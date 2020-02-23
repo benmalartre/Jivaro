@@ -1,0 +1,5 @@
+/Users/benmalartre/Documents/RnD/embree/embree-usd/build/CMakeFiles/rebuild_cache.dir
+/Users/benmalartre/Documents/RnD/embree/embree-usd/build/CMakeFiles/edit_cache.dir
+/Users/benmalartre/Documents/RnD/embree/embree-usd/build/src/CMakeFiles/rebuild_cache.dir
+/Users/benmalartre/Documents/RnD/embree/embree-usd/build/src/CMakeFiles/edit_cache.dir
+/Users/benmalartre/Documents/RnD/embree/embree-usd/build/src/CMakeFiles/hello.dir
