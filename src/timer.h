@@ -1,11 +1,4 @@
-//------------------------------------------------------------------------------------------------
-// Easy embeddable cross-platform high resolution timer function. For each
-// platform we select the high resolution timer. You can call the 'ns()'
-// function in your file after embedding this.
-// Borrowed from https://github.com/ahmidou/SoftimageCageDeformers/blob/master/definitions.h
-//------------------------------------------------------------------------------------------------
-#ifndef _TIMER_H_
-#define _TIMER_H_
+#pragma once
 
 #if defined(__linux)
 	#define HAVE_POSIX_TIMER
@@ -59,4 +52,30 @@ static uint64_t ns() {
 #endif
 }
 
-#endif //_TIMER_H_
+template <class> struct ExecutionTimer;
+
+// execution time timer decorator
+template <class R, class... Args>
+struct ExecutionTimer<R(Args ...)> {
+public:
+    ExecutionTimer(std::function<R(Args...)> func): f_(func) { } 
+
+    R operator ()(Args ... args) {
+        uint64_t startT = ns();
+
+        R result = f_(args...); 
+
+        std::cout << "Timer took " << (ns() - startT) * 1e-9 
+            << " seconds..." << std::endl;
+
+        return result;   
+    }   
+
+private:
+    std::function<R(Args ...)> f_; 
+};
+
+template <class R, class... Args>
+ExecutionTimer<R(Args ...)> TIMER_DECORATOR(R (*f)(Args ...)) {
+    return ExecutionTimer<R(Args...)>(std::function<R(Args...)>(f));    
+}

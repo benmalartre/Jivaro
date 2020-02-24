@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8.11)
-project (UsdEmbree)
+project (AMINA)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +20,7 @@ if(UNIX)
 else()
 
 endif()
+
 # usd 
 set(USD_DIR "/Users/benmalartre/Documents/RnD/USD_BUILD")
 set(USD_INCLUDE_DIR "${USD_DIR}/include")
@@ -39,9 +40,6 @@ foreach(USD_LIB_NAME IN LISTS USD_LIB_NAMES)
     ${USD_LIBRARIES} 
       "${USD_LIBRARY_DIR}/${LIB_PREFIX}${USD_LIB_NAME}${LIB_DYNAMIC_EXT}"
   )
-
-  message("${USD_LIBRARY_DIR}/
-    ${LIB_PREFIX}${USD_LIB_NAME}${LIB_DYNAMIC_EXT}")
 endforeach()
 
 # python
@@ -64,18 +62,61 @@ list(APPEND BOOST_LIB_NAMES
   thread
 )
 
-message(${BOOST_LIB_NAMES})
 set(BOOST_LIBRARIES "")
 foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
   set(BOOST_LIBRARIES 
     ${BOOST_LIBRARIES} 
       "${USD_LIBRARY_DIR}/${LIB_PREFIX}boost_${BOOST_LIB_NAME}${LIB_DYNAMIC_EXT}"
   )
-
-  message("${USD_LIBRARY_DIR}/
-    ${LIB_PREFIX}boost_${BOOST_LIB_NAME}${LIB_DYNAMIC_EXT}")
 endforeach()
 
 # embree
+set(EMBREE_DIR "/Users/benmalartre/Documents/RnD/embree")
+list(APPEND EMBREE_INCLUDE_DIRS 
+  "${EMBREE_DIR}/embree/include"
+  "${EMBREE_DIR}/embree/common"
+)
+set(EMBREE_LIBRARY_DIR "${EMBREE_DIR}/build")
+list(APPEND EMBREE_LIB_NAMES 
+  sys
+)
+
+set(EMBREE_LIBRARIES "")
+foreach(EMBREE_LIB_NAME IN LISTS EMBREE_LIB_NAMES)
+  set(EMBREE_LIBRARIES 
+    ${EMBREE_LIBRARIES} 
+      "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}${EMBREE_LIB_NAME}${LIB_STATIC_EXT}"
+  )
+endforeach()
+
+set(EMBREE_LIBRARIES 
+    ${EMBREE_LIBRARIES} 
+      "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}"
+  )
+
+# OpenGL
+find_package(OpenGL REQUIRED)
+
+# gl3w 
+set(GL3W_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/gl3w/include")
+message("GL3W DIRECTORY :  ${GL3W_INCLUDE_DIR}")
+
+# glfw
+set(GLFW_DIR "/Users/benmalartre/Documents/RnD/glfw")
+set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
+find_library(GLFW glfw3 PATHS "${GLFW_DIR}/build/src/Release")
+
+
+#target_link_libraries(${CMAKE_PROJECT_NAME}
+#    ${GLFW}
+#    )
+#set(GLFW_LIBRARY_DIR "${GLFW_DIR}/build/src/Release")
+#set(GLFW_LIBRARY "${GLFW_LIBRARY_DIR}/libglfw3.a")
+
+# system
+IF(APPLE)
+  SET(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} 
+    "-framework Cocoa -framework IOKit -framework CoreVideo")
+ENDIF(APPLE)
 
 add_subdirectory (src)
