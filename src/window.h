@@ -1,16 +1,16 @@
 #pragma once
 
 #include "default.h"
+#include "splitter.h"
 #include <GLFW/glfw3.h>
-#include "view.h"
 #include "pxr/pxr.h"
 #include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/usd/usd/prim.h>
 
 
 namespace AMN {
   class Application;
-  class Window;
   class View;
 
 
@@ -49,20 +49,14 @@ namespace AMN {
   AMN_EXPORT void 
   ReshapeCallback(GLFWwindow* window, int width, int height);
   
-  class Splitter : pxr::UsdPrim
-  {
-    pxr::GfVec2i  _min;
-    pxr::GfVec2i  _max;
-    int         _perc;
-    Window*     _left;
-    Window*     _right;
-  };
-
-  class Window : pxr::UsdPrim
+  class Window
   {
   public:
+    // constructor
     Window(int width, int height);
     Window(bool fullscreen);
+
+    //destructor
     ~Window();
 
     // infos
@@ -88,14 +82,23 @@ namespace AMN {
     void SetHeight(int height){_height = height;};
     void Resize(unsigned width, unsigned height);
 
+    // splitters
+    void SplitView(View* view, int perc = 50, bool horizontal=true );
+    int GetNumSplitters(){return _splitters.size();};
+    Splitter* GetSplitterPtr(int index=0);
+    void AddSplitter(int x, int y, int w, int h, int perc);
+    
+
     // loop in thread
     void MainLoop();
 
     static Window* GetUserData(GLFWwindow* window);
 
   private:
-    std::vector<View> _views;
-    GLFWwindow*       _window;
+    std::vector<View>       _views;
+    GLFWwindow*             _window;
+    View*                   _view;
+    std::vector<Splitter>   _splitters;
 
     // render settings
     //Camera            _camera;
@@ -121,13 +124,6 @@ namespace AMN {
     //----------------------------------------------------------------------------
     static Window* CreateFullScreenWindow();
     static Window* CreateStandardWindow(int width, int height);
-
   };
-
-  static void WindowExecution(Window* window)
-  {
-      window->MainLoop();
-  };
-  
 
 } // namespace AMN

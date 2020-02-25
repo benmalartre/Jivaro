@@ -1,11 +1,15 @@
 #include "window.h"
-
+#include "view.h"
+#include "splitter.h"
+#include "imgui/imgui_custom.h"
+#include "imgui/imgui_test.h"
 
 namespace AMN {
+
   // fullscreen window constructor
   //----------------------------------------------------------------------------
   Window::Window(bool fullscreen) :
-  _pixels(nullptr), _debounce(0)
+  _pixels(nullptr), _debounce(0),_view(NULL)
   {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -22,8 +26,12 @@ namespace AMN {
     _window = glfwCreateWindow(mode->width, mode->height, "AMINA.0.0",  monitor, NULL);
     _width = mode->width;
     _height = mode->height;
+    
     if(_window)
     {
+      // create main splittable view
+      _view = new View(NULL, pxr::GfVec2i(0,_width), pxr::GfVec2i(0, _height));
+      SplitView(_view, 50, false);
       // window datas
       GetContextVersionInfos();
       glfwSetWindowUserPointer(_window, this);
@@ -53,7 +61,7 @@ namespace AMN {
   // width/height window constructor
   //----------------------------------------------------------------------------
   Window::Window(int width, int height):
-  _pixels(nullptr), _debounce(0)
+  _pixels(nullptr), _debounce(0),_view(NULL)
   {
     _width = width;
     _height = height;
@@ -65,9 +73,11 @@ namespace AMN {
     glfwWindowHint(GLFW_STENCIL_BITS, 8);
     
     _window = glfwCreateWindow(_width,_height,"AMINA.0.0",NULL,NULL);
-  
     if(_window)
     {
+      // create main splittable view
+      _view = new View(NULL, pxr::GfVec2i(0,_width), pxr::GfVec2i(0, _height));
+      SplitView(_view, 50, false);
       // window datas
       GetContextVersionInfos();
       glfwSetWindowUserPointer(_window, this);
@@ -132,7 +142,47 @@ namespace AMN {
     _height = height;
     _pixels = 
       (unsigned*) embree::alignedMalloc(_width*_height*sizeof(unsigned),64);
-  
+  }
+
+  // split view
+  //----------------------------------------------------------------------------
+  void 
+  Window::SplitView(View* view, int perc, bool horizontal )
+  {
+    if(!view->IsLeaf())
+    {
+      std::cerr << "Can't split non-leaf view! Sorry!!!" << std::endl;
+      return;
+    }
+    view->SetLeaf();
+    view->SetPerc(perc);
+    if(horizontal)
+    {
+      view->SetHorizontal();
+      view->Split();
+    }
+    else
+    {
+      view->ClearHorizontal();
+      view->Split();
+    }
+  }
+
+  // add splitter
+  //----------------------------------------------------------------------------
+  void
+  Window::AddSplitter(int x, int y, int w, int h, int perc)
+  {
+    Splitter splitter(this, x, y, w, h, perc);
+    _splitters.push_back(splitter);
+  }
+
+  // get splitter ptr
+  //----------------------------------------------------------------------------
+  Splitter* Window::GetSplitterPtr(int index)
+  {
+    if(index>=0 && index <_splitters.size()) return &_splitters[index];
+    else return NULL;
   }
 
   // get context version infos
@@ -174,8 +224,18 @@ namespace AMN {
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // setup imgui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+    ImGui::StyleColorsAmina();
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.Alpha = 1.f;      
+    style.WindowRounding = 0.0f;
+    style.ChildRounding = 0.0f;
+    style.FrameRounding = 0.0f;
+    style.GrabRounding = 0.0f;
+    style.PopupRounding = 0.0f;
+    style.ScrollbarRounding = 0.0f;
+    style.TabRounding = 0.0f;
+
+    ImGui::SetNextWindowBgAlpha(1.f);
 
     // setup platform/renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(_window, glfwGetCurrentContext());
@@ -196,9 +256,11 @@ namespace AMN {
   void
   Window::TestImgui(int index)
   {
+
     // Start the imgui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
+    
     ImGui::NewFrame();
     bool dummy = true;
     float color[3] = {1.0f, 0.5f, 0.5f};
@@ -209,9 +271,28 @@ namespace AMN {
     {
       static float f = 0.0f;
       static int counter = 0;
+      bool opened;
+      ImGuiWindowFlags flags = 0;
+      flags |= ImGuiWindowFlags_NoResize;
+      //flags |= ImGuiWindowFlags_NoTitleBar;
+      flags |= ImGuiWindowFlags_NoMove;
 
-      ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+      
+      ImGui::Begin("Hello, FUCKIN BITCH!", &opened, flags);                          // Create a window called "Hello, world!" and append into it.
+      ImGui::SetWindowSize(pxr::GfVec2i(GetWidth(), GetHeight()));
+      ImGui::SetWindowPos(pxr::GfVec2i(0,0));
+      /*
+      int N = 2;
+      const char* labels[2] = {"Label1", "Label2"};
+      const char* tooltips[2] = {"ToolTip1", "ToolTip2"};
 
+
+      int optionalHoveredIndex;
+
+      int selectedIndex = 0;
+      bool B = ImGui::TabLabels(2, &labels[0], selectedIndex, &tooltips[0], true, &optionalHoveredIndex);
+
+    
       ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
       ImGui::Checkbox("Demo Window", &dummy);      // Edit bools storing our window open/close state
       ImGui::Checkbox("Another Window", &dummy);
@@ -225,6 +306,21 @@ namespace AMN {
       ImGui::Text("counter = %d", counter);
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+      */
+
+      for(int i=0;i<GetNumSplitters(); ++i)
+      {
+        std::string name = "Je M'appelle "+std::to_string(i);
+        ImGui::Begin(name.c_str(), &opened, flags);
+        Splitter* splitter = GetSplitterPtr(i);
+        ImGui::TestGrapNodes(&opened, splitter->GetMin(), splitter->GetMin() + 
+          splitter->GetMax() * splitter->GetPerc() * 0.01);
+        ImGui::SetWindowSize(splitter->GetMax() - splitter->GetMin());
+        ImGui::SetWindowPos(splitter->GetMin());
+        ImGui::End();
+
+      }
+      
       ImGui::End();
     }
       
@@ -240,10 +336,9 @@ namespace AMN {
     // Rendering
     ImGui::Render();
     glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
-    glClearColor(color[0], color[1], color[2], 1.f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    //glClearColor(color[0], color[1], color[2], 1.f);
+    //glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    glfwSwapBuffers(_window);
 
   }
 
@@ -255,7 +350,9 @@ namespace AMN {
     while(!glfwWindowShouldClose(_window))
     {
       glfwPollEvents();
-      //AMN::DisplayCallback(_window);
+      glClearColor(0,0,0,1.f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      AMN::DisplayCallback(_window);
       // If you press escape the window will close
       if (glfwGetKey(_window, GLFW_KEY_ESCAPE))
       {
@@ -270,7 +367,7 @@ namespace AMN {
        
       }
       TestImgui(_guiId % 3);
-      
+      glfwSwapBuffers(_window);
     }
   }
 
@@ -461,6 +558,8 @@ namespace AMN {
   void 
   DisplayCallback(GLFWwindow* window)
   {
+    Window* parent = (Window*)glfwGetWindowUserPointer(window);
+   
     //std::cout << "DISPLAY !!!" << std::endl;
     /*
     // update camera 
@@ -509,14 +608,21 @@ namespace AMN {
     ImGui::Render();
     ImGui_ImplGlfwGL2_RenderDrawData(ImGui::GetDrawData());
     */
+   /*
     glClearColor(
       (float)rand()/(float)RAND_MAX,
       (float)rand()/(float)RAND_MAX,
       (float)rand()/(float)RAND_MAX,
       1.f
     );
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glfwSwapBuffers(window);
+    */
+
+    glEnable(GL_SCISSOR_TEST);
+    for(int i=0;i<parent->GetNumSplitters(); ++i)
+    {
+      parent->GetSplitterPtr(i)->Draw();
+    }
+    glDisable(GL_SCISSOR_TEST);
 
 #ifdef __APPLE__
     // work around glfw issue #1334

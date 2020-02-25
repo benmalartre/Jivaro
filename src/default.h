@@ -5,7 +5,6 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_glfw.h"
-#include <stdio.h>
 
 #include <sys/platform.h>
 #include <sys/sysinfo.h>
@@ -25,6 +24,9 @@
 
 #include <iostream>
 #include <sstream>
+#include <ostream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <vector>
 #include <memory>
 #include <map>

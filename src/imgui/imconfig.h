@@ -10,6 +10,8 @@
 // Defining those options in imconfig.h will ensure every compilation unit gets to see the same data structure layouts.
 // Call IMGUI_CHECKVERSION() from your .cpp files to verify that the data structures your files are using are matching the ones imgui.cpp is using.
 //-----------------------------------------------------------------------------
+#include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec4i.h>
 
 #pragma once
 
@@ -61,15 +63,13 @@
 
 //---- Define constructor and implicit cast operators to convert back<>forth between your math types and ImVec2/ImVec4.
 // This will be inlined as part of ImVec2 and ImVec4 class declarations.
-/*
-#define IM_VEC2_CLASS_EXTRA                                                 \
-        ImVec2(const MyVec2& f) { x = f.x; y = f.y; }                       \
-        operator MyVec2() const { return MyVec2(x,y); }
+#define IM_VEC2_CLASS_EXTRA                                                       \
+        ImVec2(const pxr::GfVec2i& f) { x = f[0]; y = f[1]; }                     \
+        operator pxr::GfVec2i() const { return pxr::GfVec2i(x,y); }
 
-#define IM_VEC4_CLASS_EXTRA                                                 \
-        ImVec4(const MyVec4& f) { x = f.x; y = f.y; z = f.z; w = f.w; }     \
-        operator MyVec4() const { return MyVec4(x,y,z,w); }
-*/
+#define IM_VEC4_CLASS_EXTRA                                                       \
+        ImVec4(const pxr::GfVec4i& f) { x = f[0]; y = f[1]; z = f[2]; w = f[3]; } \
+        operator pxr::GfVec4i() const { return pxr::GfVec4i(x,y,z,w); }
 
 //---- Use 32-bit vertex indices (default is 16-bit) is one way to allow large meshes with more than 64K vertices.
 // Your renderer back-end will need to support it (most example renderer back-ends support both 16/32-bit indices).

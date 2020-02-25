@@ -20,6 +20,7 @@ add_executable(${TARGET}
   imgui/imstb_textedit.h
   imgui/imstb_truetype.h
   view.cpp
+  splitter.cpp
   window.cpp
   application.cpp
   main.cpp

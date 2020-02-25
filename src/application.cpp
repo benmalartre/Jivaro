@@ -22,6 +22,12 @@ namespace AMN {
   {
     _mainWindow = CreateFullScreenWindow();
     glfwGetWindowSize(_mainWindow->GetWindow(), &_width, &_height);
+
+    int N = 7;
+    int H = _mainWindow->GetHeight() / N;
+    //_mainWindow->AddView()
+    for(int i = 0; i< N; ++i)
+      _mainWindow->AddSplitter(0, i * H, _mainWindow->GetWidth(), H, 50);
   };
 
   
@@ -46,15 +52,7 @@ namespace AMN {
   void 
   Application::MainLoop()
   {
-    int x = 666;
-    std::thread window_thread(WindowExecution, _mainWindow);
-    while(true)
-    {
-      std::cout << "LOOP :D" << std::endl;
-      usleep(100);
-    }
-    
-      _mainWindow->MainLoop();
+    _mainWindow->MainLoop();
    
   }
 
