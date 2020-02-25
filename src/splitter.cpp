@@ -1,86 +1,60 @@
 #include "splitter.h"
-#include "window.h"
+#include "view.h"
+
 namespace AMN {
-
-  // splitter constructor
-  //----------------------------------------------------------------------------
-  Splitter::Splitter(Window* window, 
-    const pxr::GfVec2i& min, const pxr::GfVec2i& max):
-      _window(window), _min(min), _max(max), _perc(50), _horizontal(true)
-  {
-  }
-
-  Splitter::Splitter(Window* window, int x, int y, int w, int h, int perc):
-    _window(window), _min(pxr::GfVec2i(x, y)),
-    _max(pxr::GfVec2i(x+w, y+h)), _perc(perc), _horizontal(true)
-  {
-  }
-
   void 
-  Splitter::Draw()
+  Splitter::RecurseBuildMap(View* view)
   {
-    int x, y, w, h;
-    if(!_horizontal)
+    if(view->IsLeaf())
     {
-      x = (_min[0] + ((_max[0]-_min[0]) * _perc)/100) - 1;
-      y = _min[1];
-      w = 2;
-      h = _max[1] - _min[1];
+      int x1, x2, y1, y2;
+      int w = view->GetMax()[0] - view->GetMin()[0];
+      if(view->IsHorizontal())
+      { 
+        x1 = view->GetMin()[0];
+        x2 = view->GetMax()[0];
+        int h = view->GetMin()[1] + (view->GetMax()[1] - view->GetMin()[1]) * 
+          view->GetPerc() * 0.01f;
+        y1 = h - SPLITTER_THICKNESS;
+        y2 = h + SPLITTER_THICKNESS;
+      }
+      else
+      {
+        int w = view->GetMin()[0] + (view->GetMax()[0] - view->GetMin()[0]) * 
+          view->GetPerc() * 0.01f;
+        x1 = w - SPLITTER_THICKNESS;
+        x2 = w + SPLITTER_THICKNESS;
+        y1 = view->GetMin()[0];
+        y2 = view->GetMax()[0];
+      }
+      for(int y = y1; y < y2; ++y)
+      {
+        for(int x = x1; x < x2; ++x)
+        {
+          _pixels[y * w + x] = _viewID;
+        }
+      }
+      _viewID++;;
     }
     else
     {
-      x = _min[0];
-      y = (_min[1] + ((_max[1]-_min[1]) * _perc)/100 ) - 1;
-      w = _max[0] - _min[0];
-      h = 2;
+      RecurseBuildMap(view->GetLeft());
+      RecurseBuildMap(view->GetRight());
     }
-    
-    
-    glScissor(x,y,w,h);
-    //glClearColor(_color[0], _color[1], _color[2], 1.f);
-    glClearColor(
-      (float)rand()/(float)RAND_MAX,
-      (float)rand()/(float)RAND_MAX,
-      (float)rand()/(float)RAND_MAX,
-      1.f
-    );
-    glClear(GL_COLOR_BUFFER_BIT);
-
   }
 
   void 
-  Splitter::MouseEnter()
-  {
-    _color = pxr::GfVec3f(1.f, 0.f, 0.f);
-  }
-
-  void 
-  Splitter::MouseLeave()
-  {
-    _color = pxr::GfVec3f(0.f, 1.f, 0.f);
-  }
-
-  void 
-  SplitterMap::AddSplitter(Splitter* splitter)
-  {
-
-  }
-
-  void 
-  SplitterMap::BuildMap()
+  Splitter::BuildMap(View* view)
   {
     if(_pixels)delete [] _pixels;
     if(_window)
     {
-      _pixels = new char[_window->GetWidth() * _window->GetHeight()];
-      for(auto item: _map)
-      {
-        const pxr::GfVec2i smin(0,0);
-        //for(int x= splitter.second.GetMin()[0];
-      }
+      const pxr::GfVec2i size(view->GetMax() - view->GetMin());
+      _pixels = new unsigned[size[0] * size[1]];
+      memset((void*)&_pixels[0], 0, size[0] * size[1] * sizeof(int));
+      _viewID = 1;
+      RecurseBuildMap(view);
     }
-    
   }
-
 
 } // namespace AMN

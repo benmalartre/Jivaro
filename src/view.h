@@ -16,13 +16,6 @@ namespace AMN {
     LEAF = 4
   };
 
-  enum BORDER
-  {
-    TOP     = 1,
-    RIGHT   = 2,
-    BOTTOM  = 4,
-    LEFT    = 8
-  };
 
   public:
     View(View* parent, const pxr::GfVec2i& min, const pxr::GfVec2i& max);
@@ -30,9 +23,18 @@ namespace AMN {
     const pxr::GfVec2i& GetMin(){return _min;};
     const pxr::GfVec2i& GetMax(){return _max;};
     const pxr::GfVec3f& GetColor(){return _color;};
+    const pxr::GfVec4f GetColor4()
+    {
+      return pxr::GfVec4f(_color[0], _color[1], _color[2], 1.f);
+    };
+    const std::string& GetName(){return _name;};
+    const char* GetText(){return _name.c_str();};
     int GetPerc(){return _perc;};
     void SetPerc(float perc){_perc=perc;};
     void GetChildMinMax(bool , pxr::GfVec2i& , pxr::GfVec2i& );
+
+    inline View* GetLeft(){return _left;};
+    inline View* GetRight(){return _right;};
     void Split();
     void Draw();
     int TouchBorder();
@@ -63,21 +65,7 @@ namespace AMN {
     View*             _right;
     View*             _parent;
     int               _flags;
-  };
-
-  class ViewMap
-  {
-  public: 
-    ViewMap():_pixels(NULL){};
-    ~ViewMap(){if(_pixels)delete [] _pixels;};
-
-    void AddView(View* view);
-    void BuildMap(int width, int height);
-    
-  private:
-    Window* _window;
-    const char* _pixels;
-    std::map<char, View*> _map;
+    std::string       _name;
   };
 
 }

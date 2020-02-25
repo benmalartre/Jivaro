@@ -8,6 +8,8 @@ add_executable(${TARGET}
   imgui/imconfig.h
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
+  imgui/imgui_test.h
+  imgui/imgui_test.cpp
   imgui/imgui_impl_glfw.cpp
   imgui/imgui_impl_glfw.h
   imgui/imgui_impl_opengl3.cpp

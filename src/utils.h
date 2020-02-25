@@ -1,7 +1,9 @@
 #pragma once
 
 #include "default.h"
-
+#include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
 namespace AMN {
 
   #define RANDOM_0_1 ((float)rand() / (float)RAND_MAX)
@@ -22,5 +24,13 @@ namespace AMN {
   #define BITMASK_CLEAR(x,y) ((x) &= (~(y)))
   #define BITMASK_FLIP(x,y) ((x) ^= (y))
   #define BITMASK_CHECK(x,y) (((x) & (y)) == (y))
+
+  // print vectors (debug)
+  void PrintVector(const pxr::GfVec2i& v, const char* t);
+  void PrintVector(const pxr::GfVec3f& v, const char* t);
+  void PrintVector(const pxr::GfVec4f& v, const char* t);
+
+  // index to random color
+  unsigned GetRandomColorByIndex(unsigned index);
 
 } // namespace AMN

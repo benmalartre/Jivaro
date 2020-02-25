@@ -2,21 +2,10 @@
 
 #include "default.h"
 #include "window.h"
-//#include "application.h"
 #include "camera.h"
-//#include "scene.h"
-//#include "scene_device.h"
-
-/* include GLFW for window management */
-#include <GLFW/glfw3.h>
-
-/* include ImGUI */
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_opengl3.h"
 
 namespace AMN
 {
-
   class Application
   {
   public:
@@ -41,13 +30,11 @@ namespace AMN
     void CleanUp();
 
   private:
-    
     std::string _fileName;
     Window*     _mainWindow;
 
     int         _width;
     int         _height;
-
   };
 } // namespace AMN
 

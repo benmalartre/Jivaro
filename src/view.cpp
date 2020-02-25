@@ -1,6 +1,8 @@
 #include "view.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>
+#include "imgui/imgui_test.h"
+
 namespace AMN {
 
   // view constructor
@@ -11,6 +13,7 @@ namespace AMN {
     _max(max), 
     _flags(HORIZONTAL|LEAF)
   {
+    if(_parent==NULL)_name = "main";
     _color = pxr::GfVec3f(
       RANDOM_0_1,
       RANDOM_0_1,
@@ -24,6 +27,7 @@ namespace AMN {
     _max(pxr::GfVec2i(x+w, y+h)), 
     _flags(HORIZONTAL|LEAF)
   {
+    if(_parent==NULL)_name = "main";
     _color = pxr::GfVec3f(
       RANDOM_0_1,
       RANDOM_0_1,
@@ -34,8 +38,38 @@ namespace AMN {
   void 
   View::Draw()
   {
+    if(!IsLeaf()){
+      if(_left)_left->Draw();
+      if(_right)_right->Draw();
+    }
+    else
+    {
+      bool opened;
+      int flags = 0;
+      flags |= ImGuiWindowFlags_NoResize;
+      flags |= ImGuiWindowFlags_NoTitleBar;
+      flags |= ImGuiWindowFlags_NoMove;
+      
+
+      ImGui::Begin(GetText(), &opened, flags);
+      pxr::GfVec4f color(
+        RANDOM_0_1,
+        RANDOM_0_1,
+        RANDOM_0_1, 
+        1.f
+      );
+      //ImGui::TestDummyView(&opened, GetMin(), GetMax(), color);
+      ImGui::TestGrapNodes(&opened, GetMin(), GetMax());
+      ImGui::SetWindowSize(GetMax() - GetMin());
+      ImGui::SetWindowPos(GetMin());
+      ImGui::End();
+    }
+    
+   
+    
+    /*
     int x, y, w, h;
-    if(!IsHorizontal())
+    if(!BITMASK_CHECK(_flags, HORIZONTAL))
     {
       x = (_min[0] + ((_max[0]-_min[0]) * _perc)/100) - 1;
       y = _min[1];
@@ -60,7 +94,7 @@ namespace AMN {
       1.f
     );
     glClear(GL_COLOR_BUFFER_BIT);
-
+    */
   }
 
   void 
@@ -84,13 +118,13 @@ namespace AMN {
       if(leftOrRight)
       {
         cMin = GetMin();
-        cMax = GetMin() + 
-          GfCompMult(GetMax()-GetMin(), pxr::GfVec2i(1.f, _perc / 100));
+        cMax[0] = GetMax()[0];
+        cMax[1] = GetMin()[1] + (GetMax()[1]-GetMin()[1]) * _perc * 0.01f;
       }
       else
-      {
-        cMin = GetMin() + 
-          GfCompMult(GetMax()-GetMin(), pxr::GfVec2i(1.f, _perc / 100));
+      { 
+        cMin[0] = GetMin()[0];
+        cMin[1] = GetMin()[1] + (GetMax()[1]-GetMin()[1]) * _perc * 0.01f;
         cMax = GetMax();
       }
     }
@@ -100,13 +134,13 @@ namespace AMN {
       if(leftOrRight)
       {
         cMin = GetMin();
-        cMax = GetMin() + 
-          GfCompMult(GetMax()-GetMin(), pxr::GfVec2i(_perc / 100, 1.f));
+        cMax[0] = GetMin()[0] + (GetMax()[0]-GetMin()[0]) * _perc * 0.01f;
+        cMax[1] = GetMax()[1];
       }
       else
       {
-        cMin = GetMin() + 
-          GfCompMult(GetMax()-GetMin(), pxr::GfVec2i(_perc / 100, 1.f));
+        cMin[0] = GetMin()[0] + (GetMax()[0]-GetMin()[0]) * _perc * 0.01f;
+        cMin[1] = GetMin()[1];
         cMax = GetMax();
       }
     }
@@ -115,11 +149,15 @@ namespace AMN {
   void
   View::Split()
   {
-    pxr::GfVec2i cMin, cMax;
+    ClearLeaf();
+    pxr::GfVec2i cMin, cMax;    
     GetChildMinMax(true, cMin, cMax);
     _left = new View(this, cMin, cMax);
+    _left->_name = _name + ":left";
+
     GetChildMinMax(false, cMin, cMax);
     _right = new View(this, cMin, cMax);
+    _right->_name = _name + ":right";
 
     if(_content){
       std::cerr << 
@@ -127,28 +165,4 @@ namespace AMN {
           << std::endl;
     }
   }
-
-  void 
-  ViewMap::AddView(View* splitter)
-  {
-
-  }
-
-  void 
-  ViewMap::BuildMap(int width, int height)
-  {
-    if(_pixels)delete [] _pixels;
-    if(_window)
-    {
-      _pixels = new char[width * height];
-      for(auto item: _map)
-      {
-        const pxr::GfVec2i smin(0,0);
-        //for(int x= splitter.second.GetMin()[0];
-      }
-    }
-    
-  }
-
-
 } // namespace AMN

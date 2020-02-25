@@ -3,6 +3,7 @@
 #include "default.h"
 #include "splitter.h"
 #include <GLFW/glfw3.h>
+
 #include "pxr/pxr.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
@@ -12,6 +13,7 @@
 namespace AMN {
   class Application;
   class View;
+  class Splitter;
 
 
   // keyboard callback
@@ -84,10 +86,16 @@ namespace AMN {
 
     // splitters
     void SplitView(View* view, int perc = 50, bool horizontal=true );
+    View* GetMainView(){return _view;};
+    /*
     int GetNumSplitters(){return _splitters.size();};
     Splitter* GetSplitterPtr(int index=0);
     void AddSplitter(int x, int y, int w, int h, int perc);
-    
+    */
+
+    // draw
+    void Draw();
+    void DrawPickImage();
 
     // loop in thread
     void MainLoop();
@@ -98,7 +106,7 @@ namespace AMN {
     std::vector<View>       _views;
     GLFWwindow*             _window;
     View*                   _view;
-    std::vector<Splitter>   _splitters;
+    Splitter                _splitter;
 
     // render settings
     //Camera            _camera;

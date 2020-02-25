@@ -1,53 +1,39 @@
 #pragma once
 
 #include "default.h"
-#include "view.h"
 #include "pxr/pxr.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
-
 
 namespace AMN {
   class View;
   class Window;
 
-  class Splitter
+  enum BORDER
   {
-  public:
-    Splitter(Window* window, const pxr::GfVec2i& min, const pxr::GfVec2i& max);
-    Splitter(Window* window, int x, int y, int w, int h, int perc);
-    const pxr::GfVec2i& GetMin(){return _min;};
-    const pxr::GfVec2i& GetMax(){return _max;};
-    int GetPerc(){return _perc;};
-    const pxr::GfVec3f& GetColor(){return _color;};
-    void Draw();
-    void MouseEnter();
-    void MouseLeave();
-  private:
-    pxr::GfVec2i      _min;
-    pxr::GfVec2i      _max;
-    pxr::GfVec3f      _color;
-    int               _perc;
-    View*             _left;
-    View*             _right;
-    Window*           _window;
-    bool              _over;
-    bool              _horizontal;
+    TOP     = 1,
+    RIGHT   = 2,
+    BOTTOM  = 4,
+    LEFT    = 8
   };
 
-  class SplitterMap
+  #define SPLITTER_THICKNESS 4
+
+  class Splitter
   {
   public: 
-    SplitterMap():_pixels(NULL){};
-    ~SplitterMap(){if(_pixels)delete [] _pixels;};
+    Splitter():_pixels(NULL){};
+    ~Splitter(){if(_pixels)delete [] _pixels;};
 
-    void AddSplitter(Splitter* splitter);
-    void BuildMap();
+    unsigned* GetPixels(){return _pixels;};
+    void BuildMap(View* view);
+    void RecurseBuildMap(View* view);
     
   private:
     Window* _window;
-    const char* _pixels;
-    std::map<char, Splitter*> _map;
+    unsigned* _pixels;
+    std::map<char, View*> _map;
+    unsigned _viewID;
   };
 
 } // namespace AMN

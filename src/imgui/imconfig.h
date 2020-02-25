@@ -11,7 +11,7 @@
 // Call IMGUI_CHECKVERSION() from your .cpp files to verify that the data structures your files are using are matching the ones imgui.cpp is using.
 //-----------------------------------------------------------------------------
 #include <pxr/base/gf/vec2i.h>
-#include <pxr/base/gf/vec4i.h>
+#include <pxr/base/gf/vec4f.h>
 
 #pragma once
 
@@ -68,8 +68,8 @@
         operator pxr::GfVec2i() const { return pxr::GfVec2i(x,y); }
 
 #define IM_VEC4_CLASS_EXTRA                                                       \
-        ImVec4(const pxr::GfVec4i& f) { x = f[0]; y = f[1]; z = f[2]; w = f[3]; } \
-        operator pxr::GfVec4i() const { return pxr::GfVec4i(x,y,z,w); }
+        ImVec4(const pxr::GfVec4f& f) { x = f[0]; y = f[1]; z = f[2]; w = f[3]; } \
+        operator pxr::GfVec4f() const { return pxr::GfVec4f(x,y,z,w); }
 
 //---- Use 32-bit vertex indices (default is 16-bit) is one way to allow large meshes with more than 64K vertices.
 // Your renderer back-end will need to support it (most example renderer back-ends support both 16/32-bit indices).

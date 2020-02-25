@@ -30,8 +30,13 @@ namespace AMN {
     if(_window)
     {
       // create main splittable view
-      _view = new View(NULL, pxr::GfVec2i(0,_width), pxr::GfVec2i(0, _height));
-      SplitView(_view, 50, false);
+      _view = new View(NULL, pxr::GfVec2i(0,0), pxr::GfVec2i(_width, _height));
+      SplitView(_view, 75, true);
+      SplitView(_view->GetLeft(), 50, false);
+      SplitView(_view->GetRight(), 25, false);
+
+      _splitter.BuildMap(_view);
+
       // window datas
       GetContextVersionInfos();
       glfwSetWindowUserPointer(_window, this);
@@ -76,8 +81,13 @@ namespace AMN {
     if(_window)
     {
       // create main splittable view
-      _view = new View(NULL, pxr::GfVec2i(0,_width), pxr::GfVec2i(0, _height));
-      SplitView(_view, 50, false);
+      _view = new View(NULL, pxr::GfVec2i(0,0), pxr::GfVec2i(_width, _height));
+      SplitView(_view, 75, true);
+      SplitView(_view->GetLeft(), 50, false);
+      SplitView(_view->GetRight(), 25, false);
+
+      _splitter.BuildMap(_view);
+
       // window datas
       GetContextVersionInfos();
       glfwSetWindowUserPointer(_window, this);
@@ -168,6 +178,7 @@ namespace AMN {
     }
   }
 
+  /*
   // add splitter
   //----------------------------------------------------------------------------
   void
@@ -184,6 +195,7 @@ namespace AMN {
     if(index>=0 && index <_splitters.size()) return &_splitters[index];
     else return NULL;
   }
+  */
 
   // get context version infos
   //----------------------------------------------------------------------------
@@ -209,6 +221,43 @@ namespace AMN {
   Window::GetUserData(GLFWwindow* window)
   {
     return static_cast<Window*>(glfwGetWindowUserPointer(window));
+  }
+
+  // draw
+  //----------------------------------------------------------------------------
+  void 
+  Window::Draw()
+  {
+    // start the imgui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    
+    ImGui::NewFrame();
+    ImGui::SetWindowSize(pxr::GfVec2i(GetWidth(), GetHeight()));
+    ImGui::SetWindowPos(pxr::GfVec2i(0,0));
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowPadding = pxr::GfVec2i(0,0);
+    style.FramePadding = pxr::GfVec2i(0,0);
+
+    if(_view)_view->Draw();
+
+    // Rendering
+    ImGui::Render();
+    glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+  }
+
+  // draw pick image
+  //----------------------------------------------------------------------------
+  void 
+  Window::DrawPickImage()
+  {
+    glDrawPixels(GetWidth(), GetHeight(), GL_RGBA, 
+      GL_UNSIGNED_BYTE,_splitter.GetPixels());
+
+    //glDrawPixels(width,height,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
   }
 
   // setup imgui
@@ -265,7 +314,24 @@ namespace AMN {
     bool dummy = true;
     float color[3] = {1.0f, 0.5f, 0.5f};
     if (index == 0)
-      ImGui::ShowDemoWindow(&dummy);
+    {
+      bool opened;
+      View* view = GetMainView();
+      int flags = 0;
+      flags |= ImGuiWindowFlags_NoResize;
+      flags |= ImGuiWindowFlags_NoTitleBar;
+      flags |= ImGuiWindowFlags_NoMove;
+
+
+
+      ImGui::Begin("FUCK", &opened, flags);
+      ImGui::SetWindowSize(pxr::GfVec2i(GetWidth(), GetHeight()));
+      ImGui::SetWindowPos(pxr::GfVec2i(0,0));
+      /*ImGui::TestDummyView(&opened, pxr::GfVec2i(0,0), 
+        pxr::GfVec2i(GetWidth(), GetHeight()), view->GetColor4());*/
+      ImGui::End();
+    }
+      //ImGui::ShowDemoWindow(&dummy);
 
     else if(index == 1)
     {
@@ -308,6 +374,7 @@ namespace AMN {
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
       */
 
+      /*
       for(int i=0;i<GetNumSplitters(); ++i)
       {
         std::string name = "Je M'appelle "+std::to_string(i);
@@ -320,6 +387,7 @@ namespace AMN {
         ImGui::End();
 
       }
+      */
       
       ImGui::End();
     }
@@ -352,7 +420,8 @@ namespace AMN {
       glfwPollEvents();
       glClearColor(0,0,0,1.f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      AMN::DisplayCallback(_window);
+      Draw();
+      //AMN::DisplayCallback(_window);
       // If you press escape the window will close
       if (glfwGetKey(_window, GLFW_KEY_ESCAPE))
       {
@@ -366,7 +435,7 @@ namespace AMN {
        }
        
       }
-      TestImgui(_guiId % 3);
+      //TestImgui(_guiId % 3);
       glfwSwapBuffers(_window);
     }
   }
@@ -617,12 +686,14 @@ namespace AMN {
     );
     */
 
+    /*
     glEnable(GL_SCISSOR_TEST);
     for(int i=0;i<parent->GetNumSplitters(); ++i)
     {
       parent->GetSplitterPtr(i)->Draw();
     }
     glDisable(GL_SCISSOR_TEST);
+    */
 
 #ifdef __APPLE__
     // work around glfw issue #1334
