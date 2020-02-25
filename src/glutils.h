@@ -1,15 +1,67 @@
-//--------------------------------------------------------
+//------------------------------------------------------------------------------
 // GLUTILS
-//--------------------------------------------------------
-#ifndef _GL_UTILS_H_
-#define _GL_UTILS_H_
+//------------------------------------------------------------------------------
+#pragma once
 
 #include <GL/gl3w.h>
+#include "glsl.h"
 #include <string>
 #include <iostream>
-using namespace std;
 
 namespace AMN {
+
+GLint SCREENSPACEQUAD_VAO;
+GLint SCREENSPACEQUAD_VBO;
+GLint SCREENSPACEQUAD_SHADER;
+
+static float SCREENSPACEQUAD_POINTS[12] = {
+  -1.f, -1.f,
+   1.f, -1.f,
+   1.f,  1.f,
+   1.f,  1.f,
+  -1.f,  1.f,
+  -1.f, -1.f
+};
+
+static unsigned SCREENSPACEQUAD_UVS[12] = {
+  0.f, 0.f,
+  1.f, 0.f,
+  1.f, 1.f,
+  1.f, 1.f,
+  0.f, 1.f,
+  0.f, 0.f
+};
+
+void SetupScreenSpaceQuad()
+{
+  unsigned sz = 12 * sizeof(float);
+  // generate vertex array object
+  glGenVertexArrays(1, &SCREENSPACEQUAD_VAO);
+  glBindVertexArray(SCREENSPACEQUAD_VAO);
+
+  // generate vertex buffer object
+  glGenBuffers(1, SCREENSPACEQUAD_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, SCREENSPACEQUAD_VBO);
+
+  // push buffer to GPU
+  glBufferData(GL_ARRAY_BUFFER,2 * sz, NULL,GL_STATIC_DRAW)
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sz, &SCREENSPACEQUAD_POINTS[0]);
+  glBufferSubData(GL_ARRAY_BUFFER, sz, sz, &SCREENSPACEQUAD_UVS[0]);
+
+  // attibute position
+  glEnableVertexAttribArray(0)
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0)
+  
+  // attibute uvs
+  glEnableVertexAttribArray(1)
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, sz)
+
+  // bind shader program
+  glBindAttribLocation(SCREENSPACEQUAD_SHADER, 0, "position")
+  glBindAttribLocation(SCREENSPACEQUAD_SHADER, 1, "coords")
+  
+  glLinkProgram(SCREENSPACEQUAD_SHADER)
+}
 
 static bool 
 GLCheckError(std::string message)
@@ -50,4 +102,4 @@ GLCheckError(std::string message)
   return false;
 }
 
-#endif // namespace AMN
+} // namespace AMN

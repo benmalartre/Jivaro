@@ -87,11 +87,6 @@ namespace AMN {
     // splitters
     void SplitView(View* view, int perc = 50, bool horizontal=true );
     View* GetMainView(){return _view;};
-    /*
-    int GetNumSplitters(){return _splitters.size();};
-    Splitter* GetSplitterPtr(int index=0);
-    void AddSplitter(int x, int y, int w, int h, int perc);
-    */
 
     // draw
     void Draw();

@@ -3,6 +3,7 @@
 #include "splitter.h"
 #include "imgui/imgui_custom.h"
 #include "imgui/imgui_test.h"
+#include "GL"
 
 namespace AMN {
 
@@ -254,8 +255,10 @@ namespace AMN {
   void 
   Window::DrawPickImage()
   {
+    /*
     glDrawPixels(GetWidth(), GetHeight(), GL_RGBA, 
       GL_UNSIGNED_BYTE,_splitter.GetPixels());
+    */
 
     //glDrawPixels(width,height,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
   }
