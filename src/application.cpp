@@ -22,15 +22,7 @@ namespace AMN {
   {
     _mainWindow = CreateFullScreenWindow();
     glfwGetWindowSize(_mainWindow->GetWindow(), &_width, &_height);
-
-    int N = 7;
-    int H = _mainWindow->GetHeight() / N;
-    //_mainWindow->AddView()
-    for(int i = 0; i< N; ++i)
-      _mainWindow->AddSplitter(0, i * H, _mainWindow->GetWidth(), H, 50);
   };
-
-  
 
   // create full screen window
   //----------------------------------------------------------------------------

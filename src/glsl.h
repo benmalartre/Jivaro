@@ -1,17 +1,14 @@
-// GLSLShaders.h
-//--------------------------------------------
+//------------------------------------------------------------------------------
+// GLSL SHADER UTILS
+//------------------------------------------------------------------------------
 
-#ifndef _GLSL_H_
-#define _GLSL_H_
+#pragma once
 
-#include "glutils.h"
-#include <sstream>
-#include <iostream>
-#include <string>
+#include "default.h"
 
 namespace AMN {
 // vertex shader :
-static const GLchar* vert_shader =
+static const GLchar* SIMPLE_VERTEX_SHADER_CODE =
 "#version 330 core\n"
 "layout(location = 0) in vec3 position;\n"
 "layout(location = 1) in vec3 color;\n"
@@ -24,7 +21,7 @@ static const GLchar* vert_shader =
 "}\n";
 
 // fragment shader :
-static const GLchar* frag_shader =
+static const GLchar* SIMPLE_FRAGMENT_SHADER_CODE =
 "#version 330 core\n"
 "in vec3 vertex_color;\n"
 "out vec4 out_color;\n"
@@ -112,7 +109,7 @@ _checkGLError(const char *file, int line)
         ss << "UnknowError";
         break;
     }
-    ss << endl;
+    ss << std::endl;
     e = glGetError();
   }
   // Finally print all in one

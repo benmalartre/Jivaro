@@ -3,14 +3,15 @@
 #include "splitter.h"
 #include "imgui/imgui_custom.h"
 #include "imgui/imgui_test.h"
-#include "GL"
+//#include "glutils.h"
 
 namespace AMN {
 
   // fullscreen window constructor
   //----------------------------------------------------------------------------
   Window::Window(bool fullscreen) :
-  _pixels(nullptr), _debounce(0),_view(NULL)
+  _pixels(nullptr), _debounce(0),_mainView(NULL), _activeView(NULL), 
+  _pickImage(0),_cursor(NULL),_splitter(NULL)
   {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -28,46 +29,14 @@ namespace AMN {
     _width = mode->width;
     _height = mode->height;
     
-    if(_window)
-    {
-      // create main splittable view
-      _view = new View(NULL, pxr::GfVec2i(0,0), pxr::GfVec2i(_width, _height));
-      SplitView(_view, 75, true);
-      SplitView(_view->GetLeft(), 50, false);
-      SplitView(_view->GetRight(), 25, false);
-
-      _splitter.BuildMap(_view);
-
-      // window datas
-      GetContextVersionInfos();
-      glfwSetWindowUserPointer(_window, this);
-      
-      // set current opengl context
-      glfwMakeContextCurrent(_window);
-      Resize(_width,_height);
-
-      // load opengl functions
-      gl3wInit();
-
-      // setup callbacks
-      glfwSetMouseButtonCallback(_window, ClickCallback);
-      //glfwSetScrollCallback(_window, ImGui_ImplGlfw_ScrollCallback);
-      glfwSetScrollCallback(_window, ScrollCallback);
-      glfwSetKeyCallback(_window, KeyboardCallback);
-      //glfwSetCharCallback(_window, ImGui_ImplGlfw_CharCallback);
-      glfwSetCharCallback(_window, CharCallback);
-      glfwSetCursorPosCallback(_window, MotionCallback);
-      glfwSetWindowSizeCallback(_window, ReshapeCallback);
-
-      // imgui
-      SetupImgui();
-    }
+    Init();
   }
 
   // width/height window constructor
   //----------------------------------------------------------------------------
   Window::Window(int width, int height):
-  _pixels(nullptr), _debounce(0),_view(NULL)
+  _pixels(nullptr), _debounce(0),_mainView(NULL), _activeView(NULL), 
+  _pickImage(0),_cursor(NULL), _splitter(NULL)
   {
     _width = width;
     _height = height;
@@ -79,15 +48,25 @@ namespace AMN {
     glfwWindowHint(GLFW_STENCIL_BITS, 8);
     
     _window = glfwCreateWindow(_width,_height,"AMINA.0.0",NULL,NULL);
+    Init();
+  }
+
+  // initialize
+  //----------------------------------------------------------------------------
+  void 
+  Window::Init()
+  {
     if(_window)
     {
       // create main splittable view
-      _view = new View(NULL, pxr::GfVec2i(0,0), pxr::GfVec2i(_width, _height));
-      SplitView(_view, 75, true);
-      SplitView(_view->GetLeft(), 50, false);
-      SplitView(_view->GetRight(), 25, false);
+      _mainView = new View(NULL, pxr::GfVec2i(0,0), pxr::GfVec2i(_width, _height));
+      SplitView(_mainView, 10, true);
+      SplitView(_mainView->GetRight(), 75, true);
+      SplitView(_mainView->GetRight()->GetLeft(), 25, false);
+      SplitView(_mainView->GetRight()->GetLeft()->GetRight(), 75, false);
 
-      _splitter.BuildMap(_view);
+      _splitter = new Splitter();
+      _splitter->BuildMap(_mainView);
 
       // window datas
       GetContextVersionInfos();
@@ -107,11 +86,14 @@ namespace AMN {
       glfwSetKeyCallback(_window, KeyboardCallback);
       //glfwSetCharCallback(_window, ImGui_ImplGlfw_CharCallback);
       glfwSetCharCallback(_window, CharCallback);
-      glfwSetCursorPosCallback(_window, MotionCallback);
-      glfwSetWindowSizeCallback(_window, ReshapeCallback);
+      glfwSetCursorPosCallback(_window, MouseMoveCallback);
+      glfwSetWindowSizeCallback(_window, ResizeCallback);
 
       // imgui
       SetupImgui();
+
+      // screen space quad
+      ScreenSpaceQuad();
     }
   }
 
@@ -119,7 +101,7 @@ namespace AMN {
   //----------------------------------------------------------------------------
   Window::~Window()
   {
-    _views.clear();
+    if(_splitter)delete _splitter;
     if(_pixels)embree::alignedFree(_pixels);
     if(_window)glfwDestroyWindow(_window);
   }
@@ -153,12 +135,14 @@ namespace AMN {
     _height = height;
     _pixels = 
       (unsigned*) embree::alignedMalloc(_width*_height*sizeof(unsigned),64);
+
+    _mainView->Resize(0, 0, _width, _height);
   }
 
   // split view
   //----------------------------------------------------------------------------
   void 
-  Window::SplitView(View* view, int perc, bool horizontal )
+  Window::SplitView(View* view, unsigned perc, bool horizontal )
   {
     if(!view->IsLeaf())
     {
@@ -177,6 +161,14 @@ namespace AMN {
       view->ClearHorizontal();
       view->Split();
     }
+  }
+
+  // build split map
+  //----------------------------------------------------------------------------
+  void 
+  Window::RebuildSplittersMap()
+  {
+    _splitter->BuildMap(_mainView);
   }
 
   /*
@@ -241,7 +233,8 @@ namespace AMN {
     style.WindowPadding = pxr::GfVec2i(0,0);
     style.FramePadding = pxr::GfVec2i(0,0);
 
-    if(_view)_view->Draw();
+    if(_mainView)_mainView->Draw();
+    
 
     // Rendering
     ImGui::Render();
@@ -255,12 +248,52 @@ namespace AMN {
   void 
   Window::DrawPickImage()
   {
-    /*
-    glDrawPixels(GetWidth(), GetHeight(), GL_RGBA, 
-      GL_UNSIGNED_BYTE,_splitter.GetPixels());
-    */
+    if(!_pickImage)
+    {
+      glDeleteTextures(1, &_pickImage);
 
-    //glDrawPixels(width,height,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
+      //glDeleteTextures(1 &_pickImage);
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+      glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
+
+      glGenTextures(1, &_pickImage);
+      glBindTexture(GL_TEXTURE_2D, _pickImage);
+      
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
+                      GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+                      GL_NEAREST);
+    }
+
+    glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D,_pickImage);
+    glTexImage2D(	GL_TEXTURE_2D,
+                    0,
+                    GL_RGBA,
+                    _splitter->GetWidth(),
+                    _splitter->GetHeight(),
+                    0,
+                    GL_RGBA,
+                    GL_UNSIGNED_BYTE,
+                    _splitter->GetPixels());
+
+    glUniform1i(glGetUniformLocation(SCREENSPACEQUAD_PROGRAM_SHADER,"tex"),0);
+    //glClear(GL_DEPTH_BUFFER_BIT);
+    //glDisable(GL_CULL_FACE);
+    //glDisable(GL_DEPTH_TEST);
+    //glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  
+    DrawScreenSpaceQuad();
+  }
+
+  void 
+  Window::ScreenSpaceQuad()
+  {
+    SetupScreenSpaceQuadShader();
+    SetupScreenSpaceQuad();
   }
 
   // setup imgui
@@ -324,8 +357,6 @@ namespace AMN {
       flags |= ImGuiWindowFlags_NoResize;
       flags |= ImGuiWindowFlags_NoTitleBar;
       flags |= ImGuiWindowFlags_NoMove;
-
-
 
       ImGui::Begin("FUCK", &opened, flags);
       ImGui::SetWindowSize(pxr::GfVec2i(GetWidth(), GetHeight()));
@@ -413,6 +444,38 @@ namespace AMN {
 
   }
 
+  void Window::MakeTextureFromPixels(void)
+  {
+    /*
+    int i, j, c;
+    for (i = 0; i < GetHeight().; ++i) 
+    {
+      for (j = 0; j < GetWidth(); ++j) 
+      {
+        c = ((((i&0x8)==0)^((j&0x8))==0))*255;
+        checkImage[i][j][0] = (GLubyte) c;
+        checkImage[i][j][1] = (GLubyte) c;
+        checkImage[i][j][2] = (GLubyte) c;
+        checkImage[i][j][3] = (GLubyte) 255;
+      }
+    }
+    */
+  }
+
+  bool Window::UpdateActiveTool(int mouseX, int mouseY)
+  {
+    if(_activeTool == DRAG)
+    {
+      if(_activeView)
+      {
+        _activeView->GetPercFromMousePosition(mouseX, mouseY);
+        _splitter->BuildMap(_mainView);
+        _splitter->Resize(_mainView);
+        this->DrawPickImage();
+      }
+    }
+  }
+
   void Window::MainLoop()
   {
     // Enable the OpenGL context for the current window
@@ -421,10 +484,9 @@ namespace AMN {
     while(!glfwWindowShouldClose(_window))
     {
       glfwPollEvents();
-      glClearColor(0,0,0,1.f);
+      glClearColor(1.f,1.f, 1.f,1.f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      Draw();
-      //AMN::DisplayCallback(_window);
+
       // If you press escape the window will close
       if (glfwGetKey(_window, GLFW_KEY_ESCAPE))
       {
@@ -432,15 +494,46 @@ namespace AMN {
       }
       else if(glfwGetKey(_window, GLFW_KEY_SPACE))
       {
-       if(!_debounce){
-         _guiId++;
-         _debounce = true;
-       }
-       
+        if(!_debounce)
+        {
+          _guiId++;
+          _debounce = true;
+        }
       }
+      
+      _splitter->Draw();
       //TestImgui(_guiId % 3);
       glfwSwapBuffers(_window);
     }
+  }
+
+  // pick splitter
+  //----------------------------------------------------------------------------
+  bool 
+  Window::PickSplitter(double mouseX, double mouseY)
+  {
+    _clickX = mouseX;
+    _clickY = mouseY;
+    int pixelValue = _splitter->GetPixelValue(mouseX, mouseY);
+    if(pixelValue)
+    {
+      if(_cursor) glfwDestroyCursor(_cursor);
+      _activeView = _splitter->GetViewByIndex(pixelValue - 1);
+      if (_activeView->IsHorizontal())
+        _cursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+      else 
+        _cursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+      glfwSetCursor(_window, _cursor);
+      return true;
+    }
+    else
+    {
+      if(_cursor) glfwDestroyCursor(_cursor);
+      _cursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR );
+      glfwSetCursor(_window, _cursor);
+      return false;
+    }
+    glfwSwapBuffers(_window);
   }
 
   // keyboard event callback
@@ -550,51 +643,36 @@ namespace AMN {
   ClickCallback(GLFWwindow* window, int button, int action, int mods)
   { 
     Window* parent = Window::GetUserData(window);
-    std::cout << "CLICK CLICK" << std::endl;
-    
-    // feed inputs to dear imgui, start new frame
-    //ImGui_ImplOpenGL3_NewFrame();
-    //ImGui_ImplGlfw_NewFrame();
-    //ImGui::NewFrame();
-
-    // render your GUI
-    //ImGui::Begin("Demo window");
-    //ImGui::Button("Hello!");
-    //ImGui::End();
-    
 
     double x,y;
     glfwGetCursorPos(window,&x,&y);
 
-    /*
     if (action == GLFW_RELEASE)
     {
-      mouseMode = 0;
+      parent->SetActiveTool(NONE);
     }
     else if (action == GLFW_PRESS)
     {
       if (button == GLFW_MOUSE_BUTTON_RIGHT)
       {
-        ISPCCamera ispccamera = camera.getISPCCamera(width,height);
-        Vec3fa p; bool hit = device_pick(float(x),float(y),ispccamera,p);
-
-        if (hit) {
-          Vec3fa delta = p - camera.to;
-          Vec3fa right = normalize(ispccamera.xfm.l.vx);
-          Vec3fa up    = normalize(ispccamera.xfm.l.vy);
-          camera.to = p;
-          camera.from += dot(delta,right)*right + dot(delta,up)*up;
-        }
+        std::cerr << "MOUSE BUTTON RIGHT PRESSED ! " << std::endl;
       }
       else
       {
-        clickX = x; clickY = y;
-        if      (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_SHIFT) mouseMode = 1;
-        else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_CONTROL ) mouseMode = 3;
-        else if (button == GLFW_MOUSE_BUTTON_LEFT) mouseMode = 4;
+        if(parent->PickSplitter(x, y))
+        {
+          parent->SetActiveTool(DRAG);
+        }
       }
+        /*
+        if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_SHIFT)
+           _mouseMode = 1;
+        else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_CONTROL ) 
+          _mouseMode = 3;
+        else if (button == GLFW_MOUSE_BUTTON_LEFT) 
+          _mouseMode = 4;
+        */
     }
-    */
   }
 
   void 
@@ -610,21 +688,21 @@ namespace AMN {
   }
 
   void 
-  MotionCallback(GLFWwindow* window, double x, double y)
+  MouseMoveCallback(GLFWwindow* window, double x, double y)
   {
-    /*
     //if (ImGui::GetIO().WantCaptureMouse) return;
   
-    float dClickX = float(clickX - x), dClickY = float(clickY - y);
-    clickX = x; clickY = y;
+    Window* parent = Window::GetUserData(window);
+    double xPos, yPos;
+    glfwGetCursorPos(window, &xPos, &yPos);
 
-    switch (mouseMode) {
-    case 1: camera.rotateOrbit(-0.005f*dClickX,0.005f*dClickY); break;
-    case 2: break;
-    case 3: camera.dolly(-dClickY); break;
-    case 4: camera.rotate(-0.005f*dClickX,0.005f*dClickY); break;
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    if(parent->GetActiveTool() != NONE)
+    {
+      parent->UpdateActiveTool(x, y);
     }
-    */
+
   }
 
   void 
@@ -689,15 +767,6 @@ namespace AMN {
     );
     */
 
-    /*
-    glEnable(GL_SCISSOR_TEST);
-    for(int i=0;i<parent->GetNumSplitters(); ++i)
-    {
-      parent->GetSplitterPtr(i)->Draw();
-    }
-    glDisable(GL_SCISSOR_TEST);
-    */
-
 #ifdef __APPLE__
     // work around glfw issue #1334
     // https://github.com/glfw/glfw/issues/1334
@@ -735,17 +804,18 @@ namespace AMN {
   }
 
   void 
-  ReshapeCallback(GLFWwindow* window, int, int)
+  ResizeCallback(GLFWwindow* window, int width, int height)
   {
-    /*
+/*
     Window* parent = (Window*)glfwGetWindowUserPointer(window);
-    int width,height;
+    //int width,height;
     glfwGetFramebufferSize(window, &width, &height);
+
     parent->Resize(width,height);
+    //parent->DrawPickImage(true);
+    //parent->RebuildSplittersMap();
     glViewport(0, 0, width, height);
-    parent->SetWidth(width); 
-    parent->SetHeight(height);
-    */
+   */ 
   }
 
 } // namespace AMN

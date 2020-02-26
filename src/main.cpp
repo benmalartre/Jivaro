@@ -58,7 +58,7 @@ void TraverseStage()
 int main(void)
 {
   glfwInit();
-  AMN::Application app(true);//800,600);
+  AMN::Application app(800,600);
   app.MainLoop();
   //app->cleanUp();
  

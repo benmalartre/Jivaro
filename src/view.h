@@ -20,23 +20,35 @@ namespace AMN {
   public:
     View(View* parent, const pxr::GfVec2i& min, const pxr::GfVec2i& max);
     View(View* parent, int x, int y, int w, int h);
+    ~View();
     const pxr::GfVec2i& GetMin(){return _min;};
     const pxr::GfVec2i& GetMax(){return _max;};
     const pxr::GfVec3f& GetColor(){return _color;};
-    const pxr::GfVec4f GetColor4()
-    {
-      return pxr::GfVec4f(_color[0], _color[1], _color[2], 1.f);
-    };
-    const std::string& GetName(){return _name;};
-    const char* GetText(){return _name.c_str();};
-    int GetPerc(){return _perc;};
-    void SetPerc(float perc){_perc=perc;};
+    float GetWidth(){return _max[0] - _min[0];};
+    float GetHeight(){return _max[1] - _min[1];};
+    pxr::GfVec2i GetSize(){return _max - _min;};
+
+    inline const pxr::GfVec4f 
+    GetColor4(){return pxr::GfVec4f(_color[0], _color[1], _color[2], 1.f);};
+
+    inline const std::string& GetName(){return _name;};
+    inline const char* GetText(){return _name.c_str();};
+    inline unsigned GetPerc(){return _perc;};
+    inline void SetPerc(unsigned perc){_perc=perc;};
+    int GetPercFromMousePosition(int x, int y);
+
     void GetChildMinMax(bool , pxr::GfVec2i& , pxr::GfVec2i& );
+    void Split();
+    void GetSplitterInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax, 
+      const int width, const int height);
 
     inline View* GetLeft(){return _left;};
     inline View* GetRight(){return _right;};
-    void Split();
+    inline View* GetParent(){return _parent;};
+    inline bool HasParent(){return _parent != NULL;};
+    
     void Draw();
+    void Resize(int x, int y, int width, int height);
     int TouchBorder();
     void MouseEnter();
     void MouseLeave();
@@ -58,13 +70,13 @@ namespace AMN {
     pxr::GfVec2i      _min;
     pxr::GfVec2i      _max;
     pxr::GfVec3f      _color;
-    int               _perc;
+    unsigned          _perc;
   protected:
     UI*               _content;
     View*             _left;
     View*             _right;
     View*             _parent;
-    int               _flags;
+    unsigned          _flags;
     std::string       _name;
   };
 

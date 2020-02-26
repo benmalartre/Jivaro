@@ -2,12 +2,16 @@
 
 #include "default.h"
 #include "splitter.h"
-#include <GLFW/glfw3.h>
+#include "glutils.h"
+#include "tools.h"
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/usd/usd/prim.h>
+
+#include <GLFW/glfw3.h>
+
 
 
 namespace AMN {
@@ -29,7 +33,7 @@ namespace AMN {
   // mouse move callback
   //----------------------------------------------------------------------------
   AMN_EXPORT void 
-  MotionCallback(GLFWwindow* window, double x, double y);
+  MouseMoveCallback(GLFWwindow* window, double x, double y);
 
   // display callback
   //----------------------------------------------------------------------------
@@ -49,7 +53,7 @@ namespace AMN {
   // reshape callback
   //----------------------------------------------------------------------------
   AMN_EXPORT void 
-  ReshapeCallback(GLFWwindow* window, int width, int height);
+  ResizeCallback(GLFWwindow* window, int width, int height);
   
   class Window
   {
@@ -60,6 +64,9 @@ namespace AMN {
 
     //destructor
     ~Window();
+
+    // initialize
+    void Init();
 
     // infos
     void GetContextVersionInfos();
@@ -83,31 +90,45 @@ namespace AMN {
     void SetWidth(int width){_width = width;};
     void SetHeight(int height){_height = height;};
     void Resize(unsigned width, unsigned height);
+    void RebuildSplittersMap();
 
     // splitters
-    void SplitView(View* view, int perc = 50, bool horizontal=true );
-    View* GetMainView(){return _view;};
+    void SplitView(View* view, unsigned perc = 50, bool horizontal=true );
+    View* GetMainView(){return _mainView;};
+    View* GetActiveView(){return _activeView;};
+    void MakeTextureFromPixels();
 
     // draw
     void Draw();
     void DrawPickImage();
+    bool PickSplitter(double mX, double mY);
+    void ScreenSpaceQuad();
 
+    // tool
+    inline void SetActiveTool(int tool){_activeTool = tool;};
+    inline int GetActiveTool(){return _activeTool;};
+    bool UpdateActiveTool(int mouseX, int mouseY);
     // loop in thread
     void MainLoop();
 
     static Window* GetUserData(GLFWwindow* window);
 
   private:
-    std::vector<View>       _views;
     GLFWwindow*             _window;
-    View*                   _view;
-    Splitter                _splitter;
+    GLFWcursor*             _cursor;
+    View*                   _mainView;
+    View*                   _activeView;
+    Splitter*               _splitter;
 
     // render settings
     //Camera            _camera;
     //Shader _shader;
 
     bool              _fullscreen;
+    int               _mouseMode;
+    int               _activeTool;
+    int               _clickX;
+    int               _clickY;
     int               _width;
     int               _height;
     unsigned*         _pixels;
@@ -116,6 +137,10 @@ namespace AMN {
     int               _iOpenGLMajor;
     int               _iOpenGLMinor;
     int               _iOpenGLRevision;
+
+    // opengl
+    GLuint            _pickImage;
+    GLuint            _debugImage;
 
     // imgui
     ImGuiIO*          _io;

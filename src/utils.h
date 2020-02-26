@@ -8,7 +8,7 @@ namespace AMN {
 
   #define RANDOM_0_1 ((float)rand() / (float)RAND_MAX)
   
-  #define RANDOM_0_X(HI) ((float)rand() / (float) RAND_MAX / (X))
+  #define RANDOM_0_X(HI) ((float)rand() / (float) RAND_MAX * (HI))
 
   #define RANDOM_LO_HI(LO, HI) ((LO) + (float)rand() / \
     (float)(RAND_MAX / ((HI) - (LO))))
@@ -31,6 +31,22 @@ namespace AMN {
   void PrintVector(const pxr::GfVec4f& v, const char* t);
 
   // index to random color
-  unsigned GetRandomColorByIndex(unsigned index);
+  static inline unsigned RandomColorByIndex(unsigned index)
+  {
+    srand(index);
+    return rand();
+  }
+
+  // color for procedural GL textures
+  union GLColor 
+  {
+    int32_t  packed;
+    struct {
+      char r;
+      char g;
+      char b;
+      char a;
+    } components;
+  };
 
 } // namespace AMN

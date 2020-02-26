@@ -1,4 +1,5 @@
 #include "view.h"
+#include "splitter.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>
 #include "imgui/imgui_test.h"
@@ -11,7 +12,8 @@ namespace AMN {
     _parent(parent), 
     _min(min), 
     _max(max), 
-    _flags(HORIZONTAL|LEAF)
+    _flags(HORIZONTAL|LEAF),
+    _perc(50)
   {
     if(_parent==NULL)_name = "main";
     _color = pxr::GfVec3f(
@@ -25,7 +27,8 @@ namespace AMN {
     _parent(parent), 
     _min(pxr::GfVec2i(x, y)), 
     _max(pxr::GfVec2i(x+w, y+h)), 
-    _flags(HORIZONTAL|LEAF)
+    _flags(HORIZONTAL|LEAF),
+    _perc(50)
   {
     if(_parent==NULL)_name = "main";
     _color = pxr::GfVec3f(
@@ -33,6 +36,12 @@ namespace AMN {
       RANDOM_0_1,
       RANDOM_0_1
     );
+  }
+
+  View::~View()
+  {
+    if(_left)delete _left;
+    if(_right)delete _right;
   }
 
   void 
@@ -58,6 +67,7 @@ namespace AMN {
         RANDOM_0_1, 
         1.f
       );
+
       //ImGui::TestDummyView(&opened, GetMin(), GetMax(), color);
       ImGui::TestGrapNodes(&opened, GetMin(), GetMax());
       ImGui::SetWindowSize(GetMax() - GetMin());
@@ -147,22 +157,91 @@ namespace AMN {
   }
 
   void
+  View::GetSplitterInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax,
+    const int width, const int height)
+  {
+    if(IsHorizontal())
+    { 
+      sMin[0] = GetMin()[0];
+      sMax[0] = GetMax()[0];
+    
+      int h = GetMin()[1] + (GetMax()[1] - GetMin()[1]) * (GetPerc() * 0.01f);
+      sMin[1] = h - SPLITTER_THICKNESS;
+      sMax[1] = h + SPLITTER_THICKNESS;
+      sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > height) ? height : sMin[1]);
+      sMax[1] = (sMax[1] < 0) ? 0 : ((sMax[1] > height) ? height : sMax[1]);
+    }
+    else
+    {
+      int w = GetMin()[0] + (GetMax()[0]-GetMin()[0]) * (GetPerc() * 0.01f);
+      sMin[0] = w - SPLITTER_THICKNESS;
+      sMax[0] = w + SPLITTER_THICKNESS;
+      sMin[1] = GetMin()[1];
+      sMax[1] = GetMax()[1];
+      sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > width) ? width : sMin[1]);
+      sMax[1]= (sMax[1] < 0) ? 0 : ((sMax[1] > width) ? width : sMax[1]);
+    }
+  }
+
+  void
   View::Split()
   {
-    ClearLeaf();
     pxr::GfVec2i cMin, cMax;    
     GetChildMinMax(true, cMin, cMax);
     _left = new View(this, cMin, cMax);
     _left->_name = _name + ":left";
+    _left->_parent = this;
 
     GetChildMinMax(false, cMin, cMax);
     _right = new View(this, cMin, cMax);
     _right->_name = _name + ":right";
+    _right->_parent = this;
 
     if(_content){
       std::cerr << 
         "WE GOT FUCKIN CONTENT : WE HAVE TO MOVE THIS SHIT FROM HERE !!!! " 
           << std::endl;
     }
+
+    ClearLeaf();
   }
+
+  void 
+  View::Resize(int x, int y, int w, int h)
+  {
+    _min = pxr::GfVec2i(x, y);
+    _max = pxr::GfVec2i(x+w, y+h);
+    if(!IsLeaf())
+    {
+      if(IsHorizontal())
+      {
+        if(_left)_left->Resize(x, y, w, h * _perc * 0.01f);
+        if(_right)_right->Resize(x, y + h * _perc * 0.01f, w, h - h *_perc * 0.01f);
+      }
+      else
+      {
+        if(_left)_left->Resize(x, y, w * _perc * 0.01f, h);
+        if(_right)_right->Resize(x + w * _perc * 0.01f, y, w - w * _perc * 0.01f, h);
+      }
+
+    }
+  }
+
+  int 
+  View::GetPercFromMousePosition(int x, int y)
+  {
+    if(IsHorizontal())
+    {
+      float perc = (float)(y - _min[1]) / (float)(_max[1] - _min[1]);
+      perc = perc < 0.02f ? 0.02f : perc > 0.98f ? 0.98f : perc;
+      _perc = (int)(perc * 100);
+    }
+    else
+    {
+      float perc = (float)(x - _min[0]) / (float)(_max[0] - _min[0]);
+      perc = perc < 0.02f ? 0.02f : perc > 0.98f ? 0.98f : perc;
+      _perc = (int)(perc * 100);
+    }
+  }
+
 } // namespace AMN

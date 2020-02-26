@@ -17,7 +17,7 @@ namespace AMN {
     LEFT    = 8
   };
 
-  #define SPLITTER_THICKNESS 4
+  #define SPLITTER_THICKNESS 2
 
   class Splitter
   {
@@ -26,14 +26,26 @@ namespace AMN {
     ~Splitter(){if(_pixels)delete [] _pixels;};
 
     unsigned* GetPixels(){return _pixels;};
-    void BuildMap(View* view);
+    inline unsigned GetWidth(){return _width;};
+    inline unsigned GetHeight(){return _height;};
     void RecurseBuildMap(View* view);
+    void BuildMap(View* view);
+    View* GetViewByIndex(int index);
+    unsigned GetPixelValue(double xPos, double yPos);
+
+    void Resize(View* view);
+    void Draw();
+    void Event();
     
   private:
-    Window* _window;
-    unsigned* _pixels;
-    std::map<char, View*> _map;
-    unsigned _viewID;
+    unsigned*           _pixels;
+    unsigned            _viewID;
+    unsigned            _width;
+    unsigned            _height;
+    unsigned            _lastX;
+    unsigned            _lastY;
+    bool                _drag;
+    std::vector<View*>  _views;
   };
 
 } // namespace AMN

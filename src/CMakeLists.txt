@@ -21,6 +21,7 @@ add_executable(${TARGET}
   imgui/imstb_rectpack.h
   imgui/imstb_textedit.h
   imgui/imstb_truetype.h
+  utils.cpp
   view.cpp
   splitter.cpp
   window.cpp

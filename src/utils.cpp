@@ -1,4 +1,4 @@
-#include "ui.h"
+#include "utils.h"
 namespace AMN {
   // print vectors (debug)
   void
@@ -19,13 +19,6 @@ namespace AMN {
   {
     std::cerr << t << ": " << v[0] << "," << v[1] 
       << "," << v[2] << "," << v[3] <<std::endl;
-  }
-
-  unsigned 
-  GetRandomColorByIndex(unsigned index)
-  {
-    srand(index);
-    return rand();
   }
 
 } // namespace AMN

@@ -2,42 +2,26 @@
 #include "view.h"
 
 namespace AMN {
-  void 
-  Splitter::RecurseBuildMap(View* view)
+  void Splitter::RecurseBuildMap(View* view)
   {
-    if(view->IsLeaf())
+    if(!view) return;
+    _views.push_back(view);
+    _viewID++;
+    if(!view->IsLeaf())
     {
-      int x1, x2, y1, y2;
-      int w = view->GetMax()[0] - view->GetMin()[0];
-      if(view->IsHorizontal())
-      { 
-        x1 = view->GetMin()[0];
-        x2 = view->GetMax()[0];
-        int h = view->GetMin()[1] + (view->GetMax()[1] - view->GetMin()[1]) * 
-          view->GetPerc() * 0.01f;
-        y1 = h - SPLITTER_THICKNESS;
-        y2 = h + SPLITTER_THICKNESS;
-      }
-      else
+      View* parent = view->GetParent();
+      if(!parent)parent = view;
+
+      pxr::GfVec2i sMin, sMax;
+      view->GetSplitterInfos(sMin, sMax, _width, _height);
+
+      for(int y = sMin[1]; y < sMax[1]; ++y)
       {
-        int w = view->GetMin()[0] + (view->GetMax()[0] - view->GetMin()[0]) * 
-          view->GetPerc() * 0.01f;
-        x1 = w - SPLITTER_THICKNESS;
-        x2 = w + SPLITTER_THICKNESS;
-        y1 = view->GetMin()[0];
-        y2 = view->GetMax()[0];
-      }
-      for(int y = y1; y < y2; ++y)
-      {
-        for(int x = x1; x < x2; ++x)
+        for(int x = sMin[0]; x < sMax[0]; ++x)
         {
-          _pixels[y * w + x] = _viewID;
+          _pixels[y * _width + x] = _viewID;
         }
       }
-      _viewID++;;
-    }
-    else
-    {
       RecurseBuildMap(view->GetLeft());
       RecurseBuildMap(view->GetRight());
     }
@@ -46,15 +30,60 @@ namespace AMN {
   void 
   Splitter::BuildMap(View* view)
   {
-    if(_pixels)delete [] _pixels;
-    if(_window)
-    {
-      const pxr::GfVec2i size(view->GetMax() - view->GetMin());
-      _pixels = new unsigned[size[0] * size[1]];
-      memset((void*)&_pixels[0], 0, size[0] * size[1] * sizeof(int));
-      _viewID = 1;
-      RecurseBuildMap(view);
-    }
+    
+    if(_pixels){ delete [] _pixels; _pixels = NULL; };
+
+    _views.clear();
+    const pxr::GfVec2i size(view->GetMax() - view->GetMin());
+    
+    _width = size[0];
+    _height = size[1];
+
+    _pixels = new unsigned[_width * _height];
+    memset((void*)&_pixels[0], 0, _width * _height * sizeof(unsigned));
+    _viewID = 0;
+    RecurseBuildMap(view); 
   }
 
+  // get pixel value under mouse
+  unsigned 
+  Splitter::GetPixelValue(double xPos, double yPos)
+  {
+    unsigned idx = (unsigned) yPos * _width + (unsigned)xPos;
+    if(idx >= 0 && idx < (_width * _height))
+    {
+      return _pixels[idx];
+    }
+    return 0;
+  }
+
+  // debug draw the splitters
+  void 
+  Splitter::Draw()
+  {
+    glEnable(GL_SCISSOR_TEST);
+    glClearColor(0.f, 1.f, 0.f, 1.f);
+    pxr::GfVec2i sMin, sMax;
+    for(auto view : _views)
+    {
+      if(view->IsLeaf()) continue;
+      view->GetSplitterInfos(sMin, sMax, _width, _height);
+      glScissor(sMin[0], _height -sMax[1], sMax[0]-sMin[0], sMax[1]-sMin[1]);
+      glClear(GL_COLOR_BUFFER_BIT);
+    }
+    glDisable(GL_SCISSOR_TEST);
+  }
+
+  View* 
+  Splitter::GetViewByIndex(int index)
+  {
+    return _views[index];
+  }
+
+  void 
+  Splitter::Resize(View* view)
+  {
+    view->Resize(view->GetMin()[0], view->GetMin()[1], 
+      view->GetWidth(), view->GetHeight());
+  }
 } // namespace AMN
