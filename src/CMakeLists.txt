@@ -23,6 +23,8 @@ add_executable(${TARGET}
   imgui/imstb_truetype.h
   utils.cpp
   view.cpp
+  ui.cpp
+  widgets/dummy.cpp
   splitter.cpp
   window.cpp
   application.cpp

@@ -1,9 +1,11 @@
+#pragma once
+
 #include "imgui.h"
 #include "imgui_internal.h"
 
 namespace ImGui {
 
-void StyleColorsAmina(ImGuiStyle* dst = NULL)
+static void StyleColorsAmina(ImGuiStyle* dst)
 {
   ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
   ImVec4* colors = style->Colors;

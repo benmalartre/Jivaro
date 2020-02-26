@@ -13,7 +13,8 @@ namespace AMN {
     _min(min), 
     _max(max), 
     _flags(HORIZONTAL|LEAF),
-    _perc(50)
+    _perc(50),
+    _content(NULL)
   {
     if(_parent==NULL)_name = "main";
     _color = pxr::GfVec3f(
@@ -28,7 +29,8 @@ namespace AMN {
     _min(pxr::GfVec2i(x, y)), 
     _max(pxr::GfVec2i(x+w, y+h)), 
     _flags(HORIZONTAL|LEAF),
-    _perc(50)
+    _perc(50),
+    _content(NULL)
   {
     if(_parent==NULL)_name = "main";
     _color = pxr::GfVec3f(
@@ -53,26 +55,7 @@ namespace AMN {
     }
     else
     {
-      bool opened;
-      int flags = 0;
-      flags |= ImGuiWindowFlags_NoResize;
-      flags |= ImGuiWindowFlags_NoTitleBar;
-      flags |= ImGuiWindowFlags_NoMove;
-      
-
-      ImGui::Begin(GetText(), &opened, flags);
-      pxr::GfVec4f color(
-        RANDOM_0_1,
-        RANDOM_0_1,
-        RANDOM_0_1, 
-        1.f
-      );
-
-      //ImGui::TestDummyView(&opened, GetMin(), GetMax(), color);
-      ImGui::TestGrapNodes(&opened, GetMin(), GetMax());
-      ImGui::SetWindowSize(GetMax() - GetMin());
-      ImGui::SetWindowPos(GetMin());
-      ImGui::End();
+      if(_content)_content->OnDraw();
     }
     
    
@@ -157,7 +140,7 @@ namespace AMN {
   }
 
   void
-  View::GetSplitterInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax,
+  View::GetSplitInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax,
     const int width, const int height)
   {
     if(IsHorizontal())

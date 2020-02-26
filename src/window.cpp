@@ -1,6 +1,7 @@
 #include "window.h"
 #include "view.h"
 #include "splitter.h"
+#include "widgets/dummy.h"
 #include "imgui/imgui_custom.h"
 #include "imgui/imgui_test.h"
 //#include "glutils.h"
@@ -67,6 +68,17 @@ namespace AMN {
 
       _splitter = new Splitter();
       _splitter->BuildMap(_mainView);
+
+      _leaves.clear();
+      CollectLeaves(_mainView);
+
+
+      for(auto leaf: _leaves)
+      {
+        std::cout << leaf->GetText() << std::endl;
+        UI* ui = new DummyUI(leaf, leaf->GetName()+":content");
+        leaf->SetContent(ui);
+      }
 
       // window datas
       GetContextVersionInfos();
@@ -163,6 +175,17 @@ namespace AMN {
     }
   }
 
+  void 
+  Window::CollectLeaves(View* view)
+  {
+    if(view->IsLeaf())_leaves.push_back(view);
+    else
+    {
+      if(view->GetLeft())CollectLeaves(view->GetLeft());
+      if(view->GetRight())CollectLeaves(view->GetRight());
+    }
+  }
+
   // build split map
   //----------------------------------------------------------------------------
   void 
@@ -170,25 +193,6 @@ namespace AMN {
   {
     _splitter->BuildMap(_mainView);
   }
-
-  /*
-  // add splitter
-  //----------------------------------------------------------------------------
-  void
-  Window::AddSplitter(int x, int y, int w, int h, int perc)
-  {
-    Splitter splitter(this, x, y, w, h, perc);
-    _splitters.push_back(splitter);
-  }
-
-  // get splitter ptr
-  //----------------------------------------------------------------------------
-  Splitter* Window::GetSplitterPtr(int index)
-  {
-    if(index>=0 && index <_splitters.size()) return &_splitters[index];
-    else return NULL;
-  }
-  */
 
   // get context version infos
   //----------------------------------------------------------------------------
@@ -233,13 +237,17 @@ namespace AMN {
     style.WindowPadding = pxr::GfVec2i(0,0);
     style.FramePadding = pxr::GfVec2i(0,0);
 
-    if(_mainView)_mainView->Draw();
+    // draw splitters
+    _splitter->Draw();
     
+    if(_mainView)_mainView->Draw();
 
     // Rendering
     ImGui::Render();
     glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    
 
   }
 
@@ -309,7 +317,7 @@ namespace AMN {
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // setup imgui style
-    ImGui::StyleColorsAmina();
+    ImGui::StyleColorsAmina(NULL);
     ImGuiStyle& style = ImGui::GetStyle();
     style.Alpha = 1.f;      
     style.WindowRounding = 0.0f;
@@ -500,8 +508,7 @@ namespace AMN {
           _debounce = true;
         }
       }
-      
-      _splitter->Draw();
+      Draw();
       //TestImgui(_guiId % 3);
       glfwSwapBuffers(_window);
     }
@@ -806,16 +813,16 @@ namespace AMN {
   void 
   ResizeCallback(GLFWwindow* window, int width, int height)
   {
-/*
+
     Window* parent = (Window*)glfwGetWindowUserPointer(window);
     //int width,height;
     glfwGetFramebufferSize(window, &width, &height);
 
     parent->Resize(width,height);
-    //parent->DrawPickImage(true);
-    //parent->RebuildSplittersMap();
+    parent->DrawPickImage();
+    parent->RebuildSplittersMap();
     glViewport(0, 0, width, height);
-   */ 
+  
   }
 
 } // namespace AMN

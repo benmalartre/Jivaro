@@ -2,6 +2,7 @@
 
 #include "default.h"
 #include "utils.h"
+#include "ui.h"
 #include <pxr/usd/usd/prim.h>
 
 namespace AMN {
@@ -39,13 +40,15 @@ namespace AMN {
 
     void GetChildMinMax(bool , pxr::GfVec2i& , pxr::GfVec2i& );
     void Split();
-    void GetSplitterInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax, 
+    void GetSplitInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax, 
       const int width, const int height);
 
     inline View* GetLeft(){return _left;};
     inline View* GetRight(){return _right;};
     inline View* GetParent(){return _parent;};
     inline bool HasParent(){return _parent != NULL;};
+
+    void SetContent(UI* ui){if(_content)delete _content; _content=ui;};
     
     void Draw();
     void Resize(int x, int y, int width, int height);
@@ -71,7 +74,6 @@ namespace AMN {
     pxr::GfVec2i      _max;
     pxr::GfVec3f      _color;
     unsigned          _perc;
-  protected:
     UI*               _content;
     View*             _left;
     View*             _right;

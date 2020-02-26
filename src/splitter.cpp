@@ -13,7 +13,7 @@ namespace AMN {
       if(!parent)parent = view;
 
       pxr::GfVec2i sMin, sMax;
-      view->GetSplitterInfos(sMin, sMax, _width, _height);
+      view->GetSplitInfos(sMin, sMax, _width, _height);
 
       for(int y = sMin[1]; y < sMax[1]; ++y)
       {
@@ -67,7 +67,7 @@ namespace AMN {
     for(auto view : _views)
     {
       if(view->IsLeaf()) continue;
-      view->GetSplitterInfos(sMin, sMax, _width, _height);
+      view->GetSplitInfos(sMin, sMax, _width, _height);
       glScissor(sMin[0], _height -sMax[1], sMax[0]-sMin[0], sMax[1]-sMin[1]);
       glClear(GL_COLOR_BUFFER_BIT);
     }

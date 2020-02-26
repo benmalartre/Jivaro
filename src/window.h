@@ -73,6 +73,7 @@ namespace AMN {
     GLFWwindow* GetWindow(){return _window;};
     bool GetDebounce(){return _debounce;};
     void SetDebounce(bool debounce){_debounce=debounce;};
+    void CollectLeaves(View* view);
 
     // imgui context
     void SetupImgui();
@@ -119,6 +120,7 @@ namespace AMN {
     View*                   _mainView;
     View*                   _activeView;
     Splitter*               _splitter;
+    std::vector<View*>      _leaves;
 
     // render settings
     //Camera            _camera;

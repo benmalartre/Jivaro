@@ -7,18 +7,18 @@
 #include <pxr/base/gf/vec4i.h>
 
 namespace ImGui {
-IMGUI_API  bool 
-TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, 
-  const char** tabLabelTooltips, bool autoLayout, int *pOptionalHoveredIndex) ;
+  IMGUI_API  bool 
+  TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, 
+    const char** tabLabelTooltips, bool autoLayout, int *pOptionalHoveredIndex) ;
 
-IMGUI_API void
-FillBackground();
+  IMGUI_API void
+  FillBackground();
 
-IMGUI_API  void 
-TestDummyView(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax,
-  const pxr::GfVec4f& color);
+  IMGUI_API  void 
+  TestDummyView(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax,
+    const pxr::GfVec4f& color);
 
-IMGUI_API  void 
-TestGrapNodes(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax); 
+  IMGUI_API  void 
+  TestGrapNodes(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax); 
 
 } // namespace ImGui
