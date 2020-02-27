@@ -2,7 +2,9 @@ set(TARGET amina)
 
 add_definitions(
   -DIMGUI_IMPL_OPENGL_LOADER_GL3W
-  -DTASKING_TBB)
+  -DTASKING_TBB
+
+)
 
 
 add_executable(${TARGET}
@@ -18,7 +20,6 @@ add_executable(${TARGET}
   jpeg.cpp
   mesh.cpp
   device.cpp
-  context.cpp
   utils.cpp
   view.cpp
   ui.cpp

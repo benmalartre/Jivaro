@@ -13,9 +13,9 @@
 #include <algorithms/parallel_for.h>
 #include <tasking/taskschedulertbb.h>
 
+#include "default.h"
 #include "camera.h"
 #include "ray.h"
-#include "default.h"
 
 namespace embree {
 
@@ -24,26 +24,20 @@ namespace embree {
 #define WIDTH 1280
 #define HEIGHT 640
 
+extern RTCScene g_scene;
+extern Vec3fa* face_colors; 
+extern Vec3fa* vertex_colors;
+extern RTCDevice g_device;
+extern bool g_changed;
+extern float g_debug;
+
+static Camera camera;
+static std::string rtcore("start_threads=1,set_affinity=1");
+
 // face forward for shading normals
 inline Vec3fa faceforward( const Vec3fa& N, const Vec3fa& I, const Vec3fa& Ng ) {
   Vec3fa NN = N; return dot(I, Ng) < 0 ? NN : neg(NN);
 }
-
-// GLFW keys codes
-#if !defined(GLFW_KEY_F1)
-#define GLFW_KEY_F1                 290
-#define GLFW_KEY_F2                 291
-#define GLFW_KEY_F3                 292
-#define GLFW_KEY_F4                 293
-#define GLFW_KEY_F5                 294
-#define GLFW_KEY_F6                 295
-#define GLFW_KEY_F7                 296
-#define GLFW_KEY_F8                 297
-#define GLFW_KEY_F9                 298
-#define GLFW_KEY_F10                299
-#define GLFW_KEY_F11                300
-#define GLFW_KEY_F12                301
-#endif
 
 // render statistics
 struct RayStats
@@ -76,9 +70,17 @@ inline bool nativePacketSupported(RTCDevice device)
   else return false;
 }
 
+// scene management
+unsigned int addCube (RTCScene scene_i);
+unsigned int addGroundPlane (RTCScene scene_i);
+
+// device management
+RTCScene device_init (char* cfg);
+void commit_scene ();
+void device_cleanup ();
+
 // render tile function prototype
-typedef void (* renderTileFunc)(RTCScene scene,
-                                int taskIndex,
+typedef void (* renderTileFunc)(int taskIndex,
                                 int threadIndex,
                                 int* pixels,
                                 const unsigned int width,
@@ -93,8 +95,7 @@ static renderTileFunc renderTile;
 Vec3fa renderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats& stats);
 
 // standard shading function
-void renderTileStandard(RTCScene scene,
-                        int taskIndex,
+void renderTileStandard(int taskIndex,
                         int threadIndex,
                         int* pixels,
                         const unsigned int width,
@@ -105,12 +106,10 @@ void renderTileStandard(RTCScene scene,
                         const int numTilesY);
 
 // task that renders a single pixel with ambient occlusion 
-Vec3fa renderPixelAmbientOcclusion(RTCScene scene, float x, float y, 
-  const ISPCCamera& camera, RayStats& stats);
+Vec3fa renderPixelAmbientOcclusion(float x, float y, const ISPCCamera& camera, RayStats& stats);
 
 // ambient occlusion shading function
-void renderTileAmbientOcclusion(RTCScene scene,
-                                int taskIndex,
+void renderTileAmbientOcclusion(int taskIndex,
                                 int threadIndex,
                                 int* pixels,
                                 const unsigned int width,
@@ -122,27 +121,23 @@ void renderTileAmbientOcclusion(RTCScene scene,
                                 
 
 // task that renders a single screen tile
-void renderTileTask (RTCScene scene,
-                    int taskIndex, 
-                    int threadIndex, 
-                    int* pixels,
-                    const unsigned int width,
-                    const unsigned int height,
-                    const float time,
-                    const ISPCCamera& camera,
-                    const int numTilesX,
-                    const int numTilesY);
+void renderTileTask (int taskIndex, int threadIndex, int* pixels,
+                         const unsigned int width,
+                         const unsigned int height,
+                         const float time,
+                         const ISPCCamera& camera,
+                         const int numTilesX,
+                         const int numTilesY);
 
 // called by the C++ code to render
-void device_render (RTCScene scene,
-                    int* pixels,
-                    const unsigned int width,
-                    const unsigned int height,
-                    const float time,
-                    const ISPCCamera& camera);
+void device_render (int* pixels,
+                           const unsigned int width,
+                           const unsigned int height,
+                           const float time,
+                           const ISPCCamera& camera);
 
 // render to file
-void renderToFile(RTCScene scene, Camera camera, const FileName& fileName);
+void renderToFile(const FileName& fileName);
 
 
 

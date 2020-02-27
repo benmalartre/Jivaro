@@ -37,6 +37,26 @@ namespace AMN {
     return rand();
   }
 
+  static inline int PackColor(float r, float g, float b, float a)
+  {
+
+  }
+
+  static inline pxr::GfVec4f UnpackColor(uint32_t packed)
+  {
+    uint8_t alpha = (packed & 0xFF000000) >> 24;
+    uint8_t blue = (packed & 0x00FF0000) >> 16;
+    uint8_t green = (packed & 0x0000FF00) >> 8;
+    uint8_t red = (packed & 0x000000FF);
+
+    return pxr::GfVec4f(
+      (float)red/255.f, 
+      (float)green/255.f, 
+      (float)blue/255.f, 
+      (float)alpha/255.f
+    );
+  }
+
   // color for procedural GL textures
   union GLColor 
   {

@@ -115,6 +115,7 @@ namespace AMN {
     static Window* GetUserData(GLFWwindow* window);
 
   private:
+    // objects
     GLFWwindow*             _window;
     GLFWcursor*             _cursor;
     View*                   _mainView;
@@ -123,10 +124,7 @@ namespace AMN {
     Splitter*               _splitter;
     std::vector<View*>      _leaves;
 
-    // render settings
-    //Camera            _camera;
-    //Shader _shader;
-
+    // view datas
     bool              _fullscreen;
     int               _mouseMode;
     int               _activeTool;
