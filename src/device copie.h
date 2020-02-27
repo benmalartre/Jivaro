@@ -13,9 +13,9 @@
 #include <algorithms/parallel_for.h>
 #include <tasking/taskschedulertbb.h>
 
+#include "default.h"
 #include "camera.h"
 #include "ray.h"
-#include "default.h"
 
 namespace embree {
 
@@ -24,10 +24,31 @@ namespace embree {
 #define WIDTH 1280
 #define HEIGHT 640
 
+struct Vertex{float x, y, z;};
+struct Triangle{int v0,v1,v2;};
+
 // face forward for shading normals
-inline Vec3fa faceforward( const Vec3fa& N, const Vec3fa& I, const Vec3fa& Ng ) {
+inline Vec3fa faceforward( 
+  const Vec3fa& N, 
+  const Vec3fa& I, 
+  const Vec3fa& Ng 
+)
+{
   Vec3fa NN = N; return dot(I, Ng) < 0 ? NN : neg(NN);
 }
+
+
+// scene data
+//static RTCScene g_scene = nullptr;
+static Vec3fa* face_colors = nullptr;
+static Vec3fa* vertex_colors = nullptr;
+//static RTCDevice g_device = nullptr;
+static bool g_changed = false;
+static float g_debug = 0.0f;
+
+static Camera camera;
+static std::string rtcore("start_threads=1,set_affinity=1");
+
 
 // GLFW keys codes
 #if !defined(GLFW_KEY_F1)
@@ -76,8 +97,20 @@ inline bool nativePacketSupported(RTCDevice device)
   else return false;
 }
 
+// event management
+extern "C" void device_key_pressed_default(int key);
+static void (* key_pressed_handler)(int key);
+
+// scene management
+unsigned int addCube (UsdEmbreeContext& ctxt);
+unsigned int addGroundPlane (UsdEmbreeContext& ctxt);
+
+// device management
+void device_init (UsdEmbreeContext& ctxt, char* cfg);
+void device_cleanup ();
+
 // render tile function prototype
-typedef void (* renderTileFunc)(RTCScene scene,
+typedef void (* renderTileFunc)(UsdEmbreeContext& ctxt,
                                 int taskIndex,
                                 int threadIndex,
                                 int* pixels,
@@ -90,10 +123,11 @@ typedef void (* renderTileFunc)(RTCScene scene,
 static renderTileFunc renderTile;
 
 // task that renders a single screen tile
-Vec3fa renderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats& stats);
+Vec3fa renderPixelStandard(UsdEmbreeContext& ctxt, float x, float y, 
+  const ISPCCamera& camera, RayStats& stats);
 
 // standard shading function
-void renderTileStandard(RTCScene scene,
+void renderTileStandard(UsdEmbreeContext& ctxt,
                         int taskIndex,
                         int threadIndex,
                         int* pixels,
@@ -105,11 +139,11 @@ void renderTileStandard(RTCScene scene,
                         const int numTilesY);
 
 // task that renders a single pixel with ambient occlusion 
-Vec3fa renderPixelAmbientOcclusion(RTCScene scene, float x, float y, 
+Vec3fa renderPixelAmbientOcclusion(UsdEmbreeContext& ctxt, float x, float y, 
   const ISPCCamera& camera, RayStats& stats);
 
 // ambient occlusion shading function
-void renderTileAmbientOcclusion(RTCScene scene,
+void renderTileAmbientOcclusion(UsdEmbreeContext& ctxt,
                                 int taskIndex,
                                 int threadIndex,
                                 int* pixels,
@@ -120,9 +154,8 @@ void renderTileAmbientOcclusion(RTCScene scene,
                                 const int numTilesX,
                                 const int numTilesY);
                                 
-
 // task that renders a single screen tile
-void renderTileTask (RTCScene scene,
+void renderTileTask (UsdEmbreeContext& ctxt,
                     int taskIndex, 
                     int threadIndex, 
                     int* pixels,
@@ -134,7 +167,7 @@ void renderTileTask (RTCScene scene,
                     const int numTilesY);
 
 // called by the C++ code to render
-void device_render (RTCScene scene,
+void device_render (UsdEmbreeContext& ctxt,
                     int* pixels,
                     const unsigned int width,
                     const unsigned int height,
@@ -142,8 +175,6 @@ void device_render (RTCScene scene,
                     const ISPCCamera& camera);
 
 // render to file
-void renderToFile(RTCScene scene, Camera camera, const FileName& fileName);
-
-
+void renderToFile(UsdEmbreeContext& ctxt, const FileName& fileName);
 
 } // namespace embree

@@ -75,10 +75,21 @@ set(EMBREE_DIR "/Users/benmalartre/Documents/RnD/embree")
 list(APPEND EMBREE_INCLUDE_DIRS 
   "${EMBREE_DIR}/embree/include"
   "${EMBREE_DIR}/embree/common"
+  "${EMBREE_DIR}/embree/tutorials/common"
 )
 set(EMBREE_LIBRARY_DIR "${EMBREE_DIR}/build")
 list(APPEND EMBREE_LIB_NAMES 
   sys
+  math
+  noise
+  image
+  lexers
+  lights
+  scenegraph
+  simd
+  tasking
+  texture
+  #tutorial
 )
 
 set(EMBREE_LIBRARIES "")
@@ -89,10 +100,42 @@ foreach(EMBREE_LIB_NAME IN LISTS EMBREE_LIB_NAMES)
   )
 endforeach()
 
+# jpeg
+find_package(JPEG)
+include_directories(${JPEG_INCLUDE_DIR})
+set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${JPEG_LIBRARIES})
+set(ADDITIONAL_SOURCES ${ADDITIONAL_SOURCES} jpeg.cpp)
+
+# png
+find_package(PNG)
+include_directories(${PNG_INCLUDE_DIR})
+set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${PNG_LIBRARIES})
+set(ADDITIONAL_SOURCES ${ADDITIONAL_SOURCES} png.cpp)
+
+
 set(EMBREE_LIBRARIES 
     ${EMBREE_LIBRARIES} 
       "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}"
+)
+message("EMBREE LIBRARY : ${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}")
+
+# tbb
+set(TBB_INCLUDE_DIR "${USD_DIR}/include/tbb")
+set(TBB_LIBRARY_DIR "${USD_DIR}/lib")
+
+list(APPEND TBB_LIB_NAMES 
+  tbb
+  tbbmalloc_proxy
+  tbbmalloc
+)
+
+set(TBB_LIBRARIES "")
+foreach(TBB_LIB_NAME IN LISTS TBB_LIB_NAMES)
+  set(TBB_LIBRARIES 
+    ${TBB_LIBRARIES} 
+      "${TBB_LIBRARY_DIR}/${LIB_PREFIX}${TBB_LIB_NAME}${LIB_DYNAMIC_EXT}"
   )
+endforeach()
 
 # OpenGL
 find_package(OpenGL REQUIRED)

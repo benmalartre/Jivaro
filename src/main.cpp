@@ -2,6 +2,7 @@
 #include "default.h"
 #include "application.h"
 #include "device.h"
+#include "mesh.h"
 
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
@@ -12,6 +13,7 @@
 
 void RecursePrim(const pxr::UsdPrim& prim)
 {
+    std::cout << "RECURSE PRIM "<< std::endl;
     pxr::UsdPrimSiblingRange children = prim.GetAllChildren();
     for(auto child : children)
     {
@@ -19,16 +21,18 @@ void RecursePrim(const pxr::UsdPrim& prim)
         if(child.IsA<pxr::UsdGeomXform>())
         {
           std::cout << "XFORM" << std::endl;
+          
         }
         else if(child.IsA<pxr::UsdGeomMesh>())
         {
-          std::cout << "MESH" << std::endl;
+          std::cout << "MESH" << g_context._device << "," <<g_context._scene << std::endl;
+          embree::TranslateMesh(g_context._device, g_context._scene, pxr::UsdGeomMesh(child), 0);
         }
         RecursePrim(child);
     }
 }
 
-int TraverseAllRecursive(const pxr::UsdStageRefPtr stage)
+int TraverseAllRecursive( const pxr::UsdStageRefPtr stage)
 {
     RecursePrim(stage->GetPseudoRoot());
     return 0;
@@ -69,26 +73,28 @@ void TraverseStage()
 //------------------------------------------------------------------------------
 int main(void)
 {
-  embree::device_init((char*)"hello");
-  embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.002.jpg");
-  embree::renderToFile(outputImageFilename);
+  UsdEmbreeContext* ctxt = new UsdEmbreeContext();
+  ctxt.Initialize();
 
-  std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
+  //embree::device_init(ctxt, (char*)"hello");
+  embree::device_init((char*)"hello");
+  std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
 
   pxr::UsdStageRefPtr stage = 
       pxr::UsdStage::Open(usdFile, pxr::UsdStage::LoadAll);
 
-  //RecursePrim(stage->GetPseudoRoot());
-
+  RecursePrim(stage->GetPseudoRoot());
+  embree::device_term();
   
+  embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.005.jpg");
+  //embree::renderToFile(ctxt, outputImageFilename);
+  embree::renderToFile(outputImageFilename);
 
   glfwInit();
   AMN::Application app(800,600);
   app.MainLoop();
   //app->cleanUp();
- 
-    glfwTerminate();
-  
+   
   glfwTerminate();
   return 1;
 }

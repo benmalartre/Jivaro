@@ -6,6 +6,9 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_glfw.h"
 
+#include <embree3/rtcore.h>
+
+
 #include <sys/platform.h>
 #include <sys/sysinfo.h>
 #include <sys/ref.h>

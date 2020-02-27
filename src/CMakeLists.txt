@@ -16,7 +16,9 @@ add_executable(${TARGET}
   imgui/imgui.cpp
   oiio.cpp
   jpeg.cpp
+  mesh.cpp
   device.cpp
+  context.cpp
   utils.cpp
   view.cpp
   ui.cpp
