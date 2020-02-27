@@ -86,7 +86,7 @@ unsigned int addGroundPlane (RTCScene scene_i)
 extern "C" void device_key_pressed_default(int key)
 {
   if (key == GLFW_KEY_F1) {
-    renderTile = renderTileStandard;
+    renderTile = renderTileAmbientOcclusion;
     g_changed = true;
   }
   /*
@@ -149,7 +149,7 @@ extern "C" void device_key_pressed_default(int key)
 void device_init (char* cfg)
 { 
   
-  camera.from = embree::Vec3fa(1.5f,1.5f,0.f);
+  camera.from = embree::Vec3fa(1.5f,3.f,-1.5f);
   camera.to   = embree::Vec3fa(0.0f,0.0f,0.0f);
 
   // create device
@@ -169,7 +169,7 @@ void device_init (char* cfg)
   rtcCommitScene (g_scene);
 
   // set start render mode
-  renderTile = renderTileStandard;
+  renderTile = renderTileAmbientOcclusion;
   //key_pressed_handler = device_key_pressed_default;
 }
 
@@ -232,6 +232,103 @@ void renderTileStandard(int taskIndex,
     Vec3fa color = renderPixelStandard((float)x,(float)y,camera,g_stats[threadIndex]);
 
     // write color to framebuffer
+    unsigned int r = (unsigned int) (255.0f * clamp(color.x,0.0f,1.0f));
+    unsigned int g = (unsigned int) (255.0f * clamp(color.y,0.0f,1.0f));
+    unsigned int b = (unsigned int) (255.0f * clamp(color.z,0.0f,1.0f));
+    pixels[y*width+x] = (b << 16) + (g << 8) + r;
+  }
+}
+
+// renders a single pixel with ambient occlusion 
+Vec3fa renderPixelAmbientOcclusion(float x, float y, const ISPCCamera& camera, RayStats& stats)
+{
+  // initialize ray
+  Ray ray;
+  ray.org = Vec3fa(camera.xfm.p);
+  ray.dir = Vec3fa(normalize(x*camera.xfm.l.vx + y*camera.xfm.l.vy + camera.xfm.l.vz));
+  ray.tnear() = 0.0f;
+  ray.tfar = inf;
+  ray.geomID = RTC_INVALID_GEOMETRY_ID;
+  ray.primID = RTC_INVALID_GEOMETRY_ID;
+  ray.mask = -1;
+  ray.time() = g_debug;
+
+  // intersect ray with scene 
+  IntersectContext context;
+  InitIntersectionContext(&context);
+  rtcIntersect1(g_scene,&context.context,RTCRayHit_(ray));
+  RayStats_addRay(stats);
+
+  // shade pixel
+  if (ray.geomID == RTC_INVALID_GEOMETRY_ID) return Vec3fa(0.0f);
+
+  Vec3fa Ng = normalize(ray.Ng);
+  Vec3fa Nf = faceforward(Ng,ray.dir,Ng);
+  Vec3fa col = Vec3fa(min(1.f,.3f+.8f*abs(dot(Ng,normalize(ray.dir)))));
+
+  // calculate hit point 
+  float intensity = 0;
+  Vec3fa hitPos = ray.org + ray.tfar * ray.dir;
+
+#define AMBIENT_OCCLUSION_SAMPLES 64
+  // trace some ambient occlusion rays
+  RandomSampler sampler;
+  RandomSampler_init(sampler, (int)x, (int)y, 0);
+  for (int i=0; i<AMBIENT_OCCLUSION_SAMPLES; i++)
+  {
+    Vec2f sample = RandomSampler_get2D(sampler);
+    Sample3f dir = cosineSampleHemisphere(sample.x,sample.y,Nf);
+
+    // initialize shadow ray
+    Ray shadow;
+    shadow.org = hitPos;
+    shadow.dir = dir.v;
+    shadow.tnear() = 0.001f;
+    shadow.tfar = inf;
+    shadow.geomID = RTC_INVALID_GEOMETRY_ID;
+    shadow.primID = RTC_INVALID_GEOMETRY_ID;
+    shadow.mask = -1;
+    shadow.time() = g_debug;
+
+    // trace shadow ray 
+    IntersectContext context;
+    InitIntersectionContext(&context);
+    rtcOccluded1(g_scene,&context.context,RTCRay_(shadow));
+    RayStats_addShadowRay(stats);
+
+    // add light contribution 
+    if (shadow.tfar >= 0.0f)
+      intensity += 1.0f;
+  }
+  intensity *= 1.0f/AMBIENT_OCCLUSION_SAMPLES;
+
+  // shade pixel 
+  return col * intensity;
+}
+
+void renderTileAmbientOcclusion(int taskIndex,
+                                int threadIndex,
+                                int* pixels,
+                                const unsigned int width,
+                                const unsigned int height,
+                                const float time,
+                                const ISPCCamera& camera,
+                                const int numTilesX,
+                                const int numTilesY)
+{
+  const int t = taskIndex;
+  const unsigned int tileY = t / numTilesX;
+  const unsigned int tileX = t - tileY * numTilesX;
+  const unsigned int x0 = tileX * TILE_SIZE_X;
+  const unsigned int x1 = min(x0+TILE_SIZE_X,width);
+  const unsigned int y0 = tileY * TILE_SIZE_Y;
+  const unsigned int y1 = min(y0+TILE_SIZE_Y,height);
+
+  for (unsigned int y=y0; y<y1; y++) for (unsigned int x=x0; x<x1; x++)
+  {
+    Vec3fa color = renderPixelAmbientOcclusion((float)x,(float)y,camera,g_stats[threadIndex]);
+
+    // write color to framebuffer 
     unsigned int r = (unsigned int) (255.0f * clamp(color.x,0.0f,1.0f));
     unsigned int g = (unsigned int) (255.0f * clamp(color.y,0.0f,1.0f));
     unsigned int b = (unsigned int) (255.0f * clamp(color.z,0.0f,1.0f));

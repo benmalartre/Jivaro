@@ -6,6 +6,8 @@
 #include <math/vec3.h>
 #include <math/vec3fa.h>
 #include <math/vec3ba.h>
+#include <math/sampling.h>
+#include <math/random_sampler.h>
 #include <sys/filename.h>
 #include <image/image.h>
 #include <algorithms/parallel_for.h>
@@ -18,8 +20,8 @@ namespace embree {
 
 #define TILE_SIZE_X 8
 #define TILE_SIZE_Y 8
-#define WIDTH 128
-#define HEIGHT 64
+#define WIDTH 1280
+#define HEIGHT 640
 
 struct Vertex{float x, y, z;};
 struct Face{int a, b, c;};
@@ -31,11 +33,17 @@ static Vec3fa* face_colors = nullptr;
 static Vec3fa* vertex_colors = nullptr;
 static RTCDevice g_device = nullptr;
 static bool g_changed = false;
+static float g_debug = 0.0f;
 
-static embree::Camera camera;
+static Camera camera;
 static std::string rtcore("start_threads=1,set_affinity=1");
 
-/* GLFW keys codes */
+// face forward for shading normals
+inline Vec3fa faceforward( const Vec3fa& N, const Vec3fa& I, const Vec3fa& Ng ) {
+  Vec3fa NN = N; return dot(I, Ng) < 0 ? NN : neg(NN);
+}
+
+// GLFW keys codes
 #if !defined(GLFW_KEY_F1)
 #define GLFW_KEY_F1                 290
 #define GLFW_KEY_F2                 291
@@ -51,31 +59,7 @@ static std::string rtcore("start_threads=1,set_affinity=1");
 #define GLFW_KEY_F12                301
 #endif
 
-// standard shading function
-typedef void (* renderTileFunc)(int taskIndex,
-                                        int threadIndex,
-                                        int* pixels,
-                                        const unsigned int width,
-                                        const unsigned int height,
-                                        const float time,
-                                        const ISPCCamera& camera,
-                                        const int numTilesX,
-                                        const int numTilesY);
-static renderTileFunc renderTile;
-
-extern "C" void device_key_pressed_default(int key);
-static void (* key_pressed_handler)(int key);
-
-void renderTileStandard(int taskIndex,
-                        int threadIndex,
-                        int* pixels,
-                        const unsigned int width,
-                        const unsigned int height,
-                        const float time,
-                        const ISPCCamera& camera,
-                        const int numTilesX,
-                        const int numTilesY);
-
+// render statistics
 struct RayStats
 {
   int numRays;
@@ -106,19 +90,34 @@ inline bool nativePacketSupported(RTCDevice device)
   else return false;
 }
 
-// adds a cube to the scene
-unsigned int addCube (RTCScene scene_i);
+// event management
+extern "C" void device_key_pressed_default(int key);
+static void (* key_pressed_handler)(int key);
 
-// adds a ground plane to the scene
+// scene management
+unsigned int addCube (RTCScene scene_i);
 unsigned int addGroundPlane (RTCScene scene_i);
 
-// called by the C++ code for initialization
+// device management
 void device_init (char* cfg);
+void device_cleanup ();
+
+// render tile function prototype
+typedef void (* renderTileFunc)(int taskIndex,
+                                        int threadIndex,
+                                        int* pixels,
+                                        const unsigned int width,
+                                        const unsigned int height,
+                                        const float time,
+                                        const ISPCCamera& camera,
+                                        const int numTilesX,
+                                        const int numTilesY);
+static renderTileFunc renderTile;
 
 // task that renders a single screen tile
 Vec3fa renderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats& stats);
 
-// renders a single screen tile
+// standard shading function
 void renderTileStandard(int taskIndex,
                         int threadIndex,
                         int* pixels,
@@ -128,6 +127,21 @@ void renderTileStandard(int taskIndex,
                         const ISPCCamera& camera,
                         const int numTilesX,
                         const int numTilesY);
+
+// task that renders a single pixel with ambient occlusion 
+Vec3fa renderPixelAmbientOcclusion(float x, float y, const ISPCCamera& camera, RayStats& stats);
+
+// ambient occlusion shading function
+void renderTileAmbientOcclusion(int taskIndex,
+                                int threadIndex,
+                                int* pixels,
+                                const unsigned int width,
+                                const unsigned int height,
+                                const float time,
+                                const ISPCCamera& camera,
+                                const int numTilesX,
+                                const int numTilesY);
+                                
 
 // task that renders a single screen tile
 void renderTileTask (int taskIndex, int threadIndex, int* pixels,
@@ -144,9 +158,10 @@ void device_render (int* pixels,
                            const unsigned int height,
                            const float time,
                            const ISPCCamera& camera);
-// called by the C++ code for cleanup 
-void device_cleanup ();
 
+// render to file
 void renderToFile(const FileName& fileName);
+
+
 
 } // namespace embree

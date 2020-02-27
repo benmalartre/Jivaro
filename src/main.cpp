@@ -70,7 +70,7 @@ void TraverseStage()
 int main(void)
 {
   embree::device_init((char*)"hello");
-  embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.jpg");
+  embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.002.jpg");
   embree::renderToFile(outputImageFilename);
 
   std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
