@@ -114,7 +114,7 @@ namespace AMN {
   Window::~Window()
   {
     if(_splitter)delete _splitter;
-    if(_pixels)embree::alignedFree(_pixels);
+    //if(_pixels)embree::alignedFree(_pixels);
     if(_window)glfwDestroyWindow(_window);
   }
 
@@ -142,11 +142,11 @@ namespace AMN {
     if (width == _width && height == _height && _pixels)
       return;
 
-    if (_pixels) embree::alignedFree(_pixels);
-    _width = width;
-    _height = height;
-    _pixels = 
-      (unsigned*) embree::alignedMalloc(_width*_height*sizeof(unsigned),64);
+    //if (_pixels) embree::alignedFree(_pixels);
+    //_width = width;
+    //_height = height;
+    //_pixels = 
+    //  (unsigned*) embree::alignedMalloc(_width*_height*sizeof(unsigned),64);
 
     _mainView->Resize(0, 0, _width, _height);
   }
@@ -239,10 +239,10 @@ namespace AMN {
 
     // draw splitters
     _splitter->Draw();
-    
+
     if(_mainView)_mainView->Draw();
 
-    // Rendering
+    // render the imgui frame
     ImGui::Render();
     glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -256,6 +256,7 @@ namespace AMN {
   void 
   Window::DrawPickImage()
   {
+    /*
     if(!_pickImage)
     {
       glDeleteTextures(1, &_pickImage);
@@ -275,7 +276,7 @@ namespace AMN {
                       GL_NEAREST);
     }
 
-    glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
+    
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,_pickImage);
     glTexImage2D(	GL_TEXTURE_2D,
@@ -287,13 +288,17 @@ namespace AMN {
                     GL_RGBA,
                     GL_UNSIGNED_BYTE,
                     _splitter->GetPixels());
-
-    glUniform1i(glGetUniformLocation(SCREENSPACEQUAD_PROGRAM_SHADER,"tex"),0);
-    //glClear(GL_DEPTH_BUFFER_BIT);
-    //glDisable(GL_CULL_FACE);
-    //glDisable(GL_DEPTH_TEST);
-    //glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-  
+  */
+    int ID = 3;
+    CreateOpenGLTexture(
+      _splitter->GetWidth(),
+      _splitter->GetHeight(),
+      _splitter->GetPixels(),
+      _pickImage,
+      ID
+    );
+    glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
+    glUniform1i(glGetUniformLocation(SCREENSPACEQUAD_PROGRAM_SHADER,"tex"),ID);
     DrawScreenSpaceQuad();
   }
 
@@ -479,7 +484,7 @@ namespace AMN {
         _activeView->GetPercFromMousePosition(mouseX, mouseY);
         _splitter->BuildMap(_mainView);
         _splitter->Resize(_mainView);
-        this->DrawPickImage();
+        //this->DrawPickImage();
       }
     }
   }
@@ -737,7 +742,7 @@ namespace AMN {
     // draw pixels to screen 
     glDrawPixels(width,height,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
 
-    ImGui_ImplGlfwGL2_NewFrame();
+    ImGui_ImplGlfwGL3_NewFrame();
     
     ImGuiWindowFlags window_flags = 0;
     window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -763,7 +768,7 @@ namespace AMN {
     //ImGui::ShowDemoWindow();
         
     ImGui::Render();
-    ImGui_ImplGlfwGL2_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
     */
    /*
     glClearColor(

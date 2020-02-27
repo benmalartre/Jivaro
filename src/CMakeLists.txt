@@ -1,26 +1,22 @@
 set(TARGET amina)
 
-add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GL3W)
+add_definitions(
+  -DIMGUI_IMPL_OPENGL_LOADER_GL3W
+  -DTASKING_TBB)
 
 
 add_executable(${TARGET}
   gl3w/src/gl3w.c
-  imgui/imconfig.h
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
-  imgui/imgui_test.h
   imgui/imgui_test.cpp
   imgui/imgui_impl_glfw.cpp
-  imgui/imgui_impl_glfw.h
   imgui/imgui_impl_opengl3.cpp
-  imgui/imgui_impl_opengl3.h 
-  imgui/imgui_internal.h
   imgui/imgui_widgets.cpp
   imgui/imgui.cpp
-  imgui/imgui.h
-  imgui/imstb_rectpack.h
-  imgui/imstb_textedit.h
-  imgui/imstb_truetype.h
+  oiio.cpp
+  jpeg.cpp
+  device.cpp
   utils.cpp
   view.cpp
   ui.cpp
@@ -38,6 +34,7 @@ target_include_directories(${TARGET}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
     ${GL3W_INCLUDE_DIR}
+    ${TBB_INCLUDE_DIR}
 )
 
 target_link_libraries(${TARGET}
@@ -46,6 +43,7 @@ target_link_libraries(${TARGET}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}
   ${EMBREE_LIBRARIES}
+  ${TBB_LIBRARIES}
   ${GLFW}
   ${ADDITIONAL_LIBRARIES}
 )

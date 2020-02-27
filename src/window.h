@@ -119,6 +119,7 @@ namespace AMN {
     GLFWcursor*             _cursor;
     View*                   _mainView;
     View*                   _activeView;
+    View*                   _activeLeaf;
     Splitter*               _splitter;
     std::vector<View*>      _leaves;
 
