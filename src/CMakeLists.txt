@@ -6,7 +6,6 @@ add_definitions(
 
 )
 
-
 add_executable(${TARGET}
   gl3w/src/gl3w.c
   imgui/imgui_demo.cpp
@@ -24,6 +23,7 @@ add_executable(${TARGET}
   view.cpp
   ui.cpp
   widgets/dummy.cpp
+  widgets/viewport.cpp
   splitter.cpp
   window.cpp
   application.cpp

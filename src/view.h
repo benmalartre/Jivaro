@@ -2,7 +2,6 @@
 
 #include "default.h"
 #include "utils.h"
-#include "ui.h"
 #include <pxr/usd/usd/prim.h>
 
 namespace AMN {
@@ -48,7 +47,7 @@ namespace AMN {
     inline View* GetParent(){return _parent;};
     inline bool HasParent(){return _parent != NULL;};
 
-    void SetContent(UI* ui){if(_content)delete _content; _content=ui;};
+    void SetContent(UI* ui);
     
     void Draw();
     void Resize(int x, int y, int width, int height);

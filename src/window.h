@@ -12,8 +12,6 @@
 
 #include <GLFW/glfw3.h>
 
-
-
 namespace AMN {
   class Application;
   class View;
@@ -67,13 +65,14 @@ namespace AMN {
 
     // initialize
     void Init();
+    void DummyFill();
 
     // infos
     void GetContextVersionInfos();
     GLFWwindow* GetWindow(){return _window;};
     bool GetDebounce(){return _debounce;};
     void SetDebounce(bool debounce){_debounce=debounce;};
-    void CollectLeaves(View* view);
+    void CollectLeaves(View* view = NULL);
 
     // imgui context
     void SetupImgui();
@@ -91,7 +90,7 @@ namespace AMN {
     void SetWidth(int width){_width = width;};
     void SetHeight(int height){_height = height;};
     void Resize(unsigned width, unsigned height);
-    void RebuildSplittersMap();
+    void BuildSplittersMap();
 
     // splitters
     void SplitView(View* view, unsigned perc = 50, bool horizontal=true );

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <dirent.h>
 #include "default.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
@@ -39,7 +40,7 @@ namespace AMN {
 
   static inline int PackColor(float r, float g, float b, float a)
   {
-
+    return 0;
   }
 
   static inline pxr::GfVec4f UnpackColor(uint32_t packed)
@@ -68,5 +69,27 @@ namespace AMN {
       char a;
     } components;
   };
+
+  // num files in directory
+  static int FilesInDirectory()
+  {
+    DIR *dir;
+    struct dirent *ent;
+    int num_files = 2;
+    if ((dir = opendir ("/Users/benmalartre/Documents/RnD/embree/embree-usd/images")) != NULL) {
+      /* print all the files and directories within directory */
+      while ((ent = readdir (dir)) != NULL) {
+        printf ("%s\n", ent->d_name);
+        num_files++;
+      }
+      closedir (dir);
+      return num_files - 2;
+    } else {
+      /* could not open directory */
+      perror ("");
+      return EXIT_FAILURE;
+    }
+  }
+ 
 
 } // namespace AMN

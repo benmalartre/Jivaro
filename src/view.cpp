@@ -1,4 +1,5 @@
 #include "view.h"
+#include "ui.h"
 #include "splitter.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>
@@ -45,6 +46,12 @@ namespace AMN {
     if(_left)delete _left;
     if(_right)delete _right;
   }
+
+  void View::SetContent(UI* ui)
+  {
+    if(_content)delete _content; 
+    _content=ui;
+  };
 
   void 
   View::Draw()

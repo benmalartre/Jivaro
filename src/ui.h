@@ -20,6 +20,8 @@ namespace AMN {
     virtual void OnLeave()=0;
     virtual void OnDraw()=0;
 
+    void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
+
   protected:
     View*       _parent;
     std::string _name;

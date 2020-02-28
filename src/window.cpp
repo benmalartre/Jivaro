@@ -2,6 +2,7 @@
 #include "view.h"
 #include "splitter.h"
 #include "widgets/dummy.h"
+#include "widgets/viewport.h"
 #include "imgui/imgui_custom.h"
 #include "imgui/imgui_test.h"
 //#include "glutils.h"
@@ -61,25 +62,8 @@ namespace AMN {
     {
       // create main splittable view
       _mainView = new View(NULL, pxr::GfVec2i(0,0), pxr::GfVec2i(_width, _height));
-      SplitView(_mainView, 10, true);
-      SplitView(_mainView->GetRight(), 75, true);
-      SplitView(_mainView->GetRight()->GetLeft(), 25, false);
-      SplitView(_mainView->GetRight()->GetLeft()->GetRight(), 75, false);
-
       _splitter = new Splitter();
-      _splitter->BuildMap(_mainView);
-
-      _leaves.clear();
-      CollectLeaves(_mainView);
-
-
-      for(auto leaf: _leaves)
-      {
-        std::cout << leaf->GetText() << std::endl;
-        UI* ui = new DummyUI(leaf, leaf->GetName()+":content");
-        leaf->SetContent(ui);
-      }
-
+      
       // window datas
       GetContextVersionInfos();
       glfwSetWindowUserPointer(_window, this);
@@ -109,11 +93,24 @@ namespace AMN {
     }
   }
 
+  void Window::DummyFill()
+  {
+    for(auto leaf: _leaves)
+    {
+      std::cout << leaf->GetText() << std::endl;
+      //UI* ui = new DummyUI(leaf, leaf->GetName()+":content");
+      UI* ui = new ViewportUI(leaf, EMBREE);
+      leaf->SetContent(ui);
+    }
+  }
+   
+
   // window destructor
   //----------------------------------------------------------------------------
   Window::~Window()
   {
     if(_splitter)delete _splitter;
+    if(_mainView)delete _mainView;
     //if(_pixels)embree::alignedFree(_pixels);
     if(_window)glfwDestroyWindow(_window);
   }
@@ -175,9 +172,16 @@ namespace AMN {
     }
   }
 
+  // collect leaves views (contains actual ui elements)
+  //----------------------------------------------------------------------------
   void 
   Window::CollectLeaves(View* view)
   {
+    if(view == NULL)
+    {
+      view = _mainView;
+      _leaves.clear();
+    }
     if(view->IsLeaf())_leaves.push_back(view);
     else
     {
@@ -186,10 +190,12 @@ namespace AMN {
     }
   }
 
+
+
   // build split map
   //----------------------------------------------------------------------------
   void 
-  Window::RebuildSplittersMap()
+  Window::BuildSplittersMap()
   {
     _splitter->BuildMap(_mainView);
   }
@@ -237,9 +243,6 @@ namespace AMN {
     style.WindowPadding = pxr::GfVec2i(0,0);
     style.FramePadding = pxr::GfVec2i(0,0);
 
-    // draw splitters
-    _splitter->Draw();
-
     if(_mainView)_mainView->Draw();
 
     // render the imgui frame
@@ -247,7 +250,8 @@ namespace AMN {
     glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    
+    // draw splitters
+    _splitter->Draw();
 
   }
 
@@ -825,7 +829,7 @@ namespace AMN {
 
     parent->Resize(width,height);
     parent->DrawPickImage();
-    parent->RebuildSplittersMap();
+    parent->BuildSplittersMap();
     glViewport(0, 0, width, height);
   
   }

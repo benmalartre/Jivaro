@@ -1,50 +1,27 @@
 #pragma once
 
-#include <embree3/rtcore.h>
+#include "prim.h"
 
-#include <pxr/usd/usdGeom/xform.h>
-#include <pxr/usd/usdGeom/mesh.h>
-#include <math/vec3.h>
-
-namespace embree {
+namespace AMN {
   extern RTCScene g_scene;
-  extern Vec3fa* face_colors; 
-  extern Vec3fa* vertex_colors;
   extern RTCDevice g_device;
-  extern bool g_changed;
-  extern float g_debug;
 
-  enum INTERPOLATION_MODE{
-    CONSTANT,
-    UNIFORM,
-    VARYING,
-    VERTEX,
-    FACE_VARYING
-  };
-
-  template<typename T>
-  struct UsdEmbreeMeshDatas {
-    INTERPOLATION_MODE          _interpolationMode;
-    pxr::VtArray<T>             _datas;
-  };
-
-  struct UsdEmbreeMesh {
-    unsigned                    _geomId;
-    RTCGeometry                 _mesh;
+  struct UsdEmbreeMesh  : public UsdEmbreePrim {
+    unsigned                    _numOriginalSamples;
     pxr::VtArray<pxr::GfVec3f>  _positions;
     pxr::VtArray<int>           _triangles;
     pxr::VtArray<int>           _samples;
 
     bool                        _hasNormals;
-    INTERPOLATION_MODE          _normalsInterpolationMode;
+    INTERPOLATION_TYPE          _normalsInterpolationType;
     pxr::VtArray<pxr::GfVec3f>  _normals;
 
     bool                        _hasUVs;
-    INTERPOLATION_MODE          _uvsInterpolationMode;
+    INTERPOLATION_TYPE          _uvsInterpolationType;
     pxr::VtArray<pxr::GfVec2f>  _uvs;
 
     bool                        _hasColors;
-    INTERPOLATION_MODE          _colorsInterpolationMode;
+    INTERPOLATION_TYPE          _colorsInterpolationType;
     pxr::VtArray<pxr::GfVec3f>  _colors;
 
     //std::vector<UsdEmbreeMeshDatas> _extraDatas;
@@ -55,7 +32,7 @@ namespace embree {
                                 const pxr::UsdGeomMesh& usdMesh, 
                                 double time);
 
-  void CheckNormals(const pxr::UsdGeomMesh& usdMesh,
+  bool CheckNormals(const pxr::UsdGeomMesh& usdMesh,
                     double time,
                     UsdEmbreeMesh* mesh);
 
@@ -65,8 +42,8 @@ namespace embree {
                       pxr::VtArray<int>& samples);
 
   template<typename T>
-  int TriangulateData(const pxr::VtArray<int>& indices, 
+  void TriangulateData(const pxr::VtArray<int>& indices, 
                       const pxr::VtArray<T>& datas,
                       pxr::VtArray<T>& result);
 
-} // namespace embree
+} // namespace AMN

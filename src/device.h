@@ -17,26 +17,29 @@
 #include "camera.h"
 #include "ray.h"
 
-namespace embree {
+namespace AMN {
 
 #define TILE_SIZE_X 8
 #define TILE_SIZE_Y 8
-#define WIDTH 1280
-#define HEIGHT 640
+#define WIDTH 1024
+#define HEIGHT 720
 
 extern RTCScene g_scene;
-extern Vec3fa* face_colors; 
-extern Vec3fa* vertex_colors;
+extern embree::Vec3fa* face_colors; 
+extern embree::Vec3fa* vertex_colors;
 extern RTCDevice g_device;
 extern bool g_changed;
 extern float g_debug;
 
-static Camera camera;
+static embree::Camera camera;
 static std::string rtcore("start_threads=1,set_affinity=1");
 
 // face forward for shading normals
-inline Vec3fa faceforward( const Vec3fa& N, const Vec3fa& I, const Vec3fa& Ng ) {
-  Vec3fa NN = N; return dot(I, Ng) < 0 ? NN : neg(NN);
+inline embree::Vec3fa FaceForward(const embree::Vec3fa& N, 
+                                  const embree::Vec3fa& I, 
+                                  const embree::Vec3fa& Ng ) 
+{
+  embree::Vec3fa NN = N; return embree::dot(I, Ng) < 0 ? NN : embree::neg(NN);
 }
 
 // render statistics
@@ -61,7 +64,7 @@ inline void RayStats_addShadowRay(RayStats& stats) {}
 
 static RayStats* g_stats;
 
-inline bool nativePacketSupported(RTCDevice device)
+inline bool NativePacketSupported(RTCDevice device)
 {
   if (sizeof(float) == 1*4) return true;
   else if (sizeof(float) == 4*4) return rtcGetDeviceProperty(device,RTC_DEVICE_PROPERTY_NATIVE_RAY4_SUPPORTED);
@@ -71,74 +74,87 @@ inline bool nativePacketSupported(RTCDevice device)
 }
 
 // scene management
-unsigned int addCube (RTCScene scene_i);
-unsigned int addGroundPlane (RTCScene scene_i);
+unsigned int AddCube (RTCScene scene_i);
+unsigned int AddGroundPlane (RTCScene scene_i);
 
 // device management
-RTCScene device_init (char* cfg);
-void commit_scene ();
-void device_cleanup ();
+RTCScene DeviceInit (char* cfg);
+void CommitScene ();
+void DeviceCleanup ();
 
 // render tile function prototype
-typedef void (* renderTileFunc)(int taskIndex,
+typedef void (* RenderTileFunc)(int taskIndex,
                                 int threadIndex,
                                 int* pixels,
                                 const unsigned int width,
                                 const unsigned int height,
                                 const float time,
-                                const ISPCCamera& camera,
+                                const embree::ISPCCamera& camera,
                                 const int numTilesX,
                                 const int numTilesY);
-static renderTileFunc renderTile;
+static RenderTileFunc RenderTile;
 
 // task that renders a single screen tile
-Vec3fa renderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats& stats);
+embree::Vec3fa RenderPixelStandard(float x, float y, const embree::ISPCCamera& camera, RayStats& stats);
 
 // standard shading function
-void renderTileStandard(int taskIndex,
+void RenderTileStandard(int taskIndex,
                         int threadIndex,
                         int* pixels,
                         const unsigned int width,
                         const unsigned int height,
                         const float time,
-                        const ISPCCamera& camera,
+                        const embree::ISPCCamera& camera,
                         const int numTilesX,
                         const int numTilesY);
 
 // task that renders a single pixel with ambient occlusion 
-Vec3fa renderPixelAmbientOcclusion(float x, float y, const ISPCCamera& camera, RayStats& stats);
+embree::Vec3fa RenderPixelAmbientOcclusion(float x, float y, const embree::ISPCCamera& camera, RayStats& stats);
 
 // ambient occlusion shading function
-void renderTileAmbientOcclusion(int taskIndex,
+void RenderTileAmbientOcclusion(int taskIndex,
                                 int threadIndex,
                                 int* pixels,
                                 const unsigned int width,
                                 const unsigned int height,
                                 const float time,
-                                const ISPCCamera& camera,
+                                const embree::ISPCCamera& camera,
                                 const int numTilesX,
                                 const int numTilesY);
                                 
+// task that renders a single pixel with geometry normal
+embree::Vec3fa RenderPixelNormal(float x, float y, const embree::ISPCCamera& camera, RayStats& stats);
 
+// geometry normal shading function
+void RenderTileNormal(int taskIndex,
+                      int threadIndex,
+                      int* pixels,
+                      const unsigned int width,
+                      const unsigned int height,
+                      const float time,
+                      const embree::ISPCCamera& camera,
+                      const int numTilesX,
+                      const int numTilesY);
+                      
 // task that renders a single screen tile
-void renderTileTask (int taskIndex, int threadIndex, int* pixels,
+void RenderTileTask (int taskIndex, int threadIndex, int* pixels,
                          const unsigned int width,
                          const unsigned int height,
                          const float time,
-                         const ISPCCamera& camera,
+                         const embree::ISPCCamera& camera,
                          const int numTilesX,
                          const int numTilesY);
 
 // called by the C++ code to render
-void device_render (int* pixels,
+void DeviceRender (int* pixels,
                            const unsigned int width,
                            const unsigned int height,
                            const float time,
-                           const ISPCCamera& camera);
+                           const embree::ISPCCamera& camera);
 
 // render to file
-void renderToFile(const FileName& fileName);
+void RenderToFile(const embree::FileName& fileName);
 
 
 
-} // namespace embree
+} // namespace AMN

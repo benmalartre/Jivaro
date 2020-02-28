@@ -44,6 +44,5 @@
 
 #define AMN_EXPORT extern "C" 
 
-struct Vertex{float x, y, z;};
-struct Face{int a, b, c;};
-struct Triangle{int v0,v1,v2;};
+#define EDGE_LEVEL 256.0f
+#define ENABLE_SMOOTH_NORMALS 1
