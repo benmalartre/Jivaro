@@ -16,11 +16,12 @@ namespace AMN {
     LEAF = 4
   };
 
-
   public:
     View(View* parent, const pxr::GfVec2i& min, const pxr::GfVec2i& max);
     View(View* parent, int x, int y, int w, int h);
     ~View();
+    void SetWindow(Window* window);
+    Window* GetWindow();
     const pxr::GfVec2i& GetMin(){return _min;};
     const pxr::GfVec2i& GetMax(){return _max;};
     const pxr::GfVec3f& GetColor(){return _color;};
@@ -79,6 +80,7 @@ namespace AMN {
     View*             _parent;
     unsigned          _flags;
     std::string       _name;
+    Window*           _window;
   };
 
 }

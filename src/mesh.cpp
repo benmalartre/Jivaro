@@ -6,8 +6,8 @@ namespace AMN {
 
   // adds a cube to the scene
 UsdEmbreeMesh* 
-TranslateMesh (RTCDevice device, RTCScene scene, 
-  const pxr::UsdGeomMesh& usdMesh, double time)
+TranslateMesh(RTCDevice device, RTCScene scene, 
+  const pxr::UsdGeomMesh& usdMesh, float time)
 {
   size_t num_vertices, num_triangles;
   UsdEmbreeMesh* result = new UsdEmbreeMesh();
@@ -29,15 +29,25 @@ TranslateMesh (RTCDevice device, RTCScene scene,
                               num_vertices);              // Num Elements*/
     hasPoints = true;
   }
+  // if there are no points, no point to continue 
+  if(!hasPoints)
+  {
+    std::cerr << usdMesh.GetPrim().GetPrimPath() << "\n" << 
+          "Problem getting points datas : " <<
+            "this mesh is invalid!";
+    delete result;
+    return NULL;
+  }
 
   bool hasTriangles = false;
   pxr::UsdAttribute countsAttr = usdMesh.GetFaceVertexCountsAttr();
   pxr::UsdAttribute indicesAttr = usdMesh.GetFaceVertexIndicesAttr();
+  pxr::VtArray<int> counts;
+  pxr::VtArray<int> indices;
   if(countsAttr && countsAttr.HasAuthoredValue() &&
     indicesAttr && indicesAttr.HasAuthoredValue())
   {
-    pxr::VtArray<int> counts;
-    pxr::VtArray<int> indices;
+    
     countsAttr.Get(&counts, time);
     indicesAttr.Get(&indices, time);
 
@@ -59,6 +69,17 @@ TranslateMesh (RTCDevice device, RTCScene scene,
                               num_triangles);             // Num Elements
     hasTriangles = true;
   }
+
+  // if there are no triangles no point to continue 
+  if(!hasTriangles)
+  {
+    std::cerr << usdMesh.GetPrim().GetPrimPath() << "\n" << 
+          "Problem computing triangle datas : " <<
+            "this mesh is invalid!";
+    delete result;
+    return NULL;
+  }
+
   /*
   Vec3fa* vertex_colors = (Vec3fa*) alignedMalloc(num_vertices*sizeof(Vec3fa),16);
   for(int v=0;v<num_vertices;++v)
@@ -70,6 +91,16 @@ TranslateMesh (RTCDevice device, RTCScene scene,
   */
 
   CheckNormals(usdMesh, time, result);
+  if(!result->_hasNormals)
+  {
+    ComputeVertexNormals(result->_positions,
+                        counts,
+                        indices,
+                        result->_triangles,
+                        result->_normals);
+    result->_hasNormals = true;
+    result->_normalsInterpolationType = VERTEX;
+  }
 
   if(hasPoints && hasTriangles)
   {
@@ -137,6 +168,8 @@ TriangulateData(const pxr::VtArray<int>& indices,
   }
 }
 
+// check usd file for authored normals
+//------------------------------------------------------------------------------
 bool 
 CheckNormals(const pxr::UsdGeomMesh& usdMesh,
             double time,
@@ -202,7 +235,6 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
 
     if(mesh->_hasNormals)
     {
-      std::cerr << "Pass Normals to Fuckin Embree..." << std::endl;
       rtcSetSharedGeometryBuffer(mesh->_geom,             // RTCGeometry
                                 RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
                                 1,                          // Slot
@@ -234,7 +266,7 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
   pxr::VtArray<pxr::GfVec3f> triangleNormals;
   triangleNormals.resize(totalNumTriangles);
 
-  for(int i=0;i<num_triangles;++i)
+  for(int i = 0; i < totalNumTriangles; ++i)
   {
     pxr::GfVec3f ab = positions[triangles[i*3+1]] - positions[triangles[i*3]];
     pxr::GfVec3f ac = positions[triangles[i*3+2]] - positions[triangles[i*3]];
@@ -254,7 +286,7 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
     pxr::GfVec3f n(0.f, 0.f, 0.f);
     for(int j = 0; j < numTriangles; ++j)
     {
-      n += triangleNormals(base + j);
+      n += triangleNormals[base + j];
     }
     n.Normalize();
     polygonNormals[i] = n;
@@ -262,8 +294,8 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
   }
 
   // finaly average vertex normals
-  for(auto n : normals) n = GfVec3f(0.f, 0.f, 0.f);
-  int base = 0;
+  for(auto n : normals) n = pxr::GfVec3f(0.f, 0.f, 0.f);
+  base = 0;
   for(int i = 0; i < counts.size(); ++i)
   {
     int numVertices = counts[i];
@@ -273,8 +305,8 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
     }
     base += numVertices;
   }
-  for(auto n: normals) n.normalize();
-
+  for(auto n: normals) n.Normalize();
+  std::cerr << "COMPUTED VERTEX NORMALS" << std::endl;
 }
 
 } // namespace AMN

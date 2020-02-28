@@ -3,9 +3,6 @@
 #include "prim.h"
 
 namespace AMN {
-  extern RTCScene g_scene;
-  extern RTCDevice g_device;
-
   struct UsdEmbreeMesh  : public UsdEmbreePrim {
     unsigned                    _numOriginalSamples;
     pxr::VtArray<pxr::GfVec3f>  _positions;
@@ -29,12 +26,18 @@ namespace AMN {
 
   UsdEmbreeMesh* TranslateMesh( RTCDevice device,
                                 RTCScene scene,
-                                const pxr::UsdGeomMesh& usdMesh, 
-                                double time);
+                                const pxr::UsdGeomMesh& usdMesh,
+                                float time);
 
   bool CheckNormals(const pxr::UsdGeomMesh& usdMesh,
                     double time,
                     UsdEmbreeMesh* mesh);
+
+  void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
+                            const pxr::VtArray<int>& counts,
+                            const pxr::VtArray<int>& indices,
+                            const pxr::VtArray<int>& triangles,
+                            pxr::VtArray<pxr::GfVec3f>& normals);
 
   int TriangulateMesh(const pxr::VtArray<int>& counts, 
                       const pxr::VtArray<int>& indices, 

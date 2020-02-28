@@ -40,13 +40,13 @@ namespace AMN {
 
   }
   void ViewportUI::OnDraw()
-  {
-    std::cerr << "VIEWPORT DRAW..." << std::endl;
+  {    
     float x = _parent->GetMin()[0];
     float y = _parent->GetMin()[1];
+    
     float w = _parent->GetWidth();
     float h = _parent->GetHeight();
-    std::cerr << x << "," << y << "," << "," << w << "," << h << std::endl;
+        
     if(_pixels)
     {
       CreateOpenGLTexture(w, h, _pixels, _texture, 0);
@@ -58,8 +58,9 @@ namespace AMN {
     }
     else
     {
+      float wh = GetWindowHeight();
       glEnable(GL_SCISSOR_TEST);
-      glScissor(x, y, w, h);
+      glScissor(x, wh - (y + h), w, h);
       glClearColor(RANDOM_0_1,RANDOM_0_1,RANDOM_0_1,1.f);
       glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
       glDisable(GL_SCISSOR_TEST);

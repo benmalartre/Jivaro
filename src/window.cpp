@@ -62,6 +62,7 @@ namespace AMN {
     {
       // create main splittable view
       _mainView = new View(NULL, pxr::GfVec2i(0,0), pxr::GfVec2i(_width, _height));
+      _mainView->SetWindow(this);
       _splitter = new Splitter();
       
       // window datas

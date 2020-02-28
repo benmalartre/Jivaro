@@ -1,4 +1,5 @@
 #include "view.h"
+#include "window.h"
 #include "ui.h"
 #include "splitter.h"
 #include <pxr/base/gf/vec2i.h>
@@ -18,6 +19,7 @@ namespace AMN {
     _content(NULL)
   {
     if(_parent==NULL)_name = "main";
+    else _window = _parent->_window;
     _color = pxr::GfVec3f(
       RANDOM_0_1,
       RANDOM_0_1,
@@ -34,6 +36,7 @@ namespace AMN {
     _content(NULL)
   {
     if(_parent==NULL)_name = "main";
+    else _window = _parent->_window;
     _color = pxr::GfVec3f(
       RANDOM_0_1,
       RANDOM_0_1,
@@ -45,6 +48,16 @@ namespace AMN {
   {
     if(_left)delete _left;
     if(_right)delete _right;
+  }
+
+  void View::SetWindow(Window* window)
+  {
+    _window = window;
+  }
+
+  Window* View::GetWindow()
+  {
+    return _window;
   }
 
   void View::SetContent(UI* ui)

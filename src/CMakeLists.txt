@@ -18,6 +18,7 @@ add_executable(${TARGET}
   oiio.cpp
   jpeg.cpp
   mesh.cpp
+  context.cpp
   device.cpp
   utils.cpp
   view.cpp

@@ -13,6 +13,10 @@ namespace AMN {
     UI(View* parent, const std::string& name);
     virtual ~UI(){};
 
+    float GetWindowHeight();
+    void GetRelativeMousePosition(const int inX, const int inY, 
+      int& outX, int& outY);
+
     virtual void OnKeyboard()=0;
     virtual void OnMouseMove()=0;
     virtual void OnClick()=0;
@@ -20,7 +24,7 @@ namespace AMN {
     virtual void OnLeave()=0;
     virtual void OnDraw()=0;
 
-    void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
+    
 
   protected:
     View*       _parent;

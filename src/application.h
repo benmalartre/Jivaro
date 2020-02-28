@@ -5,7 +5,10 @@
 #include "view.h"
 #include "camera.h"
 #include "device.h"
+#include "context.h"
+#include "prim.h"
 #include "mesh.h"
+#include "widgets/viewport.h"
 
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
@@ -18,12 +21,7 @@
 
 namespace AMN
 {
-  extern RTCScene g_scene;
-  extern embree::Vec3fa* face_colors; 
-  extern embree::Vec3fa* vertex_colors;
-  extern RTCDevice g_device;
-  extern bool g_changed;
-  extern float g_debug;
+  extern UsdEmbreeContext* EMBREE_CTXT;
   
   class Application
   {
@@ -34,7 +32,7 @@ namespace AMN
     Application(bool fullscreen=true);
 
     // destructor
-    ~Application(){};
+    ~Application(){if(_context)delete _context;};
 
      // create a fullscreen window
     static Window* CreateFullScreenWindow();
@@ -52,11 +50,11 @@ namespace AMN
     void CleanUp();
 
   private:
-    std::string _fileName;
-    Window*     _mainWindow;
-
-    int         _width;
-    int         _height;
+    std::string         _fileName;
+    Window*             _mainWindow;
+    UsdEmbreeContext*   _context;
+    int                 _width;
+    int                 _height;
   };
 } // namespace AMN
 

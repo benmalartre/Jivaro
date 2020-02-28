@@ -1,10 +1,14 @@
 #include "ui.h"
+#include "window.h"
 #include "view.h"
 
 
 namespace AMN {
 
-  UI::UI(View* parent, const std::string& name):_parent(parent), _name(name){};
+  UI::UI(View* parent, const std::string& name):
+    _parent(parent), _name(name)
+  {
+  };
 
   void
   UI::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
@@ -14,5 +18,11 @@ namespace AMN {
     int parentY = parentPosition[1];
     outX = inX - parentX;
     outY = inY - parentY;
+  }
+
+  float 
+  UI::GetWindowHeight()
+  {
+    return _parent->GetWindow()->GetHeight();
   }
 } // namespace AMN
