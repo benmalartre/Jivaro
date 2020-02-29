@@ -23,7 +23,7 @@ add_executable(${TARGET}
   utils.cpp
   view.cpp
   ui.cpp
-  widgets/dummy.cpp
+  widgets/menu.cpp
   widgets/viewport.cpp
   splitter.cpp
   window.cpp

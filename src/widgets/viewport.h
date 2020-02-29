@@ -1,19 +1,12 @@
 #pragma once
 
 #include "../default.h"
+#include "../context.h"
 #include "../ui.h"
 #include "../utils.h"
 
 namespace AMN {
-  // screen-space-quad 
-  extern GLuint SCREENSPACEQUAD_VAO;
-  extern GLuint SCREENSPACEQUAD_VBO;
-
-  extern GLuint SCREENSPACEQUAD_VERTEX_SHADER;
-  extern GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
-  extern GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
-
-
+  extern UsdEmbreeContext* EMBREE_CTXT;
   enum VIEWPORT_MODE {
     OPENGL,
     HYDRA,
@@ -27,12 +20,11 @@ namespace AMN {
       ~ViewportUI();
       void SetMode(VIEWPORT_MODE mode){_mode=mode;};
       void SetPixels(int w, int h, int* pixels);
-      void OnKeyboard() override;
-      void OnMouseMove() override;
-      void OnClick() override;
-      void OnEnter() override;
-      void OnLeave() override;
-      void OnDraw() override;
+
+      // overrides
+      void Event() override;
+      void Draw() override;
+      
     private:
       VIEWPORT_MODE       _mode;
       GLuint              _texture;

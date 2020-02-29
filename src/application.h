@@ -8,16 +8,6 @@
 #include "context.h"
 #include "prim.h"
 #include "mesh.h"
-#include "widgets/viewport.h"
-
-#include <pxr/usd/usd/stage.h>
-#include <pxr/usd/usd/prim.h>
-#include <pxr/usd/usd/primRange.h>
-#include <pxr/usd/usdGeom/metrics.h>
-#include <pxr/usd/usdGeom/xform.h>
-#include <pxr/usd/usdGeom/points.h>
-#include <pxr/usd/usdGeom/mesh.h>
-
 
 namespace AMN
 {

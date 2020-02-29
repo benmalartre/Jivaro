@@ -4,10 +4,11 @@
 #pragma once
 
 #include "default.h"
+#include "context.h"
 #include "glsl.h"
 
 namespace AMN {
-
+extern UsdEmbreeContext* EMBREE_CTXT;
 static bool 
 GLCheckError(std::string message)
 {
@@ -113,6 +114,7 @@ static void SetupScreenSpaceQuadShader()
     glslLinkProgram(SCREENSPACEQUAD_VERTEX_SHADER, 
       SCREENSPACEQUAD_FRAGMENT_SHADER);
     GLCheckError("CREATE PROGRAM SHADER");
+  EMBREE_CTXT->_screenSpaceQuadPgm = SCREENSPACEQUAD_PROGRAM_SHADER;
 }
 
 static void SetupScreenSpaceQuad()

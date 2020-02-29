@@ -1,99 +1,13 @@
 #include "device.h"
 #include "utils.h"
 #include "context.h"
-//#include "widgets/viewport.h"
+#include "prim.h"
+#include "mesh.h"
+#include "widgets/viewport.h"
 
 namespace AMN {
+  
   using namespace embree;
-// adds a cube to the scene
-/*
-unsigned int AddCube (RTCScene scene_i)
-{
-  // create a triangulated cube with 12 triangles and 8 vertices
-  RTCGeometry mesh = rtcNewGeometry(g_device, RTC_GEOMETRY_TYPE_TRIANGLE);
-  
-  // create face and vertex color arrays
-  face_colors = (Vec3fa*) alignedMalloc(12*sizeof(Vec3fa),16);
-  vertex_colors = (Vec3fa*) alignedMalloc(8*sizeof(Vec3fa),16);
-  
-  // set vertices and vertex colors
-  pxr::GfVec3f* vertices = 
-    (pxr::GfVec3f*) rtcSetNewGeometryBuffer(mesh,RTC_BUFFER_TYPE_VERTEX,0,RTC_FORMAT_FLOAT3,sizeof(pxr::GfVec3f),8);
-  vertex_colors[0] = Vec3fa(0,0,0); 
-  vertices[0][0] = -1; vertices[0][1] = -1; vertices[0][2] = -1;
-  vertex_colors[1] = Vec3fa(0,0,1); vertices[1][0] = -1; vertices[1][1] = -1; vertices[1][2] = +1;
-  vertex_colors[2] = Vec3fa(0,1,0); vertices[2][0] = -1; vertices[2][1] = +1; vertices[2][2] = -1;
-  vertex_colors[3] = Vec3fa(0,1,1); vertices[3][0] = -1; vertices[3][1] = +1; vertices[3][2] = +1;
-  vertex_colors[4] = Vec3fa(1,0,0); vertices[4][0] = +1; vertices[4][1] = -1; vertices[4][2] = -1;
-  vertex_colors[5] = Vec3fa(1,0,1); vertices[5][0] = +1; vertices[5][1] = -1; vertices[5][2] = +1;
-  vertex_colors[6] = Vec3fa(1,1,0); vertices[6][0] = +1; vertices[6][1] = +1; vertices[6][2] = -1;
-  vertex_colors[7] = Vec3fa(1,1,1); vertices[7][0] = +1; vertices[7][1] = +1; vertices[7][2] = +1;
-  
-  // set triangles and face colors
-  int tri = 0;
-  pxr::GfVec3i* triangles = 
-    (pxr::GfVec3i*) rtcSetNewGeometryBuffer(mesh,RTC_BUFFER_TYPE_INDEX,0,RTC_FORMAT_UINT3,sizeof(pxr::GfVec3i),12);
-
-  // left side
-  face_colors[tri] = Vec3fa(1,0,0); triangles[tri][0] = 0; triangles[tri][1] = 1; triangles[tri][2] = 2; tri++;
-  face_colors[tri] = Vec3fa(1,0,0); triangles[tri][0] = 1; triangles[tri][1] = 3; triangles[tri][2] = 2; tri++;
-
-  // right side
-  face_colors[tri] = Vec3fa(0,1,0); triangles[tri][0] = 4; triangles[tri][1] = 6; triangles[tri][2] = 5; tri++;
-  face_colors[tri] = Vec3fa(0,1,0); triangles[tri][0] = 5; triangles[tri][1] = 6; triangles[tri][2] = 7; tri++;
-
-  // bottom side
-  face_colors[tri] = Vec3fa(0.5f);  triangles[tri][0] = 0; triangles[tri][1] = 4; triangles[tri][2] = 1; tri++;
-  face_colors[tri] = Vec3fa(0.5f);  triangles[tri][0] = 1; triangles[tri][1] = 4; triangles[tri][2] = 5; tri++;
-
-  // top side
-  face_colors[tri] = Vec3fa(1.0f);  triangles[tri][0] = 2; triangles[tri][1] = 3; triangles[tri][2] = 6; tri++;
-  face_colors[tri] = Vec3fa(1.0f);  triangles[tri][0] = 3; triangles[tri][1] = 7; triangles[tri][2] = 6; tri++;
-
-  // front side
-  face_colors[tri] = Vec3fa(0,0,1); triangles[tri][0] = 0; triangles[tri][1] = 2; triangles[tri][2] = 4; tri++;
-  face_colors[tri] = Vec3fa(0,0,1); triangles[tri][0] = 2; triangles[tri][1] = 6; triangles[tri][2] = 4; tri++;
-
-  // back side
-  face_colors[tri] = Vec3fa(1,1,0); triangles[tri][0] = 1; triangles[tri][1] = 5; triangles[tri][2] = 3; tri++;
-  face_colors[tri] = Vec3fa(1,1,0); triangles[tri][0] = 3; triangles[tri][1] = 5; triangles[tri][2] = 7; tri++;
-
-  rtcSetGeometryVertexAttributeCount(mesh,1);
-  rtcSetSharedGeometryBuffer(mesh,RTC_BUFFER_TYPE_VERTEX_ATTRIBUTE,0,RTC_FORMAT_FLOAT3,vertex_colors,0,sizeof(Vec3fa),8);
-  
-  rtcCommitGeometry(mesh);
-  unsigned int geomID = rtcAttachGeometry(scene_i,mesh);
-  rtcReleaseGeometry(mesh);
-  return geomID;
-}
-
-// adds a ground plane to the scene 
-unsigned int AddGroundPlane (RTCScene scene_i)
-{
-  // create a triangulated plane with 2 triangles and 4 vertices 
-  RTCGeometry mesh = rtcNewGeometry (g_device, RTC_GEOMETRY_TYPE_TRIANGLE);
-
-  // set vertices
-  pxr::GfVec3f* vertices = (pxr::GfVec3f*) rtcSetNewGeometryBuffer(mesh, 
-    RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, sizeof(pxr::GfVec3f), 4);
-  vertices[0][0] = -10; vertices[0][1] = -2; vertices[0][2] = -10;
-  vertices[1][0] = -10; vertices[1][1] = -2; vertices[1][2] = +10;
-  vertices[2][0] = +10; vertices[2][1] = -2; vertices[2][2] = -10;
-  vertices[3][0] = +10; vertices[3][1] = -2; vertices[3][2] = +10;
-
-  // set triangles 
-  pxr::GfVec3i* triangles = 
-    (pxr::GfVec3i*) rtcSetNewGeometryBuffer(mesh, RTC_BUFFER_TYPE_INDEX, 0,
-      RTC_FORMAT_UINT3, sizeof(pxr::GfVec3i), 2);
-  triangles[0][0] = 0; triangles[0][1] = 1; triangles[0][2] = 2;
-  triangles[1][0] = 1; triangles[1][1] = 3; triangles[1][2] = 2;
-  
-  rtcCommitGeometry(mesh);
-  unsigned int geomID = rtcAttachGeometry(scene_i,mesh);
-  rtcReleaseGeometry(mesh);
-  return geomID;
-}
-*/
 
 // called by the C++ code for initialization
 RTCScene DeviceInit ()
@@ -123,9 +37,9 @@ RTCScene DeviceInit ()
 
 
   // set start render mode
-  RenderTile = RenderTileAmbientOcclusion;
+  //RenderTile = RenderTileAmbientOcclusion;
   //RenderTile = RenderTileStandard;
-  //RenderTile = RenderTileNormal;
+  RenderTile = RenderTileNormal;
 
   return EMBREE_CTXT->_scene;
   //key_pressed_handler = device_key_pressed_default;
@@ -136,6 +50,31 @@ void CommitScene ()
 { 
   // commit changes to scene
   rtcCommitScene (EMBREE_CTXT->_scene);
+}
+
+Vec3fa GetSmoothNormal(Ray& ray)
+{
+  UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+  pxr::GfVec3f smoothNormal(0.f, 1.f, 0.f);
+  if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
+  {
+    UsdEmbreeMesh* mesh = (UsdEmbreeMesh*)prim;
+    pxr::VtArray<pxr::GfVec3f>& normals = mesh->_normals;
+    INTERPOLATION_TYPE interpType = mesh->_normalsInterpolationType;
+    if(interpType == VERTEX){
+      smoothNormal = 
+        normals[mesh->_triangles[ray.primID*3]] * (1 - ray.u - ray.v) + 
+        normals[mesh->_triangles[ray.primID*3+1]] * ray.u + 
+        normals[mesh->_triangles[ray.primID*3+2]] * ray.v;
+    }
+    else if(interpType == FACE_VARYING){
+      smoothNormal = 
+        normals[ray.primID*3] * (1 - ray.u - ray.v) + 
+        normals[ray.primID*3+1] * ray.u + 
+        normals[ray.primID*3+2] * ray.v;
+    }
+  }
+  return Vec3fa(smoothNormal[0], smoothNormal[1], smoothNormal[2]);
 }
 
 // task that renders a single screen tile
@@ -157,6 +96,8 @@ Vec3fa RenderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats&
   {
     //const Triangle& tri = triangles[ray.primID];
     pxr::GfVec4f rColor = AMN::UnpackColor(AMN::RandomColorByIndex(ray.primID));
+    UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+    
     Vec3fa diffuse = Vec3fa(rColor[0], rColor[1], rColor[2]);//face_colors[ray.primID];
     color = color + diffuse*0.5f;
     Vec3fa lightDir = normalize(Vec3fa(-1,-1,-1));
@@ -329,30 +270,7 @@ Vec3fa RenderPixelNormal( float x, float y, const ISPCCamera& camera, RayStats& 
   else 
   {
     #if ENABLE_SMOOTH_NORMALS
-      Vec3fa P = ray.org + ray.tfar*ray.dir;
-      if (ray.geomID > 0) 
-      {
-        Vec3fa dPdu,dPdv;
-        unsigned int geomID = ray.geomID; 
-        {
-          rtcInterpolate1(rtcGetGeometry(EMBREE_CTXT->_scene, geomID),
-                          ray.primID,
-                          ray.u,
-                          ray.v,
-                          RTC_BUFFER_TYPE_VERTEX,
-                          0,
-                          NULL,
-                          &dPdu.x,
-                          &dPdv.x,
-                          3);
-        }
-        /*
-        ray.Ng = normalize(cross(dPdu,dPdv));
-        dPdu = dPdu + ray.Ng*displacement_du(P,dPdu);
-        dPdv = dPdv + ray.Ng*displacement_dv(P,dPdv);
-        */
-        ray.Ng = normalize(cross(dPdu,dPdv));
-      }
+      ray.Ng = GetSmoothNormal(ray);
     #endif
   }
   return normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z));
@@ -445,6 +363,15 @@ void RenderToMemory()
                 EMBREE_CTXT->_height,
                 0.0f,
                 ispccamera);
+}
+
+// render to viewport
+void RenderToViewport(ViewportUI* viewport)
+{
+  RenderToMemory();
+  viewport->SetPixels(EMBREE_CTXT->_width,
+                      EMBREE_CTXT->_height, 
+                      EMBREE_CTXT->_pixels);
 }
 
 // called by the C++ code for cleanup

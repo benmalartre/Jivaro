@@ -3,6 +3,7 @@
 #include "prim.h"
 
 namespace AMN {
+  class UsdEmbreeContext;
   struct UsdEmbreeMesh  : public UsdEmbreePrim {
     unsigned                    _numOriginalSamples;
     pxr::VtArray<pxr::GfVec3f>  _positions;
@@ -24,13 +25,11 @@ namespace AMN {
     //std::vector<UsdEmbreeMeshDatas> _extraDatas;
   };
 
-  UsdEmbreeMesh* TranslateMesh( RTCDevice device,
-                                RTCScene scene,
-                                const pxr::UsdGeomMesh& usdMesh,
-                                float time);
+  UsdEmbreeMesh* TranslateMesh( UsdEmbreeContext* ctxt,
+                                const pxr::UsdGeomMesh& usdMesh);
 
   bool CheckNormals(const pxr::UsdGeomMesh& usdMesh,
-                    double time,
+                    const pxr::UsdTimeCode& time,
                     UsdEmbreeMesh* mesh);
 
   void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,

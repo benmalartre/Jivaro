@@ -20,27 +20,11 @@ namespace AMN {
   }
 
   // overrides
-  void ViewportUI::OnKeyboard() 
+  void ViewportUI::Event() 
   {
 
   }
-  void ViewportUI::OnMouseMove()
-  {
-
-  }
-  void ViewportUI::OnClick() 
-  {
-
-  }
-  void ViewportUI::OnEnter() 
-  {
-
-  }
-  void ViewportUI::OnLeave() 
-  {
-
-  }
-  void ViewportUI::OnDraw()
+  void ViewportUI::Draw()
   {    
     float x = _parent->GetMin()[0];
     float y = _parent->GetMin()[1];
@@ -50,10 +34,10 @@ namespace AMN {
         
     if(_pixels)
     {
-      glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
+      glUseProgram(EMBREE_CTXT->_screenSpaceQuadPgm);
       CreateOpenGLTexture(_width, _height, _pixels, _texture, 0);
       glViewport(x, GetWindowHeight()-(y+h), w, h);
-      glUniform1i(glGetUniformLocation(SCREENSPACEQUAD_PROGRAM_SHADER,"tex"),0);
+      glUniform1i(glGetUniformLocation(EMBREE_CTXT->_screenSpaceQuadPgm,"tex"),0);
       DrawScreenSpaceQuad();
     }
     else

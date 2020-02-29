@@ -3,6 +3,29 @@
 #include "mesh.h"
 
 namespace AMN {
+
+  // constructor
+  //----------------------------------------------------------------------------
+  UsdEmbreeContext::UsdEmbreeContext():
+    _scene(NULL),
+    _device(NULL),
+    _changed(false),
+    _debug(0.f),
+    _width(0),
+    _height(0),
+    _pixels(NULL),
+    _xformCache(NULL),
+    _bboxCache(NULL){};
+
+  // destructor
+  //----------------------------------------------------------------------------
+  UsdEmbreeContext::~UsdEmbreeContext()
+  {
+    if(_bboxCache)delete _bboxCache;
+    if(_xformCache)delete _xformCache;
+    if(_pixels)embree::alignedFree(_pixels);
+
+  }
   // recurse collect prim
   //----------------------------------------------------------------------------
   void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
@@ -17,7 +40,9 @@ namespace AMN {
       else if(child.IsA<pxr::UsdGeomMesh>())
       {
         std::cout << "MESH" << std::endl;
-        TranslateMesh(_device, _scene, pxr::UsdGeomMesh(child), 0);
+        UsdEmbreeMesh* mesh = TranslateMesh(this, pxr::UsdGeomMesh(child));
+        std::cout << "EMBREE GEOM ID : " << mesh->_geomId << std::endl;
+        _prims.push_back(mesh);
       }
       CollectPrims(child);
     }
@@ -58,7 +83,13 @@ namespace AMN {
       std::cerr << "### UP AXIS : Y " << std::endl;
     else if(_axis == pxr::UsdGeomTokens->z) 
       std::cerr << "### UP AXIS : Z " << std::endl;
+    
+    _time = pxr::UsdTimeCode::EarliestTime();
 
+    _xformCache = new pxr::UsdGeomXformCache(_time);
+    pxr::TfTokenVector includedPurposes = {pxr::UsdGeomTokens->default_,
+                                          pxr::UsdGeomTokens->render};
+    _bboxCache = new pxr::UsdGeomBBoxCache(_time, includedPurposes);
     GetNumPrims(_stage->GetPseudoRoot());
     _prims.reserve(_numPrims);
     CollectPrims(_stage->GetPseudoRoot());

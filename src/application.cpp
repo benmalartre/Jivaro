@@ -1,6 +1,8 @@
 #include "application.h"
 #include <unistd.h>
 #include <thread>
+#include "widgets/viewport.h"
+#include "widgets/menu.h"
 
 namespace AMN {
 
@@ -12,6 +14,7 @@ namespace AMN {
   Application::Application(unsigned width, unsigned height):
     _mainWindow(NULL), _context(NULL)
   {
+    EMBREE_CTXT = new UsdEmbreeContext();
     _width = width;
     _height = height;
     _mainWindow = CreateStandardWindow(width, height);
@@ -20,6 +23,7 @@ namespace AMN {
   Application::Application(bool fullscreen):
     _mainWindow(NULL), _context(NULL)
   {
+    EMBREE_CTXT = new UsdEmbreeContext();
     _mainWindow = CreateFullScreenWindow();
     glfwGetWindowSize(_mainWindow->GetWindow(), &_width, &_height);
   };
@@ -49,6 +53,8 @@ namespace AMN {
     _mainWindow->SetContext();
     View* mainView = _mainWindow->GetMainView();
     _mainWindow->SplitView(mainView, 10, true);
+
+    MenuUI* menu = new MenuUI(mainView->GetLeft());
     ViewportUI* viewport = new ViewportUI(mainView->GetRight(), EMBREE);
 
     /*
@@ -60,7 +66,7 @@ namespace AMN {
     //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/assets/Clock/Clock.usd";
     //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemale.usd";
     */
-    EMBREE_CTXT = new UsdEmbreeContext();
+    
     EMBREE_CTXT->Resize(1024, 720);
     EMBREE_CTXT->SetFilePath("/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd");
     EMBREE_CTXT->InitDevice();

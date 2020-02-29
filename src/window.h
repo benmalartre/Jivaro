@@ -79,7 +79,6 @@ namespace AMN {
     // imgui context
     void SetupImgui();
     void ClearImgui();
-    void TestImgui(int index);
     int GetGuiId(){return _guiId;};
 
     // fullscreen

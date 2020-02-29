@@ -335,112 +335,6 @@ namespace AMN {
     ImGui::DestroyContext();
   }
 
-  void
-  Window::TestImgui(int index)
-  {
-
-    // Start the imgui frame
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    
-    ImGui::NewFrame();
-    bool dummy = true;
-    float color[3] = {1.0f, 0.5f, 0.5f};
-    if (index == 0)
-    {
-      bool opened;
-      View* view = GetMainView();
-      int flags = 0;
-      flags |= ImGuiWindowFlags_NoResize;
-      flags |= ImGuiWindowFlags_NoTitleBar;
-      flags |= ImGuiWindowFlags_NoMove;
-
-      ImGui::Begin("FUCK", &opened, flags);
-      ImGui::SetWindowSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-      ImGui::SetWindowPos(pxr::GfVec2i(0,0));
-      /*ImGui::TestDummyView(&opened, pxr::GfVec2i(0,0), 
-        pxr::GfVec2i(GetWidth(), GetHeight()), view->GetColor4());*/
-      ImGui::End();
-    }
-      //ImGui::ShowDemoWindow(&dummy);
-
-    else if(index == 1)
-    {
-      static float f = 0.0f;
-      static int counter = 0;
-      bool opened;
-      ImGuiWindowFlags flags = 0;
-      flags |= ImGuiWindowFlags_NoResize;
-      //flags |= ImGuiWindowFlags_NoTitleBar;
-      flags |= ImGuiWindowFlags_NoMove;
-
-      
-      ImGui::Begin("Hello, FUCKIN BITCH!", &opened, flags);                          // Create a window called "Hello, world!" and append into it.
-      ImGui::SetWindowSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-      ImGui::SetWindowPos(pxr::GfVec2i(0,0));
-      /*
-      int N = 2;
-      const char* labels[2] = {"Label1", "Label2"};
-      const char* tooltips[2] = {"ToolTip1", "ToolTip2"};
-
-
-      int optionalHoveredIndex;
-
-      int selectedIndex = 0;
-      bool B = ImGui::TabLabels(2, &labels[0], selectedIndex, &tooltips[0], true, &optionalHoveredIndex);
-
-    
-      ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-      ImGui::Checkbox("Demo Window", &dummy);      // Edit bools storing our window open/close state
-      ImGui::Checkbox("Another Window", &dummy);
-
-      ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-      ImGui::ColorEdit3("clear color", (float*)&color); // Edit 3 floats representing a color
-
-      if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-        counter++;
-      ImGui::SameLine();
-      ImGui::Text("counter = %d", counter);
-
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-      */
-
-      /*
-      for(int i=0;i<GetNumSplitters(); ++i)
-      {
-        std::string name = "Je M'appelle "+std::to_string(i);
-        ImGui::Begin(name.c_str(), &opened, flags);
-        Splitter* splitter = GetSplitterPtr(i);
-        ImGui::TestGrapNodes(&opened, splitter->GetMin(), splitter->GetMin() + 
-          splitter->GetMax() * splitter->GetPerc() * 0.01);
-        ImGui::SetWindowSize(splitter->GetMax() - splitter->GetMin());
-        ImGui::SetWindowPos(splitter->GetMin());
-        ImGui::End();
-
-      }
-      */
-      
-      ImGui::End();
-    }
-      
-    else
-    {
-      ImGui::Begin("Another Window", &dummy);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-      ImGui::Text("Hello from another window!");
-      if (ImGui::Button("Close Me"))
-        dummy = false;
-      ImGui::End();
-    }
-
-    // Rendering
-    ImGui::Render();
-    glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
-    //glClearColor(color[0], color[1], color[2], 1.f);
-    //glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-  }
-
   void Window::MakeTextureFromPixels(void)
   {
     /*
@@ -477,7 +371,6 @@ namespace AMN {
   {
     // Enable the OpenGL context for the current window
     _guiId = 1;
-    TestImgui(0);
     while(!glfwWindowShouldClose(_window))
     {
       glfwPollEvents();

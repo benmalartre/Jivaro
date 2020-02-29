@@ -19,7 +19,8 @@
 #include "context.h"
 
 namespace AMN {
-  
+
+class ViewportUI;
 // screen-space-quad 
 extern GLuint SCREENSPACEQUAD_VAO;
 extern GLuint SCREENSPACEQUAD_VBO;
@@ -28,11 +29,11 @@ extern GLuint SCREENSPACEQUAD_VERTEX_SHADER;
 extern GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
 extern GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
 
-
 extern UsdEmbreeContext* EMBREE_CTXT;
 
 #define TILE_SIZE_X 8
 #define TILE_SIZE_Y 8
+#define ENABLE_SMOOTH_NORMALS 1
 
 static embree::Camera camera;
 static std::string rtcore("start_threads=1,set_affinity=1");
@@ -44,11 +45,6 @@ inline embree::Vec3fa FaceForward(const embree::Vec3fa& N,
 {
   embree::Vec3fa NN = N; return embree::dot(I, Ng) < 0 ? NN : embree::neg(NN);
 }
-
-
-// scene management
-//unsigned int AddCube (RTCScene scene_i);
-//unsigned int AddGroundPlane (RTCScene scene_i);
 
 // device management
 RTCScene DeviceInit ();
@@ -139,5 +135,8 @@ void RenderToFile(const embree::FileName& fileName);
 
 // render to memory
 void RenderToMemory();
+
+// render to viewport
+void RenderToViewport(ViewportUI* viewport);
 
 } // namespace AMN

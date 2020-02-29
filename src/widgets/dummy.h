@@ -11,12 +11,9 @@ namespace AMN {
   public:
     DummyUI(View* parent, const std::string& name);
     ~DummyUI()         override;
-    void OnKeyboard()  override;
-    void OnMouseMove() override;
-    void OnClick()     override;
-    void OnEnter()     override;
-    void OnLeave()     override;
-    void OnDraw()      override;
+  
+    void Event()     override;
+    void Draw()      override;
 
     void FillBackground();
   private:

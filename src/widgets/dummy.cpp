@@ -7,33 +7,12 @@ DummyUI::DummyUI(View* parent, const std::string& name):UI(parent, name){}
 
 DummyUI::~DummyUI(){}
 
-
-void DummyUI::OnKeyboard()
+void DummyUI::Event()
 {
-  std::cerr << "DummyUI KEYBOARD EVENT!" << std::endl;
+  std::cerr << "DummyUI EVENT!" << std::endl;
 };
 
-void DummyUI::OnMouseMove()
-{
-  std::cerr << "DummyUI MOUSE MOVE EVENT!" << std::endl;
-};
-
-void DummyUI::OnClick()
-{
-  std::cerr << "DummyUI CLICK EVENT!" << std::endl;
-};
-
-void DummyUI::OnEnter()
-{
-  std::cerr << "DummyUI ENTER EVENT!" << std::endl;
-};
-
-void DummyUI::OnLeave()
-{
-  std::cerr << "DummyUI LEAVE EVENT!" << std::endl;
-};
-
-void DummyUI::OnDraw()
+void DummyUI::Draw()
 {
   bool opened;
   int flags = 0;

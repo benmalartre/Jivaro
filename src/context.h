@@ -39,11 +39,13 @@ namespace AMN {
     // usd
     std::vector<std::string>                        _files;
     pxr::UsdStageRefPtr                             _stage;
-    std::unordered_map<int, UsdEmbreePrim*>         _prims;
+    std::vector<UsdEmbreePrim*>                     _prims;
     pxr::TfToken                                    _axis;
-    float                                           _time;
+    pxr::UsdTimeCode                                _time;
     long long                                       _numPrims;
     pxr::GfMatrix4f                                 _worldMatrix;
+    pxr::UsdGeomXformCache*                         _xformCache;
+    pxr::UsdGeomBBoxCache*                          _bboxCache;
 
     // image
     int                                             _width;
@@ -56,20 +58,16 @@ namespace AMN {
     RayStats*                                       _stats;
     bool                                            _changed;
     float                                           _debug;
-    embree::Vec3fa*                                 _face_colors; 
-    embree::Vec3fa*                                 _vertex_colors;
+
+    // opengl
+    GLuint                                          _screenSpaceQuadPgm;
+
+    // parameters
+    int                                             _renderMode;
 
     // methods
-    UsdEmbreeContext():
-      _scene(NULL),
-      _device(NULL),
-      _changed(false),
-      _debug(0.f),
-      _face_colors(NULL),
-      _vertex_colors(NULL),
-      _width(0),
-      _height(0),
-      _pixels(NULL){};
+    UsdEmbreeContext();
+    ~UsdEmbreeContext();
     
     void SetFilePath(const std::string& filePath);
     void InitDevice();

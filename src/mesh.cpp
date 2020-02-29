@@ -1,22 +1,25 @@
 #include "default.h"
 #include "mesh.h"
 #include "utils.h"
+#include "context.h"
 
 namespace AMN {
 
-  // adds a cube to the scene
+// translate usd mesh to embree mesh
 UsdEmbreeMesh* 
-TranslateMesh(RTCDevice device, RTCScene scene, 
-  const pxr::UsdGeomMesh& usdMesh, float time)
+TranslateMesh(UsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
 {
   size_t num_vertices, num_triangles;
   UsdEmbreeMesh* result = new UsdEmbreeMesh();
-  result->_geom = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
+  result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
+  //result->_worldMatrix = usdMesh.GetPrim().GetWor;
+  result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_TRIANGLE);
+  result->_name = usdMesh.GetPrim().GetPrimPath().GetString();
   bool hasPoints = false;
   pxr::UsdAttribute pointsAttr = usdMesh.GetPointsAttr();
   if(pointsAttr && pointsAttr.HasAuthoredValue())
   {
-    pointsAttr.Get(&result->_positions, time);
+    pointsAttr.Get(&result->_positions, ctxt->_time);
     num_vertices = result->_positions.size();
 
     rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
@@ -48,8 +51,8 @@ TranslateMesh(RTCDevice device, RTCScene scene,
     indicesAttr && indicesAttr.HasAuthoredValue())
   {
     
-    countsAttr.Get(&counts, time);
-    indicesAttr.Get(&indices, time);
+    countsAttr.Get(&counts, ctxt->_time);
+    indicesAttr.Get(&indices, ctxt->_time);
 
     result->_numOriginalSamples = 0;
     for(auto count : counts)result->_numOriginalSamples += count;
@@ -90,7 +93,7 @@ TranslateMesh(RTCDevice device, RTCScene scene,
   }
   */
 
-  CheckNormals(usdMesh, time, result);
+  CheckNormals(usdMesh, ctxt->_time, result);
   if(!result->_hasNormals)
   {
     ComputeVertexNormals(result->_positions,
@@ -110,7 +113,7 @@ TranslateMesh(RTCDevice device, RTCScene scene,
     RTC_FORMAT_FLOAT3,vertex_colors,0,sizeof(Vec3fa),num_vertices);
     */
     rtcCommitGeometry(result->_geom);
-    result->_geomId = rtcAttachGeometry(scene, result->_geom);
+    result->_geomId = rtcAttachGeometry(ctxt->_scene, result->_geom);
     rtcReleaseGeometry(result->_geom);
     return result;
   }
@@ -172,7 +175,7 @@ TriangulateData(const pxr::VtArray<int>& indices,
 //------------------------------------------------------------------------------
 bool 
 CheckNormals(const pxr::UsdGeomMesh& usdMesh,
-            double time,
+            const pxr::UsdTimeCode& time,
             UsdEmbreeMesh* mesh)
 {
   mesh->_hasNormals = false;

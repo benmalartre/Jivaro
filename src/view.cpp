@@ -75,7 +75,7 @@ namespace AMN {
     }
     else
     {
-      if(_content)_content->OnDraw();
+      if(_content)_content->Draw();
     }
     
    
