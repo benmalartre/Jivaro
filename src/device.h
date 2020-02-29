@@ -19,6 +19,15 @@
 #include "context.h"
 
 namespace AMN {
+  
+// screen-space-quad 
+extern GLuint SCREENSPACEQUAD_VAO;
+extern GLuint SCREENSPACEQUAD_VBO;
+
+extern GLuint SCREENSPACEQUAD_VERTEX_SHADER;
+extern GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
+extern GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
+
 
 extern UsdEmbreeContext* EMBREE_CTXT;
 
@@ -128,6 +137,7 @@ void DeviceRender (int* pixels,
 // render to file
 void RenderToFile(const embree::FileName& fileName);
 
-
+// render to memory
+void RenderToMemory();
 
 } // namespace AMN

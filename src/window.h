@@ -4,6 +4,7 @@
 #include "splitter.h"
 #include "glutils.h"
 #include "tools.h"
+#include "ui.h"
 
 #include <pxr/pxr.h>
 #include <pxr/base/gf/vec2i.h>
@@ -16,6 +17,7 @@ namespace AMN {
   class Application;
   class View;
   class Splitter;
+  class UI;
 
 
   // keyboard callback
@@ -99,6 +101,7 @@ namespace AMN {
     void MakeTextureFromPixels();
 
     // draw
+    void SetContext();
     void Draw();
     void DrawPickImage();
     bool PickSplitter(double mX, double mY);
@@ -110,7 +113,6 @@ namespace AMN {
     bool UpdateActiveTool(int mouseX, int mouseY);
     // loop in thread
     void MainLoop();
-
     static Window* GetUserData(GLFWwindow* window);
 
   private:

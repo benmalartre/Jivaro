@@ -46,10 +46,11 @@ namespace AMN {
   void 
   Application::Init()
   {
+    _mainWindow->SetContext();
     View* mainView = _mainWindow->GetMainView();
-    UI* viewport = new ViewportUI(mainView, EMBREE);
     _mainWindow->SplitView(mainView, 10, true);
-    _mainWindow->BuildSplittersMap();
+    ViewportUI* viewport = new ViewportUI(mainView->GetRight(), EMBREE);
+
     /*
     
     _mainWindow->SplitView(mainView->GetRight(), 75, true);
@@ -59,17 +60,21 @@ namespace AMN {
     //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/assets/Clock/Clock.usd";
     //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemale.usd";
     */
-    EMBREE_CTXT = new UsdEmbreeContext(1024, 720);
+    EMBREE_CTXT = new UsdEmbreeContext();
+    EMBREE_CTXT->Resize(1024, 720);
     EMBREE_CTXT->SetFilePath("/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd");
     EMBREE_CTXT->InitDevice();
     EMBREE_CTXT->TraverseStage();
     EMBREE_CTXT->CommitDevice();
     
-    embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.007.jpg");
-    RenderToFile(outputImageFilename);
+    embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.011.jpg");
     
-    _mainWindow->CollectLeaves();
-    _mainWindow->DummyFill();
+    //RenderToFile(outputImageFilename);
+    RenderToMemory();
+    viewport->SetPixels(EMBREE_CTXT->_width, EMBREE_CTXT->_height, EMBREE_CTXT->_pixels);
+    
+    //_mainWindow->CollectLeaves();
+    //_mainWindow->DummyFill();
   }
 
   // main loop

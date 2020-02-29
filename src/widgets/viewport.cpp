@@ -3,19 +3,20 @@
 #include "../glutils.h"
 
 namespace AMN {
+
   // constructor
   ViewportUI::ViewportUI(View* parent, VIEWPORT_MODE mode):UI(parent, "viewport")
   {
+    parent->SetContent(this);
+    _texture = 0;
     _mode = mode;
     _pixels = NULL;
-    std::cerr << "CREATE VIEWPORT UI : PARENT = " << _parent << std::endl;
   }
 
   // destructor
   ViewportUI::~ViewportUI()
   {
     if(_texture) glDeleteTextures(1, &_texture);
-    std::cerr << "DESTROY VIEWPORT UI" << std::endl;
   }
 
   // overrides
@@ -49,10 +50,9 @@ namespace AMN {
         
     if(_pixels)
     {
-      CreateOpenGLTexture(w, h, _pixels, _texture, 0);
-      glViewport(x, y, w, h);
-
       glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
+      CreateOpenGLTexture(_width, _height, _pixels, _texture, 0);
+      glViewport(x, GetWindowHeight()-(y+h), w, h);
       glUniform1i(glGetUniformLocation(SCREENSPACEQUAD_PROGRAM_SHADER,"tex"),0);
       DrawScreenSpaceQuad();
     }
@@ -66,5 +66,12 @@ namespace AMN {
       glDisable(GL_SCISSOR_TEST);
     }
     
+  }
+
+  void ViewportUI::SetPixels(int width, int height, int* pixels)
+  {
+    _width = width;
+    _height = height;
+    _pixels=pixels;
   }
 } // namespace AMN

@@ -1,6 +1,7 @@
 #include "device.h"
 #include "utils.h"
 #include "context.h"
+//#include "widgets/viewport.h"
 
 namespace AMN {
   using namespace embree;
@@ -122,9 +123,9 @@ RTCScene DeviceInit ()
 
 
   // set start render mode
-  //RenderTile = RenderTileAmbientOcclusion;
+  RenderTile = RenderTileAmbientOcclusion;
   //RenderTile = RenderTileStandard;
-  RenderTile = RenderTileNormal;
+  //RenderTile = RenderTileNormal;
 
   return EMBREE_CTXT->_scene;
   //key_pressed_handler = device_key_pressed_default;
@@ -325,7 +326,36 @@ Vec3fa RenderPixelNormal( float x, float y, const ISPCCamera& camera, RayStats& 
   // shade pixel
   if (ray.geomID == RTC_INVALID_GEOMETRY_ID) return Vec3fa(0.0f,0.0f,1.0f);
   //else return abs(normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z)));
-  else return normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z));
+  else 
+  {
+    #if ENABLE_SMOOTH_NORMALS
+      Vec3fa P = ray.org + ray.tfar*ray.dir;
+      if (ray.geomID > 0) 
+      {
+        Vec3fa dPdu,dPdv;
+        unsigned int geomID = ray.geomID; 
+        {
+          rtcInterpolate1(rtcGetGeometry(EMBREE_CTXT->_scene, geomID),
+                          ray.primID,
+                          ray.u,
+                          ray.v,
+                          RTC_BUFFER_TYPE_VERTEX,
+                          0,
+                          NULL,
+                          &dPdu.x,
+                          &dPdv.x,
+                          3);
+        }
+        /*
+        ray.Ng = normalize(cross(dPdu,dPdv));
+        dPdu = dPdu + ray.Ng*displacement_du(P,dPdu);
+        dPdv = dPdv + ray.Ng*displacement_dv(P,dPdv);
+        */
+        ray.Ng = normalize(cross(dPdu,dPdv));
+      }
+    #endif
+  }
+  return normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z));
 }
 
 void RenderTileNormal(int taskIndex,
@@ -402,6 +432,19 @@ void RenderToFile(const FileName& fileName)
                                   EMBREE_CTXT->_height, 
                                   (Col4uc*)EMBREE_CTXT->_pixels);
   storeImage(image, fileName);
+}
+
+void RenderToMemory()
+{
+  
+  ISPCCamera ispccamera = 
+    camera.getISPCCamera(EMBREE_CTXT->_width, EMBREE_CTXT->_height);
+  //initRayStats();
+  DeviceRender( EMBREE_CTXT->_pixels,
+                EMBREE_CTXT->_width,
+                EMBREE_CTXT->_height,
+                0.0f,
+                ispccamera);
 }
 
 // called by the C++ code for cleanup

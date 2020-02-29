@@ -60,15 +60,15 @@ namespace AMN {
     embree::Vec3fa*                                 _vertex_colors;
 
     // methods
-    UsdEmbreeContext(int width, int height):
+    UsdEmbreeContext():
       _scene(NULL),
       _device(NULL),
       _changed(false),
       _debug(0.f),
       _face_colors(NULL),
       _vertex_colors(NULL),
-      _width(width),
-      _height(height),
+      _width(0),
+      _height(0),
       _pixels(NULL){};
     
     void SetFilePath(const std::string& filePath);

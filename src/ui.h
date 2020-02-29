@@ -14,6 +14,7 @@ namespace AMN {
     virtual ~UI(){};
 
     float GetWindowHeight();
+    void SetWindowContext();
     void GetRelativeMousePosition(const int inX, const int inY, 
       int& outX, int& outY);
 

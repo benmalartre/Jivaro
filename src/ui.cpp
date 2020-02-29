@@ -25,4 +25,10 @@ namespace AMN {
   {
     return _parent->GetWindow()->GetHeight();
   }
+
+  void
+  UI::SetWindowContext()
+  {
+    _parent->GetWindow()->SetContext();
+  }
 } // namespace AMN

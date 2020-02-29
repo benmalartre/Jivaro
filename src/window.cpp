@@ -171,6 +171,7 @@ namespace AMN {
       view->ClearHorizontal();
       view->Split();
     }
+    BuildSplittersMap();
   }
 
   // collect leaves views (contains actual ui elements)
@@ -227,11 +228,20 @@ namespace AMN {
     return static_cast<Window*>(glfwGetWindowUserPointer(window));
   }
 
+  // set current context
+  //----------------------------------------------------------------------------
+  void
+  Window::SetContext()
+  {
+    glfwMakeContextCurrent(_window);
+  }
+
   // draw
   //----------------------------------------------------------------------------
   void 
   Window::Draw()
   {
+    SetContext();
     // start the imgui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -261,40 +271,9 @@ namespace AMN {
   void 
   Window::DrawPickImage()
   {
-    /*
-    if(!_pickImage)
-    {
-      glDeleteTextures(1, &_pickImage);
-
-      //glDeleteTextures(1 &_pickImage);
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-      glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
-
-      glGenTextures(1, &_pickImage);
-      glBindTexture(GL_TEXTURE_2D, _pickImage);
-      
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
-                      GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-                      GL_NEAREST);
-    }
-
-    
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D,_pickImage);
-    glTexImage2D(	GL_TEXTURE_2D,
-                    0,
-                    GL_RGBA,
-                    _splitter->GetWidth(),
-                    _splitter->GetHeight(),
-                    0,
-                    GL_RGBA,
-                    GL_UNSIGNED_BYTE,
-                    _splitter->GetPixels());
-  */
-    int ID = 3;
+    std::cout << "2 : " <<SCREENSPACEQUAD_PROGRAM_SHADER << std::endl;
+    int ID = 0;
+    glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
     CreateOpenGLTexture(
       _splitter->GetWidth(),
       _splitter->GetHeight(),
@@ -302,7 +281,7 @@ namespace AMN {
       _pickImage,
       ID
     );
-    glUseProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
+    
     glUniform1i(glGetUniformLocation(SCREENSPACEQUAD_PROGRAM_SHADER,"tex"),ID);
     DrawScreenSpaceQuad();
   }

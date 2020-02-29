@@ -55,12 +55,12 @@ GLCheckError(std::string message)
 }
 
 // screen-space-quad 
-static GLuint SCREENSPACEQUAD_VAO;
-static GLuint SCREENSPACEQUAD_VBO;
+extern GLuint SCREENSPACEQUAD_VAO;
+extern GLuint SCREENSPACEQUAD_VBO;
 
-static GLuint SCREENSPACEQUAD_VERTEX_SHADER;
-static GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
-static GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
+extern GLuint SCREENSPACEQUAD_VERTEX_SHADER;
+extern GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
+extern GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
 
 // vertex shader :
 static const GLchar* SCREENSPACEQUAD_VERTEX_SHADER_CODE =
@@ -161,16 +161,14 @@ DrawScreenSpaceQuad()
 //----------------------------------------------------------------------------
 static void 
 CreateOpenGLTexture(int width, int height, 
-  unsigned* pixels, GLuint& tex, int ID=0)
+  int* pixels, GLuint& tex, int ID=0)
 {
+  //glDeleteTextures(1 &_pickImage);
   if(!tex)
   {
-    //glDeleteTextures(1 &_pickImage);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
@@ -181,6 +179,9 @@ CreateOpenGLTexture(int width, int height,
 
   glActiveTexture(GL_TEXTURE0 + ID);
   glBindTexture(GL_TEXTURE_2D,tex);
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
   glTexImage2D(	GL_TEXTURE_2D,
                   0,
                   GL_RGBA,

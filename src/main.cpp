@@ -5,6 +5,13 @@
 
 namespace AMN {
   UsdEmbreeContext* EMBREE_CTXT = NULL;
+
+  GLuint SCREENSPACEQUAD_VAO = 0;
+  GLuint SCREENSPACEQUAD_VBO = 0;
+
+  GLuint SCREENSPACEQUAD_VERTEX_SHADER = 0;
+  GLuint SCREENSPACEQUAD_FRAGMENT_SHADER = 0;
+  GLuint SCREENSPACEQUAD_PROGRAM_SHADER = 0;
 }
 
 // main application entry point

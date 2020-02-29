@@ -25,20 +25,20 @@ namespace AMN {
     Splitter():_pixels(NULL){};
     ~Splitter(){if(_pixels)delete [] _pixels;};
 
-    unsigned* GetPixels(){return _pixels;};
+    int* GetPixels(){return _pixels;};
     inline unsigned GetWidth(){return _width;};
     inline unsigned GetHeight(){return _height;};
     void RecurseBuildMap(View* view);
     void BuildMap(View* view);
     View* GetViewByIndex(int index);
-    unsigned GetPixelValue(double xPos, double yPos);
+    int GetPixelValue(double xPos, double yPos);
 
     void Resize(View* view);
     void Draw();
     void Event();
     
   private:
-    unsigned*           _pixels;
+    int*                _pixels;
     unsigned            _viewID;
     unsigned            _width;
     unsigned            _height;

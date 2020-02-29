@@ -5,6 +5,15 @@
 #include "../utils.h"
 
 namespace AMN {
+  // screen-space-quad 
+  extern GLuint SCREENSPACEQUAD_VAO;
+  extern GLuint SCREENSPACEQUAD_VBO;
+
+  extern GLuint SCREENSPACEQUAD_VERTEX_SHADER;
+  extern GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
+  extern GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
+
+
   enum VIEWPORT_MODE {
     OPENGL,
     HYDRA,
@@ -17,8 +26,7 @@ namespace AMN {
       ViewportUI(View* parent, VIEWPORT_MODE mode);
       ~ViewportUI();
       void SetMode(VIEWPORT_MODE mode){_mode=mode;};
-      void SetPixels(unsigned* pixels){_pixels=pixels;};
-
+      void SetPixels(int w, int h, int* pixels);
       void OnKeyboard() override;
       void OnMouseMove() override;
       void OnClick() override;
@@ -28,6 +36,8 @@ namespace AMN {
     private:
       VIEWPORT_MODE       _mode;
       GLuint              _texture;
-      unsigned*           _pixels;
+      int*                _pixels;
+      int                 _width;
+      int                 _height;
   };
 } // namespace AMN

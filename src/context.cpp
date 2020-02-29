@@ -97,4 +97,5 @@ namespace AMN {
     if(_pixels)embree::alignedFree(_pixels);
     _pixels = (int*) embree::alignedMalloc(_width * _height * sizeof(int), 64);
   }
+  
 } // namespace AMN

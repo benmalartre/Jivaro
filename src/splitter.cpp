@@ -39,14 +39,14 @@ namespace AMN {
     _width = size[0];
     _height = size[1];
 
-    _pixels = new unsigned[_width * _height];
+    _pixels = new int[_width * _height];
     memset((void*)&_pixels[0], 0, _width * _height * sizeof(unsigned));
     _viewID = 0;
     RecurseBuildMap(view); 
   }
 
   // get pixel value under mouse
-  unsigned 
+  int 
   Splitter::GetPixelValue(double xPos, double yPos)
   {
     unsigned idx = (unsigned) yPos * _width + (unsigned)xPos;
