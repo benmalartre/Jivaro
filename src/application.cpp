@@ -44,7 +44,6 @@ namespace AMN {
     return Window::CreateStandardWindow(width, height);
   }
 
-  
   // init application
   //----------------------------------------------------------------------------
   void 

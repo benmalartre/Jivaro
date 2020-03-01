@@ -28,6 +28,7 @@ set(USD_LIBRARY_DIR "${USD_DIR}/lib")
 list(APPEND USD_LIB_NAMES 
   tf
   vt
+  work
   sdf
   sdr
   usd
@@ -83,10 +84,10 @@ list(APPEND EMBREE_LIB_NAMES
   math
   noise
   image
-  lexers
-  lights
-  scenegraph
-  simd
+  #lexers
+  #lights
+  #scenegraph
+  #simd
   tasking
   texture
   #tutorial

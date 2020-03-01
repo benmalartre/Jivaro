@@ -24,8 +24,27 @@ namespace AMN {
     if(_bboxCache)delete _bboxCache;
     if(_xformCache)delete _xformCache;
     if(_pixels)embree::alignedFree(_pixels);
-
   }
+
+  // traverse all prim range
+  //----------------------------------------------------------------------------
+  void UsdEmbreeContext::GetNumPrims(const pxr::UsdPrim& prim)
+  {
+    pxr::TfToken visibility;
+    for(auto child : prim.GetAllChildren())
+    {
+      if(prim.IsA<pxr::UsdGeomImageable>())
+      {
+        pxr::UsdGeomImageable(prim).GetVisibilityAttr().Get(&visibility);
+        if(visibility != pxr::UsdGeomTokens->invisible)
+        {
+          _numPrims++;
+          GetNumPrims(child);
+        }
+      }
+    }
+  }
+
   // recurse collect prim
   //----------------------------------------------------------------------------
   void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
@@ -45,28 +64,6 @@ namespace AMN {
         _prims.push_back(mesh);
       }
       CollectPrims(child);
-    }
-  }
-
-  // traverse all prim range
-  //----------------------------------------------------------------------------
-  void UsdEmbreeContext::GetNumPrims(const pxr::UsdPrim& prim)
-  {
-    pxr::TfToken visibility;
-    for(auto child : prim.GetAllChildren())
-    {
-        if(prim.IsA<pxr::UsdGeomImageable>())
-        {
-          //pxr::UsdGeomImageable(prim).GetVisibilityAttr().Get(visibility);
-          //if(visibility == )
-        //}
-          
-        //{
-          _numPrims++;
-          std::cerr << "PUSH PRIM : " << prim.GetPrimPath() << std::endl;
-           GetNumPrims(child);
-        }
-       
     }
   }
 

@@ -117,7 +117,14 @@ TranslateMesh(UsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
     rtcReleaseGeometry(result->_geom);
     return result;
   }
-  else return NULL;
+  else
+  {
+    std::cerr << usdMesh.GetPrim().GetPrimPath() << "\n" << 
+      "Problem computing mesh datas : " <<
+      "this mesh is invalid!";
+    delete result;
+    return NULL;
+  };
 
  return 0;
 }
@@ -199,6 +206,8 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
     {
       mesh->_normalsInterpolationType = VARYING;
     }
+
+    // vertex varying normals
     else if(normalsInterpolation == pxr::UsdGeomTokens->vertex)
     {
       if(num_normals == mesh->_positions.size())
@@ -216,6 +225,7 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
             "fallback to compute them...";
       }
     }
+    // face varying normals (per face-vertex)
     else if(normalsInterpolation == pxr::UsdGeomTokens->faceVarying)
     {
       std::cout << "FACE VARYING NORMALS INTERPOLATION :D" << std::endl;
@@ -309,7 +319,6 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
     base += numVertices;
   }
   for(auto n: normals) n.Normalize();
-  std::cerr << "COMPUTED VERTEX NORMALS" << std::endl;
 }
 
 } // namespace AMN

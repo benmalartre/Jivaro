@@ -38,8 +38,8 @@ RTCScene DeviceInit ()
 
   // set start render mode
   //RenderTile = RenderTileAmbientOcclusion;
-  //RenderTile = RenderTileStandard;
-  RenderTile = RenderTileNormal;
+  RenderTile = RenderTileStandard;
+  //RenderTile = RenderTileNormal;
 
   return EMBREE_CTXT->_scene;
   //key_pressed_handler = device_key_pressed_default;
@@ -73,6 +73,7 @@ Vec3fa GetSmoothNormal(Ray& ray)
         normals[ray.primID*3+1] * ray.u + 
         normals[ray.primID*3+2] * ray.v;
     }
+    else return ray.Ng;
   }
   return Vec3fa(smoothNormal[0], smoothNormal[1], smoothNormal[2]);
 }
@@ -97,7 +98,8 @@ Vec3fa RenderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats&
     //const Triangle& tri = triangles[ray.primID];
     pxr::GfVec4f rColor = AMN::UnpackColor(AMN::RandomColorByIndex(ray.primID));
     UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
-    
+    ray.Ng = GetSmoothNormal(ray);
+
     Vec3fa diffuse = Vec3fa(rColor[0], rColor[1], rColor[2]);//face_colors[ray.primID];
     color = color + diffuse*0.5f;
     Vec3fa lightDir = normalize(Vec3fa(-1,-1,-1));
