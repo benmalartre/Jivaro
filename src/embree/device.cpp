@@ -5,7 +5,7 @@
 #include "../utils/utils.h"
 #include "../widgets/viewport.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
   
 using namespace embree;
 
@@ -96,7 +96,7 @@ Vec3fa RenderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats&
   if (ray.geomID != RTC_INVALID_GEOMETRY_ID)
   {
     //const Triangle& tri = triangles[ray.primID];
-    pxr::GfVec4f rColor = pxr::UnpackColor(pxr::RandomColorByIndex(ray.primID));
+    pxr::GfVec4f rColor = UnpackColor(RandomColorByIndex(ray.primID));
     AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
     ray.Ng = GetSmoothNormal(ray);
 
@@ -384,4 +384,4 @@ void DeviceCleanup ()
   //alignedFree(EMBREE_CTXT->_vertex_colors); EMBREE_CTXT->_vertex_colors = nullptr;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

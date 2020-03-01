@@ -2,7 +2,7 @@
 
 #include "prim.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 class AmnUsdEmbreeContext;
 struct AmnUsdEmbreeMesh  : public AmnUsdEmbreePrim {
@@ -49,4 +49,4 @@ void TriangulateData(const pxr::VtArray<int>& indices,
                     const pxr::VtArray<T>& datas,
                     pxr::VtArray<T>& result);
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

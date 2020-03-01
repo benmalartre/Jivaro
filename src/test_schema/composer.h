@@ -21,17 +21,17 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef GRAPH_GENERATED_NODECOMPOSER_H
-#define GRAPH_GENERATED_NODECOMPOSER_H
+#ifndef GRAPH_GENERATED_COMPOSER_H
+#define GRAPH_GENERATED_COMPOSER_H
 
-/// \file Graph/nodeComposer.h
+/// \file Graph/composer.h
 
 #include "pxr/pxr.h"
-#include "Graph/api.h"
-#include "Graph/nodeGraph.h"
+#include "./api.h"
+#include "./graph.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
-#include "Graph/tokens.h"
+#include "./tokens.h"
 
 #include "asset.h"
 #include "node.h"
@@ -46,23 +46,18 @@
 #include "pxr/base/tf/token.h"
 #include "pxr/base/tf/type.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// NODECOMPOSER                                                               //
+// COMPOSER                                                                   //
 // -------------------------------------------------------------------------- //
 
-/// \class GraphNodeComposer
+/// \class GraphComposer
 ///
-/// A NodeComposer provides a container into which multiple "assets"
-/// can add data that defines datas to upstream the pipeline.  Typically
-/// this consists of one or more UsdRelationship properties that target
-/// other prims of type \em Asset - though a target/client is free to add
-/// any data that is suitable.  We <b>strongly advise</b> that all targets
-/// adopt the convention that all properties be prefixed with a namespace
-/// that identifies the target, e.g. "rel Bob:geom = </Geometry/Head>".
+/// A Composer provides a container into which multiple state of
+/// an "asset" pass datas to upstream the pipeline.
 /// 
 ///
 /// For any described attribute \em Fallback \em Value or \em Allowed \em Values below
@@ -70,7 +65,7 @@ class SdfAssetPath;
 /// So to set an attribute to the value "rightHanded", use GraphTokens->rightHanded
 /// as the value.
 ///
-class GraphNodeComposer : public GraphNodeGraph
+class GraphComposer : public GraphGraph
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
@@ -78,26 +73,26 @@ public:
     /// \sa UsdSchemaType
     static const UsdSchemaType schemaType = UsdSchemaType::ConcreteTyped;
 
-    /// Construct a GraphNodeComposer on UsdPrim \p prim .
-    /// Equivalent to GraphNodeComposer::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a GraphComposer on UsdPrim \p prim .
+    /// Equivalent to GraphComposer::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit GraphNodeComposer(const UsdPrim& prim=UsdPrim())
-        : GraphNodeGraph(prim)
+    explicit GraphComposer(const UsdPrim& prim=UsdPrim())
+        : GraphGraph(prim)
     {
     }
 
-    /// Construct a GraphNodeComposer on the prim held by \p schemaObj .
-    /// Should be preferred over GraphNodeComposer(schemaObj.GetPrim()),
+    /// Construct a GraphComposer on the prim held by \p schemaObj .
+    /// Should be preferred over GraphComposer(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit GraphNodeComposer(const UsdSchemaBase& schemaObj)
-        : GraphNodeGraph(schemaObj)
+    explicit GraphComposer(const UsdSchemaBase& schemaObj)
+        : GraphGraph(schemaObj)
     {
     }
 
     /// Destructor.
     GRAPH_API
-    virtual ~GraphNodeComposer();
+    virtual ~GraphComposer();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -106,17 +101,17 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a GraphNodeComposer holding the prim adhering to this
+    /// Return a GraphComposer holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// GraphNodeComposer(stage->GetPrimAtPath(path));
+    /// GraphComposer(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     GRAPH_API
-    static GraphNodeComposer
+    static GraphComposer
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
     /// Attempt to ensure a \a UsdPrim adhering to this schema at \p path
@@ -142,7 +137,7 @@ public:
     /// the opinion at the current EditTarget.
     ///
     GRAPH_API
-    static GraphNodeComposer
+    static GraphComposer
     Define(const UsdStagePtr &stage, const SdfPath &path);
 
 protected:
@@ -168,13 +163,12 @@ public:
     // --------------------------------------------------------------------- //
     // DEFORMED 
     // --------------------------------------------------------------------- //
-    /// Describes the <i>deformed geometry</i> output terminal on a NodeComposer.
+    /// Describes the <i>deformed geometry</i> output terminal on a Composer.
     ///
-    /// | ||
-    /// | -- | -- |
-    /// | Declaration | `token outputs:deformed` |
-    /// | C++ Type | TfToken |
-    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->Token |
+    /// \n  C++ Type: TfToken
+    /// \n  Usd Type: SdfValueTypeNames->Token
+    /// \n  Variability: SdfVariabilityVarying
+    /// \n  Fallback Value: No Fallback
     GRAPH_API
     UsdAttribute GetDeformedAttr() const;
 
@@ -193,12 +187,12 @@ public:
     //
     // Just remember to: 
     //  - Close the class declaration with }; 
-    //  - Close the namespace with PXR_NAMESPACE_CLOSE_SCOPE
+    //  - Close the namespace with AMN_NAMESPACE_CLOSE_SCOPE
     //  - Close the include guard with #endif
     // ===================================================================== //
     // --(BEGIN CUSTOM CODE)--
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 #endif

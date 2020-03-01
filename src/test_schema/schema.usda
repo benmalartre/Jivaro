@@ -9,7 +9,7 @@
 over "GLOBAL" (
   customData = {
     string libraryName      = "Graph"
-    string libraryPath      = "Graph"
+    string libraryPath      = "."
     dictionary libraryTokens = {
       dictionary full = {
         string doc= """Possible value for 'connectability' metadata on
@@ -20,7 +20,7 @@ over "GLOBAL" (
       dictionary interfaceOnly = {
         string doc= """Possible value for 'connectability' metadata on 
         a InputPort. It implies that the input can only connect to 
-        a NodeGraph Input (which represents an interface override, not 
+        a Graph Input (which represents an interface override, not 
         a computation-time dataflow connection), or another Input whose 
         connectability is also 'interfaceOnly'.
         """
@@ -51,7 +51,7 @@ over "GLOBAL" (
 {
 }
 
-class NodeGraph "NodeGraph" (
+class Graph "Graph" (
   inherits = </Typed>
   doc = """A node-graph is a container for asset nodes, as well as other 
   node-graphs. It has a public input interface and provides a list of public 
@@ -61,7 +61,7 @@ class NodeGraph "NodeGraph" (
   
   One of the most important functions of a node-graph is to host the "interface"
   with which clients of already-built nodes networks will interact.  Please
-  see \\ref GraphNodeGraph_Interfaces "Interface Inputs" for a detailed
+  see \\ref GraphGraph_Interfaces "Interface Inputs" for a detailed
   explanation of what the interface provides, and how to construct and
   use it, to effectively share/instance nodes networks.
 
@@ -83,15 +83,10 @@ class NodeGraph "NodeGraph" (
 {
 }
 
-class NodeComposer "NodeComposer" (
-  inherits = </NodeGraph>
-  doc = """A NodeComposer provides a container into which multiple "assets"
-  can add data that defines datas to upstream the pipeline.  Typically
-  this consists of one or more UsdRelationship properties that target
-  other prims of type \\em Asset - though a target/client is free to add
-  any data that is suitable.  We <b>strongly advise</b> that all targets
-  adopt the convention that all properties be prefixed with a namespace
-  that identifies the target, e.g. "rel Bob:geom = </Geometry/Head>".
+class Composer "Composer" (
+  inherits = </Graph>
+  doc = """A Composer provides a container into which multiple state of
+  an "asset" pass datas to upstream the pipeline.
   """
   customData = {
     string extraIncludes = '''
@@ -100,40 +95,40 @@ class NodeComposer "NodeComposer" (
 #include "connectableAPI.h"'''
   dictionary schemaTokens = {
     dictionary geometry = {
-      string doc = """The modeling variation described on a NodeComposer."""
+      string doc = """The modeling variation described on a Composer."""
     }
     dictionary animRig = {
-      string doc = """The animation rig variation described on a NodeComposer."""
+      string doc = """The animation rig variation described on a Composer."""
     }
     dictionary cfxRig = {
-      string doc = """The character fx rig variation described on a NodeComposer."""
+      string doc = """The character fx rig variation described on a Composer."""
     }
     dictionary animDatas = {
-      string doc = """The animation datas variation described on a NodeComposer."""
+      string doc = """The animation datas variation described on a Composer."""
     }
     dictionary cfxDatas = {
-      string doc = """The characterFX datas variation described on a NodeComposer."""
+      string doc = """The characterFX datas variation described on a Composer."""
     }
     dictionary animCache = {
-      string doc = """The animation cache variation described on a NodeComposer."""
+      string doc = """The animation cache variation described on a Composer."""
     }
     dictionary cfxCache = {
-      string doc = """The characterFX cache variation described on a NodeComposer."""
+      string doc = """The characterFX cache variation described on a Composer."""
     }
     dictionary derivesFrom  = {
       string doc = """A legacy relationship name specifying a specializes 
-        composition on a NodeComposer."""
+        composition on a Composer."""
     }
     dictionary deformed = {
       string doc = """Describes the <i>deformed geometry</i> output terminal 
-      on a NodeComposer. It is used to cache the resulting geometry of a 
-      NodeComposer."""
+      on a Composer. It is used to cache the resulting geometry of a 
+      Composer."""
     }
   }
 }) 
 {
   token outputs:deformed (
-    doc = """Describes the <i>deformed geometry</i> output terminal on a NodeComposer."""
+    doc = """Describes the <i>deformed geometry</i> output terminal on a Composer."""
     displayGroup = "Outputs"
     customData = {
       string apiName = "deformed"
@@ -144,23 +139,7 @@ class NodeComposer "NodeComposer" (
 class Node "Node" (
   inherits = </Typed>
   doc = """Base class for all Nodes. Nodes are the building blocks
-  of deformation networks.
-  
-  Objects of this class generally represent a single object, whether
-  it exists in the target renderer or not. For example, a geometry, a manipulator,
-  or a computation node...
-
-  The main property of this class is the info:id token, which uniquely 
-  identifies the type of this node.
-
-  The purpose of representing them in Usd is two-fold:
-  \\li To represent, via "connections" the topology of the deformation network
-  that must be reconstructed in the client application. Facilities for authoring and 
-  manipulating connections are encapsulated in the Has-A schema ConnectableAPI.
-  \\li To present a (partial or full) interface of typed input parameters 
-  whose values can be set and overridden in Usd, to be provided later at 
-  deformation-time as parameter values to the actual nodes. Node 
-  input parameters are encapsulated in the property schema InputPort.
+  of an asset network.
   """ 
   customData = {
     string extraIncludes = '''
@@ -177,10 +156,9 @@ class "ConnectableAPI"
 (
   inherits = </APISchemaBase>
   doc = """ConnectableAPI is an API schema that provides a common
-  interface for creating outputs and making connections between nodes 
-  parameters and outputs. The interface is common to all Graph schemas
-  that support Inputs and Outputs, which currently includes Node,
-  NodeGraph, and NodeComposer .
+  interface for creating outputs and making connections between nodes.
+  The interface is common to all Graph schemas including Node, Graph, 
+  and Composer.
 
   One can construct a ConnectableAPI directly from a UsdPrim, or
   from objects of any of the schema classes listed above.  If it seems
@@ -200,7 +178,7 @@ class "ConnectableAPI"
     token apiSchemaType = 'nonApplied'
     string extraIncludes = '''
 #include "node.h"
-#include "nodeGraph.h"
+#include "Graph.h"
 '''
   }
 )

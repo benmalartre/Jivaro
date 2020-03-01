@@ -1,52 +1,12 @@
-//
-// Copyright 2016 Pixar
-//
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
-//
-#ifndef GRAPH_GENERATED_NODE_H
-#define GRAPH_GENERATED_NODE_H
+#ifndef AMN_GRAPH_NODE_H
+#define AMN_GRAPH_NODE_H
 
 /// \file Graph/node.h
 
 #include "pxr/pxr.h"
-#include "Graph/api.h"
-#include "pxr/usd/usd/typed.h"
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usd/stage.h"
+#include "pxr/usd/usdShade/node.h"
 
-#include "input.h"
-#include "output.h"
-#include <pxr/usd/ndr/declare.h>
-
-
-#include "pxr/base/vt/value.h"
-
-#include "pxr/base/gf/vec3d.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/base/gf/matrix4d.h"
-
-#include "pxr/base/tf/token.h"
-#include "pxr/base/tf/type.h"
-
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 class SdfAssetPath;
 
@@ -57,23 +17,7 @@ class SdfAssetPath;
 /// \class GraphNode
 ///
 /// Base class for all Nodes. Nodes are the building blocks
-/// of deformation networks.
-/// 
-/// Objects of this class generally represent a single object, whether
-/// it exists in the target renderer or not. For example, a geometry, a manipulator,
-/// or a computation node...
-/// 
-/// The main property of this class is the info:id token, which uniquely 
-/// identifies the type of this node.
-/// 
-/// The purpose of representing them in Usd is two-fold:
-/// \li To represent, via "connections" the topology of the deformation network
-/// that must be reconstructed in the client application. Facilities for authoring and 
-/// manipulating connections are encapsulated in the Has-A schema ConnectableAPI.
-/// \li To present a (partial or full) interface of typed input parameters 
-/// whose values can be set and overridden in Usd, to be provided later at 
-/// deformation-time as parameter values to the actual nodes. Node 
-/// input parameters are encapsulated in the property schema InputPort.
+/// of an asset network.
 /// 
 ///
 class GraphNode : public UsdTyped
@@ -177,12 +121,12 @@ public:
     //
     // Just remember to: 
     //  - Close the class declaration with }; 
-    //  - Close the namespace with PXR_NAMESPACE_CLOSE_SCOPE
+    //  - Close the namespace with AMN_NAMESPACE_CLOSE_SCOPE
     //  - Close the include guard with #endif
     // ===================================================================== //
     // --(BEGIN CUSTOM CODE)--
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 #endif

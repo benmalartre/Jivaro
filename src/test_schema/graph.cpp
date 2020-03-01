@@ -21,62 +21,75 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/connectableAPI.h"
+#include "./graph.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
-#include "pxr/usd/usd/tokens.h"
 
 #include "pxr/usd/sdf/types.h"
 #include "pxr/usd/sdf/assetPath.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<GraphConnectableAPI,
-        TfType::Bases< UsdAPISchemaBase > >();
+    TfType::Define<GraphGraph,
+        TfType::Bases< UsdTyped > >();
     
+    // Register the usd prim typename as an alias under UsdSchemaBase. This
+    // enables one to call
+    // TfType::Find<UsdSchemaBase>().FindDerivedByName("Graph")
+    // to find TfType<GraphGraph>, which is how IsA queries are
+    // answered.
+    TfType::AddAlias<UsdSchemaBase, GraphGraph>("Graph");
 }
 
-TF_DEFINE_PRIVATE_TOKENS(
-    _schemaTokens,
-    (ConnectableAPI)
-);
-
 /* virtual */
-GraphConnectableAPI::~GraphConnectableAPI()
+GraphGraph::~GraphGraph()
 {
 }
 
 /* static */
-GraphConnectableAPI
-GraphConnectableAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
+GraphGraph
+GraphGraph::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphConnectableAPI();
+        return GraphGraph();
     }
-    return GraphConnectableAPI(stage->GetPrimAtPath(path));
+    return GraphGraph(stage->GetPrimAtPath(path));
 }
 
+/* static */
+GraphGraph
+GraphGraph::Define(
+    const UsdStagePtr &stage, const SdfPath &path)
+{
+    static TfToken usdPrimTypeName("Graph");
+    if (!stage) {
+        TF_CODING_ERROR("Invalid stage");
+        return GraphGraph();
+    }
+    return GraphGraph(
+        stage->DefinePrim(path, usdPrimTypeName));
+}
 
 /* virtual */
-UsdSchemaType GraphConnectableAPI::_GetSchemaType() const {
-    return GraphConnectableAPI::schemaType;
+UsdSchemaType GraphGraph::_GetSchemaType() const {
+    return GraphGraph::schemaType;
 }
 
 /* static */
 const TfType &
-GraphConnectableAPI::_GetStaticTfType()
+GraphGraph::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<GraphConnectableAPI>();
+    static TfType tfType = TfType::Find<GraphGraph>();
     return tfType;
 }
 
 /* static */
 bool 
-GraphConnectableAPI::_IsTypedSchema()
+GraphGraph::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -84,18 +97,18 @@ GraphConnectableAPI::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-GraphConnectableAPI::_GetTfType() const
+GraphGraph::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 /*static*/
 const TfTokenVector&
-GraphConnectableAPI::GetSchemaAttributeNames(bool includeInherited)
+GraphGraph::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames;
     static TfTokenVector allNames =
-        UsdAPISchemaBase::GetSchemaAttributeNames(true);
+        UsdTyped::GetSchemaAttributeNames(true);
 
     if (includeInherited)
         return allNames;
@@ -103,13 +116,13 @@ GraphConnectableAPI::GetSchemaAttributeNames(bool includeInherited)
         return localNames;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 // ===================================================================== //
 // Feel free to add custom code below this line. It will be preserved by
 // the code generator.
 //
 // Just remember to wrap code in the appropriate delimiters:
-// 'PXR_NAMESPACE_OPEN_SCOPE', 'PXR_NAMESPACE_CLOSE_SCOPE'.
+// 'AMN_NAMESPACE_OPEN_SCOPE', 'AMN_NAMESPACE_CLOSE_SCOPE'.
 // ===================================================================== //
 // --(BEGIN CUSTOM CODE)--

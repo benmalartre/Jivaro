@@ -3,7 +3,7 @@
 #include "default.h"
 #include "prim.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // extern AnmUsdEmbreeContext* EMBREE_CTXT;
 // render statistics
@@ -81,4 +81,4 @@ struct AmnUsdEmbreeContext {
   void TraverseStage();
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

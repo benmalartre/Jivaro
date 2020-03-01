@@ -7,7 +7,7 @@
 #include <pxr/base/gf/vec2f.h>
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // AmnView constructor
 //----------------------------------------------------------------------------
@@ -248,4 +248,4 @@ AmnView::GetPercFromMousePosition(int x, int y)
   }
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

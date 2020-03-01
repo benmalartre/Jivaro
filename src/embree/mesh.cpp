@@ -3,7 +3,7 @@
 #include "mesh.h"
 #include "context.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // translate usd mesh to embree mesh
 AmnUsdEmbreeMesh* 
@@ -321,4 +321,4 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
   for(auto n: normals) n.Normalize();
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

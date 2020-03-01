@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/node.h"
+#include "./composerBindingAPI.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -38,7 +38,7 @@
 
 using namespace boost::python;
 
-PXR_NAMESPACE_USING_DIRECTIVE
+AMN_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 
@@ -51,12 +51,12 @@ WRAP_CUSTOM;
 
 } // anonymous namespace
 
-void wrapGraphNode()
+void wrapGraphComposerBindingAPI()
 {
-    typedef GraphNode This;
+    typedef GraphComposerBindingAPI This;
 
-    class_<This, bases<UsdTyped> >
-        cls("Node");
+    class_<This, bases<UsdAPISchemaBase> >
+        cls("ComposerBindingAPI");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -66,8 +66,8 @@ void wrapGraphNode()
         .def("Get", &This::Get, (arg("stage"), arg("path")))
         .staticmethod("Get")
 
-        .def("Define", &This::Define, (arg("stage"), arg("path")))
-        .staticmethod("Define")
+        .def("Apply", &This::Apply, (arg("prim")))
+        .staticmethod("Apply")
 
         .def("GetSchemaAttributeNames",
              &This::GetSchemaAttributeNames,

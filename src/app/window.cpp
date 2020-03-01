@@ -7,7 +7,7 @@
 #include "../imgui/imgui_custom.h"
 #include "../imgui/imgui_test.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // fullscreen window constructor
 //----------------------------------------------------------------------------
@@ -705,4 +705,4 @@ ResizeCallback(GLFWwindow* window, int width, int height)
   glViewport(0, 0, width, height);
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

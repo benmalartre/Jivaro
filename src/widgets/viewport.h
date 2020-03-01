@@ -5,7 +5,7 @@
 #include "../app/ui.h"
 #include "../utils/utils.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 enum VIEWPORT_MODE {
   OPENGL,
@@ -33,4 +33,4 @@ class AmnViewportUI : public AmnUI
     int                 _height;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

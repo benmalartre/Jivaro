@@ -21,9 +21,9 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/tokens.h"
+#include "./tokens.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 GraphTokensType::GraphTokensType() :
     animationCache("animationCache", TfToken::Immortal),
@@ -69,4 +69,4 @@ GraphTokensType::GraphTokensType() :
 
 TfStaticData<GraphTokensType> GraphTokens;
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

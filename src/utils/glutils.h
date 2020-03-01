@@ -7,7 +7,7 @@
 #include "glsl.h"
 #include "../embree/context.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 extern AmnUsdEmbreeContext* EMBREE_CTXT;
 
@@ -199,4 +199,4 @@ CreateOpenGLTexture(int width, int height,
                   pixels);
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

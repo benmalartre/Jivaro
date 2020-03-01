@@ -21,19 +21,19 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef GRAPH_GENERATED_COMPOSERBINDINGAPI_H
-#define GRAPH_GENERATED_COMPOSERBINDINGAPI_H
+#ifndef GRAPH_GENERATED_COORDSYSAPI_H
+#define GRAPH_GENERATED_COORDSYSAPI_H
 
-/// \file Graph/composerBindingAPI.h
+/// \file Graph/coordSysAPI.h
 
 #include "pxr/pxr.h"
-#include "Graph/api.h"
+#include "./api.h"
 #include "pxr/usd/usd/apiSchemaBase.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
-#include "Graph/tokens.h"
+#include "./tokens.h"
 
-    
+#include "pxr/usd/usdGeom/xformable.h"
 
 #include "pxr/base/vt/value.h"
 
@@ -44,48 +44,65 @@
 #include "pxr/base/tf/token.h"
 #include "pxr/base/tf/type.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// COMPOSERBINDINGAPI                                                         //
+// COORDSYSAPI                                                                //
 // -------------------------------------------------------------------------- //
 
-/// \class GraphComposerBindingAPI
+/// \class GraphCoordSysAPI
 ///
-/// ComposerBindingAPI is an API schema that provides an 
-/// interface for binding assets to different states(animation, cfx, cached...). 
+/// CoordSysAPI provides a way to designate, name,
+/// and discover coordinate systems.
+/// 
+/// Coordinate systems are implicitly established by UsdGeomXformable
+/// prims, using their local space.  That coordinate system may be
+/// bound (i.e., named) from another prim.  The binding is encoded
+/// as a single-target relationship in the "coordSys:" namespace.
+/// Coordinate system bindings apply to descendants of the prim
+/// where the binding is expressed, but names may be re-bound by
+/// descendant prims.
+/// 
+/// Named coordinate systems are useful in animation workflows.
+/// An example is camera base sculpting.  
+/// Using the paint coordinate frame avoids the need to assign 
+/// a UV set to the object, and can be a concise way to project
+/// sculpt across a collection of objects with a single shared
+/// paint coordinate system.
+/// 
+/// This is a non-applied API schema.
 /// 
 ///
-class GraphComposerBindingAPI : public UsdAPISchemaBase
+class GraphCoordSysAPI : public UsdAPISchemaBase
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
     ///
     /// \sa UsdSchemaType
-    static const UsdSchemaType schemaType = UsdSchemaType::SingleApplyAPI;
+    static const UsdSchemaType schemaType = UsdSchemaType::NonAppliedAPI;
 
-    /// Construct a GraphComposerBindingAPI on UsdPrim \p prim .
-    /// Equivalent to GraphComposerBindingAPI::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a GraphCoordSysAPI on UsdPrim \p prim .
+    /// Equivalent to GraphCoordSysAPI::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit GraphComposerBindingAPI(const UsdPrim& prim=UsdPrim())
+    explicit GraphCoordSysAPI(const UsdPrim& prim=UsdPrim())
         : UsdAPISchemaBase(prim)
     {
     }
 
-    /// Construct a GraphComposerBindingAPI on the prim held by \p schemaObj .
-    /// Should be preferred over GraphComposerBindingAPI(schemaObj.GetPrim()),
+    /// Construct a GraphCoordSysAPI on the prim held by \p schemaObj .
+    /// Should be preferred over GraphCoordSysAPI(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit GraphComposerBindingAPI(const UsdSchemaBase& schemaObj)
+    explicit GraphCoordSysAPI(const UsdSchemaBase& schemaObj)
         : UsdAPISchemaBase(schemaObj)
     {
     }
 
     /// Destructor.
     GRAPH_API
-    virtual ~GraphComposerBindingAPI();
+    virtual ~GraphCoordSysAPI();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -94,35 +111,19 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a GraphComposerBindingAPI holding the prim adhering to this
+    /// Return a GraphCoordSysAPI holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// GraphComposerBindingAPI(stage->GetPrimAtPath(path));
+    /// GraphCoordSysAPI(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     GRAPH_API
-    static GraphComposerBindingAPI
+    static GraphCoordSysAPI
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
-
-    /// Applies this <b>single-apply</b> API schema to the given \p prim.
-    /// This information is stored by adding "ComposerBindingAPI" to the 
-    /// token-valued, listOp metadata \em apiSchemas on the prim.
-    /// 
-    /// \return A valid GraphComposerBindingAPI object is returned upon success. 
-    /// An invalid (or empty) GraphComposerBindingAPI object is returned upon 
-    /// failure. See \ref UsdAPISchemaBase::_ApplyAPISchema() for conditions 
-    /// resulting in failure. 
-    /// 
-    /// \sa UsdPrim::GetAppliedSchemas()
-    /// \sa UsdPrim::HasAPI()
-    ///
-    GRAPH_API
-    static GraphComposerBindingAPI 
-    Apply(const UsdPrim &prim);
 
 protected:
     /// Returns the type of schema this class belongs to.
@@ -150,12 +151,12 @@ public:
     //
     // Just remember to: 
     //  - Close the class declaration with }; 
-    //  - Close the namespace with PXR_NAMESPACE_CLOSE_SCOPE
+    //  - Close the namespace with AMN_NAMESPACE_CLOSE_SCOPE
     //  - Close the include guard with #endif
     // ===================================================================== //
     // --(BEGIN CUSTOM CODE)--
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -21,9 +21,10 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./node.h"
+#include "./coordSysAPI.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
+#include "pxr/usd/usd/tokens.h"
 
 #include "pxr/usd/sdf/types.h"
 #include "pxr/usd/sdf/assetPath.h"
@@ -33,63 +34,49 @@ AMN_NAMESPACE_OPEN_SCOPE
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<GraphNode,
-        TfType::Bases< UsdTyped > >();
+    TfType::Define<GraphCoordSysAPI,
+        TfType::Bases< UsdAPISchemaBase > >();
     
-    // Register the usd prim typename as an alias under UsdSchemaBase. This
-    // enables one to call
-    // TfType::Find<UsdSchemaBase>().FindDerivedByName("Node")
-    // to find TfType<GraphNode>, which is how IsA queries are
-    // answered.
-    TfType::AddAlias<UsdSchemaBase, GraphNode>("Node");
 }
 
+TF_DEFINE_PRIVATE_TOKENS(
+    _schemaTokens,
+    (CoordSysAPI)
+);
+
 /* virtual */
-GraphNode::~GraphNode()
+GraphCoordSysAPI::~GraphCoordSysAPI()
 {
 }
 
 /* static */
-GraphNode
-GraphNode::Get(const UsdStagePtr &stage, const SdfPath &path)
+GraphCoordSysAPI
+GraphCoordSysAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphNode();
+        return GraphCoordSysAPI();
     }
-    return GraphNode(stage->GetPrimAtPath(path));
+    return GraphCoordSysAPI(stage->GetPrimAtPath(path));
 }
 
-/* static */
-GraphNode
-GraphNode::Define(
-    const UsdStagePtr &stage, const SdfPath &path)
-{
-    static TfToken usdPrimTypeName("Node");
-    if (!stage) {
-        TF_CODING_ERROR("Invalid stage");
-        return GraphNode();
-    }
-    return GraphNode(
-        stage->DefinePrim(path, usdPrimTypeName));
-}
 
 /* virtual */
-UsdSchemaType GraphNode::_GetSchemaType() const {
-    return GraphNode::schemaType;
+UsdSchemaType GraphCoordSysAPI::_GetSchemaType() const {
+    return GraphCoordSysAPI::schemaType;
 }
 
 /* static */
 const TfType &
-GraphNode::_GetStaticTfType()
+GraphCoordSysAPI::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<GraphNode>();
+    static TfType tfType = TfType::Find<GraphCoordSysAPI>();
     return tfType;
 }
 
 /* static */
 bool 
-GraphNode::_IsTypedSchema()
+GraphCoordSysAPI::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -97,18 +84,18 @@ GraphNode::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-GraphNode::_GetTfType() const
+GraphCoordSysAPI::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 /*static*/
 const TfTokenVector&
-GraphNode::GetSchemaAttributeNames(bool includeInherited)
+GraphCoordSysAPI::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames;
     static TfTokenVector allNames =
-        UsdTyped::GetSchemaAttributeNames(true);
+        UsdAPISchemaBase::GetSchemaAttributeNames(true);
 
     if (includeInherited)
         return allNames;

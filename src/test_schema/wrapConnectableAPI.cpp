@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/nodeGraph.h"
+#include "./connectableAPI.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -38,7 +38,7 @@
 
 using namespace boost::python;
 
-PXR_NAMESPACE_USING_DIRECTIVE
+AMN_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 
@@ -51,12 +51,12 @@ WRAP_CUSTOM;
 
 } // anonymous namespace
 
-void wrapGraphNodeGraph()
+void wrapGraphConnectableAPI()
 {
-    typedef GraphNodeGraph This;
+    typedef GraphConnectableAPI This;
 
-    class_<This, bases<UsdTyped> >
-        cls("NodeGraph");
+    class_<This, bases<UsdAPISchemaBase> >
+        cls("ConnectableAPI");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -65,9 +65,6 @@ void wrapGraphNodeGraph()
 
         .def("Get", &This::Get, (arg("stage"), arg("path")))
         .staticmethod("Get")
-
-        .def("Define", &This::Define, (arg("stage"), arg("path")))
-        .staticmethod("Define")
 
         .def("GetSchemaAttributeNames",
              &This::GetSchemaAttributeNames,

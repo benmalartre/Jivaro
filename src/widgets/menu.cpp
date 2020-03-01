@@ -2,7 +2,7 @@
 #include "../app/view.h"
 #include "../app/window.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // constructor
 AmnMenuUI::AmnMenuUI(AmnView* parent):AmnUI(parent, "menu")
@@ -48,4 +48,4 @@ void AmnMenuUI::Draw()
 
 } 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

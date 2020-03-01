@@ -4,7 +4,7 @@
 #include "../widgets/viewport.h"
 #include "../widgets/menu.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 const char* AmnApplication::APPLICATION_NAME = "Amnesie";
 
@@ -89,5 +89,5 @@ AmnApplication::MainLoop()
   
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 

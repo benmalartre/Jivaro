@@ -5,7 +5,7 @@
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 class AmnView;
 class AmnWindow;
 
@@ -48,5 +48,5 @@ private:
   std::vector<AmnView*>  _views;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 

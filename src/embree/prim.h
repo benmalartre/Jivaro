@@ -2,7 +2,7 @@
 
 #include "../default.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 enum AMN_INTERPOLATION_TYPE{
   CONSTANT,
@@ -26,4 +26,4 @@ struct AmnUsdEmbreePrim {
   std::string                 _name;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

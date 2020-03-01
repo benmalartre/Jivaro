@@ -6,7 +6,7 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 #define RANDOM_0_1 ((float)rand() / (float)RAND_MAX)
 
@@ -92,4 +92,4 @@ static int FilesInDirectory()
   }
 }
  
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

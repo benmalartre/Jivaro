@@ -21,75 +21,75 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/nodeComposer.h"
+#include "./composer.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
 
 #include "pxr/usd/sdf/types.h"
 #include "pxr/usd/sdf/assetPath.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<GraphNodeComposer,
-        TfType::Bases< GraphNodeGraph > >();
+    TfType::Define<GraphComposer,
+        TfType::Bases< GraphGraph > >();
     
     // Register the usd prim typename as an alias under UsdSchemaBase. This
     // enables one to call
-    // TfType::Find<UsdSchemaBase>().FindDerivedByName("NodeComposer")
-    // to find TfType<GraphNodeComposer>, which is how IsA queries are
+    // TfType::Find<UsdSchemaBase>().FindDerivedByName("Composer")
+    // to find TfType<GraphComposer>, which is how IsA queries are
     // answered.
-    TfType::AddAlias<UsdSchemaBase, GraphNodeComposer>("NodeComposer");
+    TfType::AddAlias<UsdSchemaBase, GraphComposer>("Composer");
 }
 
 /* virtual */
-GraphNodeComposer::~GraphNodeComposer()
+GraphComposer::~GraphComposer()
 {
 }
 
 /* static */
-GraphNodeComposer
-GraphNodeComposer::Get(const UsdStagePtr &stage, const SdfPath &path)
+GraphComposer
+GraphComposer::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphNodeComposer();
+        return GraphComposer();
     }
-    return GraphNodeComposer(stage->GetPrimAtPath(path));
+    return GraphComposer(stage->GetPrimAtPath(path));
 }
 
 /* static */
-GraphNodeComposer
-GraphNodeComposer::Define(
+GraphComposer
+GraphComposer::Define(
     const UsdStagePtr &stage, const SdfPath &path)
 {
-    static TfToken usdPrimTypeName("NodeComposer");
+    static TfToken usdPrimTypeName("Composer");
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphNodeComposer();
+        return GraphComposer();
     }
-    return GraphNodeComposer(
+    return GraphComposer(
         stage->DefinePrim(path, usdPrimTypeName));
 }
 
 /* virtual */
-UsdSchemaType GraphNodeComposer::_GetSchemaType() const {
-    return GraphNodeComposer::schemaType;
+UsdSchemaType GraphComposer::_GetSchemaType() const {
+    return GraphComposer::schemaType;
 }
 
 /* static */
 const TfType &
-GraphNodeComposer::_GetStaticTfType()
+GraphComposer::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<GraphNodeComposer>();
+    static TfType tfType = TfType::Find<GraphComposer>();
     return tfType;
 }
 
 /* static */
 bool 
-GraphNodeComposer::_IsTypedSchema()
+GraphComposer::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -97,19 +97,19 @@ GraphNodeComposer::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-GraphNodeComposer::_GetTfType() const
+GraphComposer::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 UsdAttribute
-GraphNodeComposer::GetDeformedAttr() const
+GraphComposer::GetDeformedAttr() const
 {
     return GetPrim().GetAttribute(GraphTokens->outputsDeformed);
 }
 
 UsdAttribute
-GraphNodeComposer::CreateDeformedAttr(VtValue const &defaultValue, bool writeSparsely) const
+GraphComposer::CreateDeformedAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(GraphTokens->outputsDeformed,
                        SdfValueTypeNames->Token,
@@ -133,14 +133,14 @@ _ConcatenateAttributeNames(const TfTokenVector& left,const TfTokenVector& right)
 
 /*static*/
 const TfTokenVector&
-GraphNodeComposer::GetSchemaAttributeNames(bool includeInherited)
+GraphComposer::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames = {
         GraphTokens->outputsDeformed,
     };
     static TfTokenVector allNames =
         _ConcatenateAttributeNames(
-            GraphNodeGraph::GetSchemaAttributeNames(true),
+            GraphGraph::GetSchemaAttributeNames(true),
             localNames);
 
     if (includeInherited)
@@ -149,13 +149,13 @@ GraphNodeComposer::GetSchemaAttributeNames(bool includeInherited)
         return localNames;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 // ===================================================================== //
 // Feel free to add custom code below this line. It will be preserved by
 // the code generator.
 //
 // Just remember to wrap code in the appropriate delimiters:
-// 'PXR_NAMESPACE_OPEN_SCOPE', 'PXR_NAMESPACE_CLOSE_SCOPE'.
+// 'AMN_NAMESPACE_OPEN_SCOPE', 'AMN_NAMESPACE_CLOSE_SCOPE'.
 // ===================================================================== //
 // --(BEGIN CUSTOM CODE)--

@@ -13,7 +13,7 @@
 
 #include <GLFW/glfw3.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 class AmnUsdEmbreeContext;
 class AmnApplication;
@@ -158,4 +158,4 @@ public:
   static AmnWindow* CreateStandardWindow(int width, int height);
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

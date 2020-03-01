@@ -1,9 +1,10 @@
 #pragma once
 
+#include "../default.h"
 #include "../imgui/imgui_custom.h"
 #include "../imgui/imgui_test.h"
 
-PXR_NAMESPACE_OPEN_SCOPE  
+AMN_NAMESPACE_OPEN_SCOPE  
 
 class AmnView;
 
@@ -35,4 +36,4 @@ protected:
   
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

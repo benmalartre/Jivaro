@@ -3,17 +3,17 @@
 #include "app/application.h"
 #include "embree/context.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 extern AmnUsdEmbreeContext* EMBREE_CTXT = 0;
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 
 
 // main application entry point
 //------------------------------------------------------------------------------
-PXR_NAMESPACE_USING_DIRECTIVE
+AMN_NAMESPACE_USING_DIRECTIVE
 
 int main(void)
 {

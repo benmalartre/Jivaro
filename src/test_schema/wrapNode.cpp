@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/nodeComposer.h"
+#include "./node.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -38,7 +38,7 @@
 
 using namespace boost::python;
 
-PXR_NAMESPACE_USING_DIRECTIVE
+AMN_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 
@@ -48,22 +48,15 @@ namespace {
 // fwd decl.
 WRAP_CUSTOM;
 
-        
-static UsdAttribute
-_CreateDeformedAttr(GraphNodeComposer &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateDeformedAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
-}
 
 } // anonymous namespace
 
-void wrapGraphNodeComposer()
+void wrapGraphNode()
 {
-    typedef GraphNodeComposer This;
+    typedef GraphNode This;
 
-    class_<This, bases<GraphNodeGraph> >
-        cls("NodeComposer");
+    class_<This, bases<UsdTyped> >
+        cls("Node");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -88,13 +81,6 @@ void wrapGraphNodeComposer()
 
         .def(!self)
 
-        
-        .def("GetDeformedAttr",
-             &This::GetDeformedAttr)
-        .def("CreateDeformedAttr",
-             &_CreateDeformedAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
 
     ;
 

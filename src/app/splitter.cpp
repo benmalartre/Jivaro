@@ -1,7 +1,7 @@
 #include "splitter.h"
 #include "view.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 void AmnSplitter::RecurseBuildMap(AmnView* view)
 {
@@ -87,4 +87,4 @@ AmnSplitter::Resize(AmnView* view)
   view->Resize(view->GetMin()[0], view->GetMin()[1], 
     view->GetWidth(), view->GetHeight());
 }
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

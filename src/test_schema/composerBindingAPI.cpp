@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/coordSysAPI.h"
+#include "./composerBindingAPI.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
 #include "pxr/usd/usd/tokens.h"
@@ -29,54 +29,62 @@
 #include "pxr/usd/sdf/types.h"
 #include "pxr/usd/sdf/assetPath.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<GraphCoordSysAPI,
+    TfType::Define<GraphComposerBindingAPI,
         TfType::Bases< UsdAPISchemaBase > >();
     
 }
 
 TF_DEFINE_PRIVATE_TOKENS(
     _schemaTokens,
-    (CoordSysAPI)
+    (ComposerBindingAPI)
 );
 
 /* virtual */
-GraphCoordSysAPI::~GraphCoordSysAPI()
+GraphComposerBindingAPI::~GraphComposerBindingAPI()
 {
 }
 
 /* static */
-GraphCoordSysAPI
-GraphCoordSysAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
+GraphComposerBindingAPI
+GraphComposerBindingAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphCoordSysAPI();
+        return GraphComposerBindingAPI();
     }
-    return GraphCoordSysAPI(stage->GetPrimAtPath(path));
+    return GraphComposerBindingAPI(stage->GetPrimAtPath(path));
 }
 
 
 /* virtual */
-UsdSchemaType GraphCoordSysAPI::_GetSchemaType() const {
-    return GraphCoordSysAPI::schemaType;
+UsdSchemaType GraphComposerBindingAPI::_GetSchemaType() const {
+    return GraphComposerBindingAPI::schemaType;
+}
+
+/* static */
+GraphComposerBindingAPI
+GraphComposerBindingAPI::Apply(const UsdPrim &prim)
+{
+    return UsdAPISchemaBase::_ApplyAPISchema<GraphComposerBindingAPI>(
+            prim, _schemaTokens->ComposerBindingAPI);
 }
 
 /* static */
 const TfType &
-GraphCoordSysAPI::_GetStaticTfType()
+GraphComposerBindingAPI::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<GraphCoordSysAPI>();
+    static TfType tfType = TfType::Find<GraphComposerBindingAPI>();
     return tfType;
 }
 
 /* static */
 bool 
-GraphCoordSysAPI::_IsTypedSchema()
+GraphComposerBindingAPI::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -84,14 +92,14 @@ GraphCoordSysAPI::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-GraphCoordSysAPI::_GetTfType() const
+GraphComposerBindingAPI::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 /*static*/
 const TfTokenVector&
-GraphCoordSysAPI::GetSchemaAttributeNames(bool includeInherited)
+GraphComposerBindingAPI::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames;
     static TfTokenVector allNames =
@@ -103,13 +111,13 @@ GraphCoordSysAPI::GetSchemaAttributeNames(bool includeInherited)
         return localNames;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 // ===================================================================== //
 // Feel free to add custom code below this line. It will be preserved by
 // the code generator.
 //
 // Just remember to wrap code in the appropriate delimiters:
-// 'PXR_NAMESPACE_OPEN_SCOPE', 'PXR_NAMESPACE_CLOSE_SCOPE'.
+// 'AMN_NAMESPACE_OPEN_SCOPE', 'AMN_NAMESPACE_CLOSE_SCOPE'.
 // ===================================================================== //
 // --(BEGIN CUSTOM CODE)--

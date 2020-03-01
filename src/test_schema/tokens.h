@@ -34,12 +34,12 @@
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 #include "pxr/pxr.h"
-#include "Graph/api.h"
+#include "./api.h"
 #include "pxr/base/tf/staticData.h"
 #include "pxr/base/tf/token.h"
 #include <vector>
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 
 /// \class GraphTokensType
@@ -68,27 +68,27 @@ struct GraphTokensType {
     const TfToken animationCache;
     /// \brief "animCache"
     /// 
-    /// The animation cache variation described on a NodeComposer.
+    /// The animation cache variation described on a Composer.
     const TfToken animCache;
     /// \brief "animDatas"
     /// 
-    /// The animation datas variation described on a NodeComposer.
+    /// The animation datas variation described on a Composer.
     const TfToken animDatas;
     /// \brief "animRig"
     /// 
-    /// When in 'animRig state, the asset will exhibit it's animation controls and authored animation curves. , The animation rig variation described on a NodeComposer.
+    /// When in 'animRig state, the asset will exhibit it's animation controls and authored animation curves. , The animation rig variation described on a Composer.
     const TfToken animRig;
     /// \brief "cfxCache"
     /// 
-    /// When in 'cfxCache state, the asset will exhibit the animation cache with the cfx cache override on top. , The characterFX cache variation described on a NodeComposer.
+    /// When in 'cfxCache state, the asset will exhibit the animation cache with the cfx cache override on top. , The characterFX cache variation described on a Composer.
     const TfToken cfxCache;
     /// \brief "cfxDatas"
     /// 
-    /// The characterFX datas variation described on a NodeComposer.
+    /// The characterFX datas variation described on a Composer.
     const TfToken cfxDatas;
     /// \brief "cfxRig"
     /// 
-    /// When in 'cfxRig state, the asset will exhibit the animation cache + the cfx rig to be simulated/sculpted on top. , The character fx rig variation described on a NodeComposer.
+    /// When in 'cfxRig state, the asset will exhibit the animation cache + the cfx rig to be simulated/sculpted on top. , The character fx rig variation described on a Composer.
     const TfToken cfxRig;
     /// \brief "connectedSourceFor:"
     /// 
@@ -100,11 +100,11 @@ struct GraphTokensType {
     const TfToken coordSys;
     /// \brief "deformed"
     /// 
-    /// Describes the <i>deformed geometry</i> output terminal  on a NodeComposer. It is used to cache the resulting geometry of a  NodeComposer.
+    /// Describes the <i>deformed geometry</i> output terminal  on a Composer. It is used to cache the resulting geometry of a  Composer.
     const TfToken deformed;
     /// \brief "derivesFrom"
     /// 
-    /// A legacy relationship name specifying a specializes  composition on a NodeComposer.
+    /// A legacy relationship name specifying a specializes  composition on a Composer.
     const TfToken derivesFrom;
     /// \brief "full"
     /// 
@@ -112,7 +112,7 @@ struct GraphTokensType {
     const TfToken full;
     /// \brief "geometry"
     /// 
-    /// The modeling variation described on a NodeComposer.
+    /// The modeling variation described on a Composer.
     const TfToken geometry;
     /// \brief "inputs:"
     /// 
@@ -120,7 +120,7 @@ struct GraphTokensType {
     const TfToken inputs;
     /// \brief "interfaceOnly"
     /// 
-    /// Possible value for 'connectability' metadata on  a InputPort. It implies that the input can only connect to  a NodeGraph Input (which represents an interface override, not  a computation-time dataflow connection), or another Input whose  connectability is also 'interfaceOnly'. 
+    /// Possible value for 'connectability' metadata on  a InputPort. It implies that the input can only connect to  a Graph Input (which represents an interface override, not  a computation-time dataflow connection), or another Input whose  connectability is also 'interfaceOnly'. 
     const TfToken interfaceOnly;
     /// \brief "outputs:"
     /// 
@@ -128,7 +128,7 @@ struct GraphTokensType {
     const TfToken outputs;
     /// \brief "outputs:deformed"
     /// 
-    /// GraphNodeComposer
+    /// GraphComposer
     const TfToken outputsDeformed;
     /// \brief "state:binding"
     /// 
@@ -144,6 +144,6 @@ struct GraphTokensType {
 /// for use in all public USD API.  \sa GraphTokensType
 extern GRAPH_API TfStaticData<GraphTokensType> GraphTokens;
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 #endif

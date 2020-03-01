@@ -9,7 +9,7 @@
 #include "../embree/prim.h"
 #include "../embree/mesh.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 extern AmnUsdEmbreeContext* EMBREE_CTXT;
 
 class AmnApplication
@@ -46,5 +46,5 @@ private:
   int                   _height;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE // namespace pxr
+AMN_NAMESPACE_CLOSE_SCOPE // namespace pxr
 

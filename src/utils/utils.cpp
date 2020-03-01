@@ -1,6 +1,6 @@
 #include "utils.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // print vectors (debug)
 void
@@ -23,4 +23,4 @@ PrintVector(const pxr::GfVec4f& v, const char* t)
     << "," << v[2] << "," << v[3] <<std::endl;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

@@ -3,7 +3,7 @@
 #include "mesh.h"
 #include "../utils/glutils.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 // constructor
 //----------------------------------------------------------------------------
 AmnUsdEmbreeContext::AmnUsdEmbreeContext():
@@ -127,4 +127,4 @@ void AmnUsdEmbreeContext::Resize(int width, int height)
   _pixels = (int*) embree::alignedMalloc(_width * _height * sizeof(int), 64);
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

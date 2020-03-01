@@ -21,70 +21,75 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/composerBindingAPI.h"
+#include "./node.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
-#include "pxr/usd/usd/tokens.h"
 
 #include "pxr/usd/sdf/types.h"
 #include "pxr/usd/sdf/assetPath.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<GraphComposerBindingAPI,
-        TfType::Bases< UsdAPISchemaBase > >();
+    TfType::Define<GraphNode,
+        TfType::Bases< UsdTyped > >();
     
+    // Register the usd prim typename as an alias under UsdSchemaBase. This
+    // enables one to call
+    // TfType::Find<UsdSchemaBase>().FindDerivedByName("Node")
+    // to find TfType<GraphNode>, which is how IsA queries are
+    // answered.
+    TfType::AddAlias<UsdSchemaBase, GraphNode>("Node");
 }
 
-TF_DEFINE_PRIVATE_TOKENS(
-    _schemaTokens,
-    (ComposerBindingAPI)
-);
-
 /* virtual */
-GraphComposerBindingAPI::~GraphComposerBindingAPI()
+GraphNode::~GraphNode()
 {
 }
 
 /* static */
-GraphComposerBindingAPI
-GraphComposerBindingAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
+GraphNode
+GraphNode::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphComposerBindingAPI();
+        return GraphNode();
     }
-    return GraphComposerBindingAPI(stage->GetPrimAtPath(path));
-}
-
-
-/* virtual */
-UsdSchemaType GraphComposerBindingAPI::_GetSchemaType() const {
-    return GraphComposerBindingAPI::schemaType;
+    return GraphNode(stage->GetPrimAtPath(path));
 }
 
 /* static */
-GraphComposerBindingAPI
-GraphComposerBindingAPI::Apply(const UsdPrim &prim)
+GraphNode
+GraphNode::Define(
+    const UsdStagePtr &stage, const SdfPath &path)
 {
-    return UsdAPISchemaBase::_ApplyAPISchema<GraphComposerBindingAPI>(
-            prim, _schemaTokens->ComposerBindingAPI);
+    static TfToken usdPrimTypeName("Node");
+    if (!stage) {
+        TF_CODING_ERROR("Invalid stage");
+        return GraphNode();
+    }
+    return GraphNode(
+        stage->DefinePrim(path, usdPrimTypeName));
+}
+
+/* virtual */
+UsdSchemaType GraphNode::_GetSchemaType() const {
+    return GraphNode::schemaType;
 }
 
 /* static */
 const TfType &
-GraphComposerBindingAPI::_GetStaticTfType()
+GraphNode::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<GraphComposerBindingAPI>();
+    static TfType tfType = TfType::Find<GraphNode>();
     return tfType;
 }
 
 /* static */
 bool 
-GraphComposerBindingAPI::_IsTypedSchema()
+GraphNode::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -92,18 +97,18 @@ GraphComposerBindingAPI::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-GraphComposerBindingAPI::_GetTfType() const
+GraphNode::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 /*static*/
 const TfTokenVector&
-GraphComposerBindingAPI::GetSchemaAttributeNames(bool includeInherited)
+GraphNode::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames;
     static TfTokenVector allNames =
-        UsdAPISchemaBase::GetSchemaAttributeNames(true);
+        UsdTyped::GetSchemaAttributeNames(true);
 
     if (includeInherited)
         return allNames;
@@ -111,13 +116,13 @@ GraphComposerBindingAPI::GetSchemaAttributeNames(bool includeInherited)
         return localNames;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE
 
 // ===================================================================== //
 // Feel free to add custom code below this line. It will be preserved by
 // the code generator.
 //
 // Just remember to wrap code in the appropriate delimiters:
-// 'PXR_NAMESPACE_OPEN_SCOPE', 'PXR_NAMESPACE_CLOSE_SCOPE'.
+// 'AMN_NAMESPACE_OPEN_SCOPE', 'AMN_NAMESPACE_CLOSE_SCOPE'.
 // ===================================================================== //
 // --(BEGIN CUSTOM CODE)--

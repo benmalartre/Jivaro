@@ -18,7 +18,7 @@
 #include "ray.h"
 #include "context.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 class AmnViewportUI;
 
 extern AmnUsdEmbreeContext* EMBREE_CTXT;
@@ -131,4 +131,4 @@ void RenderToMemory();
 // render to viewport
 void RenderToViewport(AmnViewportUI* viewport);
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

@@ -4,7 +4,7 @@
 #include "../utils/utils.h"
 #include <pxr/usd/usd/prim.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 class AmnWindow;
 class AmnUI;
@@ -84,4 +84,4 @@ private:
   AmnWindow*        _window;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

@@ -5,7 +5,7 @@
 #include "../utils/utils.h"
 #include <pxr/usd/usd/prim.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 class DummyUI : public AmnUI
 {
@@ -22,4 +22,4 @@ private:
 
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

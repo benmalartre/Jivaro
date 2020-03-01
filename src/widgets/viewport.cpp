@@ -2,7 +2,7 @@
 #include "../app/view.h"
 #include "../utils/glutils.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 extern AmnUsdEmbreeContext* EMBREE_CTXT;
 
@@ -40,7 +40,7 @@ void AmnViewportUI::Draw()
     glUseProgram(EMBREE_CTXT->_screenSpaceQuadPgm);
     CreateOpenGLTexture(_width, _height, _pixels, _texture, 0);
     glViewport(x, GetWindowHeight()-(y+h), w, h);
-    glUniform1i(glGetUniformLocation(pxr::EMBREE_CTXT->_screenSpaceQuadPgm,"tex"),0);
+    glUniform1i(glGetUniformLocation(EMBREE_CTXT->_screenSpaceQuadPgm,"tex"),0);
     DrawScreenSpaceQuad();
   }
   else
@@ -62,4 +62,4 @@ void AmnViewportUI::SetPixels(int width, int height, int* pixels)
   _pixels=pixels;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

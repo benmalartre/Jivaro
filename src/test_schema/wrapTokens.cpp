@@ -23,9 +23,9 @@
 //
 // GENERATED FILE.  DO NOT EDIT.
 #include <boost/python/class.hpp>
-#include "Graph/tokens.h"
+#include "./tokens.h"
 
-PXR_NAMESPACE_USING_DIRECTIVE
+AMN_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 

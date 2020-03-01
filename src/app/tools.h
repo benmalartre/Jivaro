@@ -4,7 +4,7 @@
 #include "../utils/utils.h"
 #include <pxr/usd/usd/prim.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 enum TOOLS
 {
@@ -16,4 +16,4 @@ enum TOOLS
   AMN_TOOL_DRAG
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

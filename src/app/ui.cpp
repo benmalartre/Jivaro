@@ -2,7 +2,7 @@
 #include "window.h"
 #include "view.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+AMN_NAMESPACE_OPEN_SCOPE
 
 // constructor
 AmnUI::AmnUI(AmnView* parent, const std::string& name):
@@ -30,4 +30,4 @@ int AmnUI::GetY(){return GetWindowHeight() - (_parent->GetMin()[1] + _parent->Ge
 int AmnUI::GetWidth(){return _parent->GetWidth();};
 int AmnUI::GetHeight(){return _parent->GetHeight();};
 
-PXR_NAMESPACE_CLOSE_SCOPE
+AMN_NAMESPACE_CLOSE_SCOPE

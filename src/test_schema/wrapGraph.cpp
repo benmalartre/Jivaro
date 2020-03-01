@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "Graph/coordSysAPI.h"
+#include "./graph.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -38,7 +38,7 @@
 
 using namespace boost::python;
 
-PXR_NAMESPACE_USING_DIRECTIVE
+AMN_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 
@@ -51,12 +51,12 @@ WRAP_CUSTOM;
 
 } // anonymous namespace
 
-void wrapGraphCoordSysAPI()
+void wrapGraphGraph()
 {
-    typedef GraphCoordSysAPI This;
+    typedef GraphGraph This;
 
-    class_<This, bases<UsdAPISchemaBase> >
-        cls("CoordSysAPI");
+    class_<This, bases<UsdTyped> >
+        cls("Graph");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -65,6 +65,9 @@ void wrapGraphCoordSysAPI()
 
         .def("Get", &This::Get, (arg("stage"), arg("path")))
         .staticmethod("Get")
+
+        .def("Define", &This::Define, (arg("stage"), arg("path")))
+        .staticmethod("Define")
 
         .def("GetSchemaAttributeNames",
              &This::GetSchemaAttributeNames,
