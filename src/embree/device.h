@@ -13,23 +13,15 @@
 #include <algorithms/parallel_for.h>
 #include <tasking/taskschedulertbb.h>
 
-#include "default.h"
+#include "../default.h"
 #include "camera.h"
 #include "ray.h"
 #include "context.h"
 
-namespace AMN {
+PXR_NAMESPACE_OPEN_SCOPE
+class AmnViewportUI;
 
-class ViewportUI;
-// screen-space-quad 
-extern GLuint SCREENSPACEQUAD_VAO;
-extern GLuint SCREENSPACEQUAD_VBO;
-
-extern GLuint SCREENSPACEQUAD_VERTEX_SHADER;
-extern GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
-extern GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
-
-extern UsdEmbreeContext* EMBREE_CTXT;
+extern AmnUsdEmbreeContext* EMBREE_CTXT;
 
 #define TILE_SIZE_X 8
 #define TILE_SIZE_Y 8
@@ -137,6 +129,6 @@ void RenderToFile(const embree::FileName& fileName);
 void RenderToMemory();
 
 // render to viewport
-void RenderToViewport(ViewportUI* viewport);
+void RenderToViewport(AmnViewportUI* viewport);
 
-} // namespace AMN
+PXR_NAMESPACE_CLOSE_SCOPE

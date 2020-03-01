@@ -1,4 +1,4 @@
-set(TARGET amina)
+set(TARGET amnesia)
 
 add_definitions(
   -DIMGUI_IMPL_OPENGL_LOADER_GL3W
@@ -15,19 +15,20 @@ add_executable(${TARGET}
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
   imgui/imgui.cpp
-  oiio.cpp
-  jpeg.cpp
-  mesh.cpp
-  context.cpp
-  device.cpp
-  utils.cpp
-  view.cpp
-  ui.cpp
   widgets/menu.cpp
   widgets/viewport.cpp
-  splitter.cpp
-  window.cpp
-  application.cpp
+  embree/oiio.cpp
+  embree/jpeg.cpp
+  embree/mesh.cpp
+  embree/context.cpp
+  embree/device.cpp
+  utils/glutils.cpp
+  utils/utils.cpp
+  app/view.cpp
+  app/ui.cpp
+  app/splitter.cpp
+  app/window.cpp
+  app/application.cpp
   main.cpp
 )
 

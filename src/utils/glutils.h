@@ -3,12 +3,14 @@
 //------------------------------------------------------------------------------
 #pragma once
 
-#include "default.h"
-#include "context.h"
+#include "../default.h"
 #include "glsl.h"
+#include "../embree/context.h"
 
-namespace AMN {
-extern UsdEmbreeContext* EMBREE_CTXT;
+PXR_NAMESPACE_OPEN_SCOPE
+
+extern AmnUsdEmbreeContext* EMBREE_CTXT;
+
 static bool 
 GLCheckError(std::string message)
 {
@@ -55,10 +57,10 @@ GLCheckError(std::string message)
   return false;
 }
 
+
 // screen-space-quad 
 extern GLuint SCREENSPACEQUAD_VAO;
 extern GLuint SCREENSPACEQUAD_VBO;
-
 extern GLuint SCREENSPACEQUAD_VERTEX_SHADER;
 extern GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
 extern GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
@@ -116,6 +118,8 @@ static void SetupScreenSpaceQuadShader()
     GLCheckError("CREATE PROGRAM SHADER");
   EMBREE_CTXT->_screenSpaceQuadPgm = SCREENSPACEQUAD_PROGRAM_SHADER;
 }
+
+//static GLuint GetScreenSpaceQuadProgram(){return SCREENSPACEQUAD_PROGRAM_SHADER;};
 
 static void SetupScreenSpaceQuad()
 {
@@ -195,6 +199,4 @@ CreateOpenGLTexture(int width, int height,
                   pixels);
 }
 
-
-
-} // namespace AMN
+PXR_NAMESPACE_CLOSE_SCOPE

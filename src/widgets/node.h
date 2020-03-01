@@ -10,7 +10,7 @@ namespace AMN {
 
   }
 
-  class Node : UI
+  class Node : AmnUI
   {
   public: 
     Node();

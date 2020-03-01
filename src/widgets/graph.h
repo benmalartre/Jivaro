@@ -6,7 +6,7 @@
 #include <pxr/usd/usd/prim.h>
 
 namespace AMN {
-  class Explorer : UI
+  class AmnExplorerUI : AmnUI
   {
 
 

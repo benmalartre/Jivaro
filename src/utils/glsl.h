@@ -6,7 +6,6 @@
 
 #include "default.h"
 
-namespace AMN {
 // vertex shader :
 static const GLchar* SIMPLE_VERTEX_SHADER_CODE =
 "#version 330 core\n"
@@ -121,4 +120,3 @@ _checkGLError(const char *file, int line)
   }
   return false;
 }
-} // namespace AMN

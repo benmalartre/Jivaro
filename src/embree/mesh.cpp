@@ -1,16 +1,16 @@
-#include "default.h"
+#include "../default.h"
+#include "../utils/utils.h"
 #include "mesh.h"
-#include "utils.h"
 #include "context.h"
 
-namespace AMN {
+PXR_NAMESPACE_OPEN_SCOPE
 
 // translate usd mesh to embree mesh
-UsdEmbreeMesh* 
-TranslateMesh(UsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
+AmnUsdEmbreeMesh* 
+TranslateMesh(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
 {
   size_t num_vertices, num_triangles;
-  UsdEmbreeMesh* result = new UsdEmbreeMesh();
+  AmnUsdEmbreeMesh* result = new AmnUsdEmbreeMesh();
   result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
   //result->_worldMatrix = usdMesh.GetPrim().GetWor;
   result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_TRIANGLE);
@@ -183,7 +183,7 @@ TriangulateData(const pxr::VtArray<int>& indices,
 bool 
 CheckNormals(const pxr::UsdGeomMesh& usdMesh,
             const pxr::UsdTimeCode& time,
-            UsdEmbreeMesh* mesh)
+            AmnUsdEmbreeMesh* mesh)
 {
   mesh->_hasNormals = false;
   pxr::UsdAttribute normalsAttr = usdMesh.GetNormalsAttr();
@@ -321,4 +321,4 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
   for(auto n: normals) n.Normalize();
 }
 
-} // namespace AMN
+PXR_NAMESPACE_CLOSE_SCOPE

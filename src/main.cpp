@@ -1,28 +1,26 @@
 
 #include "default.h"
-#include "application.h"
-#include "context.h"
+#include "app/application.h"
+#include "embree/context.h"
 
-namespace AMN {
-  UsdEmbreeContext* EMBREE_CTXT = NULL;
+PXR_NAMESPACE_OPEN_SCOPE
 
-  GLuint SCREENSPACEQUAD_VAO = 0;
-  GLuint SCREENSPACEQUAD_VBO = 0;
+extern AmnUsdEmbreeContext* EMBREE_CTXT = 0;
 
-  GLuint SCREENSPACEQUAD_VERTEX_SHADER = 0;
-  GLuint SCREENSPACEQUAD_FRAGMENT_SHADER = 0;
-  GLuint SCREENSPACEQUAD_PROGRAM_SHADER = 0;
-}
+PXR_NAMESPACE_CLOSE_SCOPE
+
+
 
 // main application entry point
 //------------------------------------------------------------------------------
+PXR_NAMESPACE_USING_DIRECTIVE
+
 int main(void)
 {
-  using namespace AMN;
   FilesInDirectory();
 
   glfwInit();
-  Application app(800,600);
+  AmnApplication app(800,600);
   app.Init();
   app.MainLoop();
   

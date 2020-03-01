@@ -130,15 +130,15 @@ CODE
  READ FIRST
  ----------
  - Remember to read the FAQ (https://www.dearimgui.org/faq)
- - Your code creates the UI, if your code doesn't run the UI is gone! The UI can be highly dynamic, there are no construction
+ - Your code creates the AmnUI, if your code doesn't run the AmnUI is gone! The AmnUI can be highly dynamic, there are no construction
    or destruction steps, less superfluous data retention on your side, less state duplication, less state synchronization, less bugs.
  - Call and read ImGui::ShowDemoWindow() for demo code demonstrating most features.
  - The library is designed to be built from sources. Avoid pre-compiled binaries and packaged versions. See imconfig.h to configure your build.
  - Dear ImGui is an implementation of the IMGUI paradigm (immediate-mode graphical user interface, a term coined by Casey Muratori).
    You can learn about IMGUI principles at http://www.johno.se/book/imgui.html, http://mollyrocket.com/861 & more links docs/README.md.
  - Dear ImGui is a "single pass" rasterizing implementation of the IMGUI paradigm, aimed at ease of use and high-performances.
-   For every application frame your UI code will be called only once. This is in contrast to e.g. Unity's own implementation of an IMGUI,
-   where the UI code is called multiple times ("multiple passes") from a single entry point. There are pros and cons to both approaches.
+   For every application frame your AmnUI code will be called only once. This is in contrast to e.g. Unity's own implementation of an IMGUI,
+   where the AmnUI code is called multiple times ("multiple passes") from a single entry point. There are pros and cons to both approaches.
  - Our origin are on the top-left. In axis aligned bounding boxes, Min = top-left, Max = bottom-right.
  - This codebase is also optimized to yield decent performances with typical "Debug" builds settings.
  - Please make sure you have asserts enabled (IM_ASSERT redirects to assert() by default, but can be redirected).
@@ -177,7 +177,7 @@ CODE
  --------------------------------------
  EXHIBIT 1: USING THE EXAMPLE BINDINGS (imgui_impl_XXX.cpp files from the examples/ folder).
 
-     // Application init: create a dear imgui context, setup some options, load fonts
+     // AmnApplication init: create a dear imgui context, setup some options, load fonts
      ImGui::CreateContext();
      ImGuiIO& io = ImGui::GetIO();
      // TODO: Set optional io.ConfigFlags values, e.g. 'io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard' to enable keyboard controls.
@@ -188,7 +188,7 @@ CODE
      ImGui_ImplWin32_Init(hwnd);
      ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 
-     // Application main loop
+     // AmnApplication main loop
      while (true)
      {
          // Feed inputs to dear imgui, start new frame
@@ -212,7 +212,7 @@ CODE
 
  EXHIBIT 2: IMPLEMENTING CUSTOM BINDING / CUSTOM ENGINE
 
-     // Application init: create a dear imgui context, setup some options, load fonts
+     // AmnApplication init: create a dear imgui context, setup some options, load fonts
      ImGui::CreateContext();
      ImGuiIO& io = ImGui::GetIO();
      // TODO: Set optional io.ConfigFlags values, e.g. 'io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard' to enable keyboard controls.
@@ -231,7 +231,7 @@ CODE
      MyTexture* texture = MyEngine::CreateTextureFromMemoryPixels(pixels, width, height, TEXTURE_TYPE_RGBA32)
      io.Fonts->TexID = (void*)texture;
 
-     // Application main loop
+     // AmnApplication main loop
      while (true)
      {
         // Setup low-level inputs, e.g. on Win32: calling GetKeyboardState(), or write to those fields from your Windows message handlers, etc.
@@ -631,11 +631,11 @@ CODE
  Q: How can I have multiple widgets with the same label or with an empty label?
  A: A primer on labels and the ID Stack...
 
-    Dear ImGui internally need to uniquely identify UI elements.
+    Dear ImGui internally need to uniquely identify AmnUI elements.
     Elements that are typically not clickable (such as calls to the Text functions) don't need an ID.
     Interactive widgets (such as calls to Button buttons) need a unique ID.
     Unique ID are used internally to track active widgets and occasionally associate state to widgets.
-    Unique ID are implicitly built from the hash of multiple elements that identify the "path" to the UI element.
+    Unique ID are implicitly built from the hash of multiple elements that identify the "path" to the AmnUI element.
 
    - Unique ID are often derived from a string label:
 
@@ -689,7 +689,7 @@ CODE
    - Solving ID conflict in a more general manner:
      Use PushID() / PopID() to create scopes and manipulate the ID stack, as to avoid ID conflicts
      within the same window. This is the most convenient way of distinguishing ID when iterating and
-     creating many UI elements programmatically.
+     creating many AmnUI elements programmatically.
      You can push a pointer, a string or an integer value into the ID stack.
      Remember that ID are formed from the concatenation of _everything_ pushed into the ID stack.
      At each level of the stack we store the seed used for items at this level of the ID stack.
@@ -997,7 +997,7 @@ ImGuiStyle::ImGuiStyle()
     ImGui::StyleColorsDark(this);
 }
 
-// To scale your entire UI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
+// To scale your entire AmnUI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
 // Important: This operation is lossy because we round all sizes to integer. If you need to change your scale multiples, call this over a freshly initialized ImGuiStyle structure rather than scaling multiple times.
 void ImGuiStyle::ScaleAllSizes(float scale_factor)
 {
@@ -9892,7 +9892,7 @@ void ImGui::ShowMetricsWindow(bool* p_open)
     ImGuiContext& g = *GImGui;
     ImGuiIO& io = ImGui::GetIO();
     ImGui::Text("Dear ImGui %s", ImGui::GetVersion());
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+    ImGui::Text("AmnApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     ImGui::Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
     ImGui::Text("%d active windows (%d visible)", io.MetricsActiveWindows, io.MetricsRenderWindows);
     ImGui::Text("%d active allocations", io.MetricsActiveAllocations);

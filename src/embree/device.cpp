@@ -1,13 +1,13 @@
 #include "device.h"
-#include "utils.h"
 #include "context.h"
 #include "prim.h"
 #include "mesh.h"
-#include "widgets/viewport.h"
+#include "../utils/utils.h"
+#include "../widgets/viewport.h"
 
-namespace AMN {
+PXR_NAMESPACE_OPEN_SCOPE
   
-  using namespace embree;
+using namespace embree;
 
 // called by the C++ code for initialization
 RTCScene DeviceInit ()
@@ -38,8 +38,8 @@ RTCScene DeviceInit ()
 
   // set start render mode
   //RenderTile = RenderTileAmbientOcclusion;
-  RenderTile = RenderTileStandard;
-  //RenderTile = RenderTileNormal;
+  //RenderTile = RenderTileStandard;
+  RenderTile = RenderTileNormal;
 
   return EMBREE_CTXT->_scene;
   //key_pressed_handler = device_key_pressed_default;
@@ -54,13 +54,13 @@ void CommitScene ()
 
 Vec3fa GetSmoothNormal(Ray& ray)
 {
-  UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+  AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
   pxr::GfVec3f smoothNormal(0.f, 1.f, 0.f);
   if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
   {
-    UsdEmbreeMesh* mesh = (UsdEmbreeMesh*)prim;
+    AmnUsdEmbreeMesh* mesh = (AmnUsdEmbreeMesh*)prim;
     pxr::VtArray<pxr::GfVec3f>& normals = mesh->_normals;
-    INTERPOLATION_TYPE interpType = mesh->_normalsInterpolationType;
+    AMN_INTERPOLATION_TYPE interpType = mesh->_normalsInterpolationType;
     if(interpType == VERTEX){
       smoothNormal = 
         normals[mesh->_triangles[ray.primID*3]] * (1 - ray.u - ray.v) + 
@@ -96,8 +96,8 @@ Vec3fa RenderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats&
   if (ray.geomID != RTC_INVALID_GEOMETRY_ID)
   {
     //const Triangle& tri = triangles[ray.primID];
-    pxr::GfVec4f rColor = AMN::UnpackColor(AMN::RandomColorByIndex(ray.primID));
-    UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+    pxr::GfVec4f rColor = pxr::UnpackColor(pxr::RandomColorByIndex(ray.primID));
+    AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
     ray.Ng = GetSmoothNormal(ray);
 
     Vec3fa diffuse = Vec3fa(rColor[0], rColor[1], rColor[2]);//face_colors[ray.primID];
@@ -368,7 +368,7 @@ void RenderToMemory()
 }
 
 // render to viewport
-void RenderToViewport(ViewportUI* viewport)
+void RenderToViewport(AmnViewportUI* viewport)
 {
   RenderToMemory();
   viewport->SetPixels(EMBREE_CTXT->_width,
@@ -384,4 +384,4 @@ void DeviceCleanup ()
   //alignedFree(EMBREE_CTXT->_vertex_colors); EMBREE_CTXT->_vertex_colors = nullptr;
 }
 
-} // namespace embree
+PXR_NAMESPACE_CLOSE_SCOPE

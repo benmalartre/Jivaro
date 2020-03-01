@@ -1,33 +1,35 @@
 #pragma once
 
 #include "../default.h"
-#include "../context.h"
-#include "../ui.h"
-#include "../utils.h"
+#include "../embree/context.h"
+#include "../app/ui.h"
+#include "../utils/utils.h"
 
-namespace AMN {
-  static int 
-  NUM_MENU_FILE_ITEMS = 5;
+PXR_NAMESPACE_OPEN_SCOPE
 
-  static const char* 
-  MENU_FILE_ITEMS[] = {
-    "Open",
-    "Save",
-    "SaveAs",
-    "Import",
-    "Export"
-  };
+static int 
+NUM_MENU_FILE_ITEMS = 5;
 
-  class MenuUI : public UI
-  {
-    public:
-      MenuUI(View* parent);
-      ~MenuUI();
-     
-      // overrides
-      void Event() override;
-      void Draw() override;
-    private:
+static const char* 
+MENU_FILE_ITEMS[] = {
+  "Open",
+  "Save",
+  "SaveAs",
+  "Import",
+  "Export"
+};
 
-  };
-} // namespace AMN
+class AmnMenuUI : public AmnUI
+{
+  public:
+    AmnMenuUI(AmnView* parent);
+    ~AmnMenuUI();
+    
+    // overrides
+    void Event() override;
+    void Draw() override;
+  private:
+
+};
+
+PXR_NAMESPACE_CLOSE_SCOPE

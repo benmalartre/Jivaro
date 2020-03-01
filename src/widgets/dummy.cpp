@@ -3,7 +3,7 @@
 
 namespace AMN {
 
-DummyUI::DummyUI(View* parent, const std::string& name):UI(parent, name){}
+DummyUI::DummyUI(AmnView* parent, const std::string& name):AmnUI(parent, name){}
 
 DummyUI::~DummyUI(){}
 
