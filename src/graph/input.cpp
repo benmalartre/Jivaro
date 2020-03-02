@@ -35,9 +35,7 @@
 #include <stdlib.h>
 #include <algorithm>
 
-
-
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 using std::vector;
@@ -110,7 +108,7 @@ GraphInput::GraphInput(
             _attr = prim.CreateAttribute(inputAttrName, typeName, 
                 /* custom = */ false);
         } else {
-            ConnectableAPI connectable(prim);
+            GraphConnectableAPI connectable(prim);
             // If this is a node-graph and the name already contains "interface:" 
             // namespace in it, just create the attribute with the requested 
             // name.
@@ -302,7 +300,7 @@ GraphInput::GetDisplayGroup() const
 bool 
 GraphInput::CanConnect(const UsdAttribute &source) const 
 {
-    return ConnectableAPI::CanConnect(*this, source);
+    return GraphConnectableAPI::CanConnect(*this, source);
 }
 
 bool 
@@ -319,71 +317,71 @@ GraphInput::CanConnect(const GraphOutput &sourceOutput) const
 
 bool 
 GraphInput::ConnectToSource(
-    ConnectableAPI const &source, 
+    GraphConnectableAPI const &source, 
     TfToken const &sourceName, 
     GraphAttributeType const sourceType,
     SdfValueTypeName typeName) const 
 {
-    return ConnectableAPI::ConnectToSource(*this, source, 
+    return GraphConnectableAPI::ConnectToSource(*this, source, 
         sourceName, sourceType, typeName);   
 }
 
 bool 
 GraphInput::ConnectToSource(SdfPath const &sourcePath) const 
 {
-    return ConnectableAPI::ConnectToSource(*this, sourcePath);
+    return GraphConnectableAPI::ConnectToSource(*this, sourcePath);
 }
 
 bool 
 GraphInput::ConnectToSource(GraphInput const &sourceInput) const 
 {
-    return ConnectableAPI::ConnectToSource(*this, sourceInput);
+    return GraphConnectableAPI::ConnectToSource(*this, sourceInput);
 }
 
 bool 
 GraphInput::ConnectToSource(GraphOutput const &sourceOutput) const 
 {
-    return ConnectableAPI::ConnectToSource(*this, sourceOutput);
+    return GraphConnectableAPI::ConnectToSource(*this, sourceOutput);
 }
 
 bool 
-GraphInput::GetConnectedSource(ConnectableAPI *source, 
+GraphInput::GetConnectedSource(GraphConnectableAPI *source, 
                                   TfToken *sourceName,
                                   GraphAttributeType *sourceType) const 
 {
-    return ConnectableAPI::GetConnectedSource(*this, source, 
+    return GraphConnectableAPI::GetConnectedSource(*this, source, 
         sourceName, sourceType);
 }
 
 bool 
 GraphInput::GetRawConnectedSourcePaths(SdfPathVector *sourcePaths) const 
 {
-    return ConnectableAPI::GetRawConnectedSourcePaths(*this, 
+    return GraphConnectableAPI::GetRawConnectedSourcePaths(*this, 
         sourcePaths);
 }
 
 bool 
 GraphInput::HasConnectedSource() const 
 {
-    return ConnectableAPI::HasConnectedSource(*this);
+    return GraphConnectableAPI::HasConnectedSource(*this);
 }
 
 bool 
 GraphInput::IsSourceConnectionFromBaseMaterial() const 
 {
-    return ConnectableAPI::IsSourceConnectionFromBaseMaterial(*this);
+    return GraphConnectableAPI::IsSourceConnectionFromBaseMaterial(*this);
 }
 
 bool 
 GraphInput::DisconnectSource() const 
 {
-    return ConnectableAPI::DisconnectSource(*this);
+    return GraphConnectableAPI::DisconnectSource(*this);
 }
 
 bool 
 GraphInput::ClearSource() const 
 {
-    return ConnectableAPI::ClearSource(*this);
+    return GraphConnectableAPI::ClearSource(*this);
 }
 
 bool 
@@ -452,17 +450,17 @@ _GetValueProducingAttributeRecursive(GraphInOutput const & inoutput,
     foundAttributes.push_back(thisAttrPath);
 
     // Check if this input or output is connected to anything
-    ConnectableAPI source;
+    GraphConnectableAPI source;
     TfToken sourceName;
     GraphAttributeType sourceType;
-    if (ConnectableAPI::GetConnectedSource(inoutput,
+    if (GraphConnectableAPI::GetConnectedSource(inoutput,
                 &source, &sourceName, &sourceType)) {
 
         // If it is connected follow it until we reach an attribute on an
         // actual shader node
         if (sourceType == GraphAttributeType::Output) {
             GraphOutput connectedOutput = source.GetOutput(sourceName);
-            if (source.IsShader()) {
+            if (source.IsNode()) {
                 attr = connectedOutput.GetAttr();
                 attrType = GraphAttributeType::Output;
             } else {
@@ -472,7 +470,7 @@ _GetValueProducingAttributeRecursive(GraphInOutput const & inoutput,
             }
         } else if (sourceType == GraphAttributeType::Input) {
             GraphInput connectedInput = source.GetInput(sourceName);
-            if (source.IsShader()) {
+            if (source.IsNode()) {
                 // Note, this is an invalid situation for a connected chain.
                 // Since we started on an input to either a Shader or a
                 // NodeGraph we cannot legally connect to an input on a Shader.
@@ -532,4 +530,4 @@ GraphInput::GetValueProducingAttribute(GraphAttributeType* attrType) const
     return attr;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

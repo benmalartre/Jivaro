@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./composer.h"
+#include "./connectableAPI.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -38,7 +38,7 @@
 
 using namespace boost::python;
 
-AMN_NAMESPACE_USING_DIRECTIVE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 
@@ -48,22 +48,15 @@ namespace {
 // fwd decl.
 WRAP_CUSTOM;
 
-        
-static UsdAttribute
-_CreateDeformedAttr(GraphComposer &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateDeformedAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
-}
 
 } // anonymous namespace
 
-void wrapGraphComposer()
+void wrapGraphConnectableAPI()
 {
-    typedef GraphComposer This;
+    typedef GraphConnectableAPI This;
 
-    class_<This, bases<GraphGraph> >
-        cls("Composer");
+    class_<This, bases<UsdAPISchemaBase> >
+        cls("ConnectableAPI");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -72,9 +65,6 @@ void wrapGraphComposer()
 
         .def("Get", &This::Get, (arg("stage"), arg("path")))
         .staticmethod("Get")
-
-        .def("Define", &This::Define, (arg("stage"), arg("path")))
-        .staticmethod("Define")
 
         .def("GetSchemaAttributeNames",
              &This::GetSchemaAttributeNames,
@@ -88,13 +78,6 @@ void wrapGraphComposer()
 
         .def(!self)
 
-        
-        .def("GetDeformedAttr",
-             &This::GetDeformedAttr)
-        .def("CreateDeformedAttr",
-             &_CreateDeformedAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
 
     ;
 

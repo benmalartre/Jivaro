@@ -38,7 +38,7 @@
 
 using namespace boost::python;
 
-AMN_NAMESPACE_USING_DIRECTIVE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 

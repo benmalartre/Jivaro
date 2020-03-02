@@ -33,7 +33,6 @@
 #include "pxr/usd/usd/stage.h"
 #include "./tokens.h"
 
-#include "asset.h"
 #include "node.h"
 #include "connectableAPI.h"
 
@@ -46,7 +45,7 @@
 #include "pxr/base/tf/token.h"
 #include "pxr/base/tf/type.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class SdfAssetPath;
 
@@ -187,12 +186,12 @@ public:
     //
     // Just remember to: 
     //  - Close the class declaration with }; 
-    //  - Close the namespace with AMN_NAMESPACE_CLOSE_SCOPE
+    //  - Close the namespace with PXR_NAMESPACE_CLOSE_SCOPE
     //  - Close the include guard with #endif
     // ===================================================================== //
     // --(BEGIN CUSTOM CODE)--
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -31,7 +31,7 @@
 
 #include <string>
 
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 TF_DEFINE_ENV_SETTING(
     USD_SHADE_READ_OLD_ENCODING, true,
@@ -53,13 +53,13 @@ GraphUtils::GetPrefixForAttributeType(GraphAttributeType sourceType)
 {
     switch (sourceType) {
         case GraphAttributeType::Input:
-            return AmnGraphTokens->inputs.GetString();
+            return GraphTokens->inputs.GetString();
         case GraphAttributeType::Output:
-            return AmnGraphTokens->outputs.GetString();
+            return GraphTokens->outputs.GetString();
         case GraphAttributeType::Parameter: 
             return string();
         case GraphAttributeType::InterfaceAttribute:
-            return AmnGraphTokens->interface_.GetString();
+            return GraphTokens->interface_.GetString();
         default:
             return string();
     }
@@ -70,17 +70,17 @@ std::pair<TfToken, GraphAttributeType>
 GraphUtils::GetBaseNameAndType(const TfToken &fullName)
 {
     std::pair<std::string, bool> res = 
-        SdfPath::StripPrefixNamespace(fullName, AmnGraphTokens->inputs);
+        SdfPath::StripPrefixNamespace(fullName, GraphTokens->inputs);
     if (res.second) {
         return std::make_pair(TfToken(res.first), GraphAttributeType::Input);
     }
 
-    res = SdfPath::StripPrefixNamespace(fullName, AmnGraphTokens->outputs);
+    res = SdfPath::StripPrefixNamespace(fullName, GraphTokens->outputs);
     if (res.second) {
         return std::make_pair(TfToken(res.first),GraphAttributeType::Output);
     }
 
-    res = SdfPath::StripPrefixNamespace(fullName, AmnGraphTokens->interface_);
+    res = SdfPath::StripPrefixNamespace(fullName, GraphTokens->interface_);
     if (res.second) {
         return std::make_pair(TfToken(res.first), 
                               GraphAttributeType::InterfaceAttribute);
@@ -116,5 +116,5 @@ GraphUtils::WriteNewEncoding()
     return writeNewEncoding;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 

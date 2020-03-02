@@ -32,7 +32,7 @@
 #include <string>
 #include <utility>
 
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 /// \enum GraphAttributeType
@@ -85,6 +85,6 @@ public:
     static bool WriteNewEncoding();
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

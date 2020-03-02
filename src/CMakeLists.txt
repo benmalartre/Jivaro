@@ -6,6 +6,13 @@ add_definitions(
 
 )
 
+set(PUBLIC_HEADERS
+  graph/composerBindingAPI.h
+  graph/connectableAPI.h
+  graph/coordSysAPI.h
+
+)
+
 add_executable(${TARGET}
   gl3w/src/gl3w.c
   imgui/imgui_demo.cpp
@@ -15,6 +22,16 @@ add_executable(${TARGET}
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
   imgui/imgui.cpp
+  graph/composerBindingAPI.cpp
+  graph/connectableAPI.cpp
+  graph/coordSysAPI.cpp
+  graph/input.cpp
+  graph/output.cpp
+  graph/node.cpp
+  graph/composer.cpp
+  graph/graph.cpp
+  graph/tokens.cpp
+  graph/utils.cpp
   widgets/menu.cpp
   widgets/viewport.cpp
   embree/oiio.cpp

@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./graph.h"
+#include "./node.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -38,7 +38,7 @@
 
 using namespace boost::python;
 
-AMN_NAMESPACE_USING_DIRECTIVE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 
@@ -48,15 +48,29 @@ namespace {
 // fwd decl.
 WRAP_CUSTOM;
 
+        
+static UsdAttribute
+_CreateImplementationSourceAttr(GraphNode &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateImplementationSourceAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
+}
+        
+static UsdAttribute
+_CreateIdAttr(GraphNode &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateIdAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
+}
 
 } // anonymous namespace
 
-void wrapGraphGraph()
+void wrapGraphNode()
 {
-    typedef GraphGraph This;
+    typedef GraphNode This;
 
     class_<This, bases<UsdTyped> >
-        cls("Graph");
+        cls("Node");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -81,6 +95,20 @@ void wrapGraphGraph()
 
         .def(!self)
 
+        
+        .def("GetImplementationSourceAttr",
+             &This::GetImplementationSourceAttr)
+        .def("CreateImplementationSourceAttr",
+             &_CreateImplementationSourceAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetIdAttr",
+             &This::GetIdAttr)
+        .def("CreateIdAttr",
+             &_CreateIdAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
 
     ;
 

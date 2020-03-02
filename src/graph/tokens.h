@@ -39,7 +39,7 @@
 #include "pxr/base/tf/token.h"
 #include <vector>
 
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 /// \class GraphTokensType
@@ -114,14 +114,34 @@ struct GraphTokensType {
     /// 
     /// The modeling variation described on a Composer.
     const TfToken geometry;
+    /// \brief "id"
+    /// 
+    /// Possible value for GraphNode::GetInfoImplementationSourceAttr(), Default value for GraphNode::GetInfoImplementationSourceAttr()
+    const TfToken id;
+    /// \brief "info:id"
+    /// 
+    /// GraphNode
+    const TfToken infoId;
+    /// \brief "info:implementationSource"
+    /// 
+    /// GraphNode
+    const TfToken infoImplementationSource;
     /// \brief "inputs:"
     /// 
     /// The prefix on input ports. 
     const TfToken inputs;
+    /// \brief "interface:"
+    /// 
+    /// (DEPRECATED) The prefix on UsdShadeNodeGraph  attributes denoting an interface attribute. 
+    const TfToken interface_;
     /// \brief "interfaceOnly"
     /// 
     /// Possible value for 'connectability' metadata on  a InputPort. It implies that the input can only connect to  a Graph Input (which represents an interface override, not  a computation-time dataflow connection), or another Input whose  connectability is also 'interfaceOnly'. 
     const TfToken interfaceOnly;
+    /// \brief "interfaceRecipientsOf:"
+    /// 
+    /// (DEPRECATED) The prefix on UsdShadeNodeGraph relationships denoting the target of an interface attribute. 
+    const TfToken interfaceRecipientsOf;
     /// \brief "outputs:"
     /// 
     /// The prefix on output ports. 
@@ -130,10 +150,26 @@ struct GraphTokensType {
     /// 
     /// GraphComposer
     const TfToken outputsDeformed;
+    /// \brief "sdrMetadata"
+    /// 
+    /// Dictionary valued metadata key authored on Shader prims with implementationSource value of sourceAsset or  sourceCode to pass along metadata to the shader parser or  compiler. It is also used to author metadata on shader  properties in a UsdShade-based shader definition file. 
+    const TfToken sdrMetadata;
+    /// \brief "sourceAsset"
+    /// 
+    /// Possible value for GraphNode::GetInfoImplementationSourceAttr()
+    const TfToken sourceAsset;
+    /// \brief "sourceCode"
+    /// 
+    /// Possible value for GraphNode::GetInfoImplementationSourceAttr()
+    const TfToken sourceCode;
     /// \brief "state:binding"
     /// 
     ///  The current state of the asset. 
     const TfToken stateBinding;
+    /// \brief ""
+    /// 
+    /// Possible value for the "sourceType" parameter  in \ref UsdShadeShader_ImplementationSource API. Represents  the universal or fallback source type. 
+    const TfToken universalSourceType;
     /// A vector of all of the tokens listed above.
     const std::vector<TfToken> allTokens;
 };
@@ -144,6 +180,6 @@ struct GraphTokensType {
 /// for use in all public USD API.  \sa GraphTokensType
 extern GRAPH_API TfStaticData<GraphTokensType> GraphTokens;
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

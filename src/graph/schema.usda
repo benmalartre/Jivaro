@@ -45,6 +45,18 @@ over "GLOBAL" (
         string doc = """The prefix on input ports.
         """
       }
+      dictionary interface = {
+        string value = "interface:"
+        string doc = """(DEPRECATED) The prefix on UsdShadeNodeGraph 
+        attributes denoting an interface attribute.
+        """
+      }
+      dictionary interfaceRecipientsOf = {
+        string value = "interfaceRecipientsOf:"
+        string doc = """(DEPRECATED) The prefix on UsdShadeNodeGraph
+        relationships denoting the target of an interface attribute.
+        """
+      }
     }
   }
 )
@@ -90,7 +102,6 @@ class Composer "Composer" (
   """
   customData = {
     string extraIncludes = '''
-#include "asset.h"
 #include "node.h"
 #include "connectableAPI.h"'''
   dictionary schemaTokens = {
@@ -137,19 +148,65 @@ class Composer "Composer" (
 }
 
 class Node "Node" (
-  inherits = </Typed>
-  doc = """Base class for all Nodes. Nodes are the building blocks
-  of an asset network.
-  """ 
-  customData = {
-    string extraIncludes = '''
+    inherits = </Typed>
+    doc = """Base class for all Amnesia Nodes.
+    """ 
+    customData = {
+      string extraIncludes = '''
 #include "input.h"
 #include "output.h"
-#include <pxr/usd/ndr/declare.h>
-'''
-  }
-) 
-{
+#include "pxr/usd/ndr/declare.h"'''
+      dictionary schemaTokens = {
+        dictionary universalSourceType = {
+          string value = ""
+          string doc = """Possible value for the "sourceType" parameter 
+          in \\ref UsdShadeShader_ImplementationSource API. Represents 
+          the universal or fallback source type.
+          """
+        }
+        dictionary sdrMetadata = {
+          string doc = """Dictionary valued metadata key authored on
+          Shader prims with implementationSource value of sourceAsset or 
+          sourceCode to pass along metadata to the shader parser or 
+          compiler. It is also used to author metadata on shader 
+          properties in a UsdShade-based shader definition file.
+          """
+        }
+      }
+    }
+) {
+    uniform token info:implementationSource = "id" (
+      allowedTokens = ["id", "sourceAsset", "sourceCode"]
+      doc = """Specifies the attribute that should be consulted to get the 
+      shader's implementation or its source code.
+
+      * If set to "id", the "info:id" attribute's value is used to 
+      determine the shader source from the shader registry.
+      * If set to "sourceAsset", the resolved value of the "info:sourceAsset" 
+      attribute corresponding to the desired implementation (or source-type)
+      is used to locate the shader source.
+      * If set to "sourceCode", the value of "info:sourceCode" attribute 
+      corresponding to the desired implementation (or source type) is used as 
+      the shader source.
+      """
+      customData = {
+        string apiName = "implementationSource"
+      }
+    )
+
+    uniform token info:id (
+      doc = """The id is an identifier for the type or purpose of the 
+      shader. E.g.: Texture or FractalFloat.
+      The use of this id will depend on the render target: some will turn it
+      into an actual shader path, some will use it to generate shader source 
+      code dynamically.
+      
+      \\sa SetShaderId()
+      """
+      customData = {
+        string apiName = "id"
+      }
+    )
 }
 
 class "ConnectableAPI"
@@ -178,7 +235,7 @@ class "ConnectableAPI"
     token apiSchemaType = 'nonApplied'
     string extraIncludes = '''
 #include "node.h"
-#include "Graph.h"
+#include "graph.h"
 '''
   }
 )

@@ -23,7 +23,7 @@
 //
 #include "./tokens.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 GraphTokensType::GraphTokensType() :
     animationCache("animationCache", TfToken::Immortal),
@@ -39,11 +39,20 @@ GraphTokensType::GraphTokensType() :
     derivesFrom("derivesFrom", TfToken::Immortal),
     full("full", TfToken::Immortal),
     geometry("geometry", TfToken::Immortal),
+    id("id", TfToken::Immortal),
+    infoId("info:id", TfToken::Immortal),
+    infoImplementationSource("info:implementationSource", TfToken::Immortal),
     inputs("inputs:", TfToken::Immortal),
+    interface_("interface:", TfToken::Immortal),
     interfaceOnly("interfaceOnly", TfToken::Immortal),
+    interfaceRecipientsOf("interfaceRecipientsOf:", TfToken::Immortal),
     outputs("outputs:", TfToken::Immortal),
     outputsDeformed("outputs:deformed", TfToken::Immortal),
+    sdrMetadata("sdrMetadata", TfToken::Immortal),
+    sourceAsset("sourceAsset", TfToken::Immortal),
+    sourceCode("sourceCode", TfToken::Immortal),
     stateBinding("state:binding", TfToken::Immortal),
+    universalSourceType("", TfToken::Immortal),
     allTokens({
         animationCache,
         animCache,
@@ -58,15 +67,24 @@ GraphTokensType::GraphTokensType() :
         derivesFrom,
         full,
         geometry,
+        id,
+        infoId,
+        infoImplementationSource,
         inputs,
+        interface_,
         interfaceOnly,
+        interfaceRecipientsOf,
         outputs,
         outputsDeformed,
-        stateBinding
+        sdrMetadata,
+        sourceAsset,
+        sourceCode,
+        stateBinding,
+        universalSourceType
     })
 {
 }
 
 TfStaticData<GraphTokensType> GraphTokens;
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

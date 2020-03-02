@@ -21,19 +21,24 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef GRAPH_GENERATED_COORDSYSAPI_H
-#define GRAPH_GENERATED_COORDSYSAPI_H
+#ifndef GRAPH_GENERATED_GRAPH_H
+#define GRAPH_GENERATED_GRAPH_H
 
-/// \file Graph/coordSysAPI.h
+/// \file Graph/graph.h
 
 #include "pxr/pxr.h"
 #include "./api.h"
-#include "pxr/usd/usd/apiSchemaBase.h"
+#include "pxr/usd/usd/typed.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
-#include "./tokens.h"
 
-#include "pxr/usd/usdGeom/xformable.h"
+#include <utility>
+#include <pxr/usd/usd/editTarget.h>
+#include <pxr/usd/usd/relationship.h>
+#include "input.h"
+#include "output.h"
+#include "node.h"
+
 
 #include "pxr/base/vt/value.h"
 
@@ -44,65 +49,62 @@
 #include "pxr/base/tf/token.h"
 #include "pxr/base/tf/type.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// COORDSYSAPI                                                                //
+// GRAPH                                                                      //
 // -------------------------------------------------------------------------- //
 
-/// \class GraphCoordSysAPI
+/// \class GraphGraph
 ///
-/// CoordSysAPI provides a way to designate, name,
-/// and discover coordinate systems.
+/// A node-graph is a container for asset nodes, as well as other 
+/// node-graphs. It has a public input interface and provides a list of public 
+/// outputs.
 /// 
-/// Coordinate systems are implicitly established by UsdGeomXformable
-/// prims, using their local space.  That coordinate system may be
-/// bound (i.e., named) from another prim.  The binding is encoded
-/// as a single-target relationship in the "coordSys:" namespace.
-/// Coordinate system bindings apply to descendants of the prim
-/// where the binding is expressed, but names may be re-bound by
-/// descendant prims.
+/// <b>Node Graph Interfaces</b>
 /// 
-/// Named coordinate systems are useful in animation workflows.
-/// An example is camera base sculpting.  
-/// Using the paint coordinate frame avoids the need to assign 
-/// a UV set to the object, and can be a concise way to project
-/// sculpt across a collection of objects with a single shared
-/// paint coordinate system.
+/// One of the most important functions of a node-graph is to host the "interface"
+/// with which clients of already-built nodes networks will interact.  Please
+/// see \ref GraphGraph_Interfaces "Interface Inputs" for a detailed
+/// explanation of what the interface provides, and how to construct and
+/// use it, to effectively share/instance nodes networks.
 /// 
-/// This is a non-applied API schema.
+/// <b>Node Graph Ports</b>
+/// 
+/// These are typically connected to an input on a other node inside the node-graph.
+/// These are also used to author and animate input parameters.
 /// 
 ///
-class GraphCoordSysAPI : public UsdAPISchemaBase
+class GraphGraph : public UsdTyped
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
     ///
     /// \sa UsdSchemaType
-    static const UsdSchemaType schemaType = UsdSchemaType::NonAppliedAPI;
+    static const UsdSchemaType schemaType = UsdSchemaType::ConcreteTyped;
 
-    /// Construct a GraphCoordSysAPI on UsdPrim \p prim .
-    /// Equivalent to GraphCoordSysAPI::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a GraphGraph on UsdPrim \p prim .
+    /// Equivalent to GraphGraph::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit GraphCoordSysAPI(const UsdPrim& prim=UsdPrim())
-        : UsdAPISchemaBase(prim)
+    explicit GraphGraph(const UsdPrim& prim=UsdPrim())
+        : UsdTyped(prim)
     {
     }
 
-    /// Construct a GraphCoordSysAPI on the prim held by \p schemaObj .
-    /// Should be preferred over GraphCoordSysAPI(schemaObj.GetPrim()),
+    /// Construct a GraphGraph on the prim held by \p schemaObj .
+    /// Should be preferred over GraphGraph(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit GraphCoordSysAPI(const UsdSchemaBase& schemaObj)
-        : UsdAPISchemaBase(schemaObj)
+    explicit GraphGraph(const UsdSchemaBase& schemaObj)
+        : UsdTyped(schemaObj)
     {
     }
 
     /// Destructor.
     GRAPH_API
-    virtual ~GraphCoordSysAPI();
+    virtual ~GraphGraph();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -111,19 +113,44 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a GraphCoordSysAPI holding the prim adhering to this
+    /// Return a GraphGraph holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// GraphCoordSysAPI(stage->GetPrimAtPath(path));
+    /// GraphGraph(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     GRAPH_API
-    static GraphCoordSysAPI
+    static GraphGraph
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
+    /// Attempt to ensure a \a UsdPrim adhering to this schema at \p path
+    /// is defined (according to UsdPrim::IsDefined()) on this stage.
+    ///
+    /// If a prim adhering to this schema at \p path is already defined on this
+    /// stage, return that prim.  Otherwise author an \a SdfPrimSpec with
+    /// \a specifier == \a SdfSpecifierDef and this schema's prim type name for
+    /// the prim at \p path at the current EditTarget.  Author \a SdfPrimSpec s
+    /// with \p specifier == \a SdfSpecifierDef and empty typeName at the
+    /// current EditTarget for any nonexistent, or existing but not \a Defined
+    /// ancestors.
+    ///
+    /// The given \a path must be an absolute prim path that does not contain
+    /// any variant selections.
+    ///
+    /// If it is impossible to author any of the necessary PrimSpecs, (for
+    /// example, in case \a path cannot map to the current UsdEditTarget's
+    /// namespace) issue an error and return an invalid \a UsdPrim.
+    ///
+    /// Note that this method may return a defined prim whose typeName does not
+    /// specify this schema class, in case a stronger typeName opinion overrides
+    /// the opinion at the current EditTarget.
+    ///
+    GRAPH_API
+    static GraphGraph
+    Define(const UsdStagePtr &stage, const SdfPath &path);
 
 protected:
     /// Returns the type of schema this class belongs to.
@@ -151,12 +178,12 @@ public:
     //
     // Just remember to: 
     //  - Close the class declaration with }; 
-    //  - Close the namespace with AMN_NAMESPACE_CLOSE_SCOPE
+    //  - Close the namespace with PXR_NAMESPACE_CLOSE_SCOPE
     //  - Close the include guard with #endif
     // ===================================================================== //
     // --(BEGIN CUSTOM CODE)--
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

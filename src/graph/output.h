@@ -35,9 +35,9 @@
 
 #include <vector>
 
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
-class ConnectableAPI;
+class GraphConnectableAPI;
 class GraphInput;
 
 /// \class GraphOutput
@@ -270,7 +270,7 @@ public:
     /// An output is considered to be connectable only if it belongs to a 
     /// node-graph. Shader outputs are not connectable.
     /// 
-    /// \sa ConnectableAPI::CanConnect
+    /// \sa GraphConnectableAPI::CanConnect
     GRAPH_API_H
     bool CanConnect(const UsdAttribute &source) const;
 
@@ -292,32 +292,32 @@ public:
     /// on the source if it doesn't exist. It is also used to validate whether 
     /// the types of the source and consumer of the connection are compatible.
     ///
-    /// \sa ConnectableAPI::ConnectToSource
+    /// \sa GraphConnectableAPI::ConnectToSource
     ///
     GRAPH_API_H
     bool ConnectToSource(
-        ConnectableAPI const &source, 
+        GraphConnectableAPI const &source, 
         TfToken const &sourceName, 
         GraphAttributeType const sourceType=GraphAttributeType::Output,
         SdfValueTypeName typeName=SdfValueTypeName()) const;
 
     /// Authors a connection for this Output to the source at the given path.
     /// 
-    /// \sa ConnectableAPI::ConnectToSource
+    /// \sa GraphConnectableAPI::ConnectToSource
     ///
     GRAPH_API_H
     bool ConnectToSource(SdfPath const &sourcePath) const;
 
     /// Connects this Output to the given input, \p sourceInput.
     /// 
-    /// \sa ConnectableAPI::ConnectToSource
+    /// \sa GraphConnectableAPI::ConnectToSource
     ///
     GRAPH_API_H
     bool ConnectToSource(GraphInput const &sourceInput) const;
 
     /// Connects this Output to the given output, \p sourceOutput.
     /// 
-    /// \sa ConnectableAPI::ConnectToSource
+    /// \sa GraphConnectableAPI::ConnectToSource
     ///
     GRAPH_API_H
     bool ConnectToSource(GraphOutput const &sourceOutput) const;
@@ -341,16 +341,16 @@ public:
     /// (source, sourceName, sourceType) tuple if the parameter is connected, 
     /// else \c None
     ///
-    /// \sa ConnectableAPI::GetConnectedSource
+    /// \sa GraphConnectableAPI::GetConnectedSource
     ///
     GRAPH_API_H
-    bool GetConnectedSource(ConnectableAPI *source, 
+    bool GetConnectedSource(GraphConnectableAPI *source, 
                             TfToken *sourceName,
                             GraphAttributeType *sourceType) const;
 
     /// Returns the "raw" (authored) connected source paths for this Output.
     /// 
-    /// \sa ConnectableAPI::GetRawConnectedSourcePaths
+    /// \sa GraphConnectableAPI::GetRawConnectedSourcePaths
     ///
     GRAPH_API_H
     bool GetRawConnectedSourcePaths(SdfPathVector *sourcePaths) const;
@@ -358,7 +358,7 @@ public:
     /// Returns true if and only if this Output is currently connected to a 
     /// valid (defined) source. 
     ///
-    /// \sa ConnectableAPI::HasConnectedSource
+    /// \sa GraphConnectableAPI::HasConnectedSource
     /// 
     GRAPH_API_H
     bool HasConnectedSource() const;
@@ -367,14 +367,14 @@ public:
     /// GetConnectedSource(), is authored across a specializes arc, which is 
     /// used to denote a base material.
     /// 
-    /// \sa ConnectableAPI::IsSourceConnectionFromBaseMaterial
+    /// \sa GraphConnectableAPI::IsSourceConnectionFromBaseMaterial
     ///
     GRAPH_API_H
     bool IsSourceConnectionFromBaseMaterial() const;
 
     /// Disconnect source for this Output.
     /// 
-    /// \sa ConnectableAPI::DisconnectSource
+    /// \sa GraphConnectableAPI::DisconnectSource
     ///
     GRAPH_API_H
     bool DisconnectSource() const;
@@ -384,7 +384,7 @@ public:
     /// Most of the time, what you probably want is DisconnectSource()
     /// rather than this function.
     ///
-    /// \sa ConnectableAPI::ClearSource
+    /// \sa GraphConnectableAPI::ClearSource
     ///
     GRAPH_API_H
     bool ClearSource() const;
@@ -404,7 +404,7 @@ public:
     }
 
 private:
-    friend class ConnectableAPI;
+    friend class GraphConnectableAPI;
 
     // Befriend UsdRiMaterialAPI which will provide a backwards compatible 
     // interface for managing terminal relationships, which turn into outputs
@@ -445,6 +445,6 @@ private:
 };
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // Graph_OUTPUT_H

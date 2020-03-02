@@ -25,7 +25,7 @@
 #include <boost/python/class.hpp>
 #include "./tokens.h"
 
-AMN_NAMESPACE_USING_DIRECTIVE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 
@@ -77,9 +77,18 @@ void wrapGraphTokens()
     _AddToken(cls, "derivesFrom", GraphTokens->derivesFrom);
     _AddToken(cls, "full", GraphTokens->full);
     _AddToken(cls, "geometry", GraphTokens->geometry);
+    _AddToken(cls, "id", GraphTokens->id);
+    _AddToken(cls, "infoId", GraphTokens->infoId);
+    _AddToken(cls, "infoImplementationSource", GraphTokens->infoImplementationSource);
     _AddToken(cls, "inputs", GraphTokens->inputs);
+    _AddToken(cls, "interface_", GraphTokens->interface_);
     _AddToken(cls, "interfaceOnly", GraphTokens->interfaceOnly);
+    _AddToken(cls, "interfaceRecipientsOf", GraphTokens->interfaceRecipientsOf);
     _AddToken(cls, "outputs", GraphTokens->outputs);
     _AddToken(cls, "outputsDeformed", GraphTokens->outputsDeformed);
+    _AddToken(cls, "sdrMetadata", GraphTokens->sdrMetadata);
+    _AddToken(cls, "sourceAsset", GraphTokens->sourceAsset);
+    _AddToken(cls, "sourceCode", GraphTokens->sourceCode);
     _AddToken(cls, "stateBinding", GraphTokens->stateBinding);
+    _AddToken(cls, "universalSourceType", GraphTokens->universalSourceType);
 }

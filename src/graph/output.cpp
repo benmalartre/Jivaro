@@ -36,7 +36,7 @@
 
 #include "pxr/base/tf/envSetting.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 using std::vector;
@@ -204,7 +204,7 @@ GraphOutput::IsOutput(const UsdAttribute &attr)
 bool 
 GraphOutput::CanConnect(const UsdAttribute &source) const
 {
-    return ConnectableAPI::CanConnect(*this, source);
+    return GraphConnectableAPI::CanConnect(*this, source);
 }
 
 bool 
@@ -221,73 +221,73 @@ GraphOutput::CanConnect(const GraphOutput &sourceOutput) const
 
 bool 
 GraphOutput::ConnectToSource(
-    ConnectableAPI const &source, 
+    GraphConnectableAPI const &source, 
     TfToken const &sourceName, 
     GraphAttributeType const sourceType,
     SdfValueTypeName typeName) const 
 {
-    return ConnectableAPI::ConnectToSource(*this, source, 
+    return GraphConnectableAPI::ConnectToSource(*this, source, 
         sourceName, sourceType, typeName);   
 }
 
 bool 
 GraphOutput::ConnectToSource(SdfPath const &sourcePath) const 
 {
-    return ConnectableAPI::ConnectToSource(*this, sourcePath);
+    return GraphConnectableAPI::ConnectToSource(*this, sourcePath);
 }
 
 bool 
 GraphOutput::ConnectToSource(GraphInput const &sourceInput) const 
 {
-    return ConnectableAPI::ConnectToSource(*this, sourceInput);
+    return GraphConnectableAPI::ConnectToSource(*this, sourceInput);
 }
 
 bool 
 GraphOutput::ConnectToSource(GraphOutput const &sourceOutput) const 
 {
-    return ConnectableAPI::ConnectToSource(*this, sourceOutput);
+    return GraphConnectableAPI::ConnectToSource(*this, sourceOutput);
 }
 
 bool 
 GraphOutput::GetConnectedSource(
-    ConnectableAPI *source, 
+    GraphConnectableAPI *source, 
     TfToken *sourceName,
     GraphAttributeType *sourceType) const 
 {
-    return ConnectableAPI::GetConnectedSource(*this, source, 
+    return GraphConnectableAPI::GetConnectedSource(*this, source, 
         sourceName, sourceType);
 }
 
 bool 
 GraphOutput::GetRawConnectedSourcePaths(SdfPathVector *sourcePaths) const 
 {
-    return ConnectableAPI::GetRawConnectedSourcePaths(*this, 
+    return GraphConnectableAPI::GetRawConnectedSourcePaths(*this, 
         sourcePaths);
 }
 
 bool 
 GraphOutput::HasConnectedSource() const 
 {
-    return ConnectableAPI::HasConnectedSource(*this);
+    return GraphConnectableAPI::HasConnectedSource(*this);
 }
 
 bool 
 GraphOutput::IsSourceConnectionFromBaseMaterial() const 
 {
-    return ConnectableAPI::IsSourceConnectionFromBaseMaterial(*this);
+    return GraphConnectableAPI::IsSourceConnectionFromBaseMaterial(*this);
 }
 
 bool 
 GraphOutput::DisconnectSource() const
 {
-    return ConnectableAPI::DisconnectSource(*this);
+    return GraphConnectableAPI::DisconnectSource(*this);
 }
 
 bool 
 GraphOutput::ClearSource() const
 {
-    return ConnectableAPI::ClearSource(*this);
+    return GraphConnectableAPI::ClearSource(*this);
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
