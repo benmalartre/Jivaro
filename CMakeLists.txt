@@ -26,13 +26,19 @@ set(USD_DIR "/Users/benmalartre/Documents/RnD/USD_BUILD")
 set(USD_INCLUDE_DIR "${USD_DIR}/include")
 set(USD_LIBRARY_DIR "${USD_DIR}/lib")
 list(APPEND USD_LIB_NAMES 
-  tf
-  vt
+  trace
   work
+  arch
+  tf
   sdf
+  ndr
   sdr
+  pcp
   usd
   usdGeom
+  usdShade
+  usdUI
+  vt
 )
 
 set(USD_LIBRARIES "")
