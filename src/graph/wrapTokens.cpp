@@ -75,12 +75,14 @@ void wrapGraphTokens()
     _AddToken(cls, "coordSys", GraphTokens->coordSys);
     _AddToken(cls, "deformed", GraphTokens->deformed);
     _AddToken(cls, "derivesFrom", GraphTokens->derivesFrom);
+    _AddToken(cls, "fileName", GraphTokens->fileName);
     _AddToken(cls, "full", GraphTokens->full);
     _AddToken(cls, "geometry", GraphTokens->geometry);
+    _AddToken(cls, "inMemory", GraphTokens->inMemory);
     _AddToken(cls, "inputs", GraphTokens->inputs);
-    _AddToken(cls, "interface_", GraphTokens->interface_);
     _AddToken(cls, "interfaceOnly", GraphTokens->interfaceOnly);
-    _AddToken(cls, "interfaceRecipientsOf", GraphTokens->interfaceRecipientsOf);
+    _AddToken(cls, "lifetimeManagement", GraphTokens->lifetimeManagement);
+    _AddToken(cls, "onDisk", GraphTokens->onDisk);
     _AddToken(cls, "outputs", GraphTokens->outputs);
     _AddToken(cls, "outputsDeformed", GraphTokens->outputsDeformed);
     _AddToken(cls, "sdrMetadata", GraphTokens->sdrMetadata);

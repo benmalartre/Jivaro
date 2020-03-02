@@ -1,0 +1,42 @@
+#include "../default.h"
+#include "../graph/input.h"
+#include "../graph/output.h"
+#include "../graph/node.h"
+#include "../graph/graph.h"
+#include "../graph/connectableAPI.h"
+#include "../graph/nodeStage.h"
+#include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
+#include <pxr/base/gf/vec2i.h>
+#include <pxr/base/vt/value.h>
+
+
+PXR_NAMESPACE_OPEN_SCOPE
+
+// add node to graph test
+GraphNode _TestAddNode(UsdStageRefPtr stage, const std::string& path);
+
+// create input test
+GraphInput _TestAddInput(GraphNode& node, 
+                              const std::string& name, 
+                              const GraphAttributeType& type,
+                              const SdfValueTypeName& valueType);
+
+// create output test
+GraphOutput _TestAddOutput(GraphNode& node, 
+                                const std::string& name, 
+                                const GraphAttributeType& type,
+                                const SdfValueTypeName& valueType);
+
+// create simple graph
+GraphNode* CreateGraphNode();
+GraphGraph* CreateGraphNodeGraph();
+GraphNode _CreateNodeAtPosition(UsdPrim prim, const GfVec2i& pos);
+
+// main entry point
+void TestScene();
+
+PXR_NAMESPACE_CLOSE_SCOPE

@@ -163,10 +163,22 @@ GraphNode::GetOutput(const TfToken &name) const
     return GraphConnectableAPI(GetPrim()).GetOutput(name);
 }
 
+GraphOutput 
+GraphNode::GetOutput(const int index) const
+{
+    return GraphConnectableAPI(GetPrim()).GetOutput(index);
+}
+
 std::vector<GraphOutput>
 GraphNode::GetOutputs() const
 {
     return GraphConnectableAPI(GetPrim()).GetOutputs();
+}
+
+int
+GraphNode::NumOutputs() const
+{
+    return GraphConnectableAPI(GetPrim()).NumOutputs();
 }
 
 GraphInput
@@ -182,10 +194,22 @@ GraphNode::GetInput(const TfToken &name) const
     return GraphConnectableAPI(GetPrim()).GetInput(name);
 }
 
+GraphInput
+GraphNode::GetInput(const int index) const
+{
+    return GraphConnectableAPI(GetPrim()).GetInput(index);
+}
+
 std::vector<GraphInput>
 GraphNode::GetInputs() const
 {
     return GraphConnectableAPI(GetPrim()).GetInputs();
+}
+
+int
+GraphNode::NumInputs() const
+{
+    return GraphConnectableAPI(GetPrim()).NumInputs();
 }
 
 NdrTokenMap

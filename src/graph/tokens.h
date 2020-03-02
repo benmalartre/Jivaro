@@ -106,6 +106,10 @@ struct GraphTokensType {
     /// 
     /// A legacy relationship name specifying a specializes  composition on a Composer.
     const TfToken derivesFrom;
+    /// \brief "fileName"
+    /// 
+    /// GraphNodeStage
+    const TfToken fileName;
     /// \brief "full"
     /// 
     /// Possible value for 'connectability' metadata on a InputPort. When connectability of an input/output is set to "full", it implies that it can be connected to any other port. 
@@ -114,22 +118,26 @@ struct GraphTokensType {
     /// 
     /// The modeling variation described on a Composer.
     const TfToken geometry;
+    /// \brief "in-memory"
+    /// 
+    /// Possible value for GraphNodeStage::GetLifetimeManagementAttr()
+    const TfToken inMemory;
     /// \brief "inputs:"
     /// 
     /// The prefix on input ports. 
     const TfToken inputs;
-    /// \brief "interface:"
-    /// 
-    /// (DEPRECATED) The prefix on UsdShadeNodeGraph  attributes denoting an interface attribute. 
-    const TfToken interface_;
     /// \brief "interfaceOnly"
     /// 
     /// Possible value for 'connectability' metadata on  a InputPort. It implies that the input can only connect to  a Graph Input (which represents an interface override, not  a computation-time dataflow connection), or another Input whose  connectability is also 'interfaceOnly'. 
     const TfToken interfaceOnly;
-    /// \brief "interfaceRecipientsOf:"
+    /// \brief "lifetimeManagement"
     /// 
-    /// (DEPRECATED) The prefix on UsdShadeNodeGraph relationships denoting the target of an interface attribute. 
-    const TfToken interfaceRecipientsOf;
+    /// GraphNodeStage
+    const TfToken lifetimeManagement;
+    /// \brief "on-disk"
+    /// 
+    /// Possible value for GraphNodeStage::GetLifetimeManagementAttr()
+    const TfToken onDisk;
     /// \brief "outputs:"
     /// 
     /// The prefix on output ports. 

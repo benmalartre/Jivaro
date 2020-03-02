@@ -45,18 +45,6 @@ over "GLOBAL" (
         string doc = """The prefix on input ports.
         """
       }
-      dictionary interface = {
-        string value = "interface:"
-        string doc = """(DEPRECATED) The prefix on UsdShadeNodeGraph 
-        attributes denoting an interface attribute.
-        """
-      }
-      dictionary interfaceRecipientsOf = {
-        string value = "interfaceRecipientsOf:"
-        string doc = """(DEPRECATED) The prefix on UsdShadeNodeGraph
-        relationships denoting the target of an interface attribute.
-        """
-      }
     }
   }
 )
@@ -176,6 +164,25 @@ class Node "Node" (
     }
 ) 
 {
+}
+
+class NodeStage "NodeStage" (
+    doc = """Class for the terminal stage node"""
+    inherits = </Node>
+    customData = {
+        string className = "NodeStage"
+    }
+)  
+{
+    uniform token lifetimeManagement (
+        allowedTokens = ["on-disk", "in-memory"]
+        doc = """Encodes the lifetime management of the stage, on-disk or
+        in-memory"""
+    )
+
+    uniform string fileName (
+        doc = """ar-solvable file path on disk"""
+    )
 }
 
 class "ConnectableAPI"

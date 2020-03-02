@@ -28,6 +28,7 @@ add_executable(${TARGET}
   graph/input.cpp
   graph/output.cpp
   graph/node.cpp
+  graph/nodeStage.cpp
   graph/composer.cpp
   graph/graph.cpp
   graph/tokens.cpp
@@ -46,6 +47,7 @@ add_executable(${TARGET}
   app/splitter.cpp
   app/window.cpp
   app/application.cpp
+  tests/stageGraph.cpp
   main.cpp
 )
 

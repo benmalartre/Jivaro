@@ -58,10 +58,6 @@ GraphInput::GetBaseName() const
     string name = GetFullName();
     if (TfStringStartsWith(name, GraphTokens->inputs)) {
         return TfToken(name.substr(GraphTokens->inputs.GetString().size()));
-    } else if (GraphUtils::ReadOldEncoding() && 
-               TfStringStartsWith(name, GraphTokens->interface_)) {
-        return TfToken(name.substr(
-            GraphTokens->interface_.GetString().size()));
     }
     
     return GetFullName();
@@ -90,38 +86,9 @@ GraphInput::GraphInput(
         _attr = prim.GetAttribute(inputAttrName);
     }
 
-    if (GraphUtils::ReadOldEncoding()) {
-        if (prim.HasAttribute(name)) {
-            _attr = prim.GetAttribute(name);
-        }
-        else {
-            TfToken interfaceAttrName(GraphTokens->interface_.GetString() + 
-                                      name.GetString());
-            if (prim.HasAttribute(interfaceAttrName)) {
-                _attr = prim.GetAttribute(interfaceAttrName);
-            }
-        }
-    }
-
     if (!_attr) {
-        if (GraphUtils::WriteNewEncoding()) {
-            _attr = prim.CreateAttribute(inputAttrName, typeName, 
-                /* custom = */ false);
-        } else {
-            GraphConnectableAPI connectable(prim);
-            // If this is a node-graph and the name already contains "interface:" 
-            // namespace in it, just create the attribute with the requested 
-            // name.
-            if (connectable.IsNodeGraph()) { 
-                TfToken attrName = TfStringStartsWith(name.GetString(),
-                    GraphTokens->interface_) ? name : 
-                    TfToken(GraphTokens->interface_.GetString() + name.GetString());
-                _attr = prim.CreateAttribute(attrName, typeName, /*custom*/ false);
-            } else {
-                // fallback to creating an old style GraphParameter.
-                _attr = prim.CreateAttribute(name, typeName, /*custom*/ false);
-            }
-        }
+        _attr = prim.CreateAttribute(inputAttrName, typeName, 
+          /* custom = */ false);
     }
 }
 
@@ -230,15 +197,8 @@ bool
 GraphInput::IsInput(const UsdAttribute &attr)
 {
     return attr && attr.IsDefined() && 
-            // If reading of old encoding is supported, then assume it's      
-            // an input as long as it's not in the "outputs:" namespace.
-            // If support for reading the old encoding is disabled, then only
-            // identify as an input if the attr is in the "inputs:" namespace.
-            (GraphUtils::ReadOldEncoding() ? 
-             !TfStringStartsWith(attr.GetName().GetString(), 
-                                GraphTokens->outputs) :
              TfStringStartsWith(attr.GetName().GetString(), 
-                                GraphTokens->inputs));
+                                GraphTokens->inputs);
 }
 
 /* static */
@@ -246,11 +206,6 @@ bool
 GraphInput::IsInterfaceInputName(const std::string & name)
 {
     if (TfStringStartsWith(name, GraphTokens->inputs)) {
-        return true;
-    }
-
-    if (GraphUtils::ReadOldEncoding() &&
-        TfStringStartsWith(name, GraphTokens->interface_)) {
         return true;
     }
 

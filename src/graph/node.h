@@ -208,10 +208,20 @@ public:
     GRAPH_API
     GraphOutput GetOutput(const TfToken &name) const;
 
+    /// Return the requested output if it exists.
+    /// 
+    GRAPH_API
+    GraphOutput GetOutput(const int index) const;
+
     /// Outputs are represented by attributes in the "outputs:" namespace.
     /// 
     GRAPH_API
     std::vector<GraphOutput> GetOutputs() const;
+
+    /// Num Outputs.
+    /// 
+    GRAPH_API
+    int NumOutputs() const;
 
     /// @}
 
@@ -239,10 +249,20 @@ public:
     GRAPH_API
     GraphInput GetInput(const TfToken &name) const;
 
+    /// Return the requested input if it exists.
+    /// 
+    GRAPH_API
+    GraphInput GetInput(const int index) const;
+
     /// Inputs are represented by attributes in the "inputs:" namespace.
     /// 
     GRAPH_API
     std::vector<GraphInput> GetInputs() const;
+
+    /// Num Inputs.
+    /// 
+    GRAPH_API
+    int NumInputs() const;
 
     /// @}
 

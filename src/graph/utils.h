@@ -73,16 +73,6 @@ public:
     GRAPH_API
     static TfToken GetFullName(const TfToken &baseName, 
                                const GraphAttributeType type);
-
-    /// Whether the env-setting that enables the reading of old-style encoding 
-    /// of shading networks is set to 'true'.
-    GRAPH_API
-    static bool ReadOldEncoding();
-
-    /// Whether the env-setting that enables the writing of new-style encoding 
-    /// of shading networks is set to 'true'.
-    GRAPH_API
-    static bool WriteNewEncoding();
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -611,11 +611,23 @@ public:
     GRAPH_API
     GraphOutput GetOutput(const TfToken &name) const;
 
-    /// Returns all outputs on the connectable prim (i.e. shader or node-graph). 
+    /// Return the requested output if it exists.
+    /// 
+    /// \p index is the port index.
+    ///
+    GRAPH_API
+    GraphOutput GetOutput(const int index) const;
+
+    /// Returns all outputs on the connectable prim (i.e. node or node-graph). 
     /// Outputs are represented by attributes in the "outputs:" namespace.
     /// 
     GRAPH_API
     std::vector<GraphOutput> GetOutputs() const;
+
+    /// Returns num outputs on the connectable prim (i.e. node or node-graph). 
+    /// 
+    GRAPH_API
+    int NumOutputs() const;
 
     /// @}
 
@@ -637,11 +649,23 @@ public:
     GRAPH_API
     GraphInput GetInput(const TfToken &name) const;
 
-    /// Returns all inputs on the connectable prim (i.e. shader or node-graph). 
+    /// Return the requested input if it exists.
+    /// 
+    /// \p index is the port number.
+    /// 
+    GRAPH_API
+    GraphInput GetInput(const int index) const;
+
+    /// Returns all inputs on the connectable prim (i.e. node or node-graph). 
     /// Inputs are represented by attributes in the "inputs:" namespace.
     /// 
     GRAPH_API
     std::vector<GraphInput> GetInputs() const;
+
+    /// Returns num inputs on the connectable prim (i.e. node or node-graph). 
+    /// 
+    GRAPH_API
+    int NumInputs() const;
 
     /// @}
 };

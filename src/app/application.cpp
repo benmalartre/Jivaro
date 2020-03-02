@@ -2,6 +2,8 @@
 #include "../widgets/viewport.h"
 #include "../widgets/menu.h"
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
+#include <pxr/usd/usdGeom/sphere.h>
+#include "../tests/stageGraph.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -43,58 +45,7 @@ AmnApplication::CreateStandardWindow(int width, int height)
   return AmnWindow::CreateStandardWindow(width, height);
 }
 
-// create simple graph
-//----------------------------------------------------------------------------
-pxr::GraphNode* CreateGraphNode()
-{
-  pxr::GraphNode* node = new pxr::GraphNode();
-  return node;
-}
 
-pxr::GraphGraph* CreateGraphNodeGraph()
-{
-  pxr::GraphGraph* graph = new pxr::GraphGraph();
-
-  return graph;
-}
-
-// add node to graph test
-//----------------------------------------------------------------------------
-pxr::GraphNode _TestAddNode(pxr::UsdStageRefPtr stage, const std::string& path)
-{
-  pxr::GraphNode node = GraphNode::Define(stage, pxr::SdfPath(path));
-  return node;
-}
-
-// create input test
-//----------------------------------------------------------------------------
-pxr::GraphInput _TestAddInput(GraphNode& node, 
-                              const std::string& name, 
-                              const GraphAttributeType& type,
-                              const pxr::SdfValueTypeName& valueType)
-{
-  if(type == GraphAttributeType::Parameter)
-  {
-    pxr::GraphInput input = node.CreateInput(pxr::TfToken(name), valueType);
-    return input;
-  }
-  return pxr::GraphInput();
-}
-
-// create output test
-//----------------------------------------------------------------------------
-pxr::GraphOutput _TestAddOutput(GraphNode& node, 
-                                const std::string& name, 
-                                const GraphAttributeType& type,
-                                const pxr::SdfValueTypeName& valueType)
-{
-  if(type == GraphAttributeType::Parameter)
-  {
-    pxr::GraphOutput output = node.CreateOutput(pxr::TfToken(name), valueType);
-    return output;
-  }
-  return pxr::GraphOutput();
-}
 
 // init application
 //----------------------------------------------------------------------------
@@ -108,32 +59,7 @@ AmnApplication::Init()
   AmnMenuUI* menu = new AmnMenuUI(mainView->GetLeft());
   AmnViewportUI* viewport = new AmnViewportUI(mainView->GetRight(), EMBREE);
 
-  /*pxr::UsdStageRefPtr stage =
-    UsdStage::CreateNew("/Users/benmalartre/Documents/RnD/amnesie/usd/test.usda");*/
-  pxr::UsdStageRefPtr stage = 
-    UsdStage::CreateInMemory();
-  pxr::GraphGraph graph = pxr::GraphGraph::Define(stage, pxr::SdfPath("/MyNodeGraph"));
-
-  pxr::GraphNode node1 = _TestAddNode(stage, "/MyNodeGraph/node1");
-  pxr::GraphInput input1 = _TestAddInput(node1, "input1", GraphAttributeType::Parameter, pxr::SdfValueTypeNames->Float);
-  pxr::GraphOutput output1 = _TestAddOutput(node1, "output1", GraphAttributeType::Parameter, pxr::SdfValueTypeNames->Float);
-
-  pxr::GraphNode node2 = _TestAddNode(stage, "/MyNodeGraph/node2");
-  pxr::GraphInput input2 = _TestAddInput(node2, "input2", GraphAttributeType::Parameter, pxr::SdfValueTypeNames->Float);
-  pxr::GraphOutput output2 = _TestAddOutput(node2, "output2", GraphAttributeType::Parameter, pxr::SdfValueTypeNames->Float);
-
-  input2.ConnectToSource(output1);
-
-  pxr::UsdUINodeGraphNodeAPI nodeUI1(node1);
-  pxr::UsdUINodeGraphNodeAPI nodeUI2(node2);
-  pxr::UsdAttribute posAttr1  = nodeUI1.CreatePosAttr();
-  posAttr1.Set(pxr::GfVec2f(120,60));
-  pxr::UsdAttribute posAttr2 = nodeUI2.CreatePosAttr();
-  posAttr2.Set(pxr::GfVec2f(240,60));
-
-
-  stage->Export("/Users/benmalartre/Documents/RnD/amnesie/usd/test2.usda");
-  //stage->Save(); 
+  pxr::TestScene();
   
   /*
   _mainWindow->SplitView(mainView->GetRight(), 75, true);

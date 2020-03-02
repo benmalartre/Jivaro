@@ -33,17 +33,6 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-TF_DEFINE_ENV_SETTING(
-    USD_SHADE_READ_OLD_ENCODING, true,
-    "Set to false to disable support for reading old-style of encoding with "
-    "parameters, interface attributes and terminals.");
-
-TF_DEFINE_ENV_SETTING(
-    USD_SHADE_WRITE_NEW_ENCODING, true,
-    "Set to true to enable the authoring of shading networks using the new "
-    "encoding (with inputs and outputs, in place of parameters, interface "
-    "attributes and terminals.");
-
 using std::vector;
 using std::string;
 
@@ -58,8 +47,6 @@ GraphUtils::GetPrefixForAttributeType(GraphAttributeType sourceType)
             return GraphTokens->outputs.GetString();
         case GraphAttributeType::Parameter: 
             return string();
-        case GraphAttributeType::InterfaceAttribute:
-            return GraphTokens->interface_.GetString();
         default:
             return string();
     }
@@ -80,12 +67,6 @@ GraphUtils::GetBaseNameAndType(const TfToken &fullName)
         return std::make_pair(TfToken(res.first),GraphAttributeType::Output);
     }
 
-    res = SdfPath::StripPrefixNamespace(fullName, GraphTokens->interface_);
-    if (res.second) {
-        return std::make_pair(TfToken(res.first), 
-                              GraphAttributeType::InterfaceAttribute);
-    }
-
     return std::make_pair(fullName, GraphAttributeType::Parameter);
 }
 
@@ -96,24 +77,6 @@ GraphUtils::GetFullName(const TfToken &baseName,
 {
     return TfToken(GraphUtils::GetPrefixForAttributeType(type) + 
                    baseName.GetString());
-}
-
-/* static */
-bool 
-GraphUtils::ReadOldEncoding()
-{
-    static const bool readOldEncoding = 
-        TfGetEnvSetting(USD_SHADE_READ_OLD_ENCODING);
-    return readOldEncoding;
-}
-
-/* static */
-bool 
-GraphUtils::WriteNewEncoding()
-{       
-    static const bool writeNewEncoding = 
-        TfGetEnvSetting(USD_SHADE_WRITE_NEW_ENCODING);
-    return writeNewEncoding;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

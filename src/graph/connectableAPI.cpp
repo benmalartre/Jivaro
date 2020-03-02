@@ -131,11 +131,6 @@ PXR_NAMESPACE_CLOSE_SCOPE
 PXR_NAMESPACE_OPEN_SCOPE
 
 TF_DEFINE_ENV_SETTING(
-    GRAPH_BACK_COMPAT, true,
-    "Set to false to terminate support for older encodings of the UsdShading "
-    "model.");
-
-TF_DEFINE_ENV_SETTING(
     GRAPH_ENABLE_BIDIRECTIONAL_INTERFACE_CONNECTIONS, false,
     "Enables authoring of connections to interface attributes from shader "
     "inputs (or parameters). This allows multiple connections to the same "
@@ -321,24 +316,6 @@ _GetConnectionRel(
     return UsdRelationship();
 }
 
-// Creates an old-style interfaceRecipientsOf relationship for an interface 
-// attribute. Exists temporarily for backwards compatibility.
-static UsdRelationship
-_GetInterfaceAttributeRel(const UsdAttribute &interfaceAttr,
-                          const TfToken &renderTarget)
-{
-    std::string relPrefix = renderTarget.IsEmpty() ? 
-            GraphTokens->interfaceRecipientsOf :
-            TfStringPrintf("%s:%s", renderTarget.GetText(),
-                GraphTokens->interfaceRecipientsOf.GetText());
-    std::string baseName = GraphUtils::GetBaseNameAndType(
-            interfaceAttr.GetName()).first.GetString();
-
-    TfToken relName(relPrefix + baseName);
-    return interfaceAttr.GetPrim().CreateRelationship(relName, 
-        /*custom */ false);
-}
-
 /* static */
 bool  
 GraphConnectableAPI::_ConnectToSource(
@@ -375,22 +352,6 @@ GraphConnectableAPI::_ConnectToSource(
             }
         }
 
-        if (!GraphUtils::WriteNewEncoding() &&
-            sourceType == GraphAttributeType::InterfaceAttribute) 
-        {
-            // Author "interfaceRecipientsOf" pointing in the reverse direction
-            // if we're authoring the old-style encoding.
-            if (UsdRelationship rel = _GetInterfaceAttributeRel(sourceAttr,
-                                                                renderTarget)) {
-                SdfPathVector targets{shadingProp.GetPath()};
-                success = rel.SetTargets(targets);
-            }
-
-            if (!AreBidirectionalInterfaceConnectionsEnabled()) {
-                return success;
-            }
-        }
-
         // If a typeName isn't specified, 
         if (!typeName) {
             // If shadingProp is not an attribute, it must be a terminal output 
@@ -405,35 +366,15 @@ GraphConnectableAPI::_ConnectToSource(
             sourceAttr = sourcePrim.CreateAttribute(sourceAttrName, typeName,
                 /* custom = */ false);
         }
-
-        // If writing of new encoding is disabled or if the shadingProp
-        // is a relationship (i.e. old-style terminal output), then author the
-        // connection as a relationship.
-        if (!GraphUtils::WriteNewEncoding() ||
-            shadingProp.Is<UsdRelationship>()) 
-        {
-            UsdRelationship rel = _GetConnectionRel(shadingProp, /* create */ true);
-            if (!rel) {
-                TF_CODING_ERROR("Failed connecting shading property <%s>. "
-                                "Unable to make the connection to source <%s>.", 
-                                shadingProp.GetPath().GetText(),
-                                sourcePrim.GetPath().GetText());
-                return false;
-            }
-
-            SdfPathVector  target{sourceAttr.GetPath()};
-            success = rel.SetTargets(target);
-
-        } else {
-            UsdAttribute shadingAttr = shadingProp.As<UsdAttribute>();
-            if (!shadingAttr) {
-                TF_CODING_ERROR("Attempted to author a connection on an invalid"
-                    "shading property <%s>.", UsdDescribe(shadingAttr).c_str());
-                return false;
-            }
-            success = shadingAttr.SetConnections(
-                SdfPathVector{sourceAttr.GetPath()});
+        
+        UsdAttribute shadingAttr = shadingProp.As<UsdAttribute>();
+        if (!shadingAttr) {
+            TF_CODING_ERROR("Attempted to author a connection on an invalid"
+                "shading property <%s>.", UsdDescribe(shadingAttr).c_str());
+            return false;
         }
+        success = shadingAttr.SetConnections(
+            SdfPathVector{sourceAttr.GetPath()});
 
             
         
@@ -567,23 +508,6 @@ GraphConnectableAPI::GetConnectedSource(
         shadingAttr.GetConnections(&sources);
     }
 
-    // Check the old encoding only when we haven't already found a source 
-    // authored via UsdAttribute connections.
-    if (GraphUtils::ReadOldEncoding() && sources.empty()) {
-        UsdRelationship connection = _GetConnectionRel(shadingProp, false);
-        // There should be no possibility of forwarding here, unless the given 
-        // shading property is a terminal output (or relationship).
-        if (connection) {
-            bool shadingPropIsTerminal = shadingProp.Is<UsdRelationship>();
-            shadingPropIsTerminal ? connection.GetForwardedTargets(&sources)
-                : connection.GetTargets(&sources);
-
-            if (TfGetEnvSetting(GRAPH_BACK_COMPAT)) {
-                connection.GetMetadata(_tokens->outputName, sourceName);
-            }
-        }
-    }
-
     // XXX(validation)  sources.size() <= 1, also sourceName,
     //                  target Material == source Material ?
     if (sources.size() == 1) {
@@ -597,14 +521,7 @@ GraphConnectableAPI::GetConnectedSource(
             std::tie(*sourceName, *sourceType) = 
                 GraphUtils::GetBaseNameAndType(attrName);
             return target.Is<UsdAttribute>();
-        } else {
-            // If this is a terminal-style output, then allow connection 
-            // to a prim.
-            if (GraphUtils::ReadOldEncoding() && 
-                shadingProp.Is<UsdRelationship>()) {
-                return static_cast<bool>(*source);
-            }
-        }
+        } 
     }
 
     return false;
@@ -624,21 +541,6 @@ GraphConnectableAPI::GetRawConnectedSourcePaths(
         }
     }
     
-    // If we already have a sourcePath authored as an attribute connection,
-    // return it.
-    if (sourcePaths->empty() && GraphUtils::ReadOldEncoding()) {
-        const UsdRelationship rel = _GetConnectionRel(shadingProp, /* create */ false);
-        if (!rel) {
-            return false;
-        }
-
-        if (!rel.GetTargets(sourcePaths)) {
-            TF_WARN("Unable to get targets for relationship <%s>",
-                    rel.GetPath().GetText());
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -728,42 +630,6 @@ GraphConnectableAPI::IsSourceConnectionFromBaseMaterial(
         
         
     }
-
-    if (!GraphUtils::ReadOldEncoding()) {
-        return false;
-    }
-
-    // Check the old encoding.
-    UsdRelationship rel = _GetConnectionRel(shadingProp, /*create*/ false);
-    if (!rel) {
-        return false;
-    }
-
-    // USD core doesn't provide a UsdResolveInfo style API for asking where
-    // relationship targets are authored, so we do it here ourselves.
-    // Find the strongest opinion about the relationship targets.
-    SdfRelationshipSpecHandle strongestRelSpec;
-    SdfPropertySpecHandleVector propStack = rel.GetPropertyStack();
-    for (const SdfPropertySpecHandle &prop: propStack) {
-        if (SdfRelationshipSpecHandle relSpec =
-            TfDynamic_cast<SdfRelationshipSpecHandle>(prop)) {
-            if (relSpec->HasTargetPathList()) {
-                strongestRelSpec = relSpec;
-                break;
-            }
-        }
-    }
-    // Find which prim node introduced that opinion.
-    if (strongestRelSpec) {
-        for(const PcpNodeRef &node:
-            rel.GetPrim().GetPrimIndex().GetNodeRange()) {
-            if (node.GetPath() == strongestRelSpec->GetPath().GetPrimPath() &&
-                node.GetLayerStack()->HasLayer(strongestRelSpec->GetLayer())) {
-                return _NodeRepresentsLiveBaseMaterial(node);
-            }
-        }
-    }
-
     return false;
 
 }
@@ -773,18 +639,8 @@ bool
 GraphConnectableAPI::DisconnectSource(UsdProperty const &shadingProp)
 {
     bool success = true;
-    if (GraphUtils::WriteNewEncoding()) {
-        if (UsdAttribute shadingAttr = shadingProp.As<UsdAttribute>()) {
-            success = shadingAttr.BlockConnections();
-        }
-    }
-
-    // Don't bother looking for and blocking rel targets, if reading of old 
-    // encoding is disabled.
-    if (GraphUtils::ReadOldEncoding()) {
-        if (UsdRelationship rel = _GetConnectionRel(shadingProp, false)) {
-            success = rel.BlockTargets();
-        }
+    if (UsdAttribute shadingAttr = shadingProp.As<UsdAttribute>()) {
+        success = shadingAttr.BlockConnections();
     }
 
     return success;
@@ -795,20 +651,9 @@ bool
 GraphConnectableAPI::ClearSource(UsdProperty const &shadingProp)
 {
     bool success = true;
-    if (GraphUtils::WriteNewEncoding()) {
-        if (UsdAttribute shadingAttr = shadingProp.As<UsdAttribute>()) {
-            success = shadingAttr.ClearConnections();
-        }
+    if (UsdAttribute shadingAttr = shadingProp.As<UsdAttribute>()) {
+        success = shadingAttr.ClearConnections();
     }
-
-    // Don't bother looking for and clearing rel targets, if reading of old 
-    // encoding is disabled.
-    if (GraphUtils::ReadOldEncoding()) {
-        if (UsdRelationship rel = _GetConnectionRel(shadingProp, false)) {
-            success = rel.ClearTargets(/* removeSpec = */ true);
-        }
-    }
-
     return success;
 }
 
@@ -827,15 +672,16 @@ GraphConnectableAPI::GetOutput(const TfToken &name) const
     if (GetPrim().HasAttribute(outputAttrName)) {
         return GraphOutput(GetPrim().GetAttribute(outputAttrName));
     } 
- 
-    if (GraphUtils::ReadOldEncoding()) {
-        if (IsNodeGraph()) {
-            if (GetPrim().HasRelationship(name)) {
-                return GraphOutput(GetPrim().GetRelationship(name));
-            }
-        }
-    }
 
+    return GraphOutput();
+}
+
+GraphOutput 
+GraphConnectableAPI::GetOutput(const int index) const
+{
+    std::vector<GraphOutput> outputs = GetOutputs();
+    if(index >=0 && index < outputs.size())
+        return outputs[index];
     return GraphOutput();
 }
 
@@ -855,27 +701,13 @@ GraphConnectableAPI::GetOutputs() const
         }
     }
 
-    if (GraphUtils::ReadOldEncoding() && IsNodeGraph()) {
-        std::vector<UsdRelationship> rels= GetPrim().GetRelationships();
-        TF_FOR_ALL(relIter, rels) { 
-            const UsdRelationship& rel= *relIter;
-            // Excluded the "connectedSourceFor:" and "interfaceRecipientsOf:" 
-            // relationships.
-            if (!TfStringStartsWith(rel.GetName(), 
-                                    GraphTokens->connectedSourceFor) &&
-                !TfStringStartsWith(rel.GetName(), 
-                                    GraphTokens->interfaceRecipientsOf)) 
-            {
-                // All non-connection related relationships on node-graphs
-                // typically represent terminal outputs, so wrap the 
-                // relationship in a GraphOutput object and add to the 
-                // resuls.
-                ret.push_back(GraphOutput(rel));
-            }
-        }
-    }
-
     return ret;
+}
+
+int 
+GraphConnectableAPI::NumOutputs() const
+{
+    return GetOutputs().size();
 }
 
 GraphInput 
@@ -895,22 +727,12 @@ GraphConnectableAPI::GetInput(const TfToken &name) const
         return GraphInput(GetPrim().GetAttribute(inputAttrName));
     }
 
-    if (GraphUtils::ReadOldEncoding()) {
-        if (IsNodeGraph()) {
-            TfToken interfaceAttrName = TfToken(
-                GraphTokens->interface_.GetString() + name.GetString());
-            if (GetPrim().HasAttribute(interfaceAttrName)) {
-                return GraphInput(GetPrim().GetAttribute(interfaceAttrName));
-            }
-        }
+    return GraphInput();
+}
 
-        if (IsNode()) {
-            if (GetPrim().HasAttribute(name)) {
-                return GraphInput(GetPrim().GetAttribute(name));
-            }
-        }
-    }
-
+GraphInput 
+GraphConnectableAPI::GetInput(const int index) const
+{
     return GraphInput();
 }
 
@@ -929,26 +751,15 @@ GraphConnectableAPI::GetInputs() const
             ret.push_back(GraphInput(attr));
             continue;
         }
-
-        // Support for old style encoding containing interface attributes 
-        // and parameters.
-        if (GraphUtils::ReadOldEncoding()) {
-            if (IsNodeGraph() && 
-                (TfStringStartsWith(attr.GetName().GetString(), 
-                                  GraphTokens->interface_))) {
-                // If it's an interface attribute on a node-graph, wrap it in a 
-                // GraphInput object and add it to the list of inputs.
-                ret.push_back(GraphInput(attr));
-            } else if (attr.GetNamespace().IsEmpty()) {
-                // Assume that the attribute belongs to a shader.
-                // If it's an unnamespaced (parameter) attribute on a shader, 
-                // wrap it in a GraphInput object and add it to the list of 
-                // inputs.
-                ret.push_back(GraphInput(attr));
-            }
-        }
     }
     return ret;
 }
+
+int
+GraphConnectableAPI::NumInputs() const
+{
+    return 0;
+}
+
 
 PXR_NAMESPACE_CLOSE_SCOPE
