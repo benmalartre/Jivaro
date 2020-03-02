@@ -48,20 +48,6 @@ namespace {
 // fwd decl.
 WRAP_CUSTOM;
 
-        
-static UsdAttribute
-_CreateImplementationSourceAttr(GraphNode &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateImplementationSourceAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
-}
-        
-static UsdAttribute
-_CreateIdAttr(GraphNode &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateIdAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
-}
 
 } // anonymous namespace
 
@@ -95,20 +81,6 @@ void wrapGraphNode()
 
         .def(!self)
 
-        
-        .def("GetImplementationSourceAttr",
-             &This::GetImplementationSourceAttr)
-        .def("CreateImplementationSourceAttr",
-             &_CreateImplementationSourceAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
-        
-        .def("GetIdAttr",
-             &This::GetIdAttr)
-        .def("CreateIdAttr",
-             &_CreateIdAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
 
     ;
 

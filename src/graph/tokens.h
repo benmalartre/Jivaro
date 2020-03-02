@@ -114,18 +114,6 @@ struct GraphTokensType {
     /// 
     /// The modeling variation described on a Composer.
     const TfToken geometry;
-    /// \brief "id"
-    /// 
-    /// Possible value for GraphNode::GetInfoImplementationSourceAttr(), Default value for GraphNode::GetInfoImplementationSourceAttr()
-    const TfToken id;
-    /// \brief "info:id"
-    /// 
-    /// GraphNode
-    const TfToken infoId;
-    /// \brief "info:implementationSource"
-    /// 
-    /// GraphNode
-    const TfToken infoImplementationSource;
     /// \brief "inputs:"
     /// 
     /// The prefix on input ports. 
@@ -154,14 +142,6 @@ struct GraphTokensType {
     /// 
     /// Dictionary valued metadata key authored on Shader prims with implementationSource value of sourceAsset or  sourceCode to pass along metadata to the shader parser or  compiler. It is also used to author metadata on shader  properties in a UsdShade-based shader definition file. 
     const TfToken sdrMetadata;
-    /// \brief "sourceAsset"
-    /// 
-    /// Possible value for GraphNode::GetInfoImplementationSourceAttr()
-    const TfToken sourceAsset;
-    /// \brief "sourceCode"
-    /// 
-    /// Possible value for GraphNode::GetInfoImplementationSourceAttr()
-    const TfToken sourceCode;
     /// \brief "state:binding"
     /// 
     ///  The current state of the asset. 
