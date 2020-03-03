@@ -58,10 +58,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 /// Use GraphTokens like so:
 ///
 /// \code
-///     gprim.GetMyTokenValuedAttr().Set(GraphTokens->animationCache);
+///     gprim.GetMyTokenValuedAttr().Set(GraphTokens->allRule);
 /// \endcode
 struct GraphTokensType {
     GRAPH_API GraphTokensType();
+    /// \brief "AllRule"
+    /// 
+    /// Possible value for GraphNodeStage::GetLoadPrimsStatesAttr()
+    const TfToken allRule;
     /// \brief "animationCache"
     /// 
     /// When in 'animationCache state, the asset will exhibit the animation cache only. 
@@ -134,10 +138,26 @@ struct GraphTokensType {
     /// 
     /// GraphNodeStage
     const TfToken lifetimeManagement;
+    /// \brief "loadPrimsPath"
+    /// 
+    /// GraphNodeStage
+    const TfToken loadPrimsPath;
+    /// \brief "loadPrimsStates"
+    /// 
+    /// GraphNodeStage
+    const TfToken loadPrimsStates;
+    /// \brief "NoneRule"
+    /// 
+    /// Possible value for GraphNodeStage::GetLoadPrimsStatesAttr()
+    const TfToken noneRule;
     /// \brief "on-disk"
     /// 
     /// Possible value for GraphNodeStage::GetLifetimeManagementAttr()
     const TfToken onDisk;
+    /// \brief "OnlyRule"
+    /// 
+    /// Possible value for GraphNodeStage::GetLoadPrimsStatesAttr()
+    const TfToken onlyRule;
     /// \brief "outputs:"
     /// 
     /// The prefix on output ports. 
@@ -146,6 +166,10 @@ struct GraphTokensType {
     /// 
     /// GraphComposer
     const TfToken outputsDeformed;
+    /// \brief "populationMask"
+    /// 
+    /// GraphNodeStage
+    const TfToken populationMask;
     /// \brief "sdrMetadata"
     /// 
     /// Dictionary valued metadata key authored on Shader prims with implementationSource value of sourceAsset or  sourceCode to pass along metadata to the shader parser or  compiler. It is also used to author metadata on shader  properties in a UsdShade-based shader definition file. 

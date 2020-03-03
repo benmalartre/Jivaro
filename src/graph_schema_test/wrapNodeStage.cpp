@@ -62,6 +62,27 @@ _CreateFileNameAttr(GraphNodeStage &self,
     return self.CreateFileNameAttr(
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->String), writeSparsely);
 }
+        
+static UsdAttribute
+_CreateLoadPrimsPathAttr(GraphNodeStage &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateLoadPrimsPathAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->StringArray), writeSparsely);
+}
+        
+static UsdAttribute
+_CreateLoadPrimsStatesAttr(GraphNodeStage &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateLoadPrimsStatesAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->TokenArray), writeSparsely);
+}
+        
+static UsdAttribute
+_CreatePopulationMaskAttr(GraphNodeStage &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreatePopulationMaskAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->StringArray), writeSparsely);
+}
 
 } // anonymous namespace
 
@@ -107,6 +128,27 @@ void wrapGraphNodeStage()
              &This::GetFileNameAttr)
         .def("CreateFileNameAttr",
              &_CreateFileNameAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetLoadPrimsPathAttr",
+             &This::GetLoadPrimsPathAttr)
+        .def("CreateLoadPrimsPathAttr",
+             &_CreateLoadPrimsPathAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetLoadPrimsStatesAttr",
+             &This::GetLoadPrimsStatesAttr)
+        .def("CreateLoadPrimsStatesAttr",
+             &_CreateLoadPrimsStatesAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetPopulationMaskAttr",
+             &This::GetPopulationMaskAttr)
+        .def("CreatePopulationMaskAttr",
+             &_CreatePopulationMaskAttr,
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
 

@@ -26,6 +26,7 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 GraphTokensType::GraphTokensType() :
+    allRule("AllRule", TfToken::Immortal),
     animationCache("animationCache", TfToken::Immortal),
     animCache("animCache", TfToken::Immortal),
     animDatas("animDatas", TfToken::Immortal),
@@ -44,13 +45,19 @@ GraphTokensType::GraphTokensType() :
     inputs("inputs:", TfToken::Immortal),
     interfaceOnly("interfaceOnly", TfToken::Immortal),
     lifetimeManagement("lifetimeManagement", TfToken::Immortal),
+    loadPrimsPath("loadPrimsPath", TfToken::Immortal),
+    loadPrimsStates("loadPrimsStates", TfToken::Immortal),
+    noneRule("NoneRule", TfToken::Immortal),
     onDisk("on-disk", TfToken::Immortal),
+    onlyRule("OnlyRule", TfToken::Immortal),
     outputs("outputs:", TfToken::Immortal),
     outputsDeformed("outputs:deformed", TfToken::Immortal),
+    populationMask("populationMask", TfToken::Immortal),
     sdrMetadata("sdrMetadata", TfToken::Immortal),
     stateBinding("state:binding", TfToken::Immortal),
     universalSourceType("", TfToken::Immortal),
     allTokens({
+        allRule,
         animationCache,
         animCache,
         animDatas,
@@ -69,9 +76,14 @@ GraphTokensType::GraphTokensType() :
         inputs,
         interfaceOnly,
         lifetimeManagement,
+        loadPrimsPath,
+        loadPrimsStates,
+        noneRule,
         onDisk,
+        onlyRule,
         outputs,
         outputsDeformed,
+        populationMask,
         sdrMetadata,
         stateBinding,
         universalSourceType

@@ -183,7 +183,35 @@ class NodeStage "NodeStage" (
     uniform string fileName (
         doc = """ar-solvable file path on disk"""
     )
+
+    uniform string[] loadPrimsPath(
+      doc = """Full Path to prims on the stage.
+        These prims will be associated with state below on loading the stage.
+        """
+    )
+
+    uniform token[] loadPrimsStates (
+        allowedTokens = ["AllRule", "OnlyRule", "NoneRule"]
+        doc = """Load rule for the associated prim.
+            - AllRule : Include payloads on the specified prim and all 
+              descendants.
+            - OnlyRule : Include payloads on the specified prim but no 
+              descendants.
+            - NoneRule : Exclude payloads on the specified prim and all 
+              descendants.
+        """
+    )
+
+    uniform  string[] populationMask (
+        doc = """Set of fullpath to prims on the stage.
+            This set represents a mask that may be applied to a stage to limit 
+            the prims it populates.
+        """
+    )
+
+
 }
+
 
 class "ConnectableAPI"
 (

@@ -64,6 +64,7 @@ void wrapGraphTokens()
 {
     boost::python::class_<GraphTokensType, boost::noncopyable>
         cls("Tokens", boost::python::no_init);
+    _AddToken(cls, "allRule", GraphTokens->allRule);
     _AddToken(cls, "animationCache", GraphTokens->animationCache);
     _AddToken(cls, "animCache", GraphTokens->animCache);
     _AddToken(cls, "animDatas", GraphTokens->animDatas);
@@ -82,9 +83,14 @@ void wrapGraphTokens()
     _AddToken(cls, "inputs", GraphTokens->inputs);
     _AddToken(cls, "interfaceOnly", GraphTokens->interfaceOnly);
     _AddToken(cls, "lifetimeManagement", GraphTokens->lifetimeManagement);
+    _AddToken(cls, "loadPrimsPath", GraphTokens->loadPrimsPath);
+    _AddToken(cls, "loadPrimsStates", GraphTokens->loadPrimsStates);
+    _AddToken(cls, "noneRule", GraphTokens->noneRule);
     _AddToken(cls, "onDisk", GraphTokens->onDisk);
+    _AddToken(cls, "onlyRule", GraphTokens->onlyRule);
     _AddToken(cls, "outputs", GraphTokens->outputs);
     _AddToken(cls, "outputsDeformed", GraphTokens->outputsDeformed);
+    _AddToken(cls, "populationMask", GraphTokens->populationMask);
     _AddToken(cls, "sdrMetadata", GraphTokens->sdrMetadata);
     _AddToken(cls, "stateBinding", GraphTokens->stateBinding);
     _AddToken(cls, "universalSourceType", GraphTokens->universalSourceType);
