@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prim.h"
+//#include "../utils/utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -32,21 +33,5 @@ AmnUsdEmbreeMesh* TranslateMesh( AmnUsdEmbreeContext* ctxt,
 bool CheckNormals(const pxr::UsdGeomMesh& usdMesh,
                   const pxr::UsdTimeCode& time,
                   AmnUsdEmbreeMesh* mesh);
-
-void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
-                          const pxr::VtArray<int>& counts,
-                          const pxr::VtArray<int>& indices,
-                          const pxr::VtArray<int>& triangles,
-                          pxr::VtArray<pxr::GfVec3f>& normals);
-
-int TriangulateMesh(const pxr::VtArray<int>& counts, 
-                    const pxr::VtArray<int>& indices, 
-                    pxr::VtArray<int>& triangles,
-                    pxr::VtArray<int>& samples);
-
-template<typename T>
-void TriangulateData(const pxr::VtArray<int>& indices, 
-                    const pxr::VtArray<T>& datas,
-                    pxr::VtArray<T>& result);
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -40,6 +40,7 @@ add_executable(${TARGET}
   widgets/viewport.cpp
   embree/oiio.cpp
   embree/jpeg.cpp
+  embree/utils.cpp
   embree/sphere.cpp
   embree/mesh.cpp
   embree/context.cpp

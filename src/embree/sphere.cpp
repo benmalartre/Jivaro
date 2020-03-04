@@ -1,47 +1,52 @@
 #include "../default.h"
 #include "../utils/utils.h"
-#include "mesh.h"
+#include "sphere.h"
 #include "context.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-// translate usd mesh to embree mesh
-AmnUsdEmbreeMesh* 
-TranslateMesh(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
+// translate usd sphere to embree mesh
+AmnUsdEmbreeSphere* 
+TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
 {
-  size_t num_vertices, num_triangles;
-  AmnUsdEmbreeMesh* result = new AmnUsdEmbreeMesh();
+  
+  AmnUsdEmbreeSphere* result = new AmnUsdEmbreeSphere();
   result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
   //result->_worldMatrix = usdMesh.GetPrim().GetWor;
   result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_TRIANGLE);
-  result->_name = usdMesh.GetPrim().GetPrimPath().GetString();
-  bool hasPoints = false;
-  pxr::UsdAttribute pointsAttr = usdMesh.GetPointsAttr();
-  if(pointsAttr && pointsAttr.HasAuthoredValue())
-  {
-    pointsAttr.Get(&result->_positions, ctxt->_time);
-    num_vertices = result->_positions.size();
+  result->_name = usdSphere.GetPrim().GetPrimPath().GetString();
+  result->_resolution = 32;
 
-    rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
-                              RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
-                              0,                          // Slot
-                              RTC_FORMAT_FLOAT3,          // RTCFormat
-                              result->_positions.cdata(), // Datas Ptr
-                              0,                          // Offset
-                              sizeof(pxr::GfVec3f),       // Stride
-                              num_vertices);              // Num Elements*/
-    hasPoints = true;
-  }
-  // if there are no points, no point to continue 
-  if(!hasPoints)
-  {
-    std::cerr << usdMesh.GetPrim().GetPrimPath() << "\n" << 
-          "Problem getting points datas : " <<
-            "this mesh is invalid!";
-    delete result;
-    return NULL;
-  }
+  size_t num_lats = result->_resolution * 2;
+  size_t num_longs = result->_resolution + 1;
 
+  size_t num_vertices = (num_longs - 2) * num_lats + 2;
+  size_t num_triangles = (num_vertices - 2 + num_lats) * 2;
+
+  pxr::UsdAttribute radiusAttr = usdSphere.GetRadiusAttr();
+  if(radiusAttr && radiusAttr.HasAuthoredValue())
+  {
+    radiusAttr.Get(&result->_radius , ctxt->_time);
+  }
+  else result->_radius = 1.f;
+
+  BuildPoints(num_lats, 
+              num_longs, 
+              result->_positions, 
+              result->_radius,
+              result->_worldMatrix);
+
+  rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
+                            RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
+                            0,                          // Slot
+                            RTC_FORMAT_FLOAT3,          // RTCFormat
+                            result->_positions.cdata(), // Datas Ptr
+                            0,                          // Offset
+                            sizeof(pxr::GfVec3f),       // Stride
+                            num_vertices);              // Num Elements*/
+
+  
+  /*
   bool hasTriangles = false;
   pxr::UsdAttribute countsAttr = usdMesh.GetFaceVertexCountsAttr();
   pxr::UsdAttribute indicesAttr = usdMesh.GetFaceVertexIndicesAttr();
@@ -83,16 +88,6 @@ TranslateMesh(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
     return NULL;
   }
 
-  /*
-  Vec3fa* vertex_colors = (Vec3fa*) alignedMalloc(num_vertices*sizeof(Vec3fa),16);
-  for(int v=0;v<num_vertices;++v)
-  {
-    vertex_colors[v][0] = RANDOM_0_1;
-    vertex_colors[v][1] = RANDOM_0_1;
-    vertex_colors[v][2] = RANDOM_0_1;
-  }
-  */
-
   CheckNormals(usdMesh, ctxt->_time, result);
   if(!result->_hasNormals)
   {
@@ -107,11 +102,6 @@ TranslateMesh(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
 
   if(hasPoints && hasTriangles)
   {
-    /*
-    rtcSetGeometryVertexAttributeCount(result->_geom, 1);
-    rtcSetSharedGeometryBuffer(result->_geom, RTC_BUFFER_TYPE_VERTEX_ATTRIBUTE, 0, 
-    RTC_FORMAT_FLOAT3,vertex_colors,0,sizeof(Vec3fa),num_vertices);
-    */
     rtcCommitGeometry(result->_geom);
     result->_geomId = rtcAttachGeometry(ctxt->_scene, result->_geom);
     rtcReleaseGeometry(result->_geom);
@@ -125,200 +115,76 @@ TranslateMesh(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
     delete result;
     return NULL;
   };
-
+  */
  return 0;
 }
 
-// triangulate mesh from usd
-int 
-TriangulateMesh(const pxr::VtArray<int>& counts, 
-                const pxr::VtArray<int>& indices, 
-                pxr::VtArray<int>& triangles,
-                pxr::VtArray<int>& samples)
-{
-  int num_triangles = 0;
-  for(auto count : counts)
-  {
-    num_triangles += count - 2;
-  }
-
-  triangles.resize(num_triangles * 3);
-  samples.resize(num_triangles * 3);
-
-  int base = 0;
-  int cnt = 0;
-  int cnt2 = 0;
-  for(auto count: counts)
-  {
-    for(int i = 1; i < count - 1; ++i)
-    {
-      triangles[cnt] = indices[base        ];
-      samples[cnt++] = base;
-      triangles[cnt] = indices[base + i    ];
-      samples[cnt++] = base + i;
-      triangles[cnt] = indices[base + i + 1];
-      samples[cnt++] = base + i + 1;
-    }
-    base += count;
-  }
-  return cnt / 3;
-}
-
-// triangulation datas from usd
-template<typename T>
 void 
-TriangulateData(const pxr::VtArray<int>& indices, 
-                const pxr::VtArray<T>& datas,
-                pxr::VtArray<T>& result)
-{
-  result.resize(indices.size());
-  for(int i=0;i<indices.size();++i)
+BuildPoints(int num_lats, 
+            int num_longs, 
+            pxr::VtArray<GfVec3f>& positions, 
+            float radius,
+            float* worldMatrix)
+{ 
+  size_t num_vertices = (num_longs - 2) * num_lats + 2;
+  positions.resize(num_vertices);
+  int k;
+  for(int i=0; i < num_longs; ++i)
   {
-    result[i] = datas[indices[i]];
-  }
-}
-
-// check usd file for authored normals
-//------------------------------------------------------------------------------
-bool 
-CheckNormals(const pxr::UsdGeomMesh& usdMesh,
-            const pxr::UsdTimeCode& time,
-            AmnUsdEmbreeMesh* mesh)
-{
-  mesh->_hasNormals = false;
-  pxr::UsdAttribute normalsAttr = usdMesh.GetNormalsAttr();
-  if(normalsAttr && normalsAttr.HasAuthoredValue())
-  {
-    pxr::VtArray<pxr::GfVec3f> normals;
-    normalsAttr.Get(&normals, time);
-    int num_normals = normals.size();
-
-    pxr::TfToken normalsInterpolation = usdMesh.GetNormalsInterpolation();
-    if(normalsInterpolation == pxr::UsdGeomTokens->constant)
+    float lng = PI *(-0.5f + i/(num_longs-1));
+    float y = radius * sinf(lng);
+    float yr = radius * cos(lng);
+    pxr::GfVec3f p;
+    if(i == 0)
     {
-      mesh->_normalsInterpolationType = CONSTANT;
+      p = pxr::GfVec3f(0, -radius, 0);
+      positions[0] = p;
     }
-    else if(normalsInterpolation == pxr::UsdGeomTokens->uniform)
+    else if(i == num_longs-1)
     {
-      mesh->_normalsInterpolationType = UNIFORM;
+      p = pxr::GfVec3f(0, radius, 0);
     }
-    else if(normalsInterpolation == pxr::UsdGeomTokens->varying)
+    else
     {
-      mesh->_normalsInterpolationType = VARYING;
-    }
-
-    // vertex varying normals
-    else if(normalsInterpolation == pxr::UsdGeomTokens->vertex)
-    {
-      if(num_normals == mesh->_positions.size())
+      for(int j=0; j<num_lats; ++j)
       {
-        TriangulateData(mesh->_triangles, 
-                        normals,
-                        mesh->_normals);
-        mesh->_hasNormals = true;
-        mesh->_normalsInterpolationType = VERTEX;
-      }
-      else
-      {
-        std::cerr << "FUCK" << "\n" << 
-          "Problem with vertex varying normals datas : " <<
-            "fallback to compute them...";
+        float lat = 2 * PI *((j-1) * (1/lats));
+        float x = cos(lat);
+        float z = sin(lat);
+        p = pxr::GfVec3f(x*yr, y, z*yr);
+
       }
     }
-    // face varying normals (per face-vertex)
-    else if(normalsInterpolation == pxr::UsdGeomTokens->faceVarying)
-    {
-      std::cout << "FACE VARYING NORMALS INTERPOLATION :D" << std::endl;
-      if(num_normals == mesh->_numOriginalSamples)
-      {
-        TriangulateData(mesh->_samples, 
-                        normals,
-                        mesh->_normals);
-        mesh->_hasNormals = true;
-        mesh->_normalsInterpolationType = FACE_VARYING;
-        std::cerr << "TRIANGULATED FACE VARYING NORMALS" << std::endl;
-      }
-      else
-      {
-        std::cerr << "FUCK" << "\n" << 
-          "Problem with face varying normals datas : " <<
-            "fallback to compute them...";
-      }
-    }
-
-    if(mesh->_hasNormals)
-    {
-      rtcSetSharedGeometryBuffer(mesh->_geom,             // RTCGeometry
-                                RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
-                                1,                          // Slot
-                                RTC_FORMAT_FLOAT3,          // RTCFormat
-                                mesh->_normals.cdata(),     // Datas Ptr
-                                0,                          // Offset
-                                sizeof(pxr::GfVec3f),       // Stride
-                                mesh->_normals.size());     // Num Elements*/
-    }
+    
   }
-  return mesh->_hasNormals;
-}
-
-// compute smooth vertex normals
-// this procedure respect the original mesh topology
-// it probably have to be triangulated later :D
-//------------------------------------------------------------------------------
-void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
-                          const pxr::VtArray<int>& counts,
-                          const pxr::VtArray<int>& indices,
-                          const pxr::VtArray<int>& triangles,
-                          pxr::VtArray<pxr::GfVec3f>& normals)
-{
-  // we want smooth vertex normals
-  normals.resize(positions.size());
-
-  // first compute triangle normals
-  int totalNumTriangles = triangles.size()/3;
-  pxr::VtArray<pxr::GfVec3f> triangleNormals;
-  triangleNormals.resize(totalNumTriangles);
-
-  for(int i = 0; i < totalNumTriangles; ++i)
-  {
-    pxr::GfVec3f ab = positions[triangles[i*3+1]] - positions[triangles[i*3]];
-    pxr::GfVec3f ac = positions[triangles[i*3+2]] - positions[triangles[i*3]];
-    triangleNormals[i] = ab ^ ac;
-    triangleNormals[i].Normalize();
-  }
-
-  // then polygons normals
-  int numPolygons = counts.size();
-  pxr::VtArray<pxr::GfVec3f> polygonNormals;
-  polygonNormals.resize(numPolygons);
-  int base = 0;
-  for(int i=0; i < counts.size(); ++i)
-  {
-    int numVertices = counts[i];
-    int numTriangles = numVertices - 2;
-    pxr::GfVec3f n(0.f, 0.f, 0.f);
-    for(int j = 0; j < numTriangles; ++j)
-    {
-      n += triangleNormals[base + j];
-    }
-    n.Normalize();
-    polygonNormals[i] = n;
-    base += numTriangles;
-  }
-
-  // finaly average vertex normals
-  for(auto n : normals) n = pxr::GfVec3f(0.f, 0.f, 0.f);
-  base = 0;
-  for(int i = 0; i < counts.size(); ++i)
-  {
-    int numVertices = counts[i];
-    for(int j = 0; j < numVertices; ++j)
-    {
-      normals[indices[base + j]] += polygonNormals[i];
-    }
-    base += numVertices;
-  }
-  for(auto n: normals) n.Normalize();
+  /*
+   For i = 0 To longs-1
+      lng = #F32_PI *(-0.5 + i/(longs-1))
+      y = radius * Sin(lng)
+      yr = radius * Cos(lng)
+      If i=0
+        Vector3::Set(p,0,-radius,0)
+        CArray::SetValue(*topo\vertices,0,p)
+  
+  
+      ElseIf i = longs-1
+        Vector3::Set(p,0,radius,0)
+        CArray::SetValue(*topo\vertices,nbp-1,p)
+  
+  
+      Else
+        For j = 0 To lats-1
+          lat = 2*#F32_PI * ((j-1)*(1/lats))
+          x = Cos(lat)
+          z = Sin(lat)
+          Vector3::Set(p,x*yr,y,z*yr)
+          k = (i-1)*lats+j+1
+          CArray::SetValue(*topo\vertices,k,p)
+  
+        Next j
+      EndIf
+    Next i
+  */
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE
