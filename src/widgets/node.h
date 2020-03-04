@@ -5,7 +5,8 @@
 #include "../graph/node.h"
 #include "../graph/graph.h"
 #include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/range2f.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
 
@@ -63,7 +64,7 @@ public:
   void Draw();
 private:
   AmnNodeUI*    _node;
-  pxr::GfVec2i  _pos;
+  pxr::GfVec2f  _pos;
   unsigned      _color;
 };
 
@@ -81,12 +82,17 @@ public:
   AmnNodeUI(const pxr::UsdPrim& prim);
   ~AmnNodeUI();
 
+  pxr::GfRange2f GetRange();
+
   void Draw();
 
 private:
   pxr::GfVec3f                _color;
   std::string                 _name;
   pxr::UsdPrim                _prim;
+  std::vector<AmnPortUI>      _inputs;
+  std::vector<AmnPortUI>      _outputs;
+  std::vector<AmnPortUI>      _overrides;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

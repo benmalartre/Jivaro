@@ -38,6 +38,28 @@ AmnNodeUI::~AmnNodeUI()
 
 }
 
+pxr::GfRange2f AmnNodeUI::GetRange()
+{
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  pxr::UsdAttribute posAttr = api.GetPosAttr();
+  pxr::GfVec2f pos;
+  if(posAttr && posAttr.HasAuthoredValue())
+  {
+    posAttr.Get(&pos);
+  }
+  //std::cout << "NODE POSITION : " << pos << std::endl;
+
+  pxr::UsdAttribute sizeAttr = api.GetSizeAttr();
+  pxr::GfVec2f size;
+  if(sizeAttr && sizeAttr.HasAuthoredValue())
+  {
+    sizeAttr.Get(&size);
+  }
+  else size = pxr::GfVec2f(128, 64);
+  //std::cout << "NODE SIZE : " << size << std::endl;
+
+  return pxr::GfRange2f(pos, pos + size);
+}
 void AmnNodeUI::Draw()
 {
 

@@ -1,5 +1,8 @@
 #include "graph.h"
+#include "../graph/stage.h"
 #include "../app/view.h"
+#include <pxr/usd/usd/primRange.h>
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -40,6 +43,28 @@ void AmnGraphUI::Draw()
   ImGui::End();
 };
 
+void AmnGraphUI::Init(const std::string& filename)
+{
+  pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
+  pxr::UsdPrimRange primRange = stage->Traverse();
+  for(auto prim: primRange)
+  {
+    if(prim.GetTypeName() == pxr::TfToken("Stage"))
+    {
+      pxr::GraphStage stageNode(prim);
+      std::string fileName;
+      pxr::UsdAttribute fileNameAttr = stageNode.CreateFileNameAttr();
+      fileNameAttr.Get(&fileName);
+      std::cout << "################## OPEN STAGE : " << std::endl;
+      std::cout << fileName << std::endl;
+
+      pxr::UsdStageRefPtr usdStage = pxr::UsdStage::CreateInMemory();
+      _stages.push_back(new AmnGraphStageUI(usdStage));
+    }
+  }
+  std::cout << "####### NUM STAGES : " << _stages.size() << std::endl;
+}
+
 void AmnGraphUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
 {
   if(_stages.size())
@@ -59,6 +84,16 @@ AmnGraphStageUI* AmnGraphUI::GetStage(int index)
   else return NULL;
 }
   
+void AmnGraphUI::BuildGraph(int index)
+{
+  AmnGraphStageUI* stage = GetStage(index);
+  if(stage)
+  {
+
+  }
+}
+
+/*
 void AmnGraphUI::FillBackground()
 {
   ImVec2 vMin = ImGui::GetWindowContentRegionMin();
@@ -71,5 +106,6 @@ void AmnGraphUI::FillBackground()
 
   ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
 }
+*/
 
 AMN_NAMESPACE_CLOSE_SCOPE
