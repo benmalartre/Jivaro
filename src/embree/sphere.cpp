@@ -32,9 +32,11 @@ TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
 
   BuildPoints(num_lats, 
               num_longs, 
-              result->_positions, 
+              result->_positions,
+              result->_normals,
+              result->_uvs, 
               result->_radius,
-              result->_worldMatrix);
+              &result->_worldMatrix[0]);
 
   rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
                             RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
@@ -45,7 +47,7 @@ TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
                             sizeof(pxr::GfVec3f),       // Stride
                             num_vertices);              // Num Elements*/
 
-  
+  BuildTriangles(num_lats, num_longs, result->_triangles);
   /*
   bool hasTriangles = false;
   pxr::UsdAttribute countsAttr = usdMesh.GetFaceVertexCountsAttr();
@@ -122,69 +124,107 @@ TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
 void 
 BuildPoints(int num_lats, 
             int num_longs, 
-            pxr::VtArray<GfVec3f>& positions, 
+            pxr::VtArray<pxr::GfVec3f>& positions,
+            pxr::VtArray<pxr::GfVec3f>& normals, 
+            pxr::VtArray<pxr::GfVec2f>& uvs,  
             float radius,
             float* worldMatrix)
 { 
   size_t num_vertices = (num_longs - 2) * num_lats + 2;
   positions.resize(num_vertices);
+  normals.resize(num_vertices);
+  uvs.resize(num_vertices);
   int k;
   for(int i=0; i < num_longs; ++i)
   {
-    float lng = PI *(-0.5f + i/(num_longs-1));
+    float lng = M_PI *(-0.5f + i/(num_longs-1));
     float y = radius * sinf(lng);
     float yr = radius * cos(lng);
-    pxr::GfVec3f p;
     if(i == 0)
     {
-      p = pxr::GfVec3f(0, -radius, 0);
-      positions[0] = p;
+      positions[0] = pxr::GfVec3f(0, -radius, 0);
+      normals[0] = pxr::GfVec3f(0, -1, 0);
+      uvs[0] = pxr::GfVec2f(0.5, 0);
+
     }
     else if(i == num_longs-1)
     {
-      p = pxr::GfVec3f(0, radius, 0);
+      positions[num_vertices-1] = pxr::GfVec3f(0, radius, 0);
+      normals[num_vertices-1] = pxr::GfVec3f(0, 1, 0);
+      uvs[num_vertices-1] = pxr::GfVec2f(0.5, 1.0);
     }
     else
     {
       for(int j=0; j<num_lats; ++j)
       {
-        float lat = 2 * PI *((j-1) * (1/lats));
+        float lat = 2 * M_PI *((j-1) * (1/num_lats));
         float x = cos(lat);
         float z = sin(lat);
-        p = pxr::GfVec3f(x*yr, y, z*yr);
-
+        
+        k = (i-1) * num_lats + j + 1;
+        positions[k] = pxr::GfVec3f(x*yr, y, z*yr);
+        normals[k] = positions[k].GetNormalized();
+        uvs[k] = pxr::GfVec2f(x, y);
       }
     }
-    
   }
-  /*
-   For i = 0 To longs-1
-      lng = #F32_PI *(-0.5 + i/(longs-1))
-      y = radius * Sin(lng)
-      yr = radius * Cos(lng)
-      If i=0
-        Vector3::Set(p,0,-radius,0)
-        CArray::SetValue(*topo\vertices,0,p)
-  
-  
-      ElseIf i = longs-1
-        Vector3::Set(p,0,radius,0)
-        CArray::SetValue(*topo\vertices,nbp-1,p)
-  
-  
-      Else
-        For j = 0 To lats-1
-          lat = 2*#F32_PI * ((j-1)*(1/lats))
-          x = Cos(lat)
-          z = Sin(lat)
-          Vector3::Set(p,x*yr,y,z*yr)
-          k = (i-1)*lats+j+1
-          CArray::SetValue(*topo\vertices,k,p)
-  
-        Next j
-      EndIf
-    Next i
-  */
+}
+
+void BuildTriangles(int num_lats,
+                    int num_longs,
+                    pxr::VtArray<int>& triangles)
+{ 
+  size_t num_vertices = (num_longs - 2) * num_lats + 2;
+  size_t num_triangles = (num_longs-3) * num_lats * 4 + num_lats * 2;
+  size_t num_indices = num_triangles * 3;
+  triangles.resize(num_indices);
+  int offset = 0;
+
+  for(int i=0; i < num_longs - 1; ++i)
+  {
+    for(int j=0; j < num_lats; ++j)
+    {
+      if(i == 0)
+      {
+        triangles[offset++] = (j + 1) % num_lats + 1;
+        triangles[offset++] = j + 1;
+        triangles[offset++] = 0;
+      }
+      else if(i == num_longs-2)
+      {
+        triangles[offset++] = num_vertices - 1;
+        triangles[offset++] = num_vertices - num_lats + j - 1;
+        if(j == num_lats-1)
+          triangles[offset++] = num_vertices - num_lats - 1;
+        else
+          triangles[offset++] = num_vertices - num_lats + j;
+      }
+      else
+      {
+        int x[4];
+        x[0] = (i - 1) * num_lats + j + 1;
+        x[3] = x[0] + num_lats;
+          
+        if(j == num_lats - 1)
+        {
+          x[1] = x[0] - num_lats + 1;
+          x[2] = x[0] + 1;
+        }
+        else
+        {
+          x[1] = x[0] + 1;  
+          x[2] = x[0] + num_lats + 1;
+        }
+        triangles[offset++] = x[0];
+        triangles[offset++] = x[1];
+        triangles[offset++] = x[2];
+        triangles[offset++] = x[0];
+        triangles[offset++] = x[2];
+        triangles[offset++] = x[3];
+      }
+      
+    }
+  } 
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

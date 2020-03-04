@@ -66,6 +66,7 @@
     "streambuf": "cpp",
     "cfenv": "cpp",
     "typeindex": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "*.isph": "cpp"
   }
 }

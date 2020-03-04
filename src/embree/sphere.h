@@ -13,7 +13,7 @@ class AmnUsdEmbreeContext;
 // A sphere of resolution N will have N+1 longitudes, including extremity
 // points, and N*2 latitudes
 struct AmnUsdEmbreeSphere  : public AmnUsdEmbreePrim {
-  pxr::GfVec4f                _radius;
+  float                       _radius;
   int                         _resolution;
   pxr::VtArray<pxr::GfVec3f>  _positions;
   pxr::VtArray<int>           _triangles;
@@ -27,8 +27,14 @@ AmnUsdEmbreeSphere* TranslateSphere( AmnUsdEmbreeContext* ctxt,
 
 void BuildPoints(int num_lats, 
                  int num_longs, 
-                 pxr::VtArray<GfVec3f>& positions, 
+                 pxr::VtArray<pxr::GfVec3f>& positions,
+                 pxr::VtArray<pxr::GfVec3f>& normals,
+                 pxr::VtArray<pxr::GfVec2f>& uvs, 
                  float radius,
                  float* worldMatrix);
+
+void BuildTriangles(int num_lats,
+                    int num_longs,
+                    pxr::VtArray<int>& triangles);
 
 AMN_NAMESPACE_CLOSE_SCOPE
