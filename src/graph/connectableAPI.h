@@ -58,7 +58,7 @@ class SdfAssetPath;
 /// ConnectableAPI is an API schema that provides a common
 /// interface for creating outputs and making connections between nodes.
 /// The interface is common to all Graph schemas including Node, Graph, 
-/// and Composer.
+/// and Deformable.
 /// 
 /// One can construct a ConnectableAPI directly from a UsdPrim, or
 /// from objects of any of the schema classes listed above.  If it seems

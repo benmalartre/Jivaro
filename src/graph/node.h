@@ -31,7 +31,6 @@
 #include "pxr/usd/usd/typed.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
-#include "./tokens.h"
 
 #include "input.h"
 #include "output.h"
@@ -265,80 +264,6 @@ public:
     int NumInputs() const;
 
     /// @}
-
-    // ------------------------------------------------------------------------
-    
-    /// \anchor GraphNode_SdrMetadata_API
-    /// \name Shader Sdr Metadata API
-    /// 
-    /// This section provides API for authoring and querying shader registry
-    /// metadata. When the shader's implementationSource is <b>sourceAsset</b> 
-    /// or <b>sourceCode</b>, the authored "sdrMetadata" dictionary value 
-    /// provides additional metadata needed to process the shader source
-    /// correctly. It is used in combination with the sourceAsset or sourceCode
-    /// value to fetch the appropriate node from the shader registry.
-    /// 
-    /// We expect the keys in sdrMetadata to correspond to the keys 
-    /// in \ref SdrNodeMetadata. However, this is not strictly enforced in the 
-    /// API. The only allowed value type in the "sdrMetadata" dictionary is a 
-    /// std::string since it needs to be converted into a NdrTokenMap, which Sdr
-    /// will parse using the utilities available in \ref SdrMetadataHelpers.
-    /// 
-    /// @{
-
-    /// Returns this shader's composed "sdrMetadata" dictionary as a 
-    /// NdrTokenMap.
-    GRAPH_API
-    NdrTokenMap GetSdrMetadata() const;
-    
-    /// Returns the value corresponding to \p key in the composed 
-    /// <b>sdrMetadata</b> dictionary.
-    GRAPH_API
-    std::string GetSdrMetadataByKey(const TfToken &key) const;
-        
-    /// Authors the given \p sdrMetadata on this shader at the current 
-    /// EditTarget.
-    GRAPH_API
-    void SetSdrMetadata(const NdrTokenMap &sdrMetadata) const;
-
-    /// Sets the value corresponding to \p key to the given string \p value, in 
-    /// the shader's "sdrMetadata" dictionary at the current EditTarget.
-    GRAPH_API
-    void SetSdrMetadataByKey(
-        const TfToken &key, 
-        const std::string &value) const;
-
-    /// Returns true if the shader has a non-empty composed "sdrMetadata" 
-    /// dictionary value.
-    GRAPH_API
-    bool HasSdrMetadata() const;
-
-    /// Returns true if there is a value corresponding to the given \p key in 
-    /// the composed "sdrMetadata" dictionary.
-    GRAPH_API
-    bool HasSdrMetadataByKey(const TfToken &key) const;
-
-    /// Clears any "sdrMetadata" value authored on the shader in the current 
-    /// EditTarget.
-    GRAPH_API
-    void ClearSdrMetadata() const;
-
-    /// Clears the entry corresponding to the given \p key in the 
-    /// "sdrMetadata" dictionary authored in the current EditTarget.
-    GRAPH_API
-    void ClearSdrMetadataByKey(const TfToken &key) const;
-
-    /// @}
-
-    /*
-    /// This method attempts to ensure that there is a ShaderNode in the shader 
-    /// registry (i.e. \ref SdrRegistry) representing this shader for the 
-    /// given \p sourceType. It may return a null pointer if none could be 
-    /// found or created.
-    GRAPH_API
-    SdrShaderNodeConstPtr GetNodeForSourceType(const TfToken &sourceType) 
-        const; 
-        */
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

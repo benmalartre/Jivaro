@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./populationMask.h"
+#include "./stage.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -50,20 +50,55 @@ WRAP_CUSTOM;
 
         
 static UsdAttribute
-_CreatePrimsPathAttr(GraphPopulationMask &self,
+_CreateLifetimeManagementAttr(GraphStage &self,
                                       object defaultVal, bool writeSparsely) {
-    return self.CreatePrimsPathAttr(
+    return self.CreateLifetimeManagementAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
+}
+        
+static UsdAttribute
+_CreateFileNameAttr(GraphStage &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateFileNameAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->String), writeSparsely);
+}
+        
+static UsdAttribute
+_CreateLoadPrimsPathAttr(GraphStage &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateLoadPrimsPathAttr(
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->StringArray), writeSparsely);
+}
+        
+static UsdAttribute
+_CreateLoadPrimsStatesAttr(GraphStage &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateLoadPrimsStatesAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->TokenArray), writeSparsely);
+}
+        
+static UsdAttribute
+_CreatePopulationMaskAttr(GraphStage &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreatePopulationMaskAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->StringArray), writeSparsely);
+}
+        
+static UsdAttribute
+_CreateInputsLayersAttr(GraphStage &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateInputsLayersAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->TokenArray), writeSparsely);
 }
 
 } // anonymous namespace
 
-void wrapGraphPopulationMask()
+void wrapGraphStage()
 {
-    typedef GraphPopulationMask This;
+    typedef GraphStage This;
 
-    class_<This, bases<UsdTyped> >
-        cls("PopulationMask");
+    class_<This, bases<GraphGraph> >
+        cls("Stage");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -89,10 +124,45 @@ void wrapGraphPopulationMask()
         .def(!self)
 
         
-        .def("GetPrimsPathAttr",
-             &This::GetPrimsPathAttr)
-        .def("CreatePrimsPathAttr",
-             &_CreatePrimsPathAttr,
+        .def("GetLifetimeManagementAttr",
+             &This::GetLifetimeManagementAttr)
+        .def("CreateLifetimeManagementAttr",
+             &_CreateLifetimeManagementAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetFileNameAttr",
+             &This::GetFileNameAttr)
+        .def("CreateFileNameAttr",
+             &_CreateFileNameAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetLoadPrimsPathAttr",
+             &This::GetLoadPrimsPathAttr)
+        .def("CreateLoadPrimsPathAttr",
+             &_CreateLoadPrimsPathAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetLoadPrimsStatesAttr",
+             &This::GetLoadPrimsStatesAttr)
+        .def("CreateLoadPrimsStatesAttr",
+             &_CreateLoadPrimsStatesAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetPopulationMaskAttr",
+             &This::GetPopulationMaskAttr)
+        .def("CreatePopulationMaskAttr",
+             &_CreatePopulationMaskAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
+        
+        .def("GetInputsLayersAttr",
+             &This::GetInputsLayersAttr)
+        .def("CreateInputsLayersAttr",
+             &_CreateInputsLayersAttr,
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
 

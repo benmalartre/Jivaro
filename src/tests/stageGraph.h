@@ -1,10 +1,14 @@
+
 #include "../default.h"
 #include "../graph/input.h"
 #include "../graph/output.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
 #include "../graph/connectableAPI.h"
-#include "../graph/nodeStage.h"
+#include "../graph/stage.h"
+#include "../widgets/node.h"
+#include "../widgets/graph.h"
+
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usd/prim.h>
@@ -17,7 +21,7 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 // add node to graph test
-GraphNode _TestAddNode(UsdStageRefPtr stage, const std::string& path);
+GraphNode _TestAddNode(UsdStageRefPtr stage, const SdfPath& path);
 
 // create input test
 GraphInput _TestAddInput(GraphNode& node, 
@@ -33,10 +37,10 @@ GraphOutput _TestAddOutput(GraphNode& node,
 
 // create simple graph
 GraphNode* CreateGraphNode();
-GraphGraph* CreateGraphNodeGraph();
+GraphGraph* CreateGraphGraph();
 GraphNode _CreateNodeAtPosition(UsdPrim prim, const GfVec2i& pos);
 
 // main entry point
-void TestScene();
+void TestScene(const std::string& result);
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -83,58 +83,6 @@ class Graph "Graph" (
 {
 }
 
-class Composer "Composer" (
-  inherits = </Graph>
-  doc = """A Composer provides a container into which multiple state of
-  an "asset" pass datas to upstream the pipeline.
-  """
-  customData = {
-    string extraIncludes = '''
-#include "node.h"
-#include "connectableAPI.h"'''
-  dictionary schemaTokens = {
-    dictionary geometry = {
-      string doc = """The modeling variation described on a Composer."""
-    }
-    dictionary animRig = {
-      string doc = """The animation rig variation described on a Composer."""
-    }
-    dictionary cfxRig = {
-      string doc = """The character fx rig variation described on a Composer."""
-    }
-    dictionary animDatas = {
-      string doc = """The animation datas variation described on a Composer."""
-    }
-    dictionary cfxDatas = {
-      string doc = """The characterFX datas variation described on a Composer."""
-    }
-    dictionary animCache = {
-      string doc = """The animation cache variation described on a Composer."""
-    }
-    dictionary cfxCache = {
-      string doc = """The characterFX cache variation described on a Composer."""
-    }
-    dictionary derivesFrom  = {
-      string doc = """A legacy relationship name specifying a specializes 
-        composition on a Composer."""
-    }
-    dictionary deformed = {
-      string doc = """Describes the <i>deformed geometry</i> output terminal 
-      on a Composer. It is used to cache the resulting geometry of a 
-      Composer."""
-    }
-  }
-}) 
-{
-  token outputs:deformed (
-    doc = """Describes the <i>deformed geometry</i> output terminal on a Composer."""
-    displayGroup = "Outputs"
-    customData = {
-      string apiName = "deformed"
-    }
-  )
-}
-
 class Node "Node" (
     inherits = </Typed>
     doc = """Base class for all Amnesia Nodes.
@@ -144,33 +92,16 @@ class Node "Node" (
 #include "input.h"
 #include "output.h"
 #include "pxr/usd/ndr/declare.h"'''
-      dictionary schemaTokens = {
-        dictionary universalSourceType = {
-          string value = ""
-          string doc = """Possible value for the "sourceType" parameter 
-          in \\ref UsdShadeShader_ImplementationSource API. Represents 
-          the universal or fallback source type.
-          """
-        }
-        dictionary sdrMetadata = {
-          string doc = """Dictionary valued metadata key authored on
-          Shader prims with implementationSource value of sourceAsset or 
-          sourceCode to pass along metadata to the shader parser or 
-          compiler. It is also used to author metadata on shader 
-          properties in a UsdShade-based shader definition file.
-          """
-        }
-      }
     }
 ) 
 {
 }
 
-class NodeStage "NodeStage" (
+class Stage "Stage" (
     doc = """Class for the terminal stage node"""
-    inherits = </Node>
+    inherits = </Graph>
     customData = {
-        string className = "NodeStage"
+        string className = "Stage"
     }
 )  
 {
@@ -209,7 +140,90 @@ class NodeStage "NodeStage" (
         """
     )
 
+    token [] inputs:layers(
+        doc = """Relationships to the layers composing this stage."""
+    )
+}
 
+class Deformable "Deformable" (
+  inherits = </Node>
+  doc = """A Deformable provides a hub into which multiple layers are 
+  composed according to the node state and provide deformed geometry over 
+  time to upstream the pipeline.
+  """
+  customData = {
+    string extraIncludes = '''
+#include "node.h"
+#include "connectableAPI.h"'''
+  dictionary schemaTokens = {
+    dictionary geometry = {
+      string doc = """The modeling variation described on a Deformable."""
+    }
+    dictionary animRig = {
+      string doc = """The animation rig variation described on a Deformable."""
+    }
+    dictionary cfxRig = {
+      string doc = """The character fx rig variation described on a Deformable."""
+    }
+    dictionary animDatas = {
+      string doc = """The animation datas variation described on a Deformable."""
+    }
+    dictionary cfxDatas = {
+      string doc = """The characterFX datas variation described on a Deformable."""
+    }
+    dictionary animCache = {
+      string doc = """The animation cache variation described on a Deformable."""
+    }
+    dictionary cfxCache = {
+      string doc = """The characterFX cache variation described on a Deformable."""
+    }
+    dictionary derivesFrom  = {
+      string doc = """A legacy relationship name specifying a specializes 
+        composition on a Deformable."""
+    }
+    dictionary deformed = {
+      string doc = """Describes the <i>deformed geometry</i> output terminal 
+      on a Deformable. It is used to output the resulting geometry to upstream
+      the graph."""
+    }
+  }
+}) 
+{
+  token inputs:geometry (
+    doc = """Describes the <i>input geometry</i> input on a Deformable."""
+    displayGroup = "Inputs"
+    customData = {
+      string apiName = "geometry"
+    }
+  )
+  token outputs:deformed (
+    doc = """Describes the <i>result geometry</i> output on a AssetNode."""
+    displayGroup = "Outputs"
+    customData = {
+      string apiName = "deformed"
+    }
+  )
+}
+
+class Layer "Layer" (
+    doc = """Class for the layer node.
+      A layer is a unit of scene description that you combine with other units
+      of scene description to form a shot, model, set, shader, and so on.
+    """
+    inherits = </Node>
+    customData = {
+        string className = "Layer"
+    }
+)  
+{
+    uniform string fileName (
+        doc = """ar-solvable file path on disk"""
+    )
+
+    token [] outputs:result(
+        displayGroup = "Outputs"
+        doc = """loaded result for this layer."""
+    )
 }
 
 
@@ -219,7 +233,7 @@ class "ConnectableAPI"
   doc = """ConnectableAPI is an API schema that provides a common
   interface for creating outputs and making connections between nodes.
   The interface is common to all Graph schemas including Node, Graph, 
-  and Composer.
+  and Deformable.
 
   One can construct a ConnectableAPI directly from a UsdPrim, or
   from objects of any of the schema classes listed above.  If it seems
@@ -246,10 +260,10 @@ class "ConnectableAPI"
 {
 }
 
-class "ComposerBindingAPI"
+class "DeformableAPI"
 (
   inherits = </APISchemaBase>
-  doc = """ComposerBindingAPI is an API schema that provides an 
+  doc = """DeformableAPI is an API schema that provides an 
   interface for binding assets to different states(animation, cfx, cached...). 
   """ 
   customData = {

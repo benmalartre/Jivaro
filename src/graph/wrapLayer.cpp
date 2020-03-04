@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./loadRule.h"
+#include "./layer.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -50,27 +50,27 @@ WRAP_CUSTOM;
 
         
 static UsdAttribute
-_CreatePrimPathAttr(GraphLoadRule &self,
+_CreateFileNameAttr(GraphLayer &self,
                                       object defaultVal, bool writeSparsely) {
-    return self.CreatePrimPathAttr(
+    return self.CreateFileNameAttr(
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->String), writeSparsely);
 }
         
 static UsdAttribute
-_CreateLoadRuleAttr(GraphLoadRule &self,
+_CreateOutputsResultAttr(GraphLayer &self,
                                       object defaultVal, bool writeSparsely) {
-    return self.CreateLoadRuleAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
+    return self.CreateOutputsResultAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->TokenArray), writeSparsely);
 }
 
 } // anonymous namespace
 
-void wrapGraphLoadRule()
+void wrapGraphLayer()
 {
-    typedef GraphLoadRule This;
+    typedef GraphLayer This;
 
-    class_<This, bases<UsdTyped> >
-        cls("LoadRule");
+    class_<This, bases<GraphNode> >
+        cls("Layer");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -96,17 +96,17 @@ void wrapGraphLoadRule()
         .def(!self)
 
         
-        .def("GetPrimPathAttr",
-             &This::GetPrimPathAttr)
-        .def("CreatePrimPathAttr",
-             &_CreatePrimPathAttr,
+        .def("GetFileNameAttr",
+             &This::GetFileNameAttr)
+        .def("CreateFileNameAttr",
+             &_CreateFileNameAttr,
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
         
-        .def("GetLoadRuleAttr",
-             &This::GetLoadRuleAttr)
-        .def("CreateLoadRuleAttr",
-             &_CreateLoadRuleAttr,
+        .def("GetOutputsResultAttr",
+             &This::GetOutputsResultAttr)
+        .def("CreateOutputsResultAttr",
+             &_CreateOutputsResultAttr,
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
 

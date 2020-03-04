@@ -130,69 +130,6 @@ GraphOutput::HasRenderType() const
     return _prop.HasMetadata(_tokens->renderType);
 }
 
-NdrTokenMap
-GraphOutput::GetSdrMetadata() const
-{
-    NdrTokenMap result;
-
-    VtDictionary sdrMetadata;
-    if (GetAttr().GetMetadata(GraphTokens->sdrMetadata, &sdrMetadata)){
-        for (const auto &it : sdrMetadata) {
-            result[TfToken(it.first)] = TfStringify(it.second);
-        }
-    }
-
-    return result;
-}
-
-std::string 
-GraphOutput::GetSdrMetadataByKey(const TfToken &key) const
-{
-    VtValue val;
-    GetAttr().GetMetadataByDictKey(GraphTokens->sdrMetadata, key, &val);
-    return TfStringify(val);
-}
-    
-void 
-GraphOutput::SetSdrMetadata(const NdrTokenMap &sdrMetadata) const
-{
-    for (auto &i: sdrMetadata) {
-        SetSdrMetadataByKey(i.first, i.second);
-    }
-}
-
-void 
-GraphOutput::SetSdrMetadataByKey(
-    const TfToken &key, 
-    const std::string &value) const
-{
-    GetAttr().SetMetadataByDictKey(GraphTokens->sdrMetadata, key, value);
-}
-
-bool 
-GraphOutput::HasSdrMetadata() const
-{
-    return GetAttr().HasMetadata(GraphTokens->sdrMetadata);
-}
-
-bool 
-GraphOutput::HasSdrMetadataByKey(const TfToken &key) const
-{
-    return GetAttr().HasMetadataDictKey(GraphTokens->sdrMetadata, key);
-}
-
-void 
-GraphOutput::ClearSdrMetadata() const
-{
-    GetAttr().ClearMetadata(GraphTokens->sdrMetadata);
-}
-
-void
-GraphOutput::ClearSdrMetadataByKey(const TfToken &key) const
-{
-    GetAttr().ClearMetadataByDictKey(GraphTokens->sdrMetadata, key);
-}
-
 /* static */
 bool 
 GraphOutput::IsOutput(const UsdAttribute &attr)

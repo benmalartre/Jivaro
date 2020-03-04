@@ -45,11 +45,12 @@ public:
   void CleanUp();
 
 private:
-  std::string           _fileName;
-  AmnWindow*            _mainWindow;
-  AmnUsdEmbreeContext*  _context;
-  int                   _width;
-  int                   _height;
+  std::string                       _fileName;
+  AmnWindow*                        _mainWindow;
+  AmnUsdEmbreeContext*              _context;
+  int                               _width;
+  int                               _height;
+  std::vector<pxr::UsdStageRefPtr>  _stages;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE // namespace pxr

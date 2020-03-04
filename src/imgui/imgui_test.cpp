@@ -119,7 +119,7 @@ TestDummyView(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax,
 }
 
 IMGUI_API  void 
-TestGrapNodes(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax) 
+TestGraphNodes(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax) 
 {
 
   //FillBackground();

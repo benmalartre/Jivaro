@@ -81,6 +81,8 @@ void wrapGraphTokens()
     _AddToken(cls, "geometry", GraphTokens->geometry);
     _AddToken(cls, "inMemory", GraphTokens->inMemory);
     _AddToken(cls, "inputs", GraphTokens->inputs);
+    _AddToken(cls, "inputsGeometry", GraphTokens->inputsGeometry);
+    _AddToken(cls, "inputsLayers", GraphTokens->inputsLayers);
     _AddToken(cls, "interfaceOnly", GraphTokens->interfaceOnly);
     _AddToken(cls, "lifetimeManagement", GraphTokens->lifetimeManagement);
     _AddToken(cls, "loadPrimsPath", GraphTokens->loadPrimsPath);
@@ -90,8 +92,7 @@ void wrapGraphTokens()
     _AddToken(cls, "onlyRule", GraphTokens->onlyRule);
     _AddToken(cls, "outputs", GraphTokens->outputs);
     _AddToken(cls, "outputsDeformed", GraphTokens->outputsDeformed);
+    _AddToken(cls, "outputsResult", GraphTokens->outputsResult);
     _AddToken(cls, "populationMask", GraphTokens->populationMask);
-    _AddToken(cls, "sdrMetadata", GraphTokens->sdrMetadata);
     _AddToken(cls, "stateBinding", GraphTokens->stateBinding);
-    _AddToken(cls, "universalSourceType", GraphTokens->universalSourceType);
 }

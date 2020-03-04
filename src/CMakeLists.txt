@@ -22,21 +22,25 @@ add_executable(${TARGET}
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
   imgui/imgui.cpp
-  graph/composerBindingAPI.cpp
+  graph/deformableAPI.cpp
   graph/connectableAPI.cpp
   graph/coordSysAPI.cpp
   graph/input.cpp
   graph/output.cpp
   graph/node.cpp
-  graph/nodeStage.cpp
-  graph/composer.cpp
   graph/graph.cpp
+  graph/deformable.cpp
+  graph/layer.cpp
+  graph/stage.cpp
   graph/tokens.cpp
   graph/utils.cpp
   widgets/menu.cpp
+  widgets/node.cpp
+  widgets/graph.cpp
   widgets/viewport.cpp
   embree/oiio.cpp
   embree/jpeg.cpp
+  embree/sphere.cpp
   embree/mesh.cpp
   embree/context.cpp
   embree/device.cpp
@@ -48,6 +52,7 @@ add_executable(${TARGET}
   app/window.cpp
   app/application.cpp
   tests/stageGraph.cpp
+  tests/stageUI.cpp
   main.cpp
 )
 

@@ -64,7 +64,7 @@ struct GraphTokensType {
     GRAPH_API GraphTokensType();
     /// \brief "AllRule"
     /// 
-    /// Possible value for GraphNodeStage::GetLoadPrimsStatesAttr()
+    /// Possible value for GraphStage::GetLoadPrimsStatesAttr()
     const TfToken allRule;
     /// \brief "animationCache"
     /// 
@@ -72,27 +72,27 @@ struct GraphTokensType {
     const TfToken animationCache;
     /// \brief "animCache"
     /// 
-    /// The animation cache variation described on a Composer.
+    /// The animation cache variation described on a Deformable.
     const TfToken animCache;
     /// \brief "animDatas"
     /// 
-    /// The animation datas variation described on a Composer.
+    /// The animation datas variation described on a Deformable.
     const TfToken animDatas;
     /// \brief "animRig"
     /// 
-    /// When in 'animRig state, the asset will exhibit it's animation controls and authored animation curves. , The animation rig variation described on a Composer.
+    /// When in 'animRig state, the asset will exhibit it's animation controls and authored animation curves. , The animation rig variation described on a Deformable.
     const TfToken animRig;
     /// \brief "cfxCache"
     /// 
-    /// When in 'cfxCache state, the asset will exhibit the animation cache with the cfx cache override on top. , The characterFX cache variation described on a Composer.
+    /// When in 'cfxCache state, the asset will exhibit the animation cache with the cfx cache override on top. , The characterFX cache variation described on a Deformable.
     const TfToken cfxCache;
     /// \brief "cfxDatas"
     /// 
-    /// The characterFX datas variation described on a Composer.
+    /// The characterFX datas variation described on a Deformable.
     const TfToken cfxDatas;
     /// \brief "cfxRig"
     /// 
-    /// When in 'cfxRig state, the asset will exhibit the animation cache + the cfx rig to be simulated/sculpted on top. , The character fx rig variation described on a Composer.
+    /// When in 'cfxRig state, the asset will exhibit the animation cache + the cfx rig to be simulated/sculpted on top. , The character fx rig variation described on a Deformable.
     const TfToken cfxRig;
     /// \brief "connectedSourceFor:"
     /// 
@@ -104,15 +104,15 @@ struct GraphTokensType {
     const TfToken coordSys;
     /// \brief "deformed"
     /// 
-    /// Describes the <i>deformed geometry</i> output terminal  on a Composer. It is used to cache the resulting geometry of a  Composer.
+    /// Describes the <i>deformed geometry</i> output terminal  on a Deformable. It is used to output the resulting geometry to upstream the graph.
     const TfToken deformed;
     /// \brief "derivesFrom"
     /// 
-    /// A legacy relationship name specifying a specializes  composition on a Composer.
+    /// A legacy relationship name specifying a specializes  composition on a Deformable.
     const TfToken derivesFrom;
     /// \brief "fileName"
     /// 
-    /// GraphNodeStage
+    /// GraphLayer, GraphStage
     const TfToken fileName;
     /// \brief "full"
     /// 
@@ -120,43 +120,51 @@ struct GraphTokensType {
     const TfToken full;
     /// \brief "geometry"
     /// 
-    /// The modeling variation described on a Composer.
+    /// The modeling variation described on a Deformable.
     const TfToken geometry;
     /// \brief "in-memory"
     /// 
-    /// Possible value for GraphNodeStage::GetLifetimeManagementAttr()
+    /// Possible value for GraphStage::GetLifetimeManagementAttr()
     const TfToken inMemory;
     /// \brief "inputs:"
     /// 
     /// The prefix on input ports. 
     const TfToken inputs;
+    /// \brief "inputs:geometry"
+    /// 
+    /// GraphDeformable
+    const TfToken inputsGeometry;
+    /// \brief "inputs:layers"
+    /// 
+    /// GraphStage
+    const TfToken inputsLayers;
     /// \brief "interfaceOnly"
     /// 
     /// Possible value for 'connectability' metadata on  a InputPort. It implies that the input can only connect to  a Graph Input (which represents an interface override, not  a computation-time dataflow connection), or another Input whose  connectability is also 'interfaceOnly'. 
     const TfToken interfaceOnly;
     /// \brief "lifetimeManagement"
     /// 
-    /// GraphNodeStage
+    /// GraphStage
     const TfToken lifetimeManagement;
     /// \brief "loadPrimsPath"
     /// 
-    /// GraphNodeStage
+    /// GraphStage
     const TfToken loadPrimsPath;
     /// \brief "loadPrimsStates"
     /// 
-    /// GraphNodeStage
+    /// GraphStage
     const TfToken loadPrimsStates;
     /// \brief "NoneRule"
     /// 
-    /// Possible value for GraphNodeStage::GetLoadPrimsStatesAttr()
+    /// Possible value for GraphStage::GetLoadPrimsStatesAttr()
     const TfToken noneRule;
     /// \brief "on-disk"
     /// 
-    /// Possible value for GraphNodeStage::GetLifetimeManagementAttr()
+    /// Possible value for GraphStage::GetLifetimeManagementAttr()
     const TfToken onDisk;
     /// \brief "OnlyRule"
     /// 
-    /// Possible value for GraphNodeStage::GetLoadPrimsStatesAttr()
+    /// Possible value for GraphStage::GetLoadPrimsStatesAttr()
     const TfToken onlyRule;
     /// \brief "outputs:"
     /// 
@@ -164,24 +172,20 @@ struct GraphTokensType {
     const TfToken outputs;
     /// \brief "outputs:deformed"
     /// 
-    /// GraphComposer
+    /// GraphDeformable
     const TfToken outputsDeformed;
+    /// \brief "outputs:result"
+    /// 
+    /// GraphLayer
+    const TfToken outputsResult;
     /// \brief "populationMask"
     /// 
-    /// GraphNodeStage
+    /// GraphStage
     const TfToken populationMask;
-    /// \brief "sdrMetadata"
-    /// 
-    /// Dictionary valued metadata key authored on Shader prims with implementationSource value of sourceAsset or  sourceCode to pass along metadata to the shader parser or  compiler. It is also used to author metadata on shader  properties in a UsdShade-based shader definition file. 
-    const TfToken sdrMetadata;
     /// \brief "state:binding"
     /// 
     ///  The current state of the asset. 
     const TfToken stateBinding;
-    /// \brief ""
-    /// 
-    /// Possible value for the "sourceType" parameter  in \ref UsdShadeShader_ImplementationSource API. Represents  the universal or fallback source type. 
-    const TfToken universalSourceType;
     /// A vector of all of the tokens listed above.
     const std::vector<TfToken> allTokens;
 };

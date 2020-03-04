@@ -10,7 +10,6 @@ extern AmnUsdEmbreeContext* EMBREE_CTXT;
 // constructor
 AmnViewportUI::AmnViewportUI(AmnView* parent, VIEWPORT_MODE mode):AmnUI(parent, "viewport")
 {
-  parent->SetContent(this);
   _texture = 0;
   _mode = mode;
   _pixels = NULL;

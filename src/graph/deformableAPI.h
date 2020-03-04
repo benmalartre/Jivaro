@@ -21,10 +21,10 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef GRAPH_GENERATED_COMPOSERBINDINGAPI_H
-#define GRAPH_GENERATED_COMPOSERBINDINGAPI_H
+#ifndef GRAPH_GENERATED_DEFORMABLEAPI_H
+#define GRAPH_GENERATED_DEFORMABLEAPI_H
 
-/// \file Graph/composerBindingAPI.h
+/// \file Graph/deformableAPI.h
 
 #include "pxr/pxr.h"
 #include "./api.h"
@@ -49,16 +49,16 @@ PXR_NAMESPACE_OPEN_SCOPE
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// COMPOSERBINDINGAPI                                                         //
+// DEFORMABLEAPI                                                              //
 // -------------------------------------------------------------------------- //
 
-/// \class GraphComposerBindingAPI
+/// \class GraphDeformableAPI
 ///
-/// ComposerBindingAPI is an API schema that provides an 
+/// DeformableAPI is an API schema that provides an 
 /// interface for binding assets to different states(animation, cfx, cached...). 
 /// 
 ///
-class GraphComposerBindingAPI : public UsdAPISchemaBase
+class GraphDeformableAPI : public UsdAPISchemaBase
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
@@ -66,26 +66,26 @@ public:
     /// \sa UsdSchemaType
     static const UsdSchemaType schemaType = UsdSchemaType::SingleApplyAPI;
 
-    /// Construct a GraphComposerBindingAPI on UsdPrim \p prim .
-    /// Equivalent to GraphComposerBindingAPI::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a GraphDeformableAPI on UsdPrim \p prim .
+    /// Equivalent to GraphDeformableAPI::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit GraphComposerBindingAPI(const UsdPrim& prim=UsdPrim())
+    explicit GraphDeformableAPI(const UsdPrim& prim=UsdPrim())
         : UsdAPISchemaBase(prim)
     {
     }
 
-    /// Construct a GraphComposerBindingAPI on the prim held by \p schemaObj .
-    /// Should be preferred over GraphComposerBindingAPI(schemaObj.GetPrim()),
+    /// Construct a GraphDeformableAPI on the prim held by \p schemaObj .
+    /// Should be preferred over GraphDeformableAPI(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit GraphComposerBindingAPI(const UsdSchemaBase& schemaObj)
+    explicit GraphDeformableAPI(const UsdSchemaBase& schemaObj)
         : UsdAPISchemaBase(schemaObj)
     {
     }
 
     /// Destructor.
     GRAPH_API
-    virtual ~GraphComposerBindingAPI();
+    virtual ~GraphDeformableAPI();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -94,26 +94,26 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a GraphComposerBindingAPI holding the prim adhering to this
+    /// Return a GraphDeformableAPI holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// GraphComposerBindingAPI(stage->GetPrimAtPath(path));
+    /// GraphDeformableAPI(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     GRAPH_API
-    static GraphComposerBindingAPI
+    static GraphDeformableAPI
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
 
     /// Applies this <b>single-apply</b> API schema to the given \p prim.
-    /// This information is stored by adding "ComposerBindingAPI" to the 
+    /// This information is stored by adding "DeformableAPI" to the 
     /// token-valued, listOp metadata \em apiSchemas on the prim.
     /// 
-    /// \return A valid GraphComposerBindingAPI object is returned upon success. 
-    /// An invalid (or empty) GraphComposerBindingAPI object is returned upon 
+    /// \return A valid GraphDeformableAPI object is returned upon success. 
+    /// An invalid (or empty) GraphDeformableAPI object is returned upon 
     /// failure. See \ref UsdAPISchemaBase::_ApplyAPISchema() for conditions 
     /// resulting in failure. 
     /// 
@@ -121,7 +121,7 @@ public:
     /// \sa UsdPrim::HasAPI()
     ///
     GRAPH_API
-    static GraphComposerBindingAPI 
+    static GraphDeformableAPI 
     Apply(const UsdPrim &prim);
 
 protected:

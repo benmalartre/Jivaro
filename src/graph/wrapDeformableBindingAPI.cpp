@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./nodeStage.h"
+#include "./deformableBindingAPI.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -48,50 +48,15 @@ namespace {
 // fwd decl.
 WRAP_CUSTOM;
 
-        
-static UsdAttribute
-_CreateLifetimeManagementAttr(GraphNodeStage &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateLifetimeManagementAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
-}
-        
-static UsdAttribute
-_CreateFileNameAttr(GraphNodeStage &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateFileNameAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->String), writeSparsely);
-}
-        
-static UsdAttribute
-_CreateLoadPrimsPathAttr(GraphNodeStage &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateLoadPrimsPathAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->StringArray), writeSparsely);
-}
-        
-static UsdAttribute
-_CreateLoadPrimsStatesAttr(GraphNodeStage &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateLoadPrimsStatesAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->TokenArray), writeSparsely);
-}
-        
-static UsdAttribute
-_CreatePopulationMaskAttr(GraphNodeStage &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreatePopulationMaskAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->StringArray), writeSparsely);
-}
 
 } // anonymous namespace
 
-void wrapGraphNodeStage()
+void wrapGraphDeformableBindingAPI()
 {
-    typedef GraphNodeStage This;
+    typedef GraphDeformableBindingAPI This;
 
-    class_<This, bases<GraphNode> >
-        cls("NodeStage");
+    class_<This, bases<UsdAPISchemaBase> >
+        cls("DeformableBindingAPI");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -101,8 +66,8 @@ void wrapGraphNodeStage()
         .def("Get", &This::Get, (arg("stage"), arg("path")))
         .staticmethod("Get")
 
-        .def("Define", &This::Define, (arg("stage"), arg("path")))
-        .staticmethod("Define")
+        .def("Apply", &This::Apply, (arg("prim")))
+        .staticmethod("Apply")
 
         .def("GetSchemaAttributeNames",
              &This::GetSchemaAttributeNames,
@@ -116,41 +81,6 @@ void wrapGraphNodeStage()
 
         .def(!self)
 
-        
-        .def("GetLifetimeManagementAttr",
-             &This::GetLifetimeManagementAttr)
-        .def("CreateLifetimeManagementAttr",
-             &_CreateLifetimeManagementAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
-        
-        .def("GetFileNameAttr",
-             &This::GetFileNameAttr)
-        .def("CreateFileNameAttr",
-             &_CreateFileNameAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
-        
-        .def("GetLoadPrimsPathAttr",
-             &This::GetLoadPrimsPathAttr)
-        .def("CreateLoadPrimsPathAttr",
-             &_CreateLoadPrimsPathAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
-        
-        .def("GetLoadPrimsStatesAttr",
-             &This::GetLoadPrimsStatesAttr)
-        .def("CreateLoadPrimsStatesAttr",
-             &_CreateLoadPrimsStatesAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
-        
-        .def("GetPopulationMaskAttr",
-             &This::GetPopulationMaskAttr)
-        .def("CreatePopulationMaskAttr",
-             &_CreatePopulationMaskAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
 
     ;
 

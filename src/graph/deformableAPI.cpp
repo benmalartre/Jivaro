@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./composerBindingAPI.h"
+#include "./deformableAPI.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
 #include "pxr/usd/usd/tokens.h"
@@ -34,57 +34,57 @@ PXR_NAMESPACE_OPEN_SCOPE
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<GraphComposerBindingAPI,
+    TfType::Define<GraphDeformableAPI,
         TfType::Bases< UsdAPISchemaBase > >();
     
 }
 
 TF_DEFINE_PRIVATE_TOKENS(
     _schemaTokens,
-    (ComposerBindingAPI)
+    (DeformableAPI)
 );
 
 /* virtual */
-GraphComposerBindingAPI::~GraphComposerBindingAPI()
+GraphDeformableAPI::~GraphDeformableAPI()
 {
 }
 
 /* static */
-GraphComposerBindingAPI
-GraphComposerBindingAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
+GraphDeformableAPI
+GraphDeformableAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphComposerBindingAPI();
+        return GraphDeformableAPI();
     }
-    return GraphComposerBindingAPI(stage->GetPrimAtPath(path));
+    return GraphDeformableAPI(stage->GetPrimAtPath(path));
 }
 
 
 /* virtual */
-UsdSchemaType GraphComposerBindingAPI::_GetSchemaType() const {
-    return GraphComposerBindingAPI::schemaType;
+UsdSchemaType GraphDeformableAPI::_GetSchemaType() const {
+    return GraphDeformableAPI::schemaType;
 }
 
 /* static */
-GraphComposerBindingAPI
-GraphComposerBindingAPI::Apply(const UsdPrim &prim)
+GraphDeformableAPI
+GraphDeformableAPI::Apply(const UsdPrim &prim)
 {
-    return UsdAPISchemaBase::_ApplyAPISchema<GraphComposerBindingAPI>(
-            prim, _schemaTokens->ComposerBindingAPI);
+    return UsdAPISchemaBase::_ApplyAPISchema<GraphDeformableAPI>(
+            prim, _schemaTokens->DeformableAPI);
 }
 
 /* static */
 const TfType &
-GraphComposerBindingAPI::_GetStaticTfType()
+GraphDeformableAPI::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<GraphComposerBindingAPI>();
+    static TfType tfType = TfType::Find<GraphDeformableAPI>();
     return tfType;
 }
 
 /* static */
 bool 
-GraphComposerBindingAPI::_IsTypedSchema()
+GraphDeformableAPI::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -92,14 +92,14 @@ GraphComposerBindingAPI::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-GraphComposerBindingAPI::_GetTfType() const
+GraphDeformableAPI::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 /*static*/
 const TfTokenVector&
-GraphComposerBindingAPI::GetSchemaAttributeNames(bool includeInherited)
+GraphDeformableAPI::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames;
     static TfTokenVector allNames =

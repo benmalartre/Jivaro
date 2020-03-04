@@ -1,34 +1,46 @@
-#pragma once
-
-#include "exporer.h"
-#include "utils.h"
+#include "node.h"
 #include <pxr/usd/usd/prim.h>
 
-namespace AMN {
-IMGUI_API void
-FillBackground()
-{
-  ImVec2 vMin = ImGui::GetWindowContentRegionMin();
-  ImVec2 vMax = ImGui::GetWindowContentRegionMax();
+AMN_NAMESPACE_OPEN_SCOPE
 
+void AmnPortUI::Draw()
+{
+
+}
+
+void AmnConnectionUI::Draw()
+{
   
-
-  vMin.x += ImGui::GetWindowPos().x;
-  vMin.y += ImGui::GetWindowPos().y;
-  vMax.x += ImGui::GetWindowPos().x;
-  vMax.y += ImGui::GetWindowPos().y;
-
-  ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
 }
 
-IMGUI_API  void 
-TestDummyView(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax,
-  const pxr::GfVec4f& color)
+AmnNodeUI::AmnNodeUI(const pxr::UsdPrim& prim):_prim(prim)
 {
-  ImGui::SetCursorScreenPos(vmin);
-  ImDrawList* draw_list = ImGui::GetWindowDrawList();
-  const ImU32 col = ImColor(color);
-  draw_list->AddRectFilled(vmin, vmax, col, 0,  0); 
+  if(_prim.IsValid())
+  {
+    if(_prim.IsA<pxr::GraphNode>())
+    {
+      std::cout << "PRIM IS A NODE :D" << std::endl;
+    }
+    else if(_prim.IsA<pxr::GraphGraph>())
+    {
+      std::cout << "PRIM IS A GRAPH :D" << std::endl;
+    }
+    else
+    {
+      std::cout << "PRIM IS A : " << _prim.GetTypeName().GetText() << std::endl;
+    }
+    
+  }
 }
 
-} // namespace AMN
+AmnNodeUI::~AmnNodeUI()
+{
+
+}
+
+void AmnNodeUI::Draw()
+{
+
+} 
+
+AMN_NAMESPACE_CLOSE_SCOPE

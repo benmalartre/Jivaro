@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./composer.h"
+#include "./deformable.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
 
@@ -33,63 +33,63 @@ PXR_NAMESPACE_OPEN_SCOPE
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<GraphComposer,
-        TfType::Bases< GraphGraph > >();
+    TfType::Define<GraphDeformable,
+        TfType::Bases< GraphNode > >();
     
     // Register the usd prim typename as an alias under UsdSchemaBase. This
     // enables one to call
-    // TfType::Find<UsdSchemaBase>().FindDerivedByName("Composer")
-    // to find TfType<GraphComposer>, which is how IsA queries are
+    // TfType::Find<UsdSchemaBase>().FindDerivedByName("Deformable")
+    // to find TfType<GraphDeformable>, which is how IsA queries are
     // answered.
-    TfType::AddAlias<UsdSchemaBase, GraphComposer>("Composer");
+    TfType::AddAlias<UsdSchemaBase, GraphDeformable>("Deformable");
 }
 
 /* virtual */
-GraphComposer::~GraphComposer()
+GraphDeformable::~GraphDeformable()
 {
 }
 
 /* static */
-GraphComposer
-GraphComposer::Get(const UsdStagePtr &stage, const SdfPath &path)
+GraphDeformable
+GraphDeformable::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphComposer();
+        return GraphDeformable();
     }
-    return GraphComposer(stage->GetPrimAtPath(path));
+    return GraphDeformable(stage->GetPrimAtPath(path));
 }
 
 /* static */
-GraphComposer
-GraphComposer::Define(
+GraphDeformable
+GraphDeformable::Define(
     const UsdStagePtr &stage, const SdfPath &path)
 {
-    static TfToken usdPrimTypeName("Composer");
+    static TfToken usdPrimTypeName("Deformable");
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphComposer();
+        return GraphDeformable();
     }
-    return GraphComposer(
+    return GraphDeformable(
         stage->DefinePrim(path, usdPrimTypeName));
 }
 
 /* virtual */
-UsdSchemaType GraphComposer::_GetSchemaType() const {
-    return GraphComposer::schemaType;
+UsdSchemaType GraphDeformable::_GetSchemaType() const {
+    return GraphDeformable::schemaType;
 }
 
 /* static */
 const TfType &
-GraphComposer::_GetStaticTfType()
+GraphDeformable::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<GraphComposer>();
+    static TfType tfType = TfType::Find<GraphDeformable>();
     return tfType;
 }
 
 /* static */
 bool 
-GraphComposer::_IsTypedSchema()
+GraphDeformable::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -97,19 +97,36 @@ GraphComposer::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-GraphComposer::_GetTfType() const
+GraphDeformable::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 UsdAttribute
-GraphComposer::GetDeformedAttr() const
+GraphDeformable::GetGeometryAttr() const
+{
+    return GetPrim().GetAttribute(GraphTokens->inputsGeometry);
+}
+
+UsdAttribute
+GraphDeformable::CreateGeometryAttr(VtValue const &defaultValue, bool writeSparsely) const
+{
+    return UsdSchemaBase::_CreateAttr(GraphTokens->inputsGeometry,
+                       SdfValueTypeNames->Token,
+                       /* custom = */ false,
+                       SdfVariabilityVarying,
+                       defaultValue,
+                       writeSparsely);
+}
+
+UsdAttribute
+GraphDeformable::GetDeformedAttr() const
 {
     return GetPrim().GetAttribute(GraphTokens->outputsDeformed);
 }
 
 UsdAttribute
-GraphComposer::CreateDeformedAttr(VtValue const &defaultValue, bool writeSparsely) const
+GraphDeformable::CreateDeformedAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(GraphTokens->outputsDeformed,
                        SdfValueTypeNames->Token,
@@ -133,14 +150,15 @@ _ConcatenateAttributeNames(const TfTokenVector& left,const TfTokenVector& right)
 
 /*static*/
 const TfTokenVector&
-GraphComposer::GetSchemaAttributeNames(bool includeInherited)
+GraphDeformable::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames = {
+        GraphTokens->inputsGeometry,
         GraphTokens->outputsDeformed,
     };
     static TfTokenVector allNames =
         _ConcatenateAttributeNames(
-            GraphGraph::GetSchemaAttributeNames(true),
+            GraphNode::GetSchemaAttributeNames(true),
             localNames);
 
     if (includeInherited)

@@ -21,10 +21,10 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef GRAPH_GENERATED_NODESTAGE_H
-#define GRAPH_GENERATED_NODESTAGE_H
+#ifndef GRAPH_GENERATED_DEFORMABLE_H
+#define GRAPH_GENERATED_DEFORMABLE_H
 
-/// \file Graph/nodeStage.h
+/// \file Graph/deformable.h
 
 #include "pxr/pxr.h"
 #include "./api.h"
@@ -32,6 +32,9 @@
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
 #include "./tokens.h"
+
+#include "node.h"
+#include "connectableAPI.h"
 
 #include "pxr/base/vt/value.h"
 
@@ -47,19 +50,22 @@ PXR_NAMESPACE_OPEN_SCOPE
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// NODESTAGE                                                                  //
+// DEFORMABLE                                                                 //
 // -------------------------------------------------------------------------- //
 
-/// \class GraphNodeStage
+/// \class GraphDeformable
 ///
-/// Class for the terminal stage node
+/// A Deformable provides a hub into which multiple layers are 
+/// composed according to the node state and provide deformed geometry over 
+/// time to upstream the pipeline.
+/// 
 ///
 /// For any described attribute \em Fallback \em Value or \em Allowed \em Values below
 /// that are text/tokens, the actual token is published and defined in \ref GraphTokens.
 /// So to set an attribute to the value "rightHanded", use GraphTokens->rightHanded
 /// as the value.
 ///
-class GraphNodeStage : public GraphNode
+class GraphDeformable : public GraphNode
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
@@ -67,26 +73,26 @@ public:
     /// \sa UsdSchemaType
     static const UsdSchemaType schemaType = UsdSchemaType::ConcreteTyped;
 
-    /// Construct a GraphNodeStage on UsdPrim \p prim .
-    /// Equivalent to GraphNodeStage::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a GraphDeformable on UsdPrim \p prim .
+    /// Equivalent to GraphDeformable::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit GraphNodeStage(const UsdPrim& prim=UsdPrim())
+    explicit GraphDeformable(const UsdPrim& prim=UsdPrim())
         : GraphNode(prim)
     {
     }
 
-    /// Construct a GraphNodeStage on the prim held by \p schemaObj .
-    /// Should be preferred over GraphNodeStage(schemaObj.GetPrim()),
+    /// Construct a GraphDeformable on the prim held by \p schemaObj .
+    /// Should be preferred over GraphDeformable(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit GraphNodeStage(const UsdSchemaBase& schemaObj)
+    explicit GraphDeformable(const UsdSchemaBase& schemaObj)
         : GraphNode(schemaObj)
     {
     }
 
     /// Destructor.
     GRAPH_API
-    virtual ~GraphNodeStage();
+    virtual ~GraphDeformable();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -95,17 +101,17 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a GraphNodeStage holding the prim adhering to this
+    /// Return a GraphDeformable holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// GraphNodeStage(stage->GetPrimAtPath(path));
+    /// GraphDeformable(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     GRAPH_API
-    static GraphNodeStage
+    static GraphDeformable
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
     /// Attempt to ensure a \a UsdPrim adhering to this schema at \p path
@@ -131,7 +137,7 @@ public:
     /// the opinion at the current EditTarget.
     ///
     GRAPH_API
-    static GraphNodeStage
+    static GraphDeformable
     Define(const UsdStagePtr &stage, const SdfPath &path);
 
 protected:
@@ -155,123 +161,45 @@ private:
 
 public:
     // --------------------------------------------------------------------- //
-    // LIFETIMEMANAGEMENT 
+    // GEOMETRY 
     // --------------------------------------------------------------------- //
-    /// Encodes the lifetime management of the stage, on-disk or
-    /// in-memory
+    /// Describes the <i>input geometry</i> input on a Deformable.
     ///
     /// \n  C++ Type: TfToken
     /// \n  Usd Type: SdfValueTypeNames->Token
-    /// \n  Variability: SdfVariabilityUniform
+    /// \n  Variability: SdfVariabilityVarying
     /// \n  Fallback Value: No Fallback
-    /// \n  \ref GraphTokens "Allowed Values": [on-disk, in-memory]
     GRAPH_API
-    UsdAttribute GetLifetimeManagementAttr() const;
+    UsdAttribute GetGeometryAttr() const;
 
-    /// See GetLifetimeManagementAttr(), and also 
+    /// See GetGeometryAttr(), and also 
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
     /// the default for \p writeSparsely is \c false.
     GRAPH_API
-    UsdAttribute CreateLifetimeManagementAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
+    UsdAttribute CreateGeometryAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
 
 public:
     // --------------------------------------------------------------------- //
-    // FILENAME 
+    // DEFORMED 
     // --------------------------------------------------------------------- //
-    /// ar-solvable file path on disk
+    /// Describes the <i>result geometry</i> output on a AssetNode.
     ///
-    /// \n  C++ Type: std::string
-    /// \n  Usd Type: SdfValueTypeNames->String
-    /// \n  Variability: SdfVariabilityUniform
+    /// \n  C++ Type: TfToken
+    /// \n  Usd Type: SdfValueTypeNames->Token
+    /// \n  Variability: SdfVariabilityVarying
     /// \n  Fallback Value: No Fallback
     GRAPH_API
-    UsdAttribute GetFileNameAttr() const;
+    UsdAttribute GetDeformedAttr() const;
 
-    /// See GetFileNameAttr(), and also 
+    /// See GetDeformedAttr(), and also 
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
     /// the default for \p writeSparsely is \c false.
     GRAPH_API
-    UsdAttribute CreateFileNameAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
-
-public:
-    // --------------------------------------------------------------------- //
-    // LOADPRIMSPATH 
-    // --------------------------------------------------------------------- //
-    /// Full Path to prims on the stage.
-    /// These prims will be associated with state below on loading the stage.
-    /// 
-    ///
-    /// \n  C++ Type: VtArray<std::string>
-    /// \n  Usd Type: SdfValueTypeNames->StringArray
-    /// \n  Variability: SdfVariabilityUniform
-    /// \n  Fallback Value: No Fallback
-    GRAPH_API
-    UsdAttribute GetLoadPrimsPathAttr() const;
-
-    /// See GetLoadPrimsPathAttr(), and also 
-    /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
-    /// If specified, author \p defaultValue as the attribute's default,
-    /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
-    /// the default for \p writeSparsely is \c false.
-    GRAPH_API
-    UsdAttribute CreateLoadPrimsPathAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
-
-public:
-    // --------------------------------------------------------------------- //
-    // LOADPRIMSSTATES 
-    // --------------------------------------------------------------------- //
-    /// Load rule for the associated prim.
-    /// - AllRule : Include payloads on the specified prim and all 
-    /// descendants.
-    /// - OnlyRule : Include payloads on the specified prim but no 
-    /// descendants.
-    /// - NoneRule : Exclude payloads on the specified prim and all 
-    /// descendants.
-    /// 
-    ///
-    /// \n  C++ Type: VtArray<TfToken>
-    /// \n  Usd Type: SdfValueTypeNames->TokenArray
-    /// \n  Variability: SdfVariabilityUniform
-    /// \n  Fallback Value: No Fallback
-    /// \n  \ref GraphTokens "Allowed Values": [AllRule, OnlyRule, NoneRule]
-    GRAPH_API
-    UsdAttribute GetLoadPrimsStatesAttr() const;
-
-    /// See GetLoadPrimsStatesAttr(), and also 
-    /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
-    /// If specified, author \p defaultValue as the attribute's default,
-    /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
-    /// the default for \p writeSparsely is \c false.
-    GRAPH_API
-    UsdAttribute CreateLoadPrimsStatesAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
-
-public:
-    // --------------------------------------------------------------------- //
-    // POPULATIONMASK 
-    // --------------------------------------------------------------------- //
-    /// Set of fullpath to prims on the stage.
-    /// This set represents a mask that may be applied to a stage to limit 
-    /// the prims it populates.
-    /// 
-    ///
-    /// \n  C++ Type: VtArray<std::string>
-    /// \n  Usd Type: SdfValueTypeNames->StringArray
-    /// \n  Variability: SdfVariabilityUniform
-    /// \n  Fallback Value: No Fallback
-    GRAPH_API
-    UsdAttribute GetPopulationMaskAttr() const;
-
-    /// See GetPopulationMaskAttr(), and also 
-    /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
-    /// If specified, author \p defaultValue as the attribute's default,
-    /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
-    /// the default for \p writeSparsely is \c false.
-    GRAPH_API
-    UsdAttribute CreatePopulationMaskAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
+    UsdAttribute CreateDeformedAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
 
 public:
     // ===================================================================== //

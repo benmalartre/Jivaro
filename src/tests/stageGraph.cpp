@@ -10,7 +10,7 @@ GraphNode* CreateGraphNode()
   return node;
 }
 
-GraphGraph* CreateGraphNodeGraph()
+GraphGraph* CreateGraphGraph()
 {
   GraphGraph* graph = new GraphGraph();
 
@@ -19,9 +19,9 @@ GraphGraph* CreateGraphNodeGraph()
 
 // add node to graph test
 //----------------------------------------------------------------------------
-GraphNode _TestAddNode(UsdStageRefPtr stage, const std::string& path)
+GraphNode _TestAddNode(UsdStageRefPtr stage, const SdfPath& path)
 {
-  GraphNode node = GraphNode::Define(stage, SdfPath(path));
+  GraphNode node = GraphNode::Define(stage, path);
   return node;
 }
 
@@ -72,19 +72,21 @@ GraphInput _AddInputPrim(GraphNode& node, UsdPrim& prim)
   return input;
 } 
 
-void TestScene()
+void TestScene(const std::string& result)
 {
   /*UsdStageRefPtr stage =
     UsdStage::CreateNew("/Users/benmalartre/Documents/RnD/amnesie/usd/test.usda");*/
   UsdStageRefPtr stage = UsdStage::CreateInMemory();
-  
+
   //UsdUINodeGraphNodeAPI stageNodeApi(stage);
 
-  GraphGraph graph = 
-    GraphGraph::Define(stage, SdfPath("/MyNodeGraph"));
+  std::string shotName = "SHA256";
+  SdfPath graphPath("/"+shotName);
+
+  GraphGraph graph = GraphGraph::Define(stage, graphPath);
 
   UsdGeomSphere sphere = 
-    UsdGeomSphere::Define(stage, SdfPath("/MySphere"));
+    UsdGeomSphere::Define(stage, graphPath.AppendChild(TfToken("Sphere")));
 
   UsdAttribute radiusAttr = sphere.CreateRadiusAttr();
   UsdAttribute colorAttr = sphere.CreateDisplayColorAttr();
@@ -94,7 +96,8 @@ void TestScene()
   colors.push_back(GfVec3f(1.f,0.5f,0.f));
   colorAttr.Set(colors);
 
-  GraphNodeStage stageNode = GraphNodeStage::Define(stage, SdfPath("/stage"));
+  GraphStage stageNode = 
+    GraphStage::Define(stage, graphPath.AppendChild(TfToken("stage")));
   UsdAttribute fileNameAttr = stageNode.CreateFileNameAttr();
   fileNameAttr.Set("/Users/benmalartre/Documents/RnD/amnesie/usd/test.usda");
   UsdAttribute lifetimeAttr = stageNode.CreateLifetimeManagementAttr();
@@ -109,7 +112,9 @@ void TestScene()
   lifetimeAttr.Get(&lifetime);
   std::cout << lifetime.GetText() << std::endl;
 
-  GraphNode node1 = _TestAddNode(stage, "/MyNodeGraph/node1");
+  SdfPath stagePath = stageNode.GetPath();
+  GraphNode node1 = 
+    _TestAddNode(stage, stagePath.AppendChild(TfToken("node1")));
   GraphInput input1 = 
     _TestAddInput(node1, "input1", 
       GraphAttributeType::Parameter, SdfValueTypeNames->Float);
@@ -118,7 +123,8 @@ void TestScene()
     _TestAddOutput(node1, "output1", 
       GraphAttributeType::Parameter, SdfValueTypeNames->Float);
 
-  GraphNode node2 = _TestAddNode(stage, "/MyNodeGraph/node2");
+  GraphNode node2 = 
+    _TestAddNode(stage, stagePath.AppendChild(TfToken("node2")));
   GraphInput input2 = 
     _TestAddInput(node2, "input2", 
       GraphAttributeType::Parameter, SdfValueTypeNames->Float);
@@ -137,8 +143,9 @@ void TestScene()
   UsdAttribute posAttr2 = nodeUI2.CreatePosAttr();
   posAttr2.Set(GfVec2f(240,60));
 
-  stage->Export("/Users/benmalartre/Documents/RnD/amnesie/usd/test2.usda");
-  /*stage->Save(); 
+  stage->Export(result.c_str());
+  /*
+  stage->Save(); 
   std::cout << 
     "SAVED STAGE at /Users/benmalartre/Documents/RnD/amnesie/usd/test.usda" << 
       std::endl;*/

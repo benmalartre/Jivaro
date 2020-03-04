@@ -1,9 +1,11 @@
 #include "application.h"
 #include "../widgets/viewport.h"
 #include "../widgets/menu.h"
+#include "../widgets/graph.h"
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include "../tests/stageGraph.h"
+#include "../tests/stageUI.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -52,15 +54,24 @@ AmnApplication::CreateStandardWindow(int width, int height)
 void 
 AmnApplication::Init()
 {
+  std::string filename = 
+    "/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
+
+  // build test scene
+  pxr::TestScene(filename);
+
+  // create window
   _mainWindow->SetContext();
   AmnView* mainView = _mainWindow->GetMainView();
-  _mainWindow->SplitView(mainView, 10, true);
+  _mainWindow->SplitView(mainView, 50, true);
 
-  AmnMenuUI* menu = new AmnMenuUI(mainView->GetLeft());
-  AmnViewportUI* viewport = new AmnViewportUI(mainView->GetRight(), EMBREE);
+  AmnGraphUI* graph = new AmnGraphUI(mainView->GetRight(), "GraphUI");
+  AmnViewportUI* viewport = new AmnViewportUI(mainView->GetLeft(), EMBREE);
 
-  pxr::TestScene();
-  
+  pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
+  _stages.push_back(stage1);
+  TestStageUI(graph, _stages);
+
   /*
   _mainWindow->SplitView(mainView->GetRight(), 75, true);
   _mainWindow->SplitView(mainView->GetRight()->GetLeft(), 25, false);
@@ -69,7 +80,7 @@ AmnApplication::Init()
   //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/assets/Clock/Clock.usd";
   //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemale.usd";
   */
-  EMBREE_CTXT->Resize(1024, 720);
+  EMBREE_CTXT->Resize(viewport->GetWidth(), viewport->GetHeight());
   EMBREE_CTXT->SetFilePath("/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd");
   EMBREE_CTXT->InitDevice();
   EMBREE_CTXT->TraverseStage();

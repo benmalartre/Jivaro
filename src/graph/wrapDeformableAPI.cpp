@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./composerBindingAPI.h"
+#include "./deformableAPI.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -51,12 +51,12 @@ WRAP_CUSTOM;
 
 } // anonymous namespace
 
-void wrapGraphComposerBindingAPI()
+void wrapGraphDeformableAPI()
 {
-    typedef GraphComposerBindingAPI This;
+    typedef GraphDeformableAPI This;
 
     class_<This, bases<UsdAPISchemaBase> >
-        cls("ComposerBindingAPI");
+        cls("DeformableAPI");
 
     cls
         .def(init<UsdPrim>(arg("prim")))

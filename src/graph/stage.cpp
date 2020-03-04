@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./nodeStage.h"
+#include "./stage.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
 
@@ -33,63 +33,63 @@ PXR_NAMESPACE_OPEN_SCOPE
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<GraphNodeStage,
-        TfType::Bases< GraphNode > >();
+    TfType::Define<GraphStage,
+        TfType::Bases< GraphGraph > >();
     
     // Register the usd prim typename as an alias under UsdSchemaBase. This
     // enables one to call
-    // TfType::Find<UsdSchemaBase>().FindDerivedByName("NodeStage")
-    // to find TfType<GraphNodeStage>, which is how IsA queries are
+    // TfType::Find<UsdSchemaBase>().FindDerivedByName("Stage")
+    // to find TfType<GraphStage>, which is how IsA queries are
     // answered.
-    TfType::AddAlias<UsdSchemaBase, GraphNodeStage>("NodeStage");
+    TfType::AddAlias<UsdSchemaBase, GraphStage>("Stage");
 }
 
 /* virtual */
-GraphNodeStage::~GraphNodeStage()
+GraphStage::~GraphStage()
 {
 }
 
 /* static */
-GraphNodeStage
-GraphNodeStage::Get(const UsdStagePtr &stage, const SdfPath &path)
+GraphStage
+GraphStage::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphNodeStage();
+        return GraphStage();
     }
-    return GraphNodeStage(stage->GetPrimAtPath(path));
+    return GraphStage(stage->GetPrimAtPath(path));
 }
 
 /* static */
-GraphNodeStage
-GraphNodeStage::Define(
+GraphStage
+GraphStage::Define(
     const UsdStagePtr &stage, const SdfPath &path)
 {
-    static TfToken usdPrimTypeName("NodeStage");
+    static TfToken usdPrimTypeName("Stage");
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return GraphNodeStage();
+        return GraphStage();
     }
-    return GraphNodeStage(
+    return GraphStage(
         stage->DefinePrim(path, usdPrimTypeName));
 }
 
 /* virtual */
-UsdSchemaType GraphNodeStage::_GetSchemaType() const {
-    return GraphNodeStage::schemaType;
+UsdSchemaType GraphStage::_GetSchemaType() const {
+    return GraphStage::schemaType;
 }
 
 /* static */
 const TfType &
-GraphNodeStage::_GetStaticTfType()
+GraphStage::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<GraphNodeStage>();
+    static TfType tfType = TfType::Find<GraphStage>();
     return tfType;
 }
 
 /* static */
 bool 
-GraphNodeStage::_IsTypedSchema()
+GraphStage::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -97,19 +97,19 @@ GraphNodeStage::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-GraphNodeStage::_GetTfType() const
+GraphStage::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 UsdAttribute
-GraphNodeStage::GetLifetimeManagementAttr() const
+GraphStage::GetLifetimeManagementAttr() const
 {
     return GetPrim().GetAttribute(GraphTokens->lifetimeManagement);
 }
 
 UsdAttribute
-GraphNodeStage::CreateLifetimeManagementAttr(VtValue const &defaultValue, bool writeSparsely) const
+GraphStage::CreateLifetimeManagementAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(GraphTokens->lifetimeManagement,
                        SdfValueTypeNames->Token,
@@ -120,13 +120,13 @@ GraphNodeStage::CreateLifetimeManagementAttr(VtValue const &defaultValue, bool w
 }
 
 UsdAttribute
-GraphNodeStage::GetFileNameAttr() const
+GraphStage::GetFileNameAttr() const
 {
     return GetPrim().GetAttribute(GraphTokens->fileName);
 }
 
 UsdAttribute
-GraphNodeStage::CreateFileNameAttr(VtValue const &defaultValue, bool writeSparsely) const
+GraphStage::CreateFileNameAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(GraphTokens->fileName,
                        SdfValueTypeNames->String,
@@ -137,13 +137,13 @@ GraphNodeStage::CreateFileNameAttr(VtValue const &defaultValue, bool writeSparse
 }
 
 UsdAttribute
-GraphNodeStage::GetLoadPrimsPathAttr() const
+GraphStage::GetLoadPrimsPathAttr() const
 {
     return GetPrim().GetAttribute(GraphTokens->loadPrimsPath);
 }
 
 UsdAttribute
-GraphNodeStage::CreateLoadPrimsPathAttr(VtValue const &defaultValue, bool writeSparsely) const
+GraphStage::CreateLoadPrimsPathAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(GraphTokens->loadPrimsPath,
                        SdfValueTypeNames->StringArray,
@@ -154,13 +154,13 @@ GraphNodeStage::CreateLoadPrimsPathAttr(VtValue const &defaultValue, bool writeS
 }
 
 UsdAttribute
-GraphNodeStage::GetLoadPrimsStatesAttr() const
+GraphStage::GetLoadPrimsStatesAttr() const
 {
     return GetPrim().GetAttribute(GraphTokens->loadPrimsStates);
 }
 
 UsdAttribute
-GraphNodeStage::CreateLoadPrimsStatesAttr(VtValue const &defaultValue, bool writeSparsely) const
+GraphStage::CreateLoadPrimsStatesAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(GraphTokens->loadPrimsStates,
                        SdfValueTypeNames->TokenArray,
@@ -171,18 +171,35 @@ GraphNodeStage::CreateLoadPrimsStatesAttr(VtValue const &defaultValue, bool writ
 }
 
 UsdAttribute
-GraphNodeStage::GetPopulationMaskAttr() const
+GraphStage::GetPopulationMaskAttr() const
 {
     return GetPrim().GetAttribute(GraphTokens->populationMask);
 }
 
 UsdAttribute
-GraphNodeStage::CreatePopulationMaskAttr(VtValue const &defaultValue, bool writeSparsely) const
+GraphStage::CreatePopulationMaskAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(GraphTokens->populationMask,
                        SdfValueTypeNames->StringArray,
                        /* custom = */ false,
                        SdfVariabilityUniform,
+                       defaultValue,
+                       writeSparsely);
+}
+
+UsdAttribute
+GraphStage::GetInputsLayersAttr() const
+{
+    return GetPrim().GetAttribute(GraphTokens->inputsLayers);
+}
+
+UsdAttribute
+GraphStage::CreateInputsLayersAttr(VtValue const &defaultValue, bool writeSparsely) const
+{
+    return UsdSchemaBase::_CreateAttr(GraphTokens->inputsLayers,
+                       SdfValueTypeNames->TokenArray,
+                       /* custom = */ false,
+                       SdfVariabilityVarying,
                        defaultValue,
                        writeSparsely);
 }
@@ -201,7 +218,7 @@ _ConcatenateAttributeNames(const TfTokenVector& left,const TfTokenVector& right)
 
 /*static*/
 const TfTokenVector&
-GraphNodeStage::GetSchemaAttributeNames(bool includeInherited)
+GraphStage::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames = {
         GraphTokens->lifetimeManagement,
@@ -209,10 +226,11 @@ GraphNodeStage::GetSchemaAttributeNames(bool includeInherited)
         GraphTokens->loadPrimsPath,
         GraphTokens->loadPrimsStates,
         GraphTokens->populationMask,
+        GraphTokens->inputsLayers,
     };
     static TfTokenVector allNames =
         _ConcatenateAttributeNames(
-            GraphNode::GetSchemaAttributeNames(true),
+            GraphGraph::GetSchemaAttributeNames(true),
             localNames);
 
     if (includeInherited)

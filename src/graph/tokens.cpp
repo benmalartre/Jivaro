@@ -43,6 +43,8 @@ GraphTokensType::GraphTokensType() :
     geometry("geometry", TfToken::Immortal),
     inMemory("in-memory", TfToken::Immortal),
     inputs("inputs:", TfToken::Immortal),
+    inputsGeometry("inputs:geometry", TfToken::Immortal),
+    inputsLayers("inputs:layers", TfToken::Immortal),
     interfaceOnly("interfaceOnly", TfToken::Immortal),
     lifetimeManagement("lifetimeManagement", TfToken::Immortal),
     loadPrimsPath("loadPrimsPath", TfToken::Immortal),
@@ -52,10 +54,9 @@ GraphTokensType::GraphTokensType() :
     onlyRule("OnlyRule", TfToken::Immortal),
     outputs("outputs:", TfToken::Immortal),
     outputsDeformed("outputs:deformed", TfToken::Immortal),
+    outputsResult("outputs:result", TfToken::Immortal),
     populationMask("populationMask", TfToken::Immortal),
-    sdrMetadata("sdrMetadata", TfToken::Immortal),
     stateBinding("state:binding", TfToken::Immortal),
-    universalSourceType("", TfToken::Immortal),
     allTokens({
         allRule,
         animationCache,
@@ -74,6 +75,8 @@ GraphTokensType::GraphTokensType() :
         geometry,
         inMemory,
         inputs,
+        inputsGeometry,
+        inputsLayers,
         interfaceOnly,
         lifetimeManagement,
         loadPrimsPath,
@@ -83,10 +86,9 @@ GraphTokensType::GraphTokensType() :
         onlyRule,
         outputs,
         outputsDeformed,
+        outputsResult,
         populationMask,
-        sdrMetadata,
-        stateBinding,
-        universalSourceType
+        stateBinding
     })
 {
 }

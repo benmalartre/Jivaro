@@ -21,14 +21,14 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef GRAPH_GENERATED_NODESTAGE_H
-#define GRAPH_GENERATED_NODESTAGE_H
+#ifndef GRAPH_GENERATED_STAGE_H
+#define GRAPH_GENERATED_STAGE_H
 
-/// \file Graph/nodeStage.h
+/// \file Graph/stage.h
 
 #include "pxr/pxr.h"
 #include "./api.h"
-#include "./node.h"
+#include "./graph.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
 #include "./tokens.h"
@@ -47,10 +47,10 @@ PXR_NAMESPACE_OPEN_SCOPE
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// NODESTAGE                                                                  //
+// STAGE                                                                      //
 // -------------------------------------------------------------------------- //
 
-/// \class GraphNodeStage
+/// \class GraphStage
 ///
 /// Class for the terminal stage node
 ///
@@ -59,7 +59,7 @@ class SdfAssetPath;
 /// So to set an attribute to the value "rightHanded", use GraphTokens->rightHanded
 /// as the value.
 ///
-class GraphNodeStage : public GraphNode
+class GraphStage : public GraphGraph
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
@@ -67,26 +67,26 @@ public:
     /// \sa UsdSchemaType
     static const UsdSchemaType schemaType = UsdSchemaType::ConcreteTyped;
 
-    /// Construct a GraphNodeStage on UsdPrim \p prim .
-    /// Equivalent to GraphNodeStage::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a GraphStage on UsdPrim \p prim .
+    /// Equivalent to GraphStage::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit GraphNodeStage(const UsdPrim& prim=UsdPrim())
-        : GraphNode(prim)
+    explicit GraphStage(const UsdPrim& prim=UsdPrim())
+        : GraphGraph(prim)
     {
     }
 
-    /// Construct a GraphNodeStage on the prim held by \p schemaObj .
-    /// Should be preferred over GraphNodeStage(schemaObj.GetPrim()),
+    /// Construct a GraphStage on the prim held by \p schemaObj .
+    /// Should be preferred over GraphStage(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit GraphNodeStage(const UsdSchemaBase& schemaObj)
-        : GraphNode(schemaObj)
+    explicit GraphStage(const UsdSchemaBase& schemaObj)
+        : GraphGraph(schemaObj)
     {
     }
 
     /// Destructor.
     GRAPH_API
-    virtual ~GraphNodeStage();
+    virtual ~GraphStage();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -95,17 +95,17 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a GraphNodeStage holding the prim adhering to this
+    /// Return a GraphStage holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// GraphNodeStage(stage->GetPrimAtPath(path));
+    /// GraphStage(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     GRAPH_API
-    static GraphNodeStage
+    static GraphStage
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
     /// Attempt to ensure a \a UsdPrim adhering to this schema at \p path
@@ -131,7 +131,7 @@ public:
     /// the opinion at the current EditTarget.
     ///
     GRAPH_API
-    static GraphNodeStage
+    static GraphStage
     Define(const UsdStagePtr &stage, const SdfPath &path);
 
 protected:
@@ -272,6 +272,27 @@ public:
     /// the default for \p writeSparsely is \c false.
     GRAPH_API
     UsdAttribute CreatePopulationMaskAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
+
+public:
+    // --------------------------------------------------------------------- //
+    // INPUTSLAYERS 
+    // --------------------------------------------------------------------- //
+    /// Relationships to the layers composing this stage.
+    ///
+    /// \n  C++ Type: VtArray<TfToken>
+    /// \n  Usd Type: SdfValueTypeNames->TokenArray
+    /// \n  Variability: SdfVariabilityVarying
+    /// \n  Fallback Value: No Fallback
+    GRAPH_API
+    UsdAttribute GetInputsLayersAttr() const;
+
+    /// See GetInputsLayersAttr(), and also 
+    /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
+    /// If specified, author \p defaultValue as the attribute's default,
+    /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
+    /// the default for \p writeSparsely is \c false.
+    GRAPH_API
+    UsdAttribute CreateInputsLayersAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
 
 public:
     // ===================================================================== //

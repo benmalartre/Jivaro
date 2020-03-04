@@ -8,6 +8,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 AmnUI::AmnUI(AmnView* parent, const std::string& name):
   _parent(parent), _name(name)
 {
+  if(_parent)_parent->SetContent(this);
 };
 
 // mouse positon relative to the view

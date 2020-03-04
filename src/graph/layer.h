@@ -21,20 +21,17 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef GRAPH_GENERATED_COMPOSER_H
-#define GRAPH_GENERATED_COMPOSER_H
+#ifndef GRAPH_GENERATED_LAYER_H
+#define GRAPH_GENERATED_LAYER_H
 
-/// \file Graph/composer.h
+/// \file Graph/layer.h
 
 #include "pxr/pxr.h"
 #include "./api.h"
-#include "./graph.h"
+#include "./node.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
 #include "./tokens.h"
-
-#include "node.h"
-#include "connectableAPI.h"
 
 #include "pxr/base/vt/value.h"
 
@@ -50,21 +47,17 @@ PXR_NAMESPACE_OPEN_SCOPE
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// COMPOSER                                                                   //
+// LAYER                                                                      //
 // -------------------------------------------------------------------------- //
 
-/// \class GraphComposer
+/// \class GraphLayer
 ///
-/// A Composer provides a container into which multiple state of
-/// an "asset" pass datas to upstream the pipeline.
+/// Class for the layer node.
+/// A layer is a unit of scene description that you combine with other units
+/// of scene description to form a shot, model, set, shader, and so on.
 /// 
 ///
-/// For any described attribute \em Fallback \em Value or \em Allowed \em Values below
-/// that are text/tokens, the actual token is published and defined in \ref GraphTokens.
-/// So to set an attribute to the value "rightHanded", use GraphTokens->rightHanded
-/// as the value.
-///
-class GraphComposer : public GraphGraph
+class GraphLayer : public GraphNode
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
@@ -72,26 +65,26 @@ public:
     /// \sa UsdSchemaType
     static const UsdSchemaType schemaType = UsdSchemaType::ConcreteTyped;
 
-    /// Construct a GraphComposer on UsdPrim \p prim .
-    /// Equivalent to GraphComposer::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a GraphLayer on UsdPrim \p prim .
+    /// Equivalent to GraphLayer::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit GraphComposer(const UsdPrim& prim=UsdPrim())
-        : GraphGraph(prim)
+    explicit GraphLayer(const UsdPrim& prim=UsdPrim())
+        : GraphNode(prim)
     {
     }
 
-    /// Construct a GraphComposer on the prim held by \p schemaObj .
-    /// Should be preferred over GraphComposer(schemaObj.GetPrim()),
+    /// Construct a GraphLayer on the prim held by \p schemaObj .
+    /// Should be preferred over GraphLayer(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit GraphComposer(const UsdSchemaBase& schemaObj)
-        : GraphGraph(schemaObj)
+    explicit GraphLayer(const UsdSchemaBase& schemaObj)
+        : GraphNode(schemaObj)
     {
     }
 
     /// Destructor.
     GRAPH_API
-    virtual ~GraphComposer();
+    virtual ~GraphLayer();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -100,17 +93,17 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a GraphComposer holding the prim adhering to this
+    /// Return a GraphLayer holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// GraphComposer(stage->GetPrimAtPath(path));
+    /// GraphLayer(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     GRAPH_API
-    static GraphComposer
+    static GraphLayer
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
     /// Attempt to ensure a \a UsdPrim adhering to this schema at \p path
@@ -136,7 +129,7 @@ public:
     /// the opinion at the current EditTarget.
     ///
     GRAPH_API
-    static GraphComposer
+    static GraphLayer
     Define(const UsdStagePtr &stage, const SdfPath &path);
 
 protected:
@@ -160,24 +153,45 @@ private:
 
 public:
     // --------------------------------------------------------------------- //
-    // DEFORMED 
+    // FILENAME 
     // --------------------------------------------------------------------- //
-    /// Describes the <i>deformed geometry</i> output terminal on a Composer.
+    /// ar-solvable file path on disk
     ///
-    /// \n  C++ Type: TfToken
-    /// \n  Usd Type: SdfValueTypeNames->Token
-    /// \n  Variability: SdfVariabilityVarying
+    /// \n  C++ Type: std::string
+    /// \n  Usd Type: SdfValueTypeNames->String
+    /// \n  Variability: SdfVariabilityUniform
     /// \n  Fallback Value: No Fallback
     GRAPH_API
-    UsdAttribute GetDeformedAttr() const;
+    UsdAttribute GetFileNameAttr() const;
 
-    /// See GetDeformedAttr(), and also 
+    /// See GetFileNameAttr(), and also 
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
     /// the default for \p writeSparsely is \c false.
     GRAPH_API
-    UsdAttribute CreateDeformedAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
+    UsdAttribute CreateFileNameAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
+
+public:
+    // --------------------------------------------------------------------- //
+    // OUTPUTSRESULT 
+    // --------------------------------------------------------------------- //
+    /// loaded result for this layer.
+    ///
+    /// \n  C++ Type: VtArray<TfToken>
+    /// \n  Usd Type: SdfValueTypeNames->TokenArray
+    /// \n  Variability: SdfVariabilityVarying
+    /// \n  Fallback Value: No Fallback
+    GRAPH_API
+    UsdAttribute GetOutputsResultAttr() const;
+
+    /// See GetOutputsResultAttr(), and also 
+    /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
+    /// If specified, author \p defaultValue as the attribute's default,
+    /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
+    /// the default for \p writeSparsely is \c false.
+    GRAPH_API
+    UsdAttribute CreateOutputsResultAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
 
 public:
     // ===================================================================== //

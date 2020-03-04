@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "./composer.h"
+#include "./deformable.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -50,7 +50,14 @@ WRAP_CUSTOM;
 
         
 static UsdAttribute
-_CreateDeformedAttr(GraphComposer &self,
+_CreateGeometryAttr(GraphDeformable &self,
+                                      object defaultVal, bool writeSparsely) {
+    return self.CreateGeometryAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
+}
+        
+static UsdAttribute
+_CreateDeformedAttr(GraphDeformable &self,
                                       object defaultVal, bool writeSparsely) {
     return self.CreateDeformedAttr(
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Token), writeSparsely);
@@ -58,12 +65,12 @@ _CreateDeformedAttr(GraphComposer &self,
 
 } // anonymous namespace
 
-void wrapGraphComposer()
+void wrapGraphDeformable()
 {
-    typedef GraphComposer This;
+    typedef GraphDeformable This;
 
-    class_<This, bases<GraphGraph> >
-        cls("Composer");
+    class_<This, bases<GraphNode> >
+        cls("Deformable");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -88,6 +95,13 @@ void wrapGraphComposer()
 
         .def(!self)
 
+        
+        .def("GetGeometryAttr",
+             &This::GetGeometryAttr)
+        .def("CreateGeometryAttr",
+             &_CreateGeometryAttr,
+             (arg("defaultValue")=object(),
+              arg("writeSparsely")=false))
         
         .def("GetDeformedAttr",
              &This::GetDeformedAttr)
