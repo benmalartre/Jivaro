@@ -11,7 +11,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 // AmnView constructor
 //----------------------------------------------------------------------------
-AmnView::AmnView(AmnView* parent, const pxr::GfVec2i& min, const pxr::GfVec2i& max):
+AmnView::AmnView(AmnView* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max):
   _parent(parent), 
   _min(min), 
   _max(max), 
@@ -30,8 +30,8 @@ AmnView::AmnView(AmnView* parent, const pxr::GfVec2i& min, const pxr::GfVec2i& m
 
 AmnView::AmnView(AmnView* parent, int x, int y, int w, int h):
   _parent(parent), 
-  _min(pxr::GfVec2i(x, y)), 
-  _max(pxr::GfVec2i(x+w, y+h)), 
+  _min(pxr::GfVec2f(x, y)), 
+  _max(pxr::GfVec2f(x+w, y+h)), 
   _flags(HORIZONTAL|LEAF),
   _perc(50),
   _content(NULL)
@@ -124,7 +124,7 @@ AmnView::MouseLeave()
 }
 
 void
-AmnView::GetChildMinMax(bool leftOrRight, pxr::GfVec2i& cMin, pxr::GfVec2i& cMax)
+AmnView::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
 {
   // horizontal splitter
   if(IsHorizontal())
@@ -161,7 +161,7 @@ AmnView::GetChildMinMax(bool leftOrRight, pxr::GfVec2i& cMin, pxr::GfVec2i& cMax
 }
 
 void
-AmnView::GetSplitInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax,
+AmnView::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
   const int width, const int height)
 {
   if(IsHorizontal())
@@ -190,7 +190,7 @@ AmnView::GetSplitInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax,
 void
 AmnView::Split()
 {
-  pxr::GfVec2i cMin, cMax;    
+  pxr::GfVec2f cMin, cMax;    
   GetChildMinMax(true, cMin, cMax);
   _left = new AmnView(this, cMin, cMax);
   _left->_name = _name + ":left";
@@ -213,8 +213,8 @@ AmnView::Split()
 void 
 AmnView::Resize(int x, int y, int w, int h)
 {
-  _min = pxr::GfVec2i(x, y);
-  _max = pxr::GfVec2i(x+w, y+h);
+  _min = pxr::GfVec2f(x, y);
+  _max = pxr::GfVec2f(x+w, y+h);
   if(!IsLeaf())
   {
     if(IsHorizontal())

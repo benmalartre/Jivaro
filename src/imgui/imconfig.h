@@ -10,7 +10,7 @@
 // Defining those options in imconfig.h will ensure every compilation unit gets to see the same data structure layouts.
 // Call IMGUI_CHECKVERSION() from your .cpp files to verify that the data structures your files are using are matching the ones imgui.cpp is using.
 //-----------------------------------------------------------------------------
-#include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/vec4f.h>
 
 #pragma once
@@ -64,8 +64,8 @@
 //---- Define constructor and implicit cast operators to convert back<>forth between your math types and ImVec2/ImVec4.
 // This will be inlined as part of ImVec2 and ImVec4 class declarations.
 #define IM_VEC2_CLASS_EXTRA                                                       \
-        ImVec2(const pxr::GfVec2i& f) { x = f[0]; y = f[1]; }                     \
-        operator pxr::GfVec2i() const { return pxr::GfVec2i(x,y); }
+        ImVec2(const pxr::GfVec2f& f) { x = f[0]; y = f[1]; }                     \
+        operator pxr::GfVec2f() const { return pxr::GfVec2f(x,y); }
 
 #define IM_VEC4_CLASS_EXTRA                                                       \
         ImVec4(const pxr::GfVec4f& f) { x = f[0]; y = f[1]; z = f[2]; w = f[3]; } \

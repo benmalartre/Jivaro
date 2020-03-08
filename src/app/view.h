@@ -18,17 +18,17 @@ enum FLAGS
 };
 
 public:
-  AmnView(AmnView* parent, const pxr::GfVec2i& min, const pxr::GfVec2i& max);
+  AmnView(AmnView* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
   AmnView(AmnView* parent, int x, int y, int w, int h);
   ~AmnView();
   void SetWindow(AmnWindow* AmnWindow);
   AmnWindow* GetWindow();
-  const pxr::GfVec2i& GetMin(){return _min;};
-  const pxr::GfVec2i& GetMax(){return _max;};
+  const pxr::GfVec2f& GetMin(){return _min;};
+  const pxr::GfVec2f& GetMax(){return _max;};
   const pxr::GfVec3f& GetColor(){return _color;};
   float GetWidth(){return _max[0] - _min[0];};
   float GetHeight(){return _max[1] - _min[1];};
-  pxr::GfVec2i GetSize(){return _max - _min;};
+  pxr::GfVec2f GetSize(){return _max - _min;};
 
   inline const pxr::GfVec4f 
   GetColor4(){return pxr::GfVec4f(_color[0], _color[1], _color[2], 1.f);};
@@ -39,9 +39,9 @@ public:
   inline void SetPerc(unsigned perc){_perc=perc;};
   int GetPercFromMousePosition(int x, int y);
 
-  void GetChildMinMax(bool , pxr::GfVec2i& , pxr::GfVec2i& );
+  void GetChildMinMax(bool , pxr::GfVec2f& , pxr::GfVec2f& );
   void Split();
-  void GetSplitInfos(pxr::GfVec2i& sMin, pxr::GfVec2i& sMax, 
+  void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
     const int width, const int height);
 
   inline AmnView* GetLeft(){return _left;};
@@ -71,8 +71,8 @@ public:
   inline bool ClearLeaf(){return BITMASK_CLEAR(_flags, LEAF);};
 
 private:
-  pxr::GfVec2i      _min;
-  pxr::GfVec2i      _max;
+  pxr::GfVec2f      _min;
+  pxr::GfVec2f      _max;
   pxr::GfVec3f      _color;
   unsigned          _perc;
   AmnUI*            _content;

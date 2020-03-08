@@ -61,7 +61,7 @@ AmnWindow::Init()
   if(_window)
   {
     // create main splittable view
-    _mainView = new AmnView(NULL, pxr::GfVec2i(0,0), pxr::GfVec2i(_width, _height));
+    _mainView = new AmnView(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
     _mainView->SetWindow(this);
     _splitter = new AmnSplitter();
     
@@ -247,12 +247,12 @@ AmnWindow::Draw()
   ImGui_ImplGlfw_NewFrame();
   
   ImGui::NewFrame();
-  ImGui::SetWindowSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-  ImGui::SetWindowPos(pxr::GfVec2i(0,0));
+  ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight()));
+  ImGui::SetWindowPos(pxr::GfVec2f(0,0));
 
   ImGuiStyle& style = ImGui::GetStyle();
-  style.WindowPadding = pxr::GfVec2i(0,0);
-  style.FramePadding = pxr::GfVec2i(0,0);
+  style.WindowPadding = pxr::GfVec2f(0,0);
+  style.FramePadding = pxr::GfVec2f(0,0);
 
   if(_mainView)_mainView->Draw();
 
@@ -321,6 +321,8 @@ AmnWindow::SetupImgui()
   // setup platform/renderer bindings
   ImGui_ImplGlfw_InitForOpenGL(_window, glfwGetCurrentContext());
   ImGui_ImplOpenGL3_Init("#version 330");
+
+  ImNodes::Initialize();
 }
 
 // clear imgui

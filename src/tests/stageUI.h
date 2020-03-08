@@ -25,7 +25,9 @@ void
 TestStageUI(AmnGraphUI* ui, const std::vector<pxr::UsdStageRefPtr>& stages);
 
 void 
-RecurseStagePrim(AmnGraphUI* ui, const pxr::UsdPrim& prim, int stageIndex);
+RecurseStagePrim(AmnGraphUI* ui, const pxr::UsdPrim& prim, int stageIndex, int& nodeIndex);
 
+void 
+DrawStageUI(AmnGraphUI* ui);
 
 AMN_NAMESPACE_CLOSE_SCOPE

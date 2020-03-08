@@ -102,8 +102,9 @@ AmnApplication::Init()
 void 
 AmnApplication::MainLoop()
 {
+
   _mainWindow->MainLoop();
-  
+  _test->Draw();
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

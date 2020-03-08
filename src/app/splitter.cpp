@@ -13,7 +13,7 @@ void AmnSplitter::RecurseBuildMap(AmnView* view)
     AmnView* parent = view->GetParent();
     if(!parent)parent = view;
 
-    pxr::GfVec2i sMin, sMax;
+    pxr::GfVec2f sMin, sMax;
     view->GetSplitInfos(sMin, sMax, _width, _height);
 
     for(int y = sMin[1]; y < sMax[1]; ++y)
@@ -35,7 +35,7 @@ AmnSplitter::BuildMap(AmnView* view)
   if(_pixels){ delete [] _pixels; _pixels = NULL; };
 
   _views.clear();
-  const pxr::GfVec2i size(view->GetMax() - view->GetMin());
+  const pxr::GfVec2f size(view->GetMax() - view->GetMin());
   
   _width = size[0];
   _height = size[1];
@@ -64,7 +64,7 @@ AmnSplitter::Draw()
 {
   glEnable(GL_SCISSOR_TEST);
   glClearColor(0.f, 1.f, 0.f, 1.f);
-  pxr::GfVec2i sMin, sMax;
+  pxr::GfVec2f sMin, sMax;
   for(auto view : _views)
   {
     if(view->IsLeaf()) continue;

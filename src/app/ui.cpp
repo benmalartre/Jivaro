@@ -14,7 +14,7 @@ AmnUI::AmnUI(AmnView* parent, const std::string& name):
 // mouse positon relative to the view
 void AmnUI::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
 {
-  pxr::GfVec2i parentPosition = _parent->GetMin();
+  pxr::GfVec2f parentPosition = _parent->GetMin();
   int parentX = parentPosition[0];
   int parentY = parentPosition[1];
   outX = inX - parentX;

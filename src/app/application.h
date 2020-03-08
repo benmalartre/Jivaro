@@ -5,6 +5,7 @@
 #include "view.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
+#include "../widgets/graph.h"
 #include "../embree/camera.h"
 #include "../embree/device.h"
 #include "../embree/context.h"
@@ -51,6 +52,8 @@ private:
   int                               _width;
   int                               _height;
   std::vector<pxr::UsdStageRefPtr>  _stages;
+
+  AmnGraphUI*                       _test;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE // namespace pxr

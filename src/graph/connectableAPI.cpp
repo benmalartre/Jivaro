@@ -758,7 +758,8 @@ GraphConnectableAPI::GetInputs() const
 int
 GraphConnectableAPI::NumInputs() const
 {
-    return 0;
+    std::vector<GraphInput> ret = GetInputs();
+    return ret.size();
 }
 
 

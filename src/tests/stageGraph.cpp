@@ -35,6 +35,7 @@ GraphInput _TestAddInput(GraphNode& node,
   if(type == GraphAttributeType::Parameter)
   {
     GraphInput input = node.CreateInput(TfToken(name), valueType);
+    
     return input;
   }
   return GraphInput();
@@ -66,9 +67,9 @@ GraphInput _AddInputPrim(GraphNode& node, UsdPrim& prim)
 {
   UsdUINodeGraphNodeAPI api(prim);
   GraphInput input = _TestAddInput(node, 
-                                        "Primitive", 
-                                        GraphAttributeType::Input,
-                                        SdfValueTypeNames->String);
+                                  "Primitive", 
+                                  GraphAttributeType::Input,
+                                  SdfValueTypeNames->String);
   return input;
 } 
 
@@ -115,9 +116,16 @@ void TestScene(const std::string& result)
   SdfPath stagePath = stageNode.GetPath();
   GraphNode node1 = 
     _TestAddNode(stage, stagePath.AppendChild(TfToken("node1")));
-  GraphInput input1 = 
-    _TestAddInput(node1, "input1", 
-      GraphAttributeType::Parameter, SdfValueTypeNames->Float);
+
+  for(int i=0;i<6;++i)
+  {
+    GraphInput input = 
+    _TestAddInput(node1, 
+                  "input"+std::to_string(i+1), 
+                  GraphAttributeType::Parameter, 
+                  SdfValueTypeNames->Float);
+  }
+
 
   GraphOutput output1 = 
     _TestAddOutput(node1, "output1", 
@@ -128,6 +136,7 @@ void TestScene(const std::string& result)
   GraphInput input2 = 
     _TestAddInput(node2, "input2", 
       GraphAttributeType::Parameter, SdfValueTypeNames->Float);
+
 
   GraphOutput output2 = 
     _TestAddOutput(node2, "output2", 

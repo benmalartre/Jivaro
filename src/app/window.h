@@ -5,6 +5,7 @@
 #include "splitter.h"
 #include "tools.h"
 #include "ui.h"
+#include "../imgui/imgui_nodes.h"
 
 #include <pxr/pxr.h>
 #include <pxr/base/gf/vec2i.h>

@@ -2,22 +2,19 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-void RecurseStagePrim(AmnGraphUI* ui, const pxr::UsdPrim& prim, int index)
+void RecurseStagePrim(AmnGraphUI* ui, 
+                      const pxr::UsdPrim& prim, 
+                      int stageIndex, 
+                      int& nodeIndex)
 {
   for(auto child : prim.GetChildren())
   {
-    std::cout << child.GetName() << " : ";
-    std::cout << child.GetTypeName().GetText() << "#### ";
-    AmnNodeUI nodeUI(child);
-    AmnGraphStageUI* stage = ui->GetStage(index);
-    if(stage)
-    {
-      stage->_nodes.push_back(nodeUI);
-      //ui->_stages[index]->_nodes.push_back(nodeUI);
-      RecurseStagePrim(ui, child, index);
-    }
+    AmnNodeUI nodeUI(child, nodeIndex);
+    nodeIndex++;
+    AmnGraphStageUI* stage = ui->GetStage(stageIndex);
     
-
+    stage->_nodes.push_back(nodeUI);
+    RecurseStagePrim(ui, child, stageIndex, nodeIndex);
   }
 }
 
@@ -26,11 +23,13 @@ void TestStageUI(AmnGraphUI* ui,
 {
   int numStages = stages.size();
   ui->Init(stages);
+  
   for(int i=0;i<numStages;++i)
   {
+    int j = 0;
     //ui->_stages[i] = new AmnGraphStageUI(stages[i]);
     pxr::UsdPrim root = stages[i]->GetPseudoRoot();
-    RecurseStagePrim(ui, root, i);
+    RecurseStagePrim(ui, root, i, j);
   }
 }
 

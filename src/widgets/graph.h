@@ -11,6 +11,7 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 struct AmnGraphStageUI {
+  int                               _nodeId;
   pxr::UsdStageRefPtr               _stage;
   std::vector<AmnNodeUI>            _nodes;
   std::vector<AmnConnectionUI>      _connections;
@@ -29,15 +30,25 @@ public:
 
   void Init(const std::string& filename);
   void Init(const std::vector<pxr::UsdStageRefPtr>& stages);
+  void Term();
   AmnGraphStageUI* GetStage(int index);
   
   void BuildGraph(int index);
   
 private:
-  std::string                   _filename;
-  pxr::GfVec3f                  _color;
-  std::vector<AmnGraphStageUI*>  _stages;
 
+  void _RecurseStagePrim(const pxr::UsdPrim& prim, 
+                        int stageIndex, 
+                        int& nodeIndex);
+
+  std::string                     _filename;
+  pxr::GfVec3f                    _color;
+  std::vector<AmnGraphStageUI*>   _stages;
+
+  int                             _nodeId;
+  ImNodes::EditorContext*         _context;
+  int                             _depth;
+  AmnGraphStageUI*                _current;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

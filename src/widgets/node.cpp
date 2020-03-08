@@ -3,9 +3,31 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+AmnPortUI::AmnPortUI(const pxr::GraphInput& port, int index)
+{
+  _id = index;
+  _color = GRAPH_COLOR_FLOAT;
+  _label = port.GetAttr().GetName();
+  _io = true;
+}
+
+AmnPortUI::AmnPortUI(const pxr::GraphOutput& port, int index, int offset)
+{
+  _id = index + offset;
+  _color = GRAPH_COLOR_BOOL;
+  _label = port.GetAttr().GetName();
+  _io = false;
+}
+
 void AmnPortUI::Draw()
 {
-
+  if(_io)
+    ImNodes::BeginInputAttribute(_id, ImNodes::PinShape_CircleFilled, _color);
+  else
+    ImNodes::BeginOutputAttribute(_id, ImNodes::PinShape_CircleFilled, _color);
+    
+  ImGui::Text(_label.c_str());
+  ImNodes::EndAttribute();
 }
 
 void AmnConnectionUI::Draw()
@@ -13,13 +35,27 @@ void AmnConnectionUI::Draw()
   
 }
 
-AmnNodeUI::AmnNodeUI(const pxr::UsdPrim& prim):_prim(prim)
+AmnNodeUI::AmnNodeUI(const pxr::UsdPrim& prim, int id):
+_prim(prim), _id(id)
 {
   if(_prim.IsValid())
   {
+    _name = prim.GetName();
     if(_prim.IsA<pxr::GraphNode>())
     {
-      std::cout << "PRIM IS A NODE :D" << std::endl;
+      pxr::GraphNode node(_prim);
+      _inputs.resize(node.NumInputs());
+      for(int i=0;i<_inputs.size();++i)
+      {
+        _inputs[i] = AmnPortUI(node.GetInput(i), i);
+      }
+
+      int offset = _inputs.size();
+      _outputs.resize(node.NumOutputs());
+      for(int i=0;i<_outputs.size();++i)
+      {
+        _outputs[i] = AmnPortUI(node.GetOutput(i), i, offset);
+      }
     }
     else if(_prim.IsA<pxr::GraphGraph>())
     {
@@ -38,31 +74,55 @@ AmnNodeUI::~AmnNodeUI()
 
 }
 
-pxr::GfRange2f AmnNodeUI::GetRange()
+void AmnNodeUI::Update()
 {
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   pxr::UsdAttribute posAttr = api.GetPosAttr();
-  pxr::GfVec2f pos;
   if(posAttr && posAttr.HasAuthoredValue())
   {
-    posAttr.Get(&pos);
+    posAttr.Get(&_pos);
   }
-  //std::cout << "NODE POSITION : " << pos << std::endl;
 
   pxr::UsdAttribute sizeAttr = api.GetSizeAttr();
-  pxr::GfVec2f size;
   if(sizeAttr && sizeAttr.HasAuthoredValue())
   {
-    sizeAttr.Get(&size);
+    sizeAttr.Get(&_size);
   }
-  else size = pxr::GfVec2f(128, 64);
-  //std::cout << "NODE SIZE : " << size << std::endl;
+  else 
+  {
+    _size[0] = 128;
+    _size[1] = 64;
+  }
 
-  return pxr::GfRange2f(pos, pos + size);
+  _size[1] += _inputs.size() * NODE_PORT_SPACING;
+
 }
+
 void AmnNodeUI::Draw()
 {
+  Update();
+  ImGui::SetCursorPos(GetPos());
+  ImNodes::BeginNode(_id);
 
+  ImNodes::BeginNodeTitleBar();
+  ImGui::TextUnformatted(_name.c_str());
+  ImNodes::EndNodeTitleBar();
+
+  int numInputs = _inputs.size();
+  
+  for(int i=0;i<numInputs;++i)
+  {
+    _inputs[i].Draw();
+  }
+
+  int numOutputs = _outputs.size();
+  ImGui::Indent(40);
+  for(int i=0;i<numOutputs;++i)
+  {
+    _outputs[i].Draw();
+  }
+
+  ImNodes::EndNode();
 } 
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -15,10 +15,10 @@ namespace ImGui {
   FillBackground();
 
   IMGUI_API  void 
-  TestDummyView(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax,
+  TestDummyView(bool* p_open, const pxr::GfVec2f& vmin, const pxr::GfVec2f& vmax,
     const pxr::GfVec4f& color);
 
   IMGUI_API  void 
-  TestGraphNodes(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax); 
+  TestGraphNodes(bool* p_open, const pxr::GfVec2f& vmin, const pxr::GfVec2f& vmax); 
 
 } // namespace ImGui

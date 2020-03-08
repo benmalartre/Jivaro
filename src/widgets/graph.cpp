@@ -6,21 +6,51 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+// constructor
+//------------------------------------------------------------------------------
 AmnGraphUI::AmnGraphUI(AmnView* parent, const std::string& filename):
 AmnUI(parent, "Graph")
 {
   _filename = filename;
+  _nodeId = 0;
 }
 
+// destructor
+//------------------------------------------------------------------------------
 AmnGraphUI::~AmnGraphUI(){}
 
+// event
+//------------------------------------------------------------------------------
 void AmnGraphUI::Event()
 {
   std::cerr << "AmnGraphUI EVENT!" << std::endl;
 };
 
+// term
+//------------------------------------------------------------------------------
+void AmnGraphUI::Term()
+{
+    ImNodes::EditorContextFree(_context);
+}
+
+// draw
+//------------------------------------------------------------------------------
 void AmnGraphUI::Draw()
 {
+  ImGui::Begin("Graph Editor");
+  ImGui::SetWindowPos(_parent->GetMin());
+  ImGui::SetWindowSize(_parent->GetSize());
+
+  ImNodes::BeginNodeEditor();
+
+  for(auto stage : _stages)
+    for(auto node : stage->_nodes)
+      node.Draw();
+
+  ImNodes::EndNodeEditor();
+  ImGui::End();
+
+  /*
   bool opened;
   int flags = 0;
   flags |= ImGuiWindowFlags_NoResize;
@@ -41,8 +71,11 @@ void AmnGraphUI::Draw()
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::End();
+  */
 };
 
+// init
+//------------------------------------------------------------------------------
 void AmnGraphUI::Init(const std::string& filename)
 {
   pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
@@ -55,16 +88,17 @@ void AmnGraphUI::Init(const std::string& filename)
       std::string fileName;
       pxr::UsdAttribute fileNameAttr = stageNode.CreateFileNameAttr();
       fileNameAttr.Get(&fileName);
-      std::cout << "################## OPEN STAGE : " << std::endl;
-      std::cout << fileName << std::endl;
 
       pxr::UsdStageRefPtr usdStage = pxr::UsdStage::CreateInMemory();
       _stages.push_back(new AmnGraphStageUI(usdStage));
     }
   }
-  std::cout << "####### NUM STAGES : " << _stages.size() << std::endl;
+  _context = ImNodes::EditorContextCreate();
+  
 }
 
+// init
+//------------------------------------------------------------------------------
 void AmnGraphUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
 {
   if(_stages.size())
@@ -75,37 +109,42 @@ void AmnGraphUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
   {
     _stages[i] = new AmnGraphStageUI(stages[i]);
   }
-  std::cout << "####### NUM STAGES : " << _stages.size() << std::endl;
+  _context = ImNodes::EditorContextCreate();
 };
 
+// get stage at index
+//------------------------------------------------------------------------------
 AmnGraphStageUI* AmnGraphUI::GetStage(int index)
 {
   if(index>=0 && index < _stages.size()) return _stages[index];
   else return NULL;
 }
-  
+
+// build graph
+//------------------------------------------------------------------------------ 
+void AmnGraphUI::_RecurseStagePrim(const pxr::UsdPrim& prim, 
+                        int stageIndex, 
+                        int& nodeIndex)
+{
+  for(auto child : prim.GetChildren())
+  {
+    AmnNodeUI nodeUI(child, nodeIndex);
+    nodeIndex++;
+    AmnGraphStageUI* stage = GetStage(stageIndex);
+    
+    stage->_nodes.push_back(nodeUI);
+    _RecurseStagePrim(child, stageIndex, nodeIndex);
+  }
+}
+
 void AmnGraphUI::BuildGraph(int index)
 {
   AmnGraphStageUI* stage = GetStage(index);
   if(stage)
   {
-
+    int nodeIndex = 0;
+    _RecurseStagePrim(stage->_stage->GetPseudoRoot(), index, nodeIndex);
   }
 }
-
-/*
-void AmnGraphUI::FillBackground()
-{
-  ImVec2 vMin = ImGui::GetWindowContentRegionMin();
-  ImVec2 vMax = ImGui::GetWindowContentRegionMax();
-
-  vMin.x += ImGui::GetWindowPos().x;
-  vMin.y += ImGui::GetWindowPos().y;
-  vMax.x += ImGui::GetWindowPos().x;
-  vMax.y += ImGui::GetWindowPos().y;
-
-  ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
-}
-*/
 
 AMN_NAMESPACE_CLOSE_SCOPE

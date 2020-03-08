@@ -21,6 +21,7 @@ add_executable(${TARGET}
   imgui/imgui_impl_glfw.cpp
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
+  imgui/imgui_nodes.cpp
   imgui/imgui.cpp
   graph/deformableAPI.cpp
   graph/connectableAPI.cpp

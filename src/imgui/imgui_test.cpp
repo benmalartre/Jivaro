@@ -109,7 +109,7 @@ FillBackground()
 }
 
 IMGUI_API  void 
-TestDummyView(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax,
+TestDummyView(bool* p_open, const pxr::GfVec2f& vmin, const pxr::GfVec2f& vmax,
   const pxr::GfVec4f& color)
 {
   ImGui::SetCursorScreenPos(vmin);
@@ -119,7 +119,7 @@ TestDummyView(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax,
 }
 
 IMGUI_API  void 
-TestGraphNodes(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax) 
+TestGraphNodes(bool* p_open, const pxr::GfVec2f& vmin, const pxr::GfVec2f& vmax) 
 {
 
   //FillBackground();
@@ -128,12 +128,12 @@ TestGraphNodes(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax)
 
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-  const pxr::GfVec2i p = ImGui::GetCursorScreenPos();
-  pxr::GfVec2i _min1 = pxr::GfVec2i(25,25) + p;
-  pxr::GfVec2i _max1 = pxr::GfVec2i(75,50) + p;
+  const pxr::GfVec2f p = ImGui::GetCursorScreenPos();
+  pxr::GfVec2f _min1 = pxr::GfVec2f(25,25) + p;
+  pxr::GfVec2f _max1 = pxr::GfVec2f(75,50) + p;
 
-  pxr::GfVec2i _min2 = pxr::GfVec2i(100,25) + p;
-  pxr::GfVec2i _max2 = pxr::GfVec2i(150,50) + p;
+  pxr::GfVec2f _min2 = pxr::GfVec2f(100,25) + p;
+  pxr::GfVec2f _max2 = pxr::GfVec2f(150,50) + p;
   static ImVec4 colf = ImVec4(
     (float)rand()/(float)RAND_MAX, 
     (float)rand()/(float)RAND_MAX, 
@@ -152,7 +152,7 @@ TestGraphNodes(bool* p_open, const pxr::GfVec2i& vmin, const pxr::GfVec2i& vmax)
   draw_list->AddRect(_min1, _max1, col, rounding,  corners_none, th); 
   draw_list->AddRect(_min2, _max2, col, rounding, corners_all, th);
 
-  pxr::GfVec2i offset(32, 64);
+  pxr::GfVec2f offset(32, 64);
   draw_list->AddRectFilled(_min1+offset, _max1+offset, col, rounding,  corners_none); 
   draw_list->AddRectFilled(_min2+offset, _max2+offset, col, rounding, corners_all);
 

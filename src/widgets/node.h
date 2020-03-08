@@ -4,6 +4,7 @@
 #include "../app/ui.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
+#include "../imgui/imgui_nodes.h"
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/range2f.h>
@@ -12,8 +13,11 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 enum GRAPH_COLORS {
-  GRAPH_COLOR_UNDEFINED         = 0x000000FF,
-  GRAPH_COLOR_BOOL              = 0x0066FFFF
+  GRAPH_COLOR_UNDEFINED         = 0xFF000000,
+  GRAPH_COLOR_BOOL              = 0xFFFF6600,
+  GRAPH_COLOR_FLOAT             = 0xFF33CC33,
+  GRAPH_COLOR_CONTOUR           = 0xFF000000,
+
   /*
   #ATTR_COLOR_BOOL              = $0066FF
   #ATTR_COLOR_INTEGER           = $116633
@@ -59,40 +63,57 @@ enum GRAPH_COLORS {
 
 class AmnNodeUI;
 
+#define NODE_CORNER_ROUNDING    4.f
+#define NODE_PORT_RADIUS        4
+#define NODE_PORT_SPACING       12
+#define NODE_HEADER_HEIGHT      32
+
 class AmnPortUI {
 public:
+  AmnPortUI(){};
+  AmnPortUI(const pxr::GraphInput& port, int index);
+  AmnPortUI(const pxr::GraphOutput& port, int index, int offset);
   void Draw();
+
 private:
-  AmnNodeUI*    _node;
-  pxr::GfVec2f  _pos;
-  unsigned      _color;
+  int                   _id;
+  std::string           _label;
+  int                   _color;
+  pxr::GfVec2f          _pos;
+  bool                  _io;
 };
 
 class AmnConnectionUI {
 public:
   void Draw();
 private:
-  AmnPortUI*     _start;
-  AmnPortUI*     _end;
+  AmnPortUI*            _start;
+  AmnPortUI*            _end;
+  unsigned              _color;
 };
 
 class AmnNodeUI
 {
 public: 
-  AmnNodeUI(const pxr::UsdPrim& prim);
+  AmnNodeUI(const pxr::UsdPrim& prim, int id);
   ~AmnNodeUI();
 
-  pxr::GfRange2f GetRange();
-
+  const pxr::GfVec2f& GetPos() const {return _pos;};
+  const pxr::GfVec2f& GetSize() const {return _size;};
+  void Update();
   void Draw();
 
 private:
+  int                         _id;
+  pxr::GfVec2f                _pos;
+  pxr::GfVec2f                _size;
   pxr::GfVec3f                _color;
   std::string                 _name;
   pxr::UsdPrim                _prim;
   std::vector<AmnPortUI>      _inputs;
   std::vector<AmnPortUI>      _outputs;
   std::vector<AmnPortUI>      _overrides;
+
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
