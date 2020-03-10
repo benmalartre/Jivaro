@@ -6,6 +6,7 @@
 #include "../widgets/viewport.h"
 #include "../imgui/imgui_custom.h"
 #include "../imgui/imgui_test.h"
+#include "../ui/font.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -88,6 +89,7 @@ AmnWindow::Init()
 
     // imgui
     SetupImgui();
+    GLUIInit();
 
     // screen space quad
     ScreenSpaceQuad();
@@ -333,6 +335,7 @@ AmnWindow::ClearImgui()
   // Cleanup
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
+  ImNodes::Shutdown();
   ImGui::DestroyContext();
 }
 
@@ -391,7 +394,8 @@ void AmnWindow::MainLoop()
         _debounce = true;
       }
     }
-    Draw();
+    //Draw();
+    GLUITest();
     //TestImgui(_guiId % 3);
     glfwSwapBuffers(_window);
   }

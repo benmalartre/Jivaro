@@ -47,7 +47,6 @@ add_executable(${TARGET}
   embree/context.cpp
   embree/device.cpp
   utils/glutils.cpp
-  utils/utils.cpp
   app/view.cpp
   app/ui.cpp
   app/splitter.cpp

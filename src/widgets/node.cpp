@@ -7,15 +7,15 @@ AmnPortUI::AmnPortUI(const pxr::GraphInput& port, int index)
 {
   _id = index;
   _color = GRAPH_COLOR_FLOAT;
-  _label = port.GetAttr().GetName();
+  _label = port.GetBaseName().GetText();
   _io = true;
 }
 
-AmnPortUI::AmnPortUI(const pxr::GraphOutput& port, int index, int offset)
+AmnPortUI::AmnPortUI(const pxr::GraphOutput& port, int index)
 {
-  _id = index + offset;
-  _color = GRAPH_COLOR_BOOL;
-  _label = port.GetAttr().GetName();
+  _id = index;
+  _color = GRAPH_COLOR_FLOAT;
+  _label = port.GetBaseName().GetText();
   _io = false;
 }
 
@@ -25,19 +25,24 @@ void AmnPortUI::Draw()
     ImNodes::BeginInputAttribute(_id, ImNodes::PinShape_CircleFilled, _color);
   else
     ImNodes::BeginOutputAttribute(_id, ImNodes::PinShape_CircleFilled, _color);
-    
+
   ImGui::Text(_label.c_str());
   ImNodes::EndAttribute();
 }
 
-void AmnConnectionUI::Draw()
+// AmnConnexionUI draw
+//------------------------------------------------------------------------------
+void AmnConnexionUI::Draw()
 {
-  
+  ImNodes::Link(_id, _start, _end, _color);
 }
 
-AmnNodeUI::AmnNodeUI(const pxr::UsdPrim& prim, int id):
+// AmnNodeUI constructor
+//------------------------------------------------------------------------------
+AmnNodeUI::AmnNodeUI(const pxr::UsdPrim& prim, int& id):
 _prim(prim), _id(id)
 {
+  id++;
   if(_prim.IsValid())
   {
     _name = prim.GetName();
@@ -47,28 +52,30 @@ _prim(prim), _id(id)
       _inputs.resize(node.NumInputs());
       for(int i=0;i<_inputs.size();++i)
       {
-        _inputs[i] = AmnPortUI(node.GetInput(i), i);
+        _inputs[i] = AmnPortUI(node.GetInput(i), id++);
       }
 
       int offset = _inputs.size();
       _outputs.resize(node.NumOutputs());
       for(int i=0;i<_outputs.size();++i)
       {
-        _outputs[i] = AmnPortUI(node.GetOutput(i), i, offset);
+        _outputs[i] = AmnPortUI(node.GetOutput(i), id++);
       }
     }
     else if(_prim.IsA<pxr::GraphGraph>())
     {
-      std::cout << "PRIM IS A GRAPH :D" << std::endl;
+      //std::cout << "PRIM IS A GRAPH :D" << std::endl;
     }
     else
     {
-      std::cout << "PRIM IS A : " << _prim.GetTypeName().GetText() << std::endl;
+      //std::cout << "PRIM IS A : " << _prim.GetTypeName().GetText() << std::endl;
     }
     
   }
 }
 
+// AmnNodeUI destructor
+//------------------------------------------------------------------------------
 AmnNodeUI::~AmnNodeUI()
 {
 
@@ -98,6 +105,8 @@ void AmnNodeUI::Update()
 
 }
 
+// AmnNodeUI draw
+//------------------------------------------------------------------------------
 void AmnNodeUI::Draw()
 {
   Update();
@@ -110,17 +119,11 @@ void AmnNodeUI::Draw()
 
   int numInputs = _inputs.size();
   
-  for(int i=0;i<numInputs;++i)
-  {
-    _inputs[i].Draw();
-  }
+  for(int i=0;i<numInputs;++i) _inputs[i].Draw();
 
   int numOutputs = _outputs.size();
   ImGui::Indent(40);
-  for(int i=0;i<numOutputs;++i)
-  {
-    _outputs[i].Draw();
-  }
+  for(int i=0;i<numOutputs;++i) _outputs[i].Draw();
 
   ImNodes::EndNode();
 } 

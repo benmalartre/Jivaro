@@ -28,9 +28,31 @@ AMN_NAMESPACE_OPEN_SCOPE
 #define BITMASK_CHECK(x,y) (((x) & (y)) == (y))
 
 // print vectors (debug)
-void PrintVector(const pxr::GfVec2i& v, const char* t);
-void PrintVector(const pxr::GfVec3f& v, const char* t);
-void PrintVector(const pxr::GfVec4f& v, const char* t);
+static void
+PrintVector(const pxr::GfVec2i& v, const char* t)
+{
+  std::cerr << t << ": " << v[0] << "," << v[1] << std::endl;
+}
+
+static void
+PrintVector(const pxr::GfVec2f& v, const char* t)
+{
+  std::cerr << t << ": " << v[0] << "," << v[1] << std::endl;
+}
+
+static void
+PrintVector(const pxr::GfVec3f& v, const char* t)
+{
+  std::cerr << t << ": " << v[0] << "," << v[1] 
+    << "," << v[2] << std::endl;
+}
+
+static void
+PrintVector(const pxr::GfVec4f& v, const char* t)
+{
+  std::cerr << t << ": " << v[0] << "," << v[1] 
+    << "," << v[2] << "," << v[3] <<std::endl;
+}
 
 // index to random color
 static inline unsigned RandomColorByIndex(unsigned index)
@@ -91,5 +113,41 @@ static int FilesInDirectory()
     return EXIT_FAILURE;
   }
 }
- 
+
+// pack & unpack color
+//------------------------------------------------------------------------------
+static int PackColor(const pxr::GfVec3f& c)
+{
+  int code = 0;
+  code |= (((int)255 * 255) & 255) << 24;
+  code |= (((int)c[0] * 255) & 255) << 16;
+  code |= (((int)c[1] * 255) & 255) << 8;
+  code |= (((int)c[2] * 255) & 255);
+  return code;
+}
+
+static float PackColorAsFloat(const pxr::GfVec3f& c)
+{
+  int code = PackColor(c);
+  return *(float*)&code;
+}
+
+static pxr::GfVec3f UnpackColor(const int& code)
+{
+  int r = (code >> 16) & 255;
+  int g = (code >> 8) & 255;
+  int b = code & 255;
+  return pxr::GfVec3f(
+    (float)r/255.f,
+    (float)g/255.f,
+    (float)b/255.f
+  );
+}
+
+static pxr::GfVec3f UnpackColorAsFloat(const float& code)
+{
+  int icode = *(int*)&code;
+  return UnpackColor(icode);
+}
+
 AMN_NAMESPACE_CLOSE_SCOPE

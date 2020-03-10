@@ -195,12 +195,14 @@ struct NodeData
 
     ImVector<ImRect> attribute_rects;
     ImVector<int> pin_indices;
+    ImVector<int> pin_colors;
     bool draggable;
 
     NodeData()
         : id(0), origin(100.0f, 100.0f), title_bar_content_rect(),
           rect(ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f)), color_style(),
-          layout_style(), attribute_rects(), pin_indices(), draggable(true)
+          layout_style(), attribute_rects(), pin_indices(), pin_colors(),
+          draggable(true)
     {
     }
 };
@@ -418,6 +420,8 @@ struct
     OptionalIndex current_attribute_idx;
     // Indexes into the pin pool array
     OptionalIndex current_pin_idx;
+    // Indexes into the color table array
+    OptionalIndex current_color;
 
     struct
     {
@@ -1135,7 +1139,7 @@ void draw_pin_shape(
     }
 }
 
-void draw_pin(const EditorContext& editor, const int pin_idx)
+void draw_pin(const EditorContext& editor, const int pin_idx, const int color)
 {
     const PinData& pin = editor.pins.pool[pin_idx];
     const NodeData& node = editor.nodes.pool[pin.node_idx];
@@ -1144,11 +1148,11 @@ void draw_pin(const EditorContext& editor, const int pin_idx)
     if (is_mouse_hovering_near_point(pin_pos, g.style.pin_hover_radius))
     {
         g.hovered_pin_idx = pin_idx;
-        draw_pin_shape(pin_pos, pin, pin.color_style.hovered);
+        draw_pin_shape(pin_pos, pin, color + 0x00101010);
     }
     else
     {
-        draw_pin_shape(pin_pos, pin, pin.color_style.background);
+        draw_pin_shape(pin_pos, pin, color);
     }
 }
 
@@ -1225,7 +1229,7 @@ void draw_node(EditorContext& editor, int node_idx)
 
     for (int i = 0; i < node.pin_indices.size(); ++i)
     {
-        draw_pin(editor, node.pin_indices[i]);
+        draw_pin(editor, node.pin_indices[i], node.pin_colors[i]);
     }
 }
 
@@ -1298,8 +1302,8 @@ void begin_attribute(
     pin.attribute_idx = g.current_attribute_idx.value();
     pin.type = type;
     pin.shape = shape;
-    pin.color_style.background = g.style.colors[ColorStyle_Pin];
-    pin.color_style.hovered = g.style.colors[ColorStyle_PinHovered];
+    pin.color_style.background = color;
+    pin.color_style.hovered = color + 0x00101010;
 
     g.current_pin_idx =
         editor.pins.id_map.GetInt(id, OptionalIndex::invalid_index);
@@ -1664,6 +1668,7 @@ void EndNodeEditor()
         NodeData& node = editor.nodes.pool[idx];
         node.attribute_rects.clear();
         node.pin_indices.clear();
+        node.pin_colors.clear();
     }
 }
 
@@ -1753,11 +1758,13 @@ void EndNodeTitleBar()
 void BeginInputAttribute(const int id, const PinShape shape, const int color)
 {
     begin_attribute(id, AttributeType_Input, shape, color);
+    g.current_color = color;
 }
 
 void BeginOutputAttribute(const int id, const PinShape shape, const int color)
 {
     begin_attribute(id, AttributeType_Output, shape, color);
+    g.current_color = color;
 }
 
 void EndAttribute()
@@ -1778,9 +1785,10 @@ void EndAttribute()
         editor_context_get().nodes.pool[g.current_node_idx.value()];
     node_current.attribute_rects.push_back(get_item_rect());
     node_current.pin_indices.push_back(g.current_pin_idx.value());
+    node_current.pin_colors.push_back(g.current_color.value());
 }
 
-void Link(int id, const int start_attr, const int end_attr)
+void Link(int id, const int start_attr, const int end_attr, const int color)
 {
     assert(g.current_scope == Scope_Editor);
 
@@ -1789,9 +1797,9 @@ void Link(int id, const int start_attr, const int end_attr)
     link.id = id;
     link.start_attribute_id = start_attr;
     link.end_attribute_id = end_attr;
-    link.color_style.base = g.style.colors[ColorStyle_Link];
-    link.color_style.hovered = g.style.colors[ColorStyle_LinkHovered];
-    link.color_style.selected = g.style.colors[ColorStyle_LinkSelected];
+    link.color_style.base = color;
+    link.color_style.hovered = color + 0x00101010;
+    link.color_style.selected = 0xFFFFFFFF;
 }
 
 void PushColorStyle(ColorStyle item, unsigned int color)

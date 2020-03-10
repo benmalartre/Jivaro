@@ -57,7 +57,6 @@ GLCheckError(std::string message)
   return false;
 }
 
-
 // screen-space-quad 
 extern GLuint SCREENSPACEQUAD_VAO;
 extern GLuint SCREENSPACEQUAD_VBO;
@@ -117,6 +116,11 @@ static void SetupScreenSpaceQuadShader()
       SCREENSPACEQUAD_FRAGMENT_SHADER);
     GLCheckError("CREATE PROGRAM SHADER");
   EMBREE_CTXT->_screenSpaceQuadPgm = SCREENSPACEQUAD_PROGRAM_SHADER;
+}
+
+static GLuint GetScreenSpaceQuadShaderProgram()
+{
+  return SCREENSPACEQUAD_PROGRAM_SHADER;
 }
 
 //static GLuint GetScreenSpaceQuadProgram(){return SCREENSPACEQUAD_PROGRAM_SHADER;};

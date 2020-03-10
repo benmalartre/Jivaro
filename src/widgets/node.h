@@ -15,50 +15,23 @@ AMN_NAMESPACE_OPEN_SCOPE
 enum GRAPH_COLORS {
   GRAPH_COLOR_UNDEFINED         = 0xFF000000,
   GRAPH_COLOR_BOOL              = 0xFFFF6600,
+  GRAPH_COLOR_INTEGER           = 0xFF336611,
+  GRAPH_COLOR_ENUM              = 0xFF339911,
   GRAPH_COLOR_FLOAT             = 0xFF33CC33,
+  GRAPH_COLOR_VECTOR2           = 0xFFFFCC00,
+  GRAPH_COLOR_VECTOR3           = 0xFFFFFF00,
+  GRAPH_COLOR_VECTOR4           = 0xFFFFFF66,
+  GRAPH_COLOR_COLOR             = 0xFFFF0000, 
+  GRAPH_COLOR_ROTATION          = 0xFFCCFFFF,
+  GRAPH_COLOR_QUATERNION        = 0xFF66FFFF,
+  GRAPH_COLOR_MATRIX3           = 0xFF00FFFF,
+  GRAPH_COLOR_MATRIX4           = 0xFF33CCFF,
+  GRAPH_COLOR_STRING            = 0xFFCC99FF,
+  GRAPH_COLOR_SHAPE             = 0xFFFF3399,
+  GRAPH_COLOR_TOPOLOGY          = 0xFFCCCCCC,
+  GRAPH_COLOR_GEOMETRY          = 0xFFFF3366,
+  GRAPH_COLOR_LOCATION          = 0xFF555577,
   GRAPH_COLOR_CONTOUR           = 0xFF000000,
-
-  /*
-  #ATTR_COLOR_BOOL              = $0066FF
-  #ATTR_COLOR_INTEGER           = $116633
-  #ATTR_COLOR_ENUM              = $119933
-  #ATTR_COLOR_FLOAT             = $33CC33
-  #ATTR_COLOR_VECTOR2           = $00CCFF
-  #ATTR_COLOR_VECTOR3           = $00FFFF
-  #ATTR_COLOR_VECTOR4           = $66FFFF
-  #ATTR_COLOR_COLOR             = $0000FF
-  #ATTR_COLOR_ROTATION          = $FFFFCC
-  #ATTR_COLOR_QUATERNION        = $FFFF66
-  #ATTR_COLOR_MATRIX3           = $FFFF00
-  #ATTR_COLOR_MATRIX4           = $FFCC33
-  #ATTR_COLOR_STRING            = $FF99CC
-  #ATTR_COLOR_SHAPE             = $9933FF
-  #ATTR_COLOR_TOPOLOGY          = $CCCCCC
-  #ATTR_COLOR_GEOMETRY          = $6633FF
-  #ATTR_COLOR_LOCATION          = $775555
-  #ATTR_COLOR_EXECUTE           = $777777
-  #ATTR_COLOR_REFERENCE         = $CC6611
-  #ATTR_COLOR_FRAMEBUFFER       = $FF6600
-  #ATTR_COLOR_TEXTURE           = $FF8844       
-  #ATTR_COLOR_UNIFORM           = $FFCCAA 
-  #ATTR_COLOR_SHADER            = $FFFFCC
-  #ATTR_COLOR_3DOBJECT          = $00DDFF 
-  #ATTR_COLOR_AUDIO             = $AA22CC
-  #ATTR_COLOR_FILE              = $FF9933
-  #ATTR_COLOR_CUSTOM            = $DDDDDD
-  
-  #ATTR_COLOR_BACKGROUND        = $666666
-  #ATTR_COLOR_InputBackground   = $999999
-  #ATTR_COLOR_InputEdit         = $FFFFFF
-  #ATTR_COLOR_BorderUnselected  = $222222
-  #ATTR_COLOR_BorderSelected    = $999999
-  #ATTR_COLOR_SliderLeft        = $888888
-  #ATTR_COLOR_SliderRight       = $555555
-  #ATTR_COLOR_Text              = $111111
-  #ATTR_COLOR_Title             = $221111
-  #ATTR_COLOR_TitleBackground   = 1973790
-  #ATTR_COLOR_PropertyBackground= 3289650
-  */
 };
 
 class AmnNodeUI;
@@ -72,8 +45,11 @@ class AmnPortUI {
 public:
   AmnPortUI(){};
   AmnPortUI(const pxr::GraphInput& port, int index);
-  AmnPortUI(const pxr::GraphOutput& port, int index, int offset);
+  AmnPortUI(const pxr::GraphOutput& port, int index);
   void Draw();
+
+  const std::string& GetName()const {return _label;};
+  const int GetId() const{return _id;};
 
 private:
   int                   _id;
@@ -83,25 +59,34 @@ private:
   bool                  _io;
 };
 
-class AmnConnectionUI {
+class AmnConnexionUI {
 public:
+  AmnConnexionUI(int id, int start, int end, int color):
+    _id(id), _start(start), _end(end), _color(color){};
+
   void Draw();
+  const int GetId() const{return _id;};
 private:
-  AmnPortUI*            _start;
-  AmnPortUI*            _end;
+  int                   _id;
+  int                   _start;
+  int                   _end;
   unsigned              _color;
 };
 
 class AmnNodeUI
 {
 public: 
-  AmnNodeUI(const pxr::UsdPrim& prim, int id);
+  AmnNodeUI(const pxr::UsdPrim& prim, int& id);
   ~AmnNodeUI();
 
   const pxr::GfVec2f& GetPos() const {return _pos;};
   const pxr::GfVec2f& GetSize() const {return _size;};
+  const std::vector<AmnPortUI>& GetInputs() const {return _inputs;};
+  const std::vector<AmnPortUI>& GetOutputs() const{return _outputs;};
+  const int GetId() const{return _id;};
   void Update();
   void Draw();
+
 
 private:
   int                         _id;

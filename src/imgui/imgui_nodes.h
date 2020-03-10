@@ -160,12 +160,12 @@ void EndAttribute();
 // The attributes ids used here must match the ids used in
 // Begin(Input|Output)Attribute function calls. The order of start_attr and
 // end_attr doesn't make a difference for rendering the link.
-void Link(int id, int start_attr, int end_attr);
+// link color (packed ABGR)
+void Link(int id, int start_attr, int end_attr, const int color);
 
 // Set's the node's position corresponding to the node id, either using screen
 // space coordinates, or node editor grid coordinates. You can even set the
 // position before the node has been created with BeginNode().
-
 void SetNodeScreenSpacePos(int node_id, const ImVec2& screen_space_pos);
 void SetNodeGridSpacePos(int node_id, const ImVec2& grid_pos);
 // Enable or disable the ability to click and drag a specific node.

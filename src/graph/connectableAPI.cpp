@@ -733,6 +733,9 @@ GraphConnectableAPI::GetInput(const TfToken &name) const
 GraphInput 
 GraphConnectableAPI::GetInput(const int index) const
 {
+    std::vector<GraphInput> inputs = GetInputs();
+    if(index >=0 && index < inputs.size())
+        return inputs[index];
     return GraphInput();
 }
 

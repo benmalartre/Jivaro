@@ -2,6 +2,8 @@
 #include "../graph/stage.h"
 #include "../app/view.h"
 #include <pxr/usd/usd/primRange.h>
+#include <pxr/usd/usd/attribute.h>
+
 
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -12,7 +14,7 @@ AmnGraphUI::AmnGraphUI(AmnView* parent, const std::string& filename):
 AmnUI(parent, "Graph")
 {
   _filename = filename;
-  _nodeId = 0;
+  _id = 0;
 }
 
 // destructor
@@ -23,7 +25,7 @@ AmnGraphUI::~AmnGraphUI(){}
 //------------------------------------------------------------------------------
 void AmnGraphUI::Event()
 {
-  std::cerr << "AmnGraphUI EVENT!" << std::endl;
+
 };
 
 // term
@@ -41,37 +43,24 @@ void AmnGraphUI::Draw()
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::SetWindowSize(_parent->GetSize());
 
-  ImNodes::BeginNodeEditor();
-
   for(auto stage : _stages)
+  {
+    ImNodes::BeginNodeEditor();
     for(auto node : stage->_nodes)
       node.Draw();
+    for(auto cnx : stage->_connexions)
+      cnx.Draw();
 
-  ImNodes::EndNodeEditor();
+    int start, end;
+    ImNodes::EndNodeEditor();
+    
+    if (ImNodes::IsLinkCreated(&start, &end))
+    {
+      stage->_connexions.push_back(AmnConnexionUI(_id++, start, end, _color));
+    }
+  }
   ImGui::End();
-
-  /*
-  bool opened;
-  int flags = 0;
-  flags |= ImGuiWindowFlags_NoResize;
-  flags |= ImGuiWindowFlags_NoTitleBar;
-  flags |= ImGuiWindowFlags_NoMove;
   
-
-  ImGui::Begin(_name.c_str(), &opened, flags);
-  pxr::GfVec4f color(
-    RANDOM_0_1,
-    RANDOM_0_1,
-    RANDOM_0_1, 
-    1.f
-  );
-
-  //ImGui::TestDummyView(&opened, _parent->GetMin(), _parent->GetMax(), color);
-  ImGui::TestGraphNodes(&opened, _parent->GetMin(), _parent->GetMax());
-  ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
-  ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::End();
-  */
 };
 
 // init
@@ -120,30 +109,45 @@ AmnGraphStageUI* AmnGraphUI::GetStage(int index)
   else return NULL;
 }
 
+// update port map
+//------------------------------------------------------------------------------ 
+void AmnGraphStageUI::Update(const AmnNodeUI& node)
+{
+   for(const auto port : node.GetInputs()) 
+      _portMap.insert(std::make_pair<int, AmnGraphPortMapData>
+        (port.GetId(), 
+        (AmnGraphPortMapData){&node, port.GetName()}));
+    
+    for(const auto port : node.GetOutputs()) 
+      _portMap.insert(std::make_pair<int, AmnGraphPortMapData>
+        (port.GetId(), 
+        (AmnGraphPortMapData){&node, port.GetName()}));
+    
+    _nodes.push_back(node);
+}
+
 // build graph
 //------------------------------------------------------------------------------ 
-void AmnGraphUI::_RecurseStagePrim(const pxr::UsdPrim& prim, 
-                        int stageIndex, 
-                        int& nodeIndex)
+void AmnGraphUI::_RecurseStagePrim(const pxr::UsdPrim& prim, int stageIndex)
 {
   for(auto child : prim.GetChildren())
   {
-    AmnNodeUI nodeUI(child, nodeIndex);
-    nodeIndex++;
+    AmnNodeUI nodeUI(child, _id);
     AmnGraphStageUI* stage = GetStage(stageIndex);
+
+    stage->Update(nodeUI);
     
-    stage->_nodes.push_back(nodeUI);
-    _RecurseStagePrim(child, stageIndex, nodeIndex);
+    _RecurseStagePrim(child, stageIndex);
   }
 }
 
-void AmnGraphUI::BuildGraph(int index)
+void AmnGraphUI::BuildGraph(int stageIndex)
 {
-  AmnGraphStageUI* stage = GetStage(index);
+  AmnGraphStageUI* stage = GetStage(stageIndex);
   if(stage)
   {
     int nodeIndex = 0;
-    _RecurseStagePrim(stage->_stage->GetPseudoRoot(), index, nodeIndex);
+    _RecurseStagePrim(stage->_stage->GetPseudoRoot(), stageIndex);
   }
 }
 
