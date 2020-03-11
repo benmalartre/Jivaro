@@ -197,8 +197,7 @@ static T ConcatenateVector(T dst, T src, bool reindex=false)
 
 // build buffer
 //------------------------------------------------------------------------------
-static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points,
-  const std::vector<int>& indices)
+static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points)
 {
   GLUIBuffer buffer;
   size_t numPoints = points.size();
@@ -252,9 +251,9 @@ static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points,
   GLCheckError("ATTRIB ENABLED");
 
   // bind shader program
-  glBindAttribLocation(GetTextShaderProgram(), 0, "datas");
+  glBindAttribLocation(GetFillShaderProgram(), 0, "datas");
   GLCheckError("BIND ATTRIBUTE LOCATION");
-  glLinkProgram(GetTextShaderProgram());
+  glLinkProgram(GetFillShaderProgram());
   GLCheckError("LINK PROGRAM");  
   
   glLinkProgram(GetFillShaderProgram());
@@ -267,18 +266,20 @@ static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points,
 
 // draw buffer
 //------------------------------------------------------------------------------
-static void DrawBuffer(GLUIBuffer buffer, std::vector<int> indices)
+static void DrawBuffer(GLUIBuffer buffer, const int N)
 {
-  glUseProgram(GetTextShaderProgram());
+  std::cout << "DRAW BUFFER : "<< N << "POINTS" << std::endl;
+  glUseProgram(GetFillShaderProgram());
   glBindVertexArray(buffer._vao);
 
-  int base = 0;
-  for(auto i: indices)
-  {
-    std::cout << base << ":" << i-base << std::endl;
-    glDrawArrays(GL_LINES_ADJACENCY,base,i-base);
-    base = i;
-  }
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glDrawArrays(GL_TRIANGLES,0, N);
+  
+  glEnable(GL_POINT_SIZE);
+  glPointSize(4);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+  glDrawArrays(GL_TRIANGLES,0, N);
+  glDisable(GL_POINT_SIZE);
 
   glBindVertexArray(0);
 }

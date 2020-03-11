@@ -51,7 +51,7 @@
 #ifndef TTF_H
 #define TTF_H
 
-#include <thread>
+#include <boost/thread.hpp>
 
 #include <exception>
 #include <vector>

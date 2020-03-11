@@ -119,10 +119,10 @@ static int FilesInDirectory()
 static int PackColor(const pxr::GfVec3f& c)
 {
   int code = 0;
-  code |= (((int)255 * 255) & 255) << 24;
-  code |= (((int)c[0] * 255) & 255) << 16;
-  code |= (((int)c[1] * 255) & 255) << 8;
-  code |= (((int)c[2] * 255) & 255);
+  code |= (((int)255 * 255) & 255);
+  code |= (((int)c[0] * 255) & 255) << 8;
+  code |= (((int)c[1] * 255) & 255) << 16;
+  code |= (((int)c[2] * 255) & 255) << 24;
   return code;
 }
 
