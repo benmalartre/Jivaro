@@ -8,20 +8,15 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 using namespace Utility::TTF;
 
+struct GLUITextPoint : public GLUIAtom {
+  short                       _t;             // texture coordinates
+  short                       _c;             // coefficient
+};
+
 struct GLUICharacter : public GLUIAtom {
-  std::vector<GLUIPoint>      _X;             // points
+  std::vector<GLUITextPoint>  _X;             // points
   float                       _W;             // width
   float                       _H;             // height
-  float                       _t;             // texture coordinates
-  float                       _c;             // coefficient
-
-  GLUICharacter(){};
-  GLUICharacter(const GLUICharacter& other) {
-    _P = other._P;
-    _X = other._X;
-    _W = other._W;
-    _H = other._H;
-  };
 
   void operator *=(float s) {
     for(auto x : _X)x._P *= s;
@@ -52,11 +47,13 @@ static GLUICharacter BuildGLUICharacter(const Utility::TTF::Mesh& mesh, const px
   for (int j = 0; j < mesh.verts.size(); j++)
   {
     const MeshVertex &mv = mesh.verts[j];
-    c._X[j]._P =  pxr::GfVec2f(mv.pos.x/2500.f, mv.pos.y/2500.f) + o;
-    if(c._X[j]._P[0]<bbmin[0])bbmin[0] = c._X[j]._P[0];
-    else if(c._X[j]._P[0]>bbmax[0])bbmax[0] = c._X[j]._P[0];
-    if(c._X[j]._P[1]<bbmin[1])bbmin[1] = c._X[j]._P[1];
-    else if(c._X[j]._P[1]>bbmax[1])bbmax[1] = c._X[j]._P[1];
+    c._X[j]._P =  pxr::GfVec2f(mv.pos.x/2500.f, mv.pos.y/2500.f) + o;// point position
+    c._X[j]._t = mv.texCoord;                                        // texture coordinate
+    c._X[j]._c = mv.coef;                                            // coefficient
+    if(c._X[j]._P[0]<bbmin[0])bbmin[0] = c._X[j]._P[0];              // bbox min x
+    else if(c._X[j]._P[0]>bbmax[0])bbmax[0] = c._X[j]._P[0];         // bbox max x
+    if(c._X[j]._P[1]<bbmin[1])bbmin[1] = c._X[j]._P[1];              // bbox min y
+    else if(c._X[j]._P[1]>bbmax[1])bbmax[1] = c._X[j]._P[1];         // bbox max y
   }
   c._W = bbmax[0]-bbmin[0];                                          // width
   c._H = bbmax[1]-bbmin[1];                                          // height
@@ -115,6 +112,100 @@ static GLUIString ParseString(const std::string& s)
   return result;
 }
 
+// build buffer
+//------------------------------------------------------------------------------
+static GLUIBuffer GLUIBuildBuffer(const std::vector<GLUITextPoint>& points)
+{
+  GLUIBuffer buffer;
+  GLuint program = GetTTFShaderSimpleProgram();
+  size_t numPoints = points.size();
+  size_t sz = numPoints * sizeof(GLUITextPoint);
+
+  GLCheckError("PRE BUILD BUFFER");
+  // generate vertex array object
+  glGenVertexArrays(1, &buffer._vao);
+  glBindVertexArray(buffer._vao);
+  GLCheckError("GEN VAO");
+
+  // generate vertex buffer object
+  glGenBuffers(1, &buffer._vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer._vbo);
+  GLCheckError("GEN VBO");
+
+  buffer._indexed = false;
+
+  // push buffer to GPU
+  glBufferData(GL_ARRAY_BUFFER,sz, NULL,GL_STATIC_DRAW);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sz, (void*)&points[0]._P[0]);
+  GLCheckError("SET DATA");
+  //delete [] datas;
+
+  GLint loc = glGetAttribLocation(program, "t");
+  glEnableVertexAttribArray(loc);
+  glVertexAttribPointer(
+    loc, 
+    1, 
+    GL_BYTE, 
+    GL_FALSE, 
+    sizeof(GLUITextPoint), 
+    (void*)sizeof(pxr::GfVec2f)
+  );
+  GLCheckError("VERTEX ATTRIBUTE POINTER : t");
+
+  loc = glGetAttribLocation(program, "c");
+  glEnableVertexAttribArray(loc);
+  glVertexAttribPointer(
+    loc, 
+    1, 
+    GL_BYTE, 
+    GL_FALSE, 
+    sizeof(GLUITextPoint), 
+    (void*)(sizeof(pxr::GfVec2f) + sizeof(short))
+  );
+  GLCheckError("VERTEX ATTRIBUTE POINTER : c");
+
+  loc = glGetAttribLocation(program, "pos");
+  glEnableVertexAttribArray(loc);
+  glVertexAttribPointer(
+    loc, 
+    2, 
+    GL_FLOAT, 
+    GL_FALSE, 
+    sizeof(GLUITextPoint), 
+    0
+  );
+  GLCheckError("VERTEX ATTRIBUTE POINTER : pos");
+
+  glLinkProgram(GetTTFShaderSimpleProgram());
+  GLCheckError("LINK PROGRAM");  
+  
+  // unbind vertex array object
+  glBindVertexArray(0);
+
+  return buffer;
+}
+
+// draw buffer
+//------------------------------------------------------------------------------
+static void GLUIDrawBuffer(GLUIBuffer* buffer, const int N)
+{
+  glUseProgram(GetTTFShaderSimpleProgram());
+  glBindVertexArray(buffer->_vao);
+
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glDrawArrays(GL_TRIANGLES,0, N);
+
+  /*
+  glEnable(GL_POINT_SIZE);
+  glPointSize(4);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+  glDrawArrays(GL_TRIANGLES,0, N);
+  glDisable(GL_POINT_SIZE);
+  */
+
+  glBindVertexArray(0);
+}
+
 // draw string
 //------------------------------------------------------------------------------
 static void GLUIDrawString(GLUIString s)
@@ -122,7 +213,7 @@ static void GLUIDrawString(GLUIString s)
 
   int baseP = 0, N = 0;
 
-  std::vector<GLUIPoint> points;
+  std::vector<GLUITextPoint> points;
   for(auto c: s._C)
   {
     points.resize(points.size() + c._X.size());
@@ -132,8 +223,8 @@ static void GLUIDrawString(GLUIString s)
       points[baseP++] = p;
     }
   }
-  GLUIBuffer buffer = BuildBuffer(points);
-  DrawBuffer(buffer, N);
+  GLUIBuffer buffer = GLUIBuildBuffer(points);
+  GLUIDrawBuffer(&buffer, N);
 }
 
 

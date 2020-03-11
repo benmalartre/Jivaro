@@ -378,7 +378,7 @@ void AmnWindow::MainLoop()
   while(!glfwWindowShouldClose(_window))
   {
     glfwPollEvents();
-    glClearColor(1.f,1.f, 1.f,1.f);
+    glClearColor(0.3f,0.3f, 0.3f,1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // If you press escape the window will close
@@ -395,7 +395,11 @@ void AmnWindow::MainLoop()
       }
     }
     //Draw();
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     GLUITest();
+    glDisable(GL_BLEND);
+
     //TestImgui(_guiId % 3);
     glfwSwapBuffers(_window);
   }

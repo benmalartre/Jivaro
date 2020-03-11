@@ -72,6 +72,14 @@ struct GLUIBuffer {
   GLuint                  _eab;
   int                     _N;
   bool                    _indexed;
+
+  GLUIBuffer():_vao(0),_vbo(0),_eab(0){};
+  ~GLUIBuffer()
+  {
+    if(_eab)glDeleteBuffers(1,&_eab);
+    if(_vbo)glDeleteBuffers(1,&_vbo);
+    if(_vao)glDeleteVertexArrays(1,&_vao);
+  }
 };
 
 // make point
@@ -85,7 +93,7 @@ static GLUIPoint MakePoint(float x, float y)
     RANDOM_0_1,
     RANDOM_0_1,
     RANDOM_0_1
-  );               // color
+  );                                   // color
   P._D = 0;                            // depth     
   return P;
 }
@@ -239,16 +247,32 @@ static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points)
     datas[j++] = PackColorAsFloat(points[i]._C);  // color (packed)
   }
 
+
+  /*
+  GLint loc = glGetAttribLocation(program, "t");
+  glEnableVertexAttribArray(loc);
+  glVertexAttribPointer(loc, 1, GL_BYTE, GL_FALSE, sizeof(MeshVertex), &m.verts[0].texCoord);
+  loc = glGetAttribLocation(program, "c");
+  glEnableVertexAttribArray(loc);
+  glVertexAttribPointer(loc, 1, GL_BYTE, GL_FALSE, sizeof(MeshVertex), &m.verts[0].coef);
+  loc = glGetAttribLocation(program, "pos");
+  glEnableVertexAttribArray(loc);
+  glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), &m.verts[0].pos.x);
+  */
+
   // push buffer to GPU
   glBufferData(GL_ARRAY_BUFFER,sz, NULL,GL_STATIC_DRAW);
   glBufferSubData(GL_ARRAY_BUFFER, 0, sz, (void*)datas);
   GLCheckError("SET DATA");
   delete [] datas;
 
-  // attibute position
+  // attibute datas
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
   GLCheckError("ATTRIB ENABLED");
+
+  // attribute texture/
+  //glEnable
 
   // bind shader program
   glBindAttribLocation(GetFillShaderProgram(), 0, "datas");
@@ -268,13 +292,12 @@ static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points)
 //------------------------------------------------------------------------------
 static void DrawBuffer(GLUIBuffer buffer, const int N)
 {
-  std::cout << "DRAW BUFFER : "<< N << "POINTS" << std::endl;
   glUseProgram(GetFillShaderProgram());
   glBindVertexArray(buffer._vao);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glDrawArrays(GL_TRIANGLES,0, N);
-  
+
   glEnable(GL_POINT_SIZE);
   glPointSize(4);
   glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);

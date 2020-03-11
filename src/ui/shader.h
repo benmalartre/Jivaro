@@ -106,12 +106,11 @@ static const GLchar* FILL_VERTEX_SHADER_CODE =
 "layout(location = 0) in vec4 datas;\n"
 "out vec4 color;\n"
 "vec4 unpackColor(float f) {\n"
-"   vec4 color;\n"
-"   color.r = floor(f / 256.0 / 256.0);\n"
-"   color.g = floor((f - color.r * 256.0 * 256.0) / 256.0);\n"
-"   color.b = floor(f - color.r * 256.0 * 256.0 - color.g * 256.0);\n"
-"	  color.a = 255;\n"
-"   return color / 256.0;\n"
+"   int packed = floatBitsToInt(f);\n"
+"   int r = (packed >> 16) & 255;\n"
+"   int g = (packed >> 8) & 255;\n"
+"   int b = packed & 255;\n"
+"   return vec4(float(r)/255.0, float(g)/255.0, float(b)/255.0, 1.0);"
 "}\n"
 "void main() {\n"
 "    color = unpackColor(datas.a);\n"
@@ -195,14 +194,14 @@ void main()\n\
 
 static const char *TTF_VERTEX_SHADER_CODE = "\n\
 #version 330\n\
-uniform float t;\n\
-uniform float c;\n\
-uniform vec2 pos;\n\
+in float t;\n\
+in float c;\n\
+in vec2 pos;\n\
 out vec3 positions;\n\
 void main(void)\n\
 {\n\
   positions = vec3(t*0.5, max(t - 1.0, 0.0), c);\n\
-  gl_Position = vec4(0.001*pos, 0.0, 1.0);\n\
+  gl_Position = vec4(pos, 0.0, 1.0);\n\
 }\n\
 ";
 
