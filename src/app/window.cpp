@@ -370,7 +370,9 @@ void AmnWindow::MainLoop()
   _guiId = 1;
   
   
+  std::vector<GLUIString*> strings;
   
+  GLUIInitTest(strings, 20, 20, GetWidth(), GetHeight(), 32);
   while(!glfwWindowShouldClose(_window))
   {
     glfwPollEvents();
@@ -393,8 +395,8 @@ void AmnWindow::MainLoop()
     //Draw();
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    GLUITest(20, 20, GetWidth(), GetHeight(), 32);
-    //GLUIDrawTest(_strings);
+    
+    GLUIDrawTest(strings);
     glDisable(GL_BLEND);
 
     //TestImgui(_guiId % 3);

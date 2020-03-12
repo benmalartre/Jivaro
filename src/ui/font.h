@@ -8,6 +8,19 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 static std::string FONT_NAME="/Users/benmalartre/Documents/RnD/amnesie/fonts/baloo/Baloo-Regular.ttf";
 
+struct GLUITextBuffer {
+  GLuint                  _vao;
+  GLuint                  _vbo;
+  int                     _N;
+
+  GLUITextBuffer():_vao(0),_vbo(0){};
+  ~GLUITextBuffer()
+  {
+    if(_vbo)glDeleteBuffers(1,&_vbo);
+    if(_vao)glDeleteVertexArrays(1,&_vao);
+  }
+};
+
 struct GLUITextPoint : public GLUIAtom {
   short                       _t;             // texture coordinates
   short                       _c;             // coefficient
@@ -30,19 +43,10 @@ struct GLUIString : public GLUIAtom {
   std::vector<GLUICharacter>      _C;         // characters  
   std::string                     _V;         // string
   float                           _S;         // size
-};
+  GLUITextBuffer*                 _buffer;    // opengl buffer
 
-struct GLUITextBuffer {
-  GLuint                  _vao;
-  GLuint                  _vbo;
-  int                     _N;
-
-  GLUITextBuffer():_vao(0),_vbo(0){};
-  ~GLUITextBuffer()
-  {
-    if(_vbo)glDeleteBuffers(1,&_vbo);
-    if(_vao)glDeleteVertexArrays(1,&_vao);
-  }
+  GLUIString(const std::string& s, ):_buffer(NULL){};
+  ~GLUIString(){ if(_buffer)delete _buffer;};
 };
 
 static  std::vector<GLUICharacter> ALPHABET;  // alphabet
@@ -95,24 +99,22 @@ static void GLUIBuildAlphabet()
 
 // parse string
 //------------------------------------------------------------------------------
-static GLUIString ParseString(
+static void ParseString(
   const Utility::TTFCore::Font& f, 
-  const std::string& s, 
+  GLUIString* s, 
   float scale,
   const Utility::TTFCore::vec2f& offset
 )
 {
   Utility::TTFCore::FontMetrics fontMetrics = f.GetFontMetrics();
   Utility::TTFCore::HeadTable headTable;
-  GLUIString result;
-  result._S = scale;
-  result._C.resize(s.length());
-  result._V = s;
+  s->_S = scale;
+  s->_C.resize(s->_V.length());
   int idx = 0;
   Utility::TTFCore::vec2f p = offset;
   Utility::TTFCore::vec2f kerning(0,0);
   char l;
-  for(auto c : s)
+  for(auto c : s->_V)
   {
     if(idx > 0)
       kerning = f.GetKerning(Utility::TTFCore::CodePoint(l), 
@@ -133,8 +135,8 @@ static GLUIString ParseString(
         p.y += kerning.y * scale;
       }
 
-      result._C[idx] = ALPHABET[(int)c];
-      for(auto& x: result._C[idx]._X)
+      s->_C[idx] = ALPHABET[(int)c];
+      for(auto& x: s->_C[idx]._X)
       {
         x._P *= scale; 
         x._P += pxr::GfVec2f(p.x, p.y);
@@ -143,28 +145,26 @@ static GLUIString ParseString(
     idx++;
     l = c;
   }
-
-  return result;
 }
 
 // build buffer
 //------------------------------------------------------------------------------
-static GLUITextBuffer GLUIBuildTextBuffer(const std::vector<GLUITextPoint>& points)
+static GLUITextBuffer* GLUIBuildTextBuffer(const std::vector<GLUITextPoint>& points)
 {
-  GLUITextBuffer buffer;
+  GLUITextBuffer* buffer = new GLUITextBuffer();
   GLuint program = GetTTFShaderSimpleProgram();
   size_t numPoints = points.size();
   size_t sz = numPoints * sizeof(GLUITextPoint);
 
   GLCheckError("PRE BUILD BUFFER");
   // generate vertex array object
-  glGenVertexArrays(1, &buffer._vao);
-  glBindVertexArray(buffer._vao);
+  glGenVertexArrays(1, &buffer->_vao);
+  glBindVertexArray(buffer->_vao);
   GLCheckError("GEN VAO");
 
   // generate vertex buffer object
-  glGenBuffers(1, &buffer._vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer._vbo);
+  glGenBuffers(1, &buffer->_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer->_vbo);
   GLCheckError("GEN VBO");
 
   // push buffer to GPU
@@ -243,13 +243,13 @@ static void GLUIDrawTextBuffer(GLUITextBuffer* buffer, const int N)
 
 // draw string
 //------------------------------------------------------------------------------
-static GLUITextBuffer GLUIConcatenateString(GLUIString s)
+static void GLUIConcatenateString(GLUIString* s)
 {
 
   int baseP = 0, N = 0;
 
   std::vector<GLUITextPoint> points;
-  for(auto c: s._C)
+  for(auto c: s->_C)
   {
     points.resize(points.size() + c._X.size());
     N += c._X.size();
@@ -258,62 +258,54 @@ static GLUITextBuffer GLUIConcatenateString(GLUIString s)
       points[baseP++] = p;
     }
   }
-  GLUITextBuffer buffer = GLUIBuildTextBuffer(points);
-  buffer._N = N;
-  return buffer;
-  //
+  s->_buffer = GLUIBuildTextBuffer(points);
+  s->_buffer->_N = N;
+  //GLUIDrawTextBuffer(s->_buffer, s->_buffer->_N);
 }
 
-static void GLUITest(int x, int y, int width, int height, int size)
+static void GLUIDrawString(GLUIString* s)
+{
+  GLUIDrawTextBuffer(s->_buffer, s->_buffer->_N);
+}
+
+static void GLUIInitTest(
+  std::vector<GLUIString*>& strings,
+  int x, 
+  int y, 
+  int width, 
+  int height, 
+  int size
+)
 {
   Utility::TTFCore::Font f(FONT_NAME);
   f.PreCacheBasicLatin();
 
+  strings.resize(2);
+  strings[0]= new GLUIString();
+  strings[0]->_V = "ABC\nDEF\nGHI\nJKL";
   Utility::TTFCore::vec2f offset(-0.5, 0.5);
-  GLUIString s = ParseString(f, "ABC\nDEF\nGHI\nJKL", 0.0001f, offset);
-  GLUITextBuffer buffer1 = GLUIConcatenateString( s);
-  GLUIDrawTextBuffer(&buffer1, buffer1._N);
+  ParseString(f, strings[0], 0.0001f, offset);
+  GLUIConcatenateString(strings[0]);
+  GLUIDrawString(strings[0]);
 
   offset.y -= 0.5;
-  s = ParseString(f, "MNOPQR\nSTUVWXYZ", 0.0001f, offset);
-  GLUITextBuffer buffer2 = GLUIConcatenateString( s);
-  GLUIDrawTextBuffer(&buffer2, buffer2._N);
-/*
-  GLUICharacter a = ALPHABET[65];
-  //GLUICircle c = MakeCircle(20,20,32, 32);
-
-  size_t sz = 12 * sizeof(float);
-  // generate vertex array object
-  glGenVertexArrays(1, &SCREENSPACEQUAD_VAO);
-  glBindVertexArray(SCREENSPACEQUAD_VAO);
-
-  // generate vertex buffer object
-  glGenBuffers(1, &SCREENSPACEQUAD_VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, SCREENSPACEQUAD_VBO);
-
-  // push buffer to GPU
-  glBufferData(GL_ARRAY_BUFFER,2 * sz, NULL,GL_STATIC_DRAW);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, sz, &SCREENSPACEQUAD_POINTS[0]);
-  glBufferSubData(GL_ARRAY_BUFFER, sz, sz, &SCREENSPACEQUAD_UVS[0]);
-
-  // attibute position
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (const void*)0);
-  
-  // attibute uvs
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const void*)sz);
-
-  // bind shader program
-  glBindAttribLocation(SCREENSPACEQUAD_PROGRAM_SHADER, 0, "position");
-  glBindAttribLocation(SCREENSPACEQUAD_PROGRAM_SHADER, 1, "uvs");
-  
-  glLinkProgram(SCREENSPACEQUAD_PROGRAM_SHADER);
-
-  // unbind vertex array object
-  glBindVertexArray(0);
-  */
+  strings[1]= new GLUIString();
+  strings[1]->_V = "MNOPQR\nSTUVWXYZ";
+  ParseString(f, strings[1], 0.0001f, offset);
+  GLUIConcatenateString(strings[1]);
+  GLUIDrawString(strings[1]);
 }
+
+static void GLUIDrawTest(const std::vector<GLUIString*>& strings)
+{
+  
+  for(auto s: strings)
+  {
+    GLUIDrawString(s);
+  }
+
+}
+
 
 static void GLUIInit()
 {
