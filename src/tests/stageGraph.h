@@ -36,8 +36,6 @@ GraphOutput _TestAddOutput(GraphNode& node,
                                 const SdfValueTypeName& valueType);
 
 // create simple graph
-GraphNode* CreateGraphNode();
-GraphGraph* CreateGraphGraph();
 GraphNode _CreateNodeAtPosition(UsdPrim prim, const GfVec2i& pos);
 
 // main entry point

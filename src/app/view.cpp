@@ -47,6 +47,7 @@ AmnView::AmnView(AmnView* parent, int x, int y, int w, int h):
 
 AmnView::~AmnView()
 {
+  if(_content)delete _content;
   if(_left)delete _left;
   if(_right)delete _right;
 }

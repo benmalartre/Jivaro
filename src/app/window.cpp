@@ -397,7 +397,7 @@ void AmnWindow::MainLoop()
     //Draw();
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    GLUITest();
+    GLUITest(20, 20, GetWidth(), GetHeight(), 32);
     glDisable(GL_BLEND);
 
     //TestImgui(_guiId % 3);

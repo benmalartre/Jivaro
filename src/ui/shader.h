@@ -150,9 +150,10 @@ static GLuint TTF_FRAGMENT_SIMPLE_SHADER;
 static GLuint TTF_PROGRAM_SHADER;
 static GLuint TTF_PROGRAM_SIMPLE_SHADER;
 
-static const char *TTF_FRAGMENT_SIMPLE_SHADER_CODE = "\n\
+static const char *TTF_FRAGMENT_SIMPLE_SHADER_CODE = "\
 #version 330\n\
 in vec3 positions;\n\
+uniform vec3 color;\n\
 out vec4 fragColor;\n\
 float round(float val)\n\
 {\n\
@@ -161,14 +162,13 @@ float round(float val)\n\
 void main()\n\
 {\n\
   float alpha = round((positions.x*positions.x-positions.y)*positions.z+0.5);\n\
-  fragColor = alpha *vec4(1.0,1.0,1.0,1.0);\n\
-}\n\
-";
+  fragColor = alpha * vec4(color, 1.0);\n\
+}";
 
-
-static const char *TTF_FRAGMENT_SHADER_CODE ="\n\
+static const char *TTF_FRAGMENT_SHADER_CODE ="\
 #version 330\n\
 in vec3 positions;\n\
+uniform vec3 color;\n\
 out vec4 fragColor;\n\
 void main()\n\
 {\n\
@@ -188,7 +188,7 @@ void main()\n\
     // Linear alpha\n\
     alpha = clamp(0.5 - sd, 0.0, 1.0);\n\
   }\n\
-  fragColor = alpha * vec4(1.0, 1.0, 1.0, 1.0);\n\
+  fragColor = alpha * vec4(color, 1.0);\n\
 }\n\
 ";
 

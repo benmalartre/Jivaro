@@ -19,7 +19,10 @@ AmnUI(parent, "Graph")
 
 // destructor
 //------------------------------------------------------------------------------
-AmnGraphUI::~AmnGraphUI(){}
+AmnGraphUI::~AmnGraphUI()
+{
+  for(auto stage : _stages) delete stage;
+}
 
 // event
 //------------------------------------------------------------------------------

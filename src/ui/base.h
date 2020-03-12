@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../default.h"
-#include "../utils/utils.h"
-#include "../utils/glutils.h"
+//#include "../utils/utils.h"
+//#include "../utils/glutils.h"
 #include "shader.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -203,6 +203,7 @@ static T ConcatenateVector(T dst, T src, bool reindex=false)
     for(auto x : src) dst[idx++] = x;
 }
 
+/*
 // build buffer
 //------------------------------------------------------------------------------
 static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points)
@@ -221,7 +222,7 @@ static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points)
   glGenBuffers(1, &buffer._vbo);
   glBindBuffer(GL_ARRAY_BUFFER, buffer._vbo);
   GLCheckError("GEN VBO");
-/*
+
   if(indices.size())
   {
     // generate element array buffer
@@ -233,8 +234,8 @@ static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points)
                 GL_STATIC_DRAW);
     buffer._indexed = true;
   }
-  else */
-  buffer._indexed = false;
+  else
+    buffer._indexed = false;
   
   // pack datas
   float* datas = new float[4 * numPoints];
@@ -246,19 +247,6 @@ static GLUIBuffer BuildBuffer(const std::vector<GLUIPoint>& points)
     datas[j++] = 0.1f;//points[i]._T;            // thickness
     datas[j++] = PackColorAsFloat(points[i]._C);  // color (packed)
   }
-
-
-  /*
-  GLint loc = glGetAttribLocation(program, "t");
-  glEnableVertexAttribArray(loc);
-  glVertexAttribPointer(loc, 1, GL_BYTE, GL_FALSE, sizeof(MeshVertex), &m.verts[0].texCoord);
-  loc = glGetAttribLocation(program, "c");
-  glEnableVertexAttribArray(loc);
-  glVertexAttribPointer(loc, 1, GL_BYTE, GL_FALSE, sizeof(MeshVertex), &m.verts[0].coef);
-  loc = glGetAttribLocation(program, "pos");
-  glEnableVertexAttribArray(loc);
-  glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), &m.verts[0].pos.x);
-  */
 
   // push buffer to GPU
   glBufferData(GL_ARRAY_BUFFER,sz, NULL,GL_STATIC_DRAW);
@@ -306,5 +294,6 @@ static void DrawBuffer(GLUIBuffer buffer, const int N)
 
   glBindVertexArray(0);
 }
+*/
 
 AMN_NAMESPACE_CLOSE_SCOPE

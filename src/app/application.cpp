@@ -17,7 +17,8 @@ const char* AmnApplication::APPLICATION_NAME = "Amnesie";
 AmnApplication::AmnApplication(unsigned width, unsigned height):
   _mainWindow(NULL), _context(NULL)
 {
-  EMBREE_CTXT = new AmnUsdEmbreeContext();
+  _context = new AmnUsdEmbreeContext();
+  EMBREE_CTXT = _context;
   _width = width;
   _height = height;
   _mainWindow = CreateStandardWindow(width, height);
@@ -26,9 +27,19 @@ AmnApplication::AmnApplication(unsigned width, unsigned height):
 AmnApplication::AmnApplication(bool fullscreen):
   _mainWindow(NULL), _context(NULL)
 {
-  EMBREE_CTXT = new AmnUsdEmbreeContext();
+  _context = new AmnUsdEmbreeContext();
+  EMBREE_CTXT = _context;
   _mainWindow = CreateFullScreenWindow();
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &_width, &_height);
+};
+
+// destructor
+//----------------------------------------------------------------------------
+AmnApplication::~AmnApplication()
+{
+  if(_context)delete _context;
+  if(_mainWindow) delete _mainWindow;
+  if(_test) delete _test;
 };
 
 // create full screen window

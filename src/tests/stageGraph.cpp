@@ -2,21 +2,6 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-// create simple graph
-//----------------------------------------------------------------------------
-GraphNode* CreateGraphNode()
-{
-  GraphNode* node = new GraphNode();
-  return node;
-}
-
-GraphGraph* CreateGraphGraph()
-{
-  GraphGraph* graph = new GraphGraph();
-
-  return graph;
-}
-
 // add node to graph test
 //----------------------------------------------------------------------------
 GraphNode _TestAddNode(UsdStageRefPtr stage, const SdfPath& path)

@@ -24,17 +24,13 @@ public:
   AmnApplication(bool fullscreen=true);
 
   // destructor
-  ~AmnApplication(){if(_context)delete _context;};
+  ~AmnApplication();
 
     // create a fullscreen window
   static AmnWindow* CreateFullScreenWindow();
 
   // create a standard window of specified size
   static AmnWindow* CreateStandardWindow(int width, int height);
-
-  // create simple graph
-  static pxr::GraphNode* CreateGraphNode();
-  static pxr::GraphGraph* CreateGraphNodeGraph();
   
   // init aplication
   void Init();
