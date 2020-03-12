@@ -243,7 +243,7 @@ static void GLUIDrawTextBuffer(GLUITextBuffer* buffer, const int N)
 
 // draw string
 //------------------------------------------------------------------------------
-static void GLUIDrawString(GLUIString s)
+static GLUITextBuffer GLUIConcatenateString(GLUIString s)
 {
 
   int baseP = 0, N = 0;
@@ -259,7 +259,9 @@ static void GLUIDrawString(GLUIString s)
     }
   }
   GLUITextBuffer buffer = GLUIBuildTextBuffer(points);
-  GLUIDrawTextBuffer(&buffer, N);
+  buffer._N = N;
+  return buffer;
+  //
 }
 
 static void GLUITest(int x, int y, int width, int height, int size)
@@ -269,11 +271,13 @@ static void GLUITest(int x, int y, int width, int height, int size)
 
   Utility::TTFCore::vec2f offset(-0.5, 0.5);
   GLUIString s = ParseString(f, "ABC\nDEF\nGHI\nJKL", 0.0001f, offset);
-  GLUIDrawString( s);
+  GLUITextBuffer buffer1 = GLUIConcatenateString( s);
+  GLUIDrawTextBuffer(&buffer1, buffer1._N);
 
   offset.y -= 0.5;
   s = ParseString(f, "MNOPQR\nSTUVWXYZ", 0.0001f, offset);
-  GLUIDrawString( s);
+  GLUITextBuffer buffer2 = GLUIConcatenateString( s);
+  GLUIDrawTextBuffer(&buffer2, buffer2._N);
 /*
   GLUICharacter a = ALPHABET[65];
   //GLUICircle c = MakeCircle(20,20,32, 32);

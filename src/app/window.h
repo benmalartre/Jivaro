@@ -153,6 +153,9 @@ private:
   int               _guiId;
   bool              _debounce;
 
+  // ui
+  std::vector<GLUIString> _strings;
+
 public:
   // static constructor
   //----------------------------------------------------------------------------

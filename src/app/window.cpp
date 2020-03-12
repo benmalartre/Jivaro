@@ -13,7 +13,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 // fullscreen window constructor
 //----------------------------------------------------------------------------
 AmnWindow::AmnWindow(bool fullscreen) :
-_pixels(nullptr), _debounce(0),_mainView(NULL), _activeView(NULL), 
+_pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
 _pickImage(0),_cursor(NULL),_splitter(NULL)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -38,7 +38,7 @@ _pickImage(0),_cursor(NULL),_splitter(NULL)
 // width/height window constructor
 //----------------------------------------------------------------------------
 AmnWindow::AmnWindow(int width, int height):
-_pixels(nullptr), _debounce(0),_mainView(NULL), _activeView(NULL), 
+_pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
 _pickImage(0),_cursor(NULL), _splitter(NULL)
 {
   _width = width;
@@ -114,7 +114,6 @@ AmnWindow::~AmnWindow()
 {
   if(_splitter)delete _splitter;
   if(_mainView)delete _mainView;
-  //if(_pixels)embree::alignedFree(_pixels);
   if(_window)glfwDestroyWindow(_window);
 }
 
@@ -141,12 +140,6 @@ AmnWindow::Resize(unsigned width, unsigned height)
 {
   if (width == _width && height == _height && _pixels)
     return;
-
-  //if (_pixels) embree::alignedFree(_pixels);
-  //_width = width;
-  //_height = height;
-  //_pixels = 
-  //  (unsigned*) embree::alignedMalloc(_width*_height*sizeof(unsigned),64);
 
   _mainView->Resize(0, 0, _width, _height);
 }
@@ -375,6 +368,9 @@ void AmnWindow::MainLoop()
 {
   // Enable the OpenGL context for the current window
   _guiId = 1;
+  
+  
+  
   while(!glfwWindowShouldClose(_window))
   {
     glfwPollEvents();
@@ -398,6 +394,7 @@ void AmnWindow::MainLoop()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     GLUITest(20, 20, GetWidth(), GetHeight(), 32);
+    //GLUIDrawTest(_strings);
     glDisable(GL_BLEND);
 
     //TestImgui(_guiId % 3);
