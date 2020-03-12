@@ -2,6 +2,7 @@
 
 #include <dirent.h>
 #include "../default.h"
+#include <GLFW/glfw3.h>
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>

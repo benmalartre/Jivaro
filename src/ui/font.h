@@ -6,8 +6,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-static std::string FONT_NAME = 
-  "/Users/benmalartre/Documents/RnD/amnesie/fonts/baloo/Baloo-Regular.ttf";
+static std::string FONT_NAME = "./../../fonts/roboto/Roboto-Regular.ttf";
 
 struct GLUITextBuffer {
   GLuint                  _vao;
@@ -33,7 +32,21 @@ struct GLUIString : public GLUIAtom {
 
 static  std::vector<GLUICharacter> ALPHABET;  // alphabet
 
-// Space
+// point size to pixel size
+//------------------------------------------------------------------------------
+static Utility::TTFCore::vec2f PointToPixels(
+  const Utility::TTFCore::vec2f& pointSize,
+  const Utility::TTFCore::vec2f& resolution
+)
+{
+  Utility::TTFCore::vec2f pixelSize;
+  pixelSize.x = pointSize.x * (resolution.x / 72);
+  pixelSize.y = pointSize.y * (resolution.y / 72);
+  return pixelSize;
+}
+
+
+// build one character
 //------------------------------------------------------------------------------
 static GLUICharacter BuildGLUICharacter(const Utility::TTF::Mesh& mesh) {
   GLUICharacter c;
@@ -66,7 +79,6 @@ static void GLUIBuildAlphabet()
     const Utility::TTFCore::Mesh &m = f.GetTriangulation(cp);
     if(m.verts.size())ALPHABET[i] = BuildGLUICharacter(m);
   }
-  
 }
 
 // parse string
@@ -78,8 +90,8 @@ static void GLUIParseString(
   const Utility::TTFCore::vec2f& offset
 )
 {
-  Utility::TTFCore::FontMetrics fontMetrics = f.GetFontMetrics();
-  Utility::TTFCore::HeadTable headTable;
+  Utility::TTFCore::FontMetrics fm = f.GetFontMetrics();
+
   s->_S = scale;
   s->_C.resize(s->_V.length());
   int idx = 0;
@@ -92,10 +104,10 @@ static void GLUIParseString(
       kerning = f.GetKerning(Utility::TTFCore::CodePoint(l), 
                               Utility::TTFCore::CodePoint(c));
 
-
     if((int)c == 10 || (int)c == 13) 
     {
-      p.y -= fontMetrics.ascent * scale;
+      // ascent - descent + linegap
+      p.y -= (fm.ascent - fm.descent + fm.lineGap) * scale;
       p.x = offset.x;
     }
       
@@ -175,8 +187,6 @@ GLUITextBuffer GLUIBuildStringBuffer(const std::vector<GLUITextPoint>& points)
   );
 
   glLinkProgram(GetTTFShaderProgram());
-  
-  // unbind vertex array object
   glBindVertexArray(0);
 
   return buffer;
@@ -205,7 +215,6 @@ static void GLUIDrawString(GLUIString* string)
 //------------------------------------------------------------------------------
 static void GLUIConcatenateString(GLUIString* s)
 {
-
   int baseP = 0, N = 0;
 
   std::vector<GLUITextPoint> points;
@@ -235,6 +244,8 @@ static void GLUIInitTest(
 {
   Utility::TTFCore::Font f(FONT_NAME);
   f.PreCacheBasicLatin();
+  Utility::TTFCore::FontMetrics fontMetrics = f.GetFontMetrics();
+  Utility::TTFCore::HeadTable headTable;
 
   strings.resize(2);
   strings[0]= new GLUIString();

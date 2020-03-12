@@ -17,6 +17,9 @@ const char* AmnApplication::APPLICATION_NAME = "Amnesie";
 AmnApplication::AmnApplication(unsigned width, unsigned height):
   _mainWindow(NULL), _context(NULL)
 {
+  // get monitors info
+  GetMonitors();
+  
   _context = new AmnUsdEmbreeContext();
   EMBREE_CTXT = _context;
   _width = width;

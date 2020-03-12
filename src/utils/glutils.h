@@ -3,13 +3,18 @@
 //------------------------------------------------------------------------------
 #pragma once
 
+
 #include "../default.h"
 #include "glsl.h"
 #include "../embree/context.h"
+#include <GLFW/glfw3.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
 extern AmnUsdEmbreeContext* EMBREE_CTXT;
+static GLFWmonitor** MONITORS;
+static GLFWvidmode* VIDEO_MODES;
+static int NUM_MONITORS;
 
 static bool 
 GLCheckError(std::string message)
@@ -201,6 +206,31 @@ CreateOpenGLTexture(int width, int height,
                   GL_RGBA,
                   GL_UNSIGNED_BYTE,
                   pixels);
+}
+
+// infos
+//------------------------------------------------------------------------------
+static void GetMonitors()
+{
+  MONITORS = glfwGetMonitors(&NUM_MONITORS);
+  for(int i=0; i<NUM_MONITORS; ++i)
+  {
+    std::cout << "###################################################" << std::endl;
+    std::cout << glfwGetMonitorName(MONITORS[i]) << std::endl;
+    int width, height;
+    glfwGetMonitorPhysicalSize(MONITORS[i], &width, &height);
+    std::cout << "SIZE : " << width << ", " << height << std::endl;
+  }
+}
+
+static GLFWvidmode GetVideoModes()
+{
+  
+  GLFWvidmode modes;
+  //glfwGetVideoModes(&modes);
+  //std::cout << "SCREEN WIDTH : " << modes.width << std::endl;
+  //std::cout << "SCREEN HEIGHT : " << modes.height << std::endl;
+  return modes;
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE
