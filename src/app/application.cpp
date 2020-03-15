@@ -25,6 +25,7 @@ AmnApplication::AmnApplication(unsigned width, unsigned height):
   _width = width;
   _height = height;
   _mainWindow = CreateStandardWindow(width, height);
+  _test = NULL;
 };
 
 AmnApplication::AmnApplication(bool fullscreen):
@@ -34,6 +35,7 @@ AmnApplication::AmnApplication(bool fullscreen):
   EMBREE_CTXT = _context;
   _mainWindow = CreateFullScreenWindow();
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &_width, &_height);
+  _test = NULL;
 };
 
 // destructor
@@ -61,8 +63,6 @@ AmnApplication::CreateStandardWindow(int width, int height)
   return AmnWindow::CreateStandardWindow(width, height);
 }
 
-
-
 // init application
 //----------------------------------------------------------------------------
 void 
@@ -85,31 +85,23 @@ AmnApplication::Init()
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
   TestStageUI(graph, _stages);
-
-  /*
-  _mainWindow->SplitView(mainView->GetRight(), 75, true);
-  _mainWindow->SplitView(mainView->GetRight()->GetLeft(), 25, false);
-  _mainWindow->SplitView(mainView->GetRight()->GetLeft()->GetRight(), 75, false);
-  //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/kitchen_set/kitchen_set.usd";
-  //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/assets/Clock/Clock.usd";
-  //std::string usdFile = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemale.usd";
-  */
+ 
   EMBREE_CTXT->Resize(viewport->GetWidth(), viewport->GetHeight());
   EMBREE_CTXT->SetFilePath("/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd");
   EMBREE_CTXT->InitDevice();
   EMBREE_CTXT->TraverseStage();
   EMBREE_CTXT->CommitDevice();
   
-  embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.011.jpg");
+  embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.013.jpg");
   
   //RenderToFile(outputImageFilename);
   RenderToMemory();
-  viewport->SetPixels(EMBREE_CTXT->_width, EMBREE_CTXT->_height, EMBREE_CTXT->_pixels);
+  viewport->SetContext(EMBREE_CTXT);
+  
+  //viewport->SetPixels(EMBREE_CTXT->_width, EMBREE_CTXT->_height, EMBREE_CTXT->_pixels);
   
   //_mainWindow->CollectLeaves();
   //_mainWindow->DummyFill();
-
- 
 }
 
 // main loop
@@ -118,7 +110,7 @@ AmnApplication::MainLoop()
 {
 
   _mainWindow->MainLoop();
-  _test->Draw();
+  //_test->Draw();
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

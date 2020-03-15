@@ -2538,7 +2538,6 @@ Mesh Font::GetGlyphMesh(ushort glyphIndex)
 
 Mesh Font::GetSimpleMesh(FItr itr)
 {
-
     // read header
     ushort contourCount = ReadUSHORT(itr);            // safe because its already been checked
     itr += 8;

@@ -40,7 +40,7 @@ struct AmnUsdEmbreeContext {
   // usd
   std::vector<std::string>                        _files;
   pxr::UsdStageRefPtr                             _stage;
-  std::vector<AmnUsdEmbreePrim*>                     _prims;
+  std::vector<AmnUsdEmbreePrim*>                  _prims;
   pxr::TfToken                                    _axis;
   pxr::UsdTimeCode                                _time;
   long long                                       _numPrims;

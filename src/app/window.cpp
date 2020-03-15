@@ -6,7 +6,6 @@
 #include "../widgets/viewport.h"
 #include "../imgui/imgui_custom.h"
 #include "../imgui/imgui_test.h"
-#include "../ui/font.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -112,6 +111,9 @@ void AmnWindow::DummyFill()
 //----------------------------------------------------------------------------
 AmnWindow::~AmnWindow()
 {
+  GLUITerm();
+  ClearImgui();
+  
   if(_splitter)delete _splitter;
   if(_mainView)delete _mainView;
   if(_window)glfwDestroyWindow(_window);
@@ -138,10 +140,12 @@ AmnWindow::CreateStandardWindow(int width, int height)
 void 
 AmnWindow::Resize(unsigned width, unsigned height)
 {
+
   if (width == _width && height == _height && _pixels)
     return;
-
-  _mainView->Resize(0, 0, _width, _height);
+  _width = width;
+  _height = height;
+  _splitter->Resize(_width, _height, _mainView);
 }
 
 // split view
@@ -357,9 +361,8 @@ bool AmnWindow::UpdateActiveTool(int mouseX, int mouseY)
     if(_activeView)
     {
       _activeView->GetPercFromMousePosition(mouseX, mouseY);
-      _splitter->BuildMap(_mainView);
-      _splitter->Resize(_mainView);
-      //this->DrawPickImage();
+      _splitter->Resize(GetWidth(), GetHeight(), _mainView);
+      DrawPickImage();
     }
   }
 }
@@ -368,11 +371,7 @@ void AmnWindow::MainLoop()
 {
   // Enable the OpenGL context for the current window
   _guiId = 1;
-  
-  
-  std::vector<GLUIString*> strings;
-  
-  GLUIInitTest(strings, 20, 20, GetWidth(), GetHeight(), 32);
+
   while(!glfwWindowShouldClose(_window))
   {
     glfwPollEvents();
@@ -392,12 +391,7 @@ void AmnWindow::MainLoop()
         _debounce = true;
       }
     }
-    //Draw();
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-    GLUIDrawTest(strings);
-    glDisable(GL_BLEND);
+    Draw();
 
     //TestImgui(_guiId % 3);
     glfwSwapBuffers(_window);
@@ -703,14 +697,14 @@ DisplayCallback(GLFWwindow* window)
 void 
 ResizeCallback(GLFWwindow* window, int width, int height)
 {
-
   AmnWindow* parent = (AmnWindow*)glfwGetWindowUserPointer(window);
-  //int width,height;
-  glfwGetFramebufferSize(window, &width, &height);
-
-  parent->Resize(width,height);
+  //glfwGetFramebufferSize(window, &width, &height);
+  parent->SetWidth(width);
+  parent->SetHeight(height);
+  AmnSplitter* splitter = parent->GetSplitter();
+  splitter->Resize(width, height, parent->GetMainView());
   parent->DrawPickImage();
-  parent->BuildSplittersMap();
+  
   glViewport(0, 0, width, height);
 }
 

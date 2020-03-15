@@ -1,20 +1,62 @@
 #include "node.h"
+#include "graph.h"
 #include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/attribute.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+int GetColorFromAttribute(const pxr::UsdAttribute& attr)
+{
+  /*
+  enum ColorGraph {
+  GRAPH_COLOR_UNDEFINED         = 0xFF000000,
+  GRAPH_COLOR_BOOL              = 0xFFFF6600,
+  GRAPH_COLOR_INTEGER           = 0xFF336611,
+  GRAPH_COLOR_ENUM              = 0xFF339911,
+  GRAPH_COLOR_FLOAT             = 0xFF33CC33,
+  GRAPH_COLOR_VECTOR2           = 0xFFFFCC00,
+  GRAPH_COLOR_VECTOR3           = 0xFFFFFF00,
+  GRAPH_COLOR_VECTOR4           = 0xFFFFFF66,
+  GRAPH_COLOR_COLOR             = 0xFFFF0000, 
+  GRAPH_COLOR_ROTATION          = 0xFFCCFFFF,
+  GRAPH_COLOR_QUATERNION        = 0xFF66FFFF,
+  GRAPH_COLOR_MATRIX3           = 0xFF00FFFF,
+  GRAPH_COLOR_MATRIX4           = 0xFF33CCFF,
+  GRAPH_COLOR_STRING            = 0xFFCC99FF,
+  GRAPH_COLOR_SHAPE             = 0xFFFF3399,
+  GRAPH_COLOR_TOPOLOGY          = 0xFFCCCCCC,
+  GRAPH_COLOR_GEOMETRY          = 0xFFFF3366,
+  GRAPH_COLOR_LOCATION          = 0xFF555577,
+  GRAPH_COLOR_CONTOUR           = 0xFF000000
+  */
+  pxr::SdfValueTypeName vtn = attr.GetTypeName();
+  if(vtn == pxr::SdfValueTypeNames->Bool) return GRAPH_COLOR_BOOL;
+  else if(vtn == pxr::SdfValueTypeNames->Int) return GRAPH_COLOR_INTEGER;
+  else if(vtn == pxr::SdfValueTypeNames->UChar) return GRAPH_COLOR_ENUM;
+  else if(vtn == pxr::SdfValueTypeNames->Float) return GRAPH_COLOR_FLOAT;
+  else if(vtn == pxr::SdfValueTypeNames->Float2) return GRAPH_COLOR_VECTOR2;
+  else if(vtn == pxr::SdfValueTypeNames->Float3) return GRAPH_COLOR_VECTOR3;
+  else if(vtn == pxr::SdfValueTypeNames->Float4) return GRAPH_COLOR_VECTOR4;
+  else if(vtn == pxr::SdfValueTypeNames->Color4f) return GRAPH_COLOR_COLOR;
+}
+
+
+//, const pxr::UsdAttribute& attr
 AmnPortUI::AmnPortUI(const pxr::GraphInput& port, int index)
 {
   _id = index;
-  _color = GRAPH_COLOR_FLOAT;
+  //SdfValueTypeName
+  std::cout << "PORT TYPE NAME : " << port.GetTypeName() << std::endl;
+  _color = GetColorFromAttribute(pxr::UsdAttribute(port));
   _label = port.GetBaseName().GetText();
   _io = true;
+
 }
 
 AmnPortUI::AmnPortUI(const pxr::GraphOutput& port, int index)
 {
   _id = index;
-  _color = GRAPH_COLOR_FLOAT;
+  _color = GetColorFromAttribute(pxr::UsdAttribute(port));
   _label = port.GetBaseName().GetText();
   _io = false;
 }

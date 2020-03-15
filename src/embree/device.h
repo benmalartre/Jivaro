@@ -1,4 +1,6 @@
 
+#pragma once
+
 // include embree API
 #include <embree3/rtcore.h>
 #include <math/math.h>

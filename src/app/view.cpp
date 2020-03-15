@@ -13,6 +13,8 @@ AMN_NAMESPACE_OPEN_SCOPE
 //----------------------------------------------------------------------------
 AmnView::AmnView(AmnView* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max):
   _parent(parent), 
+  _left(NULL),
+  _right(NULL),
   _min(min), 
   _max(max), 
   _flags(HORIZONTAL|LEAF),
@@ -30,6 +32,8 @@ AmnView::AmnView(AmnView* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& m
 
 AmnView::AmnView(AmnView* parent, int x, int y, int w, int h):
   _parent(parent), 
+  _left(NULL),
+  _right(NULL),
   _min(pxr::GfVec2f(x, y)), 
   _max(pxr::GfVec2f(x+w, y+h)), 
   _flags(HORIZONTAL|LEAF),
@@ -228,7 +232,10 @@ AmnView::Resize(int x, int y, int w, int h)
       if(_left)_left->Resize(x, y, w * _perc * 0.01f, h);
       if(_right)_right->Resize(x + w * _perc * 0.01f, y, w - w * _perc * 0.01f, h);
     }
-
+  }
+  else
+  {
+    if(_content)_content->Resize();
   }
 }
 

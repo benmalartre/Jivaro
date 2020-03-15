@@ -2,6 +2,7 @@
 
 #include "../default.h"
 #include "../embree/context.h"
+#include "../embree/device.h"
 #include "../app/ui.h"
 #include "../utils/utils.h"
 
@@ -12,7 +13,7 @@ enum VIEWPORT_MODE {
   HYDRA,
   EMBREE
 };
-
+class AmnUsdEmbreeContext;
 class AmnViewportUI : public AmnUI
 {
   public:
@@ -20,17 +21,20 @@ class AmnViewportUI : public AmnUI
     ~AmnViewportUI();
     void SetMode(VIEWPORT_MODE mode){_mode=mode;};
     void SetPixels(int w, int h, int* pixels);
+    void SetContext(AmnUsdEmbreeContext* ctxt);
 
     // overrides
     void Event() override;
     void Draw() override;
+    void Resize() override;
     
   private:
-    VIEWPORT_MODE       _mode;
-    GLuint              _texture;
-    int*                _pixels;
-    int                 _width;
-    int                 _height;
+    VIEWPORT_MODE         _mode;
+    GLuint                _texture;
+    int*                  _pixels;
+    int                   _width;
+    int                   _height;
+    AmnUsdEmbreeContext*  _context;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

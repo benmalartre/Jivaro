@@ -23,7 +23,11 @@ class AmnSplitter
 {
 public: 
   AmnSplitter():_pixels(NULL){};
-  ~AmnSplitter(){if(_pixels)delete [] _pixels;};
+  ~AmnSplitter(){
+    std::cout << "DELETE SPLITTER PIXEL BEFORE" << std::endl;
+    if(_pixels)delete [] _pixels;
+    std::cout << "DELETE SPLITTER PIXEL AFTER" << std::endl;
+  };
 
   int* GetPixels(){return _pixels;};
   inline unsigned GetWidth(){return _width;};
@@ -33,7 +37,7 @@ public:
   AmnView* GetViewByIndex(int index);
   int GetPixelValue(double xPos, double yPos);
 
-  void Resize(AmnView* view);
+  void Resize(int width, int height, AmnView* view);
   void Draw();
   void Event();
   

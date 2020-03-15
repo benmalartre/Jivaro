@@ -38,9 +38,9 @@ RTCScene DeviceInit ()
 
   // set start render mode
   //RenderTile = RenderTileAmbientOcclusion;
-  //RenderTile = RenderTileStandard;
-  RenderTile = RenderTileNormal;
-
+  RenderTile = RenderTileStandard;
+  //RenderTile = RenderTileNormal;
+  
   return EMBREE_CTXT->_scene;
   //key_pressed_handler = device_key_pressed_default;
 }
@@ -96,7 +96,7 @@ Vec3fa RenderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats&
   if (ray.geomID != RTC_INVALID_GEOMETRY_ID)
   {
     //const Triangle& tri = triangles[ray.primID];
-    pxr::GfVec4f rColor = UnpackColor(RandomColorByIndex(ray.primID));
+    pxr::GfVec4f rColor(1.f,1.f,0.f,1.f);//UnpackColor(RandomColorByIndex(ray.primID));
     AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
     ray.Ng = GetSmoothNormal(ray);
 
@@ -172,7 +172,7 @@ Vec3fa RenderPixelAmbientOcclusion(float x, float y, const ISPCCamera& camera, R
   // shade pixel
   if (ray.geomID == RTC_INVALID_GEOMETRY_ID) return Vec3fa(0.0f);
 
-  Vec3fa Ng = normalize(ray.Ng);
+  Vec3fa Ng = GetSmoothNormal(ray);
   Vec3fa Nf = FaceForward(Ng,ray.dir,Ng);
   Vec3fa col = embree::Vec3fa(embree::min(1.f,.3f+.8f*embree::abs(embree::dot(Ng,embree::normalize(ray.dir)))));
 
@@ -271,9 +271,7 @@ Vec3fa RenderPixelNormal( float x, float y, const ISPCCamera& camera, RayStats& 
   //else return abs(normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z)));
   else 
   {
-    #if ENABLE_SMOOTH_NORMALS
-      ray.Ng = GetSmoothNormal(ray);
-    #endif
+    ray.Ng = GetSmoothNormal(ray);
   }
   return normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z));
 }
@@ -342,7 +340,6 @@ void RenderToFile(const FileName& fileName)
   ISPCCamera ispccamera = 
     camera.getISPCCamera(EMBREE_CTXT->_width, EMBREE_CTXT->_height);
   //initRayStats();
-  std::cout << "LAUNCH RENDER THREAD..." << std::endl;
   DeviceRender( EMBREE_CTXT->_pixels,
                 EMBREE_CTXT->_width,
                 EMBREE_CTXT->_height,

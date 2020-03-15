@@ -29,6 +29,11 @@
 #include <stdlib.h>
 #include <iostream>
 
+#include "../graph/stage.h"
+#include "../graph/node.h"
+#include "../graph/input.h"
+#include "../graph/output.h"
+
 namespace ImNodes
 {
 namespace

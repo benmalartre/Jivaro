@@ -212,6 +212,7 @@ CreateOpenGLTexture(int width, int height,
 //------------------------------------------------------------------------------
 static void GetMonitors()
 {
+  /*
   MONITORS = glfwGetMonitors(&NUM_MONITORS);
   for(int i=0; i<NUM_MONITORS; ++i)
   {
@@ -221,6 +222,7 @@ static void GetMonitors()
     glfwGetMonitorPhysicalSize(MONITORS[i], &width, &height);
     std::cout << "SIZE : " << width << ", " << height << std::endl;
   }
+  */
 }
 
 static GLFWvidmode GetVideoModes()

@@ -82,9 +82,12 @@ AmnSplitter::GetViewByIndex(int index)
 }
 
 void 
-AmnSplitter::Resize(AmnView* view)
+AmnSplitter::Resize(int width, int height, AmnView* view)
 {
-  view->Resize(view->GetMin()[0], view->GetMin()[1], 
-    view->GetWidth(), view->GetHeight());
+  _width = width;
+  _height = height;
+  view->Resize(0, 0, width, height);
+  BuildMap(view);
+  
 }
 AMN_NAMESPACE_CLOSE_SCOPE

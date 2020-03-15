@@ -6,6 +6,7 @@ struct ImVec2;
 
 namespace ImNodes
 {
+
 enum ColorStyle
 {
     ColorStyle_NodeBackground = 0,
@@ -116,6 +117,7 @@ void Shutdown();
 // Returns the global style struct. See the struct declaration for default
 // values.
 Style& GetStyle();
+
 // Style presets matching the dear imgui styles of the same name.
 void StyleColorsDark(); // on by default
 void StyleColorsClassic();

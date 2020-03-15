@@ -99,6 +99,7 @@ public:
   void BuildSplittersMap();
 
   // splitters
+  AmnSplitter* GetSplitter(){return _splitter;};
   void SplitView(AmnView* view, unsigned perc = 50, bool horizontal=true );
   AmnView* GetMainView(){return _mainView;};
   AmnView* GetActiveView(){return _activeView;};

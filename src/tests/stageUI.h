@@ -22,10 +22,18 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 // main entry point
 void
-TestStageUI(AmnGraphUI* ui, const std::vector<pxr::UsdStageRefPtr>& stages);
+TestStageUI(
+  AmnGraphUI* ui, 
+  const std::vector<pxr::UsdStageRefPtr>& stages
+);
 
 void 
-RecurseStagePrim(AmnGraphUI* ui, const pxr::UsdPrim& prim, int stageIndex, int& nodeIndex);
+RecurseStagePrim(
+  AmnGraphUI* ui, 
+  const pxr::UsdPrim& prim, 
+  int stageIndex, 
+  int& nodeIndex
+);
 
 void 
 DrawStageUI(AmnGraphUI* ui);

@@ -121,6 +121,7 @@ void AmnUsdEmbreeContext::ReleaseDevice()
 
 void AmnUsdEmbreeContext::Resize(int width, int height)
 {
+  std::cout << "EMBREE CONTEXT RESIZE : "<< width << "," << height << std::endl;
   _width = width;
   _height = height;
   if(_pixels)embree::alignedFree(_pixels);

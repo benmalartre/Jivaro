@@ -8,38 +8,21 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/range2f.h>
+#include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
+#include "../imgui/imgui_nodes.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
-enum GRAPH_COLORS {
-  GRAPH_COLOR_UNDEFINED         = 0xFF000000,
-  GRAPH_COLOR_BOOL              = 0xFFFF6600,
-  GRAPH_COLOR_INTEGER           = 0xFF336611,
-  GRAPH_COLOR_ENUM              = 0xFF339911,
-  GRAPH_COLOR_FLOAT             = 0xFF33CC33,
-  GRAPH_COLOR_VECTOR2           = 0xFFFFCC00,
-  GRAPH_COLOR_VECTOR3           = 0xFFFFFF00,
-  GRAPH_COLOR_VECTOR4           = 0xFFFFFF66,
-  GRAPH_COLOR_COLOR             = 0xFFFF0000, 
-  GRAPH_COLOR_ROTATION          = 0xFFCCFFFF,
-  GRAPH_COLOR_QUATERNION        = 0xFF66FFFF,
-  GRAPH_COLOR_MATRIX3           = 0xFF00FFFF,
-  GRAPH_COLOR_MATRIX4           = 0xFF33CCFF,
-  GRAPH_COLOR_STRING            = 0xFFCC99FF,
-  GRAPH_COLOR_SHAPE             = 0xFFFF3399,
-  GRAPH_COLOR_TOPOLOGY          = 0xFFCCCCCC,
-  GRAPH_COLOR_GEOMETRY          = 0xFFFF3366,
-  GRAPH_COLOR_LOCATION          = 0xFF555577,
-  GRAPH_COLOR_CONTOUR           = 0xFF000000,
-};
 
 class AmnNodeUI;
 
 #define NODE_CORNER_ROUNDING    4.f
-#define NODE_PORT_RADIUS        4
-#define NODE_PORT_SPACING       12
-#define NODE_HEADER_HEIGHT      32
+#define NODE_PORT_RADIUS        4.f
+#define NODE_PORT_SPACING       12.f
+#define NODE_HEADER_HEIGHT      32.f
+
+static int GetColorFromAttribute(const pxr::UsdAttribute& attr);
 
 class AmnPortUI {
 public:
@@ -86,7 +69,6 @@ public:
   const int GetId() const{return _id;};
   void Update();
   void Draw();
-
 
 private:
   int                         _id;

@@ -1,6 +1,7 @@
 #include "viewport.h"
 #include "../app/view.h"
 #include "../utils/glutils.h"
+#include "../embree/context.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -8,7 +9,8 @@ extern AmnUsdEmbreeContext* EMBREE_CTXT;
 
 
 // constructor
-AmnViewportUI::AmnViewportUI(AmnView* parent, VIEWPORT_MODE mode):AmnUI(parent, "viewport")
+AmnViewportUI::AmnViewportUI(AmnView* parent, VIEWPORT_MODE mode):
+AmnUI(parent, "Viewport")
 {
   _texture = 0;
   _mode = mode;
@@ -54,11 +56,30 @@ void AmnViewportUI::Draw()
   
 }
 
+void AmnViewportUI::Resize()
+{
+  if(_mode == EMBREE)
+  {
+    EMBREE_CTXT->Resize(_parent->GetWidth(), _parent->GetHeight());
+    RenderToMemory();
+    SetContext(EMBREE_CTXT);
+  }
+    
+}
+
 void AmnViewportUI::SetPixels(int width, int height, int* pixels)
 {
   _width = width;
   _height = height;
   _pixels=pixels;
+}
+
+void AmnViewportUI::SetContext(AmnUsdEmbreeContext* ctxt)
+{
+  _context = ctxt;
+  _pixels = _context->_pixels;
+  _width = _context->_width;
+  _height = _context->_height;
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

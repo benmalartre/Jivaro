@@ -42,28 +42,34 @@ void AmnGraphUI::Term()
 //------------------------------------------------------------------------------
 void AmnGraphUI::Draw()
 {
+  //std::cout << "DRAW GRAP UI BEGIN" << std::endl;
   ImGui::Begin("Graph Editor");
   ImGui::SetWindowPos(_parent->GetMin());
+  //std::cout << "DRAW GRAP SET POSITION" << std::endl;
   ImGui::SetWindowSize(_parent->GetSize());
-
+  //std::cout << "DRAW GRAP SET SIZE" << std::endl;
   for(auto stage : _stages)
   {
+    //std::cout << "DRAW GRAP DRAW STAGE BEGIN" << std::endl;
     ImNodes::BeginNodeEditor();
     for(auto node : stage->_nodes)
       node.Draw();
+    //std::cout << "DRAW GRAP DRAW NODES" << std::endl;
     for(auto cnx : stage->_connexions)
       cnx.Draw();
-
+    //std::cout << "DRAW GRAP DRAW CONNEXIONS" << std::endl;
     int start, end;
     ImNodes::EndNodeEditor();
     
     if (ImNodes::IsLinkCreated(&start, &end))
     {
       stage->_connexions.push_back(AmnConnexionUI(_id++, start, end, _color));
+      //std::cout << "DRAW GRAP CREATE CONNEXION" << std::endl;
     }
+    //std::cout << "DRAW GRAP DRAW STAGE END" << std::endl;
   }
   ImGui::End();
-  
+  //std::cout << "DRAW GRAP UI END" << std::endl;
 };
 
 // init

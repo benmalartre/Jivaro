@@ -27,7 +27,7 @@ public:
 
   virtual void Event()=0;
   virtual void Draw()=0;
-
+  virtual void Resize(){};
   
 
 protected:

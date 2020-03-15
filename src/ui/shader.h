@@ -205,7 +205,7 @@ void main(void)\n\
 }\n\
 ";
 
-static void GLUIBuildTextShader()
+static void GLUIBuildStringShader()
 {
   // text shader (contour)
   TEXT_VERTEX_SHADER = 
@@ -257,6 +257,27 @@ static void GLUIBuildTextShader()
   TTF_PROGRAM_SIMPLE_SHADER = 
     glslLinkProgram(TTF_VERTEX_SHADER, TTF_FRAGMENT_SIMPLE_SHADER);
     GLCheckError("CREATE PROGRAM SIMPLE SHADER");
+}
+
+static void GLUIDeleteStringShader()
+{
+  std::cout << "DELETE STRING SHADER.." << std::endl;
+  glUseProgram(0);
+  glDeleteProgram(TEXT_PROGRAM_SHADER);
+  glDeleteShader(TEXT_VERTEX_SHADER);
+  glDeleteShader(TEXT_GEOMETRY_SHADER);
+  glDeleteShader(TEXT_FRAGMENT_SHADER);
+
+  glDeleteProgram(FILL_PROGRAM_SHADER);
+  glDeleteShader(FILL_VERTEX_SHADER);
+  glDeleteShader(FILL_FRAGMENT_SHADER);
+  glDeleteShader(FILL_GEOMETRY_SHADER);
+
+  glDeleteProgram(TTF_PROGRAM_SIMPLE_SHADER);
+  glDeleteProgram(TTF_PROGRAM_SHADER);
+  glDeleteShader(TTF_VERTEX_SHADER);
+  glDeleteShader(TTF_FRAGMENT_SHADER);
+  glDeleteShader(TTF_FRAGMENT_SIMPLE_SHADER);
 }
 
 static GLuint GetTextShaderProgram()

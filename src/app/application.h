@@ -34,6 +34,7 @@ public:
   
   // init aplication
   void Init();
+  void Term();
 
   // the main loop
   void MainLoop();

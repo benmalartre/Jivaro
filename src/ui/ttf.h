@@ -156,8 +156,7 @@ struct UnsupportedCap : public FontException
 // ----- TTFCore namespace -----
 namespace TTFCore
 {
-
-
+  
 // ----- simple typedefs -----
 typedef unsigned short ushort;
 typedef unsigned long ulong;

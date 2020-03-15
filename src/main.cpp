@@ -23,7 +23,6 @@ int main(void)
   AmnApplication app(800,600);
   app.Init();
   app.MainLoop();
-  
   glfwTerminate();
   return 1;
 }

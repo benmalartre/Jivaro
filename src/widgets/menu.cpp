@@ -45,7 +45,6 @@ void AmnMenuUI::Draw()
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::End();
-
 } 
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -102,15 +102,41 @@ void TestScene(const std::string& result)
   GraphNode node1 = 
     _TestAddNode(stage, stagePath.AppendChild(TfToken("node1")));
 
-  for(int i=0;i<6;++i)
-  {
-    GraphInput input = 
-    _TestAddInput(node1, 
-                  "input"+std::to_string(i+1), 
-                  GraphAttributeType::Parameter, 
-                  SdfValueTypeNames->Float);
-  }
+  GraphInput input = 
+  _TestAddInput(node1, 
+                "input"+std::to_string(1), 
+                GraphAttributeType::Parameter, 
+                SdfValueTypeNames->Float);
 
+  input = 
+  _TestAddInput(node1, 
+                "input"+std::to_string(2), 
+                GraphAttributeType::Parameter, 
+                SdfValueTypeNames->Bool);
+
+  input = 
+  _TestAddInput(node1, 
+                "input"+std::to_string(3), 
+                GraphAttributeType::Parameter, 
+                SdfValueTypeNames->String);
+
+  input = 
+  _TestAddInput(node1, 
+                "input"+std::to_string(4), 
+                GraphAttributeType::Parameter, 
+                SdfValueTypeNames->Int);
+
+  input = 
+  _TestAddInput(node1, 
+                "input"+std::to_string(5), 
+                GraphAttributeType::Parameter, 
+                SdfValueTypeNames->Float3);
+
+  input = 
+  _TestAddInput(node1, 
+                "input"+std::to_string(6), 
+                GraphAttributeType::Input, 
+                SdfValueTypeNames->TimeCode);
 
   GraphOutput output1 = 
     _TestAddOutput(node1, "output1", 
