@@ -27,12 +27,6 @@
 #include <string.h> // strlen, strncmp
 #include <stdio.h>  // for fwrite, ssprintf, sscanf
 #include <stdlib.h>
-#include <iostream>
-
-#include "../graph/stage.h"
-#include "../graph/node.h"
-#include "../graph/input.h"
-#include "../graph/output.h"
 
 namespace ImNodes
 {
@@ -200,14 +194,12 @@ struct NodeData
 
     ImVector<ImRect> attribute_rects;
     ImVector<int> pin_indices;
-    ImVector<int> pin_colors;
     bool draggable;
 
     NodeData()
         : id(0), origin(100.0f, 100.0f), title_bar_content_rect(),
           rect(ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f)), color_style(),
-          layout_style(), attribute_rects(), pin_indices(), pin_colors(),
-          draggable(true)
+          layout_style(), attribute_rects(), pin_indices(), draggable(true)
     {
     }
 };
@@ -318,7 +310,6 @@ struct PartialLink
 
     void finish_link(const int id)
     {
-        std::cout << "FINISH LINK" << std::endl;
         // Don't finish a link before starting it!
         assert(m_start_engaged);
         assert(!m_end_engaged);
@@ -425,8 +416,6 @@ struct
     OptionalIndex current_attribute_idx;
     // Indexes into the pin pool array
     OptionalIndex current_pin_idx;
-    // Indexes into the color table array
-    OptionalIndex current_color;
 
     struct
     {
@@ -1144,7 +1133,7 @@ void draw_pin_shape(
     }
 }
 
-void draw_pin(const EditorContext& editor, const int pin_idx, const int color)
+void draw_pin(const EditorContext& editor, const int pin_idx)
 {
     const PinData& pin = editor.pins.pool[pin_idx];
     const NodeData& node = editor.nodes.pool[pin.node_idx];
@@ -1153,11 +1142,11 @@ void draw_pin(const EditorContext& editor, const int pin_idx, const int color)
     if (is_mouse_hovering_near_point(pin_pos, g.style.pin_hover_radius))
     {
         g.hovered_pin_idx = pin_idx;
-        draw_pin_shape(pin_pos, pin, color + 0x00101010);
+        draw_pin_shape(pin_pos, pin, pin.color_style.hovered);
     }
     else
     {
-        draw_pin_shape(pin_pos, pin, color);
+        draw_pin_shape(pin_pos, pin, pin.color_style.background);
     }
 }
 
@@ -1234,7 +1223,7 @@ void draw_node(EditorContext& editor, int node_idx)
 
     for (int i = 0; i < node.pin_indices.size(); ++i)
     {
-        draw_pin(editor, node.pin_indices[i], node.pin_colors[i]);
+        draw_pin(editor, node.pin_indices[i]);
     }
 }
 
@@ -1284,8 +1273,7 @@ void draw_link(EditorContext& editor, int link_idx)
 void begin_attribute(
     const int id,
     const AttributeType type,
-    const PinShape shape,
-    const int color)
+    const PinShape shape)
 {
     // Make sure to call BeginNode() before calling
     // BeginAttribute()
@@ -1307,8 +1295,8 @@ void begin_attribute(
     pin.attribute_idx = g.current_attribute_idx.value();
     pin.type = type;
     pin.shape = shape;
-    pin.color_style.background = color;
-    pin.color_style.hovered = color + 0x00101010;
+    pin.color_style.background = g.style.colors[ColorStyle_Pin];
+    pin.color_style.hovered = g.style.colors[ColorStyle_PinHovered];
 
     g.current_pin_idx =
         editor.pins.id_map.GetInt(id, OptionalIndex::invalid_index);
@@ -1372,6 +1360,12 @@ void EditorContextFree(EditorContext* ctx)
 }
 
 void EditorContextSet(EditorContext* ctx) { g.editor_ctx = ctx; }
+
+ImVec2 EditorContextGetPanning()
+{
+    const EditorContext& editor = editor_context_get();
+    return editor.panning;
+}
 
 void EditorContextResetPanning(const ImVec2& pos)
 {
@@ -1521,7 +1515,8 @@ void BeginNodeEditor()
             "scrolling_region",
             ImVec2(0.f, 0.f),
             true,
-            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoScrollWithMouse);
         g.canvas_origin_screen_space = ImGui::GetCursorScreenPos();
 
         // NOTE: we have to fetch the canvas draw list *after* we call
@@ -1673,7 +1668,6 @@ void EndNodeEditor()
         NodeData& node = editor.nodes.pool[idx];
         node.attribute_rects.clear();
         node.pin_indices.clear();
-        node.pin_colors.clear();
     }
 }
 
@@ -1760,16 +1754,14 @@ void EndNodeTitleBar()
         grid_space_to_editor_space(get_node_content_origin(node)));
 }
 
-void BeginInputAttribute(const int id, const PinShape shape, const int color)
+void BeginInputAttribute(const int id, const PinShape shape)
 {
-    begin_attribute(id, AttributeType_Input, shape, color);
-    g.current_color = color;
+    begin_attribute(id, AttributeType_Input, shape);
 }
 
-void BeginOutputAttribute(const int id, const PinShape shape, const int color)
+void BeginOutputAttribute(const int id, const PinShape shape)
 {
-    begin_attribute(id, AttributeType_Output, shape, color);
-    g.current_color = color;
+    begin_attribute(id, AttributeType_Output, shape);
 }
 
 void EndAttribute()
@@ -1790,10 +1782,9 @@ void EndAttribute()
         editor_context_get().nodes.pool[g.current_node_idx.value()];
     node_current.attribute_rects.push_back(get_item_rect());
     node_current.pin_indices.push_back(g.current_pin_idx.value());
-    node_current.pin_colors.push_back(g.current_color.value());
 }
 
-void Link(int id, const int start_attr, const int end_attr, const int color)
+void Link(int id, const int start_attr, const int end_attr)
 {
     assert(g.current_scope == Scope_Editor);
 
@@ -1802,9 +1793,9 @@ void Link(int id, const int start_attr, const int end_attr, const int color)
     link.id = id;
     link.start_attribute_id = start_attr;
     link.end_attribute_id = end_attr;
-    link.color_style.base = color;
-    link.color_style.hovered = color + 0x00101010;
-    link.color_style.selected = 0xFFFFFFFF;
+    link.color_style.base = g.style.colors[ColorStyle_Link];
+    link.color_style.hovered = g.style.colors[ColorStyle_LinkHovered];
+    link.color_style.selected = g.style.colors[ColorStyle_LinkSelected];
 }
 
 void PushColorStyle(ColorStyle item, unsigned int color)
@@ -2216,4 +2207,4 @@ void LoadEditorStateFromIniFile(
     LoadEditorStateFromIniString(editor, file_data, data_size);
     ImGui::MemFree(file_data);
 }
-} // namespace imnodes
+} // namespace ImNodes

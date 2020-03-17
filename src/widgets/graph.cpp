@@ -8,6 +8,18 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+enum AmnNodeType
+{
+    Node_Stage,
+    Node_Layer,
+    Node_Xform,
+    Node_Mesh,
+    Node_Subdiv,
+    Node_Curve,
+    Node_Points,
+    Node_Nurbs
+};
+
 // constructor
 //------------------------------------------------------------------------------
 AmnGraphUI::AmnGraphUI(AmnView* parent, const std::string& filename):
@@ -23,13 +35,6 @@ AmnGraphUI::~AmnGraphUI()
 {
   for(auto stage : _stages) delete stage;
 }
-
-// event
-//------------------------------------------------------------------------------
-void AmnGraphUI::Event()
-{
-
-};
 
 // term
 //------------------------------------------------------------------------------
@@ -158,6 +163,16 @@ void AmnGraphUI::BuildGraph(int stageIndex)
     int nodeIndex = 0;
     _RecurseStagePrim(stage->_stage->GetPseudoRoot(), stageIndex);
   }
+}
+
+void AmnGraphUI::MouseButton(int action, int button, int mods)
+{
+  std::cerr << "GRAPH UI : MOUSE BUTTON :D" << std::endl;
+}
+
+void AmnGraphUI::MouseMove(int x, int y)
+{
+  std::cerr << "GRAPH UI : MOUSE MOVE :D" << std::endl;
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

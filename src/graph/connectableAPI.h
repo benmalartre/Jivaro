@@ -187,9 +187,9 @@ public:
 
     /// \name Connections 
     /// 
-    /// Inputs and outputs on shaders and node-graphs are connectable.
+    /// Inputs and outputs on nodes and node-graphs are connectable.
     /// This section provides API for authoring and managing these connections
-    /// in a shading network.
+    /// in a network.
     /// 
     /// @{
 
@@ -247,11 +247,11 @@ public:
         return CanConnect(output, sourceOutput.GetAttr());
     }
 
-    /// Authors a connection for a given shading property \p shadingProp. 
+    /// Authors a connection for a given  property \p prop. 
     /// 
-    /// \p shadingProp can represent a parameter, an interface attribute, an
+    /// \p prop can represent a parameter, an interface attribute, an
     /// input or an output.
-    /// \p sourceName is the name of the shading property that is the target
+    /// \p sourceName is the name of the property that is the target
     /// of the connection. This excludes any namespace prefix that determines 
     /// the type of the source (eg, output or interface attribute).
     /// \p sourceType is used to indicate the type of the shading property 
@@ -575,18 +575,6 @@ public:
     static bool ClearSource(GraphOutput const &output) {
         return ClearSource(output.GetProperty());
     }
-
-    /// \deprecated
-    /// 
-    /// Returns whether authoring of bidirectional connections for the old-style 
-    /// interface attributes is enabled. When this returns true, interface 
-    /// attribute connections are authored both ways (using both 
-    /// interfaceRecipientOf: and connectedSourceFor: relationships)
-    /// 
-    /// \note This method exists only for testing equality of the old and new
-    /// encoding of shading networks in USD. 
-    GRAPH_API
-    static bool AreBidirectionalInterfaceConnectionsEnabled();
 
     /// @}
 

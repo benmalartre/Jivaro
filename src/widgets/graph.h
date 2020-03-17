@@ -54,7 +54,8 @@ public:
   AmnGraphUI(AmnView* parent, const std::string& filename);
   ~AmnGraphUI()         override;
 
-  void Event()     override;
+  void MouseButton(int action, int button, int mods) override;
+  void MouseMove(int x, int y) override;
   void Draw()      override;
 
   void Init(const std::string& filename);
@@ -80,6 +81,7 @@ private:
   int                                   _color;
   int                                   _id;
   int                                   _depth;
+  pxr::GfVec2f                          _position;
   
 };
 

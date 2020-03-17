@@ -7,10 +7,35 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 // translate usd mesh to embree mesh
 AmnUsdEmbreeMesh* 
-TranslateMesh(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
+TranslateMesh(
+  AmnUsdEmbreeContext* ctxt, 
+  const pxr::UsdGeomMesh& usdMesh,
+  const pxr::GfMatrix4d& worldMatrix
+)
 {
+  /*
+  pxr::GfMatrix4f m(
+    usdMesh._worldMatrix[0],
+    usdMesh._worldMatrix[1],
+    usdMesh._worldMatrix[2],
+    usdMesh._worldMatrix[3],
+    usdMesh._worldMatrix[4],
+    usdMesh._worldMatrix[5],
+    usdMesh._worldMatrix[6],
+    usdMesh._worldMatrix[7],
+    usdMesh._worldMatrix[8],
+    usdMesh._worldMatrix[9],
+    usdMesh._worldMatrix[10],
+    usdMesh._worldMatrix[11],
+    usdMesh._worldMatrix[12],
+    usdMesh._worldMatrix[13],
+    usdMesh._worldMatrix[14],
+    usdMesh._worldMatrix[15],
+  );
+  */
   size_t num_vertices, num_triangles;
   AmnUsdEmbreeMesh* result = new AmnUsdEmbreeMesh();
+
   result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
   //result->_worldMatrix = usdMesh.GetPrim().GetWor;
   result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_TRIANGLE);
@@ -21,6 +46,12 @@ TranslateMesh(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomMesh& usdMesh)
   {
     pointsAttr.Get(&result->_positions, ctxt->_time);
     num_vertices = result->_positions.size();
+
+    for(auto& p: result->_positions)
+    {
+      pxr::GfVec4d tmp = pxr::GfVec4d(p[0],p[1],p[2], 1.f) * worldMatrix;
+      p[0] = tmp[0];p[1] = tmp[1];p[2] = tmp[2];
+    }
 
     rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
                               RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType

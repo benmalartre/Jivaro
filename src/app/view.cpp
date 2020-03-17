@@ -72,6 +72,13 @@ void AmnView::SetContent(AmnUI* ui)
   _content=ui;
 };
 
+bool
+AmnView::Contains(int x, int y)
+{
+  if(x>=_min[0] && x<=_max[0] && y>=_min[1] && y<=_max[1])return true;
+  else return false;
+}
+
 void 
 AmnView::Draw()
 {
@@ -116,16 +123,26 @@ AmnView::Draw()
   */
 }
 
-void 
-AmnView::MouseEnter()
+// mouse positon relative to the view
+void AmnView::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
 {
-  _color = pxr::GfVec3f(1.f, 0.f, 0.f);
+  pxr::GfVec2f position =GetMin();
+  int x = position[0];
+  int y = position[1];
+  outX = inX - x;
+  outY = inY - y;
 }
 
 void 
-AmnView::MouseLeave()
+AmnView::MouseButton(int action, int button, int mods)
 {
-  _color = pxr::GfVec3f(0.f, 1.f, 0.f);
+  if(_content)_content->MouseButton(action, button, mods);
+}
+
+void 
+AmnView::MouseMove(int x, int y)
+{
+  if(_content)_content->MouseMove(x, y);
 }
 
 void

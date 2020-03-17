@@ -20,8 +20,11 @@
 #include "ray.h"
 #include "context.h"
 
+
+
 AMN_NAMESPACE_OPEN_SCOPE
 class AmnViewportUI;
+class AmnCamera;
 
 extern AmnUsdEmbreeContext* EMBREE_CTXT;
 
@@ -29,7 +32,6 @@ extern AmnUsdEmbreeContext* EMBREE_CTXT;
 #define TILE_SIZE_Y 8
 #define ENABLE_SMOOTH_NORMALS 1
 
-static embree::Camera camera;
 static std::string rtcore("start_threads=1,set_affinity=1");
 
 // face forward for shading normals
@@ -41,7 +43,7 @@ inline embree::Vec3fa FaceForward(const embree::Vec3fa& N,
 }
 
 // device management
-RTCScene DeviceInit ();
+RTCScene DeviceInit (embree::Camera* camera);
 void CommitScene ();
 void DeviceCleanup ();
 
@@ -125,12 +127,12 @@ void DeviceRender (int* pixels,
                   const embree::ISPCCamera& camera);
 
 // render to file
-void RenderToFile(const embree::FileName& fileName);
+void RenderToFile(const embree::FileName& fileName, const embree::Camera* camera);
+void RenderToFile(const embree::FileName& fileName, AmnCamera* viewCamera);
 
 // render to memory
-void RenderToMemory();
+void RenderToMemory(embree::Camera* camera, bool interact=false);
+//void RenderToMemory(AmnCamera* viewCamera, bool interact=false);
 
-// render to viewport
-void RenderToViewport(AmnViewportUI* viewport);
 
 AMN_NAMESPACE_CLOSE_SCOPE

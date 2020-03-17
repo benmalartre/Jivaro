@@ -17,15 +17,24 @@ public:
   // get parent window height
   int GetWindowHeight();
 
-  // 
-  //void SetWindowContext();
+  // get parent view infos
   void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
   int GetX();
   int GetY();
   int GetWidth();
   int GetHeight();
 
-  virtual void Event()=0;
+  const std::string& GetName() const {return _name;};
+
+  virtual void MouseButton(int action, int button, int mods)
+  {
+    std::cerr << "AmnUI MOUSE BUTTON Fallback To NOTHING!" << std::endl;
+  };
+
+  virtual void MouseMove(int x, int y)
+  {
+    std::cerr << "AmnUI MOUSE MOVE Fallback To NOTHING!" << std::endl;
+  };
   virtual void Draw()=0;
   virtual void Resize(){};
   

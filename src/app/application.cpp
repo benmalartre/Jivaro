@@ -82,24 +82,24 @@ AmnApplication::Init()
   AmnGraphUI* graph = new AmnGraphUI(mainView->GetRight(), "GraphUI");
   AmnViewportUI* viewport = new AmnViewportUI(mainView->GetLeft(), EMBREE);
 
+  _mainWindow->CollectLeaves();
+
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
   TestStageUI(graph, _stages);
  
   EMBREE_CTXT->Resize(viewport->GetWidth(), viewport->GetHeight());
-  EMBREE_CTXT->SetFilePath("/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd");
-  EMBREE_CTXT->InitDevice();
+  EMBREE_CTXT->SetFilePath(filename);
+  EMBREE_CTXT->InitDevice(viewport->GetCamera());
   EMBREE_CTXT->TraverseStage();
   EMBREE_CTXT->CommitDevice();
   
   embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.013.jpg");
   
   //RenderToFile(outputImageFilename);
-  RenderToMemory();
+  RenderToMemory(viewport->GetCamera());
   viewport->SetContext(EMBREE_CTXT);
-  
-  //viewport->SetPixels(EMBREE_CTXT->_width, EMBREE_CTXT->_height, EMBREE_CTXT->_pixels);
-  
+    
   //_mainWindow->CollectLeaves();
   //_mainWindow->DummyFill();
 }
@@ -108,9 +108,8 @@ AmnApplication::Init()
 void 
 AmnApplication::MainLoop()
 {
-
   _mainWindow->MainLoop();
-  //_test->Draw();
+
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

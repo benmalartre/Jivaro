@@ -64,9 +64,9 @@ AmnPortUI::AmnPortUI(const pxr::GraphOutput& port, int index)
 void AmnPortUI::Draw()
 {
   if(_io)
-    ImNodes::BeginInputAttribute(_id, ImNodes::PinShape_CircleFilled, _color);
+    ImNodes::BeginInputAttribute(_id, ImNodes::PinShape_CircleFilled);
   else
-    ImNodes::BeginOutputAttribute(_id, ImNodes::PinShape_CircleFilled, _color);
+    ImNodes::BeginOutputAttribute(_id, ImNodes::PinShape_CircleFilled);
 
   ImGui::Text(_label.c_str());
   ImNodes::EndAttribute();
@@ -76,7 +76,7 @@ void AmnPortUI::Draw()
 //------------------------------------------------------------------------------
 void AmnConnexionUI::Draw()
 {
-  ImNodes::Link(_id, _start, _end, _color);
+  ImNodes::Link(_id, _start, _end);
 }
 
 // AmnNodeUI constructor

@@ -6,7 +6,6 @@ struct ImVec2;
 
 namespace ImNodes
 {
-
 enum ColorStyle
 {
     ColorStyle_NodeBackground = 0,
@@ -107,6 +106,7 @@ struct EditorContext;
 EditorContext* EditorContextCreate();
 void EditorContextFree(EditorContext*);
 void EditorContextSet(EditorContext*);
+ImVec2 EditorContextGetPanning();
 void EditorContextResetPanning(const ImVec2& pos);
 void EditorContextMoveToNode(const int node_id);
 
@@ -117,7 +117,6 @@ void Shutdown();
 // Returns the global style struct. See the struct declaration for default
 // values.
 Style& GetStyle();
-
 // Style presets matching the dear imgui styles of the same name.
 void StyleColorsDark(); // on by default
 void StyleColorsClassic();
@@ -152,22 +151,20 @@ void EndNodeTitleBar();
 // for output attributes.
 //
 // The attribute ids must be unique.
-void BeginInputAttribute(int id, PinShape shape = PinShape_CircleFilled, 
-  int color = 0xFF000000);
-void BeginOutputAttribute(int id, PinShape shape = PinShape_CircleFilled, 
-  int color = 0xFF000000);
+void BeginInputAttribute(int id, PinShape shape = PinShape_CircleFilled);
+void BeginOutputAttribute(int id, PinShape shape = PinShape_CircleFilled);
 void EndAttribute();
 
 // Render a link between attributes.
 // The attributes ids used here must match the ids used in
 // Begin(Input|Output)Attribute function calls. The order of start_attr and
 // end_attr doesn't make a difference for rendering the link.
-// link color (packed ABGR)
-void Link(int id, int start_attr, int end_attr, const int color);
+void Link(int id, int start_attr, int end_attr);
 
 // Set's the node's position corresponding to the node id, either using screen
 // space coordinates, or node editor grid coordinates. You can even set the
 // position before the node has been created with BeginNode().
+
 void SetNodeScreenSpacePos(int node_id, const ImVec2& screen_space_pos);
 void SetNodeGridSpacePos(int node_id, const ImVec2& grid_pos);
 // Enable or disable the ability to click and drag a specific node.
@@ -228,4 +225,4 @@ void SaveEditorStateToIniFile(
 
 void LoadCurrentEditorStateFromIniFile(const char* file_name);
 void LoadEditorStateFromIniFile(EditorContext* editor, const char* file_name);
-} // namespace imnodes
+} // namespace ImNodes

@@ -145,12 +145,6 @@ TF_DEFINE_PRIVATE_TOKENS(
 
 /* static */
 bool 
-GraphConnectableAPI::AreBidirectionalInterfaceConnectionsEnabled()
-{
-    return TfGetEnvSetting(GRAPH_ENABLE_BIDIRECTIONAL_INTERFACE_CONNECTIONS);
-}
-
-bool 
 GraphConnectableAPI::IsNode() const
 {
     return GetPrim().IsA<GraphNode>();

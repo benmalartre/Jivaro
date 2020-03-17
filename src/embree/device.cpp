@@ -2,6 +2,7 @@
 #include "context.h"
 #include "prim.h"
 #include "mesh.h"
+#include "../app/camera.h"
 #include "../utils/utils.h"
 #include "../widgets/viewport.h"
 
@@ -10,7 +11,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 using namespace embree;
 
 // called by the C++ code for initialization
-RTCScene DeviceInit ()
+RTCScene DeviceInit (embree::Camera* camera)
 { 
   // camera
   /* Z-Up
@@ -18,9 +19,9 @@ RTCScene DeviceInit ()
   camera.to   = embree::Vec3fa(0.0f,-60.0f,0.0f);
   camera.up   = embree::Vec3fa(0.0f,-1.0f,1.0f);*/
   // Y-Up
-  camera.from = embree::Vec3fa(12.f,12.f,12.f);
-  camera.to   = embree::Vec3fa(0.0f,10.0f,0.0f);
-  camera.up   = embree::Vec3fa(0.0f,1.0f,0.0f);
+  camera->from = embree::Vec3fa(12.f,12.f,12.f);
+  camera->to   = embree::Vec3fa(0.0f,10.0f,0.0f);
+  camera->up   = embree::Vec3fa(0.0f,1.0f,0.0f);
 
   // create device
   EMBREE_CTXT->_device = rtcNewDevice(rtcore.c_str());
@@ -28,13 +29,6 @@ RTCScene DeviceInit ()
 
   // create scene 
   EMBREE_CTXT->_scene = rtcNewScene(EMBREE_CTXT->_device);
-
-  // add cube 
-  //addCube(g_scene);
-
-  // add ground plane
-  //addGroundPlane(g_scene);
-
 
   // set start render mode
   //RenderTile = RenderTileAmbientOcclusion;
@@ -96,11 +90,11 @@ Vec3fa RenderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats&
   if (ray.geomID != RTC_INVALID_GEOMETRY_ID)
   {
     //const Triangle& tri = triangles[ray.primID];
-    pxr::GfVec4f rColor(1.f,1.f,0.f,1.f);//UnpackColor(RandomColorByIndex(ray.primID));
+    pxr::GfVec4f rColor = UnpackColor(RandomColorByIndex(ray.geomID));
     AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
     ray.Ng = GetSmoothNormal(ray);
 
-    Vec3fa diffuse = Vec3fa(rColor[0], rColor[1], rColor[2]);//face_colors[ray.primID];
+    Vec3fa diffuse = Vec3fa(rColor[0], rColor[1], rColor[2]);
     color = color + diffuse*0.5f;
     Vec3fa lightDir = normalize(Vec3fa(-1,-1,-1));
 
@@ -334,11 +328,12 @@ void DeviceRender (int* pixels,
   }); 
 }
 
-void RenderToFile(const FileName& fileName)
+// render to file
+void RenderToFile(const FileName& fileName, embree::Camera* camera)
 {
   
   ISPCCamera ispccamera = 
-    camera.getISPCCamera(EMBREE_CTXT->_width, EMBREE_CTXT->_height);
+    camera->getISPCCamera(EMBREE_CTXT->_width, EMBREE_CTXT->_height);
   //initRayStats();
   DeviceRender( EMBREE_CTXT->_pixels,
                 EMBREE_CTXT->_width,
@@ -351,32 +346,40 @@ void RenderToFile(const FileName& fileName)
   storeImage(image, fileName);
 }
 
-void RenderToMemory()
+// render to memory
+void RenderToMemory(embree::Camera* camera, bool interact)
 {
-  
-  ISPCCamera ispccamera = 
-    camera.getISPCCamera(EMBREE_CTXT->_width, EMBREE_CTXT->_height);
-  //initRayStats();
-  DeviceRender( EMBREE_CTXT->_pixels,
-                EMBREE_CTXT->_width,
-                EMBREE_CTXT->_height,
-                0.0f,
-                ispccamera);
-}
+  int width = EMBREE_CTXT->_width;
+  int height = EMBREE_CTXT->_height;
+  if(interact)
+  {
+    width *= 0.1; 
+    height *= 0.1;
 
-// render to viewport
-void RenderToViewport(AmnViewportUI* viewport)
-{
-  RenderToMemory();
-  viewport->SetPixels(EMBREE_CTXT->_width,
-                      EMBREE_CTXT->_height, 
-                      EMBREE_CTXT->_pixels);
+    ISPCCamera ispccamera = camera->getISPCCamera(width, height);
+    //initRayStats();
+    DeviceRender( EMBREE_CTXT->_lowPixels,
+                  width,
+                  height,
+                  0.0f,
+                  ispccamera);
+  }
+  else
+  {
+    ISPCCamera ispccamera = camera->getISPCCamera(width, height);
+    //initRayStats();
+    DeviceRender( EMBREE_CTXT->_pixels,
+                  width,
+                  height,
+                  0.0f,
+                  ispccamera);
+  }
 }
 
 // called by the C++ code for cleanup
 void DeviceCleanup ()
 {
-  rtcReleaseScene (EMBREE_CTXT->_scene); EMBREE_CTXT->_scene = nullptr;
+  rtcReleaseScene (EMBREE_CTXT->_scene); EMBREE_CTXT->_scene = NULL;
   //alignedFree(EMBREE_CTXT->_face_colors); EMBREE_CTXT->_face_colors = nullptr;
   //alignedFree(EMBREE_CTXT->_vertex_colors); EMBREE_CTXT->_vertex_colors = nullptr;
 }

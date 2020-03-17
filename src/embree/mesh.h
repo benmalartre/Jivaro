@@ -27,11 +27,16 @@ struct AmnUsdEmbreeMesh  : public AmnUsdEmbreePrim {
   //std::vector<UsdEmbreeMeshDatas> _extraDatas;
 };
 
-AmnUsdEmbreeMesh* TranslateMesh( AmnUsdEmbreeContext* ctxt,
-                              const pxr::UsdGeomMesh& usdMesh);
+AmnUsdEmbreeMesh* TranslateMesh( 
+  AmnUsdEmbreeContext* ctxt, 
+  const pxr::UsdGeomMesh& usdMesh,
+  const pxr::GfMatrix4d& worldMatrix
+);
 
-bool CheckNormals(const pxr::UsdGeomMesh& usdMesh,
-                  const pxr::UsdTimeCode& time,
-                  AmnUsdEmbreeMesh* mesh);
+bool CheckNormals(
+  const pxr::UsdGeomMesh& usdMesh,
+  const pxr::UsdTimeCode& time,
+  AmnUsdEmbreeMesh* mesh
+);
 
 AMN_NAMESPACE_CLOSE_SCOPE

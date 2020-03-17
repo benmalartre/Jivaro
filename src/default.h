@@ -55,7 +55,15 @@
 #include <pxr/usd/usdGeom/bboxCache.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/vec4d.h>
+#include <pxr/base/gf/rotation.h>
+#include <pxr/base/gf/quaternion.h>
 #include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/frustum.h>
+#include <pxr/base/gf/camera.h>
+#include <pxr/base/gf/transform.h>
 
 #define AMN_EXPORT extern "C" 
 
@@ -72,27 +80,30 @@
 
 #if AMN_USE_NAMESPACES
 
-#define AMN_NS AMN
-#define AMN_INTERNAL_NS amnInternal_v0_00__reserved__
-#define AMN_NS_GLOBAL ::AMN_NS
+  #define AMN_NS AMN
+  #define AMN_INTERNAL_NS amnInternal_v0_00__reserved__
+  #define AMN_NS_GLOBAL ::AMN_NS
 
-namespace AMN_INTERNAL_NS { }
+  namespace AMN_INTERNAL_NS { }
 
-// The root level namespace for all source in the USD distribution.
-namespace AMN_NS {
-    using namespace AMN_INTERNAL_NS;
-}
+  // The root level namespace for all source in the USD distribution.
+  namespace AMN_NS {
+      using namespace AMN_INTERNAL_NS;
+  }
 
-#define AMN_NAMESPACE_OPEN_SCOPE   namespace AMN_INTERNAL_NS {
-#define AMN_NAMESPACE_CLOSE_SCOPE  }  
-#define AMN_NAMESPACE_USING_DIRECTIVE using namespace AMN_NS;
+  #define AMN_NAMESPACE_OPEN_SCOPE   namespace AMN_INTERNAL_NS {
+  #define AMN_NAMESPACE_CLOSE_SCOPE  }  
+  #define AMN_NAMESPACE_USING_DIRECTIVE using namespace AMN_NS;
 
 #else
 
-#define AMN_NS 
-#define AMN_NS_GLOBAL 
-#define AMN_NAMESPACE_OPEN_SCOPE   
-#define AMN_NAMESPACE_CLOSE_SCOPE 
-#define AMN_NAMESPACE_USING_DIRECTIVE
+  #define AMN_NS 
+  #define AMN_NS_GLOBAL 
+  #define AMN_NAMESPACE_OPEN_SCOPE   
+  #define AMN_NAMESPACE_CLOSE_SCOPE 
+  #define AMN_NAMESPACE_USING_DIRECTIVE
 
 #endif // AMN_USE_NAMESPACES
+
+#define DEGREES_TO_RADIANS 0.0174532925f
+#define RADIANS_TO_DEGREES 57.2957795f

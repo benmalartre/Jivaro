@@ -22,9 +22,11 @@
 #include <math/vec3.h>
 #include <math/affinespace.h>
 #include <sstream>
+#include "../app/camera.h"
 
 namespace embree
 {
+
   /* camera settings */
   struct Camera
   {
@@ -68,6 +70,15 @@ namespace embree
       if (handedness == RIGHT_HANDED) local2world.l.vx = -local2world.l.vx;
       return local2world;
     }
+    AffineSpace3fa camera2world (AMN::AmnCamera* cam) {
+      cam->GetFrom(from.x, from.y, from.z);
+      cam->GetTo(to.x, to.y, to.z);
+      cam->GetUp(up.x, up.y, up.z);
+      AffineSpace3fa local2world = 
+        AffineSpace3fa::lookat(from, to, up);
+      if (handedness == RIGHT_HANDED) local2world.l.vx = -local2world.l.vx;
+      return local2world;
+    }
     AffineSpace3fa world2camera () { return rcp(camera2world()); }
     Vec3fa world2camera(const Vec3fa& p) { return xfmPoint(world2camera(),p); }
     Vec3fa camera2world(const Vec3fa& p) { return xfmPoint(camera2world(),p); }
@@ -76,6 +87,21 @@ namespace embree
     {
       const float fovScale = 1.0f/tanf(deg2rad(0.5f*fov));
       const AffineSpace3fa local2world = camera2world();
+      Vec3fa vx = local2world.l.vx;
+      Vec3fa vy = -local2world.l.vy;
+      Vec3fa vz = -0.5f*width*local2world.l.vx + 0.5f*height*local2world.l.vy + 0.5f*height*fovScale*local2world.l.vz;
+      Vec3fa p =  local2world.p;
+      if (flip_y) {
+        vz = vz+float(height)*vy;
+        vy = -vy;
+      }
+      return ISPCCamera(AffineSpace3fa(vx,vy,vz,p));
+    }
+
+    ISPCCamera getISPCCamera (size_t width, size_t height, AMN::AmnCamera* cam, bool flip_y = false)
+    {
+      const float fovScale = 1.0f/tanf(deg2rad(0.5f*90.f));
+      const AffineSpace3fa local2world = camera2world(cam);
       Vec3fa vx = local2world.l.vx;
       Vec3fa vy = -local2world.l.vy;
       Vec3fa vz = -0.5f*width*local2world.l.vx + 0.5f*height*local2world.l.vy + 0.5f*height*fovScale*local2world.l.vz;

@@ -17,11 +17,6 @@ AmnMenuUI::~AmnMenuUI()
 }
 
 // overrides
-void AmnMenuUI::Event() 
-{
-
-}
-
 void AmnMenuUI::Draw()
 {  
   int flags = 0;

@@ -26,7 +26,8 @@ class AmnMenuUI : public AmnUI
     ~AmnMenuUI();
     
     // overrides
-    void Event() override;
+    void MouseButton(int action, int button, int mods) override{};
+    void MouseMove(int x, int y) override{};
     void Draw() override;
   private:
 

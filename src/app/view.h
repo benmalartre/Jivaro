@@ -49,13 +49,19 @@ public:
   inline AmnView* GetParent(){return _parent;};
   inline bool HasParent(){return _parent != NULL;};
 
+  void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
+
   void SetContent(AmnUI* ui);
+  AmnUI* GetContent(){return _content;};
+
+  // 
+  bool Contains(int x, int y);
   
   void Draw();
   void Resize(int x, int y, int width, int height);
   int TouchBorder();
-  void MouseEnter();
-  void MouseLeave();
+  void MouseMove(int x, int y);
+  void MouseButton(int action, int button, int mods);
 
   // FLAGS
   inline bool IsOver(){return BITMASK_CHECK(_flags, OVER);};

@@ -8,6 +8,18 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+enum InteractionMode{
+  INTERACTION_NONE,
+  INTERACTION_TRUCK,
+  INTERACTION_PANTILT,
+  INTERACTION_DOLLY,
+  INTERACTION_PICKSELECT,
+  INTERACTION_RECTANGLESELECT,
+  INTERACTION_TRANSLATE,
+  INTERACTION_ROTATE,
+  INTERACTION_SCALE
+};
+
 enum VIEWPORT_MODE {
   OPENGL,
   HYDRA,
@@ -20,21 +32,28 @@ class AmnViewportUI : public AmnUI
     AmnViewportUI(AmnView* parent, VIEWPORT_MODE mode);
     ~AmnViewportUI();
     void SetMode(VIEWPORT_MODE mode){_mode=mode;};
-    void SetPixels(int w, int h, int* pixels);
     void SetContext(AmnUsdEmbreeContext* ctxt);
+    embree::Camera* GetCamera(){return _camera;};
 
     // overrides
-    void Event() override;
+    void MouseButton(int button, int action, int mods) override;
+    void MouseMove(int x, int y) override;
     void Draw() override;
     void Resize() override;
+    
     
   private:
     VIEWPORT_MODE         _mode;
     GLuint                _texture;
     int*                  _pixels;
+    int*                  _lowPixels;
     int                   _width;
     int                   _height;
     AmnUsdEmbreeContext*  _context;
+    embree::Camera*       _camera;
+    int                   _lastX;
+    int                   _lastY;
+    bool                  _interact;
+    InteractionMode       _interactionMode;
 };
-
 AMN_NAMESPACE_CLOSE_SCOPE

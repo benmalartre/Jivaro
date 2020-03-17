@@ -98,12 +98,14 @@ public:
   void Resize(unsigned width, unsigned height);
   void BuildSplittersMap();
 
-  // splitters
+  // views
   AmnSplitter* GetSplitter(){return _splitter;};
   void SplitView(AmnView* view, unsigned perc = 50, bool horizontal=true );
   AmnView* GetMainView(){return _mainView;};
+  void SetActiveView(AmnView* view);
   AmnView* GetActiveView(){return _activeView;};
-  void MakeTextureFromPixels();
+  AmnView* GetViewUnderMouse(int x, int y);
+  
 
   // draw
   void SetContext();

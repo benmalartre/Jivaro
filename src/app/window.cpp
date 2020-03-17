@@ -191,7 +191,17 @@ AmnWindow::CollectLeaves(AmnView* view)
   }
 }
 
-
+// get view (leaf) under mouse
+//----------------------------------------------------------------------------
+AmnView*
+AmnWindow::GetViewUnderMouse(int x, int y)
+{
+  for(auto leaf: _leaves)
+  {
+    if(leaf->Contains(x, y))return leaf;
+  }
+  return NULL;
+}
 
 // build split map
 //----------------------------------------------------------------------------
@@ -336,24 +346,6 @@ AmnWindow::ClearImgui()
   ImGui::DestroyContext();
 }
 
-void AmnWindow::MakeTextureFromPixels(void)
-{
-  /*
-  int i, j, c;
-  for (i = 0; i < GetHeight().; ++i) 
-  {
-    for (j = 0; j < GetWidth(); ++j) 
-    {
-      c = ((((i&0x8)==0)^((j&0x8))==0))*255;
-      checkImage[i][j][0] = (GLubyte) c;
-      checkImage[i][j][1] = (GLubyte) c;
-      checkImage[i][j][2] = (GLubyte) c;
-      checkImage[i][j][3] = (GLubyte) 255;
-    }
-  }
-  */
-}
-
 bool AmnWindow::UpdateActiveTool(int mouseX, int mouseY)
 {
   if(_activeTool == AMN_TOOL_DRAG)
@@ -374,7 +366,7 @@ void AmnWindow::MainLoop()
 
   while(!glfwWindowShouldClose(_window))
   {
-    glfwPollEvents();
+    glfwWaitEvents();
     glClearColor(0.3f,0.3f, 0.3f,1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -533,27 +525,31 @@ KeyboardCallback(
 void 
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
+  std::cout << "CLICK CALLBACK !" << std::endl;
   AmnWindow* parent = AmnWindow::GetUserData(window);
 
   double x,y;
   glfwGetCursorPos(window,&x,&y);
+  AmnView* view = parent->GetViewUnderMouse((int)x, (int)y);
+  if(view) std::cout << "VIEW UNDER MOUSE : "<< view->GetContent()->GetName() << std::endl;
 
   if (action == GLFW_RELEASE)
   {
     parent->SetActiveTool(AMN_TOOL_NONE);
+    if(view)
+    {
+      view->GetContent()->MouseButton(button, action, mods);
+    }
   }
   else if (action == GLFW_PRESS)
   {
-    if (button == GLFW_MOUSE_BUTTON_RIGHT)
+    if(parent->PickSplitter(x, y))
     {
-      std::cerr << "MOUSE BUTTON RIGHT PRESSED ! " << std::endl;
+      parent->SetActiveTool(AMN_TOOL_DRAG);
     }
-    else
+    else if(view)
     {
-      if(parent->PickSplitter(x, y))
-      {
-        parent->SetActiveTool(AMN_TOOL_DRAG);
-      }
+      view->GetContent()->MouseButton(button, action, mods);
     }
       /*
       if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_SHIFT)
@@ -584,14 +580,21 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   //if (ImGui::GetIO().WantCaptureMouse) return;
 
   AmnWindow* parent = AmnWindow::GetUserData(window);
-  double xPos, yPos;
-  glfwGetCursorPos(window, &xPos, &yPos);
+  AmnView* view = parent->GetViewUnderMouse((int)x, (int)y);
+  if(view) std::cout << "VIEW UNDER MOUSE : "<< view->GetContent()->GetName() << std::endl;
 
   int width, height;
   glfwGetWindowSize(window, &width, &height);
   if(parent->GetActiveTool() != AMN_TOOL_NONE)
   {
     parent->UpdateActiveTool(x, y);
+  }
+  else
+  {
+    if(view)
+    {
+      view->GetContent()->MouseMove(x, y);
+    }
   }
 
 }

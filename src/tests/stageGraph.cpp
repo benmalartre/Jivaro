@@ -58,6 +58,24 @@ GraphInput _AddInputPrim(GraphNode& node, UsdPrim& prim)
   return input;
 } 
 
+UsdGeomXform _AddExternalReferenceUnderXform(
+  UsdStageRefPtr stage,
+  const SdfPath& path,
+  const std::string& name,
+  const std::string& filename
+)
+{
+  UsdGeomXform referenceGrp = 
+    UsdGeomXform::Define(stage, path.AppendChild(TfToken(name+"_grp")));
+
+  SdfPath refGroupPath = referenceGrp.GetPath();
+  UsdPrim reference = 
+    stage->OverridePrim(refGroupPath.AppendChild(TfToken(name)));
+
+  reference.GetReferences().AddReference(filename);
+  return referenceGrp;
+}
+
 void TestScene(const std::string& result)
 {
   /*UsdStageRefPtr stage =
@@ -70,6 +88,11 @@ void TestScene(const std::string& result)
   SdfPath graphPath("/"+shotName);
 
   GraphGraph graph = GraphGraph::Define(stage, graphPath);
+  
+  /*
+  UsdPrim refManeki = graphPath.AppendChild(TfToken("manekineko"));
+  refSphere = refStage.OverridePrim('/refSphere')
+print refStage.GetRootLayer().ExportToString()
 
   UsdGeomSphere sphere = 
     UsdGeomSphere::Define(stage, graphPath.AppendChild(TfToken("Sphere")));
@@ -81,6 +104,8 @@ void TestScene(const std::string& result)
   VtArray<GfVec3f> colors;
   colors.push_back(GfVec3f(1.f,0.5f,0.f));
   colorAttr.Set(colors);
+  */
+
 
   GraphStage stageNode = 
     GraphStage::Define(stage, graphPath.AppendChild(TfToken("stage")));
@@ -99,6 +124,30 @@ void TestScene(const std::string& result)
   std::cout << lifetime.GetText() << std::endl;
 
   SdfPath stagePath = stageNode.GetPath();
+
+  UsdGeomXform maneki1Grp = 
+    _AddExternalReferenceUnderXform(
+      stage,
+      stagePath,
+      "manekineko1",
+      "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd"
+    );
+
+  UsdGeomXformOp translateManeki1 = maneki1Grp.AddTranslateOp();
+  translateManeki1.Set(GfVec3d(-8, 0, 0));
+  
+  UsdGeomXform maneki2Grp = 
+    _AddExternalReferenceUnderXform(
+      stage,
+      stagePath,
+      "manekineko2",
+      "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd"
+    );
+  
+  UsdGeomXformOp translateManeki2 = maneki2Grp.AddTranslateOp();
+  translateManeki2.Set(GfVec3d(8, 0, 0));
+
+  /*
   GraphNode node1 = 
     _TestAddNode(stage, stagePath.AppendChild(TfToken("node1")));
 
@@ -162,6 +211,7 @@ void TestScene(const std::string& result)
   UsdUINodeGraphNodeAPI nodeUI2(node2);
   UsdAttribute posAttr2 = nodeUI2.CreatePosAttr();
   posAttr2.Set(GfVec2f(240,60));
+  */
 
   stage->Export(result.c_str());
   /*
