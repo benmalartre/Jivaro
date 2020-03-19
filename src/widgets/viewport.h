@@ -10,14 +10,16 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 enum InteractionMode{
   INTERACTION_NONE,
-  INTERACTION_TRUCK,
-  INTERACTION_PANTILT,
-  INTERACTION_DOLLY,
+  INTERACTION_PAN,
+  INTERACTION_ORBIT,
+  INTERACTION_DOLLY
+  /*
   INTERACTION_PICKSELECT,
   INTERACTION_RECTANGLESELECT,
   INTERACTION_TRANSLATE,
   INTERACTION_ROTATE,
   INTERACTION_SCALE
+  */
 };
 
 enum VIEWPORT_MODE {
@@ -33,11 +35,12 @@ class AmnViewportUI : public AmnUI
     ~AmnViewportUI();
     void SetMode(VIEWPORT_MODE mode){_mode=mode;};
     void SetContext(AmnUsdEmbreeContext* ctxt);
-    embree::Camera* GetCamera(){return _camera;};
+    AmnCamera* GetCamera(){return _camera;};
 
     // overrides
     void MouseButton(int button, int action, int mods) override;
     void MouseMove(int x, int y) override;
+    void MouseWheel(int x, int y) override;
     void Draw() override;
     void Resize() override;
     
@@ -50,7 +53,7 @@ class AmnViewportUI : public AmnUI
     int                   _width;
     int                   _height;
     AmnUsdEmbreeContext*  _context;
-    embree::Camera*       _camera;
+    AmnCamera*            _camera;
     int                   _lastX;
     int                   _lastY;
     bool                  _interact;

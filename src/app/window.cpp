@@ -78,7 +78,6 @@ AmnWindow::Init()
 
     // setup callbacks
     glfwSetMouseButtonCallback(_window, ClickCallback);
-    //glfwSetScrollCallback(_window, ImGui_ImplGlfw_ScrollCallback);
     glfwSetScrollCallback(_window, ScrollCallback);
     glfwSetKeyCallback(_window, KeyboardCallback);
     //glfwSetCharCallback(_window, ImGui_ImplGlfw_CharCallback);
@@ -146,6 +145,24 @@ AmnWindow::Resize(unsigned width, unsigned height)
   _width = width;
   _height = height;
   _splitter->Resize(_width, _height, _mainView);
+}
+
+void
+AmnWindow::SetActiveView(AmnView* view)
+{
+  if(_activeView)
+  {
+    if(_activeView == view)return;
+    _activeView->ClearOver();
+
+  }
+  if(view)
+  {
+    _activeView = view;
+    _activeView->SetOver();
+  }
+  else _activeView = NULL;
+  
 }
 
 // split view
@@ -525,20 +542,22 @@ KeyboardCallback(
 void 
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
-  std::cout << "CLICK CALLBACK !" << std::endl;
   AmnWindow* parent = AmnWindow::GetUserData(window);
 
   double x,y;
   glfwGetCursorPos(window,&x,&y);
   AmnView* view = parent->GetViewUnderMouse((int)x, (int)y);
-  if(view) std::cout << "VIEW UNDER MOUSE : "<< view->GetContent()->GetName() << std::endl;
+  if(view) 
+  {
+    parent->SetActiveView(view);
+  }
 
   if (action == GLFW_RELEASE)
   {
     parent->SetActiveTool(AMN_TOOL_NONE);
-    if(view)
+    if(parent->GetActiveView())
     {
-      view->GetContent()->MouseButton(button, action, mods);
+      parent->GetActiveView()->MouseButton(button, action, mods);
     }
   }
   else if (action == GLFW_PRESS)
@@ -547,9 +566,9 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     {
       parent->SetActiveTool(AMN_TOOL_DRAG);
     }
-    else if(view)
+    else if(parent->GetActiveView())
     {
-      view->GetContent()->MouseButton(button, action, mods);
+      parent->GetActiveView()->MouseButton(button, action, mods);
     }
       /*
       if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_SHIFT)
@@ -565,7 +584,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
 void 
 ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
-
+  std::cout << "MOUSE WHEEL CALLBACK !!!" << std::endl; 
 }
 
 void 
@@ -581,7 +600,7 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
 
   AmnWindow* parent = AmnWindow::GetUserData(window);
   AmnView* view = parent->GetViewUnderMouse((int)x, (int)y);
-  if(view) std::cout << "VIEW UNDER MOUSE : "<< view->GetContent()->GetName() << std::endl;
+  //if(view) std::cout << "VIEW UNDER MOUSE : "<< view->GetContent()->GetName() << std::endl;
 
   int width, height;
   glfwGetWindowSize(window, &width, &height);
@@ -591,9 +610,9 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   }
   else
   {
-    if(view)
+    if(parent->GetActiveView())
     {
-      view->GetContent()->MouseMove(x, y);
+      parent->GetActiveView()->MouseMove(x, y);
     }
   }
 

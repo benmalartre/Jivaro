@@ -16,9 +16,10 @@
 #include <tasking/taskschedulertbb.h>
 
 #include "../default.h"
-#include "camera.h"
+#include "../app/camera.h"
 #include "ray.h"
 #include "context.h"
+
 
 
 
@@ -43,9 +44,27 @@ inline embree::Vec3fa FaceForward(const embree::Vec3fa& N,
 }
 
 // device management
-RTCScene DeviceInit (embree::Camera* camera);
+RTCScene DeviceInit (AmnCamera* camera);
 void CommitScene ();
 void DeviceCleanup ();
+
+inline pxr::GfVec2f _GetDeviceRatio(int width, int height)
+{
+  if(width>height)
+    return pxr::GfVec2f(1.f, static_cast<float>(height) / static_cast<float>(width));
+  else
+    return pxr::GfVec2f(static_cast<float>(width) / static_cast<float>(height), 1.f);
+}
+
+inline float _GetNormalizedDeviceX(int x, int width, float ratio)
+{
+  return 2.f*(static_cast<float>(x)/static_cast<float>(width))-1.f * ratio;
+}
+
+inline float _GetNormalizedDeviceY(int y, int height, float ratio)
+{
+  return 1.f - 2.f*(static_cast<float>(y)/static_cast<float>(height)) * ratio;
+}
 
 // render tile function prototype
 typedef void (* RenderTileFunc)(int taskIndex,
@@ -54,7 +73,7 @@ typedef void (* RenderTileFunc)(int taskIndex,
                                 const unsigned int width,
                                 const unsigned int height,
                                 const float time,
-                                const embree::ISPCCamera& camera,
+                                const AmnCamera* camera,
                                 const int numTilesX,
                                 const int numTilesY);
 static RenderTileFunc RenderTile;
@@ -62,7 +81,7 @@ static RenderTileFunc RenderTile;
 // task that renders a single screen tile
 embree::Vec3fa RenderPixelStandard(float x, 
                                   float y, 
-                                  const embree::ISPCCamera& camera, 
+                                  const AmnCamera* camera, 
                                   RayStats& stats);
 
 // standard shading function
@@ -72,14 +91,14 @@ void RenderTileStandard(int taskIndex,
                         const unsigned int width,
                         const unsigned int height,
                         const float time,
-                        const embree::ISPCCamera& camera,
+                        const AmnCamera* camera,
                         const int numTilesX,
                         const int numTilesY);
 
 // task that renders a single pixel with ambient occlusion 
 embree::Vec3fa RenderPixelAmbientOcclusion(float x, 
                                           float y, 
-                                          const embree::ISPCCamera& camera, 
+                                          const AmnCamera* camera, 
                                           RayStats& stats);
 
 // ambient occlusion shading function
@@ -89,14 +108,14 @@ void RenderTileAmbientOcclusion(int taskIndex,
                                 const unsigned int width,
                                 const unsigned int height,
                                 const float time,
-                                const embree::ISPCCamera& camera,
+                                const AmnCamera* camera,
                                 const int numTilesX,
                                 const int numTilesY);
                                 
 // task that renders a single pixel with geometry normal
 embree::Vec3fa RenderPixelNormal(float x, 
                                 float y, 
-                                const embree::ISPCCamera& camera, 
+                                const AmnCamera* camera, 
                                 RayStats& stats);
 
 // geometry normal shading function
@@ -106,7 +125,7 @@ void RenderTileNormal(int taskIndex,
                       const unsigned int width,
                       const unsigned int height,
                       const float time,
-                      const embree::ISPCCamera& camera,
+                      const AmnCamera* camera,
                       const int numTilesX,
                       const int numTilesY);
                       
@@ -115,7 +134,7 @@ void RenderTileTask (int taskIndex, int threadIndex, int* pixels,
                     const unsigned int width,
                     const unsigned int height,
                     const float time,
-                    const embree::ISPCCamera& camera,
+                    const AmnCamera* camera,
                     const int numTilesX,
                     const int numTilesY);
 
@@ -124,15 +143,19 @@ void DeviceRender (int* pixels,
                   const unsigned int width,
                   const unsigned int height,
                   const float time,
-                  const embree::ISPCCamera& camera);
+                  const AmnCamera* camera);
 
 // render to file
-void RenderToFile(const embree::FileName& fileName, const embree::Camera* camera);
-void RenderToFile(const embree::FileName& fileName, AmnCamera* viewCamera);
+void RenderToFile(const embree::FileName& fileName, 
+                  AmnCamera* viewCamera,
+                  int width, 
+                  int height);
+
+// save to file
+void SaveToFile(const embree::FileName& fileName);
 
 // render to memory
-void RenderToMemory(embree::Camera* camera, bool interact=false);
-//void RenderToMemory(AmnCamera* viewCamera, bool interact=false);
+void RenderToMemory(AmnCamera* viewCamera, bool interact=false);
 
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -11,18 +11,18 @@ AMN_NAMESPACE_OPEN_SCOPE
 using namespace embree;
 
 // called by the C++ code for initialization
-RTCScene DeviceInit (embree::Camera* camera)
+RTCScene DeviceInit (AmnCamera* camera)
 { 
   // camera
   /* Z-Up
   camera.from = embree::Vec3fa(40.f,60.f,35.f);
   camera.to   = embree::Vec3fa(0.0f,-60.0f,0.0f);
-  camera.up   = embree::Vec3fa(0.0f,-1.0f,1.0f);*/
+  camera.up   = embree::Vec3fa(0.0f,-1.0f,1.0f);
   // Y-Up
   camera->from = embree::Vec3fa(12.f,12.f,12.f);
   camera->to   = embree::Vec3fa(0.0f,10.0f,0.0f);
   camera->up   = embree::Vec3fa(0.0f,1.0f,0.0f);
-
+  */  
   // create device
   EMBREE_CTXT->_device = rtcNewDevice(rtcore.c_str());
   //error_handler(nullptr,rtcGetDeviceError(g_device));
@@ -31,9 +31,9 @@ RTCScene DeviceInit (embree::Camera* camera)
   EMBREE_CTXT->_scene = rtcNewScene(EMBREE_CTXT->_device);
 
   // set start render mode
-  //RenderTile = RenderTileAmbientOcclusion;
   RenderTile = RenderTileStandard;
   //RenderTile = RenderTileNormal;
+  //RenderTile = RenderTileAmbientOcclusion;
   
   return EMBREE_CTXT->_scene;
   //key_pressed_handler = device_key_pressed_default;
@@ -46,7 +46,7 @@ void CommitScene ()
   rtcCommitScene (EMBREE_CTXT->_scene);
 }
 
-Vec3fa GetSmoothNormal(Ray& ray)
+Vec3fa GetSmoothMeshNormal(Ray& ray)
 {
   AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
   pxr::GfVec3f smoothNormal(0.f, 1.f, 0.f);
@@ -69,17 +69,25 @@ Vec3fa GetSmoothNormal(Ray& ray)
     }
     else return ray.Ng;
   }
+  smoothNormal.Normalize();
   return Vec3fa(smoothNormal[0], smoothNormal[1], smoothNormal[2]);
 }
 
 // task that renders a single screen tile
-Vec3fa RenderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats& stats)
+Vec3fa RenderPixelStandard(float x, float y, const AmnCamera* camera, RayStats& stats)
 {
   RTCIntersectContext context;
   rtcInitIntersectContext(&context);
   
   // initialize ray
-  Ray ray(Vec3fa(camera.xfm.p), Vec3fa(normalize(x*camera.xfm.l.vx + y*camera.xfm.l.vy + camera.xfm.l.vz)), 0.0f, inf);
+  pxr::GfRay gfRay = camera->ComputeRay(pxr::GfVec2d(x, y));
+
+  Ray ray(
+    pxr2embree(gfRay.GetStartPoint()),
+    pxr2embree(gfRay.GetDirection()), 
+    0.0f, 
+    inf
+  );
 
   // intersect ray with scene
   rtcIntersect1(EMBREE_CTXT->_scene,&context,RTCRayHit_(ray));
@@ -90,9 +98,19 @@ Vec3fa RenderPixelStandard(float x, float y, const ISPCCamera& camera, RayStats&
   if (ray.geomID != RTC_INVALID_GEOMETRY_ID)
   {
     //const Triangle& tri = triangles[ray.primID];
-    pxr::GfVec4f rColor = UnpackColor(RandomColorByIndex(ray.geomID));
+    pxr::GfVec4f rColor(1.0,1.0,1.0,1.0);// = UnpackColor(RandomColorByIndex(ray.geomID));
     AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
-    ray.Ng = GetSmoothNormal(ray);
+    
+    if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
+      ray.Ng = GetSmoothMeshNormal(ray);
+    else if(prim->_type == RTC_GEOMETRY_TYPE_SUBDIVISION)
+    {
+      //rtcGetGeometry(g_scene,geomID)
+      Vec3fa dPdu,dPdv;
+      rtcInterpolate1(prim->_geom,ray.primID,ray.u,ray.v,RTC_BUFFER_TYPE_VERTEX,0,nullptr,&dPdu.x,&dPdv.x,3);
+      ray.Ng = cross(dPdu,dPdv);
+    }
+  
 
     Vec3fa diffuse = Vec3fa(rColor[0], rColor[1], rColor[2]);
     color = color + diffuse*0.5f;
@@ -119,7 +137,7 @@ void RenderTileStandard(int taskIndex,
                         const unsigned int width,
                         const unsigned int height,
                         const float time,
-                        const ISPCCamera& camera,
+                        const AmnCamera* camera,
                         const int numTilesX,
                         const int numTilesY)
 {
@@ -130,10 +148,17 @@ void RenderTileStandard(int taskIndex,
   const unsigned int y0 = tileY * TILE_SIZE_Y;
   const unsigned int y1 = min(y0+TILE_SIZE_Y,height);
 
+  pxr::GfVec2f ratio = _GetDeviceRatio(width, height);
+
   for (unsigned int y=y0; y<y1; y++) for (unsigned int x=x0; x<x1; x++)
   {
     // calculate pixel color 
-    Vec3fa color = RenderPixelStandard((float)x,(float)y,camera,EMBREE_CTXT->_stats[threadIndex]);
+    Vec3fa color = RenderPixelStandard(
+                    _GetNormalizedDeviceX(x, width, ratio[0]),
+                    _GetNormalizedDeviceY(y, height, ratio[1]),
+                    camera,
+                    EMBREE_CTXT->_stats[threadIndex]
+                  );
 
     // write color to framebuffer
     unsigned int r = (unsigned int) (255.0f * clamp(color.x,0.0f,1.0f));
@@ -144,12 +169,13 @@ void RenderTileStandard(int taskIndex,
 }
 
 // renders a single pixel with ambient occlusion 
-Vec3fa RenderPixelAmbientOcclusion(float x, float y, const ISPCCamera& camera, RayStats& stats)
+Vec3fa RenderPixelAmbientOcclusion(float x, float y, const AmnCamera* camera, RayStats& stats)
 {
   // initialize ray
+  pxr::GfRay gfRay= camera->ComputeRay(pxr::GfVec2d(x, y));
   Ray ray;
-  ray.org = Vec3fa(camera.xfm.p);
-  ray.dir = Vec3fa(normalize(x*camera.xfm.l.vx + y*camera.xfm.l.vy + camera.xfm.l.vz));
+  ray.org = pxr2embree(gfRay.GetStartPoint());
+  ray.dir = pxr2embree(gfRay.GetDirection());
   ray.tnear() = 0.0f;
   ray.tfar = inf;
   ray.geomID = RTC_INVALID_GEOMETRY_ID;
@@ -165,8 +191,13 @@ Vec3fa RenderPixelAmbientOcclusion(float x, float y, const ISPCCamera& camera, R
 
   // shade pixel
   if (ray.geomID == RTC_INVALID_GEOMETRY_ID) return Vec3fa(0.0f);
+  AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+  Vec3fa Ng = ray.Ng;
 
-  Vec3fa Ng = GetSmoothNormal(ray);
+  if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
+    Ng = GetSmoothMeshNormal(ray);
+  
+  
   Vec3fa Nf = FaceForward(Ng,ray.dir,Ng);
   Vec3fa col = embree::Vec3fa(embree::min(1.f,.3f+.8f*embree::abs(embree::dot(Ng,embree::normalize(ray.dir)))));
 
@@ -181,7 +212,7 @@ Vec3fa RenderPixelAmbientOcclusion(float x, float y, const ISPCCamera& camera, R
   for (int i=0; i<AMBIENT_OCCLUSION_SAMPLES; i++)
   {
     Vec2f sample = RandomSampler_get2D(sampler);
-    Sample3f dir = cosineSampleHemisphere(sample.x,sample.y,Nf);
+    Sample3f dir = cosineSampleHemisphere(sample.x,sample.y,Ng);
 
     // initialize shadow ray
     Ray shadow;
@@ -216,7 +247,7 @@ void RenderTileAmbientOcclusion(int taskIndex,
                                 const unsigned int width,
                                 const unsigned int height,
                                 const float time,
-                                const ISPCCamera& camera,
+                                const AmnCamera* camera,
                                 const int numTilesX,
                                 const int numTilesY)
 {
@@ -228,9 +259,17 @@ void RenderTileAmbientOcclusion(int taskIndex,
   const unsigned int y0 = tileY * TILE_SIZE_Y;
   const unsigned int y1 = min(y0+TILE_SIZE_Y,height);
 
+  pxr::GfVec2f ratio = _GetDeviceRatio(width, height);
+
   for (unsigned int y=y0; y<y1; y++) for (unsigned int x=x0; x<x1; x++)
   {
-    Vec3fa color = RenderPixelAmbientOcclusion((float)x,(float)y,camera,EMBREE_CTXT->_stats[threadIndex]);
+    Vec3fa color = 
+      RenderPixelAmbientOcclusion(
+        _GetNormalizedDeviceX(x, width, ratio[0]),
+        _GetNormalizedDeviceY(y, height, ratio[1]),
+        camera,
+        EMBREE_CTXT->_stats[threadIndex]
+      );
 
     // write color to framebuffer 
     unsigned int r = (unsigned int) (255.0f * clamp(color.x,0.0f,1.0f));
@@ -241,12 +280,13 @@ void RenderTileAmbientOcclusion(int taskIndex,
 }
 
 // renders a single pixel with geometry normal shading
-Vec3fa RenderPixelNormal( float x, float y, const ISPCCamera& camera, RayStats& stats)
+Vec3fa RenderPixelNormal( float x, float y, const AmnCamera* camera, RayStats& stats)
 {
   // initialize ray
+  pxr::GfRay gfRay = camera->ComputeRay(pxr::GfVec2d(x, y));
   Ray ray;
-  ray.org = Vec3fa(camera.xfm.p);
-  ray.dir = Vec3fa(normalize(x*camera.xfm.l.vx + y*camera.xfm.l.vy + camera.xfm.l.vz));
+  ray.org = pxr2embree(gfRay.GetStartPoint());
+  ray.dir = pxr2embree(gfRay.GetDirection());
   ray.tnear() = 0.0f;
   ray.tfar = inf;
   ray.geomID = RTC_INVALID_GEOMETRY_ID;
@@ -261,11 +301,13 @@ Vec3fa RenderPixelNormal( float x, float y, const ISPCCamera& camera, RayStats& 
   //RayStats_addRay(stats);
 
   // shade pixel
-  if (ray.geomID == RTC_INVALID_GEOMETRY_ID) return Vec3fa(0.0f,0.0f,1.0f);
+  if (ray.geomID == RTC_INVALID_GEOMETRY_ID) return Vec3fa(0.0f,0.0f,0.0f);
   //else return abs(normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z)));
   else 
   {
-    ray.Ng = GetSmoothNormal(ray);
+    AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+    if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
+      ray.Ng = GetSmoothMeshNormal(ray);
   }
   return normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z));
 }
@@ -276,7 +318,7 @@ void RenderTileNormal(int taskIndex,
                       const unsigned int width,
                       const unsigned int height,
                       const float time,
-                      const ISPCCamera& camera,
+                      const AmnCamera* camera,
                       const int numTilesX,
                       const int numTilesY)
 {
@@ -288,9 +330,17 @@ void RenderTileNormal(int taskIndex,
   const unsigned int y0 = tileY * TILE_SIZE_Y;
   const unsigned int y1 = min(y0+TILE_SIZE_Y,height);
 
+  pxr::GfVec2f ratio = _GetDeviceRatio(width, height);
+
   for (unsigned int y=y0; y<y1; y++) for (unsigned int x=x0; x<x1; x++)
   {
-    Vec3fa color = RenderPixelNormal((float)x,(float)y,camera,EMBREE_CTXT->_stats[threadIndex]);
+    Vec3fa color = 
+      RenderPixelNormal(
+        _GetNormalizedDeviceX(x, width, ratio[0]),
+        _GetNormalizedDeviceY(y, height, ratio[1]),
+        camera,
+        EMBREE_CTXT->_stats[threadIndex]
+      );
 
     /* write color to framebuffer */
     unsigned int r = (unsigned int) (255.0f * clamp(color.x,0.0f,1.0f));
@@ -305,7 +355,7 @@ void RenderTileTask (int taskIndex, int threadIndex, int* pixels,
                     const unsigned int width,
                     const unsigned int height,
                     const float time,
-                    const ISPCCamera& camera,
+                    const AmnCamera* camera,
                     const int numTilesX,
                     const int numTilesY)
 {
@@ -317,10 +367,11 @@ void DeviceRender (int* pixels,
                   const unsigned int width,
                   const unsigned int height,
                   const float time,
-                  const ISPCCamera& camera)
+                  const AmnCamera* camera)
 {
   const int numTilesX = (width +TILE_SIZE_X-1)/TILE_SIZE_X;
   const int numTilesY = (height+TILE_SIZE_Y-1)/TILE_SIZE_Y;
+
   parallel_for(size_t(0),size_t(numTilesX*numTilesY),[&](const range<size_t>& range) {
     const int threadIndex = (int)TaskScheduler::threadIndex();
     for (size_t i=range.begin(); i<range.end(); i++)
@@ -329,17 +380,20 @@ void DeviceRender (int* pixels,
 }
 
 // render to file
-void RenderToFile(const FileName& fileName, embree::Camera* camera)
+void RenderToFile(const FileName& fileName, AmnCamera* camera, int width, int height)
 {
-  
-  ISPCCamera ispccamera = 
-    camera->getISPCCamera(EMBREE_CTXT->_width, EMBREE_CTXT->_height);
-  //initRayStats();
-  DeviceRender( EMBREE_CTXT->_pixels,
-                EMBREE_CTXT->_width,
-                EMBREE_CTXT->_height,
-                0.0f,
-                ispccamera);
+  int* pixels = (int*) embree::alignedMalloc(width * height * sizeof(int), 64);
+  DeviceRender( pixels, width, height, 0.0f, camera);
+  Ref<Image> image = new Image4uc(width, 
+                                  height, 
+                                  (Col4uc*)pixels);
+  storeImage(image, fileName);
+  embree::alignedFree(pixels);
+}
+
+// save to file
+void SaveToFile(const FileName& fileName)
+{
   Ref<Image> image = new Image4uc(EMBREE_CTXT->_width, 
                                   EMBREE_CTXT->_height, 
                                   (Col4uc*)EMBREE_CTXT->_pixels);
@@ -347,7 +401,7 @@ void RenderToFile(const FileName& fileName, embree::Camera* camera)
 }
 
 // render to memory
-void RenderToMemory(embree::Camera* camera, bool interact)
+void RenderToMemory(AmnCamera* camera, bool interact)
 {
   int width = EMBREE_CTXT->_width;
   int height = EMBREE_CTXT->_height;
@@ -356,23 +410,21 @@ void RenderToMemory(embree::Camera* camera, bool interact)
     width *= 0.1; 
     height *= 0.1;
 
-    ISPCCamera ispccamera = camera->getISPCCamera(width, height);
     //initRayStats();
     DeviceRender( EMBREE_CTXT->_lowPixels,
                   width,
                   height,
                   0.0f,
-                  ispccamera);
+                  camera);
   }
   else
   {
-    ISPCCamera ispccamera = camera->getISPCCamera(width, height);
     //initRayStats();
     DeviceRender( EMBREE_CTXT->_pixels,
                   width,
                   height,
                   0.0f,
-                  ispccamera);
+                  camera);
   }
 }
 
@@ -380,8 +432,6 @@ void RenderToMemory(embree::Camera* camera, bool interact)
 void DeviceCleanup ()
 {
   rtcReleaseScene (EMBREE_CTXT->_scene); EMBREE_CTXT->_scene = NULL;
-  //alignedFree(EMBREE_CTXT->_face_colors); EMBREE_CTXT->_face_colors = nullptr;
-  //alignedFree(EMBREE_CTXT->_vertex_colors); EMBREE_CTXT->_vertex_colors = nullptr;
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

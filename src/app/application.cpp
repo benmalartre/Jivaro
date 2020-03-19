@@ -94,9 +94,15 @@ AmnApplication::Init()
   EMBREE_CTXT->TraverseStage();
   EMBREE_CTXT->CommitDevice();
   
-  embree::FileName outputImageFilename("/Users/benmalartre/Documents/RnD/embree/embree-usd/images/img.013.jpg");
-  
-  //RenderToFile(outputImageFilename);
+  std::string imageDirectory = "/Users/benmalartre/Documents/RnD/amnesie/images";
+  int imageId = FilesInDirectory(imageDirectory.c_str()) + 1;
+  std::string imagePath = imageDirectory + "/img.";
+  std::string imageExt = ".jpg";
+  embree::FileName outputImageFilename(imagePath + std::to_string(imageId) + imageExt);
+
+  viewport->GetCamera()->ComputeFrustum();
+
+  RenderToFile(outputImageFilename, viewport->GetCamera(), 2048, 1024);
   RenderToMemory(viewport->GetCamera());
   viewport->SetContext(EMBREE_CTXT);
     

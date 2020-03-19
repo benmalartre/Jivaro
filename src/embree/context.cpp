@@ -1,6 +1,7 @@
 #include "context.h"
 #include "device.h"
 #include "mesh.h"
+#include "subdiv.h"
 #include "../utils/glutils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -52,6 +53,11 @@ void AmnUsdEmbreeContext::GetNumPrims(const pxr::UsdPrim& prim)
 //----------------------------------------------------------------------------
 void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
 {
+  bool flip = false;
+  std::string path = prim.GetPath().GetString();
+  std::string search = "/SHA256/stage/manekineko1_grp";
+  if(path.find(search) == std::string::npos)flip = true;
+
   for(auto child : prim.GetAllChildren())
   {
     std::cout << child.GetPrimPath() << std::endl;
@@ -64,10 +70,18 @@ void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
       pxr::GfMatrix4d worldMatrix = 
         _xformCache->GetLocalToWorldTransform(child);
 
-      AmnUsdEmbreeMesh* mesh = 
+      if(flip)
+      {
+        AmnUsdEmbreeSubdiv* subdiv = 
+        TranslateSubdiv(this, pxr::UsdGeomMesh(child), worldMatrix);
+        _prims.push_back(subdiv);
+      }
+      else
+      {
+        AmnUsdEmbreeMesh* mesh = 
         TranslateMesh(this, pxr::UsdGeomMesh(child), worldMatrix);
-
-      _prims.push_back(mesh);
+        _prims.push_back(mesh);
+      }
     }
     CollectPrims(child);
   }
@@ -107,7 +121,7 @@ void AmnUsdEmbreeContext::SetFilePath(const std::string& filePath)
 
 // initialize embree device
 //----------------------------------------------------------------------------
-void AmnUsdEmbreeContext::InitDevice(embree::Camera* camera)
+void AmnUsdEmbreeContext::InitDevice(AmnCamera* camera)
 {
   DeviceInit(camera);
 }

@@ -28,6 +28,8 @@
 
 // system
 #include <iostream>
+#include <algorithm>
+#include <initializer_list>
 #include <sstream>
 #include <ostream>
 #include <stdio.h>
@@ -64,6 +66,7 @@
 #include <pxr/base/gf/frustum.h>
 #include <pxr/base/gf/camera.h>
 #include <pxr/base/gf/transform.h>
+#include <pxr/base/gf/ray.h>
 
 #define AMN_EXPORT extern "C" 
 
@@ -107,3 +110,19 @@
 
 #define DEGREES_TO_RADIANS 0.0174532925f
 #define RADIANS_TO_DEGREES 57.2957795f
+
+// conversion pxr/embree - embree/pxr  
+inline embree::Vec3fa 
+pxr2embree(const pxr::GfVec3f& v){return embree::Vec3fa(v[0], v[1], v[2]);};
+inline embree::Vec3fa 
+pxr2embree(const pxr::GfVec3d& v){return embree::Vec3fa((float)v[0], (float)v[1], (float)v[2]);};
+inline embree::Vec2fa
+pxr2embree(const pxr::GfVec2f& v){return embree::Vec2fa(v[0], v[1]);};
+inline embree::Vec2fa 
+pxr2embree(const pxr::GfVec2d& v){return embree::Vec2fa((float)v[0], (float)v[1]);};
+
+inline pxr::GfVec3f
+embree2pxr(const embree::Vec3fa & v){return pxr::GfVec3f(v.x, v.y, v.z);};
+inline pxr::GfVec2f
+embree2pxr(const embree::Vec2fa & v){return pxr::GfVec2f(v.x, v.y);};
+

@@ -24,6 +24,17 @@ public:
   AmnCamera(const std::string& name, double fov=60.0);
   ~AmnCamera(){};
 
+  // compute underlying GfCamera frustum
+  pxr::GfFrustum _GetFrustum(){return _camera.GetFrustum();};
+
+  // Computes and sets automatic clipping plane distances using the
+  // camera's position and orientation, the bouding box
+  // surrounding the stage, and the distance to the closest rendered
+  // object in the central view of the camera (closestVisibleDist).
+  // If either of the "override" clipping attributes are not None,
+  // we use those instead'''
+  void _SetClippingPlanes(const pxr::GfBBox3d& stageBBox);
+
   // set near and far back to their uncomputed defaults
   void _ResetClippingPlanes();
   
@@ -36,10 +47,30 @@ public:
   // updates parameters (center, rotTheta, etc.) from the camera transform.
   void _PullFromCameraTransform();
 
-  pxr::GfVec2d _RangeOfBoxAlongRay(const pxr::GfRay& camRay, 
+  pxr::GfRange1f _RangeOfBoxAlongRay(const pxr::GfRay& camRay, 
                                     const pxr::GfBBox3d& bbox, 
                                     bool debugClipping);
 
+  void _SetClosestVisibleDistFromPoint(const pxr::GfVec3d& point);
+
+  // makes sure the FreeCamera's computed parameters are up-to-date, and
+  // returns the GfCamera object.  If 'autoClip' is True, then compute
+  // "optimal" positions for the near/far clipping planes based on the
+  // current closestVisibleDist, in order to maximize Z-buffer resolution"""
+  pxr::GfCamera& ComputeGfCamera(const pxr::GfBBox3d& stageBBox, bool autoClip=false);
+
+  // computes the ratio that converts pixel distance into world units.
+  // It treats the pixel distances as if they were projected to a plane going
+  // through the camera center.'''
+  double _ComputePixelsToWorldFactor(double viewportHeight);
+  
+  // tumbles the camera around the center point by (dTheta, dPhi) degrees.
+  void Tumble(double dTheta, double dPhi);
+    
+  // scales the distance of the freeCamera from it's center typically by
+  // scaleFactor unless it puts the camera into a "stuck" state.
+  void AdjustDistance(double scaleFactor);
+        
   // moves the camera by (deltaRight, deltaUp) in worldspace coordinates. 
   // this is similar to a camera Truck/Pedestal.
   void Truck(double deltaRight, double deltaUp);
@@ -50,28 +81,82 @@ public:
   // this is similar to a camera Pan/Tilt.
   void PanTilt(double dPan, double dTilt);
 
-  // Specialized camera movement that moves it on the "horizontal" plane
+  // specialized camera movement that moves it on the "horizontal" plane
   void Walk(double dForward, double dRight);
 
+  void ComputeFrustum(){_frustum = _camera.GetFrustum();};
+  // compute ray from normalized xy position
+  // don't forget to update the camera frustum before calling this.
+  pxr::GfRay ComputeRay(const pxr::GfVec2d& pos) const;
+
+  // update transform from frustum matrix
+  void UpdateTransform()
+  {
+    pxr::GfMatrix4d m = _frustum.ComputeViewMatrix();
+    _camera.SetTransform(m);
+  };
+
+  // set camera position
+  void SetPosition(const pxr::GfVec3d& pos){
+    _frustum = _camera.GetFrustum();
+    _frustum.SetPosition(pos);
+    UpdateTransform();
+  };
+
+  // set lookat point
+  void SetLookAt(const pxr::GfVec3d& lookAt) {
+    _frustum = _camera.GetFrustum();
+    pxr::GfVec3d delta = _frustum.GetPosition() - lookAt;
+    pxr::GfRotation oldRot = _frustum.GetRotation();
+    //_frustum.SetLookAt(pos);
+    UpdateTransform();
+  };
+
+  void SetTransform(const pxr::GfMatrix4d& m){
+    _camera.SetTransform(m);
+  };
+
+  void SetDistance(float distance) {
+    _frustum = _camera.GetFrustum();
+    _frustum.SetViewDistance(distance);
+    UpdateTransform();
+  };
+
+  // get spherical cooridnates
+  void _GetSphericalCoordinates() {
+    /*
+    pxr::GfVec3d r = 
+    Protected r.v3f32
+    Vector3::Sub(r,*Me\pos,*Me\lookat)
+    Protected d.f = Vector3::Length(r)
+    *Me\polar = -ACos(r\y/d)*#F32_RAD2DEG
+    *Me\azimuth = ATan(r\x/r\z)*#F32_RAD2DEG
+    */
+  };
+    
   // helpers conversion to ISPCCamera (embree)
   void GetFrom(float& x, float& y, float& z);
   void GetTo(float& x, float& y, float& z);
   void GetUp(float& x, float& y, float& z);
   double GetFov(){return _fov;};
+
+  pxr::GfCamera* Get(){return &_camera;};
         
 private:
-  pxr::GfCamera _camera;
-  double _overrideNear;
-  double _overrideFar;
-  bool _cameraTransformDirty;
-  double _fov;
-  double _rotTheta;
-  double _rotPhi;
-  double _rotPsi;
+  bool                  _orthographic;
+  pxr::GfCamera         _camera;
+  double                _overrideNear;
+  double                _overrideFar;
+  bool                  _cameraTransformDirty;
+  double                _fov;
+  double                _rotTheta;
+  double                _rotPhi;
+  double                _rotPsi;
+  pxr::GfFrustum        _frustum;
+  pxr::GfVec3d          _center;
+  double                _polar;
+  double                _azimuth;
 
-  pxr::GfVec3d _center;
-  pxr::GfMatrix4d _YZUpMatrix;
-  pxr::GfMatrix4d _YZUpInvMatrix;
   
   double _dist;
   double _closestVisibleDist;

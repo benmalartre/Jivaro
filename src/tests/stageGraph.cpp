@@ -130,6 +130,7 @@ print refStage.GetRootLayer().ExportToString()
       stage,
       stagePath,
       "manekineko1",
+      /*"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd"*/
       "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd"
     );
 
@@ -147,7 +148,6 @@ print refStage.GetRootLayer().ExportToString()
   UsdGeomXformOp translateManeki2 = maneki2Grp.AddTranslateOp();
   translateManeki2.Set(GfVec3d(8, 0, 0));
 
-  /*
   GraphNode node1 = 
     _TestAddNode(stage, stagePath.AppendChild(TfToken("node1")));
 
@@ -197,7 +197,6 @@ print refStage.GetRootLayer().ExportToString()
     _TestAddInput(node2, "input2", 
       GraphAttributeType::Parameter, SdfValueTypeNames->Float);
 
-
   GraphOutput output2 = 
     _TestAddOutput(node2, "output2", 
       GraphAttributeType::Parameter, SdfValueTypeNames->Float);
@@ -211,7 +210,6 @@ print refStage.GetRootLayer().ExportToString()
   UsdUINodeGraphNodeAPI nodeUI2(node2);
   UsdAttribute posAttr2 = nodeUI2.CreatePosAttr();
   posAttr2.Set(GfVec2f(240,60));
-  */
 
   stage->Export(result.c_str());
   /*

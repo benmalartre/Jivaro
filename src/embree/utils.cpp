@@ -82,9 +82,10 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
     polygonNormals[i] = n;
     base += numTriangles;
   }
+  for(auto& n: polygonNormals) n.Normalize();
 
   // finaly average vertex normals
-  for(auto n : normals) n = pxr::GfVec3f(0.f, 0.f, 0.f);
+  for(auto& n : normals) n = pxr::GfVec3f(0.f, 0.f, 0.f);
   base = 0;
   for(int i = 0; i < counts.size(); ++i)
   {
@@ -95,7 +96,7 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
     }
     base += numVertices;
   }
-  for(auto n: normals) n.Normalize();
+  for(auto& n: normals) n.Normalize();
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

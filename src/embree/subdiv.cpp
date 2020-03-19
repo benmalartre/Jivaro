@@ -1,24 +1,26 @@
 #include "../default.h"
+#include "../utils/utils.h"
 #include "utils.h"
-#include "mesh.h"
+#include "subdiv.h"
 #include "context.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-// translate usd mesh to embree mesh
-AmnUsdEmbreeMesh* 
-TranslateMesh(
+// translate usd mesh to embree subdiv
+AmnUsdEmbreeSubdiv* 
+TranslateSubdiv(
   AmnUsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
   const pxr::GfMatrix4d& worldMatrix
 )
 {
-  size_t num_vertices, num_triangles;
-  AmnUsdEmbreeMesh* result = new AmnUsdEmbreeMesh();
 
-  result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
+  size_t num_vertices, num_faces, num_indices;
+  AmnUsdEmbreeSubdiv* result = new AmnUsdEmbreeSubdiv();
+
+  result->_type = RTC_GEOMETRY_TYPE_SUBDIVISION;
   //result->_worldMatrix = usdMesh.GetPrim().GetWor;
-  result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_TRIANGLE);
+  result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_SUBDIVISION);
   result->_name = usdMesh.GetPrim().GetPrimPath().GetString();
   bool hasPoints = false;
   pxr::UsdAttribute pointsAttr = usdMesh.GetPointsAttr();
@@ -56,42 +58,47 @@ TranslateMesh(
     return NULL;
   }
 
-  bool hasTriangles = false;
+  bool hasTopo = false;
   pxr::UsdAttribute countsAttr = usdMesh.GetFaceVertexCountsAttr();
   pxr::UsdAttribute indicesAttr = usdMesh.GetFaceVertexIndicesAttr();
-  pxr::VtArray<int> counts;
-  pxr::VtArray<int> indices;
+  //pxr::VtArray<int> counts;
+  //pxr::VtArray<int> indices;
   if(countsAttr && countsAttr.HasAuthoredValue() &&
     indicesAttr && indicesAttr.HasAuthoredValue())
   {
     
-    countsAttr.Get(&counts, ctxt->_time);
-    indicesAttr.Get(&indices, ctxt->_time);
+    countsAttr.Get(&result->_counts, ctxt->_time);
+    indicesAttr.Get(&result->_indices, ctxt->_time);
 
-    result->_numOriginalSamples = 0;
-    for(auto count : counts)result->_numOriginalSamples += count;
-
-    num_triangles = TriangulateMesh(counts, 
-                                    indices, 
-                                    result->_triangles, 
-                                    result->_samples);
+    num_faces = result->_counts.size();
+    num_indices = result->_indices.size();
 
     rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
                               RTC_BUFFER_TYPE_INDEX,      // RTCBufferType
                               0,                          // Slot
-                              RTC_FORMAT_UINT3,           // RTCFormat
-                              result->_triangles.cdata(), // Datas Ptr
+                              RTC_FORMAT_UINT,            // RTCFormat
+                              result->_indices.cdata(),   // Datas Ptr
                               0,                          // Offset
-                              3 * sizeof(int),            // Stride
-                              num_triangles);             // Num Elements
-    hasTriangles = true;
+                              sizeof(unsigned int),       // Stride
+                              num_indices);               // Num Elements
+
+    rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
+                              RTC_BUFFER_TYPE_FACE,       // RTCBufferType
+                              0,                          // Slot
+                              RTC_FORMAT_UINT,            // RTCFormat
+                              result->_counts.cdata(),    // Datas Ptr
+                              0,                          // Offset
+                              sizeof(unsigned int),       // Stride
+                              num_faces);                 // Num Elements
+
+    hasTopo = true;
   }
 
   // if there are no triangles no point to continue 
-  if(!hasTriangles)
+  if(!hasTopo)
   {
     std::cerr << usdMesh.GetPrim().GetPrimPath() << "\n" << 
-          "Problem computing triangle datas : " <<
+          "Problem getting topo data : " <<
             "this mesh is invalid!";
     delete result;
     return NULL;
@@ -108,6 +115,7 @@ TranslateMesh(
   }
   */
 
+/*
   CheckNormals(usdMesh, ctxt->_time, result);
   if(!result->_hasNormals)
   {
@@ -119,21 +127,32 @@ TranslateMesh(
     result->_hasNormals = true;
     result->_normalsInterpolationType = VERTEX;
   }
-
-  // world transform normals
+  */
+  if(hasPoints && hasTopo)
+  {
+    /*
+    // world transform normals
     for(auto& n: result->_normals)
     {
       pxr::GfVec4d tmp = pxr::GfVec4d(n[0],n[1],n[2], 0.f) * worldMatrix;
       n[0] = tmp[0];n[1] = tmp[1];n[2] = tmp[2];
     }
-  
-  if(hasPoints && hasTriangles)
-  { 
-    /*
+    
     rtcSetGeometryVertexAttributeCount(result->_geom, 1);
     rtcSetSharedGeometryBuffer(result->_geom, RTC_BUFFER_TYPE_VERTEX_ATTRIBUTE, 0, 
     RTC_FORMAT_FLOAT3,vertex_colors,0,sizeof(Vec3fa),num_vertices);
     */
+    float* level = 
+      (float*) rtcSetNewGeometryBuffer(
+        result->_geom, 
+        RTC_BUFFER_TYPE_LEVEL, 
+        0, 
+        RTC_FORMAT_FLOAT, 
+        sizeof(float), 
+        num_indices
+      );
+    for (unsigned int i=0; i<num_indices; i++)level[i] = result->_vertices[result->_indices[i]][1]/5;
+
     //AmnUsdEmbreeSetTransform(result, worldMatrix);
     rtcCommitGeometry(result->_geom);
     result->_geomId = rtcAttachGeometry(ctxt->_scene, result->_geom);
@@ -143,7 +162,7 @@ TranslateMesh(
   else
   {
     std::cerr << usdMesh.GetPrim().GetPrimPath() << "\n" << 
-      "Problem computing mesh datas : " <<
+      "Problem computing subdiv datas : " <<
       "this mesh is invalid!";
     delete result;
     return NULL;
@@ -157,9 +176,10 @@ TranslateMesh(
 bool 
 CheckNormals(const pxr::UsdGeomMesh& usdMesh,
             const pxr::UsdTimeCode& time,
-            AmnUsdEmbreeMesh* mesh)
+            AmnUsdEmbreeSubdiv* subdiv)
 {
-  mesh->_hasNormals = false;
+  /*
+  subdiv->_hasNormals = false;
   pxr::UsdAttribute normalsAttr = usdMesh.GetNormalsAttr();
   if(normalsAttr && normalsAttr.HasAuthoredValue())
   {
@@ -229,10 +249,12 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
                                 mesh->_normals.cdata(),     // Datas Ptr
                                 0,                          // Offset
                                 sizeof(pxr::GfVec3f),       // Stride
-                                mesh->_normals.size());     // Num Elements*/
+                                mesh->_normals.size());     // Num Elements
     }
   }
   return mesh->_hasNormals;
+  */
+ return false;
 }
 
 

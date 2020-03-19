@@ -17,8 +17,6 @@ AMN_NAMESPACE_USING_DIRECTIVE
 
 int main(void)
 {
-  FilesInDirectory();
-
   glfwInit();
   AmnApplication app(800,600);
   app.Init();

@@ -2,7 +2,7 @@
 
 #include "default.h"
 #include "prim.h"
-#include "../embree/camera.h"
+#include "../app/camera.h"
 AMN_NAMESPACE_OPEN_SCOPE
 
 // extern AnmUsdEmbreeContext* EMBREE_CTXT;
@@ -72,7 +72,7 @@ struct AmnUsdEmbreeContext {
   ~AmnUsdEmbreeContext();
   
   void SetFilePath(const std::string& filePath);
-  void InitDevice(embree::Camera* camera);
+  void InitDevice(AmnCamera* camera);
   void CommitDevice();
   void ReleaseDevice();
   void GetNumPrims(const pxr::UsdPrim& prim);

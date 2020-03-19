@@ -28,30 +28,39 @@ AMN_NAMESPACE_OPEN_SCOPE
 #define BITMASK_CHECK(x,y) (((x) & (y)) == (y))
 
 // print vectors (debug)
-static void
-PrintVector(const pxr::GfVec2i& v, const char* t)
+static void PrintVector(const pxr::GfVec2i& v, const char* t)
 {
   std::cerr << t << ": " << v[0] << "," << v[1] << std::endl;
 }
 
-static void
-PrintVector(const pxr::GfVec2f& v, const char* t)
+static void PrintVector(const pxr::GfVec2f& v, const char* t)
 {
   std::cerr << t << ": " << v[0] << "," << v[1] << std::endl;
 }
 
-static void
-PrintVector(const pxr::GfVec3f& v, const char* t)
+static void PrintVector(const pxr::GfVec2d& v, const char* t)
 {
-  std::cerr << t << ": " << v[0] << "," << v[1] 
-    << "," << v[2] << std::endl;
+  std::cerr << t << ": " << v[0] << "," << v[1] << std::endl;
 }
 
-static void
-PrintVector(const pxr::GfVec4f& v, const char* t)
+static void PrintVector(const pxr::GfVec3f& v, const char* t)
 {
-  std::cerr << t << ": " << v[0] << "," << v[1] 
-    << "," << v[2] << "," << v[3] <<std::endl;
+  std::cerr << t << ": " << v[0] << "," << v[1] << "," << v[2] << std::endl;
+}
+
+static void PrintVector(const pxr::GfVec3d& v, const char* t)
+{
+  std::cerr << t << ": " << v[0] << "," << v[1] << "," << v[2] << std::endl;
+}
+
+static void PrintVector(const pxr::GfVec4f& v, const char* t)
+{
+  std::cerr << t << ": " << v[0] << "," << v[1] << "," << v[2] << "," << v[3] <<std::endl;
+}
+
+static void PrintVector(const pxr::GfVec4d& v, const char* t)
+{
+  std::cerr << t << ": " << v[0] << "," << v[1] << "," << v[2] << "," << v[3] <<std::endl;
 }
 
 // index to random color
@@ -94,19 +103,25 @@ union GLColor
 };
 
 // num files in directory
-static int FilesInDirectory()
+static int FilesInDirectory(const char* path)
 {
   DIR *dir;
   struct dirent *ent;
-  int num_files = 2;
-  if ((dir = opendir ("/Users/benmalartre/Documents/RnD/embree/embree-usd/images")) != NULL) {
+  int num_files = 0;
+  if ((dir = opendir (path)) != NULL) {
     /* print all the files and directories within directory */
     while ((ent = readdir (dir)) != NULL) {
       printf ("%s\n", ent->d_name);
+      if(
+        ! strncmp(ent->d_name, ".", 1) ||
+        ! strncmp(ent->d_name, "..", 2) ||
+        ! strncmp(ent->d_name, ".DS_Store", 9)
+      ) continue;
       num_files++;
     }
     closedir (dir);
-    return num_files - 2;
+    std::cout << "Num files in " << path << " : " << num_files << std::endl;
+    return num_files;
   } else {
     /* could not open directory */
     perror ("");

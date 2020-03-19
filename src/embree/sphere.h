@@ -15,7 +15,7 @@ class AmnUsdEmbreeContext;
 struct AmnUsdEmbreeSphere  : public AmnUsdEmbreePrim {
   float                       _radius;
   int                         _resolution;
-  pxr::VtArray<pxr::GfVec3f>  _positions;
+  pxr::VtArray<pxr::GfVec3f>  _vertices;
   pxr::VtArray<int>           _triangles;
   pxr::VtArray<int>           _samples;
   pxr::VtArray<pxr::GfVec3f>  _normals;

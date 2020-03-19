@@ -45,6 +45,7 @@ add_executable(${TARGET}
   embree/utils.cpp
   embree/sphere.cpp
   embree/mesh.cpp
+  embree/subdiv.cpp
   embree/context.cpp
   embree/device.cpp
   utils/glutils.cpp

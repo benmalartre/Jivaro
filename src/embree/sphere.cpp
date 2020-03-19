@@ -32,7 +32,7 @@ TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
 
   BuildPoints(num_lats, 
               num_longs, 
-              result->_positions,
+              result->_vertices,
               result->_normals,
               result->_uvs, 
               result->_radius,
@@ -42,7 +42,7 @@ TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
                             RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
                             0,                          // Slot
                             RTC_FORMAT_FLOAT3,          // RTCFormat
-                            result->_positions.cdata(), // Datas Ptr
+                            result->_vertices.cdata(),  // Datas Ptr
                             0,                          // Offset
                             sizeof(pxr::GfVec3f),       // Stride
                             num_vertices);              // Num Elements*/
@@ -93,7 +93,7 @@ TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
   CheckNormals(usdMesh, ctxt->_time, result);
   if(!result->_hasNormals)
   {
-    ComputeVertexNormals(result->_positions,
+    ComputeVertexNormals(result->_vertices,
                         counts,
                         indices,
                         result->_triangles,
