@@ -5,48 +5,23 @@
 #include "../app/camera.h"
 AMN_NAMESPACE_OPEN_SCOPE
 
-// extern AnmUsdEmbreeContext* EMBREE_CTXT;
-// render statistics
-struct RayStats
-{
-  int numRays;
-  int pad[32-1];
-};
-
-#if defined(RAY_STATS)
-#if defined(ISPC)
-inline void RayStats_addRay(RayStats& stats)       { stats.numRays += popcnt(1); }
-inline void RayStats_addShadowRay(RayStats& stats) { stats.numRays += popcnt(1); }
-#else // C++
-__forceinline void RayStats_addRay(RayStats& stats)        { stats.numRays++; }
-__forceinline void RayStats_addShadowRay(RayStats& stats)  { stats.numRays++; }
-#endif
-#else // disabled
-inline void RayStats_addRay(RayStats& stats)       {}
-inline void RayStats_addShadowRay(RayStats& stats) {}
-#endif
-
-inline bool NativePacketSupported(RTCDevice device)
-{
-  if (sizeof(float) == 1*4) return true;
-  else if (sizeof(float) == 4*4) return rtcGetDeviceProperty(device,RTC_DEVICE_PROPERTY_NATIVE_RAY4_SUPPORTED);
-  else if (sizeof(float) == 8*4) return rtcGetDeviceProperty(device,RTC_DEVICE_PROPERTY_NATIVE_RAY8_SUPPORTED);
-  else if (sizeof(float) == 16*4) return rtcGetDeviceProperty(device,RTC_DEVICE_PROPERTY_NATIVE_RAY16_SUPPORTED);
-  else return false;
-}
-
+struct AmnUsdEmbreeMaster;
+typedef 
+pxr::TfHashMap< pxr::SdfPath, AmnUsdEmbreePrim*, pxr::SdfPath::Hash > _PrimCacheMap;
 
 struct AmnUsdEmbreeContext {
   // usd
   std::vector<std::string>                        _files;
   pxr::UsdStageRefPtr                             _stage;
   std::vector<AmnUsdEmbreePrim*>                  _prims;
+  std::vector<AmnUsdEmbreeMaster*>                _masters;
   pxr::TfToken                                    _axis;
   pxr::UsdTimeCode                                _time;
   long long                                       _numPrims;
   pxr::GfMatrix4f                                 _worldMatrix;
   pxr::UsdGeomXformCache*                         _xformCache;
   pxr::UsdGeomBBoxCache*                          _bboxCache;
+  _PrimCacheMap                                   _primCacheMap;
 
   // image
   int                                             _width;
@@ -57,7 +32,6 @@ struct AmnUsdEmbreeContext {
   // embree
   RTCScene                                        _scene;
   RTCDevice                                       _device;
-  RayStats*                                       _stats;
   bool                                            _changed;
   float                                           _debug;
 

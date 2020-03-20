@@ -261,7 +261,6 @@ static void GLUIBuildStringShader()
 
 static void GLUIDeleteStringShader()
 {
-  std::cout << "DELETE STRING SHADER.." << std::endl;
   glUseProgram(0);
   glDeleteProgram(TEXT_PROGRAM_SHADER);
   glDeleteShader(TEXT_VERTEX_SHADER);

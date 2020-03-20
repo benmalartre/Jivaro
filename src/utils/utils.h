@@ -111,7 +111,6 @@ static int FilesInDirectory(const char* path)
   if ((dir = opendir (path)) != NULL) {
     /* print all the files and directories within directory */
     while ((ent = readdir (dir)) != NULL) {
-      printf ("%s\n", ent->d_name);
       if(
         ! strncmp(ent->d_name, ".", 1) ||
         ! strncmp(ent->d_name, "..", 2) ||
@@ -120,11 +119,10 @@ static int FilesInDirectory(const char* path)
       num_files++;
     }
     closedir (dir);
-    std::cout << "Num files in " << path << " : " << num_files << std::endl;
     return num_files;
   } else {
     /* could not open directory */
-    perror ("");
+    std::cerr << "Could Not Open Directory : " << path << std::endl;
     return EXIT_FAILURE;
   }
 }

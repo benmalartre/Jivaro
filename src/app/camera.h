@@ -27,6 +27,15 @@ public:
   // compute underlying GfCamera frustum
   pxr::GfFrustum _GetFrustum(){return _camera.GetFrustum();};
 
+  // get spherical cooridnates
+  void _GetSphericalCoordinates() {
+    pxr::GfVec3d r = _pos - _lookat;
+    double d = r.GetLength();
+    _polar = (-acos(r[1]/d)) * RADIANS_TO_DEGREES;
+    _azimuth = (tan(r[0]/r[2])) * RADIANS_TO_DEGREES;
+  };
+
+  /*
   // Computes and sets automatic clipping plane distances using the
   // camera's position and orientation, the bouding box
   // surrounding the stage, and the distance to the closest rendered
@@ -84,11 +93,28 @@ public:
   // specialized camera movement that moves it on the "horizontal" plane
   void Walk(double dForward, double dRight);
 
+  */
   void ComputeFrustum(){_frustum = _camera.GetFrustum();};
+
+  // lookat from position, lookat and up 
+  void LookAt();
+
   // compute ray from normalized xy position
   // don't forget to update the camera frustum before calling this.
   pxr::GfRay ComputeRay(const pxr::GfVec2d& pos) const;
 
+  // set position, lookat and up as once
+  void Set( const pxr::GfVec3d& pos, 
+            const pxr::GfVec3d& lookat, 
+            const pxr::GfVec3d& up=pxr::GfVec3d::YAxis());
+
+  // orbit around lookat point from mouse delta
+  void Orbit(double dX, double dY);
+
+  // dolly along view direction
+  void Dolly(double dX, double dY);
+
+/*
   // update transform from frustum matrix
   void UpdateTransform()
   {
@@ -121,48 +147,24 @@ public:
     _frustum.SetViewDistance(distance);
     UpdateTransform();
   };
-
-  // get spherical cooridnates
-  void _GetSphericalCoordinates() {
-    /*
-    pxr::GfVec3d r = 
-    Protected r.v3f32
-    Vector3::Sub(r,*Me\pos,*Me\lookat)
-    Protected d.f = Vector3::Length(r)
-    *Me\polar = -ACos(r\y/d)*#F32_RAD2DEG
-    *Me\azimuth = ATan(r\x/r\z)*#F32_RAD2DEG
-    */
-  };
-    
-  // helpers conversion to ISPCCamera (embree)
-  void GetFrom(float& x, float& y, float& z);
-  void GetTo(float& x, float& y, float& z);
-  void GetUp(float& x, float& y, float& z);
+  
   double GetFov(){return _fov;};
-
+*/
   pxr::GfCamera* Get(){return &_camera;};
         
 private:
   bool                  _orthographic;
   pxr::GfCamera         _camera;
-  double                _overrideNear;
-  double                _overrideFar;
-  bool                  _cameraTransformDirty;
-  double                _fov;
-  double                _rotTheta;
-  double                _rotPhi;
-  double                _rotPsi;
   pxr::GfFrustum        _frustum;
-  pxr::GfVec3d          _center;
+  double                _near;
+  double                _far;
+  double                _fov;
+  pxr::GfVec3d          _lookat;
+  pxr::GfVec3d          _pos;
+  pxr::GfVec3d          _up;
   double                _polar;
   double                _azimuth;
-
-  
-  double _dist;
-  double _closestVisibleDist;
-  double _lastFramedDist;
-  double _lastFramedClosestDist;
-  double _selSize;
+  bool                  _dirty;
 
   std::string _name;
 };

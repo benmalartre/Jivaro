@@ -10,11 +10,13 @@ AmnUsdEmbreeMesh*
 TranslateMesh(
   AmnUsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
-  const pxr::GfMatrix4d& worldMatrix
+  const pxr::GfMatrix4d& worldMatrix,
+  RTCScene scene
 )
 {
   size_t num_vertices, num_triangles;
   AmnUsdEmbreeMesh* result = new AmnUsdEmbreeMesh();
+  ctxt->_primCacheMap[usdMesh.GetPath()] = std::move(result);
 
   result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
   //result->_worldMatrix = usdMesh.GetPrim().GetWor;
@@ -136,8 +138,9 @@ TranslateMesh(
     */
     //AmnUsdEmbreeSetTransform(result, worldMatrix);
     rtcCommitGeometry(result->_geom);
-    result->_geomId = rtcAttachGeometry(ctxt->_scene, result->_geom);
+    result->_geomId = rtcAttachGeometry(scene, result->_geom);
     rtcReleaseGeometry(result->_geom);
+    
     return result;
   }
   else
@@ -151,6 +154,15 @@ TranslateMesh(
 
  return 0;
 }
+
+// destructor
+//------------------------------------------------------------------------------
+void DeleteMesh(RTCScene scene, AmnUsdEmbreeMesh* mesh)
+{
+  rtcDetachGeometry(scene, mesh->_geomId);
+  delete mesh;
+}
+
 
 // check usd file for authored normals
 //------------------------------------------------------------------------------

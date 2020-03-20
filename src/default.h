@@ -45,6 +45,8 @@
 #include <functional>
 
 // usd
+#include <pxr/base/tf/hash.h>
+#include <pxr/base/tf/hashmap.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primRange.h>
@@ -61,6 +63,8 @@
 #include <pxr/base/gf/vec4d.h>
 #include <pxr/base/gf/rotation.h>
 #include <pxr/base/gf/quaternion.h>
+#include <pxr/base/gf/matrix3f.h>
+#include <pxr/base/gf/matrix3d.h>
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/frustum.h>

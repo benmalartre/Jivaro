@@ -2,6 +2,7 @@
 #include "context.h"
 #include "prim.h"
 #include "mesh.h"
+#include "instance.h"
 #include "../app/camera.h"
 #include "../utils/utils.h"
 #include "../widgets/viewport.h"
@@ -27,8 +28,10 @@ RTCScene DeviceInit (AmnCamera* camera)
   EMBREE_CTXT->_device = rtcNewDevice(rtcore.c_str());
   //error_handler(nullptr,rtcGetDeviceError(g_device));
 
-  // create scene 
+  // create rendering scene 
   EMBREE_CTXT->_scene = rtcNewScene(EMBREE_CTXT->_device);
+  rtcSetSceneBuildQuality(EMBREE_CTXT->_scene,RTC_BUILD_QUALITY_LOW);
+  rtcSetSceneFlags(EMBREE_CTXT->_scene,RTC_SCENE_FLAG_DYNAMIC);
 
   // set start render mode
   RenderTile = RenderTileStandard;
@@ -73,8 +76,9 @@ Vec3fa GetSmoothMeshNormal(Ray& ray)
   return Vec3fa(smoothNormal[0], smoothNormal[1], smoothNormal[2]);
 }
 
+
 // task that renders a single screen tile
-Vec3fa RenderPixelStandard(float x, float y, const AmnCamera* camera, RayStats& stats)
+Vec3fa RenderPixelStandard(float x, float y, const AmnCamera* camera)
 {
   RTCIntersectContext context;
   rtcInitIntersectContext(&context);
@@ -91,7 +95,6 @@ Vec3fa RenderPixelStandard(float x, float y, const AmnCamera* camera, RayStats& 
 
   // intersect ray with scene
   rtcIntersect1(EMBREE_CTXT->_scene,&context,RTCRayHit_(ray));
-  //RayStats_addRay(stats);
 
   // shade pixels
   Vec3fa color = Vec3fa(0.0f);
@@ -99,16 +102,33 @@ Vec3fa RenderPixelStandard(float x, float y, const AmnCamera* camera, RayStats& 
   {
     //const Triangle& tri = triangles[ray.primID];
     pxr::GfVec4f rColor(1.0,1.0,1.0,1.0);// = UnpackColor(RandomColorByIndex(ray.geomID));
+    
+      
     AmnUsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
     
+    
     if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
-      ray.Ng = GetSmoothMeshNormal(ray);
+    {
+      //ray.Ng = GetSmoothMeshNormal(ray);
+      Vec3fa dPdu,dPdv;
+      rtcInterpolate1(prim->_geom,ray.primID,ray.u,ray.v,RTC_BUFFER_TYPE_VERTEX,0,nullptr,&dPdu.x,&dPdv.x,3);
+      ray.Ng = cross(dPdu,dPdv);
+    }
+      
     else if(prim->_type == RTC_GEOMETRY_TYPE_SUBDIVISION)
     {
       //rtcGetGeometry(g_scene,geomID)
       Vec3fa dPdu,dPdv;
       rtcInterpolate1(prim->_geom,ray.primID,ray.u,ray.v,RTC_BUFFER_TYPE_VERTEX,0,nullptr,&dPdu.x,&dPdv.x,3);
       ray.Ng = cross(dPdu,dPdv);
+    }
+
+    if (ray.instID[0] != RTC_INVALID_GEOMETRY_ID)
+    {
+      AmnUsdEmbreeInstance* instance = (AmnUsdEmbreeInstance*)EMBREE_CTXT->_prims[ray.instID[0]];
+      rColor[0] = instance->_color[0];
+      rColor[1] = instance->_color[1];
+      rColor[2] = instance->_color[2];
     }
   
 
@@ -121,7 +141,6 @@ Vec3fa RenderPixelStandard(float x, float y, const AmnCamera* camera, RayStats& 
 
     // trace shadow ray
     rtcOccluded1(EMBREE_CTXT->_scene,&context,RTCRay_(shadow));
-    //RayStats_addShadowRay(stats);
 
     // add light contribution
     if (shadow.tfar >= 0.0f)
@@ -129,6 +148,7 @@ Vec3fa RenderPixelStandard(float x, float y, const AmnCamera* camera, RayStats& 
   }
   return color;
 }
+
 
 // renders a single screen tile
 void RenderTileStandard(int taskIndex,
@@ -156,8 +176,7 @@ void RenderTileStandard(int taskIndex,
     Vec3fa color = RenderPixelStandard(
                     _GetNormalizedDeviceX(x, width, ratio[0]),
                     _GetNormalizedDeviceY(y, height, ratio[1]),
-                    camera,
-                    EMBREE_CTXT->_stats[threadIndex]
+                    camera
                   );
 
     // write color to framebuffer
@@ -169,7 +188,7 @@ void RenderTileStandard(int taskIndex,
 }
 
 // renders a single pixel with ambient occlusion 
-Vec3fa RenderPixelAmbientOcclusion(float x, float y, const AmnCamera* camera, RayStats& stats)
+Vec3fa RenderPixelAmbientOcclusion(float x, float y, const AmnCamera* camera)
 {
   // initialize ray
   pxr::GfRay gfRay= camera->ComputeRay(pxr::GfVec2d(x, y));
@@ -187,7 +206,6 @@ Vec3fa RenderPixelAmbientOcclusion(float x, float y, const AmnCamera* camera, Ra
   IntersectContext context;
   InitIntersectionContext(&context);
   rtcIntersect1(EMBREE_CTXT->_scene,&context.context,RTCRayHit_(ray));
-  //RayStats_addRay(stats);
 
   // shade pixel
   if (ray.geomID == RTC_INVALID_GEOMETRY_ID) return Vec3fa(0.0f);
@@ -229,7 +247,6 @@ Vec3fa RenderPixelAmbientOcclusion(float x, float y, const AmnCamera* camera, Ra
     IntersectContext context;
     InitIntersectionContext(&context);
     rtcOccluded1(EMBREE_CTXT->_scene,&context.context,RTCRay_(shadow));
-    //RayStats_addShadowRay(stats);
 
     // add light contribution 
     if (shadow.tfar >= 0.0f)
@@ -267,8 +284,7 @@ void RenderTileAmbientOcclusion(int taskIndex,
       RenderPixelAmbientOcclusion(
         _GetNormalizedDeviceX(x, width, ratio[0]),
         _GetNormalizedDeviceY(y, height, ratio[1]),
-        camera,
-        EMBREE_CTXT->_stats[threadIndex]
+        camera
       );
 
     // write color to framebuffer 
@@ -280,7 +296,7 @@ void RenderTileAmbientOcclusion(int taskIndex,
 }
 
 // renders a single pixel with geometry normal shading
-Vec3fa RenderPixelNormal( float x, float y, const AmnCamera* camera, RayStats& stats)
+Vec3fa RenderPixelNormal( float x, float y, const AmnCamera* camera)
 {
   // initialize ray
   pxr::GfRay gfRay = camera->ComputeRay(pxr::GfVec2d(x, y));
@@ -298,7 +314,6 @@ Vec3fa RenderPixelNormal( float x, float y, const AmnCamera* camera, RayStats& s
   IntersectContext context;
   InitIntersectionContext(&context);
   rtcIntersect1(EMBREE_CTXT->_scene,&context.context,RTCRayHit_(ray));
-  //RayStats_addRay(stats);
 
   // shade pixel
   if (ray.geomID == RTC_INVALID_GEOMETRY_ID) return Vec3fa(0.0f,0.0f,0.0f);
@@ -338,8 +353,7 @@ void RenderTileNormal(int taskIndex,
       RenderPixelNormal(
         _GetNormalizedDeviceX(x, width, ratio[0]),
         _GetNormalizedDeviceY(y, height, ratio[1]),
-        camera,
-        EMBREE_CTXT->_stats[threadIndex]
+        camera
       );
 
     /* write color to framebuffer */
@@ -410,7 +424,6 @@ void RenderToMemory(AmnCamera* camera, bool interact)
     width *= 0.1; 
     height *= 0.1;
 
-    //initRayStats();
     DeviceRender( EMBREE_CTXT->_lowPixels,
                   width,
                   height,
@@ -419,7 +432,6 @@ void RenderToMemory(AmnCamera* camera, bool interact)
   }
   else
   {
-    //initRayStats();
     DeviceRender( EMBREE_CTXT->_pixels,
                   width,
                   height,

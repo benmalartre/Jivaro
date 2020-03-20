@@ -167,12 +167,12 @@ void AmnGraphUI::BuildGraph(int stageIndex)
 
 void AmnGraphUI::MouseButton(int action, int button, int mods)
 {
-  std::cerr << "GRAPH UI : MOUSE BUTTON :D" << std::endl;
+
 }
 
 void AmnGraphUI::MouseMove(int x, int y)
 {
-  std::cerr << "GRAPH UI : MOUSE MOVE :D" << std::endl;
+
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

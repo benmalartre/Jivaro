@@ -1,8 +1,11 @@
+#include "../utils/utils.h"
+#include "../utils/glutils.h"
 #include "context.h"
 #include "device.h"
 #include "mesh.h"
 #include "subdiv.h"
-#include "../utils/glutils.h"
+#include "instance.h"
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 // constructor
@@ -55,7 +58,35 @@ void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
 {
   bool flip = false;
   std::string path = prim.GetPath().GetString();
-  std::string search = "/SHA256/stage/manekineko1_grp";
+  std::string search = "/SHA256/stage/manekineko2_grp";
+  
+  if(path == search)
+  {
+    pxr::GfMatrix4d worldMatrix = 
+        _xformCache->GetLocalToWorldTransform(prim);
+    AmnUsdEmbreeMaster* master = 
+      TranslateMaster(this, prim, _xformCache, _scene);
+    _masters.push_back(master);
+
+    int N = 16;
+    float step = 360 /(float)N;
+    float radius = 32;
+    for(int i=0; i<N; ++i)
+    {
+      float ta = i * step * DEGREES_TO_RADIANS;
+      AmnUsdEmbreeInstance* instance = 
+      TranslateInstance(
+        this, 
+        master, 
+        pxr::GfMatrix4d(1).SetTranslate(
+          pxr::GfVec3d(sin(ta) * radius, 6, -cos(ta) * radius)
+        ),
+        _scene
+      );
+      _prims.push_back(instance);
+    }
+  }
+ 
   if(path.find(search) == std::string::npos)flip = true;
 
   for(auto child : prim.GetAllChildren())
@@ -73,18 +104,20 @@ void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
       if(flip)
       {
         AmnUsdEmbreeSubdiv* subdiv = 
-        TranslateSubdiv(this, pxr::UsdGeomMesh(child), worldMatrix);
+        TranslateSubdiv(this, pxr::UsdGeomMesh(child), worldMatrix, _scene);
         _prims.push_back(subdiv);
       }
       else
       {
         AmnUsdEmbreeMesh* mesh = 
-        TranslateMesh(this, pxr::UsdGeomMesh(child), worldMatrix);
+        TranslateMesh(this, pxr::UsdGeomMesh(child), worldMatrix, _scene);
         _prims.push_back(mesh);
       }
     }
     CollectPrims(child);
   }
+  
+  
 }
 
 // traverse stage

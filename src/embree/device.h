@@ -20,9 +20,6 @@
 #include "ray.h"
 #include "context.h"
 
-
-
-
 AMN_NAMESPACE_OPEN_SCOPE
 class AmnViewportUI;
 class AmnCamera;
@@ -81,8 +78,7 @@ static RenderTileFunc RenderTile;
 // task that renders a single screen tile
 embree::Vec3fa RenderPixelStandard(float x, 
                                   float y, 
-                                  const AmnCamera* camera, 
-                                  RayStats& stats);
+                                  const AmnCamera* camera);
 
 // standard shading function
 void RenderTileStandard(int taskIndex,
@@ -98,8 +94,7 @@ void RenderTileStandard(int taskIndex,
 // task that renders a single pixel with ambient occlusion 
 embree::Vec3fa RenderPixelAmbientOcclusion(float x, 
                                           float y, 
-                                          const AmnCamera* camera, 
-                                          RayStats& stats);
+                                          const AmnCamera* camera);
 
 // ambient occlusion shading function
 void RenderTileAmbientOcclusion(int taskIndex,
@@ -115,8 +110,7 @@ void RenderTileAmbientOcclusion(int taskIndex,
 // task that renders a single pixel with geometry normal
 embree::Vec3fa RenderPixelNormal(float x, 
                                 float y, 
-                                const AmnCamera* camera, 
-                                RayStats& stats);
+                                const AmnCamera* camera);
 
 // geometry normal shading function
 void RenderTileNormal(int taskIndex,

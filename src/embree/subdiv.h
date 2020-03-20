@@ -34,7 +34,8 @@ struct AmnUsdEmbreeSubdiv  : public AmnUsdEmbreePrim {
 AmnUsdEmbreeSubdiv* TranslateSubdiv( 
   AmnUsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
-  const pxr::GfMatrix4d& worldMatrix
+  const pxr::GfMatrix4d& worldMatrix,
+  RTCScene scene
 );
 
 bool CheckNormals(

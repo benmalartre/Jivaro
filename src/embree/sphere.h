@@ -22,19 +22,27 @@ struct AmnUsdEmbreeSphere  : public AmnUsdEmbreePrim {
   pxr::VtArray<pxr::GfVec2f>  _uvs;
 };
 
-AmnUsdEmbreeSphere* TranslateSphere( AmnUsdEmbreeContext* ctxt,
-                              const pxr::UsdGeomSphere& usdSphere);
+AmnUsdEmbreeSphere* 
+TranslateSphere(AmnUsdEmbreeContext* ctxt,
+                const pxr::UsdGeomSphere& usdSphere,
+                const pxr::GfMatrix4d& worldMatrix,
+                RTCScene scene);
 
-void BuildPoints(int num_lats, 
-                 int num_longs, 
-                 pxr::VtArray<pxr::GfVec3f>& positions,
-                 pxr::VtArray<pxr::GfVec3f>& normals,
-                 pxr::VtArray<pxr::GfVec2f>& uvs, 
-                 float radius,
-                 float* worldMatrix);
+void 
+DeleteSphere(RTCScene scene, AmnUsdEmbreeSphere* sphere);
 
-void BuildTriangles(int num_lats,
-                    int num_longs,
-                    pxr::VtArray<int>& triangles);
+void 
+BuildPoints(int num_lats, 
+            int num_longs, 
+            pxr::VtArray<pxr::GfVec3f>& positions,
+            pxr::VtArray<pxr::GfVec3f>& normals,
+            pxr::VtArray<pxr::GfVec2f>& uvs, 
+            float radius,
+            float* worldMatrix);
+
+void 
+BuildTriangles(int num_lats,
+              int num_longs,
+              pxr::VtArray<int>& triangles);
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -7,12 +7,15 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 // translate usd sphere to embree mesh
 AmnUsdEmbreeSphere* 
-TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
+TranslateSphere(
+  AmnUsdEmbreeContext* ctxt, 
+  const pxr::UsdGeomSphere& usdSphere,
+  const pxr::GfMatrix4d& worldMatrix,
+  RTCScene scene)
 {
   
   AmnUsdEmbreeSphere* result = new AmnUsdEmbreeSphere();
   result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
-  //result->_worldMatrix = usdMesh.GetPrim().GetWor;
   result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_TRIANGLE);
   result->_name = usdSphere.GetPrim().GetPrimPath().GetString();
   result->_resolution = 32;
@@ -36,7 +39,7 @@ TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
               result->_normals,
               result->_uvs, 
               result->_radius,
-              &result->_worldMatrix[0]);
+              pxr::GfMatrix4f(worldMatrix)[0]);
 
   rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
                             RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
@@ -48,77 +51,19 @@ TranslateSphere(AmnUsdEmbreeContext* ctxt, const pxr::UsdGeomSphere& usdSphere)
                             num_vertices);              // Num Elements*/
 
   BuildTriangles(num_lats, num_longs, result->_triangles);
-  /*
-  bool hasTriangles = false;
-  pxr::UsdAttribute countsAttr = usdMesh.GetFaceVertexCountsAttr();
-  pxr::UsdAttribute indicesAttr = usdMesh.GetFaceVertexIndicesAttr();
-  pxr::VtArray<int> counts;
-  pxr::VtArray<int> indices;
-  if(countsAttr && countsAttr.HasAuthoredValue() &&
-    indicesAttr && indicesAttr.HasAuthoredValue())
-  {
-    
-    countsAttr.Get(&counts, ctxt->_time);
-    indicesAttr.Get(&indices, ctxt->_time);
 
-    result->_numOriginalSamples = 0;
-    for(auto count : counts)result->_numOriginalSamples += count;
-
-    num_triangles = TriangulateMesh(counts, 
-                                    indices, 
-                                    result->_triangles, 
-                                    result->_samples);
-
-    rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
-                              RTC_BUFFER_TYPE_INDEX,      // RTCBufferType
-                              0,                          // Slot
-                              RTC_FORMAT_UINT3,           // RTCFormat
-                              result->_triangles.cdata(), // Datas Ptr
-                              0,                          // Offset
-                              3 * sizeof(int),            // Stride
-                              num_triangles);             // Num Elements
-    hasTriangles = true;
-  }
-
-  // if there are no triangles no point to continue 
-  if(!hasTriangles)
-  {
-    std::cerr << usdMesh.GetPrim().GetPrimPath() << "\n" << 
-          "Problem computing triangle datas : " <<
-            "this mesh is invalid!";
-    delete result;
-    return NULL;
-  }
-
-  CheckNormals(usdMesh, ctxt->_time, result);
-  if(!result->_hasNormals)
-  {
-    ComputeVertexNormals(result->_vertices,
-                        counts,
-                        indices,
-                        result->_triangles,
-                        result->_normals);
-    result->_hasNormals = true;
-    result->_normalsInterpolationType = VERTEX;
-  }
-
-  if(hasPoints && hasTriangles)
-  {
-    rtcCommitGeometry(result->_geom);
-    result->_geomId = rtcAttachGeometry(ctxt->_scene, result->_geom);
-    rtcReleaseGeometry(result->_geom);
-    return result;
-  }
-  else
-  {
-    std::cerr << usdMesh.GetPrim().GetPrimPath() << "\n" << 
-      "Problem computing mesh datas : " <<
-      "this mesh is invalid!";
-    delete result;
-    return NULL;
-  };
-  */
+  //AmnUsdEmbreeSetTransform(result, worldMatrix);
+  rtcCommitGeometry(result->_geom);
+  result->_geomId = rtcAttachGeometry(scene, result->_geom);
+  rtcReleaseGeometry(result->_geom);
+  
  return 0;
+}
+
+void DeleteSphere(RTCScene scene, AmnUsdEmbreeSphere* sphere)
+{
+  rtcDetachGeometry(scene, sphere->_geomId);
+  delete sphere;
 }
 
 void 

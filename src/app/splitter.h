@@ -24,9 +24,7 @@ class AmnSplitter
 public: 
   AmnSplitter():_pixels(NULL){};
   ~AmnSplitter(){
-    std::cout << "DELETE SPLITTER PIXEL BEFORE" << std::endl;
     if(_pixels)delete [] _pixels;
-    std::cout << "DELETE SPLITTER PIXEL AFTER" << std::endl;
   };
 
   int* GetPixels(){return _pixels;};

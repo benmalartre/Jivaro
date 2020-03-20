@@ -19,13 +19,10 @@ AmnUI(parent, "Viewport")
   _mode = mode;
   _pixels = NULL;
   _camera = new AmnCamera("Camera");
-  pxr::GfCamera* camera = _camera->Get();
-  pxr::GfMatrix4d m(1);
-  m[3][0] = 0;
-  m[3][1] = 0;
-  m[3][2] = 32;
-  camera->SetTransform(m);
-  camera->SetFocusDistance(32);
+  
+  _camera->Set(pxr::GfVec3d(12,24,12),
+              pxr::GfVec3d(0,0,0),
+              pxr::GfVec3d(0,1,0));
 
   _interact = false;
   _interactionMode = INTERACTION_NONE;
@@ -120,9 +117,10 @@ void AmnViewportUI::MouseMove(int x, int y)
        
       case INTERACTION_DOLLY:
       {
-        double zoomDelta = -.002 * (dx + dy);
-        //_camera->AdjustDistance(1 + zoomDelta);
-        std::cout << "DOLLY..." << std::endl;
+        _camera->Dolly(
+          static_cast<double>(dx)/static_cast<double>(GetWidth()), 
+          static_cast<double>(dy)/static_cast<double>(GetHeight()) 
+        );
         /*
         if freeCam.orthographic:
             # orthographic cameras zoom by scaling fov
@@ -140,8 +138,8 @@ void AmnViewportUI::MouseMove(int x, int y)
         
       case INTERACTION_ORBIT:
       {
-        std::cout << "ORBIT..." << std::endl;
-        _camera->Tumble(0.25 * dx, 0.25*dy);
+        _camera->Orbit(dx, dy);
+        //_camera->Tumble(0.25 * dx, 0.25*dy);
         /*
         _camera->rotateOrbit((float)dx/100, -(float)dy/100);
         */
@@ -152,7 +150,7 @@ void AmnViewportUI::MouseMove(int x, int y)
         break;
         
     }
-    _camera->ComputeFrustum();
+    //_camera->ComputeFrustum();
     RenderToMemory(_camera, true);
     SetContext(EMBREE_CTXT);
     _lastX = x;
@@ -162,7 +160,9 @@ void AmnViewportUI::MouseMove(int x, int y)
 
 void AmnViewportUI::MouseWheel(int x, int y)
 {
-  std::cout << "AmnViewportUI MOUSE WHEEL EVENET ..." << std::endl;
+  double dx = static_cast<double>(x);
+  double dy = static_cast<double>(y);
+  _camera->Dolly(dx, dy);
 }
 
 void AmnViewportUI::Draw()

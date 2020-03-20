@@ -46,6 +46,7 @@ add_executable(${TARGET}
   embree/sphere.cpp
   embree/mesh.cpp
   embree/subdiv.cpp
+  embree/instance.cpp
   embree/context.cpp
   embree/device.cpp
   utils/glutils.cpp
@@ -71,7 +72,7 @@ target_include_directories(${TARGET}
 )
 
 target_link_libraries(${TARGET}
-  ${OPENGL_gl_LIBRARY}
+  ${OPENGL_LIBRARY}
   ${Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}

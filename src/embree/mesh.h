@@ -30,8 +30,11 @@ struct AmnUsdEmbreeMesh  : public AmnUsdEmbreePrim {
 AmnUsdEmbreeMesh* TranslateMesh( 
   AmnUsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
-  const pxr::GfMatrix4d& worldMatrix
+  const pxr::GfMatrix4d& worldMatrix,
+  RTCScene scene
 );
+
+void DeleteMesh(RTCScene scene, AmnUsdEmbreeMesh* mesh);
 
 bool CheckNormals(
   const pxr::UsdGeomMesh& usdMesh,

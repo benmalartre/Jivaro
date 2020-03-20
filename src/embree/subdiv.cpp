@@ -11,12 +11,13 @@ AmnUsdEmbreeSubdiv*
 TranslateSubdiv(
   AmnUsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
-  const pxr::GfMatrix4d& worldMatrix
+  const pxr::GfMatrix4d& worldMatrix,
+  RTCScene scene
 )
 {
-
   size_t num_vertices, num_faces, num_indices;
   AmnUsdEmbreeSubdiv* result = new AmnUsdEmbreeSubdiv();
+  ctxt->_primCacheMap[usdMesh.GetPath()] = std::move(result);
 
   result->_type = RTC_GEOMETRY_TYPE_SUBDIVISION;
   //result->_worldMatrix = usdMesh.GetPrim().GetWor;
@@ -151,12 +152,13 @@ TranslateSubdiv(
         sizeof(float), 
         num_indices
       );
-    for (unsigned int i=0; i<num_indices; i++)level[i] = result->_vertices[result->_indices[i]][1]/5;
+    for (unsigned int i=0; i<num_indices; i++)level[i] = 0.f;//result->_vertices[result->_indices[i]][1]/5;
 
     //AmnUsdEmbreeSetTransform(result, worldMatrix);
     rtcCommitGeometry(result->_geom);
-    result->_geomId = rtcAttachGeometry(ctxt->_scene, result->_geom);
+    result->_geomId = rtcAttachGeometry(scene, result->_geom);
     rtcReleaseGeometry(result->_geom);
+    std::cout << "CREATED EMBREE MESH GEOMETRY :D" << std::endl;
     return result;
   }
   else

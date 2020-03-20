@@ -9,25 +9,21 @@ AmnCamera::AmnCamera(const std::string& name, double fov) :
   _fov(fov),
   _camera(pxr::GfCamera()),
   _orthographic(false),
-  _overrideNear(-1),
-  _overrideFar(-1),
-  _cameraTransformDirty(true),
-  _rotTheta(0),
-  _rotPhi(0),
-  _rotPsi(0),
-  _center(pxr::GfVec3d(0,0,0)),
-  _dist(100),
-  _closestVisibleDist(0),
-  _lastFramedDist(0),
-  _lastFramedClosestDist(0),
-  _selSize(10)
+  _near(DEFAULT_NEAR),
+  _far(DEFAULT_FAR),
+  _dirty(true),
+  _pos(pxr::GfVec3d(0,0,5)),
+  _lookat(pxr::GfVec3d(0,0,0)),
+  _up(pxr::GfVec3d(0,1,0))
 {
   _camera.SetPerspectiveFromAspectRatioAndFieldOfView(
             1.0, _fov, pxr::GfCamera::FOVVertical);
-  _camera.SetFocusDistance(_dist);
-  _ResetClippingPlanes();
+  _camera.SetFocusDistance((_pos - _lookat).GetLength());
+  _camera.SetClippingRange(pxr::GfRange1f(_near, _far));
+  //_ResetClippingPlanes();
 }
 
+/*
 void AmnCamera::_PushToCameraTransform()
 {
   if(!_cameraTransformDirty) return;
@@ -191,11 +187,7 @@ void AmnCamera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
     computedFar = computedNearFar.GetMax();
 
     double precisionNear = computedFar / MAX_GOOD_Z_RESOLUTION;
-    /*
-    if debugClipping:
-      print "Proposed near for precision: {}, closestDist: {}"\
-          .format(precisionNear, self._closestVisibleDist)
-          */
+
     if(_closestVisibleDist)
     {
       // Because of our concern about orbit/truck causing
@@ -211,10 +203,7 @@ void AmnCamera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
         // clipping as we zoom in, vs bad z-fighting as we zoom in.
         // See AdjustDistance() for comment about better solution.
         halfClose = std::max({precisionNear, halfClose, computedNear});
-        /*
-        if debugClipping:
-          print "ADJUSTING: Accounting for zoom-in"
-        */
+
       }
 
       if(halfClose < computedNear)
@@ -222,17 +211,11 @@ void AmnCamera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
         // If there's stuff very very close to the camera, it
         // may have been clipped by computedNear.  Get it back!
         computedNear = halfClose;
-        /*
-        if debugClipping:
-            print "ADJUSTING: closestDist was closer than bboxNear"
-        */
+
       }
       else if(precisionNear > computedNear)
       {
         computedNear = std::min((precisionNear + halfClose) / 2.0, halfClose);
-        /*
-        if debugClipping:
-            print "ADJUSTING: gaining precision by pushing out"*/
       }
     }
   }
@@ -242,11 +225,6 @@ void AmnCamera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
 
   // Make sure far is greater than near
   far = std::max(near+1, far);
-
-  /*
-  if debugClipping:
-      print "***Final Near/Far: {}, {}".format(near, far)
-  */
 
   _camera.SetClippingRange(pxr::GfRange1f(near, far));
 }       
@@ -268,13 +246,7 @@ void AmnCamera::_SetClosestVisibleDistFromPoint(const pxr::GfVec3d& point)
   _closestVisibleDist = camRay.FindClosestPoint(point)[1];
   _lastFramedDist = _dist;
   _lastFramedClosestDist = _closestVisibleDist;
-
-  /*
-  pxr::TfDebug.IsDebugSymbolNameEnabled(DEBUG_CLIPPING):
-      print "Resetting closest distance to {}; CameraPos: {}, closestPoint: {}".format(self._closestVisibleDist, camPos, point)
-  */
 }
-
 
 double AmnCamera::_ComputePixelsToWorldFactor(double viewportHeight)
 {
@@ -380,35 +352,85 @@ void AmnCamera::Walk(double dForward, double dRight)
   _PullFromCameraTransform();
   //self.signalFrustumChanged.emit()
 }
+*/
+
+void AmnCamera::Set(const pxr::GfVec3d& pos, 
+                    const pxr::GfVec3d& lookat, 
+                    const pxr::GfVec3d& up)
+{
+  _pos = pos;
+  _lookat = lookat;
+  _up = up;
+
+  LookAt();
+  _GetSphericalCoordinates();
+}
+
+void AmnCamera::LookAt()
+{
+  pxr::GfMatrix4d m(1);
+  m.SetLookAt (_pos, _lookat, _up);
+  _camera.SetTransform(m.GetInverse() * pxr::GfMatrix4d().SetTranslate(_pos));
+  ComputeFrustum();
+
+  /*
+  pxr::GfFrustum frustum = _camera.GetFrustum();
+  frustum.SetPosition(_pos);
+  
+  pxr::GfVec3d dir = (_pos - _lookat).GetNormalized();
+  pxr::GfVec3d side = GfCross(dir, _up).GetNormalized();
+  pxr::GfVec3d up = GfCross(side, dir).GetNormalized();
+
+  pxr::GfMatrix3d rm(1);
+  rm.SetRow(0, side);
+  rm.SetRow(1, up);
+  rm.SetRow(2, dir);
+  pxr::GfRotation rot = rm.ExtractRotation();
+  frustum.SetRotation(rot);
+
+  _camera.SetTransform(frustum.ComputeViewMatrix());
+  */
+}
+
+void AmnCamera::Orbit(double dx, double dy)
+{
+  double dist = (_pos - _lookat).GetLength();
+  _pos = pxr::GfVec3d(0,0, dist);
+
+  _polar -= dy;
+  _azimuth -= dx;
+
+  pxr::GfRotation pR(pxr::GfVec3d::XAxis(), _polar);
+  _pos = pR.TransformDir(_pos);
+
+  pxr::GfRotation aR( pxr::GfVec3d::YAxis(), _azimuth);
+  _pos = aR.TransformDir(_pos);
+
+  _pos += _lookat;
+
+  // flip up vector if necessary
+  double checkAngle = std::fabs(std::fmod(_polar, 360));
+  if(checkAngle < 90 || checkAngle >= 270)_up = pxr::GfVec3d(0,1,0);
+  else _up = pxr::GfVec3d(0,-1,0);
+
+  // lookat
+  LookAt();
+}
+
+void AmnCamera::Dolly(double dx, double dy)
+{
+  double delta = (dx + dy) * 2.0;
+
+  _pos *= delta;
+  _pos += _lookat * (1.0 - delta);
+    
+  // update camera transform
+  LookAt();
+}
 
 pxr::GfRay AmnCamera::ComputeRay(const pxr::GfVec2d& pos) const
 {
   return _frustum.ComputeRay(pos);
-}
-
-// helpers conversion to ISPCCamera (embree)
-void AmnCamera::GetFrom(float& x, float& y, float& z)
-{
-  pxr::GfVec3d pos = _camera.GetFrustum().GetPosition();
-  x = (float)pos[0];
-  y = (float)pos[1];
-  z = (float)pos[2];
-}
-
-void AmnCamera::GetTo(float& x, float& y, float& z)
-{
-  pxr::GfVec3d to = _camera.GetFrustum().ComputeLookAtPoint();
-  x = (float)to[0];
-  y = (float)to[1];
-  z = (float)to[2];
-}
-
-void AmnCamera::GetUp(float& x, float& y, float& z)
-{
-  pxr::GfVec3d up = _camera.GetFrustum().ComputeUpVector();
-  x = (float)up[0];
-  y = (float)up[1];
-  z = (float)up[2];
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

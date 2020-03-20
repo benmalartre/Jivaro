@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../default.h"
-//#include "../utils/utils.h"
-//#include "../utils/glutils.h"
+#include "../utils/utils.h"
+#include "../utils/glutils.h"
 #include "shader.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
