@@ -6,13 +6,13 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class AmnUsdEmbreeContext;
+class UsdEmbreeContext;
 
 // To be able to have transform as in usd specs, implicit sphere are converted
 // to triangles polygonal mesh with smooth per-vertex normals
 // A sphere of resolution N will have N+1 longitudes, including extremity
 // points, and N*2 latitudes
-struct AmnUsdEmbreeSphere  : public AmnUsdEmbreePrim {
+struct UsdEmbreeSphere  : public UsdEmbreePrim {
   float                       _radius;
   int                         _resolution;
   pxr::VtArray<pxr::GfVec3f>  _vertices;
@@ -22,14 +22,14 @@ struct AmnUsdEmbreeSphere  : public AmnUsdEmbreePrim {
   pxr::VtArray<pxr::GfVec2f>  _uvs;
 };
 
-AmnUsdEmbreeSphere* 
-TranslateSphere(AmnUsdEmbreeContext* ctxt,
+UsdEmbreeSphere* 
+TranslateSphere(UsdEmbreeContext* ctxt,
                 const pxr::UsdGeomSphere& usdSphere,
                 const pxr::GfMatrix4d& worldMatrix,
                 RTCScene scene);
 
 void 
-DeleteSphere(RTCScene scene, AmnUsdEmbreeSphere* sphere);
+DeleteSphere(RTCScene scene, UsdEmbreeSphere* sphere);
 
 void 
 BuildPoints(int num_lats, 

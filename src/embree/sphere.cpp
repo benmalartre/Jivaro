@@ -6,15 +6,15 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // translate usd sphere to embree mesh
-AmnUsdEmbreeSphere* 
+UsdEmbreeSphere* 
 TranslateSphere(
-  AmnUsdEmbreeContext* ctxt, 
+  UsdEmbreeContext* ctxt, 
   const pxr::UsdGeomSphere& usdSphere,
   const pxr::GfMatrix4d& worldMatrix,
   RTCScene scene)
 {
   
-  AmnUsdEmbreeSphere* result = new AmnUsdEmbreeSphere();
+  UsdEmbreeSphere* result = new UsdEmbreeSphere();
   result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
   result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_TRIANGLE);
   result->_name = usdSphere.GetPrim().GetPrimPath().GetString();
@@ -52,7 +52,7 @@ TranslateSphere(
 
   BuildTriangles(num_lats, num_longs, result->_triangles);
 
-  //AmnUsdEmbreeSetTransform(result, worldMatrix);
+  //UsdEmbreeSetTransform(result, worldMatrix);
   rtcCommitGeometry(result->_geom);
   result->_geomId = rtcAttachGeometry(scene, result->_geom);
   rtcReleaseGeometry(result->_geom);
@@ -60,7 +60,7 @@ TranslateSphere(
  return 0;
 }
 
-void DeleteSphere(RTCScene scene, AmnUsdEmbreeSphere* sphere)
+void DeleteSphere(RTCScene scene, UsdEmbreeSphere* sphere)
 {
   rtcDetachGeometry(scene, sphere->_geomId);
   delete sphere;

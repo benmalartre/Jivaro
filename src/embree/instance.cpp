@@ -8,8 +8,8 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 // recurse usd instance master
 void RecurseMaster(
-  AmnUsdEmbreeContext* ctxt, 
-  AmnUsdEmbreeMaster* master, 
+  UsdEmbreeContext* ctxt, 
+  UsdEmbreeMaster* master, 
   const pxr::UsdPrim& usdPrim,
   pxr::UsdGeomXformCache* xformCache,
   RTCScene scene
@@ -17,7 +17,7 @@ void RecurseMaster(
 {
   for(auto child : usdPrim.GetAllChildren())
   {
-    //AmnUsdEmbreePrim* prim = TfMapLookupPtr(ctxt->_primCacheMap, child.GetPath());
+    //UsdEmbreePrim* prim = TfMapLookupPtr(ctxt->_primCacheMap, child.GetPath());
     _PrimCacheMap::const_iterator it = ctxt->_primCacheMap.find(child.GetPath());
     if (it != ctxt->_primCacheMap.end()) 
     {
@@ -35,7 +35,7 @@ void RecurseMaster(
         pxr::GfMatrix4d worldMatrix = 
           xformCache->GetLocalToWorldTransform(child);
 
-        AmnUsdEmbreeSubdiv* mesh = 
+        UsdEmbreeSubdiv* mesh = 
           TranslateSubdiv(
             ctxt, 
             pxr::UsdGeomMesh(child), 
@@ -52,15 +52,15 @@ void RecurseMaster(
 }
 
 // translate usd master to embree master
-AmnUsdEmbreeMaster* 
+UsdEmbreeMaster* 
 TranslateMaster(
-  AmnUsdEmbreeContext* ctxt, 
+  UsdEmbreeContext* ctxt, 
   const pxr::UsdPrim& usdPrim,
   pxr::UsdGeomXformCache* xformCache,
   RTCScene scene
 )
 {
-  AmnUsdEmbreeMaster* result = new AmnUsdEmbreeMaster();
+  UsdEmbreeMaster* result = new UsdEmbreeMaster();
   result->_scene = rtcNewScene(ctxt->_device);
   ctxt->_primCacheMap[usdPrim.GetPath()] = std::move(result);
 
@@ -72,14 +72,14 @@ TranslateMaster(
 }
 
 // translate usd instance to embree instance
-AmnUsdEmbreeInstance* TranslateInstance( 
-  AmnUsdEmbreeContext* ctxt, 
-  AmnUsdEmbreeMaster* master,
+UsdEmbreeInstance* TranslateInstance( 
+  UsdEmbreeContext* ctxt, 
+  UsdEmbreeMaster* master,
   const pxr::GfMatrix4d& worldMatrix,
   RTCScene scene
 )
 {
-  AmnUsdEmbreeInstance* result = new AmnUsdEmbreeInstance();
+  UsdEmbreeInstance* result = new UsdEmbreeInstance();
   result->_geom = rtcNewGeometry (ctxt->_device, RTC_GEOMETRY_TYPE_INSTANCE);
   result->_color = pxr::GfVec3d(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
 
@@ -103,7 +103,7 @@ AmnUsdEmbreeInstance* TranslateInstance(
   _PrimCacheMap::const_iterator it = ctxt->_primCacheMap.find(masterPrim.GetPath());
   if (it != ctxt->_primCacheMap.end()) 
   {
-    AmnUsdEmbreeMaster* master = static_cast<AmnUsdEmbreeMaster*>(it->second);
+    UsdEmbreeMaster* master = static_cast<UsdEmbreeMaster*>(it->second);
     std::cout << "FOUND MASTER :D ===> " << master << std::endl;
 
     rtcSetGeometryInstancedScene(result->_geom, master->_scene);
@@ -112,7 +112,7 @@ AmnUsdEmbreeInstance* TranslateInstance(
     rtcAttachGeometry(scene,result->_geom);
     rtcReleaseGeometry(result->_geom);
 
-    AmnUsdEmbreeSetTransform(result, pxr::GfMatrix4d(1).SetTranslate(pxr::GfVec3d(0,12,0)));
+    UsdEmbreeSetTransform(result, pxr::GfMatrix4d(1).SetTranslate(pxr::GfVec3d(0,12,0)));
     rtcCommitGeometry(result->_geom);
   }
   else

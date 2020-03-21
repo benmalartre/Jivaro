@@ -10,7 +10,7 @@
 AMN_NAMESPACE_OPEN_SCOPE
 // constructor
 //----------------------------------------------------------------------------
-AmnUsdEmbreeContext::AmnUsdEmbreeContext():
+UsdEmbreeContext::UsdEmbreeContext():
   _scene(NULL),
   _device(NULL),
   _changed(false),
@@ -25,7 +25,7 @@ AmnUsdEmbreeContext::AmnUsdEmbreeContext():
 
 // destructor
 //----------------------------------------------------------------------------
-AmnUsdEmbreeContext::~AmnUsdEmbreeContext()
+UsdEmbreeContext::~UsdEmbreeContext()
 {
   if(_bboxCache)delete _bboxCache;
   if(_xformCache)delete _xformCache;
@@ -35,7 +35,7 @@ AmnUsdEmbreeContext::~AmnUsdEmbreeContext()
 
 // traverse all prim range
 //----------------------------------------------------------------------------
-void AmnUsdEmbreeContext::GetNumPrims(const pxr::UsdPrim& prim)
+void UsdEmbreeContext::GetNumPrims(const pxr::UsdPrim& prim)
 {
   pxr::TfToken visibility;
   for(auto child : prim.GetAllChildren())
@@ -54,7 +54,7 @@ void AmnUsdEmbreeContext::GetNumPrims(const pxr::UsdPrim& prim)
 
 // recurse collect prim
 //----------------------------------------------------------------------------
-void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
+void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
 {
   bool flip = false;
   std::string path = prim.GetPath().GetString();
@@ -64,7 +64,7 @@ void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
   {
     pxr::GfMatrix4d worldMatrix = 
         _xformCache->GetLocalToWorldTransform(prim);
-    AmnUsdEmbreeMaster* master = 
+    UsdEmbreeMaster* master = 
       TranslateMaster(this, prim, _xformCache, _scene);
     _masters.push_back(master);
 
@@ -74,7 +74,7 @@ void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
     for(int i=0; i<N; ++i)
     {
       float ta = i * step * DEGREES_TO_RADIANS;
-      AmnUsdEmbreeInstance* instance = 
+      UsdEmbreeInstance* instance = 
       TranslateInstance(
         this, 
         master, 
@@ -103,13 +103,13 @@ void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
 
       if(flip)
       {
-        AmnUsdEmbreeSubdiv* subdiv = 
+        UsdEmbreeSubdiv* subdiv = 
         TranslateSubdiv(this, pxr::UsdGeomMesh(child), worldMatrix, _scene);
         _prims.push_back(subdiv);
       }
       else
       {
-        AmnUsdEmbreeMesh* mesh = 
+        UsdEmbreeMesh* mesh = 
         TranslateMesh(this, pxr::UsdGeomMesh(child), worldMatrix, _scene);
         _prims.push_back(mesh);
       }
@@ -122,7 +122,7 @@ void AmnUsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
 
 // traverse stage
 //----------------------------------------------------------------------------
-void AmnUsdEmbreeContext::TraverseStage()
+void UsdEmbreeContext::TraverseStage()
 {
   _numPrims = 0;
   pxr::UsdStageRefPtr _stage = 
@@ -147,32 +147,34 @@ void AmnUsdEmbreeContext::TraverseStage()
 
 // set file path (append to list)
 //----------------------------------------------------------------------------
-void AmnUsdEmbreeContext::SetFilePath(const std::string& filePath)
+void UsdEmbreeContext::SetFilePath(const std::string& filePath)
 {
   _files.push_back(filePath);
 }
 
 // initialize embree device
 //----------------------------------------------------------------------------
-void AmnUsdEmbreeContext::InitDevice(AmnCamera* camera)
+void UsdEmbreeContext::InitDevice(Camera* camera)
 {
   DeviceInit(camera);
 }
 
-void AmnUsdEmbreeContext::CommitDevice()
+void UsdEmbreeContext::CommitDevice()
 {
   CommitScene();
 }
 
-void AmnUsdEmbreeContext::ReleaseDevice()
+void UsdEmbreeContext::ReleaseDevice()
 {
   DeviceCleanup();
 }
 
 // resize (realocate memory)
 //----------------------------------------------------------------------------
-void AmnUsdEmbreeContext::Resize(int width, int height)
+void UsdEmbreeContext::Resize(int width, int height)
 {
+
+  std::cout << "RESIZE EMBREE CTXT : " << width << ", " << height << std::endl;
   _width = width;
   _height = height;
   if(_pixels)embree::alignedFree(_pixels);
@@ -180,8 +182,10 @@ void AmnUsdEmbreeContext::Resize(int width, int height)
   _pixels = (int*) embree::alignedMalloc(_width * _height * sizeof(int), 64);
   _lowPixels = 
     (int*) embree::alignedMalloc(
-      (_width*0.1) * (_height * 0.1) * sizeof(int), 64
+      (_width>>4) * (_height>>4) * sizeof(int), 64
     );
+  std::cout << "RESIZE EMBREE CTXT DONE ! " << std::endl;
+
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

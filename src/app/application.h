@@ -13,24 +13,24 @@
 #include "../embree/mesh.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
-extern AmnUsdEmbreeContext* EMBREE_CTXT;
+extern UsdEmbreeContext* EMBREE_CTXT;
 
-class AmnApplication
+class Application
 {
 public:
   static const char* APPLICATION_NAME;
   // constructor
-  AmnApplication(unsigned width, unsigned height);
-  AmnApplication(bool fullscreen=true);
+  Application(unsigned width, unsigned height);
+  Application(bool fullscreen=true);
 
   // destructor
-  ~AmnApplication();
+  ~Application();
 
     // create a fullscreen window
-  static AmnWindow* CreateFullScreenWindow();
+  static Window* CreateFullScreenWindow();
 
   // create a standard window of specified size
-  static AmnWindow* CreateStandardWindow(int width, int height);
+  static Window* CreateStandardWindow(int width, int height);
   
   // init aplication
   void Init();
@@ -44,13 +44,13 @@ public:
 
 private:
   std::string                       _fileName;
-  AmnWindow*                        _mainWindow;
-  AmnUsdEmbreeContext*              _context;
+  Window*                        _mainWindow;
+  UsdEmbreeContext*              _context;
   int                               _width;
   int                               _height;
   std::vector<pxr::UsdStageRefPtr>  _stages;
 
-  AmnGraphUI*                       _test;
+  GraphUI*                       _test;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE // namespace pxr

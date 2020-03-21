@@ -7,10 +7,10 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class DummyUI : public AmnUI
+class DummyUI : public BaseUI
 {
 public:
-  DummyUI(AmnView* parent, const std::string& name);
+  DummyUI(View* parent, const std::string& name);
   ~DummyUI()         override;
 
   void MouseButton(int action, int button, int mods) override{};
@@ -18,6 +18,7 @@ public:
   void Draw()      override;
 
   void FillBackground();
+  void Demo();
 private:
   pxr::GfVec3f _color;
 

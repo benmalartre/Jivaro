@@ -7,16 +7,16 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // translate usd mesh to embree subdiv
-AmnUsdEmbreeSubdiv* 
+UsdEmbreeSubdiv* 
 TranslateSubdiv(
-  AmnUsdEmbreeContext* ctxt, 
+  UsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
   const pxr::GfMatrix4d& worldMatrix,
   RTCScene scene
 )
 {
   size_t num_vertices, num_faces, num_indices;
-  AmnUsdEmbreeSubdiv* result = new AmnUsdEmbreeSubdiv();
+  UsdEmbreeSubdiv* result = new UsdEmbreeSubdiv();
   ctxt->_primCacheMap[usdMesh.GetPath()] = std::move(result);
 
   result->_type = RTC_GEOMETRY_TYPE_SUBDIVISION;
@@ -154,7 +154,7 @@ TranslateSubdiv(
       );
     for (unsigned int i=0; i<num_indices; i++)level[i] = 0.f;//result->_vertices[result->_indices[i]][1]/5;
 
-    //AmnUsdEmbreeSetTransform(result, worldMatrix);
+    //UsdEmbreeSetTransform(result, worldMatrix);
     rtcCommitGeometry(result->_geom);
     result->_geomId = rtcAttachGeometry(scene, result->_geom);
     rtcReleaseGeometry(result->_geom);
@@ -178,7 +178,7 @@ TranslateSubdiv(
 bool 
 CheckNormals(const pxr::UsdGeomMesh& usdMesh,
             const pxr::UsdTimeCode& time,
-            AmnUsdEmbreeSubdiv* subdiv)
+            UsdEmbreeSubdiv* subdiv)
 {
   /*
   subdiv->_hasNormals = false;

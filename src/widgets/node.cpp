@@ -42,7 +42,7 @@ int GetColorFromAttribute(const pxr::UsdAttribute& attr)
 
 
 //, const pxr::UsdAttribute& attr
-AmnPortUI::AmnPortUI(const pxr::GraphInput& port, int index)
+PortUI::PortUI(const pxr::GraphInput& port, int index)
 {
   _id = index;
   //SdfValueTypeName
@@ -53,7 +53,7 @@ AmnPortUI::AmnPortUI(const pxr::GraphInput& port, int index)
 
 }
 
-AmnPortUI::AmnPortUI(const pxr::GraphOutput& port, int index)
+PortUI::PortUI(const pxr::GraphOutput& port, int index)
 {
   _id = index;
   _color = GetColorFromAttribute(pxr::UsdAttribute(port));
@@ -61,7 +61,7 @@ AmnPortUI::AmnPortUI(const pxr::GraphOutput& port, int index)
   _io = false;
 }
 
-void AmnPortUI::Draw()
+void PortUI::Draw()
 {
   if(_io)
     ImNodes::BeginInputAttribute(_id, ImNodes::PinShape_CircleFilled);
@@ -72,16 +72,16 @@ void AmnPortUI::Draw()
   ImNodes::EndAttribute();
 }
 
-// AmnConnexionUI draw
+// ConnexionUI draw
 //------------------------------------------------------------------------------
-void AmnConnexionUI::Draw()
+void ConnexionUI::Draw()
 {
   ImNodes::Link(_id, _start, _end);
 }
 
-// AmnNodeUI constructor
+// NodeUI constructor
 //------------------------------------------------------------------------------
-AmnNodeUI::AmnNodeUI(const pxr::UsdPrim& prim, int& id):
+NodeUI::NodeUI(const pxr::UsdPrim& prim, int& id):
 _prim(prim), _id(id)
 {
   id++;
@@ -94,14 +94,14 @@ _prim(prim), _id(id)
       _inputs.resize(node.NumInputs());
       for(int i=0;i<_inputs.size();++i)
       {
-        _inputs[i] = AmnPortUI(node.GetInput(i), id++);
+        _inputs[i] = PortUI(node.GetInput(i), id++);
       }
 
       int offset = _inputs.size();
       _outputs.resize(node.NumOutputs());
       for(int i=0;i<_outputs.size();++i)
       {
-        _outputs[i] = AmnPortUI(node.GetOutput(i), id++);
+        _outputs[i] = PortUI(node.GetOutput(i), id++);
       }
     }
     else if(_prim.IsA<pxr::GraphGraph>())
@@ -116,14 +116,14 @@ _prim(prim), _id(id)
   }
 }
 
-// AmnNodeUI destructor
+// NodeUI destructor
 //------------------------------------------------------------------------------
-AmnNodeUI::~AmnNodeUI()
+NodeUI::~NodeUI()
 {
 
 }
 
-void AmnNodeUI::Update()
+void NodeUI::Update()
 {
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   pxr::UsdAttribute posAttr = api.GetPosAttr();
@@ -147,9 +147,9 @@ void AmnNodeUI::Update()
 
 }
 
-// AmnNodeUI draw
+// NodeUI draw
 //------------------------------------------------------------------------------
-void AmnNodeUI::Draw()
+void NodeUI::Draw()
 {
   Update();
   ImGui::SetCursorPos(GetPos());

@@ -6,8 +6,8 @@
 #include <pxr/base/gf/vec3f.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
-class AmnView;
-class AmnWindow;
+class View;
+class Window;
 
 enum BORDER
 {
@@ -19,27 +19,39 @@ enum BORDER
 
 #define SPLITTER_THICKNESS 2
 
-class AmnSplitter
+class Splitter
 {
 public: 
-  AmnSplitter():_pixels(NULL){};
-  ~AmnSplitter(){
+  Splitter():_pixels(NULL) {
+    _flags = 0;
+    _flags |= ImGuiWindowFlags_NoTitleBar;
+    _flags |= ImGuiWindowFlags_NoScrollbar;
+    _flags |= ImGuiWindowFlags_NoMove;
+    _flags |= ImGuiWindowFlags_NoResize;
+    _flags |= ImGuiWindowFlags_NoCollapse;
+    _flags |= ImGuiWindowFlags_NoNav; 
+  };
+  
+  ~Splitter(){
     if(_pixels)delete [] _pixels;
   };
 
   int* GetPixels(){return _pixels;};
   inline unsigned GetWidth(){return _width;};
   inline unsigned GetHeight(){return _height;};
-  void RecurseBuildMap(AmnView* view);
-  void BuildMap(AmnView* view);
-  AmnView* GetViewByIndex(int index);
-  int GetPixelValue(double xPos, double yPos);
-
-  void Resize(int width, int height, AmnView* view);
+  void RecurseBuildMap(View* view);
+  void BuildMap(View* view);
+  View* GetViewByIndex(int index);
+  int Pick(int x, int y);
+  void SetHorizontalCursor(){_cursor = ImGuiMouseCursor_ResizeEW;};
+  void SetVerticalCursor(){_cursor = ImGuiMouseCursor_ResizeNS;};
+  void SetDefaultCursor(){_cursor = ImGuiMouseCursor_Arrow;};
+  void Resize(int width, int height, View* view);
   void Draw();
   void Event();
   
 private:
+  ImGuiWindowFlags    _flags;
   int*                _pixels;
   unsigned            _viewID;
   unsigned            _width;
@@ -47,7 +59,8 @@ private:
   unsigned            _lastX;
   unsigned            _lastY;
   bool                _drag;
-  std::vector<AmnView*>  _views;
+  int                 _cursor;
+  std::vector<View*>  _views;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

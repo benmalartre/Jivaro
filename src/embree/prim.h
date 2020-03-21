@@ -13,12 +13,12 @@ enum AMN_INTERPOLATION_TYPE{
 };
 
 template<typename T>
-struct AmnUsdEmbreePrimVarDatas{
+struct UsdEmbreePrimVarDatas{
   AMN_INTERPOLATION_TYPE      _interpolationType;
   pxr::VtArray<T>             _datas;
 };
 
-struct AmnUsdEmbreePrim {
+struct UsdEmbreePrim {
   unsigned                    _geomId;
   RTCGeometryType             _type;
   RTCGeometry                 _geom;

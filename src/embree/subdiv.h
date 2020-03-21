@@ -5,8 +5,8 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class AmnUsdEmbreeContext;
-struct AmnUsdEmbreeSubdiv  : public AmnUsdEmbreePrim {
+class UsdEmbreeContext;
+struct UsdEmbreeSubdiv  : public UsdEmbreePrim {
   pxr::VtArray<pxr::GfVec3f>  _vertices;
 
   pxr::VtArray<int>           _indices;
@@ -31,8 +31,8 @@ struct AmnUsdEmbreeSubdiv  : public AmnUsdEmbreePrim {
   //std::vector<UsdEmbreeMeshDatas> _extraDatas;
 };
 
-AmnUsdEmbreeSubdiv* TranslateSubdiv( 
-  AmnUsdEmbreeContext* ctxt, 
+UsdEmbreeSubdiv* TranslateSubdiv( 
+  UsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
   const pxr::GfMatrix4d& worldMatrix,
   RTCScene scene
@@ -41,7 +41,7 @@ AmnUsdEmbreeSubdiv* TranslateSubdiv(
 bool CheckNormals(
   const pxr::UsdGeomMesh& usdMesh,
   const pxr::UsdTimeCode& time,
-  AmnUsdEmbreeSubdiv* subdiv
+  UsdEmbreeSubdiv* subdiv
 );
 
 AMN_NAMESPACE_CLOSE_SCOPE

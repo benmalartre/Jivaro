@@ -27,15 +27,15 @@ enum VIEWPORT_MODE {
   HYDRA,
   EMBREE
 };
-class AmnUsdEmbreeContext;
-class AmnViewportUI : public AmnUI
+class UsdEmbreeContext;
+class ViewportUI : public BaseUI
 {
   public:
-    AmnViewportUI(AmnView* parent, VIEWPORT_MODE mode);
-    ~AmnViewportUI();
+    ViewportUI(View* parent, VIEWPORT_MODE mode);
+    ~ViewportUI();
     void SetMode(VIEWPORT_MODE mode){_mode=mode;};
-    void SetContext(AmnUsdEmbreeContext* ctxt);
-    AmnCamera* GetCamera(){return _camera;};
+    void SetContext(UsdEmbreeContext* ctxt);
+    Camera* GetCamera(){return _camera;};
 
     // overrides
     void MouseButton(int button, int action, int mods) override;
@@ -52,8 +52,8 @@ class AmnViewportUI : public AmnUI
     int*                  _lowPixels;
     int                   _width;
     int                   _height;
-    AmnUsdEmbreeContext*  _context;
-    AmnCamera*            _camera;
+    UsdEmbreeContext*  _context;
+    Camera*            _camera;
     int                   _lastX;
     int                   _lastY;
     bool                  _interact;

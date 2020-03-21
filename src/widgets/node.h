@@ -15,7 +15,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class AmnNodeUI;
+class NodeUI;
 
 #define NODE_CORNER_ROUNDING    4.f
 #define NODE_PORT_RADIUS        4.f
@@ -24,11 +24,11 @@ class AmnNodeUI;
 
 static int GetColorFromAttribute(const pxr::UsdAttribute& attr);
 
-class AmnPortUI {
+class PortUI {
 public:
-  AmnPortUI(){};
-  AmnPortUI(const pxr::GraphInput& port, int index);
-  AmnPortUI(const pxr::GraphOutput& port, int index);
+  PortUI(){};
+  PortUI(const pxr::GraphInput& port, int index);
+  PortUI(const pxr::GraphOutput& port, int index);
   void Draw();
 
   const std::string& GetName()const {return _label;};
@@ -42,9 +42,9 @@ private:
   bool                  _io;
 };
 
-class AmnConnexionUI {
+class ConnexionUI {
 public:
-  AmnConnexionUI(int id, int start, int end, int color):
+  ConnexionUI(int id, int start, int end, int color):
     _id(id), _start(start), _end(end), _color(color){};
 
   void Draw();
@@ -56,16 +56,16 @@ private:
   unsigned              _color;
 };
 
-class AmnNodeUI
+class NodeUI
 {
 public: 
-  AmnNodeUI(const pxr::UsdPrim& prim, int& id);
-  ~AmnNodeUI();
+  NodeUI(const pxr::UsdPrim& prim, int& id);
+  ~NodeUI();
 
   const pxr::GfVec2f& GetPos() const {return _pos;};
   const pxr::GfVec2f& GetSize() const {return _size;};
-  const std::vector<AmnPortUI>& GetInputs() const {return _inputs;};
-  const std::vector<AmnPortUI>& GetOutputs() const{return _outputs;};
+  const std::vector<PortUI>& GetInputs() const {return _inputs;};
+  const std::vector<PortUI>& GetOutputs() const{return _outputs;};
   const int GetId() const{return _id;};
   void Update();
   void Draw();
@@ -77,9 +77,9 @@ private:
   pxr::GfVec3f                _color;
   std::string                 _name;
   pxr::UsdPrim                _prim;
-  std::vector<AmnPortUI>      _inputs;
-  std::vector<AmnPortUI>      _outputs;
-  std::vector<AmnPortUI>      _overrides;
+  std::vector<PortUI>      _inputs;
+  std::vector<PortUI>      _outputs;
+  std::vector<PortUI>      _overrides;
 
 };
 

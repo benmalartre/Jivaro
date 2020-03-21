@@ -5,8 +5,8 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class AmnUsdEmbreeContext;
-struct AmnUsdEmbreeMesh  : public AmnUsdEmbreePrim {
+class UsdEmbreeContext;
+struct UsdEmbreeMesh  : public UsdEmbreePrim {
   unsigned                    _numOriginalSamples;
   pxr::VtArray<pxr::GfVec3f>  _vertices;
   pxr::VtArray<int>           _triangles;
@@ -27,19 +27,19 @@ struct AmnUsdEmbreeMesh  : public AmnUsdEmbreePrim {
   //std::vector<UsdEmbreeMeshDatas> _extraDatas;
 };
 
-AmnUsdEmbreeMesh* TranslateMesh( 
-  AmnUsdEmbreeContext* ctxt, 
+UsdEmbreeMesh* TranslateMesh( 
+  UsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
   const pxr::GfMatrix4d& worldMatrix,
   RTCScene scene
 );
 
-void DeleteMesh(RTCScene scene, AmnUsdEmbreeMesh* mesh);
+void DeleteMesh(RTCScene scene, UsdEmbreeMesh* mesh);
 
 bool CheckNormals(
   const pxr::UsdGeomMesh& usdMesh,
   const pxr::UsdTimeCode& time,
-  AmnUsdEmbreeMesh* mesh
+  UsdEmbreeMesh* mesh
 );
 
 AMN_NAMESPACE_CLOSE_SCOPE

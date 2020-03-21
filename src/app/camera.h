@@ -18,11 +18,11 @@ AMN_NAMESPACE_OPEN_SCOPE
 // is close to camera, when rendering for picking
 #define MAX_GOOD_Z_RESOLUTION 5.0e4
 
-class AmnCamera
+class Camera
 {
 public:
-  AmnCamera(const std::string& name, double fov=60.0);
-  ~AmnCamera(){};
+  Camera(const std::string& name, double fov=60.0);
+  ~Camera(){};
 
   // compute underlying GfCamera frustum
   pxr::GfFrustum _GetFrustum(){return _camera.GetFrustum();};
@@ -107,6 +107,9 @@ public:
   void Set( const pxr::GfVec3d& pos, 
             const pxr::GfVec3d& lookat, 
             const pxr::GfVec3d& up=pxr::GfVec3d::YAxis());
+
+  // set position, lookat and up as once
+  void SetWindow(int x, int y, int width, int height);
 
   // orbit around lookat point from mouse delta
   void Orbit(double dX, double dY);

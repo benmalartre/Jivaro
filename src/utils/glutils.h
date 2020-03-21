@@ -11,7 +11,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-extern AmnUsdEmbreeContext* EMBREE_CTXT;
+extern UsdEmbreeContext* EMBREE_CTXT;
 static GLFWmonitor** MONITORS;
 static GLFWvidmode* VIDEO_MODES;
 static int NUM_MONITORS;

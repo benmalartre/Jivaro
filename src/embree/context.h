@@ -5,16 +5,16 @@
 #include "../app/camera.h"
 AMN_NAMESPACE_OPEN_SCOPE
 
-struct AmnUsdEmbreeMaster;
+struct UsdEmbreeMaster;
 typedef 
-pxr::TfHashMap< pxr::SdfPath, AmnUsdEmbreePrim*, pxr::SdfPath::Hash > _PrimCacheMap;
+pxr::TfHashMap< pxr::SdfPath, UsdEmbreePrim*, pxr::SdfPath::Hash > _PrimCacheMap;
 
-struct AmnUsdEmbreeContext {
+struct UsdEmbreeContext {
   // usd
   std::vector<std::string>                        _files;
   pxr::UsdStageRefPtr                             _stage;
-  std::vector<AmnUsdEmbreePrim*>                  _prims;
-  std::vector<AmnUsdEmbreeMaster*>                _masters;
+  std::vector<UsdEmbreePrim*>                  _prims;
+  std::vector<UsdEmbreeMaster*>                _masters;
   pxr::TfToken                                    _axis;
   pxr::UsdTimeCode                                _time;
   long long                                       _numPrims;
@@ -42,11 +42,11 @@ struct AmnUsdEmbreeContext {
   int                                             _renderMode;
 
   // methods
-  AmnUsdEmbreeContext();
-  ~AmnUsdEmbreeContext();
+  UsdEmbreeContext();
+  ~UsdEmbreeContext();
   
   void SetFilePath(const std::string& filePath);
-  void InitDevice(AmnCamera* camera);
+  void InitDevice(Camera* camera);
   void CommitDevice();
   void ReleaseDevice();
   void GetNumPrims(const pxr::UsdPrim& prim);

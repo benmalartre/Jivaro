@@ -24,7 +24,7 @@
 // In this demo code, we frequently we use 'static' variables inside functions. A static variable persist across calls, so it is
 // essentially like a global variable but declared inside the scope of the function. We do this as a way to gather code and data
 // in the same place, to make the demo source code faster to read, faster to write, and smaller in size.
-// It also happens to be a convenient way of storing simple AmnUI related information as long as your function doesn't need to be
+// It also happens to be a convenient way of storing simple BaseUI related information as long as your function doesn't need to be
 // reentrant or used in multiple threads. This might be a pattern you will want to use in your code, but most of the real data
 // you would be editing is likely going to be stored outside your functions.
 
@@ -204,7 +204,7 @@ static void ShowDemoWindowColumns();
 static void ShowDemoWindowMisc();
 
 // Demonstrate most Dear ImGui features (this is big function!)
-// You may execute this function to experiment with the AmnUI and understand what it does. You may then search for keywords in the code when you are interested by a specific feature.
+// You may execute this function to experiment with the BaseUI and understand what it does. You may then search for keywords in the code when you are interested by a specific feature.
 void ImGui::ShowDemoWindow(bool* p_open)
 {
     IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!"); // Exceptionally add an extra assert here for people confused with initial dear imgui setup
@@ -3490,7 +3490,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
                 ImGui::TreePop();
             }
 
-            HelpMarker("Those are old settings provided for convenience.\nHowever, the _correct_ way of scaling your AmnUI is currently to reload your font at the designed size, rebuild the font atlas, and call style.ScaleAllSizes() on a reference ImGuiStyle structure.");
+            HelpMarker("Those are old settings provided for convenience.\nHowever, the _correct_ way of scaling your BaseUI is currently to reload your font at the designed size, rebuild the font atlas, and call style.ScaleAllSizes() on a reference ImGuiStyle structure.");
             static float window_scale = 1.0f;
             if (ImGui::DragFloat("window scale", &window_scale, 0.005f, 0.3f, 2.0f, "%.2f"))   // scale only this window
                 ImGui::SetWindowFontScale(window_scale);
@@ -3508,7 +3508,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
             ImGui::DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.10f, 10.0f, "%.2f");
             if (style.CurveTessellationTol < 0.10f) style.CurveTessellationTol = 0.10f;
             ImGui::DragFloat("Circle segment Max Error", &style.CircleSegmentMaxError, 0.01f, 0.10f, 10.0f, "%.2f");
-            ImGui::DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f, 1.0f, "%.2f"); // Not exposing zero here so user doesn't "lose" the AmnUI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
+            ImGui::DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f, 1.0f, "%.2f"); // Not exposing zero here so user doesn't "lose" the BaseUI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
             ImGui::PopItemWidth();
 
             ImGui::EndTabItem();
@@ -4819,7 +4819,7 @@ void ShowExampleAppDocuments(bool* p_open)
         }
     }
 
-    // Display closing confirmation AmnUI
+    // Display closing confirmation BaseUI
     if (!close_queue.empty())
     {
         int close_queue_unsaved_documents = 0;

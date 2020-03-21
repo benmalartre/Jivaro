@@ -1,10 +1,12 @@
 #include "camera.h"
 #include "../utils/utils.h"
+#include <pxr/imaging/cameraUtil/conformWindow.h>
+
 AMN_NAMESPACE_OPEN_SCOPE
 
 // constructor
 //------------------------------------------------------------------------------
-AmnCamera::AmnCamera(const std::string& name, double fov) :
+Camera::Camera(const std::string& name, double fov) :
   _name(name),
   _fov(fov),
   _camera(pxr::GfCamera()),
@@ -24,7 +26,7 @@ AmnCamera::AmnCamera(const std::string& name, double fov) :
 }
 
 /*
-void AmnCamera::_PushToCameraTransform()
+void Camera::_PushToCameraTransform()
 {
   if(!_cameraTransformDirty) return;
   _camera.SetTransform(
@@ -44,7 +46,7 @@ void AmnCamera::_PushToCameraTransform()
   _cameraTransformDirty = false;
 }
 
-void AmnCamera::_PullFromCameraTransform()
+void Camera::_PullFromCameraTransform()
 {
   // reads the transform set on the camera and updates all the other
   // parameters.  This is the inverse of _pushToCameraTransform
@@ -79,7 +81,7 @@ void AmnCamera::_PullFromCameraTransform()
 }
 
 pxr::GfRange1f 
-AmnCamera::_RangeOfBoxAlongRay(
+Camera::_RangeOfBoxAlongRay(
   const pxr::GfRay& camRay, 
   const pxr::GfBBox3d& bbox, 
   bool debugClipping
@@ -122,7 +124,7 @@ AmnCamera::_RangeOfBoxAlongRay(
   return pxr::GfRange1f(minDist, maxDist);
 }
 
-pxr::GfCamera& AmnCamera::ComputeGfCamera(const pxr::GfBBox3d&  stageBBox, bool autoClip)
+pxr::GfCamera& Camera::ComputeGfCamera(const pxr::GfBBox3d&  stageBBox, bool autoClip)
 {
   _PushToCameraTransform();
   if(autoClip)
@@ -132,7 +134,7 @@ pxr::GfCamera& AmnCamera::ComputeGfCamera(const pxr::GfBBox3d&  stageBBox, bool 
   return _camera;
 }
 
-void AmnCamera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
+void Camera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
 {
   _camera.SetClippingRange(pxr::GfRange1f(DEFAULT_NEAR, DEFAULT_FAR));
   return;
@@ -229,7 +231,7 @@ void AmnCamera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
   _camera.SetClippingRange(pxr::GfRange1f(near, far));
 }       
 
-void AmnCamera::_ResetClippingPlanes()
+void Camera::_ResetClippingPlanes()
 {
   std::cout << "RESET CLIPPING PLANE ..." << std::endl;
   // Set near and far back to their uncomputed defaults
@@ -238,7 +240,7 @@ void AmnCamera::_ResetClippingPlanes()
   _camera.SetClippingRange(pxr::GfRange1f(near, far)); 
 }
 
-void AmnCamera::_SetClosestVisibleDistFromPoint(const pxr::GfVec3d& point)
+void Camera::_SetClosestVisibleDistFromPoint(const pxr::GfVec3d& point)
 {
   _frustum = _camera.GetFrustum();
   pxr::GfVec3d camPos = _frustum.GetPosition();
@@ -248,7 +250,7 @@ void AmnCamera::_SetClosestVisibleDistFromPoint(const pxr::GfVec3d& point)
   _lastFramedClosestDist = _closestVisibleDist;
 }
 
-double AmnCamera::_ComputePixelsToWorldFactor(double viewportHeight)
+double Camera::_ComputePixelsToWorldFactor(double viewportHeight)
 {
   _PushToCameraTransform();
   if(_orthographic)
@@ -260,7 +262,7 @@ double AmnCamera::_ComputePixelsToWorldFactor(double viewportHeight)
   }   
 }
 
-void AmnCamera::Tumble( double dTheta, double dPhi)
+void Camera::Tumble( double dTheta, double dPhi)
 {
   _frustum = _camera.GetFrustum();
 
@@ -275,7 +277,7 @@ void AmnCamera::Tumble( double dTheta, double dPhi)
   //self.signalFrustumChanged.emit()
 }    
 
-void  AmnCamera::AdjustDistance(double scaleFactor)
+void  Camera::AdjustDistance(double scaleFactor)
 {
   // When dist gets very small, you can get stuck and not be able to
   // zoom back out, if you just keep multiplying.  Switch to addition
@@ -310,7 +312,7 @@ void  AmnCamera::AdjustDistance(double scaleFactor)
   _PushToCameraTransform();
 }
 
-void AmnCamera::Truck(double deltaRight, double deltaUp)
+void Camera::Truck(double deltaRight, double deltaUp)
 {
   // need to update the camera transform before we access the frustum
   _PushToCameraTransform();
@@ -323,7 +325,7 @@ void AmnCamera::Truck(double deltaRight, double deltaUp)
   //self.signalFrustumChanged.emit()
 }
 
-void AmnCamera::PanTilt(double dPan, double dTilt)
+void Camera::PanTilt(double dPan, double dTilt)
 {
   _camera.SetTransform(
     pxr::GfMatrix4d(1.0).SetRotate(pxr::GfRotation(pxr::GfVec3d::XAxis(), dTilt)) *
@@ -339,7 +341,7 @@ void AmnCamera::PanTilt(double dPan, double dTilt)
   //self.signalFrustumChanged.emit()
 }
   
-void AmnCamera::Walk(double dForward, double dRight)
+void Camera::Walk(double dForward, double dRight)
 {
   _PushToCameraTransform();
   _frustum = _camera.GetFrustum();
@@ -354,7 +356,7 @@ void AmnCamera::Walk(double dForward, double dRight)
 }
 */
 
-void AmnCamera::Set(const pxr::GfVec3d& pos, 
+void Camera::Set(const pxr::GfVec3d& pos, 
                     const pxr::GfVec3d& lookat, 
                     const pxr::GfVec3d& up)
 {
@@ -366,7 +368,12 @@ void AmnCamera::Set(const pxr::GfVec3d& pos,
   _GetSphericalCoordinates();
 }
 
-void AmnCamera::LookAt()
+void Camera::SetWindow(int x, int y, int width, int height)
+{
+  ComputeFrustum();
+} 
+
+void Camera::LookAt()
 {
   pxr::GfMatrix4d m(1);
   m.SetLookAt (_pos, _lookat, _up);
@@ -392,7 +399,7 @@ void AmnCamera::LookAt()
   */
 }
 
-void AmnCamera::Orbit(double dx, double dy)
+void Camera::Orbit(double dx, double dy)
 {
   double dist = (_pos - _lookat).GetLength();
   _pos = pxr::GfVec3d(0,0, dist);
@@ -417,18 +424,34 @@ void AmnCamera::Orbit(double dx, double dy)
   LookAt();
 }
 
-void AmnCamera::Dolly(double dx, double dy)
+void Camera::Dolly(double dx, double dy)
 {
-  double delta = (dx + dy) * 2.0;
+   double delta = (dx + dy) * 2.0;
+   pxr::GfVec3d interpolated = _pos * (1-delta) + _lookat * delta;
+   _pos = interpolated;
 
-  _pos *= delta;
-  _pos += _lookat * (1.0 - delta);
-    
+  /*
+  double scaleFactor = (dx + dy) * 2.0 + 1.0;
+  pxr::GfVec3d delta = _pos - _lookat;
+ 
+  if(scaleFactor > 1 && delta.GetLength()<2.0)
+  {
+    scaleFactor -= 1.0;
+    double incr = 0.5 < scaleFactor ? 0.5 : scaleFactor;
+    _pos = _lookat + incr * delta.GetNormalized();
+    std::cout << "DOLLY INCR : " << incr << std::endl;
+  }
+  else
+  {
+    std::cout << "DOLLY SCALE FACTOR : " << scaleFactor << std::endl;
+    _pos = _lookat + delta * scaleFactor;
+  }
+  */
   // update camera transform
   LookAt();
 }
 
-pxr::GfRay AmnCamera::ComputeRay(const pxr::GfVec2d& pos) const
+pxr::GfRay Camera::ComputeRay(const pxr::GfVec2d& pos) const
 {
   return _frustum.ComputeRay(pos);
 }

@@ -5,7 +5,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-extern AmnUsdEmbreeContext* EMBREE_CTXT = 0;
+extern UsdEmbreeContext* EMBREE_CTXT = 0;
 
 AMN_NAMESPACE_CLOSE_SCOPE
 
@@ -18,7 +18,7 @@ AMN_NAMESPACE_USING_DIRECTIVE
 int main(void)
 {
   glfwInit();
-  AmnApplication app(800,600);
+  Application app(800,600);
   app.Init();
   app.MainLoop();
   glfwTerminate();

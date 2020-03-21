@@ -32,27 +32,27 @@ enum ColorGraph {
   GRAPH_COLOR_CONTOUR           = 0xFF000000
 };
 
-struct AmnGraphPortMapData {
-  const AmnNodeUI*                        _node;
+struct GraphPortMapData {
+  const NodeUI*                        _node;
   std::string                             _port;
 };
 
-struct AmnGraphStageUI {
+struct GraphStageUI {
   int                                     _nodeId;
   pxr::UsdStageRefPtr                     _stage;
-  std::vector<AmnNodeUI>                  _nodes;
-  std::vector<AmnConnexionUI>             _connexions;
-  std::map<int, AmnGraphPortMapData>      _portMap;
+  std::vector<NodeUI>                  _nodes;
+  std::vector<ConnexionUI>             _connexions;
+  std::map<int, GraphPortMapData>      _portMap;
 
-  AmnGraphStageUI(const pxr::UsdStageRefPtr& stage):_stage(stage){};
-  void Update(const AmnNodeUI& node);
+  GraphStageUI(const pxr::UsdStageRefPtr& stage):_stage(stage){};
+  void Update(const NodeUI& node);
 };
 
-class AmnGraphUI : public AmnUI
+class GraphUI : public BaseUI
 {
 public:
-  AmnGraphUI(AmnView* parent, const std::string& filename);
-  ~AmnGraphUI()         override;
+  GraphUI(View* parent, const std::string& filename);
+  ~GraphUI()         override;
 
   void MouseButton(int action, int button, int mods) override;
   void MouseMove(int x, int y) override;
@@ -65,7 +65,7 @@ public:
   void SetCurrentColor(int color){_color = color;};
   int GetCurrentColor(){return _color;};
 
-  AmnGraphStageUI* GetStage(int index);
+  GraphStageUI* GetStage(int index);
   
   void BuildGraph(int index);
   
@@ -74,15 +74,14 @@ private:
   void _RecurseStagePrim(const pxr::UsdPrim& prim, int stageIndex);
 
   std::string                           _filename;
-  std::vector<AmnGraphStageUI*>         _stages;
-  AmnGraphStageUI*                      _current;
+  std::vector<GraphStageUI*>         _stages;
+  GraphStageUI*                      _current;
   ImNodes::EditorContext*               _context;
   
   int                                   _color;
   int                                   _id;
   int                                   _depth;
-  pxr::GfVec2f                          _position;
-  
+  pxr::GfVec2f                          _position;  
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

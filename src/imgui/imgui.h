@@ -1034,8 +1034,8 @@ enum ImGuiConfigFlags_
     ImGuiConfigFlags_NoMouseCursorChange    = 1 << 5,   // Instruct back-end to not alter mouse cursor shape and visibility. Use if the back-end cursor changes are interfering with yours and you don't want to use SetMouseCursor() to change mouse cursor. You may want to honor requests from imgui by reading GetMouseCursor() yourself instead.
 
     // User storage (to allow your back-end/engine to communicate to code that may be shared between multiple projects. Those flags are not used by core Dear ImGui)
-    ImGuiConfigFlags_IsSRGB                 = 1 << 20,  // AmnApplication is SRGB-aware.
-    ImGuiConfigFlags_IsTouchScreen          = 1 << 21   // AmnApplication is using a touch screen instead of a mouse.
+    ImGuiConfigFlags_IsSRGB                 = 1 << 20,  // Application is SRGB-aware.
+    ImGuiConfigFlags_IsTouchScreen          = 1 << 21   // Application is using a touch screen instead of a mouse.
 };
 
 // Back-end capabilities flags stored in io.BackendFlags. Set by imgui_impl_xxx or custom back-end.
@@ -1109,7 +1109,7 @@ enum ImGuiCol_
 };
 
 // Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
-// NB: the enum only refers to fields of ImGuiStyle which makes sense to be pushed/popped inside AmnUI code. During initialization, feel free to just poke into ImGuiStyle directly.
+// NB: the enum only refers to fields of ImGuiStyle which makes sense to be pushed/popped inside BaseUI code. During initialization, feel free to just poke into ImGuiStyle directly.
 // NB: if changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link enum values to members offset/type.
 enum ImGuiStyleVar_
 {
@@ -1473,7 +1473,7 @@ struct ImGuiIO
     bool        WantSaveIniSettings;            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
     bool        NavActive;                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
     bool        NavVisible;                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
-    float       Framerate;                      // AmnApplication framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
+    float       Framerate;                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
     int         MetricsRenderVertices;          // Vertices output during last call to Render()
     int         MetricsRenderIndices;           // Indices output during last call to Render() = number of triangles * 3
     int         MetricsRenderWindows;           // Number of visible windows
@@ -1615,7 +1615,7 @@ typedef ImGuiInputTextCallbackData  ImGuiTextEditCallbackData;
 // Helpers
 //-----------------------------------------------------------------------------
 
-// Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an AmnUI within deep-nested code that runs multiple times every frame.
+// Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an BaseUI within deep-nested code that runs multiple times every frame.
 // Usage: static ImGuiOnceUponAFrame oaf; if (oaf) ImGui::Text("This will be called only once per frame");
 struct ImGuiOnceUponAFrame
 {
@@ -1802,10 +1802,10 @@ struct ImColor
 //-----------------------------------------------------------------------------
 
 // Draw callbacks for advanced uses.
-// NB: You most likely do NOT need to use draw callbacks just to create your own widget or customized AmnUI rendering,
+// NB: You most likely do NOT need to use draw callbacks just to create your own widget or customized BaseUI rendering,
 // you can poke into the draw list for that! Draw callback may be useful for example to:
 //  A) Change your GPU render state,
-//  B) render a complex 3D scene inside a AmnUI element without an intermediate texture/render target, etc.
+//  B) render a complex 3D scene inside a BaseUI element without an intermediate texture/render target, etc.
 // The expected behavior from your rendering function is 'if (cmd.UserCallback != NULL) { cmd.UserCallback(parent_list, cmd); } else { RenderTriangles() }'
 // If you want to override the signature of ImDrawCallback, you can simply use e.g. '#define ImDrawCallback MyDrawCallback' (in imconfig.h) + update rendering back-end accordingly.
 #ifndef ImDrawCallback
@@ -2225,7 +2225,7 @@ struct ImFontAtlas
 struct ImFont
 {
     // Members: Hot ~20/24 bytes (for CalcTextSize)
-    ImVector<float>             IndexAdvanceX;      // 12-16 // out //            // Sparse. Glyphs->AdvanceX in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large AmnUI).
+    ImVector<float>             IndexAdvanceX;      // 12-16 // out //            // Sparse. Glyphs->AdvanceX in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large BaseUI).
     float                       FallbackAdvanceX;   // 4     // out // = FallbackGlyph->AdvanceX
     float                       FontSize;           // 4     // in  //            // Height of characters/line, set during loading (don't change after loading)
 

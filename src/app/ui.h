@@ -6,13 +6,13 @@
 
 AMN_NAMESPACE_OPEN_SCOPE  
 
-class AmnView;
+class View;
 
-class AmnUI
+class BaseUI
 {
 public:
-  AmnUI(AmnView* parent, const std::string& name);
-  virtual ~AmnUI(){};
+  BaseUI(View* parent, const std::string& name, bool docked=true);
+  virtual ~BaseUI(){};
 
   // get parent window height
   int GetWindowHeight();
@@ -36,28 +36,18 @@ public:
 
   const std::string& GetName() const {return _name;};
 
-  virtual void MouseButton(int action, int button, int mods)
-  {
-    std::cerr << "AmnUI MOUSE BUTTON Fallback To NOTHING!" << std::endl;
-  };
-
-  virtual void MouseMove(int x, int y)
-  {
-    std::cerr << "AmnUI MOUSE MOVE Fallback To NOTHING!" << std::endl;
-  };
-
-  virtual void MouseWheel(int x, int y)
-  {
-    std::cerr << "AmnUI MOUSE WHEEL Fallback To NOTHING!" << std::endl;
-  };
+  virtual void MouseButton(int action, int button, int mods){};
+  virtual void MouseMove(int x, int y){}; 
+  virtual void MouseWheel(int x, int y){};
 
   virtual void Draw()=0;
   virtual void Resize(){};
   
 
 protected:
-  AmnView*       _parent;
+  View*       _parent;
   std::string _name;
+  bool        _docked;
   
 };
 

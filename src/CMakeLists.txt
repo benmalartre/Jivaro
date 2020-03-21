@@ -23,7 +23,6 @@ add_executable(${TARGET}
   imgui/imgui_widgets.cpp
   imgui/imgui_nodes.cpp
   imgui/imgui.cpp
-  ui/ttf.cpp
   graph/deformableAPI.cpp
   graph/connectableAPI.cpp
   graph/coordSysAPI.cpp
@@ -36,6 +35,7 @@ add_executable(${TARGET}
   graph/stage.cpp
   graph/tokens.cpp
   graph/utils.cpp
+  widgets/dummy.cpp
   widgets/menu.cpp
   widgets/node.cpp
   widgets/graph.cpp

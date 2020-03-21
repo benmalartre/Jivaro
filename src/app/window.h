@@ -6,7 +6,6 @@
 #include "tools.h"
 #include "ui.h"
 #include "../imgui/imgui_nodes.h"
-#include "../ui/font.h"
 
 #include <pxr/pxr.h>
 #include <pxr/base/gf/vec2i.h>
@@ -17,13 +16,13 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class AmnUsdEmbreeContext;
-class AmnApplication;
-class AmnView;
-class AmnSplitter;
-class AmnUI;
+class UsdEmbreeContext;
+class Application;
+class View;
+class Splitter;
+class BaseUI;
 
-extern AmnUsdEmbreeContext* EMBREE_CTXT;
+extern UsdEmbreeContext* EMBREE_CTXT;
 
 // keyboard callback
 //----------------------------------------------------------------------------
@@ -60,15 +59,15 @@ CharCallback(GLFWwindow* window, unsigned c);
 AMN_EXPORT void 
 ResizeCallback(GLFWwindow* window, int width, int height);
 
-class AmnWindow
+class Window
 {
 public:
   // constructor
-  AmnWindow(int width, int height);
-  AmnWindow(bool fullscreen);
+  Window(int width, int height);
+  Window(bool fullscreen);
 
   //destructor
-  ~AmnWindow();
+  ~Window();
 
   // initialize
   void Init();
@@ -79,7 +78,7 @@ public:
   GLFWwindow* GetGlfwWindow(){return _window;};
   bool GetDebounce(){return _debounce;};
   void SetDebounce(bool debounce){_debounce=debounce;};
-  void CollectLeaves(AmnView* view = NULL);
+  void CollectLeaves(View* view = NULL);
 
   // imgui context
   void SetupImgui();
@@ -99,15 +98,15 @@ public:
   void BuildSplittersMap();
 
   // views
-  AmnSplitter* GetSplitter(){return _splitter;};
-  void SplitView(AmnView* view, unsigned perc = 50, bool horizontal=true );
-  AmnView* GetMainView(){return _mainView;};
-  void SetActiveView(AmnView* view);
-  AmnView* GetActiveView(){return _activeView;};
-  AmnView* GetViewUnderMouse(int x, int y);
+  Splitter* GetSplitter(){return _splitter;};
+  View* SplitView(View* view, unsigned perc = 50, bool horizontal=true );
+  View* GetMainView(){return _mainView;};
+  void SetActiveView(View* view);
+  View* GetActiveView(){return _activeView;};
+  View* GetViewUnderMouse(int x, int y);
   
-
   // draw
+  void GetContentScale();
   void SetContext();
   void Draw();
   void DrawPickImage();
@@ -118,26 +117,28 @@ public:
   inline void SetActiveTool(int tool){_activeTool = tool;};
   inline int GetActiveTool(){return _activeTool;};
   bool UpdateActiveTool(int mouseX, int mouseY);
+
   // loop in thread
   void MainLoop();
-  static AmnWindow* GetUserData(GLFWwindow* window);
+  static Window* GetUserData(GLFWwindow* window);
 
 private:
   // objects
-  GLFWwindow*                _window;
-  GLFWcursor*                _cursor;
-  AmnView*                   _mainView;
-  AmnView*                   _activeView;
-  AmnView*                   _activeLeaf;
-  AmnSplitter*               _splitter;
-  std::vector<AmnView*>      _leaves;
+  GLFWwindow*             _window;
+  GLFWcursor*             _cursor;
+  GLFWcursor*             _horizontalArrowCursor;
+  GLFWcursor*             _verticalArrowCursor;
+  GLFWcursor*             _defaultCursor;
+  View*                   _mainView;
+  View*                   _activeView;
+  View*                   _activeLeaf;
+  Splitter*               _splitter;
+  std::vector<View*>      _leaves;
 
   // view datas
   bool              _fullscreen;
   int               _mouseMode;
   int               _activeTool;
-  int               _clickX;
-  int               _clickY;
   int               _width;
   int               _height;
   unsigned*         _pixels;
@@ -157,13 +158,14 @@ private:
   bool              _debounce;
 
   // ui
-  std::vector<GLUIString> _strings;
+  float                   _dpiX;
+  float                   _dpiY;
 
 public:
   // static constructor
   //----------------------------------------------------------------------------
-  static AmnWindow* CreateFullScreenWindow();
-  static AmnWindow* CreateStandardWindow(int width, int height);
+  static Window* CreateFullScreenWindow();
+  static Window* CreateStandardWindow(int width, int height);
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

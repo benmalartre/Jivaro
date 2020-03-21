@@ -9,16 +9,16 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-extern AmnUsdEmbreeContext* EMBREE_CTXT;
+extern UsdEmbreeContext* EMBREE_CTXT;
 
 // constructor
-AmnViewportUI::AmnViewportUI(AmnView* parent, VIEWPORT_MODE mode):
-AmnUI(parent, "Viewport")
+ViewportUI::ViewportUI(View* parent, VIEWPORT_MODE mode):
+BaseUI(parent, "Viewport")
 {
   _texture = 0;
   _mode = mode;
   _pixels = NULL;
-  _camera = new AmnCamera("Camera");
+  _camera = new Camera("Camera");
   
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
@@ -29,14 +29,14 @@ AmnUI(parent, "Viewport")
 }
 
 // destructor
-AmnViewportUI::~AmnViewportUI()
+ViewportUI::~ViewportUI()
 {
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
 }
 
 // overrides
-void AmnViewportUI::MouseButton(int button, int action, int mods) 
+void ViewportUI::MouseButton(int button, int action, int mods) 
 {
   if (action == GLFW_RELEASE)
   {
@@ -94,7 +94,7 @@ void AmnViewportUI::MouseButton(int button, int action, int mods)
   }
 }
 
-void AmnViewportUI::MouseMove(int x, int y) 
+void ViewportUI::MouseMove(int x, int y) 
 {
   if(_interact)
   {
@@ -158,26 +158,34 @@ void AmnViewportUI::MouseMove(int x, int y)
   }
 }
 
-void AmnViewportUI::MouseWheel(int x, int y)
+void ViewportUI::MouseWheel(int x, int y)
 {
   double dx = static_cast<double>(x);
   double dy = static_cast<double>(y);
-  _camera->Dolly(dx, dy);
+  _camera->Dolly(
+    dx/static_cast<double>(_parent->GetWidth()), 
+    dy/static_cast<double>(_parent->GetHeight())
+  );
+  //_camera->ComputeFrustum();
+  RenderToMemory(_camera, true);
+  SetContext(EMBREE_CTXT);
 }
 
-void AmnViewportUI::Draw()
+void ViewportUI::Draw()
 {    
   float x = _parent->GetMin()[0];
   float y = _parent->GetMin()[1];
   
   float w = _parent->GetWidth();
   float h = _parent->GetHeight();
+
+  std::cout << x << ", " << GetWindowHeight()-(y+h) << ", " << w << ", " << h << std::endl;
       
   if(_pixels)
   {
     glUseProgram(EMBREE_CTXT->_screenSpaceQuadPgm);
     if(_interact)
-      CreateOpenGLTexture(_width*0.1, _height*0.1, _lowPixels, _texture, 0);
+      CreateOpenGLTexture(_width>>4, _height>>4, _lowPixels, _texture, 0);
     else
       CreateOpenGLTexture(_width, _height, _pixels, _texture, 0);
     glViewport(x, GetWindowHeight()-(y+h), w, h);
@@ -186,6 +194,7 @@ void AmnViewportUI::Draw()
   }
   else
   {
+
     float wh = GetWindowHeight();
     glEnable(GL_SCISSOR_TEST);
     glScissor(x, wh - (y + h), w, h);
@@ -196,18 +205,23 @@ void AmnViewportUI::Draw()
   
 }
 
-void AmnViewportUI::Resize()
+void ViewportUI::Resize()
 {
   if(_mode == EMBREE)
   {
     EMBREE_CTXT->Resize(_parent->GetWidth(), _parent->GetHeight());
-    //_camera->ComputeFrustum();
+    _camera->SetWindow(
+      _parent->GetX(),
+      _parent->GetY(),
+      _parent->GetWidth(), 
+      _parent->GetHeight()
+    );
     RenderToMemory(_camera, false);
     SetContext(EMBREE_CTXT);
   }   
 }
 
-void AmnViewportUI::SetContext(AmnUsdEmbreeContext* ctxt)
+void ViewportUI::SetContext(UsdEmbreeContext* ctxt)
 {
   _context = ctxt;
   _pixels = _context->_pixels;

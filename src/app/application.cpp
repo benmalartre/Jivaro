@@ -2,6 +2,7 @@
 #include "../widgets/viewport.h"
 #include "../widgets/menu.h"
 #include "../widgets/graph.h"
+#include "../widgets/dummy.h"
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include "../tests/stageGraph.h"
@@ -10,17 +11,14 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 PXR_NAMESPACE_USING_DIRECTIVE
-const char* AmnApplication::APPLICATION_NAME = "Amnesie";
+const char* Application::APPLICATION_NAME = "Amnesie";
 
 // constructor
 //----------------------------------------------------------------------------
-AmnApplication::AmnApplication(unsigned width, unsigned height):
+Application::Application(unsigned width, unsigned height):
   _mainWindow(NULL), _context(NULL)
-{
-  // get monitors info
-  GetMonitors();
-  
-  _context = new AmnUsdEmbreeContext();
+{  
+  _context = new UsdEmbreeContext();
   EMBREE_CTXT = _context;
   _width = width;
   _height = height;
@@ -28,10 +26,10 @@ AmnApplication::AmnApplication(unsigned width, unsigned height):
   _test = NULL;
 };
 
-AmnApplication::AmnApplication(bool fullscreen):
+Application::Application(bool fullscreen):
   _mainWindow(NULL), _context(NULL)
 {
-  _context = new AmnUsdEmbreeContext();
+  _context = new UsdEmbreeContext();
   EMBREE_CTXT = _context;
   _mainWindow = CreateFullScreenWindow();
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &_width, &_height);
@@ -40,7 +38,7 @@ AmnApplication::AmnApplication(bool fullscreen):
 
 // destructor
 //----------------------------------------------------------------------------
-AmnApplication::~AmnApplication()
+Application::~Application()
 {
   if(_context)delete _context;
   if(_mainWindow) delete _mainWindow;
@@ -49,39 +47,49 @@ AmnApplication::~AmnApplication()
 
 // create full screen window
 //----------------------------------------------------------------------------
-AmnWindow*
-AmnApplication::CreateFullScreenWindow()
+Window*
+Application::CreateFullScreenWindow()
 {
-  return AmnWindow::CreateFullScreenWindow();
+  return Window::CreateFullScreenWindow();
 }
 
 // create standard window
 //----------------------------------------------------------------------------
-AmnWindow*
-AmnApplication::CreateStandardWindow(int width, int height)
+Window*
+Application::CreateStandardWindow(int width, int height)
 {
-  return AmnWindow::CreateStandardWindow(width, height);
+  return Window::CreateStandardWindow(width, height);
 }
 
 // init application
 //----------------------------------------------------------------------------
 void 
-AmnApplication::Init()
+Application::Init()
 {
   std::string filename = 
     "/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
 
   // build test scene
-  pxr::TestScene(filename);
+  //pxr::TestScene(filename);
 
   // create window
   _mainWindow->SetContext();
-  AmnView* mainView = _mainWindow->GetMainView();
-  _mainWindow->SplitView(mainView, 50, true);
+  View* mainView = _mainWindow->GetMainView();
+  _mainWindow->SplitView(mainView, 10, true);
+  _mainWindow->SplitView(mainView->GetRight(), 70, true);
+  View* middleView = mainView->GetRight()->GetLeft();
+  View* graphView = mainView->GetRight()->GetRight();
 
-  AmnGraphUI* graph = new AmnGraphUI(mainView->GetRight(), "GraphUI");
-  AmnViewportUI* viewport = new AmnViewportUI(mainView->GetLeft(), EMBREE);
+  _mainWindow->SplitView(middleView, 75, false);
+  _mainWindow->SplitView(middleView->GetLeft(), 33, false);
+  //_mainWindow->SplitView(middleView->GetRight(), 50, false);
 
+/*
+  GraphUI* graph = new GraphUI(graphView, "GraphUI");
+  ViewportUI* viewport = new ViewportUI(middleView, EMBREE);
+  //DummyUI* dummy = new DummyUI(mainView->GetLeft(), "DummyUI");
+  
+  //MenuUI* menu = new MenuUI(mainView->GetLeft());
   _mainWindow->CollectLeaves();
 
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
@@ -89,6 +97,7 @@ AmnApplication::Init()
   TestStageUI(graph, _stages);
  
   EMBREE_CTXT->Resize(viewport->GetWidth(), viewport->GetHeight());
+  std::cout << "EMBREE CTXT : " << EMBREE_CTXT->_width << "," << EMBREE_CTXT->_height << std::endl;
   EMBREE_CTXT->SetFilePath(filename);
   EMBREE_CTXT->InitDevice(viewport->GetCamera());
   EMBREE_CTXT->TraverseStage();
@@ -105,14 +114,14 @@ AmnApplication::Init()
   RenderToFile(outputImageFilename, viewport->GetCamera(), 2048, 1024);
   RenderToMemory(viewport->GetCamera());
   viewport->SetContext(EMBREE_CTXT);
-    
+  */
   //_mainWindow->CollectLeaves();
   //_mainWindow->DummyFill();
 }
 
 // main loop
 void 
-AmnApplication::MainLoop()
+Application::MainLoop()
 {
   _mainWindow->MainLoop();
 

@@ -6,16 +6,16 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // translate usd mesh to embree mesh
-AmnUsdEmbreeMesh* 
+UsdEmbreeMesh* 
 TranslateMesh(
-  AmnUsdEmbreeContext* ctxt, 
+  UsdEmbreeContext* ctxt, 
   const pxr::UsdGeomMesh& usdMesh,
   const pxr::GfMatrix4d& worldMatrix,
   RTCScene scene
 )
 {
   size_t num_vertices, num_triangles;
-  AmnUsdEmbreeMesh* result = new AmnUsdEmbreeMesh();
+  UsdEmbreeMesh* result = new UsdEmbreeMesh();
   ctxt->_primCacheMap[usdMesh.GetPath()] = std::move(result);
 
   result->_type = RTC_GEOMETRY_TYPE_TRIANGLE;
@@ -136,7 +136,7 @@ TranslateMesh(
     rtcSetSharedGeometryBuffer(result->_geom, RTC_BUFFER_TYPE_VERTEX_ATTRIBUTE, 0, 
     RTC_FORMAT_FLOAT3,vertex_colors,0,sizeof(Vec3fa),num_vertices);
     */
-    //AmnUsdEmbreeSetTransform(result, worldMatrix);
+    //UsdEmbreeSetTransform(result, worldMatrix);
     rtcCommitGeometry(result->_geom);
     result->_geomId = rtcAttachGeometry(scene, result->_geom);
     rtcReleaseGeometry(result->_geom);
@@ -157,7 +157,7 @@ TranslateMesh(
 
 // destructor
 //------------------------------------------------------------------------------
-void DeleteMesh(RTCScene scene, AmnUsdEmbreeMesh* mesh)
+void DeleteMesh(RTCScene scene, UsdEmbreeMesh* mesh)
 {
   rtcDetachGeometry(scene, mesh->_geomId);
   delete mesh;
@@ -169,7 +169,7 @@ void DeleteMesh(RTCScene scene, AmnUsdEmbreeMesh* mesh)
 bool 
 CheckNormals(const pxr::UsdGeomMesh& usdMesh,
             const pxr::UsdTimeCode& time,
-            AmnUsdEmbreeMesh* mesh)
+            UsdEmbreeMesh* mesh)
 {
   mesh->_hasNormals = false;
   pxr::UsdAttribute normalsAttr = usdMesh.GetNormalsAttr();

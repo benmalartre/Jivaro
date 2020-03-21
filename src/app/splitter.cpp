@@ -3,14 +3,14 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-void AmnSplitter::RecurseBuildMap(AmnView* view)
+void Splitter::RecurseBuildMap(View* view)
 {
   if(!view) return;
   _views.push_back(view);
   _viewID++;
   if(!view->IsLeaf())
   {
-    AmnView* parent = view->GetParent();
+    View* parent = view->GetParent();
     if(!parent)parent = view;
 
     pxr::GfVec2f sMin, sMax;
@@ -29,7 +29,7 @@ void AmnSplitter::RecurseBuildMap(AmnView* view)
 }
 
 void 
-AmnSplitter::BuildMap(AmnView* view)
+Splitter::BuildMap(View* view)
 {
   
   if(_pixels){ delete [] _pixels; _pixels = NULL; };
@@ -46,48 +46,60 @@ AmnSplitter::BuildMap(AmnView* view)
   RecurseBuildMap(view); 
 }
 
-// get pixel value under mouse
+// pick splitter
 int 
-AmnSplitter::GetPixelValue(double xPos, double yPos)
+Splitter::Pick(int x, int y)
 {
-  unsigned idx = (unsigned) yPos * _width + (unsigned)xPos;
+  if(x<0 || y <0 || x >= _width || y >= _height) 
+    return -1;
+
+  unsigned idx = (unsigned) y * _width + (unsigned)x;
   if(idx >= 0 && idx < (_width * _height))
   {
-    return _pixels[idx];
+    return _pixels[idx] - 1;
   }
-  return 0;
+  return -1;
 }
 
-// debug draw the splitters
+// draw the splitters
 void 
-AmnSplitter::Draw()
+Splitter::Draw()
 {
-  glEnable(GL_SCISSOR_TEST);
-  glClearColor(0.f, 1.f, 0.f, 1.f);
+  ImGui::SetNextWindowPos(pxr::GfVec2f(0,0));
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+
+  ImGui::Begin("Splitter", NULL, _flags);
+  ImDrawList* draw_list = ImGui::GetForegroundDrawList();
   pxr::GfVec2f sMin, sMax;
+  static ImVec4 colf = ImVec4(0.0f, 1.0f, 0.4f, 1.0f);
+  const ImU32 col = ImColor(colf);
   for(auto view : _views)
   {
     if(view->IsLeaf()) continue;
     view->GetSplitInfos(sMin, sMax, _width, _height);
-    glScissor(sMin[0], _height -sMax[1], sMax[0]-sMin[0], sMax[1]-sMin[1]);
-    glClear(GL_COLOR_BUFFER_BIT);
+    draw_list->AddRectFilled(sMin, sMax, col, 0.0f, 0);
+    if(_cursor == ImGuiMouseCursor_ResizeEW)
+      ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+    else if(_cursor == ImGuiMouseCursor_ResizeNS)
+      ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+
   }
-  glDisable(GL_SCISSOR_TEST);
+  ImGui::End();
 }
 
-AmnView* 
-AmnSplitter::GetViewByIndex(int index)
+View* 
+Splitter::GetViewByIndex(int index)
 {
   return _views[index];
 }
 
 void 
-AmnSplitter::Resize(int width, int height, AmnView* view)
+Splitter::Resize(int width, int height, View* view)
 {
   _width = width;
   _height = height;
   view->Resize(0, 0, width, height);
   BuildMap(view);
-  
 }
+
 AMN_NAMESPACE_CLOSE_SCOPE

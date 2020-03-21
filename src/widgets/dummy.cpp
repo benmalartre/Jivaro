@@ -1,16 +1,11 @@
 #include "dummy.h"
-#include "../view.h"
+#include "../app/view.h"
 
-namespace AMN {
+AMN_NAMESPACE_OPEN_SCOPE
 
-DummyUI::DummyUI(AmnView* parent, const std::string& name):AmnUI(parent, name){}
+DummyUI::DummyUI(View* parent, const std::string& name):BaseUI(parent, name){}
 
 DummyUI::~DummyUI(){}
-
-void DummyUI::Event()
-{
-  std::cerr << "DummyUI EVENT!" << std::endl;
-};
 
 void DummyUI::Draw()
 {
@@ -34,6 +29,7 @@ void DummyUI::Draw()
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::End();
+  Demo();
 };
   
 void DummyUI::FillBackground()
@@ -49,4 +45,9 @@ void DummyUI::FillBackground()
   ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
 }
 
-} // namespace AMN
+void DummyUI::Demo()
+{
+  ImGui::ShowDemoWindow();
+}
+
+AMN_NAMESPACE_CLOSE_SCOPE

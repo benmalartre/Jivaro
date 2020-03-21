@@ -9,9 +9,9 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-// AmnView constructor
+// View constructor
 //----------------------------------------------------------------------------
-AmnView::AmnView(AmnView* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max):
+View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max):
   _parent(parent), 
   _left(NULL),
   _right(NULL),
@@ -28,9 +28,10 @@ AmnView::AmnView(AmnView* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& m
     RANDOM_0_1,
     RANDOM_0_1
   );
+  ComputeNumPixels();
 }
 
-AmnView::AmnView(AmnView* parent, int x, int y, int w, int h):
+View::View(View* parent, int x, int y, int w, int h):
   _parent(parent), 
   _left(NULL),
   _right(NULL),
@@ -47,40 +48,41 @@ AmnView::AmnView(AmnView* parent, int x, int y, int w, int h):
     RANDOM_0_1,
     RANDOM_0_1
   );
+ ComputeNumPixels();
 }
 
-AmnView::~AmnView()
+View::~View()
 {
   if(_content)delete _content;
   if(_left)delete _left;
   if(_right)delete _right;
 }
 
-void AmnView::SetWindow(AmnWindow* window)
+void View::SetWindow(Window* window)
 {
   _window = window;
 }
 
-AmnWindow* AmnView::GetWindow()
+Window* View::GetWindow()
 {
   return _window;
 }
 
-void AmnView::SetContent(AmnUI* ui)
+void View::SetContent(BaseUI* ui)
 {
   if(_content)delete _content; 
   _content=ui;
 };
 
 bool
-AmnView::Contains(int x, int y)
+View::Contains(int x, int y)
 {
   if(x>=_min[0] && x<=_max[0] && y>=_min[1] && y<=_max[1])return true;
   else return false;
 }
 
 void 
-AmnView::Draw()
+View::Draw()
 {
   if(!IsLeaf()){
     if(_left)_left->Draw();
@@ -124,7 +126,7 @@ AmnView::Draw()
 }
 
 // mouse positon relative to the view
-void AmnView::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
+void View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
 {
   pxr::GfVec2f position =GetMin();
   int x = position[0];
@@ -134,19 +136,25 @@ void AmnView::GetRelativeMousePosition(const int inX, const int inY, int& outX, 
 }
 
 void 
-AmnView::MouseButton(int action, int button, int mods)
+View::MouseButton(int action, int button, int mods)
 {
   if(_content)_content->MouseButton(action, button, mods);
 }
 
 void 
-AmnView::MouseMove(int x, int y)
+View::MouseMove(int x, int y)
 {
   if(_content)_content->MouseMove(x, y);
 }
 
+void 
+View::MouseWheel(int x, int y)
+{
+  if(_content)_content->MouseWheel(x, y);
+}
+
 void
-AmnView::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
+View::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
 {
   // horizontal splitter
   if(IsHorizontal())
@@ -183,7 +191,7 @@ AmnView::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax
 }
 
 void
-AmnView::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
+View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
   const int width, const int height)
 {
   if(IsHorizontal())
@@ -210,16 +218,16 @@ AmnView::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
 }
 
 void
-AmnView::Split()
+View::Split()
 {
   pxr::GfVec2f cMin, cMax;    
   GetChildMinMax(true, cMin, cMax);
-  _left = new AmnView(this, cMin, cMax);
+  _left = new View(this, cMin, cMax);
   _left->_name = _name + ":left";
   _left->_parent = this;
 
   GetChildMinMax(false, cMin, cMax);
-  _right = new AmnView(this, cMin, cMax);
+  _right = new View(this, cMin, cMax);
   _right->_name = _name + ":right";
   _right->_parent = this;
 
@@ -233,7 +241,7 @@ AmnView::Split()
 }
 
 void 
-AmnView::Resize(int x, int y, int w, int h)
+View::Resize(int x, int y, int w, int h)
 {
   _min = pxr::GfVec2f(x, y);
   _max = pxr::GfVec2f(x+w, y+h);
@@ -257,19 +265,73 @@ AmnView::Resize(int x, int y, int w, int h)
 }
 
 int 
-AmnView::GetPercFromMousePosition(int x, int y)
+View::GetPercFromMousePosition(int x, int y)
 {
+  int oldPerc = _perc;
   if(IsHorizontal())
   {
     float perc = (float)(y - _min[1]) / (float)(_max[1] - _min[1]);
-    perc = perc < 0.02f ? 0.02f : perc > 0.98f ? 0.98f : perc;
+    perc = perc < 0.05f ? 0.05f : perc > 0.95f ? 0.95f : perc;
     _perc = (int)(perc * 100);
   }
   else
   {
     float perc = (float)(x - _min[0]) / (float)(_max[0] - _min[0]);
-    perc = perc < 0.02f ? 0.02f : perc > 0.98f ? 0.98f : perc;
+    perc = perc < 0.05f ? 0.05f : perc > 0.95f ? 0.95f : perc;
     _perc = (int)(perc * 100);
+  }
+  ComputeNumPixels();
+  FixLeft();
+  FixRight();
+}
+
+void
+View::ComputeNumPixels()
+{
+  if(IsHorizontal())
+  {
+    _npixels = _min[1] + _perc * 0.01f *GetHeight();
+  }
+  else
+  {
+    _npixels = _min[0] + _perc * 0.01f * GetWidth();
+  }
+}
+
+void 
+View::FixLeft()
+{
+  if(_left->IsHorizontal() == IsHorizontal())
+  {
+    if(IsHorizontal())
+    {
+      int height = GetHeight() * _perc * 0.01f;
+      _left->_perc = (int)((float)_left->_npixels / (float)height * 100);
+    }
+    else
+    { 
+      int width = GetWidth() * _perc * 0.01f;
+      _left->_perc = (int)((float)_left->_npixels / (float)width * 100);
+    }
+  }
+
+}
+
+void 
+View::FixRight()
+{
+  if(_right->IsHorizontal() == IsHorizontal())
+  {
+    if(IsHorizontal())
+    {
+      int height = GetHeight() * (100 - _perc) * 0.01f;
+      _right->_perc = (int)((float)_left->_npixels / (float)height * 100);
+    }
+    else
+    { 
+      int width = GetWidth() * (100 - _perc) * 0.01f;
+      _right->_perc = (int)((float)_left->_npixels / (float)width * 100);
+    }
   }
 }
 

@@ -6,9 +6,9 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class AmnWindow;
-class AmnUI;
-class AmnView
+class Window;
+class BaseUI;
+class View
 {
 enum FLAGS
 {
@@ -18,11 +18,13 @@ enum FLAGS
 };
 
 public:
-  AmnView(AmnView* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
-  AmnView(AmnView* parent, int x, int y, int w, int h);
-  ~AmnView();
-  void SetWindow(AmnWindow* AmnWindow);
-  AmnWindow* GetWindow();
+  View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
+  View(View* parent, int x, int y, int w, int h);
+  ~View();
+  void SetWindow(Window* Window);
+  Window* GetWindow();
+  const float GetX(){return _min[0];};
+  const float GetY(){return _min[1];};
   const pxr::GfVec2f& GetMin(){return _min;};
   const pxr::GfVec2f& GetMax(){return _max;};
   const pxr::GfVec3f& GetColor(){return _color;};
@@ -38,21 +40,24 @@ public:
   inline unsigned GetPerc(){return _perc;};
   inline void SetPerc(unsigned perc){_perc=perc;};
   int GetPercFromMousePosition(int x, int y);
+  void ComputeNumPixels();
+  void FixLeft();
+  void FixRight();
 
   void GetChildMinMax(bool , pxr::GfVec2f& , pxr::GfVec2f& );
   void Split();
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
-    const int width, const int height);
+  const int width, const int height);
 
-  inline AmnView* GetLeft(){return _left;};
-  inline AmnView* GetRight(){return _right;};
-  inline AmnView* GetParent(){return _parent;};
+  inline View* GetLeft(){return _left;};
+  inline View* GetRight(){return _right;};
+  inline View* GetParent(){return _parent;};
   inline bool HasParent(){return _parent != NULL;};
 
   void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
 
-  void SetContent(AmnUI* ui);
-  AmnUI* GetContent(){return _content;};
+  void SetContent(BaseUI* ui);
+  BaseUI* GetContent(){return _content;};
 
   // 
   bool Contains(int x, int y);
@@ -62,6 +67,7 @@ public:
   int TouchBorder();
   void MouseMove(int x, int y);
   void MouseButton(int action, int button, int mods);
+  void MouseWheel(int x, int y);
 
   // FLAGS
   inline bool IsOver(){return BITMASK_CHECK(_flags, OVER);};
@@ -81,13 +87,14 @@ private:
   pxr::GfVec2f      _max;
   pxr::GfVec3f      _color;
   unsigned          _perc;
-  AmnUI*            _content;
-  AmnView*          _left;
-  AmnView*          _right;
-  AmnView*          _parent;
+  unsigned          _npixels;
+  BaseUI*           _content;
+  View*             _left;
+  View*             _right;
+  View*             _parent;
   unsigned          _flags;
   std::string       _name;
-  AmnWindow*        _window;
+  Window*           _window;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
