@@ -75,13 +75,13 @@ Application::Init()
   // create window
   _mainWindow->SetContext();
   View* mainView = _mainWindow->GetMainView();
-  _mainWindow->SplitView(mainView, 10, true);
-  _mainWindow->SplitView(mainView->GetRight(), 70, true);
+  _mainWindow->SplitView(mainView, 0.1, true);
+  _mainWindow->SplitView(mainView->GetRight(), 0.7, true);
   View* middleView = mainView->GetRight()->GetLeft();
   View* graphView = mainView->GetRight()->GetRight();
 
-  _mainWindow->SplitView(middleView, 75, false);
-  _mainWindow->SplitView(middleView->GetLeft(), 33, false);
+  _mainWindow->SplitView(middleView, 0.8, false);
+  _mainWindow->SplitView(middleView->GetLeft(), 0.33, false);
   //_mainWindow->SplitView(middleView->GetRight(), 50, false);
 
 /*

@@ -37,9 +37,9 @@ public:
 
   inline const std::string& GetName(){return _name;};
   inline const char* GetText(){return _name.c_str();};
-  inline unsigned GetPerc(){return _perc;};
-  inline void SetPerc(unsigned perc){_perc=perc;};
-  int GetPercFromMousePosition(int x, int y);
+  inline double GetPerc(){return _perc;};
+  inline void SetPerc(double perc){_perc=perc;};
+  void GetPercFromMousePosition(int x, int y);
   void ComputeNumPixels();
   void FixLeft();
   void FixRight();
@@ -86,7 +86,7 @@ private:
   pxr::GfVec2f      _min;
   pxr::GfVec2f      _max;
   pxr::GfVec3f      _color;
-  unsigned          _perc;
+  double            _perc;
   unsigned          _npixels;
   BaseUI*           _content;
   View*             _left;

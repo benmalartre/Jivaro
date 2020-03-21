@@ -178,7 +178,7 @@ Window::SetActiveView(View* view)
 // split view
 //----------------------------------------------------------------------------
 View* 
-Window::SplitView(View* view, unsigned perc, bool horizontal )
+Window::SplitView(View* view, double perc, bool horizontal )
 {
   if(!view->IsLeaf())
   {
