@@ -94,6 +94,7 @@ TranslateSubdiv(
 
     hasTopo = true;
   }
+  //GetProperties(usdMesh.GetPrim(), ctxt);
 
   // if there are no triangles no point to continue 
   if(!hasTopo)
@@ -105,30 +106,21 @@ TranslateSubdiv(
     return NULL;
   }
 
-  /*
   
-  Vec3fa* vertex_colors = (Vec3fa*) alignedMalloc(num_vertices*sizeof(Vec3fa),16);
-  for(int v=0;v<num_vertices;++v)
+  CheckColors(usdMesh, ctxt->_time, result);
+  
+  /*
+  if(!result->_hasColors)
   {
-    vertex_colors[v][0] = RANDOM_0_1;
-    vertex_colors[v][1] = RANDOM_0_1;
-    vertex_colors[v][2] = RANDOM_0_1;
+    ComputeVertexColors(result->_vertices,
+                        result->_counts,
+                        result->_indices,
+                        result->_colors);
+    result->_hasColors = true;
+    result->_colorsInterpolationType = VERTEX;
   }
   */
-
-/*
-  CheckNormals(usdMesh, ctxt->_time, result);
-  if(!result->_hasNormals)
-  {
-    ComputeVertexNormals(result->_vertices,
-                        counts,
-                        indices,
-                        result->_triangles,
-                        result->_normals);
-    result->_hasNormals = true;
-    result->_normalsInterpolationType = VERTEX;
-  }
-  */
+ 
   if(hasPoints && hasTopo)
   {
     /*
@@ -158,7 +150,6 @@ TranslateSubdiv(
     rtcCommitGeometry(result->_geom);
     result->_geomId = rtcAttachGeometry(scene, result->_geom);
     rtcReleaseGeometry(result->_geom);
-    std::cout << "CREATED EMBREE MESH GEOMETRY :D" << std::endl;
     return result;
   }
   else
@@ -257,6 +248,76 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
   return mesh->_hasNormals;
   */
  return false;
+}
+
+bool 
+CheckColors(const pxr::UsdGeomMesh& usdMesh,
+            const pxr::UsdTimeCode& time,
+            UsdEmbreeSubdiv* mesh)
+{
+  mesh->_hasColors = false;
+
+  pxr::UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
+  if(colorPrimVar) 
+  {
+    pxr::UsdAttribute colorsAttr = colorPrimVar.GetAttr();
+    colorsAttr.Get(&mesh->_colors, time);
+    int num_colors = mesh->_colors.size();
+    
+    pxr::TfToken interpolation = colorPrimVar.GetInterpolation();
+    if(interpolation == pxr::UsdGeomTokens->constant)
+    {
+      mesh->_hasColors = true;
+      mesh->_colorsInterpolationType = CONSTANT;
+    }
+    else if(interpolation == pxr::UsdGeomTokens->uniform)
+    {
+    }
+    else if(interpolation == pxr::UsdGeomTokens->varying)
+    {
+    }
+    else if(interpolation == pxr::UsdGeomTokens->vertex)
+    {
+      if(num_colors == mesh->_vertices.size())
+      {
+        mesh->_hasColors = true;
+        mesh->_colorsInterpolationType = VERTEX;
+      }
+      else
+      {
+        std::cerr << "Problem with vertex varying colors datas : " <<
+            usdMesh.GetPath().GetText() << " >>> fallback to compute them...";
+      }
+    }
+    else if(interpolation == pxr::UsdGeomTokens->faceVarying)
+    {
+      //if(num_colors == mesh->_numOriginalSamples)
+      {
+        mesh->_hasColors = true;
+        mesh->_colorsInterpolationType = FACE_VARYING;
+      }
+      /*
+      else
+      {
+        std::cerr << "Problem with face varying colors datas : " <<
+          usdMesh.GetPath().GetText() << " >>> fallback to compute them...";     
+      }
+      */
+    } 
+  }
+
+   if(mesh->_hasColors)
+    {
+      rtcSetSharedGeometryBuffer(mesh->_geom,             // RTCGeometry
+                                RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
+                                1,                          // Slot
+                                RTC_FORMAT_FLOAT3,          // RTCFormat
+                                mesh->_colors.cdata(),     // Datas Ptr
+                                0,                          // Offset
+                                sizeof(pxr::GfVec3f),       // Stride
+                                mesh->_colors.size());     // Num Elements
+    }
+  
 }
 
 

@@ -60,6 +60,7 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
   std::string path = prim.GetPath().GetString();
   std::string search = "/SHA256/stage/manekineko2_grp";
   
+  /*
   if(path == search)
   {
     pxr::GfMatrix4d worldMatrix = 
@@ -86,7 +87,8 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
       _prims.push_back(instance);
     }
   }
- 
+  
+  */
   if(path.find(search) == std::string::npos)flip = true;
 
   for(auto child : prim.GetAllChildren())
@@ -100,7 +102,7 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
     {
       pxr::GfMatrix4d worldMatrix = 
         _xformCache->GetLocalToWorldTransform(child);
-
+      /*
       if(flip)
       {
         UsdEmbreeSubdiv* subdiv = 
@@ -109,10 +111,11 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
       }
       else
       {
+        */
         UsdEmbreeMesh* mesh = 
         TranslateMesh(this, pxr::UsdGeomMesh(child), worldMatrix, _scene);
         _prims.push_back(mesh);
-      }
+      //}
     }
     CollectPrims(child);
   }

@@ -99,17 +99,9 @@ TranslateMesh(
     return NULL;
   }
 
-  /*
-  
-  Vec3fa* vertex_colors = (Vec3fa*) alignedMalloc(num_vertices*sizeof(Vec3fa),16);
-  for(int v=0;v<num_vertices;++v)
-  {
-    vertex_colors[v][0] = RANDOM_0_1;
-    vertex_colors[v][1] = RANDOM_0_1;
-    vertex_colors[v][2] = RANDOM_0_1;
-  }
-  */
+  //GetProperties(usdMesh.GetPrim(), ctxt);
 
+  CheckColors(usdMesh, ctxt->_time, result);
   CheckNormals(usdMesh, ctxt->_time, result);
   if(!result->_hasNormals)
   {
@@ -206,15 +198,13 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
       }
       else
       {
-        std::cerr << "FUCK" << "\n" << 
-          "Problem with vertex varying normals datas : " <<
-            "fallback to compute them...";
+        std::cerr << "Problem with vertex varying normals datas : " <<
+            usdMesh.GetPath().GetText() << " >>> fallback to compute them...";
       }
     }
     // face varying normals (per face-vertex)
     else if(normalsInterpolation == pxr::UsdGeomTokens->faceVarying)
     {
-      std::cout << "FACE VARYING NORMALS INTERPOLATION :D" << std::endl;
       if(num_normals == mesh->_numOriginalSamples)
       {
         TriangulateData<pxr::GfVec3f>(mesh->_samples, 
@@ -222,19 +212,17 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
                                       mesh->_normals);
         mesh->_hasNormals = true;
         mesh->_normalsInterpolationType = FACE_VARYING;
-        std::cerr << "TRIANGULATED FACE VARYING NORMALS" << std::endl;
       }
       else
       {
-        std::cerr << "FUCK" << "\n" << 
-          "Problem with face varying normals datas : " <<
-            "fallback to compute them...";
+        std::cerr << "Problem with face varying normals datas : " <<
+            usdMesh.GetPath().GetText() << " >>> fallback to compute them...";
       }
     }
 
     if(mesh->_hasNormals)
     {
-      rtcSetSharedGeometryBuffer(mesh->_geom,             // RTCGeometry
+      rtcSetSharedGeometryBuffer(mesh->_geom,               // RTCGeometry
                                 RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
                                 1,                          // Slot
                                 RTC_FORMAT_FLOAT3,          // RTCFormat
@@ -245,6 +233,70 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
     }
   }
   return mesh->_hasNormals;
+}
+
+bool 
+CheckColors(const pxr::UsdGeomMesh& usdMesh,
+            const pxr::UsdTimeCode& time,
+            UsdEmbreeMesh* mesh)
+{
+  mesh->_hasColors = false;
+
+  pxr::UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
+  if(colorPrimVar) 
+  {
+    pxr::VtArray<pxr::GfVec3f> colors;
+    pxr::UsdAttribute colorsAttr = colorPrimVar.GetAttr();
+    colorsAttr.Get(&colors, time);
+    int num_colors = colors.size();
+    
+    pxr::TfToken interpolation = colorPrimVar.GetInterpolation();
+    if(interpolation == pxr::UsdGeomTokens->constant)
+    {
+      colorPrimVar.Get(&mesh->_colors);
+      mesh->_hasColors = true;
+      mesh->_colorsInterpolationType = CONSTANT;
+    }
+    else if(interpolation == pxr::UsdGeomTokens->uniform)
+    {
+    }
+    else if(interpolation == pxr::UsdGeomTokens->varying)
+    {
+    }
+    else if(interpolation == pxr::UsdGeomTokens->vertex)
+    {
+      if(num_colors == mesh->_vertices.size())
+      {
+        TriangulateData<pxr::GfVec3f>(mesh->_triangles, 
+                                      colors,
+                                      mesh->_colors);
+        mesh->_hasColors = true;
+        mesh->_colorsInterpolationType = VERTEX;
+      }
+      else
+      {
+        std::cerr << "Problem with vertex varying colors datas : " <<
+            usdMesh.GetPath().GetText() << " >>> fallback to compute them...";
+      }
+    }
+    else if(interpolation == pxr::UsdGeomTokens->faceVarying)
+    {
+      if(num_colors == mesh->_numOriginalSamples)
+      {
+        TriangulateData<pxr::GfVec3f>(mesh->_samples, 
+                                      colors,
+                                      mesh->_colors);
+        mesh->_hasColors = true;
+        mesh->_colorsInterpolationType = FACE_VARYING;
+      }
+      else
+      {
+        std::cerr << "Problem with face varying colors datas : " <<
+          usdMesh.GetPath().GetText() << " >>> fallback to compute them...";     
+      }
+    } 
+  }
+  
 }
 
 

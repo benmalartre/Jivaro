@@ -10,14 +10,13 @@ class UsdEmbreeContext;
 
 struct UsdEmbreeMaster  : public UsdEmbreePrim {
   RTCScene                          _scene;
-  std::vector<UsdEmbreePrim*>    _prims;
+  std::vector<UsdEmbreePrim*>       _prims;
   std::vector<int>                  _geoms;
 };
 
 struct UsdEmbreeInstance  : public UsdEmbreePrim {
-  UsdEmbreeMaster*               _master;
+  UsdEmbreeMaster*                  _master;
   pxr::GfMatrix4d                   _xform;
-  pxr::GfVec3d                      _color;
 };
 
 void RecurseMaster(

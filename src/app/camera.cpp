@@ -430,23 +430,27 @@ void Camera::Dolly(double dx, double dy)
    pxr::GfVec3d interpolated = _pos * (1-delta) + _lookat * delta;
    _pos = interpolated;
 
-  /*
-  double scaleFactor = (dx + dy) * 2.0 + 1.0;
+  // update camera transform
+  LookAt();
+}
+
+void Camera::Walk(double dx, double dy)
+{
   pxr::GfVec3d delta = _pos - _lookat;
- 
-  if(scaleFactor > 1 && delta.GetLength()<2.0)
-  {
-    scaleFactor -= 1.0;
-    double incr = 0.5 < scaleFactor ? 0.5 : scaleFactor;
-    _pos = _lookat + incr * delta.GetNormalized();
-    std::cout << "DOLLY INCR : " << incr << std::endl;
-  }
-  else
-  {
-    std::cout << "DOLLY SCALE FACTOR : " << scaleFactor << std::endl;
-    _pos = _lookat + delta * scaleFactor;
-  }
-  */
+  double dist = delta.GetLength() * _fov * 0.5 * RADIANS_TO_DEGREES;
+
+  delta[0] = -dx * dist;
+  delta[1] = dy * dist;
+  delta[2] = 0;
+
+  std::cout << "DELTA : " << delta[0] << "," << delta[1] << "," << delta[2] << std::endl;
+
+  pxr::GfMatrix4d view = _camera.GetTransform();
+  pxr::GfRotation rot = view.ExtractRotation();
+  delta = rot.TransformDir(delta);
+  _pos += delta;
+  _lookat += delta;
+
   // update camera transform
   LookAt();
 }

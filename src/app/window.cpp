@@ -560,7 +560,6 @@ ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
   Window* parent = Window::GetUserData(window);
   if(parent->GetActiveView())
     parent->GetActiveView()->MouseWheel(xOffset, yOffset);
-  else std::cout << "NO ACTIVE VIEW :(, SORRY..." << std::endl;
   parent->Draw();
 }
 

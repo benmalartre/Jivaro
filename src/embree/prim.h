@@ -24,6 +24,7 @@ struct UsdEmbreePrim {
   RTCGeometry                 _geom;
   std::string                 _name;
   std::vector<int>            _instanceIDs;
+  pxr::GfVec3f                _color;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

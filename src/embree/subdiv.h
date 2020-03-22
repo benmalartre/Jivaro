@@ -44,4 +44,9 @@ bool CheckNormals(
   UsdEmbreeSubdiv* subdiv
 );
 
+bool 
+CheckColors(const pxr::UsdGeomMesh& usdMesh,
+            const pxr::UsdTimeCode& time,
+            UsdEmbreeSubdiv* mesh);
+
 AMN_NAMESPACE_CLOSE_SCOPE

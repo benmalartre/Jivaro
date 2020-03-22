@@ -81,7 +81,7 @@ UsdEmbreeInstance* TranslateInstance(
 {
   UsdEmbreeInstance* result = new UsdEmbreeInstance();
   result->_geom = rtcNewGeometry (ctxt->_device, RTC_GEOMETRY_TYPE_INSTANCE);
-  result->_color = pxr::GfVec3d(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  result->_color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
 
   rtcSetGeometryInstancedScene(result->_geom, master->_scene);
   rtcSetGeometryTimeStepCount(result->_geom, 1);

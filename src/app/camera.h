@@ -112,10 +112,13 @@ public:
   void SetWindow(int x, int y, int width, int height);
 
   // orbit around lookat point from mouse delta
-  void Orbit(double dX, double dY);
+  void Orbit(double x, double y);
 
   // dolly along view direction
-  void Dolly(double dX, double dY);
+  void Dolly(double x, double y);
+
+  // walk parallel to camera plane
+  void Walk(double x, double y);
 
 /*
   // update transform from frustum matrix

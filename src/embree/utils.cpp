@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "context.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -98,5 +99,18 @@ void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
   }
   for(auto& n: normals) n.Normalize();
 }
+
+void
+GetProperties(const pxr::UsdPrim& prim, UsdEmbreeContext* ctxt)
+{
+  pxr::TfTokenVector propertyNames = prim.GetPropertyNames();
+  for(auto t: propertyNames)
+    std::cout << t.GetText() << std::endl;
+
+  pxr::TfTokenVector appliedSchemas = prim.GetAppliedSchemas();
+  for(auto t: appliedSchemas)
+    std::cout << t.GetText() << std::endl;
+}
+
 
 AMN_NAMESPACE_CLOSE_SCOPE

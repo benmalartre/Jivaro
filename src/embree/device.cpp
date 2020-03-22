@@ -49,33 +49,108 @@ void CommitScene ()
   rtcCommitScene (EMBREE_CTXT->_scene);
 }
 
-Vec3fa GetSmoothMeshNormal(Ray& ray)
+Vec3fa _GetMeshNormal(Ray& ray)
 {
   UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
-  pxr::GfVec3f smoothNormal(0.f, 1.f, 0.f);
+  pxr::GfVec3f normal(0.f, 1.f, 0.f);
   if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
   {
     UsdEmbreeMesh* mesh = (UsdEmbreeMesh*)prim;
     pxr::VtArray<pxr::GfVec3f>& normals = mesh->_normals;
     AMN_INTERPOLATION_TYPE interpType = mesh->_normalsInterpolationType;
     if(interpType == VERTEX){
-      smoothNormal = 
+      normal = 
         normals[mesh->_triangles[ray.primID*3]] * (1 - ray.u - ray.v) + 
         normals[mesh->_triangles[ray.primID*3+1]] * ray.u + 
         normals[mesh->_triangles[ray.primID*3+2]] * ray.v;
     }
     else if(interpType == FACE_VARYING){
-      smoothNormal = 
+      normal = 
         normals[ray.primID*3] * (1 - ray.u - ray.v) + 
         normals[ray.primID*3+1] * ray.u + 
         normals[ray.primID*3+2] * ray.v;
     }
     else return ray.Ng;
   }
-  smoothNormal.Normalize();
-  return Vec3fa(smoothNormal[0], smoothNormal[1], smoothNormal[2]);
+  normal.Normalize();
+  return Vec3fa(normal[0], normal[1], normal[2]);
 }
 
+pxr::GfVec3f _GetMeshColor(Ray& ray)
+{
+  UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+  pxr::GfVec3f color(1.f, 1.f, 1.f);
+  if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
+  {
+    UsdEmbreeMesh* mesh = (UsdEmbreeMesh*)prim;
+    pxr::VtArray<pxr::GfVec3f>& colors = mesh->_colors;
+    AMN_INTERPOLATION_TYPE interpType = mesh->_colorsInterpolationType;
+    if(interpType == CONSTANT) {
+      if(!colors.size())color = pxr::GfVec3f(1,0,0);
+      else color = colors[0];
+    }
+    else if(interpType == VERTEX){
+      color = 
+        colors[mesh->_triangles[ray.primID*3]] * (1 - ray.u - ray.v) + 
+        colors[mesh->_triangles[ray.primID*3+1]] * ray.u + 
+        colors[mesh->_triangles[ray.primID*3+2]] * ray.v;
+    }
+    else if(interpType == FACE_VARYING){
+      color = 
+        colors[ray.primID*3] * (1 - ray.u - ray.v) + 
+        colors[ray.primID*3+1] * ray.u + 
+        colors[ray.primID*3+2] * ray.v;
+    }
+    else return color;
+  }
+  return color;
+}
+
+Vec3fa _GetSubdivNormal(Ray& ray)
+{
+  Vec3fa dPdu,dPdv;
+  UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+  rtcInterpolate1(prim->_geom,ray.primID,ray.u,ray.v,RTC_BUFFER_TYPE_VERTEX,0,nullptr,&dPdu.x,&dPdv.x,3);
+  ray.Ng = cross(dPdu,dPdv);
+}
+
+pxr::GfVec3f _GetSubdivColor(Ray& ray)
+{
+  Vec3fa C;
+  UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
+
+  pxr::GfVec3f color(1.f, 1.f, 1.f);
+  if(prim->_type == RTC_GEOMETRY_TYPE_SUBDIVISION)
+  {
+    UsdEmbreeSubdiv* mesh = (UsdEmbreeSubdiv*)prim;
+    pxr::VtArray<pxr::GfVec3f>& colors = mesh->_colors;
+    AMN_INTERPOLATION_TYPE interpType = mesh->_colorsInterpolationType;
+    if(interpType == CONSTANT) {
+      if(!colors.size())color = pxr::GfVec3f(1,0,0);
+      else color = colors[0];
+    }
+    else if(interpType == VERTEX){
+    
+      color = 
+        colors[ray.primID*3] * (1 - ray.u - ray.v) + 
+        colors[ray.primID*3+1] * ray.u + 
+        colors[ray.primID*3+2] * ray.v;
+    
+     color = pxr::GfVec3f(1.f,0.7f, 0.3f);
+    }
+    else if(interpType == FACE_VARYING){
+      color = pxr::GfVec3f(1.f,0.7f, 0.3f);
+      
+      color = 
+        colors[ray.primID*3] * (1 - ray.u - ray.v) + 
+        colors[ray.primID*3+1] * ray.u + 
+        colors[ray.primID*3+2] * ray.v;
+      
+    }
+    else return color;
+  }
+  return color;
+}
 
 // task that renders a single screen tile
 Vec3fa RenderPixelStandard(float x, float y, const Camera* camera)
@@ -101,40 +176,38 @@ Vec3fa RenderPixelStandard(float x, float y, const Camera* camera)
   if (ray.geomID != RTC_INVALID_GEOMETRY_ID)
   {
     //const Triangle& tri = triangles[ray.primID];
-    pxr::GfVec4f rColor(1.0,1.0,1.0,1.0);// = UnpackColor(RandomColorByIndex(ray.geomID));
+    /*(1.0,1.0,1.0,1.0);// =UnpackColor(RandomColorByIndex(ray.geomID));*/
     
       
     UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
-    
+    pxr::GfVec3f rColor(
+      (float)prim->_color[0],
+      (float)prim->_color[1],
+      (float)prim->_color[2]
+    );
     
     if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
     {
-      //ray.Ng = GetSmoothMeshNormal(ray);
-      Vec3fa dPdu,dPdv;
-      rtcInterpolate1(prim->_geom,ray.primID,ray.u,ray.v,RTC_BUFFER_TYPE_VERTEX,0,nullptr,&dPdu.x,&dPdv.x,3);
-      ray.Ng = cross(dPdu,dPdv);
+      ray.Ng = _GetMeshNormal(ray);
+      rColor = _GetMeshColor(ray);
     }
       
     else if(prim->_type == RTC_GEOMETRY_TYPE_SUBDIVISION)
     {
-      //rtcGetGeometry(g_scene,geomID)
-      Vec3fa dPdu,dPdv;
-      rtcInterpolate1(prim->_geom,ray.primID,ray.u,ray.v,RTC_BUFFER_TYPE_VERTEX,0,nullptr,&dPdu.x,&dPdv.x,3);
-      ray.Ng = cross(dPdu,dPdv);
+      ray.Ng = _GetSubdivNormal(ray);
+      rColor = _GetSubdivColor(ray);
+      
     }
 
     if (ray.instID[0] != RTC_INVALID_GEOMETRY_ID)
     {
       UsdEmbreeInstance* instance = (UsdEmbreeInstance*)EMBREE_CTXT->_prims[ray.instID[0]];
-      rColor[0] = instance->_color[0];
-      rColor[1] = instance->_color[1];
-      rColor[2] = instance->_color[2];
+      rColor = instance->_color;
     }
   
-
     Vec3fa diffuse = Vec3fa(rColor[0], rColor[1], rColor[2]);
     color = color + diffuse*0.5f;
-    Vec3fa lightDir = normalize(Vec3fa(-1,-1,-1));
+    Vec3fa lightDir = normalize(Vec3fa(1,-1,1));
 
     // initialize shadow ray
     Ray shadow(ray.org + ray.tfar*ray.dir, neg(lightDir), 0.001f, inf, 0.0f);
@@ -213,8 +286,7 @@ Vec3fa RenderPixelAmbientOcclusion(float x, float y, const Camera* camera)
   Vec3fa Ng = ray.Ng;
 
   if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
-    Ng = GetSmoothMeshNormal(ray);
-  
+    Ng = _GetMeshNormal(ray);
   
   Vec3fa Nf = FaceForward(Ng,ray.dir,Ng);
   Vec3fa col = embree::Vec3fa(embree::min(1.f,.3f+.8f*embree::abs(embree::dot(Ng,embree::normalize(ray.dir)))));
@@ -322,7 +394,7 @@ Vec3fa RenderPixelNormal( float x, float y, const Camera* camera)
   {
     UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
     if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
-      ray.Ng = GetSmoothMeshNormal(ray);
+      ray.Ng = _GetMeshNormal(ray);
   }
   return normalize(Vec3fa(ray.Ng.x,ray.Ng.y,ray.Ng.z));
 }

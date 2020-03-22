@@ -61,19 +61,19 @@ void ViewportUI::MouseButton(int button, int action, int mods)
       }
       else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
       {
-        _interactionMode = INTERACTION_PAN;
+        _interactionMode = INTERACTION_WALK;
       }
       else if(button == GLFW_MOUSE_BUTTON_RIGHT)
       {
         _interactionMode = INTERACTION_DOLLY;
       }
     }
-    else if(mods & GLFW_MOD_SHIFT)
+    else if(mods & GLFW_MOD_SUPER)
     {
       _interact = true;
       if (button == GLFW_MOUSE_BUTTON_LEFT)
       {
-        _interactionMode = INTERACTION_DOLLY;
+        _interactionMode = INTERACTION_WALK;
       }
       else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
       {
@@ -81,7 +81,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
       }
       else if(button == GLFW_MOUSE_BUTTON_RIGHT)
       {
-        _interactionMode = INTERACTION_PAN;
+        _interactionMode = INTERACTION_DOLLY;
       }
     }
 /*
@@ -99,7 +99,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
       }
       else if(mods == GLFW_MOD_CONTROL)
       {
-        _interactionMode = INTERACTION_PAN;
+        _interactionMode = INTERACTION_WALK;
       }
       else if(mods == GLFW_MOD_SHIFT)
       {
@@ -118,9 +118,12 @@ void ViewportUI::MouseMove(int x, int y)
     double dy = y - _lastY;
     switch(_interactionMode)
     {
-      case INTERACTION_PAN:
+      case INTERACTION_WALK:
       {
-        std::cout << "PAN..." << std::endl;
+        _camera->Walk(
+          static_cast<double>(dx)/static_cast<double>(GetWidth()/2), 
+          static_cast<double>(dy)/static_cast<double>(GetHeight()/2) 
+        );
         /*
         embree::Vec3fa dist = _camera->from - _camera->to;
         double d = embree::length(dist) * DEGREES_TO_RADIANS * _camera->fov * 0.5;

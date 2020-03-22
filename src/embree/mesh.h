@@ -11,6 +11,7 @@ struct UsdEmbreeMesh  : public UsdEmbreePrim {
   pxr::VtArray<pxr::GfVec3f>  _vertices;
   pxr::VtArray<int>           _triangles;
   pxr::VtArray<int>           _samples;
+  pxr::GfVec3d                _displayColor;
 
   bool                        _hasNormals;
   AMN_INTERPOLATION_TYPE      _normalsInterpolationType;
@@ -42,4 +43,9 @@ bool CheckNormals(
   UsdEmbreeMesh* mesh
 );
 
+bool CheckColors(
+  const pxr::UsdGeomMesh& usdMesh,
+  const pxr::UsdTimeCode& time,
+  UsdEmbreeMesh* mesh
+);
 AMN_NAMESPACE_CLOSE_SCOPE

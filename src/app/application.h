@@ -44,13 +44,12 @@ public:
 
 private:
   std::string                       _fileName;
-  Window*                        _mainWindow;
-  UsdEmbreeContext*              _context;
+  Window*                           _mainWindow;
+  UsdEmbreeContext*                 _context;
   int                               _width;
   int                               _height;
   std::vector<pxr::UsdStageRefPtr>  _stages;
-
-  GraphUI*                       _test;
+  GraphUI*                          _test;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE // namespace pxr
