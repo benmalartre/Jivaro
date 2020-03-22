@@ -181,12 +181,12 @@ Window::SplitView(View* view, double perc, bool horizontal )
   if(horizontal)
   {
     view->SetHorizontal();
-    view->Split();
+    view->Split(perc, horizontal);
   }
   else
   {
     view->ClearHorizontal();
-    view->Split();
+    view->Split(perc, horizontal);
   }
   
   view->SetPerc(perc);

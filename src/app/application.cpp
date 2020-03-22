@@ -62,6 +62,17 @@ Application::CreateStandardWindow(int width, int height)
   return Window::CreateStandardWindow(width, height);
 }
 
+void _RecurseSplitView(View* view, int depth, bool horizontal)
+{
+  if(depth < 3)
+  {
+    view->Split(0.5, horizontal);
+    _RecurseSplitView(view->GetLeft(), depth + 1, horizontal);
+    _RecurseSplitView(view->GetRight(), depth + 1, horizontal);
+    view->SetPerc(0.5);
+  }
+}
+
 // init application
 //----------------------------------------------------------------------------
 void 
@@ -69,8 +80,8 @@ Application::Init()
 {
   std::string filename = 
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
-    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
-    //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
+    //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
+    "/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
 
   // build test scene
   //pxr::TestScene(filename);
@@ -78,24 +89,33 @@ Application::Init()
   // create window
   _mainWindow->SetContext();
   View* mainView = _mainWindow->GetMainView();
+  _RecurseSplitView(mainView, 0, true);
+   
+   _mainWindow->CollectLeaves();
+
+   _mainWindow->Resize(_width, _height);
+
+  /*
   _mainWindow->SplitView(mainView, 0.1, true);
   _mainWindow->SplitView(mainView->GetRight(), 0.7, true);
   View* middleView = mainView->GetRight()->GetLeft();
   View* graphView = mainView->GetRight()->GetRight();
 
-  _mainWindow->SplitView(middleView, 0.8, false);
-  _mainWindow->SplitView(middleView->GetLeft(), 0.2, false);
+  _mainWindow->SplitView(middleView, 0.5, false);
+  _mainWindow->SplitView(middleView->GetLeft(), 0.5, false);
   _mainWindow->SplitView(middleView->GetRight(), 0.5, false);
-  mainView->Resize(0, 0, _width, _height,true);
+  _mainWindow->Resize(_width, _height);
+  */
+  /*
   View* viewportView = middleView->GetLeft()->GetRight();
-
+  _mainWindow->CollectLeaves();
   GraphUI* graph = new GraphUI(graphView, "GraphUI");
   ViewportUI* viewport = new ViewportUI(viewportView, EMBREE);
   //DummyUI* dummy = new DummyUI(mainView->GetLeft(), "DummyUI");
   
   MenuUI* menu = new MenuUI(mainView->GetLeft());
-  _mainWindow->CollectLeaves();
-
+  */
+/*
 
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
@@ -126,7 +146,7 @@ Application::Init()
   RenderToFile(outputImageFilename, viewport->GetCamera(), 2048, 1024);
   RenderToMemory(viewport->GetCamera());
   viewport->SetContext(EMBREE_CTXT);
-  
+  */
   //_mainWindow->CollectLeaves();
   //_mainWindow->DummyFill();
 }

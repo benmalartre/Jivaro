@@ -89,13 +89,13 @@ pxr::GfVec3f _GetMeshColor(Ray& ray)
       if(!colors.size())color = pxr::GfVec3f(1,0,0);
       else color = colors[0];
     }
-    else if(interpType == VERTEX){
+    else if(interpType == VERTEX) {
       color = 
         colors[mesh->_triangles[ray.primID*3]] * (1 - ray.u - ray.v) + 
         colors[mesh->_triangles[ray.primID*3+1]] * ray.u + 
         colors[mesh->_triangles[ray.primID*3+2]] * ray.v;
     }
-    else if(interpType == FACE_VARYING){
+    else if(interpType == FACE_VARYING) {
       color = 
         colors[ray.primID*3] * (1 - ray.u - ray.v) + 
         colors[ray.primID*3+1] * ray.u + 
@@ -109,9 +109,19 @@ pxr::GfVec3f _GetMeshColor(Ray& ray)
 Vec3fa _GetSubdivNormal(Ray& ray)
 {
   Vec3fa dPdu,dPdv;
-  UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
-  rtcInterpolate1(prim->_geom,ray.primID,ray.u,ray.v,RTC_BUFFER_TYPE_VERTEX,0,nullptr,&dPdu.x,&dPdv.x,3);
-  ray.Ng = cross(dPdu,dPdv);
+  rtcInterpolate1(
+    EMBREE_CTXT->_prims[ray.geomID]->_geom,
+    ray.primID,
+    ray.u,
+    ray.v,
+    RTC_BUFFER_TYPE_VERTEX,
+    0,
+    nullptr,
+    &dPdu.x,
+    &dPdv.x,
+    3
+  );
+  ray.Ng = normalize(cross(dPdu,dPdv));
 }
 
 pxr::GfVec3f _GetSubdivColor(Ray& ray)
@@ -175,10 +185,7 @@ Vec3fa RenderPixelStandard(float x, float y, const Camera* camera)
   Vec3fa color = Vec3fa(0.0f);
   if (ray.geomID != RTC_INVALID_GEOMETRY_ID)
   {
-    //const Triangle& tri = triangles[ray.primID];
-    /*(1.0,1.0,1.0,1.0);// =UnpackColor(RandomColorByIndex(ray.geomID));*/
-    
-      
+
     UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
     pxr::GfVec3f rColor(
       (float)prim->_color[0],
@@ -195,8 +202,7 @@ Vec3fa RenderPixelStandard(float x, float y, const Camera* camera)
     else if(prim->_type == RTC_GEOMETRY_TYPE_SUBDIVISION)
     {
       ray.Ng = _GetSubdivNormal(ray);
-      rColor = _GetSubdivColor(ray);
-      
+      rColor = _GetSubdivColor(ray); 
     }
 
     if (ray.instID[0] != RTC_INVALID_GEOMETRY_ID)

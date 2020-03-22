@@ -13,8 +13,8 @@ struct UsdEmbreeContext {
   // usd
   std::vector<std::string>                        _files;
   pxr::UsdStageRefPtr                             _stage;
-  std::vector<UsdEmbreePrim*>                  _prims;
-  std::vector<UsdEmbreeMaster*>                _masters;
+  std::vector<UsdEmbreePrim*>                     _prims;
+  std::vector<UsdEmbreeMaster*>                   _masters;
   pxr::TfToken                                    _axis;
   pxr::UsdTimeCode                                _time;
   long long                                       _numPrims;

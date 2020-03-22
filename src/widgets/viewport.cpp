@@ -230,11 +230,11 @@ void ViewportUI::Resize()
     _camera->SetWindow(
       _parent->GetX(),
       _parent->GetY(),
-      _parent->GetWidth(), 
+      _parent->GetWidth(),
       _parent->GetHeight()
     );
-    RenderToMemory(_camera, false);
-    SetContext(EMBREE_CTXT);
+    //RenderToMemory(_camera, false);
+    //SetContext(EMBREE_CTXT);
   }   
 }
 

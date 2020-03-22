@@ -90,35 +90,6 @@ View::Draw()
   {
     if(_content)_content->Draw();
   }
-  
-  /*
-  int x, y, w, h;
-  if(!BITMASK_CHECK(_flags, HORIZONTAL))
-  {
-    x = (_min[0] + ((_max[0]-_min[0]) * _perc)/100) - 1;
-    y = _min[1];
-    w = 2;
-    h = _max[1] - _min[1];
-  }
-  else
-  {
-    x = _min[0];
-    y = (_min[1] + ((_max[1]-_min[1]) * _perc)/100 ) - 1;
-    w = _max[0] - _min[0];
-    h = 2;
-  }
-  
-  
-  glScissor(x,y,w,h);
-  //glClearColor(_color[0], _color[1], _color[2], 1.f);
-  glClearColor(
-    (double)rand()/(double)RAND_MAX,
-    (double)rand()/(double)RAND_MAX,
-    (double)rand()/(double)RAND_MAX,
-    1.f
-  );
-  glClear(GL_COLOR_BUFFER_BIT);
-  */
 }
 
 // mouse positon relative to the view
@@ -214,8 +185,12 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
 }
 
 void
-View::Split()
+View::Split(double perc, bool horizontal)
 {
+  if(horizontal)SetHorizontal();
+  else ClearHorizontal();
+  _perc = perc;
+
   pxr::GfVec2f cMin, cMax;    
   GetChildMinMax(true, cMin, cMax);
   _left = new View(this, cMin, cMax);
@@ -226,12 +201,6 @@ View::Split()
   _right = new View(this, cMin, cMax);
   _right->_name = _name + ":right";
   _right->_parent = this;
-
-  if(_content){
-    std::cerr << 
-      "WE GOT FUCKIN CONTENT : WE HAVE TO MOVE THIS SHIT FROM HERE !!!! " 
-        << std::endl;
-  }
 
   ClearLeaf();
 }
@@ -291,7 +260,7 @@ void
 View::SetPerc(double perc)
 {
   _perc=perc;
-  ComputeNumPixels(true);
+  ComputeNumPixels(false);
 };
 
 void
@@ -358,7 +327,7 @@ View::FixRight()
     if(IsHorizontal())
     {
       double height = GetHeight() * (1 - _perc);
-      perc = 1.0/(height / (double)_right->_npixels[1]);// / height;
+      perc = 1-(double)_right->_npixels[1] / (double)height;
     }
     else
     { 

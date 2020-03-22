@@ -46,7 +46,7 @@ public:
   void FixRight();
 
   void GetChildMinMax(bool , pxr::GfVec2f& , pxr::GfVec2f& );
-  void Split();
+  void Split(double perc, bool horizontal);
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
   const int width, const int height);
 
