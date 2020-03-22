@@ -28,7 +28,6 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max):
     RANDOM_0_1,
     RANDOM_0_1
   );
-  ComputeNumPixels();
 }
 
 View::View(View* parent, int x, int y, int w, int h):
@@ -48,7 +47,6 @@ View::View(View* parent, int x, int y, int w, int h):
     RANDOM_0_1,
     RANDOM_0_1
   );
- ComputeNumPixels();
 }
 
 View::~View()
@@ -92,8 +90,6 @@ View::Draw()
   {
     if(_content)_content->Draw();
   }
-  
-  
   
   /*
   int x, y, w, h;
@@ -241,10 +237,17 @@ View::Split()
 }
 
 void 
-View::Resize(int x, int y, int w, int h)
+View::Resize(int x, int y, int w, int h, bool rationalize)
 {
+  pxr::GfVec2f ratio;
+  if(rationalize)
+  {
+    ratio[0] = 1 / ((_max[0] - _min[0]) / w);
+    ratio[1] = 1 / ((_max[1] - _min[1]) / h);
+  }
   _min = pxr::GfVec2f(x, y);
   _max = pxr::GfVec2f(x+w, y+h);
+  
   if(!IsLeaf())
   {
     if(IsHorizontal())
@@ -262,6 +265,7 @@ View::Resize(int x, int y, int w, int h)
   {
     if(_content)_content->Resize();
   }
+  if(rationalize)RescaleNumPixels(ratio);
 }
 
 void 
@@ -269,49 +273,80 @@ View::GetPercFromMousePosition(int x, int y)
 {
   if(IsHorizontal())
   {
+    if(GetHeight()<0.01)return;
     double perc = (double)(y - _min[1]) / (double)(_max[1] - _min[1]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
   else
   {
+    if(GetWidth()<0.01)return;
     double perc = (double)(x - _min[0]) / (double)(_max[0] - _min[0]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
-  ComputeNumPixels();
-  FixLeft();
-  FixRight();
+  ComputeNumPixels(true);
+ 
 }
 
+void 
+View::SetPerc(double perc)
+{
+  _perc=perc;
+  ComputeNumPixels(true);
+};
+
 void
-View::ComputeNumPixels()
+View::ComputeNumPixels(bool postFix)
 {
   if(IsHorizontal())
   {
-    _npixels = _min[1] + _perc *GetHeight();
+    _npixels[0] = _perc * GetHeight();
+    _npixels[1] = (1-_perc) * GetHeight();
   }
   else
   {
-    _npixels = _min[0] + _perc * GetWidth();
+    _npixels[0] = _perc * GetWidth();
+    _npixels[1] = (1-_perc) * GetWidth();
+  }
+  
+  if(postFix)
+  {
+    if(_left)FixLeft();
+    if(_right)FixRight();
   }
 }
+void 
+View::RescaleNumPixels(pxr::GfVec2f  ratio)
+{
+  if(!IsLeaf())
+  {
+    if(IsHorizontal()){_npixels[0] *= ratio[1]; _npixels[1] *= ratio[1];}
+    else {_npixels[0] *= ratio[0]; _npixels[1] *= ratio[0];}
+
+    if(_left)_left->RescaleNumPixels(ratio);
+    if(_right)_right->RescaleNumPixels(ratio);
+  }
+}
+
 
 void 
 View::FixLeft()
 {
   if(_left->IsHorizontal() == IsHorizontal())
   {
+    double perc;
     if(IsHorizontal())
     {
       int height = GetHeight() * _perc;
-      _left->_perc = (double)_left->_npixels / (double)height;
+      perc = (double)_left->_npixels[0] / (double)height;
     }
     else
     { 
-      int width = GetWidth() * _perc;
-      _left->_perc = (double)_left->_npixels / (double)width;
+      double width = GetWidth() * _perc;
+      perc = (double)_left->_npixels[0] / (double)width;
     }
-  }
 
+     _left->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
+  }
 }
 
 void 
@@ -319,16 +354,18 @@ View::FixRight()
 {
   if(_right->IsHorizontal() == IsHorizontal())
   {
+    double perc;
     if(IsHorizontal())
     {
       double height = GetHeight() * (1 - _perc);
-      _right->_perc = (double)_left->_npixels / (double)height;
+      perc = 1.0/(height / (double)_right->_npixels[1]);// / height;
     }
     else
     { 
-      double width = GetWidth() * (1 - _perc);
-      _right->_perc = (double)_left->_npixels / (double)width;
+      double width = GetWidth() * (1.0 - _perc);
+      perc = 1.0 - (double)_right->_npixels[1] / (double)width;
     }
+    _right->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
 }
 

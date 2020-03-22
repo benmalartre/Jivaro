@@ -11,7 +11,6 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu"){}
 // destructor
 MenuUI::~MenuUI(){}
 
-// Note that shortcuts are currently provided for display only (future version will add flags to BeginMenu to process shortcuts)
 static void ShowExampleMenuFile()
 {
     if (ImGui::MenuItem("New")) {}

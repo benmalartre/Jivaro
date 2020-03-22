@@ -61,7 +61,23 @@ void ViewportUI::MouseButton(int button, int action, int mods)
       }
       else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
       {
+        _interactionMode = INTERACTION_PAN;
+      }
+      else if(button == GLFW_MOUSE_BUTTON_RIGHT)
+      {
         _interactionMode = INTERACTION_DOLLY;
+      }
+    }
+    else if(mods & GLFW_MOD_SHIFT)
+    {
+      _interact = true;
+      if (button == GLFW_MOUSE_BUTTON_LEFT)
+      {
+        _interactionMode = INTERACTION_DOLLY;
+      }
+      else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+      {
+        _interactionMode = INTERACTION_ORBIT;
       }
       else if(button == GLFW_MOUSE_BUTTON_RIGHT)
       {
@@ -178,8 +194,6 @@ void ViewportUI::Draw()
   
   float w = _parent->GetWidth();
   float h = _parent->GetHeight();
-
-  std::cout << x << ", " << GetWindowHeight()-(y+h) << ", " << w << ", " << h << std::endl;
       
   if(_pixels)
   {

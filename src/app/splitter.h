@@ -30,6 +30,7 @@ public:
     _flags |= ImGuiWindowFlags_NoResize;
     _flags |= ImGuiWindowFlags_NoCollapse;
     _flags |= ImGuiWindowFlags_NoNav; 
+    _flags |= ImGuiWindowFlags_NoBackground;
   };
   
   ~Splitter(){
@@ -46,7 +47,7 @@ public:
   void SetHorizontalCursor(){_cursor = ImGuiMouseCursor_ResizeEW;};
   void SetVerticalCursor(){_cursor = ImGuiMouseCursor_ResizeNS;};
   void SetDefaultCursor(){_cursor = ImGuiMouseCursor_Arrow;};
-  void Resize(int width, int height, View* view);
+  void Resize(int width, int height, View* view, bool isWindowResize);
   void Draw();
   void Event();
   

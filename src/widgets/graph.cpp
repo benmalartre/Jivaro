@@ -27,6 +27,11 @@ BaseUI(parent, "Graph")
 {
   _filename = filename;
   _id = 0;
+  _flags = 0;
+  _flags |= ImGuiWindowFlags_NoMove;
+  _flags |= ImGuiWindowFlags_NoResize;
+  _flags |= ImGuiWindowFlags_NoCollapse;
+  _flags |= ImGuiWindowFlags_NoNav; 
 }
 
 // destructor
@@ -51,7 +56,7 @@ void GraphUI::Draw()
   ImGui::SetNextWindowPos(_parent->GetMin()+offset);
   ImGui::SetNextWindowSize(_parent->GetSize()-offset);
   //std::cout << "DRAW GRAP UI BEGIN" << std::endl;
-  ImGui::Begin("Graph Editor");
+  ImGui::Begin("Graph Editor", NULL, _flags);
   //ImGui::SetWindowPos(_parent->GetMin());
   //std::cout << "DRAW GRAP SET POSITION" << std::endl;
   //ImGui::SetWindowSize(_parent->GetSize());

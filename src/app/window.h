@@ -11,7 +11,7 @@
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/usd/usd/prim.h>
-
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -109,7 +109,6 @@ public:
   void GetContentScale();
   void SetContext();
   void Draw();
-  void DrawPickImage();
   bool PickSplitter(double mX, double mY);
   void ScreenSpaceQuad();
 
@@ -125,10 +124,6 @@ public:
 private:
   // objects
   GLFWwindow*             _window;
-  GLFWcursor*             _cursor;
-  GLFWcursor*             _horizontalArrowCursor;
-  GLFWcursor*             _verticalArrowCursor;
-  GLFWcursor*             _defaultCursor;
   View*                   _mainView;
   View*                   _activeView;
   View*                   _activeLeaf;

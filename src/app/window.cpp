@@ -13,7 +13,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen) :
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0),_cursor(NULL),_splitter(NULL)
+_pickImage(0),_splitter(NULL)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -24,7 +24,7 @@ _pickImage(0),_cursor(NULL),_splitter(NULL)
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
@@ -38,14 +38,14 @@ _pickImage(0),_cursor(NULL),_splitter(NULL)
 //----------------------------------------------------------------------------
 Window::Window(int width, int height):
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0),_cursor(NULL), _splitter(NULL)
+_pickImage(0), _splitter(NULL)
 {
   _width = width;
   _height = height;
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   
@@ -73,11 +73,6 @@ Window::Init()
     // set current opengl context
     glfwMakeContextCurrent(_window);
     Resize(_width,_height);
-
-    // setup cursors
-    _horizontalArrowCursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
-    _verticalArrowCursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
-    _defaultCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
 
     // load opengl functions
     gl3wInit();
@@ -120,9 +115,6 @@ Window::~Window()
 {
   ClearImgui();
   
-  if(_horizontalArrowCursor) glfwDestroyCursor(_horizontalArrowCursor);
-  if(_verticalArrowCursor) glfwDestroyCursor(_verticalArrowCursor);
-  if(_defaultCursor) glfwDestroyCursor(_defaultCursor);
   if(_splitter)delete _splitter;
   if(_mainView)delete _mainView;
   if(_window)glfwDestroyWindow(_window);
@@ -154,7 +146,7 @@ Window::Resize(unsigned width, unsigned height)
     return;
   _width = width;
   _height = height;
-  _splitter->Resize(_width, _height, _mainView);
+  _splitter->Resize(_width, _height, _mainView, true);
 }
 
 void
@@ -186,7 +178,6 @@ Window::SplitView(View* view, double perc, bool horizontal )
     return NULL;
   }
   view->SetLeaf();
-  view->SetPerc(perc);
   if(horizontal)
   {
     view->SetHorizontal();
@@ -197,6 +188,9 @@ Window::SplitView(View* view, double perc, bool horizontal )
     view->ClearHorizontal();
     view->Split();
   }
+  
+  view->SetPerc(perc);
+
   BuildSplittersMap();
   return view;
 }
@@ -310,25 +304,6 @@ Window::Draw()
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-// draw pick image
-//----------------------------------------------------------------------------
-void 
-Window::DrawPickImage()
-{
-  int ID = 0;
-  glUseProgram(EMBREE_CTXT->_screenSpaceQuadPgm);
-  CreateOpenGLTexture(
-    _splitter->GetWidth(),
-    _splitter->GetHeight(),
-    _splitter->GetPixels(),
-    _pickImage,
-    ID
-  );
-  
-  glUniform1i(glGetUniformLocation(EMBREE_CTXT->_screenSpaceQuadPgm,"tex"),ID);
-  DrawScreenSpaceQuad();
-}
-
 void 
 Window::ScreenSpaceQuad()
 {
@@ -386,8 +361,7 @@ bool Window::UpdateActiveTool(int mouseX, int mouseY)
     if(_activeView)
     {
       _activeView->GetPercFromMousePosition(mouseX, mouseY);
-      _splitter->Resize(GetWidth(), GetHeight(), _mainView);
-      DrawPickImage();
+      _splitter->Resize(GetWidth(), GetHeight(), _mainView, false);
     }
   }
 }
@@ -587,6 +561,7 @@ ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
   if(parent->GetActiveView())
     parent->GetActiveView()->MouseWheel(xOffset, yOffset);
   else std::cout << "NO ACTIVE VIEW :(, SORRY..." << std::endl;
+  parent->Draw();
 }
 
 void 
@@ -725,8 +700,7 @@ ResizeCallback(GLFWwindow* window, int width, int height)
   parent->SetWidth(width);
   parent->SetHeight(height);
   Splitter* splitter = parent->GetSplitter();
-  splitter->Resize(width, height, parent->GetMainView());
-  parent->DrawPickImage();
+  splitter->Resize(width, height, parent->GetMainView(), true);
   
   glViewport(0, 0, width, height);
 }

@@ -38,9 +38,10 @@ public:
   inline const std::string& GetName(){return _name;};
   inline const char* GetText(){return _name.c_str();};
   inline double GetPerc(){return _perc;};
-  inline void SetPerc(double perc){_perc=perc;};
+  void SetPerc(double perc);
   void GetPercFromMousePosition(int x, int y);
-  void ComputeNumPixels();
+  void ComputeNumPixels(bool postFix=false);
+  void RescaleNumPixels( pxr::GfVec2f ratio);
   void FixLeft();
   void FixRight();
 
@@ -63,7 +64,7 @@ public:
   bool Contains(int x, int y);
   
   void Draw();
-  void Resize(int x, int y, int width, int height);
+  void Resize(int x, int y, int width, int height, bool rationalize=false);
   int TouchBorder();
   void MouseMove(int x, int y);
   void MouseButton(int action, int button, int mods);
@@ -87,7 +88,8 @@ private:
   pxr::GfVec2f      _max;
   pxr::GfVec3f      _color;
   double            _perc;
-  unsigned          _npixels;
+  double            _lastPerc;
+  unsigned          _npixels[2];
   BaseUI*           _content;
   View*             _left;
   View*             _right;

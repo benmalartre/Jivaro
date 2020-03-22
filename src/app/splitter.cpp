@@ -65,13 +65,10 @@ Splitter::Pick(int x, int y)
 void 
 Splitter::Draw()
 {
-  ImGui::SetNextWindowPos(pxr::GfVec2f(0,0));
-  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
-
-  ImGui::Begin("Splitter", NULL, _flags);
-  ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+  
+  ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
   pxr::GfVec2f sMin, sMax;
-  static ImVec4 colf = ImVec4(0.0f, 1.0f, 0.4f, 1.0f);
+  static ImVec4 colf = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
   const ImU32 col = ImColor(colf);
   for(auto view : _views)
   {
@@ -82,9 +79,8 @@ Splitter::Draw()
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     else if(_cursor == ImGuiMouseCursor_ResizeNS)
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-
   }
-  ImGui::End();
+  
 }
 
 View* 
@@ -94,11 +90,11 @@ Splitter::GetViewByIndex(int index)
 }
 
 void 
-Splitter::Resize(int width, int height, View* view)
+Splitter::Resize(int width, int height, View* view, bool isWindowResize)
 {
   _width = width;
   _height = height;
-  view->Resize(0, 0, width, height);
+  view->Resize(0, 0, width, height, isWindowResize);
   BuildMap(view);
 }
 

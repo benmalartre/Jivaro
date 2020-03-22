@@ -5,6 +5,7 @@
 #include "../widgets/dummy.h"
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include "../tests/stageGraph.h"
 #include "../tests/stageUI.h"
 
@@ -67,7 +68,8 @@ void
 Application::Init()
 {
   std::string filename = 
-    "/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
+    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
+    //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
 
   // build test scene
   //pxr::TestScene(filename);
@@ -81,27 +83,36 @@ Application::Init()
   View* graphView = mainView->GetRight()->GetRight();
 
   _mainWindow->SplitView(middleView, 0.8, false);
-  _mainWindow->SplitView(middleView->GetLeft(), 0.33, false);
-  //_mainWindow->SplitView(middleView->GetRight(), 50, false);
+  _mainWindow->SplitView(middleView->GetLeft(), 0.2, false);
+  _mainWindow->SplitView(middleView->GetRight(), 0.5, false);
+  mainView->Resize(0, 0, _width, _height,true);
+  View* viewportView = middleView->GetLeft()->GetRight();
 
-/*
   GraphUI* graph = new GraphUI(graphView, "GraphUI");
-  ViewportUI* viewport = new ViewportUI(middleView, EMBREE);
+  ViewportUI* viewport = new ViewportUI(viewportView, EMBREE);
   //DummyUI* dummy = new DummyUI(mainView->GetLeft(), "DummyUI");
   
-  //MenuUI* menu = new MenuUI(mainView->GetLeft());
+  MenuUI* menu = new MenuUI(mainView->GetLeft());
   _mainWindow->CollectLeaves();
+
 
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
   TestStageUI(graph, _stages);
+
+  if(pxr::UsdGeomGetStageUpAxis	(stage1) ==  pxr::UsdGeomTokens->z)
+  {
+    std::cout << "############ Z is UP !!!! ################" << std::endl;
+    pxr::UsdPrim root = stage1->GetPseudoRoot();
+    pxr::UsdGeomXformCommonAPI xformApi(root);
+    xformApi.SetRotate(pxr::GfVec3f(90, 90, 90));
+  }	
  
-  EMBREE_CTXT->Resize(viewport->GetWidth(), viewport->GetHeight());
-  std::cout << "EMBREE CTXT : " << EMBREE_CTXT->_width << "," << EMBREE_CTXT->_height << std::endl;
-  EMBREE_CTXT->SetFilePath(filename);
-  EMBREE_CTXT->InitDevice(viewport->GetCamera());
-  EMBREE_CTXT->TraverseStage();
-  EMBREE_CTXT->CommitDevice();
+  _context->Resize(viewport->GetWidth(), viewport->GetHeight());
+  _context->SetFilePath(filename);
+  _context->InitDevice(viewport->GetCamera());
+  _context->TraverseStage();
+  _context->CommitDevice();
   
   std::string imageDirectory = "/Users/benmalartre/Documents/RnD/amnesie/images";
   int imageId = FilesInDirectory(imageDirectory.c_str()) + 1;
@@ -114,7 +125,7 @@ Application::Init()
   RenderToFile(outputImageFilename, viewport->GetCamera(), 2048, 1024);
   RenderToMemory(viewport->GetCamera());
   viewport->SetContext(EMBREE_CTXT);
-  */
+  
   //_mainWindow->CollectLeaves();
   //_mainWindow->DummyFill();
 }
@@ -128,4 +139,3 @@ Application::MainLoop()
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE
-

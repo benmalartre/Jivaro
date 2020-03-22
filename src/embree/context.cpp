@@ -173,8 +173,6 @@ void UsdEmbreeContext::ReleaseDevice()
 //----------------------------------------------------------------------------
 void UsdEmbreeContext::Resize(int width, int height)
 {
-
-  std::cout << "RESIZE EMBREE CTXT : " << width << ", " << height << std::endl;
   _width = width;
   _height = height;
   if(_pixels)embree::alignedFree(_pixels);
@@ -184,8 +182,6 @@ void UsdEmbreeContext::Resize(int width, int height)
     (int*) embree::alignedMalloc(
       (_width>>4) * (_height>>4) * sizeof(int), 64
     );
-  std::cout << "RESIZE EMBREE CTXT DONE ! " << std::endl;
-
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

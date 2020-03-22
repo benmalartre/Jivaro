@@ -74,8 +74,8 @@ private:
   void _RecurseStagePrim(const pxr::UsdPrim& prim, int stageIndex);
 
   std::string                           _filename;
-  std::vector<GraphStageUI*>         _stages;
-  GraphStageUI*                      _current;
+  std::vector<GraphStageUI*>            _stages;
+  GraphStageUI*                         _current;
   ImNodes::EditorContext*               _context;
   
   int                                   _color;

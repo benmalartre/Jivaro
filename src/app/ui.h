@@ -45,9 +45,10 @@ public:
   
 
 protected:
-  View*       _parent;
-  std::string _name;
-  bool        _docked;
+  View*             _parent;
+  std::string       _name;
+  bool              _docked;
+  ImGuiWindowFlags  _flags;
   
 };
 
