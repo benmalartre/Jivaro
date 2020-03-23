@@ -89,24 +89,21 @@ Application::Init()
   // create window
   _mainWindow->SetContext();
   View* mainView = _mainWindow->GetMainView();
-  _RecurseSplitView(mainView, 0, true);
-   
-   _mainWindow->CollectLeaves();
-
-   _mainWindow->Resize(_width, _height);
-
   /*
-  _mainWindow->SplitView(mainView, 0.1, true);
-  _mainWindow->SplitView(mainView->GetRight(), 0.7, true);
+  _RecurseSplitView(mainView, 0, true);
+  _mainWindow->CollectLeaves();
+  _mainWindow->Resize(_width, _height);
+  */
+
+  _mainWindow->SplitView(mainView, 0.075, true);
+  _mainWindow->SplitView(mainView->GetRight(), 0.6, true);
   View* middleView = mainView->GetRight()->GetLeft();
   View* graphView = mainView->GetRight()->GetRight();
 
-  _mainWindow->SplitView(middleView, 0.5, false);
-  _mainWindow->SplitView(middleView->GetLeft(), 0.5, false);
-  _mainWindow->SplitView(middleView->GetRight(), 0.5, false);
+  _mainWindow->SplitView(middleView, 0.9, false);
+  _mainWindow->SplitView(middleView->GetLeft(), 0.15, false);
   _mainWindow->Resize(_width, _height);
-  */
-  /*
+
   View* viewportView = middleView->GetLeft()->GetRight();
   _mainWindow->CollectLeaves();
   GraphUI* graph = new GraphUI(graphView, "GraphUI");
@@ -114,8 +111,7 @@ Application::Init()
   //DummyUI* dummy = new DummyUI(mainView->GetLeft(), "DummyUI");
   
   MenuUI* menu = new MenuUI(mainView->GetLeft());
-  */
-/*
+
 
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
@@ -146,7 +142,7 @@ Application::Init()
   RenderToFile(outputImageFilename, viewport->GetCamera(), 2048, 1024);
   RenderToMemory(viewport->GetCamera());
   viewport->SetContext(EMBREE_CTXT);
-  */
+
   //_mainWindow->CollectLeaves();
   //_mainWindow->DummyFill();
 }

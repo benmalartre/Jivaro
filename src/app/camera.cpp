@@ -437,13 +437,11 @@ void Camera::Dolly(double dx, double dy)
 void Camera::Walk(double dx, double dy)
 {
   pxr::GfVec3d delta = _pos - _lookat;
-  double dist = delta.GetLength() * _fov * 0.5 * RADIANS_TO_DEGREES;
+  double dist = delta.GetLength() * _fov * 0.5 * DEGREES_TO_RADIANS;
 
   delta[0] = -dx * dist;
   delta[1] = dy * dist;
   delta[2] = 0;
-
-  std::cout << "DELTA : " << delta[0] << "," << delta[1] << "," << delta[2] << std::endl;
 
   pxr::GfMatrix4d view = _camera.GetTransform();
   pxr::GfRotation rot = view.ExtractRotation();

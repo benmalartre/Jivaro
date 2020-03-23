@@ -121,8 +121,8 @@ void ViewportUI::MouseMove(int x, int y)
       case INTERACTION_WALK:
       {
         _camera->Walk(
-          static_cast<double>(dx)/static_cast<double>(GetWidth()/2), 
-          static_cast<double>(dy)/static_cast<double>(GetHeight()/2) 
+          static_cast<double>(dx)/static_cast<double>(GetWidth()), 
+          static_cast<double>(dy)/static_cast<double>(GetHeight()) 
         );
         /*
         embree::Vec3fa dist = _camera->from - _camera->to;
@@ -226,6 +226,7 @@ void ViewportUI::Resize()
 {
   if(_mode == EMBREE)
   {
+    /*
     EMBREE_CTXT->Resize(_parent->GetWidth(), _parent->GetHeight());
     _camera->SetWindow(
       _parent->GetX(),
@@ -233,8 +234,9 @@ void ViewportUI::Resize()
       _parent->GetWidth(),
       _parent->GetHeight()
     );
-    //RenderToMemory(_camera, false);
-    //SetContext(EMBREE_CTXT);
+    RenderToMemory(_camera, false);
+    SetContext(EMBREE_CTXT);
+    */
   }   
 }
 

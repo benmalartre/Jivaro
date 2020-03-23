@@ -65,7 +65,6 @@ Splitter::Pick(int x, int y)
 void 
 Splitter::Draw()
 {
-  
   ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
   pxr::GfVec2f sMin, sMax;
   static ImVec4 colf = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
@@ -80,7 +79,6 @@ Splitter::Draw()
     else if(_cursor == ImGuiMouseCursor_ResizeNS)
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
   }
-  
 }
 
 View* 

@@ -91,8 +91,8 @@ Window::Init()
     SetupImgui();
 
     // screen space quad
-    ScreenSpaceQuad();
-
+    SetupScreenSpaceQuadShader();
+    SetupScreenSpaceQuad();
    
   }
 }
@@ -271,7 +271,6 @@ void
 Window::GetContentScale()
 {
   glfwGetWindowContentScale(_window, &_dpiX, &_dpiY);
-  std::cout << "WINDOW CONTENT SCALE : " << _dpiX << ", " << _dpiY << std::endl;
   //void glfwGetMonitorContentScale	(	NULL,xscale, yscale); 
 }
 
@@ -289,10 +288,6 @@ Window::Draw()
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight()));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
 
-  ImGuiStyle& style = ImGui::GetStyle();
-  style.WindowPadding = pxr::GfVec2f(0,0);
-  style.FramePadding = pxr::GfVec2f(0,0);
-
   if(_mainView)_mainView->Draw();
 
   // draw splitters
@@ -302,13 +297,6 @@ Window::Draw()
   ImGui::Render();
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void 
-Window::ScreenSpaceQuad()
-{
-  SetupScreenSpaceQuadShader();
-  SetupScreenSpaceQuad();
 }
 
 // setup imgui
@@ -332,6 +320,8 @@ Window::SetupImgui()
   style.PopupRounding = 0.0f;
   style.ScrollbarRounding = 0.0f;
   style.TabRounding = 0.0f;
+  style.WindowPadding = pxr::GfVec2f(0,0);
+  style.FramePadding = pxr::GfVec2f(0,0);
 
   ImGui::SetNextWindowBgAlpha(1.f);
 

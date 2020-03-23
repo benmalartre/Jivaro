@@ -110,7 +110,6 @@ public:
   void SetContext();
   void Draw();
   bool PickSplitter(double mX, double mY);
-  void ScreenSpaceQuad();
 
   // tool
   inline void SetActiveTool(int tool){_activeTool = tool;};
