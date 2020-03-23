@@ -7,25 +7,28 @@
 AMN_NAMESPACE_OPEN_SCOPE  
 
 class View;
-
+class Window;
 class BaseUI
 {
 public:
   BaseUI(View* parent, const std::string& name, bool docked=true);
   virtual ~BaseUI(){};
 
+  // get parent window
+  Window* GetWindow();
+
   // get parent window height
   int GetWindowHeight();
 
-  // parent view infos
-  // relative mouse position (0,0) being the left top corner
-  // (width, height) the right bottom corner
+  // mouse position in the view space
+  // (0, 0) left top corner
+  // (width, height) right bottom corner
   void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
 
-  // get the x position in window space (left top corner)
+  // get the x position in window space (x-coordinate of left top corner)
   int GetX();
 
-  // get the y position in window space (left top corner)
+  // get the y position in window space (y-coordinate of left top corner)
   int GetY();
 
   // get the width of the parent view

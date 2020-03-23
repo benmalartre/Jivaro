@@ -111,6 +111,11 @@ public:
   void Draw();
   bool PickSplitter(double mX, double mY);
 
+  // fonts
+  inline ImFont* GetBoldFont(){return _boldFont;};
+  inline ImFont* GetMediumFont(){return _mediumFont;};
+  inline ImFont* GetRegularFont(){return _regularFont;};
+
   // tool
   inline void SetActiveTool(int tool){_activeTool = tool;};
   inline int GetActiveTool(){return _activeTool;};
@@ -150,6 +155,12 @@ private:
   ImGuiIO*          _io;
   int               _guiId;
   bool              _debounce;
+
+  // fonts
+  ImFont*           _boldFont;
+  ImFont*           _mediumFont;
+  ImFont*           _regularFont;
+  float             _fontSize;
 
   // ui
   float                   _dpiX;

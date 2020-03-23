@@ -29,12 +29,20 @@ list(APPEND USD_LIB_NAMES
   trace
   work
   arch
+  gf
+  glf
   tf
   sdf
+  plug
+  garch
   ndr
   sdr
+  sdf
   pcp
   usd
+  hd
+  hdSt
+  hdx
   usdGeom
   usdShade
   usdUI
@@ -149,19 +157,11 @@ find_package(OpenGL REQUIRED)
 
 # gl3w 
 set(GL3W_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/gl3w/include")
-message("GL3W DIRECTORY :  ${GL3W_INCLUDE_DIR}")
 
 # glfw
 set(GLFW_DIR "/Users/benmalartre/Documents/RnD/glfw")
 set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
-find_library(GLFW glfw3 PATHS "${GLFW_DIR}/build/src/Release")
-
-
-#target_link_libraries(${CMAKE_PROJECT_NAME}
-#    ${GLFW}
-#    )
-#set(GLFW_LIBRARY_DIR "${GLFW_DIR}/build/src/Release")
-#set(GLFW_LIBRARY "${GLFW_LIBRARY_DIR}/libglfw3.a")
+find_library(GLFW glfw3 PATHS "${GLFW_DIR}/build/src")
 
 # system
 IF(APPLE)
@@ -170,3 +170,4 @@ IF(APPLE)
 ENDIF(APPLE)
 
 add_subdirectory (src)
+add_subdirectory (tests)

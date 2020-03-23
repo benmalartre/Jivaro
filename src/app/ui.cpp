@@ -26,6 +26,9 @@ void BaseUI::GetRelativeMousePosition(const int inX, const int inY, int& outX, i
 }
 
 // parent window
+Window* BaseUI::GetWindow(){return _parent->GetWindow();};
+
+// parent window height
 int BaseUI::GetWindowHeight(){return _parent->GetWindow()->GetHeight();};
 //void BaseUI::SetWindowContext(){_parent->GetWindow()->SetContext();};
 

@@ -78,15 +78,21 @@ static void ShowExampleMenuFile()
 // overrides
 void MenuUI::Draw()
 {  
+  Window* window = GetWindow();
+
   if (ImGui::BeginMainMenuBar())
   {
+    ImGui::PushFont(window->GetBoldFont());
     if (ImGui::BeginMenu("File"))
     {
+      //ImGui::PushFont(window->GetMediumFont());
       ShowExampleMenuFile();
       ImGui::EndMenu();
+      //ImGui::PopFont();
     }
     if (ImGui::BeginMenu("Edit"))
     {
+      //ImGui::PushFont(window->GetMediumFont());
       if (ImGui::MenuItem("Undo", "CTRL+Z")) 
       {
         std::cout << "UNDO !!!" << std::endl;
@@ -99,9 +105,12 @@ void MenuUI::Draw()
       if (ImGui::MenuItem("Copy", "CTRL+C")) {}
       if (ImGui::MenuItem("Paste", "CTRL+V")) {}
       ImGui::EndMenu();
+      //ImGui::PopFont();
+
     }
     if (ImGui::BeginMenu("Demo"))
     {
+      ImGui::PushFont(window->GetMediumFont());
       if (ImGui::MenuItem("Open", "CTRL+D")) 
       {
         _showDemoWindow = true;
@@ -111,9 +120,12 @@ void MenuUI::Draw()
       {
         _showDemoWindow = false;
       }
+      ImGui::PopFont();
       ImGui::EndMenu();
     }
+    ImGui::PopFont();
     ImGui::EndMainMenuBar();
+    
   }
   if(_showDemoWindow) ImGui::ShowDemoWindow();
 } 

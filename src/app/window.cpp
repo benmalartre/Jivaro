@@ -2,10 +2,12 @@
 #include "view.h"
 #include "splitter.h"
 #include "../utils/glutils.h"
+#include "../utils/files.h"
 #include "../widgets/dummy.h"
 #include "../widgets/viewport.h"
 #include "../imgui/imgui_custom.h"
 #include "../imgui/imgui_test.h"
+#include <pxr/base/arch/systemInfo.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -13,7 +15,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen) :
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0),_splitter(NULL)
+_pickImage(0),_splitter(NULL),_fontSize(16.f)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -38,7 +40,7 @@ _pickImage(0),_splitter(NULL)
 //----------------------------------------------------------------------------
 Window::Window(int width, int height):
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0), _splitter(NULL)
+_pickImage(0), _splitter(NULL),_fontSize(16.f)
 {
   _width = width;
   _height = height;
@@ -304,10 +306,38 @@ Window::Draw()
 void 
 Window::SetupImgui()
 {
-  // detup imgui context
+  // setup imgui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
+  ImGui::StyleColorsLight();
   _io = &(ImGui::GetIO());
+
+  // load fonts
+  std::string exeFolder = GetInstallationFolder();
+  std::string fontPath;
+  fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Bold.otf";
+  _boldFont = _io->Fonts->AddFontFromFileTTF(
+    fontPath.c_str(),
+    _fontSize, 
+    NULL, 
+    _io->Fonts->GetGlyphRangesDefault()
+  );
+
+  fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Medium.otf";
+  _mediumFont = _io->Fonts->AddFontFromFileTTF(
+    fontPath.c_str(),
+    _fontSize, 
+    NULL, 
+    _io->Fonts->GetGlyphRangesDefault()
+  );
+
+  fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Regular.otf";
+  _regularFont = _io->Fonts->AddFontFromFileTTF(
+    fontPath.c_str(),
+    _fontSize, 
+    NULL, 
+    _io->Fonts->GetGlyphRangesDefault()
+  );
   
   // setup imgui style
   ImGui::StyleColorsAmina(NULL);

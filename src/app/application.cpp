@@ -1,4 +1,5 @@
 #include "application.h"
+#include "../utils/files.h"
 #include "../widgets/viewport.h"
 #include "../widgets/menu.h"
 #include "../widgets/graph.h"
@@ -132,7 +133,7 @@ Application::Init()
   _context->CommitDevice();
   
   std::string imageDirectory = "/Users/benmalartre/Documents/RnD/amnesie/images";
-  int imageId = FilesInDirectory(imageDirectory.c_str()) + 1;
+  int imageId = NumFilesInDirectory(imageDirectory.c_str()) + 1;
   std::string imagePath = imageDirectory + "/img.";
   std::string imageExt = ".jpg";
   embree::FileName outputImageFilename(imagePath + std::to_string(imageId) + imageExt);
