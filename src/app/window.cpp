@@ -124,7 +124,7 @@ Window::~Window()
 
 // create full screen window
 //----------------------------------------------------------------------------
-AMN_EXPORT Window* 
+Window* 
 Window::CreateFullScreenWindow()
 {
   return new Window(true);
@@ -132,7 +132,7 @@ Window::CreateFullScreenWindow()
 
 // create standard window
 //----------------------------------------------------------------------------
-AMN_EXPORT Window*
+Window*
 Window::CreateStandardWindow(int width, int height)
 {
   return new Window(width, height);
@@ -148,7 +148,9 @@ Window::Resize(unsigned width, unsigned height)
     return;
   _width = width;
   _height = height;
-  _splitter->Resize(_width, _height, _mainView, true);
+  _mainView->Resize(0, 0, _width, _height, true);
+  _splitter->Resize(_width, _height);
+  _splitter->RecurseBuildMap(_mainView);
 }
 
 void
@@ -172,7 +174,7 @@ Window::SetActiveView(View* view)
 // split view
 //----------------------------------------------------------------------------
 View* 
-Window::SplitView(View* view, double perc, bool horizontal )
+Window::SplitView(View* view, double perc, bool horizontal, bool fixed)
 {
   if(!view->IsLeaf())
   {
@@ -183,12 +185,12 @@ Window::SplitView(View* view, double perc, bool horizontal )
   if(horizontal)
   {
     view->SetHorizontal();
-    view->Split(perc, horizontal);
+    view->Split(perc, horizontal, fixed);
   }
   else
   {
     view->ClearHorizontal();
-    view->Split(perc, horizontal);
+    view->Split(perc, horizontal, fixed);
   }
   
   view->SetPerc(perc);
@@ -232,7 +234,8 @@ Window::GetViewUnderMouse(int x, int y)
 void 
 Window::BuildSplittersMap()
 {
-  _splitter->BuildMap(_mainView);
+  _splitter->BuildMap(_width, _height);
+  _splitter->RecurseBuildMap(_mainView);
 }
 
 // get context version infos
@@ -381,7 +384,9 @@ bool Window::UpdateActiveTool(int mouseX, int mouseY)
     if(_activeView)
     {
       _activeView->GetPercFromMousePosition(mouseX, mouseY);
-      _splitter->Resize(GetWidth(), GetHeight(), _mainView, false);
+      _mainView->Resize(0, 0, _width, _height, false);
+      _splitter->Resize(_width, _height);
+      _splitter->RecurseBuildMap(_mainView);
     }
   }
 }
@@ -393,7 +398,7 @@ void Window::MainLoop()
 
   while(!glfwWindowShouldClose(_window))
   {
-    glfwWaitEvents();
+    glfwWaitEventsTimeout(1.0/60.0);
     glClearColor(0.3f,0.3f, 0.3f,1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -715,12 +720,8 @@ void
 ResizeCallback(GLFWwindow* window, int width, int height)
 {
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
+  parent->Resize(width, height);
   //glfwGetFramebufferSize(window, &width, &height);
-  parent->SetWidth(width);
-  parent->SetHeight(height);
-  Splitter* splitter = parent->GetSplitter();
-  splitter->Resize(width, height, parent->GetMainView(), true);
-  
   glViewport(0, 0, width, height);
 }
 

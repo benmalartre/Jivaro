@@ -3,6 +3,7 @@
 #include "../widgets/viewport.h"
 #include "../widgets/menu.h"
 #include "../widgets/graph.h"
+#include "../widgets/timeline.h"
 #include "../widgets/dummy.h"
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
@@ -18,13 +19,11 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(NULL), _context(NULL)
+  _mainWindow(NULL), _context(NULL),_width(width),_height(height)
 {  
   _context = new UsdEmbreeContext();
   EMBREE_CTXT = _context;
-  _width = width;
-  _height = height;
-  _mainWindow = CreateStandardWindow(width, height);
+  _mainWindow = CreateStandardWindow(_width, _height);
   _test = NULL;
 };
 
@@ -67,7 +66,7 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
 {
   if(depth < 3)
   {
-    view->Split(0.5, horizontal);
+    view->Split(0.5, horizontal, false);
     _RecurseSplitView(view->GetLeft(), depth + 1, horizontal);
     _RecurseSplitView(view->GetRight(), depth + 1, horizontal);
     view->SetPerc(0.5);
@@ -89,34 +88,33 @@ Application::Init()
 
   // create window
   _mainWindow->SetContext();
+  
   View* mainView = _mainWindow->GetMainView();
-  /*
-  _RecurseSplitView(mainView, 0, true);
-  _mainWindow->CollectLeaves();
-  _mainWindow->Resize(_width, _height);
-  */
-
   _mainWindow->SplitView(mainView, 0.075, true);
-  _mainWindow->SplitView(mainView->GetRight(), 0.6, true);
-  View* middleView = mainView->GetRight()->GetLeft();
-  View* graphView = mainView->GetRight()->GetRight();
+  View* bottomView = _mainWindow->SplitView(mainView->GetRight(), 0.9, true);
+  View* timelineView = bottomView->GetRight();
+  View* centralView = _mainWindow->SplitView(bottomView->GetLeft(), 0.6, true);
+  View* middleView = centralView->GetLeft();
 
   _mainWindow->SplitView(middleView, 0.9, false);
-  _mainWindow->SplitView(middleView->GetLeft(), 0.15, false);
+  View* workingView = _mainWindow->SplitView(middleView->GetLeft(), 0.15, false);
+  View* explorerView = workingView->GetLeft();
+  View* viewportView = workingView->GetRight();  
+  //View* graphView = middleView->GetRight();
   _mainWindow->Resize(_width, _height);
 
-  View* viewportView = middleView->GetLeft()->GetRight();
   _mainWindow->CollectLeaves();
-  GraphUI* graph = new GraphUI(graphView, "GraphUI");
+
+  //GraphUI* graph = new GraphUI(graphView, "GraphUI");
   ViewportUI* viewport = new ViewportUI(viewportView, EMBREE);
-  //DummyUI* dummy = new DummyUI(mainView->GetLeft(), "DummyUI");
-  
+  TimelineUI* timeline = new TimelineUI(timelineView);
+  //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
   MenuUI* menu = new MenuUI(mainView->GetLeft());
 
-
+  /*
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
-  TestStageUI(graph, _stages);
+  //TestStageUI(graph, _stages);
 
   if(pxr::UsdGeomGetStageUpAxis	(stage1) ==  pxr::UsdGeomTokens->z)
   {
@@ -143,9 +141,7 @@ Application::Init()
   RenderToFile(outputImageFilename, viewport->GetCamera(), 2048, 1024);
   RenderToMemory(viewport->GetCamera());
   viewport->SetContext(EMBREE_CTXT);
-
-  //_mainWindow->CollectLeaves();
-  //_mainWindow->DummyFill();
+  */
 }
 
 // main loop

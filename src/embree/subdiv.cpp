@@ -207,8 +207,7 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
       }
       else
       {
-        std::cerr << "FUCK" << "\n" << 
-          "Problem with vertex varying normals datas : " <<
+        std::cerr << "Problem with vertex varying normals datas : " <<
             "fallback to compute them...";
       }
     }
@@ -227,8 +226,7 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
       }
       else
       {
-        std::cerr << "FUCK" << "\n" << 
-          "Problem with face varying normals datas : " <<
+        std::cerr << "Problem with face varying normals datas : " <<
             "fallback to compute them...";
       }
     }

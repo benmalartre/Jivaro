@@ -185,10 +185,13 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
 }
 
 void
-View::Split(double perc, bool horizontal)
+View::Split(double perc, bool horizontal, bool fixed)
 {
   if(horizontal)SetHorizontal();
   else ClearHorizontal();
+
+  if(fixed)SetFixed();
+  else ClearFixed();
   _perc = perc;
 
   pxr::GfVec2f cMin, cMax;    
@@ -211,8 +214,8 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   pxr::GfVec2f ratio;
   if(rationalize)
   {
-    ratio[0] = 1 / ((_max[0] - _min[0]) / w);
-    ratio[1] = 1 / ((_max[1] - _min[1]) / h);
+    ratio[0] = 1 / ((double)(_max[0] - _min[0]) / (double)w);
+    ratio[1] = 1 / ((double)(_max[1] - _min[1]) / (double)h);
   }
   _min = pxr::GfVec2f(x, y);
   _max = pxr::GfVec2f(x+w, y+h);
@@ -315,6 +318,12 @@ View::FixLeft()
     }
 
      _left->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
+      
+    if(!_left->IsLeaf())
+    {
+      _left->FixLeft();
+      _left->FixRight();
+    }
   }
 }
 
@@ -335,7 +344,14 @@ View::FixRight()
       perc = 1.0 - (double)_right->_npixels[1] / (double)width;
     }
     _right->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
+
+    if(!_right->IsLeaf())
+    {
+      _right->FixLeft();
+      _right->FixRight();
+    }
   }
+  
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -99,7 +99,7 @@ public:
 
   // views
   Splitter* GetSplitter(){return _splitter;};
-  View* SplitView(View* view, double perc = 0.5, bool horizontal=true );
+  View* SplitView(View* view, double perc = 0.5, bool horizontal=true, bool fixed=false);
   View* GetMainView(){return _mainView;};
   void SetActiveView(View* view);
   View* GetActiveView(){return _activeView;};
@@ -121,7 +121,7 @@ public:
   inline int GetActiveTool(){return _activeTool;};
   bool UpdateActiveTool(int mouseX, int mouseY);
 
-  // loop in thread
+  // loop
   void MainLoop();
   static Window* GetUserData(GLFWwindow* window);
 

@@ -226,7 +226,7 @@ void ViewportUI::Resize()
 {
   if(_mode == EMBREE)
   {
-    
+    /*
     EMBREE_CTXT->Resize(_parent->GetWidth(), _parent->GetHeight());
     _camera->SetWindow(
       _parent->GetX(),
@@ -236,8 +236,9 @@ void ViewportUI::Resize()
     );
     RenderToMemory(_camera, false);
     SetContext(EMBREE_CTXT);
-    
+    */
   }   
+
 }
 
 void ViewportUI::SetContext(UsdEmbreeContext* ctxt)

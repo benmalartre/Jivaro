@@ -1,10 +1,12 @@
 #include "splitter.h"
 #include "view.h"
+#include "window.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
 void Splitter::RecurseBuildMap(View* view)
 {
+  
   if(!view) return;
   _views.push_back(view);
   _viewID++;
@@ -15,7 +17,6 @@ void Splitter::RecurseBuildMap(View* view)
 
     pxr::GfVec2f sMin, sMax;
     view->GetSplitInfos(sMin, sMax, _width, _height);
-
     for(int y = sMin[1]; y < sMax[1]; ++y)
     {
       for(int x = sMin[0]; x < sMax[0]; ++x)
@@ -29,21 +30,27 @@ void Splitter::RecurseBuildMap(View* view)
 }
 
 void 
-Splitter::BuildMap(View* view)
+Splitter::BuildMap(int width, int height)
 {
-  
-  if(_pixels){ delete [] _pixels; _pixels = NULL; };
+  if(!_pixels)
+  {
+    _pixels = new int[width * height];
+    _width = width;
+    _height = height;
+  }
+  else if(_pixels && width != _width && height != _height)
+  { 
+    delete [] _pixels; 
+    _width = width;
+    _height = height;
+
+    size_t sz = _width * _height;
+    _pixels = new int[sz];
+  };
 
   _views.clear();
-  const pxr::GfVec2f size(view->GetMax() - view->GetMin());
-  
-  _width = size[0];
-  _height = size[1];
-
-  _pixels = new int[_width * _height];
-  memset((void*)&_pixels[0], 0, _width * _height * sizeof(unsigned));
+  memset((void*)&_pixels[0], 0, _width * _height * sizeof(int));
   _viewID = 0;
-  RecurseBuildMap(view); 
 }
 
 // pick splitter
@@ -53,7 +60,7 @@ Splitter::Pick(int x, int y)
   if(x<0 || y <0 || x >= _width || y >= _height) 
     return -1;
 
-  unsigned idx = (unsigned) y * _width + (unsigned)x;
+  int idx = y * _width + x;
   if(idx >= 0 && idx < (_width * _height))
   {
     return _pixels[idx] - 1;
@@ -65,7 +72,7 @@ Splitter::Pick(int x, int y)
 void 
 Splitter::Draw()
 {
-  ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
+  ImDrawList* draw_list = ImGui::GetForegroundDrawList();
   pxr::GfVec2f sMin, sMax;
   static ImVec4 colf = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
   const ImU32 col = ImColor(colf);
@@ -88,12 +95,9 @@ Splitter::GetViewByIndex(int index)
 }
 
 void 
-Splitter::Resize(int width, int height, View* view, bool isWindowResize)
+Splitter::Resize(int width, int height)
 {
-  _width = width;
-  _height = height;
-  view->Resize(0, 0, width, height, isWindowResize);
-  BuildMap(view);
+  BuildMap(width, height);
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

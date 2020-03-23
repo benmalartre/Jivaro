@@ -7,7 +7,6 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 class View;
-class Window;
 
 enum BORDER
 {
@@ -41,13 +40,13 @@ public:
   inline unsigned GetWidth(){return _width;};
   inline unsigned GetHeight(){return _height;};
   void RecurseBuildMap(View* view);
-  void BuildMap(View* view);
+  void BuildMap(int width, int height);
   View* GetViewByIndex(int index);
   int Pick(int x, int y);
   void SetHorizontalCursor(){_cursor = ImGuiMouseCursor_ResizeEW;};
   void SetVerticalCursor(){_cursor = ImGuiMouseCursor_ResizeNS;};
   void SetDefaultCursor(){_cursor = ImGuiMouseCursor_Arrow;};
-  void Resize(int width, int height, View* view, bool isWindowResize);
+  void Resize(int width, int height);
   void Draw();
   void Event();
   

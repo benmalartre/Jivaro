@@ -40,6 +40,7 @@ add_executable(${TARGET}
   widgets/node.cpp
   widgets/graph.cpp
   widgets/viewport.cpp
+  widgets/timeline.cpp
   embree/oiio.cpp
   embree/jpeg.cpp
   embree/utils.cpp

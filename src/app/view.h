@@ -12,9 +12,10 @@ class View
 {
 enum FLAGS
 {
-  OVER = 1,
-  HORIZONTAL = 2,
-  LEAF = 4
+  OVER        = 1,
+  HORIZONTAL  = 2,
+  LEAF        = 4,
+  FIXED       = 8
 };
 
 public:
@@ -46,7 +47,7 @@ public:
   void FixRight();
 
   void GetChildMinMax(bool , pxr::GfVec2f& , pxr::GfVec2f& );
-  void Split(double perc, bool horizontal);
+  void Split(double perc, bool horizontal, bool fixed);
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
   const int width, const int height);
 
@@ -82,6 +83,10 @@ public:
   inline bool IsLeaf(){return BITMASK_CHECK(_flags, LEAF);};
   inline void SetLeaf(){BITMASK_SET(_flags, LEAF);};
   inline bool ClearLeaf(){return BITMASK_CLEAR(_flags, LEAF);};
+
+  inline bool IsFixed(){return BITMASK_CHECK(_flags, FIXED);};
+  inline void SetFixed(){BITMASK_SET(_flags, FIXED);};
+  inline bool ClearFixed(){return BITMASK_CLEAR(_flags, FIXED);};
 
 private:
   pxr::GfVec2f      _min;
