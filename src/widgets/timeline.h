@@ -18,13 +18,19 @@ class TimelineUI : BaseUI
 
     void DrawControls();
     void DrawTimeSlider();
+    void ValidateMinMaxTime();
 
   private:
     float _currentTime;
+    float _currentTimeEdit;
     float _startTime;
+    float _startTimeEdit;
     float _endTime;
+    float _endTimeEdit;
     float _minTime;
+    float _minTimeEdit;
     float _maxTime;
+    float _maxTimeEdit;
     float _fps;
     float _speed;
     bool  _loop;

@@ -83,8 +83,8 @@ Window::Init()
     //glfwSetFramebufferSizeCallback(_window, ResizeCallback);
     glfwSetMouseButtonCallback(_window, ClickCallback);
     glfwSetScrollCallback(_window, ScrollCallback);
-    //glfwSetKeyCallback(_window, KeyboardCallback);
-    //glfwSetCharCallback(_window, CharCallback);
+    glfwSetKeyCallback(_window, KeyboardCallback);
+    glfwSetCharCallback(_window, CharCallback);
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
     
     Resize(_width,_height);    

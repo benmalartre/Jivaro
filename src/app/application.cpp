@@ -105,7 +105,7 @@ Application::Init()
 
   _mainWindow->CollectLeaves();
 
-  GraphUI* graph = new GraphUI(graphView, "GraphUI");
+  //GraphUI* graph = new GraphUI(graphView, "GraphUI");
   ViewportUI* viewport = new ViewportUI(viewportView, EMBREE);
   viewport->SetContext(_context);
   TimelineUI* timeline = new TimelineUI(timelineView);
@@ -114,7 +114,7 @@ Application::Init()
 
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
-  TestStageUI(graph, _stages);
+  //TestStageUI(graph, _stages);
  
   _context->Resize(viewport->GetWidth(), viewport->GetHeight());
   _context->SetFilePath(filename);

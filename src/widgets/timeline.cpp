@@ -2,7 +2,14 @@
 #include "../app/application.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
-
+/*
+int CurrentFrameChanged(ImGuiTextEditCallbackData* data)
+{
+  data->
+    data->EventChar = 'A';
+    return 0;
+}
+*/
 // constructor
 TimelineUI::TimelineUI(View* parent):BaseUI(parent, "Timeline")
 {
@@ -17,10 +24,33 @@ TimelineUI::TimelineUI(View* parent):BaseUI(parent, "Timeline")
   _endTime = 120;
   _currentTime = 25;
   _fps = 24;
+
+  _minTimeEdit = _minTime;
+  _startTimeEdit = _startTime;
+  _endTimeEdit = _endTime;
+  _maxTimeEdit = _maxTime;
+  _currentTimeEdit = _currentTime;
 }
 
 // destructor
 TimelineUI::~TimelineUI(){}
+
+void TimelineUI::ValidateMinMaxTime()
+{
+  if(_minTime>=_maxTime)_maxTime = _minTime + 1;
+  if(_endTime>_maxTime)_endTime = _maxTime;
+  if(_startTime < _minTime)_startTime = _minTime;
+  if(_endTime <= _startTime)_endTime = _startTime + 1;
+  if(_maxTime <= _endTime)_maxTime = _endTime;
+  if(_currentTime < _startTime)_currentTime = _startTime;
+  else if(_currentTime > _endTime)_currentTime = _endTime;
+
+  _minTimeEdit = _minTime;
+  _startTimeEdit = _startTime;
+  _endTimeEdit = _endTime;
+  _maxTimeEdit = _maxTime;
+  _currentTimeEdit = _currentTime;
+}
 
 void TimelineUI::MouseButton(int action, int button, int mods)
 {
@@ -41,31 +71,55 @@ void TimelineUI::DrawControls()
   ImGui::SetCursorPosY(height-20);
 
   ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime, 
+  ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTimeEdit, 
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if(!ImGui::IsItemActive() && _minTimeEdit != _minTime)
+  {
+    _minTime = _minTimeEdit;
+    ValidateMinMaxTime();
+  }
   ImGui::SameLine();
 
   ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime, 
+  ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTimeEdit, 
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if(!ImGui::IsItemActive() && _startTimeEdit != _startTime)
+  {
+    _startTime = _startTimeEdit;
+    ValidateMinMaxTime();
+  }
   ImGui::SameLine();
 
-
   ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime, 
+  ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTimeEdit, 
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if(!ImGui::IsItemActive() && _currentTimeEdit != _currentTime)
+  {
+    _currentTime = _currentTimeEdit;
+    ValidateMinMaxTime();
+  }
   ImGui::SameLine();
 
   ImGui::SetCursorPosX(width-140);
 
   ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTime, 
+  ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTimeEdit, 
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if(!ImGui::IsItemActive() && _endTimeEdit != _endTime)
+  {
+    _endTime = _endTimeEdit;
+    ValidateMinMaxTime();
+  }
   ImGui::SameLine();
 
   ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTime, 
+  ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTimeEdit, 
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if(!ImGui::IsItemActive() && _maxTimeEdit != _maxTime)
+  {
+    _maxTime = _maxTimeEdit;
+    ValidateMinMaxTime();
+  }
   ImGui::SameLine();
 
   //ImGui::InputFloat("##minTime", &_minTime, 1, 10, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
@@ -145,17 +199,18 @@ void TimelineUI::DrawTimeSlider()
     {
       pxr::GfVec2f p1(xmin * (1-perc) + xmax * perc, ymin);
       pxr::GfVec2f p2(xmin * (1-perc) + xmax * perc, ymid);
-      drawList->AddLine(p1, p2, frameColor);
+      drawList->AddLine(p1, p2, frameColor, 2);
     }
     else
     {
       pxr::GfVec2f p1(xmin * (1-perc) + xmax * perc, ymin * 0.30 + ymid * 0.70);
       pxr::GfVec2f p2(xmin * (1-perc) + xmax * perc, ymid);
-      drawList->AddLine(p1, p2, frameColor);
+      drawList->AddLine(p1, p2, frameColor, 2);
     }
   }
   // draw slider
-  float sliderPerc = (float)_currentTime / (float)(_endTime - _startTime);
+  float sliderPerc = 
+    (float)(_currentTime - _startTime) / (float)(_endTime - _startTime);
   float sliderX = (xmin * (1 - sliderPerc) + xmax *sliderPerc);
   drawList->AddRectFilled(
     pxr::GfVec2f(sliderX - 2, ymin), 
