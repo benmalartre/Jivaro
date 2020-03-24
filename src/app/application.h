@@ -13,7 +13,6 @@
 #include "../embree/mesh.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
-extern UsdEmbreeContext* EMBREE_CTXT;
 
 class Application
 {

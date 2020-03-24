@@ -9,7 +9,6 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-extern UsdEmbreeContext* EMBREE_CTXT;
 
 // constructor
 ViewportUI::ViewportUI(View* parent, VIEWPORT_MODE mode):
@@ -19,11 +18,11 @@ BaseUI(parent, "Viewport")
   _mode = mode;
   _pixels = NULL;
   _camera = new Camera("Camera");
-  
+  _valid = true;
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
-
+  _context = NULL;
   _interact = false;
   _interactionMode = INTERACTION_NONE;
 }
@@ -43,7 +42,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     _interactionMode = INTERACTION_NONE;
     _interact = false;
     RenderToMemory(_camera, false);
-    SetContext(EMBREE_CTXT);
+    SetImage();
   }
   else if (action == GLFW_PRESS)
   {
@@ -121,8 +120,8 @@ void ViewportUI::MouseMove(int x, int y)
       case INTERACTION_WALK:
       {
         _camera->Walk(
-          static_cast<double>(dx)/static_cast<double>(GetWidth()), 
-          static_cast<double>(dy)/static_cast<double>(GetHeight()) 
+          (double)dx / (double)GetWidth(), 
+          (double)dy / (double)GetHeight()
         );
         /*
         embree::Vec3fa dist = _camera->from - _camera->to;
@@ -137,8 +136,8 @@ void ViewportUI::MouseMove(int x, int y)
       case INTERACTION_DOLLY:
       {
         _camera->Dolly(
-          static_cast<double>(dx)/static_cast<double>(GetWidth()), 
-          static_cast<double>(dy)/static_cast<double>(GetHeight()) 
+          (double)dx / (double)GetWidth(), 
+          (double)dy / (double)GetHeight() 
         );
         /*
         if freeCam.orthographic:
@@ -169,9 +168,9 @@ void ViewportUI::MouseMove(int x, int y)
         break;
         
     }
-    //_camera->ComputeFrustum();
+    
     RenderToMemory(_camera, true);
-    SetContext(EMBREE_CTXT);
+    SetImage();
     _lastX = x;
     _lastY = y;
   }
@@ -179,19 +178,18 @@ void ViewportUI::MouseMove(int x, int y)
 
 void ViewportUI::MouseWheel(int x, int y)
 {
-  double dx = static_cast<double>(x);
-  double dy = static_cast<double>(y);
+
   _camera->Dolly(
-    dx/static_cast<double>(_parent->GetWidth()), 
-    dy/static_cast<double>(_parent->GetHeight())
+    (double)x / (double)_parent->GetWidth(), 
+    (double)y / (double)_parent->GetHeight()
   );
-  //_camera->ComputeFrustum();
   RenderToMemory(_camera, true);
-  SetContext(EMBREE_CTXT);
+  SetImage();
 }
 
 void ViewportUI::Draw()
 {    
+  if(!_valid)return;
   float x = _parent->GetMin()[0];
   float y = _parent->GetMin()[1];
   
@@ -200,13 +198,13 @@ void ViewportUI::Draw()
       
   if(_pixels)
   {
-    glUseProgram(EMBREE_CTXT->_screenSpaceQuadPgm);
+    glUseProgram(GetScreenSpaceQuadShaderProgram());
     if(_interact)
       CreateOpenGLTexture(_width>>4, _height>>4, _lowPixels, _texture, 0);
     else
       CreateOpenGLTexture(_width, _height, _pixels, _texture, 0);
     glViewport(x, GetWindowHeight()-(y+h), w, h);
-    glUniform1i(glGetUniformLocation(EMBREE_CTXT->_screenSpaceQuadPgm,"tex"),0);
+    glUniform1i(glGetUniformLocation(GetScreenSpaceQuadShaderProgram(),"tex"),0);
     DrawScreenSpaceQuad();
   }
   else
@@ -224,30 +222,34 @@ void ViewportUI::Draw()
 
 void ViewportUI::Resize()
 {
-  if(_mode == EMBREE)
+  if(_parent->GetWidth() <= 0 || _parent->GetHeight() <= 0)_valid = false;
+  else _valid = true;
+  if(_mode == EMBREE && _context)
   {
-    /*
-    EMBREE_CTXT->Resize(_parent->GetWidth(), _parent->GetHeight());
+    
+    _context->Resize(_parent->GetWidth(), _parent->GetHeight());
     _camera->SetWindow(
       _parent->GetX(),
       _parent->GetY(),
       _parent->GetWidth(),
       _parent->GetHeight()
     );
+    
     RenderToMemory(_camera, false);
-    SetContext(EMBREE_CTXT);
-    */
+    SetImage();
+    
   }   
 
 }
 
-void ViewportUI::SetContext(UsdEmbreeContext* ctxt)
+void ViewportUI::SetImage()
 {
-  _context = ctxt;
-  _pixels = _context->_pixels;
-  _lowPixels = _context->_lowPixels;
-  _width = _context->_width;
-  _height = _context->_height;
+  if(_context){
+    _pixels = _context->_pixels;
+    _lowPixels = _context->_lowPixels;
+    _width = _context->_width;
+    _height = _context->_height;
+  }  
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

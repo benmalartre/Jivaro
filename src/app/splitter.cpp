@@ -6,7 +6,6 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 void Splitter::RecurseBuildMap(View* view)
 {
-  
   if(!view) return;
   _views.push_back(view);
   _viewID++;
@@ -35,17 +34,23 @@ Splitter::BuildMap(int width, int height)
   if(!_pixels)
   {
     _pixels = new int[width * height];
+    _valid = true;
     _width = width;
     _height = height;
   }
   else if(_pixels && width != _width && height != _height)
   { 
     delete [] _pixels; 
+    _pixels = NULL;
     _width = width;
     _height = height;
 
+    if(_width <= 0 || _height <= 0) 
+      _valid = false; 
+
     size_t sz = _width * _height;
     _pixels = new int[sz];
+    _valid = true;
   };
 
   _views.clear();
@@ -57,7 +62,7 @@ Splitter::BuildMap(int width, int height)
 int 
 Splitter::Pick(int x, int y)
 {
-  if(x<0 || y <0 || x >= _width || y >= _height) 
+  if(!_valid || x<0 || y <0 || x >= _width || y >= _height) 
     return -1;
 
   int idx = y * _width + x;
@@ -72,7 +77,7 @@ Splitter::Pick(int x, int y)
 void 
 Splitter::Draw()
 {
-  ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+  ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
   pxr::GfVec2f sMin, sMax;
   static ImVec4 colf = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
   const ImU32 col = ImColor(colf);

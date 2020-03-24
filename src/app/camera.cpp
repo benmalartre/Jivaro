@@ -308,7 +308,6 @@ void  Camera::AdjustDistance(double scaleFactor)
     else
       _closestVisibleDist = _lastFramedClosestDist - _lastFramedDist + _dist;
   }
-  std::cout << "FUCKIN ADJUST DISTANCE FUCK!!! " << std::endl;
   _PushToCameraTransform();
 }
 

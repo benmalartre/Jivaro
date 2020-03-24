@@ -21,14 +21,14 @@ UsdEmbreeContext::UsdEmbreeContext():
   _lowPixels(NULL),
   _xformCache(NULL),
   _bboxCache(NULL),
-  _screenSpaceQuadPgm(SCREENSPACEQUAD_PROGRAM_SHADER){};
+  _screenSpaceQuadPgm(0){};
 
 // destructor
 //----------------------------------------------------------------------------
 UsdEmbreeContext::~UsdEmbreeContext()
 {
-  if(_bboxCache)delete _bboxCache;
-  if(_xformCache)delete _xformCache;
+  //if(_bboxCache)delete _bboxCache;
+  //if(_xformCache)delete _xformCache;
   if(_pixels)embree::alignedFree(_pixels);
   if(_lowPixels)embree::alignedFree(_lowPixels);
 }
@@ -137,10 +137,19 @@ void UsdEmbreeContext::TraverseStage()
   
   _time = pxr::UsdTimeCode::EarliestTime();
 
+  pxr::UsdGeomXformCache xformCache(_time);
+  _xformCache = &xformCache;
+  pxr::TfTokenVector includedPurposes = {pxr::UsdGeomTokens->default_,
+                                        pxr::UsdGeomTokens->render};
+  pxr::UsdGeomBBoxCache bboxCache(_time, includedPurposes);
+  _bboxCache = &bboxCache;
+
+  /*
   _xformCache = new pxr::UsdGeomXformCache(_time);
   pxr::TfTokenVector includedPurposes = {pxr::UsdGeomTokens->default_,
                                         pxr::UsdGeomTokens->render};
   _bboxCache = new pxr::UsdGeomBBoxCache(_time, includedPurposes);
+  */
   GetNumPrims(_stage->GetPseudoRoot());
   _prims.reserve(_numPrims);
   CollectPrims(_stage->GetPseudoRoot());

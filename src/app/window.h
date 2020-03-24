@@ -22,8 +22,6 @@ class View;
 class Splitter;
 class BaseUI;
 
-extern UsdEmbreeContext* EMBREE_CTXT;
-
 // keyboard callback
 //----------------------------------------------------------------------------
 AMN_EXPORT void
@@ -54,7 +52,7 @@ ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 AMN_EXPORT void 
 CharCallback(GLFWwindow* window, unsigned c);
 
-// reshape callback
+// resize callback
 //----------------------------------------------------------------------------
 AMN_EXPORT void 
 ResizeCallback(GLFWwindow* window, int width, int height);
@@ -71,7 +69,6 @@ public:
 
   // initialize
   void Init();
-  void DummyFill();
 
   // infos
   void GetContextVersionInfos();
@@ -141,6 +138,7 @@ private:
   int               _width;
   int               _height;
   unsigned*         _pixels;
+  bool              _valid;
 
   // version number
   int               _iOpenGLMajor;

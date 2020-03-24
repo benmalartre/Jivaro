@@ -7,7 +7,7 @@ add_definitions(
 )
 
 set(PUBLIC_HEADERS
-  graph/composerBindingAPI.h
+  graph/deformableAPI.h
   graph/connectableAPI.h
   graph/coordSysAPI.h
 

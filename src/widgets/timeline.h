@@ -16,8 +16,8 @@ class TimelineUI : BaseUI
     void MouseMove(int x, int y) override;
     void Draw() override;
 
-    // callbacks
-    int StartFrameChanged(ImGuiTextEditCallbackData* data);
+    void DrawControls();
+    void DrawTimeSlider();
 
   private:
     float _currentTime;

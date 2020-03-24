@@ -11,7 +11,6 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-extern UsdEmbreeContext* EMBREE_CTXT;
 static GLFWmonitor** MONITORS;
 static GLFWvidmode* VIDEO_MODES;
 static int NUM_MONITORS;
@@ -120,7 +119,6 @@ static void SetupScreenSpaceQuadShader()
     glslLinkProgram(SCREENSPACEQUAD_VERTEX_SHADER, 
       SCREENSPACEQUAD_FRAGMENT_SHADER);
     GLCheckError("CREATE PROGRAM SHADER");
-  EMBREE_CTXT->_screenSpaceQuadPgm = SCREENSPACEQUAD_PROGRAM_SHADER;
 }
 
 static GLuint GetScreenSpaceQuadShaderProgram()

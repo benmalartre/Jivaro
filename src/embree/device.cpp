@@ -8,7 +8,12 @@
 #include "../widgets/viewport.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
-  
+
+void SetEmbreeContext(UsdEmbreeContext* ctxt)
+{
+  EMBREE_CTXT = ctxt;
+}
+
 using namespace embree;
 
 // called by the C++ code for initialization
@@ -225,6 +230,7 @@ Vec3fa RenderPixelStandard(float x, float y, const Camera* camera)
     if (shadow.tfar >= 0.0f)
       color = color + diffuse*clamp(-dot(lightDir,normalize(ray.Ng)),0.0f,1.0f);
   }
+ 
   return color;
 }
 
@@ -469,6 +475,18 @@ void DeviceRender (int* pixels,
     for (size_t i=range.begin(); i<range.end(); i++)
       RenderTileTask((int)i,threadIndex,pixels,width,height,time,camera,numTilesX,numTilesY);
   }); 
+  /*
+  std::cout << "PIXELS : " << pixels << std::endl;
+  std::cout << "WIDTH : " << width << std::endl;
+  std::cout << "HEIGHT : " << height << std::endl;
+  std::cout << "CAMERA : " << camera << std::endl;
+  std::cout << "TILE X : " << numTilesX << std::endl;
+  std::cout << "TILE Y : " << numTilesY << std::endl;
+  for(int i=0;i<numTilesX*numTilesY;++i)
+  {
+    RenderTileTask((int)i,0,pixels,width,height,time,camera,numTilesX,numTilesY);
+  }
+  */
 }
 
 // render to file
@@ -498,6 +516,12 @@ void RenderToMemory(Camera* camera, bool interact)
   int width = EMBREE_CTXT->_width;
   int height = EMBREE_CTXT->_height;
   
+  std::cout << "EMBREE CONTEXT : " << EMBREE_CTXT << std::endl;
+  std::cout << "EMBREE PIXELS : " << EMBREE_CTXT->_pixels << std::endl;
+  std::cout << "WIDTH : " << width << " vs " << EMBREE_CTXT->_width << std::endl;
+  std::cout << "HEIGHT : " << height << " vs " << EMBREE_CTXT->_height << std::endl;
+  std::cout << "CAMERA : " << camera << std::endl;
+  
   if(interact)
   {
 
@@ -516,6 +540,7 @@ void RenderToMemory(Camera* camera, bool interact)
                   0.0f,
                   camera);
   }
+  
 }
 
 // called by the C++ code for cleanup

@@ -24,13 +24,15 @@ AMN_NAMESPACE_OPEN_SCOPE
 class ViewportUI;
 class Camera;
 
-extern UsdEmbreeContext* EMBREE_CTXT;
+static UsdEmbreeContext* EMBREE_CTXT;
 
 #define TILE_SIZE_X 8
 #define TILE_SIZE_Y 8
 #define ENABLE_SMOOTH_NORMALS 1
 
 static std::string rtcore("start_threads=1,set_affinity=1");
+
+void SetEmbreeContext(UsdEmbreeContext* ctxt);
 
 // face forward for shading normals
 inline embree::Vec3fa FaceForward(const embree::Vec3fa& N, 
@@ -48,19 +50,19 @@ void DeviceCleanup ();
 inline pxr::GfVec2f _GetDeviceRatio(int width, int height)
 {
   if(width>height)
-    return pxr::GfVec2f(1.f, static_cast<float>(height) / static_cast<float>(width));
+    return pxr::GfVec2f(1.f, (float)height / (float)width);
   else
-    return pxr::GfVec2f(static_cast<float>(width) / static_cast<float>(height), 1.f);
+    return pxr::GfVec2f((float)width / (float)height, 1.f);
 }
 
 inline float _GetNormalizedDeviceX(int x, int width, float ratio)
 {
-  return 2.f*(static_cast<float>(x)/static_cast<float>(width))-1.f * ratio;
+  return 2.f*((float)x / (float)width)-1.f * ratio;
 }
 
 inline float _GetNormalizedDeviceY(int y, int height, float ratio)
 {
-  return 1.f - 2.f*(static_cast<float>(y)/static_cast<float>(height)) * ratio;
+  return 1.f - 2.f*((float)y / (float)height) * ratio;
 }
 
 // render tile function prototype

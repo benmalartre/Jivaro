@@ -41,7 +41,6 @@ TriangulateMesh(const pxr::VtArray<int>& counts,
 
 // compute smooth vertex normals
 // this procedure respect the original mesh topology
-// it probably have to be triangulated later :D
 //------------------------------------------------------------------------------
 void ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
                           const pxr::VtArray<int>& counts,

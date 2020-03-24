@@ -74,19 +74,20 @@ Window::Init()
     
     // set current opengl context
     glfwMakeContextCurrent(_window);
-    Resize(_width,_height);
 
     // load opengl functions
     gl3wInit();
 
     // setup callbacks
+    glfwSetWindowSizeCallback(_window, ResizeCallback);
+    //glfwSetFramebufferSizeCallback(_window, ResizeCallback);
     glfwSetMouseButtonCallback(_window, ClickCallback);
     glfwSetScrollCallback(_window, ScrollCallback);
-    glfwSetKeyCallback(_window, KeyboardCallback);
-    //glfwSetCharCallback(_window, ImGui_ImplGlfw_CharCallback);
-    glfwSetCharCallback(_window, CharCallback);
+    //glfwSetKeyCallback(_window, KeyboardCallback);
+    //glfwSetCharCallback(_window, CharCallback);
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
-    glfwSetWindowSizeCallback(_window, ResizeCallback);
+    
+    Resize(_width,_height);    
 
     // ui
     GetContentScale();
@@ -97,19 +98,8 @@ Window::Init()
     SetupScreenSpaceQuad();
    
   }
-}
 
-void Window::DummyFill()
-{
-  for(auto leaf: _leaves)
-  {
-    std::cout << leaf->GetText() << std::endl;
-    //BaseUI* ui = new DummyUI(leaf, leaf->GetName()+":content");
-    BaseUI* ui = new ViewportUI(leaf, EMBREE);
-    leaf->SetContent(ui);
-  }
 }
-  
 
 // window destructor
 //----------------------------------------------------------------------------
@@ -148,6 +138,8 @@ Window::Resize(unsigned width, unsigned height)
     return;
   _width = width;
   _height = height;
+  if(_width <= 0 || _height <= 0)_valid = false;
+  else _valid = true;
   _mainView->Resize(0, 0, _width, _height, true);
   _splitter->Resize(_width, _height);
   _splitter->RecurseBuildMap(_mainView);
@@ -261,7 +253,7 @@ Window::GetContextVersionInfos()
 Window* 
 Window::GetUserData(GLFWwindow* window)
 {
-  return static_cast<Window*>(glfwGetWindowUserPointer(window));
+  return (Window*)(glfwGetWindowUserPointer(window));
 }
 
 // set current context
@@ -284,6 +276,7 @@ Window::GetContentScale()
 void 
 Window::Draw()
 {
+  if(!_valid)return;
   SetContext();
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
@@ -359,7 +352,7 @@ Window::SetupImgui()
   ImGui::SetNextWindowBgAlpha(1.f);
 
   // setup platform/renderer bindings
-  ImGui_ImplGlfw_InitForOpenGL(_window, glfwGetCurrentContext());
+  ImGui_ImplGlfw_InitForOpenGL(_window, false);
   ImGui_ImplOpenGL3_Init("#version 330");
 
   ImNodes::Initialize();
@@ -394,11 +387,12 @@ bool Window::UpdateActiveTool(int mouseX, int mouseY)
 void Window::MainLoop()
 {
   // Enable the OpenGL context for the current window
-  _guiId = 1;
 
   while(!glfwWindowShouldClose(_window))
   {
     glfwWaitEventsTimeout(1.0/60.0);
+    //glfwWaitEvents();
+    //glfwPollEvents();
     glClearColor(0.3f,0.3f, 0.3f,1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -411,12 +405,11 @@ void Window::MainLoop()
     {
       if(!_debounce)
       {
-        _guiId++;
         _debounce = true;
       }
     }
+
     Draw();
-    //TestImgui(_guiId % 3);
     glfwSwapBuffers(_window);
   }
 }
@@ -453,7 +446,7 @@ KeyboardCallback(
 {
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
 
-  //ImGui_ImplGlfw_KeyCallback(window_in,key,scancode,action,mods);
+  ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
   //if (ImGui::GetIO().WantCaptureKeyboard) return;
   if(action == GLFW_RELEASE)
   {
@@ -546,9 +539,8 @@ KeyboardCallback(
 void 
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
-  
   Window* parent = Window::GetUserData(window);
-
+  ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
   if (action == GLFW_RELEASE)
   {
     parent->SetActiveTool(AMN_TOOL_NONE);
@@ -580,18 +572,19 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
 }
 
 void 
-ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
   Window* parent = Window::GetUserData(window);
+  ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
   if(parent->GetActiveView())
-    parent->GetActiveView()->MouseWheel(xOffset, yOffset);
+    parent->GetActiveView()->MouseWheel(xoffset, yoffset);
   parent->Draw();
 }
 
 void 
 CharCallback(GLFWwindow* window, unsigned c)
 {
-
+  ImGui_ImplGlfw_CharCallback(window, c);
 }
 
 void 
@@ -721,7 +714,6 @@ ResizeCallback(GLFWwindow* window, int width, int height)
 {
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
   parent->Resize(width, height);
-  //glfwGetFramebufferSize(window, &width, &height);
   glViewport(0, 0, width, height);
 }
 

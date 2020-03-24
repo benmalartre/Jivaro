@@ -11,6 +11,7 @@
 #include "../tests/stageGraph.h"
 #include "../tests/stageUI.h"
 
+
 AMN_NAMESPACE_OPEN_SCOPE
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -22,7 +23,6 @@ Application::Application(unsigned width, unsigned height):
   _mainWindow(NULL), _context(NULL),_width(width),_height(height)
 {  
   _context = new UsdEmbreeContext();
-  EMBREE_CTXT = _context;
   _mainWindow = CreateStandardWindow(_width, _height);
   _test = NULL;
 };
@@ -31,7 +31,6 @@ Application::Application(bool fullscreen):
   _mainWindow(NULL), _context(NULL)
 {
   _context = new UsdEmbreeContext();
-  EMBREE_CTXT = _context;
   _mainWindow = CreateFullScreenWindow();
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &_width, &_height);
   _test = NULL;
@@ -78,6 +77,7 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
 void 
 Application::Init()
 {
+  SetEmbreeContext(_context);
   std::string filename = 
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
@@ -100,29 +100,21 @@ Application::Init()
   View* workingView = _mainWindow->SplitView(middleView->GetLeft(), 0.15, false);
   View* explorerView = workingView->GetLeft();
   View* viewportView = workingView->GetRight();  
-  //View* graphView = middleView->GetRight();
+  View* graphView = centralView->GetRight();
   _mainWindow->Resize(_width, _height);
 
   _mainWindow->CollectLeaves();
 
-  //GraphUI* graph = new GraphUI(graphView, "GraphUI");
+  GraphUI* graph = new GraphUI(graphView, "GraphUI");
   ViewportUI* viewport = new ViewportUI(viewportView, EMBREE);
+  viewport->SetContext(_context);
   TimelineUI* timeline = new TimelineUI(timelineView);
   //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
   MenuUI* menu = new MenuUI(mainView->GetLeft());
 
-  /*
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
-  //TestStageUI(graph, _stages);
-
-  if(pxr::UsdGeomGetStageUpAxis	(stage1) ==  pxr::UsdGeomTokens->z)
-  {
-    std::cout << "############ Z is UP !!!! ################" << std::endl;
-    pxr::UsdPrim root = stage1->GetPseudoRoot();
-    pxr::UsdGeomXformCommonAPI xformApi(root);
-    xformApi.SetRotate(pxr::GfVec3f(90, 90, 90));
-  }	
+  TestStageUI(graph, _stages);
  
   _context->Resize(viewport->GetWidth(), viewport->GetHeight());
   _context->SetFilePath(filename);
@@ -140,8 +132,8 @@ Application::Init()
 
   RenderToFile(outputImageFilename, viewport->GetCamera(), 2048, 1024);
   RenderToMemory(viewport->GetCamera());
-  viewport->SetContext(EMBREE_CTXT);
-  */
+  viewport->SetContext(_context);
+
 }
 
 // main loop
@@ -149,7 +141,6 @@ void
 Application::MainLoop()
 {
   _mainWindow->MainLoop();
-
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

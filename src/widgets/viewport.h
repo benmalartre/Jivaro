@@ -34,7 +34,8 @@ class ViewportUI : public BaseUI
     ViewportUI(View* parent, VIEWPORT_MODE mode);
     ~ViewportUI();
     void SetMode(VIEWPORT_MODE mode){_mode=mode;};
-    void SetContext(UsdEmbreeContext* ctxt);
+    void SetContext(UsdEmbreeContext* ctxt){_context = ctxt;};
+    void SetImage();
     Camera* GetCamera(){return _camera;};
 
     // overrides
@@ -52,11 +53,12 @@ class ViewportUI : public BaseUI
     int*                  _lowPixels;
     int                   _width;
     int                   _height;
-    UsdEmbreeContext*  _context;
-    Camera*            _camera;
+    UsdEmbreeContext*     _context;
+    Camera*               _camera;
     int                   _lastX;
     int                   _lastY;
     bool                  _interact;
     InteractionMode       _interactionMode;
+    bool                  _valid;
 };
 AMN_NAMESPACE_CLOSE_SCOPE

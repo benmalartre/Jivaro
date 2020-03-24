@@ -21,7 +21,7 @@ enum BORDER
 class Splitter
 {
 public: 
-  Splitter():_pixels(NULL) {
+  Splitter():_pixels(NULL),_valid(false){
     _flags = 0;
     _flags |= ImGuiWindowFlags_NoTitleBar;
     _flags |= ImGuiWindowFlags_NoScrollbar;
@@ -59,6 +59,7 @@ private:
   unsigned            _lastX;
   unsigned            _lastY;
   bool                _drag;
+  bool                _valid;
   int                 _cursor;
   std::vector<View*>  _views;
 };
