@@ -143,7 +143,7 @@ Application::Init()
 
 void Application::Update()
 {
-  std::cout << "UPDATE :D " << std::endl;
+  
 }
 
 // time
@@ -203,10 +203,8 @@ void Application::StopPlayBack()
 void Application::PlayBack()
 {
   _stopWatch.Stop();
-  std::cout << "######### PLAYBACK" << _stopWatch.GetMilliseconds() <<std::endl;
   if(_stopWatch.GetMilliseconds()>1000/_fps)
   {
-     std::cout << "######### SHOULD FUCKIN MOVE" <<std::endl;
     if(_playForwardOrBackward)PreviousFrame();
     else NextFrame();
     _stopWatch.Reset();
