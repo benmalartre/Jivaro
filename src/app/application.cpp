@@ -20,19 +20,22 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(NULL), _context(NULL),_width(width),_height(height)
+  _mainWindow(NULL), _context(NULL),_minTime(1),_maxTime(101),_startTime(1),
+  _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false)
 {  
   _context = new UsdEmbreeContext();
-  _mainWindow = CreateStandardWindow(_width, _height);
+  _mainWindow = CreateStandardWindow(width, height);
+  _mainWindow->Init(this);
   _test = NULL;
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(NULL), _context(NULL)
+  _mainWindow(NULL), _context(NULL),_minTime(1),_maxTime(101),_startTime(1),
+  _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false)
 {
   _context = new UsdEmbreeContext();
   _mainWindow = CreateFullScreenWindow();
-  glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &_width, &_height);
+  _mainWindow->Init(this);
   _test = NULL;
 };
 
@@ -88,7 +91,8 @@ Application::Init()
 
   // create window
   _mainWindow->SetContext();
-  
+  int width, height;
+  glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
   View* mainView = _mainWindow->GetMainView();
   _mainWindow->SplitView(mainView, 0.075, true);
   View* bottomView = _mainWindow->SplitView(mainView->GetRight(), 0.9, true);
@@ -101,14 +105,15 @@ Application::Init()
   View* explorerView = workingView->GetLeft();
   View* viewportView = workingView->GetRight();  
   View* graphView = centralView->GetRight();
-  _mainWindow->Resize(_width, _height);
+  _mainWindow->Resize(width, height);
 
   _mainWindow->CollectLeaves();
 
   //GraphUI* graph = new GraphUI(graphView, "GraphUI");
   ViewportUI* viewport = new ViewportUI(viewportView, EMBREE);
   viewport->SetContext(_context);
-  TimelineUI* timeline = new TimelineUI(timelineView);
+  _timeline = new TimelineUI(timelineView);
+  _timeline->Init(this);
   //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
   MenuUI* menu = new MenuUI(mainView->GetLeft());
 
@@ -134,6 +139,81 @@ Application::Init()
   RenderToMemory(viewport->GetCamera());
   viewport->SetContext(_context);
 
+}
+
+void Application::Update()
+{
+  std::cout << "UPDATE :D " << std::endl;
+}
+
+// time
+void Application::PreviousFrame()
+{
+  float currentTime = _currentTime - _speed;
+  if(currentTime < _startTime)
+  {
+    if(_loop)_currentTime = _endTime;
+    else _currentTime = _startTime;
+  }
+  else _currentTime = currentTime;
+  
+  _timeline->Update();
+}
+
+void Application::NextFrame()
+{
+ float currentTime = _currentTime + _speed;
+  if(currentTime > _endTime)
+  {
+    if(_loop)_currentTime = _startTime;
+    else _currentTime = _endTime;
+  }
+  else _currentTime = currentTime;
+  
+  _timeline->Update();
+}
+
+void Application::FirstFrame()
+{
+  _currentTime = _startTime;
+  _timeline->Update();
+}
+
+void Application::LastFrame()
+{
+  _currentTime = _endTime;
+  _timeline->Update();
+}
+
+void Application::StartPlayBack(bool backward)
+{
+  _stopWatch.Reset();
+  _playback = true;
+  _stopWatch.Start();
+  _playForwardOrBackward = backward;
+  PlayBack();
+}
+
+void Application::StopPlayBack()
+{
+  _stopWatch.Stop();
+  _playback=false;
+}
+
+void Application::PlayBack()
+{
+  _stopWatch.Stop();
+  std::cout << "######### PLAYBACK" << _stopWatch.GetMilliseconds() <<std::endl;
+  if(_stopWatch.GetMilliseconds()>1000/_fps)
+  {
+     std::cout << "######### SHOULD FUCKIN MOVE" <<std::endl;
+    if(_playForwardOrBackward)PreviousFrame();
+    else NextFrame();
+    _stopWatch.Reset();
+    _stopWatch.Start();
+  }
+  
+  Update();
 }
 
 // main loop

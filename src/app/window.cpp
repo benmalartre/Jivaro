@@ -7,7 +7,7 @@
 #include "../widgets/viewport.h"
 #include "../imgui/imgui_custom.h"
 #include "../imgui/imgui_test.h"
-#include <pxr/base/arch/systemInfo.h>
+#include "../app/application.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -33,7 +33,7 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f)
   _window = glfwCreateWindow(mode->width, mode->height, "AMINA.0.0",  monitor, NULL);
   _width = mode->width;
   _height = mode->height;
-  Init();
+
 }
 
 // width/height window constructor
@@ -52,15 +52,15 @@ _pickImage(0), _splitter(NULL),_fontSize(16.f)
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   
   _window = glfwCreateWindow(_width,_height,"AMINA.0.0",NULL,NULL);
-  Init();
 
 }
 
 // initialize
 //----------------------------------------------------------------------------
 void 
-Window::Init()
+Window::Init(Application* app)
 {
+  _app = app;
   if(_window)
   {
     // create main splittable view
@@ -396,18 +396,8 @@ void Window::MainLoop()
     glClearColor(0.3f,0.3f, 0.3f,1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // If you press escape the window will close
-    if (glfwGetKey(_window, GLFW_KEY_ESCAPE))
-    {
-      glfwSetWindowShouldClose(_window, true);
-    }
-    else if(glfwGetKey(_window, GLFW_KEY_SPACE))
-    {
-      if(!_debounce)
-      {
-        _debounce = true;
-      }
-    }
+    if(_app->IsPlaying())_app->PlayBack();
+    else _app->Update();
 
     Draw();
     glfwSwapBuffers(_window);
@@ -445,15 +435,37 @@ KeyboardCallback(
 )
 {
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
-
+  Application* app = parent->GetApplication();
   ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
   //if (ImGui::GetIO().WantCaptureKeyboard) return;
   if(action == GLFW_RELEASE)
   {
     parent->SetDebounce(false);
   }
-  //if (action == GLFW_PRESS)
-  //{
+  if (action == GLFW_PRESS)
+  {
+    switch(key)
+    {
+      case GLFW_KEY_SPACE:
+        if(app->IsPlaying())
+        {
+          app->SetLoop(false);
+          app->StopPlayBack();
+        }
+        else
+        {
+          app->SetLoop(true);
+          app->StartPlayBack();
+        }
+        break;
+      case GLFW_KEY_LEFT:
+        app->PreviousFrame();
+        break;
+      case GLFW_KEY_RIGHT:
+        app->NextFrame();
+        break;
+    }
+  }
   //  /* call tutorial keyboard handler */
   //  //device_key_pressed(key);
 //

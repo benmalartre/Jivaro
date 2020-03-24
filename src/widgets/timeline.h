@@ -4,6 +4,7 @@
 #include "../app/ui.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
+class Application;
 
 class TimelineUI : BaseUI
 {
@@ -16,24 +17,22 @@ class TimelineUI : BaseUI
     void MouseMove(int x, int y) override;
     void Draw() override;
 
+    void Init(Application* app);
     void DrawControls();
     void DrawTimeSlider();
-    void ValidateMinMaxTime();
+    void ValidateTime();
+    void Update();
 
   private:
-    float _currentTime;
-    float _currentTimeEdit;
-    float _startTime;
-    float _startTimeEdit;
-    float _endTime;
-    float _endTimeEdit;
-    float _minTime;
-    float _minTimeEdit;
-    float _maxTime;
-    float _maxTimeEdit;
-    float _fps;
-    float _speed;
-    bool  _loop;
+    float             _currentTime;
+    float             _startTime;
+    float             _endTime;
+    float             _minTime;
+    float             _maxTime;
+    float             _fps;
+    float             _speed;
+    bool              _loop;
+    Application*      _app;
 
 };
 

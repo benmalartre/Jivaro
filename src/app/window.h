@@ -7,10 +7,6 @@
 #include "ui.h"
 #include "../imgui/imgui_nodes.h"
 
-#include <pxr/pxr.h>
-#include <pxr/base/gf/vec2i.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/usd/usd/prim.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
@@ -68,8 +64,11 @@ public:
   ~Window();
 
   // initialize
-  void Init();
+  void Init(Application* app);
 
+  // application
+  Application* GetApplication(){return _app;};
+  
   // infos
   void GetContextVersionInfos();
   GLFWwindow* GetGlfwWindow(){return _window;};
@@ -124,6 +123,7 @@ public:
 
 private:
   // objects
+  Application*            _app;
   GLFWwindow*             _window;
   View*                   _mainView;
   View*                   _activeView;

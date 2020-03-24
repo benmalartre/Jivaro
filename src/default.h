@@ -47,6 +47,7 @@
 // usd
 #include <pxr/base/tf/hash.h>
 #include <pxr/base/tf/hashmap.h>
+#include <pxr/base/tf/stopwatch.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primRange.h>
@@ -71,6 +72,7 @@
 #include <pxr/base/gf/camera.h>
 #include <pxr/base/gf/transform.h>
 #include <pxr/base/gf/ray.h>
+
 
 #define AMN_EXPORT extern "C" 
 
