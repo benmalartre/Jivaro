@@ -36,7 +36,7 @@ struct UsdEmbreeContext {
   float                                           _debug;
 
   // opengl
-  GLuint                                          _screenSpaceQuadPgm;
+  int                                             _screenSpaceQuadPgm;
 
   // parameters
   int                                             _renderMode;

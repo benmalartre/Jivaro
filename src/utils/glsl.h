@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "default.h"
+#include "../default.h"
+#include <iostream>
 
 // vertex shader :
 static const GLchar* SIMPLE_VERTEX_SHADER_CODE =

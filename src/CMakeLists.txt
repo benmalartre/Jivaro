@@ -1,7 +1,7 @@
 set(TARGET amnesia)
 
 add_definitions(
-  -DIMGUI_IMPL_OPENGL_LOADER_GL3W
+  -DIMGUI_IMPL_OPENGL_LOADER_GLEW
   -DTASKING_TBB
 
 )
@@ -14,7 +14,7 @@ set(PUBLIC_HEADERS
 )
 
 add_executable(${TARGET}
-  gl3w/src/gl3w.c
+  #gl3w/src/gl3w.c
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
   imgui/imgui_test.cpp
@@ -80,5 +80,6 @@ target_link_libraries(${TARGET}
   ${EMBREE_LIBRARIES}
   ${TBB_LIBRARIES}
   ${GLFW}
+  ${GLEW_LIBRARY}
   ${ADDITIONAL_LIBRARIES}
 )

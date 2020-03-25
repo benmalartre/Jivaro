@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../default.h"
+#include <dirent.h>
 #include "strings.h"
 #include <pxr/base/arch/fileSystem.h>
 #include <pxr/base/arch/systemInfo.h>
@@ -70,6 +71,14 @@ static int GetFileSize(const std::string& filePath)
     return -1;
 }
 
+// GET FILE NAME
+//---------------------------------------------------------------------------------------
+static std::string GetFileName(const std::string& filePath)
+{
+  return SplitString(filePath, SEPARATOR).back();
+}
+
+
 // NUM FILES IN DIRECTORY
 //---------------------------------------------------------------------------------------
 static int NumFilesInDirectory(const char* path)
@@ -100,6 +109,36 @@ static int NumFilesInDirectory(const char* path)
   }
 }
 
+// GET FILES IN DIRECTORY
+//---------------------------------------------------------------------------------------
+static int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
+{
+  DIR *dir;
+  struct dirent *ent;
+  filenames.clear();
+  if ((dir = opendir (path)) != NULL) 
+  {
+    // print all the files and directories within directory
+    while ((ent = readdir (dir)) != NULL) 
+    {
+      if(
+        ! strncmp(ent->d_name, ".", 1) ||
+        ! strncmp(ent->d_name, "..", 2) ||
+        ! strncmp(ent->d_name, ".DS_Store", 9)
+      ) continue;
+      filenames.push_back((std::string)ent->d_name);
+    }
+    closedir (dir);
+    return filenames.size();
+  } 
+  else 
+  {
+    // could not open directory
+    std::cerr << "Could Not Open Directory : " << path << std::endl;
+    return EXIT_FAILURE;
+  }
+}
+
 // GET INSTALLATION FOLDER
 //---------------------------------------------------------------------------------------
 static std::string GetInstallationFolder()
@@ -108,7 +147,6 @@ static std::string GetInstallationFolder()
   std::vector<std::string> splitted = SplitString(exePath, SEPARATOR);
   splitted.pop_back();
   return JoinString(splitted, SEPARATOR);
-  
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

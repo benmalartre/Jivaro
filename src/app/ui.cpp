@@ -57,4 +57,9 @@ int BaseUI::GetHeight()
   else return ImGui::GetWindowSize().y;
 };
 
+Application* BaseUI::GetApplication()
+{
+  return _parent->GetWindow()->GetApplication();
+}
+
 AMN_NAMESPACE_CLOSE_SCOPE

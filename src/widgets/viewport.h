@@ -5,6 +5,11 @@
 #include "../embree/device.h"
 #include "../app/ui.h"
 #include "../utils/utils.h"
+#include <pxr/imaging/glf/glew.h>
+#include <pxr/usdImaging/usdImagingGL/engine.h>
+#include <pxr/usdImaging/usdImagingGL/legacyEngine.h>
+#include <pxr/usdImaging/usdImagingGL/renderParams.h>
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -33,6 +38,8 @@ class ViewportUI : public BaseUI
   public:
     ViewportUI(View* parent, VIEWPORT_MODE mode);
     ~ViewportUI();
+    void Init(pxr::UsdStageRefPtr stage);
+
     void SetMode(VIEWPORT_MODE mode){_mode=mode;};
     void SetContext(UsdEmbreeContext* ctxt){_context = ctxt;};
     void SetImage();
@@ -60,5 +67,10 @@ class ViewportUI : public BaseUI
     bool                  _interact;
     InteractionMode       _interactionMode;
     bool                  _valid;
+
+    // usd imaging engine
+    pxr::UsdImagingGLEngine*          _engine;
+    //pxr::UsdImagingGLLegacyEngine*    _engine;
+    pxr::UsdImagingGLRenderParams     _renderParams;
 };
 AMN_NAMESPACE_CLOSE_SCOPE

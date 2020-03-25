@@ -2,6 +2,7 @@
 
 #include "../default.h"
 #include "../app/ui.h"
+#include "../utils/icons.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 class Application;
@@ -24,15 +25,15 @@ class TimelineUI : BaseUI
     void Update();
 
   private:
-    float             _currentTime;
-    float             _startTime;
-    float             _endTime;
-    float             _minTime;
-    float             _maxTime;
-    float             _fps;
-    float             _speed;
-    bool              _loop;
-    Application*      _app;
+    float               _currentTime;
+    float               _startTime;
+    float               _endTime;
+    float               _minTime;
+    float               _maxTime;
+    float               _fps;
+    float               _speed;
+    bool                _loop;
+    Application*        _app;
 
 };
 

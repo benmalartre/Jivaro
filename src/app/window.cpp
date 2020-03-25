@@ -76,7 +76,8 @@ Window::Init(Application* app)
     glfwMakeContextCurrent(_window);
 
     // load opengl functions
-    gl3wInit();
+    //gl3wInit();
+    pxr::GlfGlewInit();
 
     // setup callbacks
     glfwSetWindowSizeCallback(_window, ResizeCallback);

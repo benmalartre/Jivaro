@@ -25,6 +25,20 @@ Camera::Camera(const std::string& name, double fov) :
   //_ResetClippingPlanes();
 }
 
+const pxr::GfMatrix4d Camera::GetViewMatrix()
+{
+  return _camera.GetFrustum().ComputeViewMatrix();
+}
+const pxr::GfMatrix4d Camera::GetProjectionMatrix()
+{
+  return _camera.GetFrustum().ComputeProjectionMatrix();
+}
+
+const std::vector<pxr::GfVec4f> Camera::GetClippingPlanes()
+{
+  return _camera.GetClippingPlanes();
+}
+
 /*
 void Camera::_PushToCameraTransform()
 {

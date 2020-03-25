@@ -1,5 +1,6 @@
 #include "timeline.h"
 #include "../app/application.h"
+#include "../utils/icons.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -10,6 +11,8 @@ TimelineUI::TimelineUI(View* parent):BaseUI(parent, "Timeline")
   _flags |= ImGuiWindowFlags_NoResize;
   _flags |= ImGuiWindowFlags_NoTitleBar;
   _flags |= ImGuiWindowFlags_NoMove;  
+
+  InitializeIcons();
 }
 
 // destructor
@@ -85,6 +88,29 @@ void TimelineUI::DrawControls()
   if(!ImGui::IsItemActive() && _startTime != _app->GetStartTime())
   {
     ValidateTime();
+  }
+  ImGui::SameLine();
+  
+  Icon* icon = &AMN_ICONS["play_btn.png"];
+
+  /*
+  ImGui::PushFont(GetWindow()->GetRegularFont());
+  ImGui::Text("pointer = %p", icon->_tex);
+  ImGui::SameLine();
+  ImGui::Text("size = %d x %d", icon->_size, icon->_size);
+  ImGui::SameLine();
+  ImGui::PopFont();
+  */
+  if (ImGui::ImageButton(
+      (void *)icon->_tex, 
+      ImVec2(icon->_size,icon->_size), 
+      ImVec2(0,0), 
+      ImVec2(0, 1), 
+      -2, 
+      ImVec4(1.0f,0.0f,0.0f,0.0f),
+      ImVec4(1.0f,1.0f,1.0f,1.0f)))
+  {
+    std::cout << "MY FUCKIN ICON WAS CLICKED!!!" << std::endl;
   }
   ImGui::SameLine();
 

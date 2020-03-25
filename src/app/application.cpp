@@ -82,12 +82,15 @@ Application::Init()
 {
   SetEmbreeContext(_context);
   std::string filename = 
+    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
-    "/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
+    //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
 
   // build test scene
   //pxr::TestScene(filename);
+  // create imaging gl engine
+  
 
   // create window
   _mainWindow->SetContext();
@@ -110,8 +113,8 @@ Application::Init()
   _mainWindow->CollectLeaves();
 
   //GraphUI* graph = new GraphUI(graphView, "GraphUI");
-  ViewportUI* viewport = new ViewportUI(viewportView, EMBREE);
-  viewport->SetContext(_context);
+  _viewport = new ViewportUI(viewportView, EMBREE);
+  _viewport->SetContext(_context);
   _timeline = new TimelineUI(timelineView);
   _timeline->Init(this);
   //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
@@ -120,10 +123,12 @@ Application::Init()
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
   //TestStageUI(graph, _stages);
+
+  _viewport->Init(stage1);
  
-  _context->Resize(viewport->GetWidth(), viewport->GetHeight());
+  _context->Resize(_viewport->GetWidth(), _viewport->GetHeight());
   _context->SetFilePath(filename);
-  _context->InitDevice(viewport->GetCamera());
+  _context->InitDevice(_viewport->GetCamera());
   _context->TraverseStage();
   _context->CommitDevice();
   
@@ -133,11 +138,11 @@ Application::Init()
   std::string imageExt = ".jpg";
   embree::FileName outputImageFilename(imagePath + std::to_string(imageId) + imageExt);
 
-  viewport->GetCamera()->ComputeFrustum();
+  _viewport->GetCamera()->ComputeFrustum();
 
-  RenderToFile(outputImageFilename, viewport->GetCamera(), 2048, 1024);
-  RenderToMemory(viewport->GetCamera());
-  viewport->SetContext(_context);
+  RenderToFile(outputImageFilename, _viewport->GetCamera(), 2048, 1024);
+  RenderToMemory(_viewport->GetCamera());
+  _viewport->SetContext(_context);
 
 }
 

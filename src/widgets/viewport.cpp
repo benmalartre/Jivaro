@@ -2,10 +2,11 @@
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/camera.h"
+#include "../app/application.h"
 #include "../utils/utils.h"
+#include "../utils/strings.h"
 #include "../utils/glutils.h"
 #include "../embree/context.h"
-
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -25,6 +26,10 @@ BaseUI(parent, "Viewport")
   _context = NULL;
   _interact = false;
   _interactionMode = INTERACTION_NONE;
+
+  //_engine = new pxr::UsdImagingGLLegacyEngine(pxr::SdfPathVector());
+  _engine = new pxr::UsdImagingGLEngine();
+  _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
 }
 
 // destructor
@@ -32,6 +37,37 @@ ViewportUI::~ViewportUI()
 {
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
+}
+
+void ViewportUI::Init(pxr::UsdStageRefPtr stage)
+{
+  std::cout << "ViewportUI Init\n";
+  pxr::SdfPathVector excludedPaths;
+  pxr::TfToken renderer("HdStormRendererPlugin");
+  if (pxr::UsdImagingGLEngine::IsHydraEnabled()) 
+  {
+    std::cout << "Using HD Renderer.\n";
+    _engine = new pxr::UsdImagingGLEngine(
+      stage->GetPseudoRoot().GetPath(), excludedPaths);
+    if (!_engine->SetRendererPlugin(renderer)) 
+    {
+        std::cerr << "Couldn't set renderer plugin: " <<
+            renderer.GetText() << std::endl;
+        exit(-1);
+    } 
+    else 
+    {
+      std::cout << "Renderer plugin: " << renderer.GetText()
+          << std::endl;
+    }
+  }
+  else
+  {
+    std::cout << "Using Reference Renderer.\n"; 
+    _engine = 
+      new pxr::UsdImagingGLEngine(stage->GetPseudoRoot().GetPath(), 
+                excludedPaths);
+  }
 }
 
 // overrides
@@ -195,7 +231,44 @@ void ViewportUI::Draw()
   
   float w = _parent->GetWidth();
   float h = _parent->GetHeight();
-      
+  float wh = GetWindowHeight();
+
+  glEnable(GL_SCISSOR_TEST);
+  glScissor(x, wh - (y + h), w, h);
+  glViewport(x,y,w,h);
+  glClearColor(0,0,0,0);
+  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+  Application* app = GetApplication();
+  /*
+  _engine->SetFreeCameraMatrices(
+    _camera->GetViewMatrix(),
+    _camera->GetProjectionMatrix()
+  );
+  */
+  _engine->SetCameraState(
+    _camera->GetViewMatrix(),
+    _camera->GetProjectionMatrix()
+  );
+  _renderParams.frame = pxr::UsdTimeCode(app->GetCurrentTime());
+  _renderParams.showGuides = true;
+  _renderParams.showRender = true;
+  _renderParams.showProxy = true;
+  /*
+  const std::vector<pxr::GfVec4f> clipPlanes = _camera->GetClippingPlanes();
+  std::cout << "CLIP PLANES : " << clipPlanes.size() << std::endl;
+  _renderParams.clipPlanes = {
+    pxr::GfVec4d(clipPlanes[0]),
+    pxr::GfVec4d(clipPlanes[1]),
+    pxr::GfVec4d(clipPlanes[2]),
+    pxr::GfVec4d(clipPlanes[3])
+  };
+  */
+  //_engine->PrepareBatch(_stages[0]->GetPseudoRoot());
+  _engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
+  glDisable(GL_SCISSOR_TEST);
+  
+  /*
   if(_pixels)
   {
     glUseProgram(GetScreenSpaceQuadShaderProgram());
@@ -209,7 +282,6 @@ void ViewportUI::Draw()
   }
   else
   {
-
     float wh = GetWindowHeight();
     glEnable(GL_SCISSOR_TEST);
     glScissor(x, wh - (y + h), w, h);
@@ -217,6 +289,7 @@ void ViewportUI::Draw()
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     glDisable(GL_SCISSOR_TEST);
   }
+  */
   
 }
 

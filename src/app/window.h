@@ -68,7 +68,7 @@ public:
 
   // application
   Application* GetApplication(){return _app;};
-  
+
   // infos
   void GetContextVersionInfos();
   GLFWwindow* GetGlfwWindow(){return _window;};
@@ -146,8 +146,8 @@ private:
   int               _iOpenGLRevision;
 
   // opengl
-  GLuint            _pickImage;
-  GLuint            _debugImage;
+  int            _pickImage;
+  int            _debugImage;
 
   // imgui
   ImGuiIO*          _io;

@@ -8,6 +8,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 class View;
 class Window;
+class Application;
 class BaseUI
 {
 public:
@@ -36,6 +37,8 @@ public:
   
   // get the height of the parent view
   int GetHeight();
+
+  Application* GetApplication();
 
   const std::string& GetName() const {return _name;};
 

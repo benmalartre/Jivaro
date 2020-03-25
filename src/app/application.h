@@ -46,6 +46,9 @@ public:
   // cleanup
   void CleanUp();
 
+  // usd stages
+  std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
+
   // time
   inline float GetMinTime(){return _minTime;};
   inline float GetStartTime(){return _startTime;};
@@ -81,7 +84,10 @@ private:
   UsdEmbreeContext*                 _context;
   std::vector<pxr::UsdStageRefPtr>  _stages;
   GraphUI*                          _test;
-  
+
+  // viewport
+  ViewportUI*                       _viewport;
+
   // time
   pxr::TfStopwatch                  _stopWatch;
   float                             _currentTime;

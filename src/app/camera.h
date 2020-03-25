@@ -24,6 +24,11 @@ public:
   Camera(const std::string& name, double fov=60.0);
   ~Camera(){};
 
+  // get matrices
+  const pxr::GfMatrix4d GetViewMatrix();
+  const pxr::GfMatrix4d GetProjectionMatrix();
+  const std::vector<pxr::GfVec4f> GetClippingPlanes();
+
   // compute underlying GfCamera frustum
   pxr::GfFrustum _GetFrustum(){return _camera.GetFrustum();};
 
