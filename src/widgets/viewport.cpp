@@ -2,11 +2,11 @@
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/camera.h"
+#include "../app/tools.h"
 #include "../app/application.h"
 #include "../utils/utils.h"
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
-#include "../embree/context.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -23,13 +23,9 @@ BaseUI(parent, "Viewport")
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
-  _context = NULL;
   _interact = false;
   _interactionMode = INTERACTION_NONE;
-
-  pxr::SdfPathVector excludedPaths;
-  _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/engine"), excludedPaths);
-  _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
+  _engine = NULL;
 }
 
 // destructor
@@ -37,62 +33,57 @@ ViewportUI::~ViewportUI()
 {
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
+  if(_engine) delete _engine;
 }
 
-void ViewportUI::Init(pxr::UsdStageRefPtr stage)
+void ViewportUI::Init()
 {
-
-  _stage = pxr::UsdStage::Open("/Users/benmalartre/Documents/RnD/amnesie/usd/board.usda");
-  auto cameraPrim = _stage->GetPrimAtPath(pxr::SdfPath("/camera1"));
-  _cameraX = pxr::UsdGeomCamera(cameraPrim).GetCamera(pxr::UsdTimeCode::Default());
-
-  _root = _stage->GetPrimAtPath(pxr::SdfPath("/board1"));
-  auto xfPrim = _stage->DefinePrim(pxr::SdfPath("/board1/SRT"), pxr::TfToken("Xform"));
-
-  pxr::UsdGeomXformCommonAPI(xfPrim).SetTranslate(pxr::GfVec3f(0,2,0));
-
-  xfPrim.GetReferences().AddReference(stage->GetRootLayer()->GetIdentifier(),
-                                      pxr::SdfPath("/maneki"));
-  
-
-  _renderParams.frame = 1.0;
-  _renderParams.complexity = 1.0f;
+  pxr::SdfPathVector excludedPaths;
+  _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/"), excludedPaths);
+  _engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
 
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
   light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));
-  light.SetPosition(pxr::GfVec4f(4,7,0,1));
+  light.SetPosition(pxr::GfVec4f(0,12,0,1));
   pxr::GlfSimpleLightVector lights;
   lights.push_back(light);
 
   material.SetAmbient(pxr::GfVec4f(0.5,1.0,0.5, 1.0));
   auto lightingContext = pxr::GlfSimpleLightingContext::New();
-  lightingContext->SetMaterial(material);
-  lightingContext->SetSceneAmbient(pxr::GfVec4f(0.5,0.5, 0.5,1));
-  lightingContext->SetLights(lights);
-  _engine->SetLightingState(lightingContext);
+
+   _engine->SetLightingState(lights,
+                              material,
+                              pxr::GfVec4f(0.5,0.5,0.5,1.0));
+
+  Resize();
+
+  std::cout << "Hydra Enabled : " << pxr::UsdImagingGLEngine::IsHydraEnabled() << std::endl;
 }
 
 // overrides
 void ViewportUI::MouseButton(int button, int action, int mods) 
 {
+  std::cout << "VIEWPORT MOUSE BUTTON :D " << std::endl;
   if (action == GLFW_RELEASE)
   {
     _interactionMode = INTERACTION_NONE;
     _interact = false;
-    RenderToMemory(_camera, false);
-    SetImage();
+    //RenderToMemory(_camera, false);
+    //SetImage();
   }
   else if (action == GLFW_PRESS)
   {
     double x,y;
-    glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(),&x,&y);
-
+    Window* window = _parent->GetWindow();
+    glfwGetCursorPos(window->GetGlfwWindow(),&x,&y);
+    
     _lastX = (int)x;
     _lastY = (int)y;
     if( mods & GLFW_MOD_ALT)
     {
       _interact = true;
+      window->SetActiveTool(TOOLS::AMN_TOOL_CAMERA);
       if (button == GLFW_MOUSE_BUTTON_LEFT)
       {
         _interactionMode = INTERACTION_ORBIT;
@@ -108,6 +99,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     }
     else if(mods & GLFW_MOD_SUPER)
     {
+      window->SetActiveTool(TOOLS::AMN_TOOL_CAMERA);
       _interact = true;
       if (button == GLFW_MOUSE_BUTTON_LEFT)
       {
@@ -122,6 +114,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
         _interactionMode = INTERACTION_DOLLY;
       }
     }
+    else window->RestoreLastActiveTool();
 /*
     if (button == GLFW_MOUSE_BUTTON_RIGHT)
     {
@@ -158,29 +151,20 @@ void ViewportUI::MouseMove(int x, int y)
     {
       case INTERACTION_WALK:
       {
-        _camera->Walk(
-          (double)dx / (double)GetWidth(), 
-          (double)dy / (double)GetHeight()
-        );
-       
+        _camera->Walk((double)dx / (double)GetWidth(), (double)dy / (double)GetHeight());
         break;
       }
        
       case INTERACTION_DOLLY:
       {
-        _camera->Dolly(
-          (double)dx / (double)GetWidth(), 
-          (double)dy / (double)GetHeight() 
-        );
-       
-        break;
+        _camera->Dolly((double)dx / (double)GetWidth(), (double)dy / (double)GetHeight());
+       break;
       }
         
       case INTERACTION_ORBIT:
       {
-        _camera->Orbit(dx, dy);
-       
-        break;
+        std::cout << "ORBIT ..." << std::endl;
+        _camera->Orbit(dx, dy); break;
       }
 
       default:
@@ -188,8 +172,8 @@ void ViewportUI::MouseMove(int x, int y)
         
     }
     
-    RenderToMemory(_camera, true);
-    SetImage();
+    //RenderToMemory(_camera, true);
+    //SetImage();
     _lastX = x;
     _lastY = y;
   }
@@ -198,17 +182,14 @@ void ViewportUI::MouseMove(int x, int y)
 void ViewportUI::MouseWheel(int x, int y)
 {
 
-  _camera->Dolly(
-    (double)x / (double)_parent->GetWidth(), 
-    (double)y / (double)_parent->GetHeight()
-  );
-  RenderToMemory(_camera, true);
-  SetImage();
+  _camera->Dolly((double)x / (double)GetWidth(), (double)y / (double)GetHeight());
+  //RenderToMemory(_camera, true);
+  //SetImage();
 }
 
 void ViewportUI::Draw()
 {    
-  if(!_valid)return;
+  if(!_valid)return;  
   float x = _parent->GetMin()[0];
   float y = _parent->GetMin()[1];
   
@@ -216,40 +197,44 @@ void ViewportUI::Draw()
   float h = _parent->GetHeight();
   float wh = GetWindowHeight();
 
+  GLCheckError("ENTER THE DRAGON");
   glEnable(GL_SCISSOR_TEST);
   glScissor(x, wh - (y + h), w, h);
   glViewport(x,wh - (y + h),w,h);
-  // clear to blue
+
+  // clear to black
   glClearColor(0.0, 0.0, 0.0, 1.0 );
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glDepthFunc(GL_LESS);
   glEnable(GL_DEPTH_TEST);
-
-  Application* app = GetApplication();
-
-  _engine->SetRenderViewport(
-    pxr::GfVec4f(x, wh - (y + h), w, h)
-  );
   
+  _engine->SetRenderViewport(
+    pxr::GfVec4f(0, 0, w-x, h-y)
+  );
   _engine->SetCameraState(
     _camera->GetViewMatrix(),
     _camera->GetProjectionMatrix()
   );
 
+  Application* app = GetApplication();
   _renderParams.frame = pxr::UsdTimeCode(app->GetCurrentTime());
-  _renderParams.drawMode = pxr::UsdImagingGLDrawMode::DRAW_SHADED_FLAT;
+  _renderParams.complexity = 1.0f;
+  _renderParams.drawMode = pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
   _renderParams.showGuides = true;
   _renderParams.showRender = true;
   _renderParams.showProxy = true;
-  _renderParams.forceRefresh = true;
+  _renderParams.forceRefresh = false;
+  _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_NOTHING;
   _renderParams.gammaCorrectColors = false;
   _renderParams.enableIdRender = false;
-  _renderParams.enableSampleAlphaToCoverage  = true;
-  _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_NOTHING;
-  _renderParams.clearColor = pxr::GfVec4f(1.f,0.f,0.f,1.f);
-  _renderParams.renderResolution[0] = _parent->GetWidth();
-  _renderParams.renderResolution[1] = _parent->GetHeight();
+  _renderParams.enableSampleAlphaToCoverage = true;
+  _renderParams.highlight = false;
+  _renderParams.enableSceneMaterials = true;
+  //_renderParams.colorCorrectionMode = ???
+  _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
+  _renderParams.renderResolution[0] = GetWidth();
+  _renderParams.renderResolution[1] = GetHeight();
 
 
  /*
@@ -262,13 +247,12 @@ void ViewportUI::Draw()
     pxr::GfVec4d(clipPlanes[3])
   };
   */
-
   //_engine->PrepareBatch(_stages[0]->GetPseudoRoot());
-  _engine->Render(GetApplication()->GetStages()[0]->GetPseudoRoot(), _renderParams);
+  _engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
   glDisable(GL_SCISSOR_TEST);
   
 
-  
+  GLCheckError("EXIT THE DRAGON");
   /*
   if(_pixels)
   {
@@ -294,36 +278,42 @@ void ViewportUI::Draw()
   
 }
 
+// Conform the camera viewport to the camera's aspect ratio,
+// and center the camera viewport in the window viewport.
+pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
+{
+     /*   
+  windowPolicy = CameraUtil.MatchVertically
+  targetAspect = (
+    float(self.size().width()) / max(1.0, self.size().height()))
+  if targetAspect < cameraAspectRatio:
+      windowPolicy = CameraUtil.MatchHorizontally
+
+  viewport = Gf.Range2d(Gf.Vec2d(0, 0),
+                        Gf.Vec2d(self.computeWindowSize()))
+  viewport = CameraUtil.ConformedWindow(viewport, windowPolicy, cameraAspectRatio)
+
+  viewport = (viewport.GetMin()[0], viewport.GetMin()[1],
+              viewport.GetSize()[0], viewport.GetSize()[1])
+  viewport = ViewportMakeCenteredIntegral(viewport)
+
+  return viewport
+  */
+ return pxr::GfVec4f();
+}
 void ViewportUI::Resize()
 {
   if(_parent->GetWidth() <= 0 || _parent->GetHeight() <= 0)_valid = false;
   else _valid = true;
-  if(_mode == EMBREE && _context)
-  {
-    
-    _context->Resize(_parent->GetWidth(), _parent->GetHeight());
-    _camera->SetWindow(
-      _parent->GetX(),
-      _parent->GetY(),
-      _parent->GetWidth(),
-      _parent->GetHeight()
-    );
-    
-    RenderToMemory(_camera, false);
-    SetImage();
-    
-  }   
+
+  double aspectRatio = (double)_parent->GetWidth()/(double)_parent->GetHeight();
+  _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
+    aspectRatio,
+    _camera->GetFov(),
+    pxr::GfCamera::FOVVertical
+  );
 
 }
 
-void ViewportUI::SetImage()
-{
-  if(_context){
-    _pixels = _context->_pixels;
-    _lowPixels = _context->_lowPixels;
-    _width = _context->_width;
-    _height = _context->_height;
-  }  
-}
 
 AMN_NAMESPACE_CLOSE_SCOPE

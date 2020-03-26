@@ -41,15 +41,15 @@ add_executable(${TARGET}
   widgets/graph.cpp
   widgets/viewport.cpp
   widgets/timeline.cpp
-  embree/oiio.cpp
-  embree/jpeg.cpp
-  embree/utils.cpp
-  embree/sphere.cpp
-  embree/mesh.cpp
-  embree/subdiv.cpp
-  embree/instance.cpp
-  embree/context.cpp
-  embree/device.cpp
+  #embree/oiio.cpp
+  #embree/jpeg.cpp
+  #embree/utils.cpp
+  #embree/sphere.cpp
+  #embree/mesh.cpp
+  #embree/subdiv.cpp
+  #embree/instance.cpp
+  #embree/context.cpp
+  #embree/device.cpp
   app/camera.cpp
   app/view.cpp
   app/ui.cpp

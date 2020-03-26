@@ -116,8 +116,12 @@ public:
   inline ImFont* GetRegularFont(){return _regularFont;};
 
   // tool
-  inline void SetActiveTool(int tool){_activeTool = tool;};
+  inline void SetActiveTool(int tool) {
+    _lastActiveTool = _activeTool;
+    _activeTool = tool;
+  };
   inline int GetActiveTool(){return _activeTool;};
+  inline void RestoreLastActiveTool(){_activeTool=_lastActiveTool;};
   bool UpdateActiveTool(int mouseX, int mouseY);
 
   // loop
@@ -138,6 +142,7 @@ private:
   bool              _fullscreen;
   int               _mouseMode;
   int               _activeTool;
+  int               _lastActiveTool;
   int               _width;
   int               _height;
   unsigned*         _pixels;

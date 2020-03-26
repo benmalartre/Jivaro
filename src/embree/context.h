@@ -59,3 +59,42 @@ struct UsdEmbreeContext {
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+
+ /*  HOW TO USE THIS SHIT...
+  _context->Resize(_viewport->GetWidth(), _viewport->GetHeight());
+  _context->SetFilePath(filename);
+  _context->InitDevice(_viewport->GetCamera());
+  _context->TraverseStage();
+  _context->CommitDevice();
+  
+  std::string imageDirectory = "/Users/benmalartre/Documents/RnD/amnesie/images";
+  int imageId = NumFilesInDirectory(imageDirectory.c_str()) + 1;
+  std::string imagePath = imageDirectory + "/img.";
+  std::string imageExt = ".jpg";
+  embree::FileName outputImageFilename(imagePath + std::to_string(imageId) + imageExt);
+
+  _viewport->GetCamera()->ComputeFrustum();
+
+  RenderToFile(outputImageFilename, _viewport->GetCamera(), 2048, 1024);
+  RenderToMemory(_viewport->GetCamera());
+  _viewport->SetContext(_context);
+*/
+
+/*
+  if(_mode == EMBREE && _context)
+  {
+    
+    _context->Resize(_parent->GetWidth(), _parent->GetHeight());
+    _camera->SetWindow(
+      _parent->GetX(),
+      _parent->GetY(),
+      _parent->GetWidth(),
+      _parent->GetHeight()
+    );
+    
+    RenderToMemory(_camera, false);
+    SetImage();
+    
+  }   
+*/

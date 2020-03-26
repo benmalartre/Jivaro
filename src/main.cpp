@@ -1,10 +1,7 @@
 
-#include "default.h"
+#include "common.h"
 #include "app/application.h"
-#include "embree/context.h"
 
-// main application entry point
-//------------------------------------------------------------------------------
 AMN_NAMESPACE_USING_DIRECTIVE
 
 int main(void)

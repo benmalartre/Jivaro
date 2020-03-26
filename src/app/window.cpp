@@ -137,7 +137,7 @@ Window::CreateStandardWindow(int width, int height)
 void 
 Window::Resize(unsigned width, unsigned height)
 {
-
+  CollectLeaves(_mainView);
   if (width == _width && height == _height && _pixels)
     return;
   _width = width;
@@ -291,14 +291,13 @@ Window::Draw()
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
 
   if(_mainView)_mainView->Draw();
-
   // draw splitters
   _splitter->Draw();
-
   // render the imgui frame
   ImGui::Render();
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  
 }
 
 // setup imgui
@@ -373,16 +372,25 @@ Window::ClearImgui()
   ImGui::DestroyContext();
 }
 
-bool Window::UpdateActiveTool(int mouseX, int mouseY)
+bool Window::UpdateActiveTool(int x, int y)
 {
   if(_activeTool == AMN_TOOL_DRAG)
   {
     if(_activeView)
     {
-      _activeView->GetPercFromMousePosition(mouseX, mouseY);
+      _activeView->GetPercFromMousePosition(x, y);
       _mainView->Resize(0, 0, _width, _height, false);
       _splitter->Resize(_width, _height);
       _splitter->RecurseBuildMap(_mainView);
+    }
+  }
+  else if(_activeTool == AMN_TOOL_CAMERA)
+  {
+    std::cout << "CAMERA TOOL ACTIVE ..." << std::endl;
+    if(GetActiveView())
+    {
+      std::cout << "MOUSE MOVE >>> " << GetActiveView()->GetName() << std::endl;
+      GetActiveView()->MouseMove(x, y);
     }
   }
 }
@@ -449,7 +457,9 @@ KeyboardCallback(
   {
     switch(key)
     {
+  
       case GLFW_KEY_SPACE:
+      {
         if(app->IsPlaying())
         {
           app->SetLoop(false);
@@ -461,12 +471,25 @@ KeyboardCallback(
           app->StartPlayBack();
         }
         break;
+      }
       case GLFW_KEY_LEFT:
+      {
         app->PreviousFrame();
         break;
+      }
+
       case GLFW_KEY_RIGHT:
+      {
         app->NextFrame();
         break;
+      }
+
+      case GLFW_KEY_ESCAPE:
+      {
+        glfwSetWindowShouldClose(window, true);
+        break;
+      }
+        
     }
   }
   //  /* call tutorial keyboard handler */
@@ -569,10 +592,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     double x,y;
     glfwGetCursorPos(window,&x,&y);
     View* view = parent->GetViewUnderMouse((int)x, (int)y);
-    if(view) 
-    {
-      parent->SetActiveView(view);
-    }
+    if(view)parent->SetActiveView(view);
 
     if(parent->PickSplitter(x, y))
     {
@@ -606,12 +626,13 @@ void
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   //if (ImGui::GetIO().WantCaptureMouse) return;
-
+  std::cout << "MOUSE MOVE :D "  << std::endl;
   Window* parent = Window::GetUserData(window);
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
   parent->PickSplitter(x, y);
   int width, height;
   glfwGetWindowSize(window, &width, &height);
+  std::cout << "ACTIVE TOOL : " << parent->GetActiveTool() << std::endl;
   if(parent->GetActiveTool() != AMN_TOOL_NONE)
   {
     parent->UpdateActiveTool(x, y);
@@ -620,6 +641,7 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   {
     if(parent->GetActiveView())
     {
+      std::cout << "MOUSE MOVE >>> " << parent->GetActiveView()->GetName() << std::endl;
       parent->GetActiveView()->MouseMove(x, y);
     }
   }

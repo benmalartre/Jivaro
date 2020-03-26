@@ -1,16 +1,13 @@
 #pragma once
 
-#include "default.h"
+#include "../common.h"
 #include "window.h"
 #include "view.h"
 #include "camera.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
 #include "../widgets/graph.h"
-#include "../embree/device.h"
-#include "../embree/context.h"
-#include "../embree/prim.h"
-#include "../embree/mesh.h"
+#include "../widgets/viewport.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -81,12 +78,13 @@ private:
   std::string                       _fileName;
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindow;
-  UsdEmbreeContext*                 _context;
   std::vector<pxr::UsdStageRefPtr>  _stages;
-  GraphUI*                          _test;
 
   // viewport
   ViewportUI*                       _viewport;
+
+  // graph
+  GraphUI*                          _graph;
 
   // time
   pxr::TfStopwatch                  _stopWatch;

@@ -1,9 +1,8 @@
 #pragma once
 
 #include "../common.h"
-#include "../embree/context.h"
-#include "../embree/device.h"
 #include "../app/ui.h"
+#include "../app/camera.h"
 #include "../utils/ui.h"
 #include "../utils/utils.h"
 #include <pxr/pxr.h>
@@ -39,21 +38,20 @@ enum InteractionMode{
 
 enum VIEWPORT_MODE {
   OPENGL,
-  HYDRA,
+  LOFI,
   EMBREE
 };
-class UsdEmbreeContext;
+
 class ViewportUI : public BaseUI
 {
   public:
     ViewportUI(View* parent, VIEWPORT_MODE mode);
     ~ViewportUI();
-    void Init(pxr::UsdStageRefPtr stage);
+    void Init();
 
     void SetMode(VIEWPORT_MODE mode){_mode=mode;};
-    void SetContext(UsdEmbreeContext* ctxt){_context = ctxt;};
-    void SetImage();
     Camera* GetCamera(){return _camera;};
+    pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
 
     // overrides
     void MouseButton(int button, int action, int mods) override;
@@ -70,7 +68,6 @@ class ViewportUI : public BaseUI
     int*                  _lowPixels;
     int                   _width;
     int                   _height;
-    UsdEmbreeContext*     _context;
     Camera*               _camera;
     int                   _lastX;
     int                   _lastY;

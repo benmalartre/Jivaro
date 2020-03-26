@@ -79,6 +79,9 @@
 #include "TargetConditionals.h"
 #endif
 
+#include "../common.h"
+#include "../utils/glutils.h"
+
 // Auto-enable GLES on matching platforms
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3)
 #if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)) || (defined(__ANDROID__))
@@ -250,12 +253,17 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     glUniform1i(g_AttribLocationTex, 0);
     glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
 #ifdef GL_SAMPLER_BINDING
-    glBindSampler(0, 0); // We use combined texture/sampler state. Applications using GL 3.3 may set that otherwise.
+    #ifndef __APPLE__
+        glBindSampler(0, 0); // We use combined texture/sampler state. Applications using GL 3.3 may set that otherwise.
+    #endif
 #endif
-
     (void)vertex_array_object;
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    glBindVertexArray(vertex_array_object);
+    #ifdef __APPLE__
+        glBindVertexArrayAPPLE(vertex_array_object);
+    #else
+        glBindVertexArray(vertex_array_object);
+    #endif
 #endif
 
     // Bind vertex/index buffers and setup attributes for ImDrawVert
@@ -279,14 +287,15 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
     if (fb_width <= 0 || fb_height <= 0)
         return;
-
     // Backup GL state
     GLenum last_active_texture; glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint*)&last_active_texture);
     glActiveTexture(GL_TEXTURE0);
     GLint last_program; glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
     GLint last_texture; glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 #ifdef GL_SAMPLER_BINDING
-    GLint last_sampler; glGetIntegerv(GL_SAMPLER_BINDING, &last_sampler);
+    #ifndef __APPLE__
+      GLint last_sampler; glGetIntegerv(GL_SAMPLER_BINDING, &last_sampler);
+    #endif
 #endif
     GLint last_array_buffer; glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
 #ifndef IMGUI_IMPL_OPENGL_ES2
@@ -319,10 +328,13 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     // The renderer would actually work without any VAO bound, but then our VertexAttrib calls would overwrite the default one currently bound.
     GLuint vertex_array_object = 0;
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    glGenVertexArrays(1, &vertex_array_object);
+    #ifdef __APPLE__
+        glGenVertexArraysAPPLE(1, &vertex_array_object);
+    #else
+        glGenVertexArrays(1, &vertex_array_object);
+    #endif
 #endif
     ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
-
     // Will project scissor/clipping rectangles into framebuffer space
     ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
     ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
@@ -335,7 +347,6 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
         // Upload vertex/index buffers
         glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert), (const GLvoid*)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), (const GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
-
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
         {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
@@ -373,6 +384,7 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
                     else
 #endif
                     glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, (void*)(intptr_t)(pcmd->IdxOffset * sizeof(ImDrawIdx)));
+               
                 }
             }
         }
@@ -380,18 +392,28 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
 
     // Destroy the temporary VAO
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    glDeleteVertexArrays(1, &vertex_array_object);
+    #ifdef __APPLE__
+        glDeleteVertexArraysAPPLE(1, &vertex_array_object);
+    #else
+        glDeleteVertexArrays(1, &vertex_array_object);
+    #endif
 #endif
 
     // Restore modified GL state
     glUseProgram(last_program);
     glBindTexture(GL_TEXTURE_2D, last_texture);
 #ifdef GL_SAMPLER_BINDING
-    glBindSampler(0, last_sampler);
+    #ifndef __APPLE__
+        glBindSampler(0, last_sampler);
+    #endif
 #endif
     glActiveTexture(last_active_texture);
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    glBindVertexArray(last_vertex_array_object);
+    #ifdef __APPLE__
+        glBindVertexArrayAPPLE(last_vertex_array_object);
+    #else 
+        glBindVertexArray(last_vertex_array_object);
+    #endif
 #endif
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
     glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);

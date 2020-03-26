@@ -18,8 +18,8 @@ Camera::Camera(const std::string& name, double fov) :
   _lookat(pxr::GfVec3d(0,0,0)),
   _up(pxr::GfVec3d(0,1,0))
 {
-  _camera.SetPerspectiveFromAspectRatioAndFieldOfView(
-            1.0, _fov, pxr::GfCamera::FOVVertical);
+  _camera.SetPerspectiveFromAspectRatioAndFieldOfView(1.0, _fov, 
+    pxr::GfCamera::FOVVertical);
   _camera.SetFocusDistance((_pos - _lookat).GetLength());
   _camera.SetClippingRange(pxr::GfRange1f(_near, _far));
   //_ResetClippingPlanes();
@@ -159,7 +159,7 @@ void Camera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
   
   // If the scene bounding box is empty, or we are fully on manual
   //(override, then just initialize to defaults.
-  if(stageBBox.GetRange().IsEmpty() || (_overrideNear>0 && _overrideFar>0))
+  if(stageBBox.GetRange().IsEmpty() || (_near>0 && _far>0))
   {
     computedNear = DEFAULT_NEAR;
     computedFar = DEFAULT_FAR;
@@ -236,24 +236,23 @@ void Camera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
     }
   }
   
-  double near = _overrideNear > 0 ? _overrideNear : computedNear;
-  double far  = _overrideFar > 0 ? _overrideFar : computedFar;
+  double near = _near > 0 ? _near : computedNear;
+  double far  = _far > 0 ? _far : computedFar;
 
   // Make sure far is greater than near
   far = std::max(near+1, far);
 
   _camera.SetClippingRange(pxr::GfRange1f(near, far));
 }       
-
+*/
 void Camera::_ResetClippingPlanes()
 {
-  std::cout << "RESET CLIPPING PLANE ..." << std::endl;
   // Set near and far back to their uncomputed defaults
-  float near = _overrideNear > 0.0 ? _overrideNear : DEFAULT_NEAR;
-  float far  = _overrideFar > 0.0 ? _overrideFar : DEFAULT_FAR;
-  _camera.SetClippingRange(pxr::GfRange1f(near, far)); 
+  _near = DEFAULT_NEAR;
+  _far = DEFAULT_FAR;
+  _camera.SetClippingRange(pxr::GfRange1f(_near, _far)); 
 }
-
+/*
 void Camera::_SetClosestVisibleDistFromPoint(const pxr::GfVec3d& point)
 {
   _frustum = _camera.GetFrustum();

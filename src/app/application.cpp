@@ -20,32 +20,26 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(NULL), _context(NULL),_minTime(1),_maxTime(101),_startTime(1),
+  _mainWindow(NULL),_minTime(1),_maxTime(101),_startTime(1),
   _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false)
 {  
-  _context = new UsdEmbreeContext();
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
-  _test = NULL;
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(NULL), _context(NULL),_minTime(1),_maxTime(101),_startTime(1),
+  _mainWindow(NULL),_minTime(1),_maxTime(101),_startTime(1),
   _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false)
 {
-  _context = new UsdEmbreeContext();
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
-  _test = NULL;
 };
 
 // destructor
 //----------------------------------------------------------------------------
 Application::~Application()
 {
-  if(_context)delete _context;
   if(_mainWindow) delete _mainWindow;
-  if(_test) delete _test;
 };
 
 // create full screen window
@@ -80,7 +74,6 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
 void 
 Application::Init()
 {
-  SetEmbreeContext(_context);
   std::string filename = 
     "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_clips.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
@@ -90,7 +83,10 @@ Application::Init()
   // build test scene
   //pxr::TestScene(filename);
   // create imaging gl engine
-  
+  //TfDebug::Enable(HD_MDI);
+  //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
+  //TfDebug::Enable(GLF_DEBUG_CONTEXT_CAPS);
+  //TfDebug::Enable(HDST_DUMP_SHADER_SOURCEFILE);
 
   // create window
   _mainWindow->SetContext();
@@ -110,11 +106,8 @@ Application::Init()
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
 
-  _mainWindow->CollectLeaves();
-
   //GraphUI* graph = new GraphUI(graphView, "GraphUI");
   _viewport = new ViewportUI(viewportView, EMBREE);
-  _viewport->SetContext(_context);
   _timeline = new TimelineUI(timelineView);
   _timeline->Init(this);
   //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
@@ -124,25 +117,8 @@ Application::Init()
   _stages.push_back(stage1);
   //TestStageUI(graph, _stages);
 
-  _viewport->Init(stage1);
- 
-  _context->Resize(_viewport->GetWidth(), _viewport->GetHeight());
-  _context->SetFilePath(filename);
-  _context->InitDevice(_viewport->GetCamera());
-  _context->TraverseStage();
-  _context->CommitDevice();
-  
-  std::string imageDirectory = "/Users/benmalartre/Documents/RnD/amnesie/images";
-  int imageId = NumFilesInDirectory(imageDirectory.c_str()) + 1;
-  std::string imagePath = imageDirectory + "/img.";
-  std::string imageExt = ".jpg";
-  embree::FileName outputImageFilename(imagePath + std::to_string(imageId) + imageExt);
-
-  _viewport->GetCamera()->ComputeFrustum();
-
-  RenderToFile(outputImageFilename, _viewport->GetCamera(), 2048, 1024);
-  RenderToMemory(_viewport->GetCamera());
-  _viewport->SetContext(_context);
+  _viewport->Init();
+  _mainWindow->CollectLeaves();
 
 }
 

@@ -50,10 +50,10 @@ public:
   // If either of the "override" clipping attributes are not None,
   // we use those instead'''
   void _SetClippingPlanes(const pxr::GfBBox3d& stageBBox);
-
+  */
   // set near and far back to their uncomputed defaults
   void _ResetClippingPlanes();
-  
+  /*
   // updates the camera's transform matrix, that is, the matrix that brings
   // the camera to the origin, with the camera view pointing down:
   // +Y if this is a Zup camera, or
@@ -161,9 +161,10 @@ public:
     UpdateTransform();
   };
   
-  double GetFov(){return _fov;};
+  
 */
   pxr::GfCamera* Get(){return &_camera;};
+  double GetFov(){return _fov;};
         
 private:
   bool                  _orthographic;
