@@ -14,7 +14,6 @@ set(PUBLIC_HEADERS
 )
 
 add_executable(${TARGET}
-  #gl3w/src/gl3w.c
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
   imgui/imgui_test.cpp
@@ -23,6 +22,7 @@ add_executable(${TARGET}
   imgui/imgui_widgets.cpp
   imgui/imgui_nodes.cpp
   imgui/imgui.cpp
+  utils/glutils.cpp
   graph/deformableAPI.cpp
   graph/connectableAPI.cpp
   graph/coordSysAPI.cpp
@@ -50,7 +50,6 @@ add_executable(${TARGET}
   embree/instance.cpp
   embree/context.cpp
   embree/device.cpp
-  utils/glutils.cpp
   app/camera.cpp
   app/view.cpp
   app/ui.cpp

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../default.h"
+#include "../common.h"
 #include "../utils/utils.h"
 #include <pxr/usd/usd/prim.h>
 

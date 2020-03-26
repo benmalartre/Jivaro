@@ -1,7 +1,7 @@
 #pragma once
 
 #include "prim.h"
-//#include "../utils/utils.h"
+#include <pxr/usd/usdGeom/mesh.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 

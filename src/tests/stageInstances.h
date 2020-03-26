@@ -1,5 +1,5 @@
 
-#include "../default.h"
+#include "../common.h"
 #include "../graph/input.h"
 #include "../graph/output.h"
 #include "../graph/node.h"

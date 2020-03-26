@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../default.h"
-#include "pxr/pxr.h"
+#include "../common.h"
+#include "../utils/ui.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 
@@ -48,7 +48,6 @@ public:
   void SetDefaultCursor(){_cursor = ImGuiMouseCursor_Arrow;};
   void Resize(int width, int height);
   void Draw();
-  void Event();
   
 private:
   ImGuiWindowFlags    _flags;

@@ -82,7 +82,7 @@ Application::Init()
 {
   SetEmbreeContext(_context);
   std::string filename = 
-    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd";
+    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_clips.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
     //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";

@@ -7,6 +7,8 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+// check opengl error
+//----------------------------------------------------------------------------
 static bool 
 GLCheckError(std::string message)
 {
@@ -53,33 +55,13 @@ GLCheckError(std::string message)
   return false;
 }
 
-// screen-space-quad 
-extern GLuint SCREENSPACEQUAD_VAO;
-extern GLuint SCREENSPACEQUAD_VBO;
+// screen-space quad 
+//----------------------------------------------------------------------------
 extern GLuint SCREENSPACEQUAD_VERTEX_SHADER;
 extern GLuint SCREENSPACEQUAD_FRAGMENT_SHADER;
 extern GLuint SCREENSPACEQUAD_PROGRAM_SHADER;
-
-// vertex shader :
-static const GLchar* SCREENSPACEQUAD_VERTEX_SHADER_CODE =
-"#version 330\n"
-"layout(location = 0) in vec2 position;\n"
-"layout(location = 1) in vec2 uvs;\n"
-"out vec2 st;\n"
-"void main() {\n"
-"    st = uvs;\n"
-"    gl_Position = vec4(position, 0.0, 1.0);\n"
-"}\n";
-
-// fragment shader :
-static const GLchar* SCREENSPACEQUAD_FRAGMENT_SHADER_CODE =
-"#version 330\n"
-"in vec2 st;\n"
-"uniform sampler2D tex;\n"
-"out vec4 out_color;\n"
-"void main() {\n"
-"    out_color = vec4(texture(tex,st));//vec4(texture(tex,st).rgb,1.0);\n"
-"}\n";
+extern GLuint SCREENSPACEQUAD_VAO;
+extern GLuint SCREENSPACEQUAD_VBO;
 
 static float SCREENSPACEQUAD_POINTS[12] = {
   -1.f, -1.f,
@@ -99,18 +81,59 @@ static float SCREENSPACEQUAD_UVS[12] = {
   0.f, 1.f
 };
 
+// vertex shader 120:
+static const GLchar* vertex_shader_code_glsl_120 =
+"#version 120\n"
+"attribute vec2 position;\n"
+"attribute vec2 uvs;\n"
+"varying vec2 st;\n"
+"void main() {\n"
+"    st = uvs;\n"
+"    gl_Position = vec4(position, 0.0, 1.0);\n"
+"}\n";
+
+// fragment shader 120:
+static const GLchar* fragment_shader_code_glsl_120 =
+"#version 120\n"
+"varying vec2 st;\n"
+"uniform sampler2D tex;\n"
+"void main() {\n"
+"    gl_FragColor = vec4(texture2D(tex,st));//vec4(texture(tex,st).rgb,1.0);\n"
+"}\n";
+
+// vertex shader :
+static const GLchar* vertex_shader_code_glsl_330 =
+"#version 330\n"
+"layout(location = 0) in vec2 position;\n"
+"layout(location = 1) in vec2 uvs;\n"
+"out vec2 st;\n"
+"void main() {\n"
+"    st = uvs;\n"
+"    gl_Position = vec4(position, 0.0, 1.0);\n"
+"}\n";
+
+// fragment shader :
+static const GLchar* fragment_shader_code_glsl_330 =
+"#version 330\n"
+"in vec2 st;\n"
+"uniform sampler2D tex;\n"
+"out vec4 out_color;\n"
+"void main() {\n"
+"    out_color = vec4(texture(tex,st));//vec4(texture(tex,st).rgb,1.0);\n"
+"}\n";
+
+
 static void SetupScreenSpaceQuadShader()
 {
-  SCREENSPACEQUAD_VERTEX_SHADER = 
-    glslCompileShader(GL_VERTEX_SHADER, SCREENSPACEQUAD_VERTEX_SHADER_CODE);
-    GLCheckError("CREATE VERTEX SHADER");
-  SCREENSPACEQUAD_FRAGMENT_SHADER = 
-    glslCompileShader(GL_FRAGMENT_SHADER, SCREENSPACEQUAD_FRAGMENT_SHADER_CODE);
-    GLCheckError("CREATE FRAGMENT SHADER");
-  SCREENSPACEQUAD_PROGRAM_SHADER = 
-    glslLinkProgram(SCREENSPACEQUAD_VERTEX_SHADER, 
-      SCREENSPACEQUAD_FRAGMENT_SHADER);
-    GLCheckError("CREATE PROGRAM SHADER");
+  GLuint SCREENSPACEQUAD_VERTEX_SHADER = 
+    glslCompileShader(GL_VERTEX_SHADER, vertex_shader_code_glsl_120);
+    GLCheckError("Creating Screen Space Quad Vertex Shader");
+  GLuint SCREENSPACEQUAD_FRAGMENT_SHADER = 
+    glslCompileShader(GL_FRAGMENT_SHADER, fragment_shader_code_glsl_120);
+    GLCheckError("Creating Screen Space Quad Fragmnt Shader");
+  GLuint SCREENSPACEQUAD_PROGRAM_SHADER = glslLinkProgram(SCREENSPACEQUAD_VERTEX_SHADER,
+     SCREENSPACEQUAD_FRAGMENT_SHADER);
+    GLCheckError("Linking Screen Space Program Shader");
 }
 
 static GLuint GetScreenSpaceQuadShaderProgram()
@@ -166,7 +189,7 @@ DrawScreenSpaceQuad()
 //----------------------------------------------------------------------------
 static void 
 CreateOpenGLTexture(int width, int height, 
-  int* pixels, GLuint& tex, int ID=0)
+  int* pixels, GLuint& tex, int ID)
 {
   //glDeleteTextures(1 &_pickImage);
   if(!tex)

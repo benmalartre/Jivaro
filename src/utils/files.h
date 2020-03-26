@@ -3,7 +3,7 @@
 //--------------------------------------------------------------------------------
 #pragma once
 
-#include "../default.h"
+#include "../common.h"
 #include <dirent.h>
 #include "strings.h"
 #include <pxr/base/arch/fileSystem.h>

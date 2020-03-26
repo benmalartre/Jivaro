@@ -1,5 +1,5 @@
 
-#include "../default.h"
+#include "../common.h"
 #include "../graph/input.h"
 #include "../graph/output.h"
 #include "../graph/node.h"
@@ -12,6 +12,8 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/base/gf/vec2i.h>

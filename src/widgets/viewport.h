@@ -1,14 +1,24 @@
 #pragma once
 
-#include "../default.h"
+#include "../common.h"
 #include "../embree/context.h"
 #include "../embree/device.h"
 #include "../app/ui.h"
+#include "../utils/ui.h"
 #include "../utils/utils.h"
+#include <pxr/pxr.h>
+
 #include <pxr/imaging/glf/glew.h>
+#include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usdGeom/xformCommonAPI.h>
+#include <pxr/usd/usdGeom/camera.h>
+#include <pxr/usd/usdLux/domeLight.h>
 #include <pxr/usdImaging/usdImagingGL/engine.h>
-#include <pxr/usdImaging/usdImagingGL/legacyEngine.h>
-#include <pxr/usdImaging/usdImagingGL/renderParams.h>
+#include <pxr/base/gf/camera.h>
+#include "pxr/imaging/glf/simpleMaterial.h"
+#include "pxr/imaging/glf/simpleLight.h"
+#include "pxr/imaging/glf/simpleLightingContext.h"
 
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -70,7 +80,10 @@ class ViewportUI : public BaseUI
 
     // usd imaging engine
     pxr::UsdImagingGLEngine*          _engine;
-    //pxr::UsdImagingGLLegacyEngine*    _engine;
     pxr::UsdImagingGLRenderParams     _renderParams;
+    pxr::UsdPrim                      _root;
+    pxr::UsdLuxDomeLight              _light;
+    pxr::UsdStageRefPtr               _stage;
+    pxr::GfCamera                     _cameraX;
 };
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -1,4 +1,4 @@
-#include "../default.h"
+#include "../common.h"
 #include "../utils/utils.h"
 #include "sphere.h"
 #include "context.h"

@@ -9,6 +9,8 @@
 #include "../imgui/imgui_test.h"
 #include "../app/application.h"
 
+
+
 AMN_NAMESPACE_OPEN_SCOPE
 
 // fullscreen window constructor
@@ -24,11 +26,11 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f)
   glfwWindowHint(GLFW_BLUE_BITS,mode->blueBits);
   glfwWindowHint(GLFW_REFRESH_RATE,mode->refreshRate);
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_STENCIL_BITS, 8);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  ////glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
   _window = glfwCreateWindow(mode->width, mode->height, "AMINA.0.0",  monitor, NULL);
   _width = mode->width;
@@ -45,11 +47,11 @@ _pickImage(0), _splitter(NULL),_fontSize(16.f)
   _width = width;
   _height = height;
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_STENCIL_BITS, 8);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  ////glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //glfwWindowHint(GLFW_STENCIL_BITS, 8);
   
   _window = glfwCreateWindow(_width,_height,"AMINA.0.0",NULL,NULL);
 
@@ -76,8 +78,9 @@ Window::Init(Application* app)
     glfwMakeContextCurrent(_window);
 
     // load opengl functions
-    //gl3wInit();
     pxr::GlfGlewInit();
+    pxr::GlfSharedGLContextScopeHolder sharedContext;
+	  pxr::GlfContextCaps::InitInstance();
 
     // setup callbacks
     glfwSetWindowSizeCallback(_window, ResizeCallback);
@@ -306,7 +309,7 @@ Window::SetupImgui()
   // setup imgui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGui::StyleColorsLight();
+  
   _io = &(ImGui::GetIO());
 
   // load fonts
@@ -337,7 +340,8 @@ Window::SetupImgui()
   );
   
   // setup imgui style
-  ImGui::StyleColorsAmina(NULL);
+  //ImGui::StyleColorsAmina(NULL);
+  ImGui::StyleColorsLight();
   ImGuiStyle& style = ImGui::GetStyle();
   style.Alpha = 1.f;      
   style.WindowRounding = 0.0f;
@@ -350,11 +354,9 @@ Window::SetupImgui()
   style.WindowPadding = pxr::GfVec2f(0,0);
   style.FramePadding = pxr::GfVec2f(0,0);
 
-  ImGui::SetNextWindowBgAlpha(1.f);
-
   // setup platform/renderer bindings
   ImGui_ImplGlfw_InitForOpenGL(_window, false);
-  ImGui_ImplOpenGL3_Init("#version 330");
+  ImGui_ImplOpenGL3_Init("#version 120");
 
   ImNodes::Initialize();
 }

@@ -27,8 +27,8 @@ BaseUI(parent, "Viewport")
   _interact = false;
   _interactionMode = INTERACTION_NONE;
 
-  //_engine = new pxr::UsdImagingGLLegacyEngine(pxr::SdfPathVector());
-  _engine = new pxr::UsdImagingGLEngine();
+  pxr::SdfPathVector excludedPaths;
+  _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/engine"), excludedPaths);
   _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
 }
 
@@ -41,33 +41,36 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init(pxr::UsdStageRefPtr stage)
 {
-  std::cout << "ViewportUI Init\n";
-  pxr::SdfPathVector excludedPaths;
-  pxr::TfToken renderer("HdStormRendererPlugin");
-  if (pxr::UsdImagingGLEngine::IsHydraEnabled()) 
-  {
-    std::cout << "Using HD Renderer.\n";
-    _engine = new pxr::UsdImagingGLEngine(
-      stage->GetPseudoRoot().GetPath(), excludedPaths);
-    if (!_engine->SetRendererPlugin(renderer)) 
-    {
-        std::cerr << "Couldn't set renderer plugin: " <<
-            renderer.GetText() << std::endl;
-        exit(-1);
-    } 
-    else 
-    {
-      std::cout << "Renderer plugin: " << renderer.GetText()
-          << std::endl;
-    }
-  }
-  else
-  {
-    std::cout << "Using Reference Renderer.\n"; 
-    _engine = 
-      new pxr::UsdImagingGLEngine(stage->GetPseudoRoot().GetPath(), 
-                excludedPaths);
-  }
+
+  _stage = pxr::UsdStage::Open("/Users/benmalartre/Documents/RnD/amnesie/usd/board.usda");
+  auto cameraPrim = _stage->GetPrimAtPath(pxr::SdfPath("/camera1"));
+  _cameraX = pxr::UsdGeomCamera(cameraPrim).GetCamera(pxr::UsdTimeCode::Default());
+
+  _root = _stage->GetPrimAtPath(pxr::SdfPath("/board1"));
+  auto xfPrim = _stage->DefinePrim(pxr::SdfPath("/board1/SRT"), pxr::TfToken("Xform"));
+
+  pxr::UsdGeomXformCommonAPI(xfPrim).SetTranslate(pxr::GfVec3f(0,2,0));
+
+  xfPrim.GetReferences().AddReference(stage->GetRootLayer()->GetIdentifier(),
+                                      pxr::SdfPath("/maneki"));
+  
+
+  _renderParams.frame = 1.0;
+  _renderParams.complexity = 1.0f;
+
+  pxr::GlfSimpleMaterial material;
+  pxr::GlfSimpleLight light;
+  light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));
+  light.SetPosition(pxr::GfVec4f(4,7,0,1));
+  pxr::GlfSimpleLightVector lights;
+  lights.push_back(light);
+
+  material.SetAmbient(pxr::GfVec4f(0.5,1.0,0.5, 1.0));
+  auto lightingContext = pxr::GlfSimpleLightingContext::New();
+  lightingContext->SetMaterial(material);
+  lightingContext->SetSceneAmbient(pxr::GfVec4f(0.5,0.5, 0.5,1));
+  lightingContext->SetLights(lights);
+  _engine->SetLightingState(lightingContext);
 }
 
 // overrides
@@ -159,13 +162,7 @@ void ViewportUI::MouseMove(int x, int y)
           (double)dx / (double)GetWidth(), 
           (double)dy / (double)GetHeight()
         );
-        /*
-        embree::Vec3fa dist = _camera->from - _camera->to;
-        double d = embree::length(dist) * DEGREES_TO_RADIANS * _camera->fov * 0.5;
-        dx = -dx/(double)(_parent->GetWidth()/2)*d;
-        dy = dy/(double)(_parent->GetHeight()/2)*d;
-        _camera->move (dx, dy, 0.0);
-        */
+       
         break;
       }
        
@@ -175,28 +172,14 @@ void ViewportUI::MouseMove(int x, int y)
           (double)dx / (double)GetWidth(), 
           (double)dy / (double)GetHeight() 
         );
-        /*
-        if freeCam.orthographic:
-            # orthographic cameras zoom by scaling fov
-            # fov is the height of the view frustum in world units
-            freeCam.fov *= (1 + zoomDelta)
-        else:
-            # perspective cameras dolly forward or back
-            freeCam.AdjustDistance(1 + zoomDelta)
-        */
-        /*
-        _camera->dolly(dy);
-        */
+       
         break;
       }
         
       case INTERACTION_ORBIT:
       {
         _camera->Orbit(dx, dy);
-        //_camera->Tumble(0.25 * dx, 0.25*dy);
-        /*
-        _camera->rotateOrbit((float)dx/100, -(float)dy/100);
-        */
+       
         break;
       }
 
@@ -235,26 +218,41 @@ void ViewportUI::Draw()
 
   glEnable(GL_SCISSOR_TEST);
   glScissor(x, wh - (y + h), w, h);
-  glViewport(x,y,w,h);
-  glClearColor(0,0,0,0);
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+  glViewport(x,wh - (y + h),w,h);
+  // clear to blue
+  glClearColor(0.0, 0.0, 0.0, 1.0 );
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glDepthFunc(GL_LESS);
+  glEnable(GL_DEPTH_TEST);
 
   Application* app = GetApplication();
-  /*
-  _engine->SetFreeCameraMatrices(
-    _camera->GetViewMatrix(),
-    _camera->GetProjectionMatrix()
+
+  _engine->SetRenderViewport(
+    pxr::GfVec4f(x, wh - (y + h), w, h)
   );
-  */
+  
   _engine->SetCameraState(
     _camera->GetViewMatrix(),
     _camera->GetProjectionMatrix()
   );
+
   _renderParams.frame = pxr::UsdTimeCode(app->GetCurrentTime());
+  _renderParams.drawMode = pxr::UsdImagingGLDrawMode::DRAW_SHADED_FLAT;
   _renderParams.showGuides = true;
   _renderParams.showRender = true;
   _renderParams.showProxy = true;
-  /*
+  _renderParams.forceRefresh = true;
+  _renderParams.gammaCorrectColors = false;
+  _renderParams.enableIdRender = false;
+  _renderParams.enableSampleAlphaToCoverage  = true;
+  _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_NOTHING;
+  _renderParams.clearColor = pxr::GfVec4f(1.f,0.f,0.f,1.f);
+  _renderParams.renderResolution[0] = _parent->GetWidth();
+  _renderParams.renderResolution[1] = _parent->GetHeight();
+
+
+ /*
   const std::vector<pxr::GfVec4f> clipPlanes = _camera->GetClippingPlanes();
   std::cout << "CLIP PLANES : " << clipPlanes.size() << std::endl;
   _renderParams.clipPlanes = {
@@ -264,9 +262,12 @@ void ViewportUI::Draw()
     pxr::GfVec4d(clipPlanes[3])
   };
   */
+
   //_engine->PrepareBatch(_stages[0]->GetPseudoRoot());
-  _engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
+  _engine->Render(GetApplication()->GetStages()[0]->GetPseudoRoot(), _renderParams);
   glDisable(GL_SCISSOR_TEST);
+  
+
   
   /*
   if(_pixels)

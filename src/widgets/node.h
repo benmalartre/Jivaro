@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../default.h"
+#include "../common.h"
 #include "../app/ui.h"
+#include "../utils/ui.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
 #include "../imgui/imgui_nodes.h"

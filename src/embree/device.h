@@ -15,7 +15,7 @@
 #include <algorithms/parallel_for.h>
 #include <tasking/taskschedulertbb.h>
 
-#include "../default.h"
+#include "../common.h"
 #include "../app/camera.h"
 #include "ray.h"
 #include "context.h"

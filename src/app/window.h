@@ -1,11 +1,14 @@
 #pragma once
 
-#include "../default.h"
+#include "../common.h"
 #include "../utils/utils.h"
 #include "splitter.h"
 #include "tools.h"
 #include "ui.h"
 #include "../imgui/imgui_nodes.h"
+#include "pxr/imaging/glf/contextCaps.h"
+#include "pxr/imaging/glf/glContext.h"
+#include "pxr/imaging/glf/debugCodes.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>

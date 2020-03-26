@@ -1,6 +1,10 @@
 #pragma once
 
-#include "../default.h"
+#include "../common.h"
+#include "utils.h"
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/stage.h>
+#include <pxr/base/tf/hashmap.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 

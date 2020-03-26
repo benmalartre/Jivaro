@@ -1,6 +1,8 @@
 #include "timeline.h"
 #include "../app/application.h"
 #include "../utils/icons.h"
+#include <functional>
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -33,6 +35,7 @@ void TimelineUI::Update()
   _currentTime = _app->GetCurrentTime();
   _loop = _app->GetLoop();
   _fps = _app->GetFPS();
+  _playing = _app->IsPlaying();
 }
 
 void TimelineUI::ValidateTime()
@@ -52,8 +55,35 @@ void TimelineUI::ValidateTime()
     _app->SetEndTime(_endTime);
     _app->SetMaxTime(_maxTime);
     _app->SetCurrentTime(_currentTime);
+    _app->SetLoop(_loop);
   }
 }
+
+void TimelineUI::StartStopPlayback(TimelineUI* ui)
+{
+  if(ui->_playing)
+    std::cout << "MY FUCKIN STOP PLAY BACK!!!" << std::endl;
+  else 
+    std::cout << "MY FUCKIN START PLAY BACK!!!" << std::endl;
+  ui->_playing = 1 - ui->_playing;
+}
+
+void TimelineUI::SimpleCallback()
+{
+  std::cout << "DUMB DUMB :D!!!" << std::endl;
+}
+
+void TimelineUI::DifficultCallback(TimelineUI* ui, int x)
+{
+  std::cout << "YUUUUUUPPPPIIIIII :D!!!" << x << std::endl;
+}
+
+void TimelineUI::VeryDifficultCallback(TimelineUI* ui, int x, float y, const char* z)
+{
+  std::cout << "YUUUUUUPPPPIIIIII :D!!!" << x << "," << y << "," << z << std::endl;
+}
+
+
 
 void TimelineUI::MouseButton(int action, int button, int mods)
 {
@@ -70,8 +100,13 @@ void TimelineUI::DrawControls()
   int width = GetWidth();
   int height = GetHeight();
 
+  ImGuiStyle* style = &ImGui::GetStyle();
+  const ImVec4* colors = style->Colors;
+
   ImGui::SetCursorPosX(20);
   ImGui::SetCursorPosY(height-20);
+
+  ImGui::PushFont(GetWindow()->GetMediumFont());
 
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime, 
@@ -80,7 +115,7 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
-  ImGui::SameLine();
+  ImGui::SameLine(); //HelpMarker("Minimum Time");
 
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime, 
@@ -89,31 +124,44 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
-  ImGui::SameLine();
+  ImGui::SameLine(); //HelpMarker("Start Time");
   
-  Icon* icon = &AMN_ICONS["play_btn.png"];
+  // play button
+  Icon* icon = NULL;
+  if(!_playing) icon = &AMN_ICONS["play_btn.png"];
+  else icon = &AMN_ICONS["stop_btn.png"];
 
-  /*
-  ImGui::PushFont(GetWindow()->GetRegularFont());
-  ImGui::Text("pointer = %p", icon->_tex);
-  ImGui::SameLine();
-  ImGui::Text("size = %d x %d", icon->_size, icon->_size);
-  ImGui::SameLine();
-  ImGui::PopFont();
-  */
-  if (ImGui::ImageButton(
-      (void *)icon->_tex, 
-      ImVec2(icon->_size,icon->_size), 
-      ImVec2(0,0), 
-      ImVec2(0, 1), 
-      -2, 
-      ImVec4(1.0f,0.0f,0.0f,0.0f),
-      ImVec4(1.0f,1.0f,1.0f,1.0f)))
-  {
-    std::cout << "MY FUCKIN ICON WAS CLICKED!!!" << std::endl;
-  }
-  ImGui::SameLine();
+  AddIconButton<IconPressedFunc, TimelineUI*>(
+    icon,  
+    (IconPressedFunc)StartStopPlayback, this
+  );
 
+  icon = &AMN_ICONS["bone_raw.png"];
+  AddIconButton<IconPressedFunc>(
+    icon,  
+    (IconPressedFunc)SimpleCallback
+  );
+
+  icon = &AMN_ICONS["light_raw.png"];
+  AddIconButton<IconPressedFunc, TimelineUI*, int>(
+    icon,  
+    (IconPressedFunc)DifficultCallback,
+    this, 
+    666
+  );
+
+  icon = &AMN_ICONS["model_raw.png"];
+  AddIconButton<IconPressedFunc, TimelineUI*, int, float, const char*>(
+    icon,  
+    (IconPressedFunc)VeryDifficultCallback,
+    this, 
+    666,
+    7.654321,
+    "SATAN"
+  );
+
+
+  // current time
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime, 
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
@@ -121,7 +169,15 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
-  ImGui::SameLine();
+  ImGui::SameLine(); //HelpMarker("Current Time");
+
+  // loop
+  ImGui::Checkbox("Loop", &_loop);
+  if(!ImGui::IsItemActive() && _loop != _app->GetLoop())
+  {
+    ValidateTime();
+  }
+  ImGui::SameLine(); //HelpMarker("Loop Playback");
 
   ImGui::SetCursorPosX(width-140);
 
@@ -142,6 +198,7 @@ void TimelineUI::DrawControls()
     ValidateTime();
   }
   ImGui::SameLine();
+  ImGui::PopFont();
 }
 
 void TimelineUI::DrawTimeSlider()

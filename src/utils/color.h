@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../default.h"
+#include "../common.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

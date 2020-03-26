@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../default.h"
-#include "../utils.h"
+#include "../common.h"
+#include "../utils/ui.h"
+#include "../utils/utils.h"
 #include <pxr/usd/usd/prim.h>
 
 namespace AMN {

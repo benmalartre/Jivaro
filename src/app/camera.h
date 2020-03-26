@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../default.h"
+#include "../common.h"
+#include <pxr/base/gf/camera.h>
+#include <pxr/base/gf/frustum.h>
 
 // translated from FreeCamera from UsdView
 

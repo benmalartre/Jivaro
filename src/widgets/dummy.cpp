@@ -24,8 +24,6 @@ void DummyUI::Draw()
     1.f
   );
 
-  //ImGui::TestDummyView(&opened, _parent->GetMin(), _parent->GetMax(), color);
-  ImGui::TestGraphNodes(&opened, _parent->GetMin(), _parent->GetMax());
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::End();

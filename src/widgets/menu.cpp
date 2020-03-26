@@ -1,4 +1,4 @@
-#include "../default.h"
+#include "../common.h"
 #include "menu.h"
 #include "../app/view.h"
 #include "../app/window.h"

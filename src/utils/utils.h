@@ -1,10 +1,16 @@
 #pragma once
 
 #include <dirent.h>
-#include "../default.h"
+#include "../common.h"
 #include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec2d.h>
+#include <pxr/base/gf/vec3i.h>
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/vec4i.h>
 #include <pxr/base/gf/vec4f.h>
+#include <pxr/base/gf/vec4d.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 

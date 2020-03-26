@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
-#include "../default.h"
+#include <type_traits>
+#include "../common.h"
 #include "../utils/files.h"
 #include "../utils/glutils.h"
 #include "pxr/usd/ar/asset.h"
@@ -34,9 +35,38 @@ enum ICON_ID {
 struct Icon {
   int     _size;
   GLuint  _tex;
+  //GLuint  _texHovered;
 };
-
+ 
 static std::map<std::string, Icon> AMN_ICONS;
+
+static void IconHoverDatas(pxr::GlfImage::StorageSpec* storage, int nchannels)
+{
+  uint32_t* pixels = (uint32_t*)storage->data;
+  if(nchannels == 4)
+  {
+    for(int y=0; y<storage->height; ++y)
+    {
+      for(int x=0; x<storage->width; ++x)
+      {
+        uint32_t index = y * storage->width + x;
+        uint32_t pixel = pixels[index];
+        uint8_t alpha = (pixel & 0xFF000000) >> 24;
+        if(alpha > 0)
+        {
+          uint8_t blue = (pixel & 0x00FF0000) >> 16;
+          uint8_t green = (pixel & 0x0000FF00) >> 8;
+          uint8_t red = (pixel & 0x000000FF);
+
+          pixels[index] = 0xFF0000FF;
+        } 
+
+      }
+      
+    }
+  }
+  
+}
 
 static void CreateIconFromImage(const std::string& filename, 
                                 const std::string& name,
@@ -53,6 +83,8 @@ static void CreateIconFromImage(const std::string& filename,
   storage.data = new char [size * size * img->GetBytesPerPixel()];
 
   img->Read(storage);
+
+  //IconHoverDatas(&storage, img->GetBytesPerPixel());
 
   if(AMN_ICONS.find(name) == AMN_ICONS.end())
   {
@@ -72,7 +104,6 @@ static void CreateIconFromImage(const std::string& filename,
 
     AMN_ICONS[name] = (Icon){size, tex};
   }
-
 }
 
 static void InitializeIcons()
@@ -88,7 +119,7 @@ static void InitializeIcons()
     std::string filename = iconDir + SEPARATOR + f;
     if( pxr::GlfImage::IsSupportedImageFile(filename))
     {
-     CreateIconFromImage(filename, name, ICON_MID);
+      CreateIconFromImage(filename, name, ICON_LOW);
     }
   }
 }

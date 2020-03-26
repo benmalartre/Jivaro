@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../default.h"
-#include "../imgui/imgui_custom.h"
-#include "../imgui/imgui_test.h"
+#include "../common.h"
+#include "../imgui/imgui.h"
 
 AMN_NAMESPACE_OPEN_SCOPE  
 
