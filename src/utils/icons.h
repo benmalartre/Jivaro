@@ -2,8 +2,8 @@
 #include <map>
 #include <type_traits>
 #include "../common.h"
-#include "../utils/files.h"
-#include "../utils/glutils.h"
+#include "files.h"
+#include "glutils.h"
 #include "pxr/usd/ar/asset.h"
 #include "pxr/usd/ar/resolver.h"
 #include <pxr/imaging/glf/image.h>

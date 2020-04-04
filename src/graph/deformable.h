@@ -165,10 +165,11 @@ public:
     // --------------------------------------------------------------------- //
     /// Describes the <i>input geometry</i> input on a Deformable.
     ///
-    /// \n  C++ Type: TfToken
-    /// \n  Usd Type: SdfValueTypeNames->Token
-    /// \n  Variability: SdfVariabilityVarying
-    /// \n  Fallback Value: No Fallback
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `token inputs:geometry` |
+    /// | C++ Type | TfToken |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->Token |
     GRAPH_API
     UsdAttribute GetGeometryAttr() const;
 
@@ -186,10 +187,11 @@ public:
     // --------------------------------------------------------------------- //
     /// Describes the <i>result geometry</i> output on a AssetNode.
     ///
-    /// \n  C++ Type: TfToken
-    /// \n  Usd Type: SdfValueTypeNames->Token
-    /// \n  Variability: SdfVariabilityVarying
-    /// \n  Fallback Value: No Fallback
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `token outputs:deformed` |
+    /// | C++ Type | TfToken |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->Token |
     GRAPH_API
     UsdAttribute GetDeformedAttr() const;
 

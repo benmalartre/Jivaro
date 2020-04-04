@@ -38,6 +38,7 @@ IMGUI_IMPL_API void     ImGui_ImplOpenGL3_DestroyDeviceObjects();
 // Specific OpenGL versions
 //#define IMGUI_IMPL_OPENGL_ES2     // Auto-detected on Emscripten
 //#define IMGUI_IMPL_OPENGL_ES3     // Auto-detected on iOS/Android
+#define IMGUI_IMPL_APPLE_LEGACY   // For Legacy APPLE extension
 
 // Desktop OpenGL: attempt to detect default GL loader based on available header files.
 // If auto-detection fails or doesn't select the same GL loader file as used by your application,
@@ -46,7 +47,8 @@ IMGUI_IMPL_API void     ImGui_ImplOpenGL3_DestroyDeviceObjects();
 #if !defined(IMGUI_IMPL_OPENGL_LOADER_GL3W) \
  && !defined(IMGUI_IMPL_OPENGL_LOADER_GLEW) \
  && !defined(IMGUI_IMPL_OPENGL_LOADER_GLAD) \
- && !defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING) \
+ && !defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING2) \
+ && !defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING3) \
  && !defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
     #if defined(__has_include)
         #if __has_include(<GL/glew.h>)
@@ -55,8 +57,10 @@ IMGUI_IMPL_API void     ImGui_ImplOpenGL3_DestroyDeviceObjects();
             #define IMGUI_IMPL_OPENGL_LOADER_GLAD
         #elif __has_include(<GL/gl3w.h>)
             #define IMGUI_IMPL_OPENGL_LOADER_GL3W
-        #elif __has_include(<glbinding/gl/gl.h>)
-            #define IMGUI_IMPL_OPENGL_LOADER_GLBINDING
+        #elif __has_include(<glbinding/glbinding.h>)
+            #define IMGUI_IMPL_OPENGL_LOADER_GLBINDING3
+        #elif __has_include(<glbinding/Binding.h>)
+            #define IMGUI_IMPL_OPENGL_LOADER_GLBINDING2
         #else
             #error "Cannot detect OpenGL loader!"
         #endif

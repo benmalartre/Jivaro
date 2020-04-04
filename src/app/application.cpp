@@ -75,9 +75,9 @@ void
 Application::Init()
 {
   std::string filename = 
-    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_clips.usda";
+    //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
-    //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
+    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
     //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
 
   // build test scene
@@ -89,15 +89,19 @@ Application::Init()
   //TfDebug::Enable(HDST_DUMP_SHADER_SOURCEFILE);
 
   // create window
-  _mainWindow->SetContext();
+  GLCheckError("APP: BEGIN"); 
+  _mainWindow->SetGLContext();
+  GLCheckError("APP: SET CONTEXT");  
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
+  GLCheckError("APP: GET WINDOW SIZE");  
   View* mainView = _mainWindow->GetMainView();
   _mainWindow->SplitView(mainView, 0.075, true);
   View* bottomView = _mainWindow->SplitView(mainView->GetRight(), 0.9, true);
   View* timelineView = bottomView->GetRight();
   View* centralView = _mainWindow->SplitView(bottomView->GetLeft(), 0.6, true);
   View* middleView = centralView->GetLeft();
+  GLCheckError("APP: SPLIT VIEW");  
 
   _mainWindow->SplitView(middleView, 0.9, false);
   View* workingView = _mainWindow->SplitView(middleView->GetLeft(), 0.15, false);
@@ -105,21 +109,27 @@ Application::Init()
   View* viewportView = workingView->GetRight();  
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
+  GLCheckError("APP: GET VIEW");
 
   //GraphUI* graph = new GraphUI(graphView, "GraphUI");
   _viewport = new ViewportUI(viewportView, EMBREE);
   _timeline = new TimelineUI(timelineView);
-  _timeline->Init(this);
+
   //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
   MenuUI* menu = new MenuUI(mainView->GetLeft());
+
+   _viewport->Init();
+  GLCheckError("APP: INIT VIEWPORT");
+  _timeline->Init(this);
+  GLCheckError("APP: INIT TIMELINE");
+  _mainWindow->CollectLeaves();
+  GLCheckError("APP: COLLECT LEAVES");
 
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
   //TestStageUI(graph, _stages);
 
-  _viewport->Init();
-  _mainWindow->CollectLeaves();
-
+ 
 }
 
 void Application::Update()

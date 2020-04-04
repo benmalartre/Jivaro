@@ -8,6 +8,8 @@
 #include "../imgui/imgui_custom.h"
 #include "../imgui/imgui_test.h"
 #include "../app/application.h"
+#include <pxr/imaging/glf/contextCaps.h>
+#include <pxr/base/arch/systemInfo.h>
 
 
 
@@ -28,7 +30,7 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f)
 
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  ////glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
@@ -49,7 +51,7 @@ _pickImage(0), _splitter(NULL),_fontSize(16.f)
 
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  ////glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //glfwWindowHint(GLFW_STENCIL_BITS, 8);
   
@@ -69,7 +71,7 @@ Window::Init(Application* app)
     _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
     _mainView->SetWindow(this);
     _splitter = new Splitter();
-    
+
     // window datas
     GetContextVersionInfos();
     glfwSetWindowUserPointer(_window, this);
@@ -81,6 +83,7 @@ Window::Init(Application* app)
     pxr::GlfGlewInit();
     pxr::GlfSharedGLContextScopeHolder sharedContext;
 	  pxr::GlfContextCaps::InitInstance();
+    pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
 
     // setup callbacks
     glfwSetWindowSizeCallback(_window, ResizeCallback);
@@ -91,15 +94,10 @@ Window::Init(Application* app)
     glfwSetCharCallback(_window, CharCallback);
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
     
-    Resize(_width,_height);    
-
+    Resize(_width,_height); 
+       
     // ui
-    GetContentScale();
     SetupImgui();
-
-    // screen space quad
-    SetupScreenSpaceQuadShader();
-    SetupScreenSpaceQuad();
    
   }
 
@@ -263,17 +261,11 @@ Window::GetUserData(GLFWwindow* window)
 // set current context
 //----------------------------------------------------------------------------
 void
-Window::SetContext()
+Window::SetGLContext()
 {
   glfwMakeContextCurrent(_window);
 }
 
-void 
-Window::GetContentScale()
-{
-  glfwGetWindowContentScale(_window, &_dpiX, &_dpiY);
-  //void glfwGetMonitorContentScale	(	NULL,xscale, yscale); 
-}
 
 // draw
 //----------------------------------------------------------------------------
@@ -281,23 +273,30 @@ void
 Window::Draw()
 {
   if(!_valid)return;
-  SetContext();
+  SetGLContext();
+  GLCheckError("### WINDOW 0");
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
+  GLCheckError("### WINDOW 1");
   ImGui_ImplGlfw_NewFrame();
+  GLCheckError("### WINDOW 2");
   
   ImGui::NewFrame();
+  GLCheckError("### WINDOW 3");
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight()));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
-
+  
   if(_mainView)_mainView->Draw();
+  GLCheckError("### WINDOW 4");
   // draw splitters
   _splitter->Draw();
+  GLCheckError("### WINDOW 5");
   // render the imgui frame
   ImGui::Render();
+  GLCheckError("### WINDOW 6");
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-  
+  GLCheckError("### WINDOW 7");
 }
 
 // setup imgui
@@ -354,9 +353,14 @@ Window::SetupImgui()
   style.FramePadding = pxr::GfVec2f(0,0);
 
   // setup platform/renderer bindings
+  pxr::GlfContextCaps const & caps = pxr::GlfContextCaps::GetInstance();
   ImGui_ImplGlfw_InitForOpenGL(_window, false);
-  ImGui_ImplOpenGL3_Init("#version 120");
-
+  if(caps.glslVersion <330) {
+    ImGui_ImplOpenGL3_Init("#version 120 ");
+  } else {
+    ImGui_ImplOpenGL3_Init("#version 330 ");
+  }
+    
   ImNodes::Initialize();
 }
 
@@ -386,10 +390,8 @@ bool Window::UpdateActiveTool(int x, int y)
   }
   else if(_activeTool == AMN_TOOL_CAMERA)
   {
-    std::cout << "CAMERA TOOL ACTIVE ..." << std::endl;
     if(GetActiveView())
     {
-      std::cout << "MOUSE MOVE >>> " << GetActiveView()->GetName() << std::endl;
       GetActiveView()->MouseMove(x, y);
     }
   }
@@ -626,24 +628,17 @@ void
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   //if (ImGui::GetIO().WantCaptureMouse) return;
-  std::cout << "MOUSE MOVE :D "  << std::endl;
   Window* parent = Window::GetUserData(window);
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
-  parent->PickSplitter(x, y);
-  int width, height;
-  glfwGetWindowSize(window, &width, &height);
-  std::cout << "ACTIVE TOOL : " << parent->GetActiveTool() << std::endl;
+  //parent->PickSplitter(x, y);
+  if(!parent->GetActiveView())return;
   if(parent->GetActiveTool() != AMN_TOOL_NONE)
   {
     parent->UpdateActiveTool(x, y);
   }
   else
   {
-    if(parent->GetActiveView())
-    {
-      std::cout << "MOUSE MOVE >>> " << parent->GetActiveView()->GetName() << std::endl;
-      parent->GetActiveView()->MouseMove(x, y);
-    }
+    parent->GetActiveView()->MouseMove(x, y);
   }
 
 }

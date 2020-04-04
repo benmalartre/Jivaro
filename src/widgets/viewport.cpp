@@ -39,8 +39,11 @@ ViewportUI::~ViewportUI()
 void ViewportUI::Init()
 {
   pxr::SdfPathVector excludedPaths;
+  GLCheckError("INIT VIEWPORT");  
   _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/"), excludedPaths);
-  _engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
+  _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+  //_engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
+  std::cout << "CURRENT RENDERER : " << _engine->GetCurrentRendererId().GetText() << std::endl;
 
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
@@ -163,7 +166,6 @@ void ViewportUI::MouseMove(int x, int y)
         
       case INTERACTION_ORBIT:
       {
-        std::cout << "ORBIT ..." << std::endl;
         _camera->Orbit(dx, dy); break;
       }
 
@@ -171,9 +173,6 @@ void ViewportUI::MouseMove(int x, int y)
         break;
         
     }
-    
-    //RenderToMemory(_camera, true);
-    //SetImage();
     _lastX = x;
     _lastY = y;
   }
@@ -181,10 +180,7 @@ void ViewportUI::MouseMove(int x, int y)
 
 void ViewportUI::MouseWheel(int x, int y)
 {
-
   _camera->Dolly((double)x / (double)GetWidth(), (double)y / (double)GetHeight());
-  //RenderToMemory(_camera, true);
-  //SetImage();
 }
 
 void ViewportUI::Draw()

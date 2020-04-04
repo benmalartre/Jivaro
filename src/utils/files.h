@@ -6,6 +6,7 @@
 #include "../common.h"
 #include <dirent.h>
 #include "strings.h"
+#include <fstream>
 #include <pxr/base/arch/fileSystem.h>
 #include <pxr/base/arch/systemInfo.h>
 
@@ -19,134 +20,78 @@ AMN_NAMESPACE_OPEN_SCOPE
 	#define SEPARATOR "/"
 #endif
 
-// DIRECTORY EXISTS
-//---------------------------------------------------------------------------------------
-static bool DirectoryExists(std::string path)
+// directory exists
+//-----------------------------------------------------
+bool DirectoryExists(std::string path);
+
+// create directory
+//-----------------------------------------------------
+bool CreateDirectory(const std::string& path);
+
+// get file size
+//-----------------------------------------------------
+int GetFileSize(const std::string& filePath);
+
+// get file name
+//-----------------------------------------------------
+std::string GetFileName(const std::string& filePath);
+
+// num files in directory
+//-----------------------------------------------------
+int NumFilesInDirectory(const char* path);
+
+// get files in directory
+//-----------------------------------------------------
+int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames);
+
+// get installatio folder
+//-----------------------------------------------------
+std::string GetInstallationFolder();
+
+//=====================================================
+// File class
+//=====================================================
+// mode
+//-----------------------------------------------------
+enum FILE_MODE
 {
-    struct stat info;
+    FILE_READ,
+    FILE_WRITE
+};
+// header
+//-----------------------------------------------------
+#define SIZE_HEADER 66
+#define SIZE_BUFFER 256
+
+// class
+//-----------------------------------------------------
+class File
+{
+private:
+  std::string path;
+  std::fstream* file;
+  std::string content;
+  char* buffer;
     
-    if( stat( path.c_str(), &info ) != 0 ) return false;
-    else if( info.st_mode & S_IFDIR ) return true;
-    else return false;
-}
+public:
+  File(){};
+  File(const std::string& path);
 
-// CREATE DIRECTORY
-//---------------------------------------------------------------------------------------
-static bool CreateDirectory(const std::string& path)
-{
-    if(DirectoryExists(path)) return true;
-    
-    std::vector<std::string> splitted = SplitString(path, SEPARATOR);
-    std::string currentPath = "";
-    if(StartsWithString(path, SEPARATOR))currentPath = SEPARATOR;
-    mode_t nMode = 0733; // UNIX style permissions
-    int nError = 0;
-    for(unsigned int i=0;i<splitted.size();i++)
-    {
-        currentPath += splitted[i];
-        if(!DirectoryExists(currentPath))
-        {
-#ifdef _WIN32
-			nError = CreateDirectoryA(currentPath.c_str(), NULL);
-#else
-            nError = mkdir(currentPath.c_str(),nMode);
-#endif
-            if (nError != 0) return false;
-        }
-        currentPath += SEPARATOR;
-    }
-    return true;
-}
+  bool Open(FILE_MODE mode);
+  bool Close();
+  uint64_t GetFileLength();
+  
+  void SetPath(const std::string& in_path){path = in_path;};
+  
+  void Write(const std::string& s);
+  std::string Read();
+  std::string ReadAll();
 
-// GET FILE SIZE
-//---------------------------------------------------------------------------------------
-static int GetFileSize(const std::string& filePath)
-{
-
-    struct stat results;
-    
-    if (stat((const char*)filePath.c_str(), &results) == 0)
-    return results.st_size;
-    else
-    return -1;
-}
-
-// GET FILE NAME
-//---------------------------------------------------------------------------------------
-static std::string GetFileName(const std::string& filePath)
-{
-  return SplitString(filePath, SEPARATOR).back();
-}
-
-
-// NUM FILES IN DIRECTORY
-//---------------------------------------------------------------------------------------
-static int NumFilesInDirectory(const char* path)
-{
-  DIR *dir;
-  struct dirent *ent;
-  int num_files = 0;
-  if ((dir = opendir (path)) != NULL) 
-  {
-    // print all the files and directories within directory
-    while ((ent = readdir (dir)) != NULL) 
-    {
-      if(
-        ! strncmp(ent->d_name, ".", 1) ||
-        ! strncmp(ent->d_name, "..", 2) ||
-        ! strncmp(ent->d_name, ".DS_Store", 9)
-      ) continue;
-      num_files++;
-    }
-    closedir (dir);
-    return num_files;
-  } 
-  else 
-  {
-    // could not open directory
-    std::cerr << "Could Not Open Directory : " << path << std::endl;
-    return EXIT_FAILURE;
-  }
-}
-
-// GET FILES IN DIRECTORY
-//---------------------------------------------------------------------------------------
-static int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
-{
-  DIR *dir;
-  struct dirent *ent;
-  filenames.clear();
-  if ((dir = opendir (path)) != NULL) 
-  {
-    // print all the files and directories within directory
-    while ((ent = readdir (dir)) != NULL) 
-    {
-      if(
-        ! strncmp(ent->d_name, ".", 1) ||
-        ! strncmp(ent->d_name, "..", 2) ||
-        ! strncmp(ent->d_name, ".DS_Store", 9)
-      ) continue;
-      filenames.push_back((std::string)ent->d_name);
-    }
-    closedir (dir);
-    return filenames.size();
-  } 
-  else 
-  {
-    // could not open directory
-    std::cerr << "Could Not Open Directory : " << path << std::endl;
-    return EXIT_FAILURE;
-  }
-}
-
-// GET INSTALLATION FOLDER
-//---------------------------------------------------------------------------------------
-static std::string GetInstallationFolder()
-{
-  std::string exePath = pxr::ArchGetExecutablePath();
-  std::vector<std::string> splitted = SplitString(exePath, SEPARATOR);
-  splitted.pop_back();
-  return JoinString(splitted, SEPARATOR);
-}
+  void _CreatePath(
+    const std::string& directory, 
+    const std::string& in_name, 
+    const std::string& extension
+  );
+};
 
 AMN_NAMESPACE_CLOSE_SCOPE

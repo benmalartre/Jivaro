@@ -4,55 +4,10 @@
 
 #pragma once
 
-#include <GL/glew.h>
+#include <pxr/imaging/glf/glew.h>
 #include "../common.h"
 #include <iostream>
 #include <sstream>
-
-// vertex shader :
-static const GLchar* SIMPLE_VERTEX_SHADER_CODE_1200 =
-"#version 120\n"
-"attribute in vec3 position;\n"
-"attribute in vec3 color;\n"
-"uniform float hue;\n"
-"uniform mat4 viewProj;\n"
-"varying vec3 vertex_color;\n"
-"void main() {\n"
-"    vertex_color = color*hue;\n"
-"    gl_Position = viewProj * vec4(position, 1.0);\n"
-"}\n";
-
-// fragment shader :
-static const GLchar* SIMPLE_FRAGMENT_SHADER_CODE_1200 =
-"#version 120\n"
-"varying vec3 vertex_color;\n"
-"void main() {\n"
-"    gl_FragColor = vec4(vertex_color, 1.0);\n"
-"//    out_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
-"}\n";
-
-// vertex shader :
-static const GLchar* SIMPLE_VERTEX_SHADER_CODE_330 =
-"#version 330 core\n"
-"layout(location = 0) in vec3 position;\n"
-"layout(location = 1) in vec3 color;\n"
-"uniform float hue;\n"
-"uniform mat4 viewProj;\n"
-"out vec3 vertex_color;\n"
-"void main() {\n"
-"    vertex_color = color*hue;\n"
-"    gl_Position = viewProj * vec4(position, 1.0);\n"
-"}\n";
-
-// fragment shader :
-static const GLchar* SIMPLE_FRAGMENT_SHADER_CODE_330 =
-"#version 330 core\n"
-"in vec3 vertex_color;\n"
-"out vec4 out_color;\n"
-"void main() {\n"
-"    out_color = vec4(vertex_color, 1.0);\n"
-"//    out_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
-"}\n";
 
 
 static GLuint 

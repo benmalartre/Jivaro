@@ -13,7 +13,8 @@
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
-//  2020-01-07: OpenGL: Added support for glbindings OpenGL loader.
+//  2020-03-24: OpenGL: Added support for glbinding 2.x OpenGL loader.
+//  2020-01-07: OpenGL: Added support for glbinding 3.x OpenGL loader.
 //  2019-10-25: OpenGL: Using a combination of GL define and runtime GL version to decide whether to use glDrawElementsBaseVertex(). Fix building with pre-3.2 GL loaders.
 //  2019-09-22: OpenGL: Detect default GL loader using __has_include compiler facility.
 //  2019-09-16: OpenGL: Tweak initialization code to allow application calling ImGui_ImplOpenGL3_CreateFontsTexture() before the first NewFrame() call.
@@ -79,26 +80,22 @@
 #include "TargetConditionals.h"
 #endif
 
-#include "../common.h"
-#include "../utils/glutils.h"
-
 // Auto-enable GLES on matching platforms
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3)
 #if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)) || (defined(__ANDROID__))
 #define IMGUI_IMPL_OPENGL_ES3           // iOS, Android  -> GL ES 3, "#version 300 es"
-#undef IMGUI_IMPL_OPENGL_LOADER_GL3W
-#undef IMGUI_IMPL_OPENGL_LOADER_GLEW
-#undef IMGUI_IMPL_OPENGL_LOADER_GLAD
-#undef IMGUI_IMPL_OPENGL_LOADER_GLBINDING
-#undef IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #elif defined(__EMSCRIPTEN__)
 #define IMGUI_IMPL_OPENGL_ES2           // Emscripten    -> GL ES 2, "#version 100"
+#endif
+#endif
+
+#if defined(IMGUI_IMPL_OPENGL_ES2) || defined(IMGUI_IMPL_OPENGL_ES3)
 #undef IMGUI_IMPL_OPENGL_LOADER_GL3W
 #undef IMGUI_IMPL_OPENGL_LOADER_GLEW
 #undef IMGUI_IMPL_OPENGL_LOADER_GLAD
-#undef IMGUI_IMPL_OPENGL_LOADER_GLBINDING
+#undef IMGUI_IMPL_OPENGL_LOADER_GLBINDING2
+#undef IMGUI_IMPL_OPENGL_LOADER_GLBINDING3
 #undef IMGUI_IMPL_OPENGL_LOADER_CUSTOM
-#endif
 #endif
 
 // GL includes
@@ -116,14 +113,20 @@
 //  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
 //  You may use another loader/header of your choice (glext, glLoadGen, etc.), or chose to manually implement your own.
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
-#include <GL/gl3w.h>    // Needs to be initialized with gl3wInit() in user's code
+#include <GL/gl3w.h>            // Needs to be initialized with gl3wInit() in user's code
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-#include <GL/glew.h>    // Needs to be initialized with glewInit() in user's code
+#include <pxr/imaging/glf/glew.h>            // Needs to be initialized with glewInit() in user's code.
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-#include <glad/glad.h>  // Needs to be initialized with gladLoadGL() in user's code
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING)
-#include <glbinding/gl/gl.h>  // Initialize with glbinding::initialize()
-#include <glbinding/glbinding.h>
+#include <glad/glad.h>          // Needs to be initialized with gladLoadGL() in user's code.
+#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING2)
+#define GLFW_INCLUDE_NONE       // GLFW including OpenGL headers causes ambiguity or multiple definition errors.
+#include <glbinding/Binding.h>  // Needs to be initialized with glbinding::Binding::initialize() in user's code.
+#include <glbinding/gl/gl.h>
+using namespace gl;
+#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING3)
+#define GLFW_INCLUDE_NONE       // GLFW including OpenGL headers causes ambiguity or multiple definition errors.
+#include <glbinding/glbinding.h>// Needs to be initialized with glbinding::initialize() in user's code.
+#include <glbinding/gl/gl.h>
 using namespace gl;
 #else
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
@@ -135,6 +138,17 @@ using namespace gl;
 #define IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET   0
 #else
 #define IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET   1
+#endif
+
+// On MacOS with GL 2.1(default) some function have the APPLE suffix and some others are not implemented
+#ifdef IMGUI_IMPL_APPLE_LEGACY
+#undef GL_SAMPLER_BINDING // Disable call to glBindSampler()
+#undef glBindVertexArray
+#define glBindVertexArray glBindVertexArrayAPPLE
+#undef glGenVertexArrays
+#define glGenVertexArrays glGenVertexArraysAPPLE
+#undef glDeleteVertexArrays
+#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 #endif
 
 // OpenGL Data
@@ -151,14 +165,19 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
 {
     // Query for GL version
 #if !defined(IMGUI_IMPL_OPENGL_ES2)
+#ifdef IMGUI_IMPL_APPLE_LEGACY
+  float glVersion;
+  sscanf((const char*)glGetString(GL_VERSION), "%f", &glVersion);
+  g_GlVersion = (int)(glVersion * 1000);
+#else
     GLint major, minor;
     glGetIntegerv(GL_MAJOR_VERSION, &major);
     glGetIntegerv(GL_MINOR_VERSION, &minor);
     g_GlVersion = major * 1000 + minor;
+#endif
 #else
     g_GlVersion = 2000; // GLES 2
 #endif
-
     // Setup back-end capabilities flags
     ImGuiIO& io = ImGui::GetIO();
     io.BackendRendererName = "imgui_impl_opengl3";
@@ -166,7 +185,6 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     if (g_GlVersion >= 3200)
         io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
 #endif
-
     // Store GLSL version string so we can refer to it later in case we recreate shaders.
     // Note: GLSL version is NOT the same as GL version. Leave this to NULL if unsure.
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -196,18 +214,20 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     gl_loader = "GLEW";
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
     gl_loader = "GLAD";
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING)
-    gl_loader = "glbinding";
-#else // IMGUI_IMPL_OPENGL_LOADER_CUSTOM
-    gl_loader = "Custom";
+#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING2)
+    gl_loader = "glbinding2";
+#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLBINDING3)
+    gl_loader = "glbinding3";
+#elif defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
+    gl_loader = "custom";
+#else
+    gl_loader = "none";
 #endif
-
     // Make a dummy GL call (we don't actually need the result)
     // IF YOU GET A CRASH HERE: it probably means that you haven't initialized the OpenGL function loader used by this code.
     // Desktop OpenGL 3/4 need a function loader. See the IMGUI_IMPL_OPENGL_LOADER_xxx explanation above.
     GLint current_texture;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &current_texture);
-
     return true;
 }
 
@@ -253,17 +273,11 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     glUniform1i(g_AttribLocationTex, 0);
     glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
 #ifdef GL_SAMPLER_BINDING
-    #ifndef __APPLE__
-        glBindSampler(0, 0); // We use combined texture/sampler state. Applications using GL 3.3 may set that otherwise.
-    #endif
+    glBindSampler(0, 0); // We use combined texture/sampler state. Applications using GL 3.3 may set that otherwise.
 #endif
     (void)vertex_array_object;
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    #ifdef __APPLE__
-        glBindVertexArrayAPPLE(vertex_array_object);
-    #else
-        glBindVertexArray(vertex_array_object);
-    #endif
+  glBindVertexArray(vertex_array_object);
 #endif
 
     // Bind vertex/index buffers and setup attributes for ImDrawVert
@@ -287,15 +301,14 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
     if (fb_width <= 0 || fb_height <= 0)
         return;
+
     // Backup GL state
     GLenum last_active_texture; glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint*)&last_active_texture);
     glActiveTexture(GL_TEXTURE0);
     GLint last_program; glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
     GLint last_texture; glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 #ifdef GL_SAMPLER_BINDING
-    #ifndef __APPLE__
-      GLint last_sampler; glGetIntegerv(GL_SAMPLER_BINDING, &last_sampler);
-    #endif
+    GLint last_sampler; glGetIntegerv(GL_SAMPLER_BINDING, &last_sampler);
 #endif
     GLint last_array_buffer; glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
 #ifndef IMGUI_IMPL_OPENGL_ES2
@@ -328,13 +341,10 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     // The renderer would actually work without any VAO bound, but then our VertexAttrib calls would overwrite the default one currently bound.
     GLuint vertex_array_object = 0;
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    #ifdef __APPLE__
-        glGenVertexArraysAPPLE(1, &vertex_array_object);
-    #else
-        glGenVertexArrays(1, &vertex_array_object);
-    #endif
+    glGenVertexArrays(1, &vertex_array_object);
 #endif
     ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
+
     // Will project scissor/clipping rectangles into framebuffer space
     ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
     ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
@@ -347,6 +357,7 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
         // Upload vertex/index buffers
         glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert), (const GLvoid*)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), (const GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
+
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
         {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
@@ -384,7 +395,6 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
                     else
 #endif
                     glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, (void*)(intptr_t)(pcmd->IdxOffset * sizeof(ImDrawIdx)));
-               
                 }
             }
         }
@@ -392,28 +402,18 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
 
     // Destroy the temporary VAO
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    #ifdef __APPLE__
-        glDeleteVertexArraysAPPLE(1, &vertex_array_object);
-    #else
-        glDeleteVertexArrays(1, &vertex_array_object);
-    #endif
+    glDeleteVertexArrays(1, &vertex_array_object);
 #endif
 
     // Restore modified GL state
     glUseProgram(last_program);
     glBindTexture(GL_TEXTURE_2D, last_texture);
 #ifdef GL_SAMPLER_BINDING
-    #ifndef __APPLE__
-        glBindSampler(0, last_sampler);
-    #endif
+    glBindSampler(0, last_sampler);
 #endif
     glActiveTexture(last_active_texture);
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    #ifdef __APPLE__
-        glBindVertexArrayAPPLE(last_vertex_array_object);
-    #else 
-        glBindVertexArray(last_vertex_array_object);
-    #endif
+    glBindVertexArray(last_vertex_array_object);
 #endif
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
     glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);
@@ -672,16 +672,13 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
     // Create buffers
     glGenBuffers(1, &g_VboHandle);
     glGenBuffers(1, &g_ElementsHandle);
-
     ImGui_ImplOpenGL3_CreateFontsTexture();
-
     // Restore modified GL state
     glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    glBindVertexArray(last_vertex_array);
+     glBindVertexArray(last_vertex_array);
 #endif
-
     return true;
 }
 

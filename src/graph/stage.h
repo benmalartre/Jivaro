@@ -160,11 +160,13 @@ public:
     /// Encodes the lifetime management of the stage, on-disk or
     /// in-memory
     ///
-    /// \n  C++ Type: TfToken
-    /// \n  Usd Type: SdfValueTypeNames->Token
-    /// \n  Variability: SdfVariabilityUniform
-    /// \n  Fallback Value: No Fallback
-    /// \n  \ref GraphTokens "Allowed Values": [on-disk, in-memory]
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `uniform token lifetimeManagement` |
+    /// | C++ Type | TfToken |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->Token |
+    /// | \ref SdfVariability "Variability" | SdfVariabilityUniform |
+    /// | \ref GraphTokens "Allowed Values" | on-disk, in-memory |
     GRAPH_API
     UsdAttribute GetLifetimeManagementAttr() const;
 
@@ -182,10 +184,12 @@ public:
     // --------------------------------------------------------------------- //
     /// ar-solvable file path on disk
     ///
-    /// \n  C++ Type: std::string
-    /// \n  Usd Type: SdfValueTypeNames->String
-    /// \n  Variability: SdfVariabilityUniform
-    /// \n  Fallback Value: No Fallback
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `uniform string fileName` |
+    /// | C++ Type | std::string |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->String |
+    /// | \ref SdfVariability "Variability" | SdfVariabilityUniform |
     GRAPH_API
     UsdAttribute GetFileNameAttr() const;
 
@@ -205,10 +209,12 @@ public:
     /// These prims will be associated with state below on loading the stage.
     /// 
     ///
-    /// \n  C++ Type: VtArray<std::string>
-    /// \n  Usd Type: SdfValueTypeNames->StringArray
-    /// \n  Variability: SdfVariabilityUniform
-    /// \n  Fallback Value: No Fallback
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `uniform string[] loadPrimsPath` |
+    /// | C++ Type | VtArray<std::string> |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->StringArray |
+    /// | \ref SdfVariability "Variability" | SdfVariabilityUniform |
     GRAPH_API
     UsdAttribute GetLoadPrimsPathAttr() const;
 
@@ -233,11 +239,13 @@ public:
     /// descendants.
     /// 
     ///
-    /// \n  C++ Type: VtArray<TfToken>
-    /// \n  Usd Type: SdfValueTypeNames->TokenArray
-    /// \n  Variability: SdfVariabilityUniform
-    /// \n  Fallback Value: No Fallback
-    /// \n  \ref GraphTokens "Allowed Values": [AllRule, OnlyRule, NoneRule]
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `uniform token[] loadPrimsStates` |
+    /// | C++ Type | VtArray<TfToken> |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->TokenArray |
+    /// | \ref SdfVariability "Variability" | SdfVariabilityUniform |
+    /// | \ref GraphTokens "Allowed Values" | AllRule, OnlyRule, NoneRule |
     GRAPH_API
     UsdAttribute GetLoadPrimsStatesAttr() const;
 
@@ -258,10 +266,12 @@ public:
     /// the prims it populates.
     /// 
     ///
-    /// \n  C++ Type: VtArray<std::string>
-    /// \n  Usd Type: SdfValueTypeNames->StringArray
-    /// \n  Variability: SdfVariabilityUniform
-    /// \n  Fallback Value: No Fallback
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `uniform string[] populationMask` |
+    /// | C++ Type | VtArray<std::string> |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->StringArray |
+    /// | \ref SdfVariability "Variability" | SdfVariabilityUniform |
     GRAPH_API
     UsdAttribute GetPopulationMaskAttr() const;
 
@@ -279,10 +289,11 @@ public:
     // --------------------------------------------------------------------- //
     /// Relationships to the layers composing this stage.
     ///
-    /// \n  C++ Type: VtArray<TfToken>
-    /// \n  Usd Type: SdfValueTypeNames->TokenArray
-    /// \n  Variability: SdfVariabilityVarying
-    /// \n  Fallback Value: No Fallback
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `token[] inputs:layers` |
+    /// | C++ Type | VtArray<TfToken> |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->TokenArray |
     GRAPH_API
     UsdAttribute GetInputsLayersAttr() const;
 

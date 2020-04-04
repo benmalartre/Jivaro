@@ -22,7 +22,9 @@ add_executable(${TARGET}
   imgui/imgui_widgets.cpp
   imgui/imgui_nodes.cpp
   imgui/imgui.cpp
-  utils/glutils.cpp
+  utils/files.cpp
+  utils/shaders.cpp
+  utils/screenSpaceQuad.cpp
   graph/deformableAPI.cpp
   graph/connectableAPI.cpp
   graph/coordSysAPI.cpp
@@ -67,7 +69,6 @@ target_include_directories(${TARGET}
     ${Python2_INCLUDE_DIRS}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
-    ${GL3W_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}
 )
 

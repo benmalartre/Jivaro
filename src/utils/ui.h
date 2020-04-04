@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <pxr/imaging/glf/glew.h>
 #include "../common.h"
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_opengl3.h"
@@ -55,7 +55,11 @@ bool InputRect(const char* label, pxr::GfVec2f& pos, pxr::GfVec2f& size,
 }
 */
 
-static void IconButton(Icon* icon)
+// callback prototype
+typedef void (* IconPressedFunc)(...);
+
+template<typename FuncT, typename ...ArgsT>
+static void IconButton(Icon* icon, FuncT func, ArgsT... args)
 {
   ImGui::BeginGroup();
   ImGui::Image(
@@ -65,8 +69,7 @@ static void IconButton(Icon* icon)
   ImGui::EndGroup();
 }
 
-// callback prototype
-typedef void (* IconPressedFunc)(...);
+
 
 template<typename FuncT, typename ...ArgsT>
 void AddIconButton(Icon* icon, FuncT func, ArgsT... args)

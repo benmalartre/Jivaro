@@ -1,8 +1,10 @@
 cmake_minimum_required (VERSION 2.8.11)
 project (AMINA)
 
-set(CMAKE_CXX_STANDARD 11)
+# Require C++14
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 # cross platform
@@ -29,6 +31,7 @@ list(APPEND USD_LIB_NAMES
   trace
   work
   arch
+  ar
   gf
   glf
   tf
@@ -44,8 +47,9 @@ list(APPEND USD_LIB_NAMES
   hdSt
   hdx
   usdGeom
-  usdShade
+  usdLux
   usdUI
+  usdImagingGL
   vt
 )
 
@@ -85,54 +89,54 @@ foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
   )
 endforeach()
 
-# embree
-set(EMBREE_DIR "/Users/benmalartre/Documents/RnD/embree")
-list(APPEND EMBREE_INCLUDE_DIRS 
-  "${EMBREE_DIR}/embree/include"
-  "${EMBREE_DIR}/embree/common"
-  "${EMBREE_DIR}/embree/tutorials/common"
-)
-set(EMBREE_LIBRARY_DIR "${EMBREE_DIR}/build")
-list(APPEND EMBREE_LIB_NAMES 
-  sys
-  math
-  noise
-  image
-  #lexers
-  #lights
-  #scenegraph
-  #simd
-  tasking
-  texture
-  #tutorial
-)
+## embree
+#set(EMBREE_DIR "/Users/benmalartre/Documents/RnD/embree")
+#list(APPEND EMBREE_INCLUDE_DIRS 
+#  "${EMBREE_DIR}/embree/include"
+#  "${EMBREE_DIR}/embree/common"
+#  "${EMBREE_DIR}/embree/tutorials/common"
+#)
+#set(EMBREE_LIBRARY_DIR "${EMBREE_DIR}/build")
+#list(APPEND EMBREE_LIB_NAMES 
+#  sys
+#  math
+#  noise
+#  image
+#  #lexers
+#  #lights
+#  #scenegraph
+#  #simd
+#  tasking
+#  texture
+#  #tutorial
+#)
 
-set(EMBREE_LIBRARIES "")
-foreach(EMBREE_LIB_NAME IN LISTS EMBREE_LIB_NAMES)
-  set(EMBREE_LIBRARIES 
-    ${EMBREE_LIBRARIES} 
-      "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}${EMBREE_LIB_NAME}${LIB_STATIC_EXT}"
-  )
-endforeach()
+#set(EMBREE_LIBRARIES "")
+#foreach(EMBREE_LIB_NAME IN LISTS EMBREE_LIB_NAMES)
+#  set(EMBREE_LIBRARIES 
+#    ${EMBREE_LIBRARIES} 
+#      "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}${EMBREE_LIB_NAME}${LIB_STATIC_EXT}"
+#  )
+#endforeach()
 
-# jpeg
-find_package(JPEG)
-include_directories(${JPEG_INCLUDE_DIR})
-set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${JPEG_LIBRARIES})
-set(ADDITIONAL_SOURCES ${ADDITIONAL_SOURCES} jpeg.cpp)
-
-# png
-find_package(PNG)
-include_directories(${PNG_INCLUDE_DIR})
-set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${PNG_LIBRARIES})
-set(ADDITIONAL_SOURCES ${ADDITIONAL_SOURCES} png.cpp)
-
-
-set(EMBREE_LIBRARIES 
-    ${EMBREE_LIBRARIES} 
-      "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}"
-)
-message("EMBREE LIBRARY : ${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}")
+## jpeg
+#find_package(JPEG)
+#include_directories(${JPEG_INCLUDE_DIR})
+#set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${JPEG_LIBRARIES})
+#set(ADDITIONAL_SOURCES ${ADDITIONAL_SOURCES} jpeg.cpp)
+#
+## png
+#find_package(PNG)
+#include_directories(${PNG_INCLUDE_DIR})
+#set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${PNG_LIBRARIES})
+#set(ADDITIONAL_SOURCES ${ADDITIONAL_SOURCES} png.cpp)
+#
+#
+#set(EMBREE_LIBRARIES 
+#    ${EMBREE_LIBRARIES} 
+#      "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}"
+#)
+#message("EMBREE LIBRARY : ${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}")
 
 # tbb
 set(TBB_INCLUDE_DIR "${USD_DIR}/include/tbb")
@@ -155,8 +159,10 @@ endforeach()
 # OpenGL
 find_package(OpenGL REQUIRED)
 
-# gl3w 
-set(GL3W_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/gl3w/include")
+# GLFW_INCLUDE_DIR
+#find_library(GLEW GLEW PATHS "${USD_LIBRARY_DIR}")
+set(GLEW_LIBRARY "/Users/benmalartre/Documents/RnD/USD_BUILD/lib/libGLEW.2.0.0.dylib")
+
 
 # glfw
 set(GLFW_DIR "/Users/benmalartre/Documents/RnD/glfw")
@@ -166,8 +172,8 @@ find_library(GLFW glfw3 PATHS "${GLFW_DIR}/build/src")
 # system
 IF(APPLE)
   SET(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} 
-    "-framework Cocoa -framework IOKit -framework CoreVideo")
+    "-framework Cocoa -framework IOKit")
 ENDIF(APPLE)
 
 add_subdirectory (src)
-add_subdirectory (tests)
+#add_subdirectory (tests)

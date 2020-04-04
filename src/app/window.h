@@ -105,8 +105,7 @@ public:
   View* GetViewUnderMouse(int x, int y);
   
   // draw
-  void GetContentScale();
-  void SetContext();
+  void SetGLContext();
   void Draw();
   bool PickSplitter(double mX, double mY);
 
