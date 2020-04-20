@@ -395,6 +395,7 @@ bool Window::UpdateActiveTool(int x, int y)
       GetActiveView()->MouseMove(x, y);
     }
   }
+  return false;
 }
 
 void Window::MainLoop()

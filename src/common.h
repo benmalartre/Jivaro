@@ -1,7 +1,11 @@
 #pragma once
 
-#include <iostream>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+#include <iostream>
 #define AMN_EXPORT extern "C" 
 
 #define DEGREES_TO_RADIANS 0.0174532925f

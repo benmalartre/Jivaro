@@ -139,12 +139,12 @@ void GraphStageUI::Update(const NodeUI& node)
    for(const auto port : node.GetInputs()) 
       _portMap.insert(std::make_pair<int, GraphPortMapData>
         (port.GetId(), 
-        (GraphPortMapData){&node, port.GetName()}));
+        {&node, port.GetName()}));
     
     for(const auto port : node.GetOutputs()) 
       _portMap.insert(std::make_pair<int, GraphPortMapData>
         (port.GetId(), 
-        (GraphPortMapData){&node, port.GetName()}));
+        {&node, port.GetName()}));
     
     _nodes.push_back(node);
 }

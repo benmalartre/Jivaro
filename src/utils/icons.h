@@ -33,8 +33,8 @@ enum ICON_ID {
 #define ICON_TYPE GL_UNSIGNED_BYTE
 
 struct Icon {
-  int     _size;
-  GLuint  _tex;
+  ICON_SIZE     _size;
+  GLuint        _tex;
   //GLuint  _texHovered;
 };
  
@@ -102,7 +102,7 @@ static void CreateIconFromImage(const std::string& filename,
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, 
       ICON_FORMAT, ICON_TYPE, storage.data);
 
-    AMN_ICONS[name] = (Icon){size, tex};
+    AMN_ICONS[name] = { size, tex };
   }
 }
 

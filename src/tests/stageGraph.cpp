@@ -46,6 +46,7 @@ GraphNode _CreateNodeAtPosition(UsdPrim prim, const GfVec2f& pos)
   UsdUINodeGraphNodeAPI api(prim);
   UsdAttribute attr  = api.CreatePosAttr();
   attr.Set(pos);
+  return GraphNode();
 } 
 
 GraphInput _AddInputPrim(GraphNode& node, UsdPrim& prim)

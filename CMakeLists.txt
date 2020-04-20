@@ -20,11 +20,25 @@ if(UNIX)
 
   endif()
 else()
-
+	set(LIB_PREFIX "")
+    set(LIB_DYNAMIC_EXT ".lib")
+    set(LIB_STATIC_EXT ".lib")
 endif()
 
+# glfw
+if(NOT DEFINED GLFW_DIR)
+	message(FATAL_ERROR "No GLFW_DIR variable set! GLFW installation path must be passed to cmake!!!")
+endif()
+set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
+find_library(GLFW glfw3 PATHS "${GLFW_DIR}/build/src" "${GLFW_DIR}/build/src/Release")
+message(${GLFW})
+
 # usd 
-set(USD_DIR "/Users/benmalartre/Documents/RnD/USD_BUILD")
+if(NOT DEFINED USD_DIR)
+	message(FATAL_ERROR "No USD_DIR variable set! USD installation path must be passed to cmake!!!")
+endif()
+
+#set(USD_DIR "/Users/benmalartre/Documents/RnD/USD_BUILD")
 set(USD_INCLUDE_DIR "${USD_DIR}/include")
 set(USD_LIBRARY_DIR "${USD_DIR}/lib")
 list(APPEND USD_LIB_NAMES 
@@ -68,17 +82,22 @@ message("   ${Python2_INCLUDE_DIRS}")
 message("   ${Python2_LIBRARY_DIRS}")
 
 # boost
-set(BOOST_INCLUDE_DIR "{USD_INCLUDE_DIR}")
+if(UNIX)
+  if(APPLE)
+    set(BOOST_INCLUDE_DIR "{USD_INCLUDE_DIR}")
+  else()
+
+  endif()
+else()
+	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_70")
+endif()
+
 set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
-  date_time
-  filesystem
   program_options
   python
   regex
-  system
-  thread
 )
 
 set(BOOST_LIBRARIES "")
@@ -161,13 +180,17 @@ find_package(OpenGL REQUIRED)
 
 # GLFW_INCLUDE_DIR
 #find_library(GLEW GLEW PATHS "${USD_LIBRARY_DIR}")
-set(GLEW_LIBRARY "/Users/benmalartre/Documents/RnD/USD_BUILD/lib/libGLEW.2.0.0.dylib")
 
+#
+if(UNIX)
+  if(APPLE)
+    set(GLEW_LIBRARY "${USD_LIBRARY_DIR}/libGLEW.2.0.0.dylib")
+  else()
 
-# glfw
-set(GLFW_DIR "/Users/benmalartre/Documents/RnD/glfw")
-set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
-find_library(GLFW glfw3 PATHS "${GLFW_DIR}/build/src")
+  endif()
+else()
+	set(GLEW_LIBRARY "${USD_LIBRARY_DIR}/glew32.lib")
+endif()
 
 # system
 IF(APPLE)

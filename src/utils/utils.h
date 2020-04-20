@@ -1,6 +1,6 @@
 #pragma once
 
-#include <dirent.h>
+//#include <dirent.h>
 #include "../common.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>

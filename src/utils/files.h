@@ -4,7 +4,7 @@
 #pragma once
 
 #include "../common.h"
-#include <dirent.h>
+
 #include "strings.h"
 #include <fstream>
 #include <pxr/base/arch/fileSystem.h>
@@ -18,6 +18,7 @@ AMN_NAMESPACE_OPEN_SCOPE
   typedef int mode_t;
 #else
 	#define SEPARATOR "/"
+  #include <dirent.h>
 #endif
 
 // directory exists

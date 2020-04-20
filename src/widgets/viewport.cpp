@@ -41,18 +41,19 @@ void ViewportUI::Init()
   pxr::SdfPathVector excludedPaths;
   GLCheckError("INIT VIEWPORT");  
   _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/"), excludedPaths);
-  _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+  _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
+  //_engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
   //_engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
   std::cout << "CURRENT RENDERER : " << _engine->GetCurrentRendererId().GetText() << std::endl;
 
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
   light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));
-  light.SetPosition(pxr::GfVec4f(0,12,0,1));
+  light.SetPosition(pxr::GfVec4f(24,32,8,1));
   pxr::GlfSimpleLightVector lights;
   lights.push_back(light);
 
-  material.SetAmbient(pxr::GfVec4f(0.5,1.0,0.5, 1.0));
+  material.SetAmbient(pxr::GfVec4f(0.2,0.2,0.2, 1.0));
   auto lightingContext = pxr::GlfSimpleLightingContext::New();
 
    _engine->SetLightingState(lights,

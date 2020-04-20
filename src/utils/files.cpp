@@ -32,7 +32,7 @@ bool CreateDirectory(const std::string& path)
     if(!DirectoryExists(currentPath))
     {
 #ifdef _WIN32
-      nError = CreateDirectoryA(currentPath.c_str(), NULL);
+      nError = CreateDirectoryA((LPCSTR )currentPath.c_str(), (LPSECURITY_ATTRIBUTES) NULL);
 #else
       nError = mkdir(currentPath.c_str(),nMode);
 #endif
@@ -60,6 +60,7 @@ std::string GetFileName(const std::string& filePath)
 
 int NumFilesInDirectory(const char* path)
 {
+  /*
   DIR *dir;
   struct dirent *ent;
   int num_files = 0;
@@ -84,10 +85,27 @@ int NumFilesInDirectory(const char* path)
     std::cerr << "Could Not Open Directory : " << path << std::endl;
     return EXIT_FAILURE;
   }
+  */
+
+  /*
+  int num_files = 0;
+  for (auto i = boost::filesystem::directory_iterator(path);
+    i != boost::filesystem::directory_iterator(); i++)
+  {
+    const char* fname = (i->path()).c_str();
+    if (boost::filesystem::is_directory(i->path())
+      || !strncmp(fname, ".", 1)
+      || !strncmp(fname, "..", 2)
+      || !strncmp(fname, ".DS_Store", 9)) continue;
+    num_files++;
+  }
+  */
+  return 0;
 }
 
 int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
 {
+  /*
   DIR *dir;
   struct dirent *ent;
   filenames.clear();
@@ -112,6 +130,8 @@ int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
     std::cerr << "Could Not Open Directory : " << path << std::endl;
     return EXIT_FAILURE;
   }
+  */
+  return 0;
 }
 
 std::string GetInstallationFolder()
