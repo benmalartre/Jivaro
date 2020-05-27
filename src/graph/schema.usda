@@ -1,6 +1,6 @@
 #usda 1.0
 (
-  "This file describes the Man Graph schemata for code generation."
+  "This file describes the Graph schemata for code generation."
   subLayers = [
     @usd/schema.usda@
   ]

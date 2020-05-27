@@ -3,17 +3,17 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 void RecurseStagePrim(GraphUI* ui, 
+                      NodeUI* parent,
                       const pxr::UsdPrim& prim, 
-                      int stageIndex, 
-                      int& index)
+                      int stageIndex)
 {
+
   for(auto child : prim.GetChildren())
   {
-    NodeUI nodeUI(child,index);
-    GraphStageUI* stage = ui->GetStage(stageIndex);
+    NodeUI* node = new NodeUI(child);
+    ui->AddNode(node);
     
-    stage->_nodes.push_back(nodeUI);
-    RecurseStagePrim(ui, child, stageIndex, index);
+    RecurseStagePrim(ui, ui->GetLastNode(), child, stageIndex);
   }
 }
 
@@ -22,13 +22,12 @@ void TestStageUI(GraphUI* ui,
 {
   int numStages = stages.size();
   ui->Init(stages);
-  int j = 0;
   for(int i=0;i<numStages;++i)
   {
     
     //ui->_stages[i] = new GraphStageUI(stages[i]);
     pxr::UsdPrim root = stages[i]->GetPseudoRoot();
-    RecurseStagePrim(ui, root, i, j);
+    RecurseStagePrim(ui, NULL, root, i);
   }
 }
 

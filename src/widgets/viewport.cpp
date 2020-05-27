@@ -41,8 +41,8 @@ void ViewportUI::Init()
   pxr::SdfPathVector excludedPaths;
   GLCheckError("INIT VIEWPORT");  
   _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/"), excludedPaths);
-  _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
-  //_engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+  //_engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
+  _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
   //_engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
   std::cout << "CURRENT RENDERER : " << _engine->GetCurrentRendererId().GetText() << std::endl;
 
@@ -63,6 +63,11 @@ void ViewportUI::Init()
   Resize();
 
   std::cout << "Hydra Enabled : " << pxr::UsdImagingGLEngine::IsHydraEnabled() << std::endl;
+}
+
+void ViewportUI::Update()
+{
+  _parent->SetDirty();
 }
 
 // overrides
@@ -143,6 +148,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     }
 */
   }
+  _parent->SetDirty();
 }
 
 void ViewportUI::MouseMove(int x, int y) 
@@ -176,12 +182,14 @@ void ViewportUI::MouseMove(int x, int y)
     }
     _lastX = x;
     _lastY = y;
+    _parent->SetDirty();
   }
 }
 
 void ViewportUI::MouseWheel(int x, int y)
 {
-  _camera->Dolly((double)x / (double)GetWidth(), (double)y / (double)GetHeight());
+  _camera->Dolly((double)x / (double)GetWidth(), (double)x / (double)GetHeight());
+  _parent->SetDirty();
 }
 
 void ViewportUI::Draw()
@@ -247,9 +255,13 @@ void ViewportUI::Draw()
   //_engine->PrepareBatch(_stages[0]->GetPseudoRoot());
   _engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
   glDisable(GL_SCISSOR_TEST);
-  
 
-  GLCheckError("EXIT THE DRAGON");
+  bool open;
+  ImGui::Begin("ViewportOverlay", &open, 0);
+  ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+  ImGui::End();
+  
+  _parent->SetClean();
   /*
   if(_pixels)
   {

@@ -5,7 +5,6 @@
 #include "splitter.h"
 #include "tools.h"
 #include "ui.h"
-#include "../imgui/imgui_nodes.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
 #include "pxr/imaging/glf/debugCodes.h"
@@ -110,9 +109,9 @@ public:
   bool PickSplitter(double mX, double mY);
 
   // fonts
-  inline ImFont* GetBoldFont(){return _boldFont;};
-  inline ImFont* GetMediumFont(){return _mediumFont;};
-  inline ImFont* GetRegularFont(){return _regularFont;};
+  inline ImFont* GetBoldFont(size_t index){return _boldFont[index];};
+  inline ImFont* GetMediumFont(size_t index){return _mediumFont[index];};
+  inline ImFont* GetRegularFont(size_t index){return _regularFont[index];};
 
   // tool
   inline void SetActiveTool(int tool) {
@@ -162,9 +161,9 @@ private:
   bool              _debounce;
 
   // fonts
-  ImFont*           _boldFont;
-  ImFont*           _mediumFont;
-  ImFont*           _regularFont;
+  ImFont*           _boldFont[3];
+  ImFont*           _mediumFont[3];
+  ImFont*           _regularFont[3];
   float             _fontSize;
 
   // ui

@@ -30,6 +30,7 @@ TestStageUI(
 void 
 RecurseStagePrim(
   GraphUI* ui, 
+  NodeUI* parent,
   const pxr::UsdPrim& prim, 
   int stageIndex, 
   int& nodeIndex

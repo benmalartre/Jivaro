@@ -59,6 +59,7 @@ class ViewportUI : public BaseUI
     void MouseWheel(int x, int y) override;
     void Draw() override;
     void Resize() override;
+    void Update();
     
     
   private:

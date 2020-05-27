@@ -9,7 +9,7 @@ void Splitter::RecurseBuildMap(View* view)
   if(!view) return;
   _views.push_back(view);
   _viewID++;
-  if(!view->IsLeaf())
+  if(!view->GetFlag(View::LEAF))
   {
     View* parent = view->GetParent();
     if(!parent)parent = view;
@@ -26,6 +26,7 @@ void Splitter::RecurseBuildMap(View* view)
     RecurseBuildMap(view->GetLeft());
     RecurseBuildMap(view->GetRight());
   }
+  //else if(view->GetContent())view->GetContent()->SetActive(true);
 }
 
 void 
@@ -83,7 +84,7 @@ Splitter::Draw()
   const ImU32 col = ImColor(colf);
   for(auto view : _views)
   {
-    if(view->IsLeaf()) continue;
+    if(view->GetFlag(View::LEAF)) continue;
     view->GetSplitInfos(sMin, sMax, _width, _height);
     draw_list->AddRectFilled(sMin, sMax, col, 0.0f, 0);
     if(_cursor == ImGuiMouseCursor_ResizeEW)

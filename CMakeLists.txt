@@ -30,8 +30,10 @@ if(NOT DEFINED GLFW_DIR)
 	message(FATAL_ERROR "No GLFW_DIR variable set! GLFW installation path must be passed to cmake!!!")
 endif()
 set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
-find_library(GLFW glfw3 PATHS "${GLFW_DIR}/build/src" "${GLFW_DIR}/build/src/Release")
-message(${GLFW})
+message("${GLFW_DIR}/build/src")
+message("${GLFW_DIR}/build/src/Release")
+find_library(GLFW NAMES glfw3 PATHS "${GLFW_DIR}/build/src" "${GLFW_DIR}/build/src/Release")
+message("GLFW LIB : ${GLFW}")
 
 # usd 
 if(NOT DEFINED USD_DIR)

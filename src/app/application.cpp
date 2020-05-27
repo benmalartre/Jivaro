@@ -74,7 +74,9 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
 void 
 Application::Init()
 {
-  std::string filename = 
+  std::string filename =
+    //"E:/Projects/RnD/USD_BUILD/assets/Contour/JackTurbulized.usda";
+    //"E:/Projects/RnD/USD/extras/usd/examples/usdGeomExamples/basisCurves.usda";
     "E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
@@ -107,8 +109,8 @@ Application::Init()
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
 
-  //GraphUI* graph = new GraphUI(graphView, "GraphUI");
-  _viewport = new ViewportUI(viewportView, EMBREE);
+  GraphUI* graph = new GraphUI(graphView, "GraphUI", true);
+  _viewport = new ViewportUI(viewportView, LOFI);
   _timeline = new TimelineUI(timelineView);
 
   //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
@@ -120,7 +122,7 @@ Application::Init()
 
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
-  //TestStageUI(graph, _stages);
+  TestStageUI(graph, _stages);
 
  
 }
@@ -142,6 +144,7 @@ void Application::PreviousFrame()
   else _currentTime = currentTime;
   
   _timeline->Update();
+  _viewport->Update();
 }
 
 void Application::NextFrame()
@@ -155,18 +158,21 @@ void Application::NextFrame()
   else _currentTime = currentTime;
   
   _timeline->Update();
+  _viewport->Update();
 }
 
 void Application::FirstFrame()
 {
   _currentTime = _startTime;
   _timeline->Update();
+  _viewport->Update();
 }
 
 void Application::LastFrame()
 {
   _currentTime = _endTime;
   _timeline->Update();
+  _viewport->Update();
 }
 
 void Application::StartPlayBack(bool backward)

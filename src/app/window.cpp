@@ -153,13 +153,15 @@ Window::SetActiveView(View* view)
   if(_activeView)
   {
     if(_activeView == view)return;
-    _activeView->ClearOver();
+    _activeView->ClearFlag(View::OVER);
+    _activeView->ClearFlag(View::ACTIVE);
 
   }
   if(view)
   {
     _activeView = view;
-    _activeView->SetOver();
+    _activeView->SetFlag(View::OVER);
+    _activeView->SetFlag(View::ACTIVE);
   }
   else _activeView = NULL;
   
@@ -170,20 +172,20 @@ Window::SetActiveView(View* view)
 View* 
 Window::SplitView(View* view, double perc, bool horizontal, bool fixed)
 {
-  if(!view->IsLeaf())
+  if(!view->GetFlag(View::LEAF))
   {
     std::cerr << "Can't split non-leaf view! Sorry!!!" << std::endl;
     return NULL;
   }
-  view->SetLeaf();
+  view->SetFlag(View::LEAF);
   if(horizontal)
   {
-    view->SetHorizontal();
+    view->SetFlag(View::HORIZONTAL);
     view->Split(perc, horizontal, fixed);
   }
   else
   {
-    view->ClearHorizontal();
+    view->ClearFlag(View::HORIZONTAL);
     view->Split(perc, horizontal, fixed);
   }
   
@@ -203,7 +205,10 @@ Window::CollectLeaves(View* view)
     view = _mainView;
     _leaves.clear();
   }
-  if(view->IsLeaf())_leaves.push_back(view);
+  if (view->GetFlag(View::LEAF)) {
+    _leaves.push_back(view);
+    view->SetFlag(View::DIRTY);
+  }
   else
   {
     if(view->GetLeft())CollectLeaves(view->GetLeft());
@@ -288,6 +293,7 @@ Window::Draw()
   
   if(_mainView)_mainView->Draw();
   GLCheckError("### WINDOW 4");
+
   // draw splitters
   _splitter->Draw();
   GLCheckError("### WINDOW 5");
@@ -304,38 +310,42 @@ Window::Draw()
 void 
 Window::SetupImgui()
 {
+  static float fontSizes[3] = { 16.f,32.f,64.f };
   // setup imgui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   
   _io = &(ImGui::GetIO());
+  //_io->FontAllowUserScaling = true;
 
   // load fonts
   std::string exeFolder = GetInstallationFolder();
   std::string fontPath;
-  fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Bold.otf";
-  _boldFont = _io->Fonts->AddFontFromFileTTF(
-    fontPath.c_str(),
-    _fontSize, 
-    NULL, 
-    _io->Fonts->GetGlyphRangesDefault()
-  );
+  for (int i = 0; i < 3; ++i) {
+    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Bold.otf";
+    _boldFont[i] = _io->Fonts->AddFontFromFileTTF(
+      fontPath.c_str(),
+      fontSizes[i],
+      NULL,
+      _io->Fonts->GetGlyphRangesDefault()
+    );
 
-  fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Medium.otf";
-  _mediumFont = _io->Fonts->AddFontFromFileTTF(
-    fontPath.c_str(),
-    _fontSize, 
-    NULL, 
-    _io->Fonts->GetGlyphRangesDefault()
-  );
+    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Medium.otf";
+    _mediumFont[i] = _io->Fonts->AddFontFromFileTTF(
+      fontPath.c_str(),
+      fontSizes[i],
+      NULL,
+      _io->Fonts->GetGlyphRangesDefault()
+    );
 
-  fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Regular.otf";
-  _regularFont = _io->Fonts->AddFontFromFileTTF(
-    fontPath.c_str(),
-    _fontSize, 
-    NULL, 
-    _io->Fonts->GetGlyphRangesDefault()
-  );
+    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Regular.otf";
+    _regularFont[i] = _io->Fonts->AddFontFromFileTTF(
+      fontPath.c_str(),
+      fontSizes[i],
+      NULL,
+      _io->Fonts->GetGlyphRangesDefault()
+    );
+  }
   
   // setup imgui style
   //ImGui::StyleColorsAmina(NULL);
@@ -360,8 +370,7 @@ Window::SetupImgui()
   } else {
     ImGui_ImplOpenGL3_Init("#version 330 ");
   }
-    
-  ImNodes::Initialize();
+
 }
 
 // clear imgui
@@ -372,7 +381,6 @@ Window::ClearImgui()
   // Cleanup
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
-  ImNodes::Shutdown();
   ImGui::DestroyContext();
 }
 
@@ -405,10 +413,6 @@ void Window::MainLoop()
   while(!glfwWindowShouldClose(_window))
   {
     glfwWaitEventsTimeout(1.0/60.0);
-    //glfwWaitEvents();
-    //glfwPollEvents();
-    glClearColor(0.3f,0.3f, 0.3f,1.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if(_app->IsPlaying())_app->PlayBack();
     else _app->Update();
@@ -427,7 +431,7 @@ Window::PickSplitter(double mouseX, double mouseY)
   if(splitterIndex >= 0)
   {
     _activeView = _splitter->GetViewByIndex(splitterIndex);
-    if (_activeView->IsHorizontal())
+    if (_activeView->GetFlag(View::HORIZONTAL))
       _splitter->SetVerticalCursor();
     else 
       _splitter->SetHorizontalCursor();
@@ -451,7 +455,6 @@ KeyboardCallback(
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
   Application* app = parent->GetApplication();
   ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
-  //if (ImGui::GetIO().WantCaptureKeyboard) return;
   if(action == GLFW_RELEASE)
   {
     parent->SetDebounce(false);
@@ -628,10 +631,8 @@ CharCallback(GLFWwindow* window, unsigned c)
 void 
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
-  //if (ImGui::GetIO().WantCaptureMouse) return;
   Window* parent = Window::GetUserData(window);
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
-  //parent->PickSplitter(x, y);
   if(!parent->GetActiveView())return;
   if(parent->GetActiveTool() != AMN_TOOL_NONE)
   {

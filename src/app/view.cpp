@@ -17,7 +17,7 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max):
   _right(NULL),
   _min(min), 
   _max(max), 
-  _flags(HORIZONTAL|LEAF),
+  _flags(HORIZONTAL|LEAF|DIRTY),
   _perc(0.5),
   _content(NULL)
 {
@@ -36,7 +36,7 @@ View::View(View* parent, int x, int y, int w, int h):
   _right(NULL),
   _min(pxr::GfVec2f(x, y)), 
   _max(pxr::GfVec2f(x+w, y+h)), 
-  _flags(HORIZONTAL|LEAF),
+  _flags(HORIZONTAL|LEAF|DIRTY),
   _perc(0.5),
   _content(NULL)
 {
@@ -82,13 +82,15 @@ View::Contains(int x, int y)
 void 
 View::Draw()
 {
-  if(!IsLeaf()){
+  if(!GetFlag(LEAF)){
     if(_left)_left->Draw();
     if(_right)_right->Draw();
   }
   else
   {
-    if(_content)_content->Draw();
+    if (GetFlag(DIRTY) && _content) {
+      _content->Draw();
+    }   
   }
 }
 
@@ -124,7 +126,7 @@ void
 View::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
 {
   // horizontal splitter
-  if(IsHorizontal())
+  if(GetFlag(HORIZONTAL))
   {
     if(leftOrRight)
     {
@@ -161,7 +163,7 @@ void
 View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
   const int width, const int height)
 {
-  if(IsHorizontal())
+  if(GetFlag(HORIZONTAL))
   { 
     sMin[0] = GetMin()[0];
     sMax[0] = GetMax()[0];
@@ -187,11 +189,11 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
 void
 View::Split(double perc, bool horizontal, bool fixed)
 {
-  if(horizontal)SetHorizontal();
-  else ClearHorizontal();
+  if(horizontal)SetFlag(HORIZONTAL);
+  else ClearFlag(HORIZONTAL);
 
-  if(fixed)SetFixed();
-  else ClearFixed();
+  if(fixed)SetFlag(FIXED);
+  else ClearFlag(FIXED);
   _perc = perc;
 
   pxr::GfVec2f cMin, cMax;    
@@ -205,7 +207,7 @@ View::Split(double perc, bool horizontal, bool fixed)
   _right->_name = _name + ":right";
   _right->_parent = this;
 
-  ClearLeaf();
+  ClearFlag(LEAF);
 }
 
 void 
@@ -220,9 +222,9 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   _min = pxr::GfVec2f(x, y);
   _max = pxr::GfVec2f(x+w, y+h);
   
-  if(!IsLeaf())
+  if(!GetFlag(LEAF))
   {
-    if(IsHorizontal())
+    if(GetFlag(HORIZONTAL))
     {
       if(_left)_left->Resize(x, y, w, h * _perc);
       if(_right)_right->Resize(x, y + h * _perc, w, h - h *_perc);
@@ -238,12 +240,13 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
     if(_content)_content->Resize();
   }
   if(rationalize)RescaleNumPixels(ratio);
+  SetFlag(DIRTY);
 }
 
 void 
 View::GetPercFromMousePosition(int x, int y)
 {
-  if(IsHorizontal())
+  if(GetFlag(HORIZONTAL))
   {
     if(GetHeight()<0.01)return;
     double perc = (double)(y - _min[1]) / (double)(_max[1] - _min[1]);
@@ -269,7 +272,7 @@ View::SetPerc(double perc)
 void
 View::ComputeNumPixels(bool postFix)
 {
-  if(IsHorizontal())
+  if(GetFlag(HORIZONTAL))
   {
     _npixels[0] = _perc * GetHeight();
     _npixels[1] = (1-_perc) * GetHeight();
@@ -289,9 +292,9 @@ View::ComputeNumPixels(bool postFix)
 void 
 View::RescaleNumPixels(pxr::GfVec2f  ratio)
 {
-  if(!IsLeaf())
+  if(!GetFlag(LEAF))
   {
-    if(IsHorizontal()){_npixels[0] *= ratio[1]; _npixels[1] *= ratio[1];}
+    if(GetFlag(HORIZONTAL)){_npixels[0] *= ratio[1]; _npixels[1] *= ratio[1];}
     else {_npixels[0] *= ratio[0]; _npixels[1] *= ratio[0];}
 
     if(_left)_left->RescaleNumPixels(ratio);
@@ -299,14 +302,13 @@ View::RescaleNumPixels(pxr::GfVec2f  ratio)
   }
 }
 
-
 void 
 View::FixLeft()
 {
-  if(_left->IsHorizontal() == IsHorizontal())
+  if(_left->GetFlag(HORIZONTAL) == GetFlag(HORIZONTAL))
   {
     double perc;
-    if(IsHorizontal())
+    if(GetFlag(HORIZONTAL))
     {
       int height = GetHeight() * _perc;
       perc = (double)_left->_npixels[0] / (double)height;
@@ -319,7 +321,7 @@ View::FixLeft()
 
      _left->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
       
-    if(!_left->IsLeaf())
+    if(!_left->GetFlag(LEAF))
     {
       _left->FixLeft();
       _left->FixRight();
@@ -330,10 +332,10 @@ View::FixLeft()
 void 
 View::FixRight()
 {
-  if(_right->IsHorizontal() == IsHorizontal())
+  if(_right->GetFlag(HORIZONTAL) == GetFlag(HORIZONTAL))
   {
     double perc;
-    if(IsHorizontal())
+    if(GetFlag(HORIZONTAL))
     {
       double height = GetHeight() * (1 - _perc);
       perc = 1-(double)_right->_npixels[1] / (double)height;
@@ -345,13 +347,28 @@ View::FixRight()
     }
     _right->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
 
-    if(!_right->IsLeaf())
+    if(!_right->GetFlag(LEAF))
     {
       _right->FixLeft();
       _right->FixRight();
     }
   }
-  
 }
+
+void View::SetClean()
+{
+  if (_buffered >= 2) {
+    ClearFlag(DIRTY);
+    _buffered = 0;
+  }
+  else _buffered++;
+}
+
+void View::SetDirty()
+{
+  SetFlag(DIRTY);
+  _buffered = 0;
+}
+
 
 AMN_NAMESPACE_CLOSE_SCOPE

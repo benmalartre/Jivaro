@@ -1,7 +1,9 @@
 #include "node.h"
 #include "graph.h"
+#include "../app/window.h"
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/usdGeom/xformable.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -17,7 +19,7 @@ int GetColorFromAttribute(const pxr::UsdAttribute& attr)
   GRAPH_COLOR_VECTOR2           = 0xFFFFCC00,
   GRAPH_COLOR_VECTOR3           = 0xFFFFFF00,
   GRAPH_COLOR_VECTOR4           = 0xFFFFFF66,
-  GRAPH_COLOR_COLOR             = 0xFFFF0000, 
+  GRAPH_COLOR_COLOR             = 0xFFFF0000,
   GRAPH_COLOR_ROTATION          = 0xFFCCFFFF,
   GRAPH_COLOR_QUATERNION        = 0xFF66FFFF,
   GRAPH_COLOR_MATRIX3           = 0xFF00FFFF,
@@ -30,61 +32,158 @@ int GetColorFromAttribute(const pxr::UsdAttribute& attr)
   GRAPH_COLOR_CONTOUR           = 0xFF000000
   */
   pxr::SdfValueTypeName vtn = attr.GetTypeName();
-  if(vtn == pxr::SdfValueTypeNames->Bool) return GRAPH_COLOR_BOOL;
-  else if(vtn == pxr::SdfValueTypeNames->Int) return GRAPH_COLOR_INTEGER;
-  else if(vtn == pxr::SdfValueTypeNames->UChar) return GRAPH_COLOR_ENUM;
-  else if(vtn == pxr::SdfValueTypeNames->Float) return GRAPH_COLOR_FLOAT;
-  else if(vtn == pxr::SdfValueTypeNames->Float2) return GRAPH_COLOR_VECTOR2;
-  else if(vtn == pxr::SdfValueTypeNames->Float3) return GRAPH_COLOR_VECTOR3;
-  else if(vtn == pxr::SdfValueTypeNames->Float4) return GRAPH_COLOR_VECTOR4;
-  else if(vtn == pxr::SdfValueTypeNames->Color4f) return GRAPH_COLOR_COLOR;
+  if (vtn == pxr::SdfValueTypeNames->Bool || 
+    vtn == pxr::SdfValueTypeNames->BoolArray) return GRAPH_COLOR_BOOL;
+  else if (vtn == pxr::SdfValueTypeNames->Int ||
+    vtn == pxr::SdfValueTypeNames->IntArray) return GRAPH_COLOR_INTEGER;
+  else if (vtn == pxr::SdfValueTypeNames->UChar ) return GRAPH_COLOR_ENUM;
+  else if (vtn == pxr::SdfValueTypeNames->Float ||
+    vtn == pxr::SdfValueTypeNames->FloatArray) return GRAPH_COLOR_FLOAT;
+  else if (vtn == pxr::SdfValueTypeNames->Float2 ||
+    vtn == pxr::SdfValueTypeNames->Float2Array) return GRAPH_COLOR_VECTOR2;
+  else if (vtn == pxr::SdfValueTypeNames->Float3 ||
+    vtn == pxr::SdfValueTypeNames->Vector3f ||
+    vtn == pxr::SdfValueTypeNames->Float3Array ||
+    vtn == pxr::SdfValueTypeNames->Vector3fArray ) return GRAPH_COLOR_VECTOR3;
+  else if (vtn == pxr::SdfValueTypeNames->Float4 ||
+    vtn == pxr::SdfValueTypeNames->Float4Array) return GRAPH_COLOR_VECTOR4;
+  else if (vtn == pxr::SdfValueTypeNames->Color4f ||
+    vtn == pxr::SdfValueTypeNames->Color4fArray) return GRAPH_COLOR_COLOR;
+  else if (vtn == pxr::SdfValueTypeNames->Asset ||
+    vtn == pxr::SdfValueTypeNames->AssetArray) return GRAPH_COLOR_PRIM;
 }
 
-
-//, const pxr::UsdAttribute& attr
-PortUI::PortUI(const pxr::GraphInput& port, int index)
+ItemUI::ItemUI()
+  : _pos(0), _size(0), _color(0), _state(0)
 {
-  _id = index;
-  //SdfValueTypeName
-  std::cout << "PORT TYPE NAME : " << port.GetTypeName() << std::endl;
-  _color = GetColorFromAttribute(pxr::UsdAttribute(port));
+}
+
+ItemUI::ItemUI(const pxr::GfVec2f& pos, const pxr::GfVec2f& size, int color)
+  : _pos(pos), _size(size), _color(color), _state(0)
+{
+}
+
+ItemUI::ItemUI(int color)
+  : _pos(0), _size(0), _color(color), _state(0)
+{
+}
+
+void ItemUI::SetState(size_t flag, bool value)
+{
+  if (value) _state |= flag;
+  else _state &= ~flag;
+}
+
+bool ItemUI::GetState(size_t flag)
+{
+  return _state & flag;
+}
+
+void ItemUI::SetPosition(const pxr::GfVec2f& pos)
+{
+  _pos = pos;
+}
+
+void ItemUI::SetSize(const pxr::GfVec2f& size)
+{
+  _size = size;
+}
+
+void ItemUI::SetColor(const pxr::GfVec3f& color)
+{
+  _color = ImColor(
+    int(color[0] * 255),
+    int(color[1] * 255),
+    int(color[2] * 255),
+    255);
+}
+
+void ItemUI::SetColor(int color)
+{
+  _color = color;
+}
+
+bool ItemUI::Contains(const pxr::GfVec2f& pos)
+{
+  if (pos[0] >= _pos[0] &&
+    pos[0] <= _pos[0] + _size[0] &&
+    pos[1] >= _pos[1] &&
+    pos[1] <= _pos[1] + _size[1])return true;
+  return false;
+}
+
+bool ItemUI::Intersect(const pxr::GfVec2f& start, const pxr::GfVec2f& end)
+{
+  pxr::GfRange2f grabBox(start, end);
+  pxr::GfRange2f nodeBox(_pos, _pos + _size);
+  if (!nodeBox.IsOutside(grabBox)) return true;
+  else return false;
+}
+
+PortUI::PortUI(bool io, const std::string& label, pxr::UsdAttribute& attr)
+  :ItemUI(GetColorFromAttribute(attr))
+{
+  _label = label;
+  _io = io;
+}
+
+PortUI::PortUI(const pxr::GraphInput& port)
+  :ItemUI(GetColorFromAttribute(pxr::UsdAttribute(port)))
+{
   _label = port.GetBaseName().GetText();
   _io = true;
 
 }
 
-PortUI::PortUI(const pxr::GraphOutput& port, int index)
+PortUI::PortUI(const pxr::GraphOutput& port)
+  :ItemUI(GetColorFromAttribute(pxr::UsdAttribute(port)))
 {
-  _id = index;
-  _color = GetColorFromAttribute(pxr::UsdAttribute(port));
   _label = port.GetBaseName().GetText();
   _io = false;
 }
 
-void PortUI::Draw()
+void PortUI::Draw(GraphUI* editor)
 {
-  if(_io)
-    ImNodes::BeginInputAttribute(_id, ImNodes::PinShape_CircleFilled);
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  NodeUI* drawingNode = editor->GetDrawingNode();
+  const pxr::GfVec2f offset = editor->GetOffset();
+  const float zoom = editor->GetZoom();
+  const pxr::GfVec2f p = editor->GetDrawingPos();
+  
+  if (_io)
+    drawList->AddCircleFilled(
+      p + _pos * zoom,
+      4 * zoom,
+      _color
+    );
   else
-    ImNodes::BeginOutputAttribute(_id, ImNodes::PinShape_CircleFilled);
+    drawList->AddCircleFilled(
+      p + (pxr::GfVec2f(drawingNode->GetWidth(), 0) + _pos) * zoom,
+      4 * zoom,
+      _color
+    );
+
+  ImGui::SetCursorPos(editor->GetCursorPos() + 
+    pxr::GfVec2f(NODE_PORT_PADDING * zoom, 
+      -ImGui::GetTextLineHeight() * 0.6) + _pos * zoom);
 
   ImGui::Text(_label.c_str());
-  ImNodes::EndAttribute();
+
+  editor->IncrementDrawingPos(pxr::GfVec2f(0, NODE_PORT_SPACING));
 }
 
 // ConnexionUI draw
 //------------------------------------------------------------------------------
-void ConnexionUI::Draw()
+void ConnexionUI::Draw(GraphUI* graph)
 {
-  ImNodes::Link(_id, _start, _end);
+  //ImNodes::Link(_id, _start, _end);
 }
 
 // NodeUI constructor
 //------------------------------------------------------------------------------
-NodeUI::NodeUI(const pxr::UsdPrim& prim, int& id):
-_prim(prim), _id(id)
+NodeUI::NodeUI(const pxr::UsdPrim& prim)
+ : ItemUI(), _prim(prim)
 {
-  id++;
   if(_prim.IsValid())
   {
     _name = prim.GetName();
@@ -94,25 +193,20 @@ _prim(prim), _id(id)
       _inputs.resize(node.NumInputs());
       for(int i=0;i<_inputs.size();++i)
       {
-        _inputs[i] = PortUI(node.GetInput(i), id++);
+        _inputs[i] = PortUI(node.GetInput(i));
       }
 
       int offset = _inputs.size();
       _outputs.resize(node.NumOutputs());
       for(int i=0;i<_outputs.size();++i)
       {
-        _outputs[i] = PortUI(node.GetOutput(i), id++);
+        _outputs[i] = PortUI(node.GetOutput(i));
       }
     }
     else if(_prim.IsA<pxr::GraphGraph>())
     {
       //std::cout << "PRIM IS A GRAPH :D" << std::endl;
     }
-    else
-    {
-      //std::cout << "PRIM IS A : " << _prim.GetTypeName().GetText() << std::endl;
-    }
-    
   }
 }
 
@@ -123,21 +217,21 @@ NodeUI::~NodeUI()
 
 }
 
-void NodeUI::Update()
+void NodeUI::Init()
 {
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   pxr::UsdAttribute posAttr = api.GetPosAttr();
-  if(posAttr && posAttr.HasAuthoredValue())
+  if (posAttr && posAttr.HasAuthoredValue())
   {
     posAttr.Get(&_pos);
   }
 
   pxr::UsdAttribute sizeAttr = api.GetSizeAttr();
-  if(sizeAttr && sizeAttr.HasAuthoredValue())
+  if (sizeAttr && sizeAttr.HasAuthoredValue())
   {
     sizeAttr.Get(&_size);
   }
-  else 
+  else
   {
     _size[0] = 128;
     _size[1] = 64;
@@ -147,27 +241,104 @@ void NodeUI::Update()
 
 }
 
+void NodeUI::AddInput(const std::string& name, pxr::SdfValueTypeName type)
+{
+  pxr::UsdAttribute attr = _prim.CreateAttribute(pxr::TfToken(name), type);
+  PortUI port(true, name, attr);
+  //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_SPACING));
+  _inputs.push_back(port);
+
+}
+
+void NodeUI::AddOutput(const std::string& name, pxr::SdfValueTypeName type)
+{
+  pxr::UsdAttribute attr = _prim.CreateAttribute(pxr::TfToken(name), type);
+  PortUI port(false, name, attr);
+  //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_SPACING));
+  _outputs.push_back(port);
+}
+
+void NodeUI::ComputeSize()
+{
+  float width = ImGui::CalcTextSize(_name.c_str()).x + 32;
+  
+  float height = NODE_HEADER_HEIGHT;
+  for (auto& input : _inputs) {
+    height += NODE_PORT_SPACING;
+    float w = ImGui::CalcTextSize(input.GetName().c_str()).x + 32;
+    if (w > width)width = w;
+  }
+  for (auto& output : _outputs) {
+    height += NODE_PORT_SPACING;
+    float w = ImGui::CalcTextSize(output.GetName().c_str()).x + 32;
+    if (w > width)width = w;
+  }
+  _size = pxr::GfVec2f(width, height);
+  
+}
+
+void NodeUI::Update()
+{
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  pxr::UsdAttribute posAttr = api.CreatePosAttr();
+  posAttr.Set(_pos);
+
+  pxr::UsdAttribute sizeAttr = api.CreateSizeAttr();
+  sizeAttr.Set(_size);
+
+}
+
 // NodeUI draw
 //------------------------------------------------------------------------------
-void NodeUI::Draw()
+void NodeUI::Draw(GraphUI* editor) 
 {
-  Update();
-  ImGui::SetCursorPos(GetPos());
-  ImNodes::BeginNode(_id);
+  Window* window = editor->GetWindow();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImGui::SetWindowFontScale(editor->GetFontScale());
+  ImGui::PushFont(window->GetMediumFont(editor->GetFontIndex()));
 
-  ImNodes::BeginNodeTitleBar();
+  const float zoom = editor->GetZoom();
+  const pxr::GfVec2f offset = editor->GetOffset();
+  const ImVec2 p = editor->GetPosition() + (GetPos() + offset) * zoom;
+  const float x = p.x;
+  const float y = p.y;
+  const ImVec2 s = GetSize() * zoom;
+
+  drawList->AddRectFilled(
+    ImVec2(x, y),
+    ImVec2(x + s.x, y + s.y),
+    ImColor(60,60,60, 255),
+    4 * zoom,
+    ImDrawCornerFlags_All);
+
+  drawList->AddRect(
+    ImVec2(x, y),
+    ImVec2(x + s.x, y + s.y),
+    GetState(ITEM_STATE_SELECTED) ? ImColor(0, 255, 0, 255) : 
+      GetState(ITEM_STATE_HOVERED) ? ImColor(255, 255, 0, 255) : ImColor(0,0,0,255),
+    4 * zoom,
+    ImDrawCornerFlags_All,
+    2 * zoom);
+
+  ImGui::SetCursorPos((GetPos() + pxr::GfVec2f(NODE_PORT_PADDING, 0) + editor->GetOffset()) * zoom);
   ImGui::TextUnformatted(_name.c_str());
-  ImNodes::EndNodeTitleBar();
+
+  ImGui::PopFont();
+  
+  ImGui::PushFont(window->GetRegularFont(editor->GetFontIndex()));
+
+  editor->SetDrawingPos(_pos + pxr::GfVec2f(0.f,NODE_HEADER_HEIGHT));
 
   int numInputs = _inputs.size();
   
-  for(int i=0;i<numInputs;++i) _inputs[i].Draw();
+  for(int i=0;i<numInputs;++i) _inputs[i].Draw(editor);
 
   int numOutputs = _outputs.size();
   ImGui::Indent(40);
-  for(int i=0;i<numOutputs;++i) _outputs[i].Draw();
+  for(int i=0;i<numOutputs;++i) _outputs[i].Draw(editor);
+  ImGui::PopFont();
 
-  ImNodes::EndNode();
 } 
+
 
 AMN_NAMESPACE_CLOSE_SCOPE

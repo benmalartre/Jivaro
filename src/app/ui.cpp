@@ -11,16 +11,17 @@ BaseUI::BaseUI(View* parent, const std::string& name, bool docked):
   if(_parent)
   {
     _parent->SetContent(this);
-    _parent->SetLeaf();
+    _parent->SetFlag(View::LEAF);
+    _parent->SetFlag(View::DIRTY);
   }
 };
 
 // mouse positon relative to the view
-void BaseUI::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
+void BaseUI::GetRelativeMousePosition(const float inX, const float inY, float& outX, float& outY)
 {
   pxr::GfVec2f parentPosition = _parent->GetMin();
-  int parentX = parentPosition[0];
-  int parentY = parentPosition[1];
+  float parentX = parentPosition[0];
+  float parentY = parentPosition[1];
   outX = inX - parentX;
   outY = inY - parentY;
 }
@@ -33,6 +34,12 @@ int BaseUI::GetWindowHeight(){return _parent->GetWindow()->GetHeight();};
 //void BaseUI::SetWindowContext(){_parent->GetWindow()->SetContext();};
 
 // ui dimensions
+ImVec2 BaseUI::GetPosition()
+{
+  if (_docked)return _parent->GetMin();
+  else return ImGui::GetWindowPos();
+}
+
 int BaseUI::GetX()
 {
   if(_docked)return _parent->GetMin()[0];

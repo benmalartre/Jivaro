@@ -8,8 +8,11 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primFlags.h>
 #include <vector>
+#include <set>
 
 AMN_NAMESPACE_OPEN_SCOPE
+
+#define AMN_GRAPH_CELL_MAX_NODES 6
 
 enum ColorGraph {
   GRAPH_COLOR_UNDEFINED         = 0xFF000000,
@@ -30,34 +33,45 @@ enum ColorGraph {
   GRAPH_COLOR_TOPOLOGY          = 0xFFCCCCCC,
   GRAPH_COLOR_GEOMETRY          = 0xFFFF3366,
   GRAPH_COLOR_LOCATION          = 0xFF555577,
-  GRAPH_COLOR_CONTOUR           = 0xFF000000
+  GRAPH_COLOR_CONTOUR           = 0xFF000000,
+  GRAPH_COLOR_PRIM              = 0xFF6622FF
 };
 
 struct GraphPortMapData {
   const NodeUI*                        _node;
-  std::string                             _port;
+  std::string                          _port;
 };
 
-struct GraphStageUI {
-  int                                     _nodeId;
-  pxr::UsdStageRefPtr                     _stage;
-  std::vector<NodeUI>                  _nodes;
-  std::vector<ConnexionUI>             _connexions;
-  std::map<int, GraphPortMapData>      _portMap;
+struct GraphCellUI {
+  bool                                 isLeaf;
+  std::vector<NodeUI*>                 nodes;
+  GraphCellUI*                         cells[4];
 
-  GraphStageUI(const pxr::UsdStageRefPtr& stage):_stage(stage){};
-  void Update(const NodeUI& node);
+  GraphCellUI():isLeaf(true) {
+    for (int i = 0; i < 4; ++i) cells[i] = NULL;
+  };
+};
+
+struct GraphGrabUI {
+  pxr::GfVec2f start;
+  pxr::GfVec2f end;
 };
 
 class GraphUI : public BaseUI
 {
 public:
-  GraphUI(View* parent, const std::string& filename);
-  ~GraphUI()         override;
+  GraphUI(View* parent, const std::string& filename, bool docked);
+  ~GraphUI() override;
 
-  void MouseButton(int action, int button, int mods) override;
+  void MouseButton(int button, int action, int mods) override;
   void MouseMove(int x, int y) override;
-  void Draw()      override;
+  void MouseWheel(int x, int y) override;
+  void Draw() override;
+  void DrawGrid();
+  void DrawTxt();
+
+  inline float GetZoom() { return _zoom; };
+  inline const pxr::GfVec2f& GetOffset() { return _offset; };
 
   void Init(const std::string& filename);
   void Init(const std::vector<pxr::UsdStageRefPtr>& stages);
@@ -65,24 +79,65 @@ public:
 
   void SetCurrentColor(int color){_color = color;};
   int GetCurrentColor(){return _color;};
-
-  GraphStageUI* GetStage(int index);
   
   void BuildGraph(int index);
+
+  void UpdateFont();
+  inline size_t GetFontIndex() { return _fontIndex; };
+  inline float GetFontScale() { return _fontScale; };
+
+  pxr::GfVec2f ViewPositionToGridPosition(const pxr::GfVec2f& mousePos);
+  NodeUI* NodeUnderMouse(const pxr::GfVec2f& mousePos);
+
+  void AddNode(NodeUI* node) { _nodes.push_back(node); };
+  NodeUI* GetLastNode() { return _nodes.back(); };
+  NodeUI* GetDrawingNode() { return _drawingNode; };
+  const pxr::GfVec2f GetDrawingPos() { 
+    return GetPosition() + (_drawingPos + _offset) * _zoom; 
+  };
+  const pxr::GfVec2f GetCursorPos() {
+    return (_drawingPos + _offset) * _zoom;
+  };
+  void SetDrawingPos(const pxr::GfVec2f& pos) { _drawingPos = pos; };
+  void IncrementDrawingPos(const pxr::GfVec2f& offset) { _drawingPos += offset; };
+
+  void AddToSelection(NodeUI* node, bool bringToFront);
+  void RemoveFromSelection(NodeUI* node);
+  void ClearSelection();
+  void GrabSelect(int mod);
+
+  void BuildGrid();
+  
+  void BuildGraph();
   
 private:
-
-  void _RecurseStagePrim(const pxr::UsdPrim& prim, int stageIndex);
-
-  std::string                           _filename;
-  std::vector<GraphStageUI*>            _stages;
-  GraphStageUI*                         _current;
-  ImNodes::EditorContext*               _context;
+  void _RecurseStagePrim(const pxr::UsdPrim& prim);
   
   int                                   _color;
   int                                   _id;
   int                                   _depth;
-  pxr::GfVec2f                          _position;  
+  pxr::GfVec2f                          _offset;  
+  float                                 _zoom;
+  int                                   _lastX;
+  int                                   _lastY;
+  bool                                  _drag;
+  bool                                  _grab;
+  bool                                  _navigate;
+  float                                 _fontScale;
+  size_t                                _fontIndex;
+
+  int                                   _nodeId;
+  pxr::UsdStageRefPtr                   _stage;
+  std::vector<NodeUI*>                  _nodes;
+  std::vector<ConnexionUI>              _connexions;
+  std::set<NodeUI*>                     _selected;
+  NodeUI*                               _hoveredNode;
+  NodeUI*                               _currentNode;
+  NodeUI*                               _drawingNode;
+  
+  pxr::GfVec2f                          _drawingPos;
+  GraphGrabUI                           _grabData;
+  GraphCellUI*                          _grid;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

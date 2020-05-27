@@ -10,15 +10,17 @@ class Window;
 class BaseUI;
 class View
 {
-enum FLAGS
-{
-  OVER        = 1,
-  HORIZONTAL  = 2,
-  LEAF        = 4,
-  FIXED       = 8
-};
-
 public:
+  enum FLAGS
+  {
+    OVER = 1,
+    HORIZONTAL = 2,
+    LEAF = 4,
+    FIXED = 8,
+    ACTIVE = 16,
+    DIRTY = 32
+  };
+
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
   View(View* parent, int x, int y, int w, int h);
   ~View();
@@ -72,21 +74,13 @@ public:
   void MouseWheel(int x, int y);
 
   // FLAGS
-  inline bool IsOver(){return BITMASK_CHECK(_flags, OVER);};
-  inline void SetOver(){BITMASK_SET(_flags, OVER);};
-  inline bool ClearOver(){return BITMASK_CLEAR(_flags, OVER);};
+  inline bool GetFlag(short flag) { return BITMASK_CHECK(_flags, flag); };
+  inline void SetFlag(short flag) { BITMASK_SET(_flags, flag); };
+  inline void ClearFlag(short flag) { BITMASK_CLEAR(_flags, flag); };
 
-  inline bool IsHorizontal(){return BITMASK_CHECK(_flags, HORIZONTAL);};
-  inline void SetHorizontal(){BITMASK_SET(_flags, HORIZONTAL);};
-  inline bool ClearHorizontal(){return BITMASK_CLEAR(_flags, HORIZONTAL);};
+  void SetClean();
+  void SetDirty();
 
-  inline bool IsLeaf(){return BITMASK_CHECK(_flags, LEAF);};
-  inline void SetLeaf(){BITMASK_SET(_flags, LEAF);};
-  inline bool ClearLeaf(){return BITMASK_CLEAR(_flags, LEAF);};
-
-  inline bool IsFixed(){return BITMASK_CHECK(_flags, FIXED);};
-  inline void SetFixed(){BITMASK_SET(_flags, FIXED);};
-  inline bool ClearFixed(){return BITMASK_CLEAR(_flags, FIXED);};
 
 private:
   pxr::GfVec2f      _min;
@@ -102,6 +96,7 @@ private:
   unsigned          _flags;
   std::string       _name;
   Window*           _window;
+  char              _buffered;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

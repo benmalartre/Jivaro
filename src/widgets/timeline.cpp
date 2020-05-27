@@ -15,6 +15,7 @@ TimelineUI::TimelineUI(View* parent):BaseUI(parent, "Timeline")
   _flags |= ImGuiWindowFlags_NoMove;  
 
   InitializeIcons();
+  _parent->SetDirty();
 }
 
 // destructor
@@ -24,6 +25,7 @@ void TimelineUI::Init(Application* app)
 {
   _app = app;
   Update();
+  _parent->SetDirty();
 }
 
 void TimelineUI::Update()
@@ -36,6 +38,7 @@ void TimelineUI::Update()
   _loop = _app->GetLoop();
   _fps = _app->GetFPS();
   _playing = _app->IsPlaying();
+  _parent->SetDirty();
 }
 
 void TimelineUI::ValidateTime()
@@ -83,16 +86,16 @@ void TimelineUI::VeryDifficultCallback(TimelineUI* ui, int x, float y, const cha
   std::cout << "YUUUUUUPPPPIIIIII :D!!!" << x << "," << y << "," << z << std::endl;
 }
 
-
-
 void TimelineUI::MouseButton(int action, int button, int mods)
 {
   std::cout << "TIMELINE : MOUSE BUTTON :D" << std::endl;
+  _parent->SetDirty();
 }
 
 void TimelineUI::MouseMove(int x, int y)
 {
   std::cout << "TIMELINE : MOUSE MOVE :D" << std::endl;
+  //_parent->SetDirty();
 }
 
 void TimelineUI::DrawControls()
@@ -106,7 +109,7 @@ void TimelineUI::DrawControls()
   ImGui::SetCursorPosX(20);
   ImGui::SetCursorPosY(height-20);
 
-  ImGui::PushFont(GetWindow()->GetMediumFont());
+  ImGui::PushFont(GetWindow()->GetMediumFont(0));
 
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime, 
@@ -273,15 +276,17 @@ void TimelineUI::DrawTimeSlider()
 
 void TimelineUI::Draw()
 {
-
   ImGui::Begin(_name.c_str(), NULL, _flags);
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::SetWindowSize(_parent->GetSize());
 
   DrawTimeSlider();
   DrawControls();
-  
+
   ImGui::End();
+
+  _parent->SetClean();
+
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

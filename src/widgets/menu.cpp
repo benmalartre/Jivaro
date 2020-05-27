@@ -82,7 +82,7 @@ void MenuUI::Draw()
 
   if (ImGui::BeginMainMenuBar())
   {
-    ImGui::PushFont(window->GetBoldFont());
+    ImGui::PushFont(window->GetBoldFont(0));
     if (ImGui::BeginMenu("File"))
     {
       //ImGui::PushFont(window->GetMediumFont());
@@ -110,7 +110,7 @@ void MenuUI::Draw()
     }
     if (ImGui::BeginMenu("Demo"))
     {
-      ImGui::PushFont(window->GetMediumFont());
+      ImGui::PushFont(window->GetMediumFont(0));
       if (ImGui::MenuItem("Open", "CTRL+D")) 
       {
         _showDemoWindow = true;

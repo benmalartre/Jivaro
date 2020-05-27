@@ -31,7 +31,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 #define BITMASK_SET(x,y) ((x) |= (y))
 #define BITMASK_CLEAR(x,y) ((x) &= (~(y)))
 #define BITMASK_FLIP(x,y) ((x) ^= (y))
-#define BITMASK_CHECK(x,y) (((x) & (y)) == (y))
+#define BITMASK_CHECK(x,y) ((x) & (y))
 
 // print vectors (debug)
 static void PrintVector(const pxr::GfVec2i& v, const char* t)
