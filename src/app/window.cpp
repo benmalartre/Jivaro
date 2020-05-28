@@ -25,6 +25,7 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f)
   glfwWindowHint(GLFW_GREEN_BITS,mode->greenBits);
   glfwWindowHint(GLFW_BLUE_BITS,mode->blueBits);
   glfwWindowHint(GLFW_REFRESH_RATE,mode->refreshRate);
+  //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -46,7 +47,7 @@ _pickImage(0), _splitter(NULL),_fontSize(16.f)
 {
   _width = width;
   _height = height;
-
+  //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
@@ -148,9 +149,9 @@ Window::Resize(unsigned width, unsigned height)
 void
 Window::SetActiveView(View* view)
 {
-  if(_activeView)
+  if (_activeView)
   {
-    if(_activeView == view)return;
+    if (_activeView == view)return;
     _activeView->ClearFlag(View::OVER);
     _activeView->ClearFlag(View::ACTIVE);
 
@@ -411,12 +412,12 @@ void Window::MainLoop()
   while(!glfwWindowShouldClose(_window))
   {
     glfwWaitEventsTimeout(1.0/60.0);
-
     if(_app->IsPlaying())_app->PlayBack();
     else _app->Update();
 
     Draw();
     glfwSwapBuffers(_window);
+    _app->ComputeFramerate(glfwGetTime());
   }
 }
 

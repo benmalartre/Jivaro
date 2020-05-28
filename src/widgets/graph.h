@@ -111,6 +111,7 @@ public:
   void BuildGraph();
   
 private:
+  void _GetNodeUnderMouse(const pxr::GfVec2f& mousePos);
   void _RecurseStagePrim(const pxr::UsdPrim& prim);
   
   int                                   _color;

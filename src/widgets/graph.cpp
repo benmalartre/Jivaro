@@ -22,6 +22,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename, bool docked)
   _flags = ImGuiWindowFlags_None
     | ImGuiWindowFlags_NoMove
     | ImGuiWindowFlags_NoResize
+    | ImGuiWindowFlags_NoTitleBar
     | ImGuiWindowFlags_NoCollapse
     | ImGuiWindowFlags_NoNav
     | ImGuiWindowFlags_NoScrollWithMouse
@@ -30,7 +31,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename, bool docked)
   //GraphTreeUI* tree = new GraphTreeUI();
   pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
 
-  for (int i = 0; i < 1024; ++i) {
+  for (int i = 0; i < 12; ++i) {
     pxr::UsdPrim prim =
       stage->DefinePrim(pxr::SdfPath(pxr::TfToken("/node" + std::to_string(i))));
     NodeUI* node = new NodeUI(prim);
@@ -238,11 +239,25 @@ void GraphUI::BuildGraph()
    _RecurseStagePrim(_stage->GetPseudoRoot());
 }
 
+void GraphUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos)
+{
+  pxr::GfVec2f viewPos;
+  GetRelativeMousePosition(mousePos[0], mousePos[1], viewPos[0], viewPos[1]);
+  NodeUI* hovered = NodeUnderMouse(viewPos);
+  if (_hoveredNode && _hoveredNode != hovered)_hoveredNode->SetState(ITEM_STATE_HOVERED, false);
+  if (hovered) {
+    hovered->SetState(ITEM_STATE_HOVERED, true);
+    _hoveredNode = hovered;
+  }
+  else _hoveredNode = NULL;
+}
+
 void GraphUI::MouseButton(int button, int action, int mods)
 {
-  const ImVec2& mousePos = ImGui::GetMousePos();
-  _lastX = mousePos.x;
-  _lastY = mousePos.y;
+  const pxr::GfVec2f& mousePos = ImGui::GetMousePos();
+  _lastX = mousePos[0];
+  _lastY = mousePos[1];
+  _GetNodeUnderMouse(mousePos);
 
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
@@ -309,20 +324,10 @@ void GraphUI::MouseMove(int x, int y)
     _parent->SetDirty();
   }
   else {
-    const pxr::GfVec2f mousePos = ImGui::GetMousePos();
-    pxr::GfVec2f viewPos;
-    GetRelativeMousePosition(mousePos[0], mousePos[1], viewPos[0], viewPos[1]);
-    NodeUI* hovered = NodeUnderMouse(viewPos);
-    if (_hoveredNode && _hoveredNode != hovered)_hoveredNode->SetState(ITEM_STATE_HOVERED, false);
-    if (hovered) {
-      hovered->SetState(ITEM_STATE_HOVERED, true);
-      _hoveredNode = hovered;
-    }
-    else _hoveredNode = NULL;
+    _GetNodeUnderMouse(pxr::GfVec2f(x,y));
   }
   _lastX = x;
   _lastY = y;
-  
 }
 
 void GraphUI::MouseWheel(int x, int y)

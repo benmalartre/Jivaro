@@ -74,6 +74,9 @@ public:
   void PlayBack();
   bool IsPlaying(){return _playback;};
 
+  void ComputeFramerate(double T);
+  size_t GetFramerate() { return _framerate; };
+
 private:
   std::string                       _fileName;
   Window*                           _mainWindow;
@@ -99,6 +102,11 @@ private:
   bool                              _playForwardOrBackward;
   bool                              _playback;
   TimelineUI*                       _timeline;
+
+  double                            _lastT;
+  size_t                            _frameCount;
+  size_t                            _framerate;
+
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE // namespace pxr

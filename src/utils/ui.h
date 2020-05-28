@@ -73,7 +73,7 @@ static void IconButton(Icon* icon, FuncT func, ArgsT... args)
 
 
 template<typename FuncT, typename ...ArgsT>
-void AddIconButton(Icon* icon, FuncT func, ArgsT... args)
+bool AddIconButton(Icon* icon, FuncT func, ArgsT... args)
 {
   if (ImGui::ImageButton(
     (ImTextureID)(intptr_t)icon->_tex, 
@@ -83,8 +83,11 @@ void AddIconButton(Icon* icon, FuncT func, ArgsT... args)
     -1))
   {
     func(args...);
+    ImGui::SameLine();
+    return true;
   }
   ImGui::SameLine();
+  return false;
 }
 
 static void ImDrawList_TransformChannel_Inner(ImVector<ImDrawVert>& vtxBuffer,

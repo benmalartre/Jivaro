@@ -105,10 +105,22 @@ int NumFilesInDirectory(const char* path)
 
 int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
 {
-  /*
+  filenames.clear();
+#ifdef _WIN32
+    std::string search_path = std::string(path) + "/*.*";
+    WIN32_FIND_DATA fd;
+    HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+    if (hFind != INVALID_HANDLE_VALUE) {
+      do {
+        if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+          !strncmp(fd.cFileName, ".DS_Store", 9)) continue;
+        filenames.push_back(fd.cFileName);
+      } while (::FindNextFile(hFind, &fd));
+      ::FindClose(hFind);
+    }
+#else
   DIR *dir;
   struct dirent *ent;
-  filenames.clear();
   if ((dir = opendir (path)) != NULL) 
   {
     // print all the files and directories within directory
@@ -130,8 +142,9 @@ int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
     std::cerr << "Could Not Open Directory : " << path << std::endl;
     return EXIT_FAILURE;
   }
-  */
+  
   return 0;
+#endif
 }
 
 std::string GetInstallationFolder()

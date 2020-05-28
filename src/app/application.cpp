@@ -1,5 +1,6 @@
 #include "application.h"
 #include "../utils/files.h"
+#include "../utils/timer.h"
 #include "../widgets/viewport.h"
 #include "../widgets/menu.h"
 #include "../widgets/graph.h"
@@ -21,7 +22,8 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
   _mainWindow(NULL),_minTime(1),_maxTime(101),_startTime(1),
-  _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false)
+  _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false),
+  _framerate(0),_frameCount(0),_lastT(0)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
@@ -29,7 +31,8 @@ Application::Application(unsigned width, unsigned height):
 
 Application::Application(bool fullscreen):
   _mainWindow(NULL),_minTime(1),_maxTime(101),_startTime(1),
-  _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false)
+  _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false),
+  _framerate(0), _frameCount(0), _lastT(0)
 {
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
@@ -133,6 +136,18 @@ void Application::Update()
   
 }
 
+void Application::ComputeFramerate(double T)
+{
+  _frameCount++;
+
+  if (T - _lastT >= 1.0)
+  {
+    _framerate = _frameCount;
+
+    _frameCount = 0;
+    _lastT = T;
+  }
+}
 // time
 void Application::PreviousFrame()
 {

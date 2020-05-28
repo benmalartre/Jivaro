@@ -256,9 +256,12 @@ bool ViewportUI::Draw()
   _engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
   glDisable(GL_SCISSOR_TEST);
 
+  std::cout << "FRAMERATE : " << this->GetApplication()->GetFramerate() << std::endl;
+
   bool open;
-  ImGui::Begin("ViewportOverlay", &open, 0);
-  ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+  ImGui::Begin("ViewportOverlay", &open, ImGuiWindowFlags_NoDecoration);
+  ImGui::Text("FPS : %d", this->GetApplication()->GetFramerate());
+  //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
   ImGui::End();
   
   return false;

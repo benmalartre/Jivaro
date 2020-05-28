@@ -108,13 +108,17 @@ static void CreateIconFromImage(const std::string& filename,
 
 static void InitializeIcons()
 {
+  std::cout << "INITIALIZE ICONS !!!" << std::endl;
   std::string installDir = GetInstallationFolder();
+  std::cout << installDir << std::endl;
   std::string iconDir = installDir + "/../../icons";
+  std::cout << iconDir << std::endl;
   std::vector<std::string> filenames;
   int n = GetFilesInDirectory(iconDir.c_str(), filenames);
 
   for(const auto f: filenames)
   {
+    std::cout << f << std::endl;
     std::string name = GetFileName(f);
     std::string filename = iconDir + SEPARATOR + f;
     if( pxr::GlfImage::IsSupportedImageFile(filename))
