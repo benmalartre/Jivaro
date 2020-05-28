@@ -96,6 +96,7 @@ Application::Init()
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
   View* mainView = _mainWindow->GetMainView();
+  
   _mainWindow->SplitView(mainView, 0.075, true);
   View* bottomView = _mainWindow->SplitView(mainView->GetRight(), 0.9, true);
   View* timelineView = bottomView->GetRight();
@@ -108,7 +109,7 @@ Application::Init()
   View* viewportView = workingView->GetRight();  
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
-
+  
   GraphUI* graph = new GraphUI(graphView, "GraphUI", true);
   _viewport = new ViewportUI(viewportView, LOFI);
   _timeline = new TimelineUI(timelineView);
@@ -116,15 +117,15 @@ Application::Init()
   //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
   MenuUI* menu = new MenuUI(mainView->GetLeft());
 
-   _viewport->Init();
+  _viewport->Init();
   _timeline->Init(this);
+ 
   _mainWindow->CollectLeaves();
-
+  
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
   TestStageUI(graph, _stages);
 
- 
 }
 
 void Application::Update()

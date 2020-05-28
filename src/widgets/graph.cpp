@@ -124,13 +124,12 @@ void GraphUI::DrawTxt()
 
 // draw
 //------------------------------------------------------------------------------
-void GraphUI::Draw()
+bool GraphUI::Draw()
 {
   std::cout << "DRAW GRAPH UI !!!" << std::endl;
-  //pxr::GfVec2f offset(2, 2);
-  ImGui::SetNextWindowPos(_parent->GetMin());// +offset);
-  ImGui::SetNextWindowSize(_parent->GetSize());// -offset);
-  //ImGui::GetWindowDrawList()->Clear();
+
+  ImGui::SetNextWindowPos(_parent->GetMin());
+  ImGui::SetNextWindowSize(_parent->GetSize());
   ImGui::Begin("Graph Editor", NULL, _flags);
 
   DrawGrid();
@@ -164,15 +163,14 @@ void GraphUI::Draw()
   ImGui::PopFont();
   ImGui::End();
  
-  _parent->SetClean();
-
+  return false;
 };
 
 // init
 //------------------------------------------------------------------------------
 void GraphUI::Init(const std::string& filename)
 {
-  _parent->SetFlag(View::DIRTY);
+  _parent->SetDirty();
   /*
   pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
   pxr::UsdPrimRange primRange = stage->Traverse();
@@ -199,7 +197,7 @@ void GraphUI::Init(const std::string& filename)
 //------------------------------------------------------------------------------
 void GraphUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
 {
-  _parent->SetFlag(View::DIRTY);
+  _parent->SetDirty();
   /*
   if(_trees.size())
     for(auto tree: _trees) delete tree;

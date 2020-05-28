@@ -32,31 +32,14 @@ void Splitter::RecurseBuildMap(View* view)
 void 
 Splitter::BuildMap(int width, int height)
 {
-  if(!_pixels)
-  {
-    _pixels = new int[width * height];
-    _valid = true;
-    _width = width;
-    _height = height;
-  }
-  else if(_pixels && width != _width && height != _height)
-  { 
-    delete [] _pixels; 
-    _pixels = NULL;
-    _width = width;
-    _height = height;
-
-    if(_width <= 0 || _height <= 0) 
-      _valid = false; 
-
-    size_t sz = _width * _height;
-    _pixels = new int[sz];
-    _valid = true;
-  };
-
+  _viewID = 0;
+  if (_pixels)delete[]_pixels;
+  _pixels = new int[width * height];
+  _valid = true;
+  _width = width;
+  _height = height;
   _views.clear();
   memset((void*)&_pixels[0], 0, _width * _height * sizeof(int));
-  _viewID = 0;
 }
 
 // pick splitter

@@ -73,18 +73,19 @@ static void ShowExampleMenuFile()
     }
     if (ImGui::MenuItem("Checked", NULL, true)) {}
     if (ImGui::MenuItem("Quit", "Alt+F4")) {}
+
 }
 
 // overrides
-void MenuUI::Draw()
+bool MenuUI::Draw()
 {  
   Window* window = GetWindow();
-
   if (ImGui::BeginMainMenuBar())
   {
     ImGui::PushFont(window->GetBoldFont(0));
-    if (ImGui::BeginMenu("File"))
+    if(ImGui::BeginMenu("File"))
     {
+      _parent->SetDirty();
       //ImGui::PushFont(window->GetMediumFont());
       ShowExampleMenuFile();
       ImGui::EndMenu();
@@ -92,6 +93,7 @@ void MenuUI::Draw()
     }
     if (ImGui::BeginMenu("Edit"))
     {
+      _parent->SetDirty();
       //ImGui::PushFont(window->GetMediumFont());
       if (ImGui::MenuItem("Undo", "CTRL+Z")) 
       {
@@ -106,10 +108,10 @@ void MenuUI::Draw()
       if (ImGui::MenuItem("Paste", "CTRL+V")) {}
       ImGui::EndMenu();
       //ImGui::PopFont();
-
     }
     if (ImGui::BeginMenu("Demo"))
     {
+      _parent->SetDirty();
       ImGui::PushFont(window->GetMediumFont(0));
       if (ImGui::MenuItem("Open", "CTRL+D")) 
       {
@@ -125,9 +127,12 @@ void MenuUI::Draw()
     }
     ImGui::PopFont();
     ImGui::EndMainMenuBar();
-    
   }
-  if(_showDemoWindow) ImGui::ShowDemoWindow();
+
+  if(_showDemoWindow)
+    ImGui::ShowDemoWindow();
+
+  return true;
 } 
 
 AMN_NAMESPACE_CLOSE_SCOPE

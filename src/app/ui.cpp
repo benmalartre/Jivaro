@@ -4,6 +4,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+
 // constructor
 BaseUI::BaseUI(View* parent, const std::string& name, bool docked):
   _parent(parent), _name(name), _docked(docked)
@@ -12,7 +13,6 @@ BaseUI::BaseUI(View* parent, const std::string& name, bool docked):
   {
     _parent->SetContent(this);
     _parent->SetFlag(View::LEAF);
-    _parent->SetFlag(View::DIRTY);
   }
 };
 

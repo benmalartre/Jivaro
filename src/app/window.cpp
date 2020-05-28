@@ -5,8 +5,6 @@
 #include "../utils/files.h"
 #include "../widgets/dummy.h"
 #include "../widgets/viewport.h"
-#include "../imgui/imgui_custom.h"
-#include "../imgui/imgui_test.h"
 #include "../app/application.h"
 #include <pxr/imaging/glf/contextCaps.h>
 #include <pxr/base/arch/systemInfo.h>
@@ -207,7 +205,7 @@ Window::CollectLeaves(View* view)
   }
   if (view->GetFlag(View::LEAF)) {
     _leaves.push_back(view);
-    view->SetFlag(View::DIRTY);
+    view->SetDirty();
   }
   else
   {
@@ -495,7 +493,6 @@ KeyboardCallback(
         glfwSetWindowShouldClose(window, true);
         break;
       }
-        
     }
   }
   //  /* call tutorial keyboard handler */
@@ -585,12 +582,14 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
   Window* parent = Window::GetUserData(window);
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+
   if (action == GLFW_RELEASE)
   {
     parent->SetActiveTool(AMN_TOOL_NONE);
-    if(parent->GetActiveView())
+    View* view = parent->GetActiveView();
+    if(view)
     {
-      parent->GetActiveView()->MouseButton(button, action, mods);
+      view->MouseButton(button, action, mods);
     }
   }
   else if (action == GLFW_PRESS)
@@ -598,7 +597,9 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     double x,y;
     glfwGetCursorPos(window,&x,&y);
     View* view = parent->GetViewUnderMouse((int)x, (int)y);
-    if(view)parent->SetActiveView(view);
+    if (view) {
+      parent->SetActiveView(view);
+    }
 
     if(parent->PickSplitter(x, y))
     {
@@ -609,7 +610,6 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
       parent->GetActiveView()->MouseButton(button, action, mods);
     }
   }
-  parent->Draw();
 }
 
 void 
@@ -619,7 +619,6 @@ ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
   ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
   if(parent->GetActiveView())
     parent->GetActiveView()->MouseWheel(xoffset, yoffset);
-  parent->Draw();
 }
 
 void 
@@ -642,7 +641,6 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   {
     parent->GetActiveView()->MouseMove(x, y);
   }
-
 }
 
 void 

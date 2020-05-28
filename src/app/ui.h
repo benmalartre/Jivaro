@@ -2,6 +2,7 @@
 
 #include "../common.h"
 #include "../imgui/imgui.h"
+#include "../imgui/imgui_internal.h"
 
 AMN_NAMESPACE_OPEN_SCOPE  
 
@@ -51,7 +52,7 @@ public:
   virtual void MouseMove(int x, int y){}; 
   virtual void MouseWheel(int x, int y){};
 
-  virtual void Draw()=0;
+  virtual bool Draw()=0;
   virtual void Resize(){};
 
 protected:

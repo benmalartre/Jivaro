@@ -7,7 +7,7 @@ DummyUI::DummyUI(View* parent, const std::string& name):BaseUI(parent, name){}
 
 DummyUI::~DummyUI(){}
 
-void DummyUI::Draw()
+bool DummyUI::Draw()
 {
   bool opened;
   int flags = 0;
@@ -28,6 +28,7 @@ void DummyUI::Draw()
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::End();
   Demo();
+  return false;
 };
   
 void DummyUI::FillBackground()

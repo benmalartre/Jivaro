@@ -57,7 +57,7 @@ class ViewportUI : public BaseUI
     void MouseButton(int button, int action, int mods) override;
     void MouseMove(int x, int y) override;
     void MouseWheel(int x, int y) override;
-    void Draw() override;
+    bool Draw() override;
     void Resize() override;
     void Update();
     

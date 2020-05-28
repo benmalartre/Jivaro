@@ -192,9 +192,9 @@ void ViewportUI::MouseWheel(int x, int y)
   _parent->SetDirty();
 }
 
-void ViewportUI::Draw()
+bool ViewportUI::Draw()
 {    
-  if(!_valid)return;  
+  if(!_valid)return false;  
   float x = _parent->GetMin()[0];
   float y = _parent->GetMin()[1];
   
@@ -261,7 +261,7 @@ void ViewportUI::Draw()
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
   ImGui::End();
   
-  _parent->SetClean();
+  return false;
   /*
   if(_pixels)
   {

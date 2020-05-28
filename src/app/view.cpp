@@ -2,7 +2,6 @@
 #include "window.h"
 #include "ui.h"
 #include "splitter.h"
-#include "../imgui/imgui_test.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>
 
@@ -11,15 +10,16 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 // View constructor
 //----------------------------------------------------------------------------
-View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max):
-  _parent(parent), 
+View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max) :
+  _parent(parent),
   _left(NULL),
   _right(NULL),
-  _min(min), 
-  _max(max), 
+  _min(min),
+  _max(max),
   _flags(HORIZONTAL|LEAF|DIRTY),
   _perc(0.5),
-  _content(NULL)
+  _content(NULL),
+  _buffered(0)
 {
   if(_parent==NULL)_name = "main";
   else _window = _parent->_window;
@@ -38,7 +38,8 @@ View::View(View* parent, int x, int y, int w, int h):
   _max(pxr::GfVec2f(x+w, y+h)), 
   _flags(HORIZONTAL|LEAF|DIRTY),
   _perc(0.5),
-  _content(NULL)
+  _content(NULL),
+  _buffered(0)
 {
   if(_parent==NULL)_name = "main";
   else _window = _parent->_window;
@@ -82,14 +83,14 @@ View::Contains(int x, int y)
 void 
 View::Draw()
 {
-  if(!GetFlag(LEAF)){
+  if(!GetFlag(LEAF)) {
     if(_left)_left->Draw();
     if(_right)_right->Draw();
   }
   else
   {
-    if (GetFlag(DIRTY) && _content) {
-      _content->Draw();
+    if ((GetFlag(INTERACTING) || GetFlag(DIRTY)) && _content) {
+      if (!_content->Draw())SetClean();
     }   
   }
 }
@@ -240,7 +241,7 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
     if(_content)_content->Resize();
   }
   if(rationalize)RescaleNumPixels(ratio);
-  SetFlag(DIRTY);
+  SetDirty();
 }
 
 void 
@@ -369,6 +370,5 @@ void View::SetDirty()
   SetFlag(DIRTY);
   _buffered = 0;
 }
-
 
 AMN_NAMESPACE_CLOSE_SCOPE

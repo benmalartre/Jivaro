@@ -163,6 +163,12 @@ void PortUI::Draw(GraphUI* editor)
       _color
     );
 
+  /*
+  drawList->AddText(
+    p + pxr::GfVec2f(_pos[0] + NODE_PORT_PADDING, -8) * zoom,
+    ImColor(0, 0, 0, 255),
+    _label.c_str());
+  */
   ImGui::SetCursorPos(editor->GetCursorPos() + 
     pxr::GfVec2f(NODE_PORT_PADDING * zoom, 
       -ImGui::GetTextLineHeight() * 0.6) + _pos * zoom);
@@ -320,6 +326,7 @@ void NodeUI::Draw(GraphUI* editor)
     ImDrawCornerFlags_All,
     2 * zoom);
 
+  //drawList->AddText( p + pxr::GfVec2f(NODE_PORT_PADDING, 0), ImColor(0,0,0,255), _name.c_str() );
   ImGui::SetCursorPos((GetPos() + pxr::GfVec2f(NODE_PORT_PADDING, 0) + editor->GetOffset()) * zoom);
   ImGui::TextUnformatted(_name.c_str());
 

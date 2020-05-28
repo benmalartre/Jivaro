@@ -18,7 +18,8 @@ public:
     LEAF = 4,
     FIXED = 8,
     ACTIVE = 16,
-    DIRTY = 32
+    DIRTY = 32,
+    INTERACTING = 64
   };
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
@@ -80,7 +81,6 @@ public:
 
   void SetClean();
   void SetDirty();
-
 
 private:
   pxr::GfVec2f      _min;

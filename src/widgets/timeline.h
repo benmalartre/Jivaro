@@ -16,12 +16,12 @@ class TimelineUI : BaseUI
     ~TimelineUI();
     
     // overrides
-    void MouseButton(int action, int button, int mods) override;
+    void MouseButton(int button, int action, int mods) override;
     void MouseMove(int x, int y) override;
-    void Draw() override;
+    bool Draw() override;
 
     void Init(Application* app);
-    void DrawControls();
+    void DrawControls(bool* changed);
     void DrawTimeSlider();
     void ValidateTime();
     void Update();
