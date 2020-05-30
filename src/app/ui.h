@@ -51,6 +51,7 @@ public:
   virtual void MouseButton(int button, int action, int mods){};
   virtual void MouseMove(int x, int y){}; 
   virtual void MouseWheel(int x, int y){};
+  virtual void Keyboard(int key, int scancode, int action, int mods) {};
 
   virtual bool Draw()=0;
   virtual void Resize(){};

@@ -12,6 +12,7 @@ TimelineUI::TimelineUI(View* parent) :BaseUI(parent, "Timeline")
   _flags = ImGuiWindowFlags_None
     | ImGuiWindowFlags_NoResize
     | ImGuiWindowFlags_NoTitleBar
+    | ImGuiWindowFlags_NoScrollbar
     | ImGuiWindowFlags_NoMove;
 
   _parent->SetDirty();
@@ -29,7 +30,7 @@ void TimelineUI::Init(Application* app)
   Update();
   _parent->SetDirty();
 }
-
+  
 void TimelineUI::Update()
 {
   _minTime = _app->GetMinTime();
@@ -100,11 +101,11 @@ void TimelineUI::MouseButton(int button, int action, int mods)
 
 void TimelineUI::MouseMove(int x, int y)
 {
-  if (_parent->GetFlag(View::INTERACTING))
+  if (_parent->GetFlag(View::INTERACTING) || _parent->GetFlag(View::OVER))
     _parent->SetDirty();
 }
 
-void TimelineUI::DrawControls(bool* changed)
+void TimelineUI::DrawControls()
 {
   int width = GetWidth();
   int height = GetHeight();
@@ -118,8 +119,8 @@ void TimelineUI::DrawControls(bool* changed)
   ImGui::PushFont(GetWindow()->GetMediumFont(0));
 
   ImGui::SetNextItemWidth(60);
-  if (ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll))*changed = true;
+  ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
   if (!ImGui::IsItemActive() && _minTime != _app->GetMinTime())
   {
     ValidateTime();
@@ -127,8 +128,8 @@ void TimelineUI::DrawControls(bool* changed)
   ImGui::SameLine(); //HelpMarker("Minimum Time");
 
   ImGui::SetNextItemWidth(60);
-  if (ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll))*changed = true;
+  ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
   if (!ImGui::IsItemActive() && _startTime != _app->GetStartTime())
   {
     ValidateTime();
@@ -140,40 +141,40 @@ void TimelineUI::DrawControls(bool* changed)
   if (!_playing) icon = &AMN_ICONS["play_btn.png"];
   else icon = &AMN_ICONS["stop_btn.png"];
 
-  if(AddIconButton<IconPressedFunc, TimelineUI*>(
+  AddIconButton<IconPressedFunc, TimelineUI*>(
     icon,
     (IconPressedFunc)StartStopPlayback, this
-    ))*changed=true;
+    );
 
   icon = &AMN_ICONS["first_frame_btn.png"];
-  if(AddIconButton<IconPressedFunc>(
+  AddIconButton<IconPressedFunc>(
     icon,
     (IconPressedFunc)SimpleCallback
-    ))*changed=true;
+    );
 
   icon = &AMN_ICONS["last_frame_btn.png"];
-  if(AddIconButton<IconPressedFunc, TimelineUI*, int>(
+  AddIconButton<IconPressedFunc, TimelineUI*, int>(
     icon,
     (IconPressedFunc)DifficultCallback,
     this,
     666
-    ))*changed=true;
+    );
 
   icon = &AMN_ICONS["loop_btn.png"];
-  if(AddIconButton<IconPressedFunc, TimelineUI*, int, float, const char*>(
+  AddIconButton<IconPressedFunc, TimelineUI*, int, float, const char*>(
     icon,
     (IconPressedFunc)VeryDifficultCallback,
     this,
     666,
     7.654321,
     "SATAN"
-    ))*changed=true;
+    );
 
 
   // current time
   ImGui::SetNextItemWidth(60);
-  if (ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll))*changed = true;
+  ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
   if (!ImGui::IsItemActive() && _currentTime != _app->GetCurrentTime())
   {
     ValidateTime();
@@ -181,10 +182,7 @@ void TimelineUI::DrawControls(bool* changed)
   ImGui::SameLine(); //HelpMarker("Current Time");
 
                      // loop
-  if (ImGui::Checkbox("Loop", &_loop)) {
-    std::cout << "LOOP PRESSED !" << std::endl;
-    *changed = true;
-  }
+  ImGui::Checkbox("Loop", &_loop);
   if (!ImGui::IsItemActive() && _loop != _app->GetLoop())
   {
     ValidateTime();
@@ -194,8 +192,8 @@ void TimelineUI::DrawControls(bool* changed)
   ImGui::SetCursorPosX(width - 140);
 
   ImGui::SetNextItemWidth(60);
-  if (ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll))*changed = true;
+  ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTime,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
   if (!ImGui::IsItemActive() && _endTime != _app->GetEndTime())
   {
     ValidateTime();
@@ -203,8 +201,8 @@ void TimelineUI::DrawControls(bool* changed)
   ImGui::SameLine();
 
   ImGui::SetNextItemWidth(60);
-  if (ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll))*changed = true;
+  ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTime,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
   if (!ImGui::IsItemActive() && _maxTime != _app->GetMaxTime())
   {
     ValidateTime();
@@ -283,22 +281,23 @@ void TimelineUI::DrawTimeSlider()
   );
 }
 
-
-
 bool TimelineUI::Draw()
 {
-  bool changed = false;
+  std::cout << "DRAW TIMELINE UI " << std::endl;
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::SetWindowSize(_parent->GetSize());
 
   DrawTimeSlider();
-  DrawControls(&changed);
+  DrawControls();
 
   ImGui::End();
-  std::cout << "TIMELINE CHANGED : " << changed << std::endl;
-  return changed;
+  
+  return 
+    ImGui::IsAnyItemHovered() ||
+    ImGui::IsAnyItemActive() ||
+    ImGui::IsAnyItemFocused();
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

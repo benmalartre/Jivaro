@@ -21,7 +21,7 @@ public:
   bool Draw() override;
 
   void Init(Application* app);
-  void DrawControls(bool* changed);
+  void DrawControls();
   void DrawTimeSlider();
   void ValidateTime();
   void Update();

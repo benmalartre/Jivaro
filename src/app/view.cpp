@@ -123,6 +123,12 @@ View::MouseWheel(int x, int y)
   if(_content)_content->MouseWheel(x, y);
 }
 
+void 
+View::Keyboard(int key, int scancode, int action, int mods)
+{
+  if (_content)_content->Keyboard(key, scancode, action, mods);
+}
+
 void
 View::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
 {

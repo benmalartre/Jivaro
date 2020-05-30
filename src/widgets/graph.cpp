@@ -3,6 +3,7 @@
 #include "../graph/stage.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "../app/application.h"
 #include "../app/ui.h"
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/attribute.h>
@@ -14,8 +15,10 @@ AMN_NAMESPACE_OPEN_SCOPE
 //------------------------------------------------------------------------------
 GraphUI::GraphUI(View* parent, const std::string& filename, bool docked)
   : BaseUI(parent, "Graph", docked)
-  , _hoveredNode(NULL), _currentNode(NULL), _drawingNode(NULL), _zoom(1.f)
-  , _fontIndex(0), _fontScale(1.0), _drag(false), _grab(false), _navigate(false)
+  , _hoveredNode(NULL), _currentNode(NULL)
+  , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
+  , _scale(1.f), _fontIndex(0), _fontScale(1.0)
+  , _drag(false), _grab(false), _navigate(false), _connect(false)
 {
   //_filename = filename;
   _id = 0;
@@ -66,17 +69,17 @@ void GraphUI::Term()
 //------------------------------------------------------------------------------
 void GraphUI::UpdateFont()
 {
-  if (_zoom < 1.0) {
+  if (_scale < 1.0) {
     _fontIndex = 0;
-    _fontScale = _zoom;
+    _fontScale = _scale;
   }
-  else if (_zoom < 2.0) {
+  else if (_scale < 2.0) {
     _fontIndex = 1;
-    _fontScale = RESCALE(_zoom, 1.0, 2.0, 0.5, 1.0);
+    _fontScale = RESCALE(_scale, 1.0, 2.0, 0.5, 1.0);
   }
   else {
     _fontIndex = 2;
-    _fontScale = RESCALE(_zoom, 2.0, 4.0, 0.5, 1.0);
+    _fontScale = RESCALE(_scale, 2.0, 4.0, 0.5, 1.0);
   }
 }
 
@@ -86,8 +89,8 @@ void GraphUI::DrawGrid()
 {
   const float width = GetWidth();
   const float height = GetHeight();
-  const float baseX = _parent->GetX();// +_offset[0];
-  const float baseY = _parent->GetY();// +_offset[1];
+  const float baseX = _parent->GetX();
+  const float baseY = _parent->GetY();
 
   ImGui::PushClipRect(ImVec2(baseX, baseY), ImVec2(baseX + width, baseY + height), true);
 
@@ -97,10 +100,10 @@ void GraphUI::DrawGrid()
     ImVec2(baseX + width, baseY + height),
     ImColor(60, 60, 60, 255));
 
-  float step = 32 * _zoom;
+  float step = 32 * _scale;
   int nX = width / step + 1;
   int nY = height / step + 1;
-  pxr::GfVec2f so = _offset * _zoom;
+  pxr::GfVec2f so = _offset * _scale;
   for (int x = 0; x < nX; ++x)
     drawList->AddLine(
       ImVec2(baseX + x*step + so[0], baseY),
@@ -116,37 +119,48 @@ void GraphUI::DrawGrid()
   ImGui::PopClipRect();
 }
 
-void GraphUI::DrawTxt()
-{
-  ImGui::SetCursorPos(_offset * _zoom);
-  ImGui::Text("ZOOM : %.3f", _zoom);
-}
-
-
 // draw
 //------------------------------------------------------------------------------
 bool GraphUI::Draw()
 {
-  std::cout << "DRAW GRAPH UI !!!" << std::endl;
-
   ImGui::SetNextWindowPos(_parent->GetMin());
   ImGui::SetNextWindowSize(_parent->GetSize());
+  
   ImGui::Begin("Graph Editor", NULL, _flags);
 
   DrawGrid();
 
   ImGui::PushFont(GetWindow()->GetRegularFont(_fontIndex));
   ImGui::SetWindowFontScale(_fontScale);
-  DrawTxt();
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
+  for (auto& connexion : _connexions) {
+    connexion->Draw(this);
+  }
+
   for (auto& node : _nodes) {
-    _drawingNode = node;
     node->Draw(this);
   }
 
-  if (_grab) {
+  if (_connect) {
+    const pxr::GfVec2f viewPos = GetPosition();
+    const pxr::GfVec2f startPos = GridPositionToViewPosition(
+      _connector.startPort->GetPosition() +
+      _connector.startPort->GetNode()->GetPosition());
+    const pxr::GfVec2f endPos = ImGui::GetMousePos();
+    const pxr::GfVec2f startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
+    const pxr::GfVec2f endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
+
+    drawList->AddBezierCurve(
+      startPos, 
+      startTangent, 
+      endTangent, 
+      endPos, 
+      _connector.color, 
+      NODE_CONNEXION_THICKNESS * _scale);
+  }
+  else if (_grab) {
     const pxr::GfVec2f viewPos = GetPosition();
     drawList->AddRect(
       _grabData.start + viewPos,
@@ -161,10 +175,19 @@ bool GraphUI::Draw()
       0.f, 0);
   }
 
+  ImGui::SetCursorPos(ImVec2(64, 64));
+  static bool value;
+  ImGui::Checkbox("FUCK", &value);
+
   ImGui::PopFont();
   ImGui::End();
- 
-  return false;
+
+  return 
+    (_hoveredPort != NULL) ||
+    (_hoveredConnexion != NULL) ||
+    ImGui::IsAnyItemActive() ||
+    ImGui::IsAnyItemFocused() ||
+    ImGui::IsAnyItemHovered();
 };
 
 // init
@@ -213,11 +236,10 @@ void GraphUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
   
 };
 
-
 void GraphUI::BuildGrid() 
 {
   for (auto& node : _nodes) {
-    pxr::GfVec2f pos = node->GetPos();
+    pxr::GfVec2f pos = node->GetPosition();
   }
 }
 
@@ -239,17 +261,107 @@ void GraphUI::BuildGraph()
    _RecurseStagePrim(_stage->GetPseudoRoot());
 }
 
-void GraphUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos)
+void GraphUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend)
 {
   pxr::GfVec2f viewPos;
   GetRelativeMousePosition(mousePos[0], mousePos[1], viewPos[0], viewPos[1]);
-  NodeUI* hovered = NodeUnderMouse(viewPos);
+
+  NodeUI* hovered = NULL;
+  for (auto node = _nodes.rbegin(); node != _nodes.rend(); ++node) {
+    if ((*node)->Contains(ViewPositionToGridPosition(viewPos),
+      useExtend ? pxr::GfVec2f(NODE_PORT_RADIUS * _scale) : pxr::GfVec2f(0.f))) {
+      hovered = *node;
+      break;
+    }
+  }
   if (_hoveredNode && _hoveredNode != hovered)_hoveredNode->SetState(ITEM_STATE_HOVERED, false);
   if (hovered) {
     hovered->SetState(ITEM_STATE_HOVERED, true);
     _hoveredNode = hovered;
   }
   else _hoveredNode = NULL;
+
+  if (_hoveredPort) {
+    _hoveredPort->SetState(ITEM_STATE_HOVERED, false);
+    _hoveredPort = NULL;
+  };
+
+  if (_hoveredNode) {
+    _GetPortUnderMouse(viewPos, _hoveredNode);
+  }
+
+  _GetConnexionUnderMouse(viewPos);
+  if (_hoveredConnexion)_parent->SetDirty();
+}
+
+void GraphUI::_GetPortUnderMouse(const pxr::GfVec2f& mousePos, NodeUI* node)
+{
+  const pxr::GfVec2f relativePosition =
+    ViewPositionToGridPosition(mousePos) - node->GetPosition();
+
+  if (relativePosition[1] < NODE_HEADER_HEIGHT - NODE_PORT_RADIUS ||
+    (relativePosition[0] > NODE_PORT_RADIUS &&
+      relativePosition[0] < node->GetWidth() - NODE_PORT_RADIUS)) return;
+
+  size_t portIndex =
+    int((relativePosition[1] - (NODE_HEADER_HEIGHT - NODE_PORT_RADIUS)) / (float)NODE_PORT_SPACING);
+
+  size_t numInputs = node->GetNumInputs();
+  size_t numOutputs = node->GetNumOutputs();
+  if (portIndex >= numInputs + numOutputs) return;
+
+  PortUI* port = NULL;
+  if (portIndex >= numInputs)
+    port = &(node->GetOutputs()[portIndex - numInputs]);
+  else
+    port = &(node->GetInputs()[portIndex]);
+
+  if (port->Contains(relativePosition)) {
+    port->SetState(ITEM_STATE_HOVERED, true);
+    _hoveredPort = port;
+  }
+  else _hoveredPort = NULL;
+}
+
+void GraphUI::_GetConnexionUnderMouse(const pxr::GfVec2f& mousePos)
+{
+  if (_hoveredConnexion) {
+    _hoveredConnexion->SetState(ITEM_STATE_HOVERED, false);
+    _hoveredConnexion = NULL;
+  }
+  const pxr::GfVec2f gridPosition = ViewPositionToGridPosition(mousePos);
+  for (auto& connexion : _connexions) {
+    pxr::GfRange2f range = connexion->GetBoundingBox();
+    if (range.Contains(gridPosition)) {
+      _hoveredConnexion = connexion;
+      _hoveredConnexion->SetState(ITEM_STATE_HOVERED, true);
+      return;
+    }
+  }
+  /*
+  if (relativePosition[1] < NODE_HEADER_HEIGHT - NODE_PORT_RADIUS ||
+    (relativePosition[0] > NODE_PORT_RADIUS &&
+      relativePosition[0] < node->GetWidth() - NODE_PORT_RADIUS)) return;
+
+  size_t portIndex =
+    int((relativePosition[1] - (NODE_HEADER_HEIGHT - NODE_PORT_RADIUS)) / (float)NODE_PORT_SPACING);
+
+  size_t numInputs = node->GetNumInputs();
+  size_t numOutputs = node->GetNumOutputs();
+  if (portIndex >= numInputs + numOutputs) return;
+
+  PortUI* port = NULL;
+  if (portIndex >= numInputs)
+    port = &(node->GetOutputs()[portIndex - numInputs]);
+  else
+    port = &(node->GetInputs()[portIndex]);
+
+  if (port->Contains(relativePosition)) {
+    port->SetState(ITEM_STATE_HOVERED, true);
+    _hoveredPort = port;
+  }
+  else _hoveredPort = NULL;
+  */
 }
 
 void GraphUI::MouseButton(int button, int action, int mods)
@@ -257,11 +369,14 @@ void GraphUI::MouseButton(int button, int action, int mods)
   const pxr::GfVec2f& mousePos = ImGui::GetMousePos();
   _lastX = mousePos[0];
   _lastY = mousePos[1];
-  _GetNodeUnderMouse(mousePos);
 
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
       if (mods & GLFW_MOD_ALT)_navigate = true;
+      else if (_hoveredPort) {
+        _connect = true;
+        StartConnexion();
+      }
       else if (_hoveredNode) {
         if (_hoveredNode->GetState(ITEM_STATE_SELECTED))
           _drag = true;
@@ -270,8 +385,8 @@ void GraphUI::MouseButton(int button, int action, int mods)
           _hoveredNode->SetState(ITEM_STATE_SELECTED, 1 - state);
           if (mods & GLFW_MOD_CONTROL) {
             if (1 - state) {
-              _drag = true;
               AddToSelection(_hoveredNode, false);
+              _drag = true;
             }
             else RemoveFromSelection(_hoveredNode);
           }
@@ -282,8 +397,8 @@ void GraphUI::MouseButton(int button, int action, int mods)
           else {
             ClearSelection();
             if (1 - state) {
-              _drag = true;
               AddToSelection(_hoveredNode, true);
+              _drag = true;
             }
           }
         }
@@ -300,22 +415,32 @@ void GraphUI::MouseButton(int button, int action, int mods)
     else if (action == GLFW_RELEASE) {
       _navigate = false;
       _drag = false;
-      if (_grab)GrabSelect(mods);
+      if (_connect) EndConnexion();
+      else if (_grab)GrabSelect(mods);
       _grab = false;
     }
   }
   _parent->SetDirty();
 }
 
+void GraphUI::Keyboard(int key, int scancode, int action, int mods)
+{
+  std::cout << "GRAPH UI KEYBOARD!!! " << std::endl;
+  std::cout << "KEY : " << key << (char)key << std::endl;
+  if (key == GLFW_KEY_DELETE) {
+    std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
+  }
+}
+
 void GraphUI::MouseMove(int x, int y)
 {
   if (_navigate) {
-    _offset += pxr::GfVec2f(x - _lastX, y - _lastY) / _zoom;
+    _offset += pxr::GfVec2f(x - _lastX, y - _lastY) / _scale;
     _parent->SetDirty();
   }
   else if (_drag) {
     for (auto& node : _selected) {
-      node->Move(pxr::GfVec2f(x - _lastX, y - _lastY) / _zoom);
+      node->Move(pxr::GfVec2f(x - _lastX, y - _lastY) / _scale);
     }
     _parent->SetDirty();
   }
@@ -324,7 +449,9 @@ void GraphUI::MouseMove(int x, int y)
     _parent->SetDirty();
   }
   else {
-    _GetNodeUnderMouse(pxr::GfVec2f(x,y));
+    _GetNodeUnderMouse(pxr::GfVec2f(x,y), true);
+    if (_connect && _hoveredPort)UpdateConnexion();
+    if (_hoveredPort)_parent->SetDirty();
   }
   _lastX = x;
   _lastY = y;
@@ -333,11 +460,12 @@ void GraphUI::MouseMove(int x, int y)
 void GraphUI::MouseWheel(int x, int y)
 {
   pxr::GfVec2f mousePos = (ImGui::GetMousePos() - _parent->GetMin());
-  pxr::GfVec2f originalPos = mousePos / _zoom ;
+  pxr::GfVec2f originalPos = mousePos / _scale ;
 
-  _zoom += (x + y) * 0.1;
-  _zoom = CLAMP(_zoom, 0.1, 4.0);
-  pxr::GfVec2f scaledPos = mousePos / _zoom;
+  _scale += (x + y) * 0.1;
+  _scale = CLAMP(_scale, 0.1, 4.0);
+  _invScale = 1.f / _scale;
+  pxr::GfVec2f scaledPos = mousePos / _scale;
   _offset -= (originalPos - scaledPos);
   UpdateFont();
   _parent->SetDirty();
@@ -345,17 +473,34 @@ void GraphUI::MouseWheel(int x, int y)
 
 pxr::GfVec2f GraphUI::ViewPositionToGridPosition(const pxr::GfVec2f& mousePos)
 {
-  return mousePos / _zoom - _offset;
+  return mousePos / _scale - _offset;
 }
 
-NodeUI* GraphUI::NodeUnderMouse(const pxr::GfVec2f& mousePos)
+pxr::GfVec2f GraphUI::GridPositionToViewPosition(const pxr::GfVec2f& gridPos)
 {
-  pxr::GfVec2f gridPosition = ViewPositionToGridPosition(mousePos);
+  return (gridPos + _offset) * _scale + _parent->GetMin();
+}
 
-  for (auto node = _nodes.rbegin(); node != _nodes.rend(); ++node) {
-    if ((*node)->Contains(gridPosition)) return *node;
+void GraphUI::StartConnexion()
+{
+  _connector.startPort = _hoveredPort;
+  _connector.color = _connector.startPort->GetColor();
+  _connector.endPort = NULL;
+}
+
+void GraphUI::UpdateConnexion()
+{
+  _connector.endPort = _hoveredPort;
+}
+
+void GraphUI::EndConnexion()
+{
+  if (_connector.startPort && _connector.endPort) {
+    ConnexionUI* connexion = new ConnexionUI(_connector.startPort, 
+      _connector.endPort, _connector.color);
+    _connexions.push_back(connexion);
   }
-  return NULL;
+  _connect = false;
 }
 
 void GraphUI::ClearSelection()
@@ -388,8 +533,11 @@ void GraphUI::RemoveFromSelection(NodeUI* node)
 
 void GraphUI::GrabSelect(int mod)
 {
-  const pxr::GfVec2f start = ViewPositionToGridPosition(_grabData.start);
-  const pxr::GfVec2f end = ViewPositionToGridPosition(_grabData.end);
+  pxr::GfVec2f start = ViewPositionToGridPosition(_grabData.start);
+  pxr::GfVec2f end = ViewPositionToGridPosition(_grabData.end);
+
+  if(start[0] > end[0])std::swap(start[0], end[0]);
+  if(start[1] > end[1])std::swap(start[1], end[1]);
 
   ClearSelection();
   for (auto& node : _nodes) {

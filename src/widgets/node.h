@@ -18,11 +18,13 @@ class NodeUI;
 class GraphUI;
 class Grid2DUI;
 
-#define NODE_CORNER_ROUNDING    4.f
-#define NODE_PORT_RADIUS        4.f
-#define NODE_PORT_PADDING       6.f
-#define NODE_PORT_SPACING       12.f
-#define NODE_HEADER_HEIGHT      32.f
+#define NODE_CORNER_ROUNDING      4.f
+#define NODE_PORT_RADIUS          4.f
+#define NODE_PORT_PADDING         6.f
+#define NODE_PORT_SPACING         12.f
+#define NODE_HEADER_HEIGHT        32.f
+#define NODE_CONNEXION_THICKNESS  2.5f
+#define NODE_CONNEXION_RESOLUTION 0.1f
 
 enum ItemState {
   ITEM_STATE_NONE = 0,
@@ -37,14 +39,15 @@ static int GetColorFromAttribute(const pxr::UsdAttribute& attr);
 class ItemUI {
 public:
   ItemUI();
-  ItemUI(const pxr::GfVec2f& pos, const pxr::GfVec2f& size, int color);
+  ItemUI(const pxr::GfVec2f& pos, 
+    const pxr::GfVec2f& size, int color);
   ItemUI(int color);
 
   void SetPosition(const pxr::GfVec2f& pos);
   void SetSize(const pxr::GfVec2f& size);
   void SetColor(const pxr::GfVec3f& color);
   void SetColor(int color);
-  const pxr::GfVec2f& GetPos() const { return _pos; };
+  const pxr::GfVec2f& GetPosition() const { return _pos; };
   const pxr::GfVec2f& GetSize() const { return _size; };
   float GetWidth() const { return _size[0]; };
   float GetHeight() const { return _size[1]; };
@@ -54,8 +57,10 @@ public:
 
   void SetState(size_t flag, bool value);
   bool GetState(size_t flag);
-  bool Contains(const pxr::GfVec2f& position);
-  bool Intersect(const pxr::GfVec2f& start, const pxr::GfVec2f& end);
+  virtual bool Contains(const pxr::GfVec2f& position, 
+    const pxr::GfVec2f& extend = pxr::GfVec2f(0,0));
+  virtual bool Intersect(const pxr::GfVec2f& start, 
+    const pxr::GfVec2f& end);
 
   virtual void Draw(GraphUI* editor) = 0;
 
@@ -69,16 +74,29 @@ protected:
 class PortUI : public ItemUI {
 public:
   PortUI(){};
-  PortUI(bool io, const std::string& label, pxr::UsdAttribute& attr);
-  PortUI(const pxr::GraphInput& port);
-  PortUI(const pxr::GraphOutput& port);
+  PortUI(NodeUI* node, bool io, const std::string& label, pxr::UsdAttribute& attr);
+  PortUI(NodeUI* node, const pxr::GraphInput& port);
+  PortUI(NodeUI* node, const pxr::GraphOutput& port);
+
+  bool Contains(const pxr::GfVec2f& position,
+    const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
+
   void Draw(GraphUI* editor) override;
 
   const std::string& GetName()const {return _label;};
+  NodeUI* GetNode() { return _node; };
+  void SetNode(NodeUI* node) { _node = node; };
 
 private:
+  NodeUI*               _node;
   std::string           _label;
   bool                  _io;
+};
+
+struct ConnexionUIData
+{
+  pxr::GfVec2f  p0, p1, p2, p3;
+  int           numSegments;
 };
 
 class ConnexionUI : public ItemUI {
@@ -89,6 +107,14 @@ public:
     , _end(end){};
 
   void Draw(GraphUI* editor) override;
+  inline ConnexionUIData GetDescription();
+
+  virtual bool Contains(const pxr::GfVec2f& position,
+    const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
+  virtual bool Intersect(const pxr::GfVec2f& start,
+    const pxr::GfVec2f& end) override;
+
+  pxr::GfRange2f GetBoundingBox();
 
 private:
   PortUI*               _start;
@@ -102,8 +128,10 @@ public:
 
   void AddInput(const std::string& name, pxr::SdfValueTypeName type);
   void AddOutput(const std::string& name, pxr::SdfValueTypeName type);
-  const std::vector<PortUI>& GetInputs() const {return _inputs;};
-  const std::vector<PortUI>& GetOutputs() const{return _outputs;};
+  size_t GetNumInputs() { return _inputs.size(); };
+  size_t GetNumOutputs() { return _outputs.size(); };
+  std::vector<PortUI>& GetInputs() {return _inputs;};
+  std::vector<PortUI>& GetOutputs() {return _outputs;};
   void Init();
   void Update();
   void Draw(GraphUI* graph) override;

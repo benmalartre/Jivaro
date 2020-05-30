@@ -132,7 +132,11 @@ bool MenuUI::Draw()
   if(_showDemoWindow)
     ImGui::ShowDemoWindow();
 
-  return true;
+  return
+    ImGui::IsAnyItemActive() ||
+    ImGui::IsAnyItemFocused() ||
+    ImGui::IsAnyWindowHovered();
+
 } 
 
 AMN_NAMESPACE_CLOSE_SCOPE

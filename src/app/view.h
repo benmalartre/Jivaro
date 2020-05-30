@@ -69,10 +69,10 @@ public:
   
   void Draw();
   void Resize(int x, int y, int width, int height, bool rationalize=false);
-  int TouchBorder();
   void MouseMove(int x, int y);
   void MouseButton(int action, int button, int mods);
   void MouseWheel(int x, int y);
+  void Keyboard(int key, int scancode, int action, int mods);
 
   // FLAGS
   inline bool GetFlag(short flag) { return BITMASK_CHECK(_flags, flag); };
@@ -81,6 +81,7 @@ public:
 
   void SetClean();
   void SetDirty();
+  bool NeedRedraw() { return _needRedraw > 0; };
 
 private:
   pxr::GfVec2f      _min;
@@ -97,6 +98,7 @@ private:
   std::string       _name;
   Window*           _window;
   char              _buffered;
+  char              _needRedraw;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

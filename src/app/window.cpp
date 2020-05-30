@@ -154,13 +154,14 @@ Window::SetActiveView(View* view)
     if (_activeView == view)return;
     _activeView->ClearFlag(View::OVER);
     _activeView->ClearFlag(View::ACTIVE);
-
+    _activeView->SetDirty();
   }
   if(view)
   {
     _activeView = view;
     _activeView->SetFlag(View::OVER);
     _activeView->SetFlag(View::ACTIVE);
+    _activeView->SetDirty();
   }
   else _activeView = NULL;
   
@@ -494,6 +495,16 @@ KeyboardCallback(
         glfwSetWindowShouldClose(window, true);
         break;
       }
+
+      default:
+      {
+        View* view = parent->GetActiveView();
+        if (view)
+        {
+          view->Keyboard(key, scancode, action, mods);
+          view->SetDirty();
+        }
+      }
     }
   }
   //  /* call tutorial keyboard handler */
@@ -591,6 +602,8 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     if(view)
     {
       view->MouseButton(button, action, mods);
+      view->ClearFlag(View::INTERACTING);
+      view->SetDirty();
     }
   }
   else if (action == GLFW_PRESS)
@@ -600,6 +613,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     View* view = parent->GetViewUnderMouse((int)x, (int)y);
     if (view) {
       parent->SetActiveView(view);
+      view->SetFlag(View::INTERACTING);
     }
 
     if(parent->PickSplitter(x, y))
@@ -633,14 +647,20 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   Window* parent = Window::GetUserData(window);
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
-  if(!parent->GetActiveView())return;
+  View* active = parent->GetActiveView();
+  
   if(parent->GetActiveTool() != AMN_TOOL_NONE)
   {
     parent->UpdateActiveTool(x, y);
   }
   else
   {
-    parent->GetActiveView()->MouseMove(x, y);
+    if (active && active->GetFlag(View::INTERACTING))
+      active->MouseMove(x, y);
+    else if (view) {
+      parent->SetActiveView(view);
+      parent->GetActiveView()->MouseMove(x, y);
+    }
   }
 }
 
