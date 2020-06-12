@@ -250,14 +250,14 @@ void ImGui_ImplGlfw_Shutdown()
     g_ClientApi = GlfwClientApi_Unknown;
 }
 
-static void ImGui_ImplGlfw_UpdateMousePosAndButtons()
+static void ImGui_ImplGlfw_UpdateMousePosAndButtons(GLFWwindow* window)
 {
     // Update buttons
     ImGuiIO& io = ImGui::GetIO();
     for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
     {
         // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
-        io.MouseDown[i] = g_MouseJustPressed[i] || glfwGetMouseButton(g_Window, i) != 0;
+        io.MouseDown[i] = g_MouseJustPressed[i] || glfwGetMouseButton(window, i) != 0;
         g_MouseJustPressed[i] = false;
     }
 
@@ -267,41 +267,41 @@ static void ImGui_ImplGlfw_UpdateMousePosAndButtons()
 #ifdef __EMSCRIPTEN__
     const bool focused = true; // Emscripten
 #else
-    const bool focused = glfwGetWindowAttrib(g_Window, GLFW_FOCUSED) != 0;
+    const bool focused = glfwGetWindowAttrib(window, GLFW_FOCUSED) != 0;
 #endif
     if (focused)
     {
         if (io.WantSetMousePos)
         {
-            glfwSetCursorPos(g_Window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
+            glfwSetCursorPos(window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
         }
         else
         {
             double mouse_x, mouse_y;
-            glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
+            glfwGetCursorPos(window, &mouse_x, &mouse_y);
             io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);
         }
     }
 }
 
-static void ImGui_ImplGlfw_UpdateMouseCursor()
+static void ImGui_ImplGlfw_UpdateMouseCursor(GLFWwindow* window)
 {
     ImGuiIO& io = ImGui::GetIO();
-    if ((io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) || glfwGetInputMode(g_Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
+    if ((io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) || glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
         return;
 
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
     if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor)
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
-        glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     }
     else
     {
         // Show OS mouse cursor
         // FIXME-PLATFORM: Unfocused windows seems to fail changing the mouse cursor with GLFW 3.2, but 3.3 works here.
-        glfwSetCursor(g_Window, g_MouseCursors[imgui_cursor] ? g_MouseCursors[imgui_cursor] : g_MouseCursors[ImGuiMouseCursor_Arrow]);
-        glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursor(window, g_MouseCursors[imgui_cursor] ? g_MouseCursors[imgui_cursor] : g_MouseCursors[ImGuiMouseCursor_Arrow]);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 }
 
@@ -342,7 +342,7 @@ static void ImGui_ImplGlfw_UpdateGamepads()
         io.BackendFlags &= ~ImGuiBackendFlags_HasGamepad;
 }
 
-void ImGui_ImplGlfw_NewFrame()
+void ImGui_ImplGlfw_NewFrame(GLFWwindow* window)
 {
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame().");
@@ -350,8 +350,8 @@ void ImGui_ImplGlfw_NewFrame()
     // Setup display size (every frame to accommodate for window resizing)
     int w, h;
     int display_w, display_h;
-    glfwGetWindowSize(g_Window, &w, &h);
-    glfwGetFramebufferSize(g_Window, &display_w, &display_h);
+    glfwGetWindowSize(window, &w, &h);
+    glfwGetFramebufferSize(window, &display_w, &display_h);
     io.DisplaySize = ImVec2((float)w, (float)h);
     if (w > 0 && h > 0)
         io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
@@ -361,8 +361,8 @@ void ImGui_ImplGlfw_NewFrame()
     io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f/60.0f);
     g_Time = current_time;
 
-    ImGui_ImplGlfw_UpdateMousePosAndButtons();
-    ImGui_ImplGlfw_UpdateMouseCursor();
+    ImGui_ImplGlfw_UpdateMousePosAndButtons(window);
+    ImGui_ImplGlfw_UpdateMouseCursor(window);
 
     // Update game controllers (if enabled and available)
     ImGui_ImplGlfw_UpdateGamepads();

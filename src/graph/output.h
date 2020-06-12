@@ -72,7 +72,7 @@ public:
     /// \note This simply returns the full property name if the Output represents a 
     /// terminal on a material.
     /// 
-    GRAPH_API_H
+    GRAPH_API
     TfToken GetBaseName() const;
 
     /// Get the prim that the output belongs to.
@@ -86,7 +86,7 @@ public:
     /// \note If this is an output belonging to a terminal on a material, which 
     /// does not have an associated attribute, we return 'Token' as the type.
     /// 
-    GRAPH_API_H
+    GRAPH_API
     SdfValueTypeName GetTypeName() const;
     
     /// Set a value for the output.
@@ -95,7 +95,7 @@ public:
     /// an externally computed value. The Set API is provided here just for the 
     /// sake of completeness and uniformity with other property schema.
     /// 
-    GRAPH_API_H
+    GRAPH_API
     bool Set(const VtValue& value, 
              UsdTimeCode time = UsdTimeCode::Default()) const;
 
@@ -121,21 +121,21 @@ public:
     /// are of renderman custom struct types.
     ///
     /// \return true on success
-    GRAPH_API_H
+    GRAPH_API
     bool SetRenderType(TfToken const& renderType) const;
 
     /// Return this output's specialized renderType, or an empty
     /// token if none was authored.
     ///
     /// \sa SetRenderType()
-    GRAPH_API_H
+    GRAPH_API
     TfToken GetRenderType() const;
 
     /// Return true if a renderType has been specified for this
     /// output.
     ///
     /// \sa SetRenderType()
-    GRAPH_API_H
+    GRAPH_API
     bool HasRenderType() const;
 
     /// @}
@@ -150,14 +150,14 @@ public:
     /// \p attr already represents a shade Output, and produces an \em invalid 
     /// GraphOutput otherwise (i.e. the explicit bool conversion operator 
     /// will return false).
-    GRAPH_API_H
+    GRAPH_API
     explicit GraphOutput(const UsdAttribute &attr);
 
     /// Test whether a given UsdAttribute represents a valid Output, which
     /// implies that creating a GraphOutput from the attribute will succeed.
     ///
     /// Success implies that \c prop.IsDefined() is true.
-    GRAPH_API_H
+    GRAPH_API
     static bool IsOutput(const UsdAttribute &attr);
 
     /// Explicit UsdAttribute extractor.
@@ -212,15 +212,15 @@ public:
     /// node-graph. Shader outputs are not connectable.
     /// 
     /// \sa GraphConnectableAPI::CanConnect
-    GRAPH_API_H
+    GRAPH_API
     bool CanConnect(const UsdAttribute &source) const;
 
     /// \overload
-    GRAPH_API_H
+    GRAPH_API
     bool CanConnect(const GraphInput &sourceInput) const;
 
     /// \overload
-    GRAPH_API_H
+    GRAPH_API
     bool CanConnect(const GraphOutput &sourceOutput) const;
 
     /// Authors a connection for this Output to the source described by the 
@@ -235,7 +235,7 @@ public:
     ///
     /// \sa GraphConnectableAPI::ConnectToSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ConnectToSource(
         GraphConnectableAPI const &source, 
         TfToken const &sourceName, 
@@ -246,21 +246,21 @@ public:
     /// 
     /// \sa GraphConnectableAPI::ConnectToSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ConnectToSource(SdfPath const &sourcePath) const;
 
     /// Connects this Output to the given input, \p sourceInput.
     /// 
     /// \sa GraphConnectableAPI::ConnectToSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ConnectToSource(GraphInput const &sourceInput) const;
 
     /// Connects this Output to the given output, \p sourceOutput.
     /// 
     /// \sa GraphConnectableAPI::ConnectToSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ConnectToSource(GraphOutput const &sourceOutput) const;
 
     /// Finds the source of a connection for this Output.
@@ -284,7 +284,7 @@ public:
     ///
     /// \sa GraphConnectableAPI::GetConnectedSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool GetConnectedSource(GraphConnectableAPI *source, 
                             TfToken *sourceName,
                             GraphAttributeType *sourceType) const;
@@ -293,7 +293,7 @@ public:
     /// 
     /// \sa GraphConnectableAPI::GetRawConnectedSourcePaths
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool GetRawConnectedSourcePaths(SdfPathVector *sourcePaths) const;
 
     /// Returns true if and only if this Output is currently connected to a 
@@ -301,7 +301,7 @@ public:
     ///
     /// \sa GraphConnectableAPI::HasConnectedSource
     /// 
-    GRAPH_API_H
+    GRAPH_API
     bool HasConnectedSource() const;
 
     /// Returns true if the connection to this Output's source, as returned by 
@@ -310,14 +310,14 @@ public:
     /// 
     /// \sa GraphConnectableAPI::IsSourceConnectionFromBaseMaterial
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool IsSourceConnectionFromBaseMaterial() const;
 
     /// Disconnect source for this Output.
     /// 
     /// \sa GraphConnectableAPI::DisconnectSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool DisconnectSource() const;
 
     /// Clears source for this shading property in the current UsdEditTarget.
@@ -327,7 +327,7 @@ public:
     ///
     /// \sa GraphConnectableAPI::ClearSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ClearSource() const;
 
     /// @}
@@ -372,7 +372,7 @@ private:
     // This exists only to allow higher level API to be backwards compatible
     // and treat terminals and outputs uniformly.
     // 
-    GRAPH_API_H
+    GRAPH_API
     explicit GraphOutput(const UsdRelationship &rel);
 
     // Constructor that wraps the given shading property in a GraphOutput

@@ -29,6 +29,9 @@ public:
 
   // create a standard window of specified size
   static Window* CreateStandardWindow(int width, int height);
+
+  // create a child window
+  static Window* CreateChildWindow(int width, int height, Window* parent);
   
   // init application
   void Init();

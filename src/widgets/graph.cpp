@@ -1,6 +1,9 @@
 #include "graph.h"
 #include "node.h"
 #include "../graph/stage.h"
+#include "../graph/node.h"
+#include "../graph/input.h"
+#include "../graph/output.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
@@ -212,7 +215,6 @@ void GraphUI::Init(const std::string& filename)
     }
   }
   */
-  //_context = ImNodes::EditorContextCreate();
   
   
 }

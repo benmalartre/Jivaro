@@ -64,13 +64,13 @@ public:
     /// We call this the base name since it strips off the "inputs:" namespace 
     /// prefix from the attribute name, and returns it.
     /// 
-    GRAPH_API_H
+    GRAPH_API
     TfToken GetBaseName() const;
 
     /// Get the "scene description" value type name of the attribute associated 
     /// with the Input.
     /// 
-    GRAPH_API_H
+    GRAPH_API
     SdfValueTypeName GetTypeName() const;
     
     /// Get the prim that the input belongs to.
@@ -85,12 +85,12 @@ public:
     }
 
     /// Convenience wrapper for VtValue version of UsdAttribute::Get().
-    GRAPH_API_H
+    GRAPH_API
     bool Get(VtValue* value, UsdTimeCode time = UsdTimeCode::Default()) const;
 
     /// Set a value for the Input at \p time.
     /// 
-    GRAPH_API_H
+    GRAPH_API
     bool Set(const VtValue& value, 
              UsdTimeCode time = UsdTimeCode::Default()) const;
 
@@ -121,20 +121,20 @@ public:
     ///
     /// \return true on success.
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool SetRenderType(TfToken const& renderType) const;
 
     /// Return this Input's specialized renderType, or an empty
     /// token if none was authored.
     ///
     /// \sa SetRenderType()
-    GRAPH_API_H
+    GRAPH_API
     TfToken GetRenderType() const;
 
     /// Return true if a renderType has been specified for this Input.
     ///
     /// \sa SetRenderType()
-    GRAPH_API_H
+    GRAPH_API
     bool HasRenderType() const;
 
     /// @}
@@ -149,19 +149,19 @@ public:
     /// \p attr already represents a shade Input, and produces an \em invalid 
     /// GraphInput otherwise (i.e. the explicit bool conversion operator will 
     /// return false).
-    GRAPH_API_H
+    GRAPH_API
     explicit GraphInput(const UsdAttribute &attr);
 
     /// Test whether a given UsdAttribute represents a valid Input, which
     /// implies that creating a GraphInput from the attribute will succeed.
     ///
     /// Success implies that \c attr.IsDefined() is true.
-    GRAPH_API_H
+    GRAPH_API
     static bool IsInput(const UsdAttribute &attr);
 
     /// Test if this name has a namespace that indicates it could be an
     /// input.
-    GRAPH_API_H
+    GRAPH_API
     static bool IsInterfaceInputName(const std::string & name);
 
     /// Explicit UsdAttribute extractor.
@@ -180,24 +180,24 @@ public:
 
     /// Set documentation string for this Input.
     /// \sa UsdObject::SetDocumentation()
-    GRAPH_API_H
+    GRAPH_API
     bool SetDocumentation(const std::string& docs) const;
 
     /// Get documentation string for this Input.
     /// \sa UsdObject::GetDocumentation()
-    GRAPH_API_H
+    GRAPH_API
     std::string GetDocumentation() const;
 
     /// Set the displayGroup metadata for this Input,  i.e. hinting for the
     /// location and nesting of the attribute.
     /// \sa UsdProperty::SetDisplayGroup(), UsdProperty::SetNestedDisplayGroup()
-    GRAPH_API_H
+    GRAPH_API
     bool SetDisplayGroup(const std::string& displayGroup) const;
 
     /// Get the displayGroup metadata for this Input, i.e. hint for the location 
     /// and nesting of the attribute.
     /// \sa UsdProperty::GetDisplayGroup(), UsdProperty::GetNestedDisplayGroup()
-    GRAPH_API_H
+    GRAPH_API
     std::string GetDisplayGroup() const;
 
     /// @}
@@ -223,15 +223,15 @@ public:
     /// source attribute, which can be an input or an output.
     /// 
     /// \sa GraphConnectableAPI::CanConnect
-    GRAPH_API_H
+    GRAPH_API
     bool CanConnect(const UsdAttribute &source) const;
 
     /// \overload
-    GRAPH_API_H
+    GRAPH_API
     bool CanConnect(const GraphInput &sourceInput) const;
 
     /// \overload
-    GRAPH_API_H
+    GRAPH_API
     bool CanConnect(const GraphOutput &sourceOutput) const;
 
     /// Authors a connection for this Input to the source described by the 
@@ -246,7 +246,7 @@ public:
     ///
     /// \sa GraphConnectableAPI::ConnectToSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ConnectToSource(
         GraphConnectableAPI const &source, 
         TfToken const &sourceName, 
@@ -257,21 +257,21 @@ public:
     /// 
     /// \sa GraphConnectableAPI::ConnectToSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ConnectToSource(SdfPath const &sourcePath) const;
 
     /// Connects this Input to the given input, \p sourceInput.
     /// 
     /// \sa GraphConnectableAPI::ConnectToSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ConnectToSource(GraphInput const &sourceInput) const;
 
     /// Connects this Input to the given output, \p sourceOutput.
     /// 
     /// \sa GraphConnectableAPI::ConnectToSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ConnectToSource(GraphOutput const &sourceOutput) const;
 
     /// Finds the source of a connection for this Input.
@@ -295,7 +295,7 @@ public:
     ///
     /// \sa GraphConnectableAPI::GetConnectedSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool GetConnectedSource(GraphConnectableAPI *source, 
                             TfToken *sourceName,
                             GraphAttributeType *sourceType) const;
@@ -304,7 +304,7 @@ public:
     /// 
     /// \sa GraphConnectableAPI::GetRawConnectedSourcePaths
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool GetRawConnectedSourcePaths(SdfPathVector *sourcePaths) const;
 
     /// Returns true if and only if this Input is currently connected to a 
@@ -312,7 +312,7 @@ public:
     ///
     /// \sa GraphConnectableAPI::HasConnectedSource
     /// 
-    GRAPH_API_H
+    GRAPH_API
     bool HasConnectedSource() const;
 
     /// Returns true if the connection to this Input's source, as returned by 
@@ -321,14 +321,14 @@ public:
     /// 
     /// \sa GraphConnectableAPI::IsSourceConnectionFromBaseMaterial
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool IsSourceConnectionFromBaseMaterial() const;
 
     /// Disconnect source for this Input.
     /// 
     /// \sa GraphConnectableAPI::DisconnectSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool DisconnectSource() const;
 
     /// Clears source for this shading property in the current UsdEditTarget.
@@ -338,7 +338,7 @@ public:
     ///
     /// \sa GraphConnectableAPI::ClearSource
     ///
-    GRAPH_API_H
+    GRAPH_API
     bool ClearSource() const;
 
     /// @}
@@ -369,18 +369,18 @@ public:
     /// The default connectability of an input is GraphTokens->full.
     /// 
     /// \sa SetConnectability()
-    GRAPH_API_H
+    GRAPH_API
     bool SetConnectability(const TfToken &connectability) const;
 
     /// \brief Returns the connectability of the Input.
     /// 
     /// \sa SetConnectability()
-    GRAPH_API_H
+    GRAPH_API
     TfToken GetConnectability() const;
 
     /// \brief Clears any authored connectability on the Input.
     /// 
-    GRAPH_API_H
+    GRAPH_API
     bool ClearConnectability() const;
 
     /// @}
@@ -413,7 +413,7 @@ public:
     /// UsdAttribute is returned. If a valid \p attrType pointer is provided,
     /// the method also returns what type of attribute it found, which is
     /// <b>Invalid</b>, <b>Input</b> or <b>Output</b>.
-    GRAPH_API_H
+    GRAPH_API
     UsdAttribute GetValueProducingAttribute(
         GraphAttributeType* attrType) const;
 

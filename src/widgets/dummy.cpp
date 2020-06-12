@@ -26,9 +26,15 @@ bool DummyUI::Draw()
 
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::End();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  drawList->AddRectFilled(
+    ImVec2(0, 0),
+    ImVec2(_parent->GetSize()),
+    ImColor(color[0], color[1], color[2], color[3])
+  );
   Demo();
-  return false;
+  ImGui::End();
+  return true;
 };
   
 void DummyUI::FillBackground()

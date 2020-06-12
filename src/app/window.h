@@ -14,6 +14,11 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+extern ImFontAtlas* AMN_SHARED_ATLAS;
+extern ImFont* AMN_BOLD_FONTS[3];
+extern ImFont* AMN_MEDIUM_FONTS[3];
+extern ImFont* AMN_REGULAR_FONTS[3];
+
 class UsdEmbreeContext;
 class Application;
 class View;
@@ -59,8 +64,9 @@ class Window
 {
 public:
   // constructor
-  Window(int width, int height);
-  Window(bool fullscreen);
+  Window(int width, int height, const std::string& name);
+  Window(bool fullscreen, const std::string& name);
+  Window(int width, int height, GLFWwindow* parent, const std::string& name);
 
   //destructor
   ~Window();
@@ -71,12 +77,16 @@ public:
   // application
   Application* GetApplication(){return _app;};
 
+  // ui
+  ImGuiContext* GetContext() { return _context; };
+
   // infos
   void GetContextVersionInfos();
   GLFWwindow* GetGlfwWindow(){return _window;};
   bool GetDebounce(){return _debounce;};
   void SetDebounce(bool debounce){_debounce=debounce;};
   void CollectLeaves(View* view = NULL);
+  const std::string& GetName() { return _name; };
 
   // imgui context
   void SetupImgui();
@@ -86,6 +96,10 @@ public:
   // fullscreen
   bool IsFullScreen(){return _fullscreen;};
   void SetFullScreen(bool fullscreen){_fullscreen = fullscreen;};
+
+  // children
+  void AddChild(Window* child);
+  void RemoveChild(Window* child);
 
   // size
   int GetWidth(){return _width;};
@@ -109,9 +123,9 @@ public:
   bool PickSplitter(double mX, double mY);
 
   // fonts
-  inline ImFont* GetBoldFont(size_t index){return _boldFont[index];};
-  inline ImFont* GetMediumFont(size_t index){return _mediumFont[index];};
-  inline ImFont* GetRegularFont(size_t index){return _regularFont[index];};
+  inline ImFont* GetBoldFont(size_t index){return AMN_BOLD_FONTS[index];};
+  inline ImFont* GetMediumFont(size_t index){return AMN_MEDIUM_FONTS[index];};
+  inline ImFont* GetRegularFont(size_t index){return AMN_REGULAR_FONTS[index];};
 
   // tool
   inline void SetActiveTool(int tool) {
@@ -127,14 +141,17 @@ public:
   static Window* GetUserData(GLFWwindow* window);
 
 private:
-  // objects
-  Application*            _app;
-  GLFWwindow*             _window;
-  View*                   _mainView;
-  View*                   _activeView;
-  View*                   _activeLeaf;
-  Splitter*               _splitter;
-  std::vector<View*>      _leaves;
+  std::string               _name;
+  Application*              _app;
+  GLFWwindow*               _window;
+  bool                      _shared;
+  std::vector<Window*>      _childrens;
+  View*                     _mainView;
+  View*                     _activeView;
+  View*                     _activeLeaf;
+  Splitter*                 _splitter;
+  std::vector<View*>        _leaves;
+  ImGuiContext*             _context;
 
   // view datas
   bool              _fullscreen;
@@ -152,8 +169,8 @@ private:
   int               _iOpenGLRevision;
 
   // opengl
-  int            _pickImage;
-  int            _debugImage;
+  int               _pickImage;
+  int               _debugImage;
 
   // imgui
   ImGuiIO*          _io;
@@ -161,20 +178,18 @@ private:
   bool              _debounce;
 
   // fonts
-  ImFont*           _boldFont[3];
-  ImFont*           _mediumFont[3];
-  ImFont*           _regularFont[3];
   float             _fontSize;
 
   // ui
-  float                   _dpiX;
-  float                   _dpiY;
+  float             _dpiX;
+  float             _dpiY;
 
 public:
   // static constructor
   //----------------------------------------------------------------------------
   static Window* CreateFullScreenWindow();
   static Window* CreateStandardWindow(int width, int height);
+  static Window* CreateChildWindow(int width, int height, GLFWwindow* parent);
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

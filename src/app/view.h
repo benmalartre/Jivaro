@@ -59,14 +59,15 @@ public:
   inline View* GetParent(){return _parent;};
   inline bool HasParent(){return _parent != NULL;};
 
-  void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
-
+  // content
   void SetContent(BaseUI* ui);
   BaseUI* GetContent(){return _content;};
 
-  // 
+  // cursor
+  void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
   bool Contains(int x, int y);
   
+  // callbacks
   void Draw();
   void Resize(int x, int y, int width, int height, bool rationalize=false);
   void MouseMove(int x, int y);
@@ -74,14 +75,13 @@ public:
   void MouseWheel(int x, int y);
   void Keyboard(int key, int scancode, int action, int mods);
 
-  // FLAGS
+  // flags
   inline bool GetFlag(short flag) { return BITMASK_CHECK(_flags, flag); };
   inline void SetFlag(short flag) { BITMASK_SET(_flags, flag); };
   inline void ClearFlag(short flag) { BITMASK_CLEAR(_flags, flag); };
 
   void SetClean();
   void SetDirty();
-  bool NeedRedraw() { return _needRedraw > 0; };
 
 private:
   pxr::GfVec2f      _min;
@@ -98,7 +98,6 @@ private:
   std::string       _name;
   Window*           _window;
   char              _buffered;
-  char              _needRedraw;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

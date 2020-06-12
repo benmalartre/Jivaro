@@ -205,7 +205,7 @@ bool ViewportUI::Draw()
   GLCheckError("ENTER THE DRAGON");
   glEnable(GL_SCISSOR_TEST);
   glScissor(x, wh - (y + h), w, h);
-  glViewport(x,wh - (y + h),w,h);
+  glViewport(x,wh - (y + h), w, h);
 
   // clear to black
   glClearColor(0.0, 0.0, 0.0, 1.0 );
@@ -215,7 +215,7 @@ bool ViewportUI::Draw()
   glEnable(GL_DEPTH_TEST);
   
   _engine->SetRenderViewport(
-    pxr::GfVec4f(0, 0, w-x, h-y)
+    pxr::GfVec4f(x, y, w , h)
   );
   _engine->SetCameraState(
     _camera->GetViewMatrix(),
@@ -317,12 +317,12 @@ void ViewportUI::Resize()
 {
   if(_parent->GetWidth() <= 0 || _parent->GetHeight() <= 0)_valid = false;
   else _valid = true;
-
+  std::cout << "Viewport SIze : " << _parent->GetWidth() << "," << _parent->GetHeight() << std::endl;
   double aspectRatio = (double)_parent->GetWidth()/(double)_parent->GetHeight();
   _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
     aspectRatio,
     _camera->GetFov(),
-    pxr::GfCamera::FOVVertical
+    pxr::GfCamera::FOVHorizontal
   );
 
 }

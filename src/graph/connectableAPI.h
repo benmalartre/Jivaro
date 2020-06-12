@@ -31,9 +31,9 @@
 #include "pxr/usd/usd/apiSchemaBase.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
-
-#include "node.h"
-#include "graph.h"
+
+#include "node.h"
+#include "graph.h"
 
 
 #include "pxr/base/vt/value.h"
@@ -55,24 +55,24 @@ class SdfAssetPath;
 
 /// \class GraphConnectableAPI
 ///
-/// ConnectableAPI is an API schema that provides a common
-/// interface for creating outputs and making connections between nodes.
-/// The interface is common to all Graph schemas including Node, Graph, 
-/// and Deformable.
+/// ConnectableAPI is an API schema that provides a common
+/// interface for creating outputs and making connections between nodes.
+/// The interface is common to all Graph schemas including Node, Graph, 
+/// and Deformable.
 /// 
-/// One can construct a ConnectableAPI directly from a UsdPrim, or
-/// from objects of any of the schema classes listed above.  If it seems
-/// onerous to need to construct a secondary schema object to interact with
-/// Inputs and Outputs, keep in mind that any function whose purpose is either
-/// to walk shot description networks via their connections, or to create such
-/// networks, can typically be written entirely in terms of 
-/// ConnectableAPI objects, without needing to care what the underlying
-/// prim type is.
+/// One can construct a ConnectableAPI directly from a UsdPrim, or
+/// from objects of any of the schema classes listed above.  If it seems
+/// onerous to need to construct a secondary schema object to interact with
+/// Inputs and Outputs, keep in mind that any function whose purpose is either
+/// to walk shot description networks via their connections, or to create such
+/// networks, can typically be written entirely in terms of 
+/// ConnectableAPI objects, without needing to care what the underlying
+/// prim type is.
 /// 
-/// Additionally, the most common ConnectableAPI behaviors
-/// (creating Inputs and Outputs, and making connections) are wrapped as
-/// convenience methods on the prim schema classes (creation) and 
-/// InputPort and OutputPort.
+/// Additionally, the most common ConnectableAPI behaviors
+/// (creating Inputs and Outputs, and making connections) are wrapped as
+/// convenience methods on the prim schema classes (creation) and 
+/// InputPort and OutputPort.
 /// 
 ///
 class GraphConnectableAPI : public UsdAPISchemaBase

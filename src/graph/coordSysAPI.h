@@ -32,7 +32,7 @@
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
 #include "./tokens.h"
-
+
 #include "pxr/usd/usdGeom/xformable.h"
 
 #include "pxr/base/vt/value.h"
@@ -54,25 +54,25 @@ class SdfAssetPath;
 
 /// \class GraphCoordSysAPI
 ///
-/// CoordSysAPI provides a way to designate, name,
-/// and discover coordinate systems.
+/// CoordSysAPI provides a way to designate, name,
+/// and discover coordinate systems.
 /// 
-/// Coordinate systems are implicitly established by UsdGeomXformable
-/// prims, using their local space.  That coordinate system may be
-/// bound (i.e., named) from another prim.  The binding is encoded
-/// as a single-target relationship in the "coordSys:" namespace.
-/// Coordinate system bindings apply to descendants of the prim
-/// where the binding is expressed, but names may be re-bound by
-/// descendant prims.
+/// Coordinate systems are implicitly established by UsdGeomXformable
+/// prims, using their local space.  That coordinate system may be
+/// bound (i.e., named) from another prim.  The binding is encoded
+/// as a single-target relationship in the "coordSys:" namespace.
+/// Coordinate system bindings apply to descendants of the prim
+/// where the binding is expressed, but names may be re-bound by
+/// descendant prims.
 /// 
-/// Named coordinate systems are useful in animation workflows.
-/// An example is camera base sculpting.  
-/// Using the paint coordinate frame avoids the need to assign 
-/// a UV set to the object, and can be a concise way to project
-/// sculpt across a collection of objects with a single shared
-/// paint coordinate system.
+/// Named coordinate systems are useful in animation workflows.
+/// An example is camera base sculpting.  
+/// Using the paint coordinate frame avoids the need to assign 
+/// a UV set to the object, and can be a concise way to project
+/// sculpt across a collection of objects with a single shared
+/// paint coordinate system.
 /// 
-/// This is a non-applied API schema.
+/// This is a non-applied API schema.
 /// 
 ///
 class GraphCoordSysAPI : public UsdAPISchemaBase

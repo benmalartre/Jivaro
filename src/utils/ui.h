@@ -3,6 +3,7 @@
 #include <pxr/imaging/glf/glew.h>
 #include "../common.h"
 #include "../imgui/imgui.h"
+#include "../imgui/imgui_internal.h"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_glfw.h"
 #include "icons.h"
@@ -71,11 +72,51 @@ static void IconButton(Icon* icon, FuncT func, ArgsT... args)
 }
 
 
+// frame_padding < 0: uses FramePadding from style (default)
+// frame_padding = 0: no framing
+// frame_padding > 0: set framing size
+// The color used are the button colors.
+static bool IconButton(ImTextureID user_texture_id, const pxr::GfVec2f& size, const pxr::GfVec2f& uv0, 
+  const pxr::GfVec2f& uv1, int frame_padding, const pxr::GfVec4f& bg_col = pxr::GfVec4f(0,0,0,0), 
+  const pxr::GfVec4f& tint_col = pxr::GfVec4f(0, 0, 0, 0))
+{
+  ImGuiWindow* window = ImGui::GetCurrentWindow();
+  if (window->SkipItems)
+    return false;
+
+  ImGuiContext& g = *GImGui;
+  const ImGuiStyle& style = g.Style;
+
+  // Default to using texture ID as ID. User can still push string/integer prefixes.
+  // We could hash the size/uv to create a unique ID but that would prevent the user from animating UV.
+  ImGui::PushID((void*)(intptr_t)user_texture_id);
+  const ImGuiID id = window->GetID("#image");
+  ImGui::PopID();
+
+  const pxr::GfVec2f padding = (frame_padding >= 0) ? ImVec2((float)frame_padding, (float)frame_padding) : style.FramePadding;
+  const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + padding * 2);
+  const ImRect image_bb(window->DC.CursorPos + padding, window->DC.CursorPos + padding + size);
+  ImGui::ItemSize(bb);
+  if (!ImGui::ItemAdd(bb, id))
+    return false;
+
+  bool hovered, held;
+  bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held);
+
+  // Render
+  const ImU32 col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+  ImGui::RenderNavHighlight(bb, id);
+  ImGui::RenderFrame(bb.Min, bb.Max, col, true, pxr::GfClamp((float)pxr::GfMin(padding[0], padding[1]), 0.0f, style.FrameRounding));
+  if (bg_col[3] > 0.0f)
+    window->DrawList->AddRectFilled(image_bb.Min, image_bb.Max, ImGui::GetColorU32(bg_col));
+  window->DrawList->AddImage(user_texture_id, image_bb.Min, image_bb.Max, uv0, uv1, ImGui::GetColorU32(ImVec4(1,0,0,1)));
+  return pressed;
+}
 
 template<typename FuncT, typename ...ArgsT>
 bool AddIconButton(Icon* icon, FuncT func, ArgsT... args)
 {
-  if (ImGui::ImageButton(
+  if (IconButton(
     (ImTextureID)(intptr_t)icon->_tex, 
     ImVec2(icon->_size,icon->_size),
     ImVec2(0, 0),

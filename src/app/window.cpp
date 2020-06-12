@@ -13,11 +13,62 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImFontAtlas* AMN_SHARED_ATLAS = NULL;
+ImFont* AMN_BOLD_FONTS[3] = { NULL, NULL, NULL };
+ImFont* AMN_MEDIUM_FONTS[3] = { NULL, NULL, NULL };
+ImFont* AMN_REGULAR_FONTS[3] = { NULL, NULL, NULL };
+
+//
+// Shared Font Atlas
+//
+void AMNCreateFontAtlas()
+{
+  static float fontSizes[3] = { 16.f,32.f,64.f };
+  AMN_SHARED_ATLAS = new ImFontAtlas();
+  //AMN_SHARED_ATLAS->AddFontDefault();
+
+  // load fonts
+  std::string exeFolder = GetInstallationFolder();
+
+  std::string fontPath;
+  for (int i = 0; i < 3; ++i) {
+    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Bold.otf";
+    AMN_BOLD_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
+      fontPath.c_str(),
+      fontSizes[i],
+      NULL,
+      AMN_SHARED_ATLAS->GetGlyphRangesDefault()
+    );
+
+    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Medium.otf";
+    AMN_MEDIUM_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
+      fontPath.c_str(),
+      fontSizes[i],
+      NULL,
+      AMN_SHARED_ATLAS->GetGlyphRangesDefault()
+    );
+
+    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Regular.otf";
+    AMN_REGULAR_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
+      fontPath.c_str(),
+      fontSizes[i],
+      NULL,
+      AMN_SHARED_ATLAS->GetGlyphRangesDefault()
+    );
+  }
+  std::cout << "SHARED ATLAS SETUP DONE !!! " << std::endl;
+}
+
+void AMNDeleteFontAtlas()
+{
+  if (AMN_SHARED_ATLAS)delete AMN_SHARED_ATLAS;
+}
+
 // fullscreen window constructor
 //----------------------------------------------------------------------------
-Window::Window(bool fullscreen) :
+Window::Window(bool fullscreen, const std::string& name) :
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0),_splitter(NULL),_fontSize(16.f)
+_pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -36,17 +87,19 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f)
   _window = glfwCreateWindow(mode->width, mode->height, "AMINA.0.0",  monitor, NULL);
   _width = mode->width;
   _height = mode->height;
+  _shared = true;
 
 }
 
 // width/height window constructor
 //----------------------------------------------------------------------------
-Window::Window(int width, int height):
+Window::Window(int width, int height, const std::string& name):
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0), _splitter(NULL),_fontSize(16.f)
+_pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name)
 {
   _width = width;
   _height = height;
+  _shared = true;
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -58,6 +111,26 @@ _pickImage(0), _splitter(NULL),_fontSize(16.f)
 
 }
 
+// child window constructor
+//----------------------------------------------------------------------------
+Window::Window(int width, int height, GLFWwindow* parent, const std::string& name) :
+  _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL),
+  _pickImage(0), _splitter(NULL), _fontSize(16.f), _name(name)
+{
+  _width = width;
+  _height = height;
+  _shared = false;
+  //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //glfwWindowHint(GLFW_STENCIL_BITS, 8);
+  glfwWindowHint(GLFW_FLOATING, true);
+
+  _window = glfwCreateWindow(_width, _height, "CHILD", NULL, parent);
+}
+
 // initialize
 //----------------------------------------------------------------------------
 void 
@@ -66,35 +139,38 @@ Window::Init(Application* app)
   _app = app;
   if(_window)
   {
-    // create main splittable view
-    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
-    _mainView->SetWindow(this);
-    _splitter = new Splitter();
-
     // window datas
-    GetContextVersionInfos();
     glfwSetWindowUserPointer(_window, this);
-    
+
     // set current opengl context
     glfwMakeContextCurrent(_window);
 
-    // load opengl functions
-    pxr::GlfGlewInit();
-    pxr::GlfSharedGLContextScopeHolder sharedContext;
-	  pxr::GlfContextCaps::InitInstance();
-    pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
+    if (_shared) {
+      GetContextVersionInfos();
+      // load opengl functions
+      pxr::GlfGlewInit();
+      pxr::GlfSharedGLContextScopeHolder sharedContext;
+      pxr::GlfContextCaps::InitInstance();
+      pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
+
+      AMNCreateFontAtlas();
+    }
 
     // setup callbacks
     glfwSetWindowSizeCallback(_window, ResizeCallback);
-    //glfwSetFramebufferSizeCallback(_window, ResizeCallback);
     glfwSetMouseButtonCallback(_window, ClickCallback);
     glfwSetScrollCallback(_window, ScrollCallback);
     glfwSetKeyCallback(_window, KeyboardCallback);
     glfwSetCharCallback(_window, CharCallback);
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
-    
-    Resize(_width,_height); 
-       
+
+    // create main splittable view
+    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
+    _mainView->SetWindow(this);
+    _splitter = new Splitter();
+
+    Resize(_width, _height);
+
     // ui
     SetupImgui();
    
@@ -118,7 +194,7 @@ Window::~Window()
 Window* 
 Window::CreateFullScreenWindow()
 {
-  return new Window(true);
+  return new Window(true, "Amina");
 }
 
 // create standard window
@@ -126,7 +202,32 @@ Window::CreateFullScreenWindow()
 Window*
 Window::CreateStandardWindow(int width, int height)
 {
-  return new Window(width, height);
+  return new Window(width, height, "Amina");
+}
+
+// child window
+//----------------------------------------------------------------------------
+Window*
+Window::CreateChildWindow(int width, int height, GLFWwindow* parent)
+{
+  return new Window(width, height, parent, "Child");
+}
+
+void 
+Window::AddChild(Window* child)
+{
+  _childrens.push_back(child);
+}
+
+void 
+Window::RemoveChild(Window* child)
+{
+  for (int i = 0; i < _childrens.size(); ++i) {
+    if (_childrens[i] == child) {
+      _childrens.erase(_childrens.begin() + i);
+      break;
+    }
+  }
 }
 
 // Resize
@@ -269,8 +370,8 @@ void
 Window::SetGLContext()
 {
   glfwMakeContextCurrent(_window);
+  ImGui::SetCurrentContext(_context);
 }
-
 
 // draw
 //----------------------------------------------------------------------------
@@ -283,7 +384,7 @@ Window::Draw()
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
   GLCheckError("### WINDOW 1");
-  ImGui_ImplGlfw_NewFrame();
+  ImGui_ImplGlfw_NewFrame(_window);
   GLCheckError("### WINDOW 2");
   
   ImGui::NewFrame();
@@ -313,11 +414,12 @@ Window::SetupImgui()
   static float fontSizes[3] = { 16.f,32.f,64.f };
   // setup imgui context
   IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
+  _context = ImGui::CreateContext(AMN_SHARED_ATLAS);
+  ImGui::SetCurrentContext(_context);
   
   _io = &(ImGui::GetIO());
   //_io->FontAllowUserScaling = true;
-
+  /*
   // load fonts
   std::string exeFolder = GetInstallationFolder();
   std::string fontPath;
@@ -346,7 +448,7 @@ Window::SetupImgui()
       _io->Fonts->GetGlyphRangesDefault()
     );
   }
-  
+  */
   // setup imgui style
   //ImGui::StyleColorsAmina(NULL);
   ImGui::StyleColorsLight();
@@ -363,14 +465,16 @@ Window::SetupImgui()
   style.FramePadding = pxr::GfVec2f(0,0);
 
   // setup platform/renderer bindings
-  pxr::GlfContextCaps const & caps = pxr::GlfContextCaps::GetInstance();
-  ImGui_ImplGlfw_InitForOpenGL(_window, false);
-  if(caps.glslVersion <330) {
-    ImGui_ImplOpenGL3_Init("#version 120 ");
-  } else {
-    ImGui_ImplOpenGL3_Init("#version 330 ");
+  if (_shared) {
+    pxr::GlfContextCaps const & caps = pxr::GlfContextCaps::GetInstance();
+    ImGui_ImplGlfw_InitForOpenGL(_window, false);
+    if (caps.glslVersion < 330) {
+      ImGui_ImplOpenGL3_Init("#version 120 ");
+    }
+    else {
+      ImGui_ImplOpenGL3_Init("#version 330 ");
+    }
   }
-
 }
 
 // clear imgui
@@ -381,7 +485,7 @@ Window::ClearImgui()
   // Cleanup
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
+  ImGui::DestroyContext(_context);
 }
 
 bool Window::UpdateActiveTool(int x, int y)
@@ -412,12 +516,21 @@ void Window::MainLoop()
 
   while(!glfwWindowShouldClose(_window))
   {
+    SetGLContext();
     glfwWaitEventsTimeout(1.0/60.0);
     if(_app->IsPlaying())_app->PlayBack();
     else _app->Update();
 
+    // main window
     Draw();
     glfwSwapBuffers(_window);
+
+    // child windows
+    for (auto& child : _childrens) {
+      child->Draw();
+      glfwSwapBuffers(child->GetGlfwWindow());
+    }
+    
     _app->ComputeFramerate(glfwGetTime());
   }
 }
@@ -592,7 +705,10 @@ KeyboardCallback(
 void 
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
+  
   Window* parent = Window::GetUserData(window);
+  ImGui::SetCurrentContext(parent->GetContext());
+
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 
   if (action == GLFW_RELEASE)
@@ -611,6 +727,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     double x,y;
     glfwGetCursorPos(window,&x,&y);
     View* view = parent->GetViewUnderMouse((int)x, (int)y);
+    std::cout << "VIEW UNDER MOUSE : " << view << std::endl;
     if (view) {
       parent->SetActiveView(view);
       view->SetFlag(View::INTERACTING);
@@ -631,6 +748,7 @@ void
 ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
   Window* parent = Window::GetUserData(window);
+  ImGui::SetCurrentContext(parent->GetContext());
   ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
   if(parent->GetActiveView())
     parent->GetActiveView()->MouseWheel(xoffset, yoffset);
@@ -646,6 +764,7 @@ void
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   Window* parent = Window::GetUserData(window);
+  ImGui::SetCurrentContext(parent->GetContext());
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
   

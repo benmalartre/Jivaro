@@ -6,6 +6,7 @@
 #include "../widgets/graph.h"
 #include "../widgets/timeline.h"
 #include "../widgets/dummy.h"
+#include "../widgets/toolbar.h"
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
@@ -51,6 +52,14 @@ Window*
 Application::CreateFullScreenWindow()
 {
   return Window::CreateFullScreenWindow();
+}
+
+// create child window
+//----------------------------------------------------------------------------
+Window*
+Application::CreateChildWindow(int width, int height, Window* parent)
+{
+  return Window::CreateChildWindow(width, height, parent->GetGlfwWindow());
 }
 
 // create standard window
@@ -117,8 +126,8 @@ Application::Init()
   _viewport = new ViewportUI(viewportView, LOFI);
   _timeline = new TimelineUI(timelineView);
 
-  //DummyUI* dummy = new DummyUI(timelineView, "Dummy");
   MenuUI* menu = new MenuUI(mainView->GetLeft());
+  ToolbarUI* toolbar = new ToolbarUI(mainView->GetLeft(), "Toolbar");
 
   _viewport->Init();
   _timeline->Init(this);
@@ -128,6 +137,19 @@ Application::Init()
   pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
   _stages.push_back(stage1);
   TestStageUI(graph, _stages);
+
+  
+  Window* childWindow = CreateChildWindow(400, 400, _mainWindow);
+  childWindow->Init(this);
+  
+  _mainWindow->AddChild(childWindow);
+  /*
+  ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView(), LOFI);
+  viewport2->Init();
+  */
+  DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
+  
+  childWindow->CollectLeaves();
 
 }
 

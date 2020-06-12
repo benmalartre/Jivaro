@@ -52,9 +52,9 @@ class SdfAssetPath;
 
 /// \class GraphLayer
 ///
-/// Class for the layer node.
-/// A layer is a unit of scene description that you combine with other units
-/// of scene description to form a shot, model, set, shader, and so on.
+/// Class for the layer node.
+/// A layer is a unit of scene description that you combine with other units
+/// of scene description to form a shot, model, set, shader, and so on.
 /// 
 ///
 class GraphLayer : public GraphNode
