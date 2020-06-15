@@ -2,8 +2,13 @@
 
 #include "../app/ui.h"
 #include "../utils/ui.h"
+#include <iostream>
 
 AMN_NAMESPACE_OPEN_SCOPE
+
+struct MenuItem {
+  std::string label;
+};
 
 class MenuUI : public BaseUI
 {

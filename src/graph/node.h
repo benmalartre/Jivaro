@@ -31,9 +31,9 @@
 #include "pxr/usd/usd/typed.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
-
-#include "input.h"
-#include "output.h"
+
+#include "input.h"
+#include "output.h"
 #include "pxr/usd/ndr/declare.h"
 
 #include "pxr/base/vt/value.h"
@@ -55,7 +55,7 @@ class SdfAssetPath;
 
 /// \class GraphNode
 ///
-/// Base class for all Amnesia Nodes.
+/// Base class for all Amnesia Nodes.
 /// 
 ///
 class GraphNode : public UsdTyped

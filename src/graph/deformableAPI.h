@@ -32,8 +32,7 @@
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
 #include "./tokens.h"
-
-    
+ 
 
 #include "pxr/base/vt/value.h"
 
@@ -54,8 +53,8 @@ class SdfAssetPath;
 
 /// \class GraphDeformableAPI
 ///
-/// DeformableAPI is an API schema that provides an 
-/// interface for binding assets to different states(animation, cfx, cached...). 
+/// DeformableAPI is an API schema that provides an 
+/// interface for binding assets to different states(animation, cfx, cached...). 
 /// 
 ///
 class GraphDeformableAPI : public UsdAPISchemaBase

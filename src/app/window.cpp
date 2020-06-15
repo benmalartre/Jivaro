@@ -1,15 +1,14 @@
-#include "window.h"
-#include "view.h"
-#include "splitter.h"
 #include "../utils/glutils.h"
 #include "../utils/files.h"
+#include "../utils/icons.h"
 #include "../widgets/dummy.h"
 #include "../widgets/viewport.h"
 #include "../app/application.h"
 #include <pxr/imaging/glf/contextCaps.h>
 #include <pxr/base/arch/systemInfo.h>
-
-
+#include "window.h"
+#include "view.h"
+#include "splitter.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -25,7 +24,6 @@ void AMNCreateFontAtlas()
 {
   static float fontSizes[3] = { 16.f,32.f,64.f };
   AMN_SHARED_ATLAS = new ImFontAtlas();
-  //AMN_SHARED_ATLAS->AddFontDefault();
 
   // load fonts
   std::string exeFolder = GetInstallationFolder();
@@ -56,7 +54,6 @@ void AMNCreateFontAtlas()
       AMN_SHARED_ATLAS->GetGlyphRangesDefault()
     );
   }
-  std::cout << "SHARED ATLAS SETUP DONE !!! " << std::endl;
 }
 
 void AMNDeleteFontAtlas()
@@ -68,7 +65,7 @@ void AMNDeleteFontAtlas()
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen, const std::string& name) :
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name)
+_pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(false)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -95,7 +92,7 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name)
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, const std::string& name):
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name)
+_pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(false)
 {
   _width = width;
   _height = height;
@@ -154,6 +151,7 @@ Window::Init(Application* app)
       pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
 
       AMNCreateFontAtlas();
+      AMNInitializeIcons();
     }
 
     // setup callbacks
@@ -391,8 +389,8 @@ Window::Draw()
   GLCheckError("### WINDOW 3");
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight()));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
-  
-  if(_mainView)_mainView->Draw();
+  if (_mainView)_mainView->Draw(false);// _forceRedraw > 0);
+  _forceRedraw = pxr::GfMax(0, _forceRedraw-1);
   GLCheckError("### WINDOW 4");
 
   // draw splitters
@@ -451,7 +449,8 @@ Window::SetupImgui()
   */
   // setup imgui style
   //ImGui::StyleColorsAmina(NULL);
-  ImGui::StyleColorsLight();
+  //ImGui::StyleColorsLight();
+  //ImGui::StyleColorsClassic();
   ImGuiStyle& style = ImGui::GetStyle();
   style.Alpha = 1.f;      
   style.WindowRounding = 0.0f;
@@ -512,12 +511,11 @@ bool Window::UpdateActiveTool(int x, int y)
 
 void Window::MainLoop()
 {
-  // Enable the OpenGL context for the current window
-
   while(!glfwWindowShouldClose(_window))
   {
     SetGLContext();
-    glfwWaitEventsTimeout(1.0/60.0);
+    //glfwWaitEventsTimeout(1.0/60.0);
+    glfwPollEvents();
     if(_app->IsPlaying())_app->PlayBack();
     else _app->Update();
 
@@ -527,8 +525,11 @@ void Window::MainLoop()
 
     // child windows
     for (auto& child : _childrens) {
-      child->Draw();
-      glfwSwapBuffers(child->GetGlfwWindow());
+      if (glfwGetWindowAttrib(child->GetGlfwWindow(), GLFW_FOCUSED))
+      {
+        child->Draw();
+        glfwSwapBuffers(child->GetGlfwWindow());
+      }
     }
     
     _app->ComputeFramerate(glfwGetTime());
@@ -550,7 +551,7 @@ Window::PickSplitter(double mouseX, double mouseY)
       _splitter->SetHorizontalCursor();
     return true;
   }
-  _splitter->SetDefaultCursor();
+  else _splitter->SetDefaultCursor();
   return false;
 }
 
@@ -767,13 +768,14 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   ImGui::SetCurrentContext(parent->GetContext());
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
-  
+  parent->PickSplitter(x, y);
   if(parent->GetActiveTool() != AMN_TOOL_NONE)
   {
     parent->UpdateActiveTool(x, y);
   }
   else
   {
+    
     if (active && active->GetFlag(View::INTERACTING))
       active->MouseMove(x, y);
     else if (view) {

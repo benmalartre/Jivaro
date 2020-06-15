@@ -74,6 +74,7 @@ Splitter::Draw()
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     else if(_cursor == ImGuiMouseCursor_ResizeNS)
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+    else ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
   }
 }
 

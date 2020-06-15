@@ -9,6 +9,8 @@
 AMN_NAMESPACE_OPEN_SCOPE
 class Application;
 
+extern std::map<std::string, Icon> AMN_ICONS;;
+
 class TimelineUI : BaseUI
 {
 public:

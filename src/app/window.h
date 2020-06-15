@@ -121,6 +121,7 @@ public:
   void SetGLContext();
   void Draw();
   bool PickSplitter(double mX, double mY);
+  void ForceRedraw() { _forceRedraw = 3; };
 
   // fonts
   inline ImFont* GetBoldFont(size_t index){return AMN_BOLD_FONTS[index];};
@@ -162,6 +163,7 @@ private:
   int               _height;
   unsigned*         _pixels;
   bool              _valid;
+  int            _forceRedraw;
 
   // version number
   int               _iOpenGLMajor;

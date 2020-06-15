@@ -68,7 +68,7 @@ public:
   bool Contains(int x, int y);
   
   // callbacks
-  void Draw();
+  void Draw(bool forceRedraw);
   void Resize(int x, int y, int width, int height, bool rationalize=false);
   void MouseMove(int x, int y);
   void MouseButton(int action, int button, int mods);
@@ -82,6 +82,7 @@ public:
 
   void SetClean();
   void SetDirty();
+  void SetInteracting(bool value);
 
 private:
   pxr::GfVec2f      _min;

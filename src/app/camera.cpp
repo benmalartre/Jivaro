@@ -391,24 +391,6 @@ void Camera::LookAt()
   m.SetLookAt (_pos, _lookat, _up);
   _camera.SetTransform(m.GetInverse() * pxr::GfMatrix4d().SetTranslate(_pos));
   ComputeFrustum();
-
-  /*
-  pxr::GfFrustum frustum = _camera.GetFrustum();
-  frustum.SetPosition(_pos);
-  
-  pxr::GfVec3d dir = (_pos - _lookat).GetNormalized();
-  pxr::GfVec3d side = GfCross(dir, _up).GetNormalized();
-  pxr::GfVec3d up = GfCross(side, dir).GetNormalized();
-
-  pxr::GfMatrix3d rm(1);
-  rm.SetRow(0, side);
-  rm.SetRow(1, up);
-  rm.SetRow(2, dir);
-  pxr::GfRotation rot = rm.ExtractRotation();
-  frustum.SetRotation(rot);
-
-  _camera.SetTransform(frustum.ComputeViewMatrix());
-  */
 }
 
 void Camera::Orbit(double dx, double dy)

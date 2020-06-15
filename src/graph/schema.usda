@@ -1,52 +1,52 @@
 #usda 1.0
 (
-  "This file describes the Graph schemata for code generation."
-  subLayers = [
-    @usd/schema.usda@
-  ]
+	"This file describes the Graph schemata for code generation."
+	subLayers = [
+		@usd/schema.usda@
+	]
 )
 
 over "GLOBAL" (
-  customData = {
-    string libraryName      = "Graph"
-    string libraryPath      = "."
-    dictionary libraryTokens = {
-      dictionary full = {
-        string doc= """Possible value for 'connectability' metadata on
-        a InputPort. When connectability of an input/output is set to
-        "full", it implies that it can be connected to any other port.
-        """
-      }
-      dictionary interfaceOnly = {
-        string doc= """Possible value for 'connectability' metadata on 
-        a InputPort. It implies that the input can only connect to 
-        a Graph Input (which represents an interface override, not 
-        a computation-time dataflow connection), or another Input whose 
-        connectability is also 'interfaceOnly'.
-        """
-      }
-      dictionary connectedSourceFor = {
-        string value = "connectedSourceFor:"
-        string doc = """The prefix on Asset relationships
-        associated with a Parameter.
+	customData = {
+		string libraryName      = "Graph"
+		string libraryPath      = "."
+		dictionary libraryTokens = {
+			dictionary full = {
+				string doc = """Possible value for connectability metadata on a InputPort.
+				When connectability of an input/output is set to full, it implies that it can be connected
+				to any other port.
+				"""
+			}
+			dictionary interfaceOnly = {
+				string doc= """Possible value for 'connectability' metadata on 
+				a InputPort. It implies that the input can only connect to 
+				a Graph Input (which represents an interface override, not 
+				a computation-time dataflow connection), or another Input whose 
+				connectability is also 'interfaceOnly'.
+				"""
+			}
+			dictionary connectedSourceFor = {
+				string value = "connectedSourceFor:"
+				string doc = """The prefix on Asset relationships
+				associated with a Parameter.
 
-        This prefixed relationship has a suffix matching the associated
-        attribute name, and denotes a logical connection between
-        AssetNodes.
-        """
-      }
-      dictionary outputs = {
-        string value = "outputs:"
-        string doc = """The prefix on output ports.
-        """
-      }
-      dictionary inputs = {
-        string value = "inputs:"
-        string doc = """The prefix on input ports.
-        """
-      }
-    }
-  }
+				This prefixed relationship has a suffix matching the associated
+				attribute name, and denotes a logical connection between
+				AssetNodes.
+				"""
+			}
+			dictionary outputs = {
+				string value = "outputs:"
+				string doc = """The prefix on output ports.
+				"""
+			}
+			dictionary inputs = {
+				string value = "inputs:"
+				string doc = """The prefix on input ports.
+				"""
+			}
+		}
+	}
 )
 {
 }
@@ -267,39 +267,31 @@ class "DeformableAPI"
   interface for binding assets to different states(animation, cfx, cached...). 
   """ 
   customData = {
-    string extraIncludes = '''
-    '''
-      dictionary schemaTokens = {
-        dictionary stateBinding = {
-          string value = "state:binding"
-          string doc = """
-          The current state of the asset.
-          """
-        }
-        
-        dictionary animRig = {
-          string doc = """When in 'animRig state, the asset will exhibit
-            it's animation controls and authored animation curves.
-          """
-        }
+    string extraIncludes = """ """
+	dictionary schemaTokens = {
+		dictionary stateBinding = {
+		  string value = "state:binding"
+		  string doc = """The current state of the asset."""
+		}
 
-        dictionary cfxRig = {
-          string doc = """When in 'cfxRig state, the asset will exhibit
-            the animation cache + the cfx rig to be simulated/sculpted on top.
-          """
-        }
-        dictionary animationCache = {
-          string doc = """When in 'animationCache state, the asset will exhibit
-            the animation cache only.
-          """
-        }
-        dictionary cfxCache = {
-          string doc = """When in 'cfxCache state, the asset will exhibit
-            the animation cache with the cfx cache override on top.
-          """
-        }
-      }
-    }
+		dictionary animRig = {
+		  string doc = """When in animRig state, the asset will exhibit it's animation controls 
+		  and authored animation curves."""
+		}
+
+		dictionary cfxRig = {
+		  string doc = """When in cfxRig state, the asset will exhibit the animation cache + the cfx rig 
+		  to be simulated/sculpted on top."""
+		}
+		dictionary animationCache = {
+		  string doc = """When in animationCache state, the asset will exhibit the animation cache only."""
+		}
+		dictionary cfxCache = {
+		  string doc = """When in cfxCache state, the asset will exhibit the animation cache with the cfx 
+		  cache override on top."""
+		}
+	}
+}
 )
 {
     

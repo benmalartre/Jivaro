@@ -32,8 +32,8 @@
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
 #include "./tokens.h"
-
-#include "node.h"
+
+#include "node.h"
 #include "connectableAPI.h"
 
 #include "pxr/base/vt/value.h"
@@ -55,9 +55,9 @@ class SdfAssetPath;
 
 /// \class GraphDeformable
 ///
-/// A Deformable provides a hub into which multiple layers are 
-/// composed according to the node state and provide deformed geometry over 
-/// time to upstream the pipeline.
+/// A Deformable provides a hub into which multiple layers are 
+/// composed according to the node state and provide deformed geometry over 
+/// time to upstream the pipeline.
 /// 
 ///
 /// For any described attribute \em Fallback \em Value or \em Allowed \em Values below

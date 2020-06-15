@@ -31,13 +31,13 @@
 #include "pxr/usd/usd/typed.h"
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
-
-#include <utility>
-#include <pxr/usd/usd/editTarget.h>
-#include <pxr/usd/usd/relationship.h>
-#include "input.h"
-#include "output.h"
-#include "node.h"
+
+#include <utility>
+#include <pxr/usd/usd/editTarget.h>
+#include <pxr/usd/usd/relationship.h>
+#include "input.h"
+#include "output.h"
+#include "node.h"
 
 
 #include "pxr/base/vt/value.h"
@@ -59,22 +59,22 @@ class SdfAssetPath;
 
 /// \class GraphGraph
 ///
-/// A node-graph is a container for asset nodes, as well as other 
-/// node-graphs. It has a public input interface and provides a list of public 
-/// outputs.
+/// A node-graph is a container for asset nodes, as well as other 
+/// node-graphs. It has a public input interface and provides a list of public 
+/// outputs.
 /// 
-/// <b>Node Graph Interfaces</b>
+/// <b>Node Graph Interfaces</b>
 /// 
-/// One of the most important functions of a node-graph is to host the "interface"
-/// with which clients of already-built nodes networks will interact.  Please
-/// see \ref GraphGraph_Interfaces "Interface Inputs" for a detailed
-/// explanation of what the interface provides, and how to construct and
-/// use it, to effectively share/instance nodes networks.
+/// One of the most important functions of a node-graph is to host the "interface"
+/// with which clients of already-built nodes networks will interact.  Please
+/// see \ref GraphGraph_Interfaces "Interface Inputs" for a detailed
+/// explanation of what the interface provides, and how to construct and
+/// use it, to effectively share/instance nodes networks.
 /// 
-/// <b>Node Graph Ports</b>
+/// <b>Node Graph Ports</b>
 /// 
-/// These are typically connected to an input on a other node inside the node-graph.
-/// These are also used to author and animate input parameters.
+/// These are typically connected to an input on a other node inside the node-graph.
+/// These are also used to author and animate input parameters.
 /// 
 ///
 class GraphGraph : public UsdTyped

@@ -1,7 +1,7 @@
 #include "../common.h"
-#include "menu.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "menu.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -85,7 +85,9 @@ bool MenuUI::Draw()
     ImGui::PushFont(window->GetBoldFont(0));
     if(ImGui::BeginMenu("File"))
     {
+      GetWindow()->ForceRedraw();
       _parent->SetDirty();
+      _parent->SetInteracting(true);
       //ImGui::PushFont(window->GetMediumFont());
       ShowExampleMenuFile();
       ImGui::EndMenu();
@@ -93,7 +95,9 @@ bool MenuUI::Draw()
     }
     if (ImGui::BeginMenu("Edit"))
     {
+      GetWindow()->ForceRedraw();
       _parent->SetDirty();
+      _parent->SetInteracting(true);
       //ImGui::PushFont(window->GetMediumFont());
       if (ImGui::MenuItem("Undo", "CTRL+Z")) 
       {
@@ -111,7 +115,9 @@ bool MenuUI::Draw()
     }
     if (ImGui::BeginMenu("Demo"))
     {
+      GetWindow()->ForceRedraw();
       _parent->SetDirty();
+      _parent->SetInteracting(true);
       ImGui::PushFont(window->GetMediumFont(0));
       if (ImGui::MenuItem("Open", "CTRL+D")) 
       {
@@ -129,8 +135,9 @@ bool MenuUI::Draw()
     ImGui::EndMainMenuBar();
   }
 
+  /*
   if(_showDemoWindow)
-    ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();*/
 
   return
     ImGui::IsAnyItemActive() ||

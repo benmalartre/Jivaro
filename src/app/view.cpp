@@ -81,15 +81,15 @@ View::Contains(int x, int y)
 }
 
 void 
-View::Draw()
+View::Draw(bool forceRedraw)
 {
   if(!GetFlag(LEAF)) {
-    if(_left)_left->Draw();
-    if(_right)_right->Draw();
+    if(_left)_left->Draw(forceRedraw);
+    if(_right)_right->Draw(forceRedraw);
   }
   else
   {
-    if ((GetFlag(INTERACTING) || GetFlag(DIRTY)) && _content) {
+    if (_content && (forceRedraw || (GetFlag(INTERACTING) || GetFlag(DIRTY)))) {
       if (!_content->Draw())SetClean();
     }   
   }
@@ -375,6 +375,12 @@ void View::SetDirty()
 {
   SetFlag(DIRTY);
   _buffered = 0;
+}
+
+void View::SetInteracting(bool value) 
+{
+  if (value) SetFlag(INTERACTING);
+  else ClearFlag(INTERACTING);
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

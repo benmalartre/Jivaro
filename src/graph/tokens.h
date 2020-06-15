@@ -68,7 +68,7 @@ struct GraphTokensType {
     const TfToken allRule;
     /// \brief "animationCache"
     /// 
-    /// When in 'animationCache state, the asset will exhibit the animation cache only. 
+    /// When in animationCache state, the asset will exhibit the animation cache only.
     const TfToken animationCache;
     /// \brief "animCache"
     /// 
@@ -80,11 +80,11 @@ struct GraphTokensType {
     const TfToken animDatas;
     /// \brief "animRig"
     /// 
-    /// When in 'animRig state, the asset will exhibit it's animation controls and authored animation curves. , The animation rig variation described on a Deformable.
+    /// When in animRig state, the asset will exhibit it's animation controls  and authored animation curves., The animation rig variation described on a Deformable.
     const TfToken animRig;
     /// \brief "cfxCache"
     /// 
-    /// When in 'cfxCache state, the asset will exhibit the animation cache with the cfx cache override on top. , The characterFX cache variation described on a Deformable.
+    /// When in cfxCache state, the asset will exhibit the animation cache with the cfx  cache override on top., The characterFX cache variation described on a Deformable.
     const TfToken cfxCache;
     /// \brief "cfxDatas"
     /// 
@@ -92,23 +92,23 @@ struct GraphTokensType {
     const TfToken cfxDatas;
     /// \brief "cfxRig"
     /// 
-    /// When in 'cfxRig state, the asset will exhibit the animation cache + the cfx rig to be simulated/sculpted on top. , The character fx rig variation described on a Deformable.
+    /// When in cfxRig state, the asset will exhibit the animation cache + the cfx rig  to be simulated/sculpted on top., The character fx rig variation described on a Deformable.
     const TfToken cfxRig;
     /// \brief "connectedSourceFor:"
     /// 
-    /// The prefix on Asset relationships associated with a Parameter.  This prefixed relationship has a suffix matching the associated attribute name, and denotes a logical connection between AssetNodes. 
+    /// The prefix on Asset relationships associated with a Parameter.  This prefixed relationship has a suffix matching the associated attribute name, and denotes a logical connection between AssetNodes. 
     const TfToken connectedSourceFor;
     /// \brief "coordSys:"
     /// 
-    /// Namespace prefix for relationships that bind coordinate systems.
+    /// Namespace prefix for relationships that bind coordinate systems.
     const TfToken coordSys;
     /// \brief "deformed"
     /// 
-    /// Describes the <i>deformed geometry</i> output terminal  on a Deformable. It is used to output the resulting geometry to upstream the graph.
+    /// Describes the <i>deformed geometry</i> output terminal  on a Deformable. It is used to output the resulting geometry to upstream the graph.
     const TfToken deformed;
     /// \brief "derivesFrom"
     /// 
-    /// A legacy relationship name specifying a specializes  composition on a Deformable.
+    /// A legacy relationship name specifying a specializes  composition on a Deformable.
     const TfToken derivesFrom;
     /// \brief "fileName"
     /// 
@@ -116,7 +116,7 @@ struct GraphTokensType {
     const TfToken fileName;
     /// \brief "full"
     /// 
-    /// Possible value for 'connectability' metadata on a InputPort. When connectability of an input/output is set to "full", it implies that it can be connected to any other port. 
+    /// Possible value for connectability metadata on a InputPort. When connectability of an input/output is set to full, it implies that it can be connected to any other port. 
     const TfToken full;
     /// \brief "geometry"
     /// 
@@ -128,7 +128,7 @@ struct GraphTokensType {
     const TfToken inMemory;
     /// \brief "inputs:"
     /// 
-    /// The prefix on input ports. 
+    /// The prefix on input ports. 
     const TfToken inputs;
     /// \brief "inputs:geometry"
     /// 
@@ -140,7 +140,7 @@ struct GraphTokensType {
     const TfToken inputsLayers;
     /// \brief "interfaceOnly"
     /// 
-    /// Possible value for 'connectability' metadata on  a InputPort. It implies that the input can only connect to  a Graph Input (which represents an interface override, not  a computation-time dataflow connection), or another Input whose  connectability is also 'interfaceOnly'. 
+    /// Possible value for 'connectability' metadata on  a InputPort. It implies that the input can only connect to  a Graph Input (which represents an interface override, not  a computation-time dataflow connection), or another Input whose  connectability is also 'interfaceOnly'. 
     const TfToken interfaceOnly;
     /// \brief "lifetimeManagement"
     /// 
@@ -168,7 +168,7 @@ struct GraphTokensType {
     const TfToken onlyRule;
     /// \brief "outputs:"
     /// 
-    /// The prefix on output ports. 
+    /// The prefix on output ports. 
     const TfToken outputs;
     /// \brief "outputs:deformed"
     /// 
@@ -184,7 +184,7 @@ struct GraphTokensType {
     const TfToken populationMask;
     /// \brief "state:binding"
     /// 
-    ///  The current state of the asset. 
+    /// The current state of the asset.
     const TfToken stateBinding;
     /// A vector of all of the tokens listed above.
     const std::vector<TfToken> allTokens;

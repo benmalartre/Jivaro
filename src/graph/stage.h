@@ -157,7 +157,7 @@ public:
     // --------------------------------------------------------------------- //
     // LIFETIMEMANAGEMENT 
     // --------------------------------------------------------------------- //
-    /// Encodes the lifetime management of the stage, on-disk or
+    /// Encodes the lifetime management of the stage, on-disk or
     /// in-memory
     ///
     /// | ||
@@ -205,8 +205,8 @@ public:
     // --------------------------------------------------------------------- //
     // LOADPRIMSPATH 
     // --------------------------------------------------------------------- //
-    /// Full Path to prims on the stage.
-    /// These prims will be associated with state below on loading the stage.
+    /// Full Path to prims on the stage.
+    /// These prims will be associated with state below on loading the stage.
     /// 
     ///
     /// | ||
@@ -230,13 +230,13 @@ public:
     // --------------------------------------------------------------------- //
     // LOADPRIMSSTATES 
     // --------------------------------------------------------------------- //
-    /// Load rule for the associated prim.
-    /// - AllRule : Include payloads on the specified prim and all 
-    /// descendants.
-    /// - OnlyRule : Include payloads on the specified prim but no 
-    /// descendants.
-    /// - NoneRule : Exclude payloads on the specified prim and all 
-    /// descendants.
+    /// Load rule for the associated prim.
+    /// - AllRule : Include payloads on the specified prim and all 
+    /// descendants.
+    /// - OnlyRule : Include payloads on the specified prim but no 
+    /// descendants.
+    /// - NoneRule : Exclude payloads on the specified prim and all 
+    /// descendants.
     /// 
     ///
     /// | ||
@@ -261,9 +261,9 @@ public:
     // --------------------------------------------------------------------- //
     // POPULATIONMASK 
     // --------------------------------------------------------------------- //
-    /// Set of fullpath to prims on the stage.
-    /// This set represents a mask that may be applied to a stage to limit 
-    /// the prims it populates.
+    /// Set of fullpath to prims on the stage.
+    /// This set represents a mask that may be applied to a stage to limit 
+    /// the prims it populates.
     /// 
     ///
     /// | ||

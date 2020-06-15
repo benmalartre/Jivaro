@@ -8,6 +8,7 @@
 #include "../graph/graph.h"
 #include "../widgets/graph.h"
 #include "../widgets/viewport.h"
+#include "../widgets/explorer.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -48,6 +49,7 @@ public:
 
   // usd stages
   std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
+  pxr::UsdStageRefPtr& GetStage() { return _stage; };
 
   // time
   inline float GetMinTime(){return _minTime;};
@@ -85,12 +87,16 @@ private:
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindow;
   std::vector<pxr::UsdStageRefPtr>  _stages;
+  pxr::UsdStageRefPtr               _stage;
 
   // viewport
   ViewportUI*                       _viewport;
 
   // graph
   GraphUI*                          _graph;
+
+  // explorer
+  ExplorerUI*                       _explorer;
 
   // time
   pxr::TfStopwatch                  _stopWatch;

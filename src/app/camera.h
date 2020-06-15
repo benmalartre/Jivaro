@@ -38,8 +38,8 @@ public:
   void _GetSphericalCoordinates() {
     pxr::GfVec3d r = _pos - _lookat;
     double d = r.GetLength();
-    _polar = (-acos(r[1]/d)) * RADIANS_TO_DEGREES;
-    _azimuth = (tan(r[0]/r[2])) * RADIANS_TO_DEGREES;
+    _polar = (-acosf(r[1]/d)) * RADIANS_TO_DEGREES;
+    _azimuth = (atanf(r[0]/r[2])) * RADIANS_TO_DEGREES;
   };
 
   /*

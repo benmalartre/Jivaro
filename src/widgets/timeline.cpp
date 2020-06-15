@@ -16,7 +16,6 @@ TimelineUI::TimelineUI(View* parent) :BaseUI(parent, "Timeline")
     | ImGuiWindowFlags_NoMove;
 
   _parent->SetDirty();
-  InitializeIcons();
 }
 
 // destructor
@@ -114,7 +113,7 @@ void TimelineUI::DrawControls()
   const ImVec4* colors = style->Colors;
 
   ImGui::SetCursorPosX(20);
-  ImGui::SetCursorPosY(height - 20);
+  ImGui::SetCursorPosY(height - 30);
 
   ImGui::PushFont(GetWindow()->GetMediumFont(0));
 
@@ -138,21 +137,21 @@ void TimelineUI::DrawControls()
 
   // play button
   Icon* icon = NULL;
-  if (!_playing) icon = &AMN_ICONS["play_btn.png"];
-  else icon = &AMN_ICONS["stop_btn.png"];
+  if (!_playing) icon = &AMN_ICONS["playforward.png"];
+  else icon = &AMN_ICONS["stop.png"];
 
   AddIconButton<IconPressedFunc, TimelineUI*>(
     icon,
     (IconPressedFunc)StartStopPlayback, this
     );
 
-  icon = &AMN_ICONS["first_frame_btn.png"];
+  icon = &AMN_ICONS["firstframe.png"];
   AddIconButton<IconPressedFunc>(
     icon,
     (IconPressedFunc)SimpleCallback
     );
 
-  icon = &AMN_ICONS["last_frame_btn.png"];
+  icon = &AMN_ICONS["lastframe.png"];
   AddIconButton<IconPressedFunc, TimelineUI*, int>(
     icon,
     (IconPressedFunc)DifficultCallback,
@@ -160,7 +159,7 @@ void TimelineUI::DrawControls()
     666
     );
 
-  icon = &AMN_ICONS["loop_btn.png"];
+  icon = &AMN_ICONS["loop.png"];
   AddIconButton<IconPressedFunc, TimelineUI*, int, float, const char*>(
     icon,
     (IconPressedFunc)VeryDifficultCallback,
@@ -283,7 +282,6 @@ void TimelineUI::DrawTimeSlider()
 
 bool TimelineUI::Draw()
 {
-  std::cout << "DRAW TIMELINE UI " << std::endl;
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
   ImGui::SetWindowPos(_parent->GetMin());
