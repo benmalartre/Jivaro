@@ -26,6 +26,9 @@ BaseUI(parent, "Viewport")
   _interact = false;
   _interactionMode = INTERACTION_NONE;
   _engine = NULL;
+
+  pxr::TfWeakPtr<ViewportUI> me(this);
+  pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
 }
 
 // destructor
@@ -33,13 +36,15 @@ ViewportUI::~ViewportUI()
 {
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
-  if(_engine) delete _engine;
+  if (_engine) delete _engine;
 }
 
 void ViewportUI::Init()
 {
+  if (_engine)delete _engine;
   pxr::SdfPathVector excludedPaths;
   GLCheckError("INIT VIEWPORT");  
+
   _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/"), excludedPaths);
   //_engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
   _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
@@ -63,6 +68,7 @@ void ViewportUI::Init()
   Resize();
 
   std::cout << "Hydra Enabled : " << pxr::UsdImagingGLEngine::IsHydraEnabled() << std::endl;
+  _initialized = true;
 }
 
 void ViewportUI::Update()
@@ -73,7 +79,6 @@ void ViewportUI::Update()
 // overrides
 void ViewportUI::MouseButton(int button, int action, int mods) 
 {
-  std::cout << "VIEWPORT MOUSE BUTTON :D " << std::endl;
   if (action == GLFW_RELEASE)
   {
     _interactionMode = INTERACTION_NONE;
@@ -194,6 +199,7 @@ void ViewportUI::MouseWheel(int x, int y)
 
 bool ViewportUI::Draw()
 {    
+  if (!_initialized)Init();
   if(!_valid)return false;  
   float x = _parent->GetMin()[0];
   float y = _parent->GetMin()[1];
@@ -202,7 +208,6 @@ bool ViewportUI::Draw()
   float h = _parent->GetHeight();
   float wh = GetWindowHeight();
 
-  GLCheckError("ENTER THE DRAGON");
   glEnable(GL_SCISSOR_TEST);
   glScissor(x, wh - (y + h), w, h);
   glViewport(x,wh - (y + h), w, h);
@@ -211,35 +216,33 @@ bool ViewportUI::Draw()
   glClearColor(0.0, 0.0, 0.0, 1.0 );
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glDepthFunc(GL_LESS);
-  glEnable(GL_DEPTH_TEST);
-  
-  _engine->SetRenderViewport(
-    pxr::GfVec4f(x, y, w , h)
-  );
-  _engine->SetCameraState(
-    _camera->GetViewMatrix(),
-    _camera->GetProjectionMatrix()
-  );
-
   Application* app = GetApplication();
-  _renderParams.frame = pxr::UsdTimeCode(app->GetCurrentTime());
-  _renderParams.complexity = 1.0f;
-  _renderParams.drawMode = pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
-  _renderParams.showGuides = true;
-  _renderParams.showRender = true;
-  _renderParams.showProxy = true;
-  _renderParams.forceRefresh = false;
-  _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_NOTHING;
-  _renderParams.gammaCorrectColors = false;
-  _renderParams.enableIdRender = false;
-  _renderParams.enableSampleAlphaToCoverage = true;
-  _renderParams.highlight = false;
-  _renderParams.enableSceneMaterials = true;
-  //_renderParams.colorCorrectionMode = ???
-  _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
-  _renderParams.renderResolution[0] = GetWidth();
-  _renderParams.renderResolution[1] = GetHeight();
+  if (app->GetStage() != nullptr) {
+    glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
+    _engine->SetRenderViewport(
+      pxr::GfVec4f(x, y, w , h)
+    );
+    _engine->SetCameraState(
+      _camera->GetViewMatrix(),
+      _camera->GetProjectionMatrix()
+    );
+  
+    _renderParams.frame = pxr::UsdTimeCode(app->GetActiveTime());
+    _renderParams.complexity = 1.0f;
+    _renderParams.drawMode = pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
+    _renderParams.showGuides = true;
+    _renderParams.showRender = true;
+    _renderParams.showProxy = true;
+    _renderParams.forceRefresh = false;
+    _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_NOTHING;
+    _renderParams.gammaCorrectColors = false;
+    _renderParams.enableIdRender = false;
+    _renderParams.enableSampleAlphaToCoverage = true;
+    _renderParams.highlight = false;
+    _renderParams.enableSceneMaterials = true;
+    //_renderParams.colorCorrectionMode = ???
+    _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
 
 
  /*
@@ -253,18 +256,20 @@ bool ViewportUI::Draw()
   };
   */
   //_engine->PrepareBatch(_stages[0]->GetPseudoRoot());
-  _engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
-  glDisable(GL_SCISSOR_TEST);
+  //_engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
+    _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
+    glDisable(GL_SCISSOR_TEST);
 
-  std::cout << "FRAMERATE : " << this->GetApplication()->GetFramerate() << std::endl;
+    /*
+    bool open;
+    ImGui::Begin("ViewportOverlay", &open, ImGuiWindowFlags_NoDecoration);
+    ImGui::Text("FPS : %d", this->GetApplication()->GetFramerate());
+    //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+    */
 
-  bool open;
-  ImGui::Begin("ViewportOverlay", &open, ImGuiWindowFlags_NoDecoration);
-  ImGui::Text("FPS : %d", this->GetApplication()->GetFramerate());
-  //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-  ImGui::End();
-  
-  return false;
+    return false;
+  }
   /*
   if(_pixels)
   {
@@ -317,15 +322,12 @@ void ViewportUI::Resize()
 {
   if(_parent->GetWidth() <= 0 || _parent->GetHeight() <= 0)_valid = false;
   else _valid = true;
-  std::cout << "Viewport SIze : " << _parent->GetWidth() << "," << _parent->GetHeight() << std::endl;
   double aspectRatio = (double)_parent->GetWidth()/(double)_parent->GetHeight();
   _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
     aspectRatio,
     _camera->GetFov(),
     pxr::GfCamera::FOVHorizontal
   );
-
 }
-
 
 AMN_NAMESPACE_CLOSE_SCOPE

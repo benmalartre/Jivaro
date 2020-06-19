@@ -3,6 +3,7 @@
 #include "../common.h"
 #include "../app/ui.h"
 #include "../app/camera.h"
+#include "../app/notice.h"
 #include "../utils/ui.h"
 #include "../utils/utils.h"
 #include <pxr/pxr.h>
@@ -26,14 +27,13 @@ enum InteractionMode{
   INTERACTION_NONE,
   INTERACTION_WALK,
   INTERACTION_ORBIT,
-  INTERACTION_DOLLY
-  /*
+  INTERACTION_DOLLY,
   INTERACTION_PICKSELECT,
   INTERACTION_RECTANGLESELECT,
+  INTERACTION_FREESELECT,
   INTERACTION_TRANSLATE,
   INTERACTION_ROTATE,
   INTERACTION_SCALE
-  */
 };
 
 enum VIEWPORT_MODE {
@@ -81,7 +81,6 @@ class ViewportUI : public BaseUI
     pxr::UsdImagingGLRenderParams     _renderParams;
     pxr::UsdPrim                      _root;
     pxr::UsdLuxDomeLight              _light;
-    pxr::UsdStageRefPtr               _stage;
-    pxr::GfCamera                     _cameraX;
+    //pxr::UsdStageRefPtr               _stage;
 };
 AMN_NAMESPACE_CLOSE_SCOPE

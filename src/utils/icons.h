@@ -15,9 +15,9 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 enum ICON_SIZE {
-  ICON_LOW = 16,
-  ICON_MID = 32,
-  ICON_HIGH = 64
+  AMN_ICON_SMALL,
+  AMN_ICON_MEDIUM,
+  AMN_ICON_LARGE
 };
 
 enum ICON_ID {
@@ -53,12 +53,13 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
 #define ICON_TYPE GL_UNSIGNED_BYTE
 
 struct Icon {
-  ICON_SIZE     size;
+  size_t        size;
   GLuint        tex;
   GLuint        tex_h;
 };
  
-extern std::map<std::string, Icon> AMN_ICONS;
+typedef std::vector<std::map<std::string, Icon> > AmnIconMap;
+extern AmnIconMap AMN_ICONS;
 
 void IconHoverDatas(pxr::GlfImage::StorageSpec* storage, int nchannels);
 void CreateIconFromImage(const std::string& filename,

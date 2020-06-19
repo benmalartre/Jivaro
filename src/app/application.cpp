@@ -1,4 +1,6 @@
 #include "application.h"
+#include "notice.h"
+#include "../utils/nfd.hpp"
 #include "../utils/files.h"
 #include "../utils/timer.h"
 #include "../widgets/viewport.h"
@@ -8,24 +10,29 @@
 #include "../widgets/dummy.h"
 #include "../widgets/toolbar.h"
 #include "../widgets/explorer.h"
+#include "../widgets/property.h"
+#include <pxr/base/tf/debug.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
+#include <pxr/imaging/hd/renderPassState.h>
+#include <pxr/imaging/LoFi/debugCodes.h>
 #include "../tests/stageGraph.h"
 #include "../tests/stageUI.h"
 
+#include <iostream>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-PXR_NAMESPACE_USING_DIRECTIVE
+Application* AMN_APPLICATION = nullptr;
 const char* Application::APPLICATION_NAME = "Amnesie";
 
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
   _mainWindow(NULL),_minTime(1),_maxTime(101),_startTime(1),
-  _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false),
-  _framerate(0),_frameCount(0),_lastT(0)
+  _endTime(101),_activeTime(1),_speed(1),_fps(24),_loop(false),_playback(false),
+  _framerate(0),_frameCount(0),_lastT(0),_stage(nullptr)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
@@ -33,8 +40,8 @@ Application::Application(unsigned width, unsigned height):
 
 Application::Application(bool fullscreen):
   _mainWindow(NULL),_minTime(1),_maxTime(101),_startTime(1),
-  _endTime(101),_currentTime(1),_speed(1),_fps(24),_loop(false),_playback(false),
-  _framerate(0), _frameCount(0), _lastT(0)
+  _endTime(101),_activeTime(1),_speed(1),_fps(24),_loop(false),_playback(false),
+  _framerate(0), _frameCount(0), _lastT(0),_stage(nullptr)
 {
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
@@ -103,42 +110,47 @@ Application::Init()
   //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
   //TfDebug::Enable(GLF_DEBUG_CONTEXT_CAPS);
   //TfDebug::Enable(HDST_DUMP_SHADER_SOURCEFILE);
+  //pxr::TfDebug::Enable(pxr::HD_DIRTY_LIST);
+  //pxr::TfDebug::Enable(pxr::HD_COLLECTION_CHANGED);
+  //pxr::TfDebug::Enable(pxr::LOFI_REGISTRY);
 
   // create window
   _mainWindow->SetGLContext();
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
-  View* mainView = _mainWindow->GetMainView();
+  View* mainView = _mainWindow->SplitView(_mainWindow->GetMainView(), 0.5, true, View::LFIXED, 65);
+  View* bottomView = _mainWindow->SplitView(mainView->GetRight(), 0.9, true, false);
   
-  _mainWindow->SplitView(mainView, 0.075, true);
-  View* bottomView = _mainWindow->SplitView(mainView->GetRight(), 0.9, true);
+  //bottomView->Split(0.9, true, true);
   View* timelineView = bottomView->GetRight();
   View* centralView = _mainWindow->SplitView(bottomView->GetLeft(), 0.6, true);
   View* middleView = centralView->GetLeft();
+  View* topView = _mainWindow->SplitView(mainView->GetLeft(), 0.5, true, View::LFIXED, 24);
 
   _mainWindow->SplitView(middleView, 0.9, false);
+  
   View* workingView = _mainWindow->SplitView(middleView->GetLeft(), 0.15, false);
+  View* propertyView = middleView->GetRight();
   View* explorerView = workingView->GetLeft();
   View* viewportView = workingView->GetRight();  
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
+
+  GraphUI* graph = new GraphUI(graphView, "Graph", true);
   
-  GraphUI* graph = new GraphUI(graphView, "GraphUI", true);
   _viewport = new ViewportUI(viewportView, OPENGL);
+  
   _timeline = new TimelineUI(timelineView);
 
-  MenuUI* menu = new MenuUI(mainView->GetLeft());
-  ToolbarUI* toolbar = new ToolbarUI(middleView->GetRight(), "Toolbar");
+  MenuUI* menu = new MenuUI(topView->GetLeft());
+  ToolbarUI* toolbar = new ToolbarUI(topView->GetRight(), "Toolbar");
   _explorer = new ExplorerUI(explorerView);
 
-  pxr::UsdStageRefPtr stage1 = pxr::UsdStage::Open(filename);
-  _stage = stage1;
-  _stages.push_back(stage1);
-  TestStageUI(graph, _stages);
+  PropertyUI* prop = new PropertyUI(propertyView, "Property");
 
-  _viewport->Init();
-  _timeline->Init(this);
-  _explorer->Init();
+  //_stage = pxr::UsdStage::Open(filename);
+  //_stages.push_back(stage1);
+  //TestStageUI(graph, _stages);
  
   _mainWindow->CollectLeaves();
   
@@ -177,13 +189,13 @@ void Application::ComputeFramerate(double T)
 // time
 void Application::PreviousFrame()
 {
-  float currentTime = _currentTime - _speed;
+  float currentTime = _activeTime - _speed;
   if(currentTime < _startTime)
   {
-    if(_loop)_currentTime = _endTime;
-    else _currentTime = _startTime;
+    if(_loop)_activeTime = _endTime;
+    else _activeTime = _startTime;
   }
-  else _currentTime = currentTime;
+  else _activeTime = currentTime;
   
   _timeline->Update();
   _viewport->Update();
@@ -191,13 +203,13 @@ void Application::PreviousFrame()
 
 void Application::NextFrame()
 {
- float currentTime = _currentTime + _speed;
+ float currentTime = _activeTime + _speed;
   if(currentTime > _endTime)
   {
-    if(_loop)_currentTime = _startTime;
-    else _currentTime = _endTime;
+    if(_loop)_activeTime = _startTime;
+    else _activeTime = _endTime;
   }
-  else _currentTime = currentTime;
+  else _activeTime = currentTime;
   
   _timeline->Update();
   _viewport->Update();
@@ -205,14 +217,14 @@ void Application::NextFrame()
 
 void Application::FirstFrame()
 {
-  _currentTime = _startTime;
+  _activeTime = _startTime;
   _timeline->Update();
   _viewport->Update();
 }
 
 void Application::LastFrame()
 {
-  _currentTime = _endTime;
+  _activeTime = _endTime;
   _timeline->Update();
   _viewport->Update();
 }
@@ -242,8 +254,21 @@ void Application::PlayBack()
     _stopWatch.Reset();
     _stopWatch.Start();
   }
-  
+ 
   Update();
+} 
+
+void Application::OpenScene(const std::string& filename)
+{
+  NFD::Guard nfdGuard;
+  NFD::UniquePath outPath;
+  nfdfilteritem_t filterItem[2] = { { "Usd File", "usd,usdc,usda,usdz" } };
+  nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 2);
+  if (result == NFD_OKAY)
+  {
+    _stage = pxr::UsdStage::Open(outPath.get());
+    OnNewScene();
+  }
 }
 
 // main loop

@@ -2,6 +2,7 @@
 
 #include "explorer.h"
 #include "../app/application.h"
+#include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/view.h"
 #include <pxr/pxr.h>
@@ -26,8 +27,11 @@ ExplorerUI::ExplorerUI(View* parent)
     | ImGuiWindowFlags_NoMove;
 
   _parent->SetDirty();
-  _visibleIcon = &AMN_ICONS["visible.png"];
-  _invisibleIcon = &AMN_ICONS["invisible.png"];
+  _visibleIcon = &AMN_ICONS[AMN_ICON_SMALL]["visible.png"];
+  _invisibleIcon = &AMN_ICONS[AMN_ICON_SMALL]["invisible.png"];
+
+  pxr::TfWeakPtr<ExplorerUI> me(this);
+  pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
 }
 
 // destructor
@@ -39,6 +43,7 @@ void ExplorerUI::Init()
 {
   Update();
   _parent->SetDirty();
+  _initialized = true;
 }
 
 void ExplorerUI::Update()
@@ -206,6 +211,7 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
 
 bool ExplorerUI::Draw()
 {
+  if (!_initialized)Init();
   //if (!_active)return false;
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
@@ -240,7 +246,7 @@ bool ExplorerUI::Draw()
     
     // draw title
     ImGui::PushFont(GetWindow()->GetBoldFont(0));
-    ImGui::Text("Prim name");
+    ImGui::Text("Prim");
     ImGui::NextColumn();
     ImGui::Text("Type");
     ImGui::NextColumn();
@@ -278,8 +284,6 @@ void ExplorerUI::RecurseStage()
     _root->_visible = true;
     RecursePrim(_root);
   }
-  
-
 }
 
 void ExplorerUI::RecursePrim(ExplorerItem* currentItem)

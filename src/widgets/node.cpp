@@ -380,59 +380,63 @@ void NodeUI::Update()
 
 }
 
+bool NodeUI::IsVisible(GraphUI* editor)
+{
+  return true;
+}
+
 // NodeUI draw
 //------------------------------------------------------------------------------
 void NodeUI::Draw(GraphUI* editor) 
 {
   Window* window = editor->GetWindow();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
+  if (IsVisible(editor)) {
+    ImGui::SetWindowFontScale(1.0);
+    ImGui::PushFont(window->GetMediumFont(0));
+    ComputeSize();
 
-  ImGui::SetWindowFontScale(1.0);
-  ImGui::PushFont(window->GetMediumFont(0));
-  ComputeSize();
+    ImGui::SetWindowFontScale(editor->GetFontScale());
+    ImGui::PushFont(window->GetMediumFont(editor->GetFontIndex()));
 
+    const float scale = editor->GetScale();
+    const pxr::GfVec2f offset = editor->GetOffset();
+    const ImVec2 p = editor->GetPosition() + (GetPosition() + offset) * scale;
+    const float x = p.x;
+    const float y = p.y;
+    const ImVec2 s = GetSize() * scale;
 
-  ImGui::SetWindowFontScale(editor->GetFontScale());
-  ImGui::PushFont(window->GetMediumFont(editor->GetFontIndex()));
+    drawList->AddRectFilled(
+      ImVec2(x, y),
+      ImVec2(x + s.x, y + s.y),
+      ImColor(120, 180, 150, 255),
+      NODE_PORT_RADIUS * scale,
+      ImDrawCornerFlags_All);
 
-  const float scale = editor->GetScale();
-  const pxr::GfVec2f offset = editor->GetOffset();
-  const ImVec2 p = editor->GetPosition() + (GetPosition() + offset) * scale;
-  const float x = p.x;
-  const float y = p.y;
-  const ImVec2 s = GetSize() * scale;
+    drawList->AddRect(
+      ImVec2(x, y),
+      ImVec2(x + s.x, y + s.y),
+      GetState(ITEM_STATE_SELECTED) ? ImColor(255, 255, 255, 255) :
+      GetState(ITEM_STATE_HOVERED) ? ImColor(60, 60, 60, 100) : ImColor(0, 0, 0, 100),
+      NODE_PORT_RADIUS * scale,
+      ImDrawCornerFlags_All,
+      2 * scale);
 
-  drawList->AddRectFilled(
-    ImVec2(x, y),
-    ImVec2(x + s.x, y + s.y),
-    ImColor(60,60,60, 255),
-    NODE_PORT_RADIUS * scale,
-    ImDrawCornerFlags_All);
+    drawList->AddText(p + pxr::GfVec2f(NODE_PORT_PADDING, 0), ImColor(0, 0, 0, 255), _name.c_str());
 
-  drawList->AddRect(
-    ImVec2(x, y),
-    ImVec2(x + s.x, y + s.y),
-    GetState(ITEM_STATE_SELECTED) ? ImColor(0, 255, 0, 255) : 
-      GetState(ITEM_STATE_HOVERED) ? ImColor(255, 255, 0, 255) : ImColor(0,0,0,255),
-    NODE_PORT_RADIUS * scale,
-    ImDrawCornerFlags_All,
-    2 * scale);
+    ImGui::PopFont();
 
-  drawList->AddText( p + pxr::GfVec2f(NODE_PORT_PADDING, 0), ImColor(0,0,0,255), _name.c_str() );
+    ImGui::PushFont(window->GetRegularFont(editor->GetFontIndex()));
 
-  ImGui::PopFont();
-  
-  ImGui::PushFont(window->GetRegularFont(editor->GetFontIndex()));
+    int numInputs = _inputs.size();
 
-  int numInputs = _inputs.size();
-  
-  for(int i=0;i<numInputs;++i) _inputs[i].Draw(editor);
+    for (int i = 0; i<numInputs; ++i) _inputs[i].Draw(editor);
 
-  int numOutputs = _outputs.size();
-  ImGui::Indent(40);
-  for(int i=0;i<numOutputs;++i) _outputs[i].Draw(editor);
-  ImGui::PopFont();
-
+    int numOutputs = _outputs.size();
+    ImGui::Indent(40);
+    for (int i = 0; i<numOutputs; ++i) _outputs[i].Draw(editor);
+    ImGui::PopFont();
+  }
 } 
 
 

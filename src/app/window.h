@@ -111,7 +111,8 @@ public:
 
   // views
   Splitter* GetSplitter(){return _splitter;};
-  View* SplitView(View* view, double perc = 0.5, bool horizontal=true, bool fixed=false);
+  View* SplitView(View* view, double perc = 0.5, bool horizontal=true, 
+    int fixed=0, int numPixels=-1);
   View* GetMainView(){return _mainView;};
   void SetActiveView(View* view);
   View* GetActiveView(){return _activeView;};

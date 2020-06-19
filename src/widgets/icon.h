@@ -44,7 +44,7 @@ static IconItem PlayIcon[PlayIconN] = {
     &PlayIconPoints[0],
     &PlayIconWidths[0],
     &PlayIconColors[0]
-  }
+  } 
 };
 
 class IconButtonUI
@@ -52,7 +52,7 @@ class IconButtonUI
 public:
   IconButtonUI() : _initialized(false) {};
   ~IconButtonUI() {};
-  
+
   void Build(IconItem* item, size_t n);
   void Draw(ImDrawList* drawList);
 private:

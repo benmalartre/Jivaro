@@ -7,9 +7,7 @@
 
 
 AMN_NAMESPACE_OPEN_SCOPE
-class Application;
-
-extern std::map<std::string, Icon> AMN_ICONS;;
+extern AmnIconMap AMN_ICONS;
 
 class TimelineUI : BaseUI
 {
@@ -22,7 +20,7 @@ public:
   void MouseMove(int x, int y) override;
   bool Draw() override;
 
-  void Init(Application* app);
+  void Init();
   void DrawControls();
   void DrawTimeSlider();
   void ValidateTime();
@@ -43,7 +41,6 @@ private:
   float               _speed;
   bool                _loop;
   bool                _playing;
-  Application*        _app;
 
   bool                _interacting;
   double              _lastX;

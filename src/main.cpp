@@ -7,9 +7,9 @@ AMN_NAMESPACE_USING_DIRECTIVE
 int main(void)
 {
   glfwInit();
-  Application app(800,600);
-  app.Init();
-  app.MainLoop();
+  AMN_APPLICATION = new Application(800,600);
+  AMN_APPLICATION->Init();
+  AMN_APPLICATION->MainLoop();
   glfwTerminate();
   return 1;
 }

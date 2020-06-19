@@ -14,15 +14,18 @@ void Splitter::RecurseBuildMap(View* view)
     View* parent = view->GetParent();
     if(!parent)parent = view;
 
-    pxr::GfVec2f sMin, sMax;
-    view->GetSplitInfos(sMin, sMax, _width, _height);
-    for(int y = sMin[1]; y < sMax[1]; ++y)
-    {
-      for(int x = sMin[0]; x < sMax[0]; ++x)
+    if (!view->GetFlag(View::LFIXED|View::RFIXED)) {
+      pxr::GfVec2f sMin, sMax;
+      view->GetSplitInfos(sMin, sMax, _width, _height);
+      for (int y = sMin[1]; y < sMax[1]; ++y)
       {
-        _pixels[y * _width + x] = _viewID;
+        for (int x = sMin[0]; x < sMax[0]; ++x)
+        {
+          _pixels[y * _width + x] = _viewID;
+        }
       }
     }
+   
     RecurseBuildMap(view->GetLeft());
     RecurseBuildMap(view->GetRight());
   }
@@ -63,7 +66,7 @@ Splitter::Draw()
 {
   ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
   pxr::GfVec2f sMin, sMax;
-  static ImVec4 colf = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
+  static ImVec4 colf = ImVec4(0.46f, 0.56f, 0.76f, 1.0f);
   const ImU32 col = ImColor(colf);
   for(auto view : _views)
   {

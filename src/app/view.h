@@ -13,13 +13,14 @@ class View
 public:
   enum FLAGS
   {
-    OVER = 1,
-    HORIZONTAL = 2,
-    LEAF = 4,
-    FIXED = 8,
-    ACTIVE = 16,
-    DIRTY = 32,
-    INTERACTING = 64
+    HORIZONTAL      = 1 << 1,
+    OVER            = 1 << 2,
+    LEAF            = 1 << 3,
+    LFIXED          = 1 << 4,
+    RFIXED          = 1 << 5,
+    ACTIVE          = 1 << 6,
+    DIRTY           = 1 << 7,
+    INTERACTING     = 1 << 8
   };
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
@@ -31,13 +32,9 @@ public:
   const float GetY(){return _min[1];};
   const pxr::GfVec2f& GetMin(){return _min;};
   const pxr::GfVec2f& GetMax(){return _max;};
-  const pxr::GfVec3f& GetColor(){return _color;};
   float GetWidth(){return _max[0] - _min[0];};
   float GetHeight(){return _max[1] - _min[1];};
   pxr::GfVec2f GetSize(){return _max - _min;};
-
-  inline const pxr::GfVec4f 
-  GetColor4(){return pxr::GfVec4f(_color[0], _color[1], _color[2], 1.f);};
 
   inline const std::string& GetName(){return _name;};
   inline const char* GetText(){return _name.c_str();};
@@ -46,13 +43,13 @@ public:
   void GetPercFromMousePosition(int x, int y);
   void ComputeNumPixels(bool postFix=false);
   void RescaleNumPixels( pxr::GfVec2f ratio);
-  void FixLeft();
-  void FixRight();
+  void RescaleLeft();
+  void RescaleRight();
 
-  void GetChildMinMax(bool , pxr::GfVec2f& , pxr::GfVec2f& );
-  void Split(double perc, bool horizontal, bool fixed);
+  void GetChildMinMax(bool , pxr::GfVec2f& , pxr::GfVec2f&);
+  void Split(double perc, bool horizontal, int fixed=false, int numPixels=-1);
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
-  const int width, const int height);
+    const int width, const int height);
 
   inline View* GetLeft(){return _left;};
   inline View* GetRight(){return _right;};
@@ -87,18 +84,18 @@ public:
 private:
   pxr::GfVec2f      _min;
   pxr::GfVec2f      _max;
-  pxr::GfVec3f      _color;
+  unsigned          _flags;
   double            _perc;
   double            _lastPerc;
-  unsigned          _npixels[2];
+  unsigned          _numPixels[2];
+  int               _fixedPixels;
+  char              _buffered;
   BaseUI*           _content;
+  Window*           _window;
   View*             _left;
   View*             _right;
   View*             _parent;
-  unsigned          _flags;
   std::string       _name;
-  Window*           _window;
-  char              _buffered;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

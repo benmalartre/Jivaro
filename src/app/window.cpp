@@ -1,6 +1,7 @@
 #include "../utils/glutils.h"
 #include "../utils/files.h"
 #include "../utils/icons.h"
+#include "../utils/ui.h"
 #include "../widgets/dummy.h"
 #include "../widgets/viewport.h"
 #include "../app/application.h"
@@ -65,7 +66,7 @@ void AMNDeleteFontAtlas()
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen, const std::string& name) :
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(false)
+_pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -92,7 +93,7 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(false)
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, const std::string& name):
 _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(false)
+_pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
 {
   _width = width;
   _height = height;
@@ -112,7 +113,7 @@ _pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(false)
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, GLFWwindow* parent, const std::string& name) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL),
-  _pickImage(0), _splitter(NULL), _fontSize(16.f), _name(name)
+  _pickImage(0), _splitter(NULL), _fontSize(16.f), _name(name),_forceRedraw(0)
 {
   _width = width;
   _height = height;
@@ -253,6 +254,7 @@ Window::SetActiveView(View* view)
     if (_activeView == view)return;
     _activeView->ClearFlag(View::OVER);
     _activeView->ClearFlag(View::ACTIVE);
+    _activeView->ClearFlag(View::INTERACTING);
     _activeView->SetDirty();
   }
   if(view)
@@ -269,7 +271,7 @@ Window::SetActiveView(View* view)
 // split view
 //----------------------------------------------------------------------------
 View* 
-Window::SplitView(View* view, double perc, bool horizontal, bool fixed)
+Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPixels)
 {
   if(!view->GetFlag(View::LEAF))
   {
@@ -280,15 +282,27 @@ Window::SplitView(View* view, double perc, bool horizontal, bool fixed)
   if(horizontal)
   {
     view->SetFlag(View::HORIZONTAL);
-    view->Split(perc, horizontal, fixed);
+    float height = (view->GetMax()[1] - view->GetMin()[1]);
+    if(fixed & View::LFIXED && numPixels > 0)
+      view->Split(numPixels / height, horizontal, fixed, numPixels);
+    else if(fixed & View::RFIXED && numPixels > 0)
+      view->Split((height-numPixels) / height, horizontal, fixed, numPixels);
+    else
+      view->Split(perc, horizontal, fixed, numPixels);
   }
   else
   {
     view->ClearFlag(View::HORIZONTAL);
-    view->Split(perc, horizontal, fixed);
+    float width = (view->GetMax()[0] - view->GetMin()[0]);
+    if (fixed & View::LFIXED && numPixels > 0)
+      view->Split(numPixels/width, horizontal, fixed, numPixels);
+    else if (fixed & View::RFIXED && numPixels > 0)
+      view->Split((width-numPixels)/width, horizontal, fixed, numPixels);
+    else
+      view->Split(perc, horizontal, fixed, numPixels);
   }
   
-  view->SetPerc(perc);
+  //view->SetPerc(perc);
 
   BuildSplittersMap();
   return view;
@@ -389,12 +403,13 @@ Window::Draw()
   GLCheckError("### WINDOW 3");
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight()));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
-  if (_mainView)_mainView->Draw(false);// _forceRedraw > 0);
+  if (_mainView)_mainView->Draw( _forceRedraw > 0 );
   _forceRedraw = pxr::GfMax(0, _forceRedraw-1);
   GLCheckError("### WINDOW 4");
 
   // draw splitters
   _splitter->Draw();
+
   GLCheckError("### WINDOW 5");
   // render the imgui frame
   ImGui::Render();
@@ -448,10 +463,10 @@ Window::SetupImgui()
   }
   */
   // setup imgui style
-  //ImGui::StyleColorsAmina(NULL);
   //ImGui::StyleColorsLight();
   //ImGui::StyleColorsClassic();
   ImGuiStyle& style = ImGui::GetStyle();
+
   style.Alpha = 1.f;      
   style.WindowRounding = 0.0f;
   style.ChildRounding = 0.0f;
@@ -462,6 +477,8 @@ Window::SetupImgui()
   style.TabRounding = 0.0f;
   style.WindowPadding = pxr::GfVec2f(0,0);
   style.FramePadding = pxr::GfVec2f(0,0);
+
+  AMNStyleColorsLightGreen(&style);
 
   // setup platform/renderer bindings
   if (_shared) {
@@ -489,7 +506,7 @@ Window::ClearImgui()
 
 bool Window::UpdateActiveTool(int x, int y)
 {
-  if(_activeTool == AMN_TOOL_DRAG)
+  if(_activeTool == AMN_TOOL_SPLITTER)
   {
     if(_activeView)
     {
@@ -725,22 +742,32 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   }
   else if (action == GLFW_PRESS)
   {
-    double x,y;
-    glfwGetCursorPos(window,&x,&y);
-    View* view = parent->GetViewUnderMouse((int)x, (int)y);
-    std::cout << "VIEW UNDER MOUSE : " << view << std::endl;
-    if (view) {
-      parent->SetActiveView(view);
-      view->SetFlag(View::INTERACTING);
-    }
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
 
-    if(parent->PickSplitter(x, y))
-    {
-      parent->SetActiveTool(AMN_TOOL_DRAG);
-    }
-    else if(parent->GetActiveView())
-    {
+    switch (parent->GetActiveTool()) {
+    case AMN_TOOL_MENU:
       parent->GetActiveView()->MouseButton(button, action, mods);
+      break;
+
+    case AMN_TOOL_SPLITTER:
+      break;
+
+    default:
+      if (parent->PickSplitter(x, y))
+      {
+        parent->SetActiveTool(AMN_TOOL_SPLITTER);
+      }
+      else
+      {
+        View* view = parent->GetViewUnderMouse((int)x, (int)y);
+        if (view) {
+          parent->SetActiveView(view);
+          view->SetFlag(View::INTERACTING);
+          view->MouseButton(button, action, mods);
+        }
+      }
+      break;
     }
   }
 }
@@ -768,19 +795,20 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   ImGui::SetCurrentContext(parent->GetContext());
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
-  parent->PickSplitter(x, y);
   if(parent->GetActiveTool() != AMN_TOOL_NONE)
   {
     parent->UpdateActiveTool(x, y);
   }
   else
   {
-    
     if (active && active->GetFlag(View::INTERACTING))
       active->MouseMove(x, y);
-    else if (view) {
-      parent->SetActiveView(view);
-      parent->GetActiveView()->MouseMove(x, y);
+    else {
+      if (parent->PickSplitter(x, y))return;
+      else if (view) {
+        parent->SetActiveView(view);
+        parent->GetActiveView()->MouseMove(x, y);
+      }
     }
   }
 }

@@ -2,7 +2,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-std::map<std::string, Icon> AMN_ICONS;
+AmnIconMap AMN_ICONS = AmnIconMap(3);
 
 void IconHoverDatas(pxr::GlfImage::StorageSpec* storage, int nchannels)
 {
@@ -30,23 +30,23 @@ void IconHoverDatas(pxr::GlfImage::StorageSpec* storage, int nchannels)
 }
 
 void CreateIconFromImage(const std::string& filename,
-  const std::string& name, ICON_SIZE size)
+  const std::string& name, ICON_SIZE index)
 {
   pxr::GlfImageSharedPtr img = pxr::GlfImage::OpenForReading(filename);
-
+  size_t s = (index + 1) * 16;
   pxr::GlfImage::StorageSpec storage;
-  storage.width = size;
-  storage.height = size;
+  storage.width = s;
+  storage.height = s ;
   storage.flipped = false;
   storage.type = ICON_TYPE;
   storage.format = ICON_FORMAT;
-  storage.data = new char[size * size * img->GetBytesPerPixel()];
+  storage.data = new char[storage.width * storage.height * img->GetBytesPerPixel()];
 
   img->Read(storage);
 
   //IconHoverDatas(&storage, img->GetBytesPerPixel());
 
-  if (AMN_ICONS.find(name) == AMN_ICONS.end())
+  if (AMN_ICONS[index].find(name) == AMN_ICONS[index].end())
   {
     GLuint tex;
     glGenTextures(1, &tex);
@@ -58,10 +58,10 @@ void CreateIconFromImage(const std::string& filename,
     // upload pixels into texture
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, storage.width, storage.height, 0,
       ICON_FORMAT, ICON_TYPE, storage.data);
 
-    AMN_ICONS[name] = { size, tex };
+    AMN_ICONS[index][name] = { s, tex };
   }
 }
 
@@ -78,7 +78,9 @@ void AMNInitializeIcons()
     std::string filename = iconDir + SEPARATOR + f;
     if (pxr::GlfImage::IsSupportedImageFile(filename))
     {
-      CreateIconFromImage(filename, name, ICON_MID);
+      CreateIconFromImage(filename, name, AMN_ICON_SMALL);
+      CreateIconFromImage(filename, name, AMN_ICON_MEDIUM);
+      CreateIconFromImage(filename, name, AMN_ICON_LARGE);
     }
   }
 }

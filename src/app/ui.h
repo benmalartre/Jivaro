@@ -3,13 +3,15 @@
 #include "../common.h"
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
+#include <pxr/base/tf/weakBase.h>
+#include "../app/notice.h"
 
 AMN_NAMESPACE_OPEN_SCOPE  
 
 class View;
 class Window;
 class Application;
-class BaseUI
+class BaseUI : public pxr::TfWeakBase
 {
 public:
   BaseUI(View* parent, const std::string& name, bool docked=true);
@@ -56,7 +58,11 @@ public:
   virtual bool Draw()=0;
   virtual void Resize(){};
 
+  // notices
+  void ProcessNewScene(const NewSceneNotice& n);
+
 protected:
+  bool              _initialized;
   View*             _parent;
   std::string       _name;
   bool              _docked;

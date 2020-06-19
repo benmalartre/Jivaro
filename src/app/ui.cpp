@@ -7,7 +7,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 // constructor
 BaseUI::BaseUI(View* parent, const std::string& name, bool docked):
-  _parent(parent), _name(name), _docked(docked)
+  _parent(parent), _name(name), _docked(docked), _initialized(false)
 {
   if(_parent)
   {
@@ -67,6 +67,11 @@ int BaseUI::GetHeight()
 Application* BaseUI::GetApplication()
 {
   return _parent->GetWindow()->GetApplication();
+}
+
+void BaseUI::ProcessNewScene(const NewSceneNotice& n)
+{
+  _initialized = false;
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

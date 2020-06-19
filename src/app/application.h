@@ -1,3 +1,6 @@
+#ifndef AMN_APPLICATION_APPLICATION_H
+#define AMN_APPLICATION_APPLICATION_H
+
 #pragma once
 
 #include "../common.h"
@@ -47,8 +50,10 @@ public:
   // cleanup
   void CleanUp();
 
+  void OpenScene(const std::string& filename);
+
   // usd stages
-  std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
+  //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
   pxr::UsdStageRefPtr& GetStage() { return _stage; };
 
   // time
@@ -56,7 +61,7 @@ public:
   inline float GetStartTime(){return _startTime;};
   inline float GetEndTime(){return _endTime;};
   inline float GetMaxTime(){return _maxTime;};
-  inline float GetCurrentTime(){return _currentTime;};
+  inline float GetActiveTime(){return _activeTime;};
   inline float GetFPS(){return _fps;};
   inline float GetSpeed(){return _speed;};
   inline bool GetLoop(){return _loop;};
@@ -65,7 +70,7 @@ public:
   inline void SetStartTime(float time){_startTime = time;};
   inline void SetEndTime(float time){_endTime = time;};
   inline void SetMaxTime(float time){_maxTime = time;};
-  inline void SetCurrentTime(float time){_currentTime = time;};
+  inline void SetActiveTime(float time){_activeTime = time;};
   inline void SetFPS(float fps){_fps = fps;};
   inline void SetSpeed(float speed){_speed = speed;};
   inline void SetLoop(bool loop){_loop = loop;};
@@ -86,21 +91,18 @@ private:
   std::string                       _fileName;
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindow;
-  std::vector<pxr::UsdStageRefPtr>  _stages;
+  //std::vector<pxr::UsdStageRefPtr>  _stages;
   pxr::UsdStageRefPtr               _stage;
 
-  // viewport
+  // uis
   ViewportUI*                       _viewport;
-
-  // graph
   GraphUI*                          _graph;
-
-  // explorer
   ExplorerUI*                       _explorer;
+  TimelineUI*                       _timeline;
 
   // time
   pxr::TfStopwatch                  _stopWatch;
-  float                             _currentTime;
+  float                             _activeTime;
   float                             _startTime;
   float                             _endTime;
   float                             _minTime;
@@ -110,7 +112,7 @@ private:
   bool                              _loop;
   bool                              _playForwardOrBackward;
   bool                              _playback;
-  TimelineUI*                       _timeline;
+  
 
   double                            _lastT;
   size_t                            _frameCount;
@@ -118,5 +120,9 @@ private:
 
 };
 
+extern Application* AMN_APPLICATION;
+
 AMN_NAMESPACE_CLOSE_SCOPE // namespace pxr
+
+#endif // AMN_APPLICATION_APPLICATION_H
 

@@ -1,0 +1,10 @@
+#include "notice.h"
+#include <iostream>
+AMN_NAMESPACE_OPEN_SCOPE
+
+PXR_NAMESPACE_USING_DIRECTIVE
+
+TF_INSTANTIATE_TYPE(NewSceneNotice,
+  TfType::CONCRETE, TF_1_PARENT(TfNotice));
+
+AMN_NAMESPACE_CLOSE_SCOPE

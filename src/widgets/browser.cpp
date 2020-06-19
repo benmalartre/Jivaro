@@ -1,13 +1,13 @@
-#include "dummy.h"
+#include "browser.h"
 #include "../app/view.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-DummyUI::DummyUI(View* parent, const std::string& name):BaseUI(parent, name){}
+BrowserUI::BrowserUI(View* parent, const std::string& name):BaseUI(parent, name){}
 
-DummyUI::~DummyUI(){}
+BrowserUI::~BrowserUI(){}
 
-bool DummyUI::Draw()
+bool BrowserUI::Draw()
 {
   bool opened;
   int flags = 0;
@@ -32,12 +32,11 @@ bool DummyUI::Draw()
     ImVec2(_parent->GetSize()),
     ImColor(color[0], color[1], color[2], color[3])
   );
-  //Demo();
   ImGui::End();
   return true;
 };
   
-void DummyUI::FillBackground()
+void BrowserUI::FillBackground()
 {
   ImVec2 vMin = ImGui::GetWindowContentRegionMin();
   ImVec2 vMax = ImGui::GetWindowContentRegionMax();
@@ -48,11 +47,6 @@ void DummyUI::FillBackground()
   vMax.y += ImGui::GetWindowPos().y;
 
   ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
-}
-
-void DummyUI::Demo()
-{
-  ImGui::ShowDemoWindow();
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -20,7 +20,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename, bool docked)
   : BaseUI(parent, "Graph", docked)
   , _hoveredNode(NULL), _currentNode(NULL)
   , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
-  , _scale(1.f), _fontIndex(0), _fontScale(1.0)
+  , _scale(1.f), _fontIndex(0), _fontScale(1.0), _offset(pxr::GfVec2f(0.f, 0.f))
   , _drag(false), _grab(false), _navigate(false), _connect(false)
 {
   //_filename = filename;
@@ -101,7 +101,7 @@ void GraphUI::DrawGrid()
   drawList->AddRectFilled(
     ImVec2(baseX, baseY),
     ImVec2(baseX + width, baseY + height),
-    ImColor(60, 60, 60, 255));
+    ImGuiCol_WindowBg);
 
   float step = 32 * _scale;
   int nX = width / step + 1;
@@ -111,13 +111,13 @@ void GraphUI::DrawGrid()
     drawList->AddLine(
       ImVec2(baseX + x*step + so[0], baseY),
       ImVec2(baseX + x*step + so[0], baseY + height),
-      ImColor(255, 0, 0, 255));
+      ImGuiCol_PlotLines);
 
-  for (int y = 0; y < 32; ++y)
+  for (int y = 0; y < nY; ++y)
     drawList->AddLine(
       ImVec2(baseX, baseY + y*step + so[1]), 
       ImVec2(baseX + width, baseY + y*step + so[1]), 
-      ImColor(0, 255, 0, 255));
+      ImGuiCol_PlotLines);
     
   ImGui::PopClipRect();
 }
@@ -178,10 +178,11 @@ bool GraphUI::Draw()
       0.f, 0);
   }
 
+  /*
   ImGui::SetCursorPos(ImVec2(64, 64));
   static bool value;
   ImGui::Checkbox("FUCK", &value);
-
+  */
   ImGui::PopFont();
   ImGui::End();
 

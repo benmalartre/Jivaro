@@ -23,7 +23,7 @@ class Grid2DUI;
 #define NODE_PORT_PADDING         6.f
 #define NODE_PORT_SPACING         12.f
 #define NODE_HEADER_HEIGHT        32.f
-#define NODE_CONNEXION_THICKNESS  2.5f
+#define NODE_CONNEXION_THICKNESS  2.f
 #define NODE_CONNEXION_RESOLUTION 0.1f
 
 enum ItemState {
@@ -54,14 +54,14 @@ public:
   float GetX() const { return _pos[0]; };
   float GetY() const { return _pos[1]; };
   const int GetColor() const { return _color; };
-
+  
   void SetState(size_t flag, bool value);
   bool GetState(size_t flag);
   virtual bool Contains(const pxr::GfVec2f& position, 
     const pxr::GfVec2f& extend = pxr::GfVec2f(0,0));
   virtual bool Intersect(const pxr::GfVec2f& start, 
     const pxr::GfVec2f& end);
-
+  virtual bool IsVisible(GraphUI* editor) = 0;
   virtual void Draw(GraphUI* editor) = 0;
 
 protected:
@@ -81,6 +81,7 @@ public:
   bool Contains(const pxr::GfVec2f& position,
     const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
 
+  bool IsVisible(GraphUI* editor) override { return true; };
   void Draw(GraphUI* editor) override;
 
   const std::string& GetName()const {return _label;};
@@ -106,6 +107,7 @@ public:
     , _start(start)
     , _end(end){};
 
+  bool IsVisible(GraphUI* editor) override { return true; };
   void Draw(GraphUI* editor) override;
   inline ConnexionUIData GetDescription();
 
@@ -134,6 +136,7 @@ public:
   std::vector<PortUI>& GetOutputs() {return _outputs;};
   void Init();
   void Update();
+  bool IsVisible(GraphUI* editor) override;
   void Draw(GraphUI* graph) override;
 
   void ComputeSize();

@@ -1,18 +1,106 @@
 #include "../common.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "../app/application.h"
 #include "menu.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+extern Application* AMN_APPLICATION;
+
+MenuItem::MenuItem(View* v, const std::string lbl, const std::string sht, 
+  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a) 
+  : view(v), label(lbl), shortcut(sht), selected(sel), func(f), args(a)
+{
+}
+
+MenuItem& MenuItem::AddItem(View* view, const std::string lbl, const std::string sht, 
+  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
+{
+  items.push_back(MenuItem(view, lbl, sht, sel, enb, f, a));
+  return items.back();
+}
+
+bool MenuItem::Draw()
+{
+  Window* window = view->GetWindow();
+  if (items.size()) {
+    ImGui::PushFont(window->GetBoldFont(0));
+    if (ImGui::BeginMenu(label.c_str())) {
+      for (auto& item : items) {
+        item.Draw();
+      }
+      ImGui::EndMenu();
+      ImGui::PopFont();
+      return true;
+    }
+    ImGui::PopFont();
+  }
+  else {
+    ImGui::PushFont(window->GetMediumFont(0));
+    if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
+      func(args);
+      
+      window->SetActiveTool(AMN_TOOL_NONE);
+      std::cout << "SET WINDOW TOOL TO NONE !!!" << std::endl;
+      std::cout << "IS MENU ACTIVE : " << (window->GetActiveTool() == AMN_TOOL_MENU) << std::endl;
+      view->ClearFlag(View::INTERACTING);
+      window->ForceRedraw();
+      ImGui::PopFont();
+      return true;
+    }
+    ImGui::PopFont();
+  }
+  return false;
+}
+
+static size_t fileIdx = 0;
+static void OpenFileCommand() {
+  switch (fileIdx % 3) {
+    case 0:
+      AMN_APPLICATION->OpenScene("E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd");
+      break;
+    case 1:
+      AMN_APPLICATION->OpenScene("E:/Projects/RnD/USD_BUILD/assets/Bottles.usda");
+      break;
+    case 2:
+      AMN_APPLICATION->OpenScene("E:/Projects/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd");
+      break;
+  }
+  fileIdx++;
+}
+
 // constructor
-MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu"){}
+MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
+{
+  pxr::VtArray < pxr::VtValue > args;
+  MenuItem& fileMenu = AddItem(parent, "File", "", false, true);
+  fileMenu.AddItem(parent, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCommand);
+  fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&OpenFileCommand);
+  args.push_back(pxr::VtValue(7.0));
+
+  MenuItem& testItem = AddItem(parent, "Test", "", false, true);
+  testItem.AddItem(parent, "Child1", "", true, true, (MenuPressedFunc)&TestMenuCallback, args);
+  testItem.AddItem(parent, "Child2", "", true, false, (MenuPressedFunc)&TestMenuCallback, args);
+  testItem.AddItem(parent, "Child3", "", false, false, (MenuPressedFunc)&TestMenuCallback, args);
+}
 
 // destructor
-MenuUI::~MenuUI(){}
+MenuUI::~MenuUI()
+{
+}
+
+
+MenuItem& MenuUI::AddItem(View* view, const std::string label, const std::string shortcut, 
+  bool selected, bool enabled, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
+{
+  _items.push_back(MenuItem(view, label, shortcut, selected, enabled, f, a));
+  return _items.back();
+}
 
 static void ShowExampleMenuFile()
 {
+
     if (ImGui::MenuItem("New")) {}
     if (ImGui::MenuItem("Open", "Ctrl+O")) {}
     if (ImGui::BeginMenu("Open Recent"))
@@ -73,7 +161,6 @@ static void ShowExampleMenuFile()
     }
     if (ImGui::MenuItem("Checked", NULL, true)) {}
     if (ImGui::MenuItem("Quit", "Alt+F4")) {}
-
 }
 
 // overrides
@@ -83,19 +170,18 @@ bool MenuUI::Draw()
   if (ImGui::BeginMainMenuBar())
   {
     ImGui::PushFont(window->GetBoldFont(0));
+    /*
     if(ImGui::BeginMenu("File"))
     {
-      GetWindow()->ForceRedraw();
       _parent->SetDirty();
       _parent->SetInteracting(true);
       //ImGui::PushFont(window->GetMediumFont());
       ShowExampleMenuFile();
       ImGui::EndMenu();
       //ImGui::PopFont();
-    }
+    }*/
     if (ImGui::BeginMenu("Edit"))
     {
-      GetWindow()->ForceRedraw();
       _parent->SetDirty();
       _parent->SetInteracting(true);
       //ImGui::PushFont(window->GetMediumFont());
@@ -115,7 +201,6 @@ bool MenuUI::Draw()
     }
     if (ImGui::BeginMenu("Demo"))
     {
-      GetWindow()->ForceRedraw();
       _parent->SetDirty();
       _parent->SetInteracting(true);
       ImGui::PushFont(window->GetMediumFont(0));
@@ -131,13 +216,17 @@ bool MenuUI::Draw()
       ImGui::PopFont();
       ImGui::EndMenu();
     }
+
+    for (auto& item : _items) {
+      if (item.Draw()) {
+        _parent->SetDirty();
+        _parent->SetInteracting(true);
+      }
+    }
+
     ImGui::PopFont();
     ImGui::EndMainMenuBar();
   }
-
-  /*
-  if(_showDemoWindow)
-    ImGui::ShowDemoWindow();*/
 
   return
     ImGui::IsAnyItemActive() ||

@@ -1,3 +1,5 @@
+#ifndef AMN_WIDGETS_EXPLORER_H
+#define AMN_WIDGETS_EXPLORER_H
 #pragma once
 
 #include "../common.h"
@@ -8,7 +10,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-extern std::map<std::string, Icon> AMN_ICONS;
+extern AmnIconMap AMN_ICONS;
 static size_t AMN_EXPLORER_LINE_HEIGHT = 20;
 
 struct ExplorerItem {
@@ -27,7 +29,7 @@ struct ExplorerItem {
   };
 };
 
-class ExplorerUI : BaseUI
+class ExplorerUI : public BaseUI
 {
 public:
   ExplorerUI(View* parent);
@@ -62,3 +64,5 @@ private:
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_WIDGETS_EXPLORER_H

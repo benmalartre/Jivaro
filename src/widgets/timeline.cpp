@@ -23,23 +23,24 @@ TimelineUI::~TimelineUI()
 {
 }
 
-void TimelineUI::Init(Application* app)
+void TimelineUI::Init()
 {
-  _app = app;
   Update();
   _parent->SetDirty();
+  _initialized = true;
 }
   
 void TimelineUI::Update()
 {
-  _minTime = _app->GetMinTime();
-  _startTime = _app->GetStartTime();
-  _endTime = _app->GetEndTime();
-  _maxTime = _app->GetMaxTime();
-  _currentTime = _app->GetCurrentTime();
-  _loop = _app->GetLoop();
-  _fps = _app->GetFPS();
-  _playing = _app->IsPlaying();
+  Application* app = AMN_APPLICATION;
+  _minTime = app->GetMinTime();
+  _startTime = app->GetStartTime();
+  _endTime = app->GetEndTime();
+  _maxTime = app->GetMaxTime();
+  _currentTime = app->GetActiveTime();
+  _loop = app->GetLoop();
+  _fps = app->GetFPS();
+  _playing = app->IsPlaying();
   _parent->SetDirty();
 }
 
@@ -53,15 +54,14 @@ void TimelineUI::ValidateTime()
   if (_currentTime < _startTime)_currentTime = _startTime;
   else if (_currentTime > _endTime)_currentTime = _endTime;
 
-  if (_app)
-  {
-    _app->SetMinTime(_minTime);
-    _app->SetStartTime(_startTime);
-    _app->SetEndTime(_endTime);
-    _app->SetMaxTime(_maxTime);
-    _app->SetCurrentTime(_currentTime);
-    _app->SetLoop(_loop);
-  }
+  Application* app = AMN_APPLICATION;
+  app->SetMinTime(_minTime);
+  app->SetStartTime(_startTime);
+  app->SetEndTime(_endTime);
+  app->SetMaxTime(_maxTime);
+  app->SetActiveTime(_currentTime);
+  app->SetLoop(_loop);
+ 
 }
 
 void TimelineUI::StartStopPlayback(TimelineUI* ui)
@@ -106,6 +106,7 @@ void TimelineUI::MouseMove(int x, int y)
 
 void TimelineUI::DrawControls()
 {
+  Application* app = AMN_APPLICATION;
   int width = GetWidth();
   int height = GetHeight();
 
@@ -113,14 +114,14 @@ void TimelineUI::DrawControls()
   const ImVec4* colors = style->Colors;
 
   ImGui::SetCursorPosX(20);
-  ImGui::SetCursorPosY(height - 30);
+  ImGui::SetCursorPosY(height - 20);
 
   ImGui::PushFont(GetWindow()->GetMediumFont(0));
 
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _minTime != _app->GetMinTime())
+  if (!ImGui::IsItemActive() && _minTime != app->GetMinTime())
   {
     ValidateTime();
   }
@@ -129,29 +130,31 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _startTime != _app->GetStartTime())
+  if (!ImGui::IsItemActive() && _startTime != app->GetStartTime())
   {
     ValidateTime();
   }
   ImGui::SameLine(); //HelpMarker("Start Time");
 
+  float cy = ImGui::GetCursorPosY();
+  //ImGui::SetCursorPosY(cy - 8);
   // play button
   Icon* icon = NULL;
-  if (!_playing) icon = &AMN_ICONS["playforward.png"];
-  else icon = &AMN_ICONS["stop.png"];
+  icon = &AMN_ICONS[AMN_ICON_SMALL]["firstframe.png"];
+  AddIconButton<IconPressedFunc>(
+    icon,
+    (IconPressedFunc)SimpleCallback
+    );
+
+  if (!_playing) icon = &AMN_ICONS[AMN_ICON_SMALL]["playforward.png"];
+  else icon = &AMN_ICONS[AMN_ICON_SMALL]["stop.png"];
 
   AddIconButton<IconPressedFunc, TimelineUI*>(
     icon,
     (IconPressedFunc)StartStopPlayback, this
     );
 
-  icon = &AMN_ICONS["firstframe.png"];
-  AddIconButton<IconPressedFunc>(
-    icon,
-    (IconPressedFunc)SimpleCallback
-    );
-
-  icon = &AMN_ICONS["lastframe.png"];
+  icon = &AMN_ICONS[AMN_ICON_SMALL]["lastframe.png"];
   AddIconButton<IconPressedFunc, TimelineUI*, int>(
     icon,
     (IconPressedFunc)DifficultCallback,
@@ -159,7 +162,7 @@ void TimelineUI::DrawControls()
     666
     );
 
-  icon = &AMN_ICONS["loop.png"];
+  icon = &AMN_ICONS[AMN_ICON_SMALL]["loop.png"];
   AddIconButton<IconPressedFunc, TimelineUI*, int, float, const char*>(
     icon,
     (IconPressedFunc)VeryDifficultCallback,
@@ -169,31 +172,24 @@ void TimelineUI::DrawControls()
     "SATAN"
     );
 
+  ImGui::SetCursorPosY(cy);
 
   // current time
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _currentTime != _app->GetCurrentTime())
+  if (!ImGui::IsItemActive() && _currentTime != app->GetActiveTime())
   {
     ValidateTime();
   }
   ImGui::SameLine(); //HelpMarker("Current Time");
-
-                     // loop
-  ImGui::Checkbox("Loop", &_loop);
-  if (!ImGui::IsItemActive() && _loop != _app->GetLoop())
-  {
-    ValidateTime();
-  }
-  ImGui::SameLine(); //HelpMarker("Loop Playback");
 
   ImGui::SetCursorPosX(width - 140);
 
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _endTime != _app->GetEndTime())
+  if (!ImGui::IsItemActive() && _endTime != app->GetEndTime())
   {
     ValidateTime();
   }
@@ -202,7 +198,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _maxTime != _app->GetMaxTime())
+  if (!ImGui::IsItemActive() && _maxTime != app->GetMaxTime())
   {
     ValidateTime();
   }
@@ -212,18 +208,14 @@ void TimelineUI::DrawControls()
 
 void TimelineUI::DrawTimeSlider()
 {
-  ImGui::SetCursorScreenPos(_parent->GetMin());
-
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-  const pxr::GfVec2f p = ImGui::GetCursorScreenPos();
   const float xmin = _parent->GetMin()[0];
   const float xmax = _parent->GetMax()[0];
   const float ymin = _parent->GetMin()[1];
   const float ymax = _parent->GetMax()[1] - 30;
   const float ymid = ymin * 0.25 + ymax * 0.75;
 
-  const ImU32 col = rand();//ImColor(colf.x, colf.y, colf.z, 1.f);
   float rounding = 8.f;
   float th = 1.f;
   const ImDrawCornerFlags corners_none = 0;
@@ -249,12 +241,14 @@ void TimelineUI::DrawTimeSlider()
     pxr::GfVec2f(xmax, ymax),
     frontColor, rounding, corners_none);
 
-  int numFrames = (_app->GetEndTime() - _app->GetStartTime());
+  Application* app = AMN_APPLICATION;
+
+  int numFrames = (app->GetEndTime() - app->GetStartTime());
   float incr = 1 / (float)numFrames;
   for (int i = 0; i < numFrames; ++i)
   {
     float perc = i * incr;
-    if (((int)(i - _app->GetStartTime()) % (int)_fps) == 0)
+    if (((int)(i - app->GetStartTime()) % (int)_fps) == 0)
     {
       pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin);
       pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
@@ -270,8 +264,8 @@ void TimelineUI::DrawTimeSlider()
 
   // draw slider
   float sliderPerc =
-    (float)(_app->GetCurrentTime() - _app->GetStartTime()) /
-    (float)(_app->GetEndTime() - _app->GetStartTime());
+    (float)(app->GetActiveTime() - app->GetStartTime()) /
+    (float)(app->GetEndTime() - app->GetStartTime());
   float sliderX = (xmin * (1 - sliderPerc) + xmax * sliderPerc);
   drawList->AddRectFilled(
     pxr::GfVec2f(sliderX - 2, ymin),
@@ -282,6 +276,7 @@ void TimelineUI::DrawTimeSlider()
 
 bool TimelineUI::Draw()
 {
+  if (!_initialized)Init();
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
   ImGui::SetWindowPos(_parent->GetMin());
