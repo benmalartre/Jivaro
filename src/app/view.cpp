@@ -215,6 +215,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   _right->_name = _name + ":right";
   _right->_parent = this;
 
+  ComputeNumPixels(false);
   ClearFlag(LEAF);
 }
 
@@ -288,17 +289,21 @@ View::SetPerc(double perc)
 void
 View::ComputeNumPixels(bool postFix)
 {
-  if(GetFlag(HORIZONTAL))
-  {
-    _numPixels[0] = _perc * GetHeight();
-    _numPixels[1] = (1-_perc) * GetHeight();
+  float side = GetFlag(HORIZONTAL) ? GetHeight() : GetWidth();
+
+  if (GetFlag(LFIXED)) {
+    _numPixels[0] = _fixedPixels;
+    _numPixels[1] = side - _fixedPixels;
   }
-  else
-  {
-    _numPixels[0] = _perc * GetWidth();
-    _numPixels[1] = (1-_perc) * GetWidth();
+  else if (GetFlag(RFIXED)) {
+    _numPixels[0] = side - _fixedPixels;
+    _numPixels[1] = _fixedPixels;
   }
-  
+  else {
+    _numPixels[0] = _perc * side;
+    _numPixels[1] = (1 - _perc) * side;
+  }
+
   if(postFix)
   {
     if(_left)RescaleLeft();
@@ -324,15 +329,13 @@ View::RescaleLeft()
   if(_left->GetFlag(HORIZONTAL) == GetFlag(HORIZONTAL))
   {
     double perc;
-    if(GetFlag(HORIZONTAL))
-    {
-      int height = GetHeight() * _perc;
-      perc = (double)_left->_numPixels[0] / (double)height;
+    if(GetFlag(HORIZONTAL)) {
+      double height = GetHeight() * _perc;
+      perc = (double)_left->_numPixels[0] / height;
     }
-    else
-    { 
+    else { 
       double width = GetWidth() * _perc;
-      perc = (double)_left->_numPixels[0] / (double)width;
+      perc = (double)_left->_numPixels[0] / width;
     }
 
      _left->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
@@ -351,13 +354,11 @@ View::RescaleRight()
   if(_right->GetFlag(HORIZONTAL) == GetFlag(HORIZONTAL))
   {
     double perc;
-    if(GetFlag(HORIZONTAL))
-    {
-      double height = GetHeight() * (1 - _perc);
-      perc = 1-(double)_right->_numPixels[1] / (double)height;
+    if(GetFlag(HORIZONTAL)) {
+      double height = GetHeight() * (1.0 - _perc);
+      perc = 1.0-(double)_right->_numPixels[1] / (double)height;
     }
-    else
-    { 
+    else { 
       double width = GetWidth() * (1.0 - _perc);
       perc = 1.0 - (double)_right->_numPixels[1] / (double)width;
     }

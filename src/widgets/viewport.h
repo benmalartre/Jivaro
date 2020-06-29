@@ -4,7 +4,6 @@
 #include "../app/ui.h"
 #include "../app/camera.h"
 #include "../app/notice.h"
-#include "../utils/ui.h"
 #include "../utils/utils.h"
 #include <pxr/pxr.h>
 

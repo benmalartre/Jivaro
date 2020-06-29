@@ -4,7 +4,6 @@
 
 #include "../common.h"
 #include "../app/ui.h"
-#include "../utils/ui.h"
 #include "../utils/utils.h"
 #include <pxr/usd/usd/prim.h>
 

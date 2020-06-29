@@ -14,18 +14,29 @@ set(PUBLIC_HEADERS
 
 )
 
+set(NATIVEFOLDERDIALOG_IMP "")
+if(UNIX)
+	if(APPLE)
+		set(NATIVEFOLDERDIALOG_IMP "utils/nfd_cocoa.cpp")
+	else()
+		set(NATIVEFOLDERDIALOG_IMP "utils/nfd_gtk.cpp")
+	endif()
+else()	
+	set(NATIVEFOLDERDIALOG_IMP "utils/nfd_win.cpp")
+endif()
 add_executable(${TARGET}
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
-  imgui/imgui_test.cpp
   imgui/imgui_impl_glfw.cpp
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
-  imgui/imgui_nodes.cpp
   imgui/imgui.cpp
   utils/files.cpp
   utils/shaders.cpp
   utils/screenSpaceQuad.cpp
+  utils/icons.cpp
+
+  utils/nfd_win.cpp
   graph/deformableAPI.cpp
   graph/connectableAPI.cpp
   graph/coordSysAPI.cpp
@@ -44,6 +55,9 @@ add_executable(${TARGET}
   widgets/graph.cpp
   widgets/viewport.cpp
   widgets/timeline.cpp
+  widgets/toolbar.cpp
+  widgets/explorer.cpp
+  widgets/property.cpp
   #embree/oiio.cpp
   #embree/jpeg.cpp
   #embree/utils.cpp
@@ -58,6 +72,8 @@ add_executable(${TARGET}
   app/ui.cpp
   app/splitter.cpp
   app/window.cpp
+  app/engine.cpp
+  app/notice.cpp
   app/application.cpp
   tests/stageGraph.cpp
   tests/stageUI.cpp

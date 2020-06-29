@@ -1,3 +1,5 @@
+#ifndef AMN_APPLICATION_VIEW_H
+#define AMN_APPLICATION_VIEW_H
 #pragma once
 
 #include "../common.h"
@@ -99,3 +101,5 @@ private:
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_APPLICATION_VIEW_H

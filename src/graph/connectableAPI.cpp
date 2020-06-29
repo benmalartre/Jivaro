@@ -22,6 +22,7 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "./connectableAPI.h"
+#include "./utils.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
 #include "pxr/usd/usd/tokens.h"

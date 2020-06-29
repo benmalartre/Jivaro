@@ -15,6 +15,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 ViewportUI::ViewportUI(View* parent, VIEWPORT_MODE mode):
 BaseUI(parent, "Viewport")
 {
+  std::cout << "CONSTRUCT VIEWPORT" << std::endl;
   _texture = 0;
   _mode = mode;
   _pixels = NULL;
@@ -29,6 +30,7 @@ BaseUI(parent, "Viewport")
 
   pxr::TfWeakPtr<ViewportUI> me(this);
   pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
+  std::cout << "CONSTRUCTED VIEWPORT" << std::endl;
 }
 
 // destructor
@@ -41,13 +43,14 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init()
 {
+  std::cout << "INIT VIEWPORT" << std::endl;
   if (_engine)delete _engine;
   pxr::SdfPathVector excludedPaths;
   GLCheckError("INIT VIEWPORT");  
 
   _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/"), excludedPaths);
-  //_engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
-  _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+  _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
+  //_engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
   //_engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
   std::cout << "CURRENT RENDERER : " << _engine->GetCurrentRendererId().GetText() << std::endl;
 

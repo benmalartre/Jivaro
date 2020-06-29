@@ -9,13 +9,14 @@
 #include "camera.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
-#include "../widgets/graph.h"
-#include "../widgets/viewport.h"
-#include "../widgets/explorer.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
 class TimelineUI;
+class PropertyUI;
+class ViewportUI;
+class GraphUI;
+class ExplorerUI;
 
 class Application
 {
@@ -99,6 +100,7 @@ private:
   GraphUI*                          _graph;
   ExplorerUI*                       _explorer;
   TimelineUI*                       _timeline;
+  PropertyUI*                       _property;
 
   // time
   pxr::TfStopwatch                  _stopWatch;

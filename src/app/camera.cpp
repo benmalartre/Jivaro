@@ -1,5 +1,4 @@
 #include "camera.h"
-#include "../utils/utils.h"
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 
 AMN_NAMESPACE_OPEN_SCOPE

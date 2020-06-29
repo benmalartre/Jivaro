@@ -1,8 +1,5 @@
-#include "application.h"
-#include "notice.h"
 #include "../utils/nfd.hpp"
 #include "../utils/files.h"
-#include "../utils/timer.h"
 #include "../widgets/viewport.h"
 #include "../widgets/menu.h"
 #include "../widgets/graph.h"
@@ -11,14 +8,22 @@
 #include "../widgets/toolbar.h"
 #include "../widgets/explorer.h"
 #include "../widgets/property.h"
+
 #include <pxr/base/tf/debug.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/imaging/hd/renderPassState.h>
 #include <pxr/imaging/LoFi/debugCodes.h>
+#include <pxr/usd/usdAnimX/fileFormat.h>
+#include <pxr/usd/usdAnimX/fCurve.h>
+#include <pxr/usd/usdAnimX/fCurveOp.h>
 #include "../tests/stageGraph.h"
 #include "../tests/stageUI.h"
+
+#include "application.h"
+#include "notice.h"
+#include "engine.h"
 
 #include <iostream>
 
@@ -89,11 +94,80 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
   }
 }
 
+static void
+TestAnimX()
+{
+  pxr::SdfFileFormatConstPtr fileFormat = 
+      pxr::SdfFileFormat::FindByExtension("animx");
+  pxr::SdfLayerRefPtr animLayer = 
+      pxr::SdfLayer::CreateNew("E:/Projects/RnD/USD_BUILD/assets/animX/test.animx");
+  std::cout << "ANIM LAYER : " << animLayer << std::endl;
+  pxr::UsdStageRefPtr animStage = pxr::UsdStage::Open(animLayer);
+  
+  animStage->OverridePrim(pxr::SdfPath("/test"));
+  pxr::UsdAnimXFCurveOp op = 
+      pxr::UsdAnimXFCurveOp::Define(animStage, pxr::SdfPath("/test/translateOp"));
+
+  pxr::UsdAttribute attr = op.CreateAttributeNameAttr();
+  attr.Set(pxr::TfToken("xformOp:translate"));
+  attr = op.CreateElementCountAttr();
+  attr.Set(3);
+  attr = op.CreateDataTypeAttr();
+  attr.Set(pxr::TfToken("double"));
+
+  pxr::UsdAnimXFCurve x = 
+      pxr::UsdAnimXFCurve::Define(animStage, pxr::SdfPath("/test/translateOp/x"));
+  x.CreateKeyframesAttr();
+  for (size_t i = 0; i < 12; ++i) {
+    double value = (double)rand() / (double)RAND_MAX;
+    std::cout << "ANIM X CURVE KEY : " << i * 4 << ":" << value << std::endl;
+    x.SetKeyframe((double)(i * 4), value);
+  }
+
+  pxr::UsdAnimXFCurve y =
+    pxr::UsdAnimXFCurve::Define(animStage, pxr::SdfPath("/test/translateOp/y"));
+  y.CreateKeyframesAttr();
+  for (size_t i = 0; i < 12; ++i) {
+    double value = (double)rand() / (double)RAND_MAX;
+    std::cout << "ANIM Y CURVE KEY : " << i * 4 << ":" << value << std::endl;
+    y.SetKeyframe((double)(i * 4), value);
+  }
+
+  pxr::UsdAnimXFCurve z =
+    pxr::UsdAnimXFCurve::Define(animStage, pxr::SdfPath("/test/translateOp/z"));
+  z.CreateKeyframesAttr();
+  for (size_t i = 0; i < 12; ++i) {
+    double value = (double)rand() / (double)RAND_MAX;
+    std::cout << "ANIM Z CURVE KEY : " << i * 4 << ":" << value << std::endl;
+    z.SetKeyframe((double)(i * 4), value);
+  }
+
+  animLayer->Save();
+  std::cout << "TEXT ANIM X SAVED!!!" << std::endl;
+
+
+}
+
 // init application
 //----------------------------------------------------------------------------
 void 
 Application::Init()
 {
+  //pxr::TfErrorMark mark;
+  //RunHydra();
+  
+  TestAnimX();
+  // If no error messages were logged, return success.
+  
+  /*
+  if (mark.IsClean()) {
+    std::cout << "HYDRA SCENE DELEGATE OK" << std::endl;
+  }
+  else {
+    for (auto& error : mark)std::cout << error.GetErrorCodeAsString() << std::endl;
+    std::cout << "HYDRA SCENE DELEGATE FAILED" << std::endl;
+  }
+  */
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/Contour/JackTurbulized.usda";
     //"E:/Projects/RnD/USD/extras/usd/examples/usdGeomExamples/basisCurves.usda";
@@ -136,9 +210,13 @@ Application::Init()
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
 
-  GraphUI* graph = new GraphUI(graphView, "Graph", true);
+  std::cout << "SPLITTED FUCKIN VIEWS... " << std::endl;
+
+  //GraphUI* graph = new GraphUI(graphView, "Graph", true);
   
   _viewport = new ViewportUI(viewportView, OPENGL);
+
+  std::cout << "CREATE FUCKIN VIEWPORT !!!" << std::endl;
   
   _timeline = new TimelineUI(timelineView);
 
@@ -146,9 +224,9 @@ Application::Init()
   ToolbarUI* toolbar = new ToolbarUI(topView->GetRight(), "Toolbar");
   _explorer = new ExplorerUI(explorerView);
 
-  PropertyUI* prop = new PropertyUI(propertyView, "Property");
+  _property = new PropertyUI(propertyView, "Property");
 
-  //_stage = pxr::UsdStage::Open(filename);
+  _stage = pxr::UsdStage::Open(filename);
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
  
@@ -166,7 +244,7 @@ Application::Init()
   DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
   childWindow->CollectLeaves();
-  */
+ */
 }
 
 void Application::Update()
@@ -268,6 +346,8 @@ void Application::OpenScene(const std::string& filename)
   {
     _stage = pxr::UsdStage::Open(outPath.get());
     OnNewScene();
+    std::cout << "SET PROPERTY PRIM : " << _stage->GetDefaultPrim().GetName() << std::endl;
+    _property->SetPrim(_stage->GetDefaultPrim());
   }
 }
 

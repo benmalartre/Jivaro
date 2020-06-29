@@ -32,7 +32,7 @@ bool DummyUI::Draw()
     ImVec2(_parent->GetSize()),
     ImColor(color[0], color[1], color[2], color[3])
   );
-  //Demo();
+  Demo();
   ImGui::End();
   return true;
 };
