@@ -162,7 +162,6 @@ void RunHydra()
   drawTarget->WriteToFile("color", imagePath + "color.png");
   drawTarget->WriteToFile("depth", imagePath + "depth.png");
   
-
   // Destroy the data structures
   delete renderIndex;
   delete renderDelegate;

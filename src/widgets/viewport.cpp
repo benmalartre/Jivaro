@@ -131,7 +131,10 @@ void ViewportUI::MouseButton(int button, int action, int mods)
         _interactionMode = INTERACTION_DOLLY;
       }
     }
-    else window->RestoreLastActiveTool();
+    else {
+      Pick(x, y);
+      window->RestoreLastActiveTool();
+    }
 /*
     if (button == GLFW_MOUSE_BUTTON_RIGHT)
     {
@@ -200,6 +203,17 @@ void ViewportUI::MouseWheel(int x, int y)
   _parent->SetDirty();
 }
 
+void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
+{
+  if (action == GLFW_PRESS) {
+    switch (key) {
+    case GLFW_KEY_F:
+      _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
+      break;
+    }
+  }
+}
+
 bool ViewportUI::Draw()
 {    
   if (!_initialized)Init();
@@ -242,7 +256,7 @@ bool ViewportUI::Draw()
     _renderParams.gammaCorrectColors = false;
     _renderParams.enableIdRender = false;
     _renderParams.enableSampleAlphaToCoverage = true;
-    _renderParams.highlight = false;
+    _renderParams.highlight = true;
     _renderParams.enableSceneMaterials = true;
     //_renderParams.colorCorrectionMode = ???
     _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
@@ -261,6 +275,7 @@ bool ViewportUI::Draw()
   //_engine->PrepareBatch(_stages[0]->GetPseudoRoot());
   //_engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
     _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
+    //_engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 1));
     glDisable(GL_SCISSOR_TEST);
 
     /*
@@ -331,6 +346,112 @@ void ViewportUI::Resize()
     _camera->GetFov(),
     pxr::GfCamera::FOVHorizontal
   );
+}
+
+
+pxr::GfFrustum 
+ViewportUI::_ComputePickFrustum(int x, int y)
+{
+  pxr::GfFrustum cameraFrustum = _camera->_GetFrustum();
+
+  std::cout << "Y : " << y << ", WY : " << GetY() << std::endl;
+  std::cout << " PICK X : " << (x - GetX()) << std::endl;
+  std::cout << " PICK Y : " << (y - GetY()) << std::endl;
+
+  // normalize position and pick size by the viewport size
+  pxr::GfVec2d point(
+    (double)(x - GetX()) / (double)GetWidth(),
+    (double)(y - GetY()) / (double)GetHeight());
+
+  point[0] = (point[0] * 2.0 - 1.0);
+  point[1] = -1.0 * (point[1] * 2.0 - 1.0);
+
+  pxr::GfVec2d size(1.0 / (double)GetWidth(), 1.0 / (double)GetHeight());
+
+  // "point" is normalized to the image viewport size, but if the image
+  // is cropped to the camera viewport, the image viewport won't fill the
+  // whole window viewport.Clicking outside the image will produce
+  // normalized coordinates > 1 or < -1; in this case, we should skip
+  // picking.
+  //inImageBounds = (abs(point[0]) <= 1.0 and abs(point[1]) <= 1.0)
+
+  return cameraFrustum.ComputeNarrowedFrustum(point, size);
+
+  /*
+  # compute pick frustum
+  (gfCamera, cameraAspect) = self.resolveCamera()
+    cameraFrustum = gfCamera.frustum
+
+    viewport = self.computeWindowViewport()
+    if self._cropImageToCameraViewport:
+  viewport = self.computeCameraViewport(cameraAspect)
+
+    # normalize position and pick size by the viewport size
+    point = Gf.Vec2d((x - viewport[0]) / float(viewport[2]),
+    (y - viewport[1]) / float(viewport[3]))
+    point[0] = (point[0] * 2.0 - 1.0)
+    point[1] = -1.0 * (point[1] * 2.0 - 1.0)
+
+    size = Gf.Vec2d(1.0 / viewport[2], 1.0 / viewport[3])
+
+# "point" is normalized to the image viewport size, but if the image
+    # is cropped to the camera viewport, the image viewport won't fill the
+    # whole window viewport.Clicking outside the image will produce
+    # normalized coordinates > 1 or < -1; in this case, we should skip
+    # picking.
+    inImageBounds = (abs(point[0]) <= 1.0 and abs(point[1]) <= 1.0)
+
+    return (inImageBounds, cameraFrustum.ComputeNarrowedFrustum(point, size))
+    */
+}
+
+
+
+
+bool ViewportUI::Pick(int x, int y)
+{
+  pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
+  pxr::GfVec3d outHitPoint;
+  pxr::SdfPath outHitPrimPath;
+  pxr::SdfPath outHitInstancerPath;
+  int outHitInstanceIndex;
+  pxr::HdInstancerContext outInstancerContext;
+  _engine->ClearSelected();
+
+  if (_engine->TestIntersection(
+    pickFrustum.ComputeViewMatrix(),
+    pickFrustum.ComputeProjectionMatrix(),
+    GetApplication()->GetStage()->GetPseudoRoot(),
+    _renderParams,
+    &outHitPoint,
+    &outHitPrimPath,
+    &outHitInstancerPath,
+    &outHitInstanceIndex,
+    &outInstancerContext)) {
+    std::cout << "#############################################" << std::endl;
+    std::cout << "###   WE'VE GOT AN HIT !!" << std::endl;
+    std::cout << "###   HIT PRIM : " << outHitPrimPath << std::endl;
+    std::cout << "###   HIT POINT : " << outHitPoint << std::endl;
+    std::cout << "#############################################" << std::endl;
+
+    _engine->AddSelected(outHitPrimPath, -1);
+    GetApplication()->AddToSelection(outHitPrimPath);
+  }
+
+  //std::cout << "NUM SELECTED OBJECTS : " << _engine->_GetSelection().size() << std::endl;
+  /*
+  bool
+    UsdImagingGLEngine::TestIntersection(
+      const GfMatrix4d &viewMatrix,
+      const GfMatrix4d &projectionMatrix,
+      const UsdPrim& root,
+      const UsdImagingGLRenderParams& params,
+      GfVec3d *outHitPoint,
+      SdfPath *outHitPrimPath,
+      SdfPath *outHitInstancerPath,
+      int *outHitInstanceIndex,
+      HdInstancerContext *outInstancerContext)
+  */
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

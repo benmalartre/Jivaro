@@ -4,6 +4,7 @@
 #include "../common.h"
 #include "pxr/pxr.h"
 
+#include "pxr/base/tf/token.h"
 #include "pxr/base/tf/errorMark.h"
 #include "pxr/base/gf/matrix4f.h"
 #include "pxr/base/gf/frustum.h"
@@ -13,7 +14,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 void RunHydra();
 
 class Engine {
-  //pxr::TfToken              _rendererPluginId;
+  pxr::TfToken              _rendererPluginId;
   /*
   pxr::HdRendererPlugin*    _rendererPlugin;
   pxr::HdRenderDelegate*    _renderDelegate;

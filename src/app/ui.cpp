@@ -47,7 +47,8 @@ int BaseUI::GetX()
 
 int BaseUI::GetY()
 { 
-  if(_docked)return GetWindowHeight() - (_parent->GetMin()[1] + _parent->GetHeight());
+  if(_docked)return _parent->GetMin()[1];
+    //return GetWindowHeight() - (_parent->GetMin()[1] + _parent->GetHeight());
   else return ImGui::GetWindowPos().y;
 };
 

@@ -53,6 +53,12 @@ public:
 
   void OpenScene(const std::string& filename);
 
+  // selection
+  void SetSelection(const pxr::SdfPathVector& selection);
+  void AddToSelection(const pxr::SdfPath& path);
+  void RemoveFromSelection(const pxr::SdfPath& path);
+  pxr::GfBBox3d GetSelectionBoundingBox();
+
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
   pxr::UsdStageRefPtr& GetStage() { return _stage; };
@@ -94,6 +100,7 @@ private:
   std::vector<Window*>              _childWindow;
   //std::vector<pxr::UsdStageRefPtr>  _stages;
   pxr::UsdStageRefPtr               _stage;
+  std::vector<pxr::SdfPath>         _selection;
 
   // uis
   ViewportUI*                       _viewport;

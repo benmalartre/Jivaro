@@ -28,8 +28,12 @@ public:
 
   // get matrices
   const pxr::GfMatrix4d GetViewMatrix();
+  const pxr::GfMatrix4d GetViewInverseMatrix();
   const pxr::GfMatrix4d GetProjectionMatrix();
   const std::vector<pxr::GfVec4f> GetClippingPlanes();
+
+  // frame selection
+  void FrameSelection(const pxr::GfBBox3d &selBBox);
 
   // compute underlying GfCamera frustum
   pxr::GfFrustum _GetFrustum(){return _camera.GetFrustum();};
@@ -173,6 +177,7 @@ private:
   double                _near;
   double                _far;
   double                _fov;
+  double                _dist;
   pxr::GfVec3d          _lookat;
   pxr::GfVec3d          _pos;
   pxr::GfVec3d          _up;

@@ -56,9 +56,12 @@ class ViewportUI : public BaseUI
     void MouseButton(int button, int action, int mods) override;
     void MouseMove(int x, int y) override;
     void MouseWheel(int x, int y) override;
+    void Keyboard(int key, int scancode, int action, int mods);
     bool Draw() override;
     void Resize() override;
     void Update();
+    pxr::GfFrustum _ComputePickFrustum(int x, int y);
+    bool Pick(int x, int y);
     
     
   private:

@@ -8,16 +8,25 @@
 #include "../widgets/toolbar.h"
 #include "../widgets/explorer.h"
 #include "../widgets/property.h"
+#include "../widgets/curveEditor.h"
 
 #include <pxr/base/tf/debug.h>
+#include <pxr/base/tf/refPtr.h>
+#include <pxr/usd/sdf/layer.h>
+#include <pxr/usd/sdf/layerStateDelegate.h>
+#include <pxr/base/tf/refPtr.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/bboxCache.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/imaging/hd/renderPassState.h>
 #include <pxr/imaging/LoFi/debugCodes.h>
 #include <pxr/usd/usdAnimX/fileFormat.h>
-#include <pxr/usd/usdAnimX/fCurve.h>
-#include <pxr/usd/usdAnimX/fCurveOp.h>
+#include <pxr/usd/usdAnimX/types.h>
+#include <pxr/usd/usdAnimX/desc.h>
+#include <pxr/usd/usdAnimX/data.h>  
+#include <pxr/usd/usdAnimX/keyframe.h>
 #include "../tests/stageGraph.h"
 #include "../tests/stageUI.h"
 
@@ -94,58 +103,159 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
   }
 }
 
-static void
-TestAnimX()
+static
+pxr::UsdStageRefPtr
+TestAnimXFromFile(const std::string& filename, CurveEditorUI* curveEditor)
 {
-  pxr::SdfFileFormatConstPtr fileFormat = 
-      pxr::SdfFileFormat::FindByExtension("animx");
-  pxr::SdfLayerRefPtr animLayer = 
-      pxr::SdfLayer::CreateNew("E:/Projects/RnD/USD_BUILD/assets/animX/test.animx");
-  std::cout << "ANIM LAYER : " << animLayer << std::endl;
-  pxr::UsdStageRefPtr animStage = pxr::UsdStage::Open(animLayer);
+  pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
+  pxr::SdfLayerHandleVector layers = stage->GetLayerStack();
+  for (auto& layer : layers) {
+    if (layer->GetFileFormat()->GetFormatId() == pxr::UsdAnimXFileFormatTokens->Id) {
+      curveEditor->SetLayer(layer);
+      break;
+    }
+  }
+  return stage;
+}
+
+static
+pxr::UsdStageRefPtr 
+TestAnimX(CurveEditorUI* curveEditor)
+{
+  pxr::SdfLayerRefPtr rootLayer = pxr::SdfLayer::CreateAnonymous("geom.usda");
+  pxr::SdfLayerRefPtr geomLayer = pxr::SdfLayer::CreateAnonymous("rig.rig");
+  pxr::SdfLayerRefPtr animLayer = pxr::SdfLayer::CreateAnonymous("anim.animx");
+
+  rootLayer->InsertSubLayerPath(geomLayer->GetIdentifier());
+  rootLayer->InsertSubLayerPath(animLayer->GetIdentifier());
+     
+  pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(rootLayer->GetIdentifier());
+  stage->SetStartTimeCode(1);
+  stage->SetEndTimeCode(100);
+
+  stage->SetEditTarget(geomLayer);
+  std::cout << "SET METADATAS DONE..." << std::endl;
+
+  pxr::SdfPath primPath("/Cube");
+  pxr::UsdGeomCube cube =
+    pxr::UsdGeomCube::Define(stage, primPath);
+
+  stage->SetEditTarget(animLayer);
+  //pxr::SdfFileFormatConstPtr fileFormat = animLayer->GetFileFormat();
+
+  pxr::UsdAnimXFileFormatConstPtr fileFormat = 
+    pxr::TfStatic_cast<pxr::UsdAnimXFileFormatConstPtr>(animLayer->GetFileFormat());
+  pxr::SdfAbstractDataConstPtr datas = fileFormat->GetData(&(*animLayer));
+  pxr::UsdAnimXDataPtr animXDatas = 
+    pxr::TfDynamic_cast<pxr::UsdAnimXDataPtr>(
+      pxr::TfConst_cast<pxr::SdfAbstractDataPtr>(datas));
+  std::cout << "[ANIMX] DATAS : " << animXDatas->GetCurrentCount() << std::endl;
+
+    
+  std::cout << "[ANIMX] FILE FORMAT : " << fileFormat->GetFormatId() << std::endl;
   
-  animStage->OverridePrim(pxr::SdfPath("/test"));
-  pxr::UsdAnimXFCurveOp op = 
-      pxr::UsdAnimXFCurveOp::Define(animStage, pxr::SdfPath("/test/translateOp"));
+  animXDatas->AddPrim(primPath);
+  pxr::UsdAnimXOpDesc opDesc;
+  opDesc.defaultValue = pxr::VtValue((double)1.0);
+  opDesc.target = pxr::TfToken("size");
+  opDesc.dataType = pxr::AnimXGetTokenFromSdfValueTypeName(opDesc.defaultValue.GetType());
+  opDesc.name = pxr::TfToken("sizeOp");
+  animXDatas->AddOp(primPath, opDesc);
 
-  pxr::UsdAttribute attr = op.CreateAttributeNameAttr();
-  attr.Set(pxr::TfToken("xformOp:translate"));
-  attr = op.CreateElementCountAttr();
-  attr.Set(3);
-  attr = op.CreateDataTypeAttr();
-  attr.Set(pxr::TfToken("double"));
+  pxr::UsdAnimXCurveDesc curveDesc;
+  curveDesc.name = pxr::TfToken("size");
+  curveDesc.postInfinityType = pxr::UsdAnimXTokens->cycle;
+  curveDesc.preInfinityType = pxr::UsdAnimXTokens->cycle;
 
-  pxr::UsdAnimXFCurve x = 
-      pxr::UsdAnimXFCurve::Define(animStage, pxr::SdfPath("/test/translateOp/x"));
-  x.CreateKeyframesAttr();
-  for (size_t i = 0; i < 12; ++i) {
-    double value = (double)rand() / (double)RAND_MAX;
-    std::cout << "ANIM X CURVE KEY : " << i * 4 << ":" << value << std::endl;
-    x.SetKeyframe((double)(i * 4), value);
+  pxr::UsdAnimXKeyframeDesc keyframeDesc;
+  keyframeDesc.time = 1;
+  keyframeDesc.data[0] = 1.0;
+  keyframeDesc.data[1] = (double)adsk::TangentType::Fixed;
+  keyframeDesc.data[2] = 24.0;
+  keyframeDesc.data[3] = 0.0;
+  keyframeDesc.data[4] = (double)adsk::TangentType::Fixed;
+  keyframeDesc.data[5] = 24.0;
+  keyframeDesc.data[6] = 0.0;
+  keyframeDesc.data[7] = 1.0;
+  curveDesc.keyframes.push_back(keyframeDesc);
+
+  keyframeDesc.time = 12;
+  keyframeDesc.data[0] = 1.0;
+  curveDesc.keyframes.push_back(keyframeDesc);
+
+  keyframeDesc.time = 25;
+  keyframeDesc.data[0] = 10.0;
+  curveDesc.keyframes.push_back(keyframeDesc);
+
+  keyframeDesc.time = 50;
+  keyframeDesc.data[0] = 1.0;
+  curveDesc.keyframes.push_back(keyframeDesc);
+
+  animXDatas->AddFCurve(primPath, opDesc.target, curveDesc);
+  /*
+
+  pxr::SdfPath propertyPath = pxr::SdfPath("/Cube").AppendProperty(pxr::TfToken("size"));
+  animLayer->SetField(pxr::SdfPath("/Cube"), pxr::TfToken("size"), pxr::VtValue((double)32));
+  pxr::UsdAnimXKeyframe keyframe;
+  keyframe.time = 1;
+  keyframe.value = 1;
+  animLayer->SetTimeSample(
+    propertyPath,
+    keyframe.time, keyframe.GetAsSample());
+
+  keyframe.time = 50;
+  keyframe.value = 10;
+  animLayer->SetTimeSample(
+    propertyPath,
+    keyframe.time, keyframe.GetAsSample());
+
+  keyframe.time = 100;
+  keyframe.value = 1;
+  animLayer->SetTimeSample(
+    propertyPath,
+    keyframe.time, keyframe.GetAsSample());
+
+  pxr::SdfLayerStateDelegateBasePtr animLayerStateDelegate =
+    animLayer->GetStateDelegate();
+
+  std::cout << "ANIMX LAYER STATE DELEGATE : " << animLayerStateDelegate << std::endl;
+  */
+  //pxr::SdfAbstractDataConstPtr datas = animLayer->_GetData();
+  //animLayer->SetTimeSample()
+  //stage->Reload();
+  /*
+  pxr::SdfAbstractDataConstPtr
+    SdfFileFormat::_GetLayerData(const SdfLayer& layer)
+  {
+    return layer._GetData();
   }
+    */
+  //animLayer->Se
+  //animLayer->
+  curveEditor->SetLayer(pxr::SdfLayerHandle(animLayer));
 
-  pxr::UsdAnimXFCurve y =
-    pxr::UsdAnimXFCurve::Define(animStage, pxr::SdfPath("/test/translateOp/y"));
-  y.CreateKeyframesAttr();
-  for (size_t i = 0; i < 12; ++i) {
-    double value = (double)rand() / (double)RAND_MAX;
-    std::cout << "ANIM Y CURVE KEY : " << i * 4 << ":" << value << std::endl;
-    y.SetKeyframe((double)(i * 4), value);
+
+  return stage;
+
+  /*
+  for (size_t i = 0; i < _filenames.size(); ++i)
+  {
+    std::string filename = _filenames[i];
+    if (pxr::UsdStage::IsSupportedFile(filename) &&
+      pxr::ArchGetFileLength(filename.c_str()) != -1)
+    {
+      pxr::SdfLayerRefPtr subLayer = SdfLayer::FindOrOpen(filename);
+      _layers.push_back(subLayer);
+      _rootLayer->InsertSubLayerPath(subLayer->GetIdentifier());
+    }
   }
+  
 
-  pxr::UsdAnimXFCurve z =
-    pxr::UsdAnimXFCurve::Define(animStage, pxr::SdfPath("/test/translateOp/z"));
-  z.CreateKeyframesAttr();
-  for (size_t i = 0; i < 12; ++i) {
-    double value = (double)rand() / (double)RAND_MAX;
-    std::cout << "ANIM Z CURVE KEY : " << i * 4 << ":" << value << std::endl;
-    z.SetKeyframe((double)(i * 4), value);
-  }
-
-  animLayer->Save();
-  std::cout << "TEXT ANIM X SAVED!!!" << std::endl;
-
-
+  //pxr::SdfLayerRefPtr rootLayer = pxr::SdfLayer::FindOrOpen(_filename);
+  //_stage = pxr::UsdStage::Open(rootLayer);
+  _stage = pxr::UsdStage::Open(_rootLayer->GetIdentifier());
+  _stage->SetEditTarget(_rootLayer);
+  */
 }
 
 // init application
@@ -156,7 +266,6 @@ Application::Init()
   //pxr::TfErrorMark mark;
   //RunHydra();
   
-  TestAnimX();
   // If no error messages were logged, return success.
   
   /*
@@ -169,9 +278,11 @@ Application::Init()
   }
   */
   std::string filename =
+    "E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
+    //"E:/Projects/RnD/USD_BUILD/assets/animX/layered_anim.usda";
     //"E:/Projects/RnD/USD_BUILD/assets/Contour/JackTurbulized.usda";
     //"E:/Projects/RnD/USD/extras/usd/examples/usdGeomExamples/basisCurves.usda";
-    "E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd";
+    //"E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
@@ -212,7 +323,8 @@ Application::Init()
 
   std::cout << "SPLITTED FUCKIN VIEWS... " << std::endl;
 
-  //GraphUI* graph = new GraphUI(graphView, "Graph", true);
+  GraphUI* graph = new GraphUI(graphView, "Graph", true);
+  //CurveEditorUI* curveEditor = new CurveEditorUI(graphView);
   
   _viewport = new ViewportUI(viewportView, OPENGL);
 
@@ -226,6 +338,37 @@ Application::Init()
 
   _property = new PropertyUI(propertyView, "Property");
 
+  //_stage = TestAnimXFromFile(filename, curveEditor);
+  //_stage = TestAnimX(curveEditor);
+
+  /*
+  // Create the layer to populate.
+  std::string shotFilePath = "E:/Projects/RnD/USD_BUILD/assets/AnimX/test.usda";
+  std::string animFilePath = "E:/Projects/RnD/USD_BUILD/assets/AnimX/anim.animx";
+  //pxr::SdfLayerRefPtr baseLayer = pxr::SdfLayer::FindOrOpen(shotFilePath);
+  
+  // Create a UsdStage with that root layer.
+  _stage = pxr::UsdStage::Open(shotFilePath);
+  _stage->SetStartTimeCode(1);
+  _stage->SetEndTimeCode(100);
+  
+  pxr::UsdGeomCube cube =
+    pxr::UsdGeomCube::Define(_stage, pxr::SdfPath("/Cube"));
+    
+
+  _stage->GetRootLayer()->Save();
+
+  // we use Sdf, a lower level library, to obtain the 'anim' layer.
+  pxr::SdfLayerRefPtr animLayer = pxr::SdfLayer::FindOrOpen(animFilePath);
+  std::cout << "HAS LOCAL LAYER : " << _stage->HasLocalLayer(animLayer) << std::endl;
+
+  _stage->SetEditTarget(animLayer);
+  std::cout << "HAS LOCAL LAYER : " << _stage->HasLocalLayer(animLayer) << std::endl;
+  
+  // Create a mesh for the group.
+        UsdGeomMesh mesh =
+            UsdGeomMesh::Define(stage, SdfPath("/" + group.name));
+  */
   _stage = pxr::UsdStage::Open(filename);
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
@@ -356,6 +499,93 @@ void
 Application::MainLoop()
 {
   _mainWindow->MainLoop();
+  if (_stage) {
+    pxr::SdfLayerRefPtr flattened = _stage->Flatten();
+    if (flattened)
+      flattened->Export("E:/Projects/RnD/USD_BUILD/assets/animX/flattened.usda");
+  }
+}
+
+// selection
+void 
+Application::SetSelection(const pxr::SdfPathVector& selection)
+{
+  _selection = selection;
+}
+
+void 
+Application::AddToSelection(const pxr::SdfPath& path)
+{
+  _selection.clear();
+  for (const auto& selected : _selection) {
+    if (path == selected)return;
+  }
+  _selection.push_back(path);
+}
+
+void 
+Application::RemoveFromSelection(const pxr::SdfPath& path)
+{
+  for (auto& s = _selection.begin(); s < _selection.end(); ++s) {
+    if (path == *s)_selection.erase(s);
+  }
+}
+
+pxr::GfBBox3d 
+Application::GetSelectionBoundingBox()
+{
+  pxr::GfBBox3d bbox;
+  pxr::TfTokenVector purposes = {pxr::UsdGeomTokens->default_};
+  pxr::UsdGeomBBoxCache bboxCache(
+    pxr::UsdTimeCode(_activeTime), purposes, false, false);
+  for (const auto& selected : _selection) {
+    pxr::UsdPrim& prim = _stage->GetPrimAtPath(selected);
+    if(prim.IsActive() && !prim.IsInMaster())
+        bbox = bbox.Combine(bbox, bboxCache.ComputeWorldBound(prim));
+  }
+  std::cout << "BBOX : " << bbox.GetRange() << std::endl;
+  /*
+  pxr::UsdPrim& prim = _stage->GetPrimAtPath(pxr::SdfPath("/Cube"));
+  if (!prim.IsValid()) {
+    prim = pxr::UsdGeomCube::Define(_stage, pxr::SdfPath("/Cube")).GetPrim();
+    pxr::UsdGeomCube cube(prim);
+    cube.CreateSizeAttr().Set(pxr::VtValue(1.0));
+   
+    pxr::VtArray<pxr::TfToken> xformOpOrderTokens =
+    { pxr::TfToken("xformOp:scale"), pxr::TfToken("xformOp:translate")};
+    cube.CreateXformOpOrderAttr().Set(pxr::VtValue(xformOpOrderTokens));
+   
+  }
+  pxr::UsdGeomCube cube(prim);
+
+  bool resetXformStack = false;
+  bool foundScaleOp = false;
+  bool foundTranslateOp = false;
+  std::vector<pxr::UsdGeomXformOp> xformOps = cube.GetOrderedXformOps(&resetXformStack);
+  for (auto& xformOp : xformOps) {
+ 
+    if (xformOp.GetName() == pxr::TfToken("xformOp:scale")) {
+      pxr::GfRange3d bboxRange = bbox.GetRange();
+      xformOp.Set(pxr::VtValue(pxr::GfVec3f(bboxRange.GetMax() - bboxRange.GetMin())));
+      foundScaleOp = true;
+    } else if(xformOp.GetName() == pxr::TfToken("xformOp:translate")) {
+      pxr::GfVec3d center = bbox.ComputeCentroid();
+      xformOp.Set(pxr::VtValue(center));
+      foundTranslateOp = true;
+    }
+  }
+  if (!foundScaleOp) {
+    pxr::UsdGeomXformOp scaleOp = cube.AddScaleOp();
+    pxr::GfRange3d bboxRange = bbox.GetRange();
+    scaleOp.Set(pxr::VtValue(pxr::GfVec3f(bboxRange.GetMax() - bboxRange.GetMin())));
+  }
+  if (!foundTranslateOp) {
+    pxr::UsdGeomXformOp translateOp = cube.AddTranslateOp();
+    pxr::GfVec3d center = bbox.ComputeCentroid();
+    translateOp.Set(pxr::VtValue(center));
+  }
+  */
+  return bbox;
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

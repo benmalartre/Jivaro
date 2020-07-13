@@ -28,6 +28,10 @@ const pxr::GfMatrix4d Camera::GetViewMatrix()
 {
   return _camera.GetFrustum().ComputeViewMatrix();
 }
+const pxr::GfMatrix4d Camera::GetViewInverseMatrix()
+{
+  return _camera.GetFrustum().ComputeViewMatrix().GetInverse();
+}
 const pxr::GfMatrix4d Camera::GetProjectionMatrix()
 {
   return _camera.GetFrustum().ComputeProjectionMatrix();
@@ -38,6 +42,43 @@ const std::vector<pxr::GfVec4f> Camera::GetClippingPlanes()
   return _camera.GetClippingPlanes();
 }
 
+void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
+{
+  pxr::GfVec3d center = selBBox.ComputeCentroid();
+  pxr::GfRange3d selRange = selBBox.ComputeAlignedRange();
+  pxr::GfVec3d rangeSize = selRange.GetSize();
+  
+  float frameFit = 1.1f;
+  float selSize = rangeSize[0];
+  if (rangeSize[1] > selSize)selSize = rangeSize[1];
+  if (rangeSize[2] > selSize)selSize = rangeSize[2];
+ 
+  if (_orthographic) {
+    _fov = selSize * frameFit;
+    _dist = selSize + _near;
+  }
+  else {
+    double halfFov = _fov * 0.5;
+    double lengthToFit = selSize * frameFit * 0.5;
+    //_dist = lengthToFit / tan(pxr::GfDegreesToRadians(halfFov));
+    _dist = lengthToFit / std::atanf(halfFov * DEGREES_TO_RADIANS);
+    /*
+    // Very small objects that fill out their bounding boxes(like cubes)
+    // may well pierce our 1 unit default near - clipping plane.Make sure
+    // that doesn't happen.
+    if (_dist < _near + selSize * 0.5) {
+      _dist = _near + lengthToFit;
+    }
+    */
+  }
+  pxr::GfVec3d dir = (_pos - _lookat).GetNormalized();
+  
+  _lookat = center;
+  _pos = _lookat + dir * _dist;
+  std::cout << "LOOKAT : " << _lookat << std::endl;
+  LookAt();
+
+}
 /*
 void Camera::_PushToCameraTransform()
 {
@@ -387,8 +428,12 @@ void Camera::SetWindow(int x, int y, int width, int height)
 void Camera::LookAt()
 {
   pxr::GfMatrix4d m(1);
-  m.SetLookAt (_pos, _lookat, _up);
-  _camera.SetTransform(m.GetInverse() * pxr::GfMatrix4d().SetTranslate(_pos));
+  m.SetLookAt(_pos, _lookat, _up);
+  m = m.GetInverse();
+  m[3][0] = _pos[0];
+  m[3][1] = _pos[1];
+  m[3][2] = _pos[2];
+  _camera.SetTransform(m);
   ComputeFrustum();
 }
 

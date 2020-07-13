@@ -58,6 +58,7 @@ add_executable(${TARGET}
   widgets/toolbar.cpp
   widgets/explorer.cpp
   widgets/property.cpp
+  widgets/curveEditor.cpp
   #embree/oiio.cpp
   #embree/jpeg.cpp
   #embree/utils.cpp
