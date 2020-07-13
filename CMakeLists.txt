@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-
 # cross platform
 set(LIB_PREFIX "")
 set(LIB_DYNAMIC_EXT "")
@@ -30,10 +29,7 @@ if(NOT DEFINED GLFW_DIR)
 	message(FATAL_ERROR "No GLFW_DIR variable set! GLFW installation path must be passed to cmake!!!")
 endif()
 set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
-message("${GLFW_DIR}/build/src")
-message("${GLFW_DIR}/build/src/Release")
 find_library(GLFW NAMES glfw3 PATHS "${GLFW_DIR}/build/src" "${GLFW_DIR}/build/src/Release")
-message("GLFW LIB : ${GLFW}")
 
 # usd 
 if(NOT DEFINED USD_DIR)
@@ -66,6 +62,7 @@ list(APPEND USD_LIB_NAMES
   usdLux
   usdUI
   usdImagingGL
+  usdAnimX
   vt
 )
 
@@ -79,9 +76,6 @@ endforeach()
 
 # python
 find_package (Python2 COMPONENTS Interpreter Development)
-message("PYTHON : ")
-message("   ${Python2_INCLUDE_DIRS}")
-message("   ${Python2_LIBRARY_DIRS}")
 
 # boost
 if(UNIX)
@@ -98,66 +92,21 @@ set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
   program_options
-  python
+  python27
   regex
 )
 
 set(BOOST_LIBRARIES "")
+set(BOOST_VERSION "")
+if(NOT UNIX)
+	set(BOOST_VERSION "-vc141-mt-x64-1_70")
+endif()
 foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
   set(BOOST_LIBRARIES 
     ${BOOST_LIBRARIES} 
-      "${USD_LIBRARY_DIR}/${LIB_PREFIX}boost_${BOOST_LIB_NAME}${LIB_DYNAMIC_EXT}"
+      "${USD_LIBRARY_DIR}/${LIB_PREFIX}boost_${BOOST_LIB_NAME}${BOOST_VERSION}${LIB_DYNAMIC_EXT}"
   )
 endforeach()
-
-## embree
-#set(EMBREE_DIR "/Users/benmalartre/Documents/RnD/embree")
-#list(APPEND EMBREE_INCLUDE_DIRS 
-#  "${EMBREE_DIR}/embree/include"
-#  "${EMBREE_DIR}/embree/common"
-#  "${EMBREE_DIR}/embree/tutorials/common"
-#)
-#set(EMBREE_LIBRARY_DIR "${EMBREE_DIR}/build")
-#list(APPEND EMBREE_LIB_NAMES 
-#  sys
-#  math
-#  noise
-#  image
-#  #lexers
-#  #lights
-#  #scenegraph
-#  #simd
-#  tasking
-#  texture
-#  #tutorial
-#)
-
-#set(EMBREE_LIBRARIES "")
-#foreach(EMBREE_LIB_NAME IN LISTS EMBREE_LIB_NAMES)
-#  set(EMBREE_LIBRARIES 
-#    ${EMBREE_LIBRARIES} 
-#      "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}${EMBREE_LIB_NAME}${LIB_STATIC_EXT}"
-#  )
-#endforeach()
-
-## jpeg
-#find_package(JPEG)
-#include_directories(${JPEG_INCLUDE_DIR})
-#set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${JPEG_LIBRARIES})
-#set(ADDITIONAL_SOURCES ${ADDITIONAL_SOURCES} jpeg.cpp)
-#
-## png
-#find_package(PNG)
-#include_directories(${PNG_INCLUDE_DIR})
-#set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${PNG_LIBRARIES})
-#set(ADDITIONAL_SOURCES ${ADDITIONAL_SOURCES} png.cpp)
-#
-#
-#set(EMBREE_LIBRARIES 
-#    ${EMBREE_LIBRARIES} 
-#      "${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}"
-#)
-#message("EMBREE LIBRARY : ${EMBREE_LIBRARY_DIR}/${LIB_PREFIX}embree3${LIB_DYNAMIC_EXT}")
 
 # tbb
 set(TBB_INCLUDE_DIR "${USD_DIR}/include/tbb")
