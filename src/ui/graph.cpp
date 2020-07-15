@@ -7,7 +7,7 @@
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
-#include "../app/ui.h"
+#include "../ui/ui.h"
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/attribute.h>
 

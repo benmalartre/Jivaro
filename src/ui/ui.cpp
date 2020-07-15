@@ -1,6 +1,6 @@
 #include "ui.h"
-#include "window.h"
-#include "view.h"
+#include "../app/window.h"
+#include "../app/view.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

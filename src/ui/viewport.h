@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../common.h"
-#include "../app/ui.h"
+#include "../ui/ui.h"
 #include "../app/camera.h"
 #include "../app/notice.h"
 #include "../utils/utils.h"
@@ -83,6 +83,7 @@ class ViewportUI : public BaseUI
     pxr::UsdImagingGLRenderParams     _renderParams;
     pxr::UsdPrim                      _root;
     pxr::UsdLuxDomeLight              _light;
+    pxr::GlfDrawTargetRefPtr          _drawTarget;
     //pxr::UsdStageRefPtr               _stage;
 };
 AMN_NAMESPACE_CLOSE_SCOPE

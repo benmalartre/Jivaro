@@ -1,6 +1,6 @@
 #include "splitter.h"
-#include "view.h"
-#include "window.h"
+#include "../app/view.h"
+#include "../app/window.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

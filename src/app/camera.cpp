@@ -21,7 +21,6 @@ Camera::Camera(const std::string& name, double fov) :
     pxr::GfCamera::FOVVertical);
   _camera.SetFocusDistance((_pos - _lookat).GetLength());
   _camera.SetClippingRange(pxr::GfRange1f(_near, _far));
-  //_ResetClippingPlanes();
 }
 
 const pxr::GfMatrix4d Camera::GetViewMatrix()
@@ -48,7 +47,7 @@ void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
   pxr::GfRange3d selRange = selBBox.ComputeAlignedRange();
   pxr::GfVec3d rangeSize = selRange.GetSize();
   
-  float frameFit = 1.1f;
+  float frameFit = 2.f;
   float selSize = rangeSize[0];
   if (rangeSize[1] > selSize)selSize = rangeSize[1];
   if (rangeSize[2] > selSize)selSize = rangeSize[2];
@@ -59,23 +58,13 @@ void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
   }
   else {
     double halfFov = _fov * 0.5;
-    double lengthToFit = selSize * frameFit * 0.5;
-    //_dist = lengthToFit / tan(pxr::GfDegreesToRadians(halfFov));
-    _dist = lengthToFit / std::atanf(halfFov * DEGREES_TO_RADIANS);
-    /*
-    // Very small objects that fill out their bounding boxes(like cubes)
-    // may well pierce our 1 unit default near - clipping plane.Make sure
-    // that doesn't happen.
-    if (_dist < _near + selSize * 0.5) {
-      _dist = _near + lengthToFit;
-    }
-    */
+    double lengthToFit = selSize * frameFit;
+    _dist = lengthToFit / std::tanf(pxr::GfDegreesToRadians(halfFov));
+
   }
   pxr::GfVec3d dir = (_pos - _lookat).GetNormalized();
-  
   _lookat = center;
-  _pos = _lookat + dir * _dist;
-  std::cout << "LOOKAT : " << _lookat << std::endl;
+  _pos = center + dir * _dist;
   LookAt();
 
 }

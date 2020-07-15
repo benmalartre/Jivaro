@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../common.h"
-#include "../app/ui.h"
+#include "../ui/ui.h"
 #include "../utils/utils.h"
 #include "node.h"
 #include <pxr/usd/usd/prim.h>

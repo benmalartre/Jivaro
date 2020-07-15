@@ -234,7 +234,6 @@ TestAnimX(CurveEditorUI* curveEditor)
   //animLayer->
   curveEditor->SetLayer(pxr::SdfLayerHandle(animLayer));
 
-
   return stage;
 
   /*
@@ -321,15 +320,10 @@ Application::Init()
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
 
-  std::cout << "SPLITTED FUCKIN VIEWS... " << std::endl;
-
   GraphUI* graph = new GraphUI(graphView, "Graph", true);
   //CurveEditorUI* curveEditor = new CurveEditorUI(graphView);
   
-  _viewport = new ViewportUI(viewportView, OPENGL);
-
-  std::cout << "CREATE FUCKIN VIEWPORT !!!" << std::endl;
-  
+  _viewport = new ViewportUI(viewportView, OPENGL);  
   _timeline = new TimelineUI(timelineView);
 
   MenuUI* menu = new MenuUI(topView->GetLeft());
@@ -516,7 +510,6 @@ Application::SetSelection(const pxr::SdfPathVector& selection)
 void 
 Application::AddToSelection(const pxr::SdfPath& path)
 {
-  _selection.clear();
   for (const auto& selected : _selection) {
     if (path == selected)return;
   }
@@ -529,6 +522,22 @@ Application::RemoveFromSelection(const pxr::SdfPath& path)
   for (auto& s = _selection.begin(); s < _selection.end(); ++s) {
     if (path == *s)_selection.erase(s);
   }
+}
+
+void 
+Application::ClearSelection()
+{
+  _selection.clear();
+}
+
+pxr::GfBBox3d
+Application::GetStageBoundingBox()
+{
+  pxr::GfBBox3d bbox;
+  pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
+  pxr::UsdGeomBBoxCache bboxCache(
+    pxr::UsdTimeCode(_activeTime), purposes, false, false);
+  return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
 }
 
 pxr::GfBBox3d 

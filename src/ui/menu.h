@@ -1,6 +1,8 @@
+#ifndef AMN_UI_MENU_H
+#define AMN_UI_MENU_H
 #pragma once
 
-#include "../app/ui.h"
+#include "ui.h"
 #include "../utils/utils.h"
 #include <iostream>
 #include <vector>
@@ -58,3 +60,5 @@ class MenuUI : public BaseUI
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_UI_MENU_H

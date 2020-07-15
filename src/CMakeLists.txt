@@ -35,7 +35,6 @@ add_executable(${TARGET}
   utils/shaders.cpp
   utils/screenSpaceQuad.cpp
   utils/icons.cpp
-
   utils/nfd_win.cpp
   graph/deformableAPI.cpp
   graph/connectableAPI.cpp
@@ -49,16 +48,18 @@ add_executable(${TARGET}
   graph/stage.cpp
   graph/tokens.cpp
   graph/utils.cpp
-  widgets/dummy.cpp
-  widgets/menu.cpp
-  widgets/node.cpp
-  widgets/graph.cpp
-  widgets/viewport.cpp
-  widgets/timeline.cpp
-  widgets/toolbar.cpp
-  widgets/explorer.cpp
-  widgets/property.cpp
-  widgets/curveEditor.cpp
+  ui/ui.cpp
+  ui/splitter.cpp
+  ui/dummy.cpp
+  ui/menu.cpp
+  ui/node.cpp
+  ui/graph.cpp
+  ui/viewport.cpp
+  ui/timeline.cpp
+  ui/toolbar.cpp
+  ui/explorer.cpp
+  ui/property.cpp
+  ui/curveEditor.cpp
   #embree/oiio.cpp
   #embree/jpeg.cpp
   #embree/utils.cpp
@@ -70,8 +71,6 @@ add_executable(${TARGET}
   #embree/device.cpp
   app/camera.cpp
   app/view.cpp
-  app/ui.cpp
-  app/splitter.cpp
   app/window.cpp
   app/engine.cpp
   app/notice.cpp

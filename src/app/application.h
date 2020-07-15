@@ -57,7 +57,9 @@ public:
   void SetSelection(const pxr::SdfPathVector& selection);
   void AddToSelection(const pxr::SdfPath& path);
   void RemoveFromSelection(const pxr::SdfPath& path);
+  void ClearSelection();
   pxr::GfBBox3d GetSelectionBoundingBox();
+  pxr::GfBBox3d GetStageBoundingBox();
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
@@ -101,6 +103,8 @@ private:
   //std::vector<pxr::UsdStageRefPtr>  _stages;
   pxr::UsdStageRefPtr               _stage;
   std::vector<pxr::SdfPath>         _selection;
+  //pxr::UsdGeomBBoxCache*            _bboxCache;
+  //pxr::UsdGeomXformCache*           _xformCache;
 
   // uis
   ViewportUI*                       _viewport;
@@ -122,7 +126,6 @@ private:
   bool                              _playForwardOrBackward;
   bool                              _playback;
   
-
   double                            _lastT;
   size_t                            _frameCount;
   size_t                            _framerate;
@@ -131,7 +134,7 @@ private:
 
 extern Application* AMN_APPLICATION;
 
-AMN_NAMESPACE_CLOSE_SCOPE // namespace pxr
+AMN_NAMESPACE_CLOSE_SCOPE // namespace amn
 
 #endif // AMN_APPLICATION_APPLICATION_H
 

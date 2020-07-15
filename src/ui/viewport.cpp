@@ -16,6 +16,11 @@ ViewportUI::ViewportUI(View* parent, VIEWPORT_MODE mode):
 BaseUI(parent, "Viewport")
 {
   std::cout << "CONSTRUCT VIEWPORT" << std::endl;
+  _flags = ImGuiWindowFlags_None
+    | ImGuiWindowFlags_NoResize
+    | ImGuiWindowFlags_NoTitleBar
+    | ImGuiWindowFlags_NoScrollbar
+    | ImGuiWindowFlags_NoMove;
   _texture = 0;
   _mode = mode;
   _pixels = NULL;
@@ -49,9 +54,18 @@ void ViewportUI::Init()
   GLCheckError("INIT VIEWPORT");  
 
   _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/"), excludedPaths);
-  _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
-  //_engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
-  //_engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
+  switch (_mode) {
+  case OPENGL:
+    _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
+    break;
+  case LOFI:
+    _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+    break;
+  case EMBREE:
+    _engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
+    break;
+  }
+  
   std::cout << "CURRENT RENDERER : " << _engine->GetCurrentRendererId().GetText() << std::endl;
 
   pxr::GlfSimpleMaterial material;
@@ -70,6 +84,23 @@ void ViewportUI::Init()
 
   Resize();
 
+  /*
+  glEnable(GL_DEPTH_TEST);
+  size_t imageWidth = 512;
+  size_t imageHeight = 512;
+  std::string imagePath = "E:/Projects/RnD/Amnesie/build/src/Release/";
+  pxr::GfVec2i renderResolution(imageWidth, imageHeight);
+
+  pxr::GlfDrawTargetRefPtr drawTarget = pxr::GlfDrawTarget::New(renderResolution);
+  drawTarget->Bind();
+
+  drawTarget->AddAttachment("color",
+    GL_RGBA, GL_FLOAT, GL_RGBA);
+  drawTarget->AddAttachment("depth",
+    GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+
+  glViewport(0, 0, imageWidth, imageHeight);
+  */
   std::cout << "Hydra Enabled : " << pxr::UsdImagingGLEngine::IsHydraEnabled() << std::endl;
   _initialized = true;
 }
@@ -207,6 +238,9 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
 {
   if (action == GLFW_PRESS) {
     switch (key) {
+    case GLFW_KEY_A:
+      _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
+      break;
     case GLFW_KEY_F:
       _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
       break;
@@ -225,21 +259,25 @@ bool ViewportUI::Draw()
   float h = _parent->GetHeight();
   float wh = GetWindowHeight();
 
-  glEnable(GL_SCISSOR_TEST);
-  glScissor(x, wh - (y + h), w, h);
-  glViewport(x,wh - (y + h), w, h);
-
-  // clear to black
-  glClearColor(0.0, 0.0, 0.0, 1.0 );
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //glEnable(GL_SCISSOR_TEST);
+  //glScissor(x, wh - (y + h), w, h);
+  //glViewport(x,wh - (y + h), w, h);
+  //glViewport(0, 0, w, h);
 
   Application* app = GetApplication();
   if (app->GetStage() != nullptr) {
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
+    //_engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
+      pxr::GfVec4d(
+        0.0,
+        0.0,
+        static_cast<double>(w),
+        static_cast<double>(h)));
+    /*_engine->SetRenderViewport(
       pxr::GfVec4f(x, y, w , h)
-    );
+    );*/
     _engine->SetCameraState(
       _camera->GetViewMatrix(),
       _camera->GetProjectionMatrix()
@@ -274,7 +312,37 @@ bool ViewportUI::Draw()
   */
   //_engine->PrepareBatch(_stages[0]->GetPseudoRoot());
   //_engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
+    _drawTarget->Bind();
+    glViewport(0, 0, w, h);
+    // clear to black
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
+    _drawTarget->Unbind();
+
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(x, wh - (y + h), w, h);
+    //glViewport(x,wh - (y + h), w, h);
+    //glViewport(0, 0, w, h);
+    ImGui::Begin(_name.c_str(), NULL, _flags);
+
+    ImGui::SetWindowPos(_parent->GetMin());
+    ImGui::SetWindowSize(_parent->GetSize());
+
+    std::cout << "DRAW TARGET COLOR : " << 
+      _drawTarget->GetAttachment("color")->GetGlTextureName() << std::endl;
+
+    ImGui::GetWindowDrawList()->AddImage(
+      (ImTextureID)_drawTarget->GetAttachment("color")->GetGlTextureName(),
+      _parent->GetMin(),
+      _parent->GetMax(),
+      ImVec2(0,1),
+      ImVec2(1,0));
+
+    ImGui::End();
+    
+
     //_engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 1));
     glDisable(GL_SCISSOR_TEST);
 
@@ -336,6 +404,7 @@ pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
   */
  return pxr::GfVec4f();
 }
+
 void ViewportUI::Resize()
 {
   if(_parent->GetWidth() <= 0 || _parent->GetHeight() <= 0)_valid = false;
@@ -346,18 +415,22 @@ void ViewportUI::Resize()
     _camera->GetFov(),
     pxr::GfCamera::FOVHorizontal
   );
+
+  pxr::GfVec2i renderResolution(GetWidth(), GetHeight());
+  _drawTarget = pxr::GlfDrawTarget::New(renderResolution);
+  _drawTarget->Bind();
+
+  _drawTarget->AddAttachment("color",
+    GL_RGBA, GL_FLOAT, GL_RGBA);
+  _drawTarget->AddAttachment("depth",
+    GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+  _drawTarget->Unbind();
 }
 
 
 pxr::GfFrustum 
 ViewportUI::_ComputePickFrustum(int x, int y)
 {
-  pxr::GfFrustum cameraFrustum = _camera->_GetFrustum();
-
-  std::cout << "Y : " << y << ", WY : " << GetY() << std::endl;
-  std::cout << " PICK X : " << (x - GetX()) << std::endl;
-  std::cout << " PICK Y : " << (y - GetY()) << std::endl;
-
   // normalize position and pick size by the viewport size
   pxr::GfVec2d point(
     (double)(x - GetX()) / (double)GetWidth(),
@@ -375,6 +448,7 @@ ViewportUI::_ComputePickFrustum(int x, int y)
   // picking.
   //inImageBounds = (abs(point[0]) <= 1.0 and abs(point[1]) <= 1.0)
 
+  pxr::GfFrustum cameraFrustum = _camera->_GetFrustum();
   return cameraFrustum.ComputeNarrowedFrustum(point, size);
 
   /*
@@ -404,9 +478,6 @@ ViewportUI::_ComputePickFrustum(int x, int y)
     return (inImageBounds, cameraFrustum.ComputeNarrowedFrustum(point, size))
     */
 }
-
-
-
 
 bool ViewportUI::Pick(int x, int y)
 {

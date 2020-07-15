@@ -1,44 +1,41 @@
 
-#include "engine.h"
 #include "pxr/imaging/glf/glew.h"
 #include "pxr/imaging/glf/drawTarget.h"
+#include "pxr/base/tf/diagnostic.h"
+#include "pxr/base/tf/callContext.h"
+#include "pxr/base/tf/getenv.h"
 #include "pxr/imaging/hd/engine.h"
 #include "pxr/imaging/hd/tokens.h"
 #include "pxr/imaging/hd/camera.h"
 #include "pxr/imaging/hd/rendererPlugin.h"
 #include "pxr/imaging/hd/rendererPluginRegistry.h"
 #include "pxr/imaging/hd/unitTestDelegate.h"
+#include "pxr/imaging/hgi/tokens.h"
+#include "pxr/usdImaging/usdImaging/delegate.h"
 #include "pxr/imaging/hdx/renderTask.h"
 #include "pxr/imaging/cameraUtil/conformWindow.h"
 
+#include "engine.h"
 
 #include <iostream>
 
-
 AMN_NAMESPACE_OPEN_SCOPE
-/*
-void
-SetCamera(pxr::GfMatrix4d const &modelViewMatrix,
-  pxr::GfMatrix4d const &projectionMatrix,
-  pxr::GfVec4d const &viewport)
-{
-  _sceneDelegate->UpdateCamera(
-    _cameraId, HdCameraTokens->worldToViewMatrix, VtValue(modelViewMatrix));
-  _sceneDelegate->UpdateCamera(
-    _cameraId, HdCameraTokens->projectionMatrix, VtValue(projectionMatrix));
-  // Baselines for tests were generated without constraining the view
-  // frustum based on the viewport aspect ratio.
-  _sceneDelegate->UpdateCamera(
-    _cameraId, HdCameraTokens->windowPolicy,
-    VtValue(CameraUtilDontConform));
 
-  pxr::HdSprim const *cam = _renderIndex->GetSprim(HdPrimTypeTokens->camera,
-    _cameraId);
-  TF_VERIFY(cam);
-  _renderPassState->SetCameraAndViewport(
-    dynamic_cast<pxr::HdCamera const *>(cam), viewport);
+Engine::Engine()
+{
+
+} 
+
+Engine::~Engine()
+{
+
 }
-*/
+
+bool Engine::SetRendererPlugin(const pxr::TfToken& id)
+{
+  return true;
+}
+
 void RunHydra()
 {
   // Get the renderer plugin and create a new render delegate and index.
