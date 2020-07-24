@@ -2,6 +2,7 @@
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
+#include "../ui/style.h"
 #include "menu.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -83,6 +84,12 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
   testItem.AddItem(parent, "Child1", "", true, true, (MenuPressedFunc)&TestMenuCallback, args);
   testItem.AddItem(parent, "Child2", "", true, false, (MenuPressedFunc)&TestMenuCallback, args);
   testItem.AddItem(parent, "Child3", "", false, false, (MenuPressedFunc)&TestMenuCallback, args);
+
+  _flags =
+    ImGuiWindowFlags_None
+    | ImGuiWindowFlags_NoTitleBar
+    | ImGuiWindowFlags_NoMove
+    | ImGuiWindowFlags_NoResize;
 }
 
 // destructor
@@ -166,7 +173,22 @@ static void ShowExampleMenuFile()
 // overrides
 bool MenuUI::Draw()
 {  
+  ImGui::PushStyleColor(ImGuiCol_Header, AMN_BACKGROUND_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, AMN_ALTERNATE_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, AMN_SELECTED_COLOR);
   Window* window = GetWindow();
+  /*
+  static bool open;
+  ImGui::Begin("MenuBar", &open, _flags);
+  ImGui::SetWindowPos(_parent->GetMin());
+  ImGui::SetWindowSize(_parent->GetSize());
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+  drawList->AddRectFilled(
+    _parent->GetMin(),
+    _parent->GetMax(),
+    ImGuiCol_WindowBg
+  );
+  */
   if (ImGui::BeginMainMenuBar())
   {
     ImGui::PushFont(window->GetBoldFont(0));
@@ -227,12 +249,13 @@ bool MenuUI::Draw()
     ImGui::PopFont();
     ImGui::EndMainMenuBar();
   }
-
+  ImGui::PopStyleColor(3);
+  
   return
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
-    ImGui::IsAnyWindowHovered();
-
+    ImGui::IsAnyWindowHovered() ||
+    ImGui::IsAnyMouseDown();
 } 
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -7,6 +7,7 @@
 #include <pxr/base/tf/instantiateType.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
+
 class NewSceneNotice : public pxr::TfNotice
 {
 public:
@@ -17,6 +18,18 @@ private:
 static void OnNewScene()
 {
   NewSceneNotice().Send();
+}
+
+class TimeChangedNotice : public pxr::TfNotice
+{
+public:
+  TimeChangedNotice() {};
+private:
+};
+
+static void OnTimeChanged()
+{
+  TimeChangedNotice().Send();
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

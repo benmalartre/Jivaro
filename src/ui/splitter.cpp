@@ -1,6 +1,7 @@
 #include "splitter.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "../ui/style.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -64,10 +65,14 @@ Splitter::Pick(int x, int y)
 void 
 Splitter::Draw()
 {
-  ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
+  static bool open;
+  ImGui::Begin("Splitter", &open, _flags);
+  ImGui::SetWindowPos(ImVec2(0, 0));
+  ImGui::SetWindowSize(ImVec2(_width, _height));
+
+  ImDrawList* draw_list = ImGui::GetWindowDrawList();
   pxr::GfVec2f sMin, sMax;
-  static ImVec4 colf = ImVec4(0.46f, 0.56f, 0.76f, 1.0f);
-  const ImU32 col = ImColor(colf);
+  const ImU32 col = ImColor(AMN_ALTERNATE_COLOR);
   for(auto view : _views)
   {
     if(view->GetFlag(View::LEAF)) continue;
@@ -79,6 +84,7 @@ Splitter::Draw()
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
     else ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
   }
+  ImGui::End();
 }
 
 View* 

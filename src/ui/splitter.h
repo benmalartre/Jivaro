@@ -16,20 +16,25 @@ enum BORDER
   LEFT    = 8
 };
 
-#define SPLITTER_THICKNESS 1
+#define SPLITTER_THICKNESS 1.0
 
 class Splitter
 {
 public: 
   Splitter():_pixels(NULL),_valid(false){
-    _flags = 0;
-    _flags |= ImGuiWindowFlags_NoTitleBar;
-    _flags |= ImGuiWindowFlags_NoScrollbar;
-    _flags |= ImGuiWindowFlags_NoMove;
-    _flags |= ImGuiWindowFlags_NoResize;
-    _flags |= ImGuiWindowFlags_NoCollapse;
-    _flags |= ImGuiWindowFlags_NoNav; 
-    _flags |= ImGuiWindowFlags_NoBackground;
+    _flags = 
+      ImGuiWindowFlags_None
+      | ImGuiWindowFlags_NoBackground
+      | ImGuiWindowFlags_NoDecoration
+      | ImGuiWindowFlags_NoInputs
+      | ImGuiWindowFlags_NoMouseInputs
+      | ImGuiWindowFlags_NoMove
+      | ImGuiWindowFlags_NoResize
+      | ImGuiWindowFlags_NoCollapse
+      | ImGuiWindowFlags_NoNav
+      | ImGuiWindowFlags_NoNavInputs
+      | ImGuiWindowFlags_NoTitleBar
+      | ImGuiWindowFlags_NoScrollbar;
   };
   
   ~Splitter(){

@@ -47,7 +47,7 @@ void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
   pxr::GfRange3d selRange = selBBox.ComputeAlignedRange();
   pxr::GfVec3d rangeSize = selRange.GetSize();
   
-  float frameFit = 2.f;
+  float frameFit = 1.1f;
   float selSize = rangeSize[0];
   if (rangeSize[1] > selSize)selSize = rangeSize[1];
   if (rangeSize[2] > selSize)selSize = rangeSize[2];

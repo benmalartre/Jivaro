@@ -69,11 +69,14 @@ add_executable(${TARGET}
   #embree/instance.cpp
   #embree/context.cpp
   #embree/device.cpp
+  app/time.cpp
   app/camera.cpp
   app/view.cpp
   app/window.cpp
   app/engine.cpp
   app/notice.cpp
+  app/picking.cpp
+  app/selection.cpp
   app/application.cpp
   tests/stageGraph.cpp
   tests/stageUI.cpp

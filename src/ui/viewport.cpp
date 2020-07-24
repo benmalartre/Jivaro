@@ -15,12 +15,13 @@ AMN_NAMESPACE_OPEN_SCOPE
 ViewportUI::ViewportUI(View* parent, VIEWPORT_MODE mode):
 BaseUI(parent, "Viewport")
 {
-  std::cout << "CONSTRUCT VIEWPORT" << std::endl;
   _flags = ImGuiWindowFlags_None
     | ImGuiWindowFlags_NoResize
     | ImGuiWindowFlags_NoTitleBar
     | ImGuiWindowFlags_NoScrollbar
-    | ImGuiWindowFlags_NoMove;
+    | ImGuiWindowFlags_NoMove
+    | ImGuiWindowFlags_NoDecoration;
+
   _texture = 0;
   _mode = mode;
   _pixels = NULL;
@@ -53,7 +54,7 @@ void ViewportUI::Init()
   pxr::SdfPathVector excludedPaths;
   GLCheckError("INIT VIEWPORT");  
 
-  _engine = new pxr::UsdImagingGLEngine(pxr::SdfPath("/"), excludedPaths);
+  _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
   switch (_mode) {
   case OPENGL:
     _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
@@ -283,7 +284,7 @@ bool ViewportUI::Draw()
       _camera->GetProjectionMatrix()
     );
   
-    _renderParams.frame = pxr::UsdTimeCode(app->GetActiveTime());
+    _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
     _renderParams.complexity = 1.0f;
     _renderParams.drawMode = pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
     _renderParams.showGuides = true;
@@ -315,12 +316,13 @@ bool ViewportUI::Draw()
     _drawTarget->Bind();
     glViewport(0, 0, w, h);
     // clear to black
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(0.25f, 0.25f, 0.25f, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
     _drawTarget->Unbind();
 
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_SCISSOR_TEST);
     glScissor(x, wh - (y + h), w, h);
     //glViewport(x,wh - (y + h), w, h);
@@ -329,32 +331,39 @@ bool ViewportUI::Draw()
 
     ImGui::SetWindowPos(_parent->GetMin());
     ImGui::SetWindowSize(_parent->GetSize());
-
-    std::cout << "DRAW TARGET COLOR : " << 
-      _drawTarget->GetAttachment("color")->GetGlTextureName() << std::endl;
-
-    ImGui::GetWindowDrawList()->AddImage(
+    
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    drawList->AddImage(
       (ImTextureID)_drawTarget->GetAttachment("color")->GetGlTextureName(),
       _parent->GetMin(),
       _parent->GetMax(),
       ImVec2(0,1),
-      ImVec2(1,0));
-
-    ImGui::End();
-    
+      ImVec2(1,0),
+      ImColor(255,255,255,255));
 
     //_engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 1));
     glDisable(GL_SCISSOR_TEST);
+    /*
+    ImGui::PushFont(GetWindow()->GetMediumFont(0));
+    std::string msg = "Hello Amnesie!";
+    drawList->AddText(
+      _parent->GetMin() + ImVec2(20, 20), 
+      0xFFFFFFFF, 
+      msg.c_str());
+    ImGui::PopFont();
+    */
+    ImGui::End();
 
     /*
     bool open;
     ImGui::Begin("ViewportOverlay", &open, ImGuiWindowFlags_NoDecoration);
-    ImGui::Text("FPS : %d", this->GetApplication()->GetFramerate());
-    //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::End();
     */
+    //ImGui::Text("FPS : %d", this->GetApplication()->GetFramerate());
+    //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    //ImGui::End();
+    
 
-    return false;
+    return true;
   }
   /*
   if(_pixels)
@@ -499,30 +508,36 @@ bool ViewportUI::Pick(int x, int y)
     &outHitInstancerPath,
     &outHitInstanceIndex,
     &outInstancerContext)) {
-    std::cout << "#############################################" << std::endl;
-    std::cout << "###   WE'VE GOT AN HIT !!" << std::endl;
-    std::cout << "###   HIT PRIM : " << outHitPrimPath << std::endl;
-    std::cout << "###   HIT POINT : " << outHitPoint << std::endl;
-    std::cout << "#############################################" << std::endl;
-
-    _engine->AddSelected(outHitPrimPath, -1);
-    GetApplication()->AddToSelection(outHitPrimPath);
+      _engine->AddSelected(outHitPrimPath, -1);
+      GetApplication()->AddToSelection(outHitPrimPath);
   }
-
-  //std::cout << "NUM SELECTED OBJECTS : " << _engine->_GetSelection().size() << std::endl;
-  /*
-  bool
-    UsdImagingGLEngine::TestIntersection(
-      const GfMatrix4d &viewMatrix,
-      const GfMatrix4d &projectionMatrix,
-      const UsdPrim& root,
-      const UsdImagingGLRenderParams& params,
-      GfVec3d *outHitPoint,
-      SdfPath *outHitPrimPath,
-      SdfPath *outHitInstancerPath,
-      int *outHitInstanceIndex,
-      HdInstancerContext *outInstancerContext)
-  */
 }
 
+/*
+pxr::HdSelectionSharedPtr
+ViewportUI::_Pick(pxr::GfVec2i const& startPos, pxr::GfVec2i const& endPos,
+  pxr::TfToken const& pickTarget)
+{
+  pxr::HdxPickHitVector allHits;
+  pxr::HdxPickTaskContextParams p;
+  p.resolution = pxr::HdxUnitTestUtils::CalculatePickResolution(
+    startPos, endPos, pxr::GfVec2i(4, 4));
+  p.pickTarget = pickTarget;
+  p.resolveMode = pxr::HdxPickTokens->resolveUnique;
+  p.viewMatrix = _camera->GetViewMatrix();
+  p.projectionMatrix = pxr::HdxUnitTestUtils::ComputePickingProjectionMatrix(
+    startPos, endPos, pxr::GfVec2i(GetWidth(), GetHeight()), _camera->_GetFrustum());
+  p.collection = _pickablesCol;
+  p.outHits = &allHits;
+
+  pxr::HdTaskSharedPtrVector tasks;
+  tasks.push_back(_renderIndex->GetTask(pxr::SdfPath("/pickTask")));
+  pxr::VtValue pickParams(p);
+  _engine->SetTaskContextData(HdxPickTokens->pickParams, pickParams);
+  _engine->Execute(_renderIndex.get(), &tasks);
+
+  return pxr::HdxUnitTestUtils::TranslateHitsToSelection(
+    p.pickTarget, pxr::HdSelection::HighlightModeSelect, allHits);
+}
+*/
 AMN_NAMESPACE_CLOSE_SCOPE

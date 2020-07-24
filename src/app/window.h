@@ -1,10 +1,12 @@
+#ifndef AMN_APP_WINDOW_H
+#define AMN_APP_WINDOW_H
 #pragma once
 
 #include "../common.h"
 #include "../utils/utils.h"
-#include "splitter.h"
+#include "../ui/splitter.h"
 #include "tools.h"
-#include "ui.h"
+#include "../ui/ui.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
 #include "pxr/imaging/glf/debugCodes.h"
@@ -196,3 +198,5 @@ public:
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_APP_WINDOW_H

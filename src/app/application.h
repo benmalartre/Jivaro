@@ -4,6 +4,8 @@
 #pragma once
 
 #include "../common.h"
+#include "selection.h"
+#include "time.h"
 #include "window.h"
 #include "view.h"
 #include "camera.h"
@@ -61,40 +63,12 @@ public:
   pxr::GfBBox3d GetSelectionBoundingBox();
   pxr::GfBBox3d GetStageBoundingBox();
 
+  // time
+  Time& GetTime() { return _time; };
+
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
   pxr::UsdStageRefPtr& GetStage() { return _stage; };
-
-  // time
-  inline float GetMinTime(){return _minTime;};
-  inline float GetStartTime(){return _startTime;};
-  inline float GetEndTime(){return _endTime;};
-  inline float GetMaxTime(){return _maxTime;};
-  inline float GetActiveTime(){return _activeTime;};
-  inline float GetFPS(){return _fps;};
-  inline float GetSpeed(){return _speed;};
-  inline bool GetLoop(){return _loop;};
-
-  inline void SetMinTime(float time){_minTime = time;};
-  inline void SetStartTime(float time){_startTime = time;};
-  inline void SetEndTime(float time){_endTime = time;};
-  inline void SetMaxTime(float time){_maxTime = time;};
-  inline void SetActiveTime(float time){_activeTime = time;};
-  inline void SetFPS(float fps){_fps = fps;};
-  inline void SetSpeed(float speed){_speed = speed;};
-  inline void SetLoop(bool loop){_loop = loop;};
-
-  void PreviousFrame();
-  void NextFrame();
-  void FirstFrame();
-  void LastFrame();
-  void StartPlayBack(bool backward=false);
-  void StopPlayBack();
-  void PlayBack();
-  bool IsPlaying(){return _playback;};
-
-  void ComputeFramerate(double T);
-  size_t GetFramerate() { return _framerate; };
 
 private:
   std::string                       _fileName;
@@ -102,7 +76,7 @@ private:
   std::vector<Window*>              _childWindow;
   //std::vector<pxr::UsdStageRefPtr>  _stages;
   pxr::UsdStageRefPtr               _stage;
-  std::vector<pxr::SdfPath>         _selection;
+  Selection                         _selection;
   //pxr::UsdGeomBBoxCache*            _bboxCache;
   //pxr::UsdGeomXformCache*           _xformCache;
 
@@ -114,22 +88,7 @@ private:
   PropertyUI*                       _property;
 
   // time
-  pxr::TfStopwatch                  _stopWatch;
-  float                             _activeTime;
-  float                             _startTime;
-  float                             _endTime;
-  float                             _minTime;
-  float                             _maxTime;
-  float                             _fps;
-  float                             _speed;
-  bool                              _loop;
-  bool                              _playForwardOrBackward;
-  bool                              _playback;
-  
-  double                            _lastT;
-  size_t                            _frameCount;
-  size_t                            _framerate;
-
+  Time                              _time;
 };
 
 extern Application* AMN_APPLICATION;

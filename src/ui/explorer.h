@@ -3,7 +3,7 @@
 #pragma once
 
 #include "../common.h"
-#include "../app/ui.h"
+#include "../ui/ui.h"
 #include "../utils/utils.h"
 #include <pxr/usd/usd/prim.h>
 
@@ -55,10 +55,6 @@ private:
   ImGuiTreeNodeFlags            _selectBaseFlags;
   Icon*                         _visibleIcon;
   Icon*                         _invisibleIcon;
-  ImVec4                        _backgroundColor;
-  ImVec4                        _alternateColor;
-  ImVec4                        _selectedColor;
-  ImVec4                        _hoveredColor;
   bool                          _needRefresh;
 };
 

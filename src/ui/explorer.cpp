@@ -1,10 +1,9 @@
-#pragma once
-
 #include "explorer.h"
 #include "../app/application.h"
 #include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/view.h"
+#include "../ui/style.h"
 #include <pxr/pxr.h>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/usd/usd/prim.h>
@@ -25,6 +24,10 @@ ExplorerUI::ExplorerUI(View* parent)
     | ImGuiWindowFlags_NoTitleBar
     | ImGuiWindowFlags_NoScrollbar
     | ImGuiWindowFlags_NoMove;
+
+  _selectBaseFlags =
+    ImGuiTreeNodeFlags_OpenOnArrow |
+    ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
   _parent->SetDirty();
   _visibleIcon = &AMN_ICONS[AMN_ICON_SMALL]["visible.png"];
@@ -58,26 +61,27 @@ void ExplorerUI::DrawItemBackground(ImDrawList* drawList,
 {
   if (!item) return;
   ImVec2 pos = ImGui::GetCursorPos();
+  const float width = (float)GetWidth();
   if (item->_selected) {
     drawList->AddRectFilled(
       { 0, pos.y },
-      { ImGui::GetWindowWidth(), pos.y + AMN_EXPLORER_LINE_HEIGHT },
-      ImColor(_selectedColor));
+      { width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
+      ImColor(AMN_SELECTED_COLOR));
   }
   else {
     if (flip)
       drawList->AddRectFilled(
         { 0, pos.y },
-        { ImGui::GetWindowWidth(), pos.y + AMN_EXPLORER_LINE_HEIGHT },
-        ImColor(_backgroundColor));
+        { width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
+        ImColor(AMN_BACKGROUND_COLOR));
     else
       drawList->AddRectFilled(
         { 0, pos.y },
-        { ImGui::GetWindowWidth(), pos.y + AMN_EXPLORER_LINE_HEIGHT },
-        ImColor(_alternateColor));
+        { width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
+        ImColor(AMN_ALTERNATE_COLOR));
   }
 
-  ImGui::SetCursorPos(ImVec2(0, pos.y + AMN_EXPLORER_LINE_HEIGHT));
+  ImGui::SetCursorPos(ImVec2(pos.x, pos.y + AMN_EXPLORER_LINE_HEIGHT));
   if (item->_expanded) {
     for (const auto child : item->_items) {
       flip = !flip;
@@ -88,8 +92,7 @@ void ExplorerUI::DrawItemBackground(ImDrawList* drawList,
 
 void ExplorerUI::DrawBackground()
 {
-  
-  auto* drawList = ImGui::GetBackgroundDrawList();
+  auto* drawList = ImGui::GetWindowDrawList();
   const auto& style = ImGui::GetStyle();
 
   float scrollOffsetH = ImGui::GetScrollX();
@@ -103,21 +106,28 @@ void ExplorerUI::DrawBackground()
   {
     clipRectMax.y -= style.ScrollbarSize;
   }
-
+ 
   drawList->PushClipRect(clipRectMin, clipRectMax);
   bool flip = false;
 
   drawList->AddRectFilled(
-    { 0, -scrollOffsetV },
-    { ImGui::GetWindowWidth(), -scrollOffsetV + AMN_EXPLORER_LINE_HEIGHT },
-    ImColor(1, 0, 0, 1));
+    _parent->GetMin(),
+    _parent->GetMax(),
+    ImColor(AMN_BACKGROUND_COLOR)
+  );
 
-  ImGui::SetCursorPos(ImVec2(0, -scrollOffsetV + AMN_EXPLORER_LINE_HEIGHT));
-  DrawItemBackground(drawList, _root, flip);
+  ImGui::SetCursorPos(
+    ImVec2(
+      _parent->GetX(), 
+      _parent->GetY() - scrollOffsetV + AMN_EXPLORER_LINE_HEIGHT));
+
+  for (auto& item : _root->_items) {
+    DrawItemBackground(drawList, item, flip);
+    flip = !flip;
+  }
   ImGui::SetCursorPos(ImVec2(0, AMN_EXPLORER_LINE_HEIGHT));
 
   drawList->PopClipRect();
-  
 }
 
 void ExplorerUI::DrawItemType(ExplorerItem* item)
@@ -128,9 +138,10 @@ void ExplorerUI::DrawItemType(ExplorerItem* item)
 
 void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
 {
+  const ImGuiStyle& style = ImGui::GetStyle();
   GLuint tex = item->_visible ? _visibleIcon->tex : _invisibleIcon->tex;
   ImVec4 col = heritedVisibility ?
-    ImVec4(0, 0, 0, 1) : ImVec4(0.33, 0.33, 0.33, 1);
+    style.Colors[ImGuiCol_Text] : style.Colors[ImGuiCol_TextDisabled];
 
   ImGui::ImageButton(
     (void*)tex,
@@ -138,7 +149,7 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
     ImVec2(0, 0),
     ImVec2(1, 1),
     0,
-    ImVec4(0, 0, 0, 0),
+    AMN_TRANSPARENT_COLOR,
     col);
 
   if (ImGui::IsItemClicked()) {
@@ -212,6 +223,25 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
 bool ExplorerUI::Draw()
 {
   if (!_initialized)Init();
+
+  /*
+  // setup colors
+  const size_t numColorIDs = 7;
+  int colorIDs[numColorIDs] = {
+    ImGuiCol_WindowBg,
+    ImGuiCol_Header,
+    ImGuiCol_HeaderHovered,
+    ImGuiCol_HeaderActive,
+    ImGuiCol_Button,
+    ImGuiCol_ButtonActive,
+    ImGuiCol_ButtonHovered
+  };
+  
+  for (size_t ic = 0; ic<numColorIDs; ++ic)
+    ImGui::PushStyleColor(
+      colorIDs[ic],
+      ImVec4(0, 0, 0, 0));
+      */
   //if (!_active)return false;
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
@@ -222,25 +252,10 @@ bool ExplorerUI::Draw()
   
   if (app->GetStage())
   {
-    // setup colors
-    const size_t numColorIDs = 7;
-    int colorIDs[numColorIDs] = {
-      ImGuiCol_WindowBg,
-      ImGuiCol_Header,
-      ImGuiCol_HeaderHovered,
-      ImGuiCol_HeaderActive,
-      ImGuiCol_Button,
-      ImGuiCol_ButtonActive,
-      ImGuiCol_ButtonHovered
-    };
-    for (int i = 0; i<numColorIDs; ++i)
-      ImGui::PushStyleColor(
-        colorIDs[i],
-        ImVec4(0, 0, 0, 0));
-    
+   
     // setup columns
     ImGui::Columns(3);
-    ImGui::SetColumnWidth(0, GetWidth() - 100);
+    ImGui::SetColumnWidth(0, _parent->GetWidth() - 100);
     ImGui::SetColumnWidth(1, 60);
     ImGui::SetColumnWidth(2, 40);
     
@@ -257,19 +272,22 @@ bool ExplorerUI::Draw()
     DrawBackground();
     
     ImGui::PushFont(GetWindow()->GetMediumFont(0));
-    DrawItem(_root, true);
+    for (auto& item : _root->_items) {
+      DrawItem(item, true);
+    }
     ImGui::PopFont();
-    
-    ImGui::PopStyleColor(numColorIDs);
   }
   
   ImGui::End();
 
-  return
+  //ImGui::PopStyleColor(numColorIDs);
+
+  return true;
+  /*
     ImGui::IsAnyItemHovered() ||
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
-    ImGui::IsAnyMouseDown();
+    ImGui::IsAnyMouseDown();*/
 }
 
 

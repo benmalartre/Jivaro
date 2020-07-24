@@ -1,5 +1,6 @@
 #include "timeline.h"
 #include "../app/application.h"
+#include "../app/time.h"
 #include "../utils/icons.h"
 #include <functional>
 
@@ -33,14 +34,15 @@ void TimelineUI::Init()
 void TimelineUI::Update()
 {
   Application* app = AMN_APPLICATION;
-  _minTime = app->GetMinTime();
-  _startTime = app->GetStartTime();
-  _endTime = app->GetEndTime();
-  _maxTime = app->GetMaxTime();
-  _currentTime = app->GetActiveTime();
-  _loop = app->GetLoop();
-  _fps = app->GetFPS();
-  _playing = app->IsPlaying();
+  Time& time = app->GetTime();
+  _minTime = time.GetMinTime();
+  _startTime = time.GetStartTime();
+  _endTime = time.GetEndTime();
+  _maxTime = time.GetMaxTime();
+  _currentTime = time.GetActiveTime();
+  _loop = time.GetLoop();
+  _fps = time.GetFPS();
+  _playing = time.IsPlaying();
   _parent->SetDirty();
 }
 
@@ -55,13 +57,13 @@ void TimelineUI::ValidateTime()
   else if (_currentTime > _endTime)_currentTime = _endTime;
 
   Application* app = AMN_APPLICATION;
-  app->SetMinTime(_minTime);
-  app->SetStartTime(_startTime);
-  app->SetEndTime(_endTime);
-  app->SetMaxTime(_maxTime);
-  app->SetActiveTime(_currentTime);
-  app->SetLoop(_loop);
- 
+  Time& time = app->GetTime();
+  time.SetMinTime(_minTime);
+  time.SetStartTime(_startTime);
+  time.SetEndTime(_endTime);
+  time.SetMaxTime(_maxTime);
+  time.SetActiveTime(_currentTime);
+  time.SetLoop(_loop);
 }
 
 void TimelineUI::StartStopPlayback(TimelineUI* ui)
@@ -121,23 +123,23 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _minTime != app->GetMinTime())
+  if (!ImGui::IsItemActive() && _minTime != app->GetTime().GetMinTime())
   {
     ValidateTime();
   }
-  ImGui::SameLine(); //HelpMarker("Minimum Time");
+  AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetMediumFont(0));
+  ImGui::SameLine(); 
 
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _startTime != app->GetStartTime())
+  if (!ImGui::IsItemActive() && _startTime != app->GetTime().GetStartTime())
   {
     ValidateTime();
   }
-  ImGui::SameLine(); //HelpMarker("Start Time");
+  ImGui::SameLine(); 
 
   float cy = ImGui::GetCursorPosY();
-  //ImGui::SetCursorPosY(cy - 8);
   // play button
   Icon* icon = NULL;
   icon = &AMN_ICONS[AMN_ICON_SMALL]["firstframe.png"];
@@ -178,18 +180,18 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _currentTime != app->GetActiveTime())
+  if (!ImGui::IsItemActive() && _currentTime != app->GetTime().GetActiveTime())
   {
     ValidateTime();
   }
-  ImGui::SameLine(); //HelpMarker("Current Time");
+  ImGui::SameLine(); 
 
   ImGui::SetCursorPosX(width - 140);
 
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _endTime != app->GetEndTime())
+  if (!ImGui::IsItemActive() && _endTime != app->GetTime().GetEndTime())
   {
     ValidateTime();
   }
@@ -198,7 +200,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _maxTime != app->GetMaxTime())
+  if (!ImGui::IsItemActive() && _maxTime != app->GetTime().GetMaxTime())
   {
     ValidateTime();
   }
@@ -225,7 +227,7 @@ void TimelineUI::DrawTimeSlider()
   const ImVec4* colors = style->Colors;
   static ImColor backColor(colors[ImGuiCol_FrameBgHovered]);
   static ImColor frontColor(colors[ImGuiCol_FrameBgActive]);
-  static ImColor frameColor(colors[ImGuiCol_PlotLines]);
+  static ImColor frameColor(colors[ImGuiCol_Text]);
   static ImColor sliderColor(colors[ImGuiCol_PlotHistogram]);
 
   // draw background
@@ -243,29 +245,29 @@ void TimelineUI::DrawTimeSlider()
 
   Application* app = AMN_APPLICATION;
 
-  int numFrames = (app->GetEndTime() - app->GetStartTime());
+  int numFrames = (app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
   float incr = 1 / (float)numFrames;
   for (int i = 0; i < numFrames; ++i)
   {
     float perc = i * incr;
-    if (((int)(i - app->GetStartTime()) % (int)_fps) == 0)
+    if (((int)(i - app->GetTime().GetStartTime()) % (int)_fps) == 0)
     {
       pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin);
       pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
-      drawList->AddLine(p1, p2, frameColor, 2);
+      drawList->AddLine(p1, p2, frameColor, 1);
     }
     else
     {
       pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin * 0.30 + ymid * 0.70);
       pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
-      drawList->AddLine(p1, p2, frameColor, 2);
+      drawList->AddLine(p1, p2, frameColor, 1);
     }
   }
 
   // draw slider
   float sliderPerc =
-    (float)(app->GetActiveTime() - app->GetStartTime()) /
-    (float)(app->GetEndTime() - app->GetStartTime());
+    (float)(app->GetTime().GetActiveTime() - app->GetTime().GetStartTime()) /
+    (float)(app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
   float sliderX = (xmin * (1 - sliderPerc) + xmax * sliderPerc);
   drawList->AddRectFilled(
     pxr::GfVec2f(sliderX - 2, ymin),

@@ -1,7 +1,7 @@
 #include "view.h"
 #include "window.h"
-#include "ui.h"
-#include "splitter.h"
+#include "../ui/ui.h"
+#include "../ui/splitter.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>
 
@@ -160,10 +160,10 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
 {
   if(GetFlag(HORIZONTAL))
   { 
-    sMin[0] = GetMin()[0];
-    sMax[0] = GetMax()[0];
+    sMin[0] = GetMin()[0] - SPLITTER_THICKNESS;
+    sMax[0] = GetMax()[0] + SPLITTER_THICKNESS;
   
-    int h = GetMin()[1] + (GetMax()[1] - GetMin()[1]) * (GetPerc());
+    int h = GetMin()[1] + (GetMax()[1] - GetMin()[1]) * GetPerc();
     sMin[1] = h - SPLITTER_THICKNESS;
     sMax[1] = h + SPLITTER_THICKNESS;
     sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > height) ? height : sMin[1]);
@@ -171,11 +171,11 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
   }
   else
   {
-    int w = GetMin()[0] + (GetMax()[0]-GetMin()[0]) * (GetPerc());
+    int w = GetMin()[0] + (GetMax()[0] - GetMin()[0]) * GetPerc();
     sMin[0] = w - SPLITTER_THICKNESS;
     sMax[0] = w + SPLITTER_THICKNESS;
-    sMin[1] = GetMin()[1];
-    sMax[1] = GetMax()[1];
+    sMin[1] = GetMin()[1] - SPLITTER_THICKNESS;
+    sMax[1] = GetMax()[1] + SPLITTER_THICKNESS;
     sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > width) ? width : sMin[1]);
     sMax[1]= (sMax[1] < 0) ? 0 : ((sMax[1] > width) ? width : sMax[1]);
   }
@@ -228,8 +228,8 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
     ratio[0] = 1 / ((double)(_max[0] - _min[0]) / (double)w);
     ratio[1] = 1 / ((double)(_max[1] - _min[1]) / (double)h);
   }
-  _min = pxr::GfVec2f(x+SPLITTER_THICKNESS, y+SPLITTER_THICKNESS);
-  _max = pxr::GfVec2f(x+w-2*SPLITTER_THICKNESS, y+h-2*SPLITTER_THICKNESS);
+  _min = pxr::GfVec2f(x , y);
+  _max = pxr::GfVec2f(x + w, y + h);
   
   if(!GetFlag(LEAF))
   {

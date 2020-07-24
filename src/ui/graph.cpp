@@ -95,12 +95,15 @@ void GraphUI::DrawGrid()
   const float baseX = _parent->GetX();
   const float baseY = _parent->GetY();
 
-  ImGui::PushClipRect(ImVec2(baseX, baseY), ImVec2(baseX + width, baseY + height), true);
+  ImGui::PushClipRect(
+    _parent->GetMin(), 
+    _parent->GetMax(), 
+    true);
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(
-    ImVec2(baseX, baseY),
-    ImVec2(baseX + width, baseY + height),
+    _parent->GetMin(),
+    _parent->GetMax(),
     ImGuiCol_WindowBg);
 
   float step = 32 * _scale;

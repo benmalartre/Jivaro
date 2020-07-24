@@ -1,8 +1,9 @@
 #include "toolbar.h"
 #include "../app/view.h"
 #include "../app/window.h"
-#include "../app/ui.h"
-#include "../widgets/icon.h"
+#include "../ui/ui.h"
+#include "../ui/style.h"
+#include "../ui/icon.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -11,9 +12,31 @@ static void OnTranslateCallback()
   std::cout << "ON TRANSLATE CALLBACK!!!" << std::endl;
 }
 
-ToolbarItem::ToolbarItem(BaseUI* ui, const std::string label, const std::string shortcut, bool selected,
-  bool enabled, ToolbarPressedFunc func, const pxr::VtArray<pxr::VtValue> args)
-  : ui(ui), label(label), shortcut(shortcut), selected(selected), enabled(enabled), func(func), args(args)
+static void OnRotateCallback()
+{
+  std::cout << "ON ROTATE CALLBACK!!!" << std::endl;
+}
+
+static void OnScaleCallback()
+{
+  std::cout << "ON SCALE CALLBACK!!!" << std::endl;
+}
+
+static void OnSelectCallback()
+{
+  std::cout << "ON SELECT CALLBACK!!!" << std::endl;
+}
+
+ToolbarItem::ToolbarItem(BaseUI* ui, const std::string label, const std::string shortcut, Icon* icon,
+  bool toggable, bool enabled, IconPressedFunc func, const pxr::VtArray<pxr::VtValue> args)
+  : ui(ui)
+  , label(label)
+  , shortcut(shortcut)
+  , icon(icon)
+  , toggable(toggable)
+  , enabled(enabled)
+  , func(func)
+  , args(args)
 {
 
 }
@@ -21,56 +44,14 @@ ToolbarItem::ToolbarItem(BaseUI* ui, const std::string label, const std::string 
 bool ToolbarItem::Draw()
 {
   Window* window = ui->GetView()->GetWindow();
-  ImGui::SetCursorPos(ImVec2(4, 4));
-
-  /*
-  const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO", "PPPP", "QQQQQQQQQQ", "RRR", "SSSS" };
-  static const char* current_item = NULL;
-
-  ImGui::PushItemWidth(120);
-  if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
-  {
-    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-    {
-      bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
-      if (ImGui::Selectable(items[n], is_selected))
-        current_item = items[n];
-      if (is_selected)
-        ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
-    }
-    ImGui::EndCombo();
-  }
-  ImGui::PopItemWidth();
-
-  ImGui::SameLine();
-  */ 
-  ImGui::PushFont(window->GetRegularFont(0));
-  Icon* icon = &AMN_ICONS[AMN_ICON_MEDIUM]["select.png"];
-  AddIconButton<IconPressedFunc>(
-    icon,
-    (IconPressedFunc)OnTranslateCallback
-    );
-  ImGui::SameLine();
   
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM]["rotate.png"];
+  ImGui::PushFont(window->GetRegularFont(0));
+  
   AddIconButton<IconPressedFunc>(
     icon,
-    (IconPressedFunc)OnTranslateCallback
+    func
     );
-
   ImGui::SameLine();
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM]["translate.png"];
-  AddIconButton<IconPressedFunc>(
-    icon,
-    (IconPressedFunc)OnTranslateCallback
-    );
-
-  ImGui::SameLine();
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM]["scale.png"];
-  AddIconButton<IconPressedFunc>(
-    icon,
-    (IconPressedFunc)OnTranslateCallback
-    );
 
   ImGui::PopFont();
   return false;
@@ -78,9 +59,21 @@ bool ToolbarItem::Draw()
 
 ToolbarUI::ToolbarUI(View* parent, const std::string& name) :BaseUI(parent, name) 
 {
-  ToolbarItem item(this, "Translate", "T", false,
-    true, (ToolbarPressedFunc)&OnTranslateCallback);
-  _items.push_back(item);
+  ToolbarItem selectItem(this, "Select", "Space", &AMN_ICONS[AMN_ICON_MEDIUM]["select.png"], false,
+    true, (IconPressedFunc)&OnSelectCallback);
+  _items.push_back(selectItem);
+
+  ToolbarItem translateItem(this, "Translate", "T", &AMN_ICONS[AMN_ICON_MEDIUM]["translate.png"], false,
+    true, (IconPressedFunc)&OnTranslateCallback);
+  _items.push_back(translateItem);
+
+  ToolbarItem rotateItem(this, "Rotate", "R", &AMN_ICONS[AMN_ICON_MEDIUM]["rotate.png"], false,
+    true, (IconPressedFunc)&OnRotateCallback);
+  _items.push_back(rotateItem);
+
+  ToolbarItem scaleItem(this, "Scale", "S", &AMN_ICONS[AMN_ICON_MEDIUM]["scale.png"], false,
+    true, (IconPressedFunc)&OnScaleCallback);
+  _items.push_back(scaleItem);
 }
 
 ToolbarUI::~ToolbarUI() {}
@@ -92,24 +85,23 @@ bool ToolbarUI::Draw()
     | ImGuiWindowFlags_NoResize
     | ImGuiWindowFlags_NoTitleBar
     | ImGuiWindowFlags_NoMove
-    | ImGuiWindowFlags_NoScrollbar;
+    | ImGuiWindowFlags_NoScrollbar
+    | ImGuiWindowFlags_NoDecoration;
 
   ImGui::Begin(_name.c_str(), &opened, flags);
-  pxr::GfVec4f color(
-    RANDOM_0_1,
-    RANDOM_0_1,
-    RANDOM_0_1,
-    1.f
-  );
+  ImGui::PushClipRect(
+    _parent->GetMin(),
+    _parent->GetMax(), 
+    false);
 
   ImGui::SetWindowSize(_parent->GetSize());
   ImGui::SetWindowPos(_parent->GetMin());
  
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImGui::SetCursorPosY(4.f);
   for (auto& item : _items)item.Draw();
-
+  ImGui::PopClipRect();
   ImGui::End();
-
+  return true;
   return ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
     ImGui::IsAnyItemHovered() ||

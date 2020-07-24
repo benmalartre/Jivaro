@@ -1,14 +1,14 @@
 #include "../utils/nfd.hpp"
 #include "../utils/files.h"
-#include "../widgets/viewport.h"
-#include "../widgets/menu.h"
-#include "../widgets/graph.h"
-#include "../widgets/timeline.h"
-#include "../widgets/dummy.h"
-#include "../widgets/toolbar.h"
-#include "../widgets/explorer.h"
-#include "../widgets/property.h"
-#include "../widgets/curveEditor.h"
+#include "../ui/viewport.h"
+#include "../ui/menu.h"
+#include "../ui/graph.h"
+#include "../ui/timeline.h"
+#include "../ui/dummy.h"
+#include "../ui/toolbar.h"
+#include "../ui/explorer.h"
+#include "../ui/property.h"
+#include "../ui/curveEditor.h"
 
 #include <pxr/base/tf/debug.h>
 #include <pxr/base/tf/refPtr.h>
@@ -44,21 +44,19 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(NULL),_minTime(1),_maxTime(101),_startTime(1),
-  _endTime(101),_activeTime(1),_speed(1),_fps(24),_loop(false),_playback(false),
-  _framerate(0),_frameCount(0),_lastT(0),_stage(nullptr)
+  _mainWindow(NULL),_stage(nullptr)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
+  _time.Init(1, 101, 24);
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(NULL),_minTime(1),_maxTime(101),_startTime(1),
-  _endTime(101),_activeTime(1),_speed(1),_fps(24),_loop(false),_playback(false),
-  _framerate(0), _frameCount(0), _lastT(0),_stage(nullptr)
+  _mainWindow(NULL),_stage(nullptr)
 {
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
+  _time.Init(1, 101, 24);
 };
 
 // destructor
@@ -263,7 +261,6 @@ void
 Application::Init()
 {
   //pxr::TfErrorMark mark;
-  //RunHydra();
   
   // If no error messages were logged, return success.
   
@@ -277,8 +274,8 @@ Application::Init()
   }
   */
   std::string filename =
-    "E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
-    //"E:/Projects/RnD/USD_BUILD/assets/animX/layered_anim.usda";
+    //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
+    "E:/Projects/RnD/USD_BUILD/assets/animX/layered_anim.usda";
     //"E:/Projects/RnD/USD_BUILD/assets/Contour/JackTurbulized.usda";
     //"E:/Projects/RnD/USD/extras/usd/examples/usdGeomExamples/basisCurves.usda";
     //"E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd";
@@ -309,7 +306,7 @@ Application::Init()
   View* timelineView = bottomView->GetRight();
   View* centralView = _mainWindow->SplitView(bottomView->GetLeft(), 0.6, true);
   View* middleView = centralView->GetLeft();
-  View* topView = _mainWindow->SplitView(mainView->GetLeft(), 0.5, true, View::LFIXED, 24);
+  View* topView = _mainWindow->SplitView(mainView->GetLeft(), 0.5, true, View::LFIXED, 20);
 
   _mainWindow->SplitView(middleView, 0.9, false);
   
@@ -389,89 +386,6 @@ void Application::Update()
   
 }
 
-void Application::ComputeFramerate(double T)
-{
-  _frameCount++;
-
-  if (T - _lastT >= 1.0)
-  {
-    _framerate = _frameCount;
-
-    _frameCount = 0;
-    _lastT = T;
-  }
-}
-// time
-void Application::PreviousFrame()
-{
-  float currentTime = _activeTime - _speed;
-  if(currentTime < _startTime)
-  {
-    if(_loop)_activeTime = _endTime;
-    else _activeTime = _startTime;
-  }
-  else _activeTime = currentTime;
-  
-  _timeline->Update();
-  _viewport->Update();
-}
-
-void Application::NextFrame()
-{
- float currentTime = _activeTime + _speed;
-  if(currentTime > _endTime)
-  {
-    if(_loop)_activeTime = _startTime;
-    else _activeTime = _endTime;
-  }
-  else _activeTime = currentTime;
-  
-  _timeline->Update();
-  _viewport->Update();
-}
-
-void Application::FirstFrame()
-{
-  _activeTime = _startTime;
-  _timeline->Update();
-  _viewport->Update();
-}
-
-void Application::LastFrame()
-{
-  _activeTime = _endTime;
-  _timeline->Update();
-  _viewport->Update();
-}
-
-void Application::StartPlayBack(bool backward)
-{
-  _stopWatch.Reset();
-  _playback = true;
-  _stopWatch.Start();
-  _playForwardOrBackward = backward;
-  PlayBack();
-}
-
-void Application::StopPlayBack()
-{
-  _stopWatch.Stop();
-  _playback=false;
-}
-
-void Application::PlayBack()
-{
-  _stopWatch.Stop();
-  if(_stopWatch.GetMilliseconds()>1000/_fps)
-  {
-    if(_playForwardOrBackward)PreviousFrame();
-    else NextFrame();
-    _stopWatch.Reset();
-    _stopWatch.Start();
-  }
- 
-  Update();
-} 
 
 void Application::OpenScene(const std::string& filename)
 {
@@ -493,41 +407,41 @@ void
 Application::MainLoop()
 {
   _mainWindow->MainLoop();
+  /*
   if (_stage) {
     pxr::SdfLayerRefPtr flattened = _stage->Flatten();
     if (flattened)
       flattened->Export("E:/Projects/RnD/USD_BUILD/assets/animX/flattened.usda");
   }
+  */
 }
 
 // selection
 void 
 Application::SetSelection(const pxr::SdfPathVector& selection)
 {
-  _selection = selection;
+  _selection.Clear();
+  for (auto& selected : selection) {
+    _selection.AddItem(selected);
+  }
 }
 
 void 
 Application::AddToSelection(const pxr::SdfPath& path)
 {
-  for (const auto& selected : _selection) {
-    if (path == selected)return;
-  }
-  _selection.push_back(path);
+  _selection.AddItem(path);
 }
 
 void 
 Application::RemoveFromSelection(const pxr::SdfPath& path)
 {
-  for (auto& s = _selection.begin(); s < _selection.end(); ++s) {
-    if (path == *s)_selection.erase(s);
-  }
+  _selection.RemoveItem(path);
 }
 
 void 
 Application::ClearSelection()
 {
-  _selection.clear();
+  _selection.Clear();
 }
 
 pxr::GfBBox3d
@@ -536,7 +450,7 @@ Application::GetStageBoundingBox()
   pxr::GfBBox3d bbox;
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
-    pxr::UsdTimeCode(_activeTime), purposes, false, false);
+    pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
   return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
 }
 
@@ -546,12 +460,19 @@ Application::GetSelectionBoundingBox()
   pxr::GfBBox3d bbox;
   pxr::TfTokenVector purposes = {pxr::UsdGeomTokens->default_};
   pxr::UsdGeomBBoxCache bboxCache(
-    pxr::UsdTimeCode(_activeTime), purposes, false, false);
-  for (const auto& selected : _selection) {
-    pxr::UsdPrim& prim = _stage->GetPrimAtPath(selected);
-    if(prim.IsActive() && !prim.IsInMaster())
+    pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
+  for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
+    const SelectionItem& item = _selection[n];
+    if (item.type == SelectionType::OBJECT) {
+      pxr::UsdPrim& prim = _stage->GetPrimAtPath(item.path);
+      if (prim.IsActive() && !prim.IsInMaster())
         bbox = bbox.Combine(bbox, bboxCache.ComputeWorldBound(prim));
+    }
+    else if (item.type == SelectionType::COMPONENT) {
+
+    }
   }
+
   std::cout << "BBOX : " << bbox.GetRange() << std::endl;
   /*
   pxr::UsdPrim& prim = _stage->GetPrimAtPath(pxr::SdfPath("/Cube"));

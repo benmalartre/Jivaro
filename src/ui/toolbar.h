@@ -3,9 +3,9 @@
 #pragma once
 
 #include "../common.h"
-#include "../app/ui.h"
 #include "../utils/utils.h"
-#include "../widgets/icon.h"
+#include "../ui/ui.h"
+#include "../ui/icon.h"
 #include <vector>
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>
@@ -13,19 +13,20 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // callback prototype
-typedef void(*ToolbarPressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
+//typedef void(*ToolbarPressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
 struct ToolbarItem {
   BaseUI*                     ui;
   std::string                 label;
   std::string                 shortcut;
-  bool                        selected;
+  bool                        toggable;
   bool                        enabled;
 
   pxr::VtArray<pxr::VtValue>  args;
-  ToolbarPressedFunc          func;
+  IconPressedFunc          func;
+  Icon*                       icon;
 
-  ToolbarItem(BaseUI* ui, const std::string lbl, const std::string sht, bool sel,
-    bool enb, ToolbarPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
+  ToolbarItem(BaseUI* ui, const std::string lbl, const std::string sht, Icon* icon, bool sel,
+    bool enb, IconPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
 
   bool Draw();
 };
@@ -43,6 +44,7 @@ public:
 private:
   pxr::GfVec3f              _color;
   std::vector<ToolbarItem>  _items;
+  ToolbarItem*              _current;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

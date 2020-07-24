@@ -6,8 +6,8 @@
 #include "../graph/graph.h"
 #include "../graph/connectableAPI.h"
 #include "../graph/stage.h"
-#include "../widgets/node.h"
-#include "../widgets/graph.h"
+#include "../ui/node.h"
+#include "../ui/graph.h"
 
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/attribute.h>

@@ -13,11 +13,11 @@
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdLux/domeLight.h>
-#include <pxr/usdImaging/usdImagingGL/engine.h>
 #include <pxr/base/gf/camera.h>
 #include "pxr/imaging/glf/simpleMaterial.h"
 #include "pxr/imaging/glf/simpleLight.h"
 #include "pxr/imaging/glf/simpleLightingContext.h"
+#include "../app/engine.h"
 
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -62,6 +62,9 @@ class ViewportUI : public BaseUI
     void Update();
     pxr::GfFrustum _ComputePickFrustum(int x, int y);
     bool Pick(int x, int y);
+    /*
+    pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos,
+      pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);*/
     
     
   private:
@@ -79,7 +82,7 @@ class ViewportUI : public BaseUI
     bool                  _valid;
 
     // usd imaging engine
-    pxr::UsdImagingGLEngine*          _engine;
+    Engine*                           _engine;
     pxr::UsdImagingGLRenderParams     _renderParams;
     pxr::UsdPrim                      _root;
     pxr::UsdLuxDomeLight              _light;
