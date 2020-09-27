@@ -24,6 +24,9 @@ else()
     set(LIB_STATIC_EXT ".lib")
 endif()
 
+# nfd (native file dialog)
+set(NFD_INCLUDE_DIR "./utils/nfd/include")
+
 # glfw
 if(NOT DEFINED GLFW_DIR)
 	message(FATAL_ERROR "No GLFW_DIR variable set! GLFW installation path must be passed to cmake!!!")
@@ -78,7 +81,7 @@ foreach(USD_LIB_NAME IN LISTS USD_LIB_NAMES)
 endforeach()
 
 # python
-find_package (Python2 COMPONENTS Interpreter Development)
+find_package(Python2 COMPONENTS Interpreter Development)
 
 # boost
 if(UNIX)
@@ -95,7 +98,7 @@ set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
   program_options
-  python27
+  python
   regex
 )
 

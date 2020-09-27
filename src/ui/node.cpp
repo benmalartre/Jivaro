@@ -395,7 +395,7 @@ void NodeUI::Draw(GraphUI* editor)
     ImGui::SetWindowFontScale(1.0);
     ImGui::PushFont(window->GetMediumFont(0));
     ComputeSize();
-
+    ImGui::PopFont();
     ImGui::SetWindowFontScale(editor->GetFontScale());
     ImGui::PushFont(window->GetMediumFont(editor->GetFontIndex()));
 

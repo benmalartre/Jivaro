@@ -79,11 +79,11 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
   //glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 
-  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  //glfwWindowHint(GLFW_STENCIL_BITS, 8);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
   _window = glfwCreateWindow(mode->width, mode->height, "AMINA.0.0",  monitor, NULL);
   _width = mode->width;
@@ -103,11 +103,11 @@ _pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
   _shared = true;
   //glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
-  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  //glfwWindowHint(GLFW_STENCIL_BITS, 8);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_STENCIL_BITS, 8);
   
   _window = glfwCreateWindow(_width,_height,"AMINA.0.0",NULL,NULL);
 

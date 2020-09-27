@@ -41,7 +41,7 @@ public:
   void DrawCurve(pxr::UsdAnimXCurve* crv);
   void DrawCurves();
 
-  void SetLayer(pxr::SdfLayerHandle& layer);
+  void SetLayer(pxr::SdfLayerHandle layer);
   void SetDatas(const pxr::UsdAnimXDataRefPtr& datas);
   void PopulateCurves();
   /*

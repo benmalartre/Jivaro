@@ -101,8 +101,8 @@ static void IconButton(Icon* icon, FuncT func, ArgsT... args)
 {
   ImGui::BeginGroup();
   ImGui::Image(
-    (ImTextureID)(intptr_t)icon->_tex,
-    ImVec2(icon->_size, icon->_size)
+    (ImTextureID)(intptr_t)icon->tex,
+    ImVec2(icon->size, icon->size)
   );
   ImGui::EndGroup();
 }

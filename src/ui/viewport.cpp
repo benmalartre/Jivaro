@@ -334,7 +334,7 @@ bool ViewportUI::Draw()
     
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     drawList->AddImage(
-      (ImTextureID)_drawTarget->GetAttachment("color")->GetGlTextureName(),
+      (ImTextureID)(size_t)_drawTarget->GetAttachment("color")->GetGlTextureName(),
       _parent->GetMin(),
       _parent->GetMax(),
       ImVec2(0,1),
@@ -387,7 +387,7 @@ bool ViewportUI::Draw()
     glDisable(GL_SCISSOR_TEST);
   }
   */
-  
+  return false;
 }
 
 // Conform the camera viewport to the camera's aspect ratio,
@@ -510,7 +510,9 @@ bool ViewportUI::Pick(int x, int y)
     &outInstancerContext)) {
       _engine->AddSelected(outHitPrimPath, -1);
       GetApplication()->AddToSelection(outHitPrimPath);
+    return true;
   }
+  return false;
 }
 
 /*

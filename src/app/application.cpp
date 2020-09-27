@@ -1,4 +1,4 @@
-#include "../utils/nfd.hpp"
+#include "../utils/nfd/include/nfd.h"
 #include "../utils/files.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
@@ -273,6 +273,7 @@ Application::Init()
     std::cout << "HYDRA SCENE DELEGATE FAILED" << std::endl;
   }
   */
+ #ifdef _WIN32
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
     "E:/Projects/RnD/USD_BUILD/assets/animX/layered_anim.usda";
@@ -283,6 +284,10 @@ Application::Init()
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
     //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
+#else
+  std::string filename = 
+    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
+#endif
 
   // build test scene
   //pxr::TestScene(filename);
@@ -389,16 +394,25 @@ void Application::Update()
 
 void Application::OpenScene(const std::string& filename)
 {
-  NFD::Guard nfdGuard;
-  NFD::UniquePath outPath;
-  nfdfilteritem_t filterItem[2] = { { "Usd File", "usd,usdc,usda,usdz" } };
-  nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 2);
-  if (result == NFD_OKAY)
+
+  nfdchar_t *outPath = NULL;
+  nfdresult_t result = NFD_OpenDialog( "usd,usdc,usda,usdz", NULL, &outPath );
+  if ( result == NFD_OKAY )
   {
-    _stage = pxr::UsdStage::Open(outPath.get());
+    std::cout << "NEW FILE : " << outPath << std::endl;
+    _stage = pxr::UsdStage::Open(outPath);
     OnNewScene();
     std::cout << "SET PROPERTY PRIM : " << _stage->GetDefaultPrim().GetName() << std::endl;
     _property->SetPrim(_stage->GetDefaultPrim());
+    free(outPath);
+  }
+  else if ( result == NFD_CANCEL )
+  {
+      puts("User pressed cancel.");
+  }
+  else 
+  {
+      printf("Error: %s\n", NFD_GetError() );
   }
 }
 
@@ -464,7 +478,7 @@ Application::GetSelectionBoundingBox()
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const SelectionItem& item = _selection[n];
     if (item.type == SelectionType::OBJECT) {
-      pxr::UsdPrim& prim = _stage->GetPrimAtPath(item.path);
+      pxr::UsdPrim prim = _stage->GetPrimAtPath(item.path);
       if (prim.IsActive() && !prim.IsInMaster())
         bbox = bbox.Combine(bbox, bboxCache.ComputeWorldBound(prim));
     }

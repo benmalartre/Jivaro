@@ -186,7 +186,7 @@ void CurveEditorUI::MouseWheel(int x, int y)
 
 }
 
-void CurveEditorUI::SetLayer(pxr::SdfLayerHandle& layer)
+void CurveEditorUI::SetLayer(pxr::SdfLayerHandle layer)
 {
   std::cout << "### CURVE EDITOR UI : SET LAYER!!!" << std::endl;
   _layer = layer;

@@ -17,12 +17,12 @@ set(PUBLIC_HEADERS
 set(NATIVEFOLDERDIALOG_IMP "")
 if(UNIX)
 	if(APPLE)
-		set(NATIVEFOLDERDIALOG_IMP "utils/nfd_cocoa.cpp")
+		set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_cocoa.m")
 	else()
-		set(NATIVEFOLDERDIALOG_IMP "utils/nfd_gtk.cpp")
+		set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_gtk.cpp")
 	endif()
 else()	
-	set(NATIVEFOLDERDIALOG_IMP "utils/nfd_win.cpp")
+	set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_win.cpp")
 endif()
 add_executable(${TARGET}
   imgui/imgui_demo.cpp
@@ -35,7 +35,8 @@ add_executable(${TARGET}
   utils/shaders.cpp
   utils/screenSpaceQuad.cpp
   utils/icons.cpp
-  utils/nfd_win.cpp
+  utils/nfd/nfd_common.c
+  ${NATIVEFOLDERDIALOG_IMP}
   graph/deformableAPI.cpp
   graph/connectableAPI.cpp
   graph/coordSysAPI.cpp
@@ -85,6 +86,7 @@ add_executable(${TARGET}
 
 target_include_directories(${TARGET} 
   PUBLIC
+    ${NFD_INCLUDE_DIR}
     ${USD_INCLUDE_DIR}
     ${Python2_INCLUDE_DIRS}
     ${EMBREE_INCLUDE_DIRS}

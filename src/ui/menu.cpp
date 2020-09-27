@@ -57,6 +57,7 @@ bool MenuItem::Draw()
 
 static size_t fileIdx = 0;
 static void OpenFileCommand() {
+  std::cout << "OPEN FILE COMMAND CALLED!!!" << std::endl;
   switch (fileIdx % 3) {
     case 0:
       AMN_APPLICATION->OpenScene("E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd");

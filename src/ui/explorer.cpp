@@ -132,7 +132,7 @@ void ExplorerUI::DrawBackground()
 
 void ExplorerUI::DrawItemType(ExplorerItem* item)
 {
-  ImGui::Text(item->_prim.GetTypeName().GetText());
+  ImGui::Text("%s", item->_prim.GetTypeName().GetText());
   ImGui::NextColumn();
 }
 
@@ -144,7 +144,7 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
     style.Colors[ImGuiCol_Text] : style.Colors[ImGuiCol_TextDisabled];
 
   ImGui::ImageButton(
-    (void*)tex,
+    (void*)(size_t)tex,
     ImVec2(16, 16),
     ImVec2(0, 0),
     ImVec2(1, 1),

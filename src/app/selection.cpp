@@ -13,7 +13,7 @@ void Selection::AddItem(const pxr::SdfPath& path)
 
 void Selection::RemoveItem(const pxr::SdfPath& path)
 {
-  for (auto& it = _items.begin(); it < _items.end(); ++it) {
+  for (auto it = _items.begin(); it < _items.end(); ++it) {
     if (path == it->path) _items.erase(it);
   }
 }

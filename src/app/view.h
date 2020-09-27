@@ -33,8 +33,8 @@ public:
   Window* GetWindow();
   const float GetX(){return _min[0] + SPLITTER_THICKNESS;};
   const float GetY(){return _min[1] + SPLITTER_THICKNESS;};
-  const pxr::GfVec2f& GetMin(){return _min + pxr::GfVec2f(SPLITTER_THICKNESS);};
-  const pxr::GfVec2f& GetMax(){return _max - pxr::GfVec2f(SPLITTER_THICKNESS);};
+  const pxr::GfVec2f GetMin(){return _min + pxr::GfVec2f(SPLITTER_THICKNESS);};
+  const pxr::GfVec2f GetMax(){return _max - pxr::GfVec2f(SPLITTER_THICKNESS);};
   float GetWidth(){return (_max[0] - _min[0]) - 2*SPLITTER_THICKNESS;};
   float GetHeight(){return (_max[1] - _min[1]) - 2 * SPLITTER_THICKNESS;};
   pxr::GfVec2f GetSize(){return (_max - _min) - pxr::GfVec2f(2*SPLITTER_THICKNESS);};
