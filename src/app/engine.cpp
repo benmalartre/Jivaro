@@ -75,7 +75,6 @@ Engine::Engine(
       TF_CODING_ERROR("No renderer plugins found! "
         "Check before creation.");
     }
-
   }
   else {
     TF_CODING_ERROR("Hydra is NOT supported! ");

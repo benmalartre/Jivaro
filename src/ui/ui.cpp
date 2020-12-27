@@ -35,33 +35,33 @@ int BaseUI::GetWindowHeight(){return _parent->GetWindow()->GetHeight();};
 // ui dimensions
 ImVec2 BaseUI::GetPosition()
 {
-  if (_docked)return _parent->GetMin();
-  else return ImGui::GetWindowPos();
+  if (_docked)return ImVec2(_parent->GetMin()[0] - 1, _parent->GetMin()[1] - 1);
+  else return ImVec2(ImGui::GetWindowPos()[0] - 1, ImGui::GetWindowPos()[1] - 1);
 }
 
 int BaseUI::GetX()
 {
-  if(_docked)return _parent->GetMin()[0];
-  else return ImGui::GetWindowPos().x;
+  if(_docked)return _parent->GetMin()[0] - 1;
+  else return ImGui::GetWindowPos().x - 1;
 };
 
 int BaseUI::GetY()
 { 
-  if(_docked)return _parent->GetMin()[1];
+  if(_docked)return _parent->GetMin()[1] - 1;
     //return GetWindowHeight() - (_parent->GetMin()[1] + _parent->GetHeight());
-  else return ImGui::GetWindowPos().y;
+  else return ImGui::GetWindowPos().y - 1;
 };
 
 int BaseUI::GetWidth()
 { 
-  if(_docked)return _parent->GetWidth();
-  else return ImGui::GetWindowSize().x;
+  if(_docked)return _parent->GetWidth() + 2;
+  else return ImGui::GetWindowSize().x + 2;
 };
 
 int BaseUI::GetHeight()
 {
-  if(_docked)return _parent->GetHeight();
-  else return ImGui::GetWindowSize().y;
+  if(_docked)return _parent->GetHeight() + 2;
+  else return ImGui::GetWindowSize().y + 2;
 };
 
 Application* BaseUI::GetApplication()

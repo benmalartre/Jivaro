@@ -325,7 +325,7 @@ Application::Init()
   GraphUI* graph = new GraphUI(graphView, "Graph", true);
   //CurveEditorUI* curveEditor = new CurveEditorUI(graphView);
   
-  _viewport = new ViewportUI(viewportView, OPENGL);  
+  _viewport = new ViewportUI(viewportView, LOFI);  
   _timeline = new TimelineUI(timelineView);
 
   MenuUI* menu = new MenuUI(topView->GetLeft());

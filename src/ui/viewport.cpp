@@ -57,11 +57,17 @@ void ViewportUI::Init()
   _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
   switch (_mode) {
   case OPENGL:
-    _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
+  {
+    std::cout << "TRY TO SET OPENGL HYDRA BACKEND..." << std::endl;
+    bool loaded = _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
+    std::cout << "LOADED ? " << loaded << std::endl;
     break;
+  }
   case LOFI:
+  {
     _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
     break;
+  }
   case EMBREE:
     _engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
     break;

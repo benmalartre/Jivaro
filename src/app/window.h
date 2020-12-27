@@ -4,9 +4,9 @@
 
 #include "../common.h"
 #include "../utils/utils.h"
+#include "../ui/ui.h"
 #include "../ui/splitter.h"
 #include "tools.h"
-#include "../ui/ui.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
 #include "pxr/imaging/glf/debugCodes.h"

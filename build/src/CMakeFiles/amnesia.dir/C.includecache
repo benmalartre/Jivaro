@@ -6,23 +6,3 @@
 
 #IncludeRegexTransform: 
 
-../src/utils/nfd/include/nfd.h
-stddef.h
--
-
-/Users/benmalartre/Documents/RnD/amnesie/src/utils/nfd/nfd_common.c
-stdlib.h
--
-assert.h
--
-string.h
--
-nfd_common.h
-/Users/benmalartre/Documents/RnD/amnesie/src/utils/nfd/nfd_common.h
-
-/Users/benmalartre/Documents/RnD/amnesie/src/utils/nfd/nfd_common.h
-nfd.h
-/Users/benmalartre/Documents/RnD/amnesie/src/utils/nfd/nfd.h
-stdint.h
--
-

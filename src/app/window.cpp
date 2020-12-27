@@ -85,7 +85,7 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
-  _window = glfwCreateWindow(mode->width, mode->height, "AMINA.0.0",  monitor, NULL);
+  _window = glfwCreateWindow(mode->width, mode->height, "AMNESIA.0.0",  monitor, NULL);
   _width = mode->width;
   _height = mode->height;
   _shared = true;
@@ -177,9 +177,7 @@ Window::Init(Application* app)
 
     // ui
     SetupImgui();
-   
   }
-
 }
 
 // window destructor
@@ -198,7 +196,7 @@ Window::~Window()
 Window* 
 Window::CreateFullScreenWindow()
 {
-  return new Window(true, "Amina");
+  return new Window(true, "Amnesia");
 }
 
 // create standard window
@@ -206,7 +204,7 @@ Window::CreateFullScreenWindow()
 Window*
 Window::CreateStandardWindow(int width, int height)
 {
-  return new Window(width, height, "Amina");
+  return new Window(width, height, "Amnesia");
 }
 
 // child window
@@ -404,16 +402,20 @@ Window::Draw()
   ImGui::NewFrame();
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight()));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
-  if(_mainView)_mainView->Draw( _forceRedraw > 0 );
-  _forceRedraw = pxr::GfMax(0, _forceRedraw-1);
 
   // draw splitters
   _splitter->Draw();
+  
+  if(_mainView)_mainView->Draw( _forceRedraw > 0 );
+  _forceRedraw = pxr::GfMax(0, _forceRedraw-1);
 
   // render the imgui frame
   ImGui::Render();
+
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+  
 }
 
 // setup imgui
