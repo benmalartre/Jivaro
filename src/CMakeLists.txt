@@ -1,10 +1,10 @@
 set(TARGET amnesia)
 
 add_definitions(
-  -DIMGUI_IMPL_OPENGL_LOADER_GLEW
   -DTASKING_TBB
   -DNOMINMAX
   -DGRAPH_EXPORTS=1
+  -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM="${USD_INCLUDE_DIR}/pxr/imaging/garch/glApi.h"
 )
 
 set(PUBLIC_HEADERS
@@ -37,18 +37,18 @@ add_executable(${TARGET}
   utils/icons.cpp
   utils/nfd/nfd_common.c
   ${NATIVEFOLDERDIALOG_IMP}
-  graph/deformableAPI.cpp
-  graph/connectableAPI.cpp
-  graph/coordSysAPI.cpp
-  graph/input.cpp
-  graph/output.cpp
-  graph/node.cpp
-  graph/graph.cpp
-  graph/deformable.cpp
-  graph/layer.cpp
-  graph/stage.cpp
-  graph/tokens.cpp
-  graph/utils.cpp
+  #graph/deformableAPI.cpp
+  #graph/connectableAPI.cpp
+  #graph/coordSysAPI.cpp
+  #graph/input.cpp
+  #graph/output.cpp
+  #graph/node.cpp
+  #graph/graph.cpp
+  #graph/deformable.cpp
+  #graph/layer.cpp
+  #graph/stage.cpp
+  #graph/tokens.cpp
+  #graph/utils.cpp
   ui/ui.cpp
   ui/splitter.cpp
   ui/dummy.cpp
@@ -79,8 +79,8 @@ add_executable(${TARGET}
   app/picking.cpp
   app/selection.cpp
   app/application.cpp
-  tests/stageGraph.cpp
-  tests/stageUI.cpp
+  #tests/stageGraph.cpp
+  #tests/stageUI.cpp
   main.cpp
 )
 
@@ -103,6 +103,6 @@ target_link_libraries(${TARGET}
   ${EMBREE_LIBRARIES}
   ${TBB_LIBRARIES}
   ${GLFW}
-  ${GLEW_LIBRARY}
+  #${GLEW_LIBRARY}
   ${ADDITIONAL_LIBRARIES}
 )

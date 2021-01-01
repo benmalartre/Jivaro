@@ -230,165 +230,9 @@ src/CMakeFiles/amnesia.dir/utils/nfd/nfd_cocoa.m.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/amnesia.dir/utils/nfd/nfd_cocoa.m.s"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/utils/nfd/nfd_cocoa.m -o CMakeFiles/amnesia.dir/utils/nfd/nfd_cocoa.m.s
 
-src/CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.o: ../src/graph/deformableAPI.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/deformableAPI.cpp
-
-src/CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/deformableAPI.cpp > CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/deformableAPI.cpp -o CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.o: ../src/graph/connectableAPI.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/connectableAPI.cpp
-
-src/CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/connectableAPI.cpp > CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/connectableAPI.cpp -o CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.o: ../src/graph/coordSysAPI.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/coordSysAPI.cpp
-
-src/CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/coordSysAPI.cpp > CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/coordSysAPI.cpp -o CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/input.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/input.cpp.o: ../src/graph/input.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/CMakeFiles/amnesia.dir/graph/input.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/input.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/input.cpp
-
-src/CMakeFiles/amnesia.dir/graph/input.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/input.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/input.cpp > CMakeFiles/amnesia.dir/graph/input.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/input.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/input.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/input.cpp -o CMakeFiles/amnesia.dir/graph/input.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/output.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/output.cpp.o: ../src/graph/output.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/CMakeFiles/amnesia.dir/graph/output.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/output.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/output.cpp
-
-src/CMakeFiles/amnesia.dir/graph/output.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/output.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/output.cpp > CMakeFiles/amnesia.dir/graph/output.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/output.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/output.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/output.cpp -o CMakeFiles/amnesia.dir/graph/output.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/node.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/node.cpp.o: ../src/graph/node.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/amnesia.dir/graph/node.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/node.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/node.cpp
-
-src/CMakeFiles/amnesia.dir/graph/node.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/node.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/node.cpp > CMakeFiles/amnesia.dir/graph/node.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/node.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/node.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/node.cpp -o CMakeFiles/amnesia.dir/graph/node.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/graph.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/graph.cpp.o: ../src/graph/graph.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/CMakeFiles/amnesia.dir/graph/graph.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/graph.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/graph.cpp
-
-src/CMakeFiles/amnesia.dir/graph/graph.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/graph.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/graph.cpp > CMakeFiles/amnesia.dir/graph/graph.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/graph.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/graph.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/graph.cpp -o CMakeFiles/amnesia.dir/graph/graph.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/deformable.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/deformable.cpp.o: ../src/graph/deformable.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/CMakeFiles/amnesia.dir/graph/deformable.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/deformable.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/deformable.cpp
-
-src/CMakeFiles/amnesia.dir/graph/deformable.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/deformable.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/deformable.cpp > CMakeFiles/amnesia.dir/graph/deformable.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/deformable.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/deformable.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/deformable.cpp -o CMakeFiles/amnesia.dir/graph/deformable.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/layer.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/layer.cpp.o: ../src/graph/layer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/CMakeFiles/amnesia.dir/graph/layer.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/layer.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/layer.cpp
-
-src/CMakeFiles/amnesia.dir/graph/layer.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/layer.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/layer.cpp > CMakeFiles/amnesia.dir/graph/layer.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/layer.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/layer.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/layer.cpp -o CMakeFiles/amnesia.dir/graph/layer.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/stage.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/stage.cpp.o: ../src/graph/stage.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/CMakeFiles/amnesia.dir/graph/stage.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/stage.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/stage.cpp
-
-src/CMakeFiles/amnesia.dir/graph/stage.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/stage.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/stage.cpp > CMakeFiles/amnesia.dir/graph/stage.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/stage.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/stage.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/stage.cpp -o CMakeFiles/amnesia.dir/graph/stage.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/tokens.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/tokens.cpp.o: ../src/graph/tokens.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object src/CMakeFiles/amnesia.dir/graph/tokens.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/tokens.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/tokens.cpp
-
-src/CMakeFiles/amnesia.dir/graph/tokens.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/tokens.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/tokens.cpp > CMakeFiles/amnesia.dir/graph/tokens.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/tokens.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/tokens.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/tokens.cpp -o CMakeFiles/amnesia.dir/graph/tokens.cpp.s
-
-src/CMakeFiles/amnesia.dir/graph/utils.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/graph/utils.cpp.o: ../src/graph/utils.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object src/CMakeFiles/amnesia.dir/graph/utils.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/graph/utils.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/graph/utils.cpp
-
-src/CMakeFiles/amnesia.dir/graph/utils.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/graph/utils.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/graph/utils.cpp > CMakeFiles/amnesia.dir/graph/utils.cpp.i
-
-src/CMakeFiles/amnesia.dir/graph/utils.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/graph/utils.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/graph/utils.cpp -o CMakeFiles/amnesia.dir/graph/utils.cpp.s
-
 src/CMakeFiles/amnesia.dir/ui/ui.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/ui.cpp.o: ../src/ui/ui.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object src/CMakeFiles/amnesia.dir/ui/ui.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/CMakeFiles/amnesia.dir/ui/ui.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/ui.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/ui.cpp
 
 src/CMakeFiles/amnesia.dir/ui/ui.cpp.i: cmake_force
@@ -401,7 +245,7 @@ src/CMakeFiles/amnesia.dir/ui/ui.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/splitter.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/splitter.cpp.o: ../src/ui/splitter.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object src/CMakeFiles/amnesia.dir/ui/splitter.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/CMakeFiles/amnesia.dir/ui/splitter.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/splitter.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/splitter.cpp
 
 src/CMakeFiles/amnesia.dir/ui/splitter.cpp.i: cmake_force
@@ -414,7 +258,7 @@ src/CMakeFiles/amnesia.dir/ui/splitter.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/dummy.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/dummy.cpp.o: ../src/ui/dummy.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object src/CMakeFiles/amnesia.dir/ui/dummy.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/CMakeFiles/amnesia.dir/ui/dummy.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/dummy.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/dummy.cpp
 
 src/CMakeFiles/amnesia.dir/ui/dummy.cpp.i: cmake_force
@@ -427,7 +271,7 @@ src/CMakeFiles/amnesia.dir/ui/dummy.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/menu.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/menu.cpp.o: ../src/ui/menu.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object src/CMakeFiles/amnesia.dir/ui/menu.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/CMakeFiles/amnesia.dir/ui/menu.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/menu.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/menu.cpp
 
 src/CMakeFiles/amnesia.dir/ui/menu.cpp.i: cmake_force
@@ -440,7 +284,7 @@ src/CMakeFiles/amnesia.dir/ui/menu.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/node.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/node.cpp.o: ../src/ui/node.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object src/CMakeFiles/amnesia.dir/ui/node.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/CMakeFiles/amnesia.dir/ui/node.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/node.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/node.cpp
 
 src/CMakeFiles/amnesia.dir/ui/node.cpp.i: cmake_force
@@ -453,7 +297,7 @@ src/CMakeFiles/amnesia.dir/ui/node.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/graph.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/graph.cpp.o: ../src/ui/graph.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object src/CMakeFiles/amnesia.dir/ui/graph.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/amnesia.dir/ui/graph.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/graph.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/graph.cpp
 
 src/CMakeFiles/amnesia.dir/ui/graph.cpp.i: cmake_force
@@ -466,7 +310,7 @@ src/CMakeFiles/amnesia.dir/ui/graph.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/viewport.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/viewport.cpp.o: ../src/ui/viewport.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object src/CMakeFiles/amnesia.dir/ui/viewport.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/CMakeFiles/amnesia.dir/ui/viewport.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/viewport.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/viewport.cpp
 
 src/CMakeFiles/amnesia.dir/ui/viewport.cpp.i: cmake_force
@@ -479,7 +323,7 @@ src/CMakeFiles/amnesia.dir/ui/viewport.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/timeline.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/timeline.cpp.o: ../src/ui/timeline.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object src/CMakeFiles/amnesia.dir/ui/timeline.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/CMakeFiles/amnesia.dir/ui/timeline.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/timeline.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/timeline.cpp
 
 src/CMakeFiles/amnesia.dir/ui/timeline.cpp.i: cmake_force
@@ -492,7 +336,7 @@ src/CMakeFiles/amnesia.dir/ui/timeline.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/toolbar.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/toolbar.cpp.o: ../src/ui/toolbar.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object src/CMakeFiles/amnesia.dir/ui/toolbar.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/CMakeFiles/amnesia.dir/ui/toolbar.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/toolbar.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/toolbar.cpp
 
 src/CMakeFiles/amnesia.dir/ui/toolbar.cpp.i: cmake_force
@@ -505,7 +349,7 @@ src/CMakeFiles/amnesia.dir/ui/toolbar.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/explorer.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/explorer.cpp.o: ../src/ui/explorer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object src/CMakeFiles/amnesia.dir/ui/explorer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/CMakeFiles/amnesia.dir/ui/explorer.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/explorer.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/explorer.cpp
 
 src/CMakeFiles/amnesia.dir/ui/explorer.cpp.i: cmake_force
@@ -518,7 +362,7 @@ src/CMakeFiles/amnesia.dir/ui/explorer.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/property.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/property.cpp.o: ../src/ui/property.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building CXX object src/CMakeFiles/amnesia.dir/ui/property.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object src/CMakeFiles/amnesia.dir/ui/property.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/property.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/property.cpp
 
 src/CMakeFiles/amnesia.dir/ui/property.cpp.i: cmake_force
@@ -531,7 +375,7 @@ src/CMakeFiles/amnesia.dir/ui/property.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/ui/curveEditor.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/ui/curveEditor.cpp.o: ../src/ui/curveEditor.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building CXX object src/CMakeFiles/amnesia.dir/ui/curveEditor.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object src/CMakeFiles/amnesia.dir/ui/curveEditor.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/ui/curveEditor.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/ui/curveEditor.cpp
 
 src/CMakeFiles/amnesia.dir/ui/curveEditor.cpp.i: cmake_force
@@ -544,7 +388,7 @@ src/CMakeFiles/amnesia.dir/ui/curveEditor.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/time.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/time.cpp.o: ../src/app/time.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building CXX object src/CMakeFiles/amnesia.dir/app/time.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object src/CMakeFiles/amnesia.dir/app/time.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/time.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/time.cpp
 
 src/CMakeFiles/amnesia.dir/app/time.cpp.i: cmake_force
@@ -557,7 +401,7 @@ src/CMakeFiles/amnesia.dir/app/time.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/camera.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/camera.cpp.o: ../src/app/camera.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building CXX object src/CMakeFiles/amnesia.dir/app/camera.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object src/CMakeFiles/amnesia.dir/app/camera.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/camera.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/camera.cpp
 
 src/CMakeFiles/amnesia.dir/app/camera.cpp.i: cmake_force
@@ -570,7 +414,7 @@ src/CMakeFiles/amnesia.dir/app/camera.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/view.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/view.cpp.o: ../src/app/view.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building CXX object src/CMakeFiles/amnesia.dir/app/view.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object src/CMakeFiles/amnesia.dir/app/view.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/view.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/view.cpp
 
 src/CMakeFiles/amnesia.dir/app/view.cpp.i: cmake_force
@@ -583,7 +427,7 @@ src/CMakeFiles/amnesia.dir/app/view.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/window.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/window.cpp.o: ../src/app/window.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building CXX object src/CMakeFiles/amnesia.dir/app/window.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object src/CMakeFiles/amnesia.dir/app/window.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/window.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/window.cpp
 
 src/CMakeFiles/amnesia.dir/app/window.cpp.i: cmake_force
@@ -596,7 +440,7 @@ src/CMakeFiles/amnesia.dir/app/window.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/engine.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/engine.cpp.o: ../src/app/engine.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Building CXX object src/CMakeFiles/amnesia.dir/app/engine.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object src/CMakeFiles/amnesia.dir/app/engine.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/engine.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/engine.cpp
 
 src/CMakeFiles/amnesia.dir/app/engine.cpp.i: cmake_force
@@ -609,7 +453,7 @@ src/CMakeFiles/amnesia.dir/app/engine.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/notice.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/notice.cpp.o: ../src/app/notice.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_42) "Building CXX object src/CMakeFiles/amnesia.dir/app/notice.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object src/CMakeFiles/amnesia.dir/app/notice.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/notice.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/notice.cpp
 
 src/CMakeFiles/amnesia.dir/app/notice.cpp.i: cmake_force
@@ -622,7 +466,7 @@ src/CMakeFiles/amnesia.dir/app/notice.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/picking.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/picking.cpp.o: ../src/app/picking.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building CXX object src/CMakeFiles/amnesia.dir/app/picking.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object src/CMakeFiles/amnesia.dir/app/picking.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/picking.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/picking.cpp
 
 src/CMakeFiles/amnesia.dir/app/picking.cpp.i: cmake_force
@@ -635,7 +479,7 @@ src/CMakeFiles/amnesia.dir/app/picking.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/selection.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/selection.cpp.o: ../src/app/selection.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building CXX object src/CMakeFiles/amnesia.dir/app/selection.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object src/CMakeFiles/amnesia.dir/app/selection.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/selection.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/selection.cpp
 
 src/CMakeFiles/amnesia.dir/app/selection.cpp.i: cmake_force
@@ -648,7 +492,7 @@ src/CMakeFiles/amnesia.dir/app/selection.cpp.s: cmake_force
 
 src/CMakeFiles/amnesia.dir/app/application.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/app/application.cpp.o: ../src/app/application.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building CXX object src/CMakeFiles/amnesia.dir/app/application.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object src/CMakeFiles/amnesia.dir/app/application.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/app/application.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/app/application.cpp
 
 src/CMakeFiles/amnesia.dir/app/application.cpp.i: cmake_force
@@ -659,35 +503,9 @@ src/CMakeFiles/amnesia.dir/app/application.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/app/application.cpp.s"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/app/application.cpp -o CMakeFiles/amnesia.dir/app/application.cpp.s
 
-src/CMakeFiles/amnesia.dir/tests/stageGraph.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/tests/stageGraph.cpp.o: ../src/tests/stageGraph.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building CXX object src/CMakeFiles/amnesia.dir/tests/stageGraph.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/tests/stageGraph.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/tests/stageGraph.cpp
-
-src/CMakeFiles/amnesia.dir/tests/stageGraph.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/tests/stageGraph.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/tests/stageGraph.cpp > CMakeFiles/amnesia.dir/tests/stageGraph.cpp.i
-
-src/CMakeFiles/amnesia.dir/tests/stageGraph.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/tests/stageGraph.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/tests/stageGraph.cpp -o CMakeFiles/amnesia.dir/tests/stageGraph.cpp.s
-
-src/CMakeFiles/amnesia.dir/tests/stageUI.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
-src/CMakeFiles/amnesia.dir/tests/stageUI.cpp.o: ../src/tests/stageUI.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building CXX object src/CMakeFiles/amnesia.dir/tests/stageUI.cpp.o"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/tests/stageUI.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/tests/stageUI.cpp
-
-src/CMakeFiles/amnesia.dir/tests/stageUI.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/amnesia.dir/tests/stageUI.cpp.i"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/benmalartre/Documents/RnD/amnesie/src/tests/stageUI.cpp > CMakeFiles/amnesia.dir/tests/stageUI.cpp.i
-
-src/CMakeFiles/amnesia.dir/tests/stageUI.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/amnesia.dir/tests/stageUI.cpp.s"
-	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/benmalartre/Documents/RnD/amnesie/src/tests/stageUI.cpp -o CMakeFiles/amnesia.dir/tests/stageUI.cpp.s
-
 src/CMakeFiles/amnesia.dir/main.cpp.o: src/CMakeFiles/amnesia.dir/flags.make
 src/CMakeFiles/amnesia.dir/main.cpp.o: ../src/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building CXX object src/CMakeFiles/amnesia.dir/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object src/CMakeFiles/amnesia.dir/main.cpp.o"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/amnesia.dir/main.cpp.o -c /Users/benmalartre/Documents/RnD/amnesie/src/main.cpp
 
 src/CMakeFiles/amnesia.dir/main.cpp.i: cmake_force
@@ -712,18 +530,6 @@ amnesia_OBJECTS = \
 "CMakeFiles/amnesia.dir/utils/icons.cpp.o" \
 "CMakeFiles/amnesia.dir/utils/nfd/nfd_common.c.o" \
 "CMakeFiles/amnesia.dir/utils/nfd/nfd_cocoa.m.o" \
-"CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/input.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/output.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/node.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/graph.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/deformable.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/layer.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/stage.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/tokens.cpp.o" \
-"CMakeFiles/amnesia.dir/graph/utils.cpp.o" \
 "CMakeFiles/amnesia.dir/ui/ui.cpp.o" \
 "CMakeFiles/amnesia.dir/ui/splitter.cpp.o" \
 "CMakeFiles/amnesia.dir/ui/dummy.cpp.o" \
@@ -745,8 +551,6 @@ amnesia_OBJECTS = \
 "CMakeFiles/amnesia.dir/app/picking.cpp.o" \
 "CMakeFiles/amnesia.dir/app/selection.cpp.o" \
 "CMakeFiles/amnesia.dir/app/application.cpp.o" \
-"CMakeFiles/amnesia.dir/tests/stageGraph.cpp.o" \
-"CMakeFiles/amnesia.dir/tests/stageUI.cpp.o" \
 "CMakeFiles/amnesia.dir/main.cpp.o"
 
 # External object files for target amnesia
@@ -764,18 +568,6 @@ src/amnesia: src/CMakeFiles/amnesia.dir/utils/screenSpaceQuad.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/utils/icons.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/utils/nfd/nfd_common.c.o
 src/amnesia: src/CMakeFiles/amnesia.dir/utils/nfd/nfd_cocoa.m.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/deformableAPI.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/connectableAPI.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/coordSysAPI.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/input.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/output.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/node.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/graph.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/deformable.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/layer.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/stage.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/tokens.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/graph/utils.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/ui/ui.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/ui/splitter.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/ui/dummy.cpp.o
@@ -797,8 +589,6 @@ src/amnesia: src/CMakeFiles/amnesia.dir/app/notice.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/app/picking.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/app/selection.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/app/application.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/tests/stageGraph.cpp.o
-src/amnesia: src/CMakeFiles/amnesia.dir/tests/stageUI.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/main.cpp.o
 src/amnesia: src/CMakeFiles/amnesia.dir/build.make
 src/amnesia: /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config/libpython2.7.dylib
@@ -826,8 +616,10 @@ src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhdSt.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhdx.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhgi.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhf.dylib
+src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhio.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdGeom.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdLux.dylib
+src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdShade.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdUI.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdImaging.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdImagingGL.dylib
@@ -837,7 +629,6 @@ src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libtbb.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libtbbmalloc_proxy.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libtbbmalloc.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/glfw/build/src/libglfw3.a
-src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libGLEW.2.0.0.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libplug.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libgarch.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libndr.dylib
@@ -849,8 +640,10 @@ src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhdSt.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhdx.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhgi.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhf.dylib
+src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libhio.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdGeom.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdLux.dylib
+src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdShade.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdUI.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdImaging.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libusdImagingGL.dylib
@@ -860,9 +653,8 @@ src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libtbb.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libtbbmalloc_proxy.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libtbbmalloc.dylib
 src/amnesia: /Users/benmalartre/Documents/RnD/glfw/build/src/libglfw3.a
-src/amnesia: /Users/benmalartre/Documents/RnD/USD_BUILD/lib/libGLEW.2.0.0.dylib
 src/amnesia: src/CMakeFiles/amnesia.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Linking CXX executable amnesia"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/benmalartre/Documents/RnD/amnesie/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Linking CXX executable amnesia"
 	cd /Users/benmalartre/Documents/RnD/amnesie/build/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/amnesia.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

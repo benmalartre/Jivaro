@@ -7,7 +7,7 @@
 #include "../utils/utils.h"
 #include <pxr/pxr.h>
 
-#include <pxr/imaging/glf/glew.h>
+#include <pxr/imaging/garch/glApi.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
@@ -17,6 +17,7 @@
 #include "pxr/imaging/glf/simpleMaterial.h"
 #include "pxr/imaging/glf/simpleLight.h"
 #include "pxr/imaging/glf/simpleLightingContext.h"
+#include "pxr/imaging/glf/drawTarget.h"
 #include "../app/engine.h"
 
 

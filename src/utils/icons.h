@@ -9,9 +9,9 @@
 #include "glutils.h"
 #include "pxr/usd/ar/asset.h"
 #include "pxr/usd/ar/resolver.h"
-#include <pxr/imaging/glf/image.h>
-#include <pxr/imaging/glf/stb/stb_image.h>
-#include <pxr/imaging/glf/stb/stb_image_resize.h>
+#include <pxr/imaging/hio/image.h>
+#include <pxr/imaging/hio/stb_image.h>
+#include <pxr/imaging/hio/stb_image_resize.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 enum ICON_SIZE {
@@ -61,7 +61,7 @@ struct Icon {
 typedef std::vector<std::map<std::string, Icon> > AmnIconMap;
 extern AmnIconMap AMN_ICONS;
 
-void IconHoverDatas(pxr::GlfImage::StorageSpec* storage, int nchannels);
+void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels);
 void CreateIconFromImage(const std::string& filename,
   const std::string& name, ICON_SIZE size);
 void AMNInitializeIcons();

@@ -4,6 +4,8 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usdGeom/xformable.h>
+#include <pxr/usd/usdShade/nodeGraph.h>
+#include <pxr/usd/usdShade/shader.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -129,7 +131,7 @@ PortUI::PortUI(NodeUI* node, bool io, const std::string& label, pxr::UsdAttribut
   _size = pxr::GfVec2f(2.f * NODE_PORT_RADIUS);
 }
 
-PortUI::PortUI(NodeUI* node, const pxr::GraphInput& port)
+PortUI::PortUI(NodeUI* node, const pxr::UsdShadeInput& port)
   :ItemUI(GetColorFromAttribute(pxr::UsdAttribute(port)))
 {
   _node = node;
@@ -138,7 +140,7 @@ PortUI::PortUI(NodeUI* node, const pxr::GraphInput& port)
   _size = pxr::GfVec2f(2.f * NODE_PORT_RADIUS);
 }
 
-PortUI::PortUI(NodeUI* node, const pxr::GraphOutput& port)
+PortUI::PortUI(NodeUI* node, const pxr::UsdShadeOutput& port)
   :ItemUI(GetColorFromAttribute(pxr::UsdAttribute(port)))
 {
   _node = node;
@@ -273,10 +275,11 @@ NodeUI::NodeUI(const pxr::UsdPrim& prim)
   if(_prim.IsValid())
   {
     _name = prim.GetName();
-    if(_prim.IsA<pxr::GraphNode>())
+    /*
+    if(_prim.IsA<pxr::UsdShadeShader>())
     {
-      pxr::GraphNode node(_prim);
-      _inputs.resize(node.NumInputs());
+      pxr::UsdShadeShader node(_prim);
+      _inputs.resize(node.GetInputs().size());
       for(int i=0;i<_inputs.size();++i)
       {
         _inputs[i] = PortUI(this, node.GetInput(i));
@@ -293,6 +296,7 @@ NodeUI::NodeUI(const pxr::UsdPrim& prim)
     {
       //std::cout << "PRIM IS A GRAPH :D" << std::endl;
     }
+    */
   }
 }
 

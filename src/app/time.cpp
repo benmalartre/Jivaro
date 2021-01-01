@@ -11,6 +11,7 @@ void Time::Init(float start, float end, float fps)
   _maxTime = _endTime;
   _loop = false;
   _fps = fps;
+  _speed = 1.f;
   _playback = false;
   _playForwardOrBackward = false;
   _lastT = 0;
@@ -43,6 +44,7 @@ void Time::PreviousFrame()
 
 void Time::NextFrame()
 {
+  std::cout << "SPEED = " << _speed;
  float currentTime = _activeTime + _speed;
   if(currentTime > _endTime)
   {
@@ -80,6 +82,7 @@ void Time::StopPlayBack()
 void Time::PlayBack()
 {
   _stopWatch.Stop();
+  std::cout << "PLAYBACK CURRENT fRAME : " << _activeTime << std::endl;
   if(_stopWatch.GetMilliseconds()>1000/_fps)
   {
     if(_playForwardOrBackward)PreviousFrame();

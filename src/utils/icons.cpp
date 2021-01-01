@@ -4,7 +4,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 AmnIconMap AMN_ICONS = AmnIconMap(3);
 
-void IconHoverDatas(pxr::GlfImage::StorageSpec* storage, int nchannels)
+void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels)
 {
   uint32_t* pixels = (uint32_t*)storage->data;
   if (nchannels == 4)
@@ -32,14 +32,13 @@ void IconHoverDatas(pxr::GlfImage::StorageSpec* storage, int nchannels)
 void CreateIconFromImage(const std::string& filename,
   const std::string& name, ICON_SIZE index)
 {
-  pxr::GlfImageSharedPtr img = pxr::GlfImage::OpenForReading(filename);
+  pxr::HioImageSharedPtr img = pxr::HioImage::OpenForReading(filename);
   size_t s = (index + 1) * 16;
-  pxr::GlfImage::StorageSpec storage;
+  pxr::HioImage::StorageSpec storage;
   storage.width = s;
   storage.height = s ;
   storage.flipped = false;
-  storage.type = ICON_TYPE;
-  storage.format = ICON_FORMAT;
+  storage.format = pxr::HioFormat::HioFormatInt32Vec4;
   storage.data = new char[storage.width * storage.height * img->GetBytesPerPixel()];
 
   img->Read(storage);
@@ -76,7 +75,7 @@ void AMNInitializeIcons()
   {
     std::string name = GetFileName(f);
     std::string filename = iconDir + SEPARATOR + f;
-    if (pxr::GlfImage::IsSupportedImageFile(filename))
+    if (pxr::HioImage::IsSupportedImageFile(filename))
     {
       CreateIconFromImage(filename, name, AMN_ICON_SMALL);
       CreateIconFromImage(filename, name, AMN_ICON_MEDIUM);

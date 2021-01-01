@@ -63,8 +63,10 @@ list(APPEND USD_LIB_NAMES
   hdx
   hgi
   hf
+  hio
   usdGeom
   usdLux
+  usdShade
   usdUI
   usdImaging
   usdImagingGL

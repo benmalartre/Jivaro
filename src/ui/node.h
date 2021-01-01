@@ -3,12 +3,14 @@
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../utils/utils.h"
-#include "../graph/node.h"
-#include "../graph/graph.h"
+//#include "../graph/node.h"
+//#include "../graph/graph.h"
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/range2f.h>
 #include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/usdShade/input.h>
+#include <pxr/usd/usdShade/output.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
 
@@ -75,8 +77,8 @@ class PortUI : public ItemUI {
 public:
   PortUI(){};
   PortUI(NodeUI* node, bool io, const std::string& label, pxr::UsdAttribute& attr);
-  PortUI(NodeUI* node, const pxr::GraphInput& port);
-  PortUI(NodeUI* node, const pxr::GraphOutput& port);
+  PortUI(NodeUI* node, const pxr::UsdShadeInput& port);
+  PortUI(NodeUI* node, const pxr::UsdShadeOutput& port);
 
   bool Contains(const pxr::GfVec2f& position,
     const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;

@@ -9,7 +9,6 @@
 #include "tools.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
-#include "pxr/imaging/glf/debugCodes.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>

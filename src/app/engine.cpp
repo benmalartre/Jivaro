@@ -1,4 +1,4 @@
-#include "pxr/imaging/glf/glew.h"
+#include "pxr/imaging/garch/glApi.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
 #include "pxr/base/tf/envSetting.h"
@@ -30,8 +30,8 @@ void _InitGL()
 
   std::call_once(initFlag, [] {
 
-    // Initialize Glew library for GL Extensions if needed
-    pxr::GlfGlewInit();
+    // Initialize GL library for GL Extensions if needed
+    GarchGLApiLoad();
 
     // Initialize if needed and switch to shared GL context.
     pxr::GlfSharedGLContextScopeHolder sharedContext;

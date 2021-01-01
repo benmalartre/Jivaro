@@ -2,7 +2,7 @@
 #define AMN_UTILS_UTILS_H
 #pragma once
 
-#include <pxr/imaging/glf/glew.h>
+#include <pxr/imaging/garch/glApi.h>
 #include "../common.h"
 #include "../ui/style.h"
 #include "../imgui/imgui.h"

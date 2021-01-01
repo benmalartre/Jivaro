@@ -498,6 +498,7 @@ bool ViewportUI::Pick(int x, int y)
 {
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;
+  pxr::GfVec3d outHitNormal;
   pxr::SdfPath outHitPrimPath;
   pxr::SdfPath outHitInstancerPath;
   int outHitInstanceIndex;
@@ -510,6 +511,7 @@ bool ViewportUI::Pick(int x, int y)
     GetApplication()->GetStage()->GetPseudoRoot(),
     _renderParams,
     &outHitPoint,
+    &outHitNormal,
     &outHitPrimPath,
     &outHitInstancerPath,
     &outHitInstanceIndex,

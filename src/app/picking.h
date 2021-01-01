@@ -31,7 +31,7 @@
 #include "pxr/base/gf/matrix4d.h"
 #include "pxr/base/gf/vec2i.h"
 
-#include "pxr/imaging/glf/glew.h"
+#include "pxr/imaging/garch/glApi.h"
 #include "pxr/imaging/hd/engine.h"
 #include "pxr/imaging/hd/rprimCollection.h"
 #include "pxr/imaging/hdx/pickTask.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 // opengl
-#include <pxr/imaging/glf/glew.h>
+#include <pxr/imaging/garch/glApi.h>
 
 // system
 #include <iostream>

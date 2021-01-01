@@ -151,7 +151,7 @@ Window::Init(Application* app)
     if (_shared) {
       GetContextVersionInfos();
       // load opengl functions
-      pxr::GlfGlewInit();
+      GarchGLApiLoad();
       pxr::GlfSharedGLContextScopeHolder sharedContext;
       pxr::GlfContextCaps::InitInstance();
       pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
@@ -358,7 +358,7 @@ Window::BuildSplittersMap()
 void 
 Window::GetContextVersionInfos()
 {
-  // get GLFW, OpenGL version And GLEW Version:
+  // get GLFW, OpenGL version:
     _iOpenGLMajor = glfwGetWindowAttrib(_window, GLFW_CONTEXT_VERSION_MAJOR);
     _iOpenGLMinor = glfwGetWindowAttrib(_window, GLFW_CONTEXT_VERSION_MINOR);
     _iOpenGLRevision = glfwGetWindowAttrib(_window, GLFW_CONTEXT_REVISION);
@@ -405,7 +405,6 @@ Window::Draw()
 
   // draw splitters
   _splitter->Draw();
-  
   if(_mainView)_mainView->Draw( _forceRedraw > 0 );
   _forceRedraw = pxr::GfMax(0, _forceRedraw-1);
 

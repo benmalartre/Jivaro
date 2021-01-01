@@ -3,7 +3,7 @@
 #include "../common.h"
 #include <stdio.h>
 #include <string.h>
-#include <pxr/imaging/glf/glew.h>
+#include <pxr/imaging/garch/glApi.h>
 
 #include "files.h"
 
