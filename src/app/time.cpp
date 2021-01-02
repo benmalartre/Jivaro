@@ -4,6 +4,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 void Time::Init(float start, float end, float fps)
 {
+  std::cout << "TIME INIT !!!" << std::endl;
   _startTime = start;
   _minTime = _startTime;
   _activeTime = _startTime;
@@ -33,6 +34,7 @@ void Time::ComputeFramerate(double T)
 // time
 void Time::PreviousFrame()
 {
+  std::cout << "PREVIOUS FRAME !!!" << std::endl;
   float currentTime = _activeTime - _speed;
   if(currentTime < _startTime)
   {
@@ -44,8 +46,8 @@ void Time::PreviousFrame()
 
 void Time::NextFrame()
 {
-  std::cout << "SPEED = " << _speed;
- float currentTime = _activeTime + _speed;
+  std::cout << "NEXT FRAME !!!" << std::endl;
+  float currentTime = _activeTime + _speed;
   if(currentTime > _endTime)
   {
     if(_loop)_activeTime = _startTime;
@@ -68,8 +70,8 @@ void Time::StartPlayBack(bool backward)
 {
   _stopWatch.Reset();
   _playback = true;
-  _stopWatch.Start();
   _playForwardOrBackward = backward;
+  _stopWatch.Start();
   PlayBack();
 }
 
@@ -82,7 +84,6 @@ void Time::StopPlayBack()
 void Time::PlayBack()
 {
   _stopWatch.Stop();
-  std::cout << "PLAYBACK CURRENT fRAME : " << _activeTime << std::endl;
   if(_stopWatch.GetMilliseconds()>1000/_fps)
   {
     if(_playForwardOrBackward)PreviousFrame();

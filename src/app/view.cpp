@@ -80,9 +80,12 @@ View::Draw(bool forceRedraw)
     if(_right)_right->Draw(forceRedraw);
   }
   else {
-    if (_content && (forceRedraw || (GetFlag(INTERACTING) || GetFlag(DIRTY)))) {
-        if (!_content->Draw() && !forceRedraw)SetClean();
-    }   
+    bool bForceRedraw = GetFlag(FORCEREDRAW) ? true : forceRedraw;
+    if (_content && (bForceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+      if (!_content->Draw() && !bForceRedraw) {
+        SetClean();
+      }
+    } 
   }
 }
 

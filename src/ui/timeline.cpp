@@ -15,8 +15,8 @@ TimelineUI::TimelineUI(View* parent) :BaseUI(parent, "Timeline")
     | ImGuiWindowFlags_NoTitleBar
     | ImGuiWindowFlags_NoScrollbar
     | ImGuiWindowFlags_NoMove;
-
   _parent->SetDirty();
+  _parent->SetFlag(View::FORCEREDRAW);
 }
 
 // destructor
@@ -48,6 +48,10 @@ void TimelineUI::Update()
 
 void TimelineUI::ValidateTime()
 {
+  Application* app = AMN_APPLICATION;
+  Time& time = app->GetTime();
+
+  _currentTime = time.GetActiveTime();
   if (_minTime >= _maxTime)_maxTime = _minTime + 1;
   if (_endTime>_maxTime)_endTime = _maxTime;
   if (_startTime < _minTime)_startTime = _minTime;
@@ -56,8 +60,7 @@ void TimelineUI::ValidateTime()
   if (_currentTime < _startTime)_currentTime = _startTime;
   else if (_currentTime > _endTime)_currentTime = _endTime;
 
-  Application* app = AMN_APPLICATION;
-  Time& time = app->GetTime();
+  
   time.SetMinTime(_minTime);
   time.SetStartTime(_startTime);
   time.SetEndTime(_endTime);
@@ -66,28 +69,27 @@ void TimelineUI::ValidateTime()
   time.SetLoop(_loop);
 }
 
-void TimelineUI::StartStopPlayback(TimelineUI* ui)
+void TimelineUI::PlaybackCallback(TimelineUI* ui)
 {
-  if (ui->_playing)
-    std::cout << "MY FUCKIN STOP PLAY BACK!!!" << std::endl;
-  else
-    std::cout << "MY FUCKIN START PLAY BACK!!!" << std::endl;
   ui->_playing = 1 - ui->_playing;
 }
 
-void TimelineUI::SimpleCallback()
+void TimelineUI::FirstFrameCallback(TimelineUI* ui)
 {
-  std::cout << "DUMB DUMB :D!!!" << std::endl;
+  std::cout << "FIRST FRAME CALLBACK !!" << std::endl;
 }
 
-void TimelineUI::DifficultCallback(TimelineUI* ui, int x)
+void TimelineUI::LastFrameCallback(TimelineUI* ui)
 {
-  std::cout << "YUUUUUUPPPPIIIIII :D!!!" << x << std::endl;
+  std::cout << "LAST FRAME CALLBACK !!" << std::endl;
 }
 
-void TimelineUI::VeryDifficultCallback(TimelineUI* ui, int x, float y, const char* z)
+void TimelineUI::LoopCallback(TimelineUI* ui)
 {
-  std::cout << "YUUUUUUPPPPIIIIII :D!!!" << x << "," << y << "," << z << std::endl;
+  ui->_loop = 1 - ui->_loop;
+  Application* app = AMN_APPLICATION;
+  Time& time = app->GetTime();
+  time.SetLoop(ui->_loop);
 }
 
 void TimelineUI::MouseButton(int button, int action, int mods)
@@ -127,7 +129,7 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
-  AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetMediumFont(0));
+  AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
   ImGui::SetNextItemWidth(60);
@@ -137,6 +139,7 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
+  AttachTooltip("Start Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
   float cy = ImGui::GetCursorPosY();
@@ -145,7 +148,7 @@ void TimelineUI::DrawControls()
   icon = &AMN_ICONS[AMN_ICON_SMALL]["firstframe.png"];
   AddIconButton<IconPressedFunc>(
     icon,
-    (IconPressedFunc)SimpleCallback
+    (IconPressedFunc)FirstFrameCallback, this
     );
 
   if (!_playing) icon = &AMN_ICONS[AMN_ICON_SMALL]["playforward.png"];
@@ -153,26 +156,18 @@ void TimelineUI::DrawControls()
 
   AddIconButton<IconPressedFunc, TimelineUI*>(
     icon,
-    (IconPressedFunc)StartStopPlayback, this
-    );
+    (IconPressedFunc)PlaybackCallback, this);
 
   icon = &AMN_ICONS[AMN_ICON_SMALL]["lastframe.png"];
-  AddIconButton<IconPressedFunc, TimelineUI*, int>(
+  AddIconButton<IconPressedFunc, TimelineUI*>(
     icon,
-    (IconPressedFunc)DifficultCallback,
-    this,
-    666
-    );
+    (IconPressedFunc)LastFrameCallback, this);
 
   icon = &AMN_ICONS[AMN_ICON_SMALL]["loop.png"];
-  AddIconButton<IconPressedFunc, TimelineUI*, int, float, const char*>(
+  AddCheckableIconButton<IconPressedFunc, TimelineUI*>(
     icon,
-    (IconPressedFunc)VeryDifficultCallback,
-    this,
-    666,
-    7.654321,
-    "SATAN"
-    );
+    _loop,
+    (IconPressedFunc)LoopCallback, this);
 
   ImGui::SetCursorPosY(cy);
 
@@ -184,6 +179,7 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
+  AttachTooltip("Current Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
   ImGui::SetCursorPosX(width - 140);
@@ -204,6 +200,7 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
+  AttachTooltip("Maximum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine();
   ImGui::PopFont();
 }

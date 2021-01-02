@@ -24,7 +24,7 @@ BaseUI(parent, "Viewport")
 
   _texture = 0;
   _mode = mode;
-  _pixels = NULL;
+  _pixels = nullptr;
   _camera = new Camera("Camera");
   _valid = true;
   _camera->Set(pxr::GfVec3d(12,24,12),
@@ -32,11 +32,11 @@ BaseUI(parent, "Viewport")
               pxr::GfVec3d(0,1,0));
   _interact = false;
   _interactionMode = INTERACTION_NONE;
-  _engine = NULL;
+  _engine = nullptr;
+  _parent->SetFlag(View::FORCEREDRAW);
 
   pxr::TfWeakPtr<ViewportUI> me(this);
   pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
-  std::cout << "CONSTRUCTED VIEWPORT" << std::endl;
 }
 
 // destructor
@@ -85,9 +85,9 @@ void ViewportUI::Init()
   material.SetAmbient(pxr::GfVec4f(0.2,0.2,0.2, 1.0));
   auto lightingContext = pxr::GlfSimpleLightingContext::New();
 
-   _engine->SetLightingState(lights,
-                              material,
-                              pxr::GfVec4f(0.5,0.5,0.5,1.0));
+  _engine->SetLightingState(lights,
+                            material,
+                            pxr::GfVec4f(0.5,0.5,0.5,1.0));
 
   Resize();
 

@@ -26,10 +26,10 @@ public:
   void ValidateTime();
   void Update();
 
-  static void StartStopPlayback(TimelineUI* ui);
-  static void SimpleCallback();
-  static void DifficultCallback(TimelineUI* ui, int x);
-  static void VeryDifficultCallback(TimelineUI* ui, int x, float y, const char* z);
+  static void PlaybackCallback(TimelineUI* ui);
+  static void FirstFrameCallback(TimelineUI* ui);
+  static void LastFrameCallback(TimelineUI* ui);
+  static void LoopCallback(TimelineUI* ui);
 
 private:
   float               _currentTime;

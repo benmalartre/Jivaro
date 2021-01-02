@@ -388,7 +388,8 @@ Application::Init()
 
 void Application::Update()
 {
-  
+  if(_time.IsPlaying())_time.PlayBack();
+  _time.ComputeFramerate(glfwGetTime());
 }
 
 

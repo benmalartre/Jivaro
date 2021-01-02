@@ -516,13 +516,11 @@ void Window::MainLoop()
 {
   while(!glfwWindowShouldClose(_window))
   {
-    Time& time = _app->GetTime();
+    _app->Update();
     SetGLContext();
     //glfwWaitEventsTimeout(1.0/60.0);
     glfwPollEvents();
-    if(time.IsPlaying())time.PlayBack();
-    else _app->Update();
-
+    
     // main window
     Draw();
     glfwSwapBuffers(_window);
@@ -535,8 +533,6 @@ void Window::MainLoop()
         glfwSwapBuffers(child->GetGlfwWindow());
       }
     }
-    
-    time.ComputeFramerate(glfwGetTime());
   }
 }
 

@@ -125,6 +125,25 @@ bool AddIconButton(Icon* icon, FuncT func, ArgsT... args)
   return false;
 }
 
+template<typename FuncT, typename ...ArgsT>
+bool AddCheckableIconButton(Icon* icon, bool checked, FuncT func, ArgsT... args)
+{
+  if (ImGui::ImageButton(
+    (ImTextureID)(intptr_t)icon->tex,
+    ImVec2(icon->size, icon->size),
+    ImVec2(0, 0),
+    ImVec2(1, 1),
+    -1,
+    checked ? ImColor(255,128,64,100) : ImColor(0,0,0,0)))
+  {
+    func(args...);
+    ImGui::SameLine();
+    return true;
+  }
+  ImGui::SameLine();
+  return false;
+}
+
 // print vectors (debug)
 static void PrintVector(const pxr::GfVec2i& v, const char* t)
 {
