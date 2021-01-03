@@ -16,7 +16,7 @@ enum BORDER
   LEFT    = 8
 };
 
-#define SPLITTER_THICKNESS 1.0
+#define SPLITTER_THICKNESS 2.0
 
 class Splitter
 {

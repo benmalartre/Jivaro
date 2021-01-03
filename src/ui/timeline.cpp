@@ -48,8 +48,7 @@ void TimelineUI::Update()
 
 void TimelineUI::ValidateTime()
 {
-  Application* app = AMN_APPLICATION;
-  Time& time = app->GetTime();
+  Time& time = AMN_APPLICATION->GetTime();
 
   _currentTime = time.GetActiveTime();
   if (_minTime >= _maxTime)_maxTime = _minTime + 1;
@@ -71,17 +70,24 @@ void TimelineUI::ValidateTime()
 
 void TimelineUI::PlaybackCallback(TimelineUI* ui)
 {
+  Time& time = AMN_APPLICATION->GetTime();
   ui->_playing = 1 - ui->_playing;
+  if(ui->_playing) time.StartPlayBack();
+  else time.StopPlayBack();
 }
 
 void TimelineUI::FirstFrameCallback(TimelineUI* ui)
 {
-  std::cout << "FIRST FRAME CALLBACK !!" << std::endl;
+  Time& time = AMN_APPLICATION->GetTime();
+  ui->_currentTime = ui->_startTime;
+  time.SetActiveTime(ui->_currentTime);
 }
 
 void TimelineUI::LastFrameCallback(TimelineUI* ui)
 {
-  std::cout << "LAST FRAME CALLBACK !!" << std::endl;
+  Time& time = AMN_APPLICATION->GetTime();
+  ui->_currentTime = ui->_endTime;
+  time.SetActiveTime(ui->_currentTime);
 }
 
 void TimelineUI::LoopCallback(TimelineUI* ui)
@@ -209,11 +215,11 @@ void TimelineUI::DrawTimeSlider()
 {
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-  const float xmin = _parent->GetMin()[0];
-  const float xmax = _parent->GetMax()[0];
-  const float ymin = _parent->GetMin()[1];
-  const float ymax = _parent->GetMax()[1] - 30;
-  const float ymid = ymin * 0.25 + ymax * 0.75;
+  float xmin = _parent->GetMin()[0];
+  float xmax = _parent->GetMax()[0];
+  float ymin = _parent->GetMin()[1];
+  float ymax = _parent->GetMax()[1] - 30;
+  float ymid = ymin * 0.25 + ymax * 0.75;
 
   float rounding = 8.f;
   float th = 1.f;
@@ -242,6 +248,9 @@ void TimelineUI::DrawTimeSlider()
 
   Application* app = AMN_APPLICATION;
 
+  xmin += 2 * SLIDER_THICKNESS;
+  xmax -= 2 * SLIDER_THICKNESS;
+
   int numFrames = (app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
   float incr = 1 / (float)numFrames;
   for (int i = 0; i < numFrames; ++i)
@@ -267,8 +276,8 @@ void TimelineUI::DrawTimeSlider()
     (float)(app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
   float sliderX = (xmin * (1 - sliderPerc) + xmax * sliderPerc);
   drawList->AddRectFilled(
-    pxr::GfVec2f(sliderX - 2, ymin),
-    pxr::GfVec2f(sliderX + 2, ymid),
+    pxr::GfVec2f(sliderX - SLIDER_THICKNESS, ymin),
+    pxr::GfVec2f(sliderX + SLIDER_THICKNESS, ymid),
     sliderColor, rounding, corners_all
   );
 }

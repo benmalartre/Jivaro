@@ -9,6 +9,8 @@
 AMN_NAMESPACE_OPEN_SCOPE
 extern AmnIconMap AMN_ICONS;
 
+#define SLIDER_THICKNESS 2.f
+
 class TimelineUI : BaseUI
 {
 public:

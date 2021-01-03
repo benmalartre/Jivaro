@@ -25,17 +25,17 @@ static void AMNStyle(ImGuiStyle* dst)
   style->PopupRounding = 0.0f;
   style->ScrollbarRounding = 0.0f;
   style->TabRounding = 0.0f;
-  style->WindowPadding = pxr::GfVec2f(0.f, 0.f);
+  style->WindowPadding = pxr::GfVec2f(4.f, 0.f);
   style->FramePadding = pxr::GfVec2f(0.f, 0.f);
   style->ChildBorderSize = 0.f;
   style->FrameBorderSize = 0.f;
-  style->IndentSpacing = 8.f;
+  style->IndentSpacing = 2.f;
+  style->ItemSpacing = pxr::GfVec2f(2.f,4.f);
   style->ItemInnerSpacing = pxr::GfVec2f(0.f, 4.f);
   style->FrameBorderSize = 1.0f;
   style->FrameRounding = 2.f;
   style->AntiAliasedLines = true;
   style->AntiAliasedFill = true;
-  
 
   colors[ImGuiCol_Text] = ImVec4(0.75f, 0.75f, 0.75f, 1.f);
   colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.f);
@@ -59,9 +59,9 @@ static void AMNStyle(ImGuiStyle* dst)
   colors[ImGuiCol_CheckMark] = ImVec4(0.184f, 0.407f, 0.193f, 1.00f);
   colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
   colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-  colors[ImGuiCol_Button] = ImVec4(0.f, 0.f, 0.f, 0.f);
-  colors[ImGuiCol_ButtonHovered] = ImVec4(0.f, 0.f, 0.f, 0.f);
-  colors[ImGuiCol_ButtonActive] = ImVec4(1.f, 0.f, 0.f, 1.f);
+  colors[ImGuiCol_Button] = ImVec4(0.15f, 0.15f, 0.15f, 0.f);
+  colors[ImGuiCol_ButtonHovered] = ImVec4(0.25f, 0.25f, 0.25f, 1.f);
+  colors[ImGuiCol_ButtonActive] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
   colors[ImGuiCol_Header] = ImVec4(0.f, 0.f, 0.f, 0.f);
   colors[ImGuiCol_HeaderHovered] = ImVec4(0.f, 0.f, 0.f, 0.f);
   colors[ImGuiCol_HeaderActive] = ImVec4(0.f, 0.f, 0.f, 0.f);

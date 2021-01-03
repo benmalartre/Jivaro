@@ -42,9 +42,7 @@ bool MenuItem::Draw()
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
       
-      window->SetActiveTool(AMN_TOOL_NONE);
-      std::cout << "SET WINDOW TOOL TO NONE !!!" << std::endl;
-      std::cout << "IS MENU ACTIVE : " << (window->GetActiveTool() == AMN_TOOL_MENU) << std::endl;
+      window->SetActiveTool(AMN_TOOL_SELECT);
       view->ClearFlag(View::INTERACTING);
       window->ForceRedraw();
       ImGui::PopFont();
@@ -221,23 +219,6 @@ bool MenuUI::Draw()
       if (ImGui::MenuItem("Paste", "CTRL+V")) {}
       ImGui::EndMenu();
       //ImGui::PopFont();
-    }
-    if (ImGui::BeginMenu("Demo"))
-    {
-      _parent->SetDirty();
-      _parent->SetInteracting(true);
-      ImGui::PushFont(window->GetMediumFont(0));
-      if (ImGui::MenuItem("Open", "CTRL+D")) 
-      {
-        _showDemoWindow = true;
-        ImGui::ShowDemoWindow();
-      }
-      if (ImGui::MenuItem("Close", "SHIFT+D")) 
-      {
-        _showDemoWindow = false;
-      }
-      ImGui::PopFont();
-      ImGui::EndMenu();
     }
 
     for (auto& item : _items) {

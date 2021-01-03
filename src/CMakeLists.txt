@@ -30,13 +30,15 @@ add_executable(${TARGET}
   imgui/imgui_impl_glfw.cpp
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
+  imgui/imgui_filebrowser.cpp
   imgui/imgui.cpp
   utils/files.cpp
   utils/shaders.cpp
   utils/screenSpaceQuad.cpp
   utils/icons.cpp
-  utils/nfd/nfd_common.c
-  ${NATIVEFOLDERDIALOG_IMP}
+  #utils/nfd/nfd_common.c
+  #${NATIVEFOLDERDIALOG_IMP}
+  utils/native.c
   #graph/deformableAPI.cpp
   #graph/connectableAPI.cpp
   #graph/coordSysAPI.cpp
@@ -50,6 +52,7 @@ add_executable(${TARGET}
   #graph/tokens.cpp
   #graph/utils.cpp
   ui/ui.cpp
+  ui/filebrowser.cpp
   ui/splitter.cpp
   ui/dummy.cpp
   ui/menu.cpp

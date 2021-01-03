@@ -1,5 +1,8 @@
-#include "../utils/nfd/include/nfd.h"
+//#include "../utils/nfd/include/nfd.h"
+#include "../imgui/imgui_filebrowser.h"
+#include "../utils/native.h"
 #include "../utils/files.h"
+#include "../ui/filebrowser.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
 #include "../ui/graph.h"
@@ -44,7 +47,7 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(NULL),_stage(nullptr)
+  _mainWindow(NULL), _stage(nullptr)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
@@ -52,7 +55,7 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(NULL),_stage(nullptr)
+  _mainWindow(NULL), _stage(nullptr)
 {
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
@@ -99,6 +102,41 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
     _RecurseSplitView(view->GetRight(), depth + 1, horizontal);
     view->SetPerc(0.5);
   }
+}
+
+// browse for file
+//----------------------------------------------------------------------------
+std::string
+Application::BrowseFile(const char* folder, const char* filters[], 
+  const int numFilters)
+{
+  std::cout << "BROWSE FOR FILE\n   EXTENSIONS :\n ";
+  for(int i=0;i<numFilters; ++i)
+    std::cout << "      " << filters[i] << "\n" << std::endl;
+
+  _mainWindow->SetIdle(true);
+  size_t width = 600;
+  size_t height = 600;
+  Window* window = CreateChildWindow(width, height, _mainWindow);
+  window->Init(this);
+
+  View* view = window->GetMainView();
+  FileBrowserUI* browser = new FileBrowserUI(view, "FileBrowser");
+
+  bool browse = true;
+  std::string result;
+  while(browse) {
+    window->SetGLContext();
+    window->Draw();
+    glfwSwapBuffers(window->GetGlfwWindow());
+    glfwPollEvents();
+  }
+  _mainWindow->SetIdle(false);
+  _mainWindow->SetGLContext();
+  delete browser;
+  delete window;
+
+ return result;
 }
 
 static
@@ -395,33 +433,52 @@ void Application::Update()
 
 void Application::OpenScene(const std::string& filename)
 {
+  const char* filters[4] = {"*.usd","*.usda","*.usdc","*.usdz"};
+  const char* folder = "";
+  const std::string& result = BrowseFile(folder, filters, 4);
 
-  nfdchar_t *outPath = NULL;
-  nfdresult_t result = NFD_OpenDialog( "usd,usdc,usda,usdz", NULL, &outPath );
+/*
+  char const * result = tinyfd_openFileDialog (
+    "Open USD File" , // Title
+    "" ,              // Default File Name
+    4,                // Num Of Filter Patterns
+    filters,          // Filter Patterns 
+    "usd file",       // SingleFilterDescription
+    0);               //AllowMultipleSelects ) ; // 0
+*/
+  if(strlen(result.c_str()) > 0) {
+    std::cout << "OPEN FILE : " << result << std::endl;
+    _stage = pxr::UsdStage::Open(result);
+    OnNewScene();
+    _property->SetPrim(_stage->GetDefaultPrim());
+  }
+  /*
+  nfdchar_t *outPath = nullptr;
+  nfdresult_t result = NFD_OpenDialog( "usd,usdc,usda,usdz", nullptr, &outPath );
   if ( result == NFD_OKAY )
   {
-    std::cout << "NEW FILE : " << outPath << std::endl;
     _stage = pxr::UsdStage::Open(outPath);
     OnNewScene();
-    std::cout << "SET PROPERTY PRIM : " << _stage->GetDefaultPrim().GetName() << std::endl;
     _property->SetPrim(_stage->GetDefaultPrim());
     free(outPath);
   }
   else if ( result == NFD_CANCEL )
   {
-      puts("User pressed cancel.");
+      std::cout << "User pressed cancel." << std::endl;
   }
   else 
   {
-      printf("Error: %s\n", NFD_GetError() );
+      std::cout << "Error: " << NFD_GetError() << std::endl;
   }
+  */
 }
 
 // main loop
 void 
 Application::MainLoop()
 {
-  _mainWindow->MainLoop();
+  if(!_mainWindow->IsIdle())
+    _mainWindow->MainLoop();
   /*
   if (_stage) {
     pxr::SdfLayerRefPtr flattened = _stage->Flatten();

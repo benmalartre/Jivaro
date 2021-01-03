@@ -39,6 +39,10 @@ public:
 
   // create a child window
   static Window* CreateChildWindow(int width, int height, Window* parent);
+
+  // browse file
+  std::string BrowseFile(const char* folder, const char* filters[], 
+    const int numFilters);
   
   // init application
   void Init();
@@ -66,6 +70,10 @@ public:
   // time
   Time& GetTime() { return _time; };
 
+  // window
+  Window* GetMainWindow() {return _mainWindow;};
+  Window* GetChildWindow(size_t index) {return _childWindows[index];};
+
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
   pxr::UsdStageRefPtr& GetStage() { return _stage; };
@@ -73,7 +81,7 @@ public:
 private:
   std::string                       _fileName;
   Window*                           _mainWindow;
-  std::vector<Window*>              _childWindow;
+  std::vector<Window*>              _childWindows;
   //std::vector<pxr::UsdStageRefPtr>  _stages;
   pxr::UsdStageRefPtr               _stage;
   Selection                         _selection;

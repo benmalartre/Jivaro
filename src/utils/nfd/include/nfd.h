@@ -66,7 +66,6 @@ nfdchar_t  *NFD_PathSet_GetPath( const nfdpathset_t *pathSet, size_t index );
 /* Free the pathSet */    
 void        NFD_PathSet_Free( nfdpathset_t *pathSet );
 
-
 #ifdef __cplusplus
 }
 #endif

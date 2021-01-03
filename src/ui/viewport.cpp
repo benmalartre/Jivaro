@@ -138,7 +138,6 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     if( mods & GLFW_MOD_ALT)
     {
       _interact = true;
-      window->SetActiveTool(TOOLS::AMN_TOOL_CAMERA);
       if (button == GLFW_MOUSE_BUTTON_LEFT)
       {
         _interactionMode = INTERACTION_ORBIT;
@@ -154,7 +153,6 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     }
     else if(mods & GLFW_MOD_SUPER)
     {
-      window->SetActiveTool(TOOLS::AMN_TOOL_CAMERA);
       _interact = true;
       if (button == GLFW_MOUSE_BUTTON_LEFT)
       {
@@ -171,7 +169,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     }
     else {
       Pick(x, y);
-      window->RestoreLastActiveTool();
+      //window->RestoreLastActiveTool();
     }
 /*
     if (button == GLFW_MOUSE_BUTTON_RIGHT)

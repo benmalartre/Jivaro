@@ -124,6 +124,8 @@ public:
   void Draw();
   bool PickSplitter(double mX, double mY);
   void ForceRedraw() { _forceRedraw = 3; };
+  void SetIdle(bool value){_idle=value;};
+  bool IsIdle(){return _idle;};
 
   // fonts
   inline ImFont* GetBoldFont(size_t index){return AMN_BOLD_FONTS[index];};
@@ -132,18 +134,27 @@ public:
 
   // tool
   inline void SetActiveTool(int tool) {
-    _lastActiveTool = _activeTool;
-    _activeTool = tool;
+    if(tool != _activeTool) {
+      _lastActiveTool = _activeTool;
+      _activeTool = tool;
+    }
   };
   inline int GetActiveTool(){return _activeTool;};
   inline void RestoreLastActiveTool(){_activeTool=_lastActiveTool;};
   bool UpdateActiveTool(int mouseX, int mouseY);
+
+  // splitter
+  void BeginDragSplitter(){_dragSplitter=true;};
+  void EndDragSplitter(){_dragSplitter=false;};
+  bool IsDraggingSplitter(){return _dragSplitter;};
+  void DragSplitter(int x, int y);
 
   // loop
   void MainLoop();
   static Window* GetUserData(GLFWwindow* window);
 
 private:
+  bool                      _idle;
   std::string               _name;
   Application*              _app;
   GLFWwindow*               _window;
@@ -153,6 +164,7 @@ private:
   View*                     _activeView;
   View*                     _activeLeaf;
   Splitter*                 _splitter;
+  bool                      _dragSplitter;
   std::vector<View*>        _leaves;
   ImGuiContext*             _context;
 
@@ -165,7 +177,7 @@ private:
   int               _height;
   unsigned*         _pixels;
   bool              _valid;
-  int            _forceRedraw;
+  int               _forceRedraw;
 
   // version number
   int               _iOpenGLMajor;

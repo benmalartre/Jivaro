@@ -181,6 +181,7 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
       ImGui::TreeNodeEx(
         current->_prim.GetPath().GetText(),
         itemFlags,
+        "%s", 
         current->_prim.GetName().GetText());
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
@@ -209,7 +210,8 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
     ImGui::TreeNodeEx(
       current->_prim.GetPath().GetText(),
       itemFlags,
-      current->_prim.GetName().GetText());
+      "%s", 
+       current->_prim.GetName().GetText());
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
       current->_selected = true;
     current->_expanded = false;
@@ -282,12 +284,11 @@ bool ExplorerUI::Draw()
 
   //ImGui::PopStyleColor(numColorIDs);
 
-  return true;
-  /*
+  return 
     ImGui::IsAnyItemHovered() ||
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
-    ImGui::IsAnyMouseDown();*/
+    ImGui::IsAnyMouseDown();
 }
 
 

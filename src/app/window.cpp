@@ -67,8 +67,9 @@ void AMNDeleteFontAtlas()
 // fullscreen window constructor
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen, const std::string& name) :
-_pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
+  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
+  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _name(name),_forceRedraw(0),_idle(false)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -95,8 +96,9 @@ _pickImage(0),_splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
 // width/height window constructor
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, const std::string& name):
-_pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
-_pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
+  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
+  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _name(name),_forceRedraw(0),_idle(false)
 {
   _width = width;
   _height = height;
@@ -117,7 +119,8 @@ _pickImage(0), _splitter(NULL),_fontSize(16.f), _name(name),_forceRedraw(0)
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, GLFWwindow* parent, const std::string& name) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL),
-  _pickImage(0), _splitter(NULL), _fontSize(16.f), _name(name),_forceRedraw(0)
+  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _name(name),_forceRedraw(0),_idle(false)
 {
   _width = width;
   _height = height;
@@ -393,7 +396,7 @@ Window::SetGLContext()
 void 
 Window::Draw()
 {
-  if (!_valid)return;
+  if (!_valid || _idle)return;
   SetGLContext();
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
@@ -403,10 +406,12 @@ Window::Draw()
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight()));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
 
-  // draw splitters
-  _splitter->Draw();
+  // draw views
   if(_mainView)_mainView->Draw( _forceRedraw > 0 );
   _forceRedraw = pxr::GfMax(0, _forceRedraw-1);
+
+  // draw splitters
+  _splitter->Draw();
 
   // render the imgui frame
   ImGui::Render();
@@ -490,24 +495,22 @@ Window::ClearImgui()
   ImGui::DestroyContext(_context);
 }
 
+void Window::DragSplitter(int x, int y)
+{
+  if(_activeView)
+  {
+    _activeView->GetPercFromMousePosition(x, y);
+    _mainView->Resize(0, 0, _width, _height, false);
+    _splitter->Resize(_width, _height);
+    _splitter->RecurseBuildMap(_mainView);
+  }
+}
+
 bool Window::UpdateActiveTool(int x, int y)
 {
-  if(_activeTool == AMN_TOOL_SPLITTER)
+  if(GetActiveView())
   {
-    if(_activeView)
-    {
-      _activeView->GetPercFromMousePosition(x, y);
-      _mainView->Resize(0, 0, _width, _height, false);
-      _splitter->Resize(_width, _height);
-      _splitter->RecurseBuildMap(_mainView);
-    }
-  }
-  else if(_activeTool == AMN_TOOL_CAMERA)
-  {
-    if(GetActiveView())
-    {
-      GetActiveView()->MouseMove(x, y);
-    }
+    GetActiveView()->MouseMove(x, y);
   }
   return false;
 }
@@ -707,7 +710,6 @@ KeyboardCallback(
 void 
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
-  
   Window* parent = Window::GetUserData(window);
   ImGui::SetCurrentContext(parent->GetContext());
 
@@ -715,7 +717,8 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
 
   if (action == GLFW_RELEASE)
   {
-    parent->SetActiveTool(AMN_TOOL_NONE);
+    parent->EndDragSplitter();
+    //parent->SetActiveTool(AMN_TOOL_SELECT);
     View* view = parent->GetActiveView();
     if(view)
     {
@@ -728,30 +731,18 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
-
-    switch (parent->GetActiveTool()) {
-    case AMN_TOOL_MENU:
-      parent->GetActiveView()->MouseButton(button, action, mods);
-      break;
-
-    case AMN_TOOL_SPLITTER:
-      break;
-
-    default:
-      if (parent->PickSplitter(x, y))
-      {
-        parent->SetActiveTool(AMN_TOOL_SPLITTER);
+    if (parent->PickSplitter(x, y))
+    {
+      parent->BeginDragSplitter();
+    }
+    else
+    {
+      View* view = parent->GetViewUnderMouse((int)x, (int)y);
+      if (view) {
+        parent->SetActiveView(view);
+        view->SetFlag(View::INTERACTING);
+        view->MouseButton(button, action, mods);
       }
-      else
-      {
-        View* view = parent->GetViewUnderMouse((int)x, (int)y);
-        if (view) {
-          parent->SetActiveView(view);
-          view->SetFlag(View::INTERACTING);
-          view->MouseButton(button, action, mods);
-        }
-      }
-      break;
     }
   }
 }
@@ -779,12 +770,11 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   ImGui::SetCurrentContext(parent->GetContext());
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
-  if(parent->GetActiveTool() != AMN_TOOL_NONE)
-  {
+  if(parent->IsDraggingSplitter()) {
+    parent->DragSplitter(x, y);
+  } else if(parent->GetActiveTool() != AMN_TOOL_NONE) {
     parent->UpdateActiveTool(x, y);
-  }
-  else
-  {
+  } else {
     if (active && active->GetFlag(View::INTERACTING))
       active->MouseMove(x, y);
     else {

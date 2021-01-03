@@ -16,17 +16,19 @@ AMN_NAMESPACE_OPEN_SCOPE
 //typedef void(*ToolbarPressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
 struct ToolbarItem {
   BaseUI*                     ui;
+  short                       tool;
   std::string                 label;
   std::string                 shortcut;
   bool                        toggable;
   bool                        enabled;
 
   pxr::VtArray<pxr::VtValue>  args;
-  IconPressedFunc          func;
+  IconPressedFunc             func;
   Icon*                       icon;
 
-  ToolbarItem(BaseUI* ui, const std::string lbl, const std::string sht, Icon* icon, bool sel,
-    bool enb, IconPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
+  ToolbarItem(BaseUI* ui, short tool, const std::string lbl, 
+    const std::string sht, Icon* icon, bool sel, bool enb, 
+    IconPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
 
   bool Draw();
 };

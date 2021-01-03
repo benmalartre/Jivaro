@@ -154,7 +154,7 @@ endif()
 # system
 IF(APPLE)
   SET(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} 
-    "-framework Cocoa -framework IOKit")
+    "-framework Cocoa -framework IOKit -framework AppKit")
 ENDIF(APPLE)
 
 add_subdirectory (src)

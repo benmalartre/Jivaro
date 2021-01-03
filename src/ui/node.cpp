@@ -53,6 +53,7 @@ int GetColorFromAttribute(const pxr::UsdAttribute& attr)
     vtn == pxr::SdfValueTypeNames->Color4fArray) return GRAPH_COLOR_COLOR;
   else if (vtn == pxr::SdfValueTypeNames->Asset ||
     vtn == pxr::SdfValueTypeNames->AssetArray) return GRAPH_COLOR_PRIM;
+  else return GRAPH_COLOR_UNDEFINED;
 }
 
 ItemUI::ItemUI()

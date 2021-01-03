@@ -54,7 +54,6 @@ class MenuUI : public BaseUI
     MenuItem& AddItem(View* view, const std::string label, const std::string shortcut, bool selected, 
       bool enabled, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
   private:
-    bool                  _showDemoWindow;
     std::vector<MenuItem> _items;
     MenuItem*             _current;
 };

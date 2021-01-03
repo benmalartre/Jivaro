@@ -128,13 +128,15 @@ bool AddIconButton(Icon* icon, FuncT func, ArgsT... args)
 template<typename FuncT, typename ...ArgsT>
 bool AddCheckableIconButton(Icon* icon, bool checked, FuncT func, ArgsT... args)
 {
-  if (ImGui::ImageButton(
+  ImGuiStyle* style = &ImGui::GetStyle();
+  ImVec4* colors = style->Colors;
+  if (ImGui::ImageButton( 
     (ImTextureID)(intptr_t)icon->tex,
     ImVec2(icon->size, icon->size),
     ImVec2(0, 0),
     ImVec2(1, 1),
     -1,
-    checked ? ImColor(255,128,64,100) : ImColor(0,0,0,0)))
+    checked ? colors[ImGuiCol_ButtonActive] : colors[ImGuiCol_ButtonHovered]))
   {
     func(args...);
     ImGui::SameLine();
