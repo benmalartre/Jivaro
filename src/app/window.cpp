@@ -213,9 +213,10 @@ Window::CreateStandardWindow(int width, int height)
 // child window
 //----------------------------------------------------------------------------
 Window*
-Window::CreateChildWindow(int width, int height, GLFWwindow* parent)
+Window::CreateChildWindow(int width, int height, GLFWwindow* parent,
+  const std::string& name)
 {
-  return new Window(width, height, parent, "Child");
+  return new Window(width, height, parent, name);
 }
 
 void 

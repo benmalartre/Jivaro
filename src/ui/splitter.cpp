@@ -70,14 +70,15 @@ Splitter::Draw()
   ImGui::SetWindowPos(ImVec2(0, 0));
   ImGui::SetWindowSize(ImVec2(_width, _height));
 
-  ImDrawList* draw_list = ImGui::GetWindowDrawList();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  //ImDrawList* drawList = ImGui::GetForegroundDrawList();
   pxr::GfVec2f sMin, sMax;
   const ImU32 col = ImColor(AMN_ALTERNATE_COLOR);
   for(auto view : _views)
   {
     if(view->GetFlag(View::LEAF)) continue;
     view->GetSplitInfos(sMin, sMax, _width, _height);
-    draw_list->AddRectFilled(sMin, sMax, col, 0.0f, 0);
+    drawList->AddRectFilled(sMin, sMax, col, 0.0f, 0);
     if(_cursor == ImGuiMouseCursor_ResizeEW)
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     else if(_cursor == ImGuiMouseCursor_ResizeNS)

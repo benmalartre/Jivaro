@@ -48,9 +48,9 @@ int GetFileSize(const std::string& filePath)
     struct stat results;
     
     if (stat((const char*)filePath.c_str(), &results) == 0)
-    return results.st_size;
+      return results.st_size;
     else
-    return -1;
+      return -1;
 }
 
 std::string GetFileName(const std::string& filePath)
@@ -100,6 +100,37 @@ int NumFilesInDirectory(const char* path)
     num_files++;
   }
   */
+  return 0;
+}
+
+int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
+{
+  entries.clear();
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir (path)) != NULL) 
+  {
+    // print all the files and directories within directory
+    while ((ent = readdir (dir)) != NULL) 
+    {
+      std::cout << ent->d_name << std::endl;
+      if(ent->d_type == DT_REG) {
+        entries.push_back({
+          (std::string)ent->d_name,
+          EntryInfo::Type::FILE,
+          false
+        });
+      } else if(ent->d_type == DT_DIR) {
+         entries.push_back({
+          (std::string)ent->d_name,
+          EntryInfo::Type::FOLDER,
+          false
+        });
+      }
+    }
+    closedir (dir);
+    return entries.size();
+  } 
   return 0;
 }
 

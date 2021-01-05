@@ -205,7 +205,8 @@ public:
   //----------------------------------------------------------------------------
   static Window* CreateFullScreenWindow();
   static Window* CreateStandardWindow(int width, int height);
-  static Window* CreateChildWindow(int width, int height, GLFWwindow* parent);
+  static Window* CreateChildWindow(int width, int height, GLFWwindow* parent,
+    const std::string& name="Child");
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

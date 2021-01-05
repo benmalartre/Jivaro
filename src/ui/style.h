@@ -62,9 +62,9 @@ static void AMNStyle(ImGuiStyle* dst)
   colors[ImGuiCol_Button] = ImVec4(0.15f, 0.15f, 0.15f, 0.f);
   colors[ImGuiCol_ButtonHovered] = ImVec4(0.25f, 0.25f, 0.25f, 1.f);
   colors[ImGuiCol_ButtonActive] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-  colors[ImGuiCol_Header] = ImVec4(0.f, 0.f, 0.f, 0.f);
-  colors[ImGuiCol_HeaderHovered] = ImVec4(0.f, 0.f, 0.f, 0.f);
-  colors[ImGuiCol_HeaderActive] = ImVec4(0.f, 0.f, 0.f, 0.f);
+  colors[ImGuiCol_Header] = ImVec4(0.35f, 0.35f, 0.35f, 0.25f);
+  colors[ImGuiCol_HeaderHovered] = ImVec4(0.35f, 0.35f, 0.35f, 0.5f);
+  colors[ImGuiCol_HeaderActive] = ImVec4(0.35f, 0.35f, 0.35f, 0.75f);
   colors[ImGuiCol_Separator] = ImVec4(0.4f, 0.4f, 0.4f, 1.f);
   colors[ImGuiCol_SeparatorHovered] = ImVec4(0.5f, 0.5f, 0.5f, 1.f);
   colors[ImGuiCol_SeparatorActive] = ImVec4(0.6f, 0.6f, 0.6f, 1.f);

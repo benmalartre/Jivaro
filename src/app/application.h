@@ -38,7 +38,8 @@ public:
   static Window* CreateStandardWindow(int width, int height);
 
   // create a child window
-  static Window* CreateChildWindow(int width, int height, Window* parent);
+  static Window* CreateChildWindow(int width, int height, Window* parent, 
+    const std::string& name="Child");
 
   // browse file
   std::string BrowseFile(const char* folder, const char* filters[], 

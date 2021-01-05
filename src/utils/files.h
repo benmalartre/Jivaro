@@ -16,10 +16,31 @@ AMN_NAMESPACE_OPEN_SCOPE
 	#define SEPARATOR "\\"
   #include <windows.h>
   typedef int mode_t;
+  #include "dirent.h"
 #else
 	#define SEPARATOR "/"
   #include <dirent.h>
 #endif
+
+// entry info
+//-----------------------------------------------------
+struct EntryInfo
+{
+  enum Type {
+    FOLDER,
+    FILE
+  };
+
+  EntryInfo(const std::string& path, Type type, bool is_hidden) 
+    : path(path)
+    , is_hidden(is_hidden)
+    , type(type)
+  {
+  }
+  std::string path;
+  bool is_hidden;
+  Type type;
+};
 
 // directory exists
 //-----------------------------------------------------
@@ -40,6 +61,10 @@ std::string GetFileName(const std::string& filePath);
 // num files in directory
 //-----------------------------------------------------
 int NumFilesInDirectory(const char* path);
+
+// get entries in directory
+//-----------------------------------------------------
+int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries);
 
 // get files in directory
 //-----------------------------------------------------
@@ -63,6 +88,7 @@ enum FILE_MODE
 //-----------------------------------------------------
 #define SIZE_HEADER 66
 #define SIZE_BUFFER 256
+
 
 // class
 //-----------------------------------------------------

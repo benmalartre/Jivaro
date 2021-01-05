@@ -33,8 +33,20 @@ enum ICON_ID {
   ICON_TRANSLATE,
   ICON_ROTATE,
   ICON_SCALE,
+  ICON_SELECT,
+  ICON_SPLITV,
+  ICON_SPLITH,
+  ICON_LOCKED,
+  ICON_UNLOCKED,
+  ICON_OP,
+  ICON_TRASH,
+  ICON_LAYER,
+  ICON_PEN,
+  ICON_FOLDER,
+  ICON_FILE,
   ICON_MAX_ID
 };
+
 static const char* ICON_NAMES[ICON_MAX_ID] = {
   "visible",
   "invisible",
@@ -45,7 +57,18 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
   "stop",
   "translate",
   "rotate",
-  "scale"
+  "scale",
+  "select",
+  "splitv",
+  "splith",
+  "locked",
+  "unlocked",
+  "op",
+  "trash",
+  "layer",
+  "pen",
+  "folder",
+  "file"
 };
 
 #define ICON_INTERNAL_FORMAT GL_RGBA

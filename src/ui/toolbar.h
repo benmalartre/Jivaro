@@ -28,7 +28,8 @@ struct ToolbarItem {
 
   ToolbarItem(BaseUI* ui, short tool, const std::string lbl, 
     const std::string sht, Icon* icon, bool sel, bool enb, 
-    IconPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
+    IconPressedFunc f = NULL, 
+    const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
 
   bool Draw();
 };

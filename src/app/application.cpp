@@ -80,9 +80,10 @@ Application::CreateFullScreenWindow()
 // create child window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateChildWindow(int width, int height, Window* parent)
+Application::CreateChildWindow(int width, int height, Window* parent,
+  const std::string& name)
 {
-  return Window::CreateChildWindow(width, height, parent->GetGlfwWindow());
+  return Window::CreateChildWindow(width, height, parent->GetGlfwWindow(), name);
 }
 
 // create standard window
@@ -110,10 +111,6 @@ std::string
 Application::BrowseFile(const char* folder, const char* filters[], 
   const int numFilters)
 {
-  std::cout << "BROWSE FOR FILE\n   EXTENSIONS :\n ";
-  for(int i=0;i<numFilters; ++i)
-    std::cout << "      " << filters[i] << "\n" << std::endl;
-
   _mainWindow->SetIdle(true);
   size_t width = 600;
   size_t height = 600;
@@ -123,6 +120,11 @@ Application::BrowseFile(const char* folder, const char* filters[],
   View* view = window->GetMainView();
   FileBrowserUI* browser = new FileBrowserUI(view, "FileBrowser");
 
+  // set initial path
+  if(!strlen(folder) || !DirectoryExists((std::string)folder)) 
+    browser->SetPath( GetInstallationFolder());
+  else browser->SetPath(folder);
+
   bool browse = true;
   std::string result;
   while(browse) {
@@ -130,13 +132,19 @@ Application::BrowseFile(const char* folder, const char* filters[],
     window->Draw();
     glfwSwapBuffers(window->GetGlfwWindow());
     glfwPollEvents();
+    browse = browser->IsBrowsing();
+    if(!browse) {
+      if(!browser->IsCanceled()) {
+        //result = browser->GetResult();
+        result = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd";
+      }
+    }
   }
   _mainWindow->SetIdle(false);
   _mainWindow->SetGLContext();
-  delete browser;
   delete window;
 
- return result;
+  return result;
 }
 
 static

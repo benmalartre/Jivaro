@@ -8,6 +8,15 @@
 #include "nfd.h"
 #include "nfd_common.h"
 
+@interface NFDOpenPanel : NSOBject
+{
+}
+- (void) foo;
+- (void) threadfunc :(NSInteger*) param;
+- (void) mt;
+
+@end
+
 static NSArray *BuildAllowedFileTypes( const char *filterList )
 {
     // Commas and semicolons are the same thing on this platform
