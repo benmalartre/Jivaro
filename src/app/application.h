@@ -43,7 +43,7 @@ public:
 
   // browse file
   std::string BrowseFile(const char* folder, const char* filters[], 
-    const int numFilters);
+    const int numFilters, const char* name="Browse");
   
   // init application
   void Init();

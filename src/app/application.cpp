@@ -109,16 +109,17 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
 //----------------------------------------------------------------------------
 std::string
 Application::BrowseFile(const char* folder, const char* filters[], 
-  const int numFilters)
+  const int numFilters, const char* name)
 {
   _mainWindow->SetIdle(true);
   size_t width = 600;
-  size_t height = 600;
-  Window* window = CreateChildWindow(width, height, _mainWindow);
+  size_t height = 400;
+  Window* window = CreateChildWindow(width, height, _mainWindow, std::string(name));
   window->Init(this);
 
   View* view = window->GetMainView();
-  FileBrowserUI* browser = new FileBrowserUI(view, "FileBrowser");
+  FileBrowserUI* browser = 
+    new FileBrowserUI(view, "FileBrowser", FileBrowserUI::Mode::OPEN);
 
   // set initial path
   if(!strlen(folder) || !DirectoryExists((std::string)folder)) 
@@ -140,10 +141,9 @@ Application::BrowseFile(const char* folder, const char* filters[],
       }
     }
   }
+  delete window;
   _mainWindow->SetIdle(false);
   _mainWindow->SetGLContext();
-  delete window;
-
   return result;
 }
 
@@ -443,7 +443,8 @@ void Application::OpenScene(const std::string& filename)
 {
   const char* filters[4] = {"*.usd","*.usda","*.usdc","*.usdz"};
   const char* folder = "";
-  const std::string& result = BrowseFile(folder, filters, 4);
+  const char* title = "Open USD File";
+  const std::string& result = BrowseFile(folder, filters, 4, title);
 
 /*
   char const * result = tinyfd_openFileDialog (

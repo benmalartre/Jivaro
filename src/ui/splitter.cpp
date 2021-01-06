@@ -79,11 +79,13 @@ Splitter::Draw()
     if(view->GetFlag(View::LEAF)) continue;
     view->GetSplitInfos(sMin, sMax, _width, _height);
     drawList->AddRectFilled(sMin, sMax, col, 0.0f, 0);
-    if(_cursor == ImGuiMouseCursor_ResizeEW)
+    if(_cursor == ImGuiMouseCursor_ResizeEW) {
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-    else if(_cursor == ImGuiMouseCursor_ResizeNS)
+    } else if(_cursor == ImGuiMouseCursor_ResizeNS) {
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-    else ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    } else {
+      ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    }
   }
   ImGui::End();
 }

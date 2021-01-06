@@ -42,9 +42,13 @@ struct EntryInfo
   Type type;
 };
 
+// file exists
+//-----------------------------------------------------
+bool FileExists(const std::string& path);
+
 // directory exists
 //-----------------------------------------------------
-bool DirectoryExists(std::string path);
+bool DirectoryExists(const std::string& path);
 
 // create directory
 //-----------------------------------------------------

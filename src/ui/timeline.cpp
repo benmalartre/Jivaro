@@ -151,25 +151,25 @@ void TimelineUI::DrawControls()
   float cy = ImGui::GetCursorPosY();
   // play button
   Icon* icon = NULL;
-  icon = &AMN_ICONS[AMN_ICON_SMALL]["firstframe.png"];
+  icon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FIRST_FRAME];
   AddIconButton<IconPressedFunc>(
     icon,
     (IconPressedFunc)FirstFrameCallback, this
     );
 
-  if (!_playing) icon = &AMN_ICONS[AMN_ICON_SMALL]["playforward.png"];
-  else icon = &AMN_ICONS[AMN_ICON_SMALL]["stop.png"];
+  if (!_playing) icon = &AMN_ICONS[AMN_ICON_SMALL][ICON_PLAYBACK_FORWARD];
+  else icon = &AMN_ICONS[AMN_ICON_SMALL][ICON_STOP_PLAYBACK];
 
   AddIconButton<IconPressedFunc, TimelineUI*>(
     icon,
     (IconPressedFunc)PlaybackCallback, this);
 
-  icon = &AMN_ICONS[AMN_ICON_SMALL]["lastframe.png"];
+  icon = &AMN_ICONS[AMN_ICON_SMALL][ICON_LAST_FRAME];
   AddIconButton<IconPressedFunc, TimelineUI*>(
     icon,
     (IconPressedFunc)LastFrameCallback, this);
 
-  icon = &AMN_ICONS[AMN_ICON_SMALL]["loop.png"];
+  icon = &AMN_ICONS[AMN_ICON_SMALL][ICON_PLAYBACK_LOOP];
   AddCheckableIconButton<IconPressedFunc, TimelineUI*>(
     icon,
     _loop,

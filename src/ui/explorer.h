@@ -9,7 +9,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-extern AmnIconMap AMN_ICONS;
+extern AmnIconList AMN_ICONS;
 static size_t AMN_EXPLORER_LINE_HEIGHT = 20;
 
 struct ExplorerItem {

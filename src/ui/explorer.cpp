@@ -30,8 +30,8 @@ ExplorerUI::ExplorerUI(View* parent)
     ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
   _parent->SetDirty();
-  _visibleIcon = &AMN_ICONS[AMN_ICON_SMALL]["visible.png"];
-  _invisibleIcon = &AMN_ICONS[AMN_ICON_SMALL]["invisible.png"];
+  _visibleIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_VISIBLE];
+  _invisibleIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_INVISIBLE];
 
   pxr::TfWeakPtr<ExplorerUI> me(this);
   pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);

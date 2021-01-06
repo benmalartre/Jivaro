@@ -2,13 +2,12 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-inline bool FileExists(const std::string& name){
+bool FileExists(const std::string& name){
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0);
 }
 
-
-bool DirectoryExists(std::string path)
+bool DirectoryExists(const std::string& path)
 {
   struct stat info;
   
@@ -113,7 +112,6 @@ int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
     // print all the files and directories within directory
     while ((ent = readdir (dir)) != NULL) 
     {
-      std::cout << ent->d_name << std::endl;
       if(ent->d_type == DT_REG) {
         entries.push_back({
           (std::string)ent->d_name,
@@ -191,8 +189,6 @@ File::File(const std::string& fileName)
 {
   if(FileExists(fileName))
     path = fileName;
-  else
-    std::cout << "This file does NOT exists : "<< fileName << std::endl;
 }
 
 void File::_CreatePath(const std::string& directory, const std::string& in_name, const std::string& extension)

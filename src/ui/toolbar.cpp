@@ -81,22 +81,22 @@ bool ToolbarItem::Draw()
 ToolbarUI::ToolbarUI(View* parent, const std::string& name) :BaseUI(parent, name) 
 {
   ToolbarItem selectItem(this, AMN_TOOL_SELECT, "Select", "Space",
-    &AMN_ICONS[AMN_ICON_MEDIUM]["select.png"], true, true, 
+    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SELECT], true, true, 
     (IconPressedFunc)&OnSelectCallback);
   _items.push_back(selectItem);
 
   ToolbarItem translateItem(this, AMN_TOOL_TRANSLATE, "Translate", "T", 
-    &AMN_ICONS[AMN_ICON_MEDIUM]["translate.png"], true, true, 
+    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_TRANSLATE], true, true, 
     (IconPressedFunc)&OnTranslateCallback);
   _items.push_back(translateItem);
 
   ToolbarItem rotateItem(this, AMN_TOOL_ROTATE, "Rotate", "R", 
-    &AMN_ICONS[AMN_ICON_MEDIUM]["rotate.png"], true, true, 
+    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_ROTATE], true, true, 
     (IconPressedFunc)&OnRotateCallback);
   _items.push_back(rotateItem);
 
   ToolbarItem scaleItem(this, AMN_TOOL_SCALE, "Scale", "S", 
-    &AMN_ICONS[AMN_ICON_MEDIUM]["scale.png"], true, true, 
+    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SCALE], true, true, 
     (IconPressedFunc)&OnScaleCallback);
   _items.push_back(scaleItem);
 }

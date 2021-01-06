@@ -86,7 +86,7 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
-  _window = glfwCreateWindow(mode->width, mode->height, "AMNESIA.0.0",  monitor, NULL);
+  _window = glfwCreateWindow(mode->width, mode->height, "AMNESIE.0.0",  monitor, NULL);
   _width = mode->width;
   _height = mode->height;
   _shared = true;
@@ -111,7 +111,7 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   
-  _window = glfwCreateWindow(_width,_height,"AMINA.0.0",NULL,NULL);
+  _window = glfwCreateWindow(_width,_height,"AMNESIE.0.0",NULL,NULL);
 
 }
 
@@ -125,7 +125,7 @@ Window::Window(int width, int height, GLFWwindow* parent, const std::string& nam
   _width = width;
   _height = height;
   _shared = false;
-  //glfwWindowHint(GLFW_DECORATED, false);
+  glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -134,7 +134,7 @@ Window::Window(int width, int height, GLFWwindow* parent, const std::string& nam
   //glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_FLOATING, true);
 
-  _window = glfwCreateWindow(_width, _height, "CHILD", NULL, parent);
+  _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
 }
 
 // initialize
@@ -491,8 +491,10 @@ void
 Window::ClearImgui()
 {
   // Cleanup
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
+  if(_shared) {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+  }
   ImGui::DestroyContext(_context);
 }
 
@@ -715,6 +717,9 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   ImGui::SetCurrentContext(parent->GetContext());
 
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+  double x, y;
+  glfwGetCursorPos(window, &x, &y);
+  bool splitterHovered = parent->PickSplitter(x, y);
 
   if (action == GLFW_RELEASE)
   {
@@ -730,9 +735,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   }
   else if (action == GLFW_PRESS)
   {
-    double x, y;
-    glfwGetCursorPos(window, &x, &y);
-    if (parent->PickSplitter(x, y))
+    if (splitterHovered)
     {
       parent->BeginDragSplitter();
     }
@@ -771,6 +774,7 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   ImGui::SetCurrentContext(parent->GetContext());
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
+  bool splitterHovered = parent->PickSplitter(x, y);
   if(parent->IsDraggingSplitter()) {
     parent->DragSplitter(x, y);
   } else if(parent->GetActiveTool() != AMN_TOOL_NONE) {
@@ -779,8 +783,7 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
     if (active && active->GetFlag(View::INTERACTING))
       active->MouseMove(x, y);
     else {
-      if (parent->PickSplitter(x, y))return;
-      else if (view) {
+      if (view) {
         parent->SetActiveView(view);
         parent->GetActiveView()->MouseMove(x, y);
       }

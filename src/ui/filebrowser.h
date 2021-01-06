@@ -12,7 +12,14 @@ AMN_NAMESPACE_OPEN_SCOPE
 class FileBrowserUI : public BaseUI
 {
 public:
-  FileBrowserUI(View* parent, const std::string& name);
+  enum Mode {
+    OPEN,
+    SAVE,
+    SELECT,
+    MULTI
+  };
+
+  FileBrowserUI(View* parent, const std::string& name, Mode mode);
   ~FileBrowserUI()         override;
 
   void MouseButton(int action, int button, int mods) override{};
@@ -21,14 +28,29 @@ public:
 
   void SetPath(const std::string& path);
   void AppendPath(const std::string& name);
+  void PopPath();
   void SetPathFromTokenIndex(size_t index);
   void SetFilters(const std::vector<std::string>& filters);
   void _GetPathEntries();
-  bool _DrawEntries();
+  void _GetRootEntries();
 
-  const std::string& GetResult(){return _result;};
+  // setters
+  void SetResult(const std::string& name);
+
+  // drawing methods
+  void _DrawPath();
+  bool _DrawEntries();
+  void _DrawButtons();
+
+  // state
   bool IsBrowsing(){return _browsing;};
   bool IsCanceled(){return _canceled;};
+
+  // result
+  bool GetResult(std::string&);
+  size_t GetNumResults();
+  bool GetResult(size_t index, std::string&);
+
   void Demo();
 private:
   std::string              _path;
@@ -39,8 +61,9 @@ private:
   std::vector<std::string> _filters;
   bool                     _canceled;
   bool                     _browsing;
-  std::string              _result;
+  std::vector<std::string> _result;
   int                      _selected;
+  Mode                     _mode;
 
 };
 

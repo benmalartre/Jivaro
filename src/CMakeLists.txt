@@ -30,27 +30,12 @@ add_executable(${TARGET}
   imgui/imgui_impl_glfw.cpp
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
-  imgui/imgui_filebrowser.cpp
   imgui/imgui.cpp
   utils/files.cpp
   utils/shaders.cpp
   utils/screenSpaceQuad.cpp
   utils/icons.cpp
-  #utils/nfd/nfd_common.c
-  #${NATIVEFOLDERDIALOG_IMP}
   utils/native.c
-  #graph/deformableAPI.cpp
-  #graph/connectableAPI.cpp
-  #graph/coordSysAPI.cpp
-  #graph/input.cpp
-  #graph/output.cpp
-  #graph/node.cpp
-  #graph/graph.cpp
-  #graph/deformable.cpp
-  #graph/layer.cpp
-  #graph/stage.cpp
-  #graph/tokens.cpp
-  #graph/utils.cpp
   ui/ui.cpp
   ui/filebrowser.cpp
   ui/splitter.cpp
@@ -77,6 +62,7 @@ add_executable(${TARGET}
   app/camera.cpp
   app/view.cpp
   app/window.cpp
+  app/modal.cpp
   app/engine.cpp
   app/notice.cpp
   app/picking.cpp

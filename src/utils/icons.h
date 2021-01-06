@@ -25,11 +25,10 @@ enum ICON_ID {
   ICON_INVISIBLE,
   ICON_PLAYBACK_FORWARD,
   ICON_PLAYBACK_BACKWARD,
-  ICON_FIRST_FRAME,
-  ICON_PREVIOUS_FRAME,
-  ICON_NEXT_FRAME,
-  ICON_LAST_FRAME,
   ICON_STOP_PLAYBACK,
+  ICON_FIRST_FRAME,
+  ICON_LAST_FRAME,
+  ICON_PLAYBACK_LOOP,
   ICON_TRANSLATE,
   ICON_ROTATE,
   ICON_SCALE,
@@ -44,6 +43,8 @@ enum ICON_ID {
   ICON_PEN,
   ICON_FOLDER,
   ICON_FILE,
+  ICON_HOME,
+  ICON_BACK,
   ICON_MAX_ID
 };
 
@@ -52,9 +53,10 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
   "invisible",
   "playforward",
   "playbackward",
+  "stop",
   "firstframe",
   "lastframe",
-  "stop",
+  "loop",
   "translate",
   "rotate",
   "scale",
@@ -68,7 +70,9 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
   "layer",
   "pen",
   "folder",
-  "file"
+  "file",
+  "home",
+  "back"
 };
 
 #define ICON_INTERNAL_FORMAT GL_RGBA
@@ -81,12 +85,12 @@ struct Icon {
   GLuint        tex_h;
 };
  
-typedef std::vector<std::map<std::string, Icon> > AmnIconMap;
-extern AmnIconMap AMN_ICONS;
+typedef std::vector<std::vector<Icon> > AmnIconList;
+extern AmnIconList AMN_ICONS;
 
 void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels);
 void CreateIconFromImage(const std::string& filename,
-  const std::string& name, ICON_SIZE size);
+  int index, ICON_SIZE size);
 void AMNInitializeIcons();
 void AMNTerminateIcons();
 
