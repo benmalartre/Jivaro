@@ -11,6 +11,7 @@
 #include <pxr/base/arch/systemInfo.h>
 #include "window.h"
 #include "view.h"
+#include "shape.h"
 
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -125,7 +126,7 @@ Window::Window(int width, int height, GLFWwindow* parent, const std::string& nam
   _width = width;
   _height = height;
   _shared = false;
-  glfwWindowHint(GLFW_DECORATED, false);
+  //glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -162,6 +163,9 @@ Window::Init(Application* app)
       AMNCreateFontAtlas();
       AMNInitializeIcons();
     }
+
+    // init static shapes
+    InitStaticShapes();
 
     // setup callbacks
     glfwSetWindowSizeCallback(_window, ResizeCallback);

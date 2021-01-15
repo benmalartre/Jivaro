@@ -1,7 +1,31 @@
+#ifndef AMN_APPLICATION_HANDLE_H
+#define AMN_APPLICATION_HANDLE_H
 #pragma once
 
 #include "../common.h"
-#include 
+
 AMN_NAMESPACE_OPEN_SCOPE
 
+class BaseHandle {
+  enum Axis {
+    AXIS_ACTIVE_NONE,
+    AXIS_ACTIVE_X,
+    AXIS_ACTIVE_Y,
+    AXIS_ACTIVE_Z,
+    AXIS_ACTIVE_XY,
+    AXIS_ACTIVE_XZ,
+    AXIS_ACTIVE_YZ,
+    AXIS_ACTIVE_ALL
+  };
+
+  enum PlaneNormal {
+    PLANE_NORMAL_X,
+    PLANE_NORMAL_Y,
+    PLANE_NORMAL_Z,
+    PLANE_NORMAL_CAMERA
+  }
+};
+
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_APPLICATION_HANDLE_H

@@ -347,7 +347,7 @@ bool ViewportUI::Draw()
 
     //_engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 1));
     glDisable(GL_SCISSOR_TEST);
-    /*
+  
     ImGui::PushFont(GetWindow()->GetMediumFont(0));
     std::string msg = "Hello Amnesie!";
     drawList->AddText(
@@ -355,7 +355,7 @@ bool ViewportUI::Draw()
       0xFFFFFFFF, 
       msg.c_str());
     ImGui::PopFont();
-    */
+  
     ImGui::End();
 
     /*

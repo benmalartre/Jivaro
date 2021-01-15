@@ -6,17 +6,20 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-Modal::Modal(int width, int height, const std::string& name, Mode mode)
-  : _width(width), _height(height), _mode(mode), _window(NULL)
+BaseModal::BaseModal(int width, int height, const std::string& name)
+  : _width(width)
+  , _height(height)
+  , _window(NULL)
+  , _status(ACTIVE)
 {
 }
 
-Modal::~Modal()
+BaseModal::~BaseModal()
 {
   if(_window) delete _window;
 }
 
-void Modal::Loop()
+void BaseModal::Init()
 {
   Application* app = AMN_APPLICATION;
   Window* mainWindow = app->GetMainWindow();
@@ -30,7 +33,7 @@ void Modal::Loop()
   switch(_mode) {
     case Mode::FILE
   }
-  */
+  
   FileBrowserUI* browser = new FileBrowserUI(view, "FileBrowser", FileBrowserUI::Mode::OPEN);
 
   // set initial path
@@ -38,14 +41,31 @@ void Modal::Loop()
     browser->SetPath( GetInstallationFolder());
   else browser->SetPath(_folder);
 
-  bool browse = true;
+  _ui = browser;
+  */
+}
+
+void BaseModal::Term()
+{
+  delete _window;
+
+  Application* app = AMN_APPLICATION;
+  Window* mainWindow = app->GetMainWindow();
+  
+  mainWindow->SetIdle(false);
+  mainWindow->SetGLContext();
+}
+
+bool BaseModal::Loop()
+{
+  FileBrowserUI* browser = (FileBrowserUI*)_ui;
   std::string result;
-  while(browse) {
+  while (!glfwWindowShouldClose(_window->GetGlfwWindow()) && _status == ACTIVE) {
     _window->SetGLContext();
     _window->Draw();
     glfwSwapBuffers(_window->GetGlfwWindow());
     glfwPollEvents();
-    browse = browser->IsBrowsing();
+    bool browse = browser->IsBrowsing();
     if(!browse) {
       if(!browser->IsCanceled()) {
         //result = browser->GetResult();
@@ -53,10 +73,8 @@ void Modal::Loop()
       }
     }
   }
-  delete _window;
-  mainWindow->SetIdle(false);
-  mainWindow->SetGLContext();
-  //return result;
+  
+  return true;//result;
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -59,6 +59,7 @@ add_executable(${TARGET}
   #embree/context.cpp
   #embree/device.cpp
   app/time.cpp
+  app/shape.cpp
   app/camera.cpp
   app/view.cpp
   app/window.cpp
