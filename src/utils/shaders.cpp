@@ -113,7 +113,8 @@ void GLSLProgram::_Build()
 
 }
 
-void GLSLProgram::Build(const char* name, const char* vertex, const char* fragment)
+void GLSLProgram::BuildFromString(const char* name, const char* vertex, 
+  const char* fragment)
 {
   _name = name;
   _vert = new GLSLShader();
@@ -131,7 +132,8 @@ void GLSLProgram::Build(const char* name, const char* vertex, const char* fragme
   _Build();
 }
 
-void GLSLProgram::Build(const char* name, const char* vertex, const char* geom, const char* fragment)
+void GLSLProgram::BuildFromString(const char* name, const char* vertex, 
+  const char* geom, const char* fragment)
 {
   _name = name;
   _vert = new GLSLShader();

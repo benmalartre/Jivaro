@@ -1,8 +1,10 @@
 #include "viewport.h"
+#include "../app/shape.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+#include "../app/handle.h"
 #include "../app/application.h"
 #include "../utils/utils.h"
 #include "../utils/strings.h"
@@ -90,6 +92,8 @@ void ViewportUI::Init()
                             pxr::GfVec4f(0.5,0.5,0.5,1.0));
 
   Resize();
+
+  _handle.SetCamera(_camera);
 
   /*
   glEnable(GL_DEPTH_TEST);
@@ -227,10 +231,10 @@ void ViewportUI::MouseMove(int x, int y)
         break;
         
     }
-    _lastX = x;
-    _lastY = y;
     _parent->SetDirty();
   }
+  _lastX = x;
+  _lastY = y;
 }
 
 void ViewportUI::MouseWheel(int x, int y)
@@ -251,6 +255,118 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       break;
     }
   }
+}
+
+static void TestShapes() {
+  for(size_t i = 0; i< 2; ++i) {
+    
+    CYLINDER_SHAPE->Draw(
+        {1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        (float)i*2, 0.f, 0.f, 1.f},
+      pxr::GfVec4f(1.f, 0.25f, 0.5f, 1.f));
+  }
+  for(size_t i = 2; i< 4; ++i) {
+    ICOSPHERE_SHAPE->Draw(
+        {1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        (float)i*2, 0.f, 0.f, 1.f},
+      pxr::GfVec4f(0.5f, 1.f, 0.25f, 1.f));
+  }
+  for(size_t i = 4; i< 6; ++i) {
+    CONE_SHAPE->Draw(
+        {1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        (float)i*2, 0.f, 0.f, 1.f},
+      pxr::GfVec4f(0.25f, 0.5f, 1.f, 1.f));
+  }
+  for(size_t i = 6; i< 8; ++i) {
+    GRID_SHAPE->Draw(
+        {1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        (float)i*2, 0.f, 0.f, 1.f},
+      pxr::GfVec4f(0.f, 1.f, 0.f, 1.f));
+  }
+  for(size_t i = 8; i< 10; ++i) {
+    BOX_SHAPE->Draw(
+        {1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        (float)i*2, 0.f, 0.f, 1.f},
+      pxr::GfVec4f(0.f, 1.f, 0.f, 1.f));
+  }
+  for(size_t i = 10; i< 12; ++i) {
+    TUBE_SHAPE->Draw(
+        {1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        (float)i*2, 0.f, 0.f, 1.f},
+      pxr::GfVec4f(0.f, 1.f, 0.f, 1.f));
+  }
+  for(size_t i = 12; i< 14; ++i) {
+    TORUS_SHAPE->Draw(
+        {1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        (float)i*2, 0.f, 0.f, 1.f},
+      pxr::GfVec4f(1.f, 0.25f, 0.5f, 1.f));
+  }
+}
+
+static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd) {
+
+  ViewportUI* viewport = (ViewportUI*)cmd->UserCallbackData;
+  Camera* camera = viewport->GetCamera();
+  View* view = viewport->GetView();
+  BaseHandle* handle = viewport->GetHandle();
+
+  // get current state
+  GLint currentViewport[4];
+  glGetIntegerv(GL_VIEWPORT, &currentViewport[0]);
+
+  GLint currentProgram;
+  glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+
+  // resize viewport
+  float x = view->GetX();
+  float y = view->GetY();
+  float w = view->GetWidth();
+  float h = view->GetHeight();
+  float wh = viewport->GetWindowHeight();
+  glViewport(x,wh - (y + h), w, h);
+  glEnable(GL_DEPTH_TEST);
+  glClear(GL_DEPTH_BUFFER_BIT);
+
+  // test handle
+  Shape::UpdateCamera(
+    pxr::GfMatrix4f(camera->GetViewMatrix()),
+    pxr::GfMatrix4f(camera->GetProjectionMatrix()));
+
+  handle->Resize();
+  short activeAxis = handle->Pick(
+    viewport->GetLastMouseX() - viewport->GetX(),
+    viewport->GetLastMouseY() - viewport->GetY(),
+    viewport->GetWidth(),
+    viewport->GetHeight());
+  handle->SetActiveAxis(activeAxis);
+
+  
+  handle->Draw();
+
+  // restore viewport
+  glViewport(
+    currentViewport[0],
+    currentViewport[1],
+    currentViewport[2],
+    currentViewport[3]);
+
+  // restore material
+  glUseProgram(currentProgram);
+  glDisable(GL_DEPTH_TEST);
 }
 
 bool ViewportUI::Draw()
@@ -347,6 +463,9 @@ bool ViewportUI::Draw()
 
     //_engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 1));
     glDisable(GL_SCISSOR_TEST);
+
+    // tool drawing
+    drawList->AddCallback(DrawToolCallback, this);
   
     ImGui::PushFont(GetWindow()->GetMediumFont(0));
     std::string msg = "Hello Amnesie!";

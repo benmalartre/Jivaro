@@ -1,4 +1,6 @@
 #include "camera.h"
+#include <pxr/base/gf/vec4d.h>
+
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -21,6 +23,36 @@ Camera::Camera(const std::string& name, double fov) :
     pxr::GfCamera::FOVVertical);
   _camera.SetFocusDistance((_pos - _lookat).GetLength());
   _camera.SetClippingRange(pxr::GfRange1f(_near, _far));
+}
+
+pxr::GfVec3d 
+Camera::GetRayDirection(float x, float y, float width, float height)
+{
+  // normalize device coordinates
+  float nx = (2.f * x) / width - 1;
+  float ny = 1.f - (2.f * y) /height;
+  float nz = 1.f;
+  pxr::GfVec3d rayNds(nx, ny, nz);
+
+  // homogenous clip coordinates
+  pxr::GfVec3d rayClip(rayNds[0], rayNds[1], -1.f);
+
+  // eye (camera) coordinates
+  pxr::GfMatrix4d invProj = GetProjectionMatrix().GetInverse();
+  pxr::GfVec3d rayEye = invProj.Transform(rayClip);
+  rayEye[2] = -1.f;
+
+  // world coordinates
+  pxr::GfMatrix4d invView = GetViewMatrix().GetInverse();
+  pxr::GfVec3d rayWorld = invView.TransformDir(rayEye);
+
+  return rayWorld.GetNormalized();
+}
+
+pxr::GfVec3d 
+Camera::GetViewPlaneNormal()
+{
+  return (_lookat - _pos).GetNormalized();
 }
 
 const pxr::GfMatrix4d Camera::GetViewMatrix()

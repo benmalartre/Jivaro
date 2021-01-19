@@ -4,6 +4,7 @@
 #include "../ui/ui.h"
 #include "../app/camera.h"
 #include "../app/notice.h"
+#include "../app/handle.h"
 #include "../utils/utils.h"
 #include <pxr/pxr.h>
 
@@ -53,6 +54,10 @@ class ViewportUI : public BaseUI
     Camera* GetCamera(){return _camera;};
     pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
 
+    BaseHandle* GetHandle(){return &_handle;};
+    float GetLastMouseX(){return _lastX;};
+    float GetLastMouseY(){return _lastY;};
+
     // overrides
     void MouseButton(int button, int action, int mods) override;
     void MouseMove(int x, int y) override;
@@ -81,6 +86,7 @@ class ViewportUI : public BaseUI
     bool                  _interact;
     InteractionMode       _interactionMode;
     bool                  _valid;
+    TranslateHandle       _handle;
 
     // usd imaging engine
     Engine*                           _engine;

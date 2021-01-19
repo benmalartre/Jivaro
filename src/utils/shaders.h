@@ -10,7 +10,48 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // vertex shader :
-static const GLchar* SIMPLE_VERTEX_SHADER_CODE_120 =
+static const char* SIMPLE_VERTEX_SHADER_CODE_120 =
+"#version 120\n"
+"attribute in vec3 position;\n"
+"uniform mat4 view;\n"
+"uniform mat4 proj;\n"
+"uniform mat4 model;\n"
+"void main() {\n"
+"    gl_Position = proj * view * model * vec4(position, 1.0);\n"
+"}\n";
+
+// fragment shader :
+static const char* SIMPLE_FRAGMENT_SHADER_CODE_120 =
+"#version 120\n"
+"uniform vec4 color;\n"
+"void main() {\n"
+"    gl_FragColor = color;\n"
+"//    out_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
+"}\n";
+
+// vertex shader :
+static const char* SIMPLE_VERTEX_SHADER_CODE_330 =
+"#version 330 core\n"
+"layout(location = 0) in vec3 position;\n"
+"uniform mat4 view;\n"
+"uniform mat4 proj;\n"
+"uniform mat4 model;\n"
+"void main() {\n"
+"    gl_Position = proj * view * model * vec4(position, 1.0);\n"
+"}\n";
+
+// fragment shader :
+static const char* SIMPLE_FRAGMENT_SHADER_CODE_330 =
+"#version 330 core\n"
+"uniform vec4 color;\n"
+"out vec4 out_color;\n"
+"void main() {\n"
+"    out_color = color;\n"
+"//    out_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
+"}\n";
+
+// vertex shader :
+static const char* COLORED_VERTEX_SHADER_CODE_120 =
 "#version 120\n"
 "attribute in vec3 position;\n"
 "attribute in vec3 color;\n"
@@ -23,7 +64,7 @@ static const GLchar* SIMPLE_VERTEX_SHADER_CODE_120 =
 "}\n";
 
 // fragment shader :
-static const GLchar* SIMPLE_FRAGMENT_SHADER_CODE_120 =
+static const char* COLORED_FRAGMENT_SHADER_CODE_120 =
 "#version 120\n"
 "varying vec3 vertex_color;\n"
 "void main() {\n"
@@ -32,7 +73,7 @@ static const GLchar* SIMPLE_FRAGMENT_SHADER_CODE_120 =
 "}\n";
 
 // vertex shader :
-static const GLchar* SIMPLE_VERTEX_SHADER_CODE_330 =
+static const char* COLORED_VERTEX_SHADER_CODE_330 =
 "#version 330 core\n"
 "layout(location = 0) in vec3 position;\n"
 "layout(location = 1) in vec3 color;\n"
@@ -45,7 +86,7 @@ static const GLchar* SIMPLE_VERTEX_SHADER_CODE_330 =
 "}\n";
 
 // fragment shader :
-static const GLchar* SIMPLE_FRAGMENT_SHADER_CODE_330 =
+static const char* COLORED_FRAGMENT_SHADER_CODE_330 =
 "#version 330 core\n"
 "in vec3 vertex_color;\n"
 "out vec4 out_color;\n"
@@ -103,10 +144,12 @@ public:
   }
   void _Build();
   void Build(const char* name);
-  void Build(const char* name, const char* s_vert="", const char* s_frag="");
-  void Build(const char* name, const char* s_vert="", const char* s_geom="", const char* s_frag="");
+  void BuildFromString(const char* name, const char* s_vert, const char* s_frag);
+  void BuildFromString(const char* name, const char* s_vert, const char* s_geom, 
+    const char* s_frag);
   void Build(const char* name, GLSLShader* vertex, GLSLShader* fragment);
-  void Build(const char* name, GLSLShader* vertex, GLSLShader* geom, GLSLShader* fragment);
+  void Build(const char* name, GLSLShader* vertex, GLSLShader* geom, 
+    GLSLShader* fragment);
   void OutputInfoLog();
   GLuint Get(){return _pgm;};
 private:
