@@ -67,51 +67,37 @@ public:
     NORMAL_CAMERA
   };
 
-  /*
-  struct Component {
-    short axis;
-    size_t startIdx;
-    size_t endIdx;
-    bool active;
-    bool hovered;
-    const pxr::GfMatrix4f* offset;
-    const pxr::GfVec4f* color;
-
-    Component(short axis, size_t start, size_t end, const pxr::GfVec4f* color,
-      const pxr::GfMatrix4f* m) 
-      : axis(axis)
-      , startIdx(start)
-      , endIdx(end)
-      , color(color)
-      , offset(m)
-      , active(false)
-      , hovered(false){};
-  };
-  */
-
   BaseHandle() 
     : _activeAxis(AXIS_NONE)
+    , _hoveredAxis(AXIS_NONE)
     , _activeNormal(NORMAL_CAMERA)
-    , _camera(NULL) 
+    , _camera(NULL)
+    , _interacting(false)
     , _position(pxr::GfVec3d(0.f))
     , _rotation(pxr::GfRotation())
     , _scale(pxr::GfVec3d(1.f))
     , _viewPlaneMatrix(pxr::GfMatrix4f(1.f)) {};
 
   void SetActiveAxis(short axis);
+  void SetHoveredAxis(short axis);
   void SetCamera(Camera* camera) {_camera = camera;};
   void SetMatrixFromSRT();
   void SetSRTFromMatrix();
   void Resize();
   void AddComponent(Shape::Component& component);
+  void AddXComponent(Shape::Component& component);
+  void AddYComponent(Shape::Component& component);
+  void AddZComponent(Shape::Component& component);
   void AddXYZComponents(Shape::Component& component);
   void AddYZXZXYComponents(Shape::Component& component);
-  const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
 
-  virtual void Draw() = 0;
-  virtual short Pick(float x, float y, float width, float height) = 0;
-  virtual void Update(float x, float y) = 0;
+  const pxr::GfVec4f& GetColor(const Shape::Component& comp);
+
+  virtual void Draw();
+  virtual short Select(float x, float y, float width, float height, bool lock);
+  virtual short Pick(float x, float y, float width, float height);
+  virtual void Update(float x, float y);
 
 protected:
   // geomeyry
@@ -160,11 +146,11 @@ public:
 
 class TranslateHandle : public BaseHandle {
 public:
+/*static bool VISIBILITIES[8][10] = {
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  } */
   TranslateHandle();
-
-  void Draw() override;
-  short Pick(float x, float y, float width, float height) override;
-  void Update(float x, float y) override;
 private:
   float _radius;
   float _height;

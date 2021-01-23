@@ -50,9 +50,9 @@ public:
   std::vector<SelectionItem>& Get() { return _items; };
 	
 private:
-	SelectionType 				      _selectionMode;
-	ComponentType				        _componentMode;
-	std::vector<SelectionItem> 	_items;
+	SelectionType               _selectionMode;
+	ComponentType               _componentMode;
+	std::vector<SelectionItem>  _items;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

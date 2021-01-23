@@ -31,28 +31,38 @@ public:
   struct Component {
     short type;
     short index;
-    size_t start;
-    size_t end;
+    size_t basePoint;
+    size_t numPoints;
+    size_t baseIndex;
+    size_t endIndex;
     bool active;
     bool hovered;
+    bool visible;
     pxr::GfRange3f bounds;
-    pxr::GfMatrix4f offset;
+    pxr::GfMatrix4f offsetMatrix;
+    pxr::GfMatrix4f parentMatrix;
     pxr::GfVec4f color;
     
-
-    Component(short type, short index, size_t start, size_t end, 
-      const pxr::GfVec4f& color, const pxr::GfMatrix4f& m) 
+    Component(short type, short shapeIndex, size_t basePointIndex, 
+      size_t numPoints, size_t baseIndex, size_t endIndex, 
+      const pxr::GfVec4f& color, const pxr::GfMatrix4f& parentMatrix, 
+      const pxr::GfMatrix4f& offsetMatrix=pxr::GfMatrix4f(1.f)) 
       : type(type)
-      , index(index)
-      , start(start)
-      , end(end)
+      , index(shapeIndex)
+      , basePoint(basePointIndex)
+      , numPoints(numPoints)
+      , baseIndex(baseIndex)
+      , endIndex(endIndex)
       , color(color)
-      , offset(m)
+      , parentMatrix(parentMatrix)
+      , offsetMatrix(offsetMatrix)
       , active(false)
-      , hovered(false){};
+      , hovered(false)
+      , visible(true) {};
     ~Component(){};
 
     void SetBounds(const pxr::GfVec3f& xyz);
+    void SetBounds(const pxr::GfRange3f&);
     void ComputeBounds(Shape* shape);
     size_t Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
   };
@@ -65,6 +75,7 @@ public:
   size_t GetNumIndices() {return _indices.size();};
   size_t GetNumComponents() {return _components.size();};
   const std::vector<pxr::GfVec3f>& GetPoints() {return _points;};
+  const std::vector<int>& GetIndices() {return _indices;};
   const Component& GetComponent(size_t index) {return _components[index];};
 
   static void _MakeCircle(std::vector<pxr::GfVec3f>& points, float radius, 
@@ -75,36 +86,37 @@ public:
 
   void UpdateComponents(short hovered, short active);
   void AddComponent(const Component& component);
-  void AddComponent(short type, short index, size_t start, size_t end, 
-      const pxr::GfVec4f& color, const pxr::GfMatrix4f& m);
-  Component AddGrid(size_t index, float width=1.f, float depth=1.f,  size_t divX=8, 
+  void AddComponent(short type, short index, size_t basePoint, size_t numPoints,
+    size_t startIndex, size_t endIndex, const pxr::GfVec4f& color, 
+    const pxr::GfMatrix4f& m);
+  Component AddGrid(short index, float width=1.f, float depth=1.f,  size_t divX=8, 
     size_t divZ=8, const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddBox(size_t index, float width=1.f, float height=1.f, float depth=1.f, 
+  Component AddBox(short index, float width=1.f, float height=1.f, float depth=1.f, 
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddSphere(size_t index, float radius, size_t lats=8, size_t longs=8,
+  Component AddSphere(short index, float radius, size_t lats=8, size_t longs=8,
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddIcoSphere(size_t index, float radius, size_t subdiv=0, 
+  Component AddIcoSphere(short index, float radius, size_t subdiv=0, 
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddDisc(size_t index, float radius, size_t lats=8, 
+  Component AddDisc(short index, float radius, size_t lats=8, 
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddDisc(size_t index, float radius, float start, float end, size_t lats=8,
+  Component AddDisc(short index, float radius, float start, float end, size_t lats=8,
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddCylinder(size_t index, float radius, float height, size_t lats=8, 
+  Component AddCylinder(short index, float radius, float height, size_t lats=8, 
     size_t longs=2, const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddTube(size_t index, float outRadius, float inRadius, float height, 
+  Component AddTube(short index, float outRadius, float inRadius, float height, 
     size_t lats=8, size_t longs=2, const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddCone(size_t index, float radius, float height, size_t lats=8, 
+  Component AddCone(short index, float radius, float height, size_t lats=8, 
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  Component AddTorus(size_t index, float radius, float section, size_t lats=16, 
+  Component AddTorus(short index, float radius, float section, size_t lats=16, 
     size_t longs=8, const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
   
@@ -120,6 +132,11 @@ public:
   void Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
     size_t start, size_t end);
 
+  void Bind(GLSLProgram* pgm);
+  void Unbind();
+  void DrawComponent(size_t index, const pxr::GfMatrix4f& model, 
+    const pxr::GfVec4f& color);
+
 private:
   std::vector<pxr::GfVec3f> _points;
   std::vector<int> _indices;
@@ -127,6 +144,8 @@ private:
   GLuint _vao;
   GLuint _vbo;
   GLuint _eab;
+  GLuint _uModel;
+  GLuint _uColor;
 };
 
 // static shapes

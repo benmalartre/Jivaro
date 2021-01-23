@@ -1,9 +1,11 @@
 #include "shape.h"
+#include "intersector.h"
 #include "../utils/shaders.h"
 #include <iostream>
 #include <map>
 #include <pxr/imaging/glf/contextCaps.h>
 #include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/plane.h>
 #include <pxr/base/gf/range3f.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
@@ -28,13 +30,17 @@ void Shape::Component::SetBounds(const pxr::GfVec3f& xyz)
   bounds = pxr::GfRange3f(pxr::GfVec3f(0.f), xyz);
 }
 
+void Shape::Component::SetBounds(const pxr::GfRange3f& value)
+{
+  bounds = value;
+}
+
 void Shape::Component::ComputeBounds(Shape* shape)
 {
-  pxr::GfMatrix4f invMatrix = offset.GetInverse();
   bounds.SetEmpty();
   const std::vector<pxr::GfVec3f>& points = shape->GetPoints();
-  for(size_t e = start; e < end; ++e) {
-    bounds.UnionWith(invMatrix.Transform(points[e]));
+  for(size_t e = basePoint; e < (basePoint + numPoints); ++e) {
+    bounds.UnionWith(points[e]);
   }
 }
 
@@ -49,76 +55,69 @@ Shape::Component::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m)
         pxr::GfVec3d(-bound[0] * 0.5f, 0.f, -bound[1] * 0.5f),
         pxr::GfVec3d(bound[0] * 0.5f, 0.f, bound[1] * 0.5f));
       pxr::GfBBox3d bbox(range);
-      bbox.Transform(pxr::GfMatrix4d(offset * m));
-      if(ray.Intersect(bbox)) {
-        hovered = true;
-        return index;
-      } else {
-        hovered = false;
-      }
+      bbox.Transform(pxr::GfMatrix4d(offsetMatrix * parentMatrix * m));
+      if(ray.Intersect(bbox)) return index;
       break;
     }
     case BOX:
     {
-
+      pxr::GfRange3d range(
+        pxr::GfVec3d(bounds.GetMin()),
+        pxr::GfVec3d(bounds.GetMax()));
+      pxr::GfBBox3d bbox(range);
+      bbox.Transform(pxr::GfMatrix4d(offsetMatrix * parentMatrix * m));
+      if(ray.Intersect(bbox)) return index;
+      break;
     }
     case SPHERE:
-    {
-
-    }
     case ICOSPHERE:
     {
-
+      pxr::GfVec3d center = 
+        (offsetMatrix * parentMatrix * m).Transform(pxr::GfVec3d(0));
+      pxr::GfVec3d radius = m.Transform(bounds.GetMax());
+      if(ray.Intersect(center, radius[0])) return index;
+      break;
     }
     case DISC:
     {
-
-    }
-    case CYLINDER:
-    {
-      const pxr::GfVec3f& bound = bounds.GetMax();
-      pxr::GfMatrix4f matrix = offset * m;
-      /*
-      pxr::GfVec3d origin = matrix.Transform(pxr::GfVec3d(0, 0, 0));
-      pxr::GfVec3d axis = matrix.TransformDir(pxr::GfVec3d(0, bound[1], 0));
-      if(ray.Intersect(origin, axis, bound[0])) {
-        hovered = true;
-        return index;
-      } else {
-        hovered = false;
-      }
-      */
-      pxr::GfRange3d range(
-        pxr::GfVec3d(-bound[0], 0.f, -bound[0]),
-        pxr::GfVec3d(bound[0], bound[1], bound[0]));
-      pxr::GfBBox3d bbox(range);
-      bbox.Transform(pxr::GfMatrix4d(offset * m));
-      if(ray.Intersect(bbox)) {
-        hovered = true;
-        return index;
-      } else {
-        hovered = false;
-      }
+      pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
+      float radius = bounds.GetMax()[0];
+      pxr::GfRay localRay(ray);
+      localRay.Transform(matrix);
+      if(DiscIntersection(localRay, pxr::GfVec3d(0, 1, 0), 
+        pxr::GfVec3d(0), radius) >= 0.f) return index;
       break;
     }
     case TUBE:
+    case CYLINDER:
     {
-
+      pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
+      const pxr::GfVec3d& bound = bounds.GetMax();
+      pxr::GfRay invRay(ray);
+      invRay.Transform(matrix);
+      if(CylinderIntersection(invRay, bound[0], bound[1]) >= 0.f) 
+          return index;
+      break;
     }
     case CONE:
     {
-
+      break;
     }
     case CAPSULE:
     {
-
+      break;
     }
     case TORUS:
     {
-
+      pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
+      pxr::GfRay invRay(ray);
+      invRay.Transform(pxr::GfMatrix4d(matrix));
+      const pxr::GfVec3d& bound = bounds.GetMax();
+      if(TorusIntersection( invRay, bound[0], bound[1]) > 0.f)
+          return index;
+      break;
     }
   }
-  
   return 0;
 }
 
@@ -144,10 +143,20 @@ void Shape::AddComponent(const Component& component)
   _components.push_back(component);
 }
 
-void Shape::AddComponent(short type, short index, size_t start, size_t end, 
+void Shape::AddComponent(short type, short index, size_t basePoint, 
+  size_t numPoints, size_t startIdx, size_t endIdx, 
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
-  _components.push_back(Component(type, index, start, end, color, m));
+  _components.push_back({
+    type, 
+    index, 
+    basePoint, 
+    numPoints, 
+    startIdx, 
+    endIdx, 
+    color, 
+    m
+  });
 }
 
 void Shape::_MakeCircle(std::vector<pxr::GfVec3f>& points, float radius, 
@@ -160,10 +169,10 @@ void Shape::_MakeCircle(std::vector<pxr::GfVec3f>& points, float radius,
   }
 }
 
-void Shape::_TransformPoints(size_t start, size_t end, 
+void Shape::_TransformPoints(size_t startIdx, size_t endIdx, 
   const pxr::GfMatrix4f& m)
 {
-  for(size_t k=start; k < end; ++k) {
+  for(size_t k=startIdx; k < endIdx; ++k) {
     _points[k] = m.TransformAffine(_points[k]);
   }
 }
@@ -180,7 +189,7 @@ Shape::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m)
 }
 
 Shape::Component
-Shape::AddGrid(size_t index, float width, float depth, size_t divX, 
+Shape::AddGrid(short index, float width, float depth, size_t divX, 
   size_t divZ, const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   // initialize data
@@ -220,14 +229,24 @@ Shape::AddGrid(size_t index, float width, float depth, size_t divX,
   }
 
   // make component
-  Shape::Component component(Shape::GRID, index, baseNumIndices, _indices.size(),  
-    color, m);
+  Shape::Component component =  {
+    Shape::GRID,
+    index, 
+    baseNumPoints, 
+    (_points.size() - baseNumPoints), 
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m
+  };
+
   component.ComputeBounds(this);
   return component;
 }
 
 Shape::Component
-Shape::AddBox(size_t index, float width, float height, float depth, 
+Shape::AddBox(short index, float width, float height, float depth, 
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   // initialize data
@@ -259,14 +278,28 @@ Shape::AddBox(size_t index, float width, float height, float depth,
   }
 
   // make component
-  Shape::Component component(Shape::BOX, index, baseNumIndices, _indices.size(),  
-    color, m);
-  component.ComputeBounds(this);
+  Shape::Component component = {
+    Shape::BOX, 
+    index, 
+    baseNumPoints,
+    (_points.size() - baseNumPoints), 
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m
+  };
+
+  //component.ComputeBounds(this);
+  component.SetBounds(
+    pxr::GfRange3f(
+      pxr::GfVec3f(-width * 0.5f, -height * 0.5f, -depth * 0.5f),
+      pxr::GfVec3f(width * 0.5f, height * 0.5f, depth * 0.5f)));
   return component;
 }
 
 Shape::Component 
-Shape::AddSphere(size_t index, float radius, size_t lats, size_t longs, 
+Shape::AddSphere(short index, float radius, size_t lats, size_t longs, 
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   // initialize data
@@ -303,9 +336,9 @@ Shape::AddSphere(size_t index, float radius, size_t lats, size_t longs,
   for(size_t i = 0; i < longs - 1; ++i) {
     for(size_t j = 0; j < lats; ++j) {
       if(i == 0) {
-        _indices.push_back((j + 1) % lats + 1);
-        _indices.push_back(j + 1);
-        _indices.push_back(0);
+        _indices.push_back((j + 1) % lats + 1 + baseNumPoints);
+        _indices.push_back(j + 1 + baseNumPoints);
+        _indices.push_back(baseNumPoints);
       } else if( i == longs - 2) {
         _indices.push_back(numPoints - 1);
         _indices.push_back(numPoints - lats + j - 1);
@@ -327,19 +360,29 @@ Shape::AddSphere(size_t index, float radius, size_t lats, size_t longs,
           i3 = i1 + lats + 1;
         }
 
-        _indices.push_back(i1);
-        _indices.push_back(i2);
-        _indices.push_back(i3);
-        _indices.push_back(i1);
-        _indices.push_back(i3);
-        _indices.push_back(i4);
+        _indices.push_back(i1 + baseNumPoints);
+        _indices.push_back(i2 + baseNumPoints);
+        _indices.push_back(i3 + baseNumPoints);
+        _indices.push_back(i1 + baseNumPoints);
+        _indices.push_back(i3 + baseNumPoints);
+        _indices.push_back(i4 + baseNumPoints);
       }
     }
   }
 
   // make component
-  Shape::Component component(Shape::SPHERE, index, baseNumIndices, 
-    _indices.size(), color, m);
+  Shape::Component component = {
+    Shape::SPHERE, 
+    index, 
+    baseNumPoints, 
+    (_points.size() - baseNumPoints), 
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m
+  };
+
   component.SetBounds(pxr::GfVec3f(radius, 0.f, 0.f));
   return component;
 }
@@ -421,7 +464,7 @@ static void IcoSubdivide(std::vector<pxr::GfVec3f>& points,
 }
 
 Shape::Component
-Shape::AddIcoSphere(size_t index, float radius, size_t subdiv, 
+Shape::AddIcoSphere(short index, float radius, size_t subdiv, 
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   // initialize data
@@ -461,15 +504,25 @@ Shape::AddIcoSphere(size_t index, float radius, size_t subdiv,
   _TransformPoints(baseNumPoints, _points.size(), m);
 
   // make component
-  Shape::Component component(Shape::CYLINDER, index, baseNumIndices, _indices.size(),  
-    color, m);
+  Shape::Component component = {
+    Shape::ICOSPHERE, 
+    index, 
+    baseNumPoints,
+    _points.size() - baseNumPoints,
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f),
+    m
+  };
+
   component.SetBounds(pxr::GfVec3f(radius, 0.f, 0.f));
   return component;
 
 }
 
 Shape::Component 
-Shape::AddCylinder(size_t index, float radius, float height, size_t lats, 
+Shape::AddCylinder(short index, float radius, float height, size_t lats, 
   size_t longs, const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   // initialize data
@@ -480,17 +533,16 @@ Shape::AddCylinder(size_t index, float radius, float height, size_t lats,
 
   // make points
   float stepY = height / (float) (longs - 1);
-  float baseY = -height * 0.5f;
   for(size_t i=0; i< longs; ++i) {
     _MakeCircle(_points, radius, lats, 
     {1.f, 0.f, 0.f, 0.f,
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
-    0.f, baseY + (i * stepY), 0.f, 1.f});
+    0.f, (float)(i * stepY), 0.f, 1.f});
   }
 
-  _points.push_back(pxr::GfVec3f(0.f, -height * 0.5f, 0.f));
-  _points.push_back(pxr::GfVec3f(0.f, height * 0.5f, 0.f));
+  _points.push_back(pxr::GfVec3f(0.f, 0.f, 0.f));
+  _points.push_back(pxr::GfVec3f(0.f, height, 0.f));
 
   // transform points
   _TransformPoints(baseNumPoints, _points.size(), m);
@@ -507,30 +559,39 @@ Shape::AddCylinder(size_t index, float radius, float height, size_t lats,
       _indices.push_back((int)(baseNumPoints + (i + 1) * lats + j));
     }
   };
-  
   size_t numPoints = _points.size();
   for(size_t i=0; i < lats; ++i) {
     _indices.push_back(numPoints - 2);
     _indices.push_back(baseNumPoints + (i + 1) % lats);
     _indices.push_back(baseNumPoints + i);
   }
-
   size_t baseRow = numPoints - (lats + 2);
   for(size_t i=0; i < lats; ++i) {
     _indices.push_back(numPoints - 1);
-    _indices.push_back(baseNumPoints + baseRow + i);
-    _indices.push_back(baseNumPoints + baseRow + (i + 1) % lats);
+    _indices.push_back(baseRow + i);
+    _indices.push_back(baseRow + (i + 1) % lats);
   }
 
   // make component
-  Shape::Component component(Shape::CYLINDER, index, baseNumIndices, 
-    _indices.size(), color, m);
-  component.SetBounds(pxr::GfVec3f(radius * 2.f, height, 0.f));
+  Shape::Component component = {
+    Shape::CYLINDER, 
+    index, 
+    baseNumPoints,
+    _points.size() - baseNumPoints,
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m
+  };
+
+  component.SetBounds(pxr::GfVec3f(radius + 0.05f, height, 0.f));
+
   return component;
 }
 
 Shape::Component 
-Shape::AddTube(size_t index, float outRadius, float inRadius, float height,
+Shape::AddTube(short index, float outRadius, float inRadius, float height,
   size_t lats, size_t longs, const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   // initialize data
@@ -559,12 +620,12 @@ Shape::AddTube(size_t index, float outRadius, float inRadius, float height,
 
   // make indices
   for(size_t x = 0; x < lats; ++x) {
-    _indices.push_back(x);
-    _indices.push_back((x + 1) % lats);
-    _indices.push_back((x + 1) % lats + lats);
-    _indices.push_back(x);
-    _indices.push_back((x + 1) % lats + lats);
-    _indices.push_back(x + lats);
+    _indices.push_back(x + baseNumPoints);
+    _indices.push_back((x + 1) % lats + baseNumPoints);
+    _indices.push_back((x + 1) % lats + lats + baseNumPoints);
+    _indices.push_back(x + baseNumPoints);
+    _indices.push_back((x + 1) % lats + lats + baseNumPoints);
+    _indices.push_back(x + lats + baseNumPoints);
   }
 
   size_t baseRowIdx = baseNumPoints + (longs - 1) * lats * 2;
@@ -579,31 +640,41 @@ Shape::AddTube(size_t index, float outRadius, float inRadius, float height,
 
   for(size_t y = 0; y < longs -1; ++y) {
     for(size_t x = 0; x < lats; ++x) {
-      _indices.push_back(x);
-      _indices.push_back((x + 1) % lats);
-      _indices.push_back((x + 1) % lats + 2 * lats);
-      _indices.push_back(x);
-      _indices.push_back((x + 1) % lats + 2 * lats);
-      _indices.push_back(x + 2 * lats);
+      _indices.push_back(x + baseNumPoints);
+      _indices.push_back((x + 1) % lats + baseNumPoints);
+      _indices.push_back((x + 1) % lats + 2 * lats + baseNumPoints);
+      _indices.push_back(x + baseNumPoints);
+      _indices.push_back((x + 1) % lats + 2 * lats + baseNumPoints);
+      _indices.push_back(x + 2 * lats + baseNumPoints);
 
-      _indices.push_back(x + 3 * lats);
-      _indices.push_back((x + 1) % lats + 3 * lats);
-      _indices.push_back(x + lats);
-      _indices.push_back((x + 1) % lats + 3 * lats);
-      _indices.push_back((x + 1) % lats + lats);
-      _indices.push_back(x + lats);
+      _indices.push_back(x + 3 * lats + baseNumPoints);
+      _indices.push_back((x + 1) % lats + 3 * lats + baseNumPoints);
+      _indices.push_back(x + lats + baseNumPoints);
+      _indices.push_back((x + 1) % lats + 3 * lats + baseNumPoints);
+      _indices.push_back((x + 1) % lats + lats + baseNumPoints);
+      _indices.push_back(x + lats + baseNumPoints);
     }
   }
 
   // make component
-  Shape::Component  component(Shape::TUBE, index, baseNumIndices, _indices.size(),  
-    color, m);
+  Shape::Component  component = {
+    Shape::TUBE, 
+    index, 
+    baseNumPoints,
+    _points.size() - baseNumPoints,
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m
+  };
+
   component.SetBounds(pxr::GfVec3f(inRadius, outRadius, height));
   return component;
 }
 
 Shape::Component 
-Shape::AddCone(size_t index, float radius, float height, size_t lats, 
+Shape::AddCone(short index, float radius, float height, size_t lats, 
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   size_t baseNumPoints = _points.size();
@@ -630,14 +701,24 @@ Shape::AddCone(size_t index, float radius, float height, size_t lats,
   }
 
   // make component
-  Shape::Component  component(Shape::CONE, index, baseNumIndices, 
-    _indices.size(), color, m);
+  Shape::Component  component = {
+    Shape::CONE, 
+    index, 
+    baseNumPoints,
+    _points.size() - baseNumPoints,
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m
+  };
+
   component.SetBounds(pxr::GfVec3f(radius, height, 0.f));
   return component;
 }
 
 Shape::Component 
-Shape::AddTorus(size_t index, float radius, float section, size_t lats, 
+Shape::AddTorus(short index, float radius, float section, size_t lats, 
   size_t longs, const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   // check data
@@ -650,17 +731,17 @@ Shape::AddTorus(size_t index, float radius, float section, size_t lats,
   // make points
   float angleInc = 360.f / (float)lats;
   float sectionAngleInc = 360.f / (float)longs;
-  float cradius, zval;
+  float cradius, yval;
 
   for(int i = 0; i < longs; ++i){
     cradius = radius + (section * std::cosf(i * sectionAngleInc * DEGREES_TO_RADIANS));
-    zval = section * std::sinf(i * sectionAngleInc * DEGREES_TO_RADIANS);
+    yval = section * std::sinf(i * sectionAngleInc * DEGREES_TO_RADIANS);
     for(int j = 0; j < lats; ++j) {
       _points.push_back(
         pxr::GfVec3f(
           cradius * std::cosf(j * angleInc * DEGREES_TO_RADIANS),
-          cradius * std::sinf(j * angleInc * DEGREES_TO_RADIANS),
-          zval));
+          yval,
+          cradius * std::sinf(j * angleInc * DEGREES_TO_RADIANS)));
     }
   }
 
@@ -668,9 +749,9 @@ Shape::AddTorus(size_t index, float radius, float section, size_t lats,
   _TransformPoints(baseNumPoints, _points.size(), m);
 
   // make indices
-	for(int i = 0; i < longs; ++i) {
-		for(int j = 0; j < lats; ++j) {
-			size_t i1, i2, i3, i4;
+  for(int i = 0; i < longs; ++i) {
+    for(int j = 0; j < lats; ++j) {
+      size_t i1, i2, i3, i4;
       i1 = baseNumPoints + (j + i * lats);
       if(j < lats -1) {
         i2 = baseNumPoints + ((j + i * lats + 1) % torusNumPoints);
@@ -692,14 +773,24 @@ Shape::AddTorus(size_t index, float radius, float section, size_t lats,
   }
 
   // make component
-  Shape::Component component(Shape::TORUS, index, baseNumIndices, 
-    _indices.size(), color, m);
+  Shape::Component component = {
+    Shape::TORUS, 
+    index, 
+    baseNumPoints,
+    _points.size() - baseNumPoints,
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m
+  };
+
   component.SetBounds(pxr::GfVec3f(radius, section, 0.f));
   return component;
 }
 
 Shape::Component 
-Shape::AddDisc(size_t index, float radius, float start, float end, size_t lats,
+Shape::AddDisc(short index, float radius, float start, float end, size_t lats,
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   size_t baseNumPoints = _points.size();
@@ -707,34 +798,54 @@ Shape::AddDisc(size_t index, float radius, float start, float end, size_t lats,
   if(lats < 3) lats = 3;
   float totalAngle = end - start; 
   bool closed = (totalAngle >= 360.f);
+  float step = ((end - start) / (float)lats);
   if(!closed) lats++;
 
   // make points
-  _points.push_back(pxr::GfVec3f(0.f));
-  float step = (360.f / (float)lats);
   for(size_t i=0; i < lats; ++i) {
     float currentAngle = (start + i * step) * DEGREES_TO_RADIANS;
     _points.push_back(
-      pxr::GfVec3f(std::sinf(currentAngle), 0.f, std::cosf(currentAngle)));
+      pxr::GfVec3f(
+        std::sinf(currentAngle) * radius, 
+        0.f, 
+        std::cosf(currentAngle) * radius));
   }
+  _points.push_back(pxr::GfVec3f(0.f));
+  size_t lastIdx = _points.size() - 1;
+
+  // transform points
+  _TransformPoints(baseNumPoints, _points.size(), m);
 
   // make indices
   if(closed) {
     for(size_t i = 0; i < lats; ++i) {
       _indices.push_back(baseNumPoints + i);
-      _indices.push_back(baseNumPoints + (i + 1) % lats);
-      _indices.push_back(baseNumPoints);
+      _indices.push_back(baseNumPoints + ((i + 1) % lats));
+      _indices.push_back(lastIdx);
+      std::cout << (baseNumPoints + i) << "," <<
+        (baseNumPoints + ((i + 1) % lats)) << "," <<
+        (lastIdx) << std::endl;
     }
   } else {
     for(size_t i = 0; i < lats - 1; ++i) {
       _indices.push_back(baseNumPoints + i);
       _indices.push_back(baseNumPoints + (i + 1));
-      _indices.push_back(baseNumPoints);
+      _indices.push_back(lastIdx);
     }
   }
   // make component
-  Shape::Component component(Shape::DISC, index, baseNumIndices, 
-    _indices.size(), color, m);
+  Shape::Component component = {
+    Shape::DISC, 
+    index, 
+    baseNumPoints,
+    _points.size() - baseNumPoints,
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m
+  };
+
   component.SetBounds(pxr::GfVec3f(radius, 0.f, 0.f));
   return component;
 }
@@ -793,6 +904,32 @@ void Shape::UpdateCamera(const pxr::GfMatrix4f& view,
   glUniformMatrix4fv(uProj,1,GL_FALSE,&proj[0][0]);
 }
 
+void Shape::Bind(GLSLProgram* pgm)
+{
+  GLuint program = pgm->Get();
+  _uModel = glGetUniformLocation(program, "model");
+  _uColor = glGetUniformLocation(program, "color");
+
+  glBindVertexArray(_vao);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+void Shape::Unbind()
+{
+  glBindVertexArray(0);
+}
+
+void Shape::DrawComponent(size_t index, const pxr::GfMatrix4f& model, 
+  const pxr::GfVec4f& color)
+{
+  glUniformMatrix4fv(_uModel,1,GL_FALSE,&model[0][0]);
+  glUniform4f(_uColor, color[0], color[1], color[2], color[3]);
+  
+  const Shape::Component& comp = _components[index];
+  glDrawElements(GL_TRIANGLES, (comp.endIndex - comp.baseIndex), 
+    GL_UNSIGNED_INT, ((char*)NULL + (comp.baseIndex * sizeof(unsigned int))));
+}
+
 void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)
 {
   GLuint pgm = SHAPE_PROGRAM->Get();
@@ -806,7 +943,6 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)
   glUniformMatrix4fv(uModel,1,GL_FALSE,&model[0][0]);
   glUniform4f(uColor, color[0], color[1], color[2], color[3]);
   
-  //glDisable(GL_CULL_FACE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, 0);
 
@@ -827,10 +963,9 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
   glUniformMatrix4fv(uModel,1,GL_FALSE,&model[0][0]);
   glUniform4f(uColor, color[0], color[1], color[2], color[3]);
   
-  //glDisable(GL_CULL_FACE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glDrawRangeElements(GL_TRIANGLES, start, end, 
-    end, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, (end - start), GL_UNSIGNED_INT, 
+    ((char*)NULL + (start * sizeof(unsigned int))));
 
   glBindVertexArray(vao);
 }
@@ -842,12 +977,12 @@ void InitStaticShapes()
   pxr::GlfContextCaps const & caps = pxr::GlfContextCaps::GetInstance();
   if (caps.glslVersion < 330) {
     SHAPE_PROGRAM->BuildFromString(
-      "SimpleShapePGM", 
+      "SimpleShape", 
       SIMPLE_VERTEX_SHADER_CODE_120, 
       SIMPLE_FRAGMENT_SHADER_CODE_120);
   } else {
     SHAPE_PROGRAM->BuildFromString(
-      "SimpleShapePGM", 
+      "SimpleShape", 
       SIMPLE_VERTEX_SHADER_CODE_330, 
       SIMPLE_FRAGMENT_SHADER_CODE_330);
   }

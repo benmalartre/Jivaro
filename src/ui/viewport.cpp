@@ -172,7 +172,13 @@ void ViewportUI::MouseButton(int button, int action, int mods)
       }
     }
     else {
-      Pick(x, y);
+      short activeAxis = _handle.Select(
+        GetLastMouseX() - GetX(),
+        GetLastMouseY() - GetY(),
+        GetWidth(),
+        GetHeight(), false);
+      _handle.SetActiveAxis(activeAxis);
+      //Pick(x, y);
       //window->RestoreLastActiveTool();
     }
 /*
@@ -228,11 +234,26 @@ void ViewportUI::MouseMove(int x, int y)
       }
 
       default:
+      {
+        short activeAxis = _handle.Pick(
+          GetLastMouseX() - GetX(),
+          GetLastMouseY() - GetY(),
+          GetWidth(),
+          GetHeight());
+        _handle.SetActiveAxis(activeAxis);
+      }
         break;
         
     }
     _parent->SetDirty();
   }
+  short hoveredAxis = _handle.Pick(
+    GetLastMouseX() - GetX(),
+    GetLastMouseY() - GetY(),
+    GetWidth(),
+    GetHeight());
+  _handle.SetHoveredAxis(hoveredAxis);
+
   _lastX = x;
   _lastY = y;
 }
@@ -347,14 +368,6 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
     pxr::GfMatrix4f(camera->GetProjectionMatrix()));
 
   handle->Resize();
-  short activeAxis = handle->Pick(
-    viewport->GetLastMouseX() - viewport->GetX(),
-    viewport->GetLastMouseY() - viewport->GetY(),
-    viewport->GetWidth(),
-    viewport->GetHeight());
-  handle->SetActiveAxis(activeAxis);
-
-  
   handle->Draw();
 
   // restore viewport
@@ -613,6 +626,7 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 
 bool ViewportUI::Pick(int x, int y)
 {
+  std::cout << "VIEWPORT PICK CALLED !!!" << std::endl;
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;
   pxr::GfVec3d outHitNormal;
@@ -633,6 +647,8 @@ bool ViewportUI::Pick(int x, int y)
     &outHitInstancerPath,
     &outHitInstanceIndex,
     &outInstancerContext)) {
+      std::cout << "WE'VE GOT SOME INTERSECTION : " << std::endl;
+      std::cout << outHitPrimPath << std::endl;
       _engine->AddSelected(outHitPrimPath, -1);
       GetApplication()->AddToSelection(outHitPrimPath);
     return true;

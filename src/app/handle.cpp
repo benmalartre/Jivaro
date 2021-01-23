@@ -27,35 +27,50 @@ void BaseHandle::AddComponent(Shape::Component& component)
   _shape.AddComponent(component);
 }
 
-void BaseHandle::AddXYZComponents(Shape::Component& component)
+void BaseHandle::AddXComponent(Shape::Component& component)
 {
   component.index = AXIS_X;
   component.color = HANDLE_X_COLOR;
-  component.offset = HANDLE_X_MATRIX;
+  component.parentMatrix = HANDLE_X_MATRIX;
   _shape.AddComponent(component);
+}
+
+void BaseHandle::AddYComponent(Shape::Component& component)
+{
   component.index = AXIS_Y;
   component.color = HANDLE_Y_COLOR;
-  component.offset =  HANDLE_Y_MATRIX;
+  component.parentMatrix =  HANDLE_Y_MATRIX;
   _shape.AddComponent(component);
+}
+
+void BaseHandle::AddZComponent(Shape::Component& component)
+{
   component.index = AXIS_Z;
   component.color = HANDLE_Z_COLOR;
-  component.offset =  HANDLE_Z_MATRIX;
+  component.parentMatrix =  HANDLE_Z_MATRIX;
   _shape.AddComponent(component);
+}
+
+void BaseHandle::AddXYZComponents(Shape::Component& component)
+{
+  AddXComponent(component);
+  AddYComponent(component);
+  AddZComponent(component);
 }
 
 void BaseHandle::AddYZXZXYComponents(Shape::Component& component)
 {
   component.index = AXIS_YZ;
   component.color = HANDLE_X_COLOR;
-  component.offset = HANDLE_X_MATRIX;
+  component.parentMatrix = HANDLE_X_MATRIX;
   _shape.AddComponent(component);
   component.index = AXIS_XZ;
   component.color = HANDLE_Y_COLOR;
-  component.offset =  HANDLE_Y_MATRIX;
+  component.parentMatrix =  HANDLE_Y_MATRIX;
   _shape.AddComponent(component);
   component.index = AXIS_XY;
   component.color = HANDLE_Z_COLOR;
-  component.offset =  HANDLE_Z_MATRIX;
+  component.parentMatrix =  HANDLE_Z_MATRIX;
   _shape.AddComponent(component);
 }
 
@@ -81,13 +96,11 @@ void BaseHandle::SetSRTFromMatrix()
 void BaseHandle::SetActiveAxis(short axis)
 {
   _activeAxis = axis;
-  /*
-  memset(&_axisState, STATE_DEFAULT, AXIS_LAST * sizeof(short));
-  _axisState[_activeAxis] = STATE_ACTIVE;
-  if(!_interacting) {
-    _axisState[_hoveredAxis] = STATE_HOVERED;
-  }
-  */
+}
+
+void BaseHandle::SetHoveredAxis(short axis)
+{
+  _hoveredAxis = axis;
 }
 
 void BaseHandle::UpdatePickingPlane(short axis)
@@ -122,19 +135,17 @@ void BaseHandle::UpdatePickingPlane(short axis)
 
 const pxr::GfVec4f& BaseHandle::GetColor(const Shape::Component& comp)
 {
-  if(!_interacting) {
-    if(comp.hovered) {
-      return HANDLE_HOVERED_COLOR;
-    } else if(comp.active) {
+  if(_interacting) {
+    if(comp.active) {
       return HANDLE_ACTIVE_COLOR;
     } else {
-      return comp.color;
+      return HANDLE_HELP_COLOR;
     }
   } else {
-    if(comp.hovered) {
-      return HANDLE_HOVERED_COLOR;
-    } else if(comp.active) {
+    if(comp.active) {
       return HANDLE_ACTIVE_COLOR;
+    } else if(comp.hovered) {
+      return HANDLE_HOVERED_COLOR;
     } else {
       return comp.color;
     }
@@ -146,16 +157,24 @@ TranslateHandle::TranslateHandle()
  , _radius(0.05f)
  , _height(1.f)
 {  
-  size_t baseIdx = 0;
   
+  Shape::Component sphere = _shape.AddIcoSphere(
+    AXIS_CAMERA, _radius * 2.f, 1, HANDLE_HELP_COLOR);
+  AddComponent(sphere);
+  /*
+  Shape::Component sphere = _shape.AddSphere(
+   AXIS_CAMERA, 0.2, 12, 12);
+  _shape.AddComponent(sphere);
+*/
+/*
   Shape::Component cylinder = _shape.AddCylinder(
     AXIS_X, _radius * 0.2f, _height, 16, 2, HANDLE_X_COLOR, {
     1.f, 0.f, 0.f, 0.f,
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
-    0.f, _radius * 4.f + _height * 0.5f, 0.f, 1.f});
+    0.f, _radius * 4.f, 0.f, 1.f});
   AddXYZComponents(cylinder);
-    
+  
   Shape::Component cone = _shape.AddCone(
     AXIS_X, _radius, _height * 0.2f, 8, HANDLE_X_COLOR, {
     1.f, 0.f, 0.f, 0.f,
@@ -163,20 +182,33 @@ TranslateHandle::TranslateHandle()
     0.f, 0.f, 1.f, 0.f,
     0.f, _radius * 4.f + _height, 0.f, 1.f});
   AddXYZComponents(cone);
-
-  float size = _height * 0.1f;
+  
+  float size = _height * 0.2f;
   Shape::Component box = _shape.AddBox(
     AXIS_YZ, size, _radius * 0.1f, size, HANDLE_X_COLOR, {
     1.f, 0.f, 0.f, 0.f,
     0.f, -1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
-    _height * 0.5f, 0.f, _height * 0.5f, 1.f});
+    _radius * 2.f + _height * 0.5f, 0.f, _radius * 2.f + _height * 0.5f, 1.f});
   AddYZXZXYComponents(box);
-
-  Shape::Component sphere = _shape.AddIcoSphere(
-    AXIS_CAMERA, _radius * 2.f, 1, HANDLE_HELP_COLOR);
-  AddComponent(sphere);
   
+  Shape::Component torus = _shape.AddTorus(
+    AXIS_Y, 0.5f, 0.05f, 32, 12, HANDLE_Y_COLOR, {
+    1.f, 0.f, 0.f, 0.f,
+    0.f, 1.f, 0.f, 0.f,
+    0.f, 0.f, 1.f, 0.f,
+    0.f, 0.f, 0.f, 1.f});
+  AddXComponent(torus);
+  */
+
+  Shape::Component disc = _shape.AddDisc(
+    AXIS_X, 0.5f, 90.f, 360.f, 8, HANDLE_X_COLOR, {
+    1.f, 0.f, 0.f, 0.f,
+    0.f, 1.f, 0.f, 0.f,
+    0.f, 0.f, 1.f, 0.f,
+    0.f, 1.f, 0.f, 1.f});
+  AddXYZComponents(disc);
+
   _shape.Setup();
 
   _position = pxr::GfVec3d(0, 3, 0);
@@ -186,32 +218,43 @@ TranslateHandle::TranslateHandle()
   SetMatrixFromSRT();
 }
 
-short TranslateHandle::Pick(float x, float y, float width, float height)
+short BaseHandle::Select(float x, float y, float width, float height, 
+  bool lock)
 {
-  double enterDistance, exitDistance;
+  size_t hovered = Pick(x, y, width, height);
+  _shape.UpdateComponents(hovered, hovered);
+  return hovered;
+}
+
+short BaseHandle::Pick(float x, float y, float width, float height)
+{
   pxr::GfRay ray(
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
 
   pxr::GfMatrix4f m = _sizeMatrix * _matrix;
   size_t hovered = _shape.Intersect(ray, m);
-  SetActiveAxis(hovered);
-  _shape.UpdateComponents(hovered, AXIS_NONE);
+  SetHoveredAxis(hovered);
+  _shape.UpdateComponents(hovered, _activeAxis);
   return hovered;
 }
 
-void TranslateHandle::Draw() 
+void BaseHandle::Draw() 
 {
   pxr::GfMatrix4f m = _sizeMatrix * _matrix;
-  
+  GLint vao;
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+  _shape.Bind(SHAPE_PROGRAM);
   for(size_t i=0; i < _shape.GetNumComponents(); ++i) {
     const Shape::Component& component = _shape.GetComponent(i);
-    _shape.Draw(component.offset * m, GetColor(component), 
-      component.start, component.end);
+    if(component.visible)
+      _shape.DrawComponent(i, component.parentMatrix * m, GetColor(component));
   }
+  _shape.Unbind();
+  glBindVertexArray(vao);
 }
 
-void TranslateHandle::Update(float x, float y)
+void BaseHandle::Update(float x, float y)
 {
 
 }
