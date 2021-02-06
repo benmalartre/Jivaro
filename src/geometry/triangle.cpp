@@ -6,57 +6,66 @@ AMN_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------
 // Triangle Area
 //-------------------------------------------------------
-double Triangle::getArea(Mesh* mesh)
+float Triangle::GetArea(Mesh* mesh)
 {
-	const MVector AB = (mesh->getPosition(this, 1) - mesh->getPosition(this, 0));
-	const MVector BC = (mesh->getPosition(this, 2) - mesh->getPosition(this, 1));
-	const MVector CA = (mesh->getPosition(this, 0) - mesh->getPosition(this, 2));
+  const pxr::GfVec3f AB = 
+    (mesh->GetPosition(this, 1) - mesh->GetPosition(this, 0));
+  const pxr::GfVec3f BC = 
+    (mesh->GetPosition(this, 2) - mesh->GetPosition(this, 1));
+  const pxr::GfVec3f CA = 
+    (mesh->GetPosition(this, 0) - mesh->GetPosition(this, 2));
 
-	// edge length
-	double lAB = AB.length();
-	double lBC = BC.length();
-	double lCA = CA.length();
+  // edge length
+  float lAB = AB.GetLength();
+  float lBC = BC.GetLength();
+  float lCA = CA.GetLength();
 
-	// half perimeter
-	double P = (lAB + lBC + lCA) * 0.5;
+  // half perimeter
+  float P = (lAB + lBC + lCA) * 0.5;
 
-	// compute area
-	return sqrt(P*(P - lAB)*(P - lBC)*(P - lCA));
+  // compute area
+  return sqrt(P*(P - lAB)*(P - lBC)*(P - lCA));
 }
 
 //-------------------------------------------------------
 // Triangle Center
 //-------------------------------------------------------
-void Triangle::getCenter(Mesh* mesh, MVector& center)
+void Triangle::GetCenter(Mesh* mesh, pxr::GfVec3f& center)
 {
-    center = (mesh->getPosition(this, 0)+ mesh->getPosition(this, 1)+ mesh->getPosition(this, 2))/3.0f;
+    center = (
+      mesh->GetPosition(this, 0) + 
+      mesh->GetPosition(this, 1) + 
+      mesh->GetPosition(this, 2)) / 3.0f;
 }
 
 //-------------------------------------------------------
 // Triangle Normal
 //-------------------------------------------------------
-void Triangle::getNormal(Mesh* mesh, MVector& normal)
+void Triangle::GetNormal(Mesh* mesh, pxr::GfVec3f& normal)
 {
     // get triangle edges
-    MVector AB = mesh->getPosition(this, 1) - mesh->getPosition(this, 0);
-    MVector AC = mesh->getPosition(this, 2) - mesh->getPosition(this, 0);
+    pxr::GfVec3f AB = mesh->GetPosition(this, 1) - mesh->GetPosition(this, 0);
+    pxr::GfVec3f AC = mesh->GetPosition(this, 2) - mesh->GetPosition(this, 0);
     
     // cross product
-    normal = AB^AC;
+    normal = AB ^ AC;
     
     // normalize
-    normal.normalize();
+    normal.Normalize();
 }
 
 //-------------------------------------------------------
 // Triangle Closest Point
 //-------------------------------------------------------
-void Triangle::closestPoint( Mesh* mesh, const MVector &point , MVector& closest, float& u, float& v, float& w)
+void Triangle::ClosestPoint( Mesh* mesh, const pxr::GfVec3f& point , 
+  pxr::GfVec3f& closest, float& u, float& v, float& w)
 {
-    MVector edge0 = mesh->getPosition(this, 1) - mesh->getPosition(this, 0);
-    MVector edge1 = mesh->getPosition(this, 2) - mesh->getPosition(this, 0);;
+    pxr::GfVec3f edge0 = 
+      mesh->GetPosition(this, 1) - mesh->GetPosition(this, 0);
+    pxr::GfVec3f edge1 = 
+      mesh->GetPosition(this, 2) - mesh->GetPosition(this, 0);;
     
-    MVector v0 = mesh->getPosition(this, 1) - point;
+    pxr::GfVec3f v0 = mesh->GetPosition(this, 1) - point;
     
     float a = edge0 * edge0;
     float b = edge0 * edge1;
@@ -146,7 +155,7 @@ void Triangle::closestPoint( Mesh* mesh, const MVector &point , MVector& closest
         }
     }
     
-    closest = mesh->getPosition(this, 0);
+    closest = mesh->GetPosition(this, 0);
     
     v = s;
     w = t;
@@ -158,123 +167,110 @@ void Triangle::closestPoint( Mesh* mesh, const MVector &point , MVector& closest
 //-------------------------------------------------------
 // Plane Box Test
 //-------------------------------------------------------
-bool Triangle::planeBoxTest(const MVector& normal, const MVector& vert, const MVector& maxbox)
+bool Triangle::PlaneBoxTest(const pxr::GfVec3f& normal, 
+  const pxr::GfVec3f& point, const pxr::GfVec3f& box)
 {
-    int q;
-    
-    MVector vmin,vmax;
-    float v;
-    
-    for(q=0;q<=2;q++)
-    {
-        
-        v=vert[q];
-        if(normal[q]>0.0f)
-            
-        {
-            vmin[q]=-maxbox[q] - v;
-            vmax[q]= maxbox[q] - v;
-        }
-        
-        else
-            
-        {
-            vmin[q]= maxbox[q] - v;
-            vmax[q]=-maxbox[q] - v;
-        }
-        
+  int q;
+  
+  pxr::GfVec3f vmin,vmax;
+  float v;
+  
+  for(q=0; q <= 2; ++q) {
+    v=point[q];
+    if(normal[q]>0.0f) {
+      vmin[q]=-box[q] - v;
+      vmax[q]= box[q] - v;
+    } else {
+      vmin[q]= box[q] - v;
+      vmax[q]=-box[q] - v;
     }
-    
-    if((normal*vmin)>0.0f) return false;
-    if((normal*vmax)>=0.0f) return true;
-    
-    return false;
+  }
+  
+  if((normal * vmin) >  0.0f) return false;
+  if((normal * vmax) >= 0.0f) return true;
+  
+  return false;
 }
 
 //-------------------------------------------------------
 // Triangle Intersect Bounding Box
 //-------------------------------------------------------
-bool Triangle::touch(Mesh* mesh, const MVector& center, const MVector& boxhalfsize)
+bool Triangle::Touch(Mesh* mesh, const pxr::GfVec3f& center, 
+  const pxr::GfVec3f& boxhalfsize)
 {
-    /*
-     use separating axis theorem to test overlap between triangle and box
-     need to test for overlap in these directions:
-     
-     1) the {x,y,z}-directions (actually, since we use the AABB of the triangle
-     we do not even need to test these)
-     2) normal of the triangle
-     3) crossproduct(edge from triangle, {x,y,z}-direction)
-     
-     this gives 3x3=9 more tests
-     */
+  /*
+    use separating axis theorem to test overlap between triangle and box
+    need to test for overlap in these directions:
     
-    float min,max,p0,p1,p2,rad,fex,fey,fez;
+    1) the {x,y,z}-directions (actually, since we use the AABB of the triangle
+    we do not even need to test these)
+    2) normal of the triangle
+    3) crossproduct(edge from triangle, {x,y,z}-direction)
     
-    /* This is the fastest branch on Sun */
-    /* move everything so that the boxcenter is in (0,0,0) */
-    MVector v0 = mesh->getPosition(this, 0) - center;
-    MVector v1 = mesh->getPosition(this, 1) - center;
-    MVector v2 = mesh->getPosition(this, 2) - center;
+    this gives 3x3=9 more tests
+    */
+
+  float min,max,p0,p1,p2,rad,fex,fey,fez;
     
-    /* compute triangle edges */
-    MVector e0 = v1-v0;
-    MVector e1 = v2-v1;
-    MVector e2 = v0-v2;
+  /* This is the fastest branch on Sun */
+  /* move everything so that the boxcenter is in (0,0,0) */
+  pxr::GfVec3f v0 = mesh->GetPosition(this, 0) - center;
+  pxr::GfVec3f v1 = mesh->GetPosition(this, 1) - center;
+  pxr::GfVec3f v2 = mesh->GetPosition(this, 2) - center;
+  
+  /* compute triangle edges */
+  pxr::GfVec3f e0 = v1-v0;
+  pxr::GfVec3f e1 = v2-v1;
+  pxr::GfVec3f e2 = v0-v2;
+  
+  /*  test the 9 tests first (this was faster) */
+  fex = fabs(e0[0]);
+  fey = fabs(e0[1]);
+  fez = fabs(e0[2]);
+  
+  AXISTEST_X01(e0[2], e0[1], fez, fey);
+  AXISTEST_Y02(e0[2], e0[0], fez, fex);
+  AXISTEST_Z12(e0[1], e0[0], fey, fex);
     
-    /*  test the 9 tests first (this was faster) */
-    fex = fabs(e0.x);
-    fey = fabs(e0.y);
-    fez = fabs(e0.z);
-    
-    AXISTEST_X01(e0.z, e0.y, fez, fey);
-    AXISTEST_Y02(e0.z, e0.x, fez, fex);
-    AXISTEST_Z12(e0.y, e0.x, fey, fex);
-    
-    fex = fabs(e1.x);
-    fey = fabs(e1.y);
-    fez = fabs(e1.z);
-    
-    AXISTEST_X01(e1.z, e1.y, fez, fey);
-    AXISTEST_Y02(e1.z, e1.x, fez, fex);
-    AXISTEST_Z0(e1.y, e1.x, fey, fex);
-    
-    fex = fabs(e2.x);
-    fey = fabs(e2.y);
-    fez = fabs(e2.z);
-    
-    AXISTEST_X2(e2.z, e2.y, fez, fey);
-    AXISTEST_Y1(e2.z, e2.x, fez, fex);
-    AXISTEST_Z12(e2.y, e2.x, fey, fex);
-    
-    /*
-     first test overlap in the {x,y,z}-directions
-     find min, max of the triangle each direction, and test for overlap in
-     that direction -- this is equivalent to testing a minimal AABB around
-     the triangle against the AABB
-     */
-    
-    // test in X-direction
-    FINDMINMAX(v0.x,v1.x,v2.x,min,max);
-    if(min>boxhalfsize.x || max<-boxhalfsize.x) return false;
-    
-    // test in Y-direction
-    FINDMINMAX(v0.y,v1.y,v2.y,min,max);
-    if(min>boxhalfsize.y || max<-boxhalfsize.y) return false;
-    
-    // test in Z-direction
-    FINDMINMAX(v0.z,v1.z,v2.z,min,max);
-    if(min>boxhalfsize.z || max<-boxhalfsize.z) return false;
-    
-    /*
-     test if the box intersects the plane of the triangle
-     compute plane equation of triangle: normal*x+d=0
-     */
-    MVector normal = e0^e1;
-    
-    // -NJMP- (line removed here)
-    if(!planeBoxTest(normal,v0,boxhalfsize)) return false;	// -NJMP-
-    
-    return true;   /* box and triangle overlaps */
+  fex = fabs(e1[0]);
+  fey = fabs(e1[1]);
+  fez = fabs(e1[2]);
+  
+  AXISTEST_X01(e1[2], e1[1], fez, fey);
+  AXISTEST_Y02(e1[2], e1[0], fez, fex);
+  AXISTEST_Z0(e1[1], e1[0], fey, fex);
+  
+  fex = fabs(e2[0]);
+  fey = fabs(e2[1]);
+  fez = fabs(e2[2]);
+  
+  AXISTEST_X2(e2[2], e2[1], fez, fey);
+  AXISTEST_Y1(e2[2], e2[0], fez, fex);
+  AXISTEST_Z12(e2[1], e2[0], fey, fex);
+  
+  /*
+    first test overlap in the {x,y,z}-directions
+    find min, max of the triangle each direction, and test for overlap in
+    that direction -- this is equivalent to testing a minimal AABB around
+    the triangle against the AABB
+    */
+  
+  // test in XYZ directions
+  for(size_t axis=0; axis < 3; ++axis) {
+    FINDMINMAX(v0[axis], v1[axis], v2[axis], min, max);
+    if(min>boxhalfsize[axis] || max<-boxhalfsize[axis]) return false;
+  }
+  
+  /*
+    test if the box intersects the plane of the triangle
+    compute plane equation of triangle: normal*x+d=0
+    */
+  pxr::GfVec3f normal = e0 ^ e1;
+  
+  // -NJMP- (line removed here)
+  if(!PlaneBoxTest(normal, v0, boxhalfsize)) return false;	// -NJMP-
+  
+  return true;   /* box and triangle overlaps */
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -70,24 +70,22 @@ rad = fa * boxhalfsize[0] + fb * boxhalfsize[1];   \
 if(min>rad || max<-rad) return 0;
 
 class Mesh;
-class Triangle{
-public:
-    unsigned _globalID;          // global triangle index
-    unsigned _meshID;            // source mesh index
-    unsigned _triangleID;        // source triangle index
-    unsigned _mapID;
-    bool _boundary;
-public:
-    void GetCenter(Mesh* mesh, pxr::GfVec3f& center);
-    void GetNormal(Mesh* mesh, pxr::GfVec3f& normal);
-    double GetArea(Mesh* mesh);
-    void ClosestPoint(Mesh* mesh, const pxr::GfVec3f& point , 
-      pxr::GfVec3f& closest, float& u, float& v, float& w);
-    bool Touch(Mesh* mesh, const pxr::GfVec3f& center, 
-      const pxr::GfVec3f& boxhalfsize);
-    bool PlaneBoxTest(const pxr::GfVec3f& normal, const pxr::GfVec3f& vert, 
-      const pxr::GfVec3f& maxbox);
-    bool IsBoundary(){return _boundary;};
+struct Triangle {
+  unsigned     _id;
+  pxr::GfVec3i _vertices;
+  pxr::GfVec3i _samples;
+  bool _boundary;
+
+  void GetCenter(Mesh* mesh, pxr::GfVec3f& center);
+  void GetNormal(Mesh* mesh, pxr::GfVec3f& normal);
+  float GetArea(Mesh* mesh);
+  void ClosestPoint(Mesh* mesh, const pxr::GfVec3f& point , 
+    pxr::GfVec3f& closest, float& u, float& v, float& w);
+  bool Touch(Mesh* mesh, const pxr::GfVec3f& center, 
+    const pxr::GfVec3f& boxhalfsize);
+  bool PlaneBoxTest(const pxr::GfVec3f& normal, const pxr::GfVec3f& point, 
+    const pxr::GfVec3f& box);
+  bool IsBoundary(){return _boundary;};
 
 };
 
