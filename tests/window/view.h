@@ -1,6 +1,10 @@
 #pragma once
 
 #include "default.h"
+#include "../../src/common.h"
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
 
 class Window;
 class BaseUI;

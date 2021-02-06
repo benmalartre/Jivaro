@@ -23,6 +23,8 @@
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/cube.h>
 #include <pxr/imaging/hd/renderPassState.h>
 #include <pxr/imaging/LoFi/debugCodes.h>
 #include <pxr/usd/usdAnimX/fileFormat.h>
@@ -38,6 +40,7 @@
 #include "engine.h"
 
 #include <iostream>
+#include <string>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -47,7 +50,7 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(NULL), _stage(nullptr)
+  _mainWindow(NULL), _stage(nullptr), _tools(Tool())
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
@@ -55,7 +58,7 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(NULL), _stage(nullptr)
+  _mainWindow(NULL), _stage(nullptr), _tools(Tool())
 {
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
@@ -137,7 +140,7 @@ Application::BrowseFile(const char* folder, const char* filters[],
     if(!browse) {
       if(!browser->IsCanceled()) {
         //result = browser->GetResult();
-        result = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd";
+        result = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
       }
     }
   }
@@ -368,6 +371,9 @@ Application::Init()
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
 
+  // initialize 3d tools
+  _tools.Init();
+
   GraphUI* graph = new GraphUI(graphView, "Graph", true);
   //CurveEditorUI* curveEditor = new CurveEditorUI(graphView);
   
@@ -412,11 +418,20 @@ Application::Init()
             UsdGeomMesh::Define(stage, SdfPath("/" + group.name));
   */
   _stage = pxr::UsdStage::Open(filename);
+
+  for(size_t i=0; i< 12; ++i) {
+    pxr::SdfPath path(pxr::TfToken("/cube_"+std::to_string(i)));
+    pxr::UsdGeomCube cube = pxr::UsdGeomCube::Define(_stage, path);
+    cube.AddTranslateOp().Set(pxr::GfVec3d(i * 3, 0, 0), pxr::UsdTimeCode::Default());
+  }
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
  
   _mainWindow->CollectLeaves();
   
+  // setup notifications
+  pxr::TfWeakPtr<Application> me(this);
+  pxr::TfNotice::Register(me, &Application::SelectionChangedCallback);
  /*
   Window* childWindow = CreateChildWindow(400, 400, _mainWindow);
   childWindow->Init(this);
@@ -533,6 +548,12 @@ Application::GetStageBoundingBox()
   pxr::UsdGeomBBoxCache bboxCache(
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
   return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
+}
+
+void Application::SelectionChangedCallback(const SelectionChangedNotice& n)
+{
+  std::cout << "SELECTION CHANGED !!!" << std::endl;
+  _tools.ResetSelection();
 }
 
 pxr::GfBBox3d 

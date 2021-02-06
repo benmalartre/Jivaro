@@ -39,6 +39,9 @@ if(NOT DEFINED USD_DIR)
 	message(FATAL_ERROR "No USD_DIR variable set! USD installation path must be passed to cmake!!!")
 endif()
 
+# eigen
+set(EIGEN_INCLUDE_DIR "/Users/benmalartre/Documents/RnD/eigen")
+
 #set(USD_DIR "/Users/benmalartre/Documents/RnD/USD_BUILD")
 set(USD_INCLUDE_DIR "${USD_DIR}/include")
 set(USD_LIBRARY_DIR "${USD_DIR}/lib")
@@ -158,4 +161,4 @@ IF(APPLE)
 ENDIF(APPLE)
 
 add_subdirectory (src)
-#add_subdirectory (tests)
+add_subdirectory (tests)

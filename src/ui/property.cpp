@@ -37,18 +37,12 @@ bool PropertyUI::Draw()
   if (_prim.IsA<pxr::UsdGeomXform>()) {
     pxr::UsdGeomXform xfo(_prim);
     pxr::TfTokenVector attrNames = xfo.GetSchemaAttributeNames();
-    for (auto& attrName : attrNames) {
-      std::cout << "Attribute Name : " << attrName << std::endl;
-    }
   }
   /*
   std::cout << "PRIM : " << _prim.GetName() << std::endl;
   pxr::UsdSchemaBase base(_prim);
   std::cout << "BASE : " << base.GetPath() << std::endl;
   pxr::TfTokenVector attrNames = base.GetSchemaAttributeNames();
-  for (auto& attrName : attrNames) {
-    std::cout << "Attribute Name : " << attrName << std::endl;
-  }
   */
 
   bool opened;

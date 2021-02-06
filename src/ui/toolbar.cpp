@@ -11,8 +11,8 @@ AMN_NAMESPACE_OPEN_SCOPE
 static void _SetActiveTool(short tool) 
 {
   Application* app = AMN_APPLICATION;
-  Window* window = app->GetMainWindow();
-  window->SetActiveTool(tool);
+  app->GetTools()->SetActiveTool(tool);
+  app->GetMainWindow()->SetActiveTool(tool);
 }
 
 static void OnTranslateCallback()

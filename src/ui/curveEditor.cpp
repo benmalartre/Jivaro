@@ -48,7 +48,6 @@ void CurveEditorUI::Update()
 
 void CurveEditorUI::MouseButton(int button, int action, int mods)
 {
-  std::cout << ">>>>>>>>>>>>>>>>> CURVE EDITOR MOUSE BUTTON!!!" << std::endl;
   const pxr::GfVec2f& mousePos = ImGui::GetMousePos();
   _lastX = mousePos[0];
   _lastY = mousePos[1];
@@ -106,13 +105,11 @@ void CurveEditorUI::MouseButton(int button, int action, int mods)
       _grab = false;
     }
   }
-  std::cout << ">>>>>>>>>>>>>> NAVIGATE ? " << _navigate << std::endl;
   _parent->SetDirty();
 }
 
 void CurveEditorUI::MouseMove(int x, int y)
 {
-  std::cout << ">>>>>>>>>>>>>>>>> CURVE EDITOR MOUSE MOVE!!!" << std::endl;
   if (_navigate) {
     _offset += pxr::GfVec2f(
       (x - _lastX) * _invScale[0], 

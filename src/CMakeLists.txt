@@ -58,6 +58,9 @@ add_executable(${TARGET}
   #embree/instance.cpp
   #embree/context.cpp
   #embree/device.cpp
+  objects/mesh.cpp
+  pbd/integration.cpp
+  pbd/maths.cpp
   app/time.cpp
   app/shape.cpp
   app/intersector.cpp
@@ -70,6 +73,7 @@ add_executable(${TARGET}
   app/notice.cpp
   app/picking.cpp
   app/selection.cpp
+  app/tools.cpp
   app/application.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp

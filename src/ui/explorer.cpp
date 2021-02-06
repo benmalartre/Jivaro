@@ -49,6 +49,14 @@ void ExplorerUI::Init()
   _initialized = true;
 }
 
+void ExplorerUI::MouseButton(int action, int button, int mods)
+{
+}
+
+void ExplorerUI::MouseMove(int x, int y)
+{
+}
+
 void ExplorerUI::Update()
 {
   if (GetApplication()->GetStage()) {
@@ -184,9 +192,16 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
         "%s", 
         current->_prim.GetName().GetText());
 
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+      if(!current->_selected) {
+        AMN_APPLICATION->AddToSelection(current->_prim.GetPath());
+      } else {
+        AMN_APPLICATION->RemoveFromSelection(current->_prim.GetPath());
+      }
       current->_selected = !current->_selected;
-
+      OnSelectionChanged();
+    }
+      
     ImGui::NextColumn();
 
     DrawItemType(current);
@@ -212,8 +227,17 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
       itemFlags,
       "%s", 
        current->_prim.GetName().GetText());
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-      current->_selected = true;
+       
+    if (ImGui::IsItemClicked()) {
+      if(!current->_selected) {
+        AMN_APPLICATION->AddToSelection(current->_prim.GetPath());
+      } else {
+        AMN_APPLICATION->RemoveFromSelection(current->_prim.GetPath());
+      }
+      current->_selected = !current->_selected;
+      OnSelectionChanged();
+    }
+
     current->_expanded = false;
 
     ImGui::NextColumn();
@@ -284,11 +308,11 @@ bool ExplorerUI::Draw()
 
   //ImGui::PopStyleColor(numColorIDs);
 
-  return 
+  return true;/*
     ImGui::IsAnyItemHovered() ||
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
-    ImGui::IsAnyMouseDown();
+    ImGui::IsAnyMouseDown();*/
 }
 
 

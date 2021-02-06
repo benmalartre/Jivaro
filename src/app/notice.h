@@ -32,5 +32,17 @@ static void OnTimeChanged()
   TimeChangedNotice().Send();
 }
 
+class SelectionChangedNotice : public pxr::TfNotice
+{
+public:
+  SelectionChangedNotice() {};
+private:
+};
+
+static void OnSelectionChanged()
+{
+  SelectionChangedNotice().Send();
+}
+
 AMN_NAMESPACE_CLOSE_SCOPE
 #endif //AMN_APPLICATION_NOTICE_H

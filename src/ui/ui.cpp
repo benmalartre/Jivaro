@@ -71,6 +71,7 @@ Application* BaseUI::GetApplication()
 
 void BaseUI::ProcessNewScene(const NewSceneNotice& n)
 {
+  std::cout << "PROCESS NEW SCENE @@@@@@@@@@@@@" << std::endl;
   _initialized = false;
 }
 

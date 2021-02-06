@@ -55,14 +55,21 @@ Camera::GetViewPlaneNormal()
   return (_lookat - _pos).GetNormalized();
 }
 
+const pxr::GfMatrix4d Camera::GetTransform()
+{
+  return _camera.GetTransform();
+}
+
 const pxr::GfMatrix4d Camera::GetViewMatrix()
 {
   return _camera.GetFrustum().ComputeViewMatrix();
 }
+
 const pxr::GfMatrix4d Camera::GetViewInverseMatrix()
 {
   return _camera.GetFrustum().ComputeViewMatrix().GetInverse();
 }
+
 const pxr::GfMatrix4d Camera::GetProjectionMatrix()
 {
   return _camera.GetFrustum().ComputeProjectionMatrix();

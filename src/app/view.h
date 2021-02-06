@@ -24,7 +24,8 @@ public:
     ACTIVE          = 1 << 6,
     DIRTY           = 1 << 7,
     INTERACTING     = 1 << 8,
-    FORCEREDRAW     = 1 << 9
+    DYNAMIC         = 1 << 9,
+    FORCEREDRAW     = 1 << 10
   };
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
@@ -77,7 +78,7 @@ public:
   void Keyboard(int key, int scancode, int action, int mods);
 
   // flags
-  inline bool GetFlag(short flag) { return BITMASK_CHECK(_flags, flag); };
+  inline bool GetFlag(short flag) const { return BITMASK_CHECK(_flags, flag); };
   inline void SetFlag(short flag) { BITMASK_SET(_flags, flag); };
   inline void ClearFlag(short flag) { BITMASK_CLEAR(_flags, flag); };
 

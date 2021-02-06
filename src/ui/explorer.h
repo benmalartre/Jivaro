@@ -34,8 +34,8 @@ public:
   ExplorerUI(View* parent);
   ~ExplorerUI()         override;
 
-  void MouseButton(int action, int button, int mods) override {};
-  void MouseMove(int x, int y) override {};
+  void MouseButton(int action, int button, int mods) override;
+  void MouseMove(int x, int y) override;
   void Init();
   void Update();
   bool Draw()      override;
@@ -46,7 +46,9 @@ public:
   void DrawItemType(ExplorerItem* item);
   void DrawItemVisibility(ExplorerItem* item, bool heritedVisibility);
   void DrawBackground();
-  void DrawItemBackground(ImDrawList* drawList, const ExplorerItem* item, bool& flip);
+  void DrawItemBackground(ImDrawList* drawList, const ExplorerItem* item, 
+    bool& flip);
+
 
 private:
   pxr::GfVec3f                  _color;

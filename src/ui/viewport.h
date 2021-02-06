@@ -54,7 +54,6 @@ class ViewportUI : public BaseUI
     Camera* GetCamera(){return _camera;};
     pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
 
-    BaseHandle* GetHandle(){return &_handle;};
     float GetLastMouseX(){return _lastX;};
     float GetLastMouseY(){return _lastY;};
 
@@ -86,7 +85,6 @@ class ViewportUI : public BaseUI
     bool                  _interact;
     InteractionMode       _interactionMode;
     bool                  _valid;
-    TranslateHandle       _handle;
 
     // usd imaging engine
     Engine*                           _engine;

@@ -9,6 +9,7 @@
 #include "window.h"
 #include "view.h"
 #include "camera.h"
+#include "tools.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
 
@@ -20,7 +21,7 @@ class ViewportUI;
 class GraphUI;
 class ExplorerUI;
 
-class Application
+class Application : public pxr::TfWeakBase
 {
 public:
   static const char* APPLICATION_NAME;
@@ -61,12 +62,14 @@ public:
   void OpenScene(const std::string& filename);
 
   // selection
+  Selection* GetSelection(){return &_selection;};
   void SetSelection(const pxr::SdfPathVector& selection);
   void AddToSelection(const pxr::SdfPath& path);
   void RemoveFromSelection(const pxr::SdfPath& path);
   void ClearSelection();
   pxr::GfBBox3d GetSelectionBoundingBox();
   pxr::GfBBox3d GetStageBoundingBox();
+  void SelectionChangedCallback(const SelectionChangedNotice& n);
 
   // time
   Time& GetTime() { return _time; };
@@ -74,6 +77,10 @@ public:
   // window
   Window* GetMainWindow() {return _mainWindow;};
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
+
+  // tools
+  Tool* GetTools(){return &_tools;};
+  void SetActiveTool(short tool) {_tools.SetActiveTool(tool);};
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
@@ -88,6 +95,7 @@ private:
   Selection                         _selection;
   //pxr::UsdGeomBBoxCache*            _bboxCache;
   //pxr::UsdGeomXformCache*           _xformCache;
+  Tool                              _tools;
 
   // uis
   ViewportUI*                       _viewport;

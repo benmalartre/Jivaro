@@ -32,6 +32,7 @@ public:
   pxr::GfVec3d GetRayDirection(float x, float y, float width, float height); 
 
   // get matrices
+  const pxr::GfMatrix4d GetTransform();
   const pxr::GfMatrix4d GetViewMatrix();
   const pxr::GfMatrix4d GetViewInverseMatrix();
   const pxr::GfMatrix4d GetProjectionMatrix();

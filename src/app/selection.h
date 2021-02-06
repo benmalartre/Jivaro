@@ -4,55 +4,59 @@
 #pragma once
 
 #include "../common.h"
-#include "pxr/usd/sdf/path.h"
+#include <pxr/usd/sdf/path.h>
 #include <vector>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
 enum SelectionType {
-	OBJECT,
-	COMPONENT,
-	ATTRIBUTE
+  OBJECT,
+  COMPONENT,
+  ATTRIBUTE
 };
 
 enum ComponentType {
-	VERTEX,
-	EDGE,
-	FACE
+  VERTEX,
+  EDGE,
+  FACE
 };
 
 struct SelectionItem {
-	SelectionType     type;
-	pxr::SdfPath      path;
-	ComponentType	    componentType;
-	std::vector<int>  components;
+  SelectionType       type;
+  pxr::SdfPath        path;
+  ComponentType	      componentType;
+  std::vector<int>    components;
+  std::vector<float>  weights;
 };
 
 class Selection {
 public:
 	void AddItem(const pxr::SdfPath& item);
-	void RemoveItem(const pxr::SdfPath& item);
-	
-	void AddComponent(const pxr::SdfPath& object,
-		ComponentType compType, int index);
-	void RemoveComponent(const pxr::SdfPath& object,
-		ComponentType compType, int index);
-	void AddComponents(const pxr::SdfPath& object,
-		ComponentType compType, std::vector<int> indices);
-	void RemoveComponents(const pxr::SdfPath& object,
-		ComponentType compType, std::vector<int> indices);
-	void Clear();
+  void RemoveItem(const pxr::SdfPath& item);
+
+  void AddComponent(const pxr::SdfPath& object,
+    ComponentType compType, int index);
+  void RemoveComponent(const pxr::SdfPath& object,
+    ComponentType compType, int index);
+  void AddComponents(const pxr::SdfPath& object,
+    ComponentType compType, std::vector<int> indices);
+  void RemoveComponents(const pxr::SdfPath& object,
+    ComponentType compType, std::vector<int> indices);
+  void Clear();
 
   size_t GetNumSelectedItems() { return _items.size(); };
   const SelectionItem& operator[](size_t index) const {
     return _items[index];
   };
+  const SelectionItem& GetItem(size_t index) const {
+    return _items[index];
+  };
   std::vector<SelectionItem>& Get() { return _items; };
-	
+
 private:
-	SelectionType               _selectionMode;
-	ComponentType               _componentMode;
-	std::vector<SelectionItem>  _items;
+  SelectionType               _selectionMode;
+  ComponentType               _componentMode;
+  std::vector<SelectionItem>  _items;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

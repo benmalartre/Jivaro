@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../common.h"
-#include "../utils/utils.h"
+#include "../../src/common.h"
+#include "../../src/utils/utils.h"
 #include "splitter.h"
 #include "tools.h"
 #include "ui.h"
-#include "../imgui/imgui_nodes.h"
+#include "../../src/imgui/imgui_nodes.h"
 
 #include <pxr/pxr.h>
 #include <pxr/base/gf/vec2i.h>

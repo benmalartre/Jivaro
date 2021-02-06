@@ -10,4 +10,8 @@ TF_INSTANTIATE_TYPE(NewSceneNotice,
 TF_INSTANTIATE_TYPE(TimeChangedNotice,
   TfType::CONCRETE, TF_1_PARENT(TfNotice));
 
+
+TF_INSTANTIATE_TYPE(SelectionChangedNotice,
+  TfType::CONCRETE, TF_1_PARENT(TfNotice));
+
 AMN_NAMESPACE_CLOSE_SCOPE

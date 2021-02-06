@@ -9,6 +9,8 @@
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/gf/vec4f.h>
 #include <pxr/base/gf/plane.h>
+#include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usd/stage.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -33,13 +35,20 @@ static const pxr::GfMatrix4f HANDLE_Z_MATRIX = {
 static const pxr::GfVec4f HANDLE_X_COLOR =  {1.f, 0.25f, 0.5f, 1.f};
 static const pxr::GfVec4f HANDLE_Y_COLOR =  {0.5f, 1.f, 0.25f, 1.f};
 static const pxr::GfVec4f HANDLE_Z_COLOR =  {0.25f, 0.5f, 1.f, 1.f}; 
-static const pxr::GfVec4f HANDLE_HELP_COLOR = {0.66f, 0.66f, 0.66f, 1.f};
+static const pxr::GfVec4f HANDLE_HELP_COLOR = {0.66f, 0.66f, 0.66f, 0.5f};
 static const pxr::GfVec4f HANDLE_HOVERED_COLOR = {1.f, 0.5f, 0.0f, 1.f};
 static const pxr::GfVec4f HANDLE_ACTIVE_COLOR = {1.f, 0.75f, 0.25f, 1.f};
 static const pxr::GfVec4f HANDLE_MASK_COLOR = {0.f, 0.f, 0.f, 0.f};
 
 
 class Camera;
+
+struct TargetDesc {
+  pxr::SdfPath path;
+  pxr::GfMatrix4f base;
+  pxr::GfMatrix4f offset;
+};
+
 class BaseHandle {
 public:
   enum State {
@@ -76,6 +85,8 @@ public:
     , _position(pxr::GfVec3d(0.f))
     , _rotation(pxr::GfRotation())
     , _scale(pxr::GfVec3d(1.f))
+    , _matrix(pxr::GfMatrix4f(1.f))
+    , _startMatrix(pxr::GfMatrix4f(1.f))
     , _viewPlaneMatrix(pxr::GfMatrix4f(1.f)) {};
 
   void SetActiveAxis(short axis);
@@ -83,7 +94,7 @@ public:
   void SetCamera(Camera* camera) {_camera = camera;};
   void SetMatrixFromSRT();
   void SetSRTFromMatrix();
-  void Resize();
+  void ResetSelection();
   void AddComponent(Shape::Component& component);
   void AddXComponent(Shape::Component& component);
   void AddYComponent(Shape::Component& component);
@@ -91,22 +102,40 @@ public:
   void AddXYZComponents(Shape::Component& component);
   void AddYZXZXYComponents(Shape::Component& component);
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
+  void ComputeSizeMatrix();
+  void ComputeViewPlaneMatrix();
 
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
+  short GetActiveAxis(){return _activeAxis;};
 
+  virtual void Setup();
   virtual void Draw();
   virtual short Select(float x, float y, float width, float height, bool lock);
   virtual short Pick(float x, float y, float width, float height);
-  virtual void Update(float x, float y);
+  virtual void BeginUpdate(float x, float y, float width, float height);
+  virtual void Update(float x, float y, float width, float height);
+  virtual void EndUpdate();
+
+  virtual void _ComputeCOGMatrix(pxr::UsdStageRefPtr stage);
+  virtual void _UpdateTargets();
+  pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
+  pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
 
 protected:
-  // geomeyry
+  // targets
+  std::vector<TargetDesc> _targets;
+  
+  // geometry
   Shape _shape;
+
+  // viewport
+  Camera* _camera;
 
   // state
   short _activeNormal;
   short _activeAxis;
   short _hoveredAxis;
+  short _lastActiveAxis;
   float _size;
   float _distance;
   bool _interacting;
@@ -117,21 +146,18 @@ protected:
   pxr::GfVec3d _offset;
   pxr::GfRotation _rotation;
   pxr::GfMatrix4f _matrix;
+  pxr::GfMatrix4f _startMatrix;
   pxr::GfPlane _plane;
   pxr::GfMatrix4f _viewPlaneMatrix;
   pxr::GfMatrix4f _sizeMatrix;
-
-  Camera* _camera;
-
 };
 
 class ScaleHandle : public BaseHandle {
 public:
   ScaleHandle();
 
-  void Draw() override;
-  short Pick(float x, float y, float width, float height) override;
-  void Update(float x, float y) override;
+  void Update(float x, float y, float width, float height) override;
+
 private:
 };
 
@@ -139,9 +165,10 @@ class RotateHandle : public BaseHandle {
 public:
   RotateHandle();
 
-  void Draw() override;
-  short Pick(float x, float y, float width, float height) override;
-  void Update(float x, float y) override;
+  void Update(float x, float y, float width, float height) override;
+
+private:
+  float _radius;
 };
 
 class TranslateHandle : public BaseHandle {
@@ -151,6 +178,10 @@ public:
     {, 1, 1, 1, 1, 1, 1, 1, 1, 1},
   } */
   TranslateHandle();
+
+  void BeginUpdate(float x, float y, float width, float height) override;
+  void Update(float x, float y, float width, float height) override;
+
 private:
   float _radius;
   float _height;

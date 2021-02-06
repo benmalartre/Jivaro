@@ -25,6 +25,20 @@ Shape* CONE_SHAPE = NULL;
 Shape* CAPSULE_SHAPE = NULL;
 Shape* TORUS_SHAPE = NULL;
 
+void Shape::Component::SetFlag(short flag, bool value)
+{
+  if(value) {
+    BITMASK_SET(flags, flag);
+  } else {
+    BITMASK_CLEAR(flags, flag);
+  }
+}
+
+bool Shape::Component::GetFlag(short flag) const
+{
+  return BITMASK_CHECK(flags, flag);
+}
+
 void Shape::Component::SetBounds(const pxr::GfVec3f& xyz)
 {
   bounds = pxr::GfRange3f(pxr::GfVec3f(0.f), xyz);
@@ -45,8 +59,79 @@ void Shape::Component::ComputeBounds(Shape* shape)
 }
 
 size_t 
+Shape::Component::_IntersectGrid(const pxr::GfRay& ray, const pxr::GfMatrix4f& m)
+{
+  const pxr::GfVec3f& bound = bounds.GetMax();
+  pxr::GfRange3d range(
+    pxr::GfVec3d(-bound[0] * 0.5f, 0.f, -bound[1] * 0.5f),
+    pxr::GfVec3d(bound[0] * 0.5f, 0.f, bound[1] * 0.5f));
+  pxr::GfBBox3d bbox(range);
+  bbox.Transform(pxr::GfMatrix4d(offsetMatrix * parentMatrix * m));
+  return ray.Intersect(bbox) ? index : 0;
+}
+
+size_t 
+Shape::Component::_IntersectBox(const pxr::GfRay& ray, 
+  const pxr::GfMatrix4f& m)
+{
+  pxr::GfRange3d range(
+    pxr::GfVec3d(bounds.GetMin()),
+    pxr::GfVec3d(bounds.GetMax()));
+  pxr::GfBBox3d bbox(range);
+  bbox.Transform(pxr::GfMatrix4d(offsetMatrix * parentMatrix * m));
+  return ray.Intersect(bbox) ? index : 0;
+}
+
+size_t 
+Shape::Component::_IntersectSphere(const pxr::GfRay& ray, 
+  const pxr::GfMatrix4f& m)
+{
+  pxr::GfVec3d center = 
+      (offsetMatrix * parentMatrix * m).Transform(pxr::GfVec3d(0));
+  pxr::GfVec3d radius = m.Transform(bounds.GetMax());
+  return ray.Intersect(center, radius[0]) ? index : 0;
+}
+
+size_t 
+Shape::Component::_IntersectDisc(const pxr::GfRay& ray, 
+  const pxr::GfMatrix4f& m)
+{
+  pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
+  float radius = bounds.GetMax()[0];
+  pxr::GfRay localRay(ray);
+  localRay.Transform(matrix);
+  return (DiscIntersection(localRay, pxr::GfVec3d(0, 1, 0), 
+    pxr::GfVec3d(0), radius) >= 0.f) ? index : 0;
+}
+
+size_t 
+Shape::Component::_IntersectCylinder(const pxr::GfRay& ray, 
+  const pxr::GfMatrix4f& m)
+{
+  pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
+  const pxr::GfVec3d& bound = bounds.GetMax();
+  pxr::GfRay invRay(ray);
+  invRay.Transform(matrix);
+  return (CylinderIntersection(invRay, bound[0], bound[1]) >= 0.f) ? index: 0;
+}
+
+size_t 
+Shape::Component::_IntersectTorus(const pxr::GfRay& ray, 
+  const pxr::GfMatrix4f& m)
+{
+  pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
+  pxr::GfRay invRay(ray);
+  invRay.Transform(pxr::GfMatrix4d(matrix));
+  const pxr::GfVec3d& bound = bounds.GetMax();
+  return (TorusIntersection( invRay, bound[0], bound[1]) > 0.f) ? index : 0.f;
+}
+
+size_t 
 Shape::Component::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m)
 {
+  return _intersectImplementation ? 
+    (this->*_intersectImplementation)(ray, m) : 0;
+  /*
   switch(type) {
     case GRID:
     {
@@ -117,8 +202,13 @@ Shape::Component::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m)
           return index;
       break;
     }
+    case EXTRUSION:
+    {
+
+    }
   }
   return 0;
+  */
 }
 
 Shape::Shape() : _vao(0), _vbo(0), _eab(0) {};
@@ -133,8 +223,43 @@ Shape::~Shape()
 void Shape::UpdateComponents(short hovered, short active)
 {
   for(Shape::Component& component: _components) {
-    component.hovered = (component.index == hovered);
-    component.active = (component.index == active);
+    if(component.index == hovered)
+      BITMASK_SET(component.flags, HOVERED);
+    else 
+      BITMASK_CLEAR(component.flags, HOVERED);
+
+    if(component.index == active)
+      BITMASK_SET(component.flags, SELECTED);
+    else 
+      BITMASK_CLEAR(component.flags, SELECTED);
+  }
+}
+
+void Shape::UpdateVisibility(const pxr::GfMatrix4f& m, const pxr::GfVec3f& dir)
+{
+  for(Shape::Component& component: _components) {
+    pxr::GfVec3f axis = _GetComponentAxis(component, m);
+    switch(component.index) {
+      case 1:
+      case 2:
+      case 3:
+        if(pxr::GfAbs(pxr::GfDot(dir, axis)) < 0.9f)
+          BITMASK_SET(component.flags, VISIBLE);
+        else
+          BITMASK_CLEAR(component.flags, VISIBLE);
+        break;
+      case 4:
+      case 5:
+      case 6:
+        if(pxr::GfAbs(pxr::GfDot(dir, axis)) > 0.15f)
+         BITMASK_SET(component.flags, VISIBLE);
+        else
+          BITMASK_CLEAR(component.flags, VISIBLE);
+        break;
+      default:
+        BITMASK_SET(component.flags, VISIBLE);
+        break;
+    }
   }
 }
 
@@ -143,11 +268,13 @@ void Shape::AddComponent(const Component& component)
   _components.push_back(component);
 }
 
+/*
 void Shape::AddComponent(short type, short index, size_t basePoint, 
   size_t numPoints, size_t startIdx, size_t endIdx, 
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   _components.push_back({
+    VISIBLE|PICKABLE,
     type, 
     index, 
     basePoint, 
@@ -157,7 +284,7 @@ void Shape::AddComponent(short type, short index, size_t basePoint,
     color, 
     m
   });
-}
+}*/
 
 void Shape::_MakeCircle(std::vector<pxr::GfVec3f>& points, float radius, 
   size_t numPoints, const pxr::GfMatrix4f& m)
@@ -177,13 +304,23 @@ void Shape::_TransformPoints(size_t startIdx, size_t endIdx,
   }
 }
 
+pxr::GfVec3f Shape::_GetComponentAxis(const Shape::Component& component, 
+  const pxr::GfMatrix4f& m)
+{
+  const pxr::GfMatrix4f matrix = 
+    component.offsetMatrix * component.parentMatrix * m;
+  return matrix.TransformDir(pxr::GfVec3f(0.f, 1.f, 0.f));
+}
+
 size_t
 Shape::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m)
 {
   size_t index = 0;
   for(auto& component: _components) {
-    size_t intersected = component.Intersect(ray, m);
-    if(intersected && !index) index = intersected;
+    if(component.GetFlag(Shape::VISIBLE) && component.GetFlag(Shape::PICKABLE)) {
+      size_t intersected = component.Intersect(ray, m);
+      if(intersected) return intersected;
+    }
   }
   return index;
 }
@@ -229,7 +366,7 @@ Shape::AddGrid(short index, float width, float depth, size_t divX,
   }
 
   // make component
-  Shape::Component component =  {
+  Shape::Component component(
     Shape::GRID,
     index, 
     baseNumPoints, 
@@ -238,8 +375,7 @@ Shape::AddGrid(short index, float width, float depth, size_t divX,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f), 
-    m
-  };
+    m);
 
   component.ComputeBounds(this);
   return component;
@@ -278,7 +414,7 @@ Shape::AddBox(short index, float width, float height, float depth,
   }
 
   // make component
-  Shape::Component component = {
+  Shape::Component component(
     Shape::BOX, 
     index, 
     baseNumPoints,
@@ -287,8 +423,7 @@ Shape::AddBox(short index, float width, float height, float depth,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f), 
-    m
-  };
+    m);
 
   //component.ComputeBounds(this);
   component.SetBounds(
@@ -371,7 +506,7 @@ Shape::AddSphere(short index, float radius, size_t lats, size_t longs,
   }
 
   // make component
-  Shape::Component component = {
+  Shape::Component component(
     Shape::SPHERE, 
     index, 
     baseNumPoints, 
@@ -380,8 +515,7 @@ Shape::AddSphere(short index, float radius, size_t lats, size_t longs,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f), 
-    m
-  };
+    m);
 
   component.SetBounds(pxr::GfVec3f(radius, 0.f, 0.f));
   return component;
@@ -504,7 +638,7 @@ Shape::AddIcoSphere(short index, float radius, size_t subdiv,
   _TransformPoints(baseNumPoints, _points.size(), m);
 
   // make component
-  Shape::Component component = {
+  Shape::Component component(
     Shape::ICOSPHERE, 
     index, 
     baseNumPoints,
@@ -513,8 +647,7 @@ Shape::AddIcoSphere(short index, float radius, size_t subdiv,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f),
-    m
-  };
+    m);
 
   component.SetBounds(pxr::GfVec3f(radius, 0.f, 0.f));
   return component;
@@ -573,7 +706,7 @@ Shape::AddCylinder(short index, float radius, float height, size_t lats,
   }
 
   // make component
-  Shape::Component component = {
+  Shape::Component component(
     Shape::CYLINDER, 
     index, 
     baseNumPoints,
@@ -582,8 +715,7 @@ Shape::AddCylinder(short index, float radius, float height, size_t lats,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f), 
-    m
-  };
+    m);
 
   component.SetBounds(pxr::GfVec3f(radius + 0.05f, height, 0.f));
 
@@ -592,7 +724,8 @@ Shape::AddCylinder(short index, float radius, float height, size_t lats,
 
 Shape::Component 
 Shape::AddTube(short index, float outRadius, float inRadius, float height,
-  size_t lats, size_t longs, const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
+  size_t lats, size_t longs, const pxr::GfVec4f& color, 
+  const pxr::GfMatrix4f& m)
 {
   // initialize data
   longs = longs < 2 ? 2 : longs;
@@ -657,7 +790,7 @@ Shape::AddTube(short index, float outRadius, float inRadius, float height,
   }
 
   // make component
-  Shape::Component  component = {
+  Shape::Component  component(
     Shape::TUBE, 
     index, 
     baseNumPoints,
@@ -666,8 +799,7 @@ Shape::AddTube(short index, float outRadius, float inRadius, float height,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f), 
-    m
-  };
+    m);
 
   component.SetBounds(pxr::GfVec3f(inRadius, outRadius, height));
   return component;
@@ -701,7 +833,7 @@ Shape::AddCone(short index, float radius, float height, size_t lats,
   }
 
   // make component
-  Shape::Component  component = {
+  Shape::Component  component(
     Shape::CONE, 
     index, 
     baseNumPoints,
@@ -710,8 +842,7 @@ Shape::AddCone(short index, float radius, float height, size_t lats,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f), 
-    m
-  };
+    m);
 
   component.SetBounds(pxr::GfVec3f(radius, height, 0.f));
   return component;
@@ -773,7 +904,7 @@ Shape::AddTorus(short index, float radius, float section, size_t lats,
   }
 
   // make component
-  Shape::Component component = {
+  Shape::Component component(
     Shape::TORUS, 
     index, 
     baseNumPoints,
@@ -782,11 +913,79 @@ Shape::AddTorus(short index, float radius, float section, size_t lats,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f), 
-    m
-  };
+    m);
 
   component.SetBounds(pxr::GfVec3f(radius, section, 0.f));
   return component;
+}
+
+Shape::Component
+Shape::AddExtrusion(short index, 
+  const std::vector<pxr::GfMatrix4f>& xfos,
+  const std::vector<pxr::GfVec3f>& profile, 
+  const pxr::GfVec4f& color,
+  const pxr::GfMatrix4f& m)
+{
+  size_t baseNumPoints = _points.size();
+  size_t baseNumIndices = _indices.size();
+
+  size_t numPoints = profile.size();
+  size_t numXfos = xfos.size();
+
+  bool closeU = 
+    GfIsClose(xfos.front(), xfos.back(), 0.001f) ? true : false;
+  bool closeV = 
+    GfIsClose(profile.front(), profile.back(), 0.001f) ? true : false;
+
+  // make points
+  size_t numLongs = closeU ? numXfos - 1 : numXfos;
+  size_t numLats = closeV ? numPoints - 1 : numPoints;
+  for(size_t i=0; i < numLongs; ++i) {
+    for(size_t j=0; j < numLats; ++j) {
+      _points.push_back(xfos[i].Transform(profile[j]));
+    }
+  }
+
+  // transform points
+  _TransformPoints(baseNumPoints, _points.size(), m);
+
+  // make indices
+  for(size_t i=0; i < numLongs; ++i) {
+    size_t baseIdx = baseNumPoints + i * numPoints;
+    for(size_t j=0; j < numLats; ++j) {
+      _indices.push_back(baseIdx + j);
+      _indices.push_back(baseIdx + ((j + 1) % numLats));
+      _indices.push_back(baseIdx + ((j + 1) % numLats ) + numLats);
+
+      _indices.push_back(baseIdx + j);
+      _indices.push_back(baseIdx + ((j + 1) % numLats ) + numLats);
+      _indices.push_back(baseIdx + j + numLats);
+    }
+  }
+
+  // make component
+  Shape::Component component(
+    Shape::EXTRUSION, 
+    index, 
+    baseNumPoints,
+    _points.size() - baseNumPoints,
+    baseNumIndices, 
+    _indices.size(), 
+    color, 
+    pxr::GfMatrix4f(1.f), 
+    m);
+
+  component.ComputeBounds(this);
+  return component;
+
+}
+
+Shape::Component 
+Shape::AddDisc(short index, float radius, size_t lats,
+  const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
+{
+  return 
+    Shape::AddDisc(index, radius, 0.f, 360.f, 8, color, m);
 }
 
 Shape::Component 
@@ -834,7 +1033,7 @@ Shape::AddDisc(short index, float radius, float start, float end, size_t lats,
     }
   }
   // make component
-  Shape::Component component = {
+  Shape::Component component(
     Shape::DISC, 
     index, 
     baseNumPoints,
@@ -843,8 +1042,7 @@ Shape::AddDisc(short index, float radius, float start, float end, size_t lats,
     _indices.size(), 
     color, 
     pxr::GfMatrix4f(1.f), 
-    m
-  };
+    m);
 
   component.SetBounds(pxr::GfVec3f(radius, 0.f, 0.f));
   return component;
@@ -970,7 +1168,7 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
   glBindVertexArray(vao);
 }
 
-void InitStaticShapes()
+void AMNInitShapeShader()
 {
   // setup glsl program
   SHAPE_PROGRAM = new GLSLProgram();
@@ -986,39 +1184,7 @@ void InitStaticShapes()
       SIMPLE_VERTEX_SHADER_CODE_330, 
       SIMPLE_FRAGMENT_SHADER_CODE_330);
   }
-  /*
-  CYLINDER_SHAPE = new Shape();
-  CYLINDER_SHAPE->AddCylinder(0.05f, 5.f, 8, 1);
-  CYLINDER_SHAPE->Setup();
-
-  GRID_SHAPE = new Shape();
-  GRID_SHAPE->AddGrid(1.f, 1.f, 1, 1);
-  GRID_SHAPE->Setup();
-
-  BOX_SHAPE = new Shape();
-  BOX_SHAPE->AddBox();
-  BOX_SHAPE->Setup();
-
-  CONE_SHAPE = new Shape();
-  CONE_SHAPE->AddCone(0.5f, 1.f, 8);
-  CONE_SHAPE->Setup();
-
-  SPHERE_SHAPE = new Shape();
-  SPHERE_SHAPE->AddSphere(0.5f, 8, 8);
-  SPHERE_SHAPE->Setup();
-
-  ICOSPHERE_SHAPE = new Shape();
-  ICOSPHERE_SHAPE->AddIcoSphere(0.5f, 2);
-  ICOSPHERE_SHAPE->Setup();
-
-  TUBE_SHAPE = new Shape();
-  TUBE_SHAPE->AddTube(1.f, 0.5f, 0.1f, 32);
-  TUBE_SHAPE->Setup();
-
-  TORUS_SHAPE = new Shape();
-  TORUS_SHAPE->AddTorus(1.f, 0.1f, 32, 8);
-  TORUS_SHAPE->Setup();
-  */
+  
   SHAPE_INITIALIZED = true;
 }
 

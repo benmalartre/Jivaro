@@ -15,6 +15,14 @@ AMN_NAMESPACE_OPEN_SCOPE
 class GLSLProgram;
 class Shape {
 public:
+  enum Flag {
+    SELECTED  = 1,
+    HOVERED   = 2,
+    VISIBLE   = 4,
+    PICKABLE  = 8,
+    HELPER    = 16
+  };
+
   enum Type {
     GRID,
     BOX,
@@ -25,29 +33,34 @@ public:
     TUBE,
     CONE,
     CAPSULE,
-    TORUS
+    TORUS,
+    EXTRUSION
   };
 
   struct Component {
+    typedef size_t (Shape::Component::*IntersectFunc)(const pxr::GfRay& ray, 
+      const pxr::GfMatrix4f& m);
+
+    short flags;
     short type;
     short index;
     size_t basePoint;
     size_t numPoints;
     size_t baseIndex;
     size_t endIndex;
-    bool active;
-    bool hovered;
-    bool visible;
     pxr::GfRange3f bounds;
     pxr::GfMatrix4f offsetMatrix;
     pxr::GfMatrix4f parentMatrix;
     pxr::GfVec4f color;
+
+    IntersectFunc _intersectImplementation;
     
     Component(short type, short shapeIndex, size_t basePointIndex, 
       size_t numPoints, size_t baseIndex, size_t endIndex, 
       const pxr::GfVec4f& color, const pxr::GfMatrix4f& parentMatrix, 
       const pxr::GfMatrix4f& offsetMatrix=pxr::GfMatrix4f(1.f)) 
-      : type(type)
+      : flags(VISIBLE|PICKABLE)
+      , type(type)
       , index(shapeIndex)
       , basePoint(basePointIndex)
       , numPoints(numPoints)
@@ -55,15 +68,47 @@ public:
       , endIndex(endIndex)
       , color(color)
       , parentMatrix(parentMatrix)
-      , offsetMatrix(offsetMatrix)
-      , active(false)
-      , hovered(false)
-      , visible(true) {};
+      , offsetMatrix(offsetMatrix){
+        switch(type) {
+          case GRID:
+            _intersectImplementation = &Shape::Component::_IntersectGrid;
+            break;
+          case BOX:
+            _intersectImplementation = &Shape::Component::_IntersectBox;
+            break;
+          case SPHERE:
+          case ICOSPHERE:
+            _intersectImplementation = &Shape::Component::_IntersectSphere;
+            break;
+          case DISC:
+            _intersectImplementation = &Shape::Component::_IntersectDisc;
+            break;
+          case TUBE:
+          case CYLINDER:
+            _intersectImplementation = &Shape::Component::_IntersectCylinder;
+            break;
+          case TORUS:
+            _intersectImplementation = &Shape::Component::_IntersectTorus;
+            break;
+          default:
+            _intersectImplementation = 0;
+        }
+      };
     ~Component(){};
 
     void SetBounds(const pxr::GfVec3f& xyz);
     void SetBounds(const pxr::GfRange3f&);
+    void SetFlag(short flag, bool value);
+    bool GetFlag(short flag) const;
     void ComputeBounds(Shape* shape);
+
+    size_t _IntersectGrid(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
+    size_t _IntersectBox(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
+    size_t _IntersectSphere(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
+    size_t _IntersectDisc(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
+    size_t _IntersectCylinder(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
+    size_t _IntersectTorus(const pxr::GfRay&, const pxr::GfMatrix4f& m);
+
     size_t Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
   };
 
@@ -83,12 +128,15 @@ public:
 
   void _TransformPoints(size_t start, size_t end, 
     const pxr::GfMatrix4f& m);
+  pxr::GfVec3f _GetComponentAxis(const Shape::Component& component,
+    const pxr::GfMatrix4f& m);
 
   void UpdateComponents(short hovered, short active);
+  void UpdateVisibility(const pxr::GfMatrix4f& m, const pxr::GfVec3f& dir);
   void AddComponent(const Component& component);
-  void AddComponent(short type, short index, size_t basePoint, size_t numPoints,
+  /*void AddComponent(short type, short index, size_t basePoint, size_t numPoints,
     size_t startIndex, size_t endIndex, const pxr::GfVec4f& color, 
-    const pxr::GfMatrix4f& m);
+    const pxr::GfMatrix4f& m);*/
   Component AddGrid(short index, float width=1.f, float depth=1.f,  size_t divX=8, 
     size_t divZ=8, const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
@@ -119,7 +167,12 @@ public:
   Component AddTorus(short index, float radius, float section, size_t lats=16, 
     size_t longs=8, const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
-  
+  Component AddExtrusion(short index, 
+    const std::vector<pxr::GfMatrix4f>& xfos,
+    const std::vector<pxr::GfVec3f>& profile, 
+    const pxr::GfVec4f& color=pxr::GfVec4f(1.f),
+    const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
+
   size_t Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
 
   void Clear();
@@ -164,7 +217,7 @@ extern GLSLProgram* SHAPE_PROGRAM;
 static bool SHAPE_INITIALIZED = false;
 
 
-void InitStaticShapes();
+void AMNInitShapeShader();
 
 AMN_NAMESPACE_CLOSE_SCOPE
 

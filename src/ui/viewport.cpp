@@ -93,8 +93,6 @@ void ViewportUI::Init()
 
   Resize();
 
-  _handle.SetCamera(_camera);
-
   /*
   glEnable(GL_DEPTH_TEST);
   size_t imageWidth = 512;
@@ -128,6 +126,8 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _interactionMode = INTERACTION_NONE;
     _interact = false;
+    Tool* tools = AMN_APPLICATION->GetTools();
+    tools->EndUpdate();
     //RenderToMemory(_camera, false);
     //SetImage();
   }
@@ -139,45 +139,27 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     
     _lastX = (int)x;
     _lastY = (int)y;
-    if( mods & GLFW_MOD_ALT)
-    {
-      _interact = true;
-      if (button == GLFW_MOUSE_BUTTON_LEFT)
-      {
+    _interact = true;
+    if( mods & GLFW_MOD_ALT) {
+      if (button == GLFW_MOUSE_BUTTON_LEFT) {
         _interactionMode = INTERACTION_ORBIT;
-      }
-      else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
-      {
+      } else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
         _interactionMode = INTERACTION_WALK;
-      }
-      else if(button == GLFW_MOUSE_BUTTON_RIGHT)
-      {
+      } else if(button == GLFW_MOUSE_BUTTON_RIGHT) {
         _interactionMode = INTERACTION_DOLLY;
       }
-    }
-    else if(mods & GLFW_MOD_SUPER)
-    {
-      _interact = true;
-      if (button == GLFW_MOUSE_BUTTON_LEFT)
-      {
+    } else if(mods & GLFW_MOD_SUPER) {
+      if (button == GLFW_MOUSE_BUTTON_LEFT) {
         _interactionMode = INTERACTION_WALK;
-      }
-      else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
-      {
+      } else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
         _interactionMode = INTERACTION_ORBIT;
-      }
-      else if(button == GLFW_MOUSE_BUTTON_RIGHT)
-      {
+      } else if(button == GLFW_MOUSE_BUTTON_RIGHT) {
         _interactionMode = INTERACTION_DOLLY;
       }
-    }
-    else {
-      short activeAxis = _handle.Select(
-        GetLastMouseX() - GetX(),
-        GetLastMouseY() - GetY(),
-        GetWidth(),
-        GetHeight(), false);
-      _handle.SetActiveAxis(activeAxis);
+    } else {
+      Tool* tools = AMN_APPLICATION->GetTools();
+      tools->Select(false);
+      tools->BeginUpdate();
       //Pick(x, y);
       //window->RestoreLastActiveTool();
     }
@@ -210,6 +192,9 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
 void ViewportUI::MouseMove(int x, int y) 
 {
+  Tool* tools = AMN_APPLICATION->GetTools();
+  tools->SetViewport(this);
+  
   if(_interact)
   {
     double dx = x - _lastX;
@@ -230,29 +215,22 @@ void ViewportUI::MouseMove(int x, int y)
         
       case INTERACTION_ORBIT:
       {
-        _camera->Orbit(dx, dy); break;
+        _camera->Orbit(dx, dy); 
+        break;
       }
 
       default:
       {
-        short activeAxis = _handle.Pick(
-          GetLastMouseX() - GetX(),
-          GetLastMouseY() - GetY(),
-          GetWidth(),
-          GetHeight());
-        _handle.SetActiveAxis(activeAxis);
-      }
+        tools->Update();
         break;
+      }
         
     }
     _parent->SetDirty();
+  } else {
+    tools->Pick();
   }
-  short hoveredAxis = _handle.Pick(
-    GetLastMouseX() - GetX(),
-    GetLastMouseY() - GetY(),
-    GetWidth(),
-    GetHeight());
-  _handle.SetHoveredAxis(hoveredAxis);
+
 
   _lastX = x;
   _lastY = y;
@@ -278,72 +256,11 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
   }
 }
 
-static void TestShapes() {
-  for(size_t i = 0; i< 2; ++i) {
-    
-    CYLINDER_SHAPE->Draw(
-        {1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        (float)i*2, 0.f, 0.f, 1.f},
-      pxr::GfVec4f(1.f, 0.25f, 0.5f, 1.f));
-  }
-  for(size_t i = 2; i< 4; ++i) {
-    ICOSPHERE_SHAPE->Draw(
-        {1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        (float)i*2, 0.f, 0.f, 1.f},
-      pxr::GfVec4f(0.5f, 1.f, 0.25f, 1.f));
-  }
-  for(size_t i = 4; i< 6; ++i) {
-    CONE_SHAPE->Draw(
-        {1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        (float)i*2, 0.f, 0.f, 1.f},
-      pxr::GfVec4f(0.25f, 0.5f, 1.f, 1.f));
-  }
-  for(size_t i = 6; i< 8; ++i) {
-    GRID_SHAPE->Draw(
-        {1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        (float)i*2, 0.f, 0.f, 1.f},
-      pxr::GfVec4f(0.f, 1.f, 0.f, 1.f));
-  }
-  for(size_t i = 8; i< 10; ++i) {
-    BOX_SHAPE->Draw(
-        {1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        (float)i*2, 0.f, 0.f, 1.f},
-      pxr::GfVec4f(0.f, 1.f, 0.f, 1.f));
-  }
-  for(size_t i = 10; i< 12; ++i) {
-    TUBE_SHAPE->Draw(
-        {1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        (float)i*2, 0.f, 0.f, 1.f},
-      pxr::GfVec4f(0.f, 1.f, 0.f, 1.f));
-  }
-  for(size_t i = 12; i< 14; ++i) {
-    TORUS_SHAPE->Draw(
-        {1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        (float)i*2, 0.f, 0.f, 1.f},
-      pxr::GfVec4f(1.f, 0.25f, 0.5f, 1.f));
-  }
-}
-
 static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd) {
 
   ViewportUI* viewport = (ViewportUI*)cmd->UserCallbackData;
   Camera* camera = viewport->GetCamera();
   View* view = viewport->GetView();
-  BaseHandle* handle = viewport->GetHandle();
 
   // get current state
   GLint currentViewport[4];
@@ -362,13 +279,9 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
   glEnable(GL_DEPTH_TEST);
   glClear(GL_DEPTH_BUFFER_BIT);
 
-  // test handle
-  Shape::UpdateCamera(
-    pxr::GfMatrix4f(camera->GetViewMatrix()),
-    pxr::GfMatrix4f(camera->GetProjectionMatrix()));
-
-  handle->Resize();
-  handle->Draw();
+  Tool* tools = AMN_APPLICATION->GetTools();
+  tools->SetViewport(viewport);
+  tools->Draw();
 
   // restore viewport
   glViewport(

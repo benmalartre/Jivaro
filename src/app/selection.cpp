@@ -1,5 +1,11 @@
 #include "selection.h"
-
+#include "application.h"
+#include <pxr/usd/usdGeom/bboxCache.h>
+#include <pxr/usd/usdGeom/xformCache.h>
+#include <pxr/base/gf/range3d.h>
+#include <pxr/base/gf/bbox3d.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/quatf.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -46,5 +52,6 @@ void Selection::Clear()
 {
   _items.clear();
 }
+
 
 AMN_NAMESPACE_CLOSE_SCOPE

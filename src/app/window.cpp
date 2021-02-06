@@ -7,6 +7,7 @@
 #include "../ui/viewport.h"
 #include "../ui/splitter.h"
 #include "../app/application.h"
+#include "../app/tools.h"
 #include <pxr/imaging/glf/contextCaps.h>
 #include <pxr/base/arch/systemInfo.h>
 #include "window.h"
@@ -78,6 +79,7 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_GREEN_BITS,mode->greenBits);
   glfwWindowHint(GLFW_BLUE_BITS,mode->blueBits);
   glfwWindowHint(GLFW_REFRESH_RATE,mode->refreshRate);
+  
   //glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 
@@ -86,6 +88,7 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
+  glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(mode->width, mode->height, "AMNESIE.0.0",  monitor, NULL);
   _width = mode->width;
@@ -111,6 +114,7 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
+  glfwWindowHint(GLFW_SAMPLES, 4);
   
   _window = glfwCreateWindow(_width,_height,"AMNESIE.0.0",NULL,NULL);
 
@@ -134,6 +138,7 @@ Window::Window(int width, int height, GLFWwindow* parent, const std::string& nam
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_FLOATING, true);
+  glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
 }
@@ -162,10 +167,8 @@ Window::Init(Application* app)
 
       AMNCreateFontAtlas();
       AMNInitializeIcons();
+      AMNInitializeTools();
     }
-
-    // init static shapes
-    InitStaticShapes();
 
     // setup callbacks
     glfwSetWindowSizeCallback(_window, ResizeCallback);
@@ -176,11 +179,12 @@ Window::Init(Application* app)
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
 
     // create main splittable view
-    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
+    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width + 1, _height + 1));
     _mainView->SetWindow(this);
     _splitter = new Splitter();
 
     Resize(_width, _height);
+    
 
     // ui
     SetupImgui();
@@ -615,6 +619,22 @@ KeyboardCallback(
         break;
       }
 
+      case GLFW_KEY_S:
+      {
+        app->SetActiveTool(AMN_TOOL_SCALE);
+        break;
+      }
+      case GLFW_KEY_R:
+      {
+        app->SetActiveTool(AMN_TOOL_ROTATE);
+        break;
+      }
+      case GLFW_KEY_T:
+      {
+        app->SetActiveTool(AMN_TOOL_TRANSLATE);
+        break;
+      }
+
       case GLFW_KEY_ESCAPE:
       {
         glfwSetWindowShouldClose(window, true);
@@ -781,8 +801,6 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   bool splitterHovered = parent->PickSplitter(x, y);
   if(parent->IsDraggingSplitter()) {
     parent->DragSplitter(x, y);
-  } else if(parent->GetActiveTool() != AMN_TOOL_NONE) {
-    parent->UpdateActiveTool(x, y);
   } else {
     if (active && active->GetFlag(View::INTERACTING))
       active->MouseMove(x, y);
