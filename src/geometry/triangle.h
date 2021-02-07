@@ -70,11 +70,10 @@ rad = fa * boxhalfsize[0] + fb * boxhalfsize[1];   \
 if(min>rad || max<-rad) return 0;
 
 class Mesh;
+
 struct Triangle {
-  unsigned     _id;
-  pxr::GfVec3i _vertices;
-  pxr::GfVec3i _samples;
-  bool _boundary;
+  uint32_t     id;
+  pxr::GfVec3i vertices;
 
   void GetCenter(Mesh* mesh, pxr::GfVec3f& center);
   void GetNormal(Mesh* mesh, pxr::GfVec3f& normal);
@@ -85,7 +84,6 @@ struct Triangle {
     const pxr::GfVec3f& boxhalfsize);
   bool PlaneBoxTest(const pxr::GfVec3f& normal, const pxr::GfVec3f& point, 
     const pxr::GfVec3f& box);
-  bool IsBoundary(){return _boundary;};
 
 };
 

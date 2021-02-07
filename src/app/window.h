@@ -6,7 +6,7 @@
 #include "../utils/utils.h"
 #include "../ui/ui.h"
 #include "../ui/splitter.h"
-#include "tools.h"
+#include "../app/tools.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
 

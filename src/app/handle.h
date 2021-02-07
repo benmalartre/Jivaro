@@ -3,7 +3,7 @@
 #pragma once
 
 #include "../common.h"
-#include "../app/shape.h"
+#include "../geometry/shape.h"
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/rotation.h>
 #include <pxr/base/gf/matrix4f.h>

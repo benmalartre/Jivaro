@@ -12,7 +12,7 @@
 #include <pxr/base/arch/systemInfo.h>
 #include "window.h"
 #include "view.h"
-#include "shape.h"
+#include "../geometry/shape.h"
 
 
 AMN_NAMESPACE_OPEN_SCOPE

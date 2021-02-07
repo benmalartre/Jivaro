@@ -1,5 +1,5 @@
 #include "viewport.h"
-#include "../app/shape.h"
+#include "../geometry/shape.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/camera.h"

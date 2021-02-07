@@ -58,13 +58,14 @@ add_executable(${TARGET}
   #embree/instance.cpp
   #embree/context.cpp
   #embree/device.cpp
+  geometry/utils.cpp
+  geometry/shape.cpp
+  geometry/intersector.cpp
   geometry/triangle.cpp
   geometry/mesh.cpp
   pbd/integration.cpp
   pbd/maths.cpp
   app/time.cpp
-  app/shape.cpp
-  app/intersector.cpp
   app/handle.cpp
   app/camera.cpp
   app/view.cpp
