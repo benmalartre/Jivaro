@@ -6,15 +6,15 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-template<typename T>
-static inline bool IsZero(T x) {
-  return pxr::GfIsClose(x, 0, 1e-9);
+template<typename SCALAR>
+static inline bool IsZero(SCALAR x) {
+  return pxr::GfIsClose(x, static_cast<SCALAR>(0), static_cast<SCALAR>(1e-9));
 }
 
-template<typename T>
-int SolveQuadric(const T c[3], T s[2])
+template<typename SCALAR>
+int SolveQuadric(const SCALAR c[3], SCALAR s[2])
 {
-  T p, q, D;
+  SCALAR p, q, D;
 
   /* normal form: x^2 + px + q = 0 */
   p = c[1] / (2 * c[2]);
@@ -28,7 +28,7 @@ int SolveQuadric(const T c[3], T s[2])
   } else if (D < 0) {
     return 0;
   } else /* if (D > 0) */ {
-    T sqrt_D = sqrt(D);
+    SCALAR sqrt_D = sqrt(D);
 
     s[0] =   sqrt_D - p;
     s[1] = - sqrt_D - p;
@@ -36,14 +36,14 @@ int SolveQuadric(const T c[3], T s[2])
   }
 }
 
-template<typename T>
-int SolveCubic(const T c[4], T s[3])
+template<typename SCALAR>
+int SolveCubic(const SCALAR c[4], SCALAR s[3])
 {
   int i, num;
-  T   sub;
-  T   A, B, C;
-  T   sq_A, p, q;
-  T   cb_p, D;
+  SCALAR sub;
+  SCALAR A, B, C;
+  SCALAR sq_A, p, q;
+  SCALAR cb_p, D;
 
   /* normal form: x^3 + Ax^2 + Bx + C = 0 */
   A = c[ 2 ] / c[ 3 ];
@@ -64,23 +64,23 @@ int SolveCubic(const T c[4], T s[3])
       s[ 0 ] = 0;
       num = 1;
     } else /* one single and one double solution */ {
-      T u = cbrt(-q);
+      SCALAR u = cbrt(-q);
       s[ 0 ] = 2 * u;
       s[ 1 ] = - u;
       num = 2;
     }
   } else if (D < 0) /* Casus irreducibilis: three real solutions */ {
-    T phi = 1.0/3 * acos(-q / sqrt(-cb_p));
-    T t = 2 * sqrt(-p);
+    SCALAR phi = 1.0/3 * acos(-q / sqrt(-cb_p));
+    SCALAR t = 2 * sqrt(-p);
 
     s[ 0 ] =   t * cos(phi);
     s[ 1 ] = - t * cos(phi + M_PI / 3);
     s[ 2 ] = - t * cos(phi - M_PI / 3);
     num = 3;
   } else /* one real solution */ {
-    T sqrt_D = sqrt(D);
-    T u = cbrt(sqrt_D - q);
-    T v = - cbrt(sqrt_D + q);
+    SCALAR sqrt_D = sqrt(D);
+    SCALAR u = cbrt(sqrt_D - q);
+    SCALAR v = - cbrt(sqrt_D + q);
 
     s[ 0 ] = u + v;
     num = 1;
@@ -95,13 +95,13 @@ int SolveCubic(const T c[4], T s[3])
   return num;
 }
 
-template<typename T>
-int SolveQuartic(const T c[5], T s[4])
+template<typename SCALAR>
+int SolveQuartic(const SCALAR c[5], SCALAR s[4])
 {
-  T   coeffs[4];
-  T   z, u, v, sub;
-  T   A, B, C, D;
-  T   sq_A, p, q, r;
+  SCALAR coeffs[4];
+  SCALAR z, u, v, sub;
+  SCALAR A, B, C, D;
+  SCALAR sq_A, p, q, r;
   int i, num = 0;
 
   /* normal form: x^4 + Ax^3 + Bx^2 + Cx + D = 0 */

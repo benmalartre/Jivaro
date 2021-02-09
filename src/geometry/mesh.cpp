@@ -75,59 +75,31 @@ Mesh::~Mesh()
 };
 
 Mesh::Mesh()
+  : Geometry()
 {
   _initialized = false;
   _numTriangles = 0;
   _numPoints = 0;
   _numFaces = 0;
+  _type = MESH;
 }
 
 Mesh::Mesh(const Mesh* other, bool normalize)
+  : Geometry(other, normalize)
 {
   _initialized = true;
   _numTriangles = other->_numTriangles;
-  _numPoints = other->_numPoints;
   _numSamples = other->_numSamples;
   _numFaces = other->_numFaces;
+  _type = MESH;
 
-  _position = other->_position;
-  _normal = other->_position;
+  _normal = other->_normal;
 
   _triangles.resize(_numTriangles);
   memcpy(
     &_triangles[0], 
     &other->_triangles[0], 
     _numTriangles * sizeof(Triangle));
-
-  _bbox = other->_bbox;
-
-  if (normalize) {
-    // compute center of mass
-    pxr::GfVec3f center(0.f);
-    for (size_t v = 0; v < other->_numPoints; ++v) {
-      center += other->GetPosition(v);
-    }
-    
-    center *= 1.0 / (float)_numPoints;
-
-    // translate to origin
-    for (size_t v = 0; v < other->_numPoints; ++v) {
-      _position[v]  = other->GetPosition(v) - center;
-    }
-
-    // determine radius
-    float rMax = 0;
-    for (size_t v = 0; v < other->_numPoints; ++v) {
-      rMax = std::max(rMax, _position[v].GetLength());
-    }
-
-    // rescale to unit sphere
-    float invRMax = 1.f / rMax;
-    for (size_t v = 0; v < other->_numPoints; ++v) {
-      _position[v] *= invRMax;
-    }
-
-  }
 }
 
 pxr::GfVec3f Mesh::GetPosition(const Triangle* T) const
@@ -141,11 +113,6 @@ pxr::GfVec3f Mesh::GetPosition(const Triangle* T) const
 pxr::GfVec3f Mesh::GetPosition(const Triangle *T, uint32_t index) const
 {
   return _position[T->vertices[index]];
-}
-
-pxr::GfVec3f Mesh::GetPosition(uint32_t index) const
-{
-  return _position[index];
 }
 
 pxr::GfVec3f Mesh::GetPosition(const PointOnMesh& point) const
@@ -171,11 +138,6 @@ pxr::GfVec3f Mesh::GetNormal(const Triangle *T, uint32_t index) const
   return _normal[T->vertices[index]];
 }
 
-pxr::GfVec3f Mesh::GetNormal(uint32_t index) const
-{
-  return _normal[index];
-}
-
 pxr::GfVec3f Mesh::GetNormal(const PointOnMesh& point) const
 {
   const Triangle* T = &_triangles[point.triangleId];
@@ -197,25 +159,6 @@ pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const{
   return (B ^ C).GetNormalized();
 }
 
-void Mesh::ComputeBoundingBox()
-{
-  /*
-  SubMesh* subMesh;
-  _bbox.clear();
-  for(uint32_t i=0;i<getNumMeshes();i++)
-  {
-    subMesh = getSubMesh(i);
-    subMesh->_bbox.compute(subMesh);
-    _bbox.addInPlace(subMesh->_bbox);
-  }
-  */
-}
-
-pxr::GfBBox3d& Mesh::GetBoundingBox()
-{
-  return _bbox;
-}
-
 static bool _GetEdgeLatency(int p0, int p1, const int* )
 {
 
@@ -223,9 +166,7 @@ static bool _GetEdgeLatency(int p0, int p1, const int* )
 
 void Mesh::ComputeHalfEdges()
 {
-  std::cout << "COMPUTE HALF EDGES MESH :D" << std::endl;
   _halfEdges.resize(_numTriangles * 3);
-  std::cout << "NUM HALF EDGES : " << _halfEdges.size() << std::endl;
 
   pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
 
@@ -404,6 +345,60 @@ bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin,
     }
   }
   return hit;
+}
+
+void Mesh::PolygonSoup(size_t numPolygons, const pxr::GfVec3f& minimum, 
+  const pxr::GfVec3f& maximum)
+{
+  size_t numTriangles = numPolygons;
+  size_t numPoints = numPolygons * 3;
+  pxr::VtArray<pxr::GfVec3f> position(numPoints);
+
+  float radius = (maximum - minimum).GetLength() / 10.f;
+  for(size_t i=0; i < numPolygons; ++i) {
+    float bx = RANDOM_0_1;
+    float by = RANDOM_0_1;
+    float bz = RANDOM_0_1;
+    pxr::GfVec3f center(
+      minimum[0] * (1.f - bx) + maximum[0] * bx,
+      minimum[1] * (1.f - by) + maximum[1] * by,
+      minimum[2] * (1.f - bz) + maximum[2] * bz
+    );
+
+    pxr::GfVec3f normal(
+      RANDOM_LO_HI(-1.f, 1.f),
+      RANDOM_LO_HI(-1.f, 1.f),
+      RANDOM_LO_HI(-1.f, 1.f)
+    );
+
+    normal.Normalize();
+
+    position[i * 3 + 0] = center + pxr::GfVec3f(1.f, 0.f, 0.f);
+    position[i * 3 + 1] = center + pxr::GfVec3f(0.f, 1.f, 0.f);
+    position[i * 3 + 2] = center + pxr::GfVec3f(0.f, 0.f, 1.f);
+  }
+
+  pxr::VtArray<int> faceCount(numTriangles);
+  for(size_t i=0; i < numTriangles; ++i) {
+    faceCount[i] = 3;
+  }
+
+  pxr::VtArray<int> faceConnect(numPoints);
+  for(size_t i=0; i < numPoints; ++i) {
+    faceConnect[i] = i;
+  }
+
+  Init(position, faceCount, faceConnect);
+}
+
+void Mesh::Randomize(float value)
+{
+  for(auto& pos: _position) {
+    pos += pxr::GfVec3f(
+      RANDOM_LO_HI(-value, value),
+      RANDOM_LO_HI(-value, value),
+      RANDOM_LO_HI(-value, value));
+  }
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -9,12 +9,12 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // https://github.com/erich666/GraphicsGems/blob/master/gems/Roots3And4.c
-template<typename T>
-int SolveQuadric(const T c[3], T s[2]);
-template<typename T>
-int SolveCubic(const T c[4], T s[3]);
-template<typename T>
-int SolveQuartic(const T c[5], T s[4]);
+template<typename SCALAR>
+int SolveQuadric(const SCALAR c[3], SCALAR s[2]);
+template<typename SCALAR>
+int SolveCubic(const SCALAR c[4], SCALAR s[3]);
+template<typename SCALAR>
+int SolveQuartic(const SCALAR c[5], SCALAR s[4]);
 
 
 float DiscIntersection(const pxr::GfRay& ray, const pxr::GfVec3d& n, 

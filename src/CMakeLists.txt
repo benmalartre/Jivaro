@@ -62,6 +62,7 @@ add_executable(${TARGET}
   geometry/shape.cpp
   geometry/intersector.cpp
   geometry/triangle.cpp
+  geometry/geometry.cpp
   geometry/mesh.cpp
   pbd/integration.cpp
   pbd/maths.cpp
@@ -71,6 +72,7 @@ add_executable(${TARGET}
   app/view.cpp
   app/window.cpp
   app/modal.cpp
+  app/scene.cpp
   app/engine.cpp
   app/notice.cpp
   app/picking.cpp

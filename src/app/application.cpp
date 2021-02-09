@@ -1,5 +1,4 @@
 //#include "../utils/nfd/include/nfd.h"
-#include "../imgui/imgui_filebrowser.h"
 #include "../utils/native.h"
 #include "../utils/files.h"
 #include "../ui/filebrowser.h"
@@ -417,13 +416,29 @@ Application::Init()
         UsdGeomMesh mesh =
             UsdGeomMesh::Define(stage, SdfPath("/" + group.name));
   */
-  _stage = pxr::UsdStage::Open(filename);
+  //_stage = pxr::UsdStage::CreateNew("test_stage");
+  //_stage = pxr::UsdStage::Open(filename);
+  _stage = pxr::UsdStage::CreateInMemory();
 
+  _mesh.PolygonSoup(65535);
+
+  pxr::SdfPath path(pxr::TfToken("/polygon_soup"));
+  pxr::UsdGeomMesh polygonSoup = pxr::UsdGeomMesh::Define(_stage, path);
+  polygonSoup.CreatePointsAttr(pxr::VtValue(_mesh.GetPositions()));
+  polygonSoup.CreateNormalsAttr(pxr::VtValue(_mesh.GetNormals()));
+  polygonSoup.CreateFaceVertexIndicesAttr(pxr::VtValue(_mesh.GetFaceConnects()));
+  polygonSoup.CreateFaceVertexCountsAttr(pxr::VtValue(_mesh.GetFaceCounts()));
+  pxr::VtArray<pxr::GfVec3f> colors(1);
+  colors[0] = pxr::GfVec3f(1.f, 0.f, 0.5f);
+  polygonSoup.CreateDisplayColorAttr(pxr::VtValue(colors));
+  polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
+/*
   for(size_t i=0; i< 12; ++i) {
     pxr::SdfPath path(pxr::TfToken("/cube_"+std::to_string(i)));
     pxr::UsdGeomCube cube = pxr::UsdGeomCube::Define(_stage, path);
     cube.AddTranslateOp().Set(pxr::GfVec3d(i * 3, 0, 0), pxr::UsdTimeCode::Default());
   }
+*/
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
  
@@ -449,6 +464,11 @@ Application::Init()
 
 void Application::Update()
 {
+  pxr::UsdGeomMesh polygonSoup(
+    _stage->GetPrimAtPath(pxr::SdfPath("/polygon_soup")));
+  _mesh.Randomize(0.1f);
+  polygonSoup.GetPointsAttr().Set(pxr::VtValue(_mesh.GetPositions()));
+  
   if(_time.IsPlaying())_time.PlayBack();
   _time.ComputeFramerate(glfwGetTime());
 }

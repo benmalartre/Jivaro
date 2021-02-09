@@ -11,23 +11,32 @@
 #include <pxr/base/gf/bbox3d.h>
 #include <float.h>
 #include "triangle.h"
+#include "geometry.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+class Mesh;
 struct PointOnMesh{
-  uint32_t     triangleId;    // global triangle index
-  pxr::GfVec3f baryCoords;    // barycentric coordinates
+  Mesh*                 mesh;          // geometry mesh
+  uint32_t              triangleId;    // triangle index
+  pxr::GfVec3f          baryCoords;    // barycentric coordinates
 };
 
 struct HalfEdge
 {
+  enum Latency {
+    REAL,
+    IMPLICIT,
+    VIRTUAL
+  };
+
   uint32_t                index;     // half edge index
   uint32_t                vertex;    // vertex index
   struct HalfEdge*        twin;      // opposite half-edge
   struct HalfEdge*        next;      // next half-edge
-  bool                    latent;    // virtual edge
+  uint8_t                 latency;   // edge latency
 
-  HalfEdge():vertex(0),twin(NULL),next(NULL),latent(true){};
+  HalfEdge():vertex(0),twin(NULL),next(NULL),latency(REAL){};
   inline size_t GetTriangleIndex() const {return index / 3;};
   void GetTriangleNormal(const pxr::GfVec3f* positions, 
     pxr::GfVec3f& normal) const;
@@ -43,29 +52,28 @@ struct HalfEdge
     const pxr::GfVec3f& v) const;
 };
 
-class Mesh {
+class Mesh : public Geometry {
 public:
   Mesh();
   Mesh(const Mesh* other, bool normalize = true);
   ~Mesh();
 
-  const pxr::GfVec3f* GetPositionsCPtr(){return &_position[0];};
-  const pxr::GfVec3f* GetNormalsCPtr(){return &_normal[0];};
+  const pxr::VtArray<int>& GetFaceCounts() const { return _faceCounts;};
+  const pxr::VtArray<int>& GetFaceConnects() const { return _faceConnects;};
+  pxr::VtArray<int>& GetFaceCounts() { return _faceCounts;};
+  pxr::VtArray<int>& GetFaceConnects() { return _faceConnects;};
 
   pxr::GfVec3f GetPosition(const Triangle* T) const;                   // triangle position
   pxr::GfVec3f GetPosition(const Triangle* T, uint32_t index) const;   // vertex position
   pxr::GfVec3f GetNormal(const Triangle* T) const;                     // triangle normal
   pxr::GfVec3f GetNormal(const Triangle* T, uint32_t index) const;     // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;           // triangle normal
-  pxr::GfVec3f GetPosition(uint32_t index) const;                      // vertex position
-  pxr::GfVec3f GetNormal(uint32_t index) const;                        // vertex normal
   
   pxr::GfVec3f GetPosition(const PointOnMesh& point) const ;
   pxr::GfVec3f GetNormal(const PointOnMesh& point) const;
   Triangle* GetTriangle(uint32_t index){return &_triangles[index];};
   pxr::VtArray<Triangle>& GetTriangles(){return _triangles;};
 
-  uint32_t GetNumPoints()const {return _numPoints;};
   uint32_t GetNumTriangles()const {return _numTriangles;};
   uint32_t GetNumSamples()const {return _numSamples;};
   uint32_t GetNumFaces()const {return _numFaces;};
@@ -80,18 +88,20 @@ public:
     const pxr::VtArray<int>& connects);
 
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
+
   void Inflate(uint32_t index, float value);
-  void ComputeBoundingBox();
-  pxr::GfBBox3d& GetBoundingBox();
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
     const pxr::GfVec3f& direction, PointOnMesh& point, float maxDistance);
-  bool IsInitialized(){return _initialized;};
-  void SetInitialized(bool initialized){_initialized = initialized;};
+
+  // test (to be removed)
+  void PolygonSoup(size_t numPolygons, 
+    const pxr::GfVec3f& minimum=pxr::GfVec3f(-1.f), 
+    const pxr::GfVec3f& maximum=pxr::GfVec3f(1.f));
+  void Randomize(float value);
 
 private:
   // infos
   uint32_t                            _numTriangles;
-  uint32_t                            _numPoints;
   uint32_t                            _numSamples;
   uint32_t                            _numFaces;
 
@@ -100,8 +110,6 @@ private:
   pxr::VtArray<int>                   _faceConnects;
 
   // vertex data
-  pxr::VtArray<pxr::GfVec3f>          _position;
-  pxr::VtArray<pxr::GfVec3f>          _normal;
   pxr::VtArray<bool>                  _boundary;
   pxr::VtArray<int>                   _shell;
   pxr::VtArray< pxr::VtArray<int> >   _neighbors;
@@ -114,10 +122,6 @@ private:
 
   // half-edge data
   pxr::VtArray<HalfEdge>              _halfEdges;
-
-  // bounding box
-  pxr::GfBBox3d                       _bbox;
-  bool _initialized;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

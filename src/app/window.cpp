@@ -532,8 +532,8 @@ void Window::MainLoop()
   {
     _app->Update();
     SetGLContext();
-    //glfwWaitEventsTimeout(1.0/60.0);
-    glfwPollEvents();
+    glfwWaitEventsTimeout(1.0/60.0);
+    //glfwPollEvents();
     
     // main window
     Draw();

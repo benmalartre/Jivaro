@@ -9,7 +9,7 @@ TriangulateMesh(const pxr::VtArray<int>& counts,
                 pxr::VtArray<Triangle>& triangles)
 {
   int num_triangles = 0;
-  for(auto count : counts)
+  for(int count : counts)
   {
     num_triangles += count - 2;
   }
@@ -18,7 +18,7 @@ TriangulateMesh(const pxr::VtArray<int>& counts,
 
   int base = 0;
   int tri = 0;
-  for(auto count: counts)
+  for(int count: counts)
   {
     for(int i = 1; i < count - 1; ++i)
     {

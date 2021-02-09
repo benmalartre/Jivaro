@@ -10,6 +10,7 @@
 #include "view.h"
 #include "camera.h"
 #include "tools.h"
+#include "../geometry/mesh.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
 
@@ -106,6 +107,9 @@ private:
 
   // time
   Time                              _time;
+
+  // mesh
+  Mesh                              _mesh;
 };
 
 extern Application* AMN_APPLICATION;
