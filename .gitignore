@@ -67,4 +67,4 @@ windows
 *.suo
 
 # build folder
-*/build/*
+*build/*
