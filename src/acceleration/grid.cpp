@@ -1,5 +1,6 @@
 #include "grid.h"
-#include "utils.h"
+
+AMN_NAMESPACE_OPEN_SCOPE
 
 // delete all cells
 void Grid3D::DeleteCells()
@@ -23,6 +24,7 @@ void Grid3D::ResetCells()
   }
 }
 
+/*
 void Grid3D::PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points, 
   const MMatrix& M, float cellSize)
 {
@@ -91,6 +93,7 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points,
       _cells[o]->_grid = this;
     }
 }
+*/
 
 // place a triangle mesh in the grid
 void Grid3D::PlaceIntoGrid(Mesh* mesh)
@@ -105,11 +108,14 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh)
   _mesh = mesh;
 
   // compute bound of the scene
-  uint32_t totalNumTriangles = _mesh->_numTriangles;
-  //AABB& bbox = _mesh->_bbox;
-  _bbox.compute(_mesh);
+  uint32_t totalNumTriangles = _mesh->GetNumTriangles();
+  _range.SetEmpty();
+  for(const auto& position: _mesh->GetPositions()) {
+    _range.Union(position);
+  }
+
   // create the grid
-  pxr::GfVec3f size = _bbox.max() - _bbox.min();
+  pxr::GfVec3f size = _range.GetMax() - _range.GetMin();
 
   //float desiredCellSize = area*12;
   float cubeRoot = 
@@ -120,9 +126,9 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh)
       MAX(uint32_t(1), MIN(_resolution[i], uint32_t(128)));
   }
 
-  _cellDimension.x = size.x /(float)_resolution[0];
-  _cellDimension.y = size.y /(float)_resolution[1];
-  _cellDimension.z = size.z /(float)_resolution[2];
+  _cellDimension[0] = size[0] /(float)_resolution[0];
+  _cellDimension[1] = size[1] /(float)_resolution[1];
+  _cellDimension[2] = size[2] /(float)_resolution[2];
 
   // allocate memory
   _numCells = _resolution[0] * _resolution[1] * _resolution[2];
@@ -133,12 +139,13 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh)
 
   pxr::GfVec3f A, B, C;
   Triangle* T;
-  Mesh* mesh = _mesh->_mesh;
   unsigned offset = 0;
 
   pxr::GfVec3f invDimensions(1/_cellDimension[0],
     1/_cellDimension[1], 1/_cellDimension[2]);
 
+  const pxr::GfVec3f& bboxMin = _range.GetMin();
+  const pxr::GfVec3f& bboxMax = _range.GetMax();
   // insert all the triangles in the cells
   for(uint32_t i=0;i<totalNumTriangles;i++)
   {
@@ -159,13 +166,14 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh)
     }
 
     // convert to cell coordinates
-    tmin.x = (tmin.x - _bbox.min().x) * invDimensions.x;
-    tmin.y = (tmin.y - _bbox.min().y) * invDimensions.y;
-    tmin.z = (tmin.z - _bbox.min().z) * invDimensions.z;
+    
+    tmin[0] = (tmin[0] - bboxMin[0]) * invDimensions[0];
+    tmin[1] = (tmin[1] - bboxMin[1]) * invDimensions[1];
+    tmin[2] = (tmin[2] - bboxMin[2]) * invDimensions[2];
 
-    tmax.x = (tmax.x - _bbox.min().x) * invDimensions.x;
-    tmax.y = (tmax.y - _bbox.min().y) * invDimensions.y;
-    tmax.z = (tmax.z - _bbox.min().z) * invDimensions.z;
+    tmax[0] = (tmax[0] - bboxMin[0]) * invDimensions[0];
+    tmax[1] = (tmax[1] - bboxMin[1]) * invDimensions[1];
+    tmax[2] = (tmax[2] - bboxMin[2]) * invDimensions[2];
 
     uint32_t zmin = CLAMP(floor(tmin[2]), 0, _resolution[2] - 1);
     uint32_t zmax = CLAMP(floor(tmax[2]), 0, _resolution[2] - 1);
@@ -184,7 +192,7 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh)
             uint32_t o = 
               z * _resolution[0] * _resolution[1] + y * _resolution[0] + x;
             if (_cells[o] == NULL) _cells[o] = new Cell(o);
-            _cells[o]->insert(T);
+            _cells[o]->Insert(T);
             _cells[o]->_color = pxr::GfVec3f(0.5f);
         }
       }
@@ -192,33 +200,35 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh)
   }
 }
 
-bool Grid3D::intersect(const pxr::GfRay& ray, double maxDistance, 
+bool Grid3D::Intersect(const pxr::GfRay& ray, double maxDistance, 
   PointOnMesh* hitPoint) const
 {
     double bmin, bmax;
     // if the ray doesn't intersect the grid return
-    if(!ray.intersectBox(_mesh->_bbox, &bmin, &bmax))
+    if(!ray.Intersect(pxr::GfBBox3d(pxr::GfRange3d(_range)), &bmin, &bmax))
     {
         return false;
     }
 
     // initialization step
     int32_t exit[3], step[3], cell[3];
-    MVector deltaT, nextCrossingT;
-    MVector invdir = ray.getInvDirection();
+    pxr::GfVec3d deltaT, nextCrossingT;
+    pxr::GfVec3d invdir = -1.0 * ray.GetDirection();
 
     for (uint8_t i = 0; i < 3; ++i) {
         // convert ray starting point to cell coordinates
-        double rayOrigCell = ((ray.getOrigin()[i] + ray.getDirection()[i] * bmin) -  _mesh->_bbox.min()[i]);
+        double rayOrigCell = 
+          ((ray.getOrigin()[i] + ray.getDirection()[i] * bmin) - 
+            _range.GetMin()[i]);
         cell[i] = CLAMP(floor(rayOrigCell / _cellDimension[i]), 0, _resolution[i] - 1);
-        if(fabs(ray.getDirection()[i]) < 0.0000001)
+        if(fabs(ray.GetDirection()[i]) < 0.0000001)
         {
             deltaT[i] = 0;
             nextCrossingT[i] = maxDistance;
             exit[i] = cell[i];
             step[i] = 0;
         }
-        else if (ray.getDirection()[i] < 0.0) {
+        else if (ray.GetDirection()[i] < 0.0) {
             deltaT[i] = -_cellDimension[i] * invdir[i];
             nextCrossingT[i] = bmin + (cell[i] * _cellDimension[i] - rayOrigCell) * invdir[i];
             exit[i] = -1;
@@ -245,7 +255,7 @@ bool Grid3D::intersect(const pxr::GfRay& ray, double maxDistance,
         uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
         if (_cells[o] != NULL)
         {
-            if (_cells[o]->intersect(mesh, ray, MP, maxDistance, &minDistance))
+            if (_cells[o]->Intersect(mesh, ray, MP, maxDistance, &minDistance))
             {
                 _cells[o]->_hit = true;
                 hit = true;
@@ -266,7 +276,7 @@ bool Grid3D::intersect(const pxr::GfRay& ray, double maxDistance,
     return hit;
 }
 
-MVector Grid3D::GetCellPosition(uint32_t index){
+pxr::GfVec3f Grid3D::GetCellPosition(uint32_t index){
   pxr::GfVec3f position;
   position.x = _bbox.min().x + 
     _cellDimension.x * (index % _resolution[0]);
@@ -277,44 +287,58 @@ MVector Grid3D::GetCellPosition(uint32_t index){
   return position;
 }
 
-MVector Grid3D::GetCellMin(uint32_t index){
+pxr::GfVec3f Grid3D::GetCellMin(uint32_t index){
   return GetCellPosition(index) - _cellDimension * 0.5f;
 }
 
-MVector Grid3D::GetCellMax(uint32_t index){
+pxr::GfVec3f Grid3D::GetCellMax(uint32_t index){
   return GetCellPosition(index) + _cellDimension * 0.5f;
 }
 
 const bool Grid3D::Cell::Intersect(Mesh* mesh, const pxr::GfRay& ray, 
   PointOnMesh* hitPoint, double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3f A, B, C;
-  pxr::GfVec3f baryCoords;
+  pxr::GfVec3f p0, p1, p2;
+  pxr::GfVec3d baryCoords;
   double distance;
 
   bool frontFacing;
   bool hit = false;
-  Triangle* T;
-  for(unsigned t = 0;t<_triangles.size();t++)
-  {
-    T = _triangles[t];
-    A = mesh->getPosition(T, 0);
-    B = mesh->getPosition(T, 1);
-    C = mesh->getPosition(T, 2);
+  Triangle* tri;
+  for(unsigned t = 0;t<_elements.size();t++) {
+    tri = (Triangle*)_elements[t].ptr;
+    p0 = mesh->GetPosition(tri, 0);
+    p1 = mesh->GetPosition(tri, 1);
+    p2 = mesh->GetPosition(tri, 2);
     frontFacing = false;
-    if(ray.intersectTriangle(A, B, C, &distance, &baryCoords, &frontFacing, maxDistance))
-    {
-      if(distance < *minDistance)
-      {
+
+    if(ray.Intersect(p0, p1, p2, &distance, &baryCoords, &frontFacing, 
+      maxDistance)) {
+      if(distance < *minDistance) {
         *minDistance = distance;
-        hitPoint->_triangleID = T->_ID;
-        hitPoint->_baryCoords = baryCoords;
+        hitPoint->triangleId = tri->id;
+        hitPoint->baryCoords = pxr::GfVec3f(baryCoords);
         hit = true;
       }
     }
   }
+
   return hit;
 }
+
+/*
+    switch(_elementType) {
+    case POINT:
+      break;
+    case EDGE:
+      break;
+    case TRIANGLE:
+    {
+      break;
+    }
+    case POLYGON:
+      break;
+*/
 
 
 uint32_t Grid3D::SLICE_INDICES[27*3] = {    
@@ -365,7 +389,7 @@ void Grid3D::GetIndices(uint32_t index, uint32_t& X, uint32_t& Y, uint32_t& Z)
 
 Grid3D::Cell* Grid3D::GetCell(uint32_t index)
 {
-    return _cells[pxr::MIN(pxr::MAX(index, 0), _numCells-1)];
+    return _cells[MIN(MAX(index, 0), _numCells-1)];
 }
 
 Grid3D::Cell* Grid3D::GetCell(uint32_t x, uint32_t y, uint32_t z) 
@@ -377,49 +401,51 @@ Grid3D::Cell* Grid3D::GetCell(uint32_t x, uint32_t y, uint32_t z)
       _cells[_resolution[0] * _resolution[1] * cz + _resolution[0] * cy + cx];
 }
 
-Grid3D::Cell* Grid3D::GetCell(const pxr::GfVec3f& P){
-  pxr::GfVec3f R;
+Grid3D::Cell* Grid3D::GetCell(const pxr::GfVec3f& pos){
+  pxr::GfVec3f rescale;
   pxr::GfVec3f invDimensions(1.f/_cellDimension[0],
                              1.f/_cellDimension[1],
                              1.f/_cellDimension[2]);
 
   // convert to cell coordinates
-  R.x = (P.x - _bbox.min().x) * invDimensions.x;
-  R.y = (P.y - _bbox.min().y) * invDimensions.y;
-  R.z = (P.z - _bbox.min().z) * invDimensions.z;
+  const pxr::GfVec3f& bboxMin = _range.GetMin();
+  rescale[0] = (pos[0] - bboxMin[0]) * invDimensions[0];
+  rescale[0] = (pos[1] - bboxMin[1]) * invDimensions[1];
+  rescale[0] = (pos[2] - bboxMin[2]) * invDimensions[2];
 
-  uint32_t idz = CLAMP(floor(R[2]), 0, _resolution[2] - 1);
-  uint32_t idy = CLAMP(floor(R[1]), 0, _resolution[1] - 1);
-  uint32_t idx = CLAMP(floor(R[0]), 0, _resolution[0] - 1);
+  uint32_t idz = CLAMP(floor(rescale[2]), 0, _resolution[2] - 1);
+  uint32_t idy = CLAMP(floor(rescale[1]), 0, _resolution[1] - 1);
+  uint32_t idx = CLAMP(floor(rescale[0]), 0, _resolution[0] - 1);
 
   return 
     _cells[_resolution[0] * _resolution[1] * idz + _resolution[0] * idy + idx];
 }
 
 
-void Grid3D::GetCellIndexAndWeights(const pxr::GfVec3f& P,
+void Grid3D::GetCellIndexAndWeights(const pxr::GfVec3f& pos,
                                     uint32_t& index,
                                     pxr::GfVec3f& weights){
-  pxr::GfVec3f R;
+  pxr::GfVec3f rescale;
   pxr::GfVec3f invDimensions(1.f/(_cellDimension[0]),
                              1.f/(_cellDimension[1]),
                              1.f/(_cellDimension[2]));
 
   // convert to cell coordinates
-  R.x = (P.x - _bbox.min().x - 0.5f * _cellDimension[0]) * invDimensions.x;
-  R.y = (P.y - _bbox.min().y - 0.5f * _cellDimension[1]) * invDimensions.y;
-  R.z = (P.z - _bbox.min().z - 0.5f * _cellDimension[2]) * invDimensions.z;
+  const pxr::GfVec3f& bboxMin = _range.GetMin();
+  rescale[0] = (pos[0] - bboxMin[0] - 0.5f * _cellDimension[0]) * invDimensions[0];
+  rescale[1] = (pos[1] - bboxMin[1] - 0.5f * _cellDimension[1]) * invDimensions[1];
+  rescale[2] = (pos[2] - bboxMin[2] - 0.5f * _cellDimension[2]) * invDimensions[2];
 
 
-  uint32_t idz = CLAMP(floor(R[2]), 0, _resolution[2] - 2);
-  uint32_t idy = CLAMP(floor(R[1]), 0, _resolution[1] - 2);
-  uint32_t idx = CLAMP(floor(R[0]), 0, _resolution[0] - 2);
+  uint32_t idz = CLAMP(floor(rescale[2]), 0, _resolution[2] - 2);
+  uint32_t idy = CLAMP(floor(rescale[1]), 0, _resolution[1] - 2);
+  uint32_t idx = CLAMP(floor(rescale[0]), 0, _resolution[0] - 2);
 
-  weights.x = MIN(MAX((((R.x - idx) * 
+  weights[0] = MIN(MAX((((rescale[0] - idx) * 
     _cellDimension[0]) / _cellDimension[0]), 0.f), 1.f);
-  weights.y = MIN(MAX((((R.y - idy) * 
+  weights[1] = MIN(MAX((((rescale[1] - idy) * 
     _cellDimension[1]) / _cellDimension[1]), 0.f), 1.f);
-  weights.z = MIN(MAX((((R.z - idz) * 
+  weights[2] = MIN(MAX((((rescale[2] - idz) * 
     _cellDimension[2]) / _cellDimension[2]), 0.f), 1.f);
 
   index = _resolution[0]*_resolution[1]*idz + _resolution[0]*idy + idx;
@@ -500,3 +526,5 @@ Grid3D::GetNeighbors(uint32_t index, std::vector<Grid3D::Cell*>& neighbors)
   }
 }
 
+
+AMN_NAMESPACE_CLOSE_SCOPE

@@ -7,19 +7,27 @@
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/ray.h>
 #include "../common.h"
+#include "../geometry/geometry.h"
 #include "../geometry/triangle.h"
 #include "../geometry/mesh.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
 class Grid3D {
- 
+  enum ElemType {
+    POINT,
+    EDGE,
+    TRIANGLE,
+    POLYGON
+  };
+
   static uint32_t SLICE_INDICES[27*3];
 public:
-  struct _Triangle {
-    Mesh*       mesh;
-    Triangle*   tri;
-  }
+  struct Element {
+    uint8_t     geometry;
+    void*       ptr;
+  };
+
   struct Cell
   {
 #ifdef _WIN32
@@ -40,7 +48,9 @@ public:
 
     bool Contains(const pxr::GfVec3f& pos);
     //void insert(Vertex* V){_points.push_back(V);};
-    void Insert(Triangle* triangle){ _triangles.push_back(triangle); };
+    void Insert(Triangle* triangle) { 
+      _elements.push_back({0, (void*)triangle}); 
+    };
     const bool Intersect(Mesh* mesh, const pxr::GfRay &ray, 
       PointOnMesh* htPoint, double maxDistance, double* minDistance) const;
 
@@ -51,7 +61,7 @@ public:
     static bool CheckNeighborBit(const uint32_t neighborBits, uint32_t index);
 
     // data
-    std::vector<_Triangle>  _triangles;
+    std::vector<Element>    _elements;
     pxr::GfVec3f            _color;
     uint32_t                _index;
     bool                    _hit;
@@ -104,23 +114,26 @@ public:
     uint32_t& index);
 
 private:
-    // bounding box of the mesh
-    uint32_t                _resolution[3];
-    pxr::GfVec3f            _cellDimension;
-    pxr::GfRange3f          _range;
-    // cells
-    Cell**                  _cells;
-    uint32_t                _numCells;
+  ElemType                _elementType;
+  // bounding box of the mesh
+  uint32_t                _resolution[3];
+  pxr::GfVec3f            _cellDimension;
+  pxr::GfRange3f          _range;
+  // cells
+  Cell**                  _cells;
+  uint32_t                _numCells;
 
-    // rays tested for intersection
-    std::vector<pxr::GfRay> _rays;
-    uint32_t                _numRays;
-    // mesh
-    Mesh*                   _mesh;
+  // rays tested for intersection
+  std::vector<pxr::GfRay> _rays;
+  uint32_t                _numRays;
+  // mesh
+  Mesh*                   _mesh;
 
-    // place a triangle into intersected cells
-    void PlaceTriangle(Triangle* t);
-    //void PlacePoint(Vertex* V);
+  // place an element into intersected cells
+  void PlacePoint(void);
+  void PlaceEdge(HalfEdge* he);
+  void PlaceTriangle(Triangle* t);
+  //void PlacePoint(Vertex* V);
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

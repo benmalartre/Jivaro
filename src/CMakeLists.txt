@@ -58,6 +58,7 @@ add_executable(${TARGET}
   #embree/instance.cpp
   #embree/context.cpp
   #embree/device.cpp
+  acceleration/grid.cpp
   geometry/utils.cpp
   geometry/shape.cpp
   geometry/intersector.cpp
