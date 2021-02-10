@@ -201,11 +201,12 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh)
 }
 
 bool Grid3D::Intersect(const pxr::GfRay& ray, double maxDistance, 
-  PointOnMesh* hitPoint) const
+  Location* hitPoint) const
 {
     double bmin, bmax;
     // if the ray doesn't intersect the grid return
-    if(!ray.Intersect(pxr::GfBBox3d(pxr::GfRange3d(_range)), &bmin, &bmax))
+    if(!ray.Intersect(pxr::GfBBox3d(
+      pxr::GfRange3d(_range.GetMin(), _range.GetMax())), &bmin, &bmax))
     {
         return false;
     }
@@ -218,7 +219,7 @@ bool Grid3D::Intersect(const pxr::GfRay& ray, double maxDistance,
     for (uint8_t i = 0; i < 3; ++i) {
         // convert ray starting point to cell coordinates
         double rayOrigCell = 
-          ((ray.getOrigin()[i] + ray.getDirection()[i] * bmin) - 
+          ((ray.GetPoint(0.f)[i] + ray.GetDirection()[i] * bmin) - 
             _range.GetMin()[i]);
         cell[i] = CLAMP(floor(rayOrigCell / _cellDimension[i]), 0, _resolution[i] - 1);
         if(fabs(ray.GetDirection()[i]) < 0.0000001)
@@ -248,14 +249,13 @@ bool Grid3D::Intersect(const pxr::GfRay& ray, double maxDistance,
 
     // walk through each cell of the grid and test for an intersection if
     // current cell contains geometry
-    Mesh* mesh = _mesh->_mesh;
     double minDistance = DBL_MAX;
     bool hit = false;
     while(1) {
         uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
         if (_cells[o] != NULL)
         {
-            if (_cells[o]->Intersect(mesh, ray, MP, maxDistance, &minDistance))
+            if (_cells[o]->Intersect(_mesh, ray, hitPoint, maxDistance, &minDistance))
             {
                 _cells[o]->_hit = true;
                 hit = true;
@@ -276,14 +276,15 @@ bool Grid3D::Intersect(const pxr::GfRay& ray, double maxDistance,
     return hit;
 }
 
-pxr::GfVec3f Grid3D::GetCellPosition(uint32_t index){
+pxr::GfVec3f Grid3D::GetCellPosition(uint32_t index) {
   pxr::GfVec3f position;
-  position.x = _bbox.min().x + 
-    _cellDimension.x * (index % _resolution[0]);
-  position.y = _bbox.min().y + 
-    _cellDimension.y * ((index / _resolution[0]) % _resolution[1]);
-  position.z = _bbox.min().z + 
-    _cellDimension.z * (index / (_resolution[0] * _resolution[1]));
+  const pxr::GfVec3f& bboxMin = _range.GetMin();
+  position[0] = bboxMin[0] + 
+    _cellDimension[0] * (index % _resolution[0]);
+  position[1] = bboxMin[1] + 
+    _cellDimension[1] * ((index / _resolution[0]) % _resolution[1]);
+  position[2] = bboxMin[2] + 
+    _cellDimension[2] * (index / (_resolution[0] * _resolution[1]));
   return position;
 }
 
@@ -296,7 +297,7 @@ pxr::GfVec3f Grid3D::GetCellMax(uint32_t index){
 }
 
 const bool Grid3D::Cell::Intersect(Mesh* mesh, const pxr::GfRay& ray, 
-  PointOnMesh* hitPoint, double maxDistance, double* minDistance) const
+  Location* hitPoint, double maxDistance, double* minDistance) const
 {
   pxr::GfVec3f p0, p1, p2;
   pxr::GfVec3d baryCoords;
@@ -316,7 +317,7 @@ const bool Grid3D::Cell::Intersect(Mesh* mesh, const pxr::GfRay& ray,
       maxDistance)) {
       if(distance < *minDistance) {
         *minDistance = distance;
-        hitPoint->triangleId = tri->id;
+        hitPoint->id = tri->id;
         hitPoint->baryCoords = pxr::GfVec3f(baryCoords);
         hit = true;
       }

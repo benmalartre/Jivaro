@@ -15,10 +15,10 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class Mesh;
-struct PointOnMesh{
-  Mesh*                 mesh;          // geometry mesh
-  uint32_t              triangleId;    // triangle index
+class Geometry;
+struct Location {
+  Geometry*             geometry;      // geometry ptr
+  uint32_t              id;            // element index
   pxr::GfVec3f          baryCoords;    // barycentric coordinates
 };
 
@@ -69,8 +69,8 @@ public:
   pxr::GfVec3f GetNormal(const Triangle* T, uint32_t index) const;     // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;           // triangle normal
   
-  pxr::GfVec3f GetPosition(const PointOnMesh& point) const ;
-  pxr::GfVec3f GetNormal(const PointOnMesh& point) const;
+  pxr::GfVec3f GetPosition(const Location& point) const ;
+  pxr::GfVec3f GetNormal(const Location& point) const;
   Triangle* GetTriangle(uint32_t index){return &_triangles[index];};
   pxr::VtArray<Triangle>& GetTriangles(){return _triangles;};
 
@@ -91,7 +91,7 @@ public:
 
   void Inflate(uint32_t index, float value);
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
-    const pxr::GfVec3f& direction, PointOnMesh& point, float maxDistance);
+    const pxr::GfVec3f& direction, Location& point, float maxDistance);
 
   // test (to be removed)
   void PolygonSoup(size_t numPolygons, 

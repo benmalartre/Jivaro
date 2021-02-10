@@ -115,9 +115,9 @@ pxr::GfVec3f Mesh::GetPosition(const Triangle *T, uint32_t index) const
   return _position[T->vertices[index]];
 }
 
-pxr::GfVec3f Mesh::GetPosition(const PointOnMesh& point) const
+pxr::GfVec3f Mesh::GetPosition(const Location& point) const
 {
-  const Triangle* T = &_triangles[point.triangleId];
+  const Triangle* T = &_triangles[point.id];
   pxr::GfVec3f pos(0.f);
   for(uint32_t i = 0; i < 3; ++i) 
     pos += _position[T->vertices[i]] * point.baryCoords[i];
@@ -138,9 +138,9 @@ pxr::GfVec3f Mesh::GetNormal(const Triangle *T, uint32_t index) const
   return _normal[T->vertices[index]];
 }
 
-pxr::GfVec3f Mesh::GetNormal(const PointOnMesh& point) const
+pxr::GfVec3f Mesh::GetNormal(const Location& point) const
 {
-  const Triangle* T = &_triangles[point.triangleId];
+  const Triangle* T = &_triangles[point.id];
   pxr::GfVec3f nrm(0.f);
   for(uint32_t i=0;i<3;i++) 
     nrm += _normal[T->vertices[i]] * point.baryCoords[i];
@@ -315,31 +315,31 @@ float Mesh::AveragedTriangleArea()
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 
-  const pxr::GfVec3f& direction, PointOnMesh& result, float maxDistance)
+  const pxr::GfVec3f& direction, Location& result, float maxDistance)
 {
   pxr::GfRay ray(origin, direction);
 
-  pxr::GfVec3d A, B, C;
+  pxr::GfVec3d p0, p1, p2;
   pxr::GfVec3d baryCoords;
   double distance;
   double minDistance = DBL_MAX;
   bool frontFacing;
   bool hit = false;
-  Triangle* T;
+  Triangle* tri;
   for(uint32_t t = 0;t<_triangles.size();t++)
   {
-    T = &_triangles[t];
-    A = GetPosition(T, 0);
-    B = GetPosition(T, 1);
-    C = GetPosition(T, 2);
+    tri = &_triangles[t];
+    p0 = GetPosition(tri, 0);
+    p1 = GetPosition(tri, 1);
+    p2 = GetPosition(tri, 2);
 
-    if(ray.Intersect(A, B, C, &distance, &baryCoords, &frontFacing, maxDistance))
+    if(ray.Intersect(p0, p1, p2, &distance, &baryCoords, &frontFacing, maxDistance))
     {
       if(distance < minDistance)
       {
         minDistance = distance;
         result.baryCoords = pxr::GfVec3f(baryCoords);
-        result.triangleId = T->id;
+        result.id = tri->id;
         hit = true;
       }
     }

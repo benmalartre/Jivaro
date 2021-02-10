@@ -21,6 +21,10 @@ class Grid3D {
     POLYGON
   };
 
+  typedef bool (Grid3D::*IntersectFunc)(Geometry* geometry, 
+    const pxr::GfRay &ray, Location* hitPoint, double maxDistance, 
+    double* minDistance);
+
   static uint32_t SLICE_INDICES[27*3];
 public:
   struct Element {
@@ -52,7 +56,7 @@ public:
       _elements.push_back({0, (void*)triangle}); 
     };
     const bool Intersect(Mesh* mesh, const pxr::GfRay &ray, 
-      PointOnMesh* htPoint, double maxDistance, double* minDistance) const;
+      Location* hitPoint, double maxDistance, double* minDistance) const;
 
     // neighboring bits
     static void InitNeighborBits(uint32_t& neighborBits);
@@ -98,7 +102,7 @@ public:
 
   // intersect a ray with the mesh
   bool Intersect(const pxr::GfRay& ray, double maxDistance, 
-    PointOnMesh* hitPoint) const;
+    Location* hitPoint) const;
 
   Cell* GetCell(uint32_t index);
   Cell* GetCell(uint32_t x, uint32_t y, uint32_t z);
