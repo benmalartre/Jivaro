@@ -68,12 +68,14 @@ void AMNInitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
   std::string iconDir = installDir + "/../../icons";
+  std::cout << "ICON DIRECTORY : " << iconDir << std::endl;
   //std::vector<std::string> filenames;
   //int n = GetFilesInDirectory(iconDir.c_str(), filenames);
 
   for (size_t i=0; i<ICON_MAX_ID; ++i)
   {
     std::string filename = iconDir + SEPARATOR + ICON_NAMES[i] + ".png";
+	std::cout << "ICON FILE NAME : " << filename << std::endl;
     if (FileExists(filename) &&
       pxr::HioImage::IsSupportedImageFile(filename))
     {

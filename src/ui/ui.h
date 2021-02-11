@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../common.h"
+#include <pxr/base/tf/notice.h>
+#include <pxr/base/tf/weakBase.h>
+#include <pxr/base/tf/instantiateType.h>
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
-#include <pxr/base/tf/weakBase.h>
+#include "../common.h"
 #include "../app/notice.h"
 
 AMN_NAMESPACE_OPEN_SCOPE  
@@ -58,8 +60,9 @@ public:
   virtual bool Draw()=0;
   virtual void Resize(){};
 
-  // notices
-  void ProcessNewScene(const NewSceneNotice& n);
+  // notices callbacks
+  void OnNewSceneNotice(const Notice::NewScene& n);
+  void OnAllNotices(const pxr::TfNotice& n);
 
 protected:
   bool              _initialized;

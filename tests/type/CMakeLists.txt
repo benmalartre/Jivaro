@@ -1,34 +1,28 @@
-set(TARGET eigenSolver)
+set(TARGET testType)
 
-find_package(Threads REQUIRED)
 
-add_definitions(
-  -DTASKING_TBB
-
-)
-
-set(PUBLIC_HEADERS
+add_library(${TARGET} SHARED
+  type.cpp
 
 )
 
-add_executable(${TARGET}
-  main.cpp
-
-)
-
+message("USD INCLUDE DIRECTORIES : ${USD_INCLUDE_DIRECTORIES}")
 target_include_directories(${TARGET} 
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
     ${USD_INCLUDE_DIR}
-    ${EIGEN_INCLUDE_DIR}
-    ${BOOST_INCLUDE_DIR}
-
+    ${Python2_INCLUDE_DIRS}
+    ${TBB_INCLUDE_DIR}
+	${BOOST_INCLUDE_DIR}
 )
 
 target_link_libraries(${TARGET}
-  ${USD_LIBRARIES}
+  ${Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
+  ${USD_LIBRARIES}
+  ${ADDITIONAL_LIBRARIES}
+  ${TBB_LIBRARIES}
 )
+
 
 #if (APPLE)
 #    set_target_properties(${TARGET} PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Tests")

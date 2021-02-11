@@ -1,17 +1,52 @@
+
+#include "pxr/pxr.h"
+#include "pxr/base/tf/type.h"
+#include "pxr/base/tf/registryManager.h"
 #include "notice.h"
-#include <iostream>
-AMN_NAMESPACE_OPEN_SCOPE
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-TF_INSTANTIATE_TYPE(NewSceneNotice,
-  TfType::CONCRETE, TF_1_PARENT(TfNotice));
+TF_REGISTRY_FUNCTION(TfType)
+{
+  TfType::Define< AMN::Notice::Base,
+    TfType::Bases<TfNotice> >();
+  TfType::Define< AMN::Notice::NewScene,
+    TfType::Bases<AMN::Notice::Base> >();
+  TfType::Define< AMN::Notice::SelectionChanged,
+    TfType::Bases<AMN::Notice::Base> >();
+}
 
-TF_INSTANTIATE_TYPE(TimeChangedNotice,
-  TfType::CONCRETE, TF_1_PARENT(TfNotice));
 
+AMN_NAMESPACE_OPEN_SCOPE
 
-TF_INSTANTIATE_TYPE(SelectionChangedNotice,
-  TfType::CONCRETE, TF_1_PARENT(TfNotice));
+////////////////////////////////////////////////////////////
+
+Notice::Base::~Base()
+{
+}
+
+////////////////////////////////////////////////////////////
+
+Notice::
+NewScene::NewScene()
+{
+}
+
+Notice::
+NewScene::~NewScene()
+{
+}
+
+////////////////////////////////////////////////////////////
+
+Notice::
+SelectionChanged::SelectionChanged()
+{
+}
+
+Notice::
+SelectionChanged::~SelectionChanged()
+{
+}
 
 AMN_NAMESPACE_CLOSE_SCOPE

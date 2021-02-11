@@ -147,6 +147,7 @@ int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
       } while (::FindNextFile(hFind, &fd));
       ::FindClose(hFind);
     }
+    return 0;
 #else
   DIR *dir;
   struct dirent *ent;

@@ -37,8 +37,6 @@ BaseUI(parent, "Viewport")
   _engine = nullptr;
   _parent->SetFlag(View::FORCEREDRAW);
 
-  pxr::TfWeakPtr<ViewportUI> me(this);
-  pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
 }
 
 // destructor

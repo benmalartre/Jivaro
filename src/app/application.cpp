@@ -31,8 +31,8 @@
 #include <pxr/usd/usdAnimX/desc.h>
 #include <pxr/usd/usdAnimX/data.h>  
 #include <pxr/usd/usdAnimX/keyframe.h>
-#include "../tests/stageGraph.h"
-#include "../tests/stageUI.h"
+//#include "../tests/stageGraph.h"
+//#include "../tests/stageUI.h"
 
 #include "application.h"
 #include "notice.h"
@@ -49,7 +49,7 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(NULL), _stage(nullptr), _tools(Tool())
+  _mainWindow(nullptr), _stage(nullptr), _tools(Tool()), _mesh(nullptr)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
@@ -57,7 +57,7 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(NULL), _stage(nullptr), _tools(Tool())
+  _mainWindow(nullptr), _stage(nullptr), _tools(Tool()), _mesh(nullptr)
 {
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
@@ -321,6 +321,7 @@ Application::Init()
     std::cout << "HYDRA SCENE DELEGATE FAILED" << std::endl;
   }
   */
+  std::cout << "APPLICATION INIT !!!" << std::endl;
  #ifdef _WIN32
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
@@ -370,6 +371,7 @@ Application::Init()
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
 
+
   // initialize 3d tools
   _tools.Init();
 
@@ -382,7 +384,6 @@ Application::Init()
   MenuUI* menu = new MenuUI(topView->GetLeft());
   ToolbarUI* toolbar = new ToolbarUI(topView->GetRight(), "Toolbar");
   _explorer = new ExplorerUI(explorerView);
-
   _property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, curveEditor);
@@ -418,20 +419,26 @@ Application::Init()
   */
   //_stage = pxr::UsdStage::CreateNew("test_stage");
   //_stage = pxr::UsdStage::Open(filename);
+
+  std::cout << "UIS INITIALIZED !!!" << std::endl;
+
   _stage = pxr::UsdStage::CreateInMemory();
 
-  _mesh.PolygonSoup(65535);
+  _mesh = new Mesh();
+  _mesh->PolygonSoup(65535);
 
   pxr::SdfPath path(pxr::TfToken("/polygon_soup"));
   pxr::UsdGeomMesh polygonSoup = pxr::UsdGeomMesh::Define(_stage, path);
-  polygonSoup.CreatePointsAttr(pxr::VtValue(_mesh.GetPositions()));
-  polygonSoup.CreateNormalsAttr(pxr::VtValue(_mesh.GetNormals()));
-  polygonSoup.CreateFaceVertexIndicesAttr(pxr::VtValue(_mesh.GetFaceConnects()));
-  polygonSoup.CreateFaceVertexCountsAttr(pxr::VtValue(_mesh.GetFaceCounts()));
+  polygonSoup.CreatePointsAttr(pxr::VtValue(_mesh->GetPositions()));
+  polygonSoup.CreateNormalsAttr(pxr::VtValue(_mesh->GetNormals()));
+  polygonSoup.CreateFaceVertexIndicesAttr(pxr::VtValue(_mesh->GetFaceConnects()));
+  polygonSoup.CreateFaceVertexCountsAttr(pxr::VtValue(_mesh->GetFaceCounts()));
   pxr::VtArray<pxr::GfVec3f> colors(1);
   colors[0] = pxr::GfVec3f(1.f, 0.f, 0.5f);
   polygonSoup.CreateDisplayColorAttr(pxr::VtValue(colors));
   polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
+
+  std::cout << "CREATED POLYGON SOUP !!!" << std::endl;
 /*
   for(size_t i=0; i< 12; ++i) {
     pxr::SdfPath path(pxr::TfToken("/cube_"+std::to_string(i)));
@@ -445,8 +452,7 @@ Application::Init()
   _mainWindow->CollectLeaves();
   
   // setup notifications
-  pxr::TfWeakPtr<Application> me(this);
-  pxr::TfNotice::Register(me, &Application::SelectionChangedCallback);
+  //pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
  /*
   Window* childWindow = CreateChildWindow(400, 400, _mainWindow);
   childWindow->Init(this);
@@ -464,10 +470,12 @@ Application::Init()
 
 void Application::Update()
 {
-  pxr::UsdGeomMesh polygonSoup(
-    _stage->GetPrimAtPath(pxr::SdfPath("/polygon_soup")));
-  _mesh.Randomize(0.1f);
-  polygonSoup.GetPointsAttr().Set(pxr::VtValue(_mesh.GetPositions()));
+  if (_mesh) {
+    pxr::UsdGeomMesh polygonSoup(
+      _stage->GetPrimAtPath(pxr::SdfPath("/polygon_soup")));
+    _mesh->Randomize(0.1f);
+    polygonSoup.GetPointsAttr().Set(pxr::VtValue(_mesh->GetPositions()));
+  }
   
   if(_time.IsPlaying())_time.PlayBack();
   _time.ComputeFramerate(glfwGetTime());
@@ -492,8 +500,11 @@ void Application::OpenScene(const std::string& filename)
 */
   if(strlen(result.c_str()) > 0) {
     std::cout << "OPEN FILE : " << result << std::endl;
+    
     _stage = pxr::UsdStage::Open(result);
-    OnNewScene();
+    delete _mesh;
+    _mesh = nullptr;
+    Notice::NewScene().Send();
     _property->SetPrim(_stage->GetDefaultPrim());
   }
   /*
@@ -570,7 +581,7 @@ Application::GetStageBoundingBox()
   return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
 }
 
-void Application::SelectionChangedCallback(const SelectionChangedNotice& n)
+void Application::SelectionChangedCallback(const Notice::SelectionChanged& n)
 {
   std::cout << "SELECTION CHANGED !!!" << std::endl;
   _tools.ResetSelection();
