@@ -8,19 +8,19 @@
 AMN_NAMESPACE_OPEN_SCOPE
 class View;
 
-enum BORDER
-{
-  TOP     = 1,
-  RIGHT   = 2,
-  BOTTOM  = 4,
-  LEFT    = 8
-};
-
 #define SPLITTER_THICKNESS 2.0
 
 class Splitter
 {
-public: 
+public:
+  enum Border
+  {
+    TOP = 1,
+    RIGHT = 2,
+    BOTTOM = 4,
+    LEFT = 8
+  };
+ 
   Splitter():_pixels(NULL),_valid(false){
     _flags = 
       ImGuiWindowFlags_None

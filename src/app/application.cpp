@@ -139,7 +139,11 @@ Application::BrowseFile(const char* folder, const char* filters[],
     if(!browse) {
       if(!browser->IsCanceled()) {
         //result = browser->GetResult();
+#ifdef _WIN32
+        result = "C:/Users/graph/Documents/bmal/src/USD_ASSETS/Kitchen_set/Kitchen_set.usd";
+#else
         result = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
+#endif
       }
     }
   }

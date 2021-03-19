@@ -179,13 +179,12 @@ Window::Init(Application* app)
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
 
     // create main splittable view
-    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width + 1, _height + 1));
+    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
     _mainView->SetWindow(this);
     _splitter = new Splitter();
 
     Resize(_width, _height);
     
-
     // ui
     SetupImgui();
   }
@@ -532,8 +531,8 @@ void Window::MainLoop()
   {
     _app->Update();
     SetGLContext();
-    glfwWaitEventsTimeout(1.0/60.0);
-    //glfwPollEvents();
+    //glfwWaitEventsTimeout(1.0/60.0);
+    glfwPollEvents();
     
     // main window
     Draw();

@@ -192,10 +192,11 @@ File::File(const std::string& fileName)
     path = fileName;
 }
 
-void File::_CreatePath(const std::string& directory, const std::string& in_name, const std::string& extension)
+void File::_CreatePath(const std::string& directory, 
+  const std::string& name, const std::string& extension)
 {
-    if(EndsWithString(in_name, extension)) path = directory+SEPARATOR+in_name;
-    else path = directory+SEPARATOR+in_name+extension;
+    if(EndsWithString(name, extension)) path = directory+SEPARATOR+name;
+    else path = directory+SEPARATOR+name+extension;
 }
 
 bool File::Open(FILE_MODE mode)

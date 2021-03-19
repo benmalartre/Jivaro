@@ -34,13 +34,13 @@ void CreateIconFromImage(const std::string& filename,
   int index, ICON_SIZE size)
 {
   pxr::HioImageSharedPtr img = pxr::HioImage::OpenForReading(filename);
-  size_t s = (size + 1) * 16;
+  size_t s = ((size_t)size + 1) * 16;
   pxr::HioImage::StorageSpec storage;
   storage.width = s;
   storage.height = s ;
   storage.flipped = false;
   storage.format = pxr::HioFormat::HioFormatInt32Vec4;
-  storage.data = new char[storage.width * storage.height * img->GetBytesPerPixel()];
+  storage.data = new char[(size_t)storage.width * (size_t)storage.height * img->GetBytesPerPixel()];
 
   img->Read(storage);
 

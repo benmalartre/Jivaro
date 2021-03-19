@@ -195,8 +195,8 @@ void ViewportUI::MouseMove(int x, int y)
   
   if(_interact)
   {
-    double dx = x - _lastX;
-    double dy = y - _lastY;
+    double dx = (double)(x - _lastX);
+    double dy = (double)(y - _lastY);
     switch(_interactionMode)
     {
       case INTERACTION_WALK:
@@ -396,6 +396,12 @@ bool ViewportUI::Draw()
     drawList->AddText(
       _parent->GetMin() + ImVec2(20, 20), 
       0xFFFFFFFF, 
+      msg.c_str());
+
+    msg = std::to_string(app->GetTime().GetFramerate());
+    drawList->AddText(
+      _parent->GetMin() + ImVec2(GetWidth() - 100.f, 20),
+      0xFFFFFFFF,
       msg.c_str());
     ImGui::PopFont();
   

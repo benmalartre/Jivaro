@@ -120,7 +120,7 @@ public:
 
   void _CreatePath(
     const std::string& directory, 
-    const std::string& in_name, 
+    const std::string& name, 
     const std::string& extension
   );
 };

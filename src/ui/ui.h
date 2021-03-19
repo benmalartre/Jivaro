@@ -1,3 +1,5 @@
+#ifndef AMN_UI_UI_H
+#define AMN_UI_UI_H
 #pragma once
 
 #include <pxr/base/tf/notice.h>
@@ -75,3 +77,5 @@ protected:
 
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif
