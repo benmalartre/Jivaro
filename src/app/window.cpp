@@ -35,7 +35,7 @@ void AMNCreateFontAtlas()
 
   std::string fontPath;
   for (int i = 0; i < 3; ++i) {
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Bold.otf";
+    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Bold.otf";
     AMN_BOLD_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -43,7 +43,7 @@ void AMNCreateFontAtlas()
       AMN_SHARED_ATLAS->GetGlyphRangesDefault()
     );
 
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Medium.otf";
+    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Medium.otf";
     AMN_MEDIUM_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -51,7 +51,7 @@ void AMNCreateFontAtlas()
       AMN_SHARED_ATLAS->GetGlyphRangesDefault()
     );
 
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Regular.otf";
+    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Regular.otf";
     AMN_REGULAR_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],

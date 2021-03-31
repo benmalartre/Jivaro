@@ -67,7 +67,7 @@ void CreateIconFromImage(const std::string& filename,
 void AMNInitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
-  std::string iconDir = installDir + "/../../icons";
+  std::string iconDir = installDir + "/icons";
   std::cout << "ICON DIRECTORY : " << iconDir << std::endl;
   //std::vector<std::string> filenames;
   //int n = GetFilesInDirectory(iconDir.c_str(), filenames);
