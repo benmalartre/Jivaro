@@ -21,7 +21,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename, bool docked)
   , _hoveredNode(NULL), _currentNode(NULL)
   , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
   , _scale(1.f), _fontIndex(0), _fontScale(1.0), _offset(pxr::GfVec2f(0.f, 0.f))
-  , _drag(false), _grab(false), _navigate(false), _connect(false)
+  , _drag(false), _grab(false), _navigate(0), _connect(false)
 {
   //_filename = filename;
   _id = 0;
@@ -378,7 +378,7 @@ void GraphUI::MouseButton(int button, int action, int mods)
 
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
-      if (mods & GLFW_MOD_ALT)_navigate = true;
+      if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::PAN;
       else if (_hoveredPort) {
         _connect = true;
         StartConnexion();
@@ -419,13 +419,31 @@ void GraphUI::MouseButton(int button, int action, int mods)
       }
     }
     else if (action == GLFW_RELEASE) {
-      _navigate = false;
+      _navigate = NavigateMode::IDLE;
       _drag = false;
       if (_connect) EndConnexion();
       else if (_grab)GrabSelect(mods);
       _grab = false;
     }
+  } 
+
+  else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+    if (action == GLFW_PRESS) {
+      if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::PAN;
+    } else if (action == GLFW_RELEASE) {
+      if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::IDLE;
+    }
   }
+
+  else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+    if (action == GLFW_PRESS) {
+      if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::ZOOM;
+    }
+    else if (action == GLFW_RELEASE) {
+      if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::IDLE;
+    }
+  }
+
   _parent->SetDirty();
 }
 
@@ -440,9 +458,18 @@ void GraphUI::Keyboard(int key, int scancode, int action, int mods)
 
 void GraphUI::MouseMove(int x, int y)
 {
-  if (_navigate) {
-    _offset += pxr::GfVec2f(x - _lastX, y - _lastY) / _scale;
-    _parent->SetDirty();
+  if (_navigate ) {
+    switch (_navigate) {
+    case NavigateMode::PAN:
+      _offset += pxr::GfVec2f(x - _lastX, y - _lastY) / _scale;
+      _parent->SetDirty();
+      break;
+    case NavigateMode::ZOOM:
+      MouseWheel(x - _lastX, y - _lastY);
+      break;
+    default:
+      break;
+    }
   }
   else if (_drag) {
     for (auto& node : _selected) {

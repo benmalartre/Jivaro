@@ -34,7 +34,7 @@ ExplorerUI::ExplorerUI(View* parent)
   _invisibleIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_INVISIBLE];
 
   pxr::TfWeakPtr<ExplorerUI> me(this);
-  pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
+  //pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
 }
 
 // destructor
@@ -199,7 +199,7 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
         AMN_APPLICATION->RemoveFromSelection(current->_prim.GetPath());
       }
       current->_selected = !current->_selected;
-      OnSelectionChanged();
+      //Notice::SelectionChanged().Send();
     }
       
     ImGui::NextColumn();
@@ -235,7 +235,7 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
         AMN_APPLICATION->RemoveFromSelection(current->_prim.GetPath());
       }
       current->_selected = !current->_selected;
-      OnSelectionChanged();
+      //Notice::SelectionChanged().Send();
     }
 
     current->_expanded = false;

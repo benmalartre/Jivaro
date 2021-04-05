@@ -24,6 +24,7 @@ if(UNIX)
 else()	
 	set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_win.cpp")
 endif()
+
 add_executable(${TARGET}
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
@@ -68,6 +69,7 @@ add_executable(${TARGET}
   pbd/integration.cpp
   pbd/maths.cpp
   app/time.cpp
+  app/notice.cpp
   app/handle.cpp
   app/camera.cpp
   app/view.cpp
@@ -75,7 +77,6 @@ add_executable(${TARGET}
   app/modal.cpp
   app/scene.cpp
   app/engine.cpp
-  app/notice.cpp
   app/picking.cpp
   app/selection.cpp
   app/tools.cpp

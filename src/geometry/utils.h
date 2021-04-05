@@ -51,6 +51,12 @@ TriangulateDatas( const pxr::VtArray<Triangle>& triangles,
   }
 };
 
+/// Compute line tangents
+void
+ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
+                    const pxr::VtArray<pxr::GfVec3f>& ups,
+                    pxr::VtArray<pxr::GfVec3f>& tangents);
+
 AMN_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -2,18 +2,36 @@
 #include "../app/window.h"
 #include "../app/view.h"
 
+
 AMN_NAMESPACE_OPEN_SCOPE
 
 // constructor
-BaseUI::BaseUI(View* parent, const std::string& name, bool docked):
-  _parent(parent), _name(name), _docked(docked), _initialized(false)
+BaseUI::BaseUI(View* parent, const std::string& name, bool docked)
+  : _parent(parent) 
+  , _name(name)
+  , _docked(docked)
+  , _initialized(false)
 {
   if(_parent)
   {
     _parent->SetContent(this);
     _parent->SetFlag(View::LEAF);
   }
+  pxr::TfWeakPtr<BaseUI> me(this);
+  //pxr::TfNotice::Register(me, &BaseUI::OnAllNotices);
+  pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
 };
+
+void BaseUI::OnNewSceneNotice(const Notice::NewScene& n)
+{
+  std::cout << "PROCESS NEW SCENE !!!" << std::endl;
+  _initialized = false;
+}
+
+void BaseUI::OnAllNotices(const pxr::TfNotice& n)
+{
+  std::cout << "PROCESS ALL NOTICES !!!" << std::endl;
+}
 
 // mouse positon relative to the view
 void BaseUI::GetRelativeMousePosition(const float inX, const float inY, float& outX, float& outY)
@@ -69,10 +87,6 @@ Application* BaseUI::GetApplication()
   return _parent->GetWindow()->GetApplication();
 }
 
-void BaseUI::ProcessNewScene(const NewSceneNotice& n)
-{
-  std::cout << "PROCESS NEW SCENE @@@@@@@@@@@@@" << std::endl;
-  _initialized = false;
-}
+
 
 AMN_NAMESPACE_CLOSE_SCOPE

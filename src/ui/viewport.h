@@ -73,7 +73,7 @@ class ViewportUI : public BaseUI
     
     
   private:
-    VIEWPORT_MODE         _mode;
+    short                 _mode;
     GLuint                _texture;
     int*                  _pixels;
     int*                  _lowPixels;
@@ -83,7 +83,7 @@ class ViewportUI : public BaseUI
     int                   _lastX;
     int                   _lastY;
     bool                  _interact;
-    InteractionMode       _interactionMode;
+    short                 _interactionMode;
     bool                  _valid;
 
     // usd imaging engine

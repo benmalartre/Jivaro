@@ -1,2 +1,5 @@
 #add_subdirectory (window)
 add_subdirectory (eigenSolver)
+add_subdirectory (notice)
+add_subdirectory (type)
+add_subdirectory (test)

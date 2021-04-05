@@ -70,7 +70,7 @@ public:
   void ClearSelection();
   pxr::GfBBox3d GetSelectionBoundingBox();
   pxr::GfBBox3d GetStageBoundingBox();
-  void SelectionChangedCallback(const SelectionChangedNotice& n);
+  void SelectionChangedCallback(const Notice::SelectionChanged& n);
 
   // time
   Time& GetTime() { return _time; };
@@ -109,7 +109,7 @@ private:
   Time                              _time;
 
   // mesh
-  Mesh                              _mesh;
+  Mesh*                             _mesh;
 };
 
 extern Application* AMN_APPLICATION;

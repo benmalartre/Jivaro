@@ -195,6 +195,7 @@ bool FileBrowserUI::_DrawEntries()
   
   ImGui::PopStyleColor();
   ImGui::EndChild();
+  return false;
 }
 
 void FileBrowserUI::_DrawButtons()

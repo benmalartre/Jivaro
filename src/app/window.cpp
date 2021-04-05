@@ -35,7 +35,7 @@ void AMNCreateFontAtlas()
 
   std::string fontPath;
   for (int i = 0; i < 3; ++i) {
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Bold.otf";
+    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Bold.otf";
     AMN_BOLD_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -43,7 +43,7 @@ void AMNCreateFontAtlas()
       AMN_SHARED_ATLAS->GetGlyphRangesDefault()
     );
 
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Medium.otf";
+    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Medium.otf";
     AMN_MEDIUM_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -51,7 +51,7 @@ void AMNCreateFontAtlas()
       AMN_SHARED_ATLAS->GetGlyphRangesDefault()
     );
 
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Regular.otf";
+    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Regular.otf";
     AMN_REGULAR_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -179,13 +179,12 @@ Window::Init(Application* app)
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
 
     // create main splittable view
-    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width + 1, _height + 1));
+    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
     _mainView->SetWindow(this);
     _splitter = new Splitter();
 
     Resize(_width, _height);
     
-
     // ui
     SetupImgui();
   }
@@ -532,8 +531,8 @@ void Window::MainLoop()
   {
     _app->Update();
     SetGLContext();
-    glfwWaitEventsTimeout(1.0/60.0);
-    //glfwPollEvents();
+    //glfwWaitEventsTimeout(1.0/60.0);
+    glfwPollEvents();
     
     // main window
     Draw();

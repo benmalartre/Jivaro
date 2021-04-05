@@ -1,15 +1,8 @@
-set(TARGET eigenSolver)
+set(TARGET test)
 
-find_package(Threads REQUIRED)
-
-add_definitions(
-  -DTASKING_TBB
-
-)
-
-set(PUBLIC_HEADERS
-
-)
+if(WIN32)
+    set(WINLIBS Shlwapi.lib)
+endif()
 
 add_executable(${TARGET}
   main.cpp
@@ -18,17 +11,23 @@ add_executable(${TARGET}
 
 target_include_directories(${TARGET} 
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+	"C:/Users/graph/Documents/bmal/src/Amnesie/tests/type"
     ${USD_INCLUDE_DIR}
-    ${EIGEN_INCLUDE_DIR}
-    ${BOOST_INCLUDE_DIR}
-
+    ${Python2_INCLUDE_DIRS}
+    ${TBB_INCLUDE_DIR}
+	${BOOST_INCLUDE_DIR}
 )
 
 target_link_libraries(${TARGET}
-  ${USD_LIBRARIES}
+  "C:/Users/graph/Documents/bmal/src/Amnesie/build/tests/type/Release/testType.lib"
+  ${WINLIBS}
+  ${Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
+  ${USD_LIBRARIES}
+  ${ADDITIONAL_LIBRARIES}
+  ${TBB_LIBRARIES}
 )
+
 
 #if (APPLE)
 #    set_target_properties(${TARGET} PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Tests")

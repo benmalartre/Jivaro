@@ -59,6 +59,13 @@ struct GraphConnectUI {
 
 class GraphUI : public BaseUI
 {
+private:
+  enum NavigateMode {
+    IDLE,
+    PAN,
+    ZOOM
+  };
+
 public:
   GraphUI(View* parent, const std::string& filename, bool docked);
   ~GraphUI() override;
@@ -120,7 +127,7 @@ private:
   bool                                  _drag;
   bool                                  _grab;
   bool                                  _connect;
-  bool                                  _navigate;
+  short                                 _navigate;
   float                                 _fontScale;
   size_t                                _fontIndex;
 

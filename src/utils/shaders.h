@@ -10,90 +10,91 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // vertex shader :
-static const char* SIMPLE_VERTEX_SHADER_CODE_120 =
-"#version 120\n"
-"attribute in vec3 position;\n"
-"uniform mat4 view;\n"
-"uniform mat4 proj;\n"
-"uniform mat4 model;\n"
-"void main() {\n"
-"    gl_Position = proj * view * model * vec4(position, 1.0);\n"
-"}\n";
+static const char* SIMPLE_VERTEX_SHADER_CODE_120 = R"""(
+#version 120
+attribute in vec3 position;
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 model;
+void main() {
+    gl_Position = proj * view * model * vec4(position, 1.0);
+})""";
+
 
 // fragment shader :
-static const char* SIMPLE_FRAGMENT_SHADER_CODE_120 =
-"#version 120\n"
-"uniform vec4 color;\n"
-"void main() {\n"
-"    gl_FragColor = color;\n"
-"//    out_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
-"}\n";
+static const char* SIMPLE_FRAGMENT_SHADER_CODE_120 = R"""(
+#version 120
+uniform vec4 color;
+void main() {
+    gl_FragColor = color;
+//    out_color = vec4(0.0, 1.0, 0.0, 1.0);
+})""";
 
 // vertex shader :
-static const char* SIMPLE_VERTEX_SHADER_CODE_330 =
-"#version 330 core\n"
-"layout(location = 0) in vec3 position;\n"
-"uniform mat4 view;\n"
-"uniform mat4 proj;\n"
-"uniform mat4 model;\n"
-"void main() {\n"
-"    gl_Position = proj * view * model * vec4(position, 1.0);\n"
-"}\n";
+static const char* SIMPLE_VERTEX_SHADER_CODE_330 = R"""(
+#version 330 core
+layout(location = 0) in vec3 position;
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 model;
+void main() {
+    gl_Position = proj * view * model * vec4(position, 1.0);
+})""";
 
 // fragment shader :
-static const char* SIMPLE_FRAGMENT_SHADER_CODE_330 =
-"#version 330 core\n"
-"uniform vec4 color;\n"
-"out vec4 out_color;\n"
-"void main() {\n"
-"    out_color = color;\n"
-"//    out_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
-"}\n";
+static const char* SIMPLE_FRAGMENT_SHADER_CODE_330 = R"""(
+#version 330 core
+uniform vec4 color;
+out vec4 out_color;
+void main() {
+    out_color = color;
+//    out_color = vec4(0.0, 1.0, 0.0, 1.0);
+})""";
 
 // vertex shader :
-static const char* COLORED_VERTEX_SHADER_CODE_120 =
-"#version 120\n"
-"attribute in vec3 position;\n"
-"attribute in vec3 color;\n"
-"uniform float hue;\n"
-"uniform mat4 viewProj;\n"
-"varying vec3 vertex_color;\n"
-"void main() {\n"
-"    vertex_color = color*hue;\n"
-"    gl_Position = viewProj * vec4(position, 1.0);\n"
-"}\n";
+static const char* COLORED_VERTEX_SHADER_CODE_120 = R"""(
+#version 120
+attribute in vec3 position;
+attribute in vec3 color;
+uniform float hue;
+uniform mat4 viewProj;
+varying vec3 vertex_color;
+void main() {
+    vertex_color = color*hue;
+    gl_Position = viewProj * vec4(position, 1.0);
+})""";
 
 // fragment shader :
-static const char* COLORED_FRAGMENT_SHADER_CODE_120 =
-"#version 120\n"
-"varying vec3 vertex_color;\n"
-"void main() {\n"
-"    gl_FragColor = vec4(vertex_color, 1.0);\n"
-"//    out_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
-"}\n";
+static const char* COLORED_FRAGMENT_SHADER_CODE_120 = R"""(
+#version 120
+varying vec3 vertex_color;
+void main() {
+    gl_FragColor = vec4(vertex_color, 1.0);
+//    out_color = vec4(0.0, 1.0, 0.0, 1.0);
+})""";
 
 // vertex shader :
-static const char* COLORED_VERTEX_SHADER_CODE_330 =
-"#version 330 core\n"
-"layout(location = 0) in vec3 position;\n"
-"layout(location = 1) in vec3 color;\n"
-"uniform float hue;\n"
-"uniform mat4 viewProj;\n"
-"out vec3 vertex_color;\n"
-"void main() {\n"
-"    vertex_color = color*hue;\n"
-"    gl_Position = viewProj * vec4(position, 1.0);\n"
-"}\n";
+static const char* COLORED_VERTEX_SHADER_CODE_330 = R"""(
+#version 330 core
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 color;
+uniform float hue;
+uniform mat4 viewProj;
+out vec3 vertex_color;
+void main() {
+    vertex_color = color*hue;
+    gl_Position = viewProj * vec4(position, 1.0);
+})""";
 
 // fragment shader :
-static const char* COLORED_FRAGMENT_SHADER_CODE_330 =
-"#version 330 core\n"
-"in vec3 vertex_color;\n"
-"out vec4 out_color;\n"
-"void main() {\n"
-"    out_color = vec4(vertex_color, 1.0);\n"
-"//    out_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
-"}\n";
+static const char* COLORED_FRAGMENT_SHADER_CODE_330 = R"""(
+#version 330 core
+in vec3 vertex_color;
+out vec4 out_color;
+void main() {
+    out_color = vec4(vertex_color, 1.0);
+//    out_color = vec4(0.0, 1.0, 0.0, 1.0);
+})""";
     
 
 enum GLSLShaderType

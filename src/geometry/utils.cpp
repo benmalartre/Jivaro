@@ -1,4 +1,3 @@
-#include "pxr/imaging/garch/glApi.h"
 #include "utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -26,8 +25,8 @@ TriangulateMesh(const pxr::VtArray<int>& counts,
         static_cast<uint32_t>(tri), 
         pxr::GfVec3i(
           indices[base], 
-          indices[base+i], 
-          indices[base+i+1])
+          indices[base + i],
+          indices[base + i + 1])
       };
       tri++;
     }
@@ -91,7 +90,6 @@ ComputeVertexNormals( const pxr::VtArray<pxr::GfVec3f>& positions,
   }
   
   for(auto& n: normals) n.Normalize();
-  
 }
 
 void 
@@ -110,5 +108,33 @@ ComputeTriangleNormals( const pxr::VtArray<pxr::GfVec3f>& positions,
     normals[i] = (ab ^ ac).GetNormalized();
   }
 }
+
+void
+ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
+  const pxr::VtArray<pxr::GfVec3f>& ups,
+  pxr::VtArray<pxr::GfVec3f>& tangents)
+{
+  size_t numPoints = points.size();
+  tangents.resize(numPoints);
+  pxr::GfVec3f current, previous, next;
+  switch (numPoints) {
+  case 0:
+    return;
+  case 1:
+    tangents[0] = pxr::GfVec3f(0.f, 1.f, 0.f);
+    return;
+  case 2:
+    current = points[1] - points[0];
+    next = current;
+  default:
+    current = points[1] - points[0];
+    next = points[2] - points[1];
+  }
+
+  for (int i = 1; i < numPoints; ++i) {
+
+  }
+}
+
 
 AMN_NAMESPACE_CLOSE_SCOPE

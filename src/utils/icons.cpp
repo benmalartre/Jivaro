@@ -34,13 +34,13 @@ void CreateIconFromImage(const std::string& filename,
   int index, ICON_SIZE size)
 {
   pxr::HioImageSharedPtr img = pxr::HioImage::OpenForReading(filename);
-  size_t s = (size + 1) * 16;
+  size_t s = ((size_t)size + 1) * 16;
   pxr::HioImage::StorageSpec storage;
   storage.width = s;
   storage.height = s ;
   storage.flipped = false;
   storage.format = pxr::HioFormat::HioFormatInt32Vec4;
-  storage.data = new char[storage.width * storage.height * img->GetBytesPerPixel()];
+  storage.data = new char[(size_t)storage.width * (size_t)storage.height * img->GetBytesPerPixel()];
 
   img->Read(storage);
 
@@ -67,13 +67,15 @@ void CreateIconFromImage(const std::string& filename,
 void AMNInitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
-  std::string iconDir = installDir + "/../../icons";
+  std::string iconDir = installDir + "/icons";
+  std::cout << "ICON DIRECTORY : " << iconDir << std::endl;
   //std::vector<std::string> filenames;
   //int n = GetFilesInDirectory(iconDir.c_str(), filenames);
 
   for (size_t i=0; i<ICON_MAX_ID; ++i)
   {
     std::string filename = iconDir + SEPARATOR + ICON_NAMES[i] + ".png";
+	std::cout << "ICON FILE NAME : " << filename << std::endl;
     if (FileExists(filename) &&
       pxr::HioImage::IsSupportedImageFile(filename))
     {
