@@ -8,23 +8,23 @@ AMN_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------
 float Triangle::GetArea(Mesh* mesh)
 {
-  const pxr::GfVec3f AB = 
+  const pxr::GfVec3f e0 = 
     (mesh->GetPosition(this, 1) - mesh->GetPosition(this, 0));
-  const pxr::GfVec3f BC = 
+  const pxr::GfVec3f e1 = 
     (mesh->GetPosition(this, 2) - mesh->GetPosition(this, 1));
-  const pxr::GfVec3f CA = 
+  const pxr::GfVec3f e2 = 
     (mesh->GetPosition(this, 0) - mesh->GetPosition(this, 2));
 
   // edge length
-  float lAB = AB.GetLength();
-  float lBC = BC.GetLength();
-  float lCA = CA.GetLength();
+  float le0 = e0.GetLength();
+  float le1 = e1.GetLength();
+  float le2 = e2.GetLength();
 
   // half perimeter
-  float P = (lAB + lBC + lCA) * 0.5;
+  float hp = (le0 + le1 + le2) * 0.5;
 
   // compute area
-  return sqrt(P*(P - lAB)*(P - lBC)*(P - lCA));
+  return sqrt(hp * (hp - le0) * ( hp - le1) * (hp - le2));
 }
 
 //-------------------------------------------------------
