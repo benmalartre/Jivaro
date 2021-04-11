@@ -69,6 +69,12 @@ public:
   pxr::GfVec3f GetNormal(const Triangle* T, uint32_t index) const;     // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;           // triangle normal
   
+  void SetDisplayColor(GeomInterpolation interp, 
+    const pxr::VtArray<pxr::GfVec3f>& colors);
+  const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
+  GeomInterpolation GetDisplayColorInterpolation() const {
+    return _colorsInterpolation;
+  };
   pxr::GfVec3f GetPosition(const Location& point) const ;
   pxr::GfVec3f GetNormal(const Location& point) const;
   Triangle* GetTriangle(uint32_t index){return &_triangles[index];};
@@ -108,6 +114,10 @@ private:
   // polygonal description
   pxr::VtArray<int>                   _faceCounts;  
   pxr::VtArray<int>                   _faceConnects;
+
+  // colors
+  pxr::VtArray<pxr::GfVec3f>          _colors;
+  GeomInterpolation                   _colorsInterpolation;
 
   // vertex data
   pxr::VtArray<bool>                  _boundary;

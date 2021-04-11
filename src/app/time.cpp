@@ -78,7 +78,7 @@ void Time::StopPlayBack()
   _playback=false;
 }
 
-void Time::PlayBack()
+bool Time::PlayBack()
 {
   _stopWatch.Stop();
   if(_stopWatch.GetMilliseconds()>1000/_fps)
@@ -87,7 +87,9 @@ void Time::PlayBack()
     else NextFrame();
     _stopWatch.Reset();
     _stopWatch.Start();
+    return true;
   }
+  return false;
 } 
 AMN_NAMESPACE_CLOSE_SCOPE
 

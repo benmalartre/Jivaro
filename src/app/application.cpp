@@ -438,8 +438,31 @@ Application::Init()
   polygonSoup.CreateFaceVertexIndicesAttr(pxr::VtValue(_mesh->GetFaceConnects()));
   polygonSoup.CreateFaceVertexCountsAttr(pxr::VtValue(_mesh->GetFaceCounts()));
   pxr::VtArray<pxr::GfVec3f> colors(1);
-  colors[0] = pxr::GfVec3f(1.f, 0.f, 0.5f);
-  polygonSoup.CreateDisplayColorAttr(pxr::VtValue(colors));
+
+  polygonSoup.CreateDisplayColorAttr(pxr::VtValue(_mesh->GetDisplayColor()));
+  pxr::UsdGeomPrimvar displayColorPrimvar = polygonSoup.GetDisplayColorPrimvar();
+  GeomInterpolation colorInterpolation = _mesh->GetDisplayColorInterpolation();
+
+  switch(colorInterpolation) {
+    case GeomInterpolationConstant:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->constant);
+      break;
+    case GeomInterpolationUniform:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->uniform);
+      break;
+    case GeomInterpolationVertex:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+      break;
+    case GeomInterpolationVarying:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+      break;
+    case GeomInterpolationFaceVarying:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->faceVarying);
+      break;
+    default:
+      break;
+  }
+
   polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
 
   std::cout << "CREATED POLYGON SOUP !!!" << std::endl;
@@ -474,14 +497,18 @@ Application::Init()
 
 void Application::Update()
 {
-  if (_mesh) {
-    pxr::UsdGeomMesh polygonSoup(
-      _stage->GetPrimAtPath(pxr::SdfPath("/polygon_soup")));
-    _mesh->Randomize(0.1f);
-    polygonSoup.GetPointsAttr().Set(pxr::VtValue(_mesh->GetPositions()));
-  }
   
-  if(_time.IsPlaying())_time.PlayBack();
+  
+  if(_time.IsPlaying()) {
+    if(_time.PlayBack()) {
+      if (_mesh) {
+        pxr::UsdGeomMesh polygonSoup(
+          _stage->GetPrimAtPath(pxr::SdfPath("/polygon_soup")));
+        _mesh->Randomize(0.1f);
+        polygonSoup.GetPointsAttr().Set(pxr::VtValue(_mesh->GetPositions()));
+      }
+    }
+  }
   _time.ComputeFramerate(glfwGetTime());
 }
 

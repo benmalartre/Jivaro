@@ -388,7 +388,20 @@ void Mesh::PolygonSoup(size_t numPolygons, const pxr::GfVec3f& minimum,
     faceConnect[i] = i;
   }
 
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  for(size_t i=0; i < numPoints / 3; ++i) {
+    pxr::GfVec3f color(
+      RANDOM_0_1,
+      RANDOM_0_1,
+      RANDOM_0_1
+    );
+    colors[i * 3] = color;
+    colors[i * 3 + 1] = color;
+    colors[i * 3 + 2] = color;
+  }
+
   Init(position, faceCount, faceConnect);
+  SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
 }
 
 void Mesh::Randomize(float value)
@@ -400,5 +413,14 @@ void Mesh::Randomize(float value)
       RANDOM_LO_HI(-value, value));
   }
 }
+
+
+void Mesh::SetDisplayColor(GeomInterpolation interp, 
+  const pxr::VtArray<pxr::GfVec3f>& colors)
+{
+  _colorsInterpolation = interp;
+  _colors = colors;
+}
+
 
 AMN_NAMESPACE_CLOSE_SCOPE

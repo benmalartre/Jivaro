@@ -14,6 +14,16 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+enum GeomInterpolation : short {
+  GeomInterpolationConstant = 0,
+  GeomInterpolationUniform,
+  GeomInterpolationVarying,
+  GeomInterpolationVertex,
+  GeomInterpolationFaceVarying,
+
+  GeomInterpolationCount
+};
+
 class Geometry {
 public:
   enum Type {
