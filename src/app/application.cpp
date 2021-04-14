@@ -40,6 +40,7 @@
 
 #include <iostream>
 #include <string>
+#include "../geometry/vdb.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -54,6 +55,7 @@ Application::Application(unsigned width, unsigned height):
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
+  makeVDBSphere();
 };
 
 Application::Application(bool fullscreen):
@@ -62,6 +64,7 @@ Application::Application(bool fullscreen):
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
+  makeVDBSphere();
 };
 
 // destructor

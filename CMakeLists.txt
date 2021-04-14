@@ -49,6 +49,7 @@ list(APPEND USD_LIB_NAMES
   trace
   work
   arch
+  half
   ar
   gf
   glf
@@ -137,22 +138,27 @@ foreach(TBB_LIB_NAME IN LISTS TBB_LIB_NAMES)
   )
 endforeach()
 
+# openvdb
+set(OPENVDB_INCLUDE_DIR "${USD_DIR}/include/openvdb")
+set(OPENVDB_LIBRARY_DIR "${USD_DIR}/lib")
+
 # OpenGL
 find_package(OpenGL REQUIRED)
 
 # GLFW_INCLUDE_DIR
 #find_library(GLEW GLEW PATHS "${USD_LIBRARY_DIR}")
 
-#
-if(UNIX)
-  if(APPLE)
-    set(GLEW_LIBRARY "${USD_LIBRARY_DIR}/libGLEW.2.0.0.dylib")
-  else()
+list(APPEND OPENVDB_LIB_NAMES 
+  openvdb
+)
 
-  endif()
-else()
-	set(GLEW_LIBRARY "${USD_LIBRARY_DIR}/glew32.lib")
-endif()
+set(OPENVDB_LIBRARIES "")
+foreach(OPENVDB_LIB_NAME IN LISTS OPENVDB_LIB_NAMES)
+  set(OPENVDB_LIBRARIES 
+    ${OPENVDB_LIBRARIES} 
+      "${OPENVDB_LIBRARY_DIR}/${LIB_PREFIX}${OPENVDB_LIB_NAME}${LIB_DYNAMIC_EXT}"
+  )
+endforeach()
 
 # system
 IF(APPLE)

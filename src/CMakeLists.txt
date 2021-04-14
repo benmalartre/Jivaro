@@ -16,13 +16,13 @@ set(PUBLIC_HEADERS
 
 set(NATIVEFOLDERDIALOG_IMP "")
 if(UNIX)
-	if(APPLE)
-		set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_cocoa.m")
-	else()
-		set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_gtk.cpp")
-	endif()
+  if(APPLE)
+    set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_cocoa.m")
+  else()
+    set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_gtk.cpp")
+  endif()
 else()	
-	set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_win.cpp")
+  set(NATIVEFOLDERDIALOG_IMP "utils/nfd/nfd_win.cpp")
 endif()
 
 add_executable(${TARGET}
@@ -66,6 +66,7 @@ add_executable(${TARGET}
   geometry/triangle.cpp
   geometry/geometry.cpp
   geometry/mesh.cpp
+  geometry/vdb.cpp
   pbd/integration.cpp
   pbd/maths.cpp
   app/time.cpp
@@ -94,6 +95,7 @@ target_include_directories(${TARGET}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}
+    ${OPENVDB_INCLUDE_DIR}
 	${BOOST_INCLUDE_DIR}
 )
 
@@ -104,7 +106,7 @@ target_link_libraries(${TARGET}
   ${USD_LIBRARIES}
   ${EMBREE_LIBRARIES}
   ${TBB_LIBRARIES}
+  ${OPENVDB_LIBRARIES}
   ${GLFW}
-  #${GLEW_LIBRARY}
   ${ADDITIONAL_LIBRARIES}
 )

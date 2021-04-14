@@ -13,6 +13,7 @@
 #include "../geometry/mesh.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
+#include <openvdb/openvdb.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
