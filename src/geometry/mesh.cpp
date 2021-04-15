@@ -6,7 +6,6 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-
 void HalfEdge::GetTriangleNormal(const pxr::GfVec3f* positions, 
   pxr::GfVec3f& normal) const
 {
@@ -100,6 +99,18 @@ Mesh::Mesh(const Mesh* other, bool normalize)
     &_triangles[0], 
     &other->_triangles[0], 
     _numTriangles * sizeof(Triangle));
+}
+
+uint32_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
+{
+  size_t accum = 0;
+  for(size_t i=0; i < face; ++i)accum += _faceCounts[i];
+  return _faceConnects[accum + vertex];
+}
+
+pxr::GfVec3f Mesh::GetPosition(size_t idx) const
+{
+  return _position[idx];
 }
 
 pxr::GfVec3f Mesh::GetPosition(const Triangle* T) const
@@ -404,6 +415,11 @@ void Mesh::PolygonSoup(size_t numPolygons, const pxr::GfVec3f& minimum,
   SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
 }
 
+void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
+{
+
+}
+
 void Mesh::Randomize(float value)
 {
   for(auto& pos: _position) {
@@ -421,6 +437,5 @@ void Mesh::SetDisplayColor(GeomInterpolation interp,
   _colorsInterpolation = interp;
   _colors = colors;
 }
-
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -55,7 +55,6 @@ Application::Application(unsigned width, unsigned height):
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
-  makeVDBSphere();
 };
 
 Application::Application(bool fullscreen):
@@ -64,7 +63,6 @@ Application::Application(bool fullscreen):
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
-  makeVDBSphere();
 };
 
 // destructor
@@ -310,6 +308,68 @@ TestAnimX(CurveEditorUI* curveEditor)
   */
 }
 
+Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage, 
+  const pxr::TfToken& path)
+{
+  Mesh* mesh = new Mesh();
+  mesh->PolygonSoup(65535);
+
+  pxr::UsdGeomMesh polygonSoup = 
+    pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(path));
+  polygonSoup.CreatePointsAttr(pxr::VtValue(mesh->GetPositions()));
+  polygonSoup.CreateNormalsAttr(pxr::VtValue(mesh->GetNormals()));
+  polygonSoup.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh->GetFaceConnects()));
+  polygonSoup.CreateFaceVertexCountsAttr(pxr::VtValue(mesh->GetFaceCounts()));
+  pxr::VtArray<pxr::GfVec3f> colors(1);
+
+  polygonSoup.CreateDisplayColorAttr(pxr::VtValue(mesh->GetDisplayColor()));
+  pxr::UsdGeomPrimvar displayColorPrimvar = polygonSoup.GetDisplayColorPrimvar();
+  GeomInterpolation colorInterpolation = mesh->GetDisplayColorInterpolation();
+
+  switch(colorInterpolation) {
+    case GeomInterpolationConstant:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->constant);
+      break;
+    case GeomInterpolationUniform:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->uniform);
+      break;
+    case GeomInterpolationVertex:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+      break;
+    case GeomInterpolationVarying:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+      break;
+    case GeomInterpolationFaceVarying:
+      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->faceVarying);
+      break;
+    default:
+      break;
+  }
+
+  polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
+
+  std::cout << "CREATED POLYGON SOUP !!!" << std::endl;
+}
+
+Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
+{
+  Mesh* mesh = new Mesh();
+  /*
+  mesh->OpenVDBSphere(6.66, pxr::GfVec3f(3.f, 7.f, 4.f));
+
+  pxr::SdfPath path(path);
+  pxr::UsdGeomMesh vdbSphere = pxr::UsdGeomMesh::Define(stage, path);
+  vdbSphere.CreatePointsAttr(pxr::VtValue(mesh->GetPositions()));
+  vdbSphere.CreateNormalsAttr(pxr::VtValue(mesh->GetNormals()));
+  vdbSphere.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh->GetFaceConnects()));
+  vdbSphere.CreateFaceVertexCountsAttr(pxr::VtValue(mesh->GetFaceCounts()));
+
+  vdbSphere.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
+
+  std::cout << "CREATED OPENVDB SPHERE !!!" << std::endl;
+  */ return mesh;
+}
+
 // init application
 //----------------------------------------------------------------------------
 void 
@@ -431,44 +491,8 @@ Application::Init()
 
   _stage = pxr::UsdStage::CreateInMemory();
 
-  _mesh = new Mesh();
-  _mesh->PolygonSoup(65535);
-
-  pxr::SdfPath path(pxr::TfToken("/polygon_soup"));
-  pxr::UsdGeomMesh polygonSoup = pxr::UsdGeomMesh::Define(_stage, path);
-  polygonSoup.CreatePointsAttr(pxr::VtValue(_mesh->GetPositions()));
-  polygonSoup.CreateNormalsAttr(pxr::VtValue(_mesh->GetNormals()));
-  polygonSoup.CreateFaceVertexIndicesAttr(pxr::VtValue(_mesh->GetFaceConnects()));
-  polygonSoup.CreateFaceVertexCountsAttr(pxr::VtValue(_mesh->GetFaceCounts()));
-  pxr::VtArray<pxr::GfVec3f> colors(1);
-
-  polygonSoup.CreateDisplayColorAttr(pxr::VtValue(_mesh->GetDisplayColor()));
-  pxr::UsdGeomPrimvar displayColorPrimvar = polygonSoup.GetDisplayColorPrimvar();
-  GeomInterpolation colorInterpolation = _mesh->GetDisplayColorInterpolation();
-
-  switch(colorInterpolation) {
-    case GeomInterpolationConstant:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->constant);
-      break;
-    case GeomInterpolationUniform:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->uniform);
-      break;
-    case GeomInterpolationVertex:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
-      break;
-    case GeomInterpolationVarying:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
-      break;
-    case GeomInterpolationFaceVarying:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->faceVarying);
-      break;
-    default:
-      break;
-  }
-
-  polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
-
-  std::cout << "CREATED POLYGON SOUP !!!" << std::endl;
+  _mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
+  //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, pxr::TfToken("/openvdb_sphere"));
 /*
   for(size_t i=0; i< 12; ++i) {
     pxr::SdfPath path(pxr::TfToken("/cube_"+std::to_string(i)));
@@ -500,8 +524,6 @@ Application::Init()
 
 void Application::Update()
 {
-  
-  
   if(_time.IsPlaying()) {
     if(_time.PlayBack()) {
       if (_mesh) {

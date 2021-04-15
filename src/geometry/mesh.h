@@ -63,6 +63,7 @@ public:
   pxr::VtArray<int>& GetFaceCounts() { return _faceCounts;};
   pxr::VtArray<int>& GetFaceConnects() { return _faceConnects;};
 
+  pxr::GfVec3f GetPosition(size_t idx) const;
   pxr::GfVec3f GetPosition(const Triangle* T) const;                   // triangle position
   pxr::GfVec3f GetPosition(const Triangle* T, uint32_t index) const;   // vertex position
   pxr::GfVec3f GetNormal(const Triangle* T) const;                     // triangle normal
@@ -83,6 +84,9 @@ public:
   uint32_t GetNumTriangles()const {return _numTriangles;};
   uint32_t GetNumSamples()const {return _numSamples;};
   uint32_t GetNumFaces()const {return _numFaces;};
+  uint32_t GetNumFaceVertices() const {return _numFaceVertices;};
+  uint32_t GetFaceNumVertices(uint32_t idx) const {return _faceCounts[idx];};
+  uint32_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
 
   void ComputeHalfEdges();
   float TriangleArea(uint32_t index);
@@ -103,6 +107,8 @@ public:
   void PolygonSoup(size_t numPolygons, 
     const pxr::GfVec3f& minimum=pxr::GfVec3f(-1.f), 
     const pxr::GfVec3f& maximum=pxr::GfVec3f(1.f));
+  void OpenVDBSphere(const float radius, 
+    const pxr::GfVec3f& center=pxr::GfVec3f(0.f));
   void Randomize(float value);
 
 private:
@@ -110,6 +116,7 @@ private:
   uint32_t                            _numTriangles;
   uint32_t                            _numSamples;
   uint32_t                            _numFaces;
+  uint32_t                            _numFaceVertices;
 
   // polygonal description
   pxr::VtArray<int>                   _faceCounts;  
