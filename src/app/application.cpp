@@ -347,6 +347,7 @@ Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage,
   polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
 
   std::cout << "CREATED POLYGON SOUP !!!" << std::endl;
+  return mesh;
 }
 
 Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
@@ -441,7 +442,7 @@ Application::Init()
   _tools.Init();
 
   //GraphUI* graph = new GraphUI(graphView, "Graph", true);
-  _animationEditor = new CurveEditorUI(graphView);
+  //_animationEditor = new CurveEditorUI(graphView);
   
   _viewport = new ViewportUI(viewportView, LOFI);  
   _timeline = new TimelineUI(timelineView);
@@ -485,10 +486,8 @@ Application::Init()
   //_stage = pxr::UsdStage::CreateNew("test_stage");
   //_stage = pxr::UsdStage::Open(filename);
 
-  std::cout << "UIS INITIALIZED !!!" << std::endl;
-
-  _stage = pxr::UsdStage::CreateNew("test.usda", pxr::TfNullPtr);
-  //_stage = pxr::UsdStage::CreateInMemory();
+  //_stage = pxr::UsdStage::CreateNew("test.usda", pxr::TfNullPtr);
+  _stage = pxr::UsdStage::CreateInMemory();
 
   _mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
   //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, pxr::TfToken("/openvdb_sphere"));
@@ -523,6 +522,7 @@ Application::Init()
 
 void Application::Update()
 {
+  _time.ComputeFramerate(glfwGetTime());
   if(_time.IsPlaying()) {
     if(_time.PlayBack()) {
       if (_mesh) {
@@ -533,7 +533,6 @@ void Application::Update()
       }
     }
   }
-  _time.ComputeFramerate(glfwGetTime());
 }
 
 

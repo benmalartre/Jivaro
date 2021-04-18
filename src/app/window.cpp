@@ -156,6 +156,7 @@ Window::Init(Application* app)
 
     // set current opengl context
     glfwMakeContextCurrent(_window);
+    //glfwSwapInterval(0);
 
     if (_shared) {
       GetContextVersionInfos();
@@ -426,8 +427,6 @@ Window::Draw()
 
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-  
 }
 
 // setup imgui
@@ -537,6 +536,7 @@ void Window::MainLoop()
     // main window
     Draw();
     glfwSwapBuffers(_window);
+    //glFlush();
 
     // child windows
     for (auto& child : _childrens) {
@@ -544,6 +544,7 @@ void Window::MainLoop()
       {
         child->Draw();
         glfwSwapBuffers(child->GetGlfwWindow());
+        //glFlush();
       }
     }
   }
