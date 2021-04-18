@@ -1,5 +1,3 @@
-//#include "../utils/nfd/include/nfd.h"
-#include "../utils/native.h"
 #include "../utils/files.h"
 #include "../ui/filebrowser.h"
 #include "../ui/viewport.h"
@@ -451,7 +449,7 @@ Application::Init()
   MenuUI* menu = new MenuUI(topView->GetLeft());
   ToolbarUI* toolbar = new ToolbarUI(topView->GetRight(), "Toolbar");
   _explorer = new ExplorerUI(explorerView);
-  _property = new PropertyUI(propertyView, "Property");
+  //_property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, curveEditor);
   //_stage = TestAnimX(curveEditor);
@@ -489,7 +487,8 @@ Application::Init()
 
   std::cout << "UIS INITIALIZED !!!" << std::endl;
 
-  _stage = pxr::UsdStage::CreateInMemory();
+  _stage = pxr::UsdStage::CreateNew("test.usda", pxr::TfNullPtr);
+  //_stage = pxr::UsdStage::CreateInMemory();
 
   _mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
   //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, pxr::TfToken("/openvdb_sphere"));
@@ -561,7 +560,7 @@ void Application::OpenScene(const std::string& filename)
     delete _mesh;
     _mesh = nullptr;
     Notice::NewScene().Send();
-    _property->SetPrim(_stage->GetDefaultPrim());
+    //_property->SetPrim(_stage->GetDefaultPrim());
   }
   /*
   nfdchar_t *outPath = nullptr;

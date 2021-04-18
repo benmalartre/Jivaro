@@ -126,7 +126,7 @@ set(TBB_LIBRARY_DIR "${USD_DIR}/lib")
 
 list(APPEND TBB_LIB_NAMES 
   tbb
-  tbbmalloc_proxy
+  #tbbmalloc_proxy
   tbbmalloc
 )
 
