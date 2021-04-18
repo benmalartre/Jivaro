@@ -18,19 +18,22 @@ static const pxr::GfMatrix4f HANDLE_X_MATRIX = {
   0.f, 1.f, 0.f, 0.f,
   1.f, 0.f, 0.f, 0.f,
   0.f, 0.f, 1.f, 0.f,
-  0.f, 0.f, 0.f, 1.f};
+  0.f, 0.f, 0.f, 1.f
+};
 
 static const pxr::GfMatrix4f HANDLE_Y_MATRIX = {
   1.f, 0.f, 0.f, 0.f,
   0.f, 1.f, 0.f, 0.f,
   0.f, 0.f, 1.f, 0.f,
-  0.f, 0.f, 0.f, 1.f};
+  0.f, 0.f, 0.f, 1.f
+};
 
 static const pxr::GfMatrix4f HANDLE_Z_MATRIX = {
   1.f, 0.f, 0.f, 0.f,
   0.f, 0.f, 1.f, 0.f,
   0.f, 1.f, 0.f, 0.f,
-  0.f, 0.f, 0.f, 1.f};
+  0.f, 0.f, 0.f, 1.f
+};
 
 static const pxr::GfVec4f HANDLE_X_COLOR =  {1.f, 0.25f, 0.5f, 1.f};
 static const pxr::GfVec4f HANDLE_Y_COLOR =  {0.5f, 1.f, 0.25f, 1.f};

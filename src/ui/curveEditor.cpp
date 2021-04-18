@@ -364,6 +364,7 @@ bool CurveEditorUI::Draw()
   DrawBackground();
   DrawCurves();
   ImGui::PopClipRect();
+  ImGui::End();
   return true;
 }
 

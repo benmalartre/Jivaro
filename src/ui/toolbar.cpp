@@ -15,6 +15,16 @@ static void _SetActiveTool(short tool)
   app->GetMainWindow()->SetActiveTool(tool);
 }
 
+static void OnOpenCallback()
+{
+  std::cout << "ON OPEN CALLBACK !!!" << std::endl;
+}
+
+static void OnSaveCallback()
+{
+  std::cout << "ON SAVE CALLBACK !!!" << std::endl;
+}
+
 static void OnTranslateCallback()
 {
   std::cout << "ON TRANSLATE CALLBACK!!!" << std::endl;
@@ -39,10 +49,21 @@ static void OnSelectCallback()
   _SetActiveTool(AMN_TOOL_SELECT);
 }
 
-ToolbarItem::ToolbarItem(BaseUI* ui, short tool, const std::string label, 
+ToolbarSeparator::ToolbarSeparator(BaseUI* ui, short orientation)
+  : ToolbarItem(ui, TOOLBAR_SEPARATOR)
+  , orientation(orientation)
+{
+}
+
+bool ToolbarSeparator::Draw()
+{
+  return true;
+}
+
+ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string label, 
   const std::string shortcut, Icon* icon, bool toggable, bool enabled, 
   IconPressedFunc func, const pxr::VtArray<pxr::VtValue> args)
-  : ui(ui)
+  : ToolbarItem(ui, TOOLBAR_BUTTON)
   , tool(tool)
   , label(label)
   , shortcut(shortcut)
@@ -52,10 +73,9 @@ ToolbarItem::ToolbarItem(BaseUI* ui, short tool, const std::string label,
   , func(func)
   , args(args)
 {
-
 }
 
-bool ToolbarItem::Draw()
+bool ToolbarButton::Draw()
 {
   Window* window = ui->GetView()->GetWindow();
   ImGui::PushFont(window->GetRegularFont(0));
@@ -80,24 +100,46 @@ bool ToolbarItem::Draw()
 
 ToolbarUI::ToolbarUI(View* parent, const std::string& name) :BaseUI(parent, name) 
 {
-  ToolbarItem selectItem(this, AMN_TOOL_SELECT, "Select", "Space",
+  ToolbarItem* openItem = new ToolbarButton(
+    this, AMN_TOOL_OPEN, "Open", "Ctrl+O",
+    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_OPEN], false, true, 
+    (IconPressedFunc)&OnOpenCallback
+  );
+  _items.push_back(openItem);
+
+  ToolbarItem* saveItem = new ToolbarButton(
+    this, AMN_TOOL_SAVE, "Save", "Ctrl+S",
+    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SAVE], false, true, 
+    (IconPressedFunc)&OnSaveCallback
+  );
+  _items.push_back(saveItem);
+
+  ToolbarItem* selectItem = new ToolbarButton(
+    this, AMN_TOOL_SELECT, "Select", "Space",
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SELECT], true, true, 
-    (IconPressedFunc)&OnSelectCallback);
+    (IconPressedFunc)&OnSelectCallback
+  );
   _items.push_back(selectItem);
 
-  ToolbarItem translateItem(this, AMN_TOOL_TRANSLATE, "Translate", "T", 
+  ToolbarItem* translateItem = new ToolbarButton(
+    this, AMN_TOOL_TRANSLATE, "Translate", "T", 
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_TRANSLATE], true, true, 
-    (IconPressedFunc)&OnTranslateCallback);
+    (IconPressedFunc)&OnTranslateCallback
+  );
   _items.push_back(translateItem);
 
-  ToolbarItem rotateItem(this, AMN_TOOL_ROTATE, "Rotate", "R", 
+  ToolbarItem* rotateItem = new ToolbarButton(
+    this, AMN_TOOL_ROTATE, "Rotate", "R", 
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_ROTATE], true, true, 
-    (IconPressedFunc)&OnRotateCallback);
+    (IconPressedFunc)&OnRotateCallback
+  );
   _items.push_back(rotateItem);
 
-  ToolbarItem scaleItem(this, AMN_TOOL_SCALE, "Scale", "S", 
+  ToolbarItem* scaleItem = new ToolbarButton(
+    this, AMN_TOOL_SCALE, "Scale", "S", 
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SCALE], true, true, 
-    (IconPressedFunc)&OnScaleCallback);
+    (IconPressedFunc)&OnScaleCallback
+  );
   _items.push_back(scaleItem);
 }
 
@@ -123,7 +165,7 @@ bool ToolbarUI::Draw()
   ImGui::SetWindowPos(_parent->GetMin());
  
   ImGui::SetCursorPosY(4.f);
-  for (auto& item : _items)item.Draw();
+  for (auto& item : _items)item->Draw();
   ImGui::PopClipRect();
   ImGui::End();
   return true;

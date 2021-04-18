@@ -45,6 +45,8 @@ enum ICON_ID {
   ICON_FILE,
   ICON_HOME,
   ICON_BACK,
+  ICON_OPEN,
+  ICON_SAVE,
   ICON_MAX_ID
 };
 
@@ -72,7 +74,9 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
   "folder",
   "file",
   "home",
-  "back"
+  "back",
+  "open",
+  "save"
 };
 
 #define ICON_INTERNAL_FORMAT GL_RGBA
