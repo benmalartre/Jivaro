@@ -5,7 +5,6 @@
 #include "../common.h"
 #include "../utils/utils.h"
 #include "../ui/ui.h"
-#include "../ui/icon.h"
 #include <vector>
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>

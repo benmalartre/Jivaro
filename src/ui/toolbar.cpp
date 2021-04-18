@@ -4,7 +4,6 @@
 #include "../app/application.h"
 #include "../ui/ui.h"
 #include "../ui/style.h"
-#include "../ui/icon.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

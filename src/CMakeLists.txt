@@ -23,7 +23,6 @@ add_executable(${TARGET}
   imgui/imgui.cpp
   utils/files.cpp
   utils/shaders.cpp
-  utils/screenSpaceQuad.cpp
   utils/icons.cpp
   ui/ui.cpp
   ui/filebrowser.cpp
