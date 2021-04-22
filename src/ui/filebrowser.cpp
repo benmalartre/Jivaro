@@ -24,6 +24,7 @@ void FileBrowserUI::SetPath(const std::string& path)
   } else {
     _GetRootEntries();
   }
+  ResetSelected();
 }
 
 void FileBrowserUI::AppendPath(const std::string& name)
@@ -120,6 +121,13 @@ static void OnParentCallback(FileBrowserUI* ui)
   ui->PopPath();
 }
 
+void FileBrowserUI::ResetSelected()
+{
+  size_t numEntries = _entries.size();
+  _selected.resize(numEntries);
+  for(size_t i=0; i < _selected.size(); ++i) _selected[i] = false;
+}
+
 void FileBrowserUI::_DrawPath()
 {
   AddIconButton<IconPressedFunc, FileBrowserUI*>(
@@ -143,10 +151,86 @@ void FileBrowserUI::_DrawPath()
   }
 }
 
+bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
+{
+  const EntryInfo& info = _entries[idx];
+  if(info.path == ".") return false;
+
+  std::string itemid = "##" + info.path;
+  if(ImGui::Selectable(itemid.c_str(), _selected[idx], 
+    ImGuiSelectableFlags_AllowDoubleClick)) {
+      _selected[idx] = 1 - _selected[idx];
+  }
+  if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {    
+    if(info.type == EntryInfo::Type::FOLDER) 
+      AppendPath(info.path);
+  }
+
+  ImVec2 pos = ImVec2(
+    ImGui::GetCursorPosX(), 
+    ImGui::GetCursorPosY() - ImGui::GetScrollY());
+  const float width = (float)GetWidth();
+  if (_selected[idx]) {
+    drawList->AddRectFilled(
+      { 0, pos.y },
+      { width, pos.y + AMN_FILEBROWSER_LINE_HEIGHT },
+      ImColor(AMN_SELECTED_COLOR));
+  }
+  else {
+    if (flip)
+      drawList->AddRectFilled(
+        { 0, pos.y },
+        { width, pos.y + AMN_FILEBROWSER_LINE_HEIGHT },
+        ImColor(AMN_BACKGROUND_COLOR));
+    else
+      drawList->AddRectFilled(
+        { 0, pos.y },
+        { width, pos.y + AMN_FILEBROWSER_LINE_HEIGHT },
+        ImColor(AMN_ALTERNATE_COLOR));
+  }
+  
+  ImGui::SameLine();
+
+  if(info.type == EntryInfo::Type::FOLDER) {
+    const static Icon* folderIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FOLDER];
+    ImGui::Image(
+      (ImTextureID)(intptr_t)folderIcon->tex,
+      ImVec2(folderIcon->size, folderIcon->size));
+  } else if(info.type == EntryInfo::Type::FILE) {
+    const static Icon* fileIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FILE];
+    ImGui::Image(
+      (ImTextureID)(intptr_t)fileIcon->tex,
+      ImVec2(fileIcon->size, fileIcon->size));
+  }
+  ImGui::SameLine();
+  ImGui::Text("%s", info.path.c_str());
+
+  return true;
+
+  
+  /*
+  ImGui::SameLine();
+
+  if(info.type == EntryInfo::Type::FOLDER) {
+    const static Icon* folderIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FOLDER];
+    ImGui::Image(
+      (ImTextureID)(intptr_t)folderIcon->tex,
+      ImVec2(folderIcon->size, folderIcon->size));
+  } else if(info.type == EntryInfo::Type::FILE) {
+    const static Icon* fileIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FILE];
+    ImGui::Image(
+      (ImTextureID)(intptr_t)fileIcon->tex,
+      ImVec2(fileIcon->size, fileIcon->size));
+  }
+  ImGui::SameLine();
+  ImGui::Text("%s", info.path.c_str());
+  */
+}
+
 bool FileBrowserUI::_DrawEntries()
 {
+  static bool selected = false;
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_HorizontalScrollbar;
-  ImGuiSelectableFlags entryFlags = ImGuiSelectableFlags_AllowDoubleClick;
   float height = GetHeight() - 64;
 
   ImGui::PushStyleColor(
@@ -159,37 +243,12 @@ bool FileBrowserUI::_DrawEntries()
     ImVec2(ImGui::GetWindowContentRegionWidth() - 8, height), 
     false, 
     windowFlags);
-  
+
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  bool flip = false;
   for (size_t i=0; i < _entries.size(); ++i) {
-    const EntryInfo& info = _entries[i];
-    if(info.path == ".") {
-      continue;
-    } else {
-      std::string itemid = "##" + std::to_string(i);
-      if (ImGui::Selectable(itemid.c_str(), i == _selected, entryFlags)) {
-        _selected = i;
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-        {    
-          if(info.type == EntryInfo::Type::FOLDER)  
-            AppendPath(info.path);
-          else SetResult(info.path);
-        }
-      }
-      ImGui::SameLine();
-      
-      if(info.type == EntryInfo::Type::FOLDER) {
-        const static Icon* folderIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FOLDER];
-        ImGui::Image(
-          (ImTextureID)(intptr_t)folderIcon->tex,
-          ImVec2(folderIcon->size, folderIcon->size));
-      } else if(info.type == EntryInfo::Type::FILE) {
-        const static Icon* fileIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FILE];
-        ImGui::Image(
-          (ImTextureID)(intptr_t)fileIcon->tex,
-          ImVec2(fileIcon->size, fileIcon->size));
-      }
-      ImGui::SameLine();
-      ImGui::Text("%s", _entries[i].path.c_str());
+    if(_DrawEntry(drawList, i, flip)) {
+      flip = 1 - flip;
     }
   }
   
@@ -226,16 +285,9 @@ bool FileBrowserUI::Draw()
   _DrawPath();
   _DrawEntries();
   _DrawButtons();
-
-  Demo();
   
   ImGui::End();
   return true;
 };
-
-void FileBrowserUI::Demo()
-{
-  ImGui::ShowDemoWindow();
-}
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -2,6 +2,7 @@
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
+#include "../app/modal.h"
 #include "../ui/ui.h"
 #include "../ui/style.h"
 
@@ -16,6 +17,17 @@ static void _SetActiveTool(short tool)
 
 static void OnOpenCallback()
 {
+  Application* app = AMN_APPLICATION;
+  const char* folder = "/Users/benmalartre/Documents/RnD/amnesie/build";
+  const char* filters[] = {
+    ".usd",
+    ".usda",
+    ".usdc",
+    ".usdz"
+  };
+  int numFilters = 4;
+
+  app->BrowseFile(folder, filters, numFilters, "open usd file");
   std::cout << "ON OPEN CALLBACK !!!" << std::endl;
 }
 
@@ -84,12 +96,12 @@ bool ToolbarButton::Draw()
       icon,
       (window->GetActiveTool() == tool),
       func
-      );
+    );
   } else {
     AddIconButton<IconPressedFunc>(
       icon,
       func
-      );
+    );
   }
   ImGui::SameLine();
 
@@ -142,7 +154,11 @@ ToolbarUI::ToolbarUI(View* parent, const std::string& name) :BaseUI(parent, name
   _items.push_back(scaleItem);
 }
 
-ToolbarUI::~ToolbarUI() {}
+ToolbarUI::~ToolbarUI() 
+{
+  for(auto& item: _items) delete item;
+  _items.clear();
+}
 
 bool ToolbarUI::Draw()
 {

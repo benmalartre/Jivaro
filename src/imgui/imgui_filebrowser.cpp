@@ -13,15 +13,16 @@
 #include <cctype>
 #include <algorithm>
 #include <cmath>
+
 #if defined (WIN32) || defined (_WIN32) || defined (__WIN32)
-#define OSWIN
-#ifndef NOMINMAX
+  #define OSWIN
+  #ifndef NOMINMAX
     #define NOMINMAX
-#endif
-#include "Dirent/dirent.h"
-#include <windows.h>
+  #endif
+  #include "dirent.h"
+  #include <windows.h>
 #else
-#include <dirent.h>
+  #include <dirent.h>
 #endif // defined (WIN32) || defined (_WIN32)
 
 namespace ImGui

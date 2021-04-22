@@ -33,6 +33,7 @@
 //#include "../tests/stageUI.h"
 
 #include "application.h"
+#include "modal.h"
 #include "notice.h"
 #include "engine.h"
 
@@ -112,6 +113,16 @@ std::string
 Application::BrowseFile(const char* folder, const char* filters[], 
   const int numFilters, const char* name)
 {
+
+  std::cout << "BROWSE FILE " << std::endl;
+  ModalFileBrowser browser("Open", ModalFileBrowser::Mode::OPEN);
+  browser.Loop();
+  if(browser.GetStatus() == BaseModal::Status::OK) {
+    std::string result = browser.GetResult();
+    return result;
+  }
+  return "";
+  /*
   _mainWindow->SetIdle(true);
   size_t width = 600;
   size_t height = 400;
@@ -124,7 +135,7 @@ Application::BrowseFile(const char* folder, const char* filters[],
 
   // set initial path
   if(!strlen(folder) || !DirectoryExists((std::string)folder)) 
-    browser->SetPath( GetInstallationFolder());
+    browser->SetPath(GetInstallationFolder());
   else browser->SetPath(folder);
 
   bool browse = true;
@@ -150,6 +161,7 @@ Application::BrowseFile(const char* folder, const char* filters[],
   _mainWindow->SetIdle(false);
   _mainWindow->SetGLContext();
   return result;
+  */
 }
 
 static
@@ -345,8 +357,6 @@ Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage,
   }
 
   polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
-
-  std::cout << "CREATED POLYGON SOUP !!!" << std::endl;
   return mesh;
 }
 
@@ -366,7 +376,9 @@ Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
   vdbSphere.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
 
   std::cout << "CREATED OPENVDB SPHERE !!!" << std::endl;
-  */ return mesh;
+  */ 
+ 
+  return mesh;
 }
 
 // init application
@@ -419,14 +431,14 @@ Application::Init()
   _mainWindow->SetGLContext();
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
-  View* mainView = _mainWindow->SplitView(_mainWindow->GetMainView(), 0.5, true, View::LFIXED, 65);
+  View* mainView = _mainWindow->SplitView(_mainWindow->GetMainView(), 0.5, true, View::LFIXED, 42);
   View* bottomView = _mainWindow->SplitView(mainView->GetRight(), 0.9, true, false);
   
   //bottomView->Split(0.9, true, true);
   View* timelineView = bottomView->GetRight();
   View* centralView = _mainWindow->SplitView(bottomView->GetLeft(), 0.6, true);
   View* middleView = centralView->GetLeft();
-  View* topView = _mainWindow->SplitView(mainView->GetLeft(), 0.5, true, View::LFIXED, 20);
+  View* topView = mainView->GetLeft();
 
   _mainWindow->SplitView(middleView, 0.9, false);
   
@@ -447,8 +459,8 @@ Application::Init()
   _viewport = new ViewportUI(viewportView, LOFI);  
   _timeline = new TimelineUI(timelineView);
 
-  MenuUI* menu = new MenuUI(topView->GetLeft());
-  ToolbarUI* toolbar = new ToolbarUI(topView->GetRight(), "Toolbar");
+  //MenuUI* menu = new MenuUI(topView->GetLeft());
+  ToolbarUI* toolbar = new ToolbarUI(topView, "Toolbar");
   _explorer = new ExplorerUI(explorerView);
   //_property = new PropertyUI(propertyView, "Property");
 

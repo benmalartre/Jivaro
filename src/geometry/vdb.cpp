@@ -154,20 +154,8 @@ void VDB::Clear() {
   _grid->clear();
 }
 
-Mesh VDB::ToMesh() {
-  if (!_initialized) {
-    UpdateMesh();
-  }
-  return _mesh;
-}
-
-void VDB::FloodFill() {
-  openvdb::tools::signedFloodFill(_grid->tree());
-}
-
-void VDB::UpdateMesh() {
-
-  //openvdb::tools::VolumeToMesh mesher(grid->getGridClass() == openvdb::GRID_LEVEL_SET ? 0.0 : 0.01);
+void VDB::ToMesh(Mesh* mesh) {
+   //openvdb::tools::VolumeToMesh mesher(grid->getGridClass() == openvdb::GRID_LEVEL_SET ? 0.0 : 0.01);
   openvdb::tools::VolumeToMesh mesher(_isovalue);
   mesher(*_grid);
 
@@ -222,6 +210,11 @@ void VDB::UpdateMesh() {
   _initialized = false;
 }
 
+void VDB::FloodFill() {
+  openvdb::tools::signedFloodFill(_grid->tree());
+}
+
+
 void VDB::Transform(const pxr::GfMatrix4f & mat) {
   /*
   _xfo *= mat;
@@ -274,15 +267,16 @@ VDB::VDB(const VDB & vdb) {
 }
 
 pxr::GfRange3f VDB::GetBBox() {
-  /*
-  math::CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
-  Coord minC = bbox.getStart();
-  Coord maxC = bbox.getEnd();
-  Vec3d minPt = grid->indexToWorld(minC);
-  Vec3d maxPt = grid->indexToWorld(maxC);
-  return make_pair(ofVec3f(minPt.x(), minPt.y(), minPt.z()), ofVec3f(maxPt.x(), maxPt.y(), maxPt.z()));
-  */
- return pxr::GfRange3f();
+  
+  openvdb::math::CoordBBox bbox = _grid->evalActiveVoxelBoundingBox();
+  openvdb::Coord minC = bbox.getStart();
+  openvdb::Coord maxC = bbox.getEnd();
+  openvdb::Vec3d minPt = _grid->indexToWorld(minC);
+  openvdb::Vec3d maxPt = _grid->indexToWorld(maxC);
+  return pxr::GfRange3f(
+    pxr::GfVec3f(minPt.x(), minPt.y(), minPt.z()), 
+    pxr::GfVec3f(maxPt.x(), maxPt.y(), maxPt.z())
+  );
 }
 
 bool VDB::IntersectRay(const float x, const float y, const float z, 
@@ -417,29 +411,33 @@ void VDB::LoadVolume(std::ifstream & buf, int w, int h, int d, float resolution)
   _initialized = false;
 }
 
+void VDB::LevelSphere(const pxr::GfVec3f& center, float radius,
+    float voxelSize, float width)
+{
+  // Create a FloatGrid and populate it with a narrow-band
+  // signed distance field of a sphere.
+  _grid =
+    openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
+      radius, openvdb::Vec3f(center[0], center[1], center[2]),
+      voxelSize, width
+    );
+  // Associate some metadata with the grid.
+  _grid->insertMeta("radius", openvdb::FloatMetadata(radius));
+  // Name the grid "LevelSetSphere".
+  _grid->setName("LevelSetSphere");
+}
+
+/*
 void
 makeVDBSphere()
 {
   openvdb::initialize();
-  /*
+  
   openvdb::FloatGrid::Ptr grid =
         openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
             50.0, openvdb::Vec3f(1.5, 2, 3),
             0.5, 4.0);
-  */
 
-  // Create a FloatGrid and populate it with a narrow-band
-  // signed distance field of a sphere.
-  openvdb::FloatGrid::Ptr grid =
-      openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
-          /*radius=*/50.0, /*center=*/openvdb::Vec3f(1.5, 2, 3),
-          /*voxel size=*/0.5, /*width=*/4.0);
-  // Associate some metadata with the grid.
-  grid->insertMeta("radius", openvdb::FloatMetadata(50.0));
-  // Name the grid "LevelSetSphere".
-  grid->setName("LevelSetSphere");
-  
-  /*
   // Create an empty floating-point grid with background value 0.
   openvdb::FloatGrid::Ptr grid = openvdb::FloatGrid::create();
 
@@ -456,7 +454,7 @@ makeVDBSphere()
   grid->setGridClass(openvdb::GRID_LEVEL_SET);
   // Name the grid "LevelSetSphere".
   grid->setName("LevelSetSphere");
-  */
+  
   // Propagate the outside/inside sign information from the narrow band
   // throughout the grid.
   //openvdb::tools::signedFloodFill(grid->tree());
@@ -469,5 +467,5 @@ makeVDBSphere()
   std::cout << "OPEN VDB NUM POLYGON POOLS " << numPolygonPools << std::endl;
 
 }
-
+*/
 AMN_NAMESPACE_CLOSE_SCOPE

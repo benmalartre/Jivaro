@@ -11,6 +11,7 @@ BaseModal::BaseModal(int width, int height, const std::string& name)
   , _height(height)
   , _window(NULL)
   , _status(ACTIVE)
+  , _title(name)
 {
 }
 
@@ -27,22 +28,6 @@ void BaseModal::Init()
 
   _window = app->CreateChildWindow(_width, _height, mainWindow, _title);
   _window->Init(app);
-
-  View* view = _window->GetMainView();
-  /*
-  switch(_mode) {
-    case Mode::FILE
-  }
-  
-  FileBrowserUI* browser = new FileBrowserUI(view, "FileBrowser", FileBrowserUI::Mode::OPEN);
-
-  // set initial path
-  if(!strlen(_folder.c_str()) || !DirectoryExists(_folder)) 
-    browser->SetPath( GetInstallationFolder());
-  else browser->SetPath(_folder);
-
-  _ui = browser;
-  */
 }
 
 void BaseModal::Term()
@@ -56,25 +41,66 @@ void BaseModal::Term()
   mainWindow->SetGLContext();
 }
 
-bool BaseModal::Loop()
+void BaseModal::Loop()
 {
-  FileBrowserUI* browser = (FileBrowserUI*)_ui;
-  std::string result;
   while (!glfwWindowShouldClose(_window->GetGlfwWindow()) && _status == ACTIVE) {
     _window->SetGLContext();
     _window->Draw();
     glfwSwapBuffers(_window->GetGlfwWindow());
     glfwPollEvents();
-    bool browse = browser->IsBrowsing();
-    if(!browse) {
-      if(!browser->IsCanceled()) {
-        //result = browser->GetResult();
-        result = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usd";
-      }
-    }
+    _LoopImpl();
   }
-  
-  return true;//result;
+}
+
+ModalFileBrowser::ModalFileBrowser(const std::string& title, 
+  ModalFileBrowser::Mode mode)
+  : BaseModal(600, 400, title)
+  , _mode( mode )
+{
+  BaseModal::Init();
+  View* view = _window->GetMainView();
+  FileBrowserUI* browser = NULL;
+
+  switch(_mode) {
+    case Mode::OPEN:
+      browser = new FileBrowserUI(view, _title, FileBrowserUI::Mode::OPEN);
+      break;
+    case Mode::SAVE:
+      browser = new FileBrowserUI(view, _title, FileBrowserUI::Mode::SAVE);
+      break;
+    case Mode::SELECT:
+    case Mode::MULTI: 
+      break;
+  }
+  if(browser) {
+    // set initial path
+    if(!strlen(_folder.c_str()) || !DirectoryExists(_folder)) 
+      browser->SetPath( GetInstallationFolder());
+    else browser->SetPath(_folder);
+
+    _ui = browser;
+  }
+}
+
+void ModalFileBrowser::_LoopImpl()
+{
+  FileBrowserUI* browser = (FileBrowserUI*)_ui;
+  bool browse = browser->IsBrowsing();
+  if(!browse) {
+    if(browser->IsCanceled()) {
+      _status = Status::CANCEL;
+      _result = "";
+      std::cout << "CANCEL ! " << std::endl;
+    } else if(!browser->IsBrowsing()) {
+      _status = Status::OK;
+      if(browser->GetResult(_result)) {
+        _status = Status::OK;
+      } else {
+        _status = Status::FAIL;
+      }
+      std::cout << "OK : " << _result << std::endl;
+    } 
+  }
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -8,7 +8,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 static ImVec4 AMN_BACKGROUND_COLOR(0.2f, 0.2f, 0.2f, 1.f);
 static ImVec4 AMN_ALTERNATE_COLOR(0.25f, 0.25f, 0.25f, 1.f);
-static ImVec4 AMN_SELECTED_COLOR(0.9f, 0.4f, 0.1f, 1.f);
+static ImVec4 AMN_SELECTED_COLOR(0.9f, 0.7f, 0.f, 1.f);
 static ImVec4 AMN_HOVERED_COLOR(0.9f, 0.6f, 0.2f, 1.f);
 static ImVec4 AMN_TRANSPARENT_COLOR(0.f, 0.f, 0.f, 0.f);
 

@@ -2,12 +2,15 @@
 #define AMN_UI_FILEBROWSER_H
 #pragma once
 
+#include <bitset>
 #include "../common.h"
 #include "../utils/utils.h"
 #include "../utils/icons.h"
 #include "ui.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
+
+static size_t AMN_FILEBROWSER_LINE_HEIGHT = 20;
 
 class FileBrowserUI : public BaseUI
 {
@@ -35,12 +38,14 @@ public:
   void _GetRootEntries();
 
   // setters
+  void ResetSelected();
   void SetResult(const std::string& name);
 
   // drawing methods
   void _DrawPath();
   bool _DrawEntries();
   void _DrawButtons();
+  bool _DrawEntry(ImDrawList* drawList, size_t idx, bool flip);
 
   // state
   bool IsBrowsing(){return _browsing;};
@@ -51,7 +56,10 @@ public:
   size_t GetNumResults();
   bool GetResult(size_t index, std::string&);
 
-  void Demo();
+  inline bool _IsSelected(int idx) {
+    return _selected[idx];
+  }
+
 private:
   std::string              _path;
   std::vector<std::string> _pathTokens;
@@ -62,7 +70,7 @@ private:
   bool                     _canceled;
   bool                     _browsing;
   std::vector<std::string> _result;
-  int                      _selected;
+  std::vector<bool>         _selected;
   Mode                     _mode;
 
 };

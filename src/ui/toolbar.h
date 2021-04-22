@@ -24,6 +24,7 @@ struct ToolbarItem {
 
   ToolbarItem(BaseUI* ui, ToolbarItemType type) 
     : ui(ui), type(type) {};
+  virtual ~ToolbarItem(){};
   virtual bool Draw()=0;
 };
 
@@ -37,6 +38,7 @@ struct ToolbarSeparator : public ToolbarItem {
 
   ToolbarSeparator(BaseUI* ui, 
     short orientation=ToolbarSeparatorOrientation::SEPARATOR_VERTICAL);
+  ~ToolbarSeparator(){};
   bool Draw() override;
 };
 
@@ -55,7 +57,7 @@ struct ToolbarButton : public ToolbarItem {
     const std::string sht, Icon* icon, bool sel, bool enb, 
     IconPressedFunc f = NULL, 
     const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
-
+  ~ToolbarButton(){};
   bool Draw() override;
 };
 

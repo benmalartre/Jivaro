@@ -7,8 +7,9 @@
 #include <fstream>
 #include <openvdb/openvdb.h>
 #include <pxr/base/gf/matrix4f.h>
-#include "mesh.h"
 
+#include "../common.h"
+#include "mesh.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -17,13 +18,14 @@ public:
   typedef std::shared_ptr<VDB> Ptr;
   pxr::GfMatrix4f _xfo;
   openvdb::FloatGrid::Ptr _grid;
-  Mesh _mesh;
   float _isovalue;
   bool _initialized;
 
   void LoadMesh(Mesh& toLoad, float resolution = 1.0, int band = 3);
   void LoadVolume(std::ifstream & buf, int w, int h , int d, 
     float resolution = 1.0);
+  void LevelSphere(const pxr::GfVec3f& center, float radius,
+    float voxelSize=0.5f, float width=4.f);
   void Clear();
   void Offset(float amt);
   void Load(std::string filename);
@@ -48,15 +50,13 @@ public:
   void Blur();
   void Taubin();
 
-  void UpdateMesh();
-
   void Transform(const pxr::GfMatrix4f& mat);
   void Translate(const pxr::GfVec3f& dir);
   void Rotate(const pxr::GfVec3f& axis, float angle);
   pxr::GfRange3f GetBBox();
   void Save(std::string filename);
 
-  Mesh ToMesh();
+  void ToMesh(Mesh* mesh);
 
   VDB();
   VDB(Mesh& m, float resolution = 1.0);

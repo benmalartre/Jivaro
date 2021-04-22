@@ -16,23 +16,27 @@ public:
   enum Status {
     ACTIVE,
     OK,
-    CANCEL
+    CANCEL,
+    FAIL
   };
 
 
   // constructor
-  BaseModal(int width, int height, const std::string& name);
-  ~BaseModal();
+  BaseModal(int width, int height, const std::string& title);
+  virtual ~BaseModal();
 
   // get data
   Status GetStatus(){return _status;};
 
   // event loop
-  virtual void Init();
-  virtual void Term();
-  virtual bool Loop();
+  void Init();
+  void Term();
+  void Loop();
 
-private:
+  // callbacks
+  virtual void _LoopImpl()=0;
+
+protected:
   size_t                    _width;
   size_t                    _height;
   Window*                   _window;
@@ -45,18 +49,32 @@ private:
 class ModalFileBrowser : public BaseModal
 {
 public:
+  enum Mode {
+    OPEN,
+    SAVE,
+    SELECT,
+    MULTI
+  };
+
+  ModalFileBrowser(const std::string& title, Mode mode);
   std::string& GetResult(){return _result;};
+
+  void _LoopImpl() override;
 
 private:
   std::string               _result;
   std::string               _folder;
+  Mode                      _mode;
 };
 
 // folder browser
 class ModalFolderBrowser : public BaseModal
 {
 public:
+  ModalFolderBrowser(const std::string& title);
   std::string& GetResult(){return _result;};
+
+  void _LoopImpl() override;
 
 private:
   std::string               _result;
