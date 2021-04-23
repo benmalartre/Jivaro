@@ -113,55 +113,14 @@ std::string
 Application::BrowseFile(const char* folder, const char* filters[], 
   const int numFilters, const char* name)
 {
-
-  std::cout << "BROWSE FILE " << std::endl;
+  std::string result;
   ModalFileBrowser browser("Open", ModalFileBrowser::Mode::OPEN);
   browser.Loop();
   if(browser.GetStatus() == BaseModal::Status::OK) {
-    std::string result = browser.GetResult();
-    return result;
+    result = browser.GetResult();
   }
-  return "";
-  /*
-  _mainWindow->SetIdle(true);
-  size_t width = 600;
-  size_t height = 400;
-  Window* window = CreateChildWindow(width, height, _mainWindow, std::string(name));
-  window->Init(this);
-
-  View* view = window->GetMainView();
-  FileBrowserUI* browser = 
-    new FileBrowserUI(view, "FileBrowser", FileBrowserUI::Mode::OPEN);
-
-  // set initial path
-  if(!strlen(folder) || !DirectoryExists((std::string)folder)) 
-    browser->SetPath(GetInstallationFolder());
-  else browser->SetPath(folder);
-
-  bool browse = true;
-  std::string result;
-  while(browse) {
-    window->SetGLContext();
-    window->Draw();
-    glfwSwapBuffers(window->GetGlfwWindow());
-    glfwPollEvents();
-    browse = browser->IsBrowsing();
-    if(!browse) {
-      if(!browser->IsCanceled()) {
-        //result = browser->GetResult();
-#ifdef _WIN32
-        result = "C:/Users/graph/Documents/bmal/src/USD_ASSETS/Kitchen_set/Kitchen_set.usd";
-#else
-        result = "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
-#endif
-      }
-    }
-  }
-  delete window;
-  _mainWindow->SetIdle(false);
-  _mainWindow->SetGLContext();
+  browser.Term();
   return result;
-  */
 }
 
 static
@@ -550,48 +509,13 @@ void Application::Update()
 
 void Application::OpenScene(const std::string& filename)
 {
-  const char* filters[4] = {"*.usd","*.usda","*.usdc","*.usdz"};
-  const char* folder = "";
-  const char* title = "Open USD File";
-  const std::string& result = BrowseFile(folder, filters, 4, title);
-
-/*
-  char const * result = tinyfd_openFileDialog (
-    "Open USD File" , // Title
-    "" ,              // Default File Name
-    4,                // Num Of Filter Patterns
-    filters,          // Filter Patterns 
-    "usd file",       // SingleFilterDescription
-    0);               //AllowMultipleSelects ) ; // 0
-*/
-  if(strlen(result.c_str()) > 0) {
-    std::cout << "OPEN FILE : " << result << std::endl;
-    
-    _stage = pxr::UsdStage::Open(result);
+  if(strlen(filename.c_str()) > 0) {    
+    _stage = pxr::UsdStage::Open(filename);
     delete _mesh;
     _mesh = nullptr;
     Notice::NewScene().Send();
     //_property->SetPrim(_stage->GetDefaultPrim());
   }
-  /*
-  nfdchar_t *outPath = nullptr;
-  nfdresult_t result = NFD_OpenDialog( "usd,usdc,usda,usdz", nullptr, &outPath );
-  if ( result == NFD_OKAY )
-  {
-    _stage = pxr::UsdStage::Open(outPath);
-    OnNewScene();
-    _property->SetPrim(_stage->GetDefaultPrim());
-    free(outPath);
-  }
-  else if ( result == NFD_CANCEL )
-  {
-      std::cout << "User pressed cancel." << std::endl;
-  }
-  else 
-  {
-      std::cout << "Error: " << NFD_GetError() << std::endl;
-  }
-  */
 }
 
 // main loop

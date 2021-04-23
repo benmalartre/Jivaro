@@ -102,6 +102,12 @@ int NumFilesInDirectory(const char* path)
   return 0;
 }
 
+static bool _IsHiddenFile(const char* filename)
+{
+  if(strcmp(filename, "..") == 0) return false;
+  return (filename[0] == '.' || filename[strlen(filename)-1] == '~');
+}
+
 int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
 {
   entries.clear();
@@ -116,13 +122,13 @@ int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
         entries.push_back({
           (std::string)ent->d_name,
           EntryInfo::Type::FILE,
-          false
+          _IsHiddenFile(ent->d_name)
         });
       } else if(ent->d_type == DT_DIR) {
          entries.push_back({
           (std::string)ent->d_name,
           EntryInfo::Type::FOLDER,
-          false
+          _IsHiddenFile(ent->d_name)
         });
       }
     }

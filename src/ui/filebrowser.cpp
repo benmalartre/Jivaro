@@ -10,6 +10,7 @@ FileBrowserUI::FileBrowserUI(View* parent, const std::string& name, Mode mode)
   , _browsing(true)
   , _canceled(false)
   , _changed(true)
+  , _showHiddenFiles(false)
 {
 }
 
@@ -147,6 +148,8 @@ void FileBrowserUI::_DrawPath()
       ImGui::Text("/");
       if(i < (numTokens - 1))ImGui::SameLine();
     }
+    if(lastTokenIndex != numTokens - 1)
+      SetPathFromTokenIndex(lastTokenIndex);
   } else {
     ImGui::Text("/");
   }
@@ -156,7 +159,7 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
 {
   bool selected = false;
   const EntryInfo& info = _entries[idx];
-  if(info.path == ".") return false;
+  if(info.path == "." || (!_showHiddenFiles && info.isHidden)) return false;
 
   std::string itemid = "##" + info.path;
   ImGui::Selectable(itemid.c_str(), &selected, 

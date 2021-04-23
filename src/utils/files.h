@@ -31,14 +31,14 @@ struct EntryInfo
     FILE
   };
 
-  EntryInfo(const std::string& path, Type type, bool is_hidden) 
+  EntryInfo(const std::string& path, Type type, bool isHidden) 
     : path(path)
-    , is_hidden(is_hidden)
+    , isHidden(isHidden)
     , type(type)
   {
   }
   std::string path;
-  bool is_hidden;
+  bool isHidden;
   Type type;
 };
 

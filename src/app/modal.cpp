@@ -17,7 +17,9 @@ BaseModal::BaseModal(int width, int height, const std::string& name)
 
 BaseModal::~BaseModal()
 {
+  std::cout << "DELETE WINDOW" << std::endl;
   if(_window) delete _window;
+    std::cout << "DONE" << std::endl;
 }
 
 void BaseModal::Init()
@@ -32,8 +34,6 @@ void BaseModal::Init()
 
 void BaseModal::Term()
 {
-  delete _window;
-
   Application* app = AMN_APPLICATION;
   Window* mainWindow = app->GetMainWindow();
   
@@ -96,7 +96,6 @@ void ModalFileBrowser::_LoopImpl()
       } else {
         _status = Status::FAIL;
       }
-      std::cout << "OK : " << _result << std::endl;
     } 
   }
 }

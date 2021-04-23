@@ -71,8 +71,9 @@ private:
   bool                     _canceled;
   bool                     _browsing;
   bool                     _changed;
+  bool                     _showHiddenFiles;
   std::vector<std::string> _result;
-  std::vector<bool>         _selected;
+  std::vector<bool>        _selected;
   Mode                     _mode;
 
 };

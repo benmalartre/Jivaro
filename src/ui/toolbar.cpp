@@ -27,8 +27,10 @@ static void OnOpenCallback()
   };
   int numFilters = 4;
 
-  app->BrowseFile(folder, filters, numFilters, "open usd file");
-  std::cout << "ON OPEN CALLBACK !!!" << std::endl;
+  std::string filename = 
+    app->BrowseFile(folder, filters, numFilters, "open usd file");
+  app->OpenScene(filename);
+
 }
 
 static void OnSaveCallback()
@@ -183,7 +185,6 @@ bool ToolbarUI::Draw()
   for (auto& item : _items)item->Draw();
   ImGui::PopClipRect();
   ImGui::End();
-  return true;
   return ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
     ImGui::IsAnyItemHovered() ||
