@@ -38,7 +38,6 @@ public:
   void _GetRootEntries();
 
   // setters
-  void ResetSelected();
   void SetResult(const std::string& name);
 
   // drawing methods
@@ -56,6 +55,8 @@ public:
   size_t GetNumResults();
   bool GetResult(size_t index, std::string&);
 
+  // selection
+  void _ResetSelected();
   inline bool _IsSelected(int idx) {
     return _selected[idx];
   }
@@ -69,6 +70,7 @@ private:
   std::vector<std::string> _filters;
   bool                     _canceled;
   bool                     _browsing;
+  bool                     _changed;
   std::vector<std::string> _result;
   std::vector<bool>         _selected;
   Mode                     _mode;

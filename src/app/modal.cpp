@@ -90,9 +90,7 @@ void ModalFileBrowser::_LoopImpl()
     if(browser->IsCanceled()) {
       _status = Status::CANCEL;
       _result = "";
-      std::cout << "CANCEL ! " << std::endl;
-    } else if(!browser->IsBrowsing()) {
-      _status = Status::OK;
+    } else {
       if(browser->GetResult(_result)) {
         _status = Status::OK;
       } else {

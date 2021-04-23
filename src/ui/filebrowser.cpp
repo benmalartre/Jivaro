@@ -9,7 +9,9 @@ FileBrowserUI::FileBrowserUI(View* parent, const std::string& name, Mode mode)
   , _mode(mode)
   , _browsing(true)
   , _canceled(false)
-  , _selected(0){}
+  , _changed(true)
+{
+}
 
 FileBrowserUI::~FileBrowserUI()
 {
@@ -24,7 +26,7 @@ void FileBrowserUI::SetPath(const std::string& path)
   } else {
     _GetRootEntries();
   }
-  ResetSelected();
+  _ResetSelected();
 }
 
 void FileBrowserUI::AppendPath(const std::string& name)
@@ -55,6 +57,7 @@ void FileBrowserUI::SetPathFromTokenIndex(size_t index)
   }
   _pathTokens = SplitString(_path, SEPARATOR);
   _GetPathEntries();
+  _ResetSelected();
 }
 
 void FileBrowserUI::SetFilters(const std::vector<std::string>& filters)
@@ -82,8 +85,6 @@ void FileBrowserUI::SetResult(const std::string& name)
 {
   _result.resize(1);
   _result[0] = _path+ SEPARATOR + name;
-
-  std::cout << "RESULT : " << _result[0] << std::endl;
 }
 
 bool FileBrowserUI::GetResult(std::string& result)
@@ -121,11 +122,12 @@ static void OnParentCallback(FileBrowserUI* ui)
   ui->PopPath();
 }
 
-void FileBrowserUI::ResetSelected()
+void FileBrowserUI::_ResetSelected()
 {
   size_t numEntries = _entries.size();
   _selected.resize(numEntries);
   for(size_t i=0; i < _selected.size(); ++i) _selected[i] = false;
+  _changed = true;
 }
 
 void FileBrowserUI::_DrawPath()
@@ -145,7 +147,6 @@ void FileBrowserUI::_DrawPath()
       ImGui::Text("/");
       if(i < (numTokens - 1))ImGui::SameLine();
     }
-    SetPathFromTokenIndex(lastTokenIndex);
   } else {
     ImGui::Text("/");
   }
@@ -153,17 +154,22 @@ void FileBrowserUI::_DrawPath()
 
 bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
 {
+  bool selected = false;
   const EntryInfo& info = _entries[idx];
   if(info.path == ".") return false;
 
   std::string itemid = "##" + info.path;
-  if(ImGui::Selectable(itemid.c_str(), _selected[idx], 
-    ImGuiSelectableFlags_AllowDoubleClick)) {
+  ImGui::Selectable(itemid.c_str(), &selected, 
+    ImGuiSelectableFlags_AllowDoubleClick);
+  if(selected) {
       _selected[idx] = 1 - _selected[idx];
   }
   if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {    
-    if(info.type == EntryInfo::Type::FOLDER) 
+    if(info.type == EntryInfo::Type::FOLDER) {
       AppendPath(info.path);
+    } else if(info.type == EntryInfo::Type::FILE) {
+      SetResult(info.path);
+    }
   }
 
   ImVec2 pos = ImVec2(
@@ -174,7 +180,7 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
     drawList->AddRectFilled(
       { 0, pos.y },
       { width, pos.y + AMN_FILEBROWSER_LINE_HEIGHT },
-      ImColor(AMN_SELECTED_COLOR));
+      ImColor(AMN_HIGHLIGHTED_COLOR));
   }
   else {
     if (flip)
@@ -206,25 +212,6 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
   ImGui::Text("%s", info.path.c_str());
 
   return true;
-
-  
-  /*
-  ImGui::SameLine();
-
-  if(info.type == EntryInfo::Type::FOLDER) {
-    const static Icon* folderIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FOLDER];
-    ImGui::Image(
-      (ImTextureID)(intptr_t)folderIcon->tex,
-      ImVec2(folderIcon->size, folderIcon->size));
-  } else if(info.type == EntryInfo::Type::FILE) {
-    const static Icon* fileIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FILE];
-    ImGui::Image(
-      (ImTextureID)(intptr_t)fileIcon->tex,
-      ImVec2(fileIcon->size, fileIcon->size));
-  }
-  ImGui::SameLine();
-  ImGui::Text("%s", info.path.c_str());
-  */
 }
 
 bool FileBrowserUI::_DrawEntries()
@@ -233,26 +220,27 @@ bool FileBrowserUI::_DrawEntries()
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_HorizontalScrollbar;
   float height = GetHeight() - 64;
 
-  ImGui::PushStyleColor(
-    ImGuiCol_ChildBg, 
-    ImGui::GetStyle().Colors[ImGuiCol_FrameBg]);
-  
   ImGui::SetCursorPosX(8);
   ImGui::BeginChild(
     "##Entries", 
     ImVec2(ImGui::GetWindowContentRegionWidth() - 8, height), 
     false, 
-    windowFlags);
+    windowFlags
+  );
+
+  if(_changed) {
+    _changed = false;
+    ImGui::SetScrollY(0.f);
+  }
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
-  bool flip = false;
+  static bool flip = false;
   for (size_t i=0; i < _entries.size(); ++i) {
     if(_DrawEntry(drawList, i, flip)) {
       flip = 1 - flip;
     }
   }
   
-  ImGui::PopStyleColor();
   ImGui::EndChild();
   return false;
 }
@@ -271,17 +259,16 @@ void FileBrowserUI::_DrawButtons()
 bool FileBrowserUI::Draw()
 {
   bool opened;
-  int flags = 0;
-  flags |= ImGuiWindowFlags_NoResize;
-  flags |= ImGuiWindowFlags_NoTitleBar;
-  flags |= ImGuiWindowFlags_NoMove;
+  int flags = 
+    ImGuiWindowFlags_NoResize |
+    ImGuiWindowFlags_NoTitleBar | 
+    ImGuiWindowFlags_NoMove;
 
   ImGui::Begin(_name.c_str(), &opened, flags);
 
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
 
-  // draw
   _DrawPath();
   _DrawEntries();
   _DrawButtons();
