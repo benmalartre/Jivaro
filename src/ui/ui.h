@@ -12,13 +12,39 @@
 
 AMN_NAMESPACE_OPEN_SCOPE  
 
+#define AMN_UI_HEADER_HEIGHT 32
+
 class View;
 class Window;
 class Application;
+
+enum UIType {
+  VIEWPORT,
+  EXPLORER,
+  TIMELINE,
+  PROPERTY,
+  TOOLBAR,
+  FILE_BROWSER,
+  CURVE_EDITOR,
+  GRAPH_EDITOR,
+  COUNT
+};
+
+static const char* UITypeName[UIType::COUNT] = {
+  "viewport",
+  "explorer",
+  "timeline",
+  "property",
+  "toolbar",
+  "file browser",
+  "curve editor",
+  "graph editor"
+};
+
 class BaseUI : public pxr::TfWeakBase
 {
 public:
-  BaseUI(View* parent, const std::string& name, bool docked=true);
+  BaseUI(View* parent, const std::string& name);
   virtual ~BaseUI(){};
 
   // get parent window
@@ -59,6 +85,7 @@ public:
   virtual void MouseWheel(int x, int y){};
   virtual void Keyboard(int key, int scancode, int action, int mods) {};
 
+  bool DrawHead();
   virtual bool Draw()=0;
   virtual void Resize(){};
 
@@ -70,7 +97,6 @@ protected:
   bool              _initialized;
   View*             _parent;
   std::string       _name;
-  bool              _docked;
   ImGuiWindowFlags  _flags;
   
 };

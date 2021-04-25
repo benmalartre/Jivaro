@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AMN_UI_SPLITTER_H
+#define AMN_UI_SPLITTER_H
 
 #include "../common.h"
 #include "../utils/utils.h"
@@ -70,3 +71,4 @@ private:
 
 AMN_NAMESPACE_CLOSE_SCOPE
 
+#endif // AMN_UI_SPLITTER_H

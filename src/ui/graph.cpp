@@ -16,8 +16,8 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 // constructor
 //------------------------------------------------------------------------------
-GraphUI::GraphUI(View* parent, const std::string& filename, bool docked)
-  : BaseUI(parent, "Graph", docked)
+GraphUI::GraphUI(View* parent, const std::string& filename)
+  : BaseUI(parent, "Graph")
   , _hoveredNode(NULL), _currentNode(NULL)
   , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
   , _scale(1.f), _fontIndex(0), _fontScale(1.0), _offset(pxr::GfVec2f(0.f, 0.f))

@@ -150,15 +150,14 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
   GLuint tex = item->_visible ? _visibleIcon->tex : _invisibleIcon->tex;
   ImVec4 col = heritedVisibility ?
     style.Colors[ImGuiCol_Text] : style.Colors[ImGuiCol_TextDisabled];
-
+  ImGui::PushStyleColor(ImGuiCol_Button, AMN_TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Text, col);
   ImGui::ImageButton(
     (void*)(size_t)tex,
     ImVec2(16, 16),
     ImVec2(0, 0),
     ImVec2(1, 1),
-    0,
-    AMN_TRANSPARENT_COLOR,
-    col);
+    0);
 
   if (ImGui::IsItemClicked()) {
     item->_visible = !item->_visible;
@@ -171,6 +170,7 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
   }
 
   ImGui::NextColumn();
+  ImGui::PopStyleColor(2);
 }
 
 void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)

@@ -35,7 +35,7 @@ void AMNCreateFontAtlas()
 
   std::string fontPath;
   for (int i = 0; i < 3; ++i) {
-    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Bold.otf";
+    fontPath = exeFolder + "/fonts/roboto/Roboto-Bold.ttf";
     AMN_BOLD_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -43,7 +43,7 @@ void AMNCreateFontAtlas()
       AMN_SHARED_ATLAS->GetGlyphRangesDefault()
     );
 
-    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Medium.otf";
+    fontPath = exeFolder + "/fonts/roboto/Roboto-Medium.ttf";
     AMN_MEDIUM_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -51,7 +51,7 @@ void AMNCreateFontAtlas()
       AMN_SHARED_ATLAS->GetGlyphRangesDefault()
     );
 
-    fontPath = exeFolder + "/fonts/montserrat/Montserrat-Regular.otf";
+    fontPath = exeFolder + "/fonts/roboto/Roboto-Regular.ttf";
     AMN_REGULAR_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -290,7 +290,6 @@ Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPi
 {
   if(!view->GetFlag(View::LEAF))
   {
-    std::cerr << "Can't split non-leaf view! Sorry!!!" << std::endl;
     return NULL;
   }
   view->SetFlag(View::LEAF);
@@ -328,17 +327,14 @@ Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPi
 void 
 Window::CollectLeaves(View* view)
 {
-  if(view == NULL)
-  {
+  if(view == NULL) {
     view = _mainView;
     _leaves.clear();
   }
   if (view->GetFlag(View::LEAF)) {
     _leaves.push_back(view);
     view->SetDirty();
-  }
-  else
-  {
+  } else {
     if(view->GetLeft())CollectLeaves(view->GetLeft());
     if(view->GetRight())CollectLeaves(view->GetRight());
   }
@@ -349,8 +345,7 @@ Window::CollectLeaves(View* view)
 View*
 Window::GetViewUnderMouse(int x, int y)
 {
-  for(auto leaf: _leaves)
-  {
+  for(auto leaf: _leaves) {
     if(leaf->Contains(x, y))return leaf;
   }
   return NULL;
@@ -475,8 +470,7 @@ Window::SetupImgui()
   // setup imgui style
   //ImGui::StyleColorsLight();
   //ImGui::StyleColorsClassic();
-  ImGuiStyle& style = ImGui::GetStyle();
-  AMNStyle(&style);
+  AMNStyle(&ImGui::GetStyle());
 
   // setup platform/renderer bindings
   if (_shared) {
@@ -506,8 +500,7 @@ Window::ClearImgui()
 
 void Window::DragSplitter(int x, int y)
 {
-  if(_activeView)
-  {
+  if(_activeView) {
     _activeView->GetPercFromMousePosition(x, y);
     _mainView->Resize(0, 0, _width, _height, false);
     _splitter->Resize(_width, _height);
@@ -517,8 +510,7 @@ void Window::DragSplitter(int x, int y)
 
 bool Window::UpdateActiveTool(int x, int y)
 {
-  if(GetActiveView())
-  {
+  if(GetActiveView()) {
     GetActiveView()->MouseMove(x, y);
   }
   return false;
@@ -526,8 +518,7 @@ bool Window::UpdateActiveTool(int x, int y)
 
 void Window::MainLoop()
 {
-  while(!glfwWindowShouldClose(_window))
-  {
+  while(!glfwWindowShouldClose(_window)) {
     _app->Update();
     SetGLContext();
     //glfwWaitEventsTimeout(1.0/60.0);
@@ -540,8 +531,7 @@ void Window::MainLoop()
 
     // child windows
     for (auto& child : _childrens) {
-      if (glfwGetWindowAttrib(child->GetGlfwWindow(), GLFW_FOCUSED))
-      {
+      if (glfwGetWindowAttrib(child->GetGlfwWindow(), GLFW_FOCUSED)) {
         child->Draw();
         glfwSwapBuffers(child->GetGlfwWindow());
         //glFlush();
@@ -556,13 +546,13 @@ bool
 Window::PickSplitter(double mouseX, double mouseY)
 {
   int splitterIndex = _splitter->Pick(mouseX, mouseY);
-  if(splitterIndex >= 0)
-  {
+  if(splitterIndex >= 0) {
     _activeView = _splitter->GetViewByIndex(splitterIndex);
-    if (_activeView->GetFlag(View::HORIZONTAL))
+    if (_activeView->GetFlag(View::HORIZONTAL)) {
       _splitter->SetVerticalCursor();
-    else 
+    } else { 
       _splitter->SetHorizontalCursor();
+    }
     return true;
   }
   else _splitter->SetDefaultCursor();
@@ -584,24 +574,18 @@ KeyboardCallback(
   Application* app = parent->GetApplication();
   Time& time = app->GetTime();
   ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
-  if(action == GLFW_RELEASE)
-  {
+  if(action == GLFW_RELEASE) {
     parent->SetDebounce(false);
   }
-  if (action == GLFW_PRESS)
-  {
+  if (action == GLFW_PRESS) {
     switch(key)
     {
-  
       case GLFW_KEY_SPACE:
       {
-        if(time.IsPlaying())
-        {
+        if(time.IsPlaying()) {
           time.SetLoop(false);
           time.StopPlayBack();
-        }
-        else
-        {
+        } else {
           time.SetLoop(true);
           time.StartPlayBack();
         }
@@ -644,8 +628,7 @@ KeyboardCallback(
       default:
       {
         View* view = parent->GetActiveView();
-        if (view)
-        {
+        if (view) {
           view->Keyboard(key, scancode, action, mods);
           view->SetDirty();
         }
@@ -750,8 +733,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     parent->EndDragSplitter();
     //parent->SetActiveTool(AMN_TOOL_SELECT);
     View* view = parent->GetActiveView();
-    if(view)
-    {
+    if(view) {
       view->MouseButton(button, action, mods);
       view->ClearFlag(View::INTERACTING);
       view->SetDirty();
@@ -759,12 +741,9 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   }
   else if (action == GLFW_PRESS)
   {
-    if (splitterHovered)
-    {
+    if (splitterHovered) {
       parent->BeginDragSplitter();
-    }
-    else
-    {
+    } else {
       View* view = parent->GetViewUnderMouse((int)x, (int)y);
       if (view) {
         parent->SetActiveView(view);
@@ -781,8 +760,9 @@ ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
   Window* parent = Window::GetUserData(window);
   ImGui::SetCurrentContext(parent->GetContext());
   ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
-  if(parent->GetActiveView())
+  if(parent->GetActiveView()) {
     parent->GetActiveView()->MouseWheel(xoffset, yoffset);
+  }
 }
 
 void 

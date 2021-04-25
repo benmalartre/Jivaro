@@ -10,6 +10,7 @@ Tool::Tool()
   : _translate(TranslateHandle())
   , _rotate(RotateHandle())
   , _scale(ScaleHandle())
+  , _brush(BrushHandle())
   , _interacting(false)
   , _active(NULL)
   , _viewport(NULL)
@@ -52,9 +53,11 @@ void Tool::SetViewport(ViewportUI* viewport)
 void Tool::SetActiveTool(short tool)
 {
   switch(tool) {
-    case AMN_TOOL_BRUSH:
     case AMN_TOOL_NONE:
       _active = NULL;
+      break;
+    case AMN_TOOL_BRUSH:
+      _active = (BaseHandle*)&_brush;
       break;
     case AMN_TOOL_SCALE:
       _active = (BaseHandle*)&_scale;

@@ -34,7 +34,13 @@ void CreateIconFromImage(const std::string& filename,
   int index, ICON_SIZE size)
 {
   pxr::HioImageSharedPtr img = pxr::HioImage::OpenForReading(filename);
-  size_t s = ((size_t)size + 1) * 16;
+  size_t s;
+  switch(size) {
+    case(0):s=16;break;
+    case(1):s=24;break;
+    case(2):s=32;break;
+    default:s=64;break;
+  }
   pxr::HioImage::StorageSpec storage;
   storage.width = s;
   storage.height = s ;
@@ -68,17 +74,13 @@ void AMNInitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
   std::string iconDir = installDir + "/icons";
-  std::cout << "ICON DIRECTORY : " << iconDir << std::endl;
   //std::vector<std::string> filenames;
   //int n = GetFilesInDirectory(iconDir.c_str(), filenames);
 
-  for (size_t i=0; i<ICON_MAX_ID; ++i)
-  {
+  for (size_t i=0; i<ICON_MAX_ID; ++i) {
     std::string filename = iconDir + SEPARATOR + ICON_NAMES[i] + ".png";
-	std::cout << "ICON FILE NAME : " << filename << std::endl;
     if (FileExists(filename) &&
-      pxr::HioImage::IsSupportedImageFile(filename))
-    {
+      pxr::HioImage::IsSupportedImageFile(filename)) {
       CreateIconFromImage(filename, i, AMN_ICON_SMALL);
       CreateIconFromImage(filename, i, AMN_ICON_MEDIUM);
       CreateIconFromImage(filename, i, AMN_ICON_LARGE);

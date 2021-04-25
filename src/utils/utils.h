@@ -126,23 +126,50 @@ bool AddIconButton(Icon* icon, FuncT func, ArgsT... args)
 }
 
 template<typename FuncT, typename ...ArgsT>
-bool AddCheckableIconButton(Icon* icon, bool checked, FuncT func, ArgsT... args)
+bool AddTransparentIconButton(Icon* icon, FuncT func, ArgsT... args)
 {
-  ImGuiStyle* style = &ImGui::GetStyle();
-  ImVec4* colors = style->Colors;
-  if (ImGui::ImageButton( 
+  ImGui::PushStyleColor(ImGuiCol_Button, AMN_TRANSPARENT_COLOR);
+  if (ImGui::ImageButton(
     (ImTextureID)(intptr_t)icon->tex,
     ImVec2(icon->size, icon->size),
     ImVec2(0, 0),
     ImVec2(1, 1),
-    -1,
-    checked ? colors[ImGuiCol_ButtonActive] : colors[ImGuiCol_ButtonHovered]))
+    -1))
   {
     func(args...);
     ImGui::SameLine();
     return true;
   }
   ImGui::SameLine();
+  ImGui::PopStyleColor();
+  return false;
+}
+
+template<typename FuncT, typename ...ArgsT>
+bool AddCheckableIconButton(Icon* icon, bool checked, FuncT func, ArgsT... args)
+{
+  ImGuiStyle* style = &ImGui::GetStyle();
+  ImVec4* colors = style->Colors;
+  if(checked) {
+    ImGui::PushStyleColor(ImGuiCol_Button, AMN_BUTTON_ACTIVE_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, AMN_BUTTON_ACTIVE_COLOR);
+  }
+  
+  if (ImGui::ImageButton( 
+    (ImTextureID)(intptr_t)icon->tex,
+    ImVec2(icon->size, icon->size),
+    ImVec2(0, 0),
+    ImVec2(1, 1),
+    -1))
+  {
+    func(args...);
+    ImGui::SameLine();
+    if(checked) ImGui::PopStyleColor(2);
+    return true;
+  }
+  ImGui::SameLine();
+  if(checked) ImGui::PopStyleColor(2);
+  
   return false;
 }
 

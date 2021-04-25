@@ -105,7 +105,7 @@ size_t FileBrowserUI::GetNumResults()
 
 bool FileBrowserUI::GetResult(size_t index, std::string& result)
 {
-  if(index>=0 && index < _result.size()) {
+  if(index < _result.size()) {
     result = _result[index];
     return true;
   } else {
@@ -236,7 +236,7 @@ bool FileBrowserUI::_DrawEntries()
     ImGui::SetScrollY(0.f);
   }
 
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   static bool flip = false;
   for (size_t i=0; i < _entries.size(); ++i) {
     if(_DrawEntry(drawList, i, flip)) {

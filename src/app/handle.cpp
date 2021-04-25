@@ -535,4 +535,16 @@ void ScaleHandle::Update(float x, float y, float width, float height)
 
 }
 
+BrushHandle::BrushHandle()
+  : BaseHandle()
+{
+  
+}
+
+void BrushHandle::Update(float x, float y, float width, float height)
+{
+
+}
+
+
 AMN_NAMESPACE_CLOSE_SCOPE

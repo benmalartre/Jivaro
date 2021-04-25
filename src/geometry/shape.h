@@ -1,6 +1,5 @@
 #ifndef AMN_APPLICATION_SHAPE_H
 #define AMN_APPLICATION_SHAPE_H
-#pragma once
 
 #include "../common.h"
 #include <vector>

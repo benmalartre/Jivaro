@@ -1,7 +1,8 @@
 //--------------------------------------------------------------------------------
 // FILES UTILS
 //--------------------------------------------------------------------------------
-#pragma once
+#ifndef AMN_UTILS_FILES_H
+#define AMN_UTILS_FILES_H
 
 #include "../common.h"
 
@@ -126,3 +127,5 @@ public:
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_UTILS_FILES_H

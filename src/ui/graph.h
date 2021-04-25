@@ -67,7 +67,7 @@ private:
   };
 
 public:
-  GraphUI(View* parent, const std::string& filename, bool docked);
+  GraphUI(View* parent, const std::string& filename);
   ~GraphUI() override;
 
   void MouseButton(int button, int action, int mods) override;

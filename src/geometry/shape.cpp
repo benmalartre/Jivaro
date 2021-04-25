@@ -112,7 +112,7 @@ Shape::Component::_IntersectCylinder(const pxr::GfRay& ray,
   const pxr::GfVec3d& bound = bounds.GetMax();
   pxr::GfRay invRay(ray);
   invRay.Transform(matrix);
-  return (CylinderIntersection(invRay, bound[0], bound[1]) >= 0.f) ? index: 0;
+  return CylinderIntersection(invRay, bound[0], bound[1]) >= 0.f ? index: 0;
 }
 
 size_t 
@@ -123,7 +123,7 @@ Shape::Component::_IntersectTorus(const pxr::GfRay& ray,
   pxr::GfRay invRay(ray);
   invRay.Transform(pxr::GfMatrix4d(matrix));
   const pxr::GfVec3d& bound = bounds.GetMax();
-  return (TorusIntersection( invRay, bound[0], bound[1]) > 0.f) ? index : 0.f;
+  return TorusIntersection( invRay, bound[0], bound[1]) > 0.f ? index : 0.f;
 }
 
 size_t 
@@ -131,84 +131,6 @@ Shape::Component::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m)
 {
   return _intersectImplementation ? 
     (this->*_intersectImplementation)(ray, m) : 0;
-  /*
-  switch(type) {
-    case GRID:
-    {
-      const pxr::GfVec3f& bound = bounds.GetMax();
-      pxr::GfRange3d range(
-        pxr::GfVec3d(-bound[0] * 0.5f, 0.f, -bound[1] * 0.5f),
-        pxr::GfVec3d(bound[0] * 0.5f, 0.f, bound[1] * 0.5f));
-      pxr::GfBBox3d bbox(range);
-      bbox.Transform(pxr::GfMatrix4d(offsetMatrix * parentMatrix * m));
-      if(ray.Intersect(bbox)) return index;
-      break;
-    }
-    case BOX:
-    {
-      pxr::GfRange3d range(
-        pxr::GfVec3d(bounds.GetMin()),
-        pxr::GfVec3d(bounds.GetMax()));
-      pxr::GfBBox3d bbox(range);
-      bbox.Transform(pxr::GfMatrix4d(offsetMatrix * parentMatrix * m));
-      if(ray.Intersect(bbox)) return index;
-      break;
-    }
-    case SPHERE:
-    case ICOSPHERE:
-    {
-      pxr::GfVec3d center = 
-        (offsetMatrix * parentMatrix * m).Transform(pxr::GfVec3d(0));
-      pxr::GfVec3d radius = m.Transform(bounds.GetMax());
-      if(ray.Intersect(center, radius[0])) return index;
-      break;
-    }
-    case DISC:
-    {
-      pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
-      float radius = bounds.GetMax()[0];
-      pxr::GfRay localRay(ray);
-      localRay.Transform(matrix);
-      if(DiscIntersection(localRay, pxr::GfVec3d(0, 1, 0), 
-        pxr::GfVec3d(0), radius) >= 0.f) return index;
-      break;
-    }
-    case TUBE:
-    case CYLINDER:
-    {
-      pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
-      const pxr::GfVec3d& bound = bounds.GetMax();
-      pxr::GfRay invRay(ray);
-      invRay.Transform(matrix);
-      if(CylinderIntersection(invRay, bound[0], bound[1]) >= 0.f) 
-          return index;
-      break;
-    }
-    case CONE:
-    {
-      break;
-    }
-    case CAPSULE:
-    {
-      break;
-    }
-    case TORUS:
-    {
-      pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
-      pxr::GfRay invRay(ray);
-      invRay.Transform(pxr::GfMatrix4d(matrix));
-      const pxr::GfVec3d& bound = bounds.GetMax();
-      if(TorusIntersection( invRay, bound[0], bound[1]) > 0.f)
-          return index;
-      break;
-    }
-    case EXTRUSION:
-    {
-
-    }
-  }
-  return 0;
-  */
 }
 
 Shape::Shape() : _vao(0), _vbo(0), _eab(0) {};

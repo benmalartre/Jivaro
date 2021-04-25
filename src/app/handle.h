@@ -190,6 +190,18 @@ private:
   float _height;
 };
 
+class BrushHandle : public BaseHandle {
+public:
+  BrushHandle();
+
+  //void BeginUpdate(float x, float y, float width, float height) override;
+  void Update(float x, float y, float width, float height) override;
+
+private:
+  float _minRadius;
+  float _maxRadius;
+};
+
 AMN_NAMESPACE_CLOSE_SCOPE
 
 #endif // AMN_APPLICATION_HANDLE_H

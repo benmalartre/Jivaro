@@ -31,8 +31,7 @@ void PropertyUI::SetPrim(const pxr::UsdPrim& prim)
 bool PropertyUI::Draw()
 {
   if (!_prim)return false;
-  if (!_initialized) std::cout << "PROPERTY UI NEED UPDATE !!" << std::endl;
-  _initialized = true;
+  if (!_initialized)_initialized = true;
 
   if (_prim.IsA<pxr::UsdGeomXform>()) {
     pxr::UsdGeomXform xfo(_prim);

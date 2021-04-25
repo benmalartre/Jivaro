@@ -43,7 +43,7 @@ private:
   TranslateHandle _translate;
   RotateHandle _rotate;
   ScaleHandle _scale;
-  //BrushHandle* _brush;
+  BrushHandle _brush;
   bool _interacting;
   ViewportUI* _viewport;
 
