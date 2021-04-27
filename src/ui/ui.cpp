@@ -23,7 +23,6 @@ BaseUI::BaseUI(View* parent, const std::string& name)
 
 void BaseUI::OnNewSceneNotice(const Notice::NewScene& n)
 {
-  std::cout << "PROCESS NEW SCENE !!!" << std::endl;
   _initialized = false;
 }
 
@@ -89,6 +88,7 @@ bool BaseUI::DrawHead()
     ImVec2(GetX() + GetWidth(),AMN_UI_HEADER_HEIGHT),
     ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f)
   );
+  return true;
 }
 
 Application* BaseUI::GetApplication()

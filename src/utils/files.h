@@ -14,12 +14,12 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 #ifdef _WIN32
-	#define SEPARATOR "\\"
+  #define SEPARATOR "\\"
   #include <windows.h>
   typedef int mode_t;
   #include "dirent.h"
 #else
-	#define SEPARATOR "/"
+  #define SEPARATOR "/"
   #include <dirent.h>
 #endif
 

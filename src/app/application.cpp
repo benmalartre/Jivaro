@@ -358,7 +358,7 @@ Application::Init()
     std::cout << "HYDRA SCENE DELEGATE FAILED" << std::endl;
   }
   */
-  std::cout << "APPLICATION INIT !!!" << std::endl;
+  std::cout << "APP INIT :D" << std::endl;
  #ifdef _WIN32
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
@@ -412,7 +412,7 @@ Application::Init()
   // initialize 3d tools
   _tools.Init();
 
-  GraphUI* graph = new GraphUI(graphView, "Graph");
+  GraphUI* graph = new GraphUI(graphView, filename);
   //_animationEditor = new CurveEditorUI(graphView);
   
   _viewport = new ViewportUI(viewportView, LOFI);  
@@ -573,7 +573,6 @@ Application::GetStageBoundingBox()
 
 void Application::SelectionChangedCallback(const Notice::SelectionChanged& n)
 {
-  std::cout << "SELECTION CHANGED !!!" << std::endl;
   _tools.ResetSelection();
 }
 
@@ -596,7 +595,6 @@ Application::GetSelectionBoundingBox()
     }
   }
 
-  std::cout << "BBOX : " << bbox.GetRange() << std::endl;
   /*
   pxr::UsdPrim& prim = _stage->GetPrimAtPath(pxr::SdfPath("/Cube"));
   if (!prim.IsValid()) {

@@ -24,7 +24,6 @@ Tool::~Tool()
 
 void Tool::Init()
 {
-
   _translate.Setup();
   _rotate.Setup();
   _scale.Setup();

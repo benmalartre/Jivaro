@@ -186,9 +186,12 @@ int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
 std::string GetInstallationFolder()
 {
   std::string exePath = pxr::ArchGetExecutablePath();
-  std::vector<std::string> splitted = SplitString(exePath, SEPARATOR);
-  splitted.pop_back();
-  return JoinString(splitted, SEPARATOR);
+  std::cout << "INSTALL DIR :" << exePath << std::endl;
+  std::vector<std::string> tokens = SplitString(exePath, SEPARATOR);
+  for (auto& token : tokens)
+    std::cout << token << std::endl;
+  tokens.pop_back();
+  return JoinString(tokens, SEPARATOR);
 }
     
 

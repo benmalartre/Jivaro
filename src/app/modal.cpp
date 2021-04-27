@@ -17,9 +17,7 @@ BaseModal::BaseModal(int width, int height, const std::string& name)
 
 BaseModal::~BaseModal()
 {
-  std::cout << "DELETE WINDOW" << std::endl;
   if(_window) delete _window;
-    std::cout << "DONE" << std::endl;
 }
 
 void BaseModal::Init()

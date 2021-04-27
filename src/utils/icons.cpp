@@ -86,6 +86,7 @@ void AMNInitializeIcons()
       CreateIconFromImage(filename, i, AMN_ICON_LARGE);
     }
   }
+  std::cout << "LOAD ICONS PASSED !!!" << std::endl;
 }
 
 void AMNTerminateIcons()

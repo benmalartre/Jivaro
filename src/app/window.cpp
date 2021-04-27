@@ -31,11 +31,14 @@ void AMNCreateFontAtlas()
   AMN_SHARED_ATLAS = new ImFontAtlas();
 
   // load fonts
+  std::cout << "GET EXE FOLDER" << std::endl;
   std::string exeFolder = GetInstallationFolder();
+  std::cout << exeFolder << std::endl;
 
   std::string fontPath;
   for (int i = 0; i < 3; ++i) {
     fontPath = exeFolder + "/fonts/roboto/Roboto-Bold.ttf";
+    std::cout << fontPath << std::endl;
     AMN_BOLD_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -59,6 +62,7 @@ void AMNCreateFontAtlas()
       AMN_SHARED_ATLAS->GetGlyphRangesDefault()
     );
   }
+  std::cout << "LOAD FONT PASSED" << std::endl;
 }
 
 void AMNDeleteFontAtlas()
@@ -107,6 +111,7 @@ Window::Window(int width, int height, const std::string& name):
   _width = width;
   _height = height;
   _shared = true;
+  std::cout << "CREATE GLFW WINDOW" << std::endl;
   //glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -117,7 +122,6 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_SAMPLES, 4);
   
   _window = glfwCreateWindow(_width,_height,"AMNESIE.0.0",NULL,NULL);
-
 }
 
 // child window constructor
@@ -166,8 +170,11 @@ Window::Init(Application* app)
       pxr::GlfContextCaps::InitInstance();
       pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
 
+      std::cout << "INIT ATLAS" << std::endl;
       AMNCreateFontAtlas();
+      std::cout << "INIT ICONS" << std::endl;
       AMNInitializeIcons();
+      std::cout << "INIT TOOLS" << std::endl;
       AMNInitializeTools();
     }
 
