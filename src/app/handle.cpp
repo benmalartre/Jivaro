@@ -30,6 +30,8 @@ void BaseHandle::ComputeSizeMatrix()
 
 void BaseHandle::AddComponent(Shape::Component& component)
 {
+  if (component.index == AXIS_CAMERA)
+    component.SetFlag(Shape::FLAT, true);
   _shape.AddComponent(component);
 }
 
@@ -106,6 +108,7 @@ void BaseHandle::ComputeViewPlaneMatrix()
   _viewPlaneMatrix[3][0] = _position[0];
   _viewPlaneMatrix[3][1] = _position[1];
   _viewPlaneMatrix[3][2] = _position[2];
+  _viewPlaneMatrix[3][3] = 1;
 }
 
 void BaseHandle::ResetSelection()
@@ -150,7 +153,8 @@ void BaseHandle::UpdatePickingPlane(short axis)
 {
  _plane.Set(
     _camera->GetViewPlaneNormal(),
-    pxr::GfVec3d(_position));
+    pxr::GfVec3d(_position)
+ );
 }
 
 const pxr::GfVec4f& BaseHandle::GetColor(const Shape::Component& comp)
@@ -164,7 +168,7 @@ const pxr::GfVec4f& BaseHandle::GetColor(const Shape::Component& comp)
   } else {
     if(comp.flags & Shape::SELECTED) {
       return HANDLE_ACTIVE_COLOR;
-    } if(comp.flags &Shape::HOVERED) {
+    } if(comp.flags & Shape::HOVERED && !(comp.flags & Shape::MASK)) {
       return HANDLE_HOVERED_COLOR;
     } else {
       return comp.color;
@@ -180,7 +184,7 @@ short BaseHandle::Select(float x, float y, float width, float height,
     _camera->GetRayDirection(x, y, width, height));
 
   pxr::GfMatrix4f m = _sizeMatrix * _matrix;
-  size_t hovered = _shape.Intersect(ray, m);
+  size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
 
   if(hovered) {
     SetActiveAxis(hovered);
@@ -198,9 +202,9 @@ short BaseHandle::Pick(float x, float y, float width, float height)
     _camera->GetRayDirection(x, y, width, height));
 
   pxr::GfMatrix4f m = _sizeMatrix * _matrix;
-  size_t hovered = _shape.Intersect(ray, m);
+  size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
   SetHoveredAxis(hovered);
-  _shape.UpdateComponents(hovered, _activeAxis);
+  _shape.UpdateComponents(hovered, 0);
   _shape.UpdateVisibility(_matrix, pxr::GfVec3f(_camera->GetViewPlaneNormal()));
   return hovered;
 }
@@ -216,7 +220,7 @@ void BaseHandle::Draw()
   
   for(size_t i=0; i < _shape.GetNumComponents(); ++i) {
     const Shape::Component& component = _shape.GetComponent(i);
-    if(component.GetFlag(Shape::VISIBLE) && component.GetFlag(Shape::PICKABLE)) {
+    if(component.GetFlag(Shape::VISIBLE) /*&& component.GetFlag(Shape::PICKABLE)*/) {
       if(component.index == AXIS_CAMERA) {
         _shape.DrawComponent(i, _viewPlaneMatrix, GetColor(component));
       } else {
@@ -293,10 +297,12 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
     accumRotation.Normalize();
 
     _matrix.SetIdentity();
+   
     _matrix.SetRotate(accumRotation);
     _matrix[3][0] = accumPosition[0];
     _matrix[3][1] = accumPosition[1];
     _matrix[3][2] = accumPosition[2];
+   
   }
 }
 
@@ -460,18 +466,17 @@ void TranslateHandle::Update(float x, float y, float width, float height)
 RotateHandle::RotateHandle()
  : BaseHandle()
  , _radius(0.75f)
-{  
+{
   Shape::Component mask = _shape.AddIcoSphere(
-    AXIS_NONE, _radius * 0.9f, 1, HANDLE_MASK_COLOR);
-  mask.SetFlag(Shape::PICKABLE, false);
+    AXIS_NONE, _radius * 0.9f, 2, HANDLE_MASK_COLOR);
+  mask.SetFlag(Shape::MASK, true);
   AddComponent(mask);
-
+  
   Shape::Component torus = _shape.AddTorus(
     AXIS_X, _radius, 0.02f, 32, 16, HANDLE_X_COLOR);
   AddXYZComponents(torus);
-
-  Shape::Component plane = _shape.AddTorus(
-    AXIS_CAMERA, _radius * 1.4f, 0.02f, 32, 16, HANDLE_HELP_COLOR, {
+  Shape::Component plane = _shape.AddRing(
+    AXIS_CAMERA, _radius * 1.4f, 0.025f, 32, HANDLE_HELP_COLOR, {
       1.f, 0.f, 0.f, 0.f,
       0.f, 0.f, 1.f, 0.f,
       0.f, -1.f, 0.f, 0.f,

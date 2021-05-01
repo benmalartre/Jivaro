@@ -195,19 +195,25 @@ void ViewportUI::MouseMove(int x, int y)
   
   if(_interact)
   {
-    double dx = (double)(x - _lastX);
-    double dy = (double)(y - _lastY);
+    double dx = static_cast<double>(x) - _lastX;
+    double dy = static_cast<double>(y) - _lastY;
     switch(_interactionMode)
     {
       case INTERACTION_WALK:
       {
-        _camera->Walk((double)dx / (double)GetWidth(), (double)dy / (double)GetHeight());
+        _camera->Walk(
+          dx / static_cast<double>(GetWidth()), 
+          dy / static_cast<double>(GetHeight())
+        );
         break;
       }
        
       case INTERACTION_DOLLY:
       {
-        _camera->Dolly((double)dx / (double)GetWidth(), (double)dy / (double)GetHeight());
+        _camera->Dolly(
+          dx / static_cast<double>(GetWidth()), 
+          dy / static_cast<double>(GetHeight())
+        );
        break;
       }
         
@@ -230,13 +236,16 @@ void ViewportUI::MouseMove(int x, int y)
   }
 
 
-  _lastX = x;
-  _lastY = y;
+  _lastX = static_cast<double>(x);
+  _lastY = static_cast<double>(y);
 }
 
 void ViewportUI::MouseWheel(int x, int y)
 {
-  _camera->Dolly((double)x / (double)GetWidth(), (double)x / (double)GetHeight());
+  _camera->Dolly(
+    static_cast<double>(x) / static_cast<double>(GetWidth()), 
+    static_cast<double>(x) / static_cast<double>(GetHeight())
+  );
   _parent->SetDirty();
 }
 
@@ -286,7 +295,8 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
     currentViewport[0],
     currentViewport[1],
     currentViewport[2],
-    currentViewport[3]);
+    currentViewport[3]
+  );
 
   // restore material
   glUseProgram(currentProgram);

@@ -1,5 +1,6 @@
 #include "camera.h"
 #include <pxr/base/gf/vec4d.h>
+#include <pxr/base/gf/range2d.h>
 
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 
@@ -29,9 +30,9 @@ pxr::GfVec3d
 Camera::GetRayDirection(float x, float y, float width, float height)
 {
   // normalize device coordinates
-  float nx = (2.f * x) / width - 1;
-  float ny = 1.f - (2.f * y) /height;
-  float nz = 1.f;
+  double nx = (2.0 * x) / width - 1.0;
+  double ny = 1.0 - (2.0 * y) /height;
+  double nz = 1.0;
   pxr::GfVec3d rayNds(nx, ny, nz);
 
   // homogenous clip coordinates
@@ -40,13 +41,14 @@ Camera::GetRayDirection(float x, float y, float width, float height)
   // eye (camera) coordinates
   pxr::GfMatrix4d invProj = GetProjectionMatrix().GetInverse();
   pxr::GfVec3d rayEye = invProj.Transform(rayClip);
-  rayEye[2] = -1.f;
+  rayEye[2] = -1.0;
 
   // world coordinates
-  pxr::GfMatrix4d invView = GetViewMatrix().GetInverse();
+  pxr::GfMatrix4d invView = GetViewInverseMatrix();
   pxr::GfVec3d rayWorld = invView.TransformDir(rayEye);
 
   return rayWorld.GetNormalized();
+
 }
 
 pxr::GfVec3d 

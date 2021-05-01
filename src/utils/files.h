@@ -18,6 +18,7 @@ AMN_NAMESPACE_OPEN_SCOPE
   #include <windows.h>
   typedef int mode_t;
   #include "dirent.h"
+  #include <tchar.h>
 #else
   #define SEPARATOR "/"
   #include <dirent.h>
@@ -66,6 +67,10 @@ std::string GetFileName(const std::string& filePath);
 // num files in directory
 //-----------------------------------------------------
 int NumFilesInDirectory(const char* path);
+
+// get entries in directory
+//-----------------------------------------------------
+int GetVolumes(std::vector<EntryInfo>& entries);
 
 // get entries in directory
 //-----------------------------------------------------

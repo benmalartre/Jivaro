@@ -179,82 +179,173 @@ int SolveQuartic(const SCALAR c[5], SCALAR s[4])
   return num;
 }
 
-float DiscIntersection(const pxr::GfRay& ray, const pxr::GfVec3d& normal, 
-  const pxr::GfVec3d& center, float radius) 
+bool DiscIntersection(const pxr::GfRay& ray, const pxr::GfVec3d& normal, 
+  const pxr::GfVec3d& center, const double radius, double* distance) 
 { 
   double hitDistance;
   if(ray.Intersect(pxr::GfPlane(normal, center), &hitDistance)) {
     pxr::GfVec3d hitPoint = ray.GetPoint(hitDistance);
-    if((hitPoint - center).GetLength() <= radius) return hitDistance;
+    if ((hitPoint - center).GetLength() <= radius) {
+      *distance = hitDistance;
+      return true;
+    }
   }
-  return -1.f;
+  return false;
 } 
 
-float CylinderIntersection( const pxr::GfRay& ray, float radius, float height)
+bool RingIntersection(const pxr::GfRay& localRay, const double radius, 
+  const double section, double* distance)
+{
+  double hitDistance;
+  if (localRay.Intersect(AMN_DEFAULT_PLANE, &hitDistance)) {
+    pxr::GfVec3d hitPoint = localRay.GetPoint(hitDistance);
+    double distanceFromCenter = hitPoint.GetLength();
+    if (distanceFromCenter >= (radius - section) && distanceFromCenter <= (radius + section)) {
+      *distance = hitDistance;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool CylinderIntersection( const pxr::GfRay& localRay, const double radius, 
+  const double height, double* distance)
 {
   double enterDistance, exitDistance;
   const pxr::GfVec3d axis(0, 1, 0);
-  if(ray.Intersect(pxr::GfVec3d(0.f), axis,
+  if(localRay.Intersect(pxr::GfVec3d(0.f), axis,
     radius, &enterDistance, &exitDistance)) {
       // check enter point
-      pxr::GfVec3d hit = ray.GetPoint(enterDistance);
+      pxr::GfVec3d hit = localRay.GetPoint(enterDistance);
       pxr::GfVec3d projected = hit.GetProjection(axis);
-      if(hit[1] >= 0.f && hit[1] <= height) return enterDistance;
-      // check exit point
-      hit = ray.GetPoint(exitDistance);
-      projected = hit.GetProjection(axis);
-      if(hit[1] >= 0.f && hit[1] <= height) return exitDistance;
-  }
-  return -1.f;
-}
-
-float TorusIntersection( const pxr::GfRay& ray, float radius, float section)
-{
-  const pxr::GfVec3d& origin = ray.GetPoint(0);
-  double ox = origin[0];
-  double oy = origin[1];
-  double oz = origin[2];
-
-  const pxr::GfVec3d& direction = ray.GetDirection();
-  double dx = direction[0];
-  double dy = direction[1];
-  double dz = direction[2];
-
-  // define the coefficients of the quartic equation
-  double sum_d_sqrd = dx * dx + dy * dy + dz * dz;
-  double e = ox * ox + oy * oy + oz * oz - radius*radius - section*section;
-  double f = ox * dx + oy * dy + oz * dz;
-  double four_a_sqrd = 4.0 * radius * radius;
-
-  double coeffs[5] = {
-    e * e - four_a_sqrd * (section*section - oy * oy),
-    4.f * f * e + 2.f * four_a_sqrd * oy * dy,
-    2.f * sum_d_sqrd * e + 4.f * f * f + four_a_sqrd * dy * dy,
-    4.f * sum_d_sqrd * f,
-    sum_d_sqrd * sum_d_sqrd
-  };
-  double roots[4] = {0.f, 0.f, 0.f, 0.f};
-
-  int numRealRoots = SolveQuartic(coeffs, roots);
-  if(numRealRoots) {
-    // find the smallest root greater than kEpsilon, if any
-    // the roots array is not sorted
-    bool intersected = false;
-    float t = std::numeric_limits<float>::max();
-
-    for (int j = 0; j < numRealRoots; ++j)  
-      if (roots[j] > 0.000001f) {
-        intersected = true;
-        if (roots[j] < t)
-          t = roots[j];
+      if (hit[1] >= 0.f && hit[1] <= height) {
+        *distance = enterDistance;
+        return true;
       }
-    if(intersected) return t;
+      // check exit point
+      hit = localRay.GetPoint(exitDistance);
+      projected = hit.GetProjection(axis);
+      if (hit[1] >= 0.f && hit[1] <= height) {
+        *distance = exitDistance;
+        return true;
+      }
   }
-  return -1.f;
+  return false;
+}
+
+bool TorusIntersection( const pxr::GfRay& localRay, const double radius, 
+    const double section, double* distance)
+{
+  double po = 1.0;
+
+  const pxr::GfVec3d ro(localRay.GetPoint(0));
+  const pxr::GfVec3d rd((localRay.GetPoint(1) - ro).GetNormalized());
+  double Ra2 = radius * radius;
+  double ra2 = section * section;
+
+  double m = pxr::GfDot(ro, ro);
+  double n = pxr::GfDot(ro, rd);
+
+  // bounding sphere
+  {
+    double h = n * n - m + (radius + section) * (radius + section);
+    if (h < 0.0) return false;
+    //float t = -n-sqrt(h); // could use this to compute intersections from ro+t*rd
+  }
+
+  // find quartic equation
+  double k = (m - ra2 - Ra2) / 2.0;
+  double k3 = n;
+  double k2 = n * n + Ra2 * rd[1] * rd[1] + k;
+  double k1 = k * n + Ra2 * ro[1] * rd[1];
+  double k0 = k * k + Ra2 * ro[1] * ro[1] - Ra2 * ra2;
+  
+#if 1
+  // prevent |c1| from being too close to zero
+  if (pxr::GfAbs(k3 * (k3 * k3 - k2) + k1) < 0.01)
+  {
+    po = -1.0;
+    double tmp = k1; k1 = k3; k3 = tmp;
+    k0 = 1.0 / k0;
+    k1 = k1 * k0;
+    k2 = k2 * k0;
+    k3 = k3 * k0;
+  }
+#endif
+  
+  double c2 = 2.0 * k2 - 3.0 * k3 * k3;
+  double c1 = k3 * (k3 * k3 - k2) + k1;
+  double c0 = k3 * (k3 * (-3.0 * k3 * k3 + 4.0 * k2) - 8.0 * k1) + 4.0 * k0;
+
+
+  c2 /= 3.0;
+  c1 *= 2.0;
+  c0 /= 3.0;
+
+  double Q = c2 * c2 + c0;
+  double R = 3.0 * c0 * c2 - c2 * c2 * c2 - c1 * c1;
+
+
+  double h = R * R - Q * Q * Q;
+  double z = 0.0;
+  if (h < 0.0)
+  {
+    // 4 intersections
+    double sQ = pxr::GfSqrt(Q);
+    z = 2.0 * sQ * pxr::GfCos(acos(R / (sQ * Q)) / 3.0);
+  }
+  else
+  {
+    // 2 intersections
+    double sQ = pxr::GfPow(pxr::GfSqrt(h) + pxr::GfAbs(R), 1.0 / 3.0);
+    z = pxr::GfSgn(R) * pxr::GfAbs(sQ + Q / sQ);
+  }
+  z = c2 - z;
+
+  double d1 = z - 3.0 * c2;
+  double d2 = z * z - 3.0 * c0;
+  if (pxr::GfAbs(d1) < 1.0e-4)
+  {
+    if (d2 < 0.0) return false;
+    d2 = pxr::GfSqrt(d2);
+  }
+  else
+  {
+    if (d1 < 0.0) return false;
+    d1 = pxr::GfSqrt(d1 / 2.0);
+    d2 = c1 / d1;
+  }
+
+  //----------------------------------
+
+  double result = 1e20;
+
+  h = d1 * d1 - z + d2;
+  if (h > 0.f)
+  {
+    h = pxr::GfSqrt(h);
+    double t1 = -d1 - h - k3; t1 = (po < 0.f) ? 2.f / t1 : t1;
+    double t2 = -d1 + h - k3; t2 = (po < 0.f) ? 2.f / t2 : t2;
+    if (t1 > 0.f) result = t1;
+    if (t2 > 0.f) result = pxr::GfMin(result, t2);
+  }
+
+  h = d1 * d1 - z - d2;
+  if (h > 0.f)
+  {
+    h = pxr::GfSqrt(h);
+    double t1 = d1 - h - k3;  t1 = (po < 0.f) ? 2.f / t1 : t1;
+    double t2 = d1 + h - k3;  t2 = (po < 0.f) ? 2.f / t2 : t2;
+    if (t1 > 0.0) result = pxr::GfMin(result, t1);
+    if (t2 > 0.0) result = pxr::GfMin(result, t2);
+  }
+
+  *distance = result;
+  return true;
 }
 
 
-pxr::GfVec3d TorusNormal(const pxr::GfVec3d& point, float radius, float section) 
+pxr::GfVec3d TorusNormal(const pxr::GfVec3d& point, const double radius, const double section) 
 {
   double paramSquared = radius*radius + section*section;
 

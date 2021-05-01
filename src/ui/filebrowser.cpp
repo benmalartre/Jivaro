@@ -21,7 +21,6 @@ FileBrowserUI::~FileBrowserUI()
 void FileBrowserUI::SetPath(const std::string& path)
 {
   _path = path;
-  std::cout << "PATH :" << _path << std::endl;
   if(strlen(_path.c_str())) {
     _pathTokens = SplitString(_path, SEPARATOR);
     _GetPathEntries();
@@ -43,12 +42,10 @@ void FileBrowserUI::AppendPath(const std::string& name)
 
 void FileBrowserUI::PopPath()
 {
-  std::cout << "POP PATH" << std::endl;
   if(_pathTokens.size() > 2)
     SetPathFromTokenIndex(_pathTokens.size() - 2);
   else 
     SetPath("");
-  std::cout << "PATH :" << _path << std::endl;
 }
 
 void FileBrowserUI::SetPathFromTokenIndex(size_t idx)
@@ -58,7 +55,6 @@ void FileBrowserUI::SetPathFromTokenIndex(size_t idx)
 #else
   _path = SEPARATOR;
 #endif
-  _path = "";
   for(size_t i=0; i<= idx; ++i) {
     if(!strlen(_pathTokens[i].c_str())) continue;
     _path += _pathTokens[i];
@@ -81,13 +77,13 @@ void FileBrowserUI::_GetPathEntries()
 
 void FileBrowserUI::_GetRootEntries()
 {
+  _pathTokens.clear();
 #ifdef _WIN32
-
+  _path = "";
 #else
   _path = SEPARATOR;
-  _pathTokens.clear();
-  _GetPathEntries();
 #endif
+  GetVolumes(_entries);
 }
 
 void FileBrowserUI::SetResult(const std::string& name)

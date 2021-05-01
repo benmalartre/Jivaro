@@ -69,6 +69,7 @@ public:
     AXIS_XZ,
     AXIS_YZ,
     AXIS_CAMERA,
+    AXIS_NORMAL,
     AXIS_LAST
   };
 

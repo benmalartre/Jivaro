@@ -19,7 +19,9 @@ public:
     HOVERED   = 2,
     VISIBLE   = 4,
     PICKABLE  = 8,
-    HELPER    = 16
+    HELPER    = 16,
+    FLAT      = 32,
+    MASK      = 64
   };
 
   enum Type {
@@ -28,6 +30,7 @@ public:
     SPHERE,
     ICOSPHERE,
     DISC,
+    RING,
     CYLINDER,
     TUBE,
     CONE,
@@ -37,8 +40,8 @@ public:
   };
 
   struct Component {
-    typedef size_t (Shape::Component::*IntersectFunc)(const pxr::GfRay& ray, 
-      const pxr::GfMatrix4f& m);
+    typedef short (Shape::Component::*IntersectFunc)(const pxr::GfRay& ray, 
+      const pxr::GfMatrix4f& m, double* distance);
 
     short flags;
     short type;
@@ -82,12 +85,15 @@ public:
           case DISC:
             _intersectImplementation = &Shape::Component::_IntersectDisc;
             break;
+          case RING:
+            _intersectImplementation = &Shape::Component::_IntersectRing;
+            break;
           case TUBE:
           case CYLINDER:
             _intersectImplementation = &Shape::Component::_IntersectCylinder;
             break;
           case TORUS:
-            _intersectImplementation = &Shape::Component::_IntersectTorus;
+              _intersectImplementation = &Shape::Component::_IntersectTorus;
             break;
           default:
             _intersectImplementation = 0;
@@ -101,14 +107,15 @@ public:
     bool GetFlag(short flag) const;
     void ComputeBounds(Shape* shape);
 
-    size_t _IntersectGrid(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
-    size_t _IntersectBox(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
-    size_t _IntersectSphere(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
-    size_t _IntersectDisc(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
-    size_t _IntersectCylinder(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
-    size_t _IntersectTorus(const pxr::GfRay&, const pxr::GfMatrix4f& m);
+    short _IntersectGrid(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
+    short _IntersectBox(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
+    short _IntersectSphere(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
+    short _IntersectDisc(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
+    short _IntersectRing(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
+    short _IntersectCylinder(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
+    short _IntersectTorus(const pxr::GfRay&, const pxr::GfMatrix4f& m, double* distance);
 
-    size_t Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
+    short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
   };
 
   Shape();
@@ -154,6 +161,9 @@ public:
   Component AddDisc(short index, float radius, float start, float end, size_t lats=8,
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
+  Component AddRing(short index, float radius, float section, size_t lats=16,
+    const pxr::GfVec4f& color = pxr::GfVec4f(1.f),
+    const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
   Component AddCylinder(short index, float radius, float height, size_t lats=8, 
     size_t longs=2, const pxr::GfVec4f& color=pxr::GfVec4f(1.f), 
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
@@ -172,7 +182,7 @@ public:
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f),
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
 
-  size_t Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m);
+  short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, const pxr::GfMatrix4f& v);
 
   void Clear();
 

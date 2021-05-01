@@ -54,8 +54,8 @@ class ViewportUI : public BaseUI
     Camera* GetCamera(){return _camera;};
     pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
 
-    float GetLastMouseX(){return _lastX;};
-    float GetLastMouseY(){return _lastY;};
+    double GetLastMouseX(){return _lastX;};
+    double GetLastMouseY(){return _lastY;};
 
     // overrides
     void MouseButton(int button, int action, int mods) override;
@@ -80,8 +80,8 @@ class ViewportUI : public BaseUI
     int                   _width;
     int                   _height;
     Camera*               _camera;
-    int                   _lastX;
-    int                   _lastY;
+    double                _lastX;
+    double                _lastY;
     bool                  _interact;
     short                 _interactionMode;
     bool                  _valid;

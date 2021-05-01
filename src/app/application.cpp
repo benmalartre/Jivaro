@@ -411,7 +411,6 @@ Application::Init()
 
   // initialize 3d tools
   _tools.Init();
-
   GraphUI* graph = new GraphUI(graphView, filename);
   //_animationEditor = new CurveEditorUI(graphView);
   

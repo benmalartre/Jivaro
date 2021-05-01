@@ -5,6 +5,7 @@ project (AMINA)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:inline-")
 
 # cross platform
 set(LIB_PREFIX "")
@@ -120,7 +121,6 @@ foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
       "${USD_LIBRARY_DIR}/${LIB_PREFIX}boost_${BOOST_LIB_NAME}${BOOST_VERSION}${LIB_DYNAMIC_EXT}"
   )
 endforeach()
-
 
 # tbb
 set(TBB_INCLUDE_DIR "${USD_DIR}/include/tbb")

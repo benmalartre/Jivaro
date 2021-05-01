@@ -108,6 +108,36 @@ static bool _IsHiddenFile(const char* filename)
   return (filename[0] == '.' || filename[strlen(filename)-1] == '~');
 }
 
+int GetVolumes(std::vector<EntryInfo>& entries)
+{
+#ifdef _WIN32
+  entries.clear();
+  TCHAR szDrive[] = _T(" A:");
+  DWORD uDriveMask = GetLogicalDrives();
+
+  if (uDriveMask != 0)
+  {
+    while (uDriveMask)
+    {
+      // Use the bitwise AND, 1â€"available, 0-not available
+      if (uDriveMask & 1) {
+        entries.push_back({
+          (std::string)(const char*)szDrive,
+          EntryInfo::Type::FOLDER,
+          false
+          });
+      }
+      // increment, check next drive
+      ++szDrive[1];
+      // shift the bitmask binary right
+      uDriveMask >>= 1;
+    }
+  }
+#else
+  GetEntriesInDirectory(SEPARATOR, entries);
+#endif
+}
+
 int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
 {
   entries.clear();
@@ -118,6 +148,7 @@ int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
     // print all the files and directories within directory
     while ((ent = readdir (dir)) != NULL) 
     {
+      std::cout << "ROOT : " << ent->d_name << std::endl;
       if(ent->d_type == DT_REG) {
         entries.push_back({
           (std::string)ent->d_name,
@@ -186,10 +217,7 @@ int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
 std::string GetInstallationFolder()
 {
   std::string exePath = pxr::ArchGetExecutablePath();
-  std::cout << "INSTALL DIR :" << exePath << std::endl;
   std::vector<std::string> tokens = SplitString(exePath, SEPARATOR);
-  for (auto& token : tokens)
-    std::cout << token << std::endl;
   tokens.pop_back();
   return JoinString(tokens, SEPARATOR);
 }

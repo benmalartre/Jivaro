@@ -29,7 +29,7 @@ public:
   // get data
   pxr::GfVec3d& GetPosition(){return _pos;};
   pxr::GfVec3d GetViewPlaneNormal();
-  pxr::GfVec3d GetRayDirection(float x, float y, float width, float height); 
+  pxr::GfVec3d GetRayDirection(float x, float y, float width, float height);
 
   // get matrices
   const pxr::GfMatrix4d GetTransform();
