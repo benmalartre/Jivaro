@@ -23,7 +23,6 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
   , _scale(1.f), _fontIndex(0), _fontScale(1.0), _offset(pxr::GfVec2f(0.f, 0.f))
   , _drag(false), _grab(false), _navigate(0), _connect(false)
 {
-  std::cout << "GRAPHUI CONSTRUCTOR" << std::endl;
   //_filename = filename;
   _id = 0;
   _flags = ImGuiWindowFlags_None
@@ -37,9 +36,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
 
   //GraphTreeUI* tree = new GraphTreeUI();
   pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
-  std::cout << "STAGE IN MEMORY!" << std::endl;
 
-  /*
   for (int i = 0; i < 12; ++i) {
     pxr::UsdPrim prim =
       stage->DefinePrim(pxr::SdfPath(pxr::TfToken("/node" + std::to_string(i))));
@@ -54,7 +51,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
     node->AddOutput("Output", pxr::SdfValueTypeNames->Vector3f);
     
     _nodes.push_back(node);
-  }*/
+  }
 }
 
 // destructor
@@ -132,6 +129,7 @@ void GraphUI::DrawGrid()
 //------------------------------------------------------------------------------
 bool GraphUI::Draw()
 {
+  std::cout << "DRAW FUCKIN GRAPH..." << std::endl;
   ImGui::SetNextWindowPos(_parent->GetMin());
   ImGui::SetNextWindowSize(_parent->GetSize());
   
@@ -184,11 +182,11 @@ bool GraphUI::Draw()
       0.f, 0);
   }
 
-  /*
+  
   ImGui::SetCursorPos(ImVec2(64, 64));
   static bool value;
   ImGui::Checkbox("FUCK", &value);
-  */
+  
   ImGui::PopFont();
   ImGui::End();
 

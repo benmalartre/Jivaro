@@ -118,10 +118,8 @@ bool AddIconButton(Icon* icon, FuncT func, ArgsT... args)
     -1))
   {
     func(args...);
-    ImGui::SameLine();
     return true;
   }
-  ImGui::SameLine();
   return false;
 }
 
@@ -137,10 +135,8 @@ bool AddTransparentIconButton(Icon* icon, FuncT func, ArgsT... args)
     -1))
   {
     func(args...);
-    ImGui::SameLine();
     return true;
   }
-  ImGui::SameLine();
   ImGui::PopStyleColor();
   return false;
 }
@@ -163,11 +159,9 @@ bool AddCheckableIconButton(Icon* icon, bool checked, FuncT func, ArgsT... args)
     -1))
   {
     func(args...);
-    ImGui::SameLine();
     if(checked) ImGui::PopStyleColor(2);
     return true;
   }
-  ImGui::SameLine();
   if(checked) ImGui::PopStyleColor(2);
   
   return false;
