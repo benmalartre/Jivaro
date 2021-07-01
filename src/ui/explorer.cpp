@@ -151,6 +151,8 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
   ImVec4 col = heritedVisibility ?
     style.Colors[ImGuiCol_Text] : style.Colors[ImGuiCol_TextDisabled];
   ImGui::PushStyleColor(ImGuiCol_Button, AMN_TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, AMN_TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive, AMN_TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_Text, col);
   ImGui::ImageButton(
     (void*)(size_t)tex,
@@ -170,7 +172,7 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
   }
 
   ImGui::NextColumn();
-  ImGui::PopStyleColor(2);
+  ImGui::PopStyleColor(4);
 }
 
 void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
@@ -185,17 +187,13 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
   // parent
   if (current->_items.size())
   {
-    if(current->_selected) {
-      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_SELECTED_COLOR);
-    } else {
-      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_DEFAULT_COLOR);
-    }
+    
     bool currentOpen =
       ImGui::TreeNodeEx(
         current->_prim.GetPath().GetText(),
-        itemFlags,
+        itemFlags);/*,
         "%s", 
-        current->_prim.GetName().GetText());
+        current->_prim.GetName().GetText());*/
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
       if(!current->_selected) {
@@ -205,7 +203,12 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
       }
       current->_selected = 1 - current->_selected;
     }
-      
+    if(current->_selected) {
+      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_SELECTED_COLOR);
+    } else {
+      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_DEFAULT_COLOR);
+    }
+    ImGui::Text(current->_prim.GetName().GetText());
     ImGui::NextColumn();
 
     DrawItemType(current);

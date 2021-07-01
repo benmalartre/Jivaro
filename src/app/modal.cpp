@@ -21,6 +21,7 @@ BaseModal::BaseModal(int width, int height, const std::string& name)
 
 BaseModal::~BaseModal()
 {
+  if(_ui) delete _ui;
   if(_window) delete _window;
 }
 
@@ -113,11 +114,8 @@ ModalDemo::ModalDemo(const std::string& title)
 {
   BaseModal::Init();
   View* view = _window->GetMainView();
-  DummyUI* dummy = new DummyUI(view, title);
-  dummy->Demo(); 
-  _ui = dummy;
+  _ui = new DummyUI(view, title);
 }
-
 
 void ModalDemo::_LoopImpl()
 {

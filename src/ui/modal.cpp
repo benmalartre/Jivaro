@@ -30,8 +30,6 @@ bool ModalUI::Draw()
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
 
-  // draw
-  
   ImGui::End();
   return true;
 };
