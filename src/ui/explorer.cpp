@@ -185,6 +185,11 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
   // parent
   if (current->_items.size())
   {
+    if(current->_selected) {
+      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_SELECTED_COLOR);
+    } else {
+      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_DEFAULT_COLOR);
+    }
     bool currentOpen =
       ImGui::TreeNodeEx(
         current->_prim.GetPath().GetText(),
@@ -198,14 +203,14 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
       } else {
         AMN_APPLICATION->RemoveFromSelection(current->_prim.GetPath());
       }
-      current->_selected = !current->_selected;
-      //Notice::SelectionChanged().Send();
+      current->_selected = 1 - current->_selected;
     }
       
     ImGui::NextColumn();
 
     DrawItemType(current);
     DrawItemVisibility(current, heritedVisibility);
+    ImGui::PopStyleColor();
 
     if (currentOpen)
     {

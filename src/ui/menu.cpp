@@ -3,6 +3,7 @@
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../ui/style.h"
+#include "../app/modal.h"
 #include "menu.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -70,6 +71,13 @@ static void OpenFileCommand() {
   fileIdx++;
 }
 
+static void OpenDemoCallback()
+{
+  ModalDemo demo("Demo");
+  demo.Loop();
+  demo.Term();
+}
+
 // constructor
 MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
 {
@@ -79,10 +87,8 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
   fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&OpenFileCommand);
   args.push_back(pxr::VtValue(7.0));
 
-  MenuItem& testItem = AddItem(parent, "Test", "", false, true);
-  testItem.AddItem(parent, "Child1", "", true, true, (MenuPressedFunc)&TestMenuCallback, args);
-  testItem.AddItem(parent, "Child2", "", true, false, (MenuPressedFunc)&TestMenuCallback, args);
-  testItem.AddItem(parent, "Child3", "", false, false, (MenuPressedFunc)&TestMenuCallback, args);
+  MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);
+  demoItem.AddItem(parent, "OpenDemo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
 
   _flags =
     ImGuiWindowFlags_None

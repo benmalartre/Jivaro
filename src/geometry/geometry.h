@@ -29,7 +29,8 @@ public:
   enum Type {
     POINT,
     CURVE,
-    MESH
+    MESH,
+    STROKE
   };
 
   Geometry();

@@ -126,45 +126,8 @@ void TimelineUI::MouseMove(int x, int y)
     _parent->SetDirty();
 }
 
-void TimelineUI::DrawControls()
+void TimelineUI::DrawButtons()
 {
-  Application* app = AMN_APPLICATION;
-  int width = GetWidth();
-  int height = GetHeight();
-
-  ImGuiStyle* style = &ImGui::GetStyle();
-  const ImVec4* colors = style->Colors;
-
-  ImGui::SetCursorPosX(20);
-  ImGui::SetCursorPosY(height - 20);
-
-  ImGui::PushFont(GetWindow()->GetMediumFont(0));
-
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _minTime != app->GetTime().GetMinTime())
-  {
-    ValidateTime();
-  }
-  AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine(); 
-
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _startTime != app->GetTime().GetStartTime())
-  {
-    ValidateTime();
-  }
-  AttachTooltip("Start Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine(); 
-
-  float cy = ImGui::GetCursorPosY();
-  ImGui::SetCursorPosY(cy - 6);
-  ImGui::SetCursorPosX(width * 0.5f - 64);
-
-  // buttons
   Icon* icon = NULL;
   icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_FIRST_FRAME];
   AddIconButton<IconPressedFunc>(
@@ -208,7 +171,48 @@ void TimelineUI::DrawControls()
     _loop,
     (IconPressedFunc)LoopCallback, this);
   ImGui::SameLine();
+}
 
+void TimelineUI::DrawControls()
+{
+  Application* app = AMN_APPLICATION;
+  int width = GetWidth();
+  int height = GetHeight();
+
+  ImGuiStyle* style = &ImGui::GetStyle();
+  const ImVec4* colors = style->Colors;
+
+  ImGui::SetCursorPosX(20);
+  ImGui::SetCursorPosY(height - 20);
+
+  ImGui::PushFont(GetWindow()->GetMediumFont(0));
+
+  ImGui::SetNextItemWidth(60);
+  ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if (!ImGui::IsItemActive() && _minTime != app->GetTime().GetMinTime())
+  {
+    ValidateTime();
+  }
+  AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
+  ImGui::SameLine(); 
+
+  ImGui::SetNextItemWidth(60);
+  ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if (!ImGui::IsItemActive() && _startTime != app->GetTime().GetStartTime())
+  {
+    ValidateTime();
+  }
+  AttachTooltip("Start Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
+  ImGui::SameLine(); 
+
+  float cy = ImGui::GetCursorPosY();
+  ImGui::SetCursorPosY(cy - 6);
+  ImGui::SetCursorPosX(width * 0.5f - 64);
+
+  // buttons
+  DrawButtons();
   ImGui::SetCursorPosY(cy);
 
   // current time

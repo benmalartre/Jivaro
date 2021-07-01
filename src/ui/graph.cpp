@@ -129,7 +129,6 @@ void GraphUI::DrawGrid()
 //------------------------------------------------------------------------------
 bool GraphUI::Draw()
 {
-  std::cout << "DRAW FUCKIN GRAPH..." << std::endl;
   ImGui::SetNextWindowPos(_parent->GetMin());
   ImGui::SetNextWindowSize(_parent->GetSize());
   

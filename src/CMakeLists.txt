@@ -53,6 +53,7 @@ add_executable(${TARGET}
   geometry/triangle.cpp
   geometry/geometry.cpp
   geometry/mesh.cpp
+  geometry/curve.cpp
   geometry/vdb.cpp
   pbd/integration.cpp
   pbd/maths.cpp
