@@ -42,12 +42,12 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
       stage->DefinePrim(pxr::SdfPath(pxr::TfToken("/node" + std::to_string(i))));
     NodeUI* node = new NodeUI(prim);
     node->SetPosition(pxr::GfVec2f(
-      rand() / 255,
-      rand() / 255));
+      ((float)rand() / (float)RAND_MAX) * 255,
+      ((float)rand() / (float)RAND_MAX) * 255));
     node->SetSize(pxr::GfVec2f(120, 32));
 
     node->AddInput("Input1", pxr::SdfValueTypeNames->Vector3f);
-    node->AddInput("Input2", pxr::SdfValueTypeNames->Vector3f);
+    node->AddInput("Input2", pxr::SdfValueTypeNames->Float);
     node->AddOutput("Output", pxr::SdfValueTypeNames->Vector3f);
     
     _nodes.push_back(node);
@@ -134,7 +134,7 @@ bool GraphUI::Draw()
   
   ImGui::Begin("Graph Editor", NULL, _flags);
 
-  DrawGrid();
+  //DrawGrid();
 
   ImGui::PushFont(GetWindow()->GetRegularFont(_fontIndex));
   ImGui::SetWindowFontScale(_fontScale);
@@ -155,8 +155,10 @@ bool GraphUI::Draw()
       _connector.startPort->GetPosition() +
       _connector.startPort->GetNode()->GetPosition());
     const pxr::GfVec2f endPos = ImGui::GetMousePos();
-    const pxr::GfVec2f startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
-    const pxr::GfVec2f endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
+    const pxr::GfVec2f 
+      startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
+    const pxr::GfVec2f 
+      endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
 
     drawList->AddBezierCurve(
       startPos, 
@@ -202,6 +204,7 @@ bool GraphUI::Draw()
 void GraphUI::Init(const std::string& filename)
 {
   _parent->SetDirty();
+  
   /*
   pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
   pxr::UsdPrimRange primRange = stage->Traverse();
@@ -215,12 +218,10 @@ void GraphUI::Init(const std::string& filename)
       fileNameAttr.Get(&fileName);
 
       pxr::UsdStageRefPtr usdStage = pxr::UsdStage::CreateInMemory();
-      _trees.push_back(new GraphTreeUI(usdStage));
+      //_trees.push_back(new GraphTreeUI(usdStage));
     }
-  }
-  */
-  
-  
+  }*/ 
+
 }
 
 // init

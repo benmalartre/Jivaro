@@ -276,28 +276,30 @@ NodeUI::NodeUI(const pxr::UsdPrim& prim)
   if(_prim.IsValid())
   {
     _name = prim.GetName();
-    /*
+    
     if(_prim.IsA<pxr::UsdShadeShader>())
     {
       pxr::UsdShadeShader node(_prim);
       _inputs.resize(node.GetInputs().size());
       for(int i=0;i<_inputs.size();++i)
       {
-        _inputs[i] = PortUI(this, node.GetInput(i));
+        _inputs[i] = 
+          PortUI(this, node.GetInput(pxr::TfToken(_inputs[i].GetName())));
       }
 
       int offset = _inputs.size();
-      _outputs.resize(node.NumOutputs());
+      _outputs.resize(node.GetOutputs().size());
       for(int i=0;i<_outputs.size();++i)
       {
-        _outputs[i] = PortUI(this, node.GetOutput(i));
+        _outputs[i] = 
+          PortUI(this, node.GetOutput(pxr::TfToken(_outputs[i].GetName())));
       }
     }
-    else if(_prim.IsA<pxr::GraphGraph>())
+    else if(_prim.IsA<pxr::UsdShadeNodeGraph>())
     {
       //std::cout << "PRIM IS A GRAPH :D" << std::endl;
     }
-    */
+    
   }
 }
 
@@ -410,7 +412,6 @@ void NodeUI::Draw(GraphUI* editor)
     const float x = p.x;
     const float y = p.y;
     const ImVec2 s = GetSize() * scale;
-
     drawList->AddRectFilled(
       ImVec2(x, y),
       ImVec2(x + s.x, y + s.y),

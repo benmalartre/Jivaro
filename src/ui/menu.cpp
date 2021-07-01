@@ -95,7 +95,9 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
     | ImGuiWindowFlags_MenuBar
     | ImGuiWindowFlags_NoTitleBar
     | ImGuiWindowFlags_NoMove
-    | ImGuiWindowFlags_NoResize;
+    | ImGuiWindowFlags_NoResize
+    | ImGuiWindowFlags_NoBringToFrontOnFocus
+    | ImGuiWindowFlags_NoDecoration;
 }
 
 // destructor
@@ -186,15 +188,17 @@ bool MenuUI::Draw()
 
   static bool open;
   ImGui::Begin("MenuBar", &open, _flags);
+
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::SetWindowSize(_parent->GetSize());
   ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+
   drawList->AddRectFilled(
     _parent->GetMin(),
     _parent->GetMax(),
     ImGuiCol_WindowBg
   );
-    
+  
   if (ImGui::BeginMenuBar())
   {
     ImGui::PushFont(window->GetBoldFont(0));
@@ -232,6 +236,7 @@ bool MenuUI::Draw()
     ImGui::PopFont();
     ImGui::EndMenuBar();
   }
+
   ImGui::PopStyleColor(3);
   ImGui::End();
   

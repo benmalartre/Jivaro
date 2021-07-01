@@ -7,14 +7,14 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 static ImVec4 AMN_BACKGROUND_COLOR(0.2f, 0.2f, 0.2f, 1.f);
 static ImVec4 AMN_ALTERNATE_COLOR(0.25f, 0.25f, 0.25f, 1.f);
-static ImVec4 AMN_SELECTED_COLOR(0.9f, 0.7f, 0.f, 1.f);
+static ImVec4 AMN_SELECTED_COLOR(0.9f, 0.9f, 0.9f, 1.f);
 static ImVec4 AMN_HIGHLIGHTED_COLOR(0.4f, 0.4f, 0.4f, 1.f);
-static ImVec4 AMN_HOVERED_COLOR(0.9f, 0.6f, 0.2f, 1.f);
+static ImVec4 AMN_HOVERED_COLOR(0.75f, 0.75f, 0.75f, 1.f);
 static ImVec4 AMN_TRANSPARENT_COLOR(0.f, 0.f, 0.f, 0.f);
 static ImVec4 AMN_TRANSPARENT_HOVERED_COLOR(1.f, 1.f, 1.f, 0.1f);
 static ImVec4 AMN_BUTTON_COLOR(0.25f, 0.25f, 0.25f, 1.f);
 static ImVec4 AMN_BUTTON_HOVERED_COLOR(0.33f, 0.33f, 0.33f, 1.f);
-static ImVec4 AMN_BUTTON_ACTIVE_COLOR(0.90f, 0.70f, 0.00f, 1.f);
+static ImVec4 AMN_BUTTON_ACTIVE_COLOR(0.9f, 0.9f, 0.9f, 1.f);
 static ImVec4 AMN_TEXT_DEFAULT_COLOR(0.9f, 0.9f, 0.9f, 1.f);
 static ImVec4 AMN_TEXT_SELECTED_COLOR(0.1f, 0.1f, 0.1f, 1.f);
 static ImVec4 AMN_TEXT_DISABLED_COLOR(0.5f, 0.5f, 0.5f, 1.f);

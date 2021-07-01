@@ -101,15 +101,14 @@ void ExplorerUI::DrawItemBackground(ImDrawList* drawList,
 
 void ExplorerUI::DrawBackground()
 {
-  auto* drawList = ImGui::GetWindowDrawList();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
   const auto& style = ImGui::GetStyle();
 
   float scrollOffsetH = ImGui::GetScrollX();
   float scrollOffsetV = ImGui::GetScrollY();
 
-  ImVec2 clipRectMin(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
-  ImVec2 clipRectMax(clipRectMin.x + ImGui::GetWindowWidth(),
-    clipRectMin.y + ImGui::GetWindowHeight());
+  ImVec2 clipRectMin = _parent->GetMin();
+  ImVec2 clipRectMax = _parent->GetMax();
 
   if (ImGui::GetScrollMaxX() > 0)
   {
