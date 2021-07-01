@@ -30,10 +30,8 @@ void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels)
   }
 }
 
-void CreateIconFromImage(const std::string& filename,
-  int index, ICON_SIZE size)
+static uint16_t GetIconResolution(ICON_SIZE size) 
 {
-  pxr::HioImageSharedPtr img = pxr::HioImage::OpenForReading(filename);
   size_t s;
   switch(size) {
     case(0):s=16;break;
@@ -41,6 +39,14 @@ void CreateIconFromImage(const std::string& filename,
     case(2):s=32;break;
     default:s=64;break;
   }
+  return s;
+}
+
+GLuint CreateIconFromImage(const std::string& filename,
+  int index, ICON_SIZE size)
+{
+  pxr::HioImageSharedPtr img = pxr::HioImage::OpenForReading(filename);
+  size_t s = GetIconResolution(size); 
   pxr::HioImage::StorageSpec storage;
   storage.width = s;
   storage.height = s ;
@@ -66,27 +72,44 @@ void CreateIconFromImage(const std::string& filename,
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, storage.width, storage.height, 0,
     ICON_FORMAT, ICON_TYPE, storage.data);
-
-  AMN_ICONS[size][index] = { s, tex };
+  return tex;
 }
 
 void AMNInitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
   std::string iconDir = installDir + "/icons";
-  //std::vector<std::string> filenames;
-  //int n = GetFilesInDirectory(iconDir.c_str(), filenames);
 
-  for (size_t i=0; i<ICON_MAX_ID; ++i) {
-    std::string filename = iconDir + SEPARATOR + ICON_NAMES[i] + ".png";
-    if (FileExists(filename) &&
-      pxr::HioImage::IsSupportedImageFile(filename)) {
-      CreateIconFromImage(filename, i, AMN_ICON_SMALL);
-      CreateIconFromImage(filename, i, AMN_ICON_MEDIUM);
-      CreateIconFromImage(filename, i, AMN_ICON_LARGE);
+  for (size_t i=0; i < ICON_MAX_ID; ++i) {
+    //AMN_ICONS[size][index] = { s, tex };
+    GLuint tex_small[3];
+    GLuint tex_medium[3];
+    GLuint tex_large[3];
+    
+    for(size_t j=0; j < 3; ++j) {
+      std::string filename = 
+        iconDir + SEPARATOR + ICON_NAMES[i] + "_" + ICON_SUFFIX[j] + ".png";
+
+      if (FileExists(filename) &&
+        pxr::HioImage::IsSupportedImageFile(filename)) {
+        tex_small[j] = CreateIconFromImage(filename, i, AMN_ICON_SMALL);
+        tex_medium[j] = CreateIconFromImage(filename, i, AMN_ICON_MEDIUM);
+        tex_large[j] = CreateIconFromImage(filename, i, AMN_ICON_LARGE);
+      }
     }
-  }
-  std::cout << "LOAD ICONS PASSED !!!" << std::endl;
+    AMN_ICONS[AMN_ICON_SMALL][i] = Icon {
+      GetIconResolution(AMN_ICON_SMALL), 
+      tex_small[0], tex_small[1], tex_small[2]
+    };
+    AMN_ICONS[AMN_ICON_MEDIUM][i] = Icon {
+      GetIconResolution(AMN_ICON_MEDIUM), 
+      tex_medium[0], tex_medium[1], tex_medium[2]
+    };
+    AMN_ICONS[AMN_ICON_LARGE][i] = Icon {
+      GetIconResolution(AMN_ICON_LARGE), 
+      tex_large[0], tex_large[1], tex_large[2]
+    };
+  }  
 }
 
 void AMNTerminateIcons()

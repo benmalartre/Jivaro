@@ -15,7 +15,7 @@ static ImVec4 AMN_TRANSPARENT_HOVERED_COLOR(1.f, 1.f, 1.f, 0.1f);
 static ImVec4 AMN_BUTTON_COLOR(0.25f, 0.25f, 0.25f, 1.f);
 static ImVec4 AMN_BUTTON_HOVERED_COLOR(0.33f, 0.33f, 0.33f, 1.f);
 static ImVec4 AMN_BUTTON_ACTIVE_COLOR(0.90f, 0.70f, 0.00f, 1.f);
-static ImVec4 AMN_TEXT_DEFAULT_COLOR(1.f, 1.f, 1.f, 1.f);
+static ImVec4 AMN_TEXT_DEFAULT_COLOR(0.9f, 0.9f, 0.9f, 1.f);
 static ImVec4 AMN_TEXT_SELECTED_COLOR(0.1f, 0.1f, 0.1f, 1.f);
 static ImVec4 AMN_TEXT_DISABLED_COLOR(0.5f, 0.5f, 0.5f, 1.f);
 
@@ -37,7 +37,7 @@ static void AMNStyle(ImGuiStyle* dst)
   style->ChildBorderSize = 0.f;
   style->FrameBorderSize = 0.f;
   style->IndentSpacing = 2.f;
-  style->ItemSpacing = pxr::GfVec2f(2.f,4.f);
+  style->ItemSpacing = pxr::GfVec2f(4.f,4.f);
   style->ItemInnerSpacing = pxr::GfVec2f(0.f, 4.f);
   style->FrameBorderSize = 1.0f;
   style->FrameRounding = 2.f;

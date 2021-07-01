@@ -21,7 +21,7 @@ BaseModal::BaseModal(int width, int height, const std::string& name)
 
 BaseModal::~BaseModal()
 {
-  if(_ui) delete _ui;
+  //if(_ui) delete _ui;
   if(_window) delete _window;
 }
 

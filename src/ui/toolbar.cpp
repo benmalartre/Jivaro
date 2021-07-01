@@ -96,12 +96,13 @@ bool ToolbarButton::Draw()
   if(toggable) {
     AddCheckableIconButton<IconPressedFunc>(
       icon,
-      (window->GetActiveTool() == tool),
+      (window->GetActiveTool() == tool) ? AMN_ICON_SELECTED : AMN_ICON_DEFAULT,
       func
     );
   } else {
     AddIconButton<IconPressedFunc>(
       icon,
+      AMN_ICON_DEFAULT,
       func
     );
   }

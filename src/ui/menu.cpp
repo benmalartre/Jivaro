@@ -92,6 +92,7 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
 
   _flags =
     ImGuiWindowFlags_None
+    | ImGuiWindowFlags_MenuBar
     | ImGuiWindowFlags_NoTitleBar
     | ImGuiWindowFlags_NoMove
     | ImGuiWindowFlags_NoResize;
@@ -182,7 +183,7 @@ bool MenuUI::Draw()
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, AMN_ALTERNATE_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, AMN_SELECTED_COLOR);
   Window* window = GetWindow();
-  /*
+
   static bool open;
   ImGui::Begin("MenuBar", &open, _flags);
   ImGui::SetWindowPos(_parent->GetMin());
@@ -193,38 +194,32 @@ bool MenuUI::Draw()
     _parent->GetMax(),
     ImGuiCol_WindowBg
   );
-  */
-  if (ImGui::BeginMainMenuBar())
+    
+  if (ImGui::BeginMenuBar())
   {
     ImGui::PushFont(window->GetBoldFont(0));
-    /*
-    if(ImGui::BeginMenu("File"))
-    {
-      _parent->SetDirty();
-      _parent->SetInteracting(true);
-      //ImGui::PushFont(window->GetMediumFont());
-      ShowExampleMenuFile();
-      ImGui::EndMenu();
-      //ImGui::PopFont();
-    }*/
     if (ImGui::BeginMenu("Edit"))
     {
       _parent->SetDirty();
       _parent->SetInteracting(true);
       //ImGui::PushFont(window->GetMediumFont());
-      if (ImGui::MenuItem("Undo", "CTRL+Z")) 
-      {
+      if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
         std::cout << "UNDO !!!" << std::endl;
       }
-      if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {
+      if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false)) {
         std::cout << "REDO !!!" << std::endl;
       }  // Disabled item
       ImGui::Separator();
-      if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-      if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-      if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+      if (ImGui::MenuItem("Cut", "Ctrl+X")) {
+        std::cout << "CUT !!!" << std::endl;
+      }
+      if (ImGui::MenuItem("Copy", "Ctrl+C")) {
+        std::cout << "COPY !!!" << std::endl;
+      }
+      if (ImGui::MenuItem("Paste", "Ctrl+V")) {
+        std::cout << "PASTE !!!" << std::endl;
+      }
       ImGui::EndMenu();
-      //ImGui::PopFont();
     }
 
     for (auto& item : _items) {
@@ -235,9 +230,10 @@ bool MenuUI::Draw()
     }
 
     ImGui::PopFont();
-    ImGui::EndMainMenuBar();
+    ImGui::EndMenuBar();
   }
   ImGui::PopStyleColor(3);
+  ImGui::End();
   
   return
     ImGui::IsAnyItemActive() ||

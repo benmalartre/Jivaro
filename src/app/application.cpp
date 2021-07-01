@@ -518,10 +518,12 @@ void Application::Update()
 
 void Application::OpenScene(const std::string& filename)
 {
+  std::cout << "OPEN SCENE " << filename << std::endl;
   if(strlen(filename.c_str()) > 0) {    
     _stage = pxr::UsdStage::Open(filename);
     delete _mesh;
-    _mesh = nullptr;
+    std::cout << "DELETE MESH :)" << std::endl;
+    _mesh = NULL;
     Notice::NewScene().Send();
     //_property->SetPrim(_stage->GetDefaultPrim());
   }

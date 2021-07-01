@@ -49,6 +49,7 @@ void ExplorerUI::Init()
   _initialized = true;
 }
 
+
 void ExplorerUI::MouseButton(int action, int button, int mods)
 {
 }
@@ -147,19 +148,19 @@ void ExplorerUI::DrawItemType(ExplorerItem* item)
 void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  GLuint tex = item->_visible ? _visibleIcon->tex : _invisibleIcon->tex;
-  ImVec4 col = heritedVisibility ?
-    style.Colors[ImGuiCol_Text] : style.Colors[ImGuiCol_TextDisabled];
+  short state = 
+    item->_selected ? AMN_ICON_SELECTED : AMN_ICON_DEFAULT;
+  GLuint tex = 
+    item->_visible ? _visibleIcon->tex[state] : _invisibleIcon->tex[state];
+  const ImVec4& sel_col = 
+    item->_selected ? AMN_TEXT_SELECTED_COLOR : AMN_TEXT_DEFAULT_COLOR;
+  const ImVec4& col = 
+    heritedVisibility ? sel_col : style.Colors[ImGuiCol_TextDisabled];
   ImGui::PushStyleColor(ImGuiCol_Button, AMN_TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, AMN_TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, AMN_TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_Text, col);
   ImGui::ImageButton(
-    (void*)(size_t)tex,
-    ImVec2(16, 16),
-    ImVec2(0, 0),
-    ImVec2(1, 1),
-    0);
+    (void*)(size_t)tex, ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1));
 
   if (ImGui::IsItemClicked()) {
     item->_visible = !item->_visible;
@@ -172,7 +173,7 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
   }
 
   ImGui::NextColumn();
-  ImGui::PopStyleColor(4);
+  ImGui::PopStyleColor(3);
 }
 
 void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
@@ -187,13 +188,8 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
   // parent
   if (current->_items.size())
   {
-    
-    bool currentOpen =
-      ImGui::TreeNodeEx(
-        current->_prim.GetPath().GetText(),
-        itemFlags);/*,
-        "%s", 
-        current->_prim.GetName().GetText());*/
+    std::string key = "##" + current->_prim.GetPath().GetString();
+    bool currentOpen = ImGui::TreeNodeEx(key.c_str(), itemFlags);
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
       if(!current->_selected) {
@@ -201,14 +197,16 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
       } else {
         AMN_APPLICATION->RemoveFromSelection(current->_prim.GetPath());
       }
-      current->_selected = 1 - current->_selected;
+      current->_selected = !current->_selected;
     }
+
     if(current->_selected) {
       ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_SELECTED_COLOR);
     } else {
       ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_DEFAULT_COLOR);
     }
-    ImGui::Text(current->_prim.GetName().GetText());
+    ImGui::SameLine();
+    ImGui::Text("%s", current->_prim.GetName().GetText());
     ImGui::NextColumn();
 
     DrawItemType(current);
@@ -230,11 +228,8 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
     itemFlags |= ImGuiTreeNodeFlags_Leaf |
       ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-    ImGui::TreeNodeEx(
-      current->_prim.GetPath().GetText(),
-      itemFlags,
-      "%s", 
-       current->_prim.GetName().GetText());
+    std::string key = "##" + current->_prim.GetPath().GetString();
+    ImGui::TreeNodeEx(key.c_str(), itemFlags);
        
     if (ImGui::IsItemClicked()) {
       if(!current->_selected) {
@@ -246,11 +241,21 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
       //Notice::SelectionChanged().Send();
     }
 
+    if(current->_selected) {
+      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_SELECTED_COLOR);
+    } else {
+      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_DEFAULT_COLOR);
+    }
+
+    ImGui::SameLine();
+    ImGui::Text("%s", current->_prim.GetName().GetText());
+    ImGui::NextColumn();
+
     current->_expanded = false;
 
-    ImGui::NextColumn();
     DrawItemType(current);
     DrawItemVisibility(current, heritedVisibility);
+    ImGui::PopStyleColor();
   }
 }
 
