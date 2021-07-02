@@ -30,7 +30,8 @@ public:
     POINT,
     CURVE,
     MESH,
-    STROKE
+    STROKE,
+    INSTANCER
   };
 
   Geometry();

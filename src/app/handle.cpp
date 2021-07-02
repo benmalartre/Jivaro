@@ -16,9 +16,9 @@ AMN_NAMESPACE_OPEN_SCOPE
 void BaseHandle::ComputeSizeMatrix()
 {
   if(_camera) {
-    pxr::GfVec3d delta = _camera->GetPosition() - _position;
+    const pxr::GfVec3d delta = _camera->GetPosition() - _position;
     _distance = (float)delta.GetLength();
-    _size = _distance * 0.06f * (_camera->GetFov() * 2 * DEGREES_TO_RADIANS);
+    _size = _distance * HANDLE_SIZE;// * (_camera->GetFov() * 2 * DEGREES_TO_RADIANS);
     _sizeMatrix = {
       _size, 0.f, 0.f, 0.f,
       0.f, _size, 0.f, 0.f,

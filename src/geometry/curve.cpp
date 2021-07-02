@@ -47,6 +47,22 @@ uint32_t Curve::GetNumCVs(uint32_t curveIndex)const
   return _cvCounts[curveIndex];
 }
 
+float Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
+{
+  size_t numCurves = _cvCounts.size();
+  if(curveIndex >= numCurves)
+    return -1.f;
+  uint32_t numCurveSegments = _cvCounts[curveIndex];
+  if(segmentIndex >= numCurveSegments)
+    return -1.f;
+
+  size_t baseCvIndex = segmentIndex;
+  for(size_t i=0; i < curveIndex - 1; ++i)baseCvIndex += _cvCounts[i];
+
+  return (_position[segmentIndex] - _position[segmentIndex + 1]).GetLength();
+}
+
+
 void Curve::Init(
   const pxr::VtArray<pxr::GfVec3f>& positions, 
   const pxr::VtArray<int>& counts)

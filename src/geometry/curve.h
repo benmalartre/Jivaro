@@ -28,8 +28,8 @@ public:
   Curve(const Curve* other, bool normalize = true);
   ~Curve();
 
-  const pxr::VtArray<int>& GetCVsCount() const { return _cvCounts;};
-  pxr::VtArray<int>& GetCVsCounts() { return _cvCounts;};
+  const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
+  pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
 
   void SetDisplayColor(GeomInterpolation interp, 
     const pxr::VtArray<pxr::GfVec3f>& colors);
@@ -40,7 +40,7 @@ public:
 
   uint32_t GetNumCVs(uint32_t curveIndex)const;
 
-  float SegmentLength(uint32_t index);
+  float GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex);
 
   void Init(
     const pxr::VtArray<pxr::GfVec3f>& positions, 
