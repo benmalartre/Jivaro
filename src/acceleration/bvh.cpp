@@ -12,19 +12,18 @@ const pxr::GfVec3f BVH::_planeSetNormals[BVH::NUM_PLANE_SET_NORMALS] = {
  
 BVH::BVH(std::vector<std::unique_ptr<const Mesh>>& m) 
 { 
-  Extents sceneExtents; // that's the extent of the entire scene which we need to compute for the octree 
+  Extents sceneExtents;
   _extentsList.reserve(meshes.size()); 
   for (uint32_t i = 0; i < meshes.size(); ++i) { 
     for (uint8_t j = 0; j < NUM_PLANE_SET_NORMALS; ++j) { 
       for (const auto vtx : meshes[i]->vertexPool) { 
         float d = pxr::GfDot(planeSetNormals[j], vtx); 
-        // set dNEar and dFar
         if (d < _extentsList[i].d[j][0]) _extentsList[i].d[j][0] = d; 
         if (d > _extentsList[i].d[j][1]) _extentsList[i].d[j][1] = d; 
       } 
     } 
-    sceneExtents.ExtendBy(_extentsList[i]); // expand the scene extent of this object's extent 
-    _extentsList[i].mesh = meshes[i].get(); // the extent itself needs to keep a pointer to the object its holds 
+    sceneExtents.ExtendBy(_extentsList[i]);  
+    _extentsList[i].mesh = meshes[i].get();
   } 
 
   // Now that we have the extent of the scene we can start building our octree

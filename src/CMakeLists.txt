@@ -52,6 +52,7 @@ add_executable(${TARGET}
   geometry/intersector.cpp
   geometry/triangle.cpp
   geometry/geometry.cpp
+  geometry/points.cpp
   geometry/mesh.cpp
   geometry/curve.cpp
   geometry/stroke.cpp
