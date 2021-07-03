@@ -73,7 +73,8 @@ Splitter::Draw()
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   //ImDrawList* drawList = ImGui::GetForegroundDrawList();
   pxr::GfVec2f sMin, sMax;
-  const ImU32 col = ImColor(AMN_ALTERNATE_COLOR);
+  ImU32 col = ImColor(AMN_BACKGROUND_COLOR);
+
   for(auto view : _views)
   {
     if(view->GetFlag(View::LEAF)) continue;

@@ -163,30 +163,39 @@ bool PortUI::Contains(const pxr::GfVec2f& position,
 void PortUI::Draw(GraphUI* editor)
 {
   ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImVec2 portTextSize;
   const pxr::GfVec2f offset = editor->GetOffset();
   const float scale = editor->GetScale();
   const pxr::GfVec2f p = 
     editor->GridPositionToViewPosition(_node->GetPosition());
   
+  static const ImVec2 inputPortOffset(
+    NODE_PORT_RADIUS * scale, NODE_PORT_RADIUS * scale);
+  static const ImVec2 outputPortOffset(
+    - NODE_PORT_RADIUS * scale, NODE_PORT_RADIUS * scale);
+
   if (_io) {
+    portTextSize = ImGui::CalcTextSize(_label.c_str());
+    portTextSize.x = 0;
     drawList->AddCircleFilled(
-      p + _pos * scale,
+      p + _pos * scale - inputPortOffset,
       NODE_PORT_RADIUS * scale * (GetState(ITEM_STATE_HOVERED) ? 1.25f : 1.f),
       _color
     );
     drawList->AddText(
-      p + _pos * scale,
+      p + _pos * scale - portTextSize,
       ImColor(0, 0, 0, 255),
       _label.c_str());
   }
   else {
+    portTextSize = ImGui::CalcTextSize(_label.c_str());
     drawList->AddCircleFilled(
-      p + _pos * scale,
+      p + _pos * scale - outputPortOffset,
       NODE_PORT_RADIUS * scale * (GetState(ITEM_STATE_HOVERED) ? 1.25f : 1.f),
       _color
     );
     drawList->AddText(
-      p + _pos * scale,
+      p + _pos * scale - portTextSize,
       ImColor(0, 0, 0, 255),
       _label.c_str());
   }
@@ -353,20 +362,27 @@ void NodeUI::AddOutput(const std::string& name, pxr::SdfValueTypeName type)
 
 void NodeUI::ComputeSize()
 {
-  float width = ImGui::CalcTextSize(_name.c_str()).x + 32;
-  
+  float nameWidth = ImGui::CalcTextSize(_name.c_str()).x + 32;
+  float inputWidth= 0, outputWidth = 0;
   float height = NODE_HEADER_HEIGHT;
+  float width = 0.f;
   for (auto& input : _inputs) {
-    input.SetPosition(pxr::GfVec2f(0.f, height));
+    input.SetPosition(pxr::GfVec2f(0.f, height + NODE_PORT_RADIUS));
     float w = ImGui::CalcTextSize(input.GetName().c_str()).x + 32;
-    if (w > width)width = w;
+    if (w > inputWidth)inputWidth = w;
     height += NODE_PORT_SPACING;
   }
   for (auto& output : _outputs) {
+    output.SetPosition(pxr::GfVec2f(width, height + NODE_PORT_RADIUS));
     float w = ImGui::CalcTextSize(output.GetName().c_str()).x + 32;
-    if (w > width)width = w;
-    output.SetPosition(pxr::GfVec2f(width, height));
+    if (w > outputWidth)outputWidth = w;
     height += NODE_PORT_SPACING;
+  }
+
+  if( nameWidth > (inputWidth + outputWidth)) {
+    width = nameWidth;
+  } else {
+    width = (inputWidth + outputWidth);
   }
 
   for (auto& output : _outputs) {
@@ -412,13 +428,24 @@ void NodeUI::Draw(GraphUI* editor)
     const float x = p.x;
     const float y = p.y;
     const ImVec2 s = GetSize() * scale;
+
+    // body background
     drawList->AddRectFilled(
       ImVec2(x, y),
       ImVec2(x + s.x, y + s.y),
-      ImColor(120, 180, 150, 255),
+      ImColor(90, 120, 180, 255),
       NODE_PORT_RADIUS * scale,
       ImDrawCornerFlags_All);
 
+    // head background
+    drawList->AddRectFilled(
+      ImVec2(x, y),
+      ImVec2(x + s.x, y + NODE_HEADER_HEIGHT),
+      ImColor(150, 160, 190, 255),
+      NODE_PORT_RADIUS * scale,
+      ImDrawCornerFlags_All);
+
+    // border
     drawList->AddRect(
       ImVec2(x, y),
       ImVec2(x + s.x, y + s.y),

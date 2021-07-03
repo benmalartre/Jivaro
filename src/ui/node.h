@@ -24,7 +24,7 @@ class Grid2DUI;
 #define NODE_PORT_RADIUS          4.f
 #define NODE_PORT_PADDING         6.f
 #define NODE_PORT_SPACING         12.f
-#define NODE_HEADER_HEIGHT        32.f
+#define NODE_HEADER_HEIGHT        24.f
 #define NODE_CONNEXION_THICKNESS  2.f
 #define NODE_CONNEXION_RESOLUTION 0.1f
 

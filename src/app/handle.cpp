@@ -13,12 +13,16 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-void BaseHandle::ComputeSizeMatrix()
+void BaseHandle::ComputeSizeMatrix(float width, float height)
 {
   if(_camera) {
     const pxr::GfVec3d delta = _camera->GetPosition() - _position;
     _distance = (float)delta.GetLength();
-    _size = _distance * HANDLE_SIZE;// * (_camera->GetFov() * 2 * DEGREES_TO_RADIANS);
+    if(width > height) {
+      _size = _distance * (float)HANDLE_SIZE / width;
+    } else {
+      _size = _distance * (float)HANDLE_SIZE / height;
+    }
     _sizeMatrix = {
       _size, 0.f, 0.f, 0.f,
       0.f, _size, 0.f, 0.f,
@@ -209,9 +213,9 @@ short BaseHandle::Pick(float x, float y, float width, float height)
   return hovered;
 }
 
-void BaseHandle::Draw() 
+void BaseHandle::Draw(float width, float height) 
 {
-  ComputeSizeMatrix();
+  ComputeSizeMatrix(width, height);
   ComputeViewPlaneMatrix();
   pxr::GfMatrix4f m = _sizeMatrix * _matrix;
   GLint vao;
