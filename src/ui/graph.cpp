@@ -35,11 +35,11 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
     | ImGuiWindowFlags_NoScrollbar;
 
   //GraphTreeUI* tree = new GraphTreeUI();
-  pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
+  _stage = pxr::UsdStage::CreateInMemory();
 
   for (int i = 0; i < 12; ++i) {
     pxr::UsdPrim prim =
-      stage->DefinePrim(pxr::SdfPath(pxr::TfToken("/node" + std::to_string(i))));
+      _stage->DefinePrim(pxr::SdfPath(pxr::TfToken("/node" + std::to_string(i))));
     NodeUI* node = new NodeUI(prim);
     node->SetPosition(pxr::GfVec2f(
       ((float)rand() / (float)RAND_MAX) * 255,
@@ -526,22 +526,19 @@ void GraphUI::StartConnexion()
 
 void GraphUI::UpdateConnexion()
 {
-  if(_connector.startPort) {
-    if(_hoveredPort == _connector.startPort)return;
-    /*
-    if(_hoveredPort->GetAttr().GetTypeName() == 
-      _connector.startPort->GetAttr().GetTypeName())
+  if(_hoveredPort) {
+    if(_connector.startPort) {
+      if(_hoveredPort == _connector.startPort)return;
+      if(_hoveredPort->GetAttr().GetTypeName() == 
+        _connector.startPort->GetAttr().GetTypeName())
+        _connector.endPort = _hoveredPort;
+    } else if(_connector.endPort) {
+      if(_hoveredPort == _connector.endPort)return;
+      if(_hoveredPort->GetAttr().GetTypeName() == 
+        _connector.endPort->GetAttr().GetTypeName())
       _connector.endPort = _hoveredPort;
-      */
-  } else if(_connector.endPort) {
-    if(_hoveredPort == _connector.endPort)return;
-    /*
-    if(_hoveredPort->GetAttr().GetTypeName() == 
-      _connector.endPort->GetAttr().GetTypeName())
-    _connector.endPort = _hoveredPort;
-    */
+    }
   }
-  _connector.endPort = _hoveredPort;
 }
 
 void GraphUI::EndConnexion()
