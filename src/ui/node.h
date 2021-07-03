@@ -20,13 +20,19 @@ class NodeUI;
 class GraphUI;
 class Grid2DUI;
 
-#define NODE_CORNER_ROUNDING      4.f
-#define NODE_PORT_RADIUS          4.f
-#define NODE_PORT_PADDING         6.f
-#define NODE_PORT_SPACING         12.f
-#define NODE_HEADER_HEIGHT        24.f
-#define NODE_CONNEXION_THICKNESS  2.f
-#define NODE_CONNEXION_RESOLUTION 0.1f
+#define NODE_CORNER_ROUNDING          4.f
+#define NODE_PORT_RADIUS              4.f
+#define NODE_PORT_PADDING             6.f
+#define NODE_PORT_VERTICAL_SPACING    16.f
+#define NODE_PORT_HORIZONTAL_SPACING  12.f
+#define NODE_HEADER_HEIGHT            24.f
+#define NODE_HEADER_PADDING           4
+#define NODE_CONNEXION_THICKNESS      2.f
+#define NODE_CONNEXION_RESOLUTION     0.1f
+
+static ImColor NODE_CONTOUR_DEFAULT(0, 0, 0, 100);
+static ImColor NODE_CONTOUR_SELECTED(255, 255, 255, 255);
+static ImColor NODE_CONTOUR_HOVERED(60, 60, 60, 100);
 
 enum ItemState {
   ITEM_STATE_NONE = 0,
@@ -76,7 +82,8 @@ protected:
 class PortUI : public ItemUI {
 public:
   PortUI(){};
-  PortUI(NodeUI* node, bool io, const std::string& label, pxr::UsdAttribute& attr);
+  PortUI(NodeUI* node, bool io, const std::string& label, 
+    pxr::UsdAttribute& attr);
   PortUI(NodeUI* node, const pxr::UsdShadeInput& port);
   PortUI(NodeUI* node, const pxr::UsdShadeOutput& port);
 
@@ -89,11 +96,14 @@ public:
   const std::string& GetName()const {return _label;};
   NodeUI* GetNode() { return _node; };
   void SetNode(NodeUI* node) { _node = node; };
+  const pxr::UsdAttribute& GetAttr() const { return _attr;};
+  pxr::UsdAttribute& GetAttr() { return _attr;};
 
 private:
   NodeUI*               _node;
   std::string           _label;
   bool                  _io;
+  pxr::UsdAttribute     _attr;
 };
 
 struct ConnexionUIData

@@ -311,7 +311,9 @@ void GraphUI::_GetPortUnderMouse(const pxr::GfVec2f& mousePos, NodeUI* node)
       relativePosition[0] < node->GetWidth() - NODE_PORT_RADIUS)) return;
 
   size_t portIndex =
-    int((relativePosition[1] - (NODE_HEADER_HEIGHT - NODE_PORT_RADIUS)) / (float)NODE_PORT_SPACING);
+    int((relativePosition[1] - (
+      (NODE_HEADER_HEIGHT + NODE_HEADER_PADDING) - NODE_PORT_RADIUS)) / 
+        (float)NODE_PORT_VERTICAL_SPACING);
 
   size_t numInputs = node->GetNumInputs();
   size_t numOutputs = node->GetNumOutputs();
@@ -524,6 +526,21 @@ void GraphUI::StartConnexion()
 
 void GraphUI::UpdateConnexion()
 {
+  if(_connector.startPort) {
+    if(_hoveredPort == _connector.startPort)return;
+    /*
+    if(_hoveredPort->GetAttr().GetTypeName() == 
+      _connector.startPort->GetAttr().GetTypeName())
+      _connector.endPort = _hoveredPort;
+      */
+  } else if(_connector.endPort) {
+    if(_hoveredPort == _connector.endPort)return;
+    /*
+    if(_hoveredPort->GetAttr().GetTypeName() == 
+      _connector.endPort->GetAttr().GetTypeName())
+    _connector.endPort = _hoveredPort;
+    */
+  }
   _connector.endPort = _hoveredPort;
 }
 
@@ -535,6 +552,7 @@ void GraphUI::EndConnexion()
     _connexions.push_back(connexion);
   }
   _connect = false;
+  _connector.startPort = _connector.endPort = NULL;
 }
 
 void GraphUI::ClearSelection()

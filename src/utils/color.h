@@ -11,11 +11,6 @@ static inline unsigned RandomColorByIndex(unsigned index)
   return rand();
 }
 
-static inline int PackColor(float r, float g, float b, float a)
-{
-  return 0;
-}
-
 static inline pxr::GfVec4f UnpackColor(uint32_t packed)
 {
   uint8_t alpha = (packed & 0xFF000000) >> 24;
@@ -45,35 +40,23 @@ union GLColor
 
 // pack & unpack color
 //------------------------------------------------------------------------------
-static int PackColor(const pxr::GfVec3f& c)
+static int PackColor(const pxr::GfVec4f& c)
 {
   int code = 0;
-  code |= (((int)255 * 255) & 255) << 24;
-  code |= (((int)c[0] * 255) & 255) << 16;
-  code |= (((int)c[1] * 255) & 255) << 8;
-  code |= (((int)c[2] * 255) & 255);
+  code |= (((int)c[0] * 255) & 255) << 24;
+  code |= (((int)c[1] * 255) & 255) << 16;
+  code |= (((int)c[2] * 255) & 255) << 8;
+  code |= (((int)c[3] * 255) & 255);
   return code;
 }
 
-static float PackColorAsFloat(const pxr::GfVec3f& c)
+static float PackColorAsFloat(const pxr::GfVec4f& c)
 {
   int code = PackColor(c);
   return *(float*)&code;
 }
 
-static pxr::GfVec3f UnpackColor(const int& code)
-{
-  int r = (code >> 16) & 255;
-  int g = (code >> 8) & 255;
-  int b = code & 255;
-  return pxr::GfVec3f(
-    (float)r/255.f,
-    (float)g/255.f,
-    (float)b/255.f
-  );
-}
-
-static pxr::GfVec3f UnpackColorAsFloat(const float& code)
+static pxr::GfVec4f UnpackColorAsFloat(const float& code)
 {
   int icode = *(int*)&code;
   return UnpackColor(icode);
