@@ -24,29 +24,23 @@ public:
 
   void Init();
   void DrawControls();
+  void DrawButtons();
   void DrawTimeSlider();
   void ValidateTime();
   void Update();
 
-  static void PlaybackCallback(TimelineUI* ui);
-  static void FirstFrameCallback(TimelineUI* ui);
-  static void LastFrameCallback(TimelineUI* ui);
-  static void LoopCallback(TimelineUI* ui);
-
-private:
-  float               _currentTime;
-  float               _startTime;
-  float               _endTime;
-  float               _minTime;
-  float               _maxTime;
-  float               _fps;
-  float               _speed;
-  bool                _loop;
-  bool                _playing;
-
-  bool                _interacting;
-  double              _lastX;
-  double              _lastY;
+  float  _currentTime;
+  float  _startTime;
+  float  _endTime;
+  float  _minTime;
+  float  _maxTime;
+  float  _fps;
+  float  _speed;
+  bool   _loop;
+  bool   _playing;
+  bool   _interacting;
+  double _lastX;
+  double _lastY;
 };
 
 

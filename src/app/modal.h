@@ -81,6 +81,13 @@ private:
   std::string               _folder;
 };
 
+class ModalDemo : public BaseModal
+{
+public:
+  ModalDemo(const std::string& title);
+  void _LoopImpl() override;
+};
+
 AMN_NAMESPACE_CLOSE_SCOPE
 
 #endif

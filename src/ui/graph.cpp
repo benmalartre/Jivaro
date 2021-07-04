@@ -23,7 +23,6 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
   , _scale(1.f), _fontIndex(0), _fontScale(1.0), _offset(pxr::GfVec2f(0.f, 0.f))
   , _drag(false), _grab(false), _navigate(0), _connect(false)
 {
-  std::cout << "GRAPHUI CONSTRUCTOR" << std::endl;
   //_filename = filename;
   _id = 0;
   _flags = ImGuiWindowFlags_None
@@ -36,25 +35,23 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
     | ImGuiWindowFlags_NoScrollbar;
 
   //GraphTreeUI* tree = new GraphTreeUI();
-  pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
-  std::cout << "STAGE IN MEMORY!" << std::endl;
+  _stage = pxr::UsdStage::CreateInMemory();
 
-  /*
   for (int i = 0; i < 12; ++i) {
     pxr::UsdPrim prim =
-      stage->DefinePrim(pxr::SdfPath(pxr::TfToken("/node" + std::to_string(i))));
+      _stage->DefinePrim(pxr::SdfPath(pxr::TfToken("/node" + std::to_string(i))));
     NodeUI* node = new NodeUI(prim);
     node->SetPosition(pxr::GfVec2f(
-      rand() / 255,
-      rand() / 255));
+      ((float)rand() / (float)RAND_MAX) * 255,
+      ((float)rand() / (float)RAND_MAX) * 255));
     node->SetSize(pxr::GfVec2f(120, 32));
 
     node->AddInput("Input1", pxr::SdfValueTypeNames->Vector3f);
-    node->AddInput("Input2", pxr::SdfValueTypeNames->Vector3f);
+    node->AddInput("Input2", pxr::SdfValueTypeNames->Float);
     node->AddOutput("Output", pxr::SdfValueTypeNames->Vector3f);
     
     _nodes.push_back(node);
-  }*/
+  }
 }
 
 // destructor
@@ -137,7 +134,7 @@ bool GraphUI::Draw()
   
   ImGui::Begin("Graph Editor", NULL, _flags);
 
-  DrawGrid();
+  //DrawGrid();
 
   ImGui::PushFont(GetWindow()->GetRegularFont(_fontIndex));
   ImGui::SetWindowFontScale(_fontScale);
@@ -158,8 +155,10 @@ bool GraphUI::Draw()
       _connector.startPort->GetPosition() +
       _connector.startPort->GetNode()->GetPosition());
     const pxr::GfVec2f endPos = ImGui::GetMousePos();
-    const pxr::GfVec2f startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
-    const pxr::GfVec2f endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
+    const pxr::GfVec2f 
+      startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
+    const pxr::GfVec2f 
+      endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
 
     drawList->AddBezierCurve(
       startPos, 
@@ -184,11 +183,11 @@ bool GraphUI::Draw()
       0.f, 0);
   }
 
-  /*
+  
   ImGui::SetCursorPos(ImVec2(64, 64));
   static bool value;
   ImGui::Checkbox("FUCK", &value);
-  */
+  
   ImGui::PopFont();
   ImGui::End();
 
@@ -205,6 +204,7 @@ bool GraphUI::Draw()
 void GraphUI::Init(const std::string& filename)
 {
   _parent->SetDirty();
+  
   /*
   pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
   pxr::UsdPrimRange primRange = stage->Traverse();
@@ -218,12 +218,10 @@ void GraphUI::Init(const std::string& filename)
       fileNameAttr.Get(&fileName);
 
       pxr::UsdStageRefPtr usdStage = pxr::UsdStage::CreateInMemory();
-      _trees.push_back(new GraphTreeUI(usdStage));
+      //_trees.push_back(new GraphTreeUI(usdStage));
     }
-  }
-  */
-  
-  
+  }*/ 
+
 }
 
 // init
@@ -313,7 +311,9 @@ void GraphUI::_GetPortUnderMouse(const pxr::GfVec2f& mousePos, NodeUI* node)
       relativePosition[0] < node->GetWidth() - NODE_PORT_RADIUS)) return;
 
   size_t portIndex =
-    int((relativePosition[1] - (NODE_HEADER_HEIGHT - NODE_PORT_RADIUS)) / (float)NODE_PORT_SPACING);
+    int((relativePosition[1] - (
+      (NODE_HEADER_HEIGHT + NODE_HEADER_PADDING) - NODE_PORT_RADIUS)) / 
+        (float)NODE_PORT_VERTICAL_SPACING);
 
   size_t numInputs = node->GetNumInputs();
   size_t numOutputs = node->GetNumOutputs();
@@ -526,7 +526,19 @@ void GraphUI::StartConnexion()
 
 void GraphUI::UpdateConnexion()
 {
-  _connector.endPort = _hoveredPort;
+  if(_hoveredPort) {
+    if(_connector.startPort) {
+      if(_hoveredPort == _connector.startPort)return;
+      if(_hoveredPort->GetAttr().GetTypeName() == 
+        _connector.startPort->GetAttr().GetTypeName())
+        _connector.endPort = _hoveredPort;
+    } else if(_connector.endPort) {
+      if(_hoveredPort == _connector.endPort)return;
+      if(_hoveredPort->GetAttr().GetTypeName() == 
+        _connector.endPort->GetAttr().GetTypeName())
+      _connector.endPort = _hoveredPort;
+    }
+  }
 }
 
 void GraphUI::EndConnexion()
@@ -537,6 +549,7 @@ void GraphUI::EndConnexion()
     _connexions.push_back(connexion);
   }
   _connect = false;
+  _connector.startPort = _connector.endPort = NULL;
 }
 
 void GraphUI::ClearSelection()

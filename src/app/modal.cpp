@@ -2,10 +2,14 @@
 #include "application.h"
 #include "window.h"
 #include "../ui/filebrowser.h"
+#include "../ui/dummy.h"
 
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+//==============================================================================
+// Base Modal Window
+//==============================================================================
 BaseModal::BaseModal(int width, int height, const std::string& name)
   : _width(width)
   , _height(height)
@@ -17,6 +21,7 @@ BaseModal::BaseModal(int width, int height, const std::string& name)
 
 BaseModal::~BaseModal()
 {
+  //if(_ui) delete _ui;
   if(_window) delete _window;
 }
 
@@ -50,6 +55,9 @@ void BaseModal::Loop()
   }
 }
 
+//==============================================================================
+// File Browser Modal Window
+//==============================================================================
 ModalFileBrowser::ModalFileBrowser(const std::string& title, 
   ModalFileBrowser::Mode mode)
   : BaseModal(600, 400, title)
@@ -96,6 +104,21 @@ void ModalFileBrowser::_LoopImpl()
       }
     } 
   }
+}
+
+//==============================================================================
+// Demo Modal Window
+//==============================================================================
+ModalDemo::ModalDemo(const std::string& title)
+  : BaseModal(800, 800, title)
+{
+  BaseModal::Init();
+  View* view = _window->GetMainView();
+  _ui = new DummyUI(view, title);
+}
+
+void ModalDemo::_LoopImpl()
+{
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

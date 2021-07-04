@@ -78,7 +78,7 @@ void Tool::Draw()
 {
   Selection* selection = AMN_APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
-    _active->Draw();
+    _active->Draw(_viewport->GetWidth(), _viewport->GetHeight());
   }
 }
 

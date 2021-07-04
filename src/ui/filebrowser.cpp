@@ -139,6 +139,7 @@ void FileBrowserUI::_DrawPath()
 {
   AddIconButton<IconPressedFunc, FileBrowserUI*>(
     &AMN_ICONS[AMN_ICON_SMALL][ICON_HOME],
+    AMN_ICON_DEFAULT,
     (IconPressedFunc)&OnHomeCallback, this);
 
   size_t numTokens = _pathTokens.size();
@@ -207,12 +208,12 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
   if(info.type == EntryInfo::Type::FOLDER) {
     const static Icon* folderIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FOLDER];
     ImGui::Image(
-      (ImTextureID)(intptr_t)folderIcon->tex,
+      (ImTextureID)(intptr_t)folderIcon->tex[0],
       ImVec2(folderIcon->size, folderIcon->size));
   } else if(info.type == EntryInfo::Type::FILE) {
     const static Icon* fileIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FILE];
     ImGui::Image(
-      (ImTextureID)(intptr_t)fileIcon->tex,
+      (ImTextureID)(intptr_t)fileIcon->tex[0],
       ImVec2(fileIcon->size, fileIcon->size));
   }
   ImGui::SameLine();

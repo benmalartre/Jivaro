@@ -68,7 +68,7 @@ void TimelineUI::ValidateTime()
   time.SetLoop(_loop);
 }
 
-void TimelineUI::PlaybackCallback(TimelineUI* ui)
+static void PlaybackCallback(TimelineUI* ui)
 {
   Time& time = AMN_APPLICATION->GetTime();
   ui->_playing = 1 - ui->_playing;
@@ -76,21 +76,33 @@ void TimelineUI::PlaybackCallback(TimelineUI* ui)
   else time.StopPlayBack();
 }
 
-void TimelineUI::FirstFrameCallback(TimelineUI* ui)
+static void PreviousFrameCallback(TimelineUI* ui)
+{
+  Time& time = AMN_APPLICATION->GetTime();
+  time.PreviousFrame();
+}
+
+static void NextFrameCallback(TimelineUI* ui)
+{
+  Time& time = AMN_APPLICATION->GetTime();
+  time.NextFrame();
+}
+
+static void FirstFrameCallback(TimelineUI* ui)
 {
   Time& time = AMN_APPLICATION->GetTime();
   ui->_currentTime = ui->_startTime;
   time.SetActiveTime(ui->_currentTime);
 }
 
-void TimelineUI::LastFrameCallback(TimelineUI* ui)
+static void LastFrameCallback(TimelineUI* ui)
 {
   Time& time = AMN_APPLICATION->GetTime();
   ui->_currentTime = ui->_endTime;
   time.SetActiveTime(ui->_currentTime);
 }
 
-void TimelineUI::LoopCallback(TimelineUI* ui)
+static void LoopCallback(TimelineUI* ui)
 {
   ui->_loop = 1 - ui->_loop;
   Application* app = AMN_APPLICATION;
@@ -112,6 +124,53 @@ void TimelineUI::MouseMove(int x, int y)
 {
   if (_parent->GetFlag(View::INTERACTING) || _parent->GetFlag(View::OVER))
     _parent->SetDirty();
+}
+
+void TimelineUI::DrawButtons()
+{
+  Icon* icon = NULL;
+  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_FIRST_FRAME];
+  AddIconButton<IconPressedFunc>(
+    icon, AMN_ICON_DEFAULT,
+    (IconPressedFunc)FirstFrameCallback, this
+    );
+  ImGui::SameLine();
+
+  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PREVIOUS_FRAME];
+  AddIconButton<IconPressedFunc>(
+    icon, AMN_ICON_DEFAULT,
+    (IconPressedFunc)PreviousFrameCallback, this
+    );
+  ImGui::SameLine();
+
+  if (!_playing) icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PLAYBACK_FORWARD];
+  else icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_STOP_PLAYBACK];
+
+  AddIconButton<IconPressedFunc, TimelineUI*>(
+    icon, AMN_ICON_DEFAULT,
+    (IconPressedFunc)PlaybackCallback, this);
+  ImGui::SameLine();
+
+  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_NEXT_FRAME];
+  AddIconButton<IconPressedFunc>(
+    icon, AMN_ICON_DEFAULT,
+    (IconPressedFunc)NextFrameCallback, this
+    );
+  ImGui::SameLine();
+
+
+  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_LAST_FRAME];
+  AddIconButton<IconPressedFunc, TimelineUI*>(
+    icon, AMN_ICON_DEFAULT,
+    (IconPressedFunc)LastFrameCallback, this);
+  ImGui::SameLine();
+
+  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PLAYBACK_LOOP];
+  AddCheckableIconButton<IconPressedFunc, TimelineUI*>(
+    icon,
+    _loop ? AMN_ICON_SELECTED : AMN_ICON_DEFAULT,
+    (IconPressedFunc)LoopCallback, this);
+  ImGui::SameLine();
 }
 
 void TimelineUI::DrawControls()
@@ -151,32 +210,9 @@ void TimelineUI::DrawControls()
   float cy = ImGui::GetCursorPosY();
   ImGui::SetCursorPosY(cy - 6);
   ImGui::SetCursorPosX(width * 0.5f - 64);
-  // play button
-  Icon* icon = NULL;
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_FIRST_FRAME];
-  AddIconButton<IconPressedFunc>(
-    icon,
-    (IconPressedFunc)FirstFrameCallback, this
-    );
 
-  if (!_playing) icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PLAYBACK_FORWARD];
-  else icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_STOP_PLAYBACK];
-
-  AddIconButton<IconPressedFunc, TimelineUI*>(
-    icon,
-    (IconPressedFunc)PlaybackCallback, this);
-
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_LAST_FRAME];
-  AddIconButton<IconPressedFunc, TimelineUI*>(
-    icon,
-    (IconPressedFunc)LastFrameCallback, this);
-
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PLAYBACK_LOOP];
-  AddCheckableIconButton<IconPressedFunc, TimelineUI*>(
-    icon,
-    _loop,
-    (IconPressedFunc)LoopCallback, this);
-
+  // buttons
+  DrawButtons();
   ImGui::SetCursorPosY(cy);
 
   // current time

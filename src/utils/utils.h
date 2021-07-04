@@ -97,78 +97,72 @@ static void AttachTooltip(const char* desc, float delay, float maxwidth, ImFont*
 typedef void(*IconPressedFunc)(...);
 
 template<typename FuncT, typename ...ArgsT>
-static void IconButton(Icon* icon, FuncT func, ArgsT... args)
+static void IconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::BeginGroup();
   ImGui::Image(
-    (ImTextureID)(intptr_t)icon->tex,
+    (ImTextureID)(intptr_t)icon->tex[state],
     ImVec2(icon->size, icon->size)
   );
   ImGui::EndGroup();
 }
 
 template<typename FuncT, typename ...ArgsT>
-bool AddIconButton(Icon* icon, FuncT func, ArgsT... args)
+bool AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   if (ImGui::ImageButton(
-    (ImTextureID)(intptr_t)icon->tex,
+    (ImTextureID)(intptr_t)icon->tex[state],
     ImVec2(icon->size, icon->size),
     ImVec2(0, 0),
     ImVec2(1, 1),
     -1))
   {
     func(args...);
-    ImGui::SameLine();
     return true;
   }
-  ImGui::SameLine();
   return false;
 }
 
 template<typename FuncT, typename ...ArgsT>
-bool AddTransparentIconButton(Icon* icon, FuncT func, ArgsT... args)
+bool AddTransparentIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, AMN_TRANSPARENT_COLOR);
   if (ImGui::ImageButton(
-    (ImTextureID)(intptr_t)icon->tex,
+    (ImTextureID)(intptr_t)icon->tex[state],
     ImVec2(icon->size, icon->size),
     ImVec2(0, 0),
     ImVec2(1, 1),
     -1))
   {
     func(args...);
-    ImGui::SameLine();
     return true;
   }
-  ImGui::SameLine();
   ImGui::PopStyleColor();
   return false;
 }
 
 template<typename FuncT, typename ...ArgsT>
-bool AddCheckableIconButton(Icon* icon, bool checked, FuncT func, ArgsT... args)
+bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
-  if(checked) {
+  if(state == AMN_ICON_SELECTED) {
     ImGui::PushStyleColor(ImGuiCol_Button, AMN_BUTTON_ACTIVE_COLOR);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, AMN_BUTTON_ACTIVE_COLOR);
   }
   
   if (ImGui::ImageButton( 
-    (ImTextureID)(intptr_t)icon->tex,
+    (ImTextureID)(intptr_t)icon->tex[state],
     ImVec2(icon->size, icon->size),
     ImVec2(0, 0),
     ImVec2(1, 1),
     -1))
   {
     func(args...);
-    ImGui::SameLine();
-    if(checked) ImGui::PopStyleColor(2);
+    if(state == AMN_ICON_SELECTED) ImGui::PopStyleColor(2);
     return true;
   }
-  ImGui::SameLine();
-  if(checked) ImGui::PopStyleColor(2);
+  if(state == AMN_ICON_SELECTED) ImGui::PopStyleColor(2);
   
   return false;
 }

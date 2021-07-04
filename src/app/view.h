@@ -40,6 +40,7 @@ public:
   float GetWidth(){return (_max[0] - _min[0]);};
   float GetHeight(){return (_max[1] - _min[1]);};
   pxr::GfVec2f GetSize(){return (_max - _min);};
+  bool IsFixed(){return (_fixedPixels > 0);};
 
   inline const std::string& GetName(){return _name;};
   inline const char* GetText(){return _name.c_str();};

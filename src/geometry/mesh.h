@@ -1,6 +1,5 @@
-#ifndef AMN_OBJECTS_MESH_H
-#define AMN_OBJECTS_MESH_H
-
+#ifndef AMN_GEOMETRY_MESH_H
+#define AMN_GEOMETRY_MESH_H
 
 #include "../common.h"
 #include "pxr/base/vt/array.h"
@@ -15,7 +14,6 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class Geometry;
 struct Location {
   Geometry*             geometry;      // geometry ptr
   uint32_t              id;            // element index

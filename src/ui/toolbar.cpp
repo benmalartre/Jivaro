@@ -96,22 +96,23 @@ bool ToolbarButton::Draw()
   if(toggable) {
     AddCheckableIconButton<IconPressedFunc>(
       icon,
-      (window->GetActiveTool() == tool),
+      (window->GetActiveTool() == tool) ? AMN_ICON_SELECTED : AMN_ICON_DEFAULT,
       func
     );
   } else {
     AddIconButton<IconPressedFunc>(
       icon,
+      AMN_ICON_DEFAULT,
       func
     );
   }
-  ImGui::SameLine();
-
   ImGui::PopFont();
   return false;
 }
 
-ToolbarUI::ToolbarUI(View* parent, const std::string& name) :BaseUI(parent, name) 
+ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical) 
+  : BaseUI(parent, name) 
+  , _vertical(vertical)
 {
   ToolbarItem* openItem = new ToolbarButton(
     this, AMN_TOOL_OPEN, "Open", "Ctrl+O",
@@ -171,7 +172,6 @@ bool ToolbarUI::Draw()
     | ImGuiWindowFlags_NoMove
     | ImGuiWindowFlags_NoScrollbar
     | ImGuiWindowFlags_NoDecoration;
-
   ImGui::Begin(_name.c_str(), &opened, flags);
   ImGui::PushClipRect(
     _parent->GetMin(),
@@ -182,7 +182,10 @@ bool ToolbarUI::Draw()
   ImGui::SetWindowPos(_parent->GetMin());
  
   ImGui::SetCursorPosY(4.f);
-  for (auto& item : _items)item->Draw();
+  for (auto& item : _items) {
+    item->Draw();
+    if(!_vertical) ImGui::SameLine();
+  }
   ImGui::PopClipRect();
   ImGui::End();
   return ImGui::IsAnyItemActive() ||

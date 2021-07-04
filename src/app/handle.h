@@ -43,7 +43,7 @@ static const pxr::GfVec4f HANDLE_HELP_COLOR = {0.66f, 0.66f, 0.66f, 0.5f};
 static const pxr::GfVec4f HANDLE_HOVERED_COLOR = {1.f, 0.5f, 0.0f, 1.f};
 static const pxr::GfVec4f HANDLE_ACTIVE_COLOR = {1.f, 0.75f, 0.25f, 1.f};
 static const pxr::GfVec4f HANDLE_MASK_COLOR = {0.f, 0.f, 0.f, 0.f};
-
+static float HANDLE_SIZE = 100.f;
 
 class Camera;
 
@@ -107,14 +107,14 @@ public:
   void AddXYZComponents(Shape::Component& component);
   void AddYZXZXYComponents(Shape::Component& component);
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
-  void ComputeSizeMatrix();
+  void ComputeSizeMatrix(float width, float height);
   void ComputeViewPlaneMatrix();
 
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
 
   virtual void Setup();
-  virtual void Draw();
+  virtual void Draw(float width, float height);
   virtual short Select(float x, float y, float width, float height, bool lock);
   virtual short Pick(float x, float y, float width, float height);
   virtual void BeginUpdate(float x, float y, float width, float height);

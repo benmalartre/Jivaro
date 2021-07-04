@@ -391,20 +391,29 @@ Application::Init()
   _mainWindow->SetGLContext();
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
-  View* mainView = _mainWindow->SplitView(_mainWindow->GetMainView(), 0.5, true, View::LFIXED, 42);
-  View* bottomView = _mainWindow->SplitView(mainView->GetRight(), 0.9, true, false);
+
+  View* mainView = _mainWindow->SplitView(
+    _mainWindow->GetMainView(), 0.5, true, View::LFIXED, 24);
+  View* bottomView = _mainWindow->SplitView(
+    mainView->GetRight(), 0.9, true, false);
   
   //bottomView->Split(0.9, true, true);
   View* timelineView = bottomView->GetRight();
-  View* centralView = _mainWindow->SplitView(bottomView->GetLeft(), 0.6, true);
+  View* centralView = _mainWindow->SplitView(
+    bottomView->GetLeft(), 0.6, true);
   View* middleView = centralView->GetLeft();
   View* topView = mainView->GetLeft();
 
   _mainWindow->SplitView(middleView, 0.9, false);
   
-  View* workingView = _mainWindow->SplitView(middleView->GetLeft(), 0.15, false);
+  View* workingView = _mainWindow->SplitView(
+    middleView->GetLeft(), 0.15, false);
   View* propertyView = middleView->GetRight();
-  View* explorerView = workingView->GetLeft();
+  View* leftTopView = _mainWindow->SplitView(
+    workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
+  View* toolView = leftTopView->GetLeft();
+  View* explorerView = leftTopView->GetRight();
+
   View* viewportView = workingView->GetRight();  
   View* graphView = centralView->GetRight();
   _mainWindow->Resize(width, height);
@@ -418,8 +427,9 @@ Application::Init()
   _viewport = new ViewportUI(viewportView, OPENGL);  
   _timeline = new TimelineUI(timelineView);
 
-  //MenuUI* menu = new MenuUI(topView->GetLeft());
-  ToolbarUI* toolbar = new ToolbarUI(topView, "Toolbar");
+  MenuUI* menu = new MenuUI(topView);
+  //ToolbarUI* toolbar = new ToolbarUI(topView, "Toolbar");
+  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
   _explorer = new ExplorerUI(explorerView);
   //_property = new PropertyUI(propertyView, "Property");
 
@@ -509,6 +519,7 @@ void Application::Update()
 
 void Application::OpenScene(const std::string& filename)
 {
+  std::cout << "OPEN SCENE " << filename << std::endl;
   if(strlen(filename.c_str()) > 0) {    
     //_stage = pxr::UsdStage::Open(filename);
     _stage = pxr::UsdStage::CreateInMemory("XYZ.usda");
@@ -516,7 +527,8 @@ void Application::OpenScene(const std::string& filename)
     pxr::UsdPrim ref = _stage->OverridePrim(pxr::SdfPath("/root/ref"));
     ref.GetReferences().AddReference(filename);
     delete _mesh;
-    _mesh = nullptr;
+    std::cout << "DELETE MESH :)" << std::endl;
+    _mesh = NULL;
     Notice::NewScene().Send();
     //_property->SetPrim(_stage->GetDefaultPrim());
   }

@@ -20,12 +20,26 @@ enum ICON_SIZE {
   AMN_ICON_LARGE
 };
 
+enum ICON_STATE {
+  AMN_ICON_DEFAULT,
+  AMN_ICON_SELECTED,
+  AMN_ICON_DISABLED
+};
+
+static const char* ICON_SUFFIX[3] = {
+  "default",
+  "selected",
+  "disabled"
+};
+
 enum ICON_ID {
   ICON_VISIBLE,
   ICON_INVISIBLE,
   ICON_PLAYBACK_FORWARD,
   ICON_PLAYBACK_BACKWARD,
   ICON_STOP_PLAYBACK,
+  ICON_PREVIOUS_FRAME,
+  ICON_NEXT_FRAME,
   ICON_FIRST_FRAME,
   ICON_LAST_FRAME,
   ICON_PLAYBACK_LOOP,
@@ -56,6 +70,8 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
   "playforward",
   "playbackward",
   "stop",
+  "previousframe",
+  "nextframe",
   "firstframe",
   "lastframe",
   "loop",
@@ -85,15 +101,14 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
 
 struct Icon {
   size_t        size;
-  GLuint        tex;
-  GLuint        tex_h;
+  GLuint        tex[3];
 };
  
 typedef std::vector<std::vector<Icon> > AmnIconList;
 extern AmnIconList AMN_ICONS;
 
 void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels);
-void CreateIconFromImage(const std::string& filename,
+GLuint CreateIconFromImage(const std::string& filename,
   int index, ICON_SIZE size);
 void AMNInitializeIcons();
 void AMNTerminateIcons();

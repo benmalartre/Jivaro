@@ -98,6 +98,8 @@ public:
 
   // place a triangle mesh in the grid
   void PlaceIntoGrid(Mesh* mesh);
+  //void PlaceIntoGrid(Curve* curve);
+  //void PlaceIntoGrid(Point* point);
   //void PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points, const MMatrix& M, float cellSize);
 
   // intersect a ray with the mesh

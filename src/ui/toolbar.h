@@ -64,7 +64,7 @@ struct ToolbarButton : public ToolbarItem {
 class ToolbarUI : BaseUI
 {
 public:
-  ToolbarUI(View* parent, const std::string& name);
+  ToolbarUI(View* parent, const std::string& name, bool vertical=false);
   ~ToolbarUI() override;
 
   void MouseButton(int action, int button, int mods) override {};
@@ -72,6 +72,7 @@ public:
   bool Draw() override;
 
 private:
+  bool                        _vertical;
   pxr::GfVec3f                _color;
   std::vector<ToolbarItem*>   _items;
   ToolbarItem*                _current;

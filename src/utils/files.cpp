@@ -119,7 +119,7 @@ int GetVolumes(std::vector<EntryInfo>& entries)
   {
     while (uDriveMask)
     {
-      // Use the bitwise AND, 1â€"available, 0-not available
+      // Use the bitwise AND, 1ï¿½"available, 0-not available
       if (uDriveMask & 1) {
         entries.push_back({
           (std::string)(const char*)szDrive,
@@ -148,7 +148,6 @@ int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
     // print all the files and directories within directory
     while ((ent = readdir (dir)) != NULL) 
     {
-      std::cout << "ROOT : " << ent->d_name << std::endl;
       if(ent->d_type == DT_REG) {
         entries.push_back({
           (std::string)ent->d_name,

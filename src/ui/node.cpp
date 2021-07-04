@@ -1,6 +1,7 @@
 #include "node.h"
 #include "graph.h"
 #include "../app/window.h"
+#include "../utils/color.h"
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usdGeom/xformable.h>
@@ -54,6 +55,17 @@ int GetColorFromAttribute(const pxr::UsdAttribute& attr)
   else if (vtn == pxr::SdfValueTypeNames->Asset ||
     vtn == pxr::SdfValueTypeNames->AssetArray) return GRAPH_COLOR_PRIM;
   else return GRAPH_COLOR_UNDEFINED;
+}
+
+static ImColor _GetHoveredColor(int color)
+{
+  pxr::GfVec4f origin = UnpackColor(color);
+  return ImColor(
+    (origin[0] + 1.f) * 0.5f,
+    (origin[1] + 1.f) * 0.5f,
+    (origin[2] + 1.f) * 0.5f,
+    (origin[3] + 1.f) * 0.5f
+  );
 }
 
 ItemUI::ItemUI()
@@ -125,6 +137,7 @@ bool ItemUI::Intersect(const pxr::GfVec2f& start, const pxr::GfVec2f& end)
 
 PortUI::PortUI(NodeUI* node, bool io, const std::string& label, pxr::UsdAttribute& attr)
   :ItemUI(GetColorFromAttribute(attr))
+  , _attr(attr)
 {
   _node = node;
   _label = label;
@@ -139,6 +152,7 @@ PortUI::PortUI(NodeUI* node, const pxr::UsdShadeInput& port)
   _label = port.GetBaseName().GetText();
   _io = true;
   _size = pxr::GfVec2f(2.f * NODE_PORT_RADIUS);
+  _attr = port.GetAttr();
 }
 
 PortUI::PortUI(NodeUI* node, const pxr::UsdShadeOutput& port)
@@ -148,6 +162,7 @@ PortUI::PortUI(NodeUI* node, const pxr::UsdShadeOutput& port)
   _label = port.GetBaseName().GetText();
   _io = false;
   _size = pxr::GfVec2f(2.f * NODE_PORT_RADIUS);
+  _attr = port.GetAttr();
 }
 
 bool PortUI::Contains(const pxr::GfVec2f& position,
@@ -163,30 +178,55 @@ bool PortUI::Contains(const pxr::GfVec2f& position,
 void PortUI::Draw(GraphUI* editor)
 {
   ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImVec2 portTextOffset;
   const pxr::GfVec2f offset = editor->GetOffset();
   const float scale = editor->GetScale();
   const pxr::GfVec2f p = 
     editor->GridPositionToViewPosition(_node->GetPosition());
   
+  static const ImVec2 inputPortOffset(
+    NODE_PORT_RADIUS * scale, NODE_PORT_RADIUS * scale);
+  static const ImVec2 outputPortOffset(
+    - NODE_PORT_RADIUS * scale, NODE_PORT_RADIUS * scale);
+
   if (_io) {
+    portTextOffset = ImGui::CalcTextSize(_label.c_str());
+    portTextOffset.x = -NODE_PORT_RADIUS * 2.f;
+    portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f;
+
     drawList->AddCircleFilled(
       p + _pos * scale,
-      NODE_PORT_RADIUS * scale * (GetState(ITEM_STATE_HOVERED) ? 1.25f : 1.f),
+      NODE_PORT_RADIUS * scale * 1.5f,
+      GetState(ITEM_STATE_HOVERED) ? NODE_CONTOUR_SELECTED : NODE_CONTOUR_DEFAULT
+    );
+
+    drawList->AddCircleFilled(
+      p + _pos * scale,
+      NODE_PORT_RADIUS * scale,
       _color
     );
     drawList->AddText(
-      p + _pos * scale,
+      p + (_pos - portTextOffset) * scale ,
       ImColor(0, 0, 0, 255),
       _label.c_str());
   }
   else {
+    portTextOffset = ImGui::CalcTextSize(_label.c_str());
+    portTextOffset.x += NODE_PORT_RADIUS * 2.f;
+    portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f;
     drawList->AddCircleFilled(
       p + _pos * scale,
-      NODE_PORT_RADIUS * scale * (GetState(ITEM_STATE_HOVERED) ? 1.25f : 1.f),
+      NODE_PORT_RADIUS * scale * 1.5f,
+      GetState(ITEM_STATE_HOVERED) ? NODE_CONTOUR_SELECTED : NODE_CONTOUR_DEFAULT
+    );
+
+    drawList->AddCircleFilled(
+      p + _pos * scale,
+      NODE_PORT_RADIUS * scale,
       _color
     );
     drawList->AddText(
-      p + _pos * scale,
+      p + (_pos - portTextOffset) * scale,
       ImColor(0, 0, 0, 255),
       _label.c_str());
   }
@@ -245,17 +285,17 @@ void ConnexionUI::Draw(GraphUI* graph)
       graph->GridPositionToViewPosition(datas.p1),
       graph->GridPositionToViewPosition(datas.p2),
       graph->GridPositionToViewPosition(datas.p3),
-      ImColor(255,255,255,255),
+      _GetHoveredColor(_color),
       NODE_CONNEXION_THICKNESS * scale * 1.4);
   }
 
-  if(GetState(ITEM_STATE_SELECTED)) 
+  else if(GetState(ITEM_STATE_SELECTED)) 
     drawList->AddBezierCurve(
       graph->GridPositionToViewPosition(datas.p0),
       graph->GridPositionToViewPosition(datas.p1),
       graph->GridPositionToViewPosition(datas.p2),
       graph->GridPositionToViewPosition(datas.p3),
-      ImColor(255,0,0,255),
+      ImColor(255,255,255,255),
       NODE_CONNEXION_THICKNESS * graph->GetScale());
 
   else
@@ -276,28 +316,30 @@ NodeUI::NodeUI(const pxr::UsdPrim& prim)
   if(_prim.IsValid())
   {
     _name = prim.GetName();
-    /*
+    
     if(_prim.IsA<pxr::UsdShadeShader>())
     {
       pxr::UsdShadeShader node(_prim);
       _inputs.resize(node.GetInputs().size());
       for(int i=0;i<_inputs.size();++i)
       {
-        _inputs[i] = PortUI(this, node.GetInput(i));
+        _inputs[i] = 
+          PortUI(this, node.GetInput(pxr::TfToken(_inputs[i].GetName())));
       }
 
       int offset = _inputs.size();
-      _outputs.resize(node.NumOutputs());
+      _outputs.resize(node.GetOutputs().size());
       for(int i=0;i<_outputs.size();++i)
       {
-        _outputs[i] = PortUI(this, node.GetOutput(i));
+        _outputs[i] = 
+          PortUI(this, node.GetOutput(pxr::TfToken(_outputs[i].GetName())));
       }
     }
-    else if(_prim.IsA<pxr::GraphGraph>())
+    else if(_prim.IsA<pxr::UsdShadeNodeGraph>())
     {
       //std::cout << "PRIM IS A GRAPH :D" << std::endl;
     }
-    */
+    
   }
 }
 
@@ -328,7 +370,7 @@ void NodeUI::Init()
     _size[1] = 64;
   }
 
-  _size[1] += _inputs.size() * NODE_PORT_SPACING;
+  _size[1] += _inputs.size() * NODE_PORT_VERTICAL_SPACING;
 
 }
 
@@ -336,7 +378,7 @@ void NodeUI::AddInput(const std::string& name, pxr::SdfValueTypeName type)
 {
   pxr::UsdAttribute attr = _prim.CreateAttribute(pxr::TfToken(name), type);
   PortUI port(this, true, name, attr);
-  //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_SPACING));
+  //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_VERTICAL_SPACING));
   _inputs.push_back(port);
 
 }
@@ -345,26 +387,36 @@ void NodeUI::AddOutput(const std::string& name, pxr::SdfValueTypeName type)
 {
   pxr::UsdAttribute attr = _prim.CreateAttribute(pxr::TfToken(name), type);
   PortUI port(this, false, name, attr);
-  //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_SPACING));
+  //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_VERTICAL_SPACING));
   _outputs.push_back(port);
 }
 
 void NodeUI::ComputeSize()
 {
-  float width = ImGui::CalcTextSize(_name.c_str()).x + 32;
-  
-  float height = NODE_HEADER_HEIGHT;
+  float nameWidth = 
+    ImGui::CalcTextSize(_name.c_str()).x + 2 * NODE_PORT_HORIZONTAL_SPACING;
+  float inputWidth= 0, outputWidth = 0;
+  float height = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
+  float width = 0.f;
   for (auto& input : _inputs) {
-    input.SetPosition(pxr::GfVec2f(0.f, height));
-    float w = ImGui::CalcTextSize(input.GetName().c_str()).x + 32;
-    if (w > width)width = w;
-    height += NODE_PORT_SPACING;
+    input.SetPosition(pxr::GfVec2f(0.f, height + NODE_PORT_RADIUS));
+    float w = ImGui::CalcTextSize(input.GetName().c_str()).x + 
+      NODE_PORT_HORIZONTAL_SPACING;
+    if (w > inputWidth)inputWidth = w;
+    height += NODE_PORT_VERTICAL_SPACING;
   }
   for (auto& output : _outputs) {
-    float w = ImGui::CalcTextSize(output.GetName().c_str()).x + 32;
-    if (w > width)width = w;
-    output.SetPosition(pxr::GfVec2f(width, height));
-    height += NODE_PORT_SPACING;
+    output.SetPosition(pxr::GfVec2f(width, height + NODE_PORT_RADIUS));
+    float w = ImGui::CalcTextSize(output.GetName().c_str()).x + 
+      NODE_PORT_HORIZONTAL_SPACING;
+    if (w > outputWidth)outputWidth = w;
+    height += NODE_PORT_VERTICAL_SPACING;
+  }
+
+  if( nameWidth > (inputWidth + outputWidth)) {
+    width = nameWidth;
+  } else {
+    width = (inputWidth + outputWidth);
   }
 
   for (auto& output : _outputs) {
@@ -411,23 +463,35 @@ void NodeUI::Draw(GraphUI* editor)
     const float y = p.y;
     const ImVec2 s = GetSize() * scale;
 
+    // body background
     drawList->AddRectFilled(
       ImVec2(x, y),
       ImVec2(x + s.x, y + s.y),
-      ImColor(120, 180, 150, 255),
+      ImColor(90, 120, 180, 255),
       NODE_PORT_RADIUS * scale,
       ImDrawCornerFlags_All);
 
+    // head background
+    drawList->AddRectFilled(
+      ImVec2(x, y),
+      ImVec2(x + s.x, y + NODE_HEADER_HEIGHT),
+      ImColor(150, 160, 190, 255),
+      NODE_PORT_RADIUS * scale,
+      ImDrawCornerFlags_All);
+
+    // border
     drawList->AddRect(
       ImVec2(x, y),
       ImVec2(x + s.x, y + s.y),
       GetState(ITEM_STATE_SELECTED) ? ImColor(255, 255, 255, 255) :
-      GetState(ITEM_STATE_HOVERED) ? ImColor(60, 60, 60, 100) : ImColor(0, 0, 0, 100),
+        GetState(ITEM_STATE_HOVERED) ? ImColor(60, 60, 60, 100) : 
+          ImColor(0, 0, 0, 100),
       NODE_PORT_RADIUS * scale,
       ImDrawCornerFlags_All,
       2 * scale);
 
-    drawList->AddText(p + pxr::GfVec2f(NODE_PORT_PADDING, 0), ImColor(0, 0, 0, 255), _name.c_str());
+    drawList->AddText(p + pxr::GfVec2f(NODE_PORT_PADDING, 
+      NODE_HEADER_PADDING), ImColor(0, 0, 0, 255), _name.c_str());
 
     ImGui::PopFont();
 

@@ -29,7 +29,7 @@ public:
   };
 
   ModalUI(View* parent, const std::string& name, Mode mode, Severity severity);
-  ~ModalUI()         override;
+  ~ModalUI() override;
 
   void MouseButton(int action, int button, int mods) override{};
   void MouseMove(int x, int y) override{};
@@ -45,7 +45,7 @@ private:
   Severity                 _severity;
   Mode                     _mode;
   std::string              _message;
-
+  Status                   _status;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
