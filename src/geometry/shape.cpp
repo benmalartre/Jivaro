@@ -62,14 +62,19 @@ short
 Shape::Component::_IntersectGrid(const pxr::GfRay& ray, 
    const pxr::GfMatrix4f& m, double* distance)
 {
+  pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
+  pxr::GfRay localRay(ray);
+  localRay.Transform(pxr::GfMatrix4d(matrix));
+
   const pxr::GfVec3f& bound = bounds.GetMax();
   pxr::GfRange3d range(
     pxr::GfVec3d(-bound[0] * 0.5, 0.0, -bound[1] * 0.5),
-    pxr::GfVec3d(bound[0] * 0.5, 0.0, bound[1] * 0.5));
+    pxr::GfVec3d(bound[0] * 0.5, 0.0, bound[1] * 0.5)
+  );
   pxr::GfBBox3d bbox(range);
-  bbox.Transform(pxr::GfMatrix4d(offsetMatrix * parentMatrix * m));
+
   double enterDistance, exitDistance;
-  if (ray.Intersect(bbox, &enterDistance, &exitDistance)) {
+  if (localRay.Intersect(bbox, &enterDistance, &exitDistance)) {
     *distance = enterDistance;
     return index;
   }
@@ -80,13 +85,16 @@ short
 Shape::Component::_IntersectBox(const pxr::GfRay& ray, 
   const pxr::GfMatrix4f& m, double* distance)
 {
+  pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
+  pxr::GfRay localRay(ray);
+  localRay.Transform(pxr::GfMatrix4d(matrix));
+
   pxr::GfRange3d range(
     pxr::GfVec3d(bounds.GetMin()),
     pxr::GfVec3d(bounds.GetMax()));
   pxr::GfBBox3d bbox(range);
-  bbox.Transform(pxr::GfMatrix4d(offsetMatrix * parentMatrix * m));
   double enterDistance, exitDistance;
-  if (ray.Intersect(bbox, &enterDistance, &exitDistance)) {
+  if (localRay.Intersect(bbox, &enterDistance, &exitDistance)) {
     *distance = enterDistance;
     return index;
   }
@@ -97,15 +105,16 @@ short
 Shape::Component::_IntersectSphere(const pxr::GfRay& ray, 
   const pxr::GfMatrix4f& m, double* distance)
 {
-  pxr::GfVec3d center = 
-      (offsetMatrix * parentMatrix * m).Transform(pxr::GfVec3d(0));
-  pxr::GfVec3d radius = m.Transform(bounds.GetMax());
+  pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
+  pxr::GfRay localRay(ray);
+  localRay.Transform(pxr::GfMatrix4d(matrix));
+
   double enterDistance, exitDistance;
-  if (ray.Intersect(center, radius[0], &enterDistance, &exitDistance)) {
+  if (localRay.Intersect(pxr::GfVec3d(0.0), bounds.GetMax()[0], &enterDistance, &exitDistance)) {
     *distance = enterDistance;
     return index;
   }
-  return 0;
+  return -1;
 }
 
 short 
@@ -113,11 +122,15 @@ Shape::Component::_IntersectDisc(const pxr::GfRay& ray,
   const pxr::GfMatrix4f& m, double* distance)
 {
   pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
-  float radius = bounds.GetMax()[0];
   pxr::GfRay localRay(ray);
   localRay.Transform(matrix);
-  if (DiscIntersection(localRay, pxr::GfVec3d(0, 1, 0),
-    pxr::GfVec3d(0), radius, distance)) return index;
+
+  float radius = bounds.GetMax()[0];
+  double enterDistance;
+  if(IntersectDisc(localRay, radius, &enterDistance)) {
+    *distance = enterDistance;
+    return index;
+  }
   return 0;
 }
 
@@ -126,10 +139,15 @@ Shape::Component::_IntersectRing(const pxr::GfRay& ray,
   const pxr::GfMatrix4f& m, double* distance)
 {
   pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
+  pxr::GfRay localRay(ray);
+  localRay.Transform(matrix);
+
   const pxr::GfVec3d& bound = bounds.GetMax();
-  pxr::GfRay invRay(ray);
-  invRay.Transform(matrix);
-  if (RingIntersection(invRay, bound[0], bound[1], distance)) return index;
+  double enterDistance;
+  if (IntersectRing(localRay, bound[0], bound[1], &enterDistance)) {
+    *distance = enterDistance;
+    return index;
+  }
   return 0;
 }
 
@@ -138,10 +156,32 @@ Shape::Component::_IntersectCylinder(const pxr::GfRay& ray,
   const pxr::GfMatrix4f& m, double* distance)
 {
   pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
+  pxr::GfRay localRay(ray);
+  localRay.Transform(matrix);
+
   const pxr::GfVec3d& bound = bounds.GetMax();
-  pxr::GfRay invRay(ray);
-  invRay.Transform(matrix);
-  if (CylinderIntersection(invRay, bound[0], bound[1], distance))return index;
+  double enterDistance;
+  if (IntersectCylinder(localRay, bound[0], bound[1], &enterDistance)) {
+    *distance = enterDistance;
+    return index;
+  }
+  return 0;
+}
+
+short
+Shape::Component::_IntersectTube(const pxr::GfRay& ray,
+  const pxr::GfMatrix4f& m, double* distance)
+{
+  pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
+  pxr::GfRay localRay(ray);
+  localRay.Transform(matrix);
+
+  const pxr::GfVec3d& bound = bounds.GetMax();
+  double enterDistance;
+  if (IntersectTube(localRay, bound[0], bound[1], bound[2], &enterDistance)) {
+    *distance = enterDistance;
+    return index;
+  }
   return 0;
 }
 
@@ -150,10 +190,15 @@ Shape::Component::_IntersectTorus(const pxr::GfRay& ray,
   const pxr::GfMatrix4f& m, double* distance)
 {
   pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
-  pxr::GfRay invRay(ray);
-  invRay.Transform(pxr::GfMatrix4d(matrix));
+  pxr::GfRay localRay(ray);
+  localRay.Transform(pxr::GfMatrix4d(matrix));
+
   const pxr::GfVec3d& bound = bounds.GetMax();
-  if (TorusIntersection(invRay, bound[0], bound[1], distance)) return index;
+  double enterDistance;
+  if (IntersectTorusApprox(localRay, bound[0], bound[1], &enterDistance)) {
+    *distance = enterDistance;
+    return index;
+  }
   return 0;
 }
 
@@ -161,12 +206,11 @@ short
 Shape::Component::Intersect(const pxr::GfRay& ray, 
   const pxr::GfMatrix4f& m, double* distance)
 {
-
   return _intersectImplementation ? 
     (this->*_intersectImplementation)(ray, m, distance) : 0;
 }
 
-Shape::Shape() : _vao(0), _vbo(0), _eab(0) {};
+Shape::Shape(short usage) : _usage(usage), _vao(0), _vbo(0), _eab(0) {};
 
 Shape::~Shape()
 {
@@ -175,9 +219,15 @@ Shape::~Shape()
   if(_vao) glDeleteVertexArrays(1,&_vao); 
 };
 
-void Shape::UpdateComponents(short hovered, short active)
+void Shape::UpdateComponents(short hovered, short active, bool hideInactive)
 {
   for(Shape::Component& component: _components) {
+    if (component.GetFlag(Shape::MASK)) continue;
+    if (hideInactive && component.index != active) 
+      BITMASK_CLEAR(component.flags, VISIBLE);
+    else
+      BITMASK_SET(component.flags, VISIBLE);
+
     if(component.index == hovered)
       BITMASK_SET(component.flags, HOVERED);
     else 
@@ -270,18 +320,23 @@ pxr::GfVec3f Shape::_GetComponentAxis(const Shape::Component& component,
 short
 Shape::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, const pxr::GfMatrix4f& v)
 {
-  double distance = DBL_MAX;
   double minDistance = DBL_MAX;
   short result = 0;
   short intersected;
   for(auto& component: _components) {
-    if(component.GetFlag(Shape::VISIBLE) && component.GetFlag(Shape::PICKABLE)) {
-      if(component.GetFlag(Shape::FLAT))
+    if (component.GetFlag(Shape::VISIBLE) && component.GetFlag(Shape::PICKABLE)) {
+      double distance = DBL_MAX;
+      if (component.GetFlag(Shape::FLAT)) {
         intersected = component.Intersect(ray, v, &distance);
-      else
+      } else {
         intersected = component.Intersect(ray, m, &distance);
-      if (intersected && distance < minDistance) {
-        result = intersected;
+      }
+      if (distance < minDistance) {
+        if (component.GetFlag(Shape::MASK)) {
+          result = 0;
+        } else {
+          result = intersected;
+        }
         minDistance = distance;
       }
     }
@@ -706,7 +761,7 @@ Shape::AddTube(short index, float outRadius, float inRadius, float height,
       1.f, 0.f, 0.f, 0.f,
       0.f, 1.f, 0.f, 0.f,
       0.f, 0.f, 1.f, 0.f,
-      0.f, i * stepY, 0.f, 1.f
+      0.f, baseY + i * stepY, 0.f, 1.f
     };
     _MakeCircle(_points, outRadius, lats, m);
     _MakeCircle(_points, inRadius, lats, m);
@@ -765,7 +820,7 @@ Shape::AddTube(short index, float outRadius, float inRadius, float height,
     pxr::GfMatrix4f(1.f), 
     m);
 
-  component.SetBounds(pxr::GfVec3f(inRadius, outRadius, height));
+  component.SetBounds(pxr::GfVec3f(inRadius - 0.05f, outRadius + 0.05f, height));
   return component;
 }
 
@@ -949,7 +1004,7 @@ Shape::AddDisc(short index, float radius, size_t lats,
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
   return 
-    Shape::AddDisc(index, radius, 0.f, 360.f, 8, color, m);
+    Shape::AddDisc(index, radius, 0.f, 360.f, lats, color, m);
 }
 
 Shape::Component 
@@ -985,9 +1040,6 @@ Shape::AddDisc(short index, float radius, float start, float end, size_t lats,
       _indices.push_back(baseNumPoints + i);
       _indices.push_back(baseNumPoints + ((i + 1) % lats));
       _indices.push_back(lastIdx);
-      std::cout << (baseNumPoints + i) << "," <<
-        (baseNumPoints + ((i + 1) % lats)) << "," <<
-        (lastIdx) << std::endl;
     }
   } else {
     for(size_t i = 0; i < lats - 1; ++i) {

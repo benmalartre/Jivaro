@@ -39,6 +39,11 @@ public:
     EXTRUSION
   };
 
+  enum Usage {
+    STATIC,
+    DYNAMIC
+  };
+
   struct Component {
     typedef short (Shape::Component::*IntersectFunc)(const pxr::GfRay& ray, 
       const pxr::GfMatrix4f& m, double* distance);
@@ -89,6 +94,8 @@ public:
             _intersectImplementation = &Shape::Component::_IntersectRing;
             break;
           case TUBE:
+            _intersectImplementation = &Shape::Component::_IntersectTube;
+            break;
           case CYLINDER:
             _intersectImplementation = &Shape::Component::_IntersectCylinder;
             break;
@@ -113,12 +120,13 @@ public:
     short _IntersectDisc(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
     short _IntersectRing(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
     short _IntersectCylinder(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
+    short _IntersectTube(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
     short _IntersectTorus(const pxr::GfRay&, const pxr::GfMatrix4f& m, double* distance);
 
     short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
   };
 
-  Shape();
+  Shape(short usage=STATIC);
   ~Shape();
   
   size_t GetNumPoints() {return _points.size();};
@@ -137,7 +145,7 @@ public:
   pxr::GfVec3f _GetComponentAxis(const Shape::Component& component,
     const pxr::GfMatrix4f& m);
 
-  void UpdateComponents(short hovered, short active);
+  void UpdateComponents(short hovered, short active, bool hideInactive=false);
   void UpdateVisibility(const pxr::GfMatrix4f& m, const pxr::GfVec3f& dir);
   void AddComponent(const Component& component);
   /*void AddComponent(short type, short index, size_t basePoint, size_t numPoints,
@@ -203,6 +211,7 @@ private:
   std::vector<pxr::GfVec3f> _points;
   std::vector<int> _indices;
   std::vector<Component> _components;
+  short _usage;
   GLuint _vao;
   GLuint _vbo;
   GLuint _eab;

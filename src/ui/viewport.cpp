@@ -49,32 +49,29 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init()
 {
-  std::cout << "INIT VIEWPORT" << std::endl;
   if (_engine)delete _engine;
   pxr::SdfPathVector excludedPaths;
-  GLCheckError("INIT VIEWPORT");  
 
   _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
   switch (_mode) {
-  case OPENGL:
-  {
-    std::cout << "TRY TO SET OPENGL HYDRA BACKEND..." << std::endl;
-    bool loaded = _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
-    std::cout << "LOADED ? " << loaded << std::endl;
-    break;
-  }
-  case LOFI:
-  {
-    _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
-    break;
-  }
-  case EMBREE:
-    _engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
-    break;
+    case OPENGL:
+    {
+      std::cout << "TRY TO SET OPENGL HYDRA BACKEND..." << std::endl;
+      bool loaded = _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
+      std::cout << "LOADED ? " << loaded << std::endl;
+      break;
+    }
+    case LOFI:
+    {
+      _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+      break;
+    }
+    case EMBREE:
+      _engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
+      break;
   }
   
   std::cout << "CURRENT RENDERER : " << _engine->GetCurrentRendererId().GetText() << std::endl;
-
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
   light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));

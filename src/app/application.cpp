@@ -22,6 +22,7 @@
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/xform.h>
 #include <pxr/imaging/hd/renderPassState.h>
 #include <pxr/imaging/LoFi/debugCodes.h>
 #include <pxr/usd/usdAnimX/fileFormat.h>
@@ -414,7 +415,7 @@ Application::Init()
   GraphUI* graph = new GraphUI(graphView, filename);
   //_animationEditor = new CurveEditorUI(graphView);
   
-  _viewport = new ViewportUI(viewportView, LOFI);  
+  _viewport = new ViewportUI(viewportView, OPENGL);  
   _timeline = new TimelineUI(timelineView);
 
   //MenuUI* menu = new MenuUI(topView->GetLeft());
@@ -509,7 +510,11 @@ void Application::Update()
 void Application::OpenScene(const std::string& filename)
 {
   if(strlen(filename.c_str()) > 0) {    
-    _stage = pxr::UsdStage::Open(filename);
+    //_stage = pxr::UsdStage::Open(filename);
+    _stage = pxr::UsdStage::CreateInMemory("XYZ.usda");
+    pxr::UsdPrim root = pxr::UsdGeomXform::Define(_stage, pxr::SdfPath("/root")).GetPrim();
+    pxr::UsdPrim ref = _stage->OverridePrim(pxr::SdfPath("/root/ref"));
+    ref.GetReferences().AddReference(filename);
     delete _mesh;
     _mesh = nullptr;
     Notice::NewScene().Send();

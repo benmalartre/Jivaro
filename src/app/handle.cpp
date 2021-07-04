@@ -118,13 +118,13 @@ void BaseHandle::ResetSelection()
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
-  pxr::UsdGeomXformCache xformCache(activeTime);
+  _xformCache.SetTime(activeTime);
 
   _targets.clear();
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
     const SelectionItem& item = selection->GetItem(i);
     if(stage->GetPrimAtPath(item.path).IsA<pxr::UsdGeomXformable>()) {
-      pxr::GfMatrix4f world(xformCache.GetLocalToWorldTransform(
+      pxr::GfMatrix4f world(_xformCache.GetLocalToWorldTransform(
         stage->GetPrimAtPath(item.path)));
       _targets.push_back({item.path, world, pxr::GfMatrix4f(1.f)});
     }
@@ -168,7 +168,7 @@ const pxr::GfVec4f& BaseHandle::GetColor(const Shape::Component& comp)
   } else {
     if(comp.flags & Shape::SELECTED) {
       return HANDLE_ACTIVE_COLOR;
-    } if(comp.flags & Shape::HOVERED && !(comp.flags & Shape::MASK)) {
+    } else if(comp.flags & Shape::HOVERED && !(comp.flags & Shape::MASK)) {
       return HANDLE_HOVERED_COLOR;
     } else {
       return comp.color;
@@ -204,8 +204,8 @@ short BaseHandle::Pick(float x, float y, float width, float height)
   pxr::GfMatrix4f m = _sizeMatrix * _matrix;
   size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
   SetHoveredAxis(hovered);
-  _shape.UpdateComponents(hovered, 0);
-  _shape.UpdateVisibility(_matrix, pxr::GfVec3f(_camera->GetViewPlaneNormal()));
+  _shape.UpdateComponents(hovered, AXIS_NONE);
+  //_shape.UpdateVisibility(_matrix, pxr::GfVec3f(_camera->GetViewPlaneNormal()));
   return hovered;
 }
 
@@ -220,7 +220,7 @@ void BaseHandle::Draw()
   
   for(size_t i=0; i < _shape.GetNumComponents(); ++i) {
     const Shape::Component& component = _shape.GetComponent(i);
-    if(component.GetFlag(Shape::VISIBLE) /*&& component.GetFlag(Shape::PICKABLE)*/) {
+    if(component.GetFlag(Shape::VISIBLE)) {
       if(component.index == AXIS_CAMERA) {
         _shape.DrawComponent(i, _viewPlaneMatrix, GetColor(component));
       } else {
@@ -264,7 +264,6 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
     activeTime, purposes, false, false);
-  pxr::UsdGeomXformCache xformCache(activeTime);
   pxr::GfVec3f accumPosition(0.f);
   pxr::GfQuatf accumRotation(1.f);
   pxr::GfVec3f accumSCale(1.f);
@@ -281,7 +280,7 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
 
       if(prim.IsA<pxr::UsdGeomXformable>()) {
         bool resetsXformStack = false;
-        pxr::GfMatrix4f m(xformCache.GetLocalToWorldTransform(prim));
+        pxr::GfMatrix4f m(_xformCache.GetLocalToWorldTransform(prim));
 
         accumPosition += pxr::GfVec3f(
           m[3][0],
@@ -342,26 +341,35 @@ pxr::GfVec3f BaseHandle::_ConstraintPointToPlane(const pxr::GfVec3f& point,
 }
 
 void BaseHandle::_UpdateTargets()
-
 {
+  
   Application* app = AMN_APPLICATION;
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
   Selection* selection = app->GetSelection();
-  pxr::UsdGeomXformCache xformCache(activeTime);
   for(auto& target: _targets) {
+    
     pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
     pxr::GfMatrix4d invParentMatrix = 
-      xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse();
-    xformable.ClearXformOpOrder();
-    pxr::UsdGeomXformOp t = xformable.AddTransformOp();
-    t.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix, activeTime);
-  }
+      _xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse();
 
+    bool resetXformOpExists;
+    std::vector<pxr::UsdGeomXformOp> xformOps = xformable.GetOrderedXformOps(&resetXformOpExists);
+    if (!xformOps.size()) {
+      pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
+      //xformOp.Set(pxr::VtValue(usdMatrix));
+      xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
+    }
+    else {
+      //xformOps[0].Set(pxr::VtValue(usdMatrix));
+      xformOps[0].Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
+    }
+  }
 }
 
 void BaseHandle::BeginUpdate(float x, float y, float width, float height)
 {
+  Application* app = AMN_APPLICATION;
   pxr::GfRay ray(
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
@@ -372,6 +380,8 @@ void BaseHandle::BeginUpdate(float x, float y, float width, float height)
   if(ray.Intersect(_plane, &distance, &frontFacing)) {
     _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
   }
+  float activeTime = app->GetTime().GetActiveTime();
+  _xformCache.SetTime(activeTime);
   _interacting = true;
 }
 
@@ -467,21 +477,40 @@ RotateHandle::RotateHandle()
  : BaseHandle()
  , _radius(0.75f)
 {
-  Shape::Component mask = _shape.AddIcoSphere(
-    AXIS_NONE, _radius * 0.9f, 2, HANDLE_MASK_COLOR);
+  float section = 0.02f;
+  Shape::Component mask = _shape.AddDisc(
+    AXIS_CAMERA, _radius - section, 32, HANDLE_MASK_COLOR, {
+      1.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 1.f, 0.f,
+      0.f, -1.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 1.f }
+  );
   mask.SetFlag(Shape::MASK, true);
   AddComponent(mask);
-  
+  /*
   Shape::Component torus = _shape.AddTorus(
-    AXIS_X, _radius, 0.02f, 32, 16, HANDLE_X_COLOR);
-  AddXYZComponents(torus);
+    AXIS_X, _radius, section, 32, 16, HANDLE_X_COLOR);
+  */
+  Shape::Component axis = _shape.AddTube(
+    AXIS_X, _radius + section, _radius, 0.05f, 32, 2, HANDLE_X_COLOR);
+  AddXYZComponents(axis);
+  
   Shape::Component plane = _shape.AddRing(
     AXIS_CAMERA, _radius * 1.4f, 0.025f, 32, HANDLE_HELP_COLOR, {
       1.f, 0.f, 0.f, 0.f,
       0.f, 0.f, 1.f, 0.f,
       0.f, -1.f, 0.f, 0.f,
-      0.f, 0.f, 0.f, 1.f});
+      0.f, 0.f, 0.f, 1.f
+    });
   AddComponent(plane);
+
+  Shape::Component help = _help.AddDisc(
+    AXIS_Y, _radius, 45.f, 128.f, 16, HANDLE_HELP_COLOR, {
+      1.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 1.f, 0.f,
+      0.f, -1.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 1.f
+    });
 }
 
 void RotateHandle::Update(float x, float y, float width, float height)

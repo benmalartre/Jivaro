@@ -83,8 +83,8 @@ Window::Window(bool fullscreen, const std::string& name) :
   //glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
@@ -109,8 +109,8 @@ Window::Window(int width, int height, const std::string& name):
   _shared = true;
   //glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
@@ -470,8 +470,6 @@ Window::SetupImgui()
   }
   */
   // setup imgui style
-  //ImGui::StyleColorsLight();
-  //ImGui::StyleColorsClassic();
   AMNStyle(&ImGui::GetStyle());
 
   // setup platform/renderer bindings
@@ -523,8 +521,8 @@ void Window::MainLoop()
   while(!glfwWindowShouldClose(_window)) {
     _app->Update();
     SetGLContext();
-    //glfwWaitEventsTimeout(1.0/60.0);
-    glfwPollEvents();
+    glfwWaitEventsTimeout(1.0/60.0);
+    //glfwPollEvents();
     
     // main window
     Draw();

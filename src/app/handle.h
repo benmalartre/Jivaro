@@ -11,6 +11,7 @@
 #include <pxr/base/gf/plane.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usdGeom/xformCache.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -131,6 +132,7 @@ protected:
   
   // geometry
   Shape _shape;
+  Shape _help;
 
   // viewport
   Camera* _camera;
@@ -143,6 +145,8 @@ protected:
   float _size;
   float _distance;
   bool _interacting;
+  pxr::UsdGeomXformCache _xformCache;
+
 
   // data
   pxr::GfVec3d _scale;
