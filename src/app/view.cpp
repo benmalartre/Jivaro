@@ -238,10 +238,10 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   {
     if(GetFlag(HORIZONTAL))
     {
-      if (GetFlag(LFIXED)) _perc = (float)_fixedPixels / (float)h;
-      else if (GetFlag(RFIXED)) _perc = (float)(h - _fixedPixels) / (float)h;
+      if (GetFlag(LFIXED)) _perc = (double)_fixedPixels / (double)h;
+      else if (GetFlag(RFIXED)) _perc = (double)(h - _fixedPixels) / (double)h;
       
-      float ph = (float)h * _perc;
+      double ph = (double)h * _perc;
       if (_left)_left->Resize(x, y, w, ph);
       if (_right)_right->Resize(x, y + ph, w, h - ph);
     }
@@ -250,7 +250,7 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
       if (GetFlag(LFIXED)) _perc = (float)_fixedPixels / (float)w;
       else if (GetFlag(RFIXED)) _perc = (float)(w - _fixedPixels) / (float)w;
       
-      float pw = (float)w * _perc;
+      double pw = (double)w * _perc;
       if (_left)_left->Resize(x, y, pw, h);
       if (_right)_right->Resize(x + pw, y, w - pw, h);
     }

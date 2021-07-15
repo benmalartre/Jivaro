@@ -18,7 +18,9 @@ enum TOOLS
   AMN_TOOL_SCALE,
   AMN_TOOL_BRUSH,
   AMN_TOOL_OPEN,
-  AMN_TOOL_SAVE
+  AMN_TOOL_SAVE,
+  AMN_TOOL_ADD_STAGE,
+  AMN_TOOL_ADD_LAYER
 };
 
 class ViewportUI;
@@ -41,13 +43,12 @@ public:
 
 private:
   TranslateHandle _translate;
-  RotateHandle _rotate;
-  ScaleHandle _scale;
-  BrushHandle _brush;
-  bool _interacting;
-  ViewportUI* _viewport;
-
-  BaseHandle* _active;
+  RotateHandle    _rotate;
+  ScaleHandle     _scale;
+  BrushHandle     _brush;
+  bool            _interacting;
+  ViewportUI*     _viewport;
+  BaseHandle*     _active;
 };
 
 void AMNInitializeTools();

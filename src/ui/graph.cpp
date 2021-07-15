@@ -48,7 +48,12 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
 
     node->AddInput("Input1", pxr::SdfValueTypeNames->Vector3f);
     node->AddInput("Input2", pxr::SdfValueTypeNames->Float);
-    node->AddOutput("Output", pxr::SdfValueTypeNames->Vector3f);
+    node->AddInput("Input3", pxr::SdfValueTypeNames->Color4f);
+    node->AddInput("Input4", pxr::SdfValueTypeNames->FloatArray);
+    node->AddOutput("Output1", pxr::SdfValueTypeNames->Vector3f);
+    node->AddOutput("Output2", pxr::SdfValueTypeNames->Float);
+    node->AddOutput("Output3", pxr::SdfValueTypeNames->Color4f);
+    node->AddOutput("Output4", pxr::SdfValueTypeNames->FloatArray);
     
     _nodes.push_back(node);
   }
@@ -452,8 +457,6 @@ void GraphUI::MouseButton(int button, int action, int mods)
 
 void GraphUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  std::cout << "GRAPH UI KEYBOARD!!! " << std::endl;
-  std::cout << "KEY : " << key << (char)key << std::endl;
   if (key == GLFW_KEY_DELETE) {
     std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
   }
@@ -529,11 +532,13 @@ void GraphUI::UpdateConnexion()
   if(_hoveredPort) {
     if(_connector.startPort) {
       if(_hoveredPort == _connector.startPort)return;
+      if (_hoveredPort->IsOutput())return;
       if(_hoveredPort->GetAttr().GetTypeName() == 
         _connector.startPort->GetAttr().GetTypeName())
         _connector.endPort = _hoveredPort;
     } else if(_connector.endPort) {
       if(_hoveredPort == _connector.endPort)return;
+      if (_hoveredPort->IsInput())return;
       if(_hoveredPort->GetAttr().GetTypeName() == 
         _connector.endPort->GetAttr().GetTypeName())
       _connector.endPort = _hoveredPort;

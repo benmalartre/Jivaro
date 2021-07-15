@@ -62,6 +62,19 @@ static void OnSelectCallback()
   _SetActiveTool(AMN_TOOL_SELECT);
 }
 
+static void OnBrushCallback()
+{
+  std::cout << "ON BRUSH CALLBACK!!!" << std::endl;
+  _SetActiveTool(AMN_TOOL_BRUSH);
+  std::cout << "ACTIVE TOOL : BRUSH" << std::endl;
+}
+
+static void OnAddStageCallback()
+{
+  std::cout << "ON ADD STAGE CALLBACK!!!" << std::endl;
+  _SetActiveTool(AMN_TOOL_ADD_STAGE);
+}
+
 ToolbarSeparator::ToolbarSeparator(BaseUI* ui, short orientation)
   : ToolbarItem(ui, TOOLBAR_SEPARATOR)
   , orientation(orientation)
@@ -114,6 +127,7 @@ ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical)
   : BaseUI(parent, name) 
   , _vertical(vertical)
 {
+  /*
   ToolbarItem* openItem = new ToolbarButton(
     this, AMN_TOOL_OPEN, "Open", "Ctrl+O",
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_OPEN], false, true, 
@@ -127,6 +141,13 @@ ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical)
     (IconPressedFunc)&OnSaveCallback
   );
   _items.push_back(saveItem);
+  */
+  ToolbarItem* stageItem = new ToolbarButton(
+    this, AMN_TOOL_ADD_STAGE, "Add Stage", "Ctrl+N",
+    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_STAGE], false, true, 
+    (IconPressedFunc)&OnAddStageCallback
+  );
+  _items.push_back(stageItem);
 
   ToolbarItem* selectItem = new ToolbarButton(
     this, AMN_TOOL_SELECT, "Select", "Space",
@@ -155,6 +176,13 @@ ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical)
     (IconPressedFunc)&OnScaleCallback
   );
   _items.push_back(scaleItem);
+
+  ToolbarItem* brushItem = new ToolbarButton(
+    this, AMN_TOOL_BRUSH, "Brush", "B", 
+    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_BRUSH], true, true, 
+    (IconPressedFunc)&OnBrushCallback
+  );
+  _items.push_back(brushItem);
 }
 
 ToolbarUI::~ToolbarUI() 

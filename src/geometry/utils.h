@@ -12,6 +12,14 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+/// Make circle
+void
+MakeCircle(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& m, size_t n);
+
+/// Make arc (circle part)
+void
+MakeArc(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& m, size_t n, float startAngle, float endAngle);
+
 /// Triangulate a polygonal mesh
 int 
 TriangulateMesh(const pxr::VtArray<int>& counts, 

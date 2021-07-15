@@ -4,6 +4,27 @@
 #include "utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
+void StrokeInput::Clear(){
+  raw_points.clear();
+  raw_widths.clear();
+  points.clear();
+  widths.clear();
+}
+
+void StrokeInput::Update(float threshold)
+{
+  size_t numRawPoints = raw_points.size();
+  size_t numActivePoints = numRawPoints - baseIndex;
+  std::vector<pxr::GfVec3f> deltas;
+  std::vector<float> distances(numActivePoints - 1);
+  std::vector<bool> preserve(numActivePoints);
+  
+  for(size_t i=1; i < numActivePoints - 1; ++i) {
+    deltas[i] = raw_points[baseIndex + i + 1] - raw_points[baseIndex + i];
+    distances[i] = deltas[i].GetLength();
+  }
+}
+
 
 Stroke::~Stroke()
 {
@@ -24,7 +45,7 @@ Stroke::Stroke(const Stroke* other, bool normalize)
   _numLines = other->_numLines;
   _type = STROKE;
 
-  _raw = other->_raw;
+  _input = other->_input;
   _lines.resize(_numLines);
   for(size_t i = 0; i < _numLines; ++i) {
     _lines[i].points = other->_lines[i].points;
@@ -62,6 +83,34 @@ float Stroke::GetSegmentLength(uint32_t lineIndex, uint32_t segmentIndex)
   return (_positions[segmentIndex] - _positions[segmentIndex + 1]).GetLength();
   */
  return 0.f;
+}
+
+void Stroke::StartLine()
+{
+  if(_input.points.size()) {
+    _lines.push_back(StrokeLine(_input.points, _input.widths));
+    _input.Clear();
+  }
+  _interacting = CREATE;
+}
+
+void Stroke::EndLine(bool closed)
+{
+
+}
+
+void Stroke::AddPoint(const pxr::GfVec3f& position)
+{
+  if (_interacting == CREATE) {
+    _input.raw_points.push_back(position);
+    _input.Update(0.05f);
+  }
+
+}
+  
+void Stroke::Refine()
+{
+
 }
 
 

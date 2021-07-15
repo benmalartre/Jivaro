@@ -4,12 +4,12 @@
 #pragma once
 
 #include "../common.h"
-#include "selection.h"
-#include "time.h"
-#include "window.h"
-#include "view.h"
-#include "camera.h"
-#include "tools.h"
+#include "../app/selection.h"
+#include "../app/time.h"
+#include "../app/window.h"
+#include "../app/view.h"
+#include "../app/camera.h"
+#include "../app/tools.h"
 #include "../geometry/mesh.h"
 #include "../graph/node.h"
 #include "../graph/graph.h"
@@ -106,7 +106,7 @@ private:
   ExplorerUI*                       _explorer;
   TimelineUI*                       _timeline;
   PropertyUI*                       _property;
-  CurveEditorUI*                _animationEditor;
+  CurveEditorUI*                    _animationEditor;
 
   // time
   Time                              _time;

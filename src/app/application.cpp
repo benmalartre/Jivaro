@@ -162,7 +162,6 @@ TestAnimX(CurveEditorUI* curveEditor)
     pxr::UsdGeomCube::Define(stage, primPath);
 
   stage->SetEditTarget(animLayer);
-  //pxr::SdfFileFormatConstPtr fileFormat = animLayer->GetFileFormat();
 
   pxr::UsdAnimXFileFormatConstPtr fileFormat = 
     pxr::TfStatic_cast<pxr::UsdAnimXFileFormatConstPtr>(animLayer->GetFileFormat());
@@ -278,11 +277,14 @@ TestAnimX(CurveEditorUI* curveEditor)
   */
 }
 
+
 Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage, 
   const pxr::TfToken& path)
 {
   Mesh* mesh = new Mesh();
-  mesh->PolygonSoup(65535);
+  //mesh->PolygonSoup(65535);
+  pxr::GfMatrix4f space(1.f);
+  mesh->TriangularGrid2D(10.f, 6.f, space, 0.2f);
 
   pxr::UsdGeomMesh polygonSoup = 
     pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(path));
@@ -363,7 +365,7 @@ Application::Init()
  #ifdef _WIN32
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
-    "E:/Projects/RnD/USD_BUILD/assets/animX/layered_anim.usda";
+    "C:/Users/graph/Documents/bmal/src/USD_ASSETS/Kitchen_set/Kitchen_set.usd";
     //"E:/Projects/RnD/USD_BUILD/assets/Contour/JackTurbulized.usda";
     //"E:/Projects/RnD/USD/extras/usd/examples/usdGeomExamples/basisCurves.usda";
     //"E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd";
@@ -389,6 +391,7 @@ Application::Init()
 
   // create window
   _mainWindow->SetGLContext();
+  std::cout << "SET GL CONTEXT :D" << std::endl;
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
 
@@ -421,20 +424,27 @@ Application::Init()
 
   // initialize 3d tools
   _tools.Init();
-  GraphUI* graph = new GraphUI(graphView, filename);
-  //_animationEditor = new CurveEditorUI(graphView);
+  //GraphUI* graph = new GraphUI(graphView, filename);
+  //std::cout << "INIT GRAPH OK " << std::endl;
+  CurveEditorUI* editor = new CurveEditorUI(graphView);
+  std::cout << "INIT EDITOR OK " << std::endl;
   
   _viewport = new ViewportUI(viewportView, OPENGL);  
+  std::cout << "INIT VIEWPORT OK " << std::endl;
   _timeline = new TimelineUI(timelineView);
+  std::cout << "INIT TIMELINE OK " << std::endl;
 
   MenuUI* menu = new MenuUI(topView);
+  std::cout << "INIT MENU OK " << std::endl;
   //ToolbarUI* toolbar = new ToolbarUI(topView, "Toolbar");
   ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
+  std::cout << "INIT TOOLBAR OK " << std::endl;
   _explorer = new ExplorerUI(explorerView);
-  //_property = new PropertyUI(propertyView, "Property");
+  std::cout << "INIT EXPLORER OK " << std::endl;
+  _property = new PropertyUI(propertyView, "Property");
 
-  //_stage = TestAnimXFromFile(filename, curveEditor);
-  //_stage = TestAnimX(curveEditor);
+  //_stage = TestAnimXFromFile(filename, editor);
+  _stage = TestAnimX(editor);
 
   /*
   // Create the layer to populate.
@@ -468,9 +478,9 @@ Application::Init()
   //_stage = pxr::UsdStage::Open(filename);
 
   //_stage = pxr::UsdStage::CreateNew("test.usda", pxr::TfNullPtr);
-  _stage = pxr::UsdStage::CreateInMemory();
+ // _stage = pxr::UsdStage::CreateInMemory();
 
-  _mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
+  //_mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
   //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, pxr::TfToken("/openvdb_sphere"));
 /*
   for(size_t i=0; i< 12; ++i) {
@@ -507,10 +517,10 @@ void Application::Update()
   if(_time.IsPlaying()) {
     if(_time.PlayBack()) {
       if (_mesh) {
-        pxr::UsdGeomMesh polygonSoup(
-          _stage->GetPrimAtPath(pxr::SdfPath("/polygon_soup")));
+        pxr::UsdGeomMesh patron(
+          _stage->GetPrimAtPath(pxr::SdfPath("/patron")));
         _mesh->Randomize(0.1f);
-        polygonSoup.GetPointsAttr().Set(pxr::VtValue(_mesh->GetPositions()));
+        patron.GetPointsAttr().Set(pxr::VtValue(_mesh->GetPositions()));
       }
     }
   }

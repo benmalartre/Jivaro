@@ -3,6 +3,8 @@
 #include "mesh.h"
 #include "utils.h"
 #include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/matrix4f.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -410,6 +412,79 @@ void Mesh::PolygonSoup(size_t numPolygons, const pxr::GfVec3f& minimum,
     colors[i * 3 + 1] = color;
     colors[i * 3 + 2] = color;
   }
+
+  Init(position, faceCount, faceConnect);
+  SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
+}
+
+void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& space, float size)
+{
+  size_t numX = (width / size ) * 0.5 + 1;
+  size_t numY = (height / size) + 1;
+  size_t numPoints = numX * numY;
+  size_t numTriangles = (numX - 1) * 2 * (numY - 1);
+  size_t numSamples = numTriangles * 3;
+  pxr::VtArray<pxr::GfVec3f> position(numPoints);
+
+  float spaceX = size * 2.0 / width;
+  float spaceY = size / height;
+
+  for(size_t y = 0; y < numY; ++y) {
+    for(size_t x = 0; x < numX; ++x) {
+      size_t vertexId = y * numX + x;
+      if(y %2 == 0)position[vertexId][0] = x * spaceX + spaceX * 0.5f;
+      else position[vertexId][0] = x * spaceX;
+      position[vertexId][1] = 0.f;
+      position[vertexId][2] = y * spaceY;
+      position[vertexId] = space.Transform(position[vertexId]);
+    }
+  }
+  
+  pxr::VtArray<int> faceCount(numTriangles);
+  for(size_t i=0; i < numTriangles; ++i) {
+    faceCount[i] = 3;
+  }
+
+  size_t numRows = numY - 1;
+  size_t numTrianglesPerRow = (numX - 1) ;
+  pxr::VtArray<int> faceConnect(numSamples);
+  
+  size_t k = 0;
+  for(size_t i=0; i < numRows; ++i) {
+    for (size_t j = 0; j < numTrianglesPerRow; ++j) {
+      if (i % 2 == 0) {
+        faceConnect[k++] = i * numX + j;
+        faceConnect[k++] = i * numX + j + 1;
+        faceConnect[k++] = (i + 1) * numX + j + 1;
+
+        faceConnect[k++] = (i + 1) * numX + j + 1;
+        faceConnect[k++] = (i + 1) * numX + j;
+        faceConnect[k++] = i * numX + j;
+      }
+      else {
+        faceConnect[k++] = i * numX + j;
+        faceConnect[k++] = i * numX + j + 1;
+        faceConnect[k++] = (i + 1) * numX + j;
+
+        faceConnect[k++] = (i + 1) * numX + j + 1;
+        faceConnect[k++] = (i + 1) * numX + j;
+        faceConnect[k++] = i * numX + j + 1;
+      }
+    }
+  }
+  
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  for(size_t i=0; i < numPoints / 3; ++i) {
+    pxr::GfVec3f color(
+      RANDOM_0_1,
+      RANDOM_0_1,
+      RANDOM_0_1
+    );
+    colors[i * 3] = color;
+    colors[i * 3 + 1] = color;
+    colors[i * 3 + 2] = color;
+  }
+ 
 
   Init(position, faceCount, faceConnect);
   SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);

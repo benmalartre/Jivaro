@@ -43,6 +43,17 @@ enum VIEWPORT_MODE {
   EMBREE
 };
 
+static const char* DRAW_MODE_NAMES[] = { 
+  "Points", 
+  "Wireframe", 
+  "Wireframe On Surface", 
+  "Shaded Flat", 
+  "Shaded Smooth", 
+  "Geom Only",
+  "Geom Flat",
+  "Geom Smooth"
+};
+
 class ViewportUI : public BaseUI
 {
   public:
@@ -92,6 +103,7 @@ class ViewportUI : public BaseUI
     pxr::UsdPrim                      _root;
     pxr::UsdLuxDomeLight              _light;
     pxr::GlfDrawTargetRefPtr          _drawTarget;
+    int                               _drawMode;
     //pxr::UsdStageRefPtr               _stage;
 };
 AMN_NAMESPACE_CLOSE_SCOPE

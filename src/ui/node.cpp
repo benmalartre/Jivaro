@@ -191,8 +191,8 @@ void PortUI::Draw(GraphUI* editor)
 
   if (_io) {
     portTextOffset = ImGui::CalcTextSize(_label.c_str());
-    portTextOffset.x = -NODE_PORT_RADIUS * 2.f;
-    portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f;
+    portTextOffset.x = -NODE_PORT_RADIUS * 2.f * scale;
+    portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f * scale;
 
     drawList->AddCircleFilled(
       p + _pos * scale,
@@ -206,14 +206,14 @@ void PortUI::Draw(GraphUI* editor)
       _color
     );
     drawList->AddText(
-      p + (_pos - portTextOffset) * scale ,
+      p + (_pos * scale) - portTextOffset,
       ImColor(0, 0, 0, 255),
       _label.c_str());
   }
   else {
     portTextOffset = ImGui::CalcTextSize(_label.c_str());
-    portTextOffset.x += NODE_PORT_RADIUS * 2.f;
-    portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f;
+    portTextOffset.x += NODE_PORT_RADIUS * 2.f * scale;
+    portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f * scale;
     drawList->AddCircleFilled(
       p + _pos * scale,
       NODE_PORT_RADIUS * scale * 1.5f,
@@ -226,7 +226,7 @@ void PortUI::Draw(GraphUI* editor)
       _color
     );
     drawList->AddText(
-      p + (_pos - portTextOffset) * scale,
+      p + (_pos * scale) - portTextOffset,
       ImColor(0, 0, 0, 255),
       _label.c_str());
   }
@@ -474,7 +474,7 @@ void NodeUI::Draw(GraphUI* editor)
     // head background
     drawList->AddRectFilled(
       ImVec2(x, y),
-      ImVec2(x + s.x, y + NODE_HEADER_HEIGHT),
+      ImVec2(x + s.x, y + NODE_HEADER_HEIGHT * scale),
       ImColor(150, 160, 190, 255),
       NODE_PORT_RADIUS * scale,
       ImDrawCornerFlags_All);

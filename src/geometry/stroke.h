@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_STOKE_H
-#define AMN_GEOMETRY_STOKE_H
+#ifndef AMN_GEOMETRY_STROKE_H
+#define AMN_GEOMETRY_STROKE_H
 
 
 #include "../common.h"
@@ -16,19 +16,34 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 struct StrokeLine {
   std::vector<pxr::GfVec3f> points;
-  std::vector<pxr::GfVec3f> widths;
+  std::vector<float> widths;
+
+  StrokeLine() {};
+  StrokeLine(const std::vector<pxr::GfVec3f>& p, const std::vector<float>& w)
+    : points(p), widths(w){};
 };
 
-struct StrokeRaw {
+struct StrokeInput {
   std::vector<pxr::GfVec3f> raw_points;
-  std::vector<pxr::GfVec3f> raw_widths;
+  std::vector<float> raw_widths;
   std::vector<pxr::GfVec3f> points;
-  std::vector<pxr::GfVec3f> widths;
-  uint32_t breakIndex;
+  std::vector<float> widths;
+  uint32_t baseIndex;
+
+  void Clear();
+  void Update(float threshold);
 };
 
 class Stroke : public Geometry {
 public:
+  enum Interaction {
+    NONE,
+    CREATE,
+    INSERT,
+    EDIT,
+    REMOVE,
+    DEL
+  };
   Stroke();
   Stroke(const Stroke* other, bool normalize = true);
   ~Stroke();
@@ -47,7 +62,9 @@ public:
 
   float GetSegmentLength(uint32_t lineIndex, uint32_t segmentIndex);
 
-  void AddPoint(const pxr::GfVec3d& position);
+  void StartLine();
+  void AddPoint(const pxr::GfVec3f& position);
+  void EndLine(bool closed);
   void Refine();
 
 
@@ -56,8 +73,9 @@ private:
   uint32_t                    _numLines;
 
   // strokes
-  pxr::VtArray<StrokeLine>    _lines;  
-  StrokeRaw                   _raw;
+  pxr::VtArray<StrokeLine>    _lines;
+  StrokeInput                 _input;
+  short                       _interacting;
 
   // colors
   pxr::VtArray<pxr::GfVec3f>  _colors;

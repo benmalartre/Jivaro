@@ -27,6 +27,7 @@ void Tool::Init()
   _translate.Setup();
   _rotate.Setup();
   _scale.Setup();
+  _brush.Setup();
   SetActiveTool(AMN_TOOL_TRANSLATE);
 }
 
@@ -38,6 +39,7 @@ void Tool::SetViewport(ViewportUI* viewport)
   _translate.SetCamera(camera);
   _rotate.SetCamera(camera);
   _scale.SetCamera(camera);
+  _brush.SetCamera(camera);
 
   // update shader
   Shape::UpdateCamera(

@@ -2,8 +2,7 @@
 #define AMN_APPLICATION_HANDLE_H
 #pragma once
 
-#include "../common.h"
-#include "../geometry/shape.h"
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/rotation.h>
 #include <pxr/base/gf/matrix4f.h>
@@ -12,6 +11,10 @@
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/xformCache.h>
+
+#include "../common.h"
+#include "../geometry/shape.h"
+#include "../geometry/utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -46,12 +49,23 @@ static const pxr::GfVec4f HANDLE_MASK_COLOR = {0.f, 0.f, 0.f, 0.f};
 static float HANDLE_SIZE = 100.f;
 
 class Camera;
+class Geometry;
 
-struct TargetDesc {
+struct HandleTargetDesc {
   pxr::SdfPath path;
   pxr::GfMatrix4f base;
   pxr::GfMatrix4f offset;
 };
+
+typedef std::vector<HandleTargetDesc> HandleTargetDescList;
+
+struct HandleTargetGeometryDesc {
+  Geometry* geometry;
+  std::vector<int> elements;
+  std::vector<float> weights;
+};
+
+typedef std::vector<HandleTargetGeometryDesc> HandleTargetGeometryDescList;
 
 class BaseHandle {
 public:
@@ -71,6 +85,7 @@ public:
     AXIS_YZ,
     AXIS_CAMERA,
     AXIS_NORMAL,
+    AXIS_RAY,
     AXIS_LAST
   };
 
@@ -81,12 +96,13 @@ public:
     NORMAL_CAMERA
   };
 
-  BaseHandle() 
+  BaseHandle(bool compensate=true) 
     : _activeAxis(AXIS_NONE)
     , _hoveredAxis(AXIS_NONE)
     , _activeNormal(NORMAL_CAMERA)
     , _camera(NULL)
     , _interacting(false)
+    , _compensate(compensate)
     , _position(pxr::GfVec3d(0.f))
     , _rotation(pxr::GfRotation())
     , _scale(pxr::GfVec3d(1.f))
@@ -109,6 +125,7 @@ public:
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
   void ComputeSizeMatrix(float width, float height);
   void ComputeViewPlaneMatrix();
+  void ComputePickFrustum();
 
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
@@ -121,6 +138,7 @@ public:
   virtual void Update(float x, float y, float width, float height);
   virtual void EndUpdate();
 
+  virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m);
   virtual void _ComputeCOGMatrix(pxr::UsdStageRefPtr stage);
   virtual void _UpdateTargets();
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
@@ -128,36 +146,36 @@ public:
 
 protected:
   // targets
-  std::vector<TargetDesc> _targets;
+  HandleTargetDescList    _targets;
   
   // geometry
-  Shape _shape;
-  Shape _help;
+  Shape                   _shape;
+  Shape                   _help;
 
   // viewport
-  Camera* _camera;
+  Camera*                 _camera;
 
   // state
-  short _activeNormal;
-  short _activeAxis;
-  short _hoveredAxis;
-  short _lastActiveAxis;
-  float _size;
-  float _distance;
-  bool _interacting;
-  pxr::UsdGeomXformCache _xformCache;
-
+  short                   _activeNormal;
+  short                   _activeAxis;
+  short                   _hoveredAxis;
+  short                   _lastActiveAxis;
+  float                   _size;
+  float                   _distance;
+  bool                    _compensate;
+  bool                    _interacting;
+  pxr::UsdGeomXformCache  _xformCache;
 
   // data
-  pxr::GfVec3d _scale;
-  pxr::GfVec3d _position;
-  pxr::GfVec3d _offset;
-  pxr::GfRotation _rotation;
-  pxr::GfMatrix4f _matrix;
-  pxr::GfMatrix4f _startMatrix;
-  pxr::GfPlane _plane;
-  pxr::GfMatrix4f _viewPlaneMatrix;
-  pxr::GfMatrix4f _sizeMatrix;
+  pxr::GfVec3d            _scale;
+  pxr::GfVec3d            _position;
+  pxr::GfVec3d            _offset;
+  pxr::GfRotation         _rotation;
+  pxr::GfMatrix4f         _matrix;
+  pxr::GfMatrix4f         _startMatrix;
+  pxr::GfPlane            _plane;
+  pxr::GfMatrix4f         _viewPlaneMatrix;
+  pxr::GfMatrix4f         _sizeMatrix;
 };
 
 class ScaleHandle : public BaseHandle {
@@ -173,6 +191,7 @@ class RotateHandle : public BaseHandle {
 public:
   RotateHandle();
 
+  void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
 
 private:
@@ -199,12 +218,17 @@ class BrushHandle : public BaseHandle {
 public:
   BrushHandle();
 
-  //void BeginUpdate(float x, float y, float width, float height) override;
+  void Draw(float width, float height) override;
+  void BeginUpdate(float x, float y, float width, float height) override;
+  short Pick(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
 
 private:
-  float _minRadius;
-  float _maxRadius;
+  float                         _minRadius;
+  float                         _maxRadius;
+  HandleTargetGeometryDescList  _geometries;
+  Shape                         _stroke;
+  std::vector<pxr::GfVec3f>     _path;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

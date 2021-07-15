@@ -108,6 +108,8 @@ public:
   void OpenVDBSphere(const float radius, 
     const pxr::GfVec3f& center=pxr::GfVec3f(0.f));
   void Randomize(float value);
+  void TriangularGrid2D(float width, float height, 
+    const pxr::GfMatrix4f& space, float size);
 
 private:
   // infos

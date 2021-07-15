@@ -10,6 +10,7 @@
 #include <pxr/base/gf/range2f.h>
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usdShade/input.h>
+#include <pxr/usd/usdShade/shader.h>
 #include <pxr/usd/usdShade/output.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
@@ -81,7 +82,7 @@ protected:
 
 class PortUI : public ItemUI {
 public:
-  PortUI(){};
+  PortUI() {};
   PortUI(NodeUI* node, bool io, const std::string& label, 
     pxr::UsdAttribute& attr);
   PortUI(NodeUI* node, const pxr::UsdShadeInput& port);
@@ -92,6 +93,9 @@ public:
 
   bool IsVisible(GraphUI* editor) override { return true; };
   void Draw(GraphUI* editor) override;
+
+  bool IsInput() { return _io; };
+  bool IsOutput() { return !_io; };
 
   const std::string& GetName()const {return _label;};
   NodeUI* GetNode() { return _node; };
@@ -156,6 +160,7 @@ public:
 
 private:
   std::string                 _name;
+  pxr::UsdShadeShader         _shader;
   pxr::UsdPrim                _prim;
   std::vector<PortUI>         _inputs;
   std::vector<PortUI>         _outputs;

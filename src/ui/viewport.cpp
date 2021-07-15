@@ -26,6 +26,7 @@ BaseUI(parent, "Viewport")
 
   _texture = 0;
   _mode = mode;
+  _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
   _pixels = nullptr;
   _camera = new Camera("Camera");
   _valid = true;
@@ -337,7 +338,7 @@ bool ViewportUI::Draw()
   
     _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
     _renderParams.complexity = 1.0f;
-    _renderParams.drawMode = pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
+    _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
     _renderParams.showGuides = true;
     _renderParams.showRender = true;
     _renderParams.showProxy = true;
@@ -401,17 +402,23 @@ bool ViewportUI::Draw()
     ImGui::PushFont(GetWindow()->GetMediumFont(0));
     std::string msg = "Hello Amnesie!";
     drawList->AddText(
-      _parent->GetMin() + ImVec2(20, 20), 
+      ImVec2(_parent->GetMin()[0] + 20, _parent->GetMax()[1] - 20), 
       0xFFFFFFFF, 
       msg.c_str());
 
-    msg = std::to_string(app->GetTime().GetFramerate());
+    msg = "FPS : "+ std::to_string(app->GetTime().GetFramerate());
     drawList->AddText(
-      _parent->GetMin() + ImVec2(GetWidth() - 100.f, 20),
+      ImVec2(_parent->GetMin()[0] + GetWidth() - 128.f, _parent->GetMax()[1] - 20),
       0xFFFFFFFF,
       msg.c_str());
     ImGui::PopFont();
-  
+
+    const float halfWidth = _parent->GetWidth() * 0.5;
+    ImGui::SetCursorPosX(_parent->GetMin()[0] + halfWidth);
+    ImGui::SetNextItemWidth(halfWidth);
+    ImGui::PushItemWidth(250);
+    ImGui::Combo("DrawMode", &_drawMode, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES));
+    ImGui::PopItemWidth();
     ImGui::End();
 
     /*

@@ -48,17 +48,17 @@ public:
     typedef short (Shape::Component::*IntersectFunc)(const pxr::GfRay& ray, 
       const pxr::GfMatrix4f& m, double* distance);
 
-    short flags;
-    short type;
-    short index;
-    size_t basePoint;
-    size_t numPoints;
-    size_t baseIndex;
-    size_t endIndex;
-    pxr::GfRange3f bounds;
-    pxr::GfMatrix4f offsetMatrix;
-    pxr::GfMatrix4f parentMatrix;
-    pxr::GfVec4f color;
+    short               flags;
+    short               type;
+    int                 index;
+    size_t              basePoint;
+    size_t              numPoints;
+    size_t              baseIndex;
+    size_t              endIndex;
+    pxr::GfRange3f      bounds;
+    pxr::GfMatrix4f     offsetMatrix;
+    pxr::GfMatrix4f     parentMatrix;
+    pxr::GfVec4f        color;
 
     IntersectFunc _intersectImplementation;
     
@@ -135,7 +135,8 @@ public:
   size_t GetNumComponents() {return _components.size();};
   const std::vector<pxr::GfVec3f>& GetPoints() {return _points;};
   const std::vector<int>& GetIndices() {return _indices;};
-  const Component& GetComponent(size_t index) {return _components[index];};
+  const Component& GetComponent(size_t index) const {return _components[index];};
+  Component& GetComponent(size_t index) { return _components[index]; };
 
   static void _MakeCircle(std::vector<pxr::GfVec3f>& points, float radius, 
     size_t numPoints, const pxr::GfMatrix4f& m= pxr::GfMatrix4f());

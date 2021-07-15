@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "selection.h"
 #include "application.h"
+#include "../geometry/utils.h"
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
@@ -15,7 +16,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 void BaseHandle::ComputeSizeMatrix(float width, float height)
 {
-  if(_camera) {
+  if(_compensate && _camera) {
     const pxr::GfVec3d delta = _camera->GetPosition() - _position;
     _distance = (float)delta.GetLength();
     if(width > height) {
@@ -28,6 +29,14 @@ void BaseHandle::ComputeSizeMatrix(float width, float height)
       0.f, _size, 0.f, 0.f,
       0.f, 0.f, _size, 0.f,
       0.f, 0.f, 0.f, 1.f
+    };
+  }
+  else {
+    _sizeMatrix = {
+      1.f,0.f,0.f,0.f,
+      0.f,1.f,0.f,0.f,
+      0.f,0.f,1.f,0.f,
+      0.f,0.f,0.f,1.f
     };
   }
 }
@@ -213,6 +222,25 @@ short BaseHandle::Pick(float x, float y, float width, float height)
   return hovered;
 }
 
+void BaseHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
+{
+  shape->Bind(SHAPE_PROGRAM);
+  for (size_t i = 0; i < shape->GetNumComponents(); ++i) {
+    const Shape::Component& component = shape->GetComponent(i);
+    if (component.GetFlag(Shape::VISIBLE)) {
+      if (component.index == AXIS_CAMERA) {
+        shape->DrawComponent(i, _viewPlaneMatrix, GetColor(component));
+      }
+      else {
+        shape->DrawComponent(i, component.parentMatrix * m,
+          GetColor(component));
+      }
+    }
+  }
+  shape->Unbind();
+}
+
+
 void BaseHandle::Draw(float width, float height) 
 {
   ComputeSizeMatrix(width, height);
@@ -220,20 +248,8 @@ void BaseHandle::Draw(float width, float height)
   pxr::GfMatrix4f m = _sizeMatrix * _matrix;
   GLint vao;
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
-  _shape.Bind(SHAPE_PROGRAM);
   
-  for(size_t i=0; i < _shape.GetNumComponents(); ++i) {
-    const Shape::Component& component = _shape.GetComponent(i);
-    if(component.GetFlag(Shape::VISIBLE)) {
-      if(component.index == AXIS_CAMERA) {
-        _shape.DrawComponent(i, _viewPlaneMatrix, GetColor(component));
-      } else {
-        _shape.DrawComponent(i, component.parentMatrix * m, 
-          GetColor(component));
-      }
-    }
-  }
-  _shape.Unbind();
+  _DrawShape(&_shape, m);
   glBindVertexArray(vao);
 }
 
@@ -517,6 +533,29 @@ RotateHandle::RotateHandle()
     });
 }
 
+void RotateHandle::BeginUpdate(float x, float y, float width, float height)
+{
+  /*
+  pxr::GfRay ray(
+    _camera->GetPosition(),
+    _camera->GetRayDirection(x, y, width, height));
+
+  double distance;
+  bool frontFacing;
+  _startMatrix = _matrix;
+  if (ray.Intersect(_plane, &distance, &frontFacing)) {
+    if (_activeAxis == AXIS_CAMERA) {
+      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
+    }
+    else {
+      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
+        _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+    }
+  }
+  _interacting = true;
+  */
+}
+
 void RotateHandle::Update(float x, float y, float width, float height)
 {
 
@@ -540,8 +579,8 @@ ScaleHandle::ScaleHandle()
   // dummy xfos
   std::vector<pxr::GfMatrix4f> xfos = {
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(-1.f, 0.f, 0.f)),
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(-0.5f, 1.f, 0.f)),
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 2.f, 0.f)),
+    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(-1.f, 1.f, 0.f)),
+    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 1.f, 0.f)),
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.5f, 1.f, 0.f)),
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(1.f, 0.f, 0.f)),
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, -1.f, 1.f))
@@ -556,7 +595,7 @@ ScaleHandle::ScaleHandle()
   };
 
   Shape::Component extrude = _shape.AddExtrusion(
-    AXIS_CAMERA, xfos, profile, HANDLE_X_COLOR
+    AXIS_X, xfos, profile, HANDLE_X_COLOR
   );
   /*
   Shape::AddExtrusion(short index, 
@@ -574,15 +613,93 @@ void ScaleHandle::Update(float x, float y, float width, float height)
 }
 
 BrushHandle::BrushHandle()
-  : BaseHandle()
+  : BaseHandle(false), _minRadius(1.f), _maxRadius(1.2f)
 {
+  Shape::Component cylinder = _shape.AddCylinder(
+    AXIS_NORMAL, 0.02f, 1.f, 16, 2, HANDLE_ACTIVE_COLOR, HANDLE_Z_MATRIX);
+  AddComponent(cylinder);
+  Shape::Component innerRadius = _shape.AddTorus(
+    AXIS_NORMAL, _minRadius, 0.025f, 32, 8, HANDLE_ACTIVE_COLOR, HANDLE_Z_MATRIX);
+  AddComponent(innerRadius);
+  Shape::Component outerRadius = _shape.AddTorus(
+    AXIS_NORMAL, _maxRadius, 0.025f, 32, 8, HANDLE_HELP_COLOR, HANDLE_Z_MATRIX);
+  AddComponent(outerRadius);
+
+}
+
+void BrushHandle::BeginUpdate(float x, float y, float width, float height)
+{
+  _stroke.Clear();
+  pxr::GfRay ray(
+    _camera->GetPosition(),
+    _camera->GetRayDirection(x, y, width, height));
+
+  double distance;
+  ray.Intersect(_plane, &distance);
+  _path.push_back(pxr::GfVec3f(ray.GetPoint(distance)));
   
+  _interacting = true;
 }
 
 void BrushHandle::Update(float x, float y, float width, float height)
 {
+  if (_interacting) {
+    Pick(x, y, width, height);
+    pxr::GfRay ray(
+      _camera->GetPosition(),
+      _camera->GetRayDirection(x, y, width, height));
 
+    double distance;
+    ray.Intersect(_plane, &distance);
+    _path.push_back(pxr::GfVec3f(ray.GetPoint(distance)));
+  }
+}
+  
+short BrushHandle::Pick(float x, float y, float width, float height)
+{
+  UpdatePickingPlane(AXIS_CAMERA);
+  pxr::GfRay ray(
+    _camera->GetPosition(),
+    _camera->GetRayDirection(x, y, width, height));
+
+  ComputeViewPlaneMatrix();
+
+  Shape::Component& comp = _shape.GetComponent(1);
+  pxr::GfVec3f bounds(comp.bounds.GetMax());
+  bounds[1] = 1.f / _distance;
+  comp.bounds.SetMax(bounds);
+
+  comp = _shape.GetComponent(2);
+  bounds = comp.bounds.GetMax();
+  bounds[1] = 1.f / _distance;
+  comp.bounds.SetMax(bounds);
+
+  pxr::GfVec3f translate;
+  double planeDistance;
+  if (ray.Intersect(_plane, &planeDistance))
+    translate = pxr::GfVec3f(ray.GetPoint(planeDistance));
+  else translate = pxr::GfVec3f(ray.GetPoint(_distance));
+  _matrix = _viewPlaneMatrix;
+  memcpy(&_matrix[3][0], &translate[0], 3 * sizeof(float));
+
+  return false;
 }
 
+
+void BrushHandle::Draw(float width, float height)
+{
+  ComputeSizeMatrix(width, height);
+  ComputeViewPlaneMatrix();
+  pxr::GfMatrix4f m = _sizeMatrix * _matrix;
+  GLint vao;
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+
+  _DrawShape(&_shape, m);
+  
+  if (_interacting) {
+    std::cout << "INTERACTING................." << std::endl;
+  }
+  glBindVertexArray(vao);
+}
 
 AMN_NAMESPACE_CLOSE_SCOPE

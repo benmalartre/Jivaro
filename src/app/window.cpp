@@ -409,7 +409,7 @@ Window::Draw()
   ImGui_ImplGlfw_NewFrame(_window);
   
   ImGui::NewFrame();
-  ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight()));
+  ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight() + 2 ));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
 
   // draw views
