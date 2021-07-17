@@ -1,8 +1,3 @@
-#include "handle.h"
-#include "camera.h"
-#include "selection.h"
-#include "application.h"
-#include "../geometry/utils.h"
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
@@ -11,6 +6,12 @@
 #include <pxr/usd/usdGeom/xformable.h>
 #include <pxr/usd/usdGeom/xformCache.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
+
+#include "../app/handle.h"
+#include "../app/camera.h"
+#include "../app/selection.h"
+#include "../app/application.h"
+#include "../geometry/utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -652,6 +653,25 @@ void BrushHandle::Update(float x, float y, float width, float height)
     double distance;
     ray.Intersect(_plane, &distance);
     _path.push_back(pxr::GfVec3f(ray.GetPoint(distance)));
+    
+    std::vector<pxr::GfVec3f> profile;
+    MakeCircle(&profile, 1.f, pxr::GfMatrix4f(1.f), 12);
+    std::vector<pxr::GfMatrix4f> xfos(_path.size());
+    for (size_t i=0; i < _path.size(); ++i) {
+      xfos[i].SetTranslate(_path[i]);
+    }
+    profile[0] = {-1, 0, 0 };
+    profile[1] = { 1, 0, 0 };
+    _stroke.RemoveLastComponent();
+    Shape::Component comp = _stroke.AddExtrusion(AXIS_NONE, xfos, profile, pxr::GfVec4f(1.f, 0.f, 0.f, 1.f));
+    _stroke.AddComponent(comp);
+    //_stroke.RemoveComponent();
+    
+    /*
+    Shape::Component comp = _stroke.AddBox(AXIS_X, 0.1f, 0.1f, 0.1f, pxr::GfVec4f(1.f, 0.f, 0.f, 1.f),
+      pxr::GfMatrix4f(1.f).SetTranslate(_path.back()));
+    _stroke.AddComponent(comp);
+    */
   }
 }
   
@@ -697,7 +717,8 @@ void BrushHandle::Draw(float width, float height)
   _DrawShape(&_shape, m);
   
   if (_interacting) {
-    std::cout << "INTERACTING................." << std::endl;
+    _stroke.Setup();
+    _DrawShape(&_stroke);
   }
   glBindVertexArray(vao);
 }

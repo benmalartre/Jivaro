@@ -15,29 +15,6 @@ static void _SetActiveTool(short tool)
   app->GetMainWindow()->SetActiveTool(tool);
 }
 
-static void OnOpenCallback()
-{
-  Application* app = AMN_APPLICATION;
-  const char* folder = "/Users/benmalartre/Documents/RnD/amnesie/build";
-  const char* filters[] = {
-    ".usd",
-    ".usda",
-    ".usdc",
-    ".usdz"
-  };
-  int numFilters = 4;
-
-  std::string filename = 
-    app->BrowseFile(folder, filters, numFilters, "open usd file");
-  app->OpenScene(filename);
-
-}
-
-static void OnSaveCallback()
-{
-  std::cout << "ON SAVE CALLBACK !!!" << std::endl;
-}
-
 static void OnTranslateCallback()
 {
   std::cout << "ON TRANSLATE CALLBACK!!!" << std::endl;
@@ -86,13 +63,14 @@ bool ToolbarSeparator::Draw()
   return true;
 }
 
-ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string label, 
-  const std::string shortcut, Icon* icon, bool toggable, bool enabled, 
-  IconPressedFunc func, const pxr::VtArray<pxr::VtValue> args)
+ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string& label, 
+  const std::string& shortcut, const std::string& tooltip, Icon* icon, bool toggable, 
+  bool enabled, IconPressedFunc func, const pxr::VtArray<pxr::VtValue> args)
   : ToolbarItem(ui, TOOLBAR_BUTTON)
   , tool(tool)
   , label(label)
   , shortcut(shortcut)
+  , tooltip(tooltip)
   , icon(icon)
   , toggable(toggable)
   , enabled(enabled)
@@ -120,6 +98,8 @@ bool ToolbarButton::Draw()
     );
   }
   ImGui::PopFont();
+  if(tooltip.length())AttachTooltip(tooltip.c_str(), 0.5f, 128, window->GetRegularFont(0));
+ 
   return false;
 }
 
@@ -143,42 +123,42 @@ ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical)
   _items.push_back(saveItem);
   */
   ToolbarItem* stageItem = new ToolbarButton(
-    this, AMN_TOOL_ADD_STAGE, "Add Stage", "Ctrl+N",
+    this, AMN_TOOL_ADD_STAGE, "Add Stage", "Ctrl+N","create a new stage",
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_STAGE], false, true, 
     (IconPressedFunc)&OnAddStageCallback
   );
   _items.push_back(stageItem);
 
   ToolbarItem* selectItem = new ToolbarButton(
-    this, AMN_TOOL_SELECT, "Select", "Space",
+    this, AMN_TOOL_SELECT, "Select", "Space","selection tool",
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SELECT], true, true, 
     (IconPressedFunc)&OnSelectCallback
   );
   _items.push_back(selectItem);
 
   ToolbarItem* translateItem = new ToolbarButton(
-    this, AMN_TOOL_TRANSLATE, "Translate", "T", 
+    this, AMN_TOOL_TRANSLATE, "Translate", "T", "translation tool",
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_TRANSLATE], true, true, 
     (IconPressedFunc)&OnTranslateCallback
   );
   _items.push_back(translateItem);
 
   ToolbarItem* rotateItem = new ToolbarButton(
-    this, AMN_TOOL_ROTATE, "Rotate", "R", 
+    this, AMN_TOOL_ROTATE, "Rotate", "R", "rotation tool",
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_ROTATE], true, true, 
     (IconPressedFunc)&OnRotateCallback
   );
   _items.push_back(rotateItem);
 
   ToolbarItem* scaleItem = new ToolbarButton(
-    this, AMN_TOOL_SCALE, "Scale", "S", 
+    this, AMN_TOOL_SCALE, "Scale", "S", "scale tool",
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SCALE], true, true, 
     (IconPressedFunc)&OnScaleCallback
   );
   _items.push_back(scaleItem);
 
   ToolbarItem* brushItem = new ToolbarButton(
-    this, AMN_TOOL_BRUSH, "Brush", "B", 
+    this, AMN_TOOL_BRUSH, "Brush", "B", "brush tool",
     &AMN_ICONS[AMN_ICON_MEDIUM][ICON_BRUSH], true, true, 
     (IconPressedFunc)&OnBrushCallback
   );

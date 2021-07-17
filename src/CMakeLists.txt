@@ -59,6 +59,7 @@ add_executable(${TARGET}
   geometry/vdb.cpp
   pbd/integration.cpp
   pbd/maths.cpp
+  anim/animx.cpp
   app/time.cpp
   app/notice.cpp
   app/handle.cpp

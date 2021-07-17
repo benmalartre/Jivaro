@@ -1,11 +1,12 @@
 #ifndef AMN_WIDGETS_EXPLORER_H
 #define AMN_WIDGETS_EXPLORER_H
-#pragma once
+
+#include <pxr/usd/usd/prim.h>
 
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../utils/utils.h"
-#include <pxr/usd/usd/prim.h>
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -45,7 +46,7 @@ public:
   void DrawItem(ExplorerItem* item, bool heritedVisibility);
   void DrawItemType(ExplorerItem* item);
   void DrawItemVisibility(ExplorerItem* item, bool heritedVisibility);
-  void DrawBackground();
+  void DrawBackground(float localMouseX, float localMouseY);
   void DrawItemBackground(ImDrawList* drawList, const ExplorerItem* item, 
     bool& flip);
 

@@ -143,8 +143,8 @@ static
 pxr::UsdStageRefPtr 
 TestAnimX(CurveEditorUI* curveEditor)
 {
-  pxr::SdfLayerRefPtr rootLayer = pxr::SdfLayer::CreateAnonymous("geom.usda");
-  pxr::SdfLayerRefPtr geomLayer = pxr::SdfLayer::CreateAnonymous("rig.rig");
+  pxr::SdfLayerRefPtr rootLayer = pxr::SdfLayer::CreateAnonymous("shot.usda");
+  pxr::SdfLayerRefPtr geomLayer = pxr::SdfLayer::CreateAnonymous("geom.usda");
   pxr::SdfLayerRefPtr animLayer = pxr::SdfLayer::CreateAnonymous("anim.animx");
 
   rootLayer->InsertSubLayerPath(geomLayer->GetIdentifier());
@@ -212,46 +212,7 @@ TestAnimX(CurveEditorUI* curveEditor)
   curveDesc.keyframes.push_back(keyframeDesc);
 
   animXDatas->AddFCurve(primPath, opDesc.target, curveDesc);
-  /*
-
-  pxr::SdfPath propertyPath = pxr::SdfPath("/Cube").AppendProperty(pxr::TfToken("size"));
-  animLayer->SetField(pxr::SdfPath("/Cube"), pxr::TfToken("size"), pxr::VtValue((double)32));
-  pxr::UsdAnimXKeyframe keyframe;
-  keyframe.time = 1;
-  keyframe.value = 1;
-  animLayer->SetTimeSample(
-    propertyPath,
-    keyframe.time, keyframe.GetAsSample());
-
-  keyframe.time = 50;
-  keyframe.value = 10;
-  animLayer->SetTimeSample(
-    propertyPath,
-    keyframe.time, keyframe.GetAsSample());
-
-  keyframe.time = 100;
-  keyframe.value = 1;
-  animLayer->SetTimeSample(
-    propertyPath,
-    keyframe.time, keyframe.GetAsSample());
-
-  pxr::SdfLayerStateDelegateBasePtr animLayerStateDelegate =
-    animLayer->GetStateDelegate();
-
-  std::cout << "ANIMX LAYER STATE DELEGATE : " << animLayerStateDelegate << std::endl;
-  */
-  //pxr::SdfAbstractDataConstPtr datas = animLayer->_GetData();
-  //animLayer->SetTimeSample()
-  //stage->Reload();
-  /*
-  pxr::SdfAbstractDataConstPtr
-    SdfFileFormat::_GetLayerData(const SdfLayer& layer)
-  {
-    return layer._GetData();
-  }
-    */
-  //animLayer->Se
-  //animLayer->
+  animLayer->Export("C:/Users/graph/Documents/bmal/src/Amnesie/assets/test.animx");
   curveEditor->SetLayer(pxr::SdfLayerHandle(animLayer));
 
   return stage;

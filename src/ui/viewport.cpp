@@ -413,9 +413,7 @@ bool ViewportUI::Draw()
       msg.c_str());
     ImGui::PopFont();
 
-    const float halfWidth = _parent->GetWidth() * 0.5;
-    ImGui::SetCursorPosX(_parent->GetMin()[0] + halfWidth);
-    ImGui::SetNextItemWidth(halfWidth);
+    ImGui::SetCursorPosX(_parent->GetMax()[0] - 300);
     ImGui::PushItemWidth(250);
     ImGui::Combo("DrawMode", &_drawMode, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES));
     ImGui::PopItemWidth();

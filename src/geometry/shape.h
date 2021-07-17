@@ -51,10 +51,10 @@ public:
     short               flags;
     short               type;
     int                 index;
-    size_t              basePoint;
+    size_t              basePoints;
     size_t              numPoints;
-    size_t              baseIndex;
-    size_t              endIndex;
+    size_t              baseIndices;
+    size_t              numIndices;
     pxr::GfRange3f      bounds;
     pxr::GfMatrix4f     offsetMatrix;
     pxr::GfMatrix4f     parentMatrix;
@@ -63,16 +63,16 @@ public:
     IntersectFunc _intersectImplementation;
     
     Component(short type, short shapeIndex, size_t basePointIndex, 
-      size_t numPoints, size_t baseIndex, size_t endIndex, 
+      size_t numPoints, size_t baseIndices, size_t numIndices, 
       const pxr::GfVec4f& color, const pxr::GfMatrix4f& parentMatrix, 
       const pxr::GfMatrix4f& offsetMatrix=pxr::GfMatrix4f(1.f)) 
       : flags(VISIBLE|PICKABLE)
       , type(type)
       , index(shapeIndex)
-      , basePoint(basePointIndex)
+      , basePoints(basePointIndex)
       , numPoints(numPoints)
-      , baseIndex(baseIndex)
-      , endIndex(endIndex)
+      , baseIndices(baseIndices)
+      , numIndices(numIndices)
       , color(color)
       , parentMatrix(parentMatrix)
       , offsetMatrix(offsetMatrix){
@@ -149,6 +149,8 @@ public:
   void UpdateComponents(short hovered, short active, bool hideInactive=false);
   void UpdateVisibility(const pxr::GfMatrix4f& m, const pxr::GfVec3f& dir);
   void AddComponent(const Component& component);
+  void RemoveComponent(size_t idx);
+  void RemoveLastComponent();
   /*void AddComponent(short type, short index, size_t basePoint, size_t numPoints,
     size_t startIndex, size_t endIndex, const pxr::GfVec4f& color, 
     const pxr::GfMatrix4f& m);*/

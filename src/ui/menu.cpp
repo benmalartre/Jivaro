@@ -54,23 +54,25 @@ bool MenuItem::Draw()
   return false;
 }
 
-static size_t fileIdx = 0;
-static void OpenFileCommand() {
-  std::cout << "OPEN FILE COMMAND CALLED!!!" << std::endl;
-  switch (fileIdx % 3) {
-    case 0:
-      AMN_APPLICATION->OpenScene("E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd");
-      break;
-    case 1:
-      AMN_APPLICATION->OpenScene("E:/Projects/RnD/USD_BUILD/assets/Bottles.usda");
-      break;
-    case 2:
-      AMN_APPLICATION->OpenScene("E:/Projects/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd");
-      break;
-  }
-  fileIdx++;
+static void OpenFileCallback() {
+  Application* app = AMN_APPLICATION;
+  const char* folder = GetInstallationFolder().c_str();
+  const char* filters[] = {
+    ".usd",
+    ".usda",
+    ".usdc",
+    ".usdz"
+  };
+  int numFilters = 4;
+
+  std::string filename =
+    app->BrowseFile(folder, filters, numFilters, "open usd file");
+  app->OpenScene(filename);
 }
 
+static void SaveFileCallback() {
+  std::cout << "ON SAVE CALLBACK !!!" << std::endl;
+}
 static void OpenDemoCallback()
 {
   ModalDemo demo("Demo");
@@ -83,8 +85,8 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
 {
   pxr::VtArray < pxr::VtValue > args;
   MenuItem& fileMenu = AddItem(parent, "File", "", false, true);
-  fileMenu.AddItem(parent, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCommand);
-  fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&OpenFileCommand);
+  fileMenu.AddItem(parent, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCallback);
+  fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
   args.push_back(pxr::VtValue(7.0));
   
   MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);

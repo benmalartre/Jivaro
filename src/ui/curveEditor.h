@@ -14,6 +14,8 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+#define KEYFRAME_SAMPLE_SIZE 32
+
 struct CurveEditorGrabUI {
   pxr::GfVec2f start;
   pxr::GfVec2f end;
@@ -40,6 +42,7 @@ public:
   void DrawBackground();
   void DrawCurve(pxr::UsdAnimXCurve* crv);
   void DrawCurves();
+  void DrawTime();
 
   void SetLayer(pxr::SdfLayerHandle layer);
   void SetDatas(const pxr::UsdAnimXDataRefPtr& datas);
@@ -55,6 +58,11 @@ public:
   */
 
 private:
+  float _GetTimeMinimum();
+  float _GetTimeMaximum();
+  float _GetTimeStep(float width, float scale);
+  size_t _GetNumSamples(float width);
+
   AnimXCurvesMap                _curves;
   pxr::SdfLayerHandle           _layer;
   pxr::UsdAnimXDataRefPtr       _datas;

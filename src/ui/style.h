@@ -1,6 +1,7 @@
 #ifndef AMN_UI_STYLE_H
 #define AMN_UI_STYLE_H
 
+#include "../common.h"
 #include "../imgui/imgui.h"
 
 AMN_NAMESPACE_OPEN_SCOPE

@@ -138,7 +138,7 @@ public:
   virtual void Update(float x, float y, float width, float height);
   virtual void EndUpdate();
 
-  virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m);
+  virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
   virtual void _ComputeCOGMatrix(pxr::UsdStageRefPtr stage);
   virtual void _UpdateTargets();
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);

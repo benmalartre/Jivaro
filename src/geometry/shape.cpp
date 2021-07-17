@@ -53,7 +53,7 @@ void Shape::Component::ComputeBounds(Shape* shape)
 {
   bounds.SetEmpty();
   const std::vector<pxr::GfVec3f>& points = shape->GetPoints();
-  for(size_t e = basePoint; e < (basePoint + numPoints); ++e) {
+  for(size_t e = basePoints; e < (basePoints + numPoints); ++e) {
     bounds.UnionWith(points[e]);
   }
 }
@@ -273,6 +273,24 @@ void Shape::AddComponent(const Component& component)
   _components.push_back(component);
 }
 
+void Shape::RemoveComponent(size_t idx)
+{
+
+}
+
+void Shape::RemoveLastComponent()
+{
+  if (_components.size()) {
+    const Component& comp = _components.back();
+    size_t numPoints = comp.numPoints;
+    size_t numIndices = comp.numIndices;
+    _indices.resize(_indices.size() - numIndices);
+    _points.resize(_points.size() - numPoints);
+    _components.pop_back();
+  }
+  //_components.push_back(component);
+}
+
 /*
 void Shape::AddComponent(short type, short index, size_t basePoint, 
   size_t numPoints, size_t startIdx, size_t endIdx, 
@@ -391,7 +409,7 @@ Shape::AddGrid(short index, float width, float depth, size_t divX,
     baseNumPoints, 
     (_points.size() - baseNumPoints), 
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -439,7 +457,7 @@ Shape::AddBox(short index, float width, float height, float depth,
     baseNumPoints,
     (_points.size() - baseNumPoints), 
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -531,7 +549,7 @@ Shape::AddSphere(short index, float radius, size_t lats, size_t longs,
     baseNumPoints, 
     (_points.size() - baseNumPoints), 
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -663,7 +681,7 @@ Shape::AddIcoSphere(short index, float radius, size_t subdiv,
     baseNumPoints,
     _points.size() - baseNumPoints,
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f),
     m);
@@ -731,7 +749,7 @@ Shape::AddCylinder(short index, float radius, float height, size_t lats,
     baseNumPoints,
     _points.size() - baseNumPoints,
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -815,7 +833,7 @@ Shape::AddTube(short index, float outRadius, float inRadius, float height,
     baseNumPoints,
     _points.size() - baseNumPoints,
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -858,7 +876,7 @@ Shape::AddCone(short index, float radius, float height, size_t lats,
     baseNumPoints,
     _points.size() - baseNumPoints,
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -929,7 +947,7 @@ Shape::AddTorus(short index, float radius, float section, size_t lats,
     baseNumPoints,
     _points.size() - baseNumPoints,
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -989,7 +1007,7 @@ Shape::AddExtrusion(short index,
     baseNumPoints,
     _points.size() - baseNumPoints,
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -1003,8 +1021,7 @@ Shape::Component
 Shape::AddDisc(short index, float radius, size_t lats,
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
 {
-  return 
-    Shape::AddDisc(index, radius, 0.f, 360.f, lats, color, m);
+  return Shape::AddDisc(index, radius, 0.f, 360.f, lats, color, m);
 }
 
 Shape::Component 
@@ -1055,7 +1072,7 @@ Shape::AddDisc(short index, float radius, float start, float end, size_t lats,
     baseNumPoints,
     _points.size() - baseNumPoints,
     baseNumIndices, 
-    _indices.size(), 
+    _indices.size() - baseNumIndices, 
     color, 
     pxr::GfMatrix4f(1.f), 
     m);
@@ -1110,7 +1127,7 @@ Shape::AddRing(short index, float radius, float section, size_t lats,
     baseNumPoints,
     _points.size() - baseNumPoints,
     baseNumIndices,
-    _indices.size(),
+    _indices.size() - baseNumIndices,
     color,
     pxr::GfMatrix4f(1.f),
     m);
@@ -1195,8 +1212,8 @@ void Shape::DrawComponent(size_t index, const pxr::GfMatrix4f& model,
   glUniform4f(_uColor, color[0], color[1], color[2], color[3]);
   
   const Shape::Component& comp = _components[index];
-  glDrawElements(GL_TRIANGLES, (comp.endIndex - comp.baseIndex), 
-    GL_UNSIGNED_INT, ((char*)NULL + (comp.baseIndex * sizeof(unsigned int))));
+  glDrawElements(GL_TRIANGLES, comp.numIndices, 
+    GL_UNSIGNED_INT, ((char*)NULL + (comp.baseIndices * sizeof(unsigned int))));
 }
 
 void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)

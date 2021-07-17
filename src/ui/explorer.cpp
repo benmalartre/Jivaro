@@ -1,14 +1,16 @@
-#include "explorer.h"
-#include "../app/application.h"
-#include "../app/notice.h"
-#include "../app/window.h"
-#include "../app/view.h"
-#include "../ui/style.h"
 #include <pxr/pxr.h>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usdGeom/imageable.h>
 #include <pxr/usd/usdGeom/tokens.h>
+
+#include "../ui/style.h"
+#include "../ui/explorer.h"
+#include "../app/application.h"
+#include "../app/notice.h"
+#include "../app/window.h"
+#include "../app/view.h"
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -73,20 +75,20 @@ void ExplorerUI::DrawItemBackground(ImDrawList* drawList,
   const float width = (float)GetWidth();
   if (item->_selected) {
     drawList->AddRectFilled(
-      { 0, pos.y },
-      { width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
+      { pos.x, pos.y },
+      { pos.x + width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
       ImColor(AMN_SELECTED_COLOR));
   }
   else {
     if (flip)
       drawList->AddRectFilled(
-        { 0, pos.y },
-        { width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
+        { pos.x, pos.y },
+        { pos.x + width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
         ImColor(AMN_BACKGROUND_COLOR));
     else
       drawList->AddRectFilled(
-        { 0, pos.y },
-        { width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
+        { pos.x, pos.y },
+        { pos.x + width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
         ImColor(AMN_ALTERNATE_COLOR));
   }
 
@@ -99,7 +101,7 @@ void ExplorerUI::DrawItemBackground(ImDrawList* drawList,
   }
 }
 
-void ExplorerUI::DrawBackground()
+void ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
 {
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   const auto& style = ImGui::GetStyle();
@@ -112,28 +114,26 @@ void ExplorerUI::DrawBackground()
 
   if (ImGui::GetScrollMaxX() > 0)
   {
-    clipRectMax.y -= style.ScrollbarSize;
+    clipRectMax.x += style.ScrollbarSize;
   }
  
   drawList->PushClipRect(clipRectMin, clipRectMax);
+  
   bool flip = false;
-
-  drawList->AddRectFilled(
-    _parent->GetMin(),
-    _parent->GetMax(),
-    ImColor(AMN_BACKGROUND_COLOR)
-  );
-
+  
   ImGui::SetCursorPos(
     ImVec2(
-      _parent->GetX(), 
-      _parent->GetY() - scrollOffsetV + AMN_EXPLORER_LINE_HEIGHT));
+      clipRectMin.x,
+      clipRectMin.y - scrollOffsetV + AMN_EXPLORER_LINE_HEIGHT));
 
   for (auto& item : _root->_items) {
     DrawItemBackground(drawList, item, flip);
     flip = !flip;
   }
+  
   ImGui::SetCursorPos(ImVec2(0, AMN_EXPLORER_LINE_HEIGHT));
+
+  drawList->AddCircleFilled(ImVec2(localMouseX, localMouseY) + _parent->GetMin(), 12.f, ImColor(0.f, 1.f, 0.f, 0.5f), 32);
 
   drawList->PopClipRect();
 }
@@ -262,35 +262,22 @@ bool ExplorerUI::Draw()
 {
   if (!_initialized)Init();
 
-  /*
-  // setup colors
-  const size_t numColorIDs = 7;
-  int colorIDs[numColorIDs] = {
-    ImGuiCol_WindowBg,
-    ImGuiCol_Header,
-    ImGuiCol_HeaderHovered,
-    ImGuiCol_HeaderActive,
-    ImGuiCol_Button,
-    ImGuiCol_ButtonActive,
-    ImGuiCol_ButtonHovered
-  };
-  
-  for (size_t ic = 0; ic<numColorIDs; ++ic)
-    ImGui::PushStyleColor(
-      colorIDs[ic],
-      ImVec4(0, 0, 0, 0));
-      */
-  //if (!_active)return false;
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::SetWindowSize(_parent->GetSize());
 
+  const ImVec2 localMousePos = ImGui::GetMousePos() - _parent->GetMin();
+
   Application* app = GetApplication();
   
   if (app->GetStage())
   {
-   
+    // setup transparent background
+    ImGui::PushStyleColor(ImGuiCol_Header, AMN_TRANSPARENT_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, AMN_TRANSPARENT_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, AMN_TRANSPARENT_COLOR);
+
     // setup columns
     ImGui::Columns(3);
     ImGui::SetColumnWidth(0, _parent->GetWidth() - 100);
@@ -307,18 +294,20 @@ bool ExplorerUI::Draw()
     ImGui::NextColumn();
     ImGui::PopFont();
     
-    DrawBackground();
+    DrawBackground(localMousePos.x, localMousePos.y);
     
     ImGui::PushFont(GetWindow()->GetMediumFont(0));
     for (auto& item : _root->_items) {
       DrawItem(item, true);
     }
     ImGui::PopFont();
+    ImGui::PopStyleColor(3);
+    
   }
   
   ImGui::End();
 
-  //ImGui::PopStyleColor(numColorIDs);
+  
 
   return true;/*
     ImGui::IsAnyItemHovered() ||

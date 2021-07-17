@@ -5,6 +5,7 @@
 #include "../app/view.h"
 
 #include <pxr/usd/usdAnimX/fileFormat.h>
+#include <pxr/usd/usdAnimX/curve.h>
 
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -227,8 +228,6 @@ void CurveEditorUI::DrawBackground()
   vMin.y += ImGui::GetWindowPos().y;
   vMax.x += ImGui::GetWindowPos().x;
   vMax.y += ImGui::GetWindowPos().y;
-
-  ImGui::GetForegroundDrawList()->AddRect(vMin, vMax, IM_COL32(0, 255, 255, 255));
 }
 
 void CurveEditorUI::DrawCurve(pxr::UsdAnimXCurve* crv)
@@ -236,13 +235,48 @@ void CurveEditorUI::DrawCurve(pxr::UsdAnimXCurve* crv)
 
 }
 
+void CurveEditorUI::DrawTime()
+{
+  Time& time = AMN_APPLICATION->GetTime();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  float ox = _parent->GetX() + _offset[0] * _scale[0];
+  float oy = _parent->GetY() + _offset[1] * _scale[1];
+  static ImU32 orange = ImColor(255, 180, 120);
+  
+  drawList->AddRectFilled(
+    ImVec2(ox + time.GetActiveTime() * _scale[0], _parent->GetY()),
+    ImVec2(ox + time.GetActiveTime() * _scale[0] + 4, _parent->GetY() + _parent->GetHeight()),
+    orange);
+
+}
+
+float CurveEditorUI::_GetTimeMinimum()
+{
+  return -_offset[0] * _scale[0];
+}
+float CurveEditorUI::_GetTimeMaximum()
+{
+  return (-_offset[0] + _parent->GetWidth()) * _scale[0];
+}
+
+float CurveEditorUI::_GetTimeStep(float width, float scale)
+{
+  return (float)KEYFRAME_SAMPLE_SIZE / width;
+}
+
+size_t CurveEditorUI::_GetNumSamples(float width)
+{
+  return (width / KEYFRAME_SAMPLE_SIZE);
+}
+
+
 void CurveEditorUI::DrawCurves()
 {
   pxr::UsdAnimXKeyframe keyframe;
   pxr::UsdAnimXKeyframe lastKeyframe;
   ImDrawList* drawList = ImGui::GetWindowDrawList();
-  float ox = ImGui::GetWindowPos().x + _offset[0] * _scale[0];
-  float oy = ImGui::GetWindowPos().y + _offset[1] * _scale[1];
+  float ox = _parent->GetX() + _offset[0] * _scale[0];
+  float oy = _parent->GetY() + _offset[1] * _scale[1];
   static ImU32 red = ImColor(255, 64, 32);
   static ImU32 green = ImColor(32, 255, 64);
   static ImU32 blue = ImColor(64, 32, 255);
@@ -263,24 +297,38 @@ void CurveEditorUI::DrawCurves()
     cid = 0;
     for (const auto& curve: curves) {
       // draw curve
-      for (size_t k = 0; k < curve->keyframeCount(); ++k) {
+      const float minimum = _GetTimeMinimum();
+      const float maximum = _GetTimeMaximum();
+      drawList->AddRectFilled(
+        ImVec2((minimum + _offset[0]) * _scale[0] - 2, GetY()),
+        ImVec2((minimum + _offset[0]) * _scale[0] + 2, GetY() + GetHeight()),
+        ImColor(0, 255, 0)
+      );
+      drawList->AddRectFilled(
+        ImVec2((maximum + _offset[0]) * _scale[0] - 2, GetY()),
+        ImVec2((maximum + _offset[0]) * _scale[0] + 2, GetY() + GetHeight()),
+        ImColor(0, 255, 0)
+      );
+      size_t numSamples = _GetNumSamples(GetWidth());
+      float sampleStep = (maximum - minimum) / numSamples;
+      for (size_t k = 0; k < numSamples - 1; ++k) {
         ImU32 col = red;
         if (cid % 3 == 1)col = green;
         else if (cid % 3 == 2)col = blue;
-        curve->keyframeAtIndex(k, keyframe);
+        float t0 = minimum + (k + 0.000) * sampleStep;
+        float t1 = minimum + (k + 0.333) * sampleStep;
+        float t2 = minimum + (k + 0.666) * sampleStep;
+        float t3 = minimum + (k + 1.000) * sampleStep;
 
-        if (k > 0) {
-          const ImVec2 A(ox + lastKeyframe.time * _scale[0],
-            oy + lastKeyframe.value * _scale[1]);
-          const ImVec2 B(A.x + lastKeyframe.tanOut.x * _scale[0],
-            A.y + lastKeyframe.tanOut.y * _scale[1]);
-          const ImVec2 D(ox + keyframe.time * _scale[0],
-            oy + keyframe.value * _scale[1]);
-          const ImVec2 C(D.x - keyframe.tanIn.x * _scale[0],
-            D.y - keyframe.tanIn.y * _scale[1]);
-          drawList->AddBezierCurve(A, B, C, D, col, 1);
-        }
-        lastKeyframe = keyframe;
+        const ImVec2 A(t0 * _scale[0],
+          oy - curve->evaluate(t0) * _scale[1]);
+        const ImVec2 B(t1 * _scale[0],
+          oy - curve->evaluate(t1) * _scale[1]);
+        const ImVec2 C(t2 * _scale[0],
+          oy - curve->evaluate(t2) * _scale[1]);
+        const ImVec2 D(t3 * _scale[0],
+          oy - curve->evaluate(t3) * _scale[1]);
+        drawList->AddBezierCurve(A, B, C, D, col, 1);
       }
       // draw keyframes
       for (size_t k = 0; k < curve->keyframeCount(); ++k) {
@@ -291,7 +339,7 @@ void CurveEditorUI::DrawCurves()
             ox + keyframe.time * _scale[0],
             oy + keyframe.value * _scale[1]),
           2,
-          ImColor(60, 60, 60));
+          ImColor(255, 255, 255));
       }
     }
     cid++;
@@ -363,6 +411,7 @@ bool CurveEditorUI::Draw()
   */
   DrawBackground();
   DrawCurves();
+  DrawTime();
   ImGui::PopClipRect();
   ImGui::End();
   return true;

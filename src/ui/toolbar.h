@@ -46,6 +46,7 @@ struct ToolbarButton : public ToolbarItem {
   short                       tool;
   std::string                 label;
   std::string                 shortcut;
+  std::string                 tooltip;
   bool                        toggable;
   bool                        enabled;
 
@@ -53,9 +54,9 @@ struct ToolbarButton : public ToolbarItem {
   IconPressedFunc             func;
   Icon*                       icon;
 
-  ToolbarButton(BaseUI* ui, short tool, const std::string lbl, 
-    const std::string sht, Icon* icon, bool sel, bool enb, 
-    IconPressedFunc f = NULL, 
+  ToolbarButton(BaseUI* ui, short tool, const std::string& lbl, 
+    const std::string& sht, const std::string& tooltip, Icon* icon, 
+    bool sel, bool enb, IconPressedFunc f = NULL, 
     const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
   ~ToolbarButton(){};
   bool Draw() override;
