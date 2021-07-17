@@ -2,6 +2,7 @@
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/transform.h>
+#include <pxr/base/gf/matrix3f.h>
 #include <pxr/usd/usdGeom/boundable.h>
 #include <pxr/usd/usdGeom/xformable.h>
 #include <pxr/usd/usdGeom/xformCache.h>
@@ -630,7 +631,7 @@ BrushHandle::BrushHandle()
 
 void BrushHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  _stroke.Clear();
+  _path.clear();
   pxr::GfRay ray(
     _camera->GetPosition(),
     _camera->GetRayDirection(x, y, width, height));
@@ -640,6 +641,11 @@ void BrushHandle::BeginUpdate(float x, float y, float width, float height)
   _path.push_back(pxr::GfVec3f(ray.GetPoint(distance)));
   
   _interacting = true;
+}
+
+void BrushHandle::EndUpdate()
+{
+
 }
 
 void BrushHandle::Update(float x, float y, float width, float height)
@@ -653,25 +659,41 @@ void BrushHandle::Update(float x, float y, float width, float height)
     double distance;
     ray.Intersect(_plane, &distance);
     _path.push_back(pxr::GfVec3f(ray.GetPoint(distance)));
-    
-    std::vector<pxr::GfVec3f> profile;
-    MakeCircle(&profile, 1.f, pxr::GfMatrix4f(1.f), 12);
+    const pxr::GfVec3f normal(_camera->GetViewPlaneNormal());
+    std::vector<pxr::GfVec3f> profile(2);
+    profile[0] = { -0.5f, 0.f, 0.f };
+    profile[1] = { 0.5f, 0.f, 0.f };
+
     std::vector<pxr::GfMatrix4f> xfos(_path.size());
+    pxr::GfVec3f tangent, bitangent, up;
     for (size_t i=0; i < _path.size(); ++i) {
-      xfos[i].SetTranslate(_path[i]);
+      if (i == 0) {
+        tangent = (_path[1] - _path[0]).GetNormalized();
+      } else if (i == _path.size() - 1) {
+        size_t last = _path.size() - 1;
+        tangent = (_path[last] - _path[last - 1]).GetNormalized();
+      } else {
+        tangent = 
+          ((_path[i] - _path[i - 1]) + (_path[i+1] - _path[i])).GetNormalized();
+      }
+      bitangent = (tangent ^ normal).GetNormalized();
+      up = (bitangent ^ tangent).GetNormalized();
+      pxr::GfMatrix3f rotation(
+        bitangent[0], bitangent[1], bitangent[2],
+        tangent[0], tangent[1], tangent[2],
+        up[0], up[1], up[2]
+      );
+      xfos[i] = 
+        pxr::GfMatrix4f(1.f).SetRotate(rotation) * 
+        pxr::GfMatrix4f(1.f).SetTranslate(_path[i]);
     }
     profile[0] = {-1, 0, 0 };
     profile[1] = { 1, 0, 0 };
-    _stroke.RemoveLastComponent();
-    Shape::Component comp = _stroke.AddExtrusion(AXIS_NONE, xfos, profile, pxr::GfVec4f(1.f, 0.f, 0.f, 1.f));
+    _stroke.RemoveComponent(_stroke.GetNumComponents()-1);
+    Shape::Component comp = _stroke.AddExtrusion(
+      AXIS_NONE, xfos, profile, pxr::GfVec4f(1.f, 0.f, 0.f, 1.f));
     _stroke.AddComponent(comp);
-    //_stroke.RemoveComponent();
-    
-    /*
-    Shape::Component comp = _stroke.AddBox(AXIS_X, 0.1f, 0.1f, 0.1f, pxr::GfVec4f(1.f, 0.f, 0.f, 1.f),
-      pxr::GfMatrix4f(1.f).SetTranslate(_path.back()));
-    _stroke.AddComponent(comp);
-    */
+
   }
 }
   

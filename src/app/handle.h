@@ -1,6 +1,5 @@
 #ifndef AMN_APPLICATION_HANDLE_H
 #define AMN_APPLICATION_HANDLE_H
-#pragma once
 
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
@@ -200,10 +199,6 @@ private:
 
 class TranslateHandle : public BaseHandle {
 public:
-/*static bool VISIBILITIES[8][10] = {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-  } */
   TranslateHandle();
 
   void BeginUpdate(float x, float y, float width, float height) override;
@@ -220,6 +215,7 @@ public:
 
   void Draw(float width, float height) override;
   void BeginUpdate(float x, float y, float width, float height) override;
+  void EndUpdate() override;
   short Pick(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
 

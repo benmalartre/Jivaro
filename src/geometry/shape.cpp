@@ -275,20 +275,32 @@ void Shape::AddComponent(const Component& component)
 
 void Shape::RemoveComponent(size_t idx)
 {
-
+  if (!_components.size() || idx >= _components.size())return;
+  const Component& comp = _components[idx];
+  size_t remainingPoints = _points.size() - (comp.basePoints + comp.numPoints);
+  size_t remainingIndices = _indices.size() - (comp.baseIndices + comp.numIndices);
+  memmove(
+    &_points[comp.basePoints], 
+    &_points[comp.basePoints + comp.numPoints], 
+    comp.numPoints * sizeof(pxr::GfVec3f)
+  );
+  memmove(
+    &_indices[comp.baseIndices],
+    &_indices[comp.baseIndices + comp.numIndices],
+    comp.numIndices * sizeof(int)
+  );
+  _indices.resize(_indices.size() - comp.numIndices);
+  _points.resize(_points.size() - comp.numPoints);
+  _components.erase(_components.begin() + idx);
 }
 
 void Shape::RemoveLastComponent()
 {
-  if (_components.size()) {
-    const Component& comp = _components.back();
-    size_t numPoints = comp.numPoints;
-    size_t numIndices = comp.numIndices;
-    _indices.resize(_indices.size() - numIndices);
-    _points.resize(_points.size() - numPoints);
-    _components.pop_back();
-  }
-  //_components.push_back(component);
+  if (!_components.size()) return;
+  const Component& comp = _components.back();
+  _indices.resize(_indices.size() - comp.numIndices);
+  _points.resize(_points.size() - comp.numPoints);
+  _components.pop_back();
 }
 
 /*
@@ -969,14 +981,14 @@ Shape::AddExtrusion(short index,
   size_t numPoints = profile.size();
   size_t numXfos = xfos.size();
 
-  bool closeU = 
-    GfIsClose(xfos.front(), xfos.back(), 0.001f) ? true : false;
-  bool closeV = 
-    GfIsClose(profile.front(), profile.back(), 0.001f) ? true : false;
+  bool closeU = false;
+  //  GfIsClose(xfos.front(), xfos.back(), 0.001f) ? true : false;
+  bool closeV = false;
+  //  GfIsClose(profile.front(), profile.back(), 0.001f) ? true : false;
 
   // make points
   size_t numLongs = closeU ? numXfos - 1 : numXfos;
-  size_t numLats = closeV ? numPoints - 1 : numPoints;
+  size_t numLats = closeV ? numPoints - profile.size() : numPoints;
   for(size_t i=0; i < numLongs; ++i) {
     for(size_t j=0; j < numLats; ++j) {
       _points.push_back(xfos[i].Transform(profile[j]));
