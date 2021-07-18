@@ -1,11 +1,26 @@
-#include "splitter.h"
+#include "../ui/style.h"
+#include "../ui/splitter.h"
 #include "../app/view.h"
 #include "../app/window.h"
-#include "../ui/style.h"
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-void Splitter::RecurseBuildMap(View* view)
+ImGuiWindowFlags SplitterUI::_flags =
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoBackground |
+  ImGuiWindowFlags_NoDecoration |
+  ImGuiWindowFlags_NoInputs |
+  ImGuiWindowFlags_NoMouseInputs |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoNavInputs |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoScrollbar;
+
+void SplitterUI::RecurseBuildMap(View* view)
 {
   if(!view) return;
   _views.push_back(view);
@@ -34,21 +49,22 @@ void Splitter::RecurseBuildMap(View* view)
 }
 
 void 
-Splitter::BuildMap(int width, int height)
+SplitterUI::BuildMap(int width, int height)
 {
+  size_t numPixels = width * height;
   _viewID = 0;
   if (_pixels)delete[]_pixels;
-  _pixels = new int[width * height];
+  _pixels = new int[numPixels];
   _valid = true;
   _width = width;
   _height = height;
   _views.clear();
-  memset((void*)&_pixels[0], 0, _width * _height * sizeof(int));
+  memset((void*)&_pixels[0], 0, numPixels * sizeof(int));
 }
 
 // pick splitter
 int 
-Splitter::Pick(int x, int y)
+SplitterUI::Pick(int x, int y)
 {
   if(!_valid || x<0 || y <0 || x >= _width || y >= _height) 
     return -1;
@@ -62,8 +78,8 @@ Splitter::Pick(int x, int y)
 }
 
 // draw the splitters
-void 
-Splitter::Draw()
+bool 
+SplitterUI::Draw()
 {
   static bool open;
   ImGui::Begin("Splitter", &open, _flags);
@@ -89,16 +105,17 @@ Splitter::Draw()
     }
   }
   ImGui::End();
+  return true;
 }
 
 View* 
-Splitter::GetViewByIndex(int index)
+SplitterUI::GetViewByIndex(int index)
 {
   return _views[index];
 }
 
 void 
-Splitter::Resize(int width, int height)
+SplitterUI::Resize(int width, int height)
 {
   BuildMap(width, height);
 }

@@ -11,7 +11,7 @@ class View;
 
 #define SPLITTER_THICKNESS 2.0
 
-class Splitter
+class SplitterUI : public BaseUI
 {
 public:
   enum Border
@@ -22,23 +22,9 @@ public:
     LEFT = 8
   };
  
-  Splitter():_pixels(NULL),_valid(false){
-    _flags = 
-      ImGuiWindowFlags_None
-      | ImGuiWindowFlags_NoBackground
-      | ImGuiWindowFlags_NoDecoration
-      | ImGuiWindowFlags_NoInputs
-      | ImGuiWindowFlags_NoMouseInputs
-      | ImGuiWindowFlags_NoMove
-      | ImGuiWindowFlags_NoResize
-      | ImGuiWindowFlags_NoCollapse
-      | ImGuiWindowFlags_NoNav
-      | ImGuiWindowFlags_NoNavInputs
-      | ImGuiWindowFlags_NoTitleBar
-      | ImGuiWindowFlags_NoScrollbar;
-  };
+  SplitterUI():_pixels(NULL),_valid(false){};
   
-  ~Splitter(){
+  ~SplitterUI(){
     if(_pixels)delete [] _pixels;
   };
 
@@ -52,11 +38,11 @@ public:
   void SetHorizontalCursor(){_cursor = ImGuiMouseCursor_ResizeEW;};
   void SetVerticalCursor(){_cursor = ImGuiMouseCursor_ResizeNS;};
   void SetDefaultCursor(){_cursor = ImGuiMouseCursor_Arrow;};
-  void Resize(int width, int height);
-  void Draw();
+
+  void Resize(int width, int height) override;
+  bool Draw() override;
   
 private:
-  ImGuiWindowFlags    _flags;
   int*                _pixels;
   unsigned            _viewID;
   unsigned            _width;

@@ -14,6 +14,15 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
+  ImGuiTreeNodeFlags_OpenOnArrow |
+  ImGuiTreeNodeFlags_OpenOnDoubleClick;
+
+ImGuiSelectableFlags ExplorerUI::_itemFlags = 
+  ImGuiSelectableFlags_SpanAllColumns |
+  ImGuiSelectableFlags_SpanAvailWidth |
+  ImGuiSelectableFlags_SelectOnClick;
+
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, "Explorer")
@@ -26,10 +35,6 @@ ExplorerUI::ExplorerUI(View* parent)
     | ImGuiWindowFlags_NoTitleBar
     | ImGuiWindowFlags_NoScrollbar
     | ImGuiWindowFlags_NoMove;
-
-  _selectBaseFlags =
-    ImGuiTreeNodeFlags_OpenOnArrow |
-    ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
   _parent->SetDirty();
   _visibleIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_VISIBLE];
@@ -178,7 +183,7 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
 void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
 {
   if (!current) return;
-  ImGuiTreeNodeFlags itemFlags = _selectBaseFlags;
+  ImGuiTreeNodeFlags itemFlags = _treeFlags;
 
   if (current->_selected) {
     itemFlags |= ImGuiTreeNodeFlags_Selected;
@@ -189,11 +194,13 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
   {
     std::string key = "##" + current->_prim.GetPath().GetString();
     bool currentOpen = ImGui::TreeNodeEx(key.c_str(), itemFlags);
-
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-      if(!current->_selected) {
+    key += "Selectable";
+    if (ImGui::Selectable(key.c_str(), current->_selected, _itemFlags,
+      ImVec2(GetWidth(), AMN_EXPLORER_LINE_HEIGHT))) {
+      if (!current->_selected) {
         AMN_APPLICATION->AddToSelection(current->_prim.GetPath());
-      } else {
+      }
+      else {
         AMN_APPLICATION->RemoveFromSelection(current->_prim.GetPath());
       }
       current->_selected = !current->_selected;

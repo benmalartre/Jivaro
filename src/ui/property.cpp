@@ -9,13 +9,15 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags PropertyUI::_flags = 
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoMove;
+
 PropertyUI::PropertyUI(View* parent, const std::string& name)
   : BaseUI(parent, name)
 {
-  _flags = ImGuiWindowFlags_None
-    | ImGuiWindowFlags_NoResize
-    | ImGuiWindowFlags_NoTitleBar
-    | ImGuiWindowFlags_NoMove;
 }
 
 PropertyUI::~PropertyUI()

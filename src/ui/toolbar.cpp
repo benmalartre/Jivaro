@@ -8,6 +8,14 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags ToolbarUI::_flags = 
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoDecoration;
+
 static void _SetActiveTool(short tool) 
 {
   Application* app = AMN_APPLICATION;
@@ -174,12 +182,7 @@ ToolbarUI::~ToolbarUI()
 bool ToolbarUI::Draw()
 {
   bool opened;
-  int flags = ImGuiWindowFlags_None 
-    | ImGuiWindowFlags_NoResize
-    | ImGuiWindowFlags_NoTitleBar
-    | ImGuiWindowFlags_NoMove
-    | ImGuiWindowFlags_NoScrollbar
-    | ImGuiWindowFlags_NoDecoration;
+  
   ImGui::Begin(_name.c_str(), &opened, flags);
   ImGui::PushClipRect(
     _parent->GetMin(),

@@ -214,6 +214,7 @@ TestAnimX(CurveEditorUI* curveEditor)
   animXDatas->AddFCurve(primPath, opDesc.target, curveDesc);
   animLayer->Export("C:/Users/graph/Documents/bmal/src/Amnesie/assets/test.animx");
   curveEditor->SetLayer(pxr::SdfLayerHandle(animLayer));
+  stage->SetEditTarget(geomLayer);
 
   return stage;
 

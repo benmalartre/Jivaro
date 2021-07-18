@@ -12,18 +12,18 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags ViewportUI::_flags = 
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoDecoration;
 
 // constructor
 ViewportUI::ViewportUI(View* parent, VIEWPORT_MODE mode):
 BaseUI(parent, "Viewport")
 {
-  _flags = ImGuiWindowFlags_None
-    | ImGuiWindowFlags_NoResize
-    | ImGuiWindowFlags_NoTitleBar
-    | ImGuiWindowFlags_NoScrollbar
-    | ImGuiWindowFlags_NoMove
-    | ImGuiWindowFlags_NoDecoration;
-
   _texture = 0;
   _mode = mode;
   _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;

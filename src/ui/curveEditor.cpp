@@ -10,6 +10,13 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags CurveEditorUI::_flags = 
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoMove;
+
 // constructor
 CurveEditorUI::CurveEditorUI(View* parent)
   : BaseUI(parent, "CurveEditor")
@@ -19,12 +26,6 @@ CurveEditorUI::CurveEditorUI(View* parent)
   , _navigate(false)
   , _grab(false)
 {
-  _flags = ImGuiWindowFlags_None
-    | ImGuiWindowFlags_NoResize
-    | ImGuiWindowFlags_NoTitleBar
-    | ImGuiWindowFlags_NoScrollbar
-    | ImGuiWindowFlags_NoMove;
-
   _parent->SetDirty();
 }
 

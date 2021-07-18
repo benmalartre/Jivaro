@@ -14,6 +14,16 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags GraphUI::_flags = 
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoScrollWithMouse |
+  ImGuiWindowFlags_NoScrollbar;
+
 // constructor
 //------------------------------------------------------------------------------
 GraphUI::GraphUI(View* parent, const std::string& filename)
@@ -25,15 +35,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
 {
   //_filename = filename;
   _id = 0;
-  _flags = ImGuiWindowFlags_None
-    | ImGuiWindowFlags_NoMove
-    | ImGuiWindowFlags_NoResize
-    | ImGuiWindowFlags_NoTitleBar
-    | ImGuiWindowFlags_NoCollapse
-    | ImGuiWindowFlags_NoNav
-    | ImGuiWindowFlags_NoScrollWithMouse
-    | ImGuiWindowFlags_NoScrollbar;
-
+  
   //GraphTreeUI* tree = new GraphTreeUI();
   _stage = pxr::UsdStage::CreateInMemory();
 

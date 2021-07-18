@@ -723,17 +723,7 @@ short BrushHandle::Pick(float x, float y, float width, float height)
     _camera->GetRayDirection(x, y, width, height));
 
   ComputeViewPlaneMatrix();
-  /*
-  Shape::Component& comp = _shape.GetComponent(1);
-  pxr::GfVec3f bounds(comp.bounds.GetMax());
-  bounds[1] = 1.f / _distance;
-  comp.bounds.SetMax(bounds);
 
-  comp = _shape.GetComponent(2);
-  bounds = comp.bounds.GetMax();
-  bounds[1] = 1.f / _distance;
-  comp.bounds.SetMax(bounds);
-  */
   pxr::GfVec3f translate;
   double planeDistance;
   if (ray.Intersect(_plane, &planeDistance))

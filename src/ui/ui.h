@@ -94,10 +94,10 @@ public:
   void OnAllNotices(const pxr::TfNotice& n);
 
 protected:
-  bool              _initialized;
-  View*             _parent;
-  std::string       _name;
-  ImGuiWindowFlags  _flags;
+  bool                    _initialized;
+  View*                   _parent;
+  std::string             _name;
+  static ImGuiWindowFlags _flags;
   
 };
 

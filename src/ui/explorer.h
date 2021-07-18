@@ -55,7 +55,8 @@ private:
   pxr::GfVec3f                  _color;
   bool                          _locked;
   ExplorerItem*                 _root;
-  ImGuiTreeNodeFlags            _selectBaseFlags;
+  static ImGuiTreeNodeFlags     _treeFlags;
+  static ImGuiSelectableFlags   _itemFlags;
   Icon*                         _visibleIcon;
   Icon*                         _invisibleIcon;
   bool                          _needRefresh;

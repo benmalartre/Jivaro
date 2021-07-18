@@ -10,6 +10,15 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 extern Application* AMN_APPLICATION;
 
+ImGuiWindowFlags MenuUI::_flags =
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_MenuBar |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoBringToFrontOnFocus |
+  ImGuiWindowFlags_NoDecoration;
+
 MenuItem::MenuItem(View* v, const std::string lbl, const std::string sht, 
   bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a) 
   : view(v), label(lbl), shortcut(sht), selected(sel), func(f), args(a)
@@ -91,15 +100,6 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
   
   MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);
   demoItem.AddItem(parent, "OpenDemo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
-
-  _flags =
-    ImGuiWindowFlags_None
-    | ImGuiWindowFlags_MenuBar
-    | ImGuiWindowFlags_NoTitleBar
-    | ImGuiWindowFlags_NoMove
-    | ImGuiWindowFlags_NoResize
-    | ImGuiWindowFlags_NoBringToFrontOnFocus
-    | ImGuiWindowFlags_NoDecoration;
 }
 
 // destructor

@@ -7,14 +7,16 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags TimelineUI::_flags = 
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoMove;
+
 // constructor
 TimelineUI::TimelineUI(View* parent) :BaseUI(parent, "Timeline")
 {
-  _flags = ImGuiWindowFlags_None
-    | ImGuiWindowFlags_NoResize
-    | ImGuiWindowFlags_NoTitleBar
-    | ImGuiWindowFlags_NoScrollbar
-    | ImGuiWindowFlags_NoMove;
   _parent->SetDirty();
   _parent->SetFlag(View::FORCEREDRAW);
 }
