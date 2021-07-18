@@ -1,11 +1,12 @@
-#ifndef AMN_WIDGETS_PROPERTY_H
-#define AMN_WIDGETS_PROPERTY_H
-#pragma once
+#ifndef AMN_UI_PROPERTY_H
+#define AMN_UI_PROPERTY_H
+
+#include <pxr/usd/usd/prim.h>
 
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../utils/utils.h"
-#include <pxr/usd/usd/prim.h>
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -23,8 +24,9 @@ public:
   bool Draw()      override;
 
 private:
-  pxr::GfVec3f  _color;
-  pxr::UsdPrim  _prim;
+  pxr::GfVec3f            _color;
+  pxr::UsdPrim            _prim;
+  static ImGuiWindowFlags _flags;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

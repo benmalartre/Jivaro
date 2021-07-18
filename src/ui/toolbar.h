@@ -1,13 +1,14 @@
 #ifndef AMN_WIDGET_TOOLBAR_H
 #define AMN_WIDGET_TOOLBAR_H
-#pragma once
+
+#include <vector>
+#include <pxr/base/vt/value.h>
+#include <pxr/base/vt/array.h>
 
 #include "../common.h"
 #include "../utils/utils.h"
 #include "../ui/ui.h"
-#include <vector>
-#include <pxr/base/vt/value.h>
-#include <pxr/base/vt/array.h>
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -77,6 +78,7 @@ private:
   pxr::GfVec3f                _color;
   std::vector<ToolbarItem*>   _items;
   ToolbarItem*                _current;
+  static ImGuiWindowFlags     _flags;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -145,6 +145,8 @@ private:
   GraphGrabUI                           _grabData;
   GraphCellUI*                          _grid;
   GraphConnectUI                        _connector;
+
+  static ImGuiWindowFlags               _flags;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -55,11 +55,13 @@ private:
   pxr::GfVec3f                  _color;
   bool                          _locked;
   ExplorerItem*                 _root;
-  static ImGuiTreeNodeFlags     _treeFlags;
-  static ImGuiSelectableFlags   _itemFlags;
   Icon*                         _visibleIcon;
   Icon*                         _invisibleIcon;
   bool                          _needRefresh;
+
+  static ImGuiWindowFlags       _flags;
+  static ImGuiTreeNodeFlags     _treeFlags;
+  static ImGuiSelectableFlags   _itemFlags;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

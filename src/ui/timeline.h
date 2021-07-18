@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AMN_UI_TIMELINE_H
+#define AMN_UI_TIMELINE_H
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -29,19 +30,22 @@ public:
   void ValidateTime();
   void Update();
 
-  float  _currentTime;
-  float  _startTime;
-  float  _endTime;
-  float  _minTime;
-  float  _maxTime;
-  float  _fps;
-  float  _speed;
-  bool   _loop;
-  bool   _playing;
-  bool   _interacting;
-  double _lastX;
-  double _lastY;
+  float                   _currentTime;
+  float                   _startTime;
+  float                   _endTime;
+  float                   _minTime;
+  float                   _maxTime;
+  float                   _fps;
+  float                   _speed;
+  bool                    _loop;
+  bool                    _playing;
+  bool                    _interacting;
+  double                  _lastX;
+  double                  _lastY;
+  static ImGuiWindowFlags _flags;
 };
 
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_UI_TIMELINE_H

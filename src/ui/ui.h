@@ -97,8 +97,6 @@ protected:
   bool                    _initialized;
   View*                   _parent;
   std::string             _name;
-  static ImGuiWindowFlags _flags;
-  
 };
 
 

@@ -1,13 +1,13 @@
 #ifndef AMN_UI_MENU_H
 #define AMN_UI_MENU_H
-#pragma once
 
-#include "ui.h"
-#include "../utils/utils.h"
 #include <iostream>
 #include <vector>
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>
+
+#include "../ui/ui.h"
+#include "../utils/utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -54,8 +54,9 @@ class MenuUI : public BaseUI
     MenuItem& AddItem(View* view, const std::string label, const std::string shortcut, bool selected, 
       bool enabled, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
   private:
-    std::vector<MenuItem> _items;
-    MenuItem*             _current;
+    std::vector<MenuItem>   _items;
+    MenuItem*               _current;
+    static ImGuiWindowFlags _flags;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -1,11 +1,11 @@
-#include "curveEditor.h"
+#include <pxr/usd/usdAnimX/fileFormat.h>
+#include <pxr/usd/usdAnimX/curve.h>
+
+#include "../ui/curveEditor.h"
 #include "../app/application.h"
 #include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/view.h"
-
-#include <pxr/usd/usdAnimX/fileFormat.h>
-#include <pxr/usd/usdAnimX/curve.h>
 
 
 AMN_NAMESPACE_OPEN_SCOPE

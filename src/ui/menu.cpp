@@ -1,10 +1,11 @@
 #include "../common.h"
+#include "../ui/style.h"
+#include "../ui/menu.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
-#include "../ui/style.h"
 #include "../app/modal.h"
-#include "menu.h"
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 

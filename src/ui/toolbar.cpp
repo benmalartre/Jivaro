@@ -1,10 +1,10 @@
-#include "toolbar.h"
+#include "../ui/ui.h"
+#include "../ui/style.h"
+#include "../ui/toolbar.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../app/modal.h"
-#include "../ui/ui.h"
-#include "../ui/style.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

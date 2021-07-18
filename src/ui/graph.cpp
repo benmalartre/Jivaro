@@ -1,5 +1,9 @@
-#include "graph.h"
-#include "node.h"
+#include <pxr/usd/usd/primRange.h>
+#include <pxr/usd/usd/attribute.h>
+
+#include "../ui/ui.h"
+#include "../ui/graph.h"
+#include "../ui/node.h"
 #include "../graph/stage.h"
 #include "../graph/node.h"
 #include "../graph/input.h"
@@ -7,9 +11,7 @@
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
-#include "../ui/ui.h"
-#include <pxr/usd/usd/primRange.h>
-#include <pxr/usd/usd/attribute.h>
+
 
 
 AMN_NAMESPACE_OPEN_SCOPE

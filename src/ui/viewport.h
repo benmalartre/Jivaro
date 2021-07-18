@@ -1,11 +1,6 @@
-#pragma once
+#ifndef AMN_UI_VIEWPORT_H
+#define AMN_UI_VIEWPORT_H
 
-#include "../common.h"
-#include "../ui/ui.h"
-#include "../app/camera.h"
-#include "../app/notice.h"
-#include "../app/handle.h"
-#include "../utils/utils.h"
 #include <pxr/pxr.h>
 
 #include <pxr/imaging/garch/glApi.h>
@@ -19,7 +14,15 @@
 #include "pxr/imaging/glf/simpleLight.h"
 #include "pxr/imaging/glf/simpleLightingContext.h"
 #include "pxr/imaging/glf/drawTarget.h"
+
+#include "../common.h"
+#include "../ui/ui.h"
+#include "../utils/utils.h"
+#include "../app/camera.h"
+#include "../app/notice.h"
+#include "../app/handle.h"
 #include "../app/engine.h"
+
 
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -98,12 +101,15 @@ class ViewportUI : public BaseUI
     bool                  _valid;
 
     // usd imaging engine
-    Engine*                           _engine;
-    pxr::UsdImagingGLRenderParams     _renderParams;
-    pxr::UsdPrim                      _root;
-    pxr::UsdLuxDomeLight              _light;
-    pxr::GlfDrawTargetRefPtr          _drawTarget;
-    int                               _drawMode;
+    Engine*                       _engine;
+    pxr::UsdImagingGLRenderParams _renderParams;
+    pxr::UsdPrim                  _root;
+    pxr::UsdLuxDomeLight          _light;
+    pxr::GlfDrawTargetRefPtr      _drawTarget;
+    int                           _drawMode;
     //pxr::UsdStageRefPtr               _stage;
+    static ImGuiWindowFlags       _flags;
 };
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif //AMN_UI_VIEWPORT_H

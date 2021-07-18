@@ -76,19 +76,7 @@ private:
   bool                          _grab;
   bool                          _navigate;
   CurveEditorGrabUI             _grabData;
-  /*
-  pxr::GfVec3f                  _color;
-  bool                          _locked;
-  ExplorerItem*                 _root;
-  ImGuiTreeNodeFlags            _selectBaseFlags;
-  Icon*                         _visibleIcon;
-  Icon*                         _invisibleIcon;
-  ImVec4                        _backgroundColor;
-  ImVec4                        _alternateColor;
-  ImVec4                        _selectedColor;
-  ImVec4                        _hoveredColor;
-  bool                          _needRefresh;
-  */
+  static ImGuiWindowFlags       _flags;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

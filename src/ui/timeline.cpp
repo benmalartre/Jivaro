@@ -1,9 +1,8 @@
-#include "timeline.h"
+#include <functional>
+#include "../ui/timeline.h"
 #include "../app/application.h"
 #include "../app/time.h"
 #include "../utils/icons.h"
-#include <functional>
-
 
 AMN_NAMESPACE_OPEN_SCOPE
 

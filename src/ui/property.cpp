@@ -1,11 +1,11 @@
-#include "property.h"
-#include "../app/view.h"
-#include "../app/window.h"
-
 #include <pxr/usd/usd/schemaBase.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/curves.h>
+
+#include "../ui/property.h"
+#include "../app/view.h"
+#include "../app/window.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -39,12 +39,6 @@ bool PropertyUI::Draw()
     pxr::UsdGeomXform xfo(_prim);
     pxr::TfTokenVector attrNames = xfo.GetSchemaAttributeNames();
   }
-  /*
-  std::cout << "PRIM : " << _prim.GetName() << std::endl;
-  pxr::UsdSchemaBase base(_prim);
-  std::cout << "BASE : " << base.GetPath() << std::endl;
-  pxr::TfTokenVector attrNames = base.GetSchemaAttributeNames();
-  */
 
   bool opened;
 
