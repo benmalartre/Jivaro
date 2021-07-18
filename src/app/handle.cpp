@@ -174,6 +174,7 @@ void BaseHandle::UpdatePickingPlane(short axis)
 
 const pxr::GfVec4f& BaseHandle::GetColor(const Shape::Component& comp)
 {
+  if (comp.index == AXIS_NONE)return comp.color;
   if(_interacting) {
     if(comp.flags &Shape::SELECTED) {
       return HANDLE_ACTIVE_COLOR;
@@ -250,7 +251,6 @@ void BaseHandle::Draw(float width, float height)
   pxr::GfMatrix4f m = _sizeMatrix * _matrix;
   GLint vao;
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
-  
   _DrawShape(&_shape, m);
   glBindVertexArray(vao);
 }
@@ -615,18 +615,61 @@ void ScaleHandle::Update(float x, float y, float width, float height)
 }
 
 BrushHandle::BrushHandle()
-  : BaseHandle(false), _minRadius(1.f), _maxRadius(1.2f)
+  : BaseHandle(false), _minRadius(1.f), _maxRadius(2.f), _color(pxr::GfVec4f(1.f,0.f,0.f,1.f))
 {
   Shape::Component cylinder = _shape.AddCylinder(
     AXIS_NORMAL, 0.02f, 1.f, 16, 2, HANDLE_ACTIVE_COLOR, HANDLE_Z_MATRIX);
   AddComponent(cylinder);
   Shape::Component innerRadius = _shape.AddTorus(
-    AXIS_NORMAL, _minRadius, 0.025f, 32, 8, HANDLE_ACTIVE_COLOR, HANDLE_Z_MATRIX);
+    AXIS_NORMAL, _minRadius, 0.025f, 32, 8, HANDLE_HELP_COLOR, HANDLE_Z_MATRIX);
   AddComponent(innerRadius);
   Shape::Component outerRadius = _shape.AddTorus(
     AXIS_NORMAL, _maxRadius, 0.025f, 32, 8, HANDLE_HELP_COLOR, HANDLE_Z_MATRIX);
   AddComponent(outerRadius);
 
+}
+
+void BrushHandle::_BuildStroke(bool replace)
+{
+  if (_path.size() < 2) return;
+
+  const pxr::GfVec3f normal(_camera->GetViewPlaneNormal());
+  std::vector<pxr::GfVec3f> profile(2);
+  profile[0] = { -0.5f, 0.f, 0.f };
+  profile[1] = { 0.5f, 0.f, 0.f };
+
+  std::vector<pxr::GfMatrix4f> xfos(_path.size());
+  pxr::GfVec3f tangent, bitangent, up;
+  for (size_t i = 0; i < _path.size(); ++i) {
+    if (i == 0) {
+      tangent = (_path[1] - _path[0]).GetNormalized();
+    }
+    else if (i == _path.size() - 1) {
+      size_t last = _path.size() - 1;
+      tangent = (_path[last] - _path[last - 1]).GetNormalized();
+    }
+    else {
+      tangent =
+        ((_path[i] - _path[i - 1]) + (_path[i + 1] - _path[i])).GetNormalized();
+    }
+    bitangent = (tangent ^ normal).GetNormalized();
+    up = (bitangent ^ tangent).GetNormalized();
+    pxr::GfMatrix3f rotation(
+      bitangent[0], bitangent[1], bitangent[2],
+      tangent[0], tangent[1], tangent[2],
+      up[0], up[1], up[2]
+    );
+    xfos[i] =
+      pxr::GfMatrix4f(1.f).SetRotate(rotation) *
+      pxr::GfMatrix4f(1.f).SetTranslate(_path[i]);
+  }
+  profile[0] = { -1, 0, 0 };
+  profile[1] = { 1, 0, 0 };
+  if(replace) _stroke.RemoveLastComponent();
+  Shape::Component comp = _stroke.AddExtrusion(
+    AXIS_NONE, xfos, profile, _color);
+  _stroke.AddComponent(comp);
+  _needUpdate = true;
 }
 
 void BrushHandle::BeginUpdate(float x, float y, float width, float height)
@@ -641,11 +684,19 @@ void BrushHandle::BeginUpdate(float x, float y, float width, float height)
   _path.push_back(pxr::GfVec3f(ray.GetPoint(distance)));
   
   _interacting = true;
+  _color = pxr::GfVec4f(
+    RANDOM_0_1,
+    RANDOM_0_1,
+    RANDOM_0_1,
+    1.f
+  );
 }
 
 void BrushHandle::EndUpdate()
 {
-
+  _BuildStroke(false);
+  _path.clear();
+  _interacting = false;
 }
 
 void BrushHandle::Update(float x, float y, float width, float height)
@@ -659,41 +710,8 @@ void BrushHandle::Update(float x, float y, float width, float height)
     double distance;
     ray.Intersect(_plane, &distance);
     _path.push_back(pxr::GfVec3f(ray.GetPoint(distance)));
-    const pxr::GfVec3f normal(_camera->GetViewPlaneNormal());
-    std::vector<pxr::GfVec3f> profile(2);
-    profile[0] = { -0.5f, 0.f, 0.f };
-    profile[1] = { 0.5f, 0.f, 0.f };
 
-    std::vector<pxr::GfMatrix4f> xfos(_path.size());
-    pxr::GfVec3f tangent, bitangent, up;
-    for (size_t i=0; i < _path.size(); ++i) {
-      if (i == 0) {
-        tangent = (_path[1] - _path[0]).GetNormalized();
-      } else if (i == _path.size() - 1) {
-        size_t last = _path.size() - 1;
-        tangent = (_path[last] - _path[last - 1]).GetNormalized();
-      } else {
-        tangent = 
-          ((_path[i] - _path[i - 1]) + (_path[i+1] - _path[i])).GetNormalized();
-      }
-      bitangent = (tangent ^ normal).GetNormalized();
-      up = (bitangent ^ tangent).GetNormalized();
-      pxr::GfMatrix3f rotation(
-        bitangent[0], bitangent[1], bitangent[2],
-        tangent[0], tangent[1], tangent[2],
-        up[0], up[1], up[2]
-      );
-      xfos[i] = 
-        pxr::GfMatrix4f(1.f).SetRotate(rotation) * 
-        pxr::GfMatrix4f(1.f).SetTranslate(_path[i]);
-    }
-    profile[0] = {-1, 0, 0 };
-    profile[1] = { 1, 0, 0 };
-    _stroke.RemoveComponent(_stroke.GetNumComponents()-1);
-    Shape::Component comp = _stroke.AddExtrusion(
-      AXIS_NONE, xfos, profile, pxr::GfVec4f(1.f, 0.f, 0.f, 1.f));
-    _stroke.AddComponent(comp);
-
+    _BuildStroke(true);
   }
 }
   
@@ -705,7 +723,7 @@ short BrushHandle::Pick(float x, float y, float width, float height)
     _camera->GetRayDirection(x, y, width, height));
 
   ComputeViewPlaneMatrix();
-
+  /*
   Shape::Component& comp = _shape.GetComponent(1);
   pxr::GfVec3f bounds(comp.bounds.GetMax());
   bounds[1] = 1.f / _distance;
@@ -715,7 +733,7 @@ short BrushHandle::Pick(float x, float y, float width, float height)
   bounds = comp.bounds.GetMax();
   bounds[1] = 1.f / _distance;
   comp.bounds.SetMax(bounds);
-
+  */
   pxr::GfVec3f translate;
   double planeDistance;
   if (ray.Intersect(_plane, &planeDistance))
@@ -738,10 +756,13 @@ void BrushHandle::Draw(float width, float height)
 
   _DrawShape(&_shape, m);
   
-  if (_interacting) {
+  if (_needUpdate) {
     _stroke.Setup();
-    _DrawShape(&_stroke);
+    _needUpdate = false;
   }
+
+  _DrawShape(&_stroke, pxr::GfMatrix4f(1.f));
+
   glBindVertexArray(vao);
 }
 

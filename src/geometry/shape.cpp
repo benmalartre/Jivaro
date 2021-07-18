@@ -282,12 +282,12 @@ void Shape::RemoveComponent(size_t idx)
   memmove(
     &_points[comp.basePoints], 
     &_points[comp.basePoints + comp.numPoints], 
-    comp.numPoints * sizeof(pxr::GfVec3f)
+    remainingPoints * sizeof(pxr::GfVec3f)
   );
   memmove(
     &_indices[comp.baseIndices],
     &_indices[comp.baseIndices + comp.numIndices],
-    comp.numIndices * sizeof(int)
+    remainingIndices * sizeof(int)
   );
   _indices.resize(_indices.size() - comp.numIndices);
   _points.resize(_points.size() - comp.numPoints);
@@ -302,24 +302,6 @@ void Shape::RemoveLastComponent()
   _points.resize(_points.size() - comp.numPoints);
   _components.pop_back();
 }
-
-/*
-void Shape::AddComponent(short type, short index, size_t basePoint, 
-  size_t numPoints, size_t startIdx, size_t endIdx, 
-  const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
-{
-  _components.push_back({
-    VISIBLE|PICKABLE,
-    type, 
-    index, 
-    basePoint, 
-    numPoints, 
-    startIdx, 
-    endIdx, 
-    color, 
-    m
-  });
-}*/
 
 void Shape::_MakeCircle(std::vector<pxr::GfVec3f>& points, float radius, 
   size_t numPoints, const pxr::GfMatrix4f& m)
@@ -931,7 +913,7 @@ Shape::AddTorus(short index, float radius, float section, size_t lats,
   // make indices
   for(int i = 0; i < longs; ++i) {
     for(int j = 0; j < lats; ++j) {
-      size_t i1, i2, i3, i4;
+      int i1, i2, i3, i4;
       i1 = baseNumPoints + (j + i * lats);
       if(j < lats -1) {
         i2 = baseNumPoints + ((j + i * lats + 1) % torusNumPoints);
@@ -984,7 +966,7 @@ Shape::AddExtrusion(short index,
   bool closeU = false;
   //  GfIsClose(xfos.front(), xfos.back(), 0.001f) ? true : false;
   bool closeV = false;
-  //  GfIsClose(profile.front(), profile.back(), 0.001f) ? true : false;
+   // GfIsClose(profile.front(), profile.back(), 0.001f) ? true : false;
 
   // make points
   size_t numLongs = closeU ? numXfos - 1 : numXfos;
@@ -999,9 +981,9 @@ Shape::AddExtrusion(short index,
   _TransformPoints(baseNumPoints, _points.size(), m);
 
   // make indices
-  for(size_t i=0; i < numLongs; ++i) {
+  for(size_t i=0; i < numLongs - 1; ++i) {
     size_t baseIdx = baseNumPoints + i * numPoints;
-    for(size_t j=0; j < numLats; ++j) {
+    for(size_t j=0; j < numLats - 1; ++j) {
       _indices.push_back(baseIdx + j);
       _indices.push_back(baseIdx + ((j + 1) % numLats));
       _indices.push_back(baseIdx + ((j + 1) % numLats ) + numLats);

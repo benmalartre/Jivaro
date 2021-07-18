@@ -122,8 +122,10 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _interactionMode = INTERACTION_NONE;
     _interact = false;
-    Tool* tools = AMN_APPLICATION->GetTools();
-    tools->EndUpdate();
+    if (!(mods & GLFW_MOD_ALT) && !(mods & GLFW_MOD_SUPER)) {
+      Tool* tools = AMN_APPLICATION->GetTools();
+      tools->EndUpdate();
+    }
     //RenderToMemory(_camera, false);
     //SetImage();
   }
@@ -156,32 +158,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
       Tool* tools = AMN_APPLICATION->GetTools();
       tools->Select(false);
       tools->BeginUpdate();
-      //Pick(x, y);
-      //window->RestoreLastActiveTool();
     }
-/*
-    if (button == GLFW_MOUSE_BUTTON_RIGHT)
-    {
-      _interact = true;
-      _interactionMode = INTERACTION_ORBIT;
-    }
-    else if(button == GLFW_MOUSE_BUTTON_LEFT)
-    {
-      _interact = true;
-      if(mods == GLFW_MOD_ALT)
-      {
-        _interactionMode = INTERACTION_ORBIT;
-      }
-      else if(mods == GLFW_MOD_CONTROL)
-      {
-        _interactionMode = INTERACTION_WALK;
-      }
-      else if(mods == GLFW_MOD_SHIFT)
-      {
-        _interactionMode = INTERACTION_DOLLY;
-      }
-    }
-*/
   }
   _parent->SetDirty();
 }

@@ -137,13 +137,13 @@ public:
   virtual void Update(float x, float y, float width, float height);
   virtual void EndUpdate();
 
-  virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
+protected:
+  virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
   virtual void _ComputeCOGMatrix(pxr::UsdStageRefPtr stage);
   virtual void _UpdateTargets();
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
 
-protected:
   // targets
   HandleTargetDescList    _targets;
   
@@ -220,11 +220,15 @@ public:
   void Update(float x, float y, float width, float height) override;
 
 private:
+  void _BuildStroke(bool replace);
+
+  bool                          _needUpdate;
   float                         _minRadius;
   float                         _maxRadius;
   HandleTargetGeometryDescList  _geometries;
   Shape                         _stroke;
   std::vector<pxr::GfVec3f>     _path;
+  pxr::GfVec4f                  _color;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
