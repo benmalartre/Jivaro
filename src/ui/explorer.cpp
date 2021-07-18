@@ -14,6 +14,13 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags ExplorerUI::_flags = 
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoMove;
+
 ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
   ImGuiTreeNodeFlags_OpenOnArrow |
   ImGuiTreeNodeFlags_OpenOnDoubleClick;
@@ -30,12 +37,6 @@ ExplorerUI::ExplorerUI(View* parent)
   , _visibleIcon(NULL)
   , _invisibleIcon(NULL)
 {
-  _flags = ImGuiWindowFlags_None
-    | ImGuiWindowFlags_NoResize
-    | ImGuiWindowFlags_NoTitleBar
-    | ImGuiWindowFlags_NoScrollbar
-    | ImGuiWindowFlags_NoMove;
-
   _parent->SetDirty();
   _visibleIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_VISIBLE];
   _invisibleIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_INVISIBLE];

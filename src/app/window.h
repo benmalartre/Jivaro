@@ -111,7 +111,7 @@ public:
   void BuildSplittersMap();
 
   // views
-  Splitter* GetSplitter(){return _splitter;};
+  SplitterUI* GetSplitter(){return _splitter;};
   View* SplitView(View* view, double perc = 0.5, bool horizontal=true, 
     int fixed=0, int numPixels=-1);
   View* GetMainView(){return _mainView;};
@@ -163,7 +163,7 @@ private:
   View*                     _mainView;
   View*                     _activeView;
   View*                     _activeLeaf;
-  Splitter*                 _splitter;
+  SplitterUI*               _splitter;
   bool                      _dragSplitter;
   std::vector<View*>        _leaves;
   ImGuiContext*             _context;

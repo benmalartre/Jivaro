@@ -3,6 +3,7 @@
 
 #include "../common.h"
 #include "../utils/utils.h"
+#include "../ui/ui.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 
@@ -22,11 +23,8 @@ public:
     LEFT = 8
   };
  
-  SplitterUI():_pixels(NULL),_valid(false){};
-  
-  ~SplitterUI(){
-    if(_pixels)delete [] _pixels;
-  };
+  SplitterUI();
+  ~SplitterUI();
 
   int* GetPixels(){return _pixels;};
   inline unsigned GetWidth(){return _width;};
@@ -39,7 +37,7 @@ public:
   void SetVerticalCursor(){_cursor = ImGuiMouseCursor_ResizeNS;};
   void SetDefaultCursor(){_cursor = ImGuiMouseCursor_Arrow;};
 
-  void Resize(int width, int height) override;
+  void Resize(int width, int height);
   bool Draw() override;
   
 private:

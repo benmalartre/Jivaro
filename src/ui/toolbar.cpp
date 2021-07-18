@@ -183,7 +183,7 @@ bool ToolbarUI::Draw()
 {
   bool opened;
   
-  ImGui::Begin(_name.c_str(), &opened, flags);
+  ImGui::Begin(_name.c_str(), &opened, _flags);
   ImGui::PushClipRect(
     _parent->GetMin(),
     _parent->GetMax(), 

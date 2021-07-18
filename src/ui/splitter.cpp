@@ -20,6 +20,18 @@ ImGuiWindowFlags SplitterUI::_flags =
   ImGuiWindowFlags_NoTitleBar |
   ImGuiWindowFlags_NoScrollbar;
 
+SplitterUI::SplitterUI()
+  : BaseUI(NULL, "Splitter")
+  , _pixels(NULL)
+  , _valid(false)
+{
+};
+
+SplitterUI::~SplitterUI()
+{
+  if (_pixels)delete[] _pixels;
+};
+
 void SplitterUI::RecurseBuildMap(View* view)
 {
   if(!view) return;
