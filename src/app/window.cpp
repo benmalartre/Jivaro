@@ -35,6 +35,7 @@ void AMNCreateFontAtlas()
   std::string fontPath;
   for (int i = 0; i < 3; ++i) {
     fontPath = exeFolder + "/fonts/roboto/Roboto-Bold.ttf";
+    //fontPath = exeFolder + "/fonts/opensans/OpenSans-Bold.ttf";
     std::cout << fontPath << std::endl;
     AMN_BOLD_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
@@ -44,6 +45,7 @@ void AMNCreateFontAtlas()
     );
 
     fontPath = exeFolder + "/fonts/roboto/Roboto-Medium.ttf";
+    //fontPath = exeFolder + "/fonts/opensans/OpenSans-Medium.ttf";
     AMN_MEDIUM_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -52,6 +54,7 @@ void AMNCreateFontAtlas()
     );
 
     fontPath = exeFolder + "/fonts/roboto/Roboto-Regular.ttf";
+    //fontPath = exeFolder + "/fonts/opensans/OpenSans-Regular.ttf";
     AMN_REGULAR_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],

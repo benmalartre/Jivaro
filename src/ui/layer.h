@@ -1,5 +1,5 @@
-#ifndef AMN_UI_EXPLORER_H
-#define AMN_UI_EXPLORER_H
+#ifndef AMN_UI_LAYER_H
+#define AMN_UI_LAYER_H
 
 #include <pxr/usd/usd/prim.h>
 
@@ -29,11 +29,11 @@ struct ExplorerItem {
   };
 };
 
-class ExplorerUI : public BaseUI
+class LayerUI : public BaseUI
 {
 public:
-  ExplorerUI(View* parent);
-  ~ExplorerUI()         override;
+  LayerUI(View* parent);
+  ~LayerUI()         override;
 
   void MouseButton(int action, int button, int mods) override;
   void MouseMove(int x, int y) override;

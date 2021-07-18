@@ -376,7 +376,7 @@ bool ViewportUI::Draw()
     // tool drawing
     drawList->AddCallback(DrawToolCallback, this);
   
-    ImGui::PushFont(GetWindow()->GetMediumFont(0));
+    ImGui::PushFont(GetWindow()->GetRegularFont(0));
     std::string msg = "Hello Amnesie!";
     drawList->AddText(
       ImVec2(_parent->GetMin()[0] + 20, _parent->GetMax()[1] - 20), 
@@ -388,22 +388,14 @@ bool ViewportUI::Draw()
       ImVec2(_parent->GetMin()[0] + GetWidth() - 128.f, _parent->GetMax()[1] - 20),
       0xFFFFFFFF,
       msg.c_str());
+
+    // shaded mode
+    ImGui::SetCursorPosX(_parent->GetWidth() - 300);
+    ImGui::SetNextItemWidth(300);
+    ImGui::Combo("DrawMode", &_drawMode, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES));
     ImGui::PopFont();
 
-    ImGui::SetCursorPosX(_parent->GetMax()[0] - 300);
-    ImGui::PushItemWidth(250);
-    ImGui::Combo("DrawMode", &_drawMode, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES));
-    ImGui::PopItemWidth();
     ImGui::End();
-
-    /*
-    bool open;
-    ImGui::Begin("ViewportOverlay", &open, ImGuiWindowFlags_NoDecoration);
-    */
-    //ImGui::Text("FPS : %d", this->GetApplication()->GetFramerate());
-    //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    //ImGui::End();
-    
 
     return true;
   }

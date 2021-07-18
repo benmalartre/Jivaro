@@ -1,6 +1,7 @@
-#include "filebrowser.h"
-#include "../app/view.h"
+#include "../ui/filebrowser.h"
 #include "../utils/strings.h"
+#include "../app/view.h"
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -177,6 +178,7 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
       AppendPath(info.path);
     } else if(info.type == EntryInfo::Type::FILE) {
       SetResult(info.path);
+      _browsing = false;
     }
   }
 

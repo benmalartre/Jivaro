@@ -6,7 +6,7 @@
 #include "../common.h"
 #include "../utils/utils.h"
 #include "../utils/icons.h"
-#include "ui.h"
+#include "../ui/ui.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

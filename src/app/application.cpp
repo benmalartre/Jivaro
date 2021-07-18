@@ -1,15 +1,5 @@
-#include "../utils/files.h"
-#include "../ui/filebrowser.h"
-#include "../ui/viewport.h"
-#include "../ui/menu.h"
-#include "../ui/graph.h"
-#include "../ui/timeline.h"
-#include "../ui/dummy.h"
-#include "../ui/toolbar.h"
-#include "../ui/explorer.h"
-#include "../ui/property.h"
-#include "../ui/curveEditor.h"
-
+#include <iostream>
+#include <string>
 #include <pxr/base/tf/debug.h>
 #include <pxr/base/tf/refPtr.h>
 #include <pxr/usd/sdf/layer.h>
@@ -30,16 +20,22 @@
 #include <pxr/usd/usdAnimX/desc.h>
 #include <pxr/usd/usdAnimX/data.h>  
 #include <pxr/usd/usdAnimX/keyframe.h>
-//#include "../tests/stageGraph.h"
-//#include "../tests/stageUI.h"
 
-#include "application.h"
-#include "modal.h"
-#include "notice.h"
-#include "engine.h"
-
-#include <iostream>
-#include <string>
+#include "../utils/files.h"
+#include "../ui/filebrowser.h"
+#include "../ui/viewport.h"
+#include "../ui/menu.h"
+#include "../ui/graph.h"
+#include "../ui/timeline.h"
+#include "../ui/dummy.h"
+#include "../ui/toolbar.h"
+#include "../ui/explorer.h"
+#include "../ui/property.h"
+#include "../ui/curveEditor.h"
+#include "../app/application.h"
+#include "../app/modal.h"
+#include "../app/notice.h"
+#include "../app/engine.h"
 #include "../geometry/vdb.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -457,7 +453,8 @@ Application::Init()
   _mainWindow->CollectLeaves();
   
   // setup notifications
-  //pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
  /*
   Window* childWindow = CreateChildWindow(400, 400, _mainWindow);
   childWindow->Init(this);
@@ -562,6 +559,12 @@ Application::GetStageBoundingBox()
 void Application::SelectionChangedCallback(const Notice::SelectionChanged& n)
 {
   _tools.ResetSelection();
+}
+
+void Application::NewSceneCallback(const Notice::NewScene& n)
+{
+  std::cout << "NEW SCENE CALBACK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  _selection.Clear();
 }
 
 pxr::GfBBox3d 

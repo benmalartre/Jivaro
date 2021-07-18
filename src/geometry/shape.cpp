@@ -1,6 +1,3 @@
-#include "shape.h"
-#include "intersector.h"
-#include "../utils/shaders.h"
 #include <iostream>
 #include <map>
 #include <pxr/imaging/glf/contextCaps.h>
@@ -9,6 +6,9 @@
 #include <pxr/base/gf/range3f.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
+#include "../geometry/shape.h"
+#include "../geometry/intersector.h"
+#include "../utils/shaders.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

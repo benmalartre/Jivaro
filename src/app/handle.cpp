@@ -105,6 +105,7 @@ void BaseHandle::SetMatrixFromSRT()
   transform.SetTranslation(_position);
 
   _matrix = pxr::GfMatrix4f(transform.GetMatrix());
+  _displayMatrix = _matrix;
 }
 
 void BaseHandle::SetSRTFromMatrix()
@@ -114,6 +115,7 @@ void BaseHandle::SetSRTFromMatrix()
   _scale = transform.GetScale();
   _rotation = transform.GetRotation();
   _position = transform.GetTranslation();
+  std::cout << "BASE HANDLE SET SRT : " << _position << std::endl;
 }
 
 void BaseHandle::ComputeViewPlaneMatrix()
@@ -128,13 +130,16 @@ void BaseHandle::ComputeViewPlaneMatrix()
 
 void BaseHandle::ResetSelection()
 {
+  std::cout << "RESET SELECTION " << std::endl;
   Application* app = AMN_APPLICATION;
   
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetStage();
+  std::cout << "STAGE : " << stage << std::endl;
   float activeTime = app->GetTime().GetActiveTime();
+  std::cout << "TIME : " << activeTime << std::endl;
   _xformCache.SetTime(activeTime);
-
+  std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
   _targets.clear();
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
     const SelectionItem& item = selection->GetItem(i);
@@ -205,7 +210,6 @@ short BaseHandle::Select(float x, float y, float width, float height,
   if(hovered) {
     SetActiveAxis(hovered);
     UpdatePickingPlane(hovered);
-    ResetSelection();
   }
   _shape.UpdateComponents(hovered, hovered);
   return hovered;
@@ -217,7 +221,7 @@ short BaseHandle::Pick(float x, float y, float width, float height)
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
 
-  pxr::GfMatrix4f m = _sizeMatrix * _matrix;
+  pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
   size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
   SetHoveredAxis(hovered);
   _shape.UpdateComponents(hovered, AXIS_NONE);
@@ -314,7 +318,7 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
     }
   }
   if(numPrims) {
-     accumPosition *= 1.f / (float)numPrims;
+    accumPosition *= 1.f / (float)numPrims;
     accumRotation.Normalize();
 
     _matrix.SetIdentity();
@@ -323,6 +327,8 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
     _matrix[3][0] = accumPosition[0];
     _matrix[3][1] = accumPosition[1];
     _matrix[3][2] = accumPosition[2];
+
+    _displayMatrix = _matrix;
    
   }
 }
@@ -379,12 +385,23 @@ void BaseHandle::_UpdateTargets()
     std::vector<pxr::UsdGeomXformOp> xformOps = xformable.GetOrderedXformOps(&resetXformOpExists);
     if (!xformOps.size()) {
       pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
-      //xformOp.Set(pxr::VtValue(usdMatrix));
       xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
     }
     else {
-      //xformOps[0].Set(pxr::VtValue(usdMatrix));
-      xformOps[0].Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
+      bool found = false;
+      for (auto& xformOp : xformOps) {
+        pxr::UsdGeomXformOp::Type opType = xformOp.GetOpType();
+        if (opType == pxr::UsdGeomXformOp::TypeTransform) {
+          xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        xformable.ClearXformOpOrder();
+        pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
+        xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
+      }
     }
   }
 }
@@ -565,9 +582,20 @@ void RotateHandle::Update(float x, float y, float width, float height)
 
 ScaleHandle::ScaleHandle()
   : BaseHandle()
+  , _invScale(pxr::GfVec3f(1.f))
 {
+  Shape::Component all = _shape.AddGrid(
+    AXIS_CAMERA, 0.1f, 0.1f, 1, 1, HANDLE_HELP_COLOR
+  );
+  AddComponent(all);
+
   Shape::Component cylinder = _shape.AddCylinder(
-    AXIS_X, 0.02f, 1.f, 16, 2, HANDLE_X_COLOR);
+    AXIS_X, 0.02f, 0.8f, 16, 2, HANDLE_X_COLOR, {
+      1.f,0.f,0.f,0.f,
+      0.f,1.f,0.f,0.f,
+      0.f,0.f,1.f,0.f,
+      0.f,0.2f,0.f,1.f 
+    });
   AddXYZComponents(cylinder);
 
   Shape::Component box = _shape.AddBox(
@@ -577,42 +605,119 @@ ScaleHandle::ScaleHandle()
       0.f, 0.f, 1.f, 0.f,
       0.f, 1.f, 0.f, 1.f });
   AddXYZComponents(box);
-  
-  // dummy xfos
-  std::vector<pxr::GfMatrix4f> xfos = {
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(-1.f, 0.f, 0.f)),
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(-1.f, 1.f, 0.f)),
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 1.f, 0.f)),
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.5f, 1.f, 0.f)),
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(1.f, 0.f, 0.f)),
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, -1.f, 1.f))
-  };
+}
 
-  // dummy profile
-  std::vector<pxr::GfVec3f> profile = {
-    pxr::GfVec3f(-0.1f, 0.f, -0.1f),
-    pxr::GfVec3f(0.1f, 0.f, -0.1f),
-    pxr::GfVec3f(0.1f, 0.f, 0.1f),
-    pxr::GfVec3f(-0.1f, 0.f, 0.1f)
-  };
+void ScaleHandle::_GetInverseScale()
+{
+  _invScale = pxr::GfVec3f(
+    pxr::GfIsClose(_matrix[0][0], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[0][0],
+    pxr::GfIsClose(_matrix[1][1], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[1][1],
+    pxr::GfIsClose(_matrix[2][2], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[2][2]);
+}
 
-  Shape::Component extrude = _shape.AddExtrusion(
-    AXIS_X, xfos, profile, HANDLE_X_COLOR
-  );
-  /*
-  Shape::AddExtrusion(short index, 
-  const std::vector<pxr::GfMatrix4f>& xfos,
-  const std::vector<pxr::GfVec3f>& profile, 
-  const pxr::GfVec4f& color,
-  const pxr::GfMatrix4f& m)
-  */
-  AddComponent(extrude);
+void ScaleHandle::BeginUpdate(float x, float y, float width, float height)
+{
+  pxr::GfRay ray(
+    _camera->GetPosition(),
+    _camera->GetRayDirection(x, y, width, height));
+
+  double distance;
+  bool frontFacing;
+  _startMatrix = _matrix;
+  if (ray.Intersect(_plane, &distance, &frontFacing)) {
+    if (_activeAxis == AXIS_CAMERA) {
+      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
+    }
+    else {
+      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
+        _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+    }
+  }
+  _GetInverseScale();
+  _interacting = true;
 }
 
 void ScaleHandle::Update(float x, float y, float width, float height)
 {
+  if (_interacting) {
+    pxr::GfRay ray(
+      _camera->GetPosition(),
+      _camera->GetRayDirection(x, y, width, height));
 
+    double distance;
+    float value = RANDOM_0_1;
+    bool frontFacing;
+    if (ray.Intersect(_plane, &distance, &frontFacing)) {
+      if (_activeAxis == AXIS_CAMERA) {
+        value = RANDOM_0_1;
+        _scale = pxr::GfVec3f(value, value, value);
+      }
+      else {
+        /*
+        _position =
+          _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)),
+            _activeAxis) + _offset;
+        _scale = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+        */
+        switch (_activeAxis) {
+          case AXIS_X:
+            _scale[0] = value;
+            break;
+          case AXIS_Y:
+            _scale[1] = value;
+            break;
+          case AXIS_Z:
+            _scale[2] = value;
+            break;
+          case AXIS_XY:
+            _scale[0] = value;
+            _scale[1] = value;
+            break;
+          case AXIS_XZ:
+            _scale[0] = value;
+            _scale[2] = value;
+            break;
+          case AXIS_YZ:
+            _scale[1] = value;
+            _scale[2] = value;
+            break;
+          default:
+            _scale = pxr::GfVec3f(value, value, value);
+        }
+      }
+
+      SetMatrixFromSRT();
+      _displayMatrix = pxr::GfMatrix4f(1.f).SetScale(_invScale) * _matrix;
+      _UpdateTargets();
+    }
+  }
 }
+
+void ScaleHandle::EndUpdate()
+{
+  _GetInverseScale();
+  _displayMatrix = pxr::GfMatrix4f(1.f).SetScale(_invScale) * _matrix;
+  _interacting = false;
+}
+
+void ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
+{
+  shape->Bind(SHAPE_PROGRAM);
+  for (size_t i = 0; i < shape->GetNumComponents(); ++i) {
+    const Shape::Component& component = shape->GetComponent(i);
+    if (component.GetFlag(Shape::VISIBLE)) {
+      if (component.index == AXIS_CAMERA) {
+        shape->DrawComponent(i, _viewPlaneMatrix, GetColor(component));
+      }
+      else {
+        shape->DrawComponent(i, component.parentMatrix * m * _inverseScale,
+          GetColor(component));
+      }
+    }
+  }
+  shape->Unbind();
+}
+
 
 BrushHandle::BrushHandle()
   : BaseHandle(false), _minRadius(1.f), _maxRadius(2.f), _color(pxr::GfVec4f(1.f,0.f,0.f,1.f))

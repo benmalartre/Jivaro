@@ -73,6 +73,7 @@ public:
   pxr::GfBBox3d GetSelectionBoundingBox();
   pxr::GfBBox3d GetStageBoundingBox();
   void SelectionChangedCallback(const Notice::SelectionChanged& n);
+  void NewSceneCallback(const Notice::NewScene& n);
 
   // time
   Time& GetTime() { return _time; };

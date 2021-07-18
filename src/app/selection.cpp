@@ -51,6 +51,7 @@ void Selection::RemoveComponents(const pxr::SdfPath& object,
 void Selection::Clear()
 {
   _items.clear();
+  std::cout << "CLEARED SELECTION !" << std::endl;
 }
 
 

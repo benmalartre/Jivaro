@@ -82,6 +82,7 @@ public:
     AXIS_XY,
     AXIS_XZ,
     AXIS_YZ,
+    AXIS_XYZ,
     AXIS_CAMERA,
     AXIS_NORMAL,
     AXIS_RAY,
@@ -171,6 +172,7 @@ protected:
   pxr::GfVec3d            _offset;
   pxr::GfRotation         _rotation;
   pxr::GfMatrix4f         _matrix;
+  pxr::GfMatrix4f         _displayMatrix;
   pxr::GfMatrix4f         _startMatrix;
   pxr::GfPlane            _plane;
   pxr::GfMatrix4f         _viewPlaneMatrix;
@@ -181,9 +183,16 @@ class ScaleHandle : public BaseHandle {
 public:
   ScaleHandle();
 
+  void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
+  void EndUpdate() override;
+  void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
 
 private:
+  void _GetInverseScale();
+
+  pxr::GfVec3f _invScale;
+
 };
 
 class RotateHandle : public BaseHandle {

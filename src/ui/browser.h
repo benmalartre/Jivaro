@@ -1,5 +1,5 @@
-#ifndef AMN_WIDGETS_BROWSER_H
-#define AMN_WIDGETS_BROWSER_H
+#define AMN_UI_BROWSER_H
+#ifndef AMN_UI_BROWSER_H
 #pragma once
 
 #include "../common.h"

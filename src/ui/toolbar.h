@@ -1,5 +1,5 @@
-#ifndef AMN_WIDGET_TOOLBAR_H
-#define AMN_WIDGET_TOOLBAR_H
+#ifndef AMN_UI_TOOLBAR_H
+#define AMN_UI_TOOLBAR_H
 
 #include <vector>
 #include <pxr/base/vt/value.h>
@@ -83,4 +83,4 @@ private:
 
 AMN_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_WIDGET_TOOLBAR_H
+#endif // AMN_UI_TOOLBAR_H

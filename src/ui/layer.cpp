@@ -25,6 +25,12 @@ ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
   ImGuiTreeNodeFlags_OpenOnDoubleClick |
   ImGuiTreeNodeFlags_SpanAvailWidth;
 
+ImGuiSelectableFlags ExplorerUI::_itemFlags = 
+  ImGuiSelectableFlags_SpanAllColumns |
+  ImGuiSelectableFlags_SpanAvailWidth |
+  ImGuiSelectableFlags_SelectOnClick;
+
+
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, "Explorer")
@@ -154,13 +160,7 @@ void ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
 }
 void ExplorerUI::DrawItemType(ExplorerItem* item)
 {
-  std::string key = "##" + item->_prim.GetPath().GetToken().GetString();
-  ImGui::Selectable(
-    item->_prim.GetTypeName().GetText(),
-    &item->_selected, 
-    ImGuiSelectableFlags_SpanAvailWidth | ImGuiSelectableFlags_SelectOnRelease, 
-    ImVec2(60, AMN_EXPLORER_LINE_HEIGHT)
-  );
+  ImGui::Text("%s", item->_prim.GetTypeName().GetText());
   _UpdateSelection(item, !item->_items.size());
   ImGui::NextColumn();
 }

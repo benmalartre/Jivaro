@@ -75,7 +75,7 @@ public:
       , numIndices(numIndices)
       , color(color)
       , parentMatrix(parentMatrix)
-      , offsetMatrix(offsetMatrix){
+      , offsetMatrix(offsetMatrix) {
         switch(type) {
           case GRID:
             _intersectImplementation = &Shape::Component::_IntersectGrid;
