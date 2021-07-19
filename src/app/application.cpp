@@ -243,6 +243,7 @@ Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage,
   //mesh->PolygonSoup(65535);
   pxr::GfMatrix4f space(1.f);
   mesh->TriangularGrid2D(10.f, 6.f, space, 0.2f);
+  mesh->Randomize(0.5f);
 
   pxr::UsdGeomMesh polygonSoup = 
     pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(path));
@@ -402,7 +403,7 @@ Application::Init()
   _property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, editor);
-  _stage = TestAnimX(editor);
+  //_stage = TestAnimX(editor);
 
   /*
   // Create the layer to populate.
@@ -436,9 +437,9 @@ Application::Init()
   //_stage = pxr::UsdStage::Open(filename);
 
   //_stage = pxr::UsdStage::CreateNew("test.usda", pxr::TfNullPtr);
- // _stage = pxr::UsdStage::CreateInMemory();
+  _stage = pxr::UsdStage::CreateInMemory();
 
-  //_mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
+  _mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
   //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, pxr::TfToken("/openvdb_sphere"));
 /*
   for(size_t i=0; i< 12; ++i) {

@@ -3,7 +3,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-void Barycentric(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
+void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
   const pxr::GfVec3f& c, float* u, float* v, float* w)
 {
   pxr::GfVec3f v0 = b - a;
@@ -169,24 +169,25 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
   pxr::VtArray<pxr::GfVec3f>& tangents)
 {
   size_t numPoints = points.size();
+  size_t last = numPoints - 1;
   tangents.resize(numPoints);
   pxr::GfVec3f current, previous, next;
   switch (numPoints) {
   case 0:
-    return;
+    break;
   case 1:
     tangents[0] = pxr::GfVec3f(0.f, 1.f, 0.f);
-    return;
+    break;
   case 2:
-    current = points[1] - points[0];
-    next = current;
+    current = (points[1] - points[0]).GetNormalized();
+    break;
   default:
-    current = points[1] - points[0];
-    next = points[2] - points[1];
-  }
-
-  for (int i = 1; i < numPoints; ++i) {
-
+    tangents[0] = (points[1] - points[0]).GetNormalized();
+    tangents[last] = (points[last] - points[last-1]).GetNormalized();
+    for (int i = 1; i < numPoints; ++i) {
+      tangents[i] =
+        ((points[i] - points[i - 1]) + (points[i + 1] - points[i])).GetNormalized();
+    }
   }
 }
 
