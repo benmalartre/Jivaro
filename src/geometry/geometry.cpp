@@ -1,8 +1,8 @@
-// Geometry
-//----------------------------------------------
-#include "geometry.h"
-#include "utils.h"
 #include <pxr/base/gf/ray.h>
+
+#include "../geometry/geometry.h"
+#include "../geometry/utils.h"
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -80,11 +80,6 @@ void Geometry::ComputeBoundingBox()
     _bbox.addInPlace(subMesh->_bbox);
   }
   */
-}
-
-pxr::GfBBox3d& Geometry::GetBoundingBox()
-{
-  return _bbox;
 }
 
 void Geometry::Init(const pxr::VtArray<pxr::GfVec3f>& positions)

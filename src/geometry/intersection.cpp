@@ -1,11 +1,70 @@
-#include "intersector.h"
 #include <pxr/base/gf/math.h>
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/plane.h>
 
+#include "../geometry/intersection.h"
+#include "../geometry/geometry.h"
+
 AMN_NAMESPACE_OPEN_SCOPE
 
+//=================================================================================================
+// HIT CLASS
+//=================================================================================================
+void Hit::Set(const Hit& other) {
+  _geom = other._geom;
+  _baryCoords = other._baryCoords;
+  _elemType = other._elemType;
+  _elemId = other._elemId;
+  _elemMapId = other._elemMapId;
+  _t = other._t;
+}
+
+void Hit::GetPosition(pxr::GfVec3f* position) const 
+{
+  /*
+  Geometry*     _geom;
+  pxr::GfVec3f  _baryCoords;
+  short         _elemType;
+  int           _elemId;
+  int           _elemMapId;
+  */
+  switch (_geom->GetType()) {
+    case Geometry::MESH:
+    {
+
+    }
+    case Geometry::CURVE:
+    {
+
+    }
+    case Geometry::POINT:
+    {
+
+    }
+  }
+}
+void Hit::GetNormal(pxr::GfVec3f* normal) const
+{
+  switch (_geom->GetType()) {
+    case Geometry::MESH:
+    {
+
+    }
+    case Geometry::CURVE:
+    {
+
+    }
+    case Geometry::POINT:
+    {
+
+    }
+  }
+}
+
+//=================================================================================================
+// INTERSECTION ROUTINES
+//=================================================================================================
 bool IntersectDisc(const pxr::GfRay& localRay, const double radius, double* distance) 
 { 
   double hitDistance;

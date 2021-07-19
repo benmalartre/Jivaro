@@ -190,8 +190,10 @@ public:
 
 private:
   void _GetInverseScale();
+  pxr::GfVec3f _GetTranslateOffset(size_t axis);
 
   pxr::GfVec3f _invScale;
+  pxr::GfVec3f _baseScale;
 
 };
 

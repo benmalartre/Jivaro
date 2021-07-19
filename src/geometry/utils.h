@@ -12,6 +12,10 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+/// Barycentric coordinates
+void Barycentric(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
+  const pxr::GfVec3f& c, float* u, float* v, float* w);
+
 /// Make circle
 void
 MakeCircle(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& m, size_t n);

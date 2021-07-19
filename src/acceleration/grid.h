@@ -8,12 +8,16 @@
 #include <pxr/base/gf/ray.h>
 #include "../common.h"
 #include "../geometry/geometry.h"
-#include "../geometry/triangle.h"
-#include "../geometry/mesh.h"
+#include "../acceleration/intersector.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-class Grid3D {
+class Geometry;
+class Mesh;
+class Curve;
+class Points;
+
+class GridIntersector : public Intersector {
   enum ElemType {
     POINT,
     EDGE,
@@ -21,14 +25,14 @@ class Grid3D {
     POLYGON
   };
 
-  typedef bool (Grid3D::*IntersectFunc)(Geometry* geometry, 
-    const pxr::GfRay &ray, Location* hitPoint, double maxDistance, 
-    double* minDistance);
+  typedef bool (GridIntersector::*IntersectFunc)(
+    Geometry* geometry, const pxr::GfRay &ray, Hit* hit, 
+    double maxDistance, double* minDistance);
 
   static uint32_t SLICE_INDICES[27*3];
 public:
   struct Element {
-    uint8_t     geometry;
+    uint16_t    geometry;
     void*       ptr;
   };
 
@@ -52,11 +56,14 @@ public:
 
     bool Contains(const pxr::GfVec3f& pos);
     //void insert(Vertex* V){_points.push_back(V);};
+    //void Insert(Point* point);
+    //void Insert(Edge* edge);
     void Insert(Triangle* triangle) { 
       _elements.push_back({0, (void*)triangle}); 
     };
-    const bool Intersect(Mesh* mesh, const pxr::GfRay &ray, 
-      Location* hitPoint, double maxDistance, double* minDistance) const;
+    bool Raycast(Geometry* geom, const pxr::GfRay& ray, Hit* hit, 
+      double maxDistance=-1, double* minDistance=NULL) const;
+    
 
     // neighboring bits
     static void InitNeighborBits(uint32_t& neighborBits);
@@ -65,17 +72,17 @@ public:
     static bool CheckNeighborBit(const uint32_t neighborBits, uint32_t index);
 
     // data
+    std::vector<Geometry*>  _geometries;
     std::vector<Element>    _elements;
     pxr::GfVec3f            _color;
     uint32_t                _index;
     bool                    _hit;
-    //Grid3D*                 _grid;
     uint32_t                _neighborBits;
 
   };
 
-  Grid3D():_cells(NULL),_mesh(NULL),_numCells(0){};
-  ~Grid3D()
+  GridIntersector():_cells(NULL),_numCells(0){};
+  ~GridIntersector()
   {
       DeleteCells();
   }
@@ -83,8 +90,8 @@ public:
   pxr::GfVec3f GetCellPosition(uint32_t index);
   pxr::GfVec3f GetCellMin(uint32_t index);
   pxr::GfVec3f GetCellMax(uint32_t index);
-  Mesh* GetMesh(){return _mesh;};
-  void SetMesh(Mesh* mesh){_mesh = mesh;};
+  Geometry* GetGeometry(size_t index){return _geometries[index];};
+  //void SetGeometry(Geometry* geom, size_t index){_mesh = mesh;};
   inline uint32_t NumCells(){return _numCells;};
   uint32_t* GetResolution(){return &_resolution[0];};
   inline uint32_t GetResolutionX(){return _resolution[0];};
@@ -96,20 +103,23 @@ public:
   // clear all rays
   void ClearRays() { _rays.clear(); };
 
-  // place a triangle mesh in the grid
-  void PlaceIntoGrid(Mesh* mesh);
-  //void PlaceIntoGrid(Curve* curve);
-  //void PlaceIntoGrid(Point* point);
-  //void PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points, const MMatrix& M, float cellSize);
+  // geometries
+  void Init(const std::vector<Geometry*>& geometries);
+  void Update(const std::vector<Geometry*>& geometries);
+  void InsertMesh(Mesh* mesh);
+  void InsertCurve(Curve* curve);
+  void InsertPoints(Points* points);
 
   // intersect a ray with the mesh
-  bool Intersect(const pxr::GfRay& ray, double maxDistance, 
-    Location* hitPoint) const;
+  bool Raycast(const pxr::GfRay& ray, Hit* hitPoint, 
+    double maxDistance=-1, double* minDistance=NULL) const override;
+  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1, double* minDistance = NULL) const override;
 
   Cell* GetCell(uint32_t index);
   Cell* GetCell(uint32_t x, uint32_t y, uint32_t z);
   Cell* GetCell(const pxr::GfVec3f& pos);
-  void GetNeighbors(uint32_t index, std::vector<Grid3D::Cell*>& neighbors);
+  void GetNeighbors(uint32_t index, std::vector<Cell*>& neighbors);
   void GetNeighbors(uint32_t index, std::vector<uint32_t>& neighbors);
   void GetIndices(uint32_t index, uint32_t& X, uint32_t& Y, uint32_t& Z);
   void GetCellIndexAndWeights(const pxr::GfVec3f& pos, uint32_t& index, 
@@ -132,13 +142,12 @@ private:
   // rays tested for intersection
   std::vector<pxr::GfRay> _rays;
   uint32_t                _numRays;
-  // mesh
-  Mesh*                   _mesh;
+
 
   // place an element into intersected cells
-  void PlacePoint(void);
-  void PlaceEdge(HalfEdge* he);
-  void PlaceTriangle(Triangle* t);
+  //void PlacePoint(void);
+  //void PlaceEdge(HalfEdge* he);
+  //void PlaceTriangle(Triangle* t);
   //void PlacePoint(Vertex* V);
 };
 

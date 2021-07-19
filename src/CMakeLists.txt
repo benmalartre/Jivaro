@@ -46,10 +46,9 @@ add_executable(${TARGET}
   #embree/instance.cpp
   #embree/context.cpp
   #embree/device.cpp
-  acceleration/grid.cpp
   geometry/utils.cpp
   geometry/shape.cpp
-  geometry/intersector.cpp
+  geometry/intersection.cpp
   geometry/triangle.cpp
   geometry/geometry.cpp
   geometry/points.cpp
@@ -57,6 +56,9 @@ add_executable(${TARGET}
   geometry/curve.cpp
   geometry/stroke.cpp
   geometry/vdb.cpp
+  acceleration/grid.cpp
+  acceleration/bvh.cpp
+  acceleration/intersector.cpp
   pbd/integration.cpp
   pbd/maths.cpp
   anim/animx.cpp

@@ -47,6 +47,25 @@ uint32_t Curve::GetNumCVs(uint32_t curveIndex)const
   return _cvCounts[curveIndex];
 }
 
+uint32_t Curve::GetNumSegments(uint32_t curveIndex)const
+{
+  if (curveIndex >= _cvCounts.size())
+    return 0;
+  return _cvCounts[curveIndex] - 1;
+}
+
+uint32_t Curve::GetTotalNumCVs()const
+{
+  std::cout << "GET TOTAL NUM POINTS : " << _numPoints << std::endl;
+  return _numPoints;
+}
+
+uint32_t Curve::GetTotalNumSegments()const
+{
+  std::cout << "GET TOTAL NUM SEGMENTS : " << _numSegments << std::endl;
+  return _numSegments;
+}
+
 float Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
 {
   size_t numCurves = _cvCounts.size();

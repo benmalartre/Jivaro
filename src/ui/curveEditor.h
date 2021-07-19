@@ -1,5 +1,5 @@
-#ifndef AMN_WIDGETS_CURVEEDITOR_H
-#define AMN_WIDGETS_CURVEEDITOR_H
+#ifndef AMN_UI_CURVEEDITOR_H
+#define AMN_UI_CURVEEDITOR_H
 #pragma once
 
 #include "../common.h"
@@ -81,4 +81,4 @@ private:
 
 AMN_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_WIDGETS_CURVEEDITOR_H
+#endif // AMN_UI_CURVEEDITOR_H

@@ -39,6 +39,10 @@ public:
   };
 
   uint32_t GetNumCVs(uint32_t curveIndex)const;
+  uint32_t GetNumSegments(uint32_t curveIndex)const;
+
+  uint32_t GetTotalNumCVs()const;
+  uint32_t GetTotalNumSegments()const;
 
   float GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex);
 

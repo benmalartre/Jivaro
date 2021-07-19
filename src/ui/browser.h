@@ -27,4 +27,4 @@ private:
 
 AMN_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_WIDGETS_BROWSER_H
+#endif // AMN_UI_BROWSER_H

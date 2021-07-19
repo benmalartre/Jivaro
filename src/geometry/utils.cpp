@@ -3,6 +3,23 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+void Barycentric(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
+  const pxr::GfVec3f& c, float* u, float* v, float* w)
+{
+  pxr::GfVec3f v0 = b - a;
+  pxr::GfVec3f v1 = c - a;
+  pxr::GfVec3f v2 = p - a;
+  float d00 = v0*v0;
+  float d01 = v0*v1;
+  float d11 = v1*v1;
+  float d20 = v2*v0;
+  float d21 = v2*v1;
+  float denom = d00 * d11 - d01 * d01;
+  *v = (d11 * d20 - d01 * d21) / denom;
+  *w = (d00 * d21 - d01 * d20) / denom;
+  *u = 1.0f - *v - *w;
+}
+
 void 
 MakeCircle(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& m, size_t n)
 {

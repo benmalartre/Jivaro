@@ -24,6 +24,7 @@ enum GeomInterpolation : short {
   GeomInterpolationCount
 };
 
+class Hit;
 class Geometry {
 public:
   enum Type {
@@ -38,6 +39,7 @@ public:
   Geometry(const Geometry* other, bool normalize);
   virtual ~Geometry();
 
+  short GetType() { return _type; };
   const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _position;};
   const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normal;};
 
@@ -55,10 +57,17 @@ public:
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
   void ComputeBoundingBox();
-  pxr::GfBBox3d& GetBoundingBox();
+  pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
+  const pxr::GfBBox3d& GetBoundingBox() const { return _bbox; };
 
   bool IsInitialized(){return _initialized;};
   void SetInitialized(bool initialized){_initialized = initialized;};
+
+  // query 3d position on geometry
+  virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
+    double maxDistance=-1.0, double* minDistance=NULL) const = 0;
+  virtual bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const = 0;
 
 protected:
   // infos

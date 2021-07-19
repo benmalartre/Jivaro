@@ -7,7 +7,7 @@
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include "../geometry/shape.h"
-#include "../geometry/intersector.h"
+#include "../geometry/intersection.h"
 #include "../utils/shaders.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -68,8 +68,8 @@ Shape::Component::_IntersectGrid(const pxr::GfRay& ray,
 
   const pxr::GfVec3f& bound = bounds.GetMax();
   pxr::GfRange3d range(
-    pxr::GfVec3d(-bound[0] * 0.5, 0.0, -bound[1] * 0.5),
-    pxr::GfVec3d(bound[0] * 0.5, 0.0, bound[1] * 0.5)
+    pxr::GfVec3d(-bound[0] * 0.5f, -0.01f, -bound[1] * 0.5f),
+    pxr::GfVec3d(bound[0] * 0.5f, 0.01f, bound[1] * 0.5f)
   );
   pxr::GfBBox3d bbox(range);
 

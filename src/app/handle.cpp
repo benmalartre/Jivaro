@@ -252,7 +252,7 @@ void BaseHandle::Draw(float width, float height)
 {
   ComputeSizeMatrix(width, height);
   ComputeViewPlaneMatrix();
-  pxr::GfMatrix4f m = _sizeMatrix * _matrix;
+  pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
   GLint vao;
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
   _DrawShape(&_shape, m);
@@ -583,11 +583,15 @@ void RotateHandle::Update(float x, float y, float width, float height)
 ScaleHandle::ScaleHandle()
   : BaseHandle()
   , _invScale(pxr::GfVec3f(1.f))
+  , _baseScale(pxr::GfVec3f(1.f))
 {
-  Shape::Component all = _shape.AddGrid(
-    AXIS_CAMERA, 0.1f, 0.1f, 1, 1, HANDLE_HELP_COLOR
-  );
-  AddComponent(all);
+  Shape::Component center = _shape.AddBox(
+    AXIS_CAMERA, 0.1f, 0.1f, 0.01f, HANDLE_HELP_COLOR, {
+    1.f, 0.f, 0.f, 0.f,
+    0.f, 1.f, 0.f, 0.f,
+    0.f, 0.f, 1.f, 0.f,
+    0.f, 0.f, 0.f, 1.f });
+  AddComponent(center);
 
   Shape::Component cylinder = _shape.AddCylinder(
     AXIS_X, 0.02f, 0.8f, 16, 2, HANDLE_X_COLOR, {
@@ -603,8 +607,19 @@ ScaleHandle::ScaleHandle()
       1.f, 0.f, 0.f, 0.f,
       0.f, 1.F, 0.f, 0.f,
       0.f, 0.f, 1.f, 0.f,
-      0.f, 1.f, 0.f, 1.f });
+      0.f, 1.f, 0.f, 1.f 
+    });
   AddXYZComponents(box);
+
+  Shape::Component plane = _shape.AddBox(
+    AXIS_X, 0.25f, 0.025f, 0.25f, HANDLE_X_COLOR, {
+      1.f, 0.f, 0.f, 0.f,
+      0.f, 1.F, 0.f, 0.f,
+      0.f, 0.f, 1.f, 0.f,
+      0.5f, 0.f, 0.5f, 1.f
+    });
+  AddYZXZXYComponents(plane);
+
 }
 
 void ScaleHandle::_GetInverseScale()
@@ -613,6 +628,7 @@ void ScaleHandle::_GetInverseScale()
     pxr::GfIsClose(_matrix[0][0], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[0][0],
     pxr::GfIsClose(_matrix[1][1], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[1][1],
     pxr::GfIsClose(_matrix[2][2], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[2][2]);
+
 }
 
 void ScaleHandle::BeginUpdate(float x, float y, float width, float height)
@@ -624,13 +640,26 @@ void ScaleHandle::BeginUpdate(float x, float y, float width, float height)
   double distance;
   bool frontFacing;
   _startMatrix = _matrix;
+  _baseScale = pxr::GfVec3f(_scale);
   if (ray.Intersect(_plane, &distance, &frontFacing)) {
-    if (_activeAxis == AXIS_CAMERA) {
-      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
-    }
-    else {
-      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
-        _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+    switch (_activeAxis) {
+      case AXIS_CAMERA:
+        _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
+        break;
+      case AXIS_X:
+      case AXIS_Y:
+      case AXIS_Z:
+        _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
+          _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+        break;
+      case AXIS_XY:
+      case AXIS_XZ:
+      case AXIS_YZ:
+        _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
+          _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+      default:
+        _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
+        break;
     }
   }
   _GetInverseScale();
@@ -645,45 +674,31 @@ void ScaleHandle::Update(float x, float y, float width, float height)
       _camera->GetRayDirection(x, y, width, height));
 
     double distance;
-    float value = RANDOM_0_1;
     bool frontFacing;
+    float value;
+    pxr::GfVec3f offset;
+
     if (ray.Intersect(_plane, &distance, &frontFacing)) {
-      if (_activeAxis == AXIS_CAMERA) {
-        value = RANDOM_0_1;
-        _scale = pxr::GfVec3f(value, value, value);
-      }
-      else {
-        /*
-        _position =
-          _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)),
-            _activeAxis) + _offset;
-        _scale = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-        */
-        switch (_activeAxis) {
-          case AXIS_X:
-            _scale[0] = value;
-            break;
-          case AXIS_Y:
-            _scale[1] = value;
-            break;
-          case AXIS_Z:
-            _scale[2] = value;
-            break;
-          case AXIS_XY:
-            _scale[0] = value;
-            _scale[1] = value;
-            break;
-          case AXIS_XZ:
-            _scale[0] = value;
-            _scale[2] = value;
-            break;
-          case AXIS_YZ:
-            _scale[1] = value;
-            _scale[2] = value;
-            break;
-          default:
-            _scale = pxr::GfVec3f(value, value, value);
-        }
+      switch (_activeAxis) {
+        case AXIS_CAMERA:
+          offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
+          value = offset[0] - _offset[0] + offset[1] - _offset[1];
+          _scale = _baseScale + pxr::GfVec3f(value);
+          break;
+        case AXIS_X:
+        case AXIS_Y:
+        case AXIS_Z:
+          offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
+            _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+          value = offset[0] - _offset[0] + offset[1] - _offset[1];
+          _scale = _baseScale + pxr::GfVec3f(value);
+          break;
+        case AXIS_XY:
+        case AXIS_XZ:
+        case AXIS_YZ:
+        default:
+          _scale = _baseScale + _offset;
+          break;
       }
 
       SetMatrixFromSRT();
@@ -700,24 +715,55 @@ void ScaleHandle::EndUpdate()
   _interacting = false;
 }
 
+pxr::GfVec3f ScaleHandle::_GetTranslateOffset(size_t axis)
+{
+  switch (axis) {
+    case AXIS_X:
+      return { (float)_scale[0], 0.f, 0.f };
+    case AXIS_Y:
+      return { 0.f, (float)_scale[1], 0.f };
+    case AXIS_Z:
+      return { 0.f, 0.f, (float)_scale[2]};
+    case AXIS_XY:
+      return { (float)_scale[0] * 0.5f, (float)_scale[1] * 0.5f, 0.f };
+    case AXIS_XZ:
+      return { (float)_scale[0] * 0.5f, 0.f, (float)_scale[2] * 0.5f };
+    case AXIS_YZ:
+      return { 0.f, (float)_scale[1] * 0.5f, (float)_scale[2] * 0.5f };
+    }
+}
+
 void ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
 {
   shape->Bind(SHAPE_PROGRAM);
-  for (size_t i = 0; i < shape->GetNumComponents(); ++i) {
-    const Shape::Component& component = shape->GetComponent(i);
-    if (component.GetFlag(Shape::VISIBLE)) {
-      if (component.index == AXIS_CAMERA) {
-        shape->DrawComponent(i, _viewPlaneMatrix, GetColor(component));
-      }
-      else {
-        shape->DrawComponent(i, component.parentMatrix * m * _inverseScale,
-          GetColor(component));
-      }
+  Shape::Component* component;
+   // center
+  {
+    component = &(shape->GetComponent(0));
+    shape->DrawComponent(AXIS_CAMERA, _viewPlaneMatrix, GetColor(*component));
+  }
+  // cylinders
+  {
+    for (size_t i = 0; i < 3; ++i) {
+      component = &(shape->GetComponent(AXIS_X + i));
+      pxr::GfMatrix4f mm = pxr::GfMatrix4f(component->parentMatrix) *
+        pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(_scale));
+      shape->DrawComponent(AXIS_X + i, mm, GetColor(*component));
     }
   }
+  // boxes
+  {
+    for (size_t i = 0; i < 3; ++i) {
+      component = &(shape->GetComponent(AXIS_XY + i));
+      pxr::GfMatrix4f mm = pxr::GfMatrix4f(component->parentMatrix) *
+        pxr::GfMatrix4f(1.f).SetTranslate(_GetTranslateOffset(AXIS_XY + i));
+      shape->DrawComponent(AXIS_XY + i, mm, GetColor(*component));
+    }
+   
+  }
+        
   shape->Unbind();
 }
-
 
 BrushHandle::BrushHandle()
   : BaseHandle(false), _minRadius(1.f), _maxRadius(2.f), _color(pxr::GfVec4f(1.f,0.f,0.f,1.f))

@@ -1,125 +1,164 @@
-#include "bvh.h"
+#include <pxr/base/gf/range3d.h>
+#include <pxr/base/gf/bbox3d.h>
+#include <pxr/base/gf/ray.h>
+#include "../acceleration/bvh.h"
+#include "../geometry/geometry.h"
 
-const pxr::GfVec3f BVH::_planeSetNormals[BVH::NUM_PLANE_SET_NORMALS] = { 
-  pxr::GfVec3f(1, 0, 0), 
-  pxr::GfVec3f(0, 1, 0), 
-  pxr::GfVec3f(0, 0, 1), 
-  pxr::GfVec3f( sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f), 
-  pxr::GfVec3f(-sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f), 
-  pxr::GfVec3f(-sqrtf(3.f) / 3.f, -sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f), 
-  pxr::GfVec3f( sqrtf(3.f) / 3.f, -sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f) 
-}; 
- 
-BVH::BVH(std::vector<std::unique_ptr<const Mesh>>& m) 
-{ 
-  Extents sceneExtents;
-  _extentsList.reserve(meshes.size()); 
-  for (uint32_t i = 0; i < meshes.size(); ++i) { 
-    for (uint8_t j = 0; j < NUM_PLANE_SET_NORMALS; ++j) { 
-      for (const auto vtx : meshes[i]->vertexPool) { 
-        float d = pxr::GfDot(planeSetNormals[j], vtx); 
-        if (d < _extentsList[i].d[j][0]) _extentsList[i].d[j][0] = d; 
-        if (d > _extentsList[i].d[j][1]) _extentsList[i].d[j][1] = d; 
-      } 
-    } 
-    sceneExtents.ExtendBy(_extentsList[i]);  
-    _extentsList[i].mesh = meshes[i].get();
-  } 
+AMN_NAMESPACE_OPEN_SCOPE
 
-  // Now that we have the extent of the scene we can start building our octree
-  // Using C++ make_unique function here but you don't need to, just to learn something... 
-  _octree = new Octree(sceneExtents); 
+// distance
+static double _GetDistance1D(double value, double lower, double upper)
+{
+  if (value < lower)return lower - value;
+  if (value > upper)return value - upper;
+  return pxr::GfMin(value - lower, upper - value);
+};
 
-  for (uint32_t i = 0; i < meshes.size(); ++i) { 
-    _octree->Insert(&_extentsList[i]); 
-  } 
+// get distance
+static double _GetDistance(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
+{
+  pxr::GfVec3d half = lhs->GetSize() * 0.5;
+  pxr::GfVec3d center = lhs->GetMidpoint();
+  const pxr::GfVec3d& minimum = rhs->GetMin();
+  const pxr::GfVec3d& maximum = rhs->GetMax();
+  float dx = _GetDistance1D(center[0], minimum[0] + half[0], maximum[0] - half[0]);
+  float dy = _GetDistance1D(center[1], minimum[1] + half[1], maximum[1] - half[1]);
+  float dz = _GetDistance1D(center[2], minimum[2] + half[2], maximum[2] - half[2]);
+  return pxr::GfSqrt(dx * dx + dy * dy + dz * dz);
+}
 
-  // Build from bottom up
-  _octree->Build(); 
-} 
- 
-bool BVH::Extents::Intersect( 
-  const float* precomputedNumerator, 
-  const float* precomputedDenominator, 
-  float& tNear,   // tn and tf in this method need to be contained 
-  float& tFar,    // within the range [tNear:tFar] 
-  uint8_t& planeIndex) const 
-{ 
-  numRayBoundingVolumeTests++; 
-  for (uint8_t i = 0; i < NUM_PLANE_SET_NORMALS; ++i) { 
-    float tNearExtents = (d[i][0] - precomputedNumerator[i]) / precomputedDenominator[i]; 
-    float tFarExtents = (d[i][1] - precomputedNumerator[i]) / precomputedDenominator[i]; 
-    if (precomputedDenominator[i] < 0) std::swap(tNearExtents, tFarExtents); 
-    if (tNearExtents > tNear) tNear = tNearExtents, planeIndex = i; 
-    if (tFarExtents < tFar) tFar = tFarExtents; 
-    if (tNear > tFar) return false; 
-  } 
+static pxr::GfVec3d _GetBoundingMinimum(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
+{
+  return pxr::GfRange3d::GetUnion(*lhs, *rhs).GetMin();
+}
 
-  return true; 
-} 
- 
-bool BVH::Intersect(const Vec3f& orig, const Vec3f& dir, 
-  const uint32_t& rayId, float& tHit) const 
-{ 
-  tHit = std::numeric_limits<float>::infinity(); 
-  const Mesh* intersectedMesh = nullptr; 
-  float precomputedNumerator[BVH::NUM_PLANE_SET_NORMALS]; 
-  float precomputedDenominator[BVH::NUM_PLANE_SET_NORMALS]; 
-  for (uint8_t i = 0; i < NUM_PLANE_SET_NORMALS; ++i) { 
-    precomputedNumerator[i] = pxr::GfDot(planeSetNormals[i], orig); 
-    precomputedDenominator[i] = pxr::GfDot(planeSetNormals[i], dir); 
-  } 
+static pxr::GfVec3d _GetBoundingMaximum(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
+{
+  return pxr::GfRange3d::GetUnion(*lhs, *rhs).GetMax();
+}
 
-    /* 
-    tNear = kInfinity; // set 
-    for (uint32_t i = 0; i < meshes.size(); ++i) { 
-        numRayVolumeTests++; 
-        float tn = -kInfinity, tf = kInfinity; 
-        uint8_t planeIndex; 
-        if (extents[i].intersect(precomputedNumerator, precomputedDenominator, tn, tf, planeIndex)) { 
-            if (tn < tNear) { 
-                intersectedMesh = meshes[i].get(); 
-                tNear = tn; 
-                // normal = planeSetNormals[planeIndex];
-            } 
-        } 
-    } 
-    */ 
- 
-    uint8_t planeIndex; 
-    // tNear, tFar for the intersected extents 
-    float tNear = 0, tFar = std::numeric_limits<float>::infinity(); 
-    if (!_octree->root->nodeExtents.Intersect(precomputedNumerator, 
-      precomputedDenominator, tNear, tFar, planeIndex) || tFar < 0) 
-        return false; 
-    tHit = tFar; 
-    std::priority_queue<BVH::Octree::QueueElement> queue; 
-    queue.push(BVH::Octree::QueueElement(_octree->root, 0)); 
-    while (!queue.empty() && queue.top().t < tHit) { 
-      const Octree::OctreeNode *node = queue.top().node; 
-      queue.pop(); 
-      if (node->isLeaf) { 
-        for (const auto& e: node->nodeExtentsList) { 
-          float t = std::numeric_limits<float>::infinity(); 
-          if (e->mesh->intersect(orig, dir, t) && t < tHit) { 
-            tHit = t; 
-            intersectedMesh = e->mesh; 
-          } 
-        } 
-      } else { 
-        for (uint8_t i = 0; i < 8; ++i) { 
-          if (node->child[i] != nullptr) { 
-            float tNearChild = 0, tFarChild = tFar; 
-            if (node->child[i]->nodeExtents.intersect(precomputedNumerator, 
-              precomputedDenominator, tNearChild, tFarChild, planeIndex)) { 
-              float t = (tNearChild < 0 && tFarChild >= 0) ? 
-                tFarChild : tNearChild; 
-              queue.push(BVH::Octree::QueueElement(node->child[i], t)); 
-            } 
-          } 
-        } 
-      } 
-    } 
- 
-    return (intersectedMesh != nullptr); 
-} 
+static pxr::GfRange3d _GetBoundingBox(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
+{
+  return pxr::GfRange3d::GetUnion(*lhs, *rhs);
+}
+
+BVH::Leaf::Leaf(Geometry* geom)
+{
+  const pxr::GfBBox3d& bbox = _geom->GetBoundingBox();
+  SetMin(pxr::GfVec3d(bbox.GetRange().GetMin()));
+  SetMax(pxr::GfVec3d(bbox.GetRange().GetMax()));
+  _geom = geom;
+}
+
+BVH::Branch::Branch(BVH::Cell* cell)
+{
+  SetMin(cell->GetMin());
+  SetMax(cell->GetMax());
+  SetLeft(cell);
+  SetRight(NULL);
+}
+
+BVH::Branch::Branch(BVH::Cell* lhs, BVH::Cell* rhs)
+{
+  SetMin(_GetBoundingMinimum(lhs, rhs));
+  SetMax(_GetBoundingMaximum(lhs, rhs));
+  SetLeft(lhs);
+  SetRight(rhs);
+}
+
+bool BVH::Branch::Raycast(const pxr::GfRay& ray, Hit* hit, double maxDistance, double* minDistance) const
+{
+  double enterDistance, exitDistance;
+  if (ray.Intersect(*this, &enterDistance, &exitDistance)) {
+    Hit leftHit(*hit), rightHit(*hit);
+    if (_left)_left->Raycast(ray, &leftHit);
+    if (_right)_right->Raycast(ray, &rightHit);
+    if (leftHit.GetGeometry() && rightHit.GetGeometry()) {
+      if (leftHit.GetT() < rightHit.GetT()) {
+        hit->Set(leftHit); return true;
+      } else {
+        hit->Set(rightHit);; return true;
+      }
+    } else if (leftHit.GetGeometry()) {
+      hit->Set(leftHit); return true;
+    } else if (rightHit.GetGeometry()) {
+      hit->Set(rightHit); return true;
+    } else {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool BVH::Leaf::Raycast(const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  double distance;
+  if (ray.Intersect(*this, &distance)) {
+    if (_geom->Raycast(ray, hit, maxDistance, minDistance)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static void _SortGeometriesByPair(std::vector<BVH::Cell*>& cells,
+  std::vector<BVH::Cell*>& results)
+{
+  size_t numCells = cells.size();
+  std::vector<short> used;
+  used.resize(numCells);
+  memset(&used[0], 0x0, numCells * sizeof(bool));
+
+  for (size_t i = 0; i < numCells; ++i) {
+    if (used[i]) continue;
+    BVH::Cell* cell = cells[i];
+    float min_distance = std::numeric_limits<float>::max();
+    int closest_idx = -1;
+    for (size_t j = 0; j < numCells; ++j) {
+      BVH::Cell* other = cells[j];
+      if (i == j)continue;
+      float distance = _GetDistance(cell, other);
+      if (distance < min_distance && !used[j]) {
+        min_distance = distance;
+        closest_idx = j;
+      }
+    }
+
+    if (closest_idx >= 0) {
+      used[closest_idx] = true;
+      used[i] = true;
+      results.push_back(new BVH::Branch(cell, cells[closest_idx]));
+    }
+    else {
+      used[i] = true;
+      results.push_back(new BVH::Branch(cell));
+    }
+  }
+}
+
+void BVH::Init(const std::vector<Geometry*>& geometries)
+{
+  std::vector<Cell*> leaves;
+  leaves.reserve(geometries.size());
+  for (Geometry* geom : geometries) {
+    leaves.push_back(new BVH::Leaf(geom));
+  }
+  std::vector<BVH::Cell*> cells = leaves;
+  std::vector<BVH::Cell*> results;
+  _SortGeometriesByPair(leaves, results);
+  while (results.size() > 2) {
+    cells = results;
+    results.clear();
+    _SortGeometriesByPair(cells, results);
+  }
+  root = new BVH::Branch(results[0], results[1]);
+  leaves.clear();
+}
+
+bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit, double maxDistance, double* minDistance) const
+{
+  return root->Raycast(ray, hit, maxDistance, minDistance);
+}
+
+AMN_NAMESPACE_CLOSE_SCOPE
