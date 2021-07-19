@@ -111,6 +111,16 @@ public:
   void TriangularGrid2D(float width, float height, 
     const pxr::GfMatrix4f& space, float size);
 
+  // query 3d position on geometry
+  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override {
+    return false;
+  };
+  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override {
+    return false;
+  };
+
 private:
   // infos
   uint32_t                            _numTriangles;

@@ -7,7 +7,7 @@
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/range3d.h>
 #include "../geometry/intersection.h"
-#include "../acceleration/intersector.h
+#include "../acceleration/intersector.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

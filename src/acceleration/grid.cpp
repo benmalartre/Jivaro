@@ -296,6 +296,7 @@ pxr::GfVec3f GridIntersector::GetCellMax(uint32_t index){
 bool GridIntersector::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
   Hit* hit, double maxDistance, double* minDistance) const
 {
+  /*
   pxr::GfVec3f p0, p1, p2;
   pxr::GfVec3d baryCoords;
   double distance;
@@ -303,6 +304,7 @@ bool GridIntersector::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
   bool frontFacing;
   Triangle* tri;
   for(unsigned t = 0;t<_elements.size();t++) {
+    switch(_elements[t].)
     tri = (Triangle*)_elements[t].ptr;
     p0 = mesh->GetPosition(tri, 0);
     p1 = mesh->GetPosition(tri, 1);
@@ -315,16 +317,17 @@ bool GridIntersector::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
         *minDistance = distance;
         hit->SetGeometry(geom);
         hit->SetElementIndex(tri->id);
-        /*
+        
         hit->id = tri->id;
         hit-> = pxr::GfVec3f(baryCoords);
         hit = true;
-        */
+
       }
     }
   }
-
   return hit;
+  */
+    return false;
 }
 
 /*
