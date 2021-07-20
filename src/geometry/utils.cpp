@@ -184,10 +184,11 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
   default:
     tangents[0] = (points[1] - points[0]).GetNormalized();
     tangents[last] = (points[last] - points[last-1]).GetNormalized();
-    for (int i = 1; i < numPoints; ++i) {
+    for (size_t i = 1; i < numPoints; ++i) {
       tangents[i] =
         ((points[i] - points[i - 1]) + (points[i + 1] - points[i])).GetNormalized();
     }
+    break;
   }
 }
 

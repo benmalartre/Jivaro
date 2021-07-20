@@ -5,6 +5,9 @@
 
 #include "../geometry/intersection.h"
 #include "../geometry/geometry.h"
+#include "../geometry/mesh.h"
+#include "../geometry/curve.h"
+#include "../geometry/points.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -32,7 +35,18 @@ void Hit::GetPosition(pxr::GfVec3f* position) const
   switch (_geom->GetType()) {
     case Geometry::MESH:
     {
-
+      Mesh* mesh = (Mesh*)_geom;
+      Triangle* triangle = mesh->GetTriangle(_elemId);
+      const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+      *position = pxr::GfVec3f(0.f);
+      for (unsigned i = 0; i < 3; i++)
+      {
+        *position += 
+          pxr::GfVec3f(positions[triangle->vertices[0]]) * _baryCoords[i],
+          pxr::GfVec3f(positions[triangle->vertices[1]]) * _baryCoords[i],
+          pxr::GfVec3f(positions[triangle->vertices[2]]) * _baryCoords[i];
+      }
+      return;
     }
     case Geometry::CURVE:
     {
@@ -40,7 +54,8 @@ void Hit::GetPosition(pxr::GfVec3f* position) const
     }
     case Geometry::POINT:
     {
-
+      Points* points = (Points*)_geom;
+      //Point*
     }
   }
 }

@@ -242,8 +242,8 @@ Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage,
   Mesh* mesh = new Mesh();
   //mesh->PolygonSoup(65535);
   pxr::GfMatrix4f space(1.f);
-  mesh->TriangularGrid2D(10.f, 6.f, space, 0.2f);
-  mesh->Randomize(0.5f);
+  mesh->TriangularGrid2D(10.f, 6.f, space, 2.f);
+  mesh->Randomize(0.05f);
 
   pxr::UsdGeomMesh polygonSoup = 
     pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(path));

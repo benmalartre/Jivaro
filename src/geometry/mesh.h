@@ -87,6 +87,7 @@ public:
   uint32_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
 
   void ComputeHalfEdges();
+  void ComputeNeighbors();
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
 
@@ -149,6 +150,7 @@ private:
 
   // half-edge data
   pxr::VtArray<HalfEdge>              _halfEdges;
+  pxr::VtArray<int>                   _vertexHalfEdge;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

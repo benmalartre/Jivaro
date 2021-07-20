@@ -49,6 +49,8 @@ add_executable(${TARGET}
   geometry/utils.cpp
   geometry/shape.cpp
   geometry/intersection.cpp
+  geometry/point.cpp
+  geometry/edge.cpp
   geometry/triangle.cpp
   geometry/geometry.cpp
   geometry/points.cpp

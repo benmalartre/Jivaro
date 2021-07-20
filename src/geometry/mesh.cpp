@@ -1,10 +1,14 @@
 // Mesh
 //----------------------------------------------
-#include "mesh.h"
-#include "utils.h"
+
+#include <unordered_map>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/matrix4f.h>
+
+#include "mesh.h"
+#include "utils.h"
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -254,6 +258,100 @@ void Mesh::ComputeHalfEdges()
   }
 }
 
+static HalfEdge* _GetPreviousAdjacentEdge(Mesh* mesh, HalfEdge* edge)
+{
+  int vertex = edge->vertex;
+  HalfEdge* current = edge->next;
+  while (current->next->vertex != vertex) {
+    current = current->next;
+  }
+  if (current->twin)return current->twin->next;
+  return NULL;
+}
+
+static HalfEdge* _GetNextjacentEdge(Mesh* mesh, HalfEdge* edge)
+{
+  if (edge->twin)return edge->twin->next;
+  return NULL;
+
+}
+
+static HalfEdge* _GetPreviousEdge(HalfEdge* edge)
+{
+  int vertex = edge->vertex;
+  HalfEdge* current = edge->next;
+  while (current->next->vertex != vertex) {
+    current = current->next;
+  }
+  return current;
+}
+
+static bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
+{
+  for (int neighbor: neighbors) {
+    if (neighbor == idx)return true;
+  }
+  return false;
+}
+
+void Mesh::ComputeNeighbors()
+{
+  _neighbors.clear();
+  _neighbors.resize(_numPoints);
+
+  for (HalfEdge& halfEdge : _halfEdges) {
+    int edgeIndex = halfEdge.index;
+    int vertexIndex = halfEdge.vertex;
+    HalfEdge* startEdge = &halfEdge;
+    HalfEdge* currentEdge = startEdge;
+    HalfEdge* nextEdge = NULL;
+    pxr::VtArray<int>& neighbors = _neighbors[vertexIndex];
+    if (!_IsNeighborRegistered(neighbors, startEdge->next->vertex)) {
+      neighbors.push_back(startEdge->next->vertex);
+    }
+
+    short state = 1;
+    while (state == 1) {
+      nextEdge = _GetNextjacentEdge(this, currentEdge);
+      if (!nextEdge) {
+        state = 0;
+      } else if (nextEdge == startEdge) {
+        state = -1;
+      } else {
+        if (!_IsNeighborRegistered(neighbors, nextEdge->next->vertex)) {
+          neighbors.push_back(nextEdge->next->vertex);
+        }
+        currentEdge = nextEdge;
+      }
+    }
+    
+    if(state == 0) {
+      HalfEdge* previousEdge = NULL;
+      currentEdge = startEdge;
+      previousEdge = _GetPreviousEdge(currentEdge);
+      if (!_IsNeighborRegistered(neighbors, previousEdge->vertex)) {
+        neighbors.push_back(previousEdge->vertex);
+      }
+      state = 1;
+      while (state == 1) {
+        previousEdge = _GetPreviousAdjacentEdge(this, currentEdge);
+        if (!previousEdge) {
+          state = 0;
+        }
+        else if (previousEdge == startEdge) {
+          state = -1;
+        }
+        else {
+          if (!_IsNeighborRegistered(neighbors, previousEdge->next->vertex)) {
+            neighbors.push_back(previousEdge->next->vertex);
+          }
+          currentEdge = previousEdge;
+        }
+      }
+    }
+  }
+}
+
 void Mesh::Init(
   const pxr::VtArray<pxr::GfVec3f>& positions, 
   const pxr::VtArray<int>& counts, 
@@ -277,6 +375,9 @@ void Mesh::Init(
 
   // compute half-edges
   ComputeHalfEdges();
+  
+  // compute neighbors
+  ComputeNeighbors();
 }
 
 void Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
