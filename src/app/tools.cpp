@@ -143,7 +143,6 @@ void Tool::Update()
 
 void Tool::ResetSelection()
 {
-  std::cout << "TOOL : RESET SELECTION = " << _active << std::endl;
   if(_active) {
     _active->ResetSelection();
   }

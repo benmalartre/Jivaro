@@ -564,7 +564,6 @@ void Application::SelectionChangedCallback(const Notice::SelectionChanged& n)
 
 void Application::NewSceneCallback(const Notice::NewScene& n)
 {
-  std::cout << "NEW SCENE CALBACK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
   _selection.Clear();
 }
 

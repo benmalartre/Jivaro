@@ -144,6 +144,7 @@ protected:
   virtual void _UpdateTargets();
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
+  pxr::GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
 
   // targets
   HandleTargetDescList    _targets;
@@ -186,12 +187,15 @@ public:
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
   void EndUpdate() override;
+  //void Draw(float width, float height) override;
   void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
 
 private:
   void _GetInverseScale();
+  pxr::GfVec3f _GetScaleOffset(size_t axis);
   pxr::GfVec3f _GetTranslateOffset(size_t axis);
 
+  pxr::GfVec3f _offsetScale;;
   pxr::GfVec3f _invScale;
   pxr::GfVec3f _baseScale;
 

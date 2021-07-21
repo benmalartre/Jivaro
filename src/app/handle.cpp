@@ -103,9 +103,7 @@ void BaseHandle::SetMatrixFromSRT()
   transform.SetScale(_scale);
   transform.SetRotation(_rotation);
   transform.SetTranslation(_position);
-
   _matrix = pxr::GfMatrix4f(transform.GetMatrix());
-  _displayMatrix = _matrix;
 }
 
 void BaseHandle::SetSRTFromMatrix()
@@ -115,7 +113,6 @@ void BaseHandle::SetSRTFromMatrix()
   _scale = transform.GetScale();
   _rotation = transform.GetRotation();
   _position = transform.GetTranslation();
-  std::cout << "BASE HANDLE SET SRT : " << _position << std::endl;
 }
 
 void BaseHandle::ComputeViewPlaneMatrix()
@@ -130,16 +127,13 @@ void BaseHandle::ComputeViewPlaneMatrix()
 
 void BaseHandle::ResetSelection()
 {
-  std::cout << "RESET SELECTION " << std::endl;
   Application* app = AMN_APPLICATION;
   
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetStage();
-  std::cout << "STAGE : " << stage << std::endl;
   float activeTime = app->GetTime().GetActiveTime();
-  std::cout << "TIME : " << activeTime << std::endl;
+  _xformCache.Clear();
   _xformCache.SetTime(activeTime);
-  std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
   _targets.clear();
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
     const SelectionItem& item = selection->GetItem(i);
@@ -151,12 +145,14 @@ void BaseHandle::ResetSelection()
   }
 
   _ComputeCOGMatrix(app->GetStage());
-  SetSRTFromMatrix();
-
+  
   pxr::GfMatrix4f invMatrix = _matrix.GetInverse();
   for(auto& target: _targets) {
     target.offset = target.base * invMatrix;
   }
+
+  SetSRTFromMatrix();
+  _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
 }
 
 void BaseHandle::SetActiveAxis(short axis)
@@ -225,8 +221,14 @@ short BaseHandle::Pick(float x, float y, float width, float height)
   size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
   SetHoveredAxis(hovered);
   _shape.UpdateComponents(hovered, AXIS_NONE);
-  //_shape.UpdateVisibility(_matrix, pxr::GfVec3f(_camera->GetViewPlaneNormal()));
+  _shape.UpdateVisibility(_matrix, pxr::GfVec3f(_camera->GetViewPlaneNormal()));
   return hovered;
+}
+
+pxr::GfMatrix4f BaseHandle::_ExtractRotationAndTranslateFromMatrix()
+{
+  return pxr::GfMatrix4f(1.f).SetRotate(_matrix.ExtractRotation())*
+    pxr::GfMatrix4f(1.f).SetTranslate(_matrix.ExtractTranslation());
 }
 
 void BaseHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
@@ -292,7 +294,7 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
     activeTime, purposes, false, false);
   pxr::GfVec3f accumPosition(0.f);
   pxr::GfQuatf accumRotation(1.f);
-  pxr::GfVec3f accumSCale(1.f);
+  pxr::GfVec3f accumScale(1.f);
   pxr::GfRange3d accumulatedRange;
   size_t numPrims = 0;
   for (auto& target: _targets) {
@@ -312,23 +314,29 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
           m[3][0],
           m[3][1],
           m[3][2]);
+
+        accumScale += pxr::GfVec3f(
+          m[0][0],
+          m[1][1],
+          m[2][2]);
+
         accumRotation *= m.ExtractRotationQuat();
         ++numPrims;
       }
     }
   }
   if(numPrims) {
-    accumPosition *= 1.f / (float)numPrims;
+    float ratio = 1.f / (float)numPrims;
+    accumPosition *= ratio;
+    accumScale *= ratio;
     accumRotation.Normalize();
 
-    _matrix.SetIdentity();
-   
-    _matrix.SetRotate(accumRotation);
-    _matrix[3][0] = accumPosition[0];
-    _matrix[3][1] = accumPosition[1];
-    _matrix[3][2] = accumPosition[2];
+    _matrix =
+      pxr::GfMatrix4f(1.f).SetScale(accumScale) *
+      pxr::GfMatrix4f(1.f).SetRotate(accumRotation) *
+      pxr::GfMatrix4f(1.f).SetTranslate(accumPosition);
 
-    _displayMatrix = _matrix;
+    _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
    
   }
 }
@@ -385,14 +393,16 @@ void BaseHandle::_UpdateTargets()
     std::vector<pxr::UsdGeomXformOp> xformOps = xformable.GetOrderedXformOps(&resetXformOpExists);
     if (!xformOps.size()) {
       pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
-      xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
+      xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix, 
+        pxr::UsdTimeCode(activeTime));
     }
     else {
       bool found = false;
       for (auto& xformOp : xformOps) {
         pxr::UsdGeomXformOp::Type opType = xformOp.GetOpType();
         if (opType == pxr::UsdGeomXformOp::TypeTransform) {
-          xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
+          xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
+            pxr::UsdTimeCode(activeTime));
           found = true;
           break;
         }
@@ -400,7 +410,8 @@ void BaseHandle::_UpdateTargets()
       if (!found) {
         xformable.ClearXformOpOrder();
         pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
-        xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix);
+        xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
+          pxr::UsdTimeCode(activeTime));
       }
     }
   }
@@ -419,8 +430,6 @@ void BaseHandle::BeginUpdate(float x, float y, float width, float height)
   if(ray.Intersect(_plane, &distance, &frontFacing)) {
     _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
   }
-  float activeTime = app->GetTime().GetActiveTime();
-  _xformCache.SetTime(activeTime);
   _interacting = true;
 }
 
@@ -507,6 +516,7 @@ void TranslateHandle::Update(float x, float y, float width, float height)
       }
       
       SetMatrixFromSRT();
+      _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
       _UpdateTargets();
     }
   }
@@ -586,7 +596,7 @@ ScaleHandle::ScaleHandle()
   , _baseScale(pxr::GfVec3f(1.f))
 {
   Shape::Component center = _shape.AddBox(
-    AXIS_CAMERA, 0.1f, 0.1f, 0.01f, HANDLE_HELP_COLOR, {
+    AXIS_CAMERA, 0.1f, 0.01f, 0.1f, HANDLE_HELP_COLOR, {
     1.f, 0.f, 0.f, 0.f,
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
@@ -649,14 +659,14 @@ void ScaleHandle::BeginUpdate(float x, float y, float width, float height)
       case AXIS_X:
       case AXIS_Y:
       case AXIS_Z:
-        _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
-          _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+        _offset = _position - 
+          _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
         break;
       case AXIS_XY:
       case AXIS_XZ:
       case AXIS_YZ:
-        _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
-          _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+        _offset = _position - 
+          _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
       default:
         _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
         break;
@@ -686,23 +696,41 @@ void ScaleHandle::Update(float x, float y, float width, float height)
           _scale = _baseScale + pxr::GfVec3f(value);
           break;
         case AXIS_X:
+          offset = pxr::GfVec3f(_position) - 
+            _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
+          _offsetScale = pxr::GfVec3f(_offset[0] - offset[0], 0.f, 0.f);
+          _scale = _baseScale + _offsetScale;
+          break;
         case AXIS_Y:
+          offset = pxr::GfVec3f(_position) - 
+            _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
+          _offsetScale = pxr::GfVec3f(0.f, _offset[1] - offset[1], 0.f);
+          _scale = _baseScale + _offsetScale;
+          break;
         case AXIS_Z:
-          offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
-            _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
-          value = offset[0] - _offset[0] + offset[1] - _offset[1];
-          _scale = _baseScale + pxr::GfVec3f(value);
+          offset = pxr::GfVec3f(_position) - 
+            _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
+          _offsetScale = pxr::GfVec3f(0.f, 0.f, _offset[2] - offset[2]);
+          _scale = _baseScale + _offsetScale;
           break;
         case AXIS_XY:
+          offset = pxr::GfVec3f(pxr::GfVec3d(_offset) -
+            _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+          _scale = _baseScale + pxr::GfVec3f(offset.GetLength(), offset.GetLength(), 0.f);
         case AXIS_XZ:
+          offset = pxr::GfVec3f(pxr::GfVec3d(_offset) -
+            _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+          _scale = _baseScale + pxr::GfVec3f(offset.GetLength(), 0.f, offset.GetLength());
         case AXIS_YZ:
+          offset = pxr::GfVec3f(pxr::GfVec3d(_offset) -
+            _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+          _scale = _baseScale + pxr::GfVec3f(0.f, offset.GetLength(), offset.GetLength());
         default:
           _scale = _baseScale + _offset;
           break;
       }
-
       SetMatrixFromSRT();
-      _displayMatrix = pxr::GfMatrix4f(1.f).SetScale(_invScale) * _matrix;
+      _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
       _UpdateTargets();
     }
   }
@@ -710,8 +738,10 @@ void ScaleHandle::Update(float x, float y, float width, float height)
 
 void ScaleHandle::EndUpdate()
 {
+  _offsetScale = pxr::GfVec3f(0.f);
   _GetInverseScale();
-  _displayMatrix = pxr::GfMatrix4f(1.f).SetScale(_invScale) * _matrix;
+  std::cout << "POSITION : " << _position << std::endl;
+  _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
   _interacting = false;
 }
 
@@ -719,18 +749,53 @@ pxr::GfVec3f ScaleHandle::_GetTranslateOffset(size_t axis)
 {
   switch (axis) {
     case AXIS_X:
-      return { (float)_scale[0], 0.f, 0.f };
+      return pxr::GfVec3f((float)_offsetScale[0], 0.f, 0.f);
     case AXIS_Y:
-      return { 0.f, (float)_scale[1], 0.f };
+      return pxr::GfVec3f(0.f, (float)_offsetScale[1], 0.f);
     case AXIS_Z:
-      return { 0.f, 0.f, (float)_scale[2]};
+      return pxr::GfVec3f(0.f, 0.f, (float)_offsetScale[2]);
+    /*
     case AXIS_XY:
       return { (float)_scale[0] * 0.5f, (float)_scale[1] * 0.5f, 0.f };
     case AXIS_XZ:
       return { (float)_scale[0] * 0.5f, 0.f, (float)_scale[2] * 0.5f };
     case AXIS_YZ:
       return { 0.f, (float)_scale[1] * 0.5f, (float)_scale[2] * 0.5f };
+    */
     }
+  
+  return pxr::GfVec3f(0.f);
+}
+
+pxr::GfVec3f ScaleHandle::_GetScaleOffset(size_t axis)
+{
+  switch (axis) {
+  case AXIS_X:
+    if(_activeAxis == axis)
+      return { 1.f + (float)_offsetScale[0], 1.f, 1.f };
+    else
+      return { 1.f, 1.f, 1.f };
+  case AXIS_Y:
+    if(_activeAxis == axis)
+      return { 1.f, 1.f + (float)_offsetScale[1], 1.f };
+    else
+      return { 1.f, 1.f, 1.f };
+  case AXIS_Z:
+    if(_activeAxis == axis)
+      return { 1.f, 1.f, 1.f + (float)_offsetScale[2] };
+    else
+      return { 1.f, 1.f, 1.f };
+    /*
+    case AXIS_XY:
+      return { (float)_scale[0] * 0.5f, (float)_scale[1] * 0.5f, 0.f };
+    case AXIS_XZ:
+      return { (float)_scale[0] * 0.5f, 0.f, (float)_scale[2] * 0.5f };
+    case AXIS_YZ:
+      return { 0.f, (float)_scale[1] * 0.5f, (float)_scale[2] * 0.5f };
+    */
+  }
+
+  return pxr::GfVec3f(0.f);
 }
 
 void ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
@@ -745,21 +810,29 @@ void ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
   // cylinders
   {
     for (size_t i = 0; i < 3; ++i) {
-      component = &(shape->GetComponent(AXIS_X + i));
+      component = &(shape->GetComponent(1 + i));
       pxr::GfMatrix4f mm = pxr::GfMatrix4f(component->parentMatrix) *
-        pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(_scale));
-      shape->DrawComponent(AXIS_X + i, mm, GetColor(*component));
+        pxr::GfMatrix4f(1.f).SetScale(_GetScaleOffset(AXIS_X + i)) * m;
+      shape->DrawComponent(1 + i, mm, GetColor(*component));
     }
   }
   // boxes
   {
     for (size_t i = 0; i < 3; ++i) {
-      component = &(shape->GetComponent(AXIS_XY + i));
+      component = &(shape->GetComponent(4 + i));
       pxr::GfMatrix4f mm = pxr::GfMatrix4f(component->parentMatrix) *
-        pxr::GfMatrix4f(1.f).SetTranslate(_GetTranslateOffset(AXIS_XY + i));
-      shape->DrawComponent(AXIS_XY + i, mm, GetColor(*component));
+        pxr::GfMatrix4f(1.f).SetTranslate(_GetTranslateOffset(AXIS_X + i)) * m;
+      shape->DrawComponent(4 + i, mm, GetColor(*component));
     }
-   
+  }
+  // planes
+  {
+    for (size_t i = 0; i < 3; ++i) {
+      component = &(shape->GetComponent(7 + i));
+      pxr::GfMatrix4f mm = pxr::GfMatrix4f(component->parentMatrix) *
+        pxr::GfMatrix4f(1.f).SetTranslate(_GetTranslateOffset(AXIS_XY + i)) * m;
+      shape->DrawComponent(7 + i, mm, GetColor(*component));
+    }
   }
         
   shape->Unbind();
