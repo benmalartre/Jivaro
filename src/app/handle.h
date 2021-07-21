@@ -191,12 +191,10 @@ public:
   void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
 
 private:
-  void _GetInverseScale();
   pxr::GfVec3f _GetScaleOffset(size_t axis);
   pxr::GfVec3f _GetTranslateOffset(size_t axis);
 
-  pxr::GfVec3f _offsetScale;;
-  pxr::GfVec3f _invScale;
+  pxr::GfVec3f _offsetScale;
   pxr::GfVec3f _baseScale;
 
 };

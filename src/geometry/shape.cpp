@@ -330,7 +330,7 @@ pxr::GfVec3f Shape::_GetComponentAxis(const Shape::Component& component,
 }
 
 short
-Shape::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, const pxr::GfMatrix4f& v)
+Shape::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& model, const pxr::GfMatrix4f& view)
 {
   double minDistance = DBL_MAX;
   short result = 0;
@@ -339,9 +339,9 @@ Shape::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, const pxr::GfM
     if (component.GetFlag(Shape::VISIBLE) && component.GetFlag(Shape::PICKABLE)) {
       double distance = DBL_MAX;
       if (component.GetFlag(Shape::FLAT)) {
-        intersected = component.Intersect(ray, v, &distance);
+        intersected = component.Intersect(ray, view, &distance);
       } else {
-        intersected = component.Intersect(ray, m, &distance);
+        intersected = component.Intersect(ray, model, &distance);
       }
       if (distance < minDistance) {
         if (component.GetFlag(Shape::MASK)) {

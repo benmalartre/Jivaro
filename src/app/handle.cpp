@@ -200,15 +200,15 @@ short BaseHandle::Select(float x, float y, float width, float height,
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
 
-  pxr::GfMatrix4f m = _sizeMatrix * _matrix;
-  size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
+  pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
+  size_t selected = _shape.Intersect(ray, m, _viewPlaneMatrix);
 
-  if(hovered) {
-    SetActiveAxis(hovered);
-    UpdatePickingPlane(hovered);
+  if(selected) {
+    SetActiveAxis(selected);
+    UpdatePickingPlane(selected);
   }
-  _shape.UpdateComponents(hovered, hovered);
-  return hovered;
+  _shape.UpdateComponents(selected, selected);
+  return selected;
 }
 
 short BaseHandle::Pick(float x, float y, float width, float height)
@@ -219,16 +219,18 @@ short BaseHandle::Pick(float x, float y, float width, float height)
 
   pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
   size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
+
   SetHoveredAxis(hovered);
   _shape.UpdateComponents(hovered, AXIS_NONE);
-  _shape.UpdateVisibility(_matrix, pxr::GfVec3f(_camera->GetViewPlaneNormal()));
   return hovered;
 }
 
 pxr::GfMatrix4f BaseHandle::_ExtractRotationAndTranslateFromMatrix()
 {
-  return pxr::GfMatrix4f(1.f).SetRotate(_matrix.ExtractRotation())*
-    pxr::GfMatrix4f(1.f).SetTranslate(_matrix.ExtractTranslation());
+  return 
+    pxr::GfMatrix4f(1.f).SetRotate(_rotation) *
+    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(_position));
+
 }
 
 void BaseHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
@@ -592,7 +594,6 @@ void RotateHandle::Update(float x, float y, float width, float height)
 
 ScaleHandle::ScaleHandle()
   : BaseHandle()
-  , _invScale(pxr::GfVec3f(1.f))
   , _baseScale(pxr::GfVec3f(1.f))
 {
   Shape::Component center = _shape.AddBox(
@@ -604,7 +605,7 @@ ScaleHandle::ScaleHandle()
   AddComponent(center);
 
   Shape::Component cylinder = _shape.AddCylinder(
-    AXIS_X, 0.02f, 0.8f, 16, 2, HANDLE_X_COLOR, {
+    AXIS_X, 0.01f, 0.8f, 16, 2, HANDLE_X_COLOR, {
       1.f,0.f,0.f,0.f,
       0.f,1.f,0.f,0.f,
       0.f,0.f,1.f,0.f,
@@ -613,7 +614,7 @@ ScaleHandle::ScaleHandle()
   AddXYZComponents(cylinder);
 
   Shape::Component box = _shape.AddBox(
-    AXIS_X, 0.2f, 0.2f, 0.2f, HANDLE_X_COLOR, {
+    AXIS_X, 0.16f, 0.16f, 0.16f, HANDLE_X_COLOR, {
       1.f, 0.f, 0.f, 0.f,
       0.f, 1.F, 0.f, 0.f,
       0.f, 0.f, 1.f, 0.f,
@@ -629,15 +630,6 @@ ScaleHandle::ScaleHandle()
       0.5f, 0.f, 0.5f, 1.f
     });
   AddYZXZXYComponents(plane);
-
-}
-
-void ScaleHandle::_GetInverseScale()
-{
-  _invScale = pxr::GfVec3f(
-    pxr::GfIsClose(_matrix[0][0], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[0][0],
-    pxr::GfIsClose(_matrix[1][1], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[1][1],
-    pxr::GfIsClose(_matrix[2][2], 0.f, 0.000001f) ? 1.f : 1.f / _matrix[2][2]);
 
 }
 
@@ -672,7 +664,6 @@ void ScaleHandle::BeginUpdate(float x, float y, float width, float height)
         break;
     }
   }
-  _GetInverseScale();
   _interacting = true;
 }
 
@@ -739,8 +730,6 @@ void ScaleHandle::Update(float x, float y, float width, float height)
 void ScaleHandle::EndUpdate()
 {
   _offsetScale = pxr::GfVec3f(0.f);
-  _GetInverseScale();
-  std::cout << "POSITION : " << _position << std::endl;
   _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
   _interacting = false;
 }
@@ -749,19 +738,41 @@ pxr::GfVec3f ScaleHandle::_GetTranslateOffset(size_t axis)
 {
   switch (axis) {
     case AXIS_X:
-      return pxr::GfVec3f((float)_offsetScale[0], 0.f, 0.f);
+      if (_activeAxis == axis)
+        return { (float)_offsetScale[0], 0.f, 0.f };
+      else 
+        return { 0.f, 0.f, 0.f };
+
     case AXIS_Y:
-      return pxr::GfVec3f(0.f, (float)_offsetScale[1], 0.f);
+      if (_activeAxis == axis)
+        return { 0.f, (float)_offsetScale[1], 0.f };
+      else
+        return { 0.f, 0.f, 0.f };
+      
     case AXIS_Z:
-      return pxr::GfVec3f(0.f, 0.f, (float)_offsetScale[2]);
-    /*
+      if (_activeAxis == axis)
+        return { 0.f, 0.f, (float)_offsetScale[2] };
+      else
+        return { 0.f, 0.f, 0.f };
+      
     case AXIS_XY:
-      return { (float)_scale[0] * 0.5f, (float)_scale[1] * 0.5f, 0.f };
+      if (_activeAxis == axis)
+        return { (float)_offsetScale[0], (float)_offsetScale[1], 0.f };
+      else
+        return { 0.f, 0.f, 0.f };
+      
     case AXIS_XZ:
-      return { (float)_scale[0] * 0.5f, 0.f, (float)_scale[2] * 0.5f };
+      if (_activeAxis == axis)
+        return { (float)_offsetScale[0], 0.f, (float)_offsetScale[2] };
+      else
+        return { 0.f, 0.f, 0.f };
+      
     case AXIS_YZ:
-      return { 0.f, (float)_scale[1] * 0.5f, (float)_scale[2] * 0.5f };
-    */
+      if (_activeAxis == axis)
+        return { 0.f, (float)_offsetScale[1], (float)_offsetScale[2] };
+      else
+        return { 0.f, 0.f, 0.f };
+      
     }
   
   return pxr::GfVec3f(0.f);
@@ -775,24 +786,37 @@ pxr::GfVec3f ScaleHandle::_GetScaleOffset(size_t axis)
       return { 1.f + (float)_offsetScale[0], 1.f, 1.f };
     else
       return { 1.f, 1.f, 1.f };
+
   case AXIS_Y:
     if(_activeAxis == axis)
       return { 1.f, 1.f + (float)_offsetScale[1], 1.f };
     else
       return { 1.f, 1.f, 1.f };
+
   case AXIS_Z:
     if(_activeAxis == axis)
       return { 1.f, 1.f, 1.f + (float)_offsetScale[2] };
     else
       return { 1.f, 1.f, 1.f };
-    /*
+
     case AXIS_XY:
-      return { (float)_scale[0] * 0.5f, (float)_scale[1] * 0.5f, 0.f };
+      if (_activeAxis == axis)
+        return { (float)_offsetScale[0], (float)_offsetScale[1], 0.f };
+      else
+        return { 1.f, 1.f, 1.f };
+      
     case AXIS_XZ:
-      return { (float)_scale[0] * 0.5f, 0.f, (float)_scale[2] * 0.5f };
+      if (_activeAxis == axis)
+        return { (float)_offsetScale[0], 0.f, (float)_offsetScale[2] };
+      else
+        return { 1.f, 1.f, 1.f };
+      
     case AXIS_YZ:
-      return { 0.f, (float)_scale[1] * 0.5f, (float)_scale[2] * 0.5f };
-    */
+      if (_activeAxis == axis)
+        return { 0.f, (float)_offsetScale[1], (float)_offsetScale[2] };
+      else
+        return { 1.f, 1.f, 1.f };
+
   }
 
   return pxr::GfVec3f(0.f);
