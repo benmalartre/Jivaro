@@ -24,10 +24,8 @@ struct Point {
 
   void GetPosition(Geometry* geom, pxr::GfVec3f& center);
   void GetNormal(Geometry* geom, pxr::GfVec3f& normal);
-  void Raycast(Geometry* geom, const pxr::GfRay& point,
-    pxr::GfVec3f& closest, double maxDistance = -1, double* minDistance = NULL);
-  void ClosestPoint(Geometry* geom, const pxr::GfVec3f& point , 
-    pxr::GfVec3f& closest, double maxDistance=-1, double* minDistance=NULL);
+  void Raycast(Geometry* geom, const pxr::GfRay& point , 
+    pxr::GfVec3f& closest, double maxDistance=-1, double* minDistance=NULL)
 
 };
 
