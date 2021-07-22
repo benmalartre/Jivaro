@@ -100,9 +100,9 @@ void BaseHandle::AddYZXZXYComponents(Shape::Component& component)
 void BaseHandle::SetMatrixFromSRT()
 {
   pxr::GfTransform transform;
-  transform.SetScale(_scale);
+  transform.SetScale(pxr::GfVec3d(_scale));
   transform.SetRotation(_rotation);
-  transform.SetTranslation(_position);
+  transform.SetTranslation(pxr::GfVec3d(_position));
   _matrix = pxr::GfMatrix4f(transform.GetMatrix());
 }
 
@@ -110,9 +110,9 @@ void BaseHandle::SetSRTFromMatrix()
 {
   pxr::GfTransform transform;
   transform.SetMatrix(pxr::GfMatrix4d(_matrix));
-  _scale = transform.GetScale();
+  _scale = pxr::GfVec3f(transform.GetScale());
   _rotation = transform.GetRotation();
-  _position = transform.GetTranslation();
+  _position = pxr::GfVec3f(transform.GetTranslation());
 }
 
 void BaseHandle::ComputeViewPlaneMatrix()
@@ -229,8 +229,7 @@ pxr::GfMatrix4f BaseHandle::_ExtractRotationAndTranslateFromMatrix()
 {
   return 
     pxr::GfMatrix4f(1.f).SetRotate(_rotation) *
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(_position));
-
+    pxr::GfMatrix4f(1.f).SetTranslate(_position);
 }
 
 void BaseHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
@@ -374,6 +373,22 @@ pxr::GfVec3f BaseHandle::_ConstraintPointToAxis(const pxr::GfVec3f& point,
 
 pxr::GfVec3f BaseHandle::_ConstraintPointToPlane(const pxr::GfVec3f& point, 
   short axis)
+{
+  switch (axis) {
+  case AXIS_X:
+    return { 0.f, point[1], point[2] };
+  case AXIS_Y:
+    return { point[0], 0.f, point[2] };
+  case AXIS_Z:
+    return { point[0], point[1], 0.f };
+  case AXIS_CAMERA:
+    return _viewPlaneMatrix.GetInverse().Transform(point);
+  }
+  return pxr::GfVec3f(0.f);
+}
+
+pxr::GfVec3f BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& point,
+  short axis, float radius)
 {
   return pxr::GfVec3f(0.f);
 }
@@ -566,7 +581,6 @@ RotateHandle::RotateHandle()
 
 void RotateHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  /*
   pxr::GfRay ray(
     _camera->GetPosition(),
     _camera->GetRayDirection(x, y, width, height));
@@ -584,7 +598,7 @@ void RotateHandle::BeginUpdate(float x, float y, float width, float height)
     }
   }
   _interacting = true;
-  */
+  
 }
 
 void RotateHandle::Update(float x, float y, float width, float height)
@@ -597,7 +611,7 @@ ScaleHandle::ScaleHandle()
   , _baseScale(pxr::GfVec3f(1.f))
 {
   Shape::Component center = _shape.AddBox(
-    AXIS_CAMERA, 0.1f, 0.01f, 0.1f, HANDLE_HELP_COLOR, {
+    AXIS_CAMERA, 0.1f, 0.1f, 0.01f, HANDLE_HELP_COLOR, {
     1.f, 0.f, 0.f, 0.f,
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
@@ -683,7 +697,7 @@ void ScaleHandle::Update(float x, float y, float width, float height)
       switch (_activeAxis) {
         case AXIS_CAMERA:
           offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
-          value = offset[0] - _offset[0] + offset[1] - _offset[1];
+          value = _offset[0] - offset[0] + _offset[1] - offset[1];
           _scale = _baseScale + pxr::GfVec3f(value);
           break;
         case AXIS_X:
@@ -826,10 +840,11 @@ void ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
 {
   shape->Bind(SHAPE_PROGRAM);
   Shape::Component* component;
-   // center
+  
+  // center
   {
     component = &(shape->GetComponent(0));
-    shape->DrawComponent(AXIS_CAMERA, _viewPlaneMatrix, GetColor(*component));
+    shape->DrawComponent(0, _viewPlaneMatrix, GetColor(*component));
   }
   // cylinders
   {

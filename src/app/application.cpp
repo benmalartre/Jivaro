@@ -35,6 +35,7 @@
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/notice.h"
+#include "../app/handle.h"
 #include "../app/engine.h"
 #include "../geometry/vdb.h"
 
@@ -242,7 +243,7 @@ Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage,
   Mesh* mesh = new Mesh();
   //mesh->PolygonSoup(65535);
   pxr::GfMatrix4f space(1.f);
-  mesh->TriangularGrid2D(10.f, 6.f, space, 2.f);
+  mesh->TriangularGrid2D(10.f, 6.f, space, 0.2f);
   mesh->Randomize(0.05f);
 
   pxr::UsdGeomMesh polygonSoup = 
@@ -383,10 +384,10 @@ Application::Init()
 
   // initialize 3d tools
   _tools.Init();
-  //GraphUI* graph = new GraphUI(graphView, filename);
+  GraphUI* graph = new GraphUI(graphView, filename);
   //std::cout << "INIT GRAPH OK " << std::endl;
-  CurveEditorUI* editor = new CurveEditorUI(graphView);
-  std::cout << "INIT EDITOR OK " << std::endl;
+  //CurveEditorUI* editor = new CurveEditorUI(graphView);
+  std::cout << "INIT GRAPH OK " << std::endl;
   
   _viewport = new ViewportUI(viewportView, OPENGL);  
   std::cout << "INIT VIEWPORT OK " << std::endl;
@@ -437,9 +438,9 @@ Application::Init()
   //_stage = pxr::UsdStage::Open(filename);
 
   //_stage = pxr::UsdStage::CreateNew("test.usda", pxr::TfNullPtr);
-  _stage = pxr::UsdStage::CreateInMemory();
+  //_stage = pxr::UsdStage::CreateInMemory();
 
-  _mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
+  //_mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
   //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, pxr::TfToken("/openvdb_sphere"));
 /*
   for(size_t i=0; i< 12; ++i) {

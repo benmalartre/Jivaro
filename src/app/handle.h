@@ -144,6 +144,7 @@ protected:
   virtual void _UpdateTargets();
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
+  pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& point, short axis, float radius);
   pxr::GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
 
   // targets
@@ -168,15 +169,17 @@ protected:
   pxr::UsdGeomXformCache  _xformCache;
 
   // data
-  pxr::GfVec3d            _scale;
-  pxr::GfVec3d            _position;
-  pxr::GfVec3d            _offset;
+  pxr::GfVec3f            _scale;
+  pxr::GfVec3f            _position;
+  pxr::GfVec3f            _offset;
+  pxr::GfVec3f            _normal;
   pxr::GfRotation         _rotation;
+  pxr::GfPlane            _plane;
   pxr::GfMatrix4f         _matrix;
   pxr::GfMatrix4f         _displayMatrix;
   pxr::GfMatrix4f         _startMatrix;
-  pxr::GfPlane            _plane;
   pxr::GfMatrix4f         _viewPlaneMatrix;
+  pxr::GfMatrix4f         _normalPlaneMatrix;
   pxr::GfMatrix4f         _sizeMatrix;
 };
 

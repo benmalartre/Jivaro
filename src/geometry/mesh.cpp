@@ -588,7 +588,7 @@ void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& sp
  
 
   Init(position, faceCount, faceConnect);
-  SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
+  SetDisplayColor(GeomInterpolation::GeomInterpolationVertex, colors);
 }
 
 void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
