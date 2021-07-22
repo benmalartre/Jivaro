@@ -74,6 +74,13 @@ public:
     STATE_ACTIVE
   };
 
+  enum Mode {
+    MODE_LOCAL = 1,
+    MODE_GLOBAL = 2,
+    MODE_REFERENCE = 4,
+    MODE_COG = 8
+  };
+
   enum Axis {
     AXIS_NONE,
     AXIS_X,
@@ -103,6 +110,7 @@ public:
     , _camera(NULL)
     , _interacting(false)
     , _compensate(compensate)
+    , _mode(MODE_LOCAL | MODE_COG)
     , _position(pxr::GfVec3d(0.f))
     , _rotation(pxr::GfRotation())
     , _scale(pxr::GfVec3d(1.f))
@@ -144,8 +152,12 @@ protected:
   virtual void _UpdateTargets();
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
-  pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& point, short axis, float radius);
+  pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& point, const pxr::GfVec3f& center, 
+    short axis, float radius);
   pxr::GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
+
+  // handle transformation flags
+  short                   _mode;
 
   // targets
   HandleTargetDescList    _targets;
@@ -153,7 +165,6 @@ protected:
   // geometry
   Shape                   _shape;
   Shape                   _help;
-
   // viewport
   Camera*                 _camera;
 
@@ -166,6 +177,7 @@ protected:
   float                   _distance;
   bool                    _compensate;
   bool                    _interacting;
+  bool                    _needUpdate;
   pxr::UsdGeomXformCache  _xformCache;
 
   // data
@@ -211,6 +223,7 @@ public:
 
 private:
   float _radius;
+  Shape _help;
 };
 
 class TranslateHandle : public BaseHandle {
@@ -238,11 +251,9 @@ public:
 private:
   void _BuildStroke(bool replace);
 
-  bool                          _needUpdate;
   float                         _minRadius;
   float                         _maxRadius;
   HandleTargetGeometryDescList  _geometries;
-  Shape                         _stroke;
   std::vector<pxr::GfVec3f>     _path;
   pxr::GfVec4f                  _color;
 };

@@ -250,15 +250,23 @@ void BaseHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
   shape->Unbind();
 }
 
-
-void BaseHandle::Draw(float width, float height) 
+void BaseHandle::Draw(float width, float height)
 {
   ComputeSizeMatrix(width, height);
   ComputeViewPlaneMatrix();
   pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
   GLint vao;
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+
   _DrawShape(&_shape, m);
+
+  if (_help.GetNumComponents()) {
+    if (_needUpdate) {
+      _help.Setup();
+      _needUpdate = false;
+    }
+    _DrawShape(&_help, m);
+  }
   glBindVertexArray(vao);
 }
 
@@ -388,14 +396,14 @@ pxr::GfVec3f BaseHandle::_ConstraintPointToPlane(const pxr::GfVec3f& point,
 }
 
 pxr::GfVec3f BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& point,
-  short axis, float radius)
+  const pxr::GfVec3f& center, short axis, float radius)
 {
-  return pxr::GfVec3f(0.f);
+  const pxr::GfVec3f pointToPlane = _ConstraintPointToPlane(point - center, axis).GetNormalized();
+  return pointToPlane * radius + center;
 }
 
 void BaseHandle::_UpdateTargets()
 {
-  
   Application* app = AMN_APPLICATION;
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
@@ -928,10 +936,10 @@ void BrushHandle::_BuildStroke(bool replace)
   }
   profile[0] = { -1, 0, 0 };
   profile[1] = { 1, 0, 0 };
-  if(replace) _stroke.RemoveLastComponent();
-  Shape::Component comp = _stroke.AddExtrusion(
+  if(replace) _help.RemoveLastComponent();
+  Shape::Component comp = _help.AddExtrusion(
     AXIS_NONE, xfos, profile, _color);
-  _stroke.AddComponent(comp);
+  _help.AddComponent(comp);
   _needUpdate = true;
 }
 
@@ -998,7 +1006,6 @@ short BrushHandle::Pick(float x, float y, float width, float height)
   return false;
 }
 
-
 void BrushHandle::Draw(float width, float height)
 {
   ComputeSizeMatrix(width, height);
@@ -1009,13 +1016,13 @@ void BrushHandle::Draw(float width, float height)
 
   _DrawShape(&_shape, m);
   
-  if (_needUpdate) {
-    _stroke.Setup();
-    _needUpdate = false;
+  if (_help.GetNumComponents()) {
+    if (_needUpdate) {
+      _help.Setup();
+      _needUpdate = false;
+    }
+    _DrawShape(&_help, pxr::GfMatrix4f(1.f));
   }
-
-  _DrawShape(&_stroke, pxr::GfMatrix4f(1.f));
-
   glBindVertexArray(vao);
 }
 
