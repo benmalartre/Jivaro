@@ -156,9 +156,20 @@ void BVH::Init(const std::vector<Geometry*>& geometries)
   leaves.clear();
 }
 
-bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit, double maxDistance, double* minDistance) const
+bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit, 
+  double maxDistance, double* minDistance) const
 {
   return root->Raycast(ray, hit, maxDistance, minDistance);
 }
 
+bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit, 
+  double maxDistance, double* minDistance) const
+{
+  return false;
+}
+
+void BVH::Update(const std::vector<Geometry*>& geometries)
+{
+
+}
 AMN_NAMESPACE_CLOSE_SCOPE

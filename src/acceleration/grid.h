@@ -104,8 +104,8 @@ public:
   void ClearRays() { _rays.clear(); };
 
   // geometries
-  void Init(const std::vector<Geometry*>& geometries);
-  void Update(const std::vector<Geometry*>& geometries);
+  void Init(const std::vector<Geometry*>& geometries) override;
+  void Update(const std::vector<Geometry*>& geometries) override;
   void InsertMesh(Mesh* mesh);
   void InsertCurve(Curve* curve);
   void InsertPoints(Points* points);

@@ -197,6 +197,11 @@ void GridIntersector::Init(const std::vector<Geometry*>& geometries)
   
 }
 
+void GridIntersector::Update(const std::vector<Geometry*>& geometries)
+{
+
+}
+
 bool GridIntersector::Raycast(const pxr::GfRay& ray, Hit* hit, 
   double maxDistance, double* minDistance) const
 {
@@ -271,6 +276,12 @@ bool GridIntersector::Raycast(const pxr::GfRay& ray, Hit* hit,
     }
 
     return hit;
+}
+
+bool GridIntersector::Closest(const pxr::GfVec3f& point, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  return false;
 }
 
 pxr::GfVec3f GridIntersector::GetCellPosition(uint32_t index) {

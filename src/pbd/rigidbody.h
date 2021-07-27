@@ -14,57 +14,57 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-/** This class encapsulates the state of a rigid body.
-  */
+// This class encapsulates the state of a rigid body.
+//
 class RigidBody
 {
   private:
-    /** mass */
+    // mass
     float _mass;
-    /** inverse mass */
+    // inverse mass
     float _invMass;
-    /** center of mass */
+    // center of mass
     pxr::GfVec3f _x;
     pxr::GfVec3f _lastX;
     pxr::GfVec3f _oldX;
     pxr::GfVec3f _x0;
-    /** center of mass velocity */
+    // center of mass velocity
     pxr::GfVec3f _v;
     pxr::GfVec3f _v0;
-    /** acceleration (by external forces) */
+    // acceleration (by external forces)
     pxr::GfVec3f _a;
 
-    /** Inertia tensor in the principal axis system: \n
-    * After the main axis transformation the inertia tensor is a diagonal matrix.
-    * So only three values are required to store the inertia tensor. These values
-    * are constant over time.
-    */
+    // Inertia tensor in the principal axis system: \n
+    // After the main axis transformation the inertia tensor is a diagonal matrix.
+    // So only three values are required to store the inertia tensor. These values
+    // are constant over time.
+    //
     pxr::GfVec3f _inertiaTensor;
-    /** Inverse inertia tensor in body space */
+    // Inverse inertia tensor in body space
     pxr::GfVec3f _inertiaTensorInverse;
-    /** 3x3 matrix, inverse of the inertia tensor in world space */
+    // 3x3 matrix, inverse of the inertia tensor in world space
     pxr::GfMatrix3f _inertiaTensorInverseW;
-    /** Quaternion that describes the rotation of the body in world space */
+    // Quaternion that describes the rotation of the body in world space
     pxr::GfQuatf _q;
     pxr::GfQuatf _lastQ;
     pxr::GfQuatf _oldQ;
     pxr::GfQuatf _q0;
-    /** Quaternion representing the rotation of the main axis transformation
-    that is performed to get a diagonal inertia tensor */
+    // Quaternion representing the rotation of the main axis transformation
+    // that is performed to get a diagonal inertia tensor
     pxr::GfQuatf _q_mat;
-    /** Quaternion representing the initial rotation of the geometry */
+    // Quaternion representing the initial rotation of the geometry
     pxr::GfQuatf _q_initial;
-    /** difference of the initial translation and the translation of the main axis transformation */
+    // difference of the initial translation and the translation of the main axis transformation
     pxr::GfVec3f _x0_mat;
-    /** rotationMatrix = 3x3 matrix. 
-    * Important for the transformation from world in body space and vice versa.
-    * When using quaternions the rotation matrix is computed out of the quaternion.
-    */
+    // rotationMatrix = 3x3 matrix. 
+    // Important for the transformation from world in body space and vice versa.
+    // When using quaternions the rotation matrix is computed out of the quaternion.
+    //
     pxr::GfMatrix3f _rot;
-    /** Angular velocity, defines rotation axis and velocity (magnitude of the vector) */
+    // Angular velocity, defines rotation axis and velocity (magnitude of the vector)
     pxr::GfVec3f _omega;
     pxr::GfVec3f _omega0;
-    /** external torque */
+    // external torque
     pxr::GfVec3f _torque;
 
     float _restitutionCoeff;
@@ -209,8 +209,8 @@ class RigidBody
       }
     }
 
-    /** Determine mass and inertia tensor of the given geometry.
-      */
+    // Determine mass and inertia tensor of the given geometry.
+    //
     void DetermineMassProperties(const float density)
     {
       // apply initial rotation

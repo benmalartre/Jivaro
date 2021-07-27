@@ -203,7 +203,7 @@ public:
   void Update(float x, float y, float width, float height) override;
   void EndUpdate() override;
   //void Draw(float width, float height) override;
-  void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
+  void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
 
 private:
   pxr::GfVec3f _GetScaleOffset(size_t axis);

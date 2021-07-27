@@ -1,10 +1,10 @@
 #include "utils.h"
-#include <pxr\base\gf\matrix4f.h>
+#include <pxr/base/gf/matrix4f.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
-  const pxr::GfVec3f& c, float* u, float* v, float* w)
+void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, 
+  const pxr::GfVec3f& b, const pxr::GfVec3f& c, float* u, float* v, float* w)
 {
   pxr::GfVec3f v0 = b - a;
   pxr::GfVec3f v1 = c - a;
@@ -21,19 +21,22 @@ void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVe
 }
 
 void 
-MakeCircle(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& m, size_t n)
+MakeCircle(std::vector<pxr::GfVec3f>* points, float radius, 
+  const pxr::GfMatrix4f& m, size_t n)
 {
   float step = (360.f / (float)n) * DEGREES_TO_RADIANS;
   size_t baseIndex = points->size();
   points->resize(baseIndex + n);
   for (size_t k = 0; k < n; ++k) {
     (*points)[baseIndex + k] = m.TransformAffine(
-      pxr::GfVec3f(std::sinf(step * k) * radius, 0.f, std::cosf(step * k) * radius));
+      pxr::GfVec3f(std::sinf(step * k) * radius, 0.f, 
+        std::cosf(step * k) * radius));
   }
 }
 
 void
-MakeArc(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& m, size_t n, float startAngle, float endAngle)
+MakeArc(std::vector<pxr::GfVec3f>* points, float radius, 
+  const pxr::GfMatrix4f& m, size_t n, float startAngle, float endAngle)
 {
   float step;
   if (startAngle < endAngle) {
@@ -47,11 +50,13 @@ MakeArc(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& 
   for (size_t k = 0; k < n; ++k) {
     if (startAngle < endAngle) {
       (*points)[baseIndex + k] = m.TransformAffine(
-        pxr::GfVec3f(std::sinf(step * k + endAngle) * radius, 0.f, std::cosf(step * k + endAngle) * radius));
+        pxr::GfVec3f(std::sinf(step * k + endAngle) * radius, 0.f, 
+          std::cosf(step * k + endAngle) * radius));
     }
     else {
       (*points)[baseIndex + k] = m.TransformAffine(
-        pxr::GfVec3f(std::sinf(step * k + startAngle) * radius, 0.f, std::cosf(step * k + startAngle) * radius));
+        pxr::GfVec3f(std::sinf(step * k + startAngle) * radius, 0.f, 
+          std::cosf(step * k + startAngle) * radius));
     }
   }
 }
@@ -186,7 +191,8 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
     tangents[last] = (points[last] - points[last-1]).GetNormalized();
     for (size_t i = 1; i < numPoints; ++i) {
       tangents[i] =
-        ((points[i] - points[i - 1]) + (points[i + 1] - points[i])).GetNormalized();
+        ((points[i] - points[i - 1]) + 
+        (points[i + 1] - points[i])).GetNormalized();
     }
     break;
   }
