@@ -154,7 +154,7 @@ void ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
 }
 void ExplorerUI::DrawItemType(ExplorerItem* item)
 {
-  ImGui::Text(item->_prim.GetTypeName().GetText());
+  ImGui::Text("%s", item->_prim.GetTypeName().GetText());
   /*
   ImGui::Selectable(
     item->_prim.GetTypeName().GetText(),

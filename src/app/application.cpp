@@ -325,11 +325,11 @@ Application::Init()
  #ifdef _WIN32
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
-    "C:/Users/graph/Documents/bmal/src/USD_ASSETS/Kitchen_set/Kitchen_set.usd";
+    //"C:/Users/graph/Documents/bmal/src/USD_ASSETS/Kitchen_set/Kitchen_set.usd";
     //"E:/Projects/RnD/USD_BUILD/assets/Contour/JackTurbulized.usda";
     //"E:/Projects/RnD/USD/extras/usd/examples/usdGeomExamples/basisCurves.usda";
     //"E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd";
-    //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
+    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
     //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
     //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
@@ -389,7 +389,7 @@ Application::Init()
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   std::cout << "INIT GRAPH OK " << std::endl;
   
-  _viewport = new ViewportUI(viewportView, OPENGL);  
+  _viewport = new ViewportUI(viewportView, LOFI );  
   std::cout << "INIT VIEWPORT OK " << std::endl;
   _timeline = new TimelineUI(timelineView);
   std::cout << "INIT TIMELINE OK " << std::endl;
