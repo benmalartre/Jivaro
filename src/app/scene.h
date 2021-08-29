@@ -5,27 +5,28 @@
 #include "../geometry/mesh.h"
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
+#include <pxr/base/tf/hashmap.h>
 
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-struct Proxy {
-  pxr::UsdPrim  prim;
-  Geometry*     geometry;
-
-  Proxy(const pxr::UsdPrim& prim);
-  ~Proxy();
-};
+typedef pxr::TfHashMap< pxr::SdfPath, pxr::UsdStageRefPtr, pxr::SdfPath::Hash > _StageCacheMap;
 
 class Scene {
 public:
   Scene();
-  Scene(pxr::UsdStageRefPtr& stage);
   ~Scene();
+
+  void ClearAllStages();
+  void RemoveStage(const std::string& name);
+  void RemoveStage(const pxr::SdfPath& path);
+  pxr::UsdStageRefPtr& AddStageFromMemory(const std::string& name);
+  pxr::UsdStageRefPtr& AddStageFromDisk(const std::string& name, const std::string& filename);
+  pxr::UsdStageRefPtr& GetRoot(){return _stage;};
 
 private:
   pxr::UsdStageRefPtr _stage;
-  std::vector<Proxy>  _proxys;
+  _StageCacheMap  _childrens;
 };
 
 

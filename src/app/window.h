@@ -154,51 +154,51 @@ public:
   static Window* GetUserData(GLFWwindow* window);
 
 private:
-  bool                      _idle;
-  std::string               _name;
-  Application*              _app;
-  GLFWwindow*               _window;
-  bool                      _shared;
-  std::vector<Window*>      _childrens;
-  View*                     _mainView;
-  View*                     _activeView;
-  View*                     _activeLeaf;
-  SplitterUI*               _splitter;
-  bool                      _dragSplitter;
-  std::vector<View*>        _leaves;
-  ImGuiContext*             _context;
+  bool                  _idle;
+  std::string           _name;
+  Application*          _app;
+  GLFWwindow*           _window;
+  bool                  _shared;
+  std::vector<Window*>  _childrens;
+  View*                 _mainView;
+  View*                 _activeView;
+  View*                 _activeLeaf;
+  SplitterUI*           _splitter;
+  bool                  _dragSplitter;
+  std::vector<View*>    _leaves;
+  ImGuiContext*         _context;
 
   // view datas
-  bool              _fullscreen;
-  int               _mouseMode;
-  int               _activeTool;
-  int               _lastActiveTool;
-  int               _width;
-  int               _height;
-  unsigned*         _pixels;
-  bool              _valid;
-  int               _forceRedraw;
+  bool                  _fullscreen;
+  int                   _mouseMode;
+  int                   _activeTool;
+  int                   _lastActiveTool;
+  int                   _width;
+  int                   _height;
+  unsigned*             _pixels;
+  bool                  _valid;
+  int                   _forceRedraw;
 
   // version number
-  int               _iOpenGLMajor;
-  int               _iOpenGLMinor;
-  int               _iOpenGLRevision;
+  int                   _iOpenGLMajor;
+  int                   _iOpenGLMinor;
+  int                   _iOpenGLRevision;
 
   // opengl
-  int               _pickImage;
-  int               _debugImage;
+  int                   _pickImage;
+  int                   _debugImage;
 
   // imgui
-  ImGuiIO*          _io;
-  int               _guiId;
-  bool              _debounce;
+  ImGuiIO*              _io;
+  int                   _guiId;
+  bool                  _debounce;
 
   // fonts
-  float             _fontSize;
+  float                 _fontSize;
 
   // ui
-  float             _dpiX;
-  float             _dpiY;
+  float                 _dpiX;
+  float                 _dpiY;
 
 public:
   // static constructor

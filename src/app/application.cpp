@@ -47,16 +47,18 @@ const char* Application::APPLICATION_NAME = "Amnesie";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _stage(nullptr), _tools(Tool()), _mesh(nullptr)
+  _mainWindow(nullptr), _tools(Tool()), _mesh(nullptr)
 {  
+  _scene = new Scene();
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _stage(nullptr), _tools(Tool()), _mesh(nullptr)
+  _mainWindow(nullptr), _tools(Tool()), _mesh(nullptr)
 {
+  _scene = new Scene();
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
@@ -67,6 +69,7 @@ Application::Application(bool fullscreen):
 Application::~Application()
 {
   if(_mainWindow) delete _mainWindow;
+  if (_scene) delete _scene;
 };
 
 // create full screen window
@@ -321,7 +324,6 @@ Application::Init()
     std::cout << "HYDRA SCENE DELEGATE FAILED" << std::endl;
   }
   */
-  std::cout << "APP INIT :D" << std::endl;
  #ifdef _WIN32
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
@@ -387,20 +389,14 @@ Application::Init()
   GraphUI* graph = new GraphUI(graphView, filename);
   //std::cout << "INIT GRAPH OK " << std::endl;
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
-  std::cout << "INIT GRAPH OK " << std::endl;
   
-  _viewport = new ViewportUI(viewportView, LOFI );  
-  std::cout << "INIT VIEWPORT OK " << std::endl;
+  _viewport = new ViewportUI(viewportView, OPENGL );  
   _timeline = new TimelineUI(timelineView);
-  std::cout << "INIT TIMELINE OK " << std::endl;
 
   MenuUI* menu = new MenuUI(topView);
-  std::cout << "INIT MENU OK " << std::endl;
   //ToolbarUI* toolbar = new ToolbarUI(topView, "Toolbar");
   ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
-  std::cout << "INIT TOOLBAR OK " << std::endl;
   _explorer = new ExplorerUI(explorerView);
-  std::cout << "INIT EXPLORER OK " << std::endl;
   _property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, editor);
@@ -477,12 +473,14 @@ void Application::Update()
   _time.ComputeFramerate(glfwGetTime());
   if(_time.IsPlaying()) {
     if(_time.PlayBack()) {
+      /*
       if (_mesh) {
         pxr::UsdGeomMesh patron(
           _stage->GetPrimAtPath(pxr::SdfPath("/patron")));
         _mesh->Randomize(0.1f);
         patron.GetPointsAttr().Set(pxr::VtValue(_mesh->GetPositions()));
       }
+      */
     }
   }
 }
@@ -491,6 +489,29 @@ void Application::Update()
 void Application::OpenScene(const std::string& filename)
 {
   std::cout << "OPEN SCENE " << filename << std::endl;
+  if(strlen(filename.c_str()) > 0) {    
+    if (_scene) delete _scene;
+    _scene = new Scene();
+    _scene->AddStageFromDisk("test", filename);
+    //_stage = pxr::UsdStage::Open(filename);
+    /*
+    _stage = pxr::UsdStage::CreateInMemory("XYZ.usda");
+    pxr::UsdPrim root = pxr::UsdGeomXform::Define(_stage, pxr::SdfPath("/root")).GetPrim();
+    pxr::UsdPrim ref = _stage->OverridePrim(pxr::SdfPath("/root/ref"));
+    ref.GetReferences().AddReference(filename);
+    delete _mesh;
+    std::cout << "DELETE MESH :)" << std::endl;
+    _mesh = NULL;
+    */
+    Notice::NewScene().Send();
+    //_property->SetPrim(_stage->GetDefaultPrim());
+  }
+}
+
+void Application::SaveScene(const std::string& filename)
+{
+  std::cout << "SAVE SCENE " << filename << std::endl;
+  /*
   if(strlen(filename.c_str()) > 0) {    
     //_stage = pxr::UsdStage::Open(filename);
     _stage = pxr::UsdStage::CreateInMemory("XYZ.usda");
@@ -503,6 +524,7 @@ void Application::OpenScene(const std::string& filename)
     Notice::NewScene().Send();
     //_property->SetPrim(_stage->GetDefaultPrim());
   }
+  */
 }
 
 // main loop
@@ -555,7 +577,7 @@ Application::GetStageBoundingBox()
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
-  return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
+  return bboxCache.ComputeWorldBound(_scene->GetRoot()->GetPseudoRoot());
 }
 
 void Application::SelectionChangedCallback(const Notice::SelectionChanged& n)
@@ -578,8 +600,8 @@ Application::GetSelectionBoundingBox()
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const SelectionItem& item = _selection[n];
     if (item.type == SelectionType::OBJECT) {
-      pxr::UsdPrim prim = _stage->GetPrimAtPath(item.path);
-      if (prim.IsActive() && !prim.IsInMaster())
+      pxr::UsdPrim prim = _scene->GetRoot()->GetPrimAtPath(item.path);
+      if (prim.IsActive() && !prim.IsInPrototype())
         bbox = bbox.Combine(bbox, bboxCache.ComputeWorldBound(prim));
     }
     else if (item.type == SelectionType::COMPONENT) {

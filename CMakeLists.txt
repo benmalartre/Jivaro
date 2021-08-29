@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.0.0)
 project (AMINA)
 
 # Require C++14
@@ -51,7 +51,7 @@ list(APPEND USD_LIB_NAMES
   trace
   work
   arch
-  half
+  Half-2_3
   ar
   gf
   glf

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../common.h"
+#include "../app/scene.h"
 #include "../app/selection.h"
 #include "../app/time.h"
 #include "../app/window.h"
@@ -11,8 +12,6 @@
 #include "../app/camera.h"
 #include "../app/tools.h"
 #include "../geometry/mesh.h"
-#include "../graph/node.h"
-#include "../graph/graph.h"
 #include <openvdb/openvdb.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -63,6 +62,7 @@ public:
   void CleanUp();
 
   void OpenScene(const std::string& filename);
+  void SaveScene(const std::string& filename);
 
   // selection
   Selection* GetSelection(){return &_selection;};
@@ -88,17 +88,14 @@ public:
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
-  pxr::UsdStageRefPtr& GetStage() { return _stage; };
+  pxr::UsdStageRefPtr& GetStage() { return _scene->GetRoot(); };
 
 private:
   std::string                       _fileName;
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindows;
-  //std::vector<pxr::UsdStageRefPtr>  _stages;
-  pxr::UsdStageRefPtr               _stage;
+  Scene*                            _scene;
   Selection                         _selection;
-  //pxr::UsdGeomBBoxCache*            _bboxCache;
-  //pxr::UsdGeomXformCache*           _xformCache;
   Tool                              _tools;
 
   // uis
