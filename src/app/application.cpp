@@ -436,7 +436,7 @@ Application::Init()
   //_stage = pxr::UsdStage::CreateNew("test.usda", pxr::TfNullPtr);
   //_stage = pxr::UsdStage::CreateInMemory();
 
-  //_mesh = MakeColoredPolygonSoup(_stage, pxr::TfToken("/polygon_soup"));
+  //_mesh = MakeColoredPolygonSoup(_scene->GetCurrentStage(), pxr::TfToken("/polygon_soup"));
   //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, pxr::TfToken("/openvdb_sphere"));
 /*
   for(size_t i=0; i< 12; ++i) {
@@ -447,6 +447,8 @@ Application::Init()
 */
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
+
+  _scene->TestVoronoi();
  
   _mainWindow->CollectLeaves();
   
@@ -488,23 +490,11 @@ void Application::Update()
 
 void Application::OpenScene(const std::string& filename)
 {
-  std::cout << "OPEN SCENE " << filename << std::endl;
   if(strlen(filename.c_str()) > 0) {    
     if (_scene) delete _scene;
     _scene = new Scene();
-    _scene->AddStageFromDisk("test", filename);
-    //_stage = pxr::UsdStage::Open(filename);
-    /*
-    _stage = pxr::UsdStage::CreateInMemory("XYZ.usda");
-    pxr::UsdPrim root = pxr::UsdGeomXform::Define(_stage, pxr::SdfPath("/root")).GetPrim();
-    pxr::UsdPrim ref = _stage->OverridePrim(pxr::SdfPath("/root/ref"));
-    ref.GetReferences().AddReference(filename);
-    delete _mesh;
-    std::cout << "DELETE MESH :)" << std::endl;
-    _mesh = NULL;
-    */
+    _scene->AddStageFromDisk(filename);
     Notice::NewScene().Send();
-    //_property->SetPrim(_stage->GetDefaultPrim());
   }
 }
 
@@ -577,7 +567,7 @@ Application::GetStageBoundingBox()
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
-  return bboxCache.ComputeWorldBound(_scene->GetRoot()->GetPseudoRoot());
+  return bboxCache.ComputeWorldBound(_scene->GetRootStage()->GetPseudoRoot());
 }
 
 void Application::SelectionChangedCallback(const Notice::SelectionChanged& n)
@@ -600,7 +590,7 @@ Application::GetSelectionBoundingBox()
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const SelectionItem& item = _selection[n];
     if (item.type == SelectionType::OBJECT) {
-      pxr::UsdPrim prim = _scene->GetRoot()->GetPrimAtPath(item.path);
+      pxr::UsdPrim prim = _scene->GetRootStage()->GetPrimAtPath(item.path);
       if (prim.IsActive() && !prim.IsInPrototype())
         bbox = bbox.Combine(bbox, bboxCache.ComputeWorldBound(prim));
     }

@@ -56,6 +56,7 @@ public:
 
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
+  void Normalize();
   void ComputeBoundingBox();
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
   const pxr::GfBBox3d& GetBoundingBox() const { return _bbox; };

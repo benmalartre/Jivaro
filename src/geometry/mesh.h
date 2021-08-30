@@ -98,6 +98,9 @@ public:
 
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
 
+  // Flatten
+  void Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs);
+
   void Inflate(uint32_t index, float value);
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
     const pxr::GfVec3f& direction, Location& point, float maxDistance);
@@ -111,6 +114,7 @@ public:
   void Randomize(float value);
   void TriangularGrid2D(float width, float height, 
     const pxr::GfMatrix4f& space, float size);
+  void VoronoiDiagram(const std::vector<pxr::GfVec3f>& points);
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Hit* hit,

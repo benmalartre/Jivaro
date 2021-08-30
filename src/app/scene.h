@@ -21,11 +21,15 @@ public:
   void RemoveStage(const std::string& name);
   void RemoveStage(const pxr::SdfPath& path);
   pxr::UsdStageRefPtr& AddStageFromMemory(const std::string& name);
-  pxr::UsdStageRefPtr& AddStageFromDisk(const std::string& name, const std::string& filename);
-  pxr::UsdStageRefPtr& GetRoot(){return _stage;};
+  pxr::UsdStageRefPtr& AddStageFromDisk(const std::string& filename);
+  pxr::UsdStageRefPtr& GetRootStage() { return _rootStage; };
+  pxr::UsdStageRefPtr& GetCurrentStage() { return _currentStage; };
+
+  void TestVoronoi();
 
 private:
-  pxr::UsdStageRefPtr _stage;
+  pxr::UsdStageRefPtr _currentStage;
+  pxr::UsdStageRefPtr _rootStage;
   _StageCacheMap  _childrens;
 };
 

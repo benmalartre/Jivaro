@@ -88,7 +88,7 @@ public:
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
-  pxr::UsdStageRefPtr& GetStage() { return _scene->GetRoot(); };
+  pxr::UsdStageRefPtr& GetStage() { return _scene->GetCurrentStage(); };
 
 private:
   std::string                       _fileName;

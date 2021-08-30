@@ -9,6 +9,7 @@
 #include "mesh.h"
 #include "utils.h"
 
+#include "../voronoi/FortuneAlgorithm.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -385,6 +386,11 @@ void Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
   _position = positions;
 }
 
+void Mesh::Flatten(const pxr::VtArray<pxr::GfVec2f>& uvs)
+{
+
+}
+
 void Mesh::Inflate(uint32_t index, float value)
 {
   /*
@@ -593,6 +599,73 @@ void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& sp
 
 void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
 {
+
+}
+
+void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
+{
+  size_t numPoints = points.size();
+  std::vector<mygal::Vector2<double>> _points(numPoints);
+  for (size_t p=0; p < numPoints; ++p) {
+    _points[p].x = points[p][0];
+    _points[p].y = points[p][2];
+  }
+  mygal::FortuneAlgorithm<double> algorithm(_points);
+  algorithm.construct();
+
+  algorithm.bound(mygal::Box<double>{-0.05, -0.05, 1.05, 1.05});
+  mygal::Diagram<double> diagram = algorithm.getDiagram();
+  diagram.intersect(mygal::Box<double>{0.0, 0.0, 1.0, 1.0});
+
+  pxr::VtArray<pxr::GfVec3f> positions;
+  pxr::VtArray<int> faceCounts;
+  pxr::VtArray<int> faceConnects;
+  pxr::VtArray<pxr::GfVec3f> colors;
+
+  for (const auto& site : diagram.getSites())
+  {
+    auto center = site.point;
+    auto face = site.face;
+    auto halfEdge = face->outerComponent;
+    if (halfEdge == nullptr)
+      continue;
+    while (halfEdge->prev != nullptr)
+    {
+      halfEdge = halfEdge->prev;
+      if (halfEdge == face->outerComponent)
+        break;
+    }
+    auto start = halfEdge;
+    const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    size_t numFaceVertices = 0;
+    if (halfEdge->origin != nullptr) {
+      auto origin = (halfEdge->origin->point - center) + center;
+      faceConnects.push_back(positions.size());
+      positions.push_back(pxr::GfVec3f(origin.x, 0.f, origin.y));
+      colors.push_back(color);
+      numFaceVertices++;
+    }
+
+    while (halfEdge != nullptr)
+    {
+      if (halfEdge->origin != nullptr && halfEdge->destination != nullptr)
+      {
+        auto destination = (halfEdge->destination->point - center) + center;
+        faceConnects.push_back(positions.size());
+        positions.push_back(pxr::GfVec3f(destination.x, 0.f, destination.y));
+        colors.push_back(color);
+        numFaceVertices++;
+      }
+      halfEdge = halfEdge->next;
+      if (halfEdge == start) {
+        faceCounts.push_back(numFaceVertices);
+        break;
+      }
+    }
+  }
+
+  Init(positions, faceCounts, faceConnects);
+  SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
 
 }
 
