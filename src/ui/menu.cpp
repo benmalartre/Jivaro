@@ -5,7 +5,11 @@
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../app/modal.h"
+#include "../app/selection.h"
 
+#include <pxr/base/vt/array.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/primvar.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -83,11 +87,63 @@ static void OpenFileCallback() {
 static void SaveFileCallback() {
   std::cout << "ON SAVE CALLBACK !!!" << std::endl;
 }
+
 static void OpenDemoCallback()
 {
   ModalDemo demo("Demo");
   demo.Loop();
   demo.Term();
+}
+
+static void FlattenGeometryCallback()
+{
+  Application* app = AMN_APPLICATION;
+  pxr::UsdStageRefPtr& stage = app->GetStage();
+  Selection* selection = app->GetSelection();
+  std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
+  for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
+    SelectionItem& item = selection->GetItem(i);
+    std::cout << "SELECTED PRIM PATH : " << item.path << std::endl;
+    pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
+      pxr::UsdGeomMesh mesh(prim);
+      pxr::TfToken uvToken("st");
+      if(mesh.HasPrimvar(uvToken)) {
+        std::cout << "WE FOUND UVS :)" << std::endl;
+        pxr::UsdGeomPrimvar uvPrimvar = mesh.GetPrimvar(uvToken);
+        pxr::TfToken interpolation = uvPrimvar.GetInterpolation();
+        if (interpolation == pxr::UsdGeomTokens->vertex) {
+          std::cout << "UV INTERPOLATION VERTEX !" << std::endl;
+          pxr::VtArray<pxr::GfVec2d> uvs;
+          uvPrimvar.Get(&uvs);
+          std::cout << "UVS COUNT : " << uvs.size() << std::endl;
+        } else if (interpolation == pxr::UsdGeomTokens->faceVarying) {
+          std::cout << "UV INTERPOLATION FACE VARYING !" << std::endl;
+          pxr::VtArray<pxr::GfVec2d> uvs;
+          uvPrimvar.Get(&uvs);
+          
+          std::cout << "UVS COUNT : " << uvs.size() << std::endl;
+          // pxr::UsdGeomMesh usdFlattened = pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(item.path.GetString() + "_flattened"));
+          Mesh flattened(mesh);
+          std::cout << flattened.GetNumPoints() << std::endl;
+          pxr::VtArray<int> cuts;
+          flattened.GetCutEdgesFromUVs(uvs, &cuts);
+          /*
+          cuts.clear();
+          flattened.GetCutVerticesFromUVs(uvs, &cuts);
+          */
+          flattened.DisconnectEdges(cuts);
+          flattened.Flatten(uvs, interpolation);
+
+          mesh.GetPointsAttr().Set(pxr::VtValue(flattened.GetPositions()));
+          mesh.GetFaceVertexCountsAttr().Set(pxr::VtValue(flattened.GetFaceCounts()));
+          mesh.GetFaceVertexIndicesAttr().Set(pxr::VtValue(flattened.GetFaceConnects()));
+
+          //pxr::VtArray<pxr::GfVec2d> uvs = uvPrimvar.Get< pxr::VtArray<pxr::GfVec2d>>()
+        }
+      }
+    }
+  }
 }
 
 // constructor
@@ -101,6 +157,9 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
   
   MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);
   demoItem.AddItem(parent, "OpenDemo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
+
+  MenuItem& testItem = AddItem(parent, "Test", "", false, true);
+  testItem.AddItem(parent, "Flatten Geometry", "Shift+F", false, true, (MenuPressedFunc)&FlattenGeometryCallback);
 }
 
 // destructor
@@ -140,31 +199,6 @@ bool MenuUI::Draw()
   if (ImGui::BeginMenuBar())
   {
     ImGui::PushFont(window->GetBoldFont(0));
-    /*
-    if (ImGui::BeginMenu("Edit"))
-    {
-      _parent->SetDirty();
-      _parent->SetInteracting(true);
-      //ImGui::PushFont(window->GetMediumFont());
-      if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
-        std::cout << "UNDO !!!" << std::endl;
-      }
-      if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false)) {
-        std::cout << "REDO !!!" << std::endl;
-      }  // Disabled item
-      ImGui::Separator();
-      if (ImGui::MenuItem("Cut", "Ctrl+X")) {
-        std::cout << "CUT !!!" << std::endl;
-      }
-      if (ImGui::MenuItem("Copy", "Ctrl+C")) {
-        std::cout << "COPY !!!" << std::endl;
-      }
-      if (ImGui::MenuItem("Paste", "Ctrl+V")) {
-        std::cout << "PASTE !!!" << std::endl;
-      }
-      ImGui::EndMenu();
-    }
-    */
     for (auto& item : _items) {
       if (item.Draw()) {
         _parent->SetDirty();

@@ -8,6 +8,7 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
+#include <pxr/usd/usdGeom/mesh.h>
 #include <float.h>
 #include "triangle.h"
 #include "geometry.h"
@@ -54,12 +55,13 @@ class Mesh : public Geometry {
 public:
   Mesh();
   Mesh(const Mesh* other, bool normalize = true);
+  Mesh(const pxr::UsdGeomMesh& usdMesh);
   ~Mesh();
 
-  const pxr::VtArray<int>& GetFaceCounts() const { return _faceCounts;};
-  const pxr::VtArray<int>& GetFaceConnects() const { return _faceConnects;};
-  pxr::VtArray<int>& GetFaceCounts() { return _faceCounts;};
-  pxr::VtArray<int>& GetFaceConnects() { return _faceConnects;};
+  const pxr::VtArray<int>& GetFaceCounts() const { return _faceVertexCounts;};
+  const pxr::VtArray<int>& GetFaceConnects() const { return _faceVertexIndices;};
+  pxr::VtArray<int>& GetFaceCounts() { return _faceVertexCounts;};
+  pxr::VtArray<int>& GetFaceConnects() { return _faceVertexIndices;};
 
   pxr::GfVec3f GetPosition(size_t idx) const;
   pxr::GfVec3f GetPosition(const Triangle* T) const;                   // triangle position
@@ -83,23 +85,28 @@ public:
   uint32_t GetNumSamples()const {return _numSamples;};
   uint32_t GetNumFaces()const {return _numFaces;};
   uint32_t GetNumFaceVertices() const {return _numFaceVertices;};
-  uint32_t GetFaceNumVertices(uint32_t idx) const {return _faceCounts[idx];};
+  uint32_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
   uint32_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
+  void GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
+  void GetCutEdgesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
 
   void ComputeHalfEdges();
   void ComputeNeighbors();
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
 
-  void Init(
+  void SetTopology(
     const pxr::VtArray<pxr::GfVec3f>& positions, 
-    const pxr::VtArray<int>& counts, 
-    const pxr::VtArray<int>& connects);
+    const pxr::VtArray<int>& faceVertexCounts, 
+    const pxr::VtArray<int>& faceVertexIndices);
+
+  void Init();
 
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
 
   // Flatten
-  void Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs);
+  void DisconnectEdges(const pxr::VtArray<int>& edges);
+  void Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs, const pxr::TfToken& interpolation);
 
   void Inflate(uint32_t index, float value);
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
@@ -134,8 +141,8 @@ private:
   uint32_t                            _numFaceVertices;
 
   // polygonal description
-  pxr::VtArray<int>                   _faceCounts;  
-  pxr::VtArray<int>                   _faceConnects;
+  pxr::VtArray<int>                   _faceVertexCounts;  
+  pxr::VtArray<int>                   _faceVertexIndices;
 
   // colors
   pxr::VtArray<pxr::GfVec3f>          _colors;
@@ -154,6 +161,7 @@ private:
 
   // half-edge data
   pxr::VtArray<HalfEdge>              _halfEdges;
+  pxr::VtArray<int>                   _uniqueEdges;
   pxr::VtArray<int>                   _vertexHalfEdge;
 };
 

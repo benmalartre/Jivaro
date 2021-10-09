@@ -40,12 +40,6 @@ enum InteractionMode{
   INTERACTION_SCALE
 };
 
-enum VIEWPORT_MODE {
-  OPENGL,
-  LOFI,
-  EMBREE
-};
-
 static const char* DRAW_MODE_NAMES[] = { 
   "Points", 
   "Wireframe", 
@@ -60,11 +54,10 @@ static const char* DRAW_MODE_NAMES[] = {
 class ViewportUI : public BaseUI
 {
   public:
-    ViewportUI(View* parent, VIEWPORT_MODE mode);
+    ViewportUI(View* parent);
     ~ViewportUI();
     void Init();
 
-    void SetMode(VIEWPORT_MODE mode){_mode=mode;};
     Camera* GetCamera(){return _camera;};
     pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
 
@@ -87,7 +80,6 @@ class ViewportUI : public BaseUI
     
     
   private:
-    short                 _mode;
     GLuint                _texture;
     int*                  _pixels;
     int*                  _lowPixels;
@@ -107,8 +99,13 @@ class ViewportUI : public BaseUI
     pxr::UsdLuxDomeLight          _light;
     pxr::GlfDrawTargetRefPtr      _drawTarget;
     int                           _drawMode;
+    int                           _rendererIndex;
     //pxr::UsdStageRefPtr               _stage;
     static ImGuiWindowFlags       _flags;
+
+    const char**                  _rendererNames;
+    int                           _numRenderers;
+
 };
 AMN_NAMESPACE_CLOSE_SCOPE
 

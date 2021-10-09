@@ -27,7 +27,7 @@ Curve::Curve(const Curve* other, bool normalize)
   _numSegments = other->_numSegments;
   _type = CURVE;
 
-  _normal = other->_normal;
+  _normals = other->_normals;
 
   _cvCounts.resize(_numCurves);
   memcpy(&_cvCounts[0], &other->_cvCounts[0], _numCurves * sizeof(int));
@@ -78,7 +78,7 @@ float Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
   size_t baseCvIndex = segmentIndex;
   for(size_t i=0; i < curveIndex - 1; ++i)baseCvIndex += _cvCounts[i];
 
-  return (_position[segmentIndex] - _position[segmentIndex + 1]).GetLength();
+  return (_points[segmentIndex] - _points[segmentIndex + 1]).GetLength();
 }
 
 
@@ -90,14 +90,14 @@ void Curve::Init(
   _numCurves = counts.size();
   _numSegments = 0;
   for(const auto& count: counts) _numSegments += count - 1;
-  _position = positions;
-  _normal = positions;
-  _numPoints = _position.size();
+  _points = positions;
+  _normals = positions;
+  _numPoints = _points.size();
 }
 
 void Curve::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _position = positions;
+  _points = positions;
 }
 
 bool Curve::ClosestIntersection(const pxr::GfVec3f& origin, 

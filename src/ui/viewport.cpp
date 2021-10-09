@@ -21,11 +21,10 @@ ImGuiWindowFlags ViewportUI::_flags =
   ImGuiWindowFlags_NoDecoration;
 
 // constructor
-ViewportUI::ViewportUI(View* parent, VIEWPORT_MODE mode):
+ViewportUI::ViewportUI(View* parent):
 BaseUI(parent, "Viewport")
 {
   _texture = 0;
-  _mode = mode;
   _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
   _pixels = nullptr;
   _camera = new Camera("Camera");
@@ -36,6 +35,8 @@ BaseUI(parent, "Viewport")
   _interact = false;
   _interactionMode = INTERACTION_NONE;
   _engine = nullptr;
+  _rendererIndex = 0;
+  _rendererNames = NULL;
   _parent->SetFlag(View::FORCEREDRAW);
 
 }
@@ -43,6 +44,7 @@ BaseUI(parent, "Viewport")
 // destructor
 ViewportUI::~ViewportUI()
 {
+  if (_rendererNames)delete[] _rendererNames;
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
   if (_engine) delete _engine;
@@ -54,23 +56,16 @@ void ViewportUI::Init()
   pxr::SdfPathVector excludedPaths;
 
   _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
-  switch (_mode) {
-    case OPENGL:
-    {
-      std::cout << "TRY TO SET OPENGL HYDRA BACKEND..." << std::endl;
-      bool loaded = _engine->SetRendererPlugin(pxr::TfToken("HdStormRendererPlugin"));
-      std::cout << "LOADED ? " << loaded << std::endl;
-      break;
-    }
-    case LOFI:
-    {
-      _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
-      break;
-    }
-    case EMBREE:
-      _engine->SetRendererPlugin(pxr::TfToken("HdEmbreeRendererPlugin"));
-      break;
+
+  pxr::TfTokenVector rendererTokens = _engine->GetRendererPlugins();
+  if (_rendererNames) delete[] _rendererNames;
+  _numRenderers = rendererTokens.size();
+  _rendererNames = new const char* [_numRenderers];
+  for (short rendererIndex = 0; rendererIndex < _numRenderers; ++rendererIndex) {
+    _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
+  std::cout << "RENDERER INDEX : " << _rendererIndex << std::endl;
+  _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
   
   std::cout << "CURRENT RENDERER : " << _engine->GetCurrentRendererId().GetText() << std::endl;
   pxr::GlfSimpleMaterial material;
@@ -389,10 +384,25 @@ bool ViewportUI::Draw()
       0xFFFFFFFF,
       msg.c_str());
 
-    // shaded mode
-    ImGui::SetCursorPosX(_parent->GetWidth() - 300);
+    // renderer
+    ImGui::SetCursorPosX(0);
+
+    int rendererIndex = _rendererIndex;
+    ImGui::Text("Renderer");
+    ImGui::SameLine();
     ImGui::SetNextItemWidth(300);
-    ImGui::Combo("DrawMode", &_drawMode, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES));
+    ImGui::Combo("##Renderer", &rendererIndex, _rendererNames, _numRenderers);
+    if (rendererIndex != _rendererIndex) {
+      _rendererIndex = rendererIndex;
+      Init();
+    }
+    ImGui::SameLine();
+
+    // shaded mode
+    ImGui::Text("Mode");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(300);
+    ImGui::Combo("##DrawMode", &_drawMode, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES));
     ImGui::PopFont();
 
     ImGui::End();

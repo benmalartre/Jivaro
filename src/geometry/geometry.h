@@ -40,14 +40,14 @@ public:
   virtual ~Geometry();
 
   short GetType() { return _type; };
-  const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _position;};
-  const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normal;};
+  const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _points;};
+  const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normals;};
 
-  pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _position;};
-  pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normal;};
+  pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _points;};
+  pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normals;};
 
-  const pxr::GfVec3f* GetPositionsCPtr() const {return &_position[0];};
-  const pxr::GfVec3f* GetNormalsCPtr() const {return &_normal[0];};
+  const pxr::GfVec3f* GetPositionsCPtr() const {return &_points[0];};
+  const pxr::GfVec3f* GetNormalsCPtr() const {return &_normals[0];};
 
   pxr::GfVec3f GetPosition(uint32_t index) const;
   pxr::GfVec3f GetNormal(uint32_t index) const;
@@ -76,8 +76,8 @@ protected:
   uint32_t                            _numPoints;
 
   // vertex data
-  pxr::VtArray<pxr::GfVec3f>          _position;
-  pxr::VtArray<pxr::GfVec3f>          _normal;
+  pxr::VtArray<pxr::GfVec3f>          _points;
+  pxr::VtArray<pxr::GfVec3f>          _normals;
 
   // bounding box
   pxr::GfBBox3d                       _bbox;

@@ -45,10 +45,10 @@ public:
   void Clear();
 
   size_t GetNumSelectedItems() { return _items.size(); };
-  const SelectionItem& operator[](size_t index) const {
+  SelectionItem& operator[](size_t index) {
     return _items[index];
   };
-  const SelectionItem& GetItem(size_t index) const {
+  SelectionItem& GetItem(size_t index) {
     return _items[index];
   };
   std::vector<SelectionItem>& Get() { return _items; };

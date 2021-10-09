@@ -1,4 +1,4 @@
-#include "../acceleration/grid.h"
+#include "../acceleration/grid3d.h"
 #include "../geometry/triangle.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
@@ -8,7 +8,7 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // delete all cells
-void GridIntersector::DeleteCells()
+void Grid3DIntersector::DeleteCells()
 {
   if(_cells)
   {
@@ -20,7 +20,7 @@ void GridIntersector::DeleteCells()
 }
 
 // reset all cells
-void GridIntersector::ResetCells()
+void Grid3DIntersector::ResetCells()
 {
   if(_cells)
   {
@@ -29,19 +29,19 @@ void GridIntersector::ResetCells()
   }
 }
 
-void GridIntersector::InsertMesh(Mesh* mesh)
+void Grid3DIntersector::InsertMesh(size_t idx)
 {
-
+  Mesh* mesh = (Mesh*)_geometries[idx];
 }
 
-void GridIntersector::InsertCurve(Curve* curve)
+void Grid3DIntersector::InsertCurve(size_t idx)
 {
+  Curve* curve = (Curve*)_geometries[idx];
+} 
 
-}
-
-void GridIntersector::InsertPoints(Points* points)
+void Grid3DIntersector::InsertPoints(size_t idx)
 {
-
+  Points* points = (Points*)_geometries[idx];
 }
 
 /*
@@ -116,7 +116,7 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points,
 */
 
 // place a triangle mesh in the grid
-void GridIntersector::Init(const std::vector<Geometry*>& geometries)
+void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries)
 {
   // delete old cells
   DeleteCells();
@@ -172,10 +172,10 @@ void GridIntersector::Init(const std::vector<Geometry*>& geometries)
 
   // allocate memory
   _numCells = _resolution[0] * _resolution[1] * _resolution[2];
-  _cells = new GridIntersector::Cell* [_numCells];
+  _cells = new Grid3DIntersector::Cell* [_numCells];
 
   // set all pointers to NULL
-  memset(_cells, 0x0, sizeof(GridIntersector::Cell*) * _numCells);
+  memset(_cells, 0x0, sizeof(Grid3DIntersector::Cell*) * _numCells);
 
   pxr::GfVec3f A, B, C;
   Triangle* T;
@@ -187,22 +187,28 @@ void GridIntersector::Init(const std::vector<Geometry*>& geometries)
   const pxr::GfVec3f& bboxMin = _range.GetMin();
   const pxr::GfVec3f& bboxMax = _range.GetMax();
   // insert all the triangles in the cells
-  for (const auto& geom : _geometries) {
-    switch (geom->GetType()) {
+  for (size_t geomIt = 0; geomIt < _geometries.size(); ++ geomIt) {
+    switch (_geometries[geomIt]->GetType()) {
       case Geometry::MESH:
-        InsertMesh((Mesh*)&geom);
+        InsertMesh(geomIt);
+        break;
+      case Geometry::CURVE:
+        InsertCurve(geomIt);
+        break;
+      case Geometry::POINT:
+        InsertPoints(geomIt);
         break;
     }
   }
   
 }
 
-void GridIntersector::Update(const std::vector<Geometry*>& geometries)
+void Grid3DIntersector::Update(const std::vector<Geometry*>& geometries)
 {
 
 }
 
-bool GridIntersector::Raycast(const pxr::GfRay& ray, Hit* hit, 
+bool Grid3DIntersector::Raycast(const pxr::GfRay& ray, Hit* hit, 
   double maxDistance, double* minDistance) const
 {
     double bmin, bmax;
@@ -264,9 +270,9 @@ bool GridIntersector::Raycast(const pxr::GfRay& ray, Hit* hit,
             */
         }
         uint8_t k =
-        ((nextCrossingT[0] < nextCrossingT[1]) << 2) +
-        ((nextCrossingT[0] < nextCrossingT[2]) << 1) +
-        ((nextCrossingT[1] < nextCrossingT[2]));
+          ((nextCrossingT[0] < nextCrossingT[1]) << 2) +
+          ((nextCrossingT[0] < nextCrossingT[2]) << 1) +
+          ((nextCrossingT[1] < nextCrossingT[2]));
         static const uint8_t map[8] = {2, 1, 2, 1, 2, 2, 0, 0};
         uint8_t axis = map[k];
         if (maxDistance <= nextCrossingT[axis]) break;
@@ -278,13 +284,13 @@ bool GridIntersector::Raycast(const pxr::GfRay& ray, Hit* hit,
     return hit;
 }
 
-bool GridIntersector::Closest(const pxr::GfVec3f& point, Hit* hit,
+bool Grid3DIntersector::Closest(const pxr::GfVec3f& point, Hit* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
 }
 
-pxr::GfVec3f GridIntersector::GetCellPosition(uint32_t index) {
+pxr::GfVec3f Grid3DIntersector::GetCellPosition(uint32_t index) {
   pxr::GfVec3f position;
   const pxr::GfVec3f& bboxMin = _range.GetMin();
   position[0] = bboxMin[0] + 
@@ -296,15 +302,15 @@ pxr::GfVec3f GridIntersector::GetCellPosition(uint32_t index) {
   return position;
 }
 
-pxr::GfVec3f GridIntersector::GetCellMin(uint32_t index){
+pxr::GfVec3f Grid3DIntersector::GetCellMin(uint32_t index){
   return GetCellPosition(index) - _cellDimension * 0.5f;
 }
 
-pxr::GfVec3f GridIntersector::GetCellMax(uint32_t index){
+pxr::GfVec3f Grid3DIntersector::GetCellMax(uint32_t index){
   return GetCellPosition(index) + _cellDimension * 0.5f;
 }
 
-bool GridIntersector::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
+bool Grid3DIntersector::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
   Hit* hit, double maxDistance, double* minDistance) const
 {
   /*
@@ -356,7 +362,7 @@ bool GridIntersector::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
 */
 
 
-uint32_t GridIntersector::SLICE_INDICES[27*3] = {    
+uint32_t Grid3DIntersector::SLICE_INDICES[27*3] = {    
   // X_SLICE
   0,3,6,9,12,15,18,21,24,
   1,4,7,10,13,16,19,22,25,
@@ -373,41 +379,41 @@ uint32_t GridIntersector::SLICE_INDICES[27*3] = {
   18,19,20,21,22,23,24,25,26 
 };
 
-void GridIntersector::Cell::InitNeighborBits(uint32_t& neighborBits)
+void Grid3DIntersector::Cell::InitNeighborBits(uint32_t& neighborBits)
 {
     neighborBits = 0;
     for(int i=0;i<32;++i)neighborBits |= (1<<(i));
 }
 
-void GridIntersector::Cell::ClearNeighborBitsSlice(uint32_t& neighborBits,
+void Grid3DIntersector::Cell::ClearNeighborBitsSlice(uint32_t& neighborBits,
   short axis, short slice)
 {
   uint32_t* indices;
-  indices = &GridIntersector::SLICE_INDICES[axis * 27 + slice * 9];
+  indices = &Grid3DIntersector::SLICE_INDICES[axis * 27 + slice * 9];
   for(int i=0;i<9;++i){
     neighborBits &= ~(1<<(indices[i]));
   }
 }
 
-bool GridIntersector::Cell::CheckNeighborBit(const uint32_t neighborBits,
+bool Grid3DIntersector::Cell::CheckNeighborBit(const uint32_t neighborBits,
   uint32_t index)
 {
     return neighborBits & (1<<(index));
 }
 
-void GridIntersector::GetIndices(uint32_t index, uint32_t& X, uint32_t& Y, uint32_t& Z)
+void Grid3DIntersector::GetIndices(uint32_t index, uint32_t& X, uint32_t& Y, uint32_t& Z)
 {
     X = index % _resolution[0];
     Y = (index / _resolution[0]) % _resolution[1];
     Z = index / (_resolution[0] * _resolution[1]);
 }
 
-GridIntersector::Cell* GridIntersector::GetCell(uint32_t index)
+Grid3DIntersector::Cell* Grid3DIntersector::GetCell(uint32_t index)
 {
     return _cells[MIN(MAX(index, 0), _numCells-1)];
 }
 
-GridIntersector::Cell* GridIntersector::GetCell(uint32_t x, uint32_t y, uint32_t z)
+Grid3DIntersector::Cell* Grid3DIntersector::GetCell(uint32_t x, uint32_t y, uint32_t z)
 {
     uint32_t cx = MIN(MAX(x, 0), _resolution[0]);
     uint32_t cy = MIN(MAX(y, 0), _resolution[1]);
@@ -416,7 +422,7 @@ GridIntersector::Cell* GridIntersector::GetCell(uint32_t x, uint32_t y, uint32_t
       _cells[_resolution[0] * _resolution[1] * cz + _resolution[0] * cy + cx];
 }
 
-GridIntersector::Cell* GridIntersector::GetCell(const pxr::GfVec3f& pos){
+Grid3DIntersector::Cell* Grid3DIntersector::GetCell(const pxr::GfVec3f& pos){
   pxr::GfVec3f rescale;
   pxr::GfVec3f invDimensions(1.f/_cellDimension[0],
                              1.f/_cellDimension[1],
@@ -437,7 +443,7 @@ GridIntersector::Cell* GridIntersector::GetCell(const pxr::GfVec3f& pos){
 }
 
 
-void GridIntersector::GetCellIndexAndWeights(const pxr::GfVec3f& pos,
+void Grid3DIntersector::GetCellIndexAndWeights(const pxr::GfVec3f& pos,
                                     uint32_t& index,
                                     pxr::GfVec3f& weights){
   pxr::GfVec3f rescale;
@@ -466,7 +472,7 @@ void GridIntersector::GetCellIndexAndWeights(const pxr::GfVec3f& pos,
   index = _resolution[0]*_resolution[1]*idz + _resolution[0]*idy + idx;
 }
 
-void GridIntersector::IndexToXYZ(const uint32_t index, uint32_t& x, uint32_t& y, uint32_t& z)
+void Grid3DIntersector::IndexToXYZ(const uint32_t index, uint32_t& x, uint32_t& y, uint32_t& z)
 {
     x = index % (GetResolutionX());
     y = (index  / (GetResolutionY())) % (GetResolutionX());
@@ -477,29 +483,29 @@ void GridIntersector::IndexToXYZ(const uint32_t index, uint32_t& x, uint32_t& y,
     z = MAX(MIN(z, GetResolutionZ()), 0);
 }
 
-void GridIntersector::XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, uint32_t& index){
+void Grid3DIntersector::XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, uint32_t& index){
     index = z * (GetResolutionX() * GetResolutionY()) + y * GetResolutionX() + x;
 }
 
-void GridIntersector::GetNeighbors(uint32_t index, std::vector<uint32_t>& neighbors){
-  GridIntersector::Cell* cell = _cells[index];
+void Grid3DIntersector::GetNeighbors(uint32_t index, std::vector<uint32_t>& neighbors){
+  Grid3DIntersector::Cell* cell = _cells[index];
     uint32_t neighborBits = 0;
     uint32_t x, y, z, c, n;
-    GridIntersector::Cell::InitNeighborBits(neighborBits);
+    Grid3DIntersector::Cell::InitNeighborBits(neighborBits);
     IndexToXYZ(index, x, y, z);
-    if(x==0)GridIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 0,0);
-    else if(x==_resolution[0]-1)GridIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 0,2);
-    if(y==0)GridIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 1,0);
-    else if(y==_resolution[1]-1)GridIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 1,2);
-    if(z==0)GridIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 2,0);
-    else if(z==_resolution[2]-1)GridIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 2,2);
+    if(x==0)Grid3DIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 0,0);
+    else if(x==_resolution[0]-1)Grid3DIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 0,2);
+    if(y==0)Grid3DIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 1,0);
+    else if(y==_resolution[1]-1)Grid3DIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 1,2);
+    if(z==0)Grid3DIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 2,0);
+    else if(z==_resolution[2]-1)Grid3DIntersector::Cell::ClearNeighborBitsSlice(neighborBits, 2,2);
 
     for(z=0;z<3;++z){
         for(y=0;y<3;++y){
             for(x=0;x<3;++x){
                 c = z * 9 + y * 3 + x;
                 if(c==13)continue;
-                if(GridIntersector::Cell::CheckNeighborBit(neighborBits, c)){
+                if(Grid3DIntersector::Cell::CheckNeighborBit(neighborBits, c)){
                     n = index;
                     if(z == 0){
                         n -= (_resolution[0] * _resolution[1]);
@@ -530,7 +536,7 @@ void GridIntersector::GetNeighbors(uint32_t index, std::vector<uint32_t>& neighb
 }
 
 void 
-GridIntersector::GetNeighbors(uint32_t index, std::vector<GridIntersector::Cell*>& neighbors)
+Grid3DIntersector::GetNeighbors(uint32_t index, std::vector<Grid3DIntersector::Cell*>& neighbors)
 {
   std::vector<uint32_t> indices;
   GetNeighbors(index, indices);

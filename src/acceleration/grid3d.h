@@ -17,7 +17,7 @@ class Mesh;
 class Curve;
 class Points;
 
-class GridIntersector : public Intersector {
+class Grid3DIntersector : public Intersector {
   enum ElemType {
     POINT,
     EDGE,
@@ -25,15 +25,21 @@ class GridIntersector : public Intersector {
     POLYGON
   };
 
-  typedef bool (GridIntersector::*IntersectFunc)(
+  typedef bool (Grid3DIntersector::*IntersectFunc)(
     Geometry* geometry, const pxr::GfRay &ray, Hit* hit, 
     double maxDistance, double* minDistance);
 
   static uint32_t SLICE_INDICES[27*3];
 public:
+  
   struct Element {
     uint16_t    geometry;
     void*       ptr;
+  };
+
+  struct ElementContainer {
+    ElemType type;
+    std::vector<Element> elements;
   };
 
   struct Cell
@@ -58,9 +64,7 @@ public:
     //void insert(Vertex* V){_points.push_back(V);};
     //void Insert(Point* point);
     //void Insert(Edge* edge);
-    void Insert(Triangle* triangle) { 
-      _elements.push_back({0, (void*)triangle}); 
-    };
+    void Insert(uint16_t geometryIndex, Triangle* triangle);
     bool Raycast(Geometry* geom, const pxr::GfRay& ray, Hit* hit, 
       double maxDistance=-1, double* minDistance=NULL) const;
     
@@ -72,17 +76,17 @@ public:
     static bool CheckNeighborBit(const uint32_t neighborBits, uint32_t index);
 
     // data
-    std::vector<Geometry*>  _geometries;
-    std::vector<Element>    _elements;
-    pxr::GfVec3f            _color;
-    uint32_t                _index;
-    bool                    _hit;
-    uint32_t                _neighborBits;
+    std::vector<Geometry*>        _geometries;
+    std::vector<ElementContainer> _elements;
+    pxr::GfVec3f                  _color;
+    uint32_t                      _index;
+    bool                          _hit;
+    uint32_t                      _neighborBits;
 
   };
 
-  GridIntersector():_cells(NULL),_numCells(0){};
-  ~GridIntersector()
+  Grid3DIntersector():_cells(NULL),_numCells(0){};
+  ~Grid3DIntersector()
   {
       DeleteCells();
   }
@@ -106,9 +110,9 @@ public:
   // geometries
   void Init(const std::vector<Geometry*>& geometries) override;
   void Update(const std::vector<Geometry*>& geometries) override;
-  void InsertMesh(Mesh* mesh);
-  void InsertCurve(Curve* curve);
-  void InsertPoints(Points* points);
+  void InsertMesh(size_t idx);
+  void InsertCurve(size_t idx);
+  void InsertPoints(size_t idx);
 
   // intersect a ray with the mesh
   bool Raycast(const pxr::GfRay& ray, Hit* hitPoint, 

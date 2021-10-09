@@ -25,7 +25,7 @@ Points::Points(const Points* other, bool normalize)
   _numPoints = other->_numPoints;
   _type = POINT;
 
-  _normal = other->_normal;
+  _normals = other->_normals;
 
   _radius.resize(_numPoints);
   memcpy(&_radius[0], &other->_radius[0], _numPoints * sizeof(float));
@@ -44,14 +44,14 @@ void Points::Init(
   const pxr::VtArray<float>& radius)
 {
   _radius = radius;
-  _position = positions;
-  _normal = positions;
-  _numPoints = _position.size();
+  _points = positions;
+  _normals = positions;
+  _numPoints = _points.size();
 }
 
 void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _position = positions;
+  _points = positions;
 }
 
 void Points::Update(const pxr::VtArray<float>& radius)
@@ -62,7 +62,7 @@ void Points::Update(const pxr::VtArray<float>& radius)
 void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
   const pxr::VtArray<float>& radius)
 {
-  _position = positions;
+  _points = positions;
   _radius = radius;
 }
 

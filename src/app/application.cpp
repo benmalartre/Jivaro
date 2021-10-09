@@ -390,7 +390,7 @@ Application::Init()
   //std::cout << "INIT GRAPH OK " << std::endl;
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   
-  _viewport = new ViewportUI(viewportView, OPENGL );  
+  _viewport = new ViewportUI(viewportView);  
   _timeline = new TimelineUI(timelineView);
 
   MenuUI* menu = new MenuUI(topView);
