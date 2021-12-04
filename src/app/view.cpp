@@ -3,6 +3,7 @@
 #include "window.h"
 #include "../ui/ui.h"
 #include "../ui/splitter.h"
+#include "../ui/curveEditor.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>
 
@@ -47,10 +48,9 @@ View::View(View* parent, int x, int y, int w, int h):
 
 View::~View()
 {
-  if(_content)delete _content;
-  if(_left)delete _left;
-  if(_right)delete _right;
-  if (_popup)delete _popup;
+  if (_content) delete _content;
+  if (_left) delete _left;
+  if (_right) delete _right;
 }
 
 void View::SetWindow(Window* window)
@@ -79,17 +79,21 @@ View::Contains(int x, int y)
 void 
 View::Draw(bool forceRedraw)
 {
-  if(!GetFlag(LEAF)) {
-    if(_left)_left->Draw(forceRedraw);
-    if(_right)_right->Draw(forceRedraw);
-  }
-  else {
-    bool bForceRedraw = GetFlag(FORCEREDRAW) ? true : forceRedraw;
-    if (_content && (bForceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-      if (!_content->Draw() && !bForceRedraw) {
-        SetClean();
+  if (_popup) {
+    _popup->Draw(forceRedraw);
+  } else {
+    if (!GetFlag(LEAF)) {
+      if (_left)_left->Draw(forceRedraw);
+      if (_right)_right->Draw(forceRedraw);
+    }
+    else {
+      bool bForceRedraw = GetFlag(FORCEREDRAW) ? true : forceRedraw;
+      if (_content && (bForceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+        if (!_content->Draw() && !bForceRedraw) {
+          SetClean();
+        }
       }
-    } 
+    }
   }
 }
 
@@ -110,15 +114,16 @@ View::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (_popup) {
     if(action == GLFW_PRESS) {
-      _popup->MouseButton(x, y);
-      std::cout << "DELETE POPUP..." << std::endl;
+      _popup->MouseButton(x, y, mods);
       delete _popup;
       _popup = NULL;
     }
-  }
-  else {
+  } else {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
-      _popup = new Popup(this, pxr::GfVec2f(x, y), pxr::GfVec2f(x + 200, y + 200));
+      _popup = new Popup(this, x, y, x + 200, y + 200);
+      std::cout << "POPUP : " << _popup << std::endl;
+      CurveEditorUI* content = new CurveEditorUI(_popup);
+
       std::cout << "CREATE POPUP : " << ((void*)_popup) << std::endl;
     }
     else if(_content)_content->MouseButton(button, action, mods);
@@ -128,19 +133,28 @@ View::MouseButton(int button, int action, int mods)
 void 
 View::MouseMove(int x, int y)
 {
-  if(_content)_content->MouseMove(x, y);
+  if(_popup)_popup->MouseMove(x, y);
+  else if(_content)_content->MouseMove(x, y);
 }
 
 void 
 View::MouseWheel(int x, int y)
 {
-  if(_content)_content->MouseWheel(x, y);
+  if (_popup) {
+    // do nothing
+  }
+  else if(_content)_content->MouseWheel(x, y);
 }
 
 void 
 View::Keyboard(int key, int scancode, int action, int mods)
 {
-  if (_content)_content->Keyboard(key, scancode, action, mods);
+  if (_popup) {
+    // do nothing
+  }
+  else if (_content) {
+    _content->Keyboard(key, scancode, action, mods);
+  }
 }
 
 void

@@ -31,7 +31,7 @@ public:
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
   View(View* parent, int x, int y, int w, int h);
-  ~View();
+  virtual ~View();
   void SetWindow(Window* Window);
   Window* GetWindow();
   const float GetX(){return _min[0];};
@@ -72,12 +72,12 @@ public:
   bool Contains(int x, int y);
   
   // callbacks
-  void Draw(bool forceRedraw);
-  void Resize(int x, int y, int width, int height, bool rationalize=false);
-  void MouseMove(int x, int y);
-  void MouseButton(int button, int action, int mods);
-  void MouseWheel(int x, int y);
-  void Keyboard(int key, int scancode, int action, int mods);
+  virtual void Draw(bool forceRedraw);
+  virtual void Resize(int x, int y, int width, int height, bool rationalize=false);
+  virtual void MouseMove(int x, int y);
+  virtual void MouseButton(int button, int action, int mods);
+  virtual void MouseWheel(int x, int y);
+  virtual void Keyboard(int key, int scancode, int action, int mods);
 
   // flags
   inline bool GetFlag(short flag) const { return BITMASK_CHECK(_flags, flag); };

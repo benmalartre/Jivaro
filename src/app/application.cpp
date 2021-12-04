@@ -458,6 +458,7 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
  
+  /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   childWindow->Init(this);
   
@@ -466,9 +467,10 @@ Application::Init()
   ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
   viewport2->Init();
   
-  DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
+  //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
   childWindow->CollectLeaves();
+  */
 
 }
 
