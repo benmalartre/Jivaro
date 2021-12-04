@@ -10,8 +10,10 @@ AMN_NAMESPACE_OPEN_SCOPE
 //==============================================================================
 // Base Modal Window
 //==============================================================================
-BaseModal::BaseModal(int width, int height, const std::string& name)
-  : _width(width)
+BaseModal::BaseModal(int x, int y, int width, int height, const std::string& name)
+  : _x(x)
+  , _y(y)
+  , _width(width)
   , _height(height)
   , _window(NULL)
   , _status(ACTIVE)
@@ -31,7 +33,7 @@ void BaseModal::Init()
   Window* mainWindow = app->GetMainWindow();
   mainWindow->SetIdle(true);
 
-  _window = app->CreateChildWindow(_width, _height, mainWindow, _title);
+  _window = app->CreateChildWindow(_x, _y, _width, _height, mainWindow, _title);
   _window->Init(app);
 }
 
@@ -58,9 +60,9 @@ void BaseModal::Loop()
 //==============================================================================
 // File Browser Modal Window
 //==============================================================================
-ModalFileBrowser::ModalFileBrowser(const std::string& title, 
+ModalFileBrowser::ModalFileBrowser(int x, int y, const std::string& title, 
   ModalFileBrowser::Mode mode)
-  : BaseModal(600, 400, title)
+  : BaseModal(x, y, 600, 400, title)
   , _mode( mode )
 {
   BaseModal::Init();
@@ -109,8 +111,8 @@ void ModalFileBrowser::_LoopImpl()
 //==============================================================================
 // Demo Modal Window
 //==============================================================================
-ModalDemo::ModalDemo(const std::string& title)
-  : BaseModal(800, 800, title)
+ModalDemo::ModalDemo(int x, int y, const std::string& title)
+  : BaseModal(x, y, 800, 800, title)
 {
   BaseModal::Init();
   View* view = _window->GetMainView();
@@ -118,6 +120,21 @@ ModalDemo::ModalDemo(const std::string& title)
 }
 
 void ModalDemo::_LoopImpl()
+{
+}
+
+//==============================================================================
+// Modal Menu Window
+//==============================================================================
+ModalMenu::ModalMenu(int x, int y, const std::string& title)
+  : BaseModal(x, y, 800, 800, title)
+{
+  BaseModal::Init();
+  View* view = _window->GetMainView();
+  _ui = new DummyUI(view, title);
+}
+
+void ModalMenu::_LoopImpl()
 {
 }
 

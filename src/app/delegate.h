@@ -67,8 +67,7 @@ public:
   // constructor
   Window(int width, int height, const std::string& name);
   Window(bool fullscreen, const std::string& name);
-  Window(int x, int y, int width, int height,
-    GLFWwindow* parent, const std::string& name, bool decorated=true);
+  Window(int width, int height, GLFWwindow* parent, const std::string& name);
 
   //destructor
   ~Window();
@@ -206,8 +205,8 @@ public:
   //----------------------------------------------------------------------------
   static Window* CreateFullScreenWindow();
   static Window* CreateStandardWindow(int width, int height);
-  static Window* CreateChildWindow(int x, int y, int width, int height, GLFWwindow* parent,
-    const std::string& name="Child", bool decorated=true);
+  static Window* CreateChildWindow(int width, int height, GLFWwindow* parent,
+    const std::string& name="Child");
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

@@ -1,4 +1,5 @@
 #include "view.h"
+#include "popup.h"
 #include "window.h"
 #include "../ui/ui.h"
 #include "../ui/splitter.h"
@@ -20,7 +21,8 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max) :
   _perc(0.5),
   _content(NULL),
   _buffered(0),
-  _fixedPixels(-1)
+  _fixedPixels(-1),
+  _popup(NULL)
 {
   if(_parent==NULL)_name = "main";
   else _window = _parent->_window;
@@ -36,7 +38,8 @@ View::View(View* parent, int x, int y, int w, int h):
   _perc(0.5),
   _content(NULL),
   _buffered(0),
-  _fixedPixels(-1)
+  _fixedPixels(-1),
+  _popup(NULL)
 {
   if(_parent==NULL)_name = "main";
   else _window = _parent->_window;
@@ -47,6 +50,7 @@ View::~View()
   if(_content)delete _content;
   if(_left)delete _left;
   if(_right)delete _right;
+  if (_popup)delete _popup;
 }
 
 void View::SetWindow(Window* window)
@@ -100,9 +104,25 @@ void View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int
 }
 
 void 
-View::MouseButton(int action, int button, int mods)
+View::MouseButton(int button, int action, int mods)
 {
-  if(_content)_content->MouseButton(action, button, mods);
+  double x, y;
+  glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
+  if (_popup) {
+    if(action == GLFW_PRESS) {
+      _popup->MouseButton(x, y);
+      std::cout << "DELETE POPUP..." << std::endl;
+      delete _popup;
+      _popup = NULL;
+    }
+  }
+  else {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
+      _popup = new Popup(this, pxr::GfVec2f(x, y), pxr::GfVec2f(x + 200, y + 200));
+      std::cout << "CREATE POPUP : " << ((void*)_popup) << std::endl;
+    }
+    else if(_content)_content->MouseButton(button, action, mods);
+  }
 }
 
 void 

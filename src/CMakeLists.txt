@@ -57,6 +57,7 @@ add_executable(${TARGET}
   geometry/mesh.cpp
   geometry/curve.cpp
   geometry/stroke.cpp
+  geometry/voronoi.cpp
   geometry/vdb.cpp
   acceleration/grid2d.cpp
   acceleration/grid3d.cpp
@@ -70,6 +71,7 @@ add_executable(${TARGET}
   app/handle.cpp
   app/camera.cpp
   app/view.cpp
+  app/popup.cpp
   app/window.cpp
   app/modal.cpp
   app/scene.cpp
@@ -77,6 +79,7 @@ add_executable(${TARGET}
   app/picking.cpp
   app/selection.cpp
   app/tools.cpp
+  #app/delegate.cpp
   app/application.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp

@@ -80,7 +80,7 @@ static void OpenFileCallback() {
   int numFilters = 4;
 
   std::string filename =
-    app->BrowseFile(folder, filters, numFilters, "open usd file");
+    app->BrowseFile(200, 200, folder, filters, numFilters, "open usd file");
   app->OpenScene(filename);
 }
 
@@ -89,8 +89,8 @@ static void SaveFileCallback() {
 }
 
 static void OpenDemoCallback()
-{
-  ModalDemo demo("Demo");
+{ 
+  ModalDemo demo(0, 0, "Demo");
   demo.Loop();
   demo.Term();
 }

@@ -51,11 +51,13 @@ void FileBrowserUI::PopPath()
 
 void FileBrowserUI::SetPathFromTokenIndex(size_t idx)
 {
+  std::cout << "SET PATH FROM TOKEN INDEX " << idx << std::endl;
 #ifdef _WIN32
   _path = "";
 #else
   _path = SEPARATOR;
 #endif
+  std::cout << "NUM TOKENS : " << _pathTokens.size() << std::endl;
   for(size_t i=0; i<= idx; ++i) {
     if(!strlen(_pathTokens[i].c_str())) continue;
     _path += _pathTokens[i];
@@ -138,12 +140,14 @@ void FileBrowserUI::_ResetSelected()
 
 void FileBrowserUI::_DrawPath()
 {
+  std::cout << "DRAW PATH..." << std::endl;
   AddIconButton<IconPressedFunc, FileBrowserUI*>(
     &AMN_ICONS[AMN_ICON_SMALL][ICON_HOME],
     AMN_ICON_DEFAULT,
     (IconPressedFunc)&OnHomeCallback, this);
 
   size_t numTokens = _pathTokens.size();
+  std::cout << "NUM TOKENS : " << numTokens << std::endl;
   if(numTokens) {
     size_t lastTokenIndex = numTokens - 1;
     for(size_t i=0; i < numTokens; ++i) {

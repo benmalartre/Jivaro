@@ -9,6 +9,8 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
+#include <pxr/usd/usdGeom/tokens.h>
+#include <pxr/usd/usdGeom/points.h>
 #include <float.h>
 #include "triangle.h"
 #include "geometry.h"
@@ -19,8 +21,8 @@ class Points : public Geometry {
 public:
   Points();
   Points(const Points* other, bool normalize = true);
+  Points(const pxr::UsdGeomPoints& points);
   ~Points();
-
 
   void SetDisplayColor(GeomInterpolation interp, 
     const pxr::VtArray<pxr::GfVec3f>& colors);

@@ -31,11 +31,13 @@ struct HalfEdge
 
   uint32_t                index;     // half edge index
   uint32_t                vertex;    // vertex index
+  uint32_t                face;      // face index
+  uint32_t                triangle;  // triangle index
   struct HalfEdge*        twin;      // opposite half-edge
   struct HalfEdge*        next;      // next half-edge
   uint8_t                 latency;   // edge latency
 
-  HalfEdge():vertex(0),twin(NULL),next(NULL),latency(REAL){};
+  HalfEdge():vertex(0),face(0),triangle(0),twin(NULL),next(NULL),latency(REAL){};
   inline size_t GetTriangleIndex() const {return index / 3;};
   void GetTriangleNormal(const pxr::GfVec3f* positions, 
     pxr::GfVec3f& normal) const;
@@ -64,10 +66,10 @@ public:
   pxr::VtArray<int>& GetFaceConnects() { return _faceVertexIndices;};
 
   pxr::GfVec3f GetPosition(size_t idx) const;
-  pxr::GfVec3f GetPosition(const Triangle* T) const;                   // triangle position
-  pxr::GfVec3f GetPosition(const Triangle* T, uint32_t index) const;   // vertex position
-  pxr::GfVec3f GetNormal(const Triangle* T) const;                     // triangle normal
-  pxr::GfVec3f GetNormal(const Triangle* T, uint32_t index) const;     // vertex normal
+  pxr::GfVec3f GetTrianglePosition(const Triangle* T) const;                   // triangle position
+  pxr::GfVec3f GetTriangleVertexPosition(const Triangle* T, uint32_t index) const;   // vertex position
+  pxr::GfVec3f GetTriangleNormal(const Triangle* T) const;                     // triangle normal
+  pxr::GfVec3f GetTriangleVertexNormal(const Triangle* T, uint32_t index) const;     // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;           // triangle normal
   
   void SetDisplayColor(GeomInterpolation interp, 

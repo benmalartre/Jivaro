@@ -9,11 +9,11 @@ AMN_NAMESPACE_OPEN_SCOPE
 float Triangle::GetArea(Mesh* mesh)
 {
   const pxr::GfVec3f e0 = 
-    (mesh->GetPosition(this, 1) - mesh->GetPosition(this, 0));
+    (mesh->GetTriangleVertexPosition(this, 1) - mesh->GetTriangleVertexPosition(this, 0));
   const pxr::GfVec3f e1 = 
-    (mesh->GetPosition(this, 2) - mesh->GetPosition(this, 1));
+    (mesh->GetTriangleVertexPosition(this, 2) - mesh->GetTriangleVertexPosition(this, 1));
   const pxr::GfVec3f e2 = 
-    (mesh->GetPosition(this, 0) - mesh->GetPosition(this, 2));
+    (mesh->GetTriangleVertexPosition(this, 0) - mesh->GetTriangleVertexPosition(this, 2));
 
   // edge length
   float le0 = e0.GetLength();
@@ -33,9 +33,9 @@ float Triangle::GetArea(Mesh* mesh)
 void Triangle::GetCenter(Mesh* mesh, pxr::GfVec3f& center)
 {
   center = (
-    mesh->GetPosition(this, 0) + 
-    mesh->GetPosition(this, 1) + 
-    mesh->GetPosition(this, 2)) / 3.0f;
+    mesh->GetTriangleVertexPosition(this, 0) +
+    mesh->GetTriangleVertexPosition(this, 1) +
+    mesh->GetTriangleVertexPosition(this, 2)) / 3.0f;
 }
 
 //-------------------------------------------------------
@@ -44,8 +44,8 @@ void Triangle::GetCenter(Mesh* mesh, pxr::GfVec3f& center)
 void Triangle::GetNormal(Mesh* mesh, pxr::GfVec3f& normal)
 {
   // get triangle edges
-  pxr::GfVec3f AB = mesh->GetPosition(this, 1) - mesh->GetPosition(this, 0);
-  pxr::GfVec3f AC = mesh->GetPosition(this, 2) - mesh->GetPosition(this, 0);
+  pxr::GfVec3f AB = mesh->GetTriangleVertexPosition(this, 1) - mesh->GetTriangleVertexPosition(this, 0);
+  pxr::GfVec3f AC = mesh->GetTriangleVertexPosition(this, 2) - mesh->GetTriangleVertexPosition(this, 0);
   
   // cross product
   normal = AB ^ AC;
@@ -61,11 +61,11 @@ void Triangle::ClosestPoint( Mesh* mesh, const pxr::GfVec3f& point ,
   pxr::GfVec3f& closest, float& u, float& v, float& w)
 {
   pxr::GfVec3f edge0 = 
-    mesh->GetPosition(this, 1) - mesh->GetPosition(this, 0);
+    mesh->GetTriangleVertexPosition(this, 1) - mesh->GetTriangleVertexPosition(this, 0);
   pxr::GfVec3f edge1 = 
-    mesh->GetPosition(this, 2) - mesh->GetPosition(this, 0);;
+    mesh->GetTriangleVertexPosition(this, 2) - mesh->GetTriangleVertexPosition(this, 0);;
   
-  pxr::GfVec3f v0 = mesh->GetPosition(this, 1) - point;
+  pxr::GfVec3f v0 = mesh->GetTriangleVertexPosition(this, 1) - point;
   
   float a = edge0 * edge0;
   float b = edge0 * edge1;
@@ -130,7 +130,7 @@ void Triangle::ClosestPoint( Mesh* mesh, const pxr::GfVec3f& point ,
     }
   }
   
-  closest = mesh->GetPosition(this, 0);
+  closest = mesh->GetTriangleVertexPosition(this, 0);
   
   v = s;
   w = t;
@@ -189,9 +189,9 @@ bool Triangle::Touch(Mesh* mesh, const pxr::GfVec3f& center,
     
   // This is the fastest branch on Sun 
   // move everything so that the boxcenter is in (0,0,0)
-  pxr::GfVec3f v0 = mesh->GetPosition(this, 0) - center;
-  pxr::GfVec3f v1 = mesh->GetPosition(this, 1) - center;
-  pxr::GfVec3f v2 = mesh->GetPosition(this, 2) - center;
+  pxr::GfVec3f v0 = mesh->GetTriangleVertexPosition(this, 0) - center;
+  pxr::GfVec3f v1 = mesh->GetTriangleVertexPosition(this, 1) - center;
+  pxr::GfVec3f v2 = mesh->GetTriangleVertexPosition(this, 2) - center;
   
   // compute triangle edges 
   pxr::GfVec3f e0 = v1-v0;

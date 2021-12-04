@@ -67,6 +67,26 @@ pxr::GfVec3f Geometry::GetNormal(uint32_t index) const
   return _normals[index];
 }
 
+float Geometry::GetRadius(uint32_t index) const
+{
+  return _radius[index];
+}
+
+void Geometry::SetPosition(uint32_t index, const pxr::GfVec3f& position)
+{
+  _points[index] = position;
+}
+
+void Geometry::SetNormal(uint32_t index, const pxr::GfVec3f& normal)
+{
+  _normals[index] = normal;
+}
+
+void Geometry::SetRadius(uint32_t index, float radius)
+{
+  _radius[index] = radius;
+}
+
 
 void Geometry::ComputeBoundingBox()
 {

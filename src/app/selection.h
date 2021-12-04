@@ -5,6 +5,7 @@
 
 #include "../common.h"
 #include <pxr/usd/sdf/path.h>
+#include <pxr/imaging/hd/selection.h>
 #include <vector>
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -24,7 +25,7 @@ enum ComponentType {
 struct SelectionItem {
   SelectionType       type;
   pxr::SdfPath        path;
-  ComponentType	      componentType;
+  ComponentType       componentType;
   std::vector<int>    components;
   std::vector<float>  weights;
 };
@@ -33,6 +34,7 @@ class Selection {
 public:
 	void AddItem(const pxr::SdfPath& item);
   void RemoveItem(const pxr::SdfPath& item);
+  void ToggleItem(const pxr::SdfPath& item);
 
   void AddComponent(const pxr::SdfPath& object,
     ComponentType compType, int index);
@@ -44,6 +46,12 @@ public:
     ComponentType compType, std::vector<int> indices);
   void Clear();
 
+  bool IsEmpty();
+  bool IsObject();
+  bool IsComponent();
+  bool IsAttribute();
+
+  pxr::SdfPathVector GetSelectedPrims();
   size_t GetNumSelectedItems() { return _items.size(); };
   SelectionItem& operator[](size_t index) {
     return _items[index];

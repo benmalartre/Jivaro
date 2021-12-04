@@ -70,10 +70,24 @@ void Tool::SetActiveTool(short tool)
       _active = (BaseHandle*)&_translate;
       break;
     default:
-    _active = NULL;
-    break;
+      _active = NULL;
+      break;
   }
   if(_active)_active->ResetSelection();
+}
+
+bool Tool::IsActive()
+{
+  return (_active != NULL);
+}
+
+bool Tool::IsInteracting() {
+  if (_active && _interacting) {
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 void Tool::Draw()
@@ -88,7 +102,7 @@ void Tool::Select(bool lock)
 {
   Selection* selection = AMN_APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
-    short activeAxis = _active->Select(
+    _activeAxis = _active->Select(
       _viewport->GetLastMouseX() - _viewport->GetX(),
       _viewport->GetLastMouseY() - _viewport->GetY(),
       _viewport->GetWidth(),
@@ -99,7 +113,7 @@ void Tool::Select(bool lock)
 void Tool::Pick()
 {
   if(_active && _viewport) {
-    short hoveredAxis = _active->Pick(
+    _hoveredAxis = _active->Pick(
       _viewport->GetLastMouseX() - _viewport->GetX(),
       _viewport->GetLastMouseY() - _viewport->GetY(),
       _viewport->GetWidth(),
@@ -111,12 +125,17 @@ void Tool::BeginUpdate()
 {
   Selection* selection = AMN_APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
-    _active->BeginUpdate(
-      _viewport->GetLastMouseX() - _viewport->GetX(),
-      _viewport->GetLastMouseY() - _viewport->GetY(),
-      _viewport->GetWidth(),
-      _viewport->GetHeight());
-    _interacting = true;
+    if (_activeAxis != BaseHandle::AXIS_NONE) {
+      _active->BeginUpdate(
+        _viewport->GetLastMouseX() - _viewport->GetX(),
+        _viewport->GetLastMouseY() - _viewport->GetY(),
+        _viewport->GetWidth(),
+        _viewport->GetHeight());
+      _interacting = true;
+    }
+    else {
+      _interacting = false;
+    }
   }
 }
 

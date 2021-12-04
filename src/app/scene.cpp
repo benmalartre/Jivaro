@@ -3,6 +3,8 @@
 #include "../utils/files.h"
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/basisCurves.h>
+#include <pxr/usd/usdGeom/points.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -21,7 +23,7 @@ Scene::~Scene()
 
 void Scene::ClearAllStages() 
 {
-  _childrens.clear();
+  _allStages.clear();
 }
 
 void Scene::RemoveStage(const std::string& name)
@@ -33,8 +35,8 @@ void Scene::RemoveStage(const std::string& name)
 
 void Scene::RemoveStage(const pxr::SdfPath& path)
 {
-  if(_childrens.find(path) != _childrens.end()) {
-    _childrens.erase(path);
+  if(_allStages.find(path) != _allStages.end()) {
+    _allStages.erase(path);
   }
 }
 
@@ -42,8 +44,8 @@ void Scene::RemoveStage(const pxr::SdfPath& path)
 pxr::UsdStageRefPtr& Scene::AddStageFromMemory(const std::string& name)
 {
   pxr::SdfPath path(name);
-  _childrens[path] = pxr::UsdStage::CreateInMemory(name);
-  return  _childrens[path];
+  _allStages[path] = pxr::UsdStage::CreateInMemory(name);
+  return  _allStages[path];
 }
 
 pxr::UsdStageRefPtr& Scene::AddStageFromDisk(const std::string& filename)
@@ -51,9 +53,9 @@ pxr::UsdStageRefPtr& Scene::AddStageFromDisk(const std::string& filename)
   std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
   std::string name = tokens.front();
   pxr::SdfPath path("/" + name);
-  _childrens[path] = pxr::UsdStage::CreateInMemory(name);
+  _allStages[path] = pxr::UsdStage::CreateInMemory(name);
 
-  pxr::UsdStageRefPtr& stage = _childrens[path];
+  pxr::UsdStageRefPtr& stage = _allStages[path];
   pxr::UsdPrim ref = stage->OverridePrim(path);
   ref.GetReferences().AddReference(filename);
   stage->SetDefaultPrim(ref);
@@ -61,11 +63,60 @@ pxr::UsdStageRefPtr& Scene::AddStageFromDisk(const std::string& filename)
   _rootStage->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
 }
 
+Mesh* Scene::AddMesh(pxr::SdfPath& path, pxr::GfMatrix4d& xfo)
+{
+  if (!_currentStage->GetPrimAtPath(path).IsDefined()) {
+    pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(_currentStage, path);
+    usdMesh.CreatePointsAttr();
+    usdMesh.CreateNormalsAttr();
+    usdMesh.CreateFaceVertexIndicesAttr(pxr::VtValue());
+    usdMesh.CreateFaceVertexCountsAttr(pxr::VtValue());
+
+    usdMesh.CreateDisplayColorAttr();
+    pxr::UsdGeomPrimvar displayColorPrimvar = usdMesh.GetDisplayColorPrimvar();
+    displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->constant);
+   
+    usdMesh.CreateSubdivisionSchemeAttr();
+    _meshes[path] = Mesh();
+  } else {
+    pxr::UsdGeomMesh usdMesh(_currentStage->GetPrimAtPath(path));
+    _meshes[path] = Mesh(usdMesh);
+  }
+  return &_meshes[path];
+}
+
+  Curve* Scene::AddCurve(pxr::SdfPath & path, pxr::GfMatrix4d & xfo)
+  {
+    if (!_currentStage->GetPrimAtPath(path).IsDefined()) {
+      pxr::UsdGeomBasisCurves usdCurve = pxr::UsdGeomBasisCurves::Define(_currentStage, path);
+      _curves[path] = Curve();
+    }
+    else {
+      pxr::UsdGeomBasisCurves usdCurve(_currentStage->GetPrimAtPath(path));
+     _curves[path] = Curve(usdCurve);
+    }
+    return &_curves[path];
+  }
+
+  Points* Scene::AddPoints(pxr::SdfPath& path, pxr::GfMatrix4d& xfo)
+  {
+    if (!_currentStage->GetPrimAtPath(path).IsDefined()) {
+      pxr::UsdGeomPoints usdPoints = pxr::UsdGeomPoints::Define(_currentStage, path);
+      _points[path] = Points();
+    }
+    else {
+      pxr::UsdGeomPoints usdPoints(_currentStage->GetPrimAtPath(path));
+      _points[path] = Points(usdPoints);
+    }
+    return &_points[path];
+  }
+
+
 void Scene::TestVoronoi()
 {
   pxr::SdfPath path("/Voronoi");
   pxr::UsdStageRefPtr stage = AddStageFromMemory("Voronoi");
-  _childrens[path] = stage;
+  _allStages[path] = stage;
   Mesh mesh;
   std::vector<pxr::GfVec3f> points(1024);
   for (auto& point : points) {

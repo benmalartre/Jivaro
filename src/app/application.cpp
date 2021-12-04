@@ -83,10 +83,11 @@ Application::CreateFullScreenWindow()
 // create child window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateChildWindow(int width, int height, Window* parent,
-  const std::string& name)
+Application::CreateChildWindow(
+  int x, int y, int width, int height, Window* parent,
+  const std::string& name, bool decorated)
 {
-  return Window::CreateChildWindow(width, height, parent->GetGlfwWindow(), name);
+  return Window::CreateChildWindow(x, y, width, height, parent->GetGlfwWindow(), name, decorated);
 }
 
 // create standard window
@@ -111,11 +112,11 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
 // browse for file
 //----------------------------------------------------------------------------
 std::string
-Application::BrowseFile(const char* folder, const char* filters[], 
+Application::BrowseFile(int x, int y, const char* folder, const char* filters[], 
   const int numFilters, const char* name)
 {
   std::string result;
-  ModalFileBrowser browser("Open", ModalFileBrowser::Mode::OPEN);
+  ModalFileBrowser browser(x, y, "Open", ModalFileBrowser::Mode::OPEN);
   browser.Loop();
   if(browser.GetStatus() == BaseModal::Status::OK) {
     result = browser.GetResult();
@@ -400,7 +401,8 @@ Application::Init()
   _property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, editor);
-  //_stage = TestAnimX(editor);
+  //pxr::UsdStageRefPtr stage = TestAnimX(editor);
+  //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
 
   /*
   // Create the layer to populate.
@@ -455,19 +457,19 @@ Application::Init()
   // setup notifications
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
- /*
-  Window* childWindow = CreateChildWindow(400, 400, _mainWindow);
+ 
+  Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   childWindow->Init(this);
   
   _mainWindow->AddChild(childWindow);
   
-  ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView(), LOFI);
+  ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
   viewport2->Init();
   
   DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
   childWindow->CollectLeaves();
- */
+
 }
 
 void Application::Update()

@@ -124,8 +124,7 @@ Window::Window(int width, int height, const std::string& name):
 
 // child window constructor
 //----------------------------------------------------------------------------
-Window::Window(int x, int y, int width, int height, 
-  GLFWwindow* parent, const std::string& name, bool decorated) :
+Window::Window(int width, int height, GLFWwindow* parent, const std::string& name) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL),
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
   _name(name),_forceRedraw(0),_idle(false)
@@ -133,8 +132,7 @@ Window::Window(int x, int y, int width, int height,
   _width = width;
   _height = height;
   _shared = false;
-
-  glfwWindowHint(GLFW_DECORATED, decorated);
+  //glfwWindowHint(GLFW_DECORATED, false);
   //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -145,7 +143,6 @@ Window::Window(int x, int y, int width, int height,
   glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
-  glfwSetWindowPos(_window, x, y);
 }
 
 // initialize
@@ -226,11 +223,10 @@ Window::CreateStandardWindow(int width, int height)
 // child window
 //----------------------------------------------------------------------------
 Window*
-Window::CreateChildWindow(
-  int x, int y, int width, int height, GLFWwindow* parent,
-  const std::string& name, bool decorated)
+Window::CreateChildWindow(int width, int height, GLFWwindow* parent,
+  const std::string& name)
 {
-  return new Window(x, y, width, height, parent, name, decorated);
+  return new Window(width, height, parent, name);
 }
 
 void 

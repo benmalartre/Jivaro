@@ -1,4 +1,5 @@
 #include "../ui/viewport.h"
+#include "../ui/menu.h"
 #include "../geometry/shape.h"
 #include "../app/view.h"
 #include "../app/window.h"
@@ -113,48 +114,61 @@ void ViewportUI::Update()
 // overrides
 void ViewportUI::MouseButton(int button, int action, int mods) 
 {
+  double x, y;
+  Window* window = _parent->GetWindow();
+  Tool* tools = AMN_APPLICATION->GetTools();
+  glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
+
   if (action == GLFW_RELEASE)
   {
     _interactionMode = INTERACTION_NONE;
     _interact = false;
+
     if (!(mods & GLFW_MOD_ALT) && !(mods & GLFW_MOD_SUPER)) {
-      Tool* tools = AMN_APPLICATION->GetTools();
-      tools->EndUpdate();
+      if (tools->IsInteracting()) {
+        tools->EndUpdate();
+      }
+      else {
+        Pick(x, y, mods);
+      }
     }
-    //RenderToMemory(_camera, false);
-    //SetImage();
   }
   else if (action == GLFW_PRESS)
   {
-    double x,y;
-    Window* window = _parent->GetWindow();
-    glfwGetCursorPos(window->GetGlfwWindow(),&x,&y);
-    
     _lastX = (int)x;
     _lastY = (int)y;
     _interact = true;
-    if( mods & GLFW_MOD_ALT) {
+    if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
         _interactionMode = INTERACTION_ORBIT;
-      } else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+      }
+      else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
         _interactionMode = INTERACTION_WALK;
-      } else if(button == GLFW_MOUSE_BUTTON_RIGHT) {
+      }
+      else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         _interactionMode = INTERACTION_DOLLY;
       }
-    } else if(mods & GLFW_MOD_SUPER) {
+    }
+    else if (mods & GLFW_MOD_SUPER) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
         _interactionMode = INTERACTION_WALK;
-      } else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+      }
+      else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
         _interactionMode = INTERACTION_ORBIT;
-      } else if(button == GLFW_MOUSE_BUTTON_RIGHT) {
+      }
+      else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         _interactionMode = INTERACTION_DOLLY;
       }
-    } else {
-      Tool* tools = AMN_APPLICATION->GetTools();
+    }
+    else if (tools->IsActive()) {
       tools->Select(false);
       tools->BeginUpdate();
     }
+    else {
+
+    }
   }
+
   _parent->SetDirty();
 }
 
@@ -324,6 +338,13 @@ bool ViewportUI::Draw()
     //_renderParams.colorCorrectionMode = ???
     _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
 
+    // update selection
+    Selection* selection = app->GetSelection();
+    if (!selection->IsEmpty() && selection->IsObject()) {
+      _engine->SetSelected(app->GetSelection()->GetSelectedPrims());
+    } else {
+      _engine->ClearSelected();
+    }
 
  /*
   const std::vector<pxr::GfVec4f> clipPlanes = _camera->GetClippingPlanes();
@@ -532,9 +553,9 @@ ViewportUI::_ComputePickFrustum(int x, int y)
     */
 }
 
-bool ViewportUI::Pick(int x, int y)
+bool ViewportUI::Pick(int x, int y, int mods)
 {
-  std::cout << "VIEWPORT PICK CALLED !!!" << std::endl;
+  Selection* selection = AMN_APPLICATION->GetSelection();
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;
   pxr::GfVec3d outHitNormal;
@@ -542,7 +563,6 @@ bool ViewportUI::Pick(int x, int y)
   pxr::SdfPath outHitInstancerPath;
   int outHitInstanceIndex;
   pxr::HdInstancerContext outInstancerContext;
-  _engine->ClearSelected();
 
   if (_engine->TestIntersection(
     pickFrustum.ComputeViewMatrix(),
@@ -555,13 +575,24 @@ bool ViewportUI::Pick(int x, int y)
     &outHitInstancerPath,
     &outHitInstanceIndex,
     &outInstancerContext)) {
-      std::cout << "WE'VE GOT SOME INTERSECTION : " << std::endl;
-      std::cout << outHitPrimPath << std::endl;
-      _engine->AddSelected(outHitPrimPath, -1);
-      GetApplication()->AddToSelection(outHitPrimPath);
+      if (mods & GLFW_MOD_CONTROL && mods & GLFW_MOD_SHIFT) {
+        selection->ToggleItem(outHitPrimPath);
+      }
+      else if (mods & GLFW_MOD_SHIFT) {
+        selection->AddItem(outHitPrimPath);
+      }
+      else {
+        selection->Clear();
+        selection->AddItem(outHitPrimPath);
+      }
+    AMN_APPLICATION->GetTools()->ResetSelection();
     return true;
+  } else {
+    selection->Clear();
+    AMN_APPLICATION->GetTools()->ResetSelection();
+    return false;
   }
-  return false;
+  
 }
 
 /*

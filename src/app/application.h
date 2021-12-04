@@ -41,11 +41,11 @@ public:
   static Window* CreateStandardWindow(int width, int height);
 
   // create a child window
-  static Window* CreateChildWindow(int width, int height, Window* parent, 
-    const std::string& name="Child");
+  static Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
+    const std::string& name="Child", bool decorated=true);
 
   // browse file
-  std::string BrowseFile(const char* folder, const char* filters[], 
+  std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
     const int numFilters, const char* name="Browse");
   
   // init application

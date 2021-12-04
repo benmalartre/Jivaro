@@ -53,7 +53,7 @@ void ExplorerUI::Init()
 }
 
 
-void ExplorerUI::MouseButton(int action, int button, int mods)
+void ExplorerUI::MouseButton(int button, int action, int mods)
 {
 }
 

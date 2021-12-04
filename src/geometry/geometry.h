@@ -42,15 +42,23 @@ public:
   short GetType() { return _type; };
   const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _points;};
   const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normals;};
+  const pxr::VtArray<float>& GetRadius() const { return _radius; };
 
   pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _points;};
   pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normals;};
+  pxr::VtArray<float>& GetRadius() { return _radius; };
 
   const pxr::GfVec3f* GetPositionsCPtr() const {return &_points[0];};
   const pxr::GfVec3f* GetNormalsCPtr() const {return &_normals[0];};
+  const float* GetRadiusCPtr() const { return &_radius[0]; };
 
   pxr::GfVec3f GetPosition(uint32_t index) const;
   pxr::GfVec3f GetNormal(uint32_t index) const;
+  float GetRadius(uint32_t index) const;
+
+  void SetPosition(uint32_t index, const pxr::GfVec3f& position);
+  void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
+  void SetRadius(uint32_t index, float normal);
 
   uint32_t GetNumPoints()const {return _numPoints;};
 
@@ -78,6 +86,7 @@ protected:
   // vertex data
   pxr::VtArray<pxr::GfVec3f>          _points;
   pxr::VtArray<pxr::GfVec3f>          _normals;
+  pxr::VtArray<float>                 _radius;
 
   // bounding box
   pxr::GfBBox3d                       _bbox;

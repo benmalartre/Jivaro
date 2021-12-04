@@ -11,6 +11,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 class Window;
 class BaseUI;
+class Popup;
 class View
 {
 public:
@@ -74,7 +75,7 @@ public:
   void Draw(bool forceRedraw);
   void Resize(int x, int y, int width, int height, bool rationalize=false);
   void MouseMove(int x, int y);
-  void MouseButton(int action, int button, int mods);
+  void MouseButton(int button, int action, int mods);
   void MouseWheel(int x, int y);
   void Keyboard(int key, int scancode, int action, int mods);
 
@@ -101,6 +102,7 @@ private:
   View*             _left;
   View*             _right;
   View*             _parent;
+  Popup*            _popup;
   std::string       _name;
 };
 

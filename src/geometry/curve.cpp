@@ -2,7 +2,7 @@
 //----------------------------------------------
 #include "curve.h"
 #include "utils.h"
-#include <pxr/base/gf/ray.h>
+
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -33,6 +33,26 @@ Curve::Curve(const Curve* other, bool normalize)
   memcpy(&_cvCounts[0], &other->_cvCounts[0], _numCurves * sizeof(int));
 }
 
+Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
+{
+  _numCurves = curve.GetCurveCount();
+  _type = CURVE;
+
+  pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
+  pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());
+  _numPoints = _points.size();
+
+  pxr::UsdAttribute vertexCountsAttr = curve.GetCurveVertexCountsAttr();
+  vertexCountsAttr.Get(&_cvCounts, pxr::UsdTimeCode::Default());
+
+  _numSegments = 0;
+  for (const auto& cvCount : _cvCounts) _numSegments += cvCount - 1;
+
+  pxr::UsdAttribute normalsAttr = curve.GetNormalsAttr();
+  if(normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
+    normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
+}
+
 void Curve::SetDisplayColor(GeomInterpolation interp, 
   const pxr::VtArray<pxr::GfVec3f>& colors) 
 {
@@ -56,13 +76,11 @@ uint32_t Curve::GetNumSegments(uint32_t curveIndex)const
 
 uint32_t Curve::GetTotalNumCVs()const
 {
-  std::cout << "GET TOTAL NUM POINTS : " << _numPoints << std::endl;
   return _numPoints;
 }
 
 uint32_t Curve::GetTotalNumSegments()const
 {
-  std::cout << "GET TOTAL NUM SEGMENTS : " << _numSegments << std::endl;
   return _numSegments;
 }
 

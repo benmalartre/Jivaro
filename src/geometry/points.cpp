@@ -31,6 +31,23 @@ Points::Points(const Points* other, bool normalize)
   memcpy(&_radius[0], &other->_radius[0], _numPoints * sizeof(float));
 }
 
+Points::Points(const pxr::UsdGeomPoints& points)
+{
+  _type = POINT;
+
+  pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
+  pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());
+  _numPoints = _points.size();
+
+  pxr::UsdAttribute normalsAttr = points.GetNormalsAttr();
+  if (normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
+    normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
+
+  pxr::UsdAttribute widthsAttr = points.GetWidthsAttr();
+  if (widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue())
+    widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+}
+
 void Points::SetDisplayColor(GeomInterpolation interp, 
   const pxr::VtArray<pxr::GfVec3f>& colors) 
 {

@@ -30,6 +30,9 @@ public:
   void SetActiveTool(short tool);
   void ResetSelection();
 
+  bool IsActive();
+  bool IsInteracting();
+
   void Draw();
   void Select(bool lock);
   void Pick();
@@ -45,6 +48,8 @@ private:
   bool            _interacting;
   ViewportUI*     _viewport;
   BaseHandle*     _active;
+  short           _activeAxis;
+  short           _hoveredAxis;
 };
 
 void AMNInitializeTools();

@@ -26,6 +26,7 @@ struct Edge {
   void GetNormal(Geometry* geom, pxr::GfVec3f& normal);
   void Raycast(Geometry* geom, const pxr::GfRay& point , 
     pxr::GfVec3f& closest, double maxDistance=-1, double* minDistance=NULL);
+  bool Intersect(const Edge& other, float epsilon=0.0001);
 
 };
 

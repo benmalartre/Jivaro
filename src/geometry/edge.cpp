@@ -27,22 +27,36 @@ void Edge::GetNormal(Geometry* geom, pxr::GfVec3f& normal)
 {
   switch(geom->GetType()) {
     case Geometry::MESH:
+    case Geometry::CURVE:
     {
       Mesh* mesh = (Mesh*)geom;
 
-      // get triangle normals
-      pxr::GfVec3f norm0 = mesh->GetTriangleNormal(0);
-      pxr::GfVec3f norm1 = mesh->GetTriangleNormal(1);
+      // get points normals
+      pxr::GfVec3f norm0 = geom->GetNormal(vertices[0]);
+      pxr::GfVec3f norm1 = geom->GetNormal(vertices[1]);
   
       // average
       normal = (norm0 + norm1).GetNormalized();
       break;
     }
-    case Geometry::CURVE:
-      break;
+
     case Geometry::POINT:
+    {
+      Points* points = (Points*)geom;
+
+      // get point normals
+      normal = points->GetNormal(vertices[0]);
       break;
+    }
   }
+}
+
+//-------------------------------------------------------
+// Intersect
+//-------------------------------------------------------
+bool Edge::Intersect(const Edge& other, float epsilon)
+{
+  return false;
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

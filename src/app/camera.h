@@ -1,3 +1,6 @@
+#ifndef AMN_APPLICATION_CAMERA_H
+#define AMN_APPLICATION_CAMERA_H
+
 #pragma once
 
 #include "../common.h"
@@ -195,3 +198,5 @@ private:
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_APPLICATION_CAMERA_H

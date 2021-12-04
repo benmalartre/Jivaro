@@ -73,7 +73,7 @@ class ViewportUI : public BaseUI
     void Resize() override;
     void Update();
     pxr::GfFrustum _ComputePickFrustum(int x, int y);
-    bool Pick(int x, int y);
+    bool Pick(int x, int y, int mods);
     /*
     pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos,
       pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);*/
