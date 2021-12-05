@@ -25,6 +25,7 @@ add_executable(${TARGET}
   utils/shaders.cpp
   utils/icons.cpp
   ui/ui.cpp
+  ui/popup.cpp
   ui/filebrowser.cpp
   ui/splitter.cpp
   ui/dummy.cpp
@@ -71,7 +72,6 @@ add_executable(${TARGET}
   app/handle.cpp
   app/camera.cpp
   app/view.cpp
-  app/popup.cpp
   app/window.cpp
   app/modal.cpp
   app/scene.cpp

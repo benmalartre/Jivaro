@@ -1,9 +1,10 @@
-#include "view.h"
-#include "popup.h"
-#include "window.h"
+#include "../app/view.h"
+#include "../app/window.h"
+#include "../app/application.h"
 #include "../ui/ui.h"
+#include "../ui/popup.h"
 #include "../ui/splitter.h"
-#include "../ui/curveEditor.h"
+#include "../ui/menu.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>
 
@@ -80,7 +81,7 @@ void
 View::Draw(bool forceRedraw)
 {
   if (_popup) {
-    _popup->Draw(forceRedraw);
+    _popup->Draw();
   } else {
     if (!GetFlag(LEAF)) {
       if (_left)_left->Draw(forceRedraw);
@@ -114,17 +115,20 @@ View::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (_popup) {
     if(action == GLFW_PRESS) {
-      _popup->MouseButton(x, y, mods);
       delete _popup;
       _popup = NULL;
+      AMN_APPLICATION->GetMainWindow()->ForceRedraw();
     }
   } else {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
-      _popup = new Popup(this, x, y, x + 200, y + 200);
-      std::cout << "POPUP : " << _popup << std::endl;
-      CurveEditorUI* content = new CurveEditorUI(_popup);
-
-      std::cout << "CREATE POPUP : " << ((void*)_popup) << std::endl;
+      _popup = new PopupUI(NULL, x, y, 200, 200);
+      /*
+      MenuUI* content = new MenuUI(_popup);
+      MenuItem& item0 = content->AddItem(_popup, "test1", "T1", false, true, TestMenuCallback);
+      MenuItem& item1 = content->AddItem(_popup, "test2", "T2", false, true, TestMenuCallback);
+      MenuItem& item2 = content->AddItem(_popup, "test3", "T3", false, true, TestMenuCallback);
+      MenuItem& item3 = content->AddItem(_popup, "test4", "T4", false, true, TestMenuCallback);
+      */
     }
     else if(_content)_content->MouseButton(button, action, mods);
   }

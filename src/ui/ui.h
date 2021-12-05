@@ -59,22 +59,23 @@ public:
   // mouse position in the view space
   // (0, 0) left top corner
   // (width, height) right bottom corner
-  void GetRelativeMousePosition(const float inX, const float inY, float& outX, float& outY);
+  virtual void GetRelativeMousePosition(const float inX, const float inY, 
+    float& outX, float& outY);
 
   // get the (x,y) position in window space (left top corner)
-  ImVec2 GetPosition();
+  virtual ImVec2 GetPosition();
 
   // get the x position in window space (x-coordinate of left top corner)
-  int GetX();
+  virtual int GetX();
 
   // get the y position in window space (y-coordinate of left top corner)
-  int GetY();
+  virtual int GetY();
 
   // get the width of the parent view
-  int GetWidth();
+  virtual int GetWidth();
   
   // get the height of the parent view
-  int GetHeight();
+  virtual int GetHeight();
 
   Application* GetApplication();
 

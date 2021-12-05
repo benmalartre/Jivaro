@@ -11,7 +11,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 class Window;
 class BaseUI;
-class Popup;
+class PopupUI;
 class View
 {
 public:
@@ -102,7 +102,7 @@ private:
   View*             _left;
   View*             _right;
   View*             _parent;
-  Popup*            _popup;
+  PopupUI*          _popup;
   std::string       _name;
 };
 

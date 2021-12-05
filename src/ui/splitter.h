@@ -29,8 +29,8 @@ public:
   ~SplitterUI();
 
   int* GetPixels(){return _pixels;};
-  inline unsigned GetWidth(){return _width;};
-  inline unsigned GetHeight(){return _height;};
+  int GetWidth() override {return _width;};
+  int GetHeight() override {return _height;};
   void RecurseBuildMap(View* view);
   void BuildMap(int width, int height);
   View* GetViewByIndex(int index);
