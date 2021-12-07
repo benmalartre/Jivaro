@@ -3,6 +3,8 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
+#include <pxr/base/vt/array.h>
+#include <pxr/base/vt/value.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -31,7 +33,7 @@ public:
   PopupUI(View* parent, int x, int y, int width, int height);
   ~PopupUI() override;
 
-  void MouseButton(int action, int button, int mods) override;
+  void MouseButton(int button, int action, int mods) override;
   void MouseMove(int x, int y) override;
   bool Draw() override;
 

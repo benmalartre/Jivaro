@@ -37,6 +37,7 @@ public:
 
   void MouseButton(int action, int button, int mods) override;
   void MouseMove(int x, int y) override;
+  void Keyboard(int key, int scancode, int action, int mods) override;
   void Init();
   void Update();
   bool Draw()      override;

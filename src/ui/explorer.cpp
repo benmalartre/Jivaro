@@ -61,6 +61,11 @@ void ExplorerUI::MouseMove(int x, int y)
 {
 }
 
+void ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
+{
+  std::cout << "EXPLORER UI : KEY  = " << key << std::endl;
+}
+
 void ExplorerUI::Update()
 {
   if (GetApplication()->GetStage()) {

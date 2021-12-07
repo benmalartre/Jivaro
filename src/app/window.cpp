@@ -74,7 +74,7 @@ void AMNDeleteFontAtlas()
 Window::Window(bool fullscreen, const std::string& name) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name),_forceRedraw(0),_idle(false)
+  _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -105,7 +105,7 @@ Window::Window(bool fullscreen, const std::string& name) :
 Window::Window(int width, int height, const std::string& name):
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name),_forceRedraw(0),_idle(false)
+  _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
 {
   _width = width;
   _height = height;
@@ -128,7 +128,7 @@ Window::Window(int x, int y, int width, int height,
   GLFWwindow* parent, const std::string& name, bool decorated) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL),
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name),_forceRedraw(0),_idle(false)
+  _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
 {
   _width = width;
   _height = height;
@@ -419,12 +419,18 @@ Window::Draw()
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight() + 2 ));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
 
-  // draw views
-  if(_mainView)_mainView->Draw( _forceRedraw > 0 );
-  _forceRedraw = pxr::GfMax(0, _forceRedraw-1);
+  // draw popuo
+  if (_popup) {
+    _popup->Draw();
+  }
+  else {
+    // draw views
+    if (_mainView)_mainView->Draw(_forceRedraw > 0);
+    _forceRedraw = pxr::GfMax(0, _forceRedraw - 1);
 
-  // draw splitters
-  _splitter->Draw();
+    // draw splitters
+    _splitter->Draw();
+  }
 
   // render the imgui frame
   ImGui::Render();
@@ -735,27 +741,40 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   glfwGetCursorPos(window, &x, &y);
   bool splitterHovered = parent->PickSplitter(x, y);
 
-  if (action == GLFW_RELEASE)
-  {
-    parent->EndDragSplitter();
-    //parent->SetActiveTool(AMN_TOOL_SELECT);
-    View* view = parent->GetActiveView();
-    if(view) {
-      view->MouseButton(button, action, mods);
-      view->ClearFlag(View::INTERACTING);
-      view->SetDirty();
+  PopupUI* popup = parent->GetPopup();
+  if (popup) {
+    if (action == GLFW_PRESS) {
+      popup->MouseButton(button, action, mods);
+      delete popup;
+      parent->SetPopup(NULL);
+      parent->ForceRedraw();
     }
-  }
-  else if (action == GLFW_PRESS)
-  {
-    if (splitterHovered) {
-      parent->BeginDragSplitter();
-    } else {
-      View* view = parent->GetViewUnderMouse((int)x, (int)y);
+  } else if(button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
+    parent->SetPopup(new PopupUI(parent->GetMainView(), x, y, 200, 200));
+  } else {
+    if (action == GLFW_RELEASE)
+    {
+      parent->EndDragSplitter();
+      //parent->SetActiveTool(AMN_TOOL_SELECT);
+      View* view = parent->GetActiveView();
       if (view) {
-        parent->SetActiveView(view);
-        view->SetFlag(View::INTERACTING);
         view->MouseButton(button, action, mods);
+        view->ClearFlag(View::INTERACTING);
+        view->SetDirty();
+      }
+    }
+    else if (action == GLFW_PRESS)
+    {
+      if (splitterHovered) {
+        parent->BeginDragSplitter();
+      }
+      else {
+        View* view = parent->GetViewUnderMouse((int)x, (int)y);
+        if (view) {
+          parent->SetActiveView(view);
+          view->SetFlag(View::INTERACTING);
+          view->MouseButton(button, action, mods);
+        }
       }
     }
   }

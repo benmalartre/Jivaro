@@ -25,22 +25,7 @@ bool PopupUIItem::Draw()
 {
   Window* window = ui->GetView()->GetWindow();
   ImGui::PushFont(window->GetRegularFont(0));
-  
-  /*
-  if(toggable) {
-    AddCheckableIconButton<IconPressedFunc>(
-      icon,
-      (window->GetActiveTool() == tool) ? AMN_ICON_SELECTED : AMN_ICON_DEFAULT,
-      func
-    );
-  } else {
-    AddIconButton<IconPressedFunc>(
-      icon,
-      AMN_ICON_DEFAULT,
-      func
-    );
-  }
-  */
+ 
   ImGui::PopFont(); 
   return false;
 }
@@ -61,7 +46,7 @@ static void _FillBackground()
 // Popup constructor
 //----------------------------------------------------------------------------
 PopupUI::PopupUI(View* parent, int x, int y, int w, int h)
-  : BaseUI(parent, "popup_" + std::to_string(ns()))
+  : BaseUI(parent, "popup_" + std::to_string(ns()), true)
   , _x(x)
   , _y(y)
   , _width(w)
@@ -85,7 +70,15 @@ void PopupUI::GetRelativeMousePosition(const float inX, const float inY,
 void 
 PopupUI::MouseButton(int button, int action, int mods)
 {
-  std::cout << "POPUP MOUSE BUTTON : " << button << "," << action << "," << mods << std::endl;
+  double x, y;
+  glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
+  if (x > _x && y > _y && x < (_x + _width) && y < (_y + _height)) {
+    std::cout << "POPUP MOUSE BUTTON : (INSIDE) = " << x << "," << y << std::endl;
+  }
+  else {
+    std::cout << "POPUP MOUSE BUTTON : (OUTSIDE) = " << x << "," << y << std::endl;
+  }
+  
   //MouseButton(button, action, mods);
 }
 

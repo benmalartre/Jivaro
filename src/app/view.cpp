@@ -2,7 +2,6 @@
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../ui/ui.h"
-#include "../ui/popup.h"
 #include "../ui/splitter.h"
 #include "../ui/menu.h"
 #include <pxr/base/gf/vec2i.h>
@@ -23,8 +22,7 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max) :
   _perc(0.5),
   _content(NULL),
   _buffered(0),
-  _fixedPixels(-1),
-  _popup(NULL)
+  _fixedPixels(-1)
 {
   if(_parent==NULL)_name = "main";
   else _window = _parent->_window;
@@ -40,8 +38,7 @@ View::View(View* parent, int x, int y, int w, int h):
   _perc(0.5),
   _content(NULL),
   _buffered(0),
-  _fixedPixels(-1),
-  _popup(NULL)
+  _fixedPixels(-1)
 {
   if(_parent==NULL)_name = "main";
   else _window = _parent->_window;
@@ -80,19 +77,15 @@ View::Contains(int x, int y)
 void 
 View::Draw(bool forceRedraw)
 {
-  if (_popup) {
-    _popup->Draw();
-  } else {
-    if (!GetFlag(LEAF)) {
-      if (_left)_left->Draw(forceRedraw);
-      if (_right)_right->Draw(forceRedraw);
-    }
-    else {
-      bool bForceRedraw = GetFlag(FORCEREDRAW) ? true : forceRedraw;
-      if (_content && (bForceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-        if (!_content->Draw() && !bForceRedraw) {
-          SetClean();
-        }
+  if (!GetFlag(LEAF)) {
+    if (_left)_left->Draw(forceRedraw);
+    if (_right)_right->Draw(forceRedraw);
+  }
+  else {
+    bool bForceRedraw = GetFlag(FORCEREDRAW) ? true : forceRedraw;
+    if (_content && (bForceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+      if (!_content->Draw() && !bForceRedraw) {
+        SetClean();
       }
     }
   }
@@ -113,50 +106,25 @@ View::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  if (_popup) {
-    if(action == GLFW_PRESS) {
-      delete _popup;
-      _popup = NULL;
-      AMN_APPLICATION->GetMainWindow()->ForceRedraw();
-    }
-  } else {
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
-      _popup = new PopupUI(NULL, x, y, 200, 200);
-      /*
-      MenuUI* content = new MenuUI(_popup);
-      MenuItem& item0 = content->AddItem(_popup, "test1", "T1", false, true, TestMenuCallback);
-      MenuItem& item1 = content->AddItem(_popup, "test2", "T2", false, true, TestMenuCallback);
-      MenuItem& item2 = content->AddItem(_popup, "test3", "T3", false, true, TestMenuCallback);
-      MenuItem& item3 = content->AddItem(_popup, "test4", "T4", false, true, TestMenuCallback);
-      */
-    }
-    else if(_content)_content->MouseButton(button, action, mods);
-  }
+  if(_content)_content->MouseButton(button, action, mods);
 }
 
 void 
 View::MouseMove(int x, int y)
 {
-  if(_popup)_popup->MouseMove(x, y);
-  else if(_content)_content->MouseMove(x, y);
+  if(_content)_content->MouseMove(x, y);
 }
 
 void 
 View::MouseWheel(int x, int y)
 {
-  if (_popup) {
-    // do nothing
-  }
-  else if(_content)_content->MouseWheel(x, y);
+  if(_content)_content->MouseWheel(x, y);
 }
 
 void 
 View::Keyboard(int key, int scancode, int action, int mods)
 {
-  if (_popup) {
-    // do nothing
-  }
-  else if (_content) {
+  if (_content) {
     _content->Keyboard(key, scancode, action, mods);
   }
 }

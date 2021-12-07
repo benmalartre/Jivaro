@@ -6,6 +6,7 @@
 #include "../utils/utils.h"
 #include "../ui/ui.h"
 #include "../ui/splitter.h"
+#include "../ui/popup.h"
 #include "../app/tools.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
@@ -150,6 +151,10 @@ public:
   bool IsDraggingSplitter(){return _dragSplitter;};
   void DragSplitter(int x, int y);
 
+  // popup
+  PopupUI* GetPopup() { return _popup; };
+  void SetPopup(PopupUI* popup) { _popup = popup; };
+
   // loop
   void MainLoop();
   static Window* GetUserData(GLFWwindow* window);
@@ -200,6 +205,7 @@ private:
   // ui
   float                 _dpiX;
   float                 _dpiY;
+  PopupUI*              _popup;
 
 public:
   // static constructor

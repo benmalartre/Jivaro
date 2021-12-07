@@ -6,12 +6,12 @@
 AMN_NAMESPACE_OPEN_SCOPE
 
 // constructor
-BaseUI::BaseUI(View* parent, const std::string& name)
+BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
   : _parent(parent) 
   , _name(name)
   , _initialized(false)
 {
-  if(_parent)
+  if(_parent && !popup)
   {
     _parent->SetContent(this);
     _parent->SetFlag(View::LEAF);

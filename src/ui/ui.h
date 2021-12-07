@@ -44,7 +44,7 @@ static const char* UITypeName[UIType::COUNT] = {
 class BaseUI : public pxr::TfWeakBase
 {
 public:
-  BaseUI(View* parent, const std::string& name);
+  BaseUI(View* parent, const std::string& name, bool popup=false);
   virtual ~BaseUI(){};
 
   // get parent window

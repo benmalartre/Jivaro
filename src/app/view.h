@@ -11,7 +11,6 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 class Window;
 class BaseUI;
-class PopupUI;
 class View
 {
 public:
@@ -25,8 +24,7 @@ public:
     ACTIVE          = 1 << 6,
     DIRTY           = 1 << 7,
     INTERACTING     = 1 << 8,
-    DYNAMIC         = 1 << 9,
-    FORCEREDRAW     = 1 << 10
+    FORCEREDRAW     = 1 << 9
   };
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
@@ -102,7 +100,6 @@ private:
   View*             _left;
   View*             _right;
   View*             _parent;
-  PopupUI*          _popup;
   std::string       _name;
 };
 

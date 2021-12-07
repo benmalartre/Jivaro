@@ -142,7 +142,7 @@ void FileBrowserUI::_DrawPath()
     &AMN_ICONS[AMN_ICON_SMALL][ICON_HOME],
     AMN_ICON_DEFAULT,
     (IconPressedFunc)&OnHomeCallback, this);
-
+  ImGui::SameLine();
   size_t numTokens = _pathTokens.size();
   if(numTokens) {
     size_t lastTokenIndex = numTokens - 1;
