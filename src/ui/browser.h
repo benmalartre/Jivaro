@@ -4,7 +4,7 @@
 
 #include "../common.h"
 #include "../app/ui.h"
-#include "../utils/utils.h"
+#include "../ui/utils.h"
 #include <pxr/usd/usd/prim.h>
 
 AMN_NAMESPACE_OPEN_SCOPE

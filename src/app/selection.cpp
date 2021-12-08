@@ -17,7 +17,7 @@ bool Selection::IsEmpty()
 bool Selection::IsObject()
 {
   for (auto& item : _items) {
-    if (item.type == OBJECT) return true;
+    if (item.type == Type::OBJECT) return true;
   }
   return false;
 }
@@ -25,7 +25,9 @@ bool Selection::IsObject()
 bool Selection::IsComponent()
 {
   for (auto& item : _items) {
-    if (item.type == COMPONENT) return true;
+    if (item.type == Type::VERTEX ||
+        item.type == Type::EDGE ||
+        item.type == Type::FACE) return true;
   }
   return false;
 }
@@ -33,7 +35,7 @@ bool Selection::IsComponent()
 bool Selection::IsAttribute()
 {
   for (auto& item : _items) {
-    if (item.type == ATTRIBUTE) return true;
+    if (item.type == Type::ATTRIBUTE) return true;
   }
   return false;
 }
@@ -43,7 +45,7 @@ void Selection::AddItem(const pxr::SdfPath& path)
   for (auto& item: _items) {
     if (path == item.path)return;
   }
-  _items.push_back({ SelectionType::OBJECT, path });
+  _items.push_back({ Type::OBJECT, path });
 }
 
 void Selection::RemoveItem(const pxr::SdfPath& path)
@@ -65,25 +67,25 @@ void Selection::ToggleItem(const pxr::SdfPath& path)
 }
 
 void Selection::AddComponent(const pxr::SdfPath& object,
-	ComponentType compType, int index)
+  Type type, int index)
 {
 
 }
 
 void Selection::RemoveComponent(const pxr::SdfPath& object,
-  ComponentType compType, int index)
+  Type type, int index)
 {
 
 }
 
 void Selection::AddComponents(const pxr::SdfPath& object,
-  ComponentType compType, std::vector<int> indices)
+  Type type, std::vector<int> indices)
 {
 
 }
 
 void Selection::RemoveComponents(const pxr::SdfPath& object,
-  ComponentType compType, std::vector<int> indices)
+  Type type, std::vector<int> indices)
 {
 
 }

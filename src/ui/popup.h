@@ -18,7 +18,7 @@ struct PopupUIItem {
   bool                        enabled;
 
   pxr::VtArray<pxr::VtValue>  args;
-  IconPressedFunc             func;
+  PopupItemPressedFunc        func;
 
   PopupUIItem(BaseUI* ui, const std::string& lbl, bool tgl, bool enb, PopupItemPressedFunc f = NULL, 
     const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
@@ -40,10 +40,11 @@ public:
   // mouse position in the view space
   // (0, 0) left top corner
   // (width, height) right bottom corner
-  void GetRelativeMousePosition(const float inX, const float inY, float& outX, float& outY) override;
+  void GetRelativeMousePosition(const float inX, const float inY, 
+    float& outX, float& outY) override;
 
   // get the (x,y) position in window space (left top corner)
-  ImVec2 GetPosition() override { return ImVec2(_x, _y); };;
+  pxr::GfVec2f GetPosition() override { return pxr::GfVec2f(_x, _y); };;
 
   // get the x position in window space (x-coordinate of left top corner)
   int GetX() override {return _x;};
@@ -64,8 +65,9 @@ private:
   int                         _height;
   std::vector<PopupUIItem*>   _items;
   PopupUIItem*                _current;
+  static ImGuiWindowFlags     _flags;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APPLICATION_VIEW_H
+#endif // AMN_APPLICATION_POPUP_H

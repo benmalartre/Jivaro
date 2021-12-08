@@ -1,7 +1,6 @@
 #pragma once
 
 #include "prim.h"
-#include "utils.h"
 #include <pxr/usd/usdGeom/sphere.h>
 
 AMN_NAMESPACE_OPEN_SCOPE

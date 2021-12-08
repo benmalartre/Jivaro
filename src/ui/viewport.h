@@ -17,13 +17,11 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
-#include "../utils/utils.h"
+#include "../ui/utils.h"
 #include "../app/camera.h"
 #include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/engine.h"
-
-
 
 AMN_NAMESPACE_OPEN_SCOPE
 
@@ -100,7 +98,6 @@ class ViewportUI : public BaseUI
     pxr::GlfDrawTargetRefPtr      _drawTarget;
     int                           _drawMode;
     int                           _rendererIndex;
-    //pxr::UsdStageRefPtr               _stage;
     static ImGuiWindowFlags       _flags;
 
     const char**                  _rendererNames;

@@ -3,8 +3,8 @@
 #pragma once
 
 #include "../common.h"
-#include "../utils/utils.h"
-#include "ui.h"
+#include "../ui/utils.h"
+#include "../ui/ui.h"
 #include <pxr/usd/usd/prim.h>
 
 AMN_NAMESPACE_OPEN_SCOPE

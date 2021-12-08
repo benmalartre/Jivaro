@@ -1,8 +1,7 @@
 #include "../common.h"
-#include "../utils/utils.h"
-#include "utils.h"
-#include "instance.h"
-#include "context.h"
+#include "../embree/utils.h"
+#include "../embree/instance.h"
+#include "../embree/context.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

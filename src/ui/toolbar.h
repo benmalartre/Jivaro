@@ -1,13 +1,14 @@
 #ifndef AMN_UI_TOOLBAR_H
 #define AMN_UI_TOOLBAR_H
 
+#include "../common.h"
+#include "../ui/ui.h"
+#include "../ui/utils.h"
+
 #include <vector>
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>
-
-#include "../common.h"
-#include "../utils/utils.h"
-#include "../ui/ui.h"
+#include <pxr/base/gf/vec3f.h>
 
 
 AMN_NAMESPACE_OPEN_SCOPE

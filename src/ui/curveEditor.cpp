@@ -10,7 +10,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-ImGuiWindowFlags CurveEditorUI::_flags = 
+ImGuiWindowFlags CurveEditorUI::_flags =
   ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_NoTitleBar |

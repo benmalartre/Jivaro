@@ -4,7 +4,7 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
-#include "../utils/utils.h"
+#include "../ui/utils.h"
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/usdAnimX/data.h>

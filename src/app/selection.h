@@ -10,40 +10,36 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-enum SelectionType {
-  OBJECT,
-  COMPONENT,
-  ATTRIBUTE
-};
-
-enum ComponentType {
-  VERTEX,
-  EDGE,
-  FACE
-};
-
-struct SelectionItem {
-  SelectionType       type;
-  pxr::SdfPath        path;
-  ComponentType       componentType;
-  std::vector<int>    components;
-  std::vector<float>  weights;
-};
 
 class Selection {
 public:
+  enum Type {
+    OBJECT,
+    VERTEX,
+    EDGE,
+    FACE,
+    ATTRIBUTE
+  };
+
+  struct Item {
+    Type                type;
+    pxr::SdfPath        path;
+    std::vector<int>    components;
+    std::vector<float>  weights;
+  };
+
 	void AddItem(const pxr::SdfPath& item);
   void RemoveItem(const pxr::SdfPath& item);
   void ToggleItem(const pxr::SdfPath& item);
 
   void AddComponent(const pxr::SdfPath& object,
-    ComponentType compType, int index);
+    Type type, int index);
   void RemoveComponent(const pxr::SdfPath& object,
-    ComponentType compType, int index);
+    Type type, int index);
   void AddComponents(const pxr::SdfPath& object,
-    ComponentType compType, std::vector<int> indices);
+    Type type, std::vector<int> indices);
   void RemoveComponents(const pxr::SdfPath& object,
-    ComponentType compType, std::vector<int> indices);
+    Type type, std::vector<int> indices);
   void Clear();
 
   bool IsEmpty();
@@ -53,18 +49,17 @@ public:
 
   pxr::SdfPathVector GetSelectedPrims();
   size_t GetNumSelectedItems() { return _items.size(); };
-  SelectionItem& operator[](size_t index) {
+  Item& operator[](size_t index) {
     return _items[index];
   };
-  SelectionItem& GetItem(size_t index) {
+  Item& GetItem(size_t index) {
     return _items[index];
   };
-  std::vector<SelectionItem>& Get() { return _items; };
+  std::vector<Item>& Get() { return _items; };
 
 private:
-  SelectionType               _selectionMode;
-  ComponentType               _componentMode;
-  std::vector<SelectionItem>  _items;
+  Type                        _mode;
+  std::vector<Item>           _items;
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE

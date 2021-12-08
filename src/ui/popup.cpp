@@ -1,9 +1,9 @@
-#include "../app/window.h"
-#include "../app/view.h"
 #include "../ui/ui.h"
 #include "../ui/popup.h"
 #include "../ui/splitter.h"
 #include "../utils/timer.h"
+#include "../app/window.h"
+#include "../app/view.h"
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec2f.h>
 
@@ -43,10 +43,16 @@ static void _FillBackground()
   ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
 }
 
+ImGuiWindowFlags PopupUI::_flags = 
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoBackground;
+
 // Popup constructor
 //----------------------------------------------------------------------------
 PopupUI::PopupUI(View* parent, int x, int y, int w, int h)
-  : BaseUI(parent, "popup_" + std::to_string(ns()), true)
+  : BaseUI(parent, "##popup_" + std::to_string(CurrentTime()), true)
   , _x(x)
   , _y(y)
   , _width(w)
@@ -72,7 +78,7 @@ PopupUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  if (x > _x && y > _y && x < (_x + _width) && y < (_y + _height)) {
+  if (x > _x && y > y && x < (_x + _width) && y < (_y + _height)) {
     std::cout << "POPUP MOUSE BUTTON : (INSIDE) = " << x << "," << y << std::endl;
   }
   else {
@@ -92,13 +98,8 @@ bool
 PopupUI::Draw()
 {
   bool opened;
-  int flags = 0;
-  flags |= ImGuiWindowFlags_NoResize;
-  flags |= ImGuiWindowFlags_NoTitleBar;
-  flags |= ImGuiWindowFlags_NoMove;
-  
 
-  ImGui::Begin(_name.c_str(), &opened, flags);
+  ImGui::Begin(_name.c_str(), &opened, _flags);
   pxr::GfVec4f color(
     RANDOM_0_1,
     RANDOM_0_1,

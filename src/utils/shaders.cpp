@@ -1,6 +1,6 @@
 #include "shaders.h"
 #include <iostream>
-#include "glutils.h"
+#include "../utils/glutils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

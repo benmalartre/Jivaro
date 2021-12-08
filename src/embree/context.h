@@ -2,7 +2,6 @@
 
 #include "default.h"
 #include "prim.h"
-#include "utils.h"
 #include "../app/camera.h"
 
 AMN_NAMESPACE_OPEN_SCOPE

@@ -1,8 +1,8 @@
 #include "../utils/glutils.h"
 #include "../utils/files.h"
 #include "../utils/icons.h"
-#include "../utils/utils.h"
 #include "../ui/style.h"
+#include "../ui/utils.h"
 #include "../ui/dummy.h"
 #include "../ui/viewport.h"
 #include "../ui/splitter.h"
@@ -233,6 +233,15 @@ Window::CreateChildWindow(
   return new Window(x, y, width, height, parent, name, decorated);
 }
 
+// popup
+//----------------------------------------------------------------------------
+void
+Window::SetPopup(PopupUI* popup)
+{
+  _popup = popup;
+  if (_popup)_dim = true;
+}
+
 void 
 Window::AddChild(Window* child)
 {
@@ -419,6 +428,16 @@ Window::Draw()
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight() + 2 ));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
 
+  if (_dim) {
+    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+    const ImVec4* colors = ImGui::GetStyle().Colors;
+    drawList->AddRectFilled(
+      ImVec2(0.0, 0.0),
+      ImVec2(_width, _height),
+      ImColor(colors[ImGuiCol_ModalWindowDimBg])
+    );
+    _dim = false;
+  }
   // draw popuo
   if (_popup) {
     _popup->Draw();

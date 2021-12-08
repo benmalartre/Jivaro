@@ -2,8 +2,8 @@
 #define AMN_APP_DELEGATE_H
 
 #include "../common.h"
-#include "../utils/utils.h"
 #include "../ui/ui.h"
+#include "../ui/utils.h"
 #include "../ui/splitter.h"
 #include "../app/tools.h"
 #include "pxr/imaging/glf/contextCaps.h"

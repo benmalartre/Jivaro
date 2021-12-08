@@ -10,8 +10,8 @@
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/mesh.h>
 
-#include "mesh.h"
-#include "utils.h"
+#include "../geometry/mesh.h"
+#include "../geometry/utils.h"
 
 #include "../voronoi/FortuneAlgorithm.h"
 

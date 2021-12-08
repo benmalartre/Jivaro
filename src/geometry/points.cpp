@@ -1,7 +1,7 @@
 // Points
 //----------------------------------------------
-#include "points.h"
-#include "utils.h"
+#include "../geometry/points.h"
+#include "../geometry/utils.h"
 #include <pxr/base/gf/ray.h>
 
 AMN_NAMESPACE_OPEN_SCOPE

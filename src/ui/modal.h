@@ -3,9 +3,9 @@
 #pragma once
 
 #include "../common.h"
-#include "../utils/utils.h"
 #include "../utils/icons.h"
-#include "ui.h"
+#include "../ui/ui.h"
+#include "../ui/utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

@@ -1,6 +1,10 @@
 #ifndef AMN_COMMON_H
 #define AMN_COMMON_H
-#pragma once
+
+#include <cstddef>
+#include <cstdint>
+#include <cinttypes>
+#include <bitset>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -28,7 +32,7 @@
 
   namespace AMN_INTERNAL_NS { }
 
-  // The root level namespace for all source in the USD distribution.
+  // The root level namespace for all source in the Amnesia distribution.
   namespace AMN_NS {
       using namespace AMN_INTERNAL_NS;
   }

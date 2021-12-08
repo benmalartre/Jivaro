@@ -7,7 +7,7 @@
 #include <pxr/base/vt/array.h>
 
 #include "../ui/ui.h"
-#include "../utils/utils.h"
+#include "../ui/utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

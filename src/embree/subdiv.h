@@ -1,7 +1,8 @@
-#pragma once
+#ifndef AMN_EMBREE_SUBDIV_H
+#define AMN_EMBREE_SUBDIV_H
 
-#include "prim.h"
-#include "utils.h"
+#include "../embree/prim.h"
+#include "../embree/utils.h"
 #include <pxr/usd/usdGeom/mesh.h>
 
 
@@ -52,3 +53,5 @@ CheckColors(const pxr::UsdGeomMesh& usdMesh,
             UsdEmbreeSubdiv* mesh);
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_EMBREE_SUBDIV_H

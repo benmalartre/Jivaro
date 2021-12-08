@@ -102,7 +102,7 @@ static void FlattenGeometryCallback()
   Selection* selection = app->GetSelection();
   std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
-    SelectionItem& item = selection->GetItem(i);
+    Selection::Item& item = selection->GetItem(i);
     std::cout << "SELECTED PRIM PATH : " << item.path << std::endl;
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
     if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {

@@ -240,20 +240,20 @@ void _BenchMark(size_t N) {
   uint64_t startT; 
   // jacobi
   { 
-    startT = ns();
+    startT = CurrentTime();
     for(size_t i=0; i < N; ++i) {
       const pxr::GfMatrix4f& m = matrices[i];
       pxr::GfVec3f* eigenValues = (pxr::GfVec3f*)&values0[i * 3];
       pxr::GfVec3f* eigenVectors = (pxr::GfVec3f*)&vectors0[i * 9];;
       _Jacobi3(m, eigenValues, eigenVectors);
     }
-    uint64_t T0 = ns() - startT;
-    _PrintBenchMark("Jacobi", ns() - startT);
+    uint64_t T0 = CurrentTime() - startT;
+    _PrintBenchMark("Jacobi", CurrentTime() - startT);
   }
 
   // eigen
   {
-    startT = ns();
+    startT = CurrentTime();
     Matrix3r em3;
     for(size_t i=0; i < N; ++i) {
       const pxr::GfMatrix4f& m = matrices[i];
@@ -266,12 +266,12 @@ void _BenchMark(size_t N) {
       memcpy(&values1[i*3], &es.eigenvalues(), 3 * sizeof(float));
       memcpy(&vectors1[i*9], &es.eigenvectors(), 9 * sizeof(float));
     }
-    _PrintBenchMark("Eigen", ns() - startT);
+    _PrintBenchMark("Eigen", CurrentTime() - startT);
   }
 
   // custom iterative
   {
-    startT = ns();
+    startT = CurrentTime();
     for(size_t i=0; i < N; ++i) {
       const pxr::GfMatrix4f& m = matrices[i];
       pxr::GfVec3f& values = *(pxr::GfVec3f*)&values3[i * 3];
@@ -280,12 +280,12 @@ void _BenchMark(size_t N) {
       AMN::SymmetricEigensolver3x3 solver;
       solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], true, 1, values, vectors);
     }
-    _PrintBenchMark("Custom iterative", ns() - startT);
+    _PrintBenchMark("Custom iterative", CurrentTime() - startT);
   }
 
   // custom non-iterative
   {
-    startT = ns();
+    startT = CurrentTime();
     for(size_t i=0; i < N; ++i) {
       const pxr::GfMatrix4f& m = matrices[i];
       pxr::GfVec3f& values = *(pxr::GfVec3f*)&values3[i * 3];
@@ -294,7 +294,7 @@ void _BenchMark(size_t N) {
       AMN::NISymmetricEigensolver3x3 solver;
       solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], 1, values, vectors);
     }
-    _PrintBenchMark("Custom non-iterative", ns() - startT);
+    _PrintBenchMark("Custom non-iterative", CurrentTime() - startT);
   }
 }
 

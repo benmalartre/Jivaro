@@ -7,6 +7,7 @@
 #include "../common.h"
 
 #include "strings.h"
+#include <stdint.h>
 #include <fstream>
 #include <pxr/base/arch/fileSystem.h>
 #include <pxr/base/arch/systemInfo.h>
@@ -80,7 +81,7 @@ int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries);
 //-----------------------------------------------------
 int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames);
 
-// get installatio folder
+// get installation folder
 //-----------------------------------------------------
 std::string GetInstallationFolder();
 

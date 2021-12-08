@@ -1,10 +1,14 @@
 #ifndef AMN_UI_LAYERS_H
 #define AMN_UI_LAYERS_H
-#pragma once
 
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/sdf/layer.h>
 
+#include "../ui/ui.h"
+
+AMN_NAMESPACE_OPEN_SCOPE
+
+/*
 struct SummaryStats
 {
     size_t numSpecs = 0;
@@ -33,7 +37,8 @@ GetSummaryStats(pxr::SdfLayerHandle const &layer)
 struct LayerItem {
 
 };
-
+*/
+class View;
 class LayersUI : public BaseUI
 {
   public:
@@ -41,14 +46,17 @@ class LayersUI : public BaseUI
     ~LayersUI();
     
     // overrides
-    void MouseButton(int action, int button, int mods) override{};
-    void MouseMove(int x, int y) override{};
+    /*
+    void MouseButton(int action, int button, int mods) override;
+    void MouseMove(int x, int y) override;
+    */
     bool Draw() override;
 
-    LayerItem& AddLayer(View* view);
+
   private:
-    std::vector<LayerItem> _items;
-    MenuItem*             _current;
+    static ImGuiWindowFlags               _flags;
 };
+
+AMN_NAMESPACE_CLOSE_SCOPE
 
 #endif

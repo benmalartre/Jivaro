@@ -1,7 +1,8 @@
-#pragma once
+#ifndef AMN_EMBREE_SPHERE_H
+#define AMN_EMBREE_SPHERE_H
 
-#include "prim.h"
-#include "utils.h"
+#include "../embree/prim.h"
+#include "../embree/utils.h"
 #include <pxr/usd/usdGeom/sphere.h>
 
 AMN_NAMESPACE_OPEN_SCOPE
@@ -46,3 +47,5 @@ BuildTriangles(int num_lats,
               pxr::VtArray<int>& triangles);
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_EMBREE_SPHERE_H

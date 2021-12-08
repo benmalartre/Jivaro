@@ -2,13 +2,15 @@
 #define AMN_UI_UI_H
 #pragma once
 
-#include <pxr/base/tf/notice.h>
-#include <pxr/base/tf/weakBase.h>
-#include <pxr/base/tf/instantiateType.h>
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
 #include "../common.h"
 #include "../app/notice.h"
+
+#include <pxr/base/tf/notice.h>
+#include <pxr/base/tf/weakBase.h>
+#include <pxr/base/tf/instantiateType.h>
+#include <pxr/base/gf/vec2f.h>
 
 AMN_NAMESPACE_OPEN_SCOPE  
 
@@ -24,9 +26,9 @@ enum UIType {
   TIMELINE,
   PROPERTY,
   TOOLBAR,
-  FILE_BROWSER,
-  CURVE_EDITOR,
-  GRAPH_EDITOR,
+  FILEBROWSER,
+  CURVEEDITOR,
+  GRAPHEDITOR,
   COUNT
 };
 
@@ -36,9 +38,9 @@ static const char* UITypeName[UIType::COUNT] = {
   "timeline",
   "property",
   "toolbar",
-  "file browser",
-  "curve editor",
-  "graph editor"
+  "fileBrowser",
+  "curveEditor",
+  "graphEditor"
 };
 
 class BaseUI : public pxr::TfWeakBase
@@ -63,7 +65,7 @@ public:
     float& outX, float& outY);
 
   // get the (x,y) position in window space (left top corner)
-  virtual ImVec2 GetPosition();
+  virtual pxr::GfVec2f GetPosition();
 
   // get the x position in window space (x-coordinate of left top corner)
   virtual int GetX();
@@ -98,6 +100,7 @@ protected:
   bool                    _initialized;
   View*                   _parent;
   std::string             _name;
+  static ImGuiWindowFlags _flags;
 };
 
 

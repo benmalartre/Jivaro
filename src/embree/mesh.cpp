@@ -1,7 +1,7 @@
 #include "../common.h"
-#include "utils.h"
-#include "mesh.h"
-#include "context.h"
+#include "../embree/utils.h"
+#include "../embree/mesh.h"
+#include "../embree/context.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

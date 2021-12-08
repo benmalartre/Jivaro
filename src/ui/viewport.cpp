@@ -1,3 +1,4 @@
+#include "../ui/utils.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
 #include "../geometry/shape.h"
@@ -7,7 +8,6 @@
 #include "../app/tools.h"
 #include "../app/handle.h"
 #include "../app/application.h"
-#include "../utils/utils.h"
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
 
@@ -45,10 +45,10 @@ BaseUI(parent, "Viewport")
 // destructor
 ViewportUI::~ViewportUI()
 {
-  if (_rendererNames)delete[] _rendererNames;
+  if(_rendererNames)delete[] _rendererNames;
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
-  if (_engine) delete _engine;
+  if(_engine) delete _engine;
 }
 
 void ViewportUI::Init()
@@ -65,10 +65,8 @@ void ViewportUI::Init()
   for (short rendererIndex = 0; rendererIndex < _numRenderers; ++rendererIndex) {
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
-  std::cout << "RENDERER INDEX : " << _rendererIndex << std::endl;
   _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
   
-  std::cout << "CURRENT RENDERER : " << _engine->GetCurrentRendererId().GetText() << std::endl;
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
   light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));

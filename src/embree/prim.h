@@ -1,7 +1,8 @@
-#pragma once
+#ifndef AMN_EMBREE_PRIM_H
+#define AMN_EMBREE_PRIM_H
 
 #include "../common.h"
-#include "utils.h"
+#include "../embree/utils.h"
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/base/tf/hashmap.h>
@@ -32,3 +33,5 @@ struct UsdEmbreePrim {
 };
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_EMBREE_PRIM_H

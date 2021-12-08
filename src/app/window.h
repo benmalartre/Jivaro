@@ -1,10 +1,9 @@
 #ifndef AMN_APP_WINDOW_H
 #define AMN_APP_WINDOW_H
-#pragma once
 
 #include "../common.h"
-#include "../utils/utils.h"
 #include "../ui/ui.h"
+#include "../ui/utils.h"
 #include "../ui/splitter.h"
 #include "../ui/popup.h"
 #include "../app/tools.h"
@@ -153,7 +152,7 @@ public:
 
   // popup
   PopupUI* GetPopup() { return _popup; };
-  void SetPopup(PopupUI* popup) { _popup = popup; };
+  void SetPopup(PopupUI* popup);
 
   // loop
   void MainLoop();
@@ -206,6 +205,7 @@ private:
   float                 _dpiX;
   float                 _dpiY;
   PopupUI*              _popup;
+  bool                  _dim;
 
 public:
   // static constructor

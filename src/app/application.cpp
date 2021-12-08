@@ -30,6 +30,7 @@
 #include "../ui/dummy.h"
 #include "../ui/toolbar.h"
 #include "../ui/explorer.h"
+#include "../ui/layers.h"
 #include "../ui/property.h"
 #include "../ui/curveEditor.h"
 #include "../app/application.h"
@@ -378,7 +379,11 @@ Application::Init()
   View* leftTopView = _mainWindow->SplitView(
     workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
   View* toolView = leftTopView->GetLeft();
-  View* explorerView = leftTopView->GetRight();
+  View* stageView = leftTopView->GetRight();
+  _mainWindow->SplitView(stageView, 0.25, true);
+  View* layersView = stageView->GetLeft();
+  View* explorerView = stageView->GetRight();
+
 
   View* viewportView = workingView->GetRight();  
   View* graphView = centralView->GetRight();
@@ -398,6 +403,7 @@ Application::Init()
   //ToolbarUI* toolbar = new ToolbarUI(topView, "Toolbar");
   ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
   _explorer = new ExplorerUI(explorerView);
+  _layers = new LayersUI(layersView);
   _property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, editor);
@@ -592,13 +598,19 @@ Application::GetSelectionBoundingBox()
   pxr::UsdGeomBBoxCache bboxCache(
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
-    const SelectionItem& item = _selection[n];
-    if (item.type == SelectionType::OBJECT) {
+    const Selection::Item& item = _selection[n];
+    if (item.type == Selection::Type::OBJECT) {
       pxr::UsdPrim prim = _scene->GetRootStage()->GetPrimAtPath(item.path);
       if (prim.IsActive() && !prim.IsInPrototype())
         bbox = bbox.Combine(bbox, bboxCache.ComputeWorldBound(prim));
     }
-    else if (item.type == SelectionType::COMPONENT) {
+    else if (item.type == Selection::Type::VERTEX) {
+
+    }
+    else if (item.type == Selection::Type::EDGE) {
+
+    }
+    else if (item.type == Selection::Type::FACE) {
 
     }
   }

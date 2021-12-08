@@ -146,7 +146,6 @@ void TimelineUI::DrawButtons()
 
   if (!_playing) icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PLAYBACK_FORWARD];
   else icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_STOP_PLAYBACK];
-
   AddIconButton<IconPressedFunc, TimelineUI*>(
     icon, AMN_ICON_DEFAULT,
     (IconPressedFunc)PlaybackCallback, this);
@@ -155,8 +154,7 @@ void TimelineUI::DrawButtons()
   icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_NEXT_FRAME];
   AddIconButton<IconPressedFunc>(
     icon, AMN_ICON_DEFAULT,
-    (IconPressedFunc)NextFrameCallback, this
-    );
+    (IconPressedFunc)NextFrameCallback, this);
   ImGui::SameLine();
 
 

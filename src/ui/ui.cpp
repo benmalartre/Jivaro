@@ -52,9 +52,9 @@ int BaseUI::GetWindowHeight(){
 //void BaseUI::SetWindowContext(){_parent->GetWindow()->SetContext();};
 
 // ui dimensions
-ImVec2 BaseUI::GetPosition()
+pxr::GfVec2f BaseUI::GetPosition()
 {
-  return ImVec2(
+  return pxr::GfVec2f(
     ImGui::GetWindowPos()[0] - 1, 
     ImGui::GetWindowPos()[1] - 1
   );

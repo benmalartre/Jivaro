@@ -32,7 +32,7 @@ void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels)
 
 static uint16_t GetIconResolution(ICON_SIZE size) 
 {
-  size_t s;
+  uint16_t s;
   switch(size) {
     case(0):s=16;break;
     case(1):s=24;break;

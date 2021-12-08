@@ -30,11 +30,11 @@ add_executable(${TARGET}
   ui/splitter.cpp
   ui/dummy.cpp
   ui/menu.cpp
-  ui/node.cpp
   ui/graph.cpp
   ui/viewport.cpp
   ui/timeline.cpp
   ui/toolbar.cpp
+  ui/layers.cpp
   ui/explorer.cpp
   ui/property.cpp
   ui/curveEditor.cpp

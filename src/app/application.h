@@ -21,6 +21,7 @@ class PropertyUI;
 class ViewportUI;
 class GraphUI;
 class ExplorerUI;
+class LayersUI;
 class CurveEditorUI;
 
 class Application : public pxr::TfWeakBase
@@ -101,6 +102,7 @@ private:
   // uis
   ViewportUI*                       _viewport;
   GraphUI*                          _graph;
+  LayersUI*                         _layers;
   ExplorerUI*                       _explorer;
   TimelineUI*                       _timeline;
   PropertyUI*                       _property;

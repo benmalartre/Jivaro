@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "../geometry/utils.h"
 #include <pxr/base/gf/matrix4f.h>
 
 AMN_NAMESPACE_OPEN_SCOPE

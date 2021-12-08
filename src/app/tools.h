@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../common.h"
-#include "../utils/utils.h"
 #include "../ui/ui.h"
+#include "../ui/utils.h"
 #include "../ui/viewport.h"
 #include "../app/handle.h"
 #include <pxr/usd/usd/prim.h>

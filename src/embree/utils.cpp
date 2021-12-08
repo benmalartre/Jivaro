@@ -1,5 +1,5 @@
-#include "utils.h"
-#include "context.h"
+#include "../embree/utils.h"
+#include "../embree/context.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 

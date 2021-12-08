@@ -136,7 +136,7 @@ void BaseHandle::ResetSelection()
   _xformCache.SetTime(activeTime);
   _targets.clear();
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
-    const SelectionItem& item = selection->GetItem(i);
+    const Selection::Item& item = selection->GetItem(i);
     if(stage->GetPrimAtPath(item.path).IsA<pxr::UsdGeomXformable>()) {
       pxr::GfMatrix4f world(_xformCache.GetLocalToWorldTransform(
         stage->GetPrimAtPath(item.path)));

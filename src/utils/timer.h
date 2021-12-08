@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AMN_UTILS_TIMER_H
+#define AMN_UTILS_TIMER_H
 
 #if defined(__linux)
 	#define HAVE_POSIX_TIMER
@@ -16,7 +17,7 @@
 	#include <windows.h>
 #endif
 
-static uint64_t ns() {
+static uint64_t CurrentTime() {
   static uint64_t is_init = 0;
 #if defined(__APPLE__)
     static mach_timebase_info_data_t info;
@@ -49,6 +50,8 @@ static uint64_t ns() {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     return (uint64_t) ((1e9 * now.QuadPart)  / win_frequency.QuadPart);
+#else
+  return 0;
 #endif
 }
 
@@ -79,3 +82,5 @@ template <class R, class... Args>
 ExecutionTimer<R(Args ...)> TIMER_DECORATOR(R (*f)(Args ...)) {
     return ExecutionTimer<R(Args...)>(std::function<R(Args...)>(f));    
 }
+
+#endif // AMN_UTILS_TIMER_H

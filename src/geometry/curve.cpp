@@ -1,7 +1,7 @@
 // Curve
 //----------------------------------------------
-#include "curve.h"
-#include "utils.h"
+#include "../geometry/curve.h"
+#include "../geometry/utils.h"
 
 
 AMN_NAMESPACE_OPEN_SCOPE

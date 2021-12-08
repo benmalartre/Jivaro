@@ -1,7 +1,7 @@
 // Stroke
 //----------------------------------------------
-#include "stroke.h"
-#include "utils.h"
+#include "../geometry/stroke.h"
+#include "../geometry/utils.h"
 
 AMN_NAMESPACE_OPEN_SCOPE
 void StrokeInput::Clear(){
