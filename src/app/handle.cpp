@@ -101,7 +101,7 @@ void BaseHandle::SetMatrixFromSRT()
 {
   pxr::GfTransform transform;
   transform.SetScale(pxr::GfVec3d(_scale));
-  transform.SetRotation(_rotation);
+  transform.SetRotation(pxr::GfRotation(_rotation));
   transform.SetTranslation(pxr::GfVec3d(_position));
   _matrix = pxr::GfMatrix4f(transform.GetMatrix());
 }
@@ -111,7 +111,8 @@ void BaseHandle::SetSRTFromMatrix()
   pxr::GfTransform transform;
   transform.SetMatrix(pxr::GfMatrix4d(_matrix));
   _scale = pxr::GfVec3f(transform.GetScale());
-  _rotation = transform.GetRotation();
+  pxr::GfQuaternion rot = transform.GetRotation().GetQuaternion();
+  _rotation = pxr::GfQuatf(rot.GetReal(), pxr::GfVec3f(rot.GetImaginary()));
   _position = pxr::GfVec3f(transform.GetTranslation());
 }
 
@@ -123,6 +124,10 @@ void BaseHandle::ComputeViewPlaneMatrix()
   _viewPlaneMatrix[3][1] = _position[1];
   _viewPlaneMatrix[3][2] = _position[2];
   _viewPlaneMatrix[3][3] = 1;
+}
+
+void BaseHandle::ComputePickFrustum()
+{
 }
 
 void BaseHandle::ResetSelection()
@@ -301,9 +306,9 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
     activeTime, purposes, false, false);
-  pxr::GfVec3f accumPosition(0.f);
-  pxr::GfQuatf accumRotation(1.f);
-  pxr::GfVec3f accumScale(1.f);
+  _position = pxr::GfVec3f(0.f);
+  _rotation = pxr::GfQuatf(1.f);
+  _scale = pxr::GfVec3f(1.f);
   pxr::GfRange3d accumulatedRange;
   size_t numPrims = 0;
   for (auto& target: _targets) {
@@ -319,31 +324,31 @@ void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
         bool resetsXformStack = false;
         pxr::GfMatrix4f m(_xformCache.GetLocalToWorldTransform(prim));
 
-        accumPosition += pxr::GfVec3f(
+        _position += pxr::GfVec3f(
           m[3][0],
           m[3][1],
           m[3][2]);
 
-        accumScale += pxr::GfVec3f(
+        _scale += pxr::GfVec3f(
           m[0][0],
           m[1][1],
           m[2][2]);
 
-        accumRotation *= m.ExtractRotationQuat();
+        _rotation *= m.ExtractRotationQuat();
         ++numPrims;
       }
     }
   }
   if(numPrims) {
     float ratio = 1.f / (float)numPrims;
-    accumPosition *= ratio;
-    accumScale *= ratio;
-    accumRotation.Normalize();
+    _position *= ratio;
+    _scale *= ratio;
+    _rotation.Normalize();
 
     _matrix =
-      pxr::GfMatrix4f(1.f).SetScale(accumScale) *
-      pxr::GfMatrix4f(1.f).SetRotate(accumRotation) *
-      pxr::GfMatrix4f(1.f).SetTranslate(accumPosition);
+      pxr::GfMatrix4f(1.f).SetScale(_scale) *
+      pxr::GfMatrix4f(1.f).SetRotate(_rotation) *
+      pxr::GfMatrix4f(1.f).SetTranslate(_position);
 
     _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
    

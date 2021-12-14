@@ -59,10 +59,17 @@ static ImColor NODE_CONTOUR_DEFAULT(0, 0, 0, 100);
 static ImColor NODE_CONTOUR_SELECTED(255, 255, 255, 255);
 static ImColor NODE_CONTOUR_HOVERED(60, 60, 60, 100);
 
-static int GetColorFromAttribute(const pxr::UsdAttribute& attr);
+static int _GetColorFromAttribute(const pxr::UsdAttribute& attr);
 
 class GraphUI : public BaseUI
 {
+public:
+  enum NodeType {
+    HIERARCHY,
+    MATERIAL,
+    OPERATOR
+  };
+
 protected:
   enum ItemState {
     ITEM_STATE_NONE = 0,
@@ -84,9 +91,9 @@ protected:
         const pxr::GfVec2f& size, int color);
       Item(int color);
 
-      void SetPosition(const pxr::GfVec2f& pos);
-      void SetSize(const pxr::GfVec2f& size);
-      void SetColor(const pxr::GfVec3f& color);
+      virtual void SetPosition(const pxr::GfVec2f& pos);
+      virtual void SetSize(const pxr::GfVec2f& size);
+      virtual void SetColor(const pxr::GfVec3f& color);
       void SetColor(int color);
       const pxr::GfVec2f& GetPosition() const { return _pos; };
       const pxr::GfVec2f& GetSize() const { return _size; };
@@ -117,7 +124,7 @@ protected:
   class Port : public Item {
     public:
       Port() {};
-      Port(Node* node, bool io, const std::string& label, 
+      Port(Node* node, bool io, const pxr::TfToken& label, 
         pxr::UsdAttribute& attr);
       //Port(Node* node, const pxr::UsdShadeInput& port);
       //Port(Node* node, const pxr::UsdShadeOutput& port);
@@ -131,7 +138,7 @@ protected:
       bool IsInput() { return _io; };
       bool IsOutput() { return !_io; };
 
-      const std::string& GetName()const {return _label;};
+      const pxr::TfToken& GetName()const {return _label;};
       Node* GetNode() { return _node; };
       void SetNode(Node* node) { _node = node; };
       const pxr::UsdAttribute& GetAttr() const { return _attr;};
@@ -139,7 +146,7 @@ protected:
 
     private:
       Node*                 _node;
-      std::string           _label;
+      pxr::TfToken          _label;
       bool                  _io;
       pxr::UsdAttribute     _attr;
   };
@@ -179,9 +186,53 @@ protected:
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
-      Node(pxr::UsdPrim& prim);
+      Node(pxr::UsdPrim& prim, bool write=false);
       ~Node();
 
+      void AddInput(const pxr::TfToken& name, pxr::SdfValueTypeName type);
+      void AddOutput(const pxr::TfToken& name, pxr::SdfValueTypeName type);
+      size_t GetNumInputs() { return _inputs.size(); };
+      size_t GetNumOutputs() { return _outputs.size(); };
+      std::vector<Port>& GetInputs() {return _inputs;};
+      std::vector<Port>& GetOutputs() {return _outputs;};
+      pxr::UsdPrim GetPrim() { return _prim; };
+      void Init();
+      void Update();
+      void SetPosition(const pxr::GfVec2f& pos) override;
+      void SetSize(const pxr::GfVec2f& size) override;
+      void SetColor(const pxr::GfVec3f& color) override;
+      bool IsVisible(GraphUI* editor) override;
+      void Draw(GraphUI* graph) override;
+
+      void ComputeSize();
+      void Move(const pxr::GfVec2f& offset) { _pos += offset; };
+
+      Port* GetInput(const pxr::TfToken& name);
+      Port* GetOutput(const pxr::TfToken& name);
+
+    private:
+      pxr::TfToken                _name;
+      pxr::UsdPrim                _prim;
+      std::vector<Port>           _inputs;
+      std::vector<Port>           _outputs;
+  };
+
+  // Graph graph class
+  //-------------------------------------------------------------------
+  class Graph : public Node {
+    public: 
+      Graph(pxr::UsdPrim& prim);
+      ~Graph();
+
+      void AddNode(Node* node);
+      void RemoveNode(Node* node);
+
+      const std::vector<Node*>& GetNodes() const { return _nodes; };
+      std::vector<Node*>& GetNodes() { return _nodes; };
+
+      const Node* GetNode(const pxr::UsdPrim& prim) const;
+      Node* GetNode(const pxr::UsdPrim& prim);
+      /*
       void AddInput(const std::string& name, pxr::SdfValueTypeName type);
       void AddOutput(const std::string& name, pxr::SdfValueTypeName type);
       size_t GetNumInputs() { return _inputs.size(); };
@@ -195,12 +246,12 @@ protected:
 
       void ComputeSize();
       void Move(const pxr::GfVec2f& offset) { _pos += offset; };
+      */
 
     private:
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
-      std::vector<Port>           _inputs;
-      std::vector<Port>           _outputs;
+      std::vector<Node*>          _nodes;
   };
 
   // Graph cell class
@@ -261,8 +312,8 @@ public:
   pxr::GfVec2f GridPositionToViewPosition(const pxr::GfVec2f& gridPos);
   
   // nodes
-  void AddNode(Node* node) { _nodes.push_back(node); };
-  Node* GetLastNode() { return _nodes.back(); };
+  void AddNode(Node* node) { _graph->AddNode(node); };
+  Node* GetLastNode() { return _graph->GetNodes().back(); };
 
   // connection
   void StartConnexion();
@@ -275,8 +326,18 @@ public:
   void ClearSelection();
   void MarqueeSelect(int mod);
 
+  // display
+  void ResetScaleOffset();
+  void FrameSelection();
+  void FrameAll();
+
+  // io
+  bool Read(const std::string& filename);
+  bool Write(const std::string& filename);
+
   void BuildGrid();
   void BuildGraph();
+
   
 private:
   void _GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node);
@@ -300,7 +361,7 @@ private:
 
   int                                   _nodeId;
   pxr::UsdStageRefPtr                   _stage;
-  std::vector<Node*>                    _nodes;
+  Graph*                                _graph;
   std::vector<Connexion*>               _connexions;
   std::set<Node*>                       _selected;
   Node*                                 _hoveredNode;

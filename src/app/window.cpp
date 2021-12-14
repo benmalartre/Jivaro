@@ -1,6 +1,7 @@
 #include "../utils/glutils.h"
 #include "../utils/files.h"
 #include "../utils/icons.h"
+#include "../utils/scancode.h"
 #include "../ui/style.h"
 #include "../ui/utils.h"
 #include "../ui/dummy.h"
@@ -16,6 +17,10 @@
 
 
 AMN_NAMESPACE_OPEN_SCOPE
+
+int AMN_KEY_SCANCODES[NUM_PRINTABLE_KEYS];
+bool AMN_KEY_SCANCODES_INITIALIZED = false;
+
 
 ImFontAtlas* AMN_SHARED_ATLAS = NULL;
 ImFont* AMN_BOLD_FONTS[3] = { NULL, NULL, NULL };
@@ -94,6 +99,7 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(mode->width, mode->height, "AMNESIE.0.0",  monitor, NULL);
+  AMN_INITIALIZE_SCAN_CODES;
   _width = mode->width;
   _height = mode->height;
   _shared = true;
@@ -120,6 +126,7 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_SAMPLES, 4);
   
   _window = glfwCreateWindow(_width,_height,"AMNESIE.0.0",NULL,NULL);
+  AMN_INITIALIZE_SCAN_CODES;
 }
 
 // child window constructor
@@ -146,6 +153,7 @@ Window::Window(int x, int y, int width, int height,
 
   _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
   glfwSetWindowPos(_window, x, y);
+  AMN_INITIALIZE_SCAN_CODES;
 }
 
 // initialize
@@ -632,22 +640,6 @@ KeyboardCallback(
       case GLFW_KEY_RIGHT:
       {
         time.NextFrame();
-        break;
-      }
-
-      case GLFW_KEY_S:
-      {
-        app->SetActiveTool(AMN_TOOL_SCALE);
-        break;
-      }
-      case GLFW_KEY_R:
-      {
-        app->SetActiveTool(AMN_TOOL_ROTATE);
-        break;
-      }
-      case GLFW_KEY_T:
-      {
-        app->SetActiveTool(AMN_TOOL_TRANSLATE);
         break;
       }
 

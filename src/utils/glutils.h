@@ -1,7 +1,8 @@
 //------------------------------------------------------------------------------
 // GLUTILS
 //------------------------------------------------------------------------------
-#pragma once
+#ifndef AMN_UTILS_GL_H
+#define AMN_UTILS_GL_H
 
 #include "shaders.h"
 
@@ -92,3 +93,5 @@ CreateOpenGLTexture(int width, int height,
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE
+
+#endif // AMN_UTILS_GL_H

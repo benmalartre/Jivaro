@@ -8,25 +8,6 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-// callback prototype
-typedef void(*PopupItemPressedFunc)(...);
-
-struct PopupUIItem {
-  BaseUI*                     ui;
-  std::string                 label;
-  bool                        toggable;
-  bool                        enabled;
-
-  pxr::VtArray<pxr::VtValue>  args;
-  PopupItemPressedFunc        func;
-
-  PopupUIItem(BaseUI* ui, const std::string& lbl, bool tgl, bool enb, PopupItemPressedFunc f = NULL, 
-    const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
-  ~PopupUIItem(){};
-  bool Draw();
-};
-
-class BaseUI;
 class PopupUI : public BaseUI
 {
 public:
@@ -63,8 +44,6 @@ private:
   int                         _y;
   int                         _width;
   int                         _height;
-  std::vector<PopupUIItem*>   _items;
-  PopupUIItem*                _current;
   static ImGuiWindowFlags     _flags;
 };
 

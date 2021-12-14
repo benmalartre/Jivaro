@@ -1,10 +1,17 @@
+#include <iostream>
+#include <string>
+#include <pxr/pxr.h>
+#include <pxr/base/tf/type.h>
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/ndr/property.h>
+#include <pxr/usd/ndr/node.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
 #include <pxr/usd/usdUI/backdrop.h>
 
 #include "../utils/color.h"
+#include "../utils/scancode.h"
 #include "../ui/ui.h"
 #include "../ui/graph.h"
 #include "../app/view.h"
@@ -12,10 +19,58 @@
 #include "../app/application.h"
 
 
-
 AMN_NAMESPACE_OPEN_SCOPE
 
-int GetColorFromAttribute(const pxr::UsdAttribute& attr)
+extern int AMN_KEY_SCANCODES[];
+
+PXR_NAMESPACE_USING_DIRECTIVE
+
+bool 
+_ConnexionPossible(const pxr::SdfValueTypeName& lhs, const pxr::SdfValueTypeName& rhs)
+{
+  if (lhs.GetDimensions() == rhs.GetDimensions())return true;
+  return false;
+}
+
+pxr::SdfValueTypeName 
+_GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
+{
+  if (vtn == pxr::SdfValueTypeNames->Bool ||
+    vtn == pxr::SdfValueTypeNames->BoolArray) return pxr::SdfValueTypeNames->BoolArray;
+  else if (vtn == pxr::SdfValueTypeNames->Int ||
+    vtn == pxr::SdfValueTypeNames->IntArray) return pxr::SdfValueTypeNames->IntArray;
+  else if (vtn == pxr::SdfValueTypeNames->UChar) return pxr::SdfValueTypeNames->UCharArray;
+  else if (vtn == pxr::SdfValueTypeNames->Float ||
+    vtn == pxr::SdfValueTypeNames->FloatArray ||
+    vtn == pxr::SdfValueTypeNames->Double ||
+    vtn == pxr::SdfValueTypeNames->DoubleArray) return pxr::SdfValueTypeNames->FloatArray;
+  else if (vtn == pxr::SdfValueTypeNames->Float2 ||
+    vtn == pxr::SdfValueTypeNames->Float2Array) return pxr::SdfValueTypeNames->Float2Array;
+  else if (vtn == pxr::SdfValueTypeNames->Float3 ||
+    vtn == pxr::SdfValueTypeNames->Vector3f ||
+    vtn == pxr::SdfValueTypeNames->Float3Array ||
+    vtn == pxr::SdfValueTypeNames->Vector3fArray ||
+    vtn == pxr::SdfValueTypeNames->Point3f ||
+    vtn == pxr::SdfValueTypeNames->Point3fArray ||
+    vtn == pxr::SdfValueTypeNames->Normal3f ||
+    vtn == pxr::SdfValueTypeNames->Normal3fArray ||
+    vtn == pxr::SdfValueTypeNames->Vector3d ||
+    vtn == pxr::SdfValueTypeNames->Double3Array ||
+    vtn == pxr::SdfValueTypeNames->Vector3dArray ||
+    vtn == pxr::SdfValueTypeNames->Point3d ||
+    vtn == pxr::SdfValueTypeNames->Point3dArray ||
+    vtn == pxr::SdfValueTypeNames->Normal3d ||
+    vtn == pxr::SdfValueTypeNames->Normal3dArray) return pxr::SdfValueTypeNames->Float3Array;
+  else if (vtn == pxr::SdfValueTypeNames->Float4 ||
+    vtn == pxr::SdfValueTypeNames->Float4Array) return pxr::SdfValueTypeNames->Float4Array;
+  else if (vtn == pxr::SdfValueTypeNames->Color4f ||
+    vtn == pxr::SdfValueTypeNames->Color4fArray) return pxr::SdfValueTypeNames->Color3fArray;
+  else if (vtn == pxr::SdfValueTypeNames->Asset ||
+    vtn == pxr::SdfValueTypeNames->AssetArray) return pxr::SdfValueTypeNames->AssetArray;
+}
+
+int
+_GetColorFromAttribute(const pxr::UsdAttribute& attr)
 {
   /*
   enum ColorGraph {
@@ -46,13 +101,26 @@ int GetColorFromAttribute(const pxr::UsdAttribute& attr)
     vtn == pxr::SdfValueTypeNames->IntArray) return GRAPH_COLOR_INTEGER;
   else if (vtn == pxr::SdfValueTypeNames->UChar ) return GRAPH_COLOR_ENUM;
   else if (vtn == pxr::SdfValueTypeNames->Float ||
+    vtn == pxr::SdfValueTypeNames->FloatArray ||
+    vtn == pxr::SdfValueTypeNames->Double ||
     vtn == pxr::SdfValueTypeNames->FloatArray) return GRAPH_COLOR_FLOAT;
   else if (vtn == pxr::SdfValueTypeNames->Float2 ||
     vtn == pxr::SdfValueTypeNames->Float2Array) return GRAPH_COLOR_VECTOR2;
   else if (vtn == pxr::SdfValueTypeNames->Float3 ||
     vtn == pxr::SdfValueTypeNames->Vector3f ||
     vtn == pxr::SdfValueTypeNames->Float3Array ||
-    vtn == pxr::SdfValueTypeNames->Vector3fArray ) return GRAPH_COLOR_VECTOR3;
+    vtn == pxr::SdfValueTypeNames->Vector3fArray ||
+    vtn == pxr::SdfValueTypeNames->Point3f ||
+    vtn == pxr::SdfValueTypeNames->Point3fArray ||
+    vtn == pxr::SdfValueTypeNames->Normal3f ||
+    vtn == pxr::SdfValueTypeNames->Normal3fArray ||
+    vtn == pxr::SdfValueTypeNames->Vector3d ||
+    vtn == pxr::SdfValueTypeNames->Double3Array ||
+    vtn == pxr::SdfValueTypeNames->Vector3dArray ||
+    vtn == pxr::SdfValueTypeNames->Point3d ||
+    vtn == pxr::SdfValueTypeNames->Point3dArray ||
+    vtn == pxr::SdfValueTypeNames->Normal3d ||
+    vtn == pxr::SdfValueTypeNames->Normal3dArray) return GRAPH_COLOR_VECTOR3;
   else if (vtn == pxr::SdfValueTypeNames->Float4 ||
     vtn == pxr::SdfValueTypeNames->Float4Array) return GRAPH_COLOR_VECTOR4;
   else if (vtn == pxr::SdfValueTypeNames->Color4f ||
@@ -62,9 +130,10 @@ int GetColorFromAttribute(const pxr::UsdAttribute& attr)
   else return GRAPH_COLOR_UNDEFINED;
 }
 
-static ImColor _GetHoveredColor(int color)
+static ImColor
+_GetHoveredColor(int color)
 {
-  pxr::GfVec4f origin = UnpackColor(color);
+  pxr::GfVec4f origin = UnpackColor4<pxr::GfVec4f>(color);
   return ImColor(
     (origin[0] + 1.f) * 0.5f,
     (origin[1] + 1.f) * 0.5f,
@@ -73,6 +142,8 @@ static ImColor _GetHoveredColor(int color)
   );
 }
 
+// Item base class
+//------------------------------------------------------------------------------
 GraphUI::Item::Item()
   : _pos(0), _size(0), _color(0), _state(0)
 {
@@ -88,28 +159,33 @@ GraphUI::Item::Item(int color)
 {
 }
 
-void GraphUI::Item::SetState(size_t flag, bool value)
+void
+GraphUI::Item::SetState(size_t flag, bool value)
 {
   if (value) _state |= flag;
   else _state &= ~flag;
 }
 
-bool GraphUI::Item::GetState(size_t flag)
+bool 
+GraphUI::Item::GetState(size_t flag)
 {
   return _state & flag;
 }
 
-void GraphUI::Item::SetPosition(const pxr::GfVec2f& pos)
+void 
+GraphUI::Item::SetPosition(const pxr::GfVec2f& pos)
 {
   _pos = pos;
 }
 
-void GraphUI::Item::SetSize(const pxr::GfVec2f& size)
+void
+GraphUI::Item::SetSize(const pxr::GfVec2f& size)
 {
   _size = size;
 }
 
-void GraphUI::Item::SetColor(const pxr::GfVec3f& color)
+void 
+GraphUI::Item::SetColor(const pxr::GfVec3f& color)
 {
   _color = ImColor(
     int(color[0] * 255),
@@ -118,12 +194,14 @@ void GraphUI::Item::SetColor(const pxr::GfVec3f& color)
     255);
 }
 
-void GraphUI::Item::SetColor(int color)
+void 
+GraphUI::Item::SetColor(int color)
 {
   _color = color;
 }
 
-bool GraphUI::Item::Contains(const pxr::GfVec2f& pos, const pxr::GfVec2f& extend)
+bool 
+GraphUI::Item::Contains(const pxr::GfVec2f& pos, const pxr::GfVec2f& extend)
 {
   if (pos[0] >= _pos[0] - extend[0] &&
     pos[0] <= _pos[0] + _size[0] + extend[0] &&
@@ -132,7 +210,8 @@ bool GraphUI::Item::Contains(const pxr::GfVec2f& pos, const pxr::GfVec2f& extend
   return false;
 }
 
-bool GraphUI::Item::Intersect(const pxr::GfVec2f& start, const pxr::GfVec2f& end)
+bool 
+GraphUI::Item::Intersect(const pxr::GfVec2f& start, const pxr::GfVec2f& end)
 {
   pxr::GfRange2f marqueBox(start, end);
   pxr::GfRange2f nodeBox(_pos, _pos + _size);
@@ -140,8 +219,10 @@ bool GraphUI::Item::Intersect(const pxr::GfVec2f& start, const pxr::GfVec2f& end
   else return false;
 }
 
-GraphUI::Port::Port(GraphUI::Node* node, bool io, const std::string& label, pxr::UsdAttribute& attr)
-  : GraphUI::Item(GetColorFromAttribute(attr))
+// Port
+//------------------------------------------------------------------------------
+GraphUI::Port::Port(GraphUI::Node* node, bool io, const TfToken& label, pxr::UsdAttribute& attr)
+  : GraphUI::Item(_GetColorFromAttribute(attr))
   , _attr(attr)
 {
   _node = node;
@@ -172,7 +253,8 @@ GraphUI::Port::Port(GraphUI::Node* node, const pxr::UsdShadeOutput& port)
 }
 */
 
-bool GraphUI::Port::Contains(const pxr::GfVec2f& position,
+bool 
+GraphUI::Port::Contains(const pxr::GfVec2f& position,
   const pxr::GfVec2f& extend)
 {
   if (position[0] + NODE_PORT_RADIUS >= _pos[0] - extend[0] &&
@@ -182,7 +264,8 @@ bool GraphUI::Port::Contains(const pxr::GfVec2f& position,
   return false;
 }
 
-void GraphUI::Port::Draw(GraphUI* editor)
+void
+GraphUI::Port::Draw(GraphUI* editor)
 {
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   ImVec2 portTextOffset;
@@ -197,7 +280,7 @@ void GraphUI::Port::Draw(GraphUI* editor)
     - NODE_PORT_RADIUS * scale, NODE_PORT_RADIUS * scale);
 
   if (_io) {
-    portTextOffset = ImGui::CalcTextSize(_label.c_str());
+    portTextOffset = ImGui::CalcTextSize(_label.GetText());
     portTextOffset.x = -NODE_PORT_RADIUS * 2.f * scale;
     portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f * scale;
 
@@ -215,10 +298,10 @@ void GraphUI::Port::Draw(GraphUI* editor)
     drawList->AddText(
       p + (_pos * scale) - portTextOffset,
       ImColor(0, 0, 0, 255),
-      _label.c_str());
+      _label.GetText());
   }
   else {
-    portTextOffset = ImGui::CalcTextSize(_label.c_str());
+    portTextOffset = ImGui::CalcTextSize(_label.GetText());
     portTextOffset.x += NODE_PORT_RADIUS * 2.f * scale;
     portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f * scale;
     drawList->AddCircleFilled(
@@ -235,13 +318,14 @@ void GraphUI::Port::Draw(GraphUI* editor)
     drawList->AddText(
       p + (_pos * scale) - portTextOffset,
       ImColor(0, 0, 0, 255),
-      _label.c_str());
+      _label.GetText());
   }
 }
 
 // Connexion description
 //------------------------------------------------------------------------------
-GraphUI::ConnexionData GraphUI::Connexion::GetDescription()
+GraphUI::ConnexionData 
+GraphUI::Connexion::GetDescription()
 {
   GraphUI::ConnexionData datas;
   datas.p0 = _start->GetPosition() + _start->GetNode()->GetPosition();
@@ -257,7 +341,8 @@ GraphUI::ConnexionData GraphUI::Connexion::GetDescription()
   return datas;
 }
 
-pxr::GfRange2f GraphUI::Connexion::GetBoundingBox()
+pxr::GfRange2f 
+GraphUI::Connexion::GetBoundingBox()
 {
   pxr::GfVec2f minBox = _start->GetPosition() + _start->GetNode()->GetPosition();
   pxr::GfVec2f maxBox = _end->GetPosition() + _end->GetNode()->GetPosition();
@@ -267,13 +352,15 @@ pxr::GfRange2f GraphUI::Connexion::GetBoundingBox()
   return pxr::GfRange2f(minBox, maxBox);
 }
 
-bool GraphUI::Connexion::Contains(const pxr::GfVec2f& position,
+bool 
+GraphUI::Connexion::Contains(const pxr::GfVec2f& position,
   const pxr::GfVec2f& extend)
 {
   return false;
 }
 
-bool GraphUI::Connexion::Intersect(const pxr::GfVec2f& start,
+bool 
+GraphUI::Connexion::Intersect(const pxr::GfVec2f& start,
   const pxr::GfVec2f& end)
 {
   return false;
@@ -281,7 +368,8 @@ bool GraphUI::Connexion::Intersect(const pxr::GfVec2f& start,
 
 // Connexion draw
 //------------------------------------------------------------------------------
-void GraphUI::Connexion::Draw(GraphUI* graph)
+void 
+GraphUI::Connexion::Draw(GraphUI* graph)
 {
   const GraphUI::ConnexionData datas = GetDescription();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -317,13 +405,43 @@ void GraphUI::Connexion::Draw(GraphUI* graph)
 
 // Node constructor
 //------------------------------------------------------------------------------
-GraphUI::Node::Node(pxr::UsdPrim& prim)
+GraphUI::Node::Node(pxr::UsdPrim& prim, bool write)
  : GraphUI::Item(), _prim(prim)
 {
-  if(_prim.IsValid())
+  if (_prim.IsValid())
   {
     _name = prim.GetName();
 
+    if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
+      pxr::UsdUINodeGraphNodeAPI api(prim);
+      pxr::TfTokenVector attributeNames = api.GetSchemaAttributeNames(true);
+      for (const auto& attributeName : attributeNames) {
+        std::cout << "ATTRIBUTE NAME : " << attributeName << std::endl;
+      }
+    } else {
+      if (pxr::UsdUINodeGraphNodeAPI::CanApply(prim)) {
+        std::cout << "CAN APPLY NODE GRAPH NODE API : " << prim.GetPath().GetString() << std::endl;
+        pxr::UsdUINodeGraphNodeAPI::Apply(prim);
+      }
+      else {
+        pxr::TF_CODING_ERROR("Invalid prim for applying UsdUINodeGepahNodeAPI : %s.", prim.GetPath().GetString());
+        return;
+      }
+    }
+  }
+
+  if (prim.IsA<pxr::UsdGeomMesh>()) {
+    pxr::UsdGeomMesh mesh(prim);
+    for (const auto& attrName : mesh.GetSchemaAttributeNames()) {
+      pxr::UsdAttribute attr = mesh.GetPrim().GetAttribute(attrName);
+      if(write)
+        AddInput(attrName, _GetRuntimeTypeName(attr.GetTypeName()));
+      else
+        AddOutput(attrName, _GetRuntimeTypeName(attr.GetTypeName()));
+    }
+  }
+
+  /*
     if(_prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>())
     {
 
@@ -331,7 +449,6 @@ GraphUI::Node::Node(pxr::UsdPrim& prim)
     
     if (_prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>())
     {
-      /*
       pxr::UsdShadeShader node(_prim);
       _inputs.resize(node.GetInputs().size());
       for(int i=0;i<_inputs.size();++i)
@@ -352,9 +469,8 @@ GraphUI::Node::Node(pxr::UsdPrim& prim)
     {
       //std::cout << "PRIM IS A GRAPH :D" << std::endl;
     }
-    */
-    }
   }
+  */
 }
 
 // NodeUI destructor
@@ -364,7 +480,8 @@ GraphUI::Node::~Node()
 
 }
 
-void GraphUI::Node::Init()
+void 
+GraphUI::Node::Init()
 {
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   pxr::UsdAttribute posAttr = api.GetPosAttr();
@@ -388,24 +505,72 @@ void GraphUI::Node::Init()
 
 }
 
-void GraphUI::Node::AddInput(const std::string& name, pxr::SdfValueTypeName type)
+void 
+GraphUI::Node::AddInput(const pxr::TfToken& name, pxr::SdfValueTypeName type)
 {
-  pxr::UsdAttribute attr = _prim.CreateAttribute(pxr::TfToken(name), type);
-  GraphUI::Port port(this, true, name, attr);
+  pxr::UsdAttribute attribute = _prim.GetAttribute(name);
+  GraphUI::Port port(this, true, name, attribute);
   //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_VERTICAL_SPACING));
   _inputs.push_back(port);
-
+ 
 }
 
-void GraphUI::Node::AddOutput(const std::string& name, pxr::SdfValueTypeName type)
+void 
+GraphUI::Node::AddOutput(const pxr::TfToken& name, pxr::SdfValueTypeName type)
 {
-  pxr::UsdAttribute attr = _prim.CreateAttribute(pxr::TfToken(name), type);
-  GraphUI::Port port(this, false, name, attr);
+  pxr::UsdAttribute attribute = _prim.GetAttribute(name);
+  GraphUI::Port port(this, false, name, attribute);
   //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_VERTICAL_SPACING));
   _outputs.push_back(port);
 }
 
-void GraphUI::Node::ComputeSize()
+GraphUI::Port* 
+GraphUI::Node::GetInput(const pxr::TfToken& name)
+{
+  std::cout << "GET INPUT : " << name << std::endl;
+  for (auto& input : _inputs) {
+    if (input.GetName() == name) return &input;
+  }
+  return NULL;
+}
+
+GraphUI::Port* 
+GraphUI::Node::GetOutput(const pxr::TfToken& name)
+{
+  std::cout << "GET OUPUT : " << name << std::endl;
+  for (auto& output : _outputs) {
+    if (output.GetName() == name) return &output;
+  }
+  return NULL;
+}
+
+
+void 
+GraphUI::Node::SetPosition(const pxr::GfVec2f& pos)
+{
+  _pos = pos;
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  api.GetPosAttr().Set(pxr::VtValue(pos));
+}
+
+void 
+GraphUI::Node::SetSize(const pxr::GfVec2f& size)
+{
+  _size = size;
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  api.GetSizeAttr().Set(pxr::VtValue(size));
+}
+
+void 
+GraphUI::Node::SetColor(const pxr::GfVec3f& color)
+{
+  _color = PackColor3<pxr::GfVec3f>(color);
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  api.GetPosAttr().Set(pxr::VtValue(color));
+}
+
+void 
+GraphUI::Node::ComputeSize()
 {
   float nameWidth = 
     ImGui::CalcTextSize(_name.GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING;
@@ -414,14 +579,14 @@ void GraphUI::Node::ComputeSize()
   float width = 0.f;
   for (auto& input : _inputs) {
     input.SetPosition(pxr::GfVec2f(0.f, height + NODE_PORT_RADIUS));
-    float w = ImGui::CalcTextSize(input.GetName().c_str()).x + 
+    float w = ImGui::CalcTextSize(input.GetName().GetText()).x + 
       NODE_PORT_HORIZONTAL_SPACING;
     if (w > inputWidth)inputWidth = w;
     height += NODE_PORT_VERTICAL_SPACING;
   }
   for (auto& output : _outputs) {
     output.SetPosition(pxr::GfVec2f(width, height + NODE_PORT_RADIUS));
-    float w = ImGui::CalcTextSize(output.GetName().c_str()).x + 
+    float w = ImGui::CalcTextSize(output.GetName().GetText()).x + 
       NODE_PORT_HORIZONTAL_SPACING;
     if (w > outputWidth)outputWidth = w;
     height += NODE_PORT_VERTICAL_SPACING;
@@ -437,10 +602,11 @@ void GraphUI::Node::ComputeSize()
     output.SetPosition(pxr::GfVec2f(width, output.GetPosition()[1]));
   }
 
-  _size = pxr::GfVec2f(width, height);
+  SetSize(pxr::GfVec2f(width, height));
 }
 
-void GraphUI::Node::Update()
+void 
+GraphUI::Node::Update()
 {
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   pxr::UsdAttribute posAttr = api.CreatePosAttr();
@@ -451,14 +617,16 @@ void GraphUI::Node::Update()
 
 }
 
-bool GraphUI::Node::IsVisible(GraphUI* editor)
+bool 
+GraphUI::Node::IsVisible(GraphUI* editor)
 {
   return true;
 }
 
 // Node draw
 //------------------------------------------------------------------------------
-void GraphUI::Node::Draw(GraphUI* editor) 
+void 
+GraphUI::Node::Draw(GraphUI* editor) 
 {
   Window* window = editor->GetWindow();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -522,6 +690,75 @@ void GraphUI::Node::Draw(GraphUI* editor)
   }
 } 
 
+// Node constructor
+//------------------------------------------------------------------------------
+GraphUI::Graph::Graph(pxr::UsdPrim& prim)
+  : GraphUI::Node(prim)
+{
+  if (prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
+    // do nothing
+  }
+  else {
+    if (pxr::UsdUISceneGraphPrimAPI::CanApply(prim)) {
+      std::cout << "CAN APPLY NODE GRAPH NODE API : " << prim.GetPath().GetString() << std::endl;
+      pxr::UsdUISceneGraphPrimAPI::Apply(prim);
+    }
+    else {
+      pxr::TF_CODING_ERROR("Invalid prim for applying UsdUINodeGepahNodeAPI : %s.", prim.GetPath().GetString());
+      return;
+    }
+  }
+}
+
+// Node destructor
+//------------------------------------------------------------------------------
+GraphUI::Graph::~Graph()
+{
+  for (auto& node : _nodes)delete node;
+}
+
+// Add node
+//------------------------------------------------------------------------------
+void 
+GraphUI::Graph::AddNode(GraphUI::Node* node)
+{
+  _nodes.push_back(node);
+}
+
+// Remove node
+//------------------------------------------------------------------------------
+void 
+GraphUI::Graph::RemoveNode(GraphUI::Node* node)
+{
+  
+}
+
+// Get node
+//------------------------------------------------------------------------------
+const 
+GraphUI::Node* GraphUI::Graph::GetNode(const pxr::UsdPrim& prim) const
+{
+  for (const auto& node : _nodes) {
+    if (node->GetPrim().GetPath() == prim.GetPath())return node;
+  }
+  return NULL;
+}
+
+GraphUI::Node* 
+GraphUI::Graph::GetNode(const pxr::UsdPrim& prim)
+{
+  for (const auto& node : _nodes) {
+    if (node->GetPrim().GetPath() == prim.GetPath())return node;
+  }
+  return NULL;
+}
+
+
+//==============================================================================
+// GRAPH UI
+//==============================================================================
+// ImGui window flags
+//------------------------------------------------------------------------------
 ImGuiWindowFlags GraphUI::_flags = 
   ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoMove |
@@ -536,58 +773,210 @@ ImGuiWindowFlags GraphUI::_flags =
 //------------------------------------------------------------------------------
 GraphUI::GraphUI(View* parent, const std::string& filename)
   : BaseUI(parent, "Graph")
-  , _hoveredNode(NULL), _currentNode(NULL)
+  , _graph(NULL), _hoveredNode(NULL), _currentNode(NULL)
   , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
   , _scale(1.f), _fontIndex(0), _fontScale(1.0), _offset(pxr::GfVec2f(0.f, 0.f))
   , _drag(false), _marque(false), _navigate(0), _connect(false)
 {
-  /*
+ 
   //_filename = filename;
   _id = 0;
   
   //GraphTreeUI* tree = new GraphTreeUI();
+  /*
   _stage = pxr::UsdStage::CreateInMemory();
+  pxr::SdfPath meshPath(pxr::TfToken("/mesh"));
+  pxr::UsdGeomMesh mesh = pxr::UsdGeomMesh::Define(_stage, meshPath);
+  pxr::SdfPath deformedPath(pxr::TfToken("/deformed"));
+  pxr::UsdGeomMesh deformed = pxr::UsdGeomMesh::Define(_stage, deformedPath);
+  pxr::SdfPath push1Path(pxr::TfToken("/push1"));
+  pxr::UsdPrim push1 = _stage->DefinePrim(push1Path);
 
-  for (int i = 0; i < 12; ++i) {
-    pxr::UsdPrim prim =
-      _stage->DefinePrim(pxr::SdfPath(pxr::TfToken("/node" + std::to_string(i))));
-    NodeUI* node = new NodeUI(prim);
-    node->SetPosition(pxr::GfVec2f(
-      ((float)rand() / (float)RAND_MAX) * 255,
-      ((float)rand() / (float)RAND_MAX) * 255));
-    node->SetSize(pxr::GfVec2f(120, 32));
+  pxr::SdfPath graphPath(pxr::TfToken("/graph"));
+  pxr::UsdPrim graphPrim = _stage->DefinePrim(graphPath);
 
-    node->AddInput("Input1", pxr::SdfValueTypeNames->Vector3f);
-    node->AddInput("Input2", pxr::SdfValueTypeNames->Float);
-    node->AddInput("Input3", pxr::SdfValueTypeNames->Color4f);
-    node->AddInput("Input4", pxr::SdfValueTypeNames->FloatArray);
-    node->AddOutput("Output1", pxr::SdfValueTypeNames->Vector3f);
-    node->AddOutput("Output2", pxr::SdfValueTypeNames->Float);
-    node->AddOutput("Output3", pxr::SdfValueTypeNames->Color4f);
-    node->AddOutput("Output4", pxr::SdfValueTypeNames->FloatArray);
-    
-    _nodes.push_back(node);
-  }
+  _graph = new Graph(graphPrim);
+
+  Node* getterNode = new Node(mesh.GetPrim());
+  getterNode->SetPosition(pxr::GfVec2f(0.f, 0.f));
+  _graph->AddNode(getterNode);
+
+  Node* setterNode = new Node(deformed.GetPrim(), true);
+  setterNode->SetPosition(pxr::GfVec2f(600.f, 0.f));
+  _graph->AddNode(setterNode);
+  
+
+  push1.CreateAttribute(TfToken("position"), pxr::SdfValueTypeNames->Float3Array, true);
+  push1.CreateAttribute(TfToken("normal"), pxr::SdfValueTypeNames->Float3Array, true);
+  push1.CreateAttribute(TfToken("result"), pxr::SdfValueTypeNames->Float3Array, true);
+  Node* pushNode = new Node(push1.GetPrim());
+  pushNode->SetPosition(pxr::GfVec2f(300.f, 0.f));
+  pushNode->AddInput(TfToken("position"), pxr::SdfValueTypeNames->Float3Array);
+  pushNode->AddInput(TfToken("normal"), pxr::SdfValueTypeNames->Float3Array);
+  pushNode->AddOutput(TfToken("result"), pxr::SdfValueTypeNames->Float3Array);
+
+  _graph->AddNode(pushNode);
   */
+  Read("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
+
 }
 
 // destructor
 //------------------------------------------------------------------------------
 GraphUI::~GraphUI()
 {
-  for (auto& node : _nodes)delete node;
+  if (_graph) delete _graph;
 }
+
+// read
+//------------------------------------------------------------------------------
+bool 
+GraphUI::Read(const std::string& filename)
+{
+  _stage = pxr::UsdStage::Open(filename);
+
+  // first find graph
+  for (auto& prim : _stage->TraverseAll()) {
+    if (prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
+      _graph = new GraphUI::Graph(prim);
+      break;
+    }
+  }
+  if (!_graph) return false;
+
+  // then look for nodes
+  for (auto& prim : _stage->TraverseAll()) {
+    if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
+      pxr::UsdUINodeGraphNodeAPI api(prim);
+      Node* node = new Node(prim);
+
+      pxr::GfVec2f position;
+      api.GetPosAttr().Get<pxr::GfVec2f>(&position);
+      node->SetPosition(position);
+
+      pxr::GfVec2f size;
+      api.GetSizeAttr().Get<pxr::GfVec2f>(&size);
+      node->SetSize(size);
+
+      _graph->AddNode(node);
+    }
+  }
+
+  // finaly build connexions
+  pxr::SdfPathVector targets;
+  for (auto& prim : _stage->TraverseAll()) {
+    if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
+      pxr::UsdRelationshipVector relationships = prim.GetRelationships();
+      for (auto& relationship : relationships) {
+        GraphUI::Node* source = NULL;
+        GraphUI::Node* destination = NULL;
+        GraphUI::Port* start = NULL;
+        GraphUI::Port* end = NULL;
+        std::string relName = relationship.GetName().GetString();
+        std::cout << "REL NAME : " << relName << std::endl;
+        pxr::TfToken name(relName.replace(relName.begin(), relName.begin() + 6, ""));
+        std::cout << "NAME : " << name << std::endl;
+        destination = _graph->GetNode(prim);
+        std::cout << "DESTINATION : " << destination << std::endl;
+        if (destination) {
+          end = destination->GetInput(name);
+        }
+
+        if (relationship.GetTargets(&targets)) {
+          for (auto& target : targets) {
+            pxr::UsdAttribute attr = _stage->GetAttributeAtPath(target);
+            if(attr.IsValid()) {
+              source = _graph->GetNode(attr.GetPrim());
+              std::cout << "SOURCE : " << source << std::endl;
+              if (source) {
+                start = source->GetOutput(attr.GetName());
+              }
+            }
+          }
+        }
+
+        std::cout << "START : " << start << std::endl;
+        std::cout << "END : " << end << std::endl;
+        if (start && end) {
+          Connexion* connexion = new Connexion(start, end, 0);
+          _connexions.push_back(connexion);
+        }
+       
+      }
+     /*
+      Connexion* connexion = new Connexion(_connector.startPort, 
+      _connector.endPort, _connector.color);
+
+    pxr::UsdPrim src = _connector.startPort->GetNode()->GetPrim();
+    pxr::UsdPrim dst = _connector.endPort->GetNode()->GetPrim();
+
+
+    std::string srcName = "input:";
+    srcName += _connector.endPort->GetName().GetString();
+    pxr::UsdRelationship relation = dst.CreateRelationship(TfToken(srcName));
+    relation.AddTarget(src.GetPath().AppendProperty(_connector.startPort->GetName()));
+
+    dst.GetRelationships().push_back(std::move(relation));
+    _connexions.push_back(connexion);
+     */
+    }
+  }
+
+  pxr::SdfPath meshPath(pxr::TfToken("/mesh"));
+  pxr::UsdGeomMesh mesh = pxr::UsdGeomMesh::Define(_stage, meshPath);
+  pxr::SdfPath deformedPath(pxr::TfToken("/deformed"));
+  pxr::UsdGeomMesh deformed = pxr::UsdGeomMesh::Define(_stage, deformedPath);
+  pxr::SdfPath push1Path(pxr::TfToken("/push1"));
+  pxr::UsdPrim push1 = _stage->DefinePrim(push1Path);
+
+  pxr::SdfPath graphPath(pxr::TfToken("/graph"));
+  pxr::UsdPrim graphPrim = _stage->DefinePrim(graphPath);
+
+  _graph = new Graph(graphPrim);
+
+  Node* getterNode = new Node(mesh.GetPrim());
+  getterNode->SetPosition(pxr::GfVec2f(0.f, 0.f));
+  _graph->AddNode(getterNode);
+
+  Node* setterNode = new Node(deformed.GetPrim(), true);
+  setterNode->SetPosition(pxr::GfVec2f(600.f, 0.f));
+  _graph->AddNode(setterNode);
+
+
+  push1.CreateAttribute(TfToken("position"), pxr::SdfValueTypeNames->Float3Array, true);
+  push1.CreateAttribute(TfToken("normal"), pxr::SdfValueTypeNames->Float3Array, true);
+  push1.CreateAttribute(TfToken("result"), pxr::SdfValueTypeNames->Float3Array, true);
+  Node* pushNode = new Node(push1.GetPrim());
+  pushNode->SetPosition(pxr::GfVec2f(300.f, 0.f));
+  pushNode->AddInput(TfToken("position"), pxr::SdfValueTypeNames->Float3Array);
+  pushNode->AddInput(TfToken("normal"), pxr::SdfValueTypeNames->Float3Array);
+  pushNode->AddOutput(TfToken("result"), pxr::SdfValueTypeNames->Float3Array);
+
+  _graph->AddNode(pushNode);
+  return true;
+}
+
+// save
+//------------------------------------------------------------------------------
+bool 
+GraphUI::Write(const std::string& filename)
+{
+  return true;
+}
+
 
 // term
 //------------------------------------------------------------------------------
-void GraphUI::Term()
+void 
+GraphUI::Term()
 {
     //ImNodes::EditorContextFree(_context);
 }
 
 // fonts
 //------------------------------------------------------------------------------
-void GraphUI::UpdateFont()
+void 
+GraphUI::UpdateFont()
 {
   if (_scale < 1.0) {
     _fontIndex = 0;
@@ -605,7 +994,8 @@ void GraphUI::UpdateFont()
 
 // draw grid
 //------------------------------------------------------------------------------
-void GraphUI::DrawGrid()
+void 
+GraphUI::DrawGrid()
 {
   const float width = GetWidth();
   const float height = GetHeight();
@@ -644,7 +1034,8 @@ void GraphUI::DrawGrid()
 
 // draw
 //------------------------------------------------------------------------------
-bool GraphUI::Draw()
+bool 
+GraphUI::Draw()
 {
   ImGui::SetNextWindowPos(_parent->GetMin());
   ImGui::SetNextWindowSize(_parent->GetSize());
@@ -662,7 +1053,7 @@ bool GraphUI::Draw()
     connexion->Draw(this);
   }
 
-  for (auto& node : _nodes) {
+  for (auto& node : _graph->GetNodes()) {
     node->Draw(this);
   }
 
@@ -704,6 +1095,10 @@ bool GraphUI::Draw()
   ImGui::SetCursorPos(ImVec2(64, 64));
   static bool value;
   ImGui::Checkbox("FUCK", &value);
+  if (ImGui::Button("SAVE")) {
+    std::cout << "SAVE FUCKIN GRAPH..." << std::endl;
+    _stage->Export("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
+  }
   
   ImGui::PopFont();
   ImGui::End();
@@ -718,7 +1113,8 @@ bool GraphUI::Draw()
 
 // init
 //------------------------------------------------------------------------------
-void GraphUI::Init(const std::string& filename)
+void 
+GraphUI::Init(const std::string& filename)
 {
   _parent->SetDirty();
   
@@ -743,7 +1139,8 @@ void GraphUI::Init(const std::string& filename)
 
 // init
 //------------------------------------------------------------------------------
-void GraphUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
+void 
+GraphUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
 {
   _parent->SetDirty();
   /*
@@ -760,17 +1157,17 @@ void GraphUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
   
 };
 
-void GraphUI::BuildGrid() 
+void 
+GraphUI::BuildGrid() 
 {
-  for (auto& node : _nodes) {
-    pxr::GfVec2f pos = node->GetPosition();
-  }
+
 }
 
 
 // build graph
 //------------------------------------------------------------------------------ 
-void GraphUI::_RecurseStagePrim(const pxr::UsdPrim& prim)
+void 
+GraphUI::_RecurseStagePrim(const pxr::UsdPrim& prim)
 {
   for(auto child : prim.GetChildren())
   {
@@ -780,18 +1177,21 @@ void GraphUI::_RecurseStagePrim(const pxr::UsdPrim& prim)
   }
 }
 
-void GraphUI::BuildGraph()
+void 
+GraphUI::BuildGraph()
 {
    _RecurseStagePrim(_stage->GetPseudoRoot());
 }
 
-void GraphUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend)
+void 
+GraphUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend)
 {
   pxr::GfVec2f viewPos;
   GetRelativeMousePosition(mousePos[0], mousePos[1], viewPos[0], viewPos[1]);
 
   Node* hovered = NULL;
-  for (auto node = _nodes.rbegin(); node != _nodes.rend(); ++node) {
+  std::vector<GraphUI::Node*> nodes = _graph->GetNodes();
+  for (auto node = nodes.rbegin(); node != nodes.rend(); ++node) {
     if ((*node)->Contains(ViewPositionToGridPosition(viewPos),
       useExtend ? pxr::GfVec2f(NODE_PORT_RADIUS * _scale) : pxr::GfVec2f(0.f))) {
       hovered = *node;
@@ -818,7 +1218,8 @@ void GraphUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend)
   if (_hoveredConnexion)_parent->SetDirty();
 }
 
-void GraphUI::_GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node)
+void 
+GraphUI::_GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node)
 {
   const pxr::GfVec2f relativePosition =
     ViewPositionToGridPosition(mousePos) - node->GetPosition();
@@ -849,7 +1250,8 @@ void GraphUI::_GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node)
   else _hoveredPort = NULL;
 }
 
-void GraphUI::_GetConnexionUnderMouse(const pxr::GfVec2f& mousePos)
+void 
+GraphUI::_GetConnexionUnderMouse(const pxr::GfVec2f& mousePos)
 {
   if (_hoveredConnexion) {
     _hoveredConnexion->SetState(ITEM_STATE_HOVERED, false);
@@ -890,7 +1292,8 @@ void GraphUI::_GetConnexionUnderMouse(const pxr::GfVec2f& mousePos)
   */
 }
 
-void GraphUI::MouseButton(int button, int action, int mods)
+void 
+GraphUI::MouseButton(int button, int action, int mods)
 {
   const pxr::GfVec2f& mousePos = ImGui::GetMousePos();
   _lastX = mousePos[0];
@@ -940,6 +1343,9 @@ void GraphUI::MouseButton(int button, int action, int mods)
     }
     else if (action == GLFW_RELEASE) {
       _navigate = NavigateMode::IDLE;
+      for (auto& node : _selected) {
+        node->SetPosition(node->GetPosition());
+      }
       _drag = false;
       if (_connect) EndConnexion();
       else if (_marque)MarqueeSelect(mods);
@@ -967,14 +1373,34 @@ void GraphUI::MouseButton(int button, int action, int mods)
   _parent->SetDirty();
 }
 
-void GraphUI::Keyboard(int key, int scancode, int action, int mods)
+void 
+GraphUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  if (key == GLFW_KEY_DELETE) {
-    std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
+  std::cout << "SCAN CODE : " << scancode << std::endl;
+  std::cout << "AMN_KEY_A : " << AMN_KEY_A << std::endl;
+  std::cout << "AMN_KEY_B : " << AMN_KEY_B << std::endl;
+  std::cout << "AMN_KEY_C : " << AMN_KEY_C << std::endl;
+  if (action == GLFW_PRESS) {
+    if (key == GLFW_KEY_DELETE) {
+      std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
+    }
+    else if (key == GLFW_KEY_R) {
+      std::cout << "GRAPH UI : RESET SCALE OFFSET !!! " << std::endl;
+      ResetScaleOffset();
+    }
+    else if (key == GLFW_KEY_F) {
+      std::cout << "GRAPH UI : FRAME SELECTED NODES !!! " << std::endl;
+      FrameSelection();
+    }
+    else if (key == GLFW_KEY_A) {
+      std::cout << "GRAPH UI : FRAME ALL NODES !!! " << std::endl;
+      FrameAll();
+    }
   }
 }
 
-void GraphUI::MouseMove(int x, int y)
+void 
+GraphUI::MouseMove(int x, int y)
 {
   if (_navigate ) {
     switch (_navigate) {
@@ -1008,7 +1434,8 @@ void GraphUI::MouseMove(int x, int y)
   _lastY = y;
 }
 
-void GraphUI::MouseWheel(int x, int y)
+void 
+GraphUI::MouseWheel(int x, int y)
 {
   pxr::GfVec2f mousePos = (ImGui::GetMousePos() - _parent->GetMin());
   pxr::GfVec2f originalPos = mousePos / _scale ;
@@ -1022,54 +1449,71 @@ void GraphUI::MouseWheel(int x, int y)
   _parent->SetDirty();
 }
 
-pxr::GfVec2f GraphUI::ViewPositionToGridPosition(const pxr::GfVec2f& mousePos)
+pxr::GfVec2f 
+GraphUI::ViewPositionToGridPosition(const pxr::GfVec2f& mousePos)
 {
   return mousePos / _scale - _offset;
 }
 
-pxr::GfVec2f GraphUI::GridPositionToViewPosition(const pxr::GfVec2f& gridPos)
+pxr::GfVec2f
+GraphUI::GridPositionToViewPosition(const pxr::GfVec2f& gridPos)
 {
   return (gridPos + _offset) * _scale + _parent->GetMin();
 }
 
-void GraphUI::StartConnexion()
+void 
+GraphUI::StartConnexion()
 {
   _connector.startPort = _hoveredPort;
   _connector.color = _connector.startPort->GetColor();
   _connector.endPort = NULL;
 }
 
-void GraphUI::UpdateConnexion()
+void 
+GraphUI::UpdateConnexion()
 {
   if(_hoveredPort) {
     if(_connector.startPort) {
       if(_hoveredPort == _connector.startPort)return;
       if (_hoveredPort->IsOutput())return;
-      if(_hoveredPort->GetAttr().GetTypeName() == 
-        _connector.startPort->GetAttr().GetTypeName())
+      if(_ConnexionPossible(_hoveredPort->GetAttr().GetTypeName(),
+        _connector.startPort->GetAttr().GetTypeName()))
         _connector.endPort = _hoveredPort;
     } else if(_connector.endPort) {
       if(_hoveredPort == _connector.endPort)return;
       if (_hoveredPort->IsInput())return;
-      if(_hoveredPort->GetAttr().GetTypeName() == 
-        _connector.endPort->GetAttr().GetTypeName())
+      if(_ConnexionPossible(_hoveredPort->GetAttr().GetTypeName(),
+        _connector.endPort->GetAttr().GetTypeName()))
       _connector.endPort = _hoveredPort;
     }
   }
 }
 
-void GraphUI::EndConnexion()
+void 
+GraphUI::EndConnexion()
 {
   if (_connector.startPort && _connector.endPort) {
     Connexion* connexion = new Connexion(_connector.startPort, 
       _connector.endPort, _connector.color);
+
+    pxr::UsdPrim src = _connector.startPort->GetNode()->GetPrim();
+    pxr::UsdPrim dst = _connector.endPort->GetNode()->GetPrim();
+
+
+    std::string srcName = "input:";
+    srcName += _connector.endPort->GetName().GetString();
+    pxr::UsdRelationship relation = dst.CreateRelationship(TfToken(srcName));
+    relation.AddTarget(src.GetPath().AppendProperty(_connector.startPort->GetName()));
+
+    dst.GetRelationships().push_back(std::move(relation));
     _connexions.push_back(connexion);
   }
   _connect = false;
   _connector.startPort = _connector.endPort = NULL;
 }
 
-void GraphUI::ClearSelection()
+void 
+GraphUI::ClearSelection()
 {
   if(_selected.size())
     for (auto& node : _selected)
@@ -1077,27 +1521,31 @@ void GraphUI::ClearSelection()
   _selected.clear();
 }
 
-void GraphUI::AddToSelection(Node* node, bool bringToFront) 
+void 
+GraphUI::AddToSelection(Node* node, bool bringToFront) 
 {
   node->SetState(ITEM_STATE_SELECTED, true);
   _selected.insert(node);
   
+  std::vector<GraphUI::Node*> nodes = _graph->GetNodes();
   if (bringToFront) {
-    for (size_t i = 0; i < _nodes.size(); ++i) {
-      if (_nodes[i] == node && _nodes.back() != node) {
-        std::swap(_nodes[i], _nodes.back());
+    for (size_t i = 0; i < nodes.size(); ++i) {
+      if (nodes[i] == node && nodes.back() != node) {
+        std::swap(nodes[i], nodes.back());
       }
     }
   }
 }
 
-void GraphUI::RemoveFromSelection(Node* node)
+void 
+GraphUI::RemoveFromSelection(Node* node)
 {
   node->SetState(ITEM_STATE_SELECTED, false);
   _selected.erase(node);
 }
 
-void GraphUI::MarqueeSelect(int mod)
+void 
+GraphUI::MarqueeSelect(int mod)
 {
   pxr::GfVec2f start = ViewPositionToGridPosition(_marquee.start);
   pxr::GfVec2f end = ViewPositionToGridPosition(_marquee.end);
@@ -1106,9 +1554,74 @@ void GraphUI::MarqueeSelect(int mod)
   if(start[1] > end[1])std::swap(start[1], end[1]);
 
   ClearSelection();
-  for (auto& node : _nodes) {
+  for (auto& node : _graph->GetNodes()) {
     if (node->Intersect(start, end)) AddToSelection(node, false);
   }
+}
+
+void 
+GraphUI::ResetScaleOffset() {
+  _scale = 1.f;
+  _invScale = 1.f;
+  _offset = pxr::GfVec2f(0.f);
+  UpdateFont();
+  _parent->SetDirty();
+}
+
+void 
+GraphUI::FrameSelection()
+{
+  if (!_selected.size())return;
+
+  pxr::GfRange2f selectedRange;
+  for (const auto& node : _selected) {
+    selectedRange.ExtendBy(
+      pxr::GfRange2f(
+        node->GetPosition(),
+        node->GetPosition() + node->GetSize()
+      )
+    );
+  }
+  pxr::GfVec2f size = selectedRange.GetSize();
+  pxr::GfVec2f(pxr::GfMax(size[0], size[1]));
+  
+  if (GetWidth() > GetHeight()) {
+    _scale = GetHeight() / selectedRange.GetSize()[1];
+    _scale = CLAMP(_scale, 0.1, 4.0);
+  }
+  else {
+    _offset = -selectedRange.GetCorner(0);
+    _scale = GetWidth() / selectedRange.GetSize()[0];
+  }
+  _invScale = 1.f / _scale;
+  _offset = -selectedRange.GetCorner(0) + pxr::GfVec2f(_invScale * GetWidth() * 0.25, 0.f);
+  UpdateFont();
+  _parent->SetDirty();
+  
+
+}
+
+void 
+GraphUI::FrameAll()
+{
+  pxr::GfRange2f allRange;
+  for (const auto& node : _graph->GetNodes()) {
+    allRange.ExtendBy(
+      pxr::GfRange2f(
+        node->GetPosition(),
+        node->GetPosition() + node->GetSize()
+      )
+    );
+  }
+  std::cout << "ALL RANGE : " << allRange << std::endl;
+
+  _offset = -allRange.GetCorner(0);
+  _scale = GetWidth() / allRange.GetSize()[0];
+  _scale = CLAMP(_scale, 0.1, 4.0);
+  _invScale = 1.f / _scale;
+  UpdateFont();
+  _parent->SetDirty();
+
 }
 
 AMN_NAMESPACE_CLOSE_SCOPE

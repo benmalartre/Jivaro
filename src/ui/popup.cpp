@@ -10,39 +10,6 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-PopupUIItem::PopupUIItem(BaseUI* ui, const std::string& lbl, bool tgl, bool enb, 
-  PopupItemPressedFunc func, const pxr::VtArray<pxr::VtValue> args)
-  : ui(ui)
-  , label(lbl)
-  , toggable(tgl)
-  , enabled(enb)
-  , func(func)
-  , args(args)
-{
-}
-
-bool PopupUIItem::Draw()
-{
-  Window* window = ui->GetView()->GetWindow();
-  ImGui::PushFont(window->GetRegularFont(0));
- 
-  ImGui::PopFont(); 
-  return false;
-}
-
-static void _FillBackground()
-{
-  ImVec2 vMin = ImGui::GetWindowContentRegionMin();
-  ImVec2 vMax = ImGui::GetWindowContentRegionMax();
-
-  vMin.x += ImGui::GetWindowPos().x;
-  vMin.y += ImGui::GetWindowPos().y;
-  vMax.x += ImGui::GetWindowPos().x;
-  vMax.y += ImGui::GetWindowPos().y;
-
-  ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
-}
-
 ImGuiWindowFlags PopupUI::_flags = 
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_NoTitleBar |

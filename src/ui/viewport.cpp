@@ -235,12 +235,31 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
 {
   if (action == GLFW_PRESS) {
     switch (key) {
-    case GLFW_KEY_A:
-      _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
-      break;
-    case GLFW_KEY_F:
-      _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
-      break;
+      case GLFW_KEY_A:
+      {
+        _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
+        break;
+      }
+      case GLFW_KEY_F:
+      {
+        _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
+        break;
+      }
+      case GLFW_KEY_S:
+      {
+        AMN_APPLICATION->SetActiveTool(AMN_TOOL_SCALE);
+        break;
+      }
+      case GLFW_KEY_R:
+      {
+        AMN_APPLICATION->SetActiveTool(AMN_TOOL_ROTATE);
+        break;
+      }
+      case GLFW_KEY_T:
+      {
+        AMN_APPLICATION->SetActiveTool(AMN_TOOL_TRANSLATE);
+        break;
+      }
     }
   }
 }

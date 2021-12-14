@@ -112,7 +112,7 @@ public:
     , _compensate(compensate)
     , _mode(MODE_LOCAL | MODE_COG)
     , _position(pxr::GfVec3d(0.f))
-    , _rotation(pxr::GfRotation())
+    , _rotation(pxr::GfQuatf(1.f))
     , _scale(pxr::GfVec3d(1.f))
     , _matrix(pxr::GfMatrix4f(1.f))
     , _startMatrix(pxr::GfMatrix4f(1.f))
@@ -185,7 +185,7 @@ protected:
   pxr::GfVec3f            _position;
   pxr::GfVec3f            _offset;
   pxr::GfVec3f            _normal;
-  pxr::GfRotation         _rotation;
+  pxr::GfQuatf            _rotation;
   pxr::GfPlane            _plane;
   pxr::GfMatrix4f         _matrix;
   pxr::GfMatrix4f         _displayMatrix;
