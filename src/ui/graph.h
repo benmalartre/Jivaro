@@ -186,7 +186,7 @@ protected:
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
-      Node(pxr::UsdPrim& prim, bool write=false);
+      Node(pxr::UsdPrim prim, bool write=false);
       ~Node();
 
       void AddInput(const pxr::TfToken& name, pxr::SdfValueTypeName type);

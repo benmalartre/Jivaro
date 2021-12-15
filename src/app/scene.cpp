@@ -63,7 +63,7 @@ pxr::UsdStageRefPtr& Scene::AddStageFromDisk(const std::string& filename)
   _rootStage->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
 }
 
-Mesh* Scene::AddMesh(pxr::SdfPath& path, pxr::GfMatrix4d& xfo)
+Mesh* Scene::AddMesh(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
   if (!_currentStage->GetPrimAtPath(path).IsDefined()) {
     pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(_currentStage, path);
@@ -85,7 +85,7 @@ Mesh* Scene::AddMesh(pxr::SdfPath& path, pxr::GfMatrix4d& xfo)
   return &_meshes[path];
 }
 
-  Curve* Scene::AddCurve(pxr::SdfPath & path, pxr::GfMatrix4d & xfo)
+  Curve* Scene::AddCurve(pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
   {
     if (!_currentStage->GetPrimAtPath(path).IsDefined()) {
       pxr::UsdGeomBasisCurves usdCurve = pxr::UsdGeomBasisCurves::Define(_currentStage, path);
@@ -98,7 +98,7 @@ Mesh* Scene::AddMesh(pxr::SdfPath& path, pxr::GfMatrix4d& xfo)
     return &_curves[path];
   }
 
-  Points* Scene::AddPoints(pxr::SdfPath& path, pxr::GfMatrix4d& xfo)
+  Points* Scene::AddPoints(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
   {
     if (!_currentStage->GetPrimAtPath(path).IsDefined()) {
       pxr::UsdGeomPoints usdPoints = pxr::UsdGeomPoints::Define(_currentStage, path);

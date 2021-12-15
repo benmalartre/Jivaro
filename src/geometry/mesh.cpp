@@ -498,12 +498,15 @@ void Mesh::Init()
   ComputeNeighbors();
 }
 
-void Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
+void 
+Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
   _points = positions;
 }
 
-const HalfEdge* _GetNextCutEdge(const HalfEdge* edge, const std::vector<bool>& doCutEdge, int& cnt)
+const HalfEdge* 
+_GetNextCutEdge(const HalfEdge* edge, 
+  const std::vector<bool>& doCutEdge, int& cnt)
 {
   HalfEdge* current = (HalfEdge*)edge;
   while (current->next->twin) {
@@ -521,7 +524,8 @@ const HalfEdge* _GetNextCutEdge(const HalfEdge* edge, const std::vector<bool>& d
   return edge;
 }
 
-static int _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
+static int 
+_CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
   HalfEdge* current = start;
   int count = 0;
   bool search = true;
@@ -555,14 +559,14 @@ static int _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) 
 
 void Mesh::DisconnectEdges(const pxr::VtArray<int>& cutEdges)
 {
- 
+  size_t numHalfEdges = _halfEdges.size();
   std::vector<std::vector<int>> insertedPoints(_points.size());
-  std::vector<bool> doCutEdge(_halfEdges.size());
+  std::vector<bool> doCutEdge(numHalfEdges);
 
   pxr::VtArray<pxr::GfVec3f> points = _points;
   size_t baseNewPoints = points.size();
   pxr::VtArray<int> indices = _faceVertexIndices;
-  for(auto& value: doCutEdge) value = false;
+  for(size_t i = 0; i < numHalfEdges; ++i) doCutEdge[i] = false;
   for(const auto& cutEdge: cutEdges) doCutEdge[cutEdge] = true;
   /*
   for(size_t faceVertex = 0; faceVertex < _faceVertexIndices.size(); ++faceVertex) {

@@ -64,11 +64,11 @@ public:
     ExecutionTimer(std::function<R(Args...)> func): f_(func) { } 
 
     R operator ()(Args ... args) {
-        uint64_t startT = ns();
+        uint64_t startT = CurrentTime();
 
         R result = f_(args...); 
 
-        std::cout << "Timer took " << (ns() - startT) * 1e-9 
+        std::cout << "Timer took " << (CurrentTime() - startT) * 1e-9 
             << " seconds..." << std::endl;
 
         return result;   

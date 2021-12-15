@@ -405,7 +405,7 @@ GraphUI::Connexion::Draw(GraphUI* graph)
 
 // Node constructor
 //------------------------------------------------------------------------------
-GraphUI::Node::Node(pxr::UsdPrim& prim, bool write)
+GraphUI::Node::Node(pxr::UsdPrim prim, bool write)
  : GraphUI::Item(), _prim(prim)
 {
   if (_prim.IsValid())
@@ -424,7 +424,9 @@ GraphUI::Node::Node(pxr::UsdPrim& prim, bool write)
         pxr::UsdUINodeGraphNodeAPI::Apply(prim);
       }
       else {
-        pxr::TF_CODING_ERROR("Invalid prim for applying UsdUINodeGepahNodeAPI : %s.", prim.GetPath().GetString());
+        pxr::TF_CODING_ERROR(
+          "Invalid prim for applying UsdUINodeGepahNodeAPI : %s.", 
+          prim.GetPath().GetText());
         return;
       }
     }
@@ -693,7 +695,7 @@ GraphUI::Node::Draw(GraphUI* editor)
 // Node constructor
 //------------------------------------------------------------------------------
 GraphUI::Graph::Graph(pxr::UsdPrim& prim)
-  : GraphUI::Node(prim)
+  : GraphUI::Node(prim, false)
 {
   if (prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
     // do nothing
@@ -704,7 +706,9 @@ GraphUI::Graph::Graph(pxr::UsdPrim& prim)
       pxr::UsdUISceneGraphPrimAPI::Apply(prim);
     }
     else {
-      pxr::TF_CODING_ERROR("Invalid prim for applying UsdUINodeGepahNodeAPI : %s.", prim.GetPath().GetString());
+      pxr::TF_CODING_ERROR(
+        "Invalid prim for applying UsdUINodeGepahNodeAPI : %s.", 
+        prim.GetPath().GetText());
       return;
     }
   }
@@ -781,9 +785,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
  
   //_filename = filename;
   _id = 0;
-  
-  //GraphTreeUI* tree = new GraphTreeUI();
-  /*
+    
   _stage = pxr::UsdStage::CreateInMemory();
   pxr::SdfPath meshPath(pxr::TfToken("/mesh"));
   pxr::UsdGeomMesh mesh = pxr::UsdGeomMesh::Define(_stage, meshPath);
@@ -816,8 +818,8 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
   pushNode->AddOutput(TfToken("result"), pxr::SdfValueTypeNames->Float3Array);
 
   _graph->AddNode(pushNode);
-  */
-  Read("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
+  
+  //Read("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
 
 }
 
@@ -836,7 +838,7 @@ GraphUI::Read(const std::string& filename)
   _stage = pxr::UsdStage::Open(filename);
 
   // first find graph
-  for (auto& prim : _stage->TraverseAll()) {
+  for (pxr::UsdPrim prim : _stage->TraverseAll()) {
     if (prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
       _graph = new GraphUI::Graph(prim);
       break;
@@ -845,7 +847,7 @@ GraphUI::Read(const std::string& filename)
   if (!_graph) return false;
 
   // then look for nodes
-  for (auto& prim : _stage->TraverseAll()) {
+  for (pxr::UsdPrim prim : _stage->TraverseAll()) {
     if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
       pxr::UsdUINodeGraphNodeAPI api(prim);
       Node* node = new Node(prim);
@@ -864,10 +866,10 @@ GraphUI::Read(const std::string& filename)
 
   // finaly build connexions
   pxr::SdfPathVector targets;
-  for (auto& prim : _stage->TraverseAll()) {
+  for (pxr::UsdPrim prim : _stage->TraverseAll()) {
     if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
       pxr::UsdRelationshipVector relationships = prim.GetRelationships();
-      for (auto& relationship : relationships) {
+      for (const pxr::UsdRelationship& relationship : relationships) {
         GraphUI::Node* source = NULL;
         GraphUI::Node* destination = NULL;
         GraphUI::Port* start = NULL;

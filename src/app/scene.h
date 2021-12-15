@@ -12,13 +12,15 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
-typedef pxr::TfHashMap< pxr::SdfPath, pxr::UsdStageRefPtr, pxr::SdfPath::Hash > _StageCacheMap;
+typedef pxr::TfHashMap< pxr::SdfPath, pxr::UsdStageRefPtr, pxr::SdfPath::Hash > 
+  _StageCacheMap;
 
 
 class Item {
 public:
   Item() { _prim = pxr::UsdPrim(); _geometry = NULL; };
-  Item(pxr::UsdPrim& inPrim, Geometry* inGeom) { _prim = inPrim; _geometry = inGeom; };
+  Item(pxr::UsdPrim& inPrim, Geometry* inGeom) { 
+    _prim = inPrim; _geometry = inGeom; };
 private:
   pxr::UsdPrim _prim;
   Geometry* _geometry;
@@ -44,9 +46,12 @@ public:
 
   void TestVoronoi();
 
-  Mesh* AddMesh(pxr::SdfPath& path, pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
-  Curve* AddCurve(pxr::SdfPath& path, pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
-  Points* AddPoints(pxr::SdfPath& path, pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  Mesh* AddMesh(pxr::SdfPath& path, 
+    const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  Curve* AddCurve(pxr::SdfPath& path, 
+    const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  Points* AddPoints(pxr::SdfPath& path, 
+    const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
 
 private:
   pxr::UsdStageRefPtr _currentStage;

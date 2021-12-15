@@ -64,9 +64,10 @@ void ViewportUI::Init()
   _rendererNames = new const char* [_numRenderers];
   for (short rendererIndex = 0; rendererIndex < _numRenderers; ++rendererIndex) {
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
+    std::cout << rendererTokens[rendererIndex].GetText() << std::endl;
   }
-  _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
-  
+  //_engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
+  _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
   light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));
