@@ -11,8 +11,8 @@
 #include "../app/tools.h"
 #include <pxr/imaging/glf/contextCaps.h>
 #include <pxr/base/arch/systemInfo.h>
-#include "window.h"
-#include "view.h"
+#include "../app/window.h"
+#include "../app/view.h"
 #include "../geometry/shape.h"
 
 
@@ -20,6 +20,7 @@ AMN_NAMESPACE_OPEN_SCOPE
 
 int AMN_KEY_SCANCODES[NUM_PRINTABLE_KEYS];
 bool AMN_KEY_SCANCODES_INITIALIZED = false;
+bool AMN_LEGACY_OPENGL;
 
 
 ImFontAtlas* AMN_SHARED_ATLAS = NULL;
@@ -91,14 +92,20 @@ Window::Window(bool fullscreen, const std::string& name) :
   //glfwWindowHint(GLFW_DECORATED, false);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(mode->width, mode->height, "AMNESIE.0.0",  monitor, NULL);
+  if (!_window) {
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    _window = glfwCreateWindow(mode->width, mode->height, "AMNESIE.0.0", monitor, NULL);
+    AMN_LEGACY_OPENGL = true;
+  }
   AMN_INITIALIZE_SCAN_CODES;
   _width = mode->width;
   _height = mode->height;
@@ -118,14 +125,20 @@ Window::Window(int width, int height, const std::string& name):
   _shared = true;
   //glfwWindowHint(GLFW_DECORATED, false);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
   
   _window = glfwCreateWindow(_width,_height,"AMNESIE.0.0",NULL,NULL);
+  if (!_window) {
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    _window = glfwCreateWindow(_width, _height, "AMNESIE.0.0", NULL, NULL);
+    AMN_LEGACY_OPENGL = true;
+  }
   AMN_INITIALIZE_SCAN_CODES;
 }
 
@@ -144,15 +157,21 @@ Window::Window(int x, int y, int width, int height,
   glfwWindowHint(GLFW_DECORATED, decorated);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   //glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_FLOATING, true);
   glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
+  if (!_window) {
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
+    AMN_LEGACY_OPENGL = true;
+  }
   glfwSetWindowPos(_window, x, y);
   AMN_INITIALIZE_SCAN_CODES;
 }

@@ -13,6 +13,8 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+extern bool AMN_LEGACY_OPENGL;
+
 ImGuiWindowFlags ViewportUI::_flags = 
   ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoResize |
@@ -66,8 +68,12 @@ void ViewportUI::Init()
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
     std::cout << rendererTokens[rendererIndex].GetText() << std::endl;
   }
-  //_engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
-  _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+  if (AMN_LEGACY_OPENGL) {
+    _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+  } else {
+    _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
+  }
+  
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
   light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));

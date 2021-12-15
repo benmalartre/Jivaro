@@ -15,6 +15,7 @@
 
 AMN_NAMESPACE_OPEN_SCOPE
 
+extern bool AMN_LEGACY_OPENGL;
 extern ImFontAtlas* AMN_SHARED_ATLAS;
 extern ImFont* AMN_BOLD_FONTS[3];
 extern ImFont* AMN_MEDIUM_FONTS[3];
