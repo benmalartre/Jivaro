@@ -7,7 +7,7 @@
 #include "../app/view.h"
 #include "../app/window.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags PropertyUI::_flags = 
   ImGuiWindowFlags_None |
@@ -111,4 +111,4 @@ bool PropertyUI::Draw()
 };
   
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

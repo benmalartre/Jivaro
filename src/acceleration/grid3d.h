@@ -1,5 +1,5 @@
-#ifndef AMN_ACCELERATION_GRID_H
-#define AMN_ACCELERATION_GRID_H
+#ifndef JVR_ACCELERATION_GRID_H
+#define JVR_ACCELERATION_GRID_H
 
 #include <float.h>
 #include <vector>
@@ -10,7 +10,7 @@
 #include "../geometry/geometry.h"
 #include "../acceleration/intersector.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 class Mesh;
@@ -155,6 +155,6 @@ private:
   //void PlacePoint(Vertex* V);
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

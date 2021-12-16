@@ -11,18 +11,18 @@
 
 #include <iostream>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-TF_DEFINE_ENV_SETTING(AMN_ENGINE_DEBUG_SCENE_DELEGATE_ID, "/",
-  "Default Amnesia scene delegate id");
+TF_DEFINE_ENV_SETTING(ENGINE_DEBUG_SCENE_DELEGATE_ID, "/",
+  "Default Jivaro scene delegate id");
 
 pxr::SdfPath const&
 _GetUsdImagingDelegateId()
 {
   static pxr::SdfPath const delegateId =
-    pxr::SdfPath(pxr::TfGetEnvSetting(AMN_ENGINE_DEBUG_SCENE_DELEGATE_ID));
+    pxr::SdfPath(pxr::TfGetEnvSetting(ENGINE_DEBUG_SCENE_DELEGATE_ID));
 
   return delegateId;
 }
@@ -138,4 +138,4 @@ Engine::Engine(
 
 Engine::~Engine() = default;
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

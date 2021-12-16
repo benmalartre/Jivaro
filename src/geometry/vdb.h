@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_VDB_H
-#define AMN_GEOMETRY_VDB_H
+#ifndef JVR_GEOMETRY_VDB_H
+#define JVR_GEOMETRY_VDB_H
 #pragma once
 
 #include <memory>
@@ -11,7 +11,7 @@
 #include "../common.h"
 #include "mesh.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class VDB {
 public:
@@ -63,6 +63,6 @@ public:
   VDB(const VDB & vdb);
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_GEOMETRY_VDB_H
+#endif // JVR_GEOMETRY_VDB_H

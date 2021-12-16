@@ -1,5 +1,5 @@
-#ifndef AMN_EMBREE_PRIM_H
-#define AMN_EMBREE_PRIM_H
+#ifndef JVR_EMBREE_PRIM_H
+#define JVR_EMBREE_PRIM_H
 
 #include "../common.h"
 #include "../embree/utils.h"
@@ -7,9 +7,9 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/base/tf/hashmap.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-enum AMN_INTERPOLATION_TYPE{
+enum JVR_INTERPOLATION_TYPE{
   CONSTANT,
   UNIFORM,
   VARYING,
@@ -19,7 +19,7 @@ enum AMN_INTERPOLATION_TYPE{
 
 template<typename T>
 struct UsdEmbreePrimVarDatas{
-  AMN_INTERPOLATION_TYPE      _interpolationType;
+  JVR_INTERPOLATION_TYPE      _interpolationType;
   pxr::VtArray<T>             _datas;
 };
 
@@ -32,6 +32,6 @@ struct UsdEmbreePrim {
   pxr::GfVec3f                _color;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_EMBREE_PRIM_H
+#endif // JVR_EMBREE_PRIM_H

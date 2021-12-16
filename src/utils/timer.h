@@ -1,5 +1,5 @@
-#ifndef AMN_UTILS_TIMER_H
-#define AMN_UTILS_TIMER_H
+#ifndef JVR_UTILS_TIMER_H
+#define JVR_UTILS_TIMER_H
 
 #if defined(__linux)
 	#define HAVE_POSIX_TIMER
@@ -83,4 +83,4 @@ ExecutionTimer<R(Args ...)> TIMER_DECORATOR(R (*f)(Args ...)) {
     return ExecutionTimer<R(Args...)>(std::function<R(Args...)>(f));    
 }
 
-#endif // AMN_UTILS_TIMER_H
+#endif // JVR_UTILS_TIMER_H

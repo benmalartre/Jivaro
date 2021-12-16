@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_GEOMETRY_H
-#define AMN_GEOMETRY_GEOMETRY_H
+#ifndef JVR_GEOMETRY_GEOMETRY_H
+#define JVR_GEOMETRY_GEOMETRY_H
 
 
 #include "../common.h"
@@ -12,7 +12,7 @@
 #include <float.h>
 #include "triangle.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 enum GeomInterpolation : short {
   GeomInterpolationConstant = 0,
@@ -93,6 +93,6 @@ protected:
   bool _initialized;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif
+#endif // JVR_GEOMETRY_GEOMETRY_H

@@ -4,7 +4,7 @@
 #include "prim.h"
 #include "../app/camera.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 struct UsdEmbreeMaster;
 typedef 
@@ -57,7 +57,7 @@ struct UsdEmbreeContext {
   void TraverseStage();
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 
  /*  HOW TO USE THIS SHIT...

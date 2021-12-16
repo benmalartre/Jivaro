@@ -20,7 +20,7 @@
 #include "../ui/layers.h"
 #include "../app/view.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 /*
 #include "Editor.h"
 #include "Commands.h"
@@ -395,9 +395,9 @@ bool LayersUI::Draw()
     if (app->GetStage())
     {
         // setup transparent background
-        ImGui::PushStyleColor(ImGuiCol_Header, AMN_TRANSPARENT_COLOR);
-        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, AMN_TRANSPARENT_COLOR);
-        ImGui::PushStyleColor(ImGuiCol_HeaderActive, AMN_TRANSPARENT_COLOR);
+        ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, TRANSPARENT_COLOR);
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
 
         // setup columns
         ImGui::Columns(3);
@@ -433,4 +433,4 @@ bool LayersUI::Draw()
     return true;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

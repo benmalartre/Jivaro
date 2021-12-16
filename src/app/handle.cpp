@@ -14,7 +14,7 @@
 #include "../app/application.h"
 #include "../geometry/utils.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void BaseHandle::ComputeSizeMatrix(float width, float height)
 {
@@ -132,7 +132,7 @@ void BaseHandle::ComputePickFrustum()
 
 void BaseHandle::ResetSelection()
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetStage();
@@ -301,7 +301,7 @@ void BaseHandle::Update(float x, float y, float width, float height)
 
 void BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   float activeTime = app->GetTime().GetActiveTime();
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
@@ -409,7 +409,7 @@ pxr::GfVec3f BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& point,
 
 void BaseHandle::_UpdateTargets()
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
   Selection* selection = app->GetSelection();
@@ -449,7 +449,7 @@ void BaseHandle::_UpdateTargets()
 
 void BaseHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   pxr::GfRay ray(
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
@@ -616,7 +616,30 @@ void RotateHandle::BeginUpdate(float x, float y, float width, float height)
 
 void RotateHandle::Update(float x, float y, float width, float height)
 {
+  /*
+  if(_interacting) {
+    pxr::GfRay ray(
+      _camera->GetPosition(), 
+      _camera->GetRayDirection(x, y, width, height));
 
+    double distance;
+    bool frontFacing;
+    if(ray.Intersect(_plane, &distance, &frontFacing)) {
+      if(_activeAxis == AXIS_CAMERA) {
+        _position = pxr::GfVec3f(ray.GetPoint(distance)) + _offset;
+      } else {
+        _rotation = 
+        _position = 
+          _ConstraintPointToCircle(pxr::GfVec3f(ray.GetPoint(distance)),
+            _position,_activeAxis, _radius);
+      }
+      
+      SetMatrixFromSRT();
+      _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
+      _UpdateTargets();
+    }
+  }
+  */
 }
 
 ScaleHandle::ScaleHandle()
@@ -1031,4 +1054,4 @@ void BrushHandle::Draw(float width, float height)
   glBindVertexArray(vao);
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

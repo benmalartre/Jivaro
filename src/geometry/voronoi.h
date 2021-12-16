@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_VORONOI_H
-#define AMN_GEOMETRY_VORONOI_H
+#ifndef JVR_GEOMETRY_VORONOI_H
+#define JVR_GEOMETRY_VORONOI_H
 
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/vt/array.h>
@@ -9,7 +9,7 @@
 #include "../common.h"
 #include "mesh.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Voronoi2D {
   struct Site_t {
@@ -31,6 +31,6 @@ private:
   size_t                        _resolutionY;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_GEOMETRY_VDB_H
+#endif // JVR_GEOMETRY_VDB_H

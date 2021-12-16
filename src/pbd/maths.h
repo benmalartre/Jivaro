@@ -1,12 +1,12 @@
-#ifndef AMN_PBD_MATH_FUNCTIONS_H
-#define AMN_PBD_MATH_FUNCTIONS_H
+#ifndef JVR_PBD_MATH_FUNCTIONS_H
+#define JVR_PBD_MATH_FUNCTIONS_H
 
 #include "../common.h"
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/quatf.h>
 #include <pxr/base/gf/matrix3f.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 class PBDMath
 {
 private:
@@ -36,6 +36,6 @@ static void ExtractRotation(const pxr::GfMatrix3f& A, pxr::GfQuatf& q,
   const unsigned int maxIter);
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

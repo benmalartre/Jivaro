@@ -7,7 +7,7 @@
 #include "../utils/utils.h"
 #include "../widgets/viewport.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void SetEmbreeContext(UsdEmbreeContext* ctxt)
 {
@@ -62,7 +62,7 @@ Vec3fa _GetMeshNormal(Ray& ray)
   {
     UsdEmbreeMesh* mesh = (UsdEmbreeMesh*)prim;
     pxr::VtArray<pxr::GfVec3f>& normals = mesh->_normals;
-    AMN_INTERPOLATION_TYPE interpType = mesh->_normalsInterpolationType;
+    JVR_INTERPOLATION_TYPE interpType = mesh->_normalsInterpolationType;
     if(interpType == VERTEX){
       normal = 
         normals[mesh->_triangles[ray.primID*3]] * (1 - ray.u - ray.v) + 
@@ -89,7 +89,7 @@ pxr::GfVec3f _GetMeshColor(Ray& ray)
   {
     UsdEmbreeMesh* mesh = (UsdEmbreeMesh*)prim;
     pxr::VtArray<pxr::GfVec3f>& colors = mesh->_colors;
-    AMN_INTERPOLATION_TYPE interpType = mesh->_colorsInterpolationType;
+    JVR_INTERPOLATION_TYPE interpType = mesh->_colorsInterpolationType;
     if(interpType == CONSTANT) {
       if(!colors.size())color = pxr::GfVec3f(1,0,0);
       else color = colors[0];
@@ -139,7 +139,7 @@ pxr::GfVec3f _GetSubdivColor(Ray& ray)
   {
     UsdEmbreeSubdiv* mesh = (UsdEmbreeSubdiv*)prim;
     pxr::VtArray<pxr::GfVec3f>& colors = mesh->_colors;
-    AMN_INTERPOLATION_TYPE interpType = mesh->_colorsInterpolationType;
+    JVR_INTERPOLATION_TYPE interpType = mesh->_colorsInterpolationType;
     if(interpType == CONSTANT) {
       if(!colors.size())color = pxr::GfVec3f(1,0,0);
       else color = colors[0];
@@ -549,4 +549,4 @@ void DeviceCleanup ()
   rtcReleaseScene (EMBREE_CTXT->_scene); EMBREE_CTXT->_scene = NULL;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

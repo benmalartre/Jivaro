@@ -1,12 +1,12 @@
-#ifndef AMN_PBD_INTEGRATION_H
-#define AMN_PBD_INTEGRATION_H
+#ifndef JVR_PBD_INTEGRATION_H
+#define JVR_PBD_INTEGRATION_H
 
 #include "../common.h"
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/quatf.h>
 #include <pxr/base/gf/matrix3f.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class PBDIntegration
 {
@@ -66,6 +66,6 @@ public:
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

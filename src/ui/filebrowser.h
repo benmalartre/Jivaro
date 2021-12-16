@@ -1,6 +1,5 @@
-#ifndef AMN_UI_FILEBROWSER_H
-#define AMN_UI_FILEBROWSER_H
-#pragma once
+#ifndef JVR_UI_FILEBROWSER_H
+#define JVR_UI_FILEBROWSER_H
 
 #include <bitset>
 #include "../common.h"
@@ -8,9 +7,9 @@
 #include "../ui/ui.h"
 #include "../ui/utils.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-static size_t AMN_FILEBROWSER_LINE_HEIGHT = 20;
+static size_t FILEBROWSER_LINE_HEIGHT = 20;
 
 class FileBrowserUI : public BaseUI
 {
@@ -78,6 +77,6 @@ private:
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_FILEBROWSER_H
+#endif // JVR_UI_FILEBROWSER_H

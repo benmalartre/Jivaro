@@ -5,8 +5,8 @@
 // https://www.geometrictools.com/License/Boost/LICENSE_1_0.txt
 // Version: 4.0.2019.08.16
 
-#ifndef AMN_PBD_EIGENSOLVER_H
-#define AMN_PBD_EIGENSOLVER_H
+#ifndef JVR_PBD_EIGENSOLVER_H
+#define JVR_PBD_EIGENSOLVER_H
 
 #include "../common.h"
 #include <algorithm>
@@ -23,7 +23,7 @@
 // implemented by class NISymmetricEigensolver3x3.  The code does not use
 // GTEngine objects.
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class SortEigenstuff
 {
@@ -642,6 +642,6 @@ private:
   }
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

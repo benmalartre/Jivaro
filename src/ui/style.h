@@ -1,26 +1,26 @@
-#ifndef AMN_UI_STYLE_H
-#define AMN_UI_STYLE_H
+#ifndef JVR_UI_STYLE_H
+#define JVR_UI_STYLE_H
 
 #include "../common.h"
 #include "../imgui/imgui.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-static ImVec4 AMN_BACKGROUND_COLOR(0.2f, 0.2f, 0.2f, 1.f);
-static ImVec4 AMN_ALTERNATE_COLOR(0.25f, 0.25f, 0.25f, 1.f);
-static ImVec4 AMN_SELECTED_COLOR(0.9f, 0.9f, 0.9f, 1.f);
-static ImVec4 AMN_HIGHLIGHTED_COLOR(0.4f, 0.4f, 0.4f, 1.f);
-static ImVec4 AMN_HOVERED_COLOR(0.75f, 0.75f, 0.75f, 1.f);
-static ImVec4 AMN_TRANSPARENT_COLOR(0.f, 0.f, 0.f, 0.f);
-static ImVec4 AMN_TRANSPARENT_HOVERED_COLOR(1.f, 1.f, 1.f, 0.1f);
-static ImVec4 AMN_BUTTON_COLOR(0.25f, 0.25f, 0.25f, 1.f);
-static ImVec4 AMN_BUTTON_HOVERED_COLOR(0.33f, 0.33f, 0.33f, 1.f);
-static ImVec4 AMN_BUTTON_ACTIVE_COLOR(0.9f, 0.9f, 0.9f, 1.f);
-static ImVec4 AMN_TEXT_DEFAULT_COLOR(0.9f, 0.9f, 0.9f, 1.f);
-static ImVec4 AMN_TEXT_SELECTED_COLOR(0.1f, 0.1f, 0.1f, 1.f);
-static ImVec4 AMN_TEXT_DISABLED_COLOR(0.5f, 0.5f, 0.5f, 1.f);
+static ImVec4 BACKGROUND_COLOR(0.2f, 0.2f, 0.2f, 1.f);
+static ImVec4 ALTERNATE_COLOR(0.25f, 0.25f, 0.25f, 1.f);
+static ImVec4 SELECTED_COLOR(0.9f, 0.9f, 0.9f, 1.f);
+static ImVec4 HIGHLIGHTED_COLOR(0.4f, 0.4f, 0.4f, 1.f);
+static ImVec4 HOVERED_COLOR(0.75f, 0.75f, 0.75f, 1.f);
+static ImVec4 TRANSPARENT_COLOR(0.f, 0.f, 0.f, 0.f);
+static ImVec4 TRANSPARENT_HOVERED_COLOR(1.f, 1.f, 1.f, 0.1f);
+static ImVec4 BUTTON_COLOR(0.25f, 0.25f, 0.25f, 1.f);
+static ImVec4 BUTTON_HOVERED_COLOR(0.33f, 0.33f, 0.33f, 1.f);
+static ImVec4 BUTTON_ACTIVE_COLOR(0.9f, 0.9f, 0.9f, 1.f);
+static ImVec4 TEXT_DEFAULT_COLOR(0.9f, 0.9f, 0.9f, 1.f);
+static ImVec4 TEXT_SELECTED_COLOR(0.1f, 0.1f, 0.1f, 1.f);
+static ImVec4 TEXT_DISABLED_COLOR(0.5f, 0.5f, 0.5f, 1.f);
 
-static void AMNStyle(ImGuiStyle* dst)
+static void SetStyle(ImGuiStyle* dst)
 {
   ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
@@ -67,9 +67,9 @@ static void AMNStyle(ImGuiStyle* dst)
   colors[ImGuiCol_CheckMark] = ImVec4(0.184f, 0.407f, 0.193f, 1.00f);
   colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
   colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-  colors[ImGuiCol_Button] = AMN_BUTTON_COLOR;
-  colors[ImGuiCol_ButtonHovered] = AMN_BUTTON_HOVERED_COLOR;
-  colors[ImGuiCol_ButtonActive] = AMN_BUTTON_ACTIVE_COLOR;
+  colors[ImGuiCol_Button] = BUTTON_COLOR;
+  colors[ImGuiCol_ButtonHovered] = BUTTON_HOVERED_COLOR;
+  colors[ImGuiCol_ButtonActive] = BUTTON_ACTIVE_COLOR;
   colors[ImGuiCol_Header] = ImVec4(0.35f, 0.35f, 0.35f, 0.25f);
   colors[ImGuiCol_HeaderHovered] = ImVec4(0.35f, 0.35f, 0.35f, 0.5f);
   colors[ImGuiCol_HeaderActive] = ImVec4(0.35f, 0.35f, 0.35f, 0.75f);
@@ -94,6 +94,6 @@ static void AMNStyle(ImGuiStyle* dst)
   colors[ImGuiCol_TabHovered] = ImVec4(0.62f, 0.62f, 0.62f, 1.00f);
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_STYLE_H
+#endif // JVR_UI_STYLE_H

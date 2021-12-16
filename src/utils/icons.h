@@ -1,29 +1,31 @@
-#ifndef AMN_UTILS_ICONS_H
-#define AMN_UTILS_ICONS_H
+#ifndef JVR_UTILS_ICONS_H
+#define JVR_UTILS_ICONS_H
 
 #pragma once
 #include <map>
 #include <type_traits>
-#include "../common.h"
-#include "../utils/files.h"
-#include "../utils/glutils.h"
-#include "pxr/usd/ar/asset.h"
-#include "pxr/usd/ar/resolver.h"
+
+#include <pxr/usd/ar/asset.h>
+#include <pxr/usd/ar/resolver.h>
 #include <pxr/imaging/hio/image.h>
 #include <pxr/imaging/hio/stb_image.h>
 #include <pxr/imaging/hio/stb_image_resize.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+#include "../common.h"
+#include "../utils/files.h"
+#include "../utils/glutils.h"
+
+JVR_NAMESPACE_OPEN_SCOPE
 enum ICON_SIZE {
-  AMN_ICON_SMALL,
-  AMN_ICON_MEDIUM,
-  AMN_ICON_LARGE
+  ICON_SIZE_SMALL,
+  ICON_SIZE_MEDIUM,
+  ICON_SIZE_LARGE
 };
 
 enum ICON_STATE {
-  AMN_ICON_DEFAULT,
-  AMN_ICON_SELECTED,
-  AMN_ICON_DISABLED
+  ICON_DEFAULT,
+  ICON_SELECTED,
+  ICON_DISABLED
 };
 
 static const char* ICON_SUFFIX[3] = {
@@ -108,15 +110,14 @@ struct Icon {
   GLuint        tex[3];
 };
  
-typedef std::vector<std::vector<Icon> > AmnIconList;
-extern AmnIconList AMN_ICONS;
+typedef std::vector<std::vector<Icon> > IconList;
+extern IconList ICONS;
 
-void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels);
-GLuint CreateIconFromImage(const std::string& filename,
-  int index, ICON_SIZE size);
-void AMNInitializeIcons();
-void AMNTerminateIcons();
+void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int numChannels);
+GLuint CreateIconFromImage(const std::string& filename, int index, ICON_SIZE size);
+void InitializeIcons();
+void TerminateIcons();
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UTILS_ICONS_H
+#endif // JVR_UTILS_ICONS_H

@@ -3,7 +3,7 @@
 #include "prim.h"
 #include <pxr/usd/usdGeom/mesh.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 struct UsdEmbreeMesh  : public UsdEmbreePrim {
@@ -14,15 +14,15 @@ struct UsdEmbreeMesh  : public UsdEmbreePrim {
   pxr::GfVec3d                _displayColor;
 
   bool                        _hasNormals;
-  AMN_INTERPOLATION_TYPE      _normalsInterpolationType;
+  JVR_INTERPOLATION_TYPE      _normalsInterpolationType;
   pxr::VtArray<pxr::GfVec3f>  _normals;
 
   bool                        _hasUVs;
-  AMN_INTERPOLATION_TYPE      _uvsInterpolationType;
+  JVR_INTERPOLATION_TYPE      _uvsInterpolationType;
   pxr::VtArray<pxr::GfVec2f>  _uvs;
 
   bool                        _hasColors;
-  AMN_INTERPOLATION_TYPE      _colorsInterpolationType;
+  JVR_INTERPOLATION_TYPE      _colorsInterpolationType;
   pxr::VtArray<pxr::GfVec3f>  _colors;
 
   //std::vector<UsdEmbreeMeshDatas> _extraDatas;
@@ -48,4 +48,4 @@ bool CheckColors(
   const pxr::UsdTimeCode& time,
   UsdEmbreeMesh* mesh
 );
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

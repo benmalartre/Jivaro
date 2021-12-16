@@ -1,7 +1,7 @@
 #include "triangle.h"
 #include "mesh.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 //-------------------------------------------------------
 // Triangle Area
@@ -244,4 +244,4 @@ bool Triangle::Touch(Mesh* mesh, const pxr::GfVec3f& center,
   return true;   // box and triangle overlaps
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

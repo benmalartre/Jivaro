@@ -7,16 +7,16 @@
 #include "../app/handle.h"
 #include <pxr/usd/usd/prim.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 enum TOOLS
 {
-  AMN_TOOL_NONE,
-  AMN_TOOL_SELECT,
-  AMN_TOOL_TRANSLATE,
-  AMN_TOOL_ROTATE,
-  AMN_TOOL_SCALE,
-  AMN_TOOL_BRUSH
+  TOOL_NONE,
+  TOOL_SELECT,
+  TOOL_TRANSLATE,
+  TOOL_ROTATE,
+  TOOL_SCALE,
+  TOOL_BRUSH
 };
 
 class ViewportUI;
@@ -52,6 +52,6 @@ private:
   short           _hoveredAxis;
 };
 
-void AMNInitializeTools();
+void InitializeTools();
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

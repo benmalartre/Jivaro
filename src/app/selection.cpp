@@ -7,7 +7,7 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/quatf.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 bool Selection::IsEmpty()
 {
@@ -105,4 +105,4 @@ pxr::SdfPathVector Selection::GetSelectedPrims()
 }
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

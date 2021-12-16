@@ -22,8 +22,8 @@
 // language governing permissions and limitations under the Apache License.
 //
 //
-#ifndef AMN_APP_PICKING_H
-#define AMN_APP_PICKING_H
+#ifndef JVR_APP_PICKING_H
+#define JVR_APP_PICKING_H
 
 #include "pxr/pxr.h"
 
@@ -39,7 +39,7 @@
 
 #include <memory>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 namespace Picking
@@ -75,6 +75,6 @@ namespace Picking
     };
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APP_PICKING_H
+#endif // JVR_APP_PICKING_H

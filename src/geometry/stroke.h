@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_STROKE_H
-#define AMN_GEOMETRY_STROKE_H
+#ifndef JVR_GEOMETRY_STROKE_H
+#define JVR_GEOMETRY_STROKE_H
 
 
 #include "../common.h"
@@ -12,7 +12,7 @@
 #include <float.h>
 #include "geometry.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 struct StrokeLine {
   std::vector<pxr::GfVec3f> points;
@@ -83,6 +83,6 @@ private:
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

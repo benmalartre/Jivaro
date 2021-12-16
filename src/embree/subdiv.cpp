@@ -3,7 +3,7 @@
 #include "../embree/subdiv.h"
 #include "../embree/context.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // translate usd mesh to embree subdiv
 UsdEmbreeSubdiv* 
@@ -318,4 +318,4 @@ CheckColors(const pxr::UsdGeomMesh& usdMesh,
 }
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

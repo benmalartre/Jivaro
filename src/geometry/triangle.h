@@ -1,8 +1,8 @@
 //======================================================
 // TRIANGLE DECLARATION
 //======================================================
-#ifndef AMN_GEOMETRY_TRIANGLE_H
-#define AMN_GEOMETRY_TRIANGLE_H
+#ifndef JVR_GEOMETRY_TRIANGLE_H
+#define JVR_GEOMETRY_TRIANGLE_H
 
 #include "../common.h"
 #include <pxr/base/gf/vec3f.h>
@@ -10,7 +10,7 @@
 #include <math.h>
 #include <stdio.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 #define FINDMINMAX(x0,x1,x2,min,max)  \
   min = max = x0;                     \
@@ -85,6 +85,6 @@ struct Triangle {
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_GEOMETRY_TRIANGLE_H
+#endif // JVR_GEOMETRY_TRIANGLE_H

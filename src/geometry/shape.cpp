@@ -10,7 +10,7 @@
 #include "../geometry/intersection.h"
 #include "../utils/shaders.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 GLSLProgram* SHAPE_PROGRAM = NULL;
 
@@ -1250,7 +1250,7 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
   glBindVertexArray(vao);
 }
 
-void AMNInitShapeShader()
+void InitShapeShader()
 {
   // setup glsl program
   SHAPE_PROGRAM = new GLSLProgram();
@@ -1270,4 +1270,4 @@ void AMNInitShapeShader()
   SHAPE_INITIALIZED = true;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

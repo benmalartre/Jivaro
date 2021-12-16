@@ -1,5 +1,5 @@
-#ifndef AMN_ACCELERATION_BVH_H
-#define AMN_ACCELERATION_BVH_H
+#ifndef JVR_ACCELERATION_BVH_H
+#define JVR_ACCELERATION_BVH_H
 
 #include <vector>
 #include <limits>
@@ -9,7 +9,7 @@
 #include "../geometry/intersection.h"
 #include "../acceleration/intersector.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
@@ -78,6 +78,6 @@ public:
     double maxDistance = -1.f, double* minDistance=NULL) const override;
 }; 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif
+#endif // JVR_ACCELERATION_BVH_H

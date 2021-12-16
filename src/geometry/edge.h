@@ -1,8 +1,8 @@
 //======================================================
 // POINT DECLARATION
 //======================================================
-#ifndef AMN_GEOMETRY_POINT_H
-#define AMN_GEOMETRY_POINT_H
+#ifndef JVR_GEOMETRY_POINT_H
+#define JVR_GEOMETRY_POINT_H
 
 #include <algorithm>
 #include <math.h>
@@ -14,7 +14,7 @@
 #include "../common.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 struct Edge {
@@ -30,6 +30,6 @@ struct Edge {
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_GEOMETRY_POINT_H
+#endif // JVR_GEOMETRY_POINT_H

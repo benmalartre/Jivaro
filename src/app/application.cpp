@@ -40,10 +40,10 @@
 #include "../app/engine.h"
 #include "../geometry/vdb.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-Application* AMN_APPLICATION = nullptr;
-const char* Application::APPLICATION_NAME = "Amnesie";
+Application* APPLICATION = nullptr;
+const char* Application::APPLICATION_NAME = "Jivaro";
 
 // constructor
 //----------------------------------------------------------------------------
@@ -504,7 +504,7 @@ void Application::OpenScene(const std::string& filename)
     if (_scene) delete _scene;
     _scene = new Scene();
     _scene->AddStageFromDisk(filename);
-    Notice::NewScene().Send();
+    NewSceneNotice().Send();
   }
 }
 
@@ -521,7 +521,7 @@ void Application::SaveScene(const std::string& filename)
     delete _mesh;
     std::cout << "DELETE MESH :)" << std::endl;
     _mesh = NULL;
-    Notice::NewScene().Send();
+    NewSceneNotice().Send();
     //_property->SetPrim(_stage->GetDefaultPrim());
   }
   */
@@ -580,12 +580,12 @@ Application::GetStageBoundingBox()
   return bboxCache.ComputeWorldBound(_scene->GetRootStage()->GetPseudoRoot());
 }
 
-void Application::SelectionChangedCallback(const Notice::SelectionChanged& n)
+void Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {
   _tools.ResetSelection();
 }
 
-void Application::NewSceneCallback(const Notice::NewScene& n)
+void Application::NewSceneCallback(const NewSceneNotice& n)
 {
   _selection.Clear();
 }
@@ -659,4 +659,4 @@ Application::GetSelectionBoundingBox()
   return bbox;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

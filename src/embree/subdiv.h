@@ -1,12 +1,12 @@
-#ifndef AMN_EMBREE_SUBDIV_H
-#define AMN_EMBREE_SUBDIV_H
+#ifndef JVR_EMBREE_SUBDIV_H
+#define JVR_EMBREE_SUBDIV_H
 
 #include "../embree/prim.h"
 #include "../embree/utils.h"
 #include <pxr/usd/usdGeom/mesh.h>
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 struct UsdEmbreeSubdiv  : public UsdEmbreePrim {
@@ -24,11 +24,11 @@ struct UsdEmbreeSubdiv  : public UsdEmbreePrim {
   pxr::VtArray<int>           _edgeCreaseIndices;
 
   bool                        _hasUVs;
-  AMN_INTERPOLATION_TYPE      _uvsInterpolationType;
+  JVR_INTERPOLATION_TYPE      _uvsInterpolationType;
   pxr::VtArray<pxr::GfVec2f>  _uvs;
 
   bool                        _hasColors;
-  AMN_INTERPOLATION_TYPE      _colorsInterpolationType;
+  JVR_INTERPOLATION_TYPE      _colorsInterpolationType;
   pxr::VtArray<pxr::GfVec3f>  _colors;
 
   //std::vector<UsdEmbreeMeshDatas> _extraDatas;
@@ -52,6 +52,6 @@ CheckColors(const pxr::UsdGeomMesh& usdMesh,
             const pxr::UsdTimeCode& time,
             UsdEmbreeSubdiv* mesh);
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_EMBREE_SUBDIV_H
+#endif // JVR_EMBREE_SUBDIV_H

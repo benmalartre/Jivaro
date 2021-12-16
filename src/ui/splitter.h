@@ -1,5 +1,5 @@
-#ifndef AMN_UI_SPLITTER_H
-#define AMN_UI_SPLITTER_H
+#ifndef JVR_UI_SPLITTER_H
+#define JVR_UI_SPLITTER_H
 
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
@@ -9,7 +9,7 @@
 #include "../ui/utils.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 class View;
 
 #define SPLITTER_THICKNESS 2.0
@@ -56,6 +56,6 @@ private:
   static ImGuiWindowFlags _flags;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_SPLITTER_H
+#endif // JVR_UI_SPLITTER_H

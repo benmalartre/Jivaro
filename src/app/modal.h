@@ -1,5 +1,5 @@
-#ifndef AMN_APPLICATION_MODAL_H
-#define AMN_APPLICATION_MODAL_H
+#ifndef JVR_APPLICATION_MODAL_H
+#define JVR_APPLICATION_MODAL_H
 #pragma once
 
 #include "../common.h"
@@ -7,7 +7,7 @@
 #include "../ui/ui.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // base class for modal window
 class BaseModal
@@ -97,6 +97,6 @@ public:
   void _LoopImpl() override;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

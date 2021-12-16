@@ -1,5 +1,5 @@
-#ifndef AMN_UI_TOOLBAR_H
-#define AMN_UI_TOOLBAR_H
+#ifndef JVR_UI_TOOLBAR_H
+#define JVR_UI_TOOLBAR_H
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -11,7 +11,7 @@
 #include <pxr/base/gf/vec3f.h>
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 enum ToolbarItemType {
   TOOLBAR_BUTTON,
@@ -82,6 +82,6 @@ private:
   static ImGuiWindowFlags     _flags;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_TOOLBAR_H
+#endif // JVR_UI_TOOLBAR_H

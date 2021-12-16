@@ -11,7 +11,7 @@
 #include "../app/view.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags ExplorerUI::_flags = 
   ImGuiWindowFlags_None |
@@ -33,8 +33,8 @@ ExplorerUI::ExplorerUI(View* parent)
   , _invisibleIcon(NULL)
 {
   _parent->SetDirty();
-  _visibleIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_VISIBLE];
-  _invisibleIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_INVISIBLE];
+  _visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
+  _invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];
 
   pxr::TfWeakPtr<ExplorerUI> me(this);
   //pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
@@ -82,23 +82,23 @@ void ExplorerUI::DrawItemBackground(ImDrawList* drawList,
   if (item->_selected) {
     drawList->AddRectFilled(
       { pos.x, pos.y },
-      { pos.x + width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
-      ImColor(AMN_SELECTED_COLOR));
+      { pos.x + width, pos.y + EXPLORER_LINE_HEIGHT },
+      ImColor(SELECTED_COLOR));
   }
   else {
     if (flip)
       drawList->AddRectFilled(
         { pos.x, pos.y },
-        { pos.x + width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
-        ImColor(AMN_BACKGROUND_COLOR));
+        { pos.x + width, pos.y + EXPLORER_LINE_HEIGHT },
+        ImColor(BACKGROUND_COLOR));
     else
       drawList->AddRectFilled(
         { pos.x, pos.y },
-        { pos.x + width, pos.y + AMN_EXPLORER_LINE_HEIGHT },
-        ImColor(AMN_ALTERNATE_COLOR));
+        { pos.x + width, pos.y + EXPLORER_LINE_HEIGHT },
+        ImColor(ALTERNATE_COLOR));
   }
 
-  ImGui::SetCursorPos(ImVec2(pos.x, pos.y + AMN_EXPLORER_LINE_HEIGHT));
+  ImGui::SetCursorPos(ImVec2(pos.x, pos.y + EXPLORER_LINE_HEIGHT));
   if (item->_expanded) {
     for (const auto child : item->_items) {
       flip = !flip;
@@ -130,14 +130,14 @@ void ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
   ImGui::SetCursorPos(
     ImVec2(
       clipRectMin.x,
-      clipRectMin.y - scrollOffsetV + AMN_EXPLORER_LINE_HEIGHT));
+      clipRectMin.y - scrollOffsetV + EXPLORER_LINE_HEIGHT));
 
   for (auto& item : _root->_items) {
     DrawItemBackground(drawList, item, flip);
     flip = !flip;
   }
   
-  ImGui::SetCursorPos(ImVec2(0, AMN_EXPLORER_LINE_HEIGHT));
+  ImGui::SetCursorPos(ImVec2(0, EXPLORER_LINE_HEIGHT));
 
   drawList->AddCircleFilled(ImVec2(localMouseX, localMouseY) + _parent->GetMin(), 12.f, ImColor(0.f, 1.f, 0.f, 0.5f), 32);
 
@@ -148,13 +148,13 @@ void ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
 {
   if (isLeaf ? ImGui::IsItemClicked() : ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     if (!item->_selected) {
-      AMN_APPLICATION->AddToSelection(item->_prim.GetPath());
+      APPLICATION->AddToSelection(item->_prim.GetPath());
     }
     else {
-      AMN_APPLICATION->RemoveFromSelection(item->_prim.GetPath());
+      APPLICATION->RemoveFromSelection(item->_prim.GetPath());
     }
     item->_selected = !item->_selected;
-    Notice::SelectionChanged().Send();
+    SelectionChangedNotice().Send();
   }
 }
 void ExplorerUI::DrawItemType(ExplorerItem* item)
@@ -165,7 +165,7 @@ void ExplorerUI::DrawItemType(ExplorerItem* item)
     item->_prim.GetTypeName().GetText(),
     &item->_selected, 
     ImGuiSelectableFlags_SpanAvailWidth | ImGuiSelectableFlags_SelectOnRelease, 
-    ImVec2(60, AMN_EXPLORER_LINE_HEIGHT)
+    ImVec2(60, EXPLORER_LINE_HEIGHT)
   );
   */
   _UpdateSelection(item, !item->_items.size());
@@ -176,16 +176,16 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
   short state = 
-    item->_selected ? AMN_ICON_SELECTED : AMN_ICON_DEFAULT;
+    item->_selected ? ICON_SELECTED : ICON_DEFAULT;
   GLuint tex = 
     item->_visible ? _visibleIcon->tex[state] : _invisibleIcon->tex[state];
   const ImVec4& sel_col = 
-    item->_selected ? AMN_TEXT_SELECTED_COLOR : AMN_TEXT_DEFAULT_COLOR;
+    item->_selected ? TEXT_SELECTED_COLOR : TEXT_DEFAULT_COLOR;
   const ImVec4& col = 
     heritedVisibility ? sel_col : style.Colors[ImGuiCol_TextDisabled];
-  ImGui::PushStyleColor(ImGuiCol_Button, AMN_TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, AMN_TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonActive, AMN_TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
   ImGui::ImageButton(
     (void*)(size_t)tex, ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1));
 
@@ -220,9 +220,9 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
     _UpdateSelection(current, false);
 
     if(current->_selected) {
-      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_SELECTED_COLOR);
+      ImGui::PushStyleColor(ImGuiCol_Text, TEXT_SELECTED_COLOR);
     } else {
-      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_DEFAULT_COLOR);
+      ImGui::PushStyleColor(ImGuiCol_Text, TEXT_DEFAULT_COLOR);
     }
     ImGui::SameLine();
     ImGui::Text("%s", current->_prim.GetName().GetText());
@@ -253,9 +253,9 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
     _UpdateSelection(current, true);
 
     if(current->_selected) {
-      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_SELECTED_COLOR);
+      ImGui::PushStyleColor(ImGuiCol_Text, TEXT_SELECTED_COLOR);
     } else {
-      ImGui::PushStyleColor(ImGuiCol_Text, AMN_TEXT_DEFAULT_COLOR);
+      ImGui::PushStyleColor(ImGuiCol_Text, TEXT_DEFAULT_COLOR);
     }
 
     ImGui::SameLine();
@@ -286,9 +286,9 @@ bool ExplorerUI::Draw()
   if (app->GetStage())
   {
     // setup transparent background
-    ImGui::PushStyleColor(ImGuiCol_Header, AMN_TRANSPARENT_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, AMN_TRANSPARENT_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, AMN_TRANSPARENT_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, TRANSPARENT_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
 
     // setup columns
     ImGui::Columns(3);
@@ -362,4 +362,4 @@ void ExplorerUI::RecursePrim(ExplorerItem* currentItem)
   }
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

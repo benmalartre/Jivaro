@@ -1,7 +1,7 @@
 
 #include "voronoi.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 static void _GetDistances(const pxr::VtArray<pxr::GfVec3f>& points, pxr::VtArray<float>* distances)
 {
@@ -47,4 +47,4 @@ void Voronoi2D::Build(pxr::UsdStageRefPtr& stage, const pxr::VtArray<pxr::GfVec3
   }
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

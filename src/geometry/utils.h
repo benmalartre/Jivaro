@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_UTILS_H
-#define AMN_GEOMETRY_UTILS_H
+#ifndef JVR_GEOMETRY_UTILS_H
+#define JVR_GEOMETRY_UTILS_H
 
 #include "../common.h"
 #include "triangle.h"
@@ -10,7 +10,7 @@
 #include "pxr/base/gf/vec3i.h"
 #include "pxr/base/gf/vec3f.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 /// Barycentric coordinates
 void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
@@ -69,6 +69,6 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
                     const pxr::VtArray<pxr::GfVec3f>& ups,
                     pxr::VtArray<pxr::GfVec3f>& tangents);
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

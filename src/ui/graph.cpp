@@ -19,9 +19,9 @@
 #include "../app/application.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-extern int AMN_KEY_SCANCODES[];
+extern int KEY_SCANCODES[];
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -436,9 +436,9 @@ GraphUI::Node::Node(pxr::UsdPrim prim, bool write)
     pxr::UsdGeomMesh mesh(prim);
     for (const auto& attrName : mesh.GetSchemaAttributeNames()) {
       pxr::UsdAttribute attr = mesh.GetPrim().GetAttribute(attrName);
-      if(write)
+      //if(write)
         AddInput(attrName, _GetRuntimeTypeName(attr.GetTypeName()));
-      else
+      //else
         AddOutput(attrName, _GetRuntimeTypeName(attr.GetTypeName()));
     }
   }
@@ -785,7 +785,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
  
   //_filename = filename;
   _id = 0;
-    
+    /*
   _stage = pxr::UsdStage::CreateInMemory();
   pxr::SdfPath meshPath(pxr::TfToken("/mesh"));
   pxr::UsdGeomMesh mesh = pxr::UsdGeomMesh::Define(_stage, meshPath);
@@ -818,8 +818,8 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
   pushNode->AddOutput(TfToken("result"), pxr::SdfValueTypeNames->Float3Array);
 
   _graph->AddNode(pushNode);
-  
-  //Read("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
+  */
+  Read("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
 
 }
 
@@ -887,6 +887,7 @@ GraphUI::Read(const std::string& filename)
         if (relationship.GetTargets(&targets)) {
           for (auto& target : targets) {
             pxr::UsdAttribute attr = _stage->GetAttributeAtPath(target);
+            std::cout << "ATTR :" << attr.GetName() << std::endl;
             if(attr.IsValid()) {
               source = _graph->GetNode(attr.GetPrim());
               std::cout << "SOURCE : " << source << std::endl;
@@ -1379,9 +1380,9 @@ void
 GraphUI::Keyboard(int key, int scancode, int action, int mods)
 {
   std::cout << "SCAN CODE : " << scancode << std::endl;
-  std::cout << "AMN_KEY_A : " << AMN_KEY_A << std::endl;
-  std::cout << "AMN_KEY_B : " << AMN_KEY_B << std::endl;
-  std::cout << "AMN_KEY_C : " << AMN_KEY_C << std::endl;
+  std::cout << "KEY_A : " << KEY_A << std::endl;
+  std::cout << "KEY_B : " << KEY_B << std::endl;
+  std::cout << "KEY_C : " << KEY_C << std::endl;
   if (action == GLFW_PRESS) {
     if (key == GLFW_KEY_DELETE) {
       std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
@@ -1626,4 +1627,4 @@ GraphUI::FrameAll()
 
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

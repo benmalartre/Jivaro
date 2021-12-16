@@ -3,7 +3,7 @@
 #include "../app/view.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // constructor
 BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
@@ -21,7 +21,7 @@ BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
   pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
 };
 
-void BaseUI::OnNewSceneNotice(const Notice::NewScene& n)
+void BaseUI::OnNewSceneNotice(const NewSceneNotice& n)
 {
   _initialized = false;
 }
@@ -85,7 +85,7 @@ bool BaseUI::DrawHead()
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(
     ImVec2(GetX(), _parent->GetMin()[1]),
-    ImVec2(GetX() + GetWidth(),AMN_UI_HEADER_HEIGHT),
+    ImVec2(GetX() + GetWidth(), UI_HEADER_HEIGHT),
     ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f)
   );
   return true;
@@ -98,4 +98,4 @@ Application* BaseUI::GetApplication()
 
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

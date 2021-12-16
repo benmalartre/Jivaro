@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_CURVE_H
-#define AMN_GEOMETRY_CURVE_H
+#ifndef JVR_GEOMETRY_CURVE_H
+#define JVR_GEOMETRY_CURVE_H
 
 
 #include "../common.h"
@@ -17,7 +17,7 @@
 #include "triangle.h"
 #include "geometry.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 struct CurveLocation {
   Geometry* geometry; // geometry ptr
@@ -87,6 +87,6 @@ private:
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif
+#endif // JVR_GEOMETRY_CURVE_H

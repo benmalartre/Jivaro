@@ -1,5 +1,5 @@
-#ifndef AMN_UI_GRAPH_H
-#define AMN_UI_GRAPH_H
+#ifndef JVR_UI_GRAPH_H
+#define JVR_UI_GRAPH_H
 
 #include <vector>
 #include <set>
@@ -18,9 +18,9 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primFlags.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-#define AMN_GRAPH_CELL_MAX_NODES 6
+#define GRAPH_CELL_MAX_NODES 6
 
 enum ColorGraph {
   GRAPH_COLOR_UNDEFINED         = 0xFF000000,
@@ -377,6 +377,6 @@ private:
   static ImGuiWindowFlags               _flags;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_GRAPH_H
+#endif // JVR_UI_GRAPH_H

@@ -1,8 +1,8 @@
 //--------------------------------------------------------------------------------
 // FILES UTILS
 //--------------------------------------------------------------------------------
-#ifndef AMN_UTILS_FILES_H
-#define AMN_UTILS_FILES_H
+#ifndef JVR_UTILS_FILES_H
+#define JVR_UTILS_FILES_H
 
 #include "../common.h"
 
@@ -12,7 +12,7 @@
 #include <pxr/base/arch/fileSystem.h>
 #include <pxr/base/arch/systemInfo.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 #ifdef _WIN32
   #define SEPARATOR "\\"
@@ -132,6 +132,6 @@ public:
   );
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UTILS_FILES_H
+#endif // JVR_UTILS_FILES_H

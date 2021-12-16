@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_INTERSECTION_H
-#define AMN_GEOMETRY_INTERSECTION_H
+#ifndef JVR_GEOMETRY_INTERSECTION_H
+#define JVR_GEOMETRY_INTERSECTION_H
 
 #include <pxr/base/gf/plane.h>
 #include <pxr/base/gf/vec3f.h>
@@ -7,7 +7,7 @@
 #include <pxr/base/gf/ray.h>
 #include "../common.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Intersector;
 class Geometry;
@@ -67,7 +67,7 @@ public:
   void GetNormal(pxr::GfVec3f* normal) const;
 };
 
-static pxr::GfPlane AMN_DEFAULT_PLANE(pxr::GfVec3d(0, 1, 0), pxr::GfVec3d(0));
+static pxr::GfPlane DEFAULT_PLANE(pxr::GfVec3d(0, 1, 0), pxr::GfVec3d(0));
 
 bool IntersectDisc(const pxr::GfRay& localRay, const double radius,
   double* distance);
@@ -87,6 +87,6 @@ bool IntersectTorus( const pxr::GfRay& localRay, const double radius,
 bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   const double section, double* distance);
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif //AMN_GEOMETRY_INTERSECTION_H
+#endif //JVR_GEOMETRY_INTERSECTION_H

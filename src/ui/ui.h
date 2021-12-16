@@ -1,5 +1,5 @@
-#ifndef AMN_UI_UI_H
-#define AMN_UI_UI_H
+#ifndef JVR_UI_UI_H
+#define JVR_UI_UI_H
 #pragma once
 
 #include "../imgui/imgui.h"
@@ -12,9 +12,9 @@
 #include <pxr/base/tf/instantiateType.h>
 #include <pxr/base/gf/vec2f.h>
 
-AMN_NAMESPACE_OPEN_SCOPE  
+JVR_NAMESPACE_OPEN_SCOPE  
 
-#define AMN_UI_HEADER_HEIGHT 32
+#define UI_HEADER_HEIGHT 32
 
 class View;
 class Window;
@@ -93,7 +93,7 @@ public:
   virtual void Resize(){};
 
   // notices callbacks
-  void OnNewSceneNotice(const Notice::NewScene& n);
+  void OnNewSceneNotice(const NewSceneNotice& n);
   void OnAllNotices(const pxr::TfNotice& n);
 
 protected:
@@ -104,6 +104,6 @@ protected:
 };
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

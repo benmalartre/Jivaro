@@ -1,5 +1,5 @@
-#ifndef AMN_PBD_RIGIDBODY_H
-#define AMN_PBD_RIGIDBODY_H
+#ifndef JVR_PBD_RIGIDBODY_H
+#define JVR_PBD_RIGIDBODY_H
 
 #include <vector>
 #include "../common.h"
@@ -12,7 +12,7 @@
 //#include "RigidBodyGeometry.h"
 //#include "Utils/VolumeIntegration.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // This class encapsulates the state of a rigid body.
 //

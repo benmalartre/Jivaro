@@ -85,7 +85,7 @@ class Graph "Graph" (
 
 class Node "Node" (
     inherits = </Typed>
-    doc = """Base class for all Amnesia Nodes.
+    doc = """Base class for all Jivaro Nodes.
     """ 
     customData = {
       string extraIncludes = '''

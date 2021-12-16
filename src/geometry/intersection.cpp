@@ -9,7 +9,7 @@
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 //=================================================================================================
 // HIT CLASS
@@ -83,7 +83,7 @@ void Hit::GetNormal(pxr::GfVec3f* normal) const
 bool IntersectDisc(const pxr::GfRay& localRay, const double radius, double* distance) 
 { 
   double hitDistance;
-  if(localRay.Intersect(AMN_DEFAULT_PLANE, &hitDistance)) {
+  if(localRay.Intersect(DEFAULT_PLANE, &hitDistance)) {
     pxr::GfVec3d hitPoint = localRay.GetPoint(hitDistance);
     if (hitPoint.GetLength() <= radius) {
       *distance = hitDistance;
@@ -97,7 +97,7 @@ bool IntersectRing(const pxr::GfRay& localRay, const double radius,
   const double section, double* distance)
 {
   double hitDistance;
-  if (localRay.Intersect(AMN_DEFAULT_PLANE, &hitDistance)) {
+  if (localRay.Intersect(DEFAULT_PLANE, &hitDistance)) {
     pxr::GfVec3d hitPoint = localRay.GetPoint(hitDistance);
     double distanceFromCenter = hitPoint.GetLength();
     if (distanceFromCenter >= (radius - section) && distanceFromCenter <= (radius + section)) {
@@ -140,7 +140,7 @@ bool IntersectTube(const pxr::GfRay& localRay, const double innerRadius,
   double hitDistance;
   double radius = (innerRadius + outerRadius) * 0.5;
   double section = (outerRadius - innerRadius) * 0.5;
-  if (localRay.Intersect(AMN_DEFAULT_PLANE, &hitDistance)) {
+  if (localRay.Intersect(DEFAULT_PLANE, &hitDistance)) {
     pxr::GfVec3d hitPoint = localRay.GetPoint(hitDistance);
     double hitLength = hitPoint.GetLength();
     if (hitLength > innerRadius && hitLength < outerRadius) {
@@ -163,7 +163,7 @@ bool IntersectTube(const pxr::GfRay& localRay, const double innerRadius,
     }
     // check bi-tangent plane
     pxr::GfPlane biTangentPlane(
-      hitPoint ^ AMN_DEFAULT_PLANE.GetNormal(),
+      hitPoint ^ DEFAULT_PLANE.GetNormal(),
       pointOnCircle
     );
     if (localRay.Intersect(biTangentPlane, &hitDistance)) {
@@ -281,7 +281,7 @@ bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
 
   // closest point on circle
   double hitDistance;
-  if (localRay.Intersect(AMN_DEFAULT_PLANE, &hitDistance)) {
+  if (localRay.Intersect(DEFAULT_PLANE, &hitDistance)) {
     pxr::GfVec3d hitPoint = localRay.GetPoint(hitDistance);
     pxr::GfVec3d pointOnCircle(hitPoint.GetNormalized() * radius);
     if ((hitPoint - pointOnCircle).GetLengthSq() < ra2) {
@@ -290,7 +290,7 @@ bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
     }
     else {
       pxr::GfPlane hitCrossPlane(
-        hitPoint.GetNormalized() ^ AMN_DEFAULT_PLANE.GetNormal(),
+        hitPoint.GetNormalized() ^ DEFAULT_PLANE.GetNormal(),
         pointOnCircle
       );
       if (localRay.Intersect(hitCrossPlane, &hitDistance)) {
@@ -305,4 +305,4 @@ bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   return false;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

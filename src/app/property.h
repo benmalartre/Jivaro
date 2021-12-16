@@ -1,12 +1,12 @@
-#ifndef AMN_APPLICATION_PROPERTY_H
-#define AMN_APPLICATION_PROPERTY_H
+#ifndef JVR_APPLICATION_PROPERTY_H
+#define JVR_APPLICATION_PROPERTY_H
 
 #include "../common.h"
 #include <pxr/usd/usd/property.h>
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usd/attributeQuery.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 /// \class Property
@@ -16,5 +16,5 @@ class Property
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
-#endif //AMN_APPLICATION_PROPERTY_H
+JVR_NAMESPACE_CLOSE_SCOPE
+#endif //JVR_APPLICATION_PROPERTY_H

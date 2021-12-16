@@ -15,20 +15,20 @@
 #include "../geometry/shape.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+NAMESPACE_OPEN_SCOPE
 
-ImFontAtlas* AMN_SHARED_ATLAS = NULL;
-ImFont* AMN_BOLD_FONTS[3] = { NULL, NULL, NULL };
-ImFont* AMN_MEDIUM_FONTS[3] = { NULL, NULL, NULL };
-ImFont* AMN_REGULAR_FONTS[3] = { NULL, NULL, NULL };
+ImFontAtlas* SHARED_ATLAS = NULL;
+ImFont* BOLD_FONTS[3] = { NULL, NULL, NULL };
+ImFont* MEDIUM_FONTS[3] = { NULL, NULL, NULL };
+ImFont* REGULAR_FONTS[3] = { NULL, NULL, NULL };
 
 //
 // Shared Font Atlas
 //
-void AMNCreateFontAtlas()
+void CreateFontAtlas()
 {
   static float fontSizes[3] = { 16.f,32.f,64.f };
-  AMN_SHARED_ATLAS = new ImFontAtlas();
+  SHARED_ATLAS = new ImFontAtlas();
 
   // load fonts
   std::string exeFolder = GetInstallationFolder();
@@ -37,36 +37,36 @@ void AMNCreateFontAtlas()
     fontPath = exeFolder + "/fonts/roboto/Roboto-Bold.ttf";
     //fontPath = exeFolder + "/fonts/opensans/OpenSans-Bold.ttf";
     std::cout << fontPath << std::endl;
-    AMN_BOLD_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
+    BOLD_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
       NULL,
-      AMN_SHARED_ATLAS->GetGlyphRangesDefault()
+      SHARED_ATLAS->GetGlyphRangesDefault()
     );
 
     fontPath = exeFolder + "/fonts/roboto/Roboto-Medium.ttf";
     //fontPath = exeFolder + "/fonts/opensans/OpenSans-Medium.ttf";
-    AMN_MEDIUM_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
+    MEDIUM_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
       NULL,
-      AMN_SHARED_ATLAS->GetGlyphRangesDefault()
+      SHARED_ATLAS->GetGlyphRangesDefault()
     );
 
     fontPath = exeFolder + "/fonts/roboto/Roboto-Regular.ttf";
     //fontPath = exeFolder + "/fonts/opensans/OpenSans-Regular.ttf";
-    AMN_REGULAR_FONTS[i] = AMN_SHARED_ATLAS->AddFontFromFileTTF(
+    REGULAR_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
       NULL,
-      AMN_SHARED_ATLAS->GetGlyphRangesDefault()
+      SHARED_ATLAS->GetGlyphRangesDefault()
     );
   }
 }
 
-void AMNDeleteFontAtlas()
+void DeleteFontAtlas()
 {
-  if (AMN_SHARED_ATLAS)delete AMN_SHARED_ATLAS;
+  if (SHARED_ATLAS)delete SHARED_ATLAS;
 }
 
 // fullscreen window constructor
@@ -93,7 +93,7 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
 
-  _window = glfwCreateWindow(mode->width, mode->height, "AMNESIE.0.0",  monitor, NULL);
+  _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0",  monitor, NULL);
   _width = mode->width;
   _height = mode->height;
   _shared = true;
@@ -119,7 +119,7 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
   
-  _window = glfwCreateWindow(_width,_height,"AMNESIE.0.0",NULL,NULL);
+  _window = glfwCreateWindow(_width,_height,"Jivaro.1.0",NULL,NULL);
 }
 
 // child window constructor
@@ -168,9 +168,9 @@ Window::Init(Application* app)
       pxr::GlfContextCaps::InitInstance();
       pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
 
-      AMNCreateFontAtlas();
-      AMNInitializeIcons();
-      AMNInitializeTools();
+      CreateFontAtlas();
+      InitializeIcons();
+      InitializeTools();
     }
 
     // setup callbacks
@@ -209,7 +209,7 @@ Window::~Window()
 Window* 
 Window::CreateFullScreenWindow()
 {
-  return new Window(true, "Amnesia");
+  return new Window(true, "Jivaro");
 }
 
 // create standard window
@@ -217,7 +217,7 @@ Window::CreateFullScreenWindow()
 Window*
 Window::CreateStandardWindow(int width, int height)
 {
-  return new Window(width, height, "Amnesia");
+  return new Window(width, height, "Jivaro");
 }
 
 // child window
@@ -437,7 +437,7 @@ Window::SetupImgui()
   static float fontSizes[3] = { 16.f,32.f,64.f };
   // setup imgui context
   IMGUI_CHECKVERSION();
-  _context = ImGui::CreateContext(AMN_SHARED_ATLAS);
+  _context = ImGui::CreateContext(SHARED_ATLAS);
   ImGui::SetCurrentContext(_context);
   
   _io = &(ImGui::GetIO());
@@ -473,7 +473,7 @@ Window::SetupImgui()
   }
   */
   // setup imgui style
-  AMNStyle(&ImGui::GetStyle());
+  SetStyle(&ImGui::GetStyle());
 
   // setup platform/renderer bindings
   if (_shared) {
@@ -608,17 +608,17 @@ KeyboardCallback(
 
       case GLFW_KEY_S:
       {
-        app->SetActiveTool(AMN_TOOL_SCALE);
+        app->SetActiveTool(TOOL_SCALE);
         break;
       }
       case GLFW_KEY_R:
       {
-        app->SetActiveTool(AMN_TOOL_ROTATE);
+        app->SetActiveTool(TOOL_ROTATE);
         break;
       }
       case GLFW_KEY_T:
       {
-        app->SetActiveTool(AMN_TOOL_TRANSLATE);
+        app->SetActiveTool(TOOL_TRANSLATE);
         break;
       }
 
@@ -734,7 +734,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   if (action == GLFW_RELEASE)
   {
     parent->EndDragSplitter();
-    //parent->SetActiveTool(AMN_TOOL_SELECT);
+    //parent->SetActiveTool(TOOL_SELECT);
     View* view = parent->GetActiveView();
     if(view) {
       view->MouseButton(button, action, mods);
@@ -902,4 +902,4 @@ ResizeCallback(GLFWwindow* window, int width, int height)
   glViewport(0, 0, width, height);
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+NAMESPACE_CLOSE_SCOPE

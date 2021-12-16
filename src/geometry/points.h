@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_POINTS_H
-#define AMN_GEOMETRY_POINTS_H
+#ifndef JVR_GEOMETRY_POINTS_H
+#define JVR_GEOMETRY_POINTS_H
 
 
 #include "../common.h"
@@ -15,7 +15,7 @@
 #include "triangle.h"
 #include "geometry.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Points : public Geometry {
 public:
@@ -60,6 +60,6 @@ private:
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

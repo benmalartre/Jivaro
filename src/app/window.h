@@ -1,5 +1,5 @@
-#ifndef AMN_APP_WINDOW_H
-#define AMN_APP_WINDOW_H
+#ifndef JVR_APP_WINDOW_H
+#define JVR_APP_WINDOW_H
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -13,13 +13,13 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-extern bool AMN_LEGACY_OPENGL;
-extern ImFontAtlas* AMN_SHARED_ATLAS;
-extern ImFont* AMN_BOLD_FONTS[3];
-extern ImFont* AMN_MEDIUM_FONTS[3];
-extern ImFont* AMN_REGULAR_FONTS[3];
+extern bool LEGACY_OPENGL;
+extern ImFontAtlas* SHARED_ATLAS;
+extern ImFont* BOLD_FONTS[3];
+extern ImFont* MEDIUM_FONTS[3];
+extern ImFont* REGULAR_FONTS[3];
 
 class UsdEmbreeContext;
 class Application;
@@ -29,37 +29,37 @@ class BaseUI;
 
 // keyboard callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void
+JVR_EXPORT void
 KeyboardCallback(GLFWwindow* window, int key, int code, int action, int mods);
 
 // button callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 ClickCallback(GLFWwindow* window, int button, int action, int mods);
 
 // mouse move callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 MouseMoveCallback(GLFWwindow* window, double x, double y);
 
 // display callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 DisplayCallback(GLFWwindow* window);
 
 // scroll callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
 // char callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 CharCallback(GLFWwindow* window, unsigned c);
 
 // resize callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 ResizeCallback(GLFWwindow* window, int width, int height);
 
 class Window
@@ -130,9 +130,9 @@ public:
   bool IsIdle(){return _idle;};
 
   // fonts
-  inline ImFont* GetBoldFont(size_t index){return AMN_BOLD_FONTS[index];};
-  inline ImFont* GetMediumFont(size_t index){return AMN_MEDIUM_FONTS[index];};
-  inline ImFont* GetRegularFont(size_t index){return AMN_REGULAR_FONTS[index];};
+  inline ImFont* GetBoldFont(size_t index){return BOLD_FONTS[index];};
+  inline ImFont* GetMediumFont(size_t index){return MEDIUM_FONTS[index];};
+  inline ImFont* GetRegularFont(size_t index){return REGULAR_FONTS[index];};
 
   // tool
   inline void SetActiveTool(int tool) {
@@ -217,6 +217,6 @@ public:
     const std::string& name="Child", bool decorated=true);
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APP_WINDOW_H
+#endif // JVR_APP_WINDOW_H

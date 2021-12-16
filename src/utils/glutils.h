@@ -1,12 +1,12 @@
 //------------------------------------------------------------------------------
 // GLUTILS
 //------------------------------------------------------------------------------
-#ifndef AMN_UTILS_GL_H
-#define AMN_UTILS_GL_H
+#ifndef JVR_UTILS_GL_H
+#define JVR_UTILS_GL_H
 
 #include "shaders.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // check opengl error
 //----------------------------------------------------------------------------
@@ -92,6 +92,6 @@ CreateOpenGLTexture(int width, int height,
                   pixels);
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UTILS_GL_H
+#endif // JVR_UTILS_GL_H

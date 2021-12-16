@@ -8,7 +8,7 @@
 #include "../app/view.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags CurveEditorUI::_flags =
   ImGuiWindowFlags_None |
@@ -238,7 +238,7 @@ void CurveEditorUI::DrawCurve(pxr::UsdAnimXCurve* crv)
 
 void CurveEditorUI::DrawTime()
 {
-  Time& time = AMN_APPLICATION->GetTime();
+  Time& time = APPLICATION->GetTime();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   float ox = _parent->GetX() + _offset[0] * _scale[0];
   float oy = _parent->GetY() + _offset[1] * _scale[1];
@@ -418,4 +418,4 @@ bool CurveEditorUI::Draw()
   return true;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

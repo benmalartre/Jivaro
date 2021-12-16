@@ -4,7 +4,7 @@
 #include "../app/selection.h"
 #include "../app/application.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 Tool::Tool()
   : _translate(TranslateHandle())
@@ -28,7 +28,7 @@ void Tool::Init()
   _rotate.Setup();
   _scale.Setup();
   _brush.Setup();
-  SetActiveTool(AMN_TOOL_TRANSLATE);
+  SetActiveTool(TOOL_TRANSLATE);
 }
 
 
@@ -54,19 +54,19 @@ void Tool::SetViewport(ViewportUI* viewport)
 void Tool::SetActiveTool(short tool)
 {
   switch(tool) {
-    case AMN_TOOL_NONE:
+    case TOOL_NONE:
       _active = NULL;
       break;
-    case AMN_TOOL_BRUSH:
+    case TOOL_BRUSH:
       _active = (BaseHandle*)&_brush;
       break;
-    case AMN_TOOL_SCALE:
+    case TOOL_SCALE:
       _active = (BaseHandle*)&_scale;
       break;
-    case AMN_TOOL_ROTATE:
+    case TOOL_ROTATE:
       _active = (BaseHandle*)&_rotate;
       break;
-    case AMN_TOOL_TRANSLATE:
+    case TOOL_TRANSLATE:
       _active = (BaseHandle*)&_translate;
       break;
     default:
@@ -92,7 +92,7 @@ bool Tool::IsInteracting() {
 
 void Tool::Draw()
 {
-  Selection* selection = AMN_APPLICATION->GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     _active->Draw(_viewport->GetWidth(), _viewport->GetHeight());
   }
@@ -100,7 +100,7 @@ void Tool::Draw()
 
 void Tool::Select(bool lock)
 {
-  Selection* selection = AMN_APPLICATION->GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     _activeAxis = _active->Select(
       _viewport->GetLastMouseX() - _viewport->GetX(),
@@ -123,7 +123,7 @@ void Tool::Pick()
 
 void Tool::BeginUpdate()
 {
-  Selection* selection = AMN_APPLICATION->GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     if (_activeAxis != BaseHandle::AXIS_NONE) {
       _active->BeginUpdate(
@@ -150,7 +150,7 @@ void Tool::EndUpdate()
 
 void Tool::Update()
 {
-  Selection* selection = AMN_APPLICATION->GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     _active->Update(
       _viewport->GetLastMouseX() - _viewport->GetX(),
@@ -167,10 +167,10 @@ void Tool::ResetSelection()
   }
 }
 
-void AMNInitializeTools()
+void InitializeTools()
 {
-   AMNInitShapeShader();
+   InitShapeShader();
 }
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

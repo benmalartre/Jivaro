@@ -1,12 +1,12 @@
-#ifndef AMN_APP_TIME_H
-#define AMN_APP_TIME_H
+#ifndef JVR_APP_TIME_H
+#define JVR_APP_TIME_H
 
 #pragma once
 
 #include "../common.h"
 #include "pxr/base/tf/stopwatch.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 class Time {
@@ -59,6 +59,6 @@ private:
   size_t                            _framerate;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APP_SELECTION_H
+#endif // JVR_APP_SELECTION_H

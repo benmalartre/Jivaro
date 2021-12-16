@@ -11,9 +11,9 @@
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/primvar.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-extern Application* AMN_APPLICATION;
+extern Application* APPLICATION;
 
 ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_None |
@@ -57,7 +57,7 @@ bool MenuItem::Draw()
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
       
-      window->SetActiveTool(AMN_TOOL_SELECT);
+      window->SetActiveTool(TOOL_SELECT);
       view->ClearFlag(View::INTERACTING);
       window->ForceRedraw();
       ImGui::PopFont();
@@ -69,7 +69,7 @@ bool MenuItem::Draw()
 }
 
 static void OpenFileCallback() {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   const char* folder = GetInstallationFolder().c_str();
   const char* filters[] = {
     ".usd",
@@ -97,7 +97,7 @@ static void OpenDemoCallback()
 
 static void FlattenGeometryCallback()
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   pxr::UsdStageRefPtr& stage = app->GetStage();
   Selection* selection = app->GetSelection();
   std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
@@ -178,9 +178,9 @@ MenuItem& MenuUI::AddItem(View* view, const std::string label, const std::string
 // overrides
 bool MenuUI::Draw()
 {  
-  ImGui::PushStyleColor(ImGuiCol_Header, AMN_BACKGROUND_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, AMN_ALTERNATE_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_HeaderActive, AMN_SELECTED_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Header, BACKGROUND_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ALTERNATE_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, SELECTED_COLOR);
   Window* window = GetWindow();
 
   static bool open;
@@ -220,4 +220,4 @@ bool MenuUI::Draw()
     ImGui::IsAnyMouseDown();
 } 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

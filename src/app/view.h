@@ -1,5 +1,5 @@
-#ifndef AMN_APPLICATION_VIEW_H
-#define AMN_APPLICATION_VIEW_H
+#ifndef JVR_APPLICATION_VIEW_H
+#define JVR_APPLICATION_VIEW_H
 #pragma once
 
 #include "../common.h"
@@ -7,7 +7,7 @@
 #include "../ui/utils.h"
 #include <pxr/usd/usd/prim.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Window;
 class BaseUI;
@@ -103,6 +103,6 @@ private:
   std::string       _name;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APPLICATION_VIEW_H
+#endif // JVR_APPLICATION_VIEW_H

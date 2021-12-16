@@ -1,5 +1,5 @@
-#ifndef AMN_APPLICATION_HANDLE_H
-#define AMN_APPLICATION_HANDLE_H
+#ifndef JVR_APPLICATION_HANDLE_H
+#define JVR_APPLICATION_HANDLE_H
 
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
@@ -15,7 +15,7 @@
 #include "../geometry/shape.h"
 #include "../geometry/utils.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 static const pxr::GfMatrix4f HANDLE_X_MATRIX = {
   0.f, 1.f, 0.f, 0.f,
@@ -258,6 +258,6 @@ private:
   pxr::GfVec4f                  _color;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APPLICATION_HANDLE_H
+#endif // JVR_APPLICATION_HANDLE_H

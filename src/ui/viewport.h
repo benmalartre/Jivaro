@@ -1,5 +1,5 @@
-#ifndef AMN_UI_VIEWPORT_H
-#define AMN_UI_VIEWPORT_H
+#ifndef JVR_UI_VIEWPORT_H
+#define JVR_UI_VIEWPORT_H
 
 #include <pxr/pxr.h>
 
@@ -23,7 +23,7 @@
 #include "../app/handle.h"
 #include "../app/engine.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 enum InteractionMode{
   INTERACTION_NONE,
@@ -104,6 +104,6 @@ class ViewportUI : public BaseUI
     int                           _numRenderers;
 
 };
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif //AMN_UI_VIEWPORT_H
+#endif //JVR_UI_VIEWPORT_H

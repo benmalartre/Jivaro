@@ -1,11 +1,11 @@
-#ifndef AMN_PBD_PARTICLE_H
-#define AMN_PBD_PARTICLE_H
+#ifndef JVR_PBD_PARTICLE_H
+#define JVR_PBD_PARTICLE_H
 
 #include <vector>
 #include "../common.h"
 #include <pxr/base/gf/vec3f.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class PBDParticle
 {
@@ -406,6 +406,6 @@ public:
   }
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

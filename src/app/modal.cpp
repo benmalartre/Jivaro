@@ -5,7 +5,7 @@
 #include "../ui/dummy.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 //==============================================================================
 // Base Modal Window
@@ -29,7 +29,7 @@ BaseModal::~BaseModal()
 
 void BaseModal::Init()
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   Window* mainWindow = app->GetMainWindow();
   mainWindow->SetIdle(true);
 
@@ -39,7 +39,7 @@ void BaseModal::Init()
 
 void BaseModal::Term()
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   Window* mainWindow = app->GetMainWindow();
   
   mainWindow->SetIdle(false);
@@ -138,4 +138,4 @@ void ModalMenu::_LoopImpl()
 {
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

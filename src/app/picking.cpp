@@ -35,7 +35,7 @@
 #include <set>
 #include "picking.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 namespace {
 struct AggregatedHit {

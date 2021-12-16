@@ -1,5 +1,5 @@
-#define AMN_UI_BROWSER_H
-#ifndef AMN_UI_BROWSER_H
+#define JVR_UI_BROWSER_H
+#ifndef JVR_UI_BROWSER_H
 #pragma once
 
 #include "../common.h"
@@ -7,7 +7,7 @@
 #include "../ui/utils.h"
 #include <pxr/usd/usd/prim.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class BrowserUI : public BaseUI
 {
@@ -25,6 +25,6 @@ private:
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_BROWSER_H
+#endif // JVR_UI_BROWSER_H

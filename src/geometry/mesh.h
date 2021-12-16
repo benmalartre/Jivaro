@@ -1,5 +1,5 @@
-#ifndef AMN_GEOMETRY_MESH_H
-#define AMN_GEOMETRY_MESH_H
+#ifndef JVR_GEOMETRY_MESH_H
+#define JVR_GEOMETRY_MESH_H
 
 #include "../common.h"
 #include "pxr/base/vt/array.h"
@@ -13,7 +13,7 @@
 #include "triangle.h"
 #include "geometry.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 struct Location {
   Geometry*             geometry;      // geometry ptr
@@ -167,6 +167,6 @@ private:
   pxr::VtArray<int>                   _vertexHalfEdge;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -6,7 +6,7 @@
 #include "../app/application.h"
 #include "../app/modal.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags ToolbarUI::_flags = 
   ImGuiWindowFlags_None |
@@ -18,7 +18,7 @@ ImGuiWindowFlags ToolbarUI::_flags =
 
 static void _SetActiveTool(short tool) 
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   app->GetTools()->SetActiveTool(tool);
   app->GetMainWindow()->SetActiveTool(tool);
 }
@@ -26,31 +26,31 @@ static void _SetActiveTool(short tool)
 static void OnTranslateCallback()
 {
   std::cout << "ON TRANSLATE CALLBACK!!!" << std::endl;
-  _SetActiveTool(AMN_TOOL_TRANSLATE);
+  _SetActiveTool(TOOL_TRANSLATE);
 }
 
 static void OnRotateCallback()
 {
   std::cout << "ON ROTATE CALLBACK!!!" << std::endl;
-  _SetActiveTool(AMN_TOOL_ROTATE);
+  _SetActiveTool(TOOL_ROTATE);
 }
 
 static void OnScaleCallback()
 {
   std::cout << "ON SCALE CALLBACK!!!" << std::endl;
-  _SetActiveTool(AMN_TOOL_SCALE);
+  _SetActiveTool(TOOL_SCALE);
 }
 
 static void OnSelectCallback()
 {
   std::cout << "ON SELECT CALLBACK!!!" << std::endl;
-  _SetActiveTool(AMN_TOOL_SELECT);
+  _SetActiveTool(TOOL_SELECT);
 }
 
 static void OnBrushCallback()
 {
   std::cout << "ON BRUSH CALLBACK!!!" << std::endl;
-  _SetActiveTool(AMN_TOOL_BRUSH);
+  _SetActiveTool(TOOL_BRUSH);
   std::cout << "ACTIVE TOOL : BRUSH" << std::endl;
 }
 
@@ -90,13 +90,13 @@ bool ToolbarButton::Draw()
   if(toggable) {
     AddCheckableIconButton<IconPressedFunc>(
       icon,
-      (window->GetActiveTool() == tool) ? AMN_ICON_SELECTED : AMN_ICON_DEFAULT,
+      (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT,
       func
     );
   } else {
     AddIconButton<IconPressedFunc>(
       icon,
-      AMN_ICON_DEFAULT,
+      ICON_DEFAULT,
       func
     );
   }
@@ -112,50 +112,50 @@ ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical)
 {
   /*
   ToolbarItem* openItem = new ToolbarButton(
-    this, AMN_TOOL_OPEN, "Open", "Ctrl+O",
-    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_OPEN], false, true, 
+    this, TOOL_OPEN, "Open", "Ctrl+O",
+    &ICONS[ICON_MEDIUM][ICON_OPEN], false, true, 
     (IconPressedFunc)&OnOpenCallback
   );
   _items.push_back(openItem);
 
   ToolbarItem* saveItem = new ToolbarButton(
-    this, AMN_TOOL_SAVE, "Save", "Ctrl+S",
-    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SAVE], false, true, 
+    this, TOOL_SAVE, "Save", "Ctrl+S",
+    &ICONS[ICON_MEDIUM][ICON_SAVE], false, true, 
     (IconPressedFunc)&OnSaveCallback
   );
   _items.push_back(saveItem);
   */
   ToolbarItem* selectItem = new ToolbarButton(
-    this, AMN_TOOL_SELECT, "Select", "Space","selection tool",
-    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SELECT], true, true, 
+    this, TOOL_SELECT, "Select", "Space","selection tool",
+    &ICONS[ICON_SIZE_MEDIUM][ICON_SELECT], true, true, 
     (IconPressedFunc)&OnSelectCallback
   );
   _items.push_back(selectItem);
 
   ToolbarItem* translateItem = new ToolbarButton(
-    this, AMN_TOOL_TRANSLATE, "Translate", "T", "translation tool",
-    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_TRANSLATE], true, true, 
+    this, TOOL_TRANSLATE, "Translate", "T", "translation tool",
+    &ICONS[ICON_SIZE_MEDIUM][ICON_TRANSLATE], true, true, 
     (IconPressedFunc)&OnTranslateCallback
   );
   _items.push_back(translateItem);
 
   ToolbarItem* rotateItem = new ToolbarButton(
-    this, AMN_TOOL_ROTATE, "Rotate", "R", "rotation tool",
-    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_ROTATE], true, true, 
+    this, TOOL_ROTATE, "Rotate", "R", "rotation tool",
+    &ICONS[ICON_SIZE_MEDIUM][ICON_ROTATE], true, true, 
     (IconPressedFunc)&OnRotateCallback
   );
   _items.push_back(rotateItem);
 
   ToolbarItem* scaleItem = new ToolbarButton(
-    this, AMN_TOOL_SCALE, "Scale", "S", "scale tool",
-    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_SCALE], true, true, 
+    this, TOOL_SCALE, "Scale", "S", "scale tool",
+    &ICONS[ICON_SIZE_MEDIUM][ICON_SCALE], true, true, 
     (IconPressedFunc)&OnScaleCallback
   );
   _items.push_back(scaleItem);
 
   ToolbarItem* brushItem = new ToolbarButton(
-    this, AMN_TOOL_BRUSH, "Brush", "B", "brush tool",
-    &AMN_ICONS[AMN_ICON_MEDIUM][ICON_BRUSH], true, true, 
+    this, TOOL_BRUSH, "Brush", "B", "brush tool",
+    &ICONS[ICON_SIZE_MEDIUM][ICON_BRUSH], true, true, 
     (IconPressedFunc)&OnBrushCallback
   );
   _items.push_back(brushItem);
@@ -193,4 +193,4 @@ bool ToolbarUI::Draw()
     ImGui::IsAnyMouseDown();
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

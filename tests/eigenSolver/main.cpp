@@ -206,7 +206,7 @@ void _TestOne() {
     pxr::GfVec3f values;
     pxr::GfVec3f vectors[3];
 
-    AMN::SymmetricEigensolver3x3 solver;
+    JVR::SymmetricEigensolver3x3 solver;
     solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], true, 1, values, vectors);
     _PrintResult("Custom Iterative", &values[0], &vectors[0][0]);
   }
@@ -216,7 +216,7 @@ void _TestOne() {
     pxr::GfVec3f values;
     pxr::GfVec3f vectors[3];
 
-    AMN::NISymmetricEigensolver3x3 solver;
+    JVR::NISymmetricEigensolver3x3 solver;
     solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], 1, values, vectors);
     _PrintResult("Custom Non-Iterative", &values[0], &vectors[0][0]);
   }
@@ -277,7 +277,7 @@ void _BenchMark(size_t N) {
       pxr::GfVec3f& values = *(pxr::GfVec3f*)&values3[i * 3];
       pxr::GfVec3f* vectors = (pxr::GfVec3f*)&vectors3[i * 9];;
 
-      AMN::SymmetricEigensolver3x3 solver;
+      JVR::SymmetricEigensolver3x3 solver;
       solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], true, 1, values, vectors);
     }
     _PrintBenchMark("Custom iterative", CurrentTime() - startT);
@@ -291,7 +291,7 @@ void _BenchMark(size_t N) {
       pxr::GfVec3f& values = *(pxr::GfVec3f*)&values3[i * 3];
       pxr::GfVec3f* vectors = (pxr::GfVec3f*)&vectors3[i * 9];;
 
-      AMN::NISymmetricEigensolver3x3 solver;
+      JVR::NISymmetricEigensolver3x3 solver;
       solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], 1, values, vectors);
     }
     _PrintBenchMark("Custom non-iterative", CurrentTime() - startT);

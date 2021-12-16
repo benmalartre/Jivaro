@@ -1,12 +1,12 @@
-#ifndef AMN_UI_LAYERS_H
-#define AMN_UI_LAYERS_H
+#ifndef JVR_UI_LAYERS_H
+#define JVR_UI_LAYERS_H
 
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/sdf/layer.h>
 
 #include "../ui/ui.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 /*
 struct SummaryStats
@@ -57,6 +57,6 @@ class LayersUI : public BaseUI
     static ImGuiWindowFlags               _flags;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

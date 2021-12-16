@@ -4,7 +4,7 @@
 #include "../geometry/utils.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 Curve::~Curve()
 {
@@ -131,4 +131,4 @@ bool Curve::ClosestPoint(const pxr::GfVec3f& point,
 }
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

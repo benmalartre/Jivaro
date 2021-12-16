@@ -1,5 +1,5 @@
-#ifndef AMN_APPLICATION_APPLICATION_H
-#define AMN_APPLICATION_APPLICATION_H
+#ifndef JVR_APPLICATION_APPLICATION_H
+#define JVR_APPLICATION_APPLICATION_H
 
 #pragma once
 
@@ -14,7 +14,7 @@
 #include "../geometry/mesh.h"
 #include <openvdb/openvdb.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class TimelineUI;
 class PropertyUI;
@@ -73,8 +73,8 @@ public:
   void ClearSelection();
   pxr::GfBBox3d GetSelectionBoundingBox();
   pxr::GfBBox3d GetStageBoundingBox();
-  void SelectionChangedCallback(const Notice::SelectionChanged& n);
-  void NewSceneCallback(const Notice::NewScene& n);
+  void SelectionChangedCallback(const SelectionChangedNotice& n);
+  void NewSceneCallback(const NewSceneNotice& n);
 
   // time
   Time& GetTime() { return _time; };
@@ -115,9 +115,9 @@ private:
   Mesh*                             _mesh;
 };
 
-extern Application* AMN_APPLICATION;
+extern Application* APPLICATION;
 
-AMN_NAMESPACE_CLOSE_SCOPE // namespace amn
+JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR
 
-#endif // AMN_APPLICATION_APPLICATION_H
+#endif // JVR_APPLICATION_APPLICATION_H
 

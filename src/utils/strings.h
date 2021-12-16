@@ -22,7 +22,7 @@
 #include <iomanip>
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // STRING END WITH
 //---------------------------------------------------------------------------------------
@@ -154,7 +154,7 @@ std::string randomString(size_t length)
 }
 */
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 template <typename T> 
 static std::string ToString(const T& t)

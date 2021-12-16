@@ -1,4 +1,4 @@
-set(TARGET amnesia)
+set(TARGET jivaro)
 
 add_definitions(
   -DTASKING_TBB

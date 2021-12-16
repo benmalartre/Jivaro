@@ -2,7 +2,7 @@
 #include "../geometry/points.h"
 #include "../geometry/mesh.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 //-------------------------------------------------------
 // Point Position
@@ -39,4 +39,4 @@ void Point::GetNormal(Geometry* geom, pxr::GfVec3f& normal)
   }
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

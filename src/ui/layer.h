@@ -1,5 +1,5 @@
-#ifndef AMN_UI_LAYER_H
-#define AMN_UI_LAYER_H
+#ifndef JVR_UI_LAYER_H
+#define JVR_UI_LAYER_H
 
 #include <pxr/usd/usd/prim.h>
 
@@ -8,10 +8,10 @@
 #include "../ui/utils.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-extern AmnIconList AMN_ICONS;
-static size_t AMN_EXPLORER_LINE_HEIGHT = 20;
+extern IconList ICONS;
+static size_t EXPLORER_LINE_HEIGHT = 20;
 
 struct ExplorerItem {
   pxr::UsdPrim                  _prim;
@@ -64,6 +64,6 @@ private:
   static ImGuiTreeNodeFlags     _treeFlags;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_EXPLORER_H
+#endif // JVR_UI_EXPLORER_H

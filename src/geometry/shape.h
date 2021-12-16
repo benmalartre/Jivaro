@@ -1,5 +1,5 @@
-#ifndef AMN_APPLICATION_SHAPE_H
-#define AMN_APPLICATION_SHAPE_H
+#ifndef JVR_APPLICATION_SHAPE_H
+#define JVR_APPLICATION_SHAPE_H
 
 #include "../common.h"
 #include <vector>
@@ -9,7 +9,7 @@
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/imaging/garch/glApi.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class GLSLProgram;
 class Shape {
@@ -238,8 +238,8 @@ extern GLSLProgram* SHAPE_PROGRAM;
 static bool SHAPE_INITIALIZED = false;
 
 
-void AMNInitShapeShader();
+void InitShapeShader();
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

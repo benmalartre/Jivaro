@@ -4,7 +4,7 @@
 #include "../app/window.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags SplitterUI::_flags =
   ImGuiWindowFlags_None |
@@ -101,7 +101,7 @@ SplitterUI::Draw()
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   //ImDrawList* drawList = ImGui::GetForegroundDrawList();
   pxr::GfVec2f sMin, sMax;
-  ImU32 col = ImColor(AMN_BACKGROUND_COLOR);
+  ImU32 col = ImColor(BACKGROUND_COLOR);
 
   for(auto view : _views)
   {
@@ -132,4 +132,4 @@ SplitterUI::Resize(int width, int height)
   BuildMap(width, height);
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

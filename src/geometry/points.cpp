@@ -4,7 +4,7 @@
 #include "../geometry/utils.h"
 #include <pxr/base/gf/ray.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 Points::~Points()
 {
@@ -83,4 +83,4 @@ void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
   _radius = radius;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -1,6 +1,6 @@
 #include "files.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 bool FileExists(const std::string& name){
   struct stat buffer;
@@ -136,6 +136,7 @@ int GetVolumes(std::vector<EntryInfo>& entries)
 #else
   GetEntriesInDirectory(SEPARATOR, entries);
 #endif
+  return entries.size();
 }
 
 int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
@@ -293,5 +294,5 @@ std::string File::ReadAll()
     return content;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 

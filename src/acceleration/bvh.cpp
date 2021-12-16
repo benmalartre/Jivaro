@@ -4,7 +4,7 @@
 #include "../acceleration/bvh.h"
 #include "../geometry/geometry.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // distance
 static double _GetDistance1D(double value, double lower, double upper)
@@ -172,4 +172,4 @@ void BVH::Update(const std::vector<Geometry*>& geometries)
 {
 
 }
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

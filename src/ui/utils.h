@@ -1,5 +1,5 @@
-#ifndef AMN_UI_UTILS_H
-#define AMN_UI_UTILS_H
+#ifndef JVR_UI_UTILS_H
+#define JVR_UI_UTILS_H
 
 #include "../common.h"
 #include "../utils/icons.h"
@@ -10,7 +10,7 @@
 #include "../imgui/imgui_impl_glfw.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using
@@ -114,7 +114,7 @@ bool AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 template<typename FuncT, typename ...ArgsT>
 bool AddTransparentIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
-  ImGui::PushStyleColor(ImGuiCol_Button, AMN_TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Button, JVR_TRANSPARENT_COLOR);
   if (ImGui::ImageButton(
     (ImTextureID)(intptr_t)icon->tex[state],
     ImVec2(icon->size, icon->size),
@@ -134,9 +134,9 @@ bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
-  if(state == AMN_ICON_SELECTED) {
-    ImGui::PushStyleColor(ImGuiCol_Button, AMN_BUTTON_ACTIVE_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, AMN_BUTTON_ACTIVE_COLOR);
+  if(state == ICON_SELECTED) {
+    ImGui::PushStyleColor(ImGuiCol_Button, BUTTON_ACTIVE_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, BUTTON_ACTIVE_COLOR);
   }
   
   if (ImGui::ImageButton( 
@@ -147,14 +147,14 @@ bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
     -1))
   {
     func(args...);
-    if(state == AMN_ICON_SELECTED) ImGui::PopStyleColor(2);
+    if(state == ICON_SELECTED) ImGui::PopStyleColor(2);
     return true;
   }
-  if(state == AMN_ICON_SELECTED) ImGui::PopStyleColor(2);
+  if(state == ICON_SELECTED) ImGui::PopStyleColor(2);
   
   return false;
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_UTILS_H
+#endif // JVR_UI_UTILS_H

@@ -1,51 +1,44 @@
-#ifndef AMN_APPLICATION_NOTICE_H
-#define AMN_APPLICATION_NOTICE_H
+#ifndef JVR_APPLICATION_NOTICE_H
+#define JVR_APPLICATION_NOTICE_H
 
 #include "../common.h"
 #include <pxr/base/tf/notice.h>
 #include <pxr/base/tf/type.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
-/// \class Notice
-/// Notifications sent by the Amnesia Application
-class Notice
+/// Notifications sent by the Jivaro Application
+
+/// Base class for all Plug notices.
+class BaseNotice : public pxr::TfNotice
 {
 public:
-  /// Base class for all Plug notices.
-  class Base : public pxr::TfNotice
-  {
-  public:
-    virtual ~Base();
-  };
-
-  /// Notice sent after new scene
-  class NewScene : public Base
-  {
-  public:
-    explicit NewScene();
-    virtual ~NewScene();
-
-
-  private:
-  };
-
-  /// Notice sent after selection changed
-  class SelectionChanged : public Base
-  {
-  public:
-    explicit SelectionChanged();
-    virtual ~SelectionChanged();
-
-
-  private:
-  };
-/// </summary>
-
-private:
-  Notice();
+  BaseNotice();
+  virtual ~BaseNotice();
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
-#endif //AMN_APPLICATION_NOTICE_H
+/// Notice sent after new scene
+class NewSceneNotice : public BaseNotice
+{
+public:
+  explicit NewSceneNotice();
+  virtual ~NewSceneNotice();
+
+
+private:
+};
+
+/// Notice sent after selection changed
+class SelectionChangedNotice : public BaseNotice
+{
+public:
+  explicit SelectionChangedNotice();
+  virtual ~SelectionChangedNotice();
+
+
+private:
+};
+
+JVR_NAMESPACE_CLOSE_SCOPE
+#endif //JVR_APPLICATION_NOTICE_H

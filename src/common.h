@@ -1,5 +1,5 @@
-#ifndef AMN_COMMON_H
-#define AMN_COMMON_H
+#ifndef JVR_COMMON_H
+#define JVR_COMMON_H
 
 #include <cstddef>
 #include <cstdint>
@@ -11,45 +11,45 @@
 #include <windows.h>
 #endif
 #include <iostream>
-#define AMN_EXPORT extern "C" 
+#define JVR_EXPORT extern "C" 
 
 #define DEGREES_TO_RADIANS 0.0174532925f
 #define RADIANS_TO_DEGREES 57.2957795f
 
-#define AMN_MAJOR_VERSION 0
-#define AMN_MINOR_VERSION 0
-#define AMN_PATCH_VERSION 0
+#define JVR_MAJOR_VERSION 0
+#define JVR_MINOR_VERSION 0
+#define JVR_PATCH_VERSION 0
 
-#define AMN_VERSION 000
+#define JVR_VERSION 000
 
-#define AMN_USE_NAMESPACES 1
+#define JVR_USE_NAMESPACES 1
 
-#if AMN_USE_NAMESPACES
+#if JVR_USE_NAMESPACES
 
-  #define AMN_NS AMN
-  #define AMN_INTERNAL_NS amnInternal_v0_00__reserved__
-  #define AMN_NS_GLOBAL ::AMN_NS
+  #define JVR_NS JVR
+  #define JVR_INTERNAL_NS jvrInternal_v0_00__reserved__
+  #define JVR_NS_GLOBAL ::JVR_NS
 
-  namespace AMN_INTERNAL_NS { }
+  namespace JVR_INTERNAL_NS { }
 
-  // The root level namespace for all source in the Amnesia distribution.
-  namespace AMN_NS {
-      using namespace AMN_INTERNAL_NS;
+  // The root level namespace for all source in the Jivaro distribution.
+  namespace JVR_NS {
+      using namespace JVR_INTERNAL_NS;
   }
 
-  #define AMN_NAMESPACE_OPEN_SCOPE   namespace AMN_INTERNAL_NS {
-  #define AMN_NAMESPACE_CLOSE_SCOPE  }  
-  #define AMN_NAMESPACE_USING_DIRECTIVE using namespace AMN_NS;
+  #define JVR_NAMESPACE_OPEN_SCOPE   namespace JVR_INTERNAL_NS {
+  #define JVR_NAMESPACE_CLOSE_SCOPE  }  
+  #define JVR_NAMESPACE_USING_DIRECTIVE using namespace JVR_NS;
 
 #else
 
-  #define AMN_NS 
-  #define AMN_NS_GLOBAL 
-  #define AMN_NAMESPACE_OPEN_SCOPE   
-  #define AMN_NAMESPACE_CLOSE_SCOPE 
-  #define AMN_NAMESPACE_USING_DIRECTIVE
+  #define JVR_NS 
+  #define JVR_NS_GLOBAL 
+  #define JVR_NAMESPACE_OPEN_SCOPE   
+  #define JVR_NAMESPACE_CLOSE_SCOPE 
+  #define JVR_NAMESPACE_USING_DIRECTIVE
 
-#endif // AMN_USE_NAMESPACES
+#endif // JVR_USE_NAMESPACES
 
 #define RANDOM_0_1 ((float)rand() / (float)RAND_MAX)
 
@@ -70,5 +70,5 @@
 #define BITMASK_FLIP(x,y) ((x) ^= (y))
 #define BITMASK_CHECK(x,y) ((x) & (y))
 
-#endif // AMN_COMMON_H
+#endif // JVR_COMMON_H
 

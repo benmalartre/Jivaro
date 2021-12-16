@@ -11,9 +11,9 @@
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-extern bool AMN_LEGACY_OPENGL;
+extern bool LEGACY_OPENGL;
 
 ImGuiWindowFlags ViewportUI::_flags = 
   ImGuiWindowFlags_None |
@@ -68,7 +68,7 @@ void ViewportUI::Init()
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
     std::cout << rendererTokens[rendererIndex].GetText() << std::endl;
   }
-  if (AMN_LEGACY_OPENGL) {
+  if (LEGACY_OPENGL) {
     _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
   } else {
     _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
@@ -121,7 +121,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   Window* window = _parent->GetWindow();
-  Tool* tools = AMN_APPLICATION->GetTools();
+  Tool* tools = APPLICATION->GetTools();
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
   if (action == GLFW_RELEASE)
@@ -179,7 +179,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
 void ViewportUI::MouseMove(int x, int y) 
 {
-  Tool* tools = AMN_APPLICATION->GetTools();
+  Tool* tools = APPLICATION->GetTools();
   tools->SetViewport(this);
   
   if(_interact)
@@ -254,17 +254,17 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       }
       case GLFW_KEY_S:
       {
-        AMN_APPLICATION->SetActiveTool(AMN_TOOL_SCALE);
+        APPLICATION->SetActiveTool(TOOL_SCALE);
         break;
       }
       case GLFW_KEY_R:
       {
-        AMN_APPLICATION->SetActiveTool(AMN_TOOL_ROTATE);
+        APPLICATION->SetActiveTool(TOOL_ROTATE);
         break;
       }
       case GLFW_KEY_T:
       {
-        AMN_APPLICATION->SetActiveTool(AMN_TOOL_TRANSLATE);
+        APPLICATION->SetActiveTool(TOOL_TRANSLATE);
         break;
       }
     }
@@ -294,7 +294,7 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
   glEnable(GL_DEPTH_TEST);
   glClear(GL_DEPTH_BUFFER_BIT);
 
-  Tool* tools = AMN_APPLICATION->GetTools();
+  Tool* tools = APPLICATION->GetTools();
   tools->SetViewport(viewport);
   tools->Draw();
 
@@ -417,7 +417,7 @@ bool ViewportUI::Draw()
     drawList->AddCallback(DrawToolCallback, this);
   
     ImGui::PushFont(GetWindow()->GetRegularFont(0));
-    std::string msg = "Hello Amnesie!";
+    std::string msg = "Hello Jivaro!";
     drawList->AddText(
       ImVec2(_parent->GetMin()[0] + 20, _parent->GetMax()[1] - 20), 
       0xFFFFFFFF, 
@@ -579,7 +579,7 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 
 bool ViewportUI::Pick(int x, int y, int mods)
 {
-  Selection* selection = AMN_APPLICATION->GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;
   pxr::GfVec3d outHitNormal;
@@ -609,11 +609,11 @@ bool ViewportUI::Pick(int x, int y, int mods)
         selection->Clear();
         selection->AddItem(outHitPrimPath);
       }
-    AMN_APPLICATION->GetTools()->ResetSelection();
+    APPLICATION->GetTools()->ResetSelection();
     return true;
   } else {
     selection->Clear();
-    AMN_APPLICATION->GetTools()->ResetSelection();
+    APPLICATION->GetTools()->ResetSelection();
     return false;
   }
   
@@ -646,4 +646,4 @@ ViewportUI::_Pick(pxr::GfVec2i const& startPos, pxr::GfVec2i const& endPos,
     p.pickTarget, pxr::HdSelection::HighlightModeSelect, allHits);
 }
 */
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

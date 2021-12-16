@@ -1,11 +1,11 @@
-#ifndef AMN_EMBREE_SPHERE_H
-#define AMN_EMBREE_SPHERE_H
+#ifndef JVR_EMBREE_SPHERE_H
+#define JVR_EMBREE_SPHERE_H
 
 #include "../embree/prim.h"
 #include "../embree/utils.h"
 #include <pxr/usd/usdGeom/sphere.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 
@@ -46,6 +46,6 @@ BuildTriangles(int num_lats,
               int num_longs,
               pxr::VtArray<int>& triangles);
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_EMBREE_SPHERE_H
+#endif // JVR_EMBREE_SPHERE_H

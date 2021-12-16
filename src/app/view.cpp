@@ -8,7 +8,7 @@
 #include <pxr/base/gf/vec2f.h>
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // View constructor
 //----------------------------------------------------------------------------
@@ -402,4 +402,4 @@ void View::SetInteracting(bool value)
   else ClearFlag(INTERACTING);
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

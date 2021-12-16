@@ -1,5 +1,5 @@
-#ifndef AMN_APPLICATION_ENGINE_H
-#define AMN_APPLICATION_ENGINE_H
+#ifndef JVR_APPLICATION_ENGINE_H
+#define JVR_APPLICATION_ENGINE_H
 
 #include "../common.h"
 #include "pxr/pxr.h"
@@ -16,7 +16,7 @@
 
 #include <memory>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Engine : public pxr::UsdImagingGLEngine {
 public:
@@ -35,6 +35,6 @@ public:
     */
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

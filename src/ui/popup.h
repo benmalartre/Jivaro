@@ -1,12 +1,12 @@
-#ifndef AMN_APPLICATION_POPUP_H
-#define AMN_APPLICATION_POPUP_H
+#ifndef JVR_APPLICATION_POPUP_H
+#define JVR_APPLICATION_POPUP_H
 
 #include "../common.h"
 #include "../ui/ui.h"
 #include <pxr/base/vt/array.h>
 #include <pxr/base/vt/value.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class PopupUI : public BaseUI
 {
@@ -47,6 +47,6 @@ private:
   static ImGuiWindowFlags     _flags;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APPLICATION_POPUP_H
+#endif // JVR_APPLICATION_POPUP_H

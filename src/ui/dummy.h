@@ -1,5 +1,5 @@
-#ifndef AMN_UI_DUMMY_H
-#define AMN_UI_DUMMY_H
+#ifndef JVR_UI_DUMMY_H
+#define JVR_UI_DUMMY_H
 #pragma once
 
 #include "../common.h"
@@ -7,7 +7,7 @@
 #include "../ui/ui.h"
 #include <pxr/usd/usd/prim.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class DummyUI : public BaseUI
 {
@@ -26,6 +26,6 @@ private:
 
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_DUMMY_H
+#endif // JVR_UI_DUMMY_H

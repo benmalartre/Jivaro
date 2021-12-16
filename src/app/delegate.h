@@ -1,5 +1,5 @@
-#ifndef AMN_APP_DELEGATE_H
-#define AMN_APP_DELEGATE_H
+#ifndef JVR_APP_DELEGATE_H
+#define JVR_APP_DELEGATE_H
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -12,7 +12,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 #include "pxr/pxr.h"
@@ -774,6 +774,6 @@ PXR_NAMESPACE_CLOSE_SCOPE
 #endif //PXR_USD_IMAGING_USD_IMAGING_DELEGATE_H
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APP_WINDOW_H
+#endif // JVR_APP_WINDOW_H

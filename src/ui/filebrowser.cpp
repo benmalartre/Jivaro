@@ -3,7 +3,7 @@
 #include "../app/view.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 FileBrowserUI::FileBrowserUI(View* parent, const std::string& name, Mode mode)
   : BaseUI(parent, name)
@@ -139,8 +139,8 @@ void FileBrowserUI::_ResetSelected()
 void FileBrowserUI::_DrawPath()
 {
   AddIconButton<IconPressedFunc, FileBrowserUI*>(
-    &AMN_ICONS[AMN_ICON_SMALL][ICON_HOME],
-    AMN_ICON_DEFAULT,
+    &ICONS[ICON_SIZE_SMALL][ICON_HOME],
+    ICON_DEFAULT,
     (IconPressedFunc)&OnHomeCallback, this);
   ImGui::SameLine();
   size_t numTokens = _pathTokens.size();
@@ -189,31 +189,31 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
   if (_selected[idx]) {
     drawList->AddRectFilled(
       { 0, pos.y },
-      { width, pos.y + AMN_FILEBROWSER_LINE_HEIGHT },
-      ImColor(AMN_HIGHLIGHTED_COLOR));
+      { width, pos.y + FILEBROWSER_LINE_HEIGHT },
+      ImColor(HIGHLIGHTED_COLOR));
   }
   else {
     if (flip)
       drawList->AddRectFilled(
         { 0, pos.y },
-        { width, pos.y + AMN_FILEBROWSER_LINE_HEIGHT },
-        ImColor(AMN_BACKGROUND_COLOR));
+        { width, pos.y + FILEBROWSER_LINE_HEIGHT },
+        ImColor(BACKGROUND_COLOR));
     else
       drawList->AddRectFilled(
         { 0, pos.y },
-        { width, pos.y + AMN_FILEBROWSER_LINE_HEIGHT },
-        ImColor(AMN_ALTERNATE_COLOR));
+        { width, pos.y + FILEBROWSER_LINE_HEIGHT },
+        ImColor(ALTERNATE_COLOR));
   }
   
   ImGui::SameLine();
 
   if(info.type == EntryInfo::Type::FOLDER) {
-    const static Icon* folderIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FOLDER];
+    const static Icon* folderIcon = &ICONS[ICON_SIZE_SMALL][ICON_FOLDER];
     ImGui::Image(
       (ImTextureID)(intptr_t)folderIcon->tex[0],
       ImVec2(folderIcon->size, folderIcon->size));
   } else if(info.type == EntryInfo::Type::FILE) {
-    const static Icon* fileIcon = &AMN_ICONS[AMN_ICON_SMALL][ICON_FILE];
+    const static Icon* fileIcon = &ICONS[ICON_SIZE_SMALL][ICON_FILE];
     ImGui::Image(
       (ImTextureID)(intptr_t)fileIcon->tex[0],
       ImVec2(fileIcon->size, fileIcon->size));
@@ -287,4 +287,4 @@ bool FileBrowserUI::Draw()
   return true;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

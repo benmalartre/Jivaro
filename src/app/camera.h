@@ -1,5 +1,5 @@
-#ifndef AMN_APPLICATION_CAMERA_H
-#define AMN_APPLICATION_CAMERA_H
+#ifndef JVR_APPLICATION_CAMERA_H
+#define JVR_APPLICATION_CAMERA_H
 
 #pragma once
 
@@ -9,7 +9,7 @@
 
 // translated from FreeCamera from UsdView
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 #define DEFAULT_NEAR 1.0
 #define DEFAULT_FAR 2000000.0
@@ -197,6 +197,6 @@ private:
   std::string _name;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APPLICATION_CAMERA_H
+#endif // JVR_APPLICATION_CAMERA_H

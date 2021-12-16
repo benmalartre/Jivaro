@@ -1,5 +1,5 @@
-#ifndef AMN_UI_TIMELINE_H
-#define AMN_UI_TIMELINE_H
+#ifndef JVR_UI_TIMELINE_H
+#define JVR_UI_TIMELINE_H
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -7,8 +7,8 @@
 #include "../utils/icons.h"
 
 
-AMN_NAMESPACE_OPEN_SCOPE
-extern AmnIconList AMN_ICONS;
+JVR_NAMESPACE_OPEN_SCOPE
+extern IconList ICONS;
 
 #define SLIDER_THICKNESS 2.f
 
@@ -46,6 +46,6 @@ public:
 };
 
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_TIMELINE_H
+#endif // JVR_UI_TIMELINE_H

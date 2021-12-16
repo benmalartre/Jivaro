@@ -1,5 +1,5 @@
-#ifndef AMN_UI_MENU_H
-#define AMN_UI_MENU_H
+#ifndef JVR_UI_MENU_H
+#define JVR_UI_MENU_H
 
 #include <iostream>
 #include <vector>
@@ -9,7 +9,7 @@
 #include "../ui/ui.h"
 #include "../ui/utils.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // callback prototype
 typedef void(*MenuPressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
@@ -59,6 +59,6 @@ class MenuUI : public BaseUI
     static ImGuiWindowFlags _flags;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_UI_MENU_H
+#endif // JVR_UI_MENU_H

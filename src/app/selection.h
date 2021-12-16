@@ -1,5 +1,5 @@
-#ifndef AMN_APP_SELECTION_H
-#define AMN_APP_SELECTION_H
+#ifndef JVR_APP_SELECTION_H
+#define JVR_APP_SELECTION_H
 
 #pragma once
 
@@ -8,7 +8,7 @@
 #include <pxr/imaging/hd/selection.h>
 #include <vector>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 class Selection {
@@ -62,6 +62,6 @@ private:
   std::vector<Item>           _items;
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // AMN_APP_SELECTION_H
+#endif // JVR_APP_SELECTION_H

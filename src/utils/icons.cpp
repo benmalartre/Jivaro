@@ -1,9 +1,9 @@
-#include "icons.h"
-#include "files.h"
+#include "../utils/icons.h"
+#include "../utils/files.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
-AmnIconList AMN_ICONS = AmnIconList(3);
+IconList ICONS = IconList(3);
 
 void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels)
 {
@@ -57,8 +57,8 @@ GLuint CreateIconFromImage(const std::string& filename,
   img->Read(storage);
 
   //IconHoverDatas(&storage, img->GetBytesPerPixel());
-  if(!AMN_ICONS[size].size())
-    AMN_ICONS[size].resize(ICON_MAX_ID);
+  if(!ICONS[size].size())
+    ICONS[size].resize(ICON_MAX_ID);
 
   GLuint tex;
   glGenTextures(1, &tex);
@@ -75,13 +75,13 @@ GLuint CreateIconFromImage(const std::string& filename,
   return tex;
 }
 
-void AMNInitializeIcons()
+void InitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
   std::string iconDir = installDir + "/icons";
 
   for (size_t i=0; i < ICON_MAX_ID; ++i) {
-    //AMN_ICONS[size][index] = { s, tex };
+    //ICONS[size][index] = { s, tex };
     GLuint tex_small[3];
     GLuint tex_medium[3];
     GLuint tex_large[3];
@@ -92,29 +92,29 @@ void AMNInitializeIcons()
 
       if (FileExists(filename) &&
         pxr::HioImage::IsSupportedImageFile(filename)) {
-        tex_small[j] = CreateIconFromImage(filename, i, AMN_ICON_SMALL);
-        tex_medium[j] = CreateIconFromImage(filename, i, AMN_ICON_MEDIUM);
-        tex_large[j] = CreateIconFromImage(filename, i, AMN_ICON_LARGE);
+        tex_small[j] = CreateIconFromImage(filename, i, ICON_SIZE_SMALL);
+        tex_medium[j] = CreateIconFromImage(filename, i, ICON_SIZE_MEDIUM);
+        tex_large[j] = CreateIconFromImage(filename, i, ICON_SIZE_LARGE);
       }
     }
-    AMN_ICONS[AMN_ICON_SMALL][i] = Icon {
-      GetIconResolution(AMN_ICON_SMALL), 
+    ICONS[ICON_SIZE_SMALL][i] = Icon {
+      GetIconResolution(ICON_SIZE_SMALL), 
       tex_small[0], tex_small[1], tex_small[2]
     };
-    AMN_ICONS[AMN_ICON_MEDIUM][i] = Icon {
-      GetIconResolution(AMN_ICON_MEDIUM), 
+    ICONS[ICON_SIZE_MEDIUM][i] = Icon {
+      GetIconResolution(ICON_SIZE_MEDIUM), 
       tex_medium[0], tex_medium[1], tex_medium[2]
     };
-    AMN_ICONS[AMN_ICON_LARGE][i] = Icon {
-      GetIconResolution(AMN_ICON_LARGE), 
+    ICONS[ICON_SIZE_LARGE][i] = Icon {
+      GetIconResolution(ICON_SIZE_LARGE), 
       tex_large[0], tex_large[1], tex_large[2]
     };
   }  
 }
 
-void AMNTerminateIcons()
+void TerminateIcons()
 {
 
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

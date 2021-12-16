@@ -1,6 +1,6 @@
 #include "stageUI.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void RecurseStagePrim(GraphUI* ui, 
                       NodeUI* parent,
@@ -31,4 +31,4 @@ void TestStageUI(GraphUI* ui,
   }
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

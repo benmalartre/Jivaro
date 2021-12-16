@@ -1,5 +1,5 @@
-#ifndef AMN_ACCELERATION_INTERSECTOR_H
-#define AMN_ACCELERATION_INTERSECTOR_H
+#ifndef JVR_ACCELERATION_INTERSECTOR_H
+#define JVR_ACCELERATION_INTERSECTOR_H
 
 #include <vector>
 #include <limits>
@@ -8,7 +8,7 @@
 #include <pxr/base/gf/range3f.h>
 #include "../geometry/intersection.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
@@ -26,5 +26,5 @@ protected:
   std::vector<Geometry*>  _geometries;
 }; 
 
-AMN_NAMESPACE_CLOSE_SCOPE
-#endif // AMN_ACCELERATION_INTERSECTOR_H
+JVR_NAMESPACE_CLOSE_SCOPE
+#endif // JVR_ACCELERATION_INTERSECTOR_H

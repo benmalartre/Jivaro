@@ -4,7 +4,7 @@
 #include "../app/time.h"
 #include "../utils/icons.h"
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags TimelineUI::_flags = 
   ImGuiWindowFlags_None |
@@ -34,7 +34,7 @@ void TimelineUI::Init()
   
 void TimelineUI::Update()
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   Time& time = app->GetTime();
   _minTime = time.GetMinTime();
   _startTime = time.GetStartTime();
@@ -49,7 +49,7 @@ void TimelineUI::Update()
 
 void TimelineUI::ValidateTime()
 {
-  Time& time = AMN_APPLICATION->GetTime();
+  Time& time = APPLICATION->GetTime();
 
   _currentTime = time.GetActiveTime();
   if (_minTime >= _maxTime)_maxTime = _minTime + 1;
@@ -71,7 +71,7 @@ void TimelineUI::ValidateTime()
 
 static void PlaybackCallback(TimelineUI* ui)
 {
-  Time& time = AMN_APPLICATION->GetTime();
+  Time& time = APPLICATION->GetTime();
   ui->_playing = 1 - ui->_playing;
   if(ui->_playing) time.StartPlayBack();
   else time.StopPlayBack();
@@ -79,26 +79,26 @@ static void PlaybackCallback(TimelineUI* ui)
 
 static void PreviousFrameCallback(TimelineUI* ui)
 {
-  Time& time = AMN_APPLICATION->GetTime();
+  Time& time = APPLICATION->GetTime();
   time.PreviousFrame();
 }
 
 static void NextFrameCallback(TimelineUI* ui)
 {
-  Time& time = AMN_APPLICATION->GetTime();
+  Time& time = APPLICATION->GetTime();
   time.NextFrame();
 }
 
 static void FirstFrameCallback(TimelineUI* ui)
 {
-  Time& time = AMN_APPLICATION->GetTime();
+  Time& time = APPLICATION->GetTime();
   ui->_currentTime = ui->_startTime;
   time.SetActiveTime(ui->_currentTime);
 }
 
 static void LastFrameCallback(TimelineUI* ui)
 {
-  Time& time = AMN_APPLICATION->GetTime();
+  Time& time = APPLICATION->GetTime();
   ui->_currentTime = ui->_endTime;
   time.SetActiveTime(ui->_currentTime);
 }
@@ -106,7 +106,7 @@ static void LastFrameCallback(TimelineUI* ui)
 static void LoopCallback(TimelineUI* ui)
 {
   ui->_loop = 1 - ui->_loop;
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   Time& time = app->GetTime();
   time.SetLoop(ui->_loop);
 }
@@ -130,51 +130,51 @@ void TimelineUI::MouseMove(int x, int y)
 void TimelineUI::DrawButtons()
 {
   Icon* icon = NULL;
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_FIRST_FRAME];
+  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_FIRST_FRAME];
   AddIconButton<IconPressedFunc>(
-    icon, AMN_ICON_DEFAULT,
+    icon, ICON_DEFAULT,
     (IconPressedFunc)FirstFrameCallback, this
     );
   ImGui::SameLine();
 
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PREVIOUS_FRAME];
+  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PREVIOUS_FRAME];
   AddIconButton<IconPressedFunc>(
-    icon, AMN_ICON_DEFAULT,
+    icon, ICON_DEFAULT,
     (IconPressedFunc)PreviousFrameCallback, this
     );
   ImGui::SameLine();
 
-  if (!_playing) icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PLAYBACK_FORWARD];
-  else icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_STOP_PLAYBACK];
+  if (!_playing) icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_FORWARD];
+  else icon = &ICONS[ICON_SIZE_MEDIUM][ICON_STOP_PLAYBACK];
   AddIconButton<IconPressedFunc, TimelineUI*>(
-    icon, AMN_ICON_DEFAULT,
+    icon, ICON_DEFAULT,
     (IconPressedFunc)PlaybackCallback, this);
   ImGui::SameLine();
 
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_NEXT_FRAME];
+  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_NEXT_FRAME];
   AddIconButton<IconPressedFunc>(
-    icon, AMN_ICON_DEFAULT,
+    icon, ICON_DEFAULT,
     (IconPressedFunc)NextFrameCallback, this);
   ImGui::SameLine();
 
 
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_LAST_FRAME];
+  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_LAST_FRAME];
   AddIconButton<IconPressedFunc, TimelineUI*>(
-    icon, AMN_ICON_DEFAULT,
+    icon, ICON_DEFAULT,
     (IconPressedFunc)LastFrameCallback, this);
   ImGui::SameLine();
 
-  icon = &AMN_ICONS[AMN_ICON_MEDIUM][ICON_PLAYBACK_LOOP];
+  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_LOOP];
   AddCheckableIconButton<IconPressedFunc, TimelineUI*>(
     icon,
-    _loop ? AMN_ICON_SELECTED : AMN_ICON_DEFAULT,
+    _loop ? ICON_SELECTED : ICON_DEFAULT,
     (IconPressedFunc)LoopCallback, this);
   ImGui::SameLine();
 }
 
 void TimelineUI::DrawControls()
 {
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
   int width = GetWidth();
   int height = GetHeight();
 
@@ -283,7 +283,7 @@ void TimelineUI::DrawTimeSlider()
     pxr::GfVec2f(xmax, ymax),
     frontColor, rounding, corners_none);
 
-  Application* app = AMN_APPLICATION;
+  Application* app = APPLICATION;
 
   xmin += 2 * SLIDER_THICKNESS;
   xmax -= 2 * SLIDER_THICKNESS;
@@ -338,4 +338,4 @@ bool TimelineUI::Draw()
     ImGui::IsAnyItemFocused();
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
