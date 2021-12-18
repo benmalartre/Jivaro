@@ -1,4 +1,3 @@
-#include <bitset>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
@@ -93,9 +92,9 @@ BaseHandle::AddXYZComponents(Shape::Component& component)
 
 
 void
-BaseHandle::AddXYXZYZComponents(Shape::Component& component)
+BaseHandle::AddYZXZXYComponents(Shape::Component& component)
 {
-  component.index = AXIS_XY;
+  component.index = AXIS_YZ;
   component.color = HANDLE_X_COLOR;
   component.parentMatrix = HANDLE_X_MATRIX;
   _shape.AddComponent(component);
@@ -103,7 +102,7 @@ BaseHandle::AddXYXZYZComponents(Shape::Component& component)
   component.color = HANDLE_Y_COLOR;
   component.parentMatrix =  HANDLE_Y_MATRIX;
   _shape.AddComponent(component);
-  component.index = AXIS_YZ;
+  component.index = AXIS_XY;
   component.color = HANDLE_Z_COLOR;
   component.parentMatrix =  HANDLE_Z_MATRIX;
   _shape.AddComponent(component);
@@ -156,24 +155,6 @@ BaseHandle::ComputePickFrustum()
 void 
 BaseHandle::SetVisibility(short axis)
 {
-  int bits = 0;
-  switch (axis) {
-  case AXIS_X:
-    bits = 0b000000001; break;
-  case AXIS_Y:
-    bits = 0b000000010; break;
-  case AXIS_Z:
-    bits = 0b000000100; break;
-  case AXIS_XY:
-    bits = 0b000000111; break;
-  case AXIS_XZ:
-    bits = 0b000010101; break;
-  case AXIS_YZ:
-    bits = 0b000100110; break;
-  default:
-    bits = 0b1111111111; break;
-  }
-  _shape.SetVisibility(bits);
 }
 
 void 
@@ -248,27 +229,6 @@ BaseHandle::GetColor(const Shape::Component& comp)
     } else {
       return comp.color;
     }
-  }
-}
-
-bool
-BaseHandle::IsActiveAxis(short axis) 
-{
-  switch (_activeAxis) {
-    case AXIS_X:
-      return axis == AXIS_X || axis == AXIS_XY || axis == AXIS_XYZ || axis == AXIS_XZ;
-    case AXIS_Y:
-      return axis == AXIS_Y || axis == AXIS_XY || axis == AXIS_XYZ || axis == AXIS_YZ;
-    case AXIS_Z:
-      return axis == AXIS_Z || axis == AXIS_XZ || axis == AXIS_XYZ || axis == AXIS_YZ;
-    case AXIS_XY:
-      return axis == AXIS_X || axis == AXIS_XY || axis == AXIS_XYZ || axis == AXIS_XZ || axis == AXIS_YZ;
-    case AXIS_YZ:
-      return axis == AXIS_Y || axis == AXIS_XY || axis == AXIS_XYZ || axis == AXIS_YZ || axis == AXIS_XZ;
-    case AXIS_XZ:
-      return axis == AXIS_Z || axis == AXIS_XZ || axis == AXIS_XYZ || axis == AXIS_XY || axis == AXIS_YZ;
-    default:
-      return false;
   }
 }
 
@@ -474,52 +434,30 @@ BaseHandle::_ConstraintPointToPlane(const pxr::GfVec3f& point,
   short axis)
 {
   switch (axis) {
-  case AXIS_X:
-    return pxr::GfVec3f(pxr::GfPlane(pxr::GfVec3d(1.f, 0.f, 0.f), 0.f).Project(point));
-  case AXIS_Y:
-    return pxr::GfVec3f(pxr::GfPlane(pxr::GfVec3d(0.f, 1.f, 0.f), 0.f).Project(point));
-  case AXIS_Z:
-    return pxr::GfVec3f(pxr::GfPlane(pxr::GfVec3d(0.f, 0.f, 1.f), 0.f).Project(point));
-  case AXIS_CAMERA:
-    return _viewPlaneMatrix.GetInverse().Transform(point);
-  }
-  return pxr::GfVec3f(0.f);
-}
-
-pxr::GfVec3f 
-BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& point,
-  const pxr::GfVec3f& center, short axis, float radius)
-{
-  const pxr::GfVec3f pointToPlane = _ConstraintPointToPlane(point - center, axis).GetNormalized();
-  return pointToPlane * radius + center;
-}
-
-pxr::GfVec3f 
-BaseHandle::_ConstraintPointToPlane(const pxr::GfPlane& plane, const pxr::GfVec3f& point,
-  short axis)
-{
-  switch (axis) {
-  case AXIS_X:
-    return pxr::GfVec3f(plane.Project(point));
-  case AXIS_Y:
-    return pxr::GfVec3f(plane.Project(point));
-  case AXIS_Z:
-    return pxr::GfVec3f(plane.Project(point));
-  case AXIS_CAMERA:
-    return _viewPlaneMatrix.GetInverse().Transform(point);
+    case AXIS_X:
+      return pxr::GfVec3f(pxr::GfPlane(_matrix.TransformDir(
+        pxr::GfVec3f::Axis(0)), _position).Project(point));
+    case AXIS_Y:
+      return pxr::GfVec3f(pxr::GfPlane(_matrix.TransformDir(
+        pxr::GfVec3f::Axis(1)), _position).Project(point));
+    case AXIS_Z:
+      return pxr::GfVec3f(pxr::GfPlane(_matrix.TransformDir(
+        pxr::GfVec3f::Axis(2)), _position).Project(point));
+    case AXIS_CAMERA:
+      return _viewPlaneMatrix.GetInverse().Transform(point);
   }
   return pxr::GfVec3f(0.f);
 }
 
 
-pxr::GfVec3f 
-BaseHandle::_ConstraintPointToCircle(const pxr::GfPlane& plane, const pxr::GfVec3f& point,
-  const pxr::GfVec3f& center, short axis, float radius)
+pxr::GfVec3f
+BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVec3f& normal, 
+  const pxr::GfVec3f& point, short axis, float radius)
 {
-  const pxr::GfVec3f pointToPlane = _ConstraintPointToPlane(plane, point - center, axis).GetNormalized();
+  const pxr::GfVec3f pointToPlane =
+    _ConstraintPointToPlane(point - center, axis).GetNormalized();
   return pointToPlane * radius + center;
 }
-
 
 void
 BaseHandle::_UpdateTargets()
@@ -626,13 +564,14 @@ TranslateHandle::TranslateHandle()
     0.f, -1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
     _radius * 2.f + _height * 0.5f, 0.f, _radius * 2.f + _height * 0.5f, 1.f});
-  AddXYXZYZComponents(box);
+  AddYZXZXYComponents(box);
 }
 
 
 void
 TranslateHandle::SetVisibility(short axis)
 {
+  /*YZXZXY*/
   int bits = 0;
   switch (axis) {
   case AXIS_X:
@@ -642,11 +581,11 @@ TranslateHandle::SetVisibility(short axis)
   case AXIS_Z:
     bits = 0b0001001000; break;
   case AXIS_XY:
-    bits = 0b0010110110; break;
+    bits = 0b100110110; break;
   case AXIS_XZ:
     bits = 0b0101011010; break;
   case AXIS_YZ:
-    bits = 0b1001101100; break;
+    bits = 0b0011101100; break;
   case AXIS_XYZ:
     bits = 0b0000001111; break;
   default:
@@ -774,27 +713,22 @@ RotateHandle::SetVisibility(short axis)
 }
 
 pxr::GfVec3f 
-RotateHandle::_ContraintPointToRotationPlane(const pxr::GfRay& ray)
+RotateHandle::_ContraintPointToRotationPlane(const pxr::GfVec3f& point)
 {
-  pxr::GfPlane plane;
-  double distance;
+  pxr::GfVec3f normal;
   switch (_activeAxis) {
   case AXIS_X:
-    plane = pxr::GfPlane(_base.Transform(pxr::GfVec3f::Axis(0)), _position);
-    ray.Intersect(plane, &distance, NULL);
+    normal = _base.Transform(pxr::GfVec3f::Axis(0));
     break;
   case AXIS_Y:
-    plane = pxr::GfPlane(_base.Transform(pxr::GfVec3f::Axis(1)), _position);
-    ray.Intersect(plane, &distance, NULL);
+    normal = _base.Transform(pxr::GfVec3f::Axis(1));
     break;
   case AXIS_Z:
-    plane = pxr::GfPlane(_base.Transform(pxr::GfVec3f::Axis(2)), _position);
-    ray.Intersect(plane, &distance, NULL);
+    normal = _base.Transform(pxr::GfVec3f::Axis(2));
     break;
   }
 
-  return pxr::GfVec3f(_ConstraintPointToCircle(plane,
-    pxr::GfVec3f(ray.GetPoint(distance)), _position, _activeAxis, _radius));
+  return _ConstraintPointToCircle(_position, normal, point, _activeAxis, _radius);
 }
 
 void 
@@ -812,7 +746,8 @@ RotateHandle::BeginUpdate(float x, float y, float width, float height)
     }
     else {
       _base = _rotation;
-      const pxr::GfVec3f constrained = _ContraintPointToRotationPlane(ray);
+      const pxr::GfVec3f constrained = 
+        _ContraintPointToRotationPlane(pxr::GfVec3f(ray.GetPoint(distance)));
 
       _offset = pxr::GfVec3f(constrained - _position).GetNormalized() * _radius;
 
@@ -846,7 +781,8 @@ RotateHandle::Update(float x, float y, float width, float height)
       if(_activeAxis == AXIS_CAMERA) {
         _position = pxr::GfVec3f(ray.GetPoint(distance)) + _offset;
       } else {
-        const pxr::GfVec3f constrained = _ContraintPointToRotationPlane(ray);
+        const pxr::GfVec3f constrained = 
+          _ContraintPointToRotationPlane(pxr::GfVec3f(ray.GetPoint(distance)));
         const pxr::GfVec3f offset((constrained - _position).GetNormalized() * _radius);
 
         Shape::Component& help = _help.GetComponent(1);
@@ -913,8 +849,33 @@ ScaleHandle::ScaleHandle()
       0.f, 0.f, 1.f, 0.f,
       0.5f, 0.f, 0.5f, 1.f
     });
-  AddXYXZYZComponents(plane);
+  AddYZXZXYComponents(plane);
+}
 
+void
+ScaleHandle::SetVisibility(short axis)
+{
+  /*YZXZXY*/
+  int bits = 0;
+  switch (axis) {
+  case AXIS_X:
+    bits = 0b0000010010; break;
+  case AXIS_Y:
+    bits = 0b0000100100; break;
+  case AXIS_Z:
+    bits = 0b0001001000; break;
+  case AXIS_XY:
+    bits = 0b100110110; break;
+  case AXIS_XZ:
+    bits = 0b0101011010; break;
+  case AXIS_YZ:
+    bits = 0b0011101100; break;
+  case AXIS_XYZ:
+    bits = 0b0000001111; break;
+  default:
+    bits = 0b1111111111; break;
+  }
+  _shape.SetVisibility(bits);
 }
 
 void 

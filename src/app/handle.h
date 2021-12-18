@@ -130,7 +130,7 @@ public:
   void AddYComponent(Shape::Component& component);
   void AddZComponent(Shape::Component& component);
   void AddXYZComponents(Shape::Component& component);
-  void AddXYXZYZComponents(Shape::Component& component);
+  void AddYZXZXYComponents(Shape::Component& component);
   void AddHelperComponent(Shape::Component& component);
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
   void ComputeSizeMatrix(float width, float height);
@@ -140,7 +140,6 @@ public:
 
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
-  bool IsActiveAxis(short axis);
 
   virtual void SetVisibility(short axis);
   virtual void Setup();
@@ -157,11 +156,8 @@ protected:
   virtual void _UpdateTargets();
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
-  pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& point, const pxr::GfVec3f& center, 
-    short axis, float radius);
-  pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfPlane& plane, const pxr::GfVec3f& point, short axis);
-  pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfPlane& plane, const pxr::GfVec3f& point,
-    const pxr::GfVec3f& center, short axis, float radius);
+  pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVec3f& normal,
+    const pxr::GfVec3f& point, short axis, float radius);
   pxr::GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
 
   // handle transformation flags
@@ -211,6 +207,7 @@ public:
   void Update(float x, float y, float width, float height) override;
   void EndUpdate() override;
   void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
+  void SetVisibility(short axis) override;
 
 private:
   pxr::GfVec3f _GetScaleOffset(size_t axis);
@@ -230,7 +227,7 @@ public:
   void SetVisibility(short axis) override;
 
 private:
-  pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfRay& ray);
+  pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfVec3f& point);
   float             _radius;
   pxr::GfQuatf      _base;
 
