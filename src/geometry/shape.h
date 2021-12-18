@@ -193,6 +193,7 @@ public:
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f),
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
 
+  void SetVisibility(int bits);
   short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, const pxr::GfMatrix4f& v);
 
   void Clear();
@@ -200,7 +201,7 @@ public:
   static void UpdateCamera(const pxr::GfMatrix4f& view, 
     const pxr::GfMatrix4f& proj);
 
-  void Setup();
+  void Setup(bool dynamic=false);
   void Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color);
   void Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
     size_t start, size_t end);

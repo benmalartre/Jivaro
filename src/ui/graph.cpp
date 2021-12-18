@@ -67,6 +67,8 @@ _GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
     vtn == pxr::SdfValueTypeNames->Color4fArray) return pxr::SdfValueTypeNames->Color3fArray;
   else if (vtn == pxr::SdfValueTypeNames->Asset ||
     vtn == pxr::SdfValueTypeNames->AssetArray) return pxr::SdfValueTypeNames->AssetArray;
+  else
+    return pxr::SdfValueTypeNames->Int;
 }
 
 int

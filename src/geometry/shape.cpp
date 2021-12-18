@@ -9,6 +9,7 @@
 #include "../geometry/shape.h"
 #include "../geometry/intersection.h"
 #include "../utils/shaders.h"
+#include "../utils/glutils.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -25,7 +26,8 @@ Shape* CONE_SHAPE = NULL;
 Shape* CAPSULE_SHAPE = NULL;
 Shape* TORUS_SHAPE = NULL;
 
-void Shape::Component::SetFlag(short flag, bool value)
+void 
+Shape::Component::SetFlag(short flag, bool value)
 {
   if(value) {
     BITMASK_SET(flags, flag);
@@ -34,22 +36,26 @@ void Shape::Component::SetFlag(short flag, bool value)
   }
 }
 
-bool Shape::Component::GetFlag(short flag) const
+bool 
+Shape::Component::GetFlag(short flag) const
 {
   return BITMASK_CHECK(flags, flag);
 }
 
-void Shape::Component::SetBounds(const pxr::GfVec3f& xyz)
+void 
+Shape::Component::SetBounds(const pxr::GfVec3f& xyz)
 {
   bounds = pxr::GfRange3f(pxr::GfVec3f(0.f), xyz);
 }
 
-void Shape::Component::SetBounds(const pxr::GfRange3f& value)
+void 
+Shape::Component::SetBounds(const pxr::GfRange3f& value)
 {
   bounds = value;
 }
 
-void Shape::Component::ComputeBounds(Shape* shape)
+void 
+Shape::Component::ComputeBounds(Shape* shape)
 {
   bounds.SetEmpty();
   const std::vector<pxr::GfVec3f>& points = shape->GetPoints();
@@ -219,7 +225,18 @@ Shape::~Shape()
   if(_vao) glDeleteVertexArrays(1,&_vao); 
 };
 
-void Shape::UpdateComponents(short hovered, short active, bool hideInactive)
+void
+Shape::SetVisibility(int bits)
+{
+  /*
+  for (int i = 0; i < _components.size(); ++i) {
+    _components[i].SetFlag(Shape::VISIBLE, BITMASK_CHECK(bits, i));
+  }
+  */
+}
+
+void 
+Shape::UpdateComponents(short hovered, short active, bool hideInactive)
 {
   for(Shape::Component& component: _components) {
     if (component.GetFlag(Shape::MASK)) continue;
@@ -240,7 +257,8 @@ void Shape::UpdateComponents(short hovered, short active, bool hideInactive)
   }
 }
 
-void Shape::UpdateVisibility(const pxr::GfMatrix4f& m, const pxr::GfVec3f& dir)
+void
+Shape::UpdateVisibility(const pxr::GfMatrix4f& m, const pxr::GfVec3f& dir)
 {
   for(Shape::Component& component: _components) {
     pxr::GfVec3f axis = _GetComponentAxis(component, m);
@@ -268,12 +286,14 @@ void Shape::UpdateVisibility(const pxr::GfMatrix4f& m, const pxr::GfVec3f& dir)
   }
 }
 
-void Shape::AddComponent(const Component& component)
+void 
+Shape::AddComponent(const Component& component)
 {
   _components.push_back(component);
 }
 
-void Shape::RemoveComponent(size_t idx)
+void 
+Shape::RemoveComponent(size_t idx)
 {
   if (!_components.size() || idx >= _components.size())return;
   const Component& comp = _components[idx];
@@ -294,7 +314,8 @@ void Shape::RemoveComponent(size_t idx)
   _components.erase(_components.begin() + idx);
 }
 
-void Shape::RemoveLastComponent()
+void 
+Shape::RemoveLastComponent()
 {
   if (!_components.size()) return;
   const Component& comp = _components.back();
@@ -303,7 +324,8 @@ void Shape::RemoveLastComponent()
   _components.pop_back();
 }
 
-void Shape::_MakeCircle(std::vector<pxr::GfVec3f>& points, float radius, 
+void 
+Shape::_MakeCircle(std::vector<pxr::GfVec3f>& points, float radius, 
   size_t numPoints, const pxr::GfMatrix4f& m)
 {
   float step = (360 / (float)numPoints) * DEGREES_TO_RADIANS;
@@ -313,7 +335,8 @@ void Shape::_MakeCircle(std::vector<pxr::GfVec3f>& points, float radius,
   }
 }
 
-void Shape::_TransformPoints(size_t startIdx, size_t endIdx, 
+void 
+Shape::_TransformPoints(size_t startIdx, size_t endIdx, 
   const pxr::GfMatrix4f& m)
 {
   for(size_t k=startIdx; k < endIdx; ++k) {
@@ -321,7 +344,8 @@ void Shape::_TransformPoints(size_t startIdx, size_t endIdx,
   }
 }
 
-pxr::GfVec3f Shape::_GetComponentAxis(const Shape::Component& component, 
+pxr::GfVec3f
+Shape::_GetComponentAxis(const Shape::Component& component, 
   const pxr::GfMatrix4f& m)
 {
   const pxr::GfMatrix4f matrix = 
@@ -548,6 +572,7 @@ Shape::AddSphere(short index, float radius, size_t lats, size_t longs,
     pxr::GfMatrix4f(1.f), 
     m);
 
+  std::cout << "INDICES SIZE : " << _indices.size() << std::endl;
   component.SetBounds(pxr::GfVec3f(radius, 0.f, 0.f));
   return component;
 }
@@ -1137,7 +1162,7 @@ void Shape::Clear()
   _components.clear();
 }
 
-void Shape::Setup()
+void Shape::Setup(bool dynamic)
 {
   // current vao
   GLint vao;
@@ -1151,24 +1176,28 @@ void Shape::Setup()
   if(!_vbo) glGenBuffers(1,&_vbo);
   glBindBuffer(GL_ARRAY_BUFFER,_vbo);
 
-  // create or reuse element array object
-  if(!_eab) glGenBuffers(1,&_eab);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab);
-
   // fill buffer data
   size_t length = _points.size() * 3 * sizeof(float);
   if(length) {
-    glBufferData(GL_ARRAY_BUFFER,length,NULL,GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,length,NULL, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW );
     glBufferSubData(GL_ARRAY_BUFFER, 0, length, &_points[0][0]);
-    //glBufferSubData(GL_ARRAY_BUFFER, plength, clength, CArray::GetPtr(*item\colors,0))
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
   
     //glEnableVertexAttribArray(1);
     //glVertexAttribPointer(1,4,#GL_FLOAT,#GL_FALSE,0,plength);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(int), 
-      &_indices[0], GL_STATIC_DRAW);
   }
+
+  // create or reuse element array object
+  if (!_eab) glGenBuffers(1, &_eab);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab);
+
+  if (_indices.size()) {
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(int),
+      &_indices[0], dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+  }
+
+
   glBindVertexArray(vao);
 }
 

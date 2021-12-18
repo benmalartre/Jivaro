@@ -3,6 +3,7 @@
 
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/quaternion.h>
 #include <pxr/base/gf/rotation.h>
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/gf/vec4f.h>
@@ -130,13 +131,16 @@ public:
   void AddZComponent(Shape::Component& component);
   void AddXYZComponents(Shape::Component& component);
   void AddYZXZXYComponents(Shape::Component& component);
+  void AddHelperComponent(Shape::Component& component);
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
   void ComputeSizeMatrix(float width, float height);
   void ComputeViewPlaneMatrix();
   void ComputePickFrustum();
+  void SetVisibility(short axis);
 
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
+  bool IsActiveAxis(short axis);
 
   virtual void Setup();
   virtual void Draw(float width, float height);
@@ -154,6 +158,9 @@ protected:
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& point, const pxr::GfVec3f& center, 
     short axis, float radius);
+  pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfPlane& plane, const pxr::GfVec3f& point, short axis);
+  pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfPlane& plane, const pxr::GfVec3f& point,
+    const pxr::GfVec3f& center, short axis, float radius);
   pxr::GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
 
   // handle transformation flags
@@ -202,7 +209,6 @@ public:
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
   void EndUpdate() override;
-  //void Draw(float width, float height) override;
   void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
 
 private:
@@ -222,8 +228,10 @@ public:
   void Update(float x, float y, float width, float height) override;
 
 private:
-  float _radius;
-  Shape _help;
+  pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfRay& ray);
+  float             _radius;
+  pxr::GfQuatf      _base;
+
 };
 
 class TranslateHandle : public BaseHandle {
