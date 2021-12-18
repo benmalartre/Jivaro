@@ -28,6 +28,7 @@ ImFont* BOLD_FONTS[3] = { NULL, NULL, NULL };
 ImFont* MEDIUM_FONTS[3] = { NULL, NULL, NULL };
 ImFont* REGULAR_FONTS[3] = { NULL, NULL, NULL };
 
+#define SPLITTER_DEBOUNCE 32
 //
 // Shared Font Atlas
 //
@@ -607,15 +608,16 @@ Window::PickSplitter(double mouseX, double mouseY)
 {
   int splitterIndex = _splitter->Pick(mouseX, mouseY);
   if(splitterIndex >= 0) {
-    _activeView = _splitter->GetViewByIndex(splitterIndex);
-    if (_activeView->GetFlag(View::HORIZONTAL)) {
+    View* activeView = _splitter->GetViewByIndex(splitterIndex);
+    if (activeView->GetFlag(View::HORIZONTAL)) {
       _splitter->SetVerticalCursor();
-    } else { 
+    } else {
       _splitter->SetHorizontalCursor();
     }
     return true;
+  } else {
+    _splitter->SetDefaultCursor();
   }
-  else _splitter->SetDefaultCursor();
   return false;
 }
 
@@ -797,6 +799,9 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     else if (action == GLFW_PRESS)
     {
       if (splitterHovered) {
+        View* activeView = parent->GetActiveView();
+        if (activeView) { activeView->SetInteracting(false); };
+        parent->SetActiveView(parent->GetSplitter()->GetHovered());
         parent->BeginDragSplitter();
       }
       else {
@@ -818,6 +823,7 @@ ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
   ImGui::SetCurrentContext(parent->GetContext());
   ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
   if(parent->GetActiveView()) {
+
     parent->GetActiveView()->MouseWheel(xoffset, yoffset);
   }
 }
@@ -839,9 +845,10 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   if(parent->IsDraggingSplitter()) {
     parent->DragSplitter(x, y);
   } else {
-    if (active && active->GetFlag(View::INTERACTING))
+    if (active && active->GetFlag(View::INTERACTING)) {
+      std::cout << "ACTIVE VIEW : " << active->GetName() << std::endl;
       active->MouseMove(x, y);
-    else {
+    } else {
       if (view) {
         parent->SetActiveView(view);
         parent->GetActiveView()->MouseMove(x, y);

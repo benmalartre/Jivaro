@@ -49,7 +49,6 @@ private:
   pxr::GfVec2f _TimeToPosition(float time);
   float _PositionToTime(const pxr::GfVec2f& position);
   
-  bool                    _interacting;
   TimeData                _data;
   int                     _frame;
   int                     _lastFrame;

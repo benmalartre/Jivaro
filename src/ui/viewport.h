@@ -86,7 +86,6 @@ class ViewportUI : public BaseUI
     Camera*               _camera;
     double                _lastX;
     double                _lastY;
-    bool                  _interact;
     short                 _interactionMode;
     bool                  _valid;
 

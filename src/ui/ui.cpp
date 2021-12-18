@@ -10,6 +10,7 @@ BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
   : _parent(parent) 
   , _name(name)
   , _initialized(false)
+  , _interacting(false)
 {
   if(_parent && !popup)
   {
@@ -78,6 +79,18 @@ int BaseUI::GetWidth()
 int BaseUI::GetHeight()
 {
   return _parent->GetHeight() + 2;
+}
+
+void 
+BaseUI::SetInteracting(bool state)
+{
+  if(state) {
+    _interacting = true;
+    _parent->SetFlag(View::INTERACTING);
+  } else {
+    _interacting = false;
+   _parent->ClearFlag(View::INTERACTING);
+  }
 }
 
 bool BaseUI::DrawHead() 

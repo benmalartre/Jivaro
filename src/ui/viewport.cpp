@@ -35,7 +35,6 @@ BaseUI(parent, "Viewport")
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
-  _interact = false;
   _interactionMode = INTERACTION_NONE;
   _engine = nullptr;
   _rendererIndex = 0;
@@ -127,7 +126,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   if (action == GLFW_RELEASE)
   {
     _interactionMode = INTERACTION_NONE;
-    _interact = false;
+    SetInteracting(false);
 
     if (!(mods & GLFW_MOD_ALT) && !(mods & GLFW_MOD_SUPER)) {
       if (tools->IsInteracting()) {
@@ -142,7 +141,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _lastX = (int)x;
     _lastY = (int)y;
-    _interact = true;
+    SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
         _interactionMode = INTERACTION_ORBIT;
@@ -182,7 +181,7 @@ void ViewportUI::MouseMove(int x, int y)
   Tool* tools = APPLICATION->GetTools();
   tools->SetViewport(this);
   
-  if(_interact)
+  if(_interacting)
   {
     double dx = static_cast<double>(x) - _lastX;
     double dy = static_cast<double>(y) - _lastY;

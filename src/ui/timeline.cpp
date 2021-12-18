@@ -71,7 +71,6 @@ ImGuiWindowFlags TimelineUI::_flags =
 // constructor
 TimelineUI::TimelineUI(View* parent) 
   : BaseUI(parent, "Timeline")
-  , _interacting(false)
 {
   _parent->SetDirty();
   _parent->SetFlag(View::FORCEREDRAW);
@@ -157,17 +156,15 @@ void TimelineUI::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
 
   if (action == GLFW_PRESS) {
-    _interacting = true;
+    SetInteracting(true);
     _lastX = static_cast<double>(x);
     _lastY = static_cast<double>(y);
     _frame = _GetFrameUnderMouse(x, y);
-    _parent->SetFlag(View::INTERACTING);
   } else if (action == GLFW_RELEASE) {
-    _interacting = false;
+    SetInteracting(false);
     _frame = _GetFrameUnderMouse(x, y);
     _data.currentTime = _frame;
     time.SetActiveTime(_frame);
-    _parent->ClearFlag(View::INTERACTING);
   }
   _parent->SetDirty();
 }

@@ -35,6 +35,7 @@ public:
   void BuildMap(int width, int height);
   View* GetViewByIndex(int index);
   int Pick(int x, int y);
+  View* GetHovered() { return _hovered; };
   void SetHorizontalCursor(){_cursor = ImGuiMouseCursor_ResizeEW;};
   void SetVerticalCursor(){_cursor = ImGuiMouseCursor_ResizeNS;};
   void SetDefaultCursor(){_cursor = ImGuiMouseCursor_Arrow;};
@@ -44,7 +45,6 @@ public:
   
 private:
   int*                    _pixels;
-  unsigned                _viewID;
   unsigned                _width;
   unsigned                _height;
   unsigned                _lastX;
@@ -53,6 +53,7 @@ private:
   bool                    _valid;
   int                     _cursor;
   std::vector<View*>      _views;
+  View* _hovered;
   static ImGuiWindowFlags _flags;
 };
 

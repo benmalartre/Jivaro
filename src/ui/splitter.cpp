@@ -22,6 +22,7 @@ ImGuiWindowFlags SplitterUI::_flags =
 
 SplitterUI::SplitterUI()
   : BaseUI(NULL, "Splitter")
+  , _hovered(NULL)
   , _pixels(NULL)
   , _valid(false)
 {
@@ -36,7 +37,7 @@ void SplitterUI::RecurseBuildMap(View* view)
 {
   if(!view) return;
   _views.push_back(view);
-  _viewID++;
+  size_t viewID = _views.size();
   if(!view->GetFlag(View::LEAF))
   {
     View* parent = view->GetParent();
@@ -49,7 +50,7 @@ void SplitterUI::RecurseBuildMap(View* view)
       {
         for (int x = sMin[0]; x < sMax[0]; ++x)
         {
-          _pixels[y * _width + x] = _viewID;
+          _pixels[y * _width + x] = viewID;
         }
       }
     }
@@ -64,7 +65,6 @@ void
 SplitterUI::BuildMap(int width, int height)
 {
   size_t numPixels = width * height;
-  _viewID = 0;
   if (_pixels)delete[]_pixels;
   _pixels = new int[numPixels];
   _valid = true;
@@ -84,6 +84,7 @@ SplitterUI::Pick(int x, int y)
   int idx = y * _width + x;
   if(idx >= 0 && idx < (_width * _height))
   {
+    _hovered = _views[_pixels[idx] - 1];
     return _pixels[idx] - 1;
   }
   return -1;

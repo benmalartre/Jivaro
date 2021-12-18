@@ -88,6 +88,7 @@ public:
   virtual void MouseWheel(int x, int y){};
   virtual void Keyboard(int key, int scancode, int action, int mods) {};
 
+  void SetInteracting(bool state);
   bool DrawHead();
   virtual bool Draw()=0;
   virtual void Resize(){};
@@ -98,6 +99,7 @@ public:
 
 protected:
   bool                    _initialized;
+  bool                    _interacting;
   View*                   _parent;
   std::string             _name;
   static ImGuiWindowFlags _flags;
