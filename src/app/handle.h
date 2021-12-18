@@ -157,7 +157,7 @@ protected:
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVec3f& normal,
-    const pxr::GfVec3f& point, short axis, float radius);
+    const pxr::GfRay& ray, short axis, float radius);
   pxr::GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
 
   // handle transformation flags
@@ -227,7 +227,7 @@ public:
   void SetVisibility(short axis) override;
 
 private:
-  pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfVec3f& point);
+  pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfRay& ray);
   float             _radius;
   pxr::GfQuatf      _base;
 

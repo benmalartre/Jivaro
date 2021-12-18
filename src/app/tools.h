@@ -1,4 +1,5 @@
-#pragma once
+#ifndef JVR_APPLICATION_TOOLS_H
+#define JVR_APPLICATION_TOOLS_H
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -55,3 +56,5 @@ private:
 void InitializeTools();
 
 JVR_NAMESPACE_CLOSE_SCOPE
+
+#endif // JVR_APPLICATION_HANDLE_H

@@ -12,6 +12,18 @@ extern IconList ICONS;
 
 #define SLIDER_THICKNESS 2.f
 
+struct TimeData {
+  float currentTime;
+  float startTime;
+  float endTime;
+  float minTime;
+  float maxTime;
+  float fps;
+  float speed;
+  bool  loop;
+  bool  playing;
+};
+
 class TimelineUI : BaseUI
 {
 public:
@@ -29,17 +41,18 @@ public:
   void DrawTimeSlider();
   void ValidateTime();
   void Update();
+  TimeData& GetData() { return _data; };
+  const TimeData& GetData() const { return _data; };
 
-  float                   _currentTime;
-  float                   _startTime;
-  float                   _endTime;
-  float                   _minTime;
-  float                   _maxTime;
-  float                   _fps;
-  float                   _speed;
-  bool                    _loop;
-  bool                    _playing;
+private:
+  float _GetFrameUnderMouse(int x, int y);
+  pxr::GfVec2f _TimeToPosition(float time);
+  float _PositionToTime(const pxr::GfVec2f& position);
+  
   bool                    _interacting;
+  TimeData                _data;
+  int                     _frame;
+  int                     _lastFrame;
   double                  _lastX;
   double                  _lastY;
   static ImGuiWindowFlags _flags;

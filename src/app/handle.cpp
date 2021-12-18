@@ -355,6 +355,7 @@ BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
   _scale = pxr::GfVec3f(1.f);
   pxr::GfRange3d accumulatedRange;
   size_t numPrims = 0;
+  pxr::GfTransform transform;
   for (auto& target: _targets) {
     const auto& prim(stage->GetPrimAtPath(target.path));
     if(prim.IsValid()) {
@@ -367,18 +368,12 @@ BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
       if(prim.IsA<pxr::UsdGeomXformable>()) {
         bool resetsXformStack = false;
         pxr::GfMatrix4f m(_xformCache.GetLocalToWorldTransform(prim));
+        transform.SetMatrix(pxr::GfMatrix4d(m));
+        _position += pxr::GfVec3f(transform.GetTranslation());
 
-        _position += pxr::GfVec3f(
-          m[3][0],
-          m[3][1],
-          m[3][2]);
+        _scale += pxr::GfVec3f(transform.GetScale());
 
-        _scale += pxr::GfVec3f(
-          m[0][0],
-          m[1][1],
-          m[2][2]);
-
-        _rotation *= m.ExtractRotationQuat();
+        _rotation *= pxr::GfQuatf(transform.GetRotation().GetQuat());
         ++numPrims;
       }
     }
@@ -395,7 +390,6 @@ BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
       pxr::GfMatrix4f(1.f).SetTranslate(_position);
 
     _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
-   
   }
 }
 
@@ -452,11 +446,12 @@ BaseHandle::_ConstraintPointToPlane(const pxr::GfVec3f& point,
 
 pxr::GfVec3f
 BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVec3f& normal, 
-  const pxr::GfVec3f& point, short axis, float radius)
+  const pxr::GfRay& ray, short axis, float radius)
 {
-  const pxr::GfVec3f pointToPlane =
-    _ConstraintPointToPlane(point - center, axis).GetNormalized();
-  return pointToPlane * radius + center;
+  double distance;
+  ray.Intersect(pxr::GfPlane(normal, center), &distance, NULL);
+  const pxr::GfVec3f hit(ray.GetPoint(distance));
+  return center - (hit - center).GetNormalized() * radius;
 }
 
 void
@@ -523,6 +518,7 @@ void
 BaseHandle::EndUpdate()
 {
   _interacting = false;
+  _shape.SetVisibility(0b1111111111111111);
 }
 
 //==================================================================================
@@ -691,6 +687,7 @@ RotateHandle::RotateHandle()
   Shape::Component help3 = _help.AddDisc(
     AXIS_NONE, _radius, 0.f, 360.f, 32, HANDLE_HELP_COLOR, zeroScaleMatrix);
   AddHelperComponent(help3);
+  _shape.SetVisibility(0b11111);
 }
 
 void
@@ -713,7 +710,7 @@ RotateHandle::SetVisibility(short axis)
 }
 
 pxr::GfVec3f 
-RotateHandle::_ContraintPointToRotationPlane(const pxr::GfVec3f& point)
+RotateHandle::_ContraintPointToRotationPlane(const pxr::GfRay& ray)
 {
   pxr::GfVec3f normal;
   switch (_activeAxis) {
@@ -728,7 +725,8 @@ RotateHandle::_ContraintPointToRotationPlane(const pxr::GfVec3f& point)
     break;
   }
 
-  return _ConstraintPointToCircle(_position, normal, point, _activeAxis, _radius);
+  return _ConstraintPointToCircle(_position, normal, ray, _activeAxis, _radius);
+  //return _position;
 }
 
 void 
@@ -740,6 +738,7 @@ RotateHandle::BeginUpdate(float x, float y, float width, float height)
   double distance;
   bool frontFacing;
   _startMatrix = _matrix;
+  _position = pxr::GfVec3f(_matrix[3][0], _matrix[3][1], _matrix[3][2]);
   if (ray.Intersect(_plane, &distance, &frontFacing)) {
     if (_activeAxis == AXIS_CAMERA) {
       _offset = pxr::GfVec3f(_position - ray.GetPoint(distance));
@@ -747,7 +746,7 @@ RotateHandle::BeginUpdate(float x, float y, float width, float height)
     else {
       _base = _rotation;
       const pxr::GfVec3f constrained = 
-        _ContraintPointToRotationPlane(pxr::GfVec3f(ray.GetPoint(distance)));
+        _ContraintPointToRotationPlane(ray);
 
       _offset = pxr::GfVec3f(constrained - _position).GetNormalized() * _radius;
 
@@ -782,7 +781,7 @@ RotateHandle::Update(float x, float y, float width, float height)
         _position = pxr::GfVec3f(ray.GetPoint(distance)) + _offset;
       } else {
         const pxr::GfVec3f constrained = 
-          _ContraintPointToRotationPlane(pxr::GfVec3f(ray.GetPoint(distance)));
+          _ContraintPointToRotationPlane(ray);
         const pxr::GfVec3f offset((constrained - _position).GetNormalized() * _radius);
 
         Shape::Component& help = _help.GetComponent(1);
@@ -792,10 +791,6 @@ RotateHandle::Update(float x, float y, float width, float height)
           0.f, 0.f, 1.f, 0.f,
           constrained[0], constrained[1], constrained[2], 1.f
         };
-
-        //Shape::Component& angle = _help.GetComponent(2);
-        //_help.AddComponent()
-
         _needUpdate = true;
 
         const pxr::GfRotation rotation(offset, _offset);
