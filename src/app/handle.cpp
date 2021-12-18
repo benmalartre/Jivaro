@@ -655,10 +655,7 @@ RotateHandle::RotateHandle()
   );
   mask.SetFlag(Shape::MASK, true);
   AddComponent(mask);
-  /*
-  Shape::Component torus = _shape.AddTorus(
-    AXIS_X, _radius, section, 32, 16, HANDLE_X_COLOR);
-  */
+
   Shape::Component axis = _shape.AddTube(
     AXIS_X, _radius + section, _radius, 0.05f, 32, 2, HANDLE_X_COLOR);
   AddXYZComponents(axis);
@@ -755,7 +752,7 @@ RotateHandle::BeginUpdate(float x, float y, float width, float height)
         1.f, 0.f, 0.f,0.f,
         0.f, 1.f, 0.f, 0.f,
         0.f, 0.f, 1.f, 0.f,
-        constrained[0], constrained[1], constrained[2], 1.f
+        _offset[0] + _position[0], _offset[1] + _position[1], _offset[2] + _position[2], 1.f
       };
       _needUpdate = true;
     }
@@ -780,8 +777,7 @@ RotateHandle::Update(float x, float y, float width, float height)
       if(_activeAxis == AXIS_CAMERA) {
         _position = pxr::GfVec3f(ray.GetPoint(distance)) + _offset;
       } else {
-        const pxr::GfVec3f constrained = 
-          _ContraintPointToRotationPlane(ray);
+        const pxr::GfVec3f constrained = _ContraintPointToRotationPlane(ray);
         const pxr::GfVec3f offset((constrained - _position).GetNormalized() * _radius);
 
         Shape::Component& help = _help.GetComponent(1);
@@ -789,7 +785,7 @@ RotateHandle::Update(float x, float y, float width, float height)
           1.f, 0.f, 0.f,0.f,
           0.f, 1.f, 0.f, 0.f,
           0.f, 0.f, 1.f, 0.f,
-          constrained[0], constrained[1], constrained[2], 1.f
+          offset[0] + _position[0], offset[1] + _position[1], offset[2] + _position[2], 1.f
         };
         _needUpdate = true;
 

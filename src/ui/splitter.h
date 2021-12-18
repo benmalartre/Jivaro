@@ -53,7 +53,7 @@ private:
   bool                    _valid;
   int                     _cursor;
   std::vector<View*>      _views;
-  View* _hovered;
+  View*                   _hovered;
   static ImGuiWindowFlags _flags;
 };
 
