@@ -130,18 +130,19 @@ public:
   void AddYComponent(Shape::Component& component);
   void AddZComponent(Shape::Component& component);
   void AddXYZComponents(Shape::Component& component);
-  void AddYZXZXYComponents(Shape::Component& component);
+  void AddXYXZYZComponents(Shape::Component& component);
   void AddHelperComponent(Shape::Component& component);
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
   void ComputeSizeMatrix(float width, float height);
   void ComputeViewPlaneMatrix();
   void ComputePickFrustum();
-  void SetVisibility(short axis);
+  
 
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
   bool IsActiveAxis(short axis);
 
+  virtual void SetVisibility(short axis);
   virtual void Setup();
   virtual void Draw(float width, float height);
   virtual short Select(float x, float y, float width, float height, bool lock);
@@ -226,6 +227,7 @@ public:
 
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
+  void SetVisibility(short axis) override;
 
 private:
   pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfRay& ray);
@@ -240,6 +242,7 @@ public:
 
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
+  void SetVisibility(short axis) override;
 
 private:
   float _radius;

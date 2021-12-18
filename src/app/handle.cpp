@@ -1,3 +1,4 @@
+#include <bitset>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
@@ -90,10 +91,11 @@ BaseHandle::AddXYZComponents(Shape::Component& component)
   AddZComponent(component);
 }
 
+
 void
-BaseHandle::AddYZXZXYComponents(Shape::Component& component)
+BaseHandle::AddXYXZYZComponents(Shape::Component& component)
 {
-  component.index = AXIS_YZ;
+  component.index = AXIS_XY;
   component.color = HANDLE_X_COLOR;
   component.parentMatrix = HANDLE_X_MATRIX;
   _shape.AddComponent(component);
@@ -101,7 +103,7 @@ BaseHandle::AddYZXZXYComponents(Shape::Component& component)
   component.color = HANDLE_Y_COLOR;
   component.parentMatrix =  HANDLE_Y_MATRIX;
   _shape.AddComponent(component);
-  component.index = AXIS_XY;
+  component.index = AXIS_YZ;
   component.color = HANDLE_Z_COLOR;
   component.parentMatrix =  HANDLE_Z_MATRIX;
   _shape.AddComponent(component);
@@ -157,20 +159,21 @@ BaseHandle::SetVisibility(short axis)
   int bits = 0;
   switch (axis) {
   case AXIS_X:
-    bits = 0b0000000010; break;
+    bits = 0b000000001; break;
   case AXIS_Y:
-    bits = 0b0000000100; break;
+    bits = 0b000000010; break;
   case AXIS_Z:
-    bits = 0b0000001000; break;
+    bits = 0b000000100; break;
   case AXIS_XY:
-    bits = 0b0000001110; break;
+    bits = 0b000000111; break;
   case AXIS_XZ:
-    bits = 0b0000101010; break;
+    bits = 0b000010101; break;
   case AXIS_YZ:
-    bits = 0b0001001100; break;
+    bits = 0b000100110; break;
   default:
     bits = 0b1111111111; break;
   }
+  _shape.SetVisibility(bits);
 }
 
 void 
@@ -319,8 +322,11 @@ BaseHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
   for (size_t i = 0; i < shape->GetNumComponents(); ++i) {
     const Shape::Component& component = shape->GetComponent(i);
     if (component.GetFlag(Shape::VISIBLE)) {
-      if (component.GetFlag(Shape::VISIBLE)) {
+      if (component.index == AXIS_CAMERA) {
         shape->DrawComponent(i, _viewPlaneMatrix, GetColor(component));
+      }
+      else {
+        shape->DrawComponent(i, component.parentMatrix * m, GetColor(component));
       }
     }
   }
@@ -620,7 +626,33 @@ TranslateHandle::TranslateHandle()
     0.f, -1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
     _radius * 2.f + _height * 0.5f, 0.f, _radius * 2.f + _height * 0.5f, 1.f});
-  AddYZXZXYComponents(box);
+  AddXYXZYZComponents(box);
+}
+
+
+void
+TranslateHandle::SetVisibility(short axis)
+{
+  int bits = 0;
+  switch (axis) {
+  case AXIS_X:
+    bits = 0b0000010010; break;
+  case AXIS_Y:
+    bits = 0b0000100100; break;
+  case AXIS_Z:
+    bits = 0b0001001000; break;
+  case AXIS_XY:
+    bits = 0b0010110110; break;
+  case AXIS_XZ:
+    bits = 0b0101011010; break;
+  case AXIS_YZ:
+    bits = 0b1001101100; break;
+  case AXIS_XYZ:
+    bits = 0b0000001111; break;
+  default:
+    bits = 0b1111111111; break;
+  }
+  _shape.SetVisibility(bits);
 }
 
 void 
@@ -720,8 +752,25 @@ RotateHandle::RotateHandle()
   Shape::Component help3 = _help.AddDisc(
     AXIS_NONE, _radius, 0.f, 360.f, 32, HANDLE_HELP_COLOR, zeroScaleMatrix);
   AddHelperComponent(help3);
- 
+}
 
+void
+RotateHandle::SetVisibility(short axis)
+{
+  int bits = 0;
+  switch (axis) {
+  case AXIS_X:
+    bits = 0b00010; break;
+  case AXIS_Y:
+    bits = 0b00100; break;
+  case AXIS_Z:
+    bits = 0b01000; break;
+  case AXIS_CAMERA:
+    bits = 0b10000; break;
+  default:
+    bits = 0b11111; break;
+  }
+  _shape.SetVisibility(bits);
 }
 
 pxr::GfVec3f 
@@ -864,7 +913,7 @@ ScaleHandle::ScaleHandle()
       0.f, 0.f, 1.f, 0.f,
       0.5f, 0.f, 0.5f, 1.f
     });
-  AddYZXZXYComponents(plane);
+  AddXYXZYZComponents(plane);
 
 }
 

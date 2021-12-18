@@ -228,11 +228,9 @@ Shape::~Shape()
 void
 Shape::SetVisibility(int bits)
 {
-  /*
   for (int i = 0; i < _components.size(); ++i) {
-    _components[i].SetFlag(Shape::VISIBLE, BITMASK_CHECK(bits, i));
+    _components[i].SetFlag(Shape::VISIBLE, bits & 1 << i);
   }
-  */
 }
 
 void 
