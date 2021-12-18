@@ -28,7 +28,6 @@ ImFont* BOLD_FONTS[3] = { NULL, NULL, NULL };
 ImFont* MEDIUM_FONTS[3] = { NULL, NULL, NULL };
 ImFont* REGULAR_FONTS[3] = { NULL, NULL, NULL };
 
-#define SPLITTER_DEBOUNCE 32
 //
 // Shared Font Atlas
 //
@@ -846,7 +845,6 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
     parent->DragSplitter(x, y);
   } else {
     if (active && active->GetFlag(View::INTERACTING)) {
-      std::cout << "ACTIVE VIEW : " << active->GetName() << std::endl;
       active->MouseMove(x, y);
     } else {
       if (view) {
