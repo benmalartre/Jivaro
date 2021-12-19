@@ -9,8 +9,11 @@
 #include "../ui/ui.h"
 #include "../ui/utils.h"
 
+
+
 JVR_NAMESPACE_OPEN_SCOPE
 
+class Command;
 // callback prototype
 typedef void(*MenuPressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
 
@@ -26,19 +29,12 @@ struct MenuItem {
   MenuPressedFunc             func;
 
   MenuItem(View* view, const std::string lbl, const std::string sht, bool sel,
-    bool enb, MenuPressedFunc f=NULL, const pxr::VtArray<pxr::VtValue> a=pxr::VtArray<pxr::VtValue>());
+    bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a=pxr::VtArray<pxr::VtValue>());
   MenuItem& AddItem(View* view, const std::string lbl, const std::string sht, bool sel,
-    bool enb, MenuPressedFunc f=NULL, const pxr::VtArray<pxr::VtValue> a=pxr::VtArray<pxr::VtValue>());
+    bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a=pxr::VtArray<pxr::VtValue>());
 
   bool Draw();
 };
-
-static void TestMenuCallback(const pxr::VtArray<pxr::VtValue>& args)
-{
-  if(args.size())
-    std::cout << "TEST MENU CALLBACK SUCCEDED : " << args[0] << std::endl;
-  else std::cout << "FUCKIN ARGS EMPTY !! ! " << std::endl;
-}
 
 class MenuUI : public BaseUI
 {

@@ -23,15 +23,18 @@ class GraphUI;
 class ExplorerUI;
 class LayersUI;
 class CurveEditorUI;
+class Command;
+class CommandManager;
 
 class Application : public pxr::TfWeakBase
 {
 public:
-  static const char* APPLICATION_NAME;
+  static const char* name;
   // constructor
   Application(unsigned width, unsigned height);
   Application(bool fullscreen=true);
 
+  static Application* Create(unsigned width, unsigned height);
   // destructor
   ~Application();
 
@@ -73,8 +76,16 @@ public:
   void ClearSelection();
   pxr::GfBBox3d GetSelectionBoundingBox();
   pxr::GfBBox3d GetStageBoundingBox();
+
+  // notices callbacks
   void SelectionChangedCallback(const SelectionChangedNotice& n);
   void NewSceneCallback(const NewSceneNotice& n);
+  void SceneChangedCallback(const SceneChangedNotice& n);
+
+  // commands
+  void AddCommand(std::shared_ptr<Command> command);
+  void Undo();
+  void Redo();
 
   // time
   Time& GetTime() { return _time; };
@@ -90,6 +101,7 @@ public:
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
   pxr::UsdStageRefPtr& GetStage() { return _scene->GetCurrentStage(); };
+  Application& operator()() { return *_application; };
 
 private:
   std::string                       _fileName;
@@ -98,6 +110,9 @@ private:
   Scene*                            _scene;
   Selection                         _selection;
   Tool                              _tools;
+
+  // command
+  CommandManager*                   _manager;
 
   // uis
   ViewportUI*                       _viewport;
@@ -113,9 +128,10 @@ private:
 
   // mesh
   Mesh*                             _mesh;
-};
 
-extern Application* APPLICATION;
+  // application
+  static Application*              _application;
+};
 
 JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR
 

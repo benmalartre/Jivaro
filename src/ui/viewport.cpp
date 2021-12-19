@@ -120,7 +120,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   Window* window = _parent->GetWindow();
-  Tool* tools = APPLICATION->GetTools();
+  Tool* tools = Application().GetTools();
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
   if (action == GLFW_RELEASE)
@@ -178,7 +178,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
 void ViewportUI::MouseMove(int x, int y) 
 {
-  Tool* tools = APPLICATION->GetTools();
+  Tool* tools = Application().GetTools();
   tools->SetViewport(this);
   
   if(_interacting)
@@ -253,17 +253,17 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       }
       case GLFW_KEY_S:
       {
-        APPLICATION->SetActiveTool(TOOL_SCALE);
+        Application().SetActiveTool(TOOL_SCALE);
         break;
       }
       case GLFW_KEY_R:
       {
-        APPLICATION->SetActiveTool(TOOL_ROTATE);
+        Application().SetActiveTool(TOOL_ROTATE);
         break;
       }
       case GLFW_KEY_T:
       {
-        APPLICATION->SetActiveTool(TOOL_TRANSLATE);
+        Application().SetActiveTool(TOOL_TRANSLATE);
         break;
       }
     }
@@ -293,7 +293,7 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
   glEnable(GL_DEPTH_TEST);
   glClear(GL_DEPTH_BUFFER_BIT);
 
-  Tool* tools = APPLICATION->GetTools();
+  Tool* tools = Application().GetTools();
   tools->SetViewport(viewport);
   tools->Draw();
 
@@ -578,7 +578,7 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 
 bool ViewportUI::Pick(int x, int y, int mods)
 {
-  Selection* selection = APPLICATION->GetSelection();
+  Selection* selection = Application().GetSelection();
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;
   pxr::GfVec3d outHitNormal;
@@ -608,11 +608,11 @@ bool ViewportUI::Pick(int x, int y, int mods)
         selection->Clear();
         selection->AddItem(outHitPrimPath);
       }
-    APPLICATION->GetTools()->ResetSelection();
+      Application().GetTools()->ResetSelection();
     return true;
   } else {
     selection->Clear();
-    APPLICATION->GetTools()->ResetSelection();
+    Application().GetTools()->ResetSelection();
     return false;
   }
   

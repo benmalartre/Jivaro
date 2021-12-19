@@ -160,12 +160,11 @@ BaseHandle::SetVisibility(short axis)
 void 
 BaseHandle::ResetSelection()
 {
-  Application* app = APPLICATION;
+  Application* app = &Application();
   
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
-  _xformCache.Clear();
   _xformCache.SetTime(activeTime);
   _targets.clear();
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
@@ -342,10 +341,11 @@ BaseHandle::Update(float x, float y, float width, float height)
   }
 }
 
+
 void 
 BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
 {
-  Application* app = APPLICATION;
+  Application* app = &Application();
   float activeTime = app->GetTime().GetActiveTime();
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
@@ -367,12 +367,9 @@ BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
 
       if(prim.IsA<pxr::UsdGeomXformable>()) {
         bool resetsXformStack = false;
-        pxr::GfMatrix4f m(_xformCache.GetLocalToWorldTransform(prim));
-        transform.SetMatrix(pxr::GfMatrix4d(m));
+        transform.SetMatrix(pxr::GfMatrix4d(_xformCache.GetLocalToWorldTransform(prim)));
         _position += pxr::GfVec3f(transform.GetTranslation());
-
         _scale += pxr::GfVec3f(transform.GetScale());
-
         _rotation *= pxr::GfQuatf(transform.GetRotation().GetQuat());
         ++numPrims;
       }
@@ -392,6 +389,7 @@ BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
     _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
   }
 }
+
 
 pxr::GfVec3f 
 BaseHandle::_ConstraintPointToAxis(const pxr::GfVec3f& point, 
@@ -457,7 +455,7 @@ BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVe
 void
 BaseHandle::_UpdateTargets()
 {
-  Application* app = APPLICATION;
+  Application* app = &Application();
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
   Selection* selection = app->GetSelection();
@@ -498,7 +496,7 @@ BaseHandle::_UpdateTargets()
 void 
 BaseHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  Application* app = APPLICATION;
+  Application* app = &Application();
   pxr::GfRay ray(
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));

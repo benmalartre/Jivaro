@@ -1,11 +1,14 @@
+#include <memory>
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/menu.h"
+#include "../command/command.h""
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/selection.h"
+#include "../app/notice.h"
 
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usdGeom/mesh.h>
@@ -13,7 +16,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-extern Application* APPLICATION;
 
 ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_None |
@@ -25,7 +27,7 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoDecoration;
 
 MenuItem::MenuItem(View* v, const std::string lbl, const std::string sht, 
-  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a) 
+  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
   : view(v), label(lbl), shortcut(sht), selected(sel), func(f), args(a)
 {
 }
@@ -69,7 +71,6 @@ bool MenuItem::Draw()
 }
 
 static void OpenFileCallback() {
-  Application* app = APPLICATION;
   const char* folder = GetInstallationFolder().c_str();
   const char* filters[] = {
     ".usd",
@@ -80,8 +81,10 @@ static void OpenFileCallback() {
   int numFilters = 4;
 
   std::string filename =
-    app->BrowseFile(200, 200, folder, filters, numFilters, "open usd file");
-  app->OpenScene(filename);
+    Application().BrowseFile(200, 200, folder, filters, numFilters, "open usd file");
+
+  Application().AddCommand(
+    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
 }
 
 static void SaveFileCallback() {
@@ -95,9 +98,36 @@ static void OpenDemoCallback()
   demo.Term();
 }
 
+
+std::string _RandomName(size_t length)
+{
+  auto RndC = []() -> char
+  {
+    const char charset[] =
+      "0123456789"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "abcdefghijklmnopqrstuvwxyz";
+    const size_t max_index = (sizeof(charset) - 1);
+    return charset[rand() % max_index];
+  };
+  std::string str(length, 0);
+  std::generate_n(str.begin(), length, RndC);
+  std::cout << "PRIM NAME : " << str << std::endl;
+  return str;
+}
+
+static void CreatePrimCallback()
+{
+  std::string name = _RandomName(32);
+
+  Application().AddCommand(
+    std::shared_ptr<CreatePrimCommand>(new CreatePrimCommand(Application().GetStage(), name)));
+  SceneChangedNotice().Send();
+}
+
 static void FlattenGeometryCallback()
 {
-  Application* app = APPLICATION;
+  Application* app = &Application();
   pxr::UsdStageRefPtr& stage = app->GetStage();
   Selection* selection = app->GetSelection();
   std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
@@ -152,6 +182,7 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
   pxr::VtArray < pxr::VtValue > args;
   MenuItem& fileMenu = AddItem(parent, "File", "", false, true);
   fileMenu.AddItem(parent, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCallback);
+  /*
   fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
   args.push_back(pxr::VtValue(7.0));
   
@@ -160,6 +191,10 @@ MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
 
   MenuItem& testItem = AddItem(parent, "Test", "", false, true);
   testItem.AddItem(parent, "Flatten Geometry", "Shift+F", false, true, (MenuPressedFunc)&FlattenGeometryCallback);
+  */
+  MenuItem& createPrimItem = AddItem(parent, "Test", "", false, true);
+  createPrimItem.AddItem(parent, "CreatePrim", "CTRL+P", false, true, (MenuPressedFunc)&CreatePrimCallback);
+ 
 }
 
 // destructor
@@ -169,9 +204,9 @@ MenuUI::~MenuUI()
 
 
 MenuItem& MenuUI::AddItem(View* view, const std::string label, const std::string shortcut, 
-  bool selected, bool enabled, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
+  bool selected, bool enabled, MenuPressedFunc func, const pxr::VtArray<pxr::VtValue> a)
 {
-  _items.push_back(MenuItem(view, label, shortcut, selected, enabled, f, a));
+  _items.push_back(MenuItem(view, label, shortcut, selected, enabled, func, a));
   return _items.back();
 }
 

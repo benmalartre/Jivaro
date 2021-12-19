@@ -29,7 +29,7 @@ BaseModal::~BaseModal()
 
 void BaseModal::Init()
 {
-  Application* app = APPLICATION;
+  Application* app = &Application();
   Window* mainWindow = app->GetMainWindow();
   mainWindow->SetIdle(true);
 
@@ -39,7 +39,7 @@ void BaseModal::Init()
 
 void BaseModal::Term()
 {
-  Application* app = APPLICATION;
+  Application* app = &Application();
   Window* mainWindow = app->GetMainWindow();
   
   mainWindow->SetIdle(false);

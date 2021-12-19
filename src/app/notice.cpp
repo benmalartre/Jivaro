@@ -46,4 +46,14 @@ SelectionChangedNotice::~SelectionChangedNotice()
 {
 }
 
+////////////////////////////////////////////////////////////
+
+SceneChangedNotice::SceneChangedNotice()
+{
+}
+
+SceneChangedNotice::~SceneChangedNotice()
+{
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

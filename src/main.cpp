@@ -7,9 +7,10 @@ JVR_NAMESPACE_USING_DIRECTIVE
 int main(void)
 {
   glfwInit();
-  APPLICATION = new Application(1024,720);
-  APPLICATION->Init();
-  APPLICATION->MainLoop();
+  
+  Application* app = Application::Create(1024, 720);
+  app->Init();
+  app->MainLoop();
   glfwTerminate();
   return 1;
 }
