@@ -66,8 +66,6 @@ add_executable(${TARGET}
   acceleration/intersector.cpp
   pbd/integration.cpp
   pbd/maths.cpp
-  command/command.cpp
-  command/manager.cpp
   anim/animx.cpp
   app/time.cpp
   app/notice.cpp

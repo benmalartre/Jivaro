@@ -33,8 +33,6 @@
 #include "../ui/layers.h"
 #include "../ui/property.h"
 #include "../ui/curveEditor.h"
-#include "../command/command.h"
-#include "../command/manager.h"
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/notice.h"
@@ -44,14 +42,13 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const char* Application::name = "Jivaro";
-
-Application* Application::_application = NULL;
+Application* APPLICATION = nullptr;
+const char* Application::APPLICATION_NAME = "Jivaro";
 
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _tools(Tool())
+  _mainWindow(nullptr), _tools(Tool()), _mesh(nullptr)
 {  
   _scene = new Scene();
   _mainWindow = CreateStandardWindow(width, height);
@@ -60,18 +57,13 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _tools(Tool())
+  _mainWindow(nullptr), _tools(Tool()), _mesh(nullptr)
 {
   _scene = new Scene();
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
 };
-
-Application* Application::Create(unsigned width, unsigned height)
-{
-  return new Application(width, height);
-}
 
 // destructor
 //----------------------------------------------------------------------------
@@ -471,10 +463,6 @@ Application::Init()
   // setup notifications
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
-
-  _manager = new CommandManager();
-  _manager->Start();
  
   /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
@@ -600,26 +588,6 @@ void Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 void Application::NewSceneCallback(const NewSceneNotice& n)
 {
   _selection.Clear();
-}
-
-void Application::SceneChangedCallback(const SceneChangedNotice& n)
-{
-  Application().GetMainWindow()->ForceRedraw();
-}
-
-void Application::AddCommand(std::shared_ptr<Command> command)
-{
-  _manager->AddCommand(command);
-}
-
-void Application::Undo()
-{
-  _manager->Undo();
-}
-
-void Application::Redo()
-{
-  _manager->Redo();
 }
 
 pxr::GfBBox3d 

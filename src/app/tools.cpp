@@ -92,7 +92,7 @@ bool Tool::IsInteracting() {
 
 void Tool::Draw()
 {
-  Selection* selection = Application().GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     _active->Draw(_viewport->GetWidth(), _viewport->GetHeight());
   }
@@ -100,7 +100,7 @@ void Tool::Draw()
 
 void Tool::Select(bool lock)
 {
-  Selection* selection = Application().GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     _activeAxis = _active->Select(
       _viewport->GetLastMouseX() - _viewport->GetX(),
@@ -123,7 +123,7 @@ void Tool::Pick()
 
 void Tool::BeginUpdate()
 {
-  Selection* selection = Application().GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     if (_activeAxis != BaseHandle::AXIS_NONE) {
       _active->BeginUpdate(
@@ -150,7 +150,7 @@ void Tool::EndUpdate()
 
 void Tool::Update()
 {
-  Selection* selection = Application().GetSelection();
+  Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     _active->Update(
       _viewport->GetLastMouseX() - _viewport->GetX(),

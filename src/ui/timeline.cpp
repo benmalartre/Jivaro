@@ -11,7 +11,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 static void
 PlaybackCallback(TimelineUI* ui)
 {
-  Time& time = Application().GetTime();
+  Time& time = APPLICATION->GetTime();
   TimeData& data = ui->GetData();
   data.playing = 1 - data.playing;
   if (data.playing) time.StartPlayBack();
@@ -21,21 +21,21 @@ PlaybackCallback(TimelineUI* ui)
 static void
 PreviousFrameCallback(TimelineUI* ui)
 {
-  Time& time = Application().GetTime();
+  Time& time = APPLICATION->GetTime();
   time.PreviousFrame();
 }
 
 static void
 NextFrameCallback(TimelineUI* ui)
 {
-  Time& time = Application().GetTime();
+  Time& time = APPLICATION->GetTime();
   time.NextFrame();
 }
 
 static void
 FirstFrameCallback(TimelineUI* ui)
 {
-  Time& time = Application().GetTime();
+  Time& time = APPLICATION->GetTime();
   TimeData& data = ui->GetData();
   data.currentTime = data.startTime;
   time.SetActiveTime(data.currentTime);
@@ -44,7 +44,7 @@ FirstFrameCallback(TimelineUI* ui)
 static void
 LastFrameCallback(TimelineUI* ui)
 {
-  Time& time = Application().GetTime();
+  Time& time = APPLICATION->GetTime();
   TimeData& data = ui->GetData();
   data.currentTime = data.endTime;
   time.SetActiveTime(data.currentTime);
@@ -55,7 +55,8 @@ LoopCallback(TimelineUI* ui)
 {
   TimeData& data = ui->GetData();
   data.loop = 1 - data.loop;
-  Time& time = Application().GetTime();
+  Application* app = APPLICATION;
+  Time& time = app->GetTime();
   time.SetLoop(data.loop);
 }
 
@@ -91,7 +92,8 @@ TimelineUI::Init()
 void 
 TimelineUI::Update()
 {
-  Time& time = Application().GetTime();
+  Application* app = APPLICATION;
+  Time& time = app->GetTime();
   _data.minTime = time.GetMinTime();
   _data.startTime = time.GetStartTime();
   _data.endTime = time.GetEndTime();
@@ -106,7 +108,7 @@ TimelineUI::Update()
 void 
 TimelineUI::ValidateTime()
 {
-  Time& time = Application().GetTime();
+  Time& time = APPLICATION->GetTime();
 
   _data.currentTime = time.GetActiveTime();
   if (_data.minTime >= _data.maxTime)_data.maxTime = _data.minTime + 1;
@@ -149,7 +151,7 @@ TimelineUI::_PositionToTime(const pxr::GfVec2f& position)
 
 void TimelineUI::MouseButton(int button, int action, int mods)
 {
-  Time& time = Application().GetTime();
+  Time& time = APPLICATION->GetTime();
   double x, y;
   glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
 
@@ -171,7 +173,7 @@ void TimelineUI::MouseMove(int x, int y)
 {
   _frame = _GetFrameUnderMouse(x, y);
   if (_interacting) {
-    Time& time = Application().GetTime();
+    Time& time = APPLICATION->GetTime();
     _frame = _GetFrameUnderMouse(x, y);
     if (static_cast<int>(_frame) != static_cast<int>(_lastFrame)) {
       _data.currentTime = _frame;
@@ -230,7 +232,7 @@ void TimelineUI::DrawButtons()
 
 void TimelineUI::DrawControls()
 {
-  Time& time = Application().GetTime();
+  Application* app = APPLICATION;
   int width = GetWidth();
   int height = GetHeight();
 
@@ -245,7 +247,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_data.minTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.minTime != time.GetMinTime())
+  if (!ImGui::IsItemActive() && _data.minTime != app->GetTime().GetMinTime())
   {
     ValidateTime();
   }
@@ -255,7 +257,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_data.startTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.startTime != time.GetStartTime())
+  if (!ImGui::IsItemActive() && _data.startTime != app->GetTime().GetStartTime())
   {
     ValidateTime();
   }
@@ -274,7 +276,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_data.currentTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.currentTime != time.GetActiveTime())
+  if (!ImGui::IsItemActive() && _data.currentTime != app->GetTime().GetActiveTime())
   {
     ValidateTime();
   }
@@ -286,7 +288,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_data.endTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.endTime != time.GetEndTime())
+  if (!ImGui::IsItemActive() && _data.endTime != app->GetTime().GetEndTime())
   {
     ValidateTime();
   }
@@ -295,7 +297,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_data.maxTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.maxTime != time.GetMaxTime())
+  if (!ImGui::IsItemActive() && _data.maxTime != app->GetTime().GetMaxTime())
   {
     ValidateTime();
   }
@@ -339,7 +341,7 @@ void TimelineUI::DrawTimeSlider()
     pxr::GfVec2f(xmax, ymax),
     frontColor, rounding, corners_none);
 
-  Application* app = &Application();
+  Application* app = APPLICATION;
 
   xmin += 2 * SLIDER_THICKNESS;
   xmax -= 2 * SLIDER_THICKNESS;

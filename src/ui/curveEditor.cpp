@@ -238,7 +238,7 @@ void CurveEditorUI::DrawCurve(pxr::UsdAnimXCurve* crv)
 
 void CurveEditorUI::DrawTime()
 {
-  Time& time = Application().GetTime();
+  Time& time = APPLICATION->GetTime();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   float ox = _parent->GetX() + _offset[0] * _scale[0];
   float oy = _parent->GetY() + _offset[1] * _scale[1];

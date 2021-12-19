@@ -18,7 +18,7 @@ ImGuiWindowFlags ToolbarUI::_flags =
 
 static void _SetActiveTool(short tool) 
 {
-  Application* app = &Application();
+  Application* app = APPLICATION;
   app->GetTools()->SetActiveTool(tool);
   app->GetMainWindow()->SetActiveTool(tool);
 }

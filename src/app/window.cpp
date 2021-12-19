@@ -581,7 +581,7 @@ void Window::MainLoop()
   while(!glfwWindowShouldClose(_window)) {
     _app->Update();
     SetGLContext();
-    glfwWaitEventsTimeout(1.f / (60 * Application().GetTime().GetFPS()));
+    glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
     //glfwPollEvents();
     
     // main window
