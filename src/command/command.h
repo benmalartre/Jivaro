@@ -59,10 +59,10 @@ public:
   void Undo() override;
   void Redo() override;
 private:
-    pxr::UsdPrim        _prim;
-    pxr::UsdPrim        _parent;
-    pxr::UsdStageRefPtr _stage;
-    pxr::TfToken        _name;
+    pxr::UsdPrim          _prim;
+    pxr::UsdPrim          _parent;
+    pxr::UsdStageWeakPtr  _stage;
+    pxr::TfToken          _name;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -36,13 +36,19 @@ ExplorerUI::ExplorerUI(View* parent)
   _visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
   _invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];
 
-  pxr::TfWeakPtr<ExplorerUI> me(this);
+  //pxr::TfWeakPtr<ExplorerUI> me(this);
   //pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
+  //pxr::TfNotice::Register(me, &ExplorerUI::OnSceneChangedNotice);
 }
 
 // destructor
 ExplorerUI::~ExplorerUI()
 {
+}
+
+void ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
+{
+  Update();
 }
 
 void ExplorerUI::Init()
@@ -68,6 +74,7 @@ void ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 
 void ExplorerUI::Update()
 {
+  std::cout << "EXPLORER UPDATE : " << GetApplication()->GetStage() << std::endl;
   if (GetApplication()->GetStage()) {
     RecurseStage();
   }
@@ -346,6 +353,7 @@ void ExplorerUI::RecursePrim(ExplorerItem* currentItem)
 {
   for (const auto& childPrim : currentItem->_prim.GetChildren())
   {
+    std::cout << "CHILD : " << childPrim.GetName() << std::endl;
     ExplorerItem* childItem = currentItem->AddItem();
     childItem->_expanded = true;
     childItem->_prim = childPrim;

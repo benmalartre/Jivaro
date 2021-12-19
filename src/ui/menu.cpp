@@ -1,11 +1,14 @@
+#include <memory>
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/menu.h"
+#include "../command/command.h""
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/selection.h"
+#include "../app/notice.h"
 
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usdGeom/mesh.h>
@@ -13,24 +16,23 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-extern Application* APPLICATION;
 
 ImGuiWindowFlags MenuUI::_flags =
-  ImGuiWindowFlags_None |
-  ImGuiWindowFlags_MenuBar |
-  ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoBringToFrontOnFocus |
-  ImGuiWindowFlags_NoDecoration;
+ImGuiWindowFlags_None |
+ImGuiWindowFlags_MenuBar |
+ImGuiWindowFlags_NoTitleBar |
+ImGuiWindowFlags_NoMove |
+ImGuiWindowFlags_NoResize |
+ImGuiWindowFlags_NoBringToFrontOnFocus |
+ImGuiWindowFlags_NoDecoration;
 
-MenuItem::MenuItem(View* v, const std::string lbl, const std::string sht, 
-  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a) 
+MenuItem::MenuItem(View* v, const std::string lbl, const std::string sht,
+  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
   : view(v), label(lbl), shortcut(sht), selected(sel), func(f), args(a)
 {
 }
 
-MenuItem& MenuItem::AddItem(View* view, const std::string lbl, const std::string sht, 
+MenuItem& MenuItem::AddItem(View* view, const std::string lbl, const std::string sht,
   bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
 {
   items.push_back(MenuItem(view, lbl, sht, sel, enb, f, a));
@@ -56,7 +58,7 @@ bool MenuItem::Draw()
     ImGui::PushFont(window->GetMediumFont(0));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
-      
+
       window->SetActiveTool(TOOL_SELECT);
       view->ClearFlag(View::INTERACTING);
       window->ForceRedraw();
@@ -69,7 +71,6 @@ bool MenuItem::Draw()
 }
 
 static void OpenFileCallback() {
-  Application* app = APPLICATION;
   const char* folder = GetInstallationFolder().c_str();
   const char* filters[] = {
     ".usd",
@@ -80,8 +81,10 @@ static void OpenFileCallback() {
   int numFilters = 4;
 
   std::string filename =
-    app->BrowseFile(200, 200, folder, filters, numFilters, "open usd file");
-  app->OpenScene(filename);
+    GetApplication()->BrowseFile(200, 200, folder, filters, numFilters, "open usd file");
+
+  GetApplication()->AddCommand(
+    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
 }
 
 static void SaveFileCallback() {
@@ -89,15 +92,41 @@ static void SaveFileCallback() {
 }
 
 static void OpenDemoCallback()
-{ 
+{
   ModalDemo demo(0, 0, "Demo");
   demo.Loop();
   demo.Term();
 }
 
+
+std::string _RandomName(size_t length)
+{
+  auto RndC = []() -> char
+  {
+    const char charset[] =
+      "0123456789"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "abcdefghijklmnopqrstuvwxyz";
+    const size_t max_index = (sizeof(charset) - 1);
+    return charset[rand() % max_index];
+  };
+  std::string str(length, 0);
+  std::generate_n(str.begin(), length, RndC);
+  std::cout << "PRIM NAME : " << str << std::endl;
+  return str;
+}
+
+static void CreatePrimCallback()
+{
+  std::string name = _RandomName(32);
+
+  GetApplication()->AddCommand(
+    std::shared_ptr<CreatePrimCommand>(new CreatePrimCommand(GetApplication()->GetStage(), name)));
+}
+
 static void FlattenGeometryCallback()
 {
-  Application* app = APPLICATION;
+  Application* app = GetApplication();
   pxr::UsdStageRefPtr& stage = app->GetStage();
   Selection* selection = app->GetSelection();
   std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
@@ -108,7 +137,7 @@ static void FlattenGeometryCallback()
     if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh mesh(prim);
       pxr::TfToken uvToken("st");
-      if(mesh.HasPrimvar(uvToken)) {
+      if (mesh.HasPrimvar(uvToken)) {
         std::cout << "WE FOUND UVS :)" << std::endl;
         pxr::UsdGeomPrimvar uvPrimvar = mesh.GetPrimvar(uvToken);
         pxr::TfToken interpolation = uvPrimvar.GetInterpolation();
@@ -117,11 +146,12 @@ static void FlattenGeometryCallback()
           pxr::VtArray<pxr::GfVec2d> uvs;
           uvPrimvar.Get(&uvs);
           std::cout << "UVS COUNT : " << uvs.size() << std::endl;
-        } else if (interpolation == pxr::UsdGeomTokens->faceVarying) {
+        }
+        else if (interpolation == pxr::UsdGeomTokens->faceVarying) {
           std::cout << "UV INTERPOLATION FACE VARYING !" << std::endl;
           pxr::VtArray<pxr::GfVec2d> uvs;
           uvPrimvar.Get(&uvs);
-          
+
           std::cout << "UVS COUNT : " << uvs.size() << std::endl;
           // pxr::UsdGeomMesh usdFlattened = pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(item.path.GetString() + "_flattened"));
           Mesh flattened(mesh);
@@ -147,19 +177,24 @@ static void FlattenGeometryCallback()
 }
 
 // constructor
-MenuUI::MenuUI(View* parent):BaseUI(parent, "MainMenu")
+MenuUI::MenuUI(View* parent) :BaseUI(parent, "MainMenu")
 {
   pxr::VtArray < pxr::VtValue > args;
   MenuItem& fileMenu = AddItem(parent, "File", "", false, true);
   fileMenu.AddItem(parent, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCallback);
+  /*
   fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
   args.push_back(pxr::VtValue(7.0));
-  
+
   MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);
   demoItem.AddItem(parent, "OpenDemo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
 
   MenuItem& testItem = AddItem(parent, "Test", "", false, true);
   testItem.AddItem(parent, "Flatten Geometry", "Shift+F", false, true, (MenuPressedFunc)&FlattenGeometryCallback);
+  */
+  MenuItem& createPrimItem = AddItem(parent, "Test", "", false, true);
+  createPrimItem.AddItem(parent, "CreatePrim", "CTRL+P", false, true, (MenuPressedFunc)&CreatePrimCallback);
+
 }
 
 // destructor
@@ -168,16 +203,16 @@ MenuUI::~MenuUI()
 }
 
 
-MenuItem& MenuUI::AddItem(View* view, const std::string label, const std::string shortcut, 
-  bool selected, bool enabled, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
+MenuItem& MenuUI::AddItem(View* view, const std::string label, const std::string shortcut,
+  bool selected, bool enabled, MenuPressedFunc func, const pxr::VtArray<pxr::VtValue> a)
 {
-  _items.push_back(MenuItem(view, label, shortcut, selected, enabled, f, a));
+  _items.push_back(MenuItem(view, label, shortcut, selected, enabled, func, a));
   return _items.back();
 }
 
 // overrides
 bool MenuUI::Draw()
-{  
+{
   ImGui::PushStyleColor(ImGuiCol_Header, BACKGROUND_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ALTERNATE_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, SELECTED_COLOR);
@@ -195,7 +230,7 @@ bool MenuUI::Draw()
     _parent->GetMax(),
     ImGuiCol_WindowBg
   );
-  
+
   if (ImGui::BeginMenuBar())
   {
     ImGui::PushFont(window->GetBoldFont(0));
@@ -212,12 +247,12 @@ bool MenuUI::Draw()
 
   ImGui::PopStyleColor(3);
   ImGui::End();
-  
+
   return
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
     ImGui::IsAnyWindowHovered() ||
     ImGui::IsAnyMouseDown();
-} 
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE

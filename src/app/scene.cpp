@@ -56,7 +56,7 @@ pxr::UsdStageRefPtr& Scene::AddStageFromDisk(const std::string& filename)
   _allStages[path] = pxr::UsdStage::CreateInMemory(name);
 
   pxr::UsdStageRefPtr& stage = _allStages[path];
-  pxr::UsdPrim ref = stage->OverridePrim(path);
+  pxr::UsdPrim ref = stage->DefinePrim(path);
   ref.GetReferences().AddReference(filename);
   stage->SetDefaultPrim(ref);
 

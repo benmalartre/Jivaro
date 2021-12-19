@@ -40,5 +40,16 @@ public:
 private:
 };
 
+/// Notice sent after scene changed
+class SceneChangedNotice : public BaseNotice
+{
+public:
+  explicit SceneChangedNotice();
+  virtual ~SceneChangedNotice();
+
+
+private:
+};
+
 JVR_NAMESPACE_CLOSE_SCOPE
 #endif //JVR_APPLICATION_NOTICE_H

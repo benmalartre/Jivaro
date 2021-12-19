@@ -11,7 +11,7 @@
 #include <pxr/usd/usdUI/backdrop.h>
 
 #include "../utils/color.h"
-#include "../utils/scancode.h"
+#include "../utils/keys.h"
 #include "../ui/ui.h"
 #include "../ui/graph.h"
 #include "../app/view.h"
@@ -787,7 +787,7 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
  
   //_filename = filename;
   _id = 0;
-    /*
+    
   _stage = pxr::UsdStage::CreateInMemory();
   pxr::SdfPath meshPath(pxr::TfToken("/mesh"));
   pxr::UsdGeomMesh mesh = pxr::UsdGeomMesh::Define(_stage, meshPath);
@@ -820,8 +820,8 @@ GraphUI::GraphUI(View* parent, const std::string& filename)
   pushNode->AddOutput(TfToken("result"), pxr::SdfValueTypeNames->Float3Array);
 
   _graph->AddNode(pushNode);
-  */
-  Read("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
+  
+ // Read("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
 
 }
 
@@ -1381,23 +1381,20 @@ GraphUI::MouseButton(int button, int action, int mods)
 void 
 GraphUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  std::cout << "SCAN CODE : " << scancode << std::endl;
-  std::cout << "KEY_A : " << KEY_A << std::endl;
-  std::cout << "KEY_B : " << KEY_B << std::endl;
-  std::cout << "KEY_C : " << KEY_C << std::endl;
+  int mappedKey = GetMappedKey(scancode);
   if (action == GLFW_PRESS) {
-    if (key == GLFW_KEY_DELETE) {
+    if (mappedKey == GLFW_KEY_DELETE) {
       std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
     }
-    else if (key == GLFW_KEY_R) {
+    else if (mappedKey == GLFW_KEY_R) {
       std::cout << "GRAPH UI : RESET SCALE OFFSET !!! " << std::endl;
       ResetScaleOffset();
     }
-    else if (key == GLFW_KEY_F) {
+    else if (mappedKey == GLFW_KEY_F) {
       std::cout << "GRAPH UI : FRAME SELECTED NODES !!! " << std::endl;
       FrameSelection();
     }
-    else if (key == GLFW_KEY_A) {
+    else if (mappedKey == GLFW_KEY_A) {
       std::cout << "GRAPH UI : FRAME ALL NODES !!! " << std::endl;
       FrameAll();
     }

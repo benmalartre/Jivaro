@@ -51,6 +51,8 @@ public:
   void DrawItemBackground(ImDrawList* drawList, const ExplorerItem* item, 
     bool& flip);
 
+  void OnSceneChangedNotice(const SceneChangedNotice& n) override;
+
 private:
   void _UpdateSelection(ExplorerItem* item, bool isLeaf);
 

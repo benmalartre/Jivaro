@@ -33,6 +33,8 @@
 #include "../ui/layers.h"
 #include "../ui/property.h"
 #include "../ui/curveEditor.h"
+#include "../command/command.h"
+#include "../command/manager.h"
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/notice.h"
@@ -463,6 +465,10 @@ Application::Init()
   // setup notifications
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
+
+  _manager = new CommandManager();
+  _manager->Start();
  
   /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
@@ -497,6 +503,25 @@ void Application::Update()
   }
 }
 
+void Application::SceneChangedCallback(const SceneChangedNotice& n)
+{
+  GetApplication()->GetMainWindow()->ForceRedraw();
+}
+
+void Application::AddCommand(std::shared_ptr<Command> command)
+{
+  _manager->AddCommand(command);
+}
+
+void Application::Undo()
+{
+  _manager->Undo();
+}
+
+void Application::Redo()
+{
+  _manager->Redo();
+}
 
 void Application::OpenScene(const std::string& filename)
 {
@@ -504,7 +529,6 @@ void Application::OpenScene(const std::string& filename)
     if (_scene) delete _scene;
     _scene = new Scene();
     _scene->AddStageFromDisk(filename);
-    NewSceneNotice().Send();
   }
 }
 

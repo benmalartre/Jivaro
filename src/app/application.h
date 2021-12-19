@@ -23,6 +23,8 @@ class GraphUI;
 class ExplorerUI;
 class LayersUI;
 class CurveEditorUI;
+class Command;
+class CommandManager;
 
 class Application : public pxr::TfWeakBase
 {
@@ -44,6 +46,7 @@ public:
   // create a child window
   static Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
     const std::string& name="Child", bool decorated=true);
+
 
   // browse file
   std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
@@ -73,8 +76,16 @@ public:
   void ClearSelection();
   pxr::GfBBox3d GetSelectionBoundingBox();
   pxr::GfBBox3d GetStageBoundingBox();
+
+  // notices callback
   void SelectionChangedCallback(const SelectionChangedNotice& n);
-  void NewSceneCallback(const NewSceneNotice& n);
+  void NewSceneCallback(const NewSceneNotice& n); 
+  void SceneChangedCallback(const SceneChangedNotice& n);
+
+  // commands
+  void AddCommand(std::shared_ptr<Command> command);
+  void Undo();
+  void Redo();
 
   // time
   Time& GetTime() { return _time; };
@@ -113,9 +124,14 @@ private:
 
   // mesh
   Mesh*                             _mesh;
+
+  // command
+  CommandManager*                   _manager;
 };
 
 extern Application* APPLICATION;
+
+static Application* GetApplication() { return APPLICATION; };
 
 JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR
 

@@ -79,8 +79,6 @@ public:
   // get the height of the parent view
   virtual int GetHeight();
 
-  Application* GetApplication();
-
   const std::string& GetName() const {return _name;};
 
   virtual void MouseButton(int button, int action, int mods){};
@@ -94,8 +92,10 @@ public:
   virtual void Resize(){};
 
   // notices callbacks
-  void OnNewSceneNotice(const NewSceneNotice& n);
-  void OnAllNotices(const pxr::TfNotice& n);
+  virtual void OnNewSceneNotice(const NewSceneNotice& n);
+  virtual void OnSceneChangedNotice(const SceneChangedNotice& n);
+  virtual void OnSelectionChangedNotice(const SelectionChangedNotice& n);
+  virtual void OnAllNotices(const pxr::TfNotice& n);
 
 protected:
   bool                    _initialized;

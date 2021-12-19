@@ -11,6 +11,7 @@ TF_REGISTRY_FUNCTION(TfType)
   TfType::Define<JVR::BaseNotice, TfType::Bases<TfNotice> >();
   TfType::Define<JVR::NewSceneNotice, TfType::Bases<JVR::BaseNotice> >();
   TfType::Define<JVR::SelectionChangedNotice, TfType::Bases<JVR::BaseNotice> >();
+  TfType::Define<JVR::SceneChangedNotice, TfType::Bases<JVR::BaseNotice> >();
 }
 
 
@@ -45,5 +46,16 @@ SelectionChangedNotice::SelectionChangedNotice()
 SelectionChangedNotice::~SelectionChangedNotice()
 {
 }
+
+////////////////////////////////////////////////////////////
+
+SceneChangedNotice::SceneChangedNotice()
+{
+}
+
+SceneChangedNotice::~SceneChangedNotice()
+{
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

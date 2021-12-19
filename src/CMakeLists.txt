@@ -67,6 +67,8 @@ add_executable(${TARGET}
   pbd/integration.cpp
   pbd/maths.cpp
   anim/animx.cpp
+  command/command.cpp
+  command/manager.cpp
   app/time.cpp
   app/notice.cpp
   app/handle.cpp

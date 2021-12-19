@@ -1,7 +1,7 @@
 #include "../utils/glutils.h"
 #include "../utils/files.h"
 #include "../utils/icons.h"
-#include "../utils/scancode.h"
+#include "../utils/keys.h"
 #include "../ui/style.h"
 #include "../ui/utils.h"
 #include "../ui/dummy.h"
@@ -18,8 +18,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-int KEY_SCANCODES[NUM_PRINTABLE_KEYS];
-bool KEY_SCANCODES_INITIALIZED = false;
 bool LEGACY_OPENGL;
 
 
@@ -106,7 +104,7 @@ Window::Window(bool fullscreen, const std::string& name) :
     _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0", monitor, NULL);
     LEGACY_OPENGL = true;
   }
-  INITIALIZE_SCAN_CODES;
+  BuildKeyMap();
   _width = mode->width;
   _height = mode->height;
   _shared = true;
@@ -139,7 +137,7 @@ Window::Window(int width, int height, const std::string& name):
     _window = glfwCreateWindow(_width, _height, "Jivaro.1.0", NULL, NULL);
     LEGACY_OPENGL = true;
   }
-  INITIALIZE_SCAN_CODES;
+  BuildKeyMap();
 }
 
 // child window constructor
@@ -173,7 +171,7 @@ Window::Window(int x, int y, int width, int height,
     LEGACY_OPENGL = true;
   }
   glfwSetWindowPos(_window, x, y);
-  INITIALIZE_SCAN_CODES;
+  BuildKeyMap();
 }
 
 // initialize
@@ -639,14 +637,27 @@ KeyboardCallback(
     parent->SetDebounce(false);
   }
   if (action == GLFW_PRESS) {
-    switch(key)
+    switch(GetMappedKey(key))
     {
+      case GLFW_KEY_Z:
+      {
+        std::cout << "ZZZZZZZZZZZZZZZZZZZ" << std::endl;
+        if (mods & GLFW_MOD_CONTROL)GetApplication()->Undo();
+        break;
+      }
+      case GLFW_KEY_Y: 
+      {
+        std::cout << "YYYYYYYYYYYYYYYYYYY" << std::endl;
+        if (mods & GLFW_MOD_CONTROL)GetApplication()->Redo();
+        break;
+      }
       case GLFW_KEY_SPACE:
       {
-        if(time.IsPlaying()) {
+        if (time.IsPlaying()) {
           time.SetLoop(false);
           time.StopPlayBack();
-        } else {
+        }
+        else {
           time.SetLoop(true);
           time.StartPlayBack();
         }

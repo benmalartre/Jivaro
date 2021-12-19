@@ -20,6 +20,7 @@ BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
   pxr::TfWeakPtr<BaseUI> me(this);
   //pxr::TfNotice::Register(me, &BaseUI::OnAllNotices);
   pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
+  pxr::TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
 };
 
 void BaseUI::OnNewSceneNotice(const NewSceneNotice& n)
@@ -27,9 +28,16 @@ void BaseUI::OnNewSceneNotice(const NewSceneNotice& n)
   _initialized = false;
 }
 
+void BaseUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
+{
+}
+
+void BaseUI::OnSceneChangedNotice(const SceneChangedNotice& n)
+{
+}
+
 void BaseUI::OnAllNotices(const pxr::TfNotice& n)
 {
-  std::cout << "PROCESS ALL NOTICES !!!" << std::endl;
 }
 
 // mouse positon relative to the view
@@ -102,11 +110,6 @@ bool BaseUI::DrawHead()
     ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f)
   );
   return true;
-}
-
-Application* BaseUI::GetApplication()
-{
-  return _parent->GetWindow()->GetApplication();
 }
 
 
