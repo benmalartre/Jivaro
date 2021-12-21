@@ -30,6 +30,95 @@ void PropertyUI::SetPrim(const pxr::UsdPrim& prim)
   _initialized = false;
 }
 
+// Draw a xform common api in a table
+// I am not sure this is really useful
+bool PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
+{
+  pxr::UsdGeomXformCommonAPI xformAPI(_prim);
+
+  if (xformAPI) {
+    pxr::GfVec3d translation;
+    pxr::GfVec3f scale;
+    pxr::GfVec3f pivot;
+    pxr::GfVec3f rotation;
+    pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+    xformAPI.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, time);
+    pxr::GfVec3f translationf(translation[0], translation[1], translation[2]);
+    /*
+    if (ImGui::BeginTable("##DrawXformsCommon", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+      ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
+      ImGui::TableSetupColumn("Transform");
+      ImGui::TableSetupColumn("Value");
+
+      ImGui::TableHeadersRow();
+      // Translate
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      DrawPropertyMiniButton("(x)");
+
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("translation");
+
+      ImGui::TableSetColumnIndex(2);
+      ImGui::PushItemWidth(-FLT_MIN);
+      ImGui::InputFloat3("Translation", translationf.data(), DecimalPrecision);
+      if (ImGui::IsItemDeactivatedAfterEdit()) {
+        translation[0] = translationf[0]; // TODO: InputDouble3 instead, we don't want to loose values
+        translation[1] = translationf[1];
+        translation[2] = translationf[2];
+        //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetTranslate, xformAPI, translation, currentTime);
+      }
+      // Rotation
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      DrawPropertyMiniButton("(x)");
+
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("rotation");
+
+      ImGui::TableSetColumnIndex(2);
+      ImGui::PushItemWidth(-FLT_MIN);
+      ImGui::InputFloat3("Rotation", rotation.data(), DecimalPrecision);
+      if (ImGui::IsItemDeactivatedAfterEdit()) {
+        std::cout << "SET XFORM API !" << std::endl;
+        //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetRotate, xformAPI, rotation, rotOrder, currentTime);
+      }
+      // Scale
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      DrawPropertyMiniButton("(x)");
+
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("scale");
+
+      ImGui::TableSetColumnIndex(2);
+      ImGui::PushItemWidth(-FLT_MIN);
+      ImGui::InputFloat3("Scale", scale.data(), DecimalPrecision);
+      if (ImGui::IsItemDeactivatedAfterEdit()) {
+        ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetScale, xformAPI, scale, currentTime);
+      }
+
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      DrawPropertyMiniButton("(x)");
+
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("pivot");
+
+      ImGui::TableSetColumnIndex(2);
+      ImGui::InputFloat3("Pivot", pivot.data(), DecimalPrecision);
+      if (ImGui::IsItemDeactivatedAfterEdit()) {
+        ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetPivot, xformAPI, pivot, currentTime);
+      }
+      // TODO rotation order
+      ImGui::EndTable();
+    }
+    */
+    return true;
+  }
+  return false;
+}
+
 bool PropertyUI::Draw()
 {
   if (!_prim)return false;

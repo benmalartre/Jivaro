@@ -3,15 +3,6 @@ set(TARGET jivaro)
 add_definitions(
   -DTASKING_TBB
   -DNOMINMAX
-  -DGRAPH_EXPORTS=1
-  -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM="${USD_INCLUDE_DIR}/pxr/imaging/garch/glApi.h"
-)
-
-set(PUBLIC_HEADERS
-  graph/deformableAPI.h
-  graph/connectableAPI.h
-  graph/coordSysAPI.h
-
 )
 
 add_executable(${TARGET}
@@ -20,6 +11,7 @@ add_executable(${TARGET}
   imgui/imgui_impl_glfw.cpp
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
+  imgui/imgui_tables.cpp
   imgui/imgui.cpp
   utils/files.cpp
   utils/shaders.cpp

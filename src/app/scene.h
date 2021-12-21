@@ -56,10 +56,10 @@ public:
 private:
   pxr::UsdStageRefPtr _currentStage;
   pxr::UsdStageRefPtr _rootStage;
-  _StageCacheMap  _allStages;
-  _MeshMap _meshes;
-  _CurveMap _curves;
-  _PointsMap _points;
+  _StageCacheMap      _allStages;
+  _MeshMap            _meshes;
+  _CurveMap           _curves;
+  _PointsMap          _points;
 };
 
 

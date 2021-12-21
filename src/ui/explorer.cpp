@@ -13,6 +13,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+// static data
 ImGuiWindowFlags ExplorerUI::_flags = 
   ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoResize |
@@ -29,16 +30,8 @@ ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, "Explorer")
   , _root(NULL)
-  , _visibleIcon(NULL)
-  , _invisibleIcon(NULL)
 {
   _parent->SetDirty();
-  _visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
-  _invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];
-
-  //pxr::TfWeakPtr<ExplorerUI> me(this);
-  //pxr::TfNotice::Register(me, &BaseUI::ProcessNewScene);
-  //pxr::TfNotice::Register(me, &ExplorerUI::OnSceneChangedNotice);
 }
 
 // destructor
@@ -69,12 +62,10 @@ void ExplorerUI::MouseMove(int x, int y)
 
 void ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  std::cout << "EXPLORER UI : KEY  = " << key << std::endl;
 }
 
 void ExplorerUI::Update()
 {
-  std::cout << "EXPLORER UPDATE : " << GetApplication()->GetStage() << std::endl;
   if (GetApplication()->GetStage()) {
     RecurseStage();
   }
@@ -184,8 +175,11 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
   const ImGuiStyle& style = ImGui::GetStyle();
   short state = 
     item->_selected ? ICON_SELECTED : ICON_DEFAULT;
+
+  const Icon* visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
+  const Icon* invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];
   GLuint tex = 
-    item->_visible ? _visibleIcon->tex[state] : _invisibleIcon->tex[state];
+    item->_visible ? visibleIcon->tex[state] : invisibleIcon->tex[state];
   const ImVec4& sel_col = 
     item->_selected ? TEXT_SELECTED_COLOR : TEXT_DEFAULT_COLOR;
   const ImVec4& col = 
@@ -353,7 +347,6 @@ void ExplorerUI::RecursePrim(ExplorerItem* currentItem)
 {
   for (const auto& childPrim : currentItem->_prim.GetChildren())
   {
-    std::cout << "CHILD : " << childPrim.GetName() << std::endl;
     ExplorerItem* childItem = currentItem->AddItem();
     childItem->_expanded = true;
     childItem->_prim = childPrim;

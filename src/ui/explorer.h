@@ -59,8 +59,6 @@ private:
   pxr::GfVec3f                  _color;
   bool                          _locked;
   ExplorerItem*                 _root;
-  Icon*                         _visibleIcon;
-  Icon*                         _invisibleIcon;
   bool                          _needRefresh;
 
   static ImGuiWindowFlags       _flags;

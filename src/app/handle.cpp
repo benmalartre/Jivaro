@@ -3,6 +3,7 @@
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/transform.h>
 #include <pxr/base/gf/matrix3f.h>
+#include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usdGeom/boundable.h>
 #include <pxr/usd/usdGeom/xformable.h>
 #include <pxr/usd/usdGeom/xformCache.h>
@@ -160,23 +161,22 @@ BaseHandle::SetVisibility(short axis)
 void 
 BaseHandle::ResetSelection()
 {
-  Application* app = APPLICATION;
+  Application* app = GetApplication();
   
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
-  _xformCache.Clear();
-  _xformCache.SetTime(activeTime);
+  pxr::UsdGeomXformCache xformCache(activeTime);
   _targets.clear();
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
     const Selection::Item& item = selection->GetItem(i);
-    if(stage->GetPrimAtPath(item.path).IsA<pxr::UsdGeomXformable>()) {
-      pxr::GfMatrix4f world(_xformCache.GetLocalToWorldTransform(
-        stage->GetPrimAtPath(item.path)));
+    pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if(prim.IsA<pxr::UsdGeomXformable>()) {
+      pxr::GfMatrix4f world(xformCache.GetLocalToWorldTransform(prim));
       _targets.push_back({item.path, world, pxr::GfMatrix4f(1.f)});
     }
   }
-
+  _xformCache.Swap(xformCache);
   _ComputeCOGMatrix(app->GetStage());
   
   pxr::GfMatrix4f invMatrix = _matrix.GetInverse();
@@ -342,14 +342,23 @@ BaseHandle::Update(float x, float y, float width, float height)
   }
 }
 
+pxr::GfMatrix4f _GetWorldMatrix(pxr::UsdGeomXformCache& xformCache, const pxr::UsdPrim& prim)
+{
+  if (pxr::UsdGeomXformCommonAPI xform = pxr::UsdGeomXformCommonAPI(prim)) {
+    return pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim));
+  } else {
+    if (prim == prim.GetStage()->GetPseudoRoot())return pxr::GfMatrix4f(1.f);
+    return _GetWorldMatrix(xformCache, prim.GetParent());
+  }
+}
+
 void 
 BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
 {
-  Application* app = APPLICATION;
-  float activeTime = app->GetTime().GetActiveTime();
+  float activeTime = GetApplication()->GetTime().GetActiveTime();
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
-  pxr::UsdGeomBBoxCache bboxCache(
-    activeTime, purposes, false, false);
+  /*pxr::UsdGeomBBoxCache bboxCache(
+    activeTime, purposes, false, false);*/
   _position = pxr::GfVec3f(0.f);
   _rotation = pxr::GfQuatf(1.f);
   _scale = pxr::GfVec3f(1.f);
@@ -359,20 +368,19 @@ BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
   for (auto& target: _targets) {
     const auto& prim(stage->GetPrimAtPath(target.path));
     if(prim.IsValid()) {
+      /*
       if(prim.IsA<pxr::UsdGeomBoundable>()) {
         pxr::GfBBox3d bbox = bboxCache.ComputeWorldBound(prim);
         const pxr::GfRange3d& range = bbox.GetRange();
         accumulatedRange.UnionWith(range);
       }
-
+      */
       if(prim.IsA<pxr::UsdGeomXformable>()) {
         bool resetsXformStack = false;
-        pxr::GfMatrix4f m(_xformCache.GetLocalToWorldTransform(prim));
-        transform.SetMatrix(pxr::GfMatrix4d(m));
+        pxr::GfMatrix4f world(_GetWorldMatrix(_xformCache, prim));
+        transform.SetMatrix(pxr::GfMatrix4d(world));
         _position += pxr::GfVec3f(transform.GetTranslation());
-
         _scale += pxr::GfVec3f(transform.GetScale());
-
         _rotation *= pxr::GfQuatf(transform.GetRotation().GetQuat());
         ++numPrims;
       }
@@ -457,7 +465,7 @@ BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVe
 void
 BaseHandle::_UpdateTargets()
 {
-  Application* app = APPLICATION;
+  Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
   Selection* selection = app->GetSelection();

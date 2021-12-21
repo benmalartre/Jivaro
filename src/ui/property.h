@@ -24,6 +24,7 @@ public:
   bool Draw()      override;
 
 private:
+  bool _DrawXformsCommon(pxr::UsdTimeCode time);
   pxr::GfVec3f            _color;
   pxr::UsdPrim            _prim;
   static ImGuiWindowFlags _flags;

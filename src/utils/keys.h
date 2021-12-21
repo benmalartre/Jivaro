@@ -1,5 +1,5 @@
-#ifndef JVR_UTILS_SCANCODE_H
-#define JVR_UTILS_SCANCODE_H
+#ifndef JVR_UTILS_KEYS_H
+#define JVR_UTILS_KEYS_H
 
 #include "../common.h"
 
@@ -9,8 +9,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static int MAPPED_KEYS[GLFW_KEY_LAST+1];
-static bool KEY_MAP_INITIALIZED = false;
+extern int MAPPED_KEYS[GLFW_KEY_LAST+1];
+extern bool KEY_MAP_INITIALIZED;
 
 static void BuildKeyMap()
 {
@@ -54,5 +54,5 @@ static int GetMappedKey(int key)
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif //JVR_UTILS_SCANCODE_H
+#endif //JVR_UTILS_KEYS_H
 

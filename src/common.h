@@ -70,5 +70,7 @@
 #define BITMASK_FLIP(x,y) ((x) ^= (y))
 #define BITMASK_CHECK(x,y) ((x) & (y))
 
+constexpr const char * DecimalPrecision = "%.5f";
+
 #endif // JVR_COMMON_H
 

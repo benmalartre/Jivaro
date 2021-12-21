@@ -138,24 +138,8 @@ static int GetPadding(const std::string& padding_string)
 	return  atoi(&nb);
 }
 
-/*
-// RANDOM STRING
+// CONVERT TO STRING
 //---------------------------------------------------------------------------------------
-std::string randomString(size_t length)
-{
-  const char* charmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const size_t charmapLength = strlen(charmap);
-  std::string result;
-  auto generator = [&](){ return charmap[rand()%charmapLength]; };
-  string result;
-  result.reserve(length);
-  std::generate_n(std::back_inserter(result), length, generator);
-  return result;
-}
-*/
-
-JVR_NAMESPACE_CLOSE_SCOPE
-
 template <typename T> 
 static std::string ToString(const T& t)
 {
@@ -163,3 +147,25 @@ static std::string ToString(const T& t)
 	os << t;
 	return os.str();
 }
+
+
+// RANDOM STRING
+//---------------------------------------------------------------------------------------
+static std::string RandomString(size_t length)
+{
+  auto RndC = []() -> char
+  {
+    const char charset[] =
+      "0123456789"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "abcdefghijklmnopqrstuvwxyz";
+    const size_t max_index = (sizeof(charset) - 1);
+    return charset[rand() % max_index];
+  };
+  std::string str(length, 0);
+  std::generate_n(str.begin(), length, RndC);
+  return str;
+}
+
+JVR_NAMESPACE_CLOSE_SCOPE
+

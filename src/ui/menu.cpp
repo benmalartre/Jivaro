@@ -2,6 +2,7 @@
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/menu.h"
+#include "../utils/strings.h"
 #include "../command/command.h""
 #include "../app/view.h"
 #include "../app/window.h"
@@ -88,7 +89,6 @@ static void OpenFileCallback() {
 }
 
 static void SaveFileCallback() {
-  std::cout << "ON SAVE CALLBACK !!!" << std::endl;
 }
 
 static void OpenDemoCallback()
@@ -98,27 +98,9 @@ static void OpenDemoCallback()
   demo.Term();
 }
 
-
-std::string _RandomName(size_t length)
-{
-  auto RndC = []() -> char
-  {
-    const char charset[] =
-      "0123456789"
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      "abcdefghijklmnopqrstuvwxyz";
-    const size_t max_index = (sizeof(charset) - 1);
-    return charset[rand() % max_index];
-  };
-  std::string str(length, 0);
-  std::generate_n(str.begin(), length, RndC);
-  std::cout << "PRIM NAME : " << str << std::endl;
-  return str;
-}
-
 static void CreatePrimCallback()
 {
-  std::string name = _RandomName(32);
+  std::string name = RandomString(32);
 
   GetApplication()->AddCommand(
     std::shared_ptr<CreatePrimCommand>(new CreatePrimCommand(GetApplication()->GetStage(), name)));
@@ -186,14 +168,14 @@ MenuUI::MenuUI(View* parent) :BaseUI(parent, "MainMenu")
   fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
   args.push_back(pxr::VtValue(7.0));
 
-  MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);
-  demoItem.AddItem(parent, "OpenDemo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
-
   MenuItem& testItem = AddItem(parent, "Test", "", false, true);
   testItem.AddItem(parent, "Flatten Geometry", "Shift+F", false, true, (MenuPressedFunc)&FlattenGeometryCallback);
   */
   MenuItem& createPrimItem = AddItem(parent, "Test", "", false, true);
   createPrimItem.AddItem(parent, "CreatePrim", "CTRL+P", false, true, (MenuPressedFunc)&CreatePrimCallback);
+
+  MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);
+  demoItem.AddItem(parent, "Open Demo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
 
 }
 
