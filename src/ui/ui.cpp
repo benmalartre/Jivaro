@@ -21,6 +21,7 @@ BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
   //pxr::TfNotice::Register(me, &BaseUI::OnAllNotices);
   pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
+  pxr::TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
 };
 
 void BaseUI::OnNewSceneNotice(const NewSceneNotice& n)

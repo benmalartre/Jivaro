@@ -185,6 +185,7 @@ Window::Init(Application* app)
   _app = app;
   if(_window)
   {
+    std::cout << "INIT WINDOW" << std::endl;
     // window datas
     glfwSetWindowUserPointer(_window, this);
 
@@ -451,8 +452,7 @@ Window::Draw()
   SetGLContext();
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame(_window);
-  
+  ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight() + 2 ));
   ImGui::SetWindowPos(pxr::GfVec2f(0,0));
@@ -467,7 +467,7 @@ Window::Draw()
     );
     _dim = false;
   }
-  // draw popuo
+  // draw popup
   if (_popup) {
     _popup->Draw();
   }
@@ -534,15 +534,13 @@ Window::SetupImgui()
   SetStyle(&ImGui::GetStyle());
 
   // setup platform/renderer bindings
-  if (_shared) {
-    pxr::GlfContextCaps const & caps = pxr::GlfContextCaps::GetInstance();
-    ImGui_ImplGlfw_InitForOpenGL(_window, false);
-    if (caps.glslVersion < 330) {
-      ImGui_ImplOpenGL3_Init("#version 120 ");
-    }
-    else {
-      ImGui_ImplOpenGL3_Init("#version 330 ");
-    }
+  pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
+  ImGui_ImplGlfw_InitForOpenGL(_window, false);
+  if (caps.glslVersion < 330) {
+    ImGui_ImplOpenGL3_Init("#version 120 ");
+  }
+  else {
+    ImGui_ImplOpenGL3_Init("#version 330 ");
   }
 }
 

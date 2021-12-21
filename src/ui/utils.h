@@ -39,7 +39,7 @@ static float tooltip_lastactive = 0.f;
 static void AttachTooltip(const char* desc, float delay, float maxwidth, ImFont* font)
 {
 	ImGuiContext *g = ImGui::GetCurrentContext();
-  ImGuiID id = g->CurrentWindow->DC.LastItemId;
+  ImGuiID id = ImGui::GetActiveID();
   float time = ImGui::GetTime();
   int thisframe = ImGui::GetFrameCount();
 

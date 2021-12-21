@@ -233,7 +233,6 @@ bool MenuUI::Draw()
   return
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
-    ImGui::IsAnyWindowHovered() ||
     ImGui::IsAnyMouseDown();
 }
 

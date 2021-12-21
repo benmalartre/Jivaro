@@ -1,11 +1,12 @@
-#include "selection.h"
-#include "application.h"
 #include <pxr/usd/usdGeom/bboxCache.h>
 #include <pxr/usd/usdGeom/xformCache.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/quatf.h>
+#include "../app/selection.h"
+#include "../app/application.h"
+#include "../app/notice.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -46,6 +47,7 @@ void Selection::AddItem(const pxr::SdfPath& path)
     if (path == item.path)return;
   }
   _items.push_back({ Type::OBJECT, path });
+  SelectionChangedNotice().Send();
 }
 
 void Selection::RemoveItem(const pxr::SdfPath& path)
@@ -53,6 +55,7 @@ void Selection::RemoveItem(const pxr::SdfPath& path)
   for (auto it = _items.begin(); it < _items.end(); ++it) {
     if (path == it->path) _items.erase(it);
   }
+  SelectionChangedNotice().Send();
 }
 
 void Selection::ToggleItem(const pxr::SdfPath& path)

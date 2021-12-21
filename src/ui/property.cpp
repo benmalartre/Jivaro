@@ -6,6 +6,8 @@
 #include "../ui/property.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "../app/application.h"
+#include "../app/selection.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -24,15 +26,31 @@ PropertyUI::~PropertyUI()
 {
 }
 
-void PropertyUI::SetPrim(const pxr::UsdPrim& prim)
+void 
+PropertyUI::SetPrim(const pxr::UsdPrim& prim)
 {
   if(prim.IsValid())_prim = prim;
   _initialized = false;
 }
 
+void 
+PropertyUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
+{
+  Application* app = GetApplication();
+  Selection* selection = app->GetSelection();
+  if (selection->GetNumSelectedItems()) {
+    pxr::UsdPrim prim = app->GetStage()->GetPrimAtPath(selection->GetSelectedPrims().back());
+    SetPrim(prim);
+  }
+  else {
+    SetPrim(pxr::UsdPrim());
+  }
+}
+
 // Draw a xform common api in a table
 // I am not sure this is really useful
-bool PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
+bool 
+PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 {
   pxr::UsdGeomXformCommonAPI xformAPI(_prim);
 
@@ -44,7 +62,7 @@ bool PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
     pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
     xformAPI.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, time);
     pxr::GfVec3f translationf(translation[0], translation[1], translation[2]);
-    /*
+    
     if (ImGui::BeginTable("##DrawXformsCommon", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
       ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
       ImGui::TableSetupColumn("Transform");
@@ -54,7 +72,7 @@ bool PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       // Translate
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      DrawPropertyMiniButton("(x)");
+      //DrawPropertyMiniButton("(x)");
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("translation");
@@ -71,7 +89,7 @@ bool PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       // Rotation
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      DrawPropertyMiniButton("(x)");
+      //DrawPropertyMiniButton("(x)");
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("rotation");
@@ -86,7 +104,7 @@ bool PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       // Scale
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      DrawPropertyMiniButton("(x)");
+      //DrawPropertyMiniButton("(x)");
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("scale");
@@ -95,12 +113,12 @@ bool PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Scale", scale.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
-        ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetScale, xformAPI, scale, currentTime);
+        //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetScale, xformAPI, scale, currentTime);
       }
 
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      DrawPropertyMiniButton("(x)");
+      //DrawPropertyMiniButton("(x)");
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("pivot");
@@ -108,18 +126,19 @@ bool PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::TableSetColumnIndex(2);
       ImGui::InputFloat3("Pivot", pivot.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
-        ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetPivot, xformAPI, pivot, currentTime);
+        //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetPivot, xformAPI, pivot, currentTime);
       }
       // TODO rotation order
       ImGui::EndTable();
     }
-    */
+    
     return true;
   }
   return false;
 }
 
-bool PropertyUI::Draw()
+bool 
+PropertyUI::Draw()
 {
   if (!_prim)return false;
   if (!_initialized)_initialized = true;
@@ -144,56 +163,10 @@ bool PropertyUI::Draw()
     ImGuiCol_WindowBg
   );
 
-  static pxr::GfVec3f position;
-  static pxr::GfVec3f rotation;
-  static pxr::GfVec3f scale(1.f, 1.f, 1.f);
-  static bool visible;
-  static pxr::GfVec3f color;
-  static float opacity;
-
   Window* window = _parent->GetWindow();
-
-  const float valueWidth = GetWidth() - 100;
   ImGui::PushFont(window->GetBoldFont(0));
-  if (ImGui::BeginTabBar("Tab")) {
+  _DrawXformsCommon(pxr::UsdTimeCode::Default());
 
-    if (ImGui::BeginTabItem("Xform")) {
-      // setup columns
-      ImGui::Columns(2);
-      ImGui::SetColumnWidth(0, 100);
-      ImGui::SetColumnWidth(1, GetWidth() - 100);
-
-      // draw title
-      ImGui::PushFont(GetWindow()->GetMediumFont(0));
-      ImGui::Text("Attribute");
-      ImGui::NextColumn();
-      ImGui::Text("Value");
-      ImGui::NextColumn();
-      ImGui::PopFont();
-
-      ImGui::PushFont(window->GetRegularFont(0));
-      ImGui::Text("Position");                            ImGui::NextColumn();
-      ImGui::SetNextItemWidth(valueWidth);
-      ImGui::InputFloat3("##Position", &position[0], 3);  ImGui::NextColumn();
-      ImGui::Text("Rotation");                            ImGui::NextColumn();
-      ImGui::SetNextItemWidth(valueWidth);
-      ImGui::InputFloat3("##Rotation", &rotation[0], 3);  ImGui::NextColumn();
-      ImGui::Text("Scale");                               ImGui::NextColumn();
-      ImGui::SetNextItemWidth(valueWidth);
-      ImGui::InputFloat3("##Scale", &scale[0],3);         ImGui::NextColumn();
-      ImGui::EndTabItem();
-      ImGui::PopFont();
-    }
-    if (ImGui::BeginTabItem("Display")) {
-      ImGui::PushFont(window->GetRegularFont(0));
-      ImGui::Checkbox("##Visibility", &visible);
-      ImGui::ColorEdit3("##Color", &color[0]);
-      ImGui::InputFloat("##Opacity", &opacity);
-      ImGui::EndTabItem();
-      ImGui::PopFont();
-    }
-    ImGui::EndTabBar();
-  }
   ImGui::PopFont();
   ImGui::End();
   return true;

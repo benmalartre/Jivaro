@@ -101,7 +101,8 @@ bool ToolbarButton::Draw()
     );
   }
   ImGui::PopFont();
-  if(tooltip.length())AttachTooltip(tooltip.c_str(), 0.5f, 128, window->GetRegularFont(0));
+  if(tooltip.length() && ImGui::IsItemHovered())
+    ImGui::SetTooltip(tooltip.c_str());
  
   return false;
 }

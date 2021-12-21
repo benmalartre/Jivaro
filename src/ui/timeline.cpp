@@ -251,7 +251,9 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
-  AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
+  if (ImGui::IsItemHovered())
+    ImGui::SetTooltip("Minimum Time");
+  //AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
   ImGui::SetNextItemWidth(60);
@@ -261,7 +263,9 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
-  AttachTooltip("Start Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
+  if (ImGui::IsItemHovered())
+    ImGui::SetTooltip("Start Time");
+  //AttachTooltip("Start Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
   float cy = ImGui::GetCursorPosY();
@@ -280,7 +284,9 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
-  AttachTooltip("Current Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
+  if (ImGui::IsItemHovered())
+    ImGui::SetTooltip("Current Time");
+  //AttachTooltip("Current Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
   ImGui::SetCursorPosX(width - 140);
@@ -301,7 +307,9 @@ void TimelineUI::DrawControls()
   {
     ValidateTime();
   }
-  AttachTooltip("Maximum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
+  if (ImGui::IsItemHovered())
+    ImGui::SetTooltip("Maximum Time");
+  //AttachTooltip("Maximum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine();
   ImGui::PopFont();
 }
