@@ -3,7 +3,7 @@
 #include "../ui/style.h"
 #include "../ui/menu.h"
 #include "../utils/strings.h"
-#include "../command/command.h""
+#include "../command/command.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
