@@ -91,7 +91,6 @@ ModalFileBrowser::ModalFileBrowser(int x, int y, const std::string& title,
 
 void ModalFileBrowser::_LoopImpl()
 {
-  std::cout << "FILE BROWSER LOOP START..." << std::endl;
   FileBrowserUI* browser = (FileBrowserUI*)_ui;
   bool browse = browser->IsBrowsing();
   if(!browse) {
@@ -106,7 +105,6 @@ void ModalFileBrowser::_LoopImpl()
       }
     } 
   }
-  std::cout << "FILE BROWSER LOOP END..." << std::endl;
 }
 
 //==============================================================================
