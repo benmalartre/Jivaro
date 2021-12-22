@@ -22,7 +22,7 @@
 #include <iomanip>
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // STRING END WITH
 //---------------------------------------------------------------------------------------
@@ -167,5 +167,5 @@ static std::string RandomString(size_t length)
   return str;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 

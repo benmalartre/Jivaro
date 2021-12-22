@@ -16,7 +16,7 @@
 
 #include <memory>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class Engine : public pxr::UsdImagingGLEngine {
 public:
@@ -35,6 +35,6 @@ public:
     */
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

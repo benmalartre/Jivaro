@@ -11,7 +11,7 @@
 #include <mutex>
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
 // Command Manager
@@ -34,6 +34,6 @@ public:
   void Redo();
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_COMMAND_MANAGER_H

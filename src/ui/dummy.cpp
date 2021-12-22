@@ -1,7 +1,7 @@
 #include "dummy.h"
 #include "../app/view.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 DummyUI::DummyUI(View* parent, const std::string& name):BaseUI(parent, name){}
 
@@ -55,4 +55,4 @@ void DummyUI::Demo()
   ImGui::ShowDemoWindow();
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

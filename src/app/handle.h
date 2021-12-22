@@ -16,7 +16,7 @@
 #include "../geometry/shape.h"
 #include "../geometry/utils.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 static const pxr::GfMatrix4f HANDLE_X_MATRIX = {
   0.f, 1.f, 0.f, 0.f,
@@ -266,6 +266,6 @@ private:
   pxr::GfVec4f                  _color;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_HANDLE_H

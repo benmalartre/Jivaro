@@ -14,7 +14,7 @@
 #include "../geometry/mesh.h"
 #include <openvdb/openvdb.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class TimelineUI;
 class PropertyUI;
@@ -133,7 +133,7 @@ extern Application* APPLICATION;
 
 static Application* GetApplication() { return APPLICATION; };
 
-JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR
+PXR_NAMESPACE_CLOSE_SCOPE // namespace JVR
 
 #endif // JVR_APPLICATION_APPLICATION_H
 

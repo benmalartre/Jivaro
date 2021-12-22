@@ -8,7 +8,7 @@
 #include "../ui/utils.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 extern IconList ICONS;
 static size_t EXPLORER_LINE_HEIGHT = 20;
@@ -65,6 +65,6 @@ private:
   static ImGuiTreeNodeFlags     _treeFlags;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_EXPLORER_H

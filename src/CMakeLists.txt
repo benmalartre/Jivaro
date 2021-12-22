@@ -60,6 +60,7 @@ add_executable(${TARGET}
   pbd/maths.cpp
   anim/animx.cpp
   command/command.cpp
+  command/delegate.cpp
   command/manager.cpp
   app/time.cpp
   app/notice.cpp

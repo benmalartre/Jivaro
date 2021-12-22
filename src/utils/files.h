@@ -12,7 +12,7 @@
 #include <pxr/base/arch/fileSystem.h>
 #include <pxr/base/arch/systemInfo.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 #ifdef _WIN32
   #define SEPARATOR "\\"
@@ -132,6 +132,6 @@ public:
   );
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UTILS_FILES_H

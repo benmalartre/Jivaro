@@ -10,7 +10,7 @@
 #include "pxr/base/gf/vec3i.h"
 #include "pxr/base/gf/vec3f.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 /// Barycentric coordinates
 void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
@@ -69,6 +69,6 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
                     const pxr::VtArray<pxr::GfVec3f>& ups,
                     pxr::VtArray<pxr::GfVec3f>& tangents);
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

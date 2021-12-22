@@ -3,7 +3,7 @@
 #include "../app/notice.h"
 #include <pxr/usd/usdGeom/mesh.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
 // Open Scene
@@ -67,4 +67,4 @@ void CreatePrimCommand::Redo() {
   SceneChangedNotice().Send();
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

@@ -6,7 +6,7 @@
 
 #include "../ui/ui.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 /*
 struct SummaryStats
@@ -57,6 +57,6 @@ class LayersUI : public BaseUI
     static ImGuiWindowFlags               _flags;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

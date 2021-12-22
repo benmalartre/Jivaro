@@ -7,7 +7,7 @@
 #include "../utils/utils.h"
 #include "../widgets/viewport.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 void SetEmbreeContext(UsdEmbreeContext* ctxt)
 {
@@ -549,4 +549,4 @@ void DeviceCleanup ()
   rtcReleaseScene (EMBREE_CTXT->_scene); EMBREE_CTXT->_scene = NULL;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

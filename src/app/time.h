@@ -6,7 +6,7 @@
 #include "../common.h"
 #include "pxr/base/tf/stopwatch.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 class Time {
@@ -59,6 +59,6 @@ private:
   size_t                            _framerate;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APP_SELECTION_H

@@ -11,7 +11,7 @@
 
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class Command;
 // callback prototype
@@ -55,6 +55,6 @@ private:
   static ImGuiWindowFlags _flags;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_MENU_H

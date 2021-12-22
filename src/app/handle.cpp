@@ -15,7 +15,7 @@
 #include "../app/application.h"
 #include "../geometry/utils.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
 // BASE HANDLE IMPLEMENTATION
@@ -1264,4 +1264,4 @@ BrushHandle::Draw(float width, float height)
   glBindVertexArray(vao);
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

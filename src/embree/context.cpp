@@ -6,7 +6,7 @@
 #include "instance.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 // constructor
 //----------------------------------------------------------------------------
 UsdEmbreeContext::UsdEmbreeContext():
@@ -193,4 +193,4 @@ void UsdEmbreeContext::Resize(int width, int height)
     );
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

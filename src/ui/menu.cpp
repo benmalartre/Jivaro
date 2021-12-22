@@ -15,7 +15,7 @@
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/primvar.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 ImGuiWindowFlags MenuUI::_flags =
@@ -236,4 +236,4 @@ bool MenuUI::Draw()
     ImGui::IsAnyMouseDown();
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

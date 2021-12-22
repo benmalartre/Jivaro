@@ -8,7 +8,7 @@
 #include <pxr/imaging/hd/selection.h>
 #include <vector>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 class Selection {
@@ -62,6 +62,6 @@ private:
   std::vector<Item>           _items;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APP_SELECTION_H

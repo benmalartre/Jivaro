@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 extern int MAPPED_KEYS[GLFW_KEY_LAST+1];
 extern bool KEY_MAP_INITIALIZED;
@@ -52,7 +52,7 @@ static int GetMappedKey(int key)
   return MAPPED_KEYS[key];
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif //JVR_UTILS_KEYS_H
 

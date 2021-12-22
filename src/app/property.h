@@ -6,7 +6,7 @@
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usd/attributeQuery.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 /// \class Property
@@ -16,5 +16,5 @@ class Property
 
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 #endif //JVR_APPLICATION_PROPERTY_H

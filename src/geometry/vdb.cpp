@@ -14,7 +14,7 @@
 using namespace openvdb;
 using namespace openvdb::tools;
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 struct MeshWrapper {
   Mesh* mesh;
@@ -468,4 +468,4 @@ makeVDBSphere()
 
 }
 */
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

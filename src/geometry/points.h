@@ -15,7 +15,7 @@
 #include "triangle.h"
 #include "geometry.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class Points : public Geometry {
 public:
@@ -60,6 +60,6 @@ private:
 
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

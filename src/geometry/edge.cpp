@@ -2,7 +2,7 @@
 #include "../geometry/points.h"
 #include "../geometry/mesh.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 //-------------------------------------------------------
 // Edge Center
@@ -59,4 +59,4 @@ bool Edge::Intersect(const Edge& other, float epsilon)
   return false;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

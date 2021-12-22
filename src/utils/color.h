@@ -2,7 +2,7 @@
 
 #include "../common.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // index to random color
 static inline unsigned RandomColorByIndex(unsigned index)
@@ -88,4 +88,4 @@ static T UnpackColor4AsFloat(const float& code)
   return UnpackColor4<T>(icode);
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

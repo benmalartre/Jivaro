@@ -7,7 +7,7 @@
 #include "../ui/ui.h"
 #include "../ui/utils.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 static size_t FILEBROWSER_LINE_HEIGHT = 20;
 
@@ -77,6 +77,6 @@ private:
 
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_FILEBROWSER_H

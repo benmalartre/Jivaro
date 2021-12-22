@@ -12,7 +12,7 @@
 #include <pxr/base/tf/instantiateType.h>
 #include <pxr/base/gf/vec2f.h>
 
-JVR_NAMESPACE_OPEN_SCOPE  
+PXR_NAMESPACE_OPEN_SCOPE  
 
 #define UI_HEADER_HEIGHT 32
 
@@ -106,6 +106,6 @@ protected:
 };
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

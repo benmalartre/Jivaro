@@ -9,7 +9,7 @@
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/imaging/garch/glApi.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class GLSLProgram;
 class Shape {
@@ -241,6 +241,6 @@ static bool SHAPE_INITIALIZED = false;
 
 void InitShapeShader();
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

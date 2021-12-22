@@ -6,7 +6,7 @@
 
 #include "shaders.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // check opengl error
 //----------------------------------------------------------------------------
@@ -92,6 +92,6 @@ CreateOpenGLTexture(int width, int height,
                   pixels);
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UTILS_GL_H

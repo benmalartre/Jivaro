@@ -11,7 +11,7 @@
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 
@@ -645,4 +645,4 @@ ViewportUI::_Pick(pxr::GfVec2i const& startPos, pxr::GfVec2i const& endPos,
     p.pickTarget, pxr::HdSelection::HighlightModeSelect, allHits);
 }
 */
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

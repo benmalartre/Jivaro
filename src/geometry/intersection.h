@@ -7,7 +7,7 @@
 #include <pxr/base/gf/ray.h>
 #include "../common.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class Intersector;
 class Geometry;
@@ -87,6 +87,6 @@ bool IntersectTorus( const pxr::GfRay& localRay, const double radius,
 bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   const double section, double* distance);
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif //JVR_GEOMETRY_INTERSECTION_H

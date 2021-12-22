@@ -9,7 +9,7 @@
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 //=================================================================================================
 // HIT CLASS
@@ -305,4 +305,4 @@ bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   return false;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

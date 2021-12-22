@@ -3,7 +3,7 @@
 #include "../app/view.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // constructor
 BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
@@ -115,4 +115,4 @@ bool BaseUI::DrawHead()
 
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

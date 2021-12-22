@@ -4,7 +4,7 @@
 #include "../common.h"
 #include "../imgui/imgui.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 static ImVec4 BACKGROUND_COLOR(0.2f, 0.2f, 0.2f, 1.f);
 static ImVec4 ALTERNATE_COLOR(0.25f, 0.25f, 0.25f, 1.f);
@@ -35,11 +35,11 @@ static void SetStyle(ImGuiStyle* dst)
   style->TabRounding = 0.0f;
   style->WindowPadding = pxr::GfVec2f(4.f, 0.f);
   style->FramePadding = pxr::GfVec2f(0.f, 0.f);
-  style->ChildBorderSize = 0.f;
+  style->ChildBorderSize = 4.f;
   style->FrameBorderSize = 0.f;
   style->IndentSpacing = 2.f;
   style->ItemSpacing = pxr::GfVec2f(4.f,4.f);
-  style->ItemInnerSpacing = pxr::GfVec2f(0.f, 4.f);
+  style->ItemInnerSpacing = pxr::GfVec2f(2.f, 4.f);
   style->FrameBorderSize = 1.0f;
   style->FrameRounding = 2.f;
   style->AntiAliasedLines = true;
@@ -93,6 +93,6 @@ static void SetStyle(ImGuiStyle* dst)
   colors[ImGuiCol_TabHovered] = ImVec4(0.62f, 0.62f, 0.62f, 1.00f);
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_STYLE_H

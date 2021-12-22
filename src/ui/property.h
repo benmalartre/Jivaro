@@ -8,7 +8,7 @@
 #include "../ui/utils.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class PropertyUI : public BaseUI
 {
@@ -26,11 +26,27 @@ public:
 
 private:
   bool _DrawXformsCommon(pxr::UsdTimeCode time);
+  /*
+  static pxr::VtValue _DrawAttributeValue(
+    const std::string &label, pxr::UsdAttribute &attribute, const pxr::VtValue &value);
+  static void _DrawAttributeTypeInfo(
+    const pxr::UsdAttribute &attribute);
+  static void _DrawAttributeDisplayName(
+    const pxr::UsdAttribute &attribute);
+  static void _DrawAttributeValueAtTime(
+    pxr::UsdAttribute &attribute, pxr::UsdTimeCode currentTime);
+  static void _DrawUsdRelationshipDisplayName(
+    const pxr::UsdRelationship &relationship);
+  static void _DrawUsdRelationshipList(
+    const pxr::UsdRelationship &relationship);
+  static bool _DrawVariantSetsCombos(pxr::UsdPrim &prim);
+  */
+
   pxr::GfVec3f            _color;
   pxr::UsdPrim            _prim;
   static ImGuiWindowFlags _flags;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_PROPERTY_H

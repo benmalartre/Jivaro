@@ -20,7 +20,7 @@
 #include "../ui/layers.h"
 #include "../app/view.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 /*
 #include "Editor.h"
 #include "Commands.h"
@@ -433,4 +433,4 @@ bool LayersUI::Draw()
     return true;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

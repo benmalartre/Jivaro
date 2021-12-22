@@ -42,7 +42,7 @@
 #include "../app/engine.h"
 #include "../geometry/vdb.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 Application* APPLICATION = nullptr;
 const char* Application::APPLICATION_NAME = "Jivaro";
@@ -683,4 +683,4 @@ Application::GetSelectionBoundingBox()
   return bbox;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

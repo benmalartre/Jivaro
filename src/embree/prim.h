@@ -7,7 +7,7 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/base/tf/hashmap.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 enum JVR_INTERPOLATION_TYPE{
   CONSTANT,
@@ -32,6 +32,6 @@ struct UsdEmbreePrim {
   pxr::GfVec3f                _color;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_EMBREE_PRIM_H

@@ -8,7 +8,7 @@
 #include "../app/application.h"
 #include "../app/notice.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 bool Selection::IsEmpty()
 {
@@ -108,4 +108,4 @@ pxr::SdfPathVector Selection::GetSelectedPrims()
 }
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

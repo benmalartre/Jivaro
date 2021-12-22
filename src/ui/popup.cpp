@@ -8,7 +8,7 @@
 #include <pxr/base/gf/vec2f.h>
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags PopupUI::_flags = 
   ImGuiWindowFlags_NoResize |
@@ -87,4 +87,4 @@ PopupUI::Draw()
 };
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

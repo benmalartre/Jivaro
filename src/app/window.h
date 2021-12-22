@@ -13,7 +13,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 extern ImFontAtlas* SHARED_ATLAS;
@@ -217,6 +217,6 @@ public:
     const std::string& name="Child", bool decorated=true);
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APP_WINDOW_H

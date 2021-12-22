@@ -3,7 +3,7 @@
 #include "sphere.h"
 #include "context.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // translate usd sphere to embree mesh
 UsdEmbreeSphere* 
@@ -172,4 +172,4 @@ void BuildTriangles(int num_lats,
   } 
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

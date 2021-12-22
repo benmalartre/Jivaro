@@ -5,7 +5,7 @@
 #include "../common.h"
 #include <pxr/base/gf/vec3f.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class PBDParticle
 {
@@ -406,6 +406,6 @@ public:
   }
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

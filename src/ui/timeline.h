@@ -7,7 +7,7 @@
 #include "../utils/icons.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 extern IconList ICONS;
 
 #define SLIDER_THICKNESS 2.f
@@ -58,6 +58,6 @@ private:
 };
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_TIMELINE_H

@@ -3,7 +3,7 @@
 #include "prim.h"
 #include <pxr/usd/usdGeom/sphere.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 
@@ -44,4 +44,4 @@ BuildTriangles(int num_lats,
               int num_longs,
               pxr::VtArray<int>& triangles);
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

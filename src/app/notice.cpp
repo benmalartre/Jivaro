@@ -4,18 +4,17 @@
 #include "pxr/base/tf/registryManager.h"
 #include "../app/notice.h"
 
-PXR_NAMESPACE_USING_DIRECTIVE
+
+PXR_NAMESPACE_OPEN_SCOPE
 
 TF_REGISTRY_FUNCTION(TfType)
 {
-  TfType::Define<JVR::BaseNotice, TfType::Bases<TfNotice> >();
-  TfType::Define<JVR::NewSceneNotice, TfType::Bases<JVR::BaseNotice> >();
-  TfType::Define<JVR::SelectionChangedNotice, TfType::Bases<JVR::BaseNotice> >();
-  TfType::Define<JVR::SceneChangedNotice, TfType::Bases<JVR::BaseNotice> >();
+  TfType::Define<BaseNotice, TfType::Bases<TfNotice> >();
+  TfType::Define<NewSceneNotice, TfType::Bases<BaseNotice> >();
+  TfType::Define<SelectionChangedNotice, TfType::Bases<BaseNotice> >();
+  TfType::Define<SceneChangedNotice, TfType::Bases<BaseNotice> >();
 }
 
-
-JVR_NAMESPACE_OPEN_SCOPE
 
 ////////////////////////////////////////////////////////////
 BaseNotice::BaseNotice()
@@ -58,4 +57,4 @@ SceneChangedNotice::~SceneChangedNotice()
 }
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

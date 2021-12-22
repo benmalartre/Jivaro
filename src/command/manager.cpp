@@ -1,6 +1,6 @@
 #include "../command/manager.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 static void
 _ExecuteCommandsThread(CommandManager* manager)
@@ -71,4 +71,4 @@ CommandManager::Redo() {
   command->Redo();                        // redo most recently executed command
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

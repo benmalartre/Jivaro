@@ -4,7 +4,7 @@
 
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // constructor
 //------------------------------------------------------------------------------
@@ -526,4 +526,4 @@ pxr::GfRay Camera::ComputeRay(const pxr::GfVec2d& pos) const
   return _frustum.ComputeRay(pos);
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

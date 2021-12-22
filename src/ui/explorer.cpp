@@ -11,7 +11,7 @@
 #include "../app/view.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // static data
 ImGuiWindowFlags ExplorerUI::_flags = 
@@ -39,12 +39,14 @@ ExplorerUI::~ExplorerUI()
 {
 }
 
-void ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
+void 
+ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
   Update();
 }
 
-void ExplorerUI::Init()
+void 
+ExplorerUI::Init()
 {
   Update();
   _parent->SetDirty();
@@ -52,26 +54,31 @@ void ExplorerUI::Init()
 }
 
 
-void ExplorerUI::MouseButton(int button, int action, int mods)
+void 
+ExplorerUI::MouseButton(int button, int action, int mods)
 {
 }
 
-void ExplorerUI::MouseMove(int x, int y)
+void 
+ExplorerUI::MouseMove(int x, int y)
 {
 }
 
-void ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
+void
+ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
 }
 
-void ExplorerUI::Update()
+void 
+ExplorerUI::Update()
 {
   if (GetApplication()->GetStage()) {
     RecurseStage();
   }
 }
 
-void ExplorerUI::DrawItemBackground(ImDrawList* drawList,
+void 
+ExplorerUI::DrawItemBackground(ImDrawList* drawList,
   const ExplorerItem* item, bool& flip)
 {
   if (!item) return;
@@ -105,7 +112,8 @@ void ExplorerUI::DrawItemBackground(ImDrawList* drawList,
   }
 }
 
-void ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
+void 
+ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
 {
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   const auto& style = ImGui::GetStyle();
@@ -142,7 +150,8 @@ void ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
   drawList->PopClipRect();
 }
 
-void ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
+void 
+ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
 {
   if (isLeaf ? ImGui::IsItemClicked() : ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     if (!item->_selected) {
@@ -155,7 +164,9 @@ void ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
     SelectionChangedNotice().Send();
   }
 }
-void ExplorerUI::DrawItemType(ExplorerItem* item)
+
+void 
+ExplorerUI::DrawItemType(ExplorerItem* item)
 {
   ImGui::Text("%s", item->_prim.GetTypeName().GetText());
   /*
@@ -170,7 +181,8 @@ void ExplorerUI::DrawItemType(ExplorerItem* item)
   ImGui::NextColumn();
 }
 
-void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
+void
+ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
   short state = 
@@ -204,7 +216,8 @@ void ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
   ImGui::PopStyleColor(3);
 }
 
-void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
+void 
+ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
 {
   if (!current) return;
   ImGuiTreeNodeFlags itemFlags = _treeFlags;
@@ -271,7 +284,8 @@ void ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
   }
 }
 
-bool ExplorerUI::Draw()
+bool 
+ExplorerUI::Draw()
 {
   if (!_initialized)Init();
 
@@ -330,7 +344,8 @@ bool ExplorerUI::Draw()
 }
 
 
-void ExplorerUI::RecurseStage()
+void 
+ExplorerUI::RecurseStage()
 {
   if (_root)delete _root;
   _root = new ExplorerItem();
@@ -343,7 +358,8 @@ void ExplorerUI::RecurseStage()
   }
 }
 
-void ExplorerUI::RecursePrim(ExplorerItem* currentItem)
+void
+ExplorerUI::RecursePrim(ExplorerItem* currentItem)
 {
   for (const auto& childPrim : currentItem->_prim.GetChildren())
   {
@@ -363,4 +379,4 @@ void ExplorerUI::RecursePrim(ExplorerItem* currentItem)
   }
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

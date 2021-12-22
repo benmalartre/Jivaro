@@ -5,7 +5,7 @@
 #include <pxr/base/tf/notice.h>
 #include <pxr/base/tf/type.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 
 /// Notifications sent by the Jivaro Application
@@ -51,5 +51,5 @@ public:
 private:
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 #endif //JVR_APPLICATION_NOTICE_H

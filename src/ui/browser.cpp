@@ -1,7 +1,7 @@
 #include "browser.h"
 #include "../app/view.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 BrowserUI::BrowserUI(View* parent, const std::string& name):BaseUI(parent, name){}
 
@@ -49,4 +49,4 @@ void BrowserUI::FillBackground()
   ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

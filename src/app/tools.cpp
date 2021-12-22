@@ -4,7 +4,7 @@
 #include "../app/selection.h"
 #include "../app/application.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 Tool::Tool()
   : _translate(TranslateHandle())
@@ -173,4 +173,4 @@ void InitializeTools()
 }
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

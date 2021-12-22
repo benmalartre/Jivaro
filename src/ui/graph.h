@@ -18,7 +18,7 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primFlags.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 #define GRAPH_CELL_MAX_NODES 6
 
@@ -377,6 +377,6 @@ private:
   static ImGuiWindowFlags               _flags;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_GRAPH_H

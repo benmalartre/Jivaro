@@ -9,7 +9,7 @@
 #include "../ui/utils.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 class View;
 
 #define SPLITTER_THICKNESS 2.0
@@ -57,6 +57,6 @@ private:
   static ImGuiWindowFlags _flags;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_SPLITTER_H

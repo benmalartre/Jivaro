@@ -1,6 +1,6 @@
 #include "files.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 bool FileExists(const std::string& name){
   struct stat buffer;
@@ -294,5 +294,5 @@ std::string File::ReadAll()
     return content;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 

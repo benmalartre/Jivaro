@@ -9,7 +9,7 @@
 
 // translated from FreeCamera from UsdView
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 #define DEFAULT_NEAR 1.0
 #define DEFAULT_FAR 2000000.0
@@ -197,6 +197,6 @@ private:
   std::string _name;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_CAMERA_H

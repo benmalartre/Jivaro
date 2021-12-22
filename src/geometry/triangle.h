@@ -10,7 +10,7 @@
 #include <math.h>
 #include <stdio.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 #define FINDMINMAX(x0,x1,x2,min,max)  \
   min = max = x0;                     \
@@ -85,6 +85,6 @@ struct Triangle {
 
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_GEOMETRY_TRIANGLE_H

@@ -12,7 +12,7 @@
 //#include "RigidBodyGeometry.h"
 //#include "Utils/VolumeIntegration.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // This class encapsulates the state of a rigid body.
 //

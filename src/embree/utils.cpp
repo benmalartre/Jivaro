@@ -1,7 +1,7 @@
 #include "../embree/utils.h"
 #include "../embree/context.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // triangulate mesh from usd
 //------------------------------------------------------------------------------
@@ -112,4 +112,4 @@ GetProperties(const pxr::UsdPrim& prim, UsdEmbreeContext* ctxt)
 }
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

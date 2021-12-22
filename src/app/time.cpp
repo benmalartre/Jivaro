@@ -1,6 +1,6 @@
 #include "time.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 void Time::Init(float start, float end, float fps)
 {
@@ -91,5 +91,5 @@ bool Time::PlayBack()
   }
   return false;
 } 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 

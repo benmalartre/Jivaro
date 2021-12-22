@@ -9,7 +9,7 @@
 #include "../common.h"
 #include "mesh.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class Voronoi2D {
   struct Site_t {
@@ -31,6 +31,6 @@ private:
   size_t                        _resolutionY;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_GEOMETRY_VDB_H

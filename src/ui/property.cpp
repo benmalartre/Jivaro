@@ -9,7 +9,7 @@
 #include "../app/application.h"
 #include "../app/selection.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags PropertyUI::_flags = 
   ImGuiWindowFlags_None |
@@ -137,6 +137,63 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
   return false;
 }
 
+/*
+bool 
+PropertyUI::_DrawVariantSetsCombos(pxr::UsdPrim &prim) {
+  int buttonID = 0;
+  if (!prim.HasVariantSets())
+    return false;
+  auto variantSets = prim.GetVariantSets();
+
+  if (ImGui::BeginTable("##DrawVariantSetsCombos", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
+    ImGui::TableSetupColumn("VariantSet");
+    ImGui::TableSetupColumn("");
+
+    ImGui::TableHeadersRow();
+
+    for (auto variantSetName : variantSets.GetNames()) {
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+
+      // Variant set mini button --- TODO move code from this function
+      auto variantSet = variantSets.GetVariantSet(variantSetName);
+      // TODO: how do we figure out if the variant set has been edited in this edit target ?
+      // Otherwise after a "Clear variant selection" the button remains green and it visually looks like it did nothing
+      ImVec4 variantColor =
+        variantSet.HasAuthoredVariantSelection() 
+        ? ImVec4(MiniButtonAuthoredColor) 
+        : ImVec4(MiniButtonUnauthoredColor);
+      ImGui::PushID(buttonID++);
+      DrawPropertyMiniButton("(v)", variantColor);
+      ImGui::PopID();
+      if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
+        if (ImGui::MenuItem("Clear variant selection")) {
+          //ExecuteAfterDraw(&UsdVariantSet::ClearVariantSelection, variantSet);
+        }
+        ImGui::EndPopup();
+      }
+
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%s", variantSetName.c_str());
+
+      ImGui::TableSetColumnIndex(2);
+      ImGui::PushItemWidth(-FLT_MIN);
+      if (ImGui::BeginCombo(variantSetName.c_str(), variantSet.GetVariantSelection().c_str())) {
+        for (auto variant : variantSet.GetVariantNames()) {
+          if (ImGui::Selectable(variant.c_str(), false)) {
+            //ExecuteAfterDraw(&UsdVariantSet::SetVariantSelection, variantSet, variant);
+          }
+        }
+        ImGui::EndCombo();
+      }
+    }
+    ImGui::EndTable();
+  }
+  return true;
+}
+*/
+
 bool 
 PropertyUI::Draw()
 {
@@ -173,4 +230,4 @@ PropertyUI::Draw()
 };
   
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

@@ -1,6 +1,7 @@
 #ifndef JVR_UI_UTILS_H
 #define JVR_UI_UTILS_H
 
+#include <pxr/usd/usd/attribute.h>
 #include "../common.h"
 #include "../utils/icons.h"
 #include "../ui/style.h"
@@ -10,7 +11,7 @@
 #include "../imgui/imgui_impl_glfw.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using
@@ -155,6 +156,132 @@ bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
   return false;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+/*
+template <typename PropertyT> 
+static std::string 
+GetDisplayName(const PropertyT &property) {
+  return property.GetNamespace().GetString() + (property.GetNamespace() == TfToken() 
+    ? std::string() 
+    : std::string(":")) + property.GetBaseName().GetString();
+}
+
+inline void 
+RightAlignNextItem(const char *str) {
+  ImGui::SetCursorPosX(
+    ImGui::GetCursorPosX() + ImGui::GetColumnWidth() - 
+    ImGui::CalcTextSize(str).x - ImGui::GetScrollX() -
+    2 * ImGui::GetStyle().ItemSpacing.x);
+}
+
+/// Specialization for DrawPropertyMiniButton, between UsdAttribute and UsdRelashionship
+template <typename UsdPropertyT> 
+const char*
+SmallButtonLabel();
+template <> const char *SmallButtonLabel<pxr::UsdAttribute>() { return "(a)"; };
+template <> const char *SmallButtonLabel<pxr::UsdRelationship>() { return "(r)"; };
+
+template <typename UsdPropertyT> 
+void 
+DrawMenuClearAuthoredValues(UsdPropertyT &property){};
+
+template <> 
+void 
+DrawMenuClearAuthoredValues(pxr::UsdAttribute &attribute) {
+    if (attribute.IsAuthored()) {
+        if (ImGui::MenuItem(ICON_FA_EJECT " Clear")) {
+          //ExecuteAfterDraw(&pxr::UsdAttribute::Clear, attribute);
+        }
+    }
+}
+
+template <typename UsdPropertyT> 
+void 
+DrawMenuRemoveProperty(UsdPropertyT &property){};
+
+template <> 
+void 
+DrawMenuRemoveProperty(pxr::UsdAttribute &attribute) {
+    if (ImGui::MenuItem(ICON_FA_TRASH " Remove property")) {
+      //ExecuteAfterDraw(&pxr::UsdPrim::RemoveProperty, attribute.GetPrim(), attribute.GetName());
+    }
+}
+
+template <typename UsdPropertyT> 
+void 
+DrawMenuSetKey(UsdPropertyT &property, pxr::UsdTimeCode currentTime){};
+
+template <> 
+void 
+DrawMenuSetKey(pxr::UsdAttribute &attribute, pxr::UsdTimeCode currentTime) {
+  if (attribute.GetVariability() == pxr::SdfVariabilityVarying && 
+    attribute.HasValue() && 
+    ImGui::MenuItem(ICON_FA_KEY " Set key")) {
+      pxr::VtValue value;
+      attribute.Get(&value, currentTime);
+      //ExecuteAfterDraw<AttributeSet>(attribute, value, currentTime);
+  }
+}
+
+
+static void 
+DrawPropertyMiniButton(const char *btnStr, const ImVec4 &btnColor = ImVec4(MiniButtonUnauthoredColor)) {
+  ImGui::PushStyleColor(ImGuiCol_Text, btnColor);
+  ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(TransparentColor));
+  ImGui::SmallButton(btnStr);
+  ImGui::PopStyleColor();
+  ImGui::PopStyleColor();
+}
+
+template <typename UsdPropertyT> 
+void 
+DrawMenuEditConnection(pxr::UsdPropertyT &property) {}
+
+template <> 
+void 
+DrawMenuEditConnection(UsdAttribute &attribute) {
+  if (ImGui::MenuItem(ICON_FA_LINK " Create connection")) {
+    //DrawModalDialog<CreateConnectionDialog>(attribute);
+  }
+}
+
+// TODO: relationship
+template <typename UsdPropertyT> 
+void 
+DrawMenuCreateValue(UsdPropertyT &property){};
+
+template <> 
+void 
+DrawMenuCreateValue(pxr::UsdAttribute &attribute) {
+  if (!attribute.HasValue()) {
+    if (ImGui::MenuItem(ICON_FA_DONATE " Create value")) {
+      //ExecuteAfterDraw<AttributeCreateDefaultValue>(attribute);
+    }
+  }
+}
+
+// Property mini button, should work with UsdProperty, UsdAttribute and UsdRelationShip
+template <typename UsdPropertyT>
+void 
+DrawPropertyMiniButton(pxr::UsdPropertyT &property, const pxr::UsdEditTarget &editTarget, 
+  pxr::UsdTimeCode currentTime) {
+  ImVec4 propertyColor = property.IsAuthoredAt(editTarget) 
+    ? ImVec4(MiniButtonAuthoredColor) 
+    : ImVec4(MiniButtonUnauthoredColor);
+  DrawPropertyMiniButton(SmallButtonLabel<UsdPropertyT>(), propertyColor);
+  if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
+    DrawMenuSetKey(property, currentTime);
+    DrawMenuCreateValue(property);
+    DrawMenuClearAuthoredValues(property);
+    DrawMenuRemoveProperty(property);
+    DrawMenuEditConnection(property);
+    if (ImGui::MenuItem(ICON_FA_COPY " Copy attribute path")) {
+      ImGui::SetClipboardText(property.GetPath().GetString().c_str());
+    }
+    ImGui::EndPopup();
+  }
+}
+*/
+
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_UTILS_H

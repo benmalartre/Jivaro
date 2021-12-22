@@ -18,7 +18,7 @@
 
 #include "../common.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
 // Base class
@@ -65,6 +65,6 @@ private:
     pxr::TfToken          _name;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_COMMAND_COMMAND_H

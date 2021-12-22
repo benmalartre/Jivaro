@@ -3,7 +3,7 @@
 #include "../geometry/stroke.h"
 #include "../geometry/utils.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 void StrokeInput::Clear(){
   raw_points.clear();
   raw_widths.clear();
@@ -114,4 +114,4 @@ void Stroke::Refine()
 }
 
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

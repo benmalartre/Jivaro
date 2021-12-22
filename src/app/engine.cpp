@@ -11,9 +11,7 @@
 
 #include <iostream>
 
-JVR_NAMESPACE_OPEN_SCOPE
-
-PXR_NAMESPACE_USING_DIRECTIVE
+PXR_NAMESPACE_OPEN_SCOPE
 
 TF_DEFINE_ENV_SETTING(ENGINE_DEBUG_SCENE_DELEGATE_ID, "/",
   "Default Jivaro scene delegate id");
@@ -138,4 +136,4 @@ Engine::Engine(
 
 Engine::~Engine() = default;
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

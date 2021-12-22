@@ -6,7 +6,7 @@
 #include <pxr/base/vt/array.h>
 #include <pxr/base/vt/value.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class PopupUI : public BaseUI
 {
@@ -47,6 +47,6 @@ private:
   static ImGuiWindowFlags     _flags;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_POPUP_H

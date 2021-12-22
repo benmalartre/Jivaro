@@ -2,7 +2,7 @@
 #include <iostream>
 #include "../utils/glutils.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 void GLSLShader::OutputInfoLog()
 {
@@ -205,4 +205,4 @@ void GLSLProgram::OutputInfoLog()
   std::cout << _name << ":" << (std::string) buffer << std::endl;
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

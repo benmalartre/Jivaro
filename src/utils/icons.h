@@ -15,7 +15,7 @@
 #include "../utils/files.h"
 #include "../utils/glutils.h"
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 enum ICON_SIZE {
   ICON_SIZE_SMALL,
   ICON_SIZE_MEDIUM,
@@ -118,6 +118,6 @@ GLuint CreateIconFromImage(const std::string& filename, int index, ICON_SIZE siz
 void InitializeIcons();
 void TerminateIcons();
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UTILS_ICONS_H

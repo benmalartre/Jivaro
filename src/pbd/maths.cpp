@@ -1,7 +1,7 @@
 #include "maths.h"
 #include <cfloat>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 //////////////////////////////////////////////////////////////////////////
 // MathFunctions
@@ -433,4 +433,4 @@ void PBDMath::ExtractRotation(const pxr::GfMatrix3f& A, pxr::GfQuatf& q,
   }
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

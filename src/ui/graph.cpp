@@ -19,9 +19,7 @@
 #include "../app/application.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
-
-PXR_NAMESPACE_USING_DIRECTIVE
+PXR_NAMESPACE_OPEN_SCOPE
 
 bool 
 _ConnexionPossible(const pxr::SdfValueTypeName& lhs, const pxr::SdfValueTypeName& rhs)
@@ -1379,13 +1377,8 @@ GraphUI::MouseButton(int button, int action, int mods)
 void 
 GraphUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  for (int i = 65; i <= 90; ++i)
-    std::cout << i << " : " << GetMappedKey(i) << std::endl;
   int mappedKey = GetMappedKey(key);
-  std::cout << "KEY : " << key << std::endl;
-  std::cout << "MAPPED KEY : " << mappedKey << std::endl;
-  std::cout << "KEY NAME : " << glfwGetKeyName(key, 0) << std::endl;
-  std::cout << "MAPPED NAME : " << glfwGetKeyName(mappedKey, 0) << std::endl;
+
   if (action == GLFW_PRESS) {
     if (mappedKey == GLFW_KEY_DELETE) {
       std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
@@ -1630,4 +1623,4 @@ GraphUI::FrameAll()
 
 }
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

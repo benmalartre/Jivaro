@@ -6,7 +6,7 @@
 #include <pxr/base/gf/quatf.h>
 #include <pxr/base/gf/matrix3f.h>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 class PBDIntegration
 {
@@ -66,6 +66,6 @@ public:
 
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

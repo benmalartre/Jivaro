@@ -11,7 +11,7 @@
 #include <pxr/usd/usdAnimX/keyframe.h>
 #include <vector>
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_OPEN_SCOPE
 
 #define KEYFRAME_SAMPLE_SIZE 32
 
@@ -78,6 +78,6 @@ private:
   static ImGuiWindowFlags       _flags;
 };
 
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_CURVEEDITOR_H
