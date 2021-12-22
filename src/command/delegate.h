@@ -18,9 +18,6 @@ SDF_DECLARE_HANDLES(SdfLayer);
 TF_DECLARE_WEAK_AND_REF_PTRS(LayerStateDelegate);
 TF_DECLARE_WEAK_PTRS(SdfAbstractData);
 
-class pxr::SdfAbstractDataConstValue;
-class pxr::SdfPath;
-class pxr::TfToken;
 
 /// \class SdfSimpleLayerStateDelegate
 /// A layer state delegate that simply records whether any changes have
