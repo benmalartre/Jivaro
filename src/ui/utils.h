@@ -115,7 +115,7 @@ bool AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 template<typename FuncT, typename ...ArgsT>
 bool AddTransparentIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
-  ImGui::PushStyleColor(ImGuiCol_Button, JVR_TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   if (ImGui::ImageButton(
     (ImTextureID)(intptr_t)icon->tex[state],
     ImVec2(icon->size, icon->size),
