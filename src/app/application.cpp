@@ -34,6 +34,7 @@
 #include "../ui/property.h"
 #include "../ui/curveEditor.h"
 #include "../command/command.h"
+#include "../command/delegate.h"
 #include "../command/manager.h"
 #include "../app/application.h"
 #include "../app/modal.h"
@@ -469,6 +470,8 @@ Application::Init()
 
   _manager = new CommandManager();
   _manager->Start();
+
+  _scene->GetRootStage()->GetRootLayer()->SetStateDelegate(LayerStateDelegate::New());
  
   /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
