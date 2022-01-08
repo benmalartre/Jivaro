@@ -102,7 +102,7 @@ bool ToolbarButton::Draw()
   }
   ImGui::PopFont();
   if(tooltip.length() && ImGui::IsItemHovered())
-    ImGui::SetTooltip(tooltip.c_str());
+    ImGui::SetTooltip("%s", tooltip.c_str());
  
   return false;
 }

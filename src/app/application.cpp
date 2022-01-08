@@ -41,7 +41,7 @@
 #include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/engine.h"
-#include "../geometry/vdb.h"
+//#include "../geometry/vdb.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

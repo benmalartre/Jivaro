@@ -12,6 +12,7 @@
 #endif
 #include <iostream>
 #include <pxr/pxr.h>
+#include <pxr/base/arch/defines.h>
 
 #define JVR_EXPORT extern "C" 
 

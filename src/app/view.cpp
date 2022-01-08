@@ -232,6 +232,7 @@ void
 View::Resize(int x, int y, int w, int h, bool rationalize)
 {
   pxr::GfVec2f ratio;
+
   if(rationalize)
   {
     ratio[0] = 1 / ((double)(_max[0] - _min[0]) / (double)w);

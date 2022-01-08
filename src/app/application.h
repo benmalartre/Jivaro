@@ -12,7 +12,7 @@
 #include "../app/camera.h"
 #include "../app/tools.h"
 #include "../geometry/mesh.h"
-#include <openvdb/openvdb.h>
+//#include <openvdb/openvdb.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

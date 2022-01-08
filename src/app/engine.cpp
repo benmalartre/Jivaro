@@ -51,6 +51,7 @@ Engine::Engine(const pxr::HdDriver& driver)
     driver
   )
 {
+  //SetRendererAov()
 }
 
 
@@ -67,73 +68,15 @@ Engine::Engine(
     sceneDelegateID,
     driver)
 {
-  _InitGL();
-
-  if (IsHydraEnabled()) {
-
-    // _renderIndex, _taskController, and _sceneDelegate are initialized
-    // by the plugin system.
-    if (!SetRendererPlugin(_GetDefaultRendererPluginId())) {
-      TF_CODING_ERROR("No renderer plugins found! "
-        "Check before creation.");
-    }
-
-    /*
-    // render task parameters.
-    VtValue vParam = _delegate->GetTaskParam(renderSetupTask, HdTokens->params);
-    HdxRenderTaskParams param = vParam.Get<HdxRenderTaskParams>();
-    param.enableLighting = true; // use default lighting
-    _delegate->SetTaskParam(renderSetupTask, HdTokens->params,
-                            VtValue(param));
-    // Use wireframe and enable points for edge and point picking.
-    const auto sceneReprSel = HdReprSelector(HdReprTokens->wireOnSurf,
-                                             HdReprTokens->disabled,
-                                             _tokens->meshPoints);
-    _delegate->SetTaskParam(renderTask, HdTokens->collection,
-                            VtValue(HdRprimCollection(HdTokens->geometry, 
-                                                      sceneReprSel)));
-    */
-
-    pxr::TfToken pointsRepr("meshPoints");
-    // Add a meshPoints repr since it isn't populated in 
-    // HdRenderIndex::_ConfigureReprs
-    pxr::HdMesh::ConfigureRepr(
-      pointsRepr,
-      pxr::HdMeshReprDesc(
-        HdMeshGeomStylePoints,
-        HdCullStyleNothing,
-        HdMeshReprDescTokens->pointColor,
-        /*flatShadingEnabled=*/true,
-        /*blendWireframeColor=*/false
-      )
-    );
-
-    pxr::HdxTaskController* taskController = _GetTaskController();
-    pxr::HdTaskSharedPtrVector renderTasks = taskController->GetRenderingTasks();
-
-    const auto sceneReprSel = HdReprSelector(
-      HdReprTokens->wireOnSurf,
-      HdReprTokens->disabled,
-      pointsRepr
-    );
-    _GetSceneDelegate()->SetReprFallback(sceneReprSel);
-
-
-    for (auto& renderTask : renderTasks) {
-      std::cout << "RENDER TASK : " << renderTask->GetId() << std::endl;
-      
-
-    }
-    /*
-    pxr::UsdImagingDelegate* sceneDelegate = _GetSceneDelegate();
-    sceneDelegate->
-    */
-  }
-  else {
-    TF_CODING_ERROR("Hydra is NOT supported! ");
-  }
+ std::cout << "ENGINE CONSTRUCTOR CALLED..." << std::endl;
 }
 
 Engine::~Engine() = default;
+
+void Engine::SetHandleOverridesXform(HandleXformOverridesMap& overridesXform)
+{
+  _GetSceneDelegate()->SetRigidXformOverrides(overridesXform);
+}
+
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -56,6 +56,7 @@ class ViewportUI : public BaseUI
     ~ViewportUI();
     void Init();
 
+    Engine* GetEngine(){return _engine;};
     Camera* GetCamera(){return _camera;};
     pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
 

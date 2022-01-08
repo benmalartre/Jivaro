@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:inline-")
 endif()
+
 # cross platform
 set(LIB_PREFIX "")
 set(LIB_DYNAMIC_EXT "")
@@ -51,7 +52,6 @@ list(APPEND USD_LIB_NAMES
   trace
   work
   arch
-  Half-2_3
   ar
   gf
   glf
@@ -68,6 +68,7 @@ list(APPEND USD_LIB_NAMES
   hdSt
   hdx
   hgi
+  hgiInterop
   hf
   hio
   usdGeom
@@ -84,12 +85,12 @@ set(USD_LIBRARIES "")
 foreach(USD_LIB_NAME IN LISTS USD_LIB_NAMES)
   set(USD_LIBRARIES 
     ${USD_LIBRARIES} 
-      "${USD_LIBRARY_DIR}/${LIB_PREFIX}${USD_LIB_NAME}${LIB_DYNAMIC_EXT}"
+      "${USD_LIBRARY_DIR}/${LIB_PREFIX}usd_${USD_LIB_NAME}${LIB_DYNAMIC_EXT}"
   )
 endforeach()
 
 # python
-find_package(Python2 COMPONENTS Interpreter Development)
+# find_package(Python2 COMPONENTS Interpreter Development)
 
 # boost
 if(UNIX)
@@ -107,7 +108,6 @@ set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
   program_options
-  python27
   regex
 )
 
@@ -142,8 +142,8 @@ foreach(TBB_LIB_NAME IN LISTS TBB_LIB_NAMES)
 endforeach()
 
 # openvdb
-set(OPENVDB_INCLUDE_DIR "${USD_DIR}/include/openvdb")
-set(OPENVDB_LIBRARY_DIR "${USD_DIR}/lib")
+#set(OPENVDB_INCLUDE_DIR "${USD_DIR}/include/openvdb")
+#set(OPENVDB_LIBRARY_DIR "${USD_DIR}/lib")
 
 # OpenGL
 find_package(OpenGL REQUIRED)

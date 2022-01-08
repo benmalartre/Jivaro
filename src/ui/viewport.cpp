@@ -1,3 +1,4 @@
+
 #include "../ui/utils.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
@@ -54,10 +55,33 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init()
 {
+  std::cout << "VIEWPORT UI INITIALIZE START" << std::endl;
   if (_engine)delete _engine;
   pxr::SdfPathVector excludedPaths;
 
+  std::cout << "CREATE ENGINE ..." << std::endl;
+
+  /*
+  // default aggregation strategies for varying (vertex, varying) primvars
+    , _nonUniformAggregationStrategy(
+        std::make_unique<HdStVBOMemoryManager>(this))
+    , _nonUniformImmutableAggregationStrategy(
+        std::make_unique<HdStVBOMemoryManager>(this))
+    // default aggregation strategy for uniform on UBO (for globals)
+    , _uniformUboAggregationStrategy(
+        std::make_unique<HdStInterleavedUBOMemoryManager>(this))
+    // default aggregation strategy for uniform on SSBO (for primvars)
+    , _uniformSsboAggregationStrategy(
+        std::make_unique<HdStInterleavedSSBOMemoryManager>(this))
+    // default aggregation strategy for single buffers (for nested instancer)
+    , _singleAggregationStrategy(
+        std::make_unique<HdStVBOSimpleMemoryManager>(this))
+    , _textureHandleRegistry(std::make_unique<HdSt_TextureHandleRegistry>(this))
+    , _stagingBuffer(std::make_unique<HdStStagingBuffer>(this))
+    */
+
   _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
+  std::cout << "ENGINE : " << _engine << std::endl;
 
   pxr::TfTokenVector rendererTokens = _engine->GetRendererPlugins();
   if (_rendererNames) delete[] _rendererNames;
@@ -67,12 +91,15 @@ void ViewportUI::Init()
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
     std::cout << rendererTokens[rendererIndex].GetText() << std::endl;
   }
+  
   if (LEGACY_OPENGL) {
     _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
   } else {
     _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
   }
-  
+    std::cout << "SET RENDERER PLUGIN : " << _rendererNames[_rendererIndex] << std::endl;
+
+
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
   light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));
@@ -88,6 +115,9 @@ void ViewportUI::Init()
                             pxr::GfVec4f(0.5,0.5,0.5,1.0));
 
   Resize();
+  std::cout << "VIEWPORT UI RESIZED : " << _rendererNames[_rendererIndex] << std::endl;
+  std::cout << "VIEWPORT UI INITIALIZE END" << std::endl;
+
 
   /*
   glEnable(GL_DEPTH_TEST);
@@ -284,12 +314,14 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
   glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
 
   // resize viewport
+  float scaleX, scaleY;
+  glfwGetWindowContentScale(view->GetWindow()->GetGlfwWindow(), &scaleX, &scaleY);
   float x = view->GetX();
   float y = view->GetY();
   float w = view->GetWidth();
   float h = view->GetHeight();
   float wh = viewport->GetWindowHeight();
-  glViewport(x,wh - (y + h), w, h);
+  glViewport(x * scaleX,(wh - (y + h)) * scaleY, w * scaleX, h * scaleY);
   glEnable(GL_DEPTH_TEST);
   glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -330,7 +362,7 @@ bool ViewportUI::Draw()
   if (app->GetStage() != nullptr) {
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
-    //_engine->SetRendererAov(pxr::HdAovTokens->color);
+    _engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
       pxr::GfVec4d(
         0.0,
@@ -379,8 +411,7 @@ bool ViewportUI::Draw()
     pxr::GfVec4d(clipPlanes[3])
   };
   */
-  //_engine->PrepareBatch(_stages[0]->GetPseudoRoot());
-  //_engine->Render(app->GetStages()[0]->GetPseudoRoot(), _renderParams);
+
     _drawTarget->Bind();
     glViewport(0, 0, w, h);
     // clear to black

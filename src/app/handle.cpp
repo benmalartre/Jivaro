@@ -168,12 +168,15 @@ BaseHandle::ResetSelection()
   float activeTime = app->GetTime().GetActiveTime();
   pxr::UsdGeomXformCache xformCache(activeTime);
   _targets.clear();
+  _overrideXforms.clear();
+  bool resetXformCache;
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
     const Selection::Item& item = selection->GetItem(i);
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
     if(prim.IsA<pxr::UsdGeomXformable>()) {
       pxr::GfMatrix4f world(xformCache.GetLocalToWorldTransform(prim));
       _targets.push_back({item.path, world, pxr::GfMatrix4f(1.f)});
+      _overrideXforms[item.path] = xformCache.GetLocalTransformation(prim, &resetXformCache);
     }
   }
   _xformCache.Swap(xformCache);
@@ -344,12 +347,7 @@ BaseHandle::Update(float x, float y, float width, float height)
 
 pxr::GfMatrix4f _GetWorldMatrix(pxr::UsdGeomXformCache& xformCache, const pxr::UsdPrim& prim)
 {
-  if (pxr::UsdGeomXformCommonAPI xform = pxr::UsdGeomXformCommonAPI(prim)) {
-    return pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim));
-  } else {
-    if (prim == prim.GetStage()->GetPseudoRoot())return pxr::GfMatrix4f(1.f);
-    return _GetWorldMatrix(xformCache, prim.GetParent());
-  }
+  return pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim));
 }
 
 void 
@@ -462,45 +460,69 @@ BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVe
   return center - (hit - center).GetNormalized() * radius;
 }
 
+void 
+BaseHandle::BeginOverridesXform()
+{
+
+}
+
+void 
+BaseHandle::EndOverridesXform()
+{
+  _overrideXforms.clear();
+}
+
 void
-BaseHandle::_UpdateTargets()
+BaseHandle::_UpdateTargets(bool interacting)
 {
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetStage();
   float activeTime = app->GetTime().GetActiveTime();
   Selection* selection = app->GetSelection();
-  for(auto& target: _targets) {
-    
-    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
-    pxr::GfMatrix4d invParentMatrix = 
-      _xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse();
+  if(interacting) {
+    std::cout << "UPDATE TARGET (OVERRIDES)" << std::endl;
+    for(auto& target: _targets) {
+      pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
+      pxr::GfMatrix4d invParentMatrix = 
+        _xformCache.GetParentToWorldTransform(targetPrim).GetInverse();
 
-    bool resetXformOpExists;
-    std::vector<pxr::UsdGeomXformOp> xformOps = xformable.GetOrderedXformOps(&resetXformOpExists);
-    if (!xformOps.size()) {
-      pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
-      xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix, 
-        pxr::UsdTimeCode(activeTime));
-    }
-    else {
-      bool found = false;
-      for (auto& xformOp : xformOps) {
-        pxr::UsdGeomXformOp::Type opType = xformOp.GetOpType();
-        if (opType == pxr::UsdGeomXformOp::TypeTransform) {
-          xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
-            pxr::UsdTimeCode(activeTime));
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        xformable.ClearXformOpOrder();
+      _overrideXforms[target.path] = pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix;
+    } 
+  } else {
+    std::cout << "UPDATE TARGET (SET)" << std::endl;
+    for(auto& target: _targets) {
+      pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+      pxr::GfMatrix4d invParentMatrix = 
+        _xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse();
+
+      bool resetXformOpExists;
+      std::vector<pxr::UsdGeomXformOp> xformOps = xformable.GetOrderedXformOps(&resetXformOpExists);
+      if (!xformOps.size()) {
         pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
-        xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
+        xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix, 
           pxr::UsdTimeCode(activeTime));
       }
-    }
+      else {
+        bool found = false;
+        for (auto& xformOp : xformOps) {
+          pxr::UsdGeomXformOp::Type opType = xformOp.GetOpType();
+          if (opType == pxr::UsdGeomXformOp::TypeTransform) {
+            xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
+              pxr::UsdTimeCode(activeTime));
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          xformable.ClearXformOpOrder();
+          pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
+          xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
+            pxr::UsdTimeCode(activeTime));
+        }
+      }
+    } 
   }
+  
 }
 
 void 
@@ -527,6 +549,7 @@ BaseHandle::EndUpdate()
 {
   _interacting = false;
   _shape.SetVisibility(0b1111111111111111);
+  _UpdateTargets(false);
 }
 
 //==================================================================================
@@ -641,7 +664,7 @@ TranslateHandle::Update(float x, float y, float width, float height)
       
       SetMatrixFromSRT();
       _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
-      _UpdateTargets();
+      _UpdateTargets(true);
     }
   }
 }
@@ -803,7 +826,7 @@ RotateHandle::Update(float x, float y, float width, float height)
       }
       SetMatrixFromSRT();
       _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
-      _UpdateTargets();
+      _UpdateTargets(true);
     }
   }
 }
@@ -969,7 +992,7 @@ ScaleHandle::Update(float x, float y, float width, float height)
       }
       SetMatrixFromSRT();
       _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
-      _UpdateTargets();
+      _UpdateTargets(true);
     }
   }
 }
@@ -977,6 +1000,7 @@ ScaleHandle::Update(float x, float y, float width, float height)
 void 
 ScaleHandle::EndUpdate()
 {
+  _UpdateTargets(false);
   _offsetScale = pxr::GfVec3f(0.f);
   _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
   _interacting = false;

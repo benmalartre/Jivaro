@@ -66,6 +66,7 @@ struct HandleTargetGeometryDesc {
 };
 
 typedef std::vector<HandleTargetGeometryDesc> HandleTargetGeometryDescList;
+typedef pxr::TfHashMap<pxr::SdfPath, pxr::GfMatrix4d, pxr::SdfPath::Hash> HandleXformOverridesMap;
 
 class BaseHandle {
 public:
@@ -136,8 +137,11 @@ public:
   void ComputeSizeMatrix(float width, float height);
   void ComputeViewPlaneMatrix();
   void ComputePickFrustum();
-  
 
+  void BeginOverridesXform();
+  void EndOverridesXform();
+  HandleXformOverridesMap& GetOverridesXform(){ return _overrideXforms;};
+  
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
 
@@ -153,7 +157,7 @@ public:
 protected:
   virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
   virtual void _ComputeCOGMatrix(pxr::UsdStageRefPtr stage);
-  virtual void _UpdateTargets();
+  virtual void _UpdateTargets(bool interacting);
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVec3f& normal,
@@ -165,6 +169,7 @@ protected:
 
   // targets
   HandleTargetDescList    _targets;
+  HandleXformOverridesMap  _overrideXforms;
   
   // geometry
   Shape                   _shape;

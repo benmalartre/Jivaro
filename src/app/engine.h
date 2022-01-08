@@ -1,18 +1,21 @@
 #ifndef JVR_APPLICATION_ENGINE_H
 #define JVR_APPLICATION_ENGINE_H
 
-#include "../common.h"
-#include "pxr/pxr.h"
-#include "pxr/usd/sdf/path.h"
-#include "pxr/imaging/hd/driver.h"
-#include "pxr/usdImaging/usdImagingGL/engine.h"
-#include "pxr/usdImaging/usdImagingGL/renderParams.h"
 
-#include "pxr/base/tf/token.h"
-#include "pxr/base/tf/errorMark.h"
-#include "pxr/base/gf/matrix4f.h"
-#include "pxr/base/gf/frustum.h"
-#include "pxr/base/gf/rotation.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/path.h>
+#include <pxr/imaging/hd/driver.h>
+#include <pxr/usdImaging/usdImagingGL/engine.h>
+#include <pxr/usdImaging/usdImagingGL/renderParams.h>
+
+#include <pxr/base/tf/token.h>
+#include <pxr/base/tf/errorMark.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/frustum.h>
+#include <pxr/base/gf/rotation.h>
+
+#include "../common.h"
+#include "../app/handle.h"
 
 #include <memory>
 
@@ -29,6 +32,7 @@ public:
           const pxr::HdDriver& driver = pxr::HdDriver());
   ~Engine();
 
+  void SetHandleOverridesXform(HandleXformOverridesMap& overridesXform);
   /*
   pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos, 
     pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);

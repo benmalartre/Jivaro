@@ -2,6 +2,7 @@
 #include "../app/camera.h"
 #include "../app/tools.h"
 #include "../app/selection.h"
+#include "../app/engine.h"
 #include "../app/application.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -150,6 +151,7 @@ void Tool::EndUpdate()
 
 void Tool::Update()
 {
+  Engine* engine = _viewport->GetEngine();
   Selection* selection = APPLICATION->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     _active->Update(
@@ -157,6 +159,10 @@ void Tool::Update()
       _viewport->GetLastMouseY() - _viewport->GetY(),
       _viewport->GetWidth(),
       _viewport->GetHeight());
+
+    engine->SetHandleOverridesXform(
+      _active->GetOverridesXform()
+    );
   }
 }
 
