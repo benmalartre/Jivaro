@@ -55,6 +55,18 @@ struct HandleTargetDesc {
   pxr::SdfPath path;
   pxr::GfMatrix4f base;
   pxr::GfMatrix4f offset;
+  pxr::UsdGeomXformCommonAPI xformApi;
+  pxr::GfVec3d translation;
+  pxr::GfVec3f rotation;
+  pxr::GfVec3f scale;
+  pxr::GfVec3f pivot;
+  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+
+  HandleTargetDesc(pxr::UsdStageRefPtr stage, pxr::SdfPath& path, 
+    const pxr::UsdTimeCode& timeCode) : path(path){
+    xformApi = pxr::UsdGeomXformCommonAPI(stage->GetPrimAtPath(path));
+    xformApi.GetXformVectors(&translation, &rotation, &sacle, &pivot, &rotOrder, timeCode);
+  }
 };
 
 typedef std::vector<HandleTargetDesc> HandleTargetDescList;

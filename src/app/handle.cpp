@@ -480,7 +480,6 @@ BaseHandle::_UpdateTargets(bool interacting)
   float activeTime = app->GetTime().GetActiveTime();
   Selection* selection = app->GetSelection();
   if(interacting) {
-    std::cout << "UPDATE TARGET (OVERRIDES)" << std::endl;
     for(auto& target: _targets) {
       pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       pxr::GfMatrix4d invParentMatrix = 
@@ -489,7 +488,6 @@ BaseHandle::_UpdateTargets(bool interacting)
       _overrideXforms[target.path] = pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix;
     } 
   } else {
-    std::cout << "UPDATE TARGET (SET)" << std::endl;
     for(auto& target: _targets) {
       pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
       pxr::GfMatrix4d invParentMatrix = 
