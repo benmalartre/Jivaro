@@ -84,7 +84,7 @@ add_executable(${TARGET}
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
-    #${Python2_INCLUDE_DIRS}
+    ${Python2_INCLUDE_DIRS}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}
@@ -94,7 +94,7 @@ target_include_directories(${TARGET}
 
 target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}
-  #${Python2_LIBRARIES}
+  ${Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}
   ${EMBREE_LIBRARIES}

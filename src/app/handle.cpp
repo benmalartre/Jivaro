@@ -13,6 +13,7 @@
 #include "../app/camera.h"
 #include "../app/selection.h"
 #include "../app/application.h"
+#include "../command/command.h"
 #include "../geometry/utils.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -472,6 +473,7 @@ BaseHandle::EndOverridesXform()
   _overrideXforms.clear();
 }
 
+/*
 void
 BaseHandle::_UpdateTargets(bool interacting)
 {
@@ -520,8 +522,8 @@ BaseHandle::_UpdateTargets(bool interacting)
       }
     } 
   }
-  
 }
+*/
 
 void 
 BaseHandle::BeginUpdate(float x, float y, float width, float height)
@@ -664,6 +666,63 @@ TranslateHandle::Update(float x, float y, float width, float height)
       _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
       _UpdateTargets(true);
     }
+  }
+}
+
+void
+TranslateHandle::_UpdateTargets(bool interacting)
+{
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+  float activeTime = app->GetTime().GetActiveTime();
+  Selection* selection = app->GetSelection();
+  if (interacting) {
+    for (auto& target : _targets) {
+      pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
+      pxr::GfMatrix4d invParentMatrix =
+        _xformCache.GetParentToWorldTransform(targetPrim).GetInverse();
+
+      _overrideXforms[target.path] = pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix;
+    }
+  }
+  else {
+    GetApplication()->AddCommand(
+      std::shared_ptr<TranslateCommand>(new TranslateCommand(GetApplication()->GetStage(),
+        _matrix, _targets, pxr::UsdTimeCode(activeTime))));
+    _overrideXforms.clear();
+    /*
+    for (auto& target : _targets) {
+      pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+      pxr::GfMatrix4d invParentMatrix =
+        _xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse();
+
+      bool resetXformOpExists;
+      std::vector<pxr::UsdGeomXformOp> xformOps = xformable.GetOrderedXformOps(&resetXformOpExists);
+      if (!xformOps.size()) {
+        pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
+        xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
+          pxr::UsdTimeCode(activeTime));
+      }
+      else {
+        bool found = false;
+        for (auto& xformOp : xformOps) {
+          pxr::UsdGeomXformOp::Type opType = xformOp.GetOpType();
+          if (opType == pxr::UsdGeomXformOp::TypeTransform) {
+            xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
+              pxr::UsdTimeCode(activeTime));
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          xformable.ClearXformOpOrder();
+          pxr::UsdGeomXformOp xformOp = xformable.AddTransformOp(pxr::UsdGeomXformOp::PrecisionDouble);
+          xformOp.Set(pxr::GfMatrix4d(target.offset * _matrix) * invParentMatrix,
+            pxr::UsdTimeCode(activeTime));
+        }
+      }
+    }
+    */
   }
 }
 

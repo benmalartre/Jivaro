@@ -91,7 +91,7 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_REFRESH_RATE,mode->refreshRate);
   
   //glfwWindowHint(GLFW_DECORATED, false);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -125,7 +125,7 @@ Window::Window(int width, int height, const std::string& name):
   _height = height;
   _shared = true;
   //glfwWindowHint(GLFW_DECORATED, false);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -156,7 +156,7 @@ Window::Window(int x, int y, int width, int height,
   _shared = false;
 
   glfwWindowHint(GLFW_DECORATED, decorated);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);

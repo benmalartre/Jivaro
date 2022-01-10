@@ -83,14 +83,20 @@ list(APPEND USD_LIB_NAMES
 
 set(USD_LIBRARIES "")
 foreach(USD_LIB_NAME IN LISTS USD_LIB_NAMES)
+if(UNIX)
   set(USD_LIBRARIES 
     ${USD_LIBRARIES} 
-      "${USD_LIBRARY_DIR}/${LIB_PREFIX}usd_${USD_LIB_NAME}${LIB_DYNAMIC_EXT}"
-  )
+      "${USD_LIBRARY_DIR}/${LIB_PREFIX}usd_${USD_LIB_NAME}${LIB_DYNAMIC_EXT}")
+else()
+  set(USD_LIBRARIES 
+    ${USD_LIBRARIES} 
+	  "${USD_LIBRARY_DIR}/${LIB_PREFIX}${USD_LIB_NAME}${LIB_DYNAMIC_EXT}")
+endif()
+
 endforeach()
 
 # python
-# find_package(Python2 COMPONENTS Interpreter Development)
+find_package(Python2 COMPONENTS Interpreter Development)
 
 # boost
 if(UNIX)
@@ -108,6 +114,7 @@ set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
   program_options
+  python27
   regex
 )
 

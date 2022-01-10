@@ -11,6 +11,7 @@
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/xformCache.h>
+#include <pxr/usd/usdGeom/xformCommonAPI.h>
 
 #include "../common.h"
 #include "../geometry/shape.h"
@@ -55,6 +56,7 @@ struct HandleTargetDesc {
   pxr::SdfPath path;
   pxr::GfMatrix4f base;
   pxr::GfMatrix4f offset;
+  /*
   pxr::UsdGeomXformCommonAPI xformApi;
   pxr::GfVec3d translation;
   pxr::GfVec3f rotation;
@@ -65,8 +67,9 @@ struct HandleTargetDesc {
   HandleTargetDesc(pxr::UsdStageRefPtr stage, pxr::SdfPath& path, 
     const pxr::UsdTimeCode& timeCode) : path(path){
     xformApi = pxr::UsdGeomXformCommonAPI(stage->GetPrimAtPath(path));
-    xformApi.GetXformVectors(&translation, &rotation, &sacle, &pivot, &rotOrder, timeCode);
+    xformApi.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
   }
+  */
 };
 
 typedef std::vector<HandleTargetDesc> HandleTargetDescList;
@@ -169,7 +172,7 @@ public:
 protected:
   virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
   virtual void _ComputeCOGMatrix(pxr::UsdStageRefPtr stage);
-  virtual void _UpdateTargets(bool interacting);
+  virtual void _UpdateTargets(bool interacting) = 0;
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVec3f& normal,
@@ -226,6 +229,9 @@ public:
   void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
   void SetVisibility(short axis) override;
 
+protected:
+  void _UpdateTargets(bool interacting) override {};
+
 private:
   pxr::GfVec3f _GetScaleOffset(size_t axis);
   pxr::GfVec3f _GetTranslateOffset(size_t axis);
@@ -243,11 +249,13 @@ public:
   void Update(float x, float y, float width, float height) override;
   void SetVisibility(short axis) override;
 
+protected:
+  void _UpdateTargets(bool interacting) override {};
+
 private:
   pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfRay& ray);
   float             _radius;
   pxr::GfQuatf      _base;
-
 };
 
 class TranslateHandle : public BaseHandle {
@@ -257,6 +265,9 @@ public:
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
   void SetVisibility(short axis) override;
+
+protected:
+  void _UpdateTargets(bool interacting) override;
 
 private:
   float _radius;
@@ -272,6 +283,9 @@ public:
   void EndUpdate() override;
   short Pick(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
+
+protected:
+  void _UpdateTargets(bool interacting) override {};
 
 private:
   void _BuildStroke(bool replace);

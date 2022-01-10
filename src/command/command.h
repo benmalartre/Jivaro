@@ -17,6 +17,7 @@
 #include <pxr/usd/usd/stage.h>
 
 #include "../common.h"
+#include "../app/handle.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -63,6 +64,24 @@ private:
     pxr::UsdPrim          _parent;
     pxr::UsdStageWeakPtr  _stage;
     pxr::TfToken          _name;
+};
+
+//==================================================================================
+// Translate 
+//==================================================================================
+class TranslateCommand : public Command {
+public:
+  TranslateCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
+    std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode);
+  ~TranslateCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+private:
+  std::vector<pxr::UsdPrim>          _prims;
+  std::vector<pxr::GfVec3f>          _translate;
+  std::vector<pxr::GfVec3f>          _origin;
+  pxr::UsdTimeCode                   _time;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

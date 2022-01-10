@@ -142,11 +142,13 @@ void Tool::BeginUpdate()
 
 void Tool::EndUpdate()
 {
+  Engine* engine = _viewport->GetEngine();
   Pick();
   if(_active && _viewport) {
     _active->EndUpdate();
   }
   _interacting = false;
+  engine->SetHandleOverridesXform(HandleXformOverridesMap());
 }
 
 void Tool::Update()

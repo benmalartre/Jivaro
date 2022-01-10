@@ -67,4 +67,75 @@ void CreatePrimCommand::Redo() {
   SceneChangedNotice().Send();
 }
 
+
+//==================================================================================
+// Translate
+//==================================================================================
+TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
+  std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode)
+  : Command(true)
+{
+  _time = timeCode;
+  pxr::UsdGeomXformCache xformCache(timeCode);
+  for (auto& target : targets) {
+    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+    pxr::GfMatrix4f invParentMatrix(
+      xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
+    pxr::GfMatrix4d xformMatrix((target.offset * matrix) * invParentMatrix);
+
+
+    pxr::UsdGeomXformCommonAPI api(xformable.GetPrim());
+    pxr::GfVec3d translation;
+    pxr::GfVec3f rotation;
+    pxr::GfVec3f scale;
+    pxr::GfVec3f pivot;
+    pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+
+    api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
+    _origin.push_back(pxr::GfVec3f(translation));
+    _translate.push_back(pxr::GfVec3f(xformMatrix.GetRow3(3)));
+    _prims.push_back(xformable.GetPrim());
+  }
+}
+
+void TranslateCommand::Execute()
+{
+  Redo();
+}
+
+static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, pxr::UsdTimeCode& timeCode)
+{
+  pxr::GfVec3d translation;
+  pxr::GfVec3f rotation;
+  pxr::GfVec3f scale;
+  pxr::GfVec3f pivot;
+  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+  pxr::UsdGeomXformCommonAPI api(prim);
+  api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
+  pxr::UsdGeomXformable xformable(prim);
+  xformable.ClearXformOpOrder();
+  api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
+}
+
+void TranslateCommand::Undo()
+{
+  for (size_t i = 0; i < _prims.size(); ++i) {
+    pxr::UsdGeomXformCommonAPI api(_prims[i]);
+    api.SetTranslate(_origin[i], _time);
+  }
+  SceneChangedNotice().Send();
+}
+
+void TranslateCommand::Redo() {
+  for (size_t i = 0; i < _prims.size(); ++i) {
+    pxr::UsdGeomXformCommonAPI api(_prims[i]);
+    if (!api) {
+      std::cout << "FAIL CREATE API " << _prims[i].GetPath() << std::endl;
+      _EnsureXformCommonAPI(_prims[i], _time);
+    }
+    api.SetTranslate(_translate[i], _time);
+  }
+  SceneChangedNotice().Send();
+}
+
 PXR_NAMESPACE_CLOSE_SCOPE
