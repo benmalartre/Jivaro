@@ -4,6 +4,7 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+
 int main(void)
 {
   glfwInit();

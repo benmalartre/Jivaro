@@ -204,7 +204,7 @@ void ViewportUI::MouseMove(int x, int y)
           dx / static_cast<double>(GetWidth()), 
           dy / static_cast<double>(GetHeight())
         );
-        _dirty = true;
+        app->SetDirty();
         break;
       }
        
@@ -214,21 +214,21 @@ void ViewportUI::MouseMove(int x, int y)
           dx / static_cast<double>(GetWidth()), 
           dy / static_cast<double>(GetHeight())
         );
-        _dirty = true;
+        app->SetDirty();
         break;
       }
         
       case INTERACTION_ORBIT:
       {
         _camera->Orbit(dx, dy);
-        _dirty = true;
+        app->SetDirty();
         break;
       }
 
       default:
       {
         tools->Update();
-        _dirty = true;
+        app->SetDirty();
         break;
       }
         
@@ -250,7 +250,7 @@ void ViewportUI::MouseWheel(int x, int y)
     static_cast<double>(x) / static_cast<double>(GetWidth()), 
     static_cast<double>(x) / static_cast<double>(GetHeight())
   );
-  _dirty = true;
+  app->SetDirty();
   _parent->SetDirty();
 }
 
@@ -261,6 +261,7 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       case GLFW_KEY_A:
       {
         _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
+
         break;
       }
       case GLFW_KEY_F:
@@ -390,7 +391,7 @@ bool ViewportUI::Draw()
     pxr::GfVec4d(clipPlanes[3])
   };
   */
-    if ( _dirty ||app->IsDirty() || !_engine->IsConverged() ) {
+    if ( app->IsDirty() || !_engine->IsConverged() ) {
       _drawTarget->Bind();
       glViewport(0, 0, w, h);
       // clear to black
@@ -399,7 +400,6 @@ bool ViewportUI::Draw()
 
       _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
       _drawTarget->Unbind();
-      _dirty = false;
     }
 
     glDisable(GL_DEPTH_TEST);

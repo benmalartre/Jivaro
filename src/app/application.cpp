@@ -635,15 +635,15 @@ Application::ToggleSelection(const pxr::SdfPathVector& selection)
 }
 
 void 
-Application::AddToSelection(const pxr::SdfPath& path)
+Application::AddToSelection(const pxr::SdfPathVector& paths)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, { path }, 1)));
+  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, paths, 1)));
 }
 
 void 
-Application::RemoveFromSelection(const pxr::SdfPath& path)
+Application::RemoveFromSelection(const pxr::SdfPathVector& paths)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, { path }, 2)));
+  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, paths, 2)));
 }
 
 void 

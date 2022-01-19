@@ -45,6 +45,12 @@ ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
   Update();
 }
 
+void
+ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
+{
+  Select();
+}
+
 void 
 ExplorerUI::Init()
 {
@@ -74,6 +80,22 @@ ExplorerUI::Update()
 {
   if (GetApplication()->GetStage()) {
     RecurseStage();
+  }
+}
+
+void
+ExplorerUI::Select()
+{
+  Selection* selection = GetApplication()->GetSelection();
+  if (GetApplication()->GetStage()) {
+    for (auto& item : _map) {
+      item.second->_selected = false;
+    }
+    for (auto& selected : selection->GetItems()) {
+      if (_map.find(selected.path) != _map.end()) {
+        _map[selected.path]->_selected = true;
+      }
+    }
   }
 }
 
@@ -153,15 +175,14 @@ ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
 void 
 ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
 {
+  Application* app = GetApplication();
   if (isLeaf ? ImGui::IsItemClicked() : ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     if (!item->_selected) {
-      APPLICATION->AddToSelection(item->_prim.GetPath());
+      app->AddToSelection({ item->_prim.GetPath() });
     }
     else {
-      APPLICATION->RemoveFromSelection(item->_prim.GetPath());
+      app->RemoveFromSelection({ item->_prim.GetPath() });
     }
-    item->_selected = !item->_selected;
-    SelectionChangedNotice().Send();
   }
 }
 
@@ -354,6 +375,7 @@ ExplorerUI::RecurseStage()
   if (app->GetStage()) {
     _root->_prim = app->GetStage()->GetPseudoRoot();
     _root->_visible = true;
+    _map[_root->_prim.GetPath()] = _root;
     RecursePrim(_root);
   }
 }
@@ -361,20 +383,21 @@ ExplorerUI::RecurseStage()
 void
 ExplorerUI::RecursePrim(ExplorerItem* currentItem)
 {
-  for (const auto& childPrim : currentItem->_prim.GetChildren())
+  Selection* selection = GetApplication()->GetSelection();
+  for (auto& childPrim : currentItem->_prim.GetChildren())
   {
-    ExplorerItem* childItem = currentItem->AddItem();
-    childItem->_expanded = true;
-    childItem->_prim = childPrim;
     pxr::UsdAttribute visibilityAttr =
       pxr::UsdGeomImageable(childPrim).GetVisibilityAttr();
+    bool visible = true;
     if (visibilityAttr.IsValid())
     {
-      pxr::TfToken visible;
-      visibilityAttr.Get(&visible);
-      if (visible == pxr::UsdGeomTokens->invisible)currentItem->_visible = false;
-      else childItem->_visible = true;
+      pxr::TfToken visibility;
+      visibilityAttr.Get(&visibility);
+      if (visibility == pxr::UsdGeomTokens->invisible)visible = false;
+      else visible = true;
     }
+    ExplorerItem* childItem = currentItem->AddItem(childPrim, visible, false, false);
+    _map[childPrim.GetPath()] = childItem;
     RecursePrim(childItem);
   }
 }

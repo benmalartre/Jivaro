@@ -90,7 +90,6 @@ class ViewportUI : public BaseUI
     double                _lastY;
     short                 _interactionMode;
     bool                  _valid;
-    bool                  _dirty;
 
     // usd imaging engine
     Engine*                       _engine;

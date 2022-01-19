@@ -74,8 +74,8 @@ public:
   Selection* GetSelection(){return &_selection;};
   void SetSelection(const pxr::SdfPathVector& selection);
   void ToggleSelection(const pxr::SdfPathVector& selection);
-  void AddToSelection(const pxr::SdfPath& path);
-  void RemoveFromSelection(const pxr::SdfPath& path);
+  void AddToSelection(const pxr::SdfPathVector& path);
+  void RemoveFromSelection(const pxr::SdfPathVector& path);
   void ClearSelection();
   pxr::GfBBox3d GetSelectionBoundingBox();
   pxr::GfBBox3d GetStageBoundingBox();

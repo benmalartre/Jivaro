@@ -2,6 +2,7 @@
 #define JVR_UI_EXPLORER_H
 
 #include <pxr/usd/usd/prim.h>
+#include <pxr/base/tf/hashmap.h>
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -18,16 +19,30 @@ struct ExplorerItem {
   bool                          _visible;
   bool                          _selected;
   bool                          _expanded;
-  std::vector<ExplorerItem*>    _items;
+  std::vector<ExplorerItem*>     _items;
 
-  ExplorerItem* AddItem() {
-    _items.push_back(new ExplorerItem());
+  ExplorerItem() 
+    : _prim(pxr::UsdPrim())
+    , _visible(true)
+    , _selected(false)
+    , _expanded(true) {};
+
+  ExplorerItem(pxr::UsdPrim& prim, bool visible, bool selected, bool expanded)
+    : _prim(prim)
+    , _visible(visible)
+    , _selected(selected)
+    , _expanded(expanded) {};
+
+  ExplorerItem* AddItem(pxr::UsdPrim& prim, bool visible, bool selected, bool expanded) {
+    _items.push_back(new ExplorerItem(prim, visible, selected, expanded));
     return _items.back();
   }
   ~ExplorerItem() {
     for (auto item : _items)delete item;
   };
 };
+
+typedef pxr::TfHashMap<pxr::SdfPath, ExplorerItem*, pxr::TfHash> ExplorerItemMap;
 
 class ExplorerUI : public BaseUI
 {
@@ -40,6 +55,7 @@ public:
   void Keyboard(int key, int scancode, int action, int mods) override;
   void Init();
   void Update();
+  void Select();
   bool Draw()      override;
 
   void RecurseStage();
@@ -52,6 +68,7 @@ public:
     bool& flip);
 
   void OnSceneChangedNotice(const SceneChangedNotice& n) override;
+  void OnSelectionChangedNotice(const SelectionChangedNotice& n) override;
 
 private:
   void _UpdateSelection(ExplorerItem* item, bool isLeaf);
@@ -59,6 +76,7 @@ private:
   pxr::GfVec3f                  _color;
   bool                          _locked;
   ExplorerItem*                 _root;
+  ExplorerItemMap               _map;
   bool                          _needRefresh;
 
   static ImGuiWindowFlags       _flags;
