@@ -85,6 +85,7 @@ public:
   void SetClean();
   void SetDirty();
   void SetInteracting(bool value);
+  bool IsInteracting();
 
 private:
   pxr::GfVec2f      _min;

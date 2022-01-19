@@ -7,6 +7,7 @@
 #include "../app/window.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+#include "../command/command.h"
 #include "../app/handle.h"
 #include "../app/application.h"
 #include "../utils/strings.h"
@@ -41,7 +42,6 @@ BaseUI(parent, "Viewport")
   _rendererIndex = 0;
   _rendererNames = NULL;
   _parent->SetFlag(View::FORCEREDRAW);
-
 }
 
 // destructor
@@ -55,33 +55,15 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init()
 {
-  std::cout << "VIEWPORT UI INITIALIZE START" << std::endl;
-  if (_engine)delete _engine;
+  Application* app = GetApplication();
+  if (_engine) {
+    app->RemoveEngine(_engine);
+    delete _engine;
+  }
   pxr::SdfPathVector excludedPaths;
 
-  std::cout << "CREATE ENGINE ..." << std::endl;
-
-  /*
-  // default aggregation strategies for varying (vertex, varying) primvars
-    , _nonUniformAggregationStrategy(
-        std::make_unique<HdStVBOMemoryManager>(this))
-    , _nonUniformImmutableAggregationStrategy(
-        std::make_unique<HdStVBOMemoryManager>(this))
-    // default aggregation strategy for uniform on UBO (for globals)
-    , _uniformUboAggregationStrategy(
-        std::make_unique<HdStInterleavedUBOMemoryManager>(this))
-    // default aggregation strategy for uniform on SSBO (for primvars)
-    , _uniformSsboAggregationStrategy(
-        std::make_unique<HdStInterleavedSSBOMemoryManager>(this))
-    // default aggregation strategy for single buffers (for nested instancer)
-    , _singleAggregationStrategy(
-        std::make_unique<HdStVBOSimpleMemoryManager>(this))
-    , _textureHandleRegistry(std::make_unique<HdSt_TextureHandleRegistry>(this))
-    , _stagingBuffer(std::make_unique<HdStStagingBuffer>(this))
-    */
-
   _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
-  std::cout << "ENGINE : " << _engine << std::endl;
+  app->AddEngine(_engine);
 
   pxr::TfTokenVector rendererTokens = _engine->GetRendererPlugins();
   if (_rendererNames) delete[] _rendererNames;
@@ -97,8 +79,6 @@ void ViewportUI::Init()
   } else {
     _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
   }
-    std::cout << "SET RENDERER PLUGIN : " << _rendererNames[_rendererIndex] << std::endl;
-
 
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
@@ -208,7 +188,8 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
 void ViewportUI::MouseMove(int x, int y) 
 {
-  Tool* tools = APPLICATION->GetTools();
+  Application* app = GetApplication();
+  Tool* tools = app->GetTools();
   tools->SetViewport(this);
   
   if(_interacting)
@@ -223,6 +204,7 @@ void ViewportUI::MouseMove(int x, int y)
           dx / static_cast<double>(GetWidth()), 
           dy / static_cast<double>(GetHeight())
         );
+        _dirty = true;
         break;
       }
        
@@ -232,18 +214,21 @@ void ViewportUI::MouseMove(int x, int y)
           dx / static_cast<double>(GetWidth()), 
           dy / static_cast<double>(GetHeight())
         );
-       break;
+        _dirty = true;
+        break;
       }
         
       case INTERACTION_ORBIT:
       {
-        _camera->Orbit(dx, dy); 
+        _camera->Orbit(dx, dy);
+        _dirty = true;
         break;
       }
 
       default:
       {
         tools->Update();
+        _dirty = true;
         break;
       }
         
@@ -260,10 +245,12 @@ void ViewportUI::MouseMove(int x, int y)
 
 void ViewportUI::MouseWheel(int x, int y)
 {
+  Application* app = GetApplication();
   _camera->Dolly(
     static_cast<double>(x) / static_cast<double>(GetWidth()), 
     static_cast<double>(x) / static_cast<double>(GetHeight())
   );
+  _dirty = true;
   _parent->SetDirty();
 }
 
@@ -393,14 +380,6 @@ bool ViewportUI::Draw()
     //_renderParams.colorCorrectionMode = ???
     _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
 
-    // update selection
-    Selection* selection = app->GetSelection();
-    if (!selection->IsEmpty() && selection->IsObject()) {
-      _engine->SetSelected(app->GetSelection()->GetSelectedPrims());
-    } else {
-      _engine->ClearSelected();
-    }
-
  /*
   const std::vector<pxr::GfVec4f> clipPlanes = _camera->GetClippingPlanes();
   std::cout << "CLIP PLANES : " << clipPlanes.size() << std::endl;
@@ -411,21 +390,22 @@ bool ViewportUI::Draw()
     pxr::GfVec4d(clipPlanes[3])
   };
   */
+    if ( _dirty ||app->IsDirty() || !_engine->IsConverged() ) {
+      _drawTarget->Bind();
+      glViewport(0, 0, w, h);
+      // clear to black
+      glClearColor(0.25f, 0.25f, 0.25f, 1.0);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    _drawTarget->Bind();
-    glViewport(0, 0, w, h);
-    // clear to black
-    glClearColor(0.25f, 0.25f, 0.25f, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
-    _drawTarget->Unbind();
+      _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
+      _drawTarget->Unbind();
+      _dirty = false;
+    }
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_SCISSOR_TEST);
     glScissor(x, wh - (y + h), w, h);
-    //glViewport(x,wh - (y + h), w, h);
-    //glViewport(0, 0, w, h);
+
     ImGui::Begin(_name.c_str(), NULL, _flags);
 
     ImGui::SetWindowPos(_parent->GetMin());
@@ -482,7 +462,7 @@ bool ViewportUI::Draw()
 
     ImGui::End();
 
-    return true;
+    return GetView()->IsInteracting();
   }
   /*
   if(_pixels)
@@ -609,7 +589,7 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 
 bool ViewportUI::Pick(int x, int y, int mods)
 {
-  Selection* selection = APPLICATION->GetSelection();
+  Application* app = GetApplication();
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;
   pxr::GfVec3d outHitNormal;
@@ -630,23 +610,19 @@ bool ViewportUI::Pick(int x, int y, int mods)
     &outHitInstanceIndex,
     &outInstancerContext)) {
       if (mods & GLFW_MOD_CONTROL && mods & GLFW_MOD_SHIFT) {
-        selection->ToggleItem(outHitPrimPath);
+        app->ToggleSelection({ outHitPrimPath });
       }
       else if (mods & GLFW_MOD_SHIFT) {
-        selection->AddItem(outHitPrimPath);
+        app->AddToSelection({ outHitPrimPath });
       }
       else {
-        selection->Clear();
-        selection->AddItem(outHitPrimPath);
+        app->SetSelection({ outHitPrimPath });
       }
-    APPLICATION->GetTools()->ResetSelection();
     return true;
   } else {
-    selection->Clear();
-    APPLICATION->GetTools()->ResetSelection();
+    app->ClearSelection();
     return false;
   }
-  
 }
 
 /*

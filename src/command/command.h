@@ -15,9 +15,11 @@
 
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usdGeom/xformCommonAPI.h>
 
 #include "../common.h"
 #include "../app/handle.h"
+#include "../app/selection.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -67,6 +69,28 @@ private:
 };
 
 //==================================================================================
+// Select 
+// mode : 0 = Set
+//        1 = Add
+//        2 = Remove
+//        3 = Toggle
+//==================================================================================
+class SelectCommand : public Command {
+public:
+  SelectCommand(Selection::Type type, const pxr::SdfPathVector& paths, int mode);
+  ~SelectCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+private:
+  std::vector<pxr::SdfPath>         _paths;
+  std::vector<std::vector<int>>     _indices;
+  Selection::Type                   _type;
+  int                               _mode;
+  std::vector<Selection::Item>      _previous;
+};
+
+//==================================================================================
 // Translate 
 //==================================================================================
 class TranslateCommand : public Command {
@@ -81,6 +105,25 @@ private:
   std::vector<pxr::UsdPrim>          _prims;
   std::vector<pxr::GfVec3f>          _translate;
   std::vector<pxr::GfVec3f>          _origin;
+  pxr::UsdTimeCode                   _time;
+};
+
+//==================================================================================
+// Rotate 
+//==================================================================================
+class RotateCommand : public Command {
+public:
+  RotateCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
+    std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode);
+  ~RotateCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+private:
+  std::vector<pxr::UsdPrim>          _prims;
+  std::vector<pxr::GfVec3f>          _rotation;
+  std::vector<pxr::GfVec3f>          _origin;
+  std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder> _rotOrder;
   pxr::UsdTimeCode                   _time;
 };
 

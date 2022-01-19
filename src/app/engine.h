@@ -32,7 +32,6 @@ public:
           const pxr::HdDriver& driver = pxr::HdDriver());
   ~Engine();
 
-  void SetHandleOverridesXform(HandleXformOverridesMap& overridesXform);
   /*
   pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos, 
     pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);

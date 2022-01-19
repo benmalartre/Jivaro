@@ -403,4 +403,9 @@ void View::SetInteracting(bool value)
   else ClearFlag(INTERACTING);
 }
 
+bool View::IsInteracting()
+{
+  return GetFlag(INTERACTING);
+}
+
 PXR_NAMESPACE_CLOSE_SCOPE

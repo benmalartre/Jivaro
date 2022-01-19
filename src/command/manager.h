@@ -7,8 +7,6 @@
 #include <deque>
 #include "../common.h"
 #include "../command/command.h"
-#include <thread>
-#include <mutex>
 
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -19,19 +17,17 @@ PXR_NAMESPACE_OPEN_SCOPE
 typedef std::deque<std::shared_ptr<Command>> CommandStack_t;
 
 class CommandManager {
-  std::mutex     _mutex;
-  std::thread    _thread;
   CommandStack_t _todoStack;
   CommandStack_t _undoStack;
   CommandStack_t _redoStack;
 
 public:
-  CommandManager() {}
-  void Start();
+  CommandManager() {};
   void AddCommand(std::shared_ptr<Command> command);
   void ExecuteCommands();
   void Undo();
   void Redo();
+  void Clear();
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

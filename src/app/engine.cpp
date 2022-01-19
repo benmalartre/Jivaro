@@ -73,10 +73,5 @@ Engine::Engine(
 
 Engine::~Engine() = default;
 
-void Engine::SetHandleOverridesXform(HandleXformOverridesMap& overridesXform)
-{
-  _GetSceneDelegate()->SetRigidXformOverrides(overridesXform);
-}
-
 
 PXR_NAMESPACE_CLOSE_SCOPE

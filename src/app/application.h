@@ -11,6 +11,7 @@
 #include "../app/view.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+#include "../command/manager.h"
 #include "../geometry/mesh.h"
 //#include <openvdb/openvdb.h>
 
@@ -25,6 +26,7 @@ class LayersUI;
 class CurveEditorUI;
 class Command;
 class CommandManager;
+class Engine;
 
 class Application : public pxr::TfWeakBase
 {
@@ -71,6 +73,7 @@ public:
   // selection
   Selection* GetSelection(){return &_selection;};
   void SetSelection(const pxr::SdfPathVector& selection);
+  void ToggleSelection(const pxr::SdfPathVector& selection);
   void AddToSelection(const pxr::SdfPath& path);
   void RemoveFromSelection(const pxr::SdfPath& path);
   void ClearSelection();
@@ -89,6 +92,8 @@ public:
 
   // time
   Time& GetTime() { return _time; };
+  void SetDirty() { _dirty = true; };
+  bool IsDirty() { return _dirty; };
 
   // window
   Window* GetMainWindow() {return _mainWindow;};
@@ -97,6 +102,11 @@ public:
   // tools
   Tool* GetTools(){return &_tools;};
   void SetActiveTool(short tool) {_tools.SetActiveTool(tool);};
+
+  // engines
+  void AddEngine(Engine* engine);
+  void RemoveEngine(Engine* engine);
+  std::vector<Engine*> GetEngines() { return _engines; };
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
@@ -121,12 +131,16 @@ private:
 
   // time
   Time                              _time;
+  int                               _dirty;
 
   // mesh
   Mesh*                             _mesh;
 
   // command
-  CommandManager*                   _manager;
+  CommandManager                    _manager;
+
+  // engines
+  std::vector<Engine*>              _engines;
 };
 
 extern Application* APPLICATION;

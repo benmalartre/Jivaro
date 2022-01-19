@@ -55,7 +55,8 @@ public:
   Item& GetItem(size_t index) {
     return _items[index];
   };
-  std::vector<Item>& Get() { return _items; };
+  std::vector<Item>& GetItems() { return _items; };
+  void SetItems(const std::vector<Item>& items) {_items = items;};
 
 private:
   Type                        _mode;

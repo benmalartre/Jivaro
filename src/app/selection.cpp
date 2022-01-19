@@ -47,7 +47,6 @@ void Selection::AddItem(const pxr::SdfPath& path)
     if (path == item.path)return;
   }
   _items.push_back({ Type::OBJECT, path });
-  SelectionChangedNotice().Send();
 }
 
 void Selection::RemoveItem(const pxr::SdfPath& path)
@@ -55,7 +54,6 @@ void Selection::RemoveItem(const pxr::SdfPath& path)
   for (auto it = _items.begin(); it < _items.end(); ++it) {
     if (path == it->path) _items.erase(it);
   }
-  SelectionChangedNotice().Send();
 }
 
 void Selection::ToggleItem(const pxr::SdfPath& path)

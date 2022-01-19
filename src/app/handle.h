@@ -52,24 +52,20 @@ static float HANDLE_SIZE = 100.f;
 class Camera;
 class Geometry;
 
-struct HandleTargetDesc {
-  pxr::SdfPath path;
-  pxr::GfMatrix4f base;
-  pxr::GfMatrix4f offset;
-  /*
-  pxr::UsdGeomXformCommonAPI xformApi;
+struct HandleTargetXformVectors {
   pxr::GfVec3d translation;
   pxr::GfVec3f rotation;
   pxr::GfVec3f scale;
   pxr::GfVec3f pivot;
   pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+};
 
-  HandleTargetDesc(pxr::UsdStageRefPtr stage, pxr::SdfPath& path, 
-    const pxr::UsdTimeCode& timeCode) : path(path){
-    xformApi = pxr::UsdGeomXformCommonAPI(stage->GetPrimAtPath(path));
-    xformApi.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
-  }
-  */
+struct HandleTargetDesc {
+  pxr::SdfPath path;
+  pxr::GfMatrix4f base;
+  pxr::GfMatrix4f offset;
+  pxr::GfMatrix4f parent;
+  HandleTargetXformVectors previous;
 };
 
 typedef std::vector<HandleTargetDesc> HandleTargetDescList;
@@ -81,7 +77,6 @@ struct HandleTargetGeometryDesc {
 };
 
 typedef std::vector<HandleTargetGeometryDesc> HandleTargetGeometryDescList;
-typedef pxr::TfHashMap<pxr::SdfPath, pxr::GfMatrix4d, pxr::SdfPath::Hash> HandleXformOverridesMap;
 
 class BaseHandle {
 public:
@@ -152,10 +147,6 @@ public:
   void ComputeSizeMatrix(float width, float height);
   void ComputeViewPlaneMatrix();
   void ComputePickFrustum();
-
-  void BeginOverridesXform();
-  void EndOverridesXform();
-  HandleXformOverridesMap& GetOverridesXform(){ return _overrideXforms;};
   
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
@@ -184,7 +175,6 @@ protected:
 
   // targets
   HandleTargetDescList    _targets;
-  HandleXformOverridesMap  _overrideXforms;
   
   // geometry
   Shape                   _shape;
@@ -250,7 +240,7 @@ public:
   void SetVisibility(short axis) override;
 
 protected:
-  void _UpdateTargets(bool interacting) override {};
+  void _UpdateTargets(bool interacting) override;
 
 private:
   pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfRay& ray);

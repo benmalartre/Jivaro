@@ -148,13 +148,13 @@ void Tool::EndUpdate()
     _active->EndUpdate();
   }
   _interacting = false;
-  engine->SetHandleOverridesXform(HandleXformOverridesMap());
 }
 
 void Tool::Update()
 {
+  Application* app = GetApplication();
   Engine* engine = _viewport->GetEngine();
-  Selection* selection = APPLICATION->GetSelection();
+  Selection* selection = app->GetSelection();
   if(_active && _viewport && selection->GetNumSelectedItems()) {
     _active->Update(
       _viewport->GetLastMouseX() - _viewport->GetX(),
@@ -162,9 +162,7 @@ void Tool::Update()
       _viewport->GetWidth(),
       _viewport->GetHeight());
 
-    engine->SetHandleOverridesXform(
-      _active->GetOverridesXform()
-    );
+    app->SetDirty();
   }
 }
 

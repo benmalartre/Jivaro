@@ -56,6 +56,7 @@ Application::Application(unsigned width, unsigned height):
   _scene = new Scene();
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
+  _dirty = true;
   _time.Init(1, 101, 24);
 };
 
@@ -65,6 +66,7 @@ Application::Application(bool fullscreen):
   _scene = new Scene();
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
+  _dirty = true;
   _time.Init(1, 101, 24);
 };
 
@@ -468,8 +470,7 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
 
-  _manager = new CommandManager();
-  _manager->Start();
+  //_manager.Start();
 
   _scene->GetRootStage()->GetRootLayer()->SetStateDelegate(LayerStateDelegate::New());
  
@@ -489,7 +490,8 @@ Application::Init()
 
 }
 
-void Application::Update()
+void 
+Application::Update()
 {
   _time.ComputeFramerate(glfwGetTime());
   if(_time.IsPlaying()) {
@@ -504,29 +506,79 @@ void Application::Update()
       */
     }
   }
+  _dirty = false;
 }
 
-void Application::SceneChangedCallback(const SceneChangedNotice& n)
+void 
+Application::AddEngine(Engine* engine)
 {
-  GetApplication()->GetMainWindow()->ForceRedraw();
+  _engines.push_back(engine);
 }
 
-void Application::AddCommand(std::shared_ptr<Command> command)
+void 
+Application::RemoveEngine(Engine* engine)
 {
-  _manager->AddCommand(command);
+  for (size_t i = 0; i < _engines.size(); ++i) {
+    if (engine == _engines[i]) {
+      _engines.erase(_engines.begin() + i);
+      break;
+    }
+  }
 }
 
-void Application::Undo()
+void 
+Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {
-  _manager->Undo();
+  for (auto& engine : _engines) {
+    if (!_selection.IsEmpty() && _selection.IsObject()) {
+      engine->SetSelected(_selection.GetSelectedPrims());
+    }
+    else {
+      engine->ClearSelected();
+    }
+  }
+  _tools.ResetSelection();
+  GetMainWindow()->ForceRedraw();
+  _dirty = true;
 }
 
-void Application::Redo()
+void 
+Application::NewSceneCallback(const NewSceneNotice& n)
 {
-  _manager->Redo();
+  _selection.Clear();
+  _manager.Clear();
+  _dirty = true;
 }
 
-void Application::OpenScene(const std::string& filename)
+void 
+Application::SceneChangedCallback(const SceneChangedNotice& n)
+{
+  _tools.ResetSelection();
+  GetMainWindow()->ForceRedraw();
+  _dirty = true;
+}
+
+void 
+Application::AddCommand(std::shared_ptr<Command> command)
+{
+  _manager.AddCommand(command);
+  _manager.ExecuteCommands();
+}
+
+void 
+Application::Undo()
+{
+  _manager.Undo();
+}
+
+void 
+Application::Redo()
+{
+  _manager.Redo();
+}
+
+void 
+Application::OpenScene(const std::string& filename)
 {
   if(strlen(filename.c_str()) > 0) {    
     if (_scene) delete _scene;
@@ -573,28 +625,31 @@ Application::MainLoop()
 void 
 Application::SetSelection(const pxr::SdfPathVector& selection)
 {
-  _selection.Clear();
-  for (auto& selected : selection) {
-    _selection.AddItem(selected);
-  }
+  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, selection, 0)));
+}
+
+void
+Application::ToggleSelection(const pxr::SdfPathVector& selection)
+{
+  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, selection, 3)));
 }
 
 void 
 Application::AddToSelection(const pxr::SdfPath& path)
 {
-  _selection.AddItem(path);
+  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, { path }, 1)));
 }
 
 void 
 Application::RemoveFromSelection(const pxr::SdfPath& path)
 {
-  _selection.RemoveItem(path);
+  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, { path }, 2)));
 }
 
 void 
 Application::ClearSelection()
 {
-  _selection.Clear();
+  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, {}, 0)));
 }
 
 pxr::GfBBox3d
@@ -607,15 +662,6 @@ Application::GetStageBoundingBox()
   return bboxCache.ComputeWorldBound(_scene->GetRootStage()->GetPseudoRoot());
 }
 
-void Application::SelectionChangedCallback(const SelectionChangedNotice& n)
-{
-  _tools.ResetSelection();
-}
-
-void Application::NewSceneCallback(const NewSceneNotice& n)
-{
-  _selection.Clear();
-}
 
 pxr::GfBBox3d 
 Application::GetSelectionBoundingBox()
