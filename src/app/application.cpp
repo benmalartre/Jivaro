@@ -625,31 +625,36 @@ Application::MainLoop()
 void 
 Application::SetSelection(const pxr::SdfPathVector& selection)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, selection, 0)));
+  AddCommand(std::shared_ptr<SelectCommand>(
+    new SelectCommand(Selection::OBJECT, selection, SelectCommand::SET)));
 }
 
 void
 Application::ToggleSelection(const pxr::SdfPathVector& selection)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, selection, 3)));
+  AddCommand(std::shared_ptr<SelectCommand>(
+    new SelectCommand(Selection::OBJECT, selection, SelectCommand::TOGGLE)));
 }
 
 void 
 Application::AddToSelection(const pxr::SdfPathVector& paths)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, paths, 1)));
+  AddCommand(std::shared_ptr<SelectCommand>(
+    new SelectCommand(Selection::OBJECT, paths, SelectCommand::ADD)));
 }
 
 void 
 Application::RemoveFromSelection(const pxr::SdfPathVector& paths)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, paths, 2)));
+  AddCommand(std::shared_ptr<SelectCommand>(
+    new SelectCommand(Selection::OBJECT, paths, SelectCommand::REMOVE)));
 }
 
 void 
 Application::ClearSelection()
 {
-  AddCommand(std::shared_ptr<SelectCommand>(new SelectCommand(Selection::OBJECT, {}, 0)));
+  AddCommand(std::shared_ptr<SelectCommand>(
+    new SelectCommand(Selection::OBJECT, {}, SelectCommand::SET)));
 }
 
 pxr::GfBBox3d

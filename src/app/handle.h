@@ -220,7 +220,7 @@ public:
   void SetVisibility(short axis) override;
 
 protected:
-  void _UpdateTargets(bool interacting) override {};
+  void _UpdateTargets(bool interacting) override;
 
 private:
   pxr::GfVec3f _GetScaleOffset(size_t axis);
@@ -263,6 +263,24 @@ private:
   float _radius;
   float _height;
 };
+
+/*
+class PivotHandle : public BaseHandle {
+public:
+  PivotHandle();
+
+  void BeginUpdate(float x, float y, float width, float height) override;
+  void Update(float x, float y, float width, float height) override;
+  void SetVisibility(short axis) override;
+
+protected:
+  void _UpdateTargets(bool interacting) override;
+
+private:
+  float _radius;
+  float _height;
+};
+*/
 
 class BrushHandle : public BaseHandle {
 public:

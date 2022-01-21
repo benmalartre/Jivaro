@@ -66,7 +66,7 @@ Shape::Component::ComputeBounds(Shape* shape)
 
 short 
 Shape::Component::_IntersectGrid(const pxr::GfRay& ray, 
-   const pxr::GfMatrix4f& m, double* distance)
+   const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
   pxr::GfRay localRay(ray);
@@ -74,8 +74,8 @@ Shape::Component::_IntersectGrid(const pxr::GfRay& ray,
 
   const pxr::GfVec3f& bound = bounds.GetMax();
   pxr::GfRange3d range(
-    pxr::GfVec3d(-bound[0] * 0.5f, -0.01f, -bound[1] * 0.5f),
-    pxr::GfVec3d(bound[0] * 0.5f, 0.01f, bound[1] * 0.5f)
+    pxr::GfVec3d(-bound[0] * 0.5f, -0.01f * scale, -bound[1] * 0.5f),
+    pxr::GfVec3d(bound[0] * 0.5f, 0.01f * scale, bound[1] * 0.5f)
   );
   pxr::GfBBox3d bbox(range);
 
@@ -89,15 +89,16 @@ Shape::Component::_IntersectGrid(const pxr::GfRay& ray,
 
 short 
 Shape::Component::_IntersectBox(const pxr::GfRay& ray, 
-  const pxr::GfMatrix4f& m, double* distance)
+  const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
   pxr::GfRay localRay(ray);
   localRay.Transform(pxr::GfMatrix4d(matrix));
 
+  const pxr::GfVec3f offset = bounds.GetSize() * (1.0 - scale) * 0.5;
   pxr::GfRange3d range(
-    pxr::GfVec3d(bounds.GetMin()),
-    pxr::GfVec3d(bounds.GetMax()));
+    pxr::GfVec3d(bounds.GetMin() - offset),
+    pxr::GfVec3d(bounds.GetMax() + offset));
   pxr::GfBBox3d bbox(range);
   double enterDistance, exitDistance;
   if (localRay.Intersect(bbox, &enterDistance, &exitDistance)) {
@@ -109,14 +110,14 @@ Shape::Component::_IntersectBox(const pxr::GfRay& ray,
 
 short 
 Shape::Component::_IntersectSphere(const pxr::GfRay& ray, 
-  const pxr::GfMatrix4f& m, double* distance)
+  const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
   pxr::GfRay localRay(ray);
   localRay.Transform(pxr::GfMatrix4d(matrix));
 
   double enterDistance, exitDistance;
-  if (localRay.Intersect(pxr::GfVec3d(0.0), bounds.GetMax()[0], &enterDistance, &exitDistance)) {
+  if (localRay.Intersect(pxr::GfVec3d(0.0), bounds.GetMax()[0] * scale, &enterDistance, &exitDistance)) {
     *distance = enterDistance;
     return index;
   }
@@ -125,7 +126,7 @@ Shape::Component::_IntersectSphere(const pxr::GfRay& ray,
 
 short 
 Shape::Component::_IntersectDisc(const pxr::GfRay& ray, 
-  const pxr::GfMatrix4f& m, double* distance)
+  const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
   pxr::GfRay localRay(ray);
@@ -133,7 +134,7 @@ Shape::Component::_IntersectDisc(const pxr::GfRay& ray,
 
   float radius = bounds.GetMax()[0];
   double enterDistance;
-  if(IntersectDisc(localRay, radius, &enterDistance)) {
+  if(IntersectDisc(localRay, radius * scale, &enterDistance)) {
     *distance = enterDistance;
     return index;
   }
@@ -142,7 +143,7 @@ Shape::Component::_IntersectDisc(const pxr::GfRay& ray,
 
 short
 Shape::Component::_IntersectRing(const pxr::GfRay& ray,
-  const pxr::GfMatrix4f& m, double* distance)
+  const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
   pxr::GfRay localRay(ray);
@@ -150,7 +151,7 @@ Shape::Component::_IntersectRing(const pxr::GfRay& ray,
 
   const pxr::GfVec3d& bound = bounds.GetMax();
   double enterDistance;
-  if (IntersectRing(localRay, bound[0], bound[1], &enterDistance)) {
+  if (IntersectRing(localRay, bound[0], bound[1] * scale, &enterDistance)) {
     *distance = enterDistance;
     return index;
   }
@@ -159,7 +160,7 @@ Shape::Component::_IntersectRing(const pxr::GfRay& ray,
 
 short 
 Shape::Component::_IntersectCylinder(const pxr::GfRay& ray, 
-  const pxr::GfMatrix4f& m, double* distance)
+  const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
   pxr::GfRay localRay(ray);
@@ -167,7 +168,7 @@ Shape::Component::_IntersectCylinder(const pxr::GfRay& ray,
 
   const pxr::GfVec3d& bound = bounds.GetMax();
   double enterDistance;
-  if (IntersectCylinder(localRay, bound[0], bound[1], &enterDistance)) {
+  if (IntersectCylinder(localRay, bound[0] * scale, bound[1], &enterDistance)) {
     *distance = enterDistance;
     return index;
   }
@@ -176,7 +177,7 @@ Shape::Component::_IntersectCylinder(const pxr::GfRay& ray,
 
 short
 Shape::Component::_IntersectTube(const pxr::GfRay& ray,
-  const pxr::GfMatrix4f& m, double* distance)
+  const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   pxr::GfMatrix4d matrix((offsetMatrix * parentMatrix * m).GetInverse());
   pxr::GfRay localRay(ray);
@@ -184,7 +185,8 @@ Shape::Component::_IntersectTube(const pxr::GfRay& ray,
 
   const pxr::GfVec3d& bound = bounds.GetMax();
   double enterDistance;
-  if (IntersectTube(localRay, bound[0], bound[1], bound[2], &enterDistance)) {
+  double innerRadius = bound[0] - (bound[0] * scale - bound[0]);
+  if (IntersectTube(localRay, innerRadius, bound[1] * scale, bound[2], &enterDistance)) {
     *distance = enterDistance;
     return index;
   }
@@ -193,7 +195,7 @@ Shape::Component::_IntersectTube(const pxr::GfRay& ray,
 
 short 
 Shape::Component::_IntersectTorus(const pxr::GfRay& ray, 
-  const pxr::GfMatrix4f& m, double* distance)
+  const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   pxr::GfMatrix4f matrix = (offsetMatrix * parentMatrix * m).GetInverse();
   pxr::GfRay localRay(ray);
@@ -201,7 +203,7 @@ Shape::Component::_IntersectTorus(const pxr::GfRay& ray,
 
   const pxr::GfVec3d& bound = bounds.GetMax();
   double enterDistance;
-  if (IntersectTorusApprox(localRay, bound[0], bound[1], &enterDistance)) {
+  if (IntersectTorusApprox(localRay, bound[0], bound[1] * scale, &enterDistance)) {
     *distance = enterDistance;
     return index;
   }
@@ -210,13 +212,13 @@ Shape::Component::_IntersectTorus(const pxr::GfRay& ray,
 
 short 
 Shape::Component::Intersect(const pxr::GfRay& ray, 
-  const pxr::GfMatrix4f& m, double* distance)
+  const pxr::GfMatrix4f& m, double* distance, double scale)
 {
   return _intersectImplementation ? 
-    (this->*_intersectImplementation)(ray, m, distance) : 0;
+    (this->*_intersectImplementation)(ray, m, distance, scale) : 0;
 }
 
-Shape::Shape(short usage) : _usage(usage), _vao(0), _vbo(0), _eab(0) {};
+Shape::Shape(short usage) : _usage(usage), _vao(0), _vbo(0), _eab(0), _scale(1.1) {};
 
 Shape::~Shape()
 {
@@ -361,9 +363,9 @@ Shape::Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& model, const pxr:
     if (component.GetFlag(Shape::VISIBLE) && component.GetFlag(Shape::PICKABLE)) {
       double distance = DBL_MAX;
       if (component.GetFlag(Shape::FLAT)) {
-        intersected = component.Intersect(ray, view, &distance);
+        intersected = component.Intersect(ray, view, &distance, _scale);
       } else {
-        intersected = component.Intersect(ray, model, &distance);
+        intersected = component.Intersect(ray, model, &distance, _scale);
       }
       if (distance < minDistance) {
         if (component.GetFlag(Shape::MASK)) {

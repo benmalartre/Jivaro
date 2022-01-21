@@ -77,6 +77,12 @@ private:
 //==================================================================================
 class SelectCommand : public Command {
 public:
+  enum Mode {
+    SET,
+    ADD,
+    REMOVE,
+    TOGGLE
+  };
   SelectCommand(Selection::Type type, const pxr::SdfPathVector& paths, int mode);
   ~SelectCommand() {};
   void Execute() override;
@@ -124,6 +130,42 @@ private:
   std::vector<pxr::GfVec3f>          _rotation;
   std::vector<pxr::GfVec3f>          _origin;
   std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder> _rotOrder;
+  pxr::UsdTimeCode                   _time;
+};
+
+//==================================================================================
+// Scale 
+//==================================================================================
+class ScaleCommand : public Command {
+public:
+  ScaleCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
+    std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode);
+  ~ScaleCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+private:
+  std::vector<pxr::UsdPrim>          _prims;
+  std::vector<pxr::GfVec3f>          _scale;
+  std::vector<pxr::GfVec3f>          _origin;
+  pxr::UsdTimeCode                   _time;
+};
+
+//==================================================================================
+// Pivot 
+//==================================================================================
+class PivotCommand : public Command {
+public:
+  PivotCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
+    std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode);
+  ~PivotCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+private:
+  std::vector<pxr::UsdPrim>          _prims;
+  std::vector<pxr::GfVec3f>          _pivot;
+  std::vector<pxr::GfVec3f>          _origin;
   pxr::UsdTimeCode                   _time;
 };
 

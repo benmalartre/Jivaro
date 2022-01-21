@@ -46,7 +46,7 @@ public:
 
   struct Component {
     typedef short (Shape::Component::*IntersectFunc)(const pxr::GfRay& ray, 
-      const pxr::GfMatrix4f& m, double* distance);
+      const pxr::GfMatrix4f& m, double* distance, double scale);
 
     short               flags;
     short               type;
@@ -114,16 +114,16 @@ public:
     bool GetFlag(short flag) const;
     void ComputeBounds(Shape* shape);
 
-    short _IntersectGrid(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
-    short _IntersectBox(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
-    short _IntersectSphere(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
-    short _IntersectDisc(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
-    short _IntersectRing(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
-    short _IntersectCylinder(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
-    short _IntersectTube(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
-    short _IntersectTorus(const pxr::GfRay&, const pxr::GfMatrix4f& m, double* distance);
+    short _IntersectGrid(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale=1.0);
+    short _IntersectBox(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
+    short _IntersectSphere(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
+    short _IntersectDisc(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
+    short _IntersectRing(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
+    short _IntersectCylinder(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
+    short _IntersectTube(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
+    short _IntersectTorus(const pxr::GfRay&, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
 
-    short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance);
+    short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
   };
 
   Shape(short usage=STATIC);
@@ -216,6 +216,7 @@ private:
   std::vector<int> _indices;
   std::vector<Component> _components;
   short _usage;
+  float _scale;
   GLuint _vao;
   GLuint _vbo;
   GLuint _eab;

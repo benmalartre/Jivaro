@@ -113,6 +113,22 @@ void SelectCommand::Redo() {
   SelectionChangedNotice().Send();
 }
 
+//==================================================================================
+// Transform Helper
+//==================================================================================
+static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, pxr::UsdTimeCode& timeCode)
+{
+  pxr::GfVec3d translation;
+  pxr::GfVec3f rotation;
+  pxr::GfVec3f scale;
+  pxr::GfVec3f pivot;
+  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+  pxr::UsdGeomXformCommonAPI api(prim);
+  api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
+  pxr::UsdGeomXformable xformable(prim);
+  xformable.ClearXformOpOrder();
+  api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
+}
 
 //==================================================================================
 // Translate
@@ -139,20 +155,6 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatri
 void TranslateCommand::Execute()
 {
   Redo();
-}
-
-static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, pxr::UsdTimeCode& timeCode)
-{
-  pxr::GfVec3d translation;
-  pxr::GfVec3f rotation;
-  pxr::GfVec3f scale;
-  pxr::GfVec3f pivot;
-  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
-  pxr::UsdGeomXformCommonAPI api(prim);
-  api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
-  pxr::UsdGeomXformable xformable(prim);
-  xformable.ClearXformOpOrder();
-  api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
 }
 
 void TranslateCommand::Undo()
@@ -241,6 +243,100 @@ void RotateCommand::Redo() {
       _EnsureXformCommonAPI(_prims[i], _time);
     }
     api.SetRotate(_rotation[i],_rotOrder[i], _time);
+  }
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Scale
+//==================================================================================
+ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
+  std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode)
+  : Command(true)
+{
+  _time = timeCode;
+  pxr::UsdGeomXformCache xformCache(timeCode);
+  for (auto& target : targets) {
+    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+    pxr::GfMatrix4f invParentMatrix(
+      xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
+    pxr::GfMatrix4d xformMatrix((target.offset * matrix) * invParentMatrix);
+
+    _origin.push_back(pxr::GfVec3f(target.previous.scale));
+    _scale.push_back(pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]));
+    _prims.push_back(xformable.GetPrim());
+    target.previous.scale = _scale.back();
+  }
+}
+
+void ScaleCommand::Execute()
+{
+  Redo();
+}
+
+void ScaleCommand::Undo()
+{
+  for (size_t i = 0; i < _prims.size(); ++i) {
+    pxr::UsdGeomXformCommonAPI api(_prims[i]);
+    api.SetScale(_origin[i], _time);
+  }
+  SceneChangedNotice().Send();
+}
+
+void ScaleCommand::Redo() {
+  for (size_t i = 0; i < _prims.size(); ++i) {
+    pxr::UsdGeomXformCommonAPI api(_prims[i]);
+    if (!api) {
+      _EnsureXformCommonAPI(_prims[i], _time);
+    }
+    api.SetScale(_scale[i], _time);
+  }
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Pivot
+//==================================================================================
+PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
+  std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode)
+  : Command(true)
+{
+  _time = timeCode;
+  pxr::UsdGeomXformCache xformCache(timeCode);
+  for (auto& target : targets) {
+    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+    pxr::GfMatrix4f invParentMatrix(
+      xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
+    pxr::GfMatrix4d xformMatrix((target.offset * matrix) * invParentMatrix);
+
+    _origin.push_back(pxr::GfVec3f(target.previous.pivot));
+    _pivot.push_back(pxr::GfVec3f(xformMatrix.GetRow3(3)));
+    _prims.push_back(xformable.GetPrim());
+    target.previous.pivot = _pivot.back();
+  }
+}
+
+void PivotCommand::Execute()
+{
+  Redo();
+}
+
+void PivotCommand::Undo()
+{
+  for (size_t i = 0; i < _prims.size(); ++i) {
+    pxr::UsdGeomXformCommonAPI api(_prims[i]);
+    api.SetPivot(_origin[i], _time);
+  }
+  SceneChangedNotice().Send();
+}
+
+void PivotCommand::Redo() {
+  for (size_t i = 0; i < _prims.size(); ++i) {
+    pxr::UsdGeomXformCommonAPI api(_prims[i]);
+    if (!api) {
+      _EnsureXformCommonAPI(_prims[i], _time);
+    }
+    api.SetPivot(_pivot[i], _time);
   }
   SceneChangedNotice().Send();
 }

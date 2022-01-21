@@ -1142,6 +1142,29 @@ ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
   shape->Unbind();
 }
 
+void
+ScaleHandle::_UpdateTargets(bool interacting)
+{
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
+  Selection* selection = app->GetSelection();
+  if (interacting) {
+    for (auto& target : _targets) {
+      pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
+      pxr::UsdGeomXformCommonAPI api(stage->GetPrimAtPath(target.path));
+      pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
+      api.SetScale(pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]), activeTime);
+    }
+  }
+  else {
+    GetApplication()->AddCommand(
+      std::shared_ptr<ScaleCommand>(new ScaleCommand(GetApplication()->GetStage(),
+        _matrix, _targets, pxr::UsdTimeCode(activeTime))));
+  }
+}
+
+
 //==================================================================================
 // BRUSH HANDLE IMPLEMENTATION
 //==================================================================================
