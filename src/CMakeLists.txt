@@ -18,11 +18,12 @@ add_executable(${TARGET}
   utils/icons.cpp
   ui/ui.cpp
   ui/popup.cpp
-  ui/filebrowser.cpp
+  ui/fileBrowser.cpp
   ui/splitter.cpp
+  ui/head.cpp
   ui/dummy.cpp
   ui/menu.cpp
-  ui/graph.cpp
+  ui/graphEditor.cpp
   ui/viewport.cpp
   ui/timeline.cpp
   ui/toolbar.cpp

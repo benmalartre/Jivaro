@@ -1,7 +1,7 @@
 #include "modal.h"
 #include "application.h"
 #include "window.h"
-#include "../ui/filebrowser.h"
+#include "../ui/fileBrowser.h"
 #include "../ui/dummy.h"
 
 

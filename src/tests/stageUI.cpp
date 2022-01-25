@@ -2,7 +2,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-void RecurseStagePrim(GraphUI* ui, 
+void RecurseStagePrim(GraphEditorUI* ui, 
                       NodeUI* parent,
                       const pxr::UsdPrim& prim, 
                       int stageIndex)
@@ -17,7 +17,7 @@ void RecurseStagePrim(GraphUI* ui,
   }
 }
 
-void TestStageUI(GraphUI* ui, 
+void TestStageUI(GraphEditorUI* ui, 
   const std::vector<pxr::UsdStageRefPtr>& stages)
 {
   int numStages = stages.size();

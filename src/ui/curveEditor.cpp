@@ -165,8 +165,9 @@ void CurveEditorUI::Keyboard(int key, int scancode, int action, int mods)
 
 void CurveEditorUI::MouseWheel(int x, int y)
 {
+  const pxr::GfVec2f min(GetX(), GetY());
   pxr::GfVec2f mousePos = 
-    (ImGui::GetMousePos() - _parent->GetMin());
+    (ImGui::GetMousePos() - min);
   pxr::GfVec2f originalPos(
     mousePos[0] / _scale[0], 
     mousePos[1] / _scale[1]);
@@ -354,9 +355,12 @@ bool CurveEditorUI::Draw()
   //if (!_active)return false;
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
-  ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::SetWindowSize(_parent->GetSize());
-  ImGui::PushClipRect(_parent->GetMin(), _parent->GetMax(), false);
+  const pxr::GfVec2f min(GetX(), GetY());
+  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const pxr::GfVec2f max(min + size);
+  ImGui::SetWindowPos(min);
+  ImGui::SetWindowSize(size);
+  ImGui::PushClipRect(min, max, false);
   Application* app = GetApplication();
   /*
   if (app->GetStage())

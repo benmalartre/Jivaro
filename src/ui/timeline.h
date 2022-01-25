@@ -10,7 +10,8 @@
 PXR_NAMESPACE_OPEN_SCOPE
 extern IconList ICONS;
 
-#define SLIDER_THICKNESS 2.f
+#define TIMELINE_SLIDER_THICKNESS 2.f
+#define TIMELINE_CONTROL_HEIGHT 32
 
 struct TimeData {
   float currentTime;

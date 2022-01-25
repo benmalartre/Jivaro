@@ -2,6 +2,7 @@
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../ui/ui.h"
+#include "../ui/head.h"
 #include "../ui/splitter.h"
 #include "../ui/menu.h"
 #include <pxr/base/gf/vec2i.h>
@@ -12,33 +13,35 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 // View constructor
 //----------------------------------------------------------------------------
-View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max) :
-  _parent(parent),
-  _left(NULL),
-  _right(NULL),
-  _min(min),
-  _max(max),
-  _flags(HORIZONTAL|LEAF|DIRTY),
-  _perc(0.5),
-  _content(NULL),
-  _buffered(0),
-  _fixedPixels(-1)
+View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max)
+  : _parent(parent)
+  , _head(NULL)
+  , _left(NULL)
+  , _right(NULL)
+  , _min(min)
+  , _max(max)
+  , _flags(HORIZONTAL|LEAF|DIRTY)
+  , _perc(0.5)
+  , _content(NULL)
+  , _buffered(0)
+  , _fixedPixels(-1)
 {
   if(_parent==NULL)_name = "main";
   else _window = _parent->_window;
 }
 
-View::View(View* parent, int x, int y, int w, int h):
-  _parent(parent), 
-  _left(NULL),
-  _right(NULL),
-  _min(pxr::GfVec2f(x, y)), 
-  _max(pxr::GfVec2f(x+w, y+h)), 
-  _flags(HORIZONTAL|LEAF|DIRTY),
-  _perc(0.5),
-  _content(NULL),
-  _buffered(0),
-  _fixedPixels(-1)
+View::View(View* parent, int x, int y, int w, int h)
+  : _parent(parent)
+  , _head(NULL)
+  , _left(NULL)
+  , _right(NULL)
+  , _min(pxr::GfVec2f(x, y))
+  , _max(pxr::GfVec2f(x+w, y+h))
+  , _flags(HORIZONTAL|LEAF|DIRTY)
+  , _perc(0.5)
+  , _content(NULL)
+  , _buffered(0)
+  , _fixedPixels(-1)
 {
   if(_parent==NULL)_name = "main";
   else _window = _parent->_window;
@@ -46,32 +49,71 @@ View::View(View* parent, int x, int y, int w, int h):
 
 View::~View()
 {
+  if (_head) delete _head;
   if (_content) delete _content;
   if (_left) delete _left;
   if (_right) delete _right;
 }
 
-void View::SetWindow(Window* window)
+void 
+View::SetWindow(Window* window)
 {
   _window = window;
 }
 
-Window* View::GetWindow()
+Window* 
+View::GetWindow()
 {
   return _window;
 }
 
-void View::SetContent(BaseUI* ui)
+void 
+View::SetContent(BaseUI* ui)
 {
   if(_content)delete _content; 
   _content=ui;
 };
+
+ViewHead*
+View::CreateHead()
+{
+  _head = new ViewHead(this); 
+  return _head;
+}
 
 bool
 View::Contains(int x, int y)
 {
   if(x>=_min[0] && x<=_max[0] && y>=_min[1] && y<=_max[1])return true;
   else return false;
+}
+
+bool
+View::DrawHead()
+{
+  static bool open;
+  ImGui::Begin(("##"+_name).c_str(), &open, ViewHead::_flags);
+  ImGui::SetWindowPos(GetMin());
+  ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), JVR_HEAD_HEIGHT));
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+  pxr::GfVec4f color(
+    RANDOM_0_1,
+    RANDOM_0_1,
+    RANDOM_0_1,
+    1.f
+  );
+  drawList->AddRectFilled(
+    GetMin(),
+    GetMin() + pxr::GfVec2f(GetWidth(), JVR_HEAD_HEIGHT),
+    ImColor(color[0], color[1], color[2], color[3])
+  );
+  ImGui::End();
+
+  return
+    ImGui::IsAnyItemActive() ||
+    ImGui::IsAnyItemFocused() ||
+    ImGui::IsAnyMouseDown();
 }
 
 void 
@@ -83,6 +125,7 @@ View::Draw(bool forceRedraw)
   }
   else {
     bool bForceRedraw = GetFlag(FORCEREDRAW) ? true : forceRedraw;
+    if (_head)DrawHead();
     if (_content && (bForceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
       if (!_content->Draw() && !bForceRedraw) {
         SetClean();
@@ -92,7 +135,8 @@ View::Draw(bool forceRedraw)
 }
 
 // mouse positon relative to the view
-void View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
+void 
+View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
 {
   pxr::GfVec2f position =GetMin();
   int x = position[0];
@@ -408,6 +452,30 @@ void View::SetInteracting(bool value)
 bool View::IsInteracting()
 {
   return GetFlag(INTERACTING);
+}
+
+ImGuiWindowFlags ViewHead::_flags =
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoDecoration;
+
+// constructor
+ViewHead::ViewHead(View* parent)
+  : _parent(parent)
+{
+}
+
+// destructor
+ViewHead::~ViewHead()
+{
+}
+
+void ViewHead::AddChild(BaseUI* child)
+{
+  _childrens.push_back(child);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

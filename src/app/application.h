@@ -20,7 +20,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 class TimelineUI;
 class PropertyUI;
 class ViewportUI;
-class GraphUI;
+class GraphEditorUI;
 class ExplorerUI;
 class LayersUI;
 class CurveEditorUI;
@@ -122,7 +122,7 @@ private:
 
   // uis
   ViewportUI*                       _viewport;
-  GraphUI*                          _graph;
+  GraphEditorUI*                    _graph;
   LayersUI*                         _layers;
   ExplorerUI*                       _explorer;
   TimelineUI*                       _timeline;

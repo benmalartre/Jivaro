@@ -1,4 +1,4 @@
-#include "../ui/filebrowser.h"
+#include "../ui/fileBrowser.h"
 #include "../utils/strings.h"
 #include "../app/view.h"
 

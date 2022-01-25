@@ -143,8 +143,12 @@ ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
   float scrollOffsetH = ImGui::GetScrollX();
   float scrollOffsetV = ImGui::GetScrollY();
 
-  ImVec2 clipRectMin = _parent->GetMin();
-  ImVec2 clipRectMax = _parent->GetMax();
+  const pxr::GfVec2f min(GetX(), GetY());
+  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const pxr::GfVec2f max(min + size);
+
+  ImVec2 clipRectMin = min;
+  ImVec2 clipRectMax = max;
 
   if (ImGui::GetScrollMaxX() > 0)
   {
@@ -164,10 +168,6 @@ ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
     DrawItemBackground(drawList, item, flip);
     flip = !flip;
   }
-  
-  ImGui::SetCursorPos(ImVec2(0, EXPLORER_LINE_HEIGHT));
-
-  drawList->AddCircleFilled(ImVec2(localMouseX, localMouseY) + _parent->GetMin(), 12.f, ImColor(0.f, 1.f, 0.f, 0.5f), 32);
 
   drawList->PopClipRect();
 }

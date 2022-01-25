@@ -6,6 +6,7 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
+#include "../ui/head.h"
 #include "../ui/utils.h"
 
 #include <pxr/base/tf/token.h>
@@ -61,7 +62,7 @@ static ImColor NODE_CONTOUR_HOVERED(60, 60, 60, 100);
 
 static int _GetColorFromAttribute(const pxr::UsdAttribute& attr);
 
-class GraphUI : public BaseUI
+class GraphEditorUI : public HeadedUI
 {
 public:
   enum NodeType {
@@ -109,8 +110,8 @@ protected:
         const pxr::GfVec2f& extend = pxr::GfVec2f(0,0));
       virtual bool Intersect(const pxr::GfVec2f& start, 
         const pxr::GfVec2f& end);
-      virtual bool IsVisible(GraphUI* editor) = 0;
-      virtual void Draw(GraphUI* editor) = 0;
+      virtual bool IsVisible(GraphEditorUI* editor) = 0;
+      virtual void Draw(GraphEditorUI* editor) = 0;
 
     protected:
       pxr::GfVec2f _pos;
@@ -132,8 +133,8 @@ protected:
       bool Contains(const pxr::GfVec2f& position,
         const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
 
-      bool IsVisible(GraphUI* editor) override { return true; };
-      void Draw(GraphUI* editor) override;
+      bool IsVisible(GraphEditorUI* editor) override { return true; };
+      void Draw(GraphEditorUI* editor) override;
 
       bool IsInput() { return _io; };
       bool IsOutput() { return !_io; };
@@ -166,8 +167,8 @@ protected:
         , _start(start)
         , _end(end){};
 
-      bool IsVisible(GraphUI* editor) override { return true; };
-      void Draw(GraphUI* editor) override;
+      bool IsVisible(GraphEditorUI* editor) override { return true; };
+      void Draw(GraphEditorUI* editor) override;
       inline ConnexionData GetDescription();
 
       virtual bool Contains(const pxr::GfVec2f& position,
@@ -201,8 +202,8 @@ protected:
       void SetPosition(const pxr::GfVec2f& pos) override;
       void SetSize(const pxr::GfVec2f& size) override;
       void SetColor(const pxr::GfVec3f& color) override;
-      bool IsVisible(GraphUI* editor) override;
-      void Draw(GraphUI* graph) override;
+      bool IsVisible(GraphEditorUI* editor) override;
+      void Draw(GraphEditorUI* graph) override;
 
       void ComputeSize();
       void Move(const pxr::GfVec2f& offset) { _pos += offset; };
@@ -241,8 +242,8 @@ protected:
       std::vector<Port>& GetOutputs() {return _outputs;};
       void Init();
       void Update();
-      bool IsVisible(GraphUI* editor) override;
-      void Draw(GraphUI* graph) override;
+      bool IsVisible(GraphEditorUI* editor) override;
+      void Draw(GraphEditorUI* graph) override;
 
       void ComputeSize();
       void Move(const pxr::GfVec2f& offset) { _pos += offset; };
@@ -285,8 +286,8 @@ private:
   };
 
 public:
-  GraphUI(View* parent, const std::string& filename);
-  ~GraphUI() override;
+  GraphEditorUI(View* parent, const std::string& filename);
+  ~GraphEditorUI() override;
 
   void MouseButton(int button, int action, int mods) override;
   void MouseMove(int x, int y) override;

@@ -61,6 +61,17 @@ pxr::UsdStageRefPtr& Scene::AddStageFromDisk(const std::string& filename)
   stage->SetDefaultPrim(ref);
 
   _rootStage->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
+  return _allStages[path];
+  /*
+  std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
+  std::string name = tokens.front();
+  pxr::SdfPath path("/" + name);
+  pxr::SdfLayerRefPtr layer = pxr::SdfLayer::FindOrOpen(filename);
+  pxr::SdfLayerRefPtr sessionLayer = pxr::SdfLayer::CreateAnonymous();
+  _allStages[path] = pxr::UsdStage::Open(layer, sessionLayer);
+  _rootStage->GetRootLayer()->InsertSubLayerPath(layer->GetIdentifier());
+  return _allStages[path];
+  */
 }
 
 Mesh* Scene::AddMesh(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)

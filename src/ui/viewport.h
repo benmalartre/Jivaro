@@ -17,6 +17,7 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
+#include "../ui/head.h"
 #include "../ui/utils.h"
 #include "../app/camera.h"
 #include "../app/notice.h"
@@ -49,7 +50,7 @@ static const char* DRAW_MODE_NAMES[] = {
   "Geom Smooth"
 };
 
-class ViewportUI : public BaseUI
+class ViewportUI : public HeadedUI
 {
   public:
     ViewportUI(View* parent);

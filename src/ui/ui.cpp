@@ -1,4 +1,5 @@
 #include "../ui/ui.h"
+#include "../ui/head.h"
 #include "../app/window.h"
 #include "../app/view.h"
 
@@ -15,6 +16,7 @@ BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
   if(_parent && !popup)
   {
     _parent->SetContent(this);
+    _parent->AddChild(this);
     _parent->SetFlag(View::LEAF);
   }
   pxr::TfWeakPtr<BaseUI> me(this);
@@ -64,10 +66,7 @@ int BaseUI::GetWindowHeight(){
 // ui dimensions
 pxr::GfVec2f BaseUI::GetPosition()
 {
-  return pxr::GfVec2f(
-    ImGui::GetWindowPos()[0] - 1, 
-    ImGui::GetWindowPos()[1] - 1
-  );
+  return pxr::GfVec2f(GetX(), GetY());
 }
 
 int BaseUI::GetX()
@@ -102,6 +101,7 @@ BaseUI::SetInteracting(bool state)
   }
 }
 
+/*
 bool BaseUI::DrawHead() 
 {
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -112,7 +112,7 @@ bool BaseUI::DrawHead()
   );
   return true;
 }
-
+*/
 
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -43,6 +43,7 @@ static const char* UITypeName[UIType::COUNT] = {
   "graphEditor"
 };
 
+class HeadUI;
 class BaseUI : public pxr::TfWeakBase
 {
 public:
@@ -87,7 +88,6 @@ public:
   virtual void Keyboard(int key, int scancode, int action, int mods) {};
 
   void SetInteracting(bool state);
-  bool DrawHead();
   virtual bool Draw()=0;
   virtual void Resize(){};
 
@@ -103,6 +103,7 @@ protected:
   View*                   _parent;
   std::string             _name;
   static ImGuiWindowFlags _flags;
+  static bool             _headed;
 };
 
 

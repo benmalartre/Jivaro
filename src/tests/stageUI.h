@@ -23,13 +23,13 @@ PXR_NAMESPACE_OPEN_SCOPE
 // main entry point
 void
 TestStageUI(
-  GraphUI* ui, 
+  GraphEditorUI* ui, 
   const std::vector<pxr::UsdStageRefPtr>& stages
 );
 
 void 
 RecurseStagePrim(
-  GraphUI* ui, 
+  GraphEditorUI* ui, 
   NodeUI* parent,
   const pxr::UsdPrim& prim, 
   int stageIndex, 
@@ -37,6 +37,6 @@ RecurseStagePrim(
 );
 
 void 
-DrawStageUI(GraphUI* ui);
+DrawStageUI(GraphEditorUI* ui);
 
 PXR_NAMESPACE_CLOSE_SCOPE

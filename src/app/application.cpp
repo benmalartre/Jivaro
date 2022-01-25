@@ -22,10 +22,10 @@
 #include <pxr/usd/usdAnimX/keyframe.h>
 
 #include "../utils/files.h"
-#include "../ui/filebrowser.h"
+#include "../ui/fileBrowser.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
-#include "../ui/graph.h"
+#include "../ui/graphEditor.h"
 #include "../ui/timeline.h"
 #include "../ui/dummy.h"
 #include "../ui/toolbar.h"
@@ -360,7 +360,6 @@ Application::Init()
 
   // create window
   _mainWindow->SetGLContext();
-  std::cout << "SET GL CONTEXT :D" << std::endl;
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
 
@@ -397,7 +396,7 @@ Application::Init()
 
   // initialize 3d tools
   _tools.Init();
-  GraphUI* graph = new GraphUI(graphView, filename);
+  GraphEditorUI* graph = new GraphEditorUI(graphView, filename);
   //std::cout << "INIT GRAPH OK " << std::endl;
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   
@@ -472,7 +471,7 @@ Application::Init()
 
   //_manager.Start();
 
-  _scene->GetRootStage()->GetRootLayer()->SetStateDelegate(LayerStateDelegate::New());
+  //_scene->GetRootStage()->GetRootLayer()->SetStateDelegate(LayerStateDelegate::New());
  
   /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);

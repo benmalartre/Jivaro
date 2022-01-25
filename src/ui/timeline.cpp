@@ -240,7 +240,7 @@ void TimelineUI::DrawControls()
   const ImVec4* colors = style->Colors;
 
   ImGui::SetCursorPosX(20);
-  ImGui::SetCursorPosY(height - 20);
+  ImGui::SetCursorPosY(height - TIMELINE_CONTROL_HEIGHT + 8);
 
   ImGui::PushFont(GetWindow()->GetMediumFont(0));
 
@@ -321,8 +321,8 @@ void TimelineUI::DrawTimeSlider()
   float xmin = _parent->GetMin()[0];
   float xmax = _parent->GetMax()[0];
   float ymin = _parent->GetMin()[1];
-  float ymax = _parent->GetMax()[1] - 30;
-  float ymid = ymin * 0.25 + ymax * 0.75;
+  float ymax = _parent->GetMax()[1] - TIMELINE_CONTROL_HEIGHT;
+  float ymid = ymax;//ymin * 0.25 + ymax * 0.75;
 
   float rounding = 8.f;
   float th = 1.f;
@@ -351,8 +351,8 @@ void TimelineUI::DrawTimeSlider()
 
   Application* app = APPLICATION;
 
-  xmin += 2 * SLIDER_THICKNESS;
-  xmax -= 2 * SLIDER_THICKNESS;
+  xmin += 2 * TIMELINE_SLIDER_THICKNESS;
+  xmax -= 2 * TIMELINE_SLIDER_THICKNESS;
 
   int numFrames = (app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
   float incr = 1 / (float)numFrames;
@@ -379,8 +379,8 @@ void TimelineUI::DrawTimeSlider()
     (float)(app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
   float sliderX = (xmin * (1 - sliderPerc) + xmax * sliderPerc);
   drawList->AddRectFilled(
-    pxr::GfVec2f(sliderX - SLIDER_THICKNESS, ymin),
-    pxr::GfVec2f(sliderX + SLIDER_THICKNESS, ymid),
+    pxr::GfVec2f(sliderX - TIMELINE_SLIDER_THICKNESS, ymin),
+    pxr::GfVec2f(sliderX + TIMELINE_SLIDER_THICKNESS, ymid),
     sliderColor, rounding, corners_all
   );
 

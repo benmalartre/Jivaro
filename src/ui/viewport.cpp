@@ -27,7 +27,7 @@ ImGuiWindowFlags ViewportUI::_flags =
 
 // constructor
 ViewportUI::ViewportUI(View* parent):
-BaseUI(parent, "Viewport")
+  HeadedUI(parent, "Viewport")
 {
   _texture = 0;
   _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
@@ -41,7 +41,6 @@ BaseUI(parent, "Viewport")
   _engine = nullptr;
   _rendererIndex = 0;
   _rendererNames = NULL;
-  _parent->SetFlag(View::FORCEREDRAW);
 }
 
 // destructor
@@ -130,7 +129,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   Window* window = _parent->GetWindow();
-  Tool* tools = APPLICATION->GetTools();
+  Tool* tools = GetApplication()->GetTools();
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
   if (action == GLFW_RELEASE)
@@ -256,32 +255,34 @@ void ViewportUI::MouseWheel(int x, int y)
 
 void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
 {
+  Application* app = GetApplication();
   if (action == GLFW_PRESS) {
     switch (key) {
       case GLFW_KEY_A:
       {
         _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
-
+        app->SetDirty();
         break;
       }
       case GLFW_KEY_F:
       {
         _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
+        app->SetDirty();
         break;
       }
       case GLFW_KEY_S:
       {
-        APPLICATION->SetActiveTool(TOOL_SCALE);
+        app->SetActiveTool(TOOL_SCALE);
         break;
       }
       case GLFW_KEY_R:
       {
-        APPLICATION->SetActiveTool(TOOL_ROTATE);
+        app->SetActiveTool(TOOL_ROTATE);
         break;
       }
       case GLFW_KEY_T:
       {
-        APPLICATION->SetActiveTool(TOOL_TRANSLATE);
+        app->SetActiveTool(TOOL_TRANSLATE);
         break;
       }
     }
@@ -304,10 +305,10 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
   // resize viewport
   float scaleX, scaleY;
   glfwGetWindowContentScale(view->GetWindow()->GetGlfwWindow(), &scaleX, &scaleY);
-  float x = view->GetX();
-  float y = view->GetY();
-  float w = view->GetWidth();
-  float h = view->GetHeight();
+  float x = viewport->GetX();
+  float y = viewport->GetY();
+  float w = viewport->GetWidth();
+  float h = viewport->GetHeight();
   float wh = viewport->GetWindowHeight();
   glViewport(x * scaleX,(wh - (y + h)) * scaleY, w * scaleX, h * scaleY);
   glEnable(GL_DEPTH_TEST);
@@ -334,11 +335,12 @@ bool ViewportUI::Draw()
 {    
   if (!_initialized)Init();
   if(!_valid)return false;  
-  float x = _parent->GetMin()[0];
-  float y = _parent->GetMin()[1];
+
+  float x = GetX();
+  float y = GetY();
   
-  float w = _parent->GetWidth();
-  float h = _parent->GetHeight();
+  float w = GetWidth();
+  float h = GetHeight();
   float wh = GetWindowHeight();
 
   //glEnable(GL_SCISSOR_TEST);
@@ -377,7 +379,7 @@ bool ViewportUI::Draw()
     _renderParams.enableIdRender = false;
     _renderParams.enableSampleAlphaToCoverage = true;
     _renderParams.highlight = true;
-    _renderParams.enableSceneMaterials = true;
+    _renderParams.enableSceneMaterials = false;
     //_renderParams.colorCorrectionMode = ???
     _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
 
@@ -408,14 +410,18 @@ bool ViewportUI::Draw()
 
     ImGui::Begin(_name.c_str(), NULL, _flags);
 
-    ImGui::SetWindowPos(_parent->GetMin());
-    ImGui::SetWindowSize(_parent->GetSize());
+    const pxr::GfVec2f min(GetX(), GetY());
+    const pxr::GfVec2f size(GetWidth(), GetHeight());
+    const pxr::GfVec2f max(min + size);
+
+    ImGui::SetWindowPos(min);
+    ImGui::SetWindowSize(size);
     
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     drawList->AddImage(
       (ImTextureID)(size_t)_drawTarget->GetAttachment("color")->GetGlTextureName(),
-      _parent->GetMin(),
-      _parent->GetMax(),
+      min,
+      max,
       ImVec2(0,1),
       ImVec2(1,0),
       ImColor(255,255,255,255));
@@ -429,13 +435,13 @@ bool ViewportUI::Draw()
     ImGui::PushFont(GetWindow()->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
     drawList->AddText(
-      ImVec2(_parent->GetMin()[0] + 20, _parent->GetMax()[1] - 20), 
+      ImVec2(min[0] + 20, max[1] - 20), 
       0xFFFFFFFF, 
       msg.c_str());
 
     msg = "FPS : "+ std::to_string(app->GetTime().GetFramerate());
     drawList->AddText(
-      ImVec2(_parent->GetMin()[0] + GetWidth() - 128.f, _parent->GetMax()[1] - 20),
+      ImVec2(max[0] - 128.f, max[1] - 20),
       0xFFFFFFFF,
       msg.c_str());
 
