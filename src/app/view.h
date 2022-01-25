@@ -123,7 +123,7 @@ public:
   // overrides
   //void MouseButton(int action, int button, int mods) override {};
   //void MouseMove(int x, int y) override {};
-  bool Draw();
+  void Draw();
 
   /*
   MenuItem& AddItem(View* view, const std::string label, const std::string shortcut, bool selected,

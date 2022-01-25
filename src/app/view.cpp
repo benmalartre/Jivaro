@@ -92,22 +92,19 @@ bool
 View::DrawHead()
 {
   static bool open;
-  ImGui::Begin(("##"+_name).c_str(), &open, ViewHead::_flags);
+  ImGui::Begin(("##" + _name + "Head").c_str(), &open, ViewHead::_flags);
   ImGui::SetWindowPos(GetMin());
   ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), JVR_HEAD_HEIGHT));
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-  pxr::GfVec4f color(
-    RANDOM_0_1,
-    RANDOM_0_1,
-    RANDOM_0_1,
-    1.f
-  );
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(
     GetMin(),
     GetMin() + pxr::GfVec2f(GetWidth(), JVR_HEAD_HEIGHT),
-    ImColor(color[0], color[1], color[2], color[3])
+    ImColor(BACKGROUND_COLOR)
   );
+
+  _head->Draw();
+
   ImGui::End();
 
   return
@@ -473,9 +470,47 @@ ViewHead::~ViewHead()
 {
 }
 
-void ViewHead::AddChild(BaseUI* child)
+void 
+ViewHead::AddChild(BaseUI* child)
 {
   _childrens.push_back(child);
 }
 
+void 
+ViewHead::Draw()
+{
+  if (ImGui::BeginTabBar(("##" + _parent->GetName()+"TabBar").c_str(), 
+    ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
+  {
+    // Demo a Leading TabItemButton(): click the "?" button to open a menu
+    const char* popupName = ("##" + _parent->GetName() + "AddUIMenu").c_str();
+    if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+      ImGui::OpenPopup(popupName);
+    if (ImGui::BeginPopup(popupName))
+    {
+      for (size_t n = 0; n < UIType::COUNT; ++n) {
+        ImGui::Selectable(UITypeName[n]);
+      }
+      ImGui::EndPopup();
+    }
+
+    if (ImGui::TabItemButton(" x ", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip))
+      std::cout << "DELETE CURRENT TAB ITEM" << std::endl;
+
+    // Submit our regular tabs
+    for (int n = 0; n < UIType::COUNT; ++n)
+    {
+      bool open = true;
+      const char* name = UITypeName[n];
+      if (ImGui::BeginTabItem(name, &open, 
+        ImGuiTabItemFlags_NoCloseButton | ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoPushId))
+      {
+        //ImGui::Text("This is the %s tab!", name);
+        ImGui::EndTabItem();
+      }
+    }
+
+    ImGui::EndTabBar();
+  }
+}
 PXR_NAMESPACE_CLOSE_SCOPE

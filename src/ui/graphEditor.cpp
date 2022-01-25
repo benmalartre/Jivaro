@@ -1462,7 +1462,7 @@ GraphEditorUI::ViewPositionToGridPosition(const pxr::GfVec2f& mousePos)
 pxr::GfVec2f
 GraphEditorUI::GridPositionToViewPosition(const pxr::GfVec2f& gridPos)
 {
-  return (gridPos + _offset) * _scale + _parent->GetMin();
+  return (gridPos + _offset) * _scale + pxr::GfVec2f(GetX(), GetY());
 }
 
 void 
