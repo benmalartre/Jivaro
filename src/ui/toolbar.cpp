@@ -173,13 +173,13 @@ bool ToolbarUI::Draw()
   bool opened;
   
   ImGui::Begin(_name.c_str(), &opened, _flags);
+  ImGui::SetWindowSize(_parent->GetSize());
+  ImGui::SetWindowPos(_parent->GetMin());
+
   ImGui::PushClipRect(
     _parent->GetMin(),
     _parent->GetMax(), 
     false);
-
-  ImGui::SetWindowSize(_parent->GetSize());
-  ImGui::SetWindowPos(_parent->GetMin());
  
   ImGui::SetCursorPosY(4.f);
   for (auto& item : _items) {

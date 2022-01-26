@@ -310,12 +310,13 @@ ExplorerUI::Draw()
 {
   if (!_initialized)Init();
 
+  const pxr::GfVec2f min(GetX(), GetY());
+  const pxr::GfVec2f size(GetWidth(), GetHeight());
   ImGui::Begin(_name.c_str(), NULL, _flags);
+  ImGui::SetWindowPos(min);
+  ImGui::SetWindowSize(size);
 
-  ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::SetWindowSize(_parent->GetSize());
-
-  const ImVec2 localMousePos = ImGui::GetMousePos() - _parent->GetMin();
+  const ImVec2 localMousePos = ImGui::GetMousePos() - min;
 
   Application* app = GetApplication();
   
@@ -328,7 +329,7 @@ ExplorerUI::Draw()
 
     // setup columns
     ImGui::Columns(3);
-    ImGui::SetColumnWidth(0, _parent->GetWidth() - 100);
+    ImGui::SetColumnWidth(0, GetWidth() - 100);
     ImGui::SetColumnWidth(1, 60);
     ImGui::SetColumnWidth(2, 40);
     
@@ -345,6 +346,7 @@ ExplorerUI::Draw()
     DrawBackground(localMousePos.x, localMousePos.y);
     
     ImGui::PushFont(GetWindow()->GetRegularFont(0));
+    ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
     for (auto& item : _root->_items) {
       DrawItem(item, true);
     }

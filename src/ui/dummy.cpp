@@ -14,9 +14,10 @@ bool DummyUI::Draw()
   flags |= ImGuiWindowFlags_NoResize;
   flags |= ImGuiWindowFlags_NoTitleBar;
   flags |= ImGuiWindowFlags_NoMove;
-  
 
   ImGui::Begin(_name.c_str(), &opened, flags);
+  ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
+  ImGui::SetWindowPos(_parent->GetMin());
   pxr::GfVec4f color(
     RANDOM_0_1,
     RANDOM_0_1,
@@ -24,8 +25,6 @@ bool DummyUI::Draw()
     1.f
   );
 
-  ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
-  ImGui::SetWindowPos(_parent->GetMin());
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(
     ImVec2(0, 0),

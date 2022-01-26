@@ -51,5 +51,16 @@ int HeadedUI::GetHeight()
   return (_parent->GetHeight() - JVR_HEAD_HEIGHT) + 2;
 }
 
+// mouse positon relative to the view
+void HeadedUI::GetRelativeMousePosition(const float inX, const float inY,
+  float& outX, float& outY)
+{
+  pxr::GfVec2f parentPosition = _parent->GetMin();
+  float parentX = parentPosition[0];
+  float parentY = parentPosition[1] + JVR_HEAD_HEIGHT;
+  outX = inX - parentX;
+  outY = inY - parentY;
+}
+
 
 PXR_NAMESPACE_CLOSE_SCOPE

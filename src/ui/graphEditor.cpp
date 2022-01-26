@@ -1043,10 +1043,10 @@ GraphEditorUI::Draw()
 {
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
-  ImGui::SetNextWindowPos(min);
-  ImGui::SetNextWindowSize(size);
   
   ImGui::Begin("Graph Editor", NULL, _flags);
+  ImGui::SetWindowPos(min);
+  ImGui::SetWindowSize(size);
 
   //DrawGrid();
 

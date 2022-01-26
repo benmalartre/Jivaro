@@ -19,13 +19,18 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 
 ImGuiWindowFlags MenuUI::_flags =
-ImGuiWindowFlags_None |
-ImGuiWindowFlags_MenuBar |
-ImGuiWindowFlags_NoTitleBar |
-ImGuiWindowFlags_NoMove |
-ImGuiWindowFlags_NoResize |
-ImGuiWindowFlags_NoBringToFrontOnFocus |
-ImGuiWindowFlags_NoDecoration;
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_MenuBar |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoScrollWithMouse |
+  ImGuiWindowFlags_NoBringToFrontOnFocus |
+  ImGuiWindowFlags_NoDecoration |
+  ImGuiWindowFlags_NoBackground |
+  ImGuiWindowFlags_NoScrollbar;
 
 MenuItem::MenuItem(View* v, const std::string lbl, const std::string sht,
   bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
@@ -201,16 +206,19 @@ bool MenuUI::Draw()
   Window* window = GetWindow();
 
   static bool open;
-  ImGui::Begin("MenuBar", &open, _flags);
+  const pxr::GfVec2f min(GetX(), GetY());
+  const pxr::GfVec2f size(GetWidth(), GetHeight());
 
-  ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::SetWindowSize(_parent->GetSize());
-  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+  ImGui::Begin("MenuBar", &open, _flags);
+  ImGui::SetWindowPos(min);
+  ImGui::SetWindowSize(size);
+  
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
 
   drawList->AddRectFilled(
-    _parent->GetMin(),
-    _parent->GetMax(),
-    ImGuiCol_WindowBg
+    min,
+    min + size,
+    ImColor(BACKGROUND_COLOR)
   );
 
   if (ImGui::BeginMenuBar())
@@ -226,8 +234,9 @@ bool MenuUI::Draw()
     ImGui::PopFont();
     ImGui::EndMenuBar();
   }
-
+  
   ImGui::PopStyleColor(3);
+  
   ImGui::End();
 
   return

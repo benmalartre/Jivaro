@@ -408,11 +408,11 @@ bool ViewportUI::Draw()
     glEnable(GL_SCISSOR_TEST);
     glScissor(x, wh - (y + h), w, h);
 
-    ImGui::Begin(_name.c_str(), NULL, _flags);
-
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
     const pxr::GfVec2f max(min + size);
+
+    ImGui::Begin(_name.c_str(), NULL, _flags);
 
     ImGui::SetWindowPos(min);
     ImGui::SetWindowSize(size);

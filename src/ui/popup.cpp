@@ -67,6 +67,10 @@ PopupUI::Draw()
   bool opened;
 
   ImGui::Begin(_name.c_str(), &opened, _flags);
+
+  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+
   pxr::GfVec4f color(
     RANDOM_0_1,
     RANDOM_0_1,
@@ -74,8 +78,6 @@ PopupUI::Draw()
     1.f
   );
 
-  ImGui::SetWindowSize(ImVec2(_width, _height));
-  ImGui::SetWindowPos(ImVec2(_x, _y));
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
   drawList->AddRectFilled(
     ImVec2(_x, _y),

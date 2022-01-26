@@ -364,7 +364,7 @@ Application::Init()
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
 
   View* mainView = _mainWindow->SplitView(
-    _mainWindow->GetMainView(), 0.5, true, View::LFIXED, 24);
+    _mainWindow->GetMainView(), 0.5, true, View::LFIXED, 22);
   View* bottomView = _mainWindow->SplitView(
     mainView->GetRight(), 0.9, true, false);
   
@@ -396,6 +396,7 @@ Application::Init()
 
   // initialize 3d tools
   _tools.Init();
+  
   GraphEditorUI* graph = new GraphEditorUI(graphView, filename);
   //std::cout << "INIT GRAPH OK " << std::endl;
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
@@ -409,6 +410,7 @@ Application::Init()
   _explorer = new ExplorerUI(explorerView);
   _layers = new LayersUI(layersView);
   _property = new PropertyUI(propertyView, "Property");
+ 
 
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);

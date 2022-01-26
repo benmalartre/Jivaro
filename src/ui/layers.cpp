@@ -382,11 +382,10 @@ LayersUI::~LayersUI()
 
 bool LayersUI::Draw()
 {
-    ImGui::Begin(_name.c_str(), NULL, _flags);
+  ImGui::Begin(_name.c_str(), NULL, _flags);
 
-    ImGui::SetWindowPos(_parent->GetMin());
-    ImGui::SetWindowSize(_parent->GetSize());
-
+  ImGui::SetWindowPos(_parent->GetMin());
+  ImGui::SetWindowSize(_parent->GetSize());
     /*
     const ImVec2 localMousePos = ImGui::GetMousePos() - _parent->GetMin();
 

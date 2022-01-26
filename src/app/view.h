@@ -74,7 +74,7 @@ public:
   bool Contains(int x, int y);
   
   // callbacks
-  bool DrawHead();
+  void DrawHead();
   virtual void Draw(bool forceRedraw);
   virtual void Resize(int x, int y, int width, int height, bool rationalize=false);
   virtual void MouseMove(int x, int y);
@@ -124,6 +124,8 @@ public:
   //void MouseButton(int action, int button, int mods) override {};
   //void MouseMove(int x, int y) override {};
   void Draw();
+  void MouseMove(int x, int y);
+  void MouseButton(int button, int action, int mods);
 
   /*
   MenuItem& AddItem(View* view, const std::string label, const std::string shortcut, bool selected,

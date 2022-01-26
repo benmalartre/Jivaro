@@ -208,10 +208,8 @@ PropertyUI::Draw()
   bool opened;
 
   ImGui::Begin(_name.c_str(), &opened, _flags);
-
   ImGui::SetWindowSize(_parent->GetSize());
   ImGui::SetWindowPos(_parent->GetMin());
-
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
   drawList->AddRectFilled(

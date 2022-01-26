@@ -88,9 +88,9 @@ static void SetStyle(ImGuiStyle* dst)
   colors[ImGuiCol_DragDropTarget] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
   colors[ImGuiCol_NavHighlight] = colors[ImGuiCol_HeaderHovered];
   colors[ImGuiCol_NavWindowingHighlight] = ImVec4(0.70f, 0.70f, 0.70f, 0.70f);
-  colors[ImGuiCol_Tab] = ImVec4(0.15f, 0.15f, 0.15f, 1.f);
+  colors[ImGuiCol_Tab] = ImVec4(0.1f, 0.1f, 0.1f, 1.f);
   colors[ImGuiCol_TabActive] = ImVec4(0.2f, 0.2f, 0.2f, 1.f);
-  colors[ImGuiCol_TabHovered] = ImVec4(0.25f, 0.25f, 0.25f, 1.f);
+  colors[ImGuiCol_TabHovered] = ImVec4(0.3f, 0.3f, 0.3f, 1.f);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

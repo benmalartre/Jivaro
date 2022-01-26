@@ -27,6 +27,8 @@ public:
   int GetY() override;
   int GetWidth() override;
   int GetHeight() override;
+  void GetRelativeMousePosition(const float inX, const float inY,
+    float& outX, float& outY) override;
 
 private:
   ViewHead*                 _head;

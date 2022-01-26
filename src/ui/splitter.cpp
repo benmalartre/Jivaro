@@ -95,6 +95,7 @@ bool
 SplitterUI::Draw()
 {
   static bool open;
+
   ImGui::Begin("Splitter", &open, _flags);
   ImGui::SetWindowPos(ImVec2(0, 0));
   ImGui::SetWindowSize(ImVec2(_width, _height));
@@ -117,6 +118,7 @@ SplitterUI::Draw()
       ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
     }
   }
+
   ImGui::End();
   return true;
 }

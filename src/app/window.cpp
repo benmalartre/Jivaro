@@ -453,8 +453,6 @@ Window::Draw()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-  ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), GetHeight() + 2 ));
-  ImGui::SetWindowPos(pxr::GfVec2f(0,0));
 
   if (_dim) {
     ImDrawList* drawList = ImGui::GetBackgroundDrawList();
@@ -641,13 +639,11 @@ KeyboardCallback(
     {
       case GLFW_KEY_Z:
       {
-        std::cout << "ZZZZZZZZZZZZZZZZZZZ" << std::endl;
         if (mods & GLFW_MOD_CONTROL)GetApplication()->Undo();
         break;
       }
       case GLFW_KEY_Y: 
       {
-        std::cout << "YYYYYYYYYYYYYYYYYYY" << std::endl;
         if (mods & GLFW_MOD_CONTROL)GetApplication()->Redo();
         break;
       }

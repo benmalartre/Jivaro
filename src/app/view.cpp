@@ -88,29 +88,10 @@ View::Contains(int x, int y)
   else return false;
 }
 
-bool
+void
 View::DrawHead()
 {
-  static bool open;
-  ImGui::Begin(("##" + _name + "Head").c_str(), &open, ViewHead::_flags);
-  ImGui::SetWindowPos(GetMin());
-  ImGui::SetWindowSize(pxr::GfVec2f(GetWidth(), JVR_HEAD_HEIGHT));
-
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-  drawList->AddRectFilled(
-    GetMin(),
-    GetMin() + pxr::GfVec2f(GetWidth(), JVR_HEAD_HEIGHT),
-    ImColor(BACKGROUND_COLOR)
-  );
-
-  _head->Draw();
-
-  ImGui::End();
-
-  return
-    ImGui::IsAnyItemActive() ||
-    ImGui::IsAnyItemFocused() ||
-    ImGui::IsAnyMouseDown();
+  if (_head) _head->Draw();
 }
 
 void 
@@ -122,7 +103,7 @@ View::Draw(bool forceRedraw)
   }
   else {
     bool bForceRedraw = GetFlag(FORCEREDRAW) ? true : forceRedraw;
-    if (_head)DrawHead();
+    DrawHead();
     if (_content && (bForceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
       if (!_content->Draw() && !bForceRedraw) {
         SetClean();
@@ -147,13 +128,30 @@ View::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  if(_content)_content->MouseButton(button, action, mods);
+  if (_head) {
+    if ((y - GetY()) < JVR_HEAD_HEIGHT) {
+      _head->MouseButton(button, action, mods);
+    } else {
+      if (_content)_content->MouseButton(button, action, mods);
+    }
+  } else {
+    if (_content)_content->MouseButton(button, action, mods);
+  }
 }
 
 void 
 View::MouseMove(int x, int y)
 {
-  if(_content)_content->MouseMove(x, y);
+  if (_head) {
+    if ((y - GetY()) < JVR_HEAD_HEIGHT) {
+      if (GetFlag(View::INTERACTING) && _content)_content->MouseMove(x, y);
+      else _head->MouseMove(x, y);
+    } else {
+      if (_content)_content->MouseMove(x, y);
+    }
+  } else {
+    if (_content)_content->MouseMove(x, y);
+  }
 }
 
 void 
@@ -363,6 +361,7 @@ View::ComputeNumPixels(bool postFix)
     if(_right)RescaleRight();
   }
 }
+
 void 
 View::RescaleNumPixels(pxr::GfVec2f  ratio)
 {
@@ -453,11 +452,15 @@ bool View::IsInteracting()
 
 ImGuiWindowFlags ViewHead::_flags =
   ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoMove |
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoScrollbar |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoDecoration;
+  ImGuiWindowFlags_NoBackground |
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoScrollWithMouse |
+  ImGuiWindowFlags_NoBringToFrontOnFocus |
+  ImGuiWindowFlags_NoScrollbar;
 
 // constructor
 ViewHead::ViewHead(View* parent)
@@ -476,16 +479,42 @@ ViewHead::AddChild(BaseUI* child)
   _childrens.push_back(child);
 }
 
+
+static void
+AddViewChildCallback(ViewHead* head)
+{
+
+}
+
 void 
 ViewHead::Draw()
 {
+  const pxr::GfVec2f min(_parent->GetMin());
+  const pxr::GfVec2f size(_parent->GetWidth(), JVR_HEAD_HEIGHT);
+  static bool open;
+  
+  ImGui::Begin(("##" + _parent->GetName() + "Head").c_str(), &open, ViewHead::_flags);
+  ImGui::SetWindowPos(min);
+  ImGui::SetWindowSize(size);
+  ImGui::PushClipRect(min, min + size, false);
+  ImGui::PushFont(_parent->GetWindow()->GetRegularFont(0));
+
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  drawList->AddRectFilled(
+    min,
+    min + size,
+    ImColor(BACKGROUND_COLOR)
+  );
+
   if (ImGui::BeginTabBar(("##" + _parent->GetName()+"TabBar").c_str(), 
     ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
   {
     // Demo a Leading TabItemButton(): click the "?" button to open a menu
     const char* popupName = ("##" + _parent->GetName() + "AddUIMenu").c_str();
-    if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+    if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
       ImGui::OpenPopup(popupName);
+      std::cout << "OPEN POPUP !!!" << std::endl;
+    }
     if (ImGui::BeginPopup(popupName))
     {
       for (size_t n = 0; n < UIType::COUNT; ++n) {
@@ -496,12 +525,12 @@ ViewHead::Draw()
 
     if (ImGui::TabItemButton(" x ", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip))
       std::cout << "DELETE CURRENT TAB ITEM" << std::endl;
-
+    
     // Submit our regular tabs
-    for (int n = 0; n < UIType::COUNT; ++n)
+    for (int n = 0; n < _childrens.size(); ++n)
     {
       bool open = true;
-      const char* name = UITypeName[n];
+      const char* name = _childrens[n]->GetName().c_str();
       if (ImGui::BeginTabItem(name, &open, 
         ImGuiTabItemFlags_NoCloseButton | ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoPushId))
       {
@@ -509,8 +538,24 @@ ViewHead::Draw()
         ImGui::EndTabItem();
       }
     }
+    
 
     ImGui::EndTabBar();
   }
+
+  ImGui::PopClipRect();
+  ImGui::PopFont();
+
+  ImGui::End();
 }
+
+void ViewHead::MouseMove(int x, int y)
+{
+
+}
+void ViewHead::MouseButton(int button, int action, int mods)
+{
+
+}
+
 PXR_NAMESPACE_CLOSE_SCOPE
