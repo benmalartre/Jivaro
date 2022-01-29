@@ -47,6 +47,9 @@ public:
   // compute underlying GfCamera frustum
   pxr::GfFrustum _GetFrustum(){return _camera.GetFrustum();};
 
+  // aspect ratio
+  float GetAspectRatio() { return _camera.GetAspectRatio(); };
+
   // get spherical cooridnates
   void _GetSphericalCoordinates() {
     pxr::GfVec3d r = _pos - _lookat;

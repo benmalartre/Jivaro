@@ -1,6 +1,7 @@
 #ifndef JVR_UI_UI_H
 #define JVR_UI_UI_H
-#pragma once
+
+#include <map>
 
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
@@ -21,27 +22,31 @@ class Window;
 class Application;
 
 enum UIType {
-  VIEWPORT,
-  EXPLORER,
   TIMELINE,
-  PROPERTY,
   TOOLBAR,
   FILEBROWSER,
+  // headed uis
+  VIEWPORT,
+  EXPLORER,
+  PROPERTY,
   CURVEEDITOR,
   GRAPHEDITOR,
   COUNT
 };
 
 static const char* UITypeName[UIType::COUNT] = {
-  "viewport",
-  "explorer",
   "timeline",
-  "property",
   "toolbar",
   "fileBrowser",
+  "viewport",
+  "explorer",
+  "property",
   "curveEditor",
   "graphEditor"
 };
+
+static std::map<std::string, int> UINameIndexMap;
+
 
 class HeadUI;
 class BaseUI : public pxr::TfWeakBase
@@ -79,6 +84,9 @@ public:
   
   // get the height of the parent view
   virtual int GetHeight();
+
+  // get unique name
+  std::string ComputeUniqueName(const std::string& baseName);
 
   const std::string& GetName() const {return _name;};
 

@@ -262,6 +262,15 @@ Window::CreateChildWindow(
   return new Window(x, y, width, height, parent, name, decorated);
 }
 
+// force redraw
+//----------------------------------------------------------------------------
+void
+Window::ForceRedraw()
+{
+  _forceRedraw = 3;
+  for (auto& leaf : _leaves)leaf->SetFlag(View::FORCEREDRAW);
+}
+
 // popup
 //----------------------------------------------------------------------------
 void
@@ -812,6 +821,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
       }
       else {
         View* view = parent->GetViewUnderMouse((int)x, (int)y);
+        std::cout << x << "," << y << ":" << view << std::endl;
         if (view) {
           parent->SetActiveView(view);
           view->SetFlag(View::INTERACTING);

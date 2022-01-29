@@ -179,6 +179,7 @@ protected:
   // geometry
   Shape                   _shape;
   Shape                   _help;
+
   // viewport
   Camera*                 _camera;
 

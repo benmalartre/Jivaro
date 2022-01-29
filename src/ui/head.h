@@ -12,10 +12,40 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-#define JVR_HEAD_HEIGHT 20
+#define VIEW_HEAD_HEIGHT 20
 
 class View;
-class ViewHead;
+
+class ViewHead
+{
+public:
+  static ImGuiWindowFlags _flags;
+  ViewHead(View* parent);
+  ~ViewHead();
+
+  void CreateChild(UIType type);
+  void AddChild(BaseUI* child);
+  void RemoveChild(BaseUI* child);
+  void SetCurrentChild(int index);
+
+  // overrides
+  //void MouseButton(int action, int button, int mods) override {};
+  //void MouseMove(int x, int y) override {};
+  void Draw();
+  void MouseMove(int x, int y);
+  void MouseButton(int button, int action, int mods);
+
+  /*
+  MenuItem& AddItem(View* view, const std::string label, const std::string shortcut, bool selected,
+    bool enabled, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());*/
+private:
+  //std::vector<HeadItem>   _items;
+  //HeadItem*               _current;
+  View*                   _parent;
+  std::vector<BaseUI*>    _childrens;
+  bool                    _invade;
+
+};
 
 class HeadedUI : public BaseUI
 {

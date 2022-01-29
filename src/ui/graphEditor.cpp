@@ -772,7 +772,7 @@ ImGuiWindowFlags GraphEditorUI::_flags =
 
 // constructor
 //------------------------------------------------------------------------------
-GraphEditorUI::GraphEditorUI(View* parent, const std::string& filename)
+GraphEditorUI::GraphEditorUI(View* parent)
   : HeadedUI(parent, "Graph")
   , _graph(NULL), _hoveredNode(NULL), _currentNode(NULL)
   , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
@@ -1044,7 +1044,7 @@ GraphEditorUI::Draw()
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
   
-  ImGui::Begin("Graph Editor", NULL, _flags);
+  ImGui::Begin(_name.c_str(), NULL, _flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
 
@@ -1304,6 +1304,8 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
   const pxr::GfVec2f& mousePos = ImGui::GetMousePos();
   _lastX = mousePos[0];
   _lastY = mousePos[1];
+
+  _GetNodeUnderMouse(mousePos, false);
 
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {

@@ -56,7 +56,6 @@ Application::Application(unsigned width, unsigned height):
   _scene = new Scene();
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
-  _dirty = true;
   _time.Init(1, 101, 24);
 };
 
@@ -66,7 +65,6 @@ Application::Application(bool fullscreen):
   _scene = new Scene();
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
-  _dirty = true;
   _time.Init(1, 101, 24);
 };
 
@@ -397,7 +395,7 @@ Application::Init()
   // initialize 3d tools
   _tools.Init();
   
-  GraphEditorUI* graph = new GraphEditorUI(graphView, filename);
+  GraphEditorUI* graph = new GraphEditorUI(graphView);
   //std::cout << "INIT GRAPH OK " << std::endl;
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   
@@ -507,7 +505,6 @@ Application::Update()
       */
     }
   }
-  _dirty = false;
 }
 
 void 
@@ -540,7 +537,6 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
   }
   _tools.ResetSelection();
   GetMainWindow()->ForceRedraw();
-  _dirty = true;
 }
 
 void 
@@ -548,7 +544,6 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 {
   _selection.Clear();
   _manager.Clear();
-  _dirty = true;
 }
 
 void 
@@ -556,7 +551,6 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
   _tools.ResetSelection();
   GetMainWindow()->ForceRedraw();
-  _dirty = true;
 }
 
 void 

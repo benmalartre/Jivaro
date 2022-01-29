@@ -93,17 +93,18 @@ class ViewportUI : public HeadedUI
     bool                  _valid;
 
     // usd imaging engine
-    Engine*                       _engine;
-    pxr::UsdImagingGLRenderParams _renderParams;
-    pxr::UsdPrim                  _root;
-    pxr::UsdLuxDomeLight          _light;
-    pxr::GlfDrawTargetRefPtr      _drawTarget;
-    int                           _drawMode;
-    int                           _rendererIndex;
-    static ImGuiWindowFlags       _flags;
+    Engine*                             _engine;
+    pxr::UsdImagingGLRenderParams       _renderParams;
+    pxr::UsdPrim                        _root;
+    pxr::UsdLuxDomeLight                _light;
+    pxr::GlfDrawTargetRefPtr            _drawTarget;
+    int                                 _drawMode;
+    int                                 _rendererIndex;
+    static ImGuiWindowFlags             _flags;
 
-    const char**                  _rendererNames;
-    int                           _numRenderers;
+    const char**                        _rendererNames;
+    int                                 _numRenderers;
+    pxr::CameraUtilConformWindowPolicy  _conformWindowPolicy;
 
 };
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -100,10 +100,10 @@ SplitterUI::Draw()
   ImGui::SetWindowPos(ImVec2(0, 0));
   ImGui::SetWindowSize(ImVec2(_width, _height));
 
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-  //ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   pxr::GfVec2f sMin, sMax;
-  ImU32 col = ImColor(BACKGROUND_COLOR);
+  //ImU32 col = ImColor(BACKGROUND_COLOR);
+  ImU32 col = ImColor(pxr::GfVec4f(0, 0, 0, 1));
 
   for(auto view : _views)
   {

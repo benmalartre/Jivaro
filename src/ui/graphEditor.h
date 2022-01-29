@@ -286,7 +286,7 @@ private:
   };
 
 public:
-  GraphEditorUI(View* parent, const std::string& filename);
+  GraphEditorUI(View* parent);
   ~GraphEditorUI() override;
 
   void MouseButton(int button, int action, int mods) override;

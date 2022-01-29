@@ -92,8 +92,6 @@ public:
 
   // time
   Time& GetTime() { return _time; };
-  void SetDirty() { _dirty = true; };
-  bool IsDirty() { return _dirty; };
 
   // window
   Window* GetMainWindow() {return _mainWindow;};
@@ -131,7 +129,6 @@ private:
 
   // time
   Time                              _time;
-  int                               _dirty;
 
   // mesh
   Mesh*                             _mesh;

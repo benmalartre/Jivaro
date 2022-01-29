@@ -70,7 +70,6 @@ View::GetWindow()
 void 
 View::SetContent(BaseUI* ui)
 {
-  if(_content)delete _content; 
   _content=ui;
 };
 
@@ -129,13 +128,18 @@ View::MouseButton(int button, int action, int mods)
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (_head) {
-    if ((y - GetY()) < JVR_HEAD_HEIGHT) {
+    const float relativeY = y - GetY();
+    if (relativeY > 0 && relativeY < VIEW_HEAD_HEIGHT) {
       _head->MouseButton(button, action, mods);
     } else {
-      if (_content)_content->MouseButton(button, action, mods);
+      if (_content && !GetFlag(DISCARDMOUSEBUTTON))
+        _content->MouseButton(button, action, mods);
+      ClearFlag(DISCARDMOUSEBUTTON);
     }
   } else {
-    if (_content)_content->MouseButton(button, action, mods);
+    if (_content && !GetFlag(DISCARDMOUSEBUTTON))
+      _content->MouseButton(button, action, mods);
+    ClearFlag(DISCARDMOUSEBUTTON);
   }
 }
 
@@ -143,7 +147,7 @@ void
 View::MouseMove(int x, int y)
 {
   if (_head) {
-    if ((y - GetY()) < JVR_HEAD_HEIGHT) {
+    if ((y - GetY()) < VIEW_HEAD_HEIGHT) {
       if (GetFlag(View::INTERACTING) && _content)_content->MouseMove(x, y);
       else _head->MouseMove(x, y);
     } else {
@@ -308,7 +312,6 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   if(rationalize)RescaleNumPixels(ratio);
   SetDirty();
   Application* app = GetApplication();
-  if (app) app->SetDirty();
 }
 
 void 
@@ -450,112 +453,5 @@ bool View::IsInteracting()
   return GetFlag(INTERACTING);
 }
 
-ImGuiWindowFlags ViewHead::_flags =
-  ImGuiWindowFlags_None |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoBackground |
-  ImGuiWindowFlags_NoCollapse |
-  ImGuiWindowFlags_NoNav |
-  ImGuiWindowFlags_NoScrollWithMouse |
-  ImGuiWindowFlags_NoBringToFrontOnFocus |
-  ImGuiWindowFlags_NoScrollbar;
-
-// constructor
-ViewHead::ViewHead(View* parent)
-  : _parent(parent)
-{
-}
-
-// destructor
-ViewHead::~ViewHead()
-{
-}
-
-void 
-ViewHead::AddChild(BaseUI* child)
-{
-  _childrens.push_back(child);
-}
-
-
-static void
-AddViewChildCallback(ViewHead* head)
-{
-
-}
-
-void 
-ViewHead::Draw()
-{
-  const pxr::GfVec2f min(_parent->GetMin());
-  const pxr::GfVec2f size(_parent->GetWidth(), JVR_HEAD_HEIGHT);
-  static bool open;
-  
-  ImGui::Begin(("##" + _parent->GetName() + "Head").c_str(), &open, ViewHead::_flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
-  ImGui::PushClipRect(min, min + size, false);
-  ImGui::PushFont(_parent->GetWindow()->GetRegularFont(0));
-
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-  drawList->AddRectFilled(
-    min,
-    min + size,
-    ImColor(BACKGROUND_COLOR)
-  );
-
-  if (ImGui::BeginTabBar(("##" + _parent->GetName()+"TabBar").c_str(), 
-    ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
-  {
-    // Demo a Leading TabItemButton(): click the "?" button to open a menu
-    const char* popupName = ("##" + _parent->GetName() + "AddUIMenu").c_str();
-    if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
-      ImGui::OpenPopup(popupName);
-      std::cout << "OPEN POPUP !!!" << std::endl;
-    }
-    if (ImGui::BeginPopup(popupName))
-    {
-      for (size_t n = 0; n < UIType::COUNT; ++n) {
-        ImGui::Selectable(UITypeName[n]);
-      }
-      ImGui::EndPopup();
-    }
-
-    if (ImGui::TabItemButton(" x ", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip))
-      std::cout << "DELETE CURRENT TAB ITEM" << std::endl;
-    
-    // Submit our regular tabs
-    for (int n = 0; n < _childrens.size(); ++n)
-    {
-      bool open = true;
-      const char* name = _childrens[n]->GetName().c_str();
-      if (ImGui::BeginTabItem(name, &open, 
-        ImGuiTabItemFlags_NoCloseButton | ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoPushId))
-      {
-        //ImGui::Text("This is the %s tab!", name);
-        ImGui::EndTabItem();
-      }
-    }
-    
-
-    ImGui::EndTabBar();
-  }
-
-  ImGui::PopClipRect();
-  ImGui::PopFont();
-
-  ImGui::End();
-}
-
-void ViewHead::MouseMove(int x, int y)
-{
-
-}
-void ViewHead::MouseButton(int button, int action, int mods)
-{
-
-}
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -17,15 +17,17 @@ class View
 public:
   enum FLAGS
   {
-    HORIZONTAL      = 1 << 1,
-    OVER            = 1 << 2,
-    LEAF            = 1 << 3,
-    LFIXED          = 1 << 4,
-    RFIXED          = 1 << 5,
-    ACTIVE          = 1 << 6,
-    DIRTY           = 1 << 7,
-    INTERACTING     = 1 << 8,
-    FORCEREDRAW     = 1 << 9
+    HORIZONTAL          = 1 << 1,
+    OVER                = 1 << 2,
+    LEAF                = 1 << 3,
+    LFIXED              = 1 << 4,
+    RFIXED              = 1 << 5,
+    ACTIVE              = 1 << 6,
+    DIRTY               = 1 << 7,
+    INTERACTING         = 1 << 8,
+    FORCEREDRAW         = 1 << 9,
+    DISCARDMOUSEBUTTON  = 1 << 10,
+    DISCARDMOUSEMOVE    = 1 << 11
   };
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
@@ -67,7 +69,6 @@ public:
   BaseUI* GetContent(){return _content;};
   ViewHead* GetHead() { return _head; };
   ViewHead* CreateHead();
-  void AddChild(BaseUI* child) { _uis.push_back(child); };
 
   // cursor
   void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
@@ -103,7 +104,6 @@ private:
   char                  _buffered;
   BaseUI*               _content;
   ViewHead*             _head;
-  std::vector<BaseUI*>  _uis;
   Window*               _window;
   View*                 _left;
   View*                 _right;
@@ -111,32 +111,6 @@ private:
   std::string           _name;
 };
 
-class ViewHead
-{
-public:
-  static ImGuiWindowFlags _flags;
-  ViewHead(View* parent);
-  ~ViewHead();
-
-  void AddChild(BaseUI* child);
-
-  // overrides
-  //void MouseButton(int action, int button, int mods) override {};
-  //void MouseMove(int x, int y) override {};
-  void Draw();
-  void MouseMove(int x, int y);
-  void MouseButton(int button, int action, int mods);
-
-  /*
-  MenuItem& AddItem(View* view, const std::string label, const std::string shortcut, bool selected,
-    bool enabled, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());*/
-private:
-  //std::vector<HeadItem>   _items;
-  //HeadItem*               _current;
-  View*                   _parent;
-  std::vector<BaseUI*>    _childrens;
-  
-};
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

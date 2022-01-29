@@ -5,6 +5,8 @@
 #include "../app/engine.h"
 #include "../app/application.h"
 
+#include <pxr/imaging/cameraUtil/conformWindow.h>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 Tool::Tool()
@@ -14,7 +16,6 @@ Tool::Tool()
   , _brush(BrushHandle())
   , _interacting(false)
   , _active(NULL)
-  , _viewport(NULL)
 {
 
 }
@@ -33,19 +34,27 @@ void Tool::Init()
 }
 
 
-void Tool::SetViewport(ViewportUI* viewport)
+void Tool::SetViewport(const pxr::GfVec4f& viewport)
 {
-  _viewport=viewport;
-  Camera* camera = viewport->GetCamera();
+  _viewport = viewport;
+}
+
+void Tool::SetCamera(Camera* camera)
+{
   _translate.SetCamera(camera);
   _rotate.SetCamera(camera);
   _scale.SetCamera(camera);
   _brush.SetCamera(camera);
 
+  pxr::GfMatrix4d conformWindowProjectionMatrix =
+    CameraUtilConformedWindow(
+      camera->GetProjectionMatrix(),
+      CameraUtilConformWindowPolicy::CameraUtilFit, _viewport[2]/_viewport[3]);
+
   // update shader
   Shape::UpdateCamera(
     pxr::GfMatrix4f(camera->GetViewMatrix()),
-    pxr::GfMatrix4f(camera->GetProjectionMatrix()));
+    pxr::GfMatrix4f(conformWindowProjectionMatrix));
 
   if(_active) {
     _active->UpdatePickingPlane(_active->GetActiveAxis());
@@ -91,47 +100,35 @@ bool Tool::IsInteracting() {
   }
 }
 
-void Tool::Draw()
+void Tool::Draw(float width, float height)
 {
-  Selection* selection = APPLICATION->GetSelection();
-  if(_active && _viewport && selection->GetNumSelectedItems()) {
-    _active->Draw(_viewport->GetWidth(), _viewport->GetHeight());
+  Selection* selection = GetApplication()->GetSelection();
+  if(_active && selection->GetNumSelectedItems()) {
+    _active->Draw(width ,height);
   }
 }
 
-void Tool::Select(bool lock)
+void Tool::Select(float x, float y, float width, float height, bool lock)
 {
-  Selection* selection = APPLICATION->GetSelection();
-  if(_active && _viewport && selection->GetNumSelectedItems()) {
-    _activeAxis = _active->Select(
-      _viewport->GetLastMouseX() - _viewport->GetX(),
-      _viewport->GetLastMouseY() - _viewport->GetY(),
-      _viewport->GetWidth(),
-      _viewport->GetHeight(), lock);
+  Selection* selection = GetApplication()->GetSelection();
+  if(_active  && selection->GetNumSelectedItems()) {
+    _activeAxis = _active->Select(x, y, width, height, lock);
   }
 }
 
-void Tool::Pick()
+void Tool::Pick(float x, float y, float width, float height)
 {
-  if(_active && _viewport) {
-    _hoveredAxis = _active->Pick(
-      _viewport->GetLastMouseX() - _viewport->GetX(),
-      _viewport->GetLastMouseY() - _viewport->GetY(),
-      _viewport->GetWidth(),
-      _viewport->GetHeight());
+  if(_active) {
+    _hoveredAxis = _active->Pick(x, y, width, height);
   }
 }
 
-void Tool::BeginUpdate()
+void Tool::BeginUpdate(float x, float y, float width, float height)
 {
-  Selection* selection = APPLICATION->GetSelection();
-  if(_active && _viewport && selection->GetNumSelectedItems()) {
+  Selection* selection = GetApplication()->GetSelection();
+  if(_active && selection->GetNumSelectedItems()) {
     if (_activeAxis != BaseHandle::AXIS_NONE) {
-      _active->BeginUpdate(
-        _viewport->GetLastMouseX() - _viewport->GetX(),
-        _viewport->GetLastMouseY() - _viewport->GetY(),
-        _viewport->GetWidth(),
-        _viewport->GetHeight());
+      _active->BeginUpdate(x, y, width, height);
       _interacting = true;
     }
     else {
@@ -140,29 +137,21 @@ void Tool::BeginUpdate()
   }
 }
 
-void Tool::EndUpdate()
+void Tool::EndUpdate(float x, float y, float width, float height)
 {
-  Engine* engine = _viewport->GetEngine();
-  Pick();
-  if(_active && _viewport) {
+  Pick(x, y, width, height);
+  if(_active) {
     _active->EndUpdate();
   }
   _interacting = false;
 }
 
-void Tool::Update()
+void Tool::Update(float x, float y, float width, float height)
 {
   Application* app = GetApplication();
-  Engine* engine = _viewport->GetEngine();
   Selection* selection = app->GetSelection();
-  if(_active && _viewport && selection->GetNumSelectedItems()) {
-    _active->Update(
-      _viewport->GetLastMouseX() - _viewport->GetX(),
-      _viewport->GetLastMouseY() - _viewport->GetY(),
-      _viewport->GetWidth(),
-      _viewport->GetHeight());
-
-    app->SetDirty();
+  if(_active && selection->GetNumSelectedItems()) {
+    _active->Update(x, y, width, height);
   }
 }
 

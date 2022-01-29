@@ -20,34 +20,35 @@ enum TOOLS
   TOOL_BRUSH
 };
 
-class ViewportUI;
+class Camera;
 class Tool {
 public:
   Tool();
   ~Tool();
 
   void Init();
-  void SetViewport(ViewportUI* viewport);
   void SetActiveTool(short tool);
+  void SetViewport(const pxr::GfVec4f& viewport);
+  void SetCamera(Camera* camera);
   void ResetSelection();
 
   bool IsActive();
   bool IsInteracting();
 
-  void Draw();
-  void Select(bool lock);
-  void Pick();
-  void BeginUpdate();
-  void Update();
-  void EndUpdate();
+  void Draw(float width, float height);
+  void Select(float x, float y, float width, float height, bool lock);
+  void Pick(float x, float y, float width, float height);
+  void BeginUpdate(float x, float y, float width, float height);
+  void Update(float x, float y, float width, float height);
+  void EndUpdate(float x, float y, float width, float height);
 
 private:
+  pxr::GfVec4f    _viewport;
   TranslateHandle _translate;
   RotateHandle    _rotate;
   ScaleHandle     _scale;
   BrushHandle     _brush;
   bool            _interacting;
-  ViewportUI*     _viewport;
   BaseHandle*     _active;
   short           _activeAxis;
   short           _hoveredAxis;

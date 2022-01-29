@@ -79,6 +79,7 @@ list(APPEND USD_LIB_NAMES
   usdImagingGL
   usdAnimX
   vt
+  cameraUtil
 )
 
 set(USD_LIBRARIES "")

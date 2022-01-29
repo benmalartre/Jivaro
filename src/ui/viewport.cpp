@@ -13,6 +13,8 @@
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
 
+#include <pxr/imaging/cameraUtil/conformWindow.h>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
@@ -132,6 +134,9 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   Tool* tools = GetApplication()->GetTools();
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
+  const float width = GetWidth();
+  const float height = GetHeight();
+
   if (action == GLFW_RELEASE)
   {
     _interactionMode = INTERACTION_NONE;
@@ -139,7 +144,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
     if (!(mods & GLFW_MOD_ALT) && !(mods & GLFW_MOD_SUPER)) {
       if (tools->IsInteracting()) {
-        tools->EndUpdate();
+        tools->EndUpdate(x - GetX(), y - GetY(), width, height);
       }
       else {
         Pick(x, y, mods);
@@ -174,8 +179,9 @@ void ViewportUI::MouseButton(int button, int action, int mods)
       }
     }
     else if (tools->IsActive()) {
-      tools->Select(false);
-      tools->BeginUpdate();
+      
+      tools->Select(x - GetX(), y - GetY(), width, height, false);
+      tools->BeginUpdate(x - GetX(), y - GetY(), width, height);
     }
     else {
 
@@ -189,7 +195,7 @@ void ViewportUI::MouseMove(int x, int y)
 {
   Application* app = GetApplication();
   Tool* tools = app->GetTools();
-  tools->SetViewport(this);
+  tools->SetCamera(_camera);
   
   if(_interacting)
   {
@@ -203,7 +209,7 @@ void ViewportUI::MouseMove(int x, int y)
           dx / static_cast<double>(GetWidth()), 
           dy / static_cast<double>(GetHeight())
         );
-        app->SetDirty();
+        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
        
@@ -213,28 +219,29 @@ void ViewportUI::MouseMove(int x, int y)
           dx / static_cast<double>(GetWidth()), 
           dy / static_cast<double>(GetHeight())
         );
-        app->SetDirty();
+        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
         
       case INTERACTION_ORBIT:
       {
         _camera->Orbit(dx, dy);
-        app->SetDirty();
+        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
 
       default:
       {
-        tools->Update();
-        app->SetDirty();
+        tools->Update(x - GetX(), y - GetY(), GetWidth(), GetHeight());
+        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
         
     }
     _parent->SetDirty();
   } else {
-    tools->Pick();
+    tools->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());
+    _parent->SetFlag(View::FORCEREDRAW);
   }
 
 
@@ -249,7 +256,7 @@ void ViewportUI::MouseWheel(int x, int y)
     static_cast<double>(x) / static_cast<double>(GetWidth()), 
     static_cast<double>(x) / static_cast<double>(GetHeight())
   );
-  app->SetDirty();
+  _parent->SetFlag(View::FORCEREDRAW);
   _parent->SetDirty();
 }
 
@@ -261,13 +268,13 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       case GLFW_KEY_A:
       {
         _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
-        app->SetDirty();
+        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
       case GLFW_KEY_F:
       {
         _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
-        app->SetDirty();
+        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
       case GLFW_KEY_S:
@@ -301,7 +308,7 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
 
   GLint currentProgram;
   glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-
+  
   // resize viewport
   float scaleX, scaleY;
   glfwGetWindowContentScale(view->GetWindow()->GetGlfwWindow(), &scaleX, &scaleY);
@@ -311,12 +318,14 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
   float h = viewport->GetHeight();
   float wh = viewport->GetWindowHeight();
   glViewport(x * scaleX,(wh - (y + h)) * scaleY, w * scaleX, h * scaleY);
+  
   glEnable(GL_DEPTH_TEST);
   glClear(GL_DEPTH_BUFFER_BIT);
 
-  Tool* tools = APPLICATION->GetTools();
-  tools->SetViewport(viewport);
-  tools->Draw();
+  Tool* tools = GetApplication()->GetTools();
+  tools->SetViewport(pxr::GfVec4f(x, y, w, h));
+  tools->SetCamera(camera);
+  tools->Draw(w, h);
 
   // restore viewport
   glViewport(
@@ -325,7 +334,7 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
     currentViewport[2],
     currentViewport[3]
   );
-
+  
   // restore material
   glUseProgram(currentProgram);
   glDisable(GL_DEPTH_TEST);
@@ -359,9 +368,7 @@ bool ViewportUI::Draw()
         0.0,
         static_cast<double>(w),
         static_cast<double>(h)));
-    /*_engine->SetRenderViewport(
-      pxr::GfVec4f(x, y, w , h)
-    );*/
+
     _engine->SetCameraState(
       _camera->GetViewMatrix(),
       _camera->GetProjectionMatrix()
@@ -393,7 +400,7 @@ bool ViewportUI::Draw()
     pxr::GfVec4d(clipPlanes[3])
   };
   */
-    if ( app->IsDirty() || !_engine->IsConverged() ) {
+    if ( _parent->GetFlag(View::FORCEREDRAW) || !_engine->IsConverged() ) {
       _drawTarget->Bind();
       glViewport(0, 0, w, h);
       // clear to black
@@ -402,6 +409,7 @@ bool ViewportUI::Draw()
 
       _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
       _drawTarget->Unbind();
+      _parent->ClearFlag(View::FORCEREDRAW);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -541,10 +549,41 @@ void ViewportUI::Resize()
   _drawTarget->Unbind();
 }
 
+static pxr::GfVec4i _ViewportMakeCenteredIntegral(pxr::GfVec4f& viewport)
+{
+  // The values are initially integraland containing the
+  // the given rect
+  int left = int(floor(viewport[0]));
+  int bottom = int(floor(viewport[1]));
+  int right = int(ceil(viewport[0] + viewport[2]));
+  int top = int(ceil(viewport[1] + viewport[3]));
 
+  int width = right - left;
+  int height = top - bottom;
+
+  // Compare the integral height to the original height
+  // and do a centered 1 pixel adjustment if more than
+  // a pixel off.
+  if ((height - viewport[3]) > 1.0) {
+    bottom += 1;
+    height -= 2;
+  }
+
+  // Compare the integral width to the original width
+  // and do a centered 1 pixel adjustment if more than
+  // a pixel off.
+  if ((width - viewport[2]) > 1.0) {
+    left += 1;
+    width -= 2;
+  }
+  return pxr::GfVec4i(left, bottom, width, height);
+}
+
+ 
 pxr::GfFrustum 
 ViewportUI::_ComputePickFrustum(int x, int y)
 {
+  const float targetAspectRatio = float(GetWidth()) / float(pxr::GfMax(1, GetHeight()));
   // normalize position and pick size by the viewport size
   pxr::GfVec2d point(
     (double)(x - GetX()) / (double)GetWidth(),
@@ -555,42 +594,15 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 
   pxr::GfVec2d size(1.0 / (double)GetWidth(), 1.0 / (double)GetHeight());
 
-  // "point" is normalized to the image viewport size, but if the image
-  // is cropped to the camera viewport, the image viewport won't fill the
-  // whole window viewport.Clicking outside the image will produce
-  // normalized coordinates > 1 or < -1; in this case, we should skip
-  // picking.
-  //inImageBounds = (abs(point[0]) <= 1.0 and abs(point[1]) <= 1.0)
+  pxr::GfCamera camera = *(_camera->Get());
+  pxr::CameraUtilConformWindow(
+    &camera,
+    pxr::CameraUtilConformWindowPolicy::CameraUtilFit,
+    targetAspectRatio
+  );
 
-  pxr::GfFrustum cameraFrustum = _camera->_GetFrustum();
+  pxr::GfFrustum cameraFrustum = camera.GetFrustum();
   return cameraFrustum.ComputeNarrowedFrustum(point, size);
-
-  /*
-  # compute pick frustum
-  (gfCamera, cameraAspect) = self.resolveCamera()
-    cameraFrustum = gfCamera.frustum
-
-    viewport = self.computeWindowViewport()
-    if self._cropImageToCameraViewport:
-  viewport = self.computeCameraViewport(cameraAspect)
-
-    # normalize position and pick size by the viewport size
-    point = Gf.Vec2d((x - viewport[0]) / float(viewport[2]),
-    (y - viewport[1]) / float(viewport[3]))
-    point[0] = (point[0] * 2.0 - 1.0)
-    point[1] = -1.0 * (point[1] * 2.0 - 1.0)
-
-    size = Gf.Vec2d(1.0 / viewport[2], 1.0 / viewport[3])
-
-# "point" is normalized to the image viewport size, but if the image
-    # is cropped to the camera viewport, the image viewport won't fill the
-    # whole window viewport.Clicking outside the image will produce
-    # normalized coordinates > 1 or < -1; in this case, we should skip
-    # picking.
-    inImageBounds = (abs(point[0]) <= 1.0 and abs(point[1]) <= 1.0)
-
-    return (inImageBounds, cameraFrustum.ComputeNarrowedFrustum(point, size))
-    */
 }
 
 bool ViewportUI::Pick(int x, int y, int mods)

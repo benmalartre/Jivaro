@@ -9,22 +9,34 @@ PXR_NAMESPACE_OPEN_SCOPE
 // constructor
 BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
   : _parent(parent) 
-  , _name(name)
+  , _name(ComputeUniqueName(name))
   , _initialized(false)
   , _interacting(false)
 {
   if(_parent && !popup)
   {
     _parent->SetContent(this);
-    _parent->AddChild(this);
     _parent->SetFlag(View::LEAF);
   }
+
   pxr::TfWeakPtr<BaseUI> me(this);
   //pxr::TfNotice::Register(me, &BaseUI::OnAllNotices);
   pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
 };
+
+std::string 
+BaseUI::ComputeUniqueName(const std::string& baseName)
+{
+  if (UINameIndexMap.find(baseName) != UINameIndexMap.end()) {
+    UINameIndexMap[baseName]++;
+  }
+  else {
+    UINameIndexMap[baseName] = 1;
+  }
+  return baseName + std::to_string(UINameIndexMap[baseName]);
+}
 
 void BaseUI::OnNewSceneNotice(const NewSceneNotice& n)
 {

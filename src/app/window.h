@@ -125,7 +125,7 @@ public:
   void SetGLContext();
   void Draw();
   bool PickSplitter(double mX, double mY);
-  void ForceRedraw() { _forceRedraw = 3; };
+  void ForceRedraw();
   void SetIdle(bool value){_idle=value;};
   bool IsIdle(){return _idle;};
 
