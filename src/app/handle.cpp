@@ -309,8 +309,8 @@ BaseHandle::Draw(float width, float height)
   ComputeSizeMatrix(width, height);
   ComputeViewPlaneMatrix();
   pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
-  GLint vao;
-  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+  GLint restoreVao;
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &restoreVao);
 
   _DrawShape(&_shape, m);
 
@@ -321,7 +321,7 @@ BaseHandle::Draw(float width, float height)
     }
     _DrawShape(&_help, _sizeMatrix);
   }
-  glBindVertexArray(vao);
+  glBindVertexArray(restoreVao);
 }
 
 void 

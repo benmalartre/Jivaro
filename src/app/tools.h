@@ -35,7 +35,7 @@ public:
   bool IsActive();
   bool IsInteracting();
 
-  void Draw(float width, float height);
+  void Draw();
   void Select(float x, float y, float width, float height, bool lock);
   void Pick(float x, float y, float width, float height);
   void BeginUpdate(float x, float y, float width, float height);

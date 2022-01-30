@@ -57,7 +57,7 @@ public:
   void GetChildMinMax(bool , pxr::GfVec2f& , pxr::GfVec2f&);
   void Split(double perc, bool horizontal, int fixed=false, int numPixels=-1);
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
-    const int width, const int height, float multiply=1.f);
+    const int width, const int height);
 
   inline View* GetLeft(){return _left;};
   inline View* GetRight(){return _right;};

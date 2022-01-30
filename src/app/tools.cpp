@@ -93,22 +93,12 @@ bool Tool::IsInteracting() {
   }
 }
 
-void Tool::Draw(float width, float height)
+void Tool::Draw()
 {
   Selection* selection = GetApplication()->GetSelection();
   if(_active && selection->GetNumSelectedItems()) {
-    /*
-    GLint currentProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-
-    glEnable(GL_DEPTH_TEST);
     glClear(GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
-    */
-    _active->Draw(width ,height);
-
-    // restore material
-    //glUseProgram(currentProgram);
+    _active->Draw(_viewport[2] , _viewport[3]);
   }
 }
 

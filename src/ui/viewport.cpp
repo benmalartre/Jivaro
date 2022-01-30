@@ -266,7 +266,6 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
     switch (mappedKey) {
       case GLFW_KEY_A:
       {
-        std::cout << "FRAME ALL ..." << std::endl;
         _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
         _parent->SetFlag(View::FORCEREDRAW);
         break;
@@ -274,7 +273,6 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       case GLFW_KEY_F:
       {
         if (app->GetSelection()->IsEmpty())return;
-        std::cout << "FRAME SELECTION ..." << std::endl;
         _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
         _parent->SetFlag(View::FORCEREDRAW);
         break;
@@ -421,9 +419,9 @@ bool ViewportUI::Draw()
       Tool* tools = GetApplication()->GetTools();
       tools->SetViewport(pxr::GfVec4f(0, 0, w, h));
       tools->SetCamera(_camera);
-      tools->Draw(w, h);
-
+      tools->Draw();
       _drawTarget->Unbind();
+      _drawTarget->Resolve();
     }
 
 
@@ -439,8 +437,9 @@ bool ViewportUI::Draw()
 
     ImGui::SetWindowPos(min);
     ImGui::SetWindowSize(size);
-    
+   
     ImDrawList* drawList = ImGui::GetWindowDrawList();
+
     drawList->AddImage(
       (ImTextureID)(size_t)_drawTarget->GetAttachment("color")->GetGlTextureName(),
       min,
@@ -449,7 +448,7 @@ bool ViewportUI::Draw()
       ImVec2(1,0),
       ImColor(255,255,255,255));
 
-    //_engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 1));
+    _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.25));
     glDisable(GL_SCISSOR_TEST);
 
     // tool drawing
@@ -555,7 +554,7 @@ void ViewportUI::Resize()
   );
   
   pxr::GfVec2i renderResolution(GetWidth(), GetHeight());
-  _drawTarget = pxr::GlfDrawTarget::New(renderResolution);
+  _drawTarget = pxr::GlfDrawTarget::New(renderResolution, true);
   _drawTarget->Bind();
 
   _drawTarget->AddAttachment("color",
