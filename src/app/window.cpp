@@ -821,7 +821,6 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
       }
       else {
         View* view = parent->GetViewUnderMouse((int)x, (int)y);
-        std::cout << x << "," << y << ":" << view << std::endl;
         if (view) {
           parent->SetActiveView(view);
           view->SetFlag(View::INTERACTING);

@@ -12,6 +12,7 @@
 #include "../app/application.h"
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
+#include "../utils/keys.h"
 
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 
@@ -96,9 +97,6 @@ void ViewportUI::Init()
                             pxr::GfVec4f(0.5,0.5,0.5,1.0));
 
   Resize();
-  std::cout << "VIEWPORT UI RESIZED : " << _rendererNames[_rendererIndex] << std::endl;
-  std::cout << "VIEWPORT UI INITIALIZE END" << std::endl;
-
 
   /*
   glEnable(GL_DEPTH_TEST);
@@ -263,16 +261,20 @@ void ViewportUI::MouseWheel(int x, int y)
 void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
 {
   Application* app = GetApplication();
+  int mappedKey = GetMappedKey(key);
   if (action == GLFW_PRESS) {
-    switch (key) {
+    switch (mappedKey) {
       case GLFW_KEY_A:
       {
+        std::cout << "FRAME ALL ..." << std::endl;
         _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
         _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
       case GLFW_KEY_F:
       {
+        if (app->GetSelection()->IsEmpty())return;
+        std::cout << "FRAME SELECTION ..." << std::endl;
         _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
         _parent->SetFlag(View::FORCEREDRAW);
         break;
@@ -295,7 +297,7 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
     }
   }
 }
-
+/*
 static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd) {
 
   ViewportUI* viewport = (ViewportUI*)cmd->UserCallbackData;
@@ -339,6 +341,7 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
   glUseProgram(currentProgram);
   glDisable(GL_DEPTH_TEST);
 }
+*/
 
 bool ViewportUI::Draw()
 {    
@@ -388,7 +391,7 @@ bool ViewportUI::Draw()
     _renderParams.highlight = true;
     _renderParams.enableSceneMaterials = false;
     //_renderParams.colorCorrectionMode = ???
-    _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
+    _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
 
  /*
   const std::vector<pxr::GfVec4f> clipPlanes = _camera->GetClippingPlanes();
@@ -400,17 +403,29 @@ bool ViewportUI::Draw()
     pxr::GfVec4d(clipPlanes[3])
   };
   */
+   
+
     if ( _parent->GetFlag(View::FORCEREDRAW) || !_engine->IsConverged() ) {
+      
       _drawTarget->Bind();
       glViewport(0, 0, w, h);
+
       // clear to black
       glClearColor(0.25f, 0.25f, 0.25f, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
-      _drawTarget->Unbind();
+      
       _parent->ClearFlag(View::FORCEREDRAW);
+
+      Tool* tools = GetApplication()->GetTools();
+      tools->SetViewport(pxr::GfVec4f(0, 0, w, h));
+      tools->SetCamera(_camera);
+      tools->Draw(w, h);
+
+      _drawTarget->Unbind();
     }
+
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_SCISSOR_TEST);
@@ -438,7 +453,7 @@ bool ViewportUI::Draw()
     glDisable(GL_SCISSOR_TEST);
 
     // tool drawing
-    drawList->AddCallback(DrawToolCallback, this);
+    //drawList->AddCallback(DrawToolCallback, this);
   
     ImGui::PushFont(GetWindow()->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
@@ -529,15 +544,16 @@ pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
 
 void ViewportUI::Resize()
 {
-  if(_parent->GetWidth() <= 0 || _parent->GetHeight() <= 0)_valid = false;
+  if(GetWidth() <= 0 || GetHeight() <= 0)_valid = false;
   else _valid = true;
-  double aspectRatio = (double)_parent->GetWidth()/(double)_parent->GetHeight();
+  
+  double aspectRatio = (double)GetWidth()/(double)GetHeight();
   _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
     aspectRatio,
     _camera->GetFov(),
     pxr::GfCamera::FOVHorizontal
   );
-
+  
   pxr::GfVec2i renderResolution(GetWidth(), GetHeight());
   _drawTarget = pxr::GlfDrawTarget::New(renderResolution);
   _drawTarget->Bind();

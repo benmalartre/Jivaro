@@ -84,7 +84,7 @@ ViewHead::Draw()
   ImGui::Begin(("##" + _parent->GetName() + "Head").c_str(), &open, ViewHead::_flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
-  ImGui::PushClipRect(min, min + size, false);
+  //ImGui::PushClipRect(min, min + size, false);
   ImGui::PushFont(_parent->GetWindow()->GetRegularFont(0));
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -108,7 +108,7 @@ ViewHead::Draw()
       for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
         ImGui::Selectable(UITypeName[n]);
         if (ImGui::IsItemClicked()) {
-          addUIType = n;
+          CreateChild(UIType(n));
           _invade = false;
         }
       }
@@ -135,12 +135,10 @@ ViewHead::Draw()
     ImGui::EndTabBar();
   }
 
-  ImGui::PopClipRect();
+  //ImGui::PopClipRect();
   ImGui::PopFont();
 
   ImGui::End();
-
-  if (addUIType > -1) CreateChild(UIType(addUIType));
 }
 
 void ViewHead::MouseMove(int x, int y)

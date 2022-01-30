@@ -5,8 +5,6 @@
 #include "../app/engine.h"
 #include "../app/application.h"
 
-#include <pxr/imaging/cameraUtil/conformWindow.h>
-
 PXR_NAMESPACE_OPEN_SCOPE
 
 Tool::Tool()
@@ -46,15 +44,10 @@ void Tool::SetCamera(Camera* camera)
   _scale.SetCamera(camera);
   _brush.SetCamera(camera);
 
-  pxr::GfMatrix4d conformWindowProjectionMatrix =
-    CameraUtilConformedWindow(
-      camera->GetProjectionMatrix(),
-      CameraUtilConformWindowPolicy::CameraUtilFit, _viewport[2]/_viewport[3]);
-
   // update shader
   Shape::UpdateCamera(
     pxr::GfMatrix4f(camera->GetViewMatrix()),
-    pxr::GfMatrix4f(conformWindowProjectionMatrix));
+    pxr::GfMatrix4f(camera->GetProjectionMatrix()));
 
   if(_active) {
     _active->UpdatePickingPlane(_active->GetActiveAxis());
@@ -104,7 +97,18 @@ void Tool::Draw(float width, float height)
 {
   Selection* selection = GetApplication()->GetSelection();
   if(_active && selection->GetNumSelectedItems()) {
+    /*
+    GLint currentProgram;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+
+    glEnable(GL_DEPTH_TEST);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+    */
     _active->Draw(width ,height);
+
+    // restore material
+    //glUseProgram(currentProgram);
   }
 }
 

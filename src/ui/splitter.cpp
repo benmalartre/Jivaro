@@ -96,20 +96,14 @@ SplitterUI::Draw()
 {
   static bool open;
 
-  ImGui::Begin("Splitter", &open, _flags);
+  ImGui::Begin(_name.c_str(), &open, _flags);
   ImGui::SetWindowPos(ImVec2(0, 0));
   ImGui::SetWindowSize(ImVec2(_width, _height));
-
-  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-  pxr::GfVec2f sMin, sMax;
-  //ImU32 col = ImColor(BACKGROUND_COLOR);
-  ImU32 col = ImColor(pxr::GfVec4f(0, 0, 0, 1));
-
+  
   for(auto view : _views)
   {
     if(view->GetFlag(View::LEAF)) continue;
-    view->GetSplitInfos(sMin, sMax, _width, _height);
-    drawList->AddRectFilled(sMin, sMax, col, 0.0f, 0);
+
     if(_cursor == ImGuiMouseCursor_ResizeEW) {
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     } else if(_cursor == ImGuiMouseCursor_ResizeNS) {
