@@ -1,5 +1,6 @@
 #include "camera.h"
 #include <pxr/base/gf/vec4d.h>
+#include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/gf/range2d.h>
 
 #include <pxr/imaging/cameraUtil/conformWindow.h>
@@ -24,6 +25,20 @@ Camera::Camera(const std::string& name, double fov) :
     pxr::GfCamera::FOVVertical);
   _camera.SetFocusDistance((_pos - _lookat).GetLength());
   _camera.SetClippingRange(pxr::GfRange1f(_near, _far));
+  SetZIsUp(true);
+}
+
+void
+Camera::SetZIsUp(bool isZUp)
+{
+  _zUpMatrix = GfMatrix4f().SetRotate(GfRotation(GfVec3f::XAxis(), isZUp ? 90.f : 0.f));
+  _zUpInverseMatrix = _zUpMatrix.GetInverse();
+}
+
+pxr::GfVec3d
+Camera::GetPosition()
+{
+  return _pos;
 }
 
 pxr::GfVec3d 
@@ -47,14 +62,13 @@ Camera::GetRayDirection(float x, float y, float width, float height)
   pxr::GfMatrix4d invView = GetViewInverseMatrix();
   pxr::GfVec3d rayWorld = invView.TransformDir(rayEye);
 
-  return rayWorld.GetNormalized();
-
+  return _zUpInverseMatrix.TransformDir(rayWorld.GetNormalized());
 }
 
 pxr::GfVec3d 
 Camera::GetViewPlaneNormal()
 {
-  return (_lookat - _pos).GetNormalized();
+  return _zUpInverseMatrix.TransformDir((_lookat - _pos).GetNormalized());
 }
 
 const pxr::GfMatrix4d Camera::GetTransform()
@@ -84,8 +98,9 @@ const std::vector<pxr::GfVec4f> Camera::GetClippingPlanes()
 
 void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
 {
-  pxr::GfVec3d center = selBBox.ComputeCentroid();
-  pxr::GfRange3d selRange = selBBox.ComputeAlignedRange();
+  pxr::GfBBox3d zUpBBox(selBBox.GetRange(), pxr::GfMatrix4d(_zUpInverseMatrix));
+  pxr::GfVec3d center = zUpBBox.ComputeCentroid();
+  pxr::GfRange3d selRange = zUpBBox.ComputeAlignedRange();
   pxr::GfVec3d rangeSize = selRange.GetSize();
   
   float frameFit = 1.1f;
@@ -107,214 +122,8 @@ void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
   _lookat = center;
   _pos = center + dir * _dist;
   LookAt();
-
-}
-/*
-void Camera::_PushToCameraTransform()
-{
-  if(!_cameraTransformDirty) return;
-  _camera.SetTransform(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3d::ZAxis() * _dist) *
-    pxr::GfMatrix4d(1.0).SetRotate(
-      pxr::GfRotation(pxr::GfVec3d::ZAxis(), -_rotPsi)
-    ) *
-    pxr::GfMatrix4d(1.0).SetRotate(
-      pxr::GfRotation(pxr::GfVec3d::XAxis(), -_rotPhi)
-    ) *
-    pxr::GfMatrix4d(1.0).SetRotate(
-      pxr::GfRotation(pxr::GfVec3d::YAxis(), -_rotTheta)
-    ) *
-    pxr::GfMatrix4d().SetTranslate(_center)
-  );
-  _camera.SetFocusDistance(_dist);
-  _cameraTransformDirty = false;
 }
 
-void Camera::_PullFromCameraTransform()
-{
-  // reads the transform set on the camera and updates all the other
-  // parameters.  This is the inverse of _pushToCameraTransform
-  pxr::GfMatrix4d camTransform = _camera.GetTransform();
-  float dist = _camera.GetFocusDistance();
-  pxr::GfFrustum frustum = _camera.GetFrustum();
-  pxr::GfVec3d camPos = frustum.GetPosition();
-  pxr::GfVec3d camAxis = frustum.ComputeViewDirection();
-
-  // compute translational parts
-  _dist = dist;
-  _selSize = _dist / 10.0;
-  _center = camPos + _dist * camAxis;
-
-  // compute rotational part
-  pxr::GfMatrix4d transform = camTransform;
-  transform.Orthonormalize();
-  pxr::GfRotation rotation = transform.ExtractRotation();
-
-  // decompose and set angles
-  pxr::GfVec3d angles = 
-    -rotation.Decompose(
-      pxr::GfVec3d::YAxis(),
-      pxr::GfVec3d::XAxis(),
-      pxr::GfVec3d::ZAxis()
-    );
-  _rotTheta = angles[0];
-  _rotPhi = angles[1];
-  _rotPsi = angles[2];
-
-  _cameraTransformDirty = true;
-}
-
-pxr::GfRange1f 
-Camera::_RangeOfBoxAlongRay(
-  const pxr::GfRay& camRay, 
-  const pxr::GfBBox3d& bbox, 
-  bool debugClipping
-)
-{
-  double maxDist = -std::numeric_limits<double>::max();
-  double minDist = std::numeric_limits<double>::max();
-  pxr::GfRange3d boxRange = bbox.GetRange();
-  pxr::GfMatrix4d boxXform = bbox.GetMatrix();
-  for(int i=0; i < 8; ++i)
-  {
-    // for each corner of the bounding box, transform to world
-    // space and project
-    pxr::GfVec3d point = boxXform.Transform(boxRange.GetCorner(i));
-    double pointDist = camRay.FindClosestPoint(point)[1];
-
-    // find the projection of that point of the camera ray
-    // and find the farthest and closest point.
-    if(pointDist > maxDist)
-      maxDist = pointDist;
-    if(pointDist < minDist)
-        minDist = pointDist;
-  }
-      
-
-  if(debugClipping)
-      std::cout << "Projected bounds near/far: "<< minDist << ", " << maxDist << std::endl;
-
-  // if part of the bbox is behind the ray origin (i.e. camera),
-  // we clamp minDist to be positive.  Otherwise, reduce minDist by a bit
-  // so that geometry at exactly the edge of the bounds won't be clipped -
-  // do the same for maxDist, also!
-  if(minDist < DEFAULT_NEAR) minDist = DEFAULT_NEAR;
-  else minDist *= 0.99;
-  maxDist *= 1.01;
-
-  if(debugClipping)
-      std::cout << "Contracted bounds near/far: " << minDist << ", " << maxDist << std::endl;
-
-  return pxr::GfRange1f(minDist, maxDist);
-}
-
-pxr::GfCamera& Camera::ComputeGfCamera(const pxr::GfBBox3d&  stageBBox, bool autoClip)
-{
-  _PushToCameraTransform();
-  if(autoClip)
-      _SetClippingPlanes(stageBBox);
-  else
-      _ResetClippingPlanes();
-  return _camera;
-}
-
-void Camera::_SetClippingPlanes(const pxr::GfBBox3d& stageBBox)
-{
-  _camera.SetClippingRange(pxr::GfRange1f(DEFAULT_NEAR, DEFAULT_FAR));
-  return;
-
-  //debugClipping = Tf.Debug.IsDebugSymbolNameEnabled(DEBUG_CLIPPING)
-  double computedNear;
-  double computedFar;
-  
-  // If the scene bounding box is empty, or we are fully on manual
-  //(override, then just initialize to defaults.
-  if(stageBBox.GetRange().IsEmpty() || (_near>0 && _far>0))
-  {
-    computedNear = DEFAULT_NEAR;
-    computedFar = DEFAULT_FAR;
-  }
-      
-  else
-  {
-    // The problem: We want to include in the camera frustum all the
-    // geometry the viewer should be able to see, i.e. everything within
-    // the inifinite frustum starting at distance epsilon from the
-    // camera itself.  However, the further the imageable geometry is
-    // from the near-clipping plane, the less depth precision we will
-    // have to resolve nearly colinear/incident polygons (which we get
-    // especially with any doubleSided geometry).  We can run into such
-    // situations astonishingly easily with large sets when we are
-    // focussing in on just a part of a set that spans 10^5 units or
-    // more.
-    //
-    // Our solution: Begin by projecting the endpoints of the imageable
-    // world's bounds onto the ray piercing the center of the camera
-    // frustum, and take the near/far clipping distances from its
-    // extent, clamping at a positive value for near.  To address the
-    // z-buffer precision issue, we rely on someone having told us how
-    // close the closest imageable geometry actually is to the camera,
-    // by having called setClosestVisibleDistFromPoint(). This gives us
-    // the most liberal near distance we can use and not clip the
-    // geometry we are looking at.  We actually choose some fraction of
-    // that distance instead, because we do not expect the someone to
-    // recompute the closest point with every camera manipulation, as
-    // it can be expensive (we do emit signalFrustumChanged to notify
-    // them, however).  We only use this if the current range of the
-    // bbox-based frustum will have precision issues.
-    _frustum = _camera.GetFrustum();
-    pxr::GfVec3d camPos = _frustum.GetPosition();
-
-    std::cout << "_SET CLIPPING RANGE : POSITION " << camPos[0] << "," << camPos[1] << "," << camPos[2] << std::endl; 
-
-    pxr::GfRay camRay(camPos, _frustum.ComputeViewDirection());
-    pxr::GfRange1f computedNearFar = _RangeOfBoxAlongRay(camRay, stageBBox, false);
-    computedNear = computedNearFar.GetMin();
-    computedFar = computedNearFar.GetMax();
-
-    double precisionNear = computedFar / MAX_GOOD_Z_RESOLUTION;
-
-    if(_closestVisibleDist)
-    {
-      // Because of our concern about orbit/truck causing
-      // clipping, make sure we don't go closer than half the
-      // distance to the closest visible point
-      double halfClose = _closestVisibleDist / 2.0;
-
-      if(_closestVisibleDist < _lastFramedClosestDist)
-      {
-        // This can happen if we have zoomed in closer since
-        // the last time setClosestVisibleDistFromPoint() was called.
-        // Clamp to precisionNear, which gives a balance between
-        // clipping as we zoom in, vs bad z-fighting as we zoom in.
-        // See AdjustDistance() for comment about better solution.
-        halfClose = std::max({precisionNear, halfClose, computedNear});
-
-      }
-
-      if(halfClose < computedNear)
-      {
-        // If there's stuff very very close to the camera, it
-        // may have been clipped by computedNear.  Get it back!
-        computedNear = halfClose;
-
-      }
-      else if(precisionNear > computedNear)
-      {
-        computedNear = std::min((precisionNear + halfClose) / 2.0, halfClose);
-      }
-    }
-  }
-  
-  double near = _near > 0 ? _near : computedNear;
-  double far  = _far > 0 ? _far : computedFar;
-
-  // Make sure far is greater than near
-  far = std::max(near+1, far);
-
-  _camera.SetClippingRange(pxr::GfRange1f(near, far));
-}       
-*/
 void Camera::_ResetClippingPlanes()
 {
   // Set near and far back to their uncomputed defaults
@@ -458,11 +267,16 @@ void Camera::SetWindow(int x, int y, int width, int height)
 void Camera::LookAt()
 {
   pxr::GfMatrix4d m(1);
-  m.SetLookAt(_pos, _lookat, _up);
+  m.SetLookAt(
+    _zUpMatrix.TransformAffine(_pos), 
+    _zUpMatrix.TransformAffine(_lookat), 
+    _zUpMatrix.TransformAffine(_up)
+  );
   m = m.GetInverse();
-  m[3][0] = _pos[0];
-  m[3][1] = _pos[1];
-  m[3][2] = _pos[2];
+  pxr::GfVec3d zUpPosition = _zUpMatrix.TransformAffine(_pos);
+  m[3][0] = zUpPosition[0];
+  m[3][1] = zUpPosition[1];
+  m[3][2] = zUpPosition[2];
   _camera.SetTransform(m);
   ComputeFrustum();
 }
@@ -511,7 +325,7 @@ void Camera::Walk(double dx, double dy)
   delta[1] = dy * dist;
   delta[2] = 0;
 
-  pxr::GfMatrix4d view = _camera.GetTransform();
+  pxr::GfMatrix4d view = _camera.GetTransform() * _zUpMatrix.GetInverse();
   pxr::GfRotation rot = view.ExtractRotation();
   delta = rot.TransformDir(delta);
   _pos += delta;

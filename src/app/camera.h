@@ -30,7 +30,7 @@ public:
   ~Camera(){};
 
   // get data
-  pxr::GfVec3d& GetPosition(){return _pos;};
+  pxr::GfVec3d GetPosition();
   pxr::GfVec3d GetViewPlaneNormal();
   pxr::GfVec3d GetRayDirection(float x, float y, float width, float height);
 
@@ -40,6 +40,11 @@ public:
   const pxr::GfMatrix4d GetViewInverseMatrix();
   const pxr::GfMatrix4d GetProjectionMatrix();
   const std::vector<pxr::GfVec4f> GetClippingPlanes();
+
+  // scene axis
+  void SetZIsUp(bool isZUp);
+  const pxr::GfMatrix4f& GetZUpMatrix() { return _zUpMatrix; };
+  const pxr::GfMatrix4f& GetZUpInverseMatrix() { return _zUpInverseMatrix; };
 
   // frame selection
   void FrameSelection(const pxr::GfBBox3d &selBBox);
@@ -196,6 +201,8 @@ private:
   double                _polar;
   double                _azimuth;
   bool                  _dirty;
+  pxr::GfMatrix4f       _zUpMatrix;
+  pxr::GfMatrix4f       _zUpInverseMatrix;
 
   std::string _name;
 };

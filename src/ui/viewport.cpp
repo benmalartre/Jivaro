@@ -84,12 +84,16 @@ void ViewportUI::Init()
 
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight light;
-  light.SetAmbient(pxr::GfVec4f(0.25,0.25,0.25,1));
-  light.SetPosition(pxr::GfVec4f(24,32,8,1));
+  light.SetAmbient({ 0.2, 0.2, 0.2, 1.0 });
+  light.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
+  light.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
+  light.SetPosition({ 200, 200, 200, 1.0 });
   pxr::GlfSimpleLightVector lights;
   lights.push_back(light);
 
-  material.SetAmbient(pxr::GfVec4f(0.2,0.2,0.2, 1.0));
+  material.SetAmbient({ 0.0, 0.0, 0.0, 1.f });
+  material.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
+  material.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
   auto lightingContext = pxr::GlfSimpleLightingContext::New();
 
   _engine->SetLightingState(lights,
@@ -423,7 +427,6 @@ bool ViewportUI::Draw()
       _drawTarget->Unbind();
       _drawTarget->Resolve();
     }
-
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_SCISSOR_TEST);

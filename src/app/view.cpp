@@ -311,7 +311,9 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   }
   if(rationalize)RescaleNumPixels(ratio);
   SetDirty();
-  Application* app = GetApplication();
+  
+  _window->ForceRedraw();
+  
 }
 
 void 

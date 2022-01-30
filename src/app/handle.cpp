@@ -142,7 +142,7 @@ void
 BaseHandle::ComputeViewPlaneMatrix()
 {
   _viewPlaneMatrix = 
-    _sizeMatrix * pxr::GfMatrix4f(_camera->GetTransform());
+    _sizeMatrix * pxr::GfMatrix4f(_camera->GetTransform() * _camera->GetZUpInverseMatrix());
   _viewPlaneMatrix[3][0] = _position[0];
   _viewPlaneMatrix[3][1] = _position[1];
   _viewPlaneMatrix[3][2] = _position[2];
@@ -249,7 +249,8 @@ BaseHandle::Select(float x, float y, float width, float height,
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
 
-  pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
+  pxr::GfMatrix4f m = 
+    _sizeMatrix * _displayMatrix * pxr::GfMatrix4f(_camera->GetZUpInverseMatrix());
   size_t selected = _shape.Intersect(ray, m, _viewPlaneMatrix);
 
   if(selected) {
@@ -264,10 +265,11 @@ short
 BaseHandle::Pick(float x, float y, float width, float height)
 {
   pxr::GfRay ray(
-    _camera->GetPosition(), 
+    _camera->GetPosition(),
     _camera->GetRayDirection(x, y, width, height));
 
-  pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
+  pxr::GfMatrix4f m =
+    _sizeMatrix * _displayMatrix * pxr::GfMatrix4f(_camera->GetZUpInverseMatrix());
   size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
 
   SetHoveredAxis(hovered);
@@ -278,7 +280,7 @@ BaseHandle::Pick(float x, float y, float width, float height)
 pxr::GfMatrix4f 
 BaseHandle::_ExtractRotationAndTranslateFromMatrix()
 {
-  return 
+  return
     pxr::GfMatrix4f(1.f).SetRotate(_rotation) *
     pxr::GfMatrix4f(1.f).SetTranslate(_position);
 }
