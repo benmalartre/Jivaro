@@ -712,6 +712,7 @@ pxr::GfVec3f
 RotateHandle::_ContraintPointToRotationPlane(const pxr::GfRay& ray)
 {
   pxr::GfVec3f normal;
+
   switch (_activeAxis) {
   case AXIS_X:
     normal = _base.Transform(pxr::GfVec3f::Axis(0));
@@ -723,9 +724,10 @@ RotateHandle::_ContraintPointToRotationPlane(const pxr::GfRay& ray)
     normal = _base.Transform(pxr::GfVec3f::Axis(2));
     break;
   }
-
-  return _ConstraintPointToCircle(_position, normal, ray, _activeAxis, _radius);
-  //return _position;
+  const pxr::GfMatrix4f zUpInverseMatrix(_camera->GetZUpInverseMatrix());
+  return _camera->GetZUpMatrix().Transform(_ConstraintPointToCircle(
+    zUpInverseMatrix.Transform(_position),
+    zUpInverseMatrix.Transform(normal), ray, _activeAxis, _radius));
 }
 
 void 
@@ -735,17 +737,19 @@ RotateHandle::BeginUpdate(float x, float y, float width, float height)
     _camera->GetPosition(),
     _camera->GetRayDirection(x, y, width, height));
   double distance;
+  const pxr::GfMatrix4f zUpInverseMatrix(_camera->GetZUpInverseMatrix());
+
   bool frontFacing;
-  _startMatrix = _matrix;
+  _startMatrix = _matrix * zUpInverseMatrix;
   _position = pxr::GfVec3f(_matrix[3][0], _matrix[3][1], _matrix[3][2]);
   if (ray.Intersect(_plane, &distance, &frontFacing)) {
     if (_activeAxis == AXIS_CAMERA) {
-      _offset = pxr::GfVec3f(_position - ray.GetPoint(distance));
+      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
+        _camera->GetZUpMatrix().Transform(ray.GetPoint(distance)));
     }
     else {
       _base = _rotation;
-      const pxr::GfVec3f constrained = 
-        _ContraintPointToRotationPlane(ray);
+      const pxr::GfVec3f constrained = _ContraintPointToRotationPlane(ray);
 
       _offset = pxr::GfVec3f(constrained - _position).GetNormalized() * _radius;
 

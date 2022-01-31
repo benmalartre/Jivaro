@@ -138,7 +138,7 @@ void Scene::TestVoronoi()
   mesh.VoronoiDiagram(points);
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
   usdMesh.CreatePointsAttr(pxr::VtValue(mesh.GetPositions()));
-  usdMesh.CreateNormalsAttr(pxr::VtValue(mesh.GetNormals()));
+  //usdMesh.CreateNormalsAttr(pxr::VtValue(mesh.GetNormals()));
   usdMesh.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh.GetFaceConnects()));
   usdMesh.CreateFaceVertexCountsAttr(pxr::VtValue(mesh.GetFaceCounts()));
 
