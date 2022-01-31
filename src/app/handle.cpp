@@ -143,8 +143,7 @@ void
 BaseHandle::ComputeViewPlaneMatrix()
 {
   _viewPlaneMatrix =
-    _sizeMatrix * pxr::GfMatrix4f(_camera->GetTransform());/* *
-      _camera->GetZUpInverseMatrix()); */
+    _sizeMatrix * pxr::GfMatrix4f(_camera->GetTransform());
   _viewPlaneMatrix[3][0] = _position[0];
   _viewPlaneMatrix[3][1] = _position[1];
   _viewPlaneMatrix[3][2] = _position[2];
@@ -216,7 +215,7 @@ BaseHandle::UpdatePickingPlane(short axis)
 {
  _plane.Set(
     _camera->GetViewPlaneNormal(),
-    pxr::GfVec3d(_position)
+    _camera->GetZUpInverseMatrix().Transform(pxr::GfVec3d(_position))
  );
 }
 
@@ -251,9 +250,10 @@ BaseHandle::Select(float x, float y, float width, float height,
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
 
+  const pxr::GfMatrix4f zUpInverseMatrix(_camera->GetZUpInverseMatrix());
   pxr::GfMatrix4f m = 
-    _sizeMatrix * _displayMatrix * pxr::GfMatrix4f(_camera->GetZUpInverseMatrix());
-  size_t selected = _shape.Intersect(ray, m, _viewPlaneMatrix);
+    _sizeMatrix * _displayMatrix * zUpInverseMatrix;
+  size_t selected = _shape.Intersect(ray, m, _viewPlaneMatrix * zUpInverseMatrix);
 
   if(selected) {
     SetActiveAxis(selected);
@@ -270,9 +270,10 @@ BaseHandle::Pick(float x, float y, float width, float height)
     _camera->GetPosition(),
     _camera->GetRayDirection(x, y, width, height));
 
+  const pxr::GfMatrix4f zUpInverseMatrix(_camera->GetZUpInverseMatrix());
   pxr::GfMatrix4f m =
-    _sizeMatrix * _displayMatrix * pxr::GfMatrix4f(_camera->GetZUpInverseMatrix());
-  size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
+    _sizeMatrix * _displayMatrix * zUpInverseMatrix;
+  size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix * zUpInverseMatrix);
 
   SetHoveredAxis(hovered);
   _shape.UpdateComponents(hovered, AXIS_NONE);
@@ -578,7 +579,8 @@ TranslateHandle::BeginUpdate(float x, float y, float width, float height)
   _startMatrix = _matrix * pxr::GfMatrix4f(_camera->GetZUpInverseMatrix());
   if(ray.Intersect(_plane, &distance, &frontFacing)) {
     if(_activeAxis == AXIS_CAMERA) {
-      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
+      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - 
+        _camera->GetZUpMatrix().Transform(ray.GetPoint(distance)));
     } else {
       _offset =  pxr::GfVec3f(pxr::GfVec3d(_position) -
         _camera->GetZUpMatrix().Transform(
@@ -601,7 +603,8 @@ TranslateHandle::Update(float x, float y, float width, float height)
     bool frontFacing;
     if(ray.Intersect(_plane, &distance, &frontFacing)) {
       if(_activeAxis == AXIS_CAMERA) {
-        _position = pxr::GfVec3f(ray.GetPoint(distance)) + _offset;
+        _position = _camera->GetZUpMatrix().Transform(
+          pxr::GfVec3f(ray.GetPoint(distance))) + _offset;
       } else {
         _position = _camera->GetZUpMatrix().Transform(
           _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)),
