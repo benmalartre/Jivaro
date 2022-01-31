@@ -43,8 +43,8 @@ public:
 
   // scene axis
   void SetZIsUp(bool isZUp);
-  const pxr::GfMatrix4f& GetZUpMatrix() { return _zUpMatrix; };
-  const pxr::GfMatrix4f& GetZUpInverseMatrix() { return _zUpInverseMatrix; };
+  const pxr::GfMatrix4d& GetZUpMatrix() { return _zUpMatrix; };
+  const pxr::GfMatrix4d& GetZUpInverseMatrix() { return _zUpInverseMatrix; };
 
   // frame selection
   void FrameSelection(const pxr::GfBBox3d &selBBox);
@@ -201,8 +201,8 @@ private:
   double                _polar;
   double                _azimuth;
   bool                  _dirty;
-  pxr::GfMatrix4f       _zUpMatrix;
-  pxr::GfMatrix4f       _zUpInverseMatrix;
+  pxr::GfMatrix4d       _zUpMatrix;
+  pxr::GfMatrix4d       _zUpInverseMatrix;
 
   std::string _name;
 };

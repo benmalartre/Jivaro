@@ -662,7 +662,6 @@ Application::GetStageBoundingBox()
   return bboxCache.ComputeWorldBound(_scene->GetRootStage()->GetPseudoRoot());
 }
 
-
 pxr::GfBBox3d 
 Application::GetSelectionBoundingBox()
 {
@@ -674,8 +673,13 @@ Application::GetSelectionBoundingBox()
     const Selection::Item& item = _selection[n];
     if (item.type == Selection::Type::OBJECT) {
       pxr::UsdPrim prim = _scene->GetRootStage()->GetPrimAtPath(item.path);
-      if (prim.IsActive() && !prim.IsInPrototype())
-        bbox = bbox.Combine(bbox, bboxCache.ComputeWorldBound(prim));
+      std::cout << bboxCache.ComputeWorldBound(prim) << std::endl;
+      if (prim.IsActive() && !prim.IsInPrototype()) {
+        const pxr::GfBBox3d primBBox = bboxCache.ComputeWorldBound(prim);
+        
+        bbox = bbox.Combine(bbox, pxr::GfBBox3d(primBBox.ComputeAlignedRange()));
+      }
+        
     }
     else if (item.type == Selection::Type::VERTEX) {
 

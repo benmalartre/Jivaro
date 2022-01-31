@@ -25,7 +25,8 @@ void
 BaseHandle::ComputeSizeMatrix(float width, float height)
 {
   if(_compensate && _camera) {
-    const pxr::GfVec3d delta = _camera->GetPosition() - _position;
+    const pxr::GfVec3d delta = 
+      _camera->GetZUpMatrix().Transform(_camera->GetPosition()) - _position;
     _distance = (float)delta.GetLength();
     if(width > height) {
       _size = _distance * (float)HANDLE_SIZE / width;
@@ -141,8 +142,9 @@ BaseHandle::SetSRTFromMatrix()
 void 
 BaseHandle::ComputeViewPlaneMatrix()
 {
-  _viewPlaneMatrix = 
-    _sizeMatrix * pxr::GfMatrix4f(_camera->GetTransform() * _camera->GetZUpInverseMatrix());
+  _viewPlaneMatrix =
+    _sizeMatrix * pxr::GfMatrix4f(_camera->GetTransform());/* *
+      _camera->GetZUpInverseMatrix()); */
   _viewPlaneMatrix[3][0] = _position[0];
   _viewPlaneMatrix[3][1] = _position[1];
   _viewPlaneMatrix[3][2] = _position[2];
@@ -573,13 +575,14 @@ TranslateHandle::BeginUpdate(float x, float y, float width, float height)
 
   double distance;
   bool frontFacing;
-  _startMatrix = _matrix;
+  _startMatrix = _matrix * pxr::GfMatrix4f(_camera->GetZUpInverseMatrix());
   if(ray.Intersect(_plane, &distance, &frontFacing)) {
     if(_activeAxis == AXIS_CAMERA) {
       _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
     } else {
-      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - 
-        _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+      _offset =  pxr::GfVec3f(pxr::GfVec3d(_position) -
+        _camera->GetZUpMatrix().Transform(
+          _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis)));
     }
   }
   _interacting = true;
@@ -600,9 +603,9 @@ TranslateHandle::Update(float x, float y, float width, float height)
       if(_activeAxis == AXIS_CAMERA) {
         _position = pxr::GfVec3f(ray.GetPoint(distance)) + _offset;
       } else {
-        _position = 
+        _position = _camera->GetZUpMatrix().Transform(
           _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)),
-            _activeAxis) + _offset;
+            _activeAxis)) + _offset;
       }
       
       SetMatrixFromSRT();
