@@ -24,7 +24,7 @@ Camera::Camera(const std::string& name, double fov) :
     pxr::GfCamera::FOVVertical);
   _camera.SetFocusDistance((_pos - _lookat).GetLength());
   _camera.SetClippingRange(pxr::GfRange1f(_near, _far));
-  SetZIsUp(false);
+  SetZIsUp(true);
 }
 
 void
@@ -38,6 +38,14 @@ pxr::GfVec3d
 Camera::GetPosition()
 {
   return _pos;
+}
+
+pxr::GfRay
+Camera::GetRay(float x, float y, float width, float height)
+{
+  return pxr::GfRay(
+    _zUpMatrix.Transform(_pos),
+    GetRayDirection(x, y, width, height));
 }
 
 pxr::GfVec3d 
@@ -61,13 +69,13 @@ Camera::GetRayDirection(float x, float y, float width, float height)
   pxr::GfMatrix4d invView = GetViewInverseMatrix();
   pxr::GfVec3d rayWorld = invView.TransformDir(rayEye);
 
-  return _zUpInverseMatrix.TransformDir(rayWorld.GetNormalized());
+  return rayWorld.GetNormalized();
 }
 
 pxr::GfVec3d 
 Camera::GetViewPlaneNormal()
 {
-  return (_lookat - _pos).GetNormalized();
+  return _zUpMatrix.TransformDir((_lookat - _pos)).GetNormalized();
 }
 
 const pxr::GfMatrix4d Camera::GetTransform()
@@ -97,7 +105,6 @@ const std::vector<pxr::GfVec4f> Camera::GetClippingPlanes()
 
 void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
 {
-  std::cout << "BBOX : " << selBBox.GetRange().GetMin() << ", " << selBBox.GetRange().GetMax() << std::endl;
   pxr::GfBBox3d zUpBBox(selBBox.GetRange(), _zUpInverseMatrix);
   pxr::GfVec3d center = zUpBBox.ComputeCentroid();
   pxr::GfRange3d selRange = zUpBBox.ComputeAlignedRange();

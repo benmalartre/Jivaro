@@ -215,7 +215,7 @@ BaseHandle::UpdatePickingPlane(short axis)
 {
  _plane.Set(
     _camera->GetViewPlaneNormal(),
-    _camera->GetZUpInverseMatrix().Transform(pxr::GfVec3d(_position))
+    pxr::GfVec3d(_position)
  );
 }
 
@@ -246,14 +246,9 @@ short
 BaseHandle::Select(float x, float y, float width, float height, 
   bool lock)
 {
-  pxr::GfRay ray(
-    _camera->GetPosition(), 
-    _camera->GetRayDirection(x, y, width, height));
-
-  const pxr::GfMatrix4f zUpInverseMatrix(_camera->GetZUpInverseMatrix());
-  pxr::GfMatrix4f m = 
-    _sizeMatrix * _displayMatrix * zUpInverseMatrix;
-  size_t selected = _shape.Intersect(ray, m, _viewPlaneMatrix * zUpInverseMatrix);
+  pxr::GfRay ray = _camera->GetRay(x, y, width, height);
+  pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
+  size_t selected = _shape.Intersect(ray, m, _viewPlaneMatrix);
 
   if(selected) {
     SetActiveAxis(selected);
@@ -266,14 +261,9 @@ BaseHandle::Select(float x, float y, float width, float height,
 short 
 BaseHandle::Pick(float x, float y, float width, float height)
 {
-  pxr::GfRay ray(
-    _camera->GetPosition(),
-    _camera->GetRayDirection(x, y, width, height));
-
-  const pxr::GfMatrix4f zUpInverseMatrix(_camera->GetZUpInverseMatrix());
-  pxr::GfMatrix4f m =
-    _sizeMatrix * _displayMatrix * zUpInverseMatrix;
-  size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix * zUpInverseMatrix);
+  pxr::GfRay ray = _camera->GetRay(x, y, width, height);
+  pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
+  size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
 
   SetHoveredAxis(hovered);
   _shape.UpdateComponents(hovered, AXIS_NONE);
@@ -570,21 +560,17 @@ TranslateHandle::SetVisibility(short axis)
 void 
 TranslateHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  pxr::GfRay ray(
-    _camera->GetPosition(), 
-    _camera->GetRayDirection(x, y, width, height));
+  pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
   double distance;
   bool frontFacing;
-  _startMatrix = _matrix * pxr::GfMatrix4f(_camera->GetZUpInverseMatrix());
+  _startMatrix = _matrix;
   if(ray.Intersect(_plane, &distance, &frontFacing)) {
     if(_activeAxis == AXIS_CAMERA) {
-      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - 
-        _camera->GetZUpMatrix().Transform(ray.GetPoint(distance)));
+      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
     } else {
       _offset =  pxr::GfVec3f(pxr::GfVec3d(_position) -
-        _camera->GetZUpMatrix().Transform(
-          _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis)));
+        _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
     }
   }
   _interacting = true;
@@ -595,20 +581,16 @@ void
 TranslateHandle::Update(float x, float y, float width, float height)
 {
   if(_interacting) {
-    pxr::GfRay ray(
-      _camera->GetPosition(), 
-      _camera->GetRayDirection(x, y, width, height));
+    pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
     double distance;
     bool frontFacing;
     if(ray.Intersect(_plane, &distance, &frontFacing)) {
       if(_activeAxis == AXIS_CAMERA) {
-        _position = _camera->GetZUpMatrix().Transform(
-          pxr::GfVec3f(ray.GetPoint(distance))) + _offset;
+        _position = pxr::GfVec3f(ray.GetPoint(distance)) + _offset;
       } else {
-        _position = _camera->GetZUpMatrix().Transform(
-          _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)),
-            _activeAxis)) + _offset;
+        _position = _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)),
+            _activeAxis) + _offset;
       }
       
       SetMatrixFromSRT();
@@ -724,28 +706,21 @@ RotateHandle::_ContraintPointToRotationPlane(const pxr::GfRay& ray)
     normal = _base.Transform(pxr::GfVec3f::Axis(2));
     break;
   }
-  const pxr::GfMatrix4f zUpInverseMatrix(_camera->GetZUpInverseMatrix());
-  return _camera->GetZUpMatrix().Transform(_ConstraintPointToCircle(
-    zUpInverseMatrix.Transform(_position),
-    zUpInverseMatrix.Transform(normal), ray, _activeAxis, _radius));
+  return _ConstraintPointToCircle(_position, normal, ray, _activeAxis, _radius);
 }
 
 void 
 RotateHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  pxr::GfRay ray(
-    _camera->GetPosition(),
-    _camera->GetRayDirection(x, y, width, height));
+  pxr::GfRay ray = _camera->GetRay(x, y, width, height);
   double distance;
-  const pxr::GfMatrix4f zUpInverseMatrix(_camera->GetZUpInverseMatrix());
 
   bool frontFacing;
-  _startMatrix = _matrix * zUpInverseMatrix;
+  _startMatrix = _matrix;
   _position = pxr::GfVec3f(_matrix[3][0], _matrix[3][1], _matrix[3][2]);
   if (ray.Intersect(_plane, &distance, &frontFacing)) {
     if (_activeAxis == AXIS_CAMERA) {
-      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) -
-        _camera->GetZUpMatrix().Transform(ray.GetPoint(distance)));
+      _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
     }
     else {
       _base = _rotation;
@@ -773,9 +748,7 @@ RotateHandle::Update(float x, float y, float width, float height)
 {
 
   if(_interacting) {
-    pxr::GfRay ray(
-      _camera->GetPosition(), 
-      _camera->GetRayDirection(x, y, width, height));
+    pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
     double distance;
     bool frontFacing;
@@ -919,9 +892,7 @@ ScaleHandle::SetVisibility(short axis)
 void 
 ScaleHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  pxr::GfRay ray(
-    _camera->GetPosition(),
-    _camera->GetRayDirection(x, y, width, height));
+  pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
   double distance;
   bool frontFacing;
@@ -956,9 +927,7 @@ void
 ScaleHandle::Update(float x, float y, float width, float height)
 {
   if (_interacting) {
-    pxr::GfRay ray(
-      _camera->GetPosition(),
-      _camera->GetRayDirection(x, y, width, height));
+    pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
     double distance;
     bool frontFacing;
@@ -1243,9 +1212,7 @@ void
 BrushHandle::BeginUpdate(float x, float y, float width, float height)
 {
   _path.clear();
-  pxr::GfRay ray(
-    _camera->GetPosition(),
-    _camera->GetRayDirection(x, y, width, height));
+  pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
   double distance;
   ray.Intersect(_plane, &distance);
@@ -1273,9 +1240,7 @@ BrushHandle::Update(float x, float y, float width, float height)
 {
   if (_interacting) {
     Pick(x, y, width, height);
-    pxr::GfRay ray(
-      _camera->GetPosition(),
-      _camera->GetRayDirection(x, y, width, height));
+    pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
     double distance;
     ray.Intersect(_plane, &distance);
@@ -1289,9 +1254,7 @@ short
 BrushHandle::Pick(float x, float y, float width, float height)
 {
   UpdatePickingPlane(AXIS_CAMERA);
-  pxr::GfRay ray(
-    _camera->GetPosition(),
-    _camera->GetRayDirection(x, y, width, height));
+  pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
   ComputeViewPlaneMatrix();
 

@@ -41,6 +41,9 @@ public:
   const pxr::GfMatrix4d GetProjectionMatrix();
   const std::vector<pxr::GfVec4f> GetClippingPlanes();
 
+  // ray
+  pxr::GfRay GetRay(float x, float y, float width, float height);
+
   // scene axis
   void SetZIsUp(bool isZUp);
   const pxr::GfMatrix4d& GetZUpMatrix() { return _zUpMatrix; };
