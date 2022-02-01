@@ -133,16 +133,15 @@ static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, pxr::UsdTimeCode& timeCode
 //==================================================================================
 // Translate
 //==================================================================================
-TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths,
-  const std::vector<pxr::GfVec3d>& positions, const std::vector<pxr::GfVec3d>& previous,
-  pxr::UsdTimeCode& timeCode)
+TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage, 
+  const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   _time = timeCode;
-  for (size_t index = 0; index < paths.size(); ++index) {
-    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(paths[index]));
-    _origin.push_back(previous[index]);
-    _translate.push_back(positions[index]);
+  for (const auto& target: targets) {
+    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+    _origin.push_back(target.previous.translation);
+    _translate.push_back(target.current.translation);
     _prims.push_back(xformable.GetPrim());
   }
 }
@@ -175,19 +174,18 @@ void TranslateCommand::Redo() {
 //==================================================================================
 // Rotate
 //==================================================================================
-RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths,
-  const std::vector<pxr::GfVec3f>& rotation, const std::vector<pxr::GfVec3f>& previous,
-  const std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder>& rotOrder, pxr::UsdTimeCode& timeCode)
+RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage, 
+  const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   _time = timeCode;
-  for (size_t index = 0; index < paths.size(); ++index) {
-    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(paths[index]));
+  for (const auto& target: targets) {
+    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
 
-    _origin.push_back(previous[index]);
-    _rotation.push_back(rotation[index]);
-    _prims.push_back(xformable.GetPrim());
-    _rotOrder.push_back(rotOrder[index]);
+    _origin.push_back(target.previous.rotation);
+    _rotation.push_back(target.current.rotation);
+    _rotOrder.push_back(target.previous.rotOrder);
+    _prims.push_back(xformable.GetPrim()); 
   }
 }
 
@@ -220,22 +218,23 @@ void RotateCommand::Redo() {
 //==================================================================================
 // Scale
 //==================================================================================
-ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
-  std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode)
+ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage, 
+  const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   _time = timeCode;
-  pxr::UsdGeomXformCache xformCache(timeCode);
+  //pxr::UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
+    /*
     pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
     pxr::GfMatrix4f invParentMatrix(
       xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
     pxr::GfMatrix4d xformMatrix((target.offset * matrix) * invParentMatrix);
-
-    _origin.push_back(pxr::GfVec3f(target.previous.scale));
-    _scale.push_back(pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]));
-    _prims.push_back(xformable.GetPrim());
-    target.previous.scale = _scale.back();
+    pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2])
+    */
+    _origin.push_back(target.previous.scale);
+    _scale.push_back(target.current.scale);
+    _prims.push_back(stage->GetPrimAtPath(target.path));
   }
 }
 
@@ -267,22 +266,23 @@ void ScaleCommand::Redo() {
 //==================================================================================
 // Pivot
 //==================================================================================
-PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
-  std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode)
+PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage, 
+  const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   _time = timeCode;
   pxr::UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
+    /*
     pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
     pxr::GfMatrix4f invParentMatrix(
       xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
     pxr::GfMatrix4d xformMatrix((target.offset * matrix) * invParentMatrix);
-
-    _origin.push_back(pxr::GfVec3f(target.previous.pivot));
-    _pivot.push_back(pxr::GfVec3f(xformMatrix.GetRow3(3)));
-    _prims.push_back(xformable.GetPrim());
-    target.previous.pivot = _pivot.back();
+    pxr::GfVec3f(xformMatrix.GetRow3(3))
+    */
+    _origin.push_back(target.previous.pivot);
+    _pivot.push_back(target.current.pivot);
+    _prims.push_back(stage->GetPrimAtPath(target.path));
   }
 }
 

@@ -51,27 +51,13 @@ PropertyUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 bool 
 PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 {
-  pxr::UsdGeomXformCommonAPI xformAPI(_prim);
+  pxr::UsdGeomXformCommonAPI xformApi(_prim);
 
-  if (xformAPI) {
-    pxr::GfVec3d translation;
-    pxr::GfVec3f scale;
-    pxr::GfVec3f pivot;
-    pxr::GfVec3f rotation;
-    pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
-    xformAPI.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, time);
-    std::vector<pxr::GfVec3f> prevScales;
-    std::vector<pxr::GfVec3f> scales;
-    std::vector<pxr::GfVec3f> prevRotations;
-    std::vector<pxr::GfVec3f> rotations;
-    std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder> rotOrders;
-    std::vector<pxr::GfVec3d> prevTranslations;
-    std::vector<pxr::GfVec3d> translations;
-    
-    prevTranslations.push_back(translation);
-    prevRotations.push_back(rotation);
-    prevScales.push_back(scale);
-    rotOrders.push_back(rotOrder);
+  if (xformApi) {
+    HandleTargetDescList targets;
+    targets.resize(1);
+    _GetHandleTargetXformVectors(xformApi, targets[0].previous, time);
+    targets[0].current = targets[0].previous;
     
     if (ImGui::BeginTable("##DrawXformsCommon", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
       ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
@@ -90,13 +76,10 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
       //ImGui::InputFloat3("Translation", translationf.data(), DecimalPrecision);
-      ImGui::InputScalarN("Translation", ImGuiDataType_Double, &translation[0], 3, NULL, NULL, DecimalPrecision);
+      ImGui::InputScalarN("Translation", ImGuiDataType_Double, targets[0].current.translation.data(), 3, NULL, NULL, DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
-        translations.push_back(translation);
         GetApplication()->AddCommand(std::shared_ptr<TranslateCommand>(
-          new TranslateCommand(GetApplication()->GetStage(), { _prim.GetPath() }, 
-            translations, prevTranslations, time))
-        );
+          new TranslateCommand(GetApplication()->GetStage(), targets, time)));
       }
       // Rotation
       ImGui::TableNextRow();
@@ -108,12 +91,10 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
-      ImGui::InputFloat3("Rotation", rotation.data(), DecimalPrecision);
+      ImGui::InputFloat3("Rotation", targets[0].current.rotation.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
-        rotations.push_back(rotation);
         GetApplication()->AddCommand(std::shared_ptr<RotateCommand>(
-          new RotateCommand(GetApplication()->GetStage(), { _prim.GetPath() }, 
-            rotations, prevRotations, rotOrders, time))
+          new RotateCommand(GetApplication()->GetStage(), targets, time))
         );
       }
       // Scale
@@ -126,7 +107,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
-      ImGui::InputFloat3("Scale", scale.data(), DecimalPrecision);
+      ImGui::InputFloat3("Scale", targets[0].current.scale.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
         //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetScale, xformAPI, scale, currentTime);
       }
@@ -139,7 +120,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::Text("pivot");
 
       ImGui::TableSetColumnIndex(2);
-      ImGui::InputFloat3("Pivot", pivot.data(), DecimalPrecision);
+      ImGui::InputFloat3("Pivot", targets[0].current.pivot.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
         //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetPivot, xformAPI, pivot, currentTime);
       }

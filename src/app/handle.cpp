@@ -19,6 +19,16 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
+// HELPERS
+//==================================================================================
+void _GetHandleTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi, 
+  HandleTargetXformVectors& vectors, pxr::UsdTimeCode& time)
+{
+  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale, 
+    &vectors.pivot, &vectors.rotOrder, time);
+}
+
+//==================================================================================
 // BASE HANDLE IMPLEMENTATION
 //==================================================================================
 void 
@@ -174,10 +184,7 @@ BaseHandle::ResetSelection()
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
     const Selection::Item& item = selection->GetItem(i);
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
-    if (prim.IsInstance()) {
-      std::cout << "FUCKIN INSTANCE !! " << std::endl;
-      continue;
-    }
+
     if(prim.IsA<pxr::UsdGeomXformable>()) {
       pxr::GfMatrix4f parentMatrix(
         xformCache.GetParentToWorldTransform(prim));
@@ -626,23 +633,18 @@ TranslateHandle::_UpdateTargets(bool interacting)
     }
   }
   else {
-    pxr::SdfPathVector paths;
-    std::vector<pxr::GfVec3d> previousPositions;
-    std::vector<pxr::GfVec3d> newPositions;
     pxr::UsdGeomXformCache xformCache(activeTime);
-    for (const auto& target : _targets) {
-      pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+    for (auto& target : _targets) {
+      pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       pxr::GfMatrix4f invParentMatrix(
-        xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
+        xformCache.GetParentToWorldTransform(targetPrim).GetInverse());
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
 
-      previousPositions.push_back(target.previous.translation);
-      newPositions.push_back(pxr::GfVec3d(xformMatrix.GetRow3(3) - target.previous.pivot));
-      paths.push_back(target.path);
+      target.current.translation = pxr::GfVec3d(xformMatrix.GetRow3(3) - target.previous.pivot);
 
       GetApplication()->AddCommand(
-        std::shared_ptr<TranslateCommand>(new TranslateCommand(GetApplication()->GetStage(),
-          paths, newPositions, previousPositions, pxr::UsdTimeCode(activeTime))));
+        std::shared_ptr<TranslateCommand>(
+          new TranslateCommand(GetApplication()->GetStage(), _targets, activeTime)));
     }
   }
 }
@@ -765,7 +767,6 @@ RotateHandle::BeginUpdate(float x, float y, float width, float height)
   }
   _interacting = true;
   SetVisibility(_activeAxis);
-  
 }
 
 void 
@@ -852,10 +853,6 @@ RotateHandle::_UpdateTargets(bool interacting)
     }
   }
   else {
-    pxr::SdfPathVector paths;
-    std::vector<pxr::GfVec3f> rotations;
-    std::vector<pxr::GfVec3f> previous;
-    std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder> rotOrder;
     pxr::UsdGeomXformCache xformCache(activeTime);
     for (auto& target : _targets) {
 
@@ -868,15 +865,13 @@ RotateHandle::_UpdateTargets(bool interacting)
       const RotationDesc rotation =
         _ResolveRotation(target, xformApi, xformMatrix, activeTime);
 
-      paths.push_back(target.path);
-      previous.push_back(target.previous.rotation);
-      rotOrder.push_back(target.previous.rotOrder);
-      rotations.push_back(rotation.first);
+      target.current.rotation = rotation.first;
+      target.current.rotOrder = rotation.second;
     }
     
     GetApplication()->AddCommand(
-      std::shared_ptr<RotateCommand>(new RotateCommand(GetApplication()->GetStage(),
-        paths, rotations, previous, rotOrder, pxr::UsdTimeCode(activeTime))));
+      std::shared_ptr<RotateCommand>(
+        new RotateCommand(GetApplication()->GetStage(), _targets, activeTime)));
   }
 }
 
@@ -1200,8 +1195,8 @@ ScaleHandle::_UpdateTargets(bool interacting)
   }
   else {
     GetApplication()->AddCommand(
-      std::shared_ptr<ScaleCommand>(new ScaleCommand(GetApplication()->GetStage(),
-        _matrix, _targets, pxr::UsdTimeCode(activeTime))));
+      std::shared_ptr<ScaleCommand>(
+        new ScaleCommand(GetApplication()->GetStage(), _targets, activeTime)));
   }
 }
 

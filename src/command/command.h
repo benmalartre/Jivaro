@@ -101,9 +101,8 @@ private:
 //==================================================================================
 class TranslateCommand : public Command {
 public:
-  TranslateCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths,
-    const std::vector<pxr::GfVec3d>& positions, const std::vector<pxr::GfVec3d>& previous,
-    pxr::UsdTimeCode& timeCode);
+  TranslateCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
+    pxr::UsdTimeCode& timeCode=pxr::UsdTimeCode::Default());
   ~TranslateCommand() {};
   void Execute() override;
   void Undo() override;
@@ -120,10 +119,8 @@ private:
 //==================================================================================
 class RotateCommand : public Command {
 public:
-  RotateCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths,
-    const std::vector<pxr::GfVec3f>& rotation, const std::vector<pxr::GfVec3f>& previous,
-    const std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder>& rotOrder,
-    pxr::UsdTimeCode& timeCode);
+  RotateCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
+    pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~RotateCommand() {};
   void Execute() override;
   void Undo() override;
@@ -141,8 +138,8 @@ private:
 //==================================================================================
 class ScaleCommand : public Command {
 public:
-  ScaleCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
-    std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode);
+  ScaleCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets, 
+    pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~ScaleCommand() {};
   void Execute() override;
   void Undo() override;
@@ -159,8 +156,8 @@ private:
 //==================================================================================
 class PivotCommand : public Command {
 public:
-  PivotCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
-    std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode);
+  PivotCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
+    pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~PivotCommand() {};
   void Execute() override;
   void Undo() override;

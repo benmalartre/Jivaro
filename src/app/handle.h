@@ -66,9 +66,13 @@ struct HandleTargetDesc {
   pxr::GfMatrix4f offset;
   pxr::GfMatrix4f parent;
   HandleTargetXformVectors previous;
+  HandleTargetXformVectors current;
 };
 
 typedef std::vector<HandleTargetDesc> HandleTargetDescList;
+
+void _GetHandleTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
+  HandleTargetXformVectors& vectors, pxr::UsdTimeCode& time);
 
 struct HandleTargetGeometryDesc {
   Geometry* geometry;
