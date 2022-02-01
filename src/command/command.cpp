@@ -137,12 +137,13 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
   const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
+  std::cout << "TRANSLATE COMMAND : " << targets.size() << std::endl;
   _time = timeCode;
   for (const auto& target: targets) {
-    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+    std::cout << target.path << std::endl;
     _origin.push_back(target.previous.translation);
     _translate.push_back(target.current.translation);
-    _prims.push_back(xformable.GetPrim());
+    _prims.push_back(stage->GetPrimAtPath(target.path));
   }
 }
 
