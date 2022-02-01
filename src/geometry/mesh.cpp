@@ -827,9 +827,9 @@ void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
   mygal::FortuneAlgorithm<double> algorithm(_points);
   algorithm.construct();
 
-  algorithm.bound(mygal::Box<double>{-0.05, -0.05, 1.05, 1.05});
+  algorithm.bound(mygal::Box<double>{-0.55, -0.55, 0.55, 0.55});
   mygal::Diagram<double> diagram = algorithm.getDiagram();
-  diagram.intersect(mygal::Box<double>{0.0, 0.0, 1.0, 1.0});
+  diagram.intersect(mygal::Box<double>{-0.5, -0.5, 0.5, 0.5});
 
   pxr::VtArray<pxr::GfVec3f> positions;
   pxr::VtArray<int> faceVertexCounts;

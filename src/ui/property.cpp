@@ -8,6 +8,7 @@
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../app/selection.h"
+#include "../command/command.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -62,6 +63,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
     pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
     xformAPI.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, time);
     pxr::GfVec3f translationf(translation[0], translation[1], translation[2]);
+    std::vector<pxr::GfVec3d> translations;
     
     if (ImGui::BeginTable("##DrawXformsCommon", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
       ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
@@ -79,12 +81,20 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
-      ImGui::InputFloat3("Translation", translationf.data(), DecimalPrecision);
+      //ImGui::InputFloat3("Translation", translationf.data(), DecimalPrecision);
+      ImGui::InputScalarN("Translation", ImGuiDataType_Double, &translation[0], 3, NULL, NULL, DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
+        /*
         translation[0] = translationf[0]; // TODO: InputDouble3 instead, we don't want to loose values
         translation[1] = translationf[1];
         translation[2] = translationf[2];
-        //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetTranslate, xformAPI, translation, currentTime);
+        */
+       
+        translations.push_back(translation);
+        GetApplication()->AddCommand(std::shared_ptr<TranslateCommand>(
+          new TranslateCommand(GetApplication()->GetStage(), { _prim.GetPath() }, translations, time, NULL))
+        );
+
       }
       // Rotation
       ImGui::TableNextRow();

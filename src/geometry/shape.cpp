@@ -572,7 +572,6 @@ Shape::AddSphere(short index, float radius, size_t lats, size_t longs,
     pxr::GfMatrix4f(1.f), 
     m);
 
-  std::cout << "INDICES SIZE : " << _indices.size() << std::endl;
   component.SetBounds(pxr::GfVec3f(radius, 0.f, 0.f));
   return component;
 }

@@ -162,7 +162,7 @@ public:
 
 protected:
   virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
-  virtual void _ComputeCOGMatrix(pxr::UsdStageRefPtr stage);
+  virtual void _ComputeCOGMatrix();
   virtual void _UpdateTargets(bool interacting) = 0;
   pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
   pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);

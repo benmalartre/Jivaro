@@ -175,19 +175,26 @@ BaseHandle::ResetSelection()
     const Selection::Item& item = selection->GetItem(i);
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
     if(prim.IsA<pxr::UsdGeomXformable>()) {
-      pxr::GfMatrix4f world(xformCache.GetLocalToWorldTransform(prim));
+      pxr::GfMatrix4f parentMatrix(
+        xformCache.GetParentToWorldTransform(prim));
       pxr::GfMatrix4f invParentMatrix(
-        xformCache.GetParentToWorldTransform(prim).GetInverse());
+        parentMatrix.GetInverse());
       HandleTargetXformVectors vectors;
       pxr::UsdGeomXformCommonAPI xformApi(prim);
       xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
-        &vectors.pivot, &vectors.rotOrder, activeTime);
+        &vectors.pivot, &vectors.rotOrder, activeTime); 
+      const pxr::GfMatrix4f rotationMatrix(
+        UsdGeomXformOp::GetOpTransform(
+          UsdGeomXformCommonAPI::ConvertRotationOrderToOpType(vectors.rotOrder), VtValue(vectors.rotation)));
+      const pxr::GfMatrix4f translationMatrix = pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(vectors.translation));
+      const pxr::GfMatrix4f pivotMatrix = pxr::GfMatrix4f(1.f).SetTranslate(vectors.pivot);
+      pxr::GfMatrix4f world( rotationMatrix * pivotMatrix * translationMatrix * parentMatrix);
       _targets.push_back({item.path, world, 
         pxr::GfMatrix4f(xformCache.GetLocalTransformation(prim, &resetXformCache)), invParentMatrix, vectors});
     }
   }
   _xformCache.Swap(xformCache);
-  _ComputeCOGMatrix(app->GetStage());
+  _ComputeCOGMatrix();
   
   pxr::GfMatrix4f invMatrix = _matrix.GetInverse();
   for(auto& target: _targets) {
@@ -352,10 +359,8 @@ pxr::GfMatrix4f _GetWorldMatrix(pxr::UsdGeomXformCache& xformCache, const pxr::U
 }
 
 void 
-BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
+BaseHandle::_ComputeCOGMatrix()
 {
-  pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();// GetApplication()->GetTime().GetActiveTime();
-  pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   /*pxr::UsdGeomBBoxCache bboxCache(
     activeTime, purposes, false, false);*/
   _position = pxr::GfVec3f(0.f);
@@ -365,25 +370,26 @@ BaseHandle::_ComputeCOGMatrix(pxr::UsdStageRefPtr stage)
   size_t numPrims = 0;
   pxr::GfTransform transform;
   for (auto& target: _targets) {
-    const auto& prim(stage->GetPrimAtPath(target.path));
-    if(prim.IsValid()) {
-      /*
-      if(prim.IsA<pxr::UsdGeomBoundable>()) {
-        pxr::GfBBox3d bbox = bboxCache.ComputeWorldBound(prim);
-        const pxr::GfRange3d& range = bbox.GetRange();
-        accumulatedRange.UnionWith(range);
-      }
-      */
-      if(prim.IsA<pxr::UsdGeomXformable>()) {
-        bool resetsXformStack = false;
-        pxr::GfMatrix4f world(_GetWorldMatrix(_xformCache, prim));
-        transform.SetMatrix(pxr::GfMatrix4d(world));
-        _position += pxr::GfVec3f(transform.GetTranslation());
-        _scale += pxr::GfVec3f(transform.GetScale());
-        _rotation *= pxr::GfQuatf(transform.GetRotation().GetQuat());
-        ++numPrims;
-      }
-    }
+    /*
+    pxr::UsdGeomXformCommonAPI xformApi(prim);
+    xformApi.GetXformVectors(&transformVectors.translation, &transformVectors.rotation, 
+      &transformVectors.scale, &transformVectors.pivot, &transformVectors.rotOrder, activeTime);
+    const auto transMat = GfMatrix4d(1.0).SetTranslate(transformVectors.translation);
+    const auto pivotMat = GfMatrix4d(1.0).SetTranslate(transformVectors.pivot);
+    const auto parentToWorld = _xformCache.GetParentToWorldTransform(prim);
+
+    // We are just interested in the pivot position and the orientation
+    const GfMatrix4d toManipulator = pivotMat * transMat * parentToWorld;
+    transform.SetMatrix(toManipulator.GetOrthonormalized());
+    */
+    bool resetsXformStack = false;
+    transform.SetMatrix(pxr::GfMatrix4d(target.base));
+    _position += pxr::GfVec3f(transform.GetTranslation());
+    _scale += pxr::GfVec3f(transform.GetScale());
+    _rotation *= pxr::GfQuatf(transform.GetRotation().GetQuat());
+        
+    ++numPrims;
+
   }
   if(numPrims) {
     float ratio = 1.f / (float)numPrims;
@@ -612,13 +618,28 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       pxr::UsdGeomXformCommonAPI api(stage->GetPrimAtPath(target.path));
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
-      api.SetTranslate(xformMatrix.GetRow3(3), activeTime);
+      api.SetTranslate(xformMatrix.GetRow3(3) - target.previous.pivot, activeTime);
     }
   }
   else {
-    GetApplication()->AddCommand(
-      std::shared_ptr<TranslateCommand>(new TranslateCommand(GetApplication()->GetStage(),
-        _matrix, _targets, pxr::UsdTimeCode(activeTime))));
+    pxr::SdfPathVector paths;
+    std::vector<pxr::GfVec3d> previousPositions;
+    std::vector<pxr::GfVec3d> newPositions;
+    pxr::UsdGeomXformCache xformCache(activeTime);
+    for (const auto& target : _targets) {
+      pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
+      pxr::GfMatrix4f invParentMatrix(
+        xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
+      pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
+
+      previousPositions.push_back(target.previous.translation);
+      newPositions.push_back(pxr::GfVec3d(xformMatrix.GetRow3(3) - target.previous.pivot));
+      paths.push_back(target.path);
+
+      GetApplication()->AddCommand(
+        std::shared_ptr<TranslateCommand>(new TranslateCommand(GetApplication()->GetStage(),
+          paths, newPositions, pxr::UsdTimeCode(activeTime), &previousPositions)));
+    }
   }
 }
 

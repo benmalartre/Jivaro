@@ -101,16 +101,16 @@ private:
 //==================================================================================
 class TranslateCommand : public Command {
 public:
-  TranslateCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
-    std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode);
+  TranslateCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths,
+    std::vector<pxr::GfVec3d>& positions, pxr::UsdTimeCode& timeCode, std::vector<pxr::GfVec3d>* previous=NULL);
   ~TranslateCommand() {};
   void Execute() override;
   void Undo() override;
   void Redo() override;
 private:
   std::vector<pxr::UsdPrim>          _prims;
-  std::vector<pxr::GfVec3f>          _translate;
-  std::vector<pxr::GfVec3f>          _origin;
+  std::vector<pxr::GfVec3d>          _translate;
+  std::vector<pxr::GfVec3d>          _origin;
   pxr::UsdTimeCode                   _time;
 };
 
