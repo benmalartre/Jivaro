@@ -48,8 +48,6 @@ PropertyUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
   }
 }
 
-// Draw a xform common api in a table
-// I am not sure this is really useful
 bool 
 PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 {
@@ -62,8 +60,18 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
     pxr::GfVec3f rotation;
     pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
     xformAPI.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, time);
-    pxr::GfVec3f translationf(translation[0], translation[1], translation[2]);
+    std::vector<pxr::GfVec3f> prevScales;
+    std::vector<pxr::GfVec3f> scales;
+    std::vector<pxr::GfVec3f> prevRotations;
+    std::vector<pxr::GfVec3f> rotations;
+    std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder> rotOrders;
+    std::vector<pxr::GfVec3d> prevTranslations;
     std::vector<pxr::GfVec3d> translations;
+    
+    prevTranslations.push_back(translation);
+    prevRotations.push_back(rotation);
+    prevScales.push_back(scale);
+    rotOrders.push_back(rotOrder);
     
     if (ImGui::BeginTable("##DrawXformsCommon", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
       ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
@@ -84,17 +92,11 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       //ImGui::InputFloat3("Translation", translationf.data(), DecimalPrecision);
       ImGui::InputScalarN("Translation", ImGuiDataType_Double, &translation[0], 3, NULL, NULL, DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
-        /*
-        translation[0] = translationf[0]; // TODO: InputDouble3 instead, we don't want to loose values
-        translation[1] = translationf[1];
-        translation[2] = translationf[2];
-        */
-       
         translations.push_back(translation);
         GetApplication()->AddCommand(std::shared_ptr<TranslateCommand>(
-          new TranslateCommand(GetApplication()->GetStage(), { _prim.GetPath() }, translations, time, NULL))
+          new TranslateCommand(GetApplication()->GetStage(), { _prim.GetPath() }, 
+            translations, prevTranslations, time))
         );
-
       }
       // Rotation
       ImGui::TableNextRow();
@@ -108,8 +110,11 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Rotation", rotation.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
-        std::cout << "SET XFORM API !" << std::endl;
-        //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetRotate, xformAPI, rotation, rotOrder, currentTime);
+        rotations.push_back(rotation);
+        GetApplication()->AddCommand(std::shared_ptr<RotateCommand>(
+          new RotateCommand(GetApplication()->GetStage(), { _prim.GetPath() }, 
+            rotations, prevRotations, rotOrders, time))
+        );
       }
       // Scale
       ImGui::TableNextRow();

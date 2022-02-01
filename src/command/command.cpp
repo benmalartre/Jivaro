@@ -134,21 +134,14 @@ static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, pxr::UsdTimeCode& timeCode
 // Translate
 //==================================================================================
 TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths,
-  std::vector<pxr::GfVec3d>& positions, pxr::UsdTimeCode& timeCode, std::vector<pxr::GfVec3d>* previous)
+  const std::vector<pxr::GfVec3d>& positions, const std::vector<pxr::GfVec3d>& previous,
+  pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   _time = timeCode;
   for (size_t index = 0; index < paths.size(); ++index) {
     pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(paths[index]));
-    if (previous) {
-      _origin.push_back((*previous)[index]);
-    } else {
-      HandleTargetXformVectors vectors;
-      pxr::UsdGeomXformCommonAPI xformApi(xformable);
-      xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, 
-        &vectors.scale, &vectors.pivot, &vectors.rotOrder, _time);
-      _origin.push_back(pxr::GfVec3f(vectors.translation));
-    }
+    _origin.push_back(previous[index]);
     _translate.push_back(positions[index]);
     _prims.push_back(xformable.GetPrim());
   }
@@ -182,44 +175,19 @@ void TranslateCommand::Redo() {
 //==================================================================================
 // Rotate
 //==================================================================================
-RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage, const pxr::GfMatrix4f& matrix,
-  std::vector<HandleTargetDesc>& targets, pxr::UsdTimeCode& timeCode)
+RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths,
+  const std::vector<pxr::GfVec3f>& rotation, const std::vector<pxr::GfVec3f>& previous,
+  const std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder>& rotOrder, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   _time = timeCode;
-  pxr::UsdGeomXformCache xformCache(timeCode);
-  for (auto& target : targets) {
-    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
-    pxr::GfMatrix4f invParentMatrix(
-      xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
-    pxr::GfMatrix4d xformMatrix((target.offset * matrix) * invParentMatrix);
+  for (size_t index = 0; index < paths.size(); ++index) {
+    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(paths[index]));
 
-    pxr::UsdGeomXformCommonAPI api(xformable.GetPrim());
-    const GfVec3d xAxis = target.parent.GetRow3(0);
-    const GfVec3d yAxis = target.parent.GetRow3(1);
-    const GfVec3d zAxis = target.parent.GetRow3(2);
-
-    // Get latest rotation values to give a hint to the decompose function
-    HandleTargetXformVectors vectors;
-    api.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
-      &vectors.pivot, &vectors.rotOrder, _time);
-    double thetaTw = GfDegreesToRadians(vectors.rotation[0]);
-    double thetaFB = GfDegreesToRadians(vectors.rotation[1]);
-    double thetaLR = GfDegreesToRadians(vectors.rotation[2]);
-    double thetaSw = 0.0;
-
-    // Decompose the matrix in angle values
-    GfRotation::DecomposeRotation(xformMatrix, xAxis, yAxis, zAxis, 1.0,
-      &thetaTw, &thetaFB, &thetaLR, &thetaSw, true);
-    const GfVec3f rotation =
-      GfVec3f(GfRadiansToDegrees(thetaTw), GfRadiansToDegrees(thetaFB), GfRadiansToDegrees(thetaLR));
-    api.SetRotate(rotation, vectors.rotOrder, _time);
-
-    _origin.push_back(target.previous.rotation);
-    _rotation.push_back(rotation);
+    _origin.push_back(previous[index]);
+    _rotation.push_back(rotation[index]);
     _prims.push_back(xformable.GetPrim());
-    _rotOrder.push_back(vectors.rotOrder);
-    target.previous.rotation = _rotation.back();
+    _rotOrder.push_back(rotOrder[index]);
   }
 }
 
