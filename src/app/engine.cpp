@@ -44,12 +44,8 @@ void _InitGL()
 }
 
 Engine::Engine(const pxr::HdDriver& driver)
-  : Engine(pxr::SdfPath::AbsoluteRootPath(),
-    {},
-    {},
-    _GetUsdImagingDelegateId(),
-    driver
-  )
+  : Engine(pxr::SdfPath::AbsoluteRootPath(), {}, {}, 
+    _GetUsdImagingDelegateId(), driver)
 {
   //SetRendererAov()
 }

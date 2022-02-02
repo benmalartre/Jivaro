@@ -46,6 +46,7 @@ ViewportUI::ViewportUI(View* parent):
   _engine = nullptr;
   _rendererIndex = 0;
   _rendererNames = NULL;
+  _counter = 0;
 }
 
 // destructor
@@ -191,7 +192,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
     }
   }
-
+  _engine->SetDirty(true);
   _parent->SetDirty();
 }
 
@@ -213,7 +214,6 @@ void ViewportUI::MouseMove(int x, int y)
           dx / static_cast<double>(GetWidth()), 
           dy / static_cast<double>(GetHeight())
         );
-        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
        
@@ -223,32 +223,29 @@ void ViewportUI::MouseMove(int x, int y)
           dx / static_cast<double>(GetWidth()), 
           dy / static_cast<double>(GetHeight())
         );
-        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
         
       case INTERACTION_ORBIT:
       {
         _camera->Orbit(dx, dy);
-        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
 
       default:
       {
         tools->Update(x - GetX(), y - GetY(), GetWidth(), GetHeight());
-        _parent->SetFlag(View::FORCEREDRAW);
         break;
       }
         
     }
+    _engine->SetDirty(true);
     _parent->SetDirty();
   } else {
     tools->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());
-    _parent->SetFlag(View::FORCEREDRAW);
   }
 
-
+  
   _lastX = static_cast<double>(x);
   _lastY = static_cast<double>(y);
 }
@@ -260,7 +257,7 @@ void ViewportUI::MouseWheel(int x, int y)
     static_cast<double>(x) / static_cast<double>(GetWidth()), 
     static_cast<double>(x) / static_cast<double>(GetHeight())
   );
-  _parent->SetFlag(View::FORCEREDRAW);
+  _engine->SetDirty(true);
   _parent->SetDirty();
 }
 
@@ -385,9 +382,8 @@ bool ViewportUI::Draw()
     _renderParams.enableSceneMaterials = false;
     //_renderParams.colorCorrectionMode = ???
     _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
-    
-    if ( _parent->GetFlag(View::FORCEREDRAW) || _engine->IsDirty() || !_engine->IsConverged() ) {
-      
+
+    if ( _engine->IsDirty() || !_engine->IsConverged() ) {
       _drawTarget->Bind();
       glViewport(0, 0, GetWidth(), GetHeight());
 
@@ -397,14 +393,24 @@ bool ViewportUI::Draw()
 
       _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
       _engine->SetDirty(false);
+      std::cout << "DRAW VIEWPORT COUNTER : " << (_counter++) << std::endl;
 
-      Tool* tools = GetApplication()->GetTools();
+      _drawTarget->Unbind();
+    }
+
+    Tool* tools = GetApplication()->GetTools();
+    if (tools->IsActive()) {
+      _toolTarget->Bind();
+      glViewport(0, 0, GetWidth(), GetHeight());
+
+      // clear to black
+      glClearColor(0.0f, 0.0f, 0.0f, 0.f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       tools->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
       tools->SetCamera(_camera);
       tools->Draw();
-      _drawTarget->Unbind();
-      _drawTarget->Resolve();
-      
+      _toolTarget->Unbind();
+      _toolTarget->Resolve();
     }
 
     const pxr::GfVec2f min(GetX(), GetY());
@@ -419,6 +425,12 @@ bool ViewportUI::Draw()
     drawList->AddImage(
       (ImTextureID)(size_t)_drawTarget->GetAttachment("color")->GetGlTextureName(),
       min, min + size, ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255));
+
+    if (tools->IsActive()) {
+      drawList->AddImage(
+        (ImTextureID)(size_t)_toolTarget->GetAttachment("color")->GetGlTextureName(),
+        min, min + size, ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
+    }
   
     ImGui::PushFont(GetWindow()->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
@@ -521,7 +533,7 @@ void ViewportUI::Resize()
   );
   
   pxr::GfVec2i renderResolution(GetWidth(), GetHeight());
-  _drawTarget = pxr::GlfDrawTarget::New(renderResolution, true);
+  _drawTarget = pxr::GlfDrawTarget::New(renderResolution);
   _drawTarget->Bind();
 
   _drawTarget->AddAttachment("color",
@@ -529,6 +541,15 @@ void ViewportUI::Resize()
   _drawTarget->AddAttachment("depth",
     GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
   _drawTarget->Unbind();
+
+  _toolTarget = pxr::GlfDrawTarget::New(renderResolution, true /*multisamples*/);
+  _toolTarget->Bind();
+
+  _toolTarget->AddAttachment("color",
+    GL_RGBA, GL_FLOAT, GL_RGBA);
+  _toolTarget->AddAttachment("depth",
+    GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+  _toolTarget->Unbind();
 }
 
 static pxr::GfVec4i _ViewportMakeCenteredIntegral(pxr::GfVec4f& viewport)

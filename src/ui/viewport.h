@@ -98,6 +98,7 @@ class ViewportUI : public HeadedUI
     pxr::UsdPrim                        _root;
     pxr::UsdLuxDomeLight                _light;
     pxr::GlfDrawTargetRefPtr            _drawTarget;
+    pxr::GlfDrawTargetRefPtr            _toolTarget;
     int                                 _drawMode;
     int                                 _rendererIndex;
     static ImGuiWindowFlags             _flags;
@@ -105,6 +106,8 @@ class ViewportUI : public HeadedUI
     const char**                        _rendererNames;
     int                                 _numRenderers;
     pxr::CameraUtilConformWindowPolicy  _conformWindowPolicy;
+
+    uint64_t                            _counter;
 
 };
 PXR_NAMESPACE_CLOSE_SCOPE
