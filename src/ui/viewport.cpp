@@ -22,11 +22,13 @@ extern bool LEGACY_OPENGL;
 
 ImGuiWindowFlags ViewportUI::_flags = 
   ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoMove |
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoScrollbar |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoDecoration;
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoScrollWithMouse |
+  ImGuiWindowFlags_NoScrollbar;
 
 // constructor
 ViewportUI::ViewportUI(View* parent):
@@ -350,34 +352,23 @@ bool ViewportUI::Draw()
   if (!_initialized)Init();
   if(!_valid)return false;  
 
-  float x = GetX();
-  float y = GetY();
-  
-  float w = GetWidth();
-  float h = GetHeight();
-  float wh = GetWindowHeight();
-
-  //glEnable(GL_SCISSOR_TEST);
-  //glScissor(x, wh - (y + h), w, h);
-  //glViewport(x,wh - (y + h), w, h);
-  //glViewport(0, 0, w, h);
-
   Application* app = GetApplication();
   if (app->GetStage() != nullptr) {
-    glDepthFunc(GL_LESS);
-    glEnable(GL_DEPTH_TEST);
+
     _engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
       pxr::GfVec4d(
         0.0,
         0.0,
-        static_cast<double>(w),
-        static_cast<double>(h)));
+        static_cast<double>(GetWidth()),
+        static_cast<double>(GetHeight())));
 
     _engine->SetCameraState(
       _camera->GetViewMatrix(),
       _camera->GetProjectionMatrix()
     );
+
+    _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.25));
   
     _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
     _renderParams.complexity = 1.0f;
@@ -394,50 +385,32 @@ bool ViewportUI::Draw()
     _renderParams.enableSceneMaterials = false;
     //_renderParams.colorCorrectionMode = ???
     _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
-
- /*
-  const std::vector<pxr::GfVec4f> clipPlanes = _camera->GetClippingPlanes();
-  std::cout << "CLIP PLANES : " << clipPlanes.size() << std::endl;
-  _renderParams.clipPlanes = {
-    pxr::GfVec4d(clipPlanes[0]),
-    pxr::GfVec4d(clipPlanes[1]),
-    pxr::GfVec4d(clipPlanes[2]),
-    pxr::GfVec4d(clipPlanes[3])
-  };
-  */
-   
-
-    if ( _parent->GetFlag(View::FORCEREDRAW) || !_engine->IsConverged() ) {
+    
+    if ( _parent->GetFlag(View::FORCEREDRAW) || _engine->IsDirty() || !_engine->IsConverged() ) {
       
       _drawTarget->Bind();
-      glViewport(0, 0, w, h);
+      glViewport(0, 0, GetWidth(), GetHeight());
 
       // clear to black
       glClearColor(0.25f, 0.25f, 0.25f, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
-      
-      _parent->ClearFlag(View::FORCEREDRAW);
+      _engine->SetDirty(false);
 
       Tool* tools = GetApplication()->GetTools();
-      tools->SetViewport(pxr::GfVec4f(0, 0, w, h));
+      tools->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
       tools->SetCamera(_camera);
       tools->Draw();
       _drawTarget->Unbind();
       _drawTarget->Resolve();
+      
     }
-
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(x, wh - (y + h), w, h);
 
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
-    const pxr::GfVec2f max(min + size);
 
     ImGui::Begin(_name.c_str(), NULL, _flags);
-
     ImGui::SetWindowPos(min);
     ImGui::SetWindowSize(size);
    
@@ -445,31 +418,22 @@ bool ViewportUI::Draw()
 
     drawList->AddImage(
       (ImTextureID)(size_t)_drawTarget->GetAttachment("color")->GetGlTextureName(),
-      min,
-      max,
-      ImVec2(0,1),
-      ImVec2(1,0),
-      ImColor(255,255,255,255));
-
-    _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.25));
-    glDisable(GL_SCISSOR_TEST);
-
-    // tool drawing
-    //drawList->AddCallback(DrawToolCallback, this);
+      min, min + size, ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255));
   
     ImGui::PushFont(GetWindow()->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
+    
     drawList->AddText(
-      ImVec2(min[0] + 20, max[1] - 20), 
+      ImVec2(min[0] + 20, (min[1] + size[1]) - 20), 
       0xFFFFFFFF, 
       msg.c_str());
 
     msg = "FPS : "+ std::to_string(app->GetTime().GetFramerate());
     drawList->AddText(
-      ImVec2(max[0] - 128.f, max[1] - 20),
+      ImVec2((min[0] + size[0]) - 128.f, (min[1] + size[1]) - 20),
       0xFFFFFFFF,
       msg.c_str());
-
+    
     // renderer
     ImGui::SetCursorPosX(0);
 
@@ -490,7 +454,7 @@ bool ViewportUI::Draw()
     ImGui::SetNextItemWidth(300);
     ImGui::Combo("##DrawMode", &_drawMode, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES));
     ImGui::PopFont();
-
+    
     ImGui::End();
 
     return GetView()->IsInteracting();

@@ -13,20 +13,21 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags ViewHead::_flags =
-ImGuiWindowFlags_None |
-ImGuiWindowFlags_NoMove |
-ImGuiWindowFlags_NoResize |
-ImGuiWindowFlags_NoTitleBar |
-ImGuiWindowFlags_NoBackground |
-ImGuiWindowFlags_NoCollapse |
-ImGuiWindowFlags_NoNav |
-ImGuiWindowFlags_NoScrollWithMouse |
-ImGuiWindowFlags_NoScrollbar;
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoBackground |
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoScrollWithMouse |
+  ImGuiWindowFlags_NoScrollbar;
 
 // constructor
 ViewHead::ViewHead(View* parent)
   : _parent(parent)
   , _invade(false)
+  , _name(parent->GetName() + "Head")
 {
 }
 
@@ -81,10 +82,9 @@ ViewHead::Draw()
   const pxr::GfVec2f size(_parent->GetWidth(), VIEW_HEAD_HEIGHT);
   static bool open;
 
-  ImGui::Begin(("##" + _parent->GetName() + "Head").c_str(), &open, ViewHead::_flags);
+  ImGui::Begin(("##" + _name).c_str(), &open, ViewHead::_flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
-  //ImGui::PushClipRect(min, min + size, false);
   ImGui::PushFont(_parent->GetWindow()->GetRegularFont(0));
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -93,16 +93,21 @@ ViewHead::Draw()
     min + size,
     ImColor(BACKGROUND_COLOR)
   );
-  int addUIType = -1;
-  if (ImGui::BeginTabBar(("##" + _parent->GetName() + "TabBar").c_str(),
-    ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
+
+  static ImGuiTabBarFlags tabBarFlags = 
+    ImGuiTabBarFlags_AutoSelectNewTabs | 
+    ImGuiTabBarFlags_Reorderable | 
+    ImGuiTabBarFlags_FittingPolicyScroll;
+
+  if (ImGui::BeginTabBar((_name + "TabBar").c_str(), tabBarFlags))
   {
-    const char* popupName = ("##" + _parent->GetName() + "AddUIMenu").c_str();
+    const std::string popupName = _name + "Popup";
     if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
-      ImGui::OpenPopup(popupName);
+      std::cout << "FUCK" << std::endl;
+      ImGui::OpenPopup(popupName.c_str());
       _invade = true;
     }
-    if (ImGui::BeginPopup(popupName))
+    if (ImGui::BeginPopup(popupName.c_str()))
     {
       if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
       for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
@@ -130,14 +135,10 @@ ViewHead::Draw()
         ImGui::EndTabItem();
       }
     }
-
-
     ImGui::EndTabBar();
   }
 
-  //ImGui::PopClipRect();
   ImGui::PopFont();
-
   ImGui::End();
 }
 

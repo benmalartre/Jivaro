@@ -32,10 +32,14 @@ public:
           const pxr::HdDriver& driver = pxr::HdDriver());
   ~Engine();
 
+  inline bool IsDirty() { return _dirty;};
+  inline void SetDirty(bool dirty) { _dirty = dirty; };
   /*
   pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos, 
     pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);
     */
+private:
+  bool _dirty;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

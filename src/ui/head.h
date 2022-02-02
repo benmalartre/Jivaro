@@ -44,6 +44,7 @@ private:
   View*                   _parent;
   std::vector<BaseUI*>    _childrens;
   bool                    _invade;
+  std::string             _name;
 
 };
 
