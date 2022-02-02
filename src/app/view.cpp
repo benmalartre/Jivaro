@@ -111,6 +111,12 @@ View::Draw(bool forceRedraw)
   }
 }
 
+bool 
+View::IsActive()
+{
+  return this == GetWindow()->GetActiveView();
+}
+
 // mouse positon relative to the view
 void 
 View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)

@@ -60,6 +60,7 @@ ViewHead::SetCurrentChild(int index)
 {
   if (index >= 0 && index < _childrens.size())
   {
+    _childrens[index]->Resize();
     _parent->SetContent(_childrens[index]);
   }
 }
@@ -131,7 +132,11 @@ ViewHead::Draw()
       if (ImGui::BeginTabItem(name, &open,
         ImGuiTabItemFlags_NoCloseButton | ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoPushId))
       {
-        SetCurrentChild(n);
+        if (n != _current) {
+          _current = n;
+          SetCurrentChild(n);
+        }
+        
         ImGui::EndTabItem();
       }
     }

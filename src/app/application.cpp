@@ -524,6 +524,13 @@ Application::RemoveEngine(Engine* engine)
   }
 }
 
+static void _DirtyAllEngines(std::vector<Engine*>& engines)
+{
+  for (auto& engine : engines) {
+    engine->SetDirty(true);
+  }
+}
+
 void 
 Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {
@@ -534,6 +541,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
     else {
       engine->ClearSelected();
     }
+    engine->SetDirty(true);
   }
   _tools.ResetSelection();
   GetMainWindow()->ForceRedraw();
@@ -544,6 +552,7 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 {
   _selection.Clear();
   _manager.Clear();
+  _DirtyAllEngines(_engines);
 }
 
 void 
@@ -551,6 +560,7 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
   _tools.ResetSelection();
   GetMainWindow()->ForceRedraw();
+  _DirtyAllEngines(_engines);
 }
 
 void 

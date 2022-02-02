@@ -30,11 +30,28 @@ ImGuiWindowFlags ViewportUI::_flags =
   ImGuiWindowFlags_NoScrollWithMouse |
   ImGuiWindowFlags_NoScrollbar;
 
+
+static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target, 
+  int x, int y, int width, int height)
+{
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, target->GetFramebufferId());
+
+  glBlitFramebuffer(0, 0, target->GetSize()[0], target->GetSize()[1],
+    x, y, width, height,
+    GL_COLOR_BUFFER_BIT,
+    GL_NEAREST);
+
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+}
+
 // constructor
 ViewportUI::ViewportUI(View* parent):
   HeadedUI(parent, "Viewport")
 {
   _texture = 0;
+  _drawTarget = nullptr;
   _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
   _pixels = nullptr;
   _camera = new Camera("Camera");
@@ -270,14 +287,14 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       case GLFW_KEY_A:
       {
         _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
-        _parent->SetFlag(View::FORCEREDRAW);
+        _engine->SetDirty(true);
         break;
       }
       case GLFW_KEY_F:
       {
         if (app->GetSelection()->IsEmpty())return;
         _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
-        _parent->SetFlag(View::FORCEREDRAW);
+        _engine->SetDirty(true);
         break;
       }
       case GLFW_KEY_S:
@@ -399,7 +416,8 @@ bool ViewportUI::Draw()
     }
 
     Tool* tools = GetApplication()->GetTools();
-    if (tools->IsActive()) {
+    const bool shouldDrawTool = tools->IsActive() && _parent->IsActive();
+    if (shouldDrawTool) {
       _toolTarget->Bind();
       glViewport(0, 0, GetWidth(), GetHeight());
 
@@ -426,7 +444,7 @@ bool ViewportUI::Draw()
       (ImTextureID)(size_t)_drawTarget->GetAttachment("color")->GetGlTextureName(),
       min, min + size, ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255));
 
-    if (tools->IsActive()) {
+    if (shouldDrawTool) {
       drawList->AddImage(
         (ImTextureID)(size_t)_toolTarget->GetAttachment("color")->GetGlTextureName(),
         min, min + size, ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
@@ -531,25 +549,28 @@ void ViewportUI::Resize()
     _camera->GetFov(),
     pxr::GfCamera::FOVHorizontal
   );
-  
-  pxr::GfVec2i renderResolution(GetWidth(), GetHeight());
-  _drawTarget = pxr::GlfDrawTarget::New(renderResolution);
-  _drawTarget->Bind();
 
-  _drawTarget->AddAttachment("color",
-    GL_RGBA, GL_FLOAT, GL_RGBA);
-  _drawTarget->AddAttachment("depth",
-    GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-  _drawTarget->Unbind();
+  const pxr::GfVec2i renderResolution(GetWidth(), GetHeight());
+  if (!_drawTarget || _drawTarget->GetSize() != renderResolution) {
+    _drawTarget = pxr::GlfDrawTarget::New(renderResolution);
+    _drawTarget->Bind();
 
-  _toolTarget = pxr::GlfDrawTarget::New(renderResolution, true /*multisamples*/);
-  _toolTarget->Bind();
+    _drawTarget->AddAttachment("color",
+      GL_RGBA, GL_FLOAT, GL_RGBA);
+    _drawTarget->AddAttachment("depth",
+      GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+    _drawTarget->Unbind();
 
-  _toolTarget->AddAttachment("color",
-    GL_RGBA, GL_FLOAT, GL_RGBA);
-  _toolTarget->AddAttachment("depth",
-    GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-  _toolTarget->Unbind();
+    _toolTarget = pxr::GlfDrawTarget::New(renderResolution, true /*multisamples*/);
+    _toolTarget->Bind();
+
+    _toolTarget->AddAttachment("color",
+      GL_RGBA, GL_FLOAT, GL_RGBA);
+    _toolTarget->AddAttachment("depth",
+      GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+    _toolTarget->Unbind();
+    _engine->SetDirty(true);
+  }
 }
 
 static pxr::GfVec4i _ViewportMakeCenteredIntegral(pxr::GfVec4f& viewport)

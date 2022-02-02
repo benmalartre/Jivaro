@@ -63,6 +63,7 @@ Engine::Engine(
     invisedPaths,
     sceneDelegateID,
     driver)
+  , _dirty(true)
 {
  std::cout << "ENGINE CONSTRUCTOR CALLED..." << std::endl;
 }

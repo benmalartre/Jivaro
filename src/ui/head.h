@@ -41,6 +41,7 @@ public:
 private:
   //std::vector<HeadItem>   _items;
   //HeadItem*               _current;
+  int                     _current;
   View*                   _parent;
   std::vector<BaseUI*>    _childrens;
   bool                    _invade;
