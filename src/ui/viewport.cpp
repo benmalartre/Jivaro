@@ -410,8 +410,6 @@ bool ViewportUI::Draw()
 
       _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
       _engine->SetDirty(false);
-      std::cout << "DRAW VIEWPORT COUNTER : " << (_counter++) << std::endl;
-
       _drawTarget->Unbind();
     }
 
