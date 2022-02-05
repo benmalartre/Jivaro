@@ -29,7 +29,7 @@ ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
 
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
-  : BaseUI(parent, "Explorer")
+  : HeadedUI(parent, "Explorer")
   , _counter(0)
 {
   _parent->SetDirty();

@@ -6,6 +6,7 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
+#include "../ui/head.h"
 #include "../ui/utils.h"
 
 
@@ -14,7 +15,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 extern IconList ICONS;
 static size_t EXPLORER_LINE_HEIGHT = 20;
 class Selection;
-class ExplorerUI : public BaseUI
+class ExplorerUI : public HeadedUI
 {
   struct Item {
     pxr::SdfPath    path;

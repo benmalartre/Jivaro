@@ -59,13 +59,20 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
     target.path = _prim.GetPath();
     _GetHandleTargetXformVectors(xformApi, target.previous, time);
     _GetHandleTargetXformVectors(xformApi, target.current, time);
+
+    Window* window = _parent->GetWindow();
     
     if (ImGui::BeginTable("##DrawXformsCommon", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+      ImGui::PushFont(window->GetMediumFont(1));
       ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
       ImGui::TableSetupColumn("Transform");
       ImGui::TableSetupColumn("Value");
+      ImGui::PopFont();
 
       ImGui::TableHeadersRow();
+
+      ImGui::PushFont(window->GetRegularFont(1));
+
       // Translate
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
@@ -127,6 +134,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       }
       // TODO rotation order
       ImGui::EndTable();
+      ImGui::PopFont();
     }
     
     return true;
@@ -215,11 +223,8 @@ PropertyUI::Draw()
     ImGuiCol_WindowBg
   );
 
-  Window* window = _parent->GetWindow();
-  ImGui::PushFont(window->GetBoldFont(0));
   _DrawXformsCommon(pxr::UsdTimeCode::Default());
 
-  ImGui::PopFont();
   ImGui::End();
   return true;
 };

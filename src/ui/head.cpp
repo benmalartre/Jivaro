@@ -86,7 +86,7 @@ ViewHead::Draw()
   ImGui::Begin(("##" + _name).c_str(), &open, ViewHead::_flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
-  ImGui::PushFont(_parent->GetWindow()->GetRegularFont(0));
+  ImGui::PushFont(_parent->GetWindow()->GetMediumFont(1));
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(
