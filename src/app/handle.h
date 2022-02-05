@@ -214,6 +214,28 @@ protected:
   pxr::GfMatrix4f         _sizeMatrix;
 };
 
+class SelectHandle : public BaseHandle {
+  enum Mode {
+    RECTANGLE,
+    LASSO
+  };
+
+public:
+  SelectHandle();
+
+  void BeginUpdate(float x, float y, float width, float height) override;
+  void Update(float x, float y, float width, float height) override;
+  void EndUpdate() override;
+  void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
+  void SetVisibility(short axis) override;
+
+protected:
+  void _UpdateTargets(bool interacting) override;
+
+private:
+  
+};
+
 class ScaleHandle : public BaseHandle {
 public:
   ScaleHandle();

@@ -8,14 +8,9 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 Tool::Tool()
-  : _translate(TranslateHandle())
-  , _rotate(RotateHandle())
-  , _scale(ScaleHandle())
-  , _brush(BrushHandle())
-  , _interacting(false)
+  : _interacting(false)
   , _active(NULL)
 {
-
 }
 
 Tool::~Tool()
@@ -24,11 +19,9 @@ Tool::~Tool()
 
 void Tool::Init()
 {
-  _translate.Setup();
-  _rotate.Setup();
-  _scale.Setup();
-  _brush.Setup();
-  SetActiveTool(TOOL_TRANSLATE);
+  _active = new SelectHandle();
+  _active->Setup();
+  SetActiveTool(TOOL_SELECT);
 }
 
 
@@ -39,10 +32,8 @@ void Tool::SetViewport(const pxr::GfVec4f& viewport)
 
 void Tool::SetCamera(Camera* camera)
 {
-  _translate.SetCamera(camera);
-  _rotate.SetCamera(camera);
-  _scale.SetCamera(camera);
-  _brush.SetCamera(camera);
+  if (!_active) return;
+  _active->SetCamera(camera);
 
   // update shader
   Shape::UpdateCamera(
@@ -56,27 +47,34 @@ void Tool::SetCamera(Camera* camera)
 
 void Tool::SetActiveTool(short tool)
 {
+  if (_active)delete _active;
   switch(tool) {
     case TOOL_NONE:
       _active = NULL;
       break;
+    case TOOL_SELECT:
+      _active = new SelectHandle();
+      break;
     case TOOL_BRUSH:
-      _active = (BaseHandle*)&_brush;
+      _active = new BrushHandle();
       break;
     case TOOL_SCALE:
-      _active = (BaseHandle*)&_scale;
+      _active = new ScaleHandle();
       break;
     case TOOL_ROTATE:
-      _active = (BaseHandle*)&_rotate;
+      _active = new RotateHandle();
       break;
     case TOOL_TRANSLATE:
-      _active = (BaseHandle*)&_translate;
+      _active = new TranslateHandle();
       break;
     default:
       _active = NULL;
       break;
   }
-  if(_active)_active->ResetSelection();
+  if (_active) {
+    _active->Setup();
+    _active->ResetSelection();
+  }
 }
 
 bool Tool::IsActive()

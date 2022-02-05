@@ -49,11 +49,12 @@ bool MenuItem::Draw()
 {
   Window* window = view->GetWindow();
   if (items.size()) {
-    ImGui::PushFont(window->GetBoldFont(0));
+    ImGui::PushFont(window->GetBoldFont(2));
     if (ImGui::BeginMenu(label.c_str())) {
       for (auto& item : items) {
         item.Draw();
       }
+      view->SetFlag(View::INTERACTING);
       ImGui::EndMenu();
       ImGui::PopFont();
       return true;
@@ -61,12 +62,11 @@ bool MenuItem::Draw()
     ImGui::PopFont();
   }
   else {
-    ImGui::PushFont(window->GetMediumFont(0));
+    ImGui::PushFont(window->GetMediumFont(2));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
-
-      window->SetActiveTool(TOOL_SELECT);
       view->ClearFlag(View::INTERACTING);
+      window->SetActiveTool(TOOL_SELECT);
       window->ForceRedraw();
       ImGui::PopFont();
       return true;
@@ -191,7 +191,6 @@ MenuUI::~MenuUI()
 {
 }
 
-
 MenuItem& MenuUI::AddItem(View* view, const std::string label, const std::string shortcut,
   bool selected, bool enabled, MenuPressedFunc func, const pxr::VtArray<pxr::VtValue> a)
 {
@@ -225,7 +224,7 @@ bool MenuUI::Draw()
 
   if (ImGui::BeginMenuBar())
   {
-    ImGui::PushFont(window->GetBoldFont(0));
+    ImGui::PushFont(window->GetBoldFont(2));
     for (auto& item : _items) {
       if (item.Draw()) {
         _parent->SetDirty();
@@ -241,7 +240,8 @@ bool MenuUI::Draw()
   
   ImGui::End();
 
-  return
+  return 
+    _parent->IsInteracting() ||
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
     ImGui::IsAnyMouseDown();

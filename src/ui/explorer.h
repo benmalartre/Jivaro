@@ -41,7 +41,7 @@ public:
   */
   void DrawPrim(const pxr::UsdPrim& prim, Selection* selection);
   void DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected);
-  void DrawType(const pxr::UsdPrim& prim);
+  void DrawType(const pxr::UsdPrim& prim, bool selected);
   /*
   void DrawBackground(float localMouseX, float localMouseY);
   void DrawItemBackground(ImDrawList* drawList, Item* item, 
@@ -59,6 +59,8 @@ private:
 
   static ImGuiWindowFlags       _flags;
   static ImGuiTreeNodeFlags     _treeFlags;
+
+  size_t _counter;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

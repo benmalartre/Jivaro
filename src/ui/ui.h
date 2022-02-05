@@ -85,6 +85,9 @@ public:
   // get the height of the parent view
   virtual int GetHeight();
 
+  // attach tooltip
+  void AttachTooltip(const char* tooltip);
+
   // get unique name
   std::string ComputeUniqueName(const std::string& baseName);
 

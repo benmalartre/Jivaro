@@ -200,7 +200,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
         _interactionMode = INTERACTION_DOLLY;
       }
     }
-    else if (tools->IsActive()) {
+    else if (tools->IsActive() ) {
       
       tools->Select(x - GetX(), y - GetY(), width, height, false);
       tools->BeginUpdate(x - GetX(), y - GetY(), width, height);
@@ -368,7 +368,7 @@ bool ViewportUI::Draw()
 
   Application* app = GetApplication();
   if (app->GetStage() != nullptr) {
-
+    std::cout << "DRAW VIEWPORT " << _parent->IsInteracting() << std::endl;
     _engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
       pxr::GfVec4d(
@@ -469,9 +469,25 @@ bool ViewportUI::Draw()
     ImGui::Text("Renderer");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(300);
-    ImGui::Combo("##Renderer", &rendererIndex, _rendererNames, _numRenderers);
+    if (ImGui::BeginCombo("##Renderer", _rendererNames[_rendererIndex], ImGuiComboFlags_PopupAlignLeft))
+    {
+      for (int n = 0; n < _numRenderers; ++n)
+      {
+        const bool is_selected = (_rendererIndex == n);
+        if (ImGui::Selectable(_rendererNames[n], is_selected))
+        {
+          _rendererIndex = n;
+        }
+
+        if (is_selected) {
+          ImGui::SetItemDefaultFocus();
+        }
+      }
+      _parent->SetFlag(View::DISCARDMOUSEBUTTON);
+      ImGui::EndCombo();
+    }
     if (rendererIndex != _rendererIndex) {
-      _rendererIndex = rendererIndex;
+      _parent->ClearFlag(View::DISCARDMOUSEBUTTON);
       Init();
     }
     ImGui::SameLine();
@@ -480,7 +496,19 @@ bool ViewportUI::Draw()
     ImGui::Text("Mode");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(300);
-    ImGui::Combo("##DrawMode", &_drawMode, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES));
+    if (ImGui::BeginCombo("##DrawMode", DRAW_MODE_NAMES[_drawMode], ImGuiComboFlags_PopupAlignLeft))
+    {
+      for (int n = 0; n < IM_ARRAYSIZE(DRAW_MODE_NAMES); ++n)
+      {
+        const bool is_selected = (_drawMode == n);
+        if (ImGui::Selectable(DRAW_MODE_NAMES[n], is_selected))
+          _drawMode = n;
+
+        if (is_selected)
+          ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
+    }
     ImGui::PopFont();
     
     ImGui::End();
@@ -629,6 +657,7 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 
 bool ViewportUI::Pick(int x, int y, int mods)
 {
+  if (y - GetY() < 32) return false;
   Application* app = GetApplication();
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;

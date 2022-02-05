@@ -34,7 +34,7 @@ ImFont* REGULAR_FONTS[3] = { NULL, NULL, NULL };
 //
 void CreateFontAtlas()
 {
-  static float fontSizes[3] = { 16.f,32.f,64.f };
+  static float fontSizes[3] = { 12.f,14.f,16.f };
   SHARED_ATLAS = new ImFontAtlas();
 
   // load fonts
@@ -268,7 +268,6 @@ void
 Window::ForceRedraw()
 {
   _forceRedraw = 3;
-  for (auto& leaf : _leaves)leaf->SetFlag(View::FORCEREDRAW);
 }
 
 // popup
@@ -400,11 +399,23 @@ Window::GetViewUnderMouse(int x, int y)
 {
   for(auto leaf: _leaves) {
     if (leaf->Contains(x, y)) {
-      leaf->SetFlag(View::FORCEREDRAW);
+      leaf->SetDirty();
       return leaf;
     }
   }
   return NULL;
+}
+
+void 
+Window::DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+{
+  std::cout << "DIRTY VIEW UNDER BOX:" << std::endl;
+  for (auto leaf : _leaves) {
+    if (leaf->Intersect(min, size)) {
+      std::cout << leaf->GetName() << " DIRTY !!!" << std::endl;
+      leaf->SetDirty();
+    }
+  }
 }
 
 // build split map

@@ -101,8 +101,11 @@ bool ToolbarButton::Draw()
     );
   }
   ImGui::PopFont();
-  if(tooltip.length() && ImGui::IsItemHovered())
-    ImGui::SetTooltip("%s", tooltip.c_str());
+
+  if (tooltip.length() && ImGui::IsItemHovered()) {
+    ui->AttachTooltip(tooltip.c_str());
+  }
+    
  
   return false;
 }
@@ -171,7 +174,6 @@ ToolbarUI::~ToolbarUI()
 bool ToolbarUI::Draw()
 {
   bool opened;
-  
   ImGui::Begin(_name.c_str(), &opened, _flags);
   ImGui::SetWindowSize(_parent->GetSize());
   ImGui::SetWindowPos(_parent->GetMin());

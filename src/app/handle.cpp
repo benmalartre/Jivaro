@@ -506,6 +506,46 @@ BaseHandle::EndUpdate()
 }
 
 //==================================================================================
+// SELECT HANDLE IMPLEMENTATION
+//==================================================================================
+SelectHandle::SelectHandle()
+{
+
+}
+
+void 
+SelectHandle::BeginUpdate(float x, float y, float width, float height)
+{
+
+}
+
+void 
+SelectHandle::Update(float x, float y, float width, float height)
+{
+
+}
+
+void SelectHandle::EndUpdate()
+{
+
+}
+
+void SelectHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
+{
+
+}
+
+void SelectHandle::SetVisibility(short axis)
+{
+
+}
+
+void SelectHandle::_UpdateTargets(bool interacting)
+{
+
+}
+
+//==================================================================================
 // TRANSLATE HANDLE IMPLEMENTATION
 //==================================================================================
 TranslateHandle::TranslateHandle()

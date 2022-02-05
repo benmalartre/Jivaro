@@ -1,11 +1,11 @@
 #ifndef JVR_APPLICATION_VIEW_H
 #define JVR_APPLICATION_VIEW_H
-#pragma once
+#include <pxr/usd/usd/prim.h>
 
 #include "../common.h"
 #include "../ui/splitter.h"
 #include "../ui/utils.h"
-#include <pxr/usd/usd/prim.h>
+
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -15,7 +15,7 @@ class ViewHead;
 class View
 {
 public:
-  enum FLAGS
+  enum Flags
   {
     HORIZONTAL          = 1 << 1,
     OVER                = 1 << 2,
@@ -74,6 +74,7 @@ public:
   // cursor
   void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
   bool Contains(int x, int y);
+  bool Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   
   // callbacks
   void DrawHead();

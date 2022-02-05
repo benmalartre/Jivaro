@@ -30,6 +30,7 @@ ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, "Explorer")
+  , _counter(0)
 {
   _parent->SetDirty();
 }
@@ -202,16 +203,17 @@ ExplorerUI::_UpdateSelection(ExplorerUI::Item* item, bool isLeaf)
     _current = item;
   }
 }
-
+*/
 void 
-ExplorerUI::DrawItemType(ExplorerUI::Item* item)
+ExplorerUI::DrawType(const pxr::UsdPrim& prim, bool selected)
 {
-  ImGui::Text("%s", item->type.GetText());
-
-  _UpdateSelection(item, !item->items.size());
+  ImGui::Text("%s", prim.GetTypeName().GetText());
+  if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+    _current = prim.GetPath();
+  }
   ImGui::NextColumn();
 }
-*/
+
 void
 ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected)
 {
@@ -352,27 +354,15 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
     flags |= ImGuiTreeNodeFlags_Selected;
   }
 
-  bool unfolded = true;
-  {
-    ImGui::PushStyleColor(ImGuiCol_Text, GetPrimColor(prim));
-    unfolded = ImGui::TreeNodeEx(prim.GetName().GetText(), flags);
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-      _current = prim.GetPath();
-    }
-    ImGui::PopStyleColor();
-    /*
-    {
-      ScopedStyleColor popupColor(ImGuiCol_Text, ImVec4(PrimDefaultColor));
-      if (ImGui::BeginPopupContextItem()) {
-        DrawUsdPrimEditMenuItems(prim);
-        ImGui::EndPopup();
-      }
-    }
-    */
-    ImGui::NextColumn();
+  ImGui::PushStyleColor(ImGuiCol_Text, GetPrimColor(prim));
+  const bool unfolded = ImGui::TreeNodeEx(prim.GetName().GetText(), flags);
+  if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+    _current = prim.GetPath();
   }
-
+  ImGui::PopStyleColor();
   ImGui::NextColumn();
+
+  DrawType(prim, selected);
   pxr::UsdGeomImageable imageable(prim);
   if (imageable) {
     pxr::TfToken visibility;
@@ -394,6 +384,7 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
 bool 
 ExplorerUI::Draw()
 {
+  std::cout << "Draw Explorer..." << std::endl;
   /// Draw the hierarchy of the stage
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
@@ -406,8 +397,8 @@ ExplorerUI::Draw()
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
 
-  auto rootPrim = stage->GetPseudoRoot();
-  auto layer = stage->GetSessionLayer();
+  const pxr::UsdPrim root = stage->GetPseudoRoot();
+  pxr::SdfLayerHandle layer = stage->GetSessionLayer();
 
   // setup transparent background
   ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
@@ -416,12 +407,12 @@ ExplorerUI::Draw()
 
   // setup columns
   ImGui::Columns(3);
-  ImGui::SetColumnWidth(0, GetWidth() - 100);
+  ImGui::SetColumnWidth(0, GetWidth() - 90);
   ImGui::SetColumnWidth(1, 60);
-  ImGui::SetColumnWidth(2, 40);
+  ImGui::SetColumnWidth(2, 30);
   
   // draw title
-  ImGui::PushFont(GetWindow()->GetMediumFont(0));
+  ImGui::PushFont(GetWindow()->GetMediumFont(2));
   ImGui::Text("Prim");
   ImGui::NextColumn();
   ImGui::Text("Type");
@@ -444,12 +435,13 @@ ExplorerUI::Draw()
     // TODO HighlightSelectedPaths();
   }
   */
-
-  const auto& children = rootPrim.GetFilteredChildren(
+  ImGui::PushFont(GetWindow()->GetRegularFont(1));
+  const auto& children = root.GetFilteredChildren(
     pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
   for (const auto& child : children) {
     DrawPrim(child, selection);
   }
+  ImGui::PopFont();
   ImGui::TreePop();
   ImGui::PopStyleColor(3);
   ImGui::End();

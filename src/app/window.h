@@ -120,6 +120,7 @@ public:
   void SetActiveView(View* view);
   View* GetActiveView(){return _activeView;};
   View* GetViewUnderMouse(int x, int y);
+  void DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   
   // draw
   void SetGLContext();

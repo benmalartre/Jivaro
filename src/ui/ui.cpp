@@ -113,18 +113,15 @@ BaseUI::SetInteracting(bool state)
   }
 }
 
-/*
-bool BaseUI::DrawHead() 
+void BaseUI::AttachTooltip(const char* tooltip)
 {
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-  drawList->AddRectFilled(
-    ImVec2(GetX(), _parent->GetMin()[1]),
-    ImVec2(GetX() + GetWidth(), UI_HEADER_HEIGHT),
-    ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f)
-  );
-  return true;
+  ImGui::SetTooltip("%s", tooltip);
+  ImGuiContext& g = *GImGui;
+  const pxr::GfVec2i min = pxr::GfVec2i(g.IO.MousePos.x, g.IO.MousePos.y) +
+    pxr::GfVec2i(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
+  ImVec2 size(ImGui::CalcTextSize(tooltip));
+  GetWindow()->DirtyViewsUnderBox(min, pxr::GfVec2i(size.x, size.y));
 }
-*/
 
 
 PXR_NAMESPACE_CLOSE_SCOPE

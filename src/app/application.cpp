@@ -468,6 +468,7 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
 
   //_manager.Start();
 
@@ -557,6 +558,14 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
+{
+  _tools.ResetSelection();
+  GetMainWindow()->ForceRedraw();
+  _DirtyAllEngines(_engines);
+}
+
+void
+Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
   _tools.ResetSelection();
   GetMainWindow()->ForceRedraw();

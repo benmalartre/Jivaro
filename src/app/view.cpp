@@ -1,3 +1,6 @@
+#include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec2f.h>
+
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
@@ -5,8 +8,6 @@
 #include "../ui/head.h"
 #include "../ui/splitter.h"
 #include "../ui/menu.h"
-#include <pxr/base/gf/vec2i.h>
-#include <pxr/base/gf/vec2f.h>
 
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -87,6 +88,14 @@ View::Contains(int x, int y)
   else return false;
 }
 
+bool
+View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+{
+  pxr::GfRange2f viewRange(GetMin(), GetMax());
+  pxr::GfRange2f boxRange(min, min + size);
+  return !boxRange.IsOutside(viewRange);
+}
+
 void
 View::DrawHead()
 {
@@ -101,10 +110,9 @@ View::Draw(bool forceRedraw)
     if (_right)_right->Draw(forceRedraw);
   }
   else {
-    bool bForceRedraw = GetFlag(FORCEREDRAW) ? true : forceRedraw;
     DrawHead();
-    if (_content && (bForceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-      if (!_content->Draw() && !bForceRedraw) {
+    if (_content && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+      if (!_content->Draw() && !IsActive()) {
         SetClean();
       }
     }

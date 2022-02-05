@@ -73,7 +73,6 @@ TimelineUI::TimelineUI(View* parent)
   : BaseUI(parent, "Timeline")
 {
   _parent->SetDirty();
-  _parent->SetFlag(View::FORCEREDRAW);
 }
 
 // destructor
@@ -252,7 +251,7 @@ void TimelineUI::DrawControls()
     ValidateTime();
   }
   if (ImGui::IsItemHovered())
-    ImGui::SetTooltip("Minimum Time");
+    AttachTooltip("Minimum Time");
   //AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
@@ -264,7 +263,7 @@ void TimelineUI::DrawControls()
     ValidateTime();
   }
   if (ImGui::IsItemHovered())
-    ImGui::SetTooltip("Start Time");
+    AttachTooltip("Start Time");
   //AttachTooltip("Start Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
@@ -285,7 +284,7 @@ void TimelineUI::DrawControls()
     ValidateTime();
   }
   if (ImGui::IsItemHovered())
-    ImGui::SetTooltip("Current Time");
+    AttachTooltip("Current Time");
   //AttachTooltip("Current Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine(); 
 
@@ -308,7 +307,7 @@ void TimelineUI::DrawControls()
     ValidateTime();
   }
   if (ImGui::IsItemHovered())
-    ImGui::SetTooltip("Maximum Time");
+    AttachTooltip("Maximum Time");
   //AttachTooltip("Maximum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
   ImGui::SameLine();
   ImGui::PopFont();
