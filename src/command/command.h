@@ -12,6 +12,7 @@
 #include <pxr/usd/sdf/reference.h>
 #include <pxr/usd/sdf/namespaceEdit.h>
 #include <pxr/usd/sdf/valueTypeName.h>
+#include <pxr/usd/sdf/path.h>
 
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/stage.h>
@@ -66,6 +67,22 @@ private:
     pxr::UsdPrim          _parent;
     pxr::UsdStageWeakPtr  _stage;
     pxr::TfToken          _name;
+};
+
+//==================================================================================
+// Duplicate prim
+//==================================================================================
+class DuplicatePrimCommand : public Command {
+public:
+  DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPath& path);
+  ~DuplicatePrimCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+private:
+  pxr::SdfPath          _sourcePath;
+  pxr::SdfPath          _destinationPath;
+  pxr::UsdStageWeakPtr  _stage;
 };
 
 //==================================================================================

@@ -1,11 +1,15 @@
-#include "scene.h"
-#include "../utils/strings.h"
-#include "../utils/files.h"
+
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include <pxr/usd/usdGeom/points.h>
+
+
+#include "../utils/strings.h"
+#include "../utils/files.h"
+#include "../app/scene.h"
+
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -41,6 +45,12 @@ void Scene::RemoveStage(const pxr::SdfPath& path)
   }
 }
 
+void
+Scene::OpenStage(const std::string& filename)
+{
+  _rootStage = pxr::UsdStage::Open(filename);
+  _currentStage = _rootStage;
+}
 
 pxr::UsdStageRefPtr& Scene::AddStageFromMemory(const std::string& name)
 {
@@ -127,8 +137,6 @@ Mesh* Scene::AddMesh(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 void Scene::TestVoronoi()
 {
   pxr::SdfPath path("/Voronoi");
-  pxr::UsdStageRefPtr stage = AddStageFromMemory("Voronoi");
-  _allStages[path] = stage;
   Mesh mesh;
   std::vector<pxr::GfVec3f> points(1024);
   for (auto& point : points) {
@@ -137,7 +145,7 @@ void Scene::TestVoronoi()
     point[2] = (float)rand() / (float)RAND_MAX - 0.5f;
   }
   mesh.VoronoiDiagram(points);
-  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
+  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(_rootStage, path);
 
   pxr::VtArray<pxr::GfVec3f> pivotPositions = mesh.GetPositions();
   for (auto& pos : pivotPositions) pos += pxr::GfVec3f(1.f, 0.f, 0.f);
@@ -175,10 +183,10 @@ void Scene::TestVoronoi()
   pxr::UsdGeomXformCommonAPI xformApi(usdMesh.GetPrim());
   xformApi.SetPivot(pxr::GfVec3f(1.f, 0.f, 0.f), pxr::UsdTimeCode::Default());
   */
-  stage->Export("C:/Users/graph/Documents/bmal/src/USD_ASSETS/tests/pivot.usda");
+  //stage->Export("C:/Users/graph/Documents/bmal/src/USD_ASSETS/tests/pivot.usda");
 
-  stage->SetDefaultPrim(usdMesh.GetPrim());
-  _rootStage->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
+  //stage->SetDefaultPrim(usdMesh.GetPrim());
+  //_rootStage->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

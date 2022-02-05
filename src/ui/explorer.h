@@ -19,7 +19,7 @@ struct ExplorerItem {
   bool                          _visible;
   bool                          _selected;
   bool                          _expanded;
-  std::vector<ExplorerItem*>     _items;
+  std::vector<ExplorerItem*>    _items;
 
   ExplorerItem() 
     : _prim(pxr::UsdPrim())
@@ -75,9 +75,11 @@ private:
 
   pxr::GfVec3f                  _color;
   bool                          _locked;
+  ExplorerItem*                 _last;
+  ExplorerItem*                 _current;
   ExplorerItem*                 _root;
   ExplorerItemMap               _map;
-  bool                          _needRefresh;
+  size_t                        _selectionHash;
 
   static ImGuiWindowFlags       _flags;
   static ImGuiTreeNodeFlags     _treeFlags;

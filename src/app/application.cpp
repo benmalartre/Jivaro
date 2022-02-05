@@ -583,6 +583,22 @@ Application::Redo()
 }
 
 void 
+Application::Delete()
+{
+}
+
+void
+Application::Duplicate()
+{
+  Selection* selection = GetSelection();
+  if (!selection->IsEmpty()) {
+    const Selection::Item& item = selection->GetItem(0);
+    AddCommand(std::shared_ptr<DuplicatePrimCommand>(
+      new DuplicatePrimCommand(GetStage(), item.path)));
+  }
+}
+
+void 
 Application::OpenScene(const std::string& filename)
 {
   if(strlen(filename.c_str()) > 0) {    

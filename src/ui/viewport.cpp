@@ -382,7 +382,7 @@ bool ViewportUI::Draw()
       _camera->GetProjectionMatrix()
     );
 
-    _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.25));
+    _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
   
     _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
     _renderParams.complexity = 1.0f;

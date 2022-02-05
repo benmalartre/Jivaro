@@ -30,6 +30,8 @@ ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, "Explorer")
   , _root(NULL)
+  , _current(NULL)
+  , _last(NULL)
 {
   _parent->SetDirty();
 }
@@ -63,6 +65,19 @@ ExplorerUI::Init()
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
 {
+  Application* app = GetApplication();
+  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    if (action == GLFW_RELEASE) {
+      if (_current) {
+        _current->_selected = 1 - _current->_selected;
+        if (mods & GLFW_MOD_CONTROL) {
+          app->ToggleSelection({ _current->_prim.GetPath() });
+        } else {
+          app->SetSelection({ _current->_prim.GetPath() });
+        }
+      }
+    }
+  }
 }
 
 void 
@@ -87,15 +102,20 @@ void
 ExplorerUI::Select()
 {
   Selection* selection = GetApplication()->GetSelection();
-  if (GetApplication()->GetStage()) {
-    for (auto& item : _map) {
-      item.second->_selected = false;
-    }
-    for (auto& selected : selection->GetItems()) {
-      if (_map.find(selected.path) != _map.end()) {
-        _map[selected.path]->_selected = true;
+  const size_t selectionHash = selection->GetHash();
+
+  if (_selectionHash != selectionHash) {
+    if (GetApplication()->GetStage()) {
+      for (auto& item : _map) {
+        item.second->_selected = false;
+      }
+      for (auto& selected : selection->GetItems()) {
+        if (_map.find(selected.path) != _map.end()) {
+          _map[selected.path]->_selected = true;
+        }
       }
     }
+    _selectionHash = selectionHash;
   }
 }
 
@@ -176,13 +196,10 @@ void
 ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
 {
   Application* app = GetApplication();
-  if (isLeaf ? ImGui::IsItemClicked() : ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    if (!item->_selected) {
-      app->AddToSelection({ item->_prim.GetPath() });
-    }
-    else {
-      app->RemoveFromSelection({ item->_prim.GetPath() });
-    }
+  if (isLeaf ? ImGui::IsItemClicked() : 
+    ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+    _last = _current;
+    _current = item;
   }
 }
 
@@ -190,14 +207,7 @@ void
 ExplorerUI::DrawItemType(ExplorerItem* item)
 {
   ImGui::Text("%s", item->_prim.GetTypeName().GetText());
-  /*
-  ImGui::Selectable(
-    item->_prim.GetTypeName().GetText(),
-    &item->_selected, 
-    ImGuiSelectableFlags_SpanAvailWidth | ImGuiSelectableFlags_SelectOnRelease, 
-    ImVec2(60, EXPLORER_LINE_HEIGHT)
-  );
-  */
+
   _UpdateSelection(item, !item->_items.size());
   ImGui::NextColumn();
 }
@@ -206,8 +216,7 @@ void
 ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  short state = 
-    item->_selected ? ICON_SELECTED : ICON_DEFAULT;
+  short state =  item->_selected ? ICON_SELECTED : ICON_DEFAULT;
 
   const Icon* visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
   const Icon* invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];

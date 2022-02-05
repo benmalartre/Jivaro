@@ -89,6 +89,8 @@ public:
   void AddCommand(std::shared_ptr<Command> command);
   void Undo();
   void Redo();
+  void Duplicate();
+  void Delete();
 
   // time
   Time& GetTime() { return _time; };

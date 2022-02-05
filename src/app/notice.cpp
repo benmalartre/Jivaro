@@ -13,6 +13,7 @@ TF_REGISTRY_FUNCTION(TfType)
   TfType::Define<NewSceneNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<SelectionChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<SceneChangedNotice, TfType::Bases<BaseNotice> >();
+  TfType::Define<AttributeChangedNotice, TfType::Bases<BaseNotice> >();
 }
 
 
@@ -53,6 +54,16 @@ SceneChangedNotice::SceneChangedNotice()
 }
 
 SceneChangedNotice::~SceneChangedNotice()
+{
+}
+
+////////////////////////////////////////////////////////////
+
+AttributeChangedNotice::AttributeChangedNotice()
+{
+}
+
+AttributeChangedNotice::~AttributeChangedNotice()
 {
 }
 

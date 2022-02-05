@@ -656,6 +656,16 @@ KeyboardCallback(
         if (mods & GLFW_MOD_CONTROL)GetApplication()->Redo();
         break;
       }
+      case GLFW_KEY_D:
+      {
+        if (mods & GLFW_MOD_CONTROL)GetApplication()->Duplicate();
+        break;
+      }
+      case GLFW_KEY_DELETE:
+      {
+        GetApplication()->Delete();
+        break;
+      }
       case GLFW_KEY_SPACE:
       {
         if (time.IsPlaying()) {

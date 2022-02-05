@@ -90,7 +90,8 @@ static void OpenFileCallback() {
     GetApplication()->BrowseFile(200, 200, folder, filters, numFilters, "open usd file");
 
   GetApplication()->AddCommand(
-    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
+    std::shared_ptr<OpenSceneCommand>(
+      new OpenSceneCommand(filename)));
 }
 
 static void SaveFileCallback() {
@@ -108,7 +109,8 @@ static void CreatePrimCallback()
   std::string name = RandomString(32);
 
   GetApplication()->AddCommand(
-    std::shared_ptr<CreatePrimCommand>(new CreatePrimCommand(GetApplication()->GetStage(), name)));
+    std::shared_ptr<CreatePrimCommand>(
+      new CreatePrimCommand(GetApplication()->GetStage(), name)));
 }
 
 static void FlattenGeometryCallback()

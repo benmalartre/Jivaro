@@ -36,6 +36,7 @@ public:
   Scene();
   ~Scene();
 
+  void OpenStage(const std::string& filename);
   void ClearAllStages();
   void RemoveStage(const std::string& name);
   void RemoveStage(const pxr::SdfPath& path);

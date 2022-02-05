@@ -1,12 +1,11 @@
 #ifndef JVR_APP_SELECTION_H
 #define JVR_APP_SELECTION_H
 
-#pragma once
-
 #include "../common.h"
 #include <pxr/usd/sdf/path.h>
 #include <pxr/imaging/hd/selection.h>
 #include <vector>
+#include <boost/optional.hpp>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -26,8 +25,13 @@ public:
     pxr::SdfPath        path;
     std::vector<int>    components;
     std::vector<float>  weights;
+    size_t              hash;
+
+    void ComputeHash();
   };
 
+  void ComputeHash();
+  size_t GetHash() { return _hash; };
 	void AddItem(const pxr::SdfPath& item);
   void RemoveItem(const pxr::SdfPath& item);
   void ToggleItem(const pxr::SdfPath& item);
@@ -61,6 +65,7 @@ public:
 private:
   Type                        _mode;
   std::vector<Item>           _items;
+  uint64_t                    _hash;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -47,9 +47,19 @@ public:
   explicit SceneChangedNotice();
   virtual ~SceneChangedNotice();
 
+private:
+};
+
+/// Notice sent after attribute changed
+class AttributeChangedNotice : public BaseNotice
+{
+public:
+  explicit AttributeChangedNotice();
+  virtual ~AttributeChangedNotice();
 
 private:
 };
+
 
 PXR_NAMESPACE_CLOSE_SCOPE
 #endif //JVR_APPLICATION_NOTICE_H

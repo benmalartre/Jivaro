@@ -1,7 +1,11 @@
 #include "../command/command.h"
 #include "../app/application.h"
 #include "../app/notice.h"
+
 #include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/sdf/layer.h>
+#include <pxr/usd/sdf/primSpec.h>
+#include <pxr/usd/sdf/copyUtils.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -64,6 +68,47 @@ void CreatePrimCommand::Redo() {
   else if(_parent) {
     _prim = _parent.GetStage()->DefinePrim(_parent.GetPath().AppendChild(_name));
   }
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Duplicate
+//==================================================================================
+DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPath& path)
+  : Command(true)
+  , _stage(stage)
+  , _sourcePath(path)
+{
+  _destinationPath = pxr::SdfPath(path.GetString() + "_duplicate");
+}
+
+void DuplicatePrimCommand::Execute()
+{
+  Redo();
+}
+
+void DuplicatePrimCommand::Undo()
+{
+  _stage->RemovePrim(_destinationPath);
+  SceneChangedNotice().Send();
+}
+
+void DuplicatePrimCommand::Redo() {
+ 
+  pxr::UsdPrim sourcePrim = _stage->GetPrimAtPath(_sourcePath);
+  pxr::SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
+
+    pxr::UsdStagePopulationMask populationMask({ _sourcePath });
+    pxr::UsdStageRefPtr tmpStage = pxr::UsdStage::OpenMasked(_stage->GetRootLayer(), populationMask, pxr::UsdStage::InitialLoadSet::LoadAll);
+    
+    pxr::SdfLayerRefPtr sourceLayer = tmpStage->Flatten();
+    pxr::SdfLayerHandle destinationLayer = _stage->GetEditTarget().GetLayer();
+    pxr::SdfPrimSpecHandle destinationPrimSpec = SdfCreatePrimInLayer(destinationLayer, _destinationPath);
+    pxr::SdfCopySpec(pxr::SdfLayerHandle(sourceLayer), _sourcePath, destinationLayer, _destinationPath);
+
+    GetApplication()->AddCommand(std::shared_ptr<SelectCommand>(
+      new SelectCommand(Selection::OBJECT, { _destinationPath }, SelectCommand::SET)));
+
   SceneChangedNotice().Send();
 }
 
@@ -137,7 +182,6 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
   const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-  std::cout << "TRANSLATE COMMAND : " << targets.size() << std::endl;
   _time = timeCode;
   for (const auto& target: targets) {
     std::cout << target.path << std::endl;
@@ -158,7 +202,7 @@ void TranslateCommand::Undo()
     pxr::UsdGeomXformCommonAPI api(_prims[i]);
     api.SetTranslate(_origin[i], _time);
   }
-  SceneChangedNotice().Send();
+  AttributeChangedNotice().Send();
 }
 
 void TranslateCommand::Redo() {
@@ -169,7 +213,7 @@ void TranslateCommand::Redo() {
     }
     api.SetTranslate(_translate[i], _time);
   }
-  SceneChangedNotice().Send();
+  AttributeChangedNotice().Send();
 }
 
 //==================================================================================
@@ -202,7 +246,7 @@ void RotateCommand::Undo()
     pxr::UsdGeomXformCommonAPI api(_prims[i]);
     api.SetRotate(_origin[i], _rotOrder[i], _time);
   }
-  SceneChangedNotice().Send();
+  AttributeChangedNotice().Send();
 }
 
 void RotateCommand::Redo() {
@@ -213,7 +257,7 @@ void RotateCommand::Redo() {
     }
     api.SetRotate(_rotation[i],_rotOrder[i], _time);
   }
-  SceneChangedNotice().Send();
+  AttributeChangedNotice().Send();
 }
 
 //==================================================================================
@@ -250,7 +294,7 @@ void ScaleCommand::Undo()
     pxr::UsdGeomXformCommonAPI api(_prims[i]);
     api.SetScale(_origin[i], _time);
   }
-  SceneChangedNotice().Send();
+  AttributeChangedNotice().Send();
 }
 
 void ScaleCommand::Redo() {
@@ -261,7 +305,7 @@ void ScaleCommand::Redo() {
     }
     api.SetScale(_scale[i], _time);
   }
-  SceneChangedNotice().Send();
+  AttributeChangedNotice().Send();
 }
 
 //==================================================================================
@@ -298,7 +342,7 @@ void PivotCommand::Undo()
     pxr::UsdGeomXformCommonAPI api(_prims[i]);
     api.SetPivot(_origin[i], _time);
   }
-  SceneChangedNotice().Send();
+  AttributeChangedNotice().Send();
 }
 
 void PivotCommand::Redo() {
@@ -309,7 +353,7 @@ void PivotCommand::Redo() {
     }
     api.SetPivot(_pivot[i], _time);
   }
-  SceneChangedNotice().Send();
+  AttributeChangedNotice().Send();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

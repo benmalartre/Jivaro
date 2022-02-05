@@ -627,9 +627,9 @@ TranslateHandle::_UpdateTargets(bool interacting)
   if (interacting) {
     for (auto& target : _targets) {
       pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
-      pxr::UsdGeomXformCommonAPI api(stage->GetPrimAtPath(target.path));
+      pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
-      api.SetTranslate(xformMatrix.GetRow3(3) - target.previous.pivot, activeTime);
+      xformApi.SetTranslate(xformMatrix.GetRow3(3) - target.previous.pivot, activeTime);
     }
   }
   else {
@@ -641,11 +641,10 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
 
       target.current.translation = pxr::GfVec3d(xformMatrix.GetRow3(3) - target.previous.pivot);
-
-      GetApplication()->AddCommand(
-        std::shared_ptr<TranslateCommand>(
-          new TranslateCommand(GetApplication()->GetStage(), _targets, activeTime)));
     }
+    GetApplication()->AddCommand(
+      std::shared_ptr<TranslateCommand>(
+        new TranslateCommand(GetApplication()->GetStage(), _targets, activeTime)));
   }
 }
 
@@ -952,7 +951,7 @@ ScaleHandle::BeginUpdate(float x, float y, float width, float height)
   double distance;
   bool frontFacing;
   _startMatrix = _matrix;
-  _baseScale = pxr::GfVec3f(_scale);
+  _baseScale = pxr::GfVec3f(0);
   if (ray.Intersect(_plane, &distance, &frontFacing)) {
     switch (_activeAxis) {
       case AXIS_CAMERA:
@@ -1190,10 +1189,22 @@ ScaleHandle::_UpdateTargets(bool interacting)
       pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       pxr::UsdGeomXformCommonAPI api(stage->GetPrimAtPath(target.path));
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
-      api.SetScale(pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]), activeTime);
+      api.SetScale(target.previous.scale + 
+        pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]), activeTime);
     }
   }
   else {
+    pxr::UsdGeomXformCache xformCache(activeTime);
+    for (auto& target : _targets) {
+      pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
+      pxr::GfMatrix4f invParentMatrix(
+        xformCache.GetParentToWorldTransform(targetPrim).GetInverse());
+      pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
+
+      target.current.scale = target.previous.scale +
+        pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]);
+    }
+
     GetApplication()->AddCommand(
       std::shared_ptr<ScaleCommand>(
         new ScaleCommand(GetApplication()->GetStage(), _targets, activeTime)));
