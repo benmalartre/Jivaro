@@ -199,19 +199,19 @@ void TranslateCommand::Execute()
 void TranslateCommand::Undo()
 {
   for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI api(_prims[i]);
-    api.SetTranslate(_origin[i], _time);
+    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
+    xformApi.SetTranslate(_origin[i], _time);
   }
   AttributeChangedNotice().Send();
 }
 
 void TranslateCommand::Redo() {
   for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI api(_prims[i]);
-    if (!api) {
+    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
+    if (!xformApi) {
       _EnsureXformCommonAPI(_prims[i], _time);
     }
-    api.SetTranslate(_translate[i], _time);
+    xformApi.SetTranslate(_translate[i], _time);
   }
   AttributeChangedNotice().Send();
 }
@@ -243,19 +243,19 @@ void RotateCommand::Execute()
 void RotateCommand::Undo()
 {
   for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI api(_prims[i]);
-    api.SetRotate(_origin[i], _rotOrder[i], _time);
+    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
+    xformApi.SetRotate(_origin[i], _rotOrder[i], _time);
   }
   AttributeChangedNotice().Send();
 }
 
 void RotateCommand::Redo() {
   for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI api(_prims[i]);
-    if (!api) {
+    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
+    if (!xformApi) {
       _EnsureXformCommonAPI(_prims[i], _time);
     }
-    api.SetRotate(_rotation[i],_rotOrder[i], _time);
+    xformApi.SetRotate(_rotation[i],_rotOrder[i], _time);
   }
   AttributeChangedNotice().Send();
 }
@@ -291,19 +291,19 @@ void ScaleCommand::Execute()
 void ScaleCommand::Undo()
 {
   for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI api(_prims[i]);
-    api.SetScale(_origin[i], _time);
+    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
+    xformApi.SetScale(_origin[i], _time);
   }
   AttributeChangedNotice().Send();
 }
 
 void ScaleCommand::Redo() {
   for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI api(_prims[i]);
-    if (!api) {
+    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
+    if (!xformApi) {
       _EnsureXformCommonAPI(_prims[i], _time);
     }
-    api.SetScale(_scale[i], _time);
+    xformApi.SetScale(_scale[i], _time);
   }
   AttributeChangedNotice().Send();
 }
@@ -339,19 +339,19 @@ void PivotCommand::Execute()
 void PivotCommand::Undo()
 {
   for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI api(_prims[i]);
-    api.SetPivot(_origin[i], _time);
+    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
+    xformApi.SetPivot(_origin[i], _time);
   }
   AttributeChangedNotice().Send();
 }
 
 void PivotCommand::Redo() {
   for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI api(_prims[i]);
-    if (!api) {
+    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
+    if (!xformApi) {
       _EnsureXformCommonAPI(_prims[i], _time);
     }
-    api.SetPivot(_pivot[i], _time);
+    xformApi.SetPivot(_pivot[i], _time);
   }
   AttributeChangedNotice().Send();
 }

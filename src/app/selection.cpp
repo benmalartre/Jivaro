@@ -28,6 +28,15 @@ void Selection::ComputeHash()
   }
 }
 
+bool Selection::IsSelected(const pxr::UsdPrim& prim)
+{
+  const pxr::SdfPath primPath = prim.GetPath();
+  for (auto& item : _items) {
+    if (item.path == primPath) return true;
+  }
+  return false;
+}
+
 bool Selection::IsEmpty()
 {
   return _items.size() == 0;

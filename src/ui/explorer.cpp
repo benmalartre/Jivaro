@@ -26,12 +26,10 @@ ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
   ImGuiTreeNodeFlags_OpenOnDoubleClick |
   ImGuiTreeNodeFlags_SpanAvailWidth;
 
+
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, "Explorer")
-  , _root(NULL)
-  , _current(NULL)
-  , _last(NULL)
 {
   _parent->SetDirty();
 }
@@ -41,6 +39,7 @@ ExplorerUI::~ExplorerUI()
 {
 }
 
+/*
 void 
 ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
@@ -52,15 +51,17 @@ ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 {
   Select();
 }
+*/
 
+/*
 void 
 ExplorerUI::Init()
 {
-  Update();
+  //Update();
   _parent->SetDirty();
   _initialized = true;
 }
-
+*/
 
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
@@ -68,12 +69,11 @@ ExplorerUI::MouseButton(int button, int action, int mods)
   Application* app = GetApplication();
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_RELEASE) {
-      if (_current) {
-        _current->_selected = 1 - _current->_selected;
+      if (app->GetStage()->GetPrimAtPath(_current).IsValid()) {
         if (mods & GLFW_MOD_CONTROL) {
-          app->ToggleSelection({ _current->_prim.GetPath() });
+          app->ToggleSelection({ _current });
         } else {
-          app->SetSelection({ _current->_prim.GetPath() });
+          app->SetSelection({ _current });
         }
       }
     }
@@ -90,6 +90,7 @@ ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
 }
 
+/*
 void 
 ExplorerUI::Update()
 {
@@ -107,11 +108,11 @@ ExplorerUI::Select()
   if (_selectionHash != selectionHash) {
     if (GetApplication()->GetStage()) {
       for (auto& item : _map) {
-        item.second->_selected = false;
+        BITMASK_CLEAR(item.second->flags, ExplorerUI::Item::SELECTED);
       }
       for (auto& selected : selection->GetItems()) {
         if (_map.find(selected.path) != _map.end()) {
-          _map[selected.path]->_selected = true;
+          BITMASK_SET(_map[selected.path]->flags, ExplorerUI::Item::SELECTED);
         }
       }
     }
@@ -121,12 +122,11 @@ ExplorerUI::Select()
 
 void 
 ExplorerUI::DrawItemBackground(ImDrawList* drawList,
-  const ExplorerItem* item, bool& flip)
+  ExplorerUI::Item* item, bool& flip)
 {
-  if (!item) return;
   ImVec2 pos = ImGui::GetCursorPos();
   const float width = (float)GetWidth();
-  if (item->_selected) {
+  if (BITMASK_CHECK(item->flags, ExplorerUI::Item::SELECTED)) {
     drawList->AddRectFilled(
       { pos.x, pos.y },
       { pos.x + width, pos.y + EXPLORER_LINE_HEIGHT },
@@ -146,10 +146,10 @@ ExplorerUI::DrawItemBackground(ImDrawList* drawList,
   }
 
   ImGui::SetCursorPos(ImVec2(pos.x, pos.y + EXPLORER_LINE_HEIGHT));
-  if (item->_expanded) {
-    for (const auto child : item->_items) {
+  if (BITMASK_CHECK(item->flags, ExplorerUI::Item::EXPANDED)) {
+    for (auto child : item->items) {
       flip = !flip;
-      DrawItemBackground(drawList, child, flip);
+      DrawItemBackground(drawList, &child, flip);
     }
   }
 }
@@ -184,8 +184,8 @@ ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
       clipRectMin.x,
       clipRectMin.y - scrollOffsetV + EXPLORER_LINE_HEIGHT));
 
-  for (auto& item : _root->_items) {
-    DrawItemBackground(drawList, item, flip);
+  for (auto& item : _root->items) {
+    DrawItemBackground(drawList, &item, flip);
     flip = !flip;
   }
 
@@ -193,7 +193,7 @@ ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
 }
 
 void 
-ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
+ExplorerUI::_UpdateSelection(ExplorerUI::Item* item, bool isLeaf)
 {
   Application* app = GetApplication();
   if (isLeaf ? ImGui::IsItemClicked() : 
@@ -204,40 +204,38 @@ ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
 }
 
 void 
-ExplorerUI::DrawItemType(ExplorerItem* item)
+ExplorerUI::DrawItemType(ExplorerUI::Item* item)
 {
-  ImGui::Text("%s", item->_prim.GetTypeName().GetText());
+  ImGui::Text("%s", item->type.GetText());
 
-  _UpdateSelection(item, !item->_items.size());
+  _UpdateSelection(item, !item->items.size());
   ImGui::NextColumn();
 }
-
+*/
 void
-ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
+ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  short state =  item->_selected ? ICON_SELECTED : ICON_DEFAULT;
 
-  const Icon* visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
-  const Icon* invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];
-  GLuint tex = 
-    item->_visible ? visibleIcon->tex[state] : invisibleIcon->tex[state];
-  const ImVec4& sel_col = 
-    item->_selected ? TEXT_SELECTED_COLOR : TEXT_DEFAULT_COLOR;
-  const ImVec4& col = 
-    heritedVisibility ? sel_col : style.Colors[ImGuiCol_TextDisabled];
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
+
+  const Icon* visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
+  const Icon* invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];
+
+  GLuint tex = visible ?
+    visibleIcon->tex[selected] : invisibleIcon->tex[selected];
+
   ImGui::ImageButton(
     (void*)(size_t)tex, ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1));
 
   if (ImGui::IsItemClicked()) {
-    item->_visible = !item->_visible;
-    pxr::UsdGeomImageable imageable(item->_prim);
+    std::cout << "VISIBILITY CLICKED : " << visible << " : " << prim.GetPath() << std::endl;
+    pxr::UsdGeomImageable imageable(prim);
     if (imageable) {
-      if (item->_visible)imageable.MakeVisible();
-      else imageable.MakeInvisible();
+      if (visible)imageable.MakeInvisible();
+      else imageable.MakeVisible();
       GetWindow()->ForceRedraw();
     }
   }
@@ -246,30 +244,30 @@ ExplorerUI::DrawItemVisibility(ExplorerItem* item, bool heritedVisibility)
   ImGui::PopStyleColor(3);
 }
 
+/*
 void 
-ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
+ExplorerUI::DrawItem(ExplorerUI::Item* current, bool heritedVisibility)
 {
-  if (!current) return;
   ImGuiTreeNodeFlags itemFlags = _treeFlags;
 
-  if (current->_selected) {
+  if (BITMASK_CHECK(current->flags, ExplorerUI::Item::SELECTED)) {
     itemFlags |= ImGuiTreeNodeFlags_Selected;
   }
 
   // parent
-  if (current->_items.size())
+  if (current->items.size())
   {
-    std::string key = "##" + current->_prim.GetPath().GetString();
+    std::string key = "##" + current->path.GetString();
     bool currentOpen = ImGui::TreeNodeEx(key.c_str(), itemFlags);
     _UpdateSelection(current, false);
 
-    if(current->_selected) {
+    if(BITMASK_CHECK(current->flags, ExplorerUI::Item::SELECTED)) {
       ImGui::PushStyleColor(ImGuiCol_Text, TEXT_SELECTED_COLOR);
     } else {
       ImGui::PushStyleColor(ImGuiCol_Text, TEXT_DEFAULT_COLOR);
     }
     ImGui::SameLine();
-    ImGui::Text("%s", current->_prim.GetName().GetText());
+    ImGui::Text("%s", current->path.GetName().c_str());
     ImGui::NextColumn();
 
     DrawItemType(current);
@@ -278,12 +276,12 @@ ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
 
     if (currentOpen)
     {
-      current->_expanded = true;
-      for (const auto item : current->_items)
-        DrawItem(item, current->_visible && heritedVisibility);
+      BITMASK_SET(current->flags, ExplorerUI::Item::EXPANDED);
+      for (auto& item : current->items)
+        DrawItem(&item, BITMASK_CHECK(item.flags, ExplorerUI::Item::VISIBLE) && heritedVisibility);
       ImGui::TreePop();
     }
-    else current->_expanded = false;
+    else BITMASK_CLEAR(current->flags, ExplorerUI::Item::EXPANDED);
   }
   // leaf
   else
@@ -291,33 +289,116 @@ ExplorerUI::DrawItem(ExplorerItem* current, bool heritedVisibility)
     itemFlags |= ImGuiTreeNodeFlags_Leaf |
       ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-    std::string key = "##" + current->_prim.GetPath().GetString();
+    std::string key = "##" + current->path.GetString();
     ImGui::TreeNodeEx(key.c_str(), itemFlags);
        
     _UpdateSelection(current, true);
 
-    if(current->_selected) {
+    if(BITMASK_CHECK(current->flags, ExplorerUI::Item::SELECTED)) {
       ImGui::PushStyleColor(ImGuiCol_Text, TEXT_SELECTED_COLOR);
     } else {
       ImGui::PushStyleColor(ImGuiCol_Text, TEXT_DEFAULT_COLOR);
     }
 
     ImGui::SameLine();
-    ImGui::Text("%s", current->_prim.GetName().GetText());
+    ImGui::Text("%s", current->path.GetName().c_str());
     ImGui::NextColumn();
 
-    current->_expanded = false;
+    BITMASK_CLEAR(current->flags, ExplorerUI::Item::EXPANDED);
 
     DrawItemType(current);
     DrawItemVisibility(current, heritedVisibility);
     ImGui::PopStyleColor();
   }
 }
+*/
+
+#define PrimDefaultColor {227.f/255.f, 227.f/255.f, 227.f/255.f, 1.0}
+#define PrimInactiveColor {0.4, 0.4, 0.4, 1.0}
+#define PrimInstanceColor {135.f/255.f, 206.f/255.f, 250.f/255.f, 1.0}
+#define PrimPrototypeColor {118.f/255.f, 136.f/255.f, 217.f/255.f, 1.0}
+#define PrimHasCompositionColor {222.f/255.f, 158.f/255.f, 46.f/255.f, 1.0}
+
+static ImVec4 GetPrimColor(const UsdPrim& prim) {
+  if (!prim.IsActive() || !prim.IsLoaded()) {
+    return ImVec4(PrimInactiveColor);
+  }
+  if (prim.IsInstance()) {
+    return ImVec4(PrimInstanceColor);
+  }
+  const auto hasCompositionArcs = prim.HasAuthoredReferences() || prim.HasAuthoredPayloads() || prim.HasAuthoredInherits() ||
+    prim.HasAuthoredSpecializes() || prim.HasVariantSets();
+  if (hasCompositionArcs) {
+    return ImVec4(PrimHasCompositionColor);
+  }
+  if (prim.IsPrototype() || prim.IsInPrototype() || prim.IsInstanceProxy()) {
+    return ImVec4(PrimPrototypeColor);
+  }
+  return ImVec4(PrimDefaultColor);
+}
+
+/// Recursive function to draw a prim and its descendants
+void 
+ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection) 
+{
+  ImGuiTreeNodeFlags flags = _treeFlags;
+  const auto& children = prim.GetFilteredChildren(
+    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
+  if (children.empty()) {
+    flags |= ImGuiTreeNodeFlags_Leaf;
+  }
+  const bool selected = selection->IsSelected(prim);
+  if (selected) {
+    flags |= ImGuiTreeNodeFlags_Selected;
+  }
+
+  bool unfolded = true;
+  {
+    ImGui::PushStyleColor(ImGuiCol_Text, GetPrimColor(prim));
+    unfolded = ImGui::TreeNodeEx(prim.GetName().GetText(), flags);
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+      _current = prim.GetPath();
+    }
+    ImGui::PopStyleColor();
+    /*
+    {
+      ScopedStyleColor popupColor(ImGuiCol_Text, ImVec4(PrimDefaultColor));
+      if (ImGui::BeginPopupContextItem()) {
+        DrawUsdPrimEditMenuItems(prim);
+        ImGui::EndPopup();
+      }
+    }
+    */
+    ImGui::NextColumn();
+  }
+
+  ImGui::NextColumn();
+  pxr::UsdGeomImageable imageable(prim);
+  if (imageable) {
+    pxr::TfToken visibility;
+    imageable.GetVisibilityAttr().Get<TfToken>(&visibility);
+    const bool visible = (visibility != pxr::UsdGeomTokens->invisible);
+    DrawVisibility(prim, visible, selected);
+  }
+
+  if (unfolded) {
+    if (prim.IsActive()) {
+      for (const auto& child : children) {
+        DrawPrim(child, selection);
+      }
+    }
+    ImGui::TreePop();
+  }
+}
 
 bool 
 ExplorerUI::Draw()
 {
-  if (!_initialized)Init();
+  /// Draw the hierarchy of the stage
+  Application* app = GetApplication();
+  Selection* selection = app->GetSelection();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+  if (!stage) return false;
 
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
@@ -325,92 +406,59 @@ ExplorerUI::Draw()
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
 
-  const ImVec2 localMousePos = ImGui::GetMousePos() - min;
+  auto rootPrim = stage->GetPseudoRoot();
+  auto layer = stage->GetSessionLayer();
 
-  Application* app = GetApplication();
+  // setup transparent background
+  ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
+
+  // setup columns
+  ImGui::Columns(3);
+  ImGui::SetColumnWidth(0, GetWidth() - 100);
+  ImGui::SetColumnWidth(1, 60);
+  ImGui::SetColumnWidth(2, 40);
   
-  if (app->GetStage())
-  {
-    // setup transparent background
-    ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, TRANSPARENT_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
+  // draw title
+  ImGui::PushFont(GetWindow()->GetMediumFont(0));
+  ImGui::Text("Prim");
+  ImGui::NextColumn();
+  ImGui::Text("Type");
+  ImGui::NextColumn();
+  ImGui::Text("Vis");
+  ImGui::NextColumn();
+  ImGui::PopFont();
 
-    // setup columns
-    ImGui::Columns(3);
-    ImGui::SetColumnWidth(0, GetWidth() - 100);
-    ImGui::SetColumnWidth(1, 60);
-    ImGui::SetColumnWidth(2, 40);
-    
-    // draw title
-    ImGui::PushFont(GetWindow()->GetMediumFont(0));
-    ImGui::Text("Prim");
-    ImGui::NextColumn();
-    ImGui::Text("Type");
-    ImGui::NextColumn();
-    ImGui::Text("Vis");
-    ImGui::NextColumn();
-    ImGui::PopFont();
-    
-    DrawBackground(localMousePos.x, localMousePos.y);
-    
-    ImGui::PushFont(GetWindow()->GetRegularFont(0));
-    ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
-    for (auto& item : _root->_items) {
-      DrawItem(item, true);
-    }
-    ImGui::PopFont();
-    ImGui::PopStyleColor(3);
-    
+  ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
+  /*
+  bool unfolded = 
+    ImGui::TreeNodeEx(stage->GetRootLayer()->GetDisplayName().c_str(), _treeFlags);*/
+
+  /*
+  // Unfold the selected paths.
+  // TODO: This might be a behavior we don't want in some situations, so add a way to toggle it
+  static SelectionHash lastSelectionHash = 0;
+  if (UpdateSelectionHash(selectedPaths, lastSelectionHash)) { // We could use the imgui id as well instead of a static ??
+    OpenSelectedPaths(selectedPaths);
+    // TODO HighlightSelectedPaths();
   }
-  
+  */
+
+  const auto& children = rootPrim.GetFilteredChildren(
+    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
+  for (const auto& child : children) {
+    DrawPrim(child, selection);
+  }
+  ImGui::TreePop();
+  ImGui::PopStyleColor(3);
   ImGui::End();
 
-  
-
-  return 
+  return
     ImGui::IsAnyItemHovered() ||
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
     ImGui::IsAnyMouseDown();
-}
-
-
-void 
-ExplorerUI::RecurseStage()
-{
-  if (_root)delete _root;
-  _root = new ExplorerItem();
-  _root->_expanded = true;
-  Application* app = GetApplication();
-  if (app->GetStage()) {
-    _root->_prim = app->GetStage()->GetPseudoRoot();
-    _root->_visible = true;
-    _map[_root->_prim.GetPath()] = _root;
-    RecursePrim(_root);
-  }
-}
-
-void
-ExplorerUI::RecursePrim(ExplorerItem* currentItem)
-{
-  Selection* selection = GetApplication()->GetSelection();
-  for (auto& childPrim : currentItem->_prim.GetChildren())
-  {
-    pxr::UsdAttribute visibilityAttr =
-      pxr::UsdGeomImageable(childPrim).GetVisibilityAttr();
-    bool visible = true;
-    if (visibilityAttr.IsValid())
-    {
-      pxr::TfToken visibility;
-      visibilityAttr.Get(&visibility);
-      if (visibility == pxr::UsdGeomTokens->invisible)visible = false;
-      else visible = true;
-    }
-    ExplorerItem* childItem = currentItem->AddItem(childPrim, visible, false, false);
-    _map[childPrim.GetPath()] = childItem;
-    RecursePrim(childItem);
-  }
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

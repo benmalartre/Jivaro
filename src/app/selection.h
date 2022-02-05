@@ -62,6 +62,8 @@ public:
   std::vector<Item>& GetItems() { return _items; };
   void SetItems(const std::vector<Item>& items) {_items = items;};
 
+  bool IsSelected(const pxr::UsdPrim& prim);
+
 private:
   Type                        _mode;
   std::vector<Item>           _items;
