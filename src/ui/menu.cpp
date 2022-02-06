@@ -23,7 +23,6 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_MenuBar |
   ImGuiWindowFlags_NoMove |
   ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoTitleBar |
   ImGuiWindowFlags_NoCollapse |
   ImGuiWindowFlags_NoNav |
   ImGuiWindowFlags_NoScrollWithMouse |
@@ -49,29 +48,29 @@ bool MenuItem::Draw()
 {
   Window* window = view->GetWindow();
   if (items.size()) {
-    ImGui::PushFont(window->GetBoldFont(2));
+    //ImGui::PushFont(window->GetBoldFont(2));
     if (ImGui::BeginMenu(label.c_str())) {
       for (auto& item : items) {
         item.Draw();
       }
       view->SetFlag(View::INTERACTING);
       ImGui::EndMenu();
-      ImGui::PopFont();
+      //ImGui::PopFont();
       return true;
     }
-    ImGui::PopFont();
+    //ImGui::PopFont();
   }
   else {
-    ImGui::PushFont(window->GetMediumFont(2));
+    //ImGui::PushFont(window->GetMediumFont(2));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
       view->ClearFlag(View::INTERACTING);
       window->SetActiveTool(TOOL_SELECT);
       window->ForceRedraw();
-      ImGui::PopFont();
+      //ImGui::PopFont();
       return true;
     }
-    ImGui::PopFont();
+    //ImGui::PopFont();
   }
   return false;
 }
@@ -96,6 +95,10 @@ static void OpenFileCallback() {
 
 static void SaveFileCallback() {
 }
+
+static void NewFileCallback() {
+}
+
 
 static void OpenDemoCallback()
 {
@@ -171,6 +174,8 @@ MenuUI::MenuUI(View* parent) :BaseUI(parent, "MainMenu")
   pxr::VtArray < pxr::VtValue > args;
   MenuItem& fileMenu = AddItem(parent, "File", "", false, true);
   fileMenu.AddItem(parent, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCallback);
+  fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
+  fileMenu.AddItem(parent, "New", "Ctrl+N", false, true, (MenuPressedFunc)&NewFileCallback);
   /*
   fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
   args.push_back(pxr::VtValue(7.0));
@@ -204,7 +209,6 @@ bool MenuUI::Draw()
   ImGui::PushStyleColor(ImGuiCol_Header, BACKGROUND_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ALTERNATE_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, SELECTED_COLOR);
-  Window* window = GetWindow();
 
   static bool open;
   const pxr::GfVec2f min(GetX(), GetY());
@@ -219,25 +223,24 @@ bool MenuUI::Draw()
   drawList->AddRectFilled(
     min,
     min + size,
-    ImColor(BACKGROUND_COLOR)
-  );
+    ImColor(BACKGROUND_COLOR));
 
-  if (ImGui::BeginMenuBar())
+  
+  ImGui::PushFont(GetWindow()->GetBoldFont(2));
+  
+  if (ImGui::BeginMainMenuBar())
   {
-    ImGui::PushFont(window->GetBoldFont(2));
     for (auto& item : _items) {
       if (item.Draw()) {
         _parent->SetDirty();
         _parent->SetInteracting(true);
       }
     }
-
-    ImGui::PopFont();
-    ImGui::EndMenuBar();
+    ImGui::EndMainMenuBar();
   }
   
+  ImGui::PopFont();
   ImGui::PopStyleColor(3);
-  
   ImGui::End();
 
   return 

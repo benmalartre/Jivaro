@@ -361,6 +361,42 @@ static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd
 }
 */
 
+static bool ComboWidget(const char* label, BaseUI* ui, 
+  const char** names, const size_t count, int& last, size_t width=300)
+{
+  int current = last;
+  ImGui::Text(label);
+  ImGui::SameLine();
+  ImGui::SetNextItemWidth(300);
+  std::string name("##");
+  name += label;
+  if (ImGui::BeginCombo(name.c_str(), names[current], ImGuiComboFlags_PopupAlignLeft))
+  {
+    for (int n = 0; n < count; ++n)
+    {
+      const bool is_selected = (current == n);
+      if (ImGui::Selectable(names[n], is_selected))
+      {
+        current = n;
+      }
+
+      if (is_selected) {
+        ImGui::SetItemDefaultFocus();
+      }
+    }
+    ui->GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
+    ImGui::EndCombo();
+  }
+  if (current != last) {
+    last = current;
+    ui->GetView()->ClearFlag(View::DISCARDMOUSEBUTTON);
+    ImGui::SameLine();
+    return true;
+  }
+  ImGui::SameLine();
+  return false;
+}
+
 bool ViewportUI::Draw()
 {    
   if (!_initialized)Init();
@@ -465,50 +501,15 @@ bool ViewportUI::Draw()
     // renderer
     ImGui::SetCursorPosX(0);
 
-    int rendererIndex = _rendererIndex;
-    ImGui::Text("Renderer");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(300);
-    if (ImGui::BeginCombo("##Renderer", _rendererNames[_rendererIndex], ImGuiComboFlags_PopupAlignLeft))
-    {
-      for (int n = 0; n < _numRenderers; ++n)
-      {
-        const bool is_selected = (_rendererIndex == n);
-        if (ImGui::Selectable(_rendererNames[n], is_selected))
-        {
-          _rendererIndex = n;
-        }
-
-        if (is_selected) {
-          ImGui::SetItemDefaultFocus();
-        }
-      }
-      _parent->SetFlag(View::DISCARDMOUSEBUTTON);
-      ImGui::EndCombo();
-    }
-    if (rendererIndex != _rendererIndex) {
-      _parent->ClearFlag(View::DISCARDMOUSEBUTTON);
+    if (ComboWidget("Renderer", this, _rendererNames, _numRenderers, _rendererIndex, 300)) {
       Init();
     }
-    ImGui::SameLine();
 
     // shaded mode
-    ImGui::Text("Mode");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(300);
-    if (ImGui::BeginCombo("##DrawMode", DRAW_MODE_NAMES[_drawMode], ImGuiComboFlags_PopupAlignLeft))
-    {
-      for (int n = 0; n < IM_ARRAYSIZE(DRAW_MODE_NAMES); ++n)
-      {
-        const bool is_selected = (_drawMode == n);
-        if (ImGui::Selectable(DRAW_MODE_NAMES[n], is_selected))
-          _drawMode = n;
-
-        if (is_selected)
-          ImGui::SetItemDefaultFocus();
-      }
-      ImGui::EndCombo();
+    if (ComboWidget("Mode", this, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), _drawMode, 300)) {
+      _engine->SetDirty(true);
     }
+
     ImGui::PopFont();
     
     ImGui::End();

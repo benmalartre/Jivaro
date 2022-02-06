@@ -26,8 +26,9 @@ public:
     DIRTY               = 1 << 7,
     INTERACTING         = 1 << 8,
     FORCEREDRAW         = 1 << 9,
-    DISCARDMOUSEBUTTON  = 1 << 10,
-    DISCARDMOUSEMOVE    = 1 << 11
+    TIMEVARYING         = 1 << 10,
+    DISCARDMOUSEBUTTON  = 1 << 11,
+    DISCARDMOUSEMOVE    = 1 << 12
   };
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);

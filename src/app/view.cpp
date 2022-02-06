@@ -112,7 +112,7 @@ View::Draw(bool forceRedraw)
   else {
     DrawHead();
     if (_content && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-      if (!_content->Draw() && !IsActive()) {
+      if (!_content->Draw() && !IsActive() && !GetFlag(TIMEVARYING)) {
         SetClean();
       }
     }

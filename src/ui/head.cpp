@@ -79,8 +79,9 @@ ViewHead::RemoveChild(BaseUI* child)
 void
 ViewHead::Draw()
 {
+  ImGuiStyle& style = ImGui::GetStyle();
   const pxr::GfVec2f min(_parent->GetMin());
-  const pxr::GfVec2f size(_parent->GetWidth(), VIEW_HEAD_HEIGHT);
+  const pxr::GfVec2f size(_parent->GetWidth(), VIEW_HEAD_HEIGHT + 2 * style.FramePadding.y);
   static bool open;
 
   ImGui::Begin(("##" + _name).c_str(), &open, ViewHead::_flags);
@@ -104,7 +105,6 @@ ViewHead::Draw()
   {
     const std::string popupName = _name + "Popup";
     if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
-      std::cout << "FUCK" << std::endl;
       ImGui::OpenPopup(popupName.c_str());
       _invade = true;
     }
@@ -187,7 +187,8 @@ int HeadedUI::GetX()
 
 int HeadedUI::GetY()
 {
-  return (_parent->GetMin()[1] + VIEW_HEAD_HEIGHT) - 1;
+  ImGuiStyle& style = ImGui::GetStyle();
+  return (_parent->GetMin()[1] + (VIEW_HEAD_HEIGHT + 2* style.FramePadding.y)) - 1;
 }
 
 int HeadedUI::GetWidth()
@@ -197,7 +198,8 @@ int HeadedUI::GetWidth()
 
 int HeadedUI::GetHeight()
 {
-  return (_parent->GetHeight() - VIEW_HEAD_HEIGHT) + 2;
+  ImGuiStyle& style = ImGui::GetStyle();
+  return (_parent->GetHeight() - (VIEW_HEAD_HEIGHT + 2 * style.FramePadding.y)) + 2;
 }
 
 // mouse positon relative to the view

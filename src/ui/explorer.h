@@ -20,6 +20,7 @@ class ExplorerUI : public HeadedUI
   struct Item {
     pxr::SdfPath    path;
     size_t          id;
+    bool            selected;
   };
 
 public:
@@ -40,6 +41,8 @@ public:
   void DrawItem(Item* item, bool heritedVisibility);
   void DrawItemType(Item* item);
   */
+  void DrawItemBackground(ImDrawList* drawList, bool selected, bool& flip);
+  void DrawBackground();
   void DrawPrim(const pxr::UsdPrim& prim, Selection* selection);
   void DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected);
   void DrawType(const pxr::UsdPrim& prim, bool selected);
@@ -55,8 +58,11 @@ private:
   //void _UpdateSelection(Item* item, bool isLeaf);
 
   bool                          _locked;
+  bool                          _flip;
   pxr::SdfPath                  _current;
   size_t                        _selectionHash;
+  std::vector<Item>             _items;
+  size_t                        _mapping;
 
   static ImGuiWindowFlags       _flags;
   static ImGuiTreeNodeFlags     _treeFlags;

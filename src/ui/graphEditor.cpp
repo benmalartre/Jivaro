@@ -1041,6 +1041,7 @@ GraphEditorUI::DrawGrid()
 bool 
 GraphEditorUI::Draw()
 {
+  std::cout << "DRAW GRAPH EDITOR" << std::endl;
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
   

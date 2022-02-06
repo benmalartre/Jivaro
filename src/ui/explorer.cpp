@@ -19,7 +19,8 @@ ImGuiWindowFlags ExplorerUI::_flags =
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_NoTitleBar |
   ImGuiWindowFlags_NoScrollbar |
-  ImGuiWindowFlags_NoMove;
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoBackground;
 
 ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
   ImGuiTreeNodeFlags_OpenOnArrow |
@@ -154,45 +155,69 @@ ExplorerUI::DrawItemBackground(ImDrawList* drawList,
     }
   }
 }
-
-void 
-ExplorerUI::DrawBackground(float localMouseX, float localMouseY)
+*/
+void
+ExplorerUI::DrawItemBackground(ImDrawList* drawList,
+  bool selected, bool& flip)
 {
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImVec2 pos = ImGui::GetCursorPos();
   const auto& style = ImGui::GetStyle();
-
+  const float width = (float)GetWidth();
+  const float height = ImGui::GetTextLineHeight() + style.FramePadding.y * 2 + style.ItemInnerSpacing.y;
+  if (selected) {
+    drawList->AddRectFilled(
+      { pos.x, pos.y },
+      { pos.x + width, pos.y + height },
+      ImColor(SELECTED_COLOR));
+  }
+  else {
+    if (flip)
+      drawList->AddRectFilled(
+        { pos.x, pos.y },
+        { pos.x + width, pos.y + height },
+        ImColor(BACKGROUND_COLOR));
+    else
+      drawList->AddRectFilled(
+        { pos.x, pos.y },
+        { pos.x + width, pos.y + height },
+        ImColor(ALTERNATE_COLOR));
+  }
+  ImGui::SetCursorPos(ImVec2(pos.x, pos.y + height));
+}
+void
+ExplorerUI::DrawBackground()
+{
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+  const auto& style = ImGui::GetStyle();
   float scrollOffsetH = ImGui::GetScrollX();
   float scrollOffsetV = ImGui::GetScrollY();
-
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
-  const pxr::GfVec2f max(min + size);
-
-  ImVec2 clipRectMin = min;
-  ImVec2 clipRectMax = max;
+  pxr::GfVec2f clipRectMin(GetX(), GetY());
+  pxr::GfVec2f clipRectMax(GetX() + GetWidth(), GetY() + GetHeight());
 
   if (ImGui::GetScrollMaxX() > 0)
   {
-    clipRectMax.x += style.ScrollbarSize;
+    clipRectMax[0] += style.ScrollbarSize;
   }
- 
+
   drawList->PushClipRect(clipRectMin, clipRectMax);
-  
+
   bool flip = false;
-  
+
+  ImGui::PushFont(GetWindow()->GetMediumFont(2));
   ImGui::SetCursorPos(
     ImVec2(
-      clipRectMin.x,
-      clipRectMin.y - scrollOffsetV + EXPLORER_LINE_HEIGHT));
-
-  for (auto& item : _root->items) {
-    DrawItemBackground(drawList, &item, flip);
+      clipRectMin[0],
+      clipRectMin[1] - scrollOffsetV + ImGui::GetTextLineHeight() + style.FramePadding[1] * 2));
+  ImGui::PopFont();
+  ImGui::PushFont(GetWindow()->GetRegularFont(1));
+  for (auto& item : _items) {
+    DrawItemBackground(drawList, item.selected, flip);
     flip = !flip;
   }
-
+  ImGui::PopFont();
   drawList->PopClipRect();
 }
-
+/*
 void 
 ExplorerUI::_UpdateSelection(ExplorerUI::Item* item, bool isLeaf)
 {
@@ -218,11 +243,11 @@ void
 ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-
+  
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
-
+  
   const Icon* visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
   const Icon* invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];
 
@@ -230,10 +255,9 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
     visibleIcon->tex[selected] : invisibleIcon->tex[selected];
 
   ImGui::ImageButton(
-    (void*)(size_t)tex, ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1));
+    (void*)(size_t)tex, ImVec2(14, 14), ImVec2(0, 0), ImVec2(1, 1));
 
   if (ImGui::IsItemClicked()) {
-    std::cout << "VISIBILITY CLICKED : " << visible << " : " << prim.GetPath() << std::endl;
     pxr::UsdGeomImageable imageable(prim);
     if (imageable) {
       if (visible)imageable.MakeInvisible();
@@ -245,75 +269,6 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
   ImGui::NextColumn();
   ImGui::PopStyleColor(3);
 }
-
-/*
-void 
-ExplorerUI::DrawItem(ExplorerUI::Item* current, bool heritedVisibility)
-{
-  ImGuiTreeNodeFlags itemFlags = _treeFlags;
-
-  if (BITMASK_CHECK(current->flags, ExplorerUI::Item::SELECTED)) {
-    itemFlags |= ImGuiTreeNodeFlags_Selected;
-  }
-
-  // parent
-  if (current->items.size())
-  {
-    std::string key = "##" + current->path.GetString();
-    bool currentOpen = ImGui::TreeNodeEx(key.c_str(), itemFlags);
-    _UpdateSelection(current, false);
-
-    if(BITMASK_CHECK(current->flags, ExplorerUI::Item::SELECTED)) {
-      ImGui::PushStyleColor(ImGuiCol_Text, TEXT_SELECTED_COLOR);
-    } else {
-      ImGui::PushStyleColor(ImGuiCol_Text, TEXT_DEFAULT_COLOR);
-    }
-    ImGui::SameLine();
-    ImGui::Text("%s", current->path.GetName().c_str());
-    ImGui::NextColumn();
-
-    DrawItemType(current);
-    DrawItemVisibility(current, heritedVisibility);
-    ImGui::PopStyleColor();
-
-    if (currentOpen)
-    {
-      BITMASK_SET(current->flags, ExplorerUI::Item::EXPANDED);
-      for (auto& item : current->items)
-        DrawItem(&item, BITMASK_CHECK(item.flags, ExplorerUI::Item::VISIBLE) && heritedVisibility);
-      ImGui::TreePop();
-    }
-    else BITMASK_CLEAR(current->flags, ExplorerUI::Item::EXPANDED);
-  }
-  // leaf
-  else
-  {
-    itemFlags |= ImGuiTreeNodeFlags_Leaf |
-      ImGuiTreeNodeFlags_NoTreePushOnOpen;
-
-    std::string key = "##" + current->path.GetString();
-    ImGui::TreeNodeEx(key.c_str(), itemFlags);
-       
-    _UpdateSelection(current, true);
-
-    if(BITMASK_CHECK(current->flags, ExplorerUI::Item::SELECTED)) {
-      ImGui::PushStyleColor(ImGuiCol_Text, TEXT_SELECTED_COLOR);
-    } else {
-      ImGui::PushStyleColor(ImGuiCol_Text, TEXT_DEFAULT_COLOR);
-    }
-
-    ImGui::SameLine();
-    ImGui::Text("%s", current->path.GetName().c_str());
-    ImGui::NextColumn();
-
-    BITMASK_CLEAR(current->flags, ExplorerUI::Item::EXPANDED);
-
-    DrawItemType(current);
-    DrawItemVisibility(current, heritedVisibility);
-    ImGui::PopStyleColor();
-  }
-}
-*/
 
 #define PrimDefaultColor {227.f/255.f, 227.f/255.f, 227.f/255.f, 1.0}
 #define PrimInactiveColor {0.4, 0.4, 0.4, 1.0}
@@ -359,17 +314,23 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     _current = prim.GetPath();
   }
+  if (ImGui::IsItemToggledOpen())_parent->SetFlag(View::DISCARDMOUSEBUTTON);
   ImGui::PopStyleColor();
   ImGui::NextColumn();
 
   DrawType(prim, selected);
+  
   pxr::UsdGeomImageable imageable(prim);
   if (imageable) {
     pxr::TfToken visibility;
     imageable.GetVisibilityAttr().Get<TfToken>(&visibility);
     const bool visible = (visibility != pxr::UsdGeomTokens->invisible);
     DrawVisibility(prim, visible, selected);
+  } else {
+    ImGui::NextColumn();
   }
+
+  _items.push_back({ prim.GetPath(), _mapping++, selected });
 
   if (unfolded) {
     if (prim.IsActive()) {
@@ -396,6 +357,12 @@ ExplorerUI::Draw()
   ImGui::Begin(_name.c_str(), NULL, _flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
+
+  _items.clear();
+  _mapping = 0;
+
+  ImDrawList* backgroundList = ImGui::GetBackgroundDrawList();
+  backgroundList->AddRectFilled(min, min + size, ImColor(BACKGROUND_COLOR));
 
   const pxr::UsdPrim root = stage->GetPseudoRoot();
   pxr::SdfLayerHandle layer = stage->GetSessionLayer();
@@ -442,6 +409,7 @@ ExplorerUI::Draw()
     DrawPrim(child, selection);
   }
   ImGui::PopFont();
+  DrawBackground();
   ImGui::TreePop();
   ImGui::PopStyleColor(3);
   ImGui::End();
