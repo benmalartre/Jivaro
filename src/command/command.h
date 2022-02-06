@@ -80,7 +80,6 @@ public:
   void Undo() override;
   void Redo() override;
 private:
-  Selection             _selection;
   pxr::SdfPath          _sourcePath;
   pxr::SdfPath          _destinationPath;
   pxr::UsdStageWeakPtr  _stage;

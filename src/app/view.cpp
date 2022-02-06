@@ -111,8 +111,9 @@ View::Draw(bool forceRedraw)
   }
   else {
     DrawHead();
+    Time& time = GetApplication()->GetTime();
     if (_content && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-      if (!_content->Draw() && !IsActive() && !GetFlag(TIMEVARYING)) {
+      if (!_content->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
         SetClean();
       }
     }

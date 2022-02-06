@@ -64,6 +64,7 @@ ViewportUI::ViewportUI(View* parent):
   _rendererIndex = 0;
   _rendererNames = NULL;
   _counter = 0;
+  GetApplication()->SetActiveViewport(this);
 }
 
 // destructor
@@ -177,6 +178,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _lastX = (int)x;
     _lastY = (int)y;
+    GetApplication()->SetActiveViewport(this);
     SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -404,7 +406,6 @@ bool ViewportUI::Draw()
 
   Application* app = GetApplication();
   if (app->GetStage() != nullptr) {
-    std::cout << "DRAW VIEWPORT " << _parent->IsInteracting() << std::endl;
     _engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
       pxr::GfVec4d(

@@ -24,7 +24,7 @@ Camera::Camera(const std::string& name, double fov) :
     pxr::GfCamera::FOVVertical);
   _camera.SetFocusDistance((_pos - _lookat).GetLength());
   _camera.SetClippingRange(pxr::GfRange1f(_near, _far));
-  SetZIsUp(true);
+  SetZIsUp(false);
 }
 
 void

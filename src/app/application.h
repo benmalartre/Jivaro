@@ -28,6 +28,7 @@ class Command;
 class CommandManager;
 class Engine;
 
+
 class Application : public pxr::TfWeakBase
 {
 public:
@@ -108,6 +109,7 @@ public:
   void AddEngine(Engine* engine);
   void RemoveEngine(Engine* engine);
   std::vector<Engine*> GetEngines() { return _engines; };
+  void SetActiveViewport(ViewportUI* viewport);
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};

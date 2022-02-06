@@ -78,10 +78,8 @@ DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr:
   : Command(true)
   , _stage(stage)
   , _sourcePath(path)
-  , _selection()
 {
-  _destinationPath = pxr::SdfPath(path.GetString() + "_duplicate");
-  _selection.SetItems(GetApplication()->GetSelection()->GetItems());
+  _destinationPath = pxr::SdfPath(_sourcePath.GetString() + "_duplicate");
 }
 
 void DuplicatePrimCommand::Execute()
@@ -93,13 +91,12 @@ void DuplicatePrimCommand::Undo()
 {
   if(_stage->GetPrimAtPath(_destinationPath).IsValid())
     _stage->RemovePrim(_destinationPath);
-  Selection* selection = GetApplication()->GetSelection();
-  selection->SetItems(_selection.GetItems());
+
   SceneChangedNotice().Send();
 }
 
 void DuplicatePrimCommand::Redo() {
- 
+  
   pxr::UsdPrim sourcePrim = _stage->GetPrimAtPath(_sourcePath);
   pxr::SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
 
@@ -114,10 +111,6 @@ void DuplicatePrimCommand::Redo() {
     SdfCreatePrimInLayer(destinationLayer, _destinationPath);
   pxr::SdfCopySpec(pxr::SdfLayerHandle(sourceLayer), 
     _sourcePath, destinationLayer, _destinationPath);
-
-  Selection* selection = GetApplication()->GetSelection();
-  selection->Clear();
-  selection->AddItem(_destinationPath);
 
   SceneChangedNotice().Send();
 }

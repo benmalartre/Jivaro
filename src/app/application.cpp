@@ -51,7 +51,7 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _tools(Tool()), _mesh(nullptr)
+  _mainWindow(nullptr), _tools(Tool()), _viewport(nullptr)
 {  
   _scene = new Scene();
   _mainWindow = CreateStandardWindow(width, height);
@@ -60,7 +60,7 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _tools(Tool()), _mesh(nullptr)
+  _mainWindow(nullptr), _tools(Tool()), _viewport(nullptr)
 {
   _scene = new Scene();
   _mainWindow = CreateFullScreenWindow();
@@ -496,14 +496,8 @@ Application::Update()
   _time.ComputeFramerate(glfwGetTime());
   if(_time.IsPlaying()) {
     if(_time.PlayBack()) {
-      /*
-      if (_mesh) {
-        pxr::UsdGeomMesh patron(
-          _stage->GetPrimAtPath(pxr::SdfPath("/patron")));
-        _mesh->Randomize(0.1f);
-        patron.GetPointsAttr().Set(pxr::VtValue(_mesh->GetPositions()));
-      }
-      */
+      if(_viewport)_viewport->GetEngine()->SetDirty(true);
+
     }
   }
 }
@@ -530,6 +524,16 @@ static void _DirtyAllEngines(std::vector<Engine*>& engines)
   for (auto& engine : engines) {
     engine->SetDirty(true);
   }
+}
+
+void 
+Application::SetActiveViewport(ViewportUI* viewport) 
+{
+  if (_viewport) {
+    _viewport->GetView()->ClearFlag(View::TIMEVARYING);
+  }
+  _viewport = viewport;
+  _viewport->GetView()->SetFlag(View::TIMEVARYING);
 }
 
 void 

@@ -247,6 +247,7 @@ ExplorerUI::DrawType(const pxr::UsdPrim& prim, bool selected)
 
 static void _PushCurrentPath(const pxr::SdfPath& path, pxr::SdfPathVector& paths)
 {
+  if (path.IsEmpty())return;
   for (auto& _path : paths) {
     if (_path == path)return;
   }
@@ -273,6 +274,7 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
 
   Application* app = GetApplication();
   if (ImGui::IsItemClicked()) {
+    _current = prim.GetPath();
     pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPrims();
     _PushCurrentPath(_current, paths);
     app->AddCommand(std::shared_ptr<ShowHideCommand>(
@@ -303,10 +305,12 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
 
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
-  pxr::SdfPathVector paths = selection->GetSelectedPrims();
   
-  _PushCurrentPath(_current, paths);
+ 
   if (ImGui::IsItemClicked()) {
+    _current = prim.GetPath();
+    pxr::SdfPathVector paths = selection->GetSelectedPrims();
+    _PushCurrentPath(_current, paths);
     app->AddCommand(std::shared_ptr<ActivateCommand>(
       new ActivateCommand( paths, ActivateCommand::TOGGLE)));
   }
