@@ -11,13 +11,13 @@ CommandManager::AddCommand(std::shared_ptr<Command> command)
 void
 CommandManager::ExecuteCommands() 
 {
-    if(_todoStack.size()) {
-        _redoStack = CommandStack_t();             // clear the redo stack
-        std::shared_ptr<Command> command = _todoStack.back();
-        _todoStack.pop_back();
-        _undoStack.push_back(command);
-        command->Execute();
-    }
+  if(_todoStack.size()) {
+    _redoStack = CommandStack_t();             // clear the redo stack
+    std::shared_ptr<Command> command = _todoStack.back();
+    _todoStack.pop_back();
+    _undoStack.push_back(command);
+    command->Execute();
+  }
 }
 
 void 

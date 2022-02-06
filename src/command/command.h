@@ -80,6 +80,7 @@ public:
   void Undo() override;
   void Redo() override;
 private:
+  Selection             _selection;
   pxr::SdfPath          _sourcePath;
   pxr::SdfPath          _destinationPath;
   pxr::UsdStageWeakPtr  _stage;
@@ -185,6 +186,53 @@ private:
   std::vector<pxr::GfVec3f>          _origin;
   pxr::UsdTimeCode                   _time;
 };
+
+//==================================================================================
+// Show/Hide
+//==================================================================================
+class ShowHideCommand : public Command {
+public:
+  enum Mode {
+    SHOW,
+    HIDE,
+    TOGGLE
+  };
+
+  ShowHideCommand(pxr::SdfPathVector& paths, Mode mode);
+  ~ShowHideCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+protected:
+  pxr::SdfPathVector _paths;
+  std::vector<bool>  _previous;
+  std::vector<bool>  _state;
+  Mode               _mode;
+};
+
+//==================================================================================
+// Activate/Deactivate
+//==================================================================================
+class ActivateCommand : public Command {
+public:
+  enum Mode {
+    ACTIVATE,
+    DEACTIVATE,
+    TOGGLE
+  };
+
+  ActivateCommand(pxr::SdfPathVector& paths, Mode mode);
+  ~ActivateCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+protected:
+  pxr::SdfPathVector _paths;
+  std::vector<bool>  _previous;
+  std::vector<bool>  _state;
+  Mode               _mode;
+};
+
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

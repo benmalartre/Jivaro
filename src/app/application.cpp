@@ -577,6 +577,7 @@ Application::AddCommand(std::shared_ptr<Command> command)
 {
   _manager.AddCommand(command);
   _manager.ExecuteCommands();
+  GetMainWindow()->ForceRedraw();
 }
 
 void 

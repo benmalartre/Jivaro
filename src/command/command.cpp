@@ -78,8 +78,10 @@ DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr:
   : Command(true)
   , _stage(stage)
   , _sourcePath(path)
+  , _selection()
 {
   _destinationPath = pxr::SdfPath(path.GetString() + "_duplicate");
+  _selection.SetItems(GetApplication()->GetSelection()->GetItems());
 }
 
 void DuplicatePrimCommand::Execute()
@@ -89,7 +91,10 @@ void DuplicatePrimCommand::Execute()
 
 void DuplicatePrimCommand::Undo()
 {
-  _stage->RemovePrim(_destinationPath);
+  if(_stage->GetPrimAtPath(_destinationPath).IsValid())
+    _stage->RemovePrim(_destinationPath);
+  Selection* selection = GetApplication()->GetSelection();
+  selection->SetItems(_selection.GetItems());
   SceneChangedNotice().Send();
 }
 
@@ -98,16 +103,21 @@ void DuplicatePrimCommand::Redo() {
   pxr::UsdPrim sourcePrim = _stage->GetPrimAtPath(_sourcePath);
   pxr::SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
 
-    pxr::UsdStagePopulationMask populationMask({ _sourcePath });
-    pxr::UsdStageRefPtr tmpStage = pxr::UsdStage::OpenMasked(_stage->GetRootLayer(), populationMask, pxr::UsdStage::InitialLoadSet::LoadAll);
+  pxr::UsdStagePopulationMask populationMask({ _sourcePath });
+  pxr::UsdStageRefPtr tmpStage = 
+    pxr::UsdStage::OpenMasked(_stage->GetRootLayer(), 
+      populationMask, pxr::UsdStage::InitialLoadSet::LoadAll);
     
-    pxr::SdfLayerRefPtr sourceLayer = tmpStage->Flatten();
-    pxr::SdfLayerHandle destinationLayer = _stage->GetEditTarget().GetLayer();
-    pxr::SdfPrimSpecHandle destinationPrimSpec = SdfCreatePrimInLayer(destinationLayer, _destinationPath);
-    pxr::SdfCopySpec(pxr::SdfLayerHandle(sourceLayer), _sourcePath, destinationLayer, _destinationPath);
+  pxr::SdfLayerRefPtr sourceLayer = tmpStage->Flatten();
+  pxr::SdfLayerHandle destinationLayer = _stage->GetEditTarget().GetLayer();
+  pxr::SdfPrimSpecHandle destinationPrimSpec = 
+    SdfCreatePrimInLayer(destinationLayer, _destinationPath);
+  pxr::SdfCopySpec(pxr::SdfLayerHandle(sourceLayer), 
+    _sourcePath, destinationLayer, _destinationPath);
 
-    GetApplication()->AddCommand(std::shared_ptr<SelectCommand>(
-      new SelectCommand(Selection::OBJECT, { _destinationPath }, SelectCommand::SET)));
+  Selection* selection = GetApplication()->GetSelection();
+  selection->Clear();
+  selection->AddItem(_destinationPath);
 
   SceneChangedNotice().Send();
 }
@@ -156,6 +166,133 @@ void SelectCommand::Redo() {
     break;
   }
   SelectionChangedNotice().Send();
+}
+
+//==================================================================================
+// Show Hide
+//==================================================================================
+ShowHideCommand::ShowHideCommand(pxr::SdfPathVector& paths, Mode mode)
+  : Command(true)
+  , _paths(paths)
+  , _mode(mode)
+{
+
+}
+
+void ShowHideCommand::Execute()
+{
+  //Selection* selection = GetApplication()->GetSelection();
+  //_previous = selection->GetItems();
+  std::cout << "SHOW HIDE COMMAND !!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  for(auto& path: _paths)
+    std::cout << path << std::endl;
+  Redo();
+}
+
+void ShowHideCommand::Undo()
+{
+  //Selection* selection = GetApplication()->GetSelection();
+  //selection->SetItems(_previous);
+  AttributeChangedNotice().Send();
+}
+
+void ShowHideCommand::Redo() {
+  //Selection* selection = GetApplication()->GetSelection();
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+  switch (_mode) {
+  case SHOW:
+    for (auto& path : _paths) {
+      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
+        pxr::UsdGeomImageable imageable(prim);
+        imageable.MakeVisible();
+      }
+    }
+    break;
+
+  case HIDE:
+    for (auto& path : _paths) {
+      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
+        pxr::UsdGeomImageable imageable(prim);
+        imageable.MakeInvisible();
+      }
+    }
+    break;
+
+  case TOGGLE:
+    for (auto& path : _paths) {
+      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
+        pxr::UsdGeomImageable imageable(prim);
+        pxr::TfToken visibility;
+        imageable.GetVisibilityAttr().Get<pxr::TfToken>(&visibility);
+        if (visibility == pxr::UsdGeomTokens->inherited) {
+          imageable.MakeInvisible();
+        }
+        else {
+          imageable.MakeVisible();
+        }
+      }
+    }
+    break;
+  }
+  SelectionChangedNotice().Send();
+}
+
+//==================================================================================
+// Activate Deactivate
+//==================================================================================
+ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
+  : Command(true)
+  , _paths(paths)
+  , _mode(mode)
+{
+
+}
+
+void ActivateCommand::Execute()
+{
+  //Selection* selection = GetApplication()->GetSelection();
+  //_previous = selection->GetItems();
+  Redo();
+}
+
+void ActivateCommand::Undo()
+{
+  //Selection* selection = GetApplication()->GetSelection();
+  //selection->SetItems(_previous);
+  SceneChangedNotice().Send();
+}
+
+void ActivateCommand::Redo() {
+  //Selection* selection = GetApplication()->GetSelection();
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+  switch (_mode) {
+  case ACTIVATE:
+    for (auto& path : _paths) {
+      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      prim.SetActive(true);
+    }
+    break;
+
+  case DEACTIVATE:
+    for (auto& path : _paths) {
+      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      prim.SetActive(false);
+    }
+    break;
+
+  case TOGGLE:
+    for (auto& path : _paths) {
+      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      prim.SetActive(!prim.IsActive());
+    }
+    break;
+  }
+  SceneChangedNotice().Send();
 }
 
 //==================================================================================

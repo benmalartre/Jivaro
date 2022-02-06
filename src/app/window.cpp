@@ -409,11 +409,19 @@ Window::GetViewUnderMouse(int x, int y)
 void 
 Window::DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
 {
-  std::cout << "DIRTY VIEW UNDER BOX:" << std::endl;
   for (auto leaf : _leaves) {
     if (leaf->Intersect(min, size)) {
-      std::cout << leaf->GetName() << " DIRTY !!!" << std::endl;
       leaf->SetDirty();
+    }
+  }
+}
+
+void
+Window::DiscardMouseButtonViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+{
+  for (auto leaf : _leaves) {
+    if (leaf->Intersect(min, size)) {
+      leaf->SetFlag(View::DISCARDMOUSEBUTTON);
     }
   }
 }

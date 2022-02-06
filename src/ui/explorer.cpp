@@ -68,13 +68,18 @@ ExplorerUI::Init()
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
 {
+  double x, y;
+  glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
+  if (x > GetX() + (GetWidth() - 50)) return;
+
   Application* app = GetApplication();
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_RELEASE) {
       if (app->GetStage()->GetPrimAtPath(_current).IsValid()) {
         if (mods & GLFW_MOD_CONTROL) {
           app->ToggleSelection({ _current });
-        } else {
+        }
+        else {
           app->SetSelection({ _current });
         }
       }
@@ -184,6 +189,7 @@ ExplorerUI::DrawItemBackground(ImDrawList* drawList,
   }
   ImGui::SetCursorPos(ImVec2(pos.x, pos.y + height));
 }
+
 void
 ExplorerUI::DrawBackground()
 {
@@ -239,6 +245,14 @@ ExplorerUI::DrawType(const pxr::UsdPrim& prim, bool selected)
   ImGui::NextColumn();
 }
 
+static void _PushCurrentPath(const pxr::SdfPath& path, pxr::SdfPathVector& paths)
+{
+  for (auto& _path : paths) {
+    if (_path == path)return;
+  }
+  paths.push_back(path);
+}
+
 void
 ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected)
 {
@@ -257,13 +271,44 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
   ImGui::ImageButton(
     (void*)(size_t)tex, ImVec2(14, 14), ImVec2(0, 0), ImVec2(1, 1));
 
+  Application* app = GetApplication();
   if (ImGui::IsItemClicked()) {
-    pxr::UsdGeomImageable imageable(prim);
-    if (imageable) {
-      if (visible)imageable.MakeInvisible();
-      else imageable.MakeVisible();
-      GetWindow()->ForceRedraw();
-    }
+    pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPrims();
+    _PushCurrentPath(_current, paths);
+    app->AddCommand(std::shared_ptr<ShowHideCommand>(
+      new ShowHideCommand(paths, ShowHideCommand::TOGGLE)));
+  }
+
+  ImGui::NextColumn();
+  ImGui::PopStyleColor(3);
+}
+
+void
+ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
+{
+  const ImGuiStyle& style = ImGui::GetStyle();
+
+  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
+
+  const Icon* activeIcon = &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_FORWARD];
+  const Icon* inactiveIcon = &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_STOP];
+
+  GLuint tex = prim.IsActive() ?
+    activeIcon->tex[selected] : inactiveIcon->tex[selected];
+
+  ImGui::ImageButton(
+    (void*)(size_t)tex, ImVec2(14, 14), ImVec2(0, 0), ImVec2(1, 1));
+
+  Application* app = GetApplication();
+  Selection* selection = app->GetSelection();
+  pxr::SdfPathVector paths = selection->GetSelectedPrims();
+  
+  _PushCurrentPath(_current, paths);
+  if (ImGui::IsItemClicked()) {
+    app->AddCommand(std::shared_ptr<ActivateCommand>(
+      new ActivateCommand( paths, ActivateCommand::TOGGLE)));
   }
 
   ImGui::NextColumn();
@@ -311,9 +356,10 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
 
   ImGui::PushStyleColor(ImGuiCol_Text, GetPrimColor(prim));
   const bool unfolded = ImGui::TreeNodeEx(prim.GetName().GetText(), flags);
-  if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+  if (ImGui::IsItemClicked()) {
     _current = prim.GetPath();
   }
+
   if (ImGui::IsItemToggledOpen())_parent->SetFlag(View::DISCARDMOUSEBUTTON);
   ImGui::PopStyleColor();
   ImGui::NextColumn();
@@ -330,6 +376,8 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
     ImGui::NextColumn();
   }
 
+  DrawActive(prim, selected);
+
   _items.push_back({ prim.GetPath(), _mapping++, selected });
 
   if (unfolded) {
@@ -345,7 +393,6 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
 bool 
 ExplorerUI::Draw()
 {
-  std::cout << "Draw Explorer..." << std::endl;
   /// Draw the hierarchy of the stage
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
@@ -373,10 +420,11 @@ ExplorerUI::Draw()
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
 
   // setup columns
-  ImGui::Columns(3);
-  ImGui::SetColumnWidth(0, GetWidth() - 90);
+  ImGui::Columns(4);
+  ImGui::SetColumnWidth(0, GetWidth() - 110);
   ImGui::SetColumnWidth(1, 60);
-  ImGui::SetColumnWidth(2, 30);
+  ImGui::SetColumnWidth(2, 25);
+  ImGui::SetColumnWidth(3, 25);
   
   // draw title
   ImGui::PushFont(GetWindow()->GetMediumFont(2));
@@ -384,7 +432,9 @@ ExplorerUI::Draw()
   ImGui::NextColumn();
   ImGui::Text("Type");
   ImGui::NextColumn();
-  ImGui::Text("Vis");
+  ImGui::Text(" V ");
+  ImGui::NextColumn();
+  ImGui::Text(" A ");
   ImGui::NextColumn();
   ImGui::PopFont();
 

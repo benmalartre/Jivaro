@@ -203,7 +203,7 @@ void TimelineUI::DrawButtons()
   ImGui::SameLine();
 
   if (!_data.playing) icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_FORWARD];
-  else icon = &ICONS[ICON_SIZE_MEDIUM][ICON_STOP_PLAYBACK];
+  else icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_STOP];
   AddIconButton<IconPressedFunc, TimelineUI*>(
     icon, ICON_DEFAULT,
     (IconPressedFunc)PlaybackCallback, this);

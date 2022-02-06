@@ -46,6 +46,7 @@ public:
   void DrawPrim(const pxr::UsdPrim& prim, Selection* selection);
   void DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected);
   void DrawType(const pxr::UsdPrim& prim, bool selected);
+  void DrawActive(const pxr::UsdPrim& prim, bool selected);
   /*
   void DrawBackground(float localMouseX, float localMouseY);
   void DrawItemBackground(ImDrawList* drawList, Item* item, 

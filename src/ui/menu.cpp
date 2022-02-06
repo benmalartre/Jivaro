@@ -48,29 +48,41 @@ bool MenuItem::Draw()
 {
   Window* window = view->GetWindow();
   if (items.size()) {
-    //ImGui::PushFont(window->GetBoldFont(2));
+    ImGui::PushFont(window->GetBoldFont(1));
+    
     if (ImGui::BeginMenu(label.c_str())) {
+      pxr::GfVec2i min, size;
+      ImGuiContext* context = ImGui::GetCurrentContext();
+      min[0] = context->IO.MousePos.x;
+      min[0] = context->IO.MousePos.y;
       for (auto& item : items) {
         item.Draw();
+        size += pxr::GfVec2i(0, ImGui::GetTextLineHeight());
       }
       view->SetFlag(View::INTERACTING);
       ImGui::EndMenu();
-      //ImGui::PopFont();
+      ImGui::PopFont();
+      window->DiscardMouseButtonViewsUnderBox(min, size);
       return true;
     }
-    //ImGui::PopFont();
+    ImGui::PopFont();
   }
   else {
-    //ImGui::PushFont(window->GetMediumFont(2));
+    ImGui::PushFont(window->GetMediumFont(1));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
+      pxr::GfVec2i min, size;
+      min[0] = ImGui::GetItemRectMin().x;
+      min[0] = ImGui::GetItemRectMin().y;
+      size = pxr::GfVec2i(200, ImGui::GetTextLineHeight());
       view->ClearFlag(View::INTERACTING);
+      window->DiscardMouseButtonViewsUnderBox(min, size);
       window->SetActiveTool(TOOL_SELECT);
       window->ForceRedraw();
-      //ImGui::PopFont();
+      ImGui::PopFont();
       return true;
     }
-    //ImGui::PopFont();
+    ImGui::PopFont();
   }
   return false;
 }
