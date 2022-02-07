@@ -91,10 +91,6 @@ public:
   void Do() override;
 
 private:
-  std::vector<pxr::SdfPath>         _paths;
-  std::vector<std::vector<int>>     _indices;
-  Selection::Type                   _type;
-  int                               _mode;
   std::vector<Selection::Item>      _previous;
 };
 
@@ -181,7 +177,8 @@ public:
 //==================================================================================
 class SetAttributeCommand : public Command {
 public:
-  SetAttributeCommand(pxr::UsdAttributeVector& paths, const pxr::VtValue& value);
+  SetAttributeCommand(pxr::UsdAttributeVector& paths, 
+    const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode);
   ~SetAttributeCommand() {};
   void Do() override;
 

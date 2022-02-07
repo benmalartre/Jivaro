@@ -180,7 +180,6 @@ void ShowHideCommand::Do() {
 //==================================================================================
 ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
-
 {
   UndoBlock block;
   Application* app = GetApplication();
@@ -359,10 +358,16 @@ void PivotCommand::Do() {
 //==================================================================================
 // Set Attribute
 //==================================================================================
-SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes, const pxr::VtValue& value)
+SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes,
+  const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-
+  UndoBlock block;
+  for (auto& attribute : attributes) {
+    attribute.Set(value, timeCode);
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  AttributeChangedNotice().Send();
 }
 
 void SetAttributeCommand::Do()

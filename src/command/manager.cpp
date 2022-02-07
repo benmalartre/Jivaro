@@ -16,7 +16,6 @@ CommandManager::ExecuteCommands()
     std::shared_ptr<Command> command = _todoStack.back();
     _todoStack.pop_back();
     _undoStack.push_back(command);
-    command->Execute();
   }
 }
 
@@ -28,7 +27,7 @@ CommandManager::Undo() {
   std::shared_ptr<Command> command = _undoStack.back();
   _redoStack.push_back(command);          // add undone command to undo stack
   _undoStack.pop_back();                  // remove top entry from undo stack
-  command->Undo();                        // undo most recently executed command
+  command->Do();                        // undo most recently executed command
 }
 
 void 
@@ -39,7 +38,7 @@ CommandManager::Redo() {
   std::shared_ptr<Command> command = _redoStack.back();
   _undoStack.push_back(command);          // add undone command to redo stack
   _redoStack.pop_back();                  // remove top entry from redo stack
-  command->Redo();                        // redo most recently executed command
+  command->Do();                        // redo most recently executed command
 }
 
 void
