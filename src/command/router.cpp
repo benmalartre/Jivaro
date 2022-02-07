@@ -51,7 +51,7 @@ bool UndoRouter::TrackLayer(const SdfLayerHandle& layer) {
 }
 
 void UndoRouter::AddInverse(std::function<bool()> inverse) {
-    UndoBlock undoBlock;
+    //UndoBlock undoBlock;
     _inversion._Append(inverse);
 }
 

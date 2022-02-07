@@ -1,4 +1,7 @@
 #include "../command/command.h"
+#include "../command/block.h"
+#include "../command/inverse.h"
+#include "../command/router.h"
 #include "../app/application.h"
 #include "../app/notice.h"
 
@@ -312,37 +315,36 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
   const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-
-  _time = timeCode;
-  for (const auto& target: targets) {
-    _origin.push_back(target.previous.translation);
-    _translate.push_back(target.current.translation);
-    _prims.push_back(stage->GetPrimAtPath(target.path));
+  for (size_t i = 0; i < targets.size(); ++i) {
+    pxr::UsdPrim prim = stage->GetPrimAtPath(targets[i].path);
+    pxr::UsdGeomXformCommonAPI xformApi(prim);
+    if (!xformApi) {
+      _EnsureXformCommonAPI(prim, timeCode);
+    }
+    xformApi.SetTranslate(targets[i].previous.translation, timeCode);
   }
+  UndoBlock block;
+  for (size_t i = 0; i < targets.size(); ++i) {
+    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(targets[i].path));
+    xformApi.SetTranslate(targets[i].current.translation, timeCode);
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  AttributeChangedNotice().Send();
 }
 
 void TranslateCommand::Execute()
 {
-  Redo();
 }
 
 void TranslateCommand::Undo()
 {
-  for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
-    xformApi.SetTranslate(_origin[i], _time);
-  }
+  _inverse.Invert();
   AttributeChangedNotice().Send();
 }
 
-void TranslateCommand::Redo() {
-  for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
-    if (!xformApi) {
-      _EnsureXformCommonAPI(_prims[i], _time);
-    }
-    xformApi.SetTranslate(_translate[i], _time);
-  }
+void TranslateCommand::Redo() 
+{
+  _inverse.Invert();
   AttributeChangedNotice().Send();
 }
 
@@ -353,40 +355,34 @@ RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage,
   const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-  _time = timeCode;
-  for (const auto& target: targets) {
-    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
-
-    _origin.push_back(target.previous.rotation);
-    _rotation.push_back(target.current.rotation);
-    _rotOrder.push_back(target.previous.rotOrder);
-    _prims.push_back(xformable.GetPrim()); 
+  for (auto& target: targets) {
+    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    xformApi.SetRotate(target.previous.rotation, target.previous.rotOrder, timeCode);
   }
+  UndoBlock block;
+  for (auto& target : targets) {
+    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    xformApi.SetRotate(target.current.rotation, target.current.rotOrder, timeCode);
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  AttributeChangedNotice().Send();
+
 }
 
 void RotateCommand::Execute()
 {
-  Redo();
 }
 
 
 void RotateCommand::Undo()
 {
-  for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
-    xformApi.SetRotate(_origin[i], _rotOrder[i], _time);
-  }
+  _inverse.Invert();
   AttributeChangedNotice().Send();
 }
 
-void RotateCommand::Redo() {
-  for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
-    if (!xformApi) {
-      _EnsureXformCommonAPI(_prims[i], _time);
-    }
-    xformApi.SetRotate(_rotation[i],_rotOrder[i], _time);
-  }
+void RotateCommand::Redo()
+{
+  _inverse.Invert();
   AttributeChangedNotice().Send();
 }
 

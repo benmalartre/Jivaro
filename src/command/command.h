@@ -127,10 +127,6 @@ public:
   void Redo() override;
 private:
   UndoInverse                        _inverse;
-  std::vector<pxr::UsdPrim>          _prims;
-  std::vector<pxr::GfVec3d>          _translate;
-  std::vector<pxr::GfVec3d>          _origin;
-  pxr::UsdTimeCode                   _time;
 };
 
 //==================================================================================
@@ -145,11 +141,7 @@ public:
   void Undo() override;
   void Redo() override;
 private:
-  std::vector<pxr::UsdPrim>          _prims;
-  std::vector<pxr::GfVec3f>          _rotation;
-  std::vector<pxr::GfVec3f>          _origin;
-  std::vector<pxr::UsdGeomXformCommonAPI::RotationOrder> _rotOrder;
-  pxr::UsdTimeCode                   _time;
+  UndoInverse                        _inverse;
 };
 
 //==================================================================================
