@@ -31,11 +31,10 @@ PXR_NAMESPACE_OPEN_SCOPE
 class Command {
   public:
     Command(bool undoable) : _undoable(undoable) {};
-    virtual void Execute() = 0;
-    virtual void Undo() = 0;
-    virtual void Redo() = 0;
+    virtual void Do() = 0;
 protected:
-  bool _undoable;
+  bool        _undoable;
+  UndoInverse _inverse;
 };
 
 //==================================================================================
@@ -45,11 +44,8 @@ class OpenSceneCommand : public Command {
 public:
   OpenSceneCommand(const std::string& filename);
   ~OpenSceneCommand() {};
-  void Execute() override;
-  void Undo() override {};
-  void Redo() override {};
-protected:
-  std::string _filename;
+  void Do() override {};
+
 };
 
 //==================================================================================
@@ -60,14 +56,8 @@ public:
   CreatePrimCommand(pxr::UsdStageRefPtr stage, const std::string& primName);
   CreatePrimCommand(pxr::UsdPrim prim, const std::string& primName);
   ~CreatePrimCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-private:
-    pxr::UsdPrim          _prim;
-    pxr::UsdPrim          _parent;
-    pxr::UsdStageWeakPtr  _stage;
-    pxr::TfToken          _name;
+  void Do() override;
+
 };
 
 //==================================================================================
@@ -77,13 +67,8 @@ class DuplicatePrimCommand : public Command {
 public:
   DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPath& path);
   ~DuplicatePrimCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-private:
-  pxr::SdfPath          _sourcePath;
-  pxr::SdfPath          _destinationPath;
-  pxr::UsdStageWeakPtr  _stage;
+  void Do() override;
+
 };
 
 //==================================================================================
@@ -103,9 +88,8 @@ public:
   };
   SelectCommand(Selection::Type type, const pxr::SdfPathVector& paths, int mode);
   ~SelectCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
+  void Do() override;
+
 private:
   std::vector<pxr::SdfPath>         _paths;
   std::vector<std::vector<int>>     _indices;
@@ -122,11 +106,7 @@ public:
   TranslateCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
     pxr::UsdTimeCode& timeCode=pxr::UsdTimeCode::Default());
   ~TranslateCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-private:
-  UndoInverse                        _inverse;
+  void Do() override;
 };
 
 //==================================================================================
@@ -137,11 +117,7 @@ public:
   RotateCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
     pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~RotateCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-private:
-  UndoInverse                        _inverse;
+  void Do() override;
 };
 
 //==================================================================================
@@ -152,14 +128,7 @@ public:
   ScaleCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets, 
     pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~ScaleCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-private:
-  std::vector<pxr::UsdPrim>          _prims;
-  std::vector<pxr::GfVec3f>          _scale;
-  std::vector<pxr::GfVec3f>          _origin;
-  pxr::UsdTimeCode                   _time;
+  void Do() override;
 };
 
 //==================================================================================
@@ -170,14 +139,8 @@ public:
   PivotCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
     pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~PivotCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-private:
-  std::vector<pxr::UsdPrim>          _prims;
-  std::vector<pxr::GfVec3f>          _pivot;
-  std::vector<pxr::GfVec3f>          _origin;
-  pxr::UsdTimeCode                   _time;
+  void Do() override;
+
 };
 
 //==================================================================================
@@ -193,14 +156,8 @@ public:
 
   ShowHideCommand(pxr::SdfPathVector& paths, Mode mode);
   ~ShowHideCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-protected:
-  pxr::SdfPathVector _paths;
-  std::vector<bool>  _previous;
-  std::vector<bool>  _state;
-  Mode               _mode;
+  void Do() override;
+
 };
 
 //==================================================================================
@@ -216,14 +173,7 @@ public:
 
   ActivateCommand(pxr::SdfPathVector& paths, Mode mode);
   ~ActivateCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-protected:
-  pxr::SdfPathVector _paths;
-  std::vector<bool>  _previous;
-  std::vector<bool>  _state;
-  Mode               _mode;
+  void Do() override;
 };
 
 //==================================================================================
@@ -231,15 +181,10 @@ protected:
 //==================================================================================
 class SetAttributeCommand : public Command {
 public:
-  SetAttributeCommand(pxr::SdfPathVector& paths, const pxr::VtValue& value);
+  SetAttributeCommand(pxr::UsdAttributeVector& paths, const pxr::VtValue& value);
   ~SetAttributeCommand() {};
-  void Execute() override;
-  void Undo() override;
-  void Redo() override;
-protected:
-  pxr::UsdAttribute _attr;
-  pxr::VtValue      _previous;
-  pxr::VtValue      _value;
+  void Do() override;
+
 };
 
 

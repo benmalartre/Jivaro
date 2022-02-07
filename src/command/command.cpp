@@ -17,13 +17,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 //==================================================================================
 OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   : Command(false)
-  , _filename(filename)
 {
-}
-
-void OpenSceneCommand::Execute()
-{
-  GetApplication()->OpenScene(_filename);
+  GetApplication()->OpenScene(filename);
   NewSceneNotice().Send();
 }
 
@@ -33,44 +28,26 @@ void OpenSceneCommand::Execute()
 //==================================================================================
 CreatePrimCommand::CreatePrimCommand(pxr::UsdStageRefPtr stage, const std::string& name) 
   : Command(true)
-  , _parent()
-  , _stage(stage)
-  , _name(name)
 {
+  if (!stage) return;
+  UndoBlock block;
+  stage->DefinePrim(pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
 }
 
 CreatePrimCommand::CreatePrimCommand(pxr::UsdPrim parent, const std::string& name)
   : Command(true)
-  , _parent(parent)
-  , _stage()
-  , _name(name)
 {
-}
-
-void CreatePrimCommand::Execute() 
-{
-  Redo();
-}
-
-void CreatePrimCommand::Undo()
-{
-  if (!_prim) return;
-  if (_stage) {
-    _stage->RemovePrim(_prim.GetPath());
-  } else {
-    _prim.GetStage()->RemovePrim(_prim.GetPath());
-  }
+  if (!parent) return;
+  UndoBlock block;
+  parent.GetStage()->DefinePrim(parent.GetPath().AppendChild(pxr::TfToken(name)));
+  UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
-void CreatePrimCommand::Redo() {
-  if (!_stage && !_parent) return;
-  if (_stage) {
-    _prim = _stage->DefinePrim(pxr::SdfPath::AbsoluteRootPath().AppendChild(_name));
-  }
-  else if(_parent) {
-    _prim = _parent.GetStage()->DefinePrim(_parent.GetPath().AppendChild(_name));
-  }
+void CreatePrimCommand::Do() {
+  _inverse.Invert();
   SceneChangedNotice().Send();
 }
 
@@ -79,42 +56,31 @@ void CreatePrimCommand::Redo() {
 //==================================================================================
 DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPath& path)
   : Command(true)
-  , _stage(stage)
-  , _sourcePath(path)
 {
-  _destinationPath = pxr::SdfPath(_sourcePath.GetString() + "_duplicate");
-}
+  UndoBlock block;
+  pxr::SdfPath destinationPath = pxr::SdfPath(path.GetString() + "_duplicate");
+  pxr::UsdPrim sourcePrim = stage->GetPrimAtPath(path);
+  pxr::SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
 
-void DuplicatePrimCommand::Execute()
-{
-  Redo();
-}
+  pxr::UsdStagePopulationMask populationMask({ path });
+  pxr::UsdStageRefPtr tmpStage =
+    pxr::UsdStage::OpenMasked(stage->GetRootLayer(),
+      populationMask, pxr::UsdStage::InitialLoadSet::LoadAll);
 
-void DuplicatePrimCommand::Undo()
-{
-  if(_stage->GetPrimAtPath(_destinationPath).IsValid())
-    _stage->RemovePrim(_destinationPath);
-
+  pxr::SdfLayerRefPtr sourceLayer = tmpStage->Flatten();
+  pxr::SdfLayerHandle destinationLayer = stage->GetEditTarget().GetLayer();
+  pxr::SdfPrimSpecHandle destinationPrimSpec =
+    SdfCreatePrimInLayer(destinationLayer, destinationPath);
+  pxr::SdfCopySpec(pxr::SdfLayerHandle(sourceLayer),
+    path, destinationLayer, destinationPath);
+  UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
-void DuplicatePrimCommand::Redo() {
-  
-  pxr::UsdPrim sourcePrim = _stage->GetPrimAtPath(_sourcePath);
-  pxr::SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
 
-  pxr::UsdStagePopulationMask populationMask({ _sourcePath });
-  pxr::UsdStageRefPtr tmpStage = 
-    pxr::UsdStage::OpenMasked(_stage->GetRootLayer(), 
-      populationMask, pxr::UsdStage::InitialLoadSet::LoadAll);
-    
-  pxr::SdfLayerRefPtr sourceLayer = tmpStage->Flatten();
-  pxr::SdfLayerHandle destinationLayer = _stage->GetEditTarget().GetLayer();
-  pxr::SdfPrimSpecHandle destinationPrimSpec = 
-    SdfCreatePrimInLayer(destinationLayer, _destinationPath);
-  pxr::SdfCopySpec(pxr::SdfLayerHandle(sourceLayer), 
-    _sourcePath, destinationLayer, _destinationPath);
 
+void DuplicatePrimCommand::Do() {
+  _inverse.Invert();
   SceneChangedNotice().Send();
 }
 
@@ -124,43 +90,33 @@ void DuplicatePrimCommand::Redo() {
 SelectCommand::SelectCommand(Selection::Type type, 
   const pxr::SdfPathVector& paths, int mode)
   : Command(true)
-  , _paths(paths)
-  , _type(type)
-  , _mode(mode)
-{
-}
-
-void SelectCommand::Execute()
 {
   Selection* selection = GetApplication()->GetSelection();
   _previous = selection->GetItems();
-  Redo();
-}
-
-void SelectCommand::Undo()
-{
-  Selection* selection = GetApplication()->GetSelection();
-  selection->SetItems(_previous);
+  switch (mode) {
+  case 0:
+    selection->Clear();
+    for (auto& path : paths) selection->AddItem(path);
+    break;
+  case 1:
+    for (auto& path : paths) selection->AddItem(path);
+    break;
+  case 2:
+    for (auto& path : paths) selection->RemoveItem(path);
+    break;
+  case 3:
+    for (auto& path : paths) selection->ToggleItem(path);
+    break;
+  }
   SelectionChangedNotice().Send();
 }
 
-void SelectCommand::Redo() {
+void SelectCommand::Do()
+{
   Selection* selection = GetApplication()->GetSelection();
-  switch (_mode) {
-  case 0:
-    selection->Clear();
-    for (auto& path : _paths) selection->AddItem(path);
-    break;
-  case 1:
-    for (auto& path : _paths) selection->AddItem(path);
-    break;
-  case 2:
-    for (auto& path : _paths) selection->RemoveItem(path);
-    break;
-  case 3:
-    for (auto& path : _paths) selection->ToggleItem(path);
-    break;
-  }
+  std::vector<Selection::Item> previous = selection->GetItems();
+  selection->SetItems(_previous);
+  _previous = previous;
   SelectionChangedNotice().Send();
 }
 
@@ -169,36 +125,12 @@ void SelectCommand::Redo() {
 //==================================================================================
 ShowHideCommand::ShowHideCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
-  , _paths(paths)
-  , _mode(mode)
 {
-
-}
-
-void ShowHideCommand::Execute()
-{
-  //Selection* selection = GetApplication()->GetSelection();
-  //_previous = selection->GetItems();
-  std::cout << "SHOW HIDE COMMAND !!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-  for(auto& path: _paths)
-    std::cout << path << std::endl;
-  Redo();
-}
-
-void ShowHideCommand::Undo()
-{
-  //Selection* selection = GetApplication()->GetSelection();
-  //selection->SetItems(_previous);
-  AttributeChangedNotice().Send();
-}
-
-void ShowHideCommand::Redo() {
-  //Selection* selection = GetApplication()->GetSelection();
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetStage();
-  switch (_mode) {
+  switch (mode) {
   case SHOW:
-    for (auto& path : _paths) {
+    for (auto& path : paths) {
       pxr::UsdPrim prim = stage->GetPrimAtPath(path);
       if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
         pxr::UsdGeomImageable imageable(prim);
@@ -208,7 +140,7 @@ void ShowHideCommand::Redo() {
     break;
 
   case HIDE:
-    for (auto& path : _paths) {
+    for (auto& path : paths) {
       pxr::UsdPrim prim = stage->GetPrimAtPath(path);
       if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
         pxr::UsdGeomImageable imageable(prim);
@@ -218,7 +150,7 @@ void ShowHideCommand::Redo() {
     break;
 
   case TOGGLE:
-    for (auto& path : _paths) {
+    for (auto& path : paths) {
       pxr::UsdPrim prim = stage->GetPrimAtPath(path);
       if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
         pxr::UsdGeomImageable imageable(prim);
@@ -234,7 +166,13 @@ void ShowHideCommand::Redo() {
     }
     break;
   }
-  SelectionChangedNotice().Send();
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+void ShowHideCommand::Do() {
+  _inverse.Invert();
+  SceneChangedNotice().Send();
 }
 
 //==================================================================================
@@ -242,52 +180,39 @@ void ShowHideCommand::Redo() {
 //==================================================================================
 ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
-  , _paths(paths)
-  , _mode(mode)
+
 {
-
-}
-
-void ActivateCommand::Execute()
-{
-  //Selection* selection = GetApplication()->GetSelection();
-  //_previous = selection->GetItems();
-  Redo();
-}
-
-void ActivateCommand::Undo()
-{
-  //Selection* selection = GetApplication()->GetSelection();
-  //selection->SetItems(_previous);
-  SceneChangedNotice().Send();
-}
-
-void ActivateCommand::Redo() {
-  //Selection* selection = GetApplication()->GetSelection();
+  UndoBlock block;
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetStage();
-  switch (_mode) {
+  switch (mode) {
   case ACTIVATE:
-    for (auto& path : _paths) {
+    for (auto& path : paths) {
       pxr::UsdPrim prim = stage->GetPrimAtPath(path);
       prim.SetActive(true);
     }
     break;
 
   case DEACTIVATE:
-    for (auto& path : _paths) {
+    for (auto& path : paths) {
       pxr::UsdPrim prim = stage->GetPrimAtPath(path);
       prim.SetActive(false);
     }
     break;
 
   case TOGGLE:
-    for (auto& path : _paths) {
+    for (auto& path : paths) {
       pxr::UsdPrim prim = stage->GetPrimAtPath(path);
       prim.SetActive(!prim.IsActive());
     }
     break;
   }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  AttributeChangedNotice().Send();
+}
+
+void ActivateCommand::Do() {
+  _inverse.Invert();
   SceneChangedNotice().Send();
 }
 
@@ -332,17 +257,7 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
   AttributeChangedNotice().Send();
 }
 
-void TranslateCommand::Execute()
-{
-}
-
-void TranslateCommand::Undo()
-{
-  _inverse.Invert();
-  AttributeChangedNotice().Send();
-}
-
-void TranslateCommand::Redo() 
+void TranslateCommand::Do() 
 {
   _inverse.Invert();
   AttributeChangedNotice().Send();
@@ -369,18 +284,7 @@ RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage,
 
 }
 
-void RotateCommand::Execute()
-{
-}
-
-
-void RotateCommand::Undo()
-{
-  _inverse.Invert();
-  AttributeChangedNotice().Send();
-}
-
-void RotateCommand::Redo()
+void RotateCommand::Do()
 {
   _inverse.Invert();
   AttributeChangedNotice().Send();
@@ -393,44 +297,29 @@ ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage,
   const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-  _time = timeCode;
-  //pxr::UsdGeomXformCache xformCache(timeCode);
+  pxr::UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
-    /*
-    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
-    pxr::GfMatrix4f invParentMatrix(
-      xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
-    pxr::GfMatrix4d xformMatrix((target.offset * matrix) * invParentMatrix);
-    pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2])
-    */
-    _origin.push_back(target.previous.scale);
-    _scale.push_back(target.current.scale);
-    _prims.push_back(stage->GetPrimAtPath(target.path));
+    pxr:UsdPrim prim = stage->GetPrimAtPath(target.path);
+    pxr::UsdGeomXformCommonAPI xformApi(prim);
+    if (!xformApi) {
+      _EnsureXformCommonAPI(prim, timeCode);
+    }
+    xformApi.SetScale(target.previous.scale, timeCode);
   }
-}
+  UndoBlock block;
 
-void ScaleCommand::Execute()
-{
-  Redo();
-}
-
-void ScaleCommand::Undo()
-{
-  for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
-    xformApi.SetScale(_origin[i], _time);
+  for (auto& target : targets) {
+    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    xformApi.SetScale(target.current.scale, timeCode);
   }
+
+  UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();
 }
 
-void ScaleCommand::Redo() {
-  for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
-    if (!xformApi) {
-      _EnsureXformCommonAPI(_prims[i], _time);
-    }
-    xformApi.SetScale(_scale[i], _time);
-  }
+
+void ScaleCommand::Do() {
+  _inverse.Invert();
   AttributeChangedNotice().Send();
 }
 
@@ -441,44 +330,28 @@ PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage,
   const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-  _time = timeCode;
   pxr::UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
-    /*
-    pxr::UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
-    pxr::GfMatrix4f invParentMatrix(
-      xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
-    pxr::GfMatrix4d xformMatrix((target.offset * matrix) * invParentMatrix);
-    pxr::GfVec3f(xformMatrix.GetRow3(3))
-    */
-    _origin.push_back(target.previous.pivot);
-    _pivot.push_back(target.current.pivot);
-    _prims.push_back(stage->GetPrimAtPath(target.path));
+    pxr:UsdPrim prim = stage->GetPrimAtPath(target.path);
+    pxr::UsdGeomXformCommonAPI xformApi(prim);
+    if (!xformApi) {
+      _EnsureXformCommonAPI(prim, timeCode);
+    }
+    xformApi.SetPivot(target.previous.pivot, timeCode);
   }
-}
+  UndoBlock block;
 
-void PivotCommand::Execute()
-{
-  Redo();
-}
-
-void PivotCommand::Undo()
-{
-  for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
-    xformApi.SetPivot(_origin[i], _time);
+  for (auto& target : targets) {
+    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    xformApi.SetPivot(target.current.pivot, timeCode);
   }
+
+  UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();
 }
 
-void PivotCommand::Redo() {
-  for (size_t i = 0; i < _prims.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(_prims[i]);
-    if (!xformApi) {
-      _EnsureXformCommonAPI(_prims[i], _time);
-    }
-    xformApi.SetPivot(_pivot[i], _time);
-  }
+void PivotCommand::Do() {
+  _inverse.Invert();
   AttributeChangedNotice().Send();
 }
 
@@ -486,28 +359,18 @@ void PivotCommand::Redo() {
 //==================================================================================
 // Set Attribute
 //==================================================================================
-SetAttributeCommand::SetAttributeCommand(pxr::SdfPathVector& paths, const pxr::VtValue& value)
+SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes, const pxr::VtValue& value)
   : Command(true)
 {
 
 }
 
-void SetAttributeCommand::Execute()
-{
-  Redo();
-}
-
-void SetAttributeCommand::Undo()
+void SetAttributeCommand::Do()
 {
 
   AttributeChangedNotice().Send();
 }
 
-void SetAttributeCommand::Redo()
-{
-
-  AttributeChangedNotice().Send();
-}
 
 
 PXR_NAMESPACE_CLOSE_SCOPE
