@@ -19,6 +19,17 @@ public:
 };
 
 /// Notice sent after new scene
+class UndoStackNotice : public BaseNotice
+{
+public:
+  explicit UndoStackNotice();
+  virtual ~UndoStackNotice();
+
+
+private:
+};
+
+/// Notice sent after new scene
 class NewSceneNotice : public BaseNotice
 {
 public:

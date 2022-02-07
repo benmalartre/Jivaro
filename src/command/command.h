@@ -21,6 +21,7 @@
 #include "../common.h"
 #include "../app/handle.h"
 #include "../app/selection.h"
+#include "../command/inverse.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -125,6 +126,7 @@ public:
   void Undo() override;
   void Redo() override;
 private:
+  UndoInverse                        _inverse;
   std::vector<pxr::UsdPrim>          _prims;
   std::vector<pxr::GfVec3d>          _translate;
   std::vector<pxr::GfVec3d>          _origin;
@@ -230,6 +232,22 @@ protected:
   std::vector<bool>  _previous;
   std::vector<bool>  _state;
   Mode               _mode;
+};
+
+//==================================================================================
+// Set Attribute
+//==================================================================================
+class SetAttributeCommand : public Command {
+public:
+  SetAttributeCommand(pxr::SdfPathVector& paths, const pxr::VtValue& value);
+  ~SetAttributeCommand() {};
+  void Execute() override;
+  void Undo() override;
+  void Redo() override;
+protected:
+  pxr::UsdAttribute _attr;
+  pxr::VtValue      _previous;
+  pxr::VtValue      _value;
 };
 
 

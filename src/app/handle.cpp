@@ -13,6 +13,7 @@
 #include "../app/camera.h"
 #include "../app/selection.h"
 #include "../app/application.h"
+#include "../command/block.h"
 #include "../command/command.h"
 #include "../geometry/utils.h"
 
@@ -673,6 +674,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
     }
   }
   else {
+    
     pxr::UsdGeomXformCache xformCache(activeTime);
     for (auto& target : _targets) {
       pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);

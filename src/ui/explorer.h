@@ -35,26 +35,13 @@ public:
   //void Select();
   bool Draw() override;
 
-  /*
-  void RecurseStage();
-  void RecursePrim(Item* current);
-  void DrawItem(Item* item, bool heritedVisibility);
-  void DrawItemType(Item* item);
-  */
   void DrawItemBackground(ImDrawList* drawList, bool selected, bool& flip);
   void DrawBackground();
   void DrawPrim(const pxr::UsdPrim& prim, Selection* selection);
   void DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected);
   void DrawType(const pxr::UsdPrim& prim, bool selected);
   void DrawActive(const pxr::UsdPrim& prim, bool selected);
-  /*
-  void DrawBackground(float localMouseX, float localMouseY);
-  void DrawItemBackground(ImDrawList* drawList, Item* item, 
-    bool& flip);
 
-  void OnSceneChangedNotice(const SceneChangedNotice& n) override;
-  void OnSelectionChangedNotice(const SelectionChangedNotice& n) override;
-  */
 private:
   //void _UpdateSelection(Item* item, bool isLeaf);
 

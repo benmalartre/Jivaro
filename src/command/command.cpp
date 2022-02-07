@@ -312,9 +312,9 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
   const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
+
   _time = timeCode;
   for (const auto& target: targets) {
-    std::cout << target.path << std::endl;
     _origin.push_back(target.previous.translation);
     _translate.push_back(target.current.translation);
     _prims.push_back(stage->GetPrimAtPath(target.path));
@@ -485,5 +485,33 @@ void PivotCommand::Redo() {
   }
   AttributeChangedNotice().Send();
 }
+
+
+//==================================================================================
+// Set Attribute
+//==================================================================================
+SetAttributeCommand::SetAttributeCommand(pxr::SdfPathVector& paths, const pxr::VtValue& value)
+  : Command(true)
+{
+
+}
+
+void SetAttributeCommand::Execute()
+{
+  Redo();
+}
+
+void SetAttributeCommand::Undo()
+{
+
+  AttributeChangedNotice().Send();
+}
+
+void SetAttributeCommand::Redo()
+{
+
+  AttributeChangedNotice().Send();
+}
+
 
 PXR_NAMESPACE_CLOSE_SCOPE

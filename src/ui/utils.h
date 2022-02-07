@@ -2,6 +2,23 @@
 #define JVR_UI_UTILS_H
 
 #include <pxr/usd/usd/attribute.h>
+#include <pxr/base/gf/matrix2f.h>
+#include <pxr/base/gf/matrix2d.h>
+#include <pxr/base/gf/matrix3f.h>
+#include <pxr/base/gf/matrix3d.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/matrix4d.h>
+
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec2d.h>
+#include <pxr/base/gf/vec2h.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/vec3h.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/base/gf/vec4d.h>
+#include <pxr/base/gf/vec4h.h>
+
 #include "../common.h"
 #include "../utils/icons.h"
 #include "../ui/style.h"
@@ -44,7 +61,7 @@ static void IconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 }
 
 template<typename FuncT, typename ...ArgsT>
-bool AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
+static bool AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   if (ImGui::ImageButton(
     (ImTextureID)(intptr_t)icon->tex[state],
@@ -60,7 +77,7 @@ bool AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 }
 
 template<typename FuncT, typename ...ArgsT>
-bool AddTransparentIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
+static bool AddTransparentIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   if (ImGui::ImageButton(
@@ -78,7 +95,7 @@ bool AddTransparentIconButton(Icon* icon, short state, FuncT func, ArgsT... args
 }
 
 template<typename FuncT, typename ...ArgsT>
-bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
+static bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
@@ -104,43 +121,49 @@ bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 }
 
 template <typename MatrixType, int DataType, int Rows, int Cols>
-pxr::VtValue AddMatrixWidget(const std::string &label, const VtValue &value) 
+static pxr::VtValue AddMatrixWidget(const std::string &label, const VtValue &value) 
 {
     MatrixType mat = value.Get<MatrixType>();
     bool valueChanged = false;
+    
     ImGui::PushID(label.c_str());
-    ImGui::InputScalarN("###row0", DataType, mat.data(), Cols, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+    ImGui::InputScalarN("###row0", DataType, mat.data(), Cols, NULL, NULL, DecimalPrecision);
     valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
-    ImGui::InputScalarN("###row1", DataType, mat.data() + Cols, Cols, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+    ImGui::InputScalarN("###row1", DataType, mat.data() + Cols, Cols, NULL, NULL, DecimalPrecision);
     valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
-    if /* constexpr */ (Rows > 2) {
-        ImGui::InputScalarN("###row2", DataType, mat.data() + 2 * Cols, Cols, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+    if (Rows > 2) {
+        ImGui::InputScalarN("###row2", DataType, mat.data() + 2 * Cols, Cols, NULL, NULL, DecimalPrecision);
         valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
-        if /*constexpr */ (Rows > 3) {
-            ImGui::InputScalarN("###row3", DataType, mat.data() + 3 * Cols, Cols, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+        if (Rows > 3) {
+            ImGui::InputScalarN("###row3", DataType, mat.data() + 3 * Cols, Cols, NULL, NULL, DecimalPrecision);
             valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
         }
     }
     ImGui::PopID();
+    
     if (valueChanged) {
         return pxr::VtValue(MatrixType(mat));
     }
     return pxr::VtValue();
 }
 
+static pxr::VtValue AddAttributeWidget(pxr::UsdAttribute& attribute, pxr::UsdTimeCode& time);
+
 template <typename VectorType, int DataType, int N>
-pxr::VtValue AddVectorWidget(const std::string& label, const VtValue& value) 
+static pxr::VtValue AddVectorWidget(const std::string& label, const pxr::VtValue& value) 
 {
     VectorType buffer(value.Get<VectorType>());
     constexpr const char* format = DataType == ImGuiDataType_S32 ? "%d" : DecimalPrecision;
-    ImGui::InputScalarN(label.c_str(), DataType, buffer.data(), N, NULL, NULL, format, ImGuiInputTextFlags());
+    ImGui::InputScalarN(label.c_str(), DataType, buffer.data(), N, 
+      NULL, NULL, format, ImGuiInputTextFlags());
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         return pxr::VtValue(VectorType(buffer));
     }
     return pxr::VtValue();
 }
 
-pxr::VtValue AddTokenWidget(const std::string &label, const TfToken &token, const VtValue &allowedTokens) {
+static pxr::VtValue AddTokenWidget(const std::string &label, const TfToken &token, 
+  const VtValue &allowedTokens = pxr::VtValue()) {
     pxr::VtValue newToken;
     if (!allowedTokens.IsEmpty() && allowedTokens.IsHolding<pxr::VtArray<pxr::TfToken>>()) {
         pxr::VtArray<pxr::TfToken> tokensArray = allowedTokens.Get<pxr::VtArray<pxr::TfToken>>();
@@ -154,28 +177,33 @@ pxr::VtValue AddTokenWidget(const std::string &label, const TfToken &token, cons
         }
     } else {
         std::string tokenAsString = token.GetString();
-        ImGui::InputText(label.c_str(), &tokenAsString);
+        char buf[255];
+        strcpy(&buf[0], tokenAsString.c_str());
+        ImGui::InputText(label.c_str(), &buf[0], 255);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            newToken = TfToken(tokenAsString);
+            newToken = TfToken(buf);
         }
     }
     return newToken;
 }
 
-pxr::VtValue AddTokenWidget(const std::string &label, const VtValue &value, const VtValue &allowedTokens) 
+
+static pxr::VtValue AddTokenWidget(const std::string &label, const VtValue &value, 
+  const VtValue &allowedTokens = pxr::VtValue()) 
 {
     if (value.IsHolding<pxr::TfToken>()) {
         pxr::TfToken token = value.Get<pxr::TfToken>();
         return AddTokenWidget(label, token, allowedTokens);
-    } else {
-        return AddAttributeWidget(label, value);
     }
 }
 
-/// Returns the new value if the value was edited, otherwise an empty VtValue
-pxr::VtValue AddAttributeWidget(const std::string &label, const VtValue &value) 
-{
 
+/// Returns the new value if the value was edited, otherwise an empty VtValue
+static pxr::VtValue AddAttributeWidget(pxr::UsdAttribute& attribute, pxr::UsdTimeCode& time) 
+{
+  VtValue value;
+  attribute.Get(&value, time);
+  const std::string label = attribute.GetName().GetString();
     if (value.IsHolding<pxr::GfVec3f>()) {
         return AddVectorWidget<pxr::GfVec3f, ImGuiDataType_Float, 3>(label, value);
     } else if (value.IsHolding<pxr::GfVec2f>()) {
@@ -218,20 +246,24 @@ pxr::VtValue AddAttributeWidget(const std::string &label, const VtValue &value)
             return pxr::VtValue(intValue);
         }
     } else if (value.IsHolding<TfToken>()) {
-        pxr::TfToken token = value.Get<Tpxr::fToken>();
+        pxr::TfToken token = value.Get<pxr::TfToken>();
         return AddTokenWidget(label, token);
     } else if (value.IsHolding<std::string>()) {
         std::string stringValue = value.Get<std::string>();
-        ImGui::InputText(label.c_str(), &stringValue);
+        static char buf[255];
+        strcpy(&buf[0], stringValue.c_str());
+        ImGui::InputText(label.c_str(), &buf[0], 255);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            return pxr::VtValue(stringValue);
+            return pxr::VtValue(std::string(buf));
         }
     } else if (value.IsHolding<SdfAssetPath>()) {
         pxr::SdfAssetPath sdfAssetPath = value.Get<pxr::SdfAssetPath>();
         std::string assetPath = sdfAssetPath.GetAssetPath();
-        ImGui::InputText(label.c_str(), &assetPath);
+        static char buf[255];
+        strcpy(&buf[0], assetPath.c_str());
+        ImGui::InputText(label.c_str(), &buf[0], 255);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            return pxr::VtValue(assetPath);
+            return pxr::VtValue(std::string(buf));
         }
     } else if (value.IsHolding<pxr::GfMatrix4d>()) { // Matrices are in row order
         return AddMatrixWidget<pxr::GfMatrix4d, ImGuiDataType_Double, 4, 4>(label, value);
@@ -264,7 +296,7 @@ pxr::VtValue AddAttributeWidget(const std::string &label, const VtValue &value)
     return pxr::VtValue();
 }
 
-pxr::VtValue AddColorWidget(const std::string &label, const VtValue &value) 
+static pxr::VtValue AddColorWidget(const std::string &label, const VtValue &value) 
 {
     if (value.IsHolding<pxr::GfVec3f>()) {
         pxr::GfVec3f buffer(value.Get<pxr::GfVec3f>());
@@ -276,14 +308,22 @@ pxr::VtValue AddColorWidget(const std::string &label, const VtValue &value)
         pxr::GfVec3f colorValue = colorArray[0];
         if (ImGui::ColorEdit3(label.c_str(), colorValue.data())) {
             colorArray[0] = colorValue;
-            return VtValue(colorArray);
+            return pxr::VtValue(colorArray);
         }
-    } else {
-        return DrawVtValue(label, value);
-    }
-    return VtValue();
+    } 
+    return pxr::VtValue();
 }
 
+template <typename PropertyT> 
+static std::string GetDisplayName(const PropertyT& property) {
+  return property.GetNamespace().GetString() + (property.GetNamespace() == TfToken() ? 
+    std::string() : std::string(":")) + property.GetBaseName().GetString();
+}
+
+static void AddAttributeDisplayName(const UsdAttribute& attribute) {
+  const std::string displayName = GetDisplayName(attribute);
+  ImGui::Text("%s", displayName.c_str());
+}
 
 /*
 template <typename PropertyT> 

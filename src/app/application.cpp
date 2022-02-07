@@ -36,6 +36,7 @@
 #include "../command/command.h"
 #include "../command/delegate.h"
 #include "../command/manager.h"
+#include "../command/router.h"
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/notice.h"
@@ -472,7 +473,8 @@ Application::Init()
 
   //_manager.Start();
 
-  //_scene->GetRootStage()->GetRootLayer()->SetStateDelegate(LayerStateDelegate::New());
+  //_scene->GetRootStage()->GetRootLayer()->SetStateDelegate(UndoStateDelegate::New());
+  UndoRouter::Get().TrackLayer(_scene->GetRootStage()->GetRootLayer());
  
   /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);

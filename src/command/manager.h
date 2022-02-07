@@ -7,6 +7,7 @@
 #include <deque>
 #include "../common.h"
 #include "../command/command.h"
+#include "../command/inverse.h"
 
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -20,6 +21,7 @@ class CommandManager {
   CommandStack_t _todoStack;
   CommandStack_t _undoStack;
   CommandStack_t _redoStack;
+  std::vector<UndoInverse> _inverse;
 
 public:
   CommandManager() {};

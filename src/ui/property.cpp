@@ -70,7 +70,8 @@ bool PropertyUI::DrawAssetInfo(const pxr::UsdPrim& prim)
       ImGui::Text("%s", keyValue->first.c_str());
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
-      VtValue modified = AddAttributeWidget(keyValue->first, keyValue->second);
+      pxr::UsdAttribute attribute = prim.GetAttribute(pxr::TfToken(keyValue->first));
+      VtValue modified = AddAttributeWidget(attribute, pxr::UsdTimeCode::Default());
       if (!modified.IsEmpty()) {
         std::cout << "MODIFIED : " << modified << std::endl;
         //GetApplication()->AddUsdCommand()
@@ -257,7 +258,56 @@ PropertyUI::Draw()
     ImGuiCol_WindowBg
   );
 
-  _DrawXformsCommon(pxr::UsdTimeCode::Default());
+  if (_DrawXformsCommon(pxr::UsdTimeCode::Default()))
+    ImGui::Separator();
+
+  if (ImGui::BeginTable("##DrawPropertyEditorTable", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
+    ImGui::TableSetupColumn("Property name");
+    ImGui::TableSetupColumn("Value");
+    ImGui::TableHeadersRow();
+
+    int miniButtonId = 0;
+
+    // Draw attributes
+    for (auto& attribute : _prim.GetAttributes()) {
+      ImGui::TableNextRow(ImGuiTableRowFlags_None, 12);
+      ImGui::TableSetColumnIndex(0);
+      ImGui::PushID(miniButtonId++);
+      //DrawPropertyMiniButton(attribute, editTarget, currentTime);
+      ImGui::PopID();
+
+      ImGui::TableSetColumnIndex(1);
+      AddAttributeDisplayName(attribute);
+
+      ImGui::TableSetColumnIndex(2);
+      ImGui::PushItemWidth(-FLT_MIN); // Right align and get rid of widget label
+      AddAttributeWidget(attribute, pxr::UsdTimeCode::Default());
+
+      // TODO: in the hint ???
+      // DrawAttributeTypeInfo(attribute);
+    }
+
+    /*
+    // Draw relations
+    for (auto& relationship : prim.GetRelationships()) {
+      ImGui::TableNextRow();
+
+      ImGui::TableSetColumnIndex(0);
+      ImGui::PushID(miniButtonId++);
+      DrawPropertyMiniButton(relationship, editTarget, currentTime);
+      ImGui::PopID();
+
+      ImGui::TableSetColumnIndex(1);
+      DrawUsdRelationshipDisplayName(relationship);
+
+      ImGui::TableSetColumnIndex(2);
+      DrawUsdRelationshipList(relationship);
+    }
+    */
+
+    ImGui::EndTable();
+  }
 
   ImGui::End();
   return true;

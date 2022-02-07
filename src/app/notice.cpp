@@ -67,5 +67,15 @@ AttributeChangedNotice::~AttributeChangedNotice()
 {
 }
 
+////////////////////////////////////////////////////////////
+
+UndoStackNotice::UndoStackNotice()
+{
+}
+
+UndoStackNotice::~UndoStackNotice()
+{
+}
+
 
 PXR_NAMESPACE_CLOSE_SCOPE

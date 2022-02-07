@@ -35,23 +35,21 @@ PXR_NAMESPACE_OPEN_SCOPE
 /// Here is a quick breakdown of the chain of triggers.
 /// Usd Edit => Sdf Edit => Delegate => Router => Notice => Native Undo Listener
 ///
-class UndoRouter : BOOST_NS::noncopyable {
+class UndoRouter : boost::noncopyable {
 private:
     int _depth = 0;
     UndoInverse _inversion;
-
-    void _AddInverse(std::function<bool()> inverse);
 
     UndoRouter();
 
     int _muteDepth = 0;
 
-    static UndoRouter& Get();
-
     static void _Mute();
     static void _Unmute();
 public:
 
+    static UndoRouter& Get();
+    void   AddInverse(std::function<bool()> inverse);
     static bool TrackLayer(const pxr::SdfLayerHandle& layer);
     static bool TransferEdits(UndoInverse* inverse);
     static bool IsMuted();
@@ -62,21 +60,6 @@ public:
     friend class pxr::TfSingleton<UndoRouter>;
 };
 
-/*
-namespace UsdQt {
-
-/// \class UndoStackNotice
-///
-/// When an undoable change has been made, and all open UndoBlocks have been
-/// freed, this notice is emitted.  The listener of this notice should adopt the
-/// edits tracked by the router and place the edits into the application's
-/// native undo queue.
-class UndoStackNotice : public TfNotice {
-public:
-    explicit UndoStackNotice();
-};
-}
-*/
 PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif
