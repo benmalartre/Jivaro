@@ -61,6 +61,9 @@ add_executable(${TARGET}
   pbd/maths.cpp
   anim/animx.cpp
   command/command.cpp
+  command/inverse.cpp
+  command/block.cpp
+  command/router.cpp
   command/delegate.cpp
   command/manager.cpp
   app/time.cpp

@@ -16,8 +16,10 @@ public:
   PropertyUI(View* parent, const std::string& name);
   ~PropertyUI()         override;
 
+  bool DrawAssetInfo(const pxr::UsdPrim& prim);
   void SetPrim(const pxr::UsdPrim& prim);
   pxr::UsdPrim& GetPrim() { return _prim; };
+
 
   void MouseButton(int action, int button, int mods) override{};
   void MouseMove(int x, int y) override{};

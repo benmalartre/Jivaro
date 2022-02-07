@@ -4,6 +4,7 @@
 #include <pxr/usd/usdGeom/curves.h>
 
 #include "../ui/property.h"
+#include "../ui/utils.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
@@ -46,6 +47,39 @@ PropertyUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
   else {
     SetPrim(pxr::UsdPrim());
   }
+}
+
+bool PropertyUI::DrawAssetInfo(const pxr::UsdPrim& prim) 
+{
+  auto assetInfo = prim.GetAssetInfo();
+  if (assetInfo.empty())
+    return false;
+
+  if (ImGui::BeginTable("##DrawAssetInfo", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
+    ImGui::TableSetupColumn("Asset info");
+    ImGui::TableSetupColumn("");
+
+    ImGui::TableHeadersRow();
+
+    TF_FOR_ALL(keyValue, assetInfo) {
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      //DrawPropertyMiniButton("(x)");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%s", keyValue->first.c_str());
+      ImGui::TableSetColumnIndex(2);
+      ImGui::PushItemWidth(-FLT_MIN);
+      VtValue modified = AddAttributeWidget(keyValue->first, keyValue->second);
+      if (!modified.IsEmpty()) {
+        std::cout << "MODIFIED : " << modified << std::endl;
+        //GetApplication()->AddUsdCommand()
+        //ExecuteAfterDraw(&UsdPrim::SetAssetInfoByKey, prim, TfToken(keyValue->first), modified);
+      }
+    }
+    ImGui::EndTable();
+  }
+  return true;
 }
 
 bool 

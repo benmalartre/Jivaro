@@ -429,7 +429,7 @@ ExplorerUI::Draw()
   ImGui::SetColumnWidth(1, 60);
   ImGui::SetColumnWidth(2, 25);
   ImGui::SetColumnWidth(3, 25);
-  
+
   // draw title
   ImGui::PushFont(GetWindow()->GetMediumFont(2));
   ImGui::Text("Prim");
@@ -442,7 +442,7 @@ ExplorerUI::Draw()
   ImGui::NextColumn();
   ImGui::PopFont();
 
-  ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
+  //ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
   /*
   bool unfolded = 
     ImGui::TreeNodeEx(stage->GetRootLayer()->GetDisplayName().c_str(), _treeFlags);*/
