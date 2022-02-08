@@ -417,11 +417,11 @@ Window::DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
 }
 
 void
-Window::DiscardMouseButtonViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+Window::DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
 {
   for (auto leaf : _leaves) {
     if (leaf->Intersect(min, size)) {
-      leaf->SetFlag(View::DISCARDMOUSEBUTTON);
+      leaf->SetFlag(View::DISCARDMOUSEBUTTON | View::DISCARDMOUSEMOVE);
     }
   }
 }

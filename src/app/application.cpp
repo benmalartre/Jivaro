@@ -624,23 +624,16 @@ Application::OpenScene(const std::string& filename)
   }
 }
 
-void Application::SaveScene(const std::string& filename)
+void Application::SaveScene()
 {
-  std::cout << "SAVE SCENE " << filename << std::endl;
-  /*
-  if(strlen(filename.c_str()) > 0) {    
-    //_stage = pxr::UsdStage::Open(filename);
-    _stage = pxr::UsdStage::CreateInMemory("XYZ.usda");
-    pxr::UsdPrim root = pxr::UsdGeomXform::Define(_stage, pxr::SdfPath("/root")).GetPrim();
-    pxr::UsdPrim ref = _stage->OverridePrim(pxr::SdfPath("/root/ref"));
-    ref.GetReferences().AddReference(filename);
-    delete _mesh;
-    std::cout << "DELETE MESH :)" << std::endl;
-    _mesh = NULL;
-    NewSceneNotice().Send();
-    //_property->SetPrim(_stage->GetDefaultPrim());
-  }
-  */
+  std::cout << "SAVE SCENE " << std::endl;
+  GetStage()->GetRootLayer()->Save(true);
+}
+
+void Application::SaveSceneAs(const std::string& filename)
+{
+  std::cout << "SAVE SCENE AS " << filename << std::endl;
+  GetStage()->GetRootLayer()->Save(true);
 }
 
 // main loop

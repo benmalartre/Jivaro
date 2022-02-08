@@ -619,7 +619,6 @@ void
 TranslateHandle::BeginUpdate(float x, float y, float width, float height)
 {
   pxr::GfRay ray = _camera->GetRay(x, y, width, height);
-
   double distance;
   bool frontFacing;
   _startMatrix = _matrix;
@@ -681,7 +680,6 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::GfMatrix4f invParentMatrix(
         xformCache.GetParentToWorldTransform(targetPrim).GetInverse());
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
-
       target.current.translation = pxr::GfVec3d(xformMatrix.GetRow3(3) - target.previous.pivot);
     }
     GetApplication()->AddCommand(

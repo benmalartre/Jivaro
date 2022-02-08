@@ -5,12 +5,13 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
+#include "../ui/head.h"
 #include "../ui/utils.h"
 
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-class PropertyUI : public BaseUI
+class PropertyUI : public HeadedUI
 {
 public:
   PropertyUI(View* parent, const std::string& name);

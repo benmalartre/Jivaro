@@ -20,7 +20,7 @@ ImGuiWindowFlags PropertyUI::_flags =
   ImGuiWindowFlags_NoMove;
 
 PropertyUI::PropertyUI(View* parent, const std::string& name)
-  : BaseUI(parent, name)
+  : HeadedUI(parent, name)
 {
 }
 
@@ -152,7 +152,9 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Scale", target.current.scale.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
-        //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetScale, xformAPI, scale, currentTime);
+        GetApplication()->AddCommand(std::shared_ptr<ScaleCommand>(
+          new ScaleCommand(GetApplication()->GetStage(), targets, time))
+        );
       }
 
       ImGui::TableNextRow();
@@ -246,15 +248,16 @@ PropertyUI::Draw()
   }
 
   bool opened;
-
+  const pxr::GfVec2f pos(GetX(), GetY());
+  const pxr::GfVec2f size(GetWidth(), GetHeight());
   ImGui::Begin(_name.c_str(), &opened, _flags);
-  ImGui::SetWindowSize(_parent->GetSize());
-  ImGui::SetWindowPos(_parent->GetMin());
+  ImGui::SetWindowSize(size);
+  ImGui::SetWindowPos(pos);
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
   drawList->AddRectFilled(
-    _parent->GetMin(),
-    _parent->GetMax(),
+    pos,
+    pos + size,
     ImGuiCol_WindowBg
   );
 
@@ -282,7 +285,12 @@ PropertyUI::Draw()
 
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN); // Right align and get rid of widget label
-      AddAttributeWidget(attribute, pxr::UsdTimeCode::Default());
+      pxr::VtValue value = AddAttributeWidget(attribute, pxr::UsdTimeCode::Default());
+      if (!value.IsEmpty()) {
+        pxr::UsdAttributeVector attributes = { attribute };
+        GetApplication()->AddCommand(std::shared_ptr<SetAttributeCommand>(
+          new SetAttributeCommand(attributes, value, pxr::UsdTimeCode::Default())));
+      }
 
       // TODO: in the hint ???
       // DrawAttributeTypeInfo(attribute);

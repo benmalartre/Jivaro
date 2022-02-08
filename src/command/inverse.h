@@ -1,6 +1,6 @@
 
-#ifndef UNDOINVERSE_H
-#define UNDOINVERSE_H
+#ifndef UNDO_INVERSE_H
+#define UNDO_INVERSE_H
 
 #include <functional>
 #include <vector>

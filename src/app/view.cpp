@@ -166,10 +166,14 @@ View::MouseMove(int x, int y)
       if (GetFlag(View::INTERACTING) && _content)_content->MouseMove(x, y);
       else _head->MouseMove(x, y);
     } else {
-      if (_content)_content->MouseMove(x, y);
+      if (_content && !GetFlag(DISCARDMOUSEMOVE))
+        _content->MouseMove(x, y);
+        ClearFlag(DISCARDMOUSEMOVE);
     }
   } else {
-    if (_content)_content->MouseMove(x, y);
+    if (_content && !GetFlag(DISCARDMOUSEMOVE))
+      _content->MouseMove(x, y);
+    ClearFlag(DISCARDMOUSEMOVE);
   }
 }
 

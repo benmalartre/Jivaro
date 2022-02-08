@@ -20,6 +20,7 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 {
   GetApplication()->OpenScene(filename);
   NewSceneNotice().Send();
+  SceneChangedNotice().Send();
 }
 
 
@@ -76,8 +77,6 @@ DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr:
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
-
-
 
 void DuplicatePrimCommand::Do() {
   _inverse.Invert();
@@ -239,18 +238,19 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
   const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-  for (size_t i = 0; i < targets.size(); ++i) {
-    pxr::UsdPrim prim = stage->GetPrimAtPath(targets[i].path);
+  for (auto& target : targets) {
+    pxr::UsdPrim prim = stage->GetPrimAtPath(target.path);
     pxr::UsdGeomXformCommonAPI xformApi(prim);
     if (!xformApi) {
       _EnsureXformCommonAPI(prim, timeCode);
     }
-    xformApi.SetTranslate(targets[i].previous.translation, timeCode);
+    xformApi.SetTranslate(target.previous.translation, timeCode);
   }
-  UndoBlock block;
-  for (size_t i = 0; i < targets.size(); ++i) {
-    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(targets[i].path));
-    xformApi.SetTranslate(targets[i].current.translation, timeCode);
+  UndoRouter::Get().TransferEdits(&_inverse);
+
+  for (auto& target : targets) {
+    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    xformApi.SetTranslate(target.current.translation, timeCode);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();
@@ -273,6 +273,8 @@ RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage,
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetRotate(target.previous.rotation, target.previous.rotOrder, timeCode);
   }
+  UndoRouter::Get().TransferEdits(&_inverse);
+
   UndoBlock block;
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -305,7 +307,7 @@ ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage,
     }
     xformApi.SetScale(target.previous.scale, timeCode);
   }
-  UndoBlock block;
+  UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -338,7 +340,7 @@ PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage,
     }
     xformApi.SetPivot(target.previous.pivot, timeCode);
   }
-  UndoBlock block;
+  UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -362,7 +364,7 @@ SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes,
   const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-  UndoBlock block;
+  UndoRouter::Get().TransferEdits(&_inverse);
   for (auto& attribute : attributes) {
     attribute.Set(value, timeCode);
   }
@@ -372,7 +374,7 @@ SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes,
 
 void SetAttributeCommand::Do()
 {
-
+  _inverse.Invert();
   AttributeChangedNotice().Send();
 }
 

@@ -89,7 +89,7 @@ ViewHead::Draw()
   ImGui::SetWindowSize(size);
   ImGui::PushFont(_parent->GetWindow()->GetMediumFont(1));
 
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   drawList->AddRectFilled(
     min,
     min + size,

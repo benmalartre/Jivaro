@@ -13,6 +13,7 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/range2f.h>
+#include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
@@ -187,11 +188,18 @@ protected:
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
+      enum DisplayState {
+        COLLAPSED,
+        CONNECTED,
+        EXPENDED
+      };
+
       Node(pxr::UsdPrim prim, bool write=false);
       ~Node();
 
       void AddInput(const pxr::TfToken& name, pxr::SdfValueTypeName type);
       void AddOutput(const pxr::TfToken& name, pxr::SdfValueTypeName type);
+      void AddPort(const pxr::TfToken& name, pxr::SdfValueTypeName type);
       size_t GetNumInputs() { return _inputs.size(); };
       size_t GetNumOutputs() { return _outputs.size(); };
       std::vector<Port>& GetInputs() {return _inputs;};
@@ -212,6 +220,8 @@ protected:
       Port* GetOutput(const pxr::TfToken& name);
 
     private:
+      Node*                       _parent;
+      short                       _expended;
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
       std::vector<Port>           _inputs;
@@ -299,7 +309,7 @@ public:
   inline float GetScale() const { return _scale; };
   inline const pxr::GfVec2f& GetOffset() const { return _offset; };
 
-  void Init(const std::string& filename);
+  void Init();
   void Init(const std::vector<pxr::UsdStageRefPtr>& stages);
   void Term();
 
@@ -315,6 +325,7 @@ public:
   // nodes
   void AddNode(Node* node) { _graph->AddNode(node); };
   Node* GetLastNode() { return _graph->GetNodes().back(); };
+  void _RecursePrim(Graph* graph, pxr::UsdPrim& prim, const pxr::SdfPath& skipPath);
 
   // connection
   void StartConnexion();
@@ -339,18 +350,22 @@ public:
   void BuildGrid();
   void BuildGraph();
 
+  // notices
+  void OnSceneChangedNotice(const SceneChangedNotice& n) override;
   
 private:
   void _GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node);
   void _GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend = false);
   void _GetConnexionUnderMouse(const pxr::GfVec2f& mousePos);
-  void _RecurseStagePrim(const pxr::UsdPrim& prim);
+  void _RecurseStagePrim(const pxr::UsdPrim& prim, const pxr::SdfPath& skipPath);
   
   int                                   _id;
   int                                   _depth;
   pxr::GfVec2f                          _offset;  
   float                                 _scale;
   float                                 _invScale;
+  float                                 _currentX;
+  float                                 _currentY;
   int                                   _lastX;
   int                                   _lastY;
   bool                                  _drag;

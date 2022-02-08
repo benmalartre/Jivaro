@@ -403,7 +403,7 @@ GraphEditorUI::Connexion::Draw(GraphEditorUI* graph)
 // Node constructor
 //------------------------------------------------------------------------------
 GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
- : GraphEditorUI::Item(), _prim(prim)
+ : GraphEditorUI::Item(), _prim(prim), _expended(COLLAPSED)
 {
   if (_prim.IsValid())
   {
@@ -412,12 +412,8 @@ GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
     if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
       pxr::UsdUINodeGraphNodeAPI api(prim);
       pxr::TfTokenVector attributeNames = api.GetSchemaAttributeNames(true);
-      for (const auto& attributeName : attributeNames) {
-        std::cout << "ATTRIBUTE NAME : " << attributeName << std::endl;
-      }
     } else {
       if (pxr::UsdUINodeGraphNodeAPI::CanApply(prim)) {
-        std::cout << "CAN APPLY NODE GRAPH NODE API : " << prim.GetPath().GetString() << std::endl;
         pxr::UsdUINodeGraphNodeAPI::Apply(prim);
       }
       else {
@@ -428,15 +424,12 @@ GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
       }
     }
   }
-
+  
   if (prim.IsA<pxr::UsdGeomMesh>()) {
     pxr::UsdGeomMesh mesh(prim);
     for (const auto& attrName : mesh.GetSchemaAttributeNames()) {
       pxr::UsdAttribute attr = mesh.GetPrim().GetAttribute(attrName);
-      //if(write)
-        AddInput(attrName, _GetRuntimeTypeName(attr.GetTypeName()));
-      //else
-        AddOutput(attrName, _GetRuntimeTypeName(attr.GetTypeName()));
+      AddPort(attrName, _GetRuntimeTypeName(attr.GetTypeName()));
     }
   }
 
@@ -523,6 +516,17 @@ GraphEditorUI::Node::AddOutput(const pxr::TfToken& name, pxr::SdfValueTypeName t
   _outputs.push_back(port);
 }
 
+void
+GraphEditorUI::Node::AddPort(const pxr::TfToken& name, pxr::SdfValueTypeName type)
+{
+  pxr::UsdAttribute attribute = _prim.GetAttribute(name);
+  GraphEditorUI::Port input(this, true, name, attribute);
+  _inputs.push_back(input);
+  GraphEditorUI::Port output(this, false, name, attribute);
+  //port.SetPosition(pxr::GfVec2f(0, _inputs.size() * NODE_PORT_VERTICAL_SPACING));
+  _outputs.push_back(output);
+}
+
 GraphEditorUI::Port* 
 GraphEditorUI::Node::GetInput(const pxr::TfToken& name)
 {
@@ -536,7 +540,6 @@ GraphEditorUI::Node::GetInput(const pxr::TfToken& name)
 GraphEditorUI::Port* 
 GraphEditorUI::Node::GetOutput(const pxr::TfToken& name)
 {
-  std::cout << "GET OUPUT : " << name << std::endl;
   for (auto& output : _outputs) {
     if (output.GetName() == name) return &output;
   }
@@ -575,30 +578,33 @@ GraphEditorUI::Node::ComputeSize()
     ImGui::CalcTextSize(_name.GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING;
   float inputWidth= 0, outputWidth = 0;
   float height = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
-  float width = 0.f;
-  for (auto& input : _inputs) {
-    input.SetPosition(pxr::GfVec2f(0.f, height + NODE_PORT_RADIUS));
-    float w = ImGui::CalcTextSize(input.GetName().GetText()).x + 
-      NODE_PORT_HORIZONTAL_SPACING;
-    if (w > inputWidth)inputWidth = w;
-    height += NODE_PORT_VERTICAL_SPACING;
-  }
-  for (auto& output : _outputs) {
-    output.SetPosition(pxr::GfVec2f(width, height + NODE_PORT_RADIUS));
-    float w = ImGui::CalcTextSize(output.GetName().GetText()).x + 
-      NODE_PORT_HORIZONTAL_SPACING;
-    if (w > outputWidth)outputWidth = w;
-    height += NODE_PORT_VERTICAL_SPACING;
-  }
+  float width = nameWidth;
+  if (_expended != COLLAPSED) {
+    for (auto& input : _inputs) {
+      input.SetPosition(pxr::GfVec2f(0.f, height + NODE_PORT_RADIUS));
+      float w = ImGui::CalcTextSize(input.GetName().GetText()).x +
+        NODE_PORT_HORIZONTAL_SPACING;
+      if (w > inputWidth)inputWidth = w;
+      height += NODE_PORT_VERTICAL_SPACING;
+    }
+    for (auto& output : _outputs) {
+      output.SetPosition(pxr::GfVec2f(width, height + NODE_PORT_RADIUS));
+      float w = ImGui::CalcTextSize(output.GetName().GetText()).x +
+        NODE_PORT_HORIZONTAL_SPACING;
+      if (w > outputWidth)outputWidth = w;
+      height += NODE_PORT_VERTICAL_SPACING;
+    }
 
-  if( nameWidth > (inputWidth + outputWidth)) {
-    width = nameWidth;
-  } else {
-    width = (inputWidth + outputWidth);
-  }
+    if (nameWidth > (inputWidth + outputWidth)) {
+      width = nameWidth;
+    }
+    else {
+      width = (inputWidth + outputWidth);
+    }
 
-  for (auto& output : _outputs) {
-    output.SetPosition(pxr::GfVec2f(width, output.GetPosition()[1]));
+    for (auto& output : _outputs) {
+      output.SetPosition(pxr::GfVec2f(width, output.GetPosition()[1]));
+    }
   }
 
   SetSize(pxr::GfVec2f(width, height));
@@ -676,16 +682,22 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     ImGui::PopFont();
 
-    ImGui::PushFont(window->GetRegularFont(editor->GetFontIndex()));
+    if (_expended != COLLAPSED) {
+      ImGui::PushFont(window->GetRegularFont(editor->GetFontIndex()));
 
-    int numInputs = _inputs.size();
+      int numInputs = _inputs.size();
 
-    for (int i = 0; i<numInputs; ++i) _inputs[i].Draw(editor);
+      for (int i = 0; i < numInputs; ++i) {
+        if (_expended == EXPENDED) _inputs[i].Draw(editor);
+      }
 
-    int numOutputs = _outputs.size();
-    ImGui::Indent(40);
-    for (int i = 0; i<numOutputs; ++i) _outputs[i].Draw(editor);
-    ImGui::PopFont();
+      int numOutputs = _outputs.size();
+      ImGui::Indent(40);
+      for (int i = 0; i < numOutputs; ++i) {
+        if (_expended == EXPENDED) _outputs[i].Draw(editor);
+      }
+      ImGui::PopFont();
+    }
   }
 } 
 
@@ -716,6 +728,7 @@ GraphEditorUI::Graph::Graph(pxr::UsdPrim& prim)
 GraphEditorUI::Graph::~Graph()
 {
   for (auto& node : _nodes)delete node;
+  _nodes.clear();
 }
 
 // Add node
@@ -736,8 +749,8 @@ GraphEditorUI::Graph::RemoveNode(GraphEditorUI::Node* node)
 
 // Get node
 //------------------------------------------------------------------------------
-const 
-GraphEditorUI::Node* GraphEditorUI::Graph::GetNode(const pxr::UsdPrim& prim) const
+const GraphEditorUI::Node* 
+GraphEditorUI::Graph::GetNode(const pxr::UsdPrim& prim) const
 {
   for (const auto& node : _nodes) {
     if (node->GetPrim().GetPath() == prim.GetPath())return node;
@@ -754,6 +767,41 @@ GraphEditorUI::Graph::GetNode(const pxr::UsdPrim& prim)
   return NULL;
 }
 
+
+void 
+GraphEditorUI::_RecursePrim(GraphEditorUI::Graph* graph, pxr::UsdPrim& prim, const pxr::SdfPath& skipPath)
+{
+  if (!prim.IsValid() || prim.GetPath() == skipPath)return;
+  const pxr::GfVec2i originalOffset(_currentX, _currentY);
+  _currentY += 32;
+  if (!prim.IsPseudoRoot()) {
+    if (prim.HasAuthoredReferences() || prim.HasAuthoredPayloads())
+    {
+      GraphEditorUI::Node* referenceNode = new GraphEditorUI::Node(prim);
+      referenceNode->SetPosition(pxr::GfVec2f(_currentX, _currentY));
+      graph->AddNode(referenceNode);
+    }
+    else if (prim.IsInstance())
+    {
+      GraphEditorUI::Node* instanceNode = new GraphEditorUI::Node(prim);
+      instanceNode->SetPosition(pxr::GfVec2f(_currentX, _currentY));
+      graph->AddNode(instanceNode);
+    }
+    else
+    {
+      GraphEditorUI::Node* defaultNode = new GraphEditorUI::Node(prim);
+      defaultNode->SetPosition(pxr::GfVec2f(_currentX, _currentY));
+      graph->AddNode(defaultNode);
+    };
+  }
+
+  for (pxr::UsdPrim child : prim.GetChildren()) {
+    _RecursePrim(graph, child, skipPath);
+    _currentX += 100;
+  }
+  _currentX = originalOffset[0];
+  _currentY = originalOffset[1];
+}
 
 //==============================================================================
 // GRAPH UI
@@ -781,7 +829,9 @@ GraphEditorUI::GraphEditorUI(View* parent)
 {
   //_filename = filename;
   _id = 0;
-    
+  
+  Init();
+  /*
   _stage = pxr::UsdStage::CreateInMemory();
   pxr::SdfPath meshPath(pxr::TfToken("/mesh"));
   pxr::UsdGeomMesh mesh = pxr::UsdGeomMesh::Define(_stage, meshPath);
@@ -794,6 +844,7 @@ GraphEditorUI::GraphEditorUI(View* parent)
   pxr::UsdPrim graphPrim = _stage->DefinePrim(graphPath);
 
   _graph = new Graph(graphPrim);
+
 
   Node* getterNode = new Node(mesh.GetPrim());
   getterNode->SetPosition(pxr::GfVec2f(0.f, 0.f));
@@ -814,6 +865,7 @@ GraphEditorUI::GraphEditorUI(View* parent)
   pushNode->AddOutput(TfToken("result"), pxr::SdfValueTypeNames->Float3Array);
 
   _graph->AddNode(pushNode);
+  */
   
  // Read("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
 
@@ -978,7 +1030,7 @@ void
 GraphEditorUI::UpdateFont()
 {
   if (_scale < 1.0) {
-    _fontIndex = 0;
+    _fontIndex = 2;
     _fontScale = _scale;
   }
   else if (_scale < 2.0) {
@@ -986,7 +1038,7 @@ GraphEditorUI::UpdateFont()
     _fontScale = RESCALE(_scale, 1.0, 2.0, 0.5, 1.0);
   }
   else {
-    _fontIndex = 2;
+    _fontIndex = 0;
     _fontScale = RESCALE(_scale, 2.0, 4.0, 0.5, 1.0);
   }
 }
@@ -1041,7 +1093,8 @@ GraphEditorUI::DrawGrid()
 bool 
 GraphEditorUI::Draw()
 {
-  std::cout << "DRAW GRAPH EDITOR" << std::endl;
+  if(!_graph) return false;
+
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
   
@@ -1121,26 +1174,21 @@ GraphEditorUI::Draw()
 // init
 //------------------------------------------------------------------------------
 void 
-GraphEditorUI::Init(const std::string& filename)
+GraphEditorUI::Init()
 {
-  _parent->SetDirty();
-  
-  /*
-  pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
-  pxr::UsdPrimRange primRange = stage->Traverse();
-  for(auto prim: primRange)
-  {
-    if(prim.GetTypeName() == pxr::TfToken("Stage"))
-    {
-      pxr::GraphStage stageNode(prim);
-      std::string fileName;
-      pxr::UsdAttribute fileNameAttr = stageNode.CreateFileNameAttr();
-      fileNameAttr.Get(&fileName);
+  std::cout << "GRAPH EDITOR INIT" << std::endl;
+  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+  if (!stage)return;
+  //_stage = pxr::UsdStage::CreateInMemory();
+  pxr::SdfPath graphPath(pxr::TfToken("/graph"));
+  pxr::UsdPrim graphPrim = stage->DefinePrim(graphPath);
 
-      pxr::UsdStageRefPtr usdStage = pxr::UsdStage::CreateInMemory();
-      //_trees.push_back(new GraphTreeUI(usdStage));
-    }
-  }*/ 
+  _graph = new Graph(graphPrim);
+  _selected.clear();
+  _currentNode = _hoveredNode = NULL;
+  _currentPort = _hoveredPort = NULL;
+  _RecursePrim(_graph, stage->GetPseudoRoot(), graphPath);
+  _parent->SetDirty();
 
 }
 
@@ -1164,6 +1212,14 @@ GraphEditorUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
   
 };
 
+void
+GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
+{
+  std::cout << "########### SCENE CHANGED ######################" << std::endl;
+  Init();
+}
+
+
 void 
 GraphEditorUI::BuildGrid() 
 {
@@ -1174,20 +1230,20 @@ GraphEditorUI::BuildGrid()
 // build graph
 //------------------------------------------------------------------------------ 
 void 
-GraphEditorUI::_RecurseStagePrim(const pxr::UsdPrim& prim)
+GraphEditorUI::_RecurseStagePrim(const pxr::UsdPrim& prim, const pxr::SdfPath& skipPath)
 {
   for(auto child : prim.GetChildren())
   {
+    if (child.GetPath() == skipPath) continue;
     Node node(child);
-
-    _RecurseStagePrim(child);
+    _RecurseStagePrim(child, skipPath);
   }
 }
 
 void 
 GraphEditorUI::BuildGraph()
 {
-   _RecurseStagePrim(_stage->GetPseudoRoot());
+   _RecurseStagePrim(_stage->GetPseudoRoot(), pxr::SdfPath());
 }
 
 void 

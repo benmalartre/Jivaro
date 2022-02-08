@@ -69,7 +69,8 @@ public:
   void CleanUp();
 
   void OpenScene(const std::string& filename);
-  void SaveScene(const std::string& filename);
+  void SaveScene();
+  void SaveSceneAs(const std::string& filename);
 
   // selection
   Selection* GetSelection(){return &_selection;};
