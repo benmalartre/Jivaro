@@ -275,7 +275,6 @@ RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage,
   }
   UndoRouter::Get().TransferEdits(&_inverse);
 
-  UndoBlock block;
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetRotate(target.current.rotation, target.current.rotOrder, timeCode);

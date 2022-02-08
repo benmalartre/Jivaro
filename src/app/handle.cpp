@@ -551,7 +551,7 @@ void SelectHandle::_UpdateTargets(bool interacting)
 //==================================================================================
 TranslateHandle::TranslateHandle()
  : BaseHandle()
- , _radius(0.05f)
+ , _radius(0.1f)
  , _height(1.f)
 {  
   Shape::Component center = _shape.AddBox(
@@ -930,7 +930,7 @@ ScaleHandle::ScaleHandle()
   AddComponent(center);
 
   Shape::Component cylinder = _shape.AddCylinder(
-    AXIS_X, 0.01f, 0.8f, 16, 2, HANDLE_X_COLOR, {
+    AXIS_X, 0.02f, 0.8f, 16, 2, HANDLE_X_COLOR, {
       1.f,0.f,0.f,0.f,
       0.f,1.f,0.f,0.f,
       0.f,0.f,1.f,0.f,

@@ -89,11 +89,18 @@ ViewHead::Draw()
   ImGui::SetWindowSize(size);
   ImGui::PushFont(_parent->GetWindow()->GetMediumFont(1));
 
+  const ImVec4* colors = style.Colors;
   ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   drawList->AddRectFilled(
     min,
     min + size,
     ImColor(BACKGROUND_COLOR)
+  );
+
+  drawList->AddRectFilled(
+    min + pxr::GfVec2f(0, size[1] - 2),
+    min + size,
+    ImColor(colors[ImGuiCol_PlotHistogram])
   );
 
   static ImGuiTabBarFlags tabBarFlags = 
