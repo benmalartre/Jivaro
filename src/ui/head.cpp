@@ -97,11 +97,13 @@ ViewHead::Draw()
     ImColor(BACKGROUND_COLOR)
   );
 
-  drawList->AddRectFilled(
-    min + pxr::GfVec2f(0, size[1] - 2),
-    min + size,
-    ImColor(colors[ImGuiCol_PlotHistogram])
-  );
+  if (_parent->IsActive()) {
+    drawList->AddRectFilled(
+      min + pxr::GfVec2f(0, size[1] - 4),
+      min + size - pxr::GfVec2f(0, 2),
+      ImColor(pxr::GfVec4f(0.66f, 0.66f, 0.66f, 0.66f))
+    );
+  }
 
   static ImGuiTabBarFlags tabBarFlags = 
     ImGuiTabBarFlags_AutoSelectNewTabs | 

@@ -8,7 +8,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 static ImVec4 BACKGROUND_COLOR(0.2f, 0.2f, 0.2f, 1.f);
 static ImVec4 ALTERNATE_COLOR(0.25f, 0.25f, 0.25f, 1.f);
-static ImVec4 SELECTED_COLOR(0.5f, 0.5f, 0.5f, 1.f);
+static ImVec4 SELECTED_COLOR(0.75f, 0.75f, 0.75f, 1.f);
 static ImVec4 HIGHLIGHTED_COLOR(0.4f, 0.4f, 0.4f, 1.f);
 static ImVec4 HOVERED_COLOR(0.75f, 0.75f, 0.75f, 1.f);
 static ImVec4 TRANSPARENT_COLOR(0.f, 0.f, 0.f, 0.f);
@@ -45,6 +45,7 @@ static void SetStyle(ImGuiStyle* dst)
   style->AntiAliasedLines = true;
   style->AntiAliasedFill = true;
   style->WindowBorderSize = 0.0f;
+  style->ScrollbarSize = 6.f;
 
   colors[ImGuiCol_Text] = ImVec4(0.75f, 0.75f, 0.75f, 1.f);
   colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.f);
@@ -59,11 +60,11 @@ static void SetStyle(ImGuiStyle* dst)
   colors[ImGuiCol_FrameBgActive] = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
   colors[ImGuiCol_TitleBg] = ImVec4(0.85f, 0.85f, 0.85f, 1.00f);
   colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.82f, 0.78f, 0.78f, 0.51f);
-  colors[ImGuiCol_TitleBgActive] = ImVec4(0.78f, 0.78f, 0.78f, 1.00f);
+  colors[ImGuiCol_TitleBgActive] = ImVec4(0.78f, 0.78f, 0.78f, 1.f);
   colors[ImGuiCol_MenuBarBg] = ImVec4(0.2f, 0.2f, 0.2f, 1.f);
-  colors[ImGuiCol_ScrollbarBg] = ImVec4(0.20f, 0.25f, 0.30f, 0.61f);
-  colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.90f, 0.90f, 0.90f, 0.30f);
-  colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.92f, 0.92f, 0.92f, 0.78f);
+  colors[ImGuiCol_ScrollbarBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.f);
+  colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.90f, 0.90f, 0.90f, 0.6f);
+  colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.90f, 0.9f, 0.9f, 0.8f);
   colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
   colors[ImGuiCol_CheckMark] = ImVec4(0.184f, 0.407f, 0.193f, 1.00f);
   colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);

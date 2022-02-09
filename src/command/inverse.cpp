@@ -10,8 +10,8 @@ void UndoInverse::_Append(std::function<bool()> inverse) {
 
 void UndoInverse::_Invert() {
   pxr::SdfChangeBlock changeBlock;
-  for (std::vector<std::function<bool()>>::reverse_iterator it = _inversion.rbegin();
-    it != _inversion.rend(); ++it) {
+  for (std::vector<std::function<bool()>>::reverse_iterator it = 
+  _inversion.rbegin(); it != _inversion.rend(); ++it) {
     (*it)();
   }
 }

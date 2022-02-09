@@ -30,6 +30,8 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+static int UNIQUE_ICON_ID = 0;
+
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using
 // a merged icon fonts (see docs/FONTS.txt)
@@ -77,9 +79,29 @@ static bool AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 }
 
 template<typename FuncT, typename ...ArgsT>
-static bool AddTransparentIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
+static bool AddIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT... args)
+{
+  ImGui::PushID(id);
+  if (ImGui::ImageButton(
+    (ImTextureID)(intptr_t)icon->tex[state],
+    ImVec2(icon->size, icon->size),
+    ImVec2(0, 0),
+    ImVec2(1, 1),
+    -1)) {
+    func(args...);
+    ImGui::PopID();
+    return true;
+  }
+
+  ImGui::PopID();
+  return false;
+}
+
+template<typename FuncT, typename ...ArgsT>
+static bool AddTransparentIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
+  ImGui::PushID(id);
   if (ImGui::ImageButton(
     (ImTextureID)(intptr_t)icon->tex[state],
     ImVec2(icon->size, icon->size),
@@ -88,14 +110,16 @@ static bool AddTransparentIconButton(Icon* icon, short state, FuncT func, ArgsT.
     -1))
   {
     func(args...);
+    ImGui::PopID();
     return true;
   }
+  ImGui::PopID();
   ImGui::PopStyleColor();
   return false;
 }
 
 template<typename FuncT, typename ...ArgsT>
-static bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
+static bool AddCheckableIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
@@ -104,6 +128,7 @@ static bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT...
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, BUTTON_ACTIVE_COLOR);
   }
   
+  ImGui::PushID(id);
   if (ImGui::ImageButton( 
     (ImTextureID)(intptr_t)icon->tex[state],
     ImVec2(icon->size, icon->size),
@@ -113,10 +138,12 @@ static bool AddCheckableIconButton(Icon* icon, short state, FuncT func, ArgsT...
   {
     func(args...);
     if(state == ICON_SELECTED) ImGui::PopStyleColor(2);
+    ImGui::PopID();
     return true;
   }
   if(state == ICON_SELECTED) ImGui::PopStyleColor(2);
-  
+  ImGui::PopID();
+  return true;
   return false;
 }
 

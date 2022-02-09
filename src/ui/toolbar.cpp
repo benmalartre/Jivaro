@@ -89,16 +89,10 @@ bool ToolbarButton::Draw()
   
   if(toggable) {
     AddCheckableIconButton<IconPressedFunc>(
-      icon,
-      (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT,
-      func
-    );
+      0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
   } else {
     AddIconButton<IconPressedFunc>(
-      icon,
-      ICON_DEFAULT,
-      func
-    );
+      1, icon, ICON_DEFAULT, func);
   }
   ImGui::PopFont();
 

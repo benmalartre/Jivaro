@@ -73,8 +73,57 @@ bool PropertyUI::DrawAssetInfo(const pxr::UsdPrim& prim)
       pxr::UsdAttribute attribute = prim.GetAttribute(pxr::TfToken(keyValue->first));
       VtValue modified = AddAttributeWidget(attribute, pxr::UsdTimeCode::Default());
       if (!modified.IsEmpty()) {
-        std::cout << "MODIFIED : " << modified << std::endl;
         //GetApplication()->AddUsdCommand()
+        //ExecuteAfterDraw(&UsdPrim::SetAssetInfoByKey, prim, TfToken(keyValue->first), modified);
+      }
+    }
+    ImGui::EndTable();
+  }
+  return true;
+}
+
+
+void _XXX_CALLBACK__(int index)
+{
+  std::cout << "XXXXXXXXXX CALLBACK !!!" << index << std::endl;
+}
+
+// TODO Share the code,
+static void DrawPropertyMiniButton(ImGuiID id=0, const ImVec4& color = ImVec4(BUTTON_ACTIVE_COLOR))
+{
+  Icon* icon = NULL;
+  icon = &ICONS[ICON_SIZE_SMALL][ICON_OP];
+  AddIconButton<IconPressedFunc>(
+    id, icon, ICON_DEFAULT,
+    (IconPressedFunc)_XXX_CALLBACK__, id);
+  ImGui::SameLine();
+}
+
+bool 
+_DrawAssetInfo(pxr::UsdPrim& prim) {
+  auto assetInfo = prim.GetAssetInfo();
+  if (assetInfo.empty())
+    return false;
+
+  if (ImGui::BeginTable("##DrawAssetInfo", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
+    ImGui::TableSetupColumn("Asset info");
+    ImGui::TableSetupColumn("");
+
+    ImGui::TableHeadersRow();
+
+    TF_FOR_ALL(keyValue, assetInfo) {
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      DrawPropertyMiniButton(7);
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%s", keyValue->first.c_str());
+      ImGui::TableSetColumnIndex(2);
+      ImGui::PushItemWidth(-FLT_MIN);
+      pxr::VtValue modified = 
+        AddAttributeWidget(prim.GetAttribute(pxr::TfToken(keyValue->first)), pxr::UsdTimeCode::Default());
+      if (!modified.IsEmpty()) {
+        //GetApplication()->AddCommand()
         //ExecuteAfterDraw(&UsdPrim::SetAssetInfoByKey, prim, TfToken(keyValue->first), modified);
       }
     }
@@ -111,7 +160,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       // Translate
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      //DrawPropertyMiniButton("(x)");
+      DrawPropertyMiniButton(1);
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("translation");
@@ -127,7 +176,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       // Rotation
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      //DrawPropertyMiniButton("(x)");
+      DrawPropertyMiniButton(2);
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("rotation");
@@ -143,7 +192,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       // Scale
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      //DrawPropertyMiniButton("(x)");
+      DrawPropertyMiniButton(3);
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("scale");
@@ -159,7 +208,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      //DrawPropertyMiniButton("(x)");
+      DrawPropertyMiniButton(4);
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("pivot");
@@ -167,7 +216,9 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::TableSetColumnIndex(2);
       ImGui::InputFloat3("Pivot", target.current.pivot.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
-        //ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetPivot, xformAPI, pivot, currentTime);
+        GetApplication()->AddCommand(std::shared_ptr<PivotCommand>(
+          new PivotCommand(GetApplication()->GetStage(), targets, time))
+        );
       }
       // TODO rotation order
       ImGui::EndTable();
@@ -260,6 +311,9 @@ PropertyUI::Draw()
     pos + size,
     ImGuiCol_WindowBg
   );
+
+  if (DrawAssetInfo(_prim))
+    ImGui::Separator();
 
   if (_DrawXformsCommon(pxr::UsdTimeCode::Default()))
     ImGui::Separator();

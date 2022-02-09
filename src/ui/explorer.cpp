@@ -294,7 +294,7 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
 
-  const Icon* activeIcon = &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_FORWARD];
+  const Icon* activeIcon = &ICONS[ICON_SIZE_SMALL][ICON_OP];
   const Icon* inactiveIcon = &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_STOP];
 
   GLuint tex = prim.IsActive() ?

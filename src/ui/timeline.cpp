@@ -190,14 +190,14 @@ void TimelineUI::DrawButtons()
   Icon* icon = NULL;
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_FIRST_FRAME];
   AddIconButton<IconPressedFunc>(
-    icon, ICON_DEFAULT,
+    0, icon, ICON_DEFAULT,
     (IconPressedFunc)FirstFrameCallback, this
     );
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PREVIOUS_FRAME];
   AddIconButton<IconPressedFunc>(
-    icon, ICON_DEFAULT,
+    1, icon, ICON_DEFAULT,
     (IconPressedFunc)PreviousFrameCallback, this
     );
   ImGui::SameLine();
@@ -205,26 +205,26 @@ void TimelineUI::DrawButtons()
   if (!_data.playing) icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_FORWARD];
   else icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_STOP];
   AddIconButton<IconPressedFunc, TimelineUI*>(
-    icon, ICON_DEFAULT,
+    2, icon, ICON_DEFAULT,
     (IconPressedFunc)PlaybackCallback, this);
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_NEXT_FRAME];
   AddIconButton<IconPressedFunc>(
-    icon, ICON_DEFAULT,
+    3, icon, ICON_DEFAULT,
     (IconPressedFunc)NextFrameCallback, this);
   ImGui::SameLine();
 
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_LAST_FRAME];
   AddIconButton<IconPressedFunc, TimelineUI*>(
-    icon, ICON_DEFAULT,
+    4, icon, ICON_DEFAULT,
     (IconPressedFunc)LastFrameCallback, this);
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_LOOP];
   AddCheckableIconButton<IconPressedFunc, TimelineUI*>(
-    icon,
+    5, icon,
     _data.loop ? ICON_SELECTED : ICON_DEFAULT,
     (IconPressedFunc)LoopCallback, this);
   ImGui::SameLine();

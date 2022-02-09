@@ -65,7 +65,6 @@ Engine::Engine(
     driver)
   , _dirty(true)
 {
- std::cout << "ENGINE CONSTRUCTOR CALLED..." << std::endl;
 }
 
 Engine::~Engine() = default;

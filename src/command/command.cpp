@@ -31,7 +31,7 @@ CreatePrimCommand::CreatePrimCommand(pxr::UsdStageRefPtr stage, const std::strin
   : Command(true)
 {
   if (!stage) return;
-  UndoBlock block;
+  UndoRouter::Get().TransferEdits(&_inverse);
   stage->DefinePrim(pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
@@ -41,7 +41,7 @@ CreatePrimCommand::CreatePrimCommand(pxr::UsdPrim parent, const std::string& nam
   : Command(true)
 {
   if (!parent) return;
-  UndoBlock block;
+  UndoRouter::Get().TransferEdits(&_inverse);
   parent.GetStage()->DefinePrim(parent.GetPath().AppendChild(pxr::TfToken(name)));
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
@@ -58,7 +58,7 @@ void CreatePrimCommand::Do() {
 DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPath& path)
   : Command(true)
 {
-  UndoBlock block;
+  UndoRouter::Get().TransferEdits(&_inverse);
   pxr::SdfPath destinationPath = pxr::SdfPath(path.GetString() + "_duplicate");
   pxr::UsdPrim sourcePrim = stage->GetPrimAtPath(path);
   pxr::SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
@@ -180,7 +180,7 @@ void ShowHideCommand::Do() {
 ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
 {
-  UndoBlock block;
+  UndoRouter::Get().TransferEdits(&_inverse);
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetStage();
   switch (mode) {
@@ -206,7 +206,7 @@ ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
     break;
   }
   UndoRouter::Get().TransferEdits(&_inverse);
-  AttributeChangedNotice().Send();
+  SceneChangedNotice().Send();
 }
 
 void ActivateCommand::Do() {

@@ -530,7 +530,6 @@ GraphEditorUI::Node::AddPort(const pxr::TfToken& name, pxr::SdfValueTypeName typ
 GraphEditorUI::Port* 
 GraphEditorUI::Node::GetInput(const pxr::TfToken& name)
 {
-  std::cout << "GET INPUT : " << name << std::endl;
   for (auto& input : _inputs) {
     if (input.GetName() == name) return &input;
   }
@@ -711,7 +710,6 @@ GraphEditorUI::Graph::Graph(pxr::UsdPrim& prim)
   }
   else {
     if (pxr::UsdUISceneGraphPrimAPI::CanApply(prim)) {
-      std::cout << "CAN APPLY NODE GRAPH NODE API : " << prim.GetPath().GetString() << std::endl;
       pxr::UsdUISceneGraphPrimAPI::Apply(prim);
     }
     else {
@@ -923,11 +921,8 @@ GraphEditorUI::Read(const std::string& filename)
         GraphEditorUI::Port* start = NULL;
         GraphEditorUI::Port* end = NULL;
         std::string relName = relationship.GetName().GetString();
-        std::cout << "REL NAME : " << relName << std::endl;
         pxr::TfToken name(relName.replace(relName.begin(), relName.begin() + 6, ""));
-        std::cout << "NAME : " << name << std::endl;
         destination = _graph->GetNode(prim);
-        std::cout << "DESTINATION : " << destination << std::endl;
         if (destination) {
           end = destination->GetInput(name);
         }
@@ -935,10 +930,8 @@ GraphEditorUI::Read(const std::string& filename)
         if (relationship.GetTargets(&targets)) {
           for (auto& target : targets) {
             pxr::UsdAttribute attr = _stage->GetAttributeAtPath(target);
-            std::cout << "ATTR :" << attr.GetName() << std::endl;
             if(attr.IsValid()) {
               source = _graph->GetNode(attr.GetPrim());
-              std::cout << "SOURCE : " << source << std::endl;
               if (source) {
                 start = source->GetOutput(attr.GetName());
               }
@@ -946,8 +939,6 @@ GraphEditorUI::Read(const std::string& filename)
           }
         }
 
-        std::cout << "START : " << start << std::endl;
-        std::cout << "END : " << end << std::endl;
         if (start && end) {
           Connexion* connexion = new Connexion(start, end, 0);
           _connexions.push_back(connexion);
@@ -1156,7 +1147,6 @@ GraphEditorUI::Draw()
   static bool value;
   ImGui::Checkbox("FUCK", &value);
   if (ImGui::Button("SAVE")) {
-    std::cout << "SAVE FUCKIN GRAPH..." << std::endl;
     _stage->Export("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
   }
   
@@ -1176,7 +1166,6 @@ GraphEditorUI::Draw()
 void 
 GraphEditorUI::Init()
 {
-  std::cout << "GRAPH EDITOR INIT" << std::endl;
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   if (!stage)return;
   //_stage = pxr::UsdStage::CreateInMemory();

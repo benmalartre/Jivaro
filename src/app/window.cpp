@@ -43,7 +43,6 @@ void CreateFontAtlas()
   for (int i = 0; i < 3; ++i) {
     fontPath = exeFolder + "/fonts/roboto/Roboto-Bold.ttf";
     //fontPath = exeFolder + "/fonts/opensans/OpenSans-Bold.ttf";
-    std::cout << fontPath << std::endl;
     BOLD_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
       fontSizes[i],
@@ -184,7 +183,6 @@ Window::Init(Application* app)
   _app = app;
   if(_window)
   {
-    std::cout << "INIT WINDOW" << std::endl;
     // window datas
     glfwSetWindowUserPointer(_window, this);
 
