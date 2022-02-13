@@ -101,15 +101,11 @@ ColorPopupUI::ColorPopupUI(int x, int y, int width, int height,
   , _time(timeCode)
   , _isArray(false)
 {
-  std::cout << "INIT COLOR POPUP UI " << std::endl;
   _sync = true;
   pxr::VtValue value;
   attribute.Get(&value, timeCode);
   if (value.IsHolding<pxr::GfVec3f>()) {
     _color = _original = pxr::GfVec3f(value.Get<pxr::GfVec3f>());
-    std::cout << "SINGLE" << std::endl;
-    std::cout << _color << std::endl;
-    std::cout << _original << std::endl;
   }
   else if (value.IsArrayValued() &&
     value.GetArraySize() == 1 &&
@@ -117,9 +113,6 @@ ColorPopupUI::ColorPopupUI(int x, int y, int width, int height,
     pxr::VtArray<pxr::GfVec3f> array = value.Get<pxr::VtArray<pxr::GfVec3f>>();
     _color = _original = array[0];
     _isArray = true;
-    std::cout << "MULTI" << std::endl;
-    std::cout << _color << std::endl;
-    std::cout << _original << std::endl;
   }
 }
 

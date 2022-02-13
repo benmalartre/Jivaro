@@ -912,7 +912,10 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
 
 void FocusCallback(GLFWwindow* window, int focused)
 {
-
+  if (focused) {
+    Window* parent = Window::GetUserData(window);
+    GetApplication()->SetActiveWindow(parent);
+  }
 }
 
 void 

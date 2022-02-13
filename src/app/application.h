@@ -103,6 +103,7 @@ public:
   Window* GetMainWindow() {return _mainWindow;};
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
   Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
+  void SetActiveWindow(Window* window) { _activeWindow = window; };
 
   // tools
   Tool* GetTools(){return &_tools;};
