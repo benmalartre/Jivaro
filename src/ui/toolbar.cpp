@@ -68,7 +68,7 @@ bool ToolbarSeparator::Draw()
 
 ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string& label, 
   const std::string& shortcut, const std::string& tooltip, Icon* icon, bool toggable, 
-  bool enabled, IconPressedFunc func, const pxr::VtArray<pxr::VtValue> args)
+  bool enabled, UIUtils::IconPressedFunc func, const pxr::VtArray<pxr::VtValue> args)
   : ToolbarItem(ui, TOOLBAR_BUTTON)
   , tool(tool)
   , label(label)
@@ -88,10 +88,10 @@ bool ToolbarButton::Draw()
   ImGui::PushFont(window->GetRegularFont(0));
   
   if(toggable) {
-    AddCheckableIconButton<IconPressedFunc>(
+    UIUtils::AddCheckableIconButton<UIUtils::IconPressedFunc>(
       0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
   } else {
-    AddIconButton<IconPressedFunc>(
+    UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
       1, icon, ICON_DEFAULT, func);
   }
   ImGui::PopFont();
@@ -112,49 +112,49 @@ ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical)
   ToolbarItem* openItem = new ToolbarButton(
     this, TOOL_OPEN, "Open", "Ctrl+O",
     &ICONS[ICON_MEDIUM][ICON_OPEN], false, true, 
-    (IconPressedFunc)&OnOpenCallback
+    (UIUtils::IconPressedFunc)&OnOpenCallback
   );
   _items.push_back(openItem);
 
   ToolbarItem* saveItem = new ToolbarButton(
     this, TOOL_SAVE, "Save", "Ctrl+S",
     &ICONS[ICON_MEDIUM][ICON_SAVE], false, true, 
-    (IconPressedFunc)&OnSaveCallback
+    (UIUtils::IconPressedFunc)&OnSaveCallback
   );
   _items.push_back(saveItem);
   */
   ToolbarItem* selectItem = new ToolbarButton(
     this, TOOL_SELECT, "Select", "Space","selection tool",
     &ICONS[ICON_SIZE_MEDIUM][ICON_SELECT], true, true, 
-    (IconPressedFunc)&OnSelectCallback
+    (UIUtils::IconPressedFunc)&OnSelectCallback
   );
   _items.push_back(selectItem);
 
   ToolbarItem* translateItem = new ToolbarButton(
     this, TOOL_TRANSLATE, "Translate", "T", "translation tool",
     &ICONS[ICON_SIZE_MEDIUM][ICON_TRANSLATE], true, true, 
-    (IconPressedFunc)&OnTranslateCallback
+    (UIUtils::IconPressedFunc)&OnTranslateCallback
   );
   _items.push_back(translateItem);
 
   ToolbarItem* rotateItem = new ToolbarButton(
     this, TOOL_ROTATE, "Rotate", "R", "rotation tool",
     &ICONS[ICON_SIZE_MEDIUM][ICON_ROTATE], true, true, 
-    (IconPressedFunc)&OnRotateCallback
+    (UIUtils::IconPressedFunc)&OnRotateCallback
   );
   _items.push_back(rotateItem);
 
   ToolbarItem* scaleItem = new ToolbarButton(
     this, TOOL_SCALE, "Scale", "S", "scale tool",
     &ICONS[ICON_SIZE_MEDIUM][ICON_SCALE], true, true, 
-    (IconPressedFunc)&OnScaleCallback
+    (UIUtils::IconPressedFunc)&OnScaleCallback
   );
   _items.push_back(scaleItem);
 
   ToolbarItem* brushItem = new ToolbarButton(
     this, TOOL_BRUSH, "Brush", "B", "brush tool",
     &ICONS[ICON_SIZE_MEDIUM][ICON_BRUSH], true, true, 
-    (IconPressedFunc)&OnBrushCallback
+    (UIUtils::IconPressedFunc)&OnBrushCallback
   );
   _items.push_back(brushItem);
 }

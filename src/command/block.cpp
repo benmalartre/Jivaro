@@ -5,9 +5,12 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-void UndoBlock::_Initialize() {
+void UndoBlock::_Initialize(bool clear) {
   UndoRouter& router = UndoRouter::Get();
   TF_VERIFY(router._depth >= 0);
+  if (clear) {
+    router._inversion._Clear();
+  }
   /*
   TF_DEBUG(DEBUG_UNDOSTACK).Msg(
     "--Opening undo block inverse at depth '%i'.\n", router._depth);*/
@@ -22,8 +25,8 @@ void UndoBlock::_Initialize() {
   router._depth++;
 }
 
-UndoBlock::UndoBlock() {
-  _Initialize();
+UndoBlock::UndoBlock(bool clear) {
+  _Initialize(clear);
 }
 
 UndoBlock::~UndoBlock() {

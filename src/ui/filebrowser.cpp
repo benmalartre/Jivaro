@@ -138,11 +138,11 @@ void FileBrowserUI::_ResetSelected()
 
 void FileBrowserUI::_DrawPath()
 {
-  AddIconButton<IconPressedFunc, FileBrowserUI*>(
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc, FileBrowserUI*>(
     0,
     &ICONS[ICON_SIZE_SMALL][ICON_HOME],
     ICON_DEFAULT,
-    (IconPressedFunc)&OnHomeCallback, this);
+    (UIUtils::IconPressedFunc)&OnHomeCallback, this);
   ImGui::SameLine();
   size_t numTokens = _pathTokens.size();
   if(numTokens) {

@@ -65,6 +65,12 @@ CharCallback(GLFWwindow* window, unsigned c);
 JVR_EXPORT void 
 ResizeCallback(GLFWwindow* window, int width, int height);
 
+// focus callback
+//----------------------------------------------------------------------------
+JVR_EXPORT void
+FocusCallback(GLFWwindow* window, int focused);
+
+
 class Window
 {
 public:
@@ -121,6 +127,7 @@ public:
     int fixed=0, int numPixels=-1);
   View* GetMainView(){return _mainView;};
   void SetActiveView(View* view);
+  void SetHoveredView(View* view);
   View* GetActiveView(){return _activeView;};
   View* GetHoveredView() { return _hoveredView; };
   View* GetViewUnderMouse(int x, int y);
@@ -213,7 +220,6 @@ private:
   float                 _dpiX;
   float                 _dpiY;
   PopupUI*              _popup;
-  bool                  _dim;
 
 public:
   // static constructor

@@ -24,10 +24,10 @@ TF_DECLARE_WEAK_AND_REF_PTRS(UndoRouter);
 ///
 class UndoBlock {
 private:
-    void _Initialize();
+    void _Initialize(bool clear=false);
 
 public:
-    explicit UndoBlock();
+    explicit UndoBlock(bool clear=false);
     ~UndoBlock();
 };
 

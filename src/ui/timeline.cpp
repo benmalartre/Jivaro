@@ -189,44 +189,44 @@ void TimelineUI::DrawButtons()
 {
   Icon* icon = NULL;
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_FIRST_FRAME];
-  AddIconButton<IconPressedFunc>(
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
     0, icon, ICON_DEFAULT,
-    (IconPressedFunc)FirstFrameCallback, this
+    (UIUtils::IconPressedFunc)FirstFrameCallback, this
     );
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PREVIOUS_FRAME];
-  AddIconButton<IconPressedFunc>(
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
     1, icon, ICON_DEFAULT,
-    (IconPressedFunc)PreviousFrameCallback, this
+    (UIUtils::IconPressedFunc)PreviousFrameCallback, this
     );
   ImGui::SameLine();
 
   if (!_data.playing) icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_FORWARD];
   else icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_STOP];
-  AddIconButton<IconPressedFunc, TimelineUI*>(
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc, TimelineUI*>(
     2, icon, ICON_DEFAULT,
-    (IconPressedFunc)PlaybackCallback, this);
+    (UIUtils::IconPressedFunc)PlaybackCallback, this);
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_NEXT_FRAME];
-  AddIconButton<IconPressedFunc>(
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
     3, icon, ICON_DEFAULT,
-    (IconPressedFunc)NextFrameCallback, this);
+    (UIUtils::IconPressedFunc)NextFrameCallback, this);
   ImGui::SameLine();
 
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_LAST_FRAME];
-  AddIconButton<IconPressedFunc, TimelineUI*>(
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc, TimelineUI*>(
     4, icon, ICON_DEFAULT,
-    (IconPressedFunc)LastFrameCallback, this);
+    (UIUtils::IconPressedFunc)LastFrameCallback, this);
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_LOOP];
-  AddCheckableIconButton<IconPressedFunc, TimelineUI*>(
+  UIUtils::AddCheckableIconButton<UIUtils::IconPressedFunc, TimelineUI*>(
     5, icon,
     _data.loop ? ICON_SELECTED : ICON_DEFAULT,
-    (IconPressedFunc)LoopCallback, this);
+    (UIUtils::IconPressedFunc)LoopCallback, this);
   ImGui::SameLine();
 }
 

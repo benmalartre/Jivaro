@@ -210,6 +210,7 @@ Window::Init(Application* app)
     glfwSetKeyCallback(_window, KeyboardCallback);
     glfwSetCharCallback(_window, CharCallback);
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
+    glfwSetWindowFocusCallback(_window, FocusCallback);
 
     // create main splittable view
     _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
@@ -275,7 +276,6 @@ void
 Window::SetPopup(PopupUI* popup)
 {
   _popup = popup;
-  if (_popup)_dim = true;
 }
 
 void 
@@ -318,7 +318,6 @@ Window::SetActiveView(View* view)
   if (_activeView)
   {
     if (_activeView == view)return;
-    _activeView->ClearFlag(View::OVER);
     _activeView->ClearFlag(View::ACTIVE);
     _activeView->ClearFlag(View::INTERACTING);
     _activeView->SetDirty();
@@ -326,12 +325,28 @@ Window::SetActiveView(View* view)
   if(view)
   {
     _activeView = view;
-    _activeView->SetFlag(View::OVER);
     _activeView->SetFlag(View::ACTIVE);
     _activeView->SetDirty();
   }
   else _activeView = NULL;
-  
+}
+
+void
+Window::SetHoveredView(View* view)
+{
+  if (_hoveredView)
+  {
+    if (_hoveredView == view)return;
+    _hoveredView->ClearFlag(View::OVER);
+    _hoveredView->SetDirty();
+  }
+  if (view)
+  {
+    _hoveredView = view;
+    _hoveredView->SetFlag(View::OVER);
+    _hoveredView->SetDirty();
+  }
+  else _hoveredView = NULL;
 }
 
 // split view
@@ -481,21 +496,15 @@ Window::Draw()
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  if (_dim) {
-    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-    const ImVec4* colors = ImGui::GetStyle().Colors;
-    drawList->AddRectFilled(
-      ImVec2(0.0, 0.0),
-      ImVec2(_width, _height),
-      ImColor(colors[ImGuiCol_ModalWindowDimBg])
-    );
-    _dim = false;
-  }
   // draw popup
   if (_popup) {
+    if (_popup->IsSync()) {
+      for (Engine* engine : GetApplication()->GetEngines())
+        engine->SetDirty(true);
+      _mainView->Draw(true);
+    }
     _popup->Draw();
-  }
-  else {
+  } else {
     // draw views
     if (_mainView)_mainView->Draw(_forceRedraw > 0);
     _forceRedraw = pxr::GfMax(0, _forceRedraw - 1);
@@ -821,12 +830,14 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   if (popup) {
     if (action == GLFW_PRESS) {
       popup->MouseButton(button, action, mods);
-      delete popup;
-      parent->SetPopup(NULL);
-      parent->ForceRedraw();
+      if(popup->IsDone()) {
+        delete popup;
+        parent->SetPopup(NULL);
+        parent->ForceRedraw();
+      }
     }
   } else if(button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
-    parent->SetPopup(new PopupUI(parent->GetMainView(), x, y, 200, 200));
+    parent->SetPopup(new PopupUI(x, y, 200, 200));
   } else {
     if (action == GLFW_RELEASE)
     {
@@ -892,11 +903,16 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
       active->MouseMove(x, y);
     } else {
       if (view) {
-        parent->SetActiveView(view);
-        parent->GetActiveView()->MouseMove(x, y);
+        parent->SetHoveredView(view);
+        parent->GetHoveredView()->MouseMove(x, y);
       }
     }
   }
+}
+
+void FocusCallback(GLFWwindow* window, int focused)
+{
+
 }
 
 void 

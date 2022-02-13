@@ -42,7 +42,6 @@
 #include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/engine.h"
-//#include "../geometry/vdb.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -52,7 +51,7 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _tools(Tool()), _viewport(nullptr)
+  _mainWindow(nullptr), _activeWindow(nullptr), _tools(Tool()), _viewport(nullptr)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
@@ -61,7 +60,7 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _tools(Tool()), _viewport(nullptr)
+  _mainWindow(nullptr), _activeWindow(nullptr), _tools(Tool()), _viewport(nullptr)
 {
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);

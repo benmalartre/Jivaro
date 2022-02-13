@@ -102,6 +102,7 @@ public:
   // window
   Window* GetMainWindow() {return _mainWindow;};
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
+  Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
 
   // tools
   Tool* GetTools(){return &_tools;};
@@ -121,6 +122,7 @@ private:
   std::string                       _fileName;
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindows;
+  Window*                           _activeWindow;
   Scene*                            _scene;
   Selection                         _selection;
   Tool                              _tools;

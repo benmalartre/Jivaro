@@ -17,6 +17,7 @@ add_executable(${TARGET}
   utils/shaders.cpp
   utils/icons.cpp
   ui/ui.cpp
+  ui/utils.cpp
   ui/popup.cpp
   ui/fileBrowser.cpp
   ui/splitter.cpp

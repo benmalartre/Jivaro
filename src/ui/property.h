@@ -27,11 +27,9 @@ public:
   void OnSelectionChangedNotice(const SelectionChangedNotice& n) override;
 
 private:
-  void _DrawAttributeTypeInfo(const UsdAttribute& attribute);
-  VtValue _DrawAttributeValue(const std::string& label, 
-    pxr::UsdAttribute& attribute, const pxr::VtValue& value);
-  void _DrawAttributeValueAtTime(UsdAttribute& attribute,
-    UsdTimeCode currentTime);
+  void _DrawAttributeTypeInfo(const pxr::UsdAttribute& attribute);
+  VtValue _DrawAttributeValue(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  void _DrawAttributeValueAtTime(const pxr:: UsdAttribute& attribute, const pxr::UsdTimeCode& currentTime);
   bool _DrawAssetInfo(const pxr::UsdPrim& prim);
   bool _DrawXformsCommon(pxr::UsdTimeCode time);
   bool _DrawVariantSetsCombos(pxr::UsdPrim& prim);

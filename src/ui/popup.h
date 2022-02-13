@@ -1,17 +1,22 @@
 #ifndef JVR_APPLICATION_POPUP_H
 #define JVR_APPLICATION_POPUP_H
 
-#include "../common.h"
-#include "../ui/ui.h"
 #include <pxr/base/vt/array.h>
 #include <pxr/base/vt/value.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/usd/timeCode.h>
+
+#include "../common.h"
+#include "../ui/ui.h"
+
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 class PopupUI : public BaseUI
 {
 public:
-  PopupUI(View* parent, int x, int y, int width, int height);
+  PopupUI(int x, int y, int width, int height);
   ~PopupUI() override;
 
   void MouseButton(int button, int action, int mods) override;
@@ -37,14 +42,37 @@ public:
   int GetWidth() override { return _width; };
   
   // get the height of the parent view
-  int GetHeight() override { return _height; };;
+  int GetHeight() override { return _height; };
 
-private:
+  // is popup done
+  bool IsDone() { return _done; };
+  bool IsSync() { return _sync; };
+
+protected:
+  bool                        _done;
+  bool                        _sync;
   int                         _x;
   int                         _y;
   int                         _width;
   int                         _height;
   static ImGuiWindowFlags     _flags;
+};
+
+class ColorPopupUI : public PopupUI
+{
+public:
+  ColorPopupUI(int  x, int y, int width, int height, 
+    const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  ~ColorPopupUI() override;
+
+  bool Draw() override;
+  void MouseButton(int button, int action, int mods) override;
+private:
+  pxr::UsdAttribute _attribute;
+  pxr::UsdTimeCode  _time;
+  pxr::GfVec3f      _color;
+  pxr::GfVec3f      _original;
+  bool              _isArray;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
