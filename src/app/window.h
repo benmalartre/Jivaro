@@ -17,9 +17,12 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 extern ImFontAtlas* SHARED_ATLAS;
-extern ImFont* BOLD_FONTS[3];
-extern ImFont* MEDIUM_FONTS[3];
-extern ImFont* REGULAR_FONTS[3];
+
+#define NUM_FONT_SIZE 6
+extern ImFont* BOLD_FONTS[NUM_FONT_SIZE];
+extern ImFont* MEDIUM_FONTS[NUM_FONT_SIZE];
+extern ImFont* REGULAR_FONTS[NUM_FONT_SIZE];
+static float FONT_SIZE[NUM_FONT_SIZE] = { 12.f, 14.f, 16.f, 32.f, 64.f, 128.f };
 
 class UsdEmbreeContext;
 class Application;
@@ -119,6 +122,7 @@ public:
   View* GetMainView(){return _mainView;};
   void SetActiveView(View* view);
   View* GetActiveView(){return _activeView;};
+  View* GetHoveredView() { return _hoveredView; };
   View* GetViewUnderMouse(int x, int y);
   void DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
@@ -170,6 +174,7 @@ private:
   std::vector<Window*>  _childrens;
   View*                 _mainView;
   View*                 _activeView;
+  View*                 _hoveredView;
   View*                 _activeLeaf;
   SplitterUI*           _splitter;
   bool                  _dragSplitter;

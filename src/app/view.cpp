@@ -126,6 +126,12 @@ View::IsActive()
   return this == GetWindow()->GetActiveView();
 }
 
+bool
+View::IsHovered()
+{
+  return this == GetWindow()->GetHoveredView();
+}
+
 // mouse positon relative to the view
 void 
 View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)

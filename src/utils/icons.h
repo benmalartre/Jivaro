@@ -65,6 +65,12 @@ enum ICON_ID {
   ICON_BACK,
   ICON_OPEN,
   ICON_SAVE,
+  ICON_WARNING,
+  ICON_ERROR,
+  ICON_OK,
+  ICON_EXPENDED,
+  ICON_CONNECTED,
+  ICON_COLLAPSED,
   ICON_MAX_ID
 };
 
@@ -98,7 +104,13 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
   "home",
   "back",
   "open",
-  "save"
+  "save",
+  "warning",
+  "error",
+  "ok",
+  "expended",
+  "connected",
+  "collapsed"
 };
 
 #define ICON_INTERNAL_FORMAT GL_RGBA

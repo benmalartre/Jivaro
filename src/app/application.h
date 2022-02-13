@@ -87,6 +87,7 @@ public:
   void NewSceneCallback(const NewSceneNotice& n); 
   void SceneChangedCallback(const SceneChangedNotice& n);
   void AttributeChangedCallback(const AttributeChangedNotice& n);
+  void UndoStackNoticeCallback(const UndoStackNotice& n);
 
   // commands
   void AddCommand(std::shared_ptr<Command> command);

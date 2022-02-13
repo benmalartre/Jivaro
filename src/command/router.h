@@ -42,12 +42,14 @@ private:
 
     UndoRouter();
 
-    int _muteDepth = 0;
-
     static void _Mute();
     static void _Unmute();
-public:
 
+    int _muteDepth = 0;
+
+    
+public:
+    
     static UndoRouter& Get();
     void   AddInverse(std::function<bool()> inverse);
     static bool TrackLayer(const pxr::SdfLayerHandle& layer);

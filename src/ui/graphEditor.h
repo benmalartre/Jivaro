@@ -47,13 +47,14 @@ enum ColorGraph {
   GRAPH_COLOR_PRIM              = 0xFF6622FF
 };
 
-#define NODE_CORNER_ROUNDING          4.f
+#define NODE_CORNER_ROUNDING          0.f
 #define NODE_PORT_RADIUS              4.f
 #define NODE_PORT_PADDING             6.f
 #define NODE_PORT_VERTICAL_SPACING    16.f
 #define NODE_PORT_HORIZONTAL_SPACING  12.f
 #define NODE_HEADER_HEIGHT            24.f
 #define NODE_HEADER_PADDING           4
+#define NODE_EXPENDED_SIZE            12
 #define NODE_CONNEXION_THICKNESS      2.f
 #define NODE_CONNEXION_RESOLUTION     0.1f
 
@@ -125,31 +126,37 @@ protected:
   //-------------------------------------------------------------------
   class Port : public Item {
     public:
+      enum Flag {
+        INPUT = 1,
+        OUTPUT = 2
+      };
+
       Port() {};
-      Port(Node* node, bool io, const pxr::TfToken& label, 
+      Port(Node* node, Flag flag, const pxr::TfToken& label, 
         pxr::UsdAttribute& attr);
-      //Port(Node* node, const pxr::UsdShadeInput& port);
-      //Port(Node* node, const pxr::UsdShadeOutput& port);
 
       bool Contains(const pxr::GfVec2f& position,
         const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
 
       bool IsVisible(GraphEditorUI* editor) override { return true; };
+      bool IsConnected(GraphEditorUI* editor) { return true; };
       void Draw(GraphEditorUI* editor) override;
 
-      bool IsInput() { return _io; };
-      bool IsOutput() { return !_io; };
+      bool IsInput() { return _flags & INPUT; };
+      bool IsOutput() { return _flags & OUTPUT; };
+      bool IsBothInputOutput() { return _flags & (INPUT | OUTPUT); };
 
       const pxr::TfToken& GetName()const {return _label;};
       Node* GetNode() { return _node; };
       void SetNode(Node* node) { _node = node; };
       const pxr::UsdAttribute& GetAttr() const { return _attr;};
       pxr::UsdAttribute& GetAttr() { return _attr;};
+      Flag GetFlags() { return _flags; };
 
     private:
       Node*                 _node;
       pxr::TfToken          _label;
-      bool                  _io;
+      Flag                  _flags;
       pxr::UsdAttribute     _attr;
   };
 
@@ -200,10 +207,9 @@ protected:
       void AddInput(const pxr::TfToken& name, pxr::SdfValueTypeName type);
       void AddOutput(const pxr::TfToken& name, pxr::SdfValueTypeName type);
       void AddPort(const pxr::TfToken& name, pxr::SdfValueTypeName type);
-      size_t GetNumInputs() { return _inputs.size(); };
-      size_t GetNumOutputs() { return _outputs.size(); };
-      std::vector<Port>& GetInputs() {return _inputs;};
-      std::vector<Port>& GetOutputs() {return _outputs;};
+
+      size_t GetNumPorts() { return _ports.size(); };
+      std::vector<Port>& GetPorts() { return _ports; };
       pxr::UsdPrim GetPrim() { return _prim; };
       void Init();
       void Update();
@@ -212,20 +218,22 @@ protected:
       void SetColor(const pxr::GfVec3f& color) override;
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;
+      void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
 
       void ComputeSize();
       void Move(const pxr::GfVec2f& offset) { _pos += offset; };
 
-      Port* GetInput(const pxr::TfToken& name);
-      Port* GetOutput(const pxr::TfToken& name);
+      Port* GetPort(const pxr::TfToken& name);
+
+      static void _ExpendCallback(Node* node);
 
     private:
       Node*                       _parent;
+      pxr::GfVec3f                _backgroundColor;
       short                       _expended;
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
-      std::vector<Port>           _inputs;
-      std::vector<Port>           _outputs;
+      std::vector<Port>           _ports;
   };
 
   // Graph graph class
@@ -243,6 +251,7 @@ protected:
 
       const Node* GetNode(const pxr::UsdPrim& prim) const;
       Node* GetNode(const pxr::UsdPrim& prim);
+
       /*
       void AddInput(const std::string& name, pxr::SdfValueTypeName type);
       void AddOutput(const std::string& name, pxr::SdfValueTypeName type);
@@ -260,6 +269,7 @@ protected:
       */
 
     private:
+      pxr::GfVec3f                _backgroundColor;
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
       std::vector<Node*>          _nodes;
@@ -285,7 +295,8 @@ protected:
   struct Connect {
     Port* startPort;
     Port* endPort;
-    int     color;
+    int   color;
+    bool  inputOrOutput;
   };
 
 private:
@@ -385,6 +396,7 @@ private:
   Port*                                 _hoveredPort;
   Port*                                 _currentPort;
   Connexion*                            _hoveredConnexion;
+  short                                 _inputOrOutput;
 
   Marquee                               _marquee;
   Cell*                                 _grid;

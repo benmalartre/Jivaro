@@ -17,7 +17,6 @@ public:
   PropertyUI(View* parent, const std::string& name);
   ~PropertyUI()         override;
 
-  bool DrawAssetInfo(const pxr::UsdPrim& prim);
   void SetPrim(const pxr::UsdPrim& prim);
   pxr::UsdPrim& GetPrim() { return _prim; };
 
@@ -28,7 +27,14 @@ public:
   void OnSelectionChangedNotice(const SelectionChangedNotice& n) override;
 
 private:
+  void _DrawAttributeTypeInfo(const UsdAttribute& attribute);
+  VtValue _DrawAttributeValue(const std::string& label, 
+    pxr::UsdAttribute& attribute, const pxr::VtValue& value);
+  void _DrawAttributeValueAtTime(UsdAttribute& attribute,
+    UsdTimeCode currentTime);
+  bool _DrawAssetInfo(const pxr::UsdPrim& prim);
   bool _DrawXformsCommon(pxr::UsdTimeCode time);
+  bool _DrawVariantSetsCombos(pxr::UsdPrim& prim);
   /*
   static pxr::VtValue _DrawAttributeValue(
     const std::string &label, pxr::UsdAttribute &attribute, const pxr::VtValue &value);
@@ -48,6 +54,7 @@ private:
   pxr::GfVec3f            _color;
   pxr::UsdPrim            _prim;
   static ImGuiWindowFlags _flags;
+  ImGuiID                 _focused;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

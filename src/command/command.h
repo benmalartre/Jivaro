@@ -35,6 +35,9 @@ class Command {
 protected:
   bool        _undoable;
   UndoInverse _inverse;
+
+public:
+  friend UndoRouter;
 };
 
 //==================================================================================
@@ -91,7 +94,7 @@ public:
   void Do() override;
 
 private:
-  std::vector<Selection::Item>      _previous;
+  std::vector<Selection::Item> _previous;
 };
 
 //==================================================================================
@@ -181,7 +184,16 @@ public:
     const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode);
   ~SetAttributeCommand() {};
   void Do() override;
+};
 
+//==================================================================================
+// Usd Generic Command
+//==================================================================================
+class UsdGenericCommand : public Command {
+public:
+  UsdGenericCommand();
+  ~UsdGenericCommand() {};
+  void Do() override;
 };
 
 

@@ -97,11 +97,17 @@ ViewHead::Draw()
     ImColor(BACKGROUND_COLOR)
   );
 
+  drawList->AddRectFilled(
+    min + pxr::GfVec2f(0, size[1] - 4),
+    min + size - pxr::GfVec2f(0, 2),
+    ImColor(pxr::GfVec4f(0.1f, 0.1f, 0.1f, 1.f))
+  );
+
   if (_parent->IsActive()) {
     drawList->AddRectFilled(
       min + pxr::GfVec2f(0, size[1] - 4),
-      min + size - pxr::GfVec2f(0, 2),
-      ImColor(pxr::GfVec4f(0.66f, 0.66f, 0.66f, 0.66f))
+      min + size - pxr::GfVec2f(0, 1),
+      ImColor(pxr::GfVec4f(1.f, 1.f, 1.f, 0.5f))
     );
   }
 

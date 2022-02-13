@@ -405,6 +405,7 @@ bool ViewportUI::Draw()
   if(!_valid)return false;  
 
   Application* app = GetApplication();
+  Selection* selection = app->GetSelection();
   if (app->GetStage() != nullptr) {
     _engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
@@ -440,6 +441,12 @@ bool ViewportUI::Draw()
     if ( _engine->IsDirty() || !_engine->IsConverged() ) {
       _drawTarget->Bind();
       glViewport(0, 0, GetWidth(), GetHeight());
+
+      if (!selection->IsEmpty() && selection->IsObject()) {
+        _engine->SetSelected(selection->GetSelectedPrims());
+      } else {
+        _engine->ClearSelected();
+      }
 
       // clear to black
       glClearColor(0.25f, 0.25f, 0.25f, 1.0);

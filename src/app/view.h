@@ -45,6 +45,7 @@ public:
   const pxr::GfVec2f GetSize(){return (_max - _min);};
   bool IsFixed(){return (_fixedPixels > 0);};
   bool IsActive();
+  bool IsHovered();
 
   inline const std::string& GetName(){return _name;};
   inline const char* GetText(){return _name.c_str();};

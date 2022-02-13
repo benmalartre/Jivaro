@@ -96,6 +96,9 @@ void InitializeIcons()
         tex_medium[j] = CreateIconFromImage(filename, i, ICON_SIZE_MEDIUM);
         tex_large[j] = CreateIconFromImage(filename, i, ICON_SIZE_LARGE);
       }
+      else {
+        std::cout << "DI NOT FOUND " << filename << std::endl;
+      }
     }
     ICONS[ICON_SIZE_SMALL][i] = Icon {
       GetIconResolution(ICON_SIZE_SMALL), 

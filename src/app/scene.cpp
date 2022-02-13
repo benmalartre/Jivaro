@@ -9,7 +9,8 @@
 #include "../utils/strings.h"
 #include "../utils/files.h"
 #include "../app/scene.h"
-
+#include "../command/router.h"
+#include "../command/block.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -17,6 +18,7 @@ Scene::Scene()
 {
   _rootStage = pxr::UsdStage::CreateInMemory("root");
   _currentStage = _rootStage;
+  UndoRouter::Get().TrackLayer(_rootStage->GetRootLayer());
 }
 
 Scene::~Scene()
@@ -64,6 +66,7 @@ pxr::UsdStageRefPtr& Scene::AddStageFromDisk(const std::string& filename)
   std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
   std::string name = tokens.front();
   pxr::SdfPath path("/" + name);
+  UndoBlock editBlock;
   _allStages[path] = pxr::UsdStage::CreateInMemory(name);
 
   pxr::UsdStageRefPtr& stage = _allStages[path];
@@ -71,7 +74,8 @@ pxr::UsdStageRefPtr& Scene::AddStageFromDisk(const std::string& filename)
   ref.GetReferences().AddReference(filename);
   stage->SetDefaultPrim(ref);
 
-  _rootStage->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
+  pxr::SdfLayerHandle layer = stage->GetRootLayer();
+  _rootStage->GetRootLayer()->InsertSubLayerPath(layer->GetIdentifier());
   return _allStages[path];
   /*
   std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");

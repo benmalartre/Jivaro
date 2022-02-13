@@ -54,19 +54,19 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 Application::Application(unsigned width, unsigned height):
   _mainWindow(nullptr), _tools(Tool()), _viewport(nullptr)
 {  
-  _scene = new Scene();
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
+  _scene = new Scene();
 };
 
 Application::Application(bool fullscreen):
   _mainWindow(nullptr), _tools(Tool()), _viewport(nullptr)
 {
-  _scene = new Scene();
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
+  _scene = new Scene();
 };
 
 // destructor
@@ -461,7 +461,7 @@ Application::Init()
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
 
-  _scene->TestVoronoi();
+  //_scene->TestVoronoi();
  
   _mainWindow->CollectLeaves();
   
@@ -470,11 +470,8 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
-  //_manager.Start();
-
-  //_scene->GetRootStage()->GetRootLayer()->SetStateDelegate(UndoStateDelegate::New());
-  UndoRouter::Get().TrackLayer(_scene->GetRootStage()->GetRootLayer());
  
   /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
@@ -499,7 +496,6 @@ Application::Update()
   if(_time.IsPlaying()) {
     if(_time.PlayBack()) {
       if(_viewport)_viewport->GetEngine()->SetDirty(true);
-
     }
   }
 }
@@ -544,8 +540,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
   for (auto& engine : _engines) {
     if (!_selection.IsEmpty() && _selection.IsObject()) {
       engine->SetSelected(_selection.GetSelectedPrims());
-    }
-    else {
+    } else {
       engine->ClearSelected();
     }
     engine->SetDirty(true);
@@ -576,6 +571,12 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
   _tools.ResetSelection();
   GetMainWindow()->ForceRedraw();
   _DirtyAllEngines(_engines);
+}
+
+void
+Application::UndoStackNoticeCallback(const UndoStackNotice& n)
+{
+  AddCommand(std::shared_ptr<UsdGenericCommand>(new UsdGenericCommand()));
 }
 
 void 

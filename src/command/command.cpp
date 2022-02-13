@@ -1,14 +1,15 @@
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/sdf/layer.h>
+#include <pxr/usd/sdf/primSpec.h>
+#include <pxr/usd/sdf/copyUtils.h>
+#include <pxr/usd/usdGeom/sphere.h>
+
 #include "../command/command.h"
 #include "../command/block.h"
 #include "../command/inverse.h"
 #include "../command/router.h"
 #include "../app/application.h"
 #include "../app/notice.h"
-
-#include <pxr/usd/usdGeom/mesh.h>
-#include <pxr/usd/sdf/layer.h>
-#include <pxr/usd/sdf/primSpec.h>
-#include <pxr/usd/sdf/copyUtils.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -19,6 +20,8 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   : Command(false)
 {
   GetApplication()->OpenScene(filename);
+  UndoInverse inverse;
+  UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();
   SceneChangedNotice().Send();
 }
@@ -32,7 +35,8 @@ CreatePrimCommand::CreatePrimCommand(pxr::UsdStageRefPtr stage, const std::strin
 {
   if (!stage) return;
   UndoRouter::Get().TransferEdits(&_inverse);
-  stage->DefinePrim(pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
+  pxr::UsdGeomSphere::Define(stage, pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
+  //stage->DefinePrim(pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
@@ -42,7 +46,8 @@ CreatePrimCommand::CreatePrimCommand(pxr::UsdPrim parent, const std::string& nam
 {
   if (!parent) return;
   UndoRouter::Get().TransferEdits(&_inverse);
-  parent.GetStage()->DefinePrim(parent.GetPath().AppendChild(pxr::TfToken(name)));
+  pxr::UsdGeomSphere::Define(parent.GetStage(), pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
+  //parent.GetStage()->DefinePrim(parent.GetPath().AppendChild(pxr::TfToken(name)));
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
@@ -377,6 +382,23 @@ void SetAttributeCommand::Do()
   AttributeChangedNotice().Send();
 }
 
+
+//==================================================================================
+// Usd Generic
+//==================================================================================
+UsdGenericCommand::UsdGenericCommand()
+  : Command(true)
+{
+  std::cout << "USD GENERIC CLOMMAND CONTRUCTOR..." << std::endl;
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+void UsdGenericCommand::Do()
+{
+  _inverse.Invert();
+  SceneChangedNotice().Send();
+}
 
 
 PXR_NAMESPACE_CLOSE_SCOPE

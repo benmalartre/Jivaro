@@ -27,19 +27,13 @@
 #include <pxr/base/tf/instantiateSingleton.h>
 #include <pxr/base/tf/refPtr.h>
 
-#include <boost/range/adaptor/sliced.hpp>
-
 #include "../command//block.h"
 #include "../command/delegate.h"
 
-using boost::adaptors::slice;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
 TF_INSTANTIATE_SINGLETON(UndoRouter);
-
-
 
 UndoRouter::UndoRouter() {
     // TfDebug::Enable(USDQT_DEBUG_UNDOSTACK);

@@ -11,6 +11,7 @@
 #include "../app/tools.h"
 #include <pxr/imaging/glf/contextCaps.h>
 #include <pxr/base/arch/systemInfo.h>
+
 #include "../app/window.h"
 #include "../app/view.h"
 #include "../geometry/shape.h"
@@ -25,27 +26,26 @@ bool KEY_MAP_INITIALIZED = false;
 
 
 ImFontAtlas* SHARED_ATLAS = NULL;
-ImFont* BOLD_FONTS[3] = { NULL, NULL, NULL };
-ImFont* MEDIUM_FONTS[3] = { NULL, NULL, NULL };
-ImFont* REGULAR_FONTS[3] = { NULL, NULL, NULL };
+ImFont* BOLD_FONTS[NUM_FONT_SIZE] = {};
+ImFont* MEDIUM_FONTS[NUM_FONT_SIZE] = {};
+ImFont* REGULAR_FONTS[NUM_FONT_SIZE] = {};
 
 //
 // Shared Font Atlas
 //
 void CreateFontAtlas()
 {
-  static float fontSizes[3] = { 12.f,14.f,16.f };
   SHARED_ATLAS = new ImFontAtlas();
 
   // load fonts
   std::string exeFolder = GetInstallationFolder();
   std::string fontPath;
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < NUM_FONT_SIZE; ++i) {
     fontPath = exeFolder + "/fonts/roboto/Roboto-Bold.ttf";
     //fontPath = exeFolder + "/fonts/opensans/OpenSans-Bold.ttf";
     BOLD_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
-      fontSizes[i],
+      FONT_SIZE[i],
       NULL,
       SHARED_ATLAS->GetGlyphRangesDefault()
     );
@@ -54,7 +54,7 @@ void CreateFontAtlas()
     //fontPath = exeFolder + "/fonts/opensans/OpenSans-Medium.ttf";
     MEDIUM_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
-      fontSizes[i],
+      FONT_SIZE[i],
       NULL,
       SHARED_ATLAS->GetGlyphRangesDefault()
     );
@@ -63,7 +63,7 @@ void CreateFontAtlas()
     //fontPath = exeFolder + "/fonts/opensans/OpenSans-Regular.ttf";
     REGULAR_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
       fontPath.c_str(),
-      fontSizes[i],
+      FONT_SIZE[i],
       NULL,
       SHARED_ATLAS->GetGlyphRangesDefault()
     );
@@ -78,7 +78,7 @@ void DeleteFontAtlas()
 // fullscreen window constructor
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen, const std::string& name) :
-  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
+  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
   _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
 {
@@ -116,7 +116,7 @@ Window::Window(bool fullscreen, const std::string& name) :
 // width/height window constructor
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, const std::string& name):
-  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), 
+  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
   _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
 {
@@ -146,7 +146,7 @@ Window::Window(int width, int height, const std::string& name):
 //----------------------------------------------------------------------------
 Window::Window(int x, int y, int width, int height, 
   GLFWwindow* parent, const std::string& name, bool decorated) :
-  _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL),
+  _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
   _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
 {
@@ -265,6 +265,7 @@ Window::CreateChildWindow(
 void
 Window::ForceRedraw()
 {
+  for (View* leaf : _leaves)leaf->SetFlag(View::FORCEREDRAW);
   _forceRedraw = 3;
 }
 
@@ -604,7 +605,8 @@ void Window::MainLoop()
     _app->Update();
     SetGLContext();
     //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
-    
+    glfwPollEvents();
+
     // main window
     Draw();
     glfwSwapBuffers(_window);
@@ -618,7 +620,6 @@ void Window::MainLoop()
         //glFlush();
       }
     }
-    glfwPollEvents();
   }
 }
 
