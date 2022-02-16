@@ -195,8 +195,8 @@ ExplorerUI::DrawBackground()
 {
   ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   const auto& style = ImGui::GetStyle();
-  float scrollOffsetH = ImGui::GetScrollX();
-  float scrollOffsetV = ImGui::GetScrollY();
+  const float scrollOffsetH = ImGui::GetScrollX();
+  const float scrollOffsetV = ImGui::GetScrollY();
   pxr::GfVec2f clipRectMin(GetX(), GetY());
   pxr::GfVec2f clipRectMax(GetX() + GetWidth(), GetY() + GetHeight());
 

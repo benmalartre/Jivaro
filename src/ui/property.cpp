@@ -126,7 +126,8 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
     Window* window = _parent->GetWindow();
     
-    if (ImGui::BeginTable("##DrawXformsCommon", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+    if (ImGui::BeginTable("##DrawXformsCommon", 3, 
+      ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
       ImGui::PushFont(window->GetMediumFont(1));
       ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
       ImGui::TableSetupColumn("Transform");
@@ -147,8 +148,8 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
-      //ImGui::InputFloat3("Translation", translationf.data(), DecimalPrecision);
-      ImGui::InputScalarN("Translation", ImGuiDataType_Double, target.current.translation.data(), 3, NULL, NULL, DecimalPrecision);
+      ImGui::InputScalarN("Translation", ImGuiDataType_Double, 
+        target.current.translation.data(), 3, NULL, NULL, DecimalPrecision);
       
       if (ImGui::IsItemDeactivatedAfterEdit()) {
         GetApplication()->AddCommand(std::shared_ptr<TranslateCommand>(
@@ -214,7 +215,8 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
 
 VtValue 
-PropertyUI::_DrawAttributeValue(const UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode) 
+PropertyUI::_DrawAttributeValue(const UsdAttribute& attribute, 
+  const pxr::UsdTimeCode& timeCode) 
 {
   pxr::VtValue value;
   attribute.Get(&value, timeCode);
@@ -227,7 +229,8 @@ PropertyUI::_DrawAttributeValue(const UsdAttribute& attribute, const pxr::UsdTim
 }
 
 void 
-PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& currentTime) 
+PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute, 
+  const pxr::UsdTimeCode& currentTime) 
 {
   VtValue value;
   const bool hasValue = attribute.Get(&value, currentTime);
@@ -236,7 +239,8 @@ PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute, const 
     VtValue modified = _DrawAttributeValue(attribute, currentTime);
     if (!modified.IsEmpty()) {
       UndoBlock editBlock;
-      attribute.Set(modified, attribute.GetNumTimeSamples() ? currentTime : UsdTimeCode::Default());
+      attribute.Set(modified, attribute.GetNumTimeSamples() ? 
+        currentTime : UsdTimeCode::Default());
       _parent->SetInteracting(true);
     }
   }
@@ -252,7 +256,8 @@ PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute, const 
         attribute.RemoveConnection(connection);
       }
       ImGui::SameLine();
-      ImGui::TextColored(TEXT_SELECTED_COLOR, " %s", connection.GetString().c_str());
+      ImGui::TextColored(TEXT_SELECTED_COLOR, " %s", 
+        connection.GetString().c_str());
       ImGui::PopID();
     }
   }
@@ -353,8 +358,9 @@ PropertyUI::Draw()
   if (_DrawXformsCommon(pxr::UsdTimeCode::Default()))
     ImGui::Separator();
 
-  if (ImGui::BeginTable("##DrawPropertyEditorTable", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
+  if (ImGui::BeginTable("##DrawPropertyEditorTable", 3, 
+    ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24);
     ImGui::TableSetupColumn("Property name");
     ImGui::TableSetupColumn("Value");
     ImGui::TableHeadersRow();
@@ -373,7 +379,7 @@ PropertyUI::Draw()
       UIUtils::AddAttributeDisplayName(attribute);
 
       ImGui::TableSetColumnIndex(2);
-      ImGui::PushItemWidth(-FLT_MIN); // Right align and get rid of widget label
+      ImGui::PushItemWidth(-FLT_MIN);
       _DrawAttributeValueAtTime(attribute, time.GetActiveTime());
     }
 

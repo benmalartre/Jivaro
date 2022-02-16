@@ -160,16 +160,13 @@ ColorPopupUI::Draw()
   );
 
   static ImGuiColorEditFlags picker_flags = 
-    ImGuiColorEditFlags_DataTypeMask_ | 
-    ImGuiColorEditFlags_PickerMask_ | 
-    ImGuiColorEditFlags_InputMask_ | 
     ImGuiColorEditFlags_HDR | 
-    ImGuiColorEditFlags_NoAlpha | 
-    ImGuiColorEditFlags_AlphaBar |
-    ImGuiColorEditFlags_InputRGB;
+    ImGuiColorEditFlags_NoDragDrop |
+    ImGuiColorEditFlags_AlphaPreviewHalf | 
+    ImGuiColorEditFlags_NoOptions;
 
   ImGui::SetNextItemWidth(_width);
-  ImGui::ColorPicker4("##picker", &_color[0], picker_flags, &_color[0]);
+  ImGui::ColorPicker4("##picker", (float*)&_color, picker_flags);
   if(_color != _original) {
     if (_isArray) {
       pxr::VtArray<pxr::GfVec3f> result;

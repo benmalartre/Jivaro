@@ -30,26 +30,25 @@ UIUtils::AddTokenWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
   if (!allowedTokens.IsEmpty() && allowedTokens.IsHolding<pxr::VtArray<pxr::TfToken>>()) {
     pxr::VtArray<pxr::TfToken> tokensArray = allowedTokens.Get<pxr::VtArray<pxr::TfToken>>();
     if (ImGui::BeginCombo(attribute.GetName().GetText(), token.GetText())) {
-      for (auto tk : tokensArray) {
-        if (ImGui::Selectable(tk.GetString().c_str(), false)) {
-          newToken = tk;
+      for (auto token : tokensArray) {
+        if (ImGui::Selectable(token.GetString().c_str(), false)) {
+          newToken = token;
         }
       }
       ImGui::EndCombo();
     }
   } else {
     std::string tokenAsString = token.GetString();
-    char buf[255];
-    strcpy(&buf[0], tokenAsString.c_str());
-    ImGui::InputText(attribute.GetName().GetText(), &buf[0], 255);
+    static char buffer[255];
+    strcpy(&buffer[0], tokenAsString.c_str());
+    ImGui::InputText(attribute.GetName().GetText(), &buffer[0], 255);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      newToken = TfToken(buf);
+      newToken = TfToken(buffer);
     }
   }
   return newToken;
 }
 
-/// Returns the new value if the value was edited, otherwise an empty VtValue
 pxr::VtValue 
 UIUtils::AddAttributeWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode) 
 {
@@ -115,7 +114,7 @@ UIUtils::AddAttributeWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTi
     if (ImGui::IsItemDeactivatedAfterEdit()) {
       return pxr::VtValue(std::string(buf));
     }
-  } else if (value.IsHolding<pxr::GfMatrix4d>()) { // Matrices are in row order
+  } else if (value.IsHolding<pxr::GfMatrix4d>()) {
     return AddMatrixWidget<pxr::GfMatrix4d, ImGuiDataType_Double, 4, 4>(attribute, timeCode);
   } else if (value.IsHolding<pxr::GfMatrix4f>()) {
     return AddMatrixWidget<pxr::GfMatrix4f, ImGuiDataType_Float, 4, 4>(attribute, timeCode);
@@ -148,10 +147,6 @@ UIUtils::AddAttributeWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTi
 pxr::VtValue 
 UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
 {
-  const ImVec2 windowPos = ImGui::GetWindowPos();
-  const pxr::GfVec2i position = 
-    pxr::GfVec2i(windowPos.x + ImGui::GetCursorPosX(), windowPos.y + ImGui::GetCursorPosY());
-
   pxr::GfVec3f buffer;
   bool isArrayValued = false;
   pxr::VtValue value;
@@ -171,8 +166,16 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
   ImGui::PushStyleColor(ImGuiCol_Button, color);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-  if (ImGui::Button("##pick", ImVec2(32.f, 32.f))) {
-    ColorPopupUI* popup = new ColorPopupUI((int)position[0], (int)position[1], 200, 300, attribute, timeCode);
+  if (ImGui::Button("##pick", ImVec2(24.f, 24.f))) {
+    const float scrollOffsetH = ImGui::GetScrollX();
+    const float scrollOffsetV = ImGui::GetScrollY();
+    const ImVec2 windowPos = ImGui::GetWindowPos();
+    const pxr::GfVec2i position = pxr::GfVec2i(
+      windowPos.x + ImGui::GetCursorPosX() - scrollOffsetH,
+      windowPos.y + ImGui::GetCursorPosY() - scrollOffsetV);
+
+    ColorPopupUI* popup = new ColorPopupUI((int)position[0], (int)position[1], 
+      200, 300, attribute, timeCode);
     GetApplication()->GetActiveWindow()->SetPopup(popup);
     ImGui::PopStyleColor(3);
     return pxr::VtValue();
