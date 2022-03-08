@@ -56,7 +56,7 @@ Application::Application(unsigned width, unsigned height):
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
-  _scene = new Scene();
+  _workspace = new Workspace();
 };
 
 Application::Application(bool fullscreen):
@@ -65,7 +65,7 @@ Application::Application(bool fullscreen):
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
   _time.Init(1, 101, 24);
-  _scene = new Scene();
+  _workspace = new Workspace();
 };
 
 // destructor
@@ -73,7 +73,7 @@ Application::Application(bool fullscreen):
 Application::~Application()
 {
   if(_mainWindow) delete _mainWindow;
-  if (_scene) delete _scene;
+  if (_workspace) delete _workspace;
 };
 
 // create full screen window
@@ -618,9 +618,9 @@ void
 Application::OpenScene(const std::string& filename)
 {
   if(strlen(filename.c_str()) > 0) {    
-    if (_scene) delete _scene;
-    _scene = new Scene();
-    _scene->AddStageFromDisk(filename);
+    if (_workspace) delete _workspace;
+    _workspace = new Workspace();
+    _workspace->AddStageFromDisk(filename);
   }
 }
 
@@ -694,7 +694,7 @@ Application::GetStageBoundingBox()
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
-  return bboxCache.ComputeWorldBound(_scene->GetRootStage()->GetPseudoRoot());
+  return bboxCache.ComputeWorldBound(_workspace->GetRootStage()->GetPseudoRoot());
 }
 
 pxr::GfBBox3d 
@@ -707,7 +707,7 @@ Application::GetSelectionBoundingBox()
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const Selection::Item& item = _selection[n];
     if (item.type == Selection::Type::OBJECT) {
-      pxr::UsdPrim prim = _scene->GetRootStage()->GetPrimAtPath(item.path);
+      pxr::UsdPrim prim = _workspace->GetRootStage()->GetPrimAtPath(item.path);
       std::cout << bboxCache.ComputeWorldBound(prim) << std::endl;
       if (prim.IsActive() && !prim.IsInPrototype()) {
         const pxr::GfBBox3d primBBox = bboxCache.ComputeWorldBound(prim);

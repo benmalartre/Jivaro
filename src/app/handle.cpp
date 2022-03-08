@@ -991,7 +991,7 @@ ScaleHandle::BeginUpdate(float x, float y, float width, float height)
   double distance;
   bool frontFacing;
   _startMatrix = _matrix;
-  _baseScale = pxr::GfVec3f(0);
+  _baseScale = pxr::GfVec3f(0.f);
   if (ray.Intersect(_plane, &distance, &frontFacing)) {
     switch (_activeAxis) {
       case AXIS_CAMERA:
@@ -1025,7 +1025,7 @@ ScaleHandle::Update(float x, float y, float width, float height)
 
     double distance;
     bool frontFacing;
-    float value;
+    float value, delta;
     pxr::GfVec3f offset;
 
     if (ray.Intersect(_plane, &distance, &frontFacing)) {
@@ -1038,19 +1038,22 @@ ScaleHandle::Update(float x, float y, float width, float height)
         case AXIS_X:
           offset = pxr::GfVec3f(_position) - 
             _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
-          _offsetScale = pxr::GfVec3f(_offset[0] - offset[0], 0.f, 0.f);
+          delta = offset[0] / _offset[0] - 1.f;
+          _offsetScale = pxr::GfVec3f(1.f, 0.f, 0.f) * delta;
           _scale = _baseScale + _offsetScale;
           break;
         case AXIS_Y:
           offset = pxr::GfVec3f(_position) - 
             _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
-          _offsetScale = pxr::GfVec3f(0.f, _offset[1] - offset[1], 0.f);
+          delta = offset[1] / _offset[1] - 1.f;
+          _offsetScale = pxr::GfVec3f(0.f, 1.f, 0.f) * delta;
           _scale = _baseScale + _offsetScale;
           break;
         case AXIS_Z:
           offset = pxr::GfVec3f(_position) - 
             _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
-          _offsetScale = pxr::GfVec3f(0.f, 0.f, _offset[2] - offset[2]);
+          delta = offset[2] / _offset[2] - 1.f;
+          _offsetScale = pxr::GfVec3f(0.f, 0.f, 1.f) * delta;
           _scale = _baseScale + _offsetScale;
           break;
         case AXIS_XY:
@@ -1083,6 +1086,69 @@ ScaleHandle::EndUpdate()
   _offsetScale = pxr::GfVec3f(0.f);
   _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
   _interacting = false;
+}
+
+void 
+ScaleHandle::_SetMaskMatrix(size_t axis)
+{
+  switch (axis) {
+  case AXIS_X:
+    _maskMatrix = {
+      1.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 1.f
+    }; break;
+
+  case AXIS_Y:
+    _maskMatrix = {
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 1.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 1.f
+    }; break;
+
+  case AXIS_Z:
+    _maskMatrix = {
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 1.f, 0.f,
+      0.f, 0.f, 0.f, 1.f
+    }; break;
+
+  case AXIS_XY:
+    _maskMatrix = {
+      1.f, 0.f, 0.f, 0.f,
+      0.f, 1.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 1.f
+    }; break;
+
+  case AXIS_XZ:
+    _maskMatrix = {
+      1.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 1.f, 0.f,
+      0.f, 0.f, 0.f, 1.f
+    }; break;
+
+  case AXIS_YZ:
+    _maskMatrix = {
+      0.f, 0.f, 0.f, 0.f,
+      0.f, 1.f, 0.f, 0.f,
+      0.f, 0.f, 1.f, 0.f,
+      0.f, 0.f, 0.f, 1.f
+    }; break;
+
+  default:
+    _maskMatrix = {
+      1.f, 0.f, 0.f, 0.f,
+      0.f, 1.f, 0.f, 0.f,
+      0.f, 0.f, 1.f, 0.f,
+      0.f, 0.f, 0.f, 1.f
+    }; break;
+
+  }
 }
 
 pxr::GfVec3f 

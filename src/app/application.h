@@ -5,6 +5,7 @@
 
 #include "../common.h"
 #include "../app/scene.h"
+#include "../app/workspace.h"
 #include "../app/selection.h"
 #include "../app/time.h"
 #include "../app/window.h"
@@ -117,14 +118,14 @@ public:
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
-  pxr::UsdStageRefPtr& GetStage() { return _scene->GetCurrentStage(); };
+  pxr::UsdStageRefPtr& GetStage() { return _workspace->GetCurrentStage(); };
 
 private:
   std::string                       _fileName;
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindows;
   Window*                           _activeWindow;
-  Scene*                            _scene;
+  Workspace*                        _workspace;
   Selection                         _selection;
   Tool                              _tools;
 

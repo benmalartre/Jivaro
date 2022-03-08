@@ -223,18 +223,7 @@ ExplorerUI::DrawBackground()
   ImGui::PopFont();
   drawList->PopClipRect();
 }
-/*
-void 
-ExplorerUI::_UpdateSelection(ExplorerUI::Item* item, bool isLeaf)
-{
-  Application* app = GetApplication();
-  if (isLeaf ? ImGui::IsItemClicked() : 
-    ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    _last = _current;
-    _current = item;
-  }
-}
-*/
+
 void 
 ExplorerUI::DrawType(const pxr::UsdPrim& prim, bool selected)
 {
@@ -332,8 +321,9 @@ static ImVec4 GetPrimColor(const UsdPrim& prim) {
   if (prim.IsInstance()) {
     return ImVec4(PrimInstanceColor);
   }
-  const auto hasCompositionArcs = prim.HasAuthoredReferences() || prim.HasAuthoredPayloads() || prim.HasAuthoredInherits() ||
-    prim.HasAuthoredSpecializes() || prim.HasVariantSets();
+  const auto hasCompositionArcs = 
+    prim.HasAuthoredReferences() || prim.HasAuthoredPayloads() || 
+    prim.HasAuthoredInherits() || prim.HasAuthoredSpecializes() || prim.HasVariantSets();
   if (hasCompositionArcs) {
     return ImVec4(PrimHasCompositionColor);
   }

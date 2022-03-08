@@ -1,4 +1,5 @@
-#pragma once
+#ifndef JVR_APPLICATION_SCENE_H
+#define JVR_APPLICATION_SCENE_H
 
 #include "../common.h"
 #include "../geometry/geometry.h"
@@ -16,17 +17,6 @@ typedef pxr::TfHashMap< pxr::SdfPath, pxr::UsdStageRefPtr, pxr::SdfPath::Hash >
   _StageCacheMap;
 
 
-class Item {
-public:
-  Item() { _prim = pxr::UsdPrim(); _geometry = NULL; };
-  Item(pxr::UsdPrim& inPrim, Geometry* inGeom) { 
-    _prim = inPrim; _geometry = inGeom; };
-private:
-  pxr::UsdPrim _prim;
-  Geometry* _geometry;
-
-};
-
 typedef pxr::TfHashMap< pxr::SdfPath, Mesh, pxr::SdfPath::Hash > _MeshMap;
 typedef pxr::TfHashMap< pxr::SdfPath, Curve, pxr::SdfPath::Hash > _CurveMap;
 typedef pxr::TfHashMap< pxr::SdfPath, Points, pxr::SdfPath::Hash > _PointsMap;
@@ -36,15 +26,9 @@ public:
   Scene();
   ~Scene();
 
-  void OpenStage(const std::string& filename);
-  void ClearAllStages();
-  void RemoveStage(const std::string& name);
-  void RemoveStage(const pxr::SdfPath& path);
-  pxr::UsdStageRefPtr& AddStageFromMemory(const std::string& name);
-  pxr::UsdStageRefPtr& AddStageFromDisk(const std::string& filename);
-  pxr::UsdStageRefPtr& GetRootStage() { return _rootStage; };
-  pxr::UsdStageRefPtr& GetCurrentStage() { return _currentStage; };
-
+  void Init(const pxr::UsdStageRefPtr& stage);
+  void Save(const std::string& filename);
+  void Export(const std::string& filename);
   void TestVoronoi();
 
   Mesh* AddMesh(pxr::SdfPath& path, 
@@ -55,9 +39,9 @@ public:
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
 
 private:
-  pxr::UsdStageRefPtr _currentStage;
-  pxr::UsdStageRefPtr _rootStage;
-  _StageCacheMap      _allStages;
+  pxr::UsdStageRefPtr _inputStage;
+  pxr::UsdStageRefPtr _stage;
+
   _MeshMap            _meshes;
   _CurveMap           _curves;
   _PointsMap          _points;
@@ -65,3 +49,5 @@ private:
 
 
 PXR_NAMESPACE_CLOSE_SCOPE
+
+#endif // JVR_APPLICATION_SCENE_H

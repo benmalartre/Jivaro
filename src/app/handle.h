@@ -252,10 +252,11 @@ protected:
 private:
   pxr::GfVec3f _GetScaleOffset(size_t axis);
   pxr::GfVec3f _GetTranslateOffset(size_t axis);
+  void         _SetMaskMatrix(size_t axis);
 
-  pxr::GfVec3f _offsetScale;
-  pxr::GfVec3f _baseScale;
-
+  pxr::GfVec3f    _offsetScale;
+  pxr::GfVec3f    _baseScale;
+  pxr::GfMatrix4f _maskMatrix;
 };
 
 class RotateHandle : public BaseHandle {

@@ -37,7 +37,6 @@ UndoStateDelegate::_OnSetLayer(const SdfLayerHandle& layer) {
     _layer = layer;
   else {
     _layer = NULL;
-    // is this an error?
   }
 }
 

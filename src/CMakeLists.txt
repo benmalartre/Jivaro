@@ -76,6 +76,7 @@ add_executable(${TARGET}
   app/modal.cpp
   app/scene.cpp
   app/engine.cpp
+  app/workspace.cpp
   app/picking.cpp
   app/selection.cpp
   app/tools.cpp

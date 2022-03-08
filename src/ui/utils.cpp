@@ -166,13 +166,14 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
   ImGui::PushStyleColor(ImGuiCol_Button, color);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-  if (ImGui::Button("##pick", ImVec2(24.f, 24.f))) {
+  if (ImGui::Button("##pickColor", ImVec2(24.f, 24.f))) {
     const float scrollOffsetH = ImGui::GetScrollX();
     const float scrollOffsetV = ImGui::GetScrollY();
     const ImVec2 windowPos = ImGui::GetWindowPos();
-    const pxr::GfVec2i position = pxr::GfVec2i(
+    const ImVec2 position(
       windowPos.x + ImGui::GetCursorPosX() - scrollOffsetH,
-      windowPos.y + ImGui::GetCursorPosY() - scrollOffsetV);
+      windowPos.y + ImGui::GetCursorPosY() - scrollOffsetV
+    );
 
     ColorPopupUI* popup = new ColorPopupUI((int)position[0], (int)position[1], 
       200, 300, attribute, timeCode);
