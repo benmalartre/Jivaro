@@ -86,6 +86,7 @@ public:
   virtual void MouseButton(int button, int action, int mods);
   virtual void MouseWheel(int x, int y);
   virtual void Keyboard(int key, int scancode, int action, int mods);
+  virtual void Input(int key);
 
   // flags
   inline bool GetFlag(short flag) const { return BITMASK_CHECK(_flags, flag); };

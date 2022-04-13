@@ -389,7 +389,6 @@ void SetAttributeCommand::Do()
 UsdGenericCommand::UsdGenericCommand()
   : Command(true)
 {
-  std::cout << "USD GENERIC CLOMMAND CONTRUCTOR..." << std::endl;
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }

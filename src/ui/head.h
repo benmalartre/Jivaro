@@ -12,7 +12,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-#define VIEW_HEAD_HEIGHT 20
+#define VIEW_HEAD_HEIGHT 14
 
 class View;
 

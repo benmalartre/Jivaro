@@ -52,16 +52,25 @@ Workspace::OpenStage(const std::string& filename)
 {
   _rootStage = pxr::UsdStage::Open(filename);
   _currentStage = _rootStage;
+  _allStages.clear();
 }
 
-pxr::UsdStageRefPtr& Workspace::AddStageFromMemory(const std::string& name)
+void
+Workspace::OpenStage(const pxr::UsdStageRefPtr& stage)
+{
+  _currentStage = stage;
+}
+
+pxr::UsdStageRefPtr& 
+Workspace::AddStageFromMemory(const std::string& name)
 {
   pxr::SdfPath path(name);
   _allStages[path] = pxr::UsdStage::CreateInMemory(name);
   return  _allStages[path];
 }
 
-pxr::UsdStageRefPtr& Workspace::AddStageFromDisk(const std::string& filename)
+pxr::UsdStageRefPtr& 
+Workspace::AddStageFromDisk(const std::string& filename)
 {
   std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
   std::string name = tokens.front();

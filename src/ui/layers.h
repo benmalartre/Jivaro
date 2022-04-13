@@ -51,6 +51,7 @@ class LayersUI : public BaseUI
     void MouseMove(int x, int y) override;
     */
     bool Draw() override;
+    void DrawNavigation(SdfLayerRefPtr layer);
 
 
   private:

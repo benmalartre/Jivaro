@@ -197,6 +197,15 @@ View::Keyboard(int key, int scancode, int action, int mods)
   }
 }
 
+void 
+View::Input(int key)
+{
+  std::cout << "VIEW INPUT : " << key << std::endl;
+  if (_content) {
+    _content->Input(key);
+  }
+}
+
 void
 View::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
 {

@@ -23,6 +23,11 @@ typedef pxr::TfHashMap< pxr::SdfPath, Points, pxr::SdfPath::Hash > _PointsMap;
 
 class Scene {
 public:
+  enum ItemType {
+    STATIC,
+    DEFORMED,
+    GENERATED
+  };
   Scene();
   ~Scene();
 

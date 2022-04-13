@@ -21,6 +21,7 @@ public:
 
   void MouseButton(int button, int action, int mods) override;
   void MouseMove(int x, int y) override;
+  void Keyboard(int key, int scancode, int action, int mods) override;
   bool Draw() override;
 
   // mouse position in the view space
@@ -73,6 +74,23 @@ private:
   pxr::GfVec3f      _color;
   pxr::GfVec3f      _original;
   bool              _isArray;
+};
+
+class NodePopupUI : public PopupUI
+{
+public:
+
+  NodePopupUI(int x, int y, int width, int height);
+  ~NodePopupUI() override;
+
+  void BuildNodeList();
+
+  bool Draw() override;
+  void MouseButton(int button, int action, int mods) override;
+  void Input(int key) override;
+private:
+  std::vector<std::string> _nodes;
+  std::string              _filter;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -1025,7 +1025,7 @@ ScaleHandle::Update(float x, float y, float width, float height)
 
     double distance;
     bool frontFacing;
-    float value, delta;
+    float value;
     pxr::GfVec3f offset;
 
     if (ray.Intersect(_plane, &distance, &frontFacing)) {
@@ -1038,38 +1038,38 @@ ScaleHandle::Update(float x, float y, float width, float height)
         case AXIS_X:
           offset = pxr::GfVec3f(_position) - 
             _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
-          delta = offset[0] / _offset[0] - 1.f;
-          _offsetScale = pxr::GfVec3f(1.f, 0.f, 0.f) * delta;
+          _offsetScale = pxr::GfVec3f(pxr::GfPow(offset[0] / _offset[0], 3) - 1.f, 0.f, 0.f);
           _scale = _baseScale + _offsetScale;
           break;
         case AXIS_Y:
           offset = pxr::GfVec3f(_position) - 
             _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
-          delta = offset[1] / _offset[1] - 1.f;
-          _offsetScale = pxr::GfVec3f(0.f, 1.f, 0.f) * delta;
+          _offsetScale = pxr::GfVec3f(0.f, pxr::GfPow(offset[1] / _offset[1] - 1.f, 3), 0.f);
           _scale = _baseScale + _offsetScale;
           break;
         case AXIS_Z:
           offset = pxr::GfVec3f(_position) - 
             _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis);
-          delta = offset[2] / _offset[2] - 1.f;
-          _offsetScale = pxr::GfVec3f(0.f, 0.f, 1.f) * delta;
+          _offsetScale = pxr::GfVec3f(0.f, 0.f, pxr::GfPow(offset[2] / _offset[2], 3));
           _scale = _baseScale + _offsetScale;
           break;
         case AXIS_XY:
           offset = pxr::GfVec3f(pxr::GfVec3d(_offset) -
             _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
-          _scale = _baseScale + pxr::GfVec3f(offset.GetLength(), offset.GetLength(), 0.f);
+          _offsetScale = pxr::GfVec3f(offset[0] / _offset[0] - 1.f, offset[1] / _offset[1] - 1.f, 0.f);
+          _scale = _baseScale + _offsetScale;
+          break;
         case AXIS_XZ:
           offset = pxr::GfVec3f(pxr::GfVec3d(_offset) -
             _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
-          _scale = _baseScale + pxr::GfVec3f(offset.GetLength(), 0.f, offset.GetLength());
+          _offsetScale = pxr::GfVec3f(offset[0] / _offset[0] - 1.f, 0.f, offset[2] / _offset[2] - 1.f);
+          _scale = _baseScale + _offsetScale;
+          break;
         case AXIS_YZ:
           offset = pxr::GfVec3f(pxr::GfVec3d(_offset) -
             _ConstraintPointToPlane(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
-          _scale = _baseScale + pxr::GfVec3f(0.f, offset.GetLength(), offset.GetLength());
-        default:
-          _scale = _baseScale + _offset;
+          _offsetScale = pxr::GfVec3f(0.f, offset[1] / _offset[1] - 1.f, offset[2] / _offset[2] - 1.f);
+          _scale = _baseScale + _offsetScale;
           break;
       }
       SetMatrixFromSRT();

@@ -20,6 +20,8 @@
 #include <sstream>
 #include <stdlib.h>
 #include <iomanip>
+#include <locale>
+#include <codecvt>
 
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -165,6 +167,14 @@ static std::string RandomString(size_t length)
   std::string str(length, 0);
   std::generate_n(str.begin(), length, RndC);
   return str;
+}
+
+// UNICODE CODE POINT TO UTF-8
+//---------------------------------------------------------------------------------------
+static std::string ConvertCodePointToUtf8(char32_t codepoint) 
+{
+  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+  return convert.to_bytes(&codepoint, &codepoint + 1);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

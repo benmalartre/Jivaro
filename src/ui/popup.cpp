@@ -5,6 +5,8 @@
 #include "../ui/popup.h"
 #include "../ui/splitter.h"
 #include "../utils/timer.h"
+#include "../utils/keys.h"
+#include "../utils/strings.h"
 #include "../command/block.h"
 #include "../app/window.h"
 #include "../app/view.h"
@@ -64,7 +66,11 @@ PopupUI::MouseButton(int button, int action, int mods)
 void
 PopupUI::MouseMove(int x, int y)
 {
+}
 
+void 
+PopupUI::Keyboard(int key, int scancode, int action, int mods)
+{
 }
 
 bool 
@@ -94,6 +100,9 @@ PopupUI::Draw()
   return true;
 };
 
+//===========================================================================================
+// ColorPopupUI
+//===========================================================================================
 ColorPopupUI::ColorPopupUI(int x, int y, int width, int height, 
   const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
   : PopupUI(x, y, width, height)
@@ -120,6 +129,7 @@ ColorPopupUI::~ColorPopupUI()
 {
 }
 
+
 void
 ColorPopupUI::MouseButton(int button, int action, int mods)
 {
@@ -133,7 +143,8 @@ ColorPopupUI::MouseButton(int button, int action, int mods)
       result = { _color };
       UndoBlock editBlock(true);
       _attribute.Set(result, _time);
-    } else {
+    }
+    else {
       _attribute.Set(_original, _time);
       UndoBlock editBlock(true);
       _attribute.Set(_color, _time);
@@ -183,5 +194,87 @@ ColorPopupUI::Draw()
   return true;
 };
 
+//===========================================================================================
+// NodePopupUI
+//===========================================================================================
+NodePopupUI::NodePopupUI(int x, int y, int width, int height)
+  : PopupUI(x, y, width, height)
+{
+  _sync = true;
+}
+
+NodePopupUI::~NodePopupUI()
+{
+}
+
+void
+NodePopupUI::BuildNodeList()
+{
+  _nodes.push_back("wrap");
+  _nodes.push_back("collide");
+  _nodes.push_back("skin");
+  _nodes.push_back("bend");
+}
+
+void
+NodePopupUI::MouseButton(int button, int action, int mods)
+{
+  double x, y;
+  glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
+  std::cout << x << "," << y << std::endl;
+  /*
+  if (!(x >= _x && y >= _y && x <= (_x + _width) && y <= (_y + _height))) {
+    if (_isArray) {
+      pxr::VtArray<pxr::GfVec3f> result;
+      result = { _original };
+      _attribute.Set(result, _time);
+      result = { _color };
+      UndoBlock editBlock(true);
+      _attribute.Set(result, _time);
+    }
+    else {
+      _attribute.Set(_original, _time);
+      UndoBlock editBlock(true);
+      _attribute.Set(_color, _time);
+    }
+    _done = true;
+  }
+  */
+  if(button == GLFW_MOUSE_BUTTON_RIGHT)
+    _done = true;
+}
+
+
+void
+NodePopupUI::Input(int key)
+{
+  _filter += ConvertCodePointToUtf8(key);
+  std::cout << "FILTER : " << _filter << std::endl;
+}
+
+bool
+NodePopupUI::Draw()
+{
+  bool opened;
+
+  ImGui::Begin(_name.c_str(), &opened, _flags);
+
+  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+
+  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  ImGui::PushFont(GetWindow()->GetMediumFont(2));
+  for(auto& node : _nodes) {
+    ImGui::Text(node.c_str());
+  }
+
+  ImGui::InputText("##filter", (char*)_filter.c_str(), _filter.capacity() + 1);
+  if (ImGui::IsItemEdited()) {
+    std::cout << "FILTER : " << _filter << std::endl;
+  }
+
+  ImGui::End();
+  return true;
+};
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -542,9 +542,9 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
     } else {
       engine->ClearSelected();
     }
-    engine->SetDirty(true);
   }
   _tools.ResetSelection();
+  _DirtyAllEngines(_engines);
   GetMainWindow()->ForceRedraw();
 }
 

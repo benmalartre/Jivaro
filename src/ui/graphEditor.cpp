@@ -909,12 +909,12 @@ GraphEditorUI::~GraphEditorUI()
   if (_graph) delete _graph;
 }
 
-// read
+// populate
 //------------------------------------------------------------------------------
-bool 
-GraphEditorUI::Read(const std::string& filename)
+bool
+GraphEditorUI::Populate(const pxr::UsdStageRefPtr& stage)
 {
-  _stage = pxr::UsdStage::Open(filename);
+  _stage = stage;
 
   // first find graph
   for (pxr::UsdPrim prim : _stage->TraverseAll()) {
@@ -963,7 +963,7 @@ GraphEditorUI::Read(const std::string& filename)
         if (relationship.GetTargets(&targets)) {
           for (auto& target : targets) {
             pxr::UsdAttribute attr = _stage->GetAttributeAtPath(target);
-            if(attr.IsValid()) {
+            if (attr.IsValid()) {
               source = _graph->GetNode(attr.GetPrim());
               if (source) {
                 start = source->GetPort(attr.GetName());
@@ -976,24 +976,24 @@ GraphEditorUI::Read(const std::string& filename)
           Connexion* connexion = new Connexion(start, end, 0);
           _connexions.push_back(connexion);
         }
-       
+
       }
-     /*
-      Connexion* connexion = new Connexion(_connector.startPort, 
-      _connector.endPort, _connector.color);
+      /*
+       Connexion* connexion = new Connexion(_connector.startPort,
+       _connector.endPort, _connector.color);
 
-    pxr::UsdPrim src = _connector.startPort->GetNode()->GetPrim();
-    pxr::UsdPrim dst = _connector.endPort->GetNode()->GetPrim();
+     pxr::UsdPrim src = _connector.startPort->GetNode()->GetPrim();
+     pxr::UsdPrim dst = _connector.endPort->GetNode()->GetPrim();
 
 
-    std::string srcName = "input:";
-    srcName += _connector.endPort->GetName().GetString();
-    pxr::UsdRelationship relation = dst.CreateRelationship(TfToken(srcName));
-    relation.AddTarget(src.GetPath().AppendProperty(_connector.startPort->GetName()));
+     std::string srcName = "input:";
+     srcName += _connector.endPort->GetName().GetString();
+     pxr::UsdRelationship relation = dst.CreateRelationship(TfToken(srcName));
+     relation.AddTarget(src.GetPath().AppendProperty(_connector.startPort->GetName()));
 
-    dst.GetRelationships().push_back(std::move(relation));
-    _connexions.push_back(connexion);
-     */
+     dst.GetRelationships().push_back(std::move(relation));
+     _connexions.push_back(connexion);
+      */
     }
   }
 
@@ -1029,6 +1029,14 @@ GraphEditorUI::Read(const std::string& filename)
 
   _graph->AddNode(pushNode);
   return true;
+}
+
+// read
+//------------------------------------------------------------------------------
+bool 
+GraphEditorUI::Read(const std::string& filename)
+{
+  return Populate(pxr::UsdStage::Open(filename));
 }
 
 // save
@@ -1488,7 +1496,18 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
       std::cout << "GRAPH UI : FRAME ALL NODES !!! " << std::endl;
       FrameAll();
     }
+    else if (mappedKey == GLFW_KEY_TAB) {
+      NodePopupUI* popup = new NodePopupUI((int)_lastX, (int)_lastY, 200, 300);
+      popup->BuildNodeList();
+      GetApplication()->GetActiveWindow()->SetPopup(popup);
+    }
   }
+}
+
+void 
+GraphEditorUI::Input(int key)
+{
+  std::cout << "GRAPH EDITOR INPUT : " << key << std::endl;
 }
 
 void 

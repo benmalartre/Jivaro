@@ -21,6 +21,7 @@ static void _SetActiveTool(short tool)
   Application* app = APPLICATION;
   app->GetTools()->SetActiveTool(tool);
   app->GetMainWindow()->SetActiveTool(tool);
+  SelectionChangedNotice().Send();
 }
 
 static void OnTranslateCallback()

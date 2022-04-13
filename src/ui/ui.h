@@ -97,6 +97,7 @@ public:
   virtual void MouseMove(int x, int y){}; 
   virtual void MouseWheel(int x, int y){};
   virtual void Keyboard(int key, int scancode, int action, int mods) {};
+  virtual void Input(int key) {};
 
   void SetInteracting(bool state);
   virtual bool Draw()=0;

@@ -18,7 +18,9 @@
 #include <pxr/usd/usdGeom/camera.h>
 
 #include "../ui/layers.h"
+#include "../ui/utils.h"
 #include "../app/view.h"
+#include "../app/application.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 /*
@@ -380,12 +382,108 @@ LayersUI::~LayersUI()
 {
 }
 
+static void
+OnSetPreviousLayer()
+{
+  std::cout << "PREVIOUS LAYER CALLED..." << std::endl;
+}
+
+static void
+OnSetNextLayer()
+{
+  std::cout << "NEXT LAYER CALLED..." << std::endl;
+}
+
+static void
+OnSaveLayer()
+{
+  std::cout << "PREVIOUS LAYER CALLED..." << std::endl;
+}
+
+static void
+OnReloadLayer()
+{
+  std::cout << "NEXT LAYER CALLED..." << std::endl;
+}
+
+void 
+LayersUI::DrawNavigation(SdfLayerRefPtr layer) 
+{
+  if (!layer) return;
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc, LayersUI*>(
+    0,
+    &ICONS[ICON_SIZE_SMALL][ICON_ARROWLEFT],
+    ICON_DEFAULT,
+    (UIUtils::IconPressedFunc)&OnSetPreviousLayer, this);
+  ImGui::SameLine();
+
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc, LayersUI*>(
+    0,
+    &ICONS[ICON_SIZE_SMALL][ICON_ARROWRIGHT],
+    ICON_DEFAULT,
+    (UIUtils::IconPressedFunc)&OnSetNextLayer, this);
+  ImGui::SameLine();
+
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc, LayersUI*>(
+    0,
+    &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_LOOP],
+    ICON_DEFAULT,
+    (UIUtils::IconPressedFunc)&OnReloadLayer, this);
+  ImGui::SameLine();
+
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc, LayersUI*>(
+    0,
+    &ICONS[ICON_SIZE_SMALL][ICON_SAVE],
+    ICON_DEFAULT,
+    (UIUtils::IconPressedFunc)&OnSaveLayer, this);
+  ImGui::SameLine();
+
+  UIUtils::AddIconButton<UIUtils::IconPressedFunc, LayersUI*>(
+    0,
+    &ICONS[ICON_SIZE_SMALL][ICON_LAYER],
+    ICON_DEFAULT,
+    (UIUtils::IconPressedFunc)&OnSaveLayer, this);
+  ImGui::SameLine();
+  /*
+  if (ImGui::Button("Move up")) {
+    ExecuteAfterDraw<LayerMoveSubLayer>(selectedParent, selectedLayerPath, true);
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Move down")) {
+    ExecuteAfterDraw<LayerMoveSubLayer>(selectedParent, selectedLayerPath, false);
+  }
+  ImGui::Separator();
+  constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY;
+  if (ImGui::BeginTable("##DrawLayerSublayers", 1, tableFlags)) {
+    ImGui::TableSetupColumn("Layers");
+    ImGui::TableHeadersRow();
+    DrawLayerSublayerTree(layer, SdfLayerRefPtr(), std::string(), selectedParent, selectedLayerPath);
+    ImGui::EndTable();
+  }
+  */
+
+  if (!layer)
+    return;
+
+  {
+    //ScopedStyleColor textBackground(ImGuiCol_Header, ImU32(ImColor{ ColorPrimHasComposition }));
+    ImGui::Selectable("##LayerNavigation");
+    ImGui::SameLine();
+    ImGui::Text("Layer: %s", layer->GetRealPath().c_str());
+  }
+}
+
 bool LayersUI::Draw()
 {
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
   ImGui::SetWindowPos(_parent->GetMin());
   ImGui::SetWindowSize(_parent->GetSize());
+
+  Application* app = GetApplication();
+
+  if (app->GetStage())
+  DrawNavigation(app->GetStage()->GetRootLayer());
     /*
     const ImVec2 localMousePos = ImGui::GetMousePos() - _parent->GetMin();
 

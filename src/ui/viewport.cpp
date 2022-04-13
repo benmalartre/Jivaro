@@ -458,7 +458,7 @@ bool ViewportUI::Draw()
     }
 
     Tool* tools = GetApplication()->GetTools();
-    const bool shouldDrawTool = tools->IsActive() && _parent->IsActive();
+    const bool shouldDrawTool = tools->IsActive();//&& _parent->IsActive();
     if (shouldDrawTool) {
       _toolTarget->Bind();
       glViewport(0, 0, GetWidth(), GetHeight());

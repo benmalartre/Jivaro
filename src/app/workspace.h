@@ -2,6 +2,7 @@
 #define JVR_APPLICATION_WORKSPACE_H
 
 #include "../common.h"
+#include "../app/scene.h"
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/base/tf/hashmap.h>
@@ -22,11 +23,12 @@ public:
     OUTPUT
   };
 
-
   Workspace();
   ~Workspace();
 
   void OpenStage(const std::string& filename);
+  void OpenStage(const pxr::UsdStageRefPtr& stage);
+  void SetCurrentStage(pxr::UsdStageRefPtr& stage) { _currentStage = stage; };
   void ClearAllStages();
   void RemoveStage(const std::string& name);
   void RemoveStage(const pxr::SdfPath& path);
@@ -39,6 +41,8 @@ private:
   pxr::UsdStageRefPtr _currentStage;
   pxr::UsdStageRefPtr _rootStage;
   _StageCacheMap      _allStages;
+
+  Scene               _scene;
 };
 
 

@@ -675,22 +675,22 @@ KeyboardCallback(
     {
       case GLFW_KEY_Z:
       {
-        if (mods & GLFW_MOD_CONTROL)GetApplication()->Undo();
+        if (mods & GLFW_MOD_CONTROL)app->Undo();
         break;
       }
       case GLFW_KEY_Y: 
       {
-        if (mods & GLFW_MOD_CONTROL)GetApplication()->Redo();
+        if (mods & GLFW_MOD_CONTROL)app->Redo();
         break;
       }
       case GLFW_KEY_D:
       {
-        if (mods & GLFW_MOD_CONTROL)GetApplication()->Duplicate();
+        if (mods & GLFW_MOD_CONTROL)app->Duplicate();
         break;
       }
       case GLFW_KEY_DELETE:
       {
-        GetApplication()->Delete();
+        app->Delete();
         break;
       }
       case GLFW_KEY_SPACE:
@@ -837,7 +837,10 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
       }
     }
   } else if(button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
-    parent->SetPopup(new PopupUI(x, y, 200, 200));
+    View* view = parent->GetActiveView();
+    if (view) {
+      view->MouseButton(button, action, mods);
+    }
   } else {
     if (action == GLFW_RELEASE)
     {
@@ -874,10 +877,12 @@ void
 ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
   Window* parent = Window::GetUserData(window);
+  PopupUI* popup = parent->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
   ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
-  if(parent->GetActiveView()) {
-
+  if (popup) {
+    popup->MouseWheel(xoffset, yoffset);
+  } else if(parent->GetActiveView()) {
     parent->GetActiveView()->MouseWheel(xoffset, yoffset);
   }
 }
@@ -885,7 +890,14 @@ ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 void 
 CharCallback(GLFWwindow* window, unsigned c)
 {
+  Window* parent = Window::GetUserData(window);
+  PopupUI* popup = parent->GetPopup();
   ImGui_ImplGlfw_CharCallback(window, c);
+  if (popup) {
+    popup->Input(c);
+  } else if (parent->GetActiveView()) {
+    parent->GetActiveView()->Input(c);
+  }
 }
 
 void 

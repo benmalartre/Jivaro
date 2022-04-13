@@ -314,6 +314,7 @@ public:
   void MouseMove(int x, int y) override;
   void MouseWheel(int x, int y) override;
   void Keyboard(int key, int scancode, int action, int mods) override;
+  void Input(int key) override;
   bool Draw() override;
   void DrawGrid();
 
@@ -355,6 +356,7 @@ public:
   void FrameAll();
 
   // io
+  bool Populate(const pxr::UsdStageRefPtr& stage);
   bool Read(const std::string& filename);
   bool Write(const std::string& filename);
 
