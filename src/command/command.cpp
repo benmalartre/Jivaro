@@ -399,5 +399,23 @@ void UsdGenericCommand::Do()
   SceneChangedNotice().Send();
 }
 
+//==================================================================================
+// Create Node
+//==================================================================================
+CreateNodeCommand::CreateNodeCommand(const std::string& name, const pxr::SdfPath& path)
+  : Command(true)
+  , _name(name)
+  , _path(path)
+{
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+void CreateNodeCommand::Do()
+{
+  _inverse.Invert();
+  SceneChangedNotice().Send();
+}
+
 
 PXR_NAMESPACE_CLOSE_SCOPE

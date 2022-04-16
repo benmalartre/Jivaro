@@ -76,6 +76,7 @@ private:
   bool              _isArray;
 };
 
+#define NODE_FILTER_SIZE 64
 class NodePopupUI : public PopupUI
 {
 public:
@@ -87,10 +88,15 @@ public:
 
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
+  void Keyboard(int key, int scancode, int action, int mods) override;
   void Input(int key) override;
 private:
+  void _FilterNodes();
   std::vector<std::string> _nodes;
-  std::string              _filter;
+  std::vector<std::string> _filteredNodes;
+  char                     _filter[NODE_FILTER_SIZE];
+  short                    _p; // cursor position
+  short                    _i; // index in filterded nodes
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

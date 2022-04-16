@@ -356,6 +356,13 @@ Application::Init()
   //pxr::TfDebug::Enable(pxr::HD_COLLECTION_CHANGED);
   //pxr::TfDebug::Enable(pxr::LOFI_REGISTRY);
 
+    // setup notifications
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
+
   // create window
   _mainWindow->SetGLContext();
   int width, height;
@@ -389,7 +396,9 @@ Application::Init()
 
   View* viewportView = workingView->GetRight();  
   View* graphView = centralView->GetRight();
+
   _mainWindow->Resize(width, height);
+  
 
 
   // initialize 3d tools
@@ -408,6 +417,8 @@ Application::Init()
   _explorer = new ExplorerUI(explorerView);
   _layers = new LayersUI(layersView);
   _property = new PropertyUI(propertyView, "Property");
+
+
  
 
   //_stage = TestAnimXFromFile(filename, editor);
@@ -463,13 +474,6 @@ Application::Init()
   //_scene->TestVoronoi();
  
   _mainWindow->CollectLeaves();
-  
-  // setup notifications
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
  
   /*
@@ -626,13 +630,11 @@ Application::OpenScene(const std::string& filename)
 
 void Application::SaveScene()
 {
-  std::cout << "SAVE SCENE " << std::endl;
   GetStage()->GetRootLayer()->Save(true);
 }
 
 void Application::SaveSceneAs(const std::string& filename)
 {
-  std::cout << "SAVE SCENE AS " << filename << std::endl;
   GetStage()->GetRootLayer()->Save(true);
 }
 

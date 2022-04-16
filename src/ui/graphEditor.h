@@ -106,6 +106,7 @@ protected:
       float GetY() const { return _pos[1]; };
       const int GetColor() const { return _color; };
       
+      
       void SetState(size_t flag, bool value);
       bool GetState(size_t flag);
       virtual bool Contains(const pxr::GfVec2f& position, 
@@ -204,9 +205,9 @@ protected:
       Node(pxr::UsdPrim prim, bool write=false);
       ~Node();
 
-      void AddInput(const pxr::TfToken& name, pxr::SdfValueTypeName type);
-      void AddOutput(const pxr::TfToken& name, pxr::SdfValueTypeName type);
-      void AddPort(const pxr::TfToken& name, pxr::SdfValueTypeName type);
+      void AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
+      void AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
+      void AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
 
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };
@@ -221,7 +222,6 @@ protected:
       void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
 
       void ComputeSize();
-      void Move(const pxr::GfVec2f& offset) { _pos += offset; };
 
       Port* GetPort(const pxr::TfToken& name);
 
@@ -246,11 +246,17 @@ protected:
       void AddNode(Node* node);
       void RemoveNode(Node* node);
 
+      void AddConnexion(Connexion* connexion);
+      void RemoveConnexion(Connexion* connexion);
+
       const std::vector<Node*>& GetNodes() const { return _nodes; };
       std::vector<Node*>& GetNodes() { return _nodes; };
 
       const Node* GetNode(const pxr::UsdPrim& prim) const;
       Node* GetNode(const pxr::UsdPrim& prim);
+
+      const std::vector<Connexion*>& GetConnexions() const { return _connexions; };
+      std::vector<Connexion*>& GetConnexions() { return _connexions; };
 
       /*
       void AddInput(const std::string& name, pxr::SdfValueTypeName type);
@@ -269,10 +275,18 @@ protected:
       */
 
     private:
+      void _DiscoverNodes(pxr::UsdPrim& prim);
+      void _RecurseNodes(pxr::UsdPrim& prim);
+      void _DiscoverConnexions(pxr::UsdPrim& prim);
+      void _RecurseConnexions(pxr::UsdPrim& prim);
+
       pxr::GfVec3f                _backgroundColor;
+      float                       _currentX;
+      float                       _currentY;
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
       std::vector<Node*>          _nodes;
+      std::vector<Connexion*>     _connexions;
   };
 
   // Graph cell class
@@ -337,9 +351,8 @@ public:
   // nodes
   void AddNode(Node* node) { _graph->AddNode(node); };
   Node* GetLastNode() { return _graph->GetNodes().back(); };
-  void _RecursePrim(Graph* graph, pxr::UsdPrim& prim, const pxr::SdfPath& skipPath);
 
-  // connection
+  // connexion
   void StartConnexion();
   void UpdateConnexion();
   void EndConnexion();
@@ -391,8 +404,7 @@ private:
   int                                   _nodeId;
   pxr::UsdStageRefPtr                   _stage;
   Graph*                                _graph;
-  std::vector<Connexion*>               _connexions;
-  std::set<Node*>                       _selected;
+  std::set<Item*>                       _selected;
   Node*                                 _hoveredNode;
   Node*                                 _currentNode;
   Port*                                 _hoveredPort;

@@ -200,7 +200,6 @@ View::Keyboard(int key, int scancode, int action, int mods)
 void 
 View::Input(int key)
 {
-  std::cout << "VIEW INPUT : " << key << std::endl;
   if (_content) {
     _content->Input(key);
   }
@@ -317,7 +316,7 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   }
   _min = pxr::GfVec2f(x , y);
   _max = pxr::GfVec2f(x + w, y + h);
-  
+
   if(!GetFlag(LEAF))
   {
     if(GetFlag(HORIZONTAL))

@@ -41,9 +41,8 @@ UndoStateDelegate::_OnSetLayer(const SdfLayerHandle& layer) {
 }
 
 void
-UndoStateDelegate::_RouteInverse
-(
-  std::function<bool()> inverse) {
+UndoStateDelegate::_RouteInverse(std::function<bool()> inverse) 
+{
   if (!UndoRouter::IsMuted())
     UndoRouter::Get().AddInverse(inverse);
   else {

@@ -167,6 +167,7 @@ public:
   // popup
   PopupUI* GetPopup() { return _popup; };
   void SetPopup(PopupUI* popup);
+  void UpdatePopup(PopupUI* popup);
 
   // loop
   void MainLoop();

@@ -108,7 +108,7 @@ public:
   virtual void OnSceneChangedNotice(const SceneChangedNotice& n);
   virtual void OnSelectionChangedNotice(const SelectionChangedNotice& n);
   virtual void OnAllNotices(const pxr::TfNotice& n);
-
+  
 protected:
   bool                    _initialized;
   bool                    _interacting;

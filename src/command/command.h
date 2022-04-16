@@ -196,6 +196,19 @@ public:
   void Do() override;
 };
 
+//==================================================================================
+// Create Node Command
+//==================================================================================
+class CreateNodeCommand : public Command {
+public:
+  CreateNodeCommand(const std::string& name, const pxr::SdfPath& path);
+  ~CreateNodeCommand() {};
+  void Do() override;
+private:
+  std::string   _name;
+  pxr::SdfPath  _path;
+};
+
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

@@ -211,6 +211,7 @@ Window::Init(Application* app)
     glfwSetCharCallback(_window, CharCallback);
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
     glfwSetWindowFocusCallback(_window, FocusCallback);
+    glfwSetInputMode(_window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
     // create main splittable view
     _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
@@ -276,6 +277,17 @@ void
 Window::SetPopup(PopupUI* popup)
 {
   _popup = popup;
+}
+
+void
+Window::UpdatePopup(PopupUI* popup)
+{
+  if (popup) {
+    if (!popup->IsDone())return;
+    delete popup;
+  }
+  SetPopup(NULL);
+  ForceRedraw();
 }
 
 void 
@@ -664,6 +676,12 @@ KeyboardCallback(
 )
 {
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
+  PopupUI* popup = parent->GetPopup();
+  if (popup) {
+    popup->Keyboard(key, scancode, action, mods);
+    parent->UpdatePopup(popup);
+    return;
+  }
   Application* app = parent->GetApplication();
   Time& time = app->GetTime();
   ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
@@ -828,13 +846,9 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
 
   PopupUI* popup = parent->GetPopup();
   if (popup) {
-    if (action == GLFW_PRESS) {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
       popup->MouseButton(button, action, mods);
-      if(popup->IsDone()) {
-        delete popup;
-        parent->SetPopup(NULL);
-        parent->ForceRedraw();
-      }
+      parent->UpdatePopup(popup);
     }
   } else if(button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
     View* view = parent->GetActiveView();
@@ -853,7 +867,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
         view->SetDirty();
       }
     }
-    else if (action == GLFW_PRESS)
+    else if (action == GLFW_PRESS || action == GLFW_REPEAT)
     {
       if (splitterHovered) {
         View* activeView = parent->GetActiveView();

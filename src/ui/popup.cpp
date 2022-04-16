@@ -199,8 +199,11 @@ ColorPopupUI::Draw()
 //===========================================================================================
 NodePopupUI::NodePopupUI(int x, int y, int width, int height)
   : PopupUI(x, y, width, height)
+  , _p(0)
+  , _i(0)
 {
   _sync = true;
+  memset(&_filter[0], (char)0, NODE_FILTER_SIZE * sizeof(char));
 }
 
 NodePopupUI::~NodePopupUI()
@@ -245,11 +248,51 @@ NodePopupUI::MouseButton(int button, int action, int mods)
 }
 
 
+void 
+NodePopupUI::Keyboard(int key, int scancode, int action, int mods)
+{
+  if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+    switch (GetMappedKey(key)) {
+    case GLFW_KEY_BACKSPACE:
+      _filter[--_p] = (char)0;
+      break;
+    case GLFW_KEY_DOWN:
+      _i++;
+      if (_i >= _filteredNodes.size()) _i = 0;
+      break;
+    case GLFW_KEY_UP:
+      _i--;
+      if (_i < 0) _i = _filteredNodes.size() - 1;
+      break;
+    case GLFW_KEY_ENTER:
+      const std::string name = _filteredNodes[_i];
+      std::cout << "INSTANCIATE NODE : " << name << std::endl;
+      _done = true;
+      break;
+    }
+  }
+}
+
 void
 NodePopupUI::Input(int key)
 {
-  _filter += ConvertCodePointToUtf8(key);
-  std::cout << "FILTER : " << _filter << std::endl;
+  _filter[_p++] = ConvertCodePointToUtf8(key).c_str()[0];
+}
+
+static bool _FilterNodeName(const std::string& name, const char* filter)
+{
+  return CountString(name, (std::string)filter) > 0;
+}
+
+void
+NodePopupUI::_FilterNodes()
+{
+  _filteredNodes.clear();
+  for (auto& node : _nodes) {
+    if (_FilterNodeName(node, _filter)) {
+      _filteredNodes.push_back(node);
+    }
+  }
 }
 
 bool
@@ -263,15 +306,26 @@ NodePopupUI::Draw()
   ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
 
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
-  ImGui::PushFont(GetWindow()->GetMediumFont(2));
-  for(auto& node : _nodes) {
-    ImGui::Text(node.c_str());
+  
+  if (_filter == (char)0) {
+    _filteredNodes = _nodes;
+  } else {
+    _FilterNodes();
+  }
+  size_t idx = 0;
+  for(auto& node : _filteredNodes) {
+    if (idx == _i) {
+      ImGui::PushFont(GetWindow()->GetBoldFont(2));
+      ImGui::TextColored(ImVec4(1, 0, 0, 1), node.c_str());
+    } else {
+      ImGui::PushFont(GetWindow()->GetMediumFont(2));
+      ImGui::TextColored(ImVec4(0, 1, 0, 1), node.c_str());
+    }
+    idx++;
   }
 
-  ImGui::InputText("##filter", (char*)_filter.c_str(), _filter.capacity() + 1);
-  if (ImGui::IsItemEdited()) {
-    std::cout << "FILTER : " << _filter << std::endl;
-  }
+  ImGui::TextColored(ImVec4(0, 0, 1, 1), _filter);
+  ImGui::SameLine();
 
   ImGui::End();
   return true;
