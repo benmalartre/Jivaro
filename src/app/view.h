@@ -81,7 +81,7 @@ public:
   // callbacks
   void DrawHead();
   virtual void Draw(bool forceRedraw);
-  virtual void Resize(int x, int y, int width, int height, bool rationalize=true);
+  virtual void Resize(int x, int y, int width, int height, bool rationalize=false);
   virtual void MouseMove(int x, int y);
   virtual void MouseButton(int button, int action, int mods);
   virtual void MouseWheel(int x, int y);

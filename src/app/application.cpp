@@ -628,6 +628,13 @@ Application::OpenScene(const std::string& filename)
   }
 }
 
+void
+Application::NewScene()
+{
+  if (_workspace) delete _workspace;
+  _workspace = new Workspace();
+}
+
 void Application::SaveScene()
 {
   GetStage()->GetRootLayer()->Save(true);

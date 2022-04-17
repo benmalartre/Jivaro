@@ -94,11 +94,14 @@ static void OpenFileCallback() {
       new OpenSceneCommand(filename)));
 }
 
-static void SaveFileCallback() {
+static void SaveFileCallback() 
+{
   GetApplication()->SaveScene();
 }
 
-static void NewFileCallback() {
+static void NewFileCallback() 
+{
+  GetApplication()->NewScene();
 }
 
 

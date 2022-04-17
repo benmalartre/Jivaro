@@ -19,7 +19,21 @@ PXR_NAMESPACE_OPEN_SCOPE
 OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   : Command(false)
 {
+  std::cout << filename << std::endl;
   GetApplication()->OpenScene(filename);
+  UndoInverse inverse;
+  UndoRouter::Get().TransferEdits(&inverse);
+  NewSceneNotice().Send();
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// New Scene
+//==================================================================================
+NewSceneCommand::NewSceneCommand()
+  : Command(false)
+{
+  GetApplication()->NewScene();
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();
@@ -427,29 +441,22 @@ MoveNodeCommand::MoveNodeCommand(
   , _offset(offset)
 {
   for (auto& node : nodes) {
-    pxr::UsdPrim prim = node->GetPrim();
-    std::cout << "MOVE NODE COMMAND : " << prim.GetPath() << std::endl;
-   
-    if (!prim.IsValid()) continue;
-    pxr::UsdUINodeGraphNodeAPI api(prim);
+    pxr::UsdUINodeGraphNodeAPI api(node->GetPrim());
     pxr::GfVec2f pos;
     api.GetPosAttr().Get(&pos);
     pos += offset;
     api.GetPosAttr().Set(pos);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
-  SceneChangedNotice().Send();
 }
 
 void MoveNodeCommand::Do()
 {
   for (auto& node : _nodes) {
-    node->Se
+    node->SetPosition(node->GetPosition() - _offset);
   }
-  std::cout << "UNDO MOVE NODE !!" << std::endl;
   _inverse.Invert();
   _offset *= -1;
-  SceneChangedNotice().Send();
 }
 
 //==================================================================================

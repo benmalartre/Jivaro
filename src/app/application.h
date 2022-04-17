@@ -69,6 +69,7 @@ public:
   // cleanup
   void CleanUp();
 
+  void NewScene();
   void OpenScene(const std::string& filename);
   void SaveScene();
   void SaveSceneAs(const std::string& filename);

@@ -1016,8 +1016,8 @@ GraphEditorUI::GraphEditorUI(View* parent)
   , _graph(NULL), _hoveredNode(NULL), _currentNode(NULL)
   , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
   , _scale(1.f), _invScale(1.f), _fontIndex(0), _fontScale(1.0)
-  , _offset(pxr::GfVec2f(0.f, 0.f)), _drag(false), _marque(false)
-  , _navigate(0), _connect(false)
+  , _offset(pxr::GfVec2f(0.f, 0.f)), _dragOffset(pxr::GfVec2f(0.f, 0.f))
+  , _drag(false), _marque(false), _navigate(0), _connect(false)
 {
   //_filename = filename;
   _id = 0;
@@ -1372,17 +1372,19 @@ GraphEditorUI::Draw()
   ImGui::SameLine();
 
   if (ImGui::Button("SAVE")) {
-    const std::string identifier = "./usd/test_graph.usda";
-    pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
-    stage->GetRootLayer()->TransferContent(GetApplication()->GetStage()->GetRootLayer());
+    const std::string identifier = "./usd/graph.usda";
+    //pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
+    //stage->GetRootLayer()->TransferContent(GetApplication()->GetStage()->GetRootLayer());
     GetApplication()->GetStage()->Export(identifier);
   }
   ImGui::SameLine();
 
   if (ImGui::Button("LOAD")) {
-    const std::string identifier = "./usd/test_graph.usda";
+    const std::string filename = "C:\\Users\\graph\\Documents\\bmal\\src\\Jivaro\\build\\src\\Release\\usd\\graph.usda";
+    std::cout << filename << std::endl;
     GetApplication()->AddCommand(
-      std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(identifier)));
+      std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
+    return false;
   }
   ImGui::SameLine();
 
@@ -1435,6 +1437,19 @@ GraphEditorUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
+  std::cout << "ON SCENE CHNEGED GRAPH EDITOR :) " << std::endl;
+  std::cout << _graph << std::endl;
+  if (_graph) {
+    pxr::UsdPrim graphPrim = _graph->GetPrim();
+    std::cout << graphPrim.GetPath() << std::endl;
+    if (!graphPrim.IsValid() || !GetApplication()->GetStage()->GetPrimAtPath(graphPrim.GetPath()))
+    {
+      delete _graph;
+      _graph = NULL;
+      _selectedConnexions.clear();
+      _selectedNodes.clear();
+    }
+  }
   _parent->SetDirty();
 }
 
@@ -1602,7 +1617,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
       else if (_hoveredNode) {
         if (_hoveredNode->GetState(ITEM_STATE_SELECTED)) {
           _drag = true;
-          _dragOffset = pxr::GfVec2f(0);
+          _dragOffset = pxr::GfVec2f(0.f, 0.f);
         } else {
           bool state = _hoveredNode->GetState(ITEM_STATE_SELECTED);
           _hoveredNode->SetState(ITEM_STATE_SELECTED, 1 - state);
@@ -1616,12 +1631,14 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
           else if (mods & GLFW_MOD_SHIFT) {
             AddToSelection(_hoveredNode, false);
             _drag = true;
+            _dragOffset = pxr::GfVec2f(0.f, 0.f);
           }
           else {
             ClearSelection();
             if (1 - state) {
               AddToSelection(_hoveredNode, true);
               _drag = true;
+              _dragOffset = pxr::GfVec2f(0.f, 0.f);
             }
           }
         }
@@ -1638,12 +1655,8 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
     else if (action == GLFW_RELEASE) {
       _navigate = NavigateMode::IDLE;
        if(_drag == true) {
-        std::vector<pxr::SdfPath> nodes;
-        for (auto& node : _selectedNodes) {
-          nodes.push_back(node->GetPrim().GetPath());
-        }
         GetApplication()->AddCommand(std::shared_ptr<MoveNodeCommand>(
-          new MoveNodeCommand(nodes, _dragOffset)));
+          new MoveNodeCommand(_selectedNodes, _dragOffset)));
       }
       _drag = false;
       if (_connect) EndConnexion();
