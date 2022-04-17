@@ -84,6 +84,7 @@ protected:
 
   class Node;
   class Port;
+  class Connexion;
 
   // Graph item base class
   //-------------------------------------------------------------------
@@ -140,7 +141,7 @@ protected:
         const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
 
       bool IsVisible(GraphEditorUI* editor) override { return true; };
-      bool IsConnected(GraphEditorUI* editor) { return true; };
+      bool IsConnected(GraphEditorUI* editor, Connexion* connexion=NULL);
       void Draw(GraphEditorUI* editor) override;
 
       bool IsInput() { return _flags & INPUT; };
@@ -186,6 +187,8 @@ protected:
         const pxr::GfVec2f& end) override;
 
       pxr::GfRange2f GetBoundingBox();
+      Port* GetStart() { return _start; };
+      Port* GetEnd() { return _end; };
 
     private:
       Port*               _start;
@@ -221,7 +224,7 @@ protected:
       void Draw(GraphEditorUI* graph) override;
       void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
 
-      void ComputeSize();
+      void ComputeSize(GraphEditorUI* editor);
 
       Port* GetPort(const pxr::TfToken& name);
 
@@ -347,6 +350,9 @@ public:
   // conversion
   pxr::GfVec2f ViewPositionToGridPosition(const pxr::GfVec2f& mousePos);
   pxr::GfVec2f GridPositionToViewPosition(const pxr::GfVec2f& gridPos);
+
+  // graph
+  Graph* GetGraph() { return _graph; };
   
   // nodes
   void AddNode(Node* node) { _graph->AddNode(node); };
@@ -360,6 +366,8 @@ public:
   // selection
   void AddToSelection(Node* node, bool bringToFront);
   void RemoveFromSelection(Node* node);
+  void AddToSelection(Connexion* connexion);
+  void RemoveFromSelection(Connexion* connexion);
   void ClearSelection();
   void MarqueeSelect(int mod);
 
@@ -388,6 +396,7 @@ private:
   int                                   _id;
   int                                   _depth;
   pxr::GfVec2f                          _offset;  
+  pxr::GfVec2f                          _dragOffset;
   float                                 _scale;
   float                                 _invScale;
   float                                 _currentX;
@@ -404,7 +413,8 @@ private:
   int                                   _nodeId;
   pxr::UsdStageRefPtr                   _stage;
   Graph*                                _graph;
-  std::set<Item*>                       _selected;
+  std::set<Node*>                       _selectedNodes;
+  std::set<Connexion*>                  _selectedConnexions;
   Node*                                 _hoveredNode;
   Node*                                 _currentNode;
   Port*                                 _hoveredPort;

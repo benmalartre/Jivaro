@@ -15,6 +15,7 @@
 #include <pxr/usd/sdf/path.h>
 
 #include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 
@@ -22,6 +23,7 @@
 #include "../app/handle.h"
 #include "../app/selection.h"
 #include "../command/inverse.h"
+#include "../ui/graphEditor.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -207,6 +209,32 @@ public:
 private:
   std::string   _name;
   pxr::SdfPath  _path;
+};
+
+//==================================================================================
+// Move Node Command
+//==================================================================================
+class MoveNodeCommand : public Command {
+public:
+  MoveNodeCommand(const std::vector<pxr::SdfPath>& nodes, const pxr::GfVec2f& offset);
+  ~MoveNodeCommand() {};
+  void Do() override;
+private:
+  std::vector<pxr::SdfPath>         _nodes;
+  pxr::GfVec2f                      _offset;
+};
+
+//==================================================================================
+// Connect Node Command
+//==================================================================================
+class ConnectNodeCommand : public Command {
+public:
+  ConnectNodeCommand(const pxr::SdfPath& source, const pxr::SdfPath& destination);
+  ~ConnectNodeCommand() {};
+  void Do() override;
+private:
+  pxr::SdfPath   _source;
+  pxr::SdfPath   _destination;
 };
 
 

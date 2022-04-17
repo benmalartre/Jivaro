@@ -417,5 +417,53 @@ void CreateNodeCommand::Do()
   SceneChangedNotice().Send();
 }
 
+//==================================================================================
+// Move Node
+//==================================================================================
+MoveNodeCommand::MoveNodeCommand(const std::vector<pxr::SdfPath>& nodes, const pxr::GfVec2f& offset)
+  : Command(true)
+  , _nodes(nodes)
+  , _offset(offset)
+{
+  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+  for (auto& node : nodes) {
+    pxr::UsdPrim prim = stage->GetPrimAtPath(node);
+    if (!prim.IsValid()) continue;
+    pxr::UsdUINodeGraphNodeAPI api(prim);
+    pxr::GfVec2f pos;
+    api.GetPosAttr().Get(&pos);
+    pos += offset;
+    api.GetPosAttr().Set(pos);
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+void MoveNodeCommand::Do()
+{
+  _inverse.Invert();
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Connect Node
+//==================================================================================
+ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::SdfPath& destination)
+  : Command(true)
+  , _source(source)
+  , _destination(destination)
+{
+  //pxr::UsdShadeConnectableAPI api()
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+void ConnectNodeCommand::Do()
+{
+  _inverse.Invert();
+  SceneChangedNotice().Send();
+}
+
+
 
 PXR_NAMESPACE_CLOSE_SCOPE

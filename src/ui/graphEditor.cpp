@@ -147,6 +147,51 @@ _GetHoveredColor(int color)
   );
 }
 
+static pxr::UsdPrim TestUsdShadeAPI()
+{
+  UndoBlock editBlock(true);
+  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+
+  const pxr::SdfPath GRAPH_PATH("/graph");
+  const pxr::TfToken GET("get");
+  const pxr::TfToken MUL("multiply");
+  const pxr::TfToken SET("set");
+
+  UsdShadeNodeGraph graph = pxr::UsdShadeNodeGraph::Define(stage, GRAPH_PATH);
+  
+
+  pxr::UsdShadeShader get = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(GET));
+  pxr::UsdUINodeGraphNodeAPI api(get);
+  api.CreatePosAttr().Set(pxr::GfVec2f(0, 0));
+  pxr::UsdShadeInput inPrim = get.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
+  inPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
+  pxr::UsdShadeInput inAttr = get.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
+  inAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
+  pxr::UsdShadeOutput inVal = get.CreateOutput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Point3f);
+
+  pxr::UsdShadeShader mul = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(MUL));
+  api = pxr::UsdUINodeGraphNodeAPI(mul);
+  api.CreatePosAttr().Set(pxr::GfVec2f(50, 0));
+  pxr::UsdShadeInput factor = mul.CreateInput(pxr::TfToken("Factor"), pxr::SdfValueTypeNames->Float);
+  factor.Set(pxr::VtValue(1.f));
+  pxr::UsdShadeInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdShadeOutput output = mul.CreateOutput(pxr::TfToken("Output"), pxr::SdfValueTypeNames->Point3f);
+
+  pxr::UsdShadeShader set = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(SET));
+  api = pxr::UsdUINodeGraphNodeAPI(set);
+  api.CreatePosAttr().Set(pxr::GfVec2f(100, 0));
+  pxr::UsdShadeInput outPrim = set.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
+  outPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
+  pxr::UsdShadeInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
+  outAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
+  pxr::UsdShadeInput outVal = set.CreateInput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Point3f);
+
+  input.ConnectToSource(inVal);
+  outVal.ConnectToSource(output);
+
+  return graph.GetPrim();
+}
+
 // Item base class
 //------------------------------------------------------------------------------
 GraphEditorUI::Item::Item()
@@ -258,6 +303,19 @@ GraphEditorUI::Port::Port(GraphEditorUI::Node* node, const pxr::UsdShadeOutput& 
   _attr = port.GetAttr();
 }
 */
+
+bool 
+GraphEditorUI::Port::IsConnected(GraphEditorUI* editor, GraphEditorUI::Connexion* foundConnexion)
+{
+  GraphEditorUI::Graph* graph = editor->GetGraph();
+  for (auto& connexion : graph->GetConnexions()) {
+    if (connexion->GetStart() == this || connexion->GetEnd() == this) {
+      foundConnexion = connexion;
+      return true;
+    }
+  }
+  return false;
+}
 
 bool 
 GraphEditorUI::Port::Contains(const pxr::GfVec2f& position,
@@ -446,6 +504,11 @@ GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
       AddOutput(attr, output.GetBaseName());
     }
   }
+
+  pxr::UsdUINodeGraphNodeAPI api(prim);
+  api.GetPosAttr().Get(&_pos);
+  api.GetSizeAttr().Get(&_size);
+
 }
 
 // NodeUI destructor
@@ -460,7 +523,7 @@ GraphEditorUI::Node::~Node()
 void 
 GraphEditorUI::Node::Init()
 {
-
+  /*
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   pxr::UsdAttribute posAttr = api.GetPosAttr();
   if (posAttr && posAttr.HasAuthoredValue())
@@ -480,6 +543,7 @@ GraphEditorUI::Node::Init()
   }
 
   _size[1] += _ports.size() * NODE_PORT_VERTICAL_SPACING;
+  */
 
 }
 
@@ -522,48 +586,94 @@ void
 GraphEditorUI::Node::SetPosition(const pxr::GfVec2f& pos)
 {
   _pos = pos;
-  //pxr::UsdUINodeGraphNodeAPI api(_prim);
-  //api.CreatePosAttr().Set(pxr::VtValue(pos));
+  /*
+  UndoBlock editBlock;
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  api.CreatePosAttr().Set(pxr::VtValue(pos));
+  */
 }
 
 void 
 GraphEditorUI::Node::SetSize(const pxr::GfVec2f& size)
 {
   _size = size;
-  //pxr::UsdUINodeGraphNodeAPI api(_prim);
-  //api.CreatePosAttr().Set(pxr::VtValue(size));
+  /*
+  UndoBlock editBlock;
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  api.CreatePosAttr().Set(pxr::VtValue(size));
+  */
 }
 
 void 
 GraphEditorUI::Node::SetColor(const pxr::GfVec3f& color)
 {
   _color = PackColor3<pxr::GfVec3f>(color);
-  //pxr::UsdUINodeGraphNodeAPI api(_prim);
-  //api.CreatePosAttr().Set(pxr::VtValue(color));
+  /*
+  UndoBlock editBlock;
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  api.CreatePosAttr().Set(pxr::VtValue(color));
+  */
 }
 
 void 
-GraphEditorUI::Node::ComputeSize()
+GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 {
-  float nameWidth = 
-    ImGui::CalcTextSize(_name.GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING;
-  float inputWidth= 0, outputWidth = 0;
+  float width = 
+    ImGui::CalcTextSize(_name.GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING + 
+    (NODE_EXPENDED_SIZE + 2 * NODE_HEADER_PADDING);
   float height = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
-  float width = nameWidth;
-  if (_expended != COLLAPSED) {
-    for (auto& port : _ports) {
-      port.SetPosition(pxr::GfVec2f(0.f, height + NODE_PORT_RADIUS));
-      float w = ImGui::CalcTextSize(port.GetName().GetText()).x +
-        NODE_PORT_HORIZONTAL_SPACING;
-      if (w > inputWidth)inputWidth = w;
-      height += NODE_PORT_VERTICAL_SPACING;
+  float inputWidth = 0, outputWidth = 0;
+  GraphEditorUI::Connexion* connexion = NULL;
+  for (auto& port : _ports) {
+    float w = ImGui::CalcTextSize(port.GetName().GetText()).x +
+      NODE_PORT_HORIZONTAL_SPACING;
+    if (w > inputWidth)inputWidth = w;
+    switch (_expended) {
+      case COLLAPSED:
+        break;
+      case CONNECTED:
+        if (port.IsConnected(editor, connexion)) {
+          height += NODE_PORT_VERTICAL_SPACING;
+        }
+        break;
+      case EXPENDED:
+        height += NODE_PORT_VERTICAL_SPACING;
+        break;
     }
-
-    if (nameWidth > (inputWidth + outputWidth)) {
-      width = nameWidth;
+  }
+  
+  float headerMid = NODE_HEADER_HEIGHT * 0.5;
+  switch (_expended) {
+    case COLLAPSED:
+    {
+      float currentY = headerMid;
+      for (auto& port : _ports) {
+        port.SetPosition(pxr::GfVec2f(0.f, currentY));
+      }
+      break;
     }
-    else {
-      width = (inputWidth + outputWidth);
+    case CONNECTED:
+    {
+      float currentY = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
+      for (auto& port : _ports) {
+        if (port.IsConnected(editor, connexion)) {
+          port.SetPosition(pxr::GfVec2f(0.f, currentY));
+          currentY += NODE_PORT_VERTICAL_SPACING;
+        }
+        else {
+          port.SetPosition(pxr::GfVec2f(0.f, headerMid));
+        }
+      }
+      break;
+    }
+    case EXPENDED:
+    {
+      float currentY = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
+      for (auto& port : _ports) {
+        port.SetPosition(pxr::GfVec2f(0.f, currentY));
+        currentY += NODE_PORT_VERTICAL_SPACING;
+      }
+      break;
     }
   }
 
@@ -603,7 +713,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
   if (IsVisible(editor)) {
     ImGui::SetWindowFontScale(1.0);
     ImGui::PushFont(window->GetMediumFont(0));
-    ComputeSize();
+    ComputeSize(editor);
     ImGui::PopFont();
     ImGui::SetWindowFontScale(editor->GetFontScale());
     ImGui::PushFont(window->GetMediumFont(editor->GetFontIndex()));
@@ -690,13 +800,23 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     }
     
     // ports
+    switch (_expended) {
+    case COLLAPSED:
+      break;
+    case CONNECTED:
+      break;
+    case EXPENDED:
+      break;
+    }
+
+    GraphEditorUI::Connexion* connexion = NULL;
     if (_expended != COLLAPSED) {
       ImGui::PushFont(window->GetRegularFont(editor->GetFontIndex()));
       int numPorts = _ports.size();
       for (int i = 0; i < numPorts; ++i) {
         if (_expended == EXPENDED) _ports[i].Draw(editor);
         else {
-          if (_ports[i].IsConnected(editor)) _ports[i].Draw(editor);
+          if (_ports[i].IsConnected(editor, connexion)) _ports[i].Draw(editor);
         }
       }
      
@@ -793,10 +913,8 @@ GraphEditorUI::Graph::GetNode(const pxr::UsdPrim& prim)
 void 
 GraphEditorUI::Graph::_DiscoverNodes(pxr::UsdPrim& prim)
 {
-  _currentX = _currentY = 0;
   for (pxr::UsdPrim child : prim.GetChildren()) {
     _RecurseNodes(child);
-    _currentX += 100;
   }
 }
 
@@ -804,28 +922,23 @@ void
 GraphEditorUI::Graph::_RecurseNodes(pxr::UsdPrim& prim)
 {
   if (!prim.IsValid())return;
-  _currentY += 32;
-  const pxr::GfVec2f originalOffset(_currentX, _currentY);
  
   if (!prim.IsPseudoRoot()) {
     if (prim.HasAuthoredReferences() || prim.HasAuthoredPayloads())
     {
       GraphEditorUI::Node* referenceNode = new GraphEditorUI::Node(prim);
-      referenceNode->SetPosition(pxr::GfVec2f(_currentX, _currentY));
       referenceNode->SetBackgroundColor(pxr::GfVec3f(1.f, 0.f, 0.f));
       AddNode(referenceNode);
     }
     else if (prim.IsInstance())
     {
       GraphEditorUI::Node* instanceNode = new GraphEditorUI::Node(prim);
-      instanceNode->SetPosition(pxr::GfVec2f(_currentX, _currentY));
       instanceNode->SetBackgroundColor(pxr::GfVec3f(0.f, 1.f, 0.f));
       AddNode(instanceNode);
     }
     else
     {
       GraphEditorUI::Node* defaultNode = new GraphEditorUI::Node(prim);
-      defaultNode->SetPosition(pxr::GfVec2f(_currentX, _currentY));
       defaultNode->SetBackgroundColor(pxr::GfVec3f(0.f, 0.f, 1.f));
       AddNode(defaultNode);
     };
@@ -833,11 +946,7 @@ GraphEditorUI::Graph::_RecurseNodes(pxr::UsdPrim& prim)
 
   for (pxr::UsdPrim child : prim.GetChildren()) {
     _RecurseNodes(child);
-    _currentX += 100;
   }
-  
-  _currentX = originalOffset[0];
-  _currentY = originalOffset[1];
 }
 
 void
@@ -1175,8 +1284,7 @@ GraphEditorUI::DrawGrid()
 bool 
 GraphEditorUI::Draw()
 {
-  if(!_graph) return false;
-
+  
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
   
@@ -1190,57 +1298,86 @@ GraphEditorUI::Draw()
   ImGui::SetWindowFontScale(_fontScale);
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
+  if (_graph) {
+    for (auto& connexion : _graph->GetConnexions()) {
+      connexion->Draw(this);
+    }
 
-  for (auto& connexion : _graph->GetConnexions()) {
-    connexion->Draw(this);
-  }
+    for (auto& node : _graph->GetNodes()) {
+      node->Draw(this);
+    }
 
-  for (auto& node : _graph->GetNodes()) {
-    node->Draw(this);
-  }
+    if (_connect) {
+      const GraphEditorUI::Node* startNode = _connector.startPort->GetNode();
+      const pxr::GfVec2f viewPos = GetPosition();
+      pxr::GfVec2f portPos = _connector.startPort->GetPosition();
+      if (_connector.inputOrOutput) portPos += pxr::GfVec2f(startNode->GetWidth(), 0.f);
+      const pxr::GfVec2f startPos = GridPositionToViewPosition(portPos + startNode->GetPosition());
+      const pxr::GfVec2f endPos = ImGui::GetMousePos();
+      const pxr::GfVec2f
+        startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
+      const pxr::GfVec2f
+        endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
 
-  if (_connect) {
-    const GraphEditorUI::Node* startNode = _connector.startPort->GetNode();
-    const pxr::GfVec2f viewPos = GetPosition();
-    pxr::GfVec2f portPos = _connector.startPort->GetPosition();
-    if (_connector.inputOrOutput) portPos += pxr::GfVec2f(startNode->GetWidth(), 0.f);
-    const pxr::GfVec2f startPos = GridPositionToViewPosition(portPos + startNode->GetPosition());
-    const pxr::GfVec2f endPos = ImGui::GetMousePos();
-    const pxr::GfVec2f 
-      startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
-    const pxr::GfVec2f 
-      endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
+      drawList->AddBezierCurve(
+        startPos,
+        startTangent,
+        endTangent,
+        endPos,
+        _connector.color,
+        NODE_CONNEXION_THICKNESS * _scale);
+    }
+    else if (_marque) {
+      const pxr::GfVec2f viewPos = GetPosition();
+      drawList->AddRect(
+        _marquee.start + viewPos,
+        _marquee.end + viewPos,
+        ImColor(255, 128, 0, 255),
+        0.f, 0, 2);
 
-    drawList->AddBezierCurve(
-      startPos, 
-      startTangent, 
-      endTangent, 
-      endPos, 
-      _connector.color, 
-      NODE_CONNEXION_THICKNESS * _scale);
-  }
-  else if (_marque) {
-    const pxr::GfVec2f viewPos = GetPosition();
-    drawList->AddRect(
-      _marquee.start + viewPos,
-      _marquee.end + viewPos,
-      ImColor(255, 128, 0, 255),
-      0.f, 0, 2);
-
-    drawList->AddRectFilled(
-      _marquee.start + viewPos,
-      _marquee.end + viewPos,
-      ImColor(255, 128, 0, 64),
-      0.f, 0);
+      drawList->AddRectFilled(
+        _marquee.start + viewPos,
+        _marquee.end + viewPos,
+        ImColor(255, 128, 0, 64),
+        0.f, 0);
+    }
   }
 
   
   ImGui::SetCursorPos(ImVec2(64, 64));
-  static bool value;
-  ImGui::Checkbox("FUCK", &value);
-  if (ImGui::Button("SAVE")) {
-    _stage->Export("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
+  if (ImGui::Button("TEST")) {
+    std::cout << "TEST !!!" << std::endl;
+    Selection* selection = GetApplication()->GetSelection();
+    std::cout << "SELECTION SIZE : " << selection->GetNumSelectedItems() << std::endl;
+    bool done = false;
+    if (selection->GetNumSelectedItems()) {
+      Selection::Item& item = selection->GetItem(0);
+      if (item.type == Selection::OBJECT) {
+        pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+        pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
+        if (selected.IsValid() && selected.IsA<pxr::UsdShadeNodeGraph>()) {
+          std::cout << "EXISTING NODE GRAPH" << std::endl;
+          _graph = new Graph(selected);
+          done = true;
+        }
+      }
+    }if (!done) {
+      std::cout << "CREATE NODE GRAPH" << std::endl;
+      //_stage->Export("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
+      pxr::UsdPrim graphPrim = TestUsdShadeAPI();
+      _graph = new Graph(graphPrim);
+      done = true;
+    }
   }
+
+  if (ImGui::Button("SAVE")) {
+    std::cout << "SAVE ..." << std::endl;
+    const std::string identifier = "./usd/test_graph.usda";
+    pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateNew(identifier);
+    stage->GetRootLayer()->TransferContent(GetApplication()->GetStage()->GetRootLayer());
+    stage->Save();
+  }
+
   ImGui::PopFont();
   ImGui::End();
 
@@ -1252,58 +1389,17 @@ GraphEditorUI::Draw()
     ImGui::IsAnyItemHovered();
 };
 
-static pxr::UsdPrim TestUsdShadeAPI()
-{
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
-
-  const pxr::SdfPath GRAPH_PATH("/graph");
-  const pxr::TfToken GET("get");
-  const pxr::TfToken MUL("multiply");
-  const pxr::TfToken SET("set");
-
-  UsdShadeNodeGraph graph = pxr::UsdShadeNodeGraph::Define(stage, GRAPH_PATH);
-
-  pxr::UsdShadeShader get = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(GET));
-  pxr::UsdShadeInput inPrim = get.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
-  inPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeInput inAttr = get.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
-  inAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeOutput inVal = get.CreateOutput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Point3f);
-
-  pxr::UsdShadeShader mul = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(MUL));
-  pxr::UsdShadeInput factor = mul.CreateInput(pxr::TfToken("Factor"), pxr::SdfValueTypeNames->Float);
-  factor.Set(pxr::VtValue(1.f));
-  pxr::UsdShadeInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Point3f);
-  pxr::UsdShadeOutput output = mul.CreateOutput(pxr::TfToken("Output"), pxr::SdfValueTypeNames->Point3f);
-
-  pxr::UsdShadeShader set = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(SET));
-  pxr::UsdShadeInput outPrim = set.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
-  outPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
-  outAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeInput outVal = set.CreateInput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Point3f);
- 
-  input.ConnectToSource(inVal);
-  outVal.ConnectToSource(output);
-  
-  //stage->Export("C:/Users/graph/Documents/bmal/src/Jivaro/build/src/Release/usd/shade.usda");
-  return graph.GetPrim();
-}
-
 // init
 //------------------------------------------------------------------------------
 void 
 GraphEditorUI::Init()
 {
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
-  if (!stage)return;
-
-  _selected.clear();
+  _selectedNodes.clear();
+  _selectedConnexions.clear();
   _currentNode = _hoveredNode = NULL;
   _currentPort = _hoveredPort = NULL;
 
-  pxr::UsdPrim graphPrim = TestUsdShadeAPI();
-  _graph = new Graph(graphPrim);
+  _graph = NULL;
   _parent->SetDirty();
   _currentX = _currentY = 0.f;
 }
@@ -1331,8 +1427,6 @@ GraphEditorUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
-  std::cout << "########### SCENE CHANGED ######################" << std::endl;
-  Init();
 }
 
 
@@ -1369,7 +1463,10 @@ GraphEditorUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend)
   GetRelativeMousePosition(mousePos[0], mousePos[1], viewPos[0], viewPos[1]);
 
   Node* hovered = NULL;
-  std::vector<GraphEditorUI::Node*> nodes = _graph->GetNodes();
+  std::vector<GraphEditorUI::Node*> nodes;
+  if (_graph) {
+    nodes = _graph->GetNodes();
+  }
   for (auto node = nodes.rbegin(); node != nodes.rend(); ++node) {
     if ((*node)->Contains(ViewPositionToGridPosition(viewPos),
       useExtend ? pxr::GfVec2f(NODE_PORT_RADIUS * _scale) : pxr::GfVec2f(0.f))) {
@@ -1437,6 +1534,7 @@ GraphEditorUI::_GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node)
 void 
 GraphEditorUI::_GetConnexionUnderMouse(const pxr::GfVec2f& mousePos)
 {
+  if (!_graph)return;
   if (_hoveredConnexion) {
     _hoveredConnexion->SetState(ITEM_STATE_HOVERED, false);
     _hoveredConnexion = NULL;
@@ -1493,9 +1591,10 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
         StartConnexion();
       }
       else if (_hoveredNode) {
-        if (_hoveredNode->GetState(ITEM_STATE_SELECTED))
+        if (_hoveredNode->GetState(ITEM_STATE_SELECTED)) {
           _drag = true;
-        else {
+          _dragOffset = pxr::GfVec2f(0);
+        } else {
           bool state = _hoveredNode->GetState(ITEM_STATE_SELECTED);
           _hoveredNode->SetState(ITEM_STATE_SELECTED, 1 - state);
           if (mods & GLFW_MOD_CONTROL) {
@@ -1529,8 +1628,13 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
     }
     else if (action == GLFW_RELEASE) {
       _navigate = NavigateMode::IDLE;
-      for (auto& node : _selected) {
-        node->SetPosition(node->GetPosition());
+      {
+        std::vector<pxr::SdfPath> nodes;
+        for (auto& node : _selectedNodes) {
+          nodes.push_back(node->GetPrim().GetPath());
+        }
+        GetApplication()->AddCommand(std::shared_ptr<MoveNodeCommand>(
+          new MoveNodeCommand(nodes, _dragOffset)));
       }
       _drag = false;
       if (_connect) EndConnexion();
@@ -1611,8 +1715,10 @@ GraphEditorUI::MouseMove(int x, int y)
     }
   }
   else if (_drag) {
-    for (auto& node : _selected) {
-      node->SetPosition(node->GetPosition() + pxr::GfVec2f(x - _lastX, y - _lastY) / _scale);
+    for (auto& node : _selectedNodes) {
+      _dragOffset += pxr::GfVec2f(x - _lastX, y - _lastY) / _scale;
+      const pxr::GfVec2f pos(node->GetPosition() + pxr::GfVec2f(x - _lastX, y - _lastY) / _scale);
+      node->SetPosition(pos);
     }
     _parent->SetDirty();
   }
@@ -1711,19 +1817,24 @@ GraphEditorUI::EndConnexion()
 void 
 GraphEditorUI::ClearSelection()
 {
-  if(_selected.size())
-    for (auto& node : _selected)
+  if(_selectedNodes.size())
+    for (auto& node : _selectedNodes)
       node->SetState(ITEM_STATE_SELECTED, false);
-  _selected.clear();
+  _selectedNodes.clear();
+  if (_selectedConnexions.size())
+    for (auto& cnx : _selectedConnexions)
+      cnx->SetState(ITEM_STATE_SELECTED, false);
+  _selectedConnexions.clear();
 }
 
 void 
 GraphEditorUI::AddToSelection(Node* node, bool bringToFront) 
 {
   node->SetState(ITEM_STATE_SELECTED, true);
-  _selected.insert(node);
+  _selectedNodes.insert(node);
   
-  std::vector<GraphEditorUI::Node*> nodes = _graph->GetNodes();
+  std::vector<GraphEditorUI::Node*> nodes;
+  if(_graph) nodes = _graph->GetNodes();
   if (bringToFront) {
     for (size_t i = 0; i < nodes.size(); ++i) {
       if (nodes[i] == node && nodes.back() != node) {
@@ -1737,12 +1848,28 @@ void
 GraphEditorUI::RemoveFromSelection(Node* node)
 {
   node->SetState(ITEM_STATE_SELECTED, false);
-  _selected.erase(node);
+  _selectedNodes.erase(node);
 }
+
+void
+GraphEditorUI::AddToSelection(Connexion* connexion)
+{
+  connexion->SetState(ITEM_STATE_SELECTED, true);
+  _selectedConnexions.insert(connexion);
+}
+
+void
+GraphEditorUI::RemoveFromSelection(Connexion* connexion)
+{
+  connexion->SetState(ITEM_STATE_SELECTED, false);
+  _selectedConnexions.erase(connexion);
+}
+
 
 void 
 GraphEditorUI::MarqueeSelect(int mod)
 {
+  if (!_graph)return;
   pxr::GfVec2f start = ViewPositionToGridPosition(_marquee.start);
   pxr::GfVec2f end = ViewPositionToGridPosition(_marquee.end);
 
@@ -1767,10 +1894,10 @@ GraphEditorUI::ResetScaleOffset() {
 void 
 GraphEditorUI::FrameSelection()
 {
-  if (!_selected.size())return;
+  if (!_selectedNodes.size())return;
 
   pxr::GfRange2f selectedRange;
-  for (const auto& node : _selected) {
+  for (const auto& node : _selectedNodes) {
     selectedRange.ExtendBy(
       pxr::GfRange2f(
         node->GetPosition(),
@@ -1798,6 +1925,7 @@ GraphEditorUI::FrameSelection()
 void 
 GraphEditorUI::FrameAll()
 {
+  if (!_graph)return;
   pxr::GfRange2f allRange;
   for (const auto& node : _graph->GetNodes()) {
     allRange.ExtendBy(
