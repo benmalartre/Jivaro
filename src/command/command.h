@@ -216,11 +216,12 @@ private:
 //==================================================================================
 class MoveNodeCommand : public Command {
 public:
-  MoveNodeCommand(const std::vector<pxr::SdfPath>& nodes, const pxr::GfVec2f& offset);
+  friend GraphEditorUI;
+  MoveNodeCommand(const GraphEditorUI::NodeSet& nodes, const pxr::GfVec2f& offset);
   ~MoveNodeCommand() {};
   void Do() override;
 private:
-  std::vector<pxr::SdfPath>         _nodes;
+  GraphEditorUI::NodeSet            _nodes;
   pxr::GfVec2f                      _offset;
 };
 

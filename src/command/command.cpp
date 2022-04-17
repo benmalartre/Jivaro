@@ -420,14 +420,16 @@ void CreateNodeCommand::Do()
 //==================================================================================
 // Move Node
 //==================================================================================
-MoveNodeCommand::MoveNodeCommand(const std::vector<pxr::SdfPath>& nodes, const pxr::GfVec2f& offset)
+MoveNodeCommand::MoveNodeCommand(
+  const GraphEditorUI::NodeSet& nodes, const pxr::GfVec2f& offset)
   : Command(true)
   , _nodes(nodes)
   , _offset(offset)
 {
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   for (auto& node : nodes) {
-    pxr::UsdPrim prim = stage->GetPrimAtPath(node);
+    pxr::UsdPrim prim = node->GetPrim();
+    std::cout << "MOVE NODE COMMAND : " << prim.GetPath() << std::endl;
+   
     if (!prim.IsValid()) continue;
     pxr::UsdUINodeGraphNodeAPI api(prim);
     pxr::GfVec2f pos;
@@ -441,7 +443,12 @@ MoveNodeCommand::MoveNodeCommand(const std::vector<pxr::SdfPath>& nodes, const p
 
 void MoveNodeCommand::Do()
 {
+  for (auto& node : _nodes) {
+    node->Se
+  }
+  std::cout << "UNDO MOVE NODE !!" << std::endl;
   _inverse.Invert();
+  _offset *= -1;
   SceneChangedNotice().Send();
 }
 

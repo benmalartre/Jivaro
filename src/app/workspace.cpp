@@ -72,6 +72,7 @@ Workspace::AddStageFromMemory(const std::string& name)
 pxr::UsdStageRefPtr& 
 Workspace::AddStageFromDisk(const std::string& filename)
 {
+
   std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
   std::string name = tokens.front();
   pxr::SdfPath path("/" + name);

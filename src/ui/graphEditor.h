@@ -324,6 +324,9 @@ private:
   };
 
 public:
+  typedef std::set<Node*> NodeSet;
+
+public:
   GraphEditorUI(View* parent);
   ~GraphEditorUI() override;
 
@@ -370,6 +373,8 @@ public:
   void RemoveFromSelection(Connexion* connexion);
   void ClearSelection();
   void MarqueeSelect(int mod);
+  NodeSet& GetSelectedNodes() { return _selectedNodes; };
+  const NodeSet& GetSelectedNode() const { return _selectedNodes; };
 
   // display
   void ResetScaleOffset();
@@ -428,6 +433,7 @@ private:
 
   static ImGuiWindowFlags               _flags;
 };
+
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

@@ -171,7 +171,7 @@ static pxr::UsdPrim TestUsdShadeAPI()
 
   pxr::UsdShadeShader mul = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(MUL));
   api = pxr::UsdUINodeGraphNodeAPI(mul);
-  api.CreatePosAttr().Set(pxr::GfVec2f(50, 0));
+  api.CreatePosAttr().Set(pxr::GfVec2f(120, 0));
   pxr::UsdShadeInput factor = mul.CreateInput(pxr::TfToken("Factor"), pxr::SdfValueTypeNames->Float);
   factor.Set(pxr::VtValue(1.f));
   pxr::UsdShadeInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Point3f);
@@ -179,7 +179,7 @@ static pxr::UsdPrim TestUsdShadeAPI()
 
   pxr::UsdShadeShader set = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(SET));
   api = pxr::UsdUINodeGraphNodeAPI(set);
-  api.CreatePosAttr().Set(pxr::GfVec2f(100, 0));
+  api.CreatePosAttr().Set(pxr::GfVec2f(240, 0));
   pxr::UsdShadeInput outPrim = set.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
   outPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
   pxr::UsdShadeInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
@@ -188,6 +188,8 @@ static pxr::UsdPrim TestUsdShadeAPI()
 
   input.ConnectToSource(inVal);
   outVal.ConnectToSource(output);
+
+  stage->SetDefaultPrim(graph.GetPrim());
 
   return graph.GetPrim();
 }
@@ -1343,8 +1345,6 @@ GraphEditorUI::Draw()
     }
   }
 
-  
-  ImGui::SetCursorPos(ImVec2(64, 64));
   if (ImGui::Button("TEST")) {
     std::cout << "TEST !!!" << std::endl;
     Selection* selection = GetApplication()->GetSelection();
@@ -1369,14 +1369,22 @@ GraphEditorUI::Draw()
       done = true;
     }
   }
+  ImGui::SameLine();
 
   if (ImGui::Button("SAVE")) {
-    std::cout << "SAVE ..." << std::endl;
     const std::string identifier = "./usd/test_graph.usda";
-    pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateNew(identifier);
+    pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
     stage->GetRootLayer()->TransferContent(GetApplication()->GetStage()->GetRootLayer());
-    stage->Save();
+    GetApplication()->GetStage()->Export(identifier);
   }
+  ImGui::SameLine();
+
+  if (ImGui::Button("LOAD")) {
+    const std::string identifier = "./usd/test_graph.usda";
+    GetApplication()->AddCommand(
+      std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(identifier)));
+  }
+  ImGui::SameLine();
 
   ImGui::PopFont();
   ImGui::End();
@@ -1427,6 +1435,7 @@ GraphEditorUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
+  _parent->SetDirty();
 }
 
 
@@ -1628,7 +1637,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
     }
     else if (action == GLFW_RELEASE) {
       _navigate = NavigateMode::IDLE;
-      {
+       if(_drag == true) {
         std::vector<pxr::SdfPath> nodes;
         for (auto& node : _selectedNodes) {
           nodes.push_back(node->GetPrim().GetPath());

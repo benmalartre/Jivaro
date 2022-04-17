@@ -1,6 +1,7 @@
 #include <pxr/pxr.h>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usdGeom/imageable.h>
 #include <pxr/usd/usdGeom/tokens.h>
 #include "../ui/style.h"
@@ -338,8 +339,10 @@ void
 ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection) 
 {
   ImGuiTreeNodeFlags flags = _treeFlags;
+  /*
   const auto& children = prim.GetFilteredChildren(
-    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
+    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));*/
+  const auto& children = prim.GetChildren();
   if (children.empty()) {
     flags |= ImGuiTreeNodeFlags_Leaf;
   }
@@ -405,7 +408,7 @@ ExplorerUI::Draw()
   ImDrawList* backgroundList = ImGui::GetBackgroundDrawList();
   backgroundList->AddRectFilled(min, min + size, ImColor(BACKGROUND_COLOR));
 
-  const pxr::UsdPrim root = stage->GetPseudoRoot();
+  //const pxr::UsdPrim root = stage->GetPseudoRoot();
   pxr::SdfLayerHandle layer = stage->GetSessionLayer();
 
   // setup transparent background
@@ -447,9 +450,10 @@ ExplorerUI::Draw()
   }
   */
   ImGui::PushFont(GetWindow()->GetRegularFont(1));
+  /*
   const auto& children = root.GetFilteredChildren(
-    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
-  for (const auto& child : children) {
+    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));*/
+  for (auto child: stage->TraverseAll()) {
     DrawPrim(child, selection);
   }
   ImGui::PopFont();
