@@ -37,6 +37,7 @@
 #include "../command/delegate.h"
 #include "../command/manager.h"
 #include "../command/router.h"
+#include "../command/block.h"
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/notice.h"
@@ -408,7 +409,7 @@ Application::Init()
   //std::cout << "INIT GRAPH OK " << std::endl;
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   
-  _viewport = new ViewportUI(viewportView);  
+  _viewport = new ViewportUI(viewportView);
   _timeline = new TimelineUI(timelineView);
 
   MenuUI* menu = new MenuUI(topView);
@@ -605,6 +606,15 @@ Application::Redo()
 void 
 Application::Delete()
 {
+  UndoBlock editBlock();
+  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+  for (auto& item : _selection.GetItems()) {
+    if (item.type == Selection::PRIM) {
+      stage->RemovePrim(item.path);
+    }
+  }
+  _selection.Clear();
+  SceneChangedNotice().Send();
 }
 
 void
@@ -665,35 +675,35 @@ void
 Application::SetSelection(const pxr::SdfPathVector& selection)
 {
   AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::OBJECT, selection, SelectCommand::SET)));
+    new SelectCommand(Selection::PRIM, selection, SelectCommand::SET)));
 }
 
 void
 Application::ToggleSelection(const pxr::SdfPathVector& selection)
 {
   AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::OBJECT, selection, SelectCommand::TOGGLE)));
+    new SelectCommand(Selection::PRIM, selection, SelectCommand::TOGGLE)));
 }
 
 void 
 Application::AddToSelection(const pxr::SdfPathVector& paths)
 {
   AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::OBJECT, paths, SelectCommand::ADD)));
+    new SelectCommand(Selection::PRIM, paths, SelectCommand::ADD)));
 }
 
 void 
 Application::RemoveFromSelection(const pxr::SdfPathVector& paths)
 {
   AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::OBJECT, paths, SelectCommand::REMOVE)));
+    new SelectCommand(Selection::PRIM, paths, SelectCommand::REMOVE)));
 }
 
 void 
 Application::ClearSelection()
 {
   AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::OBJECT, {}, SelectCommand::SET)));
+    new SelectCommand(Selection::PRIM, {}, SelectCommand::SET)));
 }
 
 pxr::GfBBox3d
@@ -715,7 +725,7 @@ Application::GetSelectionBoundingBox()
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const Selection::Item& item = _selection[n];
-    if (item.type == Selection::Type::OBJECT) {
+    if (item.type == Selection::Type::PRIM) {
       pxr::UsdPrim prim = _workspace->GetRootStage()->GetPrimAtPath(item.path);
       std::cout << bboxCache.ComputeWorldBound(prim) << std::endl;
       if (prim.IsActive() && !prim.IsInPrototype()) {

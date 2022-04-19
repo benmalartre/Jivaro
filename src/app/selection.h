@@ -13,7 +13,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 class Selection {
 public:
   enum Type {
-    OBJECT,
+    PRIM,
     VERTEX,
     EDGE,
     FACE,

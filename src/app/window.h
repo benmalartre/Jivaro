@@ -160,7 +160,7 @@ public:
 
   // splitter
   void BeginDragSplitter(){_dragSplitter=true;};
-  void EndDragSplitter(){_dragSplitter=false;};
+  void EndDragSplitter() { _dragSplitter = false;};
   bool IsDraggingSplitter(){return _dragSplitter;};
   void DragSplitter(int x, int y);
 

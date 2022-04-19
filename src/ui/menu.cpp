@@ -90,8 +90,7 @@ static void OpenFileCallback() {
     GetApplication()->BrowseFile(200, 200, folder, filters, numFilters, "open usd file");
 
   GetApplication()->AddCommand(
-    std::shared_ptr<OpenSceneCommand>(
-      new OpenSceneCommand(filename)));
+    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
 }
 
 static void SaveFileCallback() 
@@ -101,9 +100,9 @@ static void SaveFileCallback()
 
 static void NewFileCallback() 
 {
-  GetApplication()->NewScene();
+  GetApplication()->AddCommand(
+    std::shared_ptr<NewSceneCommand>(new NewSceneCommand()));
 }
-
 
 static void OpenDemoCallback()
 {

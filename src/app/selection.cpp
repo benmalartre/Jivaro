@@ -45,7 +45,7 @@ bool Selection::IsEmpty()
 bool Selection::IsObject()
 {
   for (auto& item : _items) {
-    if (item.type == Type::OBJECT) return true;
+    if (item.type == Type::PRIM) return true;
   }
   return false;
 }
@@ -73,7 +73,7 @@ void Selection::AddItem(const pxr::SdfPath& path)
   for (auto& item: _items) {
     if (path == item.path)return;
   }
-  _items.push_back({ Type::OBJECT, path});
+  _items.push_back({ Type::PRIM, path});
   _items.back().ComputeHash();
   ComputeHash();
 

@@ -584,6 +584,7 @@ void ViewportUI::Resize()
     _camera->GetFov(),
     pxr::GfCamera::FOVHorizontal
   );
+  if (GetWindow()->IsDraggingSplitter()) return;
 
   const pxr::GfVec2i renderResolution(GetWidth(), GetHeight());
   if (!_drawTarget || _drawTarget->GetSize() != renderResolution) {

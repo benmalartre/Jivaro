@@ -5,6 +5,7 @@
 #include <set>
 
 #include "../common.h"
+#include "../utils/icons.h"
 #include "../ui/ui.h"
 #include "../ui/head.h"
 #include "../ui/utils.h"
@@ -21,7 +22,7 @@
 #include <pxr/usd/usd/primFlags.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
-
+extern IconList ICONS;
 #define GRAPH_CELL_MAX_NODES 6
 
 enum ColorGraph {
@@ -47,7 +48,7 @@ enum ColorGraph {
   GRAPH_COLOR_PRIM              = 0xFF6622FF
 };
 
-#define NODE_CORNER_ROUNDING          0.f
+#define NODE_CORNER_ROUNDING          2.f
 #define NODE_PORT_RADIUS              4.f
 #define NODE_PORT_PADDING             6.f
 #define NODE_PORT_VERTICAL_SPACING    16.f
@@ -375,6 +376,7 @@ public:
   void MarqueeSelect(int mod);
   NodeSet& GetSelectedNodes() { return _selectedNodes; };
   const NodeSet& GetSelectedNode() const { return _selectedNodes; };
+  pxr::SdfPathVector GetSelectedNodesPath();
 
   // display
   void ResetScaleOffset();
@@ -382,7 +384,8 @@ public:
   void FrameAll();
 
   // io
-  bool Populate(const pxr::UsdStageRefPtr& stage);
+  bool Populate(pxr::UsdPrim& prim);
+  void Clear();
   bool Read(const std::string& filename);
   bool Write(const std::string& filename);
 
@@ -391,6 +394,7 @@ public:
 
   // notices
   void OnSceneChangedNotice(const SceneChangedNotice& n) override;
+  void OnNewSceneNotice(const NewSceneNotice& n) override;
   
 private:
   void _GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node);

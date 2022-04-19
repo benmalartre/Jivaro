@@ -842,6 +842,8 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
   double x, y;
   glfwGetCursorPos(window, &x, &y);
+  int width, height;
+  glfwGetWindowSize(window, &width, &height);
   bool splitterHovered = parent->PickSplitter(x, y);
 
   PopupUI* popup = parent->GetPopup();
@@ -859,6 +861,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
     if (action == GLFW_RELEASE)
     {
       parent->EndDragSplitter();
+      parent->Resize(width, height);
       //parent->SetActiveTool(TOOL_SELECT);
       View* view = parent->GetActiveView();
       if (view) {

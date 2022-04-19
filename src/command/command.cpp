@@ -19,7 +19,6 @@ PXR_NAMESPACE_OPEN_SCOPE
 OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   : Command(false)
 {
-  std::cout << filename << std::endl;
   GetApplication()->OpenScene(filename);
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
