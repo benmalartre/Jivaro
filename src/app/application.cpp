@@ -606,15 +606,11 @@ Application::Redo()
 void 
 Application::Delete()
 {
-  UndoBlock editBlock();
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
-  for (auto& item : _selection.GetItems()) {
-    if (item.type == Selection::PRIM) {
-      stage->RemovePrim(item.path);
-    }
-  }
-  _selection.Clear();
-  SceneChangedNotice().Send();
+  Selection* selection = GetSelection();
+  const pxr::SdfPathVector& paths = selection->GetSelectedPrims();
+  selection->Clear();
+  AddCommand(std::shared_ptr<DeletePrimCommand>(
+    new DeletePrimCommand(GetStage(), paths)));
 }
 
 void

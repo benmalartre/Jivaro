@@ -76,7 +76,6 @@ void CreatePrimCommand::Do() {
 DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPath& path)
   : Command(true)
 {
-  UndoRouter::Get().TransferEdits(&_inverse);
   pxr::SdfPath destinationPath = pxr::SdfPath(path.GetString() + "_duplicate");
   pxr::UsdPrim sourcePrim = stage->GetPrimAtPath(path);
   pxr::SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
@@ -97,6 +96,24 @@ DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr:
 }
 
 void DuplicatePrimCommand::Do() {
+  _inverse.Invert();
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Delete
+//==================================================================================
+DeletePrimCommand::DeletePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths)
+  : Command(true)
+{
+  for (auto& path : paths) {
+    stage->RemovePrim(path);
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+void DeletePrimCommand::Do() {
   _inverse.Invert();
   SceneChangedNotice().Send();
 }

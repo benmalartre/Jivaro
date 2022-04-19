@@ -860,14 +860,16 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   } else {
     if (action == GLFW_RELEASE)
     {
-      parent->EndDragSplitter();
-      parent->Resize(width, height);
       //parent->SetActiveTool(TOOL_SELECT);
       View* view = parent->GetActiveView();
       if (view) {
         view->MouseButton(button, action, mods);
         view->ClearFlag(View::INTERACTING);
         view->SetDirty();
+      }
+      if (parent->IsDraggingSplitter()) {
+        parent->EndDragSplitter();
+        parent->Resize(width, height);
       }
     }
     else if (action == GLFW_PRESS || action == GLFW_REPEAT)

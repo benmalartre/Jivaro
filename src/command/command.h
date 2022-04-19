@@ -88,6 +88,17 @@ public:
 };
 
 //==================================================================================
+// Delete prim
+//==================================================================================
+class DeletePrimCommand : public Command {
+public:
+  DeletePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& path);
+  ~DeletePrimCommand() {};
+  void Do() override;
+
+};
+
+//==================================================================================
 // Select 
 // mode : 0 = Set
 //        1 = Add

@@ -149,7 +149,7 @@ _GetHoveredColor(int color)
 
 static pxr::UsdPrim TestUsdShadeAPI()
 {
-  UndoBlock editBlock();
+  UndoBlock editBlock;
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
 
   const pxr::SdfPath GRAPH_PATH("/graph");
