@@ -141,12 +141,12 @@ ColorPopupUI::MouseButton(int button, int action, int mods)
       result = { _original };
       _attribute.Set(result, _time);
       result = { _color };
-      UndoBlock editBlock;
+      UndoBlock editBlock(true);
       _attribute.Set(result, _time);
     }
     else {
       _attribute.Set(_original, _time);
-      UndoBlock editBlock;
+      UndoBlock editBlock(true);
       _attribute.Set(_color, _time);
     }
     _done = true;

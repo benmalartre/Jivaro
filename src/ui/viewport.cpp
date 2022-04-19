@@ -406,7 +406,12 @@ bool ViewportUI::Draw()
 
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
-  if (app->GetStage() != nullptr) {
+  if (GetWindow()->IsDraggingSplitter()) {
+    glViewport(0, 0, GetWidth(), GetHeight());
+    // clear to black
+    glClearColor(0.25f, 0.25f, 0.25f, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  } else if (app->GetStage() != nullptr) {
     _engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
       pxr::GfVec4d(

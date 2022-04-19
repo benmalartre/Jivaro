@@ -216,6 +216,7 @@ protected:
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };
       pxr::UsdPrim GetPrim() { return _prim; };
+      const pxr::UsdPrim GetPrim() const { return _prim; };
       void Init();
       void Update();
       void SetPosition(const pxr::GfVec2f& pos) override;
@@ -244,23 +245,27 @@ protected:
   //-------------------------------------------------------------------
   class Graph : public Node {
     public: 
+      Graph();
       Graph(pxr::UsdPrim& prim);
       ~Graph();
 
-      void AddNode(Node* node);
+      void Populate(pxr::UsdPrim& prim);
+      void Clear();
+
+      void AddNode(const Node& node);
       void RemoveNode(Node* node);
 
-      void AddConnexion(Connexion* connexion);
+      void AddConnexion(const Connexion& connexion);
       void RemoveConnexion(Connexion* connexion);
 
-      const std::vector<Node*>& GetNodes() const { return _nodes; };
-      std::vector<Node*>& GetNodes() { return _nodes; };
+      const std::vector<Node>& GetNodes() const { return _nodes; };
+      std::vector<Node>& GetNodes() { return _nodes; };
 
       const Node* GetNode(const pxr::UsdPrim& prim) const;
       Node* GetNode(const pxr::UsdPrim& prim);
 
-      const std::vector<Connexion*>& GetConnexions() const { return _connexions; };
-      std::vector<Connexion*>& GetConnexions() { return _connexions; };
+      const std::vector<Connexion>& GetConnexions() const { return _connexions; };
+      std::vector<Connexion>& GetConnexions() { return _connexions; };
 
       /*
       void AddInput(const std::string& name, pxr::SdfValueTypeName type);
@@ -289,8 +294,8 @@ protected:
       float                       _currentY;
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
-      std::vector<Node*>          _nodes;
-      std::vector<Connexion*>     _connexions;
+      std::vector<Node>           _nodes;
+      std::vector<Connexion>      _connexions;
   };
 
   // Graph cell class
@@ -356,11 +361,11 @@ public:
   pxr::GfVec2f GridPositionToViewPosition(const pxr::GfVec2f& gridPos);
 
   // graph
-  Graph* GetGraph() { return _graph; };
+  Graph& GetGraph() { return _graph; };
   
   // nodes
-  void AddNode(Node* node) { _graph->AddNode(node); };
-  Node* GetLastNode() { return _graph->GetNodes().back(); };
+  void AddNode(const Node& node) { _graph.AddNode(node); };
+  Node& GetLastNode() { return _graph.GetNodes().back(); };
 
   // connexion
   void StartConnexion();
@@ -421,7 +426,7 @@ private:
 
   int                                   _nodeId;
   pxr::UsdStageRefPtr                   _stage;
-  Graph*                                _graph;
+  Graph                                 _graph;
   std::set<Node*>                       _selectedNodes;
   std::set<Connexion*>                  _selectedConnexions;
   Node*                                 _hoveredNode;
