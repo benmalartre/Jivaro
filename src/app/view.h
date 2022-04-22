@@ -106,7 +106,7 @@ private:
   double                _lastPerc;
   unsigned              _numPixels[2];
   int                   _fixedPixels;
-  char                  _buffered;
+  int                   _buffered;
   BaseUI*               _content;
   ViewHead*             _head;
   Window*               _window;

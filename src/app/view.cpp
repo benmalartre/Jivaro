@@ -113,7 +113,7 @@ View::Draw(bool forceRedraw)
     DrawHead();
     Time& time = GetApplication()->GetTime();
     if (_content && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-      if (!_content->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
+      if (!_content->Draw() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
         SetClean();
       }
     }
@@ -123,13 +123,13 @@ View::Draw(bool forceRedraw)
 bool 
 View::IsActive()
 {
-  return this == GetWindow()->GetActiveView();
+  return (this == GetWindow()->GetActiveView());
 }
 
 bool
 View::IsHovered()
 {
-  return this == GetWindow()->GetHoveredView();
+  return (this == GetWindow()->GetHoveredView());
 }
 
 // mouse positon relative to the view
@@ -153,13 +153,15 @@ View::MouseButton(int button, int action, int mods)
     if (relativeY > 0 && relativeY < VIEW_HEAD_HEIGHT) {
       _head->MouseButton(button, action, mods);
     } else {
-      if (_content && !GetFlag(DISCARDMOUSEBUTTON))
+      if (_content && !GetFlag(DISCARDMOUSEBUTTON)) {
         _content->MouseButton(button, action, mods);
+      }
       ClearFlag(DISCARDMOUSEBUTTON);
     }
   } else {
-    if (_content && !GetFlag(DISCARDMOUSEBUTTON))
+    if (_content && !GetFlag(DISCARDMOUSEBUTTON)) {
       _content->MouseButton(button, action, mods);
+    }
     ClearFlag(DISCARDMOUSEBUTTON);
   }
 }
@@ -464,17 +466,16 @@ View::RescaleRight()
 
 void View::SetClean()
 {
-  if (_buffered >= 3) {
+  if (_buffered <= 0) {
     ClearFlag(DIRTY);
-    _buffered = 0;
   }
-  else _buffered++;
+  else _buffered--;
 }
 
 void View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 0;
+  _buffered = 3;
 }
 
 void View::SetInteracting(bool value) 

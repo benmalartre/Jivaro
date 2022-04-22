@@ -507,7 +507,6 @@ Window::Draw()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-
   // draw popup
   if (_popup) {
     if (_popup->IsSync()) {
@@ -623,24 +622,22 @@ bool Window::UpdateActiveTool(int x, int y)
 void Window::MainLoop()
 {
   while(!glfwWindowShouldClose(_window)) {
-    _app->Update();
-    SetGLContext();
     //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
     glfwPollEvents();
-
+    _app->Update();
+  
     // main window
     Draw();
     glfwSwapBuffers(_window);
-    //glFlush();
 
     // child windows
     for (auto& child : _childrens) {
       if (glfwGetWindowAttrib(child->GetGlfwWindow(), GLFW_FOCUSED)) {
         child->Draw();
         glfwSwapBuffers(child->GetGlfwWindow());
-        //glFlush();
       }
     }
+    
   }
 }
 

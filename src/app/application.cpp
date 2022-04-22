@@ -406,21 +406,16 @@ Application::Init()
   _tools.Init();
   
   GraphEditorUI* graph = new GraphEditorUI(graphView);
-  //std::cout << "INIT GRAPH OK " << std::endl;
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   
   _viewport = new ViewportUI(viewportView);
   _timeline = new TimelineUI(timelineView);
 
   MenuUI* menu = new MenuUI(topView);
-  //ToolbarUI* toolbar = new ToolbarUI(topView, "Toolbar");
   ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
   _explorer = new ExplorerUI(explorerView);
   _layers = new LayersUI(layersView);
   _property = new PropertyUI(propertyView, "Property");
-
-
- 
 
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);

@@ -513,7 +513,7 @@ bool ViewportUI::Draw()
     
     // renderer
     ImGui::SetCursorPosX(0);
-
+    DiscardEventsIfMouseInsideBox(pxr::GfVec2f(0, 0), pxr::GfVec2f(GetWidth(), 24));
     if (ComboWidget("Renderer", this, _rendererNames, _numRenderers, _rendererIndex, 300)) {
       Init();
     }

@@ -85,6 +85,9 @@ public:
   // get the height of the parent view
   virtual int GetHeight();
 
+  // discard events if mouse cursor inside relative bbox
+  void DiscardEventsIfMouseInsideBox(const pxr::GfVec2f& min, const pxr::GfVec2f& max);
+
   // attach tooltip
   void AttachTooltip(const char* tooltip);
 

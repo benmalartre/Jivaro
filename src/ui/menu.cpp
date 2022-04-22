@@ -54,7 +54,6 @@ bool MenuItem::Draw()
       for (auto& item : items) {
         item.Draw();
       }
-      view->SetFlag(View::INTERACTING);
       ImGui::EndMenu();
       ImGui::PopFont();
       return true;
@@ -65,7 +64,6 @@ bool MenuItem::Draw()
     ImGui::PushFont(window->GetMediumFont(1));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
-      view->ClearFlag(View::INTERACTING);
       window->SetActiveTool(TOOL_SELECT);
       window->ForceRedraw();
       ImGui::PopFont();
@@ -210,6 +208,7 @@ MenuItem& MenuUI::AddItem(View* view, const std::string label, const std::string
 // overrides
 bool MenuUI::Draw()
 {
+  _parent->SetFlag(View::DISCARDMOUSEBUTTON);
   ImGui::PushStyleColor(ImGuiCol_Header, BACKGROUND_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ALTERNATE_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, SELECTED_COLOR);
@@ -234,6 +233,7 @@ bool MenuUI::Draw()
   
   if (ImGui::BeginMainMenuBar())
   {
+    _parent->SetFlag(View::INTERACTING | View::DISCARDMOUSEMOVE);
     for (auto& item : _items) {
       if (item.Draw()) {
         _parent->SetDirty();
@@ -248,7 +248,7 @@ bool MenuUI::Draw()
   ImGui::End();
 
   return 
-    _parent->IsInteracting() ||
+    ImGui::IsItemHovered() ||
     ImGui::IsAnyItemActive() ||
     ImGui::IsAnyItemFocused() ||
     ImGui::IsAnyMouseDown();

@@ -66,6 +66,14 @@ void BaseUI::GetRelativeMousePosition(const float inX, const float inY,
   outY = inY - parentY;
 }
 
+void BaseUI::DiscardEventsIfMouseInsideBox(const pxr::GfVec2f& min, const pxr::GfVec2f& max)
+{
+  const pxr::GfVec2f mousePos = ImGui::GetMousePos() - _parent->GetMin();
+  if (mousePos[0] > min[0] && mousePos[0] < max[0] && mousePos[1] > min[1] && mousePos[1] < max[1]) {
+    _parent->SetFlag(View::DISCARDMOUSEBUTTON | View::DISCARDMOUSEMOVE);
+  }
+}
+
 // parent window
 Window* BaseUI::GetWindow(){return _parent->GetWindow();};
 
