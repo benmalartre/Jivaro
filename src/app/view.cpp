@@ -113,7 +113,7 @@ View::Draw(bool forceRedraw)
     DrawHead();
     Time& time = GetApplication()->GetTime();
     if (_content && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-      if (!_content->Draw() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
+      if (!_content->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
         SetClean();
       }
     }
@@ -475,7 +475,7 @@ void View::SetClean()
 void View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 3;
+  _buffered = 5;
 }
 
 void View::SetInteracting(bool value) 

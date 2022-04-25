@@ -55,6 +55,12 @@ static void OnBrushCallback()
   std::cout << "ACTIVE TOOL : BRUSH" << std::endl;
 }
 
+static void OnPlayCallback()
+{
+  std::cout << "ON PLAY CALLBACK!!!" << std::endl;
+  GetApplication()->ToggleExec();
+}
+
 
 ToolbarSeparator::ToolbarSeparator(BaseUI* ui, short orientation)
   : ToolbarItem(ui, TOOLBAR_SEPARATOR)
@@ -158,6 +164,13 @@ ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical)
     (UIUtils::IconPressedFunc)&OnBrushCallback
   );
   _items.push_back(brushItem);
+
+  ToolbarItem* playItem = new ToolbarButton(
+    this, TOOL_NONE, "Play", "play", "launch engine",
+    &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_FORWARD], true, true,
+    (UIUtils::IconPressedFunc)&OnPlayCallback
+  );
+  _items.push_back(playItem);
 }
 
 ToolbarUI::~ToolbarUI() 

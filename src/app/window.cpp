@@ -510,11 +510,16 @@ Window::Draw()
   // draw popup
   if (_popup) {
     if (_popup->IsSync()) {
-      for (Engine* engine : GetApplication()->GetEngines())
+      for (Engine* engine : GetApplication()->GetEngines()) {
         engine->SetDirty(true);
+      }
       _mainView->Draw(true);
     }
     _popup->Draw();
+    if (_popup->IsDone() || _popup->IsCancel()) {
+      delete _popup;
+      _popup = NULL;
+    }
   } else {
     // draw views
     if (_mainView)_mainView->Draw(_forceRedraw > 0);
@@ -672,6 +677,7 @@ KeyboardCallback(
   int mods
 )
 {
+  ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
   PopupUI* popup = parent->GetPopup();
   if (popup) {
@@ -681,7 +687,7 @@ KeyboardCallback(
   }
   Application* app = parent->GetApplication();
   Time& time = app->GetTime();
-  ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+  
   if(action == GLFW_RELEASE) {
     parent->SetDebounce(false);
   }

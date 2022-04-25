@@ -9,6 +9,7 @@
 #include "../ui/ui.h"
 #include "../ui/head.h"
 #include "../ui/utils.h"
+#include "../app/selection.h"
 
 #include <pxr/base/tf/token.h>
 #include <pxr/base/gf/vec3f.h>
@@ -65,9 +66,13 @@ static ImColor NODE_CONTOUR_HOVERED(60, 60, 60, 100);
 
 static int _GetColorFromAttribute(const pxr::UsdAttribute& attr);
 
+class Selection;
+
 class GraphEditorUI : public HeadedUI
 {
 public:
+  static const pxr::TfToken NodeExpendState[3];
+
   enum NodeType {
     HIERARCHY,
     MATERIAL,
@@ -150,6 +155,7 @@ protected:
       bool IsBothInputOutput() { return _flags & (INPUT | OUTPUT); };
 
       const pxr::TfToken& GetName()const {return _label;};
+      pxr::SdfPath GetPath();
       Node* GetNode() { return _node; };
       void SetNode(Node* node) { _node = node; };
       const pxr::UsdAttribute& GetAttr() const { return _attr;};
@@ -206,7 +212,6 @@ protected:
         EXPENDED
       };
 
-      Node(){};
       Node(pxr::UsdPrim prim, bool write=false);
       ~Node();
 
@@ -216,8 +221,8 @@ protected:
 
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };
-      pxr::UsdPrim GetPrim() { return _prim; };
-      const pxr::UsdPrim GetPrim() const { return _prim; };
+      pxr::UsdPrim& GetPrim() { return _prim; };
+      const pxr::UsdPrim& GetPrim() const { return _prim; };
       void Init();
       void Update();
       void SetPosition(const pxr::GfVec2f& pos) override;
@@ -226,12 +231,12 @@ protected:
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;
       void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
+      void SetExpansionState(short state) { _state = state; };
+      void UpdateExpansionState();
 
       void ComputeSize(GraphEditorUI* editor);
 
       Port* GetPort(const pxr::TfToken& name);
-
-      static void _ExpendCallback(Node* node);
 
     private:
       Node*                       _parent;
@@ -246,7 +251,6 @@ protected:
   //-------------------------------------------------------------------
   class Graph : public Node {
     public: 
-      Graph(){};
       Graph(pxr::UsdPrim& prim);
       ~Graph();
 
@@ -362,11 +366,11 @@ public:
   pxr::GfVec2f GridPositionToViewPosition(const pxr::GfVec2f& gridPos);
 
   // graph
-  Graph& GetGraph() { return _graph; };
+  Graph* GetGraph() { return _graph; };
   
   // nodes
-  void AddNode(Node* node) { _graph.AddNode(node); };
-  Node* GetLastNode() { return _graph.GetNodes().back(); };
+  void AddNode(Node* node) { _graph->AddNode(node); };
+  Node* GetLastNode() { return _graph->GetNodes().back(); };
 
   // connexion
   void StartConnexion();
@@ -427,7 +431,7 @@ private:
 
   int                                   _nodeId;
   pxr::UsdStageRefPtr                   _stage;
-  Graph                                 _graph;
+  Graph*                                _graph;
   std::set<Node*>                       _selectedNodes;
   std::set<Connexion*>                  _selectedConnexions;
   Node*                                 _hoveredNode;
@@ -442,6 +446,7 @@ private:
   Connect                               _connector;
 
   static ImGuiWindowFlags               _flags;
+  Selection                             _selection;
 };
 
 

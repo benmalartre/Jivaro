@@ -248,6 +248,19 @@ private:
 };
 
 //==================================================================================
+// Expend Node Command
+//==================================================================================
+class ExpendNodeCommand : public Command {
+public:
+  friend GraphEditorUI;
+  ExpendNodeCommand(const GraphEditorUI::NodeSet& nodes, const pxr::TfToken& state);
+  ~ExpendNodeCommand() {};
+  void Do() override;
+private:
+  GraphEditorUI::NodeSet            _nodes;
+};
+
+//==================================================================================
 // Connect Node Command
 //==================================================================================
 class ConnectNodeCommand : public Command {

@@ -177,7 +177,7 @@ BaseHandle::ResetSelection()
   Application* app = GetApplication();
   
   Selection* selection = app->GetSelection();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default()/*app->GetTime().GetActiveTime()*/;
   pxr::UsdGeomXformCache xformCache(activeTime);
   _targets.clear();
@@ -661,7 +661,7 @@ void
 TranslateHandle::_UpdateTargets(bool interacting)
 {
   Application* app = GetApplication();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
   if (interacting) {
@@ -684,7 +684,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
     }
     GetApplication()->AddCommand(
       std::shared_ptr<TranslateCommand>(
-        new TranslateCommand(GetApplication()->GetStage(), _targets, activeTime)));
+        new TranslateCommand(GetApplication()->GetWorkStage(), _targets, activeTime)));
   }
 }
 
@@ -877,7 +877,7 @@ void
 RotateHandle::_UpdateTargets(bool interacting)
 {
   Application* app = GetApplication();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
   if (interacting) {
@@ -910,7 +910,7 @@ RotateHandle::_UpdateTargets(bool interacting)
     
     GetApplication()->AddCommand(
       std::shared_ptr<RotateCommand>(
-        new RotateCommand(GetApplication()->GetStage(), _targets, activeTime)));
+        new RotateCommand(GetApplication()->GetWorkStage(), _targets, activeTime)));
   }
 }
 
@@ -1287,7 +1287,7 @@ void
 ScaleHandle::_UpdateTargets(bool interacting)
 {
   Application* app = GetApplication();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
   if (interacting) {
@@ -1313,7 +1313,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
 
     GetApplication()->AddCommand(
       std::shared_ptr<ScaleCommand>(
-        new ScaleCommand(GetApplication()->GetStage(), _targets, activeTime)));
+        new ScaleCommand(GetApplication()->GetWorkStage(), _targets, activeTime)));
   }
 }
 

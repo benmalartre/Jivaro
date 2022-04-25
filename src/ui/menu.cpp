@@ -115,13 +115,13 @@ static void CreatePrimCallback()
 
   GetApplication()->AddCommand(
     std::shared_ptr<CreatePrimCommand>(
-      new CreatePrimCommand(GetApplication()->GetStage(), name)));
+      new CreatePrimCommand(GetApplication()->GetWorkStage(), name)));
 }
 
 static void FlattenGeometryCallback()
 {
   Application* app = GetApplication();
-  pxr::UsdStageRefPtr& stage = app->GetStage();
+  pxr::UsdStageRefPtr& stage = app->GetWorkStage();
   Selection* selection = app->GetSelection();
   std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {

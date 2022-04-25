@@ -44,7 +44,7 @@ PropertyUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
   if (selection->GetNumSelectedItems()) {
-    pxr::UsdPrim prim = app->GetStage()->GetPrimAtPath(selection->GetSelectedPrims().back());
+    pxr::UsdPrim prim = app->GetWorkStage()->GetPrimAtPath(selection->GetSelectedPrims().back());
     SetPrim(prim);
   }
   else {
@@ -153,7 +153,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       
       if (ImGui::IsItemDeactivatedAfterEdit()) {
         GetApplication()->AddCommand(std::shared_ptr<TranslateCommand>(
-          new TranslateCommand(GetApplication()->GetStage(), targets, time)));
+          new TranslateCommand(GetApplication()->GetWorkStage(), targets, time)));
       }
       // Rotation
       ImGui::TableNextRow();
@@ -168,7 +168,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::InputFloat3("Rotation", target.current.rotation.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
         GetApplication()->AddCommand(std::shared_ptr<RotateCommand>(
-          new RotateCommand(GetApplication()->GetStage(), targets, time))
+          new RotateCommand(GetApplication()->GetWorkStage(), targets, time))
         );
       }
       // Scale
@@ -184,7 +184,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::InputFloat3("Scale", target.current.scale.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
         GetApplication()->AddCommand(std::shared_ptr<ScaleCommand>(
-          new ScaleCommand(GetApplication()->GetStage(), targets, time))
+          new ScaleCommand(GetApplication()->GetWorkStage(), targets, time))
         );
       }
 
@@ -199,7 +199,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::InputFloat3("Pivot", target.current.pivot.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit()) {
         GetApplication()->AddCommand(std::shared_ptr<PivotCommand>(
-          new PivotCommand(GetApplication()->GetStage(), targets, time))
+          new PivotCommand(GetApplication()->GetWorkStage(), targets, time))
         );
       }
 
@@ -328,16 +328,11 @@ PropertyUI::_DrawVariantSetsCombos(pxr::UsdPrim &prim)
 bool 
 PropertyUI::Draw()
 {
-  if (!_prim)return false;
+  
   if (!_initialized)_initialized = true;
 
   Time& time = GetApplication()->GetTime();
-
-  if (_prim.IsA<pxr::UsdGeomXform>()) {
-    pxr::UsdGeomXform xfo(_prim);
-    pxr::TfTokenVector attrNames = xfo.GetSchemaAttributeNames();
-  }
-
+  
   bool opened;
   const pxr::GfVec2f pos(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
@@ -352,56 +347,63 @@ PropertyUI::Draw()
     ImGuiCol_WindowBg
   );
 
-  if (_DrawAssetInfo(_prim))
-    ImGui::Separator();
-
-  if (_DrawXformsCommon(pxr::UsdTimeCode::Default()))
-    ImGui::Separator();
-
-  if (ImGui::BeginTable("##DrawPropertyEditorTable", 3, 
-    ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24);
-    ImGui::TableSetupColumn("Property name");
-    ImGui::TableSetupColumn("Value");
-    ImGui::TableHeadersRow();
-
-    int miniButtonId = 0;
-
-    // Draw attributes
-    for (pxr::UsdAttribute& attribute : _prim.GetAttributes()) {
-      ImGui::TableNextRow(ImGuiTableRowFlags_None, 12);
-      ImGui::TableSetColumnIndex(0);
-      ImGui::PushID(miniButtonId++);
-      //DrawPropertyMiniButton(attribute, editTarget, currentTime);
-      ImGui::PopID();
-
-      ImGui::TableSetColumnIndex(1);
-      UIUtils::AddAttributeDisplayName(attribute);
-
-      ImGui::TableSetColumnIndex(2);
-      ImGui::PushItemWidth(-FLT_MIN);
-      _DrawAttributeValueAtTime(attribute, time.GetActiveTime());
+  if (_prim.IsValid()) {
+    if (_prim.IsA<pxr::UsdGeomXform>()) {
+      pxr::UsdGeomXform xfo(_prim);
+      pxr::TfTokenVector attrNames = xfo.GetSchemaAttributeNames();
     }
 
-    /*
-    // Draw relations
-    for (auto& relationship : prim.GetRelationships()) {
-      ImGui::TableNextRow();
+    if (_DrawAssetInfo(_prim))
+      ImGui::Separator();
 
-      ImGui::TableSetColumnIndex(0);
-      ImGui::PushID(miniButtonId++);
-      DrawPropertyMiniButton(relationship, editTarget, currentTime);
-      ImGui::PopID();
+    if (_DrawXformsCommon(pxr::UsdTimeCode::Default()))
+      ImGui::Separator();
 
-      ImGui::TableSetColumnIndex(1);
-      DrawUsdRelationshipDisplayName(relationship);
+    if (ImGui::BeginTable("##DrawPropertyEditorTable", 3,
+      ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+      ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24);
+      ImGui::TableSetupColumn("Property name");
+      ImGui::TableSetupColumn("Value");
+      ImGui::TableHeadersRow();
 
-      ImGui::TableSetColumnIndex(2);
-      DrawUsdRelationshipList(relationship);
+      int miniButtonId = 0;
+
+      // Draw attributes
+      for (pxr::UsdAttribute& attribute : _prim.GetAttributes()) {
+        ImGui::TableNextRow(ImGuiTableRowFlags_None, 12);
+        ImGui::TableSetColumnIndex(0);
+        ImGui::PushID(miniButtonId++);
+        //DrawPropertyMiniButton(attribute, editTarget, currentTime);
+        ImGui::PopID();
+
+        ImGui::TableSetColumnIndex(1);
+        UIUtils::AddAttributeDisplayName(attribute);
+
+        ImGui::TableSetColumnIndex(2);
+        ImGui::PushItemWidth(-FLT_MIN);
+        _DrawAttributeValueAtTime(attribute, time.GetActiveTime());
+      }
+
+      /*
+      // Draw relations
+      for (auto& relationship : prim.GetRelationships()) {
+        ImGui::TableNextRow();
+
+        ImGui::TableSetColumnIndex(0);
+        ImGui::PushID(miniButtonId++);
+        DrawPropertyMiniButton(relationship, editTarget, currentTime);
+        ImGui::PopID();
+
+        ImGui::TableSetColumnIndex(1);
+        DrawUsdRelationshipDisplayName(relationship);
+
+        ImGui::TableSetColumnIndex(2);
+        DrawUsdRelationshipList(relationship);
+      }
+      */
+
+      ImGui::EndTable();
     }
-    */
-
-    ImGui::EndTable();
   }
 
   ImGui::End();

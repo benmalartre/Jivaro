@@ -17,7 +17,6 @@ PXR_NAMESPACE_OPEN_SCOPE
 Scene::Scene()
 {
   _stage = pxr::UsdStage::CreateInMemory((char*)this);
-  UndoRouter::Get().TrackLayer(_stage->GetRootLayer());
 }
 
 Scene::~Scene()
@@ -39,14 +38,29 @@ Scene::Save(const std::string& filename)
 void 
 Scene::Export(const std::string& filename)
 {
-
+  
 }
 
+pxr::UsdStageRefPtr
+Scene::GetStage()
+{
+  return _stage;
+}
 
+void
+Scene::Update(double time)
+{
+  for (auto& meshMapIt : _meshes) {
+    pxr::UsdGeomMesh mesh(_stage->GetPrimAtPath(meshMapIt.first));
+    mesh.GetPointsAttr().Set(meshMapIt.second.GetPositions(), time);
+  }
+}
 
 Mesh* Scene::AddMesh(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
-  if (!_stage->GetPrimAtPath(path).IsDefined()) {
+  bool isDefined = _stage->HasDefaultPrim() && 
+    _stage->GetPrimAtPath(path).IsDefined();
+  if (!isDefined) {
     pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(_stage, path);
     usdMesh.CreatePointsAttr();
     usdMesh.CreateNormalsAttr();
@@ -146,6 +160,18 @@ void Scene::TestVoronoi()
 
   //stage->SetDefaultPrim(usdMesh.GetPrim());
   //_rootStage->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
+}
+
+Geometry*
+Scene::GetGeometry(const pxr::SdfPath& path)
+{
+  if (_meshes.find(path) != _meshes.end()) {
+    return(Geometry*)& _meshes[path];
+  } else if (_curves.find(path) != _curves.end()) {
+    return(Geometry*)&_curves[path];
+  }if (_points.find(path) != _points.end()) {
+    return(Geometry*)&_points[path];
+  }
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

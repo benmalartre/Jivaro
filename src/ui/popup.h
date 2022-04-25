@@ -45,13 +45,23 @@ public:
   // get the height of the parent view
   int GetHeight() override { return _height; };
 
-  // is popup done
+  // is popup done, if true popup will be destroyed
   bool IsDone() { return _done; };
+
+  // is popup sync, if true it will update background window
   bool IsSync() { return _sync; };
+
+  // is popup dimmer, if true it will dim background window
+  bool IsDimmer() { return _dimmer; };
+
+  // is popup cancel
+  bool IsCancel() { return _cancel; };
 
 protected:
   bool                        _done;
+  bool                        _cancel;
   bool                        _sync;
+  bool                        _dimmer;
   int                         _x;
   int                         _y;
   int                         _width;
@@ -97,6 +107,19 @@ private:
   char                     _filter[NODE_FILTER_SIZE];
   short                    _p; // cursor position
   short                    _i; // index in filterded nodes
+};
+
+class NamePopupUI : public PopupUI
+{
+public:
+  NamePopupUI(int x, int y, int width, int height);
+  NamePopupUI(int x, int y, int width, int height, const std::string& name);
+  ~NamePopupUI() override;
+
+  void SetName(const std::string& name);
+  bool Draw() override;
+private:
+  char _value[255];
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

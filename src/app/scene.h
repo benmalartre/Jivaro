@@ -35,6 +35,7 @@ public:
   void Save(const std::string& filename);
   void Export(const std::string& filename);
   void TestVoronoi();
+  void Update(double time);
 
   Mesh* AddMesh(pxr::SdfPath& path, 
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
@@ -42,6 +43,16 @@ public:
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
   Points* AddPoints(pxr::SdfPath& path, 
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+
+  _MeshMap& GetMeshes() { return _meshes; };
+  const _MeshMap& GetMeshes() const { return _meshes; };
+  _CurveMap& GetCurves() { return _curves; };
+  const _CurveMap& GetCurves() const { return _curves; };
+  _PointsMap& GetPoints() { return _points; };
+  const _PointsMap& GetPoints() const { return _points; };
+
+  Geometry* GetGeometry(const pxr::SdfPath& path);
+  pxr::UsdStageRefPtr GetStage();
 
 private:
   pxr::UsdStageRefPtr _inputStage;

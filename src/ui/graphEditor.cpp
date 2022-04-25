@@ -22,9 +22,17 @@
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../command/block.h"
+#include "../command/command.h"
+
 
 
 PXR_NAMESPACE_OPEN_SCOPE
+
+const pxr::TfToken GraphEditorUI::NodeExpendState[3] = {
+    pxr::UsdUITokens->closed,
+    pxr::UsdUITokens->minimized,
+    pxr::UsdUITokens->open
+};
 
 bool 
 _ConnexionPossible(const pxr::SdfValueTypeName& lhs, const pxr::SdfValueTypeName& rhs)
@@ -150,7 +158,7 @@ _GetHoveredColor(int color)
 static pxr::UsdPrim TestUsdShadeAPI()
 {
   UndoBlock editBlock;
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+  pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
 
   const pxr::SdfPath GRAPH_PATH("/graph");
   const pxr::TfToken GET("get");
@@ -184,11 +192,13 @@ static pxr::UsdPrim TestUsdShadeAPI()
   outPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
   pxr::UsdShadeInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
   outAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeInput outVal = set.CreateInput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdShadeInput outVal0 = set.CreateInput(pxr::TfToken("Value0"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdShadeInput outVal1 = set.CreateInput(pxr::TfToken("Value1"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdShadeInput outVal2 = set.CreateInput(pxr::TfToken("Value2"), pxr::SdfValueTypeNames->Point3f);
 
 
   input.ConnectToSource(inVal);
-  outVal.ConnectToSource(output);
+  outVal0.ConnectToSource(output);
 
   stage->SetDefaultPrim(graph.GetPrim());
 
@@ -310,8 +320,8 @@ GraphEditorUI::Port::Port(GraphEditorUI::Node* node, const pxr::UsdShadeOutput& 
 bool 
 GraphEditorUI::Port::IsConnected(GraphEditorUI* editor, GraphEditorUI::Connexion* foundConnexion)
 {
-  GraphEditorUI::Graph& graph = editor->GetGraph();
-  for (auto& connexion : graph.GetConnexions()) {
+  GraphEditorUI::Graph* graph = editor->GetGraph();
+  for (auto& connexion : graph->GetConnexions()) {
     if (connexion->GetStart() == this || connexion->GetEnd() == this) {
       foundConnexion = connexion;
       return true;
@@ -329,6 +339,12 @@ GraphEditorUI::Port::Contains(const pxr::GfVec2f& position,
     position[1] + NODE_PORT_RADIUS >= _pos[1] - extend[1] &&
     position[1] + NODE_PORT_RADIUS <= _pos[1] + _size[1] + extend[1])return true;
   return false;
+}
+
+pxr::SdfPath
+GraphEditorUI::Port::GetPath()
+{
+  return _node->GetPrim().GetPath().AppendProperty(GetName());
 }
 
 void
@@ -517,7 +533,16 @@ GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
   pxr::UsdUINodeGraphNodeAPI api(prim);
   api.GetPosAttr().Get(&_pos);
   api.GetSizeAttr().Get(&_size);
+  pxr::TfToken expended;
 
+  api.GetExpansionStateAttr().Get(&expended);
+  if (expended == pxr::UsdUITokens->closed) {
+    _expended = COLLAPSED;
+  } else if (expended == pxr::UsdUITokens->minimized) {
+    _expended = CONNECTED;
+  } else if (expended == pxr::UsdUITokens->open) {
+    _expended = EXPENDED;
+  }
 }
 
 // NodeUI destructor
@@ -700,17 +725,34 @@ GraphEditorUI::Node::Update()
   sizeAttr.Set(_size);
 }
 
+void
+GraphEditorUI::Node::UpdateExpansionState()
+{
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  pxr::UsdAttribute expansionAttr = api.GetExpansionStateAttr();
+  if (!expansionAttr.IsValid()) {
+    _expended = COLLAPSED;
+    return;
+  }
+  pxr::TfToken state;
+  expansionAttr.Get(&state);
+  if (state == pxr::UsdUITokens->closed) {
+    _expended = COLLAPSED;
+  }
+  else if (state == pxr::UsdUITokens->minimized) {
+    _expended = CONNECTED;
+  }
+  else if (state == pxr::UsdUITokens->open) {
+    _expended = EXPENDED;
+  }
+}
+
 bool 
 GraphEditorUI::Node::IsVisible(GraphEditorUI* editor)
 {
   return true;
 }
 
-void 
-GraphEditorUI::Node::_ExpendCallback(GraphEditorUI::Node* node)
-{
-  node->_expended = (node->_expended++) % 3;
-}
 
 // Node draw
 //------------------------------------------------------------------------------
@@ -783,7 +825,9 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     strcat(expendedName, (const char*)this);
 
     if (ImGui::Selectable(&expendedName[0], true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
-      _expended = ++_expended % 3;
+      _expended = (_expended++) % 3;
+      GetApplication()->AddCommand(std::shared_ptr<ExpendNodeCommand>(
+        new ExpendNodeCommand({ this }, NodeExpendState[_expended])));
     }
 
     drawList->AddRectFilled(
@@ -866,6 +910,8 @@ GraphEditorUI::Graph::~Graph()
 void GraphEditorUI::Graph::Populate(pxr::UsdPrim& prim)
 {
   _prim = prim;
+  _nodes.clear();
+  _connexions.clear();
   _DiscoverNodes(_prim);
   _DiscoverConnexions(_prim);
 }
@@ -987,20 +1033,16 @@ GraphEditorUI::Graph::_RecurseConnexions(pxr::UsdPrim& prim)
     for (pxr::UsdShadeInput& input : shader.GetInputs()) {
       if (input.GetConnectability() == pxr::UsdShadeTokens->full) {
         pxr::UsdShadeInput::SourceInfoVector connexions = input.GetConnectedSources();
-        if (connexions.size()) {
-          for (auto& connexion : connexions) {
-            GraphEditorUI::Node* source = GetNode(connexion.source.GetPrim());
-            GraphEditorUI::Node* destination = GetNode(prim);
-            std::cout << connexion.source.GetPrim().GetPath() << ":" << source << std::endl;
-            std::cout << prim.GetPath() << ":" << destination << std::endl;
-            if (!source || !destination)continue;
-            GraphEditorUI::Port* start = source->GetPort(connexion.sourceName);
-            GraphEditorUI::Port* end = destination->GetPort(input.GetBaseName());
+        for (auto& connexion : connexions) {
+          GraphEditorUI::Node* source = GetNode(connexion.source.GetPrim());
+          GraphEditorUI::Node* destination = GetNode(prim);
+          if (!source || !destination)continue;
+          GraphEditorUI::Port* start = source->GetPort(connexion.sourceName);
+          GraphEditorUI::Port* end = destination->GetPort(input.GetBaseName());
 
-            if (start && end) {
-              GraphEditorUI::Connexion* connexion = new Connexion(start, end, start->GetColor());
-              _connexions.push_back(connexion);
-            }
+          if (start && end) {
+            GraphEditorUI::Connexion* connexion = new Connexion(start, end, start->GetColor());
+            _connexions.push_back(connexion);
           }
         }
       }
@@ -1030,7 +1072,7 @@ ImGuiWindowFlags GraphEditorUI::_flags =
 //------------------------------------------------------------------------------
 GraphEditorUI::GraphEditorUI(View* parent)
   : HeadedUI(parent, "Graph")
-  , _hoveredNode(NULL), _currentNode(NULL)
+  , _graph(NULL), _hoveredNode(NULL), _currentNode(NULL)
   , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
   , _scale(1.f), _invScale(1.f), _fontIndex(0), _fontScale(1.0)
   , _offset(pxr::GfVec2f(0.f, 0.f)), _dragOffset(pxr::GfVec2f(0.f, 0.f))
@@ -1097,7 +1139,7 @@ RefreshGraphCallback(GraphEditorUI* editor)
   if (selection->GetNumSelectedItems()) {
     Selection::Item& item = selection->GetItem(0);
     if (item.type == Selection::PRIM) {
-      pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+      pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
       pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
       
       if (selected.IsValid() && selected.IsA<pxr::UsdShadeNodeGraph>()) {
@@ -1114,14 +1156,19 @@ RefreshGraphCallback(GraphEditorUI* editor)
 bool
 GraphEditorUI::Populate(pxr::UsdPrim& prim)
 {
-  _graph.Populate(prim);
+  if (_graph)delete _graph;
+  _graph = new Graph(prim);
   return true;
 }
 
 void
 GraphEditorUI::Clear()
 {
-  _graph.Clear();
+  if (_graph) {
+    _graph->Clear();
+    delete _graph;
+  }
+  _graph = NULL;
 }
 
 // read
@@ -1228,47 +1275,50 @@ GraphEditorUI::Draw()
   ImGui::PushFont(GetWindow()->GetRegularFont(_fontIndex));
   ImGui::SetWindowFontScale(_fontScale);
 
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-  for (auto& connexion : _graph.GetConnexions()) {
-    connexion->Draw(this);
-  }
+  if (_graph) {
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    for (auto& connexion : _graph->GetConnexions()) {
+      connexion->Draw(this);
+    }
 
-  for (auto& node : _graph.GetNodes()) {
-    node->Draw(this);
-  }
+    for (auto& node : _graph->GetNodes()) {
+      node->Draw(this);
+    }
 
-  if (_connect) {
-    const GraphEditorUI::Node* startNode = _connector.startPort->GetNode();
-    const pxr::GfVec2f viewPos = GetPosition();
-    pxr::GfVec2f portPos = _connector.startPort->GetPosition();
-    if (_connector.inputOrOutput) portPos += pxr::GfVec2f(startNode->GetWidth(), 0.f);
-    const pxr::GfVec2f startPos = GridPositionToViewPosition(portPos + startNode->GetPosition());
-    const pxr::GfVec2f endPos = ImGui::GetMousePos();
-    const pxr::GfVec2f
-      startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
-    const pxr::GfVec2f
-      endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
+    if (_connect) {
+      const GraphEditorUI::Node* startNode = _connector.startPort->GetNode();
+      const pxr::GfVec2f viewPos = GetPosition();
+      pxr::GfVec2f portPos = _connector.startPort->GetPosition();
+      if (_connector.inputOrOutput) portPos += pxr::GfVec2f(startNode->GetWidth(), 0.f);
+      const pxr::GfVec2f startPos = GridPositionToViewPosition(portPos + startNode->GetPosition());
+      const pxr::GfVec2f endPos = ImGui::GetMousePos();
+      const pxr::GfVec2f
+        startTangent(startPos[0] * 0.75f + endPos[0] * 0.25f, startPos[1]);
+      const pxr::GfVec2f
+        endTangent(startPos[0] * 0.25f + endPos[0] * 0.75f, endPos[1]);
 
-    drawList->AddBezierCurve(
-      startPos,
-      startTangent,
-      endTangent,
-      endPos,
-      _connector.color,
-      NODE_CONNEXION_THICKNESS * _scale);
-  } else if (_marque) {
-    const pxr::GfVec2f viewPos = GetPosition();
-    drawList->AddRect(
-      _marquee.start + viewPos,
-      _marquee.end + viewPos,
-      ImColor(255, 128, 0, 255),
-      0.f, 0, 2);
+      drawList->AddBezierCurve(
+        startPos,
+        startTangent,
+        endTangent,
+        endPos,
+        _connector.color,
+        NODE_CONNEXION_THICKNESS * _scale);
+    }
+    else if (_marque) {
+      const pxr::GfVec2f viewPos = GetPosition();
+      drawList->AddRect(
+        _marquee.start + viewPos,
+        _marquee.end + viewPos,
+        ImColor(255, 128, 0, 255),
+        0.f, 0, 2);
 
-    drawList->AddRectFilled(
-      _marquee.start + viewPos,
-      _marquee.end + viewPos,
-      ImColor(255, 128, 0, 64),
-      0.f, 0);
+      drawList->AddRectFilled(
+        _marquee.start + viewPos,
+        _marquee.end + viewPos,
+        ImColor(255, 128, 0, 64),
+        0.f, 0);
+    }
   }
 
   ImGui::SetCursorPos(ImVec2(0, 0));
@@ -1285,24 +1335,24 @@ GraphEditorUI::Draw()
   if (mousePos[0] > 0 && mousePos[0] < 100 && mousePos[1] > 0 && mousePos[1] < 32) {
     _parent->SetFlag(View::DISCARDMOUSEBUTTON);
   }
-  DiscardEventsIfMouseInsideBox(pxr::GfVec2f(0, 0), pxr::GfVec2f(100, 32));
+  DiscardEventsIfMouseInsideBox(pxr::GfVec2f(0, 0), pxr::GfVec2f(100, 64));
   if (ImGui::Button("TEST")) {
     Selection* selection = GetApplication()->GetSelection();
     bool done = false;
     if (selection->GetNumSelectedItems()) {
       Selection::Item& item = selection->GetItem(0);
       if (item.type == Selection::PRIM) {
-        pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+        pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
         pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
         if (selected.IsValid() && selected.IsA<pxr::UsdShadeNodeGraph>()) {
-          _graph.Populate(selected);
+          _graph->Populate(selected);
           done = true;
         }
       }
     } if (!done) {
       //_stage->Export("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
       pxr::UsdPrim graphPrim = TestUsdShadeAPI();
-      _graph.Populate(graphPrim);
+      Populate(graphPrim);
     }
   }
   ImGui::SameLine();
@@ -1311,8 +1361,8 @@ GraphEditorUI::Draw()
     const std::string identifier = "./usd/graph.usda";
     //pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
     //stage->GetRootLayer()->TransferContent(GetApplication()->GetStage()->GetRootLayer());
-    std::cout << "ON SAVE DEFAULT PRIM : " << GetApplication()->GetStage()->GetDefaultPrim().GetPath() << std::endl;
-    GetApplication()->GetStage()->Export(identifier);
+    std::cout << "ON SAVE DEFAULT PRIM : " << GetApplication()->GetDisplayStage()->GetDefaultPrim().GetPath() << std::endl;
+    GetApplication()->GetDisplayStage()->Export(identifier);
   }
   ImGui::SameLine();
 
@@ -1344,7 +1394,8 @@ GraphEditorUI::Init()
   _selectedConnexions.clear();
   _currentNode = _hoveredNode = NULL;
   _currentPort = _hoveredPort = NULL;
-
+  _graph = NULL;
+  _drag = _marque = false;
   _parent->SetDirty();
   _currentX = _currentY = 0.f;
 }
@@ -1379,10 +1430,11 @@ GraphEditorUI::OnNewSceneNotice(const NewSceneNotice& n)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
-  if (!_graph.GetPrim().IsValid()) {
+  if (!_graph)return;
+  if (!_graph->GetPrim().IsValid()) {
     Clear();
   } else {
-    Populate(_graph.GetPrim());
+    Populate(_graph->GetPrim());
   }
   _parent->SetDirty();
 }
@@ -1421,7 +1473,7 @@ GraphEditorUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend)
   GetRelativeMousePosition(mousePos[0], mousePos[1], viewPos[0], viewPos[1]);
 
   Node* hovered = NULL;
-  std::vector<GraphEditorUI::Node*>& nodes = _graph.GetNodes();
+  std::vector<GraphEditorUI::Node*>& nodes = _graph->GetNodes();
  
   for (auto node = nodes.rbegin(); node != nodes.rend(); ++node) {
     if ((*node)->Contains(ViewPositionToGridPosition(viewPos),
@@ -1430,7 +1482,9 @@ GraphEditorUI::_GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend)
       break;
     }
   }
-  if (_hoveredNode && _hoveredNode != hovered)_hoveredNode->SetState(ITEM_STATE_HOVERED, false);
+  if (_hoveredNode && _hoveredNode != hovered) {
+    _hoveredNode->SetState(ITEM_STATE_HOVERED, false);
+  }
   if (hovered) {
     hovered->SetState(ITEM_STATE_HOVERED, true);
     _hoveredNode = hovered;
@@ -1472,7 +1526,8 @@ GraphEditorUI::_GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node)
   Port* port = NULL;
   port = &(node->GetPorts()[portIndex]);
 
-  if (port->Contains(relativePosition) && port->GetFlags() & GraphEditorUI::Port::INPUT) {
+  if (port->Contains(relativePosition) && 
+    port->GetFlags() & GraphEditorUI::Port::INPUT) {
     port->SetState(ITEM_STATE_HOVERED, true);
     _hoveredPort = port;
     _inputOrOutput = 0;
@@ -1495,7 +1550,7 @@ GraphEditorUI::_GetConnexionUnderMouse(const pxr::GfVec2f& mousePos)
     _hoveredConnexion = NULL;
   }
   const pxr::GfVec2f gridPosition = ViewPositionToGridPosition(mousePos);
-  for (auto& connexion : _graph.GetConnexions()) {
+  for (auto& connexion : _graph->GetConnexions()) {
     const pxr::GfRange2f range = connexion->GetBoundingBox();
     const pxr::GfVec2f extend(2, 2);
     if (range.Contains(gridPosition) && connexion->Contains(mousePos, extend)) {
@@ -1533,6 +1588,7 @@ GraphEditorUI::_GetConnexionUnderMouse(const pxr::GfVec2f& mousePos)
 void 
 GraphEditorUI::MouseButton(int button, int action, int mods)
 {
+  if (!_graph)return;
   const pxr::GfVec2f& mousePos = ImGui::GetMousePos();
   _lastX = mousePos[0];
   _lastY = mousePos[1];
@@ -1587,7 +1643,8 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
     
     else if (action == GLFW_RELEASE) {
       _navigate = NavigateMode::IDLE;
-       if(_drag == true) {
+ 
+       if(_drag == true && _dragOffset.GetLength() > 0.000001f) {
         GetApplication()->AddCommand(std::shared_ptr<MoveNodeCommand>(
           new MoveNodeCommand(_selectedNodes, _dragOffset)));
       }
@@ -1626,7 +1683,7 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
     if (mappedKey == GLFW_KEY_DELETE) {
       std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
       for (auto& node : _selectedNodes) {
-        _graph.RemoveNode(node);
+        _graph->RemoveNode(node);
       }
     }
     else if (mappedKey == GLFW_KEY_R) {
@@ -1642,9 +1699,9 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
       FrameAll();
     }
     else if (mappedKey == GLFW_KEY_TAB) {
-      NodePopupUI* popup = new NodePopupUI((int)_lastX, (int)_lastY, 200, 300);
-      popup->BuildNodeList();
-      GetApplication()->GetActiveWindow()->SetPopup(popup);
+      //NodePopupUI* popup = new NodePopupUI((int)_lastX, (int)_lastY, 200, 300);
+      NamePopupUI* popup = new NamePopupUI((int)_lastX, (int)_lastY, 200, 100);
+      _parent->GetWindow()->SetPopup(popup);
     }
   }
 }
@@ -1658,6 +1715,7 @@ GraphEditorUI::Input(int key)
 void 
 GraphEditorUI::MouseMove(int x, int y)
 {
+  if (!_graph)return;
   if (_navigate ) {
     switch (_navigate) {
     case NavigateMode::PAN:
@@ -1752,20 +1810,14 @@ void
 GraphEditorUI::EndConnexion()
 {
   if (_connector.startPort && _connector.endPort) {
-    Connexion* connexion = new Connexion(_connector.startPort, 
-      _connector.endPort, _connector.color);
-
-    pxr::UsdPrim src = _connector.startPort->GetNode()->GetPrim();
-    pxr::UsdPrim dst = _connector.endPort->GetNode()->GetPrim();
-
-
-    std::string srcName = "input:";
-    srcName += _connector.endPort->GetName().GetString();
-    pxr::UsdRelationship relation = dst.CreateRelationship(TfToken(srcName));
-    relation.AddTarget(src.GetPath().AppendProperty(_connector.startPort->GetName()));
-
-    dst.GetRelationships().push_back(std::move(relation));
-    _graph.AddConnexion(connexion);
+    if (!_connector.inputOrOutput) {
+      GetApplication()->AddCommand(std::shared_ptr<ConnectNodeCommand>(
+        new ConnectNodeCommand(_connector.endPort->GetPath(), _connector.startPort->GetPath())));
+    }
+    else {
+      GetApplication()->AddCommand(std::shared_ptr<ConnectNodeCommand>(
+        new ConnectNodeCommand(_connector.startPort->GetPath(), _connector.endPort->GetPath())));
+    }
   }
   _connect = false;
   _connector.startPort = _connector.endPort = NULL;
@@ -1792,8 +1844,6 @@ GraphEditorUI::ClearSelection()
     for (auto& cnx : _selectedConnexions)
       cnx->SetState(ITEM_STATE_SELECTED, false);
   _selectedConnexions.clear();
-  GetApplication()->AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, pxr::SdfPathVector(), SelectCommand::SET)));
 }
 
 void 
@@ -1802,7 +1852,7 @@ GraphEditorUI::AddToSelection(Node* node, bool bringToFront)
   node->SetState(ITEM_STATE_SELECTED, true);
   _selectedNodes.insert(node);
   
-  std::vector<GraphEditorUI::Node*>& nodes = _graph.GetNodes();
+  std::vector<GraphEditorUI::Node*>& nodes = _graph->GetNodes();
   if (bringToFront) {
     for (size_t i = 0; i < nodes.size(); ++i) {
       if (nodes[i] == node && nodes.back() != node) {
@@ -1810,8 +1860,6 @@ GraphEditorUI::AddToSelection(Node* node, bool bringToFront)
       }
     }
   }
-  GetApplication()->AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, GetSelectedNodesPath(), SelectCommand::SET)));
 }
 
 void 
@@ -1819,8 +1867,6 @@ GraphEditorUI::RemoveFromSelection(Node* node)
 {
   node->SetState(ITEM_STATE_SELECTED, false);
   _selectedNodes.erase(node);
-  GetApplication()->AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, GetSelectedNodesPath(), SelectCommand::SET)));
 }
 
 void
@@ -1848,7 +1894,7 @@ GraphEditorUI::MarqueeSelect(int mod)
   if(start[1] > end[1])std::swap(start[1], end[1]);
 
   ClearSelection();
-  for (auto& node : _graph.GetNodes()) {
+  for (auto& node : _graph->GetNodes()) {
     if (node->Intersect(start, end)) AddToSelection(node, false);
   }
   _marque = false;
@@ -1866,6 +1912,7 @@ GraphEditorUI::ResetScaleOffset() {
 void 
 GraphEditorUI::FrameSelection()
 {
+  if (!_graph)return;
   if (!_selectedNodes.size())return;
 
   pxr::GfRange2f selectedRange;
@@ -1897,8 +1944,9 @@ GraphEditorUI::FrameSelection()
 void 
 GraphEditorUI::FrameAll()
 {
+  if (!_graph) return;
   pxr::GfRange2f allRange;
-  for (const auto& node : _graph.GetNodes()) {
+  for (const auto& node : _graph->GetNodes()) {
     allRange.ExtendBy(
       pxr::GfRange2f(
         node->GetPosition(),

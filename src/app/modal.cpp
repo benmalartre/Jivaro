@@ -120,6 +120,7 @@ ModalDemo::ModalDemo(int x, int y, const std::string& title)
 
 void ModalDemo::_LoopImpl()
 {
+
 }
 
 //==============================================================================

@@ -129,7 +129,7 @@ ExplorerUI::MouseButton(int button, int action, int mods)
   Application* app = GetApplication();
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_RELEASE) {
-      if (app->GetStage()->GetPrimAtPath(_current).IsValid()) {
+      if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
         if (mods & GLFW_MOD_CONTROL) {
           app->ToggleSelection({ _current });
         }
@@ -446,7 +446,7 @@ ExplorerUI::Draw()
   /// Draw the hierarchy of the stage
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   if (!stage) return false;
 
   const pxr::GfVec2f min(GetX(), GetY());

@@ -411,7 +411,7 @@ bool ViewportUI::Draw()
     // clear to black
     glClearColor(0.25f, 0.25f, 0.25f, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  } else if (app->GetStage() != nullptr) {
+  } else if (app->GetDisplayStage() != nullptr) {
     _engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
       pxr::GfVec4d(
@@ -457,7 +457,7 @@ bool ViewportUI::Draw()
       glClearColor(0.25f, 0.25f, 0.25f, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      _engine->Render(app->GetStage()->GetPseudoRoot(), _renderParams);
+      _engine->Render(app->GetDisplayStage()->GetPseudoRoot(), _renderParams);
       _engine->SetDirty(false);
       _drawTarget->Unbind();
     }
@@ -685,7 +685,7 @@ bool ViewportUI::Pick(int x, int y, int mods)
   if (_engine->TestIntersection(
     pickFrustum.ComputeViewMatrix(),
     pickFrustum.ComputeProjectionMatrix(),
-    GetApplication()->GetStage()->GetPseudoRoot(),
+    GetApplication()->GetDisplayStage()->GetPseudoRoot(),
     _renderParams,
     &outHitPoint,
     &outHitNormal,

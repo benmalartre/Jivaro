@@ -3,6 +3,8 @@
 #include <pxr/usd/sdf/primSpec.h>
 #include <pxr/usd/sdf/copyUtils.h>
 #include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdShade/nodeGraph.h>
+#include <pxr/usd/usdShade/connectableAPI.h>
 
 #include "../command/command.h"
 #include "../command/block.h"
@@ -476,6 +478,36 @@ void MoveNodeCommand::Do()
 }
 
 //==================================================================================
+// Expend Node
+// The current expansionState of the node in the ui. 
+// 'open' = fully expanded
+// 'closed' = fully collapsed
+// 'minimized' = should take the least space possible
+//==================================================================================
+ExpendNodeCommand::ExpendNodeCommand(
+  const GraphEditorUI::NodeSet& nodes, const pxr::TfToken& state)
+  : Command(true)
+  , _nodes(nodes)
+{
+  for (auto& node : nodes) {
+    pxr::UsdUINodeGraphNodeAPI api(node->GetPrim());
+    api.GetExpansionStateAttr().Set(state);
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  AttributeChangedNotice().Send();
+}
+
+void ExpendNodeCommand::Do()
+{
+  std::cout << "UNDO EXPEND NODE " << std::endl;
+  _inverse.Invert();
+  for (auto& node : _nodes) {
+    node->UpdateExpansionState();
+  }
+  AttributeChangedNotice().Send();
+}
+
+//==================================================================================
 // Connect Node
 //==================================================================================
 ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::SdfPath& destination)
@@ -483,7 +515,14 @@ ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::Sd
   , _source(source)
   , _destination(destination)
 {
-  //pxr::UsdShadeConnectableAPI api()
+  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+  pxr::UsdShadeShader lhs(stage->GetPrimAtPath(source.GetPrimPath()));
+  pxr::UsdShadeShader rhs(stage->GetPrimAtPath(destination.GetPrimPath()));
+
+  pxr::UsdShadeOutput output = lhs.GetOutput(source.GetNameToken());
+  pxr::UsdShadeInput input = rhs.GetInput(destination.GetNameToken());
+
+  input.ConnectToSource(output);
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }

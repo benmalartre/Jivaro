@@ -52,7 +52,8 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), _tools(Tool()), _viewport(nullptr)
+  _mainWindow(nullptr), _activeWindow(nullptr), _tools(Tool()), 
+  _viewport(nullptr), _execute(false)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _mainWindow->Init(this);
@@ -61,7 +62,8 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), _tools(Tool()), _viewport(nullptr)
+  _mainWindow(nullptr), _activeWindow(nullptr), _tools(Tool()), 
+  _viewport(nullptr), _execute(false)
 {
   _mainWindow = CreateFullScreenWindow();
   _mainWindow->Init(this);
@@ -496,6 +498,9 @@ Application::Update()
     if(_time.PlayBack()) {
       if(_viewport)_viewport->GetEngine()->SetDirty(true);
     }
+  }  
+  if (_workspace->GetExecStage()) {
+    _workspace->UpdateExec(GetTime().GetActiveTime());
   }
 }
 
@@ -567,7 +572,7 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
-  _tools.ResetSelection();
+ _tools.ResetSelection();
   GetMainWindow()->ForceRedraw();
   _DirtyAllEngines(_engines);
 }
@@ -589,6 +594,7 @@ Application::AddCommand(std::shared_ptr<Command> command)
 void 
 Application::Undo()
 {
+  std::cout << " APPLICATION UNDO !!" << std::endl;
   _manager.Undo();
 }
 
@@ -605,7 +611,7 @@ Application::Delete()
   const pxr::SdfPathVector& paths = selection->GetSelectedPrims();
   selection->Clear();
   AddCommand(std::shared_ptr<DeletePrimCommand>(
-    new DeletePrimCommand(GetStage(), paths)));
+    new DeletePrimCommand(GetWorkStage(), paths)));
 }
 
 void
@@ -615,7 +621,7 @@ Application::Duplicate()
   if (!selection->IsEmpty()) {
     const Selection::Item& item = selection->GetItem(0);
     AddCommand(std::shared_ptr<DuplicatePrimCommand>(
-      new DuplicatePrimCommand(GetStage(), item.path)));
+      new DuplicatePrimCommand(GetWorkStage(), item.path)));
   }
 }
 
@@ -638,27 +644,56 @@ Application::NewScene()
 
 void Application::SaveScene()
 {
-  GetStage()->GetRootLayer()->Save(true);
+  GetWorkStage()->GetRootLayer()->Save(true);
 }
 
 void Application::SaveSceneAs(const std::string& filename)
 {
-  GetStage()->GetRootLayer()->Save(true);
+  GetWorkStage()->GetRootLayer()->Save(true);
 }
+
+// execution
+void 
+Application::ToggleExec() 
+{
+  _execute = 1 - _execute; 
+  if (_execute) {
+    _workspace->AddExecStage();
+  }
+};
+
+void 
+Application::SetExec(bool state) 
+{ 
+  _execute = state; 
+};
+
+bool 
+Application::GetExec() 
+{ 
+  return _execute; 
+};
 
 // main loop
 void 
 Application::MainLoop()
 {
-  if(!_mainWindow->IsIdle())
-    _mainWindow->MainLoop();
-  /*
-  if (_stage) {
-    pxr::SdfLayerRefPtr flattened = _stage->Flatten();
-    if (flattened)
-      flattened->Export("E:/Projects/RnD/USD_BUILD/assets/animX/flattened.usda");
-  }
-  */
+  if (_mainWindow->IsIdle())return;
+  _mainWindow->MainLoop();
+}
+
+// get stage for display
+pxr::UsdStageRefPtr&
+Application::GetDisplayStage()
+{
+  return _workspace->GetDisplayStage();
+}
+
+// get stage for work
+pxr::UsdStageRefPtr&
+Application::GetWorkStage()
+{
+  return _workspace->GetWorkStage();
 }
 
 // selection
@@ -704,7 +739,7 @@ Application::GetStageBoundingBox()
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
-  return bboxCache.ComputeWorldBound(_workspace->GetRootStage()->GetPseudoRoot());
+  return bboxCache.ComputeWorldBound(_workspace->GetWorkStage()->GetPseudoRoot());
 }
 
 pxr::GfBBox3d 
@@ -717,7 +752,7 @@ Application::GetSelectionBoundingBox()
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const Selection::Item& item = _selection[n];
     if (item.type == Selection::Type::PRIM) {
-      pxr::UsdPrim prim = _workspace->GetRootStage()->GetPrimAtPath(item.path);
+      pxr::UsdPrim prim = _workspace->GetWorkStage()->GetPrimAtPath(item.path);
       std::cout << bboxCache.ComputeWorldBound(prim) << std::endl;
       if (prim.IsActive() && !prim.IsInPrototype()) {
         const pxr::GfBBox3d primBBox = bboxCache.ComputeWorldBound(prim);

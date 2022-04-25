@@ -482,8 +482,8 @@ bool LayersUI::Draw()
 
   Application* app = GetApplication();
 
-  if (app->GetStage())
-  DrawNavigation(app->GetStage()->GetRootLayer());
+  if (app->GetWorkStage())
+  DrawNavigation(app->GetWorkStage()->GetRootLayer());
     /*
     const ImVec2 localMousePos = ImGui::GetMousePos() - _parent->GetMin();
 

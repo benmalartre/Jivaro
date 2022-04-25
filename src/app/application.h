@@ -117,9 +117,15 @@ public:
   std::vector<Engine*> GetEngines() { return _engines; };
   void SetActiveViewport(ViewportUI* viewport);
 
+  // execution
+  void ToggleExec();
+  void SetExec(bool state);
+  bool GetExec();
+
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
-  pxr::UsdStageRefPtr& GetStage() { return _workspace->GetCurrentStage(); };
+  pxr::UsdStageRefPtr& GetDisplayStage();
+  pxr::UsdStageRefPtr& GetWorkStage();
 
 private:
   std::string                       _fileName;
@@ -150,6 +156,7 @@ private:
 
   // engines
   std::vector<Engine*>              _engines;
+  bool                              _execute;
 };
 
 extern Application* APPLICATION;

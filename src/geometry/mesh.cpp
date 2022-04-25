@@ -114,6 +114,7 @@ Mesh::Mesh(const Mesh* other, bool normalize)
 
 Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
 {
+  std::cout << "INIT MESH FROM USD FILE" << std::endl;
   pxr::UsdAttribute pointsAttr = mesh.GetPointsAttr();
   pxr::UsdAttribute faceVertexCountsAttr = mesh.GetFaceVertexCountsAttr();
   pxr::UsdAttribute faceVertexIndicesAttr = mesh.GetFaceVertexIndicesAttr();
@@ -125,6 +126,9 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
   _numSamples = _faceVertexIndices.size();
   _normals = _points;
   _numPoints = _points.size();
+  std::cout << "NUM FACES : " << _numFaces << std::endl;
+  std::cout << "NUM SAMPLES : " << _numSamples << std::endl;
+  std::cout << "NUM POINTS : " << _numPoints << std::endl;
 
   Init();
 }

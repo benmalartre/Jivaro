@@ -31,6 +31,7 @@ PopupUI::PopupUI(int x, int y, int w, int h)
   , _height(h)
   , _done(false)
   , _sync(false)
+  , _cancel(false)
 {
   _parent = GetApplication()->GetActiveWindow()->GetMainView();
 }
@@ -53,14 +54,9 @@ PopupUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  if (x >= _x && y >= _y && x <= (_x + _width) && y <= (_y + _height)) {
-    std::cout << "POPUP MOUSE BUTTON : (INSIDE) = " << x << "," << y << std::endl;
+  if (x < _x && y < _y && x > (_x + _width) && y > (_y + _height)) {
+    _cancel = true;
   }
-  else {
-    std::cout << "POPUP MOUSE BUTTON : (OUTSIDE) = " << x << "," << y << std::endl;
-  }
-  _done = true;
-  //MouseButton(button, action, mods);
 }
 
 void
@@ -71,6 +67,16 @@ PopupUI::MouseMove(int x, int y)
 void 
 PopupUI::Keyboard(int key, int scancode, int action, int mods)
 {
+  if (action == GLFW_PRESS) {
+    switch (GetMappedKey(key)) {
+    case GLFW_KEY_ENTER:
+      _done = true;
+      break;
+    case GLFW_KEY_ESCAPE:
+      _cancel = true;
+      break;
+    }
+  }
 }
 
 bool 
@@ -193,6 +199,72 @@ ColorPopupUI::Draw()
   ImGui::End();
   return true;
 };
+
+//===========================================================================================
+// NamePopupUI
+//===========================================================================================
+NamePopupUI::NamePopupUI(int x, int y, int width, int height)
+  : PopupUI(x, y, width, height)
+{
+  _sync = true;
+  memset(&_value[0], 0, 255 * sizeof(char));
+}
+
+NamePopupUI::NamePopupUI(int x, int y, int width, int height, const std::string& name)
+  : PopupUI(x, y, width, height)
+{
+  _sync = true;
+  strcpy(&_value[0], name.c_str());
+}
+
+NamePopupUI::~NamePopupUI()
+{
+}
+
+void 
+NamePopupUI::SetName(const std::string& name)
+{
+  strcpy(&_value[0], name.c_str());
+}
+
+bool
+NamePopupUI::Draw()
+{
+  bool opened;
+  ImGui::Begin(_name.c_str(), &opened, _flags);
+
+  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  drawList->AddRectFilled(
+    _parent->GetMin(), _parent->GetMax(), ImColor(ALTERNATE_COLOR));
+
+  drawList = ImGui::GetForegroundDrawList();
+
+  ImGui::SetCursorPos(ImVec2(20, 20));
+  ImGui::Text("Name : ");
+  ImGui::SameLine();
+
+  ImGui::InputText("##name", &_value[0], 255);
+  if (!_initialized) {
+    ImGui::SetKeyboardFocusHere(-1);
+    _initialized = true;
+  }
+
+  if (ImGui::Button("OK", ImVec2(GetWidth() / 3, 32))) {
+    _done = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Cancel", ImVec2(GetWidth() / 3, 32))) {
+    _cancel = true;
+  }
+
+  ImGui::End();
+  return true;
+};
+
+
 
 //===========================================================================================
 // NodePopupUI
