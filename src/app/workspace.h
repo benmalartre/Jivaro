@@ -29,7 +29,6 @@ public:
 
   void OpenStage(const std::string& filename);
   void OpenStage(const pxr::UsdStageRefPtr& stage);
-  void SetCurrentStage(pxr::UsdStageRefPtr& stage) { _currentStage = stage; };
   void ClearAllStages();
   void RemoveStage(const std::string& name);
   void RemoveStage(const pxr::SdfPath& path);
@@ -40,14 +39,16 @@ public:
  
   pxr::SdfLayerHandle AddLayerFromDisk(const std::string& filename);
   pxr::UsdStageRefPtr& AddExecStage();
+  void RemoveExecStage();
   pxr::UsdStageRefPtr& AddStageFromMemory(const std::string& name);
   pxr::UsdStageRefPtr& AddStageFromDisk(const std::string& filename);
   pxr::UsdStageRefPtr& GetWorkStage() { return _workStage; };
-  pxr::UsdStageRefPtr& GetDisplayStage() { return _execStage ? _execStage : _workStage; };
   pxr::UsdStageRefPtr& GetExecStage() { return _execStage; };
-
+  pxr::UsdStageRefPtr& GetDisplayStage() { 
+    return _execInitialized ? _execStage : _workStage; 
+  };
+  
 private:
-  pxr::UsdStageRefPtr _currentStage;
   pxr::UsdStageRefPtr _workStage;
   pxr::UsdStageRefPtr _execStage;
   _StageCacheMap      _allStages;

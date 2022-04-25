@@ -660,6 +660,9 @@ Application::ToggleExec()
   if (_execute) {
     _workspace->AddExecStage();
   }
+  else {
+    _workspace->RemoveExecStage();
+  }
 };
 
 void 

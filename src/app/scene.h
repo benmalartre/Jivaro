@@ -28,7 +28,7 @@ public:
     DEFORMED,
     GENERATED
   };
-  Scene();
+  Scene(pxr::UsdStageRefPtr& stage);
   ~Scene();
 
   void Init(const pxr::UsdStageRefPtr& stage);
@@ -52,7 +52,7 @@ public:
   const _PointsMap& GetPoints() const { return _points; };
 
   Geometry* GetGeometry(const pxr::SdfPath& path);
-  pxr::UsdStageRefPtr GetStage();
+  pxr::UsdStageRefPtr& GetStage();
 
 private:
   pxr::UsdStageRefPtr _inputStage;

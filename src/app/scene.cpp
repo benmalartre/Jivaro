@@ -14,9 +14,9 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-Scene::Scene()
+Scene::Scene(pxr::UsdStageRefPtr& stage)
+ : _stage(stage)
 {
-  _stage = pxr::UsdStage::CreateInMemory((char*)this);
 }
 
 Scene::~Scene()
@@ -41,7 +41,7 @@ Scene::Export(const std::string& filename)
   
 }
 
-pxr::UsdStageRefPtr
+pxr::UsdStageRefPtr&
 Scene::GetStage()
 {
   return _stage;
@@ -152,6 +152,7 @@ void Scene::TestVoronoi()
   }
 
   usdMesh.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
+
   /*
   pxr::UsdGeomXformCommonAPI xformApi(usdMesh.GetPrim());
   xformApi.SetPivot(pxr::GfVec3f(1.f, 0.f, 0.f), pxr::UsdTimeCode::Default());

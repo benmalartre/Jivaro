@@ -94,7 +94,6 @@ void ViewportUI::Init()
   _rendererNames = new const char* [_numRenderers];
   for (short rendererIndex = 0; rendererIndex < _numRenderers; ++rendererIndex) {
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
-    std::cout << rendererTokens[rendererIndex].GetText() << std::endl;
   }
   
   if (LEGACY_OPENGL) {
@@ -457,8 +456,11 @@ bool ViewportUI::Draw()
       glClearColor(0.25f, 0.25f, 0.25f, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      _engine->Render(app->GetDisplayStage()->GetPseudoRoot(), _renderParams);
+      if (app->GetDisplayStage()->HasDefaultPrim()) {
+        _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
+      }
       _engine->SetDirty(false);
+
       _drawTarget->Unbind();
     }
 
