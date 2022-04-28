@@ -30,8 +30,8 @@ public:
   void OpenStage(const pxr::UsdStageRefPtr& stage);
   void ClearStageCache();
 
-  void SetCurrentLayer(pxr::SdfLayerRefPtr layer);
-  pxr::SdfLayerRefPtr GetCurrentLayer();
+  void SetWorkLayer(pxr::SdfLayerRefPtr layer);
+  pxr::SdfLayerRefPtr GetWorkLayer();
   void SetPreviousLayer();
   void SetNextLayer();
 
@@ -64,6 +64,8 @@ public:
   };
   
 private:
+  void UseLayer(SdfLayerRefPtr layer);
+
   pxr::UsdStageRefPtr       _workStage;
   pxr::UsdStageRefPtr       _execStage;
   pxr::UsdStageCache        _stageCache;

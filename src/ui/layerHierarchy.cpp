@@ -160,18 +160,12 @@ bool LayerHierarchyUI::Draw()
   ImGui::Begin(_name.c_str(), &opened, flags);
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
-  pxr::GfVec4f color(
-    RANDOM_0_1,
-    RANDOM_0_1,
-    RANDOM_0_1, 
-    1.f
-  );
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(
     ImVec2(_parent->GetMin()),
     ImVec2(_parent->GetSize()),
-    ImColor(color[0], color[1], color[2], color[3])
+    ImColor(BACKGROUND_COLOR)
   );
 
   _layer = GetApplication()->GetWorkStage()->GetRootLayer();
@@ -216,10 +210,8 @@ bool LayerHierarchyUI::Draw()
         }
         ImGui::EndPopup();
       }
-      std::cout << "UNFOLDED : " << unfolded << std::endl;
       if (unfolded) {
         for (const auto& child : _layer->GetRootPrims()) {
-          std::cout << child->GetName() << std::endl;
           DrawPrimSpecRow(child, _prim, nodeId++, selectedPosY);
         }
         ImGui::TreePop();

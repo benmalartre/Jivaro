@@ -5,6 +5,7 @@
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include <pxr/usd/usdGeom/points.h>
 #include <pxr/usd/usd/primRange.h>
+#include <pxr/usd/sdf/fileFormat.h>
 
 
 #include "../utils/strings.h"
@@ -45,29 +46,30 @@ Workspace::HasUnsavedWork()
 }
 
 void 
-Workspace::SetCurrentStage(pxr::UsdStageCache::Id current)
+Workspace::SetWorkStage(pxr::UsdStageCache::Id current)
 {
-  SetCurrentStage(_stageCache.Find(current));
+  SetWorkStage(_stageCache.Find(current));
 }
 
 void 
-Workspace::SetCurrentStage(pxr::UsdStageRefPtr stage)
+Workspace::SetWorkStage(pxr::UsdStageRefPtr stage)
 {
   _workStage = stage;
+  UndoRouter::Get().TrackLayer(_workStage->GetRootLayer());
   // NOTE: We set the default layer to the current stage root
   // this might have side effects
-  if (!GetCurrentLayer() && _workStage) {
-    SetCurrentLayer(_workStage->GetRootLayer());
+  if (!GetWorkLayer() && _workStage) {
+    SetWorkLayer(_workStage->GetRootLayer());
   }
 }
 
 void 
-Workspace::SetCurrentLayer(SdfLayerRefPtr layer) 
+Workspace::SetWorkLayer(SdfLayerRefPtr layer) 
 {
   if (!layer)
     return;
   if (!_layerHistory.empty()) {
-    if (GetCurrentLayer() != layer) {
+    if (GetWorkLayer() != layer) {
       if (_layerHistoryPointer < _layerHistory.size() - 1) {
         _layerHistory.resize(_layerHistoryPointer + 1);
       }
@@ -82,15 +84,15 @@ Workspace::SetCurrentLayer(SdfLayerRefPtr layer)
 }
 
 void 
-Workspace::SetCurrentEditTarget(SdfLayerHandle layer) 
+Workspace::SetWorkEditTarget(SdfLayerHandle layer) 
 {
-  if (GetCurrentStage()) {
-    GetCurrentStage()->SetEditTarget(UsdEditTarget(layer));
+  if (GetWorkStage()) {
+    GetWorkStage()->SetEditTarget(UsdEditTarget(layer));
   }
 }
 
 SdfLayerRefPtr 
-Workspace::GetCurrentLayer() 
+Workspace::GetWorkLayer() 
 {
   return _layerHistory.empty() ? SdfLayerRefPtr() : _layerHistory[_layerHistoryPointer];
 }
@@ -114,10 +116,10 @@ Workspace::SetNextLayer()
 
 
 void 
-Worksapce::UseLayer(SdfLayerRefPtr layer) 
+Workspace::UseLayer(SdfLayerRefPtr layer)
 {
   if (layer) {
-    SetCurrentLayer(layer);
+    SetWorkLayer(layer);
     //_settings._showContentBrowser = true;
   }
 }
@@ -145,9 +147,9 @@ Workspace::ImportStage(const std::string& path, bool openLoaded)
   if (newStage) {
     _stageCache.Insert(newStage);
     SetWorkStage(newStage);
-    _settings._showContentBrowser = true;
-    _settings._showViewport = true;
-    UpdateRecentFiles(_settings._recentFiles, path);
+    //_settings._showContentBrowser = true;
+    //_settings._showViewport = true;
+    //UpdateRecentFiles(_settings._recentFiles, path);
   }
 }
 
@@ -155,8 +157,8 @@ void
 Workspace::SaveCurrentLayerAs(const std::string& path)
 {
   auto newLayer = SdfLayer::CreateNew(path);
-  if (newLayer && GetCurrentLayer()) {
-    newLayer->TransferContent(GetCurrentLayer());
+  if (newLayer && GetWorkLayer()) {
+    newLayer->TransferContent(GetWorkLayer());
     newLayer->Save();
     UseLayer(newLayer);
   }
@@ -171,9 +173,9 @@ Workspace::CreateStage(const std::string& path)
     auto newStage = UsdStage::Open(layer);
     if (newStage) {
       _stageCache.Insert(newStage);
-      SetCurrentStage(newStage);
-      _settings._showContentBrowser = true;
-      _settings._showViewport = true;
+      SetWorkStage(newStage);
+      //_settings._showContentBrowser = true;
+      //_settings._showViewport = true;
     }
   }
 }
@@ -188,6 +190,7 @@ void
 Workspace::OpenStage(const std::string& filename)
 {
   _workStage = pxr::UsdStage::Open(filename);
+  UndoRouter::Get().TrackLayer(_workStage->GetRootLayer());
   _stageCache.Insert(_workStage);
 }
 
@@ -195,6 +198,7 @@ void
 Workspace::OpenStage(const pxr::UsdStageRefPtr& stage)
 {
   _workStage = stage;
+  UndoRouter::Get().TrackLayer(_workStage->GetRootLayer());
 }
 
 pxr::UsdStageRefPtr&
@@ -205,6 +209,10 @@ Workspace::AddStageFromMemory(const std::string& name)
   _alStages[path] = pxr::UsdStage::CreateInMemory(name);
   return  _allStages[path];
   */
+  pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory(name);
+  UndoRouter::Get().TrackLayer(stage->GetRootLayer());
+  _stageCache.Insert(stage);
+  return stage;
 }
 
 pxr::UsdStageRefPtr&
@@ -215,11 +223,11 @@ Workspace::AddStageFromDisk(const std::string& filename)
   std::string name = tokens.front();
   pxr::SdfPath path("/" + name);
   UndoBlock editBlock;
-  pxr::UsdStageRefPtr& stage = pxr::UsdStage::Open(filename);
-
-  _allStages[path] = stage;
+  pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
+  _stageCache.Insert(stage);
   pxr::SdfLayerHandle layer = stage->GetRootLayer();
   _workStage = stage;
+  UndoRouter::Get().TrackLayer(_workStage->GetRootLayer());
   //_workStage->GetRootLayer()->InsertSubLayerPath(layer->GetIdentifier());
   //_workStage->SetDefaultPrim(stage->GetDefaultPrim());
   return stage;

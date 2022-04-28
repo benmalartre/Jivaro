@@ -424,12 +424,14 @@ void SetAttributeCommand::Do()
 UsdGenericCommand::UsdGenericCommand()
   : Command(true)
 {
+  std::cout << "GENRIC CREATE" << std::endl;
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
 void UsdGenericCommand::Do()
 {
+  std::cout << "GENRIC UNDO" << std::endl;
   _inverse.Invert();
   SceneChangedNotice().Send();
 }
