@@ -97,9 +97,9 @@ static void DrawPropertyMiniButton(ImGuiID id=0, const ImVec4& color = ImVec4(BU
 {
   Icon* icon = NULL;
   icon = &ICONS[ICON_SIZE_SMALL][ICON_OP];
-  UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
+  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
     id, icon, ICON_DEFAULT,
-    (UIUtils::IconPressedFunc)_XXX_CALLBACK__, id);
+    (UIUtils::CALLBACK_FN)_XXX_CALLBACK__, id);
   ImGui::SameLine();
 }
 

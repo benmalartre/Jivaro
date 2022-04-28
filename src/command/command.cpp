@@ -5,6 +5,8 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdShade/nodeGraph.h>
 #include <pxr/usd/usdShade/connectableAPI.h>
+#include <pxr/usd/usdExec/execNode.h>
+#include <pxr/usd/usdExec/execConnectableAPI.h>
 
 #include "../command/command.h"
 #include "../command/block.h"
@@ -50,7 +52,8 @@ CreatePrimCommand::CreatePrimCommand(pxr::UsdStageRefPtr stage, const std::strin
 {
   if (!stage) return;
   UndoRouter::Get().TransferEdits(&_inverse);
-  pxr::UsdGeomSphere::Define(stage, pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
+  auto sphere = pxr::UsdGeomSphere::Define(stage, pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
+  stage->SetDefaultPrim(sphere.GetPrim());
   //stage->DefinePrim(pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
@@ -163,7 +166,7 @@ ShowHideCommand::ShowHideCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
 {
   Application* app = GetApplication();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
   case SHOW:
     for (auto& path : paths) {
@@ -219,7 +222,7 @@ ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
 {
   UndoRouter::Get().TransferEdits(&_inverse);
   Application* app = GetApplication();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
   case ACTIVATE:
     for (auto& path : paths) {
@@ -515,14 +518,24 @@ ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::Sd
   , _source(source)
   , _destination(destination)
 {
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
-  pxr::UsdShadeShader lhs(stage->GetPrimAtPath(source.GetPrimPath()));
-  pxr::UsdShadeShader rhs(stage->GetPrimAtPath(destination.GetPrimPath()));
+  pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
+  pxr::UsdPrim lhsPrim = stage->GetPrimAtPath(source.GetPrimPath());
+  pxr::UsdPrim rhsPrim = stage->GetPrimAtPath(destination.GetPrimPath());
+  if (!lhsPrim.IsValid() || !rhsPrim.IsValid()) {
+    TF_WARN("[ConnectNodeCommand] Invalid attributes path provided!");
+    return;
+  }
+  if (lhsPrim.IsA<pxr::UsdShadeShader>()) {
+    pxr::UsdShadeShader lhs(lhsPrim);
+    pxr::UsdShadeShader rhs(rhsPrim);
 
-  pxr::UsdShadeOutput output = lhs.GetOutput(source.GetNameToken());
-  pxr::UsdShadeInput input = rhs.GetInput(destination.GetNameToken());
+    pxr::UsdShadeOutput output = lhs.GetOutput(source.GetNameToken());
+    pxr::UsdShadeInput input = rhs.GetInput(destination.GetNameToken());
 
-  input.ConnectToSource(output);
+    input.ConnectToSource(output);
+  } else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
+
+  }
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }

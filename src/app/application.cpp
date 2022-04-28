@@ -31,6 +31,7 @@
 #include "../ui/toolbar.h"
 #include "../ui/explorer.h"
 #include "../ui/layers.h"
+#include "../ui/layerHierarchy.h"
 #include "../ui/property.h"
 #include "../ui/curveEditor.h"
 #include "../command/command.h"
@@ -416,7 +417,8 @@ Application::Init()
   MenuUI* menu = new MenuUI(topView);
   ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
   _explorer = new ExplorerUI(explorerView);
-  _layers = new LayersUI(layersView);
+  _layers = NULL;// new LayersUI(layersView);
+  new LayerHierarchyUI(layersView, "fuck");
   _property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, editor);
@@ -582,6 +584,7 @@ Application::UndoStackNoticeCallback(const UndoStackNotice& n)
 {
   AddCommand(std::shared_ptr<UsdGenericCommand>(new UsdGenericCommand()));
 }
+
 
 void 
 Application::AddCommand(std::shared_ptr<Command> command)

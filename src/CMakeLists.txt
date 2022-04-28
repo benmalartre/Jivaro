@@ -12,6 +12,7 @@ add_executable(${TARGET}
   imgui/imgui_impl_opengl3.cpp
   imgui/imgui_widgets.cpp
   imgui/imgui_tables.cpp
+  imgui/imgui_stdlib.cpp
   imgui/imgui.cpp
   utils/files.cpp
   utils/shaders.cpp
@@ -20,6 +21,7 @@ add_executable(${TARGET}
   ui/utils.cpp
   ui/popup.cpp
   ui/fileBrowser.cpp
+  ui/contentBrowser.cpp
   ui/splitter.cpp
   ui/head.cpp
   ui/dummy.cpp
@@ -29,6 +31,7 @@ add_executable(${TARGET}
   ui/timeline.cpp
   ui/toolbar.cpp
   ui/layers.cpp
+  ui/layerHierarchy.cpp
   ui/explorer.cpp
   ui/property.cpp
   ui/curveEditor.cpp

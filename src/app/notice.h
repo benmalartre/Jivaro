@@ -71,6 +71,5 @@ public:
 private:
 };
 
-
 PXR_NAMESPACE_CLOSE_SCOPE
 #endif //JVR_APPLICATION_NOTICE_H

@@ -6,14 +6,11 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/stageCache.h>
 #include <pxr/base/tf/hashmap.h>
 
 
 PXR_NAMESPACE_OPEN_SCOPE
-
-typedef pxr::TfHashMap< pxr::SdfPath, pxr::UsdStageRefPtr, pxr::SdfPath::Hash > 
-  _StageCacheMap;
-
 
 class Workspace {
 
@@ -27,11 +24,29 @@ public:
   Workspace();
   ~Workspace();
 
+  bool HasUnsavedWork();
+
   void OpenStage(const std::string& filename);
   void OpenStage(const pxr::UsdStageRefPtr& stage);
-  void ClearAllStages();
-  void RemoveStage(const std::string& name);
-  void RemoveStage(const pxr::SdfPath& path);
+  void ClearStageCache();
+
+  void SetCurrentLayer(pxr::SdfLayerRefPtr layer);
+  pxr::SdfLayerRefPtr GetCurrentLayer();
+  void SetPreviousLayer();
+  void SetNextLayer();
+
+  /// Create a new layer in file path
+  void CreateLayer(const std::string& path);
+  void ImportLayer(const std::string& path);
+  void CreateStage(const std::string& path);
+  void ImportStage(const std::string& path, bool openLoaded = true);
+  void SaveCurrentLayerAs(const std::string& path);
+
+  void SetWorkStage(UsdStageCache::Id current);
+  void SetWorkStage(UsdStageRefPtr stage);
+  void SetWorkEditTarget(SdfLayerHandle layer);
+
+  UsdStageCache& GetStageCache() { return _stageCache; }
 
   void InitExec();
   void UpdateExec(double time);
@@ -49,12 +64,15 @@ public:
   };
   
 private:
-  pxr::UsdStageRefPtr _workStage;
-  pxr::UsdStageRefPtr _execStage;
-  _StageCacheMap      _allStages;
+  pxr::UsdStageRefPtr       _workStage;
+  pxr::UsdStageRefPtr       _execStage;
+  pxr::UsdStageCache        _stageCache;
 
-  Scene*              _execScene;
-  bool                _execInitialized;
+  pxr::SdfLayerRefPtrVector _layerHistory;
+  size_t                    _layerHistoryPointer;
+
+  Scene*                    _execScene;
+  bool                      _execInitialized;
 };
 
 

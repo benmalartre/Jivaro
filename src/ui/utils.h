@@ -1,5 +1,6 @@
 #ifndef JVR_UI_UTILS_H
 #define JVR_UI_UTILS_H
+#include <cassert>
 
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/base/gf/matrix2f.h>
@@ -19,6 +20,9 @@
 #include <pxr/base/gf/vec4d.h>
 #include <pxr/base/gf/vec4h.h>
 
+#include <pxr/usd/sdf/listEditorProxy.h>
+#include <pxr/usd/sdf/reference.h>
+
 #include "../common.h"
 #include "../utils/icons.h"
 #include "../ui/style.h"
@@ -26,6 +30,7 @@
 #include "../imgui/imgui_internal.h"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_glfw.h"
+#include "../imgui/imgui_stdlib.h"
 
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -34,7 +39,7 @@ class View;
 class UIUtils {
 public:
   // callback prototype
-  typedef void(*IconPressedFunc)(...);
+  typedef void(*CALLBACK_FN)(...);
 
   static void HelpMarker(const char* desc);
 
@@ -63,6 +68,16 @@ public:
 
   template<typename FuncT, typename ...ArgsT>
   static bool AddCheckableIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT... args);
+
+  static void AddPropertyMiniButton(const char* btnStr, int rowId, const ImVec4& btnColor = ImVec4({ 0.0, 0.7, 0.0, 1.0 }));
+  static void AddPrimKind(const pxr::SdfPrimSpecHandle& primSpec);
+  static void AddPrimType(const pxr::SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
+  static void AddPrimSpecifier(const pxr::SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
+  static void AddPrimInstanceable(const pxr::SdfPrimSpecHandle& primSpec);
+  static void AddPrimHidden(const pxr::SdfPrimSpecHandle& primSpec);
+  static void AddPrimActive(const pxr::SdfPrimSpecHandle& primSpec);
+  static void AddPrimName(const pxr::SdfPrimSpecHandle& primSpec);
+
 };
 
 
@@ -210,6 +225,63 @@ UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeC
     return pxr::VtValue(VectorType(buffer));
   }
   return pxr::VtValue();
+}
+
+// ExtraArgsT is used to pass additional arguments as the function passed as visitor
+// might need more than the operation and the item
+template <typename PolicyT, typename FuncT, typename ...ExtraArgsT>
+static void 
+IterateListEditorItems(const SdfListEditorProxy<PolicyT>& listEditor, const FuncT& call, ExtraArgsT... args) {
+  // TODO: should we check if the list is already all explicit ??
+  for (const typename PolicyT::value_type& item : listEditor.GetExplicitItems()) {
+    call("explicit", item, args...);
+  }
+  for (const typename PolicyT::value_type& item : listEditor.GetOrderedItems()) {
+    call("ordered", item, args...);
+  }
+  for (const typename PolicyT::value_type& item : listEditor.GetAddedItems()) {
+    call("add", item, args...); // return "add" as TfToken instead ?
+  }
+  for (const typename PolicyT::value_type& item : listEditor.GetPrependedItems()) {
+    call("prepend", item, args...);
+  }
+  for (const typename PolicyT::value_type& item : listEditor.GetAppendedItems()) {
+    call("append", item, args...);
+  }
+  for (const typename PolicyT::value_type& item : listEditor.GetDeletedItems()) {
+    call("delete", item, args...);
+  }
+}
+
+/// The operations available on a SdfListEditor
+constexpr int GetListEditorOperationSize() { return 5; }
+inline const char* GetListEditorOperationName(int index) {
+  constexpr const char* names[GetListEditorOperationSize()] = { "Add", "Prepend", "Append", "Remove", "Explicit" };
+  return names[index];
+}
+
+template <typename PolicyT>
+void CreateListEditorOperation(SdfListEditorProxy<PolicyT>&& listEditor, int operation,
+  typename SdfListEditorProxy<PolicyT>::value_type item) {
+  switch (operation) {
+  case 0:
+    listEditor.Add(item);
+    break;
+  case 1:
+    listEditor.Prepend(item);
+    break;
+  case 2:
+    listEditor.Append(item);
+    break;
+  case 3:
+    listEditor.Remove(item);
+    break;
+  case 4:
+    listEditor.GetExplicitItems().push_back(item);
+    break;
+  default:
+    assert(0);
+  }
 }
 
 

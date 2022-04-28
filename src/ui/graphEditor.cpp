@@ -13,6 +13,9 @@
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
 #include <pxr/usd/usdUI/backdrop.h>
+#include <pxr/usd/usdExec/execConnectableAPI.h>
+#include <pxr/usd/usdExec/execNode.h>
+#include <pxr/usd/usdExec/execGraph.h>
 
 
 #include "../utils/color.h"
@@ -165,36 +168,35 @@ static pxr::UsdPrim TestUsdShadeAPI()
   const pxr::TfToken MUL("multiply");
   const pxr::TfToken SET("set");
 
-  UsdShadeNodeGraph graph = pxr::UsdShadeNodeGraph::Define(stage, GRAPH_PATH);
-  UsdUINodeGraphNodeAPI::Apply(graph.GetPrim());
+  pxr::UsdExecGraph graph = pxr::UsdExecGraph::Define(stage, GRAPH_PATH);
   
-  pxr::UsdShadeShader get = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(GET));
+  pxr::UsdExecNode get = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(GET));
   pxr::UsdUINodeGraphNodeAPI api(get);
   api.CreatePosAttr().Set(pxr::GfVec2f(0, 0));
-  pxr::UsdShadeInput inPrim = get.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
+  pxr::UsdExecInput inPrim = get.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
   inPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeInput inAttr = get.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
+  pxr::UsdExecInput inAttr = get.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
   inAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeOutput inVal = get.CreateOutput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecOutput inVal = get.CreateOutput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Point3f);
 
-  pxr::UsdShadeShader mul = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(MUL));
+  pxr::UsdExecNode mul = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(MUL));
   api = pxr::UsdUINodeGraphNodeAPI(mul);
   api.CreatePosAttr().Set(pxr::GfVec2f(120, 0));
-  pxr::UsdShadeInput factor = mul.CreateInput(pxr::TfToken("Factor"), pxr::SdfValueTypeNames->Float);
+  pxr::UsdExecInput factor = mul.CreateInput(pxr::TfToken("Factor"), pxr::SdfValueTypeNames->Float);
   factor.Set(pxr::VtValue(1.f));
-  pxr::UsdShadeInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Point3f);
-  pxr::UsdShadeOutput output = mul.CreateOutput(pxr::TfToken("Output"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecOutput output = mul.CreateOutput(pxr::TfToken("Output"), pxr::SdfValueTypeNames->Point3f);
 
-  pxr::UsdShadeShader set = pxr::UsdShadeShader::Define(stage, GRAPH_PATH.AppendChild(SET));
+  pxr::UsdExecNode set = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(SET));
   api = pxr::UsdUINodeGraphNodeAPI(set);
   api.CreatePosAttr().Set(pxr::GfVec2f(240, 0));
-  pxr::UsdShadeInput outPrim = set.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
+  pxr::UsdExecInput outPrim = set.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
   outPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
+  pxr::UsdExecInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
   outAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdShadeInput outVal0 = set.CreateInput(pxr::TfToken("Value0"), pxr::SdfValueTypeNames->Point3f);
-  pxr::UsdShadeInput outVal1 = set.CreateInput(pxr::TfToken("Value1"), pxr::SdfValueTypeNames->Point3f);
-  pxr::UsdShadeInput outVal2 = set.CreateInput(pxr::TfToken("Value2"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecInput outVal0 = set.CreateInput(pxr::TfToken("Value0"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecInput outVal1 = set.CreateInput(pxr::TfToken("Value1"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecInput outVal2 = set.CreateInput(pxr::TfToken("Value2"), pxr::SdfValueTypeNames->Point3f);
 
 
   input.ConnectToSource(inVal);
@@ -475,6 +477,7 @@ GraphEditorUI::Connexion::Draw(GraphEditorUI* graph)
       32);
 }
 
+
 // Node constructor
 //------------------------------------------------------------------------------
 GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
@@ -525,6 +528,28 @@ GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
       AddInput(attr, input.GetBaseName());
     }
     for (const auto& output : shader.GetOutputs()) {
+      pxr::UsdAttribute attr = output.GetAttr();
+      AddOutput(attr, output.GetBaseName());
+    }
+  }
+  else if (prim.IsA<pxr::UsdExecGraph>()) {
+    pxr::UsdExecGraph graph(prim);
+    for (const auto& input : graph.GetInputs()) {
+      pxr::UsdAttribute attr = input.GetAttr();
+      AddInput(attr, input.GetBaseName());
+    }
+    for (const auto& output : graph.GetOutputs()) {
+      pxr::UsdAttribute attr = output.GetAttr();
+      AddOutput(attr, output.GetBaseName());
+    }
+  }
+  else if (prim.IsA<pxr::UsdExecNode>()) {
+    pxr::UsdExecNode node(prim);
+    for (const auto& input : node.GetInputs()) {
+      pxr::UsdAttribute attr = input.GetAttr();
+      AddInput(attr, input.GetBaseName());
+    }
+    for (const auto& output : node.GetOutputs()) {
       pxr::UsdAttribute attr = output.GetAttr();
       AddOutput(attr, output.GetBaseName());
     }
@@ -1023,6 +1048,11 @@ GraphEditorUI::Graph::_DiscoverConnexions(pxr::UsdPrim& prim)
       _RecurseConnexions(child);
     }
   }
+  else if (prim.IsA<pxr::UsdExecGraph>()) {
+    for (pxr::UsdPrim child : prim.GetChildren()) {
+      _RecurseConnexions(child);
+    }
+  }
 }
 
 void
@@ -1033,6 +1063,25 @@ GraphEditorUI::Graph::_RecurseConnexions(pxr::UsdPrim& prim)
     for (pxr::UsdShadeInput& input : shader.GetInputs()) {
       if (input.GetConnectability() == pxr::UsdShadeTokens->full) {
         pxr::UsdShadeInput::SourceInfoVector connexions = input.GetConnectedSources();
+        for (auto& connexion : connexions) {
+          GraphEditorUI::Node* source = GetNode(connexion.source.GetPrim());
+          GraphEditorUI::Node* destination = GetNode(prim);
+          if (!source || !destination)continue;
+          GraphEditorUI::Port* start = source->GetPort(connexion.sourceName);
+          GraphEditorUI::Port* end = destination->GetPort(input.GetBaseName());
+
+          if (start && end) {
+            GraphEditorUI::Connexion* connexion = new Connexion(start, end, start->GetColor());
+            _connexions.push_back(connexion);
+          }
+        }
+      }
+    }
+  } else if (prim.IsA<pxr::UsdExecNode>()) {
+    pxr::UsdExecNode node(prim);
+    for (pxr::UsdExecInput& input : node.GetInputs()) {
+      if (input.GetConnectability() == pxr::UsdShadeTokens->full) {
+        pxr::UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
         for (auto& connexion : connexions) {
           GraphEditorUI::Node* source = GetNode(connexion.source.GetPrim());
           GraphEditorUI::Node* destination = GetNode(prim);
@@ -1142,7 +1191,7 @@ RefreshGraphCallback(GraphEditorUI* editor)
       pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
       pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
       
-      if (selected.IsValid() && selected.IsA<pxr::UsdShadeNodeGraph>()) {
+      if (selected.IsValid() && (selected.IsA<pxr::UsdShadeNodeGraph>() || selected.IsA<UsdExecGraph>())) {
         editor->Populate(selected);
         return;
       }
@@ -1325,9 +1374,9 @@ GraphEditorUI::Draw()
 
   Icon* icon = NULL;
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_LOOP];
-  UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
+  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
     0, icon, ICON_DEFAULT,
-    (UIUtils::IconPressedFunc)RefreshGraphCallback, this
+    (UIUtils::CALLBACK_FN)RefreshGraphCallback, this
     );
   ImGui::SameLine();
 

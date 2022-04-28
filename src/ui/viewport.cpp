@@ -56,6 +56,7 @@ ViewportUI::ViewportUI(View* parent):
   _pixels = nullptr;
   _camera = new Camera("Camera");
   _valid = true;
+  _initialized = false;
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
@@ -84,7 +85,6 @@ void ViewportUI::Init()
     delete _engine;
   }
   pxr::SdfPathVector excludedPaths;
-
   _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
   app->AddEngine(_engine);
 
@@ -400,10 +400,12 @@ static bool ComboWidget(const char* label, BaseUI* ui,
 
 bool ViewportUI::Draw()
 {    
+  Application* app = GetApplication();
+
   if (!_initialized)Init();
   if(!_valid)return false;  
 
-  Application* app = GetApplication();
+  
   Selection* selection = app->GetSelection();
   if (GetWindow()->IsDraggingSplitter()) {
     glViewport(0, 0, GetWidth(), GetHeight());
@@ -459,6 +461,7 @@ bool ViewportUI::Draw()
       if (app->GetDisplayStage()->HasDefaultPrim()) {
         _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
       }
+      
       _engine->SetDirty(false);
 
       _drawTarget->Unbind();

@@ -57,6 +57,7 @@ list(APPEND USD_LIB_NAMES
   glf
   tf
   sdf
+  exec
   plug
   garch
   ndr
@@ -74,6 +75,7 @@ list(APPEND USD_LIB_NAMES
   usdGeom
   usdLux
   usdShade
+  usdExec
   usdUI
   usdImaging
   usdImagingGL
@@ -91,7 +93,7 @@ if(UNIX)
 else()
   set(USD_LIBRARIES 
     ${USD_LIBRARIES} 
-	  "${USD_LIBRARY_DIR}/${LIB_PREFIX}${USD_LIB_NAME}${LIB_DYNAMIC_EXT}")
+	  "${USD_LIBRARY_DIR}/${LIB_PREFIX}usd_${USD_LIB_NAME}${LIB_DYNAMIC_EXT}")
 endif()
 
 endforeach()

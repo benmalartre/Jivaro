@@ -189,44 +189,44 @@ void TimelineUI::DrawButtons()
 {
   Icon* icon = NULL;
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_FIRST_FRAME];
-  UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
+  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
     0, icon, ICON_DEFAULT,
-    (UIUtils::IconPressedFunc)FirstFrameCallback, this
+    (UIUtils::CALLBACK_FN)FirstFrameCallback, this
     );
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PREVIOUS_FRAME];
-  UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
+  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
     1, icon, ICON_DEFAULT,
-    (UIUtils::IconPressedFunc)PreviousFrameCallback, this
+    (UIUtils::CALLBACK_FN)PreviousFrameCallback, this
     );
   ImGui::SameLine();
 
   if (!_data.playing) icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_FORWARD];
   else icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_STOP];
-  UIUtils::AddIconButton<UIUtils::IconPressedFunc, TimelineUI*>(
+  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
     2, icon, ICON_DEFAULT,
-    (UIUtils::IconPressedFunc)PlaybackCallback, this);
+    (UIUtils::CALLBACK_FN)PlaybackCallback, this);
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_NEXT_FRAME];
-  UIUtils::AddIconButton<UIUtils::IconPressedFunc>(
+  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
     3, icon, ICON_DEFAULT,
-    (UIUtils::IconPressedFunc)NextFrameCallback, this);
+    (UIUtils::CALLBACK_FN)NextFrameCallback, this);
   ImGui::SameLine();
 
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_LAST_FRAME];
-  UIUtils::AddIconButton<UIUtils::IconPressedFunc, TimelineUI*>(
+  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
     4, icon, ICON_DEFAULT,
-    (UIUtils::IconPressedFunc)LastFrameCallback, this);
+    (UIUtils::CALLBACK_FN)LastFrameCallback, this);
   ImGui::SameLine();
 
   icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_LOOP];
-  UIUtils::AddCheckableIconButton<UIUtils::IconPressedFunc, TimelineUI*>(
+  UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
     5, icon,
     _data.loop ? ICON_SELECTED : ICON_DEFAULT,
-    (UIUtils::IconPressedFunc)LoopCallback, this);
+    (UIUtils::CALLBACK_FN)LoopCallback, this);
   ImGui::SameLine();
 }
 

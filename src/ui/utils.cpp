@@ -1,7 +1,11 @@
+#include <pxr/usd/sdf/primSpec.h>
+
 #include "../ui/utils.h"
 #include "../ui/popup.h"
 #include "../app/view.h"
 #include "../app/application.h"
+#include "../command/block.h"
+
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -195,9 +199,116 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
   return pxr::VtValue();
 }
 
+// TODO Share code as we want to share the style of the button, but not necessarily the behaviour
+// DrawMiniButton ?? in a specific file ? OptionButton ??? OptionMenuButton ??
+void 
+UIUtils::AddPropertyMiniButton(const char* btnStr, int rowId, const ImVec4& btnColor) {
+  ImGui::PushID(rowId);
+  ImGui::PushStyleColor(ImGuiCol_Text, btnColor);
+  ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
+  ImGui::SmallButton(btnStr);
+  ImGui::PopStyleColor();
+  ImGui::PopStyleColor();
+  ImGui::PopID();
+}
+
 void 
 UIUtils::AddAttributeDisplayName(const UsdAttribute& attribute) {
   ImGui::Text(attribute.GetName().GetText());
 }
 
+void 
+UIUtils::AddPrimKind(const SdfPrimSpecHandle& primSpec)
+{
+
+}
+
+void 
+UIUtils::AddPrimType(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags)
+{
+
+}
+
+void
+UIUtils::AddPrimSpecifier(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags)
+{
+  const SdfSpecifier current = primSpec->GetSpecifier();
+  SdfSpecifier selected = current;
+  const std::string specifierName = TfEnum::GetDisplayName(current);
+  if (ImGui::BeginCombo("Specifier", specifierName.c_str(), comboFlags)) {
+    for (int n = SdfSpecifierDef; n < SdfNumSpecifiers; n++) {
+      const SdfSpecifier displayed = static_cast<SdfSpecifier>(n);
+      const bool isSelected = (current == displayed);
+      if (ImGui::Selectable(TfEnum::GetDisplayName(displayed).c_str(), isSelected)) {
+        selected = displayed;
+        if (isSelected)
+          ImGui::SetItemDefaultFocus();
+      }
+    }
+
+    if (selected != current) {
+      UndoBlock editBlock;
+      primSpec->SetSpecifier(selected);
+    }
+
+    ImGui::EndCombo();
+  }
+}
+
+void 
+UIUtils::AddPrimInstanceable(const SdfPrimSpecHandle& primSpec)
+{
+  if (!primSpec)return;
+  bool isInstanceable = primSpec->GetInstanceable();
+  if (ImGui::Checkbox("Instanceable", &isInstanceable)) {
+    UndoBlock editBlock;
+    primSpec->SetInstanceable(isInstanceable);
+  }
+}
+
+void UIUtils::AddPrimHidden(const SdfPrimSpecHandle& primSpec)
+{
+  if (!primSpec)return;
+  bool isHidden = primSpec->GetHidden();
+  if (ImGui::Checkbox("Hidden", &isHidden)) {
+    UndoBlock editBlock;
+    primSpec->SetHidden(isHidden);
+  }
+}
+
+void UIUtils::AddPrimActive(const SdfPrimSpecHandle& primSpec)
+{
+  if (!primSpec)return;
+  bool isActive = primSpec->GetActive();
+  if (ImGui::Checkbox("Active", &isActive)) {
+    UndoBlock editBlock;
+    primSpec->SetActive(isActive);
+  }
+}
+
+void UIUtils::AddPrimName(const SdfPrimSpecHandle& primSpec)
+{
+  std::string nameBuffer = primSpec->GetName();
+  ImGui::InputText("Prim Name", &nameBuffer);
+  if (ImGui::IsItemDeactivatedAfterEdit()) {
+    auto primName = std::string(const_cast<char*>(nameBuffer.data()));
+    if (primSpec->CanSetName(primName, nullptr)) {
+      UndoBlock editBlock;
+      primSpec->SetName(primName, true);
+    }
+  }
+}
+
+
+/*
+void UIUtils::AddPrimCompositionSummary(const SdfPrimSpecHandle& primSpec) {
+  if (!primSpec || !HasComposition(primSpec))
+    return;
+  int menuItemId = 0;
+  IterateListEditorItems(primSpec->GetReferenceList(), AddReferenceSummary, primSpec, menuItemId);
+  IterateListEditorItems(primSpec->GetPayloadList(), AddPayloadSummary, primSpec, menuItemId);
+  IterateListEditorItems(primSpec->GetInheritPathList(), AddInheritsSummary, primSpec, menuItemId);
+  IterateListEditorItems(primSpec->GetSpecializesList(), AddSpecializesSummary, primSpec, menuItemId);
+}
+*/
 PXR_NAMESPACE_CLOSE_SCOPE

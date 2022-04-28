@@ -29,34 +29,166 @@ Workspace::Workspace()
 Workspace::~Workspace()
 {
   if(_execScene)delete _execScene;
-  ClearAllStages();
+  ClearStageCache();
   _workStage = nullptr;
 }
 
-void Workspace::ClearAllStages() 
+bool 
+Workspace::HasUnsavedWork()
 {
-  _allStages.clear();
+  for (const auto& layer : SdfLayer::GetLoadedLayers()) {
+    if (layer && layer->IsDirty() && !layer->IsAnonymous()) {
+      return true;
+    }
+  }
+  return false;
 }
 
-void Workspace::RemoveStage(const std::string& name)
+void 
+Workspace::SetCurrentStage(pxr::UsdStageCache::Id current)
 {
-  pxr::SdfPath path(name);
-  RemoveStage(path);
+  SetCurrentStage(_stageCache.Find(current));
 }
 
-
-void Workspace::RemoveStage(const pxr::SdfPath& path)
+void 
+Workspace::SetCurrentStage(pxr::UsdStageRefPtr stage)
 {
-  if(_allStages.find(path) != _allStages.end()) {
-    _allStages.erase(path);
+  _workStage = stage;
+  // NOTE: We set the default layer to the current stage root
+  // this might have side effects
+  if (!GetCurrentLayer() && _workStage) {
+    SetCurrentLayer(_workStage->GetRootLayer());
   }
 }
+
+void 
+Workspace::SetCurrentLayer(SdfLayerRefPtr layer) 
+{
+  if (!layer)
+    return;
+  if (!_layerHistory.empty()) {
+    if (GetCurrentLayer() != layer) {
+      if (_layerHistoryPointer < _layerHistory.size() - 1) {
+        _layerHistory.resize(_layerHistoryPointer + 1);
+      }
+      _layerHistory.push_back(layer);
+      _layerHistoryPointer = _layerHistory.size() - 1;
+    }
+  }
+  else {
+    _layerHistory.push_back(layer);
+    _layerHistoryPointer = _layerHistory.size() - 1;
+  }
+}
+
+void 
+Workspace::SetCurrentEditTarget(SdfLayerHandle layer) 
+{
+  if (GetCurrentStage()) {
+    GetCurrentStage()->SetEditTarget(UsdEditTarget(layer));
+  }
+}
+
+SdfLayerRefPtr 
+Workspace::GetCurrentLayer() 
+{
+  return _layerHistory.empty() ? SdfLayerRefPtr() : _layerHistory[_layerHistoryPointer];
+}
+
+void 
+Workspace::SetPreviousLayer() 
+{
+  if (_layerHistoryPointer > 0) {
+    _layerHistoryPointer--;
+  }
+}
+
+
+void 
+Workspace::SetNextLayer() 
+{
+  if (_layerHistoryPointer < _layerHistory.size() - 1) {
+    _layerHistoryPointer++;
+  }
+}
+
+
+void 
+Worksapce::UseLayer(SdfLayerRefPtr layer) 
+{
+  if (layer) {
+    SetCurrentLayer(layer);
+    //_settings._showContentBrowser = true;
+  }
+}
+
+
+void 
+Workspace::CreateLayer(const std::string& path)
+{
+  auto newLayer = SdfLayer::CreateNew(path);
+  UseLayer(newLayer);
+}
+
+void 
+Workspace::ImportLayer(const std::string& path) 
+{
+  auto newLayer = SdfLayer::FindOrOpen(path);
+  UseLayer(newLayer);
+}
+
+//
+void 
+Workspace::ImportStage(const std::string& path, bool openLoaded) 
+{
+  auto newStage = UsdStage::Open(path, openLoaded ? UsdStage::LoadAll : UsdStage::LoadNone); // TODO: as an option
+  if (newStage) {
+    _stageCache.Insert(newStage);
+    SetWorkStage(newStage);
+    _settings._showContentBrowser = true;
+    _settings._showViewport = true;
+    UpdateRecentFiles(_settings._recentFiles, path);
+  }
+}
+
+void 
+Workspace::SaveCurrentLayerAs(const std::string& path)
+{
+  auto newLayer = SdfLayer::CreateNew(path);
+  if (newLayer && GetCurrentLayer()) {
+    newLayer->TransferContent(GetCurrentLayer());
+    newLayer->Save();
+    UseLayer(newLayer);
+  }
+}
+
+void 
+Workspace::CreateStage(const std::string& path)
+{
+  auto usdaFormat = pxr::SdfFileFormat::FindByExtension("usda");
+  auto layer = SdfLayer::New(usdaFormat, path);
+  if (layer) {
+    auto newStage = UsdStage::Open(layer);
+    if (newStage) {
+      _stageCache.Insert(newStage);
+      SetCurrentStage(newStage);
+      _settings._showContentBrowser = true;
+      _settings._showViewport = true;
+    }
+  }
+}
+
+void Workspace::ClearStageCache() 
+{
+  _stageCache.Clear();
+}
+
 
 void
 Workspace::OpenStage(const std::string& filename)
 {
   _workStage = pxr::UsdStage::Open(filename);
-  _allStages.clear();
+  _stageCache.Insert(_workStage);
 }
 
 void
@@ -68,9 +200,11 @@ Workspace::OpenStage(const pxr::UsdStageRefPtr& stage)
 pxr::UsdStageRefPtr&
 Workspace::AddStageFromMemory(const std::string& name)
 {
-  pxr::SdfPath path(name);
-  _allStages[path] = pxr::UsdStage::CreateInMemory(name);
+  /*
+  _stageCache.Find()
+  _alStages[path] = pxr::UsdStage::CreateInMemory(name);
   return  _allStages[path];
+  */
 }
 
 pxr::UsdStageRefPtr&
@@ -85,8 +219,9 @@ Workspace::AddStageFromDisk(const std::string& filename)
 
   _allStages[path] = stage;
   pxr::SdfLayerHandle layer = stage->GetRootLayer();
-  _workStage->GetRootLayer()->InsertSubLayerPath(layer->GetIdentifier());
-  _workStage->SetDefaultPrim(stage->GetDefaultPrim());
+  _workStage = stage;
+  //_workStage->GetRootLayer()->InsertSubLayerPath(layer->GetIdentifier());
+  //_workStage->SetDefaultPrim(stage->GetDefaultPrim());
   return stage;
   /*
   std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
@@ -132,7 +267,7 @@ void
 Workspace::InitExec()
 {
   if (!_execInitialized) {
-    _execStage = UsdStage::CreateInMemory("EXEC");
+    _execStage = UsdStage::CreateInMemory("exec");
     _execScene = new Scene(_execStage);
     
     _execStage->GetRootLayer()->TransferContent(
@@ -159,17 +294,20 @@ Workspace::UpdateExec(double time)
     pxr::VtArray<pxr::GfVec3f> positions;
     pxr::UsdGeomMesh input(_workStage->GetPrimAtPath(path));
 
+    double t = pxr::GfSin(GetApplication()->GetTime().GetActiveTime() * 100);
+
     input.GetPointsAttr().Get(&positions, time);
     for (auto& position : positions) {
       position += pxr::GfVec3f(
-        RANDOM_0_1,
-        RANDOM_0_1,
-        RANDOM_0_1
-      ) * pxr::GfSin(GetApplication()->GetTime().GetActiveTime() * 100);
+        pxr::GfSin(position[0] + t),
+        pxr::GfCos(position[0] + t) * 5.0,
+        RANDOM_0_1 * 0.05
+      );
     }
     mesh->Update(positions);
   }
   _execScene->Update(time);
+
 }
 
 void 
