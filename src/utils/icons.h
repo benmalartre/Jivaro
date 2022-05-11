@@ -67,14 +67,14 @@ enum ICON_ID {
   ICON_SAVE,
   ICON_WARNING,
   ICON_ERROR,
-  ICON_OK/*,
+  ICON_OK,
   ICON_EXPENDED,
   ICON_CONNECTED,
   ICON_COLLAPSED,
   ICON_ARROWLEFT,
   ICON_ARROWRIGHT,
   ICON_ARROWUP,
-  ICON_ARROWDOWN*/,
+  ICON_ARROWDOWN,
   ICON_MAX_ID
 };
 
@@ -111,9 +111,7 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
   "save",
   "warning",
   "error",
-  "ok"
-};
-/*,
+  "ok",
   "expended",
   "connected",
   "collapsed",
@@ -122,7 +120,7 @@ static const char* ICON_NAMES[ICON_MAX_ID] = {
   "arrowup",
   "arrowdown"
 };
-*/
+
 #define ICON_INTERNAL_FORMAT GL_RGBA
 #define ICON_FORMAT GL_RGBA
 #define ICON_TYPE GL_UNSIGNED_BYTE

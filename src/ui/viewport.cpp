@@ -95,7 +95,6 @@ void ViewportUI::Init()
   for (short rendererIndex = 0; rendererIndex < _numRenderers; ++rendererIndex) {
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
-  
   if (LEGACY_OPENGL) {
     _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
   } else {
@@ -528,6 +527,10 @@ bool ViewportUI::Draw()
       _engine->SetDirty(true);
     }
 
+    // engine
+    ImGui::Text("%s", _engine->GetRendererDisplayName(
+      _engine->GetCurrentRendererId()).c_str());
+
     ImGui::PopFont();
     
     ImGui::End();
@@ -607,7 +610,7 @@ void ViewportUI::Resize()
       GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
     _drawTarget->Unbind();
 
-    _toolTarget = pxr::GlfDrawTarget::New(renderResolution, true /*multisamples*/);
+    _toolTarget = pxr::GlfDrawTarget::New(renderResolution, false /*multisamples*/);
     _toolTarget->Bind();
 
     _toolTarget->AddAttachment("color",
@@ -615,6 +618,7 @@ void ViewportUI::Resize()
     _toolTarget->AddAttachment("depth",
       GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
     _toolTarget->Unbind();
+
     _engine->SetDirty(true);
   }
 }

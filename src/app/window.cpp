@@ -101,6 +101,11 @@ Window::Window(bool fullscreen, const std::string& name) :
 
   _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0",  monitor, NULL);
   if (!_window) {
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0", monitor, NULL);
+  }
+  if (!_window) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0", monitor, NULL);
@@ -132,11 +137,16 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
   
-  _window = glfwCreateWindow(_width,_height,"Jivaro.1.0",NULL,NULL);
+  _window = glfwCreateWindow(_width,_height,"Jivaro",NULL,NULL);
+  if (!_window) {
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    _window = glfwCreateWindow(_width, _height, "Jivaro", NULL, NULL);
+  }
   if (!_window) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    _window = glfwCreateWindow(_width, _height, "Jivaro.1.0", NULL, NULL);
+    _window = glfwCreateWindow(_width, _height, "Jivaro", NULL, NULL);
     LEGACY_OPENGL = true;
   }
   BuildKeyMap();
@@ -165,6 +175,11 @@ Window::Window(int x, int y, int width, int height,
   glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
+  if (!_window) {
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
+  }
   if (!_window) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

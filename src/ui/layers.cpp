@@ -412,14 +412,14 @@ LayersUI::DrawNavigation(SdfLayerRefPtr layer)
   if (!layer) return;
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
     0,
-    &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_LOOP],
+    &ICONS[ICON_SIZE_SMALL][ICON_ARROWLEFT],
     ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)&OnSetPreviousLayer, this);
   ImGui::SameLine();
 
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
     0,
-    &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_LOOP],
+    &ICONS[ICON_SIZE_SMALL][ICON_ARROWRIGHT],
     ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)&OnSetNextLayer, this);
   ImGui::SameLine();

@@ -145,7 +145,6 @@ void FileBrowserUI::_DrawPath()
     (UIUtils::CALLBACK_FN)&OnHomeCallback, this);
   ImGui::SameLine();
   size_t numTokens = _pathTokens.size();
-  std::cout << "NUM TOKENS : " << numTokens << std::endl;
   if(numTokens) {
     size_t lastTokenIndex = numTokens - 1;
     for(size_t i=0; i < numTokens; ++i) {
@@ -272,7 +271,6 @@ void FileBrowserUI::_DrawButtons()
 
 bool FileBrowserUI::Draw()
 {
-  std::cout << "DRAW FILE BROWSER START" << std::endl;
   bool opened;
   int flags = 
     ImGuiWindowFlags_NoResize |
@@ -284,15 +282,11 @@ bool FileBrowserUI::Draw()
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
 
-std::cout << "DRAW PATH" << std::endl;
   _DrawPath();
-  std::cout << "DRAW ENTRIES" << std::endl;
   _DrawEntries();
-  std::cout << "DRAW BUTTONS" << std::endl;
   _DrawButtons();
   
   ImGui::End();
-  std::cout << "DRAW FILE BROWSER END" << std::endl;
   return true;
 };
 
