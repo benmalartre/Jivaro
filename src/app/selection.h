@@ -6,6 +6,7 @@
 #include <pxr/imaging/hd/selection.h>
 #include <vector>
 #include <boost/optional.hpp>
+#include <boost/functional/hash.hpp>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -67,7 +68,7 @@ public:
 private:
   Type                        _mode;
   std::vector<Item>           _items;
-  uint64_t                    _hash;
+  size_t                      _hash;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

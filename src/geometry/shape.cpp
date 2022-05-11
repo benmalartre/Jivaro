@@ -1283,7 +1283,7 @@ void InitShapeShader()
   // setup glsl program
   SHAPE_PROGRAM = new GLSLProgram();
   pxr::GlfContextCaps const & caps = pxr::GlfContextCaps::GetInstance();
-  if (caps.glslVersion < 330) {
+  if (caps.glVersion < 330) {
     SHAPE_PROGRAM->BuildFromString(
       "SimpleShape", 
       SIMPLE_VERTEX_SHADER_CODE_120, 

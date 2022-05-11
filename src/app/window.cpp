@@ -585,7 +585,7 @@ Window::SetupImgui()
   // setup platform/renderer bindings
   pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
   ImGui_ImplGlfw_InitForOpenGL(_window, false);
-  if (caps.glslVersion < 330) {
+  if (caps.glVersion < 330) {
     ImGui_ImplOpenGL3_Init("#version 120 ");
   }
   else {
@@ -630,7 +630,6 @@ void Window::MainLoop()
     //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
     glfwPollEvents();
     _app->Update();
-  
     // main window
     Draw();
     glfwSwapBuffers(_window);

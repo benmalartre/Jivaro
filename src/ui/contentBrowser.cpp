@@ -1,7 +1,7 @@
 #include "../ui/contentBrowser.h"
 #include "../utils/strings.h"
 #include "../app/view.h"
-#include "../app/application.h""
+#include "../app/application.h"
 
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -15,8 +15,8 @@ ContentBrowserUI::~ContentBrowserUI()
 {
 }
 
-void 
-ContentBrowserUI::DrawLayerTooltip(pxr::SdfLayerHandle layer) 
+static void 
+DrawLayerTooltip(pxr::SdfLayerHandle layer) 
 {
   ImGui::SetTooltip("%s\n%s", layer->GetRealPath().c_str(), layer->GetIdentifier().c_str());
   auto assetInfo = layer->GetAssetInfo();
@@ -32,8 +32,8 @@ ContentBrowserUI::DrawLayerTooltip(pxr::SdfLayerHandle layer)
   }
 }
 
-bool 
-ContentBrowserUI::PassOptionsFilter(SdfLayerHandle layer, 
+static bool 
+PassOptionsFilter(SdfLayerHandle layer, 
    const ContentBrowserOptions& options, bool isStage)
 {
   if (!options._filterAnonymous) {
@@ -136,7 +136,7 @@ void DrawLayerSet(UsdStageCache& cache, SdfLayerSetT& layerSet, SdfLayerHandle* 
           DrawLayerTooltip(layer);
         }
         if (ImGui::BeginPopupContextItem()) {
-          DrawLayerActionPopupMenu(layer);
+          //DrawLayerActionPopupMenu(layer);
           ImGui::EndPopup();
         }
         ImGui::PopID();

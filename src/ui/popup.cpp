@@ -379,7 +379,7 @@ NodePopupUI::Draw()
 
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
   
-  if (_filter == (char)0) {
+  if (!strcmp(_filter, "")) {
     _filteredNodes = _nodes;
   } else {
     _FilterNodes();

@@ -37,11 +37,11 @@ public:
   void TestVoronoi();
   void Update(double time);
 
-  Mesh* AddMesh(pxr::SdfPath& path, 
+  Mesh* AddMesh(const pxr::SdfPath& path, 
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
-  Curve* AddCurve(pxr::SdfPath& path, 
+  Curve* AddCurve(const pxr::SdfPath& path, 
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
-  Points* AddPoints(pxr::SdfPath& path, 
+  Points* AddPoints(const pxr::SdfPath& path, 
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
 
   _MeshMap& GetMeshes() { return _meshes; };

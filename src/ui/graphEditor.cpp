@@ -850,7 +850,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     strcat(expendedName, (const char*)this);
 
     if (ImGui::Selectable(&expendedName[0], true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
-      _expended = (_expended++) % 3;
+      _expended = (_expended + 1) % 3;
       GetApplication()->AddCommand(std::shared_ptr<ExpendNodeCommand>(
         new ExpendNodeCommand({ this }, NodeExpendState[_expended])));
     }

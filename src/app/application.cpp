@@ -371,7 +371,7 @@ Application::Init()
   _mainWindow->SetGLContext();
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
-
+  std::cout << width << "  " << height << std::endl;
   View* mainView = _mainWindow->SplitView(
     _mainWindow->GetMainView(), 0.5, true, View::LFIXED, 22);
   View* bottomView = _mainWindow->SplitView(
@@ -403,17 +403,13 @@ Application::Init()
 
   _mainWindow->Resize(width, height);
   
-
-
   // initialize 3d tools
   _tools.Init();
   
   GraphEditorUI* graph = new GraphEditorUI(graphView);
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
-  
   _viewport = new ViewportUI(viewportView);
   _timeline = new TimelineUI(timelineView);
-
   MenuUI* menu = new MenuUI(topView);
   ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
   _explorer = new ExplorerUI(explorerView);
@@ -684,6 +680,7 @@ Application::GetExec()
 void 
 Application::MainLoop()
 {
+  std::cout << "APP MAIN LOOP" << std::endl;
   if (_mainWindow->IsIdle())return;
   _mainWindow->MainLoop();
 }

@@ -56,7 +56,7 @@ Scene::Update(double time)
   }
 }
 
-Mesh* Scene::AddMesh(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
+Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
   bool isDefined = _stage->HasDefaultPrim() && 
     _stage->GetPrimAtPath(path).IsDefined();
@@ -80,7 +80,7 @@ Mesh* Scene::AddMesh(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
   return &_meshes[path];
 }
 
-  Curve* Scene::AddCurve(pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
+  Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
   {
     if (!_stage->GetPrimAtPath(path).IsDefined()) {
       pxr::UsdGeomBasisCurves usdCurve = pxr::UsdGeomBasisCurves::Define(_stage, path);
@@ -93,7 +93,7 @@ Mesh* Scene::AddMesh(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
     return &_curves[path];
   }
 
-  Points* Scene::AddPoints(pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
+  Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
   {
     if (!_stage->GetPrimAtPath(path).IsDefined()) {
       pxr::UsdGeomPoints usdPoints = pxr::UsdGeomPoints::Define(_stage, path);

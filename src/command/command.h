@@ -127,7 +127,7 @@ private:
 class TranslateCommand : public Command {
 public:
   TranslateCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
-    pxr::UsdTimeCode& timeCode=pxr::UsdTimeCode::Default());
+    const pxr::UsdTimeCode& timeCode=pxr::UsdTimeCode::Default());
   ~TranslateCommand() {};
   void Do() override;
 };
@@ -138,7 +138,7 @@ public:
 class RotateCommand : public Command {
 public:
   RotateCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
-    pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
+    const pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~RotateCommand() {};
   void Do() override;
 };
@@ -149,7 +149,7 @@ public:
 class ScaleCommand : public Command {
 public:
   ScaleCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets, 
-    pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
+    const pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~ScaleCommand() {};
   void Do() override;
 };
@@ -160,7 +160,7 @@ public:
 class PivotCommand : public Command {
 public:
   PivotCommand(pxr::UsdStageRefPtr stage, const HandleTargetDescList& targets,
-    pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
+    const pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
   ~PivotCommand() {};
   void Do() override;
 

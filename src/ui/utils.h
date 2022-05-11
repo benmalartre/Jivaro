@@ -69,7 +69,8 @@ public:
   template<typename FuncT, typename ...ArgsT>
   static bool AddCheckableIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT... args);
 
-  static void AddPropertyMiniButton(const char* btnStr, int rowId, const ImVec4& btnColor = ImVec4({ 0.0, 0.7, 0.0, 1.0 }));
+  static void AddPropertyMiniButton(const char* btnStr, int rowId, 
+    const ImVec4& btnColor = ImVec4(0.0, 0.7, 0.0, 1.0));
   static void AddPrimKind(const pxr::SdfPrimSpecHandle& primSpec);
   static void AddPrimType(const pxr::SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
   static void AddPrimSpecifier(const pxr::SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
@@ -82,7 +83,7 @@ public:
 
 
 template<typename FuncT, typename ...ArgsT>
-static void 
+void 
 UIUtils::IconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::BeginGroup();
@@ -94,7 +95,7 @@ UIUtils::IconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 }
 
 template<typename FuncT, typename ...ArgsT>
-static bool 
+bool 
 UIUtils::AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 {
   if (ImGui::ImageButton(
@@ -111,7 +112,7 @@ UIUtils::AddIconButton(Icon* icon, short state, FuncT func, ArgsT... args)
 }
 
 template<typename FuncT, typename ...ArgsT>
-static bool 
+bool 
 UIUtils::AddIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::PushID(id);
@@ -131,7 +132,7 @@ UIUtils::AddIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT...
 }
 
 template<typename FuncT, typename ...ArgsT>
-static bool 
+bool 
 UIUtils::AddTransparentIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
@@ -153,7 +154,7 @@ UIUtils::AddTransparentIconButton(ImGuiID id, Icon* icon, short state, FuncT fun
 }
 
 template<typename FuncT, typename ...ArgsT>
-static bool 
+bool 
 UIUtils::AddCheckableIconButton(ImGuiID id, Icon* icon, short state, FuncT func, ArgsT... args)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
@@ -183,7 +184,7 @@ UIUtils::AddCheckableIconButton(ImGuiID id, Icon* icon, short state, FuncT func,
 }
 
 template <typename MatrixType, int DataType, int Rows, int Cols>
-static pxr::VtValue 
+pxr::VtValue 
 UIUtils::AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
 {
   pxr::VtValue value;
@@ -213,7 +214,7 @@ UIUtils::AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeC
 }
 
 template <typename VectorType, int DataType, int N>
-static pxr::VtValue 
+pxr::VtValue 
 UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
 {
   VectorType buffer;

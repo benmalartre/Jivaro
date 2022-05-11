@@ -143,7 +143,7 @@ UndoStateDelegate::_InvertDeleteSpec(
     SdfAbstractData* const dst;
   };
 
-  _SpecCopier specCopier(boost::get_pointer(_GetLayerData()));
+  _SpecCopier specCopier(get_pointer(_GetLayerData()));
   deletedData->VisitSpecs(&specCopier);
   return true;
 }
@@ -325,8 +325,8 @@ UndoStateDelegate::_OnDeleteSpec(const SdfPath& path, bool inert)
   SdfDataRefPtr deletedData = TfCreateRefPtr(new SdfData());
   SdfLayer::TraversalFunction copyFunc = std::bind(
     &_CopySpecAtPath,
-    boost::cref(*boost::get_pointer(_GetLayerData())),
-    boost::get_pointer(deletedData), std::placeholders::_1);
+    std::cref(*get_pointer(_GetLayerData())),
+    get_pointer(deletedData), std::placeholders::_1);
   _GetLayer()->Traverse(path, copyFunc);
 
   const SdfSpecType deletedSpecType = _GetLayer()->GetSpecType(path);

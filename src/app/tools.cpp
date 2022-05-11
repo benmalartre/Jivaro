@@ -19,8 +19,6 @@ Tool::~Tool()
 
 void Tool::Init()
 {
-  _active = new SelectHandle();
-  _active->Setup();
   SetActiveTool(TOOL_SELECT);
 }
 

@@ -6,6 +6,7 @@
 #include "../utils/icons.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
+#include "../ui/textFilter.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -33,10 +34,6 @@ public:
   void MouseButton(int action, int button, int mods) override{};
   void MouseMove(int x, int y) override{};
   bool Draw() override;
-
-protected:
-  void DrawLayerTooltip(pxr::SdfLayerHandle layer);
-  bool PassOptionsFilter(pxr::SdfLayerHandle layer, const ContentBrowserOptions& options, bool isStage);
 
 private:
 

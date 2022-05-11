@@ -362,29 +362,29 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
   ImGui::PopStyleColor(3);
 }
 
-#define PrimDefaultColor {227.f/255.f, 227.f/255.f, 227.f/255.f, 1.0}
-#define PrimInactiveColor {0.4, 0.4, 0.4, 1.0}
-#define PrimInstanceColor {135.f/255.f, 206.f/255.f, 250.f/255.f, 1.0}
-#define PrimPrototypeColor {118.f/255.f, 136.f/255.f, 217.f/255.f, 1.0}
-#define PrimHasCompositionColor {222.f/255.f, 158.f/255.f, 46.f/255.f, 1.0}
+static ImVec4 PrimDefaultColor(227.f/255.f, 227.f/255.f, 227.f/255.f, 1.0);
+static ImVec4 PrimInactiveColor(0.4, 0.4, 0.4, 1.0);
+static ImVec4 PrimInstanceColor(135.f/255.f, 206.f/255.f, 250.f/255.f, 1.0);
+static ImVec4 PrimPrototypeColor(118.f/255.f, 136.f/255.f, 217.f/255.f, 1.0);
+static ImVec4 PrimHasCompositionColor(222.f/255.f, 158.f/255.f, 46.f/255.f, 1.0);
 
 static ImVec4 GetPrimColor(const UsdPrim& prim) {
   if (!prim.IsActive() || !prim.IsLoaded()) {
-    return ImVec4(PrimInactiveColor);
+    return PrimInactiveColor;
   }
   if (prim.IsInstance()) {
-    return ImVec4(PrimInstanceColor);
+    return PrimInstanceColor;
   }
   const auto hasCompositionArcs = 
     prim.HasAuthoredReferences() || prim.HasAuthoredPayloads() || 
     prim.HasAuthoredInherits() || prim.HasAuthoredSpecializes() || prim.HasVariantSets();
   if (hasCompositionArcs) {
-    return ImVec4(PrimHasCompositionColor);
+    return PrimHasCompositionColor;
   }
   if (prim.IsPrototype() || prim.IsInPrototype() || prim.IsInstanceProxy()) {
-    return ImVec4(PrimPrototypeColor);
+    return PrimPrototypeColor;
   }
-  return ImVec4(PrimDefaultColor);
+  return PrimDefaultColor;
 }
 
 /// Recursive function to draw a prim and its descendants
@@ -510,7 +510,7 @@ ExplorerUI::Draw()
   }
   ImGui::PopFont();
   DrawBackground();
-  ImGui::TreePop();
+  //ImGui::TreePop();
   ImGui::PopStyleColor(3);
   ImGui::End();
 

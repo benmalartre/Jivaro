@@ -468,7 +468,7 @@ bool ViewportUI::Draw()
     }
 
     Tool* tools = GetApplication()->GetTools();
-    const bool shouldDrawTool = tools->IsActive();//&& _parent->IsActive();
+    const bool shouldDrawTool = tools->IsActive();
     if (shouldDrawTool) {
       _toolTarget->Bind();
       glViewport(0, 0, GetWidth(), GetHeight());
@@ -480,7 +480,6 @@ bool ViewportUI::Draw()
       tools->SetCamera(_camera);
       tools->Draw();
       _toolTarget->Unbind();
-      _toolTarget->Resolve();
     }
 
     const pxr::GfVec2f min(GetX(), GetY());
@@ -497,6 +496,7 @@ bool ViewportUI::Draw()
       min, min + size, ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255));
 
     if (shouldDrawTool) {
+      _toolTarget->Resolve();
       drawList->AddImage(
         (ImTextureID)(size_t)_toolTarget->GetAttachment("color")->GetGlTextureName(),
         min, min + size, ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));

@@ -133,7 +133,8 @@ public:
     , _matrix(pxr::GfMatrix4f(1.f))
     , _startMatrix(pxr::GfMatrix4f(1.f))
     , _viewPlaneMatrix(pxr::GfMatrix4f(1.f)) {};
-
+  virtual ~BaseHandle(){};
+  
   void SetActiveAxis(short axis);
   void SetHoveredAxis(short axis);
   void SetCamera(Camera* camera) {_camera = camera;};

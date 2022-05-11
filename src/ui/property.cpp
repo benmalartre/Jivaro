@@ -263,7 +263,7 @@ PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
   }
 
   if (!hasValue && !hasConnections) {
-    ImGui::TextColored(ImVec4({ 0.5, 0.5, 0.5, 0.5 }), "no value");
+    ImGui::TextColored(ImVec4(0.5, 0.5, 0.5, 0.5), "no value");
   }
 }
 

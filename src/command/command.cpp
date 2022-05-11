@@ -257,7 +257,7 @@ void ActivateCommand::Do() {
 //==================================================================================
 // Transform Helper
 //==================================================================================
-static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, pxr::UsdTimeCode& timeCode)
+static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, const pxr::UsdTimeCode& timeCode)
 {
   pxr::GfVec3d translation;
   pxr::GfVec3f rotation;
@@ -275,7 +275,7 @@ static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, pxr::UsdTimeCode& timeCode
 // Translate
 //==================================================================================
 TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage, 
-  const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
+  const HandleTargetDescList& targets, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   for (auto& target : targets) {
@@ -306,7 +306,7 @@ void TranslateCommand::Do()
 // Rotate
 //==================================================================================
 RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage, 
-  const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
+  const HandleTargetDescList& targets, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   for (auto& target: targets) {
@@ -334,7 +334,7 @@ void RotateCommand::Do()
 // Scale
 //==================================================================================
 ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage, 
-  const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
+  const HandleTargetDescList& targets, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   pxr::UsdGeomXformCache xformCache(timeCode);
@@ -367,7 +367,7 @@ void ScaleCommand::Do() {
 // Pivot
 //==================================================================================
 PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage, 
-  const HandleTargetDescList& targets, pxr::UsdTimeCode& timeCode)
+  const HandleTargetDescList& targets, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
   pxr::UsdGeomXformCache xformCache(timeCode);
@@ -504,7 +504,6 @@ ExpendNodeCommand::ExpendNodeCommand(
 
 void ExpendNodeCommand::Do()
 {
-  std::cout << "UNDO EXPEND NODE " << std::endl;
   _inverse.Invert();
   for (auto& node : _nodes) {
     node->UpdateExpansionState();
