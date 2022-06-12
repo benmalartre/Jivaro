@@ -27,8 +27,6 @@
 #include "../command/block.h"
 #include "../command/command.h"
 
-
-
 PXR_NAMESPACE_OPEN_SCOPE
 
 const pxr::TfToken GraphEditorUI::NodeExpendState[3] = {

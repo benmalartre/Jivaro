@@ -119,7 +119,7 @@ public:
 
   int operator()(float a00, float a01, float a02, float a11, float a12, 
     float a22, bool aggressive, int sortType, pxr::GfVec3f& values,
-    pxr::GfVec3f vectors[3]) const
+    pxr::GfVec3f& vectors[3]) const
   {
     // Compute the Householder reflection H and B = H*A*H, where
     // b02 = 0.
@@ -367,7 +367,7 @@ public:
 
   void operator()(float a00, float a01, float a02, float a11, float a12, 
     float a22, int sortType, pxr::GfVec3f& values, 
-    pxr::GfVec3f vectors[3]) const
+    pxr::GfVec3f& vectors[3]) const
   {
     // Precondition the matrix by factoring out the maximum absolute
     // value of the components.  This guards against floating-point
