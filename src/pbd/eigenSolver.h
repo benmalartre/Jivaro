@@ -14,8 +14,6 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/matrix3f.h>
 
-
-
 // The document
 // https://www.geometrictools.com/Documentation/RobustEigenSymmetric3x3.pdf
 // describes algorithms for solving the eigensystem associated with a 3x3
@@ -462,13 +460,13 @@ public:
       // orthonormal.
       if (halfDet >= 0.0)
       {
-        ComputeEigenvector0(a00, a01, a02, a11, a12, a22, values[2], (pxr::GfVec3f&)*(&vectors[2][0]));
+        ComputeEigenvector0(a00, a01, a02, a11, a12, a22, values[2], *(pxr::GfVec3f*)&vectors[2][0]);
         ComputeEigenvector1(a00, a01, a02, a11, a12, a22, vectors.GetRow(2), values[1], *(pxr::GfVec3f*)&vectors[1][0]);
         vectors.SetRow(0, vectors.GetRow(1) ^ vectors.GetRow(2));
       }
       else
       {
-        ComputeEigenvector0(a00, a01, a02, a11, a12, a22, values[0], (pxr::GfVec3f&)*(&vectors[0][0]));
+        ComputeEigenvector0(a00, a01, a02, a11, a12, a22, values[0], *(pxr::GfVec3f*)&vectors[0][0]);
         ComputeEigenvector1(a00, a01, a02, a11, a12, a22, vectors.GetRow(0), values[1], *(pxr::GfVec3f*)&vectors[1][0]);
         vectors.SetRow(2, vectors.GetRow(0) ^ vectors.GetRow(1));
       }
