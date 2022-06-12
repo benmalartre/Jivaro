@@ -69,6 +69,7 @@ void _RandomMatrices(std::vector<pxr::GfMatrix4f>& matrices)
   }
 }
 
+/*
 void _Jacobi3(const pxr::GfMatrix4f& m, pxr::GfVec3f* eigenvalues, 
   pxr::GfVec3f eigenvectors[3])
 {
@@ -170,6 +171,108 @@ void _Jacobi3(const pxr::GfMatrix4f& m, pxr::GfVec3f* eigenvalues,
 	}
     }
 }
+*/
+void _Jacobi3(const pxr::GfMatrix4f& m, pxr::GfVec3f* eigenvalues, 
+  pxr::GfVec3f eigenvectors[3])
+{
+  // This was adapted from the (open source) Open Inventor
+  // SbMatrix::Jacobi3().
+
+  // Initialize eigenvalues to the diagonal of the 3x3 matrix and
+  // eigenvectors to the principal axes.
+  eigenvalues->Set(m[0][0], m[1][1], m[2][2]);
+  eigenvectors[0] = GfVec3f::XAxis();
+  eigenvectors[1] = GfVec3f::YAxis();
+  eigenvectors[2] = GfVec3f::ZAxis();
+
+  GfMatrix4f a = m;
+  GfVec3f   b = *eigenvalues;
+  GfVec3f   z = GfVec3f(0);
+
+  for (int i = 0; i < 50; i++) {
+    float sm = 0.0;
+    for (int p = 0; p < 2; p++)
+      for (int q = p+1; q < 3; q++)
+        sm += GfAbs(a[p][q]);
+    
+    if (sm == 0.0)
+        return;
+    
+    double thresh = (i < 3 ? (.2 * sm / (3 * 3)) : 0.0);
+    
+    for (int p = 0; p < 3; p++) {
+      for (int q = p+1; q < 3; q++) {
+      
+        double g = 100.0 * GfAbs(a[p][q]);
+      
+        if (i > 3 &&
+            (GfAbs((*eigenvalues)[p]) + g ==
+            GfAbs((*eigenvalues)[p])) && 
+            (GfAbs((*eigenvalues)[q]) + g ==
+            GfAbs((*eigenvalues)[q])))
+            a[p][q] = 0.0;
+      
+        else if (GfAbs(a[p][q]) > thresh) {
+          double h = (*eigenvalues)[q] - (*eigenvalues)[p];
+          double t;
+
+          if (GfAbs(h) + g == GfAbs(h)) {
+            t = a[p][q] / h;
+          } else {
+            double theta = 0.5 * h / a[p][q];
+            t = 1.0 / (GfAbs(theta) + sqrt(1.0 + theta * theta));
+            if (theta < 0.0)
+              t = -t;
+          }
+
+          // End of computing tangent of rotation angle
+          
+          double c = 1.0 / sqrt(1.0 + t*t);
+          double s = t * c;
+          double tau = s / (1.0 + c);
+          h = t * a[p][q];
+          z[p]    -= h;
+          z[q]    += h;
+          (*eigenvalues)[p] -= h;
+          (*eigenvalues)[q] += h;
+          a[p][q] = 0.0;
+          
+          for (int j = 0; j < p; j++) {
+            g = a[j][p];
+            h = a[j][q];
+            a[j][p] = g - s * (h + g * tau);
+            a[j][q] = h + s * (g - h * tau);
+          }
+          
+          for (int j = p+1; j < q; j++) {
+            g = a[p][j];
+            h = a[j][q];
+            a[p][j] = g - s * (h + g * tau);
+            a[j][q] = h + s * (g - h * tau);
+          }
+          
+          for (int j = q+1; j < 3; j++) {
+            g = a[p][j];
+            h = a[q][j];
+            a[p][j] = g - s * (h + g * tau);
+            a[q][j] = h + s * (g - h * tau);
+          }
+          
+          for (int j = 0; j < 3; j++) {
+            g = eigenvectors[j][p];
+            h = eigenvectors[j][q];
+            eigenvectors[j][p] = g - s * (h + g * tau);
+            eigenvectors[j][q] = h + s * (g - h * tau);
+          }
+        }
+      }
+    }
+    for (int p = 0; p < 3; p++) {
+      (*eigenvalues)[p] = b[p] += z[p];
+      z[p] = 0;
+    }
+  }
+}
 
 void _TestOne() {
   std:: cout << "\n\n############  TEST ONE   ##########################" << std::endl;
@@ -199,14 +302,15 @@ void _TestOne() {
 
     _PrintResult("Eigen", es.eigenvalues().data(), 
       es.eigenvectors().data());
+  
   }
 
   // custom iterative
   {
     pxr::GfVec3f values;
-    pxr::GfVec3f vectors[3];
+    pxr::GfMatrix3f vectors;
 
-    JVR::SymmetricEigensolver3x3 solver;
+    pxr::SymmetricEigensolver3x3 solver;
     solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], true, 1, values, vectors);
     _PrintResult("Custom Iterative", &values[0], &vectors[0][0]);
   }
@@ -214,9 +318,9 @@ void _TestOne() {
   // custom non-iterative
   {
     pxr::GfVec3f values;
-    pxr::GfVec3f vectors[3];
+    pxr::GfMatrix3f vectors;
 
-    JVR::NISymmetricEigensolver3x3 solver;
+    pxr::NISymmetricEigensolver3x3 solver;
     solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], 1, values, vectors);
     _PrintResult("Custom Non-Iterative", &values[0], &vectors[0][0]);
   }
@@ -244,7 +348,8 @@ void _BenchMark(size_t N) {
     for(size_t i=0; i < N; ++i) {
       const pxr::GfMatrix4f& m = matrices[i];
       pxr::GfVec3f* eigenValues = (pxr::GfVec3f*)&values0[i * 3];
-      pxr::GfVec3f* eigenVectors = (pxr::GfVec3f*)&vectors0[i * 9];;
+      pxr::GfVec3f* eigenVectors = (pxr::GfVec3f*)&vectors0[i * 9];
+
       _Jacobi3(m, eigenValues, eigenVectors);
     }
     uint64_t T0 = CurrentTime() - startT;
@@ -275,9 +380,9 @@ void _BenchMark(size_t N) {
     for(size_t i=0; i < N; ++i) {
       const pxr::GfMatrix4f& m = matrices[i];
       pxr::GfVec3f& values = *(pxr::GfVec3f*)&values3[i * 3];
-      pxr::GfVec3f* vectors = (pxr::GfVec3f*)&vectors3[i * 9];;
+      pxr::GfMatrix3f& vectors = *(pxr::GfMatrix3f*)&vectors3[i * 9];;
 
-      JVR::SymmetricEigensolver3x3 solver;
+      pxr::SymmetricEigensolver3x3 solver;
       solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], true, 1, values, vectors);
     }
     _PrintBenchMark("Custom iterative", CurrentTime() - startT);
@@ -289,9 +394,9 @@ void _BenchMark(size_t N) {
     for(size_t i=0; i < N; ++i) {
       const pxr::GfMatrix4f& m = matrices[i];
       pxr::GfVec3f& values = *(pxr::GfVec3f*)&values3[i * 3];
-      pxr::GfVec3f* vectors = (pxr::GfVec3f*)&vectors3[i * 9];;
+      pxr::GfMatrix3f& vectors = *(pxr::GfMatrix3f*)&vectors3[i * 9];;
 
-      JVR::NISymmetricEigensolver3x3 solver;
+      pxr::NISymmetricEigensolver3x3 solver;
       solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], 1, values, vectors);
     }
     _PrintBenchMark("Custom non-iterative", CurrentTime() - startT);

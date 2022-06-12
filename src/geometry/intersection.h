@@ -88,7 +88,7 @@ bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   const double section, double* distance);
 
 bool IntersectTriangle(const pxr::GfRay& ray, const pxr::GfVec3f& a,
-  const pxr::GfVec3f& b, const pxr::GfVec3f& c);
+  const pxr::GfVec3f& b, const pxr::GfVec3f& c, double* distance, pxr::GfVec3f* uvw);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

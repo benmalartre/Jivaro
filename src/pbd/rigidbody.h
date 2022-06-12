@@ -2,12 +2,15 @@
 #define JVR_PBD_RIGIDBODY_H
 
 #include <vector>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/matrix3f.h>
+#include <pxr/base/gf/quatf.h>
+
 #include "../common.h"
 #include "../objects/mesh.h"
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/matri3f.h>
-#include <pxr/base/gf/quatf.h>
-#include "eigenSolver.h"
+
+#include "../pbd/eigenSolver.h"
+#include "../pbd/volume.h"
 
 //#include "RigidBodyGeometry.h"
 //#include "Utils/VolumeIntegration.h"
@@ -20,63 +23,63 @@ class RigidBody
 {
   private:
     // mass
-    float _mass;
+    float                   _mass;
     // inverse mass
-    float _invMass;
+    float                   _invMass;
     // center of mass
-    pxr::GfVec3f _x;
-    pxr::GfVec3f _lastX;
-    pxr::GfVec3f _oldX;
-    pxr::GfVec3f _x0;
+    pxr::GfVec3f            _x;
+    pxr::GfVec3f            _lastX;
+    pxr::GfVec3f            _oldX;
+    pxr::GfVec3f            _x0;
     // center of mass velocity
-    pxr::GfVec3f _v;
-    pxr::GfVec3f _v0;
+    pxr::GfVec3f            _v;
+    pxr::GfVec3f            _v0;
     // acceleration (by external forces)
-    pxr::GfVec3f _a;
+    pxr::GfVec3f            _a;
 
     // Inertia tensor in the principal axis system: \n
     // After the main axis transformation the inertia tensor is a diagonal matrix.
     // So only three values are required to store the inertia tensor. These values
     // are constant over time.
     //
-    pxr::GfVec3f _inertiaTensor;
+    pxr::GfVec3f            _inertiaTensor;
     // Inverse inertia tensor in body space
-    pxr::GfVec3f _inertiaTensorInverse;
+    pxr::GfVec3f            _inertiaTensorInverse;
     // 3x3 matrix, inverse of the inertia tensor in world space
-    pxr::GfMatrix3f _inertiaTensorInverseW;
+    pxr::GfMatrix3f         _inertiaTensorInverseW;
     // Quaternion that describes the rotation of the body in world space
-    pxr::GfQuatf _q;
-    pxr::GfQuatf _lastQ;
-    pxr::GfQuatf _oldQ;
-    pxr::GfQuatf _q0;
+    pxr::GfQuatf            _q;
+    pxr::GfQuatf            _lastQ;
+    pxr::GfQuatf            _oldQ;
+    pxr::GfQuatf            _q0;
     // Quaternion representing the rotation of the main axis transformation
     // that is performed to get a diagonal inertia tensor
-    pxr::GfQuatf _q_mat;
+    pxr::GfQuatf            _q_mat;
     // Quaternion representing the initial rotation of the geometry
-    pxr::GfQuatf _q_initial;
+    pxr::GfQuatf            _q_initial;
     // difference of the initial translation and the translation of the main axis transformation
-    pxr::GfVec3f _x0_mat;
+    pxr::GfVec3f            _x0_mat;
     // rotationMatrix = 3x3 matrix. 
     // Important for the transformation from world in body space and vice versa.
     // When using quaternions the rotation matrix is computed out of the quaternion.
     //
-    pxr::GfMatrix3f _rot;
+    pxr::GfMatrix3f         _rot;
     // Angular velocity, defines rotation axis and velocity (magnitude of the vector)
-    pxr::GfVec3f _omega;
-    pxr::GfVec3f _omega0;
+    pxr::GfVec3f            _omega;
+    pxr::GfVec3f            _omega0;
     // external torque
-    pxr::GfVec3f _torque;
+    pxr::GfVec3f            _torque;
 
-    float _restitutionCoeff;
-    float _frictionCoeff;
+    float                   _restitutionCoeff;
+    float                   _frictionCoeff;
 
-    PBDGeometry _geometry;
+    PBDGeometry             _geometry;
 
     // transformation required to transform a point to local space or vice vera
-    pxr::GfMatrix3f _transformation_R;
-    pxr::GfVec3f _transformation_v1;
-    pxr::GfVec3f _transformation_v2;
-    pxr::GfVec3f _transformation_R_X_v1;
+    pxr::GfMatrix3f         _transformation_R;
+    pxr::GfVec3f            _transformation_v1;
+    pxr::GfVec3f            _transformation_v2;
+    pxr::GfVec3f            _transformation_R_X_v1;
     
   public:
     void InitBody(const float mass, const pxr::GfVec3f& x, 
@@ -88,9 +91,7 @@ class RigidBody
       _x0 = x;
       _lastX = x;
       _oldX = x;
-      _v.SetZero();
-      _v0.SetZero();
-      _a.SetZero();
+      _v = _v0 = _a = pxr::GfVec3f(0.f);
 
       SetInertiaTensor(inertiaTensor);
       _q = rotation;
@@ -116,51 +117,49 @@ class RigidBody
     void InitBody(const float density, const pxr::GfVec3f& x, 
       const pxr::GfQuatf& rotation, const VertexData &vertices, const Utilities::IndexedFaceMesh &mesh, const Vector3r &scale = Vector3r(1.0, 1.0, 1.0))
     {
-      m_mass = 1.0;
-      m_inertiaTensor = Vector3r(1.0, 1.0, 1.0);
-      m_x = x;
-      m_x0 = x;
-      m_lastX = x;
-      m_oldX = x;
-      m_v.setZero();
-      m_v0.setZero();
-      m_a.setZero();
+      _mass = 1.0;
+      _inertiaTensor = pxr::GfVec3f(1.0, 1.0, 1.0);
+      _x = x;
+      _x0 = x;
+      _lastX = x;
+      _oldX = x;
+      _v = _v0 = _a = pxr::GfVec3f(0.f);
 
-      m_q = rotation;
-      m_q0 = rotation;
-      m_lastQ = rotation;
-      m_oldQ = rotation;
-      m_rot = m_q.matrix();
-      rotationUpdated();
-      m_omega.setZero();
-      m_omega0.setZero();
-      m_torque.setZero();
+      _q = rotation;
+      _q0 = rotation;
+      _lastQ = rotation;
+      _oldQ = rotation;
+      _rot = _q.matrix();
+      RotationUpdated();
+      _omega.setZero();
+      _omega0.setZero();
+      _torque.setZero();
 
-      m_restitutionCoeff = static_cast<Real>(0.6);
-      m_frictionCoeff = static_cast<Real>(0.2);
+      _restitutionCoeff = static_cast<float>(0.6);
+      _frictionCoeff = static_cast<float>(0.2);
 
-      getGeometry().initMesh(vertices.size(), mesh.numFaces(), &vertices.getPosition(0), mesh.getFaces().data(), mesh.getUVIndices(), mesh.getUVs(), scale);
-      determineMassProperties(density);
-      getGeometry().updateMeshTransformation(getPosition(), getRotationMatrix());
+      GetGeometry().InitMesh(vertices.size(), mesh.numFaces(), &vertices.getPosition(0), mesh.getFaces().data(), mesh.getUVIndices(), mesh.getUVs(), scale);
+      DetermineMassProperties(density);
+      GetGeometry().UpdateMeshTransformation(GetPosition(), GetRotationMatrix());
     }
 
-    void reset()
+    void Reset()
     {
-      getPosition() = getPosition0();
-      getOldPosition() = getPosition0();
-      getLastPosition() = getPosition0();
+      GetPosition() = GetPosition0();
+      GetOldPosition() = GetPosition0();
+      GetLastPosition() = GetPosition0();
 
-      getRotation() = getRotation0();
-      getOldRotation() = getRotation0();
-      getLastRotation() = getRotation0();
+      GetRotation() = GetRotation0();
+      GetOldRotation() = GetRotation0();
+      GetLastRotation() = GetRotation0();
 
-      getVelocity() = getVelocity0();
-      getAngularVelocity() = getAngularVelocity0();
+      GetVelocity() = GetVelocity0();
+      GetAngularVelocity() = GetAngularVelocity0();
 
-      getAcceleration().setZero();
-      getTorque().setZero();
+      GetAcceleration() = pxr::GfVec3f(0.f);
+      GetTorque() = pxr::GfVec3f(0.f);
 
-      rotationUpdated();
+      RotationUpdated();
     }
 
     void UpdateInverseTransformation()
@@ -214,16 +213,16 @@ class RigidBody
     void DetermineMassProperties(const float density)
     {
       // apply initial rotation
-      VertexData &vd = m_geometry.getVertexDataLocal();
+      VertexData &vd = _geometry.getVertexDataLocal();
       
-      Utilities::VolumeIntegration vi(m_geometry.getVertexDataLocal().size(), m_geometry.getMesh().numFaces(), &m_geometry.getVertexDataLocal().getPosition(0), m_geometry.getMesh().getFaces().data());
-      vi.compute_inertia_tensor(density);
+      PBDVolume vi(_geometry.getVertexDataLocal().size(), m_geometry.getMesh().numFaces(), &m_geometry.getVertexDataLocal().getPosition(0), m_geometry.getMesh().getFaces().data());
+      vi.ComputeInertiaTensor(density);
 
       // Diagonalize Inertia Tensor
-      NI
+      NISymmetricEigensolver3x3 solver;
       Eigen::SelfAdjointEigenSolver<Matrix3r> es(vi.getInertia());
       Vector3r inertiaTensor = es.eigenvalues();
-      Matrix3r R = es.eigenvectors();
+      pxr::GfMatrix3f R = es.eigenvectors();
 
       SetMass(vi.getMass());
       SetInertiaTensor(inertiaTensor);
@@ -234,7 +233,7 @@ class RigidBody
       for (unsigned int i = 0; i < vd.size(); i++)
         vd.getPosition(i) = m_rot * vd.getPosition(i) + m_x0;
 
-      Vector3r x_MAT = vi.getCenterOfMass();
+      pxr::GfVec3f x_MAT = vi.GetCenterOfMass();
       R = m_rot * R;
       x_MAT = m_rot * x_MAT + m_x0;
 
@@ -243,24 +242,24 @@ class RigidBody
         vd.getPosition(i) = R.transpose() * (vd.getPosition(i) - x_MAT);
 
       // set rotation
-      Quaternionr qR = Quaternionr(R);
-      qR.normalize();
-      m_q_mat = qR;
-      m_q_initial = m_q0;
-      m_x0_mat = m_x0 - x_MAT;
+      pxr::GfQuaternionf qR = pxr::GfQuaternionf(R);
+      qR.Normalize();
+      _q_mat = qR;
+      _q_initial = m_q0;
+      _x0_mat = m_x0 - x_MAT;
 
-      m_q0 = qR;
-      m_q = m_q0;
-      m_lastQ = m_q0;
-      m_oldQ = m_q0;
-      rotationUpdated();
+      _q0 = qR;
+      _q = _q0;
+      _lastQ = _q0;
+      _oldQ = _q0;
+      RotationUpdated();
 
       // set translation
-      m_x0 = x_MAT;
-      m_x = m_x0;
-      m_lastX = m_x0;
-      m_oldX = m_x0;
-      updateInverseTransformation();
+      _x0 = x_MAT;
+      _x = _x0;
+      _lastX = _x0;
+      _oldX = _x0;
+      UpdateInverseTransformation();
     }
 
     const Matrix3r &getTransformationR() { return m_transformation_R;  }

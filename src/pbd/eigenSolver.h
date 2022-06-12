@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <array>
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/matrix3f.h>
 
 
 
@@ -29,7 +30,7 @@ class SortEigenstuff
 {
 public:
   void operator()(int sortType, bool isRotation,
-    pxr::GfVec3f& values, pxr::GfVec3f vectors[3])
+    pxr::GfVec3f& values, pxr::GfMatrix3f& vectors)
   {
     if (sortType != 0) {
       // Sort the eigenvalues to values[0] <= values[1] <= values[2].
@@ -81,11 +82,11 @@ public:
       }
 
       pxr::GfVec3f unorderedValues(values);
-      pxr::GfVec3f unorderedVectors[3] = {vectors[0], vectors[1], vectors[2]};
+      pxr::GfVec3f unorderedVectors[3] = {vectors.GetRow(0), vectors.GetRow(1), vectors.GetRow(2)};
       for (size_t j = 0; j < 3; ++j) {
           size_t i = index[j];
           values[j] = unorderedValues[i];
-          vectors[j] = unorderedVectors[i];
+          vectors.SetRow(j, unorderedVectors[i]);
       }
     }
 
@@ -119,7 +120,7 @@ public:
 
   int operator()(float a00, float a01, float a02, float a11, float a12, 
     float a22, bool aggressive, int sortType, pxr::GfVec3f& values,
-    pxr::GfVec3f& vectors[3]) const
+    pxr::GfMatrix3f& vectors) const
   {
     // Compute the Householder reflection H and B = H*A*H, where
     // b02 = 0.
@@ -367,7 +368,7 @@ public:
 
   void operator()(float a00, float a01, float a02, float a11, float a12, 
     float a22, int sortType, pxr::GfVec3f& values, 
-    pxr::GfVec3f& vectors[3]) const
+    pxr::GfMatrix3f& vectors) const
   {
     // Precondition the matrix by factoring out the maximum absolute
     // value of the components.  This guards against floating-point
@@ -382,9 +383,9 @@ public:
       values[0] = (float)0;
       values[1] = (float)0;
       values[2] = (float)0;
-      vectors[0] = { (float)1, (float)0, (float)0 };
-      vectors[1] = { (float)0, (float)1, (float)0 };
-      vectors[2] = { (float)0, (float)0, (float)1 };
+      vectors.SetRow(0, pxr::GfVec3f(1.f, 0.f, 0.f));
+      vectors.SetRow(1, pxr::GfVec3f(0.f, 1.f, 0.f));
+      vectors.SetRow(2, pxr::GfVec3f(0.f, 0.f, 1.f));
       return;
     }
 
@@ -461,24 +462,24 @@ public:
       // orthonormal.
       if (halfDet >= 0.0)
       {
-        ComputeEigenvector0(a00, a01, a02, a11, a12, a22, values[2], vectors[2]);
-        ComputeEigenvector1(a00, a01, a02, a11, a12, a22, vectors[2], values[1], vectors[1]);
-        vectors[0] = vectors[1] ^ vectors[2];
+        ComputeEigenvector0(a00, a01, a02, a11, a12, a22, values[2], (pxr::GfVec3f&)*(&vectors[2][0]));
+        ComputeEigenvector1(a00, a01, a02, a11, a12, a22, vectors.GetRow(2), values[1], *(pxr::GfVec3f*)&vectors[1][0]);
+        vectors.SetRow(0, vectors.GetRow(1) ^ vectors.GetRow(2));
       }
       else
       {
-        ComputeEigenvector0(a00, a01, a02, a11, a12, a22, values[0], vectors[0]);
-        ComputeEigenvector1(a00, a01, a02, a11, a12, a22, vectors[0], values[1], vectors[1]);
-        vectors[2] = vectors[0] ^ vectors[1];
+        ComputeEigenvector0(a00, a01, a02, a11, a12, a22, values[0], (pxr::GfVec3f&)*(&vectors[0][0]));
+        ComputeEigenvector1(a00, a01, a02, a11, a12, a22, vectors.GetRow(0), values[1], *(pxr::GfVec3f*)&vectors[1][0]);
+        vectors.SetRow(2, vectors.GetRow(0) ^ vectors.GetRow(1));
       }
     } else {
       // The matrix is diagonal.
       values[0] = a00;
       values[1] = a11;
       values[2] = a22;
-      vectors[0] = { (float)1, (float)0, (float)0 };
-      vectors[1] = { (float)0, (float)1, (float)0 };
-      vectors[2] = { (float)0, (float)0, (float)1 };
+      vectors.SetRow(0, pxr::GfVec3f(1.f, 0.f, 0.f));
+      vectors.SetRow(1, pxr::GfVec3f(0.f, 1.f, 0.f));
+      vectors.SetRow(2, pxr::GfVec3f(0.f, 0.f, 1.f));
     }
 
     // The preconditioning scaled the matrix A, which scales the
