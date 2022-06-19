@@ -2,8 +2,8 @@
 #define JVR_PBD_MATRIX_H
 
 #include "../common.h"
-#include <vector>
 #include <limits>
+#include <vector>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -24,55 +24,52 @@ public:
     PBDMatrix(const PBDMatrix& other);
     ~PBDMatrix();
 
-    void Resize(int rows, int columns);
-    void Transpose();
-    int GetIndex(int row, int column);
+    inline void Resize(int rows, int columns);
+    inline PBDMatrix<T> Transpose();
+    inline int GetIndex(int row, int column);
+    inline int Size(){return _rows * _columns;};
+    inline void SetValue(int row, int column, T value);
+    inline void SetRow(int row, T* values);
+    inline void SetColumn(int column, T* values);
+    inline T GetValue(int row, int column);
+    inline void GetRow(int row, std::vector<T>& values);
+    inline void GetColumn(int column, std::vector<T>& values);
+    inline T GetRowMinimum(int row);
+    inline void GetRowsMinimum(std::vector<T>& values);
+    inline T GetRowMaximum(int row);
+    inline void GetRowsMaximum(std::vector<T>& values);
+    inline T GetColumnMinimum(int column);
+    inline void GetColumnsMinimum(std::vector<T>& values);
+    inline T GetColumnMaximum(int column);
+    inline void GetColumnsMaximum(std::vector<T>& values);
+    inline void SwapRows(int a, int b);
+    inline void SwapColumns(int a, int b);
 
-    short SetValue(int row, int column, T value);
-    short SetRow(int row, std::vector<T>& values);
-    short SetColumn(int column, std::vector<T>& values);
+    inline PBDMatrix operator+(PBDMatrix& other);
+    inline PBDMatrix& operator+=(PBDMatrix& other);
+    inline PBDMatrix operator-(PBDMatrix& other);
+    inline PBDMatrix& operator-=(PBDMatrix& other);
+    inline PBDMatrix operator*(PBDMatrix& other);
+    inline PBDMatrix& operator*=(PBDMatrix& other);
+    inline PBDMatrix operator*(const std::vector<T>& vector);
+    inline PBDMatrix& operator*=(const T factor);
+    inline PBDMatrix operator*(const T factor);
 
-    short GetValue(int row, int column, T& value);
-    short GetRow(int row, std::vector<T>& values);
-    short GetColumn(int column, std::vector<T>& values);
-
-    short GetRowMinimum(int row, T& value);
-    short GetRowsMinimum(std::vector<T>& values);
-    short GetRowMaximum(int row, T& value);
-    short GetRowsMaximum(std::vector<T>& values);
-
-    short GetColumnMinimum(int column, T& value);
-    short GetColumnsMinimum(std::vector<T>& values);
-    short GetColumnMaximum(int column, T& value);
-    short GetColumnsMaximum(std::vector<T>& values);
-
-    void SwapRows(int a, int b);
-    void SwapColumns(int a, int b);
-
-    PBDMatrix operator+(PBDMatrix& other);
-    PBDMatrix& operator+=(PBDMatrix& other);
-    PBDMatrix operator-(PBDMatrix& other);
-    PBDMatrix& operator-=(PBDMatrix& other);
-    PBDMatrix operator*(PBDMatrix& other);
-    PBDMatrix& operator*=(PBDMatrix& other);
-    PBDMatrix operator*(const std::vector<T>& vector);
-    PBDMatrix& operator*=(const T factor);
-    PBDMatrix operator*(const T factor);
-
-    short LUDecomposition(std::vector<int>& pivot); 
-    short SolveLU(const std::vector<int>& pivot,
-        std::vector<T>& b, std::vector<T>& x);
-    T GetDeterminant(std::vector<int>& pivot);
-
-    PBDMatrix Inverse();
-    PBDMatrix& InverseInPlace();
+    inline short LUDecomposition(const size_t m, int* pivot); 
+    inline short SolveLU(const size_t m, int* pivot, T* b, T* x);
+    inline T GetDeterminant(const size_t m);
+ 
+    inline PBDMatrix Inverse();
+    inline PBDMatrix& InverseInPlace();
 
     void Echo();
+    T* Data() {return _data;};
+    const T* CData() const {return _data;};
 
 private:
     int                         _rows;
     int                         _columns;
-    std::vector<T>              _data;
+    T*                          _data;
     PBDMatrix<T>*               _lu;
     bool                        _transposed;
     bool                        _singular;
@@ -83,6 +80,7 @@ private:
 template<typename T>
 PBDMatrix<T>::PBDMatrix() 
   : _lu(NULL)
+  , _data(NULL)
   , _rows(0)
   , _columns(0)
   , _transposed(false)
@@ -100,24 +98,21 @@ PBDMatrix<T>::PBDMatrix(int rows, int columns)
   , _even(true)
   , _singular(false)
 {
-  _data.resize(_rows * _columns);
+  _data = new T[_rows * _columns];
   memset(&_data[0], 0, _rows * _columns * sizeof(T));
 }
 
 template<typename T>
 PBDMatrix<T>::PBDMatrix(const PBDMatrix& other) 
   : _lu(NULL)
+  , _rows(other._rows)
+  , _columns(other._columns)
+  , _transposed(other._transposed)
+  , _even(other._even)
+  , _singular(other._singular)
 {
-  _rows = other._rows;
-  _columns = other._columns;
-  _data = other._data;
-  _transposed = other._transposed;
-  _even = other._even;
-  _singular = other._singular;
-
-  if(other._lu) {
-    _lu = new PBDMatrix<T>(*(other._lu));
-  }
+  _data = new T[_rows * _columns];
+  memcpy(_data, other._data, _rows * _columns * sizeof(T));
 }
 
 template<typename T>
@@ -127,296 +122,233 @@ PBDMatrix<T>::~PBDMatrix()
 }
 
 template<typename T>
-void PBDMatrix<T>::Resize(int rows, int columns)
+inline void PBDMatrix<T>::Resize(int rows, int columns)
 {
+  if(_data)delete _data;
   _rows = rows;
   _columns = columns;
-  _data.resize(_rows * _columns);
-  memset(&_data[0], 0, _rows * _columns * sizeof(T));
+  _data = new T[_rows * _columns];
+  memset(_data, 0, _rows * _columns * sizeof(T));
 }
 
 template<typename T>
-void PBDMatrix<T>::Transpose()
+inline PBDMatrix<T> PBDMatrix<T>::Transpose()
 {
-  int tmp = _rows;
-  _rows = _columns;
-  _columns = tmp;
-  _transposed = 1 - _transposed;
+  return *this;
 }
 
 template<typename T>
-int PBDMatrix<T>::GetIndex(int row, int column)
+inline int PBDMatrix<T>::GetIndex(int row, int column)
+{   
+  return _columns * row + column;
+}
+
+template<typename T>
+inline void PBDMatrix<T>::SetValue(int row, int column, T value)
 {
-  if(row >= 0 && row < _rows && column >= 0 && column < _columns) {
-    if(_transposed){
-      return _rows * column + row;
-    } else {
-      return _columns * row + column;
+  _data[GetIndex(row, column)] = value;
+}
+
+template<typename T>
+inline void PBDMatrix<T>::SetRow(int row, T* values)
+{
+  for(int column = 0; column < _columns; ++column) {
+    _data[GetIndex(row, column)] = values[column];
+  }
+}
+
+template<typename T>
+inline void PBDMatrix<T>::SetColumn(int column, T* values)
+{
+  for(int row = 0; row < _rows; ++row) {
+    SetValue(row, column, values[row]);
+  }
+}
+
+template<typename T>
+inline T PBDMatrix<T>::GetValue(int row, int column)
+{
+  return _data[GetIndex(row, column)];
+}
+
+template<typename T>
+inline void PBDMatrix<T>::GetRow(int row, std::vector<T>& values)
+{
+  for(size_t column = 0; column < _columns; ++column) {
+    values[column] = GetValue(row, column);
+  }
+}
+
+template<typename T>
+inline void PBDMatrix<T>::GetColumn(int column, std::vector<T>& values)
+{
+  for(size_t row = 0; row < _rows; ++row) {
+    values[row] = GetValue(row, column);
+  }
+}
+
+template<typename T>
+inline T PBDMatrix<T>::GetRowMinimum(int row)
+{
+  T value = std::numeric_limits<T>::max();
+  for(size_t column = 0; column < _columns; ++column) {
+    T curValue;
+    GetValue(row, column, curValue);
+    if(curValue < value) {
+    value = curValue;
     }
   }
-  return -1;
+  return value;
 }
 
 template<typename T>
-short PBDMatrix<T>::SetValue(int row, int column, T value)
-{
-  int idx = GetIndex(row, column);
-  if(idx >= 0) {
-    _data[idx] = value;
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_INDEX_OUTOFBOUND;
-  }
-}
-
-template<typename T>
-short PBDMatrix<T>::SetRow(int row, std::vector<T>& values)
-{
-  if(row < _rows && values.size() == _columns) {
-    for(int column = 0; column < _columns; ++column) {
-      _data[GetIndex(row, column)] = values[column];
-    }
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_SIZE_MISMATCH;
-  }
-}
-
-template<typename T>
-short PBDMatrix<T>::SetColumn(int column, std::vector<T>& values)
-{
-  if(column < _columns && values.size() == _rows) {
-    for(int row = 0; row < _rows; ++row) {
-      SetValue(row, column, values[row]);
-    }
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_SIZE_MISMATCH;
-  }
-}
-
-template<typename T>
-short PBDMatrix<T>::GetValue(int row, int column, T& value)
-{
-  int idx = GetIndex(row, column);
-  if(idx >= 0) {
-    value = _data[idx];
-    return MATRIX_VALID;
-  } else  {
-    return MATRIX_INDEX_OUTOFBOUND;
-  }
-}
-
-template<typename T>
-short PBDMatrix<T>::GetRow(int row, std::vector<T>& values)
-{
-  if(row >= 0 && row < _rows) {
-    values.resize(_columns);
-    for(size_t column = 0; column < _columns; ++column) {
-       GetValue(row, column, values[column]);
-    }
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_INDEX_OUTOFBOUND;
-  }
-}
-
-template<typename T>
-short PBDMatrix<T>::GetColumn(int column, std::vector<T>& values)
-{
-  if(column >= 0 && column < _columns) {
-    values.resize(_rows);
-    for(size_t row = 0; row < _rows; ++row) {
-        GetValue(row, column,  values[row]);
-    }
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_INDEX_OUTOFBOUND;
-  }
-}
-
-template<typename T>
-short PBDMatrix<T>::GetRowMinimum(int row, T& value)
-{
-  if(row >= 0 && row < _rows) {
-    value = std::numeric_limits<T>::max();
-    for(size_t column = 0; column < _columns; ++column) {
-      T curValue;
-      GetValue(row, column, curValue);
-      if(curValue < value) {
-        value = curValue;
-      }
-    }
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_INDEX_OUTOFBOUND;
-  }
-}
-
-template<typename T>
-short PBDMatrix<T>::GetRowsMinimum(std::vector<T>& values)
+inline void PBDMatrix<T>::GetRowsMinimum(std::vector<T>& values)
 {
   values.resize(_rows);
   for(size_t row = 0; row < _rows; ++row) {
-    GetRowMinimum(row, values[row]);
+    values[row] = GetRowMinimum(row);
   }
-  return MATRIX_VALID;
 }
 
 template<typename T>
-short PBDMatrix<T>::GetRowMaximum(int row, T& value)
+inline T PBDMatrix<T>::GetRowMaximum(int row)
 {
-  if(row >= 0 && row < _rows) {
-    value = std::numeric_limits<T>::min();
-    for(size_t column = 0; column < _columns; ++column) {
-      T curValue;
-      GetValue(row, column, curValue);
-      if(curValue > value) {
-        value = curValue;
-      }
+  T value = std::numeric_limits<T>::min();
+  for(size_t column = 0; column < _columns; ++column) {
+    T curValue;
+    GetValue(row, column, curValue);
+    if(curValue > value) {
+    value = curValue;
     }
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_INDEX_OUTOFBOUND;
   }
+  return value;
 }
 
 template<typename T>
-short PBDMatrix<T>::GetRowsMaximum(std::vector<T>& values)
+inline void PBDMatrix<T>::GetRowsMaximum(std::vector<T>& values)
 {
   values.resize(_rows);
   for(size_t row = 0; row < _rows; ++row) {
-    GetRowMaximum(row, values[row]);
+    values[row] = GetRowMaximum(row);
   }
-  return MATRIX_VALID;
 }
 
 template<typename T>
-short PBDMatrix<T>::GetColumnMinimum(int column, T& value)
+inline T PBDMatrix<T>::GetColumnMinimum(int column)
 {
-  if(column >= 0 && column < _columns) {
-    value = std::numeric_limits<T>::max();
-    for(size_t row = 0; row < _rows; ++row) {
-      T curValue;
-      GetValue(row, column, curValue);
-      if(curValue < value) {
-        value = curValue;
-      }
+  T value = std::numeric_limits<T>::max();
+  for(size_t row = 0; row < _rows; ++row) {
+    T curValue;
+    GetValue(row, column, curValue);
+    if(curValue < value) {
+      value = curValue;
     }
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_INDEX_OUTOFBOUND;
   }
+  return value;
 }
 
 template<typename T>
-short PBDMatrix<T>::GetColumnsMinimum(std::vector<T>& values)
+inline void PBDMatrix<T>::GetColumnsMinimum(std::vector<T>& values)
 {
   values.resize(_columns);
   for(size_t column = 0; column < _columns; ++column) {
-    if(GetColumnMinimum(column, values[column]) != MATRIX_VALID) 
-      return MATRIX_INDEX_OUTOFBOUND;
+    values[column] = GetColumnMinimum(column);
   }
-  return MATRIX_VALID;
 }
 
 template<typename T>
-short PBDMatrix<T>::GetColumnMaximum(int column, T& value)
+inline T PBDMatrix<T>::GetColumnMaximum(int column)
 {
-  if(column >= 0 && column < _columns) {
-    value = std::numeric_limits<T>::min();
-    for(size_t row = 0; row < _rows; ++row) {
-      T curValue;
-      GetValue(row, column, curValue);
-      if(curValue > value) {
-        value = curValue;
-      }
+  T value = std::numeric_limits<T>::min();
+  for(size_t row = 0; row < _rows; ++row) {
+    T curValue;
+    GetValue(row, column, curValue);
+    if(curValue > value) {
+      value = curValue;
     }
-    return MATRIX_VALID;
-  } else {
-    return MATRIX_INDEX_OUTOFBOUND;
-  }
+  } 
+  return value;
 }
 
 template<typename T>
-short PBDMatrix<T>::GetColumnsMaximum(std::vector<T>& values)
+inline void PBDMatrix<T>::GetColumnsMaximum(std::vector<T>& values)
 {
   values.resize(_columns);
   for(size_t column = 0; column < _columns; ++column) {
-    if(GetColumnMaximum(column, values[column]) != MATRIX_VALID) 
-      return MATRIX_INDEX_OUTOFBOUND;
+    values[column] = GetColumnMaximum(column);
   }
-  return MATRIX_VALID;
 }
 
 template<typename T>
-void PBDMatrix<T>::SwapRows(int a, int b)
+inline void PBDMatrix<T>::SwapRows(int a, int b)
 {
+  T tmp;
   for(size_t column = 0; column < _columns; ++column) {
     std::swap(_data[a * _columns + column], _data[b * _columns + column]);
   }
 }
 
 template<typename T>
-void PBDMatrix<T>::SwapColumns(int a, int b)
+inline void PBDMatrix<T>::SwapColumns(int a, int b)
 {
+  T tmp;
   for(size_t row = 0; row < _rows; ++row) {
     std::swap(_data[_columns * row + a], _data[_columns + row + b]);
   }
 }
 
 template<typename T>
-PBDMatrix<T> PBDMatrix<T>::operator+(PBDMatrix<T>& other)
+inline PBDMatrix<T> PBDMatrix<T>::operator+(PBDMatrix<T>& other)
 {
-  if(_data.size() != other._data.size()) {
+  if(Size() != other.Size()) {
     return *this;
   }
   PBDMatrix result(_rows, _columns);
-  for(size_t i = 0; i < _data.size(); ++i) {
+  for(size_t i = 0; i < Size(); ++i) {
     result[i] = _data[i] + other._data[i];
   }
   return result;
 }
 
 template<typename T>
-PBDMatrix<T>& PBDMatrix<T>::operator+=(PBDMatrix<T>& other)
+inline PBDMatrix<T>& PBDMatrix<T>::operator+=(PBDMatrix<T>& other)
 {
-  if(_data.size() != other._data.size()) {
+  if(Size() != other.Size()) {
     return *this;
   }
-  for(size_t i = 0; i < _data.size(); ++i) {
+  for(size_t i = 0; i < Size(); ++i) {
     _data[i] += other._data[i];
   }
   return *this;
 }
 
 template<typename T>
-PBDMatrix<T> PBDMatrix<T>::operator-(PBDMatrix<T>& other)
+inline PBDMatrix<T> PBDMatrix<T>::operator-(PBDMatrix<T>& other)
 {
-  if(_data.size() != other._data.size()) {
+  if(Size() != other.Size()) {
     return *this;
   }
   PBDMatrix result(_rows, _columns);
-  for(size_t i = 0; i < _data.size(); ++i) {
+  for(size_t i = 0; i < Size(); ++i) {
     result[i] = _data[i] - other._data[i];
   }
   return result;
 }
 
 template<typename T>
-PBDMatrix<T>& PBDMatrix<T>::operator-=(PBDMatrix<T>& other)
+inline PBDMatrix<T>& PBDMatrix<T>::operator-=(PBDMatrix<T>& other)
 {
-  if(_data.size() != other._data.size()) {
+  if(Size() != other.Size()) {
     return *this;
   }
-  for(size_t i = 0; i < _data.size(); ++i) {
+  for(size_t i = 0; i < Size(); ++i) {
     _data[i] -= other._data[i];
   }
   return *this;
 }
 
 template<typename T>
-PBDMatrix<T> PBDMatrix<T>::operator*(PBDMatrix<T>& other)
+inline PBDMatrix<T> PBDMatrix<T>::operator*(PBDMatrix<T>& other)
 {
   if(_columns != other.rows) {
     return *this;
@@ -434,14 +366,14 @@ PBDMatrix<T> PBDMatrix<T>::operator*(PBDMatrix<T>& other)
 }
 
 template<typename T>
-PBDMatrix<T>& PBDMatrix<T>::operator*=(PBDMatrix<T>& other)
+inline PBDMatrix<T>& PBDMatrix<T>::operator*=(PBDMatrix<T>& other)
 {
   if(_columns != other.rows) {
     return *this;
   } 
 
   PBDMatrix<T> copy(*this);
-  memset(&_data[0], 0, _rows * _columns * sizeof(T));
+  memset(_data, 0, _rows * _columns * sizeof(T));
 
   for(size_t i = 0; i < _rows; ++i) {
     for(size_t k = 0; k < other._columns; ++k) {
@@ -454,7 +386,7 @@ PBDMatrix<T>& PBDMatrix<T>::operator*=(PBDMatrix<T>& other)
 }
 
 template<typename T>
-PBDMatrix<T> PBDMatrix<T>::operator*(const std::vector<T>& vector)
+inline PBDMatrix<T> PBDMatrix<T>::operator*(const std::vector<T>& vector)
 {
   if(_columns != vector.size()) {
     return *this;
@@ -472,63 +404,58 @@ PBDMatrix<T> PBDMatrix<T>::operator*(const std::vector<T>& vector)
 }
 
 template<typename T>
-PBDMatrix<T>& PBDMatrix<T>::operator*=(const T factor)
+inline PBDMatrix<T>& PBDMatrix<T>::operator*=(const T factor)
 {
   for(auto& v: _data) v *= factor;
   return *this;
 }
 
 template<typename T>
-PBDMatrix<T> PBDMatrix<T>::operator*(const T factor)
+inline PBDMatrix<T> PBDMatrix<T>::operator*(const T factor)
 {
   PBDMatrix<T> result(*this);
   return result * factor;
 }
 
 template<typename T>
-short PBDMatrix<T>::LUDecomposition(std::vector<int>& pivot)
+inline short PBDMatrix<T>::LUDecomposition(const size_t m, int* pivot)
 {
   T singularityThreshold = static_cast<T>(0);
   if(_rows != _columns) return MATRIX_NON_SQUARE;
 
-  size_t m = _columns;
   if(_lu) delete _lu;
   _lu = new PBDMatrix<T>(*this);
 
   // initialize permutation array and parity
-  size_t row, column, i;
+  size_t row, column, i, max;
   for(row = 0; row < m; ++row)pivot[row] = row;
     
   _even = true;
   _singular = false;
 
+  std::vector<T> luRow(_columns);
+  T sum, largest, luDiag;
   // loop over columns
   for(column = 0; column < m; ++column) {
     // upper
     for(row = 0; row < column; ++ row) {
-      std::vector<T> luRow;
+      
       _lu->GetRow(row, luRow);
-      T sum = luRow[column];
+      sum = luRow[column];
       for(i = 0; i < row; ++i) {
-        T value;
-        if(_lu->GetValue(i, column, value) == MATRIX_VALID)
-            sum -= (luRow[i] * value);
+        sum -= (luRow[i] * _lu->GetValue(i, column));
       }
-        
       _lu->SetValue(row, column, sum);
     }
 
     // lower
-    size_t max = column;
-    T largest = std::numeric_limits<T>::min();
+    max = column;
+    largest = std::numeric_limits<T>::min();
     for(row = column; row < m; ++row) {
-      std::vector<T> luRow;
       _lu->GetRow(row, luRow);
-      T sum = luRow[column];
+      sum = luRow[column];
       for(i = 0; i < column; ++i) {
-        T value;
-        if(_lu->GetValue(i, column, value) == MATRIX_VALID) 
-            sum -= luRow[i] * value;
+        sum -= luRow[i] * _lu->GetValue(i, column);
       }
         
       _lu->SetValue(row, column, sum);
@@ -541,13 +468,8 @@ short PBDMatrix<T>::LUDecomposition(std::vector<int>& pivot)
     }
 
     // singularity check
-    T value;
-    if(_lu->GetValue(max, column, value) == MATRIX_VALID) {
-        if(std::abs(value) < singularityThreshold) {
-        return MATRIX_IS_SINGULAR;
-        }
-    } else {
-        return MATRIX_INDEX_OUTOFBOUND;
+    if(std::abs(_lu->GetValue(max, column)) < singularityThreshold) {
+      return MATRIX_IS_SINGULAR;
     }
 
     // pivot if necessary
@@ -558,27 +480,19 @@ short PBDMatrix<T>::LUDecomposition(std::vector<int>& pivot)
     }
 
     // divide the lower elements by the "winning" diagonal elt.
-    T luDiag;
-    if(_lu->GetValue(column, column, luDiag) == MATRIX_VALID) {
-        for(row = column + 1; row < m; ++row) {
-            T value;
-            if(_lu->GetValue(row, column, value) == MATRIX_VALID) {
-                _lu->_data[row * m + column] = value / luDiag;
-            } else {
-                return MATRIX_INDEX_OUTOFBOUND;
-            }
-        }
+    luDiag = _lu->GetValue(column, column);
+    for(row = column + 1; row < m; ++row) {
+      _lu->_data[row * m + column] = _lu->GetValue(row, column) / luDiag;
     }
+    
   }
   return MATRIX_VALID;
 }
   
 template<typename T>
-short PBDMatrix<T>::SolveLU(const std::vector<int>& pivot, std::vector<T>& b,
-  std::vector<T>& x)
+inline short PBDMatrix<T>::SolveLU(const size_t m, int* pivot, T* b, T* x)
 {
   if(!_lu) return MATRIX_INVALID;
-  const int m = pivot.size();
 
   if(_lu->_columns != m)return MATRIX_SIZE_MISMATCH;
   if(_lu->_singular)return MATRIX_IS_SINGULAR;
@@ -588,62 +502,55 @@ short PBDMatrix<T>::SolveLU(const std::vector<int>& pivot, std::vector<T>& b,
   for(row = 0; row < m; ++row) {
     x[row] = b[pivot[row]];
   }
+
   // solve LY = b
   T xColumn;
   for(column = 0; column < m; ++column) {
     xColumn = x[column];
     for(i = column+1; i < m; ++i) {
-      T value;
-      if(_lu->GetValue(i, column, value) == MATRIX_VALID)
-        x[i] -= xColumn * value;
+      x[i] -= xColumn * _lu->GetValue(i, column);
     }
   }
 
   // solve UX = Y
-  T value;
   for(column = m-1; column >= 0; --column) {
-    if(_lu->GetValue(column, column, value) == MATRIX_VALID) {
-      x[column] = x[column] / value;
-      xColumn = x[column];
-      for(size_t i = 0; i < column; ++i) {
-          if(_lu->GetValue(i, column, value) == MATRIX_VALID)
-            x[i] -= xColumn * value;
-      }
+    x[column] = x[column] / _lu->GetValue(column, column);
+    xColumn = x[column];
+    for(size_t i = 0; i < column; ++i) {
+      x[i] -= xColumn * _lu->GetValue(i, column);
     }
   }
-
   return MATRIX_VALID;
 }
 
 template<typename T>
-T PBDMatrix<T>::GetDeterminant(std::vector<int>& pivot)
+inline T PBDMatrix<T>::GetDeterminant(const size_t m)
 {
   if(_singular || !_lu)return static_cast<T>(0);
     
-  size_t m = pivot.size();
-  size_t i;
   T determinant = _even ? static_cast<T>(1) : static_cast<T>(-1);
   
-  for(i = 0; i < m; ++i) {
+  for(size_t i = 0; i < m; ++i) {
     determinant *= _lu->GetValue(i, i);
   }
   return determinant;
 }
 
 template<typename T>
-PBDMatrix<T> PBDMatrix<T>::Inverse()
+inline PBDMatrix<T> PBDMatrix<T>::Inverse()
 {
-  PBDMatrix result(*this);
-  std::vector<int> pivot(_columns);
+  PBDMatrix<float> result;
+  int pivot[_columns];
+  T b[_columns];
+  T w[_columns];
 
-  if(LUDecomposition(pivot) == MATRIX_VALID) {
+  if(LUDecomposition(_columns, &pivot[0]) == MATRIX_VALID) {    
     result.Resize(_columns, _columns);
-
     for(size_t c=0; c < _columns; ++c) {
-      std::vector<T> b(_columns);
-      std::vector<T> w(_columns);
+      memset(&b[0], static_cast<T>(0), _columns * sizeof(T));
+      memset(&w[0], static_cast<T>(0), _columns * sizeof(T));
       b[c] = static_cast<T>(1);
-      SolveLU(pivot, b, w);
+      SolveLU(_columns, &pivot[0], b, w);
       result.SetColumn(c, w);
     }
     return result;
@@ -653,32 +560,35 @@ PBDMatrix<T> PBDMatrix<T>::Inverse()
 }
 
 template<typename T>
-PBDMatrix<T>& PBDMatrix<T>::InverseInPlace()
+inline PBDMatrix<T>& PBDMatrix<T>::InverseInPlace()
 {
-  std::vector<int> pivot(_columns);
-  if(LUDecomposition(pivot) == MATRIX_VALID) {
+  int pivot[_columns];
+  T b[_columns];
+  T w[_columns];
+
+  if(LUDecomposition(_columns, &pivot[0]) == MATRIX_VALID) {
     size_t i;
     for(i = 0; i < _columns; ++i) {
-      std::vector<T> b(_columns);
-      std::vector<T> w(_columns);
+      memset(&b[0], static_cast<T>(0), _columns * sizeof(T));
+      memset(&w[0], static_cast<T>(0), _columns * sizeof(T));
       b[i] = static_cast<T>(1);
-      SolveLU(pivot, b, w);
-      SetColumn(i, w);
+      SolveLU(_columns, &pivot[0], b, w);
+      SetColumn(i, &w[0]);
     }
   }
   return *this;
 }
 
 template<typename T>
-void PBDMatrix<T>::Echo()
+inline void PBDMatrix<T>::Echo()
 {
-    for(size_t column = 0; column < _columns; ++column) {
-        for(size_t row = 0; row < _rows; ++row) {
-            std::cout << _data[GetIndex(row, column)] << ",";
-        }
-        std::cout << "\n";
+  for(size_t column = 0; column < _columns; ++column) {
+    for(size_t row = 0; row < _rows; ++row) {
+      std::cout << _data[GetIndex(row, column)] << ",";
     }
-    std::cout << "\n" << std::endl;
+    std::cout << "\n";
+  }
+  std::cout << "\n" << std::endl;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

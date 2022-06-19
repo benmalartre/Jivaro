@@ -348,6 +348,8 @@ void _TestOne() {
     }
     */
     matrix.Echo();
+    PBDMatrix<float> inverse = matrix.Inverse();
+    inverse.Echo();
     matrix.InverseInPlace();
     matrix.Echo();
 
@@ -436,10 +438,92 @@ void _BenchMark(size_t N) {
   }
 }
 
+bool _CompareDatas(float* lhs, float* rhs, size_t N)
+{
+  for(size_t x = 0; x < N; ++x) {
+    if(std::abs(lhs[x] - rhs[x]) > 0.000001f)return false;
+  }
+  return true;
+}
+
+// benchmark matrix class efficency (compared to pxr::GfMatrix4)
+void _BenchMark2(size_t N) {
+  std::vector<pxr::GfMatrix4f> matrices(N);
+  _RandomMatrices(matrices);
+
+  std::vector<PBDMatrix<float>> inverses0(N);
+  std::vector<pxr::GfMatrix4f> inverses1(N);
+  std::vector<Matrix4r> inverses2(N);
+
+  std:: cout << "\n\n############  BENCH MARK 2  ##########################" << std::endl;
+  uint64_t startT; 
+  // custom
+  {
+    std::vector<PBDMatrix<float>> matricesX(N);
+    for(size_t i=0; i < N; ++i) {
+      matricesX[i] = PBDMatrix<float>(4, 4);
+      memcpy(matricesX[i].Data(), &matrices[i][0][0], 16 * sizeof(float));
+    }
+    
+    
+    startT = CurrentTime();
+    for(size_t i=0; i < N; ++i) {
+      inverses0[i] = matricesX[i].Inverse();
+    }
+    _PrintBenchMark("CUSTOM INVERSE", CurrentTime() - startT);
+  }
+
+  // pixar
+  { 
+    startT = CurrentTime();
+
+    for(size_t i=0; i < N; ++i) {
+      inverses1[i] = matrices[i].GetInverse();
+    }
+    uint64_t T0 = CurrentTime() - startT;
+    _PrintBenchMark("PIXAR INVERSE", CurrentTime() - startT);
+  }
+
+  // eigen
+  {
+    startT = CurrentTime();
+    Matrix4r em4;
+    for(size_t i=0; i < N; ++i) {
+      const pxr::GfMatrix4f& m = matrices[i];
+      
+      em4 << m[0][0], m[1][0], m[2][0], m[3][0],
+             m[0][1], m[1][1], m[2][1], m[3][1],
+             m[0][2], m[1][2], m[2][2], m[3][2],
+             m[0][3], m[1][3], m[2][3], m[3][3];
+
+      Eigen::PartialPivLU<Matrix4r> lu(em4);
+             
+      inverses2[i] = lu.inverse();
+    }
+    _PrintBenchMark("Eigen", CurrentTime() - startT);
+  }
+
+  std::vector<float> D0(N * 16);
+  std::vector<float> D1(N * 16);
+  std::vector<float> D2(N * 16);
+
+  for(size_t n = 0; n < N; ++n){
+    
+    memcpy(&D0[n * 16], inverses0[n].Data(), 16 * sizeof(float));
+    memcpy(&D1[n * 16], &inverses1[n][0][0], 16 * sizeof(float));
+    memcpy(&D2[n * 16], inverses2[n].data(), 16 * sizeof(float));
+  }
+  std::cout << "EQUALS ? " << _CompareDatas(&D0[0], &D1[0], N * 16) << std::endl;
+  std::cout << "EQUALS ? " << _CompareDatas(&D0[0], &D2[0], N * 16) << std::endl;
+  
+}
+
 int main (int argc, char *argv[])
 {
   _TestOne();
   size_t N = 10000;
   _BenchMark(N);
+
+  _BenchMark2(N);
   return 0;
 }
