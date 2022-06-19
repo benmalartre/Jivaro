@@ -24,119 +24,119 @@ class PBDParticle
     std::vector<pxr::GfVec3f> _lastX;
 
   public:
-    void addVertex(const pxr::GfVec3f& vertex)
+    void AddPoint(const pxr::GfVec3f& point)
     {
-      _x0.push_back(vertex);
-      _x.push_back(vertex);
-      _oldX.push_back(vertex);
-      _lastX.push_back(vertex);
+      _x0.push_back(point);
+      _x.push_back(point);
+      _oldX.push_back(point);
+      _lastX.push_back(point);
       _masses.push_back(1.0);
       _invMasses.push_back(1.0);
       _v.push_back(Vector3r(0.0, 0.0, 0.0));
       _a.push_back(Vector3r(0.0, 0.0, 0.0));
     }
 
-    pxr::GfVec3f& getPosition(const unsigned int i)
+    pxr::GfVec3f& GetPosition(const unsigned int i)
     {
       return _x[i];
     }
 
-    const pxr::GfVec3f& getPosition(const unsigned int i) const 
+    const pxr::GfVec3f& GetPosition(const unsigned int i) const 
     {
       return _x[i];
     }
 
-    void setPosition(const unsigned int i, const pxr::GfVec3f& pos)
+    void SetPosition(const unsigned int i, const pxr::GfVec3f& pos)
     {
       _x[i] = pos;
     }
 
-    pxr::GfVec3f& getPosition0(const unsigned int i)
+    pxr::GfVec3f& GetPosition0(const unsigned int i)
     {
       return _x0[i];
     }
 
-    const pxr::GfVec3f& getPosition0(const unsigned int i) const
+    const pxr::GfVec3f& GetPosition0(const unsigned int i) const
     {
       return _x0[i];
     }
 
-    void setPosition0(const unsigned int i, const pxr::GfVec3f& pos)
+    void SetPosition0(const unsigned int i, const pxr::GfVec3f& pos)
     {
       _x0[i] = pos;
     }
 
-    pxr::GfVec3f& getLastPosition(const unsigned int i)
+    pxr::GfVec3f& GetLastPosition(const unsigned int i)
     {
       return _lastX[i];
     }
 
-    const pxr::GfVec3f& getLastPosition(const unsigned int i) const
+    const pxr::GfVec3f& GetLastPosition(const unsigned int i) const
     {
       return _lastX[i];
     }
 
-    void setLastPosition(const unsigned int i, const pxr::GfVec3f& pos)
+    void SetLastPosition(const unsigned int i, const pxr::GfVec3f& pos)
     {
       _lastX[i] = pos;
     }
 
-    pxr::GfVec3f& getOldPosition(const unsigned int i)
+    pxr::GfVec3f& GetOldPosition(const unsigned int i)
     {
       return _oldX[i];
     }
 
-    const pxr::GfVec3f& getOldPosition(const unsigned int i) const
+    const pxr::GfVec3f& GetOldPosition(const unsigned int i) const
     {
       return _oldX[i];
     }
 
-    void setOldPosition(const unsigned int i, const pxr::GfVec3f& pos)
+    void SetOldPosition(const unsigned int i, const pxr::GfVec3f& pos)
     {
       _oldX[i] = pos;
     }
     
-    pxr::GfVec3f& getVelocity(const unsigned int i)
+    pxr::GfVec3f& GetVelocity(const unsigned int i)
     {
       return _v[i];
     }
 
-    const pxr::GfVec3f& getVelocity(const unsigned int i) const 
+    const pxr::GfVec3f& GetVelocity(const unsigned int i) const 
     {
       return _v[i];
     }
 
-    void setVelocity(const unsigned int i, const pxr::GfVec3f& vel)
+    void SetVelocity(const unsigned int i, const pxr::GfVec3f& vel)
     {
       _v[i] = vel;
     }
 
-    pxr::GfVec3f& getAcceleration(const unsigned int i)
+    pxr::GfVec3f& GetAcceleration(const unsigned int i)
     {
       return _a[i];
     }
 
-    const pxr::GfVec3f& getAcceleration(const unsigned int i) const 
+    const pxr::GfVec3f& GetAcceleration(const unsigned int i) const 
     {
       return _a[i];
     }
 
-    void setAcceleration(const unsigned int i, const pxr::GfVec3f& accel)
+    void SetAcceleration(const unsigned int i, const pxr::GfVec3f& accel)
     {
       _a[i] = accel;
     }
 
-    const float getMass(const unsigned int i) const
+    const float GetMass(const unsigned int i) const
     {
       return _masses[i];
     }
 
-    float& getMass(const unsigned int i)
+    float& GetMass(const unsigned int i)
     {
       return _masses[i];
     }
 
-    void setMass(const unsigned int i, const float mass)
+    void SetMass(const unsigned int i, const float mass)
     {
       _masses[i] = mass;
       if (mass != 0.0)
@@ -145,19 +145,19 @@ class PBDParticle
         _invMasses[i] = 0.0;
     }
 
-    const float getInvMass(const unsigned int i) const
+    const float GetInvMass(const unsigned int i) const
     {
       return _invMasses[i];
     }
 
-    const unsigned int getNumberOfParticles() const
+    const unsigned int GetNumberOfParticles() const
     {
       return (unsigned int) _x.size();
     }
 
     /** Resize the array containing the particle data.
       */
-    void resize(const unsigned int newSize)
+    void Resize(const unsigned int newSize)
     {
       _masses.resize(newSize);
       _invMasses.resize(newSize);
@@ -171,7 +171,7 @@ class PBDParticle
 
     /** Reserve the array containing the particle data.
       */
-    void reserve(const unsigned int newSize)
+    void Reserve(const unsigned int newSize)
     {
       _masses.reserve(newSize);
       _invMasses.reserve(newSize);
@@ -185,7 +185,7 @@ class PBDParticle
 
     /** Release the array containing the particle data.
       */
-    void release()
+    void Release()
     {
       _masses.clear();
       _invMasses.clear();
@@ -199,7 +199,7 @@ class PBDParticle
 
     /** Release the array containing the particle data.
       */
-    unsigned int size() const 
+    unsigned int Size() const 
     {
       return (unsigned int) _x.size();
     }
@@ -213,8 +213,8 @@ class PBDOrientation
 private:
   // Mass
   // If the mass is zero, the particle is static
-  std::vector<float> _masses;
-  std::vector<float> _invMasses;
+  std::vector<float>        _masses;
+  std::vector<float>        _invMasses;
 
   // Dynamic state
   std::vector<pxr::GfQuatf> _q0;
@@ -225,119 +225,119 @@ private:
   std::vector<pxr::GfQuatf> _lastQ;
 
 public:
-  void addQuaternion(const pxr::GfQuatf& vertex)
+  void AddQuaternion(const pxr::GfQuatf& q)
   {
-    _q0.push_back(vertex);
-    _q.push_back(vertex);
-    _oldQ.push_back(vertex);
-    _lastQ.push_back(vertex);
+    _q0.push_back(q);
+    _q.push_back(q);
+    _oldQ.push_back(q);
+    _lastQ.push_back(q);
     _masses.push_back(1.0);
     _invMasses.push_back(1.0);
     _omega.push_back(Vector3r(0.0, 0.0, 0.0));
     _alpha.push_back(Vector3r(0.0, 0.0, 0.0));
   }
 
-  pxr::GfQuatf& getQuaternion(const unsigned int i)
+  pxr::GfQuatf& GetQuaternion(const unsigned int i)
   {
     return _q[i];
   }
 
-  const pxr::GfQuatf& getQuaternion(const unsigned int i) const
+  const pxr::GfQuatf& GetQuaternion(const unsigned int i) const
   {
     return _q[i];
   }
 
-  void setQuaternion(const unsigned int i, const pxr::GfQuatf& pos)
+  void SetQuaternion(const unsigned int i, const pxr::GfQuatf& pos)
   {
     _q[i] = pos;
   }
 
-  pxr::GfQuatf& getQuaternion0(const unsigned int i)
+  pxr::GfQuatf& GetQuaternion0(const unsigned int i)
   {
     return _q0[i];
   }
 
-  const pxr::GfQuatf& getQuaternion0(const unsigned int i) const
+  const pxr::GfQuatf& GetQuaternion0(const unsigned int i) const
   {
     return _q0[i];
   }
 
-  void setQuaternion0(const unsigned int i, const pxr::GfQuatf& pos)
+  void SetQuaternion0(const unsigned int i, const pxr::GfQuatf& pos)
   {
     _q0[i] = pos;
   }
 
-  pxr::GfQuatf& getLastQuaternion(const unsigned int i)
+  pxr::GfQuatf& GetLastQuaternion(const unsigned int i)
   {
     return _lastQ[i];
   }
 
-  const pxr::GfQuatf& getLastQuaternion(const unsigned int i) const
+  const pxr::GfQuatf& GetLastQuaternion(const unsigned int i) const
   {
     return _lastQ[i];
   }
 
-  void setLastQuaternion(const unsigned int i, const pxr::GfQuatf& pos)
+  void SetLastQuaternion(const unsigned int i, const pxr::GfQuatf& pos)
   {
     _lastQ[i] = pos;
   }
 
-  pxr::GfQuatf& getOldQuaternion(const unsigned int i)
+  pxr::GfQuatf& GetOldQuaternion(const unsigned int i)
   {
     return _oldQ[i];
   }
 
-  const pxr::GfQuatf& getOldQuaternion(const unsigned int i) const
+  const pxr::GfQuatf& GetOldQuaternion(const unsigned int i) const
   {
     return _oldQ[i];
   }
 
-  void setOldQuaternion(const unsigned int i, const pxr::GfQuatf& pos)
+  void SetOldQuaternion(const unsigned int i, const pxr::GfQuatf& pos)
   {
     _oldQ[i] = pos;
   }
 
-  pxr::GfVec3f& getVelocity(const unsigned int i)
+  pxr::GfVec3f& GetVelocity(const unsigned int i)
   {
     return _omega[i];
   }
 
-  const pxr::GfVec3f& getVelocity(const unsigned int i) const
+  const pxr::GfVec3f& GetVelocity(const unsigned int i) const
   {
     return _omega[i];
   }
 
-  void setVelocity(const unsigned int i, const pxr::GfVec3f& vel)
+  void SetVelocity(const unsigned int i, const pxr::GfVec3f& vel)
   {
     _omega[i] = vel;
   }
 
-  pxr::GfVec3f& getAcceleration(const unsigned int i)
+  pxr::GfVec3f& GetAcceleration(const unsigned int i)
   {
     return _alpha[i];
   }
 
-  const pxr::GfVec3f& getAcceleration(const unsigned int i) const
+  const pxr::GfVec3f& GetAcceleration(const unsigned int i) const
   {
     return _alpha[i];
   }
 
-  void setAcceleration(const unsigned int i, const pxr::GfVec3f& accel)
+  void SetAcceleration(const unsigned int i, const pxr::GfVec3f& accel)
   {
     _alpha[i] = accel;
   }
 
-  const float getMass(const unsigned int i) const
+  const float GetMass(const unsigned int i) const
   {
     return _masses[i];
   }
 
-  float& getMass(const unsigned int i)
+  float& GetMass(const unsigned int i)
   {
     return _masses[i];
   }
 
-  void setMass(const unsigned int i, const float mass)
+  void SetMass(const unsigned int i, const float mass)
   {
     _masses[i] = mass;
     if (mass != 0.f)
@@ -346,19 +346,19 @@ public:
       _invMasses[i] = 0.f;
   }
 
-  const float getInvMass(const unsigned int i) const
+  const float GetInvMass(const unsigned int i) const
   {
     return _invMasses[i];
   }
 
-  const unsigned int getNumberOfQuaternions() const
+  const unsigned int GetNumberOfQuaternions() const
   {
     return (unsigned int)_q.size();
   }
 
   /** Resize the array containing the particle data.
   */
-  void resize(const unsigned int newSize)
+  void Resize(const unsigned int newSize)
   {
     _masses.resize(newSize);
     _invMasses.resize(newSize);
@@ -372,7 +372,7 @@ public:
 
   /** Reserve the array containing the particle data.
   */
-  void reserve(const unsigned int newSize)
+  void Reserve(const unsigned int newSize)
   {
     _masses.reserve(newSize);
     _invMasses.reserve(newSize);
@@ -386,7 +386,7 @@ public:
 
   /** Release the array containing the particle data.
   */
-  void release()
+  void Release()
   {
     _masses.clear();
     _invMasses.clear();
@@ -400,7 +400,7 @@ public:
 
   /** Release the array containing the particle data.
   */
-  unsigned int size() const
+  unsigned int Size() const
   {
     return (unsigned int)_q.size();
   }

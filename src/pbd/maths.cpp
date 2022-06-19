@@ -432,5 +432,30 @@ void PBDMath::ExtractRotation(const pxr::GfMatrix3f& A, pxr::GfQuatf& q,
     q.Normalize();
   }
 }
+ 
+void CholeskyDecomposition(const float** matrix, float** result, int n)
+{
+  memset(result, 0.f, n * n * sizeof(float));
+
+  // Decomposing a matrix into Lower Triangular
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j <= i; j++) {
+      float sum = 0.f;
+
+      if (j == i) // summation for diagonals
+      {
+          for (int k = 0; k < j; k++)
+              sum += pow(result[j][k], 2.f);
+          result[j][j] = sqrt(matrix[j][j] - sum);
+      } else {
+
+          // Evaluating L(i, j) using L(j, j)
+          for (int k = 0; k < j; k++)
+              sum += (result[i][k] * result[j][k]);
+          result[i][j] = (matrix[i][j] - sum) / result[j][j];
+      }
+    }
+  }
+}
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -63,6 +63,7 @@ add_executable(${TARGET}
   acceleration/intersector.cpp
   pbd/integration.cpp
   pbd/maths.cpp
+  pbd/matrix.cpp
   anim/animx.cpp
   command/command.cpp
   command/inverse.cpp

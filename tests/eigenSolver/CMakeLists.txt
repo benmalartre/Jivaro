@@ -12,8 +12,8 @@ set(PUBLIC_HEADERS
 )
 
 add_executable(${TARGET}
+  ../../src/pbd/matrix.cpp
   main.cpp
-
 )
 
 target_include_directories(${TARGET} 

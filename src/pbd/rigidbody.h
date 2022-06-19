@@ -212,34 +212,36 @@ class RigidBody
     //
     void DetermineMassProperties(const float density)
     {
-      // apply initial rotation
-      VertexData &vd = _geometry.getVertexDataLocal();
+      pxr::VtArray<pxr::GfVec3f>& points = _geometry.GetPositions();
       
-      PBDVolume vi(_geometry.getVertexDataLocal().size(), m_geometry.getMesh().numFaces(), &m_geometry.getVertexDataLocal().getPosition(0), m_geometry.getMesh().getFaces().data());
-      vi.ComputeInertiaTensor(density);
+      PBDVolume volume(points.size(), m_geometry.getMesh().numFaces(), &m_geometry.getVertexDataLocal().getPosition(0), m_geometry.getMesh().getFaces().data());
+      volume.ComputeInertiaTensor(density);
 
       // Diagonalize Inertia Tensor
-      NISymmetricEigensolver3x3 solver;
-      Eigen::SelfAdjointEigenSolver<Matrix3r> es(vi.getInertia());
-      Vector3r inertiaTensor = es.eigenvalues();
-      pxr::GfMatrix3f R = es.eigenvectors();
+      pxr::GfMatrix3f vi = volume.GetInertia();
+      
+      pxr::GfVec3f inertiaTensor;
+      pxr::GfMatrix3f R;
 
-      SetMass(vi.getMass());
+      NISymmetricEigensolver3x3 solver;
+      solver(vi[0][0], vi[0][1], vi[0][2], vi[1][1], vi[1][2], vi[2][2], 1, inertiaTensor, R);
+     
+      SetMass(volume.GetMass());
       SetInertiaTensor(inertiaTensor);
 
       if (R.GetDeterminant() < 0.0)
         R = -R;
 
-      for (unsigned int i = 0; i < vd.size(); i++)
-        vd.getPosition(i) = m_rot * vd.getPosition(i) + m_x0;
+      for (unsigned int i = 0; i < points.size(); i++)
+        points[i] = _rot * points[i] + _x0;
 
-      pxr::GfVec3f x_MAT = vi.GetCenterOfMass();
-      R = m_rot * R;
-      x_MAT = m_rot * x_MAT + m_x0;
+      pxr::GfVec3f x_MAT = volume.GetCenterOfMass();
+      R = _rot * R;
+      x_MAT = _rot * x_MAT + _x0;
 
       // rotate vertices back				
-      for (unsigned int i = 0; i < vd.size(); i++)
-        vd.getPosition(i) = R.transpose() * (vd.getPosition(i) - x_MAT);
+      for (unsigned int i = 0; i < points.size(); i++)
+        points[i] = R.Transpose() * (points[i] - x_MAT);
 
       // set rotation
       pxr::GfQuaternionf qR = pxr::GfQuaternionf(R);
@@ -262,359 +264,362 @@ class RigidBody
       UpdateInverseTransformation();
     }
 
-    const Matrix3r &getTransformationR() { return m_transformation_R;  }
-    const Vector3r &getTransformationV1() { return m_transformation_v1; }
-    const Vector3r &getTransformationV2() { return m_transformation_v2; }
-    const Vector3r &getTransformationRXV1() { return m_transformation_R_X_v1; }
+    const pxr::GfMatrix3f& GetTransformationR() { return _transformation_R;  }
+    const pxr::GfVec3f& GetTransformationV1() { return _transformation_v1; }
+    const pxr::GfVec3f& GetTransformationV2() { return _transformation_v2; }
+    const pxr::GfVec3f& GetTransformationRXV1() { return _transformation_R_X_v1; }
 
-    FORCE_INLINE Real &getMass()
+    FORCE_INLINE float &GetMass()
     {
-      return m_mass;
+      return _mass;
     }
 
-    FORCE_INLINE const Real &getMass() const
+    FORCE_INLINE const float &GetMass() const
     {
-      return m_mass;
+      return _mass;
     }
 
-    FORCE_INLINE void setMass(const Real &value)
+    FORCE_INLINE void setMass(const float &value)
     {
-      m_mass = value;
-      if (m_mass != 0.0)
-        m_invMass = static_cast<Real>(1.0) / m_mass;
+      _mass = value;
+      if (_mass != 0.0)
+        _invMass = static_cast<float>(1.0) / _mass;
       else
-        m_invMass = 0.0;
+        _invMass = 0.0;
     }
 
-    FORCE_INLINE const Real &getInvMass() const
+    FORCE_INLINE const float& GetInvMass() const
     {
-      return m_invMass;
+      return _invMass;
     }
 
-    FORCE_INLINE Vector3r &getPosition()
+    FORCE_INLINE pxr::GfVec3f& GetPosition()
     {
-      return m_x;
+      return _x;
     }
 
-    FORCE_INLINE const Vector3r &getPosition() const 
+    FORCE_INLINE const pxr:GfVec3f& GetPosition() const 
     {
-      return m_x;
+      return _x;
     }
 
-    FORCE_INLINE void setPosition(const Vector3r &pos)
+    FORCE_INLINE void SetPosition(const pxr::GfVec3f& pos)
     {
-      m_x = pos;
+      _x = pos;
     }
 
-    FORCE_INLINE Vector3r &getLastPosition()
+    FORCE_INLINE pxr::GfVec3f& GetLastPosition()
     {
-      return m_lastX;
+      return _lastX;
     }
 
-    FORCE_INLINE const Vector3r &getLastPosition() const
+    FORCE_INLINE const pxr::GfVec3f& GetLastPosition() const
     {
-      return m_lastX;
+      return _lastX;
     }
 
-    FORCE_INLINE void setLastPosition(const Vector3r &pos)
+    FORCE_INLINE void SetLastPosition(const pxr::GfVec3f& pos)
     {
-      m_lastX = pos;
+      _lastX = pos;
     }
 
-    FORCE_INLINE Vector3r &getOldPosition()
+    FORCE_INLINE pxr::GfVec3f& GetOldPosition()
     {
-      return m_oldX;
+      return _oldX;
     }
 
-    FORCE_INLINE const Vector3r &getOldPosition() const
+    FORCE_INLINE const pxr::GfVec3f& GetOldPosition() const
     {
-      return m_oldX;
+      return _oldX;
     }
 
-    FORCE_INLINE void setOldPosition(const Vector3r &pos)
+    FORCE_INLINE void SetOldPosition(const pxr::GfVec3f& pos)
     {
-      m_oldX = pos;
+      _oldX = pos;
     }
 
-    FORCE_INLINE Vector3r &getPosition0()
+    FORCE_INLINE pxr::GfVec3f& GetPosition0()
     {
-      return m_x0;
+      return _x0;
     }
 
-    FORCE_INLINE const Vector3r &getPosition0() const
+    FORCE_INLINE const pxr::GfVec3f& GetPosition0() const
     {
-      return m_x0;
+      return _x0;
     }
 
-    FORCE_INLINE void setPosition0(const Vector3r &pos)
+    FORCE_INLINE void SetPosition0(const pxr::GfVec3f& pos)
     {
-      m_x0 = pos;
+      _x0 = pos;
     }
 
-    FORCE_INLINE Vector3r &getPositionInitial_MAT()
+    FORCE_INLINE pxr::GfVec3f& GetPositionInitial_MAT()
     {
-      return m_x0_mat;
+      return _x0_mat;
     }
 
-    FORCE_INLINE const Vector3r &getPositionInitial_MAT() const
+    FORCE_INLINE const pxr::GfVec3f& GetPositionInitial_MAT() const
     {
-      return m_x0_mat;
+      return _x0_mat;
     }
 
-    FORCE_INLINE void setPositionInitial_MAT(const Vector3r &pos)
+    FORCE_INLINE void SetPositionInitial_MAT(const pxr::GfVec3f& pos)
     {
-      m_x0_mat = pos;
+      _x0_mat = pos;
     }
 
-    FORCE_INLINE Vector3r &getVelocity()
+    FORCE_INLINE pxr::GfVec3f& GetVelocity()
     {
-      return m_v;
+      return _v;
     }
 
-    FORCE_INLINE const Vector3r &getVelocity() const
+    FORCE_INLINE const pxr::GfVec3f& GetVelocity() const
     {
-      return m_v;
+      return _v;
     }
 
-    FORCE_INLINE void setVelocity(const Vector3r &value)
+    FORCE_INLINE void SetVelocity(const pxr::GfVec3f& value)
     {
-      m_v = value;
+      _v = value;
     }			
 
-    FORCE_INLINE Vector3r &getVelocity0()
+    FORCE_INLINE pxr::GfVec3f& GetVelocity0()
     {
-      return m_v0;
+      return _v0;
     }
 
-    FORCE_INLINE const Vector3r &getVelocity0() const
+    FORCE_INLINE const pxr::GfVec3f& GetVelocity0() const
     {
-      return m_v0;
+      return _v0;
     }
 
-    FORCE_INLINE void setVelocity0(const Vector3r &value)
+    FORCE_INLINE void SetVelocity0(const pxr:GfVec3f& value)
     {
-      m_v0 = value;
+      _v0 = value;
     }
 
-    FORCE_INLINE Vector3r &getAcceleration()
+    FORCE_INLINE pxr::GfVec3f& GetAcceleration()
     {
-      return m_a;
+      return _a;
     }
 
-    FORCE_INLINE const Vector3r &getAcceleration() const 
+    FORCE_INLINE const pxr::GfVec3f& GetAcceleration() const 
     {
-      return m_a;
+      return _a;
     }
 
-    FORCE_INLINE void setAcceleration(const Vector3r &accel)
+    FORCE_INLINE void SetAcceleration(const pxr::GfVec3f& accel)
     {
-      m_a = accel;
+      _a = accel;
     }
 
-    FORCE_INLINE const Vector3r &getInertiaTensor() const
+    FORCE_INLINE const pxr::GfVec3f& GetInertiaTensor() const
     {
-      return m_inertiaTensor;
+      return _inertiaTensor;
     }
 
-    FORCE_INLINE void setInertiaTensor(const Vector3r &value)
+    FORCE_INLINE void SetInertiaTensor(const pxr::GfVec3f& value)
     {
-      m_inertiaTensor = value;
-      m_inertiaTensorInverse = Vector3r(static_cast<Real>(1.0) / value[0], static_cast<Real>(1.0) / value[1], static_cast<Real>(1.0) / value[2]);
+      _inertiaTensor = value;
+      _inertiaTensorInverse = pxr::GfVec3f(
+        static_cast<float>(1.0) / value[0], 
+        static_cast<float>(1.0) / value[1], 
+        static_cast<float>(1.0) / value[2]);
     }
 
-    FORCE_INLINE const Vector3r &getInertiaTensorInverse() const
+    FORCE_INLINE const pxr::GfVec3f& GetInertiaTensorInverse() const
     {
-      return m_inertiaTensorInverse;
+      return _inertiaTensorInverse;
     }
 
-    FORCE_INLINE Matrix3r &getInertiaTensorInverseW()
+    FORCE_INLINE pxr::GfMatrix3f& GetInertiaTensorInverseW()
     {
-      return m_inertiaTensorInverseW;
+      return _inertiaTensorInverseW;
     }
 
-    FORCE_INLINE const Matrix3r &getInertiaTensorInverseW() const
+    FORCE_INLINE const pxr::GfMatrix3f& GetInertiaTensorInverseW() const
     {
-      return m_inertiaTensorInverseW;
+      return _inertiaTensorInverseW;
     }
 
-    FORCE_INLINE void setInertiaTensorInverseW(const Matrix3r &value)
+    FORCE_INLINE void setInertiaTensorInverseW(const pxr::GfMatrix3f& value)
     {
-      m_inertiaTensorInverseW = value;
+      _inertiaTensorInverseW = value;
     }
 
-    FORCE_INLINE Quaternionr &getRotation()
+    FORCE_INLINE pxr::GfQuaternionf& GetRotation()
     {
-      return m_q;
+      return _q;
     }
 
-    FORCE_INLINE const Quaternionr &getRotation() const
+    FORCE_INLINE const pxr::GfQuaternionf& GetRotation() const
     {
-      return m_q;
+      return _q;
     }
 
-    FORCE_INLINE void setRotation(const Quaternionr &value)
+    FORCE_INLINE void SetRotation(const pxr::GfQuaternionf& value)
     {
-      m_q = value;
+      _q = value;
     }
 
-    FORCE_INLINE Quaternionr &getLastRotation()
+    FORCE_INLINE pxr::GfQuaternionf& GetLastRotation()
     {
-      return m_lastQ;
+      return _lastQ;
     }
 
-    FORCE_INLINE const Quaternionr &getLastRotation() const
+    FORCE_INLINE const pxr::GfQuaternionf& GetLastRotation() const
     {
-      return m_lastQ;
+      return _lastQ;
     }
 
-    FORCE_INLINE void setLastRotation(const Quaternionr &value)
+    FORCE_INLINE void SetLastRotation(const pxr::GfQuaternionf& value)
     {
-      m_lastQ = value;
+      _lastQ = value;
     }
 
-    FORCE_INLINE Quaternionr &getOldRotation()
+    FORCE_INLINE pxr::GfQuaternionf& GetOldRotation()
     {
-      return m_oldQ;
+      return _oldQ;
     }
 
-    FORCE_INLINE const Quaternionr &getOldRotation() const
+    FORCE_INLINE const pxr::GfQuaternionf& GetOldRotation() const
     {
-      return m_oldQ;
+      return _oldQ;
     }
 
-    FORCE_INLINE void setOldRotation(const Quaternionr &value)
+    FORCE_INLINE void SetOldRotation(const pxr::GfQuaternionf& value)
     {
-      m_oldQ = value;
+      _oldQ = value;
     }
 
-    FORCE_INLINE Quaternionr &getRotation0()
+    FORCE_INLINE pxr::GfQuaterniof& GetRotation0()
     {
-      return m_q0;
+      return _q0;
     }
 
-    FORCE_INLINE const Quaternionr &getRotation0() const
+    FORCE_INLINE const pxr::GfQuaternionf& GetRotation0() const
     {
-      return m_q0;
+      return _q0;
     }
 
-    FORCE_INLINE void setRotation0(const Quaternionr &value)
+    FORCE_INLINE void SetRotation0(const pxr::GfQuaterniong& value)
     {
-      m_q0 = value;
+      _q0 = value;
     }
 
-    FORCE_INLINE Quaternionr &getRotationMAT()
+    FORCE_INLINE pxr::GfQuaternionf& GetRotationMAT()
     {
-      return m_q_mat;
+      return _q_mat;
     }
 
-    FORCE_INLINE const Quaternionr &getRotationMAT() const
+    FORCE_INLINE const pxr::GfQuaternionf& GetRotationMAT() const
     {
-      return m_q_mat;
+      return _q_mat;
     }
 
-    FORCE_INLINE void setRotationMAT(const Quaternionr &value)
+    FORCE_INLINE void SetRotationMAT(const pxr::GfQuaternionf& value)
     {
-      m_q_mat = value;
+      _q_mat = value;
     }
 
-    FORCE_INLINE Quaternionr &getRotationInitial()
+    FORCE_INLINE pxr::GfQuaternionf& GetRotationInitial()
     {
-      return m_q_initial;
+      return _q_initial;
     }
 
-    FORCE_INLINE const Quaternionr &getRotationInitial() const
+    FORCE_INLINE const pxr::GfQuaternionf& GetRotationInitial() const
     {
-      return m_q_initial;
+      return _q_initial;
     }
 
-    FORCE_INLINE void setRotationInitial(const Quaternionr &value)
+    FORCE_INLINE void SetRotationInitial(const pxr::GfQuaternionf& value)
     {
-      m_q_initial = value;
+      _q_initial = value;
     }
 
-    FORCE_INLINE Matrix3r &getRotationMatrix()
+    FORCE_INLINE pxr::GfMatrix3f& GetRotationMatrix()
     {
-      return m_rot;
+      return _rot;
     }
 
-    FORCE_INLINE const Matrix3r &getRotationMatrix() const
+    FORCE_INLINE const pxr::GfMatrix3f& GetRotationMatrix() const
     {
-      return m_rot;
+      return _rot;
     }
 
-    FORCE_INLINE void setRotationMatrix(const Matrix3r &value)
+    FORCE_INLINE void SetRotationMatrix(const pxr::GfMatrix3f& value)
     {
-      m_rot = value;
+      _rot = value;
     }
 
-    FORCE_INLINE Vector3r &getAngularVelocity()
+    FORCE_INLINE pxr::GfVec3f& GetAngularVelocity()
     {
-      return m_omega;
+      return _omega;
     }
 
-    FORCE_INLINE const Vector3r &getAngularVelocity() const
+    FORCE_INLINE const pxr::GfVec3f& GetAngularVelocity() const
     {
-      return m_omega;
+      return _omega;
     }
 
-    FORCE_INLINE void setAngularVelocity(const Vector3r &value)
+    FORCE_INLINE void SetAngularVelocity(const pxr::GfVec3f& value)
     {
-      m_omega = value;
+      _omega = value;
     }
 
-    FORCE_INLINE Vector3r &getAngularVelocity0()
+    FORCE_INLINE pwr::GfVec3f& GetAngularVelocity0()
     {
-      return m_omega0;
+      return _omega0;
     }
 
-    FORCE_INLINE const Vector3r &getAngularVelocity0() const
+    FORCE_INLINE const pxr::GfVec3f& GetAngularVelocity0() const
     {
-      return m_omega0;
+      return _omega0;
     }
 
-    FORCE_INLINE void setAngularVelocity0(const Vector3r &value)
+    FORCE_INLINE void SetAngularVelocity0(const pxr::GfVec3f& value)
     {
-      m_omega0 = value;
+      _omega0 = value;
     }
 
-    FORCE_INLINE Vector3r &getTorque()
+    FORCE_INLINE pxr::GfVec3f& GetTorque()
     {
-      return m_torque;
+      return _torque;
     }
 
-    FORCE_INLINE const Vector3r &getTorque() const
+    FORCE_INLINE const pxr::GfVec3f& GetTorque() const
     {
-      return m_torque;
+      return _torque;
     }
 
-    FORCE_INLINE void setTorque(const Vector3r &value)
+    FORCE_INLINE void SetTorque(const pxr::GfVec3f& value)
     {
-      m_torque = value;
+      _torque = value;
     }
 
-    FORCE_INLINE Real getRestitutionCoeff() const 
+    FORCE_INLINE float GetRestitutionCoeff() const 
     { 
-      return m_restitutionCoeff; 
+      return _restitutionCoeff; 
     }
 
-    FORCE_INLINE void setRestitutionCoeff(Real val) 
+    FORCE_INLINE void SetRestitutionCoeff(float val) 
     { 
-      m_restitutionCoeff = val; 
+      _restitutionCoeff = val; 
     }
 
-    FORCE_INLINE Real getFrictionCoeff() const 
+    FORCE_INLINE float GetFrictionCoeff() const 
     { 
-      return m_frictionCoeff; 
+      return _frictionCoeff; 
     }
 
-    FORCE_INLINE void setFrictionCoeff(Real val) 
+    FORCE_INLINE void SetFrictionCoeff(float val) 
     { 
-      m_frictionCoeff = val; 
+      _frictionCoeff = val; 
     }
 
-    RigidBodyGeometry& getGeometry()
+    Geometry* GetGeometry()
     {
-      return m_geometry;
+      return _geometry;
     }
 };
 }

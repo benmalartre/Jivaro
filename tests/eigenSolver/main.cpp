@@ -18,6 +18,8 @@ using Matrix4r = Eigen::Matrix<float, 4, 4, Eigen::DontAlign>;
 #include "../../src/pbd/eigenSolver.h"
 #include "../../src/utils/timer.h"
 
+#include "../../src/pbd/matrix.h"
+
 PXR_NAMESPACE_USING_DIRECTIVE
 
 
@@ -323,6 +325,37 @@ void _TestOne() {
     pxr::NISymmetricEigensolver3x3 solver;
     solver(m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2], 1, values, vectors);
     _PrintResult("Custom Non-Iterative", &values[0], &vectors[0][0]);
+  }
+
+  // matrix class
+  {
+    PBDMatrix<float> matrix(4, 4);
+    
+    for(size_t column = 0; column < 4; ++column) {
+      for(size_t row = 0; row < 4; ++row) {
+        matrix.SetValue(row, column, m[row][column]);
+      }
+    }
+    /*
+    std::vector<int> pivot(4);
+    if(M.LUDecomposition(pivot) == PBDMatrix<float>::MATRIX_VALID) {
+      std::cout << "LU DECOMPOSITION SUCCEED" << std::endl;
+      std::cout << pivot[0] << "," << pivot[1] << "," << pivot[2] << "," << pivot[3]  << std::endl;
+      M.SolveLU();
+      
+    } else {
+      std::cout << "LU DECOMPOSITION FAILED" << std::endl;
+    }
+    */
+    matrix.Echo();
+    matrix.InverseInPlace();
+    matrix.Echo();
+
+    std::cout << m << std::endl;
+    std::cout << m.GetInverse() << std::endl;
+    //PBDMatrix<float> inverse = matrix.Inverse();
+    //inverse.Echo();
+    
   }
 }
 
