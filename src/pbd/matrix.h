@@ -119,6 +119,7 @@ template<typename T>
 PBDMatrix<T>::~PBDMatrix()
 {
   if(_lu) delete _lu;
+  if(_data) delete _data;
 }
 
 template<typename T>
