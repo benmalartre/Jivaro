@@ -58,12 +58,12 @@ add_executable(${TARGET}
   geometry/stroke.cpp
   geometry/voronoi.cpp
   #geometry/vdb.cpp
-  acceleration/grid2d.cpp
   acceleration/grid3d.cpp
   acceleration/bvh.cpp
   acceleration/intersector.cpp
   pbd/integration.cpp
   pbd/maths.cpp
+  pbd/matrix.cpp
   anim/animx.cpp
   command/command.cpp
   command/inverse.cpp

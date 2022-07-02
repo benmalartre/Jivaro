@@ -54,7 +54,6 @@ CreatePrimCommand::CreatePrimCommand(pxr::UsdStageRefPtr stage, const std::strin
   UndoRouter::Get().TransferEdits(&_inverse);
   auto sphere = pxr::UsdGeomSphere::Define(stage, pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
   stage->SetDefaultPrim(sphere.GetPrim());
-  //stage->DefinePrim(pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
@@ -64,8 +63,7 @@ CreatePrimCommand::CreatePrimCommand(pxr::UsdPrim parent, const std::string& nam
 {
   if (!parent) return;
   UndoRouter::Get().TransferEdits(&_inverse);
-  pxr::UsdGeomSphere::Define(parent.GetStage(), pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
-  //parent.GetStage()->DefinePrim(parent.GetPath().AppendChild(pxr::TfToken(name)));
+  pxr::UsdGeomSphere::Define(parent.GetStage(), parent.GetPath().AppendChild(pxr::TfToken(name)));
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }

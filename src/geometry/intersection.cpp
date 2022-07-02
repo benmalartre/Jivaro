@@ -305,4 +305,35 @@ bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   return false;
 }
 
+<<<<<<< HEAD
 JVR_NAMESPACE_CLOSE_SCOPE
+=======
+bool IntersectTriangle( 
+    const pxr::GfRay& ray, 
+    const pxr::GfVec3f &a, const pxr::GfVec3f &b, const pxr::GfVec3f &c, 
+    double* distance, pxr::GfVec3f* uvw) 
+{ 
+  pxr::GfVec3d ab(b - a); 
+  pxr::GfVec3d ac(c - a);
+  pxr::GfVec3d p = pxr::GfCross(ray.GetDirection(), ac);
+  double det = pxr::GfDot(ab, p); 
+
+  if (det < 0.0000001) return false; 
+  double invDet = 1 / det; 
+
+  pxr::GfVec3d t = ray.GetPoint(0.0) - pxr::GfVec3d(a); 
+  (*uvw)[0] = pxr::GfDot(t, p) * invDet; 
+  if ((*uvw)[0] < 0.0 || (*uvw)[0] > 1.0) return false; 
+
+  pxr::GfVec3d q = pxr::GfCross(t, ab);
+  (*uvw)[1] = pxr::GfDot(ray.GetDirection(), q) * invDet;
+  if ((*uvw)[1] < 0.0 || (*uvw)[0] + (*uvw)[1] > 1.0) return false; 
+
+  *distance = pxr::GfDot(ac, q) * invDet; 
+  (*uvw)[2] = 1.0 - ((*uvw)[0] + (*uvw)[1]);
+
+  return true; 
+} 
+
+PXR_NAMESPACE_CLOSE_SCOPE
+>>>>>>> 3278ce7a56863fea7183719ef0912384a4ad2c68

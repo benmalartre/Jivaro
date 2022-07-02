@@ -75,7 +75,7 @@ bool MenuItem::Draw()
 }
 
 static void OpenFileCallback() {
-  const char* folder = GetInstallationFolder().c_str();
+  std::string folder = GetInstallationFolder();
   const char* filters[] = {
     ".usd",
     ".usda",
@@ -85,7 +85,7 @@ static void OpenFileCallback() {
   int numFilters = 4;
 
   std::string filename =
-    GetApplication()->BrowseFile(200, 200, folder, filters, numFilters, "open usd file");
+    GetApplication()->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
 
   GetApplication()->AddCommand(
     std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
@@ -123,10 +123,8 @@ static void FlattenGeometryCallback()
   Application* app = GetApplication();
   pxr::UsdStageRefPtr& stage = app->GetWorkStage();
   Selection* selection = app->GetSelection();
-  std::cout << "NUM SELECTED ITEMS : " << selection->GetNumSelectedItems() << std::endl;
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);
-    std::cout << "SELECTED PRIM PATH : " << item.path << std::endl;
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
     if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh mesh(prim);
@@ -178,15 +176,9 @@ MenuUI::MenuUI(View* parent) :BaseUI(parent, "MainMenu")
   fileMenu.AddItem(parent, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCallback);
   fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
   fileMenu.AddItem(parent, "New", "Ctrl+N", false, true, (MenuPressedFunc)&NewFileCallback);
-  /*
-  fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
-  args.push_back(pxr::VtValue(7.0));
-
+ 
   MenuItem& testItem = AddItem(parent, "Test", "", false, true);
-  testItem.AddItem(parent, "Flatten Geometry", "Shift+F", false, true, (MenuPressedFunc)&FlattenGeometryCallback);
-  */
-  MenuItem& createPrimItem = AddItem(parent, "Test", "", false, true);
-  createPrimItem.AddItem(parent, "CreatePrim", "CTRL+P", false, true, (MenuPressedFunc)&CreatePrimCallback);
+  testItem.AddItem(parent, "CreatePrim", "CTRL+P", false, true, (MenuPressedFunc)&CreatePrimCallback);
 
   MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);
   demoItem.AddItem(parent, "Open Demo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
