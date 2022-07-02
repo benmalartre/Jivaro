@@ -4,7 +4,7 @@
 
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // constructor
 //------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ Camera::Camera(const std::string& name, double fov) :
 void
 Camera::SetZIsUp(bool isZUp)
 {
-  _zUpMatrix = GfMatrix4d().SetRotate(GfRotation(GfVec3d::XAxis(), isZUp ? 90 : 0));
+  _zUpMatrix = pxr::GfMatrix4d().SetRotate(pxr::GfRotation(pxr::GfVec3d::XAxis(), isZUp ? 90 : 0));
   _zUpInverseMatrix = _zUpMatrix.GetInverse();
 }
 
@@ -347,4 +347,4 @@ pxr::GfRay Camera::ComputeRay(const pxr::GfVec2d& pos) const
   return _frustum.ComputeRay(pos);
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

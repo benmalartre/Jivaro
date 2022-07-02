@@ -4,7 +4,7 @@
 #include "mesh.h"
 #include "subdiv.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 
@@ -43,4 +43,4 @@ UsdEmbreeInstance* TranslateInstance(
 
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

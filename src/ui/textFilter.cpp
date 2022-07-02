@@ -1,6 +1,6 @@
 #include "../ui/textFilter.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 //
 // Using a more performant algorithm for wildcard matching:
 // https://en.wikipedia.org/wiki/Matching_wildcards
@@ -146,4 +146,4 @@ bool TextFilter::PassFilter(const char *text, const char *text_end) const {
     return false;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -9,7 +9,7 @@
 #include "../ui/utils.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class PropertyUI : public HeadedUI
 {
@@ -28,7 +28,7 @@ public:
 
 private:
   void _DrawAttributeTypeInfo(const pxr::UsdAttribute& attribute);
-  VtValue _DrawAttributeValue(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  pxr::VtValue _DrawAttributeValue(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
   void _DrawAttributeValueAtTime(const pxr:: UsdAttribute& attribute, const pxr::UsdTimeCode& currentTime);
   bool _DrawAssetInfo(const pxr::UsdPrim& prim);
   bool _DrawXformsCommon(pxr::UsdTimeCode time);
@@ -55,6 +55,6 @@ private:
   ImGuiID                 _focused;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_PROPERTY_H

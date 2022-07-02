@@ -13,7 +13,7 @@
 #include "../command/command.h"
 #include "../command/block.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags PropertyUI::_flags = 
   ImGuiWindowFlags_None |
@@ -411,4 +411,4 @@ PropertyUI::Draw()
 };
   
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

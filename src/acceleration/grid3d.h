@@ -10,7 +10,7 @@
 #include "../geometry/geometry.h"
 #include "../acceleration/intersector.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 class Mesh;
@@ -155,6 +155,6 @@ private:
   //void PlacePoint(Vertex* V);
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

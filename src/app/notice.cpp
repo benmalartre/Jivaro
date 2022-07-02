@@ -5,8 +5,9 @@
 #include "../app/notice.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
+PXR_NAMESPACE_USING_DIRECTIVE
 TF_REGISTRY_FUNCTION(TfType)
 {
   TfType::Define<BaseNotice, TfType::Bases<TfNotice> >();
@@ -79,4 +80,4 @@ UndoStackNotice::~UndoStackNotice()
 }
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

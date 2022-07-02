@@ -12,7 +12,7 @@
 #include <float.h>
 #include "geometry.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 struct StrokeLine {
   std::vector<pxr::GfVec3f> points;
@@ -83,6 +83,6 @@ private:
 
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -25,7 +25,7 @@
 #include "../command/inverse.h"
 #include "../ui/graphEditor.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
 // Base class
@@ -274,6 +274,6 @@ private:
 };
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_COMMAND_COMMAND_H

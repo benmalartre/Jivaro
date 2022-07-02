@@ -1,6 +1,6 @@
 #include "integration.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // ----------------------------------------------------------------------------------------------
 void PBDIntegration::SemiImplicitEuler(
@@ -94,4 +94,4 @@ void PBDIntegration::AngularVelocityUpdateSecondOrder(
 	}
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -17,7 +17,7 @@
 #include "../command/command.h"
 #include "../geometry/utils.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
 // HELPERS
@@ -1462,4 +1462,4 @@ BrushHandle::Draw(float width, float height)
   glBindVertexArray(vao);
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

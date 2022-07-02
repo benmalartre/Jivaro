@@ -7,7 +7,7 @@
 #include "../ui/ui.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // base class for modal window
 class BaseModal
@@ -97,6 +97,6 @@ public:
   void _LoopImpl() override;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

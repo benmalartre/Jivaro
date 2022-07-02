@@ -11,7 +11,7 @@
 #include <pxr/base/tf/hashmap.h>
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 typedef pxr::TfHashMap< pxr::SdfPath, pxr::UsdStageRefPtr, pxr::SdfPath::Hash > 
   _StageCacheMap;
@@ -64,6 +64,6 @@ private:
 };
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_SCENE_H

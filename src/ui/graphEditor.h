@@ -22,7 +22,7 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primFlags.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 extern IconList ICONS;
 #define GRAPH_CELL_MAX_NODES 6
 
@@ -450,6 +450,6 @@ private:
 };
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_GRAPH_H

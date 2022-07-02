@@ -2,7 +2,7 @@
 #include "common.h"
 #include "app/application.h"
 
-PXR_NAMESPACE_USING_DIRECTIVE
+JVR_NAMESPACE_USING_DIRECTIVE
 
 
 int main(void)

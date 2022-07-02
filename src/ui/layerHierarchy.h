@@ -8,7 +8,7 @@
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/primSpec.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class LayerHierarchyUI : public HeadedUI
 {
@@ -21,10 +21,10 @@ public:
   bool Draw()      override;
 
 private:
-  SdfLayerRefPtr    _layer;
-  SdfPrimSpecHandle _prim;
+  pxr::SdfLayerRefPtr    _layer;
+  pxr::SdfPrimSpecHandle _prim;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_LAYER_HIERARCHY_H

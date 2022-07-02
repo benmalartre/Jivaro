@@ -4,7 +4,7 @@
 #include "../common.h"
 #include "../imgui/imgui.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 static ImVec4 BACKGROUND_COLOR(0.2f, 0.2f, 0.2f, 1.f);
 static ImVec4 ALTERNATE_COLOR(0.25f, 0.25f, 0.25f, 1.f);
@@ -165,6 +165,6 @@ static void SetStyle(ImGuiStyle* dst)
   */
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_STYLE_H

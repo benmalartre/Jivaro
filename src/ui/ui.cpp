@@ -4,7 +4,7 @@
 #include "../app/view.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // constructor
 BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
@@ -132,4 +132,4 @@ void BaseUI::AttachTooltip(const char* tooltip)
 }
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

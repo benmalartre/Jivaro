@@ -8,7 +8,7 @@
 #include "../app/handle.h"
 #include <pxr/usd/usd/prim.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 enum TOOLS
 {
@@ -58,6 +58,6 @@ private:
 
 void InitializeTools();
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_HANDLE_H

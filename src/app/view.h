@@ -7,7 +7,7 @@
 #include "../ui/utils.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Window;
 class BaseUI;
@@ -117,6 +117,6 @@ private:
 };
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_VIEW_H

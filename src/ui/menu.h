@@ -11,7 +11,7 @@
 
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Command;
 // callback prototype
@@ -29,9 +29,9 @@ struct MenuItem {
   MenuPressedFunc             func;
 
   MenuItem(View* view, const std::string lbl, const std::string sht, bool sel,
-    bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
+    bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
   MenuItem& AddItem(View* view, const std::string lbl, const std::string sht, bool sel,
-    bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
+    bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
 
   bool Draw();
 };
@@ -55,6 +55,6 @@ private:
   static ImGuiWindowFlags _flags;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_MENU_H

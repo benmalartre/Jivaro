@@ -14,7 +14,7 @@
 #include "../common.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 struct Edge {
@@ -30,6 +30,6 @@ struct Edge {
 
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_GEOMETRY_POINT_H

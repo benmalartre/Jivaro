@@ -24,7 +24,7 @@
 #include <codecvt>
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // STRING END WITH
 //---------------------------------------------------------------------------------------
@@ -177,5 +177,5 @@ static std::string ConvertCodePointToUtf8(char32_t codepoint)
   return convert.to_bytes(&codepoint, &codepoint + 1);
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 

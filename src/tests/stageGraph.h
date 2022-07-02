@@ -20,7 +20,7 @@
 #include <pxr/base/vt/value.h>
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // add node to graph test
 GraphNode _TestAddNode(UsdStageRefPtr stage, const SdfPath& path);
@@ -43,4 +43,4 @@ GraphNode _CreateNodeAtPosition(UsdPrim prim, const GfVec2i& pos);
 // main entry point
 void TestScene(const std::string& result);
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -39,7 +39,7 @@
 
 #include <memory>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 namespace Picking
@@ -75,6 +75,6 @@ namespace Picking
     };
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APP_PICKING_H

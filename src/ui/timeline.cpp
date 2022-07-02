@@ -6,7 +6,7 @@
 #include "../app/view.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 static void
 PlaybackCallback(TimelineUI* ui)
@@ -411,4 +411,4 @@ bool TimelineUI::Draw()
     ImGui::IsAnyItemFocused();
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

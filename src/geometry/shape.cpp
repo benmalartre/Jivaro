@@ -11,7 +11,7 @@
 #include "../utils/shaders.h"
 #include "../utils/glutils.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 GLSLProgram* SHAPE_PROGRAM = NULL;
 
@@ -1298,4 +1298,4 @@ void InitShapeShader()
   SHAPE_INITIALIZED = true;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

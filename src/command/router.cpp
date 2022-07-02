@@ -31,7 +31,7 @@
 #include "../command/delegate.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 TF_INSTANTIATE_SINGLETON(UndoRouter);
 
@@ -49,7 +49,7 @@ void UndoRouter::AddInverse(std::function<bool()> inverse) {
 }
 
 UndoRouter& UndoRouter::Get() {
-    return TfSingleton<UndoRouter>::GetInstance();
+    return pxr::TfSingleton<UndoRouter>::GetInstance();
 }
 
 bool UndoRouter::TransferEdits(UndoInverse* inverse){
@@ -73,4 +73,4 @@ bool UndoRouter::IsMuted(){
     return Get()._muteDepth > 0;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

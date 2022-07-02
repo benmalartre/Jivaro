@@ -10,7 +10,7 @@
 #include "../app/window.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags ViewHead::_flags =
   ImGuiWindowFlags_None |
@@ -230,4 +230,4 @@ void HeadedUI::GetRelativeMousePosition(const float inX, const float inY,
 }
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

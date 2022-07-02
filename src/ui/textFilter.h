@@ -4,7 +4,7 @@
 #include <functional>
 #include "../ui/ui.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 /*
     The following code was copied from imgui and modified to add wildcard search
 */
@@ -41,6 +41,6 @@ struct TextFilter {
 
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_TEXTFILTER_H

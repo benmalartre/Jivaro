@@ -9,7 +9,7 @@
 #include "../app/application.h"
 #include "../app/notice.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void Selection::Item::ComputeHash()
 {
@@ -169,4 +169,4 @@ bool IsPickablePath(const pxr::UsdStage& stage, const pxr::SdfPath& path) {
 
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

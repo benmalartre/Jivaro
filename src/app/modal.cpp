@@ -5,7 +5,7 @@
 #include "../ui/dummy.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 //==============================================================================
 // Base Modal Window
@@ -138,4 +138,4 @@ void ModalMenu::_LoopImpl()
 {
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -18,7 +18,7 @@
 #include <pxr/base/vt/value.h>
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // main entry point
 void
@@ -39,4 +39,4 @@ RecurseStagePrim(
 void 
 DrawStageUI(GraphEditorUI* ui);
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

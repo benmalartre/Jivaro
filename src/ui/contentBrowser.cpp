@@ -4,7 +4,7 @@
 #include "../app/application.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ContentBrowserUI::ContentBrowserUI(View* parent, const std::string& name)
   : BaseUI(parent, name)
@@ -21,8 +21,8 @@ DrawLayerTooltip(pxr::SdfLayerHandle layer)
   ImGui::SetTooltip("%s\n%s", layer->GetRealPath().c_str(), layer->GetIdentifier().c_str());
   auto assetInfo = layer->GetAssetInfo();
   if (!assetInfo.IsEmpty()) {
-    if (assetInfo.CanCast<VtDictionary>()) {
-      auto assetInfoDict = assetInfo.Get<VtDictionary>();
+    if (assetInfo.CanCast<pxr::VtDictionary>()) {
+      auto assetInfoDict = assetInfo.Get<pxr::VtDictionary>();
       TF_FOR_ALL(keyValue, assetInfoDict) {
         std::stringstream ss;
         ss << keyValue->second;
@@ -33,7 +33,7 @@ DrawLayerTooltip(pxr::SdfLayerHandle layer)
 }
 
 static bool 
-PassOptionsFilter(SdfLayerHandle layer, 
+PassOptionsFilter(pxr::SdfLayerHandle layer, 
    const ContentBrowserOptions& options, bool isStage)
 {
   if (!options._filterAnonymous) {
@@ -61,7 +61,7 @@ PassOptionsFilter(SdfLayerHandle layer,
   return true;
 }
 
-inline void DrawSaveButton(SdfLayerHandle layer) 
+inline void DrawSaveButton(pxr::SdfLayerHandle layer) 
 {
   ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(TRANSPARENT_COLOR));
   if (ImGui::SmallButton(layer->IsDirty() ? "###Save" : "  ###Save")) {
@@ -71,7 +71,7 @@ inline void DrawSaveButton(SdfLayerHandle layer)
   ImGui::PopStyleColor();
 }
 
-static inline std::string LayerNameFromOptions(SdfLayerHandle layer, const ContentBrowserOptions& options) {
+static inline std::string LayerNameFromOptions(pxr::SdfLayerHandle layer, const ContentBrowserOptions& options) {
   if (options._showAssetName) {
     return layer->GetAssetName();
   }
@@ -84,8 +84,8 @@ static inline std::string LayerNameFromOptions(SdfLayerHandle layer, const Conte
   return layer->GetIdentifier();
 }
 
-static inline void DrawLayerDescriptionRow(SdfLayerHandle layer, bool isStage, std::string& layerName, bool selected,
-  SdfLayerHandle* selectedLayer) {
+static inline void DrawLayerDescriptionRow(pxr::SdfLayerHandle layer, bool isStage, std::string& layerName, bool selected,
+  pxr::SdfLayerHandle* selectedLayer) {
   ImGui::PushStyleColor(ImGuiCol_Text, isStage ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(0.6, 0.6, 0.6, 1.0));
   if (ImGui::Selectable(layerName.c_str(), selected)) {
     if (selectedLayer) {
@@ -105,7 +105,7 @@ static inline void DrawLayerDescriptionRow(SdfLayerHandle layer, bool isStage, s
 }
 
 template <typename SdfLayerSetT>
-void DrawLayerSet(UsdStageCache& cache, SdfLayerSetT& layerSet, SdfLayerHandle* selectedLayer,
+void DrawLayerSet(pxr::UsdStageCache& cache, SdfLayerSetT& layerSet, pxr::SdfLayerHandle* selectedLayer,
   const ContentBrowserOptions& options, const ImVec2& listSize = ImVec2(0, -10)) {
 
   // Sort the layer set
@@ -193,8 +193,8 @@ bool ContentBrowserUI::Draw()
   }
 
   // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
-  SdfLayerHandle selected(GetApplication()->GetWorkStage()->GetRootLayer());
-  auto layers = SdfLayer::GetLoadedLayers();
+  pxr::SdfLayerHandle selected(GetApplication()->GetWorkStage()->GetRootLayer());
+  auto layers = pxr::SdfLayer::GetLoadedLayers();
   //DrawLayerSet(GetApplication()->GetStageCache(), layers, &selected, options);
   /*
   if (selected != editor.GetCurrentLayer()) {
@@ -205,4 +205,4 @@ bool ContentBrowserUI::Draw()
   return true;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

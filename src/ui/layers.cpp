@@ -22,7 +22,7 @@
 #include "../app/view.h"
 #include "../app/application.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 /*
 #include "Editor.h"
 #include "Commands.h"
@@ -407,7 +407,7 @@ OnReloadLayer()
 }
 
 void 
-LayersUI::DrawNavigation(SdfLayerRefPtr layer) 
+LayersUI::DrawNavigation(pxr::SdfLayerRefPtr layer) 
 {
   if (!layer) return;
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
@@ -530,4 +530,4 @@ bool LayersUI::Draw()
     return true;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

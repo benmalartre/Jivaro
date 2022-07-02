@@ -44,7 +44,7 @@
 
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 #define EDGE_LEVEL 256.0f
 #define ENABLE_SMOOTH_NORMALS 1
@@ -109,4 +109,4 @@ TriangulateData(const pxr::VtArray<int>& indices,
 void
 GetProperties(const pxr::UsdPrim& prim, UsdEmbreeContext* ctxt);
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

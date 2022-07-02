@@ -15,7 +15,7 @@
 
 #include "../voronoi/FortuneAlgorithm.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void HalfEdge::GetTriangleNormal(const pxr::GfVec3f* positions, 
   pxr::GfVec3f& normal) const
@@ -905,4 +905,4 @@ void Mesh::SetDisplayColor(GeomInterpolation interp,
   _colors = colors;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

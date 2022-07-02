@@ -4,7 +4,7 @@
 #include "../geometry/utils.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 Geometry::~Geometry()
@@ -118,4 +118,4 @@ void Geometry::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
   _points = positions;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

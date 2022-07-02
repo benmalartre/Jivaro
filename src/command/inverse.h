@@ -11,7 +11,9 @@
 #include <pxr/base/tf/refPtr.h>
 #include <pxr/base/tf/declarePtrs.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+#include "../common.h"
+
+JVR_NAMESPACE_OPEN_SCOPE
 
 class UndoRouter;
 
@@ -57,6 +59,6 @@ public:
     friend class UndoBlock;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

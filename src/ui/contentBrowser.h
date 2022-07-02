@@ -8,7 +8,7 @@
 #include "../ui/utils.h"
 #include "../ui/textFilter.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 static size_t CONTENTBROWSER_LINE_HEIGHT = 20;
 
@@ -39,6 +39,6 @@ private:
 
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_CONTENTBROWSER_H

@@ -9,7 +9,7 @@
 #include "../geometry/intersection.h"
 #include "../acceleration/intersector.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
@@ -78,6 +78,6 @@ public:
     double maxDistance = -1.f, double* minDistance=NULL) const override;
 }; 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_ACCELERATION_BVH_H

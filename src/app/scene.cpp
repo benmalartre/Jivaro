@@ -12,7 +12,7 @@
 #include "../command/router.h"
 #include "../command/block.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 Scene::Scene(pxr::UsdStageRefPtr& stage)
  : _stage(stage)
@@ -175,4 +175,4 @@ Scene::GetGeometry(const pxr::SdfPath& path)
   }
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -4,7 +4,7 @@
 #include "../command/delegate.h"
 #include "../command/router.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 UndoStateDelegate::UndoStateDelegate()
   : _dirty(false) 
@@ -390,4 +390,4 @@ UndoStateDelegate::_OnPopChild(const SdfPath& parentPath,
     this, parentPath, fieldName, oldValue));
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

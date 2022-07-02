@@ -7,7 +7,7 @@
 
 #include "files.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // vertex shader :
 static const char* SIMPLE_VERTEX_SHADER_CODE_120 = R"""(
@@ -164,4 +164,4 @@ private:
   std::string _name; 
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

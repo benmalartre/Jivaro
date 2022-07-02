@@ -18,9 +18,9 @@
 #include <pxr/base/vt/value.h>
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // main entry point
 void TestInstances(const std::string& result);
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

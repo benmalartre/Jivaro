@@ -1,7 +1,7 @@
 #include "../geometry/utils.h"
 #include <pxr/base/gf/matrix4f.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, 
   const pxr::GfVec3f& b, const pxr::GfVec3f& c, float* u, float* v, float* w)
@@ -199,4 +199,4 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
 }
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

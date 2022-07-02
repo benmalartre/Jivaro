@@ -16,7 +16,7 @@
 #include "../command/router.h"
 #include "../command/block.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 Workspace::Workspace() 
   : _execInitialized(false)
@@ -324,4 +324,4 @@ Workspace::TerminateExec()
   std::cout << "TERMINATE EXEC " << std::endl;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

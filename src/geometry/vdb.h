@@ -11,7 +11,7 @@
 #include "../common.h"
 #include "mesh.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class VDB {
 public:
@@ -63,6 +63,6 @@ public:
   VDB(const VDB & vdb);
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_GEOMETRY_VDB_H

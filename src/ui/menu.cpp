@@ -15,7 +15,7 @@
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/primvar.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 ImGuiWindowFlags MenuUI::_flags =
@@ -32,13 +32,13 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoScrollbar;
 
 MenuItem::MenuItem(View* v, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
+  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
   : view(v), label(lbl), shortcut(sht), selected(sel), func(f), args(a)
 {
 }
 
 MenuItem& MenuItem::AddItem(View* view, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue> a)
+  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
 {
   items.push_back(MenuItem(view, lbl, sht, sel, enb, f, a));
   return items.back();
@@ -254,4 +254,4 @@ bool MenuUI::Draw()
     ImGui::IsAnyMouseDown();
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -3,7 +3,7 @@
 #include "prim.h"
 #include <pxr/usd/usdGeom/mesh.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 struct UsdEmbreeMesh  : public UsdEmbreePrim {
@@ -48,4 +48,4 @@ bool CheckColors(
   const pxr::UsdTimeCode& time,
   UsdEmbreeMesh* mesh
 );
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

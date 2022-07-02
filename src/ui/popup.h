@@ -11,7 +11,7 @@
 #include "../ui/ui.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class PopupUI : public BaseUI
 {
@@ -122,6 +122,6 @@ private:
   char _value[255];
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_POPUP_H

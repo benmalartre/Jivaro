@@ -4,7 +4,7 @@
 #include "../app/window.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags SplitterUI::_flags =
   ImGuiWindowFlags_None |
@@ -129,4 +129,4 @@ SplitterUI::Resize(int width, int height)
   BuildMap(width, height);
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

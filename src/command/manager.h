@@ -10,7 +10,7 @@
 #include "../command/inverse.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
 // Command Manager
@@ -32,6 +32,6 @@ public:
   void Clear();
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_COMMAND_MANAGER_H

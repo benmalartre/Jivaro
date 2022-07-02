@@ -7,11 +7,13 @@
 #include "pxr/base/tf/envSetting.h"
 #include "pxr/base/tf/diagnostic.h"
 #include "pxr/base/tf/callContext.h"
-#include "engine.h"
+#include "../app/engine.h"
 
 #include <iostream>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
+
+PXR_NAMESPACE_USING_DIRECTIVE
 
 TF_DEFINE_ENV_SETTING(ENGINE_DEBUG_SCENE_DELEGATE_ID, "/",
   "Default Jivaro scene delegate id");
@@ -70,4 +72,4 @@ Engine::Engine(
 Engine::~Engine() = default;
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

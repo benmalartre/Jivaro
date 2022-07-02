@@ -6,7 +6,7 @@
 #include "../app/application.h"
 #include "../app/modal.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags ToolbarUI::_flags = 
   ImGuiWindowFlags_None |
@@ -204,4 +204,4 @@ bool ToolbarUI::Draw()
     ImGui::IsAnyMouseDown();
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

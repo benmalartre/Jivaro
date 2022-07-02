@@ -18,8 +18,9 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/property.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
+PXR_NAMESPACE_USING_DIRECTIVE
 TF_DECLARE_WEAK_AND_REF_PTRS(UndoStateDelegate);
 TF_DECLARE_WEAK_AND_REF_PTRS(UndoRouter);  // forward declaration
 
@@ -55,8 +56,8 @@ private:
     const pxr::VtValue& inverse);
   bool _InvertCreateSpec(const pxr::SdfPath& path, bool inert);
   bool _InvertDeleteSpec(const pxr::SdfPath& path, bool inert,
-    SdfSpecType deletedSpecType,
-    const SdfDataRefPtr& deletedData);
+    pxr::SdfSpecType deletedSpecType,
+    const pxr::SdfDataRefPtr& deletedData);
   bool _InvertPushTokenChild(const pxr::SdfPath& parentPath,
     const pxr::TfToken& fieldName, const pxr::TfToken& value);
   bool _InvertPopTokenChild(const pxr::SdfPath& parentPath,
@@ -68,7 +69,7 @@ private:
 
   bool _InvertMoveSpec(const pxr::SdfPath& oldPath, const pxr::SdfPath& newPath);
 
-  void _OnSetLayer(const SdfLayerHandle& layer) override;
+  void _OnSetLayer(const pxr::SdfLayerHandle& layer) override;
 
   void _OnSetField(const pxr::SdfPath& path, const pxr::TfToken& fieldName,
     const pxr::VtValue& value) override;
@@ -123,6 +124,6 @@ private:
   friend class UndoRouter;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // UNDOSTATEDELEGATE_H

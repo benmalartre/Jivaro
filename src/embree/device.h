@@ -20,7 +20,7 @@
 #include "ray.h"
 #include "context.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 class ViewportUI;
 class Camera;
 
@@ -154,4 +154,4 @@ void SaveToFile(const embree::FileName& fileName);
 void RenderToMemory(Camera* viewCamera, bool interact=false);
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

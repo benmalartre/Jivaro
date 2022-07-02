@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void UndoInverse::_Append(std::function<bool()> inverse) {
   _inversion.push_back(inverse);
@@ -45,4 +45,4 @@ UndoInverse::UndoInverse(UndoRouter& router) {
     router._inversion._Clear();
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

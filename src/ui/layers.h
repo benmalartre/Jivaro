@@ -6,7 +6,7 @@
 
 #include "../ui/ui.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 /*
 struct SummaryStats
@@ -51,13 +51,13 @@ class LayersUI : public BaseUI
     void MouseMove(int x, int y) override;
     */
     bool Draw() override;
-    void DrawNavigation(SdfLayerRefPtr layer);
+    void DrawNavigation(pxr::SdfLayerRefPtr layer);
 
 
   private:
     static ImGuiWindowFlags               _flags;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

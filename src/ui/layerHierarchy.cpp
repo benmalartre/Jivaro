@@ -6,7 +6,7 @@
 #include "../app/application.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 LayerHierarchyUI::LayerHierarchyUI(View* parent, const std::string& name)
   :HeadedUI(parent, name)
@@ -17,7 +17,9 @@ LayerHierarchyUI::~LayerHierarchyUI()
 {
 }
 
-static void DrawBackgroundSelection(const SdfPrimSpecHandle& currentPrim, SdfPrimSpecHandle& selectedPrim) {
+static void 
+DrawBackgroundSelection(const pxr::SdfPrimSpecHandle& currentPrim, pxr::SdfPrimSpecHandle& selectedPrim) 
+{
   const bool selected = currentPrim == selectedPrim;
   const auto selectedColor = ImGui::GetColorU32(ImGuiCol_Header);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, selected ? selectedColor : 0);
@@ -33,8 +35,10 @@ static void DrawBackgroundSelection(const SdfPrimSpecHandle& currentPrim, SdfPri
 }
 
 // Returns unfolded
-static bool DrawTreeNodePrimName(const bool& primIsVariant, SdfPrimSpecHandle& primSpec, SdfPrimSpecHandle& selectedPrim,
-  bool hasChildren) {
+static bool 
+DrawTreeNodePrimName(const bool& primIsVariant, pxr::SdfPrimSpecHandle& primSpec,
+  pxr::SdfPrimSpecHandle& selectedPrim, bool hasChildren) 
+{
   // Format text differently when the prim is a variant
   std::string primSpecName;
   if (primIsVariant) {
@@ -53,11 +57,11 @@ static bool DrawTreeNodePrimName(const bool& primIsVariant, SdfPrimSpecHandle& p
   auto unfolded = ImGui::TreeNodeEx(primSpecName.c_str(), nodeFlags);
 
   // Edition of the prim name
-  static SdfPrimSpecHandle editNamePrim;
+  static pxr::SdfPrimSpecHandle editNamePrim;
   if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked()) {
     selectedPrim = primSpec;
-    if (editNamePrim != SdfPrimSpecHandle() && editNamePrim != selectedPrim) {
-      editNamePrim = SdfPrimSpecHandle();
+    if (editNamePrim != pxr::SdfPrimSpecHandle() && editNamePrim != selectedPrim) {
+      editNamePrim = pxr::SdfPrimSpecHandle();
     }
     if (!primIsVariant && ImGui::IsMouseDoubleClicked(0)) {
       editNamePrim = primSpec;
@@ -68,7 +72,7 @@ static bool DrawTreeNodePrimName(const bool& primIsVariant, SdfPrimSpecHandle& p
     ImGui::SetCursorPos(cursor);
     UIUtils::AddPrimName(primSpec); // Draw the prim name editor
     if (ImGui::IsItemDeactivatedAfterEdit() || !ImGui::IsItemFocused()) {
-      editNamePrim = SdfPrimSpecHandle();
+      editNamePrim = pxr::SdfPrimSpecHandle();
     }
     ImGui::PopStyleColor();
   }
@@ -77,8 +81,9 @@ static bool DrawTreeNodePrimName(const bool& primIsVariant, SdfPrimSpecHandle& p
 }
 
 /// Draw a node in the primspec tree
-static void DrawPrimSpecRow(SdfPrimSpecHandle primSpec, SdfPrimSpecHandle& selectedPrim, int nodeId, float& selectedPosY) {
-
+static void 
+DrawPrimSpecRow(pxr::SdfPrimSpecHandle primSpec, pxr::SdfPrimSpecHandle& selectedPrim, int nodeId, float& selectedPosY) 
+{
   if (!primSpec)
     return;
   bool primIsVariant = primSpec->GetPath().IsPrimVariantSelectionPath();
@@ -132,12 +137,12 @@ static void DrawPrimSpecRow(SdfPrimSpecHandle primSpec, SdfPrimSpecHandle& selec
 
   // Draw children
   if (unfolded) {
-    SdfVariantSetsProxy variantSetMap = primSpec->GetVariantSets();
+    pxr::SdfVariantSetsProxy variantSetMap = primSpec->GetVariantSets();
     TF_FOR_ALL(varSetIt, variantSetMap) {
-      const SdfVariantSetSpecHandle& varSetSpec = varSetIt->second;
-      const SdfVariantSpecHandleVector& variants = varSetSpec->GetVariantList();
+      const pxr::SdfVariantSetSpecHandle& varSetSpec = varSetIt->second;
+      const pxr::SdfVariantSpecHandleVector& variants = varSetSpec->GetVariantList();
       TF_FOR_ALL(varIt, variants) {
-        const SdfPrimSpecHandle& variantSpec = (*varIt)->GetPrimSpec();
+        const pxr::SdfPrimSpecHandle& variantSpec = (*varIt)->GetPrimSpec();
         DrawPrimSpecRow(variantSpec, selectedPrim, nodeId++, selectedPosY);
       }
     }
@@ -193,14 +198,14 @@ bool LayerHierarchyUI::Draw()
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
 
-      DrawBackgroundSelection(SdfPrimSpecHandle(), _prim);
+      DrawBackgroundSelection(pxr::SdfPrimSpecHandle(), _prim);
       //HandleDragAndDrop(layer);
       ImGui::SetItemAllowOverlap();
       std::string label = _layer->GetDisplayName();
       bool unfolded = ImGui::TreeNodeEx(label.c_str(), treeNodeFlags);
 
       if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked()) {
-        _prim = SdfPrimSpecHandle();
+        _prim = pxr::SdfPrimSpecHandle();
       }
 
       if (ImGui::BeginPopupContextItem()) {
@@ -240,4 +245,4 @@ bool LayerHierarchyUI::Draw()
 };
   
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

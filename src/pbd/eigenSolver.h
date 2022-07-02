@@ -23,7 +23,7 @@
 // implemented by class NISymmetricEigensolver3x3.  The code does not use
 // GTEngine objects.
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class SortEigenstuff
 {
@@ -642,6 +642,6 @@ private:
   }
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

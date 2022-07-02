@@ -3,9 +3,11 @@
 #include "../app/notice.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
+
 
 void UndoBlock::_Initialize(bool clear) {
+  PXR_NAMESPACE_USING_DIRECTIVE
   UndoRouter& router = UndoRouter::Get();
   TF_VERIFY(router._depth >= 0);
   if (clear) {
@@ -30,6 +32,7 @@ UndoBlock::UndoBlock(bool clear) {
 }
 
 UndoBlock::~UndoBlock() {
+  PXR_NAMESPACE_USING_DIRECTIVE
   UndoRouter& router = UndoRouter::Get();
   router._depth--;
   TF_VERIFY(router._depth >= 0);
@@ -55,4 +58,4 @@ UndoBlock::~UndoBlock() {
     */
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

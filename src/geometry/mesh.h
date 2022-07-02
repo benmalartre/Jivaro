@@ -13,7 +13,7 @@
 #include "triangle.h"
 #include "geometry.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 struct Location {
   Geometry*             geometry;      // geometry ptr
@@ -167,6 +167,6 @@ private:
   pxr::VtArray<int>                   _vertexHalfEdge;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

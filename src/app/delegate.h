@@ -12,7 +12,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 #include "pxr/pxr.h"
@@ -54,7 +54,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 #include <map>
 #include <string>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 
 TF_DECLARE_WEAK_PTRS(UsdImagingDelegate);
@@ -769,11 +769,11 @@ private:
     UsdImagingDelegate &operator =(UsdImagingDelegate const &) = delete;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif //PXR_USD_IMAGING_USD_IMAGING_DELEGATE_H
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APP_WINDOW_H

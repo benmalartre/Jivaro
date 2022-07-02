@@ -5,7 +5,7 @@
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // delete all cells
 void Grid2DIntersector::DeleteCells()
@@ -523,4 +523,4 @@ Grid2DIntersector::GetNeighbors(uint32_t index, std::vector<Grid2DIntersector::C
 }
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -12,7 +12,7 @@
 #include <float.h>
 #include "triangle.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 enum GeomInterpolation : short {
   GeomInterpolationConstant = 0,
@@ -94,6 +94,6 @@ protected:
   bool _initialized;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_GEOMETRY_GEOMETRY_H

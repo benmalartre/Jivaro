@@ -14,7 +14,7 @@
 #include "../app/view.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // static data
 ImGuiWindowFlags ExplorerUI::_flags = 
@@ -30,7 +30,7 @@ ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
   ImGuiTreeNodeFlags_OpenOnDoubleClick |
   ImGuiTreeNodeFlags_SpanAvailWidth;
 
-static void ExploreLayerTree(SdfLayerTreeHandle tree, PcpNodeRef node) {
+static void ExploreLayerTree(pxr::SdfLayerTreeHandle tree, pxr::PcpNodeRef node) {
   if (!tree)
     return;
   auto obj = tree->GetLayer()->GetObjectAtPath(node.GetPath());
@@ -49,13 +49,13 @@ static void ExploreLayerTree(SdfLayerTreeHandle tree, PcpNodeRef node) {
   }
 }
 
-static void ExploreComposition(PcpNodeRef root) {
+static void ExploreComposition(pxr::PcpNodeRef root) {
   auto tree = root.GetLayerStack()->GetLayerTree();
   ExploreLayerTree(tree, root);
   TF_FOR_ALL(childNode, root.GetChildrenRange()) { ExploreComposition(*childNode); }
 }
 
-static void DrawUsdPrimEditMenuItems(const UsdPrim& prim) {
+static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
   if (ImGui::MenuItem("Toggle active")) {
     const bool active = !prim.IsActive();
     //ExecuteAfterDraw(&UsdPrim::SetActive, prim, active);
@@ -368,7 +368,7 @@ static ImVec4 PrimInstanceColor(135.f/255.f, 206.f/255.f, 250.f/255.f, 1.0);
 static ImVec4 PrimPrototypeColor(118.f/255.f, 136.f/255.f, 217.f/255.f, 1.0);
 static ImVec4 PrimHasCompositionColor(222.f/255.f, 158.f/255.f, 46.f/255.f, 1.0);
 
-static ImVec4 GetPrimColor(const UsdPrim& prim) {
+static ImVec4 GetPrimColor(const pxr::UsdPrim& prim) {
   if (!prim.IsActive() || !prim.IsLoaded()) {
     return PrimInactiveColor;
   }
@@ -419,7 +419,7 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
   pxr::UsdGeomImageable imageable(prim);
   if (imageable) {
     pxr::TfToken visibility;
-    imageable.GetVisibilityAttr().Get<TfToken>(&visibility);
+    imageable.GetVisibilityAttr().Get<pxr::TfToken>(&visibility);
     const bool visible = (visibility != pxr::UsdGeomTokens->invisible);
     DrawVisibility(prim, visible, selected);
   } else {
@@ -521,4 +521,4 @@ ExplorerUI::Draw()
     ImGui::IsAnyMouseDown();
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

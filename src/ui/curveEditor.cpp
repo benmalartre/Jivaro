@@ -8,7 +8,7 @@
 #include "../app/view.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags CurveEditorUI::_flags =
   ImGuiWindowFlags_None |
@@ -422,4 +422,4 @@ bool CurveEditorUI::Draw()
   return true;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

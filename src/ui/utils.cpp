@@ -7,7 +7,7 @@
 #include "../command/block.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void 
 UIUtils::HelpMarker(const char* desc)
@@ -312,4 +312,4 @@ void UIUtils::AddPrimCompositionSummary(const SdfPrimSpecHandle& primSpec) {
   IterateListEditorItems(primSpec->GetSpecializesList(), AddSpecializesSummary, primSpec, menuItemId);
 }
 */
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

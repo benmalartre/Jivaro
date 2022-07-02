@@ -29,7 +29,7 @@
 
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 const pxr::TfToken GraphEditorUI::NodeExpendState[3] = {
     pxr::UsdUITokens->closed,
@@ -2017,4 +2017,4 @@ GraphEditorUI::FrameAll()
 
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

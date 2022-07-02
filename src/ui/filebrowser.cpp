@@ -3,7 +3,7 @@
 #include "../app/view.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 FileBrowserUI::FileBrowserUI(View* parent, const std::string& name, Mode mode)
   : BaseUI(parent, name)
@@ -290,4 +290,4 @@ bool FileBrowserUI::Draw()
   return true;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

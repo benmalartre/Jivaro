@@ -13,7 +13,7 @@
 #include "../app/application.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags PopupUI::_flags = 
   ImGuiWindowFlags_NoResize |
@@ -403,4 +403,4 @@ NodePopupUI::Draw()
   return true;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

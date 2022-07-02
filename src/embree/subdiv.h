@@ -6,7 +6,7 @@
 #include <pxr/usd/usdGeom/mesh.h>
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 struct UsdEmbreeSubdiv  : public UsdEmbreePrim {
@@ -52,6 +52,6 @@ CheckColors(const pxr::UsdGeomMesh& usdMesh,
             const pxr::UsdTimeCode& time,
             UsdEmbreeSubdiv* mesh);
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_EMBREE_SUBDIV_H

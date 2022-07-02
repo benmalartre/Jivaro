@@ -16,7 +16,7 @@
 
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 
@@ -745,4 +745,4 @@ ViewportUI::_Pick(pxr::GfVec2i const& startPos, pxr::GfVec2i const& endPos,
     p.pickTarget, pxr::HdSelection::HighlightModeSelect, allHits);
 }
 */
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

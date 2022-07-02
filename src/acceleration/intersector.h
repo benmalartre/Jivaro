@@ -8,7 +8,7 @@
 #include <pxr/base/gf/range3f.h>
 #include "../geometry/intersection.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
@@ -26,5 +26,5 @@ protected:
   std::vector<Geometry*>  _geometries;
 }; 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 #endif // JVR_ACCELERATION_INTERSECTOR_H

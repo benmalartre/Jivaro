@@ -1,7 +1,7 @@
 #include "../utils/icons.h"
 #include "../utils/files.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 IconList ICONS = IconList(3);
 
@@ -120,4 +120,4 @@ void TerminateIcons()
 
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

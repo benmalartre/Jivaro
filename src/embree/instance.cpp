@@ -3,7 +3,7 @@
 #include "../embree/instance.h"
 #include "../embree/context.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // recurse usd instance master
 void RecurseMaster(
@@ -123,4 +123,4 @@ UsdEmbreeInstance* TranslateInstance(
 }
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

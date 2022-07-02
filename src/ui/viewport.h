@@ -24,7 +24,7 @@
 #include "../app/handle.h"
 #include "../app/engine.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 enum InteractionMode{
   INTERACTION_NONE,
@@ -110,6 +110,6 @@ class ViewportUI : public HeadedUI
     uint64_t                            _counter;
 
 };
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif //JVR_UI_VIEWPORT_H

@@ -1,14 +1,16 @@
-#ifndef UNDOBLOCK_H
-#define UNDOBLOCK_H
+#ifndef JVR_UNDOBLOCK_H
+#define JVR_UNDOBLOCK_H
 
 #include <pxr/pxr.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/base/tf/weakPtr.h>
 #include <pxr/base/tf/refPtr.h>
 #include <pxr/base/tf/declarePtrs.h>
+#include "../common.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
+PXR_NAMESPACE_USING_DIRECTIVE
 TF_DECLARE_WEAK_AND_REF_PTRS(UndoRouter);
 
 /// \class UsdUndoBlock
@@ -31,6 +33,6 @@ public:
     ~UndoBlock();
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif
+#endif  // JVR_UNDOBLOCK_H

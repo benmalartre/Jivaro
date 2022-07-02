@@ -10,7 +10,7 @@
 #include <pxr/base/tf/hashmap.h>
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class Workspace {
 
@@ -42,11 +42,11 @@ public:
   void ImportStage(const std::string& path, bool openLoaded = true);
   void SaveCurrentLayerAs(const std::string& path);
 
-  void SetWorkStage(UsdStageCache::Id current);
-  void SetWorkStage(UsdStageRefPtr stage);
-  void SetWorkEditTarget(SdfLayerHandle layer);
+  void SetWorkStage(pxr::UsdStageCache::Id current);
+  void SetWorkStage(pxr::UsdStageRefPtr stage);
+  void SetWorkEditTarget(pxr::SdfLayerHandle layer);
 
-  UsdStageCache& GetStageCache() { return _stageCache; }
+  pxr::UsdStageCache& GetStageCache() { return _stageCache; }
 
   void InitExec();
   void UpdateExec(double time);
@@ -64,7 +64,7 @@ public:
   };
   
 private:
-  void UseLayer(SdfLayerRefPtr layer);
+  void UseLayer(pxr::SdfLayerRefPtr layer);
 
   pxr::UsdStageRefPtr       _workStage;
   pxr::UsdStageRefPtr       _execStage;
@@ -78,6 +78,6 @@ private:
 };
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_Workspace_H

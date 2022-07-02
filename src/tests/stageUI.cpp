@@ -1,6 +1,6 @@
 #include "stageUI.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void RecurseStagePrim(GraphEditorUI* ui, 
                       NodeUI* parent,
@@ -31,4 +31,4 @@ void TestStageUI(GraphEditorUI* ui,
   }
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

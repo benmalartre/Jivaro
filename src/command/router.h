@@ -11,9 +11,10 @@
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/usd/stage.h>
 
+#include "../common.h"
 #include "../command/inverse.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 /// \class UndoRouter
 ///
@@ -58,10 +59,10 @@ public:
 
     friend class UndoBlock;
     friend class UndoInverse;
-    friend class LayerStateDelegate;
+    friend class UndoStateDelegate;
     friend class pxr::TfSingleton<UndoRouter>;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -35,7 +35,7 @@
 #include <set>
 #include "picking.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 namespace {
 struct AggregatedHit {
@@ -300,4 +300,4 @@ Marquee::Draw(float width, float height,
 
 } // namespace HdxUnitTestHelper
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

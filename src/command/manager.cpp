@@ -1,6 +1,6 @@
 #include "../command/manager.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 void
 CommandManager::AddCommand(std::shared_ptr<Command> command)
@@ -47,4 +47,4 @@ CommandManager::Clear() {
   _redoStack.clear();
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

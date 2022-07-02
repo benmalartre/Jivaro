@@ -1,6 +1,6 @@
 #include "stageInstance.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 UsdGeomXform _AddInstanceableExternalReferenceUnderXform(
   UsdStageRefPtr stage,
@@ -163,4 +163,4 @@ print refStage.GetRootLayer().ExportToString()
       std::endl;*/
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

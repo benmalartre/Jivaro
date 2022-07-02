@@ -1,6 +1,6 @@
 #include "stageGraph.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // add node to graph test
 //----------------------------------------------------------------------------
@@ -220,4 +220,4 @@ print refStage.GetRootLayer().ExportToString()
       std::endl;*/
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -10,7 +10,7 @@
 #include "../ui/menu.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // View constructor
 //----------------------------------------------------------------------------
@@ -490,4 +490,4 @@ bool View::IsInteracting()
 }
 
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

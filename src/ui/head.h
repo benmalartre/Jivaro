@@ -6,15 +6,14 @@
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>
 
+#include "../common.h"
 #include "../ui/utils.h"
 #include "../ui/ui.h"
 
 
-PXR_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 #define VIEW_HEAD_HEIGHT 32
-
-class View;
 
 class ViewHead
 {
@@ -67,6 +66,6 @@ private:
   static ImGuiWindowFlags   _flags;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UI_HEAD_H
