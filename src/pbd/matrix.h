@@ -2,6 +2,7 @@
 #define JVR_PBD_MATRIX_H
 
 #include "../common.h"
+#include "../pbd/maths.h"
 #include <limits>
 #include <vector>
 
@@ -25,7 +26,7 @@ public:
     ~PBDMatrix();
 
     inline void Resize(int rows, int columns);
-    inline PBDMatrix<T> Transpose();
+    inline PBDMatrix<T>& Transpose();
     inline int GetIndex(int row, int column);
     inline int Size(){return _rows * _columns;};
     inline void SetValue(int row, int column, T value);
@@ -51,18 +52,20 @@ public:
     inline PBDMatrix& operator-=(PBDMatrix& other);
     inline PBDMatrix operator*(PBDMatrix& other);
     inline PBDMatrix& operator*=(PBDMatrix& other);
-    inline PBDMatrix operator*(const std::vector<T>& vector);
+    inline T* operator*(T* vector);
     inline PBDMatrix& operator*=(const T factor);
     inline PBDMatrix operator*(const T factor);
 
     inline short LUDecomposition(const size_t m, int* pivot); 
+    inline short LUDecomposition2(T tol, int* pivot);
     inline short SolveLU(const size_t m, int* pivot, T* b, T* x);
     inline T GetDeterminant(const size_t m);
+    inline void Solve(T* vector, T* result);
  
-    inline PBDMatrix Inverse();
-    inline PBDMatrix& InverseInPlace();
+    inline void Inverse(PBDMatrix& result);
+    inline void InverseInPlace();
 
-    void Echo();
+    void Echo(const std::string& msg);
     T* Data() {return _data;};
     const T* CData() const {return _data;};
 
@@ -71,7 +74,6 @@ private:
     int                         _columns;
     T*                          _data;
     PBDMatrix<T>*               _lu;
-    bool                        _transposed;
     bool                        _singular;
     bool                        _even;
 };
@@ -83,7 +85,6 @@ PBDMatrix<T>::PBDMatrix()
   , _data(NULL)
   , _rows(0)
   , _columns(0)
-  , _transposed(false)
   , _even(true)
   , _singular(false)
 {
@@ -92,40 +93,46 @@ PBDMatrix<T>::PBDMatrix()
 template<typename T>
 PBDMatrix<T>::PBDMatrix(int rows, int columns) 
   : _lu(NULL)
+  , _data(NULL)
   , _rows(rows)
   , _columns(columns)
-  , _transposed(false)
   , _even(true)
   , _singular(false)
 {
-  _data = new T[_rows * _columns];
-  memset(&_data[0], 0, _rows * _columns * sizeof(T));
+  size_t nCells = _rows * _columns;
+  if(nCells) {
+    _data = new T[_rows * _columns];
+    memset(&_data[0], 0, _rows * _columns * sizeof(T));
+  }
 }
 
 template<typename T>
 PBDMatrix<T>::PBDMatrix(const PBDMatrix& other) 
   : _lu(NULL)
+  , _data(NULL)
   , _rows(other._rows)
   , _columns(other._columns)
-  , _transposed(other._transposed)
   , _even(other._even)
   , _singular(other._singular)
 {
-  _data = new T[_rows * _columns];
-  memcpy(_data, other._data, _rows * _columns * sizeof(T));
+  size_t nCells = _rows * _columns;
+  if(nCells) {
+    _data = new T[_rows * _columns];
+   memcpy(_data, other._data, _rows * _columns * sizeof(T));
+  }
 }
 
 template<typename T>
 PBDMatrix<T>::~PBDMatrix()
 {
   if(_lu) delete _lu;
-  if(_data) delete _data;
+  if(_data) delete [] _data;
 }
 
 template<typename T>
 inline void PBDMatrix<T>::Resize(int rows, int columns)
 {
-  if(_data)delete _data;
+  if(_data)delete [] _data;
   _rows = rows;
   _columns = columns;
   _data = new T[_rows * _columns];
@@ -133,8 +140,19 @@ inline void PBDMatrix<T>::Resize(int rows, int columns)
 }
 
 template<typename T>
-inline PBDMatrix<T> PBDMatrix<T>::Transpose()
+inline PBDMatrix<T>& PBDMatrix<T>::Transpose()
 {
+  size_t tmp = _rows;
+  _rows = _columns;
+  _columns = tmp;
+  T v;
+  for(size_t row = 0; row < _rows; ++row) {
+    for(size_t column = 0; column <= row; ++column) {
+      v = _data[GetIndex(row, column)];
+      _data[GetIndex(row, column)] = _data[GetIndex(column, row)];
+      _data[GetIndex(column, row)] = v;
+    }
+  }
   return *this;
 }
 
@@ -351,28 +369,21 @@ inline PBDMatrix<T>& PBDMatrix<T>::operator-=(PBDMatrix<T>& other)
 template<typename T>
 inline PBDMatrix<T> PBDMatrix<T>::operator*(PBDMatrix<T>& other)
 {
-  if(_columns != other.rows) {
-    return *this;
-  } 
-
   PBDMatrix<T> result(_rows, _columns);
   for(size_t i = 0; i < _rows; ++i) {
     for(size_t k = 0; k < other._columns; ++k) {
       for(size_t j = 0; j < _columns; ++j) {
         size_t idx = GetIndex(i, j);
-        result._data[idx] = _data[idx] + GetValue(i, k) * other.GetValue(k, j);
+        result._data[idx] += GetValue(i, k) * other.GetValue(k, j);
       }
     }
   }
+  return result;
 }
 
 template<typename T>
 inline PBDMatrix<T>& PBDMatrix<T>::operator*=(PBDMatrix<T>& other)
 {
-  if(_columns != other.rows) {
-    return *this;
-  } 
-
   PBDMatrix<T> copy(*this);
   memset(_data, 0, _rows * _columns * sizeof(T));
 
@@ -387,21 +398,20 @@ inline PBDMatrix<T>& PBDMatrix<T>::operator*=(PBDMatrix<T>& other)
 }
 
 template<typename T>
-inline PBDMatrix<T> PBDMatrix<T>::operator*(const std::vector<T>& vector)
+inline T* PBDMatrix<T>::operator*(T* vector)
 {
-  if(_columns != vector.size()) {
-    return *this;
-  } 
-
-  PBDMatrix<T> result(_columns, 1);
-  for(size_t row = 0; row < _rows; ++row) {
-    T product = static_cast<T>(0);
-    for(size_t column = 0; column < _columns; ++column) {
-      product += GetValue(row, column) * vector[column];
+  T product;
+  size_t row, column;
+  T buffer[_rows];
+  memcpy(&buffer[0], vector, _rows * sizeof(T));
+  for( row = 0; row < _rows; ++row) {
+    product = static_cast<T>(0);
+    for(column = 0; column < _columns; ++column) {
+      product += GetValue(row, column) * buffer[column];
     }
-    result.SetValue(row, 0, product);
+    vector[row] = product;
   }
-  return result;
+  return vector;
 }
 
 template<typename T>
@@ -417,6 +427,54 @@ inline PBDMatrix<T> PBDMatrix<T>::operator*(const T factor)
   PBDMatrix<T> result(*this);
   return result * factor;
 }
+
+template<typename T>
+short PBDMatrix<T>::LUDecomposition2(T tol, int* pivot) 
+{
+    if(_lu) delete _lu;
+    _lu = new PBDMatrix<T>(*this);
+    int i, j, k, imax; 
+    T maxA, *ptr, absA;
+
+    for (i = 0; i <= _columns; i++)
+        pivot[i] = i; //Unit permutation matrix, P[N] initialized with N
+
+    for (i = 0; i < _columns; i++) {
+        maxA = 0.0;
+        imax = i;
+
+        for (k = i; k < _columns; k++)
+            if ((absA = fabs(_lu->Data()[k*_rows+i])) > maxA) { 
+                maxA = absA;
+                imax = k;
+            }
+
+        if (maxA < tol) return MATRIX_INVALID; //failure, matrix is degenerate
+
+        if (imax != i) {
+            //pivoting P
+            j = pivot[i];
+            pivot[i] = pivot[imax];
+            pivot[imax] = j;
+
+            //pivoting rows of A
+            SwapRows(i, imax);
+
+            //counting pivots starting from N (for determinant)
+            pivot[_columns]++;
+        }
+
+        for (j = i + 1; j < _columns; ++j) {
+            _lu->Data()[j*_rows+i] /= _lu->Data()[i*_rows+i];
+
+            for (k = i + 1; k < _columns; k++)
+                _lu->Data()[j*_rows+k] -= _lu->Data()[j*_rows+i] * _lu->Data()[i*_rows+k];
+        }
+    }
+
+    return MATRIX_VALID;  //decomposition done 
+}
+
 
 template<typename T>
 inline short PBDMatrix<T>::LUDecomposition(const size_t m, int* pivot)
@@ -474,9 +532,12 @@ inline short PBDMatrix<T>::LUDecomposition(const size_t m, int* pivot)
     }
 
     // pivot if necessary
+    T tmp;
     if(max != column) {
       _lu->SwapRows(max, column);
-      std::swap(pivot[max], pivot[column]);
+      tmp = pivot[max];
+      pivot[max] = pivot[column];
+      pivot[column] = tmp;
       _even = 1 - _even;
     }
 
@@ -538,15 +599,63 @@ inline T PBDMatrix<T>::GetDeterminant(const size_t m)
 }
 
 template<typename T>
-inline PBDMatrix<T> PBDMatrix<T>::Inverse()
+inline void PBDMatrix<T>::Solve(T* vector, T* result)
 {
-  PBDMatrix<float> result;
+  T test[_columns * _columns];
+  Echo("Matrix");
+  PBDMath::CholeskyDecomposition<T>(Data(), &test[0], (int)_columns);
+
+  for(size_t c = 0; c < _columns; ++c){
+      for(size_t r=0; r < _rows; ++r) {
+          std::cout << test[c*_columns+r] << "," ;
+      }
+      std::cout << std::endl;
+  }
+  std::cout << "@@@@@@" << std::endl;
+  
+
+  Transpose();
+  Echo("TRanspose");
+  PBDMath::CholeskyDecomposition<T>(Data(), &test[0], (int)_columns);
+
+
+  for(size_t c = 0; c < _columns; ++c){
+      for(size_t r=0; r < _rows; ++r) {
+          std::cout << test[c*_columns+r] << "," ;
+      }
+      std::cout << std::endl;
+  }
+  std::cout << "@@@@@@" << std::endl;
+  //CholeskyDecomposition(const float** matrix, float** result, int n)
+  int pivot[_columns];
+
+  if(LUDecomposition(_columns, &pivot[0]) == MATRIX_VALID) {  
+      _lu->Echo("LU");
+    for(int i =0; i < _columns; ++i) {
+      result[i] = vector[pivot[i]];
+      for(int k = 0; k < i; ++k) {
+        result[i] -= _lu->Data()[GetIndex(i, k)] * result[k];
+      }
+    }
+
+    for(int i = _columns - 1; i >= 0; --i) {
+      for(int k = i + 1; k < _columns; ++k) {
+        result[i] -= _lu->Data()[GetIndex(i, k)] * result[k];
+      }
+      result[i] /= _lu->Data()[GetIndex(i, i)];
+    }
+  }
+}
+
+template<typename T>
+inline void PBDMatrix<T>::Inverse(PBDMatrix<T>& result)
+{
   int pivot[_columns];
   T b[_columns];
   T w[_columns];
 
-  if(LUDecomposition(_columns, &pivot[0]) == MATRIX_VALID) {    
-    result.Resize(_columns, _columns);
+  if(LUDecomposition(_columns, &pivot[0]) == MATRIX_VALID) {  
+    result.Resize(_columns, _columns);  
     for(size_t c=0; c < _columns; ++c) {
       memset(&b[0], static_cast<T>(0), _columns * sizeof(T));
       memset(&w[0], static_cast<T>(0), _columns * sizeof(T));
@@ -554,14 +663,11 @@ inline PBDMatrix<T> PBDMatrix<T>::Inverse()
       SolveLU(_columns, &pivot[0], b, w);
       result.SetColumn(c, w);
     }
-    return result;
-  } else {
-    return *this;
   }
 }
 
 template<typename T>
-inline PBDMatrix<T>& PBDMatrix<T>::InverseInPlace()
+inline void PBDMatrix<T>::InverseInPlace()
 {
   int pivot[_columns];
   T b[_columns];
@@ -577,14 +683,14 @@ inline PBDMatrix<T>& PBDMatrix<T>::InverseInPlace()
       SetColumn(i, &w[0]);
     }
   }
-  return *this;
 }
 
 template<typename T>
-inline void PBDMatrix<T>::Echo()
+inline void PBDMatrix<T>::Echo(const std::string& msg)
 {
-  for(size_t column = 0; column < _columns; ++column) {
-    for(size_t row = 0; row < _rows; ++row) {
+  std::cout << msg << std::endl;
+  for(size_t row = 0; row < _rows; ++row) {
+    for(size_t column = 0; column < _columns; ++column) {
       std::cout << _data[GetIndex(row, column)] << ",";
     }
     std::cout << "\n";

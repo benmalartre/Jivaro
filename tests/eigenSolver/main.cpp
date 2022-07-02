@@ -42,6 +42,13 @@ pxr::GfQuatf _RandomQuaternion() {
   return pxr::GfQuatf(x, y, s*u, s*v).GetNormalized();
 }
 
+pxr::GfVec3f _RandomScale()
+{
+  return pxr::GfVec3f(
+    RANDOM_LO_HI(0.5,1.5), RANDOM_LO_HI(0.5,1.5), RANDOM_LO_HI(0.5,1.5)
+  );
+}
+
 void _PrintResult(std::string title, const float* values, const float* vectors) {
   std::cout << "######   " << title << "   ######" << std::endl;
   std::cout << "#" << std::endl;
@@ -67,7 +74,8 @@ void _PrintBenchMark(const std::string& title, uint64_t t)
 void _RandomMatrices(std::vector<pxr::GfMatrix4f>& matrices)
 {
   for(auto& matrix: matrices) {
-    matrix = pxr::GfMatrix4f(1.0).SetRotate(_RandomQuaternion());
+    matrix = pxr::GfMatrix4f(1.0).SetRotate(_RandomQuaternion()) * 
+     pxr::GfMatrix4f(1.f).SetScale(_RandomScale());
   }
 }
 
@@ -347,11 +355,12 @@ void _TestOne() {
       std::cout << "LU DECOMPOSITION FAILED" << std::endl;
     }
     */
-    matrix.Echo();
-    PBDMatrix<float> inverse = matrix.Inverse();
-    inverse.Echo();
+    matrix.Echo("Matrix");
+    PBDMatrix<float> inverse(4, 4);
+    matrix.Inverse(inverse);
+    inverse.Echo("Inverse");
     matrix.InverseInPlace();
-    matrix.Echo();
+    matrix.Echo("InverseInPlace");
 
     std::cout << m << std::endl;
     std::cout << m.GetInverse() << std::endl;
@@ -457,18 +466,14 @@ void _BenchMark2(size_t N) {
 
   std:: cout << "\n\n############  BENCH MARK 2  ##########################" << std::endl;
   uint64_t startT; 
+  
   // custom
   {
-    std::vector<PBDMatrix<float>> matricesX(N);
-    for(size_t i=0; i < N; ++i) {
-      matricesX[i] = PBDMatrix<float>(4, 4);
-      memcpy(matricesX[i].Data(), &matrices[i][0][0], 16 * sizeof(float));
-    }
-    
-    
     startT = CurrentTime();
+    PBDMatrix<float> matrix(4, 4);
     for(size_t i=0; i < N; ++i) {
-      inverses0[i] = matricesX[i].Inverse();
+      memcpy(matrix.Data(), &matrices[i][0][0], 16 * sizeof(float));
+      matrix.Inverse(inverses0[i]);
     }
     _PrintBenchMark("CUSTOM INVERSE", CurrentTime() - startT);
   }
@@ -486,6 +491,7 @@ void _BenchMark2(size_t N) {
 
   // eigen
   {
+    
     startT = CurrentTime();
     Matrix4r em4;
     for(size_t i=0; i < N; ++i) {
@@ -496,11 +502,12 @@ void _BenchMark2(size_t N) {
              m[0][2], m[1][2], m[2][2], m[3][2],
              m[0][3], m[1][3], m[2][3], m[3][3];
 
-      Eigen::PartialPivLU<Matrix4r> lu(em4);
+      Eigen::FullPivLU<Matrix4r> lu(em4);
              
       inverses2[i] = lu.inverse();
     }
-    _PrintBenchMark("Eigen", CurrentTime() - startT);
+    _PrintBenchMark("EIGEN INVERSE", CurrentTime() - startT);
+    
   }
 
   std::vector<float> D0(N * 16);
@@ -510,12 +517,53 @@ void _BenchMark2(size_t N) {
   for(size_t n = 0; n < N; ++n){
     
     memcpy(&D0[n * 16], inverses0[n].Data(), 16 * sizeof(float));
-    memcpy(&D1[n * 16], &inverses1[n][0][0], 16 * sizeof(float));
+    memcpy(&D1[n * 16], inverses1[n].data(), 16 * sizeof(float));
     memcpy(&D2[n * 16], inverses2[n].data(), 16 * sizeof(float));
   }
   std::cout << "EQUALS ? " << _CompareDatas(&D0[0], &D1[0], N * 16) << std::endl;
   std::cout << "EQUALS ? " << _CompareDatas(&D0[0], &D2[0], N * 16) << std::endl;
   
+}
+
+void _BenchMark3(size_t N)
+{
+  std:: cout << "\n\n############  BENCH MARK 2  ##########################" << std::endl;
+
+  std::vector<pxr::GfMatrix4f> matrices(1);
+  _RandomMatrices(matrices);
+  pxr::GfVec4f v(0.5, 0.5, 0.0, 1.0);
+  pxr::GfVec4f r;
+
+  Eigen::Matrix4f A;
+  Eigen::Vector4f x;
+  for(size_t idx = 0; idx < 16; ++idx) {
+    A(idx/4, idx%4) = matrices[0].data()[idx] ;
+  }
+  for(size_t idx = 0; idx < 4; ++idx) {
+    x(idx) = v[idx];
+  }
+  std::cout << "Here is the matrix A:\n" << A << std::endl;
+  std::cout << "Computing LLT decomposition..." << std::endl;
+
+  
+  std::cout << "The solution is:\n" << A.llt().solve(x) << std::endl;
+
+  Eigen::MatrixXf L = A.llt().matrixL(); // retrieve factor L  in the decomposition
+  // The previous two lines can also be written as "L = A.llt().matrixL()"
+ 
+std::cout << "The Cholesky factor L is" << std::endl << L << std::endl;
+std::cout << "To check this, let us compute L * L.transpose()" << std::endl;
+std::cout << L * L.transpose() << std::endl;
+std::cout << "This should equal the matrix A" << std::endl;
+
+
+  PBDMatrix<float> matrix(4, 4);
+  memcpy(matrix.Data(), matrices[0].data(), 16 * sizeof(float));
+
+  matrix.Solve(&v[0], &r[0]);
+  std::cout << "The solution is:\n" << r[0] << "," << r[1] << "," << r[2] << "," << r[3]<< std::endl;
+
+  std::cout << "The solution is:\n" << A.inverse() * x << std::endl;
 }
 
 int main (int argc, char *argv[])
@@ -525,5 +573,6 @@ int main (int argc, char *argv[])
   _BenchMark(N);
 
   _BenchMark2(N);
+  _BenchMark3(0);
   return 0;
 }
