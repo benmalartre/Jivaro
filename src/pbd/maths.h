@@ -40,9 +40,7 @@ static void CholeskyDecomposition(const T* matrix, T* result, int n);
 
 };
 
-<<<<<<< HEAD
-JVR_NAMESPACE_CLOSE_SCOPE
-=======
+
 template<typename T>
 void PBDMath::CholeskyDecomposition(const T* matrix, T* result, int n)
 {
@@ -64,6 +62,5 @@ void PBDMath::CholeskyDecomposition(const T* matrix, T* result, int n)
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
->>>>>>> 61b4014121619805d24d40f056c78b6a159056db
 
 #endif

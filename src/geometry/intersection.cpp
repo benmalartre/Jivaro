@@ -305,9 +305,6 @@ bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   return false;
 }
 
-<<<<<<< HEAD
-JVR_NAMESPACE_CLOSE_SCOPE
-=======
 bool IntersectTriangle( 
     const pxr::GfRay& ray, 
     const pxr::GfVec3f &a, const pxr::GfVec3f &b, const pxr::GfVec3f &c, 
@@ -336,4 +333,3 @@ bool IntersectTriangle(
 } 
 
 PXR_NAMESPACE_CLOSE_SCOPE
->>>>>>> 3278ce7a56863fea7183719ef0912384a4ad2c68
