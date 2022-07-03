@@ -129,6 +129,7 @@ static void FlattenGeometryCallback()
     if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh mesh(prim);
       pxr::TfToken uvToken("st");
+      /*
       if (mesh.HasPrimvar(uvToken)) {
         std::cout << "WE FOUND UVS :)" << std::endl;
         pxr::UsdGeomPrimvar uvPrimvar = mesh.GetPrimvar(uvToken);
@@ -150,10 +151,10 @@ static void FlattenGeometryCallback()
           std::cout << flattened.GetNumPoints() << std::endl;
           pxr::VtArray<int> cuts;
           flattened.GetCutEdgesFromUVs(uvs, &cuts);
-          /*
-          cuts.clear();
-          flattened.GetCutVerticesFromUVs(uvs, &cuts);
-          */
+          
+          //cuts.clear();
+          //flattened.GetCutVerticesFromUVs(uvs, &cuts);
+          
           flattened.DisconnectEdges(cuts);
           flattened.Flatten(uvs, interpolation);
 
@@ -164,6 +165,7 @@ static void FlattenGeometryCallback()
           //pxr::VtArray<pxr::GfVec2d> uvs = uvPrimvar.Get< pxr::VtArray<pxr::GfVec2d>>()
         }
       }
+      */
     }
   }
 }

@@ -156,6 +156,7 @@ protected:
 
       const pxr::TfToken& GetName()const {return _label;};
       pxr::SdfPath GetPath();
+      const Node* GetNode() const { return _node; };
       Node* GetNode() { return _node; };
       void SetNode(Node* node) { _node = node; };
       const pxr::UsdAttribute& GetAttr() const { return _attr;};
@@ -411,6 +412,7 @@ private:
   void _GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend = false);
   void _GetConnexionUnderMouse(const pxr::GfVec2f& mousePos);
   void _RecurseStagePrim(const pxr::UsdPrim& prim, const pxr::SdfPath& skipPath);
+  bool _ConnexionPossible(const Port* lhs, const Port* rhs);
   
   int                                   _id;
   int                                   _depth;

@@ -517,6 +517,7 @@ ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::Sd
   , _source(source)
   , _destination(destination)
 {
+  std::cout << "CONNECT NODE COMMAND : " << source << "," << destination << std::endl;
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
   pxr::UsdPrim lhsPrim = stage->GetPrimAtPath(source.GetPrimPath());
   pxr::UsdPrim rhsPrim = stage->GetPrimAtPath(destination.GetPrimPath());
@@ -533,7 +534,13 @@ ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::Sd
 
     input.ConnectToSource(output);
   } else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
+    pxr::UsdExecNode lhs(lhsPrim);
+    pxr::UsdExecNode rhs(rhsPrim);
 
+    pxr::UsdExecOutput output = lhs.GetOutput(source.GetNameToken());
+    pxr::UsdExecInput input = rhs.GetInput(destination.GetNameToken());
+
+    input.ConnectToSource(output);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();

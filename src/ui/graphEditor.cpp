@@ -44,6 +44,39 @@ _ConnexionPossible(const pxr::SdfValueTypeName& lhs, const pxr::SdfValueTypeName
   return false;
 }
 
+bool
+GraphEditorUI::_ConnexionPossible(const GraphEditorUI::Port* lhs, const GraphEditorUI::Port* rhs)
+{
+  const GraphEditorUI::Node* lhsNode = lhs->GetNode();
+  const pxr::UsdPrim& lhsPrim = lhsNode->GetPrim();
+  const GraphEditorUI::Node* rhsNode = rhs->GetNode();
+  const pxr::UsdPrim& rhsPrim = rhsNode->GetPrim();
+
+  if (lhsPrim.IsA<pxr::UsdShadeShader>()) {
+    pxr::UsdShadeShader lhsShader(lhsPrim);
+    pxr::UsdShadeOutput output = lhsShader.GetOutput(lhs->GetName());
+
+    pxr::UsdShadeShader rhsShader(rhsPrim);
+    pxr::UsdShadeInput input = rhsShader.GetInput(lhs->GetName());
+
+    if (!output.IsDefined() || !input.IsDefined()) {
+      return false;
+    }
+    return pxr::UsdShadeConnectableAPI::CanConnect(output, input);
+  }
+  else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
+    pxr::UsdExecNode lhsExec(lhsPrim);
+    pxr::UsdExecOutput output = lhsExec.GetOutput(lhs->GetName());
+
+    pxr::UsdExecNode rhsExec(rhsPrim);
+    pxr::UsdExecInput input = rhsExec.GetInput(rhs->GetName());
+
+    return pxr::UsdExecConnectableAPI::CanConnect(output, input);
+  }
+
+  return false;
+}
+
 pxr::SdfValueTypeName 
 _GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
 {
@@ -1015,24 +1048,9 @@ GraphEditorUI::Graph::_RecurseNodes(pxr::UsdPrim& prim)
   if (!prim.IsValid())return;
  
   if (!prim.IsPseudoRoot()) {
-    if (prim.HasAuthoredReferences() || prim.HasAuthoredPayloads())
-    {
-      GraphEditorUI::Node* referenceNode = new GraphEditorUI::Node(prim);
-      referenceNode->SetBackgroundColor(pxr::GfVec3f(1.f, 0.f, 0.f));
-      AddNode(referenceNode);
-    }
-    else if (prim.IsInstance())
-    {
-      GraphEditorUI::Node* instanceNode = new GraphEditorUI::Node(prim);
-      instanceNode->SetBackgroundColor(pxr::GfVec3f(0.f, 1.f, 0.f));
-      AddNode(instanceNode);
-    }
-    else
-    {
-      GraphEditorUI::Node* defaultNode = new GraphEditorUI::Node(prim);
-      defaultNode->SetBackgroundColor(pxr::GfVec3f(0.f, 0.f, 1.f));
-      AddNode(defaultNode);
-    };
+    GraphEditorUI::Node* defaultNode = new GraphEditorUI::Node(prim);
+    defaultNode->SetBackgroundColor(pxr::GfVec3f(0.5f, 0.65f, 0.55f));
+    AddNode(defaultNode);
   }
 
   for (pxr::UsdPrim child : prim.GetChildren()) {
@@ -1842,14 +1860,12 @@ GraphEditorUI::UpdateConnexion()
     if(_connector.startPort) {
       if(_hoveredPort == _connector.startPort)return;
       if (_hoveredPort->IsOutput())return;
-      if(_ConnexionPossible(_hoveredPort->GetAttr().GetTypeName(),
-        _connector.startPort->GetAttr().GetTypeName()))
+      if(_ConnexionPossible(_connector.startPort, _hoveredPort))
         _connector.endPort = _hoveredPort;
     } else if(_connector.endPort) {
       if(_hoveredPort == _connector.endPort)return;
       if (_hoveredPort->IsInput())return;
-      if(_ConnexionPossible(_hoveredPort->GetAttr().GetTypeName(),
-        _connector.endPort->GetAttr().GetTypeName()))
+      if(_ConnexionPossible(_hoveredPort, _connector.endPort))
       _connector.endPort = _hoveredPort;
     }
   }

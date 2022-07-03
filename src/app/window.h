@@ -208,6 +208,7 @@ private:
   // opengl
   int                   _pickImage;
   int                   _debugImage;
+  GLuint                _vao;
 
   // imgui
   ImGuiIO*              _io;

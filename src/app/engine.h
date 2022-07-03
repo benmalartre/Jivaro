@@ -38,6 +38,28 @@ public:
   pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos, 
     pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);
     */
+  bool TestIntersection(
+    const pxr::GfMatrix4d& viewMatrix,
+    const pxr::GfMatrix4d& projectionMatrix,
+    const pxr::UsdPrim& root,
+    const pxr::UsdImagingGLRenderParams& params,
+    pxr::GfVec3d* outHitPoint,
+    pxr::GfVec3d* outHitNormal,
+    pxr::SdfPath* outHitPrimPath = NULL,
+    pxr::SdfPath* outHitInstancerPath = NULL,
+    int* outHitInstanceIndex = NULL,
+    pxr::HdInstancerContext* outInstancerContext = NULL);
+
+  /// Decodes a pick result given hydra prim ID/instance ID (like you'd get
+  /// from an ID render).
+  bool DecodeIntersection(
+    unsigned char const primIdColor[4],
+    unsigned char const instanceIdColor[4],
+    pxr::SdfPath* outHitPrimPath = NULL,
+    pxr::SdfPath* outHitInstancerPath = NULL,
+    int* outHitInstanceIndex = NULL,
+    pxr::HdInstancerContext* outInstancerContext = NULL);
+
 private:
   bool _dirty;
 };

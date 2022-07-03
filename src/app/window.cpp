@@ -90,7 +90,7 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_REFRESH_RATE,mode->refreshRate);
   
   //glfwWindowHint(GLFW_DECORATED, false);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -129,7 +129,7 @@ Window::Window(int width, int height, const std::string& name):
   _height = height;
   _shared = true;
   //glfwWindowHint(GLFW_DECORATED, false);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -165,7 +165,7 @@ Window::Window(int x, int y, int width, int height,
   _shared = false;
 
   glfwWindowHint(GLFW_DECORATED, decorated);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -209,7 +209,6 @@ Window::Init(Application* app)
       GetContextVersionInfos();
       // load opengl functions
       GarchGLApiLoad();
-      pxr::GlfSharedGLContextScopeHolder sharedContext;
       pxr::GlfContextCaps::InitInstance();
       pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
 
@@ -234,6 +233,7 @@ Window::Init(Application* app)
     _splitter = new SplitterUI();
 
     Resize(_width, _height);
+    glGenVertexArrays(1, &_vao);
     
     // ui
     SetupImgui();
@@ -518,10 +518,11 @@ Window::Draw()
 {
   if (!_valid || _idle)return;
   SetGLContext();
+  glBindVertexArray(_vao);
   // start the imgui frame
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  //ImGui_ImplOpenGL3_NewFrame();
+  //ImGui_ImplGlfw_NewFrame();
+  //ImGui::NewFrame();
   // draw popup
   if (_popup) {
     if (_popup->IsSync()) {
@@ -545,10 +546,11 @@ Window::Draw()
   }
 
   // render the imgui frame
-  ImGui::Render();
+  //ImGui::Render();
 
-  glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  //glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
+  //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  glBindVertexArray(0);
 }
 
 // setup imgui

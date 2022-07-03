@@ -1218,6 +1218,7 @@ void Shape::Bind(GLSLProgram* pgm)
   _uModel = glGetUniformLocation(program, "model");
   _uColor = glGetUniformLocation(program, "color");
 
+  glUseProgram(program);
   glBindVertexArray(_vao);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
@@ -1243,9 +1244,6 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)
   GLuint pgm = SHAPE_PROGRAM->Get();
   GLuint uModel = glGetUniformLocation(pgm, "model");
   GLuint uColor = glGetUniformLocation(pgm, "color");
-  
-  GLint vao;
-  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
 
   glBindVertexArray(_vao);
   glUniformMatrix4fv(uModel,1,GL_FALSE,&model[0][0]);
@@ -1253,8 +1251,6 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)
   
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, 0);
-
-  glBindVertexArray(vao);
 }
 
 void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
@@ -1263,9 +1259,6 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
   GLuint pgm = SHAPE_PROGRAM->Get();
   GLuint uModel = glGetUniformLocation(pgm, "model");
   GLuint uColor = glGetUniformLocation(pgm, "color");
-  
-  GLint vao;
-  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
 
   glBindVertexArray(_vao);
   glUniformMatrix4fv(uModel,1,GL_FALSE,&model[0][0]);
@@ -1274,8 +1267,6 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glDrawElements(GL_TRIANGLES, (end - start), GL_UNSIGNED_INT, 
     ((char*)NULL + (start * sizeof(unsigned int))));
-
-  glBindVertexArray(vao);
 }
 
 void InitShapeShader()

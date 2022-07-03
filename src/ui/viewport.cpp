@@ -28,7 +28,8 @@ ImGuiWindowFlags ViewportUI::_flags =
   ImGuiWindowFlags_NoCollapse |
   ImGuiWindowFlags_NoNav |
   ImGuiWindowFlags_NoScrollWithMouse |
-  ImGuiWindowFlags_NoScrollbar;
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoBackground;
 
 
 static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target, 
@@ -51,7 +52,6 @@ ViewportUI::ViewportUI(View* parent):
   HeadedUI(parent, "Viewport")
 {
   _texture = 0;
-  _drawTarget = nullptr;
   _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
   _pixels = nullptr;
   _camera = new Camera("Camera");
@@ -262,7 +262,6 @@ void ViewportUI::MouseMove(int x, int y)
     tools->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());
   }
 
-  
   _lastX = static_cast<double>(x);
   _lastY = static_cast<double>(y);
 }
@@ -315,51 +314,6 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
     }
   }
 }
-/*
-static void DrawToolCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd) {
-
-  ViewportUI* viewport = (ViewportUI*)cmd->UserCallbackData;
-  Camera* camera = viewport->GetCamera();
-  View* view = viewport->GetView();
-
-  // get current state
-  GLint currentViewport[4];
-  glGetIntegerv(GL_VIEWPORT, &currentViewport[0]);
-
-  GLint currentProgram;
-  glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-  
-  // resize viewport
-  float scaleX, scaleY;
-  glfwGetWindowContentScale(view->GetWindow()->GetGlfwWindow(), &scaleX, &scaleY);
-  float x = viewport->GetX();
-  float y = viewport->GetY();
-  float w = viewport->GetWidth();
-  float h = viewport->GetHeight();
-  float wh = viewport->GetWindowHeight();
-  glViewport(x * scaleX,(wh - (y + h)) * scaleY, w * scaleX, h * scaleY);
-  
-  glEnable(GL_DEPTH_TEST);
-  glClear(GL_DEPTH_BUFFER_BIT);
-
-  Tool* tools = GetApplication()->GetTools();
-  tools->SetViewport(pxr::GfVec4f(x, y, w, h));
-  tools->SetCamera(camera);
-  tools->Draw(w, h);
-
-  // restore viewport
-  glViewport(
-    currentViewport[0],
-    currentViewport[1],
-    currentViewport[2],
-    currentViewport[3]
-  );
-  
-  // restore material
-  glUseProgram(currentProgram);
-  glDisable(GL_DEPTH_TEST);
-}
-*/
 
 static bool ComboWidget(const char* label, BaseUI* ui, 
   const char** names, const size_t count, int& last, size_t width=300)
@@ -404,19 +358,21 @@ bool ViewportUI::Draw()
   if (!_initialized)Init();
   if(!_valid)return false;  
 
+  const double viewportX = GetX();
+  const double viewportY = (GetWindow()->GetHeight() - GetHeight()) - GetY();
+
   
   Selection* selection = app->GetSelection();
   if (GetWindow()->IsDraggingSplitter()) {
     glViewport(0, 0, GetWidth(), GetHeight());
-    // clear to black
     glClearColor(0.25f, 0.25f, 0.25f, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   } else if (app->GetDisplayStage() != nullptr) {
     _engine->SetRendererAov(pxr::HdAovTokens->color);
     _engine->SetRenderViewport(
       pxr::GfVec4d(
-        0.0,
-        0.0,
+        viewportX,
+        viewportY,
         static_cast<double>(GetWidth()),
         static_cast<double>(GetHeight())));
 
@@ -433,19 +389,18 @@ bool ViewportUI::Draw()
     _renderParams.showGuides = true;
     _renderParams.showRender = true;
     _renderParams.showProxy = true;
-    _renderParams.forceRefresh = false;
-    _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_NOTHING;
+    _renderParams.forceRefresh = true;
+    _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
     _renderParams.gammaCorrectColors = false;
     _renderParams.enableIdRender = false;
     _renderParams.enableSampleAlphaToCoverage = true;
     _renderParams.highlight = true;
     _renderParams.enableSceneMaterials = false;
+    _renderParams.enableSceneLights = true;
     //_renderParams.colorCorrectionMode = ???
     _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
 
     if ( _engine->IsDirty() || !_engine->IsConverged() ) {
-      _drawTarget->Bind();
-      glViewport(0, 0, GetWidth(), GetHeight());
 
       if (!selection->IsEmpty() && selection->IsObject()) {
         _engine->SetSelected(selection->GetSelectedPrims());
@@ -454,33 +409,32 @@ bool ViewportUI::Draw()
       }
 
       // clear to black
-      glClearColor(0.25f, 0.25f, 0.25f, 1.0);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glClearColor(0.f, 0.f, 0.f, 0.f);
+      glClear(GL_DEPTH_BUFFER_BIT);
 
       if (app->GetDisplayStage()->HasDefaultPrim()) {
         _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
       }
       
       _engine->SetDirty(false);
-
-      _drawTarget->Unbind();
     }
-
+    return true;
     Tool* tools = GetApplication()->GetTools();
     const bool shouldDrawTool = tools->IsActive();
     if (shouldDrawTool) {
-      _toolTarget->Bind();
-      glViewport(0, 0, GetWidth(), GetHeight());
+      glViewport(viewportX, viewportY, GetWidth(), GetHeight());
+      glScissor(viewportX, viewportY, GetWidth(), GetHeight());
 
       // clear to black
       glClearColor(0.0f, 0.0f, 0.0f, 0.f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      tools->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
+      glClear(GL_DEPTH_BUFFER_BIT);
+      
+      tools->SetViewport(pxr::GfVec4f(GetX(), GetY(), GetWidth(), GetHeight()));
       tools->SetCamera(_camera);
       tools->Draw();
-      _toolTarget->Unbind();
     }
-
+   
+    
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
 
@@ -489,18 +443,7 @@ bool ViewportUI::Draw()
     ImGui::SetWindowSize(size);
    
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-    drawList->AddImage(
-      (ImTextureID)(size_t)_drawTarget->GetAttachment("color")->GetGlTextureName(),
-      min, min + size, ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255));
-
-    if (shouldDrawTool) {
-      _toolTarget->Resolve();
-      drawList->AddImage(
-        (ImTextureID)(size_t)_toolTarget->GetAttachment("color")->GetGlTextureName(),
-        min, min + size, ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
-    }
-  
+    
     ImGui::PushFont(GetWindow()->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
     
@@ -599,28 +542,7 @@ void ViewportUI::Resize()
   );
   if (GetWindow()->IsDraggingSplitter()) return;
 
-  const pxr::GfVec2i renderResolution(GetWidth(), GetHeight());
-  if (!_drawTarget || _drawTarget->GetSize() != renderResolution) {
-    _drawTarget = pxr::GlfDrawTarget::New(renderResolution);
-    _drawTarget->Bind();
-
-    _drawTarget->AddAttachment("color",
-      GL_RGBA, GL_FLOAT, GL_RGBA);
-    _drawTarget->AddAttachment("depth",
-      GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-    _drawTarget->Unbind();
-
-    _toolTarget = pxr::GlfDrawTarget::New(renderResolution, false /*multisamples*/);
-    _toolTarget->Bind();
-
-    _toolTarget->AddAttachment("color",
-      GL_RGBA, GL_FLOAT, GL_RGBA);
-    _toolTarget->AddAttachment("depth",
-      GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-    _toolTarget->Unbind();
-
-    _engine->SetDirty(true);
-  }
+  _engine->SetDirty(true);
 }
 
 static pxr::GfVec4i _ViewportMakeCenteredIntegral(pxr::GfVec4f& viewport)
@@ -690,7 +612,7 @@ bool ViewportUI::Pick(int x, int y, int mods)
   pxr::SdfPath outHitInstancerPath;
   int outHitInstanceIndex;
   pxr::HdInstancerContext outInstancerContext;
-
+  return false;
   if (_engine->TestIntersection(
     pickFrustum.ComputeViewMatrix(),
     pickFrustum.ComputeProjectionMatrix(),

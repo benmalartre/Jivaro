@@ -406,16 +406,16 @@ Application::Init()
   // initialize 3d tools
   _tools.Init();
   
-  GraphEditorUI* graph = new GraphEditorUI(graphView);
+  //GraphEditorUI* graph = new GraphEditorUI(graphView);
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   _viewport = new ViewportUI(viewportView);
-  _timeline = new TimelineUI(timelineView);
-  MenuUI* menu = new MenuUI(topView);
-  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
-  _explorer = new ExplorerUI(explorerView);
-  _layers = NULL;// new LayersUI(layersView);
-  new LayerHierarchyUI(layersView, "fuck");
-  _property = new PropertyUI(propertyView, "Property");
+  //_timeline = new TimelineUI(timelineView);
+  //MenuUI* menu = new MenuUI(topView);
+  //ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
+  //_explorer = new ExplorerUI(explorerView);
+  //_layers = NULL;// new LayersUI(layersView);
+  //new LayerHierarchyUI(layersView, "fuck");
+  //_property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
@@ -470,9 +470,7 @@ Application::Init()
   //_scene->TestVoronoi();
  
   _mainWindow->CollectLeaves();
-
- 
-  /*
+ /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   childWindow->Init(this);
   
