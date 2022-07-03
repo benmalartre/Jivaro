@@ -418,7 +418,7 @@ bool ViewportUI::Draw()
       
       _engine->SetDirty(false);
     }
-    return true;
+
     Tool* tools = GetApplication()->GetTools();
     const bool shouldDrawTool = tools->IsActive();
     if (shouldDrawTool) {
@@ -612,7 +612,7 @@ bool ViewportUI::Pick(int x, int y, int mods)
   pxr::SdfPath outHitInstancerPath;
   int outHitInstanceIndex;
   pxr::HdInstancerContext outInstancerContext;
-  return false;
+
   if (_engine->TestIntersection(
     pickFrustum.ComputeViewMatrix(),
     pickFrustum.ComputeProjectionMatrix(),

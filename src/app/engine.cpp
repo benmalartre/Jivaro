@@ -94,7 +94,6 @@ Engine::TestIntersection(
   int* outHitInstanceIndex,
   pxr::HdInstancerContext* outInstancerContext)
 {
-  std::cout << "TEST INTERSECTION CUSTOM ENGINE" << std::endl;
   if (_IsUsingLegacyImpl()) {
     return _legacyImpl->TestIntersection(
       viewMatrix,
@@ -107,8 +106,6 @@ Engine::TestIntersection(
       outHitInstanceIndex);
   }
 
-  std::cout << "USE SCENE INDICES : " << _GetUseSceneIndices() << std::endl;
-
   if (_GetUseSceneIndices()) {
     // XXX(HYD-2299): picking support
     return false;
@@ -118,7 +115,6 @@ Engine::TestIntersection(
   TF_VERIFY(_GetTaskController());
 
   PrepareBatch(root, params);
-  std::cout << "PREPARED BATCH" << std::endl;
 
   // XXX(UsdImagingPaths): This is incorrect...  "Root" points to a USD
   // subtree, but the subtree in the hydra namespace might be very different
@@ -128,10 +124,8 @@ Engine::TestIntersection(
           SdfPath::AbsoluteRootPath(), _sceneDelegateId)
   };
   _UpdateHydraCollection(&_intersectCollection, paths, params);
-  std::cout << "UPDATED HYDRA COLLECTION" << std::endl;
 
   _PrepareRender(params);
-  std::cout << "PREPARED RENDER" << std::endl;
 
   pxr::HdxPickHitVector allHits;
   pxr::HdxPickTaskContextParams pickParams;
@@ -144,9 +138,7 @@ Engine::TestIntersection(
   const pxr::VtValue vtPickParams(pickParams);
 
   _GetHdEngine()->SetTaskContextData(pxr::HdxPickTokens->pickParams, vtPickParams);
-  std::cout << "SET TASK CONTEXT DATA" << std::endl;
   _Execute(params, _taskController->GetPickingTasks());
-  std::cout << "PICK EXECUTED" << std::endl;
 
   // Since we are in nearest-hit mode, we expect allHits to have
   // a single point in it.

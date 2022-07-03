@@ -62,6 +62,7 @@ public:
   pxr::UsdStageRefPtr& GetDisplayStage() { 
     return _execInitialized ? _execStage : _workStage; 
   };
+  Scene* GetScene() { return _execScene; };
   
 private:
   void UseLayer(pxr::SdfLayerRefPtr layer);

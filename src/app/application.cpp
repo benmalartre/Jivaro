@@ -407,18 +407,18 @@ Application::Init()
   _tools.Init();
   
   //GraphEditorUI* graph = new GraphEditorUI(graphView);
-  //CurveEditorUI* editor = new CurveEditorUI(graphView);
+  CurveEditorUI* editor = new CurveEditorUI(graphView);
   _viewport = new ViewportUI(viewportView);
-  //_timeline = new TimelineUI(timelineView);
-  //MenuUI* menu = new MenuUI(topView);
-  //ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
-  //_explorer = new ExplorerUI(explorerView);
-  //_layers = NULL;// new LayersUI(layersView);
+  _timeline = new TimelineUI(timelineView);
+  MenuUI* menu = new MenuUI(topView);
+  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
+  _explorer = new ExplorerUI(explorerView);
+  _layers =  new LayersUI(layersView);
   //new LayerHierarchyUI(layersView, "fuck");
-  //_property = new PropertyUI(propertyView, "Property");
+  _property = new PropertyUI(propertyView, "Property");
 
   //_stage = TestAnimXFromFile(filename, editor);
-  //pxr::UsdStageRefPtr stage = TestAnimX(editor);
+  pxr::UsdStageRefPtr stage = TestAnimX(editor);
   //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
 
   /*
@@ -467,10 +467,10 @@ Application::Init()
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
 
-  //_scene->TestVoronoi();
+  //_workspace->GetScene()->TestVoronoi();
  
   _mainWindow->CollectLeaves();
- /*
+ 
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   childWindow->Init(this);
   
@@ -482,7 +482,7 @@ Application::Init()
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
   childWindow->CollectLeaves();
-  */
+ 
 
 }
 
