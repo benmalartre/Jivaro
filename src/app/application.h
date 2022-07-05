@@ -29,6 +29,8 @@ class CommandManager;
 class Engine;
 class Window;
 
+typedef std::map<Window*, Tool> WindowToolsMap;
+
 
 class Application : public pxr::TfWeakBase
 {
@@ -134,7 +136,7 @@ private:
   Window*                           _activeWindow;
   Workspace*                        _workspace;
   Selection                         _selection;
-  std::map< Window*, Tool>          _tools;                          
+  WindowToolsMap                    _tools;
 
   // uis
   ViewportUI*                       _viewport;

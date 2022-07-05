@@ -540,17 +540,19 @@ Application::SetActiveViewport(ViewportUI* viewport)
 Tool*
 Application::GetTools(Window* window)
 {
-  if (_tools.find(window) != _tools.end()) {
-    return &_tools[window];
+  for (auto& tool : _tools) {
+    if (tool.first == window)return &tool.second;
   }
+
   return NULL;
 }
 
 void 
-Application::SetActiveTool(short tool)
+Application::SetActiveTool(short t)
 {
-  for (auto& _tool : _tools) {
-    _tool.second.SetActiveTool(tool);
+  for (auto& tool : _tools) {
+    glfwMakeContextCurrent(tool.first->GetGlfwWindow());
+    tool.second.SetActiveTool(t);
   }
 }
 
