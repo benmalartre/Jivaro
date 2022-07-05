@@ -5,6 +5,7 @@
 #include "../ui/head.h"
 #include "../ui/viewport.h"
 #include "../ui/graphEditor.h"
+#include "../ui/debug.h"
 
 #include "../app/view.h"
 #include "../app/window.h"
@@ -51,6 +52,9 @@ ViewHead::CreateChild(UIType type)
     break;
   case UIType::GRAPHEDITOR:
     new GraphEditorUI(_parent);
+    break;
+  case UIType::DEBUG:
+    new DebugUI(_parent);
     break;
   }
 }

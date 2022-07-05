@@ -1,8 +1,7 @@
 #ifndef JVR_APPLICATION_APPLICATION_H
 #define JVR_APPLICATION_APPLICATION_H
 
-#pragma once
-
+#include <map>
 #include "../common.h"
 #include "../app/scene.h"
 #include "../app/workspace.h"
@@ -28,6 +27,7 @@ class CurveEditorUI;
 class Command;
 class CommandManager;
 class Engine;
+class Window;
 
 
 class Application : public pxr::TfWeakBase
@@ -108,8 +108,8 @@ public:
   void SetActiveWindow(Window* window) { _activeWindow = window; };
 
   // tools
-  Tool* GetTools(){return &_tools;};
-  void SetActiveTool(short tool) {_tools.SetActiveTool(tool);};
+  Tool* GetTools(Window* window);
+  void SetActiveTool(short tool);
 
   // engines
   void AddEngine(Engine* engine);
@@ -134,7 +134,7 @@ private:
   Window*                           _activeWindow;
   Workspace*                        _workspace;
   Selection                         _selection;
-  Tool                              _tools;
+  std::map< Window*, Tool>          _tools;                          
 
   // uis
   ViewportUI*                       _viewport;

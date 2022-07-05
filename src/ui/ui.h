@@ -31,6 +31,7 @@ enum UIType {
   PROPERTY,
   CURVEEDITOR,
   GRAPHEDITOR,
+  DEBUG,
   COUNT
 };
 
@@ -42,7 +43,8 @@ static const char* UITypeName[UIType::COUNT] = {
   "explorer",
   "property",
   "curveEditor",
-  "graphEditor"
+  "graphEditor", 
+  "debug"
 };
 
 static std::map<std::string, int> UINameIndexMap;

@@ -657,7 +657,7 @@ void Window::MainLoop()
 {
   while(!glfwWindowShouldClose(_window)) {
     //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
-    
+    glfwPollEvents();
     _app->Update();
     // main window
     Draw();
@@ -670,7 +670,6 @@ void Window::MainLoop()
         glfwSwapBuffers(child->GetGlfwWindow());
       }
     }
-    glfwPollEvents();
   }
 }
 

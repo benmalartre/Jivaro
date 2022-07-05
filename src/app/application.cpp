@@ -53,7 +53,7 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), _tools(Tool()), 
+  _mainWindow(nullptr), _activeWindow(nullptr), 
   _viewport(nullptr), _execute(false)
 {  
   _mainWindow = CreateStandardWindow(width, height);
@@ -63,7 +63,7 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), _tools(Tool()), 
+  _mainWindow(nullptr), _activeWindow(nullptr), 
   _viewport(nullptr), _execute(false)
 {
   _mainWindow = CreateFullScreenWindow();
@@ -404,7 +404,8 @@ Application::Init()
   _mainWindow->Resize(width, height);
   
   // initialize 3d tools
-  _tools.Init();
+  _tools[_mainWindow] = Tool();
+  _tools[_mainWindow].Init();
   
   //GraphEditorUI* graph = new GraphEditorUI(graphView);
   CurveEditorUI* editor = new CurveEditorUI(graphView);
@@ -473,11 +474,13 @@ Application::Init()
  
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   childWindow->Init(this);
+
+  _tools[childWindow] = Tool();
+  _tools[childWindow].Init();
   
   _mainWindow->AddChild(childWindow);
   
   ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
-  viewport2->Init();
   
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
@@ -534,6 +537,23 @@ Application::SetActiveViewport(ViewportUI* viewport)
   _viewport->GetView()->SetFlag(View::TIMEVARYING);
 }
 
+Tool*
+Application::GetTools(Window* window)
+{
+  if (_tools.find(window) != _tools.end()) {
+    return &_tools[window];
+  }
+  return NULL;
+}
+
+void 
+Application::SetActiveTool(short tool)
+{
+  for (auto& _tool : _tools) {
+    _tool.second.SetActiveTool(tool);
+  }
+}
+
 void 
 Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {
@@ -544,7 +564,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
       engine->ClearSelected();
     }
   }
-  _tools.ResetSelection();
+  for(auto& tool: _tools) tool.second.ResetSelection();
   _DirtyAllEngines(_engines);
   GetMainWindow()->ForceRedraw();
 }
@@ -560,7 +580,7 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
-  _tools.ResetSelection();
+  for(auto& tool: _tools)tool.second.ResetSelection();
   GetMainWindow()->ForceRedraw();
   _DirtyAllEngines(_engines);
 }
@@ -568,7 +588,7 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
- _tools.ResetSelection();
+  for (auto& tool : _tools)tool.second.ResetSelection();
   GetMainWindow()->ForceRedraw();
   _DirtyAllEngines(_engines);
 }
@@ -678,7 +698,6 @@ Application::GetExec()
 void 
 Application::MainLoop()
 {
-  std::cout << "APP MAIN LOOP" << std::endl;
   if (_mainWindow->IsIdle())return;
   _mainWindow->MainLoop();
 }

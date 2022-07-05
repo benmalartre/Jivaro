@@ -152,7 +152,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   Window* window = _parent->GetWindow();
-  Tool* tools = GetApplication()->GetTools();
+  Tool* tools = GetApplication()->GetTools(window);
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
   const float width = GetWidth();
@@ -216,7 +216,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 void ViewportUI::MouseMove(int x, int y) 
 {
   Application* app = GetApplication();
-  Tool* tools = app->GetTools();
+  Tool* tools = app->GetTools(GetWindow());
   tools->SetCamera(_camera);
   
   if(_interacting)
@@ -354,6 +354,7 @@ static bool ComboWidget(const char* label, BaseUI* ui,
 bool ViewportUI::Draw()
 {    
   Application* app = GetApplication();
+  Window* window = GetWindow();
 
   if (!_initialized)Init();
   if(!_valid)return false;  
@@ -361,9 +362,8 @@ bool ViewportUI::Draw()
   const double viewportX = GetX();
   const double viewportY = (GetWindow()->GetHeight() - GetHeight()) - GetY();
 
-  
   Selection* selection = app->GetSelection();
-  if (GetWindow()->IsDraggingSplitter()) {
+  if (window->IsDraggingSplitter()) {
     glViewport(0, 0, GetWidth(), GetHeight());
     glClearColor(0.25f, 0.25f, 0.25f, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -389,7 +389,7 @@ bool ViewportUI::Draw()
     _renderParams.showGuides = true;
     _renderParams.showRender = true;
     _renderParams.showProxy = true;
-    _renderParams.forceRefresh = true;
+    _renderParams.forceRefresh = false;
     _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
     _renderParams.gammaCorrectColors = false;
     _renderParams.enableIdRender = false;
@@ -419,7 +419,7 @@ bool ViewportUI::Draw()
       _engine->SetDirty(false);
     }
 
-    Tool* tools = GetApplication()->GetTools();
+    Tool* tools = GetApplication()->GetTools(window);
     const bool shouldDrawTool = tools->IsActive();
     if (shouldDrawTool) {
       glViewport(viewportX, viewportY, GetWidth(), GetHeight());
@@ -444,7 +444,7 @@ bool ViewportUI::Draw()
    
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     
-    ImGui::PushFont(GetWindow()->GetRegularFont(0));
+    ImGui::PushFont(window->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
     
     drawList->AddText(
