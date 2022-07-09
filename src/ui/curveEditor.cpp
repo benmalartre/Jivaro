@@ -419,7 +419,7 @@ bool CurveEditorUI::Draw()
   DrawTime();
   ImGui::PopClipRect();
   ImGui::End();
-  return true;
+  return false;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

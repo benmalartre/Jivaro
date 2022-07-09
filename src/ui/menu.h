@@ -18,7 +18,7 @@ class Command;
 typedef void(*MenuPressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
 
 struct MenuItem {
-  View* view;
+  View*                       view;
   std::string                 label;
   std::string                 shortcut;
   bool                        selected;
@@ -33,7 +33,8 @@ struct MenuItem {
   MenuItem& AddItem(View* view, const std::string lbl, const std::string sht, bool sel,
     bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
 
-  bool Draw();
+  void Draw(bool* dirty);
+  int GetHeight();
 };
 
 class MenuUI : public BaseUI

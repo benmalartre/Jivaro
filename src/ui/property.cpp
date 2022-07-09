@@ -407,7 +407,7 @@ PropertyUI::Draw()
   }
 
   ImGui::End();
-  return true;
+  return ImGui::IsAnyItemActive() || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemFocused();
 };
   
 

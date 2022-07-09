@@ -525,9 +525,7 @@ bool LayersUI::Draw()
     */
     ImGui::End();
 
-
-
-    return true;
+    return false;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

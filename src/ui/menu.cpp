@@ -44,34 +44,48 @@ MenuItem& MenuItem::AddItem(View* view, const std::string lbl, const std::string
   return items.back();
 }
 
-bool MenuItem::Draw()
+int MenuItem::GetHeight()
+{
+  ImGuiStyle& style = ImGui::GetStyle();
+  if (items.size()) {
+    return items.size() * 32;
+  } else {
+    return 32;
+  }
+}
+
+void MenuItem::Draw(bool* dirty)
 {
   Window* window = view->GetWindow();
   if (items.size()) {
     ImGui::PushFont(window->GetBoldFont(1));
     
     if (ImGui::BeginMenu(label.c_str())) {
+      *dirty = true;
+      view->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(view->GetX(), view->GetY() + view->GetHeight()), 
+        pxr::GfVec2i(view->GetWidth(), 512));
+
       for (auto& item : items) {
-        item.Draw();
+        item.Draw(dirty);
       }
       ImGui::EndMenu();
-      ImGui::PopFont();
-      return true;
-    }
+    } 
     ImGui::PopFont();
   }
   else {
     ImGui::PushFont(window->GetMediumFont(1));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
-      window->SetActiveTool(TOOL_SELECT);
       window->ForceRedraw();
-      ImGui::PopFont();
-      return true;
-    }
+      *dirty = false;
+    } 
     ImGui::PopFont();
   }
-  return false;
+  if (ImGui::IsAnyItemHovered()) {
+    view->SetDirty();
+    view->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(view->GetX(), view->GetY() + view->GetHeight()),
+      pxr::GfVec2i(view->GetWidth(), 512));
+  }
 }
 
 static void OpenFileCallback() {
@@ -207,11 +221,10 @@ bool MenuUI::Draw()
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ALTERNATE_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, SELECTED_COLOR);
 
-  static bool open;
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
-  ImGui::Begin("MenuBar", &open, _flags);
+  ImGui::Begin("MenuBar", NULL, _flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
   
@@ -222,17 +235,14 @@ bool MenuUI::Draw()
     min + size,
     ImColor(BACKGROUND_COLOR));
 
-  
   ImGui::PushFont(GetWindow()->GetBoldFont(2));
+  static bool dirty = false;
   
   if (ImGui::BeginMainMenuBar())
   {
-    _parent->SetFlag(View::INTERACTING | View::DISCARDMOUSEMOVE);
+    std::cout << "DRAW MENU BAR..." << std::endl;
     for (auto& item : _items) {
-      if (item.Draw()) {
-        _parent->SetDirty();
-        _parent->SetInteracting(true);
-      }
+      item.Draw(&dirty);
     }
     ImGui::EndMainMenuBar();
   }
@@ -241,11 +251,9 @@ bool MenuUI::Draw()
   ImGui::PopStyleColor(3);
   ImGui::End();
 
-  return 
-    ImGui::IsItemHovered() ||
-    ImGui::IsAnyItemActive() ||
-    ImGui::IsAnyItemFocused() ||
-    ImGui::IsAnyMouseDown();
+  std::cout << "MENU BAR DIRTY : " << dirty << std::endl;
+
+  return false;// dirty || ImGui::IsAnyItemHovered();
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

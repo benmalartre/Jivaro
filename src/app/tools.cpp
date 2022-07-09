@@ -15,6 +15,7 @@ Tool::Tool()
 
 Tool::~Tool()
 { 
+  if (_active)delete _active;
 }
 
 void Tool::Init()

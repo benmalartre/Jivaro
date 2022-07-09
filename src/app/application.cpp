@@ -472,6 +472,7 @@ Application::Init()
  
   _mainWindow->CollectLeaves();
  
+  /*
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   childWindow->Init(this);
 
@@ -485,6 +486,7 @@ Application::Init()
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
   childWindow->CollectLeaves();
+  */
  
 
 }
