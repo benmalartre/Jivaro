@@ -33,19 +33,19 @@ static void SetStyle(ImGuiStyle* dst)
   style->PopupRounding = 0.0f;
   style->ScrollbarRounding = 0.0f;
   style->TabRounding = 0.0f;
-  style->WindowPadding = pxr::GfVec2f(4.f, 0.f);
-  style->FramePadding = pxr::GfVec2f(0.f, 2.f);
-  style->ChildBorderSize = 4.f;
+  style->WindowPadding = pxr::GfVec2f(0.f, 0.f);
+  style->FramePadding = pxr::GfVec2f(0.f, 0.f);
+  style->ChildBorderSize = 0.f;
   style->FrameBorderSize = 0.f;
   style->IndentSpacing = 8.f;
-  style->ItemSpacing = pxr::GfVec2f(4.f,4.f);
-  style->ItemInnerSpacing = pxr::GfVec2f(2.f, 4.f);
+  style->ItemSpacing = pxr::GfVec2f(0.f,0.f);
+  style->ItemInnerSpacing = pxr::GfVec2f(0.f, 0.f);
   style->FrameBorderSize = 1.0f;
   style->FrameRounding = 0.f;
   style->AntiAliasedLines = true;
   style->AntiAliasedFill = true;
   style->WindowBorderSize = 0.0f;
-  style->ScrollbarSize = 6.f;
+  style->ScrollbarSize = 12.f;
 
   colors[ImGuiCol_Text] = ImVec4(0.75f, 0.75f, 0.75f, 1.f);
   colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.f);

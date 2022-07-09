@@ -31,60 +31,74 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoBackground |
   ImGuiWindowFlags_NoScrollbar;
 
-MenuItem::MenuItem(View* v, const std::string lbl, const std::string sht,
+MenuItem::MenuItem(MenuUI* ui, const std::string lbl, const std::string sht,
   bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
-  : view(v), label(lbl), shortcut(sht), selected(sel), func(f), args(a)
+  : ui(ui), label(lbl), shortcut(sht), selected(sel), func(f), args(a)
 {
 }
 
-MenuItem& MenuItem::AddItem(View* view, const std::string lbl, const std::string sht,
+MenuItem& MenuItem::AddItem(MenuUI* ui, const std::string lbl, const std::string sht,
   bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
 {
-  items.push_back(MenuItem(view, lbl, sht, sel, enb, f, a));
+  items.push_back(MenuItem(ui, lbl, sht, sel, enb, f, a));
   return items.back();
 }
 
-int MenuItem::GetHeight()
+pxr::GfVec2i MenuItem::GetSize()
 {
+  ImVec2 size(0, 0);
   ImGuiStyle& style = ImGui::GetStyle();
-  if (items.size()) {
-    return items.size() * 32;
-  } else {
-    return 32;
+  for (const auto& item : items) {
+    ImVec2 labelSize = ImGui::CalcTextSize(item.label.c_str());
+    ImVec2 shortcutSize = ImGui::CalcTextSize(item.shortcut.c_str());
+    ImVec2 cur(labelSize[0] + shortcutSize[0] + 2 * style.FramePadding[0], labelSize[1]);
+    if (cur[0] > size[0])size[0] = cur[0];
+    size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
   }
+  std::cout << "BBOX SIZE : " << size[0] << "," << size[1] << std::endl;
+  return pxr::GfVec2i(size[0], size[1]);
 }
 
-void MenuItem::Draw(bool* dirty)
+pxr::GfVec2i MenuItem::GetPos()
 {
+  ImGuiStyle& style = ImGui::GetStyle();
+  View* view = ui->GetView();
+  pxr::GfVec2i pos(view->GetX() + style.WindowPadding[0], view->GetY() + view->GetHeight());
+  for (auto& item : ui->_items) {
+    if (label == item.label) break;
+    ImVec2 cur = ImGui::CalcTextSize(item.label.c_str());
+    pos[0] += cur[0] + style.ItemSpacing[0];
+  }
+  std::cout << "BBOX POS : " << pos[0] << "," << pos[1] << std::endl;
+  return pos;
+}
+
+void MenuItem::Draw()
+{
+  View* view = ui->GetView();
   Window* window = view->GetWindow();
   if (items.size()) {
     ImGui::PushFont(window->GetBoldFont(1));
     
     if (ImGui::BeginMenu(label.c_str())) {
-      *dirty = true;
-      view->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(view->GetX(), view->GetY() + view->GetHeight()), 
-        pxr::GfVec2i(view->GetWidth(), 512));
+      ui->_current = this;
 
       for (auto& item : items) {
-        item.Draw(dirty);
+        item.Draw();
       }
       ImGui::EndMenu();
     } 
     ImGui::PopFont();
+    
   }
   else {
     ImGui::PushFont(window->GetMediumFont(1));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
       window->ForceRedraw();
-      *dirty = false;
+      ui->_current = NULL;
     } 
     ImGui::PopFont();
-  }
-  if (ImGui::IsAnyItemHovered()) {
-    view->SetDirty();
-    view->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(view->GetX(), view->GetY() + view->GetHeight()),
-      pxr::GfVec2i(view->GetWidth(), 512));
   }
 }
 
@@ -185,19 +199,25 @@ static void FlattenGeometryCallback()
 }
 
 // constructor
-MenuUI::MenuUI(View* parent) :BaseUI(parent, "MainMenu")
+MenuUI::MenuUI(View* parent) 
+  : BaseUI(parent, "MainMenu")
+  , _current(NULL)
 {
   pxr::VtArray < pxr::VtValue > args;
-  MenuItem& fileMenu = AddItem(parent, "File", "", false, true);
-  fileMenu.AddItem(parent, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCallback);
-  fileMenu.AddItem(parent, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
-  fileMenu.AddItem(parent, "New", "Ctrl+N", false, true, (MenuPressedFunc)&NewFileCallback);
+  MenuItem& fileMenu = AddItem("File", "", false, true);
+  fileMenu.AddItem(this, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCallback);
+  fileMenu.AddItem(this, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
+  fileMenu.AddItem(this, "New", "Ctrl+N", false, true, (MenuPressedFunc)&NewFileCallback);
  
-  MenuItem& testItem = AddItem(parent, "Test", "", false, true);
-  testItem.AddItem(parent, "CreatePrim", "CTRL+P", false, true, (MenuPressedFunc)&CreatePrimCallback);
+  MenuItem& testItem = AddItem("Test", "", false, true);
+  testItem.AddItem(this, "CreatePrim", "CTRL+P", false, true, (MenuPressedFunc)&CreatePrimCallback);
+  MenuItem& subItem = testItem.AddItem(this, "SubMenu", "", false, true);
+  subItem.AddItem(this, "Sub0", "", false, true);
+  subItem.AddItem(this, "Sub1", "", false, true);
+  subItem.AddItem(this, "Sub2", "", false, true);
 
-  MenuItem& demoItem = AddItem(parent, "Demo", "", false, true);
-  demoItem.AddItem(parent, "Open Demo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
+  MenuItem& demoItem = AddItem("Demo", "", false, true);
+  demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
 
 }
 
@@ -206,16 +226,17 @@ MenuUI::~MenuUI()
 {
 }
 
-MenuItem& MenuUI::AddItem(View* view, const std::string label, const std::string shortcut,
+MenuItem& MenuUI::AddItem(const std::string label, const std::string shortcut,
   bool selected, bool enabled, MenuPressedFunc func, const pxr::VtArray<pxr::VtValue> a)
 {
-  _items.push_back(MenuItem(view, label, shortcut, selected, enabled, func, a));
+  _items.push_back(MenuItem(this, label, shortcut, selected, enabled, func, a));
   return _items.back();
 }
 
 // overrides
 bool MenuUI::Draw()
 {
+  if (!_parent->IsActive())_current = NULL;
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
   ImGui::PushStyleColor(ImGuiCol_Header, BACKGROUND_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ALTERNATE_COLOR);
@@ -236,24 +257,31 @@ bool MenuUI::Draw()
     ImColor(BACKGROUND_COLOR));
 
   ImGui::PushFont(GetWindow()->GetBoldFont(2));
-  static bool dirty = false;
   
   if (ImGui::BeginMainMenuBar())
   {
-    std::cout << "DRAW MENU BAR..." << std::endl;
     for (auto& item : _items) {
-      item.Draw(&dirty);
+      item.Draw();
     }
     ImGui::EndMainMenuBar();
   }
+
+  if (_current) {
+    _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0,0), pxr::GfVec2i(GetWidth(), 512));
+    _parent->SetDirty();
+    _pos =_current->GetPos();
+    _size = _current->GetSize();
+    std::cout << "DIRTY VIEW FOR " << _current->label.c_str() << std::endl;
+  }
+
+  ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
+  foregroundList->AddRect(ImVec2(_pos), ImVec2(_size), ImColor(255,128,128,255));
   
   ImGui::PopFont();
   ImGui::PopStyleColor(3);
   ImGui::End();
 
-  std::cout << "MENU BAR DIRTY : " << dirty << std::endl;
-
-  return false;// dirty || ImGui::IsAnyItemHovered();
+  return _current != NULL;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
