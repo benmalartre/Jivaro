@@ -46,9 +46,6 @@ public:
   MenuUI(View* parent);
   ~MenuUI();
 
-  // overrides
-  void MouseButton(int action, int button, int mods) override {};
-  void MouseMove(int x, int y) override {};
   bool Draw() override;
 
   MenuItem& AddItem(const std::string label, const std::string shortcut, bool selected,

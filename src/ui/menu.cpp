@@ -55,7 +55,6 @@ pxr::GfVec2i MenuItem::GetSize()
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
   }
-  std::cout << "BBOX SIZE : " << size[0] << "," << size[1] << std::endl;
   return pxr::GfVec2i(size[0], size[1]);
 }
 
@@ -69,7 +68,6 @@ pxr::GfVec2i MenuItem::GetPos()
     ImVec2 cur = ImGui::CalcTextSize(item.label.c_str());
     pos[0] += cur[0] + style.ItemSpacing[0];
   }
-  std::cout << "BBOX POS : " << pos[0] << "," << pos[1] << std::endl;
   return pos;
 }
 
@@ -82,7 +80,6 @@ void MenuItem::Draw()
     
     if (ImGui::BeginMenu(label.c_str())) {
       ui->_current = this;
-
       for (auto& item : items) {
         item.Draw();
       }
@@ -219,6 +216,7 @@ MenuUI::MenuUI(View* parent)
   MenuItem& demoItem = AddItem("Demo", "", false, true);
   demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
 
+  //_parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
 
 // destructor
@@ -237,7 +235,6 @@ MenuItem& MenuUI::AddItem(const std::string label, const std::string shortcut,
 bool MenuUI::Draw()
 {
   if (!_parent->IsActive())_current = NULL;
-  _parent->SetFlag(View::DISCARDMOUSEBUTTON);
   ImGui::PushStyleColor(ImGuiCol_Header, BACKGROUND_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ALTERNATE_COLOR);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, SELECTED_COLOR);
@@ -251,13 +248,9 @@ bool MenuUI::Draw()
   
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-  drawList->AddRectFilled(
-    min,
-    min + size,
-    ImColor(BACKGROUND_COLOR));
+  drawList->AddRectFilled(min, min + size, ImColor(BACKGROUND_COLOR));
 
   ImGui::PushFont(GetWindow()->GetBoldFont(2));
-  
   if (ImGui::BeginMainMenuBar())
   {
     for (auto& item : _items) {
@@ -266,12 +259,12 @@ bool MenuUI::Draw()
     ImGui::EndMainMenuBar();
   }
 
-  if (_current) {
-    _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0,0), pxr::GfVec2i(GetWidth(), 512));
+  bool dirty = _current || ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked();
+  if (dirty) {
+    _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0,0), pxr::GfVec2i(256, 256));
     _parent->SetDirty();
     _pos =_current->GetPos();
     _size = _current->GetSize();
-    std::cout << "DIRTY VIEW FOR " << _current->label.c_str() << std::endl;
   }
 
   ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
@@ -281,7 +274,7 @@ bool MenuUI::Draw()
   ImGui::PopStyleColor(3);
   ImGui::End();
 
-  return _current != NULL;
+  return true;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

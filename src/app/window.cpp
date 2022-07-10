@@ -249,6 +249,7 @@ Window::Init(Application* app)
     
     // ui
     SetupImgui();
+    glfwMakeContextCurrent(NULL);
   }
 }
 
@@ -519,8 +520,10 @@ Window::GetUserData(GLFWwindow* window)
 void
 Window::SetGLContext()
 {
-  glfwMakeContextCurrent(_window);
-  ImGui::SetCurrentContext(_context);
+  //if (glfwGetCurrentContext() != _window) {
+    glfwMakeContextCurrent(_window);
+    ImGui::SetCurrentContext(_context);
+  //}
 }
 
 // draw
@@ -535,6 +538,7 @@ Window::Draw()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+  
   // draw popup
   if (_popup) {
     if (_popup->IsSync()) {
@@ -559,7 +563,7 @@ Window::Draw()
 
   // render the imgui frame
   ImGui::Render();
-
+  
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glBindVertexArray(0);
@@ -655,15 +659,16 @@ bool Window::UpdateActiveTool(int x, int y)
 
 void Window::MainLoop()
 {
+  glfwSwapInterval(1);
   while(!glfwWindowShouldClose(_window)) {
-    //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
+    glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
     //glfwPollEvents();
-    glfwWaitEvents();
+    //glfwWaitEvents();
     _app->Update();
     // main window
     Draw();
     glfwSwapBuffers(_window);
-
+    
     // child windows
     for (auto& child : _childrens) {
       if (glfwGetWindowAttrib(child->GetGlfwWindow(), GLFW_FOCUSED)) {
