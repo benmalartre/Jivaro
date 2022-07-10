@@ -47,6 +47,7 @@ public:
   ~MenuUI();
 
   bool Draw() override;
+  void DirtyViewsUnderBox();
 
   MenuItem& AddItem(const std::string label, const std::string shortcut, bool selected,
     bool enabled, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());

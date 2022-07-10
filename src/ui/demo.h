@@ -1,5 +1,5 @@
-#ifndef JVR_UI_DEBUG_H
-#define JVR_UI_DEBUG_H
+#ifndef JVR_UI_DEMO_H
+#define JVR_UI_DEMO_H
 
 #include "../common.h"
 #include "../ui/head.h"
@@ -8,15 +8,16 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class DebugUI : public HeadedUI
+class DemoUI : public HeadedUI
 {
 public:
-  DebugUI(View* parent);
-  ~DebugUI()         override;
+  DemoUI(View* parent);
+  ~DemoUI()         override;
   bool Draw()      override;
 
 private:
   static ImGuiWindowFlags _flags;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -48,13 +48,16 @@ pxr::GfVec2i MenuItem::GetSize()
 {
   ImVec2 size(0, 0);
   ImGuiStyle& style = ImGui::GetStyle();
+  std::cout << "MENU ITEM GET SIZE ..." << std::endl;
   for (const auto& item : items) {
+    std::cout << "ITEM : " << item.label << std::endl;
     ImVec2 labelSize = ImGui::CalcTextSize(item.label.c_str());
     ImVec2 shortcutSize = ImGui::CalcTextSize(item.shortcut.c_str());
     ImVec2 cur(labelSize[0] + shortcutSize[0] + 2 * style.FramePadding[0], labelSize[1]);
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
   }
+  std::cout << "MENU ITEM SIZE : " << size[0] << "," << size[1] << std::endl;
   return pxr::GfVec2i(size[0], size[1]);
 }
 
@@ -216,7 +219,7 @@ MenuUI::MenuUI(View* parent)
   MenuItem& demoItem = AddItem("Demo", "", false, true);
   demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
 
-  //_parent->SetFlag(View::DISCARDMOUSEBUTTON);
+  _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
 
 // destructor
@@ -229,6 +232,14 @@ MenuItem& MenuUI::AddItem(const std::string label, const std::string shortcut,
 {
   _items.push_back(MenuItem(this, label, shortcut, selected, enabled, func, a));
   return _items.back();
+}
+
+void MenuUI::DirtyViewsUnderBox()
+{
+  _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0, 0), pxr::GfVec2i(256, 256));
+  _parent->SetDirty();
+  _pos = _current->GetPos();
+  _size = _current->GetSize();
 }
 
 // overrides
@@ -259,16 +270,13 @@ bool MenuUI::Draw()
     ImGui::EndMainMenuBar();
   }
 
-  bool dirty = _current || ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked();
+  bool dirty = _current /*|| ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked()*/;
   if (dirty) {
-    _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0,0), pxr::GfVec2i(256, 256));
-    _parent->SetDirty();
-    _pos =_current->GetPos();
-    _size = _current->GetSize();
+    DirtyViewsUnderBox();
   }
 
   ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
-  foregroundList->AddRect(ImVec2(_pos), ImVec2(_size), ImColor(255,128,128,255));
+  foregroundList->AddRect(ImVec2(_pos), ImVec2(_pos+_size), ImColor(255,128,128,255));
   
   ImGui::PopFont();
   ImGui::PopStyleColor(3);

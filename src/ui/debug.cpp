@@ -11,6 +11,16 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags DebugUI::_flags =
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoScrollWithMouse |
+  ImGuiWindowFlags_NoScrollbar;
+
 DebugUI::DebugUI(View* parent)
   : HeadedUI(parent, "Debug")
 {
@@ -22,18 +32,13 @@ DebugUI::~DebugUI()
 
 bool DebugUI::Draw()
 {
-  bool opened;
-  int flags = 0;
-  flags |= ImGuiWindowFlags_NoResize;
-  flags |= ImGuiWindowFlags_NoTitleBar;
-  flags |= ImGuiWindowFlags_NoMove;
-  
+  const pxr::GfVec2f min(GetX(), GetY());
+  const pxr::GfVec2f size(GetWidth(), GetHeight());
 
-  ImGui::Begin(_name.c_str(), &opened, flags);
- 
+  ImGui::Begin(_name.c_str(), NULL, _flags);
+  ImGui::SetWindowPos(min);
+  ImGui::SetWindowSize(size);
 
-  ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
-  ImGui::SetWindowPos(_parent->GetMin());
   ImGuiIO& io = ImGui::GetIO();
   ImGui::Text("Keys pressed:");
   for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++)

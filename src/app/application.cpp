@@ -28,6 +28,7 @@
 #include "../ui/graphEditor.h"
 #include "../ui/timeline.h"
 #include "../ui/dummy.h"
+#include "../ui/demo.h"
 #include "../ui/toolbar.h"
 #include "../ui/explorer.h"
 #include "../ui/layers.h"
@@ -416,7 +417,8 @@ Application::Init()
   _explorer = new ExplorerUI(explorerView);
   _layers =  new LayersUI(layersView);
   //new LayerHierarchyUI(layersView, "fuck");
-  _property = new PropertyUI(propertyView, "Property");
+  //_property = new PropertyUI(propertyView, "Property");
+  new DemoUI(propertyView);
 
   //_stage = TestAnimXFromFile(filename, editor);
   pxr::UsdStageRefPtr stage = TestAnimX(editor);

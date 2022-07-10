@@ -18,6 +18,7 @@ add_executable(${TARGET}
   utils/shaders.cpp
   utils/icons.cpp
   ui/ui.cpp
+  ui/demo.cpp
   ui/debug.cpp
   ui/textFilter.cpp
   ui/utils.cpp

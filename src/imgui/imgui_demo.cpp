@@ -342,6 +342,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
     if (unsaved_document)   window_flags |= ImGuiWindowFlags_UnsavedDocument;
     if (no_close)           p_open = NULL; // Don't pass our bool* to Begin
 
+    /*
     // We specify a default position/size in case there's no data in the .ini file.
     // We only do it to make the demo applications a little more welcoming, but typically this isn't required.
     const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
@@ -355,6 +356,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
         ImGui::End();
         return;
     }
+    */
 
     // Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
 
@@ -548,7 +550,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
 
     // End of ShowDemoWindow()
     ImGui::PopItemWidth();
-    ImGui::End();
+    //ImGui::End();
 }
 
 static void ShowDemoWindowWidgets()

@@ -520,10 +520,8 @@ Window::GetUserData(GLFWwindow* window)
 void
 Window::SetGLContext()
 {
-  //if (glfwGetCurrentContext() != _window) {
-    glfwMakeContextCurrent(_window);
-    ImGui::SetCurrentContext(_context);
-  //}
+  glfwMakeContextCurrent(_window);
+  ImGui::SetCurrentContext(_context);
 }
 
 // draw
@@ -661,9 +659,9 @@ void Window::MainLoop()
 {
   glfwSwapInterval(1);
   while(!glfwWindowShouldClose(_window)) {
-    glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
+    //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
     //glfwPollEvents();
-    //glfwWaitEvents();
+    glfwWaitEvents();
     _app->Update();
     // main window
     Draw();

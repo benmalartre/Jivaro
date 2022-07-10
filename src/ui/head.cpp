@@ -6,6 +6,7 @@
 #include "../ui/viewport.h"
 #include "../ui/graphEditor.h"
 #include "../ui/debug.h"
+#include "../ui/demo.h"
 
 #include "../app/view.h"
 #include "../app/window.h"
@@ -56,6 +57,9 @@ ViewHead::CreateChild(UIType type)
   case UIType::DEBUG:
     new DebugUI(_parent);
     break;
+  case UIType::DEMO:
+    new DemoUI(_parent);
+    break;
   }
 }
 
@@ -85,7 +89,7 @@ ViewHead::Draw()
 {
   ImGuiStyle& style = ImGui::GetStyle();
   const pxr::GfVec2f min(_parent->GetMin());
-  const pxr::GfVec2f size(_parent->GetWidth(), VIEW_HEAD_HEIGHT + 2 * style.FramePadding.y);
+  const pxr::GfVec2f size(_parent->GetWidth(), VIEW_HEAD_HEIGHT);
   static bool open;
 
   ImGui::Begin(("##" + _name).c_str(), &open, ViewHead::_flags);
@@ -94,13 +98,14 @@ ViewHead::Draw()
   ImGui::PushFont(_parent->GetWindow()->GetMediumFont(1));
 
   const ImVec4* colors = style.Colors;
-  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  
   drawList->AddRectFilled(
     min,
     min + size,
-    ImColor(BACKGROUND_COLOR)
+    ImColor(style.Colors[ImGuiCol_FrameBgHovered])
   );
-  /*
+ /*
   drawList->AddRectFilled(
     min + pxr::GfVec2f(0, size[1] - 4),
     min + size - pxr::GfVec2f(0, 2),
@@ -208,7 +213,7 @@ int HeadedUI::GetX()
 int HeadedUI::GetY()
 {
   ImGuiStyle& style = ImGui::GetStyle();
-  return (_parent->GetMin()[1] + (VIEW_HEAD_HEIGHT + 2* style.FramePadding.y)) - 1;
+  return (_parent->GetMin()[1] + (VIEW_HEAD_HEIGHT)) - 1;
 }
 
 int HeadedUI::GetWidth()
@@ -219,7 +224,7 @@ int HeadedUI::GetWidth()
 int HeadedUI::GetHeight()
 {
   ImGuiStyle& style = ImGui::GetStyle();
-  return (_parent->GetHeight() - (VIEW_HEAD_HEIGHT + 2 * style.FramePadding.y)) + 2;
+  return (_parent->GetHeight() - (VIEW_HEAD_HEIGHT)) + 2;
 }
 
 // mouse positon relative to the view
