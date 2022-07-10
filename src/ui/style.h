@@ -58,8 +58,8 @@ static void SetStyle(ImGuiStyle* dst)
   colors[ImGuiCol_CheckMark] = ImVec4(0.184f, 0.407f, 0.193f, 1.00f);
   colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
   colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-  colors[ImGuiCol_Button] = ImVec4(0.1f, 0.1f, 0.1f, 1.f); 
-  colors[ImGuiCol_ButtonHovered] = ImVec4(0.5f, 0.5f, 0.5f, 1.f);
+  colors[ImGuiCol_Button] = ImVec4(0.35f, 0.35f, 0.35f, 1.f);
+  colors[ImGuiCol_ButtonHovered] = ImVec4(0.4f, 0.4f, 0.4f, 1.f);
   colors[ImGuiCol_ButtonActive] = ImVec4(0.9f, 0.9f, 0.9f, 1.f); 
   colors[ImGuiCol_Header] = ImVec4(0.35f, 0.35f, 0.35f, 0.25f);
   colors[ImGuiCol_HeaderHovered] = ImVec4(0.35f, 0.35f, 0.35f, 0.5f);

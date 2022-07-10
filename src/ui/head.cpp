@@ -92,7 +92,7 @@ ViewHead::RemoveChild(BaseUI* child)
   }
 }
 
-void
+bool
 ViewHead::Draw()
 {
 
@@ -151,10 +151,6 @@ ViewHead::Draw()
       ImGui::EndPopup();
     }
 
-    if (ImGui::TabItemButton(" x ", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
-      std::cout << "DELETE CURRENT TAB ITEM" << std::endl;
-    }
-
     // Submit our regular tabs
     for (int n = 0; n < _childrens.size(); ++n)
     {
@@ -171,11 +167,17 @@ ViewHead::Draw()
         ImGui::EndTabItem();
       }
     }
+
+    if (ImGui::TabItemButton(" x ", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
+      std::cout << "DELETE CURRENT TAB ITEM" << std::endl;
+    }
+
     ImGui::EndTabBar();
   }
 
   ImGui::PopFont();
   ImGui::End();
+  return _invade;
 }
 
 void ViewHead::MouseMove(int x, int y)

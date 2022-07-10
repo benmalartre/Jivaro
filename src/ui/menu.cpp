@@ -222,9 +222,9 @@ MenuUI::MenuUI(View* parent)
   MenuUI::Item& testItem = AddItem("Test", "", false, true);
   testItem.AddItem(this, "CreatePrim", "CTRL+P", false, true, (MenuUI::PressedFunc)&CreatePrimCallback);
   MenuUI::Item& subItem = testItem.AddItem(this, "SubMenu", "", false, true);
-  subItem.AddItem(this, "Sub0", "", false, true);
-  subItem.AddItem(this, "Sub1", "", false, true);
-  subItem.AddItem(this, "Sub2", "", false, true);
+  subItem.AddItem(&subItem, "Sub0", "", false, true);
+  subItem.AddItem(&subItem, "Sub1", "", false, true);
+  subItem.AddItem(&subItem, "Sub2", "", false, true);
 
   MenuUI::Item& demoItem = AddItem("Demo", "", false, true);
   demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuUI::PressedFunc)&OpenDemoCallback);
@@ -251,7 +251,7 @@ void MenuUI::DirtyViewsUnderBox()
     _size = _current->ComputeSize();
     _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
   } else {
-    _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0, 0), pxr::GfVec2i(256, 256));
+    _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0, 0), pxr::GfVec2i(GetWidth(), 256));
   }
    _parent->SetDirty();
 }
@@ -286,9 +286,7 @@ bool MenuUI::Draw()
   }
 
   bool dirty = _current /*|| ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked()*/;
- // if (dirty) {
-    DirtyViewsUnderBox();
-  //}
+  if (dirty) {DirtyViewsUnderBox();}
 
   ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
   foregroundList->AddRect(ImVec2(_pos), ImVec2(_pos+_size), ImColor(255,128,128,255));

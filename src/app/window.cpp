@@ -658,8 +658,8 @@ void Window::MainLoop()
 {
   glfwSwapInterval(1);
   while(!glfwWindowShouldClose(_window)) {
-    glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
-    //glfwPollEvents();
+    //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
+    glfwPollEvents();
     //glfwWaitEvents();
     _app->Update();
     // main window

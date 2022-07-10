@@ -32,7 +32,7 @@ public:
   // overrides
   //void MouseButton(int action, int button, int mods) override {};
   //void MouseMove(int x, int y) override {};
-  void Draw();
+  bool Draw();
   void MouseMove(int x, int y);
   void MouseButton(int button, int action, int mods);
 

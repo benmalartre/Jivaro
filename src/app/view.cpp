@@ -96,10 +96,11 @@ View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
   return !boxRange.IsOutside(viewRange);
 }
 
-void
+bool
 View::DrawHead()
 {
-  if (_head) _head->Draw();
+  if (_head) return (_head->Draw());
+  return false;
 }
 
 void 
@@ -110,12 +111,13 @@ View::Draw(bool forceRedraw)
     if (_right)_right->Draw(forceRedraw);
   }
   else {
-    DrawHead();
-    Time& time = GetApplication()->GetTime();
-    if (_content && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-      //std::cout << "DARW " << _content->GetName() << std::endl;
-      if (!_content->Draw() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
-        SetClean();
+    if (!DrawHead()) {
+      Time& time = GetApplication()->GetTime();
+      if (_content && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+        //std::cout << "DARW " << _content->GetName() << std::endl;
+        if (!_content->Draw() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
+          SetClean();
+        }
       }
     }
   }
@@ -156,7 +158,7 @@ View::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (_head) {
     const float relativeY = y - GetY();
-    if (relativeY > 0 && relativeY < GetHeadHeight()) {
+    if (relativeY > 0 && relativeY < GetHeadHeight() * 2) {
       _head->MouseButton(button, action, mods);
     } else {
       if (_content && !GetFlag(DISCARDMOUSEBUTTON)) {
@@ -481,7 +483,8 @@ void View::SetClean()
 void View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 3;
+  _buffered = 7;
+  _buffered = 7;
 }
 
 void View::SetInteracting(bool value) 

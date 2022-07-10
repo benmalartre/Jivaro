@@ -80,7 +80,7 @@ public:
   bool Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   
   // callbacks
-  void DrawHead();
+  bool DrawHead();
   virtual void Draw(bool forceRedraw);
   virtual void Resize(int x, int y, int width, int height, bool rationalize=false);
   virtual void MouseMove(int x, int y);
