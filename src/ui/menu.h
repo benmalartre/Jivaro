@@ -14,34 +14,40 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Command;
-class MenuUI;
-// callback prototype
-typedef void(*MenuPressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
-
-struct MenuItem {
-  MenuUI*                     ui;
-  std::string                 label;
-  std::string                 shortcut;
-  bool                        selected;
-  bool                        enabled;
-
-  std::vector<MenuItem>       items;
-  pxr::VtArray<pxr::VtValue>  args;
-  MenuPressedFunc             func;
-
-  MenuItem(MenuUI* ui, const std::string lbl, const std::string sht, bool sel,
-    bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
-  MenuItem& AddItem(MenuUI* ui, const std::string lbl, const std::string sht, bool sel,
-    bool enb, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
-
-  void Draw();
-  pxr::GfVec2i GetSize();
-  pxr::GfVec2i GetPos();
-  
-};
 
 class MenuUI : public BaseUI
 {
+public:
+  // callback prototype
+  typedef void(*PressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
+
+  struct Item {
+    MenuUI*                     ui;
+    Item*                       parent;
+    std::string                 label;
+    std::string                 shortcut;
+    bool                        selected;
+    bool                        enabled;
+
+    std::vector<Item>           items;
+    pxr::VtArray<pxr::VtValue>  args;
+    PressedFunc                 func;
+
+    Item(MenuUI* ui, const std::string lbl, const std::string sht, bool sel,
+      bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
+    Item& AddItem(MenuUI* ui, const std::string lbl, const std::string sht, bool sel,
+      bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
+    Item(Item* parent, const std::string lbl, const std::string sht, bool sel,
+      bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
+    Item& AddItem(Item* parent, const std::string lbl, const std::string sht, bool sel,
+      bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
+
+    void Draw();
+    pxr::GfVec2i ComputeSize();
+    pxr::GfVec2i ComputePos();
+
+  };
+
 public:
   MenuUI(View* parent);
   ~MenuUI();
@@ -49,14 +55,13 @@ public:
   bool Draw() override;
   void DirtyViewsUnderBox();
 
-  MenuItem& AddItem(const std::string label, const std::string shortcut, bool selected,
-    bool enabled, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
+  Item& AddItem(const std::string label, const std::string shortcut, bool selected,
+    bool enabled, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
 
-  friend MenuItem;
 
 private:
-  std::vector<MenuItem>   _items;
-  MenuItem*               _current;
+  std::vector<Item>       _items;
+  Item*                   _current;
   static ImGuiWindowFlags _flags;
   pxr::GfVec2i            _pos;
   pxr::GfVec2i            _size;

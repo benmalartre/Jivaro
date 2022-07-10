@@ -134,8 +134,8 @@ ViewHead::Draw()
   {
     const std::string popupName = _name + "Popup";
     if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
+      ImGui::SetCursorPos(min);
       ImGui::OpenPopup(popupName.c_str());
-      std::cout << "OPOPUP OPEND" << std::endl;
       _invade = true;
     }
     if (ImGui::BeginPopup(popupName.c_str()))

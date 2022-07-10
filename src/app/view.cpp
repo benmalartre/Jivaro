@@ -481,7 +481,7 @@ void View::SetClean()
 void View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 5;
+  _buffered = 3;
 }
 
 void View::SetInteracting(bool value) 

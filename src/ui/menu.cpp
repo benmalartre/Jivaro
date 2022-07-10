@@ -31,37 +31,47 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoBackground |
   ImGuiWindowFlags_NoScrollbar;
 
-MenuItem::MenuItem(MenuUI* ui, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
-  : ui(ui), label(lbl), shortcut(sht), selected(sel), func(f), args(a)
+MenuUI::Item::Item(MenuUI* ui, const std::string lbl, const std::string sht,
+  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
+  : ui(ui), label(lbl), shortcut(sht), selected(sel), func(f), args(a), parent(NULL)
 {
 }
 
-MenuItem& MenuItem::AddItem(MenuUI* ui, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuPressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
+MenuUI::Item& MenuUI::Item::AddItem(MenuUI* ui, const std::string lbl, const std::string sht,
+  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
 {
-  items.push_back(MenuItem(ui, lbl, sht, sel, enb, f, a));
+  items.push_back(MenuUI::Item(ui, lbl, sht, sel, enb, f, a));
   return items.back();
 }
 
-pxr::GfVec2i MenuItem::GetSize()
+MenuUI::Item::Item(MenuUI::Item* parent, const std::string lbl, const std::string sht,
+  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
+  : ui(parent->ui), label(lbl), shortcut(sht), selected(sel), func(f), args(a), parent(parent)
+{
+}
+
+MenuUI::Item& MenuUI::Item::AddItem(MenuUI::Item* parent, const std::string lbl, const std::string sht,
+  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
+{
+  items.push_back(MenuUI::Item(parent, lbl, sht, sel, enb, f, a));
+  return items.back();
+}
+
+pxr::GfVec2i MenuUI::Item::ComputeSize()
 {
   ImVec2 size(0, 0);
   ImGuiStyle& style = ImGui::GetStyle();
-  std::cout << "MENU ITEM GET SIZE ..." << std::endl;
   for (const auto& item : items) {
-    std::cout << "ITEM : " << item.label << std::endl;
     ImVec2 labelSize = ImGui::CalcTextSize(item.label.c_str());
     ImVec2 shortcutSize = ImGui::CalcTextSize(item.shortcut.c_str());
     ImVec2 cur(labelSize[0] + shortcutSize[0] + 2 * style.FramePadding[0], labelSize[1]);
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
   }
-  std::cout << "MENU ITEM SIZE : " << size[0] << "," << size[1] << std::endl;
   return pxr::GfVec2i(size[0], size[1]);
 }
 
-pxr::GfVec2i MenuItem::GetPos()
+pxr::GfVec2i MenuUI::Item::ComputePos()
 {
   ImGuiStyle& style = ImGui::GetStyle();
   View* view = ui->GetView();
@@ -74,7 +84,7 @@ pxr::GfVec2i MenuItem::GetPos()
   return pos;
 }
 
-void MenuItem::Draw()
+void MenuUI::Item::Draw()
 {
   View* view = ui->GetView();
   Window* window = view->GetWindow();
@@ -204,20 +214,20 @@ MenuUI::MenuUI(View* parent)
   , _current(NULL)
 {
   pxr::VtArray < pxr::VtValue > args;
-  MenuItem& fileMenu = AddItem("File", "", false, true);
-  fileMenu.AddItem(this, "Open", "Ctrl+O", false, true, (MenuPressedFunc)&OpenFileCallback);
-  fileMenu.AddItem(this, "Save", "Ctrl+S", false, true, (MenuPressedFunc)&SaveFileCallback);
-  fileMenu.AddItem(this, "New", "Ctrl+N", false, true, (MenuPressedFunc)&NewFileCallback);
+  MenuUI::Item& fileMenu = AddItem("File", "", false, true);
+  fileMenu.AddItem(this, "Open", "Ctrl+O", false, true, (MenuUI::PressedFunc)&OpenFileCallback);
+  fileMenu.AddItem(this, "Save", "Ctrl+S", false, true, (MenuUI::PressedFunc)&SaveFileCallback);
+  fileMenu.AddItem(this, "New", "Ctrl+N", false, true, (MenuUI::PressedFunc)&NewFileCallback);
  
-  MenuItem& testItem = AddItem("Test", "", false, true);
-  testItem.AddItem(this, "CreatePrim", "CTRL+P", false, true, (MenuPressedFunc)&CreatePrimCallback);
-  MenuItem& subItem = testItem.AddItem(this, "SubMenu", "", false, true);
+  MenuUI::Item& testItem = AddItem("Test", "", false, true);
+  testItem.AddItem(this, "CreatePrim", "CTRL+P", false, true, (MenuUI::PressedFunc)&CreatePrimCallback);
+  MenuUI::Item& subItem = testItem.AddItem(this, "SubMenu", "", false, true);
   subItem.AddItem(this, "Sub0", "", false, true);
   subItem.AddItem(this, "Sub1", "", false, true);
   subItem.AddItem(this, "Sub2", "", false, true);
 
-  MenuItem& demoItem = AddItem("Demo", "", false, true);
-  demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuPressedFunc)&OpenDemoCallback);
+  MenuUI::Item& demoItem = AddItem("Demo", "", false, true);
+  demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuUI::PressedFunc)&OpenDemoCallback);
 
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
@@ -227,18 +237,18 @@ MenuUI::~MenuUI()
 {
 }
 
-MenuItem& MenuUI::AddItem(const std::string label, const std::string shortcut,
-  bool selected, bool enabled, MenuPressedFunc func, const pxr::VtArray<pxr::VtValue> a)
+MenuUI::Item& MenuUI::AddItem(const std::string label, const std::string shortcut,
+  bool selected, bool enabled, MenuUI::PressedFunc func, const pxr::VtArray<pxr::VtValue> a)
 {
-  _items.push_back(MenuItem(this, label, shortcut, selected, enabled, func, a));
+  _items.push_back(MenuUI::Item(this, label, shortcut, selected, enabled, func, a));
   return _items.back();
 }
 
 void MenuUI::DirtyViewsUnderBox()
 {
   if (_current) {
-    _pos = _current->GetPos();
-    _size = _current->GetSize();
+    _pos = _current->ComputePos();
+    _size = _current->ComputeSize();
     _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
   } else {
     _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0, 0), pxr::GfVec2i(256, 256));
