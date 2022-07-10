@@ -35,7 +35,7 @@ add_executable(${TARGET}
   ui/layers.cpp
   ui/layerHierarchy.cpp
   ui/explorer.cpp
-  ui/property.cpp
+  ui/propertyEditor.cpp
   ui/curveEditor.cpp
   #embree/oiio.cpp
   #embree/jpeg.cpp

@@ -166,6 +166,7 @@ void FileBrowserUI::_DrawPath()
 
 bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
 {
+  const ImGuiStyle& style = ImGui::GetStyle();
   bool selected = false;
   const EntryInfo& info = _entries[idx];
   if(info.path == "" || info.path == "." || (!_showHiddenFiles && info.isHidden)) return false;
@@ -193,19 +194,19 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
     drawList->AddRectFilled(
       { 0, pos.y },
       { width, pos.y + FILEBROWSER_LINE_HEIGHT },
-      ImColor(HIGHLIGHTED_COLOR));
+      ImColor(style.Colors[ImGuiCol_ButtonActive]));
   }
   else {
     if (flip)
       drawList->AddRectFilled(
         { 0, pos.y },
         { width, pos.y + FILEBROWSER_LINE_HEIGHT },
-        ImColor(BACKGROUND_COLOR));
+        ImColor(style.Colors[ImGuiCol_WindowBg]));
     else
       drawList->AddRectFilled(
         { 0, pos.y },
         { width, pos.y + FILEBROWSER_LINE_HEIGHT },
-        ImColor(ALTERNATE_COLOR));
+        ImColor(style.Colors[ImGuiCol_ChildBg]));
   }
   
   ImGui::SameLine();

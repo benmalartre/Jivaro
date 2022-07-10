@@ -161,8 +161,8 @@ UIUtils::AddCheckableIconButton(ImGuiID id, Icon* icon, short state, FuncT func,
   ImVec4* colors = style->Colors;
   const bool active = (state == ICON_SELECTED);
   if(active) {
-    ImGui::PushStyleColor(ImGuiCol_Button, BUTTON_ACTIVE_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, BUTTON_ACTIVE_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
   }
   
   ImGui::PushID(id);

@@ -151,95 +151,31 @@ ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
 }
 
-/*
-void 
-ExplorerUI::Update()
-{
-  if (GetApplication()->GetStage()) {
-    RecurseStage();
-  }
-}
-
-void
-ExplorerUI::Select()
-{
-  Selection* selection = GetApplication()->GetSelection();
-  const size_t selectionHash = selection->GetHash();
-
-  if (_selectionHash != selectionHash) {
-    if (GetApplication()->GetStage()) {
-      for (auto& item : _map) {
-        BITMASK_CLEAR(item.second->flags, ExplorerUI::Item::SELECTED);
-      }
-      for (auto& selected : selection->GetItems()) {
-        if (_map.find(selected.path) != _map.end()) {
-          BITMASK_SET(_map[selected.path]->flags, ExplorerUI::Item::SELECTED);
-        }
-      }
-    }
-    _selectionHash = selectionHash;
-  }
-}
-
-void 
-ExplorerUI::DrawItemBackground(ImDrawList* drawList,
-  ExplorerUI::Item* item, bool& flip)
-{
-  ImVec2 pos = ImGui::GetCursorPos();
-  const float width = (float)GetWidth();
-  if (BITMASK_CHECK(item->flags, ExplorerUI::Item::SELECTED)) {
-    drawList->AddRectFilled(
-      { pos.x, pos.y },
-      { pos.x + width, pos.y + EXPLORER_LINE_HEIGHT },
-      ImColor(SELECTED_COLOR));
-  }
-  else {
-    if (flip)
-      drawList->AddRectFilled(
-        { pos.x, pos.y },
-        { pos.x + width, pos.y + EXPLORER_LINE_HEIGHT },
-        ImColor(BACKGROUND_COLOR));
-    else
-      drawList->AddRectFilled(
-        { pos.x, pos.y },
-        { pos.x + width, pos.y + EXPLORER_LINE_HEIGHT },
-        ImColor(ALTERNATE_COLOR));
-  }
-
-  ImGui::SetCursorPos(ImVec2(pos.x, pos.y + EXPLORER_LINE_HEIGHT));
-  if (BITMASK_CHECK(item->flags, ExplorerUI::Item::EXPANDED)) {
-    for (auto child : item->items) {
-      flip = !flip;
-      DrawItemBackground(drawList, &child, flip);
-    }
-  }
-}
-*/
 void
 ExplorerUI::DrawItemBackground(ImDrawList* drawList,
   bool selected, bool& flip)
 {
+  const ImGuiStyle& style = ImGui::GetStyle();
   ImVec2 pos = ImGui::GetCursorPos();
-  const auto& style = ImGui::GetStyle();
   const float width = (float)GetWidth();
   const float height = ImGui::GetTextLineHeight() + style.FramePadding.y * 2 + style.ItemInnerSpacing.y;
   if (selected) {
     drawList->AddRectFilled(
       { pos.x, pos.y },
       { pos.x + width, pos.y + height },
-      ImColor(SELECTED_COLOR));
+      ImColor(style.Colors[ImGuiCol_ButtonActive]));
   }
   else {
     if (flip)
       drawList->AddRectFilled(
         { pos.x, pos.y },
         { pos.x + width, pos.y + height },
-        ImColor(BACKGROUND_COLOR));
+        ImColor(style.Colors[ImGuiCol_WindowBg]));
     else
       drawList->AddRectFilled(
         { pos.x, pos.y },
         { pos.x + width, pos.y + height },
-        ImColor(ALTERNATE_COLOR));
+        ImColor(style.Colors[ImGuiCol_ChildBg]));
   }
   ImGui::SetCursorPos(ImVec2(pos.x, pos.y + height));
 }
@@ -447,6 +383,7 @@ ExplorerUI::Draw()
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  const ImGuiStyle& style = ImGui::GetStyle();
   if (!stage) return false;
 
   const pxr::GfVec2f min(GetX(), GetY());
@@ -459,7 +396,7 @@ ExplorerUI::Draw()
   _mapping = 0;
 
   ImDrawList* backgroundList = ImGui::GetBackgroundDrawList();
-  backgroundList->AddRectFilled(min, min + size, ImColor(BACKGROUND_COLOR));
+  backgroundList->AddRectFilled(min, min + size, ImColor(style.Colors[ImGuiCol_WindowBg]));
 
   const pxr::UsdPrim root = stage->GetPseudoRoot();
   pxr::SdfLayerHandle layer = stage->GetSessionLayer();

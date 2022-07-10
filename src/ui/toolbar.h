@@ -67,7 +67,7 @@ struct ToolbarButton : public ToolbarItem {
 class ToolbarUI : BaseUI
 {
 public:
-  ToolbarUI(View* parent, const std::string& name, bool vertical=false);
+  ToolbarUI(View* parent, bool vertical=false);
   ~ToolbarUI() override;
 
   void MouseButton(int action, int button, int mods) override {};

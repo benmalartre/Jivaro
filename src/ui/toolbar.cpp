@@ -111,8 +111,8 @@ bool ToolbarButton::Draw()
   return false;
 }
 
-ToolbarUI::ToolbarUI(View* parent, const std::string& name, bool vertical) 
-  : BaseUI(parent, name) 
+ToolbarUI::ToolbarUI(View* parent, bool vertical) 
+  : BaseUI(parent, UIType::TOOLBAR) 
   , _vertical(vertical)
 {
   /*

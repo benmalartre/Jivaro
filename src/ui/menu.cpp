@@ -236,19 +236,24 @@ MenuItem& MenuUI::AddItem(const std::string label, const std::string shortcut,
 
 void MenuUI::DirtyViewsUnderBox()
 {
-  _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0, 0), pxr::GfVec2i(256, 256));
-  _parent->SetDirty();
-  _pos = _current->GetPos();
-  _size = _current->GetSize();
+  if (_current) {
+    _pos = _current->GetPos();
+    _size = _current->GetSize();
+    _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
+  } else {
+    _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0, 0), pxr::GfVec2i(256, 256));
+  }
+   _parent->SetDirty();
 }
 
 // overrides
 bool MenuUI::Draw()
 {
+  const ImGuiStyle& style = ImGui::GetStyle();
   if (!_parent->IsActive())_current = NULL;
-  ImGui::PushStyleColor(ImGuiCol_Header, BACKGROUND_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ALTERNATE_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_HeaderActive, SELECTED_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
 
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
@@ -259,7 +264,7 @@ bool MenuUI::Draw()
   
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-  drawList->AddRectFilled(min, min + size, ImColor(BACKGROUND_COLOR));
+  drawList->AddRectFilled(min, min + size, ImColor(style.Colors[ImGuiCol_WindowBg]));
 
   ImGui::PushFont(GetWindow()->GetBoldFont(2));
   if (ImGui::BeginMainMenuBar())
@@ -271,9 +276,9 @@ bool MenuUI::Draw()
   }
 
   bool dirty = _current /*|| ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked()*/;
-  if (dirty) {
+ // if (dirty) {
     DirtyViewsUnderBox();
-  }
+  //}
 
   ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
   foregroundList->AddRect(ImVec2(_pos), ImVec2(_pos+_size), ImColor(255,128,128,255));

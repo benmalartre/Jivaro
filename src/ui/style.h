@@ -6,19 +6,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static ImVec4 BACKGROUND_COLOR(0.2f, 0.2f, 0.2f, 1.f);
-static ImVec4 ALTERNATE_COLOR(0.25f, 0.25f, 0.25f, 1.f);
-static ImVec4 SELECTED_COLOR(0.75f, 0.75f, 0.75f, 1.f);
-static ImVec4 HIGHLIGHTED_COLOR(0.4f, 0.4f, 0.4f, 1.f);
-static ImVec4 HOVERED_COLOR(0.75f, 0.75f, 0.75f, 1.f);
+
 static ImVec4 TRANSPARENT_COLOR(0.f, 0.f, 0.f, 0.f);
-static ImVec4 TRANSPARENT_HOVERED_COLOR(1.f, 1.f, 1.f, 0.1f);
-static ImVec4 BUTTON_COLOR(0.35f, 0.35f, 0.35f, 1.f);
-static ImVec4 BUTTON_HOVERED_COLOR(0.4f, 0.4f, 0.4f, 1.f);
-static ImVec4 BUTTON_ACTIVE_COLOR(0.9f, 0.9f, 0.9f, 1.f);
-static ImVec4 TEXT_DEFAULT_COLOR(0.9f, 0.9f, 0.9f, 1.f);
-static ImVec4 TEXT_SELECTED_COLOR(0.1f, 0.1f, 0.1f, 1.f);
-static ImVec4 TEXT_DISABLED_COLOR(0.5f, 0.5f, 0.5f, 1.f);
 
 static void SetStyle(ImGuiStyle* dst)
 {
@@ -69,9 +58,9 @@ static void SetStyle(ImGuiStyle* dst)
   colors[ImGuiCol_CheckMark] = ImVec4(0.184f, 0.407f, 0.193f, 1.00f);
   colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
   colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-  colors[ImGuiCol_Button] = BUTTON_COLOR;
-  colors[ImGuiCol_ButtonHovered] = BUTTON_HOVERED_COLOR;
-  colors[ImGuiCol_ButtonActive] = BUTTON_ACTIVE_COLOR;
+  colors[ImGuiCol_Button] = ImVec4(0.5f, 0.5f, 0.5f, 1.f);
+  colors[ImGuiCol_ButtonHovered] = ImVec4(0.1f, 0.1f, 0.1f, 1.f);
+  colors[ImGuiCol_ButtonActive] = ImVec4(0.9f, 0.9f, 0.9f, 1.f); 
   colors[ImGuiCol_Header] = ImVec4(0.35f, 0.35f, 0.35f, 0.25f);
   colors[ImGuiCol_HeaderHovered] = ImVec4(0.35f, 0.35f, 0.35f, 0.5f);
   colors[ImGuiCol_HeaderActive] = ImVec4(0.35f, 0.35f, 0.35f, 0.75f);

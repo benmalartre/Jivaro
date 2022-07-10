@@ -9,6 +9,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 // constructor
 BaseUI::BaseUI(View* parent, short type, bool popup)
   : _parent(parent) 
+  , _type(type)
   , _name(ComputeUniqueName(type))
   , _initialized(false)
   , _interacting(false)

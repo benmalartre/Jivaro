@@ -72,6 +72,7 @@ public:
   BaseUI* GetContent(){return _content;};
   ViewHead* GetHead() { return _head; };
   ViewHead* CreateHead();
+  float GetHeadHeight();
 
   // cursor
   void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);

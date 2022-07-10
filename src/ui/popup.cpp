@@ -164,7 +164,7 @@ bool
 ColorPopupUI::Draw()
 {
   bool opened;
-
+  const ImGuiStyle& style = ImGui::GetStyle();
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
   ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
@@ -174,7 +174,7 @@ ColorPopupUI::Draw()
   drawList->AddRectFilled(
     ImVec2(_x, _y),
     ImVec2(_x + _width, _y + _height),
-    ImColor(BACKGROUND_COLOR)
+    ImColor(style.Colors[ImGuiCol_WindowBg])
   );
 
   static ImGuiColorEditFlags picker_flags = 
@@ -239,8 +239,9 @@ NamePopupUI::Draw()
   ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
+  const ImGuiStyle& style = ImGui::GetStyle();
   drawList->AddRectFilled(
-    _parent->GetMin(), _parent->GetMax(), ImColor(ALTERNATE_COLOR));
+    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_WindowBg]));
 
   drawList = ImGui::GetForegroundDrawList();
 

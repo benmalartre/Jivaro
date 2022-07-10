@@ -27,6 +27,8 @@ public:
   void RemoveChild(BaseUI* child);
   void SetCurrentChild(int index);
 
+  float GetHeight() { return _height;};
+
   // overrides
   //void MouseButton(int action, int button, int mods) override {};
   //void MouseMove(int x, int y) override {};
@@ -45,7 +47,7 @@ private:
   std::vector<BaseUI*>    _childrens;
   bool                    _invade;
   std::string             _name;
-
+  float                   _height;
 };
 
 class HeadedUI : public BaseUI

@@ -32,7 +32,7 @@
 #include "../ui/explorer.h"
 #include "../ui/layers.h"
 #include "../ui/layerHierarchy.h"
-#include "../ui/property.h"
+#include "../ui/propertyEditor.h"
 #include "../ui/curveEditor.h"
 #include "../command/command.h"
 #include "../command/delegate.h"
@@ -407,12 +407,12 @@ Application::Init()
   _tools[_mainWindow] = Tool();
   _tools[_mainWindow].Init();
   
-  //GraphEditorUI* graph = new GraphEditorUI(graphView);
-  CurveEditorUI* editor = new CurveEditorUI(graphView);
+  GraphEditorUI* graph = new GraphEditorUI(graphView);
+  //CurveEditorUI* editor = new CurveEditorUI(graphView);
   _viewport = new ViewportUI(viewportView);
   _timeline = new TimelineUI(timelineView);
   MenuUI* menu = new MenuUI(topView);
-  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, "VerticalToolbar", true);
+  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
   _explorer = new ExplorerUI(explorerView);
   _layers =  new LayersUI(layersView);
   //new LayerHierarchyUI(layersView, "fuck");
@@ -420,7 +420,7 @@ Application::Init()
   new DemoUI(propertyView);
 
   //_stage = TestAnimXFromFile(filename, editor);
-  pxr::UsdStageRefPtr stage = TestAnimX(editor);
+  //pxr::UsdStageRefPtr stage = TestAnimX(editor);
   //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
 
   /*

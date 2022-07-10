@@ -156,6 +156,7 @@ DrawPrimSpecRow(pxr::SdfPrimSpecHandle primSpec, pxr::SdfPrimSpecHandle& selecte
 
 bool LayerHierarchyUI::Draw()
 {
+  const ImGuiStyle& style = ImGui::GetStyle();
   bool opened;
   int flags = 0;
   flags |= ImGuiWindowFlags_NoResize;
@@ -170,7 +171,7 @@ bool LayerHierarchyUI::Draw()
   drawList->AddRectFilled(
     ImVec2(_parent->GetMin()),
     ImVec2(_parent->GetSize()),
-    ImColor(BACKGROUND_COLOR)
+    ImColor(style.Colors[ImGuiCol_WindowBg])
   );
 
   _layer = GetApplication()->GetWorkStage()->GetRootLayer();

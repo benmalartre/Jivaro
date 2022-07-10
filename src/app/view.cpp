@@ -144,6 +144,11 @@ View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& out
   outY = inY - y;
 }
 
+float View::GetHeadHeight() {
+  if (_head)return _head->GetHeight();
+  else return 0.f;
+}
+
 void 
 View::MouseButton(int button, int action, int mods)
 {
@@ -151,7 +156,7 @@ View::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (_head) {
     const float relativeY = y - GetY();
-    if (relativeY > 0 && relativeY < VIEW_HEAD_HEIGHT) {
+    if (relativeY > 0 && relativeY < GetHeadHeight()) {
       _head->MouseButton(button, action, mods);
     } else {
       if (_content && !GetFlag(DISCARDMOUSEBUTTON)) {
@@ -171,7 +176,7 @@ void
 View::MouseMove(int x, int y)
 {
   if (_head) {
-    if ((y - GetY()) < VIEW_HEAD_HEIGHT) {
+    if ((y - GetY()) < GetHeadHeight()) {
       if (GetFlag(View::INTERACTING) && _content)_content->MouseMove(x, y);
       else _head->MouseMove(x, y);
     } else {
@@ -476,7 +481,7 @@ void View::SetClean()
 void View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 3;
+  _buffered = 5;
 }
 
 void View::SetInteracting(bool value) 

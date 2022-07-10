@@ -5,6 +5,8 @@
 #include "../ui/head.h"
 #include "../ui/viewport.h"
 #include "../ui/graphEditor.h"
+#include "../ui/propertyEditor.h"
+#include "../ui/curveEditor.h"
 #include "../ui/debug.h"
 #include "../ui/demo.h"
 
@@ -54,11 +56,17 @@ ViewHead::CreateChild(UIType type)
   case UIType::GRAPHEDITOR:
     new GraphEditorUI(_parent);
     break;
+  case UIType::CURVEEDITOR:
+    new CurveEditorUI(_parent);
+    break;
   case UIType::DEBUG:
     new DebugUI(_parent);
     break;
   case UIType::DEMO:
     new DemoUI(_parent);
+    break;
+  case UIType::PROPERTYEDITOR:
+    new PropertyUI(_parent);
     break;
   }
 }
@@ -87,15 +95,18 @@ ViewHead::RemoveChild(BaseUI* child)
 void
 ViewHead::Draw()
 {
+
   ImGuiStyle& style = ImGui::GetStyle();
   const pxr::GfVec2f min(_parent->GetMin());
-  const pxr::GfVec2f size(_parent->GetWidth(), VIEW_HEAD_HEIGHT);
+  const pxr::GfVec2f size(_parent->GetWidth(), GetHeight());
   static bool open;
 
   ImGui::Begin(("##" + _name).c_str(), &open, ViewHead::_flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
   ImGui::PushFont(_parent->GetWindow()->GetMediumFont(1));
+
+  _height = ImGui::GetTextLineHeight() + style.FramePadding[1] * 2 + style.WindowPadding[1];
 
   const ImVec4* colors = style.Colors;
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -124,6 +135,7 @@ ViewHead::Draw()
     const std::string popupName = _name + "Popup";
     if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
       ImGui::OpenPopup(popupName.c_str());
+      std::cout << "OPOPUP OPEND" << std::endl;
       _invade = true;
     }
     if (ImGui::BeginPopup(popupName.c_str()))
@@ -207,7 +219,11 @@ int HeadedUI::GetX()
 int HeadedUI::GetY()
 {
   ImGuiStyle& style = ImGui::GetStyle();
-  return (_parent->GetMin()[1] + (VIEW_HEAD_HEIGHT)) - 1;
+  if (_head) {
+    return (_parent->GetMin()[1] + _head->GetHeight()) - 1;
+  } else {
+    return (_parent->GetMin()[1]) - 1;
+  }
 }
 
 int HeadedUI::GetWidth()
@@ -218,7 +234,11 @@ int HeadedUI::GetWidth()
 int HeadedUI::GetHeight()
 {
   ImGuiStyle& style = ImGui::GetStyle();
-  return (_parent->GetHeight() - (VIEW_HEAD_HEIGHT)) + 2;
+  if (_head) {
+    return (_parent->GetHeight() - _head->GetHeight()) + 2;
+  } else {
+    return _parent->GetHeight() + 2;
+  }
 }
 
 // mouse positon relative to the view
@@ -227,7 +247,8 @@ void HeadedUI::GetRelativeMousePosition(const float inX, const float inY,
 {
   pxr::GfVec2f parentPosition = _parent->GetMin();
   float parentX = parentPosition[0];
-  float parentY = parentPosition[1] + VIEW_HEAD_HEIGHT;
+  float parentY = parentPosition[1];
+  if(_head) parentY += _head->GetHeight();
   outX = inX - parentX;
   outY = inY - parentY;
 }

@@ -3,7 +3,7 @@
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/curves.h>
 
-#include "../ui/property.h"
+#include "../ui/propertyEditor.h"
 #include "../ui/utils.h"
 #include "../app/view.h"
 #include "../app/window.h"
@@ -93,7 +93,7 @@ void _XXX_CALLBACK__(int index)
 }
 
 // TODO Share the code,
-static void DrawPropertyMiniButton(ImGuiID id=0, const ImVec4& color = ImVec4(BUTTON_ACTIVE_COLOR))
+static void DrawPropertyMiniButton(ImGuiID id=0)
 {
   Icon* icon = NULL;
   icon = &ICONS[ICON_SIZE_SMALL][ICON_OP];
@@ -232,6 +232,7 @@ void
 PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute, 
   const pxr::UsdTimeCode& currentTime) 
 {
+  const ImGuiStyle& style = ImGui::GetStyle();
   VtValue value;
   const bool hasValue = attribute.Get(&value, currentTime);
 
@@ -256,7 +257,7 @@ PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
         attribute.RemoveConnection(connection);
       }
       ImGui::SameLine();
-      ImGui::TextColored(TEXT_SELECTED_COLOR, " %s", 
+      ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], " %s", 
         connection.GetString().c_str());
       ImGui::PopID();
     }
