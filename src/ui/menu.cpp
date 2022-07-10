@@ -200,7 +200,7 @@ static void FlattenGeometryCallback()
 
 // constructor
 MenuUI::MenuUI(View* parent) 
-  : BaseUI(parent, "MainMenu")
+  : BaseUI(parent, UIType::MAINMENU)
   , _current(NULL)
 {
   pxr::VtArray < pxr::VtValue > args;

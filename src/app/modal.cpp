@@ -2,7 +2,7 @@
 #include "application.h"
 #include "window.h"
 #include "../ui/fileBrowser.h"
-#include "../ui/dummy.h"
+#include "../ui/demo.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -70,10 +70,10 @@ ModalFileBrowser::ModalFileBrowser(int x, int y, const std::string& title,
 
   switch(_mode) {
     case Mode::OPEN:
-      browser = new FileBrowserUI(view, _title, FileBrowserUI::Mode::OPEN);
+      browser = new FileBrowserUI(view, FileBrowserUI::Mode::OPEN);
       break;
     case Mode::SAVE:
-      browser = new FileBrowserUI(view, _title, FileBrowserUI::Mode::SAVE);
+      browser = new FileBrowserUI(view, FileBrowserUI::Mode::SAVE);
       break;
     case Mode::SELECT:
     case Mode::MULTI: 
@@ -115,7 +115,7 @@ ModalDemo::ModalDemo(int x, int y, const std::string& title)
 {
   BaseModal::Init();
   View* view = _window->GetMainView();
-  _ui = new DummyUI(view, title);
+  _ui = new DemoUI(view);
 }
 
 void ModalDemo::_LoopImpl()
@@ -131,7 +131,7 @@ ModalMenu::ModalMenu(int x, int y, const std::string& title)
 {
   BaseModal::Init();
   View* view = _window->GetMainView();
-  _ui = new DummyUI(view, title);
+  _ui = new DemoUI(view);
 }
 
 void ModalMenu::_LoopImpl()

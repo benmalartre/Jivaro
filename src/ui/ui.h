@@ -22,29 +22,39 @@ class Window;
 class Application;
 
 enum UIType {
+  MAINMENU,
   TIMELINE,
   TOOLBAR,
   FILEBROWSER,
+  POPUP,
+  SPLITTER,
   // headed uis
+  CONTENTBROWSER,
   VIEWPORT,
   EXPLORER,
-  PROPERTY,
+  PROPERTYEDITOR,
   CURVEEDITOR,
   GRAPHEDITOR,
+  LAYEREDITOR,
   DEBUG,
   DEMO,
   COUNT
 };
 
 static const char* UITypeName[UIType::COUNT] = {
+  "mainmenu",
   "timeline",
   "toolbar",
   "fileBrowser",
+  "popup",
+  "splitter",
+  "contentBrowser", 
   "viewport",
   "explorer",
-  "property",
+  "propertyEditor",
   "curveEditor",
   "graphEditor", 
+  "layereditor",
   "debug",
   "demo"
 };
@@ -56,8 +66,11 @@ class HeadUI;
 class BaseUI : public pxr::TfWeakBase
 {
 public:
-  BaseUI(View* parent, const std::string& name, bool popup=false);
+  BaseUI(View* parent, short type, bool popup=false);
   virtual ~BaseUI(){};
+
+  // get ui type
+  short GetType() { return _type; };
 
   // get parent window
   Window* GetWindow();
@@ -96,7 +109,7 @@ public:
   void AttachTooltip(const char* tooltip);
 
   // get unique name
-  std::string ComputeUniqueName(const std::string& baseName);
+  std::string ComputeUniqueName(short type);
 
   const std::string& GetName() const {return _name;};
 
@@ -117,6 +130,7 @@ public:
   virtual void OnAllNotices(const pxr::TfNotice& n);
   
 protected:
+  short                   _type;
   bool                    _initialized;
   bool                    _interacting;
   View*                   _parent;

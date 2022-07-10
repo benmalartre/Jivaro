@@ -19,7 +19,7 @@ ImGuiWindowFlags DemoUI::_flags =
 
 
 DemoUI::DemoUI(View* parent)
-  : HeadedUI(parent, "DemoXXX")
+  : HeadedUI(parent, UIType::DEMO)
 {
 }
 
@@ -29,12 +29,10 @@ DemoUI::~DemoUI()
 
 bool DemoUI::Draw()
 {
-  std::cout << "PARENT : " << _parent->GetName() << std::endl;
   static bool opened = false;
   const pxr::GfVec2f pos(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
-  std::cout << "DEMO POS " << pos << std::endl;
-  std::cout << "DEMO SIZE : " << size << std::endl;
+
   ImGui::Begin(_name.c_str(), &opened, _flags);
   ImGui::SetWindowSize(size);
   ImGui::SetWindowPos(pos);

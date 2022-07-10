@@ -5,8 +5,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-FileBrowserUI::FileBrowserUI(View* parent, const std::string& name, Mode mode)
-  : BaseUI(parent, name)
+FileBrowserUI::FileBrowserUI(View* parent, Mode mode)
+  : BaseUI(parent, UIType::FILEBROWSER)
   , _mode(mode)
   , _browsing(true)
   , _canceled(false)

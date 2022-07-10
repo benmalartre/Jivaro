@@ -24,7 +24,7 @@ ImGuiWindowFlags PopupUI::_flags =
 // Popup constructor
 //----------------------------------------------------------------------------
 PopupUI::PopupUI(int x, int y, int w, int h)
-  : BaseUI(NULL, "##popup_" + std::to_string(CurrentTime()), true)
+  : BaseUI(NULL, UIType::POPUP, true)
   , _x(x)
   , _y(y)
   , _width(w)

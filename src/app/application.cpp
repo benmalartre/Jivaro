@@ -27,7 +27,6 @@
 #include "../ui/menu.h"
 #include "../ui/graphEditor.h"
 #include "../ui/timeline.h"
-#include "../ui/dummy.h"
 #include "../ui/demo.h"
 #include "../ui/toolbar.h"
 #include "../ui/explorer.h"

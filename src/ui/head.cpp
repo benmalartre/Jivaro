@@ -105,13 +105,7 @@ ViewHead::Draw()
     min + size,
     ImColor(style.Colors[ImGuiCol_FrameBgHovered])
   );
- /*
-  drawList->AddRectFilled(
-    min + pxr::GfVec2f(0, size[1] - 4),
-    min + size - pxr::GfVec2f(0, 2),
-    ImColor(pxr::GfVec4f(0.1f, 0.1f, 0.1f, 0.5f))
-  );
-  */
+
   if (_parent->IsActive()) {
     drawList->AddRectFilled(
       min + pxr::GfVec2f(0, size[1] - 4),
@@ -153,7 +147,7 @@ ViewHead::Draw()
     for (int n = 0; n < _childrens.size(); ++n)
     {
       bool open = true;
-      const char* name = _childrens[n]->GetName().c_str();
+      const char* name = UITypeName[_childrens[n]->GetType()];
       if (ImGui::BeginTabItem(name, &open,
         ImGuiTabItemFlags_NoCloseButton | ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoPushId))
       {
@@ -192,8 +186,8 @@ ImGuiWindowFlags HeadedUI::_flags =
 
 
 // constructor
-HeadedUI::HeadedUI(View* parent, const std::string& name)
-  : BaseUI(parent, name)
+HeadedUI::HeadedUI(View* parent, short type)
+  : BaseUI(parent, type)
 {
   _head = _parent->GetHead();
   if (!_head) _head = _parent->CreateHead();

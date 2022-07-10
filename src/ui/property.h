@@ -14,7 +14,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class PropertyUI : public HeadedUI
 {
 public:
-  PropertyUI(View* parent, const std::string& name);
+  PropertyUI(View* parent);
   ~PropertyUI()         override;
 
   void SetPrim(const pxr::UsdPrim& prim);

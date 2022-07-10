@@ -3,7 +3,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-DummyUI::DummyUI(View* parent, const std::string& name):BaseUI(parent, name){}
+DummyUI::DummyUI(View* parent):BaseUI(parent, UIType::DUMMY){}
 
 DummyUI::~DummyUI(){}
 

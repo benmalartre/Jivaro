@@ -21,8 +21,8 @@ ImGuiWindowFlags PropertyUI::_flags =
   ImGuiWindowFlags_NoTitleBar |
   ImGuiWindowFlags_NoMove;
 
-PropertyUI::PropertyUI(View* parent, const std::string& name)
-  : HeadedUI(parent, name)
+PropertyUI::PropertyUI(View* parent)
+  : HeadedUI(parent, UIType::PROPERTYEDITOR)
   , _focused(-1)
 {
 }

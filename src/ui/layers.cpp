@@ -373,7 +373,7 @@ ImGuiWindowFlags LayersUI::_flags =
 
 
 LayersUI::LayersUI(View* parent) 
-  : BaseUI(parent, "layers")
+  : BaseUI(parent, UIType::LAYEREDITOR)
 {
 
 }

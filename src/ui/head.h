@@ -51,7 +51,7 @@ private:
 class HeadedUI : public BaseUI
 {
 public:
-  HeadedUI(View* parent, const std::string& name);
+  HeadedUI(View* parent, short type);
   ~HeadedUI();
 
   int GetX() override;

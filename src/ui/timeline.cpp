@@ -70,7 +70,7 @@ ImGuiWindowFlags TimelineUI::_flags =
 
 // constructor
 TimelineUI::TimelineUI(View* parent) 
-  : BaseUI(parent, "Timeline")
+  : BaseUI(parent, UIType::TIMELINE)
 {
   _parent->SetFlag(View::TIMEVARYING);
   _parent->SetDirty();

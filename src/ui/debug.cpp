@@ -22,7 +22,7 @@ ImGuiWindowFlags DebugUI::_flags =
   ImGuiWindowFlags_NoScrollbar;
 
 DebugUI::DebugUI(View* parent)
-  : HeadedUI(parent, "Debug")
+  : HeadedUI(parent, UIType::DEBUG)
 {
 }
 

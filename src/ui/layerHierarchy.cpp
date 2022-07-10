@@ -8,8 +8,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-LayerHierarchyUI::LayerHierarchyUI(View* parent, const std::string& name)
-  :HeadedUI(parent, name)
+LayerHierarchyUI::LayerHierarchyUI(View* parent)
+  :HeadedUI(parent, UIType::LAYEREDITOR)
 {
 }
 

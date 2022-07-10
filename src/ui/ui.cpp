@@ -7,9 +7,9 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 // constructor
-BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
+BaseUI::BaseUI(View* parent, short type, bool popup)
   : _parent(parent) 
-  , _name(ComputeUniqueName(name))
+  , _name(ComputeUniqueName(type))
   , _initialized(false)
   , _interacting(false)
 {
@@ -27,8 +27,9 @@ BaseUI::BaseUI(View* parent, const std::string& name, bool popup)
 };
 
 std::string 
-BaseUI::ComputeUniqueName(const std::string& baseName)
+BaseUI::ComputeUniqueName(short type)
 {
+  std::string baseName = UITypeName[type];
   if (UINameIndexMap.find(baseName) != UINameIndexMap.end()) {
     UINameIndexMap[baseName]++;
   }

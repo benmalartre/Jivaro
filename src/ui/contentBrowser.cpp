@@ -6,8 +6,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-ContentBrowserUI::ContentBrowserUI(View* parent, const std::string& name)
-  : BaseUI(parent, name)
+ContentBrowserUI::ContentBrowserUI(View* parent)
+  : BaseUI(parent, UIType::CONTENTBROWSER)
 {
 }
 

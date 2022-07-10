@@ -28,8 +28,8 @@ struct ContentBrowserOptions {
 class ContentBrowserUI : public BaseUI
 {
 public:
-  ContentBrowserUI(View* parent, const std::string& name);
-  ~ContentBrowserUI()         override;
+  ContentBrowserUI(View* parent);
+  ~ContentBrowserUI() override;
 
   void MouseButton(int action, int button, int mods) override{};
   void MouseMove(int x, int y) override{};

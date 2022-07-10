@@ -21,7 +21,7 @@ ImGuiWindowFlags SplitterUI::_flags =
   ImGuiWindowFlags_NoScrollbar;
 
 SplitterUI::SplitterUI()
-  : BaseUI(NULL, "Splitter")
+  : BaseUI(NULL, UIType::SPLITTER)
   , _hovered(NULL)
   , _pixels(NULL)
   , _valid(false)

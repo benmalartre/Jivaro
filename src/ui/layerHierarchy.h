@@ -13,7 +13,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class LayerHierarchyUI : public HeadedUI
 {
 public:
-  LayerHierarchyUI(View* parent, const std::string& name);
+  LayerHierarchyUI(View* parent);
   ~LayerHierarchyUI()         override;
 
   void MouseButton(int action, int button, int mods) override{};

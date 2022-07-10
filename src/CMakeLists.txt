@@ -27,7 +27,6 @@ add_executable(${TARGET}
   ui/contentBrowser.cpp
   ui/splitter.cpp
   ui/head.cpp
-  ui/dummy.cpp
   ui/menu.cpp
   ui/graphEditor.cpp
   ui/viewport.cpp

@@ -28,7 +28,7 @@ class CurveEditorUI : public BaseUI
 friend pxr::UsdAnimXData;
 public:
   CurveEditorUI(View* parent);
-  ~CurveEditorUI()         override;
+  ~CurveEditorUI() override;
 
   void MouseButton(int button, int action, int mods) override;
   void MouseMove(int x, int y) override;

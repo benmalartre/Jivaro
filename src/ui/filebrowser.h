@@ -21,7 +21,7 @@ public:
     MULTI
   };
 
-  FileBrowserUI(View* parent, const std::string& name, Mode mode);
+  FileBrowserUI(View* parent, Mode mode);
   ~FileBrowserUI()         override;
 
   void MouseButton(int action, int button, int mods) override{};
