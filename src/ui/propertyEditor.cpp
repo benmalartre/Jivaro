@@ -155,6 +155,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
         GetApplication()->AddCommand(std::shared_ptr<TranslateCommand>(
           new TranslateCommand(GetApplication()->GetWorkStage(), targets, time)));
       }
+
       // Rotation
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
@@ -408,7 +409,6 @@ PropertyUI::Draw()
   }
 
   ImGui::End();
-  return ImGui::IsAnyItemActive() || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemFocused();
   return ImGui::IsAnyItemActive() || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemFocused();
 };
   
