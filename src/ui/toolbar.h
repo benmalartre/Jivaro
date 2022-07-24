@@ -73,6 +73,7 @@ public:
   void MouseButton(int action, int button, int mods) override {};
   void MouseMove(int x, int y) override {};
   bool Draw() override;
+  void Update();
 
 private:
   bool                        _vertical;

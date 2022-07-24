@@ -42,7 +42,7 @@ public:
     Item& AddItem(Item* parent, const std::string lbl, const std::string sht, bool sel,
       bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
 
-    void Draw();
+    bool Draw();
     pxr::GfVec2i ComputeSize();
     pxr::GfVec2i ComputePos();
 
@@ -53,6 +53,7 @@ public:
   ~MenuUI();
 
   bool Draw() override;
+  void MouseButton(int button, int action, int mods) override;
   void DirtyViewsUnderBox();
 
   Item& AddItem(const std::string label, const std::string shortcut, bool selected,

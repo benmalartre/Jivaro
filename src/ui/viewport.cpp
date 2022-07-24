@@ -390,7 +390,7 @@ bool ViewportUI::Draw()
     _renderParams.showGuides = true;
     _renderParams.showRender = true;
     _renderParams.showProxy = true;
-    _renderParams.forceRefresh = false;
+    _renderParams.forceRefresh = true;
     _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
     _renderParams.gammaCorrectColors = false;
     _renderParams.enableIdRender = false;

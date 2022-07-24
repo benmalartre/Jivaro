@@ -52,6 +52,7 @@ static void OnBrushCallback()
 
 static void OnPlayCallback()
 {
+  _SetActiveTool(TOOL_NONE);
   GetApplication()->ToggleExec();
 }
 
@@ -87,13 +88,15 @@ bool ToolbarButton::Draw()
 {
   Window* window = ui->GetView()->GetWindow();
   //ImGui::PushFont(window->GetRegularFont(0));
-  
+  bool clicked = false;
   if(toggable) {
-    UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN>(
-      0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
+    if (UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN>(
+      0, icon, enabled ? ICON_SELECTED : ICON_DEFAULT, func)) {
+      enabled = 1 - enabled;
+    }
   } else {
-    UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-      1, icon, ICON_DEFAULT, func);
+    clicked = UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN>(
+      0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
   }
   //ImGui::PopFont();
 
@@ -101,8 +104,7 @@ bool ToolbarButton::Draw()
     ui->AttachTooltip(tooltip.c_str());
   }
     
- 
-  return false;
+  return clicked;
 }
 
 ToolbarUI::ToolbarUI(View* parent, bool vertical) 
@@ -111,42 +113,42 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
 {
   ToolbarItem* selectItem = new ToolbarButton(
     this, TOOL_SELECT, "Select", "Space","selection tool",
-    ICON_FA_ARROW_POINTER, true, true,
+    ICON_FA_ARROW_POINTER, false, true,
     (UIUtils::CALLBACK_FN)&OnSelectCallback
   );
   _items.push_back(selectItem);
 
   ToolbarItem* translateItem = new ToolbarButton(
     this, TOOL_TRANSLATE, "Translate", "T", "translation tool",
-    ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, true, true,
+    ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, false, true,
     (UIUtils::CALLBACK_FN)&OnTranslateCallback
   );
   _items.push_back(translateItem);
 
   ToolbarItem* rotateItem = new ToolbarButton(
     this, TOOL_ROTATE, "Rotate", "R", "rotation tool",
-    ICON_FA_ROTATE, true, true,
+    ICON_FA_ROTATE, false, true,
     (UIUtils::CALLBACK_FN)&OnRotateCallback
   );
   _items.push_back(rotateItem);
 
   ToolbarItem* scaleItem = new ToolbarButton(
     this, TOOL_SCALE, "Scale", "S", "scale tool",
-    ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , true, true,
+    ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , false, true,
     (UIUtils::CALLBACK_FN)&OnScaleCallback
   );
   _items.push_back(scaleItem);
 
   ToolbarItem* brushItem = new ToolbarButton(
     this, TOOL_BRUSH, "Brush", "B", "brush tool",
-    ICON_FA_PAINTBRUSH, true, true,
+    ICON_FA_PAINTBRUSH, false, true,
     (UIUtils::CALLBACK_FN)&OnBrushCallback
   );
   _items.push_back(brushItem);
 
   ToolbarItem* playItem = new ToolbarButton(
     this, TOOL_NONE, "Play", "play", "launch engine",
-    ICON_FA_POO, true, true,
+    ICON_FA_SHUFFLE, true, true,
     (UIUtils::CALLBACK_FN)&OnPlayCallback
   );
   _items.push_back(playItem);
@@ -156,6 +158,20 @@ ToolbarUI::~ToolbarUI()
 {
   for(auto& item: _items) delete item;
   _items.clear();
+}
+
+void ToolbarUI::Update()
+{
+  Window* window = GetView()->GetWindow();
+  for (auto& item : this->_items) {
+    if (item->type == TOOLBAR_BUTTON) {
+      ToolbarButton* button = (ToolbarButton*)item;
+      if (button->tool == TOOL_NONE) continue;
+      if (button->enabled && button->tool != window->GetActiveTool()) {
+        button->enabled = false;
+      }
+    }
+  }
 }
 
 bool ToolbarUI::Draw()

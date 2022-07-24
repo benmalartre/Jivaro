@@ -112,13 +112,11 @@ TimelineUI::ValidateTime()
 
   _data.currentTime = time.GetActiveTime();
   if (_data.minTime >= _data.maxTime)_data.maxTime = _data.minTime + 1;
-  if (_data.endTime > _data.maxTime)_data.endTime = _data.maxTime;
+  if (_data.endTime > _data.maxTime)_data.maxTime = _data.endTime;
   if (_data.startTime < _data.minTime)_data.startTime = _data.minTime;
   if (_data.endTime <= _data.startTime)_data.endTime = _data.startTime + 1;
-  if (_data.maxTime <= _data.endTime)_data.maxTime = _data.endTime;
   if (_data.currentTime < _data.startTime)_data.currentTime = _data.startTime;
   else if (_data.currentTime > _data.endTime)_data.currentTime = _data.endTime;
-
   
   time.SetMinTime(_data.minTime);
   time.SetStartTime(_data.startTime);

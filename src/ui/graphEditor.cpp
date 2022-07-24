@@ -1825,7 +1825,7 @@ GraphEditorUI::MouseWheel(int x, int y)
   pxr::GfVec2f originalPos = mousePos / _scale ;
 
   _scale += (x + y) * 0.1;
-  _scale = CLAMP(_scale, 0.1, 12.0);
+  _scale = CLAMP(_scale, 0.1, 8.0);
   _invScale = 1.f / _scale;
   pxr::GfVec2f scaledPos = mousePos / _scale;
   _offset -= (originalPos - scaledPos);

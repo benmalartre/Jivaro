@@ -245,7 +245,7 @@ void
 Window::ForceRedraw()
 {
   for (View* leaf : _leaves)leaf->SetFlag(View::FORCEREDRAW);
-  _forceRedraw = 3;
+  _forceRedraw = 1;
 }
 
 // popup

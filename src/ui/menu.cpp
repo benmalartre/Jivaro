@@ -69,14 +69,14 @@ pxr::GfVec2i MenuUI::Item::ComputeSize()
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
   }
-  return pxr::GfVec2i(size[0], size[1]);
+  return pxr::GfVec2i(size[0] * 2, size[1] * 2);
 }
 
 pxr::GfVec2i MenuUI::Item::ComputePos()
 {
   ImGuiStyle& style = ImGui::GetStyle();
   View* view = ui->GetView();
-  pxr::GfVec2i pos(view->GetX() + style.WindowPadding[0], view->GetY() + view->GetHeight());
+  pxr::GfVec2i pos(view->GetX() + style.WindowPadding[0], view->GetY());
   for (auto& item : ui->_items) {
     if (label == item.label) break;
     ImVec2 cur = ImGui::CalcTextSize(item.label.c_str());
@@ -85,13 +85,11 @@ pxr::GfVec2i MenuUI::Item::ComputePos()
   return pos;
 }
 
-void MenuUI::Item::Draw()
+bool MenuUI::Item::Draw()
 {
   View* view = ui->GetView();
   Window* window = view->GetWindow();
-  if (items.size()) {
-    //ImGui::PushFont(window->GetBoldFont(1));
-    
+  if (items.size()) {    
     if (ImGui::BeginMenu(label.c_str())) {
       ui->_current = this;
       for (auto& item : items) {
@@ -99,18 +97,15 @@ void MenuUI::Item::Draw()
       }
       ImGui::EndMenu();
     } 
-    //ImGui::PopFont();
-    
   }
   else {
-    //ImGui::PushFont(window->GetMediumFont(1));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
       window->ForceRedraw();
       ui->_current = NULL;
     } 
-    //ImGui::PopFont();
   }
+  return true;
 }
 
 static void OpenFileCallback() {
@@ -245,121 +240,57 @@ MenuUI::Item& MenuUI::AddItem(const std::string label, const std::string shortcu
   return _items.back();
 }
 
+void MenuUI::MouseButton(int button, int action, int mods)
+{
+  _parent->SetDirty();
+  if (action == GLFW_PRESS)
+    _parent->SetInteracting(true);
+  else if (action == GLFW_RELEASE)
+    _parent->SetInteracting(false);
+}
+
 void MenuUI::DirtyViewsUnderBox()
 {
   if (_current) {
     _pos = _current->ComputePos();
     _size = _current->ComputeSize();
-    _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
-  } else {
-    _parent->GetWindow()->DirtyViewsUnderBox(pxr::GfVec2i(0, 0), pxr::GfVec2i(GetWidth(), 256));
   }
-   _parent->SetDirty();
+  else {
+    _pos = pxr::GfVec2i(0, 0);
+    _size = pxr::GfVec2i(GetWidth(), 128);
+  }
+  _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
+  _parent->SetDirty();
+  ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
+  foregroundList->AddRect(ImVec2(_pos), ImVec2(_pos + _size), ImColor(255, 128, 128, 255));
 }
 
 // overrides
 bool MenuUI::Draw()
 {
-  
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!_parent->IsActive())_current = NULL;
   ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
 
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
-
-  ImGui::Begin("MenuBar", NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
-  
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-  drawList->AddRectFilled(min, min + size, ImColor(style.Colors[ImGuiCol_WindowBg]));
-
+  bool active = false;
   if (ImGui::BeginMainMenuBar())
   {
     for (auto& item : _items) {
-      item.Draw();
+      if(item.Draw())active = true;
     }
     ImGui::EndMainMenuBar();
   }
 
-  bool dirty = _current || ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked();
+  bool dirty = _current || active;
   if (dirty) {DirtyViewsUnderBox();}
-
-  ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
-  foregroundList->AddRect(ImVec2(_pos), ImVec2(_pos+_size), ImColor(255,128,128,255));
+  
   
   ImGui::PopStyleColor(3);
-  ImGui::End();
 
-  return ImGui::IsAnyItemHovered();
-  /*
-  //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 8));
-  if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("File")) {
-      if (ImGui::MenuItem("New")) {
-        //DrawModalDialog<CreateUsdFileModalDialog>(*this);
-      }
-      if (ImGui::MenuItem("Open")) {
-        //DrawModalDialog<OpenUsdFileModalDialog>(*this);
-      }
-      if (ImGui::BeginMenu("Open Recent (as stage)")) {
-        
-        for (const auto& recentFile : _settings._recentFiles) {
-          if (ImGui::MenuItem(recentFile.c_str())) {
-            ExecuteAfterDraw<EditorOpenStage>(recentFile);
-          }
-        }
-        
-        ImGui::EndMenu();
-      }
-      ImGui::Separator();
-      const bool hasLayer = false;// GetCurrentLayer() != SdfLayerRefPtr();
-      if (ImGui::MenuItem("Save layer", "CTRL+S", false, hasLayer)) {
-        //GetCurrentLayer()->Save(true);
-      }
-      if (ImGui::MenuItem("Save current layer as", "CTRL+F", false, hasLayer)) {
-        //ExecuteAfterDraw<EditorSaveLayerAs>(GetCurrentLayer());
-      }
+  return true;
 
-      ImGui::Separator();
-      if (ImGui::MenuItem("Quit")) {
-        //RequestShutdown();
-      }
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("Edit")) {
-      if (ImGui::MenuItem("Undo", "CTRL+Z")) {
-        //ExecuteAfterDraw<UndoCommand>();
-      }
-      if (ImGui::MenuItem("Redo", "CTRL+R")) {
-        //ExecuteAfterDraw<RedoCommand>();
-      }
-      if (ImGui::MenuItem("Clear Undo/Redo")) {
-        //ExecuteAfterDraw<ClearUndoRedoCommand>();
-      }
-      if (ImGui::MenuItem("Clear History")) {
-        //_layerHistory.clear();
-        //_layerHistoryPointer = 0;
-      }
-      ImGui::Separator();
-      if (ImGui::MenuItem("Cut", "CTRL+X", false, false)) {
-      }
-      if (ImGui::MenuItem("Copy", "CTRL+C", false, false)) {
-      }
-      if (ImGui::MenuItem("Paste", "CTRL+V", false, false)) {
-      }
-      ImGui::EndMenu();
-    }
-
-
-    ImGui::EndMainMenuBar();
-  }
-  return false;
-  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

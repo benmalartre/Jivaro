@@ -149,7 +149,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::InputScalarN("Translation", ImGuiDataType_Double, 
         target.current.translation.data(), 3, NULL, NULL, DecimalPrecision);
       
-      if (ImGui::IsItemDeactivatedAfterEdit()) {
+      if (ImGui::IsItemDeactivatedAfterEdit() || ImGui::NavMoveRequestButNoResultYet()) {
         GetApplication()->AddCommand(std::shared_ptr<TranslateCommand>(
           new TranslateCommand(GetApplication()->GetWorkStage(), targets, time)));
       }
@@ -165,7 +165,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Rotation", target.current.rotation.data(), DecimalPrecision);
-      if (ImGui::IsItemDeactivatedAfterEdit()) {
+      if (ImGui::IsItemDeactivatedAfterEdit() || ImGui::NavMoveRequestButNoResultYet()) {
         GetApplication()->AddCommand(std::shared_ptr<RotateCommand>(
           new RotateCommand(GetApplication()->GetWorkStage(), targets, time))
         );
@@ -181,7 +181,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Scale", target.current.scale.data(), DecimalPrecision);
-      if (ImGui::IsItemDeactivatedAfterEdit()) {
+      if (ImGui::IsItemDeactivatedAfterEdit() || ImGui::NavMoveRequestButNoResultYet()) {
         GetApplication()->AddCommand(std::shared_ptr<ScaleCommand>(
           new ScaleCommand(GetApplication()->GetWorkStage(), targets, time))
         );
