@@ -47,23 +47,23 @@ NewSceneCommand::NewSceneCommand()
 //==================================================================================
 // Create Prim
 //==================================================================================
-CreatePrimCommand::CreatePrimCommand(pxr::UsdStageRefPtr stage, const std::string& name) 
+CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const std::string& name) 
   : Command(true)
 {
-  if (!stage) return;
+  if (!layer) return;
   UndoRouter::Get().TransferEdits(&_inverse);
-  auto sphere = pxr::UsdGeomSphere::Define(stage, pxr::SdfPath::AbsoluteRootPath().AppendChild(pxr::TfToken(name)));
-  stage->SetDefaultPrim(sphere.GetPrim());
+  SdfPrimSpecHandle primSpec = SdfPrimSpec::New(layer, name, SdfSpecifier::SdfSpecifierDef);
+  layer->InsertRootPrim(primSpec);
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
-CreatePrimCommand::CreatePrimCommand(pxr::UsdPrim parent, const std::string& name)
+CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle primSpec, const std::string& name)
   : Command(true)
 {
-  if (!parent) return;
+  if (!primSpec) return;
   UndoRouter::Get().TransferEdits(&_inverse);
-  pxr::UsdGeomSphere::Define(parent.GetStage(), parent.GetPath().AppendChild(pxr::TfToken(name)));
+  SdfPrimSpec::New(primSpec, name, SdfSpecifier::SdfSpecifierDef);
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }

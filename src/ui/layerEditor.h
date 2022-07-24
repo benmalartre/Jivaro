@@ -1,5 +1,5 @@
-#ifndef JVR_UI_LAYER_HIERARCHY_H
-#define JVR_UI_LAYER_HIERARCHY_H
+#ifndef JVR_UI_LAYER_EDITOR_H
+#define JVR_UI_LAYER_EDITOR_H
 
 #include "../common.h"
 #include "../ui/utils.h"
@@ -10,19 +10,20 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class LayerHierarchyUI : public HeadedUI
+class LayerEditorUI : public HeadedUI
 {
 public:
-  LayerHierarchyUI(View* parent);
-  ~LayerHierarchyUI()         override;
+  LayerEditorUI(View* parent);
+  ~LayerEditorUI()         override;
 
   void MouseButton(int action, int button, int mods) override{};
   void MouseMove(int x, int y) override{};
   bool Draw()      override;
 
 private:
-  pxr::SdfLayerRefPtr    _layer;
-  pxr::SdfPrimSpecHandle _prim;
+  pxr::SdfLayerRefPtr           _layer;
+  pxr::SdfPrimSpecHandle        _prim;
+  static ImGuiWindowFlags       _flags;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

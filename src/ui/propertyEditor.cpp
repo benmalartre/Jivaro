@@ -128,15 +128,15 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
     
     if (ImGui::BeginTable("##DrawXformsCommon", 3, 
       ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-      ImGui::PushFont(window->GetMediumFont(1));
+      //ImGui::PushFont(window->GetMediumFont(1));
       ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 24); // 24 => size of the mini button
       ImGui::TableSetupColumn("Transform");
       ImGui::TableSetupColumn("Value");
-      ImGui::PopFont();
+      //ImGui::PopFont();
 
       ImGui::TableHeadersRow();
 
-      ImGui::PushFont(window->GetRegularFont(1));
+      //ImGui::PushFont(window->GetRegularFont(1));
 
       // Translate
       ImGui::TableNextRow();
@@ -206,7 +206,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
       // TODO rotation order
       ImGui::EndTable();
-      ImGui::PopFont();
+      //ImGui::PopFont();
     }
     
     return true;
@@ -236,18 +236,8 @@ PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
   const ImGuiStyle& style = ImGui::GetStyle();
   VtValue value;
   const bool hasValue = attribute.Get(&value, currentTime);
-
-  if (hasValue) {
-    VtValue modified = _DrawAttributeValue(attribute, currentTime);
-    if (!modified.IsEmpty()) {
-      UndoBlock editBlock;
-      attribute.Set(modified, attribute.GetNumTimeSamples() ? 
-        currentTime : UsdTimeCode::Default());
-      _parent->SetInteracting(true);
-    }
-  }
-
   const bool hasConnections = attribute.HasAuthoredConnections();
+  
   if (hasConnections) {
     pxr::SdfPathVector sources;
     attribute.GetConnections(&sources);
@@ -261,6 +251,16 @@ PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
       ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], " %s", 
         connection.GetString().c_str());
       ImGui::PopID();
+    }
+  }
+
+  else if (hasValue) {
+    VtValue modified = _DrawAttributeValue(attribute, currentTime);
+    if (!modified.IsEmpty()) {
+      UndoBlock editBlock;
+      attribute.Set(modified, attribute.GetNumTimeSamples() ?
+        currentTime : UsdTimeCode::Default());
+      _parent->SetInteracting(true);
     }
   }
 

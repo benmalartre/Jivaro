@@ -69,8 +69,8 @@ public:
 //==================================================================================
 class CreatePrimCommand : public Command {
 public:
-  CreatePrimCommand(pxr::UsdStageRefPtr stage, const std::string& primName);
-  CreatePrimCommand(pxr::UsdPrim prim, const std::string& primName);
+  CreatePrimCommand(pxr::SdfLayerRefPtr layer, const std::string& primName);
+  CreatePrimCommand(pxr::SdfPrimSpecHandle primSpec, const std::string& primName);
   ~CreatePrimCommand() {};
   void Do() override;
 

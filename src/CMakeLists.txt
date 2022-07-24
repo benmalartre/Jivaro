@@ -17,7 +17,9 @@ add_executable(${TARGET}
   utils/files.cpp
   utils/shaders.cpp
   utils/icons.cpp
+  utils/prefs.cpp
   ui/ui.cpp
+  ui/fonts.cpp
   ui/demo.cpp
   ui/debug.cpp
   ui/textFilter.cpp
@@ -33,7 +35,7 @@ add_executable(${TARGET}
   ui/timeline.cpp
   ui/toolbar.cpp
   ui/layers.cpp
-  ui/layerHierarchy.cpp
+  ui/layerEditor.cpp
   ui/explorer.cpp
   ui/propertyEditor.cpp
   ui/curveEditor.cpp
@@ -92,6 +94,12 @@ add_executable(${TARGET}
   main.cpp
 )
 
+# Application icon on windows
+if(MSVC)
+    target_sources(${TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/resources.rc)
+endif()
+
+
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
@@ -101,6 +109,7 @@ target_include_directories(${TARGET}
     ${TBB_INCLUDE_DIR}
     #${OPENVDB_INCLUDE_DIR}
 	${BOOST_INCLUDE_DIR}
+	${ICON_AWESOME_DIR}
 )
 
 target_link_libraries(${TARGET}
@@ -114,3 +123,5 @@ target_link_libraries(${TARGET}
   ${GLFW}
   ${ADDITIONAL_LIBRARIES}
 )
+
+add_compile_options(/C4244)

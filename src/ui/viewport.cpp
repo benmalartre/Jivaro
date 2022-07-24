@@ -1,5 +1,6 @@
 
 #include "../ui/utils.h"
+#include "../ui/fonts.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
 #include "../geometry/shape.h"
@@ -444,7 +445,7 @@ bool ViewportUI::Draw()
    
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     
-    ImGui::PushFont(window->GetRegularFont(0));
+    //ImGui::PushFont(window->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
     
     drawList->AddText(
@@ -474,7 +475,16 @@ bool ViewportUI::Draw()
     ImGui::Text("%s", _engine->GetRendererDisplayName(
       _engine->GetCurrentRendererId()).c_str());
 
-    ImGui::PopFont();
+    if (ImGui::Button(ICON_FA_TRASH)) {
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_ARROW_UP)) {
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_ARROW_DOWN)) {
+    }
+
+    //ImGui::PopFont();
     
     ImGui::End();
 

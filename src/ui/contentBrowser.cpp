@@ -6,8 +6,14 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+ImGuiWindowFlags ContentBrowserUI::_flags = 
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_MenuBar |
+  ImGuiWindowFlags_NoTitleBar |
+  ImGuiWindowFlags_NoMove;
+
 ContentBrowserUI::ContentBrowserUI(View* parent)
-  : BaseUI(parent, UIType::CONTENTBROWSER)
+  : HeadedUI(parent, UIType::CONTENTBROWSER)
 {
 }
 
@@ -61,7 +67,7 @@ PassOptionsFilter(pxr::SdfLayerHandle layer,
   return true;
 }
 
-inline void DrawSaveButton(pxr::SdfLayerHandle layer) 
+static inline void DrawSaveButton(pxr::SdfLayerHandle layer) 
 {
   ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(TRANSPARENT_COLOR));
   if (ImGui::SmallButton(layer->IsDirty() ? "###Save" : "  ###Save")) {
@@ -69,6 +75,65 @@ inline void DrawSaveButton(pxr::SdfLayerHandle layer)
     std::cout << "SAVE LAYER : " << layer->GetUniqueIdentifier() << std::endl;
   }
   ImGui::PopStyleColor();
+}
+
+static inline void DrawSelectStageButton(pxr::SdfLayerHandle layer, bool isStage, pxr::SdfLayerHandle* selectedStage) 
+{
+  if (isStage) {
+    if (selectedStage && *selectedStage == layer) {
+      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0, 1.0, 1.0, 1.0));
+    } else {
+      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6, 0.6, 0.6, 1.0));
+    }
+  } else {
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(TRANSPARENT_COLOR));
+  }
+  
+  if (ImGui::SmallButton(layer->IsDirty() ? "###Select" : "  ###Select")) {
+    //ExecuteAfterDraw(&SdfLayer::Save, layer, true);
+    std::cout << "Select Stage : " << layer->GetUniqueIdentifier() << std::endl;
+  }
+  ImGui::PopStyleColor();
+  /*
+  ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent), ImGuiCol_Text,
+    isStage ? ((selectedStage && *selectedStage == layer) ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(0.6, 0.6, 0.6, 1.0)) : ImVec4(ColorTransparent));
+  if (ImGui::SmallButton(ICON_FA_DESKTOP "###Stage")) {
+    ExecuteAfterDraw<EditorSetCurrentStage>(layer);
+  }
+  */
+}
+
+static void DrawContentBrowserMenuBar(ContentBrowserOptions& options) {
+  if (ImGui::BeginMenuBar()) {
+    bool selected = true;
+    if (ImGui::BeginMenu("Filter")) {
+      ImGui::MenuItem("Anonymous", nullptr, &options._filterAnonymous, true);
+      ImGui::MenuItem("File", nullptr, &options._filterFiles, true);
+      ImGui::Separator();
+      ImGui::MenuItem("Unmodified", nullptr, &options._filterUnmodified, true);
+      ImGui::MenuItem("Modified", nullptr, &options._filterModified, true);
+      ImGui::Separator();
+      ImGui::MenuItem("Stage", nullptr, &options._filterStage, true);
+      ImGui::MenuItem("Layer", nullptr, &options._filterLayer, true);
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Show")) {
+      if (ImGui::MenuItem("Asset name", nullptr, &options._showAssetName, true)) {
+        options._showRealPath = options._showIdentifier = options._showDisplayName = false;
+      }
+      if (ImGui::MenuItem("Identifier", nullptr, &options._showIdentifier, true)) {
+        options._showAssetName = options._showRealPath = options._showDisplayName = false;
+      }
+      if (ImGui::MenuItem("Display name", nullptr, &options._showDisplayName, true)) {
+        options._showAssetName = options._showIdentifier = options._showRealPath = false;
+      }
+      if (ImGui::MenuItem("Real path", nullptr, &options._showRealPath, true)) {
+        options._showAssetName = options._showIdentifier = options._showDisplayName = false;
+      }
+      ImGui::EndMenu();
+    }
+    ImGui::EndMenuBar();
+  }
 }
 
 static inline std::string LayerNameFromOptions(pxr::SdfLayerHandle layer, const ContentBrowserOptions& options) {
@@ -104,23 +169,67 @@ static inline void DrawLayerDescriptionRow(pxr::SdfLayerHandle layer, bool isSta
   }
 }
 
-template <typename SdfLayerSetT>
-void DrawLayerSet(pxr::UsdStageCache& cache, SdfLayerSetT& layerSet, pxr::SdfLayerHandle* selectedLayer,
-  const ContentBrowserOptions& options, const ImVec2& listSize = ImVec2(0, -10)) {
+/// Draw a popup menu with the possible action on a layer
+static void DrawLayerActionPopupMenu(pxr::SdfLayerHandle layer) {
+  if (!layer)
+    return;
+  if (ImGui::MenuItem("Edit layer")) {
+    //ExecuteAfterDraw<EditorSetCurrentLayer>(layer);
+    std::cout << "SET CURRENT LAYER" << layer.GetUniqueIdentifier() << std::endl;
+  }
+  if (!layer->IsAnonymous() && ImGui::MenuItem("Reload")) {
+    //ExecuteAfterDraw(&SdfLayer::Reload, layer, false);
+    std::cout << "RELOAD LAYER" << layer->GetRealPath() << std::endl;
+  }
+  if (ImGui::MenuItem("Open as Stage")) {
+    //ExecuteAfterDraw<EditorOpenStage>(layer->GetRealPath());
+    std::cout << "OPEN AS STAFE " << layer->GetRealPath() << std::endl;
+  }
+  if (layer->IsDirty() && !layer->IsAnonymous() && ImGui::MenuItem("Save layer")) {
+    //ExecuteAfterDraw(&SdfLayer::Save, layer, true);
+    std::cout << "SAVE LAYER" << layer->GetRealPath() << std::endl;
+  }
+  if (ImGui::MenuItem("Save layer as")) {
+    //ExecuteAfterDraw<EditorSaveLayerAs>(layer);
+    std::cout << "SAVE AS LAYER" << layer->GetRealPath() << std::endl;
+  }
 
-  // Sort the layer set
-  std::vector<SdfLayerHandle> sortedSet(layerSet.begin(), layerSet.end());
-  std::sort(sortedSet.begin(), sortedSet.end(), [&](const auto& t1, const auto& t2) {
-    return LayerNameFromOptions(t1, options) < LayerNameFromOptions(t2, options);
-  });
+  ImGui::Separator();
+
+  // Not sure how safe this is with the undo/redo
+  if (layer->IsMuted() && ImGui::MenuItem("Unmute")) {
+    //ExecuteAfterDraw<LayerUnmute>(layer);
+    std::cout << "UNMUTE LAYER" << layer->GetRealPath() << std::endl;
+  }
+  if (!layer->IsMuted() && ImGui::MenuItem("Mute")) {
+    //ExecuteAfterDraw<LayerMute>(layer);
+    std::cout << "MUTE LAYER" << layer->GetRealPath() << std::endl;
+  }
+
+  ImGui::Separator();
+  if (ImGui::MenuItem("Copy layer path")) {
+    ImGui::SetClipboardText(layer->GetRealPath().c_str());
+  }
+}
+
+static void DrawLayerSet(pxr::UsdStageCache& cache, pxr::SdfLayerHandleSet& layerSet, pxr::SdfLayerHandle* selectedLayer, 
+  pxr::SdfLayerHandle* selectedStage, const ContentBrowserOptions& options, const ImVec2& listSize = ImVec2(0, -10)) 
+{
+
   static TextFilter filter;
   filter.Draw();
+
   ImGui::PushItemWidth(-1);
   if (ImGui::BeginListBox("##DrawLayerSet", listSize)) {
+    // Sort the layer set
+    std::vector<pxr::SdfLayerHandle> sortedSet(layerSet.begin(), layerSet.end());
+    std::sort(sortedSet.begin(), sortedSet.end(), [&](const auto& t1, const auto& t2) {
+      return LayerNameFromOptions(t1, options) < LayerNameFromOptions(t2, options);
+    });
+    //
     for (const auto& layer : sortedSet) {
       if (!layer)
         continue;
-      bool selected = selectedLayer && *selectedLayer == layer;
       std::string layerName = LayerNameFromOptions(layer, options);
       const bool passSearchFilter = filter.PassFilter(layerName.c_str());
       if (passSearchFilter) {
@@ -128,15 +237,20 @@ void DrawLayerSet(pxr::UsdStageCache& cache, SdfLayerSetT& layerSet, pxr::SdfLay
         if (!PassOptionsFilter(layer, options, isStage)) {
           continue;
         }
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, ImGui::GetStyle().ItemSpacing.y));
         ImGui::PushID(layer->GetUniqueIdentifier());
-        DrawSaveButton(layer);
+        DrawSelectStageButton(layer, isStage, selectedStage);
         ImGui::SameLine();
-        DrawLayerDescriptionRow(layer, isStage, layerName, selected, selectedLayer);
+        DrawSaveButton(layer);
+        ImGui::PopStyleVar();
+        ImGui::SameLine();
+        DrawLayerDescriptionRow(layer, isStage, layerName, selectedLayer, selectedStage);
+
         if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 2) {
           DrawLayerTooltip(layer);
         }
         if (ImGui::BeginPopupContextItem()) {
-          //DrawLayerActionPopupMenu(layer);
+          DrawLayerActionPopupMenu(layer);
           ImGui::EndPopup();
         }
         ImGui::PopID();
@@ -149,53 +263,24 @@ void DrawLayerSet(pxr::UsdStageCache& cache, SdfLayerSetT& layerSet, pxr::SdfLay
 
 bool ContentBrowserUI::Draw()
 {
-  bool opened;
-  int flags =
-    ImGuiWindowFlags_NoResize |
-    ImGuiWindowFlags_NoTitleBar |
-    ImGuiWindowFlags_NoMove;
+  const pxr::GfVec2f min(GetX(), GetY());
+  const pxr::GfVec2f size(GetWidth(), GetHeight());
 
-  ImGui::Begin(_name.c_str(), &opened, flags);
-
-  ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
-  ImGui::SetWindowPos(_parent->GetMin());
+  ImGui::Begin(_name.c_str(), NULL, _flags);
+  ImGui::SetWindowPos(min);
+  ImGui::SetWindowSize(size);
 
   static ContentBrowserOptions options;
-  if (ImGui::BeginMenuBar()) {
-    bool selected = true;
-    if (ImGui::BeginMenu("Filter")) {
-      ImGui::MenuItem("Anonymous", nullptr, &options._filterAnonymous, true);
-      ImGui::MenuItem("File", nullptr, &options._filterFiles, true);
-      ImGui::Separator();
-      ImGui::MenuItem("Unmodified", nullptr, &options._filterUnmodified, true);
-      ImGui::MenuItem("Modified", nullptr, &options._filterModified, true);
-      ImGui::Separator();
-      ImGui::MenuItem("Stage", nullptr, &options._filterStage, true);
-      ImGui::MenuItem("Layer", nullptr, &options._filterLayer, true);
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("Show")) {
-      if (ImGui::MenuItem("Asset name", nullptr, &options._showAssetName, true)) {
-        options._showRealPath = options._showIdentifier = options._showDisplayName = false;
-      }
-      if (ImGui::MenuItem("Identifier", nullptr, &options._showIdentifier, true)) {
-        options._showAssetName = options._showRealPath = options._showDisplayName = false;
-      }
-      if (ImGui::MenuItem("Display name", nullptr, &options._showDisplayName, true)) {
-        options._showAssetName = options._showIdentifier = options._showRealPath = false;
-      }
-      if (ImGui::MenuItem("Real path", nullptr, &options._showRealPath, true)) {
-        options._showAssetName = options._showIdentifier = options._showDisplayName = false;
-      }
-      ImGui::EndMenu();
-    }
-    ImGui::EndMenuBar();
-  }
+  DrawContentBrowserMenuBar(options);
+
+  Workspace* workspace = GetApplication()->GetWorkspace();
 
   // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
-  pxr::SdfLayerHandle selected(GetApplication()->GetWorkStage()->GetRootLayer());
+  pxr::SdfLayerHandle selectedLayer(workspace->GetWorkLayer());
+  pxr::SdfLayerHandle selectedStage(workspace->GetWorkStage() 
+    ? workspace->GetWorkStage()->GetRootLayer() : pxr::SdfLayerHandle());
   auto layers = pxr::SdfLayer::GetLoadedLayers();
-  //DrawLayerSet(GetApplication()->GetStageCache(), layers, &selected, options);
+  DrawLayerSet(workspace->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
   /*
   if (selected != editor.GetCurrentLayer()) {
     editor.SetCurrentLayer(selected);

@@ -92,7 +92,7 @@ ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string& label,
 bool ToolbarButton::Draw()
 {
   Window* window = ui->GetView()->GetWindow();
-  ImGui::PushFont(window->GetRegularFont(0));
+  //ImGui::PushFont(window->GetRegularFont(0));
   
   if(toggable) {
     UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN>(
@@ -101,7 +101,7 @@ bool ToolbarButton::Draw()
     UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
       1, icon, ICON_DEFAULT, func);
   }
-  ImGui::PopFont();
+  //ImGui::PopFont();
 
   if (tooltip.length() && ImGui::IsItemHovered()) {
     ui->AttachTooltip(tooltip.c_str());

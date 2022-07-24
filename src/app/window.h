@@ -3,6 +3,7 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
+#include "../ui/fonts.h"
 #include "../ui/utils.h"
 #include "../ui/splitter.h"
 #include "../ui/popup.h"
@@ -16,13 +17,6 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
-extern ImFontAtlas* SHARED_ATLAS;
-
-#define NUM_FONT_SIZE 6
-extern ImFont* BOLD_FONTS[NUM_FONT_SIZE];
-extern ImFont* MEDIUM_FONTS[NUM_FONT_SIZE];
-extern ImFont* REGULAR_FONTS[NUM_FONT_SIZE];
-static float FONT_SIZE[NUM_FONT_SIZE] = { 12.f, 14.f, 16.f, 32.f, 64.f, 128.f };
 
 class UsdEmbreeContext;
 class Application;
@@ -143,9 +137,7 @@ public:
   bool IsIdle(){return _idle;};
 
   // fonts
-  inline ImFont* GetBoldFont(size_t index){return BOLD_FONTS[index];};
-  inline ImFont* GetMediumFont(size_t index){return MEDIUM_FONTS[index];};
-  inline ImFont* GetRegularFont(size_t index){return REGULAR_FONTS[index];};
+  inline ImFont* GetFont(size_t index){return FONTS[index];};
 
   // tool
   inline void SetActiveTool(int tool) {

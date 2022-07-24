@@ -22,6 +22,7 @@
 #include <pxr/usd/usdAnimX/keyframe.h>
 
 #include "../utils/files.h"
+#include "../utils/prefs.h"
 #include "../ui/fileBrowser.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
@@ -31,7 +32,7 @@
 #include "../ui/toolbar.h"
 #include "../ui/explorer.h"
 #include "../ui/layers.h"
-#include "../ui/layerHierarchy.h"
+#include "../ui/layerEditor.h"
 #include "../ui/propertyEditor.h"
 #include "../ui/curveEditor.h"
 #include "../command/command.h"
@@ -419,6 +420,7 @@ Application::Init()
   //_property = new PropertyUI(propertyView, "Property");
   new DemoUI(propertyView);
 
+  std::cout << "PREFERENCES : " << GetPreferences().GetRootFolder() << std::endl;
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
   //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
@@ -708,17 +710,24 @@ Application::MainLoop()
 }
 
 // get stage for display
-pxr::UsdStageRefPtr&
+pxr::UsdStageRefPtr
 Application::GetDisplayStage()
 {
   return _workspace->GetDisplayStage();
 }
 
 // get stage for work
-pxr::UsdStageRefPtr&
+pxr::UsdStageRefPtr
 Application::GetWorkStage()
 {
   return _workspace->GetWorkStage();
+}
+
+// get current layer
+pxr::SdfLayerRefPtr
+Application::GetCurrentLayer()
+{
+  return _workspace->GetWorkLayer();
 }
 
 // selection

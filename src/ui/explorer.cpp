@@ -199,18 +199,18 @@ ExplorerUI::DrawBackground()
 
   bool flip = false;
 
-  ImGui::PushFont(GetWindow()->GetMediumFont(2));
+  //ImGui::PushFont(GetWindow()->GetMediumFont(2));
   ImGui::SetCursorPos(
     ImVec2(
       clipRectMin[0],
       clipRectMin[1] - scrollOffsetV + ImGui::GetTextLineHeight() + style.FramePadding[1] * 2));
-  ImGui::PopFont();
-  ImGui::PushFont(GetWindow()->GetRegularFont(1));
+  //ImGui::PopFont();
+  //ImGui::PushFont(GetWindow()->GetRegularFont(1));
   for (auto& item : _items) {
     DrawItemBackground(drawList, item.selected, flip);
     flip = !flip;
   }
-  ImGui::PopFont();
+  //ImGui::PopFont();
   drawList->PopClipRect();
 }
 
@@ -414,7 +414,7 @@ ExplorerUI::Draw()
   ImGui::SetColumnWidth(3, 25);
 
   // draw title
-  ImGui::PushFont(GetWindow()->GetMediumFont(2));
+  //ImGui::PushFont(GetWindow()->GetMediumFont(2));
   ImGui::Text("Prim");
   ImGui::NextColumn();
   ImGui::Text("Type");
@@ -423,7 +423,7 @@ ExplorerUI::Draw()
   ImGui::NextColumn();
   ImGui::Text(" A ");
   ImGui::NextColumn();
-  ImGui::PopFont();
+  //ImGui::PopFont();
 
   //ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
   /*
@@ -439,13 +439,13 @@ ExplorerUI::Draw()
     // TODO HighlightSelectedPaths();
   }
   */
-  ImGui::PushFont(GetWindow()->GetRegularFont(1));
+  //ImGui::PushFont(GetWindow()->GetRegularFont(1));
   const auto& children = root.GetFilteredChildren(
     pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
   for (const auto& child : children) {
     DrawPrim(child, selection);
   }
-  ImGui::PopFont();
+  //ImGui::PopFont();
   DrawBackground();
   //ImGui::TreePop();
   ImGui::PopStyleColor(3);

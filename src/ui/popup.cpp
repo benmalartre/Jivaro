@@ -390,10 +390,10 @@ NodePopupUI::Draw()
   size_t idx = 0;
   for(auto& node : _filteredNodes) {
     if (idx == _i) {
-      ImGui::PushFont(GetWindow()->GetBoldFont(2));
+      //ImGui::PushFont(GetWindow()->GetBoldFont(2));
       ImGui::TextColored(ImVec4(1, 0, 0, 1), node.c_str());
     } else {
-      ImGui::PushFont(GetWindow()->GetMediumFont(2));
+      //ImGui::PushFont(GetWindow()->GetMediumFont(2));
       ImGui::TextColored(ImVec4(0, 1, 0, 1), node.c_str());
     }
     idx++;

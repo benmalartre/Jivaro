@@ -172,4 +172,5 @@ void BVH::Update(const std::vector<Geometry*>& geometries)
 {
 
 }
+
 JVR_NAMESPACE_CLOSE_SCOPE

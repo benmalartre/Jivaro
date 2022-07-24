@@ -11,6 +11,7 @@
 #include "../app/selection.h"
 #include "../app/notice.h"
 
+
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/primvar.h>
@@ -89,7 +90,7 @@ void MenuUI::Item::Draw()
   View* view = ui->GetView();
   Window* window = view->GetWindow();
   if (items.size()) {
-    ImGui::PushFont(window->GetBoldFont(1));
+    //ImGui::PushFont(window->GetBoldFont(1));
     
     if (ImGui::BeginMenu(label.c_str())) {
       ui->_current = this;
@@ -98,17 +99,17 @@ void MenuUI::Item::Draw()
       }
       ImGui::EndMenu();
     } 
-    ImGui::PopFont();
+    //ImGui::PopFont();
     
   }
   else {
-    ImGui::PushFont(window->GetMediumFont(1));
+    //ImGui::PushFont(window->GetMediumFont(1));
     if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
       func(args);
       window->ForceRedraw();
       ui->_current = NULL;
     } 
-    ImGui::PopFont();
+    //ImGui::PopFont();
   }
 }
 
@@ -153,7 +154,7 @@ static void CreatePrimCallback()
 
   GetApplication()->AddCommand(
     std::shared_ptr<CreatePrimCommand>(
-      new CreatePrimCommand(GetApplication()->GetWorkStage(), name)));
+      new CreatePrimCommand(GetApplication()->GetCurrentLayer(), name)));
 }
 
 static void FlattenGeometryCallback()
@@ -259,6 +260,7 @@ void MenuUI::DirtyViewsUnderBox()
 // overrides
 bool MenuUI::Draw()
 {
+  /*
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!_parent->IsActive())_current = NULL;
   ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
@@ -285,7 +287,8 @@ bool MenuUI::Draw()
     ImGui::EndMainMenuBar();
   }
 
-  bool dirty = _current /*|| ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked()*/;
+  bool dirty = _current 
+  //|| ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked();
   if (dirty) {DirtyViewsUnderBox();}
 
   ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
@@ -295,7 +298,70 @@ bool MenuUI::Draw()
   ImGui::PopStyleColor(3);
   ImGui::End();
 
-  return true;
+  return ImGui::IsAnyItemHovered();
+  */
+  //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 8));
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      if (ImGui::MenuItem("New")) {
+        //DrawModalDialog<CreateUsdFileModalDialog>(*this);
+      }
+      if (ImGui::MenuItem("Open")) {
+        //DrawModalDialog<OpenUsdFileModalDialog>(*this);
+      }
+      if (ImGui::BeginMenu("Open Recent (as stage)")) {
+        /*
+        for (const auto& recentFile : _settings._recentFiles) {
+          if (ImGui::MenuItem(recentFile.c_str())) {
+            ExecuteAfterDraw<EditorOpenStage>(recentFile);
+          }
+        }
+        */
+        ImGui::EndMenu();
+      }
+      ImGui::Separator();
+      const bool hasLayer = false;// GetCurrentLayer() != SdfLayerRefPtr();
+      if (ImGui::MenuItem("Save layer", "CTRL+S", false, hasLayer)) {
+        //GetCurrentLayer()->Save(true);
+      }
+      if (ImGui::MenuItem("Save current layer as", "CTRL+F", false, hasLayer)) {
+        //ExecuteAfterDraw<EditorSaveLayerAs>(GetCurrentLayer());
+      }
+
+      ImGui::Separator();
+      if (ImGui::MenuItem("Quit")) {
+        //RequestShutdown();
+      }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Edit")) {
+      if (ImGui::MenuItem("Undo", "CTRL+Z")) {
+        //ExecuteAfterDraw<UndoCommand>();
+      }
+      if (ImGui::MenuItem("Redo", "CTRL+R")) {
+        //ExecuteAfterDraw<RedoCommand>();
+      }
+      if (ImGui::MenuItem("Clear Undo/Redo")) {
+        //ExecuteAfterDraw<ClearUndoRedoCommand>();
+      }
+      if (ImGui::MenuItem("Clear History")) {
+        //_layerHistory.clear();
+        //_layerHistoryPointer = 0;
+      }
+      ImGui::Separator();
+      if (ImGui::MenuItem("Cut", "CTRL+X", false, false)) {
+      }
+      if (ImGui::MenuItem("Copy", "CTRL+C", false, false)) {
+      }
+      if (ImGui::MenuItem("Paste", "CTRL+V", false, false)) {
+      }
+      ImGui::EndMenu();
+    }
+
+
+    ImGui::EndMainMenuBar();
+  }
+  return false;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -1,19 +1,25 @@
 #include <pxr/usd/sdf/variantSpec.h>
 #include <pxr/usd/sdf/variantSetSpec.h>
 #include "../ui/utils.h"
-#include "../ui/layerHierarchy.h"
+#include "../ui/layerEditor.h"
 #include "../app/view.h"
 #include "../app/application.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-LayerHierarchyUI::LayerHierarchyUI(View* parent)
+ImGuiWindowFlags LayerEditorUI::_flags = 0
+  | ImGuiWindowFlags_NoResize
+  | ImGuiWindowFlags_NoTitleBar
+  | ImGuiWindowFlags_NoMove;
+
+
+LayerEditorUI::LayerEditorUI(View* parent)
   :HeadedUI(parent, UIType::LAYEREDITOR)
 {
 }
 
-LayerHierarchyUI::~LayerHierarchyUI()
+LayerEditorUI::~LayerEditorUI()
 {
 }
 
@@ -154,18 +160,16 @@ DrawPrimSpecRow(pxr::SdfPrimSpecHandle primSpec, pxr::SdfPrimSpecHandle& selecte
   ImGui::PopID();
 }
 
-bool LayerHierarchyUI::Draw()
+bool LayerEditorUI::Draw()
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  bool opened;
-  int flags = 0;
-  flags |= ImGuiWindowFlags_NoResize;
-  flags |= ImGuiWindowFlags_NoTitleBar;
-  flags |= ImGuiWindowFlags_NoMove;
 
-  ImGui::Begin(_name.c_str(), &opened, flags);
-  ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
-  ImGui::SetWindowPos(_parent->GetMin());
+  const pxr::GfVec2f min(GetX(), GetY());
+  const pxr::GfVec2f size(GetWidth(), GetHeight());
+
+  ImGui::Begin(_name.c_str(), NULL, _flags);
+  ImGui::SetWindowPos(min);
+  ImGui::SetWindowSize(size);
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(
@@ -211,8 +215,8 @@ bool LayerHierarchyUI::Draw()
 
       if (ImGui::BeginPopupContextItem()) {
         if (ImGui::MenuItem("Add root prim")) {
-          std::cout << "ADD ROOT PRIM !!" << std::endl;
-          //ExecuteAfterDraw<PrimNew>(layer, FindNextAvailablePrimName(SdfPrimSpecDefaultName));
+          GetApplication()->AddCommand(std::shared_ptr<CreatePrimCommand>(
+            new CreatePrimCommand(GetApplication()->GetWorkspace()->GetWorkLayer(), "/root")));
         }
         ImGui::EndPopup();
       }

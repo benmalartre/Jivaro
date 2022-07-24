@@ -4,7 +4,7 @@
 #include <bitset>
 #include "../common.h"
 #include "../utils/icons.h"
-#include "../ui/ui.h"
+#include "../ui/head.h"
 #include "../ui/utils.h"
 #include "../ui/textFilter.h"
 
@@ -25,7 +25,7 @@ struct ContentBrowserOptions {
   bool _showRealPath = false;
 };
 
-class ContentBrowserUI : public BaseUI
+class ContentBrowserUI : public HeadedUI
 {
 public:
   ContentBrowserUI(View* parent);
@@ -36,7 +36,7 @@ public:
   bool Draw() override;
 
 private:
-
+  static ImGuiWindowFlags _flags;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

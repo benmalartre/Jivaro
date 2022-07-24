@@ -29,13 +29,13 @@ enum UIType {
   POPUP,
   SPLITTER,
   // headed uis
-  CONTENTBROWSER,
   VIEWPORT,
   EXPLORER,
   PROPERTYEDITOR,
   CURVEEDITOR,
   GRAPHEDITOR,
   LAYEREDITOR,
+  CONTENTBROWSER,
   DEBUG,
   DEMO,
   COUNT
@@ -48,13 +48,13 @@ static const char* UITypeName[UIType::COUNT] = {
   "fileBrowser",
   "popup",
   "splitter",
-  "contentBrowser", 
   "viewport",
   "explorer",
   "propertyEditor",
   "curveEditor",
   "graphEditor", 
-  "layereditor",
+  "layerEditor",
+  "contentBrowser",
   "debug",
   "demo"
 };

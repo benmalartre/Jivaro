@@ -210,15 +210,16 @@ static pxr::UsdPrim TestUsdShadeAPI()
   inPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
   pxr::UsdExecInput inAttr = get.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
   inAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdExecOutput inVal = get.CreateOutput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecOutput inVal = get.CreateOutput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Vector3f);
+  inVal.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
 
   pxr::UsdExecNode mul = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(MUL));
   api = pxr::UsdUINodeGraphNodeAPI(mul);
   api.CreatePosAttr().Set(pxr::GfVec2f(120, 0));
   pxr::UsdExecInput factor = mul.CreateInput(pxr::TfToken("Factor"), pxr::SdfValueTypeNames->Float);
   factor.Set(pxr::VtValue(1.f));
-  pxr::UsdExecInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Point3f);
-  pxr::UsdExecOutput output = mul.CreateOutput(pxr::TfToken("Output"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Vector3f);
+  pxr::UsdExecOutput output = mul.CreateOutput(pxr::TfToken("Output"), pxr::SdfValueTypeNames->Vector3f);
 
   pxr::UsdExecNode set = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(SET));
   api = pxr::UsdUINodeGraphNodeAPI(set);
@@ -227,13 +228,16 @@ static pxr::UsdPrim TestUsdShadeAPI()
   outPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
   pxr::UsdExecInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
   outAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdExecInput outVal0 = set.CreateInput(pxr::TfToken("Value0"), pxr::SdfValueTypeNames->Point3f);
-  pxr::UsdExecInput outVal1 = set.CreateInput(pxr::TfToken("Value1"), pxr::SdfValueTypeNames->Point3f);
-  pxr::UsdExecInput outVal2 = set.CreateInput(pxr::TfToken("Value2"), pxr::SdfValueTypeNames->Point3f);
+  pxr::UsdExecInput outVal0 = set.CreateInput(pxr::TfToken("Value0"), pxr::SdfValueTypeNames->Vector3f);
+  outVal0.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
+  pxr::UsdExecInput outVal1 = set.CreateInput(pxr::TfToken("Value1"), pxr::SdfValueTypeNames->Vector3f);
+  outVal1.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
+  pxr::UsdExecInput outVal2 = set.CreateInput(pxr::TfToken("Value2"), pxr::SdfValueTypeNames->Vector3f);
+  outVal2.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
 
 
   input.ConnectToSource(inVal);
-  outVal0.ConnectToSource(output);
+  outVal0.ConnectToSource                                                                             (output);
 
   stage->SetDefaultPrim(graph.GetPrim());
 
@@ -821,11 +825,11 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   if (IsVisible(editor)) {
     ImGui::SetWindowFontScale(1.0);
-    ImGui::PushFont(window->GetMediumFont(0));
+    //ImGui::PushFont(window->GetMediumFont(0));
     ComputeSize(editor);
-    ImGui::PopFont();
+    //ImGui::PopFont();
     ImGui::SetWindowFontScale(editor->GetFontScale());
-    ImGui::PushFont(window->GetMediumFont(editor->GetFontIndex()));
+    ImGui::PushFont(window->GetFont(editor->GetFontIndex()));
 
     const float scale = editor->GetScale();
     const pxr::GfVec2f offset = editor->GetOffset();
@@ -922,7 +926,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     GraphEditorUI::Connexion* connexion = NULL;
     if (_expended != COLLAPSED) {
-      ImGui::PushFont(window->GetRegularFont(editor->GetFontIndex()));
+      ImGui::PushFont(window->GetFont(editor->GetFontIndex()));
       int numPorts = _ports.size();
       for (int i = 0; i < numPorts; ++i) {
         if (_expended == EXPENDED) _ports[i].Draw(editor);
@@ -1268,18 +1272,29 @@ GraphEditorUI::Term()
 void 
 GraphEditorUI::UpdateFont()
 {
+  /*
   if (_scale < 1.0) {
-    _fontIndex = 2;
+    _fontIndex = 0;
     _fontScale = _scale;
   }
   else if (_scale < 2.0) {
-    _fontIndex = 3;
+    _fontIndex = 1;
     _fontScale = RESCALE(_scale, 1.0, 2.0, 0.5, 1.0);
   }
-  else {
-    _fontIndex = 4;
+  else if (_scale < 4.0) {
+    _fontIndex = 2;
     _fontScale = RESCALE(_scale, 2.0, 4.0, 0.5, 1.0);
   }
+  else {
+    _fontIndex = 3;
+    _fontScale = RESCALE(_scale, 4.0, 8.0, 0.5, 1.0);
+  }
+  */
+
+   _fontIndex = int(pxr::GfSqrt(_scale));
+   _fontScale = _fontIndex > 0 
+     ? RESCALE(_scale, _fontIndex, 2.0 * _fontIndex, 0.5, 1.0)
+     : _scale;
 }
 
 // draw grid
@@ -1339,7 +1354,7 @@ GraphEditorUI::Draw()
   ImGui::SetWindowSize(size);
 
   //DrawGrid();
-  ImGui::PushFont(GetWindow()->GetRegularFont(_fontIndex));
+  //ImGui::PushFont(GetWindow()->GetRegularFont(_fontIndex));
   ImGui::SetWindowFontScale(_fontScale);
 
   if (_graph) {
@@ -1441,7 +1456,7 @@ GraphEditorUI::Draw()
   }
   ImGui::SameLine();
 
-  ImGui::PopFont();
+  //ImGui::PopFont();
   ImGui::End();
 
   return
@@ -1767,7 +1782,7 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
     }
     else if (mappedKey == GLFW_KEY_TAB) {
       //NodePopupUI* popup = new NodePopupUI((int)_lastX, (int)_lastY, 200, 300);
-      NamePopupUI* popup = new NamePopupUI((int)_lastX, (int)_lastY, 200, 100);
+      NamePopupUI* popup = new NamePopupUI((int)_lastX + GetX(), (int)_lastY + GetY(), 200, 100);
       _parent->GetWindow()->SetPopup(popup);
     }
   }

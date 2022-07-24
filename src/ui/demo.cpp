@@ -41,7 +41,7 @@ bool DemoUI::Draw()
 
   ImGui::End();
 
-  return true;
+  return ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused() || ImGui::IsAnyItemHovered();
 };
   
 

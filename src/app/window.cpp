@@ -24,56 +24,6 @@ int MAPPED_KEYS[GLFW_KEY_LAST + 1];
 bool KEY_MAP_INITIALIZED = false;
 
 
-ImFontAtlas* SHARED_ATLAS = NULL;
-ImFont* BOLD_FONTS[NUM_FONT_SIZE] = {};
-ImFont* MEDIUM_FONTS[NUM_FONT_SIZE] = {};
-ImFont* REGULAR_FONTS[NUM_FONT_SIZE] = {};
-
-//
-// Shared Font Atlas
-//
-void CreateFontAtlas()
-{
-  SHARED_ATLAS = new ImFontAtlas();
-
-  // load fonts
-  std::string exeFolder = GetInstallationFolder();
-  std::string fontPath;
-  for (int i = 0; i < NUM_FONT_SIZE; ++i) {
-    fontPath = exeFolder + "/fonts/roboto/Roboto-Bold.ttf";
-    //fontPath = exeFolder + "/fonts/opensans/OpenSans-Bold.ttf";
-    BOLD_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
-      fontPath.c_str(),
-      FONT_SIZE[i],
-      NULL,
-      SHARED_ATLAS->GetGlyphRangesDefault()
-    );
-
-    fontPath = exeFolder + "/fonts/roboto/Roboto-Medium.ttf";
-    //fontPath = exeFolder + "/fonts/opensans/OpenSans-Medium.ttf";
-    MEDIUM_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
-      fontPath.c_str(),
-      FONT_SIZE[i],
-      NULL,
-      SHARED_ATLAS->GetGlyphRangesDefault()
-    );
-
-    fontPath = exeFolder + "/fonts/roboto/Roboto-Regular.ttf";
-    //fontPath = exeFolder + "/fonts/opensans/OpenSans-Regular.ttf";
-    REGULAR_FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
-      fontPath.c_str(),
-      FONT_SIZE[i],
-      NULL,
-      SHARED_ATLAS->GetGlyphRangesDefault()
-    );
-  }
-}
-
-void DeleteFontAtlas()
-{
-  if (SHARED_ATLAS)delete SHARED_ATLAS;
-}
-
 // fullscreen window constructor
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen, const std::string& name) :

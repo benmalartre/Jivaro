@@ -73,10 +73,15 @@ class GraphEditorUI : public HeadedUI
 public:
   static const pxr::TfToken NodeExpendState[3];
 
-  enum NodeType {
+  enum GraphType {
     HIERARCHY,
     MATERIAL,
-    OPERATOR
+    EXECUTION
+  };
+
+  enum GraphDirection {
+    VERTICAL,
+    HORIZONTAL
   };
 
 protected:
@@ -86,6 +91,12 @@ protected:
     ITEM_STATE_SELECTED = 2,
     ITEM_STATE_ERROR = 4,
     ITEM_STATE_DISABLED = 8
+  };
+
+  enum DisplayState {
+    COLLAPSED,
+    CONNECTED,
+    EXPENDED
   };
 
   class Node;
@@ -203,16 +214,11 @@ protected:
       Port*               _end;
   };
 
+
   // Graph node class
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
-      enum DisplayState {
-        COLLAPSED,
-        CONNECTED,
-        EXPENDED
-      };
-
       Node(pxr::UsdPrim prim, bool write=false);
       ~Node();
 

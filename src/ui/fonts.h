@@ -1,0 +1,29 @@
+#ifndef JVR_UI_FONTS_H
+#define JVR_UI_FONTS_H
+
+#include <map>
+
+#include "../imgui/imgui.h"
+#include "../imgui/imgui_internal.h"
+#include "../common.h"
+#include "../fonts/fonts/IBMPlexMonoFree.h"
+#include "../fonts/fonts/IBMPlexSansMediumFree.h"
+#include "../fonts/iconfontcppheaders/IconsFontAwesome5.h"
+#include "../fonts/fontawesome/FontAwesomeFree5.h"
+
+JVR_NAMESPACE_OPEN_SCOPE  
+
+extern ImFontAtlas* SHARED_ATLAS;
+
+#define NUM_FONT_SIZE 4
+extern ImFont* FONTS[NUM_FONT_SIZE];
+extern ImFont* DEFAULT_FONT;
+static float FONT_SIZE[NUM_FONT_SIZE] = { 16.f, 32.f, 64.f, 128.f };
+
+
+void CreateFontAtlas();
+void DeleteFontAtlas();
+
+JVR_NAMESPACE_CLOSE_SCOPE
+
+#endif

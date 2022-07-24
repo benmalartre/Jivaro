@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.0.0)
-project (AMINA)
+project (jivaro)
 
 # Require C++14
 set(CMAKE_CXX_STANDARD 14)
@@ -158,8 +158,6 @@ endforeach()
 # OpenGL
 find_package(OpenGL REQUIRED)
 
-# GLFW_INCLUDE_DIR
-#find_library(GLEW GLEW PATHS "${USD_LIBRARY_DIR}")
 
 list(APPEND OPENVDB_LIB_NAMES 
   openvdb
@@ -172,6 +170,7 @@ foreach(OPENVDB_LIB_NAME IN LISTS OPENVDB_LIB_NAMES)
       "${OPENVDB_LIBRARY_DIR}/${LIB_PREFIX}${OPENVDB_LIB_NAME}${LIB_DYNAMIC_EXT}"
   )
 endforeach()
+
 
 # system
 IF(APPLE)

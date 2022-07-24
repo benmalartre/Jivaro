@@ -120,14 +120,17 @@ public:
   void SetActiveViewport(ViewportUI* viewport);
 
   // execution
+  Workspace* GetWorkspace() { return _workspace; };
   void ToggleExec();
   void SetExec(bool state);
   bool GetExec();
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
-  pxr::UsdStageRefPtr& GetDisplayStage();
-  pxr::UsdStageRefPtr& GetWorkStage();
+  pxr::UsdStageRefPtr GetDisplayStage();
+  pxr::UsdStageRefPtr GetWorkStage();
+
+  pxr::SdfLayerRefPtr GetCurrentLayer();
 
 private:
   std::string                       _fileName;
