@@ -412,35 +412,35 @@ LayersUI::DrawNavigation(pxr::SdfLayerRefPtr layer)
   if (!layer) return;
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
     0,
-    &ICONS[ICON_SIZE_SMALL][ICON_ARROWLEFT],
+    ICON_FA_TRASH,
     ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)&OnSetPreviousLayer, this);
   ImGui::SameLine();
 
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
     0,
-    &ICONS[ICON_SIZE_SMALL][ICON_ARROWRIGHT],
+    ICON_FA_TRASH,
     ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)&OnSetNextLayer, this);
   ImGui::SameLine();
 
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
     0,
-    &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_LOOP],
+    ICON_FA_TRASH,
     ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)&OnReloadLayer, this);
   ImGui::SameLine();
 
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
     0,
-    &ICONS[ICON_SIZE_SMALL][ICON_SAVE],
+    ICON_FA_TRASH,
     ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)&OnSaveLayer, this);
   ImGui::SameLine();
 
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
     0,
-    &ICONS[ICON_SIZE_SMALL][ICON_LAYER],
+    ICON_FA_TRASH,
     ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)&OnSaveLayer, this);
   ImGui::SameLine();

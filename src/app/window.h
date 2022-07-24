@@ -214,6 +214,8 @@ private:
   float                 _dpiX;
   float                 _dpiY;
   PopupUI*              _popup;
+  GLuint                _fbo;
+  GLuint                _tex;
 
 public:
   // static constructor

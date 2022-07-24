@@ -140,7 +140,7 @@ void FileBrowserUI::_DrawPath()
 {
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, FileBrowserUI*>(
     0,
-    &ICONS[ICON_SIZE_SMALL][ICON_HOME],
+    ICON_FA_TRASH,
     ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)&OnHomeCallback, this);
   ImGui::SameLine();

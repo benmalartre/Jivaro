@@ -242,17 +242,13 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
   
-  const Icon* visibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_VISIBLE];
-  const Icon* invisibleIcon = &ICONS[ICON_SIZE_SMALL][ICON_INVISIBLE];
+  const char* visibleIcon = ICON_FA_EYE;
+  const char* invisibleIcon = ICON_FA_EYE_SLASH;
 
-  GLuint tex = visible ?
-    visibleIcon->tex[selected] : invisibleIcon->tex[selected];
-
-  ImGui::ImageButton(
-    (void*)(size_t)tex, ImVec2(14, 14), ImVec2(0, 0), ImVec2(1, 1));
+  
 
   Application* app = GetApplication();
-  if (ImGui::IsItemClicked()) {
+  if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
     pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPrims();
     _PushCurrentPath(_current, paths);
@@ -273,20 +269,14 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
 
-  const Icon* activeIcon = &ICONS[ICON_SIZE_SMALL][ICON_OP];
-  const Icon* inactiveIcon = &ICONS[ICON_SIZE_SMALL][ICON_PLAYBACK_STOP];
-
-  GLuint tex = prim.IsActive() ?
-    activeIcon->tex[selected] : inactiveIcon->tex[selected];
-
-  ImGui::ImageButton(
-    (void*)(size_t)tex, ImVec2(14, 14), ImVec2(0, 0), ImVec2(1, 1));
+  const char* activeIcon = ICON_FA_CLOUD;
+  const char* inactiveIcon = ICON_FA_ADDRESS_BOOK;
 
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
   
  
-  if (ImGui::IsItemClicked()) {
+  if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
     _current = prim.GetPath();
     pxr::SdfPathVector paths = selection->GetSelectedPrims();
     _PushCurrentPath(_current, paths);

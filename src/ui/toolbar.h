@@ -54,10 +54,10 @@ struct ToolbarButton : public ToolbarItem {
 
   pxr::VtArray<pxr::VtValue>  args;
   UIUtils::CALLBACK_FN        func;
-  Icon*                       icon;
+  const char*                 icon;
 
   ToolbarButton(BaseUI* ui, short tool, const std::string& lbl, 
-    const std::string& sht, const std::string& tooltip, Icon* icon, 
+    const std::string& sht, const std::string& tooltip, const char* icon, 
     bool sel, bool enb, UIUtils::CALLBACK_FN f = NULL,
     const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
   ~ToolbarButton(){};

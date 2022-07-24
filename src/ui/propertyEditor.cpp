@@ -95,10 +95,8 @@ void _XXX_CALLBACK__(int index)
 // TODO Share the code,
 static void DrawPropertyMiniButton(ImGuiID id=0)
 {
-  Icon* icon = NULL;
-  icon = &ICONS[ICON_SIZE_SMALL][ICON_OP];
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    id, icon, ICON_DEFAULT,
+    id, ICON_FA_BOMB, ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)_XXX_CALLBACK__, id);
   ImGui::SameLine();
 }

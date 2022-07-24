@@ -193,6 +193,24 @@ Window::Init(Application* app)
     _mainView->SetWindow(this);
     _splitter = new SplitterUI();
 
+    // setup background buffer for popup window
+    glGenFramebuffers(1, &_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+
+    glGenTextures(1, &_tex);
+    glBindTexture(GL_TEXTURE_2D, _tex);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     Resize(_width, _height);
     glGenVertexArrays(1, &_vao);
     
@@ -253,7 +271,11 @@ Window::ForceRedraw()
 void
 Window::SetPopup(PopupUI* popup)
 {
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
+  glBlitFramebuffer(0, 0, _width, _height, 0, _height, _width, 0, GL_COLOR_BUFFER_BIT, GL_LINEAR);
   _popup = popup;
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void
@@ -488,6 +510,15 @@ Window::Draw()
   
   // draw popup
   if (_popup) {
+    if (!_popup->IsInitialized()) {
+      ImDrawList* drawList = ImGui::GetForegroundDrawList();
+      drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
+        ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 0, 0, 255));
+      _popup->SetInitialized();
+    }
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
+      ImVec2(0,0), ImVec2(1,1), ImColor(255,0,0,128));
     if (_popup->IsSync()) {
       for (Engine* engine : GetApplication()->GetEngines()) {
         engine->SetDirty(true);

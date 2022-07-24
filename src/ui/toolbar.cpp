@@ -1,5 +1,6 @@
 #include "../ui/ui.h"
 #include "../ui/style.h"
+#include "../ui/fonts.h"
 #include "../ui/toolbar.h"
 #include "../app/view.h"
 #include "../app/window.h"
@@ -26,38 +27,31 @@ static void _SetActiveTool(short tool)
 
 static void OnTranslateCallback()
 {
-  std::cout << "ON TRANSLATE CALLBACK!!!" << std::endl;
   _SetActiveTool(TOOL_TRANSLATE);
 }
 
 static void OnRotateCallback()
 {
-  std::cout << "ON ROTATE CALLBACK!!!" << std::endl;
   _SetActiveTool(TOOL_ROTATE);
 }
 
 static void OnScaleCallback()
 {
-  std::cout << "ON SCALE CALLBACK!!!" << std::endl;
   _SetActiveTool(TOOL_SCALE);
 }
 
 static void OnSelectCallback()
 {
-  std::cout << "ON SELECT CALLBACK!!!" << std::endl;
   _SetActiveTool(TOOL_SELECT);
 }
 
 static void OnBrushCallback()
 {
-  std::cout << "ON BRUSH CALLBACK!!!" << std::endl;
   _SetActiveTool(TOOL_BRUSH);
-  std::cout << "ACTIVE TOOL : BRUSH" << std::endl;
 }
 
 static void OnPlayCallback()
 {
-  std::cout << "ON PLAY CALLBACK!!!" << std::endl;
   GetApplication()->ToggleExec();
 }
 
@@ -74,7 +68,7 @@ bool ToolbarSeparator::Draw()
 }
 
 ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string& label, 
-  const std::string& shortcut, const std::string& tooltip, Icon* icon, bool toggable, 
+  const std::string& shortcut, const std::string& tooltip, const char* icon, bool toggable, 
   bool enabled, UIUtils::CALLBACK_FN func, const pxr::VtArray<pxr::VtValue> args)
   : ToolbarItem(ui, TOOLBAR_BUTTON)
   , tool(tool)
@@ -115,59 +109,44 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
   : BaseUI(parent, UIType::TOOLBAR) 
   , _vertical(vertical)
 {
-  /*
-  ToolbarItem* openItem = new ToolbarButton(
-    this, TOOL_OPEN, "Open", "Ctrl+O",
-    &ICONS[ICON_MEDIUM][ICON_OPEN], false, true, 
-    (UIUtils::CALLBACK_FN)&OnOpenCallback
-  );
-  _items.push_back(openItem);
-
-  ToolbarItem* saveItem = new ToolbarButton(
-    this, TOOL_SAVE, "Save", "Ctrl+S",
-    &ICONS[ICON_MEDIUM][ICON_SAVE], false, true, 
-    (UIUtils::CALLBACK_FN)&OnSaveCallback
-  );
-  _items.push_back(saveItem);
-  */
   ToolbarItem* selectItem = new ToolbarButton(
     this, TOOL_SELECT, "Select", "Space","selection tool",
-    &ICONS[ICON_SIZE_MEDIUM][ICON_SELECT], true, true, 
+    ICON_FA_ARROW_POINTER, true, true,
     (UIUtils::CALLBACK_FN)&OnSelectCallback
   );
   _items.push_back(selectItem);
 
   ToolbarItem* translateItem = new ToolbarButton(
     this, TOOL_TRANSLATE, "Translate", "T", "translation tool",
-    &ICONS[ICON_SIZE_MEDIUM][ICON_TRANSLATE], true, true, 
+    ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, true, true,
     (UIUtils::CALLBACK_FN)&OnTranslateCallback
   );
   _items.push_back(translateItem);
 
   ToolbarItem* rotateItem = new ToolbarButton(
     this, TOOL_ROTATE, "Rotate", "R", "rotation tool",
-    &ICONS[ICON_SIZE_MEDIUM][ICON_ROTATE], true, true, 
+    ICON_FA_ROTATE, true, true,
     (UIUtils::CALLBACK_FN)&OnRotateCallback
   );
   _items.push_back(rotateItem);
 
   ToolbarItem* scaleItem = new ToolbarButton(
     this, TOOL_SCALE, "Scale", "S", "scale tool",
-    &ICONS[ICON_SIZE_MEDIUM][ICON_SCALE], true, true, 
+    ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , true, true,
     (UIUtils::CALLBACK_FN)&OnScaleCallback
   );
   _items.push_back(scaleItem);
 
   ToolbarItem* brushItem = new ToolbarButton(
     this, TOOL_BRUSH, "Brush", "B", "brush tool",
-    &ICONS[ICON_SIZE_MEDIUM][ICON_BRUSH], true, true, 
+    ICON_FA_PAINTBRUSH, true, true,
     (UIUtils::CALLBACK_FN)&OnBrushCallback
   );
   _items.push_back(brushItem);
 
   ToolbarItem* playItem = new ToolbarButton(
     this, TOOL_NONE, "Play", "play", "launch engine",
-    &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_FORWARD], true, true,
+    ICON_FA_POO, true, true,
     (UIUtils::CALLBACK_FN)&OnPlayCallback
   );
   _items.push_back(playItem);

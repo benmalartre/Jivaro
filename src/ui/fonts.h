@@ -8,8 +8,8 @@
 #include "../common.h"
 #include "../fonts/fonts/IBMPlexMonoFree.h"
 #include "../fonts/fonts/IBMPlexSansMediumFree.h"
-#include "../fonts/iconfontcppheaders/IconsFontAwesome5.h"
-#include "../fonts/fontawesome/FontAwesomeFree5.h"
+#include "../fonts/iconfontcppheaders/IconsFontAwesome6.h"
+#include "../fonts/fontawesome/FontAwesomeFree6.h"
 
 JVR_NAMESPACE_OPEN_SCOPE  
 

@@ -1264,7 +1264,6 @@ GraphEditorUI::Write(const std::string& filename)
 void 
 GraphEditorUI::Term()
 {
-    //ImNodes::EditorContextFree(_context);
 }
 
 // fonts
@@ -1272,29 +1271,18 @@ GraphEditorUI::Term()
 void 
 GraphEditorUI::UpdateFont()
 {
-  /*
-  if (_scale < 1.0) {
-    _fontIndex = 0;
-    _fontScale = _scale;
-  }
-  else if (_scale < 2.0) {
-    _fontIndex = 1;
-    _fontScale = RESCALE(_scale, 1.0, 2.0, 0.5, 1.0);
-  }
-  else if (_scale < 4.0) {
-    _fontIndex = 2;
-    _fontScale = RESCALE(_scale, 2.0, 4.0, 0.5, 1.0);
-  }
-  else {
-    _fontIndex = 3;
-    _fontScale = RESCALE(_scale, 4.0, 8.0, 0.5, 1.0);
-  }
-  */
-
-   _fontIndex = int(pxr::GfSqrt(_scale));
-   _fontScale = _fontIndex > 0 
-     ? RESCALE(_scale, _fontIndex, 2.0 * _fontIndex, 0.5, 1.0)
-     : _scale;
+   _fontIndex = size_t(pxr::GfSqrt(_scale));
+   switch(_fontIndex) {
+     case 0:
+       _fontScale = _scale;
+       break;
+     case 1:
+       _fontScale = _scale * 0.5f;
+       break;
+     default:
+       _fontScale = RESCALE(_scale, _fontIndex, _fontIndex * _fontIndex, 0.5, 1.0);
+       break;
+   }
 }
 
 // draw grid
@@ -1405,10 +1393,8 @@ GraphEditorUI::Draw()
 
   ImGui::SetCursorPos(ImVec2(0, 0));
 
-  Icon* icon = NULL;
-  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_LOOP];
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    0, icon, ICON_DEFAULT,
+    0, ICON_FA_TRASH, ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)RefreshGraphCallback, this
     );
   ImGui::SameLine();
@@ -1839,7 +1825,7 @@ GraphEditorUI::MouseWheel(int x, int y)
   pxr::GfVec2f originalPos = mousePos / _scale ;
 
   _scale += (x + y) * 0.1;
-  _scale = CLAMP(_scale, 0.1, 4.0);
+  _scale = CLAMP(_scale, 0.1, 12.0);
   _invScale = 1.f / _scale;
   pxr::GfVec2f scaledPos = mousePos / _scale;
   _offset -= (originalPos - scaledPos);

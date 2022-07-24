@@ -187,44 +187,41 @@ void TimelineUI::MouseMove(int x, int y)
 
 void TimelineUI::DrawButtons()
 {
-  Icon* icon = NULL;
-  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_FIRST_FRAME];
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    0, icon, ICON_DEFAULT,
+    0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)FirstFrameCallback, this
     );
   ImGui::SameLine();
 
-  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PREVIOUS_FRAME];
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    1, icon, ICON_DEFAULT,
+    1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)PreviousFrameCallback, this
     );
   ImGui::SameLine();
 
-  if (!_data.playing) icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_FORWARD];
-  else icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_STOP];
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-    2, icon, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)PlaybackCallback, this);
+  if (!_data.playing) {
+    UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
+      2, ICON_FA_STOP , ICON_DEFAULT,
+      (UIUtils::CALLBACK_FN)PlaybackCallback, this);
+  } else {
+    UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
+      2, ICON_FA_PLAY , ICON_DEFAULT,
+      (UIUtils::CALLBACK_FN)PlaybackCallback, this);
+  }
   ImGui::SameLine();
 
-  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_NEXT_FRAME];
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    3, icon, ICON_DEFAULT,
+    3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)NextFrameCallback, this);
   ImGui::SameLine();
 
-
-  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_LAST_FRAME];
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-    4, icon, ICON_DEFAULT,
+    4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)LastFrameCallback, this);
   ImGui::SameLine();
 
-  icon = &ICONS[ICON_SIZE_MEDIUM][ICON_PLAYBACK_LOOP];
   UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-    5, icon,
+    5, ICON_FA_ROTATE,
     _data.loop ? ICON_SELECTED : ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)LoopCallback, this);
   ImGui::SameLine();

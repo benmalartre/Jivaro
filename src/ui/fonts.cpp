@@ -23,7 +23,7 @@ void CreateFontAtlas()
   DEFAULT_FONT = SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
     ibmplexsansmediumfree_compressed_data,
     ibmplexsansmediumfree_compressed_size, 
-    16.0f, 
+    15.0f, 
     &fontConfig, 
     nullptr);
 
@@ -32,17 +32,19 @@ void CreateFontAtlas()
   ImFontConfig iconsConfig;
   iconsConfig.MergeMode = true;
   iconsConfig.PixelSnapH = true;
+  
   SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
-    fontawesomefree5_compressed_data, 
-    fontawesomefree5_compressed_size, 
-    16.0f,
+    FontAwesomeFree6_compressed_data,
+    FontAwesomeFree6_compressed_size,
+    15.0f,
     &iconsConfig, 
     iconRanges);
-
+  
   // load fonts
   std::string exeFolder = GetInstallationFolder();
   std::string fontPath;
   for (int i = 0; i < NUM_FONT_SIZE; ++i) {
+    /*
     fontPath = exeFolder + "/fonts/roboto/Roboto-Regular.ttf";
     //fontPath = exeFolder + "/fonts/opensans/OpenSans-Regular.ttf";
     FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
@@ -51,6 +53,13 @@ void CreateFontAtlas()
       NULL,
       SHARED_ATLAS->GetGlyphRangesDefault()
     );
+    */
+    FONTS[i] = SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
+      ibmplexsansmediumfree_compressed_data,
+      ibmplexsansmediumfree_compressed_size,
+      FONT_SIZE[i],
+      NULL,
+      SHARED_ATLAS->GetGlyphRangesDefault());
   }
 }
 
