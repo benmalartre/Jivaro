@@ -57,11 +57,7 @@ public:
   // is popup cancel
   bool IsCancel() { return _cancel; };
 
-  bool IsInitialized() { return _initialized; };
-  void SetInitialized() { _initialized = true; };
-
 protected:
-  bool                        _initialized;
   bool                        _done;
   bool                        _cancel;
   bool                        _sync;

@@ -200,12 +200,12 @@ void TimelineUI::DrawButtons()
   ImGui::SameLine();
 
   if (!_data.playing) {
-    UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-      2, ICON_FA_STOP , ICON_DEFAULT,
+    UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
+      2, ICON_FA_PLAY , ICON_DEFAULT,
       (UIUtils::CALLBACK_FN)PlaybackCallback, this);
   } else {
-    UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-      2, ICON_FA_PLAY , ICON_DEFAULT,
+    UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
+      2, ICON_FA_STOP , ICON_SELECTED,
       (UIUtils::CALLBACK_FN)PlaybackCallback, this);
   }
   ImGui::SameLine();

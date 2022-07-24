@@ -93,23 +93,24 @@ pxr::GfVec2f BaseUI::GetPosition()
 
 int BaseUI::GetX()
 {
-  return _parent->GetMin()[0] - 1;
+  return _parent->GetMin()[0];
 }
 
 int BaseUI::GetY()
 { 
-  return _parent->GetMin()[1] - 1;
+  return _parent->GetMin()[1];
 }
 
 int BaseUI::GetWidth()
 { 
-  return _parent->GetWidth() + 2;
+  return _parent->GetWidth();
 }
 
 int BaseUI::GetHeight()
 {
-  return _parent->GetHeight() + 2;
+  return _parent->GetHeight();
 }
+
 
 void 
 BaseUI::SetInteracting(bool state)

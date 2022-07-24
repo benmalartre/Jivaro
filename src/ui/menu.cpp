@@ -260,7 +260,7 @@ void MenuUI::DirtyViewsUnderBox()
 // overrides
 bool MenuUI::Draw()
 {
-  /*
+  
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!_parent->IsActive())_current = NULL;
   ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
@@ -278,7 +278,6 @@ bool MenuUI::Draw()
 
   drawList->AddRectFilled(min, min + size, ImColor(style.Colors[ImGuiCol_WindowBg]));
 
-  ImGui::PushFont(GetWindow()->GetBoldFont(2));
   if (ImGui::BeginMainMenuBar())
   {
     for (auto& item : _items) {
@@ -287,19 +286,17 @@ bool MenuUI::Draw()
     ImGui::EndMainMenuBar();
   }
 
-  bool dirty = _current 
-  //|| ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked();
+  bool dirty = _current || ImGui::IsPopupOpen("##MainMenuBar", ImGuiPopupFlags_AnyPopup) || ImGui::IsItemClicked();
   if (dirty) {DirtyViewsUnderBox();}
 
   ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
   foregroundList->AddRect(ImVec2(_pos), ImVec2(_pos+_size), ImColor(255,128,128,255));
   
-  ImGui::PopFont();
   ImGui::PopStyleColor(3);
   ImGui::End();
 
   return ImGui::IsAnyItemHovered();
-  */
+  /*
   //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 8));
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
@@ -310,13 +307,13 @@ bool MenuUI::Draw()
         //DrawModalDialog<OpenUsdFileModalDialog>(*this);
       }
       if (ImGui::BeginMenu("Open Recent (as stage)")) {
-        /*
+        
         for (const auto& recentFile : _settings._recentFiles) {
           if (ImGui::MenuItem(recentFile.c_str())) {
             ExecuteAfterDraw<EditorOpenStage>(recentFile);
           }
         }
-        */
+        
         ImGui::EndMenu();
       }
       ImGui::Separator();
@@ -362,6 +359,7 @@ bool MenuUI::Draw()
     ImGui::EndMainMenuBar();
   }
   return false;
+  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -245,8 +245,6 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
   const char* visibleIcon = ICON_FA_EYE;
   const char* invisibleIcon = ICON_FA_EYE_SLASH;
 
-  
-
   Application* app = GetApplication();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
@@ -269,8 +267,8 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
 
-  const char* activeIcon = ICON_FA_CLOUD;
-  const char* inactiveIcon = ICON_FA_ADDRESS_BOOK;
+  const char* activeIcon = ICON_FA_RIGHT_TO_BRACKET;
+  const char* inactiveIcon = ICON_FA_PAUSE;
 
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();

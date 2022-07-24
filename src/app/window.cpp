@@ -29,7 +29,7 @@ bool KEY_MAP_INITIALIZED = false;
 Window::Window(bool fullscreen, const std::string& name) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
+  _name(name), _forceRedraw(0), _idle(false), _popup(NULL), _fbo(0),  _tex(0)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -76,7 +76,7 @@ Window::Window(bool fullscreen, const std::string& name) :
 Window::Window(int width, int height, const std::string& name):
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
+  _name(name), _forceRedraw(0), _idle(false), _popup(NULL), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
@@ -115,7 +115,7 @@ Window::Window(int x, int y, int width, int height,
   GLFWwindow* parent, const std::string& name, bool decorated) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _popup(NULL)
+  _name(name), _forceRedraw(0), _idle(false), _popup(NULL), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
@@ -192,24 +192,6 @@ Window::Init(Application* app)
     _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
     _mainView->SetWindow(this);
     _splitter = new SplitterUI();
-
-    // setup background buffer for popup window
-    glGenFramebuffers(1, &_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
-
-    glGenTextures(1, &_tex);
-    glBindTexture(GL_TEXTURE_2D, _tex);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     Resize(_width, _height);
     glGenVertexArrays(1, &_vao);
@@ -321,6 +303,29 @@ Window::Resize(unsigned width, unsigned height)
   _mainView->Resize(0, 0, _width, _height, true);
   _splitter->Resize(_width, _height);
   _splitter->RecurseBuildMap(_mainView);
+
+  if (_fbo) glDeleteFramebuffers(1, &_fbo);
+  if (_tex) glDeleteTextures(1, &_tex);
+
+  // setup background buffer for popup window
+  glGenFramebuffers(1, &_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+
+  glGenTextures(1, &_tex);
+  glBindTexture(GL_TEXTURE_2D, _tex);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
 }
 
 void
@@ -495,6 +500,14 @@ Window::SetGLContext()
   ImGui::SetCurrentContext(_context);
 }
 
+static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
+  ImGuiWindowFlags_NoInputs |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoDecoration |
+  ImGuiWindowFlags_NoBackground;
+
+
 // draw
 //----------------------------------------------------------------------------
 void 
@@ -510,16 +523,17 @@ Window::Draw()
   
   // draw popup
   if (_popup) {
-    if (!_popup->IsInitialized()) {
-      ImDrawList* drawList = ImGui::GetForegroundDrawList();
+    
+    if (! _popup->IsSync()) {
+      ImGui::SetNextWindowPos(ImVec2(0, 0));
+      ImGui::SetNextWindowSize(ImVec2(_width, _height));
+      ImGui::Begin("##background", NULL, JVR_BACKGROUND_FLAGS);
+
+      ImDrawList* drawList = ImGui::GetBackgroundDrawList();
       drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
-        ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 0, 0, 255));
-      _popup->SetInitialized();
-    }
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-    drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
-      ImVec2(0,0), ImVec2(1,1), ImColor(255,0,0,128));
-    if (_popup->IsSync()) {
+        ImVec2(0, 0), ImVec2(1, 1), ImColor(100,100,100, 255));
+      ImGui::End();
+    } else {
       for (Engine* engine : GetApplication()->GetEngines()) {
         engine->SetDirty(true);
       }
@@ -862,10 +876,8 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
 
   PopupUI* popup = parent->GetPopup();
   if (popup) {
-    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-      popup->MouseButton(button, action, mods);
-      parent->UpdatePopup(popup);
-    }
+    popup->MouseButton(button, action, mods);
+    parent->UpdatePopup(popup);
   } else if(button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
     View* view = parent->GetActiveView();
     if (view) {
@@ -937,11 +949,15 @@ void
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   Window* parent = Window::GetUserData(window);
+  PopupUI* popup = parent->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
   bool splitterHovered = parent->PickSplitter(x, y);
-  if(parent->IsDraggingSplitter()) {
+
+  if (popup) {
+    popup->MouseMove(x, y);
+  } else if(parent->IsDraggingSplitter()) {
     parent->DragSplitter(x, y);
   } else {
     if (active && active->GetFlag(View::INTERACTING)) {

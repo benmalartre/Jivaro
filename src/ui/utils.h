@@ -147,17 +147,18 @@ UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT
   if(active) {
     ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(255, 0, 0, 255));
   }
   
   ImGui::PushID(id);
   if (ImGui::Button(icon, BUTTON_SIZE))
   {
     func(args...);
-    if(active) ImGui::PopStyleColor(2);
+    if(active) ImGui::PopStyleColor(3);
     ImGui::PopID();
     return true;
   }
-  if (active) ImGui::PopStyleColor(2);
+  if (active) ImGui::PopStyleColor(3);
   ImGui::PopID();
   return false;
 }

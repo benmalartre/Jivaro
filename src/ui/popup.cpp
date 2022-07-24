@@ -16,9 +16,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags PopupUI::_flags = 
-  ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoMove |
   ImGuiWindowFlags_NoBackground;
 
 // Popup constructor
@@ -29,7 +27,6 @@ PopupUI::PopupUI(int x, int y, int w, int h)
   , _y(y)
   , _width(w)
   , _height(h)
-  , _initialized(false)
   , _done(false)
   , _sync(false)
   , _cancel(false)
@@ -50,19 +47,34 @@ void PopupUI::GetRelativeMousePosition(const float inX, const float inY,
 }
 
 
+static double _TouchEdge(const pxr::GfVec2f& p, const pxr::GfVec2f& min, 
+  const pxr::GfVec2f& max, double eps=2.0)
+{
+  const double l = p[0] - min[0];
+  const double r = max[0] - p[0];
+  const double t = p[1] - min[1];
+  const double b = max[1] - p[1];
+
+  const double closest = std::min(l, std::min(r, std::min(t, b)));
+  return closest < eps;
+}
+
 void 
 PopupUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  if (x < _x && y < _y && x > (_x + _width) && y > (_y + _height)) {
-    _cancel = true;
-  }
+  if (action == GLFW_PRESS) {
+    if (x < _x && y < _y && x >(_x + _width) && y >(_y + _height)) {
+      _cancel = true;
+    }
+  } 
 }
 
 void
 PopupUI::MouseMove(int x, int y)
 {
+
 }
 
 void 
@@ -83,9 +95,8 @@ PopupUI::Keyboard(int key, int scancode, int action, int mods)
 bool 
 PopupUI::Draw()
 {
-  bool opened;
 
-  ImGui::Begin(_name.c_str(), &opened, _flags);
+  ImGui::Begin(_name.c_str(), NULL, _flags);
 
   ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
   ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
@@ -103,6 +114,8 @@ PopupUI::Draw()
     ImVec2(_x + _width, _y + _height),
     ImColor(color[0], color[1], color[2], color[3])
   );
+
+  
   ImGui::End();
   return true;
 };
@@ -209,14 +222,14 @@ ColorPopupUI::Draw()
 NamePopupUI::NamePopupUI(int x, int y, int width, int height)
   : PopupUI(x, y, width, height)
 {
-  _sync = true;
+  _sync = false;
   memset(&_value[0], 0, 255 * sizeof(char));
 }
 
 NamePopupUI::NamePopupUI(int x, int y, int width, int height, const std::string& name)
   : PopupUI(x, y, width, height)
 {
-  _sync = true;
+  _sync = false;
   strcpy(&_value[0], name.c_str());
 }
 
@@ -233,11 +246,14 @@ NamePopupUI::SetName(const std::string& name)
 bool
 NamePopupUI::Draw()
 {
-  bool opened;
-  ImGui::Begin(_name.c_str(), &opened, _flags);
+  static bool initialized = false;
+  ImGui::Begin(_name.c_str(), NULL, _flags);
 
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+  if (!initialized) {
+    ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
+    ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+    initialized = true;
+  }
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   const ImGuiStyle& style = ImGui::GetStyle();
@@ -263,6 +279,7 @@ NamePopupUI::Draw()
   if (ImGui::Button("Cancel", ImVec2(GetWidth() / 3, 32))) {
     _cancel = true;
   }
+
 
   ImGui::End();
   return true;

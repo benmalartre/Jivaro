@@ -138,7 +138,7 @@ View::IsHovered()
 void 
 View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
 {
-  pxr::GfVec2f position =GetMin();
+  pxr::GfVec2f position = GetMin();
   int x = position[0];
   int y = position[1];
   outX = inX - x;
