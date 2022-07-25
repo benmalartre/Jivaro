@@ -14,6 +14,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 #define VIEW_HEAD_HEIGHT 32
+const ImVec2 JVR_MINI_BUTTON_SIZE(14, 14);
 
 class ViewHead
 {

@@ -182,12 +182,16 @@ ViewHead::Draw()
     ImGui::EndTabBar();
 
     ImGui::SetWindowFontScale(0.5);
-    ImGui::SetCursorPos(ImVec2(_parent->GetWidth() - 64, 6));
-    ImGui::Button(ICON_FA_GRIP_LINES);
+    ImGui::SetCursorPos(
+      ImVec2(
+        _parent->GetWidth() - 3 * BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0], 
+        6
+      ));
+    ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE);
     ImGui::SameLine();
-    ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL);
+    ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE);
     ImGui::SameLine();
-    ImGui::Button(ICON_FA_XMARK);
+    ImGui::Button(ICON_FA_XMARK, BUTTON_MINI_SIZE);
     ImGui::SameLine();
     ImGui::SetWindowFontScale(1.0);
   }

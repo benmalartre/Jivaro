@@ -35,7 +35,9 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const pxr::GfVec2f BUTTON_SIZE(24.f, 24.f);
+const pxr::GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
+const pxr::GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
+const pxr::GfVec2f BUTTON_MINI_SIZE(14.f, 14.f);
 
 class View;
 class UIUtils {
@@ -89,7 +91,7 @@ void
 UIUtils::IconButton(const char* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::BeginGroup();
-  ImGui::Button(icon, BUTTON_SIZE);
+  ImGui::Button(icon, BUTTON_NORMAL_SIZE);
   ImGui::EndGroup();
 }
 
@@ -97,7 +99,7 @@ template<typename FuncT, typename ...ArgsT>
 bool 
 UIUtils::AddIconButton(const char* icon, short state, FuncT func, ArgsT... args)
 {
-  if (ImGui::Button(icon, BUTTON_SIZE))
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
     func(args...);
     return true;
@@ -110,7 +112,7 @@ bool
 UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
 {
   ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_SIZE)) {
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
     func(args...);
     ImGui::PopID();
     return true;
@@ -126,7 +128,7 @@ UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, Fun
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_SIZE))
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
     func(args...);
     ImGui::PopID();
@@ -151,7 +153,7 @@ UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT
   }
   
   ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_SIZE))
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
     func(args...);
     if(active) ImGui::PopStyleColor(3);
