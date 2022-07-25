@@ -120,6 +120,7 @@ public:
   virtual void Input(int key) {};
 
   void SetInteracting(bool state);
+  void SetParent(View* view) { _parent = view; };
   virtual bool Draw()=0;
   virtual void Resize(){};
 

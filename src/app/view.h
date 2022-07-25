@@ -48,8 +48,6 @@ public:
   bool IsActive();
   bool IsHovered();
 
-  inline const std::string& GetName(){return _name;};
-  inline const char* GetText(){return _name.c_str();};
   inline double GetPerc(){return _perc;};
   void SetPerc(double perc);
   void GetPercFromMousePosition(int x, int y);
@@ -72,6 +70,7 @@ public:
   // content
   void SetContent(BaseUI* ui);
   BaseUI* GetContent(){return _content;};
+  void TransferHead(View* source);
   ViewHead* GetHead() { return _head; };
   ViewHead* CreateHead();
   float GetHeadHeight();
@@ -116,7 +115,6 @@ private:
   View*                 _left;
   View*                 _right;
   View*                 _parent;
-  std::string           _name;
 };
 
 

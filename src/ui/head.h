@@ -2,6 +2,7 @@
 #define JVR_UI_HEAD_H
 
 #include <iostream>
+#include <sstream>  
 #include <vector>
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>
@@ -15,6 +16,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 #define VIEW_HEAD_HEIGHT 32
 const ImVec2 JVR_MINI_BUTTON_SIZE(14, 14);
+const char* VIEW_HEAD_NAME = "view_head_";
+
+static size_t ViewHeadID = 0;
 
 class ViewHead
 {
@@ -27,28 +31,27 @@ public:
   void AddChild(BaseUI* child);
   void RemoveChild(int index);
   void SetCurrentChild(int index);
+  BaseUI* GetCurrentChild();
+  void SetView(View* view);
 
   float GetHeight() { return _height;};
+  const std::vector<BaseUI*>& GetChildrens() const { return _childrens; };
 
   // overrides
-  //void MouseButton(int action, int button, int mods) override {};
-  //void MouseMove(int x, int y) override {};
   bool Draw();
   void MouseMove(int x, int y);
   void MouseButton(int button, int action, int mods);
+  bool OnButtonClicked(int btn);
 
-  /*
-  MenuItem& AddItem(View* view, const std::string label, const std::string shortcut, bool selected,
-    bool enabled, MenuPressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());*/
 private:
-  //std::vector<HeadItem>   _items;
-  //HeadItem*               _current;
+  static const char*      _ComputeName(int index, const char* suffix="");
   int                     _current;
   View*                   _parent;
   std::vector<BaseUI*>    _childrens;
   bool                    _invade;
-  std::string             _name;
+  int                     _id;
   float                   _height;
+  const char*             _name;
 };
 
 class HeadedUI : public BaseUI

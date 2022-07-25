@@ -33,19 +33,18 @@ ImGuiWindowFlags ViewHead::_flags =
 ViewHead::ViewHead(View* parent)
   : _parent(parent)
   , _invade(false)
-  , _name(parent->GetName() + "Head")
+  , _id(ViewHeadID)
+  , _name(ViewHead::_ComputeName(ViewHeadID, ""))
 {
+  ViewHeadID++;
 }
 
 // destructor
 ViewHead::~ViewHead()
 {
-}
-
-void
-ViewHead::AddChild(BaseUI* child)
-{
-  _childrens.push_back(child);
+  for (auto& child : _childrens) {
+    delete child;
+  }
 }
 
 void
@@ -80,6 +79,12 @@ ViewHead::CreateChild(UIType type)
 }
 
 void
+ViewHead::AddChild(BaseUI* child)
+{
+  _childrens.push_back(child);
+}
+
+void
 ViewHead::SetCurrentChild(int index)
 {
   if (index >= 0 && index < _childrens.size())
@@ -87,6 +92,19 @@ ViewHead::SetCurrentChild(int index)
     _childrens[index]->Resize();
     _parent->SetContent(_childrens[index]);
   }
+}
+
+BaseUI* 
+ViewHead::GetCurrentChild()
+{
+  if (0 <= _current < _childrens.size()) {
+    return _childrens[_current];
+  }
+}
+
+void ViewHead::SetView(View* view)
+{
+  _parent = view;
 }
 
 void
@@ -99,6 +117,38 @@ ViewHead::RemoveChild(int index)
   }
 }
 
+bool 
+ViewHead::OnButtonClicked(int btn) 
+{
+  Window* window = _parent->GetWindow();
+  switch (btn) {
+  case 1:
+    _parent->Split(50, true);
+    window->Resize(window->GetWidth(), window->GetHeight());
+    return true;
+  case 2:
+    _parent->Split(50, false);
+    window->Resize(window->GetWidth(), window->GetHeight());
+    return true;
+  default:
+    std::cout << "not implemented yet..." << std::endl;
+    return false;
+  }
+}
+
+const char*
+ViewHead::_ComputeName(int index, const char* suffix)
+{
+
+  std::stringstream ss;
+  ss.clear();
+  ss << VIEW_HEAD_NAME;
+  ss << index;
+  ss << suffix;
+  ss << std::endl;
+  return ss.str().c_str();
+}
+
 bool
 ViewHead::Draw()
 {
@@ -107,7 +157,7 @@ ViewHead::Draw()
   const pxr::GfVec2f size(_parent->GetWidth(), GetHeight());
   static bool open;
 
-  ImGui::Begin(("##" + _name).c_str(), &open, ViewHead::_flags);
+  ImGui::Begin(_ComputeName(), &open, ViewHead::_flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
 
@@ -135,15 +185,17 @@ ViewHead::Draw()
     ImGuiTabBarFlags_Reorderable | 
     ImGuiTabBarFlags_FittingPolicyScroll;
 
-  if (ImGui::BeginTabBar((_name + "TabBar").c_str(), tabBarFlags))
+  int button_state = 0;
+
+  if (ImGui::BeginTabBar(_ComputeName("TabBar"), tabBarFlags))
   {
-    const std::string popupName = _name + "Popup";
+    const char* popupName = _ComputeName("Popup");
     if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
-      ImGui::OpenPopup(popupName.c_str());
+      ImGui::OpenPopup(popupName);
       _invade = true;
     }
-    if (ImGui::BeginPopup(popupName.c_str()))
+    if (ImGui::BeginPopup(popupName))
     {
       if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
       for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
@@ -187,37 +239,35 @@ ViewHead::Draw()
         _parent->GetWidth() - (3 * BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]), 
         6
       ));
+
     if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
-      BaseUI* content = _parent->GetContent();
-      _parent->Split(50, false);
-      if(content) {
-        _parent->GetLeft()->SetContent(content);
-        _parent->SetContent(NULL);
-      }
+      button_state = 1;
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE)) {
-      BaseUI* content = _parent->GetContent();
-      _parent->Split(50, true);
-      if (content) {
-        _parent->GetLeft()->SetContent(content);
-        _parent->SetContent(NULL);
-      }
+      button_state = 2;
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_XMARK, BUTTON_MINI_SIZE)) {
+      /*
       View* parent = _parent->GetParent();
       View* other = _parent->GetSibling();
+      ViewHead* head = _parent->GetHead();
       BaseUI* content = other->GetContent();
+      parent->SetHead(head);
       parent->DeleteChildren();
-      parent->SetContent(content);
+      //parent->SetContent(content);
+      _parent->GetWindow()->ForceRedraw();
+      */
+      button_state = 3;
     };
     ImGui::SameLine();
     ImGui::SetWindowFontScale(1.0);
   }
 
   ImGui::End();
-  return _invade;
+  return button_state ? (OnButtonClicked(button_state) || _invade) : _invade;
+
 }
 
 void ViewHead::MouseMove(int x, int y)

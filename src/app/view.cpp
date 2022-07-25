@@ -27,8 +27,7 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max)
   , _buffered(0)
   , _fixedPixels(-1)
 {
-  if(_parent==NULL)_name = "main";
-  else _window = _parent->_window;
+  if(_parent!=NULL)_window = _parent->_window;
 }
 
 View::View(View* parent, int x, int y, int w, int h)
@@ -44,8 +43,7 @@ View::View(View* parent, int x, int y, int w, int h)
   , _buffered(0)
   , _fixedPixels(-1)
 {
-  if(_parent==NULL)_name = "main";
-  else _window = _parent->_window;
+  if(_parent!=NULL)_window = _parent->_window;
 }
 
 View::~View()
@@ -79,6 +77,19 @@ View::CreateHead()
 {
   _head = new ViewHead(this); 
   return _head;
+}
+
+
+void
+View::TransferHead(View* source)
+{
+  ViewHead* sourceHead = source->GetHead();
+  if (!sourceHead)return;
+
+  if (_head)delete _head;
+  _head = sourceHead;
+  _head->SetView(this);
+  source->_head = NULL;
 }
 
 bool
@@ -321,16 +332,20 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   pxr::GfVec2f cMin, cMax;    
   GetChildMinMax(true, cMin, cMax);
   _left = new View(this, cMin, cMax);
-  _left->_name = _name + ":left";
   _left->_parent = this;
 
   GetChildMinMax(false, cMin, cMax);
   _right = new View(this, cMin, cMax);
-  _right->_name = _name + ":right";
   _right->_parent = this;
 
   ComputeNumPixels(false);
   ClearFlag(LEAF);
+
+  _left->TransferHead(this);
+  _left->SetContent(_content);
+  if(_content)_content->SetParent(_left);
+  _head = NULL;
+  _content = NULL;
 }
 
 void 
