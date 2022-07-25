@@ -90,13 +90,12 @@ ViewHead::SetCurrentChild(int index)
 }
 
 void
-ViewHead::RemoveChild(BaseUI* child)
+ViewHead::RemoveChild(int index)
 {
-  for (size_t i = 0; i < _childrens.size(); ++i) {
-    if (_childrens[i] == child) {
-      _childrens.erase(_childrens.begin() + i);
-      delete child;
-    }
+  if (0 <= index < _childrens.size()) {
+    BaseUI* child = _childrens[index];
+    _childrens.erase(_childrens.begin() + index);
+    delete child;
   }
 }
 
@@ -111,7 +110,6 @@ ViewHead::Draw()
   ImGui::Begin(("##" + _name).c_str(), &open, ViewHead::_flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
-  //ImGui::PushFont(_parent->GetWindow()->GetMediumFont(1));
 
   _height = ImGui::GetTextLineHeight() + style.FramePadding[1] * 2 + style.WindowPadding[1];
 
@@ -176,13 +174,24 @@ ViewHead::Draw()
     }
 
     if (ImGui::TabItemButton(" x ", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
-      std::cout << "DELETE CURRENT TAB ITEM" << std::endl;
+      RemoveChild(_current);
+      _current--;
+      SetCurrentChild(_current);
     }
 
     ImGui::EndTabBar();
+
+    ImGui::SetWindowFontScale(0.5);
+    ImGui::SetCursorPos(ImVec2(_parent->GetWidth() - 64, 6));
+    ImGui::Button(ICON_FA_GRIP_LINES);
+    ImGui::SameLine();
+    ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL);
+    ImGui::SameLine();
+    ImGui::Button(ICON_FA_XMARK);
+    ImGui::SameLine();
+    ImGui::SetWindowFontScale(1.0);
   }
 
-  //ImGui::PopFont();
   ImGui::End();
   return _invade;
 }

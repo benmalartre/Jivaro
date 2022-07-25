@@ -131,17 +131,17 @@ SelectCommand::SelectCommand(Selection::Type type,
   Selection* selection = GetApplication()->GetSelection();
   _previous = selection->GetItems();
   switch (mode) {
-  case 0:
+  case SET:
     selection->Clear();
     for (auto& path : paths) selection->AddItem(path);
     break;
-  case 1:
+  case ADD:
     for (auto& path : paths) selection->AddItem(path);
     break;
-  case 2:
+  case REMOVE:
     for (auto& path : paths) selection->RemoveItem(path);
     break;
-  case 3:
+  case TOGGLE:
     for (auto& path : paths) selection->ToggleItem(path);
     break;
   }

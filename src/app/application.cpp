@@ -780,17 +780,21 @@ pxr::GfBBox3d
 Application::GetSelectionBoundingBox()
 {
   pxr::GfBBox3d bbox;
-  pxr::TfTokenVector purposes = {pxr::UsdGeomTokens->default_};
+  static pxr::TfTokenVector purposes = {
+    pxr::UsdGeomTokens->default_,
+    pxr::UsdGeomTokens->proxy,
+    pxr::UsdGeomTokens->guide,
+    pxr::UsdGeomTokens->render
+  };
   pxr::UsdGeomBBoxCache bboxCache(
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const Selection::Item& item = _selection[n];
     if (item.type == Selection::Type::PRIM) {
       pxr::UsdPrim prim = _workspace->GetWorkStage()->GetPrimAtPath(item.path);
-      std::cout << bboxCache.ComputeWorldBound(prim) << std::endl;
-      if (prim.IsActive() && !prim.IsInPrototype()) {
+      
+      if (prim.IsActive()) {
         const pxr::GfBBox3d primBBox = bboxCache.ComputeWorldBound(prim);
-        
         bbox = bbox.Combine(bbox, pxr::GfBBox3d(primBBox.ComputeAlignedRange()));
       }
         

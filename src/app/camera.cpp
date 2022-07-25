@@ -126,8 +126,13 @@ void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
 
   }
   pxr::GfVec3d dir = (_pos - _lookat).GetNormalized();
+  std::cout << "POS : " << _pos << std::endl;
+  std::cout << "DIR : " << dir << std::endl;
   _lookat = center;
   _pos = center + dir * _dist;
+
+  std::cout << "LOOKAT : " << _lookat << std::endl;
+  std::cout << "POSITION : " << _pos << std::endl;
   LookAt();
 }
 

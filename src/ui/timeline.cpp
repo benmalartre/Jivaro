@@ -60,6 +60,14 @@ LoopCallback(TimelineUI* ui)
   time.SetLoop(data.loop);
 }
 
+static void
+SetFrameCallback(TimelineUI* ui)
+{
+  Time& time = GetApplication()->GetTime();
+  TimeData& data = ui->GetData();
+  time.SetActiveTime(data.currentTime);
+}
+
 
 ImGuiWindowFlags TimelineUI::_flags = 
   ImGuiWindowFlags_None |
@@ -176,7 +184,9 @@ void TimelineUI::MouseMove(int x, int y)
     if (static_cast<int>(_frame) != static_cast<int>(_lastFrame)) {
       _data.currentTime = _frame;
       time.SetActiveTime(_frame);
+      AttributeChangedNotice().Send();
       _lastFrame = _frame;
+      _parent->GetWindow()->ForceRedraw();
     }
   }
   if (_parent->GetFlag(View::INTERACTING) || _parent->GetFlag(View::OVER))

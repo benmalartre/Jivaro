@@ -24,7 +24,7 @@ public:
 
   void CreateChild(UIType type);
   void AddChild(BaseUI* child);
-  void RemoveChild(BaseUI* child);
+  void RemoveChild(int index);
   void SetCurrentChild(int index);
 
   float GetHeight() { return _height;};
