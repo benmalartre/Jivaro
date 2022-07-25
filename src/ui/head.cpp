@@ -184,14 +184,34 @@ ViewHead::Draw()
     ImGui::SetWindowFontScale(0.5);
     ImGui::SetCursorPos(
       ImVec2(
-        _parent->GetWidth() - 3 * BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0], 
+        _parent->GetWidth() - (3 * BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]), 
         6
       ));
-    ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE);
+    if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
+      BaseUI* content = _parent->GetContent();
+      _parent->Split(50, false);
+      if(content) {
+        _parent->GetLeft()->SetContent(content);
+        _parent->SetContent(NULL);
+      }
+    }
     ImGui::SameLine();
-    ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE);
+    if (ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE)) {
+      BaseUI* content = _parent->GetContent();
+      _parent->Split(50, true);
+      if (content) {
+        _parent->GetLeft()->SetContent(content);
+        _parent->SetContent(NULL);
+      }
+    }
     ImGui::SameLine();
-    ImGui::Button(ICON_FA_XMARK, BUTTON_MINI_SIZE);
+    if (ImGui::Button(ICON_FA_XMARK, BUTTON_MINI_SIZE)) {
+      View* parent = _parent->GetParent();
+      View* other = _parent->GetSibling();
+      BaseUI* content = other->GetContent();
+      parent->DeleteChildren();
+      parent->SetContent(content);
+    };
     ImGui::SameLine();
     ImGui::SetWindowFontScale(1.0);
   }

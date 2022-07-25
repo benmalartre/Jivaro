@@ -37,7 +37,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 const pxr::GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
 const pxr::GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
-const pxr::GfVec2f BUTTON_MINI_SIZE(14.f, 14.f);
+const pxr::GfVec2f BUTTON_MINI_SIZE(12.f, 12.f);
 
 class View;
 class UIUtils {
@@ -149,7 +149,7 @@ UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT
   if(active) {
     ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(255, 0, 0, 255));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(20, 20, 20, 255));
   }
   
   ImGui::PushID(id);

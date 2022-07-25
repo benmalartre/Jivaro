@@ -36,6 +36,7 @@ public:
   virtual ~View();
   void SetWindow(Window* Window);
   Window* GetWindow();
+  View* GetSibling();
   const float GetX(){return _min[0];};
   const float GetY(){return _min[1];};
   const pxr::GfVec2f GetMin(){return _min;};
@@ -62,6 +63,7 @@ public:
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
     const int width, const int height);
 
+  void DeleteChildren();
   inline View* GetLeft(){return _left;};
   inline View* GetRight(){return _right;};
   inline View* GetParent(){return _parent;};

@@ -134,6 +134,26 @@ View::IsHovered()
   return (this == GetWindow()->GetHoveredView());
 }
 
+View* View::GetSibling()
+{
+  if (_parent) {
+    if (this == _parent->GetLeft()) {
+      return _parent->GetRight();
+    }
+    else if (this == _parent->GetRight()) {
+      return _parent->GetLeft();
+    }
+  }
+  return NULL;
+}
+
+void View::DeleteChildren()
+{
+  if (_left)delete _left;
+  if (_right) delete _right;
+  _left = _right = NULL;
+}
+
 // mouse positon relative to the view
 void 
 View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
