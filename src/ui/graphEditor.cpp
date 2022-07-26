@@ -1142,7 +1142,7 @@ ImGuiWindowFlags GraphEditorUI::_flags =
 // constructor
 //------------------------------------------------------------------------------
 GraphEditorUI::GraphEditorUI(View* parent)
-  : HeadedUI(parent, UIType::GRAPHEDITOR)
+  : BaseUI(parent, UIType::GRAPHEDITOR)
   , _graph(NULL), _hoveredNode(NULL), _currentNode(NULL)
   , _hoveredPort(NULL), _currentPort(NULL), _hoveredConnexion(NULL)
   , _scale(1.f), _invScale(1.f), _fontIndex(0), _fontScale(1.0)

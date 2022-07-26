@@ -15,7 +15,7 @@ ImGuiWindowFlags LayerEditorUI::_flags = 0
 
 
 LayerEditorUI::LayerEditorUI(View* parent)
-  :HeadedUI(parent, UIType::LAYEREDITOR)
+  :BaseUI(parent, UIType::LAYEREDITOR)
 {
 }
 

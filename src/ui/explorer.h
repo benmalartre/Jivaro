@@ -6,7 +6,7 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
-#include "../ui/head.h"
+#include "../ui/tab.h"
 #include "../ui/utils.h"
 
 
@@ -14,7 +14,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 static size_t EXPLORER_LINE_HEIGHT = 20;
 class Selection;
-class ExplorerUI : public HeadedUI
+class ExplorerUI : public BaseUI
 {
   struct Item {
     pxr::SdfPath    path;

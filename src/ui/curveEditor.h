@@ -2,7 +2,7 @@
 #define JVR_UI_CURVEEDITOR_H
 
 #include "../common.h"
-#include "../ui/head.h"
+#include "../ui/ui.h"
 #include "../ui/utils.h"
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/sdf/layer.h>
@@ -23,7 +23,7 @@ struct CurveEditorGrabUI {
 typedef std::vector<pxr::UsdAnimXCurve*> AnimXCurves;
 typedef pxr::TfHashMap <pxr::SdfPath, AnimXCurves, pxr::SdfPath::Hash> AnimXCurvesMap;
 
-class CurveEditorUI : public HeadedUI
+class CurveEditorUI : public BaseUI
 {
 friend pxr::UsdAnimXData;
 public:

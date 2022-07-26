@@ -19,7 +19,7 @@ ImGuiWindowFlags CurveEditorUI::_flags =
 
 // constructor
 CurveEditorUI::CurveEditorUI(View* parent)
-  : HeadedUI(parent, UIType::CURVEEDITOR)
+  : BaseUI(parent, UIType::CURVEEDITOR)
   , _offset(0,0)
   , _scale(1,1)
   , _invScale(1,1)

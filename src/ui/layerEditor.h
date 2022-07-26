@@ -3,14 +3,14 @@
 
 #include "../common.h"
 #include "../ui/utils.h"
-#include "../ui/head.h"
+#include "../ui/ui.h"
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/primSpec.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class LayerEditorUI : public HeadedUI
+class LayerEditorUI : public BaseUI
 {
 public:
   LayerEditorUI(View* parent);

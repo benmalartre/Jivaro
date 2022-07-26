@@ -5,13 +5,14 @@
 #include "../common.h"
 #include "../ui/splitter.h"
 #include "../ui/utils.h"
+#include "../ui/tab.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Window;
 class BaseUI;
-class ViewHead;
+class ViewTabUI;
 class View
 {
 public:
@@ -61,19 +62,22 @@ public:
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
     const int width, const int height);
 
-  void DeleteChildren();
   inline View* GetLeft(){return _left;};
   inline View* GetRight(){return _right;};
   inline View* GetParent(){return _parent;};
   inline bool HasParent(){return _parent != NULL;};
+  void DeleteChildren();
 
   // content
-  void SetContent(BaseUI* ui);
-  BaseUI* GetContent(){return _content;};
-  void TransferHead(View* source);
-  ViewHead* GetHead() { return _head; };
-  ViewHead* CreateHead();
-  float GetHeadHeight();
+  void CreateUI(UIType type);
+  void AddUI(BaseUI* ui);
+  void RemoveUI(int index);
+  void SetCurrentUI(int index);
+  BaseUI* GetCurrentUI();
+  void TransferUIs(View* source);
+  ViewTabUI* GetTab() { return _tab; };
+  ViewTabUI* CreateTab();
+  float GetTabHeight();
 
   // cursor
   void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
@@ -81,7 +85,7 @@ public:
   bool Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   
   // callbacks
-  bool DrawHead();
+  bool DrawTab();
   virtual void Draw(bool forceRedraw);
   virtual void Resize(int x, int y, int width, int height, bool rationalize=false);
   virtual void MouseMove(int x, int y);
@@ -109,12 +113,13 @@ private:
   unsigned              _numPixels[2];
   int                   _fixedPixels;
   int                   _buffered;
-  BaseUI*               _content;
-  ViewHead*             _head;
+  int                   _current;
+  ViewTabUI*            _tab;
   Window*               _window;
   View*                 _left;
   View*                 _right;
   View*                 _parent;
+  std::vector<BaseUI*>  _uis;
 };
 
 

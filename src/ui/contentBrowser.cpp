@@ -13,7 +13,7 @@ ImGuiWindowFlags ContentBrowserUI::_flags =
   ImGuiWindowFlags_NoMove;
 
 ContentBrowserUI::ContentBrowserUI(View* parent)
-  : HeadedUI(parent, UIType::CONTENTBROWSER)
+  : BaseUI(parent, UIType::CONTENTBROWSER)
 {
 }
 

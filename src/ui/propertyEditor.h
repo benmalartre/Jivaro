@@ -5,13 +5,12 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
-#include "../ui/head.h"
 #include "../ui/utils.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class PropertyUI : public HeadedUI
+class PropertyUI : public BaseUI
 {
 public:
   PropertyUI(View* parent);

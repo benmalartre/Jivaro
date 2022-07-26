@@ -4,7 +4,7 @@
 #include <bitset>
 #include "../common.h"
 #include "../utils/icons.h"
-#include "../ui/head.h"
+#include "../ui/ui.h"
 #include "../ui/utils.h"
 #include "../ui/textFilter.h"
 
@@ -25,7 +25,7 @@ struct ContentBrowserOptions {
   bool _showRealPath = false;
 };
 
-class ContentBrowserUI : public HeadedUI
+class ContentBrowserUI : public BaseUI
 {
 public:
   ContentBrowserUI(View* parent);

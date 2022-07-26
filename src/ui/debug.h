@@ -2,13 +2,13 @@
 #define JVR_UI_DEBUG_H
 
 #include "../common.h"
-#include "../ui/head.h"
+#include "../ui/ui.h"
 #include "../ui/utils.h"
 #include <pxr/usd/usd/prim.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class DebugUI : public HeadedUI
+class DebugUI : public BaseUI
 {
 public:
   DebugUI(View* parent);

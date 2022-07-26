@@ -50,7 +50,7 @@ static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target,
 
 // constructor
 ViewportUI::ViewportUI(View* parent):
-  HeadedUI(parent, UIType::VIEWPORT)
+  BaseUI(parent, UIType::VIEWPORT)
 {
   _texture = 0;
   _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;

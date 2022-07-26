@@ -84,7 +84,7 @@ static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
 
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
-  : HeadedUI(parent, UIType::EXPLORER)
+  : BaseUI(parent, UIType::EXPLORER)
   , _counter(0)
 {
   _parent->SetDirty();

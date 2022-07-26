@@ -7,7 +7,6 @@
 #include "../common.h"
 #include "../utils/icons.h"
 #include "../ui/ui.h"
-#include "../ui/head.h"
 #include "../ui/utils.h"
 #include "../app/selection.h"
 
@@ -67,7 +66,7 @@ static int _GetColorFromAttribute(const pxr::UsdAttribute& attr);
 
 class Selection;
 
-class GraphEditorUI : public HeadedUI
+class GraphEditorUI : public BaseUI
 {
 public:
   static const pxr::TfToken NodeExpendState[3];

@@ -1,5 +1,5 @@
 #include "../ui/ui.h"
-#include "../ui/head.h"
+#include "../ui/tab.h"
 #include "../app/window.h"
 #include "../app/view.h"
 
@@ -16,7 +16,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
 {
   if(_parent && !popup)
   {
-    _parent->SetContent(this);
+    _parent->AddUI(this);
     _parent->SetFlag(View::LEAF);
   }
 
@@ -64,6 +64,7 @@ void BaseUI::GetRelativeMousePosition(const float inX, const float inY,
   pxr::GfVec2f parentPosition = _parent->GetMin();
   float parentX = parentPosition[0];
   float parentY = parentPosition[1];
+  if (_parent->GetTab()) parentY += _parent->GetTab()->GetHeight();
   outX = inX - parentX;
   outY = inY - parentY;
 }
@@ -98,6 +99,13 @@ int BaseUI::GetX()
 
 int BaseUI::GetY()
 { 
+  ImGuiStyle& style = ImGui::GetStyle();
+  if (_parent->GetTab()) {
+    return (_parent->GetMin()[1] + _parent->GetTab()->GetHeight()) - 1;
+  }
+  else {
+    return (_parent->GetMin()[1]) - 1;
+  }
   return _parent->GetMin()[1];
 }
 
@@ -108,7 +116,13 @@ int BaseUI::GetWidth()
 
 int BaseUI::GetHeight()
 {
-  return _parent->GetHeight();
+  ImGuiStyle& style = ImGui::GetStyle();
+  if (_parent->GetTab()) {
+    return (_parent->GetHeight() - _parent->GetTab()->GetHeight()) + 2;
+  }
+  else {
+    return _parent->GetHeight() + 2;
+  }
 }
 
 

@@ -22,7 +22,7 @@ ImGuiWindowFlags PropertyUI::_flags =
   ImGuiWindowFlags_NoMove;
 
 PropertyUI::PropertyUI(View* parent)
-  : HeadedUI(parent, UIType::PROPERTYEDITOR)
+  : BaseUI(parent, UIType::PROPERTYEDITOR)
   , _focused(-1)
 {
 }

@@ -19,7 +19,7 @@ ImGuiWindowFlags DemoUI::_flags =
 
 
 DemoUI::DemoUI(View* parent)
-  : HeadedUI(parent, UIType::DEMO)
+  : BaseUI(parent, UIType::DEMO)
 {
 }
 

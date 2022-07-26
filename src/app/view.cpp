@@ -5,9 +5,18 @@
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../ui/ui.h"
-#include "../ui/head.h"
+#include "../ui/tab.h"
 #include "../ui/splitter.h"
 #include "../ui/menu.h"
+#include "../ui/viewport.h"
+#include "../ui/contentBrowser.h"
+#include "../ui/graphEditor.h"
+#include "../ui/propertyEditor.h"
+#include "../ui/curveEditor.h"
+#include "../ui/layerEditor.h"
+#include "../ui/debug.h"
+#include "../ui/demo.h"
+
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -16,14 +25,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 //----------------------------------------------------------------------------
 View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max)
   : _parent(parent)
-  , _head(NULL)
+  , _tab(NULL)
   , _left(NULL)
   , _right(NULL)
   , _min(min)
   , _max(max)
   , _flags(HORIZONTAL|LEAF|DIRTY)
   , _perc(0.5)
-  , _content(NULL)
   , _buffered(0)
   , _fixedPixels(-1)
 {
@@ -32,14 +40,13 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max)
 
 View::View(View* parent, int x, int y, int w, int h)
   : _parent(parent)
-  , _head(NULL)
+  , _tab(NULL)
   , _left(NULL)
   , _right(NULL)
   , _min(pxr::GfVec2f(x, y))
   , _max(pxr::GfVec2f(x+w, y+h))
   , _flags(HORIZONTAL|LEAF|DIRTY)
   , _perc(0.5)
-  , _content(NULL)
   , _buffered(0)
   , _fixedPixels(-1)
 {
@@ -48,8 +55,7 @@ View::View(View* parent, int x, int y, int w, int h)
 
 View::~View()
 {
-  if (_head) delete _head;
-  if (_content) delete _content;
+  if (_tab) delete _tab;
   if (_left) delete _left;
   if (_right) delete _right;
 }
@@ -66,30 +72,76 @@ View::GetWindow()
   return _window;
 }
 
-void 
-View::SetContent(BaseUI* ui)
-{
-  _content=ui;
-};
 
-ViewHead*
-View::CreateHead()
+ViewTabUI*
+View::CreateTab()
 {
-  _head = new ViewHead(this); 
-  return _head;
+  _tab = new ViewTabUI(this); 
+  return _tab;
+}
+
+void
+View::CreateUI(UIType type)
+{
+  switch (type) {
+  case UIType::VIEWPORT:
+    new ViewportUI(this);
+    break;
+  case UIType::CONTENTBROWSER:
+    new ContentBrowserUI(this);
+    break;
+  case UIType::GRAPHEDITOR:
+    new GraphEditorUI(this);
+    break;
+  case UIType::CURVEEDITOR:
+    new CurveEditorUI(this);
+    break;
+  case UIType::LAYEREDITOR:
+    new LayerEditorUI(this);
+    break;
+  case UIType::DEBUG:
+    new DebugUI(this);
+    break;
+  case UIType::DEMO:
+    new DemoUI(this);
+    break;
+  case UIType::PROPERTYEDITOR:
+    new PropertyUI(this);
+    break;
+  }
+}
+
+void
+View::AddUI(BaseUI* ui)
+{
+  _uis.push_back(ui);
+}
+
+void
+View::SetCurrentUI(int index)
+{
+  if (index >= 0 && index < _uis.size())
+  {
+    _uis[index]->Resize();
+    _current = index;
+  }
+}
+
+BaseUI*
+View::GetCurrentUI()
+{
+  if (0 <= _current < _uis.size()) {
+    return _uis[_current];
+  }
+  return NULL;
 }
 
 
 void
-View::TransferHead(View* source)
+View::TransferUIs(View* source)
 {
-  ViewHead* sourceHead = source->GetHead();
-  if (!sourceHead)return;
-
-  if (_head)delete _head;
-  _head = sourceHead;
-  _head->SetView(this);
-  source->_head = NULL;
+  _uis = source->_uis;
+  source->_uis.clear();
 }
 
 bool
@@ -108,9 +160,9 @@ View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
 }
 
 bool
-View::DrawHead()
+View::DrawTab()
 {
-  if (_head) return (_head->Draw());
+  if (_tab) return (_tab->Draw());
   return false;
 }
 
@@ -122,10 +174,11 @@ View::Draw(bool forceRedraw)
     if (_right)_right->Draw(forceRedraw);
   }
   else {
-    if (!DrawHead()) {
+    if (!DrawTab()) {
       Time& time = GetApplication()->GetTime();
-      if (_content && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-        if (!_content->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
+      BaseUI* current = GetCurrentUI();
+      if (current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+        if (!current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
           SetClean();
         }
       }
@@ -176,8 +229,8 @@ View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& out
   outY = inY - y;
 }
 
-float View::GetHeadHeight() {
-  if (_head)return _head->GetHeight();
+float View::GetTabHeight() {
+  if (_tab)return _tab->GetHeight();
   else return 0.f;
 }
 
@@ -186,19 +239,20 @@ View::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  if (_head) {
+  BaseUI* current = GetCurrentUI();
+  if (_tab) {
     const float relativeY = y - GetY();
     if (relativeY > 0 && relativeY < GetHeadHeight() * 2) {
-      _head->MouseButton(button, action, mods);
+      _tab->MouseButton(button, action, mods);
     } else {
-      if (_content && !GetFlag(DISCARDMOUSEBUTTON)) {
-        _content->MouseButton(button, action, mods);
+      if (current && !GetFlag(DISCARDMOUSEBUTTON)) {
+        current->MouseButton(button, action, mods);
       }
       ClearFlag(DISCARDMOUSEBUTTON);
     }
   } else {
-    if (_content && !GetFlag(DISCARDMOUSEBUTTON)) {
-      _content->MouseButton(button, action, mods);
+    if (current && !GetFlag(DISCARDMOUSEBUTTON)) {
+      current->MouseButton(button, action, mods);
     }
     ClearFlag(DISCARDMOUSEBUTTON);
   }
@@ -207,18 +261,19 @@ View::MouseButton(int button, int action, int mods)
 void 
 View::MouseMove(int x, int y)
 {
-  if (_head) {
+  BaseUI* current = GetCurrentUI();
+  if (_tab) {
     if ((y - GetY()) < GetHeadHeight()) {
-      if (GetFlag(View::INTERACTING) && _content)_content->MouseMove(x, y);
-      else _head->MouseMove(x, y);
+      if (GetFlag(View::INTERACTING) && current)current->MouseMove(x, y);
+      else _tab->MouseMove(x, y);
     } else {
-      if (_content && !GetFlag(DISCARDMOUSEMOVE))
-        _content->MouseMove(x, y);
+      if (current && !GetFlag(DISCARDMOUSEMOVE))
+        current->MouseMove(x, y);
         ClearFlag(DISCARDMOUSEMOVE);
     }
   } else {
-    if (_content && !GetFlag(DISCARDMOUSEMOVE))
-      _content->MouseMove(x, y);
+    if (current && !GetFlag(DISCARDMOUSEMOVE))
+      current->MouseMove(x, y);
     ClearFlag(DISCARDMOUSEMOVE);
   }
 }
@@ -226,22 +281,25 @@ View::MouseMove(int x, int y)
 void 
 View::MouseWheel(int x, int y)
 {
-  if(_content)_content->MouseWheel(x, y);
+  BaseUI* current = GetCurrentUI();
+  if(current)current->MouseWheel(x, y);
 }
 
 void 
 View::Keyboard(int key, int scancode, int action, int mods)
 {
-  if (_content) {
-    _content->Keyboard(key, scancode, action, mods);
+  BaseUI* current = GetCurrentUI();
+  if (current) {
+    current->Keyboard(key, scancode, action, mods);
   }
 }
 
 void 
 View::Input(int key)
 {
-  if (_content) {
-    _content->Input(key);
+  BaseUI* current = GetCurrentUI();
+  if (current) {
+    current->Input(key);
   }
 }
 
@@ -341,11 +399,10 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   ComputeNumPixels(false);
   ClearFlag(LEAF);
 
-  _left->TransferHead(this);
-  _left->SetContent(_content);
-  if(_content)_content->SetParent(_left);
-  _head = NULL;
-  _content = NULL;
+  _left->TransferUIs(this);
+  BaseUI* current = GetCurrentUI();
+  if(current)current->SetParent(_left);
+  _tab = NULL;
 }
 
 void 
@@ -384,7 +441,8 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   }
   else
   {
-    if(_content)_content->Resize();
+    BaseUI* current = GetCurrentUI();
+    if(current)current->Resize();
   }
   if(rationalize)RescaleNumPixels(ratio);
   SetDirty();
