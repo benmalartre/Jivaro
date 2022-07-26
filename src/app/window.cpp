@@ -398,8 +398,7 @@ Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPi
       view->Split(perc, horizontal, fixed, numPixels);
   }
   
-  //view->SetPerc(perc);
-
+  view->SetPerc(perc);
   BuildSplittersMap();
   return view;
 }
@@ -461,6 +460,7 @@ Window::DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& 
 void 
 Window::BuildSplittersMap()
 {
+  std::cout << "BUILD SPLITTER MAP " << _width << "," << _height << std::endl;
   _splitter->BuildMap(_width, _height);
   _splitter->RecurseBuildMap(_mainView);
 }

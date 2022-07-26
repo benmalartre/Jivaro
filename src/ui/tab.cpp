@@ -102,6 +102,7 @@ ViewTabUI::Draw()
         ImGui::Selectable(UITypeName[n]);
         if (ImGui::IsItemClicked()) {
           _parent->CreateUI(UIType(n));
+          _current = _parent->GetUIs().size() - 1;
           _invade = false;
         }
       }
@@ -121,6 +122,7 @@ ViewTabUI::Draw()
       {
         if (n != _current) {
           _parent->SetCurrentUI(n);
+          _current = n;
         }
         
         ImGui::EndTabItem();
@@ -142,12 +144,12 @@ ViewTabUI::Draw()
 
     Window* window = _parent->GetWindow();
     if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
-      _parent->Split(50, true);
+      _parent->Split(0.5, true);
       window->Resize(window->GetWidth(), window->GetHeight());
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE)) {
-      _parent->Split(50, false);
+      _parent->Split(0.5, false);
       window->Resize(window->GetWidth(), window->GetHeight());
     }
     ImGui::SameLine();

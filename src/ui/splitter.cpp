@@ -54,7 +54,7 @@ void SplitterUI::RecurseBuildMap(View* view)
         }
       }
     }
-   
+    
     RecurseBuildMap(view->GetLeft());
     RecurseBuildMap(view->GetRight());
   }

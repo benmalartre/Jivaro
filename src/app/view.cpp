@@ -91,28 +91,28 @@ View::CreateUI(UIType type)
 {
   switch (type) {
   case UIType::VIEWPORT:
-    new ViewportUI(this);
+    _current = new ViewportUI(this);
     break;
   case UIType::CONTENTBROWSER:
-    new ContentBrowserUI(this);
+    _current = new ContentBrowserUI(this);
     break;
   case UIType::GRAPHEDITOR:
-    new GraphEditorUI(this);
+    _current = new GraphEditorUI(this);
     break;
   case UIType::CURVEEDITOR:
-    new CurveEditorUI(this);
+    _current = new CurveEditorUI(this);
     break;
   case UIType::LAYEREDITOR:
-    new LayerEditorUI(this);
+    _current = new LayerEditorUI(this);
     break;
   case UIType::DEBUG:
-    new DebugUI(this);
+    _current = new DebugUI(this);
     break;
   case UIType::DEMO:
-    new DemoUI(this);
+    _current = new DemoUI(this);
     break;
   case UIType::PROPERTYEDITOR:
-    new PropertyUI(this);
+    _current = new PropertyUI(this);
     break;
   }
 }
@@ -120,23 +120,20 @@ View::CreateUI(UIType type)
 void
 View::AddUI(BaseUI* ui)
 {
-  /*
   _uis.push_back(ui);
   _currentIdx == _uis.size() - 1;
-  _current = ui;
-  */
+  _current = ui; 
 }
 
 void
 View::SetCurrentUI(int index)
-{/*
+{
   if (index >= 0 && index < _uis.size())
   {
     _uis[index]->Resize();
     _currentIdx = index;
     _current = _uis[index];
   }
-  */
 }
 
 BaseUI*
@@ -148,24 +145,22 @@ View::GetCurrentUI()
 void
 View::RemoveUI(int index)
 {
-  /*
   if (0 <= index < _uis.size()) {
     BaseUI* ui = _uis[index];
 
     _uis.erase(_uis.begin() + index);
-  }*/
+  }
 }
 
 void
 View::RemoveUI(BaseUI* ui)
 {
-  /*
   for (size_t i = 0; i < _uis.size(); ++i) {
     if (_uis[i] == ui) {
       _uis.erase(_uis.begin() + i);
       break;
     }
-  }*/
+  }
 }
 
 
@@ -184,9 +179,9 @@ View::GetUIs()
 void
 View::TransferUIs(View* source)
 {
-  /*
   _uis = std::move(source->_uis);
-  source->_uis.clear();*/
+  for (auto& ui : _uis)ui->SetParent(this);
+  source->_uis.clear();
 }
 
 bool
@@ -207,7 +202,6 @@ View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
 bool
 View::DrawTab()
 {
-  std::cout << "draw tab..." << std::endl;
   if (_tab) return (_tab->Draw());
   return false;
 }
@@ -215,7 +209,6 @@ View::DrawTab()
 void 
 View::Draw(bool forceRedraw)
 {
-  std::cout << "VIEW DRAW : " << _left << "," << _right << std::endl;
   if (!GetFlag(LEAF)) {
     if (_left)_left->Draw(forceRedraw);
     if (_right)_right->Draw(forceRedraw);
@@ -223,17 +216,12 @@ View::Draw(bool forceRedraw)
   else {
     if (!DrawTab()) {
       Time& time = GetApplication()->GetTime();
-      std::cout << "CURRENT UI : " << _current << std::endl;
-      if (_current)std::cout << "FCK : " << _current->GetType() << std::endl;
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
 
         if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
           SetClean();
         }
       }
-    }
-    else {
-      std::cout << " FAIL DRAW TAB..." << std::endl;
     }
   }
 }
@@ -414,7 +402,6 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
 void
 View::Split(double perc, bool horizontal, int fixed, int numPixels)
 {
-  std::cout << "VIEW SPLIT CALLED" << std::endl;
   if(horizontal)SetFlag(HORIZONTAL);
   else ClearFlag(HORIZONTAL);
 
@@ -447,13 +434,11 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   ComputeNumPixels(false);
   ClearFlag(LEAF);
 
-  /*
   if (_tab && _left->_tab) {
     _left->TransferUIs(this);
-    if (_current)_current->SetParent(_left);
   }
-  if (_tab) delete _tab;*/
-  std::cout << "VIEW SPLIT SUCESS" << std::endl;
+  if (_tab) delete _tab;
+  _tab = NULL;
 }
 
 void 

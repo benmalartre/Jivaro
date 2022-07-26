@@ -370,16 +370,12 @@ Application::Init()
 
   // create window
   _mainWindow->SetGLContext();
-  std::cout << "SET GL CONTEXT " << std::endl;
   int width, height;
   glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
-  std::cout << "WINDOW SIZE : " << width << "," << height << std::endl;
-  std::cout << width << "  " << height << std::endl;
   View* mainView = _mainWindow->SplitView(
     _mainWindow->GetMainView(), 0.5, true, View::LFIXED, 22);
   View* bottomView = _mainWindow->SplitView(
     mainView->GetRight(), 0.9, true, false);
-  
   //bottomView->Split(0.9, true, true);
   View* timelineView = bottomView->GetRight();
   View* centralView = _mainWindow->SplitView(
@@ -405,26 +401,24 @@ Application::Init()
   View* graphView = centralView->GetRight();
 
   _mainWindow->Resize(width, height);
-  
+
   // initialize 3d tools
   _tools[_mainWindow] = Tool();
   _tools[_mainWindow].Init();
   
-  std::cout << "INIT TOOLS..." << std::endl;
   GraphEditorUI* graph = new GraphEditorUI(graphView);
   
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   _viewport = new ViewportUI(viewportView);
   _timeline = new TimelineUI(timelineView);
   MenuUI* menu = new MenuUI(topView);
-  std::cout << "ADDED VIEW" << std::endl;
-  /*ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
+  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
   _explorer = new ExplorerUI(explorerView);
   _layers =  new LayersUI(layersView);
   //new LayerHierarchyUI(layersView, "fuck");
   //_property = new PropertyUI(propertyView, "Property");
   new DemoUI(propertyView);
-  */
+  
   std::cout << "PREFERENCES : " << GetPreferences().GetRootFolder() << std::endl;
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
