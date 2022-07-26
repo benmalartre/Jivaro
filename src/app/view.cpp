@@ -20,37 +20,42 @@
 
 
 JVR_NAMESPACE_OPEN_SCOPE
-
 // View constructor
 //----------------------------------------------------------------------------
-View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max)
+View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, unsigned flags)
   : _parent(parent)
   , _tab(NULL)
   , _left(NULL)
   , _right(NULL)
   , _min(min)
   , _max(max)
-  , _flags(HORIZONTAL|LEAF|DIRTY)
+  , _flags(flags)
   , _perc(0.5)
   , _buffered(0)
   , _fixedPixels(-1)
+  , _current(NULL)
+  , _currentIdx(-1)
 {
   if(_parent!=NULL)_window = _parent->_window;
+  if (_flags & View::TAB)CreateTab();
 }
 
-View::View(View* parent, int x, int y, int w, int h)
+View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   : _parent(parent)
   , _tab(NULL)
   , _left(NULL)
   , _right(NULL)
   , _min(pxr::GfVec2f(x, y))
   , _max(pxr::GfVec2f(x+w, y+h))
-  , _flags(HORIZONTAL|LEAF|DIRTY)
+  , _flags(flags)
   , _perc(0.5)
   , _buffered(0)
   , _fixedPixels(-1)
+  , _current(NULL)
+  , _currentIdx(-1)
 {
   if(_parent!=NULL)_window = _parent->_window;
+  if (_flags & View::TAB)CreateTab();
 }
 
 View::~View()
@@ -79,6 +84,7 @@ View::CreateTab()
   _tab = new ViewTabUI(this); 
   return _tab;
 }
+
 
 void
 View::CreateUI(UIType type)
@@ -114,34 +120,73 @@ View::CreateUI(UIType type)
 void
 View::AddUI(BaseUI* ui)
 {
+  /*
   _uis.push_back(ui);
+  _currentIdx == _uis.size() - 1;
+  _current = ui;
+  */
 }
 
 void
 View::SetCurrentUI(int index)
-{
+{/*
   if (index >= 0 && index < _uis.size())
   {
     _uis[index]->Resize();
-    _current = index;
+    _currentIdx = index;
+    _current = _uis[index];
   }
+  */
 }
 
 BaseUI*
 View::GetCurrentUI()
 {
-  if (0 <= _current < _uis.size()) {
-    return _uis[_current];
-  }
-  return NULL;
+  return _current;
 }
 
+void
+View::RemoveUI(int index)
+{
+  /*
+  if (0 <= index < _uis.size()) {
+    BaseUI* ui = _uis[index];
+
+    _uis.erase(_uis.begin() + index);
+  }*/
+}
+
+void
+View::RemoveUI(BaseUI* ui)
+{
+  /*
+  for (size_t i = 0; i < _uis.size(); ++i) {
+    if (_uis[i] == ui) {
+      _uis.erase(_uis.begin() + i);
+      break;
+    }
+  }*/
+}
+
+
+const std::vector<BaseUI*>&
+View::GetUIs() const
+{
+  return _uis;
+}
+
+std::vector<BaseUI*>&
+View::GetUIs()
+{
+  return _uis;
+}
 
 void
 View::TransferUIs(View* source)
 {
-  _uis = source->_uis;
-  source->_uis.clear();
+  /*
+  _uis = std::move(source->_uis);
+  source->_uis.clear();*/
 }
 
 bool
@@ -162,6 +207,7 @@ View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
 bool
 View::DrawTab()
 {
+  std::cout << "draw tab..." << std::endl;
   if (_tab) return (_tab->Draw());
   return false;
 }
@@ -169,6 +215,7 @@ View::DrawTab()
 void 
 View::Draw(bool forceRedraw)
 {
+  std::cout << "VIEW DRAW : " << _left << "," << _right << std::endl;
   if (!GetFlag(LEAF)) {
     if (_left)_left->Draw(forceRedraw);
     if (_right)_right->Draw(forceRedraw);
@@ -176,12 +223,17 @@ View::Draw(bool forceRedraw)
   else {
     if (!DrawTab()) {
       Time& time = GetApplication()->GetTime();
-      BaseUI* current = GetCurrentUI();
-      if (current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-        if (!current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
+      std::cout << "CURRENT UI : " << _current << std::endl;
+      if (_current)std::cout << "FCK : " << _current->GetType() << std::endl;
+      if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+
+        if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
           SetClean();
         }
       }
+    }
+    else {
+      std::cout << " FAIL DRAW TAB..." << std::endl;
     }
   }
 }
@@ -239,20 +291,19 @@ View::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  BaseUI* current = GetCurrentUI();
   if (_tab) {
     const float relativeY = y - GetY();
-    if (relativeY > 0 && relativeY < GetHeadHeight() * 2) {
+    if (relativeY > 0 && relativeY < GetTabHeight() * 2) {
       _tab->MouseButton(button, action, mods);
     } else {
-      if (current && !GetFlag(DISCARDMOUSEBUTTON)) {
-        current->MouseButton(button, action, mods);
+      if (_current && !GetFlag(DISCARDMOUSEBUTTON)) {
+        _current->MouseButton(button, action, mods);
       }
       ClearFlag(DISCARDMOUSEBUTTON);
     }
   } else {
-    if (current && !GetFlag(DISCARDMOUSEBUTTON)) {
-      current->MouseButton(button, action, mods);
+    if (_current && !GetFlag(DISCARDMOUSEBUTTON)) {
+      _current->MouseButton(button, action, mods);
     }
     ClearFlag(DISCARDMOUSEBUTTON);
   }
@@ -261,19 +312,18 @@ View::MouseButton(int button, int action, int mods)
 void 
 View::MouseMove(int x, int y)
 {
-  BaseUI* current = GetCurrentUI();
   if (_tab) {
-    if ((y - GetY()) < GetHeadHeight()) {
-      if (GetFlag(View::INTERACTING) && current)current->MouseMove(x, y);
+    if ((y - GetY()) < GetTabHeight()) {
+      if (GetFlag(View::INTERACTING) && _current)_current->MouseMove(x, y);
       else _tab->MouseMove(x, y);
     } else {
-      if (current && !GetFlag(DISCARDMOUSEMOVE))
-        current->MouseMove(x, y);
+      if (_current && !GetFlag(DISCARDMOUSEMOVE))
+        _current->MouseMove(x, y);
         ClearFlag(DISCARDMOUSEMOVE);
     }
   } else {
-    if (current && !GetFlag(DISCARDMOUSEMOVE))
-      current->MouseMove(x, y);
+    if (_current && !GetFlag(DISCARDMOUSEMOVE))
+      _current->MouseMove(x, y);
     ClearFlag(DISCARDMOUSEMOVE);
   }
 }
@@ -281,25 +331,22 @@ View::MouseMove(int x, int y)
 void 
 View::MouseWheel(int x, int y)
 {
-  BaseUI* current = GetCurrentUI();
-  if(current)current->MouseWheel(x, y);
+  if(_current)_current->MouseWheel(x, y);
 }
 
 void 
 View::Keyboard(int key, int scancode, int action, int mods)
 {
-  BaseUI* current = GetCurrentUI();
-  if (current) {
-    current->Keyboard(key, scancode, action, mods);
+  if (_current) {
+    _current->Keyboard(key, scancode, action, mods);
   }
 }
 
 void 
 View::Input(int key)
 {
-  BaseUI* current = GetCurrentUI();
-  if (current) {
-    current->Input(key);
+  if (_current) {
+    _current->Input(key);
   }
 }
 
@@ -367,6 +414,7 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
 void
 View::Split(double perc, bool horizontal, int fixed, int numPixels)
 {
+  std::cout << "VIEW SPLIT CALLED" << std::endl;
   if(horizontal)SetFlag(HORIZONTAL);
   else ClearFlag(HORIZONTAL);
 
@@ -399,10 +447,13 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   ComputeNumPixels(false);
   ClearFlag(LEAF);
 
-  _left->TransferUIs(this);
-  BaseUI* current = GetCurrentUI();
-  if(current)current->SetParent(_left);
-  _tab = NULL;
+  /*
+  if (_tab && _left->_tab) {
+    _left->TransferUIs(this);
+    if (_current)_current->SetParent(_left);
+  }
+  if (_tab) delete _tab;*/
+  std::cout << "VIEW SPLIT SUCESS" << std::endl;
 }
 
 void 
@@ -441,8 +492,7 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   }
   else
   {
-    BaseUI* current = GetCurrentUI();
-    if(current)current->Resize();
+    if(_current)_current->Resize();
   }
   if(rationalize)RescaleNumPixels(ratio);
   SetDirty();

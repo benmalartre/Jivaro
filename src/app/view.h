@@ -2,6 +2,7 @@
 #define JVR_APPLICATION_VIEW_H
 #include <pxr/usd/usd/prim.h>
 
+#include <vector>
 #include "../common.h"
 #include "../ui/splitter.h"
 #include "../ui/utils.h"
@@ -29,11 +30,14 @@ public:
     FORCEREDRAW         = 1 << 9,
     TIMEVARYING         = 1 << 10,
     DISCARDMOUSEBUTTON  = 1 << 11,
-    DISCARDMOUSEMOVE    = 1 << 12
+    DISCARDMOUSEMOVE    = 1 << 12,
+    TAB                 = 1 << 13
   };
 
-  View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max);
-  View(View* parent, int x, int y, int w, int h);
+  View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, 
+    unsigned flags=HORIZONTAL|DIRTY|LEAF|TAB);
+  View(View* parent, int x, int y, int w, int h, 
+    unsigned flags= HORIZONTAL|DIRTY|LEAF|TAB);
   virtual ~View();
   void SetWindow(Window* Window);
   Window* GetWindow();
@@ -68,16 +72,26 @@ public:
   inline bool HasParent(){return _parent != NULL;};
   void DeleteChildren();
 
+  // tab
+  ViewTabUI* GetTab() { return _tab; };
+  ViewTabUI* CreateTab();
+  float GetTabHeight();
+
   // content
   void CreateUI(UIType type);
   void AddUI(BaseUI* ui);
   void RemoveUI(int index);
+  void RemoveUI(BaseUI* ui);
   void SetCurrentUI(int index);
   BaseUI* GetCurrentUI();
+  const std::vector<BaseUI*>& GetUIs() const;
+  std::vector<BaseUI*>& GetUIs();
   void TransferUIs(View* source);
-  ViewTabUI* GetTab() { return _tab; };
-  ViewTabUI* CreateTab();
-  float GetTabHeight();
+  bool HasUIs() { return _uis.size() > 0; };
+
+  // current
+  BaseUI* GetCurrent() { return _current; };
+  void SetCurrent(BaseUI* ui) { _current = ui; };
 
   // cursor
   void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
@@ -113,13 +127,14 @@ private:
   unsigned              _numPixels[2];
   int                   _fixedPixels;
   int                   _buffered;
-  int                   _current;
   ViewTabUI*            _tab;
   Window*               _window;
   View*                 _left;
   View*                 _right;
   View*                 _parent;
+  BaseUI*               _current;
   std::vector<BaseUI*>  _uis;
+  size_t                _currentIdx;
 };
 
 

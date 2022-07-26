@@ -26,16 +26,15 @@ int ViewTabUI::ViewTabUIID = 0;
 ViewTabUI::ViewTabUI(View* parent)
   : _parent(parent)
   , _invade(false)
+  , _current(-1)
 {
   _id = ViewTabUIID++;
 }
 
+
 // destructor
 ViewTabUI::~ViewTabUI()
 {
-  for (auto& child : _childrens) {
-    delete child;
-  }
 }
 
 void ViewTabUI::SetView(View* view)
@@ -43,21 +42,12 @@ void ViewTabUI::SetView(View* view)
   _parent = view;
 }
 
-void
-ViewTabUI::RemoveChild(int index)
-{
-  if (0 <= index < _childrens.size()) {
-    BaseUI* child = _childrens[index];
-    _childrens.erase(_childrens.begin() + index);
-    delete child;
-  }
-}
-
 std::string 
 ViewTabUI::_ComputeName(int index, const char* suffix)
 {
   return VIEW_TAB_NAME + std::to_string(index) + suffix;
 }
+
 
 bool
 ViewTabUI::Draw()
@@ -111,7 +101,7 @@ ViewTabUI::Draw()
       for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
         ImGui::Selectable(UITypeName[n]);
         if (ImGui::IsItemClicked()) {
-          CreateChild(UIType(n));
+          _parent->CreateUI(UIType(n));
           _invade = false;
         }
       }
@@ -119,16 +109,18 @@ ViewTabUI::Draw()
     }
 
     // Submit our regular tabs
-    for (int n = 0; n < _childrens.size(); ++n)
+
+    BaseUI* current = _parent->GetCurrentUI();
+    std::vector<BaseUI*>& uis = _parent->GetUIs();
+    for (int n = 0; n < uis.size(); ++n)
     {
       bool open = true;
-      const char* name = UITypeName[_childrens[n]->GetType()];
+      const char* name = UITypeName[uis[n]->GetType()];
       if (ImGui::BeginTabItem(name, &open,
         ImGuiTabItemFlags_NoCloseButton | ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoPushId))
       {
         if (n != _current) {
-          _current = n;
-          SetCurrentChild(n);
+          _parent->SetCurrentUI(n);
         }
         
         ImGui::EndTabItem();
@@ -136,9 +128,7 @@ ViewTabUI::Draw()
     }
 
     if (ImGui::TabItemButton(" x ", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
-      RemoveChild(_current);
-      _current--;
-      SetCurrentChild(_current);
+      _parent->RemoveUI(current);
     }
 
     ImGui::EndTabBar();
@@ -188,6 +178,7 @@ void ViewTabUI::MouseMove(int x, int y)
 {
 
 }
+
 void ViewTabUI::MouseButton(int button, int action, int mods)
 {
   if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {

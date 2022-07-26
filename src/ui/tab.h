@@ -25,15 +25,8 @@ public:
   ViewTabUI(View* parent);
   ~ViewTabUI();
 
-  void CreateChild(UIType type);
-  void AddChild(BaseUI* child);
-  void RemoveChild(int index);
-  void SetCurrentChild(int index);
-  BaseUI* GetCurrentChild();
   void SetView(View* view);
-
   float GetHeight() { return _height;};
-  const std::vector<BaseUI*>& GetChildrens() const { return _childrens; };
 
   // overrides
   bool Draw();
@@ -42,12 +35,11 @@ public:
 
 private:
   static std::string      _ComputeName(int index, const char* suffix="");
-  int                     _current;
   View*                   _parent;
-  std::vector<BaseUI*>    _childrens;
   bool                    _invade;
   int                     _id;
   float                   _height;
+  int                     _current;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -14,9 +14,10 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
   , _initialized(false)
   , _interacting(false)
 {
-  if(_parent && !popup)
+  if (_parent && !popup)
   {
     _parent->AddUI(this);
+    _parent->SetCurrent(this);
     _parent->SetFlag(View::LEAF);
   }
 
@@ -25,6 +26,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
   pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
+
 };
 
 std::string 
