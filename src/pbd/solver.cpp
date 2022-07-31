@@ -13,6 +13,11 @@ PBDSolver::~PBDSolver()
 
 }
 
+void PBDSolver::Reset()
+{
+  _system.Reset();
+}
+
 void PBDSolver::AddGeometry(Geometry* geom)
 {
   _system.AddGeometry(geom);

@@ -79,6 +79,8 @@ private:
   bool                      _execInitialized;
 
   PBDSolver                 _solver;
+  float                     _startFrame;
+  float                     _lastFrame;
 };
 
 

@@ -277,6 +277,9 @@ Workspace::InitExec()
   if (!_execInitialized) {
     _execStage = UsdStage::CreateInMemory("exec");
     _execScene = new Scene(_execStage);
+    Time& time = GetApplication()->GetTime();
+    _startFrame = time.GetStartTime();
+    _lastFrame = time.GetActiveTime();
     
     _execStage->GetRootLayer()->TransferContent(_workStage->GetRootLayer());
     pxr::UsdPrimRange primRange = _execStage->TraverseAll();
@@ -336,11 +339,14 @@ Workspace::UpdateExec(double time)
     mesh->Update(positions);
   }
   */
-  if (GetApplication()->GetTime().IsPlaying()) {
+  if (time <= _startFrame) {
+    _solver.Reset();
+  }
+  if(time > _lastFrame) {
     _solver.Step();
     _execScene->Update(time);
   }
-
+  _lastFrame = (float)time;
 }
 
 void 

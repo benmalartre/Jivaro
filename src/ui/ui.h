@@ -28,7 +28,6 @@ enum UIType {
   FILEBROWSER,
   POPUP,
   SPLITTER,
-  // headed uis
   VIEWPORT,
   EXPLORER,
   PROPERTYEDITOR,

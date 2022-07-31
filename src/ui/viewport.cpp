@@ -541,6 +541,7 @@ pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
 
 void ViewportUI::Resize()
 {
+  if(!_initialized)return;
   if(GetWidth() <= 0 || GetHeight() <= 0)_valid = false;
   else _valid = true;
   
@@ -551,7 +552,6 @@ void ViewportUI::Resize()
     pxr::GfCamera::FOVHorizontal
   );
   if (GetWindow()->IsDraggingSplitter()) return;
-
   _engine->SetDirty(true);
 }
 

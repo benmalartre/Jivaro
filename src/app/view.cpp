@@ -85,6 +85,13 @@ View::CreateTab()
   return _tab;
 }
 
+void 
+View::RemoveTab()
+{
+  if (_tab)delete _tab;
+  _tab = NULL;
+}
+
 
 void
 View::CreateUI(UIType type)
@@ -130,9 +137,9 @@ View::SetCurrentUI(int index)
 {
   if (index >= 0 && index < _uis.size())
   {
-    _uis[index]->Resize();
     _currentIdx = index;
     _current = _uis[index];
+    _current->Resize();
   }
 }
 
@@ -217,7 +224,6 @@ View::Draw(bool forceRedraw)
     if (!DrawTab()) {
       Time& time = GetApplication()->GetTime();
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-
         if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
           SetClean();
         }
@@ -437,8 +443,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   if (_tab && _left->_tab) {
     _left->TransferUIs(this);
   }
-  if (_tab) delete _tab;
-  _tab = NULL;
+  RemoveTab();
 }
 
 void 
@@ -611,6 +616,17 @@ void View::SetDirty()
 {
   SetFlag(DIRTY);
   _buffered = 3;
+}
+
+void View::SetTabed(bool tabed)
+{
+  if (tabed) {
+    if (!_tab) _tab = CreateTab();
+  }
+  else {
+    if (_tab) delete _tab;
+    _tab = NULL;
+  }
 }
 
 void View::SetInteracting(bool value) 

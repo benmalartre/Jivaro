@@ -75,6 +75,7 @@ public:
   // tab
   ViewTabUI* GetTab() { return _tab; };
   ViewTabUI* CreateTab();
+  void RemoveTab();
   float GetTabHeight();
 
   // content
@@ -115,6 +116,7 @@ public:
 
   void SetClean();
   void SetDirty();
+  void SetTabed(bool tabed);
   void SetInteracting(bool value);
   bool IsInteracting();
 

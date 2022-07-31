@@ -378,6 +378,7 @@ Application::Init()
     mainView->GetRight(), 0.9, true, false);
   //bottomView->Split(0.9, true, true);
   View* timelineView = bottomView->GetRight();
+  timelineView->SetTabed(false);
   View* centralView = _mainWindow->SplitView(
     bottomView->GetLeft(), 0.6, true);
   View* middleView = centralView->GetLeft();
@@ -391,6 +392,7 @@ Application::Init()
   View* leftTopView = _mainWindow->SplitView(
     workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
   View* toolView = leftTopView->GetLeft();
+  toolView->SetTabed(false);
   View* stageView = leftTopView->GetRight();
   _mainWindow->SplitView(stageView, 0.25, true);
   View* layersView = stageView->GetLeft();

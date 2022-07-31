@@ -27,6 +27,7 @@ public:
     void SatisfyConstraints();
     void AccumulateForces(const pxr::GfVec3f& gravity);
     void UpdateGeometries();
+    void Reset();
     size_t GetNumParticles() { return _N; };
     pxr::VtArray<pxr::GfVec3f>& GetPositions() { return _position; };
     const pxr::VtArray<pxr::GfVec3f>& GetPositions() const { return _position; };
@@ -39,6 +40,8 @@ public:
 
 private:
     size_t                       _N;
+    pxr::VtArray<pxr::GfVec3f>   _initial;
+    pxr::VtArray<pxr::GfVec3f>   _preload;
     pxr::VtArray<pxr::GfVec3f>   _position;
     pxr::VtArray<pxr::GfVec3f>   _previous;
     pxr::VtArray<pxr::GfVec3f>   _force;

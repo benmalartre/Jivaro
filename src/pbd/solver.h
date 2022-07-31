@@ -14,9 +14,9 @@ public:
     PBDSolver();
     ~PBDSolver();
 
-
     void AddGeometry(Geometry* geom);
     void RemoveGeometry(Geometry* geom);
+    void Reset();
     void Step();
     PBDParticle& GetSystem() { return _system; };
 

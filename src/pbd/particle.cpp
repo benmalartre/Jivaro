@@ -22,6 +22,8 @@ void PBDParticle::AddGeometry(Geometry* geom)
     size_t newSize = base + add;
     _position.resize(newSize);
     _previous.resize(newSize);
+    _initial.resize(newSize);
+    _preload.resize(newSize);
     _force.resize(newSize);
     _mass.resize(newSize);
 
@@ -30,6 +32,8 @@ void PBDParticle::AddGeometry(Geometry* geom)
       size_t idx = base + p;
       _position[idx] = pos;
       _previous[idx] = pos;
+      _initial[idx] = pos;
+      _preload[idx] = pxr::GfVec3f(0.f);
       _force[idx] = pxr::GfVec3f(0.f);
       _mass[idx] = 1.f;
     }
@@ -47,6 +51,8 @@ void PBDParticle::RemoveGeometry(Geometry* geom)
     for (size_t r = 0; r < remaining; ++r) {
       _position[base + r] = _position[base + shift +r];
       _previous[base + r] = _previous[base + shift + r];
+      _initial[base + r] = _initial[base + shift + r];
+      _preload[base + r] = _preload[base + shift + r];
       _force[base + r] = _force[base + shift + r];
       _mass[base + r] = _mass[base + shift + r];
     }
@@ -54,11 +60,22 @@ void PBDParticle::RemoveGeometry(Geometry* geom)
     size_t newSize = _position.size() - shift;
     _position.resize(newSize);
     _previous.resize(newSize);
+    _initial.resize(newSize);
+    _preload.resize(newSize);
     _force.resize(newSize);
     _mass.resize(newSize);
 
     _geometries.erase(geom);
     _N -= shift;
+  }
+}
+
+void PBDParticle::Reset()
+{
+  for (size_t p = 0; p < _N; ++p) {
+    _position[p] = _initial[p];
+    _previous[p] = _initial[p] - _preload[p];
+    _force[p] = pxr::GfVec3f(0.f);
   }
 }
 
