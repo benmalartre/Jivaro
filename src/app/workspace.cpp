@@ -275,19 +275,31 @@ void
 Workspace::InitExec()
 {
   if (!_execInitialized) {
+    std::cout << "INIT EXEC " << std::endl;
     _execStage = UsdStage::CreateInMemory("exec");
     _execScene = new Scene(_execStage);
     
-    _execStage->GetRootLayer()->TransferContent(
-      _workStage->GetRootLayer());
+    _execStage->GetRootLayer()->TransferContent(_workStage->GetRootLayer());
     pxr::UsdPrimRange primRange = _execStage->TraverseAll();
     for (pxr::UsdPrim prim : primRange) {
       if (prim.IsA<pxr::UsdGeomMesh>()) {
         _execScene->AddMesh(prim.GetPath());
+        _solver.AddGeometry(&_execScene->GetMeshes()[prim.GetPath()]);
       }
     }
     _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
       _workStage->GetDefaultPrim().GetPath()));
+
+    pxr::UsdGeomPoints points =
+      pxr::UsdGeomPoints::Define(
+        _execStage, 
+        _execStage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("System")));
+
+    points.CreatePointsAttr().Set(pxr::VtValue(_solver.GetSystem().GetPositions()));
+
+    pxr::VtArray<float> widths;
+    widths.push_back(0.01f);
+    points.CreateWidthsAttr().Set(pxr::VtValue(widths));
 
     _execInitialized = true;
   }
@@ -296,6 +308,7 @@ Workspace::InitExec()
 void 
 Workspace::UpdateExec(double time)
 {
+  /*
   for (auto& meshMapIt : _execScene->GetMeshes()) {
     pxr::SdfPath path = meshMapIt.first;
     Mesh* mesh = &meshMapIt.second;
@@ -314,6 +327,8 @@ Workspace::UpdateExec(double time)
     }
     mesh->Update(positions);
   }
+  */
+  _solver.Step();
   _execScene->Update(time);
 
 }

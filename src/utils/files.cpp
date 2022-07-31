@@ -1,4 +1,4 @@
-#include "files.h"
+#include "../utils/files.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -57,7 +57,7 @@ std::string GetFileName(const std::string& filePath)
   return SplitString(filePath, SEPARATOR).back();
 }
 
-int NumFilesInDirectory(const char* path)
+size_t NumFilesInDirectory(const char* path)
 {
   /*
   DIR *dir;
@@ -108,7 +108,7 @@ static bool _IsHiddenFile(const char* filename)
   return (filename[0] == '.' || filename[strlen(filename)-1] == '~');
 }
 
-int GetVolumes(std::vector<EntryInfo>& entries)
+size_t GetVolumes(std::vector<EntryInfo>& entries)
 {
 #ifdef _WIN32
   entries.clear();
@@ -139,7 +139,7 @@ int GetVolumes(std::vector<EntryInfo>& entries)
   return entries.size();
 }
 
-int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
+size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
 {
   entries.clear();
   DIR *dir;
@@ -169,7 +169,7 @@ int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
   return 0;
 }
 
-int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
+size_t GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
 {
   filenames.clear();
 #ifdef _WIN32

@@ -337,7 +337,7 @@ ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage,
 {
   pxr::UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
-    pxr:UsdPrim prim = stage->GetPrimAtPath(target.path);
+    pxr::UsdPrim prim = stage->GetPrimAtPath(target.path);
     pxr::UsdGeomXformCommonAPI xformApi(prim);
     if (!xformApi) {
       _EnsureXformCommonAPI(prim, timeCode);
@@ -370,7 +370,7 @@ PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage,
 {
   pxr::UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
-    pxr:UsdPrim prim = stage->GetPrimAtPath(target.path);
+    pxr::UsdPrim prim = stage->GetPrimAtPath(target.path);
     pxr::UsdGeomXformCommonAPI xformApi(prim);
     if (!xformApi) {
       _EnsureXformCommonAPI(prim, timeCode);

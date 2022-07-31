@@ -121,7 +121,7 @@ void
 View::AddUI(BaseUI* ui)
 {
   _uis.push_back(ui);
-  _currentIdx == _uis.size() - 1;
+  _currentIdx = (_uis.size() - 1);
   _current = ui; 
 }
 
@@ -145,7 +145,7 @@ View::GetCurrentUI()
 void
 View::RemoveUI(int index)
 {
-  if (0 <= index < _uis.size()) {
+  if (-1 < index < _uis.size()) {
     BaseUI* ui = _uis[index];
 
     _uis.erase(_uis.begin() + index);

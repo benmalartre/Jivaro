@@ -289,7 +289,7 @@ bool MenuUI::Draw()
   
   ImGui::PopStyleColor(3);
 
-  return true;
+  return _parent->IsInteracting() || ImGui::IsAnyItemHovered();
 
 }
 

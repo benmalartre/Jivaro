@@ -64,9 +64,8 @@ add_executable(${TARGET}
   acceleration/grid3d.cpp
   acceleration/bvh.cpp
   acceleration/intersector.cpp
-  pbd/integration.cpp
-  pbd/maths.cpp
-  pbd/matrix.cpp
+  pbd/particle.cpp
+  pbd/solver.cpp
   anim/animx.cpp
   command/command.cpp
   command/inverse.cpp

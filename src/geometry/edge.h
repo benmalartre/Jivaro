@@ -1,8 +1,8 @@
 //======================================================
-// POINT DECLARATION
+// EDGE DECLARATION
 //======================================================
-#ifndef JVR_GEOMETRY_POINT_H
-#define JVR_GEOMETRY_POINT_H
+#ifndef JVR_GEOMETRY_EDGE_H
+#define JVR_GEOMETRY_EDGE_H
 
 #include <algorithm>
 #include <math.h>

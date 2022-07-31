@@ -267,7 +267,7 @@ BaseHandle::Select(float x, float y, float width, float height,
 {
   pxr::GfRay ray = _camera->GetRay(x, y, width, height);
   pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
-  size_t selected = _shape.Intersect(ray, m, _viewPlaneMatrix);
+  short selected = _shape.Intersect(ray, m, _viewPlaneMatrix);
 
   if(selected) {
     SetActiveAxis(selected);
@@ -282,7 +282,7 @@ BaseHandle::Pick(float x, float y, float width, float height)
 {
   pxr::GfRay ray = _camera->GetRay(x, y, width, height);
   pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
-  size_t hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
+  short hovered = _shape.Intersect(ray, m, _viewPlaneMatrix);
 
   SetHoveredAxis(hovered);
   _shape.UpdateComponents(hovered, AXIS_NONE);

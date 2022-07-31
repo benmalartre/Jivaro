@@ -67,19 +67,19 @@ std::string GetFileName(const std::string& filePath);
 
 // num files in directory
 //-----------------------------------------------------
-int NumFilesInDirectory(const char* path);
+size_t NumFilesInDirectory(const char* path);
 
 // get entries in directory
 //-----------------------------------------------------
-int GetVolumes(std::vector<EntryInfo>& entries);
+size_t GetVolumes(std::vector<EntryInfo>& entries);
 
 // get entries in directory
 //-----------------------------------------------------
-int GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries);
+size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries);
 
 // get files in directory
 //-----------------------------------------------------
-int GetFilesInDirectory(const char* path, std::vector<std::string>& filenames);
+size_t GetFilesInDirectory(const char* path, std::vector<std::string>& filenames);
 
 // get installation folder
 //-----------------------------------------------------

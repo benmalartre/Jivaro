@@ -90,7 +90,6 @@ void CurveEditorUI::MouseButton(int button, int action, int mods)
       }*/
       else {
         if (_parent->GetFlag(View::ACTIVE)) {
-          pxr::GfVec2f viewPos;
           GetRelativeMousePosition(mousePos[0], mousePos[1], _grabData.start[0], _grabData.start[1]);
           _grabData.end = _grabData.start;
           _grab = true;

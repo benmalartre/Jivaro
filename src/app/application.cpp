@@ -682,9 +682,11 @@ Application::ToggleExec()
   _execute = 1 - _execute; 
   if (_execute) {
     _workspace->AddExecStage();
+    _DirtyAllEngines(_engines);
   }
   else {
     _workspace->RemoveExecStage();
+    _DirtyAllEngines(_engines);
   }
 };
 

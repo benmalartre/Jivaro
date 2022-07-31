@@ -148,7 +148,7 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
 
   ToolbarItem* playItem = new ToolbarButton(
     this, TOOL_NONE, "Play", "play", "launch engine",
-    ICON_FA_SHUFFLE, true, true,
+    ICON_FA_SHUFFLE, false, true,
     (UIUtils::CALLBACK_FN)&OnPlayCallback
   );
   _items.push_back(playItem);

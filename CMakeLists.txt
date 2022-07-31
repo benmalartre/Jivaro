@@ -178,6 +178,11 @@ IF(APPLE)
     "-framework Cocoa -framework IOKit -framework AppKit")
 ENDIF(APPLE)
 
+if(WIN32)
+  add_definitions("/wd4244")
+  add_definitions("/wd4305")
+endif(WIN32)
+
 add_subdirectory (src)
 add_subdirectory (tests)
 add_subdirectory (fonts)

@@ -118,4 +118,12 @@ void Geometry::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
   _points = positions;
 }
 
+void Geometry::SetPositions(pxr::GfVec3f* positions, size_t n)
+{
+  if (n != _points.size()) {
+    _points.resize(n);
+  }
+  memmove(&_points[0], positions, n * sizeof(pxr::GfVec3f));
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE
