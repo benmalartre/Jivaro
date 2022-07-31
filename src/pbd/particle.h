@@ -38,7 +38,7 @@ public:
     const pxr::VtArray<float>& GetMasses() const { return _mass; };
 
 private:
-    size_t                      _N;
+    size_t                       _N;
     pxr::VtArray<pxr::GfVec3f>   _position;
     pxr::VtArray<pxr::GfVec3f>   _previous;
     pxr::VtArray<pxr::GfVec3f>   _force;

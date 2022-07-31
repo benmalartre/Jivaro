@@ -48,6 +48,18 @@ Shape::Component::SetBounds(const pxr::GfVec3f& xyz)
   bounds = pxr::GfRange3f(pxr::GfVec3f(0.f), xyz);
 }
 
+void
+Shape::Component::SetMode(short m)
+{
+  mode = m;
+}
+
+short
+Shape::Component::GetMode()
+{
+  return mode;
+}
+
 void 
 Shape::Component::SetBounds(const pxr::GfRange3f& value)
 {
@@ -218,7 +230,17 @@ Shape::Component::Intersect(const pxr::GfRay& ray,
     (this->*_intersectImplementation)(ray, m, distance, scale) : 0;
 }
 
-Shape::Shape(short usage) : _usage(usage), _vao(0), _vbo(0), _eab(0), _scale(1.1) {};
+Shape::Shape(short mode, short usage) 
+  : _mode(mode)
+  , _usage(usage)
+  ,_vao(0)
+  , _vbo(0)
+  , _eab(0)
+  , _scale(1.1)
+  , _uColor(0)
+  , _uModel(0)
+{
+};
 
 Shape::~Shape()
 {
@@ -1035,6 +1057,47 @@ Shape::AddExtrusion(short index,
 
 }
 
+Shape::Component
+Shape::AddPoints(
+  const std::vector<pxr::GfVec3f>& points,
+  const pxr::GfVec4f& color,
+  const pxr::GfMatrix4f& m)
+{
+  size_t baseNumPoints = _points.size();
+  size_t baseNumIndices = _indices.size();
+
+  // add points
+  for (auto& point: points) {
+    _points.push_back(point);
+  }
+
+  // transform points
+  _TransformPoints(baseNumPoints, _points.size(), m);
+
+  // add indices
+  pxr::GfRange3f range;
+  for (size_t i = 0; i < points.size(); ++i) {
+    _indices.push_back(baseNumPoints + i);
+    range.ExtendBy(points[i]);
+  }
+
+  // make component
+  Shape::Component component(
+    Shape::POINTS,
+    -1,
+    baseNumPoints,
+    _points.size() - baseNumPoints,
+    baseNumIndices,
+    _indices.size() - baseNumIndices,
+    color,
+    pxr::GfMatrix4f(1.f),
+    m);
+
+  component.SetBounds(range.GetSize());
+  component.SetMode(POINT);
+  return component;
+}
+
 Shape::Component 
 Shape::AddDisc(short index, float radius, size_t lats,
   const pxr::GfVec4f& color, const pxr::GfMatrix4f& m)
@@ -1235,8 +1298,19 @@ void Shape::DrawComponent(size_t index, const pxr::GfMatrix4f& model,
   glUniform4f(_uColor, color[0], color[1], color[2], color[3]);
   
   const Shape::Component& comp = _components[index];
-  glDrawElements(GL_TRIANGLES, comp.numIndices, 
-    GL_UNSIGNED_INT, ((char*)NULL + (comp.baseIndices * sizeof(unsigned int))));
+  switch (comp.mode) {
+  case POINT:
+
+    break;
+  case LINE:
+
+    break;
+  case TRIANGLE:
+    glDrawElements(GL_TRIANGLES, comp.numIndices,
+      GL_UNSIGNED_INT, ((char*)NULL + (comp.baseIndices * sizeof(unsigned int))));
+    break;
+  }
+  
 }
 
 void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)
@@ -1248,9 +1322,17 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)
   glBindVertexArray(_vao);
   glUniformMatrix4fv(uModel,1,GL_FALSE,&model[0][0]);
   glUniform4f(uColor, color[0], color[1], color[2], color[3]);
+  switch (_mode) {
+  case POINT:
+    break;
+  case LINE:
+    break;
+  case TRIANGLE:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, 0);
+    break;
+  }
   
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, 0);
 }
 
 void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
@@ -1264,9 +1346,18 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
   glUniformMatrix4fv(uModel,1,GL_FALSE,&model[0][0]);
   glUniform4f(uColor, color[0], color[1], color[2], color[3]);
   
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glDrawElements(GL_TRIANGLES, (end - start), GL_UNSIGNED_INT, 
-    ((char*)NULL + (start * sizeof(unsigned int))));
+  switch (_mode) {
+  case POINT:
+    break;
+  case LINE:
+    break;
+  case TRIANGLE:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDrawElements(GL_TRIANGLES, (end - start), GL_UNSIGNED_INT,
+      ((char*)NULL + (start * sizeof(unsigned int))));
+    break;
+  }
+  
 }
 
 void InitShapeShader()

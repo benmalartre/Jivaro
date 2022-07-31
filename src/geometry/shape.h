@@ -36,12 +36,20 @@ public:
     CONE,
     CAPSULE,
     TORUS,
-    EXTRUSION
+    EXTRUSION,
+    POINTS,
+    LINES
   };
 
   enum Usage {
     STATIC,
     DYNAMIC
+  };
+
+  enum Mode {
+    POINT,
+    LINE,
+    TRIANGLE
   };
 
   struct Component {
@@ -50,6 +58,7 @@ public:
 
     short               flags;
     short               type;
+    short               mode;
     int                 index;
     size_t              basePoints;
     size_t              numPoints;
@@ -102,6 +111,9 @@ public:
           case TORUS:
               _intersectImplementation = &Shape::Component::_IntersectTorus;
             break;
+          case POINTS:
+            _intersectImplementation = 0;// &Shape::Component::_IntersectPoints;
+            break;
           default:
             _intersectImplementation = 0;
         }
@@ -112,6 +124,8 @@ public:
     void SetBounds(const pxr::GfRange3f&);
     void SetFlag(short flag, bool value);
     bool GetFlag(short flag) const;
+    void SetMode(short mode);
+    short GetMode();
     void ComputeBounds(Shape* shape);
 
     short _IntersectGrid(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale=1.0);
@@ -126,7 +140,7 @@ public:
     short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale = 1.0);
   };
 
-  Shape(short usage=STATIC);
+  Shape(short mode = TRIANGLE, short usage=STATIC);
   ~Shape();
   
   size_t GetNumPoints() {return _points.size();};
@@ -192,6 +206,21 @@ public:
     const std::vector<pxr::GfVec3f>& profile, 
     const pxr::GfVec4f& color=pxr::GfVec4f(1.f),
     const pxr::GfMatrix4f& m=pxr::GfMatrix4f(1.f));
+  Component AddPoints(
+    const std::vector<pxr::GfVec3f>& points,
+    const pxr::GfVec4f& color = pxr::GfVec4f(1.f),
+    const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
+  /*
+  Component AddLines(
+    const std::vector<pxr::GfVec3f>& starts,
+    const std::vector<pxr::GfVec3f>& ends,
+    const pxr::GfVec4f& color = pxr::GfVec4f(1.f),
+    const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
+  Component AddLines(
+    const std::vector<pxr::GfVec3f>& points,
+    const std::vector<int>& bases,
+    const pxr::GfVec4f& color = pxr::GfVec4f(1.f),
+    const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));*/
 
   void SetVisibility(int bits);
   short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, const pxr::GfMatrix4f& v);
@@ -217,6 +246,7 @@ private:
   std::vector<Component> _components;
   short _usage;
   float _scale;
+  short _mode;
   GLuint _vao;
   GLuint _vbo;
   GLuint _eab;

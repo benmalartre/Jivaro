@@ -460,7 +460,6 @@ Window::DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& 
 void 
 Window::BuildSplittersMap()
 {
-  std::cout << "BUILD SPLITTER MAP " << _width << "," << _height << std::endl;
   _splitter->BuildMap(_width, _height);
   _splitter->RecurseBuildMap(_mainView);
 }

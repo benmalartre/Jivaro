@@ -247,7 +247,6 @@ UIUtils::AddPrimSpecifier(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags com
     }
 
     if (selected != current) {
-      std::cout << "WTF" << std::endl;
       UndoBlock editBlock;
       primSpec->SetSpecifier(selected);
     }

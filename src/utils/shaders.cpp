@@ -8,7 +8,7 @@ void GLSLShader::OutputInfoLog()
 {
   char buffer[512];
   glGetShaderInfoLog(_shader, 512, NULL, &buffer[0]);
-  std::cout << "COMPILE : " << (std::string)buffer << std::endl;
+  std::cout << "GLSL compilation error  : " << (std::string)buffer << std::endl;
 }
 
 void GLSLShader::Load(const char* filename)
@@ -54,8 +54,6 @@ void GLSLShader::Compile(const char* code, GLenum type)
   else
   {
     std::cout << "[GLSLCreateShader] Fail Compiling Shader !" <<std::endl;
-  
-    // Output Info Log
     OutputInfoLog();
   }
 }
@@ -108,8 +106,6 @@ void GLSLProgram::_Build()
   
   glUseProgram(_pgm);
   GLCheckError("Use Program : ");
-  
-  OutputInfoLog();
 
 }
 
@@ -195,14 +191,6 @@ void GLSLProgram::Build(const char* name)
   GLCheckError("Compile Fragment Shader : ");
   
   _Build();
-}
-
-void GLSLProgram::OutputInfoLog()
-{
-  char buffer[1024];
-  GLsizei l;
-  glGetProgramInfoLog(_pgm,1024,&l,&buffer[0]);
-  std::cout << _name << ":" << (std::string) buffer << std::endl;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

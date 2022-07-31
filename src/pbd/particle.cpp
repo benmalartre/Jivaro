@@ -13,7 +13,6 @@ PBDParticle::~PBDParticle()
 
 void PBDParticle::AddGeometry(Geometry* geom)
 {
-  std::cout << "PBD PARTICLE : ADD GEOMETRY" << std::endl;
   if (_geometries.find(geom) == _geometries.end()) {
     size_t base = _position.size();
     size_t add = geom->GetNumPoints();
@@ -36,13 +35,10 @@ void PBDParticle::AddGeometry(Geometry* geom)
     }
     _N += add;
   }
-  std::cout << "N : " << _N << std::endl;
-  std::cout << "S : " << _position.size() << std::endl;
 }
 
 void PBDParticle::RemoveGeometry(Geometry* geom)
 {
-  std::cout << "PBD PARTICLE : REMOVE GEOMETRY" << std::endl;
   if (_geometries.find(geom) != _geometries.end()) {
     size_t base = _geometries[geom];
     size_t shift = geom->GetNumPoints();
@@ -64,8 +60,6 @@ void PBDParticle::RemoveGeometry(Geometry* geom)
     _geometries.erase(geom);
     _N -= shift;
   }
-  std::cout << "N : " << _N << std::endl;
-  std::cout << "S : " << _position.size() << std::endl;
 }
 
 void PBDParticle::Integrate(float step)
@@ -81,7 +75,12 @@ void PBDParticle::Integrate(float step)
 
 void PBDParticle::SatisfyConstraints()
 {
+  for(int i=0; i<_N; i++) { 
 
+    //_position[i][0] = pxr::GfMin(pxr::GfMax(_position[i][0], -100.f), 100.f); 
+    _position[i][1] = pxr::GfMax(_position[i][1], 0.f);
+    //_position[i][2] = pxr::GfMin(pxr::GfMax(_position[i][2], 100.f), 100.f);
+  }
 }
 
 void PBDParticle::AccumulateForces(const pxr::GfVec3f& gravity)

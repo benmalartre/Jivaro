@@ -275,7 +275,6 @@ void
 Workspace::InitExec()
 {
   if (!_execInitialized) {
-    std::cout << "INIT EXEC " << std::endl;
     _execStage = UsdStage::CreateInMemory("exec");
     _execScene = new Scene(_execStage);
     
@@ -297,10 +296,19 @@ Workspace::InitExec()
 
     points.CreatePointsAttr().Set(pxr::VtValue(_solver.GetSystem().GetPositions()));
 
-    pxr::VtArray<float> widths;
-    widths.push_back(0.01f);
+    size_t numParticles = _solver.GetSystem().GetNumParticles();
+    
+    pxr::VtArray<float> widths(numParticles);
+    pxr::VtArray<pxr::GfVec3f> colors(numParticles);
+    for(size_t p = 0; p < numParticles; ++p) {
+      widths[p] = 0.02;
+      colors[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    }
     points.CreateWidthsAttr().Set(pxr::VtValue(widths));
-
+    points.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
+    points.CreateDisplayColorAttr().Set(pxr::VtValue(colors));
+    points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
+    
     _execInitialized = true;
   }
 }
@@ -328,8 +336,10 @@ Workspace::UpdateExec(double time)
     mesh->Update(positions);
   }
   */
-  _solver.Step();
-  _execScene->Update(time);
+  if (GetApplication()->GetTime().IsPlaying()) {
+    _solver.Step();
+    _execScene->Update(time);
+  }
 
 }
 
