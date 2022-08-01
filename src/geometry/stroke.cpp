@@ -31,7 +31,7 @@ Stroke::~Stroke()
 };
 
 Stroke::Stroke()
-  : Geometry()
+  : Geometry(Geometry::STROKE)
 {
   _initialized = false;
   _numLines = 0;
@@ -39,7 +39,7 @@ Stroke::Stroke()
 }
 
 Stroke::Stroke(const Stroke* other, bool normalize)
-  : Geometry(other, normalize)
+  : Geometry(other, Geometry::STROKE, normalize)
 {
   _initialized = true;
   _numLines = other->_numLines;

@@ -21,7 +21,6 @@ struct PBDGeometry
     pxr::GfMatrix4f invMatrix;
 };
 
-class PBDConstraint;
 class PBDParticle
 {
 public:
@@ -31,10 +30,11 @@ public:
     void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
     void RemoveGeometry(Geometry* geom);
 
-    void UpdateInput(Geometry* geom, const pxr::VtArray<pxr::GfVec3f>& p,
-      const pxr::GfMatrix4f& m);
+    void UpdateInput(Geometry* geom, const pxr::VtArray<pxr::GfVec3f>& p, 
+        const pxr::GfMatrix4f& m);
 
     void Integrate(float step);
+    void SatisfyConstraints();
     void AccumulateForces(const pxr::GfVec3f& gravity);
     void UpdateGeometries();
     void Reset();
@@ -63,8 +63,6 @@ private:
     pxr::VtArray<float>                 _mass;
 
     std::map<Geometry*, PBDGeometry>    _geometries;
-
-    friend PBDConstraint;
 
 };
 

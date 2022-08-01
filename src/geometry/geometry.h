@@ -35,8 +35,8 @@ public:
     INSTANCER
   };
 
-  Geometry();
-  Geometry(const Geometry* other, bool normalize);
+  Geometry(short type);
+  Geometry(const Geometry* other, short type, bool normalize);
   virtual ~Geometry();
 
   short GetType() { return _type; };

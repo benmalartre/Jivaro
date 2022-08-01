@@ -11,18 +11,18 @@ Geometry::~Geometry()
 {
 };
 
-Geometry::Geometry()
+Geometry::Geometry(short type)
 {
   _initialized = false;
   _numPoints = 0;
-  _type = POINT;
+  _type = type;
 }
 
-Geometry::Geometry(const Geometry* other, bool normalize)
+Geometry::Geometry(const Geometry* other, short type, bool normalize)
 {
   _initialized = true;
   _numPoints = other->_numPoints;
-  _type = POINT;
+  _type = type;
 
   _points = other->_points;
   _normals = other->_points;

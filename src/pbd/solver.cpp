@@ -49,7 +49,6 @@ void PBDSolver::AddConstraints(Geometry* geom)
 
 void PBDSolver::SatisfyConstraints()
 {
-  std::cout << "NUM CONSTRAINTS : " << _constraints.size() << std::endl;
   for (int j = 0; j < 5; j++) {
     for (int i = 0; i < _constraints.size(); i++) {
       PBDConstraint* c = _constraints[i];

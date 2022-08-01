@@ -11,19 +11,17 @@ Points::~Points()
 };
 
 Points::Points()
-  : Geometry()
+  : Geometry(Geometry::POINT)
 {
   _initialized = false;
   _numPoints = 0;
-  _type = POINT;
 }
 
 Points::Points(const Points* other, bool normalize)
-  : Geometry(other, normalize)
+  : Geometry(other, Geometry::POINT, normalize)
 {
   _initialized = true;
   _numPoints = other->_numPoints;
-  _type = POINT;
 
   _normals = other->_normals;
 
@@ -32,8 +30,8 @@ Points::Points(const Points* other, bool normalize)
 }
 
 Points::Points(const pxr::UsdGeomPoints& points)
+  : Geometry(Geometry::POINT)
 {
-  _type = POINT;
 
   pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
   pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());

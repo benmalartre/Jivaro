@@ -11,21 +11,19 @@ Curve::~Curve()
 };
 
 Curve::Curve()
-  : Geometry()
+  : Geometry(Geometry::CURVE)
 {
   _initialized = false;
   _numCurves = 0;
   _numSegments = 0;
-  _type = CURVE;
 }
 
 Curve::Curve(const Curve* other, bool normalize)
-  : Geometry(other, normalize)
+  : Geometry(other, Geometry::CURVE, normalize)
 {
   _initialized = true;
   _numCurves = other->_numCurves;
   _numSegments = other->_numSegments;
-  _type = CURVE;
 
   _normals = other->_normals;
 
@@ -34,9 +32,9 @@ Curve::Curve(const Curve* other, bool normalize)
 }
 
 Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
+  : Geometry(Geometry::CURVE)
 {
   _numCurves = curve.GetCurveCount();
-  _type = CURVE;
 
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());

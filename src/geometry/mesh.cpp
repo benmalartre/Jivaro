@@ -85,23 +85,21 @@ Mesh::~Mesh()
 };
 
 Mesh::Mesh()
-  : Geometry()
+  : Geometry(Geometry::MESH)
 {
   _initialized = false;
   _numTriangles = 0;
   _numPoints = 0;
   _numFaces = 0;
-  _type = MESH;
 }
 
 Mesh::Mesh(const Mesh* other, bool normalize)
-  : Geometry(other, normalize)
+  : Geometry(other, Geometry::MESH, normalize)
 {
   _initialized = true;
   _numTriangles = other->_numTriangles;
   _numSamples = other->_numSamples;
   _numFaces = other->_numFaces;
-  _type = MESH;
 
   _normals = other->_normals;
 
@@ -113,6 +111,7 @@ Mesh::Mesh(const Mesh* other, bool normalize)
 }
 
 Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
+  : Geometry(Geometry::MESH)
 {
   pxr::UsdAttribute pointsAttr = mesh.GetPointsAttr();
   pxr::UsdAttribute faceVertexCountsAttr = mesh.GetFaceVertexCountsAttr();
@@ -263,7 +262,7 @@ const std::vector<HalfEdge*> Mesh::GetUniqueEdges()
   }
   std::vector<HalfEdge*> halfEdges(numUniqueEdges);
   for (size_t i = 0; i < numUniqueEdges; ++i) {
-    halfEdges[i] = (HalfEdge*)&_halfEdges[_uniqueEdges[i]];
+    halfEdges[i] = &_halfEdges[_uniqueEdges[i]];
   }
   return halfEdges;
 }
