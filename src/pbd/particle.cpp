@@ -99,16 +99,6 @@ void PBDParticle::Integrate(float step)
   }
 }
 
-void PBDParticle::SatisfyConstraints()
-{
-  for(int i=0; i<_N; i++) { 
-
-    //_position[i][0] = pxr::GfMin(pxr::GfMax(_position[i][0], -100.f), 100.f); 
-    _position[i][1] = pxr::GfMax(_position[i][1], 0.f);
-    //_position[i][2] = pxr::GfMin(pxr::GfMax(_position[i][2], 100.f), 100.f);
-  }
-}
-
 void PBDParticle::AccumulateForces(const pxr::GfVec3f& gravity)
 {
   for (int i = 0; i < _N; i++) {
@@ -127,9 +117,8 @@ void PBDParticle::UpdateGeometries()
     for (size_t p = 0; p < numPoints; ++p) {
       results[p] = it->second.invMatrix.Transform(_position[it->second.offset + p]);
     }
-    //geom->SetPositions(, geom->GetNumPoints());
+    geom->SetPositions(&results[0], numPoints);
   }
-
 }
 
 

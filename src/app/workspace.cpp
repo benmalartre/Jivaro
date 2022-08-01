@@ -1,6 +1,7 @@
 
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
+#include <pxr/usd/usdGeom/xformCache.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include <pxr/usd/usdGeom/points.h>
@@ -282,11 +283,13 @@ Workspace::InitExec()
     _lastFrame = time.GetActiveTime();
     
     _execStage->GetRootLayer()->TransferContent(_workStage->GetRootLayer());
+    pxr::UsdGeomXformCache xformCache(_startFrame);
     pxr::UsdPrimRange primRange = _execStage->TraverseAll();
     for (pxr::UsdPrim prim : primRange) {
       if (prim.IsA<pxr::UsdGeomMesh>()) {
         _execScene->AddMesh(prim.GetPath());
-        _solver.AddGeometry(&_execScene->GetMeshes()[prim.GetPath()]);
+        _solver.AddGeometry(&_execScene->GetMeshes()[prim.GetPath()], 
+          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
       }
     }
     _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(

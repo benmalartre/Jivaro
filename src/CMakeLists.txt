@@ -65,6 +65,7 @@ add_executable(${TARGET}
   acceleration/bvh.cpp
   acceleration/intersector.cpp
   pbd/particle.cpp
+  pbd/constraint.cpp
   pbd/solver.cpp
   anim/animx.cpp
   command/command.cpp

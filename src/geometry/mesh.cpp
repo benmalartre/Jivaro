@@ -241,7 +241,8 @@ pxr::GfVec3f Mesh::GetNormal(const Location& point) const
   return nrm;
 }
 
-pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const{
+pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const
+{
   const Triangle* T = &_triangles[triangleID];
   pxr::GfVec3f A = _points[T->vertices[0]];
   pxr::GfVec3f B = _points[T->vertices[1]];
@@ -251,6 +252,20 @@ pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const{
   C -= A;
 
   return (B ^ C).GetNormalized();
+}
+
+const std::vector<HalfEdge*> Mesh::GetUniqueEdges()
+{
+  size_t numUniqueEdges = _uniqueEdges.size();
+  if (!numUniqueEdges) {
+    ComputeHalfEdges();
+    numUniqueEdges = _uniqueEdges.size();
+  }
+  std::vector<HalfEdge*> halfEdges(numUniqueEdges);
+  for (size_t i = 0; i < numUniqueEdges; ++i) {
+    halfEdges[i] = (HalfEdge*)&_halfEdges[_uniqueEdges[i]];
+  }
+  return halfEdges;
 }
 
 static bool _GetEdgeLatency(int p0, int p1, const int* )
