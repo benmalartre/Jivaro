@@ -11,13 +11,13 @@ PBDParticle::~PBDParticle()
 {
 }
 
-void PBDParticle::AddGeometry(Geometry* geom)
+void PBDParticle::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
 {
   if (_geometries.find(geom) == _geometries.end()) {
     size_t base = _position.size();
     size_t add = geom->GetNumPoints();
   
-    _geometries[geom] = base;
+    _geometries[geom] = PBDGeometry({base, m, m.GetInverse()});
 
     size_t newSize = base + add;
     _position.resize(newSize);
@@ -28,7 +28,7 @@ void PBDParticle::AddGeometry(Geometry* geom)
     _mass.resize(newSize);
 
     for (size_t p = 0; p < geom->GetNumPoints(); ++p) {
-      const pxr::GfVec3f& pos = geom->GetPosition(p);
+      const pxr::GfVec3f pos = m.Transform(geom->GetPosition(p));
       size_t idx = base + p;
       _position[idx] = pos;
       _previous[idx] = pos;
@@ -44,7 +44,8 @@ void PBDParticle::AddGeometry(Geometry* geom)
 void PBDParticle::RemoveGeometry(Geometry* geom)
 {
   if (_geometries.find(geom) != _geometries.end()) {
-    size_t base = _geometries[geom];
+    PBDGeometry& desc = _geometries[geom];
+    size_t base = desc.offset;
     size_t shift = geom->GetNumPoints();
     size_t remaining = _position.size() - (base + shift);
 
@@ -67,6 +68,14 @@ void PBDParticle::RemoveGeometry(Geometry* geom)
 
     _geometries.erase(geom);
     _N -= shift;
+  }
+}
+
+void PBDParticle::UpdateInput(Geometry* geom, 
+    const pxr::VtArray<pxr::GfVec3f>& p, const pxr::GfMatrix4f& m)
+{
+  if (_geometries.find(geom) != _geometries.end()) {
+    PBDGeometry& desc = _geometries[geom];
   }
 }
 
@@ -109,10 +118,16 @@ void PBDParticle::AccumulateForces(const pxr::GfVec3f& gravity)
 
 void PBDParticle::UpdateGeometries()
 {
-  for (std::map<Geometry*, size_t>::iterator it = _geometries.begin(); it != _geometries.end(); ++it)
+  std::map<Geometry*, PBDGeometry>::iterator it = _geometries.begin();
+  for (; it != _geometries.end(); ++it)
   {
     Geometry* geom = it->first;
-    geom->SetPositions(&_position[it->second], geom->GetNumPoints());
+    size_t numPoints = geom->GetNumPoints();
+    pxr::VtArray<pxr::GfVec3f> results(numPoints);
+    for (size_t p = 0; p < numPoints; ++p) {
+      results[p] = it->second.invMatrix.Transform(_position[it->second.offset + p]);
+    }
+    //geom->SetPositions(, geom->GetNumPoints());
   }
 
 }

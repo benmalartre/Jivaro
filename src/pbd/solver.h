@@ -1,7 +1,7 @@
 #ifndef JVR_PBD_SOLVER_H
 #define JVR_PBD_SOLVER_H
 
-
+#include <pxr/base/gf/matrix4f.h>
 #include "../common.h"
 #include "../pbd/particle.h"
 
@@ -14,7 +14,7 @@ public:
     PBDSolver();
     ~PBDSolver();
 
-    void AddGeometry(Geometry* geom);
+    void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
     void RemoveGeometry(Geometry* geom);
     void Reset();
     void Step();

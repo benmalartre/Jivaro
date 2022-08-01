@@ -6,7 +6,7 @@
 #include <map>
 #include <float.h>
 #include <pxr/base/vt/array.h>
-
+#include <pxr/base/gf/matrix4f.h>
 
 #include "../common.h"
 #include "../geometry/geometry.h"
@@ -14,14 +14,24 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+struct PBDGeometry 
+{
+    size_t offset;
+    pxr::GfMatrix4f matrix;
+    pxr::GfMatrix4f invMatrix;
+};
+
 class PBDParticle
 {
 public:
     PBDParticle();
     ~PBDParticle();
 
-    void AddGeometry(Geometry* geom);
+    void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
     void RemoveGeometry(Geometry* geom);
+
+    void UpdateInput(Geometry* geom, const pxr::VtArray<pxr::GfVec3f>& p,
+      const pxr::GfMatrix4f& m);
 
     void Integrate(float step);
     void SatisfyConstraints();
@@ -39,15 +49,17 @@ public:
     const pxr::VtArray<float>& GetMasses() const { return _mass; };
 
 private:
-    size_t                       _N;
-    pxr::VtArray<pxr::GfVec3f>   _initial;
-    pxr::VtArray<pxr::GfVec3f>   _preload;
-    pxr::VtArray<pxr::GfVec3f>   _position;
-    pxr::VtArray<pxr::GfVec3f>   _previous;
-    pxr::VtArray<pxr::GfVec3f>   _force;
-    pxr::VtArray<float>          _mass;
+    size_t                              _N;
+    pxr::VtArray<pxr::GfVec3f>          _initial;
+    pxr::VtArray<pxr::GfVec3f>          _preload;
+    pxr::VtArray<pxr::GfVec3f>          _position;
+    pxr::VtArray<pxr::GfVec3f>          _previous;
+    pxr::VtArray<pxr::GfVec3f>          _input;
+    pxr::VtArray<pxr::GfVec3f>          _force;
+    pxr::VtArray<float>                 _mass;
 
-    std::map<Geometry*, size_t>  _geometries;
+    std::map<Geometry*, PBDGeometry>    _geometries;
+
 };
 
 

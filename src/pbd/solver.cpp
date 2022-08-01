@@ -18,9 +18,9 @@ void PBDSolver::Reset()
   _system.Reset();
 }
 
-void PBDSolver::AddGeometry(Geometry* geom)
+void PBDSolver::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
 {
-  _system.AddGeometry(geom);
+  _system.AddGeometry(geom, m);
 }
 
 void PBDSolver::RemoveGeometry(Geometry* geom)
