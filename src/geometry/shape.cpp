@@ -54,12 +54,6 @@ Shape::Component::SetMode(short m)
   mode = m;
 }
 
-short
-Shape::Component::GetMode()
-{
-  return mode;
-}
-
 void 
 Shape::Component::SetBounds(const pxr::GfRange3f& value)
 {

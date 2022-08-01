@@ -39,7 +39,6 @@ BaseUI::ComputeUniqueName(short type)
   else {
     UINameIndexMap[baseName] = 1;
   }
-  std::cout << "UI UNIQUE NAME : " << baseName + std::to_string(UINameIndexMap[baseName]) << std::endl;
   return baseName + std::to_string(UINameIndexMap[baseName]);
 }
 

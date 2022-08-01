@@ -374,7 +374,7 @@ Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPi
   {
     return NULL;
   }
-  view->SetFlag(View::LEAF);
+  
   if(horizontal)
   {
     view->SetFlag(View::HORIZONTAL);
@@ -399,6 +399,8 @@ Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPi
   }
   
   view->SetPerc(perc);
+  view->ClearFlag(View::LEAF);
+  CollectLeaves(_mainView);
   BuildSplittersMap();
   return view;
 }
@@ -408,7 +410,7 @@ Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPi
 void 
 Window::CollectLeaves(View* view)
 {
-  if(view == NULL) {
+  if(view == NULL || view == _mainView) {
     view = _mainView;
     _leaves.clear();
   }

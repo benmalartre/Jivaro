@@ -624,8 +624,7 @@ void View::SetTabed(bool tabed)
     if (!_tab) _tab = CreateTab();
   }
   else {
-    if (_tab) delete _tab;
-    _tab = NULL;
+    if (_tab) RemoveTab();
   }
 }
 

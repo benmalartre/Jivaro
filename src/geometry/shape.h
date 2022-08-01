@@ -77,6 +77,7 @@ public:
       const pxr::GfMatrix4f& offsetMatrix=pxr::GfMatrix4f(1.f)) 
       : flags(VISIBLE|PICKABLE)
       , type(type)
+      , mode(TRIANGLE)
       , index(shapeIndex)
       , basePoints(basePointIndex)
       , numPoints(numPoints)
@@ -125,7 +126,6 @@ public:
     void SetFlag(short flag, bool value);
     bool GetFlag(short flag) const;
     void SetMode(short mode);
-    short GetMode();
     void ComputeBounds(Shape* shape);
 
     short _IntersectGrid(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, double* distance, double scale=1.0);
