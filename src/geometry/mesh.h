@@ -88,7 +88,6 @@ public:
   uint32_t GetNumTriangles()const {return _numTriangles;};
   uint32_t GetNumSamples()const {return _numSamples;};
   uint32_t GetNumFaces()const {return _numFaces;};
-  uint32_t GetNumFaceVertices() const {return _numFaceVertices;};
   uint32_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
   uint32_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
   void GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
@@ -107,6 +106,11 @@ public:
   void Init();
 
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
+
+  // retopo
+  void UpdateTopologyFromHalfEdges();
+  void SplitEdge(size_t index);
+  void CollapseEdge(size_t index);
 
   // Flatten
   void DisconnectEdges(const pxr::VtArray<int>& edges);
@@ -142,7 +146,6 @@ private:
   uint32_t                            _numTriangles;
   uint32_t                            _numSamples;
   uint32_t                            _numFaces;
-  uint32_t                            _numFaceVertices;
 
   // polygonal description
   pxr::VtArray<int>                   _faceVertexCounts;  

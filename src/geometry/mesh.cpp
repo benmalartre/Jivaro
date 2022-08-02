@@ -135,9 +135,121 @@ uint32_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
   return _faceVertexIndices[accum + vertex];
 }
 
+void Mesh::SplitEdge(size_t index)
+{
+  size_t numEdges = _halfEdges.size();
+  HalfEdge& edge = _halfEdges[index];
+  const pxr::GfVec3f p = (_points[edge.vertex] + _points[edge.next->vertex]) * 0.5f;
+  _points.push_back(p);
+  _normals.push_back(p);
+  
+  HalfEdge* next = edge.next;
+  HalfEdge* previous = next->next;
+
+  _halfEdges.resize(numEdges + 3);
+
+  HalfEdge* halfEdge = &_halfEdges[numEdges];
+  halfEdge->index = numEdges;
+  halfEdge->face = edge.face;
+  halfEdge->triangle = edge.triangle;
+  halfEdge->vertex = _numPoints;
+  halfEdge->next = previous;
+  halfEdge->latency = HalfEdge::REAL;
+  HalfEdge* n1 = halfEdge;
+  halfEdge++;
+
+  halfEdge->index = numEdges + 1;
+  halfEdge->face = _numFaces;
+  halfEdge->triangle = _numTriangles;
+  halfEdge->vertex = _numPoints;
+  halfEdge->next = next;
+  halfEdge->latency = HalfEdge::REAL;
+  HalfEdge* n2 = halfEdge;
+  halfEdge++;
+
+  halfEdge->index = numEdges + 2;
+  halfEdge->face = _numFaces;
+  halfEdge->triangle = _numTriangles;
+  halfEdge->vertex = _numPoints;
+  halfEdge->next = n2;
+  halfEdge->latency = HalfEdge::REAL;
+  HalfEdge* n3 = halfEdge;
+
+  next->next = n3;
+  edge.next = n1;
+  next->face = _numFaces;
+  next->triangle = _numTriangles;
+
+  _numPoints++;
+  _numFaces++;
+  _numTriangles++;
+  /*
+  if (edge.twin) {
+    HalfEdge* twin = edge.twin;
+    numEdges = _halfEdges.size();
+    HalfEdge* next2 = twin->next;
+    HalfEdge* previous2 = next2->next;
+
+    _halfEdges.resize(numEdges + 3);
+
+    halfEdge = &_halfEdges[numEdges];
+    halfEdge->index = numEdges;
+    halfEdge->face = _numFaces;
+    halfEdge->triangle = _numTriangles;
+    halfEdge->vertex = _numPoints;
+    halfEdge->next = previous2;
+    halfEdge->latency = HalfEdge::REAL;
+    HalfEdge* n3 = halfEdge;
+    halfEdge++;
+
+    halfEdge->index = numEdges + 1;
+    halfEdge->face = twin->face;
+    halfEdge->triangle = twin->triangle;
+    halfEdge->vertex = _numPoints;
+    halfEdge->next = next2;
+    halfEdge->latency = HalfEdge::REAL;
+    HalfEdge* n4 = halfEdge;
+    halfEdge++;
+
+    halfEdge->index = numEdges + 2;
+    halfEdge->face = twin->face;
+    halfEdge->triangle = twin->triangle;
+    halfEdge->vertex = twin->vertex;
+    halfEdge->next = n3;
+    halfEdge->latency = HalfEdge::REAL;
+    HalfEdge* n5 = halfEdge;
+
+    next->face = _numFaces;
+    next->triangle = _numTriangles;
+
+    _numPoints++;
+    _numFaces++;
+    _numTriangles++;
+  }
+  */
+}
+
+void Mesh::CollapseEdge(size_t index)
+{
+
+}
+
+void Mesh::UpdateTopologyFromHalfEdges()
+{
+  _numFaces = _halfEdges.size() / 3;
+  _numSamples = _halfEdges.size();
+  _numTriangles = _numFaces;
+
+  _faceVertexCounts.assign(_numFaces, 3);
+  _faceVertexIndices.resize(_numSamples);
+  size_t faceVertexIndex = 0;
+  for (auto& edge : _halfEdges) {
+    _faceVertexIndices[faceVertexIndex++] = edge.vertex;
+  }
+}
+
 void Mesh::GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts)
 {
-  //std::cout << "GET DISCONNECTIONS FROM UVS START" << std::endl;
   size_t numVertices = _points.size();
 
   pxr::VtArray<int> visited(numVertices);

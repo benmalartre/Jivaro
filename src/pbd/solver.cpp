@@ -2,6 +2,8 @@
 #include "../pbd/constraint.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
+#include "../app/application.h"
+#include "../app/time.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -49,14 +51,18 @@ void PBDSolver::AddConstraints(Geometry* geom)
 
 void PBDSolver::SatisfyConstraints()
 {
+  Time& time = GetApplication()->GetTime();
   for (int j = 0; j < 5; j++) {
     for (int i = 0; i < _constraints.size(); i++) {
       PBDConstraint* c = _constraints[i];
       c->Solve(this, 1);
     }
     // Constrain one particle of the cloth to origo
-    _system.GetPosition(0) = _system.GetInitPositions()[0];
+    _system.GetPosition(0) =
+      _system.GetInitPositions()[0] + 
+        pxr::GfVec3f(0, sin(time.GetActiveTime()) * 5.f + 1.f, 0.f);
 
+    /*
     for (int i = 0; i < _system.GetNumParticles(); ++i) {
       pxr::GfVec3f& p = _system.GetPosition(i);
 
@@ -65,6 +71,7 @@ void PBDSolver::SatisfyConstraints()
       p[1] = pxr::GfMax(p[1], 0.f);
       //_position[i][2] = pxr::GfMin(pxr::GfMax(_position[i][2], 100.f), 100.f);
     }
+    */
   }
 }
 

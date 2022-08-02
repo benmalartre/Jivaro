@@ -152,6 +152,25 @@ static void CreatePrimCallback()
       new CreatePrimCommand(GetApplication()->GetCurrentLayer(), name)));
 }
 
+static void TriangulateCallback()
+{
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr& stage = app->GetWorkStage();
+  Selection* selection = app->GetSelection();
+  for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
+    Selection::Item& item = selection->GetItem(i);
+    pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
+      pxr::UsdGeomMesh mesh(prim);
+      Mesh triangulated(mesh);
+      triangulated.UpdateTopologyFromHalfEdges();
+      mesh.GetPointsAttr().Set(pxr::VtValue(triangulated.GetPositions()));
+      mesh.GetFaceVertexCountsAttr().Set(pxr::VtValue(triangulated.GetFaceCounts()));
+      mesh.GetFaceVertexIndicesAttr().Set(pxr::VtValue(triangulated.GetFaceConnects()));
+    }
+  }
+}
+
 static void FlattenGeometryCallback()
 {
   Application* app = GetApplication();
@@ -217,6 +236,7 @@ MenuUI::MenuUI(View* parent)
  
   MenuUI::Item& testItem = AddItem("Test", "", false, true);
   testItem.AddItem(this, "CreatePrim", "CTRL+P", false, true, (MenuUI::PressedFunc)&CreatePrimCallback);
+  testItem.AddItem(this, "Triangulate", "CTRL+P", false, true, (MenuUI::PressedFunc)&TriangulateCallback);
   MenuUI::Item& subItem = testItem.AddItem(this, "SubMenu", "", false, true);
   subItem.AddItem(&subItem, "Sub0", "", false, true);
   subItem.AddItem(&subItem, "Sub1", "", false, true);
