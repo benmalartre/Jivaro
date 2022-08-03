@@ -34,17 +34,16 @@ public:
         const pxr::GfMatrix4f& m);
 
     void Integrate(float step);
-    void SatisfyConstraints();
     void AccumulateForces(const pxr::GfVec3f& gravity);
     void UpdateGeometries();
     void Reset();
     size_t GetNumParticles() { return _N; };
-    pxr::GfVec3f& GetPosition(size_t index) { return _position[index]; };
-    const pxr::GfVec3f& GetPosition(size_t index) const { return _position[index]; };
-    pxr::VtArray<pxr::GfVec3f>& GetPositions() { return _position; };
-    const pxr::VtArray<pxr::GfVec3f>& GetPositions() const { return _position; };
-    pxr::VtArray<pxr::GfVec3f>& GetPreviousPositions() { return _previous; };
-    const pxr::VtArray<pxr::GfVec3f>& GetPreviousPositions() const { return _previous; };
+    pxr::GfVec3f& GetPosition(size_t index) { return _position[_flip][index]; };
+    const pxr::GfVec3f& GetPosition(size_t index) const { return _position[_flip][index]; };
+    pxr::VtArray<pxr::GfVec3f>& GetPositions() { return _position[_flip]; };
+    const pxr::VtArray<pxr::GfVec3f>& GetPositions() const { return _position[_flip]; };
+    pxr::VtArray<pxr::GfVec3f>& GetPreviousPositions() { return _previous[_flip]; };
+    const pxr::VtArray<pxr::GfVec3f>& GetPreviousPositions() const { return _previous[_flip]; };
     pxr::VtArray<pxr::GfVec3f>& GetInitPositions() { return _initial; };
     const pxr::VtArray<pxr::GfVec3f>& GetInitPositions() const { return _initial; };
     pxr::VtArray<pxr::GfVec3f>& GetForces() { return _force; };
@@ -54,10 +53,11 @@ public:
 
 private:
     size_t                              _N;
+    bool                                _flip;
     pxr::VtArray<pxr::GfVec3f>          _initial;
     pxr::VtArray<pxr::GfVec3f>          _preload;
-    pxr::VtArray<pxr::GfVec3f>          _position;
-    pxr::VtArray<pxr::GfVec3f>          _previous;
+    pxr::VtArray<pxr::GfVec3f>          _position[2];
+    pxr::VtArray<pxr::GfVec3f>          _previous[2];
     pxr::VtArray<pxr::GfVec3f>          _input;
     pxr::VtArray<pxr::GfVec3f>          _force;
     pxr::VtArray<float>                 _mass;

@@ -135,103 +135,11 @@ uint32_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
   return _faceVertexIndices[accum + vertex];
 }
 
-void Mesh::SplitEdge(size_t index)
+void Mesh::SetAllEdgesLatencyReal()
 {
-  size_t numEdges = _halfEdges.size();
-  HalfEdge& edge = _halfEdges[index];
-  const pxr::GfVec3f p = (_points[edge.vertex] + _points[edge.next->vertex]) * 0.5f;
-  _points.push_back(p);
-  _normals.push_back(p);
-  
-  HalfEdge* next = edge.next;
-  HalfEdge* previous = next->next;
-
-  _halfEdges.resize(numEdges + 3);
-
-  HalfEdge* halfEdge = &_halfEdges[numEdges];
-  halfEdge->index = numEdges;
-  halfEdge->face = edge.face;
-  halfEdge->triangle = edge.triangle;
-  halfEdge->vertex = _numPoints;
-  halfEdge->next = previous;
-  halfEdge->latency = HalfEdge::REAL;
-  HalfEdge* n1 = halfEdge;
-  halfEdge++;
-
-  halfEdge->index = numEdges + 1;
-  halfEdge->face = _numFaces;
-  halfEdge->triangle = _numTriangles;
-  halfEdge->vertex = _numPoints;
-  halfEdge->next = next;
-  halfEdge->latency = HalfEdge::REAL;
-  HalfEdge* n2 = halfEdge;
-  halfEdge++;
-
-  halfEdge->index = numEdges + 2;
-  halfEdge->face = _numFaces;
-  halfEdge->triangle = _numTriangles;
-  halfEdge->vertex = _numPoints;
-  halfEdge->next = n2;
-  halfEdge->latency = HalfEdge::REAL;
-  HalfEdge* n3 = halfEdge;
-
-  next->next = n3;
-  edge.next = n1;
-  next->face = _numFaces;
-  next->triangle = _numTriangles;
-
-  _numPoints++;
-  _numFaces++;
-  _numTriangles++;
-  /*
-  if (edge.twin) {
-    HalfEdge* twin = edge.twin;
-    numEdges = _halfEdges.size();
-    HalfEdge* next2 = twin->next;
-    HalfEdge* previous2 = next2->next;
-
-    _halfEdges.resize(numEdges + 3);
-
-    halfEdge = &_halfEdges[numEdges];
-    halfEdge->index = numEdges;
-    halfEdge->face = _numFaces;
-    halfEdge->triangle = _numTriangles;
-    halfEdge->vertex = _numPoints;
-    halfEdge->next = previous2;
-    halfEdge->latency = HalfEdge::REAL;
-    HalfEdge* n3 = halfEdge;
-    halfEdge++;
-
-    halfEdge->index = numEdges + 1;
-    halfEdge->face = twin->face;
-    halfEdge->triangle = twin->triangle;
-    halfEdge->vertex = _numPoints;
-    halfEdge->next = next2;
-    halfEdge->latency = HalfEdge::REAL;
-    HalfEdge* n4 = halfEdge;
-    halfEdge++;
-
-    halfEdge->index = numEdges + 2;
-    halfEdge->face = twin->face;
-    halfEdge->triangle = twin->triangle;
-    halfEdge->vertex = twin->vertex;
-    halfEdge->next = n3;
-    halfEdge->latency = HalfEdge::REAL;
-    HalfEdge* n5 = halfEdge;
-
-    next->face = _numFaces;
-    next->triangle = _numTriangles;
-
-    _numPoints++;
-    _numFaces++;
-    _numTriangles++;
+  for (auto& halfEdge : _halfEdges) {
+    halfEdge.latency = HalfEdge::REAL;
   }
-  */
-}
-
-void Mesh::CollapseEdge(size_t index)
-{
-
 }
 
 void Mesh::UpdateTopologyFromHalfEdges()
@@ -291,7 +199,7 @@ void Mesh::GetCutEdgesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArra
 {
   cuts->reserve(_uniqueEdges.size());
   for (const HalfEdge& halfEdge: _halfEdges) {
-    if (halfEdge.latency == HalfEdge::REAL && halfEdge.twin) {
+    if (/*halfEdge.latency == HalfEdge::REAL && */halfEdge.twin) {
       const pxr::GfVec2d& start_lhs = uvs[halfEdge.index];
       const pxr::GfVec2d& end_lhs = uvs[halfEdge.next->index];
       const pxr::GfVec2d& start_rhs = uvs[halfEdge.twin->next->index];
@@ -379,6 +287,7 @@ const std::vector<HalfEdge*> Mesh::GetUniqueEdges()
   return halfEdges;
 }
 
+
 static bool _GetEdgeLatency(int p0, int p1, const int* )
 {
 
@@ -396,6 +305,20 @@ static void _SetHalfEdgeLatency(HalfEdge* halfEdge, int numFaceTriangles,
   } else {
     if (triangleEdgeIndex == 1) halfEdge->latency = HalfEdge::REAL;
     else halfEdge->latency = HalfEdge::IMPLICIT;
+  }
+}
+
+static void _RemovePoint(pxr::VtArray<pxr::GfVec3f>& points, size_t idx)
+{
+  points.erase(points.begin() + idx);
+}
+
+static void _RemoveEdge(pxr::VtArray<HalfEdge>& halfEdges, HalfEdge* edge)
+{
+  for(auto& it = halfEdges.begin(); it < halfEdges.end(); ++it) {
+    if (&(*it) == edge) {
+      halfEdges.erase(it, it);
+    }
   }
 }
 
@@ -426,8 +349,8 @@ void Mesh::ComputeHalfEdges()
       // create the half-edge that goes from C to A:
       halfEdgesMap[A | (C << 32)] = halfEdge;
       halfEdge->index = triangleIdx * 3;
-      halfEdge->face = faceIdx;
-      halfEdge->triangle = faceTriangleIdx + faceTriangle;
+      //halfEdge->face = faceIdx;
+      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
       halfEdge->vertex = C;
       halfEdge->next = 1 + halfEdge;
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 0);
@@ -436,8 +359,8 @@ void Mesh::ComputeHalfEdges()
       // create the half-edge that goes from A to B:
       halfEdgesMap[B | (A << 32)] = halfEdge;
       halfEdge->index = triangleIdx * 3 + 1;
-      halfEdge->face = faceIdx;
-      halfEdge->triangle = faceTriangleIdx + faceTriangle;
+      //halfEdge->face = faceIdx;
+      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
       halfEdge->vertex = A;
       halfEdge->next = 1 + halfEdge;
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 1);
@@ -446,8 +369,8 @@ void Mesh::ComputeHalfEdges()
       // create the half-edge that goes from B to C:
       halfEdgesMap[C | (B << 32)] = halfEdge;
       halfEdge->index = triangleIdx * 3 + 2;
-      halfEdge->face = faceIdx;
-      halfEdge->triangle = faceTriangleIdx + faceTriangle;
+      //halfEdge->face = faceIdx;
+      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
       halfEdge->vertex = B;
       halfEdge->next = halfEdge - 2;
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 2);
@@ -514,14 +437,47 @@ static HalfEdge* _GetNextjacentEdge(Mesh* mesh, HalfEdge* edge)
 
 }
 
-static HalfEdge* _GetPreviousEdge(HalfEdge* edge)
+static HalfEdge* _GetNextEdge(HalfEdge* edge, short latency = HalfEdge::ANY)
 {
   int vertex = edge->vertex;
   HalfEdge* current = edge->next;
-  while (current->next->vertex != vertex) {
-    current = current->next;
+  switch (latency) {
+  case HalfEdge::REAL:
+    while (current->next) {
+      if (current->next->latency == HalfEdge::REAL)return current->next;
+      if (!current->twin)return NULL;
+      current = current->twin->next;
+    }
+  case HalfEdge::IMPLICIT:
+  case HalfEdge::VIRTUAL:
+  case HalfEdge::ANY:
+    return current->next;
   }
-  return current;
+}
+
+static HalfEdge* _GetPreviousEdge(HalfEdge* edge, short latency=HalfEdge::ANY)
+{
+  int vertex = edge->vertex;
+  HalfEdge* current = edge->next;
+  switch (latency) {
+  case HalfEdge::REAL:
+    while (current->next->vertex != vertex) {
+      if (current->latency != HalfEdge::REAL && current->twin) {
+        current = current->twin->next;
+      }
+      else {
+        current = current->next;
+      }
+    }
+    return current;
+  case HalfEdge::IMPLICIT:
+  case HalfEdge::VIRTUAL:
+  case HalfEdge::ANY:
+    while (current->next->vertex != vertex) {
+      current = current->next;
+    }
+    return current;
+  }
 }
 
 static bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
@@ -681,6 +637,111 @@ _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
   }
   */
   return count;
+}
+
+void Mesh::SplitEdge(size_t index)
+{
+  size_t numEdges = _halfEdges.size();
+  HalfEdge& currentEdge = _halfEdges[index];
+  if (currentEdge.latency != HalfEdge::REAL)return;
+
+  HalfEdge* twinEdge = currentEdge.twin;
+  if(twinEdge) _halfEdges.resize(numEdges + 6);
+  else _halfEdges.resize(numEdges + 3);
+
+  const pxr::GfVec3f p = (_points[currentEdge.vertex] + _points[currentEdge.next->vertex]) * 0.5f;
+  _points.push_back(p);
+  _normals.push_back(p);
+
+  HalfEdge* nextEdge = _GetNextEdge(&currentEdge, HalfEdge::REAL);
+  HalfEdge* previousEdge = _GetPreviousEdge(&currentEdge, HalfEdge::REAL);
+
+  HalfEdge* halfEdge = &_halfEdges[numEdges];
+  halfEdge->index = numEdges;
+  halfEdge->vertex = _numPoints;
+  halfEdge->next = nextEdge;
+  halfEdge->latency = HalfEdge::REAL;
+  HalfEdge* n1 = halfEdge;
+  halfEdge++;
+
+  halfEdge->index = numEdges + 1;
+  halfEdge->vertex = _numPoints;
+  halfEdge->next = previousEdge;
+  halfEdge->latency = HalfEdge::IMPLICIT;
+  HalfEdge* n2 = halfEdge;
+  halfEdge++;
+
+  halfEdge->index = numEdges + 2;
+  halfEdge->vertex = _numPoints;
+  halfEdge->next = n2;
+  halfEdge->latency = HalfEdge::IMPLICIT;
+  HalfEdge* n3 = halfEdge;
+
+  nextEdge->next = n3;
+  currentEdge.next = n1;
+
+  _numPoints++;
+  _numTriangles++;
+  
+  if (twinEdge) {
+    HalfEdge* twinNextEdge = _GetNextEdge(twinEdge, HalfEdge::REAL);
+    HalfEdge* twinPreviousEdge = _GetPreviousEdge(twinEdge, HalfEdge::REAL);
+
+    halfEdge->index = numEdges + 3;
+    halfEdge->vertex = _numPoints;
+    halfEdge->next = twinNextEdge;
+    halfEdge->latency = HalfEdge::REAL;
+    HalfEdge* n4 = halfEdge;
+    halfEdge++;
+
+    halfEdge->index = numEdges + 4;
+    halfEdge->vertex = _numPoints;
+    halfEdge->next = twinNextEdge;
+    halfEdge->latency = HalfEdge::IMPLICIT;
+    HalfEdge* n5 = halfEdge;
+    halfEdge++;
+
+    halfEdge->index = numEdges + 5;
+    halfEdge->vertex = twinEdge->vertex;
+    halfEdge->next = n4;
+    halfEdge->latency = HalfEdge::IMPLICIT;
+    HalfEdge* n6 = halfEdge;
+
+    twinNextEdge->next = n3;
+    twinEdge->next = n1;
+
+    _numPoints++;
+    _numTriangles++;
+  }
+}
+
+void Mesh::CollapseEdge(size_t index)
+{
+  HalfEdge* currentEdge = &_halfEdges[index];
+  HalfEdge* twinEdge = currentEdge->twin;
+
+  int p1 = currentEdge->vertex;
+  int p2 = currentEdge->next->vertex;
+
+  if (p1 > p2) {
+    _points[p2] = (_points[p1] + _points[p2]) * 0.5f;
+    _RemovePoint(_points, p1);
+  } else {
+    _points[p1] = (_points[p1] + _points[p2]) * 0.5f;
+    _RemovePoint(_points, p2);
+  }
+  HalfEdge* nextEdge = _GetNextEdge(currentEdge);
+  HalfEdge* previousEdge = _GetPreviousEdge(currentEdge);
+  if (nextEdge->twin && previousEdge->twin) {
+    nextEdge->twin->twin = previousEdge;
+    previousEdge->twin->twin = nextEdge;
+  }
+
+  _RemoveEdge(_halfEdges, nextEdge);
+  _RemoveEdge(_halfEdges, previousEdge);
+  
+
+  //previousEdge->next = nextEd
 }
 
 void Mesh::DisconnectEdges(const pxr::VtArray<int>& cutEdges)

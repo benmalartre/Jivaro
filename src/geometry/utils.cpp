@@ -94,6 +94,17 @@ TriangulateMesh(const pxr::VtArray<int>& counts,
   return num_triangles;
 }
 
+void
+UpdateTriangles(pxr::VtArray<Triangle>& triangles, size_t removeVertexIdx)
+{
+  for (auto& triangle : triangles) {
+    for (short axis = 0; axis < 3; ++axis) {
+      int idx = triangle.vertices[axis];
+      triangle.vertices[axis] = idx < removeVertexIdx ? idx : idx - 1;
+    }
+  }
+}
+
 void 
 ComputeVertexNormals( const pxr::VtArray<pxr::GfVec3f>& positions,
                       const pxr::VtArray<int>& counts,
