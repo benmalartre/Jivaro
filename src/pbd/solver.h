@@ -16,7 +16,7 @@ public:
 
     void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
     void RemoveGeometry(Geometry* geom);
-    void AddConstraints(Geometry* geom);
+    void AddConstraints(Geometry* geom, size_t offset);
     void SatisfyConstraints();
     void Reset();
     void Step();

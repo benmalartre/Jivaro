@@ -6,6 +6,8 @@
 
 #include "../common.h"
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/bbox3d.h>
+#include <pxr/base/gf/ray.h>
 #include <algorithm>
 #include <math.h>
 #include <stdio.h>
@@ -69,6 +71,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 
 class Mesh;
+class Hit;
 struct Triangle {
   uint32_t     id;
   pxr::GfVec3i vertices;
@@ -83,6 +86,25 @@ struct Triangle {
   bool PlaneBoxTest(const pxr::GfVec3f& normal, const pxr::GfVec3f& point, 
     const pxr::GfVec3f& box);
 
+};
+
+struct TrianglePair {
+  Mesh*     mesh;
+  Triangle* left;
+  Triangle* right;
+
+  TrianglePair();
+  TrianglePair(Mesh* m);
+  TrianglePair(Mesh* m, Triangle* t1);
+  TrianglePair(Mesh* m, Triangle* t1, Triangle* t2);
+
+  pxr::GfBBox3d& GetBoundingBox();
+  const pxr::GfBBox3d& GetBoundingBox() const;
+
+  virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const;
+  virtual bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

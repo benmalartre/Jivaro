@@ -317,7 +317,7 @@ static void _RemoveEdge(pxr::VtArray<HalfEdge>& halfEdges, HalfEdge* edge)
 {
   for(auto& it = halfEdges.begin(); it < halfEdges.end(); ++it) {
     if (&(*it) == edge) {
-      halfEdges.erase(it, it);
+      halfEdges.erase(it);
     }
   }
 }
@@ -327,6 +327,8 @@ void Mesh::ComputeHalfEdges()
   _halfEdges.resize(_numTriangles * 3);
 
   pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
+  std::vector<bool> used;
+  used.assign(_numTriangles, false);
 
   HalfEdge* halfEdge = &_halfEdges[0];
   size_t numFaceTriangles;
@@ -410,10 +412,28 @@ void Mesh::ComputeHalfEdges()
   size_t halfEdgeIndex = 0;
   for (const HalfEdge& halfEdge : _halfEdges) {
     if (halfEdge.twin) {
-      if (halfEdge.vertex < halfEdge.twin->vertex)
+      if (halfEdge.vertex < halfEdge.twin->vertex) {
         _uniqueEdges.push_back(halfEdgeIndex);
+        if (!used[halfEdge.GetTriangleIndex()] && !used[halfEdge.twin->GetTriangleIndex()]) {
+          _trianglePairs.push_back(TrianglePair(
+            this,
+            &_triangles[halfEdge.GetTriangleIndex()], 
+            &_triangles[halfEdge.twin->GetTriangleIndex()] 
+          ));
+          used[halfEdge.GetTriangleIndex()] = true;
+          used[halfEdge.twin->GetTriangleIndex()] = true;
+        }
+      }
     } else {
       _uniqueEdges.push_back(halfEdgeIndex);
+      if (!used[halfEdge.GetTriangleIndex()]) {
+        _trianglePairs.push_back(TrianglePair(
+          this,
+          &_triangles[halfEdge.GetTriangleIndex()],
+          NULL
+        ));
+        used[halfEdge.GetTriangleIndex()] = true;
+      }
     }
     halfEdgeIndex++;
   }
@@ -577,7 +597,7 @@ void Mesh::Init()
   ComputeHalfEdges();
   
   // compute neighbors
-  ComputeNeighbors();
+  //ComputeNeighbors();
 }
 
 void 

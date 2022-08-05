@@ -12,7 +12,7 @@ PBDParticle::~PBDParticle()
 {
 }
 
-void PBDParticle::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
+size_t PBDParticle::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
 {
   if (_geometries.find(geom) == _geometries.end()) {
     size_t base = _position[0].size();
@@ -43,7 +43,9 @@ void PBDParticle::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
       _mass[idx] = 1.f;
     }
     _N += add;
+    return base;
   }
+  return 0;
 }
 
 void PBDParticle::RemoveGeometry(Geometry* geom)

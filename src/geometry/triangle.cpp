@@ -244,4 +244,60 @@ bool Triangle::Touch(Mesh* mesh, const pxr::GfVec3f& center,
   return true;   // box and triangle overlaps
 }
 
+
+TrianglePair::TrianglePair() 
+  : mesh(NULL)
+  , left(NULL)
+  , right(NULL)
+{
+}
+
+TrianglePair::TrianglePair(Mesh* m)
+  : mesh(m)
+  , left(NULL)
+  , right(NULL)
+{
+}
+
+TrianglePair::TrianglePair(Mesh* m, Triangle* t1)
+  : mesh(m)
+  , left(t1)
+  , right(NULL)
+{
+}
+
+TrianglePair::TrianglePair(Mesh* m, Triangle* t1, Triangle* t2)
+  : mesh(m)
+  , left(t1)
+  , right(t2)
+{
+}
+
+pxr::GfBBox3d&
+TrianglePair::GetBoundingBox()
+{
+  return pxr::GfBBox3d();
+}
+
+const pxr::GfBBox3d& 
+TrianglePair::GetBoundingBox() const
+{
+  return pxr::GfBBox3d();
+}
+
+bool
+TrianglePair::Raycast(const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  return false;
+}
+
+bool 
+TrianglePair::Closest(const pxr::GfVec3f& point, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  return false;
+};
+
+
 JVR_NAMESPACE_CLOSE_SCOPE

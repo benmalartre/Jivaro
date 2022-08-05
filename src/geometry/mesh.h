@@ -33,7 +33,6 @@ struct HalfEdge
   uint32_t                index;     // half edge index
   uint32_t                vertex;    // vertex index
   //uint32_t                face;      // face index
-  //uint32_t                triangle;  // triangle index
   struct HalfEdge*        twin;      // opposite half-edge
   struct HalfEdge*        next;      // next half-edge
   uint8_t                 latency;   // edge latency
@@ -170,6 +169,7 @@ private:
 
   // triangle data
   pxr::VtArray<Triangle>              _triangles;
+  pxr::VtArray<TrianglePair>          _trianglePairs;
 
   // half-edge data
   pxr::VtArray<HalfEdge>              _halfEdges;
