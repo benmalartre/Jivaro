@@ -61,6 +61,7 @@ add_executable(${TARGET}
   geometry/stroke.cpp
   geometry/voronoi.cpp
   #geometry/vdb.cpp
+  acceleration/mortom.cpp
   acceleration/grid3d.cpp
   acceleration/bvh.cpp
   acceleration/intersector.cpp

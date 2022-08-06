@@ -1,5 +1,6 @@
-#include "triangle.h"
-#include "mesh.h"
+#include "../geometry/triangle.h"
+#include "../geometry/mesh.h"
+#include "../acceleration/intersector.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -289,6 +290,34 @@ bool
 TrianglePair::Raycast(const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
 {
+  pxr::GfVec3d baryCoords;
+  bool frontFacing;
+  if (left) {
+    const pxr::GfVec3i& vertices = left->vertices;
+    if (ray.Intersect(
+      mesh->GetPosition(vertices[0]),
+      mesh->GetPosition(vertices[1]),
+      mesh->GetPosition(vertices[2]), 
+      minDistance, &baryCoords, &frontFacing, maxDistance)) {
+        hit->SetGeometry(mesh);
+        hit->SetElementIndex(left->id);
+        hit->SetElementType(Hit::TRIANGLE);
+        hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
+    }
+  } 
+  if (right) {
+    const pxr::GfVec3i& vertices = right->vertices;
+    if (ray.Intersect(
+      mesh->GetPosition(vertices[0]),
+      mesh->GetPosition(vertices[1]),
+      mesh->GetPosition(vertices[2]),
+      minDistance, &baryCoords, &frontFacing, maxDistance)) {
+      hit->SetGeometry(mesh);
+      hit->SetElementIndex(left->id);
+      hit->SetElementType(Hit::TRIANGLE);
+      hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
+    }
+  }
   return false;
 }
 

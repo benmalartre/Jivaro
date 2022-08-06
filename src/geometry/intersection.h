@@ -13,6 +13,7 @@ class Intersector;
 class Geometry;
 
 class Hit {
+public:
   enum ElementType {
     POINT,
     EDGE,
