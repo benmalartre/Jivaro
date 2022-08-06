@@ -29,18 +29,18 @@ void PBDSolver::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
 {
   size_t offset = _system.AddGeometry(geom, m);
   AddConstraints(geom, offset);
-
-  if (geom->GetType() == Geometry::MESH) {
-    std::cout << "BVH INIT" << std::endl;
-    BVH bvh;
-    bvh.Init({ (Mesh*)geom });
-    std::cout << "BVH NUM CELLS " << 666 << std::endl;
-  }
 }
 
 void PBDSolver::RemoveGeometry(Geometry* geom)
 {
   _system.RemoveGeometry(geom);
+}
+
+void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
+{
+  BVH bvh;
+  bvh.Init(colliders);
+  std::cout << "COLIDER BVH NUM CELLS " << bvh.GetNumCells() << std::endl;
 }
 
 void PBDSolver::AddConstraints(Geometry* geom, size_t offset)

@@ -43,12 +43,52 @@ static pxr::GfRange3d _GetBoundingBox(const pxr::GfRange3d* lhs, const pxr::GfRa
   return pxr::GfRange3d::GetUnion(*lhs, *rhs);
 }
 
-BVH::Leaf::Leaf(const TrianglePair& data)
+BVH::Leaf::Leaf(Geometry* geometry)
 {
-  const pxr::GfBBox3d& bbox = data.GetBoundingBox();
-  SetMin(pxr::GfVec3d(bbox.GetRange().GetMin()));
-  SetMax(pxr::GfVec3d(bbox.GetRange().GetMax()));
-  _data = data;
+  pxr::GfRange3d range = geometry->GetBoundingBox().GetRange();
+  SetMin(pxr::GfVec3d(range.GetMin()));
+  SetMax(pxr::GfVec3d(range.GetMax()));
+
+  BVH* bvh = new BVH();
+  bvh->Init(geometry);
+  _raycastImpl = &BVH::Leaf::_RaycastGeometry;
+  _data = (void*)bvh;
+}
+
+BVH::Leaf::Leaf(TrianglePair* pair)
+{
+  pxr::GfRange3d range = pair->GetBoundingBox().GetRange();
+  SetMin(pxr::GfVec3d(range.GetMin()));
+  SetMax(pxr::GfVec3d(range.GetMax()));
+  _data = (void*)pair;
+  _raycastImpl = &BVH::Leaf::_RaycastTrianglePair;
+}
+
+bool
+BVH::Leaf::_RaycastGeometry(const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  BVH* bvh = (BVH*)_data;
+  return bvh->Raycast(ray, hit, maxDistance, minDistance);
+}
+
+bool
+BVH::Leaf::_RaycastTrianglePair(const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  //ray.Intersect()
+  return false;
+}
+
+bool
+BVH::Leaf::Raycast(const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  double distance;
+  if (ray.Intersect(*this, &distance)) {
+    return (this->*_raycastImpl)(ray, hit, maxDistance, minDistance);
+  }
+  return false;
 }
 
 BVH::Branch::Branch(BVH::Cell* cell)
@@ -91,19 +131,7 @@ bool BVH::Branch::Raycast(const pxr::GfRay& ray, Hit* hit, double maxDistance, d
   return false;
 }
 
-bool BVH::Leaf::Raycast(const pxr::GfRay& ray, Hit* hit,
-  double maxDistance, double* minDistance) const
-{
-  double distance;
-  if (ray.Intersect(*this, &distance)) {
-    if (_data.Raycast(ray, hit, maxDistance, minDistance)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void BVH::_SortGeometriesByPair(std::vector<BVH::Cell*>& cells,
+void BVH::_SortCellsByPair(std::vector<BVH::Cell*>& cells,
   std::vector<BVH::Cell*>& results)
 {
   size_t numCells = cells.size();
@@ -138,53 +166,76 @@ void BVH::_SortGeometriesByPair(std::vector<BVH::Cell*>& cells,
   }
 }
 
-void BVH::_SortTrianglesByPair(std::vector<BVH::Cell*>& leaves, 
-  Geometry* geometry, std::vector<Triangle*>& triangles)
+void BVH::_SortTrianglesByPair(std::vector<BVH::Cell*>& leaves, Geometry* geometry)
 {
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
 
-  const std::vector<HalfEdge*>& uniqueEdges = mesh->GetUniqueEdges();
-  std::vector<bool> visited;
-  visited.assign(mesh->GetNumTriangles(), false);
-  for (HalfEdge* uniqueEdge : uniqueEdges) {
-    HalfEdge* twinEdge = uniqueEdge->twin;
-    if (twinEdge) {
-      BVH::Leaf* leaf = new BVH::Leaf(TrianglePair(
-        (Mesh*)geometry,
-        triangles[uniqueEdge->GetTriangleIndex()],
-        triangles[twinEdge->GetTriangleIndex()]));
-      leaves.push_back(leaf);
-      uniqueEdge->GetTriangleIndex();
-    }
-    
+  pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
+  leaves.reserve(trianglePairs.size());
+  for (auto& trianglePair : trianglePairs) {
+    BVH::Leaf* leaf = new BVH::Leaf(&trianglePair);
+    leaves.push_back(leaf);
   }
 }
 
 void BVH::Init(const std::vector<Geometry*>& geometries)
 {
-  std::vector<Cell*> leaves;
-  leaves.reserve(geometries.size());
+  _elemType = BVH::GEOMETRY;
+  std::vector<Cell*> trees;
+  trees.reserve(geometries.size());
+
   for (Geometry* geom : geometries) {
-    //leaves.push_back(new BVH::Leaf(geom));
+    trees.push_back(new BVH::Leaf(geom));
   }
 
-  std::vector<BVH::Cell*> cells = leaves;
+  std::vector<BVH::Cell*> cells = trees;
   std::vector<BVH::Cell*> results;
-  _SortGeometriesByPair(leaves, results);
+  _SortCellsByPair(trees, results);
   while (results.size() > 2) {
     cells = results;
     results.clear();
-    _SortGeometriesByPair(cells, results);
+    _SortCellsByPair(cells, results);
   }
-  root = new BVH::Branch(results[0], results[1]);
-  leaves.clear();
+  if (results.size() == 1) {
+    _root = new BVH::Branch(results[0]);
+  }
+  else {
+    _root = new BVH::Branch(results[0], results[1]);
+  }
+  trees.clear();
+}
+
+void BVH::Init(Geometry* geometry)
+{
+  if (geometry->GetType() == Geometry::MESH) {
+    _elemType = BVH::COMPONENT;
+    std::vector<Cell*> leaves;
+    _SortTrianglesByPair(leaves, geometry);
+    std::cout << "BVH NUM CELLS : " << leaves.size() << std::endl;
+
+    std::vector<BVH::Cell*> cells = leaves;
+    std::vector<BVH::Cell*> results;
+    _SortCellsByPair(leaves, results);
+    while (results.size() > 2) {
+      cells = results;
+      results.clear();
+      _SortCellsByPair(cells, results);
+    }
+    if (results.size() == 1) {
+      _root = new BVH::Branch(results[0]);
+    }
+    else {
+      _root = new BVH::Branch(results[0], results[1]);
+    }
+    leaves.clear();
+  }
 }
 
 bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit, 
   double maxDistance, double* minDistance) const
 {
-  return root->Raycast(ray, hit, maxDistance, minDistance);
+  return _root->Raycast(ray, hit, maxDistance, minDistance);
 }
 
 bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit, 
@@ -197,6 +248,28 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
 void BVH::Update(const std::vector<Geometry*>& geometries)
 {
 
+}
+
+static void _RecurseCells(BVH::Cell* cell, size_t& count)
+{
+  if (cell->IsLeaf()) { count++; return; };
+  BVH::Branch* branch = (BVH::Branch*)cell;
+  if (branch->GetLeft()) _RecurseCells(branch->GetLeft(), count);
+  if (branch->GetRight()) _RecurseCells(branch->GetRight(), count);
+}
+
+const pxr::GfBBox3d&
+BVH::GetBoundingBox() const 
+{
+  return *_root;
+}
+
+size_t BVH::GetNumCells()
+{
+  size_t numCells = 0;
+  _RecurseCells(_root, numCells);
+  std::cout << "NUM CELLS : " << numCells << std::endl;
+  return numCells;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

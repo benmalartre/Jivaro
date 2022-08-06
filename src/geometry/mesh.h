@@ -87,6 +87,7 @@ public:
   pxr::GfVec3f GetNormal(const Location& point) const;
   Triangle* GetTriangle(uint32_t index){return &_triangles[index];};
   pxr::VtArray<Triangle>& GetTriangles(){return _triangles;};
+  pxr::VtArray<TrianglePair>& GetTrianglePairs() { return _trianglePairs; };
 
   uint32_t GetNumTriangles()const {return _numTriangles;};
   uint32_t GetNumSamples()const {return _numSamples;};

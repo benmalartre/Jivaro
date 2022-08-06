@@ -292,6 +292,12 @@ Workspace::InitExec()
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
       }
     }
+
+    std::vector<Geometry*> colliders;
+    for (auto& mesh : _execScene->GetMeshes()) {
+      colliders.push_back(&mesh.second);
+    }
+    _solver.AddColliders(colliders);
     _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
       _workStage->GetDefaultPrim().GetPath()));
 
