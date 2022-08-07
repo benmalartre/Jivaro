@@ -6,6 +6,7 @@
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/range3f.h>
+#include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include "../geometry/intersection.h"
 
@@ -22,7 +23,8 @@ public:
     double maxDistance=-1, double* minDistance=NULL) const = 0;
   virtual bool Closest(const pxr::GfVec3f& point, Hit* hit, 
     double maxDistance=-1.f, double* minDistance=NULL) const = 0;
-  virtual const pxr::GfBBox3d& GetBoundingBox() const { return pxr::GfBBox3d(); };
+  virtual const pxr::GfRange3d& GetBoundingBox() const { return pxr::GfRange3d(); };
+  virtual pxr::GfRange3d& GetBoundingBox() { return pxr::GfRange3d(); };
 
 protected:
   std::vector<Geometry*>  _geometries;

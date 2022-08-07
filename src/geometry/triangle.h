@@ -98,8 +98,8 @@ struct TrianglePair {
   TrianglePair(Triangle* t1);
   TrianglePair(Triangle* t1, Triangle* t2);
 
-  pxr::GfRange3d& GetBoundingBox(const pxr::GfVec3f* points);
-  const pxr::GfRange3d& GetBoundingBox(const pxr::GfVec3f* points) const;
+  pxr::GfRange3d GetBoundingBox(const pxr::GfVec3f* points);
+  const pxr::GfRange3d GetBoundingBox(const pxr::GfVec3f* points) const;
 
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const;

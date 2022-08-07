@@ -41,6 +41,31 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   BVH bvh;
   bvh.Init(colliders);
   std::cout << "COLIDER BVH NUM CELLS " << bvh.GetNumCells() << std::endl;
+  /*
+  {
+    double minDistance;
+    Hit hit;
+    if (bvh.Closest(pxr::GfVec3f(0.f), &hit, -1, &minDistance)) {
+      std::cout << "CLOSEST HIT :" << std::endl;
+      pxr::GfVec3f position;
+      hit.GetPosition(&position);
+      std::cout << "   pos : " << position << std::endl;
+      std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
+    }
+  }
+  */
+  {
+    pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
+    double minDistance;
+    Hit hit;
+    if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
+      std::cout << "RAYCAST HIT :" << std::endl;
+      pxr::GfVec3f position;
+      hit.GetPosition(&position);
+      std::cout << "   pos : " << position << std::endl;
+      std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
+    }
+  }
 }
 
 void PBDSolver::AddConstraints(Geometry* geom, size_t offset)

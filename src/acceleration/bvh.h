@@ -36,6 +36,7 @@ public:
       double maxDistance = -1.f, double* minDistance = NULL) const = 0;
     virtual bool IsLeaf() const = 0;
     virtual bool IsRoot() const = 0;
+    void SetParent(Cell* cell) { _parent = cell; };
     Cell* GetParent() { return _parent; };
     const Cell* GetParent() const { return _parent; };
     Cell* GetRoot();
@@ -98,8 +99,8 @@ public:
 
     Leaf(Cell* p) {};
     Leaf(Cell* p, Geometry* geometry);
-    Leaf(Cell* p, TrianglePair* pair, const pxr::GfRange3f& bbox);
-    Leaf(Cell* p, Triangle* triangle, const pxr::GfRange3f& bbox);
+    Leaf(Cell* p, TrianglePair* pair, const pxr::GfRange3d& bbox);
+    Leaf(Cell* p, Triangle* triangle, const pxr::GfRange3d& bbox);
 
     bool IsLeaf() const override { return true; };
     bool IsRoot() const override { return false; };
@@ -147,7 +148,8 @@ public:
   bool Closest(const pxr::GfVec3f& point, Hit* hit, 
     double maxDistance = -1.f, double* minDistance=NULL) const override;
 
-  const pxr::GfBBox3d& GetBoundingBox() const override;
+  const pxr::GfRange3d& GetBoundingBox() const override;
+  pxr::GfRange3d& GetBoundingBox() override;
   size_t GetNumCells();
 
 private:

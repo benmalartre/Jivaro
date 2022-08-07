@@ -266,24 +266,24 @@ TrianglePair::TrianglePair(Triangle* t1, Triangle* t2)
 {
 }
 
-pxr::GfRange3d&
+pxr::GfRange3d
 TrianglePair::GetBoundingBox(const pxr::GfVec3f* points)
 {
   pxr::GfRange3d range;
   if (left) {
-    range.ExtendBy(points[left->vertices[0]]);
-    range.ExtendBy(points[left->vertices[1]]);
-    range.ExtendBy(points[left->vertices[2]]);
+    range.UnionWith(points[left->vertices[0]]);
+    range.UnionWith(points[left->vertices[1]]);
+    range.UnionWith(points[left->vertices[2]]);
   } 
   if (right) {
-    range.ExtendBy(points[right->vertices[0]]);
-    range.ExtendBy(points[right->vertices[1]]);
-    range.ExtendBy(points[right->vertices[2]]);
+    range.UnionWith(points[right->vertices[0]]);
+    range.UnionWith(points[right->vertices[1]]);
+    range.UnionWith(points[right->vertices[2]]);
   }
   return range;
 }
 
-const pxr::GfRange3d& 
+const pxr::GfRange3d
 TrianglePair::GetBoundingBox(const pxr::GfVec3f* points) const
 {
   return GetBoundingBox(points);
