@@ -14,7 +14,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
-class Intersector
+class Intersector : public pxr::GfRange3d
 { 
 public:
   virtual void Init(const std::vector<Geometry*>& geometries) = 0;

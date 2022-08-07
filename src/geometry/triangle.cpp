@@ -283,12 +283,6 @@ TrianglePair::GetBoundingBox(const pxr::GfVec3f* points)
   return range;
 }
 
-const pxr::GfRange3d
-TrianglePair::GetBoundingBox(const pxr::GfVec3f* points) const
-{
-  return GetBoundingBox(points);
-}
-
 bool
 TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
@@ -302,15 +296,17 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
       points[vertices[0]],
       points[vertices[1]],
       points[vertices[2]],
-      &distance, &baryCoords, &frontFacing, maxDistance)) {
-      if (distance < *minDistance) {
-        *minDistance = distance;
+      &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
+      //if (distance < *minDistance) {
+        if(minDistance) *minDistance = distance;
         //hit->SetGeometry(mesh);
         hit->SetElementIndex(left->id);
+        std::cout << "ELEMENT INDEX : " << hit->GetElementIndex() << std::endl;
         hit->SetElementType(Hit::TRIANGLE);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
         hit->SetT(distance);
-      }
+        return true;
+      //}
     }
   } 
   if (right) {
@@ -319,15 +315,16 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
       points[vertices[0]],
       points[vertices[1]],
       points[vertices[2]],
-      &distance, &baryCoords, &frontFacing, maxDistance)) {
-      if (distance < *minDistance) {
-        *minDistance = distance;
+      &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
+      //if (distance < *minDistance) {
+      if(minDistance) *minDistance = distance;
         //hit->SetGeometry(mesh);
         hit->SetElementIndex(right->id);
         hit->SetElementType(Hit::TRIANGLE);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
         hit->SetT(distance);
-      }
+        return true;
+      //}
     }
   }
   return false;

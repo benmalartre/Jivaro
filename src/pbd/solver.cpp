@@ -39,7 +39,12 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
 void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
   BVH bvh;
+  std::cout << "ADD COLLIDERS..." << colliders.size() << std::endl;
   bvh.Init(colliders);
+  for (auto& collider : colliders) {
+    std::cout << "COLIDER : " << ((Mesh*)collider)->GetNumTriangles() << std::endl;
+  }
+  std::cout << "WTF??" << std::endl;
   std::cout << "COLIDER BVH NUM CELLS " << bvh.GetNumCells() << std::endl;
   /*
   {
@@ -62,9 +67,11 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
       std::cout << "RAYCAST HIT :" << std::endl;
       pxr::GfVec3f position;
       hit.GetPosition(&position);
+      std::cout << "   ray * t : " << ray.GetPoint(hit.GetT()) << std::endl;
       std::cout << "   pos : " << position << std::endl;
       std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
     }
+    BVH::EchoNumHits();
   }
 }
 
