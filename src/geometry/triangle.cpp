@@ -301,7 +301,6 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
         if(minDistance) *minDistance = distance;
         //hit->SetGeometry(mesh);
         hit->SetElementIndex(left->id);
-        std::cout << "ELEMENT INDEX : " << hit->GetElementIndex() << std::endl;
         hit->SetElementType(Hit::TRIANGLE);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
         hit->SetT(distance);

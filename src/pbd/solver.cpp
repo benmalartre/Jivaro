@@ -6,6 +6,8 @@
 #include "../app/application.h"
 #include "../app/time.h"
 
+#include <iostream>
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 PBDSolver::PBDSolver() 
@@ -38,14 +40,9 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
 
 void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
+  _colliders = colliders;
   BVH bvh;
-  std::cout << "ADD COLLIDERS..." << colliders.size() << std::endl;
   bvh.Init(colliders);
-  for (auto& collider : colliders) {
-    std::cout << "COLIDER : " << ((Mesh*)collider)->GetNumTriangles() << std::endl;
-  }
-  std::cout << "WTF??" << std::endl;
-  std::cout << "COLIDER BVH NUM CELLS " << bvh.GetNumCells() << std::endl;
   /*
   {
     double minDistance;
@@ -64,14 +61,38 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
     double minDistance;
     Hit hit;
     if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
-      std::cout << "RAYCAST HIT :" << std::endl;
       pxr::GfVec3f position;
       hit.GetPosition(&position);
-      std::cout << "   ray * t : " << ray.GetPoint(hit.GetT()) << std::endl;
+    }
+    BVH::EchoNumHits();
+  }
+}
+
+void PBDSolver::UpdateColliders()
+{
+  BVH bvh;
+  bvh.Init(_colliders);
+  /*
+  {
+    double minDistance;
+    Hit hit;
+    if (bvh.Closest(pxr::GfVec3f(0.f), &hit, -1, &minDistance)) {
+      std::cout << "CLOSEST HIT :" << std::endl;
+      pxr::GfVec3f position;
+      hit.GetPosition(&position);
       std::cout << "   pos : " << position << std::endl;
       std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
     }
-    BVH::EchoNumHits();
+  }
+  */
+  {
+    pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
+    double minDistance;
+    Hit hit;
+    if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
+      pxr::GfVec3f position;
+      hit.GetPosition(&position);
+    }
   }
 }
 
@@ -118,6 +139,7 @@ void PBDSolver::Step()
 {
   _system.AccumulateForces(_gravity);
   _system.Integrate(_timeStep);
+  UpdateColliders();
   SatisfyConstraints();
   
   _system.UpdateGeometries();

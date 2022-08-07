@@ -19,6 +19,7 @@ public:
     void AddColliders(std::vector<Geometry*>& colliders);
     void AddConstraints(Geometry* geom, size_t offset);
     void SatisfyConstraints();
+    void UpdateColliders();
     void Reset();
     void Step();
     PBDParticle& GetSystem() { return _system; };
@@ -28,6 +29,7 @@ private:
     pxr::GfVec3f                _gravity;
     float                       _timeStep;
     std::vector<PBDConstraint*> _constraints;
+    std::vector<Geometry*>      _colliders;
 };
 
 

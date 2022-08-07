@@ -2,24 +2,29 @@
 #define JVR_ACCELERATION_MORTOM_H
 
 #include "../common.h"
-
+#include <pxr/base/gf/range3d.h>
+#include <pxr/base/gf/vec3d.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-struct MortomPoint2D {
+struct MortomPoint2d {
 	int x;
 	int y;
 };
   
-struct MortomPoint3D {
+struct MortomPoint3d {
 	int x;
 	int y;
 	int z;
 };
   
-#define EIGHTBIT2DMASK 0x000000FF
-#define EIGHTBIT3DMASK 0x000000FF
-#define NINEBIT3DMASK 0x000001FF
+#define MORTOM_EIGHTBIT2DMASK 	0x000000FF
+#define MORTOM_EIGHTBIT3DMASK 	0x000000FF
+#define MORTOM_NINEBIT3DMASK 	0x000001FF
+
+#define MORTOM_LONG_BITS 		21
+#define MORTOM_MAX_L        	((1<<(MORTOM_LONG_BITS))-1)
+
 
 static uint16_t MORTON_ENCODE_2D_X[256] = {
 	0, 1, 4, 5, 16, 17, 20, 21,
@@ -344,13 +349,19 @@ static uint8_t MORTOM_DECODE_3D_Z[512] = {
 	6, 6, 6, 6, 7, 7, 7, 7, 6, 6, 6, 6, 7, 7, 7, 7
 };    
   
+
+// CONVERSION
+pxr::GfVec3d MortomToWorld(const pxr::GfRange3d& range, const MortomPoint3d& p);
+MortomPoint3d WorldToMortom(const pxr::GfRange3d& range, const pxr::GfVec3d& p);
+void ClampMortom(const pxr::GfRange3d& range,  MortomPoint3d& p);
+
 // ENCODING
-uint32_t Encode2D(const MortomPoint2D& p);
-uint64_t Encode3D(const MortomPoint3D& p);
+uint32_t Encode2D(const MortomPoint2d& p);
+uint64_t Encode3D(const MortomPoint3d& p);
 
 // DECODING
-void Decode2D(uint32_t code, MortomPoint2D& p);
-void Decode3D(uint64_t code, MortomPoint3D& p);
+void Decode2D(uint32_t code, MortomPoint2d& p);
+void Decode3D(uint64_t code, MortomPoint3d& p);
  
 JVR_NAMESPACE_CLOSE_SCOPE
 

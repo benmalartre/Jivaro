@@ -32,13 +32,6 @@ void Hit::GetPosition(pxr::GfVec3f* position) const
   int           _elemId;
   int           _elemMapId;
   */
-  std::cout << "HIT GET POSITION" << position << std::endl;
-  std::cout << "HIT GEOM " << _geom << std::endl;
-  std::cout << "HIT BARY " << _baryCoords << std::endl;
-  std::cout << "HIT TYP " << _elemType << std::endl;
-  std::cout << "HIT ID " << _elemId << std::endl;
-  std::cout << "HIT MAP ID " << _elemMapId << std::endl;
-  std::cout << "HIT T " << _t << std::endl;
   switch (_geom->GetType()) {
     case Geometry::MESH:
     {
@@ -49,7 +42,6 @@ void Hit::GetPosition(pxr::GfVec3f* position) const
         pxr::GfVec3f(positions[triangle->vertices[0]]) * _baryCoords[0] +
         pxr::GfVec3f(positions[triangle->vertices[1]]) * _baryCoords[1] +
         pxr::GfVec3f(positions[triangle->vertices[2]]) * _baryCoords[2];
-        std::cout << "POSITION : " << *position << std::endl;
       return;
     }
     case Geometry::CURVE:

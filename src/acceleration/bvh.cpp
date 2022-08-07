@@ -3,6 +3,7 @@
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/ray.h>
 #include "../acceleration/bvh.h"
+#include "../acceleration/mortom.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 
@@ -340,6 +341,12 @@ void BVH::_SortCellsByPair(std::vector<BVH*>& cells,
   std::vector<short> used;
   used.resize(numCells);
   memset(&used[0], 0x0, numCells * sizeof(bool));
+
+  std::vector<uint64_t> mortom(numCells);
+  for (size_t i = 0; i < numCells; ++i) {
+    const MortomPoint3d p = WorldToMortom(*this, cells[i]->GetMidpoint());
+    mortom[i] = Encode3D(p);
+  }
 
   for (size_t i = 0; i < numCells; ++i) {
     if (used[i]) continue;
