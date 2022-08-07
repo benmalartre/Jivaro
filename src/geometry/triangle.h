@@ -76,12 +76,14 @@ struct Triangle {
   uint32_t     id;
   pxr::GfVec3i vertices;
 
-  void GetCenter(Mesh* mesh, pxr::GfVec3f& center);
-  void GetNormal(Mesh* mesh, pxr::GfVec3f& normal);
-  float GetArea(Mesh* mesh);
-  void ClosestPoint(Mesh* mesh, const pxr::GfVec3f& point , 
-    pxr::GfVec3f& closest, float& u, float& v, float& w);
-  bool Touch(Mesh* mesh, const pxr::GfVec3f& center, 
+  void GetCenter(const pxr::GfVec3f* points, pxr::GfVec3f& center);
+  void GetNormal(const pxr::GfVec3f* points, pxr::GfVec3f& normal);
+  float GetArea(const pxr::GfVec3f* points);
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const;
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const;
+  bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
     const pxr::GfVec3f& boxhalfsize);
   bool PlaneBoxTest(const pxr::GfVec3f& normal, const pxr::GfVec3f& point, 
     const pxr::GfVec3f& box);
@@ -89,21 +91,19 @@ struct Triangle {
 };
 
 struct TrianglePair {
-  Mesh*     mesh;
   Triangle* left;
   Triangle* right;
 
   TrianglePair();
-  TrianglePair(Mesh* m);
-  TrianglePair(Mesh* m, Triangle* t1);
-  TrianglePair(Mesh* m, Triangle* t1, Triangle* t2);
+  TrianglePair(Triangle* t1);
+  TrianglePair(Triangle* t1, Triangle* t2);
 
-  pxr::GfBBox3d& GetBoundingBox();
-  const pxr::GfBBox3d& GetBoundingBox() const;
+  pxr::GfRange3d& GetBoundingBox(const pxr::GfVec3f* points);
+  const pxr::GfRange3d& GetBoundingBox(const pxr::GfVec3f* points) const;
 
-  virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const;
-  virtual bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const;
 };
 

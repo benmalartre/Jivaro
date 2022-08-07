@@ -17,7 +17,6 @@ struct MortomPoint3D {
 	int z;
 };
   
-  
 #define EIGHTBIT2DMASK 0x000000FF
 #define EIGHTBIT3DMASK 0x000000FF
 #define NINEBIT3DMASK 0x000001FF
@@ -346,12 +345,12 @@ static uint8_t MORTOM_DECODE_3D_Z[512] = {
 };    
   
 // ENCODING
-uint16_t Encode2D(const MortomPoint2D& p);
-uint32_t Encode3D(const MortomPoint3D& p);
+uint32_t Encode2D(const MortomPoint2D& p);
+uint64_t Encode3D(const MortomPoint3D& p);
 
 // DECODING
-void Decode2D(uint16_t code, MortomPoint2D& p);
-void Decode3D(uint32_t code, MortomPoint3D& p);
+void Decode2D(uint32_t code, MortomPoint2D& p);
+void Decode3D(uint64_t code, MortomPoint3D& p);
  
 JVR_NAMESPACE_CLOSE_SCOPE
 

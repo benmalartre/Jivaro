@@ -416,7 +416,6 @@ void Mesh::ComputeHalfEdges()
         _uniqueEdges.push_back(halfEdgeIndex);
         if (!used[halfEdge.GetTriangleIndex()] && !used[halfEdge.twin->GetTriangleIndex()]) {
           _trianglePairs.push_back(TrianglePair(
-            this,
             &_triangles[halfEdge.GetTriangleIndex()], 
             &_triangles[halfEdge.twin->GetTriangleIndex()] 
           ));
@@ -428,7 +427,6 @@ void Mesh::ComputeHalfEdges()
       _uniqueEdges.push_back(halfEdgeIndex);
       if (!used[halfEdge.GetTriangleIndex()]) {
         _trianglePairs.push_back(TrianglePair(
-          this,
           &_triangles[halfEdge.GetTriangleIndex()],
           NULL
         ));
