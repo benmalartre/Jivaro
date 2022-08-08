@@ -248,6 +248,9 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
 }
 
 
+//-------------------------------------------------------
+// TrianglePair constructors
+//-------------------------------------------------------
 TrianglePair::TrianglePair()
   : left(NULL)
   , right(NULL)
@@ -266,6 +269,9 @@ TrianglePair::TrianglePair(Triangle* t1, Triangle* t2)
 {
 }
 
+//-------------------------------------------------------
+// TrianglePair bounding box
+//-------------------------------------------------------
 pxr::GfRange3d
 TrianglePair::GetBoundingBox(const pxr::GfVec3f* points)
 {
@@ -283,6 +289,9 @@ TrianglePair::GetBoundingBox(const pxr::GfVec3f* points)
   return range;
 }
 
+//-------------------------------------------------------
+// TrianglePair raycast
+//-------------------------------------------------------
 bool
 TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
@@ -299,7 +308,6 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
       &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
       //if (distance < *minDistance) {
         if(minDistance) *minDistance = distance;
-        //hit->SetGeometry(mesh);
         hit->SetElementIndex(left->id);
         hit->SetElementType(Hit::TRIANGLE);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
@@ -317,7 +325,6 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
       &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
       //if (distance < *minDistance) {
       if(minDistance) *minDistance = distance;
-        //hit->SetGeometry(mesh);
         hit->SetElementIndex(right->id);
         hit->SetElementType(Hit::TRIANGLE);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
@@ -329,6 +336,9 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
   return false;
 }
 
+//-------------------------------------------------------
+// TrianglePair closest point
+//-------------------------------------------------------
 bool 
 TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
   Hit* hit, double maxDistance, double* minDistance) const

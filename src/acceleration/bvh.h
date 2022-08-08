@@ -85,6 +85,7 @@ public:
   size_t GetNumCells();
 
   static void EchoNumHits();
+  static void ClearNumHits();
 
 private:
   void _SortCellsByPair(std::vector<BVH*>& cells, std::vector<BVH*>& results);

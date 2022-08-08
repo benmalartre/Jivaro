@@ -22,16 +22,24 @@ MortomPoint3d WorldToMortom(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
   const pxr::GfVec3d min(range.GetMin());
   const pxr::GfVec3d invScale(1.0 / scale[0], 1.0 / scale[1], 1.0 / scale[2]);
 
-  return MortomPoint3d({
-    (int)(invScale[0] * (p[0] - min[0])),
-    (int)(invScale[1] * (p[1] - min[1])),
-    (int)(invScale[2] * (p[2] - min[2]))
+  MortomPoint3d r({
+    (uint32_t)(invScale[0] * (p[0] - min[0])),
+    (uint32_t)(invScale[1] * (p[1] - min[1])),
+    (uint32_t)(invScale[2] * (p[2] - min[2]))
   });
+  ClampMortom(range, r);
+  return r;
 }
 
 void ClampMortom(const pxr::GfRange3d& range,  MortomPoint3d& p)
 {
   
+  if (p.x < 0)p.x = 0;
+  else if (p.x > MORTOM_MAX_L) p.x = MORTOM_MAX_L;
+  if (p.y < 0)p.y = 0;
+  else if (p.y > MORTOM_MAX_L) p.y = MORTOM_MAX_L;
+  if (p.z < 0)p.z = 0;
+  else if (p.z > MORTOM_MAX_L) p.z = MORTOM_MAX_L;
 }
 
 // method To seperate bits from a given integer 3 positions apart
@@ -87,9 +95,8 @@ void Decode2D(uint16_t code, MortomPoint2d& p)
 
 uint64_t Encode3D(const MortomPoint3d& p)
 {
-
+  int8_t index = 4;
   uint64_t answer = 0;
-  uint8_t index = 4;
   uint32_t shift;
   while (index > 0) {
     shift = (index - 1) * 8;
@@ -97,7 +104,7 @@ uint64_t Encode3D(const MortomPoint3d& p)
       ( MORTON_ENCODE_3D_Z[((p.z >> shift) & MORTOM_EIGHTBIT3DMASK) * 4] |
         MORTON_ENCODE_3D_Y[((p.y >> shift) & MORTOM_EIGHTBIT3DMASK) * 4] |
         MORTON_ENCODE_3D_X[((p.x >> shift) & MORTOM_EIGHTBIT3DMASK) * 4] );
-    index - 1;
+    index -= 1;
   }
 
   return answer | (1 << 63);

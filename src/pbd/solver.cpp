@@ -41,8 +41,6 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
 void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
   _colliders = colliders;
-  std::cout << "SOLVER ADD COLLIDERS" << std::endl;
-  std::cout << "NUM GEOMETRIES : " << _colliders.size() << std::endl;
 
   BVH bvh;
   bvh.Init(colliders);
@@ -74,7 +72,6 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 void PBDSolver::UpdateColliders()
 {
   BVH bvh;
-  std::cout << "SOLVER UPDATE COLLIDERS" << std::endl;
   bvh.Init(_colliders);
   /*
   {
@@ -102,7 +99,6 @@ void PBDSolver::UpdateColliders()
 
 void PBDSolver::AddConstraints(Geometry* geom, size_t offset)
 {
-  std::cout << "ADD CONSTRAINT : " << geom->GetType() << std::endl;
   if (geom->GetType() == Geometry::MESH) {
     Mesh* mesh = (Mesh*)geom;
     std::vector<HalfEdge*> edges = mesh->GetUniqueEdges();

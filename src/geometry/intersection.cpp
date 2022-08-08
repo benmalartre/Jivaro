@@ -14,7 +14,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 //=================================================================================================
 // HIT CLASS
 //=================================================================================================
-void Hit::Set(const Hit& other) {
+void 
+Hit::Set(const Hit& other) {
   _geom = other._geom;
   _baryCoords = other._baryCoords;
   _elemType = other._elemType;
@@ -23,7 +24,8 @@ void Hit::Set(const Hit& other) {
   _t = other._t;
 }
 
-void Hit::GetPosition(pxr::GfVec3f* position) const 
+void 
+Hit::GetPosition(pxr::GfVec3f* position) const 
 {
   /*
   Geometry*     _geom;
@@ -55,7 +57,15 @@ void Hit::GetPosition(pxr::GfVec3f* position) const
     }
   }
 }
-void Hit::GetNormal(pxr::GfVec3f* normal) const
+
+void 
+Hit::GetPosition(const pxr::GfRay& ray, pxr::GfVec3f* position) const
+{
+  *position = pxr::GfVec3f(ray.GetPoint(_t));
+}
+
+void 
+Hit::GetNormal(pxr::GfVec3f* normal) const
 {
   switch (_geom->GetType()) {
     case Geometry::MESH:
@@ -76,7 +86,8 @@ void Hit::GetNormal(pxr::GfVec3f* normal) const
 //=================================================================================================
 // INTERSECTION ROUTINES
 //=================================================================================================
-bool IntersectDisc(const pxr::GfRay& localRay, const double radius, double* distance) 
+bool 
+IntersectDisc(const pxr::GfRay& localRay, const double radius, double* distance) 
 { 
   double hitDistance;
   if(localRay.Intersect(DEFAULT_PLANE, &hitDistance)) {
@@ -89,7 +100,8 @@ bool IntersectDisc(const pxr::GfRay& localRay, const double radius, double* dist
   return false;
 } 
 
-bool IntersectRing(const pxr::GfRay& localRay, const double radius, 
+bool 
+IntersectRing(const pxr::GfRay& localRay, const double radius, 
   const double section, double* distance)
 {
   double hitDistance;
@@ -104,7 +116,8 @@ bool IntersectRing(const pxr::GfRay& localRay, const double radius,
   return false;
 }
 
-bool IntersectCylinder( const pxr::GfRay& localRay, const double radius, 
+bool 
+IntersectCylinder( const pxr::GfRay& localRay, const double radius, 
   const double height, double* distance)
 {
   double enterDistance, exitDistance;
@@ -129,7 +142,8 @@ bool IntersectCylinder( const pxr::GfRay& localRay, const double radius,
   return false;
 }
 
-bool IntersectTube(const pxr::GfRay& localRay, const double innerRadius,
+bool 
+IntersectTube(const pxr::GfRay& localRay, const double innerRadius,
   const double outerRadius, const double height, double* distance)
 {
   // closest point on circle
@@ -173,8 +187,9 @@ bool IntersectTube(const pxr::GfRay& localRay, const double innerRadius,
   return false;
 }
 
-bool IntersectTorus( const pxr::GfRay& localRay, const double radius, 
-    const double section, double* distance)
+bool 
+IntersectTorus( const pxr::GfRay& localRay, const double radius, 
+  const double section, double* distance)
 {
   
   double po = 1.0;
@@ -258,7 +273,8 @@ bool IntersectTorus( const pxr::GfRay& localRay, const double radius,
   return true;
 }
 
-bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
+bool 
+IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   const double section, double* distance)
 {
   const pxr::GfVec3d ro(localRay.GetPoint(0));
@@ -301,7 +317,8 @@ bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
   return false;
 }
 
-bool IntersectTriangle( 
+bool 
+IntersectTriangle( 
     const pxr::GfRay& ray, 
     const pxr::GfVec3f &a, const pxr::GfVec3f &b, const pxr::GfVec3f &c, 
     double* distance, pxr::GfVec3f* uvw) 

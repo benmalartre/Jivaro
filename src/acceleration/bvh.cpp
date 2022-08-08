@@ -360,13 +360,13 @@ void BVH::_SortCellsByPair(std::vector<BVH*>& cells,
   std::vector<short> used;
   used.resize(numCells);
   memset(&used[0], 0x0, numCells * sizeof(bool));
-  /*
+  
   std::vector<uint64_t> mortom(numCells);
   for (size_t i = 0; i < numCells; ++i) {
     const MortomPoint3d p = WorldToMortom(*this, cells[i]->GetMidpoint());
     mortom[i] = Encode3D(p);
   }
-  */
+  
   for (size_t i = 0; i < numCells; ++i) {
     if (used[i]) continue;
     BVH* cell = cells[i];
@@ -412,23 +412,20 @@ void BVH::_SortTrianglesByPair(std::vector<BVH*>& leaves,  Geometry* geometry)
 void BVH::Init(const std::vector<Geometry*>& geometries)
 {
   size_t numColliders = geometries.size();
-  std::cout << "INIT BVH ..." << std::endl;
   pxr::GfRange3d accum = geometries[0]->GetBoundingBox().GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
     accum.UnionWith(geometries[i]->GetBoundingBox().GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
-  std::cout << "BBOX : " << pxr::GfBBox3d(accum) << std::endl;
 
   std::vector<BVH*> trees;
   trees.reserve(numColliders);
 
   for (Geometry* geom : geometries) {
-    std::cout << "CREATE BVH LEAVES..." << std::endl;
     trees.push_back(new BVH(this, geom));
   }
-  std::cout << "BVH LEAVES CREATED..." << std::endl;
+
   std::vector<BVH*> cells = trees;
   std::vector<BVH*> results;
   _SortCellsByPair(trees, results);
@@ -528,10 +525,17 @@ BVH::GetNumCells()
   return numCells;
 }
 
+void 
+BVH::ClearNumHits()
+{
+  NUM_HITS = 0;
+}
+
 void
 BVH::EchoNumHits()
 {
   std::cout << "NUM HITS : " << NUM_HITS << std::endl;
+  ClearNumHits();
 }
 
 

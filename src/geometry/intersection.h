@@ -65,6 +65,7 @@ public:
   const pxr::GfVec3f& GetBarycentricCoordinates() { return _baryCoords; };
   float GetT() { return _t; };
   void GetPosition(pxr::GfVec3f* position) const;
+  void GetPosition(const pxr::GfRay& ray, pxr::GfVec3f* position) const;
   void GetNormal(pxr::GfVec3f* normal) const;
 };
 

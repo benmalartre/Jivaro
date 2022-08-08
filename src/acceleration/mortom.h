@@ -8,14 +8,14 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 struct MortomPoint2d {
-	int x;
-	int y;
+	uint16_t x;
+  uint16_t y;
 };
   
 struct MortomPoint3d {
-	int x;
-	int y;
-	int z;
+	uint32_t x;
+  uint32_t y;
+  uint32_t z;
 };
   
 #define MORTOM_EIGHTBIT2DMASK 	0x000000FF
