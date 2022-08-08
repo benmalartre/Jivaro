@@ -7,13 +7,26 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 pxr::GfVec3d MortomToWorld(const pxr::GfRange3d& range, const MortomPoint3d& p)
 {
-  pxr::GfVec3f scale(range.GetSize()/MORTOM_MAX_L);
-  return pxr::GfVec3f();
+  const pxr::GfVec3d scale(range.GetSize() / MORTOM_MAX_L);
+  const pxr::GfVec3d min(range.GetMin());
+  return pxr::GfVec3d(
+    scale[0] * p.x + min[0],
+    scale[1] * p.x + min[1],
+    scale[2] * p.x + min[2]
+  );
 }
 
 MortomPoint3d WorldToMortom(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
 {
-  return MortomPoint3d();
+  const pxr::GfVec3d scale(range.GetSize() / MORTOM_MAX_L);
+  const pxr::GfVec3d min(range.GetMin());
+  const pxr::GfVec3d invScale(1.0 / scale[0], 1.0 / scale[1], 1.0 / scale[2]);
+
+  return MortomPoint3d({
+    (int)(invScale[0] * (p[0] - min[0])),
+    (int)(invScale[1] * (p[1] - min[1])),
+    (int)(invScale[2] * (p[2] - min[2]))
+  });
 }
 
 void ClampMortom(const pxr::GfRange3d& range,  MortomPoint3d& p)

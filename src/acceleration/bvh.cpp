@@ -130,12 +130,15 @@ BVH::BVH(BVH* parent, Geometry* geometry)
   , _data(NULL)
   , _type(BVH::ROOT)
 {
+  std::cout << "BVH LEAF CONSTRUCTOR" << std::endl;
   if (geometry) {
     pxr::GfRange3d range = geometry->GetBoundingBox().GetRange();
-    SetMin(pxr::GfVec3d(range.GetMin()));
-    SetMax(pxr::GfVec3d(range.GetMax()));
+    std::cout << "BBOX : " << range << std::endl;
+    SetMin(range.GetMin());
+    SetMax(range.GetMax());
 
     Init(geometry, parent);
+
     SetMin(GetBoundingBox().GetMin());
     SetMax(GetBoundingBox().GetMax());
     _data = (void*)new BVH::Data({
@@ -313,22 +316,38 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
 {
   double leftMinDistance, rightMinDistance;
   if (maxDistance < 0 || _GetDistance(this, &pxr::GfRange3d(point, point)) < maxDistance) {
-    Hit leftHit(*hit), rightHit(*hit);
-    if (_left)_left->Closest(point, &leftHit, maxDistance);
-    if (_right)_right->Closest(point, &rightHit, maxDistance);
-    if (leftHit.GetGeometry() && rightHit.GetGeometry()) {
-      if (leftHit.GetT() < rightHit.GetT()) {
+    if (IsLeaf()) {
+      BVH::Data* data = (BVH::Data*)GetRoot()->_data;
+      const pxr::GfVec3f* points = data->geometry->GetPositionsCPtr();
+      switch (data->elemType) {
+      case BVH::TRIPAIR:
+        if (_ClosestTrianglePair(points, point, hit, maxDistance, minDistance)) {
+          hit->SetGeometry(data->geometry);
+          return true;
+        }
+        break;
+      default:
+        return false;
+        break;
+      }
+    }
+    else {
+      Hit leftHit(*hit), rightHit(*hit);
+      if (_left)_left->Closest(point, &leftHit, maxDistance);
+      if (_right)_right->Closest(point, &rightHit, maxDistance);
+      if (leftHit.GetGeometry() && rightHit.GetGeometry()) {
+        if (leftHit.GetT() < rightHit.GetT()) {
+          hit->Set(leftHit); return true;
+        } else {
+          hit->Set(rightHit); return true;
+        }
+      } else if (leftHit.GetGeometry()) {
         hit->Set(leftHit); return true;
-      }
-      else {
+      } else if (rightHit.GetGeometry()) {
         hit->Set(rightHit); return true;
+      } else {
+        return false;
       }
-    } else if(leftHit.GetGeometry()) {
-      hit->Set(leftHit); return true;
-    } else if (rightHit.GetGeometry()) {
-      hit->Set(rightHit); return true;
-    } else {
-      return false;
     }
   }
   return false;
@@ -341,13 +360,13 @@ void BVH::_SortCellsByPair(std::vector<BVH*>& cells,
   std::vector<short> used;
   used.resize(numCells);
   memset(&used[0], 0x0, numCells * sizeof(bool));
-
+  /*
   std::vector<uint64_t> mortom(numCells);
   for (size_t i = 0; i < numCells; ++i) {
     const MortomPoint3d p = WorldToMortom(*this, cells[i]->GetMidpoint());
     mortom[i] = Encode3D(p);
   }
-
+  */
   for (size_t i = 0; i < numCells; ++i) {
     if (used[i]) continue;
     BVH* cell = cells[i];
@@ -392,13 +411,24 @@ void BVH::_SortTrianglesByPair(std::vector<BVH*>& leaves,  Geometry* geometry)
 
 void BVH::Init(const std::vector<Geometry*>& geometries)
 {
+  size_t numColliders = geometries.size();
+  std::cout << "INIT BVH ..." << std::endl;
+  pxr::GfRange3d accum = geometries[0]->GetBoundingBox().GetRange();
+  for (size_t i = 1; i < numColliders; ++i) {
+    accum.UnionWith(geometries[i]->GetBoundingBox().GetRange());
+  }
+  SetMin(accum.GetMin());
+  SetMax(accum.GetMax());
+  std::cout << "BBOX : " << pxr::GfBBox3d(accum) << std::endl;
+
   std::vector<BVH*> trees;
-  trees.reserve(geometries.size());
+  trees.reserve(numColliders);
 
   for (Geometry* geom : geometries) {
+    std::cout << "CREATE BVH LEAVES..." << std::endl;
     trees.push_back(new BVH(this, geom));
   }
-
+  std::cout << "BVH LEAVES CREATED..." << std::endl;
   std::vector<BVH*> cells = trees;
   std::vector<BVH*> results;
   _SortCellsByPair(trees, results);
