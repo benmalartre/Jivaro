@@ -97,7 +97,7 @@ uint64_t Encode3D(const MortomPoint3d& p)
 {
   int8_t index = 4;
   uint64_t answer = 0;
-  uint32_t shift;
+  uint64_t shift;
   while (index > 0) {
     shift = (index - 1) * 8;
     answer = answer << 24 | 

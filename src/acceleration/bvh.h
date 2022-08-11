@@ -38,6 +38,14 @@ public:
     short     elemType;
   };
 
+  struct MortomData
+  {
+    bool operator<(const MortomData& rhs) const { return _mortom < rhs._mortom; };
+    BVH*            _cell;
+    uint64_t        _mortom;
+  };
+
+
   // constructor
   BVH();
   BVH(BVH* parent);
@@ -80,8 +88,6 @@ public:
   bool Closest(const pxr::GfVec3f& point, Hit* hit, 
     double maxDistance = -1.f, double* minDistance=NULL) const;
 
-  const pxr::GfRange3d& GetBoundingBox() const override;
-  pxr::GfRange3d& GetBoundingBox() override;
   size_t GetNumCells();
 
   static void EchoNumHits();
@@ -89,14 +95,10 @@ public:
 
 private:
   void _SortCellsByPair(std::vector<BVH*>& cells, std::vector<BVH*>& results);
+  void _SortCellsByPairMortom(std::vector<BVH*>& cells, std::vector<BVH*>& results);
   void _SortTrianglesByPair(std::vector<BVH*>& leaves, Geometry* geometry);
 
-  bool _RaycastGeometry(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
-    double maxDistance, double* minDistance = NULL) const;
   bool _RaycastTrianglePair(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
-    double maxDistance, double* minDistance = NULL) const;
-
-  bool _ClosestGeometry(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
     double maxDistance, double* minDistance = NULL) const;
   bool _ClosestTrianglePair(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
     double maxDistance, double* minDistance = NULL) const;

@@ -23,8 +23,6 @@ public:
     double maxDistance=-1, double* minDistance=NULL) const = 0;
   virtual bool Closest(const pxr::GfVec3f& point, Hit* hit, 
     double maxDistance=-1.f, double* minDistance=NULL) const = 0;
-  virtual const pxr::GfRange3d& GetBoundingBox() const { return pxr::GfRange3d(); };
-  virtual pxr::GfRange3d& GetBoundingBox() { return pxr::GfRange3d(); };
 
 protected:
   std::vector<Geometry*>  _geometries;
