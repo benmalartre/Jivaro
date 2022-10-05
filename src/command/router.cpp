@@ -31,9 +31,10 @@
 #include "../command/delegate.h"
 
 
-JVR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE 
+TF_INSTANTIATE_SINGLETON(AMN::UndoRouter);
 
-TF_INSTANTIATE_SINGLETON(UndoRouter);
+JVR_NAMESPACE_OPEN_SCOPE
 
 UndoRouter::UndoRouter() {
     // TfDebug::Enable(USDQT_DEBUG_UNDOSTACK);

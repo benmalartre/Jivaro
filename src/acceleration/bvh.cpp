@@ -295,7 +295,8 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
   double maxDistance, double* minDistance) const
 {
   double leftMinDistance, rightMinDistance;
-  if (maxDistance < 0 || _GetDistance(this, &pxr::GfRange3d(point, point)) < maxDistance) {
+  pxr::GfRange3d range(point, point);
+  if (maxDistance < 0 || _GetDistance(this, &range) < maxDistance) {
     if (IsLeaf()) {
       BVH::Data* data = (BVH::Data*)GetRoot()->_data;
       const pxr::GfVec3f* points = data->geometry->GetPositionsCPtr();

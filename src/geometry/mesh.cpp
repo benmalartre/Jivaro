@@ -191,7 +191,7 @@ void Mesh::GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtA
 
 static bool _IsHalfEdgesUVSeparated(const HalfEdge* lhs, const HalfEdge* rhs)
 {
-
+  return false;
 }
 
 
@@ -290,7 +290,7 @@ const std::vector<HalfEdge*> Mesh::GetUniqueEdges()
 
 static bool _GetEdgeLatency(int p0, int p1, const int* )
 {
-
+  return false;
 }
 
 static void _SetHalfEdgeLatency(HalfEdge* halfEdge, int numFaceTriangles, 
@@ -315,11 +315,18 @@ static void _RemovePoint(pxr::VtArray<pxr::GfVec3f>& points, size_t idx)
 
 static void _RemoveEdge(pxr::VtArray<HalfEdge>& halfEdges, HalfEdge* edge)
 {
-  for(auto& it = halfEdges.begin(); it < halfEdges.end(); ++it) {
+  for(size_t i=0; i < halfEdges.size(); ++i) {
+    if(&halfEdges[i] == edge) {
+      halfEdges.erase(halfEdges.begin() + i);
+    }
+  }
+  /*
+  for(std::VtArray<HalfEdge>::iterator& it = halfEdges.begin(); it < halfEdges.end(); ++it) {
     if (&(*it) == edge) {
       halfEdges.erase(it);
     }
   }
+  */
 }
 
 void Mesh::ComputeHalfEdges()
@@ -470,6 +477,8 @@ static HalfEdge* _GetNextEdge(HalfEdge* edge, short latency = HalfEdge::ANY)
   case HalfEdge::VIRTUAL:
   case HalfEdge::ANY:
     return current->next;
+  default:
+    return current->next;
   }
 }
 
@@ -495,7 +504,13 @@ static HalfEdge* _GetPreviousEdge(HalfEdge* edge, short latency=HalfEdge::ANY)
       current = current->next;
     }
     return current;
+  default:
+    while (current->next->vertex != vertex) {
+      current = current->next;
+    }
+    return current;
   }
+  
 }
 
 static bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)

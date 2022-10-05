@@ -26,6 +26,7 @@
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/fonts.h"
+#include "../utils/icons.h"
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
 #include "../imgui/imgui_impl_opengl3.h"

@@ -4,7 +4,6 @@
 #include "pxr/imaging/hdx/taskController.h"
 #include "pxr/imaging/hd/mesh.h"
 #include "pxr/usdImaging/usdImagingGL/engine.h"
-#include "pxr/usdImaging/usdImagingGL/legacyEngine.h"
 #include "pxr/usdImaging/usdImaging/delegate.h"
 #include "pxr/usdImaging/usdImaging/stageSceneIndex.h"
 #include "pxr/imaging/hd/flatteningSceneIndex.h"
@@ -94,17 +93,6 @@ Engine::TestIntersection(
   int* outHitInstanceIndex,
   pxr::HdInstancerContext* outInstancerContext)
 {
-  if (_IsUsingLegacyImpl()) {
-    return _legacyImpl->TestIntersection(
-      viewMatrix,
-      projectionMatrix,
-      root,
-      params,
-      outHitPoint,
-      outHitPrimPath,
-      outHitInstancerPath,
-      outHitInstanceIndex);
-  }
 
   if (_GetUseSceneIndices()) {
     // XXX(HYD-2299): picking support

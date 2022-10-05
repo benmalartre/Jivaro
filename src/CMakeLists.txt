@@ -115,7 +115,7 @@ target_include_directories(${TARGET}
 
 target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}
-  ${Python2_LIBRARIES}
+  #{Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}
   ${EMBREE_LIBRARIES}

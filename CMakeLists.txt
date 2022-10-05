@@ -117,7 +117,7 @@ set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
   program_options
-  python27
+  #python27
   regex
 )
 
