@@ -43,7 +43,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   _colliders = colliders;
 
   BVH bvh;
-  bvh.Init(colliders);
+  bvh.Init(_colliders);
   /*
   {
     double minDistance;
