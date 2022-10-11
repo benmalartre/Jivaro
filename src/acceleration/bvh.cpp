@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <iostream>
+#include <iterator>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
@@ -370,6 +372,28 @@ void BVH::_SortCellsByPair(std::vector<BVH*>& cells,
   }
 }
 
+
+// Least significant digit radix sort
+void BVH::_LeastSignificantBitRadixSort(uint64_t* first, uint64_t* last)
+{
+  for (uint64_t lsb = 0; lsb < 64; ++lsb)
+  {
+    std::stable_partition(first, last, RadixTest(lsb));
+  }
+}
+
+// Most significant digit radix sort (recursive)
+void BVH::_MostSignificantBitRadixSort(uint64_t* first, uint64_t* last, uint64_t msb = 63)
+{
+  if (first != last && msb >= 0)
+  {
+    uint64_t* mid = std::partition(first, last, RadixTest(msb));
+    msb--;
+    _MostSignificantBitRadixSort(first, mid, msb);
+    _MostSignificantBitRadixSort(mid, last, msb);
+  }
+}
+
 void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
   std::vector<BVH*>& results)
 {
@@ -380,6 +404,9 @@ void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
   for (size_t i = 0; i < numCells; ++i) {
     const MortomPoint3d p = WorldToMortom(*this, cells[i]->GetMidpoint());
     mortom[i] = { cells[i], Encode3D(p) };
+
+    std::cout << "point : " << p.x << "," << p.y << "," << p.z << std::endl;
+    std::cout << "mortom : " << mortom[i]._mortom << std::endl;
   }
 
   std::sort(mortom.begin(), mortom.end());
@@ -389,11 +416,13 @@ void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
     if (i % 2 == 0) {
       cell = mortom[i]._cell;
     } else {
+      std::cout << "push dual node" << std::endl;
       results.push_back(new BVH(this, cell, mortom[i]._cell));
       cell = NULL;
     }
   }
   if (cell != NULL) {
+    std::cout << "push single node" << std::endl;
     results.push_back(new BVH(this, cell));
   }
 }
@@ -432,10 +461,10 @@ void BVH::Init(const std::vector<Geometry*>& geometries)
 
   std::vector<BVH*> cells = trees;
   std::vector<BVH*> results;
-  _SortCellsByPair(trees, results);
+  _SortCellsByPairMortom(trees, results);
   while (results.size() > 2) {
     cells = results;
-    _SortCellsByPair(cells, results);
+    _SortCellsByPairMortom(cells, results);
   }
   if (results.size() == 1) {
     SetLeft(results[0]);
@@ -460,11 +489,11 @@ void BVH::Init(Geometry* geometry, BVH* parent)
 
     std::vector<BVH*> cells = leaves;
     std::vector<BVH*> results;
-    _SortCellsByPair(leaves, results);
+    _SortCellsByPairMortom(leaves, results);
     while (results.size() > 2) {
       cells = results;
       results.clear();
-      _SortCellsByPair(cells, results);
+      _SortCellsByPairMortom(cells, results);
     }
     if (results.size() == 1) {
       SetLeft(results[0]);

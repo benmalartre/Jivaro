@@ -45,6 +45,20 @@ public:
     uint64_t        _mortom;
   };
 
+  class RadixTest
+  {
+    const int64_t bit;
+  public:
+    RadixTest(int64_t offset) : bit(offset) {}
+
+    bool operator()(int64_t value) const
+    {
+      if (bit == 63)
+        return value < 0;
+      else
+        return !(value & (1 << bit));
+    }
+  };
 
   // constructor
   BVH();
@@ -94,6 +108,9 @@ public:
   static void ClearNumHits();
 
 private:
+  void _LeastSignificantBitRadixSort(uint64_t* first, uint64_t* last);
+  void _MostSignificantBitRadixSort(uint64_t* first, uint64_t* last, uint64_t msb = 63);
+
   void _SortCellsByPair(std::vector<BVH*>& cells, std::vector<BVH*>& results);
   void _SortCellsByPairMortom(std::vector<BVH*>& cells, std::vector<BVH*>& results);
   void _SortTrianglesByPair(std::vector<BVH*>& leaves, Geometry* geometry);
