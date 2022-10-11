@@ -86,4 +86,4 @@ private:
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // JVR_APPLICATION_Workspace_H
+#endif // JVR_APPLICATION_WORKSPACE_H

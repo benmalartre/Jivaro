@@ -356,7 +356,6 @@ bool ViewportUI::Draw()
 {    
   Application* app = GetApplication();
   Window* window = GetWindow();
-
   if (!_initialized)Init();
   if(!_valid)return false;  
 

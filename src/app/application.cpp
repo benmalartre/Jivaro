@@ -408,18 +408,18 @@ Application::Init()
   _tools[_mainWindow] = Tool();
   _tools[_mainWindow].Init();
   
-  GraphEditorUI* graph = new GraphEditorUI(graphView);
+  //GraphEditorUI* graph = new GraphEditorUI(graphView);
   
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   _viewport = new ViewportUI(viewportView);
-  _timeline = new TimelineUI(timelineView);
+  //_timeline = new TimelineUI(timelineView);
   MenuUI* menu = new MenuUI(topView);
-  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
-  _explorer = new ExplorerUI(explorerView);
-  _layers =  new LayersUI(layersView);
+  //ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
+  //_explorer = new ExplorerUI(explorerView);
+  //_layers =  new LayersUI(layersView);
   //new LayerHierarchyUI(layersView, "fuck");
   //_property = new PropertyUI(propertyView, "Property");
-  new DemoUI(propertyView);
+  //new DemoUI(propertyView);
   
   std::cout << "PREFERENCES : " << GetPreferences().GetRootFolder() << std::endl;
   //_stage = TestAnimXFromFile(filename, editor);
@@ -433,27 +433,29 @@ Application::Init()
   //pxr::SdfLayerRefPtr baseLayer = pxr::SdfLayer::FindOrOpen(shotFilePath);
   
   // Create a UsdStage with that root layer.
-  _stage = pxr::UsdStage::Open(shotFilePath);
-  _stage->SetStartTimeCode(1);
-  _stage->SetEndTimeCode(100);
+  pxr::UsdStageRefPtr stage = pxr::UsdStage::Create(shotFilePath);
+  stage->SetStartTimeCode(1);
+  stage->SetEndTimeCode(100);
   
   pxr::UsdGeomCube cube =
-    pxr::UsdGeomCube::Define(_stage, pxr::SdfPath("/Cube"));
+    pxr::UsdGeomCube::Define(stage, pxr::SdfPath("/Cube"));
     
 
-  _stage->GetRootLayer()->Save();
+  stage->GetRootLayer()->Save();
 
   // we use Sdf, a lower level library, to obtain the 'anim' layer.
   pxr::SdfLayerRefPtr animLayer = pxr::SdfLayer::FindOrOpen(animFilePath);
-  std::cout << "HAS LOCAL LAYER : " << _stage->HasLocalLayer(animLayer) << std::endl;
+  std::cout << "HAS LOCAL LAYER : " << stage->HasLocalLayer(animLayer) << std::endl;
 
-  _stage->SetEditTarget(animLayer);
-  std::cout << "HAS LOCAL LAYER : " << _stage->HasLocalLayer(animLayer) << std::endl;
+  stage->SetEditTarget(animLayer);
+  std::cout << "HAS LOCAL LAYER : " << stage->HasLocalLayer(animLayer) << std::endl;
+  */
   
+  /*
   // Create a mesh for the group.
         UsdGeomMesh mesh =
-            UsdGeomMesh::Define(stage, SdfPath("/" + group.name));
-  */
+            UsdGeomMesh::Define(stage, SdfPath("/" + group.name));*/
+  
   //_stage = pxr::UsdStage::CreateNew("test_stage");
   //_stage = pxr::UsdStage::Open(filename);
 
@@ -471,8 +473,10 @@ Application::Init()
 */
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
-
-  //_workspace->GetScene()->TestVoronoi();
+  _workspace->InitExec();
+  std::cout << "WORK SPACE : " << _workspace << std::endl;
+  std::cout << "WORK SCENE " << _workspace->GetScene() << std::endl;
+  _workspace->GetScene()->TestVoronoi();
  
   _mainWindow->CollectLeaves();
  
