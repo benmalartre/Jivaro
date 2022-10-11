@@ -383,7 +383,7 @@ void BVH::_LeastSignificantBitRadixSort(uint64_t* first, uint64_t* last)
 }
 
 // Most significant digit radix sort (recursive)
-void BVH::_MostSignificantBitRadixSort(uint64_t* first, uint64_t* last, uint64_t msb = 63)
+void BVH::_MostSignificantBitRadixSort(uint64_t* first, uint64_t* last, uint64_t msb)
 {
   if (first != last && msb >= 0)
   {

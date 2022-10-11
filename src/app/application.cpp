@@ -473,10 +473,7 @@ Application::Init()
 */
   //_stages.push_back(stage1);
   //TestStageUI(graph, _stages);
-  _workspace->InitExec();
-  std::cout << "WORK SPACE : " << _workspace << std::endl;
-  std::cout << "WORK SCENE " << _workspace->GetScene() << std::endl;
-  _workspace->GetScene()->TestVoronoi();
+
  
   _mainWindow->CollectLeaves();
  
