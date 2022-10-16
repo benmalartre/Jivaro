@@ -78,7 +78,7 @@ Application::Application(bool fullscreen):
 Application::~Application()
 {
   if(_mainWindow) delete _mainWindow;
-  if (_workspace) delete _workspace;
+  if(_workspace) delete _workspace;
 };
 
 // create full screen window
@@ -124,13 +124,17 @@ std::string
 Application::BrowseFile(int x, int y, const char* folder, const char* filters[], 
   const int numFilters, const char* name)
 {
-  std::string result;
+  std::string result = 
+    "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
+  
   ModalFileBrowser browser(x, y, "Open", ModalFileBrowser::Mode::OPEN);
   browser.Loop();
   if(browser.GetStatus() == BaseModal::Status::OK) {
     result = browser.GetResult();
   }
   browser.Term();
+  
+
   return result;
 }
 

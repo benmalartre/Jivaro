@@ -209,8 +209,7 @@ Window::Init(Application* app)
 //----------------------------------------------------------------------------
 Window::~Window()
 {
-  ClearImgui();
-  
+  if(_shared)ClearImgui();
   if(_splitter)delete _splitter;
   if(_mainView)delete _mainView;
   if(_window)glfwDestroyWindow(_window);
