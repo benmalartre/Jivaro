@@ -87,6 +87,9 @@ public:
   // get the (x,y) position in window space (left top corner)
   virtual pxr::GfVec2f GetPosition();
 
+  // get the (x,y) size in window space (left top corner)
+  virtual pxr::GfVec2f GetSize();
+
   // get the x position in window space (x-coordinate of left top corner)
   virtual int GetX();
 

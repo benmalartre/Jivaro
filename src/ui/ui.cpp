@@ -94,6 +94,11 @@ pxr::GfVec2f BaseUI::GetPosition()
   return pxr::GfVec2f(GetX(), GetY());
 }
 
+pxr::GfVec2f BaseUI::GetSize()
+{
+  return pxr::GfVec2f(GetWidth(), GetHeight());
+}
+
 int BaseUI::GetX()
 {
   return _parent->GetMin()[0];

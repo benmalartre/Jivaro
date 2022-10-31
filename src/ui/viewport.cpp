@@ -356,6 +356,7 @@ bool ViewportUI::Draw()
 {    
   Application* app = GetApplication();
   Window* window = GetWindow();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
   if (!_initialized)Init();
   if(!_valid)return false;  
 
@@ -423,16 +424,27 @@ bool ViewportUI::Draw()
       if(_buffered) {
         _engine->SetDirty(false);
         _buffered = false;
+      } else {
+        _buffered = true;
       }
 #else
       _engine->SetDirty(false);
 #endif
-    }
+    } /*else {
+      pxr::HgiTextureHandle aov = _engine->GetAovTexture(pxr::HdAovTokens->color);
+      // clear to black
+      glClearColor(0.f, 0.f, 0.f, 0.f);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      drawList->AddImage(
+        (ImTextureID)(size_t)aov->GetRawResource(),
+        GetPosition(), GetPosition() + GetSize(), 
+        ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
+
+    }*/
 
 
     Tool* tools = GetApplication()->GetTools(window);
-    const bool shouldDrawTool = tools->IsActive();
-    if (shouldDrawTool) {
+    if (tools->IsActive()) {
       glViewport(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
       glScissor(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
 
@@ -455,8 +467,6 @@ bool ViewportUI::Draw()
     ImGui::Begin(_name.c_str(), NULL, _flags);
     ImGui::SetWindowPos(min);
     ImGui::SetWindowSize(size);
-   
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
     
     //ImGui::PushFont(window->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
