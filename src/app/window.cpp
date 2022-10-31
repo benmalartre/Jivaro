@@ -175,7 +175,6 @@ Window::Init(Application* app)
       GarchGLApiLoad();
       pxr::GlfContextCaps::InitInstance();
       pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
-
       CreateFontAtlas();
       InitializeIcons();
       InitializeTools();
@@ -209,10 +208,14 @@ Window::Init(Application* app)
 //----------------------------------------------------------------------------
 Window::~Window()
 {
-  if(_shared)ClearImgui();
+  ClearImgui();
   if(_splitter)delete _splitter;
   if(_mainView)delete _mainView;
   if(_window)glfwDestroyWindow(_window);
+
+  if(_shared) {
+    DeleteFontAtlas();
+  }
 }
 
 // create full screen window
@@ -626,12 +629,12 @@ Window::SetupImgui()
 void 
 Window::ClearImgui()
 {
+  ImGui::DestroyContext(_context);
   // Cleanup
   if(_shared) {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
   }
-  ImGui::DestroyContext(_context);
 }
 
 void Window::DragSplitter(int x, int y)

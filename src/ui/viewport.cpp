@@ -320,7 +320,7 @@ static bool ComboWidget(const char* label, BaseUI* ui,
   const char** names, const size_t count, int& last, size_t width=300)
 {
   int current = last;
-  ImGui::Text(label);
+  ImGui::Text("%s", label);
   ImGui::SameLine();
   ImGui::SetNextItemWidth(300);
   std::string name("##");
@@ -359,8 +359,11 @@ bool ViewportUI::Draw()
   if (!_initialized)Init();
   if(!_valid)return false;  
 
-  const double viewportX = GetX();
-  const double viewportY = (GetWindow()->GetHeight() - GetHeight()) - GetY();
+  float xScale, yScale;
+  glfwGetWindowContentScale(window->GetGlfwWindow(), &xScale, &yScale);
+
+  const double viewportX = GetX() * xScale;
+  const double viewportY = ((GetWindow()->GetHeight() - GetHeight()) - GetY()) * yScale;
 
   Selection* selection = app->GetSelection();
   if (window->IsDraggingSplitter()) {
@@ -373,8 +376,8 @@ bool ViewportUI::Draw()
       pxr::GfVec4d(
         viewportX,
         viewportY,
-        static_cast<double>(GetWidth()),
-        static_cast<double>(GetHeight())));
+        static_cast<double>(GetWidth() * xScale),
+        static_cast<double>(GetHeight() * yScale)));
 
     _engine->SetCameraState(
       _camera->GetViewMatrix(),
@@ -400,7 +403,7 @@ bool ViewportUI::Draw()
     //_renderParams.colorCorrectionMode = ???
     _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
 
-    if ( _engine->IsDirty() || !_engine->IsConverged() ) {
+    if ( _engine->IsDirty() || !_engine->IsConverged()) {
 
       if (!selection->IsEmpty() && selection->IsObject()) {
         _engine->SetSelected(selection->GetSelectedPrims());
@@ -416,20 +419,31 @@ bool ViewportUI::Draw()
         _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
       }
       
+#ifdef __APPLE__
+      if(_buffered) {
+        _engine->SetDirty(false);
+        _buffered = false;
+      }
+#else
       _engine->SetDirty(false);
+#endif
     }
+
 
     Tool* tools = GetApplication()->GetTools(window);
     const bool shouldDrawTool = tools->IsActive();
     if (shouldDrawTool) {
-      glViewport(viewportX, viewportY, GetWidth(), GetHeight());
-      glScissor(viewportX, viewportY, GetWidth(), GetHeight());
+      glViewport(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
+      glScissor(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
 
       // clear to black
       glClearColor(0.0f, 0.0f, 0.0f, 0.f);
       glClear(GL_DEPTH_BUFFER_BIT);
       
-      tools->SetViewport(pxr::GfVec4f(GetX(), GetY(), GetWidth(), GetHeight()));
+      tools->SetViewport(
+        pxr::GfVec4f(
+          GetX() * xScale, GetY() * yScale, 
+          GetWidth() * xScale, GetHeight() * yScale));
       tools->SetCamera(_camera);
       tools->Draw();
     }
