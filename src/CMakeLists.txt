@@ -104,7 +104,7 @@ endif()
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
-    ${Python2_INCLUDE_DIRS}
+    #${Python2_INCLUDE_DIRS}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}

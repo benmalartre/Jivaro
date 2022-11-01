@@ -99,7 +99,7 @@ endif()
 endforeach()
 
 # python
-find_package(Python2 COMPONENTS Interpreter Development)
+# find_package(Python2 COMPONENTS Interpreter Development)
 
 # boost
 if(UNIX)
