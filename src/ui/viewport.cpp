@@ -51,7 +51,6 @@ static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target,
 // constructor
 ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
-  , _buffered(false)
 {
   _texture = 0;
   _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
@@ -68,13 +67,27 @@ ViewportUI::ViewportUI(View* parent)
   _rendererNames = NULL;
   _counter = 0;
 
-  _drawTarget = pxr::GlfDrawTarget::New(pxr::GfVec2i(GetWidth(), GetHeight()), false);
-  _drawTarget->Bind();
-  _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
-  _drawTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-  auto color = _drawTarget->GetAttachment("color");
-  _textureId = color->GetGlTextureName();
-  _drawTarget->Unbind();
+  const pxr::GfVec2i resolution(GetWidth(), GetHeight());
+
+  {
+    _drawTarget = pxr::GlfDrawTarget::New(resolution, false);
+    _drawTarget->Bind();
+    _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
+    _drawTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+    auto color = _drawTarget->GetAttachment("color");
+    _drawTexId = color->GetGlTextureName();
+    _drawTarget->Unbind();
+  }
+
+  {
+    _toolTarget = pxr::GlfDrawTarget::New(resolution, true /*multisamples*/);
+    _toolTarget->Bind();
+    _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
+    _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+    auto color = _toolTarget->GetAttachment("color");
+    _toolTexId = color->GetGlTextureName();
+    _toolTarget->Unbind();
+  }
 
   GetApplication()->SetActiveViewport(this);
 }
@@ -420,40 +433,22 @@ void ViewportUI::Render()
     _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
   }
 
-  
   Tool* tools = GetApplication()->GetTools(window);
   const bool shouldDrawTool = tools->IsActive();
   if (shouldDrawTool) {
-    //glViewport(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
-    //glScissor(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
+    _toolTarget->Bind();
+    glViewport(0, 0, GetWidth(), GetHeight());
 
     // clear to black
     glClearColor(0.0f, 0.0f, 0.0f, 0.f);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    
-    /*
-    tools->SetViewport(
-      pxr::GfVec4f(
-        GetX() * xScale, GetY() * yScale, 
-        GetWidth() * xScale, GetHeight() * yScale));*/
-    tools->SetViewport(
-      pxr::GfVec4f(
-        0.0, 0.0, 
-        GetWidth(), GetHeight()));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    tools->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
     tools->SetCamera(_camera);
     tools->Draw();
+    _toolTarget->Unbind();
   }
   
-#ifdef __APPLE__
-  if(_buffered) {
-    _engine->SetDirty(false);
-    _buffered = false;
-  } else {
-    _buffered = true;
-  }
-#else
   _engine->SetDirty(false);
-#endif
   _drawTarget->Unbind();
 }
 
@@ -463,18 +458,15 @@ bool ViewportUI::Draw()
   Window* window = GetWindow();
   if (!_initialized)Init();
   if(!_valid)return false;  
+  
+  if (app->GetDisplayStage() != nullptr) {
+    if ( _engine->IsDirty() || !_engine->IsConverged()) {
+      Render();
+    }
 
-  if (window->IsDraggingSplitter()) {
-    glViewport(0, 0, GetWidth(), GetHeight());
-    glClearColor(0.25f, 0.25f, 0.25f, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  } else if (app->GetDisplayStage() != nullptr) {
-      if ( _engine->IsDirty() || !_engine->IsConverged()) {
-        Render();
-      }
-   
-   
-    
+    Tool* tools = GetApplication()->GetTools(window);
+    const bool shouldDrawTool = tools->IsActive();
+
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
 
@@ -484,15 +476,19 @@ bool ViewportUI::Draw()
   
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-     if (_textureId) {
+    if (_drawTexId) {
        drawList->AddImage(
-         (ImTextureID)_textureId, 
-         ImVec2(GetX(), GetY()),
-         ImVec2(GetX() + GetWidth(), GetY() + GetHeight()),
-          ImVec2(0, 1), ImVec2(1, 0));
+         (ImTextureID)_drawTexId, 
+         min, min + size, ImVec2(0, 1), ImVec2(1, 0));
+    } 
+
+    if( shouldDrawTool && _toolTexId) {
+      _toolTarget->Resolve();
+      drawList->AddImage(
+        (ImTextureID)(size_t)_toolTexId,
+        min, min + size, ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
     }
     
-    //ImGui::PushFont(window->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
     
     drawList->AddText(
@@ -602,7 +598,10 @@ void ViewportUI::Resize()
   _drawTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
   _drawTarget->Unbind();
 
-  if (GetWindow()->IsDraggingSplitter()) return;
+  _toolTarget->Bind();
+  _toolTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
+  _toolTarget->Unbind();
+
   _engine->SetDirty(true);
 }
 

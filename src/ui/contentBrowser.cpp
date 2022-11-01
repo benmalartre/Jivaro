@@ -167,6 +167,7 @@ static inline void DrawLayerDescriptionRow(pxr::SdfLayerHandle layer, bool isSta
       //ExecuteAfterDraw<EditorSetCurrentStage>(layer);
     }
   }
+  ImGui::PopStyleColor();
 }
 
 /// Draw a popup menu with the possible action on a layer

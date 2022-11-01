@@ -92,15 +92,15 @@ class ViewportUI : public BaseUI
     double                              _lastY;
     short                               _interactionMode;
     bool                                _valid;
-    bool                                _buffered;
     // usd imaging engine
     Engine*                             _engine;
     pxr::UsdImagingGLRenderParams       _renderParams;
     pxr::UsdPrim                        _root;
     pxr::UsdLuxDomeLight                _light;
     pxr::GlfDrawTargetRefPtr            _drawTarget;
-    GLuint                              _textureId = 0;
+    GLuint                              _drawTexId = 0;
     pxr::GlfDrawTargetRefPtr            _toolTarget;
+    GLuint                              _toolTexId = 0;
     int                                 _drawMode;
     int                                 _rendererIndex;
     static ImGuiWindowFlags             _flags;
