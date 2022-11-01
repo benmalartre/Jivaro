@@ -432,24 +432,9 @@ void ViewportUI::Render()
   if (app->GetDisplayStage()->HasDefaultPrim()) {
     _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
   }
-
-  Tool* tools = GetApplication()->GetTools(window);
-  const bool shouldDrawTool = tools->IsActive();
-  if (shouldDrawTool) {
-    _toolTarget->Bind();
-    glViewport(0, 0, GetWidth(), GetHeight());
-
-    // clear to black
-    glClearColor(0.0f, 0.0f, 0.0f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    tools->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
-    tools->SetCamera(_camera);
-    tools->Draw();
-    _toolTarget->Unbind();
-  }
+  _drawTarget->Unbind();
   
   _engine->SetDirty(false);
-  _drawTarget->Unbind();
 }
 
 bool ViewportUI::Draw()
@@ -467,6 +452,20 @@ bool ViewportUI::Draw()
     Tool* tools = GetApplication()->GetTools(window);
     const bool shouldDrawTool = tools->IsActive();
 
+    if (shouldDrawTool) {
+      _toolTarget->Bind();
+      glViewport(0, 0, GetWidth(), GetHeight());
+
+      // clear to black
+      glClearColor(0.0f, 0.0f, 0.0f, 0.f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      tools->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
+      tools->SetCamera(_camera);
+      tools->Draw();
+      _toolTarget->Unbind();
+      _toolTarget->Resolve();
+    }
+
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
 
@@ -483,7 +482,6 @@ bool ViewportUI::Draw()
     } 
 
     if( shouldDrawTool && _toolTexId) {
-      _toolTarget->Resolve();
       drawList->AddImage(
         (ImTextureID)(size_t)_toolTexId,
         min, min + size, ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
@@ -594,6 +592,7 @@ void ViewportUI::Resize()
     _camera->GetFov(),
     pxr::GfCamera::FOVHorizontal
   );
+
   _drawTarget->Bind();
   _drawTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
   _drawTarget->Unbind();
