@@ -1,19 +1,19 @@
 
+#include "../utils/strings.h"
+#include "../utils/glutils.h"
+#include "../utils/keys.h"
 #include "../ui/utils.h"
 #include "../ui/fonts.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
 #include "../geometry/shape.h"
+#include "../command/command.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
-#include "../command/command.h"
 #include "../app/handle.h"
 #include "../app/application.h"
-#include "../utils/strings.h"
-#include "../utils/glutils.h"
-#include "../utils/keys.h"
 
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 
@@ -162,7 +162,6 @@ void ViewportUI::Init()
 
   glViewport(0, 0, imageWidth, imageHeight);
   */
-  std::cout << "Hydra Enabled : " << pxr::UsdImagingGLEngine::IsHydraEnabled() << std::endl;
   _initialized = true;
 }
 

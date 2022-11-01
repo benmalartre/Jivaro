@@ -208,6 +208,8 @@ Window::Init(Application* app)
 //----------------------------------------------------------------------------
 Window::~Window()
 {
+  if (_fbo) glDeleteFramebuffers(1, &_fbo);
+  if (_tex) glDeleteTextures(1, &_tex);
   ClearImgui();
   if(_splitter)delete _splitter;
   if(_mainView)delete _mainView;

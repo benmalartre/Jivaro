@@ -29,6 +29,7 @@ DemoUI::~DemoUI()
 
 bool DemoUI::Draw()
 {
+  /*
   static bool opened = false;
   const pxr::GfVec2f pos(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
@@ -42,6 +43,8 @@ bool DemoUI::Draw()
   ImGui::End();
 
   return ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused() || ImGui::IsAnyItemHovered();
+  */
+  return false;
 };
   
 
