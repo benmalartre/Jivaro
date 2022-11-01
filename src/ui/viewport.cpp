@@ -49,8 +49,9 @@ static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target,
 }
 
 // constructor
-ViewportUI::ViewportUI(View* parent):
-  BaseUI(parent, UIType::VIEWPORT)
+ViewportUI::ViewportUI(View* parent)
+  : BaseUI(parent, UIType::VIEWPORT)
+  , _buffered(false)
 {
   _texture = 0;
   _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
@@ -66,6 +67,15 @@ ViewportUI::ViewportUI(View* parent):
   _rendererIndex = 0;
   _rendererNames = NULL;
   _counter = 0;
+
+  _drawTarget = pxr::GlfDrawTarget::New(pxr::GfVec2i(GetWidth(), GetHeight()), false);
+  _drawTarget->Bind();
+  _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
+  _drawTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+  auto color = _drawTarget->GetAttachment("color");
+  _textureId = color->GetGlTextureName();
+  _drawTarget->Unbind();
+
   GetApplication()->SetActiveViewport(this);
 }
 
@@ -352,113 +362,117 @@ static bool ComboWidget(const char* label, BaseUI* ui,
   return false;
 }
 
+void ViewportUI::Render()
+{
+  Application* app = GetApplication();
+  Window* window = GetWindow();
+
+  _engine->SetRendererAov(pxr::HdAovTokens->color);
+  _engine->SetRenderViewport(
+    pxr::GfVec4d(
+      0,
+      0,
+      static_cast<double>(GetWidth()),
+      static_cast<double>(GetHeight())));
+
+  _engine->SetCameraState(
+    _camera->GetViewMatrix(),
+    _camera->GetProjectionMatrix()
+  );
+
+  _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
+
+  _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
+  _renderParams.complexity = 1.0f;
+  _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
+  _renderParams.showGuides = true;
+  _renderParams.showRender = true;
+  _renderParams.showProxy = true;
+  _renderParams.forceRefresh = true;
+  _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
+  _renderParams.gammaCorrectColors = false;
+  _renderParams.enableIdRender = false;
+  _renderParams.enableSampleAlphaToCoverage = true;
+  _renderParams.highlight = true;
+  _renderParams.enableSceneMaterials = false;
+  _renderParams.enableSceneLights = true;
+  //_renderParams.colorCorrectionMode = ???
+  _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
+
+  Selection* selection = app->GetSelection();
+  if (!selection->IsEmpty() && selection->IsObject()) {
+    _engine->SetSelected(selection->GetSelectedPrims());
+  } else {
+    _engine->ClearSelected();
+  }
+
+  // clear to black
+  _drawTarget->Bind();
+  glEnable(GL_DEPTH_TEST);
+  glClearColor(_renderParams.clearColor[0], 
+               _renderParams.clearColor[1], 
+               _renderParams.clearColor[2],
+               _renderParams.clearColor[3]);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glViewport(0, 0, GetWidth(), GetHeight());
+
+  if (app->GetDisplayStage()->HasDefaultPrim()) {
+    _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
+  }
+
+  
+  Tool* tools = GetApplication()->GetTools(window);
+  const bool shouldDrawTool = tools->IsActive();
+  if (shouldDrawTool) {
+    //glViewport(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
+    //glScissor(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
+
+    // clear to black
+    glClearColor(0.0f, 0.0f, 0.0f, 0.f);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    
+    /*
+    tools->SetViewport(
+      pxr::GfVec4f(
+        GetX() * xScale, GetY() * yScale, 
+        GetWidth() * xScale, GetHeight() * yScale));*/
+    tools->SetViewport(
+      pxr::GfVec4f(
+        0.0, 0.0, 
+        GetWidth(), GetHeight()));
+    tools->SetCamera(_camera);
+    tools->Draw();
+  }
+  
+#ifdef __APPLE__
+  if(_buffered) {
+    _engine->SetDirty(false);
+    _buffered = false;
+  } else {
+    _buffered = true;
+  }
+#else
+  _engine->SetDirty(false);
+#endif
+  _drawTarget->Unbind();
+}
+
 bool ViewportUI::Draw()
 {    
   Application* app = GetApplication();
   Window* window = GetWindow();
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
   if (!_initialized)Init();
   if(!_valid)return false;  
 
-  float xScale, yScale;
-  glfwGetWindowContentScale(window->GetGlfwWindow(), &xScale, &yScale);
-
-  const double viewportX = GetX() * xScale;
-  const double viewportY = ((GetWindow()->GetHeight() - GetHeight()) - GetY()) * yScale;
-
-  Selection* selection = app->GetSelection();
   if (window->IsDraggingSplitter()) {
     glViewport(0, 0, GetWidth(), GetHeight());
     glClearColor(0.25f, 0.25f, 0.25f, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   } else if (app->GetDisplayStage() != nullptr) {
-    _engine->SetRendererAov(pxr::HdAovTokens->color);
-    _engine->SetRenderViewport(
-      pxr::GfVec4d(
-        viewportX,
-        viewportY,
-        static_cast<double>(GetWidth() * xScale),
-        static_cast<double>(GetHeight() * yScale)));
-
-    _engine->SetCameraState(
-      _camera->GetViewMatrix(),
-      _camera->GetProjectionMatrix()
-    );
-
-    _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
-  
-    _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
-    _renderParams.complexity = 1.0f;
-    _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
-    _renderParams.showGuides = true;
-    _renderParams.showRender = true;
-    _renderParams.showProxy = true;
-    _renderParams.forceRefresh = true;
-    _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
-    _renderParams.gammaCorrectColors = false;
-    _renderParams.enableIdRender = false;
-    _renderParams.enableSampleAlphaToCoverage = true;
-    _renderParams.highlight = true;
-    _renderParams.enableSceneMaterials = false;
-    _renderParams.enableSceneLights = true;
-    //_renderParams.colorCorrectionMode = ???
-    _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
-
-    if ( _engine->IsDirty() || !_engine->IsConverged()) {
-
-      if (!selection->IsEmpty() && selection->IsObject()) {
-        _engine->SetSelected(selection->GetSelectedPrims());
-      } else {
-        _engine->ClearSelected();
+      if ( _engine->IsDirty() || !_engine->IsConverged()) {
+        Render();
       }
-
-      // clear to black
-      glClearColor(0.f, 0.f, 0.f, 0.f);
-      glClear(GL_DEPTH_BUFFER_BIT);
-
-      if (app->GetDisplayStage()->HasDefaultPrim()) {
-        _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
-      }
-      
-#ifdef __APPLE__
-      if(_buffered) {
-        _engine->SetDirty(false);
-        _buffered = false;
-      } else {
-        _buffered = true;
-      }
-#else
-      _engine->SetDirty(false);
-#endif
-    } /*else {
-      pxr::HgiTextureHandle aov = _engine->GetAovTexture(pxr::HdAovTokens->color);
-      // clear to black
-      glClearColor(0.f, 0.f, 0.f, 0.f);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      drawList->AddImage(
-        (ImTextureID)(size_t)aov->GetRawResource(),
-        GetPosition(), GetPosition() + GetSize(), 
-        ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
-
-    }*/
-
-
-    Tool* tools = GetApplication()->GetTools(window);
-    if (tools->IsActive()) {
-      glViewport(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
-      glScissor(viewportX, viewportY, GetWidth() * xScale, GetHeight() * yScale);
-
-      // clear to black
-      glClearColor(0.0f, 0.0f, 0.0f, 0.f);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      
-      tools->SetViewport(
-        pxr::GfVec4f(
-          GetX() * xScale, GetY() * yScale, 
-          GetWidth() * xScale, GetHeight() * yScale));
-      tools->SetCamera(_camera);
-      tools->Draw();
-    }
+   
    
     
     const pxr::GfVec2f min(GetX(), GetY());
@@ -467,6 +481,16 @@ bool ViewportUI::Draw()
     ImGui::Begin(_name.c_str(), NULL, _flags);
     ImGui::SetWindowPos(min);
     ImGui::SetWindowSize(size);
+  
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+     if (_textureId) {
+       drawList->AddImage(
+         (ImTextureID)_textureId, 
+         ImVec2(GetX(), GetY()),
+         ImVec2(GetX() + GetWidth(), GetY() + GetHeight()),
+          ImVec2(0, 1), ImVec2(1, 0));
+    }
     
     //ImGui::PushFont(window->GetRegularFont(0));
     std::string msg = "Hello Jivaro!";
@@ -574,6 +598,10 @@ void ViewportUI::Resize()
     _camera->GetFov(),
     pxr::GfCamera::FOVHorizontal
   );
+  _drawTarget->Bind();
+  _drawTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
+  _drawTarget->Unbind();
+
   if (GetWindow()->IsDraggingSplitter()) return;
   _engine->SetDirty(true);
 }
