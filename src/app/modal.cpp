@@ -23,13 +23,11 @@ BaseModal::BaseModal(int x, int y, int width, int height, const std::string& nam
 
 BaseModal::~BaseModal()
 {
-  if(_ui) delete _ui;
-  if(_window) delete _window;
 }
 
 void BaseModal::Init()
 {
-  Application* app = APPLICATION;
+  Application* app = GetApplication();
   Window* mainWindow = app->GetMainWindow();
   mainWindow->SetIdle(true);
 
@@ -39,7 +37,9 @@ void BaseModal::Init()
 
 void BaseModal::Term()
 {
-  Application* app = APPLICATION;
+  if(_window) delete _window;
+  
+  Application* app = GetApplication();
   Window* mainWindow = app->GetMainWindow();
   
   mainWindow->SetIdle(false);

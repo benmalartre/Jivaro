@@ -44,16 +44,6 @@ void CreateFontAtlas()
   std::string exeFolder = GetInstallationFolder();
   std::string fontPath;
   for (int i = 0; i < NUM_FONT_SIZE; ++i) {
-    /*
-    fontPath = exeFolder + "/fonts/roboto/Roboto-Regular.ttf";
-    //fontPath = exeFolder + "/fonts/opensans/OpenSans-Regular.ttf";
-    FONTS[i] = SHARED_ATLAS->AddFontFromFileTTF(
-      fontPath.c_str(),
-      FONT_SIZE[i],
-      NULL,
-      SHARED_ATLAS->GetGlyphRangesDefault()
-    );
-    */
     FONTS[i] = SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
       ibmplexsansmediumfree_compressed_data,
       ibmplexsansmediumfree_compressed_size,

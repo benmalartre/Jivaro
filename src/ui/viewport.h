@@ -59,9 +59,10 @@ class ViewportUI : public BaseUI
     Engine* GetEngine(){return _engine;};
     Camera* GetCamera(){return _camera;};
     pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
-
     double GetLastMouseX(){return _lastX;};
     double GetLastMouseY(){return _lastY;};
+
+    void Render();
 
     // overrides
     void MouseButton(int button, int action, int mods) override;
@@ -71,6 +72,7 @@ class ViewportUI : public BaseUI
     bool Draw() override;
     void Resize() override;
     void Update();
+    
     pxr::GfFrustum _ComputePickFrustum(int x, int y);
     bool Pick(int x, int y, int mods);
 
@@ -80,24 +82,25 @@ class ViewportUI : public BaseUI
     
     
   private:
-    GLuint                _texture;
-    int*                  _pixels;
-    int*                  _lowPixels;
-    int                   _width;
-    int                   _height;
-    Camera*               _camera;
-    double                _lastX;
-    double                _lastY;
-    short                 _interactionMode;
-    bool                  _valid;
-
+    GLuint                              _texture;
+    int*                                _pixels;
+    int*                                _lowPixels;
+    int                                 _width;
+    int                                 _height;
+    Camera*                             _camera;
+    double                              _lastX;
+    double                              _lastY;
+    short                               _interactionMode;
+    bool                                _valid;
     // usd imaging engine
     Engine*                             _engine;
     pxr::UsdImagingGLRenderParams       _renderParams;
     pxr::UsdPrim                        _root;
     pxr::UsdLuxDomeLight                _light;
     pxr::GlfDrawTargetRefPtr            _drawTarget;
+    GLuint                              _drawTexId = 0;
     pxr::GlfDrawTargetRefPtr            _toolTarget;
+    GLuint                              _toolTexId = 0;
     int                                 _drawMode;
     int                                 _rendererIndex;
     static ImGuiWindowFlags             _flags;

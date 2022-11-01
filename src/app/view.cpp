@@ -14,7 +14,6 @@
 #include "../ui/propertyEditor.h"
 #include "../ui/curveEditor.h"
 #include "../ui/layerEditor.h"
-#include "../ui/debug.h"
 #include "../ui/demo.h"
 
 
@@ -111,9 +110,6 @@ View::CreateUI(UIType type)
     break;
   case UIType::LAYEREDITOR:
     _current = new LayerEditorUI(this);
-    break;
-  case UIType::DEBUG:
-    _current = new DebugUI(this);
     break;
   case UIType::DEMO:
     _current = new DemoUI(this);

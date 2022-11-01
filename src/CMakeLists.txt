@@ -21,7 +21,6 @@ add_executable(${TARGET}
   ui/ui.cpp
   ui/fonts.cpp
   ui/demo.cpp
-  ui/debug.cpp
   ui/textFilter.cpp
   ui/utils.cpp
   ui/popup.cpp

@@ -132,8 +132,7 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
   if(browser.GetStatus() == BaseModal::Status::OK) {
     result = browser.GetResult();
   }
-  browser.Term();
-  
+  browser.Term();  
 
   return result;
 }
@@ -412,15 +411,15 @@ Application::Init()
   _tools[_mainWindow] = Tool();
   _tools[_mainWindow].Init();
   
-  //GraphEditorUI* graph = new GraphEditorUI(graphView);
+  GraphEditorUI* graph = new GraphEditorUI(graphView);
   
   //CurveEditorUI* editor = new CurveEditorUI(graphView);
   _viewport = new ViewportUI(viewportView);
-  //_timeline = new TimelineUI(timelineView);
+  _timeline = new TimelineUI(timelineView);
   MenuUI* menu = new MenuUI(topView);
-  //ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
-  //_explorer = new ExplorerUI(explorerView);
-  //_layers =  new LayersUI(layersView);
+  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
+  _explorer = new ExplorerUI(explorerView);
+  _layers =  new LayersUI(layersView);
   //new LayerHierarchyUI(layersView, "fuck");
   //_property = new PropertyUI(propertyView, "Property");
   //new DemoUI(propertyView);
