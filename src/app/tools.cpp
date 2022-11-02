@@ -11,6 +11,7 @@ Tool::Tool()
   : _interacting(false)
   , _active(NULL)
 {
+  std::cout << "tool constructor" << std::endl;
 }
 
 Tool::~Tool()
@@ -20,6 +21,7 @@ Tool::~Tool()
 
 void Tool::Init()
 {
+  std::cout << "init tool.." << std::endl;
   SetActiveTool(TOOL_SELECT);
 }
 
@@ -46,6 +48,7 @@ void Tool::SetCamera(Camera* camera)
 
 void Tool::SetActiveTool(short tool)
 {
+  std::cout << "set active tool : " << tool << std::endl;
   if (_active)delete _active;
   switch(tool) {
     case TOOL_NONE:
@@ -73,6 +76,7 @@ void Tool::SetActiveTool(short tool)
   if (_active) {
     _active->Setup();
     _active->ResetSelection();
+    std::cout << "kkk" << std::endl;
   }
 }
 

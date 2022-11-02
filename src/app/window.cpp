@@ -157,9 +157,9 @@ Window::Window(int x, int y, int width, int height,
 // initialize
 //----------------------------------------------------------------------------
 void 
-Window::Init(Application* app)
+Window::Init()
 {
-  _app = app;
+
   if(_window)
   {
     // window datas
@@ -194,12 +194,14 @@ Window::Init(Application* app)
     _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
     _mainView->SetWindow(this);
     _splitter = new SplitterUI();
-
+    
     Resize(_width, _height);
+
     glGenVertexArrays(1, &_vao);
     
     // ui
     SetupImgui();
+
     glfwMakeContextCurrent(NULL);
   }
 }
@@ -664,7 +666,7 @@ void Window::MainLoop()
     //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
     glfwPollEvents();
     //glfwWaitEvents();
-    _app->Update();
+    GetApplication()->Update();
     // main window
     Draw();
     glfwSwapBuffers(_window);
@@ -718,7 +720,7 @@ KeyboardCallback(
     parent->UpdatePopup(popup);
     return;
   }
-  Application* app = parent->GetApplication();
+  Application* app = GetApplication();
   Time& time = app->GetTime();
   
   if(action == GLFW_RELEASE) {

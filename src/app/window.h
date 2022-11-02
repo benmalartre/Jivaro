@@ -78,10 +78,7 @@ public:
   ~Window();
 
   // initialize
-  void Init(Application* app);
-
-  // application
-  Application* GetApplication(){return _app;};
+  void Init();
 
   // ui
   ImGuiContext* GetContext() { return _context; };
@@ -168,7 +165,6 @@ public:
 private:
   bool                  _idle;
   std::string           _name;
-  Application*          _app;
   GLFWwindow*           _window;
   bool                  _shared;
   std::vector<Window*>  _childrens;

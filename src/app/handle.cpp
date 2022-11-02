@@ -174,10 +174,15 @@ BaseHandle::SetVisibility(short axis)
 void 
 BaseHandle::ResetSelection()
 {
+  std::cout << "reset selection..." << std::endl;
   Application* app = GetApplication();
   
   Selection* selection = app->GetSelection();
+  std::cout << "selection : " << selection << std::endl;
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  std::cout << "stage : " << stage << std::endl;
+  if (!stage)return;
+  std::cout << "stage..." << std::endl;
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default()/*app->GetTime().GetActiveTime()*/;
   pxr::UsdGeomXformCache xformCache(activeTime);
   _targets.clear();
@@ -344,6 +349,7 @@ BaseHandle::Draw(float width, float height)
 void 
 BaseHandle::Setup()
 {
+  std::cout << "setup handle..." << std::endl;
   _shape.Setup();
   _help.Setup();
   SetMatrixFromSRT();

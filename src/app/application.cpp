@@ -57,20 +57,21 @@ Application::Application(unsigned width, unsigned height):
   _mainWindow(nullptr), _activeWindow(nullptr), 
   _viewport(nullptr), _execute(false)
 {  
-  _mainWindow = CreateStandardWindow(width, height);
-  _mainWindow->Init(this);
-  _time.Init(1, 101, 24);
   _workspace = new Workspace();
+  _mainWindow = CreateStandardWindow(width, height);
+  _mainWindow->Init();
+  _time.Init(1, 101, 24);
+  
 };
 
 Application::Application(bool fullscreen):
   _mainWindow(nullptr), _activeWindow(nullptr), 
   _viewport(nullptr), _execute(false)
 {
-  _mainWindow = CreateFullScreenWindow();
-  _mainWindow->Init(this);
-  _time.Init(1, 101, 24);
   _workspace = new Workspace();
+  _mainWindow = CreateFullScreenWindow();
+  _mainWindow->Init();
+  _time.Init(1, 101, 24);
 };
 
 // destructor
@@ -86,7 +87,8 @@ Application::~Application()
 Window*
 Application::CreateFullScreenWindow()
 {
-  return Window::CreateFullScreenWindow();
+  Window* window = Window::CreateFullScreenWindow();
+  return AddWindow(window);
 }
 
 // create child window
@@ -96,7 +98,10 @@ Application::CreateChildWindow(
   int x, int y, int width, int height, Window* parent,
   const std::string& name, bool decorated)
 {
-  return Window::CreateChildWindow(x, y, width, height, parent->GetGlfwWindow(), name, decorated);
+  Window* window =
+    Window::CreateChildWindow(x, y, width, height,
+      parent->GetGlfwWindow(), name, decorated);
+  return AddWindow(window);
 }
 
 // create standard window
@@ -104,7 +109,8 @@ Application::CreateChildWindow(
 Window*
 Application::CreateStandardWindow(int width, int height)
 {
-  return Window::CreateStandardWindow(width, height);
+  Window* window = Window::CreateStandardWindow(width, height);
+  return AddWindow(window);
 }
 
 void _RecurseSplitView(View* view, int depth, bool horizontal)
@@ -324,6 +330,7 @@ Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
 void 
 Application::Init()
 {
+  for(auto& tool: _tools)tool.second.Init();
   //pxr::TfErrorMark mark;
   
   // If no error messages were logged, return success.
@@ -406,10 +413,7 @@ Application::Init()
   View* graphView = centralView->GetRight();
 
   _mainWindow->Resize(width, height);
-
-  // initialize 3d tools
-  _tools[_mainWindow] = Tool();
-  _tools[_mainWindow].Init();
+  
   
   GraphEditorUI* graph = new GraphEditorUI(graphView);
   
@@ -525,6 +529,30 @@ Application::RemoveEngine(Engine* engine)
   for (size_t i = 0; i < _engines.size(); ++i) {
     if (engine == _engines[i]) {
       _engines.erase(_engines.begin() + i);
+      break;
+    }
+  }
+}
+
+Window*
+Application::AddWindow(Window* window)
+{
+  std::cout << "ADD WINDOW  " << window << std::endl;
+  _tools[window] = Tool();
+  std::cout << "TOOL SIZE = " << _tools.size() << std::endl;
+  std::cout << "TOOL : " << &_tools[window] << std::endl;
+  return window;
+}
+
+void
+Application::RemoveWindow(Window* window)
+{
+  WindowToolsMapIt toolIt;
+
+  for (toolIt = _tools.begin(); toolIt != _tools.end(); ++toolIt)
+  {
+    if (toolIt->first == window) {
+      _tools.erase(toolIt);
       break;
     }
   }
@@ -727,6 +755,8 @@ Application::GetDisplayStage()
 pxr::UsdStageRefPtr
 Application::GetWorkStage()
 {
+  std::cout << "get works stage..." << std::endl;
+  std::cout << "workspace : " << _workspace << std::endl;
   return _workspace->GetWorkStage();
 }
 

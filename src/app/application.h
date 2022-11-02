@@ -1,7 +1,7 @@
 #ifndef JVR_APPLICATION_APPLICATION_H
 #define JVR_APPLICATION_APPLICATION_H
 
-#include <map>
+#include <unordered_map>
 #include "../common.h"
 #include "../app/scene.h"
 #include "../app/workspace.h"
@@ -29,7 +29,8 @@ class CommandManager;
 class Engine;
 class Window;
 
-typedef std::map<Window*, Tool> WindowToolsMap;
+typedef std::unordered_map<Window*, Tool> WindowToolsMap;
+typedef std::unordered_map<Window*, Tool>::iterator WindowToolsMapIt;
 
 
 class Application : public pxr::TfWeakBase
@@ -44,13 +45,13 @@ public:
   ~Application();
 
     // create a fullscreen window
-  static Window* CreateFullScreenWindow();
+  Window* CreateFullScreenWindow();
 
   // create a standard window of specified size
-  static Window* CreateStandardWindow(int width, int height);
+  Window* CreateStandardWindow(int width, int height);
 
   // create a child window
-  static Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
+  Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
     const std::string& name="Child", bool decorated=true);
 
 
@@ -108,6 +109,8 @@ public:
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
   Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
   void SetActiveWindow(Window* window) { _activeWindow = window; };
+  Window* AddWindow(Window* window);
+  void RemoveWindow(Window* window);
 
   // tools
   Tool* GetTools(Window* window);

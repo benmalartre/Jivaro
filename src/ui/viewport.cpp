@@ -103,6 +103,7 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init()
 {
+  std::cout << "VIEWPORT INITIALIZE..." << std::endl;
   Application* app = GetApplication();
   if (_engine) {
     app->RemoveEngine(_engine);
@@ -449,8 +450,9 @@ bool ViewportUI::Draw()
     }
 
     Tool* tools = GetApplication()->GetTools(window);
+    std::cout << "TOOL : " << tools << std::endl;
     const bool shouldDrawTool = tools->IsActive();
-
+   
     if (shouldDrawTool) {
       _toolTarget->Bind();
       glViewport(0, 0, GetWidth(), GetHeight());
@@ -467,6 +469,7 @@ bool ViewportUI::Draw()
 
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
+    std::cout << _name << std::endl;
 
     ImGui::Begin(_name.c_str(), NULL, _flags);
     ImGui::SetWindowPos(min);
