@@ -19,13 +19,6 @@ Tool::~Tool()
   if (_active)delete _active;
 }
 
-void 
-Tool::Initialize()
-{
-  std::cout << "init tool.." << std::endl;
-  SetActiveTool(TOOL_SELECT);
-}
-
 
 void 
 Tool::SetViewport(const pxr::GfVec4f& viewport)

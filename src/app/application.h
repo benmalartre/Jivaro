@@ -1,7 +1,6 @@
 #ifndef JVR_APPLICATION_APPLICATION_H
 #define JVR_APPLICATION_APPLICATION_H
 
-#include <map>
 #include "../common.h"
 #include "../app/scene.h"
 #include "../app/workspace.h"

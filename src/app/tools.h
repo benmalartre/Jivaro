@@ -27,7 +27,6 @@ public:
   Tool();
   ~Tool();
 
-  void Initialize();
   void SetActiveTool(short tool);
   void SetProgram(GLSLProgram* pgm);
   void SetViewport(const pxr::GfVec4f& viewport);
