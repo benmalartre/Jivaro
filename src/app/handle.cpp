@@ -174,15 +174,11 @@ BaseHandle::SetVisibility(short axis)
 void 
 BaseHandle::ResetSelection()
 {
-  std::cout << "reset selection..." << std::endl;
   Application* app = GetApplication();
   
   Selection* selection = app->GetSelection();
-  std::cout << "selection : " << selection << std::endl;
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
-  std::cout << "stage : " << stage << std::endl;
   if (!stage)return;
-  std::cout << "stage..." << std::endl;
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default()/*app->GetTime().GetActiveTime()*/;
   pxr::UsdGeomXformCache xformCache(activeTime);
   _targets.clear();
@@ -232,6 +228,13 @@ void
 BaseHandle::SetHoveredAxis(short axis)
 {
   _hoveredAxis = axis;
+}
+
+void 
+BaseHandle::UpdateCamera(const pxr::GfMatrix4f& view,
+  const pxr::GfMatrix4f& proj)
+{
+  _shape.UpdateCamera(view, proj);
 }
 
 void 
@@ -305,7 +308,7 @@ BaseHandle::_ExtractRotationAndTranslateFromMatrix()
 void 
 BaseHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
 {
-  shape->Bind(SHAPE_PROGRAM);
+  shape->Bind();
   
   for (size_t i = 0; i < shape->GetNumComponents(); ++i) {
     const Shape::Component& component = shape->GetComponent(i);
@@ -349,10 +352,16 @@ BaseHandle::Draw(float width, float height)
 void 
 BaseHandle::Setup()
 {
-  std::cout << "setup handle..." << std::endl;
   _shape.Setup();
   _help.Setup();
   SetMatrixFromSRT();
+}
+
+void
+BaseHandle::SetProgram(GLSLProgram* pgm)
+{
+  _shape.SetProgram(pgm);
+  _help.SetProgram(pgm);
 }
 
 void 
@@ -1253,7 +1262,7 @@ ScaleHandle::_GetScaleOffset(size_t axis)
 void 
 ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
 {
-  shape->Bind(SHAPE_PROGRAM);
+  shape->Bind();
   Shape::Component* component;
   
   // center

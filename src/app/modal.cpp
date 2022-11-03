@@ -32,7 +32,7 @@ void BaseModal::Init()
   mainWindow->SetIdle(true);
 
   _window = app->CreateChildWindow(_x, _y, _width, _height, mainWindow, _title);
-  _window->Init();
+  app->AddWindow(_window);
 }
 
 void BaseModal::Term()

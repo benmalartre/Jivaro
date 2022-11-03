@@ -13,7 +13,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-GLSLProgram* SHAPE_PROGRAM = NULL;
+ShapeProgramMap SHAPE_PROGRAM_MAP;
 
 Shape* GRID_SHAPE = NULL;
 Shape* BOX_SHAPE = NULL;
@@ -1260,7 +1260,7 @@ void Shape::Setup(bool dynamic)
 void Shape::UpdateCamera(const pxr::GfMatrix4f& view, 
   const pxr::GfMatrix4f& proj)
 {
-  GLuint pgm = SHAPE_PROGRAM->Get();
+  GLuint pgm = _pgm->Get();
   glUseProgram(pgm);
   GLuint uView = glGetUniformLocation(pgm, "view");
   GLuint uProj = glGetUniformLocation(pgm, "proj");
@@ -1269,9 +1269,9 @@ void Shape::UpdateCamera(const pxr::GfMatrix4f& view,
   glUniformMatrix4fv(uProj,1,GL_FALSE,&proj[0][0]);
 }
 
-void Shape::Bind(GLSLProgram* pgm)
+void Shape::Bind()
 {
-  GLuint program = pgm->Get();
+  GLuint program = _pgm->Get();
   _uModel = glGetUniformLocation(program, "model");
   _uColor = glGetUniformLocation(program, "color");
 
@@ -1309,7 +1309,7 @@ void Shape::DrawComponent(size_t index, const pxr::GfMatrix4f& model,
 
 void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)
 {
-  GLuint pgm = SHAPE_PROGRAM->Get();
+  GLuint pgm = _pgm->Get();
   GLuint uModel = glGetUniformLocation(pgm, "model");
   GLuint uColor = glGetUniformLocation(pgm, "color");
 
@@ -1332,7 +1332,7 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color)
 void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
   size_t start, size_t end)
 {
-  GLuint pgm = SHAPE_PROGRAM->Get();
+  GLuint pgm = _pgm->Get();
   GLuint uModel = glGetUniformLocation(pgm, "model");
   GLuint uColor = glGetUniformLocation(pgm, "color");
 
@@ -1354,24 +1354,26 @@ void Shape::Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
   
 }
 
-void InitShapeShader()
+GLSLProgram* InitShapeShader(void* ctxt)
 {
-  // setup glsl program
-  SHAPE_PROGRAM = new GLSLProgram();
+  if (SHAPE_PROGRAM_MAP.find(ctxt) != SHAPE_PROGRAM_MAP.end()) {
+    return SHAPE_PROGRAM_MAP[ctxt];
+  }
+  GLSLProgram*  pgm = new GLSLProgram();
   pxr::GlfContextCaps const & caps = pxr::GlfContextCaps::GetInstance();
   if (caps.glVersion < 330) {
-    SHAPE_PROGRAM->BuildFromString(
+    pgm->BuildFromString(
       "SimpleShape", 
       SIMPLE_VERTEX_SHADER_CODE_120, 
       SIMPLE_FRAGMENT_SHADER_CODE_120);
   } else {
-    SHAPE_PROGRAM->BuildFromString(
+    pgm->BuildFromString(
       "SimpleShape", 
       SIMPLE_VERTEX_SHADER_CODE_330, 
       SIMPLE_FRAGMENT_SHADER_CODE_330);
   }
-  
-  SHAPE_INITIALIZED = true;
+  SHAPE_PROGRAM_MAP[ctxt] = pgm;
+  return pgm;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

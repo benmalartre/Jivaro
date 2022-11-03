@@ -1,7 +1,7 @@
 #ifndef JVR_APPLICATION_APPLICATION_H
 #define JVR_APPLICATION_APPLICATION_H
 
-#include <unordered_map>
+#include <map>
 #include "../common.h"
 #include "../app/scene.h"
 #include "../app/workspace.h"
@@ -28,9 +28,6 @@ class Command;
 class CommandManager;
 class Engine;
 class Window;
-
-typedef std::unordered_map<Window*, Tool> WindowToolsMap;
-typedef std::unordered_map<Window*, Tool>::iterator WindowToolsMapIt;
 
 
 class Application : public pxr::TfWeakBase
@@ -109,11 +106,8 @@ public:
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
   Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
   void SetActiveWindow(Window* window) { _activeWindow = window; };
-  Window* AddWindow(Window* window);
-  void RemoveWindow(Window* window);
 
   // tools
-  Tool* GetTools(Window* window);
   void SetActiveTool(short tool);
 
   // engines
@@ -142,7 +136,6 @@ private:
   Window*                           _activeWindow;
   Workspace*                        _workspace;
   Selection                         _selection;
-  WindowToolsMap                    _tools;
 
   // uis
   ViewportUI*                       _viewport;
@@ -159,7 +152,7 @@ private:
   // mesh
   Mesh*                             _mesh;
 
-  // command
+  // command manager
   CommandManager                    _manager;
 
   // engines

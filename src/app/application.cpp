@@ -59,7 +59,6 @@ Application::Application(unsigned width, unsigned height):
 {  
   _workspace = new Workspace();
   _mainWindow = CreateStandardWindow(width, height);
-  _mainWindow->Init();
   _time.Init(1, 101, 24);
   
 };
@@ -70,7 +69,6 @@ Application::Application(bool fullscreen):
 {
   _workspace = new Workspace();
   _mainWindow = CreateFullScreenWindow();
-  _mainWindow->Init();
   _time.Init(1, 101, 24);
 };
 
@@ -87,8 +85,7 @@ Application::~Application()
 Window*
 Application::CreateFullScreenWindow()
 {
-  Window* window = Window::CreateFullScreenWindow();
-  return AddWindow(window);
+  return Window::CreateFullScreenWindow();
 }
 
 // create child window
@@ -98,10 +95,9 @@ Application::CreateChildWindow(
   int x, int y, int width, int height, Window* parent,
   const std::string& name, bool decorated)
 {
-  Window* window =
+  return
     Window::CreateChildWindow(x, y, width, height,
       parent->GetGlfwWindow(), name, decorated);
-  return AddWindow(window);
 }
 
 // create standard window
@@ -109,8 +105,7 @@ Application::CreateChildWindow(
 Window*
 Application::CreateStandardWindow(int width, int height)
 {
-  Window* window = Window::CreateStandardWindow(width, height);
-  return AddWindow(window);
+  return Window::CreateStandardWindow(width, height);
 }
 
 void _RecurseSplitView(View* view, int depth, bool horizontal)
@@ -330,7 +325,6 @@ Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
 void 
 Application::Init()
 {
-  for(auto& tool: _tools)tool.second.Init();
   //pxr::TfErrorMark mark;
   
   // If no error messages were logged, return success.
@@ -534,30 +528,6 @@ Application::RemoveEngine(Engine* engine)
   }
 }
 
-Window*
-Application::AddWindow(Window* window)
-{
-  std::cout << "ADD WINDOW  " << window << std::endl;
-  _tools[window] = Tool();
-  std::cout << "TOOL SIZE = " << _tools.size() << std::endl;
-  std::cout << "TOOL : " << &_tools[window] << std::endl;
-  return window;
-}
-
-void
-Application::RemoveWindow(Window* window)
-{
-  WindowToolsMapIt toolIt;
-
-  for (toolIt = _tools.begin(); toolIt != _tools.end(); ++toolIt)
-  {
-    if (toolIt->first == window) {
-      _tools.erase(toolIt);
-      break;
-    }
-  }
-}
-
 static void _DirtyAllEngines(std::vector<Engine*>& engines)
 {
   for (auto& engine : engines) {
@@ -575,22 +545,14 @@ Application::SetActiveViewport(ViewportUI* viewport)
   _viewport->GetView()->SetFlag(View::TIMEVARYING);
 }
 
-Tool*
-Application::GetTools(Window* window)
-{
-  for (auto& tool : _tools) {
-    if (tool.first == window)return &tool.second;
-  }
-
-  return NULL;
-}
-
 void 
 Application::SetActiveTool(short t)
 {
-  for (auto& tool : _tools) {
-    glfwMakeContextCurrent(tool.first->GetGlfwWindow());
-    tool.second.SetActiveTool(t);
+  glfwMakeContextCurrent(_mainWindow->GetGlfwWindow());
+  _mainWindow->GetTool()->SetActiveTool(t);
+  for (auto& window : _childWindows) {
+    glfwMakeContextCurrent(window->GetGlfwWindow());
+    window->GetTool()->SetActiveTool(t);
   }
 }
 
@@ -604,9 +566,13 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
       engine->ClearSelected();
     }
   }
-  for(auto& tool: _tools) tool.second.ResetSelection();
+  _mainWindow->GetTool()->ResetSelection();
+  _mainWindow->ForceRedraw();
+  for (auto& window : _childWindows) {
+    window->GetTool()->ResetSelection();
+    window->ForceRedraw();
+  }
   _DirtyAllEngines(_engines);
-  GetMainWindow()->ForceRedraw();
 }
 
 void 
@@ -620,16 +586,25 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
-  for(auto& tool: _tools)tool.second.ResetSelection();
-  GetMainWindow()->ForceRedraw();
+  _mainWindow->GetTool()->ResetSelection();
+  _mainWindow->ForceRedraw();
+  for (auto& window : _childWindows) {
+    window->GetTool()->ResetSelection();
+    window->ForceRedraw();
+  }
+  
   _DirtyAllEngines(_engines);
 }
 
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
-  for (auto& tool : _tools)tool.second.ResetSelection();
-  GetMainWindow()->ForceRedraw();
+  _mainWindow->ForceRedraw();
+  _mainWindow->GetTool()->ResetSelection();
+  for (auto& window : _childWindows) {
+    window->ForceRedraw();
+    window->GetTool()->ResetSelection();
+  }
   _DirtyAllEngines(_engines);
 }
 
@@ -755,8 +730,6 @@ Application::GetDisplayStage()
 pxr::UsdStageRefPtr
 Application::GetWorkStage()
 {
-  std::cout << "get works stage..." << std::endl;
-  std::cout << "workspace : " << _workspace << std::endl;
   return _workspace->GetWorkStage();
 }
 

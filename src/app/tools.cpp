@@ -19,25 +19,34 @@ Tool::~Tool()
   if (_active)delete _active;
 }
 
-void Tool::Init()
+void 
+Tool::Initialize()
 {
   std::cout << "init tool.." << std::endl;
   SetActiveTool(TOOL_SELECT);
 }
 
 
-void Tool::SetViewport(const pxr::GfVec4f& viewport)
+void 
+Tool::SetViewport(const pxr::GfVec4f& viewport)
 {
   _viewport = viewport;
 }
 
-void Tool::SetCamera(Camera* camera)
+void
+Tool::SetProgram(GLSLProgram* pgm)
+{
+  _pgm = pgm;
+}
+
+void 
+Tool::SetCamera(Camera* camera)
 {
   if (!_active) return;
   _active->SetCamera(camera);
 
   // update shader
-  Shape::UpdateCamera(
+  _active->UpdateCamera(
     pxr::GfMatrix4f(camera->GetViewMatrix()),
     pxr::GfMatrix4f(camera->GetProjectionMatrix()));
 
@@ -48,7 +57,6 @@ void Tool::SetCamera(Camera* camera)
 
 void Tool::SetActiveTool(short tool)
 {
-  std::cout << "set active tool : " << tool << std::endl;
   if (_active)delete _active;
   switch(tool) {
     case TOOL_NONE:
@@ -74,9 +82,9 @@ void Tool::SetActiveTool(short tool)
       break;
   }
   if (_active) {
+    _active->SetProgram(_pgm);
     _active->Setup();
     _active->ResetSelection();
-    std::cout << "kkk" << std::endl;
   }
 }
 
@@ -155,11 +163,6 @@ void Tool::ResetSelection()
   if(_active) {
     _active->ResetSelection();
   }
-}
-
-void InitializeTools()
-{
-   InitShapeShader();
 }
 
 

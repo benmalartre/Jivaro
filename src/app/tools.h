@@ -21,13 +21,15 @@ enum TOOLS
 };
 
 class Camera;
+class GLSLProgram;
 class Tool {
 public:
   Tool();
   ~Tool();
 
-  void Init();
+  void Initialize();
   void SetActiveTool(short tool);
+  void SetProgram(GLSLProgram* pgm);
   void SetViewport(const pxr::GfVec4f& viewport);
   void SetCamera(Camera* camera);
   void ResetSelection();
@@ -54,9 +56,8 @@ private:
   BaseHandle*     _active;
   short           _activeAxis;
   short           _hoveredAxis;
+  GLSLProgram*    _pgm;
 };
-
-void InitializeTools();
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

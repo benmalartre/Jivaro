@@ -226,8 +226,8 @@ public:
   short Intersect(const pxr::GfRay& ray, const pxr::GfMatrix4f& m, const pxr::GfMatrix4f& v);
 
   void Clear();
-
-  static void UpdateCamera(const pxr::GfMatrix4f& view, 
+  
+  void UpdateCamera(const pxr::GfMatrix4f& view, 
     const pxr::GfMatrix4f& proj);
 
   void Setup(bool dynamic=false);
@@ -235,23 +235,26 @@ public:
   void Draw(const pxr::GfMatrix4f& model, const pxr::GfVec4f& color,
     size_t start, size_t end);
 
-  void Bind(GLSLProgram* pgm);
+  GLSLProgram* GetProgram() { return _pgm; };
+  void SetProgram(GLSLProgram* program) { _pgm = program; };
+  void Bind();
   void Unbind();
   void DrawComponent(size_t index, const pxr::GfMatrix4f& model, 
     const pxr::GfVec4f& color);
 
 private:
   std::vector<pxr::GfVec3f> _points;
-  std::vector<int> _indices;
-  std::vector<Component> _components;
-  short _usage;
-  float _scale;
-  short _mode;
-  GLuint _vao;
-  GLuint _vbo;
-  GLuint _eab;
-  GLuint _uModel;
-  GLuint _uColor;
+  std::vector<int>          _indices;
+  std::vector<Component>    _components;
+  GLSLProgram*              _pgm;
+  short                     _usage;
+  float                     _scale;
+  short                     _mode;
+  GLuint                    _vao;
+  GLuint                    _vbo;
+  GLuint                    _eab;
+  GLuint                    _uModel;
+  GLuint                    _uColor;
 };
 
 // static shapes
@@ -265,12 +268,14 @@ extern Shape* TUBE_SHAPE;
 extern Shape* CONE_SHAPE;
 extern Shape* CAPSULE_SHAPE;
 extern Shape* TORUS_SHAPE;
-
-extern GLSLProgram* SHAPE_PROGRAM;
 static bool SHAPE_INITIALIZED = false;
 
 
-void InitShapeShader();
+typedef std::map<void*, GLSLProgram*> ShapeProgramMap;
+typedef std::map<void*, GLSLProgram*>::iterator ShapeProgramMapIt;
+
+
+GLSLProgram* InitShapeShader(void* ctxt);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

@@ -176,7 +176,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   Window* window = _parent->GetWindow();
-  Tool* tools = GetApplication()->GetTools(window);
+  Tool* tool = window->GetTool();
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
   const float width = GetWidth();
@@ -188,8 +188,8 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     SetInteracting(false);
 
     if (!(mods & GLFW_MOD_ALT) && !(mods & GLFW_MOD_SUPER)) {
-      if (tools->IsInteracting()) {
-        tools->EndUpdate(x - GetX(), y - GetY(), width, height);
+      if (tool->IsInteracting()) {
+        tool->EndUpdate(x - GetX(), y - GetY(), width, height);
       }
       else {
         Pick(x, y, mods);
@@ -224,10 +224,10 @@ void ViewportUI::MouseButton(int button, int action, int mods)
         _interactionMode = INTERACTION_DOLLY;
       }
     }
-    else if (tools->IsActive() ) {
+    else if (tool->IsActive() ) {
       
-      tools->Select(x - GetX(), y - GetY(), width, height, false);
-      tools->BeginUpdate(x - GetX(), y - GetY(), width, height);
+      tool->Select(x - GetX(), y - GetY(), width, height, false);
+      tool->BeginUpdate(x - GetX(), y - GetY(), width, height);
     }
     else {
 
@@ -239,9 +239,9 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
 void ViewportUI::MouseMove(int x, int y) 
 {
-  Application* app = GetApplication();
-  Tool* tools = app->GetTools(GetWindow());
-  tools->SetCamera(_camera);
+  Window* window = GetWindow();
+  Tool* tool = window->GetTool();
+  tool->SetCamera(_camera);
   
   if(_interacting)
   {
@@ -275,7 +275,7 @@ void ViewportUI::MouseMove(int x, int y)
 
       default:
       {
-        tools->Update(x - GetX(), y - GetY(), GetWidth(), GetHeight());
+        tool->Update(x - GetX(), y - GetY(), GetWidth(), GetHeight());
         break;
       }
         
@@ -283,7 +283,7 @@ void ViewportUI::MouseMove(int x, int y)
     _engine->SetDirty(true);
     _parent->SetDirty();
   } else {
-    tools->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());
+    tool->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());
   }
 
   _lastX = static_cast<double>(x);
@@ -449,9 +449,9 @@ bool ViewportUI::Draw()
       Render();
     }
 
-    Tool* tools = GetApplication()->GetTools(window);
-    std::cout << "TOOL : " << tools << std::endl;
-    const bool shouldDrawTool = tools->IsActive();
+    Tool* tool = window->GetTool();
+    std::cout << "TOOL : " << tool << std::endl;
+    const bool shouldDrawTool = tool->IsActive();
    
     if (shouldDrawTool) {
       _toolTarget->Bind();
@@ -460,9 +460,9 @@ bool ViewportUI::Draw()
       // clear to black
       glClearColor(0.0f, 0.0f, 0.0f, 0.f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      tools->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
-      tools->SetCamera(_camera);
-      tools->Draw();
+      tool->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
+      tool->SetCamera(_camera);
+      tool->Draw();
       _toolTarget->Unbind();
       _toolTarget->Resolve();
     }

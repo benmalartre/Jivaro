@@ -148,6 +148,8 @@ public:
   void AddXYZComponents(Shape::Component& component);
   void AddYZXZXYComponents(Shape::Component& component);
   void AddHelperComponent(Shape::Component& component);
+  void UpdateCamera(const pxr::GfMatrix4f& view,
+    const pxr::GfMatrix4f& proj);
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
   void ComputeSizeMatrix(float width, float height);
   void ComputeViewPlaneMatrix();
@@ -158,6 +160,7 @@ public:
 
   virtual void SetVisibility(short axis);
   virtual void Setup();
+  virtual void SetProgram(GLSLProgram* pgm);
   virtual void Draw(float width, float height);
   virtual short Select(float x, float y, float width, float height, bool lock);
   virtual short Pick(float x, float y, float width, float height);

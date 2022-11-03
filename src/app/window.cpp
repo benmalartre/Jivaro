@@ -69,7 +69,7 @@ Window::Window(bool fullscreen, const std::string& name) :
   _width = mode->width;
   _height = mode->height;
   _shared = true;
-
+  Init();
 }
 
 // width/height window constructor
@@ -109,6 +109,7 @@ Window::Window(int width, int height, const std::string& name):
     LEGACY_OPENGL = true;
   }
   BuildKeyMap();
+  Init();
 }
 
 // child window constructor
@@ -152,6 +153,7 @@ Window::Window(int x, int y, int width, int height,
   }
   glfwSetWindowPos(_window, x, y);
   BuildKeyMap();
+  Init();
 }
 
 // initialize
@@ -159,51 +161,48 @@ Window::Window(int x, int y, int width, int height,
 void 
 Window::Init()
 {
+  // window datas
+  glfwSetWindowUserPointer(_window, this);
 
-  if(_window)
-  {
-    // window datas
-    glfwSetWindowUserPointer(_window, this);
+  // set current opengl context
+  glfwMakeContextCurrent(_window);
+  //glfwSwapInterval(0);
 
-    // set current opengl context
-    glfwMakeContextCurrent(_window);
-    //glfwSwapInterval(0);
-
-    if (_shared) {
-      GetContextVersionInfos();
-      // load opengl functions
-      GarchGLApiLoad();
-      pxr::GlfContextCaps::InitInstance();
-      pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
-      CreateFontAtlas();
-      InitializeIcons();
-      InitializeTools();
-    }
-
-    // setup callbacks
-    glfwSetWindowSizeCallback(_window, ResizeCallback);
-    glfwSetMouseButtonCallback(_window, ClickCallback);
-    glfwSetScrollCallback(_window, ScrollCallback);
-    glfwSetKeyCallback(_window, KeyboardCallback);
-    glfwSetCharCallback(_window, CharCallback);
-    glfwSetCursorPosCallback(_window, MouseMoveCallback);
-    glfwSetWindowFocusCallback(_window, FocusCallback);
-    glfwSetInputMode(_window, GLFW_STICKY_KEYS, GLFW_TRUE);
-
-    // create main splittable view
-    _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
-    _mainView->SetWindow(this);
-    _splitter = new SplitterUI();
-    
-    Resize(_width, _height);
-
-    glGenVertexArrays(1, &_vao);
-    
-    // ui
-    SetupImgui();
-
-    glfwMakeContextCurrent(NULL);
+  if (_shared) {
+    GetContextVersionInfos();
+    // load opengl functions
+    GarchGLApiLoad();
+    pxr::GlfContextCaps::InitInstance();
+    pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
+    CreateFontAtlas();
+    InitializeIcons();
   }
+
+  // setup callbacks
+  glfwSetWindowSizeCallback(_window, ResizeCallback);
+  glfwSetMouseButtonCallback(_window, ClickCallback);
+  glfwSetScrollCallback(_window, ScrollCallback);
+  glfwSetKeyCallback(_window, KeyboardCallback);
+  glfwSetCharCallback(_window, CharCallback);
+  glfwSetCursorPosCallback(_window, MouseMoveCallback);
+  glfwSetWindowFocusCallback(_window, FocusCallback);
+  glfwSetInputMode(_window, GLFW_STICKY_KEYS, GLFW_TRUE);
+
+  // create main splittable view
+  _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
+  _mainView->SetWindow(this);
+  _splitter = new SplitterUI();
+    
+  Resize(_width, _height);
+
+  glGenVertexArrays(1, &_vao);
+
+  GLSLProgram* pgm = InitShapeShader((void*)this);
+  _tool.SetProgram(pgm);
+    
+  // ui
+  SetupImgui();
+  glfwMakeContextCurrent(NULL);
 }
 
 // window destructor

@@ -83,6 +83,9 @@ public:
   // ui
   ImGuiContext* GetContext() { return _context; };
 
+  // tool
+  Tool* GetTool() { return &_tool; };
+
   // infos
   void GetContextVersionInfos();
   GLFWwindow* GetGlfwWindow(){return _window;};
@@ -176,6 +179,7 @@ private:
   bool                  _dragSplitter;
   std::vector<View*>    _leaves;
   ImGuiContext*         _context;
+  Tool                  _tool;
 
   // view datas
   bool                  _fullscreen;
