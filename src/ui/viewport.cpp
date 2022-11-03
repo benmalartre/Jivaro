@@ -450,7 +450,6 @@ bool ViewportUI::Draw()
     }
 
     Tool* tool = window->GetTool();
-    std::cout << "TOOL : " << tool << std::endl;
     const bool shouldDrawTool = tool->IsActive();
    
     if (shouldDrawTool) {
@@ -469,7 +468,6 @@ bool ViewportUI::Draw()
 
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
-    std::cout << _name << std::endl;
 
     ImGui::Begin(_name.c_str(), NULL, _flags);
     ImGui::SetWindowPos(min);

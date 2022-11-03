@@ -332,8 +332,6 @@ Window::Resize(unsigned width, unsigned height)
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
 }
 
 void
@@ -895,7 +893,6 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   } else {
     if (action == GLFW_RELEASE)
     {
-      //parent->SetActiveTool(TOOL_SELECT);
       View* view = parent->GetActiveView();
       if (view) {
         view->MouseButton(button, action, mods);
