@@ -51,13 +51,15 @@ static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target,
 // constructor
 ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
+  , _texture(0)
+  , _drawMode((int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH)
+  , _pixels(nullptr)
+  , _camera(new Camera("Camera"))
+  , _valid(true)
+  , _initialized(false)
 {
-  _texture = 0;
-  _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
-  _pixels = nullptr;
-  _camera = new Camera("Camera");
-  _valid = true;
-  _initialized = false;
+  
+  
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
@@ -66,6 +68,7 @@ ViewportUI::ViewportUI(View* parent)
   _rendererIndex = 0;
   _rendererNames = NULL;
   _counter = 0;
+  _hightlightSelection(true);
 
   const pxr::GfVec2i resolution(GetWidth(), GetHeight());
 
@@ -412,9 +415,13 @@ void ViewportUI::Render()
   //_renderParams.colorCorrectionMode = ???
   _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
 
-  Selection* selection = app->GetSelection();
-  if (!selection->IsEmpty() && selection->IsObject()) {
-    _engine->SetSelected(selection->GetSelectedPrims());
+  if (_highlightSelection) {
+    Selection* selection = app->GetSelection();
+    if (!selection->IsEmpty() && selection->IsObject()) {
+      _engine->SetSelected(selection->GetSelectedPrims());
+    } else {
+      _engine->ClearSelected();
+    }
   } else {
     _engine->ClearSelected();
   }

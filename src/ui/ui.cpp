@@ -26,7 +26,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
   pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
-
+  pxr::TfNotice::Register(me, &BaseUI::OnAttributeChangedNotice);
 };
 
 std::string 
@@ -52,6 +52,10 @@ void BaseUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 }
 
 void BaseUI::OnSceneChangedNotice(const SceneChangedNotice& n)
+{
+}
+
+void BaseUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
 {
 }
 

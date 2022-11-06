@@ -217,6 +217,11 @@ protected:
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
+      enum {
+        DIRTY_CLEAN = 0,
+        DIRTY_SIZE = 1,
+        DIRTY_POSITION = 2,
+      };
       Node(pxr::UsdPrim prim, bool write=false);
       ~Node();
 
@@ -250,6 +255,7 @@ protected:
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
       std::vector<Port>           _ports;
+      short                       _dirty;
   };
 
   // Graph graph class
@@ -397,6 +403,7 @@ public:
 
   // io
   bool Populate(pxr::UsdPrim& prim);
+  void Update();
   void Clear();
   bool Read(const std::string& filename);
   bool Write(const std::string& filename);
@@ -405,6 +412,7 @@ public:
   void BuildGraph();
 
   // notices
+  void OnAttributeChangedNotice(const AttributeChangedNotice& n) override;
   void OnSceneChangedNotice(const SceneChangedNotice& n) override;
   void OnNewSceneNotice(const NewSceneNotice& n) override;
   

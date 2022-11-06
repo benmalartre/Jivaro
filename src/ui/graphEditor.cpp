@@ -714,17 +714,18 @@ GraphEditorUI::Node::SetColor(const pxr::GfVec3f& color)
 void 
 GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 {
-  float width = 
-    ImGui::CalcTextSize(_name.GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING + 
-    (NODE_EXPENDED_SIZE + 2 * NODE_HEADER_PADDING);
-  float height = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
-  float inputWidth = 0, outputWidth = 0;
-  GraphEditorUI::Connexion* connexion = NULL;
-  for (auto& port : _ports) {
-    float w = ImGui::CalcTextSize(port.GetName().GetText()).x +
-      NODE_PORT_HORIZONTAL_SPACING;
-    if (w > inputWidth)inputWidth = w;
-    switch (_expended) {
+  if (_dirty & GraphEditorUI::Node::DIRTY_SIZE) {
+    float width =
+      ImGui::CalcTextSize(_name.GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING +
+      (NODE_EXPENDED_SIZE + 2 * NODE_HEADER_PADDING);
+    float height = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
+    float inputWidth = 0, outputWidth = 0;
+    GraphEditorUI::Connexion* connexion = NULL;
+    for (auto& port : _ports) {
+      float w = ImGui::CalcTextSize(port.GetName().GetText()).x +
+        NODE_PORT_HORIZONTAL_SPACING;
+      if (w > inputWidth)inputWidth = w;
+      switch (_expended) {
       case COLLAPSED:
         break;
       case CONNECTED:
@@ -735,11 +736,11 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
       case EXPENDED:
         height += NODE_PORT_VERTICAL_SPACING;
         break;
+      }
     }
-  }
-  
-  float headerMid = NODE_HEADER_HEIGHT * 0.5;
-  switch (_expended) {
+
+    float headerMid = NODE_HEADER_HEIGHT * 0.5;
+    switch (_expended) {
     case COLLAPSED:
     {
       float currentY = headerMid;
@@ -771,20 +772,32 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
       }
       break;
     }
-  }
+    }
 
-  SetSize(pxr::GfVec2f(width, height));
+    SetSize(pxr::GfVec2f(width, height));
+  }
 }
 
 void 
 GraphEditorUI::Node::Update()
 {
+  _dirty = GraphEditorUI::Node::DIRTY_CLEAN;
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   pxr::UsdAttribute posAttr = api.GetPosAttr();
-  posAttr.Set(_pos);
+  pxr::GfVec2f pos;
+  posAttr.Get(&pos);
+  if (!pxr::GfIsClose(pos, _pos, 0.0000001)) {
+    posAttr.Set(_pos);
+    _dirty += GraphEditorUI::Node::DIRTY_POSITION;
+  }
 
   pxr::UsdAttribute sizeAttr = api.GetSizeAttr();
-  sizeAttr.Set(_size);
+  pxr::GfVec2f size;
+  sizeAttr.Get(&size);
+  if (!pxr::GfIsClose(size, _size, 0.0000001)) {
+    sizeAttr.Set(_size);
+    _dirty += GraphEditorUI::Node::DIRTY_SIZE;
+  }
 }
 
 void
@@ -824,10 +837,6 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
   Window* window = editor->GetWindow();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   if (IsVisible(editor)) {
-    ImGui::SetWindowFontScale(1.0);
-    //ImGui::PushFont(window->GetMediumFont(0));
-    ComputeSize(editor);
-    //ImGui::PopFont();
     ImGui::SetWindowFontScale(editor->GetFontScale());
     ImGui::PushFont(window->GetFont(editor->GetFontIndex()));
 
@@ -947,8 +956,7 @@ GraphEditorUI::Graph::Graph(pxr::UsdPrim& prim)
 {
   if (prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
     Populate(prim);
-  }
-  else {
+  } else {
     if (pxr::UsdUISceneGraphPrimAPI::CanApply(prim)) {
       pxr::UsdUISceneGraphPrimAPI::Apply(prim);
       Populate(prim);
@@ -1233,6 +1241,16 @@ GraphEditorUI::Populate(pxr::UsdPrim& prim)
 }
 
 void
+GraphEditorUI::Update()
+{
+  ImGui::SetWindowFontScale(1.0);
+  for (auto& node : _graph->GetNodes()) {
+    node->Update();
+    node->ComputeSize(this);
+  }
+}
+
+void
 GraphEditorUI::Clear()
 {
   if (_graph) {
@@ -1347,12 +1365,13 @@ GraphEditorUI::Draw()
 
   if (_graph) {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    for (auto& connexion : _graph->GetConnexions()) {
-      connexion->Draw(this);
-    }
-
+    
     for (auto& node : _graph->GetNodes()) {
       node->Draw(this);
+    }
+
+    for (auto& connexion : _graph->GetConnexions()) {
+      connexion->Draw(this);
     }
 
     if (_connect) {
@@ -1505,6 +1524,13 @@ GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
     Populate(_graph->GetPrim());
   }
   _parent->SetDirty();
+}
+
+void
+GraphEditorUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
+{
+  if (!_graph)return;
+  Update();
 }
 
 
