@@ -1076,8 +1076,9 @@ DisplayCallback(GLFWwindow* window)
 
 void 
 ResizeCallback(GLFWwindow* window, int width, int height)
-{
+{  
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
+  parent->SetGLContext();
   parent->Resize(width, height);
   glViewport(0, 0, width, height);
 }

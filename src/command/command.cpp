@@ -7,6 +7,7 @@
 #include <pxr/usd/usdShade/connectableAPI.h>
 #include <pxr/usd/usdExec/execNode.h>
 #include <pxr/usd/usdExec/execConnectableAPI.h>
+#include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 
 #include "../command/command.h"
 #include "../command/block.h"
@@ -218,7 +219,7 @@ void ShowHideCommand::Do() {
 ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
 {
-  UndoRouter::Get().TransferEdits(&_inverse);
+  //UndoRouter::Get().TransferEdits(&_inverse);
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
@@ -284,7 +285,7 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
     }
     xformApi.SetTranslate(target.previous.translation, timeCode);
   }
-  UndoRouter::Get().TransferEdits(&_inverse);
+  //UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -311,7 +312,7 @@ RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage,
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetRotate(target.previous.rotation, target.previous.rotOrder, timeCode);
   }
-  UndoRouter::Get().TransferEdits(&_inverse);
+  //UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -344,7 +345,7 @@ ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage,
     }
     xformApi.SetScale(target.previous.scale, timeCode);
   }
-  UndoRouter::Get().TransferEdits(&_inverse);
+  //UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -377,7 +378,7 @@ PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage,
     }
     xformApi.SetPivot(target.previous.pivot, timeCode);
   }
-  UndoRouter::Get().TransferEdits(&_inverse);
+  //UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -401,7 +402,7 @@ SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes,
   const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-  UndoRouter::Get().TransferEdits(&_inverse);
+  //UndoRouter::Get().TransferEdits(&_inverse);
   for (auto& attribute : attributes) {
     attribute.Set(value, timeCode);
   }
@@ -456,28 +457,29 @@ void CreateNodeCommand::Do()
 // Move Node
 //==================================================================================
 MoveNodeCommand::MoveNodeCommand(
-  const GraphEditorUI::NodeSet& nodes, const pxr::GfVec2f& offset)
+  const pxr::SdfPathVector& nodes, const pxr::GfVec2f& offset)
   : Command(true)
   , _nodes(nodes)
   , _offset(offset)
 {
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
-    pxr::UsdUINodeGraphNodeAPI api(node->GetPrim());
+    pxr::UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
     pxr::GfVec2f pos;
     api.GetPosAttr().Get(&pos);
     pos += offset;
     api.GetPosAttr().Set(pos);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
+  AttributeChangedNotice().Send();
 }
 
 void MoveNodeCommand::Do()
 {
-  for (auto& node : _nodes) {
-    node->SetPosition(node->GetPosition() - _offset);
-  }
   _inverse.Invert();
   _offset *= -1;
+  AttributeChangedNotice().Send();
 }
 
 //==================================================================================
@@ -488,12 +490,14 @@ void MoveNodeCommand::Do()
 // 'minimized' = should take the least space possible
 //==================================================================================
 ExpendNodeCommand::ExpendNodeCommand(
-  const GraphEditorUI::NodeSet& nodes, const pxr::TfToken& state)
+  const pxr::SdfPathVector& nodes, const pxr::TfToken& state)
   : Command(true)
   , _nodes(nodes)
 {
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
-    pxr::UsdUINodeGraphNodeAPI api(node->GetPrim());
+    pxr::UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
     api.GetExpansionStateAttr().Set(state);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
@@ -503,9 +507,6 @@ ExpendNodeCommand::ExpendNodeCommand(
 void ExpendNodeCommand::Do()
 {
   _inverse.Invert();
-  for (auto& node : _nodes) {
-    node->UpdateExpansionState();
-  }
   AttributeChangedNotice().Send();
 }
 

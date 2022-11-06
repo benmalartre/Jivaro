@@ -889,7 +889,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     if (ImGui::Selectable(&expendedName[0], true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
       _expended = (_expended + 1) % 3;
       GetApplication()->AddCommand(std::shared_ptr<ExpendNodeCommand>(
-        new ExpendNodeCommand({ this }, NodeExpendState[_expended])));
+        new ExpendNodeCommand({ GetPrim().GetPath() }, NodeExpendState[_expended])));
     }
 
     drawList->AddRectFilled(
@@ -1714,7 +1714,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
  
        if(_drag == true && _dragOffset.GetLength() > 0.000001f) {
         GetApplication()->AddCommand(std::shared_ptr<MoveNodeCommand>(
-          new MoveNodeCommand(_selectedNodes, _dragOffset)));
+          new MoveNodeCommand(GetSelectedNodesPath(), _dragOffset)));
       }
       _drag = false;
       if (_connect)EndConnexion();

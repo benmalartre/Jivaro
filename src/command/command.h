@@ -23,7 +23,6 @@
 #include "../app/handle.h"
 #include "../app/selection.h"
 #include "../command/inverse.h"
-#include "../ui/graphEditor.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -238,12 +237,11 @@ private:
 //==================================================================================
 class MoveNodeCommand : public Command {
 public:
-  friend GraphEditorUI;
-  MoveNodeCommand(const GraphEditorUI::NodeSet& nodes, const pxr::GfVec2f& offset);
+  MoveNodeCommand(const pxr::SdfPathVector& paths, const pxr::GfVec2f& offset);
   ~MoveNodeCommand() {};
   void Do() override;
 private:
-  GraphEditorUI::NodeSet            _nodes;
+  pxr::SdfPathVector                _nodes;
   pxr::GfVec2f                      _offset;
 };
 
@@ -252,12 +250,11 @@ private:
 //==================================================================================
 class ExpendNodeCommand : public Command {
 public:
-  friend GraphEditorUI;
-  ExpendNodeCommand(const GraphEditorUI::NodeSet& nodes, const pxr::TfToken& state);
+  ExpendNodeCommand(const pxr::SdfPathVector& nodes, const pxr::TfToken& state);
   ~ExpendNodeCommand() {};
   void Do() override;
 private:
-  GraphEditorUI::NodeSet            _nodes;
+  pxr::SdfPathVector                _nodes;
 };
 
 //==================================================================================

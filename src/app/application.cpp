@@ -552,14 +552,9 @@ Application::SetActiveViewport(ViewportUI* viewport)
 void 
 Application::SetActiveTool(short t)
 {
-  std::cout << "set active tool : " << t << std::endl;
-  //_mainWindow->SetGLContext();
   _mainWindow->GetTool()->SetActiveTool(t);
-  std::cout << "main window done " << std::endl;
   for (auto& window : _childWindows) {
-    //window->SetGLContext();
     window->GetTool()->SetActiveTool(t);
-    std::cout << "child window done " << std::endl;
   }
 }
 
