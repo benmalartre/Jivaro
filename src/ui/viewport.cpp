@@ -669,6 +669,10 @@ bool ViewportUI::Pick(int x, int y, int mods)
 {
   if (y - GetY() < 32) return false;
   Application* app = GetApplication();
+  Selection* selection = app->GetSelection();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  if (!stage)return false;
+
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;
   pxr::GfVec3d outHitNormal;
@@ -688,6 +692,10 @@ bool ViewportUI::Pick(int x, int y, int mods)
     &outHitInstancerPath,
     &outHitInstanceIndex,
     &outInstancerContext)) {
+      while (!selection->IsPickablePath(*stage, outHitPrimPath)) {
+        outHitPrimPath = outHitPrimPath.GetParentPath();
+      }
+
       if (mods & GLFW_MOD_CONTROL && mods & GLFW_MOD_SHIFT) {
         app->ToggleSelection({ outHitPrimPath });
       }

@@ -3,6 +3,7 @@
 
 #include "../common.h"
 #include <pxr/usd/sdf/path.h>
+#include <pxr/base/tf/token.h>
 #include <pxr/imaging/hd/selection.h>
 #include <vector>
 #include <boost/optional.hpp>
@@ -19,6 +20,14 @@ public:
     EDGE,
     FACE,
     ATTRIBUTE
+  };
+
+  enum Mode {
+    ASSEMBLY,
+    MODEL,
+    GROUP,
+    COMPONENT,
+    SUCOMPONENT
   };
 
   struct Item {
@@ -52,6 +61,11 @@ public:
   bool IsComponent();
   bool IsAttribute();
 
+  void SetMode(Mode mode) { _mode = mode; };
+  Mode GetMode() { return _mode; };
+
+  bool IsPickablePath(const pxr::UsdStage& stage, 
+    const pxr::SdfPath& path);
   pxr::SdfPathVector GetSelectedPrims();
   size_t GetNumSelectedItems() { return _items.size(); };
   Item& operator[](size_t index) {
@@ -66,7 +80,8 @@ public:
   bool IsSelected(const pxr::UsdPrim& prim);
 
 private:
-  Type                        _mode;
+  bool                        _CheckKind(Mode mode, const pxr::TfToken& kind);
+  Mode                        _mode = Mode::MODEL;
   std::vector<Item>           _items;
   size_t                      _hash;
 };

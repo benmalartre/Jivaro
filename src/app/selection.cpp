@@ -1,6 +1,7 @@
 #include <pxr/usd/usdGeom/bboxCache.h>
 #include <pxr/usd/usdGeom/xformCache.h>
 #include <pxr/usd/usd/modelAPI.h>
+#include <pxr/usd/kind/registry.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/vec3f.h>
@@ -68,12 +69,40 @@ bool Selection::IsAttribute()
   return false;
 }
 
+bool 
+Selection::_CheckKind(Mode mode, const pxr::TfToken& kind)
+{
+  switch (mode) {
+  case Mode::COMPONENT:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->model);
+  case Mode::GROUP:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->group);
+  case Mode::ASSEMBLY:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->assembly);
+  case Mode::SUCOMPONENT:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->subcomponent);
+  default:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->model);
+  }
+}
+
+bool Selection::IsPickablePath(const pxr::UsdStage& stage,
+  const pxr::SdfPath& path) {
+  auto prim = stage.GetPrimAtPath(path);
+  if (prim.IsPseudoRoot())
+    return true;
+
+  pxr::TfToken primKind;
+  pxr::UsdModelAPI(prim).GetKind(&primKind);
+  return(_CheckKind(_mode, primKind));
+}
+
 void Selection::AddItem(const pxr::SdfPath& path)
 {
   for (auto& item: _items) {
     if (path == item.path)return;
   }
-  _items.push_back({ Type::PRIM, path});
+  _items.push_back({ Type::PRIM, path });
   _items.back().ComputeHash();
   ComputeHash();
 

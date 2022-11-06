@@ -52,6 +52,7 @@ list(APPEND USD_LIB_NAMES
   trace
   work
   arch
+  kind
   ar
   gf
   glf
