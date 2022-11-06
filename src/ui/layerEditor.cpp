@@ -257,8 +257,8 @@ bool LayerEditorUI::Draw()
 
       if (ImGui::BeginPopupContextItem()) {
         if (ImGui::MenuItem("Add root prim")) {
-          GetApplication()->AddCommand(std::shared_ptr<CreatePrimCommand>(
-            new CreatePrimCommand(GetApplication()->GetWorkspace()->GetWorkLayer(), "/root")));
+          ADD_COMMAND(CreatePrimCommand,
+            GetApplication()->GetWorkspace()->GetWorkLayer(), "/root");
         }
         ImGui::EndPopup();
       }

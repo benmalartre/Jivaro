@@ -56,10 +56,7 @@ TextEditorUI::Draw()
     ImGui::InputTextMultiline("###TextEditor", &layerText, sizeArg,
                               ImGuiInputTextFlags_None | ImGuiInputTextFlags_NoUndoRedo);
     if (_layer && ImGui::IsItemDeactivatedAfterEdit()) {
-      GetApplication()->AddCommand(
-        std::shared_ptr<LayerTextEditCommand>(
-          new LayerTextEditCommand(_layer, layerText))
-      );
+      ADD_COMMAND(LayerTextEditCommand, _layer, layerText);
     }
     ImGui::PopStyleColor();
   }

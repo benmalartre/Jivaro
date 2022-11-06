@@ -897,8 +897,8 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     if (ImGui::Selectable(&expendedName[0], true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
       _expended = (_expended + 1) % 3;
-      GetApplication()->AddCommand(std::shared_ptr<ExpendNodeCommand>(
-        new ExpendNodeCommand({ GetPrim().GetPath() }, NodeExpendState[_expended])));
+      ADD_COMMAND(ExpendNodeCommand, 
+        { GetPrim().GetPath() }, NodeExpendState[_expended]);
     }
 
     drawList->AddRectFilled(
@@ -1456,8 +1456,7 @@ GraphEditorUI::Draw()
   if (ImGui::Button("LOAD")) {
     const std::string filename = "C:\\Users\\graph\\Documents\\bmal\\src\\Jivaro\\build\\src\\Release\\usd\\graph.usda";
     std::cout << filename << std::endl;
-    GetApplication()->AddCommand(
-      std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
+    ADD_COMMAND(OpenSceneCommand, filename);
   }
   ImGui::SameLine();
 
@@ -1739,8 +1738,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
       _navigate = NavigateMode::IDLE;
  
        if(_drag == true && _dragOffset.GetLength() > 0.000001f) {
-        GetApplication()->AddCommand(std::shared_ptr<MoveNodeCommand>(
-          new MoveNodeCommand(GetSelectedNodesPath(), _dragOffset)));
+        ADD_COMMAND(MoveNodeCommand, GetSelectedNodesPath(), _dragOffset);
       }
       _drag = false;
       if (_connect)EndConnexion();
@@ -1903,12 +1901,12 @@ GraphEditorUI::EndConnexion()
 {
   if (_connector.startPort && _connector.endPort) {
     if (!_connector.inputOrOutput) {
-      GetApplication()->AddCommand(std::shared_ptr<ConnectNodeCommand>(
-        new ConnectNodeCommand(_connector.endPort->GetPath(), _connector.startPort->GetPath())));
+      ADD_COMMAND(ConnectNodeCommand, 
+        _connector.endPort->GetPath(), _connector.startPort->GetPath());
     }
     else {
-      GetApplication()->AddCommand(std::shared_ptr<ConnectNodeCommand>(
-        new ConnectNodeCommand(_connector.startPort->GetPath(), _connector.endPort->GetPath())));
+      ADD_COMMAND(ConnectNodeCommand,
+        _connector.startPort->GetPath(), _connector.endPort->GetPath());
     }
   }
   _connect = false;

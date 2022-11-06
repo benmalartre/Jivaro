@@ -627,7 +627,7 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 void
 Application::UndoStackNoticeCallback(const UndoStackNotice& n)
 {
-  AddCommand(std::shared_ptr<UsdGenericCommand>(new UsdGenericCommand()));
+  ADD_COMMAND(UsdGenericCommand);
 }
 
 
@@ -658,8 +658,7 @@ Application::Delete()
   Selection* selection = GetSelection();
   const pxr::SdfPathVector& paths = selection->GetSelectedPrims();
   selection->Clear();
-  AddCommand(std::shared_ptr<DeletePrimCommand>(
-    new DeletePrimCommand(GetWorkStage(), paths)));
+  ADD_COMMAND(DeletePrimCommand, GetWorkStage(), paths);
 }
 
 void
@@ -668,25 +667,20 @@ Application::Duplicate()
   Selection* selection = GetSelection();
   if (!selection->IsEmpty()) {
     const Selection::Item& item = selection->GetItem(0);
-    AddCommand(std::shared_ptr<DuplicatePrimCommand>(
-      new DuplicatePrimCommand(GetWorkStage(), item.path)));
+    ADD_COMMAND(DuplicatePrimCommand, GetWorkStage(), item.path);
   }
 }
 
 void 
 Application::OpenScene(const std::string& filename)
 {
-  AddCommand(
-    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename))
-  );
+  ADD_COMMAND(OpenSceneCommand, filename);
 }
 
 void
 Application::NewScene()
 {
-  AddCommand(
-    std::shared_ptr<NewSceneCommand>(new NewSceneCommand())
-  );
+  ADD_COMMAND(NewSceneCommand);
 }
 
 void Application::SaveScene()
@@ -751,36 +745,31 @@ Application::GetCurrentLayer()
 void 
 Application::SetSelection(const pxr::SdfPathVector& selection)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, selection, SelectCommand::SET)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::SET);
 }
 
 void
 Application::ToggleSelection(const pxr::SdfPathVector& selection)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, selection, SelectCommand::TOGGLE)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::TOGGLE);
 }
 
 void 
 Application::AddToSelection(const pxr::SdfPathVector& paths)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, paths, SelectCommand::ADD)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::ADD);
 }
 
 void 
 Application::RemoveFromSelection(const pxr::SdfPathVector& paths)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, paths, SelectCommand::REMOVE)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::REMOVE);
 }
 
 void 
 Application::ClearSelection()
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, {}, SelectCommand::SET)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, {}, SelectCommand::SET);
 }
 
 pxr::GfBBox3d

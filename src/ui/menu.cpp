@@ -131,8 +131,7 @@ static void SaveFileCallback()
 
 static void NewFileCallback() 
 {
-  GetApplication()->AddCommand(
-    std::shared_ptr<NewSceneCommand>(new NewSceneCommand()));
+  ADD_COMMAND(NewSceneCommand);
 }
 
 static void OpenDemoCallback()
@@ -161,9 +160,7 @@ static void CreatePrimCallback()
 {
   std::string name = RandomString(32);
 
-  GetApplication()->AddCommand(
-    std::shared_ptr<CreatePrimCommand>(
-      new CreatePrimCommand(GetApplication()->GetCurrentLayer(), name)));
+  ADD_COMMAND(CreatePrimCommand, GetApplication()->GetCurrentLayer(), name);
 }
 
 static void TriangulateCallback()

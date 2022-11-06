@@ -168,7 +168,7 @@ extern Application* APPLICATION;
 static Application* GetApplication() { return APPLICATION; };
 
 #define ADD_COMMAND(CMD, ...) \
-GetApplication()->AddCommand<CMD>( new CMD(__VA_ARGS__));
+GetApplication()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));
 
 JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR
 
