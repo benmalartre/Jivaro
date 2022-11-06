@@ -279,25 +279,6 @@ Window::UpdatePopup(PopupUI* popup)
   ForceRedraw();
 }
 
-/*
-void 
-Window::AddChild(Window* child)
-{
-  _childrens.push_back(child);
-}
-
-void 
-Window::RemoveChild(Window* child)
-{
-  for (int i = 0; i < _childrens.size(); ++i) {
-    if (_childrens[i] == child) {
-      _childrens.erase(_childrens.begin() + i);
-      break;
-    }
-  }
-}
-*/
-
 // Resize
 //----------------------------------------------------------------------------
 void 

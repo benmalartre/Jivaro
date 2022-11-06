@@ -219,7 +219,6 @@ void ShowHideCommand::Do() {
 ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
 {
-  //UndoRouter::Get().TransferEdits(&_inverse);
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
@@ -285,7 +284,7 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
     }
     xformApi.SetTranslate(target.previous.translation, timeCode);
   }
-  //UndoRouter::Get().TransferEdits(&_inverse);
+  UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -312,7 +311,7 @@ RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage,
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetRotate(target.previous.rotation, target.previous.rotOrder, timeCode);
   }
-  //UndoRouter::Get().TransferEdits(&_inverse);
+  UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -345,7 +344,7 @@ ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage,
     }
     xformApi.SetScale(target.previous.scale, timeCode);
   }
-  //UndoRouter::Get().TransferEdits(&_inverse);
+  UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -378,7 +377,7 @@ PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage,
     }
     xformApi.SetPivot(target.previous.pivot, timeCode);
   }
-  //UndoRouter::Get().TransferEdits(&_inverse);
+  UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
@@ -402,7 +401,6 @@ SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes,
   const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
-  //UndoRouter::Get().TransferEdits(&_inverse);
   for (auto& attribute : attributes) {
     attribute.Set(value, timeCode);
   }
@@ -423,14 +421,12 @@ void SetAttributeCommand::Do()
 UsdGenericCommand::UsdGenericCommand()
   : Command(true)
 {
-  std::cout << "GENRIC CREATE" << std::endl;
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
 void UsdGenericCommand::Do()
 {
-  std::cout << "GENRIC UNDO" << std::endl;
   _inverse.Invert();
   SceneChangedNotice().Send();
 }
