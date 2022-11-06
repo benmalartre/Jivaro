@@ -66,12 +66,15 @@ LayerTextEditCommand::LayerTextEditCommand(pxr::SdfLayerRefPtr layer, const std:
   if(!_layer)return;
   _layer->ExportToString(&_oldText);
   _layer->ImportFromString(_newText);
+  UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
 void LayerTextEditCommand::Do() {
   _layer->ExportToString(&_newText);
   _layer->ImportFromString(_oldText);
+  _oldText = _newText;
+  UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
