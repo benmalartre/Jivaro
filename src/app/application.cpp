@@ -478,26 +478,23 @@ Application::Init()
  
   _mainWindow->CollectLeaves();
  
-  /*
-  Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
-  childWindow->Init(this);
 
-  _tools[childWindow] = Tool();
-  _tools[childWindow].Init();
-  
-  _mainWindow->AddChild(childWindow);
+  Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
+  _childWindows.push_back(childWindow);
+  childWindow->Init();
+  childWindow->SetGLContext();
   
   ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
   
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
   childWindow->CollectLeaves();
-  */
+  
  
 
 }
 
-void 
+bool 
 Application::Update()
 {
   _time.ComputeFramerate(glfwGetTime());
@@ -509,6 +506,13 @@ Application::Update()
   if (_workspace->GetExecStage()) {
     _workspace->UpdateExec(GetTime().GetActiveTime());
   }
+
+  glfwSwapInterval(1);
+  glfwPollEvents();
+  if (!_mainWindow->Update())return false;
+  for (auto& childWindow : _childWindows)childWindow->Update();
+  //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
+  return true;
 }
 
 void 
@@ -548,11 +552,14 @@ Application::SetActiveViewport(ViewportUI* viewport)
 void 
 Application::SetActiveTool(short t)
 {
-  glfwMakeContextCurrent(_mainWindow->GetGlfwWindow());
+  std::cout << "set active tool : " << t << std::endl;
+  //_mainWindow->SetGLContext();
   _mainWindow->GetTool()->SetActiveTool(t);
+  std::cout << "main window done " << std::endl;
   for (auto& window : _childWindows) {
-    glfwMakeContextCurrent(window->GetGlfwWindow());
+    //window->SetGLContext();
     window->GetTool()->SetActiveTool(t);
+    std::cout << "child window done " << std::endl;
   }
 }
 
@@ -710,14 +717,6 @@ Application::GetExec()
 { 
   return _execute; 
 };
-
-// main loop
-void 
-Application::MainLoop()
-{
-  if (_mainWindow->IsIdle())return;
-  _mainWindow->MainLoop();
-}
 
 // get stage for display
 pxr::UsdStageRefPtr

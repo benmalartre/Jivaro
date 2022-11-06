@@ -23,7 +23,7 @@ void CreateFontAtlas()
   DEFAULT_FONT = SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
     ibmplexsansmediumfree_compressed_data,
     ibmplexsansmediumfree_compressed_size, 
-    15.0f, 
+    12.0f, 
     &fontConfig, 
     nullptr);
 
@@ -36,7 +36,7 @@ void CreateFontAtlas()
   SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
     FontAwesomeFree6_compressed_data,
     FontAwesomeFree6_compressed_size,
-    15.0f,
+    12.0f,
     &iconsConfig, 
     iconRanges);
   

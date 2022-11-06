@@ -10,7 +10,7 @@ int main(void)
   glfwInit();
   APPLICATION = new Application(1024,720);
   APPLICATION->Init();
-  APPLICATION->MainLoop();
+  while (APPLICATION->Update());
   glfwTerminate();
   return 1;
 }

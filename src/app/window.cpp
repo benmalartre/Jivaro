@@ -279,6 +279,7 @@ Window::UpdatePopup(PopupUI* popup)
   ForceRedraw();
 }
 
+/*
 void 
 Window::AddChild(Window* child)
 {
@@ -295,6 +296,7 @@ Window::RemoveChild(Window* child)
     }
   }
 }
+*/
 
 // Resize
 //----------------------------------------------------------------------------
@@ -656,26 +658,15 @@ bool Window::UpdateActiveTool(int x, int y)
   return false;
 }
 
-void Window::MainLoop()
+bool Window::Update()
 {
-  glfwSwapInterval(1);
-  while(!glfwWindowShouldClose(_window)) {
-    //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
-    glfwPollEvents();
-    //glfwWaitEvents();
-    GetApplication()->Update();
-    // main window
-    Draw();
-    glfwSwapBuffers(_window);
-    
-    // child windows
-    for (auto& child : _childrens) {
-      if (glfwGetWindowAttrib(child->GetGlfwWindow(), GLFW_FOCUSED)) {
-        child->Draw();
-        glfwSwapBuffers(child->GetGlfwWindow());
-      }
-    }
-  }
+  if (IsIdle())return true;
+  if (glfwWindowShouldClose(_window)) return false;
+  SetGLContext();
+  Draw();
+  glfwSwapBuffers(_window);
+  return true;
+
 }
 
 // pick splitter

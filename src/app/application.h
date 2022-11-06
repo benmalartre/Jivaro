@@ -60,7 +60,7 @@ public:
   void Term();
 
   // update application
-  void Update();
+  bool Update();
 
   // the main loop
   void MainLoop();

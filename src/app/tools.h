@@ -44,6 +44,9 @@ public:
   void EndUpdate(float x, float y, float width, float height);
 
 private:
+  void            _ResetActiveTool();
+  short           _last;
+  short           _current;
   pxr::GfVec4f    _viewport;
   /*
   TranslateHandle _translate;

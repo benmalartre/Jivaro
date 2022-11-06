@@ -104,8 +104,8 @@ public:
   void SetFullScreen(bool fullscreen){_fullscreen = fullscreen;};
 
   // children
-  void AddChild(Window* child);
-  void RemoveChild(Window* child);
+  //void AddChild(Window* child);
+  //void RemoveChild(Window* child);
 
   // size
   int GetWidth(){return _width;};
@@ -161,8 +161,8 @@ public:
   void SetPopup(PopupUI* popup);
   void UpdatePopup(PopupUI* popup);
 
-  // loop
-  void MainLoop();
+  // update
+  bool Update();
   static Window* GetUserData(GLFWwindow* window);
 
 private:
@@ -170,7 +170,7 @@ private:
   std::string           _name;
   GLFWwindow*           _window;
   bool                  _shared;
-  std::vector<Window*>  _childrens;
+  //std::vector<Window*>  _childrens;
   View*                 _mainView;
   View*                 _activeView;
   View*                 _hoveredView;

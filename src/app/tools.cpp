@@ -10,8 +10,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 Tool::Tool()
   : _interacting(false)
   , _active(NULL)
+  , _last(TOOL_NONE)
+  , _current(TOOL_NONE)
 {
-  std::cout << "tool constructor" << std::endl;
 }
 
 Tool::~Tool()
@@ -35,6 +36,7 @@ Tool::SetProgram(GLSLProgram* pgm)
 void 
 Tool::SetCamera(Camera* camera)
 {
+  _ResetActiveTool();
   if (!_active) return;
   _active->SetCamera(camera);
 
@@ -48,10 +50,12 @@ Tool::SetCamera(Camera* camera)
   }
 }
 
-void Tool::SetActiveTool(short tool)
+void
+Tool::_ResetActiveTool()
 {
-  if (_active)delete _active;
-  switch(tool) {
+  if (_last != _current) {
+    if (_active)delete _active;
+    switch (_current) {
     case TOOL_NONE:
       _active = NULL;
       break;
@@ -73,17 +77,25 @@ void Tool::SetActiveTool(short tool)
     default:
       _active = NULL;
       break;
+    }
+    if (_active) {
+      _active->SetProgram(_pgm);
+      _active->Setup();
+      _active->ResetSelection();
+    }
   }
-  if (_active) {
-    _active->SetProgram(_pgm);
-    _active->Setup();
-    _active->ResetSelection();
-  }
+  _last = _current;
+}
+
+void Tool::SetActiveTool(short tool)
+{
+  _last = _current;
+  _current = tool;
 }
 
 bool Tool::IsActive()
 {
-  return (_active != NULL);
+  return (_current != TOOL_NONE);
 }
 
 bool Tool::IsInteracting() {
