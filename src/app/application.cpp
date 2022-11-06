@@ -676,15 +676,17 @@ Application::Duplicate()
 void 
 Application::OpenScene(const std::string& filename)
 {
-  GetApplication()->AddCommand(
-    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
+  AddCommand(
+    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename))
+  );
 }
 
 void
 Application::NewScene()
 {
-  if (_workspace) delete _workspace;
-  _workspace = new Workspace();
+  AddCommand(
+    std::shared_ptr<NewSceneCommand>(new NewSceneCommand())
+  );
 }
 
 void Application::SaveScene()

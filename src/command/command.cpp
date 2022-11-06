@@ -45,7 +45,10 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 NewSceneCommand::NewSceneCommand()
   : Command(false)
 {
-  GetApplication()->NewScene();
+  Application* app = GetApplication();
+  Workspace* workspace = app->GetWorkspace();
+  if (workspace)delete workspace;
+  app->SetWorkspace(new Workspace());
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();
