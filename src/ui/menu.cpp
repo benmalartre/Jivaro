@@ -155,6 +155,7 @@ static void OpenChildWindowCallback()
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
 
   childWindow->CollectLeaves();
+  mainWindow->SetGLContext();
 }
 
 static void CreatePrimCallback()
@@ -296,8 +297,6 @@ void MenuUI::DirtyViewsUnderBox()
   }
   _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
   _parent->SetDirty();
-  ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
-  foregroundList->AddRect(ImVec2(_pos), ImVec2(_pos + _size), ImColor(255, 128, 128, 255));
 }
 
 // overrides

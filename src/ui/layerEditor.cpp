@@ -1,5 +1,6 @@
 #include <pxr/usd/sdf/variantSpec.h>
 #include <pxr/usd/sdf/variantSetSpec.h>
+#include <pxr/usd/sdf/primSpec.h>
 #include "../ui/utils.h"
 #include "../ui/layerEditor.h"
 #include "../app/view.h"
@@ -39,6 +40,47 @@ DrawBackgroundSelection(const pxr::SdfPrimSpecHandle& currentPrim, pxr::SdfPrimS
   ImGui::SameLine();
   ImGui::PopStyleColor(2);
 }
+
+void DrawTreeNodePopup(pxr::SdfPrimSpecHandle &primSpec) {
+  if (!primSpec)
+    return;
+
+  if (ImGui::MenuItem("Add child")) {
+    std::cout << "add child.." << std::endl;
+    //ExecuteAfterDraw<PrimNew>(primSpec, FindNextAvailablePrimName(SdfPrimSpecDefaultName));
+  }
+  auto parent = primSpec->GetNameParent();
+  if (parent) {
+    if (ImGui::MenuItem("Add sibling")) {
+      std::cout << "add sibling..." << std::endl;
+      //ExecuteAfterDraw<PrimNew>(parent, FindNextAvailablePrimName(primSpec->GetName()));
+    }
+  }
+  if (ImGui::MenuItem("Duplicate")) {
+    std::cout << "duplicate..." << std::endl;
+    //ExecuteAfterDraw<PrimDuplicate>(primSpec, FindNextAvailablePrimName(primSpec->GetName()));
+  }
+  if (ImGui::MenuItem("Remove")) {
+    //ExecuteAfterDraw<PrimRemove>(primSpec);
+  }
+  ImGui::Separator();
+  if (ImGui::MenuItem("Copy")) {
+    //ExecuteAfterDraw<PrimCopy>(primSpec);
+  }
+  if (ImGui::MenuItem("Paste")) {
+    //ExecuteAfterDraw<PrimPaste>(primSpec);
+  }
+  ImGui::Separator();
+  if (ImGui::BeginMenu("Create composition")) {
+    //DrawPrimCreateCompositionMenu(primSpec);
+    ImGui::EndMenu();
+  }
+  ImGui::Separator();
+  if (ImGui::MenuItem("Copy prim path")) {
+    ImGui::SetClipboardText(primSpec->GetPath().GetString().c_str());
+  }
+}
+
 
 // Returns unfolded
 static bool 
@@ -114,10 +156,9 @@ DrawPrimSpecRow(pxr::SdfPrimSpecHandle primSpec, pxr::SdfPrimSpecHandle& selecte
 
   ImGui::SameLine();
   bool unfolded = DrawTreeNodePrimName(primIsVariant, primSpec, selectedPrim, childrenNames.empty());
-
   // Right click will open the quick edit popup menu
   if (ImGui::BeginPopupContextItem()) {
-    //DrawTreeNodePopup(primSpec);
+    DrawTreeNodePopup(primSpec);
     ImGui::EndPopup();
   }
 
