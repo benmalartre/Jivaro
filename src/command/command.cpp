@@ -24,7 +24,15 @@ JVR_NAMESPACE_OPEN_SCOPE
 OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   : Command(false)
 {
-  GetApplication()->OpenScene(filename);
+  Application* app = GetApplication();
+  if (strlen(filename.c_str()) > 0) {
+    Workspace* workspace = app->GetWorkspace();
+    if (workspace)delete workspace;
+    workspace = new Workspace();
+    workspace->AddStageFromDisk(filename);
+    app->SetWorkspace(workspace);   
+  }
+
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();

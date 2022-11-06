@@ -29,6 +29,7 @@ add_executable(${TARGET}
   ui/splitter.cpp
   ui/tab.cpp
   ui/menu.cpp
+  ui/textEditor.cpp
   ui/graphEditor.cpp
   ui/viewport.cpp
   ui/timeline.cpp

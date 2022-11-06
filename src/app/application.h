@@ -120,6 +120,7 @@ public:
 
   // execution
   Workspace* GetWorkspace() { return _workspace; };
+  void SetWorkspace(Workspace* workspace) { _workspace = workspace; };
   void ToggleExec();
   void SetExec(bool state);
   bool GetExec();

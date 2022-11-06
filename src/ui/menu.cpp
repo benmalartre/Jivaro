@@ -118,11 +118,10 @@ static void OpenFileCallback() {
   };
   int numFilters = 4;
 
+  Application* app = GetApplication();
   std::string filename =
-    GetApplication()->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
-
-  GetApplication()->AddCommand(
-    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
+    app->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
+  app->OpenScene(filename);
 }
 
 static void SaveFileCallback() 

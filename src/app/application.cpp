@@ -676,11 +676,8 @@ Application::Duplicate()
 void 
 Application::OpenScene(const std::string& filename)
 {
-  if(strlen(filename.c_str()) > 0) {    
-    if (_workspace) delete _workspace;
-    _workspace = new Workspace();
-    _workspace->AddStageFromDisk(filename);
-  }
+  GetApplication()->AddCommand(
+    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
 }
 
 void

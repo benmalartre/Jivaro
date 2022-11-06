@@ -14,6 +14,7 @@
 #include "../ui/propertyEditor.h"
 #include "../ui/curveEditor.h"
 #include "../ui/layerEditor.h"
+#include "../ui/textEditor.h"
 #include "../ui/demo.h"
 
 
@@ -116,6 +117,9 @@ View::CreateUI(UIType type)
     break;
   case UIType::PROPERTYEDITOR:
     _current = new PropertyUI(this);
+    break;
+  case UIType::TEXTEDITOR:
+    _current = new TextEditorUI(this);
     break;
   }
 }

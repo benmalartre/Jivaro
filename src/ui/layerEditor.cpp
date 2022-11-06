@@ -203,6 +203,7 @@ DrawPrimSpecRow(pxr::SdfPrimSpecHandle primSpec, pxr::SdfPrimSpecHandle& selecte
 
 bool LayerEditorUI::Draw()
 {
+  SetInteracting(true);
   const ImGuiStyle& style = ImGui::GetStyle();
 
   const pxr::GfVec2f min(GetX(), GetY());

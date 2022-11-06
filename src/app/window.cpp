@@ -936,8 +936,9 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   Window* parent = Window::GetUserData(window);
   PopupUI* popup = parent->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
-  View* view = parent->GetViewUnderMouse((int)x, (int)y);
+  View* hovered = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
+
   bool splitterHovered = parent->PickSplitter(x, y);
 
   if (popup) {
@@ -948,9 +949,9 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
     if (active && active->GetFlag(View::INTERACTING)) {
       active->MouseMove(x, y);
     } else {
-      if (view) {
-        parent->SetHoveredView(view);
-        parent->GetHoveredView()->MouseMove(x, y);
+      if (hovered) {
+        parent->SetHoveredView(hovered);
+        hovered->MouseMove(x, y);
       }
     }
   }
