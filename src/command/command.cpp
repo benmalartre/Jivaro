@@ -55,6 +55,26 @@ NewSceneCommand::NewSceneCommand()
   SceneChangedNotice().Send();
 }
 
+//==================================================================================
+// Layer Text Edit
+//==================================================================================
+LayerTextEditCommand::LayerTextEditCommand(pxr::SdfLayerRefPtr layer, const std::string& newText)
+  : Command(true)
+  , _layer(layer)
+  , _newText(newText)
+{
+  if(!_layer)return;
+  _layer->ExportToString(&_oldText);
+  _layer->ImportFromString(_newText);
+  SceneChangedNotice().Send();
+}
+
+void LayerTextEditCommand::Do() {
+  _layer->ExportToString(&_newText);
+  _layer->ImportFromString(_oldText);
+  SceneChangedNotice().Send();
+}
+
 
 //==================================================================================
 // Create Prim

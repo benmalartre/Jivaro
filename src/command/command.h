@@ -64,6 +64,20 @@ public:
 };
 
 //==================================================================================
+// Layer Text Edit
+//==================================================================================
+class LayerTextEditCommand : public Command {
+public:
+  LayerTextEditCommand(pxr::SdfLayerRefPtr layer, const std::string& newText);
+  ~LayerTextEditCommand() {};
+  void Do() override;
+private:
+  pxr::SdfLayerRefPtr _layer;
+  std::string         _oldText;
+  std::string         _newText;
+};
+
+//==================================================================================
 // Create new prim
 //==================================================================================
 class CreatePrimCommand : public Command {
@@ -269,6 +283,8 @@ private:
   pxr::SdfPath   _source;
   pxr::SdfPath   _destination;
 };
+
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE
