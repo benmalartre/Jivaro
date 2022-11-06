@@ -56,19 +56,16 @@ ViewportUI::ViewportUI(View* parent)
   , _pixels(nullptr)
   , _camera(new Camera("Camera"))
   , _valid(true)
-  , _initialized(false)
+  , _interactionMode(INTERACTION_NONE)
+  , _engine(nullptr)
+  , _rendererIndex(0)
+  , _rendererNames(NULL)
+  , _counter(0)
+  , _highlightSelection(true)
 {
-  
-  
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
-  _interactionMode = INTERACTION_NONE;
-  _engine = nullptr;
-  _rendererIndex = 0;
-  _rendererNames = NULL;
-  _counter = 0;
-  _hightlightSelection(true);
 
   const pxr::GfVec2i resolution(GetWidth(), GetHeight());
 

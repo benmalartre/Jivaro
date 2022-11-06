@@ -60,8 +60,12 @@ public:
     int* outHitInstanceIndex = NULL,
     pxr::HdInstancerContext* outInstancerContext = NULL);
 
+  void SetHighlightSelection(bool state) { _highlightSelection = state; };
+  bool GetHighlightSelection() { return _highlightSelection; };
+
 private:
   bool _dirty;
+  bool _highlightSelection;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

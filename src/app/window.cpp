@@ -526,6 +526,7 @@ Window::Draw()
       ImGui::End();
     } else {
       for (Engine* engine : GetApplication()->GetEngines()) {
+        engine->SetHighlightSelection(false);
         engine->SetDirty(true);
       }
       _mainView->Draw(true);
@@ -643,7 +644,13 @@ bool Window::UpdateActiveTool(int x, int y)
 bool Window::Update()
 {
   if (IsIdle())return true;
-  if (glfwWindowShouldClose(_window)) return false;
+  if (glfwWindowShouldClose(_window)) {
+    if (!_shared) {
+      GetApplication()->RemoveWindow(this);
+      delete this;
+    }
+    return false;
+  }
   SetGLContext();
   Draw();
   glfwSwapBuffers(_window);

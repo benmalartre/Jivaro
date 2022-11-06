@@ -478,19 +478,14 @@ Application::Init()
  
   _mainWindow->CollectLeaves();
  
-
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
-  _childWindows.push_back(childWindow);
-  childWindow->Init();
-  childWindow->SetGLContext();
+  AddWindow(childWindow);
   
   ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
   
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
   childWindow->CollectLeaves();
-  
- 
 
 }
 
@@ -513,6 +508,25 @@ Application::Update()
   for (auto& childWindow : _childWindows)childWindow->Update();
   //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
   return true;
+}
+
+void
+Application::AddWindow(Window* window)
+{
+ _childWindows.push_back(window);
+  window->Init();
+  window->SetGLContext();
+}
+
+void 
+Application::RemoveWindow(Window* window)
+{
+  std::vector<Window*>::iterator it = _childWindows.begin();
+  for (; it < _childWindows.end(); ++it) {
+    if(*it == window) {
+      _childWindows.erase(it);
+    }
+  }
 }
 
 void 

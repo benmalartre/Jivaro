@@ -41,13 +41,13 @@ public:
   ~Application();
 
     // create a fullscreen window
-  Window* CreateFullScreenWindow();
+  static Window* CreateFullScreenWindow();
 
   // create a standard window of specified size
-  Window* CreateStandardWindow(int width, int height);
+  static Window* CreateStandardWindow(int width, int height);
 
   // create a child window
-  Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
+  static Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
     const std::string& name="Child", bool decorated=true);
 
 
@@ -105,6 +105,9 @@ public:
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
   Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
   void SetActiveWindow(Window* window) { _activeWindow = window; };
+
+  void AddWindow(Window* window);
+  void RemoveWindow(Window* window);
 
   // tools
   void SetActiveTool(short tool);

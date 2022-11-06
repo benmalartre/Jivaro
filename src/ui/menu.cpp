@@ -143,6 +143,20 @@ static void OpenDemoCallback()
   demo.Term();
 }
 
+static void OpenChildWindowCallback()
+{
+  Application* app = GetApplication();
+  Window* mainWindow = app->GetMainWindow();
+  Window* childWindow = Application::CreateChildWindow(200, 200, 400, 400, mainWindow);
+  app->AddWindow(childWindow);
+
+  ViewportUI* viewport = new ViewportUI(childWindow->GetMainView());
+
+  //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
+
+  childWindow->CollectLeaves();
+}
+
 static void CreatePrimCallback()
 {
   std::string name = RandomString(32);
@@ -244,6 +258,7 @@ MenuUI::MenuUI(View* parent)
 
   MenuUI::Item& demoItem = AddItem("Demo", "", false, true);
   demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuUI::PressedFunc)&OpenDemoCallback);
+  demoItem.AddItem(this, "Child Window", "Shift+W", false, true, (MenuUI::PressedFunc)&OpenChildWindowCallback);
 
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
