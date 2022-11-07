@@ -12,11 +12,13 @@
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/points.h>
 #include <float.h>
-#include "triangle.h"
-#include "geometry.h"
+#include "../geometry/point.h"
+#include "../geometry/triangle.h"
+#include "../geometry/geometry.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+class Point;
 class Points : public Geometry {
 public:
   Points();
@@ -30,6 +32,8 @@ public:
   GeomInterpolation GetDisplayColorInterpolation() const {
     return _colorsInterpolation;
   };
+
+  Point Get(uint32_t index);
 
   void Init(
     const pxr::VtArray<pxr::GfVec3f>& positions, 

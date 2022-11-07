@@ -53,6 +53,8 @@ Hit::GetPosition(pxr::GfVec3f* position) const
     case Geometry::POINT:
     {
       Points* points = (Points*)_geom;
+      Point point = points->Get(_elemId);
+      
       //Point*
     }
   }
