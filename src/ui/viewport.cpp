@@ -103,7 +103,6 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init()
 {
-  std::cout << "VIEWPORT INITIALIZE..." << std::endl;
   Application* app = GetApplication();
   if (_engine) {
     app->RemoveEngine(_engine);

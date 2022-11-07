@@ -82,7 +82,6 @@ public:
     HORIZONTAL
   };
 
-protected:
   enum ItemState {
     ITEM_STATE_NONE = 0,
     ITEM_STATE_HOVERED = 1,
@@ -91,12 +90,13 @@ protected:
     ITEM_STATE_DISABLED = 8
   };
 
-  enum DisplayState {
+  enum ExpendedState {
     COLLAPSED,
     CONNECTED,
     EXPENDED
   };
 
+protected:
   class Node;
   class Port;
   class Connexion;
@@ -241,8 +241,6 @@ protected:
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;
       void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
-      void SetExpansionState(short state) { _state = state; };
-      void UpdateExpansionState();
 
       void ComputeSize(GraphEditorUI* editor);
 

@@ -31,17 +31,37 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const pxr::TfToken GraphEditorUI::NodeExpendState[3] = {
-    pxr::UsdUITokens->closed,
-    pxr::UsdUITokens->minimized,
-    pxr::UsdUITokens->open
-};
-
 bool 
 _ConnexionPossible(const pxr::SdfValueTypeName& lhs, const pxr::SdfValueTypeName& rhs)
 {
   if (lhs.GetDimensions() == rhs.GetDimensions())return true;
   return false;
+}
+
+static
+const pxr::TfToken& _ConvertExpendedStateToToken(short state)
+{
+  switch (state) {
+  case GraphEditorUI::ExpendedState::COLLAPSED:
+    return pxr::UsdUITokens->closed;
+  case GraphEditorUI::ExpendedState::CONNECTED:
+    return pxr::UsdUITokens->minimized;
+  case GraphEditorUI::ExpendedState::EXPENDED:
+    return pxr::UsdUITokens->open;
+  default:
+    return pxr::UsdUITokens->open;
+  }
+}
+
+static
+const short _ConvertExpendedStateToEnum(const pxr::TfToken& state)
+{
+  if (state == pxr::UsdUITokens->closed)
+    return GraphEditorUI::ExpendedState::COLLAPSED;
+  else if (state == pxr::UsdUITokens->minimized)
+    return GraphEditorUI::ExpendedState::CONNECTED;
+  else
+    return GraphEditorUI::ExpendedState::EXPENDED;
 }
 
 bool
@@ -518,7 +538,10 @@ GraphEditorUI::Connexion::Draw(GraphEditorUI* graph)
 // Node constructor
 //------------------------------------------------------------------------------
 GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
- : GraphEditorUI::Item(), _prim(prim), _expended(COLLAPSED)
+  : GraphEditorUI::Item()
+  , _prim(prim)
+  , _expended(COLLAPSED)
+  , _dirty(DIRTY_POSITION|DIRTY_SIZE)
 {
   if (_prim.IsValid())
   {
@@ -594,17 +617,10 @@ GraphEditorUI::Node::Node(pxr::UsdPrim prim, bool write)
 
   pxr::UsdUINodeGraphNodeAPI api(prim);
   api.GetPosAttr().Get(&_pos);
-  api.GetSizeAttr().Get(&_size);
   pxr::TfToken expended;
 
   api.GetExpansionStateAttr().Get(&expended);
-  if (expended == pxr::UsdUITokens->closed) {
-    _expended = COLLAPSED;
-  } else if (expended == pxr::UsdUITokens->minimized) {
-    _expended = CONNECTED;
-  } else if (expended == pxr::UsdUITokens->open) {
-    _expended = EXPENDED;
-  }
+  _expended = _ConvertExpendedStateToEnum(expended);
 }
 
 // NodeUI destructor
@@ -775,50 +791,28 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
     }
 
     SetSize(pxr::GfVec2f(width, height));
+    _dirty = GraphEditorUI::Node::DIRTY_CLEAN;
   }
 }
 
-void 
+void
 GraphEditorUI::Node::Update()
 {
-  _dirty = GraphEditorUI::Node::DIRTY_CLEAN;
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   pxr::UsdAttribute posAttr = api.GetPosAttr();
   pxr::GfVec2f pos;
   posAttr.Get(&pos);
   if (!pxr::GfIsClose(pos, _pos, 0.0000001)) {
-    posAttr.Set(_pos);
-    _dirty += GraphEditorUI::Node::DIRTY_POSITION;
+    _dirty |= GraphEditorUI::Node::DIRTY_POSITION;
+    _pos = pos;
   }
 
-  pxr::UsdAttribute sizeAttr = api.GetSizeAttr();
-  pxr::GfVec2f size;
-  sizeAttr.Get(&size);
-  if (!pxr::GfIsClose(size, _size, 0.0000001)) {
-    sizeAttr.Set(_size);
-    _dirty += GraphEditorUI::Node::DIRTY_SIZE;
-  }
-}
-
-void
-GraphEditorUI::Node::UpdateExpansionState()
-{
-  pxr::UsdUINodeGraphNodeAPI api(_prim);
-  pxr::UsdAttribute expansionAttr = api.GetExpansionStateAttr();
-  if (!expansionAttr.IsValid()) {
-    _expended = COLLAPSED;
-    return;
-  }
-  pxr::TfToken state;
-  expansionAttr.Get(&state);
-  if (state == pxr::UsdUITokens->closed) {
-    _expended = COLLAPSED;
-  }
-  else if (state == pxr::UsdUITokens->minimized) {
-    _expended = CONNECTED;
-  }
-  else if (state == pxr::UsdUITokens->open) {
-    _expended = EXPENDED;
+  pxr::UsdAttribute expendedAttr = api.GetExpansionStateAttr();
+  pxr::TfToken expended;
+  expendedAttr.Get(&expended);
+  if (_ConvertExpendedStateToEnum(expended) != _expended) {
+    _dirty |= GraphEditorUI::Node::DIRTY_SIZE;
+    _expended = _ConvertExpendedStateToEnum(expended);
   }
 }
 
@@ -896,9 +890,11 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     strcat(expendedName, (const char*)this);
 
     if (ImGui::Selectable(&expendedName[0], true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
-      _expended = (_expended + 1) % 3;
+      short nextExpendedState = (_expended + 1) % 3;
       ADD_COMMAND(ExpendNodeCommand, 
-        { GetPrim().GetPath() }, NodeExpendState[_expended]);
+        { GetPrim().GetPath() }, 
+        _ConvertExpendedStateToToken(nextExpendedState));
+      _expended = nextExpendedState;
     }
 
     drawList->AddRectFilled(
@@ -1240,13 +1236,13 @@ GraphEditorUI::Populate(pxr::UsdPrim& prim)
   return true;
 }
 
+// update
+//------------------------------------------------------------------------------
 void
 GraphEditorUI::Update()
 {
-  ImGui::SetWindowFontScale(1.0);
   for (auto& node : _graph->GetNodes()) {
     node->Update();
-    node->ComputeSize(this);
   }
 }
 
@@ -1364,6 +1360,10 @@ GraphEditorUI::Draw()
   ImGui::SetWindowFontScale(_fontScale);
 
   if (_graph) {
+    ImGui::SetWindowFontScale(1.0);
+    for (auto& node : _graph->GetNodes()) {
+      node->ComputeSize(this);
+    }
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     
     for (auto& node : _graph->GetNodes()) {

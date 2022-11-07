@@ -492,14 +492,25 @@ MoveNodeCommand::MoveNodeCommand(
   , _nodes(nodes)
   , _offset(offset)
 {
+
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
-    pxr::UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
+    pxr::UsdPrim prim = stage->GetPrimAtPath(node);
+    if (!prim.IsValid()) {
+      continue;
+    }
+
+    pxr::UsdUINodeGraphNodeAPI api(prim);
     pxr::GfVec2f pos;
-    api.GetPosAttr().Get(&pos);
-    pos += offset;
-    api.GetPosAttr().Set(pos);
+    pxr::UsdAttribute posAttr = api.GetPosAttr();
+    if (posAttr.IsValid()) {
+      posAttr.Get(&pos);
+      pos += offset;
+      posAttr.Set(pos);
+    } else {
+      posAttr = api.CreatePosAttr(pxr::VtValue(offset));
+    }
   }
   UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();
@@ -528,7 +539,11 @@ ExpendNodeCommand::ExpendNodeCommand(
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
     pxr::UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
-    api.GetExpansionStateAttr().Set(state);
+    pxr::UsdAttribute expandAttr = api.CreateExpansionStateAttr();
+    if (!expandAttr.IsValid()) {
+     expandAttr = api.CreatePosAttr(pxr::VtValue(pxr::UsdUITokens->closed));
+    }
+    expandAttr.Set(state);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();

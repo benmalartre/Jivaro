@@ -642,7 +642,6 @@ Application::AddCommand(std::shared_ptr<Command> command)
 void 
 Application::Undo()
 {
-  std::cout << " APPLICATION UNDO !!" << std::endl;
   _manager.Undo();
 }
 
