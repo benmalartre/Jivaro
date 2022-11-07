@@ -56,6 +56,44 @@ NewSceneCommand::NewSceneCommand()
 }
 
 //==================================================================================
+// Save Layer 
+//==================================================================================
+SaveLayerCommand::SaveLayerCommand(pxr::SdfLayerRefPtr layer)
+  : Command(false)
+{
+  layer->Save(true);
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Save Layer As
+//==================================================================================
+SaveLayerAsCommand::SaveLayerAsCommand(pxr::SdfLayerRefPtr layer, const std::string& path)
+  : Command(false)
+{
+  auto newLayer = SdfLayer::CreateNew(path);
+  if (newLayer && layer) {
+    newLayer->TransferContent(layer);
+    newLayer->Save();
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Reload Layer 
+//==================================================================================
+ReloadLayerCommand::ReloadLayerCommand(pxr::SdfLayerRefPtr layer)
+  : Command(false)
+  , _layer(layer)
+{
+  _layer->Reload(true);
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
 // Layer Text Edit
 //==================================================================================
 LayerTextEditCommand::LayerTextEditCommand(pxr::SdfLayerRefPtr layer, const std::string& newText)

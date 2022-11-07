@@ -1,4 +1,5 @@
 #include <pxr/usd/usd/schemaBase.h>
+#include <pxr/usd/usd/schemaBase.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/curves.h>
@@ -96,7 +97,7 @@ void _XXX_CALLBACK__(int index)
 static void DrawPropertyMiniButton(ImGuiID id=0)
 {
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    id, ICON_FA_BOMB, ICON_DEFAULT,
+    id, ICON_FA_GEAR, ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)_XXX_CALLBACK__, id);
   ImGui::SameLine();
 }

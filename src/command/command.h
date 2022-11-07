@@ -64,6 +64,38 @@ public:
 };
 
 //==================================================================================
+// Save Layer
+//==================================================================================
+class SaveLayerCommand : public Command {
+public:
+  SaveLayerCommand(pxr::SdfLayerRefPtr layer);
+  ~SaveLayerCommand() {};
+  void Do() override {};
+};
+
+//==================================================================================
+// Save Layer As
+//==================================================================================
+class SaveLayerAsCommand : public Command {
+public:
+  SaveLayerAsCommand(pxr::SdfLayerRefPtr layer, const std::string& path);
+  ~SaveLayerAsCommand() {};
+  void Do() override {};
+};
+
+//==================================================================================
+// Save Layer
+//==================================================================================
+class ReloadLayerCommand : public Command {
+public:
+  ReloadLayerCommand(pxr::SdfLayerRefPtr layer);
+  ~ReloadLayerCommand() {};
+  void Do() override {};
+private:
+  pxr::SdfLayerRefPtr _layer;
+};
+
+//==================================================================================
 // Layer Text Edit
 //==================================================================================
 class LayerTextEditCommand : public Command {
