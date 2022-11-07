@@ -82,6 +82,7 @@ class ViewportUI : public BaseUI
     
     
   private:
+    void                                _DrawPickMode();
     GLuint                              _texture;
     int*                                _pixels;
     int*                                _lowPixels;

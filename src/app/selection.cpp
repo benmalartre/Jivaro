@@ -79,7 +79,7 @@ Selection::_CheckKind(Mode mode, const pxr::TfToken& kind)
     return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->group);
   case Mode::ASSEMBLY:
     return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->assembly);
-  case Mode::SUCOMPONENT:
+  case Mode::SUBCOMPONENT:
     return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->subcomponent);
   default:
     return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->model);

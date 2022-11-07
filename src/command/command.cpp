@@ -58,7 +58,7 @@ NewSceneCommand::NewSceneCommand()
 //==================================================================================
 // Save Layer 
 //==================================================================================
-SaveLayerCommand::SaveLayerCommand(pxr::SdfLayerRefPtr layer)
+SaveLayerCommand::SaveLayerCommand(pxr::SdfLayerHandle layer)
   : Command(false)
 {
   layer->Save(true);
@@ -69,7 +69,7 @@ SaveLayerCommand::SaveLayerCommand(pxr::SdfLayerRefPtr layer)
 //==================================================================================
 // Save Layer As
 //==================================================================================
-SaveLayerAsCommand::SaveLayerAsCommand(pxr::SdfLayerRefPtr layer, const std::string& path)
+SaveLayerAsCommand::SaveLayerAsCommand(pxr::SdfLayerHandle layer, const std::string& path)
   : Command(false)
 {
   auto newLayer = SdfLayer::CreateNew(path);
@@ -84,7 +84,7 @@ SaveLayerAsCommand::SaveLayerAsCommand(pxr::SdfLayerRefPtr layer, const std::str
 //==================================================================================
 // Reload Layer 
 //==================================================================================
-ReloadLayerCommand::ReloadLayerCommand(pxr::SdfLayerRefPtr layer)
+ReloadLayerCommand::ReloadLayerCommand(pxr::SdfLayerHandle layer)
   : Command(false)
   , _layer(layer)
 {
@@ -473,6 +473,7 @@ SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes,
   const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
+  UndoRouter::Get().TransferEdits(&_inverse);
   for (auto& attribute : attributes) {
     attribute.Set(value, timeCode);
   }

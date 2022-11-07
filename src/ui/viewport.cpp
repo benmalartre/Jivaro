@@ -440,6 +440,38 @@ void ViewportUI::Render()
   _engine->SetDirty(false);
 }
 
+void 
+ViewportUI::_DrawPickMode()
+{ 
+  ImGui::SameLine();
+  static const char *pickModeStr[5] = {
+    ICON_FA_HAND_POINTER "    Assembly",
+    ICON_FA_HAND_POINTER "       Model",
+    ICON_FA_HAND_POINTER "       Group",
+    ICON_FA_HAND_POINTER "   Component",
+    ICON_FA_HAND_POINTER "SubComponent",
+  };
+  Selection* selection = GetApplication()->GetSelection();
+  if (ImGui::BeginCombo("##Pick mode", pickModeStr[int(selection->GetMode())], ImGuiComboFlags_NoArrowButton)) {
+    if (ImGui::Selectable(pickModeStr[0])) {
+      selection->SetMode(Selection::Mode::ASSEMBLY);
+    }
+    if (ImGui::Selectable(pickModeStr[1])) {
+      selection->SetMode(Selection::Mode::MODEL);
+    }
+    if (ImGui::Selectable(pickModeStr[2])) {
+      selection->SetMode(Selection::Mode::GROUP);
+    }
+    if (ImGui::Selectable(pickModeStr[3])) {
+      selection->SetMode(Selection::Mode::COMPONENT);
+    }
+    if (ImGui::Selectable(pickModeStr[4])) {
+      selection->SetMode(Selection::Mode::SUBCOMPONENT);
+    }
+    ImGui::EndCombo();
+  }
+}
+
 bool ViewportUI::Draw()
 {    
   Application* app = GetApplication();
@@ -515,18 +547,12 @@ bool ViewportUI::Draw()
       _engine->SetDirty(true);
     }
 
+    _DrawPickMode();
+
     // engine
     ImGui::Text("%s", _engine->GetRendererDisplayName(
       _engine->GetCurrentRendererId()).c_str());
-
-    if (ImGui::Button(ICON_FA_TRASH)) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_ARROW_UP)) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_ARROW_DOWN)) {
-    }
+    
 
     //ImGui::PopFont();
     

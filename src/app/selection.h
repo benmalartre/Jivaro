@@ -27,7 +27,7 @@ public:
     MODEL,
     GROUP,
     COMPONENT,
-    SUCOMPONENT
+    SUBCOMPONENT
   };
 
   struct Item {
@@ -61,7 +61,7 @@ public:
   bool IsComponent();
   bool IsAttribute();
 
-  void SetMode(Mode mode) { _mode = mode; };
+  void SetMode(Mode mode) { std::cout << "set mode : " << mode << std::endl; _mode = mode; };
   Mode GetMode() { return _mode; };
 
   bool IsPickablePath(const pxr::UsdStage& stage, 

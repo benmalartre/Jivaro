@@ -38,7 +38,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 const pxr::GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
 const pxr::GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
-const pxr::GfVec2f BUTTON_MINI_SIZE(12.f, 12.f);
+const pxr::GfVec2f BUTTON_MINI_SIZE(14.f, 14.f);
 
 class View;
 class UIUtils {

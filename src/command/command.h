@@ -68,7 +68,7 @@ public:
 //==================================================================================
 class SaveLayerCommand : public Command {
 public:
-  SaveLayerCommand(pxr::SdfLayerRefPtr layer);
+  SaveLayerCommand(pxr::SdfLayerHandle layer);
   ~SaveLayerCommand() {};
   void Do() override {};
 };
@@ -78,7 +78,7 @@ public:
 //==================================================================================
 class SaveLayerAsCommand : public Command {
 public:
-  SaveLayerAsCommand(pxr::SdfLayerRefPtr layer, const std::string& path);
+  SaveLayerAsCommand(pxr::SdfLayerHandle layer, const std::string& path);
   ~SaveLayerAsCommand() {};
   void Do() override {};
 };
@@ -88,7 +88,7 @@ public:
 //==================================================================================
 class ReloadLayerCommand : public Command {
 public:
-  ReloadLayerCommand(pxr::SdfLayerRefPtr layer);
+  ReloadLayerCommand(pxr::SdfLayerHandle layer);
   ~ReloadLayerCommand() {};
   void Do() override {};
 private:
