@@ -6,7 +6,6 @@
 #include "../ui/fonts.h"
 #include "../ui/utils.h"
 #include "../ui/splitter.h"
-#include "../ui/popup.h"
 #include "../app/tools.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
@@ -23,6 +22,7 @@ class Application;
 class View;
 class Splitter;
 class BaseUI;
+class PopupUI;
 
 // keyboard callback
 //----------------------------------------------------------------------------
@@ -131,10 +131,12 @@ public:
   // draw
   void SetGLContext();
   void Draw();
+  void Draw(PopupUI* popup);
   bool PickSplitter(double mX, double mY);
   void ForceRedraw();
   void SetIdle(bool value){_idle=value;};
   bool IsIdle(){return _idle;};
+  void CaptureFramebuffer();
 
   // fonts
   inline ImFont* GetFont(size_t index){return FONTS[index];};
@@ -155,11 +157,6 @@ public:
   void EndDragSplitter() { _dragSplitter = false;};
   bool IsDraggingSplitter(){return _dragSplitter;};
   void DragSplitter(int x, int y);
-
-  // popup
-  PopupUI* GetPopup() { return _popup; };
-  void SetPopup(PopupUI* popup);
-  void UpdatePopup(PopupUI* popup);
 
   // update
   bool Update();
@@ -213,7 +210,6 @@ private:
   // ui
   float                 _dpiX;
   float                 _dpiY;
-  PopupUI*              _popup;
   GLuint                _fbo;
   GLuint                _tex;
 

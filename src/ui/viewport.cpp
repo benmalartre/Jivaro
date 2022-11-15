@@ -241,7 +241,6 @@ void ViewportUI::MouseMove(int x, int y)
   Window* window = GetWindow();
   Tool* tool = window->GetTool();
   tool->SetCamera(_camera);
-  
   if(_interacting)
   {
     double dx = static_cast<double>(x) - _lastX;
@@ -277,9 +276,8 @@ void ViewportUI::MouseMove(int x, int y)
         tool->Update(x - GetX(), y - GetY(), GetWidth(), GetHeight());
         break;
       }
-      _engine->SetDirty(true);
     }
-    
+    _engine->SetDirty(true);
     _parent->SetDirty();
   } else {
     tool->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());

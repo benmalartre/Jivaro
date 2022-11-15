@@ -164,7 +164,7 @@ LayerEditorUI::_AddPrimSpecRow(pxr::SdfPrimSpecHandle primSpec,
   if (ImGui::BeginPopupContextItem()) {
     //_AddTreeNodePopup(primSpec);
     NamePopupUI* popup = new NamePopupUI((int)200, (int)200, 200, 300);
-    GetApplication()->GetActiveWindow()->SetPopup(popup);
+    GetApplication()->SetPopup(popup);
     ImGui::EndPopup();
   }
 

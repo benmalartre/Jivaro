@@ -51,10 +51,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 Application* APPLICATION = nullptr;
 const char* Application::APPLICATION_NAME = "Jivaro";
 
+
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), 
+  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
   _viewport(nullptr), _execute(false)
 {  
   _workspace = new Workspace();
@@ -64,7 +65,7 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), 
+  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
   _viewport(nullptr), _execute(false)
 {
   _workspace = new Workspace();
@@ -117,6 +118,30 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
     _RecurseSplitView(view->GetRight(), depth + 1, horizontal);
     view->SetPerc(0.5);
   }
+}
+
+
+// popup
+//----------------------------------------------------------------------------
+void
+Application::SetPopup(PopupUI* popup)
+{
+  popup->SetParent(GetActiveWindow()->GetMainView());
+  _popup = popup;
+  _mainWindow->CaptureFramebuffer();
+  for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
+}
+
+void
+Application::UpdatePopup()
+{
+  if (_popup) {
+    if (!_popup->IsDone())return;
+    delete _popup;
+  }
+  _popup = nullptr;
+  _mainWindow->ForceRedraw();
+  for (auto& childWindow : _childWindows)childWindow->ForceRedraw();
 }
 
 // browse for file
@@ -505,8 +530,19 @@ Application::Update()
 
   glfwSwapInterval(1);
   glfwPollEvents();
-  if (!_mainWindow->Update()) return false;
-  if (!_mainWindow->GetPopup()) {
+  // draw popup
+  if (_popup) {
+    Window* window = _popup->GetView()->GetWindow();
+    window->Draw(_popup);
+    
+    if (_popup->IsDone() || _popup->IsCancel()) {
+      std::cout << "delete popup : " << _popup << std::endl;
+      delete _popup;
+      std::cout << "deleted..." << std::endl;
+      _popup = nullptr;
+    }
+  } else {
+    if (!_mainWindow->Update()) return false;
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
 

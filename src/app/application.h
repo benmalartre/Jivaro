@@ -10,6 +10,7 @@
 #include "../app/view.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+#include "../ui/popup.h"
 #include "../command/manager.h"
 #include "../geometry/mesh.h"
 //#include <openvdb/openvdb.h>
@@ -109,6 +110,11 @@ public:
   void AddWindow(Window* window);
   void RemoveWindow(Window* window);
 
+  // popup
+  PopupUI* GetPopup() { return _popup; };
+  void SetPopup(PopupUI* popup);
+  void UpdatePopup();
+
   // tools
   void SetActiveTool(short tool);
 
@@ -148,6 +154,7 @@ private:
   TimelineUI*                       _timeline;
   PropertyUI*                       _property;
   CurveEditorUI*                    _animationEditor;
+  PopupUI*                          _popup;
 
   // time
   Time                              _time;
