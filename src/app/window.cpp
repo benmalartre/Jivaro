@@ -532,11 +532,9 @@ Window::Draw(PopupUI* popup)
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(GetWidth(), GetHeight()));
     ImGui::Begin("##background", NULL, JVR_BACKGROUND_FLAGS);
-    /* need to create window proc for this
     ImDrawList* drawList = ImGui::GetBackgroundDrawList();
     drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
-      */
     ImGui::End();
   }
   else {

@@ -534,11 +534,8 @@ Application::Update()
   if (_popup) {
     Window* window = _popup->GetView()->GetWindow();
     window->Draw(_popup);
-    
     if (_popup->IsDone() || _popup->IsCancel()) {
-      std::cout << "delete popup : " << _popup << std::endl;
       delete _popup;
-      std::cout << "deleted..." << std::endl;
       _popup = nullptr;
     }
   } else {
