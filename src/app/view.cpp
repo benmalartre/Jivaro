@@ -604,7 +604,8 @@ View::RescaleRight()
   }
 }
 
-void View::SetClean()
+void
+View::SetClean()
 {
   if (_buffered <= 0) {
     ClearFlag(DIRTY);
@@ -612,13 +613,15 @@ void View::SetClean()
   else _buffered--;
 }
 
-void View::SetDirty()
+void
+View::SetDirty()
 {
   SetFlag(DIRTY);
   _buffered = 3;
 }
 
-void View::SetTabed(bool tabed)
+void 
+View::SetTabed(bool tabed)
 {
   if (tabed) {
     if (!_tab) _tab = CreateTab();
@@ -628,13 +631,15 @@ void View::SetTabed(bool tabed)
   }
 }
 
-void View::SetInteracting(bool value) 
+void 
+View::SetInteracting(bool value) 
 {
   if (value) SetFlag(INTERACTING);
   else ClearFlag(INTERACTING);
 }
 
-bool View::IsInteracting()
+bool 
+View::IsInteracting()
 {
   return GetFlag(INTERACTING);
 }

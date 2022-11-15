@@ -159,5 +159,4 @@ void BaseUI::AttachTooltip(const char* tooltip)
   GetWindow()->DirtyViewsUnderBox(min, pxr::GfVec2i(size.x, size.y));
 }
 
-
 JVR_NAMESPACE_CLOSE_SCOPE

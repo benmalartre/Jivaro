@@ -387,6 +387,7 @@ Application::Init()
     bottomView->GetLeft(), 0.6, true);
   View* middleView = centralView->GetLeft();
   View* topView = mainView->GetLeft();
+  topView->SetTabed(false);
 
   _mainWindow->SplitView(middleView, 0.9, false);
   
@@ -504,8 +505,11 @@ Application::Update()
 
   glfwSwapInterval(1);
   glfwPollEvents();
-  if (!_mainWindow->Update())return false;
-  for (auto& childWindow : _childWindows)childWindow->Update();
+  if (!_mainWindow->Update()) return false;
+  if (!_mainWindow->GetPopup()) {
+    for (auto& childWindow : _childWindows)childWindow->Update();
+  }
+
   //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
   return true;
 }

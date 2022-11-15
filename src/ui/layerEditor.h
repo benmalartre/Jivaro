@@ -21,6 +21,12 @@ public:
   bool Draw()      override;
 
 private:
+  void _AddTreeNodePopup(pxr::SdfPrimSpecHandle& primSpec);
+  bool _AddTreeNodePrimName(const bool& primIsVariant, pxr::SdfPrimSpecHandle& primSpec,
+    pxr::SdfPrimSpecHandle& selectedPrim, bool hasChildren);
+  void _AddPrimSpecRow(pxr::SdfPrimSpecHandle primSpec,
+    pxr::SdfPrimSpecHandle& selectedPrim, int nodeId, float& selectedPosY);
+
   pxr::SdfLayerRefPtr           _layer;
   pxr::SdfPrimSpecHandle        _prim;
   static ImGuiWindowFlags       _flags;

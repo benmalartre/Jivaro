@@ -513,8 +513,7 @@ Window::Draw()
   
   // draw popup
   if (_popup) {
-    Selection* selection = GetApplication()->GetSelection();
-    //selection->
+
     if (! _popup->IsSync()) {
       ImGui::SetNextWindowPos(ImVec2(0, 0));
       ImGui::SetNextWindowSize(ImVec2(_width, _height));

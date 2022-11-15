@@ -424,4 +424,84 @@ NodePopupUI::Draw()
   return true;
 };
 
+//===========================================================================================
+// SdfPathPopupUI
+//===========================================================================================
+SdfPathPopupUI::SdfPathPopupUI(int x, int y, int width, int height,
+  const pxr::SdfPrimSpecHandle& primSpec)
+  : PopupUI(x, y, width, height)
+  , _primSpec(primSpec)
+{
+  
+}
+
+SdfPathPopupUI::~SdfPathPopupUI()
+{
+}
+
+bool
+SdfPathPopupUI::Draw()
+{
+  bool opened;
+
+  ImGui::Begin(_name.c_str(), &opened, _flags);
+
+  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+
+  // TODO: We will probably want to browse in the scene hierarchy to select the path
+    //   create a selection tree, one day
+  ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
+  if (ImGui::BeginCombo("Operation", GetListEditorOperationName(_operation))) {
+    for (int n = 0; n < GetListEditorOperationSize(); n++) {
+      if (ImGui::Selectable(GetListEditorOperationName(n))) {
+        _operation = n;
+      }
+    }
+    ImGui::EndCombo();
+  }
+  ImGui::InputText("Target prim path", &_primPath);
+
+  ImGui::End();
+  return true;
+};
+
+/*
+/// Create a standard UI for entering a SdfPath.
+/// This is used for inherit and specialize
+struct SdfPathPopupUI : public ModalDialog {
+
+  CreateSdfPathModalDialog(const SdfPrimSpecHandle& primSpec) : _primSpec(primSpec) {};
+  ~CreateSdfPathModalDialog() override {}
+
+  void Draw() override {
+    if (!_primSpec) {
+      CloseModal();
+      return;
+    }
+    // TODO: We will probably want to browse in the scene hierarchy to select the path
+    //   create a selection tree, one day
+    ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
+    if (ImGui::BeginCombo("Operation", GetListEditorOperationName(_operation))) {
+      for (int n = 0; n < GetListEditorOperationSize(); n++) {
+        if (ImGui::Selectable(GetListEditorOperationName(n))) {
+          _operation = n;
+        }
+      }
+      ImGui::EndCombo();
+    }
+    ImGui::InputText("Target prim path", &_primPath);
+    DrawOkCancelModal([=]() { OnOkCallBack(); });
+  }
+
+  virtual void OnOkCallBack() = 0;
+
+  const char* DialogId() const override { return "Sdf path"; }
+
+  SdfPrimSpecHandle _primSpec;
+  std::string _primPath;
+  int _operation = 0;
+};
+*/
+
 JVR_NAMESPACE_CLOSE_SCOPE

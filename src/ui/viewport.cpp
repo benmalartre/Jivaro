@@ -277,9 +277,9 @@ void ViewportUI::MouseMove(int x, int y)
         tool->Update(x - GetX(), y - GetY(), GetWidth(), GetHeight());
         break;
       }
-        
+      _engine->SetDirty(true);
     }
-    _engine->SetDirty(true);
+    
     _parent->SetDirty();
   } else {
     tool->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());

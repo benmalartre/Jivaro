@@ -119,6 +119,7 @@ public:
   void SetTabed(bool tabed);
   void SetInteracting(bool value);
   bool IsInteracting();
+  void DirtyUnderPopup();
 
 private:
   pxr::GfVec2f          _min;
