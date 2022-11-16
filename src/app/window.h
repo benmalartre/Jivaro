@@ -167,7 +167,6 @@ private:
   std::string           _name;
   GLFWwindow*           _window;
   bool                  _shared;
-  //std::vector<Window*>  _childrens;
   View*                 _mainView;
   View*                 _activeView;
   View*                 _hoveredView;
@@ -195,8 +194,6 @@ private:
   int                   _iOpenGLRevision;
 
   // opengl
-  int                   _pickImage;
-  int                   _debugImage;
   GLuint                _vao;
 
   // imgui

@@ -111,24 +111,12 @@ Application::CreateStandardWindow(int width, int height)
   return Window::CreateStandardWindow(width, height);
 }
 
-void _RecurseSplitView(View* view, int depth, bool horizontal)
-{
-  if(depth < 3)
-  {
-    view->Split(0.5, horizontal, false);
-    _RecurseSplitView(view->GetLeft(), depth + 1, horizontal);
-    _RecurseSplitView(view->GetRight(), depth + 1, horizontal);
-    view->SetPerc(0.5);
-  }
-}
-
-
 // popup
 //----------------------------------------------------------------------------
 void
-Application::SetPopup(Window* parent, PopupUI* popup)
+Application::SetPopup(PopupUI* popup)
 {
-  popup->SetParent(parent->GetMainView());
+  popup->SetParent(GetActiveWindow()->GetMainView());
   _popup = popup;
   _needCaptureFramebuffers = true;
 }
@@ -164,6 +152,8 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
   return result;
 }
 
+// animx dirty test
+//----------------------------------------------------------------------------
 static
 pxr::UsdStageRefPtr
 TestAnimXFromFile(const std::string& filename, CurveEditorUI* curveEditor)
@@ -351,19 +341,6 @@ Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
 void 
 Application::Init()
 {
-  //pxr::TfErrorMark mark;
-  
-  // If no error messages were logged, return success.
-  
-  /*
-  if (mark.IsClean()) {
-    std::cout << "HYDRA SCENE DELEGATE OK" << std::endl;
-  }
-  else {
-    for (auto& error : mark)std::cout << error.GetErrorCodeAsString() << std::endl;
-    std::cout << "HYDRA SCENE DELEGATE FAILED" << std::endl;
-  }
-  */
  #ifdef _WIN32
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";

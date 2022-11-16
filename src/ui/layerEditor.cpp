@@ -42,6 +42,50 @@ AddBackgroundSelection(const pxr::SdfPrimSpecHandle& currentPrim, pxr::SdfPrimSp
   ImGui::PopStyleColor(2);
 }
 
+void DrawLayerNavigation(pxr::SdfLayerRefPtr layer) {
+  if (!layer)
+    return;
+  if (ImGui::Button(ICON_FA_ARROW_LEFT)) {
+    //ExecuteAfterDraw<EditorSetPreviousLayer>();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button(ICON_FA_ARROW_RIGHT)) {
+    //ExecuteAfterDraw<EditorSetNextLayer>();
+  }
+  ImGui::SameLine();
+  {
+    /*ScopedStyleColor layerIsDirtyColor(ImGuiCol_Text,
+      layer->IsDirty() ? ImGui::GetColorU32(ImGuiCol_Text) : ImU32(ImColor{ ColorGreyish }));*/
+
+    if (ImGui::Button(ICON_FA_RECYCLE)) {
+      //ExecuteAfterDraw(&SdfLayer::Reload, layer, false);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_FILE)) {
+      //ExecuteAfterDraw(&SdfLayer::Save, layer, false);
+    }
+  }
+  ImGui::SameLine();
+  if (!layer)
+    return;
+
+  {
+    /*ScopedStyleColor textBackground(ImGuiCol_Header, ImU32(ImColor{ ColorPrimHasComposition }));*/
+    ImGui::Selectable("##LayerNavigation");
+    if (ImGui::BeginPopupContextItem()) {
+      //DrawLayerActionPopupMenu(layer);
+      ImGui::EndPopup();
+    }
+    ImGui::SameLine();
+    ImGui::Text("Layer: %s", layer->GetDisplayName().c_str());
+    if (ImGui::IsItemHovered()) {
+      ImGui::BeginTooltip();
+      ImGui::Text("%s", layer->GetRealPath().c_str());
+      ImGui::EndTooltip();
+    }
+  }
+}
+
 void 
 LayerEditorUI::_AddTreeNodePopup(pxr::SdfPrimSpecHandle &primSpec)
 {
@@ -64,24 +108,34 @@ LayerEditorUI::_AddTreeNodePopup(pxr::SdfPrimSpecHandle &primSpec)
     //ExecuteAfterDraw<PrimDuplicate>(primSpec, FindNextAvailablePrimName(primSpec->GetName()));
   }
   if (ImGui::MenuItem("Remove")) {
+    std::cout << "remove..." << std::endl;
     //ExecuteAfterDraw<PrimRemove>(primSpec);
   }
   ImGui::Separator();
   if (ImGui::MenuItem("Copy")) {
+    std::cout << "copy..." << std::endl;
     //ExecuteAfterDraw<PrimCopy>(primSpec);
   }
   if (ImGui::MenuItem("Paste")) {
+    std::cout << "paste..." << std::endl;
     //ExecuteAfterDraw<PrimPaste>(primSpec);
   }
   ImGui::Separator();
   if (ImGui::BeginMenu("Create composition")) {
+    std::cout << "create composition..." << std::endl;
     //DrawPrimCreateCompositionMenu(primSpec);
     ImGui::EndMenu();
   }
   ImGui::Separator();
   if (ImGui::MenuItem("Copy prim path")) {
+    std::cout << "copy prim path..." << std::endl;
     ImGui::SetClipboardText(primSpec->GetPath().GetString().c_str());
   }
+
+  /*
+  NamePopupUI* popup = new NamePopupUI((int)200, (int)200, 200, 300);
+  GetApplication()->SetPopup(popup);
+  */
 }
 
 
@@ -162,10 +216,7 @@ LayerEditorUI::_AddPrimSpecRow(pxr::SdfPrimSpecHandle primSpec,
   bool unfolded = _AddTreeNodePrimName(primIsVariant, primSpec, selectedPrim, childrenNames.empty());
   // Right click will open the quick edit popup menu
   if (ImGui::BeginPopupContextItem()) {
-    
-    //_AddTreeNodePopup(primSpec);
-    NamePopupUI* popup = new NamePopupUI((int)200, (int)200, 200, 300);
-    GetApplication()->SetPopup(GetWindow(), popup);
+    _AddTreeNodePopup(primSpec);
     ImGui::EndPopup();
   }
 
@@ -228,7 +279,7 @@ bool LayerEditorUI::Draw()
 
   _layer = GetApplication()->GetWorkStage()->GetRootLayer();
   if (_layer) {
-    //DrawLayerNavigation(_layer);
+    DrawLayerNavigation(_layer);
     //DrawMiniToolbar(_layer, _prim);
 
     auto tableCursor = ImGui::GetCursorPosY();

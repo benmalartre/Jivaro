@@ -127,8 +127,10 @@ CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const std::strin
   UndoRouter::Get().TransferEdits(&_inverse);
   SdfPrimSpecHandle primSpec = SdfPrimSpec::New(layer, name, SdfSpecifier::SdfSpecifierDef);
   layer->InsertRootPrim(primSpec);
+  layer->SetDefaultPrim(primSpec->GetNameToken());
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
+  std::cout << "created prim at " << primSpec->GetNameToken() << std::endl;
 }
 
 CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle primSpec, const std::string& name)

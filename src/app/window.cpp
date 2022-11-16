@@ -35,7 +35,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen, const std::string& name) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
   _name(name), _forceRedraw(0), _idle(false), _fbo(0),  _tex(0)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -47,8 +47,8 @@ Window::Window(bool fullscreen, const std::string& name) :
   
   //glfwWindowHint(GLFW_DECORATED, false);
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
@@ -60,38 +60,26 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
 
-  _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0",  monitor, NULL);
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0", monitor, NULL);
-  }
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0", monitor, NULL);
-    LEGACY_OPENGL = true;
-  }
-  BuildKeyMap();
+  _window = glfwCreateWindow(mode->width, mode->height, "Jivaro",  monitor, NULL);
   _width = mode->width;
   _height = mode->height;
   _shared = true;
-  Init();
+  if(_window) Init();
 }
 
 // width/height window constructor
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, const std::string& name):
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
   _name(name), _forceRedraw(0), _idle(false), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
   _shared = true;
   //glfwWindowHint(GLFW_DECORATED, false);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
@@ -104,19 +92,7 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_SAMPLES, 4);
   
   _window = glfwCreateWindow(_width,_height,"Jivaro",NULL,NULL);
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    _window = glfwCreateWindow(_width, _height, "Jivaro", NULL, NULL);
-  }
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    _window = glfwCreateWindow(_width, _height, "Jivaro", NULL, NULL);
-    LEGACY_OPENGL = true;
-  }
-  BuildKeyMap();
-  Init();
+  if(_window) Init();
 }
 
 // child window constructor
@@ -124,7 +100,7 @@ Window::Window(int width, int height, const std::string& name):
 Window::Window(int x, int y, int width, int height, 
   GLFWwindow* parent, const std::string& name, bool decorated) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
   _name(name), _forceRedraw(0), _idle(false), _fbo(0), _tex(0)
 {
   _width = width;
@@ -132,8 +108,8 @@ Window::Window(int x, int y, int width, int height,
   _shared = false;
 
   glfwWindowHint(GLFW_DECORATED, decorated);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
@@ -147,20 +123,10 @@ Window::Window(int x, int y, int width, int height,
   glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
+  if (_window) {
+    glfwSetWindowPos(_window, x, y);
+    Init();
   }
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
-    LEGACY_OPENGL = true;
-  }
-  glfwSetWindowPos(_window, x, y);
-  BuildKeyMap();
-  Init();
 }
 
 // initialize
@@ -964,7 +930,6 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
 
 void FocusCallback(GLFWwindow* window, int focused)
 {
-  std::cout << "focus callback " << window << ":" << focused << std::endl;
   if (focused) {
     Window* parent = Window::GetUserData(window);
     GetApplication()->SetFocusWindow(parent);

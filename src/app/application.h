@@ -112,7 +112,7 @@ public:
 
   // popup
   PopupUI* GetPopup() { return _popup; };
-  void SetPopup(Window* parent, PopupUI* popup);
+  void SetPopup(PopupUI* popup);
   void UpdatePopup();
 
   // tools

@@ -1793,7 +1793,7 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
     else if (mappedKey == GLFW_KEY_TAB) {
       //NodePopupUI* popup = new NodePopupUI((int)_lastX, (int)_lastY, 200, 300);
       NamePopupUI* popup = new NamePopupUI((int)GetX() + GetWidth() * 0.5f - 100, (int)GetY() + GetHeight() * 0.5 - 50, 200, 100);
-      GetApplication()->SetPopup(GetWindow(), popup);
+      GetApplication()->SetPopup(popup);
     }
   }
 }
