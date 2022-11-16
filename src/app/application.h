@@ -106,13 +106,13 @@ public:
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
   Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
   void SetActiveWindow(Window* window) { _activeWindow = window; };
-
+  void SetFocusWindow(Window* window) { _focusWindow = window; };
   void AddWindow(Window* window);
   void RemoveWindow(Window* window);
 
   // popup
   PopupUI* GetPopup() { return _popup; };
-  void SetPopup(PopupUI* popup);
+  void SetPopup(Window* parent, PopupUI* popup);
   void UpdatePopup();
 
   // tools
@@ -143,10 +143,13 @@ private:
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindows;
   Window*                           _activeWindow;
+  Window*                           _focusWindow;
   Workspace*                        _workspace;
   Selection                         _selection;
+  bool                              _needCaptureFramebuffers;
 
   // uis
+  
   ViewportUI*                       _viewport;
   GraphEditorUI*                    _graph;
   LayersUI*                         _layers;

@@ -163,9 +163,9 @@ LayerEditorUI::_AddPrimSpecRow(pxr::SdfPrimSpecHandle primSpec,
   // Right click will open the quick edit popup menu
   if (ImGui::BeginPopupContextItem()) {
     
-    _AddTreeNodePopup(primSpec);
-    //NamePopupUI* popup = new NamePopupUI((int)200, (int)200, 200, 300);
-    //GetApplication()->SetPopup(popup);
+    //_AddTreeNodePopup(primSpec);
+    NamePopupUI* popup = new NamePopupUI((int)200, (int)200, 200, 300);
+    GetApplication()->SetPopup(GetWindow(), popup);
     ImGui::EndPopup();
   }
 

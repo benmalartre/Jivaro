@@ -56,20 +56,22 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
   _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _viewport(nullptr), _execute(false)
+  _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
 {  
   _workspace = new Workspace();
   _mainWindow = CreateStandardWindow(width, height);
+  _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
   
 };
 
 Application::Application(bool fullscreen):
   _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _viewport(nullptr), _execute(false)
+  _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
 {
   _workspace = new Workspace();
   _mainWindow = CreateFullScreenWindow();
+  _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
 };
 
@@ -124,12 +126,11 @@ void _RecurseSplitView(View* view, int depth, bool horizontal)
 // popup
 //----------------------------------------------------------------------------
 void
-Application::SetPopup(PopupUI* popup)
+Application::SetPopup(Window* parent, PopupUI* popup)
 {
-  popup->SetParent(GetActiveWindow()->GetMainView());
+  popup->SetParent(parent->GetMainView());
   _popup = popup;
-  _mainWindow->CaptureFramebuffer();
-  for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
+  _needCaptureFramebuffers = true;
 }
 
 void
@@ -518,6 +519,11 @@ Application::Init()
 bool 
 Application::Update()
 {
+  if (_needCaptureFramebuffers) {
+    _mainWindow->CaptureFramebuffer();
+    for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
+    _needCaptureFramebuffers = false;
+  }
   _time.ComputeFramerate(glfwGetTime());
   if(_time.IsPlaying()) {
     if(_time.PlayBack()) {

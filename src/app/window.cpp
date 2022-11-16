@@ -855,6 +855,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
   Window* parent = Window::GetUserData(window);
   Application* app = GetApplication();
+  app->SetActiveWindow(parent);
   ImGui::SetCurrentContext(parent->GetContext());
 
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
@@ -963,9 +964,10 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
 
 void FocusCallback(GLFWwindow* window, int focused)
 {
+  std::cout << "focus callback " << window << ":" << focused << std::endl;
   if (focused) {
     Window* parent = Window::GetUserData(window);
-    GetApplication()->SetActiveWindow(parent);
+    GetApplication()->SetFocusWindow(parent);
   }
 }
 
