@@ -15,6 +15,7 @@
 #include "../ui/curveEditor.h"
 #include "../ui/layerEditor.h"
 #include "../ui/textEditor.h"
+#include "../ui/debug.h"
 #include "../ui/demo.h"
 
 
@@ -120,6 +121,9 @@ View::CreateUI(UIType type)
     break;
   case UIType::TEXTEDITOR:
     _current = new TextEditorUI(this);
+    break;
+  case UIType::DEBUG:
+    _current = new DebugUI(this);
     break;
   }
 }

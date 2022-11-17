@@ -36,6 +36,7 @@ enum UIType {
   LAYEREDITOR,
   TEXTEDITOR,
   CONTENTBROWSER,
+  DEBUG,
   DEMO,
   COUNT
 };
@@ -55,6 +56,7 @@ static const char* UITypeName[UIType::COUNT] = {
   "layerEditor",
   "textEditor",
   "contentBrowser",
+  "debug",
   "demo"
 };
 

@@ -92,7 +92,7 @@ ViewTabUI::Draw()
   if (ImGui::BeginTabBar(_ComputeName(_id, "TabBar").c_str(), tabBarFlags))
   {
     const char* popupName = _ComputeName(_id, "Popup").c_str();
-    if (ImGui::TabItemButton(" + ", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
+    if (ImGui::TabItemButton(ICON_FA_GEAR, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
       ImGui::OpenPopup(popupName);
       _invade = true;
@@ -120,7 +120,9 @@ ViewTabUI::Draw()
       bool open = true;
       const char* name = UITypeName[uis[n]->GetType()];
       if (ImGui::BeginTabItem(name, &open,
-        ImGuiTabItemFlags_NoCloseButton | ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoPushId))
+        ImGuiTabItemFlags_NoCloseButton | 
+        ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | 
+        ImGuiTabItemFlags_NoPushId))
       {
         if (n != _current) {
           _parent->SetCurrentUI(n);
@@ -130,21 +132,25 @@ ViewTabUI::Draw()
         ImGui::EndTabItem();
       }
     }
-
-    if (ImGui::TabItemButton(" x ", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
+    if(uis.size() && ImGui::TabItemButton(ICON_FA_ERASER, 
+      ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
       _parent->RemoveUI(current);
     }
 
+
     ImGui::EndTabBar();
 
-    ImGui::SetWindowFontScale(0.5);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
     ImGui::SetCursorPos(
       ImVec2(
-        _parent->GetWidth() - (3 * BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]), 
-        6
+        _parent->GetWidth() - 
+        (3 * BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]),
+        0
       ));
 
     Window* window = _parent->GetWindow();
+    
     if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
       _parent->Split(0.5, true);
       window->Resize(window->GetWidth(), window->GetHeight());
@@ -155,7 +161,7 @@ ViewTabUI::Draw()
       window->Resize(window->GetWidth(), window->GetHeight());
     }
     ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_XMARK, BUTTON_MINI_SIZE)) {
+    if (ImGui::Button(ICON_FA_TRASH, BUTTON_MINI_SIZE)) {
       /*
       View* parent = _parent->GetParent();
       View* other = _parent->GetSibling();
@@ -170,7 +176,8 @@ ViewTabUI::Draw()
 
     };
     ImGui::SameLine();
-    ImGui::SetWindowFontScale(1.0);
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
   }
 
   ImGui::End();

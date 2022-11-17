@@ -24,6 +24,7 @@ add_executable(${TARGET}
   ui/textFilter.cpp
   ui/utils.cpp
   ui/popup.cpp
+  ui/debug.cpp
   ui/fileBrowser.cpp
   ui/contentBrowser.cpp
   ui/splitter.cpp
