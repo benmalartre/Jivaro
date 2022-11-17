@@ -131,7 +131,19 @@ static void SaveFileCallback()
 
 static void NewFileCallback() 
 {
-  ADD_COMMAND(NewSceneCommand);
+  std::string folder = GetInstallationFolder();
+  const char* filters[] = {
+    ".usd",
+    ".usda",
+    ".usdc",
+    ".usdz"
+  };
+  int numFilters = 4;
+
+  Application* app = GetApplication();
+  std::string filename =
+    app->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
+  ADD_COMMAND(NewSceneCommand, filename);
 }
 
 static void OpenDemoCallback()

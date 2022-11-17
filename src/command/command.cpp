@@ -1,4 +1,5 @@
 #include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/sdf/fileFormat.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/primSpec.h>
 #include <pxr/usd/sdf/copyUtils.h>
@@ -42,13 +43,25 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 //==================================================================================
 // New Scene
 //==================================================================================
-NewSceneCommand::NewSceneCommand()
+NewSceneCommand::NewSceneCommand(const std::string& filename)
   : Command(false)
 {
   Application* app = GetApplication();
   Workspace* workspace = app->GetWorkspace();
+  /*
   if (workspace)delete workspace;
   app->SetWorkspace(new Workspace());
+  */
+  pxr::SdfFileFormatConstPtr usdaFormat = pxr::SdfFileFormat::FindByExtension("usda");
+  pxr::SdfLayerRefPtr layer = pxr::SdfLayer::New(usdaFormat, filename);
+  if (layer) {
+    pxr::UsdStageRefPtr newStage = pxr::UsdStage::Open(layer);
+    if (newStage) {
+      Workspace* workspace = GetApplication()->GetWorkspace();
+      workspace->GetStageCache().Insert(newStage);
+      workspace->SetWorkLayer(newStage->GetRootLayer());
+    }
+  }
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();

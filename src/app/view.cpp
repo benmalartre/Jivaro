@@ -93,7 +93,6 @@ View::RemoveTab()
   _tab = NULL;
 }
 
-
 void
 View::CreateUI(UIType type)
 {

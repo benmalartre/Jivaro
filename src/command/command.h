@@ -57,7 +57,7 @@ public:
 //==================================================================================
 class NewSceneCommand : public Command {
 public:
-  NewSceneCommand();
+  NewSceneCommand(const std::string& filename);
   ~NewSceneCommand() {};
   void Do() override {};
 
