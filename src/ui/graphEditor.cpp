@@ -831,9 +831,6 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
   Window* window = editor->GetWindow();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   if (IsVisible(editor)) {
-    ImGui::SetWindowFontScale(editor->GetFontScale());
-    ImGui::PushFont(window->GetFont(editor->GetFontIndex()));
-
     const float scale = editor->GetScale();
     const pxr::GfVec2f offset = editor->GetOffset();
     const pxr::GfVec2f p = editor->GetPosition() + (GetPosition() + offset) * scale;
@@ -873,7 +870,6 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     drawList->AddText(p + pxr::GfVec2f(NODE_PORT_PADDING, 
       NODE_HEADER_PADDING) * scale, ImColor(0, 0, 0, 255), _name.GetText());
-    ImGui::PopFont();
 
     // expended state
     const pxr::GfVec2f expendOffset((GetWidth() - (NODE_EXPENDED_SIZE + 2 * NODE_HEADER_PADDING)), NODE_HEADER_PADDING);
@@ -931,7 +927,6 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     GraphEditorUI::Connexion* connexion = NULL;
     if (_expended != COLLAPSED) {
-      ImGui::PushFont(window->GetFont(editor->GetFontIndex()));
       int numPorts = _ports.size();
       for (int i = 0; i < numPorts; ++i) {
         if (_expended == EXPENDED) _ports[i].Draw(editor);
@@ -939,8 +934,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
           if (_ports[i].IsConnected(editor, connexion)) _ports[i].Draw(editor);
         }
       }
-     
-      ImGui::PopFont();
+  
     }
   }
 } 
@@ -1217,7 +1211,7 @@ RefreshGraphCallback(GraphEditorUI* editor)
       pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
       pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
       
-      if (selected.IsValid() && (selected.IsA<pxr::UsdShadeNodeGraph>() || selected.IsA<UsdExecGraph>())) {
+      if (selected.IsValid()) {
         editor->Populate(selected);
         return;
       }
@@ -1357,7 +1351,6 @@ GraphEditorUI::Draw()
 
   //DrawGrid();
   //ImGui::PushFont(GetWindow()->GetRegularFont(_fontIndex));
-  ImGui::SetWindowFontScale(_fontScale);
 
   if (_graph) {
     ImGui::SetWindowFontScale(1.0);
@@ -1365,10 +1358,13 @@ GraphEditorUI::Draw()
       node->ComputeSize(this);
     }
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    
+    ImGui::SetWindowFontScale(GetFontScale());
+    ImGui::PushFont(GetWindow()->GetFont(GetFontIndex()));
     for (auto& node : _graph->GetNodes()) {
       node->Draw(this);
     }
+    ImGui::PopFont();
+    
 
     for (auto& connexion : _graph->GetConnexions()) {
       connexion->Draw(this);
@@ -1410,10 +1406,11 @@ GraphEditorUI::Draw()
     }
   }
 
+  ImGui::SetWindowFontScale(1.0);
   ImGui::SetCursorPos(ImVec2(0, 0));
 
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    0, ICON_FA_TRASH, ICON_DEFAULT,
+    0, ICON_FA_RECYCLE, ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)RefreshGraphCallback, this
     );
   ImGui::SameLine();
