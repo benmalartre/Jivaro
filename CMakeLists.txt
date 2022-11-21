@@ -56,6 +56,7 @@ list(APPEND USD_LIB_NAMES
   gf
   glf
   tf
+  kind
   sdf
   exec
   plug
