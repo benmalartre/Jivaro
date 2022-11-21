@@ -14,6 +14,8 @@
 #include "../ui/propertyEditor.h"
 #include "../ui/curveEditor.h"
 #include "../ui/layerEditor.h"
+#include "../ui/textEditor.h"
+#include "../ui/debug.h"
 #include "../ui/demo.h"
 
 
@@ -91,7 +93,6 @@ View::RemoveTab()
   _tab = NULL;
 }
 
-
 void
 View::CreateUI(UIType type)
 {
@@ -116,6 +117,12 @@ View::CreateUI(UIType type)
     break;
   case UIType::PROPERTYEDITOR:
     _current = new PropertyUI(this);
+    break;
+  case UIType::TEXTEDITOR:
+    _current = new TextEditorUI(this);
+    break;
+  case UIType::DEBUG:
+    _current = new DebugUI(this);
     break;
   }
 }
@@ -221,7 +228,8 @@ View::Draw(bool forceRedraw)
       Time& time = GetApplication()->GetTime();
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
         if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
-          SetClean();
+          //SetClean();
+          //std::cout << "view set clean..." << std::endl;
         }
       }
     }
@@ -600,7 +608,8 @@ View::RescaleRight()
   }
 }
 
-void View::SetClean()
+void
+View::SetClean()
 {
   if (_buffered <= 0) {
     ClearFlag(DIRTY);
@@ -608,13 +617,15 @@ void View::SetClean()
   else _buffered--;
 }
 
-void View::SetDirty()
+void
+View::SetDirty()
 {
   SetFlag(DIRTY);
   _buffered = 3;
 }
 
-void View::SetTabed(bool tabed)
+void 
+View::SetTabed(bool tabed)
 {
   if (tabed) {
     if (!_tab) _tab = CreateTab();
@@ -624,13 +635,15 @@ void View::SetTabed(bool tabed)
   }
 }
 
-void View::SetInteracting(bool value) 
+void 
+View::SetInteracting(bool value) 
 {
   if (value) SetFlag(INTERACTING);
   else ClearFlag(INTERACTING);
 }
 
-bool View::IsInteracting()
+bool 
+View::IsInteracting()
 {
   return GetFlag(INTERACTING);
 }

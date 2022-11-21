@@ -295,8 +295,9 @@ NodePopupUI::NodePopupUI(int x, int y, int width, int height)
   , _p(0)
   , _i(0)
 {
-  _sync = true;
+  _sync = false;
   memset(&_filter[0], (char)0, NODE_FILTER_SIZE * sizeof(char));
+  BuildNodeList();
 }
 
 NodePopupUI::~NodePopupUI()
@@ -310,6 +311,11 @@ NodePopupUI::BuildNodeList()
   _nodes.push_back("collide");
   _nodes.push_back("skin");
   _nodes.push_back("bend");
+  _nodes.push_back("twist");
+  _nodes.push_back("perlin");
+  _nodes.push_back("wire");
+  _nodes.push_back("curve");
+  _nodes.push_back("warp");
 }
 
 void
@@ -391,28 +397,33 @@ NodePopupUI::_FilterNodes()
 bool
 NodePopupUI::Draw()
 {
-  bool opened;
-
-  ImGui::Begin(_name.c_str(), &opened, _flags);
-
+  ImGui::Begin(_name.c_str(), NULL, _flags);
   ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
   ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
 
-  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  const ImGuiStyle& style = ImGui::GetStyle();
+  drawList->AddRectFilled(
+    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_ChildBg]));
+
+  drawList = ImGui::GetForegroundDrawList();
   
   if (!strcmp(_filter, "")) {
     _filteredNodes = _nodes;
   } else {
     _FilterNodes();
   }
+
   size_t idx = 0;
   for(auto& node : _filteredNodes) {
+    std::cout << node.c_str() << std::endl;
     if (idx == _i) {
-      //ImGui::PushFont(GetWindow()->GetBoldFont(2));
-      ImGui::TextColored(ImVec4(1, 0, 0, 1), node.c_str());
+      ImGui::PushFont(GetWindow()->GetFont(1));
+      ImGui::TextColored(ImVec4(1.0,1.0,1.0,1.0), node.c_str());
     } else {
-      //ImGui::PushFont(GetWindow()->GetMediumFont(2));
-      ImGui::TextColored(ImVec4(0, 1, 0, 1), node.c_str());
+      ImGui::PushFont(GetWindow()->GetFont(1));
+      ImGui::TextColored(ImVec4(0.75,0.75,0.75,1.0), node.c_str());
     }
     idx++;
   }
@@ -420,8 +431,98 @@ NodePopupUI::Draw()
   ImGui::TextColored(ImVec4(0, 0, 1, 1), _filter);
   ImGui::SameLine();
 
+  if (ImGui::Button("OK", ImVec2(GetWidth() / 3, 32))) {
+    _done = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Cancel", ImVec2(GetWidth() / 3, 32))) {
+    _cancel = true;
+  }
+
+
+  ImGui::End();
+  return true;
+
+};
+
+//===========================================================================================
+// SdfPathPopupUI
+//===========================================================================================
+SdfPathPopupUI::SdfPathPopupUI(int x, int y, int width, int height,
+  const pxr::SdfPrimSpecHandle& primSpec)
+  : PopupUI(x, y, width, height)
+  , _primSpec(primSpec)
+{
+  
+}
+
+SdfPathPopupUI::~SdfPathPopupUI()
+{
+}
+
+bool
+SdfPathPopupUI::Draw()
+{
+  bool opened;
+
+  ImGui::Begin(_name.c_str(), &opened, _flags);
+
+  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+
+  // TODO: We will probably want to browse in the scene hierarchy to select the path
+    //   create a selection tree, one day
+  ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
+  if (ImGui::BeginCombo("Operation", GetListEditorOperationName(_operation))) {
+    for (int n = 0; n < GetListEditorOperationSize(); n++) {
+      if (ImGui::Selectable(GetListEditorOperationName(n))) {
+        _operation = n;
+      }
+    }
+    ImGui::EndCombo();
+  }
+  ImGui::InputText("Target prim path", &_primPath);
+
   ImGui::End();
   return true;
 };
+
+/*
+/// Create a standard UI for entering a SdfPath.
+/// This is used for inherit and specialize
+struct SdfPathPopupUI : public ModalDialog {
+
+  CreateSdfPathModalDialog(const SdfPrimSpecHandle& primSpec) : _primSpec(primSpec) {};
+  ~CreateSdfPathModalDialog() override {}
+
+  void Draw() override {
+    if (!_primSpec) {
+      CloseModal();
+      return;
+    }
+    // TODO: We will probably want to browse in the scene hierarchy to select the path
+    //   create a selection tree, one day
+    ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
+    if (ImGui::BeginCombo("Operation", GetListEditorOperationName(_operation))) {
+      for (int n = 0; n < GetListEditorOperationSize(); n++) {
+        if (ImGui::Selectable(GetListEditorOperationName(n))) {
+          _operation = n;
+        }
+      }
+      ImGui::EndCombo();
+    }
+    ImGui::InputText("Target prim path", &_primPath);
+    DrawOkCancelModal([=]() { OnOkCallBack(); });
+  }
+
+  virtual void OnOkCallBack() = 0;
+
+  const char* DialogId() const override { return "Sdf path"; }
+
+  SdfPrimSpecHandle _primSpec;
+  std::string _primPath;
+  int _operation = 0;
+};
+*/
 
 JVR_NAMESPACE_CLOSE_SCOPE

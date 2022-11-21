@@ -23,13 +23,20 @@ bool LEGACY_OPENGL = false;
 int MAPPED_KEYS[GLFW_KEY_LAST + 1];
 bool KEY_MAP_INITIALIZED = false;
 
+static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
+  ImGuiWindowFlags_NoInputs |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoDecoration |
+  ImGuiWindowFlags_NoBackground;
+
 
 // fullscreen window constructor
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen, const std::string& name) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _popup(NULL), _fbo(0),  _tex(0)
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _name(name), _forceRedraw(0), _idle(false), _fbo(0),  _tex(0)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -40,8 +47,8 @@ Window::Window(bool fullscreen, const std::string& name) :
   
   //glfwWindowHint(GLFW_DECORATED, false);
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
@@ -53,38 +60,26 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
 
-  _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0",  monitor, NULL);
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0", monitor, NULL);
-  }
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    _window = glfwCreateWindow(mode->width, mode->height, "Jivaro.1.0", monitor, NULL);
-    LEGACY_OPENGL = true;
-  }
-  BuildKeyMap();
+  _window = glfwCreateWindow(mode->width, mode->height, "Jivaro",  monitor, NULL);
   _width = mode->width;
   _height = mode->height;
   _shared = true;
-  Init();
+  if(_window) Init();
 }
 
 // width/height window constructor
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, const std::string& name):
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _popup(NULL), _fbo(0), _tex(0)
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _name(name), _forceRedraw(0), _idle(false), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
   _shared = true;
   //glfwWindowHint(GLFW_DECORATED, false);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
@@ -97,19 +92,7 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_SAMPLES, 4);
   
   _window = glfwCreateWindow(_width,_height,"Jivaro",NULL,NULL);
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    _window = glfwCreateWindow(_width, _height, "Jivaro", NULL, NULL);
-  }
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    _window = glfwCreateWindow(_width, _height, "Jivaro", NULL, NULL);
-    LEGACY_OPENGL = true;
-  }
-  BuildKeyMap();
-  Init();
+  if(_window) Init();
 }
 
 // child window constructor
@@ -117,16 +100,16 @@ Window::Window(int width, int height, const std::string& name):
 Window::Window(int x, int y, int width, int height, 
   GLFWwindow* parent, const std::string& name, bool decorated) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _pickImage(0), _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _popup(NULL), _fbo(0), _tex(0)
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
+  _name(name), _forceRedraw(0), _idle(false), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
   _shared = false;
 
   glfwWindowHint(GLFW_DECORATED, decorated);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
@@ -140,20 +123,10 @@ Window::Window(int x, int y, int width, int height,
   glfwWindowHint(GLFW_SAMPLES, 4);
 
   _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
+  if (_window) {
+    glfwSetWindowPos(_window, x, y);
+    Init();
   }
-  if (!_window) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
-    LEGACY_OPENGL = true;
-  }
-  glfwSetWindowPos(_window, x, y);
-  BuildKeyMap();
-  Init();
 }
 
 // initialize
@@ -259,44 +232,15 @@ Window::ForceRedraw()
 // popup
 //----------------------------------------------------------------------------
 void
-Window::SetPopup(PopupUI* popup)
+Window::CaptureFramebuffer()
 {
+  SetGLContext();
   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
   glBlitFramebuffer(0, 0, _width, _height, 0, _height, _width, 0, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-  _popup = popup;
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
-void
-Window::UpdatePopup(PopupUI* popup)
-{
-  if (popup) {
-    if (!popup->IsDone())return;
-    delete popup;
-  }
-  SetPopup(NULL);
-  ForceRedraw();
-}
-
-/*
-void 
-Window::AddChild(Window* child)
-{
-  _childrens.push_back(child);
-}
-
-void 
-Window::RemoveChild(Window* child)
-{
-  for (int i = 0; i < _childrens.size(); ++i) {
-    if (_childrens[i] == child) {
-      _childrens.erase(_childrens.begin() + i);
-      break;
-    }
-  }
-}
-*/
 
 // Resize
 //----------------------------------------------------------------------------
@@ -509,14 +453,6 @@ Window::SetGLContext()
   ImGui::SetCurrentContext(_context);
 }
 
-static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
-  ImGuiWindowFlags_NoInputs |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoDecoration |
-  ImGuiWindowFlags_NoBackground;
-
-
 // draw
 //----------------------------------------------------------------------------
 void 
@@ -530,41 +466,56 @@ Window::Draw()
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   
-  // draw popup
-  if (_popup) {
-    
-    if (! _popup->IsSync()) {
-      ImGui::SetNextWindowPos(ImVec2(0, 0));
-      ImGui::SetNextWindowSize(ImVec2(_width, _height));
-      ImGui::Begin("##background", NULL, JVR_BACKGROUND_FLAGS);
+  // draw views
+  if (_mainView)_mainView->Draw(_forceRedraw > 0);
+  _forceRedraw = pxr::GfMax(0, _forceRedraw - 1);
 
-      ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-      drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
-        ImVec2(0, 0), ImVec2(1, 1), ImColor(100,100,100, 255));
-      ImGui::End();
-    } else {
-      for (Engine* engine : GetApplication()->GetEngines()) {
-        engine->SetDirty(true);
-      }
-      _mainView->Draw(true);
-    }
-    _popup->Draw();
-    if (_popup->IsDone() || _popup->IsCancel()) {
-      delete _popup;
-      _popup = NULL;
-    }
-  } else {
-    // draw views
-    if (_mainView)_mainView->Draw(_forceRedraw > 0);
-    _forceRedraw = pxr::GfMax(0, _forceRedraw - 1);
-
-    // draw splitters
-    _splitter->Draw();
-  }
+  // draw splitters
+  _splitter->Draw();
 
   // render the imgui frame
   ImGui::Render();
   
+  glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  glBindVertexArray(0);
+}
+
+// draw
+//----------------------------------------------------------------------------
+void
+Window::Draw(PopupUI* popup)
+{
+  if (!_valid || _idle)return;
+  SetGLContext();
+  glBindVertexArray(_vao);
+  // start the imgui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+  if (!popup->IsSync()) {
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImVec2(GetWidth(), GetHeight()));
+    ImGui::Begin("##background", NULL, JVR_BACKGROUND_FLAGS);
+    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+    drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
+      ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
+    ImGui::End();
+  }
+  else {
+    for (Engine* engine : GetApplication()->GetEngines()) {
+      engine->SetHighlightSelection(false);
+      engine->SetDirty(true);
+    }
+    GetMainView()->Draw(true);
+  }
+
+  popup->Draw();
+
+  // render the imgui frame
+  ImGui::Render();
+
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glBindVertexArray(0);
@@ -661,12 +612,17 @@ bool Window::UpdateActiveTool(int x, int y)
 bool Window::Update()
 {
   if (IsIdle())return true;
-  if (glfwWindowShouldClose(_window)) return false;
+  if (glfwWindowShouldClose(_window)) {
+    if (!_shared) {
+      GetApplication()->RemoveWindow(this);
+      delete this;
+    }
+    return false;
+  }
   SetGLContext();
   Draw();
   glfwSwapBuffers(_window);
   return true;
-
 }
 
 // pick splitter
@@ -702,13 +658,14 @@ KeyboardCallback(
 {
   ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
-  PopupUI* popup = parent->GetPopup();
+  Application* app = GetApplication();
+  PopupUI* popup = app->GetPopup();
   if (popup) {
     popup->Keyboard(key, scancode, action, mods);
-    parent->UpdatePopup(popup);
+    app->UpdatePopup();
     return;
   }
-  Application* app = GetApplication();
+
   Time& time = app->GetTime();
   
   if(action == GLFW_RELEASE) {
@@ -863,6 +820,8 @@ void
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
   Window* parent = Window::GetUserData(window);
+  Application* app = GetApplication();
+  app->SetActiveWindow(parent);
   ImGui::SetCurrentContext(parent->GetContext());
 
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
@@ -872,10 +831,10 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   glfwGetWindowSize(window, &width, &height);
   bool splitterHovered = parent->PickSplitter(x, y);
 
-  PopupUI* popup = parent->GetPopup();
+  PopupUI* popup = app->GetPopup();
   if (popup) {
     popup->MouseButton(button, action, mods);
-    parent->UpdatePopup(popup);
+    app->UpdatePopup();
   } else if(button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
     View* view = parent->GetActiveView();
     if (view) {
@@ -919,7 +878,7 @@ void
 ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = parent->GetPopup();
+  PopupUI* popup = GetApplication()->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
   ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
   if (popup) {
@@ -933,7 +892,7 @@ void
 CharCallback(GLFWwindow* window, unsigned c)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = parent->GetPopup();
+  PopupUI* popup = GetApplication()->GetPopup();
   ImGui_ImplGlfw_CharCallback(window, c);
   if (popup) {
     popup->Input(c);
@@ -946,10 +905,11 @@ void
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = parent->GetPopup();
+  PopupUI* popup = GetApplication()->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
-  View* view = parent->GetViewUnderMouse((int)x, (int)y);
+  View* hovered = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
+
   bool splitterHovered = parent->PickSplitter(x, y);
 
   if (popup) {
@@ -960,9 +920,9 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
     if (active && active->GetFlag(View::INTERACTING)) {
       active->MouseMove(x, y);
     } else {
-      if (view) {
-        parent->SetHoveredView(view);
-        parent->GetHoveredView()->MouseMove(x, y);
+      if (hovered) {
+        parent->SetHoveredView(hovered);
+        hovered->MouseMove(x, y);
       }
     }
   }
@@ -972,7 +932,7 @@ void FocusCallback(GLFWwindow* window, int focused)
 {
   if (focused) {
     Window* parent = Window::GetUserData(window);
-    GetApplication()->SetActiveWindow(parent);
+    GetApplication()->SetFocusWindow(parent);
   }
 }
 
@@ -1076,8 +1036,9 @@ DisplayCallback(GLFWwindow* window)
 
 void 
 ResizeCallback(GLFWwindow* window, int width, int height)
-{
+{  
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
+  parent->SetGLContext();
   parent->Resize(width, height);
   glViewport(0, 0, width, height);
 }

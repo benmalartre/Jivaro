@@ -1,6 +1,7 @@
 #include <pxr/usd/usdGeom/bboxCache.h>
 #include <pxr/usd/usdGeom/xformCache.h>
 #include <pxr/usd/usd/modelAPI.h>
+#include <pxr/usd/kind/registry.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/vec3f.h>
@@ -68,12 +69,40 @@ bool Selection::IsAttribute()
   return false;
 }
 
+bool 
+Selection::_CheckKind(Mode mode, const pxr::TfToken& kind)
+{
+  switch (mode) {
+  case Mode::COMPONENT:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->model);
+  case Mode::GROUP:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->group);
+  case Mode::ASSEMBLY:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->assembly);
+  case Mode::SUBCOMPONENT:
+    return true;
+  case Mode::MODEL:
+    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->model);
+  }
+}
+
+bool Selection::IsPickablePath(const pxr::UsdStage& stage,
+  const pxr::SdfPath& path) {
+  auto prim = stage.GetPrimAtPath(path);
+  if (prim.IsPseudoRoot())
+    return true;
+
+  pxr::TfToken primKind;
+  pxr::UsdModelAPI(prim).GetKind(&primKind);
+  return(_CheckKind(_mode, primKind));
+}
+
 void Selection::AddItem(const pxr::SdfPath& path)
 {
   for (auto& item: _items) {
     if (path == item.path)return;
   }
-  _items.push_back({ Type::PRIM, path});
+  _items.push_back({ Type::PRIM, path });
   _items.back().ComputeHash();
   ComputeHash();
 
@@ -138,35 +167,6 @@ pxr::SdfPathVector Selection::GetSelectedPrims()
   }
   return selectedPrims;
 }
-
-bool IsPickablePath(const pxr::UsdStage& stage, const pxr::SdfPath& path) {
-  pxr::UsdPrim prim = stage.GetPrimAtPath(path);
-  if (prim.IsPseudoRoot())
-    return true;
-  /*
-  if (GetPickMode() == SelectionManipulator::PickMode::Prim)
-    return true;
-
-  TfToken primKind;
-  pxr::UsdModelAPI(prim).GetKind(&primKind);
-  if (GetPickMode() == SelectionManipulator::PickMode::Model && KindRegistry::GetInstance().IsA(primKind, KindTokens->model)) {
-    return true;
-  }
-  if (GetPickMode() == SelectionManipulator::PickMode::Assembly &&
-    KindRegistry::GetInstance().IsA(primKind, KindTokens->assembly)) {
-    return true;
-  }
-
-  // Other possible tokens
-  // KindTokens->component
-  // KindTokens->group
-  // KindTokens->subcomponent
-
-  // We can also test for xformable or other schema API
-  */
-  return false;
-}
-
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

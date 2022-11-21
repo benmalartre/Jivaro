@@ -118,11 +118,10 @@ static void OpenFileCallback() {
   };
   int numFilters = 4;
 
+  Application* app = GetApplication();
   std::string filename =
-    GetApplication()->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
-
-  GetApplication()->AddCommand(
-    std::shared_ptr<OpenSceneCommand>(new OpenSceneCommand(filename)));
+    app->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
+  app->OpenScene(filename);
 }
 
 static void SaveFileCallback() 
@@ -132,8 +131,19 @@ static void SaveFileCallback()
 
 static void NewFileCallback() 
 {
-  GetApplication()->AddCommand(
-    std::shared_ptr<NewSceneCommand>(new NewSceneCommand()));
+  std::string folder = GetInstallationFolder();
+  const char* filters[] = {
+    ".usd",
+    ".usda",
+    ".usdc",
+    ".usdz"
+  };
+  int numFilters = 4;
+
+  Application* app = GetApplication();
+  std::string filename =
+    app->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
+  ADD_COMMAND(NewSceneCommand, filename);
 }
 
 static void OpenDemoCallback()
@@ -143,13 +153,26 @@ static void OpenDemoCallback()
   demo.Term();
 }
 
+static void OpenChildWindowCallback()
+{
+  Application* app = GetApplication();
+  Window* mainWindow = app->GetMainWindow();
+  Window* childWindow = Application::CreateChildWindow(200, 200, 400, 400, mainWindow);
+  app->AddWindow(childWindow);
+
+  ViewportUI* viewport = new ViewportUI(childWindow->GetMainView());
+
+  //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
+
+  childWindow->CollectLeaves();
+  mainWindow->SetGLContext();
+}
+
 static void CreatePrimCallback()
 {
   std::string name = RandomString(32);
 
-  GetApplication()->AddCommand(
-    std::shared_ptr<CreatePrimCommand>(
-      new CreatePrimCommand(GetApplication()->GetCurrentLayer(), name)));
+  ADD_COMMAND(CreatePrimCommand, GetApplication()->GetCurrentLayer(), name);
 }
 
 static void TriangulateCallback()
@@ -244,6 +267,7 @@ MenuUI::MenuUI(View* parent)
 
   MenuUI::Item& demoItem = AddItem("Demo", "", false, true);
   demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuUI::PressedFunc)&OpenDemoCallback);
+  demoItem.AddItem(this, "Child Window", "Shift+W", false, true, (MenuUI::PressedFunc)&OpenChildWindowCallback);
 
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
@@ -281,8 +305,6 @@ void MenuUI::DirtyViewsUnderBox()
   }
   _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
   _parent->SetDirty();
-  ImDrawList* foregroundList = ImGui::GetForegroundDrawList();
-  foregroundList->AddRect(ImVec2(_pos), ImVec2(_pos + _size), ImColor(255, 128, 128, 255));
 }
 
 // overrides

@@ -51,21 +51,21 @@ static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target,
 // constructor
 ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
+  , _texture(0)
+  , _drawMode((int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH)
+  , _pixels(nullptr)
+  , _camera(new Camera("Camera"))
+  , _valid(true)
+  , _interactionMode(INTERACTION_NONE)
+  , _engine(nullptr)
+  , _rendererIndex(0)
+  , _rendererNames(NULL)
+  , _counter(0)
+  , _highlightSelection(true)
 {
-  _texture = 0;
-  _drawMode = (int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH;
-  _pixels = nullptr;
-  _camera = new Camera("Camera");
-  _valid = true;
-  _initialized = false;
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
-  _interactionMode = INTERACTION_NONE;
-  _engine = nullptr;
-  _rendererIndex = 0;
-  _rendererNames = NULL;
-  _counter = 0;
 
   const pxr::GfVec2i resolution(GetWidth(), GetHeight());
 
@@ -103,7 +103,6 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init()
 {
-  std::cout << "VIEWPORT INITIALIZE..." << std::endl;
   Application* app = GetApplication();
   if (_engine) {
     app->RemoveEngine(_engine);
@@ -242,7 +241,6 @@ void ViewportUI::MouseMove(int x, int y)
   Window* window = GetWindow();
   Tool* tool = window->GetTool();
   tool->SetCamera(_camera);
-  
   if(_interacting)
   {
     double dx = static_cast<double>(x) - _lastX;
@@ -278,7 +276,6 @@ void ViewportUI::MouseMove(int x, int y)
         tool->Update(x - GetX(), y - GetY(), GetWidth(), GetHeight());
         break;
       }
-        
     }
     _engine->SetDirty(true);
     _parent->SetDirty();
@@ -412,9 +409,13 @@ void ViewportUI::Render()
   //_renderParams.colorCorrectionMode = ???
   _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
 
-  Selection* selection = app->GetSelection();
-  if (!selection->IsEmpty() && selection->IsObject()) {
-    _engine->SetSelected(selection->GetSelectedPrims());
+  if (_highlightSelection) {
+    Selection* selection = app->GetSelection();
+    if (!selection->IsEmpty() && selection->IsObject()) {
+      _engine->SetSelected(selection->GetSelectedPrims());
+    } else {
+      _engine->ClearSelected();
+    }
   } else {
     _engine->ClearSelected();
   }
@@ -435,6 +436,38 @@ void ViewportUI::Render()
   _drawTarget->Unbind();
   
   _engine->SetDirty(false);
+}
+
+void 
+ViewportUI::_DrawPickMode()
+{ 
+  ImGui::SameLine();
+  static const char *pickModeStr[5] = {
+    ICON_FA_HAND_POINTER "    Assembly",
+    ICON_FA_HAND_POINTER "       Model",
+    ICON_FA_HAND_POINTER "       Group",
+    ICON_FA_HAND_POINTER "   Component",
+    ICON_FA_HAND_POINTER "SubComponent",
+  };
+  Selection* selection = GetApplication()->GetSelection();
+  if (ImGui::BeginCombo("##Pick mode", pickModeStr[int(selection->GetMode())], ImGuiComboFlags_NoArrowButton)) {
+    if (ImGui::Selectable(pickModeStr[0])) {
+      selection->SetMode(Selection::Mode::ASSEMBLY);
+    }
+    if (ImGui::Selectable(pickModeStr[1])) {
+      selection->SetMode(Selection::Mode::MODEL);
+    }
+    if (ImGui::Selectable(pickModeStr[2])) {
+      selection->SetMode(Selection::Mode::GROUP);
+    }
+    if (ImGui::Selectable(pickModeStr[3])) {
+      selection->SetMode(Selection::Mode::COMPONENT);
+    }
+    if (ImGui::Selectable(pickModeStr[4])) {
+      selection->SetMode(Selection::Mode::SUBCOMPONENT);
+    }
+    ImGui::EndCombo();
+  }
 }
 
 bool ViewportUI::Draw()
@@ -512,18 +545,12 @@ bool ViewportUI::Draw()
       _engine->SetDirty(true);
     }
 
+    _DrawPickMode();
+
     // engine
     ImGui::Text("%s", _engine->GetRendererDisplayName(
       _engine->GetCurrentRendererId()).c_str());
-
-    if (ImGui::Button(ICON_FA_TRASH)) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_ARROW_UP)) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_ARROW_DOWN)) {
-    }
+    
 
     //ImGui::PopFont();
     
@@ -586,6 +613,7 @@ void ViewportUI::Resize()
   if(GetWidth() <= 0 || GetHeight() <= 0)_valid = false;
   else _valid = true;
   
+  GetWindow()->SetGLContext();
   double aspectRatio = (double)GetWidth()/(double)GetHeight();
   _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
     aspectRatio,
@@ -664,6 +692,10 @@ bool ViewportUI::Pick(int x, int y, int mods)
 {
   if (y - GetY() < 32) return false;
   Application* app = GetApplication();
+  Selection* selection = app->GetSelection();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  if (!stage)return false;
+
   pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
   pxr::GfVec3d outHitPoint;
   pxr::GfVec3d outHitNormal;
@@ -683,6 +715,10 @@ bool ViewportUI::Pick(int x, int y, int mods)
     &outHitInstancerPath,
     &outHitInstanceIndex,
     &outInstancerContext)) {
+      while (!selection->IsPickablePath(*stage, outHitPrimPath)) {
+        outHitPrimPath = outHitPrimPath.GetParentPath();
+      }
+
       if (mods & GLFW_MOD_CONTROL && mods & GLFW_MOD_SHIFT) {
         app->ToggleSelection({ outHitPrimPath });
       }

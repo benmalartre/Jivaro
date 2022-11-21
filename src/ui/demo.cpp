@@ -29,22 +29,19 @@ DemoUI::~DemoUI()
 
 bool DemoUI::Draw()
 {
-  /*
   static bool opened = false;
   const pxr::GfVec2f pos(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
   ImGui::Begin(_name.c_str(), &opened, _flags);
-  ImGui::SetWindowSize(size);
-  ImGui::SetWindowPos(pos);
- 
+  ImGui::SetNextWindowSize(size);
+  ImGui::SetNextWindowPos(pos);
+
   ImGui::ShowDemoWindow();
 
   ImGui::End();
 
   return ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused() || ImGui::IsAnyItemHovered();
-  */
-  return false;
 };
   
 

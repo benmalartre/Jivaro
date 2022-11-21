@@ -1,7 +1,9 @@
+#include <pxr/usd/sdf/layer.h>
 #include "../ui/contentBrowser.h"
 #include "../utils/strings.h"
 #include "../app/view.h"
 #include "../app/application.h"
+#include "../command/command.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -71,13 +73,14 @@ static inline void DrawSaveButton(pxr::SdfLayerHandle layer)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(TRANSPARENT_COLOR));
   if (ImGui::SmallButton(layer->IsDirty() ? "###Save" : "  ###Save")) {
-    //ExecuteAfterDraw(&SdfLayer::Save, layer, true);
+    ADD_COMMAND(SaveLayerCommand, layer);
     std::cout << "SAVE LAYER : " << layer->GetUniqueIdentifier() << std::endl;
   }
   ImGui::PopStyleColor();
 }
 
-static inline void DrawSelectStageButton(pxr::SdfLayerHandle layer, bool isStage, pxr::SdfLayerHandle* selectedStage) 
+static inline void DrawSelectStageButton(pxr::SdfLayerHandle layer, 
+  bool isStage, pxr::SdfLayerHandle* selectedStage) 
 {
   if (isStage) {
     if (selectedStage && *selectedStage == layer) {
@@ -96,7 +99,8 @@ static inline void DrawSelectStageButton(pxr::SdfLayerHandle layer, bool isStage
   ImGui::PopStyleColor();
   /*
   ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent), ImGuiCol_Text,
-    isStage ? ((selectedStage && *selectedStage == layer) ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(0.6, 0.6, 0.6, 1.0)) : ImVec4(ColorTransparent));
+    isStage ? ((selectedStage && *selectedStage == layer) ? 
+      ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(0.6, 0.6, 0.6, 1.0)) : ImVec4(ColorTransparent));
   if (ImGui::SmallButton(ICON_FA_DESKTOP "###Stage")) {
     ExecuteAfterDraw<EditorSetCurrentStage>(layer);
   }
@@ -179,15 +183,14 @@ static void DrawLayerActionPopupMenu(pxr::SdfLayerHandle layer) {
     std::cout << "SET CURRENT LAYER" << layer.GetUniqueIdentifier() << std::endl;
   }
   if (!layer->IsAnonymous() && ImGui::MenuItem("Reload")) {
-    //ExecuteAfterDraw(&SdfLayer::Reload, layer, false);
+    ADD_COMMAND(ReloadLayerCommand, layer);
     std::cout << "RELOAD LAYER" << layer->GetRealPath() << std::endl;
   }
   if (ImGui::MenuItem("Open as Stage")) {
-    //ExecuteAfterDraw<EditorOpenStage>(layer->GetRealPath());
-    std::cout << "OPEN AS STAFE " << layer->GetRealPath() << std::endl;
+    ADD_COMMAND(OpenSceneCommand, layer->GetRealPath());
   }
   if (layer->IsDirty() && !layer->IsAnonymous() && ImGui::MenuItem("Save layer")) {
-    //ExecuteAfterDraw(&SdfLayer::Save, layer, true);
+    ADD_COMMAND(SaveLayerCommand, layer);
     std::cout << "SAVE LAYER" << layer->GetRealPath() << std::endl;
   }
   if (ImGui::MenuItem("Save layer as")) {

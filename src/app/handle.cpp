@@ -700,9 +700,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
       target.current.translation = pxr::GfVec3d(xformMatrix.GetRow3(3) - target.previous.pivot);
     }
-    GetApplication()->AddCommand(
-      std::shared_ptr<TranslateCommand>(
-        new TranslateCommand(GetApplication()->GetWorkStage(), _targets, activeTime)));
+    ADD_COMMAND(TranslateCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
   }
 }
 
@@ -926,9 +924,7 @@ RotateHandle::_UpdateTargets(bool interacting)
       target.current.rotOrder = rotation.second;
     }
     
-    GetApplication()->AddCommand(
-      std::shared_ptr<RotateCommand>(
-        new RotateCommand(GetApplication()->GetWorkStage(), _targets, activeTime)));
+    ADD_COMMAND(RotateCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
   }
 }
 
@@ -1329,9 +1325,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
         pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]);
     }
 
-    GetApplication()->AddCommand(
-      std::shared_ptr<ScaleCommand>(
-        new ScaleCommand(GetApplication()->GetWorkStage(), _targets, activeTime)));
+    ADD_COMMAND(ScaleCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
   }
 }
 

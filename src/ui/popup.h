@@ -122,6 +122,19 @@ private:
   char _value[255];
 };
 
+class SdfPathPopupUI : public PopupUI
+{
+public:
+  SdfPathPopupUI(int x, int y, int width, int height,
+    const pxr::SdfPrimSpecHandle& primSpec);
+  ~SdfPathPopupUI() override;
+  bool Draw() override;
+private:
+  pxr::SdfPrimSpecHandle  _primSpec;
+  std::string             _primPath;
+  int                     _operation = 0;
+};
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_APPLICATION_POPUP_H

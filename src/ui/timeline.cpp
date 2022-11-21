@@ -390,11 +390,13 @@ void TimelineUI::DrawTimeSlider()
   );
 
   // draw frame
+  /*
   const pxr::GfVec2f framePosition(_TimeToPosition(_frame));
   drawList->AddRectFilled(
     pxr::GfVec2f(framePosition[0]- 2.f, 0.f),
     pxr::GfVec2f(framePosition[0] + 2.f, ymid),
     ImColor(255, 0, 0, 255), rounding, corners_none);
+    */
 }
 
 bool TimelineUI::Draw()

@@ -15,11 +15,6 @@
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/imaging/hd/renderPassState.h>
 #include <pxr/imaging/LoFi/debugCodes.h>
-#include <pxr/usd/usdAnimX/fileFormat.h>
-#include <pxr/usd/usdAnimX/types.h>
-#include <pxr/usd/usdAnimX/desc.h>
-#include <pxr/usd/usdAnimX/data.h>  
-#include <pxr/usd/usdAnimX/keyframe.h>
 
 #include "../utils/files.h"
 #include "../utils/prefs.h"
@@ -51,24 +46,27 @@ JVR_NAMESPACE_OPEN_SCOPE
 Application* APPLICATION = nullptr;
 const char* Application::APPLICATION_NAME = "Jivaro";
 
+
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), 
-  _viewport(nullptr), _execute(false)
+  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
+  _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
 {  
   _workspace = new Workspace();
   _mainWindow = CreateStandardWindow(width, height);
+  _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
   
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), 
-  _viewport(nullptr), _execute(false)
+  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
+  _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
 {
   _workspace = new Workspace();
   _mainWindow = CreateFullScreenWindow();
+  _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
 };
 
@@ -108,27 +106,43 @@ Application::CreateStandardWindow(int width, int height)
   return Window::CreateStandardWindow(width, height);
 }
 
-void _RecurseSplitView(View* view, int depth, bool horizontal)
+// popup
+//----------------------------------------------------------------------------
+void
+Application::SetPopup(PopupUI* popup)
 {
-  if(depth < 3)
-  {
-    view->Split(0.5, horizontal, false);
-    _RecurseSplitView(view->GetLeft(), depth + 1, horizontal);
-    _RecurseSplitView(view->GetRight(), depth + 1, horizontal);
-    view->SetPerc(0.5);
+  popup->SetParent(GetActiveWindow()->GetMainView());
+  _popup = popup;
+  _needCaptureFramebuffers = true;
+}
+
+void
+Application::UpdatePopup()
+{
+  if (_popup) {
+    if (!_popup->IsDone())return;
+    delete _popup;
   }
+  _popup = nullptr;
+  _mainWindow->ForceRedraw();
+  for (auto& childWindow : _childWindows)childWindow->ForceRedraw();
 }
 
 // browse for file
 //----------------------------------------------------------------------------
 std::string
 Application::BrowseFile(int x, int y, const char* folder, const char* filters[], 
-  const int numFilters, const char* name)
+  const int numFilters, const char* name, bool readOrWrite)
 {
   std::string result = 
     "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
   
-  ModalFileBrowser browser(x, y, "Open", ModalFileBrowser::Mode::OPEN);
+  ModalFileBrowser::Mode mode = readOrWrite ? 
+    ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
+
+  const std::string label = readOrWrite ? "New" : "Open";
+
+  ModalFileBrowser browser(x, y, label, mode);
   browser.Loop();
   if(browser.GetStatus() == BaseModal::Status::OK) {
     result = browser.GetResult();
@@ -138,120 +152,6 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
   return result;
 }
 
-static
-pxr::UsdStageRefPtr
-TestAnimXFromFile(const std::string& filename, CurveEditorUI* curveEditor)
-{
-  pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
-  pxr::SdfLayerHandleVector layers = stage->GetLayerStack();
-  for (auto& layer : layers) {
-    if (layer->GetFileFormat()->GetFormatId() == pxr::UsdAnimXFileFormatTokens->Id) {
-      curveEditor->SetLayer(layer);
-      break;
-    }
-  }
-  return stage;
-}
-
-static
-pxr::UsdStageRefPtr 
-TestAnimX(CurveEditorUI* curveEditor)
-{
-  pxr::SdfLayerRefPtr rootLayer = pxr::SdfLayer::CreateAnonymous("shot.usda");
-  pxr::SdfLayerRefPtr geomLayer = pxr::SdfLayer::CreateAnonymous("geom.usda");
-  pxr::SdfLayerRefPtr animLayer = pxr::SdfLayer::CreateAnonymous("anim.animx");
-
-  rootLayer->InsertSubLayerPath(geomLayer->GetIdentifier());
-  rootLayer->InsertSubLayerPath(animLayer->GetIdentifier());
-     
-  pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(rootLayer->GetIdentifier());
-  stage->SetStartTimeCode(1);
-  stage->SetEndTimeCode(100);
-
-  stage->SetEditTarget(geomLayer);
-  std::cout << "SET METADATAS DONE..." << std::endl;
-
-  pxr::SdfPath primPath("/Cube");
-  pxr::UsdGeomCube cube =
-    pxr::UsdGeomCube::Define(stage, primPath);
-
-  stage->SetEditTarget(animLayer);
-
-  pxr::UsdAnimXFileFormatConstPtr fileFormat = 
-    pxr::TfStatic_cast<pxr::UsdAnimXFileFormatConstPtr>(animLayer->GetFileFormat());
-  pxr::SdfAbstractDataConstPtr datas = fileFormat->GetData(&(*animLayer));
-  pxr::UsdAnimXDataPtr animXDatas = 
-    pxr::TfDynamic_cast<pxr::UsdAnimXDataPtr>(
-      pxr::TfConst_cast<pxr::SdfAbstractDataPtr>(datas));
-  std::cout << "[ANIMX] DATAS : " << animXDatas->GetCurrentCount() << std::endl;
-
-    
-  std::cout << "[ANIMX] FILE FORMAT : " << fileFormat->GetFormatId() << std::endl;
-  
-  animXDatas->AddPrim(primPath);
-  pxr::UsdAnimXOpDesc opDesc;
-  opDesc.defaultValue = pxr::VtValue((double)1.0);
-  opDesc.target = pxr::TfToken("size");
-  opDesc.dataType = pxr::AnimXGetTokenFromSdfValueTypeName(opDesc.defaultValue.GetType());
-  opDesc.name = pxr::TfToken("sizeOp");
-  animXDatas->AddOp(primPath, opDesc);
-
-  pxr::UsdAnimXCurveDesc curveDesc;
-  curveDesc.name = pxr::TfToken("size");
-  curveDesc.postInfinityType = pxr::UsdAnimXTokens->cycle;
-  curveDesc.preInfinityType = pxr::UsdAnimXTokens->cycle;
-
-  pxr::UsdAnimXKeyframeDesc keyframeDesc;
-  keyframeDesc.time = 1;
-  keyframeDesc.data[0] = 1.0;
-  keyframeDesc.data[1] = (double)adsk::TangentType::Fixed;
-  keyframeDesc.data[2] = 24.0;
-  keyframeDesc.data[3] = 0.0;
-  keyframeDesc.data[4] = (double)adsk::TangentType::Fixed;
-  keyframeDesc.data[5] = 24.0;
-  keyframeDesc.data[6] = 0.0;
-  keyframeDesc.data[7] = 1.0;
-  curveDesc.keyframes.push_back(keyframeDesc);
-
-  keyframeDesc.time = 12;
-  keyframeDesc.data[0] = 1.0;
-  curveDesc.keyframes.push_back(keyframeDesc);
-
-  keyframeDesc.time = 25;
-  keyframeDesc.data[0] = 10.0;
-  curveDesc.keyframes.push_back(keyframeDesc);
-
-  keyframeDesc.time = 50;
-  keyframeDesc.data[0] = 1.0;
-  curveDesc.keyframes.push_back(keyframeDesc);
-
-  animXDatas->AddFCurve(primPath, opDesc.target, curveDesc);
-  animLayer->Export("C:/Users/graph/Documents/bmal/src/Amnesie/assets/test.animx");
-  curveEditor->SetLayer(pxr::SdfLayerHandle(animLayer));
-  stage->SetEditTarget(geomLayer);
-
-  return stage;
-
-  /*
-  for (size_t i = 0; i < _filenames.size(); ++i)
-  {
-    std::string filename = _filenames[i];
-    if (pxr::UsdStage::IsSupportedFile(filename) &&
-      pxr::ArchGetFileLength(filename.c_str()) != -1)
-    {
-      pxr::SdfLayerRefPtr subLayer = SdfLayer::FindOrOpen(filename);
-      _layers.push_back(subLayer);
-      _rootLayer->InsertSubLayerPath(subLayer->GetIdentifier());
-    }
-  }
-  
-
-  //pxr::SdfLayerRefPtr rootLayer = pxr::SdfLayer::FindOrOpen(_filename);
-  //_stage = pxr::UsdStage::Open(rootLayer);
-  _stage = pxr::UsdStage::Open(_rootLayer->GetIdentifier());
-  _stage->SetEditTarget(_rootLayer);
-  */
-}
 
 
 Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage, 
@@ -325,19 +225,6 @@ Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
 void 
 Application::Init()
 {
-  //pxr::TfErrorMark mark;
-  
-  // If no error messages were logged, return success.
-  
-  /*
-  if (mark.IsClean()) {
-    std::cout << "HYDRA SCENE DELEGATE OK" << std::endl;
-  }
-  else {
-    for (auto& error : mark)std::cout << error.GetErrorCodeAsString() << std::endl;
-    std::cout << "HYDRA SCENE DELEGATE FAILED" << std::endl;
-  }
-  */
  #ifdef _WIN32
   std::string filename =
     //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
@@ -387,6 +274,7 @@ Application::Init()
     bottomView->GetLeft(), 0.6, true);
   View* middleView = centralView->GetLeft();
   View* topView = mainView->GetLeft();
+  topView->SetTabed(false);
 
   _mainWindow->SplitView(middleView, 0.9, false);
   
@@ -397,10 +285,12 @@ Application::Init()
     workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
   View* toolView = leftTopView->GetLeft();
   toolView->SetTabed(false);
-  View* stageView = leftTopView->GetRight();
+  View* explorerView = leftTopView->GetRight();
+  /*
   _mainWindow->SplitView(stageView, 0.25, true);
   View* layersView = stageView->GetLeft();
   View* explorerView = stageView->GetRight();
+  */
 
 
   View* viewportView = workingView->GetRight();  
@@ -417,7 +307,7 @@ Application::Init()
   MenuUI* menu = new MenuUI(topView);
   ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
   _explorer = new ExplorerUI(explorerView);
-  _layers =  new LayersUI(layersView);
+  //_layers =  new LayersUI(layersView);
   //new LayerHierarchyUI(layersView, "fuck");
   //_property = new PropertyUI(propertyView, "Property");
   //new DemoUI(propertyView);
@@ -478,25 +368,25 @@ Application::Init()
  
   _mainWindow->CollectLeaves();
  
-
   Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
-  _childWindows.push_back(childWindow);
-  childWindow->Init();
-  childWindow->SetGLContext();
+  AddWindow(childWindow);
   
   ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
   
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
   childWindow->CollectLeaves();
-  
- 
 
 }
 
 bool 
 Application::Update()
 {
+  if (_needCaptureFramebuffers) {
+    _mainWindow->CaptureFramebuffer();
+    for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
+    _needCaptureFramebuffers = false;
+  }
   _time.ComputeFramerate(glfwGetTime());
   if(_time.IsPlaying()) {
     if(_time.PlayBack()) {
@@ -509,10 +399,40 @@ Application::Update()
 
   glfwSwapInterval(1);
   glfwPollEvents();
-  if (!_mainWindow->Update())return false;
-  for (auto& childWindow : _childWindows)childWindow->Update();
+  // draw popup
+  if (_popup) {
+    Window* window = _popup->GetView()->GetWindow();
+    window->Draw(_popup);
+    if (_popup->IsDone() || _popup->IsCancel()) {
+      delete _popup;
+      _popup = nullptr;
+    }
+  } else {
+    if (!_mainWindow->Update()) return false;
+    for (auto& childWindow : _childWindows)childWindow->Update();
+  }
+
   //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
   return true;
+}
+
+void
+Application::AddWindow(Window* window)
+{
+ _childWindows.push_back(window);
+  window->Init();
+  window->SetGLContext();
+}
+
+void 
+Application::RemoveWindow(Window* window)
+{
+  std::vector<Window*>::iterator it = _childWindows.begin();
+  for (; it < _childWindows.end(); ++it) {
+    if(*it == window) {
+      _childWindows.erase(it);
+    }
+  }
 }
 
 void 
@@ -552,14 +472,9 @@ Application::SetActiveViewport(ViewportUI* viewport)
 void 
 Application::SetActiveTool(short t)
 {
-  std::cout << "set active tool : " << t << std::endl;
-  //_mainWindow->SetGLContext();
   _mainWindow->GetTool()->SetActiveTool(t);
-  std::cout << "main window done " << std::endl;
   for (auto& window : _childWindows) {
-    //window->SetGLContext();
     window->GetTool()->SetActiveTool(t);
-    std::cout << "child window done " << std::endl;
   }
 }
 
@@ -618,7 +533,7 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 void
 Application::UndoStackNoticeCallback(const UndoStackNotice& n)
 {
-  AddCommand(std::shared_ptr<UsdGenericCommand>(new UsdGenericCommand()));
+  ADD_COMMAND(UsdGenericCommand);
 }
 
 
@@ -633,7 +548,6 @@ Application::AddCommand(std::shared_ptr<Command> command)
 void 
 Application::Undo()
 {
-  std::cout << " APPLICATION UNDO !!" << std::endl;
   _manager.Undo();
 }
 
@@ -649,8 +563,7 @@ Application::Delete()
   Selection* selection = GetSelection();
   const pxr::SdfPathVector& paths = selection->GetSelectedPrims();
   selection->Clear();
-  AddCommand(std::shared_ptr<DeletePrimCommand>(
-    new DeletePrimCommand(GetWorkStage(), paths)));
+  ADD_COMMAND(DeletePrimCommand, GetWorkStage(), paths);
 }
 
 void
@@ -659,26 +572,20 @@ Application::Duplicate()
   Selection* selection = GetSelection();
   if (!selection->IsEmpty()) {
     const Selection::Item& item = selection->GetItem(0);
-    AddCommand(std::shared_ptr<DuplicatePrimCommand>(
-      new DuplicatePrimCommand(GetWorkStage(), item.path)));
+    ADD_COMMAND(DuplicatePrimCommand, GetWorkStage(), item.path);
   }
 }
 
 void 
 Application::OpenScene(const std::string& filename)
 {
-  if(strlen(filename.c_str()) > 0) {    
-    if (_workspace) delete _workspace;
-    _workspace = new Workspace();
-    _workspace->AddStageFromDisk(filename);
-  }
+  ADD_COMMAND(OpenSceneCommand, filename);
 }
 
 void
-Application::NewScene()
+Application::NewScene(const std::string& filename)
 {
-  if (_workspace) delete _workspace;
-  _workspace = new Workspace();
+  ADD_COMMAND(NewSceneCommand, filename);
 }
 
 void Application::SaveScene()
@@ -743,36 +650,31 @@ Application::GetCurrentLayer()
 void 
 Application::SetSelection(const pxr::SdfPathVector& selection)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, selection, SelectCommand::SET)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::SET);
 }
 
 void
 Application::ToggleSelection(const pxr::SdfPathVector& selection)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, selection, SelectCommand::TOGGLE)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::TOGGLE);
 }
 
 void 
 Application::AddToSelection(const pxr::SdfPathVector& paths)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, paths, SelectCommand::ADD)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::ADD);
 }
 
 void 
 Application::RemoveFromSelection(const pxr::SdfPathVector& paths)
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, paths, SelectCommand::REMOVE)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::REMOVE);
 }
 
 void 
 Application::ClearSelection()
 {
-  AddCommand(std::shared_ptr<SelectCommand>(
-    new SelectCommand(Selection::PRIM, {}, SelectCommand::SET)));
+  ADD_COMMAND(SelectCommand, Selection::PRIM, {}, SelectCommand::SET);
 }
 
 pxr::GfBBox3d

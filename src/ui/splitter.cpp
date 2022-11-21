@@ -37,7 +37,7 @@ void SplitterUI::RecurseBuildMap(View* view)
 {
   if(!view) return;
   _views.push_back(view);
-  size_t viewID = _views.size();
+  int viewID = _views.size();
   if(!view->GetFlag(View::LEAF))
   {
     View* parent = view->GetParent();

@@ -82,7 +82,6 @@ public:
     HORIZONTAL
   };
 
-protected:
   enum ItemState {
     ITEM_STATE_NONE = 0,
     ITEM_STATE_HOVERED = 1,
@@ -91,12 +90,13 @@ protected:
     ITEM_STATE_DISABLED = 8
   };
 
-  enum DisplayState {
+  enum ExpendedState {
     COLLAPSED,
     CONNECTED,
     EXPENDED
   };
 
+protected:
   class Node;
   class Port;
   class Connexion;
@@ -217,6 +217,11 @@ protected:
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
+      enum {
+        DIRTY_CLEAN = 0,
+        DIRTY_SIZE = 1,
+        DIRTY_POSITION = 2,
+      };
       Node(pxr::UsdPrim prim, bool write=false);
       ~Node();
 
@@ -236,8 +241,6 @@ protected:
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;
       void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
-      void SetExpansionState(short state) { _state = state; };
-      void UpdateExpansionState();
 
       void ComputeSize(GraphEditorUI* editor);
 
@@ -250,6 +253,7 @@ protected:
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
       std::vector<Port>           _ports;
+      short                       _dirty;
   };
 
   // Graph graph class
@@ -340,9 +344,6 @@ private:
   };
 
 public:
-  typedef std::set<Node*> NodeSet;
-
-public:
   GraphEditorUI(View* parent);
   ~GraphEditorUI() override;
 
@@ -389,8 +390,8 @@ public:
   void RemoveFromSelection(Connexion* connexion);
   void ClearSelection();
   void MarqueeSelect(int mod);
-  NodeSet& GetSelectedNodes() { return _selectedNodes; };
-  const NodeSet& GetSelectedNode() const { return _selectedNodes; };
+  std::set<Node*>& GetSelectedNodes() { return _selectedNodes; };
+  const std::set<Node*>& GetSelectedNodes() const { return _selectedNodes; };
   pxr::SdfPathVector GetSelectedNodesPath();
 
   // display
@@ -400,6 +401,7 @@ public:
 
   // io
   bool Populate(pxr::UsdPrim& prim);
+  void Update();
   void Clear();
   bool Read(const std::string& filename);
   bool Write(const std::string& filename);
@@ -408,6 +410,7 @@ public:
   void BuildGraph();
 
   // notices
+  void OnAttributeChangedNotice(const AttributeChangedNotice& n) override;
   void OnSceneChangedNotice(const SceneChangedNotice& n) override;
   void OnNewSceneNotice(const NewSceneNotice& n) override;
   

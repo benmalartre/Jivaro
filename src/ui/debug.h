@@ -16,7 +16,10 @@ public:
   bool Draw()      override;
 
 private:
+  void _DrawDebugCodes();
+  void _DrawTraceReporter();
   static ImGuiWindowFlags _flags;
+  
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

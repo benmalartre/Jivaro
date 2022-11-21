@@ -82,6 +82,7 @@ class ViewportUI : public BaseUI
     
     
   private:
+    void                                _DrawPickMode();
     GLuint                              _texture;
     int*                                _pixels;
     int*                                _lowPixels;
@@ -92,6 +93,7 @@ class ViewportUI : public BaseUI
     double                              _lastY;
     short                               _interactionMode;
     bool                                _valid;
+    bool                                _highlightSelection;
     // usd imaging engine
     Engine*                             _engine;
     pxr::UsdImagingGLRenderParams       _renderParams;

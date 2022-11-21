@@ -23,7 +23,6 @@
 #include "../app/handle.h"
 #include "../app/selection.h"
 #include "../command/inverse.h"
-#include "../ui/graphEditor.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -58,10 +57,56 @@ public:
 //==================================================================================
 class NewSceneCommand : public Command {
 public:
-  NewSceneCommand();
+  NewSceneCommand(const std::string& filename);
   ~NewSceneCommand() {};
   void Do() override {};
 
+};
+
+//==================================================================================
+// Save Layer
+//==================================================================================
+class SaveLayerCommand : public Command {
+public:
+  SaveLayerCommand(pxr::SdfLayerHandle layer);
+  ~SaveLayerCommand() {};
+  void Do() override {};
+};
+
+//==================================================================================
+// Save Layer As
+//==================================================================================
+class SaveLayerAsCommand : public Command {
+public:
+  SaveLayerAsCommand(pxr::SdfLayerHandle layer, const std::string& path);
+  ~SaveLayerAsCommand() {};
+  void Do() override {};
+};
+
+//==================================================================================
+// Save Layer
+//==================================================================================
+class ReloadLayerCommand : public Command {
+public:
+  ReloadLayerCommand(pxr::SdfLayerHandle layer);
+  ~ReloadLayerCommand() {};
+  void Do() override {};
+private:
+  pxr::SdfLayerRefPtr _layer;
+};
+
+//==================================================================================
+// Layer Text Edit
+//==================================================================================
+class LayerTextEditCommand : public Command {
+public:
+  LayerTextEditCommand(pxr::SdfLayerRefPtr layer, const std::string& newText);
+  ~LayerTextEditCommand() {};
+  void Do() override;
+private:
+  pxr::SdfLayerRefPtr _layer;
+  std::string         _oldText;
+  std::string         _newText;
 };
 
 //==================================================================================
@@ -238,12 +283,11 @@ private:
 //==================================================================================
 class MoveNodeCommand : public Command {
 public:
-  friend GraphEditorUI;
-  MoveNodeCommand(const GraphEditorUI::NodeSet& nodes, const pxr::GfVec2f& offset);
+  MoveNodeCommand(const pxr::SdfPathVector& paths, const pxr::GfVec2f& offset);
   ~MoveNodeCommand() {};
   void Do() override;
 private:
-  GraphEditorUI::NodeSet            _nodes;
+  pxr::SdfPathVector                _nodes;
   pxr::GfVec2f                      _offset;
 };
 
@@ -252,12 +296,11 @@ private:
 //==================================================================================
 class ExpendNodeCommand : public Command {
 public:
-  friend GraphEditorUI;
-  ExpendNodeCommand(const GraphEditorUI::NodeSet& nodes, const pxr::TfToken& state);
+  ExpendNodeCommand(const pxr::SdfPathVector& nodes, const pxr::TfToken& state);
   ~ExpendNodeCommand() {};
   void Do() override;
 private:
-  GraphEditorUI::NodeSet            _nodes;
+  pxr::SdfPathVector                _nodes;
 };
 
 //==================================================================================
@@ -272,6 +315,8 @@ private:
   pxr::SdfPath   _source;
   pxr::SdfPath   _destination;
 };
+
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

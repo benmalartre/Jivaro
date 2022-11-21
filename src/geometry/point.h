@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <math.h>
 #include <stdio.h>
+#include <limits>
 
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/ray.h>
@@ -14,6 +15,8 @@
 
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+#define INVALID_POINT_ID std::numeric_limits<uint32_t>::max()
 
 class Geometry;
 class Points;

@@ -1,4 +1,5 @@
 #include <pxr/usd/usd/schemaBase.h>
+#include <pxr/usd/usd/schemaBase.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/curves.h>
@@ -96,7 +97,7 @@ void _XXX_CALLBACK__(int index)
 static void DrawPropertyMiniButton(ImGuiID id=0)
 {
   UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    id, ICON_FA_BOMB, ICON_DEFAULT,
+    id, ICON_FA_GEAR, ICON_DEFAULT,
     (UIUtils::CALLBACK_FN)_XXX_CALLBACK__, id);
   ImGui::SameLine();
 }
@@ -150,8 +151,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
         target.current.translation.data(), 3, NULL, NULL, DecimalPrecision);
       
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        GetApplication()->AddCommand(std::shared_ptr<TranslateCommand>(
-          new TranslateCommand(GetApplication()->GetWorkStage(), targets, time)));
+        ADD_COMMAND(TranslateCommand, GetApplication()->GetWorkStage(), targets, time);
       }
 
       // Rotation
@@ -166,9 +166,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Rotation", target.current.rotation.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        GetApplication()->AddCommand(std::shared_ptr<RotateCommand>(
-          new RotateCommand(GetApplication()->GetWorkStage(), targets, time))
-        );
+        ADD_COMMAND(RotateCommand, GetApplication()->GetWorkStage(), targets, time);
       }
       // Scale
       ImGui::TableNextRow();
@@ -182,9 +180,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Scale", target.current.scale.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        GetApplication()->AddCommand(std::shared_ptr<ScaleCommand>(
-          new ScaleCommand(GetApplication()->GetWorkStage(), targets, time))
-        );
+        ADD_COMMAND(ScaleCommand, GetApplication()->GetWorkStage(), targets, time);
       }
 
       ImGui::TableNextRow();
@@ -197,9 +193,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::TableSetColumnIndex(2);
       ImGui::InputFloat3("Pivot", target.current.pivot.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        GetApplication()->AddCommand(std::shared_ptr<PivotCommand>(
-          new PivotCommand(GetApplication()->GetWorkStage(), targets, time))
-        );
+        ADD_COMMAND(PivotCommand, GetApplication()->GetWorkStage(), targets, time);
       }
 
       // TODO rotation order

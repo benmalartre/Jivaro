@@ -26,7 +26,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
   pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
   pxr::TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
-
+  pxr::TfNotice::Register(me, &BaseUI::OnAttributeChangedNotice);
 };
 
 std::string 
@@ -52,6 +52,10 @@ void BaseUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 }
 
 void BaseUI::OnSceneChangedNotice(const SceneChangedNotice& n)
+{
+}
+
+void BaseUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
 {
 }
 
@@ -154,6 +158,5 @@ void BaseUI::AttachTooltip(const char* tooltip)
   ImVec2 size(ImGui::CalcTextSize(tooltip));
   GetWindow()->DirtyViewsUnderBox(min, pxr::GfVec2i(size.x, size.y));
 }
-
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -1,4 +1,5 @@
 #include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/sdf/fileFormat.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/primSpec.h>
 #include <pxr/usd/sdf/copyUtils.h>
@@ -7,6 +8,7 @@
 #include <pxr/usd/usdShade/connectableAPI.h>
 #include <pxr/usd/usdExec/execNode.h>
 #include <pxr/usd/usdExec/execConnectableAPI.h>
+#include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 
 #include "../command/command.h"
 #include "../command/block.h"
@@ -23,7 +25,15 @@ JVR_NAMESPACE_OPEN_SCOPE
 OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   : Command(false)
 {
-  GetApplication()->OpenScene(filename);
+  Application* app = GetApplication();
+  if (strlen(filename.c_str()) > 0) {
+    Workspace* workspace = app->GetWorkspace();
+    if (workspace)delete workspace;
+    workspace = new Workspace();
+    workspace->AddStageFromDisk(filename);
+    app->SetWorkspace(workspace);   
+  }
+
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();
@@ -33,13 +43,89 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 //==================================================================================
 // New Scene
 //==================================================================================
-NewSceneCommand::NewSceneCommand()
+NewSceneCommand::NewSceneCommand(const std::string& filename)
   : Command(false)
 {
-  GetApplication()->NewScene();
+  Application* app = GetApplication();
+  Workspace* workspace = app->GetWorkspace();
+  /*
+  if (workspace)delete workspace;
+  app->SetWorkspace(new Workspace());
+  */
+  pxr::SdfFileFormatConstPtr usdaFormat = pxr::SdfFileFormat::FindByExtension("usda");
+  pxr::SdfLayerRefPtr layer = pxr::SdfLayer::New(usdaFormat, filename);
+  if (layer) {
+    pxr::UsdStageRefPtr newStage = pxr::UsdStage::Open(layer);
+    if (newStage) {
+      Workspace* workspace = GetApplication()->GetWorkspace();
+      workspace->GetStageCache().Insert(newStage);
+      workspace->SetWorkLayer(newStage->GetRootLayer());
+    }
+  }
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Save Layer 
+//==================================================================================
+SaveLayerCommand::SaveLayerCommand(pxr::SdfLayerHandle layer)
+  : Command(false)
+{
+  layer->Save(true);
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Save Layer As
+//==================================================================================
+SaveLayerAsCommand::SaveLayerAsCommand(pxr::SdfLayerHandle layer, const std::string& path)
+  : Command(false)
+{
+  auto newLayer = SdfLayer::CreateNew(path);
+  if (newLayer && layer) {
+    newLayer->TransferContent(layer);
+    newLayer->Save();
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Reload Layer 
+//==================================================================================
+ReloadLayerCommand::ReloadLayerCommand(pxr::SdfLayerHandle layer)
+  : Command(false)
+  , _layer(layer)
+{
+  _layer->Reload(true);
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// Layer Text Edit
+//==================================================================================
+LayerTextEditCommand::LayerTextEditCommand(pxr::SdfLayerRefPtr layer, const std::string& newText)
+  : Command(true)
+  , _layer(layer)
+  , _newText(newText)
+{
+  if(!_layer)return;
+  _layer->ExportToString(&_oldText);
+  _layer->ImportFromString(_newText);
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+void LayerTextEditCommand::Do() {
+  _layer->ExportToString(&_newText);
+  _layer->ImportFromString(_oldText);
+  _oldText = _newText;
+  UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
@@ -54,8 +140,10 @@ CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const std::strin
   UndoRouter::Get().TransferEdits(&_inverse);
   SdfPrimSpecHandle primSpec = SdfPrimSpec::New(layer, name, SdfSpecifier::SdfSpecifierDef);
   layer->InsertRootPrim(primSpec);
+  layer->SetDefaultPrim(primSpec->GetNameToken());
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
+  std::cout << "created prim at " << primSpec->GetNameToken() << std::endl;
 }
 
 CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle primSpec, const std::string& name)
@@ -218,7 +306,6 @@ void ShowHideCommand::Do() {
 ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
 {
-  UndoRouter::Get().TransferEdits(&_inverse);
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
@@ -422,14 +509,12 @@ void SetAttributeCommand::Do()
 UsdGenericCommand::UsdGenericCommand()
   : Command(true)
 {
-  std::cout << "GENRIC CREATE" << std::endl;
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
 void UsdGenericCommand::Do()
 {
-  std::cout << "GENRIC UNDO" << std::endl;
   _inverse.Invert();
   SceneChangedNotice().Send();
 }
@@ -456,28 +541,40 @@ void CreateNodeCommand::Do()
 // Move Node
 //==================================================================================
 MoveNodeCommand::MoveNodeCommand(
-  const GraphEditorUI::NodeSet& nodes, const pxr::GfVec2f& offset)
+  const pxr::SdfPathVector& nodes, const pxr::GfVec2f& offset)
   : Command(true)
   , _nodes(nodes)
   , _offset(offset)
 {
+
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
-    pxr::UsdUINodeGraphNodeAPI api(node->GetPrim());
+    pxr::UsdPrim prim = stage->GetPrimAtPath(node);
+    if (!prim.IsValid()) {
+      continue;
+    }
+
+    pxr::UsdUINodeGraphNodeAPI api(prim);
     pxr::GfVec2f pos;
-    api.GetPosAttr().Get(&pos);
-    pos += offset;
-    api.GetPosAttr().Set(pos);
+    pxr::UsdAttribute posAttr = api.GetPosAttr();
+    if (posAttr.IsValid()) {
+      posAttr.Get(&pos);
+      pos += offset;
+      posAttr.Set(pos);
+    } else {
+      posAttr = api.CreatePosAttr(pxr::VtValue(offset));
+    }
   }
   UndoRouter::Get().TransferEdits(&_inverse);
+  AttributeChangedNotice().Send();
 }
 
 void MoveNodeCommand::Do()
 {
-  for (auto& node : _nodes) {
-    node->SetPosition(node->GetPosition() - _offset);
-  }
   _inverse.Invert();
   _offset *= -1;
+  AttributeChangedNotice().Send();
 }
 
 //==================================================================================
@@ -488,13 +585,19 @@ void MoveNodeCommand::Do()
 // 'minimized' = should take the least space possible
 //==================================================================================
 ExpendNodeCommand::ExpendNodeCommand(
-  const GraphEditorUI::NodeSet& nodes, const pxr::TfToken& state)
+  const pxr::SdfPathVector& nodes, const pxr::TfToken& state)
   : Command(true)
   , _nodes(nodes)
 {
+  Application* app = GetApplication();
+  pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
-    pxr::UsdUINodeGraphNodeAPI api(node->GetPrim());
-    api.GetExpansionStateAttr().Set(state);
+    pxr::UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
+    pxr::UsdAttribute expandAttr = api.CreateExpansionStateAttr();
+    if (!expandAttr.IsValid()) {
+     expandAttr = api.CreatePosAttr(pxr::VtValue(pxr::UsdUITokens->closed));
+    }
+    expandAttr.Set(state);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();
@@ -503,9 +606,6 @@ ExpendNodeCommand::ExpendNodeCommand(
 void ExpendNodeCommand::Do()
 {
   _inverse.Invert();
-  for (auto& node : _nodes) {
-    node->UpdateExpansionState();
-  }
   AttributeChangedNotice().Send();
 }
 

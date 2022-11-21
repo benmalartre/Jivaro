@@ -81,4 +81,12 @@ void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
   _radius = radius;
 }
 
+Point Points::Get(uint32_t index)
+{
+  if(index < _points.size())
+    return {index, index < _radius.size() ? _radius[index] : 1.f};   
+  else
+    return {INVALID_POINT_ID, 1.f}; 
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -48,12 +48,6 @@ private:
   short           _last;
   short           _current;
   pxr::GfVec4f    _viewport;
-  /*
-  TranslateHandle _translate;
-  RotateHandle    _rotate;
-  ScaleHandle     _scale;
-  BrushHandle     _brush;
-  */
   bool            _interacting;
   BaseHandle*     _active;
   short           _activeAxis;

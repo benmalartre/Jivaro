@@ -37,14 +37,14 @@ public:
   virtual void _LoopImpl()=0;
 
 protected:
-  size_t                    _x;
-  size_t                    _y;
-  size_t                    _width;
-  size_t                    _height;
-  Window*                   _window;
-  BaseUI*                   _ui;
-  std::string               _title;
-  Status                    _status;
+  size_t        _x;
+  size_t        _y;
+  size_t        _width;
+  size_t        _height;
+  Window*       _window;
+  BaseUI*       _ui;
+  std::string   _title;
+  Status        _status;
 };
 
 // file browser

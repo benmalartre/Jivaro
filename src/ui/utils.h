@@ -38,7 +38,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 const pxr::GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
 const pxr::GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
-const pxr::GfVec2f BUTTON_MINI_SIZE(12.f, 12.f);
+const pxr::GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
 
 class View;
 class UIUtils {
@@ -267,6 +267,18 @@ void CreateListEditorOperation(pxr::SdfListEditorProxy<PolicyT>&& listEditor, in
     assert(0);
   }
 }
+
+/// Add modal dialogs to add composition on primspec (reference, payload, inherit, specialize)
+void AddPrimCreateReference(const pxr::SdfPrimSpecHandle &primSpec);
+void AddPrimCreatePayload(const pxr::SdfPrimSpecHandle &primSpec);
+void AddPrimCreateInherit(const pxr::SdfPrimSpecHandle &primSpec);
+void AddPrimCreateSpecialize(const pxr::SdfPrimSpecHandle &primSpec);
+
+/// Add multiple tables with the compositions (Reference, Payload, Inherit, Specialize)
+void AddPrimCompositions(const pxr::SdfPrimSpecHandle &primSpec);
+
+// Add a text summary of the composition
+void AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec);
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

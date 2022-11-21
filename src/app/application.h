@@ -10,6 +10,7 @@
 #include "../app/view.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+#include "../ui/popup.h"
 #include "../command/manager.h"
 #include "../geometry/mesh.h"
 //#include <openvdb/openvdb.h>
@@ -41,19 +42,19 @@ public:
   ~Application();
 
     // create a fullscreen window
-  Window* CreateFullScreenWindow();
+  static Window* CreateFullScreenWindow();
 
   // create a standard window of specified size
-  Window* CreateStandardWindow(int width, int height);
+  static Window* CreateStandardWindow(int width, int height);
 
   // create a child window
-  Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
+  static Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
     const std::string& name="Child", bool decorated=true);
 
 
   // browse file
   std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
-    const int numFilters, const char* name="Browse");
+    const int numFilters, const char* name="Browse", bool readOrWrite=false);
   
   // init application
   void Init();
@@ -68,7 +69,7 @@ public:
   // cleanup
   void CleanUp();
 
-  void NewScene();
+  void NewScene(const std::string& filename);
   void OpenScene(const std::string& filename);
   void SaveScene();
   void SaveSceneAs(const std::string& filename);
@@ -105,6 +106,14 @@ public:
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
   Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
   void SetActiveWindow(Window* window) { _activeWindow = window; };
+  void SetFocusWindow(Window* window) { _focusWindow = window; };
+  void AddWindow(Window* window);
+  void RemoveWindow(Window* window);
+
+  // popup
+  PopupUI* GetPopup() { return _popup; };
+  void SetPopup(PopupUI* popup);
+  void UpdatePopup();
 
   // tools
   void SetActiveTool(short tool);
@@ -117,6 +126,7 @@ public:
 
   // execution
   Workspace* GetWorkspace() { return _workspace; };
+  void SetWorkspace(Workspace* workspace) { _workspace = workspace; };
   void ToggleExec();
   void SetExec(bool state);
   bool GetExec();
@@ -133,10 +143,13 @@ private:
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindows;
   Window*                           _activeWindow;
+  Window*                           _focusWindow;
   Workspace*                        _workspace;
   Selection                         _selection;
+  bool                              _needCaptureFramebuffers;
 
   // uis
+  
   ViewportUI*                       _viewport;
   GraphEditorUI*                    _graph;
   LayersUI*                         _layers;
@@ -144,6 +157,7 @@ private:
   TimelineUI*                       _timeline;
   PropertyUI*                       _property;
   CurveEditorUI*                    _animationEditor;
+  PopupUI*                          _popup;
 
   // time
   Time                              _time;
@@ -162,6 +176,9 @@ private:
 extern Application* APPLICATION;
 
 static Application* GetApplication() { return APPLICATION; };
+
+#define ADD_COMMAND(CMD, ...) \
+GetApplication()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));
 
 JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR
 

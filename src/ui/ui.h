@@ -34,7 +34,9 @@ enum UIType {
   CURVEEDITOR,
   GRAPHEDITOR,
   LAYEREDITOR,
+  TEXTEDITOR,
   CONTENTBROWSER,
+  DEBUG,
   DEMO,
   COUNT
 };
@@ -52,7 +54,9 @@ static const char* UITypeName[UIType::COUNT] = {
   "curveEditor",
   "graphEditor", 
   "layerEditor",
+  "textEditor",
   "contentBrowser",
+  "debug",
   "demo"
 };
 
@@ -128,6 +132,7 @@ public:
   virtual void OnNewSceneNotice(const NewSceneNotice& n);
   virtual void OnSceneChangedNotice(const SceneChangedNotice& n);
   virtual void OnSelectionChangedNotice(const SelectionChangedNotice& n);
+  virtual void OnAttributeChangedNotice(const AttributeChangedNotice& n);
   virtual void OnAllNotices(const pxr::TfNotice& n);
   
 protected:
