@@ -8,8 +8,10 @@
 #include "../utils/icons.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
+#include "../graph/graph.h"
 #include "../app/selection.h"
 
+#include <pxr/base/tf/type.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec2f.h>
@@ -143,40 +145,24 @@ protected:
   //-------------------------------------------------------------------
   class Port : public Item {
     public:
-      enum Flag {
-        INPUT = 1,
-        OUTPUT = 2
-      };
-
       Port() {};
-      Port(Node* node, Flag flag, const pxr::TfToken& label, 
-        pxr::UsdAttribute& attr);
+      Port(Node* node, Graph::Port* port);
 
       bool Contains(const pxr::GfVec2f& position,
         const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
 
       bool IsVisible(GraphEditorUI* editor) override { return true; };
-      bool IsConnected(GraphEditorUI* editor, Connexion* connexion=NULL);
+      bool IsConnected(GraphEditorUI* editor, Graph::Connexion* connexion=NULL);
       void Draw(GraphEditorUI* editor) override;
-
-      bool IsInput() { return _flags & INPUT; };
-      bool IsOutput() { return _flags & OUTPUT; };
-      bool IsBothInputOutput() { return _flags & (INPUT | OUTPUT); };
-
-      const pxr::TfToken& GetName()const {return _label;};
-      pxr::SdfPath GetPath();
-      const Node* GetNode() const { return _node; };
+      Graph::Port* Get() { return _port; };
       Node* GetNode() { return _node; };
-      void SetNode(Node* node) { _node = node; };
-      const pxr::UsdAttribute& GetAttr() const { return _attr;};
-      pxr::UsdAttribute& GetAttr() { return _attr;};
-      Flag GetFlags() { return _flags; };
-
     private:
+      // ui
       Node*                 _node;
-      pxr::TfToken          _label;
-      Flag                  _flags;
-      pxr::UsdAttribute     _attr;
+
+      // data
+      Graph::Port*          _port;
+
   };
 
   struct ConnexionData
@@ -189,10 +175,11 @@ protected:
   //-------------------------------------------------------------------
   class Connexion : public Item {
     public:
-      Connexion(Port* start, Port* end, int color)
-        : Item(color)
+      Connexion(Port* start, Port* end, Graph::Connexion* connexion, int color)
+        : Item(color) 
         , _start(start)
-        , _end(end){};
+        , _end(end)
+        , _connexion(connexion) {};
 
       bool IsVisible(GraphEditorUI* editor) override { return true; };
       void Draw(GraphEditorUI* editor) override;
@@ -204,124 +191,48 @@ protected:
         const pxr::GfVec2f& end) override;
 
       pxr::GfRange2f GetBoundingBox();
+      Graph::Connexion* Get() { return _connexion; };
       Port* GetStart() { return _start; };
       Port* GetEnd() { return _end; };
 
-    private:
-      Port*               _start;
-      Port*               _end;
-  };
+  private:
+    // ui
+    Port*                           _start;
+    Port*                           _end;
 
+    // data
+    Graph::Connexion*               _connexion;
+  };
 
   // Graph node class
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
-      enum {
-        DIRTY_CLEAN = 0,
-        DIRTY_SIZE = 1,
-        DIRTY_POSITION = 2,
-      };
-      Node(pxr::UsdPrim prim, bool write=false);
+      Node(Graph::Node* node);
       ~Node();
 
-      void AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
-      void AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
-      void AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
-
-      size_t GetNumPorts() { return _ports.size(); };
-      std::vector<Port>& GetPorts() { return _ports; };
-      pxr::UsdPrim& GetPrim() { return _prim; };
-      const pxr::UsdPrim& GetPrim() const { return _prim; };
-      void Init();
-      void Update();
       void SetPosition(const pxr::GfVec2f& pos) override;
       void SetSize(const pxr::GfVec2f& size) override;
       void SetColor(const pxr::GfVec3f& color) override;
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;
       void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
-
       void ComputeSize(GraphEditorUI* editor);
 
+      std::vector<Port>& GetPorts() { return _ports; };
       Port* GetPort(const pxr::TfToken& name);
+      Graph::Node* Get() { return _node; };
+
+      void Update();
 
     private:
+      // ui
+      std::vector<Port>           _ports;
       Node*                       _parent;
       pxr::GfVec3f                _backgroundColor;
-      short                       _expended;
-      pxr::TfToken                _name;
-      pxr::UsdPrim                _prim;
-      std::vector<Port>           _ports;
-      short                       _dirty;
-  };
 
-  // Graph graph class
-  //-------------------------------------------------------------------
-  class Graph : public Node {
-    public: 
-      Graph(pxr::UsdPrim& prim);
-      ~Graph();
-
-      void Populate(pxr::UsdPrim& prim);
-      void Clear();
-
-      void AddNode(Node* node);
-      void RemoveNode(Node* node);
-
-      void AddConnexion(Connexion* connexion);
-      void RemoveConnexion(Connexion* connexion);
-
-      const std::vector<Node*>& GetNodes() const { return _nodes; };
-      std::vector<Node*>& GetNodes() { return _nodes; };
-
-      const Node* GetNode(const pxr::UsdPrim& prim) const;
-      Node* GetNode(const pxr::UsdPrim& prim);
-
-      const std::vector<Connexion*>& GetConnexions() const { return _connexions; };
-      std::vector<Connexion*>& GetConnexions() { return _connexions; };
-
-      /*
-      void AddInput(const std::string& name, pxr::SdfValueTypeName type);
-      void AddOutput(const std::string& name, pxr::SdfValueTypeName type);
-      size_t GetNumInputs() { return _inputs.size(); };
-      size_t GetNumOutputs() { return _outputs.size(); };
-      std::vector<Port>& GetInputs() {return _inputs;};
-      std::vector<Port>& GetOutputs() {return _outputs;};
-      void Init();
-      void Update();
-      bool IsVisible(GraphEditorUI* editor) override;
-      void Draw(GraphEditorUI* graph) override;
-
-      void ComputeSize();
-      void Move(const pxr::GfVec2f& offset) { _pos += offset; };
-      */
-
-    private:
-      void _DiscoverNodes(pxr::UsdPrim& prim);
-      void _RecurseNodes(pxr::UsdPrim& prim);
-      void _DiscoverConnexions(pxr::UsdPrim& prim);
-      void _RecurseConnexions(pxr::UsdPrim& prim);
-
-      pxr::GfVec3f                _backgroundColor;
-      float                       _currentX;
-      float                       _currentY;
-      pxr::TfToken                _name;
-      pxr::UsdPrim                _prim;
-      std::vector<Node*>          _nodes;
-      std::vector<Connexion*>     _connexions;
-  };
-
-  // Graph cell class
-  //-------------------------------------------------------------------
-  struct Cell {
-    bool                                 isLeaf;
-    std::vector<Node*>                   nodes;
-    Cell*                                cells[4];
-
-    Cell():isLeaf(true) {
-      for (int i = 0; i < 4; ++i) cells[i] = NULL;
-    };
+      // data
+      Graph::Node* _node;
   };
 
   struct Marquee {
@@ -375,8 +286,10 @@ public:
   Graph* GetGraph() { return _graph; };
   
   // nodes
-  void AddNode(Node* node) { _graph->AddNode(node); };
-  Node* GetLastNode() { return _graph->GetNodes().back(); };
+  void AddNode(Graph::Node* node) { _graph->AddNode(node); };
+
+  // port
+  Port* GetPort(Graph::Port* port);
 
   // connexion
   void StartConnexion();
@@ -400,14 +313,11 @@ public:
   void FrameAll();
 
   // io
-  bool Populate(pxr::UsdPrim& prim);
+  bool Populate(Graph* graph);
   void Update();
   void Clear();
   bool Read(const std::string& filename);
   bool Write(const std::string& filename);
-
-  void BuildGrid();
-  void BuildGraph();
 
   // notices
   void OnAttributeChangedNotice(const AttributeChangedNotice& n) override;
@@ -418,8 +328,6 @@ private:
   void _GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node);
   void _GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend = false);
   void _GetConnexionUnderMouse(const pxr::GfVec2f& mousePos);
-  void _RecurseStagePrim(const pxr::UsdPrim& prim, const pxr::SdfPath& skipPath);
-  bool _ConnexionPossible(const Port* lhs, const Port* rhs);
   
   int                                   _id;
   int                                   _depth;
@@ -451,11 +359,13 @@ private:
   short                                 _inputOrOutput;
 
   Marquee                               _marquee;
-  Cell*                                 _grid;
   Connect                               _connector;
 
   static ImGuiWindowFlags               _flags;
   Selection                             _selection;
+
+  std::vector<Node*>                    _nodes;
+  std::vector<Connexion*>               _connexions;
 };
 
 

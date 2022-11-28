@@ -80,8 +80,8 @@ Selection::_CheckKind(Mode mode, const pxr::TfToken& kind)
   case Mode::ASSEMBLY:
     return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->assembly);
   case Mode::SUBCOMPONENT:
-    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->subcomponent);
-  default:
+    return true;
+  case Mode::MODEL:
     return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->model);
   }
 }
@@ -167,35 +167,6 @@ pxr::SdfPathVector Selection::GetSelectedPrims()
   }
   return selectedPrims;
 }
-
-bool IsPickablePath(const pxr::UsdStage& stage, const pxr::SdfPath& path) {
-  pxr::UsdPrim prim = stage.GetPrimAtPath(path);
-  if (prim.IsPseudoRoot())
-    return true;
-  /*
-  if (GetPickMode() == SelectionManipulator::PickMode::Prim)
-    return true;
-
-  TfToken primKind;
-  pxr::UsdModelAPI(prim).GetKind(&primKind);
-  if (GetPickMode() == SelectionManipulator::PickMode::Model && KindRegistry::GetInstance().IsA(primKind, KindTokens->model)) {
-    return true;
-  }
-  if (GetPickMode() == SelectionManipulator::PickMode::Assembly &&
-    KindRegistry::GetInstance().IsA(primKind, KindTokens->assembly)) {
-    return true;
-  }
-
-  // Other possible tokens
-  // KindTokens->component
-  // KindTokens->group
-  // KindTokens->subcomponent
-
-  // We can also test for xformable or other schema API
-  */
-  return false;
-}
-
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

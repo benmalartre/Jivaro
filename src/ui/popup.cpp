@@ -150,6 +150,26 @@ ColorPopupUI::~ColorPopupUI()
 {
 }
 
+bool ColorPopupUI::Terminate()
+{
+  if (_done) {
+    if (_isArray) {
+      pxr::VtArray<pxr::GfVec3f> result;
+      result = { _original };
+      _attribute.Set(result, pxr::UsdTimeCode::Default());
+      result = { _color };
+      UndoBlock editBlock(true);
+      _attribute.Set(result, pxr::UsdTimeCode::Default());
+    }
+    else {
+      _attribute.Set(_original, pxr::UsdTimeCode::Default());
+      UndoBlock editBlock(true);
+      _attribute.Set(_color, pxr::UsdTimeCode::Default());
+    }
+    AttributeChangedNotice().Send();
+  }
+  return _done;
+}
 
 void
 ColorPopupUI::MouseButton(int button, int action, int mods)
@@ -157,20 +177,8 @@ ColorPopupUI::MouseButton(int button, int action, int mods)
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (!(x >= _x && y >= _y && x <= (_x + _width) && y <= (_y + _height))) {
-    if (_isArray) {
-      pxr::VtArray<pxr::GfVec3f> result;
-      result = { _original };
-      _attribute.Set(result, _time);
-      result = { _color };
-      UndoBlock editBlock(true);
-      _attribute.Set(result, _time);
-    }
-    else {
-      _attribute.Set(_original, _time);
-      UndoBlock editBlock(true);
-      _attribute.Set(_color, _time);
-    }
     _done = true;
+    Terminate();
   }
 }
 
@@ -200,15 +208,7 @@ ColorPopupUI::Draw()
   ImGui::SetNextItemWidth(_width);
   ImGui::ColorPicker4("##picker", (float*)&_color, picker_flags);
   if(_color != _original) {
-    if (_isArray) {
-      pxr::VtArray<pxr::GfVec3f> result;
-      result = { _color };
-      _attribute.Set(result, _time);
-    }
-    else {
-      _attribute.Set(_original, _time);
-      _attribute.Set(_color, _time);
-    }
+    Terminate();
   }
  
   ImGui::End();
@@ -397,6 +397,7 @@ NodePopupUI::_FilterNodes()
 bool
 NodePopupUI::Draw()
 {
+  
   ImGui::Begin(_name.c_str(), NULL, _flags);
   ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
   ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
@@ -404,8 +405,9 @@ NodePopupUI::Draw()
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   const ImGuiStyle& style = ImGui::GetStyle();
+  /*
   drawList->AddRectFilled(
-    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_ChildBg]));
+    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_ChildBg]));*/
 
   drawList = ImGui::GetForegroundDrawList();
   
@@ -425,6 +427,7 @@ NodePopupUI::Draw()
       ImGui::PushFont(GetWindow()->GetFont(1));
       ImGui::TextColored(ImVec4(0.75,0.75,0.75,1.0), node.c_str());
     }
+    ImGui::PopFont();
     idx++;
   }
 

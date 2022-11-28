@@ -23,6 +23,7 @@ public:
   void MouseMove(int x, int y) override;
   void Keyboard(int key, int scancode, int action, int mods) override;
   bool Draw() override;
+  virtual bool Terminate() { return true; };
 
   // mouse position in the view space
   // (0, 0) left top corner
@@ -78,6 +79,7 @@ public:
 
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
+  bool Terminate() override;
 private:
   pxr::UsdAttribute _attribute;
   pxr::UsdTimeCode  _time;

@@ -121,6 +121,7 @@ Application::UpdatePopup()
 {
   if (_popup) {
     if (!_popup->IsDone())return;
+    _popup->Terminate();
     delete _popup;
   }
   _popup = nullptr;
@@ -285,10 +286,12 @@ Application::Init()
     workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
   View* toolView = leftTopView->GetLeft();
   toolView->SetTabed(false);
-  View* stageView = leftTopView->GetRight();
+  View* explorerView = leftTopView->GetRight();
+  /*
   _mainWindow->SplitView(stageView, 0.25, true);
   View* layersView = stageView->GetLeft();
   View* explorerView = stageView->GetRight();
+  */
 
 
   View* viewportView = workingView->GetRight();  
@@ -305,7 +308,7 @@ Application::Init()
   MenuUI* menu = new MenuUI(topView);
   ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
   _explorer = new ExplorerUI(explorerView);
-  _layers =  new LayersUI(layersView);
+  //_layers =  new LayersUI(layersView);
   //new LayerHierarchyUI(layersView, "fuck");
   //_property = new PropertyUI(propertyView, "Property");
   //new DemoUI(propertyView);
@@ -402,6 +405,7 @@ Application::Update()
     Window* window = _popup->GetView()->GetWindow();
     window->Draw(_popup);
     if (_popup->IsDone() || _popup->IsCancel()) {
+      _popup->Terminate();
       delete _popup;
       _popup = nullptr;
     }

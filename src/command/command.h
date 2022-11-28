@@ -4,20 +4,8 @@
 #include <iostream>
 #include <memory>
 
-#include <pxr/usd/sdf/layer.h>
-#include <pxr/usd/sdf/primSpec.h>
-#include <pxr/usd/sdf/variantSpec.h>
-#include <pxr/usd/sdf/variantSetSpec.h>
 #include <pxr/usd/sdf/path.h>
-#include <pxr/usd/sdf/reference.h>
-#include <pxr/usd/sdf/namespaceEdit.h>
-#include <pxr/usd/sdf/valueTypeName.h>
-#include <pxr/usd/sdf/path.h>
-
-#include <pxr/usd/usd/prim.h>
-#include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usd/stage.h>
-#include <pxr/usd/usdGeom/xformCommonAPI.h>
 
 #include "../common.h"
 #include "../app/handle.h"

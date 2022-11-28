@@ -494,7 +494,7 @@ Window::Draw(PopupUI* popup)
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  if (!popup->IsSync()) {
+  //if (!popup->IsSync()) {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(GetWidth(), GetHeight()));
     ImGui::Begin("##background", NULL, JVR_BACKGROUND_FLAGS);
@@ -502,14 +502,14 @@ Window::Draw(PopupUI* popup)
     drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
     ImGui::End();
-  }
+  /*}
   else {
     for (Engine* engine : GetApplication()->GetEngines()) {
       engine->SetHighlightSelection(false);
       engine->SetDirty(true);
     }
     GetMainView()->Draw(true);
-  }
+  }*/
 
   popup->Draw();
 

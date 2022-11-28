@@ -40,6 +40,8 @@ add_executable(${TARGET}
   ui/explorer.cpp
   ui/propertyEditor.cpp
   ui/curveEditor.cpp
+  graph/graph.cpp
+  graph/execution.cpp
   #embree/oiio.cpp
   #embree/jpeg.cpp
   #embree/utils.cpp

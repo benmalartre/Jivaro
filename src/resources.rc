@@ -10,7 +10,7 @@
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-GLFW_ICON              ICON             DISCARDABLE "app.ico"
+//GLFW_ICON              ICON             DISCARDABLE "app.ico"
 
 
 
