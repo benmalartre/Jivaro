@@ -295,7 +295,7 @@ NodePopupUI::NodePopupUI(int x, int y, int width, int height)
   , _p(0)
   , _i(0)
 {
-  _sync = false;
+  _sync = true;
   memset(&_filter[0], (char)0, NODE_FILTER_SIZE * sizeof(char));
   BuildNodeList();
 }
@@ -397,7 +397,6 @@ NodePopupUI::_FilterNodes()
 bool
 NodePopupUI::Draw()
 {
-  
   ImGui::Begin(_name.c_str(), NULL, _flags);
   ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
   ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
@@ -405,9 +404,9 @@ NodePopupUI::Draw()
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   const ImGuiStyle& style = ImGui::GetStyle();
-  /*
+  
   drawList->AddRectFilled(
-    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_ChildBg]));*/
+    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_ChildBg]));
 
   drawList = ImGui::GetForegroundDrawList();
   
@@ -441,7 +440,6 @@ NodePopupUI::Draw()
   if (ImGui::Button("Cancel", ImVec2(GetWidth() / 3, 32))) {
     _cancel = true;
   }
-
 
   ImGui::End();
   return true;

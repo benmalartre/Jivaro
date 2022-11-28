@@ -172,7 +172,6 @@ void
 Graph::Node::Update()
 {
   pxr::UsdUINodeGraphNodeAPI api(_prim);
-  std::cout << "update from usd " << _prim.GetPath() << std::endl;
   pxr::UsdAttribute posAttr = api.GetPosAttr();
   if (!posAttr.IsValid()) {
     posAttr = api.CreatePosAttr(pxr::VtValue(_pos));

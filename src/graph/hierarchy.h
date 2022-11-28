@@ -12,6 +12,16 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class HierarchyGraph : public Graph
 {
+class HierarchyNode : public Graph::Node {
+  public:
+    HierarchyNode(pxr::SdfPrimSpecHandle& prim);
+    ~HierarchyNode() {};
+  protected:
+    void _PopulatePorts() override;
+  };
+
+class 
+
 public:
   HierarchyGraph(pxr::SdfLayerRefPtr &layer);
   ~HierarchyGraph()         override;
