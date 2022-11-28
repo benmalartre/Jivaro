@@ -121,6 +121,7 @@ Application::UpdatePopup()
 {
   if (_popup) {
     if (!_popup->IsDone())return;
+    _popup->Terminate();
     delete _popup;
   }
   _popup = nullptr;
@@ -404,6 +405,7 @@ Application::Update()
     Window* window = _popup->GetView()->GetWindow();
     window->Draw(_popup);
     if (_popup->IsDone() || _popup->IsCancel()) {
+      _popup->Terminate();
       delete _popup;
       _popup = nullptr;
     }

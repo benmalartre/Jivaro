@@ -228,8 +228,7 @@ View::Draw(bool forceRedraw)
       Time& time = GetApplication()->GetTime();
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
         if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
-          //SetClean();
-          //std::cout << "view set clean..." << std::endl;
+          SetClean();
         }
       }
     }

@@ -23,6 +23,8 @@
 #include <pxr/usd/usdExec/execGraph.h>
 
 #include "../graph/graph.h"
+#include "../command/command.h"
+#include "../app/application.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -31,6 +33,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 //------------------------------------------------------------------------------
 Graph::Node::Node(pxr::UsdPrim& prim)
   : _prim(prim)
+  , _dirty(DIRTY_POSITION|DIRTY_SIZE)
 {
   if (_prim.IsValid())
   {
@@ -45,11 +48,15 @@ Graph::Node::Node(pxr::UsdPrim& prim)
       }
       else {
         std::cout <<
-          "Invalid prim for applying UsdUINodeGepahNodeAPI : %s." <<
+          "Invalid prim for applying UsdUINodeGraphNodeAPI : %s." <<
           prim.GetPath().GetText() << std::endl;
         return;
       }
     }
+
+    Update();
+
+    /*
   
     if (prim.IsA<pxr::UsdShadeNodeGraph>()) {
       pxr::UsdShadeNodeGraph graph(prim);
@@ -95,13 +102,7 @@ Graph::Node::Node(pxr::UsdPrim& prim)
         AddOutput(attr, output.GetBaseName());
       }
     }
-    
-    pxr::UsdUINodeGraphNodeAPI api(prim);
-    api.GetPosAttr().Get(&_pos);
-    pxr::TfToken expended;
-
-    api.GetExpansionStateAttr().Get(&expended);
-    //_expended = _ConvertExpendedStateToEnum(expended);
+    */
   }
 }
 
@@ -110,6 +111,26 @@ Graph::Node::Node(pxr::UsdPrim& prim)
 Graph::Node::~Node()
 {
 
+}
+
+// Get node
+//------------------------------------------------------------------------------
+const Graph::Node*
+Graph::GetNode(const pxr::UsdPrim& prim) const
+{
+  for (const Graph::Node* node : _nodes) {
+    if(node->GetPrim().GetPath() == prim.GetPath())return node;
+  }
+  return NULL;
+}
+
+Graph::Node* 
+Graph::Graph::GetNode(const pxr::UsdPrim& prim)
+{
+  for (Graph::Node* node : _nodes) {
+    if (node->GetPrim().GetPath() == prim.GetPath())return node;
+  }
+  return NULL;
 }
 
 // Node add input
@@ -144,6 +165,40 @@ Graph::Node::AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name)
   _ports.push_back(port);
 }
 
+
+// Node update
+//------------------------------------------------------------------------------
+void
+Graph::Node::Update()
+{
+  pxr::UsdUINodeGraphNodeAPI api(_prim);
+  std::cout << "update from usd " << _prim.GetPath() << std::endl;
+  pxr::UsdAttribute posAttr = api.GetPosAttr();
+  if (!posAttr.IsValid()) {
+    posAttr = api.CreatePosAttr(pxr::VtValue(_pos));
+  }
+  posAttr.Get(&_pos);
+
+  pxr::UsdAttribute sizeAttr = api.GetSizeAttr();
+  if (!sizeAttr.IsValid()) {
+    sizeAttr = api.CreateSizeAttr(pxr::VtValue(_size));
+  }
+  sizeAttr.Get(&_size);
+
+  pxr::UsdAttribute expendedAttr = api.GetExpansionStateAttr();
+  if (!expendedAttr.IsValid()) {
+    expendedAttr = api.CreateExpansionStateAttr(pxr::VtValue(pxr::UsdUITokens->closed));
+  }
+  expendedAttr.Get(&_expended);
+
+  pxr::UsdAttribute colorAttr = api.GetDisplayColorAttr();
+  if (!colorAttr.IsValid()) {
+    colorAttr = api.CreateDisplayColorAttr(pxr::VtValue(DEFAULT_NODE_COLOR));
+  }
+  colorAttr.Get(&_color);
+
+}
+
 // Node get port
 //------------------------------------------------------------------------------
 Graph::Port* 
@@ -154,6 +209,34 @@ Graph::Node::GetPort(const pxr::TfToken& name)
   }
   return NULL;
 }
+
+void 
+Graph::Node::SetPosition(const pxr::GfVec2f& pos) 
+{ 
+  _pos = pos; 
+  _dirty |= DIRTY_POSITION; 
+};
+      
+void 
+Graph::Node::SetSize(const pxr::GfVec2f& size)
+{ 
+  _size = size; 
+  _dirty |= DIRTY_SIZE; 
+};
+
+void 
+Graph::Node::SetExpended(const pxr::TfToken& expended) 
+{ 
+  _expended = expended; 
+  _dirty |= DIRTY_SIZE;
+};
+
+void
+Graph::Node::SetColor(const pxr::GfVec3f& color)
+{
+  _color = color;
+  _dirty |= DIRTY_COLOR;
+};
 
 // Port
 //------------------------------------------------------------------------------
@@ -182,31 +265,21 @@ Graph::Port::IsConnected(Graph* graph, Graph::Connexion* foundConnexion)
   return false;
 }
 
-
 // Graph constructor
 //------------------------------------------------------------------------------
-Graph::Graph(pxr::UsdPrim& prim)
+Graph::Graph()
 {
-  if (prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
-    Populate(prim);
-  } else {
-    if (pxr::UsdUISceneGraphPrimAPI::CanApply(prim)) {
-      pxr::UsdUISceneGraphPrimAPI::Apply(prim);
-      Populate(prim);
-    }
-    else {
-      std::cout <<
-        "Invalid prim for applying UsdUINodeGraphNodeAPI : " <<
-        prim.GetPath().GetText() << "." << std::endl;
-      return;
-    }
-  }
+ 
 }
+
 
 // Graph destructor
 //------------------------------------------------------------------------------
 Graph::~Graph()
 {
+  for(auto& connexion: _connexions)delete connexion;
+  for(auto& node: _nodes)delete node;
+  _connexions.clear();
   _nodes.clear();
 }
 
@@ -214,13 +287,21 @@ Graph::~Graph()
 //------------------------------------------------------------------------------
 void Graph::Populate(pxr::UsdPrim& prim)
 {
-  std::cout << "populate..." << prim.GetName() << std::endl;
+  if (!prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
+    if (pxr::UsdUISceneGraphPrimAPI::CanApply(prim)) {
+      pxr::UsdUISceneGraphPrimAPI::Apply(prim);
+    } else {
+      std::cout <<
+        "Invalid prim for applying UsdUINodeGraphNodeAPI : " <<
+        prim.GetPath().GetText() << "." << std::endl;
+      return;
+    }
+  }
   _prim = prim;
   _nodes.clear();
   _connexions.clear();
-  _DiscoverNodes(_prim);
-  _DiscoverConnexions(_prim);
-  std::cout << "populated..." << prim.GetName() << std::endl;
+  _DiscoverNodes();
+  _DiscoverConnexions();
 }
 
 // Graph clear
@@ -264,9 +345,11 @@ Graph::RemoveConnexion(Graph::Connexion* connexion)
 
 }
 
+/*
 void 
 Graph::_DiscoverNodes(pxr::UsdPrim& prim)
 {
+  
   if (!prim.IsValid())return;
  
   for (pxr::UsdPrim child : prim.GetChildren()) {
@@ -274,53 +357,57 @@ Graph::_DiscoverNodes(pxr::UsdPrim& prim)
     //node->SetBackgroundColor(pxr::GfVec3f(0.5f, 0.65f, 0.55f));
     AddNode(node);
   }
+ 
 }
 
 
 void
 Graph::_DiscoverConnexions(pxr::UsdPrim& prim)
 {
-    /*
-for (pxr::UsdPrim child : prim.GetChildren()) {
+  
+  for (pxr::UsdPrim child : prim.GetChildren()) {
     if (child.IsA<pxr::UsdShadeShader>()) {
-        pxr::UsdShadeShader shader(child);
-        for (pxr::UsdShadeInput& input : shader.GetInputs()) {
-        if (input.GetConnectability() == pxr::UsdShadeTokens->full) {
-            pxr::UsdShadeInput::SourceInfoVector connexions = input.GetConnectedSources();
-            for (auto& connexion : connexions) {
-            Graph::Node* source = GetNode(connexion.source.GetPrim());
-            Graph::Node* destination = GetNode(child);
-            if (!source || !destination)continue;
-            Graph::Port* start = source->GetPort(connexion.sourceName);
-            Graph::Port* end = destination->GetPort(input.GetBaseName());
+      pxr::UsdShadeShader shader(child);
+      for (pxr::UsdShadeInput& input : shader.GetInputs()) {
+        if (input.GetConnectability() != pxr::UsdShadeTokens->full) continue;
+        pxr::UsdShadeInput::SourceInfoVector connexions = input.GetConnectedSources();
+        for (auto& connexion : connexions) {
+          Graph::Node* source = GetNode(connexion.source.GetPrim());
+          Graph::Node* destination = GetNode(child);
+          if (!source || !destination)continue;
+          Graph::Port* start = source->GetPort(connexion.sourceName);
+          Graph::Port* end = destination->GetPort(input.GetBaseName());
 
-            if (start && end) {
-                Graph::Connexion* connexion = new Connexion(start, end, start->GetColor());
-                _connexions.push_back(connexion);
-            }
+          if (start && end) {
+            Graph::Connexion* connexion = new Connexion(start, end);
+            _connexions.push_back(connexion);
+          }
         }
+      }
     } else if (child.IsA<pxr::UsdExecNode>()) {
-        pxr::UsdExecNode node(child);
-        for (pxr::UsdExecInput& input : node.GetInputs()) {
-        if (input.GetConnectability() == pxr::UsdShadeTokens->full) {
-            pxr::UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
-            for (auto& connexion : connexions) {
-            Graph::Node* source = GetNode(connexion.source.GetPrim());
-            Graph::Node* destination = GetNode(child);
-            if (!source || !destination)continue;
-            Graph::Port* start = source->GetPort(connexion.sourceName);
-            Graph::Port* end = destination->GetPort(input.GetBaseName());
+      pxr::UsdExecNode node(child);
+      for (pxr::UsdExecInput& input : node.GetInputs()) {
+        if (input.GetConnectability() != pxr::UsdShadeTokens->full) continue;
+        pxr::UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
+        for (auto& connexion : connexions) {
+          Graph::Node* source = GetNode(connexion.source.GetPrim());
+          Graph::Node* destination = GetNode(child);
+          if (!source || !destination)continue;
+          Graph::Port* start = source->GetPort(connexion.sourceName);
+          Graph::Port* end = destination->GetPort(input.GetBaseName());
 
-            if (start && end) {
-                Graph::Connexion* connexion = new Connexion(start, end, start->GetColor());
-                _connexions.push_back(connexion);
-            }
+          if (start && end) {
+            Graph::Connexion* connexion = new Connexion(start, end);
+            _connexions.push_back(connexion);
+          }
         }
+      }
     }
-    */
+  }
+  
 }
-
-
+       
+*/
 
 static bool 
 _ConnexionPossible(const pxr::SdfValueTypeName& lhs, const pxr::SdfValueTypeName& rhs)

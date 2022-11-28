@@ -175,8 +175,10 @@ protected:
   //-------------------------------------------------------------------
   class Connexion : public Item {
     public:
-      Connexion(Graph::Connexion* connexion, int color)
+      Connexion(Port* start, Port* end, Graph::Connexion* connexion, int color)
         : Item(color) 
+        , _start(start)
+        , _end(end)
         , _connexion(connexion) {};
 
       bool IsVisible(GraphEditorUI* editor) override { return true; };
@@ -206,12 +208,7 @@ protected:
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
-      enum {
-        DIRTY_CLEAN = 0,
-        DIRTY_SIZE = 1,
-        DIRTY_POSITION = 2,
-      };
-      Node(Graph::Node* node, int color);
+      Node(Graph::Node* node);
       ~Node();
 
       void SetPosition(const pxr::GfVec2f& pos) override;
@@ -226,7 +223,6 @@ protected:
       Port* GetPort(const pxr::TfToken& name);
       Graph::Node* Get() { return _node; };
 
-      void Init();
       void Update();
 
     private:
@@ -234,8 +230,6 @@ protected:
       std::vector<Port>           _ports;
       Node*                       _parent;
       pxr::GfVec3f                _backgroundColor;
-      short                       _expended;
-      short                       _dirty;
 
       // data
       Graph::Node* _node;
@@ -294,6 +288,9 @@ public:
   // nodes
   void AddNode(Graph::Node* node) { _graph->AddNode(node); };
 
+  // port
+  Port* GetPort(Graph::Port* port);
+
   // connexion
   void StartConnexion();
   void UpdateConnexion();
@@ -316,7 +313,7 @@ public:
   void FrameAll();
 
   // io
-  bool Populate(pxr::UsdPrim& prim);
+  bool Populate(Graph* graph);
   void Update();
   void Clear();
   bool Read(const std::string& filename);
@@ -367,9 +364,8 @@ private:
   static ImGuiWindowFlags               _flags;
   Selection                             _selection;
 
-  std::vector<Node>                    _nodes;
-  std::vector<Port>                    _ports;
-  std::vector<Connexion>               _connexions;
+  std::vector<Node*>                    _nodes;
+  std::vector<Connexion*>               _connexions;
 };
 
 

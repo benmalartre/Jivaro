@@ -22,3 +22,5 @@ private:
     pxr::UsdStageRefPtr         _stage;
 };
 JVR_NAMESPACE_CLOSE_SCOPE
+
+#endif //JVR_GRAPH_HIERARCHY_H

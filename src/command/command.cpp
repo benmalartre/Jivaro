@@ -617,7 +617,6 @@ ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::Sd
   , _source(source)
   , _destination(destination)
 {
-  std::cout << "CONNECT NODE COMMAND : " << source << "," << destination << std::endl;
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
   pxr::UsdPrim lhsPrim = stage->GetPrimAtPath(source.GetPrimPath());
   pxr::UsdPrim rhsPrim = stage->GetPrimAtPath(destination.GetPrimPath());

@@ -10,10 +10,13 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+static pxr::GfVec2f DEFAULT_NODE_SIZE(120.f, 60.f);
+static pxr::GfVec3f DEFAULT_NODE_COLOR(0.5f, 0.5f, 0.5f);
 
 class Graph 
 {
 public:
+ 
   class Node;
   class Port;
   class Connexion;
@@ -22,6 +25,10 @@ public:
   //-------------------------------------------------------------------
   class Port {
     public:
+      enum Alignement {
+        HORIZONTAL,
+        VERTICAL
+      };
       enum Flag {
         INPUT = 1,
         OUTPUT = 2
@@ -50,6 +57,7 @@ public:
       Node*                 _node;
       pxr::TfToken          _label;
       Flag                  _flags;
+      Alignement            _align;
       pxr::UsdAttribute     _attr;
   };
 
@@ -74,6 +82,12 @@ public:
   //-------------------------------------------------------------------
   class Node {
     public: 
+      enum {
+        DIRTY_CLEAN = 0,
+        DIRTY_SIZE = 1,
+        DIRTY_POSITION = 2,
+        DIRTY_COLOR = 4
+      };
       Node(pxr::UsdPrim& prim);
       ~Node();
 
@@ -87,14 +101,27 @@ public:
       const pxr::UsdPrim& GetPrim() const { return _prim; };
       bool IsCompound();
 
+      void Init();
+      void Update();
+
       pxr::TfToken GetName() { return _name; };
       Port* GetPort(const pxr::TfToken& name);
-      virtual pxr::GfVec2i GetPosition() { return pxr::GfVec2i(); };
-      virtual pxr::GfVec2i GetSize() { return pxr::GfVec2i(); };
-      virtual float GetWidth() { return 0.f; };
-      virtual float GetHeight() { return 0.f; };
+      short GetDirty() { return _dirty; };
+      const pxr::GfVec2f& GetPosition() { return _pos; };
+      const pxr::GfVec2f& GetSize() { return _size; };
+      const pxr::GfVec3f& GetColor() { return _color; };
+      pxr::TfToken GetExpended() { return _expended; };
+      float GetWidth() { return _size[0]; };
+      float GetHeight() { return _size[1]; };
+
+      void SetDirty(short dirty) { _dirty = dirty; };
+      void SetPosition(const pxr::GfVec2f& pos) ;
+      void SetSize(const pxr::GfVec2f& size) ;
+      void SetExpended(const pxr::TfToken& expended) ;
+      void SetColor(const pxr::GfVec3f& color);
 
     protected:
+      virtual void                _PopulatePorts() {};
       Node*                       _parent;
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
@@ -102,12 +129,13 @@ public:
       short                       _dirty;
       pxr::GfVec2f                _pos;
       pxr::GfVec2f                _size;
-      short                       _expended;
+      pxr::GfVec3f                _color;
+      pxr::TfToken                _expended;
   };
 
 public:
-  Graph(pxr::UsdPrim& prim);
-  ~Graph();
+  Graph();
+  virtual ~Graph();
 
   virtual void Populate(pxr::UsdPrim& prim);
   virtual void Clear();
@@ -133,8 +161,8 @@ public:
   bool ConnexionPossible(const Port* lhs, const Port* rhs);
 
 protected:
-  void _DiscoverNodes(pxr::UsdPrim& prim);
-  void _DiscoverConnexions(pxr::UsdPrim& prim);
+  virtual void _DiscoverNodes() = 0;
+  virtual void _DiscoverConnexions() = 0;
   
 
   std::vector<Node*>              _nodes;
