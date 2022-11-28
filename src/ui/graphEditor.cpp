@@ -1108,17 +1108,10 @@ GraphEditorUI::Draw()
     }
     ImGui::PopFont();
     
-
     for (auto& connexion : _connexions) {
       connexion->Draw(this);
     }
-    ImGui::PopFont();
     
-
-    for (auto& connexion : _graph->GetConnexions()) {
-      connexion->Draw(this);
-    }
-
     if (_connect) {
       const GraphEditorUI::Node* startNode = _connector.startPort->GetNode();
       const pxr::GfVec2f viewPos = GetPosition();

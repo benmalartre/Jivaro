@@ -114,7 +114,6 @@ ExecutionGraph::ExecutionGraph(pxr::UsdPrim& prim)
   : Graph()
 {
   Populate(prim);
-  std::cout << "execution graph constructor" << prim.GetPath() << std::endl;
 }
 
 // Graph destructor
