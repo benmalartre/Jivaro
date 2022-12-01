@@ -1,15 +1,20 @@
-#include <pxr/usd/sdf/types.h
-#include "../graph/graph.h"
+#include <pxr/usd/sdf/types.h>
+#include <pxr/usd/sdf/primSpec.h>
+#include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
+#include "../graph/hierarchy.h"
+#include "../command/block.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 // Graph constructor
 //------------------------------------------------------------------------------
-HierarchyGraph::HierarchyGraph(pxr::SdfLayerRefPtr& layer) 
+HierarchyGraph::HierarchyGraph(pxr::SdfLayerRefPtr& layer, pxr::UsdPrim& prim) 
   : Graph()
+  , _layer(layer)
+  , _prim(prim)
 {
-  Populate(prim);
+    _DiscoverNodes();
 }
 
 // Graph destructor
@@ -18,54 +23,65 @@ HierarchyGraph::~HierarchyGraph()
 {
 }
 
+
 HierarchyGraph::HierarchyNode::HierarchyNode(pxr::UsdPrim& prim)
   : Graph::Node(prim)
 {
   _PopulatePorts();
 }
 
+
 void HierarchyGraph::HierarchyNode::_PopulatePorts()
 {
-    /*
-  if (_prim.IsA<pxr::UsdExecGraph>()) {
-    pxr::UsdExecGraph graph(_prim);
-    for (const auto& input : graph.GetInputs()) {
-      pxr::UsdAttribute attr = input.GetAttr();
-      AddInput(attr, input.GetBaseName());
-    }
-    for (const auto& output : graph.GetOutputs()) {
-      pxr::UsdAttribute attr = output.GetAttr();
-      AddOutput(attr, output.GetBaseName());
-    }
-  }
-  else if (_prim.IsA<pxr::UsdExecNode>()) {
-    pxr::UsdExecNode node(_prim);
-    for (const auto& input : node.GetInputs()) {
-      pxr::UsdAttribute attr = input.GetAttr();
-      AddInput(attr, input.GetBaseName());
-    }
-    for (const auto& output : node.GetOutputs()) {
-      pxr::UsdAttribute attr = output.GetAttr();
-      AddOutput(attr, output.GetBaseName());
-    }
-  }
-  */
+  _ports.push_back(Graph::Port(this, Graph::Port::RIGHT | Graph::Port::HIDDEN, ParentPortToken));
+  _ports.push_back(Graph::Port(this, Graph::Port::LEFT | Graph::Port::HIDDEN, ChildrenPortToken));
 }
 
 void
-ExecutionGraph::_DiscoverNodes() 
+HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
 {
-  
-  if (!_layer->GetRootPrims().empty())return;
+  float startX = _currentX;
+  float startY = _currentY;
+  pxr::SdfPrimSpecHandle primSpec = _layer->GetPrimAtPath(parent->GetPrim().GetPath());
+  _currentX += 100;
+  for (auto& child : primSpec.GetSpec().GetNameChildren()) {
+    _currentY += 30;
+    pxr::UsdPrim childPrim = 
+      parent->GetPrim().GetChild(pxr::TfToken(child->GetName()));
+    HierarchyGraph::HierarchyNode* node =
+      new HierarchyGraph::HierarchyNode(childPrim);
 
-  for (pxr::UsdPrim child : _prim.GetChildren()) {
-    HierarchyGraph::HierarchyNode* node = new HierarchyGraph::HierarchyNode(child);
+    if(!childPrim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
+      node->SetColor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
+      node->SetPosition(pxr::GfVec2f(_currentX, _currentY));
+    }
     AddNode(node);
+
+    
+    Graph::Connexion* connexion = 
+      new Graph::Connexion(parent->GetChildrenPort(), node->GetParentPort());
+    AddConnexion(connexion);
+    _RecurseNodes(node);
   }
+  _currentX = startX;
+  _currentY = startY;
 }
 
 void
-ExecutionGraph::_DiscoverConnexions()
+HierarchyGraph::_DiscoverNodes() 
+{
+  UndoBlock editBlock;
+  HierarchyGraph::HierarchyNode* node = 
+    new HierarchyGraph::HierarchyNode(_prim);
+  AddNode(node);
+  _currentX = 0.f;
+  _currentY = 0.f;
+  _RecurseNodes(node);
+
+}
+
+void
+HierarchyGraph::_DiscoverConnexions()
 {
     /*
   std::cout << "execution discover connexions ..." << std::endl;

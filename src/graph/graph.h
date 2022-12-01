@@ -13,6 +13,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 static pxr::GfVec2f DEFAULT_NODE_SIZE(120.f, 60.f);
 static pxr::GfVec3f DEFAULT_NODE_COLOR(0.5f, 0.5f, 0.5f);
 
+static pxr::TfToken ParentPortToken("Parent");
+static pxr::TfToken ChildrenPortToken("Children");
+
 class Graph 
 {
 public:
@@ -31,12 +34,18 @@ public:
       };
       enum Flag {
         INPUT = 1,
-        OUTPUT = 2
+        OUTPUT = 2,
+        LEFT = 4,
+        TOP = 8,
+        BOTTOM = 16,
+        RIGHT = 32,
+        HIDDEN = 64
       };
 
       Port() {};
-      Port(Node* node, Flag flag, const pxr::TfToken& label, 
+      Port(Node* node, size_t flag, const pxr::TfToken& label, 
         pxr::UsdAttribute& attribute);
+      Port(Node* node, size_t flag, const pxr::TfToken& label);
 
       bool IsInput() { return _flags & INPUT; };
       bool IsOutput() { return _flags & OUTPUT; };
@@ -49,14 +58,14 @@ public:
       void SetNode(Node* node) { _node = node; };
       const pxr::UsdAttribute& GetAttr() const { return _attr;};
       pxr::UsdAttribute& GetAttr() { return _attr;};
-      Flag GetFlags() { return _flags; };
+      size_t GetFlags() { return _flags; };
       pxr::TfToken GetLabel() { return _label; };
       bool IsConnected(Graph* graph, Connexion* foundConnexion);
 
     protected:
       Node*                 _node;
       pxr::TfToken          _label;
-      Flag                  _flags;
+      size_t                _flags;
       Alignement            _align;
       pxr::UsdAttribute     _attr;
   };
@@ -89,11 +98,15 @@ public:
         DIRTY_COLOR = 4
       };
       Node(pxr::UsdPrim& prim);
+      Node(pxr::SdfPrimSpecHandle& prim, pxr::UsdStageRefPtr& stage);
       ~Node();
 
-      void AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
-      void AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
-      void AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
+      void AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, 
+        size_t flags=Port::INPUT);
+      void AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, 
+        size_t flags=Port::OUTPUT);
+      void AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name, 
+        size_t flags=Port::INPUT|Port::OUTPUT);
 
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };
@@ -119,6 +132,8 @@ public:
       void SetSize(const pxr::GfVec2f& size) ;
       void SetExpended(const pxr::TfToken& expended) ;
       void SetColor(const pxr::GfVec3f& color);
+
+      bool HasPort(const pxr::TfToken& name);
 
     protected:
       virtual void                _PopulatePorts() {};

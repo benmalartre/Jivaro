@@ -63,7 +63,6 @@ ExecutionGraph* TestUsdExecAPI()
   outVal0.ConnectToSource(output);
 
   stage->SetDefaultPrim(graph.GetPrim());
-  std::cout << "construct execution graph" << std::endl;
   return new ExecutionGraph(graph.GetPrim());
 }
 
@@ -168,7 +167,6 @@ ExecutionGraph::_DiscoverNodes()
 void
 ExecutionGraph::_DiscoverConnexions()
 {
-  std::cout << "execution discover connexions ..." << std::endl;
   for (pxr::UsdPrim child : _prim.GetChildren()) {
     if (child.IsA<pxr::UsdExecNode>()) {
       pxr::UsdExecNode node(child);

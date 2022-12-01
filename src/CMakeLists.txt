@@ -42,6 +42,7 @@ add_executable(${TARGET}
   ui/curveEditor.cpp
   graph/graph.cpp
   graph/execution.cpp
+  graph/hierarchy.cpp
   #embree/oiio.cpp
   #embree/jpeg.cpp
   #embree/utils.cpp

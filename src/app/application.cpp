@@ -113,6 +113,15 @@ Application::SetPopup(PopupUI* popup)
 {
   popup->SetParent(GetActiveWindow()->GetMainView());
   _popup = popup;
+  _mainWindow->CaptureFramebuffer();
+  for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
+}
+
+void
+Application::SetPopupDeferred(PopupUI* popup)
+{
+  popup->SetParent(GetActiveWindow()->GetMainView());
+  _popup = popup;
   _needCaptureFramebuffers = true;
 }
 

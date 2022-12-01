@@ -113,6 +113,7 @@ public:
   // popup
   PopupUI* GetPopup() { return _popup; };
   void SetPopup(PopupUI* popup);
+  void SetPopupDeferred(PopupUI* popup);
   void UpdatePopup();
 
   // tools

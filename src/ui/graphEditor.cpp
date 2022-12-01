@@ -24,6 +24,7 @@
 #include "../command/block.h"
 #include "../command/command.h"
 #include "../graph/execution.h"
+#include "../graph/hierarchy.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -80,6 +81,7 @@ _GetColorFromAttribute(const pxr::UsdAttribute& attr)
   GRAPH_COLOR_LOCATION          = 0xFF555577,
   GRAPH_COLOR_CONTOUR           = 0xFF000000
   */
+  if (!attr.IsValid())return GRAPH_COLOR_UNDEFINED;
   pxr::SdfValueTypeName vtn = attr.GetTypeName();
   if (vtn == pxr::SdfValueTypeNames->Bool || 
     vtn == pxr::SdfValueTypeNames->BoolArray) return GRAPH_COLOR_BOOL;
@@ -290,7 +292,7 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
     ImColor(0, 0, 0, 255),
     _port->GetLabel().GetText());
 
-  if (Get()->GetFlags() & Graph::Port::INPUT) {
+  if(Get()->GetFlags() & Graph::Port::LEFT) {
     drawList->AddCircleFilled(
       p + _pos * scale,
       GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
@@ -298,7 +300,7 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
     );
   }
 
-  if (Get()->GetFlags() & Graph::Port::OUTPUT) {
+  if (Get()->GetFlags() & Graph::Port::RIGHT) {
     drawList->AddCircleFilled(
       p + (_pos + pxr::GfVec2f(_port->GetNode()->GetWidth(), 0.f)) * scale,
       GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
@@ -925,7 +927,10 @@ RefreshGraphCallback(GraphEditorUI* editor)
       pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
       
       if (selected.IsValid()) {
-        editor->Populate(new ExecutionGraph(selected));
+        //editor->Populate(new ExecutionGraph(selected));
+
+        editor->Populate(new HierarchyGraph(pxr::SdfLayerRefPtr(
+          stage->GetRootLayer()), selected));
         return;
       }
     }
@@ -938,9 +943,7 @@ GraphEditorUI::GetPort(Graph::Port* port)
 {
   for (auto& node : _nodes) {
     if (node->Get() != port->GetNode()) continue;
-    for (auto& other : node->GetPorts()) {
-      if (other.Get() == port) return &other;
-    }
+    return node->GetPort(port->GetName());
   }
   return NULL;
 }
@@ -950,7 +953,6 @@ GraphEditorUI::GetPort(Graph::Port* port)
 bool
 GraphEditorUI::Populate(Graph* graph)
 {
-  std::cout << "populate graph editor : " << graph << std::endl;
 
   for (auto& connexion : _connexions)delete connexion;
   for (auto& node : _nodes) delete node;
@@ -958,16 +960,18 @@ GraphEditorUI::Populate(Graph* graph)
   _connexions.clear();
   _nodes.clear();
 
+  if(_graph)delete _graph;
   _graph = graph;
 
-  std::cout << "num nodes : " << _graph->GetNodes().size() << std::endl;
   for (auto& node : _graph->GetNodes()) {
     _nodes.push_back(new GraphEditorUI::Node(node));
   }
   for (auto& connexion : _graph->GetConnexions()) {
-    Port* start = GetPort(connexion->GetStart());
-    Port* end = GetPort(connexion->GetEnd());
-    _connexions.push_back(new GraphEditorUI::Connexion(start, end, connexion, GRAPH_COLOR_FLOAT));
+    GraphEditorUI::Port* start = GetPort(connexion->GetStart());
+    GraphEditorUI::Port* end = GetPort(connexion->GetEnd());
+    if (start && end) {
+      _connexions.push_back(new GraphEditorUI::Connexion(start, end, connexion, GRAPH_COLOR_FLOAT));
+    }
   }
   return true;
 }
@@ -1102,16 +1106,15 @@ GraphEditorUI::Draw()
     }
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImGui::SetWindowFontScale(GetFontScale());
+    for (auto& connexion : _connexions) {
+      connexion->Draw(this);
+    }
     ImGui::PushFont(GetWindow()->GetFont(GetFontIndex()));
     for (auto& node : _nodes) {
       node->Draw(this);
     }
     ImGui::PopFont();
-    
-    for (auto& connexion : _connexions) {
-      connexion->Draw(this);
-    }
-    
+
     if (_connect) {
       const GraphEditorUI::Node* startNode = _connector.startPort->GetNode();
       const pxr::GfVec2f viewPos = GetPosition();
@@ -1268,10 +1271,8 @@ GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 void
 GraphEditorUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
 {
-  std::cout << "attribute changed : graph = " << _graph << std::endl;
   if (!_graph)return;
-  std::cout << "on attribute changed : update from usd" << std::endl;
-  Update();
+  //Update();
 }
 
 
@@ -1523,16 +1524,17 @@ GraphEditorUI::MouseMove(int x, int y)
       _parent->SetDirty();
       break;
     case NavigateMode::ZOOM:
-      MouseWheel(x - _lastX, y - _lastY);
+      MouseWheel((x - _lastX) / _invScale, (y - _lastY) / _invScale);
       break;
     default:
       break;
     }
   }
   else if (_drag) {
+    pxr::GfVec2f offset((x - _lastX) / _scale, (y - _lastY) / _scale);
+    _dragOffset += offset;
     for (auto& node : _selectedNodes) {
-      _dragOffset += pxr::GfVec2f(x - _lastX, y - _lastY) / _scale;
-      const pxr::GfVec2f pos(node->GetPosition() + pxr::GfVec2f(x - _lastX, y - _lastY) / _scale);
+      const pxr::GfVec2f pos(node->GetPosition() + offset);
       node->SetPosition(pos);
     }
     _parent->SetDirty();
@@ -1553,11 +1555,11 @@ GraphEditorUI::MouseMove(int x, int y)
 void 
 GraphEditorUI::MouseWheel(int x, int y)
 {
-  pxr::GfVec2f mousePos = (ImGui::GetMousePos() - _parent->GetMin());
+  pxr::GfVec2f mousePos = (pxr::GfVec2f(_lastX, _lastY) - _parent->GetMin());
   pxr::GfVec2f originalPos = mousePos / _scale ;
 
   _scale += (x + y) * 0.1;
-  _scale = CLAMP(_scale, 0.1, 8.0);
+  _scale = CLAMP(_scale, 0.01, 8.0);
   _invScale = 1.f / _scale;
   pxr::GfVec2f scaledPos = mousePos / _scale;
   _offset -= (originalPos - scaledPos);

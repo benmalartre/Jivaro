@@ -546,7 +546,7 @@ MoveNodeCommand::MoveNodeCommand(
   , _nodes(nodes)
   , _offset(offset)
 {
-
+  std::cout << "move node command..." << std::endl;
   Application* app = GetApplication();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
@@ -556,9 +556,10 @@ MoveNodeCommand::MoveNodeCommand(
     }
 
     pxr::UsdUINodeGraphNodeAPI api(prim);
-    pxr::GfVec2f pos;
+   
     pxr::UsdAttribute posAttr = api.GetPosAttr();
     if (posAttr.IsValid()) {
+      pxr::GfVec2f pos;
       posAttr.Get(&pos);
       pos += offset;
       posAttr.Set(pos);
@@ -572,6 +573,7 @@ MoveNodeCommand::MoveNodeCommand(
 
 void MoveNodeCommand::Do()
 {
+  std::cout << "move node command do..." << std::endl;
   _inverse.Invert();
   _offset *= -1;
   AttributeChangedNotice().Send();
