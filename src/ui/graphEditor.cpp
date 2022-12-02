@@ -525,9 +525,15 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 }
 
 void
-GraphEditorUI::Node::Update()
+GraphEditorUI::Node::Write()
 {
-  Get()->Update();
+  Get()->Write();
+}
+
+void
+GraphEditorUI::Node::Read()
+{
+  Get()->Read();
 }
 
 bool 
@@ -928,7 +934,7 @@ RefreshGraphCallback(GraphEditorUI* editor)
       
       if (selected.IsValid()) {
         //editor->Populate(new ExecutionGraph(selected));
-
+        std::cout << "refresh callback.." << std::endl;
         editor->Populate(new HierarchyGraph(pxr::SdfLayerRefPtr(
           stage->GetRootLayer()), selected));
         return;
@@ -953,14 +959,9 @@ GraphEditorUI::GetPort(Graph::Port* port)
 bool
 GraphEditorUI::Populate(Graph* graph)
 {
+  std::cout << "GRAPH POPULATE : " << graph << std::endl;
+  Clear();
 
-  for (auto& connexion : _connexions)delete connexion;
-  for (auto& node : _nodes) delete node;
-
-  _connexions.clear();
-  _nodes.clear();
-
-  if(_graph)delete _graph;
   _graph = graph;
 
   for (auto& node : _graph->GetNodes()) {
@@ -979,10 +980,18 @@ GraphEditorUI::Populate(Graph* graph)
 // update
 //------------------------------------------------------------------------------
 void
-GraphEditorUI::Update()
+GraphEditorUI::Write()
 {
   for (auto& node : _nodes) {
-    node->Update();
+    node->Write();
+  }
+}
+
+void
+GraphEditorUI::Read()
+{
+  for (auto& node : _nodes) {
+    node->Read();
   }
 }
 
@@ -990,11 +999,10 @@ GraphEditorUI::Update()
 void
 GraphEditorUI::Clear()
 {
-  if (_graph) {
-    _graph->Clear();
-    delete _graph;
-  }
-  _graph = NULL;
+  for (auto& connexion : _connexions)delete connexion;
+  for (auto& node : _nodes)delete node;
+  _connexions.clear();
+  _nodes.clear();
 }
 
 // read
@@ -1098,7 +1106,6 @@ GraphEditorUI::Draw()
 
   //DrawGrid();
   //ImGui::PushFont(GetWindow()->GetRegularFont(_fontIndex));
-
   if (_graph) {
     ImGui::SetWindowFontScale(1.0);
     for (auto& node : _nodes) {
@@ -1174,13 +1181,16 @@ GraphEditorUI::Draw()
         pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
         pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
         if (selected.IsValid() && selected.IsA<pxr::UsdShadeNodeGraph>()) {
-          _graph->Populate(selected);
+          std::cout << "test button!" << std::endl;
+          if (_graph)delete _graph;
+          _graph = new ExecutionGraph(selected);
           done = true;
         }
       }
     } if (!done) {
       //_stage->Export("C:/Users/graph/Documents/bmal/src/Amnesie/build/src/Release/graph/test.usda");
       ExecutionGraph* graph = TestUsdExecAPI();
+      std::cout << "not done!" << std::endl;
       Populate(graph);
     }
   }
@@ -1259,10 +1269,11 @@ void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
   if (!_graph)return;
+  std::cout << "scene changed notice prim valid ? " << _graph->GetPrim().IsValid() << std::endl;
+  std::cout << "prim : " << _graph->GetPrim().GetPath() << std::endl;
   if (!_graph->GetPrim().IsValid()) {
     Clear();
   } else {
-    _graph->Populate(_graph->GetPrim());
     Populate(_graph);
   }
   _parent->SetDirty();
@@ -1272,7 +1283,7 @@ void
 GraphEditorUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
 {
   if (!_graph)return;
-  //Update();
+  Read();
 }
 
 
@@ -1524,7 +1535,7 @@ GraphEditorUI::MouseMove(int x, int y)
       _parent->SetDirty();
       break;
     case NavigateMode::ZOOM:
-      MouseWheel((x - _lastX) / _invScale, (y - _lastY) / _invScale);
+      MouseWheel((x - _lastX) > 0 ? 1 : -1, (y - _lastY) > 0 ? 1 : -1);
       break;
     default:
       break;

@@ -112,7 +112,7 @@ _GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
 ExecutionGraph::ExecutionGraph(pxr::UsdPrim& prim) 
   : Graph()
 {
-  Populate(prim);
+    Populate(prim);
 }
 
 // Graph destructor

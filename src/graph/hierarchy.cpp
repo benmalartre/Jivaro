@@ -10,17 +10,26 @@ JVR_NAMESPACE_OPEN_SCOPE
 // Graph constructor
 //------------------------------------------------------------------------------
 HierarchyGraph::HierarchyGraph(pxr::SdfLayerRefPtr& layer, pxr::UsdPrim& prim) 
-  : Graph()
+  : Graph(prim)
   , _layer(layer)
-  , _prim(prim)
 {
-    _DiscoverNodes();
+  Populate(prim);
 }
 
 // Graph destructor
 //------------------------------------------------------------------------------
 HierarchyGraph::~HierarchyGraph()
 {
+}
+
+// Graph populate
+//------------------------------------------------------------------------------
+void HierarchyGraph::Populate(pxr::UsdPrim& prim)
+{
+  _prim = prim;
+  Clear();
+  _DiscoverNodes();
+  _DiscoverConnexions();
 }
 
 
@@ -70,7 +79,6 @@ HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
 void
 HierarchyGraph::_DiscoverNodes() 
 {
-  UndoBlock editBlock;
   HierarchyGraph::HierarchyNode* node = 
     new HierarchyGraph::HierarchyNode(_prim);
   AddNode(node);

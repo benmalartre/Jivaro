@@ -98,7 +98,6 @@ public:
         DIRTY_COLOR = 4
       };
       Node(pxr::UsdPrim& prim);
-      Node(pxr::SdfPrimSpecHandle& prim, pxr::UsdStageRefPtr& stage);
       ~Node();
 
       void AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, 
@@ -114,8 +113,8 @@ public:
       const pxr::UsdPrim& GetPrim() const { return _prim; };
       bool IsCompound();
 
-      void Init();
-      void Update();
+      void Read();
+      void Write();
 
       pxr::TfToken GetName() { return _name; };
       Port* GetPort(const pxr::TfToken& name);
@@ -150,6 +149,7 @@ public:
 
 public:
   Graph();
+  Graph(pxr::UsdPrim& prim);
   virtual ~Graph();
 
   virtual void Populate(pxr::UsdPrim& prim);

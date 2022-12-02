@@ -37,24 +37,24 @@ Graph::Node::Node(pxr::UsdPrim& prim)
 {
   if (_prim.IsValid())
   {
-    _name = prim.GetName();
+    _name = _prim.GetName();
 
     if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
-      pxr::UsdUINodeGraphNodeAPI api(prim);
+      pxr::UsdUINodeGraphNodeAPI api(_prim);
       api.GetPosAttr().Get(&_pos);
       api.GetSizeAttr().Get(&_size);
       api.GetExpansionStateAttr().Get(&_expended);
       api.GetDisplayColorAttr().Get(&_color);
 
     } else {
-      if (pxr::UsdUINodeGraphNodeAPI::CanApply(prim)) {
-        pxr::UsdUINodeGraphNodeAPI api = pxr::UsdUINodeGraphNodeAPI::Apply(prim);
+      if (pxr::UsdUINodeGraphNodeAPI::CanApply(_prim)) {
+        pxr::UsdUINodeGraphNodeAPI api = 
+        pxr::UsdUINodeGraphNodeAPI::Apply(_prim);
         api.CreatePosAttr().Set(_pos);
         api.CreateSizeAttr().Set(_size);
         api.CreateExpansionStateAttr().Set(_expended);
         api.CreateDisplayColorAttr().Set(_color);
-      }
-      else {
+      } else {
         std::cout <<
           "Invalid prim for applying UsdUINodeGraphNodeAPI : %s." <<
           prim.GetPath().GetText() << std::endl;
@@ -124,13 +124,24 @@ Graph::Node::AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name, siz
 // Node update
 //------------------------------------------------------------------------------
 void
-Graph::Node::Update()
+Graph::Node::Read()
 {
   pxr::UsdUINodeGraphNodeAPI api(_prim);
   api.GetPosAttr().Get(&_pos);
   api.GetSizeAttr().Get(&_size);
   api.GetExpansionStateAttr().Get(&_expended);
   api.GetDisplayColorAttr().Get(&_color);
+}
+
+void
+Graph::Node::Write()
+{
+  pxr::UsdUINodeGraphNodeAPI api = 
+    pxr::UsdUINodeGraphNodeAPI::Apply(_prim);
+  api.CreatePosAttr().Set(_pos);
+  api.CreateSizeAttr().Set(_size);
+  api.CreateExpansionStateAttr().Set(_expended);
+  api.CreateDisplayColorAttr().Set(_color);
 }
 
 // Node get port
@@ -221,7 +232,11 @@ Graph::Port::IsConnected(Graph* graph, Graph::Connexion* foundConnexion)
 //------------------------------------------------------------------------------
 Graph::Graph()
 {
- 
+}
+
+Graph::Graph(pxr::UsdPrim& prim)
+  : _prim(prim)
+{
 }
 
 
@@ -229,29 +244,16 @@ Graph::Graph()
 //------------------------------------------------------------------------------
 Graph::~Graph()
 {
-  for(auto& connexion: _connexions)delete connexion;
-  for(auto& node: _nodes)delete node;
-  _connexions.clear();
-  _nodes.clear();
+  Clear();
 }
+
 
 // Graph populate
 //------------------------------------------------------------------------------
 void Graph::Populate(pxr::UsdPrim& prim)
 {
-  if (!prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
-    if (pxr::UsdUISceneGraphPrimAPI::CanApply(prim)) {
-      pxr::UsdUISceneGraphPrimAPI::Apply(prim);
-    } else {
-      std::cout <<
-        "Invalid prim for applying UsdUINodeGraphNodeAPI : " <<
-        prim.GetPath().GetText() << "." << std::endl;
-      return;
-    }
-  }
+  Clear();
   _prim = prim;
-  _nodes.clear();
-  _connexions.clear();
   _DiscoverNodes();
   _DiscoverConnexions();
 }
@@ -260,7 +262,8 @@ void Graph::Populate(pxr::UsdPrim& prim)
 //------------------------------------------------------------------------------
 void Graph::Clear()
 {
-  _prim = pxr::UsdPrim();
+  for (auto& connexion : _connexions)delete connexion;
+  for (auto& node : _nodes) delete node;
   _nodes.clear();
   _connexions.clear();
 }

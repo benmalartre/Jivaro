@@ -166,7 +166,16 @@ bool ColorPopupUI::Terminate()
       UndoBlock editBlock(true);
       _attribute.Set(_color, pxr::UsdTimeCode::Default());
     }
-    AttributeChangedNotice().Send();
+    //AttributeChangedNotice().Send();
+  }
+  else {
+    if (_isArray) {
+      _attribute.Set(pxr::VtArray<pxr::GfVec3f>({ _color }), 
+        pxr::UsdTimeCode::Default());
+    }
+    else {
+      _attribute.Set(_color, pxr::UsdTimeCode::Default());
+    }
   }
   return _done;
 }
@@ -323,25 +332,7 @@ NodePopupUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  std::cout << x << "," << y << std::endl;
-  /*
-  if (!(x >= _x && y >= _y && x <= (_x + _width) && y <= (_y + _height))) {
-    if (_isArray) {
-      pxr::VtArray<pxr::GfVec3f> result;
-      result = { _original };
-      _attribute.Set(result, _time);
-      result = { _color };
-      UndoBlock editBlock;
-      _attribute.Set(result, _time);
-    }
-    else {
-      _attribute.Set(_original, _time);
-      UndoBlock editBlock;
-      _attribute.Set(_color, _time);
-    }
-    _done = true;
-  }
-  */
+
   if(button == GLFW_MOUSE_BUTTON_RIGHT)
     _done = true;
 }
@@ -365,7 +356,6 @@ NodePopupUI::Keyboard(int key, int scancode, int action, int mods)
       break;
     case GLFW_KEY_ENTER:
       const std::string name = _filteredNodes[_i];
-      std::cout << "INSTANCIATE NODE : " << name << std::endl;
       _done = true;
       break;
     }

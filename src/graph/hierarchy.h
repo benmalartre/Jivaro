@@ -28,6 +28,8 @@ public:
   HierarchyGraph(pxr::SdfLayerRefPtr &layer, pxr::UsdPrim& prim);
   ~HierarchyGraph()         override;
 
+  virtual void Populate(pxr::UsdPrim& prim) override;
+
 protected:
   virtual void _DiscoverNodes() override;
   virtual void _DiscoverConnexions() override;

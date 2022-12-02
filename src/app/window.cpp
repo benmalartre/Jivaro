@@ -494,7 +494,7 @@ Window::Draw(PopupUI* popup)
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  if (popup->IsSync()) {
+  if (!popup->IsSync()) {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(GetWidth(), GetHeight()));
     ImGui::Begin("##background", NULL, JVR_BACKGROUND_FLAGS);

@@ -223,7 +223,8 @@ protected:
       Port* GetPort(const pxr::TfToken& name);
       Graph::Node* Get() { return _node; };
 
-      void Update();
+      void Write();
+      void Read();
 
     private:
       // ui
@@ -314,7 +315,8 @@ public:
 
   // io
   bool Populate(Graph* graph);
-  void Update();
+  void Write();
+  void Read();
   void Clear();
   bool Read(const std::string& filename);
   bool Write(const std::string& filename);
