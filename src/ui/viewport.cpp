@@ -126,13 +126,13 @@ void ViewportUI::Init()
   }
 
   pxr::GlfSimpleMaterial material;
-  pxr::GlfSimpleLight light;
-  light.SetAmbient({ 0.2, 0.2, 0.2, 1.0 });
-  light.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
-  light.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
-  light.SetPosition({ 200, 200, 200, 1.0 });
+  pxr::GlfSimpleLight simpleLight;
+  simpleLight.SetAmbient({ 0.2, 0.2, 0.2, 1.0 });
+  simpleLight.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
+  simpleLight.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
+  simpleLight.SetPosition({ 200, 200, 200, 1.0 });
   pxr::GlfSimpleLightVector lights;
-  lights.push_back(light);
+  lights.push_back(simpleLight);
 
   material.SetAmbient({ 0.0, 0.0, 0.0, 1.f });
   material.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });

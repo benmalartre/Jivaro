@@ -162,7 +162,6 @@ protected:
   virtual void _DiscoverNodes() = 0;
   virtual void _DiscoverConnexions() = 0;
   
-
   std::vector<Node*>              _nodes;
   std::vector<Connexion*>         _connexions;
   pxr::UsdPrim                    _prim;

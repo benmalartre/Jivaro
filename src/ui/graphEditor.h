@@ -211,17 +211,15 @@ protected:
       Node(Graph::Node* node);
       ~Node();
 
-      void SetPosition(const pxr::GfVec2f& pos) override;
-      void SetSize(const pxr::GfVec2f& size) override;
       void SetColor(const pxr::GfVec3f& color) override;
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;
-      void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
       void ComputeSize(GraphEditorUI* editor);
 
       std::vector<Port>& GetPorts() { return _ports; };
       Port* GetPort(const pxr::TfToken& name);
       Graph::Node* Get() { return _node; };
+      pxr::TfToken& GetExpended() { return _expended; };
 
       void Write();
       void Read();
@@ -230,7 +228,7 @@ protected:
       // ui
       std::vector<Port>           _ports;
       Node*                       _parent;
-      pxr::GfVec3f                _backgroundColor;
+      pxr::TfToken                _expended;
 
       // data
       Graph::Node* _node;
