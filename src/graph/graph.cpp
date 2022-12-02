@@ -38,29 +38,6 @@ Graph::Node::Node(pxr::UsdPrim& prim)
   if (_prim.IsValid())
   {
     _name = _prim.GetName();
-
-    if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
-      pxr::UsdUINodeGraphNodeAPI api(_prim);
-      api.GetPosAttr().Get(&_pos);
-      api.GetSizeAttr().Get(&_size);
-      api.GetExpansionStateAttr().Get(&_expended);
-      api.GetDisplayColorAttr().Get(&_color);
-
-    } else {
-      if (pxr::UsdUINodeGraphNodeAPI::CanApply(_prim)) {
-        pxr::UsdUINodeGraphNodeAPI api = 
-        pxr::UsdUINodeGraphNodeAPI::Apply(_prim);
-        api.CreatePosAttr().Set(_pos);
-        api.CreateSizeAttr().Set(_size);
-        api.CreateExpansionStateAttr().Set(_expended);
-        api.CreateDisplayColorAttr().Set(_color);
-      } else {
-        std::cout <<
-          "Invalid prim for applying UsdUINodeGraphNodeAPI : %s." <<
-          prim.GetPath().GetText() << std::endl;
-        return;
-      }
-    }
   }
 }
 
@@ -120,30 +97,6 @@ Graph::Node::AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name, siz
 }
 
 
-
-// Node update
-//------------------------------------------------------------------------------
-void
-Graph::Node::Read()
-{
-  pxr::UsdUINodeGraphNodeAPI api(_prim);
-  api.GetPosAttr().Get(&_pos);
-  api.GetSizeAttr().Get(&_size);
-  api.GetExpansionStateAttr().Get(&_expended);
-  api.GetDisplayColorAttr().Get(&_color);
-}
-
-void
-Graph::Node::Write()
-{
-  pxr::UsdUINodeGraphNodeAPI api = 
-    pxr::UsdUINodeGraphNodeAPI::Apply(_prim);
-  api.CreatePosAttr().Set(_pos);
-  api.CreateSizeAttr().Set(_size);
-  api.CreateExpansionStateAttr().Set(_expended);
-  api.CreateDisplayColorAttr().Set(_color);
-}
-
 // Node get port
 //------------------------------------------------------------------------------
 Graph::Port* 
@@ -154,34 +107,6 @@ Graph::Node::GetPort(const pxr::TfToken& name)
   }
   return NULL;
 }
-
-void 
-Graph::Node::SetPosition(const pxr::GfVec2f& pos) 
-{ 
-  _pos = pos; 
-  _dirty |= DIRTY_POSITION; 
-};
-      
-void 
-Graph::Node::SetSize(const pxr::GfVec2f& size)
-{ 
-  _size = size; 
-  _dirty |= DIRTY_SIZE; 
-};
-
-void 
-Graph::Node::SetExpended(const pxr::TfToken& expended) 
-{ 
-  _expended = expended; 
-  _dirty |= DIRTY_SIZE;
-};
-
-void
-Graph::Node::SetColor(const pxr::GfVec3f& color)
-{
-  _color = color;
-  _dirty |= DIRTY_COLOR;
-};
 
 // Node check authored values
 //------------------------------------------------------------------------------

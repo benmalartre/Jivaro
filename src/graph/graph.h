@@ -113,24 +113,11 @@ public:
       const pxr::UsdPrim& GetPrim() const { return _prim; };
       bool IsCompound();
 
-      void Read();
-      void Write();
-
       pxr::TfToken GetName() { return _name; };
       Port* GetPort(const pxr::TfToken& name);
-      short GetDirty() { return _dirty; };
-      const pxr::GfVec2f& GetPosition() { return _pos; };
-      const pxr::GfVec2f& GetSize() { return _size; };
-      const pxr::GfVec3f& GetColor() { return _color; };
-      pxr::TfToken GetExpended() { return _expended; };
-      float GetWidth() { return _size[0]; };
-      float GetHeight() { return _size[1]; };
 
+      short GetDirty() { return _dirty; };
       void SetDirty(short dirty) { _dirty = dirty; };
-      void SetPosition(const pxr::GfVec2f& pos) ;
-      void SetSize(const pxr::GfVec2f& size) ;
-      void SetExpended(const pxr::TfToken& expended) ;
-      void SetColor(const pxr::GfVec3f& color);
 
       bool HasPort(const pxr::TfToken& name);
 
@@ -141,10 +128,6 @@ public:
       pxr::UsdPrim                _prim;
       std::vector<Port>           _ports;
       short                       _dirty;
-      pxr::GfVec2f                _pos;
-      pxr::GfVec2f                _size;
-      pxr::GfVec3f                _color;
-      pxr::TfToken                _expended;
   };
 
 public:

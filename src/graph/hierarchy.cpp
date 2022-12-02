@@ -59,11 +59,6 @@ HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
       parent->GetPrim().GetChild(pxr::TfToken(child->GetName()));
     HierarchyGraph::HierarchyNode* node =
       new HierarchyGraph::HierarchyNode(childPrim);
-
-    if(!childPrim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
-      node->SetColor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
-      node->SetPosition(pxr::GfVec2f(_currentX, _currentY));
-    }
     AddNode(node);
 
     
