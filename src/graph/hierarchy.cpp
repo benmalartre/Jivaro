@@ -33,8 +33,10 @@ void HierarchyGraph::Populate(pxr::UsdPrim& prim)
 }
 
 
-HierarchyGraph::HierarchyNode::HierarchyNode(pxr::UsdPrim& prim)
+HierarchyGraph::HierarchyNode::HierarchyNode(pxr::UsdPrim& prim, 
+  HierarchyGraph::HierarchyNode* parent)
   : Graph::Node(prim)
+  , _parent(parent)
 {
   _PopulatePorts();
 }
@@ -49,26 +51,20 @@ void HierarchyGraph::HierarchyNode::_PopulatePorts()
 void
 HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
 {
-  float startX = _currentX;
-  float startY = _currentY;
   pxr::SdfPrimSpecHandle primSpec = _layer->GetPrimAtPath(parent->GetPrim().GetPath());
-  _currentX += 100;
   for (auto& child : primSpec.GetSpec().GetNameChildren()) {
-    _currentY += 30;
     pxr::UsdPrim childPrim = 
       parent->GetPrim().GetChild(pxr::TfToken(child->GetName()));
     HierarchyGraph::HierarchyNode* node =
-      new HierarchyGraph::HierarchyNode(childPrim);
+      new HierarchyGraph::HierarchyNode(childPrim, parent);
     AddNode(node);
+    parent->AddChild(node);
 
-    
     Graph::Connexion* connexion = 
       new Graph::Connexion(parent->GetChildrenPort(), node->GetParentPort());
     AddConnexion(connexion);
     _RecurseNodes(node);
   }
-  _currentX = startX;
-  _currentY = startY;
 }
 
 void
@@ -77,8 +73,6 @@ HierarchyGraph::_DiscoverNodes()
   HierarchyGraph::HierarchyNode* node = 
     new HierarchyGraph::HierarchyNode(_prim);
   AddNode(node);
-  _currentX = 0.f;
-  _currentY = 0.f;
   _RecurseNodes(node);
 
 }
@@ -86,7 +80,7 @@ HierarchyGraph::_DiscoverNodes()
 void
 HierarchyGraph::_DiscoverConnexions()
 {
-    /*
+  /*
   std::cout << "execution discover connexions ..." << std::endl;
   for (pxr::UsdPrim child : _prim.GetChildren()) {
     if (child.IsA<pxr::UsdExecNode>()) {

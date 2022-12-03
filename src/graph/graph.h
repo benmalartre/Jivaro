@@ -91,12 +91,6 @@ public:
   //-------------------------------------------------------------------
   class Node {
     public: 
-      enum {
-        DIRTY_CLEAN = 0,
-        DIRTY_SIZE = 1,
-        DIRTY_POSITION = 2,
-        DIRTY_COLOR = 4
-      };
       Node(pxr::UsdPrim& prim);
       ~Node();
 
@@ -116,9 +110,6 @@ public:
       pxr::TfToken GetName() { return _name; };
       Port* GetPort(const pxr::TfToken& name);
 
-      short GetDirty() { return _dirty; };
-      void SetDirty(short dirty) { _dirty = dirty; };
-
       bool HasPort(const pxr::TfToken& name);
 
     protected:
@@ -127,7 +118,6 @@ public:
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
       std::vector<Port>           _ports;
-      short                       _dirty;
   };
 
 public:

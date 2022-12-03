@@ -14,14 +14,18 @@ class HierarchyGraph : public Graph
 {
 class HierarchyNode : public Graph::Node {
   public:
-    HierarchyNode(pxr::UsdPrim& prim);
+    HierarchyNode(pxr::UsdPrim& prim, HierarchyNode* parent=NULL);
     ~HierarchyNode() {};
 
     Graph::Port* GetParentPort() { return &_ports[0]; };
     Graph::Port* GetChildrenPort() { return &_ports[1]; };
 
+    void AddChild(HierarchyNode* child){_children.push_back(child);};
+
   protected:
     void _PopulatePorts() override;
+    HierarchyNode*                  _parent;
+    std::vector<HierarchyNode*>     _children;
   };
 
 public:
@@ -39,9 +43,6 @@ protected:
 private:
   pxr::SdfLayerRefPtr          _layer;
   pxr::UsdPrim                 _prim;
-
-  float                        _currentX;
-  float                        _currentY;
 
 };
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -208,6 +208,12 @@ protected:
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
+      enum {
+        DIRTY_CLEAN = 0,
+        DIRTY_SIZE = 1,
+        DIRTY_POSITION = 2,
+        DIRTY_COLOR = 4
+      };
       Node(Graph::Node* node);
       ~Node();
 
@@ -220,6 +226,8 @@ protected:
       Port* GetPort(const pxr::TfToken& name);
       Graph::Node* Get() { return _node; };
       pxr::TfToken& GetExpended() { return _expended; };
+      short GetDirty() { return _dirty; };
+      void SetDirty(short dirty) { _dirty = dirty; };
 
       void Write();
       void Read();
@@ -229,6 +237,7 @@ protected:
       std::vector<Port>           _ports;
       Node*                       _parent;
       pxr::TfToken                _expended;
+      short                       _dirty;
 
       // data
       Graph::Node* _node;

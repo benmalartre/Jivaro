@@ -249,9 +249,9 @@ PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
   else if (hasValue) {
     VtValue modified = _DrawAttributeValue(attribute, currentTime);
     if (!modified.IsEmpty()) {
-      UndoBlock editBlock;
-      attribute.Set(modified, attribute.GetNumTimeSamples() ?
-        currentTime : UsdTimeCode::Default());
+      pxr::UsdAttributeVector attributes = { attribute };
+      ADD_COMMAND(SetAttributeCommand, attributes, modified, value, 
+        attribute.GetNumTimeSamples() ? currentTime : UsdTimeCode::Default());
       _parent->SetInteracting(true);
     }
   }

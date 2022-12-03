@@ -385,6 +385,7 @@ GraphEditorUI::Connexion::Draw(GraphEditorUI* editor)
 GraphEditorUI::Node::Node(Graph::Node* node)
   : GraphEditorUI::Item()
   , _node(node)
+  , _dirty(DIRTY_POSITION|DIRTY_SIZE)
 {
   Read();
   for(auto& port: node->GetPorts()) {
@@ -397,7 +398,7 @@ GraphEditorUI::Node::Node(Graph::Node* node)
 //------------------------------------------------------------------------------
 GraphEditorUI::Node::~Node()
 {
-
+  Write();
 }
 
 
@@ -420,7 +421,7 @@ GraphEditorUI::Node::SetColor(const pxr::GfVec3f& color)
 void 
 GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 {
-  if (Get()->GetDirty() & Graph::Node::DIRTY_SIZE) {
+  if (GetDirty() & GraphEditorUI::Node::DIRTY_SIZE) {
     float width =
       ImGui::CalcTextSize(_node->GetName().GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING +
       (NODE_EXPENDED_SIZE + 2 * NODE_HEADER_PADDING);
@@ -482,7 +483,7 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
     }
 
     SetSize(pxr::GfVec2f(width, height));
-    Get()->SetDirty(Graph::Node::DIRTY_CLEAN);
+    SetDirty(GraphEditorUI::Node::DIRTY_CLEAN);
   }
 }
 
@@ -493,15 +494,15 @@ GraphEditorUI::Node::Write()
     pxr::UsdUINodeGraphNodeAPI api = 
       pxr::UsdUINodeGraphNodeAPI::Apply(_node->GetPrim());
     api.CreatePosAttr().Set(_pos);
-    api.CreateSizeAttr().Set(_size);
-    api.CreateExpansionStateAttr().Set(_expended);
-    api.CreateDisplayColorAttr().Set(_color);
+    //api.CreateSizeAttr().Set(_size);
+    //api.CreateExpansionStateAttr().Set(_expended);
+    api.CreateDisplayColorAttr().Set(UnpackColor3<pxr::GfVec3f>(_color));
   } else {
     pxr::UsdUINodeGraphNodeAPI api(_node->GetPrim());
     api.GetPosAttr().Set(_pos);
-    api.GetSizeAttr().Set(_size);
-    api.GetExpansionStateAttr().Set(_expended);
-    api.GetDisplayColorAttr().Set(_color);
+    //api.GetSizeAttr().Set(_size);
+    //api.GetExpansionStateAttr().Set(_expended);
+    api.GetDisplayColorAttr().Set(UnpackColor3<pxr::GfVec3f>(_color));
   }
 }
 
@@ -732,8 +733,6 @@ RefreshGraphCallback(GraphEditorUI* editor)
       pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
       
       if (selected.IsValid()) {
-        //editor->Populate(new ExecutionGraph(selected));
-        std::cout << "refresh callback.." << std::endl;
         editor->Populate(new HierarchyGraph(pxr::SdfLayerRefPtr(
           stage->GetRootLayer()), selected));
         return;
@@ -758,6 +757,7 @@ GraphEditorUI::GetPort(Graph::Port* port)
 bool
 GraphEditorUI::Populate(Graph* graph)
 {
+  UndoBlock editBlock;
   Clear();
   _graph = graph;
 
@@ -1041,18 +1041,6 @@ void
 GraphEditorUI::Init(const std::vector<pxr::UsdStageRefPtr>& stages)
 {
   _parent->SetDirty();
-  /*
-  if(_trees.size())
-    for(auto tree: _trees) delete tree;
-
-  _trees.resize(stages.size());
-  for(int i=0;i<stages.size();++i)
-  {
-    _trees[i] = new GraphTreeUI(stages[i]);
-  }
-  */
-  //_context = ImNodes::EditorContextCreate();
-  
 };
 
 void
@@ -1065,9 +1053,7 @@ GraphEditorUI::OnNewSceneNotice(const NewSceneNotice& n)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
-  if (!_graph)return;
-  std::cout << "scene changed notice prim valid ? " << _graph->GetPrim().IsValid() << std::endl;
-  std::cout << "prim : " << _graph->GetPrim().GetPath() << std::endl;
+  if (!_graph) return;
   if (!_graph->GetPrim().IsValid()) {
     Clear();
   } else {
@@ -1332,7 +1318,7 @@ GraphEditorUI::MouseMove(int x, int y)
       _parent->SetDirty();
       break;
     case NavigateMode::ZOOM:
-      MouseWheel((x - _lastX) > 0 ? 1 : -1, (y - _lastY) > 0 ? 1 : -1);
+      MouseWheel((x - _lastX) * _invScale, (y - _lastY) * _invScale);
       break;
     default:
       break;
@@ -1366,7 +1352,7 @@ GraphEditorUI::MouseWheel(int x, int y)
   pxr::GfVec2f mousePos = (pxr::GfVec2f(_lastX, _lastY) - _parent->GetMin());
   pxr::GfVec2f originalPos = mousePos / _scale ;
 
-  _scale += (x + y) * 0.1;
+  _scale += y * 0.1;
   _scale = CLAMP(_scale, 0.01, 8.0);
   _invScale = 1.f / _scale;
   pxr::GfVec2f scaledPos = mousePos / _scale;

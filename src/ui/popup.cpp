@@ -154,19 +154,17 @@ bool ColorPopupUI::Terminate()
 {
   if (_done) {
     if (_isArray) {
-      pxr::VtArray<pxr::GfVec3f> result;
-      result = { _original };
-      _attribute.Set(result, pxr::UsdTimeCode::Default());
-      result = { _color };
-      UndoBlock editBlock(true);
-      _attribute.Set(result, pxr::UsdTimeCode::Default());
+      pxr::VtArray<pxr::GfVec3f> value = { _color };
+      pxr::VtArray<pxr::GfVec3f> previous = { _original };
+      UsdAttributeVector attributes = { _attribute };
+      ADD_COMMAND(SetAttributeCommand, attributes, 
+        pxr::VtValue(value), pxr::VtValue(previous), pxr::UsdTimeCode::Default());
     }
     else {
-      _attribute.Set(_original, pxr::UsdTimeCode::Default());
-      UndoBlock editBlock(true);
-      _attribute.Set(_color, pxr::UsdTimeCode::Default());
+      UsdAttributeVector attributes = { _attribute };
+       ADD_COMMAND(SetAttributeCommand, attributes,
+         pxr::VtValue(_color), pxr::VtValue(_original), pxr::UsdTimeCode::Default());
     }
-    //AttributeChangedNotice().Send();
   }
   else {
     if (_isArray) {
@@ -176,7 +174,9 @@ bool ColorPopupUI::Terminate()
     else {
       _attribute.Set(_color, pxr::UsdTimeCode::Default());
     }
+    AttributeChangedNotice().Send();
   }
+
   return _done;
 }
 

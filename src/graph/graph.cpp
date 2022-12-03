@@ -33,7 +33,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 //------------------------------------------------------------------------------
 Graph::Node::Node(pxr::UsdPrim& prim)
   : _prim(prim)
-  , _dirty(DIRTY_POSITION|DIRTY_SIZE)
 {
   if (_prim.IsValid())
   {

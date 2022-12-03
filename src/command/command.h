@@ -238,7 +238,8 @@ public:
 class SetAttributeCommand : public Command {
 public:
   SetAttributeCommand(pxr::UsdAttributeVector& paths, 
-    const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode);
+    const pxr::VtValue& value, const pxr::VtValue& previous, 
+    const pxr::UsdTimeCode& timeCode);
   ~SetAttributeCommand() {};
   void Do() override;
 };

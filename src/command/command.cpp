@@ -485,9 +485,12 @@ void PivotCommand::Do() {
 // Set Attribute
 //==================================================================================
 SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes,
-  const pxr::VtValue& value, const pxr::UsdTimeCode& timeCode)
+  const pxr::VtValue& value, const pxr::VtValue& previous, const pxr::UsdTimeCode& timeCode)
   : Command(true)
 {
+  for (auto& attribute : attributes) {
+    attribute.Set(previous, timeCode);
+  }
   UndoRouter::Get().TransferEdits(&_inverse);
   for (auto& attribute : attributes) {
     attribute.Set(value, timeCode);
