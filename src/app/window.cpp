@@ -286,6 +286,7 @@ Window::SetActiveView(View* view)
   if (_activeView)
   {
     if (_activeView == view)return;
+    _activeView->Focus(false);
     _activeView->ClearFlag(View::ACTIVE);
     _activeView->ClearFlag(View::INTERACTING);
     _activeView->SetDirty();
@@ -293,6 +294,7 @@ Window::SetActiveView(View* view)
   if(view)
   {
     _activeView = view;
+    _activeView->Focus(true);
     _activeView->SetFlag(View::ACTIVE);
     _activeView->SetDirty();
   }

@@ -31,7 +31,8 @@ public:
     TIMEVARYING         = 1 << 10,
     DISCARDMOUSEBUTTON  = 1 << 11,
     DISCARDMOUSEMOVE    = 1 << 12,
-    TAB                 = 1 << 13
+    TAB                 = 1 << 13,
+    FOCUS               = 1 << 14
   };
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, 
@@ -108,6 +109,7 @@ public:
   virtual void MouseWheel(int x, int y);
   virtual void Keyboard(int key, int scancode, int action, int mods);
   virtual void Input(int key);
+  virtual void Focus(int state);
 
   // flags
   inline bool GetFlag(short flag) const { return BITMASK_CHECK(_flags, flag); };

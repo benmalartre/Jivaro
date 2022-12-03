@@ -290,7 +290,8 @@ View::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (_tab) {
     const float relativeY = y - GetY();
-    if (relativeY > 0 && relativeY < GetTabHeight() * 2) {
+    std::cout << "relative Y " << relativeY << std::endl;
+    if (_tab->Invade() || (relativeY > 0 && relativeY < GetTabHeight() * 2)) {
       _tab->MouseButton(button, action, mods);
     } else {
       if (_current && !GetFlag(DISCARDMOUSEBUTTON)) {
@@ -345,6 +346,14 @@ View::Input(int key)
   if (_current) {
     _current->Input(key);
   }
+}
+
+void
+View::Focus(int state)
+{
+  if (state)SetFlag(FOCUS);
+  else ClearFlag(FOCUS);
+  if (_tab)_tab->Focus(state);
 }
 
 void
