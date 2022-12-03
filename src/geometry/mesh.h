@@ -48,6 +48,7 @@ struct HalfEdge
   float GetDot(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals,
     const pxr::GfVec3f& v) const;
   
+  static HalfEdge* GetLongestInTriangle(const pxr::GfVec3f* positions, HalfEdge* edge);
   /*
   short GetFlags(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, 
     const pxr::GfVec3f& v, float creaseValue) const;

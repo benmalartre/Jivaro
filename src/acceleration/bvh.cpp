@@ -37,24 +37,6 @@ _GetDistance(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
   return pxr::GfSqrt(dx * dx + dy * dy + dz * dz);
 }
 
-static pxr::GfVec3d 
-_GetBoundingMinimum(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
-{
-  return pxr::GfRange3d::GetUnion(*lhs, *rhs).GetMin();
-}
-
-static pxr::GfVec3d 
-_GetBoundingMaximum(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
-{
-  return pxr::GfRange3d::GetUnion(*lhs, *rhs).GetMax();
-}
-
-static pxr::GfRange3d 
-_GetBoundingBox(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
-{
-  return pxr::GfRange3d::GetUnion(*lhs, *rhs);
-}
-
 bool
 BVH::IsRoot() const
 {
@@ -90,6 +72,51 @@ BVH::GetRoot() const
   }
   return parent;
 }
+
+static void 
+_RecurseGetLeaves(BVH* cell, std::vector<BVH*>& leaves)
+{
+  if (cell->IsLeaf()) {
+    leaves.push_back(cell);
+  }
+  else {
+    if (cell->GetLeft()) {
+      _RecurseGetLeaves(cell->GetLeft(), leaves);
+    }
+    if (cell->GetRight()) {
+      _RecurseGetLeaves(cell->GetRight(), leaves);
+    }
+  }
+}
+
+void
+BVH::GetLeaves(std::vector<BVH*>& leaves)
+{
+  leaves.clear();
+  if (_left)_RecurseGetLeaves(_left, leaves);
+  if(_right)_RecurseGetLeaves(_right, leaves);
+}
+
+static void
+_RecurseGetCells(BVH* cell, std::vector<BVH*>& leaves)
+{
+  leaves.push_back(cell);
+  if (cell->GetLeft()) {
+    _RecurseGetCells(cell->GetLeft(), leaves);
+  }
+  if (cell->GetRight()) {
+    _RecurseGetCells(cell->GetRight(), leaves);
+  }
+}
+
+void
+BVH::GetCells(std::vector<BVH*>& cells)
+{
+  cells.clear();
+  if (_left)_RecurseGetCells(_left, cells);
+  if (_right)_RecurseGetCells(_right, cells);
+}
+
 
 static short 
 _GetElementTypeFromGeometry(Geometry* geom)
@@ -154,9 +181,9 @@ BVH::BVH(BVH* parent, BVH* lhs)
   , _data(NULL)
   , _type(BVH::BRANCH)
 {
-  SetMin(lhs->GetMin());
-  SetMax(lhs->GetMax());
-  lhs->SetParent(this);
+  SetMin(_left->GetMin());
+  SetMax(_left->GetMax());
+  _left->SetParent(this);
 }
 
 BVH::BVH(BVH* parent, BVH* lhs, BVH* rhs)
@@ -167,10 +194,12 @@ BVH::BVH(BVH* parent, BVH* lhs, BVH* rhs)
   , _type(BVH::BRANCH)
 {
   _type = BVH::BRANCH;
-  SetMin(_GetBoundingMinimum(lhs, rhs));
-  SetMax(_GetBoundingMaximum(lhs, rhs));
-  lhs->SetParent(this);
-  rhs->SetParent(this);
+  pxr::GfRange3d range =
+    pxr::GfRange3d::GetUnion(*_left, *_right);
+  SetMin(range.GetMin());
+  SetMax(range.GetMax());
+  _left->SetParent(this);
+  _right->SetParent(this);
 }
 
 
@@ -351,8 +380,8 @@ void BVH::_SortCellsByPair(std::vector<BVH*>& cells,
     float min_distance = std::numeric_limits<float>::max();
     int closest_idx = -1;
     for (size_t j = 0; j < numCells; ++j) {
-      BVH* other = cells[j];
       if (i == j)continue;
+      BVH* other = cells[j];
       float distance = _GetDistance(cell, other);
       if (distance < min_distance && !used[j]) {
         min_distance = distance;
@@ -394,6 +423,7 @@ void BVH::_MostSignificantBitRadixSort(uint64_t* first, uint64_t* last, uint64_t
   }
 }
 
+
 void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
   std::vector<BVH*>& results)
 {
@@ -408,17 +438,11 @@ void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
 
   std::sort(mortom.begin(), mortom.end());
 
-  BVH* cell = NULL;
-  for (size_t i = 0; i < mortom.size(); ++i) {
-    if (i % 2 == 0) {
-      cell = mortom[i]._cell;
-    } else {
-      results.push_back(new BVH(this, cell, mortom[i]._cell));
-      cell = NULL;
-    }
+  for (size_t i = 0; i < mortom.size() / 2; ++i) {
+    results.push_back(new BVH(this, mortom[i*2]._cell, mortom[i*2+1]._cell));
   }
-  if (cell != NULL) {
-    results.push_back(new BVH(this, cell));
+  if ((numCells % 2) != 0) {
+    results.push_back(new BVH(this, mortom[numCells - 1]._cell));
   }
 }
 
@@ -456,10 +480,12 @@ void BVH::Init(const std::vector<Geometry*>& geometries)
 
   std::vector<BVH*> cells = trees;
   std::vector<BVH*> results;
-  _SortCellsByPairMortom(trees, results);
+  _SortCellsByPair(trees, results);
+  //_SortCellsByPairMortom(trees, results);
   while (results.size() > 2) {
     cells = results;
-    _SortCellsByPairMortom(cells, results);
+    //_SortCellsByPairMortom(cells, results);
+    _SortCellsByPair(cells, results);
   }
   if (results.size() == 1) {
     SetLeft(results[0]);
@@ -469,7 +495,8 @@ void BVH::Init(const std::vector<Geometry*>& geometries)
   else {
     SetLeft(results[0]);
     SetRight(results[1]);
-    pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*results[0], *results[1]);
+    pxr::GfRange3d range = 
+      pxr::GfRange3d::GetUnion(*results[0], *results[1]);
     SetMin(range.GetMin());
     SetMax(range.GetMax());
   }
@@ -484,11 +511,13 @@ void BVH::Init(Geometry* geometry, BVH* parent)
 
     std::vector<BVH*> cells = leaves;
     std::vector<BVH*> results;
-    _SortCellsByPairMortom(leaves, results);
+    //_SortCellsByPairMortom(leaves, results);
+    _SortCellsByPair(leaves, results);
     while (results.size() > 2) {
       cells = results;
       results.clear();
-      _SortCellsByPairMortom(cells, results);
+      //_SortCellsByPairMortom(cells, results);
+      _SortCellsByPair(cells, results);
     }
     if (results.size() == 1) {
       SetLeft(results[0]);
@@ -498,7 +527,8 @@ void BVH::Init(Geometry* geometry, BVH* parent)
     else {
       SetLeft(results[0]);
       SetRight(results[1]);
-      pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*results[0], *results[1]);
+      pxr::GfRange3d range = 
+        pxr::GfRange3d::GetUnion(*results[0], *results[1]);
       SetMin(range.GetMin());
       SetMax(range.GetMax());
     }

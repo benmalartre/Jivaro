@@ -2,9 +2,11 @@
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/usdGeom/xformCache.h>
+#include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include <pxr/usd/usdGeom/points.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/sdf/fileFormat.h>
 
@@ -16,6 +18,7 @@
 #include "../app/time.h"
 #include "../command/router.h"
 #include "../command/block.h"
+#include "../acceleration/bvh.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -272,18 +275,57 @@ Workspace::RemoveExecStage()
   _execInitialized = false;
 }
 
+static void
+_SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
+{
+  pxr::UsdGeomPointInstancer instancer = 
+    pxr::UsdGeomPointInstancer::Define(stage, 
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("bvh_instancer")));
+
+  pxr::UsdGeomSphere proto =
+    pxr::UsdGeomSphere::Define(stage, 
+      instancer.GetPath().AppendChild(pxr::TfToken("proto_cube")));
+
+  
+  std::vector<BVH*> leaves;
+  bvh->GetLeaves(leaves);
+  size_t numPoints = leaves.size();
+  pxr::VtArray<pxr::GfVec3f> points(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<int64_t> indices(numPoints);
+  pxr::VtArray<int> protoIndices(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    points[pointIdx] = pxr::GfVec3f(leaves[pointIdx]->GetMidpoint());
+    scales[pointIdx] = pxr::GfVec3f(leaves[pointIdx]->GetSize());
+    protoIndices[pointIdx] = 0;
+    indices[pointIdx] = pointIdx;
+  }
+  instancer.CreatePositionsAttr().Set(points);
+  instancer.CreateProtoIndicesAttr().Set(protoIndices);
+  instancer.CreateScalesAttr().Set(scales);
+  instancer.CreateIdsAttr().Set(indices);
+  instancer.CreateOrientationsAttr().Set(rotations);
+  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
+
+}
+
 void 
 Workspace::InitExec()
 {
+
   if (!_execInitialized) {
     _execStage = UsdStage::CreateInMemory("exec");
     _execScene = new Scene(_execStage);
+   
     Time& time = GetApplication()->GetTime();
     _startFrame = time.GetStartTime();
     _lastFrame = time.GetActiveTime();
     
     _execStage->GetRootLayer()->TransferContent(_workStage->GetRootLayer());
+
     pxr::UsdGeomXformCache xformCache(_startFrame);
+
     pxr::UsdPrimRange primRange = _execStage->TraverseAll();
     for (pxr::UsdPrim prim : primRange) {
       if (prim.IsA<pxr::UsdGeomMesh>()) {

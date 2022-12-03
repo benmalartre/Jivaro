@@ -280,6 +280,7 @@ pxr::GfRange3d
 TrianglePair::GetBoundingBox(const pxr::GfVec3f* points)
 {
   pxr::GfRange3d range;
+
   if (left) {
     range.UnionWith(points[left->vertices[0]]);
     range.UnionWith(points[left->vertices[1]]);

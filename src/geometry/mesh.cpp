@@ -80,6 +80,17 @@ float HalfEdge::GetDot(const pxr::GfVec3f* positions,
   return pxr::GfDot(normals[GetTriangleIndex()], dir);
 }
 
+HalfEdge* 
+HalfEdge::GetLongestInTriangle(const pxr::GfVec3f* positions, HalfEdge* edge)
+{
+  const float edge0 = (positions[edge->next->vertex] - positions[edge->vertex]).GetLength();
+  const float edge1 = (positions[edge->next->next->vertex] - positions[edge->next->vertex]).GetLength();
+  const float edge2 = (positions[edge->vertex] - positions[edge->next->next->vertex]).GetLength();
+  if (edge0 > edge1 && edge0 > edge2)return edge;
+  else if (edge1 > edge0 && edge1 > edge2)return edge->next;
+  else return edge->next->next;
+}
+
 Mesh::~Mesh()
 {
 };
@@ -416,31 +427,23 @@ void Mesh::ComputeHalfEdges()
     }
   }
   _uniqueEdges.reserve(_halfEdges.size());
-  size_t halfEdgeIndex = 0;
-  for (const HalfEdge& halfEdge : _halfEdges) {
-    if (halfEdge.twin) {
-      if (halfEdge.vertex < halfEdge.twin->vertex) {
-        _uniqueEdges.push_back(halfEdgeIndex);
-        if (!used[halfEdge.GetTriangleIndex()] && !used[halfEdge.twin->GetTriangleIndex()]) {
-          _trianglePairs.push_back(TrianglePair(
-            &_triangles[halfEdge.GetTriangleIndex()], 
-            &_triangles[halfEdge.twin->GetTriangleIndex()] 
-          ));
-          used[halfEdge.GetTriangleIndex()] = true;
-          used[halfEdge.twin->GetTriangleIndex()] = true;
-        }
-      }
+  for (HalfEdge& halfEdge : _halfEdges) {
+    if (used[halfEdge.GetTriangleIndex()])continue;
+    HalfEdge* longest = HalfEdge::GetLongestInTriangle(GetPositionsCPtr(), &halfEdge);
+    if (longest->twin) {
+      _trianglePairs.push_back(TrianglePair(
+        &_triangles[longest->GetTriangleIndex()],
+        &_triangles[longest->twin->GetTriangleIndex()]
+      ));
+      used[longest->GetTriangleIndex()] = true;
+      used[longest->twin->GetTriangleIndex()] = true;
     } else {
-      _uniqueEdges.push_back(halfEdgeIndex);
-      if (!used[halfEdge.GetTriangleIndex()]) {
-        _trianglePairs.push_back(TrianglePair(
-          &_triangles[halfEdge.GetTriangleIndex()],
-          NULL
-        ));
-        used[halfEdge.GetTriangleIndex()] = true;
-      }
+      _trianglePairs.push_back(TrianglePair(
+        &_triangles[longest->GetTriangleIndex()],
+        NULL
+      ));
+      used[longest->GetTriangleIndex()] = true;
     }
-    halfEdgeIndex++;
   }
 }
 

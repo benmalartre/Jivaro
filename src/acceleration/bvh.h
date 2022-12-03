@@ -88,6 +88,8 @@ public:
   void SetRight(BVH* cell) { _right = cell; };
   BVH* GetLeft() { return _left; };
   BVH* GetRight() { return _right; };
+  void GetLeaves(std::vector<BVH*>& leaves);
+  void GetCells(std::vector<BVH*>& cells);
 
   Geometry* GetGeometry();
   const Geometry* GetGeometry() const;

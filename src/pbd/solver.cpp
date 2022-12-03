@@ -8,8 +8,61 @@
 
 #include <iostream>
 
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
+#include <pxr/usd/usdGeom/primvarsAPI.h>
+
+
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+static void
+_SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
+{
+  pxr::UsdGeomPointInstancer instancer =
+    pxr::UsdGeomPointInstancer::Define(stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("bvh_instancer")));
+
+  pxr::UsdGeomCube proto =
+    pxr::UsdGeomCube::Define(stage,
+      instancer.GetPath().AppendChild(pxr::TfToken("proto_cube")));
+
+
+  std::vector<BVH*> cells;
+  bvh->GetCells(cells);
+  size_t numPoints = cells.size();
+  std::cout << "bvh num cells : " << numPoints << std::endl;
+  pxr::VtArray<pxr::GfVec3f> points(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<int64_t> indices(numPoints);
+  pxr::VtArray<int> protoIndices(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
+    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
+    protoIndices[pointIdx] = 0;
+    indices[pointIdx] = pointIdx;
+    colors[pointIdx] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+  }
+  instancer.CreatePositionsAttr().Set(points);
+  instancer.CreateProtoIndicesAttr().Set(protoIndices);
+  instancer.CreateScalesAttr().Set(scales);
+  instancer.CreateIdsAttr().Set(indices);
+  instancer.CreateOrientationsAttr().Set(rotations);
+  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
+  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
+  pxr::UsdGeomPrimvar colorPrimvar = 
+    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+  colorPrimvar.SetElementSize(1);
+  colorPrimvar.Set(colors);
+
+}
+
+
 PBDSolver::PBDSolver() 
   : _gravity(0,-1,0)
   , _timeStep(0.05)
@@ -65,6 +118,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
       pxr::GfVec3f position;
       hit.GetPosition(&position);
     }
+    _SetupBVHInstancer(GetApplication()->GetWorkspace()->GetExecStage(), &bvh);
     BVH::EchoNumHits();
   }
 }
