@@ -17,6 +17,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
+class Hit;
 struct Edge {
   uint32_t id;
   pxr::GfVec2i vertices;    
@@ -30,11 +31,10 @@ struct Edge {
   pxr::GfVec3f GetPosition(Geometry* geom, short idx);
   pxr::GfVec3f GetNormal(Geometry* geom);
 
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray,
-    pxr::GfVec3f& closest, double maxDistance = -1, double* minDistance = NULL);
-
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
-    pxr::GfVec3f& closest, double maxDistance=-1.f);
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const;
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const;
 
   bool Intersect(const Edge& other, float epsilon=0.0001);
 

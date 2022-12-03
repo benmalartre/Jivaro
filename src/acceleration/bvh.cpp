@@ -404,9 +404,6 @@ void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
   for (size_t i = 0; i < numCells; ++i) {
     const MortomPoint3d p = WorldToMortom(*this, cells[i]->GetMidpoint());
     mortom[i] = { cells[i], Encode3D(p) };
-
-    std::cout << "point : " << p.x << "," << p.y << "," << p.z << std::endl;
-    std::cout << "mortom : " << mortom[i]._mortom << std::endl;
   }
 
   std::sort(mortom.begin(), mortom.end());
@@ -416,13 +413,11 @@ void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
     if (i % 2 == 0) {
       cell = mortom[i]._cell;
     } else {
-      std::cout << "push dual node" << std::endl;
       results.push_back(new BVH(this, cell, mortom[i]._cell));
       cell = NULL;
     }
   }
   if (cell != NULL) {
-    std::cout << "push single node" << std::endl;
     results.push_back(new BVH(this, cell));
   }
 }

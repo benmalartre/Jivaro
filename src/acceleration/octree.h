@@ -46,7 +46,7 @@ protected:
     virtual bool Touch(Geometry* geometry,
       const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) override;
     virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& query , 
-      Hit* hit, float maxDistance = -1.f);
+      Hit* hit, float maxDistance = -1.f) override;
   };
 
   struct EdgeElement : public Element {
@@ -54,7 +54,7 @@ protected:
     virtual bool Touch(Geometry* geometry,
       const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) override;
     virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& query ,
-      Hit* hit, float maxDistance = -1.f);
+      Hit* hit, float maxDistance = -1.f) override;
   };
 
   struct TriangleElement : public Element {
@@ -62,7 +62,7 @@ protected:
     virtual bool Touch(Geometry* geometry,
       const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) override;
     virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& query , 
-      Hit* hit, float maxDistance = -1.f);
+      Hit* hit, float maxDistance = -1.f) override;
   };
 
 public: 
@@ -89,11 +89,9 @@ public:
     pxr::GfVec3f GetCenter() { return (pxr::GfVec3f((_min + _max) * 0.5f)); };
     pxr::GfVec3f GetHalfSize() { return (pxr::GfVec3f((_max - _min) * 0.5f)); };
 
-    // squared value
-    inline float _Squared(float v) const { return v * v; };
-
     // distance
-    inline float GetDistance1D(float p, float lower, float upper) const
+    inline float _Squared(float v) const { return v * v; };
+    inline float _GetDistance1D(float p, float lower, float upper) const
     {
       if (p < lower)return lower - p;
       if (p > upper)return p - upper;

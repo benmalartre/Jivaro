@@ -48,16 +48,7 @@ OctreeIntersector::PointElement::Closest(const pxr::GfVec3f* points,
   const pxr::GfVec3f& query , Hit* hit, float maxDistance)
 {
   Point* point = (Point*)_ptr;
-  pxr::GfVec3f closest;
-  if (point->Closest(points, query, closest, maxDistance)) {
-    const float distance = (query - closest).GetLength();
-    if ( distance < hit->GetT()) {
-      hit->SetElementIndex(point->GetIndex());
-      hit->SetT(distance);
-      return true;
-    }
-  }
-  return false;
+  return point->Closest(points, query, hit, maxDistance);
 }
 
 bool 
@@ -66,22 +57,16 @@ OctreeIntersector::EdgeElement::Closest(const pxr::GfVec3f* points,
 {
   Edge* edge = (Edge*)_ptr;
   pxr::GfVec3f closest;
-  if (edge->Closest(points, query, closest, maxDistance)) {
-    const float distance = (query - closest).GetLength();
-    if ( distance < hit->GetT()) {
-      hit->SetElementIndex(edge->GetIndex());
-      hit->SetT(distance);
-      return true;
-    }
-  }
-  return false;
+  return edge->Closest(points, query, hit, maxDistance);
 }
 
 bool 
 OctreeIntersector::TriangleElement::Closest(const pxr::GfVec3f* points, 
   const pxr::GfVec3f& query , Hit* hit, float maxDistance)
 {
-  return false;
+  Triangle* triangle = (Triangle*)_ptr;
+  pxr::GfVec3f closest;
+  return triangle->Closest(points, query, hit, maxDistance);
 }
 
 // destructor
@@ -109,9 +94,9 @@ void OctreeIntersector::Cell::ClearTree()
 // get distance
 float OctreeIntersector::Cell::GetDistance(const pxr::GfVec3f &point) const
 {
-    float dx = GetDistance1D(point[0], _min[0], _max[0]);
-    float dy = GetDistance1D(point[1], _min[1], _max[1]);
-    float dz = GetDistance1D(point[2], _min[2], _max[2]);
+    float dx = _GetDistance1D(point[0], _min[0], _max[0]);
+    float dy = _GetDistance1D(point[1], _min[1], _max[1]);
+    float dz = _GetDistance1D(point[2], _min[2], _max[2]);
     return sqrt(dx * dx + dy * dy + dz * dz);
 }
 
@@ -301,18 +286,6 @@ OctreeIntersector::Closest(const pxr::GfVec3f& point, Hit* hit,
     {
         E = closestCell->GetElement(e);
         E->Closest( positions, point , hit);
-        delta = point-closest;
-        distance = delta.GetLength();
-        
-        if(distance<closestDistance)
-        {
-            closestDistance = distance;
-            //closestPoint.position = closest;
-            closestElement = E;
-            //closestPoint.U = currentU;
-            //closestPoint.V = currentV;
-            //closestPoint.W = currentW;
-        }
     }
     
     std::vector<Cell*> nearbyCells;
@@ -325,31 +298,12 @@ OctreeIntersector::Closest(const pxr::GfVec3f& point, Hit* hit,
     std::vector<Cell*>::iterator nearby = nearbyCells.begin();
     for(; nearby < nearbyCells.end(); ++nearby)
     {
-        //T = (*nearby)->getTriangles().begin();
-        //for(;tri< (*nearby)->getTriangles().end();tri++)
         for(unsigned e = 0; e <(*nearby)->NumElements(); ++e)
         {
             E = (*nearby)->GetElement(e);
             E->Closest( positions, point , hit);
-            delta = point-closest;
-            distance = delta.GetLength();
-            
-            if(distance<closestDistance)
-            {
-                closestDistance = distance;
-                //closestPoint.position = closest;
-                //closestTriangle = T;
-                //closestPoint.U = currentU;
-                //closestPoint.V = currentV;
-                //closestPoint.W = currentW;
-            }
         }
     }
-    
-    //closestPoint.triangleID = closestTriangle->ID;
-    //closestPoint.triangleMapID = closestTriangle->mapID;
-    //closestPoint.boundary = closestTriangle->boundary;
-    //closestTriangle->getNormal(positions, closestPoint.normal);
 }
 
 void 

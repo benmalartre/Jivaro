@@ -1,6 +1,7 @@
 #include "../geometry/point.h"
 #include "../geometry/points.h"
 #include "../geometry/mesh.h"
+#include "../geometry/intersection.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -42,22 +43,26 @@ pxr::GfVec3f Point::GetNormal(Geometry* geom)
 }
 
 bool 
-Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray,
-    pxr::GfVec3f& closest, double maxDistance, double* minDistance)
+Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
 {
   return false;
 }
 
 bool 
-Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, pxr::GfVec3f& closest,
-  double maxDistance)
+Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+  double maxDistance, double* minDistance) const
 {
   const float distance = (point - points[id]).GetLength();
-  if (maxDistance <= 0.f || distance < maxDistance) {
-    closest = points[id];
+  if ((maxDistance <= 0.f || distance < maxDistance ) && distance < hit->GetT()) {
+    hit->SetElementIndex(id);
+    hit->SetElementType(Hit::POINT);
+    hit->SetBarycentricCoordinates(pxr::GfVec3f(0.f));
+    hit->SetT(distance);
     return true;
   }
   return false;
 }
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

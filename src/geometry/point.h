@@ -31,10 +31,10 @@ struct Point {
   pxr::GfVec3f GetPosition(Geometry* geom);
   pxr::GfVec3f GetNormal(Geometry* geom);
   
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray,
-    pxr::GfVec3f& closest, double maxDistance = -1, double* minDistance = NULL);
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
-    pxr::GfVec3f& closest, double maxDistance=-1.f);
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const;
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const;
 
 };
 
