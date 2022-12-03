@@ -7,24 +7,25 @@ JVR_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------
 // Edge Center
 //-------------------------------------------------------
-void Edge::GetCenter(Geometry* geom, pxr::GfVec3f& center)
+pxr::GfVec3f Edge::GetCenter(Geometry* geom)
 {
-  center = (geom->GetPosition(vertices[0]) + geom->GetPosition(vertices[1])) * 0.5f;
+  return (geom->GetPosition(vertices[0]) + geom->GetPosition(vertices[1])) * 0.5f;
 }
 
 //-------------------------------------------------------
 // Edge Point Position
 //-------------------------------------------------------
-void Edge::GetPosition(Geometry* geom, pxr::GfVec3f& position, short idx)
+pxr::GfVec3f Edge::GetPosition(Geometry* geom, short idx)
 {
-  position = geom->GetPosition(vertices[idx]%2);
+  return geom->GetPosition(vertices[idx]%2);
 }
 
 //-------------------------------------------------------
 // Point Normal
 //-------------------------------------------------------
-void Edge::GetNormal(Geometry* geom, pxr::GfVec3f& normal)
+pxr::GfVec3f Edge::GetNormal(Geometry* geom)
 {
+  pxr::GfVec3f normal(0.f,1.f,0.f);
   switch(geom->GetType()) {
     case Geometry::MESH:
     case Geometry::CURVE:
@@ -49,12 +50,27 @@ void Edge::GetNormal(Geometry* geom, pxr::GfVec3f& normal)
       break;
     }
   }
+  return normal;
 }
 
 //-------------------------------------------------------
 // Intersect
 //-------------------------------------------------------
 bool Edge::Intersect(const Edge& other, float epsilon)
+{
+  return false;
+}
+
+bool 
+Edge::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray,
+  pxr::GfVec3f& closest, double maxDistance, double* minDistance)
+{
+  return false;
+}
+
+bool
+Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
+  pxr::GfVec3f& closest, double maxDistance)
 {
   return false;
 }

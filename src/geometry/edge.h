@@ -18,14 +18,24 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 struct Edge {
+  uint32_t id;
   pxr::GfVec2i vertices;    
   float radius;
 
-  void GetCenter(Geometry* geom, pxr::GfVec3f& center);
-  void GetPosition(Geometry* geom, pxr::GfVec3f& center, short idx);
-  void GetNormal(Geometry* geom, pxr::GfVec3f& normal);
-  void Raycast(Geometry* geom, const pxr::GfRay& point , 
-    pxr::GfVec3f& closest, double maxDistance=-1, double* minDistance=NULL);
+  uint32_t GetIndex(){return id;};
+  uint32_t GetStartIndex(){return vertices[0];};
+  uint32_t GetEndIndex(){return vertices[1];};
+  float GetRadius(){return radius;};
+  pxr::GfVec3f GetCenter(Geometry* geom);
+  pxr::GfVec3f GetPosition(Geometry* geom, short idx);
+  pxr::GfVec3f GetNormal(Geometry* geom);
+
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray,
+    pxr::GfVec3f& closest, double maxDistance = -1, double* minDistance = NULL);
+
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
+    pxr::GfVec3f& closest, double maxDistance=-1.f);
+
   bool Intersect(const Edge& other, float epsilon=0.0001);
 
 };

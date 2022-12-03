@@ -122,7 +122,7 @@ bool Curve::ClosestIntersection(const pxr::GfVec3f& origin,
   return false;
 }
 
-bool Curve::ClosestPoint(const pxr::GfVec3f& point, 
+bool Curve::Closest(const pxr::GfVec3f& point, 
   CurveLocation& location, float maxDistance)
 {
   return false;

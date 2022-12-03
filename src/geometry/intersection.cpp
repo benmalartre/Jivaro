@@ -20,7 +20,6 @@ Hit::Set(const Hit& other) {
   _baryCoords = other._baryCoords;
   _elemType = other._elemType;
   _elemId = other._elemId;
-  _elemMapId = other._elemMapId;
   _t = other._t;
 }
 
@@ -32,7 +31,6 @@ Hit::GetPosition(pxr::GfVec3f* position) const
   pxr::GfVec3f  _baryCoords;
   short         _elemType;
   int           _elemId;
-  int           _elemMapId;
   */
   switch (_geom->GetType()) {
     case Geometry::MESH:

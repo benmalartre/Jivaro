@@ -27,7 +27,6 @@ private:
   pxr::GfVec3f  _baryCoords;
   short         _elemType;
   int           _elemId;
-  int           _elemMapId;
   float         _t;
 
 public:
@@ -37,7 +36,6 @@ public:
     , _baryCoords(pxr::GfVec3f(0.f))
     , _elemType(GEOMETRY)
     , _elemId(-1)
-    , _elemMapId(-1)
     , _t(-1.f) {};
 
   Hit(const Hit& other)
@@ -45,15 +43,20 @@ public:
     , _baryCoords(other._baryCoords)
     , _elemType(other._elemType)
     , _elemId(other._elemId)
-    , _elemMapId(other._elemMapId) 
     , _t(other._t) {};
+
+  Hit(Geometry* geom, const pxr::GfVec3f& baryCoords, short elemType, int elemId, int elemMapId, float t)
+    : _geom(geom)
+    , _baryCoords(baryCoords)
+    , _elemType(elemType)
+    , _elemId(elemId)
+    , _t(t) {};
 
   // Setters
   void Set(const Hit& other);
   void SetGeometry(Geometry* geom) { _geom = geom; };
   void SetElementType(short type) { _elemType = type; };
   void SetElementIndex(int id) { _elemId = id; };
-  void SetElementMapIndex(int id) { _elemMapId = id; };
   void SetBarycentricCoordinates(const pxr::GfVec3f& coords) { _baryCoords = coords; };
   void SetT(float t) {_t = t;};
 
@@ -61,7 +64,6 @@ public:
   Geometry* GetGeometry() { return _geom; };
   short GetElementType() { return _elemType; };
   int GetElementIndex() { return _elemId; };
-  int GetElementMapIndex() { return _elemMapId; };
   const pxr::GfVec3f& GetBarycentricCoordinates() { return _baryCoords; };
   float GetT() { return _t; };
   void GetPosition(pxr::GfVec3f* position) const;

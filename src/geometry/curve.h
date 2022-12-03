@@ -60,7 +60,7 @@ public:
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
     const pxr::GfVec3f& direction, CurveLocation& location, float maxDistance);
 
-  bool ClosestPoint(const pxr::GfVec3f& point, 
+  bool Closest(const pxr::GfVec3f& point, 
     CurveLocation& location, float maxDistance);
 
   // query 3d position on geometry

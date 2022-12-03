@@ -21,14 +21,20 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Geometry;
 class Points;
 class Mesh;
+class Hit;
 struct Point {
   uint32_t id;    
   float radius;
 
-  void GetPosition(Geometry* geom, pxr::GfVec3f& center);
-  void GetNormal(Geometry* geom, pxr::GfVec3f& normal);
-  void Raycast(Geometry* geom, const pxr::GfRay& point,
+  uint32_t GetIndex(){return id;};
+  float GetRadius(){return radius;};
+  pxr::GfVec3f GetPosition(Geometry* geom);
+  pxr::GfVec3f GetNormal(Geometry* geom);
+  
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray,
     pxr::GfVec3f& closest, double maxDistance = -1, double* minDistance = NULL);
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
+    pxr::GfVec3f& closest, double maxDistance=-1.f);
 
 };
 

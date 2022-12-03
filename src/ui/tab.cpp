@@ -192,14 +192,11 @@ void ViewTabUI::MouseMove(int x, int y)
 
 void ViewTabUI::Focus(bool state)
 {
-  std::cout << "tab ui focus " << state << std::endl;
   if (_invade && !state)_invade = false;
 }
 
 void ViewTabUI::MouseButton(int button, int action, int mods)
 {
-  std::cout << "tab ui button " << button <<"," << action << ","<< mods << std::endl;
-  std::cout << "tab invade " << _invade << std::endl;
   if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
     if (_invade) {
       _parent->SetDirty();

@@ -7,16 +7,17 @@ JVR_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------
 // Point Position
 //-------------------------------------------------------
-void Point::GetPosition(Geometry* geom, pxr::GfVec3f& center)
+pxr::GfVec3f Point::GetPosition(Geometry* geom)
 {
-  center = geom->GetPosition(id);
+  return geom->GetPosition(id);
 }
 
 //-------------------------------------------------------
 // Point Normal
 //-------------------------------------------------------
-void Point::GetNormal(Geometry* geom, pxr::GfVec3f& normal)
+pxr::GfVec3f Point::GetNormal(Geometry* geom)
 {
+  pxr::GfVec3f normal = pxr::GfVec3f(0.f, 1.f, 0.f);
   switch(geom->GetType()) {
     case Geometry::MESH:
     {
@@ -37,6 +38,26 @@ void Point::GetNormal(Geometry* geom, pxr::GfVec3f& normal)
     case Geometry::POINT:
       break;
   }
+  return normal;
+}
+
+bool 
+Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray,
+    pxr::GfVec3f& closest, double maxDistance, double* minDistance)
+{
+  return false;
+}
+
+bool 
+Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, pxr::GfVec3f& closest,
+  double maxDistance)
+{
+  const float distance = (point - points[id]).GetLength();
+  if (maxDistance <= 0.f || distance < maxDistance) {
+    closest = points[id];
+    return true;
+  }
+  return false;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

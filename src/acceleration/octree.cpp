@@ -1,0 +1,457 @@
+//======================================================
+// OCTREE IMPLEMENTATION
+//======================================================
+#include "../acceleration/octree.h"
+#include "../geometry/point.h"
+#include "../geometry/edge.h"
+#include "../geometry/triangle.h"
+#include "../geometry/geometry.h"
+#include "../geometry/mesh.h"
+#include "../geometry/curve.h"
+#include "../geometry/points.h"
+
+JVR_NAMESPACE_OPEN_SCOPE
+
+
+const int OctreeIntersector::MAX_ELEMENTS_NUMBER = 32;
+
+bool
+OctreeIntersector::PointElement::Touch(Geometry* geometry,
+      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize)
+{
+    Point* point = (Point*)_ptr;
+    const pxr::GfVec3f pos = point->GetPosition(geometry);
+    const float radius = point->GetRadius();
+
+
+    return true;
+}
+
+bool
+OctreeIntersector::EdgeElement::Touch(Geometry* geometry,
+      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize)
+{
+    return true;
+}
+
+
+bool
+OctreeIntersector::TriangleElement::Touch(Geometry* geometry,
+      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize)
+{
+    return true;
+}
+
+
+bool 
+OctreeIntersector::PointElement::Closest(const pxr::GfVec3f* points, 
+  const pxr::GfVec3f& query , Hit* hit, float maxDistance)
+{
+  Point* point = (Point*)_ptr;
+  pxr::GfVec3f closest;
+  if (point->Closest(points, query, closest, maxDistance)) {
+    const float distance = (query - closest).GetLength();
+    if ( distance < hit->GetT()) {
+      hit->SetElementIndex(point->GetIndex());
+      hit->SetT(distance);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool 
+OctreeIntersector::EdgeElement::Closest(const pxr::GfVec3f* points, 
+  const pxr::GfVec3f& query , Hit* hit, float maxDistance)
+{
+  Edge* edge = (Edge*)_ptr;
+  pxr::GfVec3f closest;
+  if (edge->Closest(points, query, closest, maxDistance)) {
+    const float distance = (query - closest).GetLength();
+    if ( distance < hit->GetT()) {
+      hit->SetElementIndex(edge->GetIndex());
+      hit->SetT(distance);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool 
+OctreeIntersector::TriangleElement::Closest(const pxr::GfVec3f* points, 
+  const pxr::GfVec3f& query , Hit* hit, float maxDistance)
+{
+  return false;
+}
+
+// destructor
+OctreeIntersector::Cell::~Cell()
+{
+    for (int i=0; i<8; i++)
+    {
+        if (_child[i])delete _child[i];
+        _child[i] = NULL;
+    }
+    if(_elements.size())_elements.clear();
+}
+
+// clear tree
+void OctreeIntersector::Cell::ClearTree()
+{
+    for (int i=0; i<8; i++)
+    {
+        if (_child[i])delete _child[i];
+        _child[i] = NULL;
+    }
+    if(_elements.size())_elements.clear();
+}
+
+// get distance
+float OctreeIntersector::Cell::GetDistance(const pxr::GfVec3f &point) const
+{
+    float dx = GetDistance1D(point[0], _min[0], _max[0]);
+    float dy = GetDistance1D(point[1], _min[1], _max[1]);
+    float dz = GetDistance1D(point[2], _min[2], _max[2]);
+    return sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+// intersect sphere
+bool OctreeIntersector::Cell::IntersectSphere(const pxr::GfVec3f& center, const float radius) const
+{
+    float r2 = radius * radius;
+    float dmin = 0;
+
+    for(int ii = 0; ii < 3; ii++ )
+    {
+        if( center[ii] < _min[ii] ) dmin += _Squared( center[ii] - _min[ii] );
+        else if( center[ii] > _max[ii] ) dmin += _Squared( center[ii] - _max[ii] );
+    }
+    return dmin <= r2;
+}
+
+// get bounding box
+void OctreeIntersector::Cell::GetBoundingBox(Geometry* geometry, pxr::VtArray<int>& vertices)
+{
+  const pxr::GfVec3f* positions = geometry->GetPositionsCPtr();
+  // reset bounding box
+  _min[0] = FLT_MAX;
+  _min[1] = FLT_MAX;
+  _min[2] = FLT_MAX;
+
+  _max[0] = -FLT_MAX;
+  _max[1] = -FLT_MAX;
+  _max[2] = -FLT_MAX;
+    
+  pxr::GfVec3f tmp;
+  unsigned int numVertices = vertices.size();
+  for(int i=0;i<numVertices;i++)
+  {
+      tmp = positions[vertices[i]];
+
+      if(tmp[0]<_min[0])_min[0] = tmp[0];
+      if(tmp[1]<_min[1])_min[1] = tmp[1];
+      if(tmp[2]<_min[2])_min[2] = tmp[2];
+        
+      if(tmp[0]>_max[0])_max[0] = tmp[0];
+      if(tmp[1]>_max[1])_max[1] = tmp[1];
+      if(tmp[2]>_max[2])_max[2] = tmp[2];
+  }
+    
+  // extend bounding box
+  _min[0] -= 0.1f;
+  _min[1] -= 0.1f;
+  _min[2] -= 0.1f;
+  _max[0] += 0.1f;
+  _max[1] += 0.1f;
+  _max[2] += 0.1f;
+}
+
+
+// get furthest corner
+void OctreeIntersector::Cell::GetFurthestCorner(const pxr::GfVec3f& point, pxr::GfVec3f& corner)
+{
+    pxr::GfVec3f delta;
+    float dist;
+    float furthestDist=-1.0f;
+    
+    float P[6] = {
+        (float)_min[0],
+        (float)_min[1],
+        (float)_min[2],
+        (float)_max[0],
+        (float)_max[1],
+        (float)_max[2]
+    };
+    
+    int permutation[24] = {0,1,2,3,1,2,0,1,5,3,1,5,
+        0,4,2,3,4,2,0,4,5,3,4,5};
+    
+    for(unsigned int z=0;z<8;z++)
+    {
+        pxr::GfVec3f currentCorner(P[permutation[z*3]],P[permutation[z*3+1]],P[permutation[z*3+2]]);
+        delta = point - currentCorner;
+        dist = (float)delta.GetLength();
+        if(dist>furthestDist)
+        {
+            furthestDist = dist;
+            corner = currentCorner;
+        }
+    }
+}
+
+// build tree
+void OctreeIntersector::Cell::BuildTree(std::vector<Element>& elements, Geometry* geometry)
+{
+    ClearTree();
+    
+    // loop over all triangles, insert all leaves to the tree
+    std::vector<Element>::iterator it;
+    for(it = elements.begin();it<elements.end();it++)
+    {
+        Insert(&(*it));
+    }
+    
+    Split(geometry);
+}
+
+// split tree
+void OctreeIntersector::Cell::Split(Geometry* geometry)
+{
+    int esz = _elements.size();
+
+    if (esz <= MAX_ELEMENTS_NUMBER || (esz <= 2*MAX_ELEMENTS_NUMBER && _depth > 3) ||(esz <= 3*MAX_ELEMENTS_NUMBER && _depth > 4) ||_depth > 6 )
+    {
+        _isLeaf = true;
+        return;
+    }
+    
+    _isLeaf = false;
+    
+    double xx[] = {_min[0], 0.5*(_min[0]+_max[0]), _max[0]};
+    double yy[] = {_min[1], 0.5*(_min[1]+_max[1]), _max[1]};
+    double zz[] = {_min[2], 0.5*(_min[2]+_max[2]), _max[2]};
+    
+    pxr::GfVec3f center, halfSize;
+
+    for (int i = 0; i < 2; ++i)
+        for (int j = 0; j < 2; ++j)
+            for (int k = 0; k < 2; ++k)
+            {
+                int m = 4*i + 2*j + k;
+                _child[m] = new Cell( pxr::GfVec3f(xx[i], yy[j], zz[k]),
+                    pxr::GfVec3f(xx[i+1], yy[j+1], zz[k+1]),_depth+1);
+
+                center = _child[m]->GetCenter();
+                halfSize = _child[m]->GetHalfSize();
+                int esz = _elements.size();
+                
+                for (int e = 0; e < esz; ++e)
+                    if (_elements[e]->Touch(geometry, center, halfSize))
+                        _child[m]->Insert(_elements[e]);
+                
+                if (_child[m]->NumElements() == 0)
+                {
+                    delete _child[m];
+                    _child[m] = NULL;
+                }
+                else _child[m]->Split(geometry);
+                
+            }
+    _elements.clear();
+}
+
+void 
+OctreeIntersector::Init(const std::vector<Geometry*>& geometries)
+{
+
+}
+
+void 
+OctreeIntersector::Update(const std::vector<Geometry*>& geometries)
+{
+
+}
+
+bool 
+OctreeIntersector::Raycast(const pxr::GfRay& ray, Hit* hit, 
+  double maxDistance, double* minDistance) const
+{
+    return false;
+}
+
+bool 
+OctreeIntersector::Closest(const pxr::GfVec3f& point, Hit* hit, 
+  double maxDistance, double* minDistance) const
+{
+    Cell* closestCell = NULL;
+    _GetClosestCell(point, closestCell);
+
+    const pxr::GfVec3f* positions = NULL;
+
+    // brute force neighbor cell
+    //std::vector<Triangle*>::iterator tri = closestCell->getTriangles().begin();
+    Element* E;
+    float closestDistance = FLT_MAX;
+    float distance;
+    float currentU, currentV, currentW;
+    pxr::GfVec3f closest;
+    pxr::GfVec3f delta;
+    Element* closestElement = NULL;
+    for(unsigned e = 0; e < closestCell->NumElements(); ++e)
+    {
+        E = closestCell->GetElement(e);
+        E->Closest( positions, point , hit);
+        delta = point-closest;
+        distance = delta.GetLength();
+        
+        if(distance<closestDistance)
+        {
+            closestDistance = distance;
+            //closestPoint.position = closest;
+            closestElement = E;
+            //closestPoint.U = currentU;
+            //closestPoint.V = currentV;
+            //closestPoint.W = currentW;
+        }
+    }
+    
+    std::vector<Cell*> nearbyCells;
+    if(!_octree.IsLeaf())
+    {
+        _GetNearbyCells(point, closestCell, nearbyCells, closestDistance);
+    }
+    
+    // loop nearby cells
+    std::vector<Cell*>::iterator nearby = nearbyCells.begin();
+    for(; nearby < nearbyCells.end(); ++nearby)
+    {
+        //T = (*nearby)->getTriangles().begin();
+        //for(;tri< (*nearby)->getTriangles().end();tri++)
+        for(unsigned e = 0; e <(*nearby)->NumElements(); ++e)
+        {
+            E = (*nearby)->GetElement(e);
+            E->Closest( positions, point , hit);
+            delta = point-closest;
+            distance = delta.GetLength();
+            
+            if(distance<closestDistance)
+            {
+                closestDistance = distance;
+                //closestPoint.position = closest;
+                //closestTriangle = T;
+                //closestPoint.U = currentU;
+                //closestPoint.V = currentV;
+                //closestPoint.W = currentW;
+            }
+        }
+    }
+    
+    //closestPoint.triangleID = closestTriangle->ID;
+    //closestPoint.triangleMapID = closestTriangle->mapID;
+    //closestPoint.boundary = closestTriangle->boundary;
+    //closestTriangle->getNormal(positions, closestPoint.normal);
+}
+
+void 
+OctreeIntersector::_GetClosestCell(const pxr::GfVec3f& point, Cell*& closestCell) const
+{
+    float closestDistance = FLT_MAX;
+    
+    // the case of low polygon count
+    if(_octree.IsLeaf())
+    {
+        closestCell = (Cell*)&_octree;
+    }
+    
+    // normal case
+    else
+    {
+        for(unsigned int j = 0; j < 8; ++j)
+        {
+            if(_octree.GetCell(j) != NULL)
+                _RecurseGetClosestCell(point, _octree.GetCell(j), closestDistance, closestCell);
+        }
+    }
+}
+
+void 
+OctreeIntersector::_RecurseGetClosestCell(const pxr::GfVec3f& point, const Cell* cell, 
+    float& closestDistance, Cell*& closestCell) const
+{
+  if(cell==NULL)return;
+    float distance;
+    if(cell->IsLeaf())
+    {
+        distance = cell->GetDistance(point);
+        
+        if(distance<closestDistance)
+        {
+            closestDistance = distance;
+            closestCell = (Cell*)cell;
+        }
+    }
+    else
+    {
+        int cid = -1;
+        float cdist = FLT_MAX;
+        for(unsigned int k=0;k<8;k++)
+        {
+            const Cell* current = cell->GetCell(k);
+            
+            if(current!=NULL)
+            {
+                distance = current->GetDistance(point);
+                if(distance<=cdist)
+                {
+                    cdist = distance;
+                    cid = k;
+                }
+            }
+        }
+        if(cid >= 0)
+            _RecurseGetClosestCell(point, cell->GetCell(cid), closestDistance, closestCell);
+    }
+}
+
+void 
+OctreeIntersector::_GetNearbyCells(const pxr::GfVec3f& point, const Cell* cell, 
+    std::vector<Cell*>& cells, float closestDistance) const
+{
+    // the case of low polygon count
+    if(!_octree.IsLeaf())
+    {
+        for(unsigned int j = 0; j < 8; ++j)
+        {
+            _RecurseGetNearbyCells(_octree.GetCell(j), point, closestDistance, cells);
+        }
+    }
+}
+
+void 
+OctreeIntersector::_RecurseGetNearbyCells(const Cell* cell, const pxr::GfVec3f& center, 
+    const float radius, std::vector<Cell*>& cells) const
+{
+if(cell == NULL) return;
+    Cell* child = NULL;
+    if(!cell->IsLeaf())
+    {
+        for(unsigned int k = 0; k < 8; ++k)
+        {
+            child = (Cell*)cell->GetCell(k);
+            if(child !=NULL)
+            {
+                if(child->IntersectSphere(center, radius))
+                    _RecurseGetNearbyCells(child, center, radius, cells);
+            }
+        }
+    }
+    else
+    {
+        if(cell->IntersectSphere(center, radius))
+        {
+            cells.push_back((Cell*)cell);
+        }
+    }
+}
+
+JVR_NAMESPACE_CLOSE_SCOPE

@@ -76,8 +76,8 @@ struct Triangle {
   uint32_t     id;
   pxr::GfVec3i vertices;
 
-  void GetCenter(const pxr::GfVec3f* points, pxr::GfVec3f& center);
-  void GetNormal(const pxr::GfVec3f* points, pxr::GfVec3f& normal);
+  pxr::GfVec3f GetCenter(const pxr::GfVec3f* points);
+  pxr::GfVec3f GetNormal(const pxr::GfVec3f* points);
   float GetArea(const pxr::GfVec3f* points);
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const;

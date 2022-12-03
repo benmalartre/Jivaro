@@ -29,9 +29,10 @@ float Triangle::GetArea(const pxr::GfVec3f* points)
 //-------------------------------------------------------
 // Triangle Center
 //-------------------------------------------------------
-void Triangle::GetCenter(const pxr::GfVec3f* points, pxr::GfVec3f& center)
+pxr::GfVec3f 
+Triangle::GetCenter(const pxr::GfVec3f* points)
 {
-  center = (
+  return pxr::GfVec3f(
     points[vertices[0]] +
     points[vertices[1]] +
     points[vertices[2]]) / 3.0f;
@@ -40,17 +41,20 @@ void Triangle::GetCenter(const pxr::GfVec3f* points, pxr::GfVec3f& center)
 //-------------------------------------------------------
 // Triangle Normal
 //-------------------------------------------------------
-void Triangle::GetNormal(const pxr::GfVec3f* points, pxr::GfVec3f& normal)
+pxr::GfVec3f 
+Triangle::GetNormal(const pxr::GfVec3f* points)
 {
+
   // get triangle edges
   pxr::GfVec3f AB = points[vertices[1]]- points[vertices[0]];
   pxr::GfVec3f AC = points[vertices[2]] - points[vertices[0]];
   
   // cross product
-  normal = AB ^ AC;
+  pxr::GfVec3f normal = AB ^ AC;
   
   // normalize
   normal.Normalize();
+  return normal;
 }
 
 //-------------------------------------------------------
