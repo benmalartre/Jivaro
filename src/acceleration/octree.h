@@ -157,8 +157,8 @@ protected:
     const float radius, std::vector<Cell*>& cells) const;
 
 public:
-  virtual void Init(const std::vector<Geometry*>& geometries, bool useMortom=false) override;
-  virtual void Update(const std::vector<Geometry*>& geometries, bool useMortom=false) override;
+  virtual void Init(const std::vector<Geometry*>& geometries) override;
+  virtual void Update(const std::vector<Geometry*>& geometries) override;
   virtual bool Raycast(const pxr::GfRay& ray, Hit* hit, 
     double maxDistance=-1, double* minDistance=NULL) const override;
   virtual bool Closest(const pxr::GfVec3f& point, Hit* hit, 

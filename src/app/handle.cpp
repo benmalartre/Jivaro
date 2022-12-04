@@ -1474,4 +1474,10 @@ BrushHandle::Draw(float width, float height)
   glBindVertexArray(vao);
 }
 
+short 
+BrushHandle::Select(float x, float y, float width, float height, bool lock)
+{
+  return AXIS_NORMAL;
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

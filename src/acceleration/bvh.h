@@ -43,7 +43,7 @@ public:
 
   // constructor
   BVH(BVH* parent=NULL, BVH* lhs=NULL, BVH* rhs=NULL);
-  BVH(BVH* parent, Geometry* geometry, bool useMortom = false);
+  BVH(BVH* parent, Geometry* geometry);
   BVH(BVH* parent, TrianglePair* pair, const pxr::GfRange3d& range);
   BVH(BVH* parent, Triangle* tri, const pxr::GfRange3d& range);
 
@@ -71,17 +71,17 @@ public:
   short GetElementType();
 
   // override base class
-  void Init(Geometry* geometry, bool useMortom);
-  virtual void Init(const std::vector<Geometry*>& geometries, bool useMortom=false) override;
-  virtual void Update(const std::vector<Geometry*>& geometries, bool useMortom=false) override;
+  void Init(Geometry* geometry);
+  virtual void Init(const std::vector<Geometry*>& geometries) override;
+  virtual void Update(const std::vector<Geometry*>& geometries) override;
   virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1, double* minDistance = NULL) const override;
   virtual bool Closest(const pxr::GfVec3f& point, Hit* hit,
     double maxDistance = -1.f, double* minDistance = NULL) const override;
 
   size_t GetNumCells();
-  uint64_t ComputeCode(const pxr::GfVec3f& point);
-  pxr::GfVec3d ComputeCodeAsColor(const pxr::GfVec3f& point);
+  uint64_t ComputeCode(const pxr::GfVec3d& point);
+  pxr::GfVec3d ComputeCodeAsColor(const pxr::GfVec3d& point);
   uint64_t GetCode() const { return _mortom; };
   void SetCode(uint64_t code) { _mortom = code; };
 
@@ -109,7 +109,6 @@ private:
   void*     _data;
   uint8_t   _type;
   uint64_t  _mortom;
-  bool      _useMortom;
 
 }; 
 

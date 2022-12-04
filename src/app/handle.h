@@ -323,6 +323,7 @@ public:
   void EndUpdate() override;
   short Pick(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
+  short Select(float x, float y, float width, float height, bool lock);
 
 protected:
   void _UpdateTargets(bool interacting) override {};

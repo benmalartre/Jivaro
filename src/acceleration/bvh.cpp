@@ -48,7 +48,7 @@ _GetDistance1D(double value, double lower, double upper)
 
 // get distance
 static double 
-_GetDistance(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
+GetDistance(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
 {
   pxr::GfVec3d half = lhs->GetSize() * 0.5;
   pxr::GfVec3d center = lhs->GetMidpoint();
@@ -158,13 +158,12 @@ _GetElementTypeFromGeometry(Geometry* geom)
 }
 
 
-BVH::BVH(BVH* parent, Geometry* geometry, bool useMortom)
+BVH::BVH(BVH* parent, Geometry* geometry)
   : _parent(parent)
   , _left(NULL)
   , _right(NULL)
   , _data(NULL)
   , _type(BVH::ROOT)
-  , _useMortom(useMortom)
 {
   if (geometry) {
     const pxr::GfRange3d& range =
@@ -172,7 +171,7 @@ BVH::BVH(BVH* parent, Geometry* geometry, bool useMortom)
     SetMin(range.GetMin());
     SetMax(range.GetMax());
 
-    Init(geometry, useMortom);
+    Init(geometry);
 
     _data = (void*)new BVH::Data({
       geometry, 
@@ -199,6 +198,7 @@ BVH::BVH(BVH* parent, BVH* lhs, BVH* rhs)
     SetMin(_left->GetMin());
     SetMax(_left->GetMax());
   }
+  _mortom = ComputeCode(GetMidpoint());
 }
 
 
@@ -326,7 +326,7 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
 {
   double leftMinDistance, rightMinDistance;
   pxr::GfRange3d range(point, point);
-  if (maxDistance < 0 || _GetDistance(this, &range) < maxDistance) {
+  if (maxDistance < 0 || GetDistance(this, &range) < maxDistance) {
     if (IsLeaf()) {
       BVH::Data* data = (BVH::Data*)GetRoot()->_data;
       const pxr::GfVec3f* points = data->geometry->GetPositionsCPtr();
@@ -396,7 +396,7 @@ void BVH::_SortCellsByPair(std::vector<BVH*>& cells,
     for (size_t j = 0; j < numCells; ++j) {
       if (i == j)continue;
       BVH* other = cells[j];
-      float distance = _GetDistance(cell, other);
+      float distance = GetDistance(cell, other);
       if (distance < min_distance && !used[j]) {
         min_distance = distance;
         closest_idx = j;
@@ -436,8 +436,9 @@ int _FindSplit(std::vector<BVH*>& cells, int first, int last)
     {
       uint64_t splitCode = cells[newSplit]->GetCode();
       int splitPrefix = _CountLeadingZeros(firstCode ^ splitCode);
-      if (splitPrefix > commonPrefix)
+      if (splitPrefix > commonPrefix) {
         split = newSplit;
+      }
     }
   } while (step > 1);
 
@@ -451,7 +452,7 @@ BVH::_GenerateHierarchyFromMortom(
   int           last)
 {
   if (first == last)
-    return new BVH(this, cells[first]);
+    return cells[first];
 
   int split = _FindSplit(cells, first, last);
 
@@ -467,10 +468,6 @@ void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
   results.clear();
   size_t numCells = cells.size();
 
-  std::vector<short> used;
-  used.resize(numCells);
-  memset(&used[0], 0x0, numCells * sizeof(short));
-
   for (size_t i = 0; i < numCells; ++i) {
     const pxr::GfVec3i p = WorldToMortom(*this, cells[i]->GetMidpoint());
     cells[i]->SetCode(Encode3D(p));
@@ -483,9 +480,8 @@ void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
   results.push_back(_GenerateHierarchyFromMortom(cells, 0, numCells - 1));
 } 
 
-void BVH::Init(const std::vector<Geometry*>& geometries, bool useMortom)
+void BVH::Init(const std::vector<Geometry*>& geometries)
 {
-  _useMortom = useMortom;
   size_t numColliders = geometries.size();
   pxr::GfRange3d accum = geometries[0]->GetBoundingBox().GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
@@ -498,17 +494,15 @@ void BVH::Init(const std::vector<Geometry*>& geometries, bool useMortom)
   trees.reserve(numColliders);
 
   for (Geometry* geom : geometries) {
-    trees.push_back(new BVH(this, geom, useMortom));
+    trees.push_back(new BVH(this, geom));
   }
 
   std::vector<BVH*> cells = trees;
   std::vector<BVH*> results;
-  if(!_useMortom)_SortCellsByPair(trees, results);
-  else _SortCellsByPairMortom(trees, results);
+  _SortCellsByPairMortom(trees, results);
   while (results.size() > 2) {
     cells = results;
-    if(!_useMortom)_SortCellsByPair(cells, results);
-    else _SortCellsByPairMortom(cells, results);
+    _SortCellsByPairMortom(cells, results);
   }
   if (results.size() == 1) {
     SetLeft(results[0]);
@@ -526,23 +520,20 @@ void BVH::Init(const std::vector<Geometry*>& geometries, bool useMortom)
   trees.clear();
 }
 
-void BVH::Init(Geometry* geometry, bool useMortom)
+void BVH::Init(Geometry* geometry)
 {
-  _useMortom = useMortom;
   if (geometry->GetType() == Geometry::MESH) {
     std::vector<BVH*> leaves;
     _SortTrianglesByPair(leaves, geometry);
 
     std::vector<BVH*> cells = leaves;
     std::vector<BVH*> results;
-    if(!_useMortom)_SortCellsByPair(leaves, results);
-    else _SortCellsByPairMortom(leaves, results);
+    _SortCellsByPairMortom(leaves, results);
 
     while (results.size() > 2) {
       cells = results;
       results.clear();
-      if(!_useMortom)_SortCellsByPair(cells, results);
-      else _SortCellsByPairMortom(cells, results);
+      _SortCellsByPairMortom(cells, results);
       
     }
     if (results.size() == 1) {
@@ -562,7 +553,7 @@ void BVH::Init(Geometry* geometry, bool useMortom)
   }
 }
 
-void BVH::Update(const std::vector<Geometry*>& geometries, bool useMortom)
+void BVH::Update(const std::vector<Geometry*>& geometries)
 {
 
 }
@@ -597,7 +588,7 @@ BVH::GetNumCells()
 }
 
 uint64_t 
-BVH::ComputeCode(const pxr::GfVec3f& point)
+BVH::ComputeCode(const pxr::GfVec3d& point)
 {
   const pxr::GfVec3i p = WorldToMortom(*this, point);
 
@@ -605,7 +596,7 @@ BVH::ComputeCode(const pxr::GfVec3f& point)
 }
 
 pxr::GfVec3d
-BVH::ComputeCodeAsColor(const pxr::GfVec3f& point)
+BVH::ComputeCodeAsColor(const pxr::GfVec3d& point)
 {
   uint64_t code = ComputeCode(point);
   pxr::GfVec3i p = Decode3D(code);
@@ -622,7 +613,7 @@ BVH::ClearNumHits()
 void
 BVH::EchoNumHits()
 {
-  std::cout << "NUM HITS : " << NUM_HITS << std::endl;
+  std::cout << "   num lookups : " << NUM_HITS << std::endl;
   ClearNumHits();
 }
 
