@@ -369,8 +369,6 @@ void Mesh::ComputeHalfEdges()
       // create the half-edge that goes from C to A:
       halfEdgesMap[A | (C << 32)] = halfEdge;
       halfEdge->index = triangleIdx * 3;
-      //halfEdge->face = faceIdx;
-      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
       halfEdge->vertex = C;
       halfEdge->next = 1 + halfEdge;
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 0);
@@ -379,8 +377,6 @@ void Mesh::ComputeHalfEdges()
       // create the half-edge that goes from A to B:
       halfEdgesMap[B | (A << 32)] = halfEdge;
       halfEdge->index = triangleIdx * 3 + 1;
-      //halfEdge->face = faceIdx;
-      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
       halfEdge->vertex = A;
       halfEdge->next = 1 + halfEdge;
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 1);
@@ -389,8 +385,6 @@ void Mesh::ComputeHalfEdges()
       // create the half-edge that goes from B to C:
       halfEdgesMap[C | (B << 32)] = halfEdge;
       halfEdge->index = triangleIdx * 3 + 2;
-      //halfEdge->face = faceIdx;
-      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
       halfEdge->vertex = B;
       halfEdge->next = halfEdge - 2;
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 2);
@@ -404,7 +398,7 @@ void Mesh::ComputeHalfEdges()
   // verify that the mesh is clean:
   size_t numEntries = halfEdgesMap.size();
   bool problematic = false;
-  if(numEntries != _numTriangles * 3)problematic = true;
+  if(numEntries != (size_t)(_numTriangles * 3))problematic = true;
 
   // populate the twin pointers by iterating over the hash map:
   uint64_t edgeIndex; 

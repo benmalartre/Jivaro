@@ -17,8 +17,8 @@ class Geometry;
 class Intersector : public pxr::GfRange3d
 { 
 public:
-  virtual void Init(const std::vector<Geometry*>& geometries) = 0;
-  virtual void Update(const std::vector<Geometry*>& geometries) = 0;
+  virtual void Init(const std::vector<Geometry*>& geometries, bool useMortom=false) = 0;
+  virtual void Update(const std::vector<Geometry*>& geometries, bool useMortom=false) = 0;
   virtual bool Raycast(const pxr::GfRay& ray, Hit* hit, 
     double maxDistance=-1, double* minDistance=NULL) const = 0;
   virtual bool Closest(const pxr::GfVec3f& point, Hit* hit, 

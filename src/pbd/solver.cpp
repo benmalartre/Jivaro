@@ -6,12 +6,15 @@
 #include "../app/application.h"
 #include "../app/time.h"
 
+#include "../utils/timer.h"
+
 #include <iostream>
 
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
 #include <pxr/usd/usdGeom/primvarsAPI.h>
+#include <pxr/usd/usdGeom/curves.h>
 
 
 
@@ -27,26 +30,38 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   pxr::UsdGeomCube proto =
     pxr::UsdGeomCube::Define(stage,
       instancer.GetPath().AppendChild(pxr::TfToken("proto_cube")));
+  proto.CreateSizeAttr().Set(0.1);
+
+  pxr::UsdGeomBasisCurves curve =
+    pxr::UsdGeomBasisCurves::Define(stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("bvh_curve")));
 
 
   std::vector<BVH*> cells;
   bvh->GetCells(cells);
   size_t numPoints = cells.size();
-  std::cout << "bvh num cells : " << numPoints << std::endl;
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);
   pxr::VtArray<int64_t> indices(numPoints);
   pxr::VtArray<int> protoIndices(numPoints);
   pxr::VtArray<pxr::GfQuath> rotations(numPoints);
   pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  pxr::VtArray<int> curveVertexCount({ numPoints});
+  pxr::VtArray<float> widths(1);
+  widths[0] = 1.f;
+
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
     scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
     protoIndices[pointIdx] = 0;
     indices[pointIdx] = pointIdx;
-    colors[pointIdx] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[pointIdx] = 
+      pxr::GfVec3f(bvh->ComputeCodeAsColor(
+        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+    widths[pointIdx] = 0.1f + RANDOM_0_1 * 0.2;
   }
+  /*
   instancer.CreatePositionsAttr().Set(points);
   instancer.CreateProtoIndicesAttr().Set(protoIndices);
   instancer.CreateScalesAttr().Set(scales);
@@ -59,7 +74,21 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
+  */
 
+  //curve.CreateTypeAttr().Set(pxr::UsdGeomTokens->linear);
+  //curve.CreatePointsAttr().Set(points);
+  //curve.SetWidthsInterpolation(pxr::UsdGeomTokens->constant);
+  //curve.CreateWidthsAttr().Set(widths);
+  //curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
+
+  //pxr::UsdGeomPrimvar colorPrimvar = curve.CreateDisplayColorPrimvar();
+  //colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+  //colorPrimvar.SetElementSize(1);
+  //colorPrimvar.Set(colors);
+  //
+  //curve.CreateWidthsAttr().Set(widths);
+  //curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
 }
 
 
@@ -94,23 +123,11 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
 void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
   _colliders = colliders;
+  {
+    uint64_t T = CurrentTime();
+    BVH bvh;
+    bvh.Init(_colliders);
 
-  BVH bvh;
-  bvh.Init(_colliders);
-  /*
-  {
-    double minDistance;
-    Hit hit;
-    if (bvh.Closest(pxr::GfVec3f(0.f), &hit, -1, &minDistance)) {
-      std::cout << "CLOSEST HIT :" << std::endl;
-      pxr::GfVec3f position;
-      hit.GetPosition(&position);
-      std::cout << "   pos : " << position << std::endl;
-      std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
-    }
-  }
-  */
-  {
     pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
     double minDistance;
     Hit hit;
@@ -120,6 +137,26 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
     }
     _SetupBVHInstancer(GetApplication()->GetWorkspace()->GetExecStage(), &bvh);
     BVH::EchoNumHits();
+    std::cout << ((T - CurrentTime()) * 10e-9) << std::endl;
+
+  }
+  
+  {/*
+    uint64_t T = CurrentTime();
+    BVH bvh;
+    bvh.Init(_colliders, true);
+
+    pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
+    double minDistance;
+    Hit hit;
+    if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
+      pxr::GfVec3f position;
+      hit.GetPosition(&position);
+    }
+    _SetupBVHInstancer(GetApplication()->GetWorkspace()->GetExecStage(), &bvh);
+    BVH::EchoNumHits();
+    std::cout << ((T - CurrentTime()) * 10e-9) << std::endl;
+    */
   }
 }
 

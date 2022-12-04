@@ -49,7 +49,7 @@ static uint64_t CurrentTime() {
     }
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
-    return (uint64_t) ((1e9 * now.QuadPart)  / win_frequency.QuadPart);
+    return (uint64_t) ((1e9 * now.QuadPart)  / win_frequency.QuadPart *0.001);
 #else
   return 0;
 #endif

@@ -4,6 +4,7 @@
 #include <vector>
 #include <limits>
 #include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/range3d.h>
 #include "../geometry/intersection.h"
@@ -38,32 +39,10 @@ public:
     short     elemType;
   };
 
-  struct MortomData
-  {
-    bool operator<(const MortomData& rhs) const { return _mortom < rhs._mortom; };
-    BVH*            _cell;
-    uint64_t        _mortom;
-  };
-
-  class RadixTest
-  {
-    const int64_t bit;
-  public:
-    RadixTest(int64_t offset) : bit(offset) {}
-
-    bool operator()(int64_t value) const
-    {
-      if (bit == 63)
-        return value < 0;
-      else
-        return !(value & (1 << bit));
-    }
-  };
-
   // constructor
   BVH();
   BVH(BVH* parent);
-  BVH(BVH* parent, Geometry* geometry);
+  BVH(BVH* parent, Geometry* geometry, bool useMortom=false);
   BVH(BVH* parent, BVH* lhs);
   BVH(BVH* parent, BVH* lhs, BVH* RHS);
   BVH(BVH* parent, TrianglePair* pair, const pxr::GfRange3d& range);
@@ -95,24 +74,30 @@ public:
   const Geometry* GetGeometry() const;
   short GetElementType();
 
-  void Init(const std::vector<Geometry*>& geometries);
-  void Init(Geometry* geometry, BVH* parent);
-  void Update(const std::vector<Geometry*>& geometries);
-  void Update(Geometry* geometry, BVH* parent);
-  bool Raycast(const pxr::GfRay& ray, Hit* hit, 
-    double maxDistance = -1.f, double* minDistance=NULL) const;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit, 
-    double maxDistance = -1.f, double* minDistance=NULL) const;
+  // override base class
+  void Init(Geometry* geometry, BVH* parent, bool useMortom);
+  virtual void Init(const std::vector<Geometry*>& geometries, bool useMortom=false) override;
+  virtual void Update(const std::vector<Geometry*>& geometries, bool useMortom=false) override;
+  virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1, double* minDistance = NULL) const override;
+  virtual bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.f, double* minDistance = NULL) const override;
 
   size_t GetNumCells();
+  uint64_t ComputeCode(const pxr::GfVec3f& point);
+  pxr::GfVec3d ComputeCodeAsColor(const pxr::GfVec3f& point);
+  uint64_t GetCode() const { return _mortom; };
+  void SetCode(uint64_t code) { _mortom = code; };
 
   static void EchoNumHits();
   static void ClearNumHits();
+ 
+  bool operator< (const BVH& other) const {
+    return _mortom < other._mortom;
+  }
 
 private:
-  void _LeastSignificantBitRadixSort(uint64_t* first, uint64_t* last);
-  void _MostSignificantBitRadixSort(uint64_t* first, uint64_t* last, uint64_t msb = 63);
-
+  BVH* _GenerateHierarchyFromMortom(std::vector<BVH*>& cells, int first, int last);
   void _SortCellsByPair(std::vector<BVH*>& cells, std::vector<BVH*>& results);
   void _SortCellsByPairMortom(std::vector<BVH*>& cells, std::vector<BVH*>& results);
   void _SortTrianglesByPair(std::vector<BVH*>& leaves, Geometry* geometry);
@@ -127,6 +112,8 @@ private:
   BVH*      _right;
   void*     _data;
   uint8_t   _type;
+  uint64_t  _mortom;
+  bool      _useMortom;
 
 }; 
 

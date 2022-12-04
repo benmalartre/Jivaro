@@ -246,13 +246,13 @@ void OctreeIntersector::Cell::Split(Geometry* geometry)
 }
 
 void 
-OctreeIntersector::Init(const std::vector<Geometry*>& geometries)
+OctreeIntersector::Init(const std::vector<Geometry*>& geometries, bool useMortom)
 {
 
 }
 
 void 
-OctreeIntersector::Update(const std::vector<Geometry*>& geometries)
+OctreeIntersector::Update(const std::vector<Geometry*>& geometries, bool useMortom)
 {
 
 }

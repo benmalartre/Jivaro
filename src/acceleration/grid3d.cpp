@@ -116,7 +116,7 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points,
 */
 
 // place a triangle mesh in the grid
-void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries)
+void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries, bool useMortom)
 {
   // delete old cells
   DeleteCells();
@@ -203,7 +203,7 @@ void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries)
   
 }
 
-void Grid3DIntersector::Update(const std::vector<Geometry*>& geometries)
+void Grid3DIntersector::Update(const std::vector<Geometry*>& geometries, bool useMortom)
 {
 
 }
