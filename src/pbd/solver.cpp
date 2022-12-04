@@ -30,7 +30,7 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   pxr::UsdGeomCube proto =
     pxr::UsdGeomCube::Define(stage,
       instancer.GetPath().AppendChild(pxr::TfToken("proto_cube")));
-  proto.CreateSizeAttr().Set(0.1);
+  proto.CreateSizeAttr().Set(1.f);
 
   pxr::UsdGeomBasisCurves curve =
     pxr::UsdGeomBasisCurves::Define(stage,
@@ -46,8 +46,9 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   pxr::VtArray<int> protoIndices(numPoints);
   pxr::VtArray<pxr::GfQuath> rotations(numPoints);
   pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  pxr::VtArray<int> curveVertexCount({ numPoints});
-  pxr::VtArray<float> widths(1);
+  pxr::VtArray<int> curveVertexCount(1);
+  curveVertexCount[0] = numPoints;
+  pxr::VtArray<float> widths(numPoints);
   widths[0] = 1.f;
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
@@ -59,9 +60,9 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
       pxr::GfVec3f(bvh->ComputeCodeAsColor(
         pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
-    widths[pointIdx] = 0.1f + RANDOM_0_1 * 0.2;
+    widths[pointIdx] = RANDOM_0_1;
   }
-  /*
+  
   instancer.CreatePositionsAttr().Set(points);
   instancer.CreateProtoIndicesAttr().Set(protoIndices);
   instancer.CreateScalesAttr().Set(scales);
@@ -74,21 +75,18 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
-  */
 
-  //curve.CreateTypeAttr().Set(pxr::UsdGeomTokens->linear);
-  //curve.CreatePointsAttr().Set(points);
-  //curve.SetWidthsInterpolation(pxr::UsdGeomTokens->constant);
-  //curve.CreateWidthsAttr().Set(widths);
-  //curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
+  curve.CreatePointsAttr().Set(points);
+  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->constant);
+  curve.CreateWidthsAttr().Set(widths);
+  curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
 
-  //pxr::UsdGeomPrimvar colorPrimvar = curve.CreateDisplayColorPrimvar();
-  //colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
-  //colorPrimvar.SetElementSize(1);
-  //colorPrimvar.Set(colors);
-  //
-  //curve.CreateWidthsAttr().Set(widths);
-  //curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
+  colorPrimvar = curve.CreateDisplayColorPrimvar();
+  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+  colorPrimvar.SetElementSize(1);
+  colorPrimvar.Set(colors);
+  
+  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
 }
 
 
@@ -127,36 +125,43 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
     uint64_t T = CurrentTime();
     BVH bvh;
     bvh.Init(_colliders);
+    std::cout << "build bvh no mortom : " << ((CurrentTime() - T) * 1e-9) << std::endl;
 
+    T = CurrentTime();
     pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
     double minDistance;
     Hit hit;
     if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
       pxr::GfVec3f position;
       hit.GetPosition(&position);
+      std::cout << "hit position : " << position << std::endl;
     }
+    std::cout << "hit time : " << ((CurrentTime() - T) * 1e-9) << std::endl;
     _SetupBVHInstancer(GetApplication()->GetWorkspace()->GetExecStage(), &bvh);
     BVH::EchoNumHits();
-    std::cout << ((T - CurrentTime()) * 10e-9) << std::endl;
+   
 
   }
   
-  {/*
+  {
     uint64_t T = CurrentTime();
     BVH bvh;
     bvh.Init(_colliders, true);
+    std::cout << "build bvh with mortom : " << ((CurrentTime() - T) * 1e-9) << std::endl;
 
+    T = CurrentTime();
     pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
     double minDistance;
     Hit hit;
     if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
       pxr::GfVec3f position;
       hit.GetPosition(&position);
+      std::cout << "hit position : " << position << std::endl;
     }
+    std::cout << "hit time : " << ((CurrentTime() - T) * 1e-9) << std::endl;
     _SetupBVHInstancer(GetApplication()->GetWorkspace()->GetExecStage(), &bvh);
     BVH::EchoNumHits();
-    std::cout << ((T - CurrentTime()) * 10e-9) << std::endl;
-    */
+    
   }
 }
 

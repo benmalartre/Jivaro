@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <limits>
+#include <immintrin.h>
+#include <stdint.h>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
@@ -40,11 +42,8 @@ public:
   };
 
   // constructor
-  BVH();
-  BVH(BVH* parent);
-  BVH(BVH* parent, Geometry* geometry, bool useMortom=false);
-  BVH(BVH* parent, BVH* lhs);
-  BVH(BVH* parent, BVH* lhs, BVH* RHS);
+  BVH(BVH* parent=NULL, BVH* lhs=NULL, BVH* rhs=NULL);
+  BVH(BVH* parent, Geometry* geometry, bool useMortom = false);
   BVH(BVH* parent, TrianglePair* pair, const pxr::GfRange3d& range);
   BVH(BVH* parent, Triangle* tri, const pxr::GfRange3d& range);
 
@@ -57,9 +56,6 @@ public:
 
   bool IsLeaf() const;
   bool IsRoot() const;
-  void SetParent(BVH* cell) { _parent = cell; };
-  BVH* GetParent() { return _parent; };
-  const BVH* GetParent() const { return _parent; };
   BVH* GetRoot();
   const BVH* GetRoot() const;
 
@@ -75,7 +71,7 @@ public:
   short GetElementType();
 
   // override base class
-  void Init(Geometry* geometry, BVH* parent, bool useMortom);
+  void Init(Geometry* geometry, bool useMortom);
   virtual void Init(const std::vector<Geometry*>& geometries, bool useMortom=false) override;
   virtual void Update(const std::vector<Geometry*>& geometries, bool useMortom=false) override;
   virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,

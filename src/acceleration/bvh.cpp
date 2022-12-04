@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
@@ -10,9 +11,31 @@
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 
+
+#ifdef WIN32
+    #include <intrin.h>
+    static uint32_t __inline __builtin_clz(uint32_t x) {
+        unsigned long r = 0;
+        _BitScanReverse(&r, x);
+        return (31-r);
+    }
+#endif
+
 JVR_NAMESPACE_OPEN_SCOPE
 
 static size_t NUM_HITS = 0;
+
+
+uint32_t _CountLeadingZeros(const uint64_t x)
+{
+  uint32_t u32 = (x >> 32);
+  uint32_t result = u32 ? __builtin_clz(u32) : 32;
+  if (result == 32) {
+    u32 = x & 0xFFFFFFFFUL;
+    result += (u32 ? __builtin_clz(u32) : 32);
+  }
+  return result;
+}
 
 // distance
 static double 
@@ -134,23 +157,6 @@ _GetElementTypeFromGeometry(Geometry* geom)
   return BVH::INVALID;
 }
 
-BVH::BVH()
-  : _parent(NULL)
-  , _left(NULL)
-  , _right(NULL)
-  , _data(NULL)
-  , _type(BVH::ROOT)
-{
-}
-
-BVH::BVH(BVH* parent)
-  : _parent(parent)
-  , _left(NULL)
-  , _right(NULL)
-  , _data(NULL)
-  , _type(BVH::ROOT)
-{
-}
 
 BVH::BVH(BVH* parent, Geometry* geometry, bool useMortom)
   : _parent(parent)
@@ -166,25 +172,13 @@ BVH::BVH(BVH* parent, Geometry* geometry, bool useMortom)
     SetMin(range.GetMin());
     SetMax(range.GetMax());
 
-    Init(geometry, _parent, useMortom);
+    Init(geometry, useMortom);
 
     _data = (void*)new BVH::Data({
       geometry, 
       _GetElementTypeFromGeometry(geometry)
       });
   }
-}
-
-BVH::BVH(BVH* parent, BVH* lhs)
-  : _parent(parent)
-  , _left(lhs)
-  , _right(NULL)
-  , _data(NULL)
-  , _type(BVH::BRANCH)
-{
-  SetMin(_left->GetMin());
-  SetMax(_left->GetMax());
-  _left->SetParent(this);
 }
 
 BVH::BVH(BVH* parent, BVH* lhs, BVH* rhs)
@@ -195,17 +189,21 @@ BVH::BVH(BVH* parent, BVH* lhs, BVH* rhs)
   , _type(BVH::BRANCH)
 {
   _type = BVH::BRANCH;
-  pxr::GfRange3d range =
-    pxr::GfRange3d::GetUnion(*_left, *_right);
-  SetMin(range.GetMin());
-  SetMax(range.GetMax());
-  _left->SetParent(this);
-  _right->SetParent(this);
+  if (_left && _right) {
+    pxr::GfRange3d range =
+      pxr::GfRange3d::GetUnion(*_left, *_right);
+    SetMin(range.GetMin());
+    SetMax(range.GetMax());
+  }
+  else if (_left) {
+    SetMin(_left->GetMin());
+    SetMax(_left->GetMax());
+  }
 }
 
 
 BVH::BVH(BVH* parent, TrianglePair* pair, const pxr::GfRange3d& range)
-  : _parent(parent)
+  :  _parent(parent)
   , _left(NULL)
   , _right(NULL)
   , _data((void*)pair)
@@ -366,6 +364,21 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
   return false;
 }
 
+void BVH::_SortTrianglesByPair(std::vector<BVH*>& leaves, Geometry* geometry)
+{
+  if (geometry->GetType() != Geometry::MESH)return;
+  Mesh* mesh = (Mesh*)geometry;
+  const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
+
+  pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
+  leaves.reserve(trianglePairs.size());
+  for (auto& trianglePair : trianglePairs) {
+    BVH* leaf =
+      new BVH(this, &trianglePair, trianglePair.GetBoundingBox(points));
+    leaves.push_back(leaf);
+  }
+}
+
 void BVH::_SortCellsByPair(std::vector<BVH*>& cells,
   std::vector<BVH*>& results)
 {
@@ -402,63 +415,36 @@ void BVH::_SortCellsByPair(std::vector<BVH*>& cells,
   }
 }
 
-static uint32_t _CountLeadingZeros(uint64_t mortom)
-{
-  uint32_t zeros;
-  if ((mortom & 0xffff) == 0) zeros = 16, mortom >>= 16; else zeros = 0;
-  if ((mortom & 0xff) == 0) zeros += 8, mortom >>= 8;
-  if ((mortom & 0xf) == 0) zeros += 4, mortom >>= 4;
-  if ((mortom & 0x3) == 0) zeros += 2, mortom >>= 2;
-  if ((mortom & 0x1) == 0) zeros += 1, mortom >>= 1;
-  return zeros + mortom;
-}
-
 int _FindSplit(std::vector<BVH*>& cells, int first, int last)
 {
-  // Identical Morton codes => split the range in the middle.
-  std::cout << "find split .." << std::endl;
-
   uint64_t firstCode = cells[first]->GetCode();
   uint64_t lastCode = cells[last]->GetCode();
-  std::cout << firstCode << std::endl;
-  std::cout << lastCode << std::endl;
 
   if (firstCode == lastCode)
     return (first + last) >> 1;
 
-  // Calculate the number of highest bits that are the same
-  // for all objects, using the count-leading-zeros intrinsic.
-
   int commonPrefix = _CountLeadingZeros(firstCode ^ lastCode);
-  std::cout << "common prefix : " << commonPrefix << std::endl;
-
-
-  // Use binary search to find where the next bit differs.
-  // Specifically, we are looking for the highest object that
-  // shares more than commonPrefix bits with the first one.
-
-  int split = first; // initial guess
+  int split = first;
   int step = last - first;
 
   do
   {
-    step = (step + 1) >> 1; // exponential decrease
-    int newSplit = split + step; // proposed new position
+    step = (step + 1) >> 1;
+    int newSplit = split + step;
 
     if (newSplit < last)
     {
       uint64_t splitCode = cells[newSplit]->GetCode();
       int splitPrefix = _CountLeadingZeros(firstCode ^ splitCode);
       if (splitPrefix > commonPrefix)
-        split = newSplit; // accept proposal
+        split = newSplit;
     }
   } while (step > 1);
 
   return split;
 }
 
-/*
-BVH* 
+BVH*
 BVH::_GenerateHierarchyFromMortom(
   std::vector<BVH*>& cells,
   int           first,
@@ -467,20 +453,17 @@ BVH::_GenerateHierarchyFromMortom(
   if (first == last)
     return new BVH(this, cells[first]);
 
-  // Determine where to split the range.
-
   int split = _FindSplit(cells, first, last);
-
-  // Process the resulting sub-ranges recursively.
 
   BVH* left = _GenerateHierarchyFromMortom(cells, first, split);
   BVH* right = _GenerateHierarchyFromMortom(cells, split + 1, last);
-  return new BVH(left, right);
+  return new BVH(this, left, right);
 }
 
 void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
   std::vector<BVH*>& results)
 {
+
   results.clear();
   size_t numCells = cells.size();
 
@@ -496,62 +479,9 @@ void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
   std::sort(cells.begin(), cells.end(), [](const BVH* lhs, const BVH* rhs) {
     return lhs->GetCode() < rhs->GetCode();
   });
+
+  results.push_back(_GenerateHierarchyFromMortom(cells, 0, numCells - 1));
 } 
-*/
-
-
-void BVH::_SortCellsByPairMortom(std::vector<BVH*>& cells,
-  std::vector<BVH*>& results)
-{
-  results.clear();
-  size_t numCells = cells.size();
-  std::vector<short> used;
-  used.resize(numCells);
-  memset(&used[0], 0x0, numCells * sizeof(bool));
-
-  for (size_t i = 0; i < numCells; ++i) {
-    if (used[i]) continue;
-    BVH* cell = cells[i];
-    float min_distance = std::numeric_limits<float>::max();
-    int closest_idx = -1;
-    for (size_t j = 0; j < numCells; ++j) {
-      if (i == j)continue;
-      BVH* other = cells[j];
-      float distance = _GetDistance(cell, other);
-      if (distance < min_distance && !used[j]) {
-        min_distance = distance;
-        closest_idx = j;
-      }
-    }
-
-    if (closest_idx >= 0) {
-      used[closest_idx] = true;
-      used[i] = true;
-      results.push_back(new BVH(this, cell, cells[closest_idx]));
-    }
-    else {
-      used[i] = true;
-      results.push_back(new BVH(this, cell));
-    }
-  }
-}
-
-
-
-void BVH::_SortTrianglesByPair(std::vector<BVH*>& leaves,  Geometry* geometry)
-{
-  if (geometry->GetType() != Geometry::MESH)return;
-  Mesh* mesh = (Mesh*)geometry;
-  const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
-
-  pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
-  leaves.reserve(trianglePairs.size());
-  for (auto& trianglePair : trianglePairs) {
-    BVH* leaf = 
-      new BVH(this, &trianglePair, trianglePair.GetBoundingBox(points));
-    leaves.push_back(leaf);
-  }
-}
 
 void BVH::Init(const std::vector<Geometry*>& geometries, bool useMortom)
 {
@@ -577,7 +507,7 @@ void BVH::Init(const std::vector<Geometry*>& geometries, bool useMortom)
   else _SortCellsByPairMortom(trees, results);
   while (results.size() > 2) {
     cells = results;
-    if(!_useMortom ==0)_SortCellsByPair(cells, results);
+    if(!_useMortom)_SortCellsByPair(cells, results);
     else _SortCellsByPairMortom(cells, results);
   }
   if (results.size() == 1) {
@@ -596,7 +526,7 @@ void BVH::Init(const std::vector<Geometry*>& geometries, bool useMortom)
   trees.clear();
 }
 
-void BVH::Init(Geometry* geometry, BVH* parent, bool useMortom)
+void BVH::Init(Geometry* geometry, bool useMortom)
 {
   _useMortom = useMortom;
   if (geometry->GetType() == Geometry::MESH) {
