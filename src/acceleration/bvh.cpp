@@ -173,10 +173,7 @@ BVH::BVH(BVH* parent, Geometry* geometry)
 
     Init(geometry);
 
-    _data = (void*)new BVH::Data({
-      geometry, 
-      _GetElementTypeFromGeometry(geometry)
-      });
+    _data = (void*)geometry;
   }
 }
 
@@ -234,7 +231,7 @@ BVH::GetGeometry()
   else return NULL;
 }
 
-const Geometry*
+Geometry*
 BVH::GetGeometry() const
 {
   const BVH* root = GetRoot();
@@ -269,10 +266,10 @@ bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit,
     if (IsLeaf()) {
       Geometry* geometry = GetGeometry();
       const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
-      switch (data->elemType) {
-      case BVH::TRIPAIR:
+      switch (geometry->GetType()) {
+      case Geometry::MESH:
         if (_RaycastTrianglePair(points, ray, hit, maxDistance, minDistance)) {
-          hit->SetGeometry(data->geometry);
+          hit->SetGeometry(geometry);
           return true;
         }
         break;
@@ -315,12 +312,12 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
   pxr::GfRange3d range(point, point);
   if (maxDistance < 0 || GetDistance(this, &range) < maxDistance) {
     if (IsLeaf()) {
-      BVH::Data* data = (BVH::Data*)GetRoot()->_data;
-      const pxr::GfVec3f* points = data->geometry->GetPositionsCPtr();
-      switch (data->elemType) {
-      case BVH::TRIPAIR:
+      Geometry* geometry = GetGeometry();
+      const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
+      switch (geometry->GetType()) {
+      case Geometry::MESH:
         if (_ClosestTrianglePair(points, point, hit, maxDistance, minDistance)) {
-          hit->SetGeometry(data->geometry);
+          hit->SetGeometry(geometry);
           return true;
         }
         break;

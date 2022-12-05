@@ -46,7 +46,6 @@ public:
   ~BVH() {
     if (_left)delete _left;
     if (_right)delete _right;
-    if (_type == BVH::ROOT)delete (void*));
   };
 
   bool IsLeaf() const;
@@ -64,7 +63,7 @@ public:
   void GetCells(std::vector<BVH*>& cells);
 
   Geometry* GetGeometry();
-  const Geometry* GetGeometry() const;
+  Geometry* GetGeometry() const;
 
   // override base class
   void Init(Geometry* geometry);
