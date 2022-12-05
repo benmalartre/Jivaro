@@ -229,8 +229,7 @@ BVH::GetGeometry()
 {
   BVH* root = GetRoot();
   if (root) {
-    BVH::Data* data = (BVH::Data*)root->_data;
-    return data->geometry;
+    return (Geometry*)root->_data;
   }
   else return NULL;
 }
@@ -240,21 +239,9 @@ BVH::GetGeometry() const
 {
   const BVH* root = GetRoot();
   if (root) {
-    BVH::Data* data = (BVH::Data*)root->_data;
-    return data->geometry;
+    return (Geometry*)root->_data;
   }
   else return NULL;
-}
-
-short
-BVH::GetElementType()
-{
-  BVH* root = GetRoot();
-  if (root) {
-    BVH::Data* data = (BVH::Data*)root->_data;
-    return data->elemType;
-  }
-  return BVH::INVALID;
 }
 
 bool
@@ -280,8 +267,8 @@ bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit,
   double enterDistance, exitDistance;
   if (ray.Intersect(*this, &enterDistance, &exitDistance)) {
     if (IsLeaf()) {
-      BVH::Data* data = (BVH::Data*)GetRoot()->_data;
-      const pxr::GfVec3f* points = data->geometry->GetPositionsCPtr();
+      Geometry* geometry = GetGeometry();
+      const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
       switch (data->elemType) {
       case BVH::TRIPAIR:
         if (_RaycastTrianglePair(points, ray, hit, maxDistance, minDistance)) {

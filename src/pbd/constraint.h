@@ -50,6 +50,19 @@ protected:
   float       _stiffness;
 };
 
+class PBDRestoreConstraint : public PBDConstraint
+{
+public:
+  PBDRestoreConstraint() : PBDConstraint(2) {}
+  virtual int& GetTypeId() const { return TYPE_ID; }
+
+  virtual bool Init(PBDSolver* solver, const unsigned int p1, const float stiffness);
+  virtual bool Solve(PBDSolver* solver, const unsigned int iter);
+
+protected:
+  static int  TYPE_ID;
+  float       _stiffness;
+};
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

@@ -46,6 +46,8 @@ public:
   const pxr::VtArray<pxr::GfVec3f>& GetPreviousPositions() const { return _previous[_flip]; };
   pxr::VtArray<pxr::GfVec3f>& GetInitPositions() { return _initial; };
   const pxr::VtArray<pxr::GfVec3f>& GetInitPositions() const { return _initial; };
+  pxr::VtArray<pxr::GfVec3f>& GetInputPositions() { return _input; };
+  const pxr::VtArray<pxr::GfVec3f>& GetInputPositions() const { return _input; };
   pxr::VtArray<pxr::GfVec3f>& GetForces() { return _force; };
   const pxr::VtArray<pxr::GfVec3f>& GetForces() const { return _force; };
   pxr::VtArray<float>& GetMasses() { return _mass; };

@@ -1,7 +1,4 @@
-#include <map>
-#include <unordered_map>
 #include "../geometry/utils.h"
-#include "../geometry/intersection.h"
 #include <pxr/base/gf/matrix4f.h>
 
 JVR_NAMESPACE_OPEN_SCOPE

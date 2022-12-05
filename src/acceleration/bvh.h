@@ -36,11 +36,6 @@ public:
     INVALID
   };
 
-  struct Data {
-    Geometry* geometry;
-    short     elemType;
-  };
-
   // constructor
   BVH(BVH* parent=NULL, BVH* lhs=NULL, BVH* rhs=NULL);
   BVH(BVH* parent, Geometry* geometry);
@@ -51,7 +46,7 @@ public:
   ~BVH() {
     if (_left)delete _left;
     if (_right)delete _right;
-    if (_type == BVH::ROOT && _data)delete _data;
+    if (_type == BVH::ROOT)delete (void*));
   };
 
   bool IsLeaf() const;
@@ -63,12 +58,13 @@ public:
   void SetRight(BVH* cell) { _right = cell; };
   BVH* GetLeft() { return _left; };
   BVH* GetRight() { return _right; };
+
+  // debug
   void GetLeaves(std::vector<BVH*>& leaves);
   void GetCells(std::vector<BVH*>& cells);
 
   Geometry* GetGeometry();
   const Geometry* GetGeometry() const;
-  short GetElementType();
 
   // override base class
   void Init(Geometry* geometry);
