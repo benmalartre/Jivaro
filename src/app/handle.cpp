@@ -1355,8 +1355,6 @@ BrushHandle::_BuildStroke(bool replace)
 
   const pxr::GfVec3f normal(_camera->GetViewPlaneNormal());
   std::vector<pxr::GfVec3f> profile(2);
-  profile[0] = { -0.5f, 0.f, 0.f };
-  profile[1] = { 0.5f, 0.f, 0.f };
 
   std::vector<pxr::GfMatrix4f> xfos(_path.size());
   pxr::GfVec3f tangent, bitangent, up;

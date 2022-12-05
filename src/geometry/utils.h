@@ -69,6 +69,15 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
                     const pxr::VtArray<pxr::GfVec3f>& ups,
                     pxr::VtArray<pxr::GfVec3f>& tangents);
 
+
+/// Sample triangle mesh
+void
+PoissonSampling(float radius, int nbSamples,
+  const pxr::VtArray<pxr::GfVec3f>& points,
+  const pxr::VtArray<pxr::GfVec3f>& normals,
+  const pxr::VtArray<int>& triangles,
+  pxr::VtArray<Hit>& samples);
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

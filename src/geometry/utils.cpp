@@ -1,4 +1,7 @@
+#include <map>
+#include <unordered_map>
 #include "../geometry/utils.h"
+#include "../geometry/intersection.h"
 #include <pxr/base/gf/matrix4f.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -208,6 +211,5 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
     break;
   }
 }
-
 
 JVR_NAMESPACE_CLOSE_SCOPE
