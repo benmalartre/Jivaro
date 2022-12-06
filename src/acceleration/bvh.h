@@ -37,6 +37,7 @@ public:
     };
 
     // constructor
+    Cell();
     Cell(Cell* parent, Cell* lhs, Cell* rhs);
     Cell(Cell* parent, Geometry* geometry);
     Cell(Cell* parent, Component* component,
@@ -85,6 +86,8 @@ public:
   };
 
 public:
+  BVH() {};
+
   static uint64_t ComputeCode(BVH::Cell* root, const pxr::GfVec3d& point)
   {
     const pxr::GfVec3i p = WorldToMortom(*root, point);

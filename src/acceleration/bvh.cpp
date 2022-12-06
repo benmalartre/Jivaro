@@ -23,7 +23,63 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static size_t NUM_HITS = 0;
+BVH::Cell::Cell()
+  : _parent(NULL)
+  , _left(NULL)
+  , _right(NULL)
+  , _data(NULL)
+  , _type(BVH::Cell::ROOT)
+{
+}
+
+BVH::Cell::Cell(BVH::Cell* parent, Geometry* geometry)
+  : _parent(parent)
+  , _left(NULL)
+  , _right(NULL)
+  , _data(NULL)
+  , _type(BVH::Cell::ROOT)
+{
+  if (geometry) {
+    const pxr::GfRange3d& range = geometry->GetBoundingBox().GetRange();
+    SetMin(range.GetMin());
+    SetMax(range.GetMax());
+
+    Init(geometry);
+
+    _data = (void*)geometry;
+  }
+}
+
+BVH::Cell::Cell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs)
+  : _parent(parent)
+  , _left(lhs)
+  , _right(rhs)
+  , _data(NULL)
+  , _type(BVH::Cell::BRANCH)
+{
+  _type = BVH::Cell::BRANCH;
+  if (_left && _right) {
+    const pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*_left, *_right);
+    SetMin(range.GetMin());
+    SetMax(range.GetMax());
+  }
+  else if (_left) {
+    SetMin(_left->GetMin());
+    SetMax(_left->GetMax());
+  }
+}
+
+
+BVH::Cell::Cell(BVH::Cell* parent, Component* component, const pxr::GfRange3d& range)
+  : _parent(parent)
+  , _left(NULL)
+  , _right(NULL)
+  , _data((void*)component)
+  , _type(BVH::Cell::LEAF)
+{
+  SetMin(range.GetMin());
+  SetMax(range.GetMax());
+}
 
 uint32_t _CountLeadingZeros(const uint64_t x)
 {
@@ -125,55 +181,6 @@ BVH::Cell::GetCells(std::vector<BVH::Cell*>& cells)
   cells.clear();
   if (_left)_RecurseGetCells(_left, cells);
   if (_right)_RecurseGetCells(_right, cells);
-}
-
-BVH::Cell::Cell(BVH::Cell* parent, Geometry* geometry)
-  : _parent(parent)
-  , _left(NULL)
-  , _right(NULL)
-  , _data(NULL)
-  , _type(BVH::Cell::ROOT)
-{
-  if (geometry) {
-    const pxr::GfRange3d& range = geometry->GetBoundingBox().GetRange();
-    SetMin(range.GetMin());
-    SetMax(range.GetMax());
-
-    Init(geometry);
-
-    _data = (void*)geometry;
-  }
-}
-
-BVH::Cell::Cell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs)
-  : _parent(parent)
-  , _left(lhs)
-  , _right(rhs)
-  , _data(NULL)
-  , _type(BVH::Cell::BRANCH)
-{
-  _type = BVH::Cell::BRANCH;
-  if (_left && _right) {
-    const pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*_left, *_right);
-    SetMin(range.GetMin());
-    SetMax(range.GetMax());
-  }
-  else if (_left) {
-    SetMin(_left->GetMin());
-    SetMax(_left->GetMax());
-  }
-}
-
-
-BVH::Cell::Cell(BVH::Cell* parent, Component* component, const pxr::GfRange3d& range)
-  :  _parent(parent)
-  , _left(NULL)
-  , _right(NULL)
-  , _data((void*)component)
-  , _type(BVH::Cell::LEAF)
-{
-  SetMin(range.GetMin());
-  SetMax(range.GetMax());
 }
 
 Geometry*
