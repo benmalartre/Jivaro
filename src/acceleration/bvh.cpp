@@ -220,7 +220,6 @@ BVH::BVH(BVH* parent, BVH* lhs, BVH* rhs)
     SetMin(_left->GetMin());
     SetMax(_left->GetMax());
   }
-  ComputeCode(GetMidpoint());
 }
 
 
