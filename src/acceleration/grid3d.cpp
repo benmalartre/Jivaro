@@ -31,17 +31,17 @@ void Grid3DIntersector::ResetCells()
 
 void Grid3DIntersector::InsertMesh(size_t idx)
 {
-  Mesh* mesh = (Mesh*)_geometries[idx];
+  //Mesh* mesh = (Mesh*)_geometries[idx];
 }
 
 void Grid3DIntersector::InsertCurve(size_t idx)
 {
-  Curve* curve = (Curve*)_geometries[idx];
+  //Curve* curve = (Curve*)_geometries[idx];
 } 
 
 void Grid3DIntersector::InsertPoints(size_t idx)
 {
-  Points* points = (Points*)_geometries[idx];
+  //Points* points = (Points*)_geometries[idx];
 }
 
 /*
@@ -120,14 +120,12 @@ void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries)
 {
   // delete old cells
   DeleteCells();
-  _geometries.clear();
   if (!geometries.size())return;
-  _geometries = geometries;
 
   // compute bound of the scene
   uint32_t totalNumElements = 0;
   _range.SetEmpty();
-  for(Geometry* geom:_geometries) {
+  for(Geometry* geom: geometries) {
     const pxr::GfBBox3d& bbox = geom->GetBoundingBox();
     const pxr::GfRange3d& range = bbox.GetRange();
     _range.UnionWith(pxr::GfRange3f(
@@ -187,8 +185,8 @@ void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries)
   const pxr::GfVec3f& bboxMin = _range.GetMin();
   const pxr::GfVec3f& bboxMax = _range.GetMax();
   // insert all the triangles in the cells
-  for (size_t geomIt = 0; geomIt < _geometries.size(); ++ geomIt) {
-    switch (_geometries[geomIt]->GetType()) {
+  for (size_t geomIt = 0; geomIt < geometries.size(); ++ geomIt) {
+    switch (geometries[geomIt]->GetType()) {
       case Geometry::MESH:
         InsertMesh(geomIt);
         break;

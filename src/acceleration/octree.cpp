@@ -130,15 +130,14 @@ void OctreeIntersector::Cell::GetFurthestCorner(const pxr::GfVec3f& point, pxr::
 }
 
 // build tree
-void OctreeIntersector::Cell::BuildTree(std::vector<Element>& elements, Geometry* geometry)
+void OctreeIntersector::Cell::BuildTree(Component* components, size_t num, Geometry* geometry)
 {
     ClearTree();
     
-    // loop over all triangles, insert all leaves to the tree
-    std::vector<Element>::iterator it;
-    for(it = elements.begin();it<elements.end();it++)
+    // loop over all elements, insert all leaves to the tree
+    for(size_t i = 0; i < num; ++i)
     {
-        Insert(&(*it));
+        Insert(&components[i]);
     }
     
     Split(geometry->GetPositionsCPtr());
@@ -220,17 +219,13 @@ OctreeIntersector::Closest(const pxr::GfVec3f& point, Hit* hit,
 
     // brute force neighbor cell
     //std::vector<Triangle*>::iterator tri = closestCell->getTriangles().begin();
-    Element* E;
+    Component* C;
     float closestDistance = FLT_MAX;
-    float distance;
-    float currentU, currentV, currentW;
-    pxr::GfVec3f closest;
-    pxr::GfVec3f delta;
-    Element* closestElement = NULL;
+
     for(unsigned e = 0; e < closestCell->NumElements(); ++e)
     {
-        E = closestCell->GetElement(e);
-        E->Closest( positions, point , hit);
+        C = closestCell->GetElement(e);
+        C->Closest( positions, point , hit);
     }
     
     std::vector<Cell*> nearbyCells;
@@ -245,8 +240,8 @@ OctreeIntersector::Closest(const pxr::GfVec3f& point, Hit* hit,
     {
         for(unsigned e = 0; e <(*nearby)->NumElements(); ++e)
         {
-            E = (*nearby)->GetElement(e);
-            E->Closest( positions, point , hit);
+            C = (*nearby)->GetElement(e);
+            C->Closest( positions, point , hit);
         }
     }
 }

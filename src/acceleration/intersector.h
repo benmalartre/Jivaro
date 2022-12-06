@@ -25,18 +25,6 @@ public:
     INVALID
   };
 
-protected:
-  struct Element {
-    Element(Component* ptr) : _ptr(ptr) {};
-    virtual bool Touch(const pxr::GfVec3f* points, 
-        const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize);
-    virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point , 
-      Hit* hit, double maxDistance=-1.0);
-    virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, 
-      Hit* hit, double maxDistance, double* minDistance);
-    void* _ptr;
-  };
-
 public:
   virtual void Init(const std::vector<Geometry*>& geometries) = 0;
   virtual void Update(const std::vector<Geometry*>& geometries) = 0;
@@ -44,10 +32,6 @@ public:
     double maxDistance=-1, double* minDistance=NULL) const = 0;
   virtual bool Closest(const pxr::GfVec3f& point, Hit* hit, 
     double maxDistance=-1.f) const = 0;
-  
-
-protected:
-  std::vector<Geometry*>  _geometries;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

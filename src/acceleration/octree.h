@@ -70,11 +70,11 @@ public:
 
     // triangles size
     int NumElements() const { return _elements.size(); };
-    std::vector<Element*>& GetElements() { return _elements; };
-    Element* GetElement(unsigned index) { return _elements[index]; };
+    std::vector<Component*>& GetElements() { return _elements; };
+    Component* GetElement(unsigned index) { return _elements[index]; };
 
     // insert a triangle
-    void Insert(Element* e) { _elements.push_back(e); };
+    void Insert(Component* e) { _elements.push_back(e); };
 
     // split into 8
     void Split(const pxr::GfVec3f* points);
@@ -86,7 +86,7 @@ public:
     void GetFurthestCorner(const pxr::GfVec3f& point, pxr::GfVec3f& corner);
 
     // build the tree
-    void BuildTree(std::vector<Element>& elements, Geometry* geometry);
+    void BuildTree(Component* comonents, size_t num, Geometry* geometry);
     void ClearTree();
 
   private:
@@ -103,7 +103,7 @@ public:
     Cell* _child[8];
 
     // elements
-    std::vector<Element*> _elements;
+    std::vector<Component*> _elements;
   };
 
 protected:
@@ -127,8 +127,8 @@ private:
   // static members
   static const int MAX_ELEMENTS_NUMBER;
 
-  Cell                  _octree;
-  std::vector<Element*> _elements;
+  Cell                      _octree;
+  std::vector<Component*>   _elements;
 
 };
 

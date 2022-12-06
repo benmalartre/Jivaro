@@ -242,16 +242,16 @@ bool
 BVH::_Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
 {
-  Intersector::Element* elem = (Intersector::Element*)_data;
-  return elem->Raycast(points, ray, hit, maxDistance, minDistance);
+  Component* component = (Component*)_data;
+  return component->Raycast(points, ray, hit, maxDistance, minDistance);
 }
 
 bool 
 BVH::_Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
   double maxDistance) const
 {
-  Intersector::Element* elem = (Intersector::Element*)_data;
-  return elem->Closest(points, point, hit, maxDistance);
+  Component* component = (Component*)_data;
+  return component->Closest(points, point, hit, maxDistance);
 }
 
 bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit, 
