@@ -57,6 +57,30 @@ Triangle::GetNormal(const pxr::GfVec3f* points)
   return normal;
 }
 
+bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  pxr::GfVec3d baryCoords;
+  double distance;
+  bool frontFacing;
+
+  if (ray.Intersect(
+    points[vertices[0]],
+    points[vertices[1]],
+    points[vertices[2]],
+    &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
+    if (distance < *minDistance) {
+      *minDistance = distance;
+      hit->SetElementIndex(id);
+      hit->SetElementType(Hit::TRIANGLE);
+      hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
+      hit->SetT(distance);
+      return true;
+    }
+  }
+
+}
+
 //-------------------------------------------------------
 // Triangle Closest Point
 //-------------------------------------------------------
@@ -150,7 +174,7 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hi
 // Plane Box Test
 //-------------------------------------------------------
 bool Triangle::PlaneBoxTest(const pxr::GfVec3f& normal, 
-  const pxr::GfVec3f& point, const pxr::GfVec3f& box)
+  const pxr::GfVec3f& point, const pxr::GfVec3f& box) const
 {
   int q;
   
@@ -178,7 +202,7 @@ bool Triangle::PlaneBoxTest(const pxr::GfVec3f& normal,
 // Triangle Intersect Bounding Box
 //-------------------------------------------------------
 bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, 
-  const pxr::GfVec3f& boxhalfsize)
+  const pxr::GfVec3f& boxhalfsize) const
 {
   /*
   use separating axis theorem to test overlap between triangle and box
@@ -249,28 +273,6 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
   if(!PlaneBoxTest(normal, v0, boxhalfsize)) return false;	// -NJMP-
   
   return true;   // box and triangle overlaps
-}
-
-
-//-------------------------------------------------------
-// TrianglePair constructors
-//-------------------------------------------------------
-TrianglePair::TrianglePair()
-  : left(NULL)
-  , right(NULL)
-{
-}
-
-TrianglePair::TrianglePair(Triangle* t1)
-  : left(t1)
-  , right(NULL)
-{
-}
-
-TrianglePair::TrianglePair(Triangle* t1, Triangle* t2)
-  : left(t1)
-  , right(t2)
-{
 }
 
 //-------------------------------------------------------
@@ -350,6 +352,16 @@ TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
 {
   return false;
 };
+
+//-------------------------------------------------------
+// TrianglePair touch box
+//-------------------------------------------------------
+bool 
+TrianglePair::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, 
+  const pxr::GfVec3f& boxhalfsize) const
+{
+  return false;
+}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

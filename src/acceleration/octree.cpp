@@ -15,60 +15,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 const int OctreeIntersector::MAX_ELEMENTS_NUMBER = 32;
 
-bool
-OctreeIntersector::PointElement::Touch(Geometry* geometry,
-      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize)
-{
-    Point* point = (Point*)_ptr;
-    const pxr::GfVec3f pos = point->GetPosition(geometry);
-    const float radius = point->GetRadius();
-
-
-    return true;
-}
-
-bool
-OctreeIntersector::EdgeElement::Touch(Geometry* geometry,
-      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize)
-{
-    return true;
-}
-
-
-bool
-OctreeIntersector::TriangleElement::Touch(Geometry* geometry,
-      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize)
-{
-    return true;
-}
-
-
-bool 
-OctreeIntersector::PointElement::Closest(const pxr::GfVec3f* points, 
-  const pxr::GfVec3f& query , Hit* hit, float maxDistance)
-{
-  Point* point = (Point*)_ptr;
-  return point->Closest(points, query, hit, maxDistance);
-}
-
-bool 
-OctreeIntersector::EdgeElement::Closest(const pxr::GfVec3f* points, 
-  const pxr::GfVec3f& query , Hit* hit, float maxDistance)
-{
-  Edge* edge = (Edge*)_ptr;
-  pxr::GfVec3f closest;
-  return edge->Closest(points, query, hit, maxDistance);
-}
-
-bool 
-OctreeIntersector::TriangleElement::Closest(const pxr::GfVec3f* points, 
-  const pxr::GfVec3f& query , Hit* hit, float maxDistance)
-{
-  Triangle* triangle = (Triangle*)_ptr;
-  pxr::GfVec3f closest;
-  return triangle->Closest(points, query, hit, maxDistance);
-}
-
 // destructor
 OctreeIntersector::Cell::~Cell()
 {
@@ -115,9 +61,8 @@ bool OctreeIntersector::Cell::IntersectSphere(const pxr::GfVec3f& center, const 
 }
 
 // get bounding box
-void OctreeIntersector::Cell::GetBoundingBox(Geometry* geometry, pxr::VtArray<int>& vertices)
+void OctreeIntersector::Cell::GetBoundingBox(const pxr::GfVec3f* points, pxr::VtArray<int>& vertices)
 {
-  const pxr::GfVec3f* positions = geometry->GetPositionsCPtr();
   // reset bounding box
   _min[0] = FLT_MAX;
   _min[1] = FLT_MAX;
@@ -129,17 +74,17 @@ void OctreeIntersector::Cell::GetBoundingBox(Geometry* geometry, pxr::VtArray<in
     
   pxr::GfVec3f tmp;
   unsigned int numVertices = vertices.size();
-  for(int i=0;i<numVertices;i++)
+  for (int i = 0; i < numVertices; i++)
   {
-      tmp = positions[vertices[i]];
+    tmp = points[vertices[i]];
 
-      if(tmp[0]<_min[0])_min[0] = tmp[0];
-      if(tmp[1]<_min[1])_min[1] = tmp[1];
-      if(tmp[2]<_min[2])_min[2] = tmp[2];
-        
-      if(tmp[0]>_max[0])_max[0] = tmp[0];
-      if(tmp[1]>_max[1])_max[1] = tmp[1];
-      if(tmp[2]>_max[2])_max[2] = tmp[2];
+    if (tmp[0] < _min[0])_min[0] = tmp[0];
+    if (tmp[1] < _min[1])_min[1] = tmp[1];
+    if (tmp[2] < _min[2])_min[2] = tmp[2];
+
+    if (tmp[0] > _max[0])_max[0] = tmp[0];
+    if (tmp[1] > _max[1])_max[1] = tmp[1];
+    if (tmp[2] > _max[2])_max[2] = tmp[2];
   }
     
   // extend bounding box
@@ -196,11 +141,11 @@ void OctreeIntersector::Cell::BuildTree(std::vector<Element>& elements, Geometry
         Insert(&(*it));
     }
     
-    Split(geometry);
+    Split(geometry->GetPositionsCPtr());
 }
 
 // split tree
-void OctreeIntersector::Cell::Split(Geometry* geometry)
+void OctreeIntersector::Cell::Split(const pxr::GfVec3f* points)
 {
     int esz = _elements.size();
 
@@ -231,7 +176,7 @@ void OctreeIntersector::Cell::Split(Geometry* geometry)
                 int esz = _elements.size();
                 
                 for (int e = 0; e < esz; ++e)
-                    if (_elements[e]->Touch(geometry, center, halfSize))
+                    if (_elements[e]->Touch(points, center, halfSize))
                         _child[m]->Insert(_elements[e]);
                 
                 if (_child[m]->NumElements() == 0)
@@ -239,7 +184,7 @@ void OctreeIntersector::Cell::Split(Geometry* geometry)
                     delete _child[m];
                     _child[m] = NULL;
                 }
-                else _child[m]->Split(geometry);
+                else _child[m]->Split(points);
                 
             }
     _elements.clear();
@@ -266,7 +211,7 @@ OctreeIntersector::Raycast(const pxr::GfRay& ray, Hit* hit,
 
 bool 
 OctreeIntersector::Closest(const pxr::GfVec3f& point, Hit* hit, 
-  double maxDistance, double* minDistance) const
+  double maxDistance) const
 {
     Cell* closestCell = NULL;
     _GetClosestCell(point, closestCell);
@@ -338,7 +283,7 @@ OctreeIntersector::_RecurseGetClosestCell(const pxr::GfVec3f& point, const Cell*
     {
         distance = cell->GetDistance(point);
         
-        if(distance<closestDistance)
+        if(distance < closestDistance)
         {
             closestDistance = distance;
             closestCell = (Cell*)cell;
@@ -348,7 +293,7 @@ OctreeIntersector::_RecurseGetClosestCell(const pxr::GfVec3f& point, const Cell*
     {
         int cid = -1;
         float cdist = FLT_MAX;
-        for(unsigned int k=0;k<8;k++)
+        for(unsigned int k = 0; k < 8; ++k)
         {
             const Cell* current = cell->GetCell(k);
             

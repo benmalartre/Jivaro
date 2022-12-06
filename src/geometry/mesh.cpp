@@ -133,7 +133,6 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
   faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
   _numFaces = _faceVertexCounts.size();
   _numSamples = _faceVertexIndices.size();
-  _normals = _points;
   _numPoints = _points.size();
 
   Init();
@@ -424,8 +423,10 @@ void Mesh::ComputeHalfEdges()
   for (HalfEdge& halfEdge : _halfEdges) {
     if (used[halfEdge.GetTriangleIndex()])continue;
     HalfEdge* longest = HalfEdge::GetLongestInTriangle(GetPositionsCPtr(), &halfEdge);
+    size_t triPairIdx = _trianglePairs.size();
     if (longest->twin) {
       _trianglePairs.push_back(TrianglePair(
+        triPairIdx,
         &_triangles[longest->GetTriangleIndex()],
         &_triangles[longest->twin->GetTriangleIndex()]
       ));
@@ -433,6 +434,7 @@ void Mesh::ComputeHalfEdges()
       used[longest->twin->GetTriangleIndex()] = true;
     } else {
       _trianglePairs.push_back(TrianglePair(
+        triPairIdx,
         &_triangles[longest->GetTriangleIndex()],
         NULL
       ));
@@ -602,6 +604,10 @@ void Mesh::Init()
   // build triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
   _numTriangles = _triangles.size();
+
+  // compute normals
+  ComputeVertexNormals(_points, _faceVertexCounts, 
+    _faceVertexIndices, _triangles, _normals);
 
   // compute half-edges
   ComputeHalfEdges();

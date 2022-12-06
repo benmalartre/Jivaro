@@ -24,47 +24,6 @@ struct Edge;
 struct Triangle;
 
 class OctreeIntersector : public Intersector {
-  enum ElemType {
-    POINT,
-    EDGE,
-    TRIANGLE,
-    POLYGON
-  };
-
-protected:
-  struct Element {
-    Element(void* ptr) : _ptr(ptr) {};
-    virtual bool Touch(Geometry* geometry, 
-        const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) = 0;
-    virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point , 
-      Hit* hit, float maxDistance=-1.f) = 0;
-    void* _ptr;
-  };
-
-  struct PointElement : public Element {
-    PointElement(Point* point) : Element((void*)point) {};
-    virtual bool Touch(Geometry* geometry,
-      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) override;
-    virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& query , 
-      Hit* hit, float maxDistance = -1.f) override;
-  };
-
-  struct EdgeElement : public Element {
-    EdgeElement(Edge* edge) : Element((void*)edge) {};
-    virtual bool Touch(Geometry* geometry,
-      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) override;
-    virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& query ,
-      Hit* hit, float maxDistance = -1.f) override;
-  };
-
-  struct TriangleElement : public Element {
-    TriangleElement(Triangle* triangle) : Element((void*)triangle) {};
-    virtual bool Touch(Geometry* geometry,
-      const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) override;
-    virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& query , 
-      Hit* hit, float maxDistance = -1.f) override;
-  };
-
 public: 
   class Cell {
 
@@ -118,10 +77,10 @@ public:
     void Insert(Element* e) { _elements.push_back(e); };
 
     // split into 8
-    void Split(Geometry* geometry);
+    void Split(const pxr::GfVec3f* points);
 
     // get bounding box
-    void GetBoundingBox(Geometry* geometry, pxr::VtArray<int>& vertices);
+    void GetBoundingBox(const pxr::GfVec3f* points, pxr::VtArray<int>& vertices);
 
     // get furthest corner
     void GetFurthestCorner(const pxr::GfVec3f& point, pxr::GfVec3f& corner);
@@ -162,7 +121,7 @@ public:
   virtual bool Raycast(const pxr::GfRay& ray, Hit* hit, 
     double maxDistance=-1, double* minDistance=NULL) const override;
   virtual bool Closest(const pxr::GfVec3f& point, Hit* hit, 
-    double maxDistance=-1.f, double* minDistance=NULL) const override;
+    double maxDistance=-1.f) const override;
 
 private:
   // static members

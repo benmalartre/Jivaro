@@ -4,13 +4,15 @@
 #ifndef JVR_GEOMETRY_TRIANGLE_H
 #define JVR_GEOMETRY_TRIANGLE_H
 
-#include "../common.h"
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/ray.h>
 #include <algorithm>
 #include <math.h>
 #include <stdio.h>
+
+#include "../common.h"
+#include "../geometry/component.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -72,38 +74,58 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Mesh;
 class Hit;
-struct Triangle {
-  uint32_t     id;
+struct Triangle : public Component{
+
+  Triangle()
+    : Component() {};
+  Triangle(uint32_t index, const pxr::GfVec3i& vertices)
+    : Component(index)
+    , vertices(vertices) {};
+
   pxr::GfVec3i vertices;
 
   pxr::GfVec3f GetCenter(const pxr::GfVec3f* points);
   pxr::GfVec3f GetNormal(const pxr::GfVec3f* points);
   float GetArea(const pxr::GfVec3f* points);
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const;
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const;
-  bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
-    const pxr::GfVec3f& boxhalfsize);
   bool PlaneBoxTest(const pxr::GfVec3f& normal, const pxr::GfVec3f& point, 
-    const pxr::GfVec3f& box);
+    const pxr::GfVec3f& box) const;
 
+  // overrides
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
+    const pxr::GfVec3f& boxhalfsize) const override;
 };
 
-struct TrianglePair {
+struct TrianglePair : public Component {
   Triangle* left;
   Triangle* right;
 
-  TrianglePair();
-  TrianglePair(Triangle* t1);
-  TrianglePair(Triangle* t1, Triangle* t2);
+  TrianglePair()
+    : Component()
+    , left(NULL)
+    , right(NULL) {};
+
+  TrianglePair(uint32_t index, Triangle* t1)
+   : Component(index)
+    , left(t1)
+    , right(NULL) {};
+
+  TrianglePair(uint32_t index, Triangle* t1, Triangle* t2)
+    : Component(index)
+    , left(t1)
+    , right(t2) {};
 
   pxr::GfRange3d GetBoundingBox(const pxr::GfVec3f* points);
 
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const;
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const;
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Touch(const pxr::GfVec3f* points, 
+    const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const override;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

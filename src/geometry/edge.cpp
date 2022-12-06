@@ -74,6 +74,14 @@ Edge::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
 }
 
 bool 
+Edge::Touch(const pxr::GfVec3f* points, 
+  const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const
+{
+  return false;
+}
+
+
+bool 
 Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
   double maxDistance, double* minDistance) const
 {

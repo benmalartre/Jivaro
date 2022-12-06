@@ -285,7 +285,7 @@ bool Grid3DIntersector::Raycast(const pxr::GfRay& ray, Hit* hit,
 }
 
 bool Grid3DIntersector::Closest(const pxr::GfVec3f& point, Hit* hit,
-  double maxDistance, double* minDistance) const
+  double maxDistance) const
 {
   return false;
 }

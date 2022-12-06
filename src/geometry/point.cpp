@@ -64,5 +64,12 @@ Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
   return false;
 }
 
+bool
+Point::Touch(const pxr::GfVec3f* points, 
+  const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const
+{
+  return false;
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -118,7 +118,7 @@ public:
   bool Raycast(const pxr::GfRay& ray, Hit* hitPoint, 
     double maxDistance=-1, double* minDistance=NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance = -1, double* minDistance = NULL) const override;
+    double maxDistance = -1) const override;
 
   Cell* GetCell(uint32_t index);
   Cell* GetCell(uint32_t x, uint32_t y, uint32_t z);

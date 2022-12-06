@@ -16,12 +16,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Workspace {
 
 public:
-  enum STAGE_TYPE {
-    INPUT,
-    EXEC,
-    OUTPUT
-  };
-
   Workspace();
   ~Workspace();
 

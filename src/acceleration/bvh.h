@@ -7,13 +7,14 @@
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/range3d.h>
 #include "../geometry/intersection.h"
-#include "../geometry/triangle.h"
+#include "../geometry/component.h"
 #include "../acceleration/intersector.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 class BVH;
+
 struct Mortom {
   uint64_t code;
   BVH* cell;
@@ -32,22 +33,10 @@ public:
     LEAF
   };
 
-  enum Element {
-    GEOMETRY,
-    TRIPAIR,
-    TRIANGLE,
-    SEGMENT,
-    POINT,
-    INVALID
-  };
-
-  
-
   // constructor
   BVH(BVH* parent=NULL, BVH* lhs=NULL, BVH* rhs=NULL);
   BVH(BVH* parent, Geometry* geometry);
-  BVH(BVH* parent, TrianglePair* pair, const pxr::GfRange3d& range);
-  BVH(BVH* parent, Triangle* tri, const pxr::GfRange3d& range);
+  BVH(BVH* parent, Component* component, const pxr::GfRange3d& range);
 
   // destructor
   ~BVH() {
@@ -79,22 +68,23 @@ public:
   virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1, double* minDistance = NULL) const override;
   virtual bool Closest(const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance = -1.f, double* minDistance = NULL) const override;
+    double maxDistance = -1.f) const override;
 
   size_t GetNumCells();
   uint64_t ComputeCode(const pxr::GfVec3d& point);
   pxr::GfVec3d ComputeCodeAsColor(const pxr::GfVec3d& point);
  
-private:
+protected:
   BVH* _RecurseSortCellsByPair(std::vector<Mortom>& mortoms, int first, int last);
   Mortom _SortCellsByPair(std::vector<Mortom>& mortoms);
   void _SortTrianglesByPair(std::vector<Mortom>& mortoms, Geometry* geometry);
 
-  bool _RaycastTrianglePair(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  bool _Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance, double* minDistance = NULL) const;
-  bool _ClosestTrianglePair(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance, double* minDistance = NULL) const;
+  bool _Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance) const;
 
+private:
   BVH*      _parent;
   BVH*      _left;
   BVH*      _right;

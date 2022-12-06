@@ -188,6 +188,59 @@ _SetupSampler(pxr::UsdStageRefPtr& stage, Geometry* geometry)
 }
 
 static void
+_SetupHairs(pxr::UsdStageRefPtr& stage, Geometry* geometry)
+{
+  if (geometry->GetType() != Geometry::MESH)return;
+  Mesh* mesh = (Mesh*)geometry;
+
+  pxr::VtArray<Sampler::Sample> samples;
+  pxr::VtArray<int> triangles(mesh->GetNumTriangles() * 3);
+  for (auto& triangle : mesh->GetTriangles()) {
+    triangles[triangle.id * 3 + 0] = triangle.vertices[0];
+    triangles[triangle.id * 3 + 1] = triangle.vertices[1];
+    triangles[triangle.id * 3 + 2] = triangle.vertices[2];
+  }
+  Sampler::PoissonSampling(0.2f, 1000000, mesh->GetPositions(), mesh->GetNormals(), triangles, samples);
+
+  size_t N = 32; // num cvs per curve
+  size_t numSamples = samples.size();
+  pxr::VtArray<pxr::GfVec3f> points(numSamples * N);
+  pxr::VtArray<pxr::GfVec3f> scales(numSamples * N);
+  pxr::VtArray<float> widths(numSamples * N);
+  pxr::VtArray<int> curveVertexCount(numSamples);
+
+  for (size_t sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
+    const pxr::GfVec3f& origin = samples[sampleIdx].GetPosition(mesh->GetPositionsCPtr());
+    const pxr::GfVec3f& normal = samples[sampleIdx].GetNormal(mesh->GetNormalsCPtr());
+    curveVertexCount[sampleIdx] = N;
+    for (int n = 0; n < N; ++n) {
+      const float t = (float)n / (float)N;
+      points[sampleIdx * N + n] = origin + normal * 0.1f * n + pxr::GfVec3f(RANDOM_LO_HI(-0.5,0.5)) * t;
+      scales[sampleIdx * N + n] = pxr::GfVec3f(RANDOM_LO_HI(0.1,0.2));
+      widths[sampleIdx * N + n] = RANDOM_LO_HI(0.1, 0.2);
+    }
+  }
+
+  pxr::UsdGeomBasisCurves curve =
+    pxr::UsdGeomBasisCurves::Define(stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("hair_curve")));
+
+  curve.CreatePointsAttr().Set(points);
+  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->constant);
+  curve.CreateWidthsAttr().Set(widths);
+  curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
+
+  pxr::UsdGeomPrimvar crvColorPrimvar = curve.CreateDisplayColorPrimvar();
+  crvColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+  crvColorPrimvar.SetElementSize(1);
+  //crvColorPrimvar.Set(colors);
+
+  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
+
+
+}
+
+static void
 _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 {
   std::vector<BVH*> cells;
@@ -303,7 +356,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   _colliders = colliders;
 
   for (auto& collider : colliders) {
-    _SetupSampler(stage, collider);
+    _SetupHairs(stage, collider);
   }
 
   std::cout << "### build bvh (mortom) : " << std::endl;

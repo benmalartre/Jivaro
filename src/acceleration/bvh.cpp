@@ -141,6 +141,7 @@ BVH::GetCells(std::vector<BVH*>& cells)
 
 static void _RecurseGetNumCells(BVH* cell, size_t& count, short elemType)
 {
+  /*
   if (cell->IsLeaf()) {
     if (elemType == BVH::TRIPAIR) {
       count++;
@@ -157,33 +158,16 @@ static void _RecurseGetNumCells(BVH* cell, size_t& count, short elemType)
       _RecurseGetNumCells(cell->GetRight(), count, elemType);
     }
   }
+  */
 }
 
 size_t
 BVH::GetNumCells()
 {
   size_t numCells = 0;
-  _RecurseGetNumCells(this, numCells, BVH::GEOMETRY);
+  //_RecurseGetNumCells(this, numCells, BVH::GEOMETRY);
   return numCells;
 }
-
-
-static short 
-_GetElementTypeFromGeometry(Geometry* geom)
-{
-  if (geom) {
-    switch (geom->GetType()) {
-    case Geometry::MESH:
-      return BVH::TRIPAIR;
-    case Geometry::CURVE:
-      return BVH::SEGMENT;
-    case Geometry::POINT:
-      return BVH::POINT;
-    }
-  }
-  return BVH::INVALID;
-}
-
 
 BVH::BVH(BVH* parent, Geometry* geometry)
   : _parent(parent)
@@ -223,22 +207,11 @@ BVH::BVH(BVH* parent, BVH* lhs, BVH* rhs)
 }
 
 
-BVH::BVH(BVH* parent, TrianglePair* pair, const pxr::GfRange3d& range)
+BVH::BVH(BVH* parent, Component* component, const pxr::GfRange3d& range)
   :  _parent(parent)
   , _left(NULL)
   , _right(NULL)
-  , _data((void*)pair)
-  , _type(BVH::LEAF)
-{
-  SetMin(range.GetMin());
-  SetMax(range.GetMax());
-}
-
-BVH::BVH(BVH* parent, Triangle* tri, const pxr::GfRange3d& range)
-  : _parent(parent)
-  , _left(NULL)
-  , _right(NULL)
-  , _data((void*)tri)
+  , _data((void*)component)
   , _type(BVH::LEAF)
 {
   SetMin(range.GetMin());
@@ -266,19 +239,19 @@ BVH::GetGeometry() const
 }
 
 bool
-BVH::_RaycastTrianglePair(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+BVH::_Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
 {
-  TrianglePair* pair = (TrianglePair*)_data;
-  return pair->Raycast(points, ray, hit, maxDistance, minDistance);
+  Intersector::Element* elem = (Intersector::Element*)_data;
+  return elem->Raycast(points, ray, hit, maxDistance, minDistance);
 }
 
 bool 
-BVH::_ClosestTrianglePair(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-  double maxDistance, double* minDistance) const
+BVH::_Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+  double maxDistance) const
 {
-  TrianglePair* pair = (TrianglePair*)_data;
-  return pair->Closest(points, point, hit, maxDistance, minDistance);
+  Intersector::Element* elem = (Intersector::Element*)_data;
+  return elem->Closest(points, point, hit, maxDistance);
 }
 
 bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit, 
@@ -292,7 +265,7 @@ bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit,
       const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
       switch (geometry->GetType()) {
       case Geometry::MESH:
-        if (_RaycastTrianglePair(points, ray, hit, maxDistance, minDistance)) {
+        if (_Raycast(points, ray, hit, maxDistance, minDistance)) {
           hit->SetGeometry(geometry);
           return true;
         }
@@ -330,7 +303,7 @@ bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit,
 }
 
 bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
-  double maxDistance, double* minDistance) const
+  double maxDistance) const
 {
   double leftMinDistance, rightMinDistance;
   pxr::GfRange3d range(point, point);
@@ -340,7 +313,7 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
       const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
       switch (geometry->GetType()) {
       case Geometry::MESH:
-        if (_ClosestTrianglePair(points, point, hit, maxDistance, minDistance)) {
+        if (_Closest(points, point, hit, maxDistance)) {
           hit->SetGeometry(geometry);
           return true;
         }
