@@ -113,9 +113,9 @@ public:
   void InsertPoints(size_t idx);
 
   // intersect a ray with the mesh
-  bool Raycast(const pxr::GfRay& ray, Hit* hitPoint, 
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hitPoint,
     double maxDistance=-1, double* minDistance=NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
     double maxDistance = -1) const override;
 
   Cell* GetCell(uint32_t index);

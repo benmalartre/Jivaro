@@ -202,15 +202,15 @@ OctreeIntersector::Update(const std::vector<Geometry*>& geometries)
 }
 
 bool 
-OctreeIntersector::Raycast(const pxr::GfRay& ray, Hit* hit, 
-  double maxDistance, double* minDistance) const
+OctreeIntersector::Raycast(const pxr::GfVec3f* points, 
+  const pxr::GfRay& ray, Hit* hit, double maxDistance, double* minDistance) const
 {
     return false;
 }
 
 bool 
-OctreeIntersector::Closest(const pxr::GfVec3f& point, Hit* hit, 
-  double maxDistance) const
+OctreeIntersector::Closest(const pxr::GfVec3f* points, 
+  const pxr::GfVec3f& point, Hit* hit, double maxDistance) const
 {
   Cell* closestCell = NULL;
   _GetClosestCell(point, closestCell);

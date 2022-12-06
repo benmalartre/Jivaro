@@ -243,8 +243,8 @@ _SetupHairs(pxr::UsdStageRefPtr& stage, Geometry* geometry)
 static void
 _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 {
-  std::vector<BVH*> cells;
-  bvh->GetCells(cells);
+  std::vector<BVH::Cell*> cells;
+  bvh->GetRoot()->GetCells(cells);
   size_t numPoints = cells.size();
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);
@@ -263,7 +263,7 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
     protoIndices[pointIdx] = 0;
     indices[pointIdx] = pointIdx;
     colors[pointIdx] =
-      pxr::GfVec3f(bvh->ComputeCodeAsColor(
+      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
         pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
     widths[pointIdx] = RANDOM_0_1;
@@ -369,16 +369,13 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   for (auto& ray : rays) {
     double minDistance;
     Hit hit;
-    if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
+    const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
+    if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
       result.push_back(hit.GetPosition(colliders[0]));
     }
   }
   std::cout << "   hit time (" << numRays << " rays) : " << ((CurrentTime() - T) * 1e-9) << std::endl;
   _SetupBVHInstancer(stage, &bvh);
-
-  std::vector<BVH*> cells;
-  bvh.GetCells(cells);
-  std::cout << "   num cells : " << cells.size() << std::endl;
 
 
   _SetupResults(stage, result);
@@ -405,7 +402,8 @@ void PBDSolver::UpdateColliders()
     pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
     double minDistance;
     Hit hit;
-    if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
+    const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
+    if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
       pxr::GfVec3f position;
       hit.GetPosition(_colliders[0]);
     }

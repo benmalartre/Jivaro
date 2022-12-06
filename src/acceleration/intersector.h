@@ -26,11 +26,11 @@ public:
   };
 
 public:
-  virtual void Init(const std::vector<Geometry*>& geometries) = 0;
-  virtual void Update(const std::vector<Geometry*>& geometries) = 0;
-  virtual bool Raycast(const pxr::GfRay& ray, Hit* hit, 
+  virtual void Init(const std::vector<Geometry*>& geometries) {};
+  virtual void Update(const std::vector<Geometry*>& geometries) {};
+  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance=-1, double* minDistance=NULL) const = 0;
-  virtual bool Closest(const pxr::GfVec3f& point, Hit* hit, 
+  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
     double maxDistance=-1.f) const = 0;
 }; 
 
