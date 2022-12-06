@@ -40,4 +40,4 @@ struct Component {
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // JVR_GEOMETRY_POINT_H
+#endif // JVR_GEOMETRY_COMPONENT_H

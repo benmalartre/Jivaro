@@ -266,7 +266,6 @@ bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit,
       switch (geometry->GetType()) {
       case Geometry::MESH:
         if (_Raycast(points, ray, hit, maxDistance, minDistance)) {
-          hit->SetGeometry(geometry);
           return true;
         }
         break;
@@ -276,11 +275,11 @@ bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit,
       }
     }
     else {
-      Hit leftHit(*hit), rightHit(*hit);
+      Hit leftHit, rightHit;
       if (_left)_left->Raycast(ray, &leftHit);
       if (_right)_right->Raycast(ray, &rightHit);
 
-      if (leftHit.GetGeometry() && rightHit.GetGeometry()) {
+      if (leftHit.HasHit() && rightHit.HasHit()) {
         if (leftHit.GetT() < rightHit.GetT()) {
           hit->Set(leftHit); return true;
         }
@@ -288,10 +287,10 @@ bool BVH::Raycast(const pxr::GfRay& ray, Hit* hit,
           hit->Set(rightHit);; return true;
         }
       }
-      else if (leftHit.GetGeometry()) {
+      else if (leftHit.HasHit()) {
         hit->Set(leftHit); return true;
       }
-      else if (rightHit.GetGeometry()) {
+      else if (rightHit.HasHit()) {
         hit->Set(rightHit); return true;
       }
       else {
@@ -314,7 +313,6 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
       switch (geometry->GetType()) {
       case Geometry::MESH:
         if (_Closest(points, point, hit, maxDistance)) {
-          hit->SetGeometry(geometry);
           return true;
         }
         break;
@@ -324,18 +322,18 @@ bool BVH::Closest(const pxr::GfVec3f& point, Hit* hit,
       }
     }
     else {
-      Hit leftHit(*hit), rightHit(*hit);
+      Hit leftHit, rightHit;
       if (_left)_left->Closest(point, &leftHit, maxDistance);
       if (_right)_right->Closest(point, &rightHit, maxDistance);
-      if (leftHit.GetGeometry() && rightHit.GetGeometry()) {
+      if (leftHit.HasHit() && rightHit.HasHit()) {
         if (leftHit.GetT() < rightHit.GetT()) {
           hit->Set(leftHit); return true;
         } else {
           hit->Set(rightHit); return true;
         }
-      } else if (leftHit.GetGeometry()) {
+      } else if (leftHit.HasHit()) {
         hit->Set(leftHit); return true;
-      } else if (rightHit.GetGeometry()) {
+      } else if (rightHit.HasHit()) {
         hit->Set(rightHit); return true;
       } else {
         return false;

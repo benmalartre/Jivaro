@@ -72,7 +72,6 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* h
     if (distance < *minDistance) {
       *minDistance = distance;
       hit->SetElementIndex(id);
-      hit->SetElementType(Hit::TRIANGLE);
       hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
       hit->SetT(distance);
       return true;
@@ -163,7 +162,6 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hi
     if(minDistance) *minDistance = distance;
     hit->SetBarycentricCoordinates(pxr::GfVec3f(1.f - s - t, s, t));
     hit->SetElementIndex(id);
-    hit->SetElementType(Hit::TRIANGLE);
     hit->SetT(distance);
     return true;
   }
@@ -316,7 +314,6 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
       //if (distance < *minDistance) {
         if(minDistance) *minDistance = distance;
         hit->SetElementIndex(left->id);
-        hit->SetElementType(Hit::TRIANGLE);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
         hit->SetT(distance);
         return true;
@@ -333,7 +330,6 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
       //if (distance < *minDistance) {
       if(minDistance) *minDistance = distance;
         hit->SetElementIndex(right->id);
-        hit->SetElementType(Hit::TRIANGLE);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
         hit->SetT(distance);
         return true;

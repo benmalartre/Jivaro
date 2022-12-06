@@ -16,15 +16,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 //=================================================================================================
 void 
 Hit::Set(const Hit& other) {
-  _geom = other._geom;
-  _baryCoords = other._baryCoords;
-  _elemType = other._elemType;
+  _geomId = other._geomId;
   _elemId = other._elemId;
-  _t = other._t;
+  _coords = other._coords;
 }
 
-void 
-Hit::GetPosition(pxr::GfVec3f* position) const 
+pxr::GfVec3f 
+Hit::GetPosition(Geometry* geometry) const 
 {
   /*
   Geometry*     _geom;
@@ -32,17 +30,16 @@ Hit::GetPosition(pxr::GfVec3f* position) const
   short         _elemType;
   int           _elemId;
   */
-  switch (_geom->GetType()) {
+  switch (geometry->GetType()) {
     case Geometry::MESH:
     {
-      Mesh* mesh = (Mesh*)_geom;
+      Mesh* mesh = (Mesh*)geometry;
       Triangle* triangle = mesh->GetTriangle(_elemId);
       const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-      *position = 
-        pxr::GfVec3f(positions[triangle->vertices[0]]) * _baryCoords[0] +
-        pxr::GfVec3f(positions[triangle->vertices[1]]) * _baryCoords[1] +
-        pxr::GfVec3f(positions[triangle->vertices[2]]) * _baryCoords[2];
-      return;
+      return pxr::GfVec3f( 
+        pxr::GfVec3f(positions[triangle->vertices[0]]) * _coords[0] +
+        pxr::GfVec3f(positions[triangle->vertices[1]]) * _coords[1] +
+        pxr::GfVec3f(positions[triangle->vertices[2]]) * _coords[2]);
     }
     case Geometry::CURVE:
     {
@@ -50,24 +47,25 @@ Hit::GetPosition(pxr::GfVec3f* position) const
     }
     case Geometry::POINT:
     {
-      Points* points = (Points*)_geom;
+      Points* points = (Points*)geometry;
       Point point = points->Get(_elemId);
       
       //Point*
     }
   }
+  return pxr::GfVec3f();
 }
 
-void 
-Hit::GetPosition(const pxr::GfRay& ray, pxr::GfVec3f* position) const
+pxr::GfVec3f
+Hit::GetPosition(const pxr::GfRay& ray) const
 {
-  *position = pxr::GfVec3f(ray.GetPoint(_t));
+  return pxr::GfVec3f(ray.GetPoint(_coords[3]));
 }
 
-void 
-Hit::GetNormal(pxr::GfVec3f* normal) const
+pxr::GfVec3f
+Hit::GetNormal(Geometry* geometry) const
 {
-  switch (_geom->GetType()) {
+  switch (geometry->GetType()) {
     case Geometry::MESH:
     {
 
@@ -81,6 +79,7 @@ Hit::GetNormal(pxr::GfVec3f* normal) const
 
     }
   }
+  return pxr::GfVec3f();
 }
 
 //=================================================================================================

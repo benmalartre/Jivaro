@@ -212,99 +212,99 @@ bool
 OctreeIntersector::Closest(const pxr::GfVec3f& point, Hit* hit, 
   double maxDistance) const
 {
-    Cell* closestCell = NULL;
-    _GetClosestCell(point, closestCell);
+  Cell* closestCell = NULL;
+  _GetClosestCell(point, closestCell);
 
-    const pxr::GfVec3f* positions = NULL;
+  const pxr::GfVec3f* positions = NULL;
 
-    // brute force neighbor cell
-    //std::vector<Triangle*>::iterator tri = closestCell->getTriangles().begin();
-    Component* C;
-    float closestDistance = FLT_MAX;
+  // brute force neighbor cell
+  //std::vector<Triangle*>::iterator tri = closestCell->getTriangles().begin();
+  Component* comp;
+  float closestDistance = FLT_MAX;
 
-    for(unsigned e = 0; e < closestCell->NumElements(); ++e)
-    {
-        C = closestCell->GetElement(e);
-        C->Closest( positions, point , hit);
-    }
+  for(unsigned e = 0; e < closestCell->NumElements(); ++e)
+  {
+    comp = closestCell->GetElement(e);
+    comp->Closest( positions, point , hit);
+  }
     
-    std::vector<Cell*> nearbyCells;
-    if(!_octree.IsLeaf())
-    {
-        _GetNearbyCells(point, closestCell, nearbyCells, closestDistance);
-    }
+  std::vector<Cell*> nearbyCells;
+  if(!_octree.IsLeaf())
+  {
+    _GetNearbyCells(point, closestCell, nearbyCells, closestDistance);
+  }
     
-    // loop nearby cells
-    std::vector<Cell*>::iterator nearby = nearbyCells.begin();
-    for(; nearby < nearbyCells.end(); ++nearby)
+  // loop nearby cells
+  std::vector<Cell*>::iterator nearby = nearbyCells.begin();
+  for(; nearby < nearbyCells.end(); ++nearby)
+  {
+    for(unsigned e = 0; e <(*nearby)->NumElements(); ++e)
     {
-        for(unsigned e = 0; e <(*nearby)->NumElements(); ++e)
-        {
-            C = (*nearby)->GetElement(e);
-            C->Closest( positions, point , hit);
-        }
+      comp = (*nearby)->GetElement(e);
+      comp->Closest( positions, point , hit);
     }
+  }
 }
 
 void 
 OctreeIntersector::_GetClosestCell(const pxr::GfVec3f& point, Cell*& closestCell) const
 {
-    float closestDistance = FLT_MAX;
+  float closestDistance = FLT_MAX;
     
-    // the case of low polygon count
-    if(_octree.IsLeaf())
-    {
-        closestCell = (Cell*)&_octree;
-    }
+  // the case of low polygon count
+  if(_octree.IsLeaf())
+  {
+    closestCell = (Cell*)&_octree;
+  }
     
-    // normal case
-    else
+  // normal case
+  else
+  {
+    for(unsigned int j = 0; j < 8; ++j)
     {
-        for(unsigned int j = 0; j < 8; ++j)
-        {
-            if(_octree.GetCell(j) != NULL)
-                _RecurseGetClosestCell(point, _octree.GetCell(j), closestDistance, closestCell);
-        }
+      if(_octree.GetCell(j) != NULL)
+        _RecurseGetClosestCell(point, _octree.GetCell(j), closestDistance, closestCell);
     }
+  }
 }
 
 void 
 OctreeIntersector::_RecurseGetClosestCell(const pxr::GfVec3f& point, const Cell* cell, 
-    float& closestDistance, Cell*& closestCell) const
+  float& closestDistance, Cell*& closestCell) const
 {
   if(cell==NULL)return;
-    float distance;
-    if(cell->IsLeaf())
-    {
-        distance = cell->GetDistance(point);
+  float distance;
+  if(cell->IsLeaf())
+  {
+    distance = cell->GetDistance(point);
         
-        if(distance < closestDistance)
-        {
-            closestDistance = distance;
-            closestCell = (Cell*)cell;
-        }
-    }
-    else
+    if(distance < closestDistance)
     {
-        int cid = -1;
-        float cdist = FLT_MAX;
-        for(unsigned int k = 0; k < 8; ++k)
-        {
-            const Cell* current = cell->GetCell(k);
-            
-            if(current!=NULL)
-            {
-                distance = current->GetDistance(point);
-                if(distance<=cdist)
-                {
-                    cdist = distance;
-                    cid = k;
-                }
-            }
-        }
-        if(cid >= 0)
-            _RecurseGetClosestCell(point, cell->GetCell(cid), closestDistance, closestCell);
+      closestDistance = distance;
+      closestCell = (Cell*)cell;
     }
+  }
+  else
+  {
+    int cid = -1;
+    float cdist = FLT_MAX;
+    for(unsigned int k = 0; k < 8; ++k)
+    {
+      const Cell* current = cell->GetCell(k);
+            
+      if(current!=NULL)
+      {
+        distance = current->GetDistance(point);
+        if(distance<=cdist)
+        {
+          cdist = distance;
+          cid = k;
+        }
+      }
+    }
+    if(cid >= 0)
+      _RecurseGetClosestCell(point, cell->GetCell(cid), closestDistance, closestCell);
+  }
 }
 
 void 

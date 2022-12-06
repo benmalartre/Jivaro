@@ -370,9 +370,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
     double minDistance;
     Hit hit;
     if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
-      pxr::GfVec3f position;
-      hit.GetPosition(&position);
-      result.push_back(position);
+      result.push_back(hit.GetPosition(colliders[0]));
     }
   }
   std::cout << "   hit time (" << numRays << " rays) : " << ((CurrentTime() - T) * 1e-9) << std::endl;
@@ -409,7 +407,7 @@ void PBDSolver::UpdateColliders()
     Hit hit;
     if (bvh.Raycast(ray, &hit, -1, &minDistance)) {
       pxr::GfVec3f position;
-      hit.GetPosition(&position);
+      hit.GetPosition(_colliders[0]);
     }
   }
 }

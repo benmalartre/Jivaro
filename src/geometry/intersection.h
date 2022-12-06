@@ -12,7 +12,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Intersector;
 class Geometry;
 
-class Hit {
+class Tracer {
 public:
   enum ElementType {
     POINT,
@@ -21,54 +21,63 @@ public:
     GEOMETRY
   };
 
+  void SetGeometry(Geometry* geom) { _geometry = geom; };
+  void SetElementType(short type) { _elemType = type; };
+
+  Geometry* GetGeometry() { return _geometry; };
+  short GetElementType() { return _elemType; };
+
 private:
   friend class Intersector;
-  Geometry*     _geom;
-  pxr::GfVec3f  _baryCoords;
+  Geometry*     _geometry;
   short         _elemType;
+};
+
+
+class Hit {
+private:
+  friend class Intersector;
+  int           _geomId;
   int           _elemId;
-  float         _t;
+  pxr::GfVec4f  _coords;
 
 public:
   // Constructors
   Hit() 
-    : _geom(NULL)
-    , _baryCoords(pxr::GfVec3f(0.f))
-    , _elemType(GEOMETRY)
+    : _geomId(-1)
     , _elemId(-1)
-    , _t(-1.f) {};
+    , _coords(pxr::GfVec4f(0.f)) {};
 
   Hit(const Hit& other)
-    : _geom(other._geom)
-    , _baryCoords(other._baryCoords)
-    , _elemType(other._elemType)
+    : _geomId(other._geomId)
     , _elemId(other._elemId)
-    , _t(other._t) {};
+    , _coords(other._coords) {};
 
-  Hit(Geometry* geom, const pxr::GfVec3f& baryCoords, short elemType, int elemId, int elemMapId, float t)
-    : _geom(geom)
-    , _baryCoords(baryCoords)
-    , _elemType(elemType)
+  Hit(int geomId, int elemId, const pxr::GfVec4f& coords)
+    : _geomId(geomId)
     , _elemId(elemId)
-    , _t(t) {};
+    , _coords(coords) {};
 
   // Setters
   void Set(const Hit& other);
-  void SetGeometry(Geometry* geom) { _geom = geom; };
-  void SetElementType(short type) { _elemType = type; };
+  void SetGeometryIndex(int id) { _geomId = id; };
   void SetElementIndex(int id) { _elemId = id; };
-  void SetBarycentricCoordinates(const pxr::GfVec3f& coords) { _baryCoords = coords; };
-  void SetT(float t) {_t = t;};
+  void SetBarycentricCoordinates(const pxr::GfVec3f& coords) { 
+    _coords[0] = coords[0]; 
+    _coords[1] = coords[1];
+    _coords[2] = coords[2];
+  };
+  void SetT(float t) { _coords[3] = t;};
 
   // Getters
-  Geometry* GetGeometry() { return _geom; };
-  short GetElementType() { return _elemType; };
+  int GetGeometryIndex() { return _geomId; };
   int GetElementIndex() { return _elemId; };
-  const pxr::GfVec3f& GetBarycentricCoordinates() { return _baryCoords; };
-  float GetT() { return _t; };
-  void GetPosition(pxr::GfVec3f* position) const;
-  void GetPosition(const pxr::GfRay& ray, pxr::GfVec3f* position) const;
-  void GetNormal(pxr::GfVec3f* normal) const;
+  const pxr::GfVec4f& GetBarycentricCoordinates() { return _coords; };
+  float GetT() { return _coords[3]; };
+  pxr::GfVec3f GetPosition(Geometry* geometry) const;
+  pxr::GfVec3f GetPosition(const pxr::GfRay& ray) const;
+  pxr::GfVec3f GetNormal(Geometry* geometry) const;
+  bool HasHit() { return _elemId >= 0; };
 };
 
 static pxr::GfPlane DEFAULT_PLANE(pxr::GfVec3d(0, 1, 0), pxr::GfVec3d(0));

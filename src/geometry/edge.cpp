@@ -91,7 +91,6 @@ Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
     if (minDistance) *minDistance = distance;
     hit->SetBarycentricCoordinates(pxr::GfVec3f(0.5f));
     hit->SetElementIndex(id);
-    hit->SetElementType(Hit::EDGE);
     hit->SetT(distance);
     return true;
   }
