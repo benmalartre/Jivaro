@@ -37,4 +37,4 @@ static Preferences& GetPreferences()
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif
+#endif // JVR_UTILS_PREFS_H

@@ -2,9 +2,6 @@
 #define JVR_ACCELERATION_BVH_H
 
 #include <vector>
-#include <limits>
-#include <immintrin.h>
-#include <stdint.h>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
@@ -16,7 +13,15 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
+class BVH;
+struct Mortom {
+  uint64_t code;
+  BVH* cell;
 
+  inline bool operator <(const Mortom& other) {
+    return code < other.code;
+  }
+};
 
 class BVH : public Intersector
 { 
@@ -35,6 +40,8 @@ public:
     POINT,
     INVALID
   };
+
+  
 
   // constructor
   BVH(BVH* parent=NULL, BVH* lhs=NULL, BVH* rhs=NULL);
@@ -77,21 +84,11 @@ public:
   size_t GetNumCells();
   uint64_t ComputeCode(const pxr::GfVec3d& point);
   pxr::GfVec3d ComputeCodeAsColor(const pxr::GfVec3d& point);
-  uint64_t GetCode() const { return _mortom; };
-  void SetCode(uint64_t code) { _mortom = code; };
-
-  static void EchoNumHits();
-  static void ClearNumHits();
  
-  bool operator< (const BVH& other) const {
-    return _mortom < other._mortom;
-  }
-
 private:
-  BVH* _GenerateHierarchyFromMortom(std::vector<BVH*>& cells, int first, int last);
-  void _SortCellsByPair(std::vector<BVH*>& cells, std::vector<BVH*>& results);
-  void _SortCellsByPairMortom(std::vector<BVH*>& cells, std::vector<BVH*>& results);
-  void _SortTrianglesByPair(std::vector<BVH*>& leaves, Geometry* geometry);
+  BVH* _RecurseSortCellsByPair(std::vector<Mortom>& mortoms, int first, int last);
+  Mortom _SortCellsByPair(std::vector<Mortom>& mortoms);
+  void _SortTrianglesByPair(std::vector<Mortom>& mortoms, Geometry* geometry);
 
   bool _RaycastTrianglePair(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance, double* minDistance = NULL) const;
@@ -103,7 +100,6 @@ private:
   BVH*      _right;
   void*     _data;
   uint8_t   _type;
-  uint64_t  _mortom;
 
 }; 
 

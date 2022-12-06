@@ -1,4 +1,5 @@
-#pragma once
+#ifndef JVR_UTILS_COLOR_H
+#define JVR_UTILS_COLOR_H
 
 #include "../common.h"
 
@@ -89,3 +90,5 @@ static T UnpackColor4AsFloat(const float& code)
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
+
+#endif // JVR_UTILS_COLOR_H

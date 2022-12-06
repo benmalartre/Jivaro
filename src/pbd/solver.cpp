@@ -2,6 +2,7 @@
 #include "../pbd/constraint.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
+#include "../geometry/sampler.h"
 #include "../acceleration/bvh.h"
 #include "../app/application.h"
 #include "../app/time.h"
@@ -129,6 +130,62 @@ _SetupResults(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfVec3f>& points)
 
 }
 
+static void 
+_SetupSampler(pxr::UsdStageRefPtr& stage, Geometry* geometry)
+{
+  if (geometry->GetType() != Geometry::MESH)return;
+  Mesh* mesh = (Mesh*)geometry;
+
+  pxr::VtArray<Sampler::Sample> samples;
+  pxr::VtArray<int> triangles(mesh->GetNumTriangles() * 3);
+  for (auto& triangle : mesh->GetTriangles()) {
+    triangles[triangle.id * 3 + 0] = triangle.vertices[0];
+    triangles[triangle.id * 3 + 1] = triangle.vertices[1];
+    triangles[triangle.id * 3 + 2] = triangle.vertices[2];
+  }
+  Sampler::PoissonSampling(0.2f, 1000000, mesh->GetPositions(), mesh->GetNormals(), triangles, samples);
+
+  size_t numSamples = samples.size();
+  pxr::VtArray<pxr::GfVec3f> points(numSamples);
+  pxr::VtArray<pxr::GfVec3f> scales(numSamples);
+  pxr::VtArray<int64_t> indices(numSamples);
+  pxr::VtArray<int> protoIndices(numSamples);
+  pxr::VtArray<pxr::GfQuath> rotations(numSamples);
+  pxr::VtArray<pxr::GfVec3f> colors(numSamples);
+
+  for (size_t sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
+    points[sampleIdx] = samples[sampleIdx].GetPosition(mesh->GetPositionsCPtr());
+    scales[sampleIdx] = pxr::GfVec3f(0.2);
+    protoIndices[sampleIdx] = 0;
+    indices[sampleIdx] = sampleIdx;
+    rotations[sampleIdx] = pxr::GfQuath::GetIdentity();
+    colors[sampleIdx] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  }
+
+  pxr::UsdGeomPointInstancer instancer =
+    pxr::UsdGeomPointInstancer::Define(stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("sampler_instancer")));
+
+  pxr::UsdGeomCube proto =
+    pxr::UsdGeomCube::Define(stage,
+      instancer.GetPath().AppendChild(pxr::TfToken("proto_instance")));
+  proto.CreateSizeAttr().Set(1.0);
+
+  instancer.CreatePositionsAttr().Set(points);
+  instancer.CreateProtoIndicesAttr().Set(protoIndices);
+  instancer.CreateScalesAttr().Set(scales);
+  instancer.CreateIdsAttr().Set(indices);
+  instancer.CreateOrientationsAttr().Set(rotations);
+  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
+  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
+  pxr::UsdGeomPrimvar colorPrimvar =
+    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+  colorPrimvar.SetElementSize(1);
+  colorPrimvar.Set(colors);
+
+
+}
 
 static void
 _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
@@ -245,6 +302,10 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 
   _colliders = colliders;
 
+  for (auto& collider : colliders) {
+    _SetupSampler(stage, collider);
+  }
+
   std::cout << "### build bvh (mortom) : " << std::endl;
   uint64_t T = CurrentTime();
   BVH bvh;
@@ -263,7 +324,6 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   }
   std::cout << "   hit time (" << numRays << " rays) : " << ((CurrentTime() - T) * 1e-9) << std::endl;
   _SetupBVHInstancer(stage, &bvh);
-  BVH::EchoNumHits();
 
   std::vector<BVH*> cells;
   bvh.GetCells(cells);
