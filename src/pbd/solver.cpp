@@ -244,6 +244,7 @@ static void
 _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 {
   std::vector<BVH::Cell*> cells;
+  std::cout << "setup instancer " << bvh->GetRoot() << std::endl;
   bvh->GetRoot()->GetCells(cells);
   size_t numPoints = cells.size();
   pxr::VtArray<pxr::GfVec3f> points(numPoints);

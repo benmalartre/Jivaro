@@ -63,6 +63,8 @@ public:
     void GetCells(std::vector<Cell*>& cells);
 
     Geometry* GetGeometry();
+    Mortom SortCellsByPair(std::vector<Mortom>& mortoms);
+    
 
     void Init(Geometry* geometry);
     void Init(const std::vector<Geometry*>& geometries);
@@ -73,9 +75,10 @@ public:
       double maxDistance = FLT_MAX) const;
 
   protected:
-    Mortom _SortCellsByPair(std::vector<Mortom>& mortoms);
-    void _SortTrianglesByPair(std::vector<Mortom>& mortoms, Geometry* geometry);
+    void _FinishSort(std::vector<Mortom>& cells);
     Cell* _RecurseSortCellsByPair(std::vector<Mortom>& mortoms, int first, int last);
+    void _SortTrianglesByPair(std::vector<Mortom>& mortoms, Geometry* geometry);
+    
 
   private:
     Cell* _parent;
@@ -102,10 +105,14 @@ public:
   }
 
   Cell* GetRoot() { return &_root; };
+  void SetRoot(BVH::Cell*);
 
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  
+  virtual void Init(const std::vector<Geometry*>& geometries) override;
+  virtual void Update(const std::vector<Geometry*>& geometries) override;
+  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
     double maxDistance) const override;
 
 private:
