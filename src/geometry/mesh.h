@@ -115,6 +115,7 @@ public:
   // retopo
   void SetAllEdgesLatencyReal();
   void UpdateTopologyFromHalfEdges();
+  void FlipEdge(size_t index);
   void SplitEdge(size_t index);
   void CollapseEdge(size_t index);
 

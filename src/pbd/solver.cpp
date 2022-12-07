@@ -357,7 +357,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   _colliders = colliders;
 
   for (auto& collider : colliders) {
-    _SetupHairs(stage, collider);
+    //_SetupHairs(stage, collider);
   }
 
   std::cout << "### build bvh (mortom) : " << std::endl;

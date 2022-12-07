@@ -675,6 +675,50 @@ _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
   return count;
 }
 
+void Mesh::FlipEdge(size_t index)
+{
+  /* flip-flop two triangle by their common edge
+                                     
+       3 _ _ _ 2        3 _ _ _ 2    
+        |    /   2    3   \    |     
+        |   /  /|      |\  \   |     
+        |  /  / |      | \  \  |     
+        | /  /  |      |  \  \ |     
+        |/  /   |      |   \  \|     
+       0   /_ _ |      | _ _\   1    
+          0      1    0      1       
+  */
+  HalfEdge* edge = &_halfEdges[index];
+  if(!edge->twin)return;
+
+  HalfEdge* twin = edge->twin;
+
+  HalfEdge* e[6] = {
+    edge, edge->next, edge->next->next,
+    twin, twin->next, twin->next->next
+  };
+
+  int vertices[4] = {
+    e[1]->vertex,
+    e[2]->vertex,
+    e[4]->vertex,
+    e[5]->vertex
+  };
+
+  e[0]->vertex = vertices[1];
+  e[0]->next = e[5];
+  e[2]->next = e[4];
+  e[3]->vertex = vertices[3];
+  e[3]->next = e[1];
+  e[4]->next = e[0];
+
+  Triangle& t1 = _triangles[edge->GetTriangleIndex()];
+  Triangle& t2 = _triangles[twin->GetTriangleIndex()];
+
+  t1.vertices = pxr::GfVec3i(vertices[0], vertices[1], vertices[3]);
+  t2.vertices = pxr::GfVec3i(vertices[3], vertices[1], vertices[2]);
+}
+
 void Mesh::SplitEdge(size_t index)
 {
   size_t numEdges = _halfEdges.size();

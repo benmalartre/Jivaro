@@ -165,7 +165,6 @@ BVH::Cell::GetLeaves(std::vector<BVH::Cell*>& leaves)
 static void
 _RecurseGetCells(BVH::Cell* cell, std::vector<BVH::Cell*>& leaves)
 {
-  std::cout << cell << ", " << cell->GetLeft() << ", " << cell->GetRight() << std::endl;
   leaves.push_back(cell);
   if (cell->GetLeft()) {
     _RecurseGetCells(cell->GetLeft(), leaves);
@@ -178,7 +177,6 @@ _RecurseGetCells(BVH::Cell* cell, std::vector<BVH::Cell*>& leaves)
 void
 BVH::Cell::GetCells(std::vector<BVH::Cell*>& cells)
 {
-  std::cout << "get cells : " << _left << "," << _right << std::endl;
   cells.clear();
   if (_left)_RecurseGetCells(_left, cells);
   if (_right)_RecurseGetCells(_right, cells);
