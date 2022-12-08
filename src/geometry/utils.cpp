@@ -181,28 +181,27 @@ ComputeTriangleNormals( const pxr::VtArray<pxr::GfVec3f>& positions,
 }
 
 void
-ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& ups,
-  pxr::VtArray<pxr::GfVec3f>& tangents)
+ComputeLineTangents(const pxr::GfVec3f* points, const pxr::GfVec3f* ups,
+  pxr::GfVec3f* tangents, size_t numPoints)
 {
-  size_t numPoints = points.size();
   size_t last = numPoints - 1;
-  tangents.resize(numPoints);
   pxr::GfVec3f current, previous, next;
   switch (numPoints) {
   case 0:
     break;
   case 1:
-    tangents[0] = pxr::GfVec3f(0.f, 1.f, 0.f);
+    *tangents[0] = pxr::GfVec3f(0.f, 1.f, 0.f);
     break;
   case 2:
     current = (points[1] - points[0]).GetNormalized();
+    *tangent[0] = current;
+    *tangent[1] = current;
     break;
   default:
-    tangents[0] = (points[1] - points[0]).GetNormalized();
-    tangents[last] = (points[last] - points[last-1]).GetNormalized();
+    *tangents[0] = (points[1] - points[0]).GetNormalized();
+    *tangents[last] = (points[last] - points[last-1]).GetNormalized();
     for (size_t i = 1; i < numPoints; ++i) {
-      tangents[i] =
+      *tangents[i] =
         ((points[i] - points[i - 1]) + 
         (points[i + 1] - points[i])).GetNormalized();
     }

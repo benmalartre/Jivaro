@@ -69,6 +69,10 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
                     const pxr::VtArray<pxr::GfVec3f>& ups,
                     pxr::VtArray<pxr::GfVec3f>& tangents);
 
+/// Compute plane from points
+pxr::GfPlane 
+ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points);
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif
