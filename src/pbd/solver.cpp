@@ -126,8 +126,36 @@ _SetupResults(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfVec3f>& points)
     rayIndex++;
 
   }
+}
 
+static void
+_SetupFlip(pxr::UsdStageRefPtr& stage)
+{
+  std::cout << "SETUP FLIP !!!" << std::endl;
+  pxr::UsdGeomMesh mesh =
+    pxr::UsdGeomMesh::Define(stage, stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("mesh")));
 
+  pxr::VtArray<pxr::GfVec3f> points = {
+    {-1, 0, -1}, { 1, 0, -1}, {-1, 0,  1}, { 1, 0,  1}
+  };
+  mesh.CreatePointsAttr().Set(points);
+  pxr::VtArray<int> indices = {
+    0, 1, 3, 3, 2, 0
+  };
+  mesh.CreateFaceVertexIndicesAttr().Set(indices);
+  pxr::VtArray<int> counts = {
+    3, 3
+  };
+  mesh.CreateFaceVertexCountsAttr().Set(counts);
+
+  Mesh* __mesh = new Mesh(mesh);
+  __mesh->FlipEdge(0);
+  __mesh->FlipEdge(0);
+  __mesh->FlipEdge(0);
+  __mesh->UpdateTopologyFromHalfEdges();
+
+  mesh.GetFaceVertexCountsAttr().Set(__mesh->GetFaceCounts());
+  mesh.GetFaceVertexIndicesAttr().Set(__mesh->GetFaceConnects());
 }
 
 static void 
@@ -343,6 +371,9 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
 void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
+
+  _SetupFlip(stage);
+  return;
   size_t numRays = 256;
   std::vector<pxr::GfRay> rays(numRays);
   for (size_t r = 0; r < numRays; ++r) {

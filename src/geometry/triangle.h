@@ -4,13 +4,6 @@
 #ifndef JVR_GEOMETRY_TRIANGLE_H
 #define JVR_GEOMETRY_TRIANGLE_H
 
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/bbox3d.h>
-#include <pxr/base/gf/ray.h>
-#include <algorithm>
-#include <math.h>
-#include <stdio.h>
-
 #include "../common.h"
 #include "../geometry/component.h"
 

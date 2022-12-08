@@ -1,5 +1,7 @@
 #include <map>
 #include <unordered_map>
+#include <pxr/base/gf/vec3i.h>
+#include <pxr/base/gf/range3f.h>
 #include "../geometry/sampler.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -150,7 +152,6 @@ namespace Sampler
     const pxr::GfVec3f bboxSize(bbox.GetSize());
 
     const float radiusSq = radius * radius;
-    std::cout << "radius sq " << radiusSq << std::endl;
     pxr::GfVec3f gridSize = bboxSize / radius;
     pxr::GfVec3i gridSizeI(pxr::GfFloor(gridSize[0]), pxr::GfFloor(gridSize[1]), pxr::GfFloor(gridSize[2]));
     gridSizeI[0] = pxr::GfMax(gridSizeI[0], 1);

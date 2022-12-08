@@ -4,13 +4,6 @@
 #ifndef JVR_GEOMETRY_EDGE_H
 #define JVR_GEOMETRY_EDGE_H
 
-#include <algorithm>
-#include <math.h>
-#include <stdio.h>
-
-#include <pxr/base/gf/vec2i.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/ray.h>
 #include "../common.h"
 #include "../geometry/component.h"
 

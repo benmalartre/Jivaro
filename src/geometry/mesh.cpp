@@ -677,7 +677,8 @@ _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
 
 void Mesh::FlipEdge(size_t index)
 {
-  /* flip-flop two triangle by their common edge
+  /* 
+  flip-flop two triangle by their common edge
                                      
        3 _ _ _ 2        3 _ _ _ 2    
         |    /   2    3   \    |     
@@ -689,34 +690,44 @@ void Mesh::FlipEdge(size_t index)
           0      1    0      1       
   */
   HalfEdge* edge = &_halfEdges[index];
+  std::cout << "flip edge : " << edge << "," << edge->twin << std::endl;
   if(!edge->twin)return;
 
   HalfEdge* twin = edge->twin;
 
-  HalfEdge* e[6] = {
+  HalfEdge* edges[6] = {
     edge, edge->next, edge->next->next,
     twin, twin->next, twin->next->next
   };
 
   int vertices[4] = {
-    e[1]->vertex,
-    e[2]->vertex,
-    e[4]->vertex,
-    e[5]->vertex
+    edges[1]->vertex,
+    edges[2]->vertex,
+    edges[4]->vertex,
+    edges[5]->vertex
   };
-
-  e[0]->vertex = vertices[1];
-  e[0]->next = e[5];
-  e[2]->next = e[4];
-  e[3]->vertex = vertices[3];
-  e[3]->next = e[1];
-  e[4]->next = e[0];
 
   Triangle& t1 = _triangles[edge->GetTriangleIndex()];
   Triangle& t2 = _triangles[twin->GetTriangleIndex()];
+  std::cout << t1.vertices << std::endl;
+  std::cout << t2.vertices << std::endl;
+
+  std::swap(edge->index, twin->index);
+  edges[0]->vertex = vertices[3];
+  edges[3]->vertex = vertices[1];
+  edges[0]->next = edges[2];
+  edges[1]->next = edges[0];
+  edges[2]->next = edges[1];
+  edges[3]->next = edges[5];
+  edges[4]->next = edges[3];
+  edges[5]->next = edges[4];
+  std::swap(edges[2]->index, edges[5]->index);
 
   t1.vertices = pxr::GfVec3i(vertices[0], vertices[1], vertices[3]);
   t2.vertices = pxr::GfVec3i(vertices[3], vertices[1], vertices[2]);
+
+  std::cout << t1.vertices << std::endl;
+  std::cout << t2.vertices << std::endl;
 }
 
 void Mesh::SplitEdge(size_t index)

@@ -1,5 +1,6 @@
 #include "../geometry/utils.h"
 #include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/plane.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -207,6 +208,58 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
     }
     break;
   }
+}
+
+// Constructs a plane from a collection of points
+// so that the summed squared distance to all points is minimzized
+pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points) 
+{
+  if(points.size()) {
+      return pxr::GfPlane();
+  }
+
+  pxr::GfVec3f sum(0.0);
+  for(const auto& point: points) {
+      sum += point;
+  }
+  pxr::GfVec3f centroid = sum * (1.0 / (float)points.size());
+
+  // Calc full 3x3 covariance matrix, excluding symmetries:
+  float xx = 0.0; float xy = 0.0; float xz = 0.0;
+  float yy = 0.0; float yz = 0.0; float zz = 0.0;
+
+  for(const auto& point: points) {
+    pxr::GfVec3f r = point - centroid;
+    xx += r[0] * r[0];
+    xy += r[0] * r[1];
+    xz += r[0] * r[2];
+    yy += r[1] * r[1];
+    yz += r[1] * r[2];
+    zz += r[2] * r[2];
+  }
+
+  float det_x = yy*zz - yz*yz;
+  float det_y = xx*zz - xz*xz;
+  float det_z = xx*yy - xy*xy;
+
+  float det_max = det_x;
+  if (det_y > det_max)det_max = det_y;
+  if (det_z > det_max) det_max = det_z;
+  if(det_max <= 0.0) {
+      return pxr::GfPlane(); // The points don't span a plane
+    }
+
+  // Pick path with best conditioning:
+  if(det_max == det_x) {
+    return pxr::GfPlane(centroid, 
+      pxr::GfVec3f(det_x, xz*yz - xy*zz, xy*yz - xz*yy).GetNormalized());
+  } else if (det_max == det_y) {
+    return pxr::GfPlane(centroid, 
+      pxr::GfVec3f(xz*yz - xy*zz, det_y, xy*xz - yz*xx).GetNormalized());
+  } else {
+    return pxr::GfPlane(centroid, 
+      pxr::GfVec3f(xy*yz - xz*yy, xy*xz - yz*xx, det_z).GetNormalized());
+  };
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
