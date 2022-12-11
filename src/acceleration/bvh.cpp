@@ -11,17 +11,28 @@
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 
+JVR_NAMESPACE_OPEN_SCOPE
 
 #ifdef WIN32
-    #include <intrin.h>
-    static uint32_t __inline __builtin_clz(uint32_t x) {
-        unsigned long r = 0;
-        _BitScanReverse(&r, x);
-        return (31-r);
-    }
+#include <intrin.h>
+static uint32_t __inline __builtin_clz(uint32_t x) {
+  unsigned long r = 0;
+  _BitScanReverse(&r, x);
+  return (31 - r);
+}
 #endif
 
-JVR_NAMESPACE_OPEN_SCOPE
+static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
+{
+  lhs->SetLeft(rhs->GetLeft());
+  lhs->SetRight(rhs->GetRight());
+  lhs->SetMin(rhs->GetMin());
+  lhs->SetMax(rhs->GetMax());
+  rhs->SetLeft(NULL);
+  rhs->SetRight(NULL);
+  delete rhs;
+}
+
 
 BVH::Cell::Cell()
   : _parent(NULL)
@@ -316,13 +327,7 @@ int _FindSplit(std::vector<Mortom>& mortoms,  int first, int last)
 void
 BVH::SetRoot(BVH::Cell* cell)
 {
-  _root.SetLeft(cell->GetLeft());
-  _root.SetRight(cell->GetRight());
-  _root.SetMin(cell->GetMin());
-  _root.SetMax(cell->GetMax());
-  cell->SetLeft(NULL);
-  cell->SetRight(NULL);
-  delete cell;
+  _SwapCells(&_root, cell);
 }
 
 BVH::Cell*
@@ -358,15 +363,6 @@ Mortom BVH::Cell::SortCellsByPair(
   std::sort(mortoms.begin(), mortoms.end());
   return { 0, _RecurseSortCellsByPair(mortoms, 0, numCells - 1) };
 } 
-
-static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
-{
-  lhs->SetLeft(rhs->GetLeft());
-  lhs->SetRight(rhs->GetRight());
-  lhs->SetMin(rhs->GetMin());
-  lhs->SetMax(rhs->GetMax());
-  delete rhs;
-}
 
 void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
 {
