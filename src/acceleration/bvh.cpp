@@ -61,8 +61,7 @@ BVH::Cell::Cell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs)
     const pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*_left, *_right);
     SetMin(range.GetMin());
     SetMax(range.GetMax());
-  }
-  else if (_left) {
+  } else if (_left) {
     SetMin(_left->GetMin());
     SetMax(_left->GetMax());
   }
@@ -321,6 +320,9 @@ BVH::SetRoot(BVH::Cell* cell)
   _root.SetRight(cell->GetRight());
   _root.SetMin(cell->GetMin());
   _root.SetMax(cell->GetMax());
+  cell->SetLeft(NULL);
+  cell->SetRight(NULL);
+  delete cell;
 }
 
 BVH::Cell*
@@ -376,13 +378,7 @@ void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
   }
 
   Mortom result = SortCellsByPair(cells);
-  BVH::Cell* cell = (BVH::Cell*)result.cell;
-  SetLeft(cell);
-  SetRight(NULL);
-
-  SetMin(cell->GetMin());
-  SetMax(cell->GetMax());
-  
+  SetRoot((BVH::Cell*)result.cell);
   cells.clear();
 }
 
