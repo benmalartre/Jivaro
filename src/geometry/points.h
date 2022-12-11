@@ -55,7 +55,7 @@ public:
   };
 
 private:
-  // curves description
+  // radius description
   pxr::VtArray<float>                 _radius;  
 
   // colors

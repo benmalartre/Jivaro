@@ -37,8 +37,8 @@ Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
   _numCurves = curve.GetCurveCount();
 
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
-  pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());
-  _numPoints = _points.size();
+  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
+  _numPoints = _positions.size();
 
   pxr::UsdAttribute vertexCountsAttr = curve.GetCurveVertexCountsAttr();
   vertexCountsAttr.Get(&_cvCounts, pxr::UsdTimeCode::Default());
@@ -94,7 +94,7 @@ float Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
   size_t baseCvIndex = segmentIndex;
   for(size_t i=0; i < curveIndex - 1; ++i)baseCvIndex += _cvCounts[i];
 
-  return (_points[segmentIndex] - _points[segmentIndex + 1]).GetLength();
+  return (_positions[segmentIndex] - _positions[segmentIndex + 1]).GetLength();
 }
 
 
@@ -106,14 +106,14 @@ void Curve::Init(
   _numCurves = counts.size();
   _numSegments = 0;
   for(const auto& count: counts) _numSegments += count - 1;
-  _points = positions;
+  _positions = positions;
   _normals = positions;
-  _numPoints = _points.size();
+  _numPoints = _positions.size();
 }
 
 void Curve::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _points = positions;
+  _positions = positions;
 }
 
 bool Curve::ClosestIntersection(const pxr::GfVec3f& origin, 

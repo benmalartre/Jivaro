@@ -128,12 +128,12 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
   pxr::UsdAttribute faceVertexCountsAttr = mesh.GetFaceVertexCountsAttr();
   pxr::UsdAttribute faceVertexIndicesAttr = mesh.GetFaceVertexIndicesAttr();
 
-  pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());
+  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
   faceVertexCountsAttr.Get(&_faceVertexCounts, pxr::UsdTimeCode::Default());
   faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
   _numFaces = _faceVertexCounts.size();
   _numSamples = _faceVertexIndices.size();
-  _numPoints = _points.size();
+  _numPoints = _positions.size();
 
   Init();
 }
@@ -168,7 +168,7 @@ void Mesh::UpdateTopologyFromHalfEdges()
 
 void Mesh::GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts)
 {
-  size_t numVertices = _points.size();
+  size_t numVertices = _positions.size();
 
   pxr::VtArray<int> visited(numVertices);
   for (auto& v : visited) v = 0;
@@ -222,20 +222,20 @@ void Mesh::GetCutEdgesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArra
 
 pxr::GfVec3f Mesh::GetPosition(size_t idx) const
 {
-  return _points[idx];
+  return _positions[idx];
 }
 
 pxr::GfVec3f Mesh::GetTrianglePosition(const Triangle* T) const
 {
   pxr::GfVec3f center(0.f);
-  for(uint32_t v=0;v<3;v++) center += _points[T->vertices[v]];
+  for(uint32_t v=0;v<3;v++) center += _positions[T->vertices[v]];
   center *= 1.f/3.f;
   return center;
 }
 
 pxr::GfVec3f Mesh::GetTriangleVertexPosition(const Triangle *T, uint32_t index) const
 {
-  return _points[T->vertices[index]];
+  return _positions[T->vertices[index]];
 }
 
 pxr::GfVec3f Mesh::GetPosition(const Location& point) const
@@ -243,7 +243,7 @@ pxr::GfVec3f Mesh::GetPosition(const Location& point) const
   const Triangle* T = &_triangles[point.id];
   pxr::GfVec3f pos(0.f);
   for(uint32_t i = 0; i < 3; ++i) 
-    pos += _points[T->vertices[i]] * point.baryCoords[i];
+    pos += _positions[T->vertices[i]] * point.baryCoords[i];
   return pos;
 }
 
@@ -273,9 +273,9 @@ pxr::GfVec3f Mesh::GetNormal(const Location& point) const
 pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const
 {
   const Triangle* T = &_triangles[triangleID];
-  pxr::GfVec3f A = _points[T->vertices[0]];
-  pxr::GfVec3f B = _points[T->vertices[1]];
-  pxr::GfVec3f C = _points[T->vertices[2]];
+  pxr::GfVec3f A = _positions[T->vertices[0]];
+  pxr::GfVec3f B = _positions[T->vertices[1]];
+  pxr::GfVec3f C = _positions[T->vertices[2]];
 
   B -= A;
   C -= A;
@@ -588,9 +588,9 @@ void Mesh::SetTopology(
   _numFaces = _faceVertexCounts.size();
   _faceVertexIndices = faceVertexIndices;
   _numSamples = _faceVertexIndices.size();
-  _points = positions;
+  _positions = positions;
   _normals = positions;
-  _numPoints = _points.size();
+  _numPoints = _positions.size();
 
   Init();
 }
@@ -606,7 +606,7 @@ void Mesh::Init()
   _numTriangles = _triangles.size();
 
   // compute normals
-  ComputeVertexNormals(_points, _faceVertexCounts, 
+  ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
 
   // compute half-edges
@@ -619,7 +619,7 @@ void Mesh::Init()
 void 
 Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _points = positions;
+  _positions = positions;
 }
 
 const HalfEdge* 
@@ -740,8 +740,8 @@ void Mesh::SplitEdge(size_t index)
   if(twinEdge) _halfEdges.resize(numEdges + 6);
   else _halfEdges.resize(numEdges + 3);
 
-  const pxr::GfVec3f p = (_points[currentEdge.vertex] + _points[currentEdge.next->vertex]) * 0.5f;
-  _points.push_back(p);
+  const pxr::GfVec3f p = (_positions[currentEdge.vertex] + _positions[currentEdge.next->vertex]) * 0.5f;
+  _positions.push_back(p);
   _normals.push_back(p);
 
   HalfEdge* nextEdge = _GetNextEdge(&currentEdge, HalfEdge::REAL);
@@ -815,11 +815,11 @@ void Mesh::CollapseEdge(size_t index)
   int p2 = currentEdge->next->vertex;
 
   if (p1 > p2) {
-    _points[p2] = (_points[p1] + _points[p2]) * 0.5f;
-    _RemovePoint(_points, p1);
+    _positions[p2] = (_positions[p1] + _positions[p2]) * 0.5f;
+    _RemovePoint(_positions, p1);
   } else {
-    _points[p1] = (_points[p1] + _points[p2]) * 0.5f;
-    _RemovePoint(_points, p2);
+    _positions[p1] = (_positions[p1] + _positions[p2]) * 0.5f;
+    _RemovePoint(_positions, p2);
   }
   HalfEdge* nextEdge = _GetNextEdge(currentEdge);
   HalfEdge* previousEdge = _GetPreviousEdge(currentEdge);
@@ -838,10 +838,10 @@ void Mesh::CollapseEdge(size_t index)
 void Mesh::DisconnectEdges(const pxr::VtArray<int>& cutEdges)
 {
   size_t numHalfEdges = _halfEdges.size();
-  std::vector<std::vector<int>> insertedPoints(_points.size());
+  std::vector<std::vector<int>> insertedPoints(_positions.size());
   std::vector<bool> doCutEdge(numHalfEdges);
 
-  pxr::VtArray<pxr::GfVec3f> points = _points;
+  pxr::VtArray<pxr::GfVec3f> points = _positions;
   size_t baseNewPoints = points.size();
   pxr::VtArray<int> indices = _faceVertexIndices;
   for(size_t i = 0; i < numHalfEdges; ++i) doCutEdge[i] = false;
@@ -851,7 +851,7 @@ void Mesh::DisconnectEdges(const pxr::VtArray<int>& cutEdges)
     if(doCutEdge[faceVertex]) {
       if(! insertedPoints[_faceVertexIndices[faceVertex]].size()) {
         insertedPoints[_faceVertexIndices[faceVertex]].push_back(baseNewPoints++);
-        points.push_back(_points[_faceVertexIndices[faceVertex]]);
+        points.push_back(_positions[_faceVertexIndices[faceVertex]]);
       } else {
         indices[faceVertex] = insertedPoints[_faceVertexIndices[faceVertex]][0];
       }
@@ -873,12 +873,12 @@ void Mesh::Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs, const pxr::TfToken& in
   if (interpolation == pxr::UsdGeomTokens->vertex) {
     for (size_t i = 0; i < uvs.size(); ++i) {
       const pxr::GfVec2d& uv = uvs[i];
-      _points[i] = pxr::GfVec3f(uv[0], 0.f, uv[1]);
+      _positions[i] = pxr::GfVec3f(uv[0], 0.f, uv[1]);
     }
   } else if (interpolation == pxr::UsdGeomTokens->faceVarying) {
     for (size_t i = 0; i < uvs.size(); ++i) {
       const pxr::GfVec2d& uv = uvs[i];
-      _points[_faceVertexIndices[i]] = pxr::GfVec3f(uv[0], 0.f, uv[1]);
+      _positions[_faceVertexIndices[i]] = pxr::GfVec3f(uv[0], 0.f, uv[1]);
     }
   }
 }
@@ -1097,12 +1097,12 @@ void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
 void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
 {
   size_t numPoints = points.size();
-  std::vector<mygal::Vector2<double>> _points(numPoints);
+  std::vector<mygal::Vector2<double>> _positions(numPoints);
   for (size_t p=0; p < numPoints; ++p) {
-    _points[p].x = points[p][0];
-    _points[p].y = points[p][2];
+    _positions[p].x = points[p][0];
+    _positions[p].y = points[p][2];
   }
-  mygal::FortuneAlgorithm<double> algorithm(_points);
+  mygal::FortuneAlgorithm<double> algorithm(_positions);
   algorithm.construct();
 
   algorithm.bound(mygal::Box<double>{-0.55, -0.55, 0.55, 0.55});
@@ -1163,7 +1163,7 @@ void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
 
 void Mesh::Randomize(float value)
 {
-  for(auto& pos: _points) {
+  for(auto& pos: _positions) {
     pos += pxr::GfVec3f(
       RANDOM_LO_HI(-value, value),
       RANDOM_LO_HI(-value, value),

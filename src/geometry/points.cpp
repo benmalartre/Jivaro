@@ -34,8 +34,8 @@ Points::Points(const pxr::UsdGeomPoints& points)
 {
 
   pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
-  pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());
-  _numPoints = _points.size();
+  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
+  _numPoints = _positions.size();
 
   pxr::UsdAttribute normalsAttr = points.GetNormalsAttr();
   if (normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
@@ -59,14 +59,14 @@ void Points::Init(
   const pxr::VtArray<float>& radius)
 {
   _radius = radius;
-  _points = positions;
+  _positions = positions;
   _normals = positions;
-  _numPoints = _points.size();
+  _numPoints = _positions.size();
 }
 
 void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _points = positions;
+  _positions = positions;
 }
 
 void Points::Update(const pxr::VtArray<float>& radius)
@@ -77,13 +77,13 @@ void Points::Update(const pxr::VtArray<float>& radius)
 void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
   const pxr::VtArray<float>& radius)
 {
-  _points = positions;
+  _positions = positions;
   _radius = radius;
 }
 
 Point Points::Get(uint32_t index)
 {
-  if(index < _points.size())
+  if(index < _positions.size())
     return Point(index, index < _radius.size() ? _radius[index] : 1.f);   
   else
     return Point(); 

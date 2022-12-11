@@ -359,6 +359,15 @@ Mortom BVH::Cell::SortCellsByPair(
   return { 0, _RecurseSortCellsByPair(mortoms, 0, numCells - 1) };
 } 
 
+static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
+{
+  lhs->SetLeft(rhs->GetLeft());
+  lhs->SetRight(rhs->GetRight());
+  lhs->SetMin(rhs->GetMin());
+  lhs->SetMax(rhs->GetMax());
+  delete rhs;
+}
+
 void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
 {
   size_t numColliders = geometries.size();
@@ -378,19 +387,18 @@ void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
   }
 
   Mortom result = SortCellsByPair(cells);
-  SetRoot((BVH::Cell*)result.cell);
+  _SwapCells(this, (BVH::Cell*)result.cell);
+
   cells.clear();
 }
 
 void BVH::Cell::_FinishSort(std::vector<Mortom>& cells)
 {
   Mortom result = SortCellsByPair(cells);
-  BVH::Cell* cell = (BVH::Cell*)result.cell;
-  SetLeft(cell);
-  SetMin(cell->GetMin());
-  SetMax(cell->GetMax());
+  _SwapCells(this, (BVH::Cell*)result.cell);
   cells.clear();
 }
+
 void BVH::Cell::Init(Geometry* geometry)
 {
   if (geometry->GetType() == Geometry::MESH) {
@@ -420,11 +428,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   }
 
   Mortom mortom = _root.SortCellsByPair(cells);
-
-  BVH::Cell* cell = (BVH::Cell*)mortom.cell;
-  _root.SetLeft(cell);
-  _root.SetMin(cell->GetMin());
-  _root.SetMax(cell->GetMax());
+  _SwapCells(&_root, (BVH::Cell*)mortom.cell);
   cells.clear();
 }
 

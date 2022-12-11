@@ -24,8 +24,8 @@ Geometry::Geometry(const Geometry* other, short type, bool normalize)
   _numPoints = other->_numPoints;
   _type = type;
 
-  _points = other->_points;
-  _normals = other->_points;
+  _positions = other->_positions;
+  _normals = other->_positions;
 
   _bbox = other->_bbox;
 
@@ -40,26 +40,26 @@ Geometry::Geometry(const Geometry* other, short type, bool normalize)
 
     // translate to origin
     for (size_t v = 0; v < other->_numPoints; ++v) {
-      _points[v]  = other->GetPosition(v) - center;
+      _positions[v]  = other->GetPosition(v) - center;
     }
 
     // determine radius
     float rMax = 0;
     for (size_t v = 0; v < other->_numPoints; ++v) {
-      rMax = std::max(rMax, _points[v].GetLength());
+      rMax = std::max(rMax, _positions[v].GetLength());
     }
 
     // rescale to unit sphere
     float invRMax = 1.f / rMax;
     for (size_t v = 0; v < other->_numPoints; ++v) {
-      _points[v] *= invRMax;
+      _positions[v] *= invRMax;
     }
   }
 }
 
 pxr::GfVec3f Geometry::GetPosition(uint32_t index) const
 {
-  return _points[index];
+  return _positions[index];
 }
 
 pxr::GfVec3f Geometry::GetNormal(uint32_t index) const
@@ -74,7 +74,7 @@ float Geometry::GetRadius(uint32_t index) const
 
 void Geometry::SetPosition(uint32_t index, const pxr::GfVec3f& position)
 {
-  _points[index] = position;
+  _positions[index] = position;
 }
 
 void Geometry::SetNormal(uint32_t index, const pxr::GfVec3f& normal)
@@ -94,7 +94,7 @@ void Geometry::ComputeBoundingBox()
   range.SetEmpty();
   auto min = range.GetMin();
   auto max = range.GetMax();
-  for (const auto& point : _points) {
+  for (const auto& point : _positions) {
     for (short i = 0; i < 3; ++i) {
       if (point[i] < min[i])min[i] = point[i];
       if (point[i] > max[i])max[i] = point[i];
@@ -108,22 +108,22 @@ void Geometry::ComputeBoundingBox()
 
 void Geometry::Init(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _points = positions;
+  _positions = positions;
   _normals = positions;
-  _numPoints = _points.size();
+  _numPoints = _positions.size();
 }
 
 void Geometry::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _points = positions;
+  _positions = positions;
 }
 
 void Geometry::SetPositions(pxr::GfVec3f* positions, size_t n)
 {
-  if (n != _points.size()) {
-    _points.resize(n);
+  if (n != _positions.size()) {
+    _positions.resize(n);
   }
-  memmove(&_points[0], positions, n * sizeof(pxr::GfVec3f));
+  memmove(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

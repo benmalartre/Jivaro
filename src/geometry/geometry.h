@@ -10,7 +10,10 @@
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <float.h>
-#include "triangle.h"
+
+#include "../geometry/point.h"
+#include "../geometry/edge.h"
+#include "../geometry/triangle.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -40,15 +43,15 @@ public:
   virtual ~Geometry();
 
   short GetType() { return _type; };
-  const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _points;};
+  const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _positions;};
   const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normals;};
   const pxr::VtArray<float>& GetRadius() const { return _radius; };
 
-  pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _points;};
+  pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _positions;};
   pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normals;};
   pxr::VtArray<float>& GetRadius() { return _radius; };
 
-  const pxr::GfVec3f* GetPositionsCPtr() const {return &_points[0];};
+  const pxr::GfVec3f* GetPositionsCPtr() const {return &_positions[0];};
   const pxr::GfVec3f* GetNormalsCPtr() const {return &_normals[0];};
   const float* GetRadiusCPtr() const { return &_radius[0]; };
 
@@ -83,9 +86,10 @@ protected:
   // infos
   short                               _type;
   uint32_t                            _numPoints;
+  pxr::VtArray<Point>                 _points;
 
   // vertex data
-  pxr::VtArray<pxr::GfVec3f>          _points;
+  pxr::VtArray<pxr::GfVec3f>          _positions;
   pxr::VtArray<pxr::GfVec3f>          _normals;
   pxr::VtArray<float>                 _radius;
 
