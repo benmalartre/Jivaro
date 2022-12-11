@@ -31,7 +31,7 @@ public:
   Curve();
   Curve(const Curve* other, bool normalize = true);
   Curve(const pxr::UsdGeomBasisCurves& curve);
-  ~Curve();
+  virtual ~Curve() {};
 
   const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
   pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};

@@ -6,10 +6,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Curve::~Curve()
-{
-};
-
 Curve::Curve()
   : Geometry(Geometry::CURVE)
 {

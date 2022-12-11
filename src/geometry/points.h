@@ -24,7 +24,7 @@ public:
   Points();
   Points(const Points* other, bool normalize = true);
   Points(const pxr::UsdGeomPoints& points);
-  ~Points();
+  virtual ~Points() {};
 
   void SetDisplayColor(GeomInterpolation interp, 
     const pxr::VtArray<pxr::GfVec3f>& colors);

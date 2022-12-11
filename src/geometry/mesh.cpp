@@ -91,10 +91,6 @@ HalfEdge::GetLongestInTriangle(const pxr::GfVec3f* positions, HalfEdge* edge)
   else return edge->next->next;
 }
 
-Mesh::~Mesh()
-{
-};
-
 Mesh::Mesh()
   : Geometry(Geometry::MESH)
 {

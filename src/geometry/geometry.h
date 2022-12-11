@@ -40,7 +40,7 @@ public:
 
   Geometry(short type);
   Geometry(const Geometry* other, short type, bool normalize);
-  virtual ~Geometry();
+  virtual ~Geometry() {};
 
   short GetType() { return _type; };
   const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _positions;};

@@ -6,10 +6,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Points::~Points()
-{
-};
-
 Points::Points()
   : Geometry(Geometry::POINT)
 {

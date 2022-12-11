@@ -7,10 +7,6 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-Geometry::~Geometry()
-{
-};
-
 Geometry::Geometry(short type)
 {
   _initialized = false;

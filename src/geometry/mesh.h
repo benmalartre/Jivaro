@@ -62,7 +62,7 @@ public:
   Mesh();
   Mesh(const Mesh* other, bool normalize = true);
   Mesh(const pxr::UsdGeomMesh& usdMesh);
-  ~Mesh();
+  virtual ~Mesh() {};
 
   const pxr::VtArray<int>& GetFaceCounts() const { return _faceVertexCounts;};
   const pxr::VtArray<int>& GetFaceConnects() const { return _faceVertexIndices;};
