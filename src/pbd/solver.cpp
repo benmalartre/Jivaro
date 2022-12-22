@@ -269,6 +269,46 @@ _SetupHairs(pxr::UsdStageRefPtr& stage, Geometry* geometry)
 }
 
 static void
+_SetupGroom(pxr::UsdStageRefPtr& stage)
+{
+
+  size_t N = 32; // num cvs per curve
+  size_t numCurves = 16;
+  pxr::VtArray<pxr::GfVec3f> points(numCurves * N);
+  pxr::VtArray<float> widths(numCurves * N);
+  pxr::VtArray<int> curveVertexCount(numCurves);
+
+  for (size_t curveIdx = 0; curveIdx < numCurves; ++curveIdx) {
+    pxr::GfVec3f origin(curveIdx, 0, 0);
+    pxr::GfVec3f normal(0, 1, 0);
+    curveVertexCount[curveIdx] = N;
+    for (int n = 0; n < N; ++n) {
+      const float t = (float)n / (float)N;
+      points[curveIdx * N + n] = origin + normal * 0.1f * n + pxr::GfVec3f(RANDOM_LO_HI(-0.5,0.5)) * t;
+      widths[curveIdx * N + n] = RANDOM_LO_HI(0.1, 0.2);
+    }
+  }
+
+  pxr::UsdGeomBasisCurves curve =
+    pxr::UsdGeomBasisCurves::Define(stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("hair_curve")));
+
+  curve.CreatePointsAttr().Set(points);
+  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->constant);
+  curve.CreateWidthsAttr().Set(widths);
+  curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
+
+  pxr::UsdGeomPrimvar crvColorPrimvar = curve.CreateDisplayColorPrimvar();
+  crvColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+  crvColorPrimvar.SetElementSize(1);
+  //crvColorPrimvar.Set(colors);
+
+  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
+
+
+}
+
+static void
 _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 {
   std::vector<BVH::Cell*> cells;
@@ -372,7 +412,8 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
 
-  _SetupFlip(stage);
+  _SetupGroom(stage);
+  //_SetupFlip(stage);
   return;
   size_t numRays = 256;
   std::vector<pxr::GfRay> rays(numRays);

@@ -47,38 +47,44 @@ Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
     normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
 }
 
-void Curve::SetDisplayColor(GeomInterpolation interp, 
+void 
+Curve::SetDisplayColor(GeomInterpolation interp, 
   const pxr::VtArray<pxr::GfVec3f>& colors) 
 {
   _colorsInterpolation = interp;
   _colors = colors;
 }
 
-uint32_t Curve::GetNumCVs(uint32_t curveIndex)const
+uint32_t 
+Curve::GetNumCVs(uint32_t curveIndex)const
 {
   if(curveIndex >= _cvCounts.size())
     return 0;
   return _cvCounts[curveIndex];
 }
 
-uint32_t Curve::GetNumSegments(uint32_t curveIndex)const
+uint32_t 
+Curve::GetNumSegments(uint32_t curveIndex)const
 {
   if (curveIndex >= _cvCounts.size())
     return 0;
   return _cvCounts[curveIndex] - 1;
 }
 
-uint32_t Curve::GetTotalNumCVs()const
+uint32_t 
+Curve::GetTotalNumCVs()const
 {
   return _numPoints;
 }
 
-uint32_t Curve::GetTotalNumSegments()const
+uint32_t 
+Curve::GetTotalNumSegments()const
 {
   return _numSegments;
 }
 
-float Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
+float 
+Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
 {
   size_t numCurves = _cvCounts.size();
   if(curveIndex >= numCurves)
@@ -94,7 +100,8 @@ float Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
 }
 
 
-void Curve::Init(
+void 
+Curve::Init(
   const pxr::VtArray<pxr::GfVec3f>& positions, 
   const pxr::VtArray<int>& counts)
 {
@@ -107,22 +114,39 @@ void Curve::Init(
   _numPoints = _positions.size();
 }
 
-void Curve::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
+void 
+Curve::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
   _positions = positions;
 }
 
-bool Curve::ClosestIntersection(const pxr::GfVec3f& origin, 
+bool 
+Curve::ClosestIntersection(const pxr::GfVec3f& origin, 
   const pxr::GfVec3f& direction, CurveLocation& location, float maxDistance)
 {
   return false;
 }
 
-bool Curve::Closest(const pxr::GfVec3f& point, 
+bool 
+Curve::Closest(const pxr::GfVec3f& point, 
   CurveLocation& location, float maxDistance)
 {
   return false;
 }
+
+bool 
+Curve::Raycast(const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  return false;
+};
+
+bool 
+Curve::Closest(const pxr::GfVec3f& point, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  return false;
+};
 
 
 JVR_NAMESPACE_CLOSE_SCOPE
