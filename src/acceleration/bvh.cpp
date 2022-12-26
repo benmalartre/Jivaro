@@ -143,8 +143,8 @@ BVH::Cell::IsLeaf() const
   return _type == BVH::Cell::LEAF;
 }
 
-BVH::Cell*
-BVH::Cell::GetRoot()
+const BVH::Cell*
+BVH::Cell::GetRoot() const
 {
   if (IsRoot())return this;
   BVH::Cell* parent = _parent;
@@ -155,8 +155,8 @@ BVH::Cell::GetRoot()
   return this;
 }
 
-BVH::Cell*
-BVH::Cell::GetGeom()
+const BVH::Cell*
+BVH::Cell::GetGeom() const
 {
   if (IsGeom())return this;
   BVH::Cell* parent = _parent;
@@ -167,6 +167,20 @@ BVH::Cell::GetGeom()
   return this;
 }
 
+const BVH* 
+BVH::Cell::GetIntersector() const
+{
+  return (BVH*) GetRoot()->GetData();
+}
+
+int
+BVH::GetGeometryIndex(Geometry* geom) const 
+{
+  for (size_t index = 0; index < _geometries.size(); ++index) {
+    if(_geometries[index] == geom)return index;
+  }
+  return -1;
+}
 
 static void 
 _RecurseGetLeaves(BVH::Cell* cell, std::vector<BVH::Cell*>& leaves)
@@ -215,7 +229,7 @@ BVH::Cell::GetCells(std::vector<BVH::Cell*>& cells)
 Geometry*
 BVH::Cell::GetGeometry()
 {
-  BVH::Cell* geom = GetGeom();
+  const BVH::Cell* geom = GetGeom();
   if (geom) {
     return (Geometry*)geom->_data;
   }
@@ -233,6 +247,10 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
       return component->Raycast(points, ray, hit, maxDistance, minDistance);
     }
     else {
+      if(IsGeom()) {
+        const BVH* intersector = GetIntersector();
+        hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
+      }
       Hit leftHit(*hit), rightHit(*hit);
       if (_left)_left->Raycast(points, ray, &leftHit);
       if (_right)_right->Raycast(points, ray, &rightHit);
@@ -309,7 +327,7 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Mortom>& leaves, Geometry* geom
     BVH::Cell* leaf =
       new BVH::Cell(this, &trianglePair, trianglePair.GetBoundingBox(points));
 
-    BVH::Cell* root = GetRoot();
+    const BVH::Cell* root = GetRoot();
     BVH::ComputeCode(root, leaf->GetMidpoint());
     leaves.push_back({ BVH::ComputeCode(root, leaf->GetMidpoint()), leaf });
   }
@@ -422,10 +440,11 @@ void BVH::Cell::Init(Geometry* geometry)
 void
 BVH::Init(const std::vector<Geometry*>& geometries)
 {
-  size_t numColliders = geometries.size();
-  pxr::GfRange3d accum = geometries[0]->GetBoundingBox().GetRange();
+  _geometries = geometries;
+  size_t numColliders = _geometries.size();
+  pxr::GfRange3d accum = _geometries[0]->GetBoundingBox().GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
-    accum.UnionWith(geometries[i]->GetBoundingBox().GetRange());
+    accum.UnionWith(_geometries[i]->GetBoundingBox().GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
@@ -433,13 +452,14 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   std::vector<Mortom> cells;
   cells.reserve(numColliders);
 
-  for (Geometry* geom : geometries) {
+  for (Geometry* geom : _geometries) {
     BVH::Cell* bvh = new BVH::Cell(&_root, geom);
     cells.push_back({ BVH::ComputeCode(&_root, bvh->GetMidpoint()), bvh });
   }
 
   Mortom mortom = _root.SortCellsByPair(cells);
   _SwapCells(&_root, (BVH::Cell*)mortom.data);
+  _root.SetData((void*)this);
   cells.clear();
 }
 

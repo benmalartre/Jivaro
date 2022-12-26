@@ -154,7 +154,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
 
-  size_t numRays = 256;
+  size_t numRays = 2048;
   std::vector<pxr::GfRay> rays(numRays);
   for (size_t r = 0; r < numRays; ++r) {
     rays[r] = pxr::GfRay(pxr::GfVec3f(0.f), 
@@ -181,6 +181,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
     std::cout << "positions : " << points << std::endl;
     if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
       std::cout << "hit something..." << std::endl;
+      std::cout << "geometry index : " << hit.GetGeometryIndex() << std::endl;
       result.push_back(hit.GetPosition(colliders[hit.GetGeometryIndex()]));
     }
   }

@@ -44,9 +44,12 @@ public:
     bool IsLeaf() const;
     bool IsRoot() const;
     bool IsGeom() const;
-    Cell* GetRoot();
-    Cell* GetGeom();
+    const Cell* GetRoot() const;
+    const Cell* GetGeom() const;
+    const BVH* GetIntersector() const;
 
+    void SetData(void* data){_data = data;};
+     void* GetData() const {return _data;};
     void SetLeft(Cell* cell) { _left = cell; };
     void SetRight(Cell* cell) { _right = cell; };
     Cell* GetLeft() { return _left; };
@@ -84,7 +87,7 @@ public:
 public:
   BVH() {};
 
-  static uint64_t ComputeCode(BVH::Cell* root, const pxr::GfVec3d& point)
+  static uint64_t ComputeCode(const BVH::Cell* root, const pxr::GfVec3d& point)
   {
     const pxr::GfVec3i p = WorldToMortom(*root, point);
     return Encode3D(p);
@@ -98,6 +101,7 @@ public:
   }
 
   Cell* GetRoot() { return &_root; };
+  int GetGeometryIndex(Geometry* geom) const;
 
   
   virtual void Init(const std::vector<Geometry*>& geometries) override;
@@ -109,6 +113,7 @@ public:
 
 private:
   Cell                        _root;
+  std::vector<Geometry*>      _geometries;
 
 }; 
 
