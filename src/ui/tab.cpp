@@ -91,13 +91,12 @@ ViewTabUI::Draw()
 
   if (ImGui::BeginTabBar(_ComputeName(_id, "TabBar").c_str(), tabBarFlags))
   {
-    const char* popupName = _ComputeName(_id, "Popup").c_str();
     if (ImGui::TabItemButton(ICON_FA_GEAR, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
-      ImGui::OpenPopup(popupName);
+      ImGui::OpenPopup(_ComputeName(_id, "Popup").c_str());
       _invade = true;
     }
-    if (ImGui::BeginPopup(popupName))
+    if (ImGui::BeginPopup(_ComputeName(_id, "Popup").c_str()))
     {
       if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
       for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {

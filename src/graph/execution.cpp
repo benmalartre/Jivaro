@@ -109,8 +109,8 @@ _GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-ExecutionGraph::ExecutionGraph(pxr::UsdPrim& prim) 
-  : Graph()
+ExecutionGraph::ExecutionGraph(const pxr::UsdPrim& prim) 
+  : Graph(prim)
 {
     Populate(prim);
 }

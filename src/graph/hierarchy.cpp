@@ -9,7 +9,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Graph constructor
 //------------------------------------------------------------------------------
-HierarchyGraph::HierarchyGraph(pxr::SdfLayerRefPtr& layer, pxr::UsdPrim& prim) 
+HierarchyGraph::HierarchyGraph(const pxr::SdfLayerRefPtr& layer, const pxr::UsdPrim& prim) 
   : Graph(prim)
   , _layer(layer)
 {
@@ -24,7 +24,7 @@ HierarchyGraph::~HierarchyGraph()
 
 // Graph populate
 //------------------------------------------------------------------------------
-void HierarchyGraph::Populate(pxr::UsdPrim& prim)
+void HierarchyGraph::Populate(const pxr::UsdPrim& prim)
 {
   _prim = prim;
   Clear();
@@ -52,7 +52,7 @@ void
 HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
 {
   pxr::SdfPrimSpecHandle primSpec = _layer->GetPrimAtPath(parent->GetPrim().GetPath());
-  for (auto& child : primSpec.GetSpec().GetNameChildren()) {
+  for (const auto& child : primSpec.GetSpec().GetNameChildren()) {
     pxr::UsdPrim childPrim = 
       parent->GetPrim().GetChild(pxr::TfToken(child->GetName()));
     HierarchyGraph::HierarchyNode* node =

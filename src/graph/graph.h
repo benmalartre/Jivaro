@@ -121,11 +121,10 @@ public:
   };
 
 public:
-  Graph();
-  Graph(pxr::UsdPrim& prim);
+  Graph(const pxr::UsdPrim& prim);
   virtual ~Graph();
 
-  virtual void Populate(pxr::UsdPrim& prim);
+  virtual void Populate(const pxr::UsdPrim& prim);
   virtual void Clear();
 
   virtual void AddNode(Node* node);

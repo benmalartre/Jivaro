@@ -124,6 +124,8 @@ View::CreateUI(UIType type)
   case UIType::DEBUG:
     _current = new DebugUI(this);
     break;
+  default:
+    break;
   }
 }
 

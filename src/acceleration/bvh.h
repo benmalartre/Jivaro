@@ -19,7 +19,7 @@ struct Mortom {
   uint64_t  code;
   void*     cell;
 
-  inline bool operator <(const Mortom& other) {
+  bool operator <(const Mortom& other) const {
     return code < other.code;
   }
 };

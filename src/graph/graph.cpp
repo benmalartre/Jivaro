@@ -154,11 +154,7 @@ Graph::Port::IsConnected(Graph* graph, Graph::Connexion* foundConnexion)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-Graph::Graph()
-{
-}
-
-Graph::Graph(pxr::UsdPrim& prim)
+Graph::Graph(const pxr::UsdPrim& prim)
   : _prim(prim)
 {
 }
@@ -174,7 +170,7 @@ Graph::~Graph()
 
 // Graph populate
 //------------------------------------------------------------------------------
-void Graph::Populate(pxr::UsdPrim& prim)
+void Graph::Populate(const pxr::UsdPrim& prim)
 {
   Clear();
   _prim = prim;

@@ -70,10 +70,11 @@ _SetupRays(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfRay>& rays)
   std::string name = "ray_origin_";
   for (auto& ray : rays) {
     colors[0] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    pxr::TfToken name(name + std::to_string(rayIndex));
 
     pxr::UsdGeomSphere origin = 
-      pxr::UsdGeomSphere::Define(stage, rayGroup.GetPath().AppendChild(name));
+      pxr::UsdGeomSphere::Define(stage, rayGroup.GetPath().AppendChild(
+        pxr::TfToken(name + std::to_string(rayIndex))
+      ));
     
     origin.AddTranslateOp().Set(ray.GetPoint(0));
     origin.CreateRadiusAttr().Set(0.05);
@@ -114,10 +115,11 @@ _SetupResults(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfVec3f>& points)
   std::string name = "ray_intersection_";
   for (auto& point : points) {
     colors[0] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    pxr::TfToken name(name + std::to_string(rayIndex));
 
     pxr::UsdGeomSphere origin =
-      pxr::UsdGeomSphere::Define(stage, pntGroup.GetPath().AppendChild(name));
+      pxr::UsdGeomSphere::Define(stage, pntGroup.GetPath().AppendChild(
+        pxr::TfToken(name + std::to_string(rayIndex))
+      ));
 
     origin.AddTranslateOp().Set(pxr::GfVec3d(point));
     origin.CreateRadiusAttr().Set(0.2);

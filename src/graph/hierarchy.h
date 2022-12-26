@@ -29,10 +29,10 @@ class HierarchyNode : public Graph::Node {
   };
 
 public:
-  HierarchyGraph(pxr::SdfLayerRefPtr &layer, pxr::UsdPrim& prim);
+  explicit HierarchyGraph(const pxr::SdfLayerRefPtr &layer, const pxr::UsdPrim& prim);
   ~HierarchyGraph()         override;
 
-  virtual void Populate(pxr::UsdPrim& prim) override;
+  virtual void Populate(const pxr::UsdPrim& prim) override;
 
 protected:
   virtual void _DiscoverNodes() override;

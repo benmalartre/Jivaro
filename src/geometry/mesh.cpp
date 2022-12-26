@@ -696,7 +696,7 @@ void Mesh::FlipEdge(size_t index)
     twin, twin->next, twin->next->next
   };
 
-  int vertices[4] = {
+  uint32_t vertices[4] = {
     edges[1]->vertex,
     edges[2]->vertex,
     edges[4]->vertex,

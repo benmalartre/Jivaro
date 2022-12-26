@@ -18,7 +18,7 @@
 
 #include "../utils/files.h"
 #include "../utils/prefs.h"
-#include "../ui/fileBrowser.h"
+#include "../ui/filebrowser.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
 #include "../ui/graphEditor.h"
