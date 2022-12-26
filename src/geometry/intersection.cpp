@@ -30,11 +30,15 @@ Hit::GetPosition(Geometry* geometry) const
   short         _elemType;
   int           _elemId;
   */
+ std::cout << "HIT GET POSITION : " << geometry->GetType() << std::endl;
   switch (geometry->GetType()) {
     case Geometry::MESH:
     {
       Mesh* mesh = (Mesh*)geometry;
+      std::cout << "hit mesh.." << std::endl;
+
       Triangle* triangle = mesh->GetTriangle(_elemId);
+      std::cout << "trainagle : " << triangle << "("<<_elemId<<")"<<std::endl;
       const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
       return pxr::GfVec3f( 
         pxr::GfVec3f(positions[triangle->vertices[0]]) * _coords[0] +

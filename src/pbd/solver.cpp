@@ -2,7 +2,6 @@
 #include "../pbd/constraint.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
-#include "../geometry/sampler.h"
 #include "../acceleration/bvh.h"
 #include "../app/application.h"
 #include "../app/time.h"
@@ -22,84 +21,6 @@
 
 
 JVR_NAMESPACE_OPEN_SCOPE
-
-struct DebugRay {
-  pxr::UsdGeomBasisCurves curves;
-  pxr::UsdGeomPoints intersections;
-
-  std::vector<pxr::GfRay> rays;
-};
-
-void InitializeDebugRay(pxr::UsdStageRefPtr& stage, DebugRay& data)
-{
-  pxr::UsdGeomXform rayGroup =
-    pxr::UsdGeomXform::Define(stage, stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("rays")));
-
-  data.intersections  =
-    pxr::UsdGeomPoints::Define(stage, rayGroup.GetPath().AppendChild(pxr::TfToken("intersections")));
-
-  data.curves =
-    pxr::UsdGeomBasisCurves::Define(stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("ray_curve")));
-
-  data.curves.CreatePointsAttr();
-  data.curves.CreateCurveVertexCountsAttr();
-
-  pxr::UsdGeomPrimvar curvesColor = data.curves.CreateDisplayColorPrimvar();
-  curvesColor.SetInterpolation(pxr::UsdGeomTokens->constant);
-  curvesColor.SetElementSize(1);
-}
-
-void UpdateDebugRay(pxr::UsdStageRefPtr& stage, DebugRay& data)
-{
-
-}
-
-static void
-_SetupRays(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfRay>& rays)
-{
-
-  pxr::UsdGeomXform rayGroup =
-    pxr::UsdGeomXform::Define(stage, stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("rays")));
-
-  size_t rayIndex = 0;
-  pxr::VtArray<pxr::GfVec3f> points(rays.size() * 2);
-  pxr::VtArray<int> curveVertexCount(rays.size());
-  pxr::VtArray<pxr::GfVec3f> colors(1);
-  
-  std::string name = "ray_origin_";
-  for (auto& ray : rays) {
-    colors[0] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-
-    pxr::UsdGeomSphere origin = 
-      pxr::UsdGeomSphere::Define(stage, rayGroup.GetPath().AppendChild(
-        pxr::TfToken(name + std::to_string(rayIndex))
-      ));
-    
-    origin.AddTranslateOp().Set(ray.GetPoint(0));
-    origin.CreateRadiusAttr().Set(0.05);
-    origin.CreateDisplayColorAttr().Set(colors);
-    points[rayIndex * 2] = pxr::GfVec3f(ray.GetPoint(0));
-    points[rayIndex * 2 + 1] = pxr::GfVec3f(ray.GetPoint(10));
-    curveVertexCount[rayIndex] = 2;
-
-    rayIndex++;
-
-  }
-  
-  pxr::UsdGeomBasisCurves curve =
-    pxr::UsdGeomBasisCurves::Define(stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("ray_curve")));
-
-  curve.CreatePointsAttr().Set(points);
-  curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
-
-  pxr::UsdGeomPrimvar colorPrimvar = curve.CreateDisplayColorPrimvar();
-  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->constant);
-  colorPrimvar.SetElementSize(1);
-  colorPrimvar.Set(colors);
-  
-}
 
 static void
 _SetupResults(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfVec3f>& points)
@@ -128,186 +49,6 @@ _SetupResults(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfVec3f>& points)
     rayIndex++;
 
   }
-}
-
-static void
-_SetupFlip(pxr::UsdStageRefPtr& stage)
-{
-  std::cout << "SETUP FLIP !!!" << std::endl;
-  pxr::UsdGeomMesh mesh =
-    pxr::UsdGeomMesh::Define(stage, stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("mesh")));
-
-  pxr::VtArray<pxr::GfVec3f> points = {
-    {-1, 0, -1}, { 1, 0, -1}, {-1, 0,  1}, { 1, 0,  1}
-  };
-  mesh.CreatePointsAttr().Set(points);
-  pxr::VtArray<int> indices = {
-    0, 1, 3, 3, 2, 0
-  };
-  mesh.CreateFaceVertexIndicesAttr().Set(indices);
-  pxr::VtArray<int> counts = {
-    3, 3
-  };
-  mesh.CreateFaceVertexCountsAttr().Set(counts);
-
-  Mesh* __mesh = new Mesh(mesh);
-  __mesh->FlipEdge(0);
-  __mesh->FlipEdge(0);
-  __mesh->FlipEdge(0);
-  __mesh->UpdateTopologyFromHalfEdges();
-
-  mesh.GetFaceVertexCountsAttr().Set(__mesh->GetFaceCounts());
-  mesh.GetFaceVertexIndicesAttr().Set(__mesh->GetFaceConnects());
-}
-
-static void 
-_SetupSampler(pxr::UsdStageRefPtr& stage, Geometry* geometry)
-{
-  if (geometry->GetType() != Geometry::MESH)return;
-  Mesh* mesh = (Mesh*)geometry;
-
-  pxr::VtArray<Sampler::Sample> samples;
-  pxr::VtArray<int> triangles(mesh->GetNumTriangles() * 3);
-  for (auto& triangle : mesh->GetTriangles()) {
-    triangles[triangle.id * 3 + 0] = triangle.vertices[0];
-    triangles[triangle.id * 3 + 1] = triangle.vertices[1];
-    triangles[triangle.id * 3 + 2] = triangle.vertices[2];
-  }
-  Sampler::PoissonSampling(0.2f, 1000000, mesh->GetPositions(), mesh->GetNormals(), triangles, samples);
-
-  size_t numSamples = samples.size();
-  pxr::VtArray<pxr::GfVec3f> points(numSamples);
-  pxr::VtArray<pxr::GfVec3f> scales(numSamples);
-  pxr::VtArray<int64_t> indices(numSamples);
-  pxr::VtArray<int> protoIndices(numSamples);
-  pxr::VtArray<pxr::GfQuath> rotations(numSamples);
-  pxr::VtArray<pxr::GfVec3f> colors(numSamples);
-
-  for (size_t sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
-    points[sampleIdx] = samples[sampleIdx].GetPosition(mesh->GetPositionsCPtr());
-    scales[sampleIdx] = pxr::GfVec3f(0.2);
-    protoIndices[sampleIdx] = 0;
-    indices[sampleIdx] = sampleIdx;
-    rotations[sampleIdx] = pxr::GfQuath::GetIdentity();
-    colors[sampleIdx] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  }
-
-  pxr::UsdGeomPointInstancer instancer =
-    pxr::UsdGeomPointInstancer::Define(stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("sampler_instancer")));
-
-  pxr::UsdGeomCube proto =
-    pxr::UsdGeomCube::Define(stage,
-      instancer.GetPath().AppendChild(pxr::TfToken("proto_instance")));
-  proto.CreateSizeAttr().Set(1.0);
-
-  instancer.CreatePositionsAttr().Set(points);
-  instancer.CreateProtoIndicesAttr().Set(protoIndices);
-  instancer.CreateScalesAttr().Set(scales);
-  instancer.CreateIdsAttr().Set(indices);
-  instancer.CreateOrientationsAttr().Set(rotations);
-  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
-  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
-  pxr::UsdGeomPrimvar colorPrimvar =
-    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
-  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
-  colorPrimvar.SetElementSize(1);
-  colorPrimvar.Set(colors);
-
-
-}
-
-static void
-_SetupHairs(pxr::UsdStageRefPtr& stage, Geometry* geometry)
-{
-  if (geometry->GetType() != Geometry::MESH)return;
-  Mesh* mesh = (Mesh*)geometry;
-
-  pxr::VtArray<Sampler::Sample> samples;
-  pxr::VtArray<int> triangles(mesh->GetNumTriangles() * 3);
-  for (auto& triangle : mesh->GetTriangles()) {
-    triangles[triangle.id * 3 + 0] = triangle.vertices[0];
-    triangles[triangle.id * 3 + 1] = triangle.vertices[1];
-    triangles[triangle.id * 3 + 2] = triangle.vertices[2];
-  }
-  Sampler::PoissonSampling(0.2f, 1000000, mesh->GetPositions(), mesh->GetNormals(), triangles, samples);
-
-  size_t N = 32; // num cvs per curve
-  size_t numSamples = samples.size();
-  pxr::VtArray<pxr::GfVec3f> points(numSamples * N);
-  pxr::VtArray<pxr::GfVec3f> scales(numSamples * N);
-  pxr::VtArray<float> widths(numSamples * N);
-  pxr::VtArray<int> curveVertexCount(numSamples);
-
-  for (size_t sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
-    const pxr::GfVec3f& origin = samples[sampleIdx].GetPosition(mesh->GetPositionsCPtr());
-    const pxr::GfVec3f& normal = samples[sampleIdx].GetNormal(mesh->GetNormalsCPtr());
-    curveVertexCount[sampleIdx] = N;
-    for (int n = 0; n < N; ++n) {
-      const float t = (float)n / (float)N;
-      points[sampleIdx * N + n] = origin + normal * 0.1f * n + pxr::GfVec3f(RANDOM_LO_HI(-0.5,0.5)) * t;
-      scales[sampleIdx * N + n] = pxr::GfVec3f(RANDOM_LO_HI(0.1,0.2));
-      widths[sampleIdx * N + n] = RANDOM_LO_HI(0.1, 0.2);
-    }
-  }
-
-  pxr::UsdGeomBasisCurves curve =
-    pxr::UsdGeomBasisCurves::Define(stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("hair_curve")));
-
-  curve.CreatePointsAttr().Set(points);
-  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->constant);
-  curve.CreateWidthsAttr().Set(widths);
-  curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
-
-  pxr::UsdGeomPrimvar crvColorPrimvar = curve.CreateDisplayColorPrimvar();
-  crvColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
-  crvColorPrimvar.SetElementSize(1);
-  //crvColorPrimvar.Set(colors);
-
-  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
-
-
-}
-
-static void
-_SetupGroom(pxr::UsdStageRefPtr& stage)
-{
-
-  size_t N = 32; // num cvs per curve
-  size_t numCurves = 16;
-  pxr::VtArray<pxr::GfVec3f> points(numCurves * N);
-  pxr::VtArray<float> widths(numCurves * N);
-  pxr::VtArray<int> curveVertexCount(numCurves);
-
-  for (size_t curveIdx = 0; curveIdx < numCurves; ++curveIdx) {
-    pxr::GfVec3f origin(curveIdx, 0, 0);
-    pxr::GfVec3f normal(0, 1, 0);
-    curveVertexCount[curveIdx] = N;
-    for (int n = 0; n < N; ++n) {
-      const float t = (float)n / (float)N;
-      points[curveIdx * N + n] = origin + normal * 0.1f * n + pxr::GfVec3f(RANDOM_LO_HI(-0.5,0.5)) * t;
-      widths[curveIdx * N + n] = RANDOM_LO_HI(0.1, 0.2);
-    }
-  }
-
-  pxr::UsdGeomBasisCurves curve =
-    pxr::UsdGeomBasisCurves::Define(stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("hair_curve")));
-
-  curve.CreatePointsAttr().Set(points);
-  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->constant);
-  curve.CreateWidthsAttr().Set(widths);
-  curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
-
-  pxr::UsdGeomPrimvar crvColorPrimvar = curve.CreateDisplayColorPrimvar();
-  crvColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
-  crvColorPrimvar.SetElementSize(1);
-  //crvColorPrimvar.Set(colors);
-
-  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
-
-
 }
 
 static void
@@ -381,7 +122,6 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
 }
 
-
 PBDSolver::PBDSolver() 
   : _gravity(0,-1,0)
   , _timeStep(0.05)
@@ -414,9 +154,6 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
 
-  _SetupGroom(stage);
-  //_SetupFlip(stage);
-  return;
   size_t numRays = 256;
   std::vector<pxr::GfRay> rays(numRays);
   for (size_t r = 0; r < numRays; ++r) {
@@ -426,13 +163,9 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 
   std::vector<pxr::GfVec3f> result;
 
-  _SetupRays(stage, rays);
 
   _colliders = colliders;
-
-  for (auto& collider : colliders) {
-    //_SetupHairs(stage, collider);
-  }
+  std::cout << "num colliders : " << colliders.size() << std::endl;
 
   std::cout << "### build bvh (mortom) : " << std::endl;
   uint64_t T = CurrentTime();
@@ -445,8 +178,10 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
     double minDistance;
     Hit hit;
     const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
+    std::cout << "positions : " << points << std::endl;
     if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
-      result.push_back(hit.GetPosition(colliders[0]));
+      std::cout << "hit something..." << std::endl;
+      result.push_back(hit.GetPosition(colliders[hit.GetGeometryIndex()]));
     }
   }
   std::cout << "   hit time (" << numRays << " rays) : " << ((CurrentTime() - T) * 1e-9) << std::endl;

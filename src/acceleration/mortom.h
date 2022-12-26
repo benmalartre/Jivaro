@@ -26,6 +26,16 @@ uint64_t Encode3D(const pxr::GfVec3i& p);
 // DECODING
 pxr::GfVec2i Decode2D(uint32_t code);
 pxr::GfVec3i Decode3D(uint64_t code);
+
+struct Mortom {
+  uint64_t  code;
+  void*     data;
+
+  bool operator <(const Mortom& other) const {
+    return code < other.code;
+  }
+};
+
  
 JVR_NAMESPACE_CLOSE_SCOPE
 

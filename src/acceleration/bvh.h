@@ -15,15 +15,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
-struct Mortom {
-  uint64_t  code;
-  void*     cell;
-
-  bool operator <(const Mortom& other) const {
-    return code < other.code;
-  }
-};
-
 class BVH : public Intersector
 {
 public:
@@ -32,6 +23,7 @@ public:
   public:
     enum Type {
       ROOT,
+      GEOM,
       BRANCH,
       LEAF
     };
@@ -51,7 +43,9 @@ public:
 
     bool IsLeaf() const;
     bool IsRoot() const;
+    bool IsGeom() const;
     Cell* GetRoot();
+    Cell* GetGeom();
 
     void SetLeft(Cell* cell) { _left = cell; };
     void SetRight(Cell* cell) { _right = cell; };
@@ -78,13 +72,12 @@ public:
     void _FinishSort(std::vector<Mortom>& cells);
     Cell* _RecurseSortCellsByPair(std::vector<Mortom>& mortoms, int first, int last);
     void _SortTrianglesByPair(std::vector<Mortom>& mortoms, Geometry* geometry);
-    
 
   private:
-    Cell* _parent;
-    Cell* _left;
-    Cell* _right;
-    void* _data;
+    Cell*     _parent;
+    Cell*     _left;
+    Cell*     _right;
+    void*     _data;
     uint8_t   _type;
   };
 
@@ -105,7 +98,6 @@ public:
   }
 
   Cell* GetRoot() { return &_root; };
-  void SetRoot(BVH::Cell*);
 
   
   virtual void Init(const std::vector<Geometry*>& geometries) override;
@@ -116,7 +108,7 @@ public:
     double maxDistance) const override;
 
 private:
-  Cell  _root;
+  Cell                        _root;
 
 }; 
 

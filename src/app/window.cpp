@@ -493,8 +493,6 @@ Window::Draw(PopupUI* popup)
   glBindVertexArray(_vao);
 
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
-  //glClearColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f);
-  //glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
