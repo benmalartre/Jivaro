@@ -46,15 +46,14 @@ Window::Window(bool fullscreen, const std::string& name) :
   glfwWindowHint(GLFW_REFRESH_RATE,mode->refreshRate);
   
   //glfwWindowHint(GLFW_DECORATED, false);
-
+  
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 #ifdef __APPLE__
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 #endif
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
@@ -81,11 +80,10 @@ Window::Window(int width, int height, const std::string& name):
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 #ifdef __APPLE__
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 #endif
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
@@ -111,11 +109,10 @@ Window::Window(int x, int y, int width, int height,
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
 #ifdef __APPLE__
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 #endif
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
@@ -481,6 +478,9 @@ Window::Draw()
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glBindVertexArray(0);
+
+  glFlush();
+  glFinish();
 }
 
 // draw
@@ -491,10 +491,16 @@ Window::Draw(PopupUI* popup)
   if (!_valid || _idle)return;
   SetGLContext();
   glBindVertexArray(_vao);
+
+  glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
+  //glClearColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f);
+  //glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+
 
   if (!popup->IsSync()) {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -504,8 +510,7 @@ Window::Draw(PopupUI* popup)
     drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
     ImGui::End();
-  }
-  else {
+  } else {
     for (Engine* engine : GetApplication()->GetEngines()) {
       engine->SetHighlightSelection(false);
       engine->SetDirty(true);
@@ -514,13 +519,15 @@ Window::Draw(PopupUI* popup)
   }
 
   popup->Draw();
-
+  
   // render the imgui frame
   ImGui::Render();
 
-  glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
+  
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glBindVertexArray(0);
+  glFlush();
+  glFinish();
 }
 
 // setup imgui
@@ -623,7 +630,7 @@ bool Window::Update()
   }
   SetGLContext();
   Draw();
-  glfwSwapBuffers(_window);
+  
   return true;
 }
 

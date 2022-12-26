@@ -201,7 +201,7 @@ ColorPopupUI::Draw()
   ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
   ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
 
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   drawList->AddRectFilled(
     ImVec2(_x, _y),
     ImVec2(_x + _width, _y + _height),
@@ -355,7 +355,10 @@ NodePopupUI::Keyboard(int key, int scancode, int action, int mods)
       if (_i < 0) _i = _filteredNodes.size() - 1;
       break;
     case GLFW_KEY_ENTER:
-      const std::string name = _filteredNodes[_i];
+      if(_filteredNodes.size()){
+        const std::string name = _filteredNodes[_i];
+        std::cout << "NodePopupUI result : " << name << std::endl;
+      }
       _done = true;
       break;
     }
@@ -387,12 +390,12 @@ NodePopupUI::_FilterNodes()
 bool
 NodePopupUI::Draw()
 {
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
 
-
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   const ImGuiStyle& style = ImGui::GetStyle();
   
   drawList->AddRectFilled(
@@ -411,16 +414,16 @@ NodePopupUI::Draw()
     std::cout << node.c_str() << std::endl;
     if (idx == _i) {
       ImGui::PushFont(GetWindow()->GetFont(1));
-      ImGui::TextColored(ImVec4(1.0,1.0,1.0,1.0), node.c_str());
+      ImGui::TextColored(ImVec4(1.0,1.0,1.0,1.0), "%s", node.c_str());
     } else {
       ImGui::PushFont(GetWindow()->GetFont(1));
-      ImGui::TextColored(ImVec4(0.75,0.75,0.75,1.0), node.c_str());
+      ImGui::TextColored(ImVec4(0.75,0.75,0.75,1.0), "%s", node.c_str());
     }
     ImGui::PopFont();
     idx++;
   }
 
-  ImGui::TextColored(ImVec4(0, 0, 1, 1), _filter);
+  ImGui::TextColored(ImVec4(0, 0, 1, 1), "%s", _filter);
   ImGui::SameLine();
 
   if (ImGui::Button("OK", ImVec2(GetWidth() / 3, 32))) {

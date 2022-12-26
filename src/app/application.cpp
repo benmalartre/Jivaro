@@ -378,14 +378,14 @@ Application::Init()
  
   _mainWindow->CollectLeaves();
  
-  Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
+  /*Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   AddWindow(childWindow);
   
   ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
   
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
-  childWindow->CollectLeaves();
+  childWindow->CollectLeaves();*/
 
 }
 
