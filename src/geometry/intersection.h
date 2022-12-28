@@ -46,7 +46,7 @@ public:
   Hit() 
     : _geomId(-1)
     , _elemId(-1)
-    , _coords(pxr::GfVec4f(0.f)) {};
+    , _coords(pxr::GfVec4f(0.f, 0.f, 0.f, FLT_MAX)) {};
 
   Hit(const Hit& other)
     : _geomId(other._geomId)

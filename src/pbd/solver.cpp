@@ -165,7 +165,6 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 
 
   _colliders = colliders;
-  std::cout << "num colliders : " << colliders.size() << std::endl;
 
   std::cout << "### build bvh (mortom) : " << std::endl;
   uint64_t T = CurrentTime();
@@ -175,13 +174,10 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 
   T = CurrentTime();
   for (auto& ray : rays) {
-    double minDistance;
+    double minDistance = DBL_MAX;
     Hit hit;
     const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
-    std::cout << "positions : " << points << std::endl;
-    if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
-      std::cout << "hit something..." << std::endl;
-      std::cout << "geometry index : " << hit.GetGeometryIndex() << std::endl;
+    if (bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
       result.push_back(hit.GetPosition(colliders[hit.GetGeometryIndex()]));
     }
   }

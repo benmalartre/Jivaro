@@ -245,15 +245,15 @@ void
 Window::Resize(unsigned width, unsigned height)
 {
   CollectLeaves(_mainView);
-  if (width == _width && height == _height && _pixels)
-    return;
+  
+  _mainView->Resize(0, 0, _width, _height, true);
+  _splitter->Resize(_width, _height);
+  _splitter->RecurseBuildMap(_mainView);
+
   _width = width;
   _height = height;
   if(_width <= 0 || _height <= 0)_valid = false;
   else _valid = true;
-  _mainView->Resize(0, 0, _width, _height, true);
-  _splitter->Resize(_width, _height);
-  _splitter->RecurseBuildMap(_mainView);
 
   if (_fbo) glDeleteFramebuffers(1, &_fbo);
   if (_tex) glDeleteTextures(1, &_tex);
@@ -351,9 +351,48 @@ Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPi
   
   view->SetPerc(perc);
   view->ClearFlag(View::LEAF);
-  CollectLeaves(_mainView);
-  BuildSplittersMap();
+  Resize(_width, _height);
   return view;
+}
+
+// remove view
+//----------------------------------------------------------------------------
+void 
+Window::RemoveView(View* view)
+{
+  if(_activeView == view)_activeView = NULL;
+  if(_hoveredView == view)_hoveredView = NULL;
+  View* parent = view->GetParent();
+  View* sibling = NULL;
+  if(parent->GetLeft() == view) {
+    sibling = parent->GetRight();
+  } else if(parent->GetRight() == view) {
+    sibling = parent->GetLeft();
+  }
+
+  if(sibling->GetFlag(View::LEAF)) {
+    parent->TransferUIs(sibling);
+    parent->SetFlag(View::LEAF);
+    parent->SetPerc(1.f);
+  } else {
+    View* left = sibling->GetLeft();
+    View* right = sibling->GetRight();
+    left->SetParent(parent);
+    right->SetParent(parent);
+    parent->SetLeft(left);
+    parent->SetRight(right);
+    parent->SetPerc(sibling->GetPerc());
+    parent->SetFlags(sibling->GetFlags());
+    sibling->SetLeft(NULL);
+    sibling->SetRight(NULL);
+  }
+
+  delete view;
+  delete sibling;
+  
+  Resize(_width, _height);
+  ForceRedraw();
+  _mainView->SetDirty();
 }
 
 // collect leaves views (contains actual ui elements)

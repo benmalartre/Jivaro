@@ -194,6 +194,13 @@ View::TransferUIs(View* source)
   _uis = std::move(source->_uis);
   for (auto& ui : _uis)ui->SetParent(this);
   source->_uis.clear();
+  if(_uis.size()) {
+    _currentIdx = 0;
+    _current = _uis[0];
+  } else {
+    _currentIdx = -1;
+    _current = NULL;
+  }
 }
 
 bool

@@ -119,6 +119,7 @@ public:
   SplitterUI* GetSplitter(){return _splitter;};
   View* SplitView(View* view, double perc = 0.5, bool horizontal=true, 
     int fixed=0, int numPixels=-1);
+  void RemoveView(View* view);
   View* GetMainView(){return _mainView;};
   void SetActiveView(View* view);
   void SetHoveredView(View* view);

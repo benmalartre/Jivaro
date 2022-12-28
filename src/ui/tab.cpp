@@ -161,18 +161,8 @@ ViewTabUI::Draw()
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_TRASH, BUTTON_MINI_SIZE)) {
-      /*
-      View* parent = _parent->GetParent();
-      View* other = _parent->GetSibling();
-      ViewTabUI* head = _parent->GetHead();
-      BaseUI* content = other->GetContent();
-      parent->SetHead(head);
-      parent->DeleteChildren();
-      //parent->SetContent(content);
-      _parent->GetWindow()->ForceRedraw();
-      */
-      std::cout << "not implemented yet..." << std::endl;
-
+      Window* window = _parent->GetWindow();
+      window->RemoveView(_parent);
     };
     ImGui::SameLine();
     ImGui::PopStyleVar();

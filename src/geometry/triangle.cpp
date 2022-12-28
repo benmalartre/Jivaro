@@ -310,14 +310,14 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
       points[vertices[0]],
       points[vertices[1]],
       points[vertices[2]],
-      &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
-      //if (distance < *minDistance) {
-        if(minDistance) *minDistance = distance;
+      &distance, &baryCoords, &frontFacing, maxDistance)) {
+      if (distance < *minDistance) {
+        *minDistance = distance;
         hit->SetElementIndex(left->id);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
         hit->SetT(distance);
         return true;
-      //}
+      }
     }
   } 
   if (right) {
@@ -326,14 +326,14 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
       points[vertices[0]],
       points[vertices[1]],
       points[vertices[2]],
-      &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
-      //if (distance < *minDistance) {
-      if(minDistance) *minDistance = distance;
+      &distance, &baryCoords, &frontFacing, maxDistance)) {
+      if (distance < *minDistance) {
+        *minDistance = distance;
         hit->SetElementIndex(right->id);
         hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
         hit->SetT(distance);
         return true;
-      //}
+      }
     }
   }
   return false;

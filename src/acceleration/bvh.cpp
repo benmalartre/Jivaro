@@ -242,6 +242,7 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
 {
   double enterDistance, exitDistance;
   if (ray.Intersect(*this, &enterDistance, &exitDistance)) {
+    if(enterDistance > maxDistance) return false;
     if (IsLeaf()) {
       Component* component = (Component*)_data;
       return component->Raycast(points, ray, hit, maxDistance, minDistance);
@@ -252,8 +253,8 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
         hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
       }
       Hit leftHit(*hit), rightHit(*hit);
-      if (_left)_left->Raycast(points, ray, &leftHit);
-      if (_right)_right->Raycast(points, ray, &rightHit);
+      if (_left)_left->Raycast(points, ray, &leftHit, maxDistance, minDistance);
+      if (_right)_right->Raycast(points, ray, &rightHit, maxDistance, minDistance);
 
       if (leftHit.HasHit() && rightHit.HasHit()) {
         if (leftHit.GetT() < rightHit.GetT()) {

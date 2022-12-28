@@ -67,6 +67,9 @@ public:
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
     const int width, const int height);
 
+  void SetLeft(View* view){_left = view;};
+  void SetRight(View* view){_right = view;};
+  void SetParent(View* view){_parent = view;};
   inline View* GetLeft(){return _left;};
   inline View* GetRight(){return _right;};
   inline View* GetParent(){return _parent;};
@@ -115,6 +118,8 @@ public:
   inline bool GetFlag(short flag) const { return BITMASK_CHECK(_flags, flag); };
   inline void SetFlag(short flag) { BITMASK_SET(_flags, flag); };
   inline void ClearFlag(short flag) { BITMASK_CLEAR(_flags, flag); };
+  unsigned GetFlags(){ return _flags;};
+  void SetFlags(unsigned flags){_flags = flags;};
 
   void SetClean();
   void SetDirty();
