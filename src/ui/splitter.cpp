@@ -20,8 +20,8 @@ ImGuiWindowFlags SplitterUI::_flags =
   ImGuiWindowFlags_NoTitleBar |
   ImGuiWindowFlags_NoScrollbar;
 
-SplitterUI::SplitterUI()
-  : BaseUI(NULL, UIType::SPLITTER)
+SplitterUI::SplitterUI(View* parent)
+  : BaseUI(parent, UIType::SPLITTER)
   , _hovered(NULL)
   , _pixels(NULL)
   , _valid(false)
@@ -126,8 +126,13 @@ SplitterUI::GetViewByIndex(int index)
 void 
 SplitterUI::Resize(int width, int height)
 {
+  std::cout << "splitter resize .." << std::endl;
   BuildMap(width, height);
+  std::cout << "splitter map build" << std::endl;
+  std::cout << "window : " << GetWindow() << std::endl;
+  std::cout << "view : " << GetWindow()->GetMainView() << std::endl;
   RecurseBuildMap(GetWindow()->GetMainView());
+  std::cout << "splitter resized" << std::endl;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

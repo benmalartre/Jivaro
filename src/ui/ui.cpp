@@ -84,10 +84,16 @@ void BaseUI::DiscardEventsIfMouseInsideBox(const pxr::GfVec2f& min, const pxr::G
 }
 
 // parent window
-Window* BaseUI::GetWindow(){return _parent->GetWindow();};
+Window* 
+BaseUI::GetWindow()
+{
+  return _parent->GetWindow();
+};
 
 // parent window height
-int BaseUI::GetWindowHeight(){
+int 
+BaseUI::GetWindowHeight()
+{
   return _parent->GetWindow()->GetHeight();
 };
 //void BaseUI::SetWindowContext(){_parent->GetWindow()->SetContext();};

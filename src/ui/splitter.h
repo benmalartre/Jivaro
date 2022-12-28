@@ -24,7 +24,7 @@ public:
     LEFT = 8
   };
  
-  SplitterUI();
+  SplitterUI(View* parent);
   ~SplitterUI();
 
   int* GetPixels(){return _pixels;};

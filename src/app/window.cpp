@@ -161,7 +161,7 @@ Window::Init()
   // create main splittable view
   _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
   _mainView->SetWindow(this);
-  _splitter = new SplitterUI();
+  _splitter = new SplitterUI(_mainView);
     
   Resize(_width, _height);
 
