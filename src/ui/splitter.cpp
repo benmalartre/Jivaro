@@ -127,6 +127,7 @@ void
 SplitterUI::Resize(int width, int height)
 {
   BuildMap(width, height);
+  RecurseBuildMap(GetWindow()->GetMainView());
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

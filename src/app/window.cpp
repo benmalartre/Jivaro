@@ -248,7 +248,6 @@ Window::Resize(unsigned width, unsigned height)
   
   _mainView->Resize(0, 0, _width, _height, true);
   _splitter->Resize(_width, _height);
-  _splitter->RecurseBuildMap(_mainView);
 
   _width = width;
   _height = height;
@@ -447,15 +446,6 @@ Window::DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& 
   }
 }
 
-// build split map
-//----------------------------------------------------------------------------
-void 
-Window::BuildSplittersMap()
-{
-  _splitter->BuildMap(_width, _height);
-  _splitter->RecurseBuildMap(_mainView);
-}
-
 // get context version infos
 //----------------------------------------------------------------------------
 void 
@@ -643,7 +633,6 @@ void Window::DragSplitter(int x, int y)
     _activeView->GetPercFromMousePosition(x, y);
     _mainView->Resize(0, 0, _width, _height, false);
     _splitter->Resize(_width, _height);
-    _splitter->RecurseBuildMap(_mainView);
   }
 }
 
