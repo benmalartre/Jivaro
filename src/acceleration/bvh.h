@@ -50,8 +50,8 @@ public:
 
     void SetData(void* data){_data = data;};
      void* GetData() const {return _data;};
-    void SetLeft(Cell* cell) { _left = cell; };
-    void SetRight(Cell* cell) { _right = cell; };
+    void SetLeft(Cell* cell) { _left = cell; _left->_parent = this;};
+    void SetRight(Cell* cell) { _right = cell; _right->_parent = this;};
     Cell* GetLeft() { return _left; };
     Cell* GetRight() { return _right; };
 

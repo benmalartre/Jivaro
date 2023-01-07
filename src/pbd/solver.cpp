@@ -124,7 +124,9 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 
 PBDSolver::PBDSolver() 
   : _gravity(0,-1,0)
-  , _timeStep(0.05)
+  , _timeStep(1.f / 60.f)
+  , _substeps(15)
+  , _paused(true)
 {
 }
 
@@ -240,7 +242,7 @@ void PBDSolver::SatisfyConstraints()
     }
     // Constrain one particle of the cloth to origo
     _system.GetPosition(0) =
-      _system.GetInitPositions()[0] + 
+      _system.GetRestPositions()[0] + 
         pxr::GfVec3f(0, sin(time.GetActiveTime()) * 5.f + 1.f, 0.f);
 
     for (int i = 0; i < _system.GetNumParticles(); ++i) {

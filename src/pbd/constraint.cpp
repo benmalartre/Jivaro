@@ -14,10 +14,10 @@ bool PBDDistanceConstraint::Init(PBDSolver* solver,
   _bodies[0] = p1;
   _bodies[1] = p2;
   PBDParticle& system = solver->GetSystem();
-  const pxr::VtArray<pxr::GfVec3f>& initPositions = system.GetInitPositions();
+  const pxr::VtArray<pxr::GfVec3f>& restPositions = system.GetRestPositions();
 
-  const pxr::GfVec3f& x1_0 = initPositions[p1];
-  const pxr::GfVec3f& x2_0 = initPositions[p2];
+  const pxr::GfVec3f& x1_0 = restPositions[p1];
+  const pxr::GfVec3f& x2_0 = restPositions[p2];
 
   _restLength = (x2_0 - x1_0).GetLength();
 

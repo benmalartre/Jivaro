@@ -28,6 +28,8 @@ private:
     PBDParticle                 _system;
     pxr::GfVec3f                _gravity;
     float                       _timeStep;
+    size_t                      _substeps;
+    bool                        _paused;		
     std::vector<PBDConstraint*> _constraints;
     std::vector<Geometry*>      _colliders;
 };
