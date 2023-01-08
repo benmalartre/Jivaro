@@ -30,6 +30,7 @@ static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
   lhs->SetMax(rhs->GetMax());
   rhs->SetLeft(NULL);
   rhs->SetRight(NULL);
+  lhs->SetType(rhs->GetType());
   delete rhs;
 }
 
@@ -54,9 +55,7 @@ BVH::Cell::Cell(BVH::Cell* parent, Geometry* geometry)
     const pxr::GfRange3d& range = geometry->GetBoundingBox().GetRange();
     SetMin(range.GetMin());
     SetMax(range.GetMax());
-    std::cout << "init cell from geometry" << std::endl;
     Init(geometry);
-    std::cout << "done" << std::endl;
     _data = (void*)geometry;
   }
 }
@@ -250,7 +249,10 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     }
     else {
       if(IsGeom()) {
+        std::cout << "we must pass here !!!" << std::endl;
+        
         const BVH* intersector = GetIntersector();
+        std::cout << "geometry index : " << intersector->GetGeometryIndex((Geometry*)_data) << std::endl;
         hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
       }
       Hit leftHit(*hit), rightHit(*hit);
@@ -384,9 +386,7 @@ BVH::Cell::_RecurseSortCellsByPair(
 Mortom BVH::Cell::SortCellsByPair(
   std::vector<Mortom>& cells)
 {
-
   size_t numCells = cells.size();
-
   std::vector<Mortom> mortoms(numCells);
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     BVH::Cell* cell = (BVH::Cell*)cells[cellIdx].data;
@@ -402,15 +402,12 @@ Mortom BVH::Cell::SortCellsByPair(
 void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
 {
   size_t numColliders = geometries.size();
-  std::cout << "num colliders " << numColliders << std::endl;
   pxr::GfRange3d accum = geometries[0]->GetBoundingBox().GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
     accum.UnionWith(geometries[i]->GetBoundingBox().GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
-
-  std::cout << accum << std::endl;
 
   std::vector<Mortom> cells;
   cells.reserve(numColliders);
@@ -419,10 +416,8 @@ void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
     BVH::Cell* bvh = new BVH::Cell(this, geom);
     cells.push_back({ BVH::ComputeCode(bvh, bvh->GetMidpoint()), bvh });
   }
-  std::cout << "build cells " << std::endl;
   Mortom result = SortCellsByPair(cells);
   _SwapCells(this, (BVH::Cell*)result.data);
-  std::cout << "swap cells" << std::endl;
 
   cells.clear();
 }
@@ -448,7 +443,6 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 {
   _geometries = geometries;
   size_t numColliders = _geometries.size();
-  std::cout << "BVH : " << numColliders << std::endl;
   pxr::GfRange3d accum = _geometries[0]->GetBoundingBox().GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
     accum.UnionWith(_geometries[i]->GetBoundingBox().GetRange());
@@ -456,19 +450,15 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
-  std::cout << accum << std::endl;
   std::vector<Mortom> cells;
   cells.reserve(numColliders);
 
-  std::cout << "root : " << &_root << std::endl;
   for (Geometry* geom : _geometries) {
     BVH::Cell* bvh = new BVH::Cell(&_root, geom);
     cells.push_back({ BVH::ComputeCode(&_root, bvh->GetMidpoint()), bvh });
   }
-  std::cout << "cells build" << std::endl;
 
   Mortom mortom = _root.SortCellsByPair(cells);
-  std::cout << "sorted mortoms " << std::endl;
   _SwapCells(&_root, (BVH::Cell*)mortom.data);
   _root.SetData((void*)this);
   cells.clear();
@@ -480,9 +470,25 @@ BVH::Update(const std::vector<Geometry*>& geometries)
 
 }
 
+static void _RecursePrintTree(BVH::Cell* cell, size_t depth)
+{
+  for (size_t x = 0; x < depth; ++x)std::cout << "  ";
+  if (cell->IsRoot()) std::cout << "ROOT";
+  else if (cell->IsLeaf()) std::cout << "LEAF";
+  else if (cell->IsGeom()) std::cout << "GEOM";
+  else std::cout << "BRANCH";
+
+  std::cout << std::endl;
+
+  if (cell->GetLeft())_RecursePrintTree(cell->GetLeft(), depth + 1);
+  if (cell->GetRight())_RecursePrintTree(cell->GetRight(), depth + 1);
+
+}
+
 bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
 {
+  _RecursePrintTree((BVH::Cell*)&_root, 0);
   return _root.Raycast(points, ray, hit, maxDistance, minDistance);
 };
 
