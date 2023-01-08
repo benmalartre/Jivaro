@@ -54,6 +54,7 @@ add_executable(${TARGET}
   #embree/device.cpp
   geometry/utils.cpp
   geometry/sampler.cpp
+  geometry/voxelize.cpp
   geometry/shape.cpp
   geometry/intersection.cpp
   geometry/point.cpp
@@ -64,6 +65,7 @@ add_executable(${TARGET}
   geometry/mesh.cpp
   geometry/curve.cpp
   geometry/stroke.cpp
+  geometry/perlin.cpp
   geometry/voronoi.cpp
   #geometry/vdb.cpp
   acceleration/mortom.cpp

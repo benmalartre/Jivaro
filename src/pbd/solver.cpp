@@ -124,7 +124,9 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 
 PBDSolver::PBDSolver() 
   : _gravity(0,-1,0)
-  , _timeStep(0.05)
+  , _timeStep(1.f / 60.f)
+  , _substeps(15)
+  , _paused(true)
 {
 }
 
@@ -167,6 +169,9 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   _colliders = colliders;
 
   std::cout << "### build bvh (mortom) : " << std::endl;
+  for(auto& collider: _colliders) {
+    std::cout << " collider : " << collider << std::endl;
+  }
   uint64_t T = CurrentTime();
   BVH bvh;
   bvh.Init(_colliders);
@@ -178,6 +183,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
     Hit hit;
     const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
     if (bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
+      std::cout << "geometry index : " << hit.GetGeometryIndex() << std::endl;
       result.push_back(hit.GetPosition(colliders[hit.GetGeometryIndex()]));
     }
   }
@@ -240,7 +246,7 @@ void PBDSolver::SatisfyConstraints()
     }
     // Constrain one particle of the cloth to origo
     _system.GetPosition(0) =
-      _system.GetInitPositions()[0] + 
+      _system.GetRestPositions()[0] + 
         pxr::GfVec3f(0, sin(time.GetActiveTime()) * 5.f + 1.f, 0.f);
 
     for (int i = 0; i < _system.GetNumParticles(); ++i) {

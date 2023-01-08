@@ -49,9 +49,12 @@ public:
     const BVH* GetIntersector() const;
 
     void SetData(void* data){_data = data;};
-     void* GetData() const {return _data;};
+    void* GetData() const {return _data;};
     void SetLeft(Cell* cell) { _left = cell; };
     void SetRight(Cell* cell) { _right = cell; };
+    void SetParent(Cell* cell) { _parent = cell; };
+    void SetType(uint8_t type) { _type = type; };
+    uint8_t GetType() { return _type; };
     Cell* GetLeft() { return _left; };
     Cell* GetRight() { return _right; };
 

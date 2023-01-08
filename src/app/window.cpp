@@ -374,12 +374,8 @@ Window::RemoveView(View* view)
     parent->SetFlag(View::LEAF);
     parent->SetPerc(1.f);
   } else {
-    View* left = sibling->GetLeft();
-    View* right = sibling->GetRight();
-    left->SetParent(parent);
-    right->SetParent(parent);
-    parent->SetLeft(left);
-    parent->SetRight(right);
+    parent->SetLeft(sibling->GetLeft());
+    parent->SetRight(sibling->GetRight());
     parent->SetPerc(sibling->GetPerc());
     parent->SetFlags(sibling->GetFlags());
     sibling->SetLeft(NULL);

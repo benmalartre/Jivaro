@@ -216,7 +216,6 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
 
   float min,max,p0,p1,p2,rad,fex,fey,fez;
     
-  // This is the fastest branch on Sun 
   // move everything so that the boxcenter is in (0,0,0)
   pxr::GfVec3f v0 = points[vertices[0]] - center;
   pxr::GfVec3f v1 = points[vertices[1]] - center;
@@ -267,8 +266,7 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
   // compute plane equation of triangle: normal*x+d=0
   pxr::GfVec3f normal = e0 ^ e1;
   
-  // -NJMP- (line removed here)
-  if(!PlaneBoxTest(normal, v0, boxhalfsize)) return false;	// -NJMP-
+  if(!PlaneBoxTest(normal, v0, boxhalfsize)) return false;
   
   return true;   // box and triangle overlaps
 }
