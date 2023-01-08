@@ -67,7 +67,6 @@ public:
     
 
     void Init(Geometry* geometry);
-    void Init(const std::vector<Geometry*>& geometries);
 
     bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
       double maxDistance = FLT_MAX, double* minDistance = NULL) const;
