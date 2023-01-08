@@ -42,6 +42,7 @@ public:
     return _colorsInterpolation;
   };
 
+  uint32_t GetNumCurves() const { return _numCurves; };
   uint32_t GetNumCVs(uint32_t curveIndex)const;
   uint32_t GetNumSegments(uint32_t curveIndex)const;
 
@@ -62,7 +63,7 @@ public:
   bool Closest(const pxr::GfVec3f& point, 
     CurveLocation& location, float maxDistance);
 
-  // query 3d position on geometry
+  // query 3d position on geometry (unaccelarated)
   bool Raycast(const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Hit* hit,

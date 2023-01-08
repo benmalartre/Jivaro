@@ -183,7 +183,6 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
     Hit hit;
     const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
     if (bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
-      std::cout << "geometry index : " << hit.GetGeometryIndex() << std::endl;
       result.push_back(hit.GetPosition(colliders[hit.GetGeometryIndex()]));
     }
   }
@@ -232,6 +231,12 @@ void PBDSolver::AddConstraints(Geometry* geom, size_t offset)
       PBDDistanceConstraint* constraint = new PBDDistanceConstraint();
       constraint->Init(this, edge->vertex + offset, edge->next->vertex + offset, 0.5f);
       _constraints.push_back(constraint);
+    }
+  } else if (geom->GetType() == Geometry::CURVE) {
+    Curve* curve = (Curve*)geom;
+    curve->GetTotalNumSegments();
+    for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
+
     }
   }
 }

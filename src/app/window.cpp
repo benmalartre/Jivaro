@@ -244,13 +244,14 @@ Window::CaptureFramebuffer()
 void 
 Window::Resize(unsigned width, unsigned height)
 {
+  _width = width;
+  _height = height;
+
   CollectLeaves(_mainView);
   
   _mainView->Resize(0, 0, _width, _height, true);
   _splitter->Resize(_width, _height);
 
-  _width = width;
-  _height = height;
   if(_width <= 0 || _height <= 0)_valid = false;
   else _valid = true;
 

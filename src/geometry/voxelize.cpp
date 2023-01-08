@@ -26,7 +26,8 @@ Voxels::Voxels(Geometry* geometry, float radius)
 
 // compute num cells
 //--------------------------------------------------------------------------------
-size_t Voxels::GetNumCells()
+size_t 
+Voxels::GetNumCells()
 {
   return 
     static_cast<size_t>(_resolution[0]) * 
@@ -34,7 +35,10 @@ size_t Voxels::GetNumCells()
     static_cast<size_t>(_resolution[2]);
 }
 
-size_t Voxels::_ComputeFlatIndex(size_t x, size_t y, size_t z)
+// compute index in flat vector
+//--------------------------------------------------------------------------------
+size_t 
+Voxels::_ComputeFlatIndex(size_t x, size_t y, size_t z)
 {
   return z * (size_t)_resolution[0] * (size_t)_resolution[1] + y * (size_t)_resolution[0] + x;
 }
@@ -89,8 +93,7 @@ void Voxels::Trace()
           {
             // march along column setting bits 
             for (uint32_t k = z; k < zend; ++k)
-              _data[_ComputeFlatIndex(x, y, k)] =
-              uint32_t(-1);
+              _data[_ComputeFlatIndex(x, y, k)] = uint32_t(-1);
           }
 
           inside = !inside;
@@ -98,8 +101,16 @@ void Voxels::Trace()
           rayStart += rayDir * (hit.GetT() + eps);
 
         }
-        else
+        else {
+          if (inside) {
+            // march along column setting bits 
+            uint32_t z = uint32_t(floorf((rayStart[2] - minExtents[2]) / delta[2] + 0.5f));
+            for (uint32_t k = z; k < _resolution[2]; ++k)
+              _data[_ComputeFlatIndex(x, y, k)] = uint32_t(-1);
+          }
           break;
+        }
+          
       }
     }
   }
