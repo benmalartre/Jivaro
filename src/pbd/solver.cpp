@@ -169,6 +169,9 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   _colliders = colliders;
 
   std::cout << "### build bvh (mortom) : " << std::endl;
+  for(auto& collider: _colliders) {
+    std::cout << " collider : " << collider << std::endl;
+  }
   uint64_t T = CurrentTime();
   BVH bvh;
   bvh.Init(_colliders);

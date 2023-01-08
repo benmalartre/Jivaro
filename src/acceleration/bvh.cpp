@@ -54,8 +54,9 @@ BVH::Cell::Cell(BVH::Cell* parent, Geometry* geometry)
     const pxr::GfRange3d& range = geometry->GetBoundingBox().GetRange();
     SetMin(range.GetMin());
     SetMax(range.GetMax());
-
+    std::cout << "init cell from geometry" << std::endl;
     Init(geometry);
+    std::cout << "done" << std::endl;
     _data = (void*)geometry;
   }
 }
@@ -401,12 +402,15 @@ Mortom BVH::Cell::SortCellsByPair(
 void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
 {
   size_t numColliders = geometries.size();
+  std::cout << "num colliders " << numColliders << std::endl;
   pxr::GfRange3d accum = geometries[0]->GetBoundingBox().GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
     accum.UnionWith(geometries[i]->GetBoundingBox().GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
+
+  std::cout << accum << std::endl;
 
   std::vector<Mortom> cells;
   cells.reserve(numColliders);
@@ -415,9 +419,10 @@ void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
     BVH::Cell* bvh = new BVH::Cell(this, geom);
     cells.push_back({ BVH::ComputeCode(bvh, bvh->GetMidpoint()), bvh });
   }
-
+  std::cout << "build cells " << std::endl;
   Mortom result = SortCellsByPair(cells);
   _SwapCells(this, (BVH::Cell*)result.data);
+  std::cout << "swap cells" << std::endl;
 
   cells.clear();
 }
@@ -443,6 +448,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 {
   _geometries = geometries;
   size_t numColliders = _geometries.size();
+  std::cout << "BVH : " << numColliders << std::endl;
   pxr::GfRange3d accum = _geometries[0]->GetBoundingBox().GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
     accum.UnionWith(_geometries[i]->GetBoundingBox().GetRange());
@@ -450,15 +456,19 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
+  std::cout << accum << std::endl;
   std::vector<Mortom> cells;
   cells.reserve(numColliders);
 
+  std::cout << "root : " << &_root << std::endl;
   for (Geometry* geom : _geometries) {
     BVH::Cell* bvh = new BVH::Cell(&_root, geom);
     cells.push_back({ BVH::ComputeCode(&_root, bvh->GetMidpoint()), bvh });
   }
+  std::cout << "cells build" << std::endl;
 
   Mortom mortom = _root.SortCellsByPair(cells);
+  std::cout << "sorted mortoms " << std::endl;
   _SwapCells(&_root, (BVH::Cell*)mortom.data);
   _root.SetData((void*)this);
   cells.clear();
