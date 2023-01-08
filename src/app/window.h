@@ -113,7 +113,6 @@ public:
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
-  void BuildSplittersMap();
 
   // views
   SplitterUI* GetSplitter(){return _splitter;};
