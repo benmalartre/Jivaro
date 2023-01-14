@@ -54,7 +54,7 @@ add_executable(${TARGET}
   #embree/device.cpp
   geometry/utils.cpp
   geometry/sampler.cpp
-  geometry/voxelize.cpp
+  geometry/voxels.cpp
   geometry/shape.cpp
   geometry/intersection.cpp
   geometry/point.cpp

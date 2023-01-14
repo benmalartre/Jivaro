@@ -16,7 +16,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 struct PBDGeometry 
 {
-  size_t offset;
+  Geometry*       ptr;
+  size_t          offset;
   pxr::GfMatrix4f matrix;
   pxr::GfMatrix4f invMatrix;
 };
@@ -27,37 +28,33 @@ public:
   PBDParticle();
   ~PBDParticle();
 
-  size_t AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
-  void RemoveGeometry(Geometry* geom);
+  size_t AddGeometry(PBDGeometry* geom);
+  void RemoveGeometry(PBDGeometry* geom);
 
-  void UpdateInput(Geometry* geom, const pxr::VtArray<pxr::GfVec3f>& p, 
-    const pxr::GfMatrix4f& m);
-
-  void Integrate(float step);
-  void AccumulateForces(const pxr::GfVec3f& gravity);
-  void UpdateGeometries();
-  void Reset();
-  size_t GetNumParticles() { return _N; };
+  void Reset(size_t startIdx, size_t endIdx);
+  void Integrate(size_t startIdx, size_t endIdx, float step);
+  void AccumulateForces(size_t startIdx, size_t endIdx, const pxr::GfVec3f& gravity);
+  
+  size_t GetNumParticles() { return _position[0].size(); };
   pxr::GfVec3f& GetPosition(size_t index) { return _position[_flip][index]; };
   const pxr::GfVec3f& GetPosition(size_t index) const { return _position[_flip][index]; };
-  pxr::VtArray<pxr::GfVec3f>& GetPositions() { return _position[_flip]; };
-  const pxr::VtArray<pxr::GfVec3f>& GetPositions() const { return _position[_flip]; };
-  pxr::VtArray<pxr::GfVec3f>& GetPreviousPositions() { return _previous[_flip]; };
-  const pxr::VtArray<pxr::GfVec3f>& GetPreviousPositions() const { return _previous[_flip]; };
-  pxr::VtArray<pxr::GfVec3f>& GetRestPositions() { return _rest; };
-  const pxr::VtArray<pxr::GfVec3f>& GetRestPositions() const { return _rest; };
-  pxr::VtArray<pxr::GfVec3f>& GetInputPositions() { return _input; };
-  const pxr::VtArray<pxr::GfVec3f>& GetInputPositions() const { return _input; };
-  pxr::VtArray<pxr::GfVec3f>& GetForces() { return _force; };
-  const pxr::VtArray<pxr::GfVec3f>& GetForces() const { return _force; };
-  pxr::VtArray<float>& GetMasses() { return _mass; };
-  const pxr::VtArray<float>& GetMasses() const { return _mass; };
+  pxr::GfVec3f* GetPositions() { return &_position[_flip][0]; };
+  const pxr::GfVec3f* GetPositions() const { return &_position[_flip][0]; };
+  pxr::GfVec3f* GetPreviousPositions() { return &_previous[_flip][0]; };
+  const pxr::GfVec3f* GetPreviousPositions() const { return &_previous[_flip][0]; };
+  pxr::GfVec3f* GetRestPositions() { return &_rest[0]; };
+  const pxr::GfVec3f* GetRestPositions() const { return &_rest[0]; };
+  pxr::GfVec3f* GetInputPositions() { return &_input[0]; };
+  const pxr::GfVec3f* GetInputPositions() const { return &_input[0]; };
+  pxr::GfVec3f* GetForces() { return &_force[0]; };
+  const pxr::GfVec3f* GetForces() const { return &_force[0]; };
+  float* GetMasses() { return &_mass[0]; };
+  const float* GetMasses() const { return &_mass[0]; };
 
 private:
-  size_t                              _N;
   bool                                _flip;
   pxr::VtArray<pxr::GfVec3f>          _rest;
-  //pxr::VtArray<pxr::GfVec3f>          _preload;
+  pxr::VtArray<pxr::GfVec3f>          _preload;
   pxr::VtArray<pxr::GfVec3f>          _position[2];
   pxr::VtArray<pxr::GfVec3f>          _previous[2];
   pxr::VtArray<pxr::GfVec3f>          _velocity[2];
@@ -65,8 +62,7 @@ private:
   pxr::VtArray<pxr::GfVec3f>          _force;
   pxr::VtArray<float>                 _mass;
   pxr::VtArray<float>                 _invMass;
-  
-  std::map<Geometry*, PBDGeometry>    _geometries;
+ 
 
 };
 

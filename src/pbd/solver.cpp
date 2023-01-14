@@ -2,6 +2,7 @@
 #include "../pbd/constraint.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
+#include "../geometry/voxels.h"
 #include "../acceleration/bvh.h"
 #include "../app/application.h"
 #include "../app/time.h"
@@ -122,6 +123,39 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
 }
 
+static void
+_SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
+{
+
+  pxr::VtArray<pxr::GfVec3f> positions;
+  voxels->Init();
+  voxels->Trace(0);
+  voxels->Trace(1);
+  voxels->Trace(2);
+  voxels->Build(positions);
+
+  size_t numPoints = positions.size();
+  pxr::UsdGeomPoints points =
+    pxr::UsdGeomPoints::Define(
+      stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("Voxels")));
+
+  points.CreatePointsAttr().Set(pxr::VtValue(positions));
+
+  pxr::VtArray<float> widths(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  for (size_t p = 0; p < numPoints; ++p) {
+    widths[p] = radius;
+    colors[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  }
+  points.CreateWidthsAttr().Set(pxr::VtValue(widths));
+  points.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
+  //points.CreateNormalsAttr().Set(pxr::VtValue({pxr::GfVec3f(0, 1, 0)}));
+  points.CreateDisplayColorAttr().Set(pxr::VtValue(colors));
+  points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
+
+}
+
 PBDSolver::PBDSolver() 
   : _gravity(0,-1,0)
   , _timeStep(1.f / 60.f)
@@ -143,19 +177,31 @@ void PBDSolver::Reset()
 
 void PBDSolver::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
 {
-  size_t offset = _system.AddGeometry(geom, m);
-  AddConstraints(geom, offset);
+  if (_geometries.find(geom) == _geometries.end()) {
+    _geometries[geom] = PBDGeometry({ geom, _system.GetNumParticles(), m, m.GetInverse() });
+    size_t offset = _system.AddGeometry(&_geometries[geom]);
+    AddConstraints(geom, offset);
+  }
 }
 
 void PBDSolver::RemoveGeometry(Geometry* geom)
 {
-  _system.RemoveGeometry(geom);
+  if (_geometries.find(geom) != _geometries.end()) {
+    _system.RemoveGeometry(&_geometries[geom]);
+    _geometries.erase(geom);
+  }
 }
 
 void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 {
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
 
+  _colliders = colliders;
+  float radius = 0.2f;
+  Voxels voxels(colliders[0], radius);
+  _SetupVoxels(stage, &voxels, radius);
+
+  /*
   size_t numRays = 2048;
   std::vector<pxr::GfRay> rays(numRays);
   for (size_t r = 0; r < numRays; ++r) {
@@ -191,6 +237,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
 
 
   _SetupResults(stage, result);
+  */
 }
 
 void PBDSolver::UpdateColliders()
@@ -241,6 +288,30 @@ void PBDSolver::AddConstraints(Geometry* geom, size_t offset)
   }
 }
 
+struct SolverTaskData {
+  PBDSolver* solver;
+  size_t     startIdx;
+  size_t     endIdx;
+};
+
+void _SatisfyConstraints(SolverTaskData* data)
+{
+  PBDSolver* solver = data->solver;
+  PBDParticle* system = solver->GetSystem();
+  for (size_t i = data->startIdx; i < data->endIdx; ++i) {
+    PBDConstraint* c = solver->GetConstraint(i);
+    c->Solve(solver, 1);
+  }
+}
+
+void _Integrate(SolverTaskData* data)
+{
+  PBDSolver* solver = data->solver;
+  PBDParticle* system = solver->GetSystem();
+  system->AccumulateForces(data->startIdx, data->endIdx, solver->GetGravity());
+  system->Integrate(data->startIdx, data->endIdx, solver->GetTimeStep());
+}
+
 void PBDSolver::SatisfyConstraints()
 {
   Time& time = GetApplication()->GetTime();
@@ -268,12 +339,57 @@ void PBDSolver::SatisfyConstraints()
 
 void PBDSolver::Step()
 {
-  _system.AccumulateForces(_gravity);
-  _system.Integrate(_timeStep);
+  _threads.resize(PBD_NUM_THREADS);
+
   UpdateColliders();
-  SatisfyConstraints();
+
+  // integrate
+  {
+    SolverTaskData data[PBD_NUM_THREADS];
+    size_t numParticles = _system.GetNumParticles();
+    size_t chunkSize = numParticles / PBD_NUM_THREADS;
+    for (size_t t = 0; t < PBD_NUM_THREADS; ++t) {
+      data[t].solver = this;
+      data[t].startIdx = t * chunkSize;
+      data[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numParticles);
+      _threads[t] = std::thread(_Integrate, &data[t]);
+    }
+
+    for (auto& thread : _threads)thread.join();
+  }
+
+  // solve constraints
+  {
+    SolverTaskData data[PBD_NUM_THREADS];
+    size_t numConstraints = _constraints.size();
+    size_t chunkSize = numConstraints / PBD_NUM_THREADS;
+    for (size_t t = 0; t < PBD_NUM_THREADS; ++t) {
+      data[t].solver = this;
+      data[t].startIdx = t * chunkSize;
+      data[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numConstraints);
+      _threads[t] = std::thread(_SatisfyConstraints, &data[t]);
+    }
+
+    for (auto& thread : _threads)thread.join();
+  }
   
-  _system.UpdateGeometries();
+  UpdateGeometries();
+}
+
+void PBDSolver::UpdateGeometries()
+{
+  std::map<Geometry*, PBDGeometry>::iterator it = _geometries.begin();
+  for (; it != _geometries.end(); ++it)
+  {
+    Geometry* geom = it->first;
+    size_t numPoints = geom->GetNumPoints();
+    pxr::VtArray<pxr::GfVec3f> results(numPoints);
+    const auto& positions = _system.GetPositions();
+    for (size_t p = 0; p < numPoints; ++p) {
+      results[p] = it->second.invMatrix.Transform(positions[it->second.offset + p]);
+    }
+    geom->SetPositions(&results[0], numPoints);
+  }
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -31,6 +31,10 @@ public:
   virtual bool Update(PBDSolver* solver) { return true; };
   virtual bool Solve(PBDSolver* solver, const unsigned int iter) { return true; };
 
+  bool Contains(unsigned int body) {
+    return std::find(_bodies.begin(), _bodies.end(), body) != _bodies.end();
+  };
+
 protected:
   std::vector<unsigned int> _bodies;
 };
