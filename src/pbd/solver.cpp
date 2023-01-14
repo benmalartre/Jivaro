@@ -232,7 +232,7 @@ PBDSolver::~PBDSolver()
 
 void PBDSolver::Reset()
 {
-  _threads.resize(_numThreads);
+  //_threads.resize(_numThreads);
 
   UpdateColliders();
 
@@ -245,10 +245,11 @@ void PBDSolver::Reset()
       data[t].solver = this;
       data[t].startIdx = t * chunkSize;
       data[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numParticles);
-      _threads[t] = std::thread(_Reset, &data[t]);
+      //AddTask(&data[t])
+      //_threads[t] = std::thread(_Reset, &data[t]);
     }
 
-    for (auto& thread : _threads)thread.join();
+    //for (auto& thread : _threads)thread.join();
   }
 }
 
@@ -400,7 +401,7 @@ void PBDSolver::SatisfyConstraints()
 
 void PBDSolver::Step()
 {
-  _threads.resize(_numThreads);
+  //_threads.resize(_numThreads);
 
   UpdateColliders();
 
@@ -413,10 +414,10 @@ void PBDSolver::Step()
       data[t].solver = this;
       data[t].startIdx = t * chunkSize;
       data[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numParticles);
-      _threads[t] = std::thread(_Integrate, &data[t]);
+      //_threads[t] = std::thread(_Integrate, &data[t]);
     }
 
-    for (auto& thread : _threads)thread.join();
+    //for (auto& thread : _threads)thread.join();
   }
 
   // solve collisions
@@ -428,10 +429,10 @@ void PBDSolver::Step()
       data[t].solver = this;
       data[t].startIdx = t * chunkSize;
       data[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numParticles);
-      _threads[t] = std::thread(_SolveCollisions, &data[t]);
+      //_threads[t] = std::thread(_SolveCollisions, &data[t]);
     }
 
-    for (auto& thread : _threads)thread.join();
+    //for (auto& thread : _threads)thread.join();
   }
 
   // solve constraints
@@ -443,10 +444,10 @@ void PBDSolver::Step()
       data[t].solver = this;
       data[t].startIdx = t * chunkSize;
       data[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numConstraints);
-      _threads[t] = std::thread(_SatisfyConstraints, &data[t]);
+      //_threads[t] = std::thread(_SatisfyConstraints, &data[t]);
     }
 
-    for (auto& thread : _threads)thread.join();
+    //for (auto& thread : _threads)thread.join();
   }
   
   UpdateGeometries();

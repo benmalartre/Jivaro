@@ -45,6 +45,7 @@ size_t PBDParticle::AddGeometry(PBDGeometry* geom)
 
 void PBDParticle::RemoveGeometry(PBDGeometry* geom)
 {
+  std::cout << "[system] remove geometry : " << geom << std::endl;
   size_t base = geom->offset;
   size_t shift = geom->ptr->GetNumPoints();
   size_t remaining = _position[0].size() - (base + shift);

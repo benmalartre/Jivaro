@@ -1,15 +1,13 @@
 #ifndef JVR_PBD_SOLVER_H
 #define JVR_PBD_SOLVER_H
 
-#include <atomic>
-#include <thread>
 #include <pxr/base/gf/matrix4f.h>
 #include "../common.h"
+#include "../acceleration/pool.h"
 #include "../pbd/particle.h"
 #include "../pbd/constraint.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
-
 
 class PBDSolver
 {
@@ -19,8 +17,8 @@ public:
 
   float GetTimeStep() { return _timeStep; };
   void SetTimeStep(float step) { _timeStep = step; };
-  size_t GetNumThreads() { return _numThreads; };
-  void SetNumThreads(size_t n) { _numThreads = n; };
+  size_t GetNumThreads() { return _pool.GetNumThreads(); };
+  void SetNumThreads(size_t n) { _pool.SetNumThreads(n); };
   const pxr::GfVec3f& GetGravity() { return _gravity; };
   void SetGravity(const pxr::GfVec3f& gravity) { _gravity = gravity; };
   void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
@@ -37,7 +35,7 @@ public:
 
 private:
   size_t                              _numThreads;
-  std::vector<std::thread>            _threads;
+  ThreadPool                          _pool;
   PBDParticle                         _system;
   pxr::GfVec3f                        _gravity;
   float                               _timeStep;
