@@ -316,9 +316,10 @@ Workspace::InitExec()
         _execStage, 
         _execStage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("System")));
 
-    points.CreatePointsAttr().Set(pxr::VtValue(_solver.GetSystem().GetPositions()));
+    PBDParticle* system = _solver.GetSystem();
+    points.CreatePointsAttr().Set(pxr::VtValue(system->GetPositions()));
 
-    size_t numParticles = _solver.GetSystem().GetNumParticles();
+    size_t numParticles = system->GetNumParticles();
     
     pxr::VtArray<float> widths(numParticles);
     pxr::VtArray<pxr::GfVec3f> colors(numParticles);

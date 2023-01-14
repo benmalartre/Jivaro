@@ -10,40 +10,42 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-#define PBD_NUM_THREADS 32
 
 class PBDSolver
 {
 public:
-    PBDSolver();
-    ~PBDSolver();
+  PBDSolver();
+  ~PBDSolver();
 
-    float GetTimeStep() { return _timeStep; };
-    void SetTimeStep(float step) { _timeStep = step; };
-    const pxr::GfVec3f& GetGravity() { return _gravity; };
-    void SetGravity(const pxr::GfVec3f& gravity) { _gravity = gravity; };
-    void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
-    void RemoveGeometry(Geometry* geom);
-    void AddColliders(std::vector<Geometry*>& colliders);
-    void AddConstraints(Geometry* geom, size_t offset);
-    void SatisfyConstraints();
-    void UpdateColliders();
-    void UpdateGeometries();
-    void Reset();
-    void Step();
-    PBDParticle* GetSystem() { return &_system; };
-    PBDConstraint* GetConstraint(size_t idx) { return _constraints[idx]; };
+  float GetTimeStep() { return _timeStep; };
+  void SetTimeStep(float step) { _timeStep = step; };
+  size_t GetNumThreads() { return _numThreads; };
+  void SetNumThreads(size_t n) { _numThreads = n; };
+  const pxr::GfVec3f& GetGravity() { return _gravity; };
+  void SetGravity(const pxr::GfVec3f& gravity) { _gravity = gravity; };
+  void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
+  void RemoveGeometry(Geometry* geom);
+  void AddColliders(std::vector<Geometry*>& colliders);
+  void AddConstraints(Geometry* geom, size_t offset);
+  void SatisfyConstraints();
+  void UpdateColliders();
+  void UpdateGeometries();
+  void Reset();
+  void Step();
+  PBDParticle* GetSystem() { return &_system; };
+  PBDConstraint* GetConstraint(size_t idx) { return _constraints[idx]; };
 
 private:
-    std::vector<std::thread>            _threads;
-    PBDParticle                         _system;
-    pxr::GfVec3f                        _gravity;
-    float                               _timeStep;
-    size_t                              _substeps;
-    bool                                _paused;		
-    std::vector<PBDConstraint*>         _constraints;
-    std::vector<Geometry*>              _colliders;
-    std::map<Geometry*, PBDGeometry>    _geometries;
+  size_t                              _numThreads;
+  std::vector<std::thread>            _threads;
+  PBDParticle                         _system;
+  pxr::GfVec3f                        _gravity;
+  float                               _timeStep;
+  size_t                              _substeps;
+  bool                                _paused;		
+  std::vector<PBDConstraint*>         _constraints;
+  std::vector<Geometry*>              _colliders;
+  std::map<Geometry*, PBDGeometry>    _geometries;
 };
 
 

@@ -415,7 +415,20 @@ void Mesh::ComputeHalfEdges()
       ++boundaryCount;
     }
   }
+
   _uniqueEdges.reserve(_halfEdges.size());
+  size_t halfEdgeIndex = 0;
+  for (const HalfEdge& halfEdge : _halfEdges) {
+    if (halfEdge.twin) {
+      if (halfEdge.vertex < halfEdge.twin->vertex)
+        _uniqueEdges.push_back(halfEdgeIndex);
+    }
+    else {
+      _uniqueEdges.push_back(halfEdgeIndex);
+    }
+    halfEdgeIndex++;
+  }
+
   for (HalfEdge& halfEdge : _halfEdges) {
     if (used[halfEdge.GetTriangleIndex()])continue;
     HalfEdge* longest = HalfEdge::GetLongestInTriangle(GetPositionsCPtr(), &halfEdge);

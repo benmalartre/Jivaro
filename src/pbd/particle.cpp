@@ -13,7 +13,7 @@ PBDParticle::~PBDParticle()
 
 size_t PBDParticle::AddGeometry(PBDGeometry* geom)
 {
-  
+  std::cout << "[system] add geometry : " << geom << std::endl;
   size_t base = _position[0].size();
   size_t add = geom->ptr->GetNumPoints();
   
@@ -39,10 +39,8 @@ size_t PBDParticle::AddGeometry(PBDGeometry* geom)
     _preload[idx] = pxr::GfVec3f(0.f);
     _force[idx] = pxr::GfVec3f(0.f);
     _mass[idx] = 1.f;
-
-    return base;
   }
-  return 0;
+  return base;
 }
 
 void PBDParticle::RemoveGeometry(PBDGeometry* geom)
