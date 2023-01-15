@@ -31,33 +31,20 @@ public:
     int Execute() { return fn(data); };
   };
 
-  struct Job {
-    unsigned int            n;
-    unsigned int            cnt;
-    std::condition_variable waiter;
-    std::mutex              mutex;
-    std::vector<Task>       tasks;
-
-    Job(TaskFn fn, size_t n, TaskData** datas);
-
-    bool Done();
-    bool HasPending();
-    Task* GetPending();
-  };
-
   void Init();
-
-  void AddJob(TaskFn fn, size_t n, TaskData** datas);
-  bool HasPending();
-  void SetPending(Job* job);
-  void ExecutePending();
-  void WaitTask();
+  void BeginTasks();
+  void AddTask(TaskFn fn, TaskData* datas);
+  void EndTasks();
+  void Signal();
+  Task* GetPending();
+  bool Done();
 
 private:
   std::mutex                    _mutex;
-  std::condition_variable       _waiter;
   std::vector<std::thread>      _workers;
-  Job*                          _job;
+  std::vector<Task>             _tasks;
+  std::atomic<int>              _pending;
+  std::atomic<int>              _done;
 };
 
 

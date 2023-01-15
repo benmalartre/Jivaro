@@ -202,6 +202,7 @@ int _Integrate(ThreadPool::TaskData* data)
 
 int _Reset(ThreadPool::TaskData* data)
 {
+  std::cout << "reset " << data << std::endl;
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
   PBDParticle* system = solver->GetSystem();
@@ -228,27 +229,26 @@ PBDSolver::~PBDSolver()
 
 void PBDSolver::Reset()
 {
-  std::cout << "reset..." << std::endl;
+  std::cout << "[solver] reset..." << std::endl;
 
   UpdateColliders();
   size_t numTasks = 8;
   
   // integrate
   {
+    _pool.BeginTasks();
     std::vector<SolverTaskData> datas(numTasks);
     std::vector<ThreadPool::TaskData*> ptr(numTasks);
-    std::cout << "num datas : " << datas.size() << std::endl;
     size_t numParticles = _system.GetNumParticles();
-    std::cout << "num particles : " << numParticles << std::endl;
     size_t chunkSize = (numParticles + numTasks - (numParticles % numTasks)) / numTasks;
     for (size_t t = 0; t < numTasks; ++t) {
       datas[t].solver = this;
       datas[t].startIdx = t * chunkSize;
       datas[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numParticles);  
-      ptr[t] = &datas[t];
+      _pool.AddTask(_Reset, &datas[t]);
     }
-    std::cout << "add job..." << std::endl;
-    _pool.AddJob(_Reset, numTasks, &ptr.front());
+    _pool.EndTasks();
+    
   }
 }
 
@@ -401,7 +401,6 @@ void PBDSolver::SatisfyConstraints()
 void PBDSolver::Step()
 {
   //_threads.resize(_numThreads);
-  std::cout << "step..." << std::endl;
   UpdateColliders();
   /*
   // integrate

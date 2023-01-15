@@ -14,8 +14,6 @@
 #include "../geometry/point.h"
 
 
-
-
 JVR_NAMESPACE_OPEN_SCOPE
 
 enum GeomInterpolation : short {
