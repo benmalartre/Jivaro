@@ -20,30 +20,36 @@ public:
     DONE
   };
 
-  typedef int (*TaskFn)(void* data);
+  struct TaskData {
+  };
+
+  typedef int (*TaskFn)(TaskData* data);
 
   struct Task {
     TaskFn      fn;
-    void*       data;
+    TaskData*   data;
     int Execute() { return fn(data); };
   };
 
   struct Job {
-    std::vector<Task>               tasks;
-    std::vector<int>                states;
+    std::mutex           mutex;
+    std::queue<Task>     tasks;
+    std::vector<int>     states;
 
-    Job(TaskFn fn, size_t n, void** datas);
+    Job(TaskFn fn, size_t n, TaskData** datas);
 
-    bool HasPending(size_t* taskIdx=NULL);
-    Task* GetPending(size_t taskIdx);
+    bool Done();
+    bool HasPending();
+    Task* GetPending();
   };
 
   void Init();
 
-  void AddJob(TaskFn fn, size_t n, void** datas);
+  void AddJob(TaskFn fn, size_t n, TaskData** datas);
   void PopJob();
 
   bool HasPending();
+  void SetPending(Job* job);
   Job* GetPending();
 
 private:

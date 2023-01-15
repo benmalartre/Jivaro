@@ -334,6 +334,7 @@ Workspace::InitExec()
     points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
     
     _execInitialized = true;
+    std::cout << "exec initialized..." << std::endl;
   }
 }
 

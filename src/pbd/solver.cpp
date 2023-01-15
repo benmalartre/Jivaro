@@ -157,13 +157,13 @@ _SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
 }
 
 
-struct SolverTaskData {
+struct SolverTaskData : public ThreadPool::TaskData {
   PBDSolver* solver;
   size_t     startIdx;
   size_t     endIdx;
 };
 
-int _SolveCollisions(void* data)
+int _SolveCollisions(ThreadPool::TaskData* data)
 {
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
@@ -178,7 +178,7 @@ int _SolveCollisions(void* data)
   return 0;
 }
 
-int _SatisfyConstraints(void* data)
+int _SatisfyConstraints(ThreadPool::TaskData* data)
 {
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
@@ -190,7 +190,7 @@ int _SatisfyConstraints(void* data)
   return 0;
 }
 
-int _Integrate(void* data)
+int _Integrate(ThreadPool::TaskData* data)
 {
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
@@ -200,9 +200,8 @@ int _Integrate(void* data)
   return 0;
 }
 
-int _Reset(void* data)
+int _Reset(ThreadPool::TaskData* data)
 {
-  std::cout << "reset..." << std::endl;
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
   PBDParticle* system = solver->GetSystem();
@@ -229,28 +228,27 @@ PBDSolver::~PBDSolver()
 
 void PBDSolver::Reset()
 {
-  //_threads.resize(_numThreads);
+  std::cout << "reset..." << std::endl;
 
   UpdateColliders();
-  size_t numTasks = 64;
-  std::cout << "reset..." << std::endl;
+  size_t numTasks = 8;
+  
   // integrate
   {
-    
-    std::vector<SolverTaskData*> datas(numTasks);
+    std::vector<SolverTaskData> datas(numTasks);
+    std::vector<ThreadPool::TaskData*> ptr(numTasks);
     std::cout << "num datas : " << datas.size() << std::endl;
     size_t numParticles = _system.GetNumParticles();
     std::cout << "num particles : " << numParticles << std::endl;
     size_t chunkSize = (numParticles + numTasks - (numParticles % numTasks)) / numTasks;
     for (size_t t = 0; t < numTasks; ++t) {
-      SolverTaskData* data = new SolverTaskData;
-      data->solver = this;
-      data->startIdx = t * chunkSize;
-      data->endIdx = pxr::GfMin((t + 1) * chunkSize, numParticles);
-      datas[t] = data;
-      
+      datas[t].solver = this;
+      datas[t].startIdx = t * chunkSize;
+      datas[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numParticles);  
+      ptr[t] = &datas[t];
     }
-    _pool.AddJob(_Reset, numTasks, (void**) datas[0]);
+    std::cout << "add job..." << std::endl;
+    _pool.AddJob(_Reset, numTasks, &ptr.front());
   }
 }
 
@@ -259,9 +257,9 @@ void PBDSolver::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
   if (_geometries.find(geom) == _geometries.end()) {
     _geometries[geom] = PBDGeometry({ geom, _system.GetNumParticles(), m, m.GetInverse() });
     size_t offset = _system.AddGeometry(&_geometries[geom]);
-    std::cout << "[Solver] added geometry : " << offset << std::endl;
+    std::cout << "[solver] added geometry : " << offset << std::endl;
     AddConstraints(geom, offset);
-    std::cout << "[SOlver] added constraints : " << _constraints.size() << std::endl;
+    std::cout << "[solver] added constraints : " << _constraints.size() << std::endl;
   }
   
 }
@@ -282,7 +280,7 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   float radius = 0.2f;
   Voxels voxels(colliders[0], radius);
   _SetupVoxels(stage, &voxels, radius);
-
+  std::cout << "[solver] added colliders " << std::endl;
   /*
   size_t numRays = 2048;
   std::vector<pxr::GfRay> rays(numRays);
@@ -403,7 +401,7 @@ void PBDSolver::SatisfyConstraints()
 void PBDSolver::Step()
 {
   //_threads.resize(_numThreads);
-
+  std::cout << "step..." << std::endl;
   UpdateColliders();
   /*
   // integrate
