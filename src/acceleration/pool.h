@@ -32,9 +32,11 @@ public:
   };
 
   struct Job {
-    std::mutex           mutex;
-    std::queue<Task>     tasks;
-    std::vector<int>     states;
+    unsigned int            n;
+    unsigned int            cnt;
+    std::condition_variable waiter;
+    std::mutex              mutex;
+    std::vector<Task>       tasks;
 
     Job(TaskFn fn, size_t n, TaskData** datas);
 
@@ -46,11 +48,10 @@ public:
   void Init();
 
   void AddJob(TaskFn fn, size_t n, TaskData** datas);
-  void PopJob();
-
   bool HasPending();
   void SetPending(Job* job);
-  Job* GetPending();
+  void ExecutePending();
+  void WaitTask();
 
 private:
   std::mutex                    _mutex;
