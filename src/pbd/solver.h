@@ -29,9 +29,14 @@ public:
   void Reset();
   void Step();
   PBDParticle* GetSystem() { return &_system; };
+  size_t GetNumConstraints() { return _constraints.size(); };
   PBDConstraint* GetConstraint(size_t idx) { return _constraints[idx]; };
 
+  void SetNumTasks(size_t numTasks) { _numTasks = numTasks; };
+  void _ParallelEvaluation(ThreadPool::TaskFn fn, size_t numElements, size_t numTasks);
+
 private:
+  size_t                              _numTasks;
   ThreadPool                          _pool;
   PBDParticle                         _system;
   pxr::GfVec3f                        _gravity;
@@ -41,6 +46,7 @@ private:
   std::vector<PBDConstraint*>         _constraints;
   std::vector<Geometry*>              _colliders;
   std::map<Geometry*, PBDGeometry>    _geometries;
+
 };
 
 

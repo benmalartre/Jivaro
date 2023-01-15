@@ -35,13 +35,13 @@ public:
   void Integrate(size_t startIdx, size_t endIdx, float step);
   void AccumulateForces(size_t startIdx, size_t endIdx, const pxr::GfVec3f& gravity);
   
-  size_t GetNumParticles() { return _position[0].size(); };
-  pxr::GfVec3f& GetPosition(size_t index) { return _position[_flip][index]; };
-  const pxr::GfVec3f& GetPosition(size_t index) const { return _position[_flip][index]; };
-  pxr::GfVec3f* GetPositions() { return &_position[_flip][0]; };
-  const pxr::GfVec3f* GetPositions() const { return &_position[_flip][0]; };
-  pxr::GfVec3f* GetPreviousPositions() { return &_previous[_flip][0]; };
-  const pxr::GfVec3f* GetPreviousPositions() const { return &_previous[_flip][0]; };
+  size_t GetNumParticles() { return _position.size(); };
+  pxr::GfVec3f& GetPosition(size_t index) { return _position[index]; };
+  const pxr::GfVec3f& GetPosition(size_t index) const { return _position[index]; };
+  pxr::GfVec3f* GetPositions() { return &_position[0]; };
+  const pxr::GfVec3f* GetPositions() const { return &_position[0]; };
+  pxr::GfVec3f* GetPreviousPositions() { return &_previous[0]; };
+  const pxr::GfVec3f* GetPreviousPositions() const { return &_previous[0]; };
   pxr::GfVec3f* GetRestPositions() { return &_rest[0]; };
   const pxr::GfVec3f* GetRestPositions() const { return &_rest[0]; };
   pxr::GfVec3f* GetInputPositions() { return &_input[0]; };
@@ -52,12 +52,11 @@ public:
   const float* GetMasses() const { return &_mass[0]; };
 
 private:
-  bool                                _flip;
   pxr::VtArray<pxr::GfVec3f>          _rest;
   pxr::VtArray<pxr::GfVec3f>          _preload;
-  pxr::VtArray<pxr::GfVec3f>          _position[2];
-  pxr::VtArray<pxr::GfVec3f>          _previous[2];
-  pxr::VtArray<pxr::GfVec3f>          _velocity[2];
+  pxr::VtArray<pxr::GfVec3f>          _position;
+  pxr::VtArray<pxr::GfVec3f>          _previous;
+  pxr::VtArray<pxr::GfVec3f>          _velocity;
   pxr::VtArray<pxr::GfVec3f>          _input;
   pxr::VtArray<pxr::GfVec3f>          _force;
   pxr::VtArray<float>                 _mass;

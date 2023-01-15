@@ -10,8 +10,6 @@ WorkerThread(ThreadPool* pool)
     if(task) {
       task->Execute();
       pool->Signal();
-    } else {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }
 }
@@ -40,37 +38,25 @@ ThreadPool::Signal()
   _done++;
 }
 
-bool 
-ThreadPool::Done()
-{
-  std::lock_guard<std::mutex> lock(_mutex);
-  if (_tasks.size() == _done) {
-    _tasks.clear();
-    _pending = 0;
-    _done = 0;
-    return true;
-  }
-  return false;
-}
-
 void 
 ThreadPool::BeginTasks()
 {
   _done = 0;
-  _pending = 0;
+  _pending = std::numeric_limits<int>::max();
   _tasks.clear();
+  _mutex.lock();
 }
 
 void 
 ThreadPool::EndTasks()
 {
+  _mutex.unlock();
   while (_done < _tasks.size()) {};
 }
 
 void
 ThreadPool::AddTask(TaskFn fn, ThreadPool::TaskData* data)
 {
-  std::lock_guard<std::mutex> lock(_mutex);
   _tasks.push_back({ fn, data });
 }
 

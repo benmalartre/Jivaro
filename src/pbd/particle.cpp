@@ -3,7 +3,6 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 PBDParticle::PBDParticle() 
-  : _flip(false)
 {
 }
 
@@ -14,14 +13,12 @@ PBDParticle::~PBDParticle()
 size_t PBDParticle::AddGeometry(PBDGeometry* geom)
 {
   std::cout << "[system] add geometry : " << geom << std::endl;
-  size_t base = _position[0].size();
+  size_t base = _position.size();
   size_t add = geom->ptr->GetNumPoints();
   
   size_t newSize = base + add;
-  _position[0].resize(newSize);
-  _position[1].resize(newSize);
-  _previous[0].resize(newSize);
-  _previous[1].resize(newSize);
+  _position.resize(newSize);
+  _previous.resize(newSize);
   _rest.resize(newSize);
   _preload.resize(newSize);
   _force.resize(newSize);
@@ -31,10 +28,8 @@ size_t PBDParticle::AddGeometry(PBDGeometry* geom)
   for (size_t p = 0; p < add; ++p) {
     const pxr::GfVec3f pos = geom->matrix.Transform(points[p]);
     size_t idx = base + p;
-    _position[0][idx] = pos;
-    _position[1][idx] = pos;
-    _previous[0][idx] = pos;
-    _previous[1][idx] = pos;
+    _position[idx] = pos;
+    _previous[idx] = pos;
     _rest[idx] = pos;
     _preload[idx] = pxr::GfVec3f(0.f);
     _force[idx] = pxr::GfVec3f(0.f);
@@ -48,7 +43,7 @@ void PBDParticle::RemoveGeometry(PBDGeometry* geom)
   std::cout << "[system] remove geometry : " << geom << std::endl;
   size_t base = geom->offset;
   size_t shift = geom->ptr->GetNumPoints();
-  size_t remaining = _position[0].size() - (base + shift);
+  size_t remaining = _position.size() - (base + shift);
 
   for (size_t r = 0; r < remaining; ++r) {
     _position[0][base + r] = _position[0][base + shift +r];
@@ -61,11 +56,9 @@ void PBDParticle::RemoveGeometry(PBDGeometry* geom)
     _mass[base + r] = _mass[base + shift + r];
   }
 
-  size_t newSize = _position[0].size() - shift;
-  _position[0].resize(newSize);
-  _position[1].resize(newSize);
-  _previous[0].resize(newSize);
-  _previous[1].resize(newSize);
+  size_t newSize = _position.size() - shift;
+  _position.resize(newSize);
+  _previous.resize(newSize);
   _rest.resize(newSize);
   _preload.resize(newSize);
   _force.resize(newSize);
@@ -76,10 +69,10 @@ void PBDParticle::RemoveGeometry(PBDGeometry* geom)
 void PBDParticle::Reset(size_t startIdx, size_t endIdx)
 {
   for (size_t p = startIdx; p < endIdx; ++p) {
-    _position[0][p] = _rest[p];
-    _position[1][p] = _rest[p];
-    _previous[0][p] = _rest[p] -_preload[p];
-    _previous[1][p] = _rest[p] -_preload[p];
+    _position[p] = _rest[p];
+    _position[p] = _rest[p];
+    _previous[p] = _rest[p] -_preload[p];
+    _previous[p] = _rest[p] -_preload[p];
     _force[p] = pxr::GfVec3f(0.f);
   }
 }
@@ -87,9 +80,9 @@ void PBDParticle::Reset(size_t startIdx, size_t endIdx)
 void PBDParticle::Integrate(size_t startIdx, size_t endIdx, float step)
 {
   for(int i = startIdx; i < endIdx; ++i) {
-    pxr::GfVec3f& position = _position[_flip][i];
+    pxr::GfVec3f& position = _position[i];
     pxr::GfVec3f tmp = position;
-    pxr::GfVec3f& previous = _previous[_flip][i];
+    pxr::GfVec3f& previous = _previous[i];
     position += position - previous + _force[i] * step * step;
     previous = tmp;
   }
@@ -98,7 +91,7 @@ void PBDParticle::Integrate(size_t startIdx, size_t endIdx, float step)
 void PBDParticle::AccumulateForces(size_t startIdx, size_t endIdx, const pxr::GfVec3f& gravity)
 {
   size_t numParticles = GetNumParticles();
-  for (int i = 0; i < numParticles; ++i) {
+  for (int i = startIdx; i < endIdx; ++i) {
     _force[i] = gravity;
   }
 }

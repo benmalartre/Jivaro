@@ -23,12 +23,12 @@ public:
   struct TaskData {
   };
 
-  typedef int (*TaskFn)(TaskData* data);
+  typedef void (*TaskFn)(TaskData* data);
 
   struct Task {
     TaskFn      fn;
     TaskData*   data;
-    int Execute() { return fn(data); };
+    void Execute() { fn(data); };
   };
 
   void Init();
@@ -37,10 +37,10 @@ public:
   void EndTasks();
   void Signal();
   Task* GetPending();
-  bool Done();
 
 private:
   std::mutex                    _mutex;
+  std::condition_variable       _waiter;
   std::vector<std::thread>      _workers;
   std::vector<Task>             _tasks;
   std::atomic<int>              _pending;
