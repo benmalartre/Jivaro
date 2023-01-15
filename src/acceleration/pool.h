@@ -20,65 +20,39 @@ public:
     DONE
   };
 
-  typedef int (*ThreadFn)(void* data);
+  typedef int (*TaskFn)(void* data);
 
-  struct Thread {
-    ThreadFn    fn;
+  struct Task {
+    TaskFn      fn;
     void*       data;
     int Execute() { return fn(data); };
   };
 
-  struct Task {
-    std::vector<Thread>             threads;
+  struct Job {
+    std::vector<Task>               tasks;
     std::vector<int>                states;
 
-    Task(ThreadFn fn, std::vector<void*>& datas);
+    Job(TaskFn fn, size_t n, void** datas);
 
-    bool HasPending(size_t* threadIdx=NULL);
-    Thread* GetPending(size_t threadIdx);
-
+    bool HasPending(size_t* taskIdx=NULL);
+    Task* GetPending(size_t taskIdx);
   };
 
-  void WorkerThread(ThreadPool* pool, size_t threadIdx)
-  {
-    while (true) { 
-      // wait until some task
-      if (!pool->HasTask()) {
-        pool->SetState(threadIdx, ThreadPool::WAITING);
-      } else {
-        ThreadPool::Task* task = pool->GetTask();
-        size_t threadIdx;
-        if (task->HasPending(&threadIdx)) {
-          Thread* thread = task->GetPending(threadIdx);
-          pool->SetState(threadIdx, ThreadPool::WORKING);
-          thread->Execute();
-          pool->SetState(threadIdx, ThreadPool::DONE);
-        }
-        else {
-          pool->PopTask();
-        }
-      }
-    }
-  }
+  void Init();
 
-  //unsigned int nthreads = std::thread::hardware_concurrency();
-  void SetNumThreads(size_t numThreads);
-  size_t GetNumThreads();
+  void AddJob(TaskFn fn, size_t n, void** datas);
+  void PopJob();
 
-  void AddTask(ThreadFn fn, std::vector<void*>& datas);
-  void PopTask();
-
-  bool HasTask();
-  Task* GetTask();
-  std::mutex& GetMutex() { return _mutex; };
-  void SetState(size_t threadIdx, ThreadPool::State state);
+  bool HasPending();
+  Job* GetPending();
 
 private:
-  std::mutex                            _mutex;
-  std::vector<std::thread>              _workers;
-  std::vector<std::condition_variable>  _waiters;
-  std::queue<Task>                      _tasks;
+  std::mutex                    _mutex;
+  std::condition_variable       _waiter;
+  std::vector<std::thread>      _workers;
+  Job*                          _job;
 };
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

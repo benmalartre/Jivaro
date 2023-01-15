@@ -17,8 +17,6 @@ public:
 
   float GetTimeStep() { return _timeStep; };
   void SetTimeStep(float step) { _timeStep = step; };
-  size_t GetNumThreads() { return _pool.GetNumThreads(); };
-  void SetNumThreads(size_t n) { _pool.SetNumThreads(n); };
   const pxr::GfVec3f& GetGravity() { return _gravity; };
   void SetGravity(const pxr::GfVec3f& gravity) { _gravity = gravity; };
   void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
@@ -34,7 +32,6 @@ public:
   PBDConstraint* GetConstraint(size_t idx) { return _constraints[idx]; };
 
 private:
-  size_t                              _numThreads;
   ThreadPool                          _pool;
   PBDParticle                         _system;
   pxr::GfVec3f                        _gravity;

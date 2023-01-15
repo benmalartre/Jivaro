@@ -285,6 +285,7 @@ Workspace::InitExec()
   if (!_execInitialized) {
     _execStage = UsdStage::CreateInMemory("exec");
     _execScene = new Scene(_execStage);
+    _solver = new PBDSolver();
    
     Time& time = GetApplication()->GetTime();
     _startFrame = time.GetStartTime();
@@ -298,7 +299,7 @@ Workspace::InitExec()
     for (pxr::UsdPrim prim : primRange) {
       if (prim.IsA<pxr::UsdGeomMesh>()) {
         _execScene->AddMesh(prim.GetPath());
-        _solver.AddGeometry(&_execScene->GetMeshes()[prim.GetPath()], 
+        _solver->AddGeometry(&_execScene->GetMeshes()[prim.GetPath()], 
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
       }
     }
@@ -307,7 +308,7 @@ Workspace::InitExec()
     for (auto& mesh : _execScene->GetMeshes()) {
       colliders.push_back(&mesh.second);
     }
-    _solver.AddColliders(colliders);
+    _solver->AddColliders(colliders);
     _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
       _workStage->GetDefaultPrim().GetPath()));
 
@@ -316,7 +317,7 @@ Workspace::InitExec()
         _execStage, 
         _execStage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("System")));
 
-    PBDParticle* system = _solver.GetSystem();
+    PBDParticle* system = _solver->GetSystem();
     points.CreatePointsAttr().Set(pxr::VtValue(system->GetPositions()));
 
     size_t numParticles = system->GetNumParticles();
@@ -360,10 +361,10 @@ Workspace::UpdateExec(double time)
   }
   */
   if (time <= _startFrame) {
-    _solver.Reset();
+    _solver->Reset();
   }
   if(time > _lastFrame) {
-    _solver.Step();
+    _solver->Step();
     _execScene->Update(time);
   }
   _lastFrame = (float)time;
@@ -373,6 +374,7 @@ void
 Workspace::TerminateExec()
 {
   std::cout << "TERMINATE EXEC " << std::endl;
+  delete _solver;
 }
 
 struct DebugRay {

@@ -1,19 +1,20 @@
 #ifndef JVR_GEOMETRY_GEOMETRY_H
 #define JVR_GEOMETRY_GEOMETRY_H
 
+#include <float.h>
 
-#include "../common.h"
 #include "pxr/base/vt/array.h"
 #include "pxr/base/tf/hashmap.h"
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
-#include <float.h>
 
+#include "../common.h"
 #include "../geometry/point.h"
-#include "../geometry/edge.h"
-#include "../geometry/triangle.h"
+
+
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 

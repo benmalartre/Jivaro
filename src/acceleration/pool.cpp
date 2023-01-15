@@ -2,93 +2,112 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-ThreadPool::Task::Task(ThreadFn fn, std::vector<void*>& datas)
+static void
+WorkerThread(ThreadPool* pool)
 {
-     threads.resize(datas.size());
-     states.resize(datas.size());
-     for (size_t t = 0; t < datas.size(); ++t) {
-       threads[t].fn = fn;
-       threads[t].data = datas[t];
-     }
+  while (true) {
+    // wait until some task
+    if (pool->HasPending()) {
+      ThreadPool::Job* job = pool->GetPending();
+      std::cout << "[worker] get job " << job << std::endl;
+      size_t taskIdx;
+      if (job->HasPending(&taskIdx)) {
+        std::cout << "[worker] task id " << taskIdx << std::endl;
+        ThreadPool::Task* task = job->GetPending(taskIdx);
+        task->Execute();
+        job->states[taskIdx] = ThreadPool::DONE;
+      } else {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    }
+    else {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  }
+}
+
+ThreadPool::Job::Job(TaskFn fn, size_t n, void** datas)
+{
+  tasks.resize(n);
+  states.resize(n);
+  for (size_t t = 0; t < n; ++t) {
+    tasks[t].fn = fn;
+    tasks[t].data = datas[t];
+    std::cout << "task data : " << tasks[t].data << std::endl;
+    states[t] = ThreadPool::WAITING;
+  }
 }
 
 bool
-ThreadPool::Task::HasPending(size_t* threadIdx)
+ThreadPool::Job::HasPending(size_t* taskIdx)
 {
   for (size_t i = 0; i < states.size(); ++i) {
     if (states[i] == ThreadPool::WAITING) {
-      if(threadIdx)*threadIdx = i; 
+      std::cout << "[pool] task has pending " << i << std::endl;
+      if(taskIdx)*taskIdx = i; 
       return true;
     }
   }
   return false;
 }
 
-ThreadPool::Thread*
-ThreadPool::Task::GetPending(size_t threadIdx)
+ThreadPool::Task*
+ThreadPool::Job::GetPending(size_t taskIdx)
 {
-  states[threadIdx] = ThreadPool::WORKING;
-  return &threads[threadIdx];
+  states[taskIdx] = ThreadPool::WORKING;
+  return &tasks[taskIdx];
 }
 
-void 
-ThreadPool::SetNumThreads(size_t numThreads)
+void
+ThreadPool::Init()
 {
-
-}
-
-size_t 
-ThreadPool::GetNumThreads() 
-{ 
-  return _workers.size(); 
-};
-
-void 
-ThreadPool::SetState(size_t threadIdx, ThreadPool::State state)
-{
-  std::unique_lock<std::mutex> lock(_mutex);
-  switch(state) {
-  case ThreadPool::WAITING:
-    _waiters[threadIdx].wait(lock, [&] { return HasTask(); });
-    break;
-  default:
-    _waiters[threadIdx].notify_all();
-    break;
+  _job = NULL;
+  unsigned int n = std::thread::hardware_concurrency();
+  std::cout << "[pool] initialize : " << n << " processors " << std::endl;
+  for (size_t i = 0; i < n - 1; ++i) {
+    _workers.push_back(std::thread(WorkerThread, this));
   }
+  std::cout << "[pool] create worker threads " << n << std::endl;
 }
 
 void
-ThreadPool::AddTask(ThreadFn fn, std::vector<void*>& datas)
+ThreadPool::AddJob(TaskFn fn, size_t n, void** datas)
 {
-  const std::lock_guard<std::mutex> lock(_mutex);
-  _tasks.push(Task(fn, datas));
+  std::lock_guard<std::mutex> lock(_mutex);
+  std::cout << " add job " << n << std::endl;
+  _job = new Job(fn, n, datas);
+  std::cout << "job added : " << _job << std::endl;
+
+  while (_job->HasPending()) {
+  }
+  std::cout << "job done : " << _job << std::endl;
+
 }
 
 void
-ThreadPool::PopTask()
+ThreadPool::PopJob()
 {
-  const std::lock_guard<std::mutex> lock(_mutex);
-  _tasks.pop();
+  std::lock_guard<std::mutex> lock(_mutex);
+  delete _job;
+  _job = NULL;
 }
 
 
 bool 
-ThreadPool::HasTask()
+ThreadPool::HasPending()
 {
-  if (!_tasks.size())return false;
-  if (!_tasks.front().HasPending()) {
-    PopTask();
-    return HasTask();
+  if (!_job)return false;
+  if (!_job->HasPending()) {
+    PopJob();
+    return false;
   }
   return true;
 }
 
-ThreadPool::Task*
-ThreadPool::GetTask()
+ThreadPool::Job*
+ThreadPool::GetPending()
 {
-  if (!_tasks.size())return NULL;
-  const std::lock_guard<std::mutex> lock(_mutex);
-  return &_tasks.front();
+  return _job;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

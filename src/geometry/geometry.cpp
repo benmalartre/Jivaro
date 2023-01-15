@@ -1,6 +1,9 @@
 #include <pxr/base/gf/ray.h>
 
 #include "../geometry/geometry.h"
+#include "../geometry/point.h"
+#include "../geometry/edge.h"
+#include "../geometry/triangle.h"
 #include "../geometry/utils.h"
 
 
