@@ -42,7 +42,7 @@ void
 ThreadPool::BeginTasks()
 {
   _done = 0;
-  _pending = std::numeric_limits<int>::max();
+  _pending = 0;
   _tasks.clear();
   _mutex.lock();
 }

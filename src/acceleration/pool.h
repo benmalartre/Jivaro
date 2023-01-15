@@ -40,7 +40,6 @@ public:
 
 private:
   std::mutex                    _mutex;
-  std::condition_variable       _waiter;
   std::vector<std::thread>      _workers;
   std::vector<Task>             _tasks;
   std::atomic<int>              _pending;
