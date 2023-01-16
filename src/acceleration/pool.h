@@ -39,6 +39,7 @@ public:
   Task* GetPending();
 
 private:
+  std::condition_variable       _waiter;
   std::mutex                    _mutex;
   std::vector<std::thread>      _workers;
   std::vector<Task>             _tasks;

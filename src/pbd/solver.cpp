@@ -55,11 +55,12 @@ _SetupResults(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfVec3f>& points)
 static void 
 BenchmarkParallelEvaluation(PBDSolver* solver)
 {
+  std::cout << "benchmark parallel evaluation" << std::endl;
   for (size_t i = 1; i <= 256; i*=2) {
     uint64_t startT = CurrentTime();
     solver->SetNumTasks(i);
     solver->Reset();
-    for (size_t t = 0; t < 100; ++t) {
+    for (size_t t = 0; t < 250; ++t) {
       solver->Step();
     }
     std::cout << "[parallel] (" << i << " threads) took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
@@ -69,7 +70,7 @@ BenchmarkParallelEvaluation(PBDSolver* solver)
   PBDParticle* system = solver->GetSystem();
   size_t last = system->GetNumParticles();
   system->Reset(0, last);
-  for (size_t t = 0; t < 100; ++t) {
+  for (size_t t = 0; t < 250; ++t) {
     system->AccumulateForces(0, last, solver->GetGravity());
     system->Integrate(0, last, solver->GetTimeStep());
 
@@ -80,12 +81,13 @@ BenchmarkParallelEvaluation(PBDSolver* solver)
       p[1] = pxr::GfMax(p[1], 0.f);
       //_position[i][2] = pxr::GfMin(pxr::GfMax(_position[i][2], 100.f), 100.f);
     }
-
+    
     size_t numConstraints = solver->GetNumConstraints();
     for (size_t i = 0; i < numConstraints; ++i) {
       PBDConstraint* c = solver->GetConstraint(i);
       c->Solve(solver, 1);
     }
+    
 
 
   }

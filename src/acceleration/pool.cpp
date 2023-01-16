@@ -41,16 +41,18 @@ ThreadPool::Signal()
 void 
 ThreadPool::BeginTasks()
 {
+  std::unique_lock<std::mutex> lock(_mutex);
+  _waiter.wait(lock);
   _done = 0;
   _pending = 0;
   _tasks.clear();
-  _mutex.lock();
+  
 }
 
 void 
 ThreadPool::EndTasks()
 {
-  _mutex.unlock();
+  _waiter.notify_one();
   while (_done < _tasks.size()) {};
 }
 
