@@ -31,20 +31,36 @@ public:
     void Execute() { fn(data); };
   };
 
+  class Semaphore {
+  public:
+    Semaphore(size_t count=0) : cnt(count) {};
+
+    void Reset(size_t count);
+    void Notify();
+    void Wait();
+
+  private:
+    size_t                  cnt;
+    std::mutex              mtx;
+    std::condition_variable cv;
+  };
+
   void Init();
   void BeginTasks();
   void AddTask(TaskFn fn, TaskData* datas);
   void EndTasks();
   void Signal();
   Task* GetPending();
+  void Wait();
 
 private:
-  std::condition_variable       _waiter;
+  Semaphore                     _start, _run;
   std::mutex                    _mutex;
   std::vector<std::thread>      _workers;
   std::vector<Task>             _tasks;
   std::atomic<int>              _pending;
   std::atomic<int>              _done;
+  
 };
 
 

@@ -92,6 +92,8 @@ BenchmarkParallelEvaluation(PBDSolver* solver)
 
   }
   std::cout << "[serial] (1 thread) took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
+
+  solver->SetNumTasks(64);
 }
 
 static void
