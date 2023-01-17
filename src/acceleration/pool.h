@@ -55,7 +55,6 @@ public:
 
 private:
   Semaphore                     _start, _run;
-  std::mutex                    _mutex;
   std::vector<std::thread>      _workers;
   std::vector<Task>             _tasks;
   std::atomic<int>              _pending;

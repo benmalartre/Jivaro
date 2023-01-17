@@ -56,14 +56,18 @@ static void
 BenchmarkParallelEvaluation(PBDSolver* solver)
 {
   std::cout << "benchmark parallel evaluation" << std::endl;
-  for (size_t i = 1; i <= 256; i*=2) {
+  for (size_t numTasks = 1; numTasks <= 256; numTasks *=2) {
     uint64_t startT = CurrentTime();
-    solver->SetNumTasks(i);
+    solver->SetNumTasks(numTasks);
     solver->Reset();
     for (size_t t = 0; t < 250; ++t) {
       solver->Step();
     }
-    std::cout << "[parallel] (" << i << " threads) took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
+    std::cout << "[parallel] (" << numTasks << " threads) took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
+
+    size_t numElements = solver->GetSystem()->GetNumParticles();
+    size_t chunkSize = (numElements + numTasks - (numElements % numTasks)) / numTasks;
+    std::cout << "[parallel] chunk size : " << chunkSize << std::endl;
   }
 
   uint64_t startT = CurrentTime();
@@ -87,13 +91,10 @@ BenchmarkParallelEvaluation(PBDSolver* solver)
       PBDConstraint* c = solver->GetConstraint(i);
       c->Solve(solver, 1);
     }
-    
-
-
   }
   std::cout << "[serial] (1 thread) took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
 
-  solver->SetNumTasks(64);
+  solver->SetNumTasks(1);
 }
 
 static void
@@ -284,7 +285,7 @@ PBDSolver::_ParallelEvaluation(ThreadPool::TaskFn fn, size_t numElements, size_t
 void PBDSolver::Reset()
 {
   UpdateColliders();
-  
+
   // reset
   _ParallelEvaluation(_Reset, _system.GetNumParticles(), _numTasks);
 }
@@ -292,11 +293,11 @@ void PBDSolver::Reset()
 void PBDSolver::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
 {
   if (_geometries.find(geom) == _geometries.end()) {
-    _geometries[geom] = PBDGeometry({ geom, _system.GetNumParticles(), m, m.GetInverse() });
+    _geometries[geom] = { 
+      geom, _system.GetNumParticles(), m, m.GetInverse() 
+    };
     size_t offset = _system.AddGeometry(&_geometries[geom]);
-    std::cout << "[solver] added geometry : " << offset << std::endl;
     AddConstraints(geom, offset);
-    std::cout << "[solver] added constraints : " << _constraints.size() << std::endl;
   }
   
 }
@@ -317,7 +318,6 @@ void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
   float radius = 0.2f;
   Voxels voxels(colliders[0], radius);
   _SetupVoxels(stage, &voxels, radius);
-  std::cout << "[solver] added colliders " << std::endl;
 
   BenchmarkParallelEvaluation(this);
   /*
@@ -439,6 +439,7 @@ void PBDSolver::SatisfyConstraints()
 
 void PBDSolver::Step()
 {
+
   UpdateColliders();
   // integrate
   _ParallelEvaluation(_Integrate, _system.GetNumParticles(), _numTasks);
@@ -446,6 +447,7 @@ void PBDSolver::Step()
   _ParallelEvaluation(_SatisfyConstraints, GetNumConstraints(), _numTasks);
 
   UpdateGeometries();
+
 }
 
 void PBDSolver::UpdateGeometries()
