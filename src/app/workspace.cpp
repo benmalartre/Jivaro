@@ -707,5 +707,34 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
 }
 
+static void
+_SetupResults(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfVec3f>& points)
+{
+
+  pxr::UsdGeomXform pntGroup =
+    pxr::UsdGeomXform::Define(stage, stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("intersection")));
+
+  size_t rayIndex = 0;
+  pxr::VtArray<pxr::GfVec3f> colors(1);
+
+
+  std::string name = "ray_intersection_";
+  for (auto& point : points) {
+    colors[0] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+
+    pxr::UsdGeomSphere origin =
+      pxr::UsdGeomSphere::Define(stage, pntGroup.GetPath().AppendChild(
+        pxr::TfToken(name + std::to_string(rayIndex))
+      ));
+
+    origin.AddTranslateOp().Set(pxr::GfVec3d(point));
+    origin.CreateRadiusAttr().Set(0.2);
+    origin.CreateDisplayColorAttr().Set(colors);
+
+    rayIndex++;
+
+  }
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

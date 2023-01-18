@@ -13,7 +13,6 @@ namespace Perlin
 #define _doublemagicroundeps	      (.5-1.4e-11)				//	almost .5f = .5f - 1e^(number of exp bit)
 #define _doublemagic			double (6755399441055744.0)		//	2^52 * 1.5,  uses limited precision to floor
 
-
 //	fast floor float->int conversion routine.
 inline int32_t Floor2Int(float val) 
 {
@@ -26,13 +25,10 @@ inline int32_t Floor2Int(float val)
 #endif
 }
 
-
-
 inline float Lerp(float t, float v1, float v2) 
 {
 	return v1 + t*(v2 - v1);
 }
-
 
 //	like cubic fade but has both first-order and second-order derivatives of 0.0 at [0.0,1.0]
 inline float PerlinFade( float val ) {			
@@ -40,8 +36,6 @@ inline float PerlinFade( float val ) {
 	float val4 = val3*val;
 	return 6.0f*val4*val - 15.0f*val4 + 10.0f*val3;
 }
-
-
 
 //
 //	Perlin Noise Stuff
@@ -139,116 +133,113 @@ return ((h&4)==0 ? -a:a) + ((h&2)==0 ? -b:b) + ((h&1)==0 ? -c:c);
 
 static float PerlinNoise3DFunctionPeriodic(float x, float y, float z, int px, int py, int pz) 
 {
-	// Compute noise cell coordinates and offsets
-	int32_t ix = Floor2Int(x);
-	int32_t iy = Floor2Int(y);
-	int32_t iz = Floor2Int(z);
-	float dx = x - ix, dy = y - iy, dz = z - iz;
+  // Compute noise cell coordinates and offsets
+  int32_t ix = Floor2Int(x);
+  int32_t iy = Floor2Int(y);
+  int32_t iz = Floor2Int(z);
+  float dx = x - ix, dy = y - iy, dz = z - iz;
 
-	int32_t ix0 = (ix%px) & (PERLIN_PERMUTATION_SIZE - 1);
-	int32_t iy0 = (iy%py) & (PERLIN_PERMUTATION_SIZE - 1);
-	int32_t iz0 = (iz%pz) & (PERLIN_PERMUTATION_SIZE - 1);
+  int32_t ix0 = (ix%px) & (PERLIN_PERMUTATION_SIZE - 1);
+  int32_t iy0 = (iy%py) & (PERLIN_PERMUTATION_SIZE - 1);
+  int32_t iz0 = (iz%pz) & (PERLIN_PERMUTATION_SIZE - 1);
 
-	int32_t ix1 = ((ix+1)%px) & (PERLIN_PERMUTATION_SIZE - 1);
-	int32_t iy1 = ((iy+1)%py) & (PERLIN_PERMUTATION_SIZE - 1);
-	int32_t iz1 = ((iz+1)%pz) & (PERLIN_PERMUTATION_SIZE - 1);
+  int32_t ix1 = ((ix+1)%px) & (PERLIN_PERMUTATION_SIZE - 1);
+  int32_t iy1 = ((iy+1)%py) & (PERLIN_PERMUTATION_SIZE - 1);
+  int32_t iz1 = ((iz+1)%pz) & (PERLIN_PERMUTATION_SIZE - 1);
 
-	float w000 = Grad3d(ix0, iy0, iz0,   dx,   dy,   dz);
-	float w100 = Grad3d(ix1, iy0, iz0,   dx-1, dy,   dz);
-	float w010 = Grad3d(ix0, iy1, iz0,   dx,   dy-1, dz);
-	float w110 = Grad3d(ix1, iy1, iz0,   dx-1, dy-1, dz);
-	float w001 = Grad3d(ix0, iy0, iz1, dx,   dy,   dz-1);
-	float w101 = Grad3d(ix1, iy0, iz1, dx-1, dy,   dz-1);
-	float w011 = Grad3d(ix0, iy1, iz1, dx,   dy-1, dz-1);
-	float w111 = Grad3d(ix1, iy1, iz1, dx-1, dy-1, dz-1);
-	// Compute trilinear interpolation of weights
-	float wx = PerlinFade(dx);
-	float wy = PerlinFade(dy);
-	float wz = PerlinFade(dz);
-	float x00 = Lerp(wx, w000, w100);
-	float x10 = Lerp(wx, w010, w110);
-	float x01 = Lerp(wx, w001, w101);
-	float x11 = Lerp(wx, w011, w111);
-	float y0 = Lerp(wy, x00, x10);
-	float y1 = Lerp(wy, x01, x11);
-	return Lerp(wz, y0, y1);
+  float w000 = Grad3d(ix0, iy0, iz0,   dx,   dy,   dz);
+  float w100 = Grad3d(ix1, iy0, iz0,   dx-1, dy,   dz);
+  float w010 = Grad3d(ix0, iy1, iz0,   dx,   dy-1, dz);
+  float w110 = Grad3d(ix1, iy1, iz0,   dx-1, dy-1, dz);
+  float w001 = Grad3d(ix0, iy0, iz1, dx,   dy,   dz-1);
+  float w101 = Grad3d(ix1, iy0, iz1, dx-1, dy,   dz-1);
+  float w011 = Grad3d(ix0, iy1, iz1, dx,   dy-1, dz-1);
+  float w111 = Grad3d(ix1, iy1, iz1, dx-1, dy-1, dz-1);
+  // Compute trilinear interpolation of weights
+  float wx = PerlinFade(dx);
+  float wy = PerlinFade(dy);
+  float wz = PerlinFade(dz);
+  float x00 = Lerp(wx, w000, w100);
+  float x10 = Lerp(wx, w010, w110);
+  float x01 = Lerp(wx, w001, w101);
+  float x11 = Lerp(wx, w011, w111);
+  float y0 = Lerp(wy, x00, x10);
+  float y1 = Lerp(wy, x01, x11);
+  return Lerp(wz, y0, y1);
 }
 
 static float PerlinNoise3DFunction(float x, float y, float z) 
 {
-	// Compute noise cell coordinates and offsets
-	int32_t ix = Floor2Int(x);
-	int32_t iy = Floor2Int(y);
-	int32_t iz = Floor2Int(z);
-	float dx = x - ix, dy = y - iy, dz = z - iz;
-	// Compute gradient weights
-	ix &= (PERLIN_PERMUTATION_SIZE - 1);
-	iy &= (PERLIN_PERMUTATION_SIZE - 1);
-	iz &= (PERLIN_PERMUTATION_SIZE - 1);
-	float w000 = Grad3d(ix,   iy,   iz,   dx,   dy,   dz);
-	float w100 = Grad3d(ix+1, iy,   iz,   dx-1, dy,   dz);
-	float w010 = Grad3d(ix,   iy+1, iz,   dx,   dy-1, dz);
-	float w110 = Grad3d(ix+1, iy+1, iz,   dx-1, dy-1, dz);
-	float w001 = Grad3d(ix,   iy,   iz+1, dx,   dy,   dz-1);
-	float w101 = Grad3d(ix+1, iy,   iz+1, dx-1, dy,   dz-1);
-	float w011 = Grad3d(ix,   iy+1, iz+1, dx,   dy-1, dz-1);
-	float w111 = Grad3d(ix+1, iy+1, iz+1, dx-1, dy-1, dz-1);
-	// Compute trilinear interpolation of weights
-	float wx = PerlinFade(dx);
-	float wy = PerlinFade(dy);
-	float wz = PerlinFade(dz);
-	float x00 = Lerp(wx, w000, w100);
-	float x10 = Lerp(wx, w010, w110);
-	float x01 = Lerp(wx, w001, w101);
-	float x11 = Lerp(wx, w011, w111);
-	float y0 = Lerp(wy, x00, x10);
-	float y1 = Lerp(wy, x01, x11);
-	return Lerp(wz, y0, y1);
+  // Compute noise cell coordinates and offsets
+  int32_t ix = Floor2Int(x);
+  int32_t iy = Floor2Int(y);
+  int32_t iz = Floor2Int(z);
+  float dx = x - ix, dy = y - iy, dz = z - iz;
+  // Compute gradient weights
+  ix &= (PERLIN_PERMUTATION_SIZE - 1);
+  iy &= (PERLIN_PERMUTATION_SIZE - 1);
+  iz &= (PERLIN_PERMUTATION_SIZE - 1);
+  float w000 = Grad3d(ix,   iy,   iz,   dx,   dy,   dz);
+  float w100 = Grad3d(ix+1, iy,   iz,   dx-1, dy,   dz);
+  float w010 = Grad3d(ix,   iy+1, iz,   dx,   dy-1, dz);
+  float w110 = Grad3d(ix+1, iy+1, iz,   dx-1, dy-1, dz);
+  float w001 = Grad3d(ix,   iy,   iz+1, dx,   dy,   dz-1);
+  float w101 = Grad3d(ix+1, iy,   iz+1, dx-1, dy,   dz-1);
+  float w011 = Grad3d(ix,   iy+1, iz+1, dx,   dy-1, dz-1);
+  float w111 = Grad3d(ix+1, iy+1, iz+1, dx-1, dy-1, dz-1);
+  // Compute trilinear interpolation of weights
+  float wx = PerlinFade(dx);
+  float wy = PerlinFade(dy);
+  float wz = PerlinFade(dz);
+  float x00 = Lerp(wx, w000, w100);
+  float x10 = Lerp(wx, w010, w110);
+  float x01 = Lerp(wx, w001, w101);
+  float x11 = Lerp(wx, w011, w111);
+  float y0 = Lerp(wy, x00, x10);
+  float y1 = Lerp(wy, x01, x11);
+  return Lerp(wz, y0, y1);
 }
-
 
 static float PerlinNoise2DFunction(float x, float y) 
 {
-	// Compute noise cell coordinates and offsets
-	int32_t ix = Floor2Int(x);
-	int32_t iy = Floor2Int(y);
-	float dx = x - ix, dy = y - iy;
-	// Compute gradient weights
-	ix &= (PERLIN_PERMUTATION_SIZE - 1);
-	iy &= (PERLIN_PERMUTATION_SIZE - 1);
-	float w00 = Grad2d(ix,   iy,   dx,		 dy);
-	float w10 = Grad2d(ix+1, iy,   dx-1.0f, dy);
-	float w01 = Grad2d(ix,   iy+1, dx,		 dy-1.0f);
-	float w11 = Grad2d(ix+1, iy+1, dx-1.0f, dy-1.0f);
-	// Compute bilinear interpolation of weights
-	float wx = PerlinFade(dx);
-	float wy = PerlinFade(dy);
-	float x0 = Lerp(wx, w00, w10);
-	float x1 = Lerp(wx, w01, w11);
-	return Lerp(wy, x0, x1);
+  // Compute noise cell coordinates and offsets
+  int32_t ix = Floor2Int(x);
+  int32_t iy = Floor2Int(y);
+  float dx = x - ix, dy = y - iy;
+  // Compute gradient weights
+  ix &= (PERLIN_PERMUTATION_SIZE - 1);
+  iy &= (PERLIN_PERMUTATION_SIZE - 1);
+  float w00 = Grad2d(ix,   iy,   dx,		 dy);
+  float w10 = Grad2d(ix+1, iy,   dx-1.0f, dy);
+  float w01 = Grad2d(ix,   iy+1, dx,		 dy-1.0f);
+  float w11 = Grad2d(ix+1, iy+1, dx-1.0f, dy-1.0f);
+  // Compute bilinear interpolation of weights
+  float wx = PerlinFade(dx);
+  float wy = PerlinFade(dy);
+  float x0 = Lerp(wx, w00, w10);
+  float x1 = Lerp(wx, w01, w11);
+  return Lerp(wy, x0, x1);
 }
 
 
 static float PerlinNoise1DFunction(float x) 
 {
-	// Compute noise cell coordinates and offsets
-	int32_t ix = Floor2Int(x);
-	float dx = x - ix;
-	// Compute gradient weights
-	ix &= (PERLIN_PERMUTATION_SIZE - 1);
-	float w00 = Grad1d(ix,   dx);
-	float w10 = Grad1d(ix+1, dx-1.0f);
-	// Compute bilinear interpolation of weights
-	float wx = PerlinFade(dx);
-	float x0 = Lerp(wx, w00, w10);
-	
-	return x0;
-}
+  // Compute noise cell coordinates and offsets
+  int32_t ix = Floor2Int(x);
+  float dx = x - ix;
+  // Compute gradient weights
+  ix &= (PERLIN_PERMUTATION_SIZE - 1);
+  float w00 = Grad1d(ix,   dx);
+  float w10 = Grad1d(ix+1, dx-1.0f);
+  // Compute bilinear interpolation of weights
+  float wx = PerlinFade(dx);
+  float x0 = Lerp(wx, w00, w10);
+
+  return x0;
 }
 
 //------------------------------------------------
 //! Public interfaces
-
 float Perlin1D(float x, int octaves, float persistence)
 {
 	float r = 0.0f;
@@ -268,7 +259,6 @@ float Perlin1D(float x, int octaves, float persistence)
 
 	return r;
 }
-
 
 float Perlin2D(float x, float y, int octaves, float persistence)
 {
@@ -290,7 +280,6 @@ float Perlin2D(float x, float y, int octaves, float persistence)
 
 	return r;
 }
-
 
 float Perlin3D(float x, float y, float z, int octaves, float persistence)
 {

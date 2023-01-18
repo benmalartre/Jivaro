@@ -84,7 +84,7 @@ ThreadPool::BeginTasks()
 }
 
 void
-ThreadPool::AddTask(TaskFn fn, ThreadPool::TaskData* data)
+ThreadPool::AddTask(TaskFn fn, void* data)
 {
   _tasks.push_back({ fn, data });
   _start.Notify();

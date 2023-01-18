@@ -2,14 +2,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-PBDParticle::PBDParticle() 
-{
-}
-
-PBDParticle::~PBDParticle()
-{
-}
-
 size_t PBDParticle::AddGeometry(PBDGeometry* geom)
 {
   std::cout << "[system] add geometry : " << geom << std::endl;
@@ -95,7 +87,5 @@ void PBDParticle::AccumulateForces(size_t startIdx, size_t endIdx, const pxr::Gf
     _force[i] = gravity;
   }
 }
-
-
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -23,35 +23,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static void
-_SetupResults(pxr::UsdStageRefPtr& stage, std::vector<pxr::GfVec3f>& points)
-{
-
-  pxr::UsdGeomXform pntGroup =
-    pxr::UsdGeomXform::Define(stage, stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("intersection")));
-
-  size_t rayIndex = 0;
-  pxr::VtArray<pxr::GfVec3f> colors(1);
-
-
-  std::string name = "ray_intersection_";
-  for (auto& point : points) {
-    colors[0] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-
-    pxr::UsdGeomSphere origin =
-      pxr::UsdGeomSphere::Define(stage, pntGroup.GetPath().AppendChild(
-        pxr::TfToken(name + std::to_string(rayIndex))
-      ));
-
-    origin.AddTranslateOp().Set(pxr::GfVec3d(point));
-    origin.CreateRadiusAttr().Set(0.2);
-    origin.CreateDisplayColorAttr().Set(colors);
-
-    rayIndex++;
-
-  }
-}
-
 static void 
 BenchmarkParallelEvaluation(PBDSolver* solver)
 {
@@ -202,13 +173,13 @@ _SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
 }
 
 
-struct SolverTaskData : public ThreadPool::TaskData {
+struct SolverTaskData {
   PBDSolver* solver;
   size_t     startIdx;
   size_t     endIdx;
 };
 
-void _SolveCollisions(ThreadPool::TaskData* data)
+void _SolveCollisions(void* data)
 {
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
@@ -222,7 +193,7 @@ void _SolveCollisions(ThreadPool::TaskData* data)
   }
 }
 
-void _SatisfyConstraints(ThreadPool::TaskData* data)
+void _SatisfyConstraints(void* data)
 {
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
@@ -233,7 +204,7 @@ void _SatisfyConstraints(ThreadPool::TaskData* data)
   }
 }
 
-void _Integrate(ThreadPool::TaskData* data)
+void _Integrate(void* data)
 {
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
@@ -242,14 +213,13 @@ void _Integrate(ThreadPool::TaskData* data)
   system->Integrate(taskData->startIdx, taskData->endIdx, solver->GetTimeStep());
 }
 
-void _Reset(ThreadPool::TaskData* data)
+void _Reset(void* data)
 {
   SolverTaskData* taskData = (SolverTaskData*)data;
   PBDSolver* solver = taskData->solver;
   PBDParticle* system = solver->GetSystem();
   system->Reset(taskData->startIdx, taskData->endIdx);
 }
-
 
 PBDSolver::PBDSolver()
   : _gravity(0, -1, 0)
@@ -259,7 +229,6 @@ PBDSolver::PBDSolver()
 {
   _pool.Init();
 }
-
 
 PBDSolver::~PBDSolver()
 {
@@ -277,7 +246,7 @@ PBDSolver::_ParallelEvaluation(ThreadPool::TaskFn fn, size_t numElements, size_t
     datas[t].solver = this;
     datas[t].startIdx = t * chunkSize;
     datas[t].endIdx = pxr::GfMin((t + 1) * chunkSize, numElements);
-    _pool.AddTask(fn, &datas[t]);
+    _pool.AddTask(fn, (void*)&datas[t]);
   }
   _pool.EndTasks();
 }

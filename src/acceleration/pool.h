@@ -14,20 +14,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 class ThreadPool {
 
 public:
-  enum State {
-    WAITING,
-    WORKING,
-    DONE
-  };
-
-  struct TaskData {
-  };
-
-  typedef void (*TaskFn)(TaskData* data);
+  typedef void (*TaskFn)(void* data);
 
   struct Task {
     TaskFn      fn;
-    TaskData*   data;
+    void*       data;
     void Execute() { fn(data); };
   };
 
@@ -47,7 +38,7 @@ public:
 
   void Init();
   void BeginTasks();
-  void AddTask(TaskFn fn, TaskData* datas);
+  void AddTask(TaskFn fn, void* datas);
   void EndTasks();
   void Signal();
   Task* GetPending();

@@ -1,8 +1,6 @@
 #ifndef JVR_PBD_PARTICLE_H
 #define JVR_PBD_PARTICLE_H
 
-
-
 #include <map>
 #include <float.h>
 #include <pxr/base/vt/array.h>
@@ -10,7 +8,6 @@
 
 #include "../common.h"
 #include "../geometry/geometry.h"
-
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -25,9 +22,6 @@ struct PBDGeometry
 class PBDParticle
 {
 public:
-  PBDParticle();
-  ~PBDParticle();
-
   size_t AddGeometry(PBDGeometry* geom);
   void RemoveGeometry(PBDGeometry* geom);
 
@@ -52,19 +46,16 @@ public:
   const float* GetMasses() const { return &_mass[0]; };
 
 private:
-  pxr::VtArray<pxr::GfVec3f>          _rest;
-  pxr::VtArray<pxr::GfVec3f>          _preload;
-  pxr::VtArray<pxr::GfVec3f>          _position;
-  pxr::VtArray<pxr::GfVec3f>          _previous;
-  pxr::VtArray<pxr::GfVec3f>          _velocity;
-  pxr::VtArray<pxr::GfVec3f>          _input;
-  pxr::VtArray<pxr::GfVec3f>          _force;
-  pxr::VtArray<float>                 _mass;
-  pxr::VtArray<float>                 _invMass;
- 
-
+  pxr::VtArray<pxr::GfVec3f>  _rest;
+  pxr::VtArray<pxr::GfVec3f>  _preload;
+  pxr::VtArray<pxr::GfVec3f>  _position;
+  pxr::VtArray<pxr::GfVec3f>  _previous;
+  pxr::VtArray<pxr::GfVec3f>  _velocity;
+  pxr::VtArray<pxr::GfVec3f>  _input;
+  pxr::VtArray<pxr::GfVec3f>  _force;
+  pxr::VtArray<float>         _mass;
+  pxr::VtArray<float>         _invMass;
 };
-
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
