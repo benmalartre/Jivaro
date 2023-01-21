@@ -308,7 +308,8 @@ Workspace::InitExec()
     for (auto& mesh : _execScene->GetMeshes()) {
       colliders.push_back(&mesh.second);
     }
-    _solver->AddColliders(colliders);
+    for(auto& collider: colliders)
+      _solver->AddCollider(collider);
     _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
       _workStage->GetDefaultPrim().GetPath()));
 

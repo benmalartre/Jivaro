@@ -171,9 +171,6 @@ Engine::DecodeIntersection(
   int* outHitInstanceIndex,
   pxr::HdInstancerContext* outInstancerContext)
 {
-  if (ARCH_UNLIKELY(_legacyImpl)) {
-    return false;
-  }
 
   if (_GetUseSceneIndices()) {
     // XXX(HYD-2299): picking

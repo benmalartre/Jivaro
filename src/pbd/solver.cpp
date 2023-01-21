@@ -279,13 +279,13 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
   }
 }
 
-void PBDSolver::AddColliders(std::vector<Geometry*>& colliders)
+void PBDSolver::AddCollider(Geometry* collider)
 {
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
 
-  _colliders = colliders;
+  _colliders.push_back(collider);
   float radius = 0.2f;
-  Voxels voxels(colliders[0], radius);
+  Voxels voxels(collider, radius);
   _SetupVoxels(stage, &voxels, radius);
 
   BenchmarkParallelEvaluation(this);

@@ -21,7 +21,7 @@ public:
   void SetGravity(const pxr::GfVec3f& gravity) { _gravity = gravity; };
   void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
   void RemoveGeometry(Geometry* geom);
-  void AddColliders(std::vector<Geometry*>& colliders);
+  void AddCollider(Geometry* colliders);
   void AddConstraints(Geometry* geom, size_t offset);
   void SatisfyConstraints();
   void UpdateColliders();

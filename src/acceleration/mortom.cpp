@@ -64,9 +64,9 @@ uint64_t Encode3D(const pxr::GfVec3i& p)
 // DECODING
 static inline uint32_t _GetThirdBits(const uint64_t m) {
   uint64_t x = m & 0x1249249249249249 ;
-  x = (x ^ (x >> 2)) & 0x10c30c30c30c30c3;
-  x = (x ^ (x >> 4)) & 0x100f00f00f00f00f;
-  x = (x ^ (x >> 8)) & 0x1f0000ff0000ff;
+  x = (x ^ (x >> 2))  & 0x10c30c30c30c30c3;
+  x = (x ^ (x >> 4))  & 0x100f00f00f00f00f;
+  x = (x ^ (x >> 8))  & 0x1f0000ff0000ff;
   x = (x ^ (x >> 16)) & 0x1f00000000ffff;
   x = (x ^ (x >> 32)) & 0x1fffff;
   return x;
