@@ -1,5 +1,6 @@
 #include "../acceleration/hashGrid.h"
 #include "../geometry/geometry.h"
+#include "../utils/color.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -12,6 +13,7 @@ HashGrid::Init(const std::vector<Geometry*>& geometries)
 void 
 HashGrid::Update(const std::vector<Geometry*>& geometries)
 {
+  std::cout << "hash grid update num points " << geometries[0]->GetNumPoints() << std::endl;
   _geometries = geometries;
   size_t numElements = 0;
   for (const auto& geometry : _geometries) {
@@ -19,6 +21,7 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
   }
 
   _tableSize = 2 * numElements;
+  std::cout << "hash grid table size " << _tableSize << std::endl;
   _cellStart.resize(_tableSize + 1, 0);
   _cellEntries.resize(numElements, 0);
   _mapping.resize(numElements);
@@ -27,16 +30,14 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
   std::vector<int64_t> hashes(numElements);
   
   size_t elemIdx = 0;
-  size_t geomIdx = 0;
-  for (const auto& geometry : _geometries) {
+  for (size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx) {
+    const Geometry* geometry = _geometries[geomIdx];
     _points[geomIdx] = geometry->GetPositionsCPtr();
     size_t numPoints = geometry->GetNumPoints();
     const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
       _mapping[elemIdx] = _ComputeElementKey(geomIdx, pointIdx);
       hashes[elemIdx] = _HashCoords(_IntCoords(points[pointIdx]));
-      std::cout << "hash coords " << hashes[elemIdx] << 
-        ":" << hashes[elemIdx] << std::endl;
       _cellStart[hashes[elemIdx]]++;
       elemIdx++;
     }
@@ -61,17 +62,21 @@ size_t
 HashGrid::Closests(const pxr::GfVec3f& point, 
   float maxDist, std::vector<int>& closests)
 {
-  const pxr::GfVec3i minCoord = _IntCoords(point - pxr::GfVec3f(-maxDist));
-  const pxr::GfVec3i maxCoord = _IntCoords(point - pxr::GfVec3f(-maxDist));
+  const pxr::GfVec3i minCoord = _IntCoords(point - pxr::GfVec3f(maxDist));
+  const pxr::GfVec3i maxCoord = _IntCoords(point + pxr::GfVec3f(maxDist));
 
   size_t closestIdx = 0;
 
-  for (int xi = minCoord[0]; xi <= minCoord[0]; ++xi) {
-    for (int yi = minCoord[1]; yi <= minCoord[1]; ++yi) {
-      for (int zi = minCoord[2]; zi <= minCoord[2]; ++zi) {
+  for (int xi = minCoord[0]; xi <= maxCoord[0]; ++xi) {
+    for (int yi = minCoord[1]; yi <= maxCoord[1]; ++yi) {
+      for (int zi = minCoord[2]; zi <= maxCoord[2]; ++zi) {
         int64_t h = _HashCoords(pxr::GfVec3i(xi, yi, zi));
+        std::cout << "hash " << h << std::endl;
+
         size_t start = _cellStart[h];
         size_t end = _cellStart[h + 1];
+
+        std::cout << start << "," << end << std::endl;
 
         for (size_t i = start; i < end; ++i) {
           closests[closestIdx] = _cellEntries[i];
@@ -86,11 +91,19 @@ HashGrid::Closests(const pxr::GfVec3f& point,
 const pxr::GfVec3f& 
 HashGrid::_GetPoint(size_t elemIdx)
 {
-  std::cout << "GET POINT " << elemIdx << std::endl;
-  std::cout << "GEOM ID : " << _GetGeometryIndexFromElementKey(elemIdx) << std::endl;
+  std::cout << "ELEM  ID : " << elemIdx << std::endl;
+  std::cout << "GEOM  ID : " << _GetGeometryIndexFromElementKey(elemIdx) << std::endl;
   std::cout << "POINT ID : " << _GetPointIndexFromElementKey(elemIdx) << std::endl;
   return _points[_GetGeometryIndexFromElementKey(elemIdx)][_GetPointIndexFromElementKey(elemIdx)];
 }
 
+pxr::GfVec3f
+HashGrid::GetColor(const pxr::GfVec3f& point)
+{
+  std::cout << "get color : " << point << std::endl;
+  int64_t h = _HashPos(point);
+  std::cout << "hash : " << h << std::endl;
+  return UnpackColor3<pxr::GfVec3f>(h);
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE

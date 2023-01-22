@@ -10,6 +10,13 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
+Geometry::Geometry()
+{
+  _initialized = false;
+  _numPoints = 0;
+  _type = INVALID;
+}
+
 Geometry::Geometry(short type)
 {
   _initialized = false;

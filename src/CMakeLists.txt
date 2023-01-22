@@ -60,6 +60,7 @@ add_executable(${TARGET}
   geometry/point.cpp
   geometry/edge.cpp
   geometry/triangle.cpp
+  geometry/delaunay.cpp
   geometry/geometry.cpp
   geometry/points.cpp
   geometry/mesh.cpp

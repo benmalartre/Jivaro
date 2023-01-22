@@ -30,6 +30,7 @@ class Hit;
 class Geometry {
 public:
   enum Type {
+    INVALID,
     POINT,
     CURVE,
     MESH,
@@ -37,6 +38,7 @@ public:
     INSTANCER
   };
 
+  Geometry();
   Geometry(short type);
   Geometry(const Geometry* other, short type, bool normalize);
   virtual ~Geometry() {};

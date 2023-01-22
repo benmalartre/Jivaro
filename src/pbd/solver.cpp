@@ -4,6 +4,7 @@
 #include "../geometry/mesh.h"
 #include "../geometry/voxels.h"
 #include "../acceleration/bvh.h"
+#include "../acceleration/hashGrid.h"
 #include "../app/application.h"
 #include "../app/time.h"
 
@@ -142,13 +143,11 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 static void
 _SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
 {
+  const pxr::VtArray<pxr::GfVec3f>& positions = voxels->GetPositions();
 
-  pxr::VtArray<pxr::GfVec3f> positions;
-  voxels->Init();
-  voxels->Trace(0);
-  voxels->Trace(1);
-  voxels->Trace(2);
-  voxels->Build(positions);
+  std::cout << "hash grid radius : " << (voxels->GetRadius() * 2.f) << std::endl;
+  HashGrid grid(voxels->GetRadius() * 2.f);
+  grid.Init({ (Geometry*)voxels });
 
   size_t numPoints = positions.size();
   pxr::UsdGeomPoints points =
@@ -162,13 +161,34 @@ _SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
   pxr::VtArray<pxr::GfVec3f> colors(numPoints);
   for (size_t p = 0; p < numPoints; ++p) {
     widths[p] = radius;
-    colors[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[p] = grid.GetColor(positions[p]);
   }
   points.CreateWidthsAttr().Set(pxr::VtValue(widths));
   points.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
   //points.CreateNormalsAttr().Set(pxr::VtValue({pxr::GfVec3f(0, 1, 0)}));
   points.CreateDisplayColorAttr().Set(pxr::VtValue(colors));
   points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
+
+}
+
+static void
+_TestHashGrid(Geometry* geometry)
+{
+  const float radius = 0.025f;
+  HashGrid grid(radius * 2.f);
+  grid.Init({ geometry });
+
+  std::vector<int> closests(geometry->GetNumPoints());
+  for (size_t t = 0; t < 100; ++t) {
+    std::cout << "search closests for query point " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
+    size_t n = grid.Closests(pxr::GfVec3f(0.f, t*0.1f, 0.f), radius, closests);
+    if (!n) continue;
+    const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
+    std::cout << "found " << n << " closests points with search radius " << radius << std::endl;
+    for (size_t c = 0; c < n; ++c) {
+      std::cout << closests[c] << " : " << points[closests[c]] << std::endl;
+    }
+  }
 
 }
 
@@ -285,8 +305,15 @@ void PBDSolver::AddCollider(Geometry* collider)
 
   _colliders.push_back(collider);
   float radius = 0.2f;
-  Voxels voxels(collider, radius);
+  Voxels voxels;
+  voxels.Init(collider, radius);
+  voxels.Trace(0);
+  voxels.Trace(1);
+  voxels.Trace(2);
+  voxels.Build();
   _SetupVoxels(stage, &voxels, radius);
+
+  _TestHashGrid(collider);
 
   BenchmarkParallelEvaluation(this);
   /*

@@ -8,20 +8,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // constructor
 //--------------------------------------------------------------------------------
-Voxels::Voxels(Geometry* geometry, float radius)
-  : _geometry(geometry)
-  , _radius(radius)
+Voxels::Voxels()
+  : _geometry(NULL)
+  , _radius(1.f)
 {
-  if (_radius < 0.0001) _radius = 0.0001;
-  const pxr::GfVec3f size(geometry->GetBoundingBox().GetRange().GetSize());
-  _resolution = pxr::GfVec3i(
-    pxr::GfClamp(size[0] / radius, 1, std::numeric_limits<int>::max()),
-    pxr::GfClamp(size[1] / radius, 1, std::numeric_limits<int>::max()),
-    pxr::GfClamp(size[2] / radius, 1, std::numeric_limits<int>::max())
-  );
-  size_t numVoxels = GetNumCells();
-  _data.resize(numVoxels);
-  memset(&_data[0], 0, numVoxels * sizeof(uint8_t));
 };
 
 // compute num cells
@@ -55,19 +45,25 @@ Voxels::_ComputeFlatIndex(size_t x, size_t y, size_t z, short axis)
 
 // init voxel grid 
 //--------------------------------------------------------------------------------
-void Voxels::Init()
+void Voxels::Init(Geometry* geometry, float radius)
 {
-  const pxr::GfRange3d& range(_geometry->GetBoundingBox().GetRange());
-  const pxr::GfVec3f size(range.GetSize());
+  _radius = radius;
+  _geometry = geometry;
+  if (_radius < 0.0001) _radius = 0.0001;
+  const pxr::GfVec3f size(geometry->GetBoundingBox().GetRange().GetSize());
   _resolution = pxr::GfVec3i(
     pxr::GfClamp(size[0] / _radius, 1, std::numeric_limits<int>::max()),
     pxr::GfClamp(size[1] / _radius, 1, std::numeric_limits<int>::max()),
     pxr::GfClamp(size[2] / _radius, 1, std::numeric_limits<int>::max())
   );
+  size_t numVoxels = GetNumCells();
+  _data.resize(numVoxels);
+  memset(&_data[0], 0, numVoxels * sizeof(uint8_t));
 
   // build an aabb tree of the geometry
   _bvh.Init({ _geometry });
 }
+
 // trace voxel grid (Z direction)
 //--------------------------------------------------------------------------------
 void Voxels::Trace(short axis)
@@ -145,13 +141,13 @@ pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)
   return pxr::GfVec3f(range.GetMin()) + pxr::GfVec3f((x + 0.5f) * _radius, (y + 0.5f) * _radius, (z + 0.5f) * _radius);
 }
 
-void Voxels::Build(pxr::VtArray<pxr::GfVec3f>& points)
+void Voxels::Build()
 {
   size_t numCells = GetNumCells();
-  points.reserve(numCells);
+  _positions.reserve(numCells);
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     if (_data[cellIdx]) {
-      points.push_back(GetCellPosition(cellIdx));
+      _positions.push_back(GetCellPosition(cellIdx));
     }
   }
 }
