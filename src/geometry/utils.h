@@ -12,31 +12,13 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-//@see https://stackoverflow.com/questions/33333363/built-in-mod-vs-custom-mod-function-improve-the-performance-of-modulus-op/33333636#33333636
-static inline size_t FastMod(const size_t i, const size_t c) 
-{
-  return i >= c ? i % c : i;
-}
-
-// Kahan and Babuska summation, Neumaier variant; accumulates less FP error
-static inline double DoubleArraySum(const std::vector<double>& x) 
-{
-  double sum = x[0];
-  double err = 0.0;
-
-  for (size_t i = 1; i < x.size(); i++) {
-    const double k = x[i];
-    const double m = sum + k;
-    err += std::fabs(sum) >= std::fabs(k) ? sum - m + k : k - m + sum;
-    sum = m;
-  }
-  return sum + err;
-}
+const double EPSILON = std::numeric_limits<double>::epsilon();
+const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
 
 template<typename T>
-static inline double ComputeDistanceSquared(const T& a, const T& b) 
+static inline double ComputeDistanceSquared(const T& a, const T& b)
 {
-  return (b - a).GetLengthSquared();
+  return (b - a).GetLengthSq();
 }
 
 template<typename T>
@@ -50,13 +32,13 @@ static inline double ComputeCircumRadius(const pxr::GfVec3d& a,
 {
     const pxr::GfVec3d ab(b - a);
     const pxr::GfVec3d ac(c - a);
-    const pxr::GfVec3d abXac(ab ^ ac);
+    const pxr::GfVec3d n(ab ^ ac);
 
     // this is the from a to circumsphere center
     pxr::GfVec3d delta = (
-      (abXac ^ ab) * ac.GetLengthSq() + 
-      (ac ^ abXac) * ab.GetLengthSq()
-    ) / (2.f*abXac.GetLengthSq());
+      (n ^ ab) * ac.GetLengthSq() + 
+      (ac ^ n) * ab.GetLengthSq()
+    ) / (2.f * n.GetLengthSq());
     return delta.GetLength();
 }
 
@@ -65,20 +47,14 @@ static inline pxr::GfVec3d ComputeCircumCenter(const pxr::GfVec3d& a,
 {
     const pxr::GfVec3d ab(b - a);
     const pxr::GfVec3d ac(c - a);
-    const pxr::GfVec3d abXac(ab ^ ac);
+    const pxr::GfVec3d n(ab ^ ac);
 
     // this is the from a to circumsphere center
     pxr::GfVec3d delta = (
-      (abXac ^ ab) * ac.GetLengthSq() + 
-      (ac ^ abXac) * ab.GetLengthSq()
-    ) / (2.f*abXac.GetLengthSq());
+      (n ^ ab) * ac.GetLengthSq() + 
+      (ac ^ n) * ab.GetLengthSq()
+    ) / (2.f * n.GetLengthSq());
     return a + delta;
-}
-
-static inline bool _Orient(const double px, const double py, const double qx, 
-  const double qy, const double rx, const double ry) 
-{
-  return (qy - py) * (rx - qx) - (qx - px) * (ry - qy) < 0.0;
 }
 
 static inline bool CheckPointInSphere(const pxr::GfVec3d& center, float radius, const pxr::GfVec3d& point)
@@ -86,20 +62,10 @@ static inline bool CheckPointInSphere(const pxr::GfVec3d& center, float radius, 
   return (point - center).GetLengthSq() < (radius * radius);
 }
 
-const double EPSILON = std::numeric_limits<double>::epsilon();
-const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
-
 template<typename T>
 inline bool CheckPointsEquals(const T& a, const T& b) {
   return pxr::GfIsClose(a, b, EPSILON);
 };
-
-// monotonically increases with real angle, but doesn't need expensive trigonometry
-inline double _GetPseudoAngle(const double dx, const double dy) {
-    const double p = dx / (std::abs(dx) + std::abs(dy));
-    return (dy > 0.0 ? 3.0 - p : 1.0 + p) / 4.0; // [0..1)
-};
-
 
 /// Barycentric coordinates
 void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
