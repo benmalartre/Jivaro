@@ -62,7 +62,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
     }
   }
 
-  const pxr::GfVec2d& coord1 = _coords[i1];
+  pxr::GfVec2d coord1 = _coords[i1];
 
   double minRadius = std::numeric_limits<double>::max();
 
@@ -83,7 +83,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
     throw std::runtime_error("not triangulation");
   }
 
-  const pxr::GfVec2d& coord2 = _coords[i2];
+  pxr::GfVec2d coord2 = _coords[i2];
 
   if(_Orient(coord0, coord1, coord2)) {
     std::swap(i1, i2);

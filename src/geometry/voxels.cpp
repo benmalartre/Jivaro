@@ -145,9 +145,11 @@ void Voxels::Build()
 {
   size_t numCells = GetNumCells();
   _positions.reserve(numCells);
+  _numPoints = 0;
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     if (_data[cellIdx]) {
       _positions.push_back(GetCellPosition(cellIdx));
+      _numPoints++;
     }
   }
 }

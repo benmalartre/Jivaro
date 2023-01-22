@@ -42,7 +42,6 @@ public:
 protected:
   // hash from integer coordinates
   inline int64_t _HashCoords(const pxr::GfVec3i& intCoords) {
-    std::cout << "hash coords table size : " << _tableSize << std::endl;
     //return pxr::TfHash()(_IntCoords(intCoords)) % _tableSize;
     int64_t h = (intCoords[0] * 92837111) ^ (intCoords[1] * 689287499) ^ (intCoords[2] * 283923481);	// fantasy function
     return std::abs(h) % _tableSize;
@@ -50,12 +49,6 @@ protected:
 
   // integer coordinates
   inline pxr::GfVec3i _IntCoords(const pxr::GfVec3f& coords) {
-    std::cout << "int coords " << coords << std::endl;
-    std::cout << "spacing " << _spacing << std::endl;
-    std::cout << "axis x " << (coords[0] / _spacing) << std::endl;
-    std::cout << "axis y " << (coords[1] / _spacing) << std::endl;
-    std::cout << "axis z " << (coords[2] / _spacing) << std::endl;
-
     return pxr::GfVec3i(
       std::floorf(coords[0] / _spacing),
       std::floorf(coords[1] / _spacing),
