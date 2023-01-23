@@ -172,18 +172,18 @@ _SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
 }
 
 static void
-_TestHashGrid(Geometry* geometry)
+_TestHashGrid(Voxels* voxels, float radius)
 {
-  const float radius = 0.025f;
+  std::cout << "hash grid radius : " << radius << std::endl;
   HashGrid grid(radius * 2.f);
-  grid.Init({ geometry });
+  grid.Init({ (Geometry*)voxels });
 
-  std::vector<int> closests(geometry->GetNumPoints());
-  for (size_t t = 0; t < 100; ++t) {
+  std::vector<int> closests(voxels->GetNumPoints());
+  for (size_t t = 0; t < 10; ++t) {
     std::cout << "search closests for query point " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
-    size_t n = grid.Closests(pxr::GfVec3f(0.f, t*0.1f, 0.f), radius, closests);
+    size_t n = grid.Closests(pxr::GfVec3f(0.f, t * 0.1f, 0.f), radius * 2.f, closests);
     if (!n) continue;
-    const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
+    const pxr::GfVec3f* points = voxels->GetPositionsCPtr();
     std::cout << "found " << n << " closests points with search radius " << radius << std::endl;
     for (size_t c = 0; c < n; ++c) {
       std::cout << closests[c] << " : " << points[closests[c]] << std::endl;
@@ -313,7 +313,7 @@ void PBDSolver::AddCollider(Geometry* collider)
   voxels.Build();
   _SetupVoxels(stage, &voxels, radius);
 
-  _TestHashGrid(collider);
+  _TestHashGrid(&voxels, radius);
 
   BenchmarkParallelEvaluation(this);
   /*

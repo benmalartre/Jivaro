@@ -34,8 +34,8 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
     size_t numPoints = geometry->GetNumPoints();
     const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+      hashes[elemIdx] = _HashPos(points[pointIdx]);
       _mapping[elemIdx] = _ComputeElementKey(geomIdx, pointIdx);
-      hashes[elemIdx] = _HashCoords(_IntCoords(points[pointIdx]));
       _cellStart[hashes[elemIdx]]++;
       elemIdx++;
     }
@@ -54,6 +54,9 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
     _cellStart[h]--;
     _cellEntries[_cellStart[h]] = elemIdx;
   }
+
+  std::cout << "table size : " << _tableSize << std::endl;
+
 }
 
 size_t 

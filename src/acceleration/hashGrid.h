@@ -43,7 +43,7 @@ protected:
   // hash from integer coordinates
   inline int64_t _HashCoords(const pxr::GfVec3i& intCoords) {
     //return pxr::TfHash()(_IntCoords(intCoords)) % _tableSize;
-    int64_t h = (intCoords[0] * 92837111) ^ (intCoords[1] * 689287499) ^ (intCoords[2] * 283923481);	// fantasy function
+    int64_t h = (intCoords[0] * 92837111) ^ (intCoords[1] * 689287499) ^ (intCoords[2] * 283923481);
     return std::abs(h) % _tableSize;
   };
 
