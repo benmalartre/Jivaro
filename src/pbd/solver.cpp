@@ -383,9 +383,11 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
 
 void PBDSolver::AddCollider(Geometry* collider)
 {
+  
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
 
   _colliders.push_back(collider);
+  
   float radius = 0.2f;
   Voxels voxels;
   voxels.Init(collider, radius);
@@ -396,9 +398,9 @@ void PBDSolver::AddCollider(Geometry* collider)
   _SetupVoxels(stage, &voxels, radius);
 
   _TestHashGrid(&voxels, radius);
-
-  BenchmarkParallelEvaluation(this);
   /*
+  BenchmarkParallelEvaluation(this);
+  
   size_t numRays = 2048;
   std::vector<pxr::GfRay> rays(numRays);
   for (size_t r = 0; r < numRays; ++r) {

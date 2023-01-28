@@ -300,14 +300,17 @@ Workspace::InitExec()
     for (pxr::UsdPrim prim : primRange) {
       if (prim.IsA<pxr::UsdGeomMesh>()) {
         Mesh* mesh = _execScene->AddMesh(prim.GetPath());
-        //Voxels* voxels = _execScene->AddVoxels(prim.GetPath(), mesh, 0.2f);
         _solver->AddGeometry(mesh, 
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
+        /*
+        Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
+        _solver->AddGeometry(voxels,
+          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));*/
 
       }
     }
 
-    /*
+    
     std::vector<Geometry*> colliders;
     for (auto& mesh : _execScene->GetMeshes()) {
       colliders.push_back(&mesh.second);
@@ -316,7 +319,7 @@ Workspace::InitExec()
       _solver->AddCollider(collider);
     _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
       _workStage->GetDefaultPrim().GetPath()));
-     */
+     
 
     pxr::UsdGeomPoints points =
       pxr::UsdGeomPoints::Define(
