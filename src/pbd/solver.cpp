@@ -329,6 +329,7 @@ PBDSolver::PBDSolver()
   , _timeStep(1.f / 60.f)
   , _substeps(15)
   , _paused(true)
+  , _numTasks(32)
 {
   _pool.Init();
 }
@@ -357,7 +358,6 @@ PBDSolver::_ParallelEvaluation(ThreadPool::TaskFn fn, size_t numElements, size_t
 void PBDSolver::Reset()
 {
   UpdateColliders();
-
   // reset
   _ParallelEvaluation(_Reset, _system.GetNumParticles(), _numTasks);
 }
@@ -383,7 +383,7 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
 
 void PBDSolver::AddCollider(Geometry* collider)
 {
-  
+  /*
   pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
 
   _colliders.push_back(collider);
@@ -398,7 +398,7 @@ void PBDSolver::AddCollider(Geometry* collider)
   _SetupVoxels(stage, &voxels, radius);
 
   _TestHashGrid(&voxels, radius);
-  /*
+  
   BenchmarkParallelEvaluation(this);
   
   size_t numRays = 2048;
@@ -519,14 +519,17 @@ void PBDSolver::SatisfyConstraints()
 
 void PBDSolver::Step()
 {
+  std::cout << "solver step start" << std::endl;
 
   UpdateColliders();
   // integrate
   _ParallelEvaluation(_Integrate, _system.GetNumParticles(), _numTasks);
   _ParallelEvaluation(_SolveCollisions, _system.GetNumParticles(), _numTasks);
   _ParallelEvaluation(_SatisfyConstraints, GetNumConstraints(), _numTasks);
-
+  std::cout << "computation done " << std::endl;
   UpdateGeometries();
+  std::cout << "geometry updated " << std::endl;
+  std::cout << "solver step end" << std::endl;
 
 }
 

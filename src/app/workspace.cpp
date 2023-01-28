@@ -302,10 +302,10 @@ Workspace::InitExec()
         Mesh* mesh = _execScene->AddMesh(prim.GetPath());
         _solver->AddGeometry(mesh, 
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
-        /*
+        
         Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
         _solver->AddGeometry(voxels,
-          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));*/
+          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
 
       }
     }

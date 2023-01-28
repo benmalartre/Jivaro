@@ -82,10 +82,8 @@ Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 
 Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
 {
-  std::cout << "add voxels.." << path << std::endl;
   _voxels[path] = Voxels();
   Voxels* voxels = &_voxels[path];
-  std::cout << "voxels : " << voxels << std::endl;
   voxels->Init(mesh, radius);
   voxels->Trace(0);
   voxels->Trace(1);
