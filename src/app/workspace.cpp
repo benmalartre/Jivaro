@@ -16,6 +16,7 @@
 #include "../utils/strings.h"
 #include "../utils/files.h"
 #include "../geometry/sampler.h"
+#include "../geometry/voxels.h"
 #include "../app/workspace.h"
 #include "../app/application.h"
 #include "../app/time.h"
@@ -298,12 +299,15 @@ Workspace::InitExec()
     pxr::UsdPrimRange primRange = _execStage->TraverseAll();
     for (pxr::UsdPrim prim : primRange) {
       if (prim.IsA<pxr::UsdGeomMesh>()) {
-        _execScene->AddMesh(prim.GetPath());
-        _solver->AddGeometry(&_execScene->GetMeshes()[prim.GetPath()], 
+        Mesh* mesh = _execScene->AddMesh(prim.GetPath());
+        //Voxels* voxels = _execScene->AddVoxels(prim.GetPath(), mesh, 0.2f);
+        _solver->AddGeometry(mesh, 
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
+
       }
     }
 
+    /*
     std::vector<Geometry*> colliders;
     for (auto& mesh : _execScene->GetMeshes()) {
       colliders.push_back(&mesh.second);
@@ -312,6 +316,7 @@ Workspace::InitExec()
       _solver->AddCollider(collider);
     _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
       _workStage->GetDefaultPrim().GetPath()));
+     */
 
     pxr::UsdGeomPoints points =
       pxr::UsdGeomPoints::Define(

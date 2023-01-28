@@ -39,7 +39,6 @@ private:
 
   pxr::GfVec3i            _resolution;
   std::vector<uint32_t>   _data;
-  std::vector<uint32_t>   _neighbors;
   Geometry*               _geometry;
   BVH                     _bvh;
   float                   _radius;

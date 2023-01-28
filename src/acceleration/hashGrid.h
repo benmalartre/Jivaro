@@ -20,30 +20,16 @@ class Geometry;
 
 class HashGrid : public Intersector
 {
-public:
-  HashGrid(float spacing = 1.f) : _tableSize(0), _spacing(spacing) {};
-
-  void Init(const std::vector<Geometry*>& geometries) override;
-  void Update(const std::vector<Geometry*>& geometries) override;
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
-    double maxDistance, double* minDistance = NULL) const override {
-    return false;
-  }
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance) const override {
-    return false;
-  }
-  size_t Closests(const pxr::GfVec3f& point, float maxDist, 
-    std::vector<int>& closests);
-
-  void SetSpacing(float spacing) { _spacing = spacing; };
-  pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
-
 protected:
+  typedef int64_t (HashGrid::*HashFunc)(const pxr::GfVec3i& intCoords);
+
   // hash from integer coordinates
-  inline int64_t _HashCoords(const pxr::GfVec3i& intCoords) {
-    //return pxr::TfHash()(_IntCoords(intCoords)) % _tableSize;
+  inline int64_t _HashCoordsMuller(const pxr::GfVec3i& intCoords) {
     int64_t h = (intCoords[0] * 92837111) ^ (intCoords[1] * 689287499) ^ (intCoords[2] * 283923481);
+    return std::abs(h) % _tableSize;
+  };
+  inline int64_t _HashCoordsPixar(const pxr::GfVec3i& intCoords) {
+    int64_t h = pxr::TfHash()(intCoords);
     return std::abs(h) % _tableSize;
   };
 
@@ -55,11 +41,6 @@ protected:
       std::floorf(coords[2] / _spacing)
     );
   };
-
-  // hash from element position
-  inline int64_t _HashPos(const pxr::GfVec3f& pos) {
-    return _HashCoords(_IntCoords(pos));
-  }
 
   // get element position
   const pxr::GfVec3f& _GetPoint(size_t elemIdx);
@@ -77,6 +58,43 @@ protected:
     return static_cast<int32_t>(key & 0xffffffff);
   }
 
+public:
+  enum HashMethod {
+    MULLER,
+    PIXAR
+  };
+
+  HashGrid(float spacing = 1.f, short hashMethod=PIXAR) 
+    : _tableSize(0), _spacing(spacing), _hashMethod(hashMethod) {
+    switch (_hashMethod) {
+    case MULLER:
+      _HashCoords = &HashGrid::_HashCoordsMuller;
+      break;
+    case PIXAR:
+      _HashCoords = &HashGrid::_HashCoordsPixar;
+      break;
+    default:
+      _HashCoords = &HashGrid::_HashCoordsPixar;
+      break;
+    }
+  };
+
+  void Init(const std::vector<Geometry*>& geometries) override;
+  void Update(const std::vector<Geometry*>& geometries) override;
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+    double maxDistance, double* minDistance = NULL) const override {
+    return false;
+  }
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance) const override {
+    return false;
+  }
+  size_t Closests(const pxr::GfVec3f& point, float maxDist, 
+    std::vector<int>& closests);
+
+  void SetSpacing(float spacing) { _spacing = spacing; };
+  pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
+
 private:
   std::vector<Geometry*>            _geometries;
   std::vector<const pxr::GfVec3f*>  _points;
@@ -85,6 +103,8 @@ private:
   size_t                            _tableSize;
   std::vector<int>                  _cellStart;
   std::vector<int>                  _cellEntries;
+  short                             _hashMethod;
+  HashFunc                          _HashCoords;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -1,6 +1,8 @@
+#include <unordered_map>
 #include "../acceleration/hashGrid.h"
 #include "../geometry/geometry.h"
 #include "../utils/color.h"
+#include "../utils/timer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -13,6 +15,7 @@ HashGrid::Init(const std::vector<Geometry*>& geometries)
 void 
 HashGrid::Update(const std::vector<Geometry*>& geometries)
 {
+  uint64_t T = CurrentTime();
   _geometries = geometries;
   size_t numElements = 0;
   for (const auto& geometry : _geometries) {
@@ -26,7 +29,7 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
   _points.resize(_geometries.size());
 
   std::vector<int64_t> hashes(numElements);
-  
+
   size_t elemIdx = 0;
   for (size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx) {
     const Geometry* geometry = _geometries[geomIdx];
@@ -34,7 +37,7 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
     size_t numPoints = geometry->GetNumPoints();
     const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-      hashes[elemIdx] = _HashPos(points[pointIdx]);
+      hashes[elemIdx] = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
       _mapping[elemIdx] = _ComputeElementKey(geomIdx, pointIdx);
       _cellStart[hashes[elemIdx]]++;
       elemIdx++;
@@ -55,7 +58,10 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
     _cellEntries[_cellStart[h]] = elemIdx;
   }
 
-  std::cout << "table size : " << _tableSize << std::endl;
+  std::cout << "  update took " << ((CurrentTime() - T) * 1e-9) << " seconds for " << numElements << std::endl;
+  std::cout << "  method : " << _hashMethod << std::endl;
+  std::cout << "  num elements : " << numElements << std::endl;
+  std::cout << "  table size : " << _tableSize << std::endl;
 
 }
 
@@ -67,11 +73,10 @@ HashGrid::Closests(const pxr::GfVec3f& point,
   const pxr::GfVec3i maxCoord = _IntCoords(point + pxr::GfVec3f(maxDist));
 
   size_t closestIdx = 0;
-
   for (int xi = minCoord[0]; xi <= maxCoord[0]; ++xi) {
     for (int yi = minCoord[1]; yi <= maxCoord[1]; ++yi) {
       for (int zi = minCoord[2]; zi <= maxCoord[2]; ++zi) {
-        int64_t h = _HashCoords(pxr::GfVec3i(xi, yi, zi));
+        int64_t h = (this->*_HashCoords)(pxr::GfVec3i(xi, yi, zi));
 
         size_t start = _cellStart[h];
         size_t end = _cellStart[h + 1];
@@ -98,7 +103,7 @@ HashGrid::_GetPoint(size_t elemIdx)
 pxr::GfVec3f
 HashGrid::GetColor(const pxr::GfVec3f& point)
 {
-  int64_t h = _HashPos(point);
+  int64_t h = (this->*_HashCoords)(_IntCoords(point));
   return UnpackColor3<pxr::GfVec3f>(h);
 }
 

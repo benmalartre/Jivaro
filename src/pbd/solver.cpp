@@ -174,22 +174,105 @@ _SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
 static void
 _TestHashGrid(Voxels* voxels, float radius)
 {
-  std::cout << "hash grid radius : " << radius << std::endl;
-  HashGrid grid(radius * 2.f);
-  grid.Init({ (Geometry*)voxels });
-
-  std::vector<int> closests(voxels->GetNumPoints());
-  for (size_t t = 0; t < 10; ++t) {
-    std::cout << "search closests for query point " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
-    size_t n = grid.Closests(pxr::GfVec3f(0.f, t * 0.1f, 0.f), radius * 2.f, closests);
-    if (!n) continue;
-    const pxr::GfVec3f* points = voxels->GetPositionsCPtr();
-    std::cout << "found " << n << " closests points with search radius " << radius << std::endl;
-    for (size_t c = 0; c < n; ++c) {
-      std::cout << closests[c] << " : " << points[closests[c]] << std::endl;
+  size_t N = 1000000;
+  float step = 10.f / float(N);
+  std::vector<std::vector<int>> result1;
+  std::vector<std::vector<int>> result2;
+  const pxr::GfVec3f* points = voxels->GetPositionsCPtr();
+  {
+    std::cout << "HashGrid MULLER : " << radius << std::endl;
+    HashGrid grid(radius * 2.f, HashGrid::MULLER);
+    grid.Init({ (Geometry*)voxels });
+    result1.resize(N);
+    std::vector<int> closests(voxels->GetNumPoints());
+    size_t falsePositive = 0;
+    size_t numChecks = 0;
+    uint64_t T = CurrentTime();
+    for (size_t t = 0; t < N; ++t) {
+      //std::cout << "search closests for query point " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
+      const pxr::GfVec3f point(0.f, t * step, 0.f);
+      size_t n = grid.Closests(point, radius, closests);
+      if (!n) continue;
+      numChecks += n;
+      //std::cout << "found " << n << " closests points with search radius " << radius << std::endl;
+      for (size_t c = 0; c < n; ++c) {
+        if ((points[closests[c]] - point).GetLengthSq() < (radius * radius)) {
+          result1[t].push_back(closests[c]);
+        }
+        else {
+          //std::cout << closests[c] << " : " << points[closests[c]] << std::endl;
+          falsePositive++;
+        }
+      }
     }
+    std::cout << "  closests took " << ((CurrentTime() - T) * 1e-9) << " seconds for " << N << " points " << std::endl;
+    std::cout << "  false positives : " << falsePositive << std::endl;
+    std::cout << "  num checks : " << numChecks << std::endl;
   }
 
+  {
+    std::cout << "HashGrid PIXAR : " << radius << std::endl;
+    HashGrid grid(radius * 2.f, HashGrid::PIXAR);
+    grid.Init({ (Geometry*)voxels });
+    result2.resize(N);
+    std::vector<int> closests(voxels->GetNumPoints());
+    size_t falsePositive = 0;
+    size_t numChecks = 0;
+    uint64_t T = CurrentTime();
+    for (size_t t = 0; t < N; ++t) {
+      //std::cout << "search closests for query point " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
+      const pxr::GfVec3f point(0.f, t * step, 0.f);
+      size_t n = grid.Closests(point, radius, closests);
+      if (!n) continue;
+      numChecks += n;
+      //std::cout << "found " << n << " closests points with search radius " << radius << std::endl;
+      for (size_t c = 0; c < n; ++c) {
+        if ((points[closests[c]] - point).GetLengthSq() < (radius * radius)) {
+          result2[t].push_back(closests[c]);
+        }
+        else {
+          //std::cout << closests[c] << " : " << points[closests[c]] << std::endl;
+          falsePositive++;
+        }
+      }
+    }
+    std::cout << "  closests took " << ((CurrentTime() - T) * 1e-9) << " seconds for " << N << " points " << std::endl;
+    std::cout << "  false positives : " << falsePositive << std::endl;
+    std::cout << "  num checks : " << numChecks << std::endl;
+  }
+
+  /*
+  std::cout << "compare results : " << std::endl;
+  for (size_t t = 0; t < 100; ++t) {
+    size_t s1 = result1[t].size();
+    size_t s2 = result2[t].size();
+    std::cout << "frame " << t << ": " << s1 << " vs " << s2 << std::endl;
+    if (s1 == s2) {
+      std::cout << "content equal ? " << (result1[t] == result2[t]) << std::endl;
+    }
+    else {
+
+      std::cout << "content can not match because different size" << std::endl;
+      std::cout << "result 1 : ";
+      for (auto& e1 : result1[t]) std::cout << e1 << ",";
+      std::cout << std::endl;
+      std::cout << "points 1 : ";
+      for (auto& e1 : result1[t]) std::cout << points[e1] << ",";
+      std::cout << std::endl;
+
+      std::cout << "result 2 : ";
+      for (auto& e2 : result2[t]) std::cout << e2 << ",";
+      std::cout << std::endl;
+      std::cout << "points 2 : ";
+      for (auto& e2 : result2[t]) std::cout << points[e2] << ",";
+      std::cout << std::endl;
+
+      std::cout << "query : " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
+      std::cout << "----------------------------------------------------------------------" << std::endl;
+ 
+    }
+  }
+  */
 }
 
 
@@ -288,7 +371,6 @@ void PBDSolver::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
     size_t offset = _system.AddGeometry(&_geometries[geom]);
     AddConstraints(geom, offset);
   }
-  
 }
 
 void PBDSolver::RemoveGeometry(Geometry* geom)
