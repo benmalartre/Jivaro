@@ -502,7 +502,7 @@ void PBDSolver::SatisfyConstraints()
     }
     // Constrain one particle of the cloth to origo
     _system.GetPosition(0) =
-      _system.GetRestPositions()[0] + 
+      _system.GetRestPosition(0) + 
         pxr::GfVec3f(0, sin(time.GetActiveTime()) * 5.f + 1.f, 0.f);
 
     for (int i = 0; i < _system.GetNumParticles(); ++i) {
@@ -519,22 +519,17 @@ void PBDSolver::SatisfyConstraints()
 
 void PBDSolver::Step()
 {
-  std::cout << "solver step start" << std::endl;
-
   UpdateColliders();
   // integrate
   _ParallelEvaluation(_Integrate, _system.GetNumParticles(), _numTasks);
   _ParallelEvaluation(_SolveCollisions, _system.GetNumParticles(), _numTasks);
   _ParallelEvaluation(_SatisfyConstraints, GetNumConstraints(), _numTasks);
-  std::cout << "computation done " << std::endl;
   UpdateGeometries();
-  std::cout << "geometry updated " << std::endl;
-  std::cout << "solver step end" << std::endl;
-
 }
 
 void PBDSolver::UpdateGeometries()
 {
+  /*
   std::map<Geometry*, PBDGeometry>::iterator it = _geometries.begin();
   for (; it != _geometries.end(); ++it)
   {
@@ -547,6 +542,7 @@ void PBDSolver::UpdateGeometries()
     }
     geom->SetPositions(&results[0], numPoints);
   }
+  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

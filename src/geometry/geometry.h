@@ -35,7 +35,8 @@ public:
     CURVE,
     MESH,
     STROKE,
-    INSTANCER
+    INSTANCER,
+    VOXEL
   };
 
   Geometry();
@@ -64,7 +65,7 @@ public:
   void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
   void SetRadius(uint32_t index, float normal);
 
-  uint32_t GetNumPoints()const {return _numPoints;};
+  uint32_t GetNumPoints()const {return _positions.size();};
 
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
@@ -86,7 +87,6 @@ public:
 protected:
   // infos
   short                               _type;
-  uint32_t                            _numPoints;
   pxr::VtArray<Point>                 _points;
 
   // vertex data

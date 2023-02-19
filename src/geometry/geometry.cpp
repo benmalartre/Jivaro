@@ -13,21 +13,18 @@ JVR_NAMESPACE_OPEN_SCOPE
 Geometry::Geometry()
 {
   _initialized = false;
-  _numPoints = 0;
   _type = INVALID;
 }
 
 Geometry::Geometry(short type)
 {
   _initialized = false;
-  _numPoints = 0;
   _type = type;
 }
 
 Geometry::Geometry(const Geometry* other, short type, bool normalize)
 {
   _initialized = true;
-  _numPoints = other->_numPoints;
   _type = type;
 
   _positions = other->_positions;
@@ -44,13 +41,15 @@ Geometry::Geometry(const Geometry* other, short type, bool normalize)
 void
 Geometry::Normalize()
 {
+  if (!_positions.size())return;
+
   // compute center of mass
   pxr::GfVec3f center(0.f);
   for (const auto& position: _positions) {
     center += position;
   }
 
-  center *= 1.0 / (float)_numPoints;
+  center *= 1.0 / (float)_positions.size();
 
   // translate to origin
   for (auto& position: _positions) {
@@ -129,11 +128,11 @@ Geometry::ComputeBoundingBox()
 void
 Geometry::Init(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
+  size_t numPoints = positions.size();
   _positions = positions;
   _normals = positions;
-  _numPoints = _positions.size();
-  _points.resize(_numPoints);
-  for (size_t pointIdx = 0; pointIdx < _numPoints; ++pointIdx) {
+  _points.resize(numPoints);
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     _points[pointIdx] = Point(pointIdx, 1.f);
   }
 }

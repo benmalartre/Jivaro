@@ -279,6 +279,32 @@ Workspace::RemoveExecStage()
   _execInitialized = false;
 }
 
+static void _CreateSystemPoints(pxr::UsdStageRefPtr& stage, const pxr::VtArray<pxr::GfVec3f>& positions, float radius=0.025)
+{
+  size_t numPoints = positions.size();
+  std::cout << "CREATE SYSTEM POINTS " << std::endl;
+  std::cout << "DEFAULT PRIM : " << stage->GetDefaultPrim().GetPath() << std::endl;
+  pxr::UsdGeomPoints points =
+    pxr::UsdGeomPoints::Define(
+      stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("System")));
+
+  points.CreatePointsAttr().Set(pxr::VtValue(positions));
+
+  pxr::VtArray<float> widths(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  for (size_t p = 0; p < numPoints; ++p) {
+    widths[p] = radius;
+    colors[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  }
+  points.CreateWidthsAttr().Set(pxr::VtValue(widths));
+  points.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
+  //points.CreateNormalsAttr().Set(pxr::VtValue({pxr::GfVec3f(0, 1, 0)}));
+  points.CreateDisplayColorAttr().Set(pxr::VtValue(colors));
+  points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
+  std::cout << "SYSTEM POIN?TS CREATED" << std::endl;
+}
+
 void 
 Workspace::InitExec()
 {
@@ -293,6 +319,8 @@ Workspace::InitExec()
     _lastFrame = time.GetActiveTime();
     
     _execStage->GetRootLayer()->TransferContent(_workStage->GetRootLayer());
+    _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
+      _workStage->GetDefaultPrim().GetPath()));
 
     pxr::UsdGeomXformCache xformCache(_startFrame);
 
@@ -302,10 +330,10 @@ Workspace::InitExec()
         Mesh* mesh = _execScene->AddMesh(prim.GetPath());
         _solver->AddGeometry(mesh, 
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
-        
+        /*
         Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
         _solver->AddGeometry(voxels,
-          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
+          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));*/
 
       }
     }
@@ -317,30 +345,11 @@ Workspace::InitExec()
     }
     for(auto& collider: colliders)
       _solver->AddCollider(collider);
-    _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
-      _workStage->GetDefaultPrim().GetPath()));
-     
-
-    pxr::UsdGeomPoints points =
-      pxr::UsdGeomPoints::Define(
-        _execStage, 
-        _execStage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("System")));
+    
 
     PBDParticle* system = _solver->GetSystem();
-    points.CreatePointsAttr().Set(pxr::VtValue(system->GetPositions()));
+    _CreateSystemPoints(_execStage, system->Get(), 0.05);
 
-    size_t numParticles = system->GetNumParticles();
-    
-    pxr::VtArray<float> widths(numParticles);
-    pxr::VtArray<pxr::GfVec3f> colors(numParticles);
-    for(size_t p = 0; p < numParticles; ++p) {
-      widths[p] = 0.02;
-      colors[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    }
-    points.CreateWidthsAttr().Set(pxr::VtValue(widths));
-    points.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
-    points.CreateDisplayColorAttr().Set(pxr::VtValue(colors));
-    points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
     
     _execInitialized = true;
   }

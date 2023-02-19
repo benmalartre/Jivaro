@@ -35,7 +35,7 @@ bool PBDDistanceConstraint::Solve(PBDSolver* solver, const unsigned int iter)
   pxr::GfVec3f& x1 = positions[p1];
   pxr::GfVec3f& x2 = positions[p2];
 
-  const float* masses = system->GetMasses();
+  const float* masses = system->GetMassesCPtr();
   const float invMass1 = 1.f / masses[p1];
   const float invMass2 = 1.f / masses[p2];
 
@@ -82,7 +82,7 @@ bool PBDRestoreConstraint::Solve(PBDSolver* solver, const unsigned int iter)
   pxr::GfVec3f& x1 = positions[p];
   const pxr::GfVec3f& x2 = inputs[p];
 
-  const float* masses = system->GetMasses();
+  const float* masses = system->GetMassesCPtr();
   const float invMass = 1.f / masses[p];
 
   if (invMass == 0.0)

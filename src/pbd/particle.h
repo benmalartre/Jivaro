@@ -32,18 +32,20 @@ public:
   size_t GetNumParticles() { return _position.size(); };
   pxr::GfVec3f& GetPosition(size_t index) { return _position[index]; };
   const pxr::GfVec3f& GetPosition(size_t index) const { return _position[index]; };
+  const pxr::VtArray<pxr::GfVec3f>& Get() const { return _position; };
   pxr::GfVec3f* GetPositions() { return &_position[0]; };
   const pxr::GfVec3f* GetPositions() const { return &_position[0]; };
   pxr::GfVec3f* GetPreviousPositions() { return &_previous[0]; };
   const pxr::GfVec3f* GetPreviousPositions() const { return &_previous[0]; };
   pxr::GfVec3f* GetRestPositions() { return &_rest[0]; };
   const pxr::GfVec3f* GetRestPositions() const { return &_rest[0]; };
+  pxr::GfVec3f& GetRestPosition(size_t index) { return _rest[index]; };
   pxr::GfVec3f* GetInputPositions() { return &_input[0]; };
   const pxr::GfVec3f* GetInputPositions() const { return &_input[0]; };
-  pxr::GfVec3f* GetForces() { return &_force[0]; };
-  const pxr::GfVec3f* GetForces() const { return &_force[0]; };
-  float* GetMasses() { return &_mass[0]; };
-  const float* GetMasses() const { return &_mass[0]; };
+  pxr::GfVec3f* GetForcesPtr() { return &_force[0]; };
+  const pxr::GfVec3f* GetForcesCPtr() const { return &_force[0]; };
+  float* GetMassesPtr() { return &_mass[0]; };
+  const float* GetMassesCPtr() const { return &_mass[0]; };
 
 private:
   pxr::VtArray<pxr::GfVec3f>  _rest;

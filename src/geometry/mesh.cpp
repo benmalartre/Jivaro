@@ -96,7 +96,6 @@ Mesh::Mesh()
 {
   _initialized = false;
   _numTriangles = 0;
-  _numPoints = 0;
   _numFaces = 0;
 }
 
@@ -129,7 +128,6 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
   faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
   _numFaces = _faceVertexCounts.size();
   _numSamples = _faceVertexIndices.size();
-  _numPoints = _positions.size();
 
   Init();
 }
@@ -531,8 +529,9 @@ static bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
 
 void Mesh::ComputeNeighbors()
 {
+  size_t numPoints = _positions.size();
   _neighbors.clear();
-  _neighbors.resize(_numPoints);
+  _neighbors.resize(numPoints);
 
   for (HalfEdge& halfEdge : _halfEdges) {
     int edgeIndex = halfEdge.index;
@@ -599,16 +598,16 @@ void Mesh::SetTopology(
   _numSamples = _faceVertexIndices.size();
   _positions = positions;
   _normals = positions;
-  _numPoints = _positions.size();
 
   Init();
 }
 
 void Mesh::Init()
 {
+  size_t numPoints = _positions.size();
   // initialize boundaries
-  _boundary.resize(_numPoints);
-  memset(&_boundary[0], false, _numPoints * sizeof(bool));
+  _boundary.resize(numPoints);
+  memset(&_boundary[0], false, numPoints * sizeof(bool));
   
   // build triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
@@ -741,6 +740,7 @@ void Mesh::FlipEdge(size_t index)
 
 void Mesh::SplitEdge(size_t index)
 {
+  size_t numPoints = _positions.size();
   size_t numEdges = _halfEdges.size();
   HalfEdge& currentEdge = _halfEdges[index];
   if (currentEdge.latency != HalfEdge::REAL)return;
@@ -758,21 +758,21 @@ void Mesh::SplitEdge(size_t index)
 
   HalfEdge* halfEdge = &_halfEdges[numEdges];
   halfEdge->index = numEdges;
-  halfEdge->vertex = _numPoints;
+  halfEdge->vertex = numPoints;
   halfEdge->next = nextEdge;
   halfEdge->latency = HalfEdge::REAL;
   HalfEdge* n1 = halfEdge;
   halfEdge++;
 
   halfEdge->index = numEdges + 1;
-  halfEdge->vertex = _numPoints;
+  halfEdge->vertex = numPoints;
   halfEdge->next = previousEdge;
   halfEdge->latency = HalfEdge::IMPLICIT;
   HalfEdge* n2 = halfEdge;
   halfEdge++;
 
   halfEdge->index = numEdges + 2;
-  halfEdge->vertex = _numPoints;
+  halfEdge->vertex = numPoints;
   halfEdge->next = n2;
   halfEdge->latency = HalfEdge::IMPLICIT;
   HalfEdge* n3 = halfEdge;
@@ -780,7 +780,7 @@ void Mesh::SplitEdge(size_t index)
   nextEdge->next = n3;
   currentEdge.next = n1;
 
-  _numPoints++;
+  numPoints++;
   _numTriangles++;
   
   if (twinEdge) {
@@ -788,14 +788,14 @@ void Mesh::SplitEdge(size_t index)
     HalfEdge* twinPreviousEdge = _GetPreviousEdge(twinEdge, HalfEdge::REAL);
 
     halfEdge->index = numEdges + 3;
-    halfEdge->vertex = _numPoints;
+    halfEdge->vertex = numPoints;
     halfEdge->next = twinNextEdge;
     halfEdge->latency = HalfEdge::REAL;
     HalfEdge* n4 = halfEdge;
     halfEdge++;
 
     halfEdge->index = numEdges + 4;
-    halfEdge->vertex = _numPoints;
+    halfEdge->vertex = numPoints;
     halfEdge->next = twinNextEdge;
     halfEdge->latency = HalfEdge::IMPLICIT;
     HalfEdge* n5 = halfEdge;
@@ -810,7 +810,7 @@ void Mesh::SplitEdge(size_t index)
     twinNextEdge->next = n3;
     twinEdge->next = n1;
 
-    _numPoints++;
+    numPoints++;
     _numTriangles++;
   }
 }

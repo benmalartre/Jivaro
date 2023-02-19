@@ -9,7 +9,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 // constructor
 //--------------------------------------------------------------------------------
 Voxels::Voxels()
-  : _geometry(NULL)
+  : Geometry(Geometry::VOXEL)
+  , _geometry(NULL)
   , _radius(1.f)
 {
 };
@@ -144,12 +145,10 @@ pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)
 void Voxels::Build()
 {
   size_t numCells = GetNumCells();
-  _positions.reserve(numCells);
-  _numPoints = 0;
+  _positions.clear();
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     if (_data[cellIdx]) {
       _positions.push_back(GetCellPosition(cellIdx));
-      _numPoints++;
     }
   }
 }

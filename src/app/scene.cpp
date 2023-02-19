@@ -5,7 +5,6 @@
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include <pxr/usd/usdGeom/points.h>
 
-
 #include "../utils/strings.h"
 #include "../utils/files.h"
 #include "../app/scene.h"

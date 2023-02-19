@@ -16,7 +16,7 @@ size_t PBDParticle::AddGeometry(PBDGeometry* geom)
   _force.resize(newSize);
   _mass.resize(newSize);
 
-  const pxr::GfVec3f* points = geom->ptr->GetPositionsCPtr();
+  const pxr::VtArray<pxr::GfVec3f>& points = geom->ptr->GetPositions();
   for (size_t p = 0; p < add; ++p) {
     const pxr::GfVec3f pos = geom->matrix.Transform(points[p]);
     size_t idx = base + p;
@@ -38,10 +38,8 @@ void PBDParticle::RemoveGeometry(PBDGeometry* geom)
   size_t remaining = _position.size() - (base + shift);
 
   for (size_t r = 0; r < remaining; ++r) {
-    _position[0][base + r] = _position[0][base + shift +r];
-    _position[1][base + r] = _position[1][base + shift + r];
-    _previous[0][base + r] = _previous[0][base + shift + r];
-    _previous[1][base + r] = _previous[1][base + shift + r];
+    _position[base + r] = _position[base + shift +r];
+    _previous[base + r] = _previous[base + shift + r];
     _rest[base + r] = _rest[base + shift + r];
     _preload[base + r] = _preload[base + shift + r];
     _force[base + r] = _force[base + shift + r];
@@ -62,8 +60,6 @@ void PBDParticle::Reset(size_t startIdx, size_t endIdx)
 {
   for (size_t p = startIdx; p < endIdx; ++p) {
     _position[p] = _rest[p];
-    _position[p] = _rest[p];
-    _previous[p] = _rest[p] -_preload[p];
     _previous[p] = _rest[p] -_preload[p];
     _force[p] = pxr::GfVec3f(0.f);
   }
@@ -71,11 +67,11 @@ void PBDParticle::Reset(size_t startIdx, size_t endIdx)
 
 void PBDParticle::Integrate(size_t startIdx, size_t endIdx, float step)
 {
-  for(int i = startIdx; i < endIdx; ++i) {
-    pxr::GfVec3f& position = _position[i];
+  for(int p = startIdx; p < endIdx; ++p) {
+    pxr::GfVec3f& position = _position[p];
     pxr::GfVec3f tmp = position;
-    pxr::GfVec3f& previous = _previous[i];
-    position += position - previous + _force[i] * step * step;
+    pxr::GfVec3f& previous = _previous[p];
+    position += position - previous + _force[p] * step * step;
     previous = tmp;
   }
 }
@@ -83,8 +79,8 @@ void PBDParticle::Integrate(size_t startIdx, size_t endIdx, float step)
 void PBDParticle::AccumulateForces(size_t startIdx, size_t endIdx, const pxr::GfVec3f& gravity)
 {
   size_t numParticles = GetNumParticles();
-  for (int i = startIdx; i < endIdx; ++i) {
-    _force[i] = gravity;
+  for (int p = startIdx; p < endIdx; ++p) {
+    _force[p] = gravity;
   }
 }
 
