@@ -54,12 +54,13 @@ add_executable(${TARGET}
   #embree/device.cpp
   geometry/utils.cpp
   geometry/sampler.cpp
-  geometry/voxelize.cpp
+  geometry/voxels.cpp
   geometry/shape.cpp
   geometry/intersection.cpp
   geometry/point.cpp
   geometry/edge.cpp
   geometry/triangle.cpp
+  geometry/delaunay.cpp
   geometry/geometry.cpp
   geometry/points.cpp
   geometry/mesh.cpp
@@ -73,6 +74,8 @@ add_executable(${TARGET}
   acceleration/grid3d.cpp
   acceleration/bvh.cpp
   acceleration/octree.cpp
+  acceleration/hashGrid.cpp
+  acceleration/pool.cpp
   pbd/particle.cpp
   pbd/constraint.cpp
   pbd/solver.cpp

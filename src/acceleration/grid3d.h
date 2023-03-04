@@ -16,6 +16,7 @@ class Geometry;
 class Mesh;
 class Curve;
 class Points;
+class Triangle;
 
 class Grid3DIntersector : public Intersector {
   enum ElemType {

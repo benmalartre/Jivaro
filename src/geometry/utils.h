@@ -12,6 +12,61 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+const double EPSILON = std::numeric_limits<double>::epsilon();
+const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
+
+template<typename T>
+static inline double ComputeDistanceSquared(const T& a, const T& b)
+{
+  return (b - a).GetLengthSq();
+}
+
+template<typename T>
+static inline double ComputeDistance(const T& a, const T& b) 
+{
+  return (b - a).GetLength();
+}
+
+static inline double ComputeCircumRadius(const pxr::GfVec3d& a, 
+  const pxr::GfVec3d& b, const pxr::GfVec3d& c) 
+{
+    const pxr::GfVec3d ab(b - a);
+    const pxr::GfVec3d ac(c - a);
+    const pxr::GfVec3d n(ab ^ ac);
+
+    // this is the from a to circumsphere center
+    pxr::GfVec3d delta = (
+      (n ^ ab) * ac.GetLengthSq() + 
+      (ac ^ n) * ab.GetLengthSq()
+    ) / (2.f * n.GetLengthSq());
+    return delta.GetLength();
+}
+
+static inline pxr::GfVec3d ComputeCircumCenter(const pxr::GfVec3d& a, 
+  const pxr::GfVec3d& b, const pxr::GfVec3d& c)
+{
+    const pxr::GfVec3d ab(b - a);
+    const pxr::GfVec3d ac(c - a);
+    const pxr::GfVec3d n(ab ^ ac);
+
+    // this is the from a to circumsphere center
+    pxr::GfVec3d delta = (
+      (n ^ ab) * ac.GetLengthSq() + 
+      (ac ^ n) * ab.GetLengthSq()
+    ) / (2.f * n.GetLengthSq());
+    return a + delta;
+}
+
+static inline bool CheckPointInSphere(const pxr::GfVec3d& center, float radius, const pxr::GfVec3d& point)
+{
+  return (point - center).GetLengthSq() < (radius * radius);
+}
+
+template<typename T>
+inline bool CheckPointsEquals(const T& a, const T& b) {
+  return pxr::GfIsClose(a, b, EPSILON);
+};
+
 /// Barycentric coordinates
 void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
   const pxr::GfVec3f& c, float* u, float* v, float* w);

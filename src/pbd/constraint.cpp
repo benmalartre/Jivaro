@@ -13,8 +13,8 @@ bool PBDDistanceConstraint::Init(PBDSolver* solver,
   _stiffness = stiffness;
   _bodies[0] = p1;
   _bodies[1] = p2;
-  PBDParticle& system = solver->GetSystem();
-  const pxr::VtArray<pxr::GfVec3f>& restPositions = system.GetRestPositions();
+  PBDParticle* system = solver->GetSystem();
+  const pxr::GfVec3f* restPositions = system->GetRestPositions();
 
   const pxr::GfVec3f& x1_0 = restPositions[p1];
   const pxr::GfVec3f& x2_0 = restPositions[p2];
@@ -26,16 +26,16 @@ bool PBDDistanceConstraint::Init(PBDSolver* solver,
 
 bool PBDDistanceConstraint::Solve(PBDSolver* solver, const unsigned int iter)
 {
-  PBDParticle& system = solver->GetSystem();
+  PBDParticle* system = solver->GetSystem();
   const unsigned p1 = _bodies[0];
   const unsigned p2 = _bodies[1];
 
-  pxr::VtArray<pxr::GfVec3f>& positions = system.GetPositions();
+  pxr::GfVec3f* positions = system->GetPositions();
 
-  pxr::GfVec3f& x1 = system.GetPosition(p1);
-  pxr::GfVec3f& x2 = system.GetPosition(p2);
+  pxr::GfVec3f& x1 = positions[p1];
+  pxr::GfVec3f& x2 = positions[p2];
 
-  const pxr::VtArray<float>& masses = system.GetMasses();
+  const float* masses = system->GetMassesCPtr();
   const float invMass1 = 1.f / masses[p1];
   const float invMass2 = 1.f / masses[p2];
 
@@ -73,16 +73,16 @@ bool PBDRestoreConstraint::Init(PBDSolver* solver,
 
 bool PBDRestoreConstraint::Solve(PBDSolver* solver, const unsigned int iter)
 {
-  PBDParticle& system = solver->GetSystem();
+  PBDParticle* system = solver->GetSystem();
   const unsigned p = _bodies[0];
 
-  pxr::VtArray<pxr::GfVec3f>& positions = system.GetPositions();
-  pxr::VtArray<pxr::GfVec3f>& inputs = system.GetInputPositions();
+  pxr::GfVec3f* positions = system->GetPositions();
+  const pxr::GfVec3f* inputs = system->GetInputPositions();
 
   pxr::GfVec3f& x1 = positions[p];
-  pxr::GfVec3f& x2 = inputs[p];
+  const pxr::GfVec3f& x2 = inputs[p];
 
-  const pxr::VtArray<float>& masses = system.GetMasses();
+  const float* masses = system->GetMassesCPtr();
   const float invMass = 1.f / masses[p];
 
   if (invMass == 0.0)
@@ -100,8 +100,6 @@ bool PBDRestoreConstraint::Solve(PBDSolver* solver, const unsigned int iter)
 
   if (invMass != 0.0)
     x1 += corr1;
-  if (invMass != 0.0)
-    x2 += corr2;
 
   return true;
 }

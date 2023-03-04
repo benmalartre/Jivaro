@@ -5,7 +5,6 @@
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include <pxr/usd/usdGeom/points.h>
 
-
 #include "../utils/strings.h"
 #include "../utils/files.h"
 #include "../app/scene.h"
@@ -78,6 +77,18 @@ Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
     _meshes[path] = Mesh(usdMesh);
   }
   return &_meshes[path];
+}
+
+Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
+{
+  _voxels[path] = Voxels();
+  Voxels* voxels = &_voxels[path];
+  voxels->Init(mesh, radius);
+  voxels->Trace(0);
+  voxels->Trace(1);
+  voxels->Trace(2);
+  voxels->Build();
+  return voxels;
 }
 
   Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)

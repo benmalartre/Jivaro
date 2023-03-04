@@ -30,7 +30,6 @@ static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
   lhs->SetMax(rhs->GetMax());
   rhs->SetLeft(NULL);
   rhs->SetRight(NULL);
-  lhs->SetType(rhs->GetType());
   delete rhs;
 }
 
@@ -248,11 +247,8 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
       return component->Raycast(points, ray, hit, maxDistance, minDistance);
     }
     else {
-      if(IsGeom()) {
-        std::cout << "we must pass here !!!" << std::endl;
-        
+      if(IsGeom()) {        
         const BVH* intersector = GetIntersector();
-        std::cout << "geometry index : " << intersector->GetGeometryIndex((Geometry*)_data) << std::endl;
         hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
       }
       Hit leftHit(*hit), rightHit(*hit);
@@ -399,38 +395,16 @@ Mortom BVH::Cell::SortCellsByPair(
   return { 0, _RecurseSortCellsByPair(mortoms, 0, numCells - 1) };
 } 
 
-void BVH::Cell::Init(const std::vector<Geometry*>& geometries)
-{
-  size_t numColliders = geometries.size();
-  pxr::GfRange3d accum = geometries[0]->GetBoundingBox().GetRange();
-  for (size_t i = 1; i < numColliders; ++i) {
-    accum.UnionWith(geometries[i]->GetBoundingBox().GetRange());
-  }
-  SetMin(accum.GetMin());
-  SetMax(accum.GetMax());
-
-  std::vector<Mortom> cells;
-  cells.reserve(numColliders);
-
-  for (Geometry* geom : geometries) {
-    BVH::Cell* bvh = new BVH::Cell(this, geom);
-    cells.push_back({ BVH::ComputeCode(bvh, bvh->GetMidpoint()), bvh });
-  }
-  Mortom result = SortCellsByPair(cells);
-  _SwapCells(this, (BVH::Cell*)result.data);
-
-  cells.clear();
-}
-
 void BVH::Cell::_FinishSort(std::vector<Mortom>& cells)
 {
-  Mortom result = SortCellsByPair(cells);
-  _SwapCells(this, (BVH::Cell*)result.data);
+  Mortom mortom = SortCellsByPair(cells);
+  _SwapCells(this, (BVH::Cell*)mortom.data);
   cells.clear();
 }
 
 void BVH::Cell::Init(Geometry* geometry)
 {
+  _type = BVH::Cell::GEOM;
   if (geometry->GetType() == Geometry::MESH) {
     std::vector<Mortom> leaves;
     _SortTrianglesByPair(leaves, geometry);
@@ -459,7 +433,10 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   }
 
   Mortom mortom = _root.SortCellsByPair(cells);
-  _SwapCells(&_root, (BVH::Cell*)mortom.data);
+  BVH::Cell* cell = (BVH::Cell*)mortom.data;
+  _root.SetLeft(cell);
+  _root.SetMin(cell->GetMin());
+  _root.SetMax(cell->GetMax());
   _root.SetData((void*)this);
   cells.clear();
 }
@@ -470,25 +447,9 @@ BVH::Update(const std::vector<Geometry*>& geometries)
 
 }
 
-static void _RecursePrintTree(BVH::Cell* cell, size_t depth)
-{
-  for (size_t x = 0; x < depth; ++x)std::cout << "  ";
-  if (cell->IsRoot()) std::cout << "ROOT";
-  else if (cell->IsLeaf()) std::cout << "LEAF";
-  else if (cell->IsGeom()) std::cout << "GEOM";
-  else std::cout << "BRANCH";
-
-  std::cout << std::endl;
-
-  if (cell->GetLeft())_RecursePrintTree(cell->GetLeft(), depth + 1);
-  if (cell->GetRight())_RecursePrintTree(cell->GetRight(), depth + 1);
-
-}
-
 bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
 {
-  _RecursePrintTree((BVH::Cell*)&_root, 0);
   return _root.Raycast(points, ray, hit, maxDistance, minDistance);
 };
 

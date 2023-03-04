@@ -10,19 +10,18 @@ Points::Points()
   : Geometry(Geometry::POINT)
 {
   _initialized = false;
-  _numPoints = 0;
 }
 
 Points::Points(const Points* other, bool normalize)
   : Geometry(other, Geometry::POINT, normalize)
 {
+  size_t numPoints = _positions.size();
   _initialized = true;
-  _numPoints = other->_numPoints;
 
   _normals = other->_normals;
 
-  _radius.resize(_numPoints);
-  memcpy(&_radius[0], &other->_radius[0], _numPoints * sizeof(float));
+  _radius.resize(numPoints);
+  memcpy(&_radius[0], &other->_radius[0], numPoints * sizeof(float));
 }
 
 Points::Points(const pxr::UsdGeomPoints& points)
@@ -31,7 +30,6 @@ Points::Points(const pxr::UsdGeomPoints& points)
 
   pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
-  _numPoints = _positions.size();
 
   pxr::UsdAttribute normalsAttr = points.GetNormalsAttr();
   if (normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
@@ -57,7 +55,6 @@ void Points::Init(
   _radius = radius;
   _positions = positions;
   _normals = positions;
-  _numPoints = _positions.size();
 }
 
 void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions)

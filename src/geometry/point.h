@@ -10,11 +10,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
-
 class Geometry;
-class Points;
-class Mesh;
 class Hit;
 struct Point : public Component {
 

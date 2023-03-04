@@ -34,7 +34,6 @@ Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
 
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
-  _numPoints = _positions.size();
 
   pxr::UsdAttribute vertexCountsAttr = curve.GetCurveVertexCountsAttr();
   vertexCountsAttr.Get(&_cvCounts, pxr::UsdTimeCode::Default());
@@ -74,7 +73,7 @@ Curve::GetNumSegments(uint32_t curveIndex)const
 uint32_t 
 Curve::GetTotalNumCVs()const
 {
-  return _numPoints;
+  return _positions.size();
 }
 
 uint32_t 
@@ -111,7 +110,6 @@ Curve::Init(
   for(const auto& count: counts) _numSegments += count - 1;
   _positions = positions;
   _normals = positions;
-  _numPoints = _positions.size();
 }
 
 void 

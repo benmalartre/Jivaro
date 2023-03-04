@@ -31,6 +31,10 @@ public:
   virtual bool Update(PBDSolver* solver) { return true; };
   virtual bool Solve(PBDSolver* solver, const unsigned int iter) { return true; };
 
+  bool Contains(unsigned int body) {
+    return std::find(_bodies.begin(), _bodies.end(), body) != _bodies.end();
+  };
+
 protected:
   std::vector<unsigned int> _bodies;
 };
@@ -38,7 +42,7 @@ protected:
 class PBDDistanceConstraint : public PBDConstraint
 {
 public:
-  PBDDistanceConstraint() : PBDConstraint(2) {}
+  PBDDistanceConstraint() : PBDConstraint(2), _restLength(0.f), _stiffness(1.f) {}
   virtual int& GetTypeId() const { return TYPE_ID; }
 
   virtual bool Init(PBDSolver* solver, const unsigned int p1, const unsigned int p2, const float stiffness);
@@ -53,7 +57,7 @@ protected:
 class PBDRestoreConstraint : public PBDConstraint
 {
 public:
-  PBDRestoreConstraint() : PBDConstraint(2) {}
+  PBDRestoreConstraint() : PBDConstraint(2), _stiffness(1.f) {}
   virtual int& GetTypeId() const { return TYPE_ID; }
 
   virtual bool Init(PBDSolver* solver, const unsigned int p1, const float stiffness);

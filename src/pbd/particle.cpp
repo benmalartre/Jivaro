@@ -2,137 +2,86 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-PBDParticle::PBDParticle() 
-  : _N(0)
-  , _flip(false)
+size_t PBDParticle::AddGeometry(PBDGeometry* geom)
 {
-}
-
-PBDParticle::~PBDParticle()
-{
-}
-
-size_t PBDParticle::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
-{
-  if (_geometries.find(geom) == _geometries.end()) {
-    size_t base = _position[0].size();
-    size_t add = geom->GetNumPoints();
+  std::cout << "[system] add geometry : " << geom << std::endl;
+  size_t base = _position.size();
+  size_t add = geom->ptr->GetNumPoints();
   
-    _geometries[geom] = PBDGeometry({base, m, m.GetInverse()});
+  size_t newSize = base + add;
+  _position.resize(newSize);
+  _previous.resize(newSize);
+  _rest.resize(newSize);
+  _preload.resize(newSize);
+  _force.resize(newSize);
+  _mass.resize(newSize);
 
-    size_t newSize = base + add;
-    _position[0].resize(newSize);
-    _position[1].resize(newSize);
-    _previous[0].resize(newSize);
-    _previous[1].resize(newSize);
-    _rest.resize(newSize);
-    //_preload.resize(newSize);
-    _force.resize(newSize);
-    _mass.resize(newSize);
-
-    for (size_t p = 0; p < geom->GetNumPoints(); ++p) {
-      const pxr::GfVec3f pos = m.Transform(geom->GetPosition(p));
-      size_t idx = base + p;
-      _position[0][idx] = pos;
-      _position[1][idx] = pos;
-      _previous[0][idx] = pos;
-      _previous[1][idx] = pos;
-      _rest[idx] = pos;
-      //_preload[idx] = pxr::GfVec3f(0.f);
-      _force[idx] = pxr::GfVec3f(0.f);
-      _mass[idx] = 1.f;
-    }
-    _N += add;
-    return base;
+  const pxr::VtArray<pxr::GfVec3f>& points = geom->ptr->GetPositions();
+  for (size_t p = 0; p < add; ++p) {
+    const pxr::GfVec3f pos = geom->matrix.Transform(points[p]);
+    size_t idx = base + p;
+    _position[idx] = pos;
+    _previous[idx] = pos;
+    _rest[idx] = pos;
+    _preload[idx] = pxr::GfVec3f(0.f);
+    _force[idx] = pxr::GfVec3f(0.f);
+    _mass[idx] = 1.f;
   }
-  return 0;
+  return base;
 }
 
-void PBDParticle::RemoveGeometry(Geometry* geom)
+void PBDParticle::RemoveGeometry(PBDGeometry* geom)
 {
-  if (_geometries.find(geom) != _geometries.end()) {
-    PBDGeometry& desc = _geometries[geom];
-    size_t base = desc.offset;
-    size_t shift = geom->GetNumPoints();
-    size_t remaining = _position[0].size() - (base + shift);
+  std::cout << "[system] remove geometry : " << geom << std::endl;
+  size_t base = geom->offset;
+  size_t shift = geom->ptr->GetNumPoints();
+  size_t remaining = _position.size() - (base + shift);
 
-    for (size_t r = 0; r < remaining; ++r) {
-      _position[0][base + r] = _position[0][base + shift +r];
-      _position[1][base + r] = _position[1][base + shift + r];
-      _previous[0][base + r] = _previous[0][base + shift + r];
-      _previous[1][base + r] = _previous[1][base + shift + r];
-      _rest[base + r] = _rest[base + shift + r];
-      //_preload[base + r] = _preload[base + shift + r];
-      _force[base + r] = _force[base + shift + r];
-      _mass[base + r] = _mass[base + shift + r];
-    }
-
-    size_t newSize = _position[0].size() - shift;
-    _position[0].resize(newSize);
-    _position[1].resize(newSize);
-    _previous[0].resize(newSize);
-    _previous[1].resize(newSize);
-    _rest.resize(newSize);
-    //_preload.resize(newSize);
-    _force.resize(newSize);
-    _mass.resize(newSize);
-
-    _geometries.erase(geom);
-    _N -= shift;
+  for (size_t r = 0; r < remaining; ++r) {
+    _position[base + r] = _position[base + shift +r];
+    _previous[base + r] = _previous[base + shift + r];
+    _rest[base + r] = _rest[base + shift + r];
+    _preload[base + r] = _preload[base + shift + r];
+    _force[base + r] = _force[base + shift + r];
+    _mass[base + r] = _mass[base + shift + r];
   }
+
+  size_t newSize = _position.size() - shift;
+  _position.resize(newSize);
+  _previous.resize(newSize);
+  _rest.resize(newSize);
+  _preload.resize(newSize);
+  _force.resize(newSize);
+  _mass.resize(newSize);
+
 }
 
-void PBDParticle::UpdateInput(Geometry* geom, 
-    const pxr::VtArray<pxr::GfVec3f>& p, const pxr::GfMatrix4f& m)
+void PBDParticle::Reset(size_t startIdx, size_t endIdx)
 {
-  if (_geometries.find(geom) != _geometries.end()) {
-    PBDGeometry& desc = _geometries[geom];
-  }
-}
-
-void PBDParticle::Reset()
-{
-  for (size_t p = 0; p < _N; ++p) {
-    _position[0][p] = _rest[p];
-    _position[1][p] = _rest[p];
-    _previous[0][p] = _rest[p];// -_preload[p];
-    _previous[1][p] = _rest[p];// -_preload[p];
+  for (size_t p = startIdx; p < endIdx; ++p) {
+    _position[p] = _rest[p];
+    _previous[p] = _rest[p] -_preload[p];
     _force[p] = pxr::GfVec3f(0.f);
   }
 }
 
-void PBDParticle::Integrate(float step)
+void PBDParticle::Integrate(size_t startIdx, size_t endIdx, float step)
 {
-  for(int i=0; i<_N; ++i) {
-    pxr::GfVec3f& position = _position[_flip][i];
+  for(int p = startIdx; p < endIdx; ++p) {
+    pxr::GfVec3f& position = _position[p];
     pxr::GfVec3f tmp = position;
-    pxr::GfVec3f& previous = _previous[_flip][i];
-    position += position - previous + _force[i] * step * step;
+    pxr::GfVec3f& previous = _previous[p];
+    position += position - previous + _force[p] * step * step;
     previous = tmp;
   }
 }
 
-void PBDParticle::AccumulateForces(const pxr::GfVec3f& gravity)
+void PBDParticle::AccumulateForces(size_t startIdx, size_t endIdx, const pxr::GfVec3f& gravity)
 {
-  for (int i = 0; i < _N; i++) {
-    _force[i] = gravity;
+  size_t numParticles = GetNumParticles();
+  for (int p = startIdx; p < endIdx; ++p) {
+    _force[p] = gravity;
   }
 }
-
-void PBDParticle::UpdateGeometries()
-{
-  std::map<Geometry*, PBDGeometry>::iterator it = _geometries.begin();
-  for (; it != _geometries.end(); ++it)
-  {
-    Geometry* geom = it->first;
-    size_t numPoints = geom->GetNumPoints();
-    pxr::VtArray<pxr::GfVec3f> results(numPoints);
-    for (size_t p = 0; p < numPoints; ++p) {
-      results[p] = it->second.invMatrix.Transform(_position[_flip][it->second.offset + p]);
-    }
-    geom->SetPositions(&results[0], numPoints);
-  }
-}
-
 
 JVR_NAMESPACE_CLOSE_SCOPE

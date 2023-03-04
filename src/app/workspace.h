@@ -72,7 +72,7 @@ private:
   Scene*                    _execScene;
   bool                      _execInitialized;
 
-  PBDSolver                 _solver;
+  PBDSolver*                _solver;
   float                     _startFrame;
   float                     _lastFrame;
 };
