@@ -407,8 +407,8 @@ Application::Update()
     _workspace->UpdateExec(GetTime().GetActiveTime());
   }
 
-  glfwSwapInterval(1);
-  glfwPollEvents();
+  glfwWaitEventsTimeout(1.f / 60.f);
+  
   // draw popup
   if (_popup) {
     Window* window = _popup->GetView()->GetWindow();
@@ -423,7 +423,6 @@ Application::Update()
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
 
-  //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
   return true;
 }
 

@@ -96,7 +96,6 @@ BaseUI::GetWindowHeight()
 {
   return _parent->GetWindow()->GetHeight();
 };
-//void BaseUI::SetWindowContext(){_parent->GetWindow()->SetContext();};
 
 // ui dimensions
 pxr::GfVec2f BaseUI::GetPosition()
@@ -141,7 +140,6 @@ int BaseUI::GetHeight()
     return _parent->GetHeight() + 2;
   }
 }
-
 
 void 
 BaseUI::SetInteracting(bool state)

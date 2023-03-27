@@ -369,23 +369,24 @@ Window::RemoveView(View* view)
   } else if(parent->GetRight() == view) {
     sibling = parent->GetLeft();
   }
-
-  if(sibling->GetFlag(View::LEAF)) {
-    parent->TransferUIs(sibling);
-    parent->SetFlag(View::LEAF);
-    parent->SetPerc(1.f);
-  } else {
-    parent->SetLeft(sibling->GetLeft());
-    parent->SetRight(sibling->GetRight());
-    parent->SetPerc(sibling->GetPerc());
-    parent->SetFlags(sibling->GetFlags());
-    sibling->SetLeft(NULL);
-    sibling->SetRight(NULL);
+  if (sibling) {
+    if (sibling->GetFlag(View::LEAF)) {
+      parent->TransferUIs(sibling);
+      parent->SetFlag(View::LEAF);
+      parent->SetPerc(1.f);
+    }
+    else {     
+      parent->SetLeft(sibling->GetLeft());
+      parent->SetRight(sibling->GetRight());
+      parent->SetPerc(sibling->GetPerc());
+      parent->SetFlags(sibling->GetFlags());
+      sibling->SetLeft(NULL);
+      sibling->SetRight(NULL);
+    }
+    delete sibling;
   }
 
   delete view;
-  delete sibling;
-  
   Resize(_width, _height);
   ForceRedraw();
   _mainView->SetDirty();

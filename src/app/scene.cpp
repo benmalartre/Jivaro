@@ -50,7 +50,7 @@ void
 Scene::Update(double time)
 {
   for (auto& meshMapIt : _meshes) {
-     pxr::UsdGeomMesh mesh(_stage->GetPrimAtPath(meshMapIt.first));
+    pxr::UsdGeomMesh mesh(_stage->GetPrimAtPath(meshMapIt.first));
     mesh.GetPointsAttr().Set(meshMapIt.second.GetPositions(), time);
   }
 }

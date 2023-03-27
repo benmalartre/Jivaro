@@ -529,7 +529,6 @@ void PBDSolver::Step()
 
 void PBDSolver::UpdateGeometries()
 {
-  /*
   std::map<Geometry*, PBDGeometry>::iterator it = _geometries.begin();
   for (; it != _geometries.end(); ++it)
   {
@@ -542,7 +541,6 @@ void PBDSolver::UpdateGeometries()
     }
     geom->SetPositions(&results[0], numPoints);
   }
-  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -67,8 +67,8 @@ public:
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
     const int width, const int height);
 
-  void SetLeft(View* view){_left = view; _left->_parent = this;};
-  void SetRight(View* view){_right = view; _right->_parent = this;};
+  void SetLeft(View* view){_left = view; if(view)view->_parent=this;};
+  void SetRight(View* view){_right = view; if(view)view->_parent=this;};
   void SetParent(View* view){_parent = view;};
   inline View* GetLeft(){return _left;};
   inline View* GetRight(){return _right;};
