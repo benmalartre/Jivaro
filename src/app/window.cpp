@@ -8,6 +8,8 @@
 #include "../ui/splitter.h"
 #include "../app/application.h"
 #include "../app/tools.h"
+#include <chrono>
+#include <thread>
 #include <pxr/imaging/glf/contextCaps.h>
 #include <pxr/base/arch/systemInfo.h>
 
@@ -36,7 +38,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 Window::Window(bool fullscreen, const std::string& name) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _fbo(0),  _tex(0)
+  _name(name), _forceRedraw(3), _idle(false), _fbo(0),  _tex(0)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -71,7 +73,7 @@ Window::Window(bool fullscreen, const std::string& name) :
 Window::Window(int width, int height, const std::string& name):
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _fbo(0), _tex(0)
+  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
@@ -99,7 +101,7 @@ Window::Window(int x, int y, int width, int height,
   GLFWwindow* parent, const std::string& name, bool decorated) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(0), _idle(false), _fbo(0), _tex(0)
+  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
@@ -223,7 +225,7 @@ void
 Window::ForceRedraw()
 {
   for (View* leaf : _leaves)leaf->SetFlag(View::FORCEREDRAW);
-  _forceRedraw = 1;
+  _forceRedraw++;
 }
 
 // popup
@@ -652,9 +654,10 @@ bool Window::Update()
     }
     return false;
   }
-  SetGLContext();
-  Draw();
-  
+  if (!_idle) {
+    SetGLContext();
+    Draw();
+  }
   return true;
 }
 
@@ -698,6 +701,8 @@ KeyboardCallback(
     app->UpdatePopup();
     return;
   }
+
+  parent->SetIdle(false);
 
   Time& time = app->GetTime();
   
@@ -853,9 +858,11 @@ void
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
   Window* parent = Window::GetUserData(window);
+  parent->SetIdle(false);
   Application* app = GetApplication();
   app->SetActiveWindow(parent);
   ImGui::SetCurrentContext(parent->GetContext());
+  
 
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
   double x, y;
@@ -942,7 +949,7 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   ImGui::SetCurrentContext(parent->GetContext());
   View* hovered = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
-
+    
   bool splitterHovered = parent->PickSplitter(x, y);
 
   if (popup) {

@@ -18,7 +18,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Point;
 class Points : public Geometry {
 public:
   Points();

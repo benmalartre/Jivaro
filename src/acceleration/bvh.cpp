@@ -282,7 +282,6 @@ bool
 BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
   Hit* hit, double maxDistance) const
 {
-  double leftMinDistance, rightMinDistance;
   pxr::GfRange3d range(point, point);
   if (maxDistance < 0 || GetDistance(this, &range) < maxDistance) {
     if (IsLeaf()) {

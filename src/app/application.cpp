@@ -162,8 +162,6 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
   return result;
 }
 
-
-
 Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage, 
   const pxr::TfToken& path)
 {
@@ -389,6 +387,12 @@ Application::Init()
 
 }
 
+void 
+Application::Term()
+{
+
+}
+
 bool 
 Application::Update()
 {
@@ -407,20 +411,30 @@ Application::Update()
     _workspace->UpdateExec(GetTime().GetActiveTime());
   }
 
-  glfwWaitEventsTimeout(1.f / 60.f);
-  
-  // draw popup
-  if (_popup) {
-    Window* window = _popup->GetView()->GetWindow();
-    window->Draw(_popup);
-    if (_popup->IsDone() || _popup->IsCancel()) {
-      _popup->Terminate();
-      delete _popup;
-      _popup = nullptr;
+  glfwPollEvents();
+  static const double refreshRate = 1.f / 60.f;
+  static double refreshTime = 0;
+  const double currentTime = glfwGetTime();
+  if ((currentTime - refreshTime) > refreshRate) {
+    refreshTime = currentTime;
+    // draw popup
+    if (_popup) {
+      Window* window = _popup->GetView()->GetWindow();
+      window->Draw(_popup);
+      if (_popup->IsDone() || _popup->IsCancel()) {
+        _popup->Terminate();
+        delete _popup;
+        _popup = nullptr;
+      }
     }
-  } else {
-    if (!_mainWindow->Update()) return false;
-    for (auto& childWindow : _childWindows)childWindow->Update();
+    else {
+      if (!_mainWindow->Update()) return false;
+      for (auto& childWindow : _childWindows)childWindow->Update();
+    }
+  }
+  else {
+    if(!_time.IsPlaying())
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   return true;

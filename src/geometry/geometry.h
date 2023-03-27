@@ -65,7 +65,7 @@ public:
   void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
   void SetRadius(uint32_t index, float normal);
 
-  uint32_t GetNumPoints()const {return _positions.size();};
+  size_t GetNumPoints()const {return _positions.size();};
 
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);

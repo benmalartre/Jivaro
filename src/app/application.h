@@ -12,8 +12,6 @@
 #include "../app/tools.h"
 #include "../ui/popup.h"
 #include "../command/manager.h"
-#include "../geometry/mesh.h"
-//#include <openvdb/openvdb.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -62,12 +60,6 @@ public:
 
   // update application
   bool Update();
-
-  // the main loop
-  void MainLoop();
-
-  // cleanup
-  void CleanUp();
 
   void NewScene(const std::string& filename);
   void OpenScene(const std::string& filename);
@@ -162,9 +154,6 @@ private:
 
   // time
   Time                              _time;
-
-  // mesh
-  Mesh*                             _mesh;
 
   // command manager
   CommandManager                    _manager;
