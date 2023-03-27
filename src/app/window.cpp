@@ -654,10 +654,8 @@ bool Window::Update()
     }
     return false;
   }
-  if (!_idle) {
-    SetGLContext();
-    Draw();
-  }
+  SetGLContext();
+  Draw();
   return true;
 }
 
@@ -701,8 +699,6 @@ KeyboardCallback(
     app->UpdatePopup();
     return;
   }
-
-  parent->SetIdle(false);
 
   Time& time = app->GetTime();
   
@@ -858,7 +854,6 @@ void
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
   Window* parent = Window::GetUserData(window);
-  parent->SetIdle(false);
   Application* app = GetApplication();
   app->SetActiveWindow(parent);
   ImGui::SetCurrentContext(parent->GetContext());
