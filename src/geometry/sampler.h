@@ -25,6 +25,8 @@ namespace Sampler
 
     pxr::GfVec3f GetPosition(const pxr::GfVec3f* positions) const;
     pxr::GfVec3f GetNormal(const pxr::GfVec3f* normals) const;
+    pxr::GfVec3f GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) const;
+
   };
 
   struct Cell {

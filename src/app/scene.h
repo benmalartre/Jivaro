@@ -23,10 +23,7 @@ class Curve;
 class Points;
 class Voxels;
 
-typedef pxr::TfHashMap< pxr::SdfPath, Mesh, pxr::SdfPath::Hash > _MeshMap;
-typedef pxr::TfHashMap< pxr::SdfPath, Curve, pxr::SdfPath::Hash > _CurveMap;
-typedef pxr::TfHashMap< pxr::SdfPath, Points, pxr::SdfPath::Hash > _PointsMap;
-typedef pxr::TfHashMap< pxr::SdfPath, Voxels, pxr::SdfPath::Hash > _VoxelsMap;
+typedef pxr::TfHashMap< pxr::SdfPath, Geometry*, pxr::SdfPath::Hash > _PrimMap;
 
 using ScenePrimAdapterSharedPtr = std::shared_ptr<pxr::UsdImagingPrimAdapter>;
 
@@ -54,20 +51,14 @@ public:
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
   Voxels* AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius);
 
-  void Remove(const pxr::SdfPath& path);
+  Geometry* Remove(const pxr::SdfPath& path);
   bool IsMesh(const pxr::SdfPath& path);
   bool IsCurves(const pxr::SdfPath& path);
   bool IsPoints(const pxr::SdfPath& path);
 
 
-  _MeshMap& GetMeshes() { return _meshes; };
-  const _MeshMap& GetMeshes() const { return _meshes; };
-  _CurveMap& GetCurves() { return _curves; };
-  const _CurveMap& GetCurves() const { return _curves; };
-  _PointsMap& GetPoints() { return _points; };
-  const _PointsMap& GetPoints() const { return _points; };
-  _VoxelsMap& GetVoxels() { return _voxels; };
-  const _VoxelsMap& GetVoxels() const { return _voxels; };
+  _PrimMap& GetPrims() { return _prims; };
+  const _PrimMap& GetPrims() const { return _prims; };
 
   Geometry* GetGeometry(const pxr::SdfPath& path);
 
@@ -175,12 +166,8 @@ private:
   size_t _SamplePrimvar(pxr::SdfPath const& id, pxr::TfToken const& key,
     size_t maxNumSamples, float* times, pxr::VtValue* samples, pxr::VtIntArray* indices);
 
-  pxr::UsdStageRefPtr _Xstage;
+  _PrimMap            _prims;
 
-  _MeshMap            _meshes;
-  _CurveMap           _curves;
-  _PointsMap          _points;
-  _VoxelsMap          _voxels;
 };
 
 

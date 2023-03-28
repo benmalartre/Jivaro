@@ -72,9 +72,9 @@ void Engine::InitExec()
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::TfToken meshName(prim.GetName().GetString() + "RT");
       pxr::SdfPath meshPath(rootId.AppendChild(meshName));
+      _srcMap[meshPath] = prim.GetPath();
       Mesh* mesh = _scene->AddMesh(meshPath);
       pxr::UsdGeomMesh usdMesh(prim);
-      pxr::VtArray<Sampler::Sample> samples;
       pxr::VtArray<pxr::GfVec3f> positions;
       usdMesh.GetPointsAttr().Get(&positions);
       pxr::VtArray<int> counts;
@@ -86,13 +86,13 @@ void Engine::InitExec()
       pxr::VtArray<pxr::GfVec3f> normals;
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
       
-      Sampler::PoissonSampling(0.1, 128, positions,normals, triangles, samples);
+      Sampler::PoissonSampling(0.1, 128, positions,normals, triangles, _samples);
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
      
-      pxr::VtArray<pxr::GfVec3f> points(samples.size());
-      for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
-        points[sampleIdx] = xform.Transform(samples[sampleIdx].GetPosition(&positions[0]));
+      pxr::VtArray<pxr::GfVec3f> points(_samples.size());
+      for (size_t sampleIdx = 0; sampleIdx < _samples.size(); ++sampleIdx) {
+        points[sampleIdx] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0]));
       }
       mesh->MaterializeSamples(points, 2.f);
       pxr::HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
@@ -114,11 +114,25 @@ static VtVec3fArray _AnimatePositions(VtVec3fArray const& positions, float time)
 
 void Engine::UpdateExec(double time)
 {
-  for (auto& mesh : _scene->GetMeshes()) {
+  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+  pxr::UsdGeomXformCache xformCache(time);
+  for (auto& execPrim : _scene->GetPrims()) {
+    pxr::UsdPrim usdPrim = stage->GetPrimAtPath(_srcMap[execPrim.first]);
+    pxr::UsdGeomMesh usdMesh(usdPrim);
+    pxr::VtArray<pxr::GfVec3f> positions;
+    usdMesh.GetPointsAttr().Get(&positions, pxr::UsdTimeCode(time));
+    pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
 
-    mesh.second.Randomize(0.01);
+    pxr::VtArray<pxr::GfVec3f>& points = execPrim.second->GetPositions();
+    for (size_t sampleIdx = 0; sampleIdx < _samples.size(); ++sampleIdx) {
+      points[sampleIdx * 3] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+      points[sampleIdx * 3 + 1] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+      points[sampleIdx * 3 + 2] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    }
+
+    //mesh.second.Randomize(0.01);
     HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
-    tracker.MarkRprimDirty(mesh.first, HdChangeTracker::DirtyPoints);
+    tracker.MarkRprimDirty(execPrim.first, HdChangeTracker::DirtyPoints);
   }
 }
 

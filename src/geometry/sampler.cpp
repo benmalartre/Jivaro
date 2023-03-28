@@ -27,6 +27,20 @@ namespace Sampler
       ).GetNormalized();
   }
 
+  pxr::GfVec3f
+  Sample::GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) const
+  {
+    const pxr::GfVec3f e0 = positions[elemIdx[1]] - positions[elemIdx[0]];
+    const pxr::GfVec3f e1 = positions[elemIdx[2]] - positions[elemIdx[1]];
+    const pxr::GfVec3f e2 = positions[elemIdx[0]] - positions[elemIdx[2]];
+
+    return(
+      (normals[0] ^ e1).GetNormalized() * baryWeights[0] +
+      (normals[1] ^ e2).GetNormalized() * baryWeights[1] +
+      (normals[2] ^ e0).GetNormalized() * baryWeights[2]
+      ).GetNormalized();
+  }
+
   // Estimate the geodesic distance between two points using their position and normals.
   // See c95-f95_199-a16-paperfinal-v5 "3.2 Sampling with Geodesic Distance".  This estimation
   // assumes that we have a smooth gradient between the two points, since it doesn't have any

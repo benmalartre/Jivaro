@@ -17,6 +17,7 @@
 #include "../common.h"
 #include "../app/handle.h"
 #include "../app/scene.h"
+#include "../geometry/sampler.h"
 
 #include <memory>
 
@@ -69,12 +70,12 @@ public:
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
   bool GetHighlightSelection() { return _highlightSelection; };
 
-
-
 private:
   bool    _dirty;
   bool    _highlightSelection;
   Scene*  _scene;
+  pxr::VtArray<Sampler::Sample> _samples;
+  pxr::TfHashMap<pxr::SdfPath, pxr::SdfPath, pxr::SdfPath::Hash> _srcMap;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

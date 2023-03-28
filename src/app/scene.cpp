@@ -60,14 +60,14 @@ Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
   HdRenderIndex& index = GetRenderIndex();
   index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, path);
-  _meshes[path] = Mesh();
-  return &_meshes[path];
+  _prims[path] = new Mesh();
+  return (Mesh*)_prims[path];
 }
 
 Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
 {
-  _voxels[path] = Voxels();
-  Voxels* voxels = &_voxels[path];
+  _prims[path] = new Voxels();
+  Voxels* voxels = (Voxels*)_prims[path];
   voxels->Init(mesh, radius);
   voxels->Trace(0);
   voxels->Trace(1);
@@ -80,52 +80,30 @@ Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
 {
   HdRenderIndex& index = GetRenderIndex();
   index.InsertRprim(pxr::HdPrimTypeTokens->basisCurves, this, path);
-  _curves[path] = Curve();
-  return &_curves[path];
+  _prims[path] = new Curve();
+  return (Curve*)_prims[path];
 }
 
 Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
   HdRenderIndex& index = GetRenderIndex();
   index.InsertRprim(pxr::HdPrimTypeTokens->points, this, path);
-    _points[path] = Points();
+    _prims[path] = new Points();
 
-  return &_points[path];
+  return (Points*)_prims[path];
 }
 
-void Scene::Remove(const pxr::SdfPath & path)
+Geometry* Scene::Remove(const pxr::SdfPath & path)
 {
-  auto& meshIt = _meshes.find(path);
-  if (meshIt != _meshes.end()) {
+  auto& primIt = _prims.find(path);
+  if (primIt != _prims.end()) {
+    Geometry* result = primIt->second;
     HdRenderIndex& index = GetRenderIndex();
     index.RemoveRprim(path);
-    _meshes.erase(meshIt);
-    return;
+    _prims.erase(primIt);
+    return result;
   }
-
-  auto& curvesIt = _curves.find(path);
-  if (curvesIt != _curves.end()) {
-    HdRenderIndex& index = GetRenderIndex();
-    index.RemoveRprim(path);
-    _curves.erase(curvesIt);
-    return;
-  }
-
-  auto& pointsIt = _points.find(path);
-  if (pointsIt != _points.end()) {
-    HdRenderIndex& index = GetRenderIndex();
-    index.RemoveRprim(path);
-    _points.erase(pointsIt);
-    return;
-  }
-
-  auto& voxelsIt = _voxels.find(path);
-  if (voxelsIt != _voxels.end()) {
-    HdRenderIndex& index = GetRenderIndex();
-    index.RemoveRprim(path);
-    _voxels.erase(voxelsIt);
-    return;
-  }
+  return NULL;
 }
 
 
@@ -145,12 +123,8 @@ void Scene::TestVoronoi()
 Geometry*
 Scene::GetGeometry(const pxr::SdfPath& path)
 {
-  if (_meshes.find(path) != _meshes.end()) {
-    return(Geometry*)& _meshes[path];
-  } else if (_curves.find(path) != _curves.end()) {
-    return(Geometry*)&_curves[path];
-  }if (_points.find(path) != _points.end()) {
-    return(Geometry*)&_points[path];
+  if (_prims.find(path) != _prims.end()) {
+    return _prims[path];
   }
   return NULL;
 }
@@ -174,8 +148,8 @@ Scene::IsEnabled(pxr::TfToken const& option) const
 pxr::HdMeshTopology
 Scene::GetMeshTopology(pxr::SdfPath const& id)
 {
-  if(_meshes.find(id) != _meshes.end()) {
-    Mesh* mesh = &_meshes[id];
+  if(_prims.find(id) != _prims.end() && _prims[id]->GetType() == Geometry::MESH) {
+    Mesh* mesh = (Mesh*)_prims[id];
     return pxr::HdMeshTopology(
       pxr::UsdGeomTokens->catmullClark,
       pxr::UsdGeomTokens->rightHanded,
@@ -188,7 +162,7 @@ Scene::GetMeshTopology(pxr::SdfPath const& id)
 pxr::HdBasisCurvesTopology
 Scene::GetBasisCurvesTopology(pxr::SdfPath const& id)
 {
-  if(_curves.find(id) != _curves.end()) {
+  if (_prims.find(id) != _prims.end() && _prims[id]->GetType() == Geometry::CURVE) {
     //return _curves.find(id).GetTopology();
   }
   return pxr::HdBasisCurvesTopology();
@@ -205,15 +179,10 @@ Scene::GetExtent(pxr::SdfPath const& id)
 {
   GfRange3d range;
   VtVec3fArray points;
-  if (_meshes.find(id) != _meshes.end()) {
-    points = _meshes[id].GetPositions();
+  if (_prims.find(id) != _prims.end()) {
+    points = _prims[id]->GetPositions();
   }
-  else if (_curves.find(id) != _curves.end()) {
-    points = _curves[id].GetPositions();
-  }
-  else if (_points.find(id) != _points.end()) {
-    points = _points[id].GetPositions();
-  }
+ 
   TF_FOR_ALL(it, points) {
     range.UnionWith(*it);
   }
@@ -281,19 +250,19 @@ Scene::_SamplePrimvar(pxr::SdfPath const& id,
 bool 
 Scene::IsMesh(const pxr::SdfPath& id)
 {
-  return (_meshes.find(id) != _meshes.end());
+  return (_prims.find(id) != _prims.end() && _prims[id]->GetType() == Geometry::MESH);
 }
 
 bool
 Scene::IsCurves(const pxr::SdfPath& id)
 {
-  return (_curves.find(id) != _curves.end());
+  return (_prims.find(id) != _prims.end() && _prims[id]->GetType() == Geometry::CURVE);
 }
 
 bool
 Scene::IsPoints(const pxr::SdfPath& id)
 {
-  return (_points.find(id) != _points.end());
+  return (_prims.find(id) != _prims.end() && _prims[id]->GetType() == Geometry::POINT);
 }
 
 bool
@@ -333,20 +302,10 @@ Scene::GetDisplayStyle(pxr::SdfPath const& id)
 pxr::TfToken
 Scene::GetRenderTag(pxr::SdfPath const& id)
 {
-  /*if (_hiddenRprims.find(id) != _hiddenRprims.end()) {
-    return HdRenderTagTokens->hidden;
-  }*/
 
-  if (Mesh* mesh = TfMapLookupPtr(_meshes, id)) {
+  if(_prims.find(id)!=_prims.end()) {
     return HdRenderTagTokens->geometry;
   }
-  else if (_curves.count(id) > 0) {
-    return HdRenderTagTokens->geometry;
-  }
-  else if (_points.count(id) > 0) {
-    return HdRenderTagTokens->geometry;
-  }
-
   return HdRenderTagTokens->hidden;
 }
 
@@ -357,16 +316,9 @@ Scene::Get(pxr::SdfPath const& id, TfToken const& key)
   VtValue value;
   if (key == pxr::HdTokens->points) {
     // Each of the prim types hold onto their points
-    if (IsMesh(id)) {
-      return VtValue(_meshes[id].GetPositions());
-    }
-    else if (IsCurves(id)) {
-      return VtValue(_curves[id].GetPositions());
-    }
-    else if (IsPoints(id)) {
-      return VtValue(_points[id].GetPositions());
-    }
+    return VtValue(_prims[id]->GetPositions());
   }
+  /*
   else if (key == pxr::HdTokens->displayColor) {
     if (IsMesh(id)) {
       Mesh* mesh = &_meshes[id];
@@ -375,7 +327,7 @@ Scene::Get(pxr::SdfPath const& id, TfToken const& key)
       return VtValue(colors);
     }
   }
-  /*
+  
   else if (key == HdInstancerTokens->scale) {
     if (_instancers.find(id) != _instancers.end()) {
       return VtValue(_instancers[id].scale);
@@ -420,9 +372,7 @@ Scene::GetIndexedPrimvar(pxr::SdfPath const& id, pxr::TfToken const& key,
 {
   if (key == HdTokens->points) {
     // Each of the prim types hold onto their points
-    if (IsMesh(id))return VtValue(_meshes[id].GetPositions());
-    else if (IsCurves(id)) return VtValue(_curves[id].GetPositions());
-    else if (IsPoints(id)) return VtValue(_points[id].GetPositions());
+    return VtValue(_prims[id]->GetPositions());
   }
   /*
   else {

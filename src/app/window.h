@@ -110,10 +110,10 @@ public:
   // size
   int GetWidth(){return _width;};
   int GetHeight(){return _height;};
+  pxr::GfVec2i GetResolution() { return pxr::GfVec2i(_width, _height); };
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
-  void BuildSplittersMap();
 
   // views
   SplitterUI* GetSplitter(){return _splitter;};

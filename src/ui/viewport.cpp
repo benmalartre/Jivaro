@@ -67,8 +67,7 @@ ViewportUI::ViewportUI(View* parent)
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
 
-  const pxr::GfVec2i resolution(GetWidth(), GetHeight());
-
+  const pxr::GfVec2i resolution = GetWindow()->GetResolution();
   {
     _drawTarget = pxr::GlfDrawTarget::New(resolution, false);
     _drawTarget->Bind();
@@ -377,13 +376,14 @@ void ViewportUI::Render()
   Application* app = GetApplication();
   Window* window = GetWindow();
 
+  const float& wh = window->GetHeight();
+  const float& h = GetHeight();
+  const float& w = GetWidth();
+
   _engine->SetRendererAov(pxr::HdAovTokens->color);
+
   _engine->SetRenderViewport(
-    pxr::GfVec4d(
-      0,
-      0,
-      static_cast<double>(GetWidth()),
-      static_cast<double>(GetHeight())));
+    pxr::GfVec4d(0, wh-(h), w, h));
 
   _engine->SetCameraState(
     _camera->GetViewMatrix(),
@@ -393,7 +393,7 @@ void ViewportUI::Render()
   _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
 
   _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
-  _renderParams.complexity = 1.25f;
+  _renderParams.complexity = 1.f;
   _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
   _renderParams.showGuides = true;
   _renderParams.showRender = true;
@@ -407,7 +407,7 @@ void ViewportUI::Render()
   _renderParams.enableSceneMaterials = false;
   _renderParams.enableSceneLights = true;
   //_renderParams.colorCorrectionMode = ???
-  _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
+  _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
 
   if (_highlightSelection) {
     Selection* selection = app->GetSelection();
@@ -428,7 +428,6 @@ void ViewportUI::Render()
                _renderParams.clearColor[2],
                _renderParams.clearColor[3]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0, 0, GetWidth(), GetHeight());
 
   if (app->GetDisplayStage()->HasDefaultPrim()) {
     _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
@@ -487,12 +486,13 @@ bool ViewportUI::Draw()
    
     if (shouldDrawTool) {
       _toolTarget->Bind();
-      glViewport(0, 0, GetWidth(), GetHeight());
-
       // clear to black
       glClearColor(0.0f, 0.0f, 0.0f, 0.f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      tool->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
+      const float& wh = window->GetHeight();
+      const float& h = GetHeight();
+      const float& w = GetWidth();
+      tool->SetViewport(pxr::GfVec4f(0, wh - (h), w, h));
       tool->SetCamera(_camera);
       tool->Draw();
       _toolTarget->Unbind();
@@ -501,6 +501,8 @@ bool ViewportUI::Draw()
 
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
+    const float u = (float)GetWidth() / (float)window->GetWidth();
+    const float v = 1.f - (float)GetHeight() / (float)window->GetHeight();
 
     ImGui::Begin(_name.c_str(), NULL, _flags);
     ImGui::SetWindowPos(min);
@@ -511,7 +513,8 @@ bool ViewportUI::Draw()
     if (_drawTexId) {
        drawList->AddImage(
          (ImTextureID)_drawTexId, 
-         min, min + size, ImVec2(0, 1), ImVec2(1, 0));
+         min, min + size, ImVec2(0, 1), 
+         ImVec2(u, v));
     } 
 
     if( shouldDrawTool && _toolTexId) {
@@ -609,11 +612,12 @@ pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
 
 void ViewportUI::Resize()
 {
+  Window* window = GetWindow();
   if(!_initialized)return;
   if(GetWidth() <= 0 || GetHeight() <= 0)_valid = false;
   else _valid = true;
   
-  GetWindow()->SetGLContext();
+  window->SetGLContext();
   double aspectRatio = (double)GetWidth()/(double)GetHeight();
   _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
     aspectRatio,
@@ -621,13 +625,16 @@ void ViewportUI::Resize()
     pxr::GfCamera::FOVHorizontal
   );
 
-  _drawTarget->Bind();
-  _drawTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-  _drawTarget->Unbind();
+  const pxr::GfVec2i& targetSize = _drawTarget->GetSize();
+  if (window->GetWidth() != targetSize[0] || window->GetHeight() != targetSize[1]) {
+    _drawTarget->Bind();
+    _drawTarget->SetSize(pxr::GfVec2i(window->GetWidth(), window->GetHeight()));
+    _drawTarget->Unbind();
 
-  _toolTarget->Bind();
-  _toolTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-  _toolTarget->Unbind();
+    _toolTarget->Bind();
+    _toolTarget->SetSize(pxr::GfVec2i(window->GetWidth(), window->GetHeight()));
+    _toolTarget->Unbind();
+  }
 
   _engine->SetDirty(true);
 }
