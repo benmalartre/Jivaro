@@ -128,7 +128,7 @@ public:
   void ColoredPolygonSoup(size_t numPolygons, 
     const pxr::GfVec3f& minimum = pxr::GfVec3f(-1.f),
     const pxr::GfVec3f& maximum = pxr::GfVec3f(1.f));
-  void MaterializeSamples(const pxr::VtArray<pxr::GfVec3f>& points, float size=0.1);
+  void MaterializeSamples(const pxr::VtArray<pxr::GfVec3f>& points, float size=0.1f);
   void OpenVDBSphere(const float radius, 
     const pxr::GfVec3f& center=pxr::GfVec3f(0.f));
   void Randomize(float value);

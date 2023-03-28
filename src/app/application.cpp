@@ -441,42 +441,41 @@ Application::Update()
     for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
     _needCaptureFramebuffers = false;
   }
-  _time.ComputeFramerate(glfwGetTime());
-  if(_time.IsPlaying()) {
-    if(_time.PlayBack()) {
-      if(_viewport)_viewport->GetEngine()->SetDirty(true);
-    }
-  }  
   
+  static double lastTime = 0.f;
+  static double refreshRate = 1.f / _time.GetFPS();
+  double currentTime = glfwGetTime();
   glfwPollEvents();
-  static const double refreshRate = 1.f / 60.f;
-  static double refreshTime = 0;
-  const double currentTime = glfwGetTime();
-  if ((currentTime - refreshTime) > refreshRate) {
-    if (_execute) {
-      UpdateExec(GetTime().GetActiveTime());
+
+  _time.ComputeFramerate(glfwGetTime());
+  if (_time.IsPlaying()) {
+    if (_time.PlayBack()) {
+      if (_viewport)_viewport->GetEngine()->SetDirty(true);
     }
-    refreshTime = currentTime;
-    // draw popup
-    if (_popup) {
-      Window* window = _popup->GetView()->GetWindow();
-      window->Draw(_popup);
-      if (_popup->IsDone() || _popup->IsCancel()) {
-        _popup->Terminate();
-        delete _popup;
-        _popup = nullptr;
-      }
-    }
-    else {
-      if (!_mainWindow->Update()) return false;
-      for (auto& childWindow : _childWindows)childWindow->Update();
+  }
+  
+  // draw popup
+  if (_popup) {
+    Window* window = _popup->GetView()->GetWindow();
+    window->Draw(_popup);
+    if (_popup->IsDone() || _popup->IsCancel()) {
+      _popup->Terminate();
+      delete _popup;
+      _popup = nullptr;
     }
   }
   else {
-    if(!_time.IsPlaying())
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    if (!_mainWindow->Update()) return false;
+    for (auto& childWindow : _childWindows)childWindow->Update();
   }
-
+  if (currentTime - lastTime > refreshRate) {
+    lastTime = currentTime;
+    if (_execute) {
+      UpdateExec(_time.GetActiveTime());
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+    
   return true;
 }
 

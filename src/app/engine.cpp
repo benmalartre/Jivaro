@@ -86,7 +86,7 @@ void Engine::InitExec()
       pxr::VtArray<pxr::GfVec3f> normals;
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
       
-      Sampler::PoissonSampling(0.1, 1000000, positions,normals, triangles, samples);
+      Sampler::PoissonSampling(0.1, 128, positions,normals, triangles, samples);
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
      
@@ -94,25 +94,12 @@ void Engine::InitExec()
       for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
         points[sampleIdx] = xform.Transform(samples[sampleIdx].GetPosition(&positions[0]));
       }
-      mesh->MaterializeSamples(points);
+      mesh->MaterializeSamples(points, 2.f);
       pxr::HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
       tracker.MarkRprimDirty(meshPath, pxr::HdChangeTracker::DirtyTopology);
-      /*
-      Mesh* mesh = _execScene->AddMesh(prim.GetPath());
-      _solver->AddGeometry(mesh,
-        pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
-      
-      Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
-      _solver->AddGeometry(voxels,
-        pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));*/
 
     }
   }
-
-
-
-  
-
 }
 
 
@@ -129,7 +116,7 @@ void Engine::UpdateExec(double time)
 {
   for (auto& mesh : _scene->GetMeshes()) {
 
-    mesh.second.Randomize(0.1);
+    mesh.second.Randomize(0.01);
     HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
     tracker.MarkRprimDirty(mesh.first, HdChangeTracker::DirtyPoints);
   }
@@ -142,8 +129,17 @@ void Engine::TerminateExec()
   if (!stage) return;
 
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::SdfPath id = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
-  _scene->Remove(id);
+  pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
+
+  pxr::UsdPrimRange primRange = stage->TraverseAll();
+
+  for (pxr::UsdPrim prim : primRange) {
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      pxr::TfToken meshName(prim.GetName().GetString() + "RT");
+      pxr::SdfPath meshPath(rootId.AppendChild(meshName));
+      _scene->Remove(meshPath);
+    }
+  }
 }
 
 Engine::Engine(const pxr::HdDriver& driver)

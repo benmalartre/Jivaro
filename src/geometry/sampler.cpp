@@ -280,30 +280,6 @@ namespace Sampler
     }
   }
 
-
-  void
-  PoissonSampling(float radius, int nbSamples,
-    const pxr::VtArray<pxr::GfVec3f>& points,
-    const pxr::VtArray<pxr::GfVec3f>& normals,
-    const pxr::VtArray<int>& triangles,
-    pxr::VtArray<Sample>& samples)
-  {
-    pxr::VtArray<Sample> seeds;
-    float surfaceArea = _CreateRawSamples(nbSamples, points, normals, triangles, seeds);
-
-    if (radius <= 0.f) {
-      radius = std::sqrtf(surfaceArea / nbSamples) * 0.75f;
-    }
-
-    _PoissonDiskFromSamples(&points[0], &normals[0], radius, seeds, samples);
-
-    std::cout << "poisson sampling " << std::endl;
-    std::cout << "num triangles : " << triangles.size() / 3 << std::endl;
-    std::cout << "surface area : " << surfaceArea << std::endl;
-    std::cout << "num seeds : " << seeds.size() << std::endl;
-    std::cout << "num samples : " << samples.size() << std::endl;
-  }
-
   void
     PoissonSampling(float radius, int nbSamples,
       const pxr::VtArray<pxr::GfVec3f>& points,
@@ -323,12 +299,6 @@ namespace Sampler
     }
 
     _PoissonDiskFromSamples(&points[0], &normals[0], radius, seeds, samples);
-
-    std::cout << "poisson sampling " << std::endl;
-    std::cout << "num triangles : " << triangles.size() / 3 << std::endl;
-    std::cout << "surface area : " << surfaceArea << std::endl;
-    std::cout << "num seeds : " << seeds.size() << std::endl;
-    std::cout << "num samples : " << samples.size() << std::endl;
   }
 
 } // namespace Sample
