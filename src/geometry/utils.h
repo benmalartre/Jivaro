@@ -85,6 +85,10 @@ TriangulateMesh(const pxr::VtArray<int>& counts,
                 const pxr::VtArray<int>& indices, 
                 pxr::VtArray<Triangle>& triangles);
 
+void
+UpdateTriangles(pxr::VtArray<Triangle>& triangles, size_t removeVertexIdx);
+
+
 /// Compute smooth vertex normals on a triangulated polymesh
 void 
 ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,

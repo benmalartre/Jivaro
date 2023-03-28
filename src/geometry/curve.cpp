@@ -46,14 +46,6 @@ Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
     normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
 }
 
-void 
-Curve::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors) 
-{
-  _colorsInterpolation = interp;
-  _colors = colors;
-}
-
 uint32_t 
 Curve::GetNumCVs(uint32_t curveIndex)const
 {

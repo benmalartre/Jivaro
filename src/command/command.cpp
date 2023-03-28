@@ -27,11 +27,13 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 {
   Application* app = GetApplication();
   if (strlen(filename.c_str()) > 0) {
-    Workspace* workspace = app->GetWorkspace();
-    if (workspace)delete workspace;
-    workspace = new Workspace();
-    workspace->AddStageFromDisk(filename);
-    app->SetWorkspace(workspace);   
+     std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
+    std::string name = tokens.front();
+    pxr::SdfPath path("/" + name);
+    UndoBlock editBlock;
+    pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
+    app->SetStage(stage);
+    UndoRouter::Get().TrackLayer(stage->GetRootLayer());
   }
 
   UndoInverse inverse;
@@ -47,7 +49,7 @@ NewSceneCommand::NewSceneCommand(const std::string& filename)
   : Command(false)
 {
   Application* app = GetApplication();
-  Workspace* workspace = app->GetWorkspace();
+  //Workspace* workspace = app->GetWorkspace();
   /*
   if (workspace)delete workspace;
   app->SetWorkspace(new Workspace());
@@ -55,11 +57,10 @@ NewSceneCommand::NewSceneCommand(const std::string& filename)
   pxr::SdfFileFormatConstPtr usdaFormat = pxr::SdfFileFormat::FindByExtension("usda");
   pxr::SdfLayerRefPtr layer = pxr::SdfLayer::New(usdaFormat, filename);
   if (layer) {
-    pxr::UsdStageRefPtr newStage = pxr::UsdStage::Open(layer);
-    if (newStage) {
-      Workspace* workspace = GetApplication()->GetWorkspace();
-      workspace->GetStageCache().Insert(newStage);
-      workspace->SetWorkLayer(newStage->GetRootLayer());
+    pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(layer);
+    if (stage) {
+      app->SetStage(stage);
+      UndoRouter::Get().TrackLayer(stage->GetRootLayer());
     }
   }
   UndoInverse inverse;

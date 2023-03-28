@@ -304,6 +304,33 @@ namespace Sampler
     std::cout << "num samples : " << samples.size() << std::endl;
   }
 
+  void
+    PoissonSampling(float radius, int nbSamples,
+      const pxr::VtArray<pxr::GfVec3f>& points,
+      const pxr::VtArray<pxr::GfVec3f>& normals,
+      const pxr::VtArray<Triangle>& triangles,
+      pxr::VtArray<Sample>& samples)
+  {
+    pxr::VtArray<Sample> seeds;
+    pxr::VtArray<int> indices(triangles.size() * 3);
+    for (size_t triIdx = 0; triIdx < triangles.size(); ++triIdx) {
+      memcpy(&indices[triIdx * 3], &triangles[triIdx].vertices, sizeof(pxr::GfVec3i));
+    }
+    float surfaceArea = _CreateRawSamples(nbSamples, points, normals, indices, seeds);
+
+    if (radius <= 0.f) {
+      radius = std::sqrtf(surfaceArea / nbSamples) * 0.75f;
+    }
+
+    _PoissonDiskFromSamples(&points[0], &normals[0], radius, seeds, samples);
+
+    std::cout << "poisson sampling " << std::endl;
+    std::cout << "num triangles : " << triangles.size() / 3 << std::endl;
+    std::cout << "surface area : " << surfaceArea << std::endl;
+    std::cout << "num seeds : " << seeds.size() << std::endl;
+    std::cout << "num samples : " << samples.size() << std::endl;
+  }
+
 } // namespace Sample
 
 JVR_NAMESPACE_CLOSE_SCOPE

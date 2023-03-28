@@ -17,7 +17,6 @@
 #include "../utils/files.h"
 #include "../geometry/sampler.h"
 #include "../geometry/voxels.h"
-#include "../app/workspace.h"
 #include "../app/application.h"
 #include "../app/time.h"
 #include "../command/router.h"

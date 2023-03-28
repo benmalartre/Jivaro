@@ -25,13 +25,6 @@ public:
   Points(const pxr::UsdGeomPoints& points);
   virtual ~Points() {};
 
-  void SetDisplayColor(GeomInterpolation interp, 
-    const pxr::VtArray<pxr::GfVec3f>& colors);
-  const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
-  GeomInterpolation GetDisplayColorInterpolation() const {
-    return _colorsInterpolation;
-  };
-
   Point Get(uint32_t index);
 
   void Init(
@@ -56,10 +49,6 @@ public:
 private:
   // radius description
   pxr::VtArray<float>                 _radius;  
-
-  // colors
-  pxr::VtArray<pxr::GfVec3f>          _colors;
-  GeomInterpolation                   _colorsInterpolation;
 
 };
 

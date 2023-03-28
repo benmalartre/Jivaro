@@ -16,6 +16,7 @@
 
 #include "../common.h"
 #include "../app/handle.h"
+#include "../app/scene.h"
 
 #include <memory>
 
@@ -34,6 +35,11 @@ public:
 
   inline bool IsDirty() { return _dirty;};
   inline void SetDirty(bool dirty) { _dirty = dirty; };
+
+  void InitExec();
+  void UpdateExec(double time);
+  void TerminateExec();
+
   /*
   pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos, 
     pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);
@@ -63,9 +69,12 @@ public:
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
   bool GetHighlightSelection() { return _highlightSelection; };
 
+
+
 private:
-  bool _dirty;
-  bool _highlightSelection;
+  bool    _dirty;
+  bool    _highlightSelection;
+  Scene*  _scene;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

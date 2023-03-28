@@ -183,6 +183,7 @@ static void TriangulateCallback()
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
+    /*
     if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh mesh(prim);
       Mesh triangulated(mesh);
@@ -191,6 +192,8 @@ static void TriangulateCallback()
       mesh.GetFaceVertexCountsAttr().Set(pxr::VtValue(triangulated.GetFaceCounts()));
       mesh.GetFaceVertexIndicesAttr().Set(pxr::VtValue(triangulated.GetFaceConnects()));
     }
+    */
+    std::cout << "triangulate : " << prim.GetPath() << std::endl;
   }
 }
 

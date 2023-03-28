@@ -3,6 +3,7 @@
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 #include "../geometry/voxels.h"
+#include "../geometry/curve.h"
 #include "../acceleration/bvh.h"
 #include "../acceleration/hashGrid.h"
 #include "../app/application.h"
@@ -15,6 +16,8 @@
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/basisCurves.h>
+#include <pxr/usd/usdGeom/points.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
 #include <pxr/usd/usdGeom/primvarsAPI.h>

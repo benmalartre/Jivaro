@@ -78,12 +78,6 @@ public:
 
   const std::vector<HalfEdge*> GetUniqueEdges();
   
-  void SetDisplayColor(GeomInterpolation interp, 
-    const pxr::VtArray<pxr::GfVec3f>& colors);
-  const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
-  GeomInterpolation GetDisplayColorInterpolation() const {
-    return _colorsInterpolation;
-  };
   pxr::GfVec3f GetPosition(const Location& point) const ;
   pxr::GfVec3f GetNormal(const Location& point) const;
   Triangle* GetTriangle(uint32_t index){return &_triangles[index];};
@@ -131,6 +125,10 @@ public:
   void PolygonSoup(size_t numPolygons, 
     const pxr::GfVec3f& minimum=pxr::GfVec3f(-1.f), 
     const pxr::GfVec3f& maximum=pxr::GfVec3f(1.f));
+  void ColoredPolygonSoup(size_t numPolygons, 
+    const pxr::GfVec3f& minimum = pxr::GfVec3f(-1.f),
+    const pxr::GfVec3f& maximum = pxr::GfVec3f(1.f));
+  void MaterializeSamples(const pxr::VtArray<pxr::GfVec3f>& points, float size=0.1);
   void OpenVDBSphere(const float radius, 
     const pxr::GfVec3f& center=pxr::GfVec3f(0.f));
   void Randomize(float value);
@@ -157,10 +155,6 @@ private:
   // polygonal description
   pxr::VtArray<int>                   _faceVertexCounts;  
   pxr::VtArray<int>                   _faceVertexIndices;
-
-  // colors
-  pxr::VtArray<pxr::GfVec3f>          _colors;
-  GeomInterpolation                   _colorsInterpolation;
 
   // vertex data
   pxr::VtArray<bool>                  _boundary;

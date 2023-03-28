@@ -3,7 +3,6 @@
 
 #include "../common.h"
 #include "../app/scene.h"
-#include "../app/workspace.h"
 #include "../app/selection.h"
 #include "../app/time.h"
 #include "../app/window.h"
@@ -117,12 +116,19 @@ public:
   std::vector<Engine*> GetEngines() { return _engines; };
   void SetActiveViewport(ViewportUI* viewport);
 
+  // stage cache
+  pxr::UsdStageRefPtr& GetStage(){return _stage;};
+  void SetStage(pxr::UsdStageRefPtr& stage);
+  pxr::UsdStageCache& GetStageCache() { return _stageCache; }
+
   // execution
-  Workspace* GetWorkspace() { return _workspace; };
-  void SetWorkspace(Workspace* workspace) { _workspace = workspace; };
   void ToggleExec();
   void SetExec(bool state);
   bool GetExec();
+
+  void InitExec();
+  void UpdateExec(double time);
+  void TerminateExec();
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
@@ -137,12 +143,10 @@ private:
   std::vector<Window*>              _childWindows;
   Window*                           _activeWindow;
   Window*                           _focusWindow;
-  Workspace*                        _workspace;
   Selection                         _selection;
   bool                              _needCaptureFramebuffers;
 
   // uis
-  
   ViewportUI*                       _viewport;
   GraphEditorUI*                    _graph;
   LayersUI*                         _layers;
@@ -159,6 +163,9 @@ private:
   CommandManager                    _manager;
 
   // engines
+  pxr::UsdStageCache                _stageCache;
+  pxr::UsdStageRefPtr               _stage;
+  pxr::SdfLayerRefPtr               _layer;
   std::vector<Engine*>              _engines;
   bool                              _execute;
 };

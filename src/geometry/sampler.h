@@ -40,6 +40,13 @@ namespace Sampler
     const pxr::VtArray<pxr::GfVec3f>& normals,
     const pxr::VtArray<int>& triangles,
     pxr::VtArray<Sample>& samples);
+
+  void PoissonSampling(
+    float radius, int nbSamples,
+    const pxr::VtArray<pxr::GfVec3f>& points,
+    const pxr::VtArray<pxr::GfVec3f>& normals,
+    const pxr::VtArray<Triangle>& triangles,
+    pxr::VtArray<Sample>& samples);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

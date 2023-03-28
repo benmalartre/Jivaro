@@ -691,7 +691,6 @@ TranslateHandle::_UpdateTargets(bool interacting)
     }
   }
   else {
-    
     pxr::UsdGeomXformCache xformCache(activeTime);
     for (auto& target : _targets) {
       pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);

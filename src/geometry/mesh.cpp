@@ -13,7 +13,6 @@
 #include "../geometry/mesh.h"
 #include "../geometry/utils.h"
 
-#include "../voronoi/FortuneAlgorithm.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -1008,22 +1007,65 @@ void Mesh::PolygonSoup(size_t numPolygons, const pxr::GfVec3f& minimum,
   for(size_t i=0; i < numPoints; ++i) {
     faceVertexConnect[i] = i;
   }
+  SetTopology(position, faceVertexCount, faceVertexConnect);
+}
 
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  for(size_t i=0; i < numPoints / 3; ++i) {
-    pxr::GfVec3f color(
-      RANDOM_0_1,
-      RANDOM_0_1,
-      RANDOM_0_1
-    );
-    colors[i * 3] = color;
-    colors[i * 3 + 1] = color;
-    colors[i * 3 + 2] = color;
+void 
+Mesh::MaterializeSamples(const pxr::VtArray<pxr::GfVec3f>& points, float size)
+{
+  size_t numTriangles = points.size();
+  size_t numPoints = numTriangles * 3;
+  pxr::VtArray<int> faceVertexCount(numTriangles);
+  for (size_t i = 0; i < numTriangles; ++i) {
+    faceVertexCount[i] = 3;
   }
 
-  SetTopology(position, faceVertexCount, faceVertexConnect);
-  SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
+  pxr::VtArray<int> faceVertexConnect(numPoints);
+  for (size_t i = 0; i < numPoints; ++i) {
+    faceVertexConnect[i] = i;
+  }
+
+  pxr::VtArray<pxr::GfVec3f> positions(numPoints);
+  for (size_t p = 0; p < numTriangles; ++p) {
+    positions[p * 3] = points[p] - pxr::GfVec3f(size, 0, 0);
+    positions[p * 3 + 1] = points[p] + pxr::GfVec3f(size, 0, 0);
+    positions[p * 3 + 2] = points[p] + pxr::GfVec3f(0, size, 0);
+  }
+  SetTopology(positions, faceVertexCount, faceVertexConnect);
 }
+
+
+void Mesh::ColoredPolygonSoup(size_t numPolygons, 
+  const pxr::GfVec3f& minimum, const pxr::GfVec3f& maximum)
+{
+  //mesh->PolygonSoup(65535);
+  pxr::GfMatrix4f space(1.f);
+  TriangularGrid2D(10.f, 6.f, space, 0.2f);
+  Randomize(0.05f);
+}
+
+Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
+{
+  Mesh* mesh = new Mesh();
+  /*
+  mesh->OpenVDBSphere(6.66, pxr::GfVec3f(3.f, 7.f, 4.f));
+
+  pxr::SdfPath path(path);
+  pxr::UsdGeomMesh vdbSphere = pxr::UsdGeomMesh::Define(stage, path);
+  vdbSphere.CreatePointsAttr(pxr::VtValue(mesh->GetPositions()));
+  vdbSphere.CreateNormalsAttr(pxr::VtValue(mesh->GetNormals()));
+  vdbSphere.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh->GetFaceConnects()));
+  vdbSphere.CreateFaceVertexCountsAttr(pxr::VtValue(mesh->GetFaceCounts()));
+
+  vdbSphere.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
+
+  std::cout << "CREATED OPENVDB SPHERE !!!" << std::endl;
+  */
+
+  return mesh;
+}
+
+
 
 void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& space, float size)
 {
@@ -1095,7 +1137,6 @@ void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& sp
  
 
   SetTopology(position, faceVertexCount, faceVertexConnect);
-  SetDisplayColor(GeomInterpolation::GeomInterpolationVertex, colors);
 }
 
 void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
@@ -1105,6 +1146,7 @@ void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
 
 void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
 {
+  /*
   size_t numPoints = points.size();
   std::vector<mygal::Vector2<double>> _positions(numPoints);
   for (size_t p=0; p < numPoints; ++p) {
@@ -1166,8 +1208,7 @@ void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
   }
 
   SetTopology(positions, faceVertexCounts, faceVertexConnects);
-  SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
-
+  */
 }
 
 void Mesh::Randomize(float value)
@@ -1178,14 +1219,6 @@ void Mesh::Randomize(float value)
       RANDOM_LO_HI(-value, value),
       RANDOM_LO_HI(-value, value));
   }
-}
-
-
-void Mesh::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors)
-{
-  _colorsInterpolation = interp;
-  _colors = colors;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

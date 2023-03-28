@@ -24,7 +24,7 @@ add_executable(${TARGET}
   ui/textFilter.cpp
   ui/utils.cpp
   ui/popup.cpp
-  ui/debug.cpp
+  #ui/debug.cpp
   ui/fileBrowser.cpp
   ui/contentBrowser.cpp
   ui/splitter.cpp
@@ -95,7 +95,6 @@ add_executable(${TARGET}
   app/modal.cpp
   app/scene.cpp
   app/engine.cpp
-  app/workspace.cpp
   app/picking.cpp
   app/selection.cpp
   app/tools.cpp

@@ -35,13 +35,6 @@ public:
   const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
   pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
 
-  void SetDisplayColor(GeomInterpolation interp, 
-    const pxr::VtArray<pxr::GfVec3f>& colors);
-  const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
-  GeomInterpolation GetDisplayColorInterpolation() const {
-    return _colorsInterpolation;
-  };
-
   uint32_t GetNumCurves() const { return _numCurves; };
   uint32_t GetNumCVs(uint32_t curveIndex)const;
   uint32_t GetNumSegments(uint32_t curveIndex)const;

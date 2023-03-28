@@ -53,7 +53,6 @@ Application::Application(unsigned width, unsigned height):
   _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
   _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
 {  
-  _workspace = new Workspace();
   _mainWindow = CreateStandardWindow(width, height);
   _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
@@ -64,7 +63,6 @@ Application::Application(bool fullscreen):
   _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
   _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
 {
-  _workspace = new Workspace();
   _mainWindow = CreateFullScreenWindow();
   _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
@@ -75,7 +73,6 @@ Application::Application(bool fullscreen):
 Application::~Application()
 {
   if(_mainWindow) delete _mainWindow;
-  if(_workspace) delete _workspace;
 };
 
 // create full screen window
@@ -162,70 +159,12 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
   return result;
 }
 
-Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage, 
-  const pxr::TfToken& path)
+void
+Application::SetStage(pxr::UsdStageRefPtr& stage)
 {
-  Mesh* mesh = new Mesh();
-  //mesh->PolygonSoup(65535);
-  pxr::GfMatrix4f space(1.f);
-  mesh->TriangularGrid2D(10.f, 6.f, space, 0.2f);
-  mesh->Randomize(0.05f);
-
-  pxr::UsdGeomMesh polygonSoup = 
-    pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(path));
-  polygonSoup.CreatePointsAttr(pxr::VtValue(mesh->GetPositions()));
-  polygonSoup.CreateNormalsAttr(pxr::VtValue(mesh->GetNormals()));
-  polygonSoup.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh->GetFaceConnects()));
-  polygonSoup.CreateFaceVertexCountsAttr(pxr::VtValue(mesh->GetFaceCounts()));
-  pxr::VtArray<pxr::GfVec3f> colors(1);
-
-  polygonSoup.CreateDisplayColorAttr(pxr::VtValue(mesh->GetDisplayColor()));
-  pxr::UsdGeomPrimvar displayColorPrimvar = polygonSoup.GetDisplayColorPrimvar();
-  GeomInterpolation colorInterpolation = mesh->GetDisplayColorInterpolation();
-
-  switch(colorInterpolation) {
-    case GeomInterpolationConstant:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->constant);
-      break;
-    case GeomInterpolationUniform:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->uniform);
-      break;
-    case GeomInterpolationVertex:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
-      break;
-    case GeomInterpolationVarying:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
-      break;
-    case GeomInterpolationFaceVarying:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->faceVarying);
-      break;
-    default:
-      break;
-  }
-
-  polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
-  return mesh;
-}
-
-Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
-{
-  Mesh* mesh = new Mesh();
-  /*
-  mesh->OpenVDBSphere(6.66, pxr::GfVec3f(3.f, 7.f, 4.f));
-
-  pxr::SdfPath path(path);
-  pxr::UsdGeomMesh vdbSphere = pxr::UsdGeomMesh::Define(stage, path);
-  vdbSphere.CreatePointsAttr(pxr::VtValue(mesh->GetPositions()));
-  vdbSphere.CreateNormalsAttr(pxr::VtValue(mesh->GetNormals()));
-  vdbSphere.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh->GetFaceConnects()));
-  vdbSphere.CreateFaceVertexCountsAttr(pxr::VtValue(mesh->GetFaceCounts()));
-
-  vdbSphere.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
-
-  std::cout << "CREATED OPENVDB SPHERE !!!" << std::endl;
-  */ 
- 
-  return mesh;
+  _stageCache.Insert(stage);
+  _stage = stage;
+  _layer = stage->GetRootLayer();
 }
 
 // init application
@@ -388,6 +327,107 @@ Application::Init()
 }
 
 void 
+Application::InitExec()
+{
+  for(auto& engine: _engines) {
+    engine->InitExec();
+  }
+  /*
+  if (!_execInitialized) {
+    _execStage = UsdStage::CreateInMemory("exec");
+    _execScene = new Scene(_execStage);
+    _solver = new PBDSolver();
+   
+    Time& time = GetApplication()->GetTime();
+    _startFrame = time.GetStartTime();
+    _lastFrame = time.GetActiveTime();
+    
+    _execStage->GetRootLayer()->TransferContent(_workStage->GetRootLayer());
+    _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
+      _workStage->GetDefaultPrim().GetPath()));
+
+    pxr::UsdGeomXformCache xformCache(_startFrame);
+
+    pxr::UsdPrimRange primRange = _execStage->TraverseAll();
+    for (pxr::UsdPrim prim : primRange) {
+      if (prim.IsA<pxr::UsdGeomMesh>()) {
+        Mesh* mesh = _execScene->AddMesh(prim.GetPath());
+        _solver->AddGeometry(mesh, 
+          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
+        
+        Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
+        _solver->AddGeometry(voxels,
+          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
+
+      }
+    }
+
+    
+    std::vector<Geometry*> colliders;
+    for (auto& mesh : _execScene->GetMeshes()) {
+      colliders.push_back(&mesh.second);
+    }
+    for(auto& collider: colliders)
+      _solver->AddCollider(collider);
+    
+
+    PBDParticle* system = _solver->GetSystem();
+    _CreateSystemPoints(_execStage, system->Get(), 0.05);
+
+    
+    _execInitialized = true;
+  }
+  */
+}
+
+void 
+Application::UpdateExec(double time)
+{
+  for(auto& engine: _engines) {
+    engine->UpdateExec(time);
+  }
+  /*
+  for (auto& meshMapIt : _execScene->GetMeshes()) {
+    pxr::SdfPath path = meshMapIt.first;
+    Mesh* mesh = &meshMapIt.second;
+    pxr::VtArray<pxr::GfVec3f> positions;
+    pxr::UsdGeomMesh input(_workStage->GetPrimAtPath(path));
+
+    double t = pxr::GfSin(GetApplication()->GetTime().GetActiveTime() * 100);
+
+    input.GetPointsAttr().Get(&positions, time);
+    for (auto& position : positions) {
+      position += pxr::GfVec3f(
+        pxr::GfSin(position[0] + t),
+        pxr::GfCos(position[0] + t) * 5.0,
+        RANDOM_0_1 * 0.05
+      );
+    }
+    mesh->Update(positions);
+  }
+  
+  if (time <= _startFrame) {
+    _solver->Reset();
+  }
+  if(time > _lastFrame) {
+    _solver->Step();
+    _execScene->Update(time);
+  }
+  _lastFrame = (float)time;
+  */
+}
+
+void 
+Application::TerminateExec()
+{
+  for (auto& engine : _engines) {
+    engine->TerminateExec();
+  }
+  //delete _solver;
+}
+
+
+void 
 Application::Term()
 {
 
@@ -407,15 +447,15 @@ Application::Update()
       if(_viewport)_viewport->GetEngine()->SetDirty(true);
     }
   }  
-  if (_workspace->GetExecStage()) {
-    _workspace->UpdateExec(GetTime().GetActiveTime());
-  }
-
+  
   glfwPollEvents();
   static const double refreshRate = 1.f / 60.f;
   static double refreshTime = 0;
   const double currentTime = glfwGetTime();
   if ((currentTime - refreshTime) > refreshRate) {
+    if (_execute) {
+      UpdateExec(GetTime().GetActiveTime());
+    }
     refreshTime = currentTime;
     // draw popup
     if (_popup) {
@@ -627,14 +667,9 @@ void
 Application::ToggleExec() 
 {
   _execute = 1 - _execute; 
-  if (_execute) {
-    _workspace->AddExecStage();
-    _DirtyAllEngines(_engines);
-  }
-  else {
-    _workspace->RemoveExecStage();
-    _DirtyAllEngines(_engines);
-  }
+  if (_execute)InitExec();
+  else TerminateExec();
+  _DirtyAllEngines(_engines);
 };
 
 void 
@@ -653,21 +688,21 @@ Application::GetExec()
 pxr::UsdStageRefPtr
 Application::GetDisplayStage()
 {
-  return _workspace->GetDisplayStage();
+  return _stage;
 }
 
 // get stage for work
 pxr::UsdStageRefPtr
 Application::GetWorkStage()
 {
-  return _workspace->GetWorkStage();
+  return _stage;
 }
 
 // get current layer
 pxr::SdfLayerRefPtr
 Application::GetCurrentLayer()
 {
-  return _workspace->GetWorkLayer();
+  return _layer;
 }
 
 // selection
@@ -708,7 +743,7 @@ Application::GetStageBoundingBox()
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
     pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
-  return bboxCache.ComputeWorldBound(_workspace->GetWorkStage()->GetPseudoRoot());
+  return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
 }
 
 pxr::GfBBox3d 
@@ -726,7 +761,7 @@ Application::GetSelectionBoundingBox()
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const Selection::Item& item = _selection[n];
     if (item.type == Selection::Type::PRIM) {
-      pxr::UsdPrim prim = _workspace->GetWorkStage()->GetPrimAtPath(item.path);
+      pxr::UsdPrim prim = _stage->GetPrimAtPath(item.path);
       
       if (prim.IsActive()) {
         const pxr::GfBBox3d primBBox = bboxCache.ComputeWorldBound(prim);

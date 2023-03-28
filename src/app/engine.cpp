@@ -14,6 +14,10 @@
 #include "pxr/base/tf/diagnostic.h"
 #include "pxr/base/tf/callContext.h"
 #include "../app/engine.h"
+#include "../app/application.h"
+#include "../geometry/geometry.h"
+#include "../geometry/mesh.h"
+#include "../geometry/sampler.h"
 
 #include <iostream>
 
@@ -50,6 +54,98 @@ _GetUseSceneIndices()
   return useSceneIndices;
 }
 
+void Engine::InitExec()
+{
+  if (!_scene)_scene = new Scene(_GetRenderIndex(), _GetUsdImagingDelegateId());
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+  if (!stage) return;
+
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
+  
+
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+
+  pxr::UsdPrimRange primRange = stage->TraverseAll();
+  for (pxr::UsdPrim prim : primRange) {
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      pxr::TfToken meshName(prim.GetName().GetString() + "RT");
+      pxr::SdfPath meshPath(rootId.AppendChild(meshName));
+      Mesh* mesh = _scene->AddMesh(meshPath);
+      pxr::UsdGeomMesh usdMesh(prim);
+      pxr::VtArray<Sampler::Sample> samples;
+      pxr::VtArray<pxr::GfVec3f> positions;
+      usdMesh.GetPointsAttr().Get(&positions);
+      pxr::VtArray<int> counts;
+      pxr::VtArray<int> indices;
+      usdMesh.GetFaceVertexCountsAttr().Get(&counts);
+      usdMesh.GetFaceVertexIndicesAttr().Get(&indices);
+      pxr::VtArray<Triangle> triangles;
+      TriangulateMesh(counts, indices, triangles);
+      pxr::VtArray<pxr::GfVec3f> normals;
+      ComputeVertexNormals(positions, counts, indices, triangles, normals);
+      
+      Sampler::PoissonSampling(0.1, 1000000, positions,normals, triangles, samples);
+
+      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+     
+      pxr::VtArray<pxr::GfVec3f> points(samples.size());
+      for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
+        points[sampleIdx] = xform.Transform(samples[sampleIdx].GetPosition(&positions[0]));
+      }
+      mesh->MaterializeSamples(points);
+      pxr::HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
+      tracker.MarkRprimDirty(meshPath, pxr::HdChangeTracker::DirtyTopology);
+      /*
+      Mesh* mesh = _execScene->AddMesh(prim.GetPath());
+      _solver->AddGeometry(mesh,
+        pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
+      
+      Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
+      _solver->AddGeometry(voxels,
+        pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));*/
+
+    }
+  }
+
+
+
+  
+
+}
+
+
+static VtVec3fArray _AnimatePositions(VtVec3fArray const& positions, float time)
+{
+  VtVec3fArray result = positions;
+  for (size_t i = 0; i < result.size(); ++i) {
+    result[i] += GfVec3f((float)(0.5 * sin(0.5 * i + time)), 0, 0);
+  }
+  return result;
+}
+
+void Engine::UpdateExec(double time)
+{
+  for (auto& mesh : _scene->GetMeshes()) {
+
+    mesh.second.Randomize(0.1);
+    HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
+    tracker.MarkRprimDirty(mesh.first, HdChangeTracker::DirtyPoints);
+  }
+}
+
+void Engine::TerminateExec()
+{
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+  if (!stage) return;
+
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  pxr::SdfPath id = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
+  _scene->Remove(id);
+}
+
 Engine::Engine(const pxr::HdDriver& driver)
   : Engine(pxr::SdfPath::AbsoluteRootPath(), {}, {}, 
     _GetUsdImagingDelegateId(), driver)
@@ -71,6 +167,7 @@ Engine::Engine(
     sceneDelegateID,
     driver)
   , _dirty(true)
+  , _scene(NULL)
 {
 }
 

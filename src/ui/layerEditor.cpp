@@ -315,7 +315,7 @@ bool LayerEditorUI::Draw()
       if (ImGui::BeginPopupContextItem()) {
         if (ImGui::MenuItem("Add root prim")) {
           ADD_COMMAND(CreatePrimCommand,
-            GetApplication()->GetWorkspace()->GetWorkLayer(), "/root");
+            GetApplication()->GetCurrentLayer(), "/root");
         }
         ImGui::EndPopup();
       }
