@@ -445,6 +445,16 @@ Application::Update()
   static double lastTime = 0.f;
   static double refreshRate = 1.f / _time.GetFPS();
   double currentTime = glfwGetTime();
+  if (currentTime - lastTime > refreshRate) {
+    lastTime = currentTime;
+    if (_execute) {
+      UpdateExec(_time.GetActiveTime());
+    }
+  } else {
+    if(!_time.IsPlaying())
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
   glfwPollEvents();
 
   _time.ComputeFramerate(glfwGetTime());
@@ -463,18 +473,12 @@ Application::Update()
       delete _popup;
       _popup = nullptr;
     }
-  }
-  else {
+  } else {
     if (!_mainWindow->Update()) return false;
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
-  if (currentTime - lastTime > refreshRate) {
-    lastTime = currentTime;
-    if (_execute) {
-      UpdateExec(_time.GetActiveTime());
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  }
+
+  
     
   return true;
 }

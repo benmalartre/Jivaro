@@ -77,6 +77,7 @@ void Engine::InitExec()
       pxr::UsdGeomMesh usdMesh(prim);
       pxr::VtArray<pxr::GfVec3f> positions;
       usdMesh.GetPointsAttr().Get(&positions);
+
       pxr::VtArray<int> counts;
       pxr::VtArray<int> indices;
       usdMesh.GetFaceVertexCountsAttr().Get(&counts);
@@ -86,7 +87,7 @@ void Engine::InitExec()
       pxr::VtArray<pxr::GfVec3f> normals;
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
       
-      Sampler::PoissonSampling(0.1, 128, positions,normals, triangles, _samples);
+      Sampler::PoissonSampling(0.1, 128, positions, normals, triangles, _samples);
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
      
@@ -121,13 +122,25 @@ void Engine::UpdateExec(double time)
     pxr::UsdGeomMesh usdMesh(usdPrim);
     pxr::VtArray<pxr::GfVec3f> positions;
     usdMesh.GetPointsAttr().Get(&positions, pxr::UsdTimeCode(time));
+
+    pxr::VtArray<int> counts;
+    pxr::VtArray<int> indices;
+    usdMesh.GetFaceVertexCountsAttr().Get(&counts);
+    usdMesh.GetFaceVertexIndicesAttr().Get(&indices);
+    pxr::VtArray<Triangle> triangles;
+    TriangulateMesh(counts, indices, triangles);
+    pxr::VtArray<pxr::GfVec3f> normals;
+    ComputeVertexNormals(positions, counts, indices, triangles, normals);
+
     pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
 
     pxr::VtArray<pxr::GfVec3f>& points = execPrim.second->GetPositions();
     for (size_t sampleIdx = 0; sampleIdx < _samples.size(); ++sampleIdx) {
-      points[sampleIdx * 3] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-      points[sampleIdx * 3 + 1] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-      points[sampleIdx * 3 + 2] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+      const pxr::GfVec3f& normal = _samples[sampleIdx].GetNormal(&normals[0]);
+      const pxr::GfVec3f& tangent = _samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
+      points[sampleIdx * 3] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) - tangent * 0.2f;
+      points[sampleIdx * 3 + 1] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + normal * 4.f;
+      points[sampleIdx * 3 + 2] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + tangent * 0.2f;
     }
 
     //mesh.second.Randomize(0.01);
