@@ -443,7 +443,7 @@ Application::Update()
   }
   
   static double lastTime = 0.f;
-  static double refreshRate = 1.f / _time.GetFPS();
+  static double refreshRate = 1.f / 60.f;
   double currentTime = glfwGetTime();
   if (currentTime - lastTime > refreshRate) {
     lastTime = currentTime;
