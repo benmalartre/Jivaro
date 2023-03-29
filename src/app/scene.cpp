@@ -292,7 +292,7 @@ Scene::InitExec()
       pxr::VtArray<pxr::GfVec3f> normals;
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
 
-      Sampler::PoissonSampling(0.01, 64000, positions, normals, triangles, _samples);
+      PoissonSampling(0.01, 64000, positions, normals, triangles, _samples);
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
 
