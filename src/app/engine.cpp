@@ -87,7 +87,7 @@ void Engine::InitExec()
       pxr::VtArray<pxr::GfVec3f> normals;
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
       
-      Sampler::PoissonSampling(0.1, 128, positions, normals, triangles, _samples);
+      Sampler::PoissonSampling(0.01, 64000, positions, normals, triangles, _samples);
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
      
@@ -98,7 +98,6 @@ void Engine::InitExec()
       mesh->MaterializeSamples(points, 2.f);
       pxr::HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
       tracker.MarkRprimDirty(meshPath, pxr::HdChangeTracker::DirtyTopology);
-
     }
   }
 }
@@ -138,9 +137,11 @@ void Engine::UpdateExec(double time)
     for (size_t sampleIdx = 0; sampleIdx < _samples.size(); ++sampleIdx) {
       const pxr::GfVec3f& normal = _samples[sampleIdx].GetNormal(&normals[0]);
       const pxr::GfVec3f& tangent = _samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
-      points[sampleIdx * 3] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) - tangent * 0.2f;
-      points[sampleIdx * 3 + 1] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + normal * 4.f;
-      points[sampleIdx * 3 + 2] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0])) + tangent * 0.2f;
+      const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
+      const pxr::GfVec3f& position = _samples[sampleIdx].GetPosition(&positions[0]);
+      points[sampleIdx * 3] = xform.Transform(position - tangent * 0.02f);
+      points[sampleIdx * 3 + 1] = xform.Transform(position + bitangent + normal * 0.4f * (1.5f + pxr::GfSin(position[2]*0.4 + time*0.2) * 0.5f));
+      points[sampleIdx * 3 + 2] = xform.Transform(position + tangent * 0.02f);
     }
 
     //mesh.second.Randomize(0.01);

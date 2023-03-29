@@ -407,7 +407,7 @@ void ViewportUI::Render()
   _renderParams.enableSceneMaterials = false;
   _renderParams.enableSceneLights = true;
   //_renderParams.colorCorrectionMode = ???
-  _renderParams.clearColor = pxr::GfVec4f(0.0,0.0,0.0,1.0);
+  _renderParams.clearColor = pxr::GfVec4f(0.25,0.25,0.25,1.0);
 
   if (_highlightSelection) {
     Selection* selection = app->GetSelection();

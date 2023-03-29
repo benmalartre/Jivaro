@@ -318,16 +318,15 @@ Scene::Get(pxr::SdfPath const& id, TfToken const& key)
     // Each of the prim types hold onto their points
     return VtValue(_prims[id]->GetPositions());
   }
-  /*
   else if (key == pxr::HdTokens->displayColor) {
     if (IsMesh(id)) {
-      Mesh* mesh = &_meshes[id];
+      Mesh* mesh = (Mesh*)_prims[id];
       pxr::VtArray<pxr::GfVec3f> colors(mesh->GetNumPoints());
       for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
       return VtValue(colors);
     }
   }
-  
+  /*
   else if (key == HdInstancerTokens->scale) {
     if (_instancers.find(id) != _instancers.end()) {
       return VtValue(_instancers[id].scale);

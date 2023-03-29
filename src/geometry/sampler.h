@@ -17,6 +17,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 /// Sample points
 namespace Sampler
 {
+  #define DOT_EPSILON 33.f
   struct Sample
   {
     pxr::GfVec3i  elemIdx;

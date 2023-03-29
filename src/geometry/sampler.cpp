@@ -30,15 +30,55 @@ namespace Sampler
   pxr::GfVec3f
   Sample::GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) const
   {
+    pxr::GfVec3f normal(normals[elemIdx[0]] * baryWeights[0] +
+      normals[elemIdx[1]] * baryWeights[1] +
+      normals[elemIdx[2]] * baryWeights[2]);
+    normal.Normalize();
+
+    pxr::GfVec3f side(1, 0, 0);
+    if ((1.f - fabsf(normal * side)) < 0.0)
+    {
+      side = pxr::GfVec3f(0, 1, 0);
+      if ((1.f - fabsf(normal * side)) < DOT_EPSILON)
+      {
+        side = pxr::GfVec3f(0, 0, 1);
+      }
+    }
+
+    return (normal ^ side).GetNormalized();
+
+
+    /*
     const pxr::GfVec3f e0 = positions[elemIdx[1]] - positions[elemIdx[0]];
     const pxr::GfVec3f e1 = positions[elemIdx[2]] - positions[elemIdx[1]];
     const pxr::GfVec3f e2 = positions[elemIdx[0]] - positions[elemIdx[2]];
 
     return(
-      (normals[0] ^ e1).GetNormalized() * baryWeights[0] +
-      (normals[1] ^ e2).GetNormalized() * baryWeights[1] +
-      (normals[2] ^ e0).GetNormalized() * baryWeights[2]
+      (e1 ^ normals[elemIdx[0]]).GetNormalized() * baryWeights[0] +
+      (e2 ^ normals[elemIdx[1]]).GetNormalized() * baryWeights[1] +
+      (e0 ^ normals[elemIdx[2]]).GetNormalized() * baryWeights[2]
       ).GetNormalized();
+  */
+    /*// GET UP VECTOR
+    MVector Curve::getUpV()
+    {
+        MVector tangent(m_samples[1][3][0] - m_samples[0][3][0],
+                        m_samples[1][3][1] - m_samples[0][3][1],
+                        m_samples[1][3][2] - m_samples[0][3][2]);
+        tangent.normalize();
+        MVector side(1,0,0);
+        if((1.f - fabsf(tangent * side)) < DOT_EPSILON)
+        {
+            side = MVector(0,1,0);
+            if((1.f - fabsf(tangent * side)) < DOT_EPSILON)
+            {
+                side = MVector(0,0,1);
+            }
+        }
+
+        return (tangent ^ side).normal();
+    }
+    */
   }
 
   // Estimate the geodesic distance between two points using their position and normals.

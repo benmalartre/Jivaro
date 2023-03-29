@@ -259,7 +259,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.startTime != app->GetTime().GetStartTime())
+  if (!ImGui::IsItemActive() && _startTime != app->GetTime().GetStartTime())
   {
     ValidateTime();
   }
@@ -280,7 +280,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.currentTime != app->GetTime().GetActiveTime())
+  if (!ImGui::IsItemActive() && _currentTime != app->GetTime().GetActiveTime())
   {
     ValidateTime();
   }
@@ -294,7 +294,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.endTime != app->GetTime().GetEndTime())
+  if (!ImGui::IsItemActive() && _endTime != app->GetTime().GetEndTime())
   {
     ValidateTime();
   }
@@ -303,7 +303,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.maxTime != app->GetTime().GetMaxTime())
+  if (!ImGui::IsItemActive() && _maxTime != app->GetTime().GetMaxTime())
   {
     ValidateTime();
   }
@@ -354,10 +354,16 @@ void TimelineUI::DrawTimeSlider()
   xmin += 2 * TIMELINE_SLIDER_THICKNESS;
   xmax -= 2 * TIMELINE_SLIDER_THICKNESS;
 
+  static const float minBlockWidth = 16.f;
   int numFrames = (app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
-  float incr = 1 / (float)numFrames;
+  const float currentBlockWidth = (float)GetWidth() / (float)numFrames;
+
+  int numFramesToSkip = pxr::GfMax(1.f, pxr::GfFloor(minBlockWidth/currentBlockWidth));
+
+  float incr = 1.f / (float)numFrames; 
   for (int i = 0; i < numFrames; ++i)
   {
+    if (i % numFramesToSkip > 0)continue;
     float perc = i * incr;
     if (((int)(i - app->GetTime().GetStartTime()) % (int)_fps) == 0)
     {
