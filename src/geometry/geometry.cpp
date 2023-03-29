@@ -9,7 +9,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
 Geometry::Geometry()
 {
   _initialized = false;

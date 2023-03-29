@@ -15,9 +15,9 @@
 #include <pxr/base/gf/rotation.h>
 
 #include "../common.h"
+#include "../geometry/intersection.h"
 #include "../app/handle.h"
-#include "../app/scene.h"
-#include "../geometry/sampler.h"
+#include "../app/delegate.h"
 
 #include <memory>
 
@@ -73,9 +73,7 @@ public:
 private:
   bool    _dirty;
   bool    _highlightSelection;
-  Scene*  _scene;
-  pxr::VtArray<Sampler::Sample> _samples;
-  pxr::TfHashMap<pxr::SdfPath, pxr::SdfPath, pxr::SdfPath::Hash> _srcMap;
+  Delegate*  _delegate;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -14,12 +14,13 @@
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
 #include "../geometry/voxels.h"
+#include "../geometry/sampler.h"
 #include "../app/scene.h"
+#include "../app/application.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Scene::Scene(pxr::HdRenderIndex* parentIndex, pxr::SdfPath const& delegateID)
-  : HdSceneDelegate(parentIndex, delegateID)
+Scene::Scene()
 {
 }
 
@@ -48,18 +49,12 @@ Scene::Export(const std::string& filename)
 void
 Scene::Update(double time)
 {
-  /*
-  for (auto& meshMapIt : _meshes) {
-    pxr::UsdGeomMesh mesh(_stage->GetPrimAtPath(meshMapIt.first));
-    mesh.GetPointsAttr().Set(meshMapIt.second.GetPositions(), time);
-  }
-  */
 }
 
 Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
-  HdRenderIndex& index = GetRenderIndex();
-  index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, path);
+  //HdRenderIndex& index = GetRenderIndex();
+  //index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, path);
   _prims[path] = new Mesh();
   return (Mesh*)_prims[path];
 }
@@ -78,16 +73,16 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
 
 Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
 {
-  HdRenderIndex& index = GetRenderIndex();
-  index.InsertRprim(pxr::HdPrimTypeTokens->basisCurves, this, path);
+  //HdRenderIndex& index = GetRenderIndex();
+  //index.InsertRprim(pxr::HdPrimTypeTokens->basisCurves, this, path);
   _prims[path] = new Curve();
   return (Curve*)_prims[path];
 }
 
 Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
-  HdRenderIndex& index = GetRenderIndex();
-  index.InsertRprim(pxr::HdPrimTypeTokens->points, this, path);
+  //HdRenderIndex& index = GetRenderIndex();
+  //index.InsertRprim(pxr::HdPrimTypeTokens->points, this, path);
     _prims[path] = new Points();
 
   return (Points*)_prims[path];
@@ -98,26 +93,12 @@ Geometry* Scene::Remove(const pxr::SdfPath & path)
   auto& primIt = _prims.find(path);
   if (primIt != _prims.end()) {
     Geometry* result = primIt->second;
-    HdRenderIndex& index = GetRenderIndex();
-    index.RemoveRprim(path);
+    //HdRenderIndex& index = GetRenderIndex();
+    //index.RemoveRprim(path);
     _prims.erase(primIt);
     return result;
   }
   return NULL;
-}
-
-
-void Scene::TestVoronoi()
-{
-  pxr::SdfPath path("/Voronoi");
-  Mesh mesh;
-  std::vector<pxr::GfVec3f> points(1024);
-  for (auto& point : points) {
-    point[0] = (float)rand() / (float)RAND_MAX - 0.5f;
-    point[1] = 0.f;
-    point[2] = (float)rand() / (float)RAND_MAX - 0.5f;
-  }
-  mesh.VoronoiDiagram(points);
 }
 
 Geometry*
@@ -127,18 +108,6 @@ Scene::GetGeometry(const pxr::SdfPath& path)
     return _prims[path];
   }
   return NULL;
-}
-
-
-/*virtual*/
-bool
-Scene::IsEnabled(pxr::TfToken const& option) const
-{
-    if (option == pxr::HdOptionTokens->parallelRprimSync) {
-        return true;
-    }
-
-    return false;
 }
 
 // -----------------------------------------------------------------------//
@@ -168,12 +137,6 @@ Scene::GetBasisCurvesTopology(pxr::SdfPath const& id)
   return pxr::HdBasisCurvesTopology();
 }
 
-pxr::PxOsdSubdivTags
-Scene::GetSubdivTags(pxr::SdfPath const& id)
-{
-    return pxr::PxOsdSubdivTags();
-}
-
 pxr::GfRange3d 
 Scene::GetExtent(pxr::SdfPath const& id)
 {
@@ -196,57 +159,6 @@ Scene::GetTransform(SdfPath const & id)
     return GfMatrix4d(1);
 }
 
-size_t
-Scene::SamplePrimvar(pxr::SdfPath const& id,
-  pxr::TfToken const& key,
-  size_t maxNumSamples,
-  float* sampleTimes,
-  VtValue* sampleValues)
-{
-  return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
-    nullptr);
-}
-
-/*virtual*/
-size_t
-Scene::SampleIndexedPrimvar(pxr::SdfPath const& id,
-  pxr::TfToken const& key,
-  size_t maxNumSamples,
-  float* sampleTimes,
-  pxr::VtValue* sampleValues,
-  pxr::VtIntArray* sampleIndices)
-{
-  return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
-    sampleIndices);
-}
-
-size_t
-Scene::_SamplePrimvar(pxr::SdfPath const& id,
-  pxr::TfToken const& key,
-  size_t maxNumSamples,
-  float* sampleTimes,
-  pxr::VtValue* sampleValues,
-  pxr::VtIntArray* sampleIndices)
-{
-  /*
-  //pxr::SdfPath cachePath = ConvertIndexPathToCachePath(id);
-  _HdPrimInfo* primInfo = _GetHdPrimInfo(id);
-  if (*TF_VERIFY(primInfo)) {
-    if (sampleIndices) {
-      sampleIndices[0] = VtIntArray(0);
-    }
-    // Retrieve the multi-sampled result.
-    size_t nSamples = primInfo->adapter
-      ->SamplePrimvar(primInfo->usdPrim, id, key,
-        pxr::UsdTimeCode::Default(), maxNumSamples, sampleTimes, sampleValues,
-        sampleIndices);
-    return nSamples;
-  }
-  */
-  return 0;
-
-}
-
 bool 
 Scene::IsMesh(const pxr::SdfPath& id)
 {
@@ -263,40 +175,6 @@ bool
 Scene::IsPoints(const pxr::SdfPath& id)
 {
   return (_prims.find(id) != _prims.end() && _prims[id]->GetType() == Geometry::POINT);
-}
-
-bool
-Scene::GetVisible(pxr::SdfPath const & id)
-{
-    return true;
-}
-
-/*virtual*/
-bool
-Scene::GetDoubleSided(pxr::SdfPath const & id)
-{
-    return false;
-}
-
-/*virtual*/
-pxr::HdCullStyle
-Scene::GetCullStyle(pxr::SdfPath const &id)
-{
-  return pxr::HdCullStyleNothing;
-}
-
-/*virtual*/
-pxr::VtValue
-Scene::GetShadingStyle(pxr::SdfPath const &id)
-{
-    return VtValue();
-}
-
-/*virtual*/
-pxr::HdDisplayStyle
-Scene::GetDisplayStyle(pxr::SdfPath const& id)
-{
-    return pxr::HdDisplayStyle();
 }
 
 pxr::TfToken
@@ -326,40 +204,6 @@ Scene::Get(pxr::SdfPath const& id, TfToken const& key)
       return VtValue(colors);
     }
   }
-  /*
-  else if (key == HdInstancerTokens->scale) {
-    if (_instancers.find(id) != _instancers.end()) {
-      return VtValue(_instancers[id].scale);
-    }
-  }
-  else if (key == HdInstancerTokens->rotate) {
-    if (_instancers.find(id) != _instancers.end()) {
-      return VtValue(_instancers[id].rotate);
-    }
-  }
-  else if (key == HdInstancerTokens->translate) {
-    if (_instancers.find(id) != _instancers.end()) {
-      return VtValue(_instancers[id].translate);
-    }
-  }
-  
-  else {
-    // Check if key is a primvar
-    _Primvars::iterator pvIt;
-    if (_FindPrimvar(id, key, &pvIt)) {
-      if (pvIt->indices.empty()) {
-        value = pvIt->value;
-      }
-      else {
-        // Flatten primvar
-        value = pvIt->value;
-        if (value.IsArrayValued()) {
-          value = _ComputeFlattenedValue(value, pvIt->indices);
-        }
-      }
-
-    }
-  }*/
   return value;
 }
 
@@ -369,43 +213,10 @@ pxr::VtValue
 Scene::GetIndexedPrimvar(pxr::SdfPath const& id, pxr::TfToken const& key, 
                                         pxr::VtIntArray *outIndices) 
 {
-  if (key == HdTokens->points) {
-    // Each of the prim types hold onto their points
-    return VtValue(_prims[id]->GetPositions());
-  }
-  /*
-  else {
-    // Check if key is a primvar
-    _Primvars::iterator pvIt;
-    if (_FindPrimvar(id, key, &pvIt)) {
-      value = pvIt->value;
-      if (outIndices) {
-        *outIndices = pvIt->indices;
-      }
-    }
-  }
-  */
   return pxr::VtValue();
 }
 
 
-pxr::VtArray<pxr::TfToken>
-Scene::GetCategories(pxr::SdfPath const& id)
-{
-    return pxr::VtArray<pxr::TfToken>();
-}
-
-std::vector<pxr::VtArray<pxr::TfToken>>
-Scene::GetInstanceCategories(pxr::SdfPath const &instancerId)
-{
-    return std::vector<pxr::VtArray<pxr::TfToken>>();
-}
-
-pxr::HdIdVectorSharedPtr
-Scene::GetCoordSysBindings(pxr::SdfPath const& id)
-{
-    return nullptr;
-}
 
 // -------------------------------------------------------------------------- //
 // Primvar Support Methods
@@ -446,5 +257,114 @@ pxr::HdPrimvarDescriptorVector Scene::GetPrimvarDescriptors(pxr::SdfPath const& 
   */
 
   return primvars;
+}
+
+void
+Scene::InitExec()
+{
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+  if (!stage) return;
+
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
+
+
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+
+  pxr::UsdPrimRange primRange = stage->TraverseAll();
+  for (pxr::UsdPrim prim : primRange) {
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      pxr::TfToken meshName(prim.GetName().GetString() + "RT");
+      pxr::SdfPath meshPath(rootId.AppendChild(meshName));
+      _srcMap[meshPath] = prim.GetPath();
+      Mesh* mesh = AddMesh(meshPath);
+      pxr::UsdGeomMesh usdMesh(prim);
+      pxr::VtArray<pxr::GfVec3f> positions;
+      usdMesh.GetPointsAttr().Get(&positions);
+
+      pxr::VtArray<int> counts;
+      pxr::VtArray<int> indices;
+      usdMesh.GetFaceVertexCountsAttr().Get(&counts);
+      usdMesh.GetFaceVertexIndicesAttr().Get(&indices);
+      pxr::VtArray<Triangle> triangles;
+      TriangulateMesh(counts, indices, triangles);
+      pxr::VtArray<pxr::GfVec3f> normals;
+      ComputeVertexNormals(positions, counts, indices, triangles, normals);
+
+      Sampler::PoissonSampling(0.01, 64000, positions, normals, triangles, _samples);
+
+      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+
+      pxr::VtArray<pxr::GfVec3f> points(_samples.size());
+      for (size_t sampleIdx = 0; sampleIdx < _samples.size(); ++sampleIdx) {
+        points[sampleIdx] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0]));
+      }
+      mesh->MaterializeSamples(points, 2.f);
+      //pxr::HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
+      //tracker.MarkRprimDirty(meshPath, pxr::HdChangeTracker::DirtyTopology);
+    }
+  }
+}
+
+
+void 
+Scene::UpdateExec(double time)
+{
+  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+  pxr::UsdGeomXformCache xformCache(time);
+  for (auto& execPrim : _prims) {
+    pxr::UsdPrim usdPrim = stage->GetPrimAtPath(_srcMap[execPrim.first]);
+    pxr::UsdGeomMesh usdMesh(usdPrim);
+    pxr::VtArray<pxr::GfVec3f> positions;
+    usdMesh.GetPointsAttr().Get(&positions, pxr::UsdTimeCode(time));
+
+    pxr::VtArray<int> counts;
+    pxr::VtArray<int> indices;
+    usdMesh.GetFaceVertexCountsAttr().Get(&counts);
+    usdMesh.GetFaceVertexIndicesAttr().Get(&indices);
+    pxr::VtArray<Triangle> triangles;
+    TriangulateMesh(counts, indices, triangles);
+    pxr::VtArray<pxr::GfVec3f> normals;
+    ComputeVertexNormals(positions, counts, indices, triangles, normals);
+
+    pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
+
+    pxr::VtArray<pxr::GfVec3f>& points = execPrim.second->GetPositions();
+    for (size_t sampleIdx = 0; sampleIdx < _samples.size(); ++sampleIdx) {
+      const pxr::GfVec3f& normal = _samples[sampleIdx].GetNormal(&normals[0]);
+      const pxr::GfVec3f& tangent = _samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
+      const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
+      const pxr::GfVec3f& position = _samples[sampleIdx].GetPosition(&positions[0]);
+      points[sampleIdx * 3] = xform.Transform(position - tangent * 0.02f);
+      points[sampleIdx * 3 + 1] = xform.Transform(position + bitangent + normal * 0.4f * (1.5f + pxr::GfSin(position[2] * 0.4 + time * 0.2) * 0.5f));
+      points[sampleIdx * 3 + 2] = xform.Transform(position + tangent * 0.02f);
+    }
+
+    //mesh.second.Randomize(0.01);
+    //HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
+    //tracker.MarkRprimDirty(execPrim.first, HdChangeTracker::DirtyPoints);
+  }
+}
+
+void 
+Scene::TerminateExec()
+{
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+  if (!stage) return;
+
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
+
+  pxr::UsdPrimRange primRange = stage->TraverseAll();
+
+  for (pxr::UsdPrim prim : primRange) {
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      pxr::TfToken meshName(prim.GetName().GetString() + "RT");
+      pxr::SdfPath meshPath(rootId.AppendChild(meshName));
+      Remove(meshPath);
+    }
+  }
 }
 JVR_NAMESPACE_CLOSE_SCOPE
