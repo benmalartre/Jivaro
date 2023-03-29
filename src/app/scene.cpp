@@ -88,17 +88,16 @@ Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
   return (Points*)_prims[path];
 }
 
-Geometry* Scene::Remove(const pxr::SdfPath & path)
+void Scene::Remove(const pxr::SdfPath & path)
 {
   auto& primIt = _prims.find(path);
   if (primIt != _prims.end()) {
-    Geometry* result = primIt->second;
+    Geometry* geometry = primIt->second;
     //HdRenderIndex& index = GetRenderIndex();
     //index.RemoveRprim(path);
     _prims.erase(primIt);
-    return result;
+    delete geometry;
   }
-  return NULL;
 }
 
 Geometry*
@@ -291,18 +290,17 @@ Scene::InitExec()
       TriangulateMesh(counts, indices, triangles);
       pxr::VtArray<pxr::GfVec3f> normals;
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
-
-      PoissonSampling(0.01, 64000, positions, normals, triangles, _samples);
+      pxr::VtArray<Sample> samples;
+      PoissonSampling(0.1, 12000, positions, normals, triangles, samples);
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
 
-      pxr::VtArray<pxr::GfVec3f> points(_samples.size());
-      for (size_t sampleIdx = 0; sampleIdx < _samples.size(); ++sampleIdx) {
-        points[sampleIdx] = xform.Transform(_samples[sampleIdx].GetPosition(&positions[0]));
+      pxr::VtArray<pxr::GfVec3f> points(samples.size());
+      for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
+        points[sampleIdx] = xform.Transform(samples[sampleIdx].GetPosition(&positions[0]));
       }
       mesh->MaterializeSamples(points, 2.f);
-      //pxr::HdChangeTracker& tracker = _scene->GetRenderIndex().GetChangeTracker();
-      //tracker.MarkRprimDirty(meshPath, pxr::HdChangeTracker::DirtyTopology);
+      _samplesMap[meshPath] = samples;
     }
   }
 }
@@ -331,19 +329,16 @@ Scene::UpdateExec(double time)
     pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
 
     pxr::VtArray<pxr::GfVec3f>& points = execPrim.second->GetPositions();
-    for (size_t sampleIdx = 0; sampleIdx < _samples.size(); ++sampleIdx) {
-      const pxr::GfVec3f& normal = _samples[sampleIdx].GetNormal(&normals[0]);
-      const pxr::GfVec3f& tangent = _samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
+    const _Samples samples = _samplesMap[execPrim.first];
+    for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
+      const pxr::GfVec3f& normal = samples[sampleIdx].GetNormal(&normals[0]);
+      const pxr::GfVec3f& tangent = samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
       const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
-      const pxr::GfVec3f& position = _samples[sampleIdx].GetPosition(&positions[0]);
+      const pxr::GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
       points[sampleIdx * 3] = xform.Transform(position - tangent * 0.02f);
-      points[sampleIdx * 3 + 1] = xform.Transform(position + bitangent + normal * 0.4f * (1.5f + pxr::GfSin(position[2] * 0.4 + time * 0.2) * 0.5f));
+      points[sampleIdx * 3 + 1] = xform.Transform(position + bitangent * pxr::GfCos(position[1] + time * 0.5) + normal * 0.4f * (1.5f + pxr::GfSin(position[2] * 0.4 + time * 0.2) * 0.5f));
       points[sampleIdx * 3 + 2] = xform.Transform(position + tangent * 0.02f);
     }
-
-    //mesh.second.Randomize(0.01);
-    //HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
-    //tracker.MarkRprimDirty(execPrim.first, HdChangeTracker::DirtyPoints);
   }
 }
 

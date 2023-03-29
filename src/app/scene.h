@@ -1,6 +1,6 @@
 #ifndef JVR_APPLICATION_SCENE_H
 #define JVR_APPLICATION_SCENE_H
-
+#include <vector>
 #include "../common.h"
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/stageCache.h>
@@ -44,7 +44,7 @@ public:
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
   Voxels* AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius);
 
-  Geometry* Remove(const pxr::SdfPath& path);
+  void Remove(const pxr::SdfPath& path);
   bool IsMesh(const pxr::SdfPath& path);
   bool IsCurves(const pxr::SdfPath& path);
   bool IsPoints(const pxr::SdfPath& path);
@@ -106,8 +106,9 @@ public:
 
 private:
   _PrimMap                      _prims;
-  pxr::VtArray<Sample>          _samples;
+  typedef pxr::VtArray<Sample>  _Samples;
   pxr::TfHashMap<pxr::SdfPath, pxr::SdfPath, pxr::SdfPath::Hash> _srcMap;
+  pxr::TfHashMap<pxr::SdfPath, _Samples, pxr::SdfPath::Hash> _samplesMap;
 };
 
 

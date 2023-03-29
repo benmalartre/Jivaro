@@ -37,7 +37,7 @@ public:
   inline bool IsDirty() { return _dirty;};
   inline void SetDirty(bool dirty) { _dirty = dirty; };
 
-  void InitExec();
+  void InitExec(Scene* scene);
   void UpdateExec(double time);
   void TerminateExec();
 
@@ -70,10 +70,13 @@ public:
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
   bool GetHighlightSelection() { return _highlightSelection; };
 
+  Delegate* GetDelegate() { return _delegate; };
+
 private:
   bool    _dirty;
   bool    _highlightSelection;
   Delegate*  _delegate;
+  Scene* _scene;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

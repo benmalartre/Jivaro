@@ -25,6 +25,7 @@ class Command;
 class CommandManager;
 class Engine;
 class Window;
+class Scene;
 
 
 class Application : public pxr::TfWeakBase

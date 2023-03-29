@@ -15,7 +15,6 @@ Delegate::~Delegate()
 {
 }
 
-/*virtual*/
 bool
 Delegate::IsEnabled(pxr::TfToken const& option) const
 {
@@ -216,35 +215,40 @@ void Delegate::SetScene(Scene* scene) {
     for (auto& prim : _scene->GetPrims()) {
       index.RemoveRprim(prim.first);
     }
-    _scene = scene;
-    if (_scene) {
-      for (auto& prim : _scene->GetPrims()) {
-        switch (prim.second->GetType()) {
-        case Geometry::MESH:
-          index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, prim.first);
-          return;
+  }
+  _scene = scene;
+  if (_scene) {
+    for (auto& prim : _scene->GetPrims()) {
+      switch (prim.second->GetType()) {
+      case Geometry::MESH:
+        index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, prim.first);
+        break;
 
-        case Geometry::CURVE:
-          index.InsertRprim(pxr::HdPrimTypeTokens->basisCurves, this, prim.first);
-          return;
+      case Geometry::CURVE:
+        index.InsertRprim(pxr::HdPrimTypeTokens->basisCurves, this, prim.first);
+        break;
 
-        case Geometry::POINT:
-          index.InsertRprim(pxr::HdPrimTypeTokens->points, this, prim.first);
-          return;
-        }
+      case Geometry::POINT:
+        index.InsertRprim(pxr::HdPrimTypeTokens->points, this, prim.first);
+        break;
       }
+      pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
+      tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyTopology);
     }
   }
 }
 
-void Delegate::RemoveScene() {
+Scene* Delegate::RemoveScene() {
   pxr::HdRenderIndex& index = GetRenderIndex();
   if (_scene) {
     for (auto& prim : _scene->GetPrims()) {
       index.RemoveRprim(prim.first);
     }
+    Scene* scene = _scene;
     _scene = NULL;
+    return scene;
   }
+  return NULL;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -21,11 +21,9 @@ void Time::Init(float start, float end, float fps)
 void Time::ComputeFramerate(double T)
 {
   _frameCount++;
-
   if (T - _lastT >= 1.0)
   {
     _framerate = _frameCount;
-
     _frameCount = 0;
     _lastT = T;
   }
