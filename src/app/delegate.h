@@ -119,6 +119,7 @@ public:
   void SetScene(Scene* scene);
   Scene* RemoveScene();
   Scene* GetScene() { return _scene; };
+  void UpdateScene();
 
 private:
 

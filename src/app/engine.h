@@ -76,7 +76,6 @@ private:
   bool    _dirty;
   bool    _highlightSelection;
   Delegate*  _delegate;
-  Scene* _scene;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

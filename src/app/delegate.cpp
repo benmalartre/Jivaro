@@ -251,4 +251,12 @@ Scene* Delegate::RemoveScene() {
   return NULL;
 }
 
+void Delegate::UpdateScene()
+{
+  for (auto& prim : _scene->GetPrims()) {
+    pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
+    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyPoints);
+  }
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

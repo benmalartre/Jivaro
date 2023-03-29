@@ -64,23 +64,18 @@ Engine::Engine(const pxr::HdDriver& driver)
 void Engine::InitExec(Scene* scene)
 {
   _delegate = new Delegate(_GetRenderIndex(), _GetUsdImagingDelegateId());
-  _scene = scene;
   _delegate->SetScene(scene);
 }
 
 
 void Engine::UpdateExec(double time)
 {
-  for (auto& execPrim : _scene->GetPrims()) {
-    HdChangeTracker& tracker = _delegate->GetRenderIndex().GetChangeTracker();
-    tracker.MarkRprimDirty(execPrim.first, HdChangeTracker::DirtyPoints);
-  }
+  _delegate->UpdateScene();
 }
 
 void Engine::TerminateExec()
 {
   _delegate->RemoveScene();
-  _scene = NULL;
   delete(_delegate);
   _delegate = NULL;
 }
