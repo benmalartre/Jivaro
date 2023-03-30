@@ -11,7 +11,6 @@
 #include <pxr/base/gf/bbox3d.h>
 
 #include "../common.h"
-#include "../geometry/point.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -87,7 +86,6 @@ public:
 protected:
   // infos
   short                               _type;
-  pxr::VtArray<Point>                 _points;
 
   // vertex data
   pxr::VtArray<pxr::GfVec3f>          _positions;

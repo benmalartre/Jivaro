@@ -131,8 +131,8 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
       stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("bvh_curve")));
 
   curve.CreatePointsAttr().Set(points);
-  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->constant);
   curve.CreateWidthsAttr().Set(widths);
+  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
   curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
 
   pxr::UsdGeomPrimvar crvColorPrimvar = curve.CreateDisplayColorPrimvar();
@@ -140,7 +140,7 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   crvColorPrimvar.SetElementSize(1);
   crvColorPrimvar.Set(colors);
   
-  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
+  
 }
 
 static void

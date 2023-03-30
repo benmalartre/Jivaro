@@ -152,7 +152,7 @@ void
 Curve::SetRadius(size_t curveIdx, size_t cvIdx, float radius)
 {
   size_t pointIdx = _PointIndex(curveIdx, cvIdx);
-  _points[pointIdx] = radius;
+  _radius[pointIdx] = radius;
 }
 
 void 
@@ -160,7 +160,7 @@ Curve::SetRadii(size_t curveIdx, float radius)
 {
   size_t pointIdx = _PointIndex(curveIdx, 0);
   for (size_t p = pointIdx; p < pointIdx + _cvCounts[curveIdx]; ++p) {
-    _points[pointIdx] = radius;
+    _radius[pointIdx] = radius;
   }
 }
 
@@ -172,7 +172,7 @@ Curve::SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
   if (radii.size() == numCVs) {
     size_t startIdx = _PointIndex(curveIdx, 0);
     for (size_t cvIdx = 0; cvIdx < numCVs; ++cvIdx) {
-      _points[startIdx + cvIdx].radius = radii[cvIdx];
+      _radius[startIdx + cvIdx] = radii[cvIdx];
     }
   }
 }
@@ -184,7 +184,7 @@ Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
   _numCurves = samples.size();
   _cvCounts.resize(_numCurves);
   std::fill(_cvCounts.begin(), _cvCounts.end(), N);
-  _points.resize(N * _numCurves);
+  _radius.resize(N * _numCurves);
   _positions.resize(N * _numCurves);
 
   for (size_t s = 0; s < samples.size(); ++s) {
@@ -197,7 +197,11 @@ Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
     _positions[s * 4 + 2] = origin + normal * 0.5 + tangent * 0.66;
     _positions[s * 4 + 3] = origin + normal + tangent;
 
-    SetRadii(s, RANDOM_0_1 + 0.2);
+    _radius[s * 4] = 0.1;
+    _radius[s * 4 + 1] = 0.08;
+    _radius[s * 4 + 2] = 0.04;
+    _radius[s * 4 + 3] = 0.02;
+
   }
 }
 
