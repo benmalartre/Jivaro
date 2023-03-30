@@ -202,6 +202,9 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
       for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
       return pxr::VtValue(colors);
     }
+  } 
+  else if (key == pxr::HdTokens->widths) {
+    return pxr::VtValue(_prims[id].geom->GetRadius());
   }
   return value;
 }
@@ -295,12 +298,13 @@ Scene::InitExec()
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
       pxr::VtArray<Sample> samples;
       PoissonSampling(0.1, 12000, positions, normals, triangles, samples);
-      std::cout << "num samples : " << samples.size() << std::endl;
       numStrands += samples.size();
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       curve->MaterializeSamples(samples, 4, &positions[0], &normals[0]);
-      std::cout << "num strands : " << numStrands << std::endl;
+      for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
+        curve->SetRadii(curveIdx, 1.f);
+      }
       _samplesMap[curvePath] = samples;
     }
   }

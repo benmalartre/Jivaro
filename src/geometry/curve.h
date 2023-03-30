@@ -33,6 +33,10 @@ public:
   Curve(const pxr::UsdGeomBasisCurves& curve);
   virtual ~Curve() {};
 
+  void SetRadius(size_t curveIdx, size_t cvIdx, float radius);
+  void SetRadii(size_t curveIdx, float radius);
+  void SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii);
+
   const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
   pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
 
@@ -67,6 +71,7 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 private:
+  size_t                              _PointIndex(size_t curveIdx, size_t cvIdx);
   // infos
   uint32_t                            _numCurves;
   uint32_t                            _numSegments;

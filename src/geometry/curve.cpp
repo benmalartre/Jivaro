@@ -138,6 +138,45 @@ Curve::Closest(const pxr::GfVec3f& point, Hit* hit,
   return false;
 };
 
+size_t
+Curve::_PointIndex(size_t curveIdx, size_t cvIdx)
+{
+  size_t index = 0;
+  for (size_t c = 0; c < curveIdx; ++c) {
+    index += _cvCounts[c];
+  }
+  return index + cvIdx;
+}
+
+void 
+Curve::SetRadius(size_t curveIdx, size_t cvIdx, float radius)
+{
+  size_t pointIdx = _PointIndex(curveIdx, cvIdx);
+  _points[pointIdx] = radius;
+}
+
+void 
+Curve::SetRadii(size_t curveIdx, float radius)
+{
+  size_t pointIdx = _PointIndex(curveIdx, 0);
+  for (size_t p = pointIdx; p < pointIdx + _cvCounts[curveIdx]; ++p) {
+    _points[pointIdx] = radius;
+  }
+}
+
+void
+Curve::SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
+{
+  size_t numCVs = _cvCounts[curveIdx];
+
+  if (radii.size() == numCVs) {
+    size_t startIdx = _PointIndex(curveIdx, 0);
+    for (size_t cvIdx = 0; cvIdx < numCVs; ++cvIdx) {
+      _points[startIdx + cvIdx].radius = radii[cvIdx];
+    }
+  }
+}
+
 void
 Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N, 
   const pxr::GfVec3f* positions, const pxr::GfVec3f* normals)
@@ -157,6 +196,8 @@ Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
     _positions[s * 4 + 1] = origin + normal * 0.1 + tangent * 0.33;
     _positions[s * 4 + 2] = origin + normal * 0.5 + tangent * 0.66;
     _positions[s * 4 + 3] = origin + normal + tangent;
+
+    SetRadii(s, RANDOM_0_1 + 0.2);
   }
 }
 

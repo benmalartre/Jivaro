@@ -463,6 +463,7 @@ Matrix<T> Matrix<T>::LUDecomposition(Matrix<T>::Pivots& pivots)
       lu._matrix[row * m + column] /= luDiag;
     }
   }
+  return lu;
 }
 
 template <typename T>

@@ -202,6 +202,9 @@ pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath cons
     primvars.emplace_back(pxr::HdTokens->points, interpolation,
       pxr::HdPrimvarRoleTokens->point);
 
+    primvars.emplace_back(pxr::HdTokens->widths, interpolation,
+      pxr::HdPrimvarRoleTokens->normal);
+
     primvars.emplace_back(pxr::HdTokens->displayColor, interpolation,
       pxr::HdPrimvarRoleTokens->color);
   }
