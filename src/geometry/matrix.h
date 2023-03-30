@@ -31,8 +31,9 @@ public:
 
   Matrix(size_t row, size_t column);
   void Resize(size_t row, size_t column);
-  void Transpose();
-  Matrix GetTransposed();
+  void Clear();
+  Matrix Transpose();
+  void TransposeInPlace();
 
   size_t GetIndex(size_t row, size_t colum);
   size_t GetColumnFromIndex(size_t idx);
@@ -53,17 +54,20 @@ public:
   Vector GetColumnsMinimum();
   T GetColumnMaximum(size_t column);
   Vector GetColumnsMaximum();
+  T GetDeterminant(const Matrix<T>::Pivots& pivots);
   Matrix Add(const Matrix& other);
   void AddInPlace(const Matrix& other);
   Matrix Subtract(const Matrix& other);
   void SubtractInPlace(const Matrix& other);
   Matrix Multiply(const Matrix& other);
   void MultiplyInPlace(const Matrix& other);
+  Matrix Scale(const Matrix<T>& other, float scale);
+  void ScaleInPlace(const Matrix<T>& other, float scale);
   Vector MultiplyVector(const Vector& vector);
   void SwapRows(size_t a, size_t b);
   void SwapColumns(size_t a, size_t b);
-  bool LUDecomposition(Pivots& pivots);
-  void SolveLU(Pivots& pivots, Vector& b, Vector& x);
+  Matrix LUDecomposition(Pivots& pivots);
+  int SolveLU(Pivots& pivots, Vector& b, Vector& x);
   Matrix Inverse();
   void InverseInPlace();
 
@@ -88,9 +92,9 @@ private:
 
   size_t _rows;
   size_t _columns;
-  size_t _state; /* transposed, singular, even encoded i three first bits*/
+  size_t _state;      // transposed, singular and even, encoded on three first bits
   Vector _matrix;
-  Matrix* _lu;
+  //Matrix* _lu;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -4,9 +4,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 template <typename T>
 Matrix<T>::Matrix<T>(size_t rows, size_t columns)
-  : _rows(rows), _columns(columns)
+  : _rows(rows), _columns(columns), _state(0)
 {
   _matrix.resize(_rows * _columns);
+  memset(&_matrix[0], 0, _matrix.size() * sizeof(T));
 }
 
 template <typename T>
@@ -17,9 +18,23 @@ void Matrix<T>::Resize(size_t rows, size_t columns)
   _matrix.resize(_rows * _columns);
 }
 
+template <typename T>
+void Matrix<T>::Clear()
+{
+  std::fill(_matrix.begin(), _matrix.end(), 0);
+}
 
 template <typename T>
-void Matrix<T>::Transpose() {
+Matrix<T> Matrix<T>::Transpose() {
+  Matrix<T> result(this);
+  result._SetTransposed(1 - _IsTransposed());
+  result._rows = _colums;
+  result._columns = rows;
+  return result;
+}
+
+template <typename T>
+void Matrix<T>::TransposeInPlace() {
   _SetTransposed(1 - _IsTransposed());
   size_t rows = _rows;
   _rows = _colums;
@@ -85,9 +100,9 @@ T Matrix<T>::Get(size_t row, size_t column)
 }
 
 template <typename T>
-Matrix<T>::Vector Matrix<T>::GetRow(size_t row)
+std::vector<T> Matrix<T>::GetRow(size_t row)
 {
-  Vector values;
+  std::vector<T> values;
   values.resize(_columns);
   for (size_t i = 0; i < _columns; ++i) {
     values[i] = Get(row, i);
@@ -96,9 +111,9 @@ Matrix<T>::Vector Matrix<T>::GetRow(size_t row)
 }
 
 template <typename T>
-Matrix<T>::Vector Matrix<T>::GetColumn(size_t column)
+std::vector<T> Matrix<T>::GetColumn(size_t column)
 {
-  Vector values;
+  std::vector<T> values;
   values.resize(_rows);
   for (size_t i = 0; i < _rows; ++i) {
     values[i] = Get(i, column);
@@ -119,9 +134,9 @@ T Matrix<T>::GetRowMinimum(size_t row)
 }
 
 template <typename T>
-Matrix<T>::Vector Matrix<T>::GetRowsMinimum()
+std::vector<T> Matrix<T>::GetRowsMinimum()
 {
-  Matrix<T>::Vector results;
+  std::vector<T> results;
   results.resize(_rows);
   for (size_t i = 0; i < _rows; ++i) {
     results[i] = GetRowMinimum(i)
@@ -141,306 +156,323 @@ T Matrix<T>::GetRowMaximum(size_t row)
 }
 
 template <typename T>
-void Matrix<T>::GetRowsMaximum(*m.Matrix_t, Array maximums.f(1))
-ReDim maximums(*m\rows)
-Define i
-For i = 0 To * m\rows - 1
-maximums(i) = GetRowMaximum(*m, i)
-Next
-ProcedureReturn #True
-EndProcedure
+std::vector<T> Matrix<T>::GetRowsMaximum()
+{
+  std::vector<T> results;
+  results.resize(_rows);
+  for (size_t i = 0; i < _rows; ++i) {
+    results[i] = GetRowMaximum(i)
+  }
+  return results;
+}
 
 template <typename T>
-void Matrix<T>::GetColumnMinimum(*m.Matrix_t, column.i)
-Define minValue.f = Math::#F32_MAX, value.f
-Define j
-For j = 0 To * m\columns - 1
-value = Get(*m, row, j)
-If value < minValue:
-minValue = value
-EndIf
-Next
-ProcedureReturn minValue
-EndProcedure
+T Matrix<T>::GetColumnMinimum(size_t column)
+{
+  T minValue = std::numeric_limits<T>::max();
+  for (size_t i = 0; i < _columns; ++i) {
+    T value = Get(row, i);
+    if (value < minValue)minValue = value;
+  }
+  return minValue;
+}
 
 template <typename T>
-void Matrix<T>::GetColumnsMinimum(*m.Matrix_t, Array minimums.f(1))
-ReDim minimums(*m\columns)
-Define i
-For i = 0 To * m\columns - 1
-minimums(i) = GetColumnMinimum(*m, i)
-Next
-ProcedureReturn #True
-EndProcedure
+std::vector<T> Matrix<T>::GetColumnsMinimum()
+{
+  std::vector<T> results(_columns);
+  for (size_t i = 0; i < _columns; ++i) {
+    results[i] = GetColumnMinimum(i);
+  }
+  return results;
+}
 
 template <typename T>
-void Matrix<T>::GetColumnMaximum(*m.Matrix_t, column.i)
-Define maxValue.f = Math::#F32_MIN, value.f
-Define j
-For j = 0 To * m\columns - 1
-value = Get(*m, j, column)
-If value > maxValue:
-maxValue = value
-EndIf
-Next
-ProcedureReturn maxValue
-EndProcedure
+T Matrix<T>::GetColumnMaximum(size_t column)
+{
+  T maxValue = std::numeric_limits<T>::min();
+  for (size_t i = 0; i < _columns; ++i) {
+    T value = Get(row, i);
+    if (value > maxValue)maxValue = value;
+  }
+  return maxValue;
+}
 
 template <typename T>
-void Matrix<T>::GetColumnsMaximum(*m.Matrix_t, Array maximums.f(1))
-ReDim maximums(*m\columns)
-Define i
-For i = 0 To * m\columns - 1
-maximums(i) = GetColumnMaximum(*m, i)
-Next
-ProcedureReturn #True
-EndProcedure
+std::vector<T> Matrix<T>::GetColumnsMaximum()
+{
+  Matrix<T>::Vector results(_columns);
+  for (size_t i = 0; i < _columns; ++i) {
+    results[i] = GetColumnMaximum(i);
+  }
+  return results;
+}
 
 template <typename T>
-void Matrix<T>::AddInPlace(*m.Matrix_t, *o.MAtrix_t)
-If Not ArraySize(*m\matrix()) = ArraySize(*o\matrix()) : ProcedureReturn #MATRIX_SIZE_MISMATCH : EndIf
-Define i
-For i = 0 To ArraySize(*m\matrix()) - 1
-* m\matrix(i) + *o\matrix(i)
-Next
-
-EndProcedure
-
-template <typename T>
-void Matrix<T>::Add(*m.Matrix_t, *a.Matrix_t, *b.Matrix_t)
-If Not(*a\rows = *b\rows And * a\columns = *b\columns) : ProcedureReturn #MATRIX_SIZE_MISMATCH : EndIf
-Resize(*m, *a\rows, *a\columns)
-Define i
-For i = 0 To ArraySize(*m\matrix()) - 1
-* m\matrix(i) = *a\matrix(i) + *b\matrix(i)
-Next
-EndProcedure
+void Matrix<T>::AddInPlace(const Matrix<T>& other)
+{
+  // MATRIX_SIZE_MISMATCH
+  if (_matrix.size() == other._matrix.size()) {
+    for (size_t i = 0; i < _matrix.size(); i++) {
+      _matrix[i] += other._matrix[i];
+    }
+  }
+}
 
 template <typename T>
-void Matrix<T>::SubtractInPlace(*m.Matrix_t, *o.MAtrix_t)
-If Not ArraySize(*m\matrix()) = ArraySize(*o\matrix()) : ProcedureReturn #MATRIX_SIZE_MISMATCH : EndIf
-Define i
-For i = 0 To ArraySize(*m\matrix()) - 1
-* m\matrix(i) - *o\matrix(i)
-Next
-
-EndProcedure
-
-template <typename T>
-void Matrix<T>::Subtract(*m.Matrix_t, *a.Matrix_t, *b.Matrix_t)
-If Not(*a\rows = *b\rows And * a\columns = *b\columns) : ProcedureReturn #MATRIX_SIZE_MISMATCH : EndIf
-Resize(*m, *a\rows, *a\columns)
-Define i
-For i = 0 To ArraySize(*m\matrix()) - 1
-* m\matrix(i) = *a\matrix(i) - *b\matrix(i)
-Next
-EndProcedure
-
+Matrix<T> Matrix<T>::Add(const Matrix<T>& other)
+{
+  // MATRIX_SIZE_MISMATCH
+  if (_matrix.size() == other._matrix.size()) {
+    Matrix add(_rows, _columns);
+    for (size_t i = 0; i < _matrix.size(); i++) {
+      add[i] = _matrix[i] + other._matrix[i];
+    }
+  }
+}
 
 template <typename T>
-void Matrix<T>::Multiply(*m.Matrix_t, *a.Matrix_t, *b.Matrix_t)
-If* a\columns <>* b\rows : ProcedureReturn #MATRIX_SIZE_MISMATCH : EndIf
-
-Define i, j, k
-; first reset output matrix
-For i = 0 To ArraySize(*m\matrix()) - 1 : *m\matrix(i) = 0 : Next
-
-For i = 0 To * a\rows - 1
-For k = 0 To * b\columns - 1
-For j = 0 To * a\columns - 1
-* m\matrix(GetIndex(*m, i, j)) + (Get(*a, i, k) * Get(*b, k, j))
-Next
-Next
-Next
-EndProcedure
+void Matrix<T>::SubtractInPlace(const Matrix<T>& other)
+{
+  // MATRIX_SIZE_MISMATCH
+  if (_matrix.size() == other._matrix.size()) {
+    for (size_t i = 0; i < _matrix.size(); i++) {
+      _matrix[i] -= other._matrix[i];
+    }
+  }
+}
 
 template <typename T>
-void Matrix<T>::MultiplyInPlace(*m.Matrix_t, *o.Matrix_t)
-Define * tmp.Matrix_t = Copy(*m)
-Multiply(*m, *tmp, *o)
-Delete(*tmp)
-EndProcedure
-
-template <typename T>
-void Matrix<T>::MultiplyVector(*m.Matrix_t, *o.Matrix_t, Array vector.f(1))
-If ArraySize(vector()) < > * o\columns : ProcedureReturn #MATRIX_SIZE_MISMATCH : EndIf
-Resize(*m, *o\columns, 1)
-Define product.f
-Define i, j
-For i = 0 To * o\rows - 1
-product = 0
-For j = 0 To * o\columns - 1
-product + Get(*o, i, j) * vector(j)
-Next
-Matrix::Set(*m, i, 0, product)
-Next
-EndProcedure
-
-template <typename T>
-void Matrix<T>::Scale(*m.Matrix_t, *o.Matrix_t, v.f)
-Resize(*m, *o\rows, *o\columns)
-Define i
-For i = 0 To ArraySize(*o\matrix()) - 1
-* m\matrix(i) = *o\matrix(i) * v
-Next
-EndProcedure
-
-Procedure ScaleInPlace(*m.Matrix_t, v.f)
-Define i
-For i = 0 To ArraySize(*m\matrix()) - 1
-* m\matrix(i) * v
-Next
-EndProcedure
-
-template <typename T>
-void Matrix<T>::SwapRows(*m.Matrix_t, a.i, b.i)
-Define i
-For i = 0 To * m\columns - 1
-Swap * m\matrix(a * *m\columns + i), * m\matrix(b** m\columns + i)
-Next
-EndProcedure
-
-Procedure SwapColumns(*m.Matrix_t, a.i, b.i)
-Define i
-For i = 0 To * m\rows - 1
-Swap * m\matrix(*m\columns * i + a), * m\matrix(*m\columns* i + b)
-Next
-EndProcedure
-
-template <typename T>
-void Matrix<T>::Inverse(*m.Matrix_t, *o.Matrix_t)
-Dim piv(*o\columns)
-If Not LUDecomposition(*o, piv())
-Resize(*m, *o\columns, *o\columns)
-Define i
-For i = 0 To * o\columns - 1
-Dim b.f(*o\columns)
-Dim w.f(*o\columns)
-b(i) = 1.0
-SolveLU(*o, piv(), b(), w())
-SetColumn(*m, i, w())
-Next
-ProcedureReturn #True
-EndIf
-ProcedureReturn #False
-EndProcedure
-
-Procedure InverseInPlace(*m.Matrix_t)
-Dim piv(*m\columns)
-If Not LUDecomposition(*m, piv())
-Define i
-For i = 0 To * m\columns - 1
-Dim b.f(*m\columns)
-Dim w.f(*m\columns)
-b(i) = 1.0
-SolveLU(*m, piv(), b(), w())
-SetColumn(*m, i, w())
-Next
-ProcedureReturn #True
-EndIf
-ProcedureReturn #False
-EndProcedure
+Matrix<T> Matrix<T>::Subtract(const Matrix<T>& other)
+{
+  // MATRIX_SIZE_MISMATCH
+  if (_matrix.size() == other._matrix.size()) {
+    Matrix sub(_rows, _columns);
+    for (size_t i = 0; i < _matrix.size(); i++) {
+      sub[i] = _matrix[i] - other._matrix[i];
+    }
+  }
+}
 
 
 template <typename T>
-void Matrix<T>::GetDeterminant(*m.Matrix_t, Array pivot.i(1))
-If* m\singular Or Not* m\lu : ProcedureReturn 0 : EndIf
-
-Define m = ArraySize(pivot())
-Define i
-Define determinant.f
-If * m\even : determinant = 1 : Else : determinant = -1 : EndIf
-
-For i = 0 To m - 1
-determinant * Get(*m\lu, i, i)
-Next
-ProcedureReturn determinant
-EndProcedure
+Matrix<T> Matrix<T>::Multiply(const Matrix<T>& other)
+{
+  if (_columns == _other._rows) {
+    size_t i, j, k;
+    Matrix result(_rows, _columns);
+    for(size_t i = 0; i < _rows; ++i)
+      for(size_t k = 0; k < other._columns; ++k)
+        for(size_t j = 0; j < _columns; ++j)
+          result[GetIndex(i, j)] += Get(i, k) * other.Get(k, j);
+    return result;
+  }
+  return Matrix();
+}
 
 template <typename T>
-int Matrix<T>::LUDecomposition(Matrix<T>::Pivots& pivots)
+void Matrix<T>::MultiplyInPlace(const Matrix<T>& other)
+{
+  if (_columns == _other._rows) {
+    size_t i, j, k;
+    Matrix tmp(this);
+    Clear();
+    for (size_t i = 0; i < _rows; ++i)
+      for (size_t k = 0; k < other._columns; ++k)
+        for (size_t j = 0; j < _columns; ++j)
+          _matrix[GetIndex(i, j)] += tmp.Get(i, k) * other.Get(k, j);
+          return result;
+  }
+  return Matrix();
+}
+
+template <typename T>
+std::vector<T> Matrix<T>::MultiplyVector(const Matrix<T>::Vector& vector)
+{
+  if (vector.size() == _columns) {
+    std::vector<T> result(_columns);
+
+    for (size_t i = 0; i < _rows; ++i) {
+      T product;
+      for (size_t j = 0; j < _columns; ++j) {
+        product += Get(i, j) * vector[j];
+      }
+      result[i] = product;
+    }
+  }
+  return std::vector<T>(_columns);
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::Scale(const Matrix<T>& other, float scale)
+{
+  Matrix result(_rows, _columns);
+  for (size_t i = 0; i < _matrix.size(); ++i) {
+    result._matrix[i] = _matrix[i] * scale;
+  }
+  return result;
+}
+
+template <typename T>
+void Matrix<T>::ScaleInPlace(const Matrix<T>& other, float scale)
+{
+  for (size_t i = 0; i < _matrix.size(); ++i) {
+    _matrix[i] *= scale;
+  }
+}
+
+template <typename T>
+void Matrix<T>::SwapRows(size_t a, size_t b)
+{
+  for (size_t i = 0; i < _columns; ++i) {
+    std::swap(
+      _matrix.begin() + (a * _columns + i), 
+      _matrix.begin() + (b * _columns + i)
+    );
+  }
+}
+
+template <typename T>
+void Matrix<T>::SwapColumns(size_t a, size_t b)
+{
+  for (size_t i = 0; i < _rows; ++i) {
+    std::swap(
+      _matrix.begin() + (_columns * i + a),
+      _matrix.begin() + (_columns * i + b)
+    );
+  }
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::Inverse()
+{
+  Matrix<T>::Pivots pivots(_columns);
+  Matrix<T> result(_columns, _columns);
+  if (!LUDecomposition(pivots)) {
+    for (size_t i = 0; i < _columns; ++i) {
+      Matrix<T>::Vector b(_columns, 0);
+      Matrix<T>::Vector w(_columns, 0);
+      b[i] = 1;
+
+      SolveLU(pivots, b, w);
+      SetColumn(i, w);
+    }
+  }
+  return result;
+}
+
+template <typename T>
+void Matrix<T>::InverseInPlace()
+{
+  Matrix<T>::Pivots pivots(_columns);
+  Matrix<T> tmp(_columns, _columns);
+  if (!LUDecomposition(pivots)) {
+    for (size_t i = 0; i < _columns; ++i) {
+      Matrix<T>::Vector b(_columns, 0);
+      Matrix<T>::Vector w(_columns, 0);
+      b[i] = 1;
+
+      SolveLU(pivots, b, w);
+      tmp.SetColumn(i, w);
+    }
+  }
+  for (size_t i = 0; i < tmp._matrix.size(); ++i) {
+    _matrix[i] = tmp[i];
+  }
+}
+
+
+template <typename T>
+T Matrix<T>::GetDeterminant(const Matrix<T>::Pivots& pivots)
+{
+  if (_IsSingular())return;
+  size_t m = pivots.size();
+  T determinant = 1.f;
+  if (!_IsEven())determinant = -1.f;
+
+  for (size_t i = 0; i < m; ++i) {
+    determinant *= Get(i, i);
+  }
+  return determinant;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::LUDecomposition(Matrix<T>::Pivots& pivots)
 {
   float singularityThreshold = 0.f;
   if (_rows <> _columns) {
-    return MATRIX_NON_SQUARE;
+    return Matrix<T>();
   }
 
+  Matrix<T> lu(this);
   size_t m = _columns;
-If * m\lu : Delete(*m\lu) : EndIf
-* m\lu = Copy(*m)
 
-; initialize permutation array And parity
-Define row, column, i
-For row = 0 To m - 1 : pivot(row) = row : Next
+  // initialize permutation array And parity
+  size_t row, column, i;
+  for (size_t row = 0; row < m; ++row) pivots[row] = row;
 
-* m\even = #True
-* m\singular = #False
+  _SetEven(true);
+  _SetSingular(false);
 
-; loop over columns
-For column = 0 To m - 1
-; upper
-For row = 0 To column - 1
-Dim luRow.f(0)
-GetRow(*m\lu, row, luRow())
-Define sum.f = luRow(column)
-For i = 0 To row - 1
-sum - (luRow(i) * Get(*m\lu, i, column))
-Next
+  // loop over columns
+  for (column = 0; column < m; ++column) {
+    // upper
+    for (row = 0; row < column; ++row) {
+      Matrix<T>::Vector luRow = GetRow(row);
+      T sum = luRow[column];
+      for (size_t i = 0; i < row; ++i) {
+        sum -= (luRow[i] * lu.Get(i, column));
+      }
+      lu.Set(row, column, sum);
+    }
 
-Set(*m\lu, row, column, sum)
-Next
+    // lower
+    size_t perm = column;//  permutation row
+    T largest = std::numeric_limits<T>::max();
+    for (row = column; row < m; ++row) {
+      Matrix<T>::Vector luRow = GetRow(row);
+      T sum = luRow[column];
+      for (size_t i = 0; i < column; ++i) {
+        sum -= (luRow[i] * lu.Get(i, column));
+      }
+      lu.Set(row, column, sum);
 
-; lower
-Define max = column;  permutation row
-Define largest = Math::#F32_MIN
-For row = column To m - 1
-Dim luRow(0)
-GetRow(*m\lu, row, luRow())
-Define sum.f = luRow(column)
-For i = 0 To column - 1
-sum - (luRow(i) * Get(*m\lu, i, column))
-Next
+      // maintain best permutation choice
+      if (pxr::GfAbs(sum) > largest) {
+        largest = pxr::GfAbs(sum);
+        perm = row;
+      }
+    }
 
-Set(*m\lu, row, column, sum)
+    // singularity check
+    if (pxr::GfAbs(lu.Get(perm, column)) < singularityThreshold) {
+      lu._SetSingular(true);
+      return lu;
+    }
 
-; maintain best permutation choice
-If Abs(sum) > largest
-largest = Abs(sum)
-max = row
-EndIf
-Next
-
-; singularity check
-If Abs(Get(*m\lu, max, column)) < singularityThreshold
-  ProcedureReturn #MATRIX_IS_SINGULAR
-  EndIf
-
-  ; pivot if necessary
-  If max <> column
-  SwapRows(*m\lu, max, column)
-  Swap pivot(max), pivot(column)
-  * m\even = 1 - *m\even
-  EndIf
-
-  ; divide the lower elements by the "winning" diagonal elt.
-  Define luDiag.f = Get(*m\lu, column, column)
-  For row = column + 1 To m - 1
-  * m\lu\matrix(row * m + column) = Get(*m\lu, row, column) / luDiag
-  Next
-  Next
-
-  EndProcedure
+    // pivot if necessary
+    if (perm <> column) {
+      lu.SwapRows(perm, column);
+      std::swap(pivots.begin() + perm, pivots.begin() + column);
+      lu._SetEven(1 - lu._IsEven());
+    }
+  
+    // divide the lower elements by the "winning" diagonal elt.
+    T luDiag.f = lu.Get(column, column);
+    for (size_t row = column + 1; row < m; ++row) {
+      lu._matrix[row * m + column] /= luDiag;
+    }
+  }
+}
 
 template <typename T>
 int Matrix<T>::SolveLU(Matrix<T>::Pivots & pivots, Matrix<T>::Vector & b, Matrix<T>::Vector & x)
 {
-  if (!_lu)return MATRIX_INVALID;
-
   size_t m = pivots.size();
-  if (_lu->_columns <> m)return MATRIX_SIZE_MISMATCH;
-  if (_lu->_IsSingular())return MATRIX_IS_SINGULAR;
+  if (_columns <> m)return MATRIX_SIZE_MISMATCH;
+  if (_IsSingular())return MATRIX_IS_SINGULAR;
 
-  size_t row, column, i
+  size_t row, column, i;
   // apply permutations to b
   for (row = 0; row < m; ++row) {
     x[row] = b[pivots[row]];
@@ -450,17 +482,19 @@ int Matrix<T>::SolveLU(Matrix<T>::Pivots & pivots, Matrix<T>::Vector & b, Matrix
   for (column = 0; column < m; ++column) {
     T value = x[column];
     for (i = column + 1; i < m; ++i) {
-      x[i] -= value * _lu->Get(i, column);
+      x[i] -= value * Get(i, column);
     }
   }
 
   // solve UX = Y
   for (column = m - 1; column >= 0; --column) {
-    x[column] = x[column] / _lu->Get(column, column);
+    x[column] = x[column] / Get(column, column);
     T value = x[column];
     for (i = 0; i < column; ++i) {
-      x[i] -= value * _lu->Get(i, column);
+      x[i] -= value * Get(i, column);
     }
   }
   return MATRIX_VALID;
 }
+
+JVR_NAMESPACE_CLOSE_SCOPE
