@@ -2,7 +2,7 @@
 //----------------------------------------------
 #include "../geometry/curve.h"
 #include "../geometry/utils.h"
-
+#include "../geometry/sampler.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -137,6 +137,28 @@ Curve::Closest(const pxr::GfVec3f& point, Hit* hit,
 {
   return false;
 };
+
+void
+Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N, 
+  const pxr::GfVec3f* positions, const pxr::GfVec3f* normals)
+{
+  _numCurves = samples.size();
+  _cvCounts.resize(_numCurves);
+  std::fill(_cvCounts.begin(), _cvCounts.end(), N);
+  _points.resize(N * _numCurves);
+  _positions.resize(N * _numCurves);
+
+  for (size_t s = 0; s < samples.size(); ++s) {
+    const pxr::GfVec3f& origin = samples[s].GetPosition(positions);
+    const pxr::GfVec3f& normal = samples[s].GetNormal(normals);
+    const pxr::GfVec3f& tangent = samples[s].GetTangent(positions, normals);
+
+    _positions[s * 4] = origin;
+    _positions[s * 4 + 1] = origin + normal * 0.1 + tangent * 0.33;
+    _positions[s * 4 + 2] = origin + normal * 0.5 + tangent * 0.66;
+    _positions[s * 4 + 3] = origin + normal + tangent;
+  }
+}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -2,7 +2,7 @@
 #define JVR_APPLICATION_WORKSPACE_H
 
 #include "../common.h"
-#include "../app/scene.h"
+//#include "../app/scene.h"
 #include "../pbd/solver.h"
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/sdf/layer.h>

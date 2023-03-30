@@ -4,6 +4,7 @@
 #include "../app/application.h"
 #include "../app/time.h"
 #include "../app/view.h"
+#include "../app/window.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE

@@ -4,6 +4,8 @@
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
+#include "../ui/style.h"
+#include "../ui/fonts.h"
 
 #include <vector>
 #include <pxr/base/vt/value.h>

@@ -87,6 +87,7 @@ add_executable(${TARGET}
   command/delegate.cpp
   command/manager.cpp
   app/time.cpp
+  app/commands.cpp
   app/notice.cpp
   app/handle.cpp
   app/camera.cpp

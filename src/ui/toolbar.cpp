@@ -1,6 +1,3 @@
-#include "../ui/ui.h"
-#include "../ui/style.h"
-#include "../ui/fonts.h"
 #include "../ui/toolbar.h"
 #include "../app/view.h"
 #include "../app/window.h"

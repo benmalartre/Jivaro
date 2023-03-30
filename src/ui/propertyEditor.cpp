@@ -11,8 +11,7 @@
 #include "../app/application.h"
 #include "../app/selection.h"
 #include "../app/time.h"
-#include "../command/command.h"
-#include "../command/block.h"
+#include "../app/commands.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -76,7 +75,7 @@ PropertyUI::_DrawAssetInfo(const pxr::UsdPrim& prim)
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
       pxr::UsdAttribute attribute = prim.GetAttribute(pxr::TfToken(keyValue->first));
-      VtValue modified = UIUtils::AddAttributeWidget(attribute, pxr::UsdTimeCode::Default());
+      pxr::VtValue modified = UIUtils::AddAttributeWidget(attribute, pxr::UsdTimeCode::Default());
       if (!modified.IsEmpty()) {
         UndoBlock editBlock;
         prim.SetAssetInfoByKey(TfToken(keyValue->first), modified);
@@ -117,8 +116,8 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
   pxr::UsdGeomXformCommonAPI xformApi(_prim);
 
   if (xformApi) {
-    HandleTargetDescList targets(1);
-    HandleTargetDesc& target = targets[0];
+    ManipTargetDescList targets(1);
+    ManipTargetDesc& target = targets[0];
     target.path = _prim.GetPath();
     _GetHandleTargetXformVectors(xformApi, target.previous, time);
     _GetHandleTargetXformVectors(xformApi, target.current, time);

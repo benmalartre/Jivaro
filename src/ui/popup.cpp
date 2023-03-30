@@ -11,7 +11,7 @@
 #include "../app/window.h"
 #include "../app/view.h"
 #include "../app/application.h"
-
+#include "../app/commands.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

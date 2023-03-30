@@ -219,7 +219,7 @@ void Delegate::SetScene(Scene* scene) {
   _scene = scene;
   if (_scene) {
     for (auto& prim : _scene->GetPrims()) {
-      switch (prim.second->GetType()) {
+      switch (prim.second.geom->GetType()) {
       case Geometry::MESH:
         index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, prim.first);
         break;
@@ -253,8 +253,8 @@ Scene* Delegate::RemoveScene() {
 
 void Delegate::UpdateScene()
 {
+  pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
-    pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
     tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyPoints);
   }
 }

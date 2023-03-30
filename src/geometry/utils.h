@@ -1,16 +1,39 @@
 #ifndef JVR_GEOMETRY_UTILS_H
 #define JVR_GEOMETRY_UTILS_H
 
-#include "../common.h"
-#include "triangle.h"
-#include <iostream>
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/base/gf/vec3i.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usdGeom/xformCommonAPI.h>
 
-#include "pxr/base/vt/array.h"
-#include "pxr/base/gf/vec3i.h"
-#include "pxr/base/gf/vec3f.h"
+#include "../common.h"
+#include "../geometry/triangle.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+struct ManipXformVectors {
+  pxr::GfVec3d translation;
+  pxr::GfVec3f rotation;
+  pxr::GfVec3f scale;
+  pxr::GfVec3f pivot;
+  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+};
+
+struct ManipTargetDesc {
+  pxr::SdfPath path;
+  pxr::GfMatrix4f base;
+  pxr::GfMatrix4f offset;
+  pxr::GfMatrix4f parent;
+  ManipXformVectors previous;
+  ManipXformVectors current;
+};
+
+typedef std::vector<ManipTargetDesc> ManipTargetDescList;
 
 const double EPSILON = std::numeric_limits<double>::epsilon();
 const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();

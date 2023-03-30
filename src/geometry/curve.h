@@ -14,11 +14,12 @@
 #include <pxr/usd/usdGeom/basisCurves.h>
 
 #include <float.h>
-#include "triangle.h"
-#include "geometry.h"
+#include "../geometry/triangle.h"
+#include "../geometry/geometry.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+struct Sample;
 struct CurveLocation {
   uint32_t  cid;      // curve index
   uint32_t  sid;      // segment index
@@ -43,6 +44,9 @@ public:
   uint32_t GetTotalNumSegments()const;
 
   float GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex);
+
+  void MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
+    const pxr::GfVec3f* positions, const pxr::GfVec3f* normals);
 
   void Init(
     const pxr::VtArray<pxr::GfVec3f>& positions, 
@@ -69,10 +73,6 @@ private:
 
   // curves description
   pxr::VtArray<int>                   _cvCounts;
-
-  // colors
-  pxr::VtArray<pxr::GfVec3f>          _colors;
-  GeomInterpolation                   _colorsInterpolation;
 
 };
 

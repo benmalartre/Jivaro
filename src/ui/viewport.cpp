@@ -512,7 +512,7 @@ bool ViewportUI::Draw()
 
     if (_drawTexId) {
        drawList->AddImage(
-         (ImTextureID)_drawTexId, 
+         (ImTextureID)(size_t)_drawTexId, 
          min, min + size, ImVec2(0, 1), 
          ImVec2(u, v));
     } 

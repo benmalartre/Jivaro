@@ -17,12 +17,12 @@
 
 #include "../utils/color.h"
 #include "../utils/keys.h"
+#include "../ui/popup.h"
 #include "../ui/graphEditor.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
-#include "../command/block.h"
-#include "../command/command.h"
+#include "../app/commands.h"
 #include "../graph/execution.h"
 #include "../graph/hierarchy.h"
 
@@ -757,7 +757,6 @@ GraphEditorUI::GetPort(Graph::Port* port)
 bool
 GraphEditorUI::Populate(Graph* graph)
 {
-  UndoBlock editBlock;
   Clear();
   _graph = graph;
 

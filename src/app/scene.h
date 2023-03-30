@@ -17,17 +17,16 @@ class Mesh;
 class Curve;
 class Points;
 class Voxels;
-class Sample;
+struct Sample;
 
-typedef pxr::TfHashMap< pxr::SdfPath, Geometry*, pxr::SdfPath::Hash > _PrimMap;
+struct _Prim {
+  Geometry*          geom;
+  pxr::HdDirtyBits   bits;
+};
+typedef pxr::TfHashMap< pxr::SdfPath, _Prim, pxr::SdfPath::Hash > _PrimMap;
 
 class Scene  {
 public:
-  enum ItemType {
-    STATIC,
-    DEFORMED,
-    GENERATED
-  };
   Scene();
   ~Scene();
 
@@ -54,11 +53,6 @@ public:
   const _PrimMap& GetPrims() const { return _prims; };
 
   Geometry* GetGeometry(const pxr::SdfPath& path);
-
-
-  // -----------------------------------------------------------------------//
-  /// \name Rprim Aspects
-  // -----------------------------------------------------------------------//
 
   /// Gets the topological mesh data for a given prim.
   pxr::HdMeshTopology GetMeshTopology(pxr::SdfPath const& id);
@@ -105,10 +99,11 @@ public:
 
 
 private:
-  _PrimMap                      _prims;
-  typedef pxr::VtArray<Sample>  _Samples;
-  pxr::TfHashMap<pxr::SdfPath, pxr::SdfPath, pxr::SdfPath::Hash> _srcMap;
-  pxr::TfHashMap<pxr::SdfPath, _Samples, pxr::SdfPath::Hash> _samplesMap;
+  _PrimMap                                                    _prims;
+  typedef pxr::VtArray<Sample>                                _Samples;
+  typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Sources;
+  pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash>  _sourcesMap;
+  pxr::TfHashMap<pxr::SdfPath, _Samples, pxr::SdfPath::Hash>  _samplesMap;
 };
 
 

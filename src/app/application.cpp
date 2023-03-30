@@ -21,6 +21,7 @@
 #include "../ui/fileBrowser.h"
 #include "../ui/viewport.h"
 #include "../ui/menu.h"
+#include "../ui/popup.h"
 #include "../ui/graphEditor.h"
 #include "../ui/timeline.h"
 #include "../ui/demo.h"
@@ -30,16 +31,19 @@
 #include "../ui/layerEditor.h"
 #include "../ui/propertyEditor.h"
 #include "../ui/curveEditor.h"
-#include "../command/command.h"
-#include "../command/delegate.h"
-#include "../command/manager.h"
-#include "../command/router.h"
-#include "../command/block.h"
+
 #include "../app/application.h"
+#include "../app/commands.h"
 #include "../app/modal.h"
 #include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/engine.h"
+#include "../app/selection.h"
+#include "../app/scene.h"
+#include "../app/window.h"
+#include "../app/view.h"
+#include "../app/camera.h"
+#include "../app/tools.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

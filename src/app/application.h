@@ -1,16 +1,13 @@
 #ifndef JVR_APPLICATION_APPLICATION_H
 #define JVR_APPLICATION_APPLICATION_H
 
+#include <pxr/usd/usd/stageCache.h>
 #include "../common.h"
-#include "../app/scene.h"
-#include "../app/selection.h"
 #include "../app/time.h"
-#include "../app/window.h"
-#include "../app/view.h"
-#include "../app/camera.h"
-#include "../app/tools.h"
-#include "../ui/popup.h"
+#include "../app/notice.h"
+#include "../app/selection.h"
 #include "../command/manager.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -21,8 +18,7 @@ class GraphEditorUI;
 class ExplorerUI;
 class LayersUI;
 class CurveEditorUI;
-class Command;
-class CommandManager;
+class PopupUI;
 class Engine;
 class Window;
 class Scene;
