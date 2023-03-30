@@ -61,7 +61,6 @@ public:
   /// Gets the topological curve data for a given prim.
   pxr::HdBasisCurvesTopology GetBasisCurvesTopology(pxr::SdfPath const& id);
 
-
   /// Gets the axis aligned bounds of a prim.
   /// The returned bounds are in the local space of the prim
   /// (transform is yet to be applied) and should contain the

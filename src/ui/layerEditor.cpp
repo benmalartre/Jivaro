@@ -6,7 +6,7 @@
 #include "../ui/layerEditor.h"
 #include "../app/view.h"
 #include "../app/application.h"
-
+#include "../app/commands.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

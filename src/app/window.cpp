@@ -6,6 +6,7 @@
 #include "../ui/utils.h"
 #include "../ui/viewport.h"
 #include "../ui/splitter.h"
+#include "../ui/popup.h"
 #include "../app/application.h"
 #include "../app/tools.h"
 #include <chrono>

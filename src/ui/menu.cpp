@@ -3,14 +3,13 @@
 #include "../ui/style.h"
 #include "../ui/menu.h"
 #include "../utils/strings.h"
-#include "../command/command.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/selection.h"
 #include "../app/notice.h"
-
+#include "../app/commands.h"
 
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usdGeom/mesh.h>

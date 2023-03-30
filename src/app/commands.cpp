@@ -219,12 +219,12 @@ void DeletePrimCommand::Do() {
 //==================================================================================
 // Selection
 //==================================================================================
-SelectCommand::SelectCommand(Selection::Type type, 
+SelectCommand::SelectCommand(short type, 
   const pxr::SdfPathVector& paths, int mode)
   : Command(true)
 {
   Selection* selection = GetApplication()->GetSelection();
-  _previous = selection->GetItems();
+  _previous = selection->GetSelectedPrims();
   switch (mode) {
   case SET:
     selection->Clear();
@@ -247,8 +247,8 @@ void SelectCommand::Do()
 {
   Selection* selection = GetApplication()->GetSelection();
   std::vector<Selection::Item> previous = selection->GetItems();
-  selection->SetItems(_previous);
-  _previous = previous;
+  //election->SetItems(_previous);
+  //_previous = previous;
   SelectionChangedNotice().Send();
 }
 

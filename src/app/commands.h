@@ -133,12 +133,12 @@ public:
     REMOVE,
     TOGGLE
   };
-  SelectCommand(Selection::Type type, const pxr::SdfPathVector& paths, int mode);
+  SelectCommand(short type, const pxr::SdfPathVector& paths, int mode);
   ~SelectCommand() {};
   void Do() override;
 
 private:
-  std::vector<Selection::Item> _previous;
+  std::vector<pxr::SdfPath> _previous;
 };
 
 //==================================================================================

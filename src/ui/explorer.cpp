@@ -9,6 +9,7 @@
 #include "../ui/style.h"
 #include "../ui/explorer.h"
 #include "../app/application.h"
+#include "../app/commands.h"
 #include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/view.h"

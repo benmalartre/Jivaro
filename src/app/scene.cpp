@@ -272,7 +272,6 @@ Scene::InitExec()
   control.CreateAttribute(pxr::TfToken("Frequency"), pxr::SdfValueTypeNames->Float).Set(0.5f);
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
 
-
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   size_t numStrands = 0;
   pxr::UsdPrimRange primRange = stage->TraverseAll();
@@ -311,7 +310,7 @@ Scene::InitExec()
 void 
 Scene::UpdateExec(double time)
 {
-  /*
+  
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);
 
@@ -321,8 +320,6 @@ Scene::UpdateExec(double time)
   controlPrim.GetAttribute(pxr::TfToken("Length")).Get(&length);
   controlPrim.GetAttribute(pxr::TfToken("Amplitude")).Get(&amplitude);
   controlPrim.GetAttribute(pxr::TfToken("Frequency")).Get(&frequency);
-  return;
-
 
   for (auto& execPrim : _prims) {
     pxr::UsdPrim usdPrim = stage->GetPrimAtPath(_sourcesMap[execPrim.first].first);
@@ -348,13 +345,12 @@ Scene::UpdateExec(double time)
       const pxr::GfVec3f& tangent = samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
       const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
       const pxr::GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
-      points[sampleIdx * 3] = xform.Transform(position - tangent * 0.02f);
-      points[sampleIdx * 3 + 1] = xform.Transform(position + bitangent * pxr::GfCos(position[1] + time * 0.5) + 
-        normal * length * (1.5f + pxr::GfSin(position[2] * 0.4 + time * frequency) * amplitude));
-      points[sampleIdx * 3 + 2] = xform.Transform(position + tangent * 0.02f);
+      points[sampleIdx * 4] = xform.Transform(position);
+      points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * length + bitangent * pxr::GfCos(position[2] + time * frequency) * amplitude * 0.33);
+      points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * length + bitangent * pxr::GfCos(position[2] + time * frequency) * amplitude * 0.66);
+      points[sampleIdx * 4 + 3] = xform.Transform(position + normal * length + bitangent * pxr::GfCos(position[2] + time * frequency) * amplitude);
     }
   }
-  */
 }
 
 void 

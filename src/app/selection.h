@@ -7,8 +7,6 @@
 #include <pxr/base/tf/token.h>
 #include <pxr/imaging/hd/selection.h>
 #include <vector>
-#include <boost/optional.hpp>
-#include <boost/functional/hash.hpp>
 
 JVR_NAMESPACE_OPEN_SCOPE
 

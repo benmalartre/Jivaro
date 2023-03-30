@@ -4,6 +4,8 @@
 #include "../ui/utils.h"
 #include "../ui/textEditor.h"
 #include "../app/view.h"
+#include "../app/window.h"
+#include "../app/commands.h"
 #include "../app/application.h"
 
 JVR_NAMESPACE_OPEN_SCOPE

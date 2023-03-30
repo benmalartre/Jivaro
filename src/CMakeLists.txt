@@ -53,6 +53,7 @@ add_executable(${TARGET}
   #embree/context.cpp
   #embree/device.cpp
   geometry/utils.cpp
+  geometry/matrix.cpp
   geometry/sampler.cpp
   geometry/voxels.cpp
   geometry/shape.cpp
