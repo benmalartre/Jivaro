@@ -377,4 +377,5 @@ Scene::TerminateExec()
     }
   }
 }
+
 JVR_NAMESPACE_CLOSE_SCOPE

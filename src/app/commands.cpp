@@ -12,6 +12,7 @@
 
 #include "../utils/strings.h"
 #include "../utils/files.h"
+#include "../geometry/utils.h"
 #include "../command/command.h"
 #include "../command/block.h"
 #include "../command/inverse.h"

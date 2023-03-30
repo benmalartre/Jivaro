@@ -10,9 +10,11 @@
 #include "../command/command.h"
 #include "../command/inverse.h"
 #include "../command/block.h"
-#include "../geometry/utils.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+struct ManipTargetDesc;
+using ManipTargetDescList = std::vector<ManipTargetDesc>;
 
 //==================================================================================
 // Open Scene

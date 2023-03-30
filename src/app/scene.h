@@ -23,6 +23,7 @@ struct _Prim {
   Geometry*          geom;
   pxr::HdDirtyBits   bits;
 };
+
 typedef pxr::TfHashMap< pxr::SdfPath, _Prim, pxr::SdfPath::Hash > _PrimMap;
 
 class Scene  {
