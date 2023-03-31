@@ -170,6 +170,29 @@ Curve::SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
   }
 }
 
+void 
+Curve::SetTopology(
+  const pxr::VtArray<pxr::GfVec3f>& positions,
+  const pxr::VtArray<int>& cvCounts)
+{
+  _positions = positions;
+  _normals = positions;
+  _radius.resize(_positions.size());
+  _cvCounts = cvCounts;
+}
+
+void 
+Curve::SetTopology(
+  const pxr::VtArray<pxr::GfVec3f>& positions,
+  const pxr::VtArray<float>& radius,
+  const pxr::VtArray<int>& cvCounts)
+{
+  _positions = positions;
+  _normals = positions;
+  _radius = radius;
+  _cvCounts = cvCounts;
+}
+
 void
 Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N, 
   const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, float width)

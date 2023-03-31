@@ -7,6 +7,7 @@
 
 #include "../utils/strings.h"
 #include "../utils/files.h"
+#include "../utils/timer.h"
 #include "../geometry/utils.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
@@ -198,6 +199,129 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
   return pxr::VtValue();
 }
 
+static void _InitControls()
+{
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+
+  pxr::UsdPrim controlPrim = stage->DefinePrim(rootPrim.GetPath().AppendChild(pxr::TfToken("Controls")));
+  controlPrim.CreateAttribute(pxr::TfToken("Density"), pxr::SdfValueTypeNames->Int).Set(1000024);
+  controlPrim.CreateAttribute(pxr::TfToken("Radius"), pxr::SdfValueTypeNames->Float).Set(0.1f);
+  controlPrim.CreateAttribute(pxr::TfToken("Length"), pxr::SdfValueTypeNames->Float).Set(4.f);
+  controlPrim.CreateAttribute(pxr::TfToken("Scale"), pxr::SdfValueTypeNames->Float).Set(1.f);
+  controlPrim.CreateAttribute(pxr::TfToken("Amplitude"), pxr::SdfValueTypeNames->Float).Set(0.5f);
+  controlPrim.CreateAttribute(pxr::TfToken("Frequency"), pxr::SdfValueTypeNames->Float).Set(1.f);
+  controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
+}
+
+void _GenerateSample(pxr::UsdGeomMesh& mesh, pxr::VtArray<Sample>* samples, float minRadius=0.1, size_t density=1024)
+{
+  pxr::VtArray<pxr::GfVec3f> positions;
+  pxr::VtArray<pxr::GfVec3f> normals;
+  pxr::VtArray<int> counts;
+  pxr::VtArray<int> indices;
+  pxr::VtArray<Triangle> triangles;
+
+  mesh.GetPointsAttr().Get(&positions);
+  mesh.GetFaceVertexCountsAttr().Get(&counts);
+  mesh.GetFaceVertexIndicesAttr().Get(&indices);
+
+  TriangulateMesh(counts, indices, triangles);
+  ComputeVertexNormals(positions, counts, indices, triangles, normals);
+  
+}
+
+static void _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
+{
+  uint64_t T = CurrentTime();
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+
+  int density;
+  float length, amplitude, frequency, width, scale, radius;
+  pxr::UsdPrim controlPrim = rootPrim.GetChild(pxr::TfToken("Controls"));
+
+  controlPrim.GetAttribute(pxr::TfToken("Density")).Get(&density);
+  controlPrim.GetAttribute(pxr::TfToken("Radius")).Get(&radius);
+  controlPrim.GetAttribute(pxr::TfToken("Length")).Get(&length);
+  controlPrim.GetAttribute(pxr::TfToken("Scale")).Get(&scale);
+  controlPrim.GetAttribute(pxr::TfToken("Amplitude")).Get(&amplitude);
+  controlPrim.GetAttribute(pxr::TfToken("Frequency")).Get(&frequency);
+  controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&width);
+
+  pxr::VtArray<Sample> samples;
+
+  pxr::VtArray<pxr::GfVec3f> positions;
+  pxr::VtArray<pxr::GfVec3f> normals;
+  pxr::VtArray<int> counts;
+  pxr::VtArray<int> indices;
+  pxr::VtArray<Triangle> triangles;
+
+  mesh.GetPointsAttr().Get(&positions);
+  mesh.GetFaceVertexCountsAttr().Get(&counts);
+  mesh.GetFaceVertexIndicesAttr().Get(&indices);
+
+  uint64_t T1 = CurrentTime() - T;
+  T = CurrentTime();
+  TriangulateMesh(counts, indices, triangles);
+  uint64_t T2 = CurrentTime() - T;
+  T = CurrentTime();
+  ComputeVertexNormals(positions, counts, indices, triangles, normals);
+  uint64_t T3 = CurrentTime() - T;
+  T = CurrentTime();
+  PoissonSampling(radius, density, positions, normals, triangles, samples);
+  uint64_t T4 = CurrentTime() - T;
+  T = CurrentTime();  
+
+  size_t numCVs = 4 * samples.size();
+  pxr::VtArray<pxr::GfVec3f> points(numCVs);
+  pxr::VtArray<float> radii(numCVs);
+  pxr::VtArray<int> cvCounts(samples.size());
+  
+  for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
+    
+    const pxr::GfVec3f& normal = samples[sampleIdx].GetNormal(&normals[0]);
+    const pxr::GfVec3f& tangent = samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
+    const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
+    const pxr::GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
+    const float tangentFactor =  pxr::GfCos(position[2] * scale + time * frequency)* amplitude;
+    
+    
+    points[sampleIdx * 4] = xform.Transform(position);
+    points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * length + bitangent * tangentFactor * 0.2);
+    points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * length + bitangent * tangentFactor * 0.6);
+    points[sampleIdx * 4 + 3] = xform.Transform(position + normal * length + bitangent * tangentFactor);
+
+    radii[sampleIdx * 4] = width * 1.f;
+    radii[sampleIdx * 4 + 1] = width * 0.8f;
+    radii[sampleIdx * 4 + 2] = width * 0.4f;
+    radii[sampleIdx * 4 + 3] = width * 0.2f;
+    
+    cvCounts[sampleIdx] = 4;
+  }
+  uint64_t T5 = CurrentTime() - T; 
+  T = CurrentTime();
+
+  curve->SetTopology(points, radii, cvCounts);
+  uint64_t T6 = CurrentTime() - T;
+  T = CurrentTime();
+
+  if (pxr::GfAbs(time) < 0.0000000001) {
+    std::cout << "----------------- stochatics: " << std::endl;
+    std::cout << "nb samples " << samples.size() << std::endl;
+    std::cout << "read : " << (double)(T1 * 1e-9) << " seconds" << std::endl;
+    std::cout << "triangulate : " << (double)(T2 * 1e-9) << " seconds" << std::endl;
+    std::cout << "normals : " << (double)(T3 * 1e-9) << " seconds" << std::endl;
+    std::cout << "samples : " << (double)(T4 * 1e-9) << " seconds" << std::endl;
+    std::cout << "generate : " << (double)(T5 * 1e-9) << " seconds" << std::endl;
+    std::cout << "write : " << (double)(T6 * 1e-9) << " seconds" << std::endl;
+
+    std::cout << "-----------------  results: " << std::endl;
+    std::cout << "total time : " << (double)((T1 + T2 + T3 + T4 + T5 + T6) * 1e-9) << " seconds" << std::endl;
+  }
+}
 
 void
 Scene::InitExec()
@@ -206,17 +330,13 @@ Scene::InitExec()
   pxr::UsdStageWeakPtr stage = app->GetStage();
   if (!stage) return;
 
-
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::UsdPrim control = stage->DefinePrim(rootPrim.GetPath().AppendChild(pxr::TfToken("Controls")));
-  control.CreateAttribute(pxr::TfToken("Length"), pxr::SdfValueTypeNames->Float).Set(4.f);
-  control.CreateAttribute(pxr::TfToken("Scale"), pxr::SdfValueTypeNames->Float).Set(1.f);
-  control.CreateAttribute(pxr::TfToken("Amplitude"), pxr::SdfValueTypeNames->Float).Set(1.f);
-  control.CreateAttribute(pxr::TfToken("Frequency"), pxr::SdfValueTypeNames->Float).Set(0.5f);
-  control.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
 
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+
+  _InitControls();
+
   size_t numStrands = 0;
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   for (pxr::UsdPrim prim : primRange) {
@@ -227,26 +347,8 @@ Scene::InitExec()
       Curve* curve = AddCurve(curvePath);
       pxr::UsdGeomMesh usdMesh(prim);
 
-      pxr::VtArray<pxr::GfVec3f> positions;
-      pxr::VtArray<pxr::GfVec3f> normals;
-      pxr::VtArray<int> counts;
-      pxr::VtArray<int> indices;
-      pxr::VtArray<Triangle> triangles;
-      pxr::VtArray<Sample> samples;
-
-      usdMesh.GetPointsAttr().Get(&positions);
-      usdMesh.GetFaceVertexCountsAttr().Get(&counts);
-      usdMesh.GetFaceVertexIndicesAttr().Get(&indices);
-      
-      TriangulateMesh(counts, indices, triangles);
-      ComputeVertexNormals(positions, counts, indices, triangles, normals);
-      PoissonSampling(0.1, 20000, positions, normals, triangles, samples);
-
-      numStrands += samples.size();
-
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      curve->MaterializeSamples(samples, 4, &positions[0], &normals[0], 0.1);
-      _samplesMap[curvePath] = samples;
+      _HairEmit(curve, usdMesh, xform, 0);
     }
   }
 }
@@ -255,56 +357,15 @@ Scene::InitExec()
 void 
 Scene::UpdateExec(double time)
 {
-  
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);
-
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::UsdPrim controlPrim = rootPrim.GetChild(pxr::TfToken("Controls"));
-  float length, amplitude, frequency, width, scale;
-  controlPrim.GetAttribute(pxr::TfToken("Length")).Get(&length);
-  controlPrim.GetAttribute(pxr::TfToken("Scale")).Get(&scale);
-  controlPrim.GetAttribute(pxr::TfToken("Amplitude")).Get(&amplitude);
-  controlPrim.GetAttribute(pxr::TfToken("Frequency")).Get(&frequency);
-  controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&width);
   
   for (auto& execPrim : _prims) {
     pxr::UsdPrim usdPrim = stage->GetPrimAtPath(_sourcesMap[execPrim.first].first);
     pxr::UsdGeomMesh usdMesh(usdPrim);
-    pxr::VtArray<pxr::GfVec3f> positions;
-    usdMesh.GetPointsAttr().Get(&positions, pxr::UsdTimeCode(time));
-
-    pxr::VtArray<int> counts;
-    pxr::VtArray<int> indices;
-    usdMesh.GetFaceVertexCountsAttr().Get(&counts);
-    usdMesh.GetFaceVertexIndicesAttr().Get(&indices);
-    pxr::VtArray<Triangle> triangles;
-    TriangulateMesh(counts, indices, triangles);
-    pxr::VtArray<pxr::GfVec3f> normals;
-    ComputeVertexNormals(positions, counts, indices, triangles, normals);
 
     pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
-
-    pxr::VtArray<pxr::GfVec3f>& points = execPrim.second.geom->GetPositions();
-    pxr::VtArray<float>& radii = execPrim.second.geom->GetRadius();
-
-    const _Samples samples = _samplesMap[execPrim.first];
-    for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
-      const pxr::GfVec3f& normal = samples[sampleIdx].GetNormal(&normals[0]);
-      const pxr::GfVec3f& tangent = samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
-      const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
-      const pxr::GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
-      const float tangentFactor = pxr::GfCos(position[2] * scale + time * frequency) * amplitude;
-      points[sampleIdx * 4] = xform.Transform(position);
-      points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * length + bitangent * tangentFactor * 0.2);
-      points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * length + bitangent * tangentFactor * 0.6);
-      points[sampleIdx * 4 + 3] = xform.Transform(position + normal * length + bitangent * tangentFactor);
-      
-      radii[sampleIdx * 4] = width * 1.f;
-      radii[sampleIdx * 4 + 1] = width * 0.8f;
-      radii[sampleIdx * 4 + 2] = width * 0.4f;
-      radii[sampleIdx * 4 + 3] = width * 0.2f; 
-    }
+    _HairEmit((Curve*)execPrim.second.geom, usdMesh, xform, time);
   }
 }
 

@@ -113,6 +113,9 @@ public:
   std::vector<Engine*> GetEngines() { return _engines; };
   void SetActiveViewport(ViewportUI* viewport);
 
+  // layout
+  void SetLayout(short layout);
+
   // stage cache
   pxr::UsdStageRefPtr& GetStage(){return _stage;};
   void SetStage(pxr::UsdStageRefPtr& stage);
@@ -135,6 +138,7 @@ public:
   pxr::SdfLayerRefPtr GetCurrentLayer();
 
 private:
+  bool                              _IsAnyEngineDirty();
   std::string                       _fileName;
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindows;

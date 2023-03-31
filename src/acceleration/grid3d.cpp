@@ -175,10 +175,6 @@ void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries)
   // set all pointers to NULL
   memset(_cells, 0x0, sizeof(Grid3DIntersector::Cell*) * _numCells);
 
-  pxr::GfVec3f A, B, C;
-  Triangle* T;
-  unsigned offset = 0;
-
   pxr::GfVec3f invDimensions(1/_cellDimension[0],
     1/_cellDimension[1], 1/_cellDimension[2]);
 

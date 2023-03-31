@@ -37,6 +37,17 @@ public:
   void SetRadii(size_t curveIdx, float radius);
   void SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii);
 
+  void SetTopology(
+    const pxr::VtArray<pxr::GfVec3f>& positions,
+    const pxr::VtArray<int>& cvCounts
+  );
+
+  void SetTopology(
+    const pxr::VtArray<pxr::GfVec3f>& positions,
+    const pxr::VtArray<float>& radius,
+    const pxr::VtArray<int>& cvCounts
+  );
+
   const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
   pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
 

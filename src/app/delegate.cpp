@@ -189,6 +189,7 @@ pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath cons
 
     primvars.emplace_back(pxr::HdTokens->displayColor, interpolation,
       pxr::HdPrimvarRoleTokens->color);
+
   } else if(interpolation == pxr::HdInterpolationVarying) {
     primvars.emplace_back(pxr::HdTokens->widths, interpolation);
   }
@@ -242,11 +243,12 @@ void Delegate::UpdateScene()
 {
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
-    tracker.MarkRprimDirty(prim.first,
+    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyTopology
+      /*
       pxr::HdChangeTracker::Clean |
       pxr::HdChangeTracker::DirtyPoints |
       pxr::HdChangeTracker::DirtyWidths |
-      pxr::HdChangeTracker::DirtyPrimvar
+      pxr::HdChangeTracker::DirtyPrimvar*/
     );
   }
 }

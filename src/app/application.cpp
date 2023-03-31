@@ -42,6 +42,7 @@
 #include "../app/scene.h"
 #include "../app/window.h"
 #include "../app/view.h"
+#include "../app/layout.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
 
@@ -163,12 +164,28 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
   return result;
 }
 
+bool
+Application::_IsAnyEngineDirty()
+{
+  for (auto& engine : _engines) {
+    if (engine->IsDirty())return true;
+  }
+  return false;
+}
+
 void
 Application::SetStage(pxr::UsdStageRefPtr& stage)
 {
   _stageCache.Insert(stage);
   _stage = stage;
   _layer = stage->GetRootLayer();
+}
+
+void
+Application::SetLayout(short layout)
+{
+  Window* window = GetActiveWindow();
+  window->SetLayout(layout);
 }
 
 // init application
@@ -212,58 +229,8 @@ Application::Init()
 
   // create window
   _mainWindow->SetGLContext();
-  int width, height;
-  glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
-  View* mainView = _mainWindow->SplitView(
-    _mainWindow->GetMainView(), 0.5, true, View::LFIXED, 22);
-  View* bottomView = _mainWindow->SplitView(
-    mainView->GetRight(), 0.9, true, false);
-  //bottomView->Split(0.9, true, true);
-  View* timelineView = bottomView->GetRight();
-  timelineView->SetTabed(false);
-  View* centralView = _mainWindow->SplitView(
-    bottomView->GetLeft(), 0.6, true);
-  View* middleView = centralView->GetLeft();
-  View* topView = mainView->GetLeft();
-  topView->SetTabed(false);
-
-  _mainWindow->SplitView(middleView, 0.9, false);
-  
-  View* workingView = _mainWindow->SplitView(
-    middleView->GetLeft(), 0.15, false);
-  View* propertyView = middleView->GetRight();
-  View* leftTopView = _mainWindow->SplitView(
-    workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
-  View* toolView = leftTopView->GetLeft();
-  toolView->SetTabed(false);
-  View* explorerView = leftTopView->GetRight();
-  /*
-  _mainWindow->SplitView(stageView, 0.25, true);
-  View* layersView = stageView->GetLeft();
-  View* explorerView = stageView->GetRight();
-  */
-
-
-  View* viewportView = workingView->GetRight();  
-  View* graphView = centralView->GetRight();
-
-  _mainWindow->Resize(width, height);
-  
-  
-  GraphEditorUI* graph = new GraphEditorUI(graphView);
-  
-  //CurveEditorUI* editor = new CurveEditorUI(graphView);
-  _viewport = new ViewportUI(viewportView);
-  _timeline = new TimelineUI(timelineView);
-  MenuUI* menu = new MenuUI(topView);
-  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
-  _explorer = new ExplorerUI(explorerView);
-  //_layers =  new LayersUI(layersView);
-  //new LayerHierarchyUI(layersView, "fuck");
-  //_property = new PropertyUI(propertyView, "Property");
-  //new DemoUI(propertyView);
-  
-  std::cout << "PREFERENCES : " << GetPreferences().GetRootFolder() << std::endl;
+  std::cout << "main window : " << _mainWindow << std::endl;
+  SetLayout(0);
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
   //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
@@ -457,7 +424,7 @@ Application::Update()
   double currentTime = glfwGetTime();
   if (currentTime - lastTime > refreshRate) {
     lastTime = currentTime;
-    if (_execute) {
+    if (_execute && (_time.IsPlaying() || _IsAnyEngineDirty())) {
       UpdateExec(_time.GetActiveTime());
     }
   } else {

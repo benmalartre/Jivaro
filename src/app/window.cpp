@@ -37,9 +37,9 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 // fullscreen window constructor
 //----------------------------------------------------------------------------
 Window::Window(bool fullscreen, const std::string& name) :
-  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0),  _tex(0)
+  _pixels(NULL), _debounce(0), _activeView(NULL), _hoveredView(NULL),
+  _dragSplitter(false), _fontSize(16.f), _name(name), _forceRedraw(3), 
+  _idle(false), _fbo(0),  _tex(0)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -72,9 +72,9 @@ Window::Window(bool fullscreen, const std::string& name) :
 // width/height window constructor
 //----------------------------------------------------------------------------
 Window::Window(int width, int height, const std::string& name):
-  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0)
+  _pixels(NULL), _debounce(0), _activeView(NULL), _hoveredView(NULL),
+  _dragSplitter(false), _fontSize(16.f), _name(name), _forceRedraw(3), 
+  _idle(false), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
@@ -100,9 +100,9 @@ Window::Window(int width, int height, const std::string& name):
 //----------------------------------------------------------------------------
 Window::Window(int x, int y, int width, int height, 
   GLFWwindow* parent, const std::string& name, bool decorated) :
-  _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0)
+  _pixels(NULL), _debounce(0), _activeView(NULL), _hoveredView(NULL),
+  _dragSplitter(false), _fontSize(16.f), _name(name), _forceRedraw(3), 
+  _idle(false), _fbo(0), _tex(0)
 {
   _width = width;
   _height = height;
@@ -162,9 +162,7 @@ Window::Init()
   glfwSetInputMode(_window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
   // create main splittable view
-  _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
-  _mainView->SetWindow(this);
-  _splitter = new SplitterUI(_mainView);
+  
     
   Resize(_width, _height);
 
@@ -185,8 +183,6 @@ Window::~Window()
   if (_fbo) glDeleteFramebuffers(1, &_fbo);
   if (_tex) glDeleteTextures(1, &_tex);
   ClearImgui();
-  if(_splitter)delete _splitter;
-  if(_mainView)delete _mainView;
   if(_window)glfwDestroyWindow(_window);
 
   if(_shared) {
@@ -220,6 +216,18 @@ Window::CreateChildWindow(
   return new Window(x, y, width, height, parent, name, decorated);
 }
 
+// layout
+//
+void
+Window::SetLayout(short layout)
+{
+  int width, height;
+  glfwGetWindowSize(GetGlfwWindow(), &width, &height);
+
+  std::cout << width << "," << height << std::endl;
+  _layout.Set(this, layout);
+}
+
 // force redraw
 //----------------------------------------------------------------------------
 void
@@ -250,10 +258,8 @@ Window::Resize(unsigned width, unsigned height)
   _width = width;
   _height = height;
 
-  CollectLeaves(_mainView);
-  
-  _mainView->Resize(0, 0, _width, _height, true);
-  _splitter->Resize(_width, _height);
+  CollectLeaves(_layout.GetView());
+  _layout.Resize(_width, _height);
 
   if(_width <= 0 || _height <= 0)_valid = false;
   else _valid = true;
@@ -392,7 +398,7 @@ Window::RemoveView(View* view)
   delete view;
   Resize(_width, _height);
   ForceRedraw();
-  _mainView->SetDirty();
+  _layout.SetDirty();
 }
 
 // collect leaves views (contains actual ui elements)
@@ -400,8 +406,8 @@ Window::RemoveView(View* view)
 void 
 Window::CollectLeaves(View* view)
 {
-  if(view == NULL || view == _mainView) {
-    view = _mainView;
+  if(view == NULL || view == _layout.GetView()) {
+    view = _layout.GetView();
     _leaves.clear();
   }
   if (view->GetFlag(View::LEAF)) {
@@ -496,11 +502,8 @@ Window::Draw()
   ImGui::NewFrame();
   
   // draw views
-  if (_mainView)_mainView->Draw(_forceRedraw > 0);
+  _layout.Draw(_forceRedraw > 0);
   _forceRedraw = pxr::GfMax(0, _forceRedraw - 1);
-
-  // draw splitters
-  _splitter->Draw();
 
   // render the imgui frame
   ImGui::Render();
@@ -632,8 +635,7 @@ void Window::DragSplitter(int x, int y)
 {
   if(_activeView) {
     _activeView->GetPercFromMousePosition(x, y);
-    _mainView->Resize(0, 0, _width, _height, false);
-    _splitter->Resize(_width, _height);
+    _layout.Resize(_width, _height);
   }
 }
 

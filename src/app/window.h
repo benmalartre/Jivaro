@@ -7,6 +7,7 @@
 #include "../ui/utils.h"
 #include "../ui/splitter.h"
 #include "../app/tools.h"
+#include "../app/layout.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
 
@@ -116,11 +117,12 @@ public:
   void Resize(unsigned width, unsigned height);
 
   // views
-  SplitterUI* GetSplitter(){return _splitter;};
+  void SetLayout(short layout);
+  SplitterUI* GetSplitter() { return _layout.GetSplitter(); };
   View* SplitView(View* view, double perc = 0.5, bool horizontal=true, 
     int fixed=0, int numPixels=-1);
   void RemoveView(View* view);
-  View* GetMainView(){return _mainView;};
+  View* GetMainView(){return _layout.GetView();};
   void SetActiveView(View* view);
   void SetHoveredView(View* view);
   View* GetActiveView(){return _activeView;};
@@ -168,11 +170,11 @@ private:
   std::string           _name;
   GLFWwindow*           _window;
   bool                  _shared;
-  View*                 _mainView;
+  //View*                 _mainView;
   View*                 _activeView;
   View*                 _hoveredView;
   View*                 _activeLeaf;
-  SplitterUI*           _splitter;
+  Layout                _layout;
   bool                  _dragSplitter;
   std::vector<View*>    _leaves;
   ImGuiContext*         _context;

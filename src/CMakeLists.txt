@@ -93,6 +93,7 @@ add_executable(${TARGET}
   app/handle.cpp
   app/camera.cpp
   app/view.cpp
+  app/layout.cpp
   app/window.cpp
   app/modal.cpp
   app/scene.cpp

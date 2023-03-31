@@ -22,28 +22,31 @@ Sample::GetNormal(const pxr::GfVec3f* normals) const
     normals[elemIdx[0]] * baryWeights[0] +
     normals[elemIdx[1]] * baryWeights[1] +
     normals[elemIdx[2]] * baryWeights[2]
-    ).GetNormalized();
+    );// .GetNormalized();
 }
 
 pxr::GfVec3f
 Sample::GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) const
 {
+  /*
   pxr::GfVec3f normal(normals[elemIdx[0]] * baryWeights[0] +
     normals[elemIdx[1]] * baryWeights[1] +
     normals[elemIdx[2]] * baryWeights[2]);
   normal.Normalize();
 
   pxr::GfVec3f side(0, 0, 1);
-  if ((1.f - fabsf(normal * side)) < 0.0)
+  if ((1.f - pxr::GfAbs(normal * side)) < 0.0)
   {
     side = pxr::GfVec3f(0, 1, 0);
-    if ((1.f - fabsf(normal * side)) < DOT_EPSILON)
+    if ((1.f - pxr::GfAbs(normal * side)) < DOT_EPSILON)
     {
       side = pxr::GfVec3f(1, 0, 0);
     }
   }
-
+  
   return (normal ^ side).GetNormalized();
+  */
+  return GetNormal(normals) ^ pxr::GfVec3f(0, 1, 0);
 
 
   /*
@@ -339,6 +342,7 @@ void
     const pxr::VtArray<Triangle>& triangles,
     pxr::VtArray<Sample>& samples)
 {
+  /*
   pxr::VtArray<Sample> seeds;
   pxr::VtArray<int> indices(triangles.size() * 3);
   for (size_t triIdx = 0; triIdx < triangles.size(); ++triIdx) {
@@ -351,6 +355,18 @@ void
   }
 
   _PoissonDiskFromSamples(&points[0], &normals[0], radius, seeds, samples);
+  */
+  samples.resize(nbSamples);
+  for (size_t sampleIdx = 0; sampleIdx < nbSamples; ++sampleIdx) {
+    float u = RANDOM_0_1;
+    float v = RANDOM_0_1;
+    size_t triIndex = RANDOM_0_X(triangles.size() - 1);
+    samples[sampleIdx] = { 
+      triangles[triIndex].vertices, 
+      0, 
+      pxr::GfVec3f(u, v, 1 - (u+v))
+    };
+  }
 
 } // namespace Sample
 
