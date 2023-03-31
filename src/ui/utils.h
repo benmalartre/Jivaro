@@ -1,6 +1,7 @@
 #ifndef JVR_UI_UTILS_H
 #define JVR_UI_UTILS_H
 #include <cassert>
+#include <functional>
 
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/base/gf/matrix2f.h>
@@ -43,6 +44,31 @@ const pxr::GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
 class View;
 class UIUtils {
 public:
+
+  struct _Callback {
+    std::function<void()> f;
+    void Execute() {
+      f();
+    }
+  };
+
+  template<typename Func, typename... Args>
+  struct _CallbackImpl : public Callback {
+    _CallbackImpl(Func func, Args... args) {
+      f = [func, args...]()
+      {
+        (func)(args...);
+      };
+    }
+  };
+
+  typedef std::unique_ptr<_Callback> Callback;
+
+  template<typename Func, typename... Args>
+  Callback RegisterCallback(Func func, Args&&... args) {
+    return std::make_unique(_CallbackImpl<Func, Args...>(func, args...));
+  }
+
   // callback prototype
   typedef void(*CALLBACK_FN)(...);
 
@@ -86,19 +112,29 @@ public:
 
 };
 
+#include <functional>
 
-template<typename FuncT, typename ...ArgsT>
+
+
+template<typename Func, typename... Args>
+void handleFunc(Func func, Args&&... args) {
+  nest<Func, Args...> myNest;
+  myNest.setup(func, args...);
+}
+
+
+template<typename Func, typename ...Args>
 void 
-UIUtils::IconButton(const char* icon, short state, FuncT func, ArgsT... args)
+UIUtils::IconButton(const char* icon, short state, Func func, Args... args)
 {
   ImGui::BeginGroup();
   ImGui::Button(icon, BUTTON_NORMAL_SIZE);
   ImGui::EndGroup();
 }
 
-template<typename FuncT, typename ...ArgsT>
+template<typename Func, typename ...Args>
 bool 
-UIUtils::AddIconButton(const char* icon, short state, FuncT func, ArgsT... args)
+UIUtils::AddIconButton(const char* icon, short state, Func func, Args... args)
 {
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
@@ -108,9 +144,9 @@ UIUtils::AddIconButton(const char* icon, short state, FuncT func, ArgsT... args)
   return false;
 }
 
-template<typename FuncT, typename ...ArgsT>
+template<typename Func, typename ...Args>
 bool 
-UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
+UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, Func func, Args... args)
 {
   ImGui::PushID(id);
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
@@ -123,9 +159,9 @@ UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, FuncT func, Ar
   return false;
 }
 
-template<typename FuncT, typename ...ArgsT>
+template<typename Func, typename ...Args>
 bool 
-UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
+UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, Func func, Args... args)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushID(id);
@@ -140,9 +176,9 @@ UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, Fun
   return false;
 }
 
-template<typename FuncT, typename ...ArgsT>
+template<typename Func, typename ...Args>
 bool 
-UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
+UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, Func func, Args... args)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
@@ -213,26 +249,26 @@ UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeC
 
 // ExtraArgsT is used to pass additional arguments as the function passed as visitor
 // might need more than the operation and the item
-template <typename PolicyT, typename FuncT, typename ...ExtraArgsT>
+template <typename Policy, typename Func, typename ...ExtraArgs>
 static void 
-IterateListEditorItems(const pxr::SdfListEditorProxy<PolicyT>& listEditor, const FuncT& call, ExtraArgsT... args) {
+IterateListEditorItems(const pxr::SdfListEditorProxy<Policy>& listEditor, const Func& call, ExtraArgs... args) {
   // TODO: should we check if the list is already all explicit ??
-  for (const typename PolicyT::value_type& item : listEditor.GetExplicitItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetExplicitItems()) {
     call("explicit", item, args...);
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetOrderedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetOrderedItems()) {
     call("ordered", item, args...);
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetAddedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetAddedItems()) {
     call("add", item, args...); // return "add" as TfToken instead ?
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetPrependedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetPrependedItems()) {
     call("prepend", item, args...);
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetAppendedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetAppendedItems()) {
     call("append", item, args...);
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetDeletedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetDeletedItems()) {
     call("delete", item, args...);
   }
 }
@@ -244,9 +280,9 @@ inline const char* GetListEditorOperationName(int index) {
   return names[index];
 }
 
-template <typename PolicyT>
-void CreateListEditorOperation(pxr::SdfListEditorProxy<PolicyT>&& listEditor, int operation,
-  typename pxr::SdfListEditorProxy<PolicyT>::value_type item) {
+template <typename Policy>
+void CreateListEditorOperation(pxr::SdfListEditorProxy<Policy>&& listEditor, int operation,
+  typename pxr::SdfListEditorProxy<Policy>::value_type item) {
   switch (operation) {
   case 0:
     listEditor.Add(item);

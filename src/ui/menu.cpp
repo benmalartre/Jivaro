@@ -1,8 +1,13 @@
 #include <memory>
+#include <functional>
+#include <tuple>
+#include <pxr/base/vt/array.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/primvar.h>
 #include "../common.h"
+#include "../utils/strings.h"
 #include "../ui/style.h"
 #include "../ui/menu.h"
-#include "../utils/strings.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
@@ -11,12 +16,7 @@
 #include "../app/notice.h"
 #include "../app/commands.h"
 
-#include <pxr/base/vt/array.h>
-#include <pxr/usd/usdGeom/mesh.h>
-#include <pxr/usd/usdGeom/primvar.h>
-
 JVR_NAMESPACE_OPEN_SCOPE
-
 
 ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_None |
@@ -31,29 +31,23 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoBackground |
   ImGuiWindowFlags_NoScrollbar;
 
-MenuUI::Item::Item(MenuUI* ui, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
-  : ui(ui), label(lbl), shortcut(sht), selected(sel), func(f), args(a), parent(NULL)
+
+MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected,
+  bool enabled, Callback cb, void* args)
+  : ui(ui)
+  , parent(NULL)
+  , label(label)
+  , selected(selected)
+  , enabled(enabled)
+  , callback(cb)
+  , args(args)
 {
 }
 
-MenuUI::Item& MenuUI::Item::AddItem(MenuUI* ui, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
+MenuUI::Item& MenuUI::Item::Add(const std::string label,
+  bool selected, bool enabled, Callback cb, void* args)
 {
-  items.push_back(MenuUI::Item(ui, lbl, sht, sel, enb, f, a));
-  return items.back();
-}
-
-MenuUI::Item::Item(MenuUI::Item* parent, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
-  : ui(parent->ui), label(lbl), shortcut(sht), selected(sel), func(f), args(a), parent(parent)
-{
-}
-
-MenuUI::Item& MenuUI::Item::AddItem(MenuUI::Item* parent, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
-{
-  items.push_back(MenuUI::Item(parent, lbl, sht, sel, enb, f, a));
+  items.push_back(MenuUI::Item(ui, label, selected, enabled, cb, args));
   return items.back();
 }
 
@@ -63,8 +57,7 @@ pxr::GfVec2i MenuUI::Item::ComputeSize()
   ImGuiStyle& style = ImGui::GetStyle();
   for (const auto& item : items) {
     ImVec2 labelSize = ImGui::CalcTextSize(item.label.c_str());
-    ImVec2 shortcutSize = ImGui::CalcTextSize(item.shortcut.c_str());
-    ImVec2 cur(labelSize[0] + shortcutSize[0] + 2 * style.FramePadding[0], labelSize[1]);
+    ImVec2 cur(labelSize[0] + 2 * style.FramePadding[0], labelSize[1]);
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
   }
@@ -98,8 +91,8 @@ bool MenuUI::Item::Draw()
     } 
   }
   else {
-    if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
-      func(args);
+    if (ImGui::MenuItem(label.c_str()) && callback) {
+      callback(args);
       window->ForceRedraw();
       ui->_current = NULL;
     } 
@@ -165,6 +158,15 @@ static void OpenChildWindowCallback()
 
   childWindow->CollectLeaves();
   mainWindow->SetGLContext();
+}
+
+static void SetLayoutCallback(Window* window, short layout)
+{
+  std::cout << "layout ? " << layout << std::endl;
+  static size_t currentLayout = 0;
+  std::cout << "set layout callback " << std::endl;
+  //window->SetLayout(currentLayout++ % 2);
+
 }
 
 static void CreatePrimCallback()
@@ -248,29 +250,42 @@ static void FlattenGeometryCallback()
   }
 }
 
+
+MenuUI::Item& MenuUI::Add(const std::string label, bool selected,
+  bool enabled, Callback cb, void* args)
+{
+  _items.push_back(MenuUI::Item(this, label, selected, enabled, cb, args));
+  return _items.back();
+}
+
 // constructor
 MenuUI::MenuUI(View* parent) 
   : BaseUI(parent, UIType::MAINMENU)
   , _current(NULL)
 {
-  pxr::VtArray < pxr::VtValue > args;
-  MenuUI::Item& fileMenu = AddItem("File", "", false, true);
-  fileMenu.AddItem(this, "Open", "Ctrl+O", false, true, (MenuUI::PressedFunc)&OpenFileCallback);
-  fileMenu.AddItem(this, "Save", "Ctrl+S", false, true, (MenuUI::PressedFunc)&SaveFileCallback);
-  fileMenu.AddItem(this, "New", "Ctrl+N", false, true, (MenuUI::PressedFunc)&NewFileCallback);
+  MenuUI::Item& fileMenu = Add("File", false, true, NULL);
+
+  fileMenu.Add("Open", false, true, (Callback)&OpenFileCallback);
+  fileMenu.Add("Save", false, true, (Callback)&SaveFileCallback);
+  fileMenu.Add("New",  false, true, (Callback)&NewFileCallback);
  
-  MenuUI::Item& testItem = AddItem("Test", "", false, true);
-  testItem.AddItem(this, "CreatePrim", "CTRL+P", false, true, (MenuUI::PressedFunc)&CreatePrimCallback);
-  testItem.AddItem(this, "Triangulate", "CTRL+P", false, true, (MenuUI::PressedFunc)&TriangulateCallback);
-  MenuUI::Item& subItem = testItem.AddItem(this, "SubMenu", "", false, true);
-  subItem.AddItem(&subItem, "Sub0", "", false, true);
-  subItem.AddItem(&subItem, "Sub1", "", false, true);
-  subItem.AddItem(&subItem, "Sub2", "", false, true);
+  MenuUI::Item& testItem = Add("Test", false, true, NULL);
+  testItem.Add("CreatePrim", false, true, (Callback)&CreatePrimCallback);
+  testItem.Add("Triangulate", false, true, (Callback)&TriangulateCallback);
 
-  MenuUI::Item& demoItem = AddItem("Demo", "", false, true);
-  demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuUI::PressedFunc)&OpenDemoCallback);
-  demoItem.AddItem(this, "Child Window", "Shift+W", false, true, (MenuUI::PressedFunc)&OpenChildWindowCallback);
+  MenuUI::Item& subItem = testItem.Add("SubMenu", false, true, NULL);
+  subItem.Add("Sub0", false, true, NULL);
+  subItem.Add("Sub1", false, true, NULL);
+  subItem.Add("Sub2", false, true, NULL);
 
+  MenuUI::Item& demoItem = Add("Demo", false, true);
+  demoItem.Add("Open Demo", false, true, (Callback) &OpenDemoCallback);
+  demoItem.Add("Child Window", false, true, (Callback) &OpenChildWindowCallback);
+
+  MenuUI::Item& layoutItem = Add("Layout", false, true);
+  layoutItem.Add("Standard", false, true, (Callback)&SetLayoutCallback);
+  layoutItem.Add("Raw", false, true, (Callback)&SetLayoutCallback);
+  
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
 
@@ -278,14 +293,22 @@ MenuUI::MenuUI(View* parent)
 MenuUI::~MenuUI()
 {
 }
-
-MenuUI::Item& MenuUI::AddItem(const std::string label, const std::string shortcut,
-  bool selected, bool enabled, MenuUI::PressedFunc func, const pxr::VtArray<pxr::VtValue> a)
+/*
+template<typename Func, typename... Args>
+MenuUI::Item& AddItem2(const std::string label, const std::string shortcut, bool selected,
+  bool enabled, Func f, Args... args)
 {
   _items.push_back(MenuUI::Item(this, label, shortcut, selected, enabled, func, a));
   return _items.back();
 }
 
+MenuUI::Item& MenuUI::AddItem(const std::string label, const std::string shortcut,
+  bool selected, bool enabled, UIUtils::CALLBACK_FN func, const pxr::VtArray<pxr::VtValue> a)
+{
+  _items.push_back(MenuUI::Item(this, label, shortcut, selected, enabled, func, a));
+  return _items.back();
+}
+*/
 void MenuUI::MouseButton(int button, int action, int mods)
 {
   _parent->SetDirty();

@@ -42,7 +42,6 @@
 #include "../app/scene.h"
 #include "../app/window.h"
 #include "../app/view.h"
-#include "../app/layout.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
 
@@ -186,7 +185,55 @@ Application::SetLayout(short layout)
 {
   Window* window = GetActiveWindow();
   std::cout << "set layout for window " << window << std::endl;
-  window->SetLayout(layout);
+}
+
+static void _StandardLayout(Window* window)
+{
+  window->SetGLContext();
+  int width, height;
+  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
+  View* mainView = window->SplitView(
+    window->GetMainView(), 0.5, true, View::LFIXED, 22);
+  View* bottomView = window->SplitView(
+    mainView->GetRight(), 0.9, true, false);
+  //bottomView->Split(0.9, true, true);
+  View* timelineView = bottomView->GetRight();
+  timelineView->SetTabed(false);
+  View* centralView = window->SplitView(
+    bottomView->GetLeft(), 0.6, true);
+  View* middleView = centralView->GetLeft();
+  View* topView = mainView->GetLeft();
+  topView->SetTabed(false);
+
+  window->SplitView(middleView, 0.9, false);
+
+  View* workingView = window->SplitView(
+    middleView->GetLeft(), 0.15, false);
+  View* propertyView = middleView->GetRight();
+  View* leftTopView = window->SplitView(
+    workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
+  View* toolView = leftTopView->GetLeft();
+  toolView->SetTabed(false);
+  View* explorerView = leftTopView->GetRight();
+  /*
+  _mainWindow->SplitView(stageView, 0.25, true);
+  View* layersView = stageView->GetLeft();
+  View* explorerView = stageView->GetRight();
+  */
+
+
+  View* viewportView = workingView->GetRight();
+  View* graphView = centralView->GetRight();
+
+  window->Resize(width, height);
+
+  new GraphEditorUI(graphView);
+  new ViewportUI(viewportView);
+  new TimelineUI(timelineView);
+  new MenuUI(topView);
+  new ToolbarUI(toolView, true);
+  new ExplorerUI(explorerView);
+
 }
 
 // init application
@@ -229,9 +276,8 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
   // create window
-  _mainWindow->SetGLContext();
-  std::cout << "main window : " << _mainWindow << std::endl;
-  SetLayout(0);
+  _StandardLayout(_mainWindow);
+  
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
   //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());

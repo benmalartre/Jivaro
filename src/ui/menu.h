@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <vector>
+#include <functional>
+#include <tuple>
+#include <memory>
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>
 
@@ -10,37 +13,32 @@
 #include "../ui/utils.h"
 
 
-
+#include <thread>
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Command;
 
+
+typedef void(*Callback)(void*);
+
+
 class MenuUI : public BaseUI
 {
 public:
-  // callback prototype
-  typedef void(*PressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
 
   struct Item {
     MenuUI*                     ui;
     Item*                       parent;
+    std::vector<Item>           items;
     std::string                 label;
-    std::string                 shortcut;
     bool                        selected;
     bool                        enabled;
+    Callback                    callback;
+    void*                       args;
 
-    std::vector<Item>           items;
-    pxr::VtArray<pxr::VtValue>  args;
-    PressedFunc                 func;
+    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, Callback cb, void* args);
 
-    Item(MenuUI* ui, const std::string lbl, const std::string sht, bool sel,
-      bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
-    Item& AddItem(MenuUI* ui, const std::string lbl, const std::string sht, bool sel,
-      bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
-    Item(Item* parent, const std::string lbl, const std::string sht, bool sel,
-      bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
-    Item& AddItem(Item* parent, const std::string lbl, const std::string sht, bool sel,
-      bool enb, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue>& a = pxr::VtArray<pxr::VtValue>());
+    Item& Add(const std::string label, bool selected, bool enabled, Callback cb=NULL, void* args=NULL);
 
     bool Draw();
     pxr::GfVec2i ComputeSize();
@@ -56,9 +54,7 @@ public:
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsUnderBox();
 
-  Item& AddItem(const std::string label, const std::string shortcut, bool selected,
-    bool enabled, PressedFunc f = NULL, const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
-
+  Item& Add(const std::string label, bool selected, bool enabled, Callback cb = NULL, void* args = NULL);
 
 private:
   std::vector<Item>       _items;

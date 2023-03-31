@@ -20,11 +20,9 @@ extern bool LEGACY_OPENGL;
 class UsdEmbreeContext;
 class Application;
 class View;
-class Layout;
 class Splitter;
 class BaseUI;
 class PopupUI;
-
 
 // keyboard callback
 //----------------------------------------------------------------------------
@@ -118,12 +116,11 @@ public:
   void Resize(unsigned width, unsigned height);
 
   // views
-  void SetLayout(short layout);
-  SplitterUI* GetSplitter();
+  SplitterUI* GetSplitter(){return _splitter;};
   View* SplitView(View* view, double perc = 0.5, bool horizontal=true, 
     int fixed=0, int numPixels=-1);
   void RemoveView(View* view);
-  View* GetMainView();
+  View* GetMainView(){return _mainView;};
   void SetActiveView(View* view);
   void SetHoveredView(View* view);
   View* GetActiveView(){return _activeView;};
@@ -171,11 +168,11 @@ private:
   std::string           _name;
   GLFWwindow*           _window;
   bool                  _shared;
-  //View*                 _mainView;
+  View*                 _mainView;
   View*                 _activeView;
   View*                 _hoveredView;
   View*                 _activeLeaf;
-  Layout*               _layout;
+  SplitterUI*           _splitter;
   bool                  _dragSplitter;
   std::vector<View*>    _leaves;
   ImGuiContext*         _context;
