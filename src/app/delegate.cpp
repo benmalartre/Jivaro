@@ -69,9 +69,19 @@ Delegate::SamplePrimvar(pxr::SdfPath const& id,
   float* sampleTimes,
   pxr::VtValue* sampleValues)
 {
-  std::cout << "sample primvar " << id << ":" << key << std::endl;
-  return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
-    nullptr);
+  std::cout << "sample prim var : " << id << ":" << key << std::endl;
+  if (key == pxr::HdTokens->widths) {
+    auto& prims = _scene->GetPrims();
+    if (prims.find(id) != prims.end()) {
+      std::cout << "set sample widths : " << std::endl;
+      *sampleValues = pxr::VtValue(prims[id].geom->GetRadius());
+    }
+    else {
+      std::cout << "prim not found " << id << std::endl;
+    }
+    return 1;
+  }
+  return 0;
 }
 
 /*virtual*/
@@ -83,37 +93,12 @@ Delegate::SampleIndexedPrimvar(pxr::SdfPath const& id,
   pxr::VtValue* sampleValues,
   pxr::VtIntArray* sampleIndices)
 {
-  return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
+  /*return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
     sampleIndices);
-}
-
-size_t
-Delegate::_SamplePrimvar(pxr::SdfPath const& id,
-  pxr::TfToken const& key,
-  size_t maxNumSamples,
-  float* sampleTimes,
-  pxr::VtValue* sampleValues,
-  pxr::VtIntArray* sampleIndices)
-{
-  /*
-  //pxr::SdfPath cachePath = ConvertIndexPathToCachePath(id);
-  _HdPrimInfo* primInfo = _GetHdPrimInfo(id);
-  if (*TF_VERIFY(primInfo)) {
-    if (sampleIndices) {
-      sampleIndices[0] = VtIntArray(0);
-    }
-    // Retrieve the multi-sampled result.
-    size_t nSamples = primInfo->adapter
-      ->SamplePrimvar(primInfo->usdPrim, id, key,
-        pxr::UsdTimeCode::Default(), maxNumSamples, sampleTimes, sampleValues,
-        sampleIndices);
-    return nSamples;
-  }
-  */
+    */
+  std::cout << "sample index primvar not implemented" << std::endl;
   return 0;
-
 }
-
 
 bool
 Delegate::GetVisible(pxr::SdfPath const & id)
@@ -159,6 +144,7 @@ Delegate::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue
 Delegate::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
+  std::cout << "get : " << id << ":" << key << std::endl;
   return _scene->Get(id, key);
 }
 
@@ -168,6 +154,7 @@ pxr::VtValue
 Delegate::GetIndexedPrimvar(pxr::SdfPath const& id, pxr::TfToken const& key, 
                                         pxr::VtIntArray *outIndices) 
 {
+  std::cout << "get indexed prim var : " << id << ":" << key << std::endl;
   return pxr::VtValue();
 }
 
@@ -193,20 +180,18 @@ Delegate::GetCoordSysBindings(pxr::SdfPath const& id)
 // -------------------------------------------------------------------------- //
 // Primvar Support Methods
 // -------------------------------------------------------------------------- //
-
 pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath const& id,
   pxr::HdInterpolation interpolation)
 {
   pxr::HdPrimvarDescriptorVector primvars;
-
-  if (interpolation == pxr::HdInterpolationVertex) {
+  if (interpolation == pxr::HdInterpolationConstant) {
+    primvars.emplace_back(pxr::HdTokens->widths, interpolation);
+  } else if (interpolation == pxr::HdInterpolationVertex) {
     primvars.emplace_back(pxr::HdTokens->points, interpolation,
       pxr::HdPrimvarRoleTokens->point);
-
+    
     primvars.emplace_back(pxr::HdTokens->displayColor, interpolation,
-      pxr::HdPrimvarRoleTokens->color);
-
-    primvars.emplace_back(pxr::HdTokens->widths, interpolation);
+      pxr::HdPrimvarRoleTokens->color); 
   }
 
   return primvars;
@@ -258,7 +243,12 @@ void Delegate::UpdateScene()
 {
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
-    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyWidths);
+    tracker.MarkRprimDirty(prim.first, 
+      pxr::HdChangeTracker::Clean | 
+      pxr::HdChangeTracker::DirtyPoints | 
+      pxr::HdChangeTracker::DirtyWidths |
+      pxr::HdChangeTracker::DirtyPrimvar
+    );
   }
 }
 

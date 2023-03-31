@@ -128,7 +128,7 @@ Scene::GetBasisCurvesTopology(pxr::SdfPath const& id)
   if (IsCurves(id)) {
     Curve* curve = (Curve*)_prims[id].geom;
     return pxr::HdBasisCurvesTopology(
-      pxr::HdTokens->cubic,
+      pxr::HdTokens->linear,
       pxr::HdTokens->catmullRom,
       pxr::HdTokens->nonperiodic,
       curve->GetCvCounts(), pxr::VtArray<int>());
@@ -198,72 +198,18 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
       pxr::VtArray<pxr::GfVec3f> colors(mesh->GetNumPoints());
       for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
       return pxr::VtValue(colors);
-    }
-    else if (IsCurves(id)) {
+    } else if (IsCurves(id)) {
       Curve* curve = (Curve*)_prims[id].geom;
       pxr::VtArray<pxr::GfVec3f> colors(curve->GetNumPoints());
       for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
       return pxr::VtValue(colors);
     }
   } else if (key == pxr::HdTokens->widths) {
-    return pxr::VtValue(_prims[id].geom->GetRadius());
+    return pxr::VtValue(RANDOM_0_1);// _prims[id].geom->GetRadius());
   }
   return pxr::VtValue();
 }
 
-
-/*virtual*/
-pxr::VtValue
-Scene::GetIndexedPrimvar(pxr::SdfPath const& id, pxr::TfToken const& key, 
-                                        pxr::VtIntArray *outIndices) 
-{
-  return pxr::VtValue();
-}
-
-
-
-// -------------------------------------------------------------------------- //
-// Primvar Support Methods
-// -------------------------------------------------------------------------- //
-
-pxr::HdPrimvarDescriptorVector Scene::GetPrimvarDescriptors(pxr::SdfPath const& id,
-  pxr::HdInterpolation interpolation)
-{
-  pxr::HdPrimvarDescriptorVector primvars;
-
-  if (interpolation == pxr::HdInterpolationVertex) {
-    primvars.emplace_back(pxr::HdTokens->points, interpolation,
-      pxr::HdPrimvarRoleTokens->point);
-
-    primvars.emplace_back(pxr::HdTokens->displayColor, interpolation,
-      pxr::HdPrimvarRoleTokens->color);
-
-    primvars.emplace_back(pxr::HdTokens->widths, interpolation);
-  }
-  
-  /*
-  if (interpolation == HdInterpolationInstance && _hasInstancePrimvars &&
-    _instancers.find(id) != _instancers.end()) {
-    primvars.emplace_back(HdInstancerTokens->scale, interpolation);
-    primvars.emplace_back(HdInstancerTokens->rotate, interpolation);
-    primvars.emplace_back(HdInstancerTokens->translate, interpolation);
-  }
-  
-
-  auto const cit = _primvars.find(id);
-  if (cit != _primvars.end()) {
-    _Primvars const& pvs = cit->second;
-    for (auto const& pv : pvs) {
-      if (pv.interp == interpolation) {
-        primvars.emplace_back(pv.name, pv.interp, pv.role,
-          !pv.indices.empty());
-      }
-    }
-  }
-  */
-
-  return primvars;
-}
 
 void
 Scene::InitExec()
@@ -306,7 +252,7 @@ Scene::InitExec()
       
       TriangulateMesh(counts, indices, triangles);
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
-      PoissonSampling(0.1, 12000, positions, normals, triangles, samples);
+      PoissonSampling(0.1, 200, positions, normals, triangles, samples);
 
       numStrands += samples.size();
 
@@ -352,7 +298,7 @@ Scene::UpdateExec(double time)
     pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
 
     pxr::VtArray<pxr::GfVec3f>& points = execPrim.second.geom->GetPositions();
-    pxr::VtArray<float>& radii = execPrim.second.geom->GetRadius();
+    //pxr::VtArray<float>& radii = execPrim.second.geom->GetRadius();
 
     const _Samples samples = _samplesMap[execPrim.first];
     for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
@@ -365,11 +311,12 @@ Scene::UpdateExec(double time)
       points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * length + bitangent * tangentFactor * 0.33);
       points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * length + bitangent * tangentFactor * 0.66);
       points[sampleIdx * 4 + 3] = xform.Transform(position + normal * length + bitangent * tangentFactor);
-
-      radii[sampleIdx * 4] = RANDOM_0_1;// width * 1.f;
-      radii[sampleIdx * 4 + 1] = RANDOM_0_1;// width * 0.8f;
-      radii[sampleIdx * 4 + 2] = RANDOM_0_1;// width * 0.4f;
-      radii[sampleIdx * 4 + 3] = RANDOM_0_1;// width * 0.2f;
+      /*
+      radii[sampleIdx * 4] = width * 1.f;
+      radii[sampleIdx * 4 + 1] = width * 0.8f;
+      radii[sampleIdx * 4 + 2] = width * 0.4f;
+      radii[sampleIdx * 4 + 3] = width * 0.2f;
+      */
     }
   }
 }

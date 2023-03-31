@@ -122,10 +122,6 @@ public:
   void UpdateScene();
 
 private:
-
-  size_t _SamplePrimvar(pxr::SdfPath const& id, pxr::TfToken const& key,
-    size_t maxNumSamples, float* times, pxr::VtValue* samples, pxr::VtIntArray* indices);
-
   Scene* _scene;
 
 };

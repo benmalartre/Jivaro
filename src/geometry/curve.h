@@ -40,7 +40,7 @@ public:
   const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
   pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
 
-  uint32_t GetNumCurves() const { return _numCurves; };
+  uint32_t GetNumCurves() const { return _cvCounts.size(); };
   uint32_t GetNumCVs(uint32_t curveIndex)const;
   uint32_t GetNumSegments(uint32_t curveIndex)const;
 
@@ -72,9 +72,6 @@ public:
 
 private:
   size_t                              _PointIndex(size_t curveIdx, size_t cvIdx);
-  // infos
-  uint32_t                            _numCurves;
-  uint32_t                            _numSegments;
 
   // curves description
   pxr::VtArray<int>                   _cvCounts;

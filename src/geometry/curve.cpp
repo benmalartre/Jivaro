@@ -10,36 +10,28 @@ Curve::Curve()
   : Geometry(Geometry::CURVE)
 {
   _initialized = false;
-  _numCurves = 0;
-  _numSegments = 0;
 }
 
 Curve::Curve(const Curve* other, bool normalize)
   : Geometry(other, Geometry::CURVE, normalize)
 {
   _initialized = true;
-  _numCurves = other->_numCurves;
-  _numSegments = other->_numSegments;
 
   _normals = other->_normals;
 
-  _cvCounts.resize(_numCurves);
-  memcpy(&_cvCounts[0], &other->_cvCounts[0], _numCurves * sizeof(int));
+  size_t numCurves = other->_cvCounts.size();
+  _cvCounts.resize(numCurves);
+  memcpy(&_cvCounts[0], &other->_cvCounts[0], numCurves * sizeof(int));
 }
 
 Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
   : Geometry(Geometry::CURVE)
 {
-  _numCurves = curve.GetCurveCount();
-
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
 
   pxr::UsdAttribute vertexCountsAttr = curve.GetCurveVertexCountsAttr();
   vertexCountsAttr.Get(&_cvCounts, pxr::UsdTimeCode::Default());
-
-  _numSegments = 0;
-  for (const auto& cvCount : _cvCounts) _numSegments += cvCount - 1;
 
   pxr::UsdAttribute normalsAttr = curve.GetNormalsAttr();
   if(normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
@@ -71,7 +63,11 @@ Curve::GetTotalNumCVs()const
 uint32_t 
 Curve::GetTotalNumSegments()const
 {
-  return _numSegments;
+  size_t numSegments = 0;
+  for (const auto& cvCount : _cvCounts) {
+    numSegments += cvCount - 1;
+  }
+  return numSegments;
 }
 
 float 
@@ -97,9 +93,6 @@ Curve::Init(
   const pxr::VtArray<int>& counts)
 {
   _cvCounts = counts;
-  _numCurves = counts.size();
-  _numSegments = 0;
-  for(const auto& count: counts) _numSegments += count - 1;
   _positions = positions;
   _normals = positions;
 }
@@ -181,13 +174,15 @@ void
 Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N, 
   const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, float width)
 {
-  _numCurves = samples.size();
-  _cvCounts.resize(_numCurves);
-  std::fill(_cvCounts.begin(), _cvCounts.end(), N);
-  _radius.resize(N * _numCurves);
-  _positions.resize(N * _numCurves);
+  size_t numCurves = samples.size();
+  _cvCounts.resize(numCurves);
+  size_t numCVs = N * numCurves;
+  _radius.resize(numCVs);
+  _positions.resize(numCVs);
 
-  for (size_t s = 0; s < _numCurves; ++s) {
+  std::fill(_cvCounts.begin(), _cvCounts.end(), N);
+
+  for (size_t s = 0; s < numCurves; ++s) {
     const pxr::GfVec3f& origin = samples[s].GetPosition(positions);
     const pxr::GfVec3f& normal = samples[s].GetNormal(normals);
     const pxr::GfVec3f& tangent = samples[s].GetTangent(positions, normals);
