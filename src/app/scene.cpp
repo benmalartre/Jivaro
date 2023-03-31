@@ -53,8 +53,6 @@ Scene::Update(double time)
 
 Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
-  //HdRenderIndex& index = GetRenderIndex();
-  //index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, path);
   _prims[path] = { new Mesh() };
   return (Mesh*)_prims[path].geom;
 }
@@ -88,8 +86,6 @@ void Scene::Remove(const pxr::SdfPath & path)
   auto& primIt = _prims.find(path);
   if (primIt != _prims.end()) {
     Geometry* geometry = primIt->second.geom;
-    //HdRenderIndex& index = GetRenderIndex();
-    //index.RemoveRprim(path);
     _prims.erase(primIt);
     delete geometry;
   }
@@ -129,7 +125,7 @@ Scene::GetBasisCurvesTopology(pxr::SdfPath const& id)
     Curve* curve = (Curve*)_prims[id].geom;
     return pxr::HdBasisCurvesTopology(
       pxr::HdTokens->linear,
-      pxr::HdTokens->catmullRom,
+      pxr::TfToken(),
       pxr::HdTokens->nonperiodic,
       curve->GetCvCounts(), pxr::VtArray<int>());
   }
@@ -193,19 +189,11 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
   if (key == pxr::HdTokens->points) {
     return pxr::VtValue(_prims[id].geom->GetPositions());
   } else if (key == pxr::HdTokens->displayColor) {
-    if (IsMesh(id)) {
-      Mesh* mesh = (Mesh*)_prims[id].geom;
-      pxr::VtArray<pxr::GfVec3f> colors(mesh->GetNumPoints());
-      for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-      return pxr::VtValue(colors);
-    } else if (IsCurves(id)) {
-      Curve* curve = (Curve*)_prims[id].geom;
-      pxr::VtArray<pxr::GfVec3f> colors(curve->GetNumPoints());
-      for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-      return pxr::VtValue(colors);
-    }
+    pxr::VtArray<pxr::GfVec3f> colors(_prims[id].geom->GetNumPoints());
+    for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    return pxr::VtValue(colors);
   } else if (key == pxr::HdTokens->widths) {
-    return pxr::VtValue(RANDOM_0_1);// _prims[id].geom->GetRadius());
+    return pxr::VtValue(_prims[id].geom->GetRadius());
   }
   return pxr::VtValue();
 }
@@ -252,7 +240,7 @@ Scene::InitExec()
       
       TriangulateMesh(counts, indices, triangles);
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
-      PoissonSampling(0.1, 200, positions, normals, triangles, samples);
+      PoissonSampling(0.1, 20000, positions, normals, triangles, samples);
 
       numStrands += samples.size();
 
@@ -298,7 +286,7 @@ Scene::UpdateExec(double time)
     pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
 
     pxr::VtArray<pxr::GfVec3f>& points = execPrim.second.geom->GetPositions();
-    //pxr::VtArray<float>& radii = execPrim.second.geom->GetRadius();
+    pxr::VtArray<float>& radii = execPrim.second.geom->GetRadius();
 
     const _Samples samples = _samplesMap[execPrim.first];
     for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
@@ -308,15 +296,14 @@ Scene::UpdateExec(double time)
       const pxr::GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
       const float tangentFactor = pxr::GfCos(position[2] * scale + time * frequency) * amplitude;
       points[sampleIdx * 4] = xform.Transform(position);
-      points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * length + bitangent * tangentFactor * 0.33);
-      points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * length + bitangent * tangentFactor * 0.66);
+      points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * length + bitangent * tangentFactor * 0.2);
+      points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * length + bitangent * tangentFactor * 0.6);
       points[sampleIdx * 4 + 3] = xform.Transform(position + normal * length + bitangent * tangentFactor);
-      /*
+      
       radii[sampleIdx * 4] = width * 1.f;
       radii[sampleIdx * 4 + 1] = width * 0.8f;
       radii[sampleIdx * 4 + 2] = width * 0.4f;
-      radii[sampleIdx * 4 + 3] = width * 0.2f;
-      */
+      radii[sampleIdx * 4 + 3] = width * 0.2f; 
     }
   }
 }

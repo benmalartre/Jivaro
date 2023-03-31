@@ -131,7 +131,7 @@ Delegate::GetShadingStyle(pxr::SdfPath const &id)
 pxr::HdDisplayStyle
 Delegate::GetDisplayStyle(pxr::SdfPath const& id)
 {
-    return pxr::HdDisplayStyle();
+  return pxr::HdDisplayStyle(1, false, true, false, true, false);
 }
 
 pxr::TfToken
@@ -144,7 +144,6 @@ Delegate::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue
 Delegate::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
-  std::cout << "get : " << id << ":" << key << std::endl;
   return _scene->Get(id, key);
 }
 
@@ -184,14 +183,14 @@ pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath cons
   pxr::HdInterpolation interpolation)
 {
   pxr::HdPrimvarDescriptorVector primvars;
-  if (interpolation == pxr::HdInterpolationConstant) {
-    primvars.emplace_back(pxr::HdTokens->widths, interpolation);
-  } else if (interpolation == pxr::HdInterpolationVertex) {
+  if (interpolation == pxr::HdInterpolationVertex) {
     primvars.emplace_back(pxr::HdTokens->points, interpolation,
       pxr::HdPrimvarRoleTokens->point);
-    
+
     primvars.emplace_back(pxr::HdTokens->displayColor, interpolation,
-      pxr::HdPrimvarRoleTokens->color); 
+      pxr::HdPrimvarRoleTokens->color);
+  } else if(interpolation == pxr::HdInterpolationVarying) {
+    primvars.emplace_back(pxr::HdTokens->widths, interpolation);
   }
 
   return primvars;
@@ -243,9 +242,9 @@ void Delegate::UpdateScene()
 {
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
-    tracker.MarkRprimDirty(prim.first, 
-      pxr::HdChangeTracker::Clean | 
-      pxr::HdChangeTracker::DirtyPoints | 
+    tracker.MarkRprimDirty(prim.first,
+      pxr::HdChangeTracker::Clean |
+      pxr::HdChangeTracker::DirtyPoints |
       pxr::HdChangeTracker::DirtyWidths |
       pxr::HdChangeTracker::DirtyPrimvar
     );
