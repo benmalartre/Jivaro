@@ -16,6 +16,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 Layout::Layout()
   : _view(NULL), _splitter(NULL), _width(0), _height(0)
 {
+  std::cout << "layout constructor" << std::endl;
 }
 
 Layout::~Layout()
@@ -70,9 +71,11 @@ void Layout::_Reset(Window* window)
 
 void Layout::_StandardLayout(Window* window) 
 {
+  std::cout << "standard layou ..." << std::endl;
   _Reset(window);
+
   View* mainView = window->SplitView(
-    window->GetMainView(), 0.5, true, View::LFIXED, 22);
+    _view, 0.5, true, View::LFIXED, 22);
   View* bottomView = window->SplitView(
     mainView->GetRight(), 0.9, true, false);
   //bottomView->Split(0.9, true, true);
@@ -123,11 +126,10 @@ void Layout::_StandardLayout(Window* window)
 
 void Layout::_RawLayout(Window* window) 
 {
-  if(window->GetMainView()) {
-    delete window->GetMainView();
-  }
+  _Reset(window);
+
   View* mainView = window->SplitView(
-    window->GetMainView(), 0.5, true, View::LFIXED, 100);
+    _view, 0.5, true, View::LFIXED, 100);
 
   View* viewportView = mainView->GetRight();
   View* graphView = mainView->GetLeft();

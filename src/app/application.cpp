@@ -185,6 +185,7 @@ void
 Application::SetLayout(short layout)
 {
   Window* window = GetActiveWindow();
+  std::cout << "set layout for window " << window << std::endl;
   window->SetLayout(layout);
 }
 
