@@ -69,6 +69,7 @@ Delegate::SamplePrimvar(pxr::SdfPath const& id,
   float* sampleTimes,
   pxr::VtValue* sampleValues)
 {
+  std::cout << "sample primvar " << id << ":" << key << std::endl;
   return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
     nullptr);
 }
@@ -202,10 +203,10 @@ pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath cons
     primvars.emplace_back(pxr::HdTokens->points, interpolation,
       pxr::HdPrimvarRoleTokens->point);
 
-    primvars.emplace_back(pxr::HdTokens->widths, interpolation);
-
     primvars.emplace_back(pxr::HdTokens->displayColor, interpolation,
       pxr::HdPrimvarRoleTokens->color);
+
+    primvars.emplace_back(pxr::HdTokens->widths, interpolation);
   }
 
   return primvars;
@@ -257,7 +258,7 @@ void Delegate::UpdateScene()
 {
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
-    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyPoints);
+    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyWidths);
   }
 }
 

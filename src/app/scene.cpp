@@ -190,9 +190,7 @@ Scene::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue
 Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
-  pxr::VtValue value;
   if (key == pxr::HdTokens->points) {
-    // Each of the prim types hold onto their points
     return pxr::VtValue(_prims[id].geom->GetPositions());
   } else if (key == pxr::HdTokens->displayColor) {
     if (IsMesh(id)) {
@@ -201,10 +199,16 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
       for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
       return pxr::VtValue(colors);
     }
+    else if (IsCurves(id)) {
+      Curve* curve = (Curve*)_prims[id].geom;
+      pxr::VtArray<pxr::GfVec3f> colors(curve->GetNumPoints());
+      for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+      return pxr::VtValue(colors);
+    }
   } else if (key == pxr::HdTokens->widths) {
     return pxr::VtValue(_prims[id].geom->GetRadius());
   }
-  return value;
+  return pxr::VtValue();
 }
 
 
@@ -268,6 +272,7 @@ Scene::InitExec()
   pxr::UsdStageWeakPtr stage = app->GetStage();
   if (!stage) return;
 
+
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::UsdPrim control = stage->DefinePrim(rootPrim.GetPath().AppendChild(pxr::TfToken("Controls")));
   control.CreateAttribute(pxr::TfToken("Length"), pxr::SdfValueTypeNames->Float).Set(4.f);
@@ -287,23 +292,26 @@ Scene::InitExec()
       _sourcesMap[curvePath] = { prim.GetPath(), pxr::HdChangeTracker::Clean };
       Curve* curve = AddCurve(curvePath);
       pxr::UsdGeomMesh usdMesh(prim);
-      pxr::VtArray<pxr::GfVec3f> positions;
-      usdMesh.GetPointsAttr().Get(&positions);
 
+      pxr::VtArray<pxr::GfVec3f> positions;
+      pxr::VtArray<pxr::GfVec3f> normals;
       pxr::VtArray<int> counts;
       pxr::VtArray<int> indices;
+      pxr::VtArray<Triangle> triangles;
+      pxr::VtArray<Sample> samples;
+
+      usdMesh.GetPointsAttr().Get(&positions);
       usdMesh.GetFaceVertexCountsAttr().Get(&counts);
       usdMesh.GetFaceVertexIndicesAttr().Get(&indices);
-      pxr::VtArray<Triangle> triangles;
+      
       TriangulateMesh(counts, indices, triangles);
-      pxr::VtArray<pxr::GfVec3f> normals;
       ComputeVertexNormals(positions, counts, indices, triangles, normals);
-      pxr::VtArray<Sample> samples;
       PoissonSampling(0.1, 12000, positions, normals, triangles, samples);
+
       numStrands += samples.size();
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      curve->MaterializeSamples(samples, 4, &positions[0], &normals[0]);
+      curve->MaterializeSamples(samples, 4, &positions[0], &normals[0], 0.1);
       _samplesMap[curvePath] = samples;
     }
   }
@@ -345,7 +353,7 @@ Scene::UpdateExec(double time)
 
     pxr::VtArray<pxr::GfVec3f>& points = execPrim.second.geom->GetPositions();
     pxr::VtArray<float>& radii = execPrim.second.geom->GetRadius();
-    execPrim.second.geom->GetRadius();
+
     const _Samples samples = _samplesMap[execPrim.first];
     for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
       const pxr::GfVec3f& normal = samples[sampleIdx].GetNormal(&normals[0]);
@@ -358,10 +366,10 @@ Scene::UpdateExec(double time)
       points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * length + bitangent * tangentFactor * 0.66);
       points[sampleIdx * 4 + 3] = xform.Transform(position + normal * length + bitangent * tangentFactor);
 
-      radii[sampleIdx * 4] = width * 1.f;
-      radii[sampleIdx * 4 + 1] = width * 0.8f;
-      radii[sampleIdx * 4 + 2] = width * 0.4f;
-      radii[sampleIdx * 4 + 3] = width * 0.2f;
+      radii[sampleIdx * 4] = RANDOM_0_1;// width * 1.f;
+      radii[sampleIdx * 4 + 1] = RANDOM_0_1;// width * 0.8f;
+      radii[sampleIdx * 4 + 2] = RANDOM_0_1;// width * 0.4f;
+      radii[sampleIdx * 4 + 3] = RANDOM_0_1;// width * 0.2f;
     }
   }
 }

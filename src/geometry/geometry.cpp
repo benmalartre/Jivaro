@@ -27,8 +27,8 @@ Geometry::Geometry(const Geometry* other, short type, bool normalize)
   _type = type;
 
   _positions = other->_positions;
-  //_points = other->_points;
   _normals = other->_positions;
+  _radius = other->_radius;
 
   _bbox = other->_bbox;
 
@@ -67,14 +67,6 @@ Geometry::Normalize()
     position *= invRMax;
   }
 }
-
-/*
-Point
-Geometry::GetPoint(uint32_t index) const
-{
-  return _points[index];
-}
-*/
 
 pxr::GfVec3f 
 Geometry::GetPosition(uint32_t index) const
@@ -138,12 +130,7 @@ Geometry::Init(const pxr::VtArray<pxr::GfVec3f>& positions)
   size_t numPoints = positions.size();
   _positions = positions;
   _normals = positions;
-  /*
-  _points.resize(numPoints);
-  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    _points[pointIdx] = Point(pointIdx, 1.f);
-  }
-  */
+  _radius.resize(numPoints);
 }
 
 void

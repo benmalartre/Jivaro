@@ -179,7 +179,7 @@ Curve::SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
 
 void
 Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N, 
-  const pxr::GfVec3f* positions, const pxr::GfVec3f* normals)
+  const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, float width)
 {
   _numCurves = samples.size();
   _cvCounts.resize(_numCurves);
@@ -187,7 +187,7 @@ Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
   _radius.resize(N * _numCurves);
   _positions.resize(N * _numCurves);
 
-  for (size_t s = 0; s < samples.size(); ++s) {
+  for (size_t s = 0; s < _numCurves; ++s) {
     const pxr::GfVec3f& origin = samples[s].GetPosition(positions);
     const pxr::GfVec3f& normal = samples[s].GetNormal(normals);
     const pxr::GfVec3f& tangent = samples[s].GetTangent(positions, normals);
@@ -197,13 +197,11 @@ Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
     _positions[s * 4 + 2] = origin + normal * 0.5 + tangent * 0.66;
     _positions[s * 4 + 3] = origin + normal + tangent;
 
-    _radius[s * 4] = 0.1;
-    _radius[s * 4 + 1] = 0.08;
-    _radius[s * 4 + 2] = 0.04;
-    _radius[s * 4 + 3] = 0.02;
-
+    _radius[s * 4] = width;
+    _radius[s * 4 + 1] = width * 0.8;
+    _radius[s * 4 + 2] = width * 0.4;
+    _radius[s * 4 + 3] = width * 0.2;
   }
 }
-
 
 JVR_NAMESPACE_CLOSE_SCOPE

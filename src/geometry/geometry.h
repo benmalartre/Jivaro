@@ -95,7 +95,7 @@ protected:
 
   // bounding box
   pxr::GfBBox3d                       _bbox;
-  bool _initialized;
+  bool                                _initialized;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
