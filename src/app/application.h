@@ -112,6 +112,7 @@ public:
   void AddEngine(Engine* engine);
   void RemoveEngine(Engine* engine);
   std::vector<Engine*> GetEngines() { return _engines; };
+  Engine* GetActiveEngine();
   void SetActiveViewport(ViewportUI* viewport);
   void DirtyAllEngines();
 
@@ -147,16 +148,9 @@ private:
   Window*                           _activeWindow;
   Window*                           _focusWindow;
   Selection                         _selection;
-  bool                              _needCaptureFramebuffers;
 
   // uis
   ViewportUI*                       _viewport;
-  GraphEditorUI*                    _graph;
-  LayersUI*                         _layers;
-  ExplorerUI*                       _explorer;
-  TimelineUI*                       _timeline; 
-  PropertyUI*                       _property;
-  CurveEditorUI*                    _animationEditor;
   PopupUI*                          _popup;
 
   // time

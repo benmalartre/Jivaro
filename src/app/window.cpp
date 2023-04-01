@@ -447,6 +447,20 @@ Window::DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& 
   }
 }
 
+void
+Window::InvalidateViews()
+{
+  std::cout << "invalidate views" << std::endl;
+  std::cout << "num leaves : " << _leaves.size() << std::endl;
+  _activeView = _hoveredView = _activeLeaf = NULL;
+
+  _splitter->Resize(GetWidth(), GetHeight());
+  std::cout << "splittre resized" << std::endl;
+  CollectLeaves();
+  std::cout << "num leaves : " << _leaves.size() << std::endl;
+}
+
+
 // get context version infos
 //----------------------------------------------------------------------------
 void 
@@ -487,6 +501,7 @@ Window::SetGLContext()
 void 
 Window::Draw()
 {
+  std::cout << "window draw" << std::endl;
   if (!_valid || _idle)return;
   SetGLContext();
   glBindVertexArray(_vao);
@@ -511,6 +526,7 @@ Window::Draw()
 
   glFlush();
   glFinish();
+  std::cout << "window draw end" << std::endl;
 }
 
 // draw

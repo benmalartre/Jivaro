@@ -54,8 +54,7 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
+  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr), _execute(false)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _activeWindow = _mainWindow;
@@ -64,8 +63,7 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
+  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr), _execute(false)
 {
   _mainWindow = CreateFullScreenWindow();
   _activeWindow = _mainWindow;
@@ -200,12 +198,62 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
   _layer = stage->GetRootLayer();
 }
 
+static void _RecurseSplitRandomLayout(View* view, size_t depth, size_t maxDepth)
+{
+  if (depth > maxDepth)return;
+  view->Split(RANDOM_0_1, rand() % 2);
+  _RecurseSplitRandomLayout(view->GetLeft(), depth + 1, maxDepth);
+  _RecurseSplitRandomLayout(view->GetRight(), depth + 1, maxDepth);
+}
+
+static void _BaseLayout(Window* window)
+{
+  window->SetGLContext();
+
+  View* mainView = window->GetMainView();
+  mainView->DeleteChildren();
+
+  int width, height;
+  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
+
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
+  View* menuView = mainView->GetLeft();
+  menuView->SetTabed(false);
+
+  window->Resize(width, height);
+  new MenuUI(menuView);
+}
+
+static void _RandomLayout(Window* window)
+{
+  window->SetGLContext();
+
+  View* mainView = window->GetMainView();
+  mainView->DeleteChildren();
+
+  int width, height;
+  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
+
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
+  View* menuView = mainView->GetLeft();
+  menuView->SetTabed(false);
+
+  window->Resize(width, height);
+  new MenuUI(menuView);
+
+  View* mosaic = mainView->GetRight();
+  _RecurseSplitRandomLayout(mosaic, 0, 3);
+}
+
 static void _StandardLayout(Window* window)
 {
   window->SetGLContext();
+
+  View* mainView = window->GetMainView();
+  mainView->DeleteChildren();
+
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
-  View* mainView = window->GetMainView();
   window->SplitView(mainView, 0.5, true, View::LFIXED, 22);
 
   View* bottomView = mainView->GetRight();
@@ -248,10 +296,15 @@ static void _StandardLayout(Window* window)
 
 static void _RawLayout(Window* window)
 {
+  std::cout << "raw layout" << std::endl;
   window->SetGLContext();
+
+  View* mainView = window->GetMainView();
+  mainView->DeleteChildren();
+
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
-  View* mainView = window->GetMainView();
+
   window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
   View* menuView = mainView->GetLeft();
   menuView->SetTabed(false);
@@ -262,28 +315,34 @@ static void _RawLayout(Window* window)
   View* viewportView = middleView->GetLeft();
   View* timelineView = middleView->GetRight();
 
+  std::cout << "view splitted" << std::endl;
+  window->InvalidateViews();
   window->Resize(width, height);
+
+  std::cout << "window resize" << std::endl;
   new MenuUI(menuView);
   new ViewportUI(viewportView);
   new TimelineUI(timelineView);
-
-
+  std::cout << "raw layout end" << std::endl;
 }
 
 void
 Application::SetLayout(Window*  window, short layout)
 {
-  View* mainView = window->GetMainView();
-  mainView->DeleteChildren();
-  window->CollectLeaves();
-  window->ForceRedraw();
-  /*
-  GetApplication()->AddDeferredCommand(
-    std::bind(&Window::Draw, window)
-  );
-  */
-  if (layout == 1)_RawLayout(window);
-  else _StandardLayout(window);
+  if (layout == 0) {
+    std::cout << " add base layout command" << std::endl;
+    _BaseLayout(window);
+  } else if (layout == 1) {
+    std::cout << " add raw layout command" << std::endl;
+    _RawLayout(window);
+  }  else if(layout == 2) {
+    std::cout << " add standard layout command" << std::endl;
+    _StandardLayout(window);
+  }
+  else {
+    _RandomLayout(window);
+  }
+  std::cout << " set layout ok" << std::endl;
 }
 
 // init application
@@ -510,6 +569,7 @@ Application::Term()
 bool 
 Application::Update()
 {
+  std::cout << "aoolication update" << std::endl;
   ExecuteDeferredCommands();
 
   /*
@@ -532,15 +592,17 @@ Application::Update()
     if(!_time.IsPlaying())
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+  std::cout << "get time" << std::endl;
 
   glfwPollEvents();
 
   _time.ComputeFramerate(glfwGetTime());
   if (_time.IsPlaying()) {
     if (_time.PlayBack()) {
-      if (_viewport)_viewport->GetEngine()->SetDirty(true);
+      GetActiveEngine()->SetDirty(true);
     }
   }
+  std::cout << "set engine dirty" << std::endl;
   
   // draw popup
   if (_popup) {
@@ -555,6 +617,8 @@ Application::Update()
     if (!_mainWindow->Update()) return false;
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
+
+  std::cout << "aoolication update end" << std::endl;
 
   
     
@@ -602,6 +666,11 @@ void Application::DirtyAllEngines()
   for (auto& engine : _engines) {
     engine->SetDirty(true);
   }
+}
+
+Engine* Application::GetActiveEngine()
+{
+  if (_viewport)return _viewport->GetEngine();
 }
 
 void 

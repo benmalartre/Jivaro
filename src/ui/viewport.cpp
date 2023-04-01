@@ -94,10 +94,15 @@ ViewportUI::ViewportUI(View* parent)
 // destructor
 ViewportUI::~ViewportUI()
 {
+  Application* app = GetApplication();
+  
   if(_rendererNames)delete[] _rendererNames;
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
-  if(_engine) delete _engine;
+  if (_engine) {
+    app->RemoveEngine(_engine);
+    delete _engine;
+  }
 }
 
 void ViewportUI::Init()

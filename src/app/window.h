@@ -128,6 +128,7 @@ public:
   View* GetViewUnderMouse(int x, int y);
   void DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
+  void InvalidateViews();
   
   // draw
   void SetGLContext();
