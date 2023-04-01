@@ -1,14 +1,5 @@
+#include "../ui/preferences.h"
 
-#include <iostream>
-#include <array>
-#include <utility>
-
-#include <pxr/base/trace/reporter.h>
-#include <pxr/base/trace/trace.h>
-#include <pxr/base/tf/debug.h>
-
-#include "../ui/debug.h"
-#include "../app/view.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

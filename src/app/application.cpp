@@ -200,50 +200,39 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
   _layer = stage->GetRootLayer();
 }
 
-void
-Application::SetLayout(Window*  window, short layout)
-{
-  View* mainView = window->GetMainView();
-  mainView->DeleteChildren();
-  window->CollectLeaves();
-  window->ForceRedraw();
-}
-
 static void _StandardLayout(Window* window)
 {
   window->SetGLContext();
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
-  View* mainView = window->SplitView(
-    window->GetMainView(), 0.5, true, View::LFIXED, 22);
-  View* bottomView = window->SplitView(
-    mainView->GetRight(), 0.9, true, false);
-  //bottomView->Split(0.9, true, true);
+  View* mainView = window->GetMainView();
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 22);
+
+  View* bottomView = mainView->GetRight();
+  window->SplitView(bottomView, 0.9, true, false);
+
   View* timelineView = bottomView->GetRight();
   timelineView->SetTabed(false);
-  View* centralView = window->SplitView(
-    bottomView->GetLeft(), 0.6, true);
+
+  View* centralView = bottomView->GetLeft();
+  window->SplitView(centralView, 0.6, true);
+
   View* middleView = centralView->GetLeft();
   View* topView = mainView->GetLeft();
   topView->SetTabed(false);
 
   window->SplitView(middleView, 0.9, false);
 
-  View* workingView = window->SplitView(
-    middleView->GetLeft(), 0.15, false);
+  View* workingView = middleView->GetLeft();
+  window->SplitView(workingView, 0.15, false);
+
   View* propertyView = middleView->GetRight();
-  View* leftTopView = window->SplitView(
-    workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
+  View* leftTopView = workingView->GetLeft();
+  window->SplitView(leftTopView, 0.1, false, View::LFIXED, 32);
+
   View* toolView = leftTopView->GetLeft();
   toolView->SetTabed(false);
   View* explorerView = leftTopView->GetRight();
-  /*
-  _mainWindow->SplitView(stageView, 0.25, true);
-  View* layersView = stageView->GetLeft();
-  View* explorerView = stageView->GetRight();
-  */
-
-
   View* viewportView = workingView->GetRight();
   View* graphView = centralView->GetRight();
 
@@ -255,7 +244,46 @@ static void _StandardLayout(Window* window)
   new MenuUI(topView);
   new ToolbarUI(toolView, true);
   new ExplorerUI(explorerView);
+}
 
+static void _RawLayout(Window* window)
+{
+  window->SetGLContext();
+  int width, height;
+  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
+  View* mainView = window->GetMainView();
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
+  View* menuView = mainView->GetLeft();
+  menuView->SetTabed(false);
+
+  View* middleView = mainView->GetRight();
+  window->SplitView(middleView, 0.5, true, View::RFIXED, 64);
+
+  View* viewportView = middleView->GetLeft();
+  View* timelineView = middleView->GetRight();
+
+  window->Resize(width, height);
+  new MenuUI(menuView);
+  new ViewportUI(viewportView);
+  new TimelineUI(timelineView);
+
+
+}
+
+void
+Application::SetLayout(Window*  window, short layout)
+{
+  View* mainView = window->GetMainView();
+  mainView->DeleteChildren();
+  window->CollectLeaves();
+  window->ForceRedraw();
+  /*
+  GetApplication()->AddDeferredCommand(
+    std::bind(&Window::Draw, window)
+  );
+  */
+  if (layout == 1)_RawLayout(window);
+  else _StandardLayout(window);
 }
 
 // init application
@@ -517,7 +545,7 @@ Application::Update()
   // draw popup
   if (_popup) {
     Window* window = _popup->GetView()->GetWindow();
-    window->Draw(_popup);
+    window->DrawPopup(_popup);
     if (_popup->IsDone() || _popup->IsCancel()) {
       _popup->Terminate();
       delete _popup;

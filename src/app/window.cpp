@@ -516,7 +516,7 @@ Window::Draw()
 // draw
 //----------------------------------------------------------------------------
 void
-Window::Draw(PopupUI* popup)
+Window::DrawPopup(PopupUI* popup)
 {
   if (!_valid || _idle)return;
   SetGLContext();
