@@ -74,7 +74,7 @@ public:
   short GetType() { return _type; };
 
   // get parent window
-  Window* GetWindow();
+  virtual Window* GetWindow();
 
   // get the parent view
   View* GetView() { return _parent; };

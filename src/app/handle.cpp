@@ -20,16 +20,6 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
-// HELPERS
-//==================================================================================
-void _GetHandleTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi, 
-  ManipXformVectors& vectors, pxr::UsdTimeCode& time)
-{
-  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale, 
-    &vectors.pivot, &vectors.rotOrder, time);
-}
-
-//==================================================================================
 // BASE HANDLE IMPLEMENTATION
 //==================================================================================
 void 

@@ -6,6 +6,7 @@
 
 #include "../ui/propertyEditor.h"
 #include "../ui/utils.h"
+#include "../geometry/utils.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
@@ -119,8 +120,8 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
     ManipTargetDescList targets(1);
     ManipTargetDesc& target = targets[0];
     target.path = _prim.GetPath();
-    _GetHandleTargetXformVectors(xformApi, target.previous, time);
-    _GetHandleTargetXformVectors(xformApi, target.current, time);
+    _GetManipTargetXformVectors(xformApi, target.previous, time);
+    _GetManipTargetXformVectors(xformApi, target.current, time);
 
     Window* window = _parent->GetWindow();
     

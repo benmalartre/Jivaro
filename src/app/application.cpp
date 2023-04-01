@@ -200,9 +200,8 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
 
 static void _RecurseSplitRandomLayout(View* view, size_t depth, size_t maxDepth)
 {
-  std::cout << "recurse split..." << std::endl;
   if (depth > maxDepth)return;
-  view->Split(RANDOM_0_1, rand() % 2);
+  view->Split(RANDOM_0_1, (rand() % 100) > 50);
   _RecurseSplitRandomLayout(view->GetLeft(), depth + 1, maxDepth);
   _RecurseSplitRandomLayout(view->GetRight(), depth + 1, maxDepth);
 }

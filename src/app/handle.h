@@ -52,9 +52,6 @@ static float HANDLE_SIZE = 100.f;
 class Camera;
 class Geometry;
 
-void _GetHandleTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
-  ManipXformVectors& vectors, pxr::UsdTimeCode& time);
-
 struct HandleTargetGeometryDesc {
   Geometry* geometry;
   std::vector<int> elements;

@@ -13,6 +13,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 #define SPLITTER_THICKNESS 2.0
 
+class Window;
 class SplitterUI : public BaseUI
 {
 public:
@@ -24,10 +25,10 @@ public:
     LEFT = 8
   };
  
-  SplitterUI(View* parent);
+  SplitterUI(Window* window);
   ~SplitterUI();
 
-  int* GetPixels(){return _pixels;};
+  const int* GetPixels(){return _pixels;};
   int GetWidth() override {return _width;};
   int GetHeight() override {return _height;};
   void BuildMap(int width, int height);
@@ -38,6 +39,7 @@ public:
   void SetVerticalCursor(){_cursor = ImGuiMouseCursor_ResizeNS;};
   void SetDefaultCursor(){_cursor = ImGuiMouseCursor_Arrow;};
 
+  Window* GetWindow() override;
   void Resize(int width, int height);
   bool Draw() override;
   
@@ -51,6 +53,7 @@ private:
   bool                    _valid;
   int                     _cursor;
   View*                   _hovered;
+  Window*                 _window;
   static ImGuiWindowFlags _flags;
 };
 
