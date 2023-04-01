@@ -61,6 +61,7 @@ public:
     bool                        enabled;
     Callback                    callback;
     pxr::VtArray<pxr::VtValue>  args;
+    std::function<void()>       func;
 
     Item(MenuUI* ui, const std::string label, bool selected, bool enabled, 
       Callback cb=NULL, const pxr::VtArray<pxr::VtValue>& args= pxr::VtArray<pxr::VtValue>());

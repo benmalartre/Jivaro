@@ -31,7 +31,11 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoBackground |
   ImGuiWindowFlags_NoScrollbar;
 
-
+void TestOneTwo(int one, int two)
+{
+  std::cout << "one : " << one << std::endl;
+  std::cout << "two : " << two << std::endl;
+}
 MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enabled,
   Callback cb, const pxr::VtArray<pxr::VtValue>& args)
   : ui(ui)
@@ -42,6 +46,7 @@ MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enab
   , callback(cb)
   , args(args)
 {
+  func = std::bind(TestOneTwo, 1, 666);
 }
 
 template<typename... Args>
@@ -88,9 +93,11 @@ template<typename... Args>
 MenuUI::Item& MenuUI::Item::Add(const std::string label,
   bool selected, bool enabled, Callback cb, Args... args)
 {
-  items.push_back(MenuUI::Item(ui, label, selected, enabled, cb, _UnpackVariadicParameters(args...)));
+  items.push_back(MenuUI::Item(ui, label, selected, enabled, cb, 
+    _UnpackVariadicParameters(args...)));
   return items.back();
 }
+
 
 pxr::GfVec2i MenuUI::Item::ComputeSize()
 {
@@ -132,9 +139,8 @@ bool MenuUI::Item::Draw()
     } 
   }
   else {
-    if (ImGui::MenuItem(label.c_str()) && callback) {
-      std::cout << "num arguments : " << args.size() << std::endl;
-      callback(args[0].Get<int>(), args[1].Get<int>(), args[2].Get<int>());
+    if (ImGui::MenuItem(label.c_str()) && func) {
+      func();
       window->ForceRedraw();
       ui->_current = NULL;
     } 
@@ -316,7 +322,7 @@ MenuUI::MenuUI(View* parent)
   MenuUI::Item& testItem = Add("Test", false, true, NULL);
   testItem.Add("CreatePrim", false, true, (Callback)CreatePrimCallback);
   testItem.Add("Triangulate", false, true, (Callback)TriangulateCallback);
-  /*
+  
   MenuUI::Item& subItem = testItem.Add("SubMenu", false, true, NULL);
   subItem.Add("Sub0", false, true, NULL);
   subItem.Add("Sub1", false, true, NULL);
@@ -330,7 +336,7 @@ MenuUI::MenuUI(View* parent)
   MenuUI::Item& layoutItem = Add("Layout", false, true);
   layoutItem.Add("Standard", false, true, (Callback)SetLayoutCallback, GetWindow(), 0);
   layoutItem.Add("Raw", false, true, (Callback)SetLayoutCallback, GetWindow(), 1);
-  */
+  
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
 
