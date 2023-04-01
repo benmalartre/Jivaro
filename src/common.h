@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cinttypes>
 #include <bitset>
+#include <functional>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -74,6 +75,9 @@
 #define BITMASK_CHECK(x,y) ((x) & (y))
 
 constexpr const char * DecimalPrecision = "%.3f";
+
+// callback prototype
+using CALLBACK_FN = std::function<void()>;
 
 #endif // JVR_COMMON_H
 

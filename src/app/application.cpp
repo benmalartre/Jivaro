@@ -118,6 +118,7 @@ Application::SetPopup(PopupUI* popup)
   for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
 }
 
+/*
 void
 Application::SetPopupDeferred(PopupUI* popup)
 {
@@ -125,6 +126,8 @@ Application::SetPopupDeferred(PopupUI* popup)
   _popup = popup;
   _needCaptureFramebuffers = true;
 }
+*/
+
 
 void
 Application::UpdatePopup()
@@ -138,6 +141,13 @@ Application::UpdatePopup()
   _mainWindow->ForceRedraw();
   for (auto& childWindow : _childWindows)childWindow->ForceRedraw();
 }
+
+void
+Application::ExecuteDeferred(CALLBACK_FN fn)
+{
+  _deferred.push_back(fn);
+}
+
 
 // browse for file
 //----------------------------------------------------------------------------
@@ -183,10 +193,10 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
 void
 Application::SetLayout(Window*  window, short layout)
 {
-  std::cout << "set layout for window " << window << std::endl;
   View* mainView = window->GetMainView();
   mainView->DeleteChildren();
-  DirtyAllEngines();
+  window->CollectLeaves();
+  window->ForceRedraw();
 }
 
 static void _StandardLayout(Window* window)
@@ -462,11 +472,16 @@ Application::Term()
 bool 
 Application::Update()
 {
+  for (auto& deferred : _deferred)deferred();
+  _deferred.clear()
+
+  /*
   if (_needCaptureFramebuffers) {
     _mainWindow->CaptureFramebuffer();
     for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
     _needCaptureFramebuffers = false;
   }
+  */
   
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;

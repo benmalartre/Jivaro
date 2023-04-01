@@ -101,11 +101,11 @@ public:
   // popup
   PopupUI* GetPopup() { return _popup; };
   void SetPopup(PopupUI* popup);
-  void SetPopupDeferred(PopupUI* popup);
   void UpdatePopup();
 
   // tools
   void SetActiveTool(short tool);
+  void ExecuteDeferred(CALLBACK_FN);
 
   // engines
   void AddEngine(Engine* engine);
@@ -153,7 +153,7 @@ private:
   GraphEditorUI*                    _graph;
   LayersUI*                         _layers;
   ExplorerUI*                       _explorer;
-  TimelineUI*                       _timeline;
+  TimelineUI*                       _timeline; 
   PropertyUI*                       _property;
   CurveEditorUI*                    _animationEditor;
   PopupUI*                          _popup;
@@ -163,6 +163,7 @@ private:
 
   // command manager
   CommandManager                    _manager;
+  std::vector<CALLBACK_FN>          _deferred;
 
   // engines
   pxr::UsdStageCache                _stageCache;

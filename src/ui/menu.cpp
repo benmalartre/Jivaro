@@ -265,7 +265,6 @@ static void SetLayoutCallback(Window* window, short layout)
   static size_t currentLayout = 0;
   std::cout << "set layout callback " << std::endl;
   GetApplication()->SetLayout(window, layout);
-
 }
 
 static void CreatePrimCallback()

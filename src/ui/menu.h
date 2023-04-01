@@ -7,6 +7,7 @@
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>
 
+#include "../common.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
 
@@ -24,10 +25,10 @@ public:
     std::string                 label;
     bool                        selected;
     bool                        enabled;
-    UIUtils::CALLBACK_FN        callback;
+    CALLBACK_FN                 callback;
 
-    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, UIUtils::CALLBACK_FN cb=NULL);
-    Item& Add(const std::string label, bool selected, bool enabled, UIUtils::CALLBACK_FN cb=NULL);
+    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN cb=NULL);
+    Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb=NULL);
 
     bool Draw();
     pxr::GfVec2i ComputeSize();
@@ -42,7 +43,7 @@ public:
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsUnderBox();
 
-  Item& Add(const std::string label, bool selected, bool enabled, UIUtils::CALLBACK_FN cb=NULL);
+  Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb=NULL);
 
 private:
   std::vector<Item>       _items;

@@ -279,6 +279,7 @@ void View::DeleteChildren()
   if (_left)delete _left;
   if (_right) delete _right;
   _left = _right = NULL;
+  SetDirty();
 }
 
 // mouse positon relative to the view

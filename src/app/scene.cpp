@@ -183,7 +183,6 @@ Scene::GetRenderTag(pxr::SdfPath const& id)
   return pxr::HdRenderTagTokens->hidden;
 }
 
-
 pxr::VtValue
 Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
@@ -232,13 +231,14 @@ void _GenerateSample(pxr::UsdGeomMesh& mesh, pxr::VtArray<Sample>* samples, floa
   
 }
 
-static void _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
+static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
 {
   uint64_t T = CurrentTime();
   Application* app = GetApplication();
   pxr::UsdStageWeakPtr stage = app->GetStage();
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
+  pxr::HdDirtyBits bits = pxr::HdChangeTracker::Clean;
   int density;
   float length, amplitude, frequency, width, scale, radius;
   pxr::UsdPrim controlPrim = rootPrim.GetChild(pxr::TfToken("Controls"));
@@ -276,6 +276,7 @@ static void _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xfo
   T = CurrentTime();  
 
   size_t numCVs = 4 * samples.size();
+
   pxr::VtArray<pxr::GfVec3f> points(numCVs);
   pxr::VtArray<float> radii(numCVs);
   pxr::VtArray<int> cvCounts(samples.size());
@@ -305,10 +306,11 @@ static void _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xfo
   T = CurrentTime();
 
   curve->SetTopology(points, radii, cvCounts);
+
   uint64_t T6 = CurrentTime() - T;
   T = CurrentTime();
 
-  if (pxr::GfAbs(time) < 0.0000000001) {
+  if (!((int)pxr::GfAbs(time*60) % 60)) {
     std::cout << "----------------- stochatics: " << std::endl;
     std::cout << "nb samples " << samples.size() << std::endl;
     std::cout << "read : " << (double)(T1 * 1e-9) << " seconds" << std::endl;
@@ -348,7 +350,7 @@ Scene::InitExec()
       pxr::UsdGeomMesh usdMesh(prim);
 
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      _HairEmit(curve, usdMesh, xform, 0);
+      pxr::HdDirtyBits bits = _HairEmit(curve, usdMesh, xform, 0);
     }
   }
 }
@@ -366,6 +368,11 @@ Scene::UpdateExec(double time)
 
     pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
     _HairEmit((Curve*)execPrim.second.geom, usdMesh, xform, time);
+    execPrim.second.bits = pxr::HdChangeTracker::DirtyTopology;
+      /*pxr::HdChangeTracker::Clean |
+      pxr::HdChangeTracker::DirtyPoints |
+      pxr::HdChangeTracker::DirtyWidths |
+      pxr::HdChangeTracker::DirtyPrimvar;*/
   }
 }
 
