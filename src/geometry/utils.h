@@ -35,7 +35,7 @@ struct ManipTargetDesc {
 
 typedef std::vector<ManipTargetDesc> ManipTargetDescList;
 
-void _GetManipXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
+void _GetManipTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
   ManipXformVectors& vectors, pxr::UsdTimeCode& time);
 
 const double EPSILON = std::numeric_limits<double>::epsilon();

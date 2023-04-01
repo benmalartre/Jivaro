@@ -209,9 +209,8 @@ static void _RecurseSplitRandomLayout(View* view, size_t depth, size_t maxDepth)
 static void _BaseLayout(Window* window)
 {
   window->SetGLContext();
-
+  window->ClearViews();
   View* mainView = window->GetMainView();
-  mainView->DeleteChildren();
 
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
@@ -227,9 +226,8 @@ static void _BaseLayout(Window* window)
 static void _RandomLayout(Window* window)
 {
   window->SetGLContext();
-
+  window->ClearViews();
   View* mainView = window->GetMainView();
-  mainView->DeleteChildren();
 
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
@@ -248,9 +246,9 @@ static void _RandomLayout(Window* window)
 static void _StandardLayout(Window* window)
 {
   window->SetGLContext();
-
+  window->ClearViews();
   View* mainView = window->GetMainView();
-  mainView->DeleteChildren();
+
 
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
@@ -269,10 +267,10 @@ static void _StandardLayout(Window* window)
   View* menuView = mainView->GetLeft();
   menuView->SetTabed(false);
 
-  window->SplitView(middleView, 0.9, false);
+  window->SplitView(middleView, 0.8, false);
 
   View* workingView = middleView->GetLeft();
-  window->SplitView(workingView, 0.15, false);
+  window->SplitView(workingView, 0.25, false);
 
   View* propertyView = middleView->GetRight();
   View* leftTopView = workingView->GetLeft();
@@ -286,24 +284,20 @@ static void _StandardLayout(Window* window)
 
   window->Resize(width, height);
 
-  /*
   new GraphEditorUI(graphView);
   new ViewportUI(viewportView);
   new TimelineUI(timelineView);
-  */
   new MenuUI(menuView);
-  /*
   new ToolbarUI(toolView, true);
   new ExplorerUI(explorerView);
-  */
+  new PropertyEditorUI(propertyView);
 }
 
 static void _RawLayout(Window* window)
 {
   window->SetGLContext();
-
+  window->ClearViews();
   View* mainView = window->GetMainView();
-  mainView->DeleteChildren();
 
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
@@ -321,8 +315,8 @@ static void _RawLayout(Window* window)
   window->Resize(width, height);
 
   new MenuUI(menuView);
-  //new ViewportUI(viewportView);
-  //new TimelineUI(timelineView);
+  new ViewportUI(viewportView);
+  new TimelineUI(timelineView);
 }
 
 void

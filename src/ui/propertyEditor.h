@@ -1,5 +1,5 @@
-#ifndef JVR_UI_PROPERTY_H
-#define JVR_UI_PROPERTY_H
+#ifndef JVR_UI_PROPERTYEDITOR_H
+#define JVR_UI_PROPERTYEDITOR_H
 
 #include <pxr/usd/usd/prim.h>
 
@@ -10,11 +10,11 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class PropertyUI : public BaseUI
+class PropertyEditorUI : public BaseUI
 {
 public:
-  PropertyUI(View* parent);
-  ~PropertyUI()         override;
+  PropertyEditorUI(View* parent);
+  ~PropertyEditorUI()         override;
 
   void SetPrim(const pxr::UsdPrim& prim);
   pxr::UsdPrim& GetPrim() { return _prim; };
@@ -56,4 +56,4 @@ private:
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // JVR_UI_PROPERTY_H
+#endif // JVR_UI_PROPERTYEDITOR_H

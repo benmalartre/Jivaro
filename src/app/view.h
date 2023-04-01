@@ -73,7 +73,7 @@ public:
   inline View* GetRight(){return _right;};
   inline View* GetParent(){return _parent;};
   inline bool HasParent(){return _parent != NULL;};
-  void DeleteChildren();
+  void Clear();
 
   // tab
   ViewTabUI* GetTab() { return _tab; };

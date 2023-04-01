@@ -117,7 +117,7 @@ View::CreateUI(UIType type)
     _current = new DemoUI(this);
     break;
   case UIType::PROPERTYEDITOR:
-    _current = new PropertyUI(this);
+    _current = new PropertyEditorUI(this);
     break;
   case UIType::TEXTEDITOR:
     _current = new TextEditorUI(this);
@@ -270,10 +270,9 @@ View* View::GetSibling()
   return NULL;
 }
 
-void View::DeleteChildren()
+void View::Clear()
 {
-  std::cout << " dlete view : " << this << std::endl;
-  if (_left)delete _left;
+  if (_left) delete _left;
   if (_right) delete _right;
   _left = _right = NULL;
   SetFlag(LEAF);

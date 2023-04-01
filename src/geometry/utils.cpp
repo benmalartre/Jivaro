@@ -4,6 +4,16 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+//==================================================================================
+// HELPERS
+//==================================================================================
+void _GetManipTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
+  ManipXformVectors& vectors, pxr::UsdTimeCode& time)
+{
+  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
+    &vectors.pivot, &vectors.rotOrder, time);
+}
+
 void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, 
   const pxr::GfVec3f& b, const pxr::GfVec3f& c, float* u, float* v, float* w)
 {

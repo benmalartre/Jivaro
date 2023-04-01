@@ -25,6 +25,7 @@ SplitterUI::SplitterUI(Window* window)
   , _hovered(NULL)
   , _pixels(NULL)
   , _valid(false)
+  , _window(window)
 {
 };
 
@@ -36,24 +37,20 @@ SplitterUI::~SplitterUI()
 void 
 SplitterUI::BuildMap(int width, int height)
 {
-  std::cout << "build map start : " << width << "," << height << std::endl;
   // delete previous allocated memory
   if (_pixels)delete[]_pixels;
-  std::cout << "delete ol pixel" << std::endl;
+
   // reallocate memory according to new resolution
   size_t numPixels = width * height;
   _pixels = new int[numPixels];
   _valid = true;
   _width = width;
   _height = height;
-  std::cout << "allocate nw pixel" << std::endl;
   // fill with black
   memset((void*)&_pixels[0], 0, numPixels * sizeof(int));
-  std::cout << "memset pixel" << std::endl;
 
   // then for each leaf view assign an indexed color
   const std::vector<View*>& views = GetWindow()->GetLeaves();
-  std::cout << "num leaves : " << views.size() << std::endl;
   for (size_t viewIdx = 0; viewIdx < views.size(); ++viewIdx) {
     if (views[viewIdx]->GetFlag(View::LFIXED) || views[viewIdx]->GetFlag(View::RFIXED))
       continue;
@@ -64,7 +61,6 @@ SplitterUI::BuildMap(int width, int height)
       for (int x = sMin[0]; x < sMax[0]; ++x)
         _pixels[y * _width + x] = viewIdx;
   }
-  std::cout << "repaint done " << views.size() << std::endl;
 }
 
 // pick splitter
@@ -120,10 +116,7 @@ SplitterUI::GetViewByIndex(int index)
 void 
 SplitterUI::Resize(int width, int height)
 {
-  std::cout << "splitter resize start " << std::endl;
-  std::cout << "size : " << width << "," << height << std::endl;
   BuildMap(width, height);
-  std::cout << "splitter build map done" << std::endl;
 }
 
 Window*

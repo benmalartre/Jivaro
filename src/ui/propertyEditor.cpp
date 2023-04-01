@@ -16,31 +16,31 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-ImGuiWindowFlags PropertyUI::_flags = 
+ImGuiWindowFlags PropertyEditorUI::_flags = 
   ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_NoTitleBar |
   ImGuiWindowFlags_NoMove;
 
-PropertyUI::PropertyUI(View* parent)
+PropertyEditorUI::PropertyEditorUI(View* parent)
   : BaseUI(parent, UIType::PROPERTYEDITOR)
   , _focused(-1)
 {
 }
 
-PropertyUI::~PropertyUI()
+PropertyEditorUI::~PropertyEditorUI()
 {
 }
 
 void 
-PropertyUI::SetPrim(const pxr::UsdPrim& prim)
+PropertyEditorUI::SetPrim(const pxr::UsdPrim& prim)
 {
   if(prim.IsValid())_prim = prim;
   _initialized = false;
 }
 
 void 
-PropertyUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
+PropertyEditorUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 {
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
@@ -54,7 +54,7 @@ PropertyUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 }
 
 bool 
-PropertyUI::_DrawAssetInfo(const pxr::UsdPrim& prim) 
+PropertyEditorUI::_DrawAssetInfo(const pxr::UsdPrim& prim) 
 {
   pxr::VtDictionary assetInfo = prim.GetAssetInfo();
   if (assetInfo.empty())
@@ -103,7 +103,7 @@ static void DrawPropertyMiniButton(ImGuiID id=0)
 }
 
 void
-PropertyUI::_DrawAttributeTypeInfo(const UsdAttribute& attribute) 
+PropertyEditorUI::_DrawAttributeTypeInfo(const UsdAttribute& attribute) 
 {
   pxr::SdfValueTypeName attributeTypeName = attribute.GetTypeName();
   pxr::TfToken attributeRoleName = attribute.GetRoleName();
@@ -112,7 +112,7 @@ PropertyUI::_DrawAttributeTypeInfo(const UsdAttribute& attribute)
 }
 
 bool 
-PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
+PropertyEditorUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 {
   pxr::UsdGeomXformCommonAPI xformApi(_prim);
 
@@ -208,7 +208,7 @@ PropertyUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 
 
 VtValue 
-PropertyUI::_DrawAttributeValue(const UsdAttribute& attribute, 
+PropertyEditorUI::_DrawAttributeValue(const UsdAttribute& attribute, 
   const pxr::UsdTimeCode& timeCode) 
 {
   pxr::VtValue value;
@@ -222,7 +222,7 @@ PropertyUI::_DrawAttributeValue(const UsdAttribute& attribute,
 }
 
 void 
-PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute, 
+PropertyEditorUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute, 
   const pxr::UsdTimeCode& currentTime) 
 {
   const ImGuiStyle& style = ImGui::GetStyle();
@@ -262,7 +262,7 @@ PropertyUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
 }
 
 bool 
-PropertyUI::_DrawVariantSetsCombos(pxr::UsdPrim &prim) 
+PropertyEditorUI::_DrawVariantSetsCombos(pxr::UsdPrim &prim) 
 {
   /*
   int buttonID = 0;
@@ -320,7 +320,7 @@ PropertyUI::_DrawVariantSetsCombos(pxr::UsdPrim &prim)
 }
 
 bool 
-PropertyUI::Draw()
+PropertyEditorUI::Draw()
 {
   
   if (!_initialized)_initialized = true;
