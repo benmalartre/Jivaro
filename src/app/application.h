@@ -114,7 +114,7 @@ public:
   void SetActiveViewport(ViewportUI* viewport);
 
   // layout
-  void SetLayout(short layout);
+  void SetLayout(Window* window, short layout);
 
   // stage cache
   pxr::UsdStageRefPtr& GetStage(){return _stage;};

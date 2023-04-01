@@ -181,9 +181,8 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
 }
 
 void
-Application::SetLayout(short layout)
+Application::SetLayout(Window*  window, short layout)
 {
-  Window* window = GetActiveWindow();
   std::cout << "set layout for window " << window << std::endl;
 }
 

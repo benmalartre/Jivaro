@@ -18,14 +18,40 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Command;
 
+/*
+template <typename Func, typename A, typename ...Args> 
+struct Caller
+{
+  static void _Call(Func& f, A&& a, Args && ...args)
+  {
+    f(std::forward<A>(a));
+    Caller<Func, Args...>::_Call(f, std::forward<Args>(args)...);
+  }
+};
 
-typedef void(*Callback)(void*);
+template <typename Func, typename A> 
+struct Caller<Func, A>
+{
+  static void _Call(Func& f, A&& a)
+  {
+    f(std::forward<A>(a));
+  }
+};
+
+template <typename Func, typename ...Args>
+void Callback(Func& f, Args && ...args)
+{
+  Caller<Func, Args...>::_Call(f, std::forward<Args>(args)...);
+}
+
+*/
+
+typedef void(*Callback)(...);
 
 
 class MenuUI : public BaseUI
 {
 public:
-
   struct Item {
     MenuUI*                     ui;
     Item*                       parent;
@@ -34,11 +60,14 @@ public:
     bool                        selected;
     bool                        enabled;
     Callback                    callback;
-    void*                       args;
+    pxr::VtArray<pxr::VtValue>  args;
 
-    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, Callback cb, void* args);
+    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, 
+      Callback cb=NULL, const pxr::VtArray<pxr::VtValue>& args= pxr::VtArray<pxr::VtValue>());
 
-    Item& Add(const std::string label, bool selected, bool enabled, Callback cb=NULL, void* args=NULL);
+    Item& Add(const std::string label, bool selected, bool enabled, Callback cb = NULL);
+    template<typename... Args>
+    Item& Add(const std::string label, bool selected, bool enabled, Callback cb, Args... args);
 
     bool Draw();
     pxr::GfVec2i ComputeSize();
@@ -54,7 +83,8 @@ public:
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsUnderBox();
 
-  Item& Add(const std::string label, bool selected, bool enabled, Callback cb = NULL, void* args = NULL);
+  Item& Add(const std::string label, bool selected, bool enabled, 
+    Callback cb=NULL, const pxr::VtArray<pxr::VtValue>& args= pxr::VtArray<pxr::VtValue>());
 
 private:
   std::vector<Item>       _items;
