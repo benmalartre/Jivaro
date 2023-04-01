@@ -31,13 +31,8 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoBackground |
   ImGuiWindowFlags_NoScrollbar;
 
-void TestOneTwo(int one, int two)
-{
-  std::cout << "one : " << one << std::endl;
-  std::cout << "two : " << two << std::endl;
-}
-MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enabled,
-  Callback cb, const pxr::VtArray<pxr::VtValue>& args)
+
+MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enabled, Callback cb)
   : ui(ui)
   , parent(NULL)
   , label(label)
@@ -46,55 +41,12 @@ MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enab
   , callback(cb)
   , args(args)
 {
-  func = std::bind(TestOneTwo, 1, 666);
-}
-
-template<typename... Args>
-constexpr std::size_t _Length(Args...)
-{
-  return sizeof...(Args);
-}
-
-template <typename A, typename ...Args>
-struct _Unpack
-{
-  static void Process(pxr::VtArray<pxr::VtValue>& r, A&& a, Args && ...args)
-  {
-    r.push_back(pxr::VtValue(a));
-    _Unpack<Args...>::Process(r, std::forward<Args>(args)...);
-  }
-};
-
-template <typename A>
-struct _Unpack<A>
-{
-  static void Process(pxr::VtArray<pxr::VtValue>& r, A&& a)
-  {
-    r.push_back(pxr::VtValue(a));
-  }
-};
-
-template<typename... Args>
-pxr::VtArray<pxr::VtValue> _UnpackVariadicParameters(Args... args)
-{
-  pxr::VtArray<pxr::VtValue> unpack;
-  _Unpack<Args...>::Process(unpack, std::forward<Args>(args)...);
-  return unpack;
 }
 
 MenuUI::Item& MenuUI::Item::Add(const std::string label,
   bool selected, bool enabled, Callback cb)
 {
   items.push_back(MenuUI::Item(ui, label, selected, enabled, cb));
-  return items.back();
-}
-
-template<typename... Args>
-MenuUI::Item& MenuUI::Item::Add(const std::string label,
-  bool selected, bool enabled, Callback cb, Args... args)
-{
-  items.push_back(MenuUI::Item(ui, label, selected, enabled, cb, 
-    _UnpackVariadicParameters(args...)));
   return items.back();
 }
 
@@ -139,8 +91,8 @@ bool MenuUI::Item::Draw()
     } 
   }
   else {
-    if (ImGui::MenuItem(label.c_str()) && func) {
-      func();
+    if (ImGui::MenuItem(label.c_str()) && callback) {
+      callback();
       window->ForceRedraw();
       ui->_current = NULL;
     } 
@@ -148,8 +100,7 @@ bool MenuUI::Item::Draw()
   return true;
 }
 
-static void OpenFileCallback(int i, int j, int k) {
-  std::cout << i << "," << j << "," << k << std::endl;
+static void OpenFileCallback() {
   std::string folder = GetInstallationFolder();
   const char* filters[] = {
     ".usd",
@@ -170,9 +121,8 @@ static void SaveFileCallback()
   GetApplication()->SaveScene();
 }
 
-static void NewFileCallback(int i, int j, int k)
+static void NewFileCallback()
 {
-  std::cout << i << "," << j << "," << k << std::endl;
   std::string folder = GetInstallationFolder();
   const char* filters[] = {
     ".usd",
@@ -301,8 +251,7 @@ static void FlattenGeometryCallback()
 }
 
 
-MenuUI::Item& MenuUI::Add(const std::string label, bool selected,
-  bool enabled, Callback cb, const pxr::VtArray<pxr::VtValue>& args)
+MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, Callback cb)
 {
   _items.push_back(MenuUI::Item(this, label, selected, enabled, cb));
   return _items.back();
@@ -314,14 +263,14 @@ MenuUI::MenuUI(View* parent)
   , _current(NULL)
 {
   MenuUI::Item& fileMenu = Add("File", false, true, NULL);
-
-  fileMenu.Add("Open", false, true, (Callback)OpenFileCallback, 1, 2, 3);
-  fileMenu.Add("Save", false, true, (Callback)SaveFileCallback, 7, 6, 5);
-  fileMenu.Add("New",  false, true, (Callback)NewFileCallback, 2, 2, 2);
+  
+  fileMenu.Add("Open", false, true, std::bind(OpenFileCallback));
+  fileMenu.Add("Save", false, true, std::bind(SaveFileCallback));
+  fileMenu.Add("New",  false, true, std::bind(NewFileCallback));
  
   MenuUI::Item& testItem = Add("Test", false, true, NULL);
-  testItem.Add("CreatePrim", false, true, (Callback)CreatePrimCallback);
-  testItem.Add("Triangulate", false, true, (Callback)TriangulateCallback);
+  testItem.Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
+  testItem.Add("Triangulate", false, true, std::bind(TriangulateCallback));
   
   MenuUI::Item& subItem = testItem.Add("SubMenu", false, true, NULL);
   subItem.Add("Sub0", false, true, NULL);
@@ -329,13 +278,13 @@ MenuUI::MenuUI(View* parent)
   subItem.Add("Sub2", false, true, NULL);
 
   MenuUI::Item& demoItem = Add("Demo", false, true);
-  demoItem.Add("Open Demo", false, true, (Callback)OpenDemoCallback);
-  demoItem.Add("Child Window", false, true, (Callback)OpenChildWindowCallback);
+  demoItem.Add("Open Demo", false, true, std::bind(OpenDemoCallback));
+  demoItem.Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
 
   static int layoutIdx = 0;
   MenuUI::Item& layoutItem = Add("Layout", false, true);
-  layoutItem.Add("Standard", false, true, (Callback)SetLayoutCallback, GetWindow(), 0);
-  layoutItem.Add("Raw", false, true, (Callback)SetLayoutCallback, GetWindow(), 1);
+  layoutItem.Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 0));
+  layoutItem.Add("Raw", false, true, std::bind(SetLayoutCallback, GetWindow(), 1));
   
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
