@@ -91,7 +91,6 @@ public:
   GLFWwindow* GetGlfwWindow(){return _window;};
   bool GetDebounce(){return _debounce;};
   void SetDebounce(bool debounce){_debounce=debounce;};
-  void CollectLeaves(View* view = NULL);
   const std::string& GetName() { return _name; };
 
   // imgui context
@@ -102,10 +101,6 @@ public:
   // fullscreen
   bool IsFullScreen(){return _fullscreen;};
   void SetFullScreen(bool fullscreen){_fullscreen = fullscreen;};
-
-  // children
-  //void AddChild(Window* child);
-  //void RemoveChild(Window* child);
 
   // size
   int GetWidth(){return _width;};
@@ -126,6 +121,8 @@ public:
   View* GetActiveView(){return _activeView;};
   View* GetHoveredView() { return _hoveredView; };
   View* GetViewUnderMouse(int x, int y);
+  void CollectLeaves(View* view=NULL);
+  const std::vector<View*>& GetLeaves();
   void DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   void InvalidateViews();

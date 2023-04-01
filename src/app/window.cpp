@@ -252,15 +252,18 @@ Window::Resize(unsigned width, unsigned height)
   _height = height;
 
   CollectLeaves(_mainView);
-  
+  std::cout << "leave collected !!!" << std::endl;
   _mainView->Resize(0, 0, _width, _height, true);
+  std::cout << "main view resize" << std::endl;
   _splitter->Resize(_width, _height);
+  std::cout << "splitter resize !!!" << std::endl;
 
   if(_width <= 0 || _height <= 0)_valid = false;
   else _valid = true;
 
   if (_fbo) glDeleteFramebuffers(1, &_fbo);
   if (_tex) glDeleteTextures(1, &_tex);
+  std::cout << "delete gl buffers" << std::endl;
 
   // setup background buffer for popup window
   glGenFramebuffers(1, &_fbo);
@@ -279,6 +282,7 @@ Window::Resize(unsigned width, unsigned height)
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  std::cout << "blable gl buffers" << std::endl;
 }
 
 void
@@ -401,10 +405,9 @@ Window::RemoveView(View* view)
 void 
 Window::CollectLeaves(View* view)
 {
-  if(view == NULL || view == _mainView) {
-    view = _mainView;
-    _leaves.clear();
-  }
+  std::cout << "collect leaves start" << std::endl;
+  if(view == NULL) view = _mainView;
+   _leaves.clear();
   if (view->GetFlag(View::LEAF)) {
     _leaves.push_back(view);
     view->SetDirty();
@@ -412,6 +415,7 @@ Window::CollectLeaves(View* view)
     if(view->GetLeft())CollectLeaves(view->GetLeft());
     if(view->GetRight())CollectLeaves(view->GetRight());
   }
+  std::cout << "collect leaves end" << std::endl;
 }
 
 // get view (leaf) under mouse
@@ -452,6 +456,12 @@ void
 Window::InvalidateViews()
 {
   _activeView = _hoveredView = _activeLeaf = NULL;
+}
+
+const std::vector<View*>&
+Window::GetLeaves()
+{
+  return _leaves;
 }
 
 // get context version infos

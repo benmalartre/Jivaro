@@ -30,7 +30,6 @@ public:
   int* GetPixels(){return _pixels;};
   int GetWidth() override {return _width;};
   int GetHeight() override {return _height;};
-  void RecurseBuildMap(View* view);
   void BuildMap(int width, int height);
   View* GetViewByIndex(int index);
   int Pick(int x, int y);
@@ -51,7 +50,6 @@ private:
   bool                    _drag;
   bool                    _valid;
   int                     _cursor;
-  std::vector<View*>      _views;
   View*                   _hovered;
   static ImGuiWindowFlags _flags;
 };
