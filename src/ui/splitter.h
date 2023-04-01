@@ -25,6 +25,7 @@ public:
     LEFT = 8
   };
  
+  SplitterUI() = delete;
   SplitterUI(Window* window);
   ~SplitterUI();
 

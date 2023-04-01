@@ -4,7 +4,6 @@
 
 #include <vector>
 #include "../common.h"
-#include "../ui/splitter.h"
 #include "../ui/utils.h"
 #include "../ui/tab.h"
 

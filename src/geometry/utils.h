@@ -35,16 +35,8 @@ struct ManipTargetDesc {
 
 typedef std::vector<ManipTargetDesc> ManipTargetDescList;
 
-//==================================================================================
-// HELPERS
-//==================================================================================
-static void
-_GetManipTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
-  ManipXformVectors& vectors, pxr::UsdTimeCode& time)
-{
-  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
-    &vectors.pivot, &vectors.rotOrder, time);
-}
+void _GetManipXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
+  ManipXformVectors& vectors, pxr::UsdTimeCode& time);
 
 const double EPSILON = std::numeric_limits<double>::epsilon();
 const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();

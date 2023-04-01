@@ -5,7 +5,6 @@
 #include "../ui/ui.h"
 #include "../ui/fonts.h"
 #include "../ui/utils.h"
-#include "../ui/splitter.h"
 #include "../app/tools.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
@@ -20,7 +19,7 @@ extern bool LEGACY_OPENGL;
 class UsdEmbreeContext;
 class Application;
 class View;
-class Splitter;
+class SplitterUI;
 class BaseUI;
 class PopupUI;
 
