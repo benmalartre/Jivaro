@@ -21,16 +21,16 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 
-ImGuiWindowFlags ViewportUI::_flags = 
-  ImGuiWindowFlags_None |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoCollapse |
-  ImGuiWindowFlags_NoNav |
-  ImGuiWindowFlags_NoScrollWithMouse |
-  ImGuiWindowFlags_NoScrollbar |
-  ImGuiWindowFlags_NoBackground;
+ImGuiWindowFlags ViewportUI::_flags =
+ImGuiWindowFlags_None |
+ImGuiWindowFlags_NoMove |
+ImGuiWindowFlags_NoResize |
+ImGuiWindowFlags_NoTitleBar |
+ImGuiWindowFlags_NoCollapse |
+ImGuiWindowFlags_NoNav |
+ImGuiWindowFlags_NoScrollWithMouse |
+ImGuiWindowFlags_NoScrollbar;/* |
+  ImGuiWindowFlags_NoBackground;*/
 
 
 static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target, 
@@ -498,25 +498,27 @@ bool ViewportUI::Draw()
       _toolTarget->Unbind();
       _toolTarget->Resolve();
     }
-
+    
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
     const float u = (float)GetWidth() / (float)window->GetWidth();
     const float v = 1.f - (float)GetHeight() / (float)window->GetHeight();
+
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0, 0, 0, 1 });
 
     ImGui::Begin(_name.c_str(), NULL, _flags);
     ImGui::SetWindowPos(min);
     ImGui::SetWindowSize(size);
   
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-
+    
     if (_drawTexId) {
        drawList->AddImage(
          (ImTextureID)(size_t)_drawTexId, 
          min, min + size, ImVec2(0, 1), 
          ImVec2(u, v));
     } 
-
+    
     if( shouldDrawTool && _toolTexId) {
       drawList->AddImage(
         (ImTextureID)(size_t)_toolTexId,
@@ -558,7 +560,8 @@ bool ViewportUI::Draw()
     //ImGui::PopFont();
     
     ImGui::End();
-
+    ImGui::PopStyleColor();
+  
     return GetView()->IsInteracting();
   }
   /*
