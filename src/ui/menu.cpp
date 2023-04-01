@@ -1,9 +1,11 @@
 #include <memory>
 #include <functional>
 #include <tuple>
+
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/primvar.h>
+
 #include "../common.h"
 #include "../utils/strings.h"
 #include "../ui/style.h"
@@ -15,6 +17,7 @@
 #include "../app/selection.h"
 #include "../app/notice.h"
 #include "../app/commands.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -100,6 +103,103 @@ bool MenuUI::Item::Draw()
   return true;
 }
 
+MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, Callback cb)
+{
+  _items.push_back(MenuUI::Item(this, label, selected, enabled, cb));
+  return _items.back();
+}
+
+// constructor
+MenuUI::MenuUI(View* parent)
+  : BaseUI(parent, UIType::MAINMENU)
+  , _current(NULL)
+{
+  MenuUI::Item& fileMenu = Add("File", false, true, NULL);
+
+  fileMenu.Add("Open", false, true, std::bind(OpenFileCallback));
+  fileMenu.Add("Save", false, true, std::bind(SaveFileCallback));
+  fileMenu.Add("New", false, true, std::bind(NewFileCallback));
+
+  MenuUI::Item& testItem = Add("Test", false, true, NULL);
+  testItem.Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
+  testItem.Add("Triangulate", false, true, std::bind(TriangulateCallback));
+
+  MenuUI::Item& subItem = testItem.Add("SubMenu", false, true, NULL);
+  subItem.Add("Sub0", false, true, NULL);
+  subItem.Add("Sub1", false, true, NULL);
+  subItem.Add("Sub2", false, true, NULL);
+
+  MenuUI::Item& demoItem = Add("Demo", false, true);
+  demoItem.Add("Open Demo", false, true, std::bind(OpenDemoCallback));
+  demoItem.Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
+
+  static int layoutIdx = 0;
+  MenuUI::Item& layoutItem = Add("Layout", false, true);
+  layoutItem.Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 0));
+  layoutItem.Add("Raw", false, true, std::bind(SetLayoutCallback, GetWindow(), 1));
+
+  _parent->SetFlag(View::DISCARDMOUSEBUTTON);
+}
+
+// destructor
+MenuUI::~MenuUI()
+{
+}
+
+void MenuUI::MouseButton(int button, int action, int mods)
+{
+  _parent->SetDirty();
+  if (action == GLFW_PRESS)
+    _parent->SetInteracting(true);
+  else if (action == GLFW_RELEASE)
+    _parent->SetInteracting(false);
+}
+
+void MenuUI::DirtyViewsUnderBox()
+{
+  if (_current) {
+    _pos = _current->ComputePos();
+    _size = _current->ComputeSize();
+  }
+  else {
+    _pos = pxr::GfVec2i(0, 0);
+    _size = pxr::GfVec2i(GetWidth(), 128);
+  }
+  _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
+  _parent->SetDirty();
+}
+
+// overrides
+bool MenuUI::Draw()
+{
+  const ImGuiStyle& style = ImGui::GetStyle();
+  if (!_parent->IsActive())_current = NULL;
+  ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
+
+  bool active = false;
+  if (ImGui::BeginMainMenuBar())
+  {
+    for (auto& item : _items) {
+      if (item.Draw())active = true;
+    }
+    ImGui::EndMainMenuBar();
+  }
+
+  bool dirty = _current || active;
+  if (dirty) { DirtyViewsUnderBox(); }
+
+
+  ImGui::PopStyleColor(3);
+
+  return _parent->IsInteracting() || ImGui::IsAnyItemHovered();
+
+}
+
+// --------------------------------------------------------------
+// Callbacks (maybe should live in another file)
+// --------------------------------------------------------------
 static void OpenFileCallback() {
   std::string folder = GetInstallationFolder();
   const char* filters[] = {
@@ -248,116 +348,6 @@ static void FlattenGeometryCallback()
       */
     }
   }
-}
-
-
-MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, Callback cb)
-{
-  _items.push_back(MenuUI::Item(this, label, selected, enabled, cb));
-  return _items.back();
-}
-
-// constructor
-MenuUI::MenuUI(View* parent) 
-  : BaseUI(parent, UIType::MAINMENU)
-  , _current(NULL)
-{
-  MenuUI::Item& fileMenu = Add("File", false, true, NULL);
-  
-  fileMenu.Add("Open", false, true, std::bind(OpenFileCallback));
-  fileMenu.Add("Save", false, true, std::bind(SaveFileCallback));
-  fileMenu.Add("New",  false, true, std::bind(NewFileCallback));
- 
-  MenuUI::Item& testItem = Add("Test", false, true, NULL);
-  testItem.Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
-  testItem.Add("Triangulate", false, true, std::bind(TriangulateCallback));
-  
-  MenuUI::Item& subItem = testItem.Add("SubMenu", false, true, NULL);
-  subItem.Add("Sub0", false, true, NULL);
-  subItem.Add("Sub1", false, true, NULL);
-  subItem.Add("Sub2", false, true, NULL);
-
-  MenuUI::Item& demoItem = Add("Demo", false, true);
-  demoItem.Add("Open Demo", false, true, std::bind(OpenDemoCallback));
-  demoItem.Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
-
-  static int layoutIdx = 0;
-  MenuUI::Item& layoutItem = Add("Layout", false, true);
-  layoutItem.Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 0));
-  layoutItem.Add("Raw", false, true, std::bind(SetLayoutCallback, GetWindow(), 1));
-  
-  _parent->SetFlag(View::DISCARDMOUSEBUTTON);
-}
-
-// destructor
-MenuUI::~MenuUI()
-{
-}
-/*
-template<typename Func, typename... Args>
-MenuUI::Item& AddItem2(const std::string label, const std::string shortcut, bool selected,
-  bool enabled, Func f, Args... args)
-{
-  _items.push_back(MenuUI::Item(this, label, shortcut, selected, enabled, func, a));
-  return _items.back();
-}
-
-MenuUI::Item& MenuUI::AddItem(const std::string label, const std::string shortcut,
-  bool selected, bool enabled, UIUtils::CALLBACK_FN func, const pxr::VtArray<pxr::VtValue> a)
-{
-  _items.push_back(MenuUI::Item(this, label, shortcut, selected, enabled, func, a));
-  return _items.back();
-}
-*/
-void MenuUI::MouseButton(int button, int action, int mods)
-{
-  _parent->SetDirty();
-  if (action == GLFW_PRESS)
-    _parent->SetInteracting(true);
-  else if (action == GLFW_RELEASE)
-    _parent->SetInteracting(false);
-}
-
-void MenuUI::DirtyViewsUnderBox()
-{
-  if (_current) {
-    _pos = _current->ComputePos();
-    _size = _current->ComputeSize();
-  }
-  else {
-    _pos = pxr::GfVec2i(0, 0);
-    _size = pxr::GfVec2i(GetWidth(), 128);
-  }
-  _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
-  _parent->SetDirty();
-}
-
-// overrides
-bool MenuUI::Draw()
-{
-  const ImGuiStyle& style = ImGui::GetStyle();
-  if (!_parent->IsActive())_current = NULL;
-  ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
-  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
-  ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
-
-  bool active = false;
-  if (ImGui::BeginMainMenuBar())
-  {
-    for (auto& item : _items) {
-      if(item.Draw())active = true;
-    }
-    ImGui::EndMainMenuBar();
-  }
-
-  bool dirty = _current || active;
-  if (dirty) {DirtyViewsUnderBox();}
-  
-  
-  ImGui::PopStyleColor(3);
-
-  return _parent->IsInteracting() || ImGui::IsAnyItemHovered();
-
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

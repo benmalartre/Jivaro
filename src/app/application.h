@@ -112,6 +112,7 @@ public:
   void RemoveEngine(Engine* engine);
   std::vector<Engine*> GetEngines() { return _engines; };
   void SetActiveViewport(ViewportUI* viewport);
+  void DirtyAllEngines();
 
   // layout
   void SetLayout(Window* window, short layout);

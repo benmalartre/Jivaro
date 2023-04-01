@@ -1,7 +1,9 @@
 #ifndef JVR_UI_MENU_H
 #define JVR_UI_MENU_H
+
 #include <vector>
 #include <functional>
+
 #include <pxr/base/vt/value.h>
 #include <pxr/base/vt/array.h>
 
@@ -52,6 +54,17 @@ private:
   pxr::GfVec2i            _pos;
   pxr::GfVec2i            _size;
 };
+
+
+static void OpenFileCallback();
+static void SaveFileCallback();
+static void NewFileCallback();
+static void OpenDemoCallback();
+static void OpenChildWindowCallback();
+static void SetLayoutCallback(Window* window, short layout);
+static void CreatePrimCallback();
+static void TriangulateCallback();
+static void FlattenGeometryCallback();
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

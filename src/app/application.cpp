@@ -184,6 +184,9 @@ void
 Application::SetLayout(Window*  window, short layout)
 {
   std::cout << "set layout for window " << window << std::endl;
+  View* mainView = window->GetMainView();
+  mainView->DeleteChildren();
+  _DirtyAllEngines();
 }
 
 static void _StandardLayout(Window* window)
@@ -542,9 +545,9 @@ Application::RemoveEngine(Engine* engine)
   }
 }
 
-static void _DirtyAllEngines(std::vector<Engine*>& engines)
+void Application::DirtyAllEngines()
 {
-  for (auto& engine : engines) {
+  for (auto& engine : _engines) {
     engine->SetDirty(true);
   }
 }
@@ -584,7 +587,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
     window->GetTool()->ResetSelection();
     window->ForceRedraw();
   }
-  _DirtyAllEngines(_engines);
+  _DirtyAllEngines();
 }
 
 void 
@@ -592,7 +595,7 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 {
   _selection.Clear();
   _manager.Clear();
-  _DirtyAllEngines(_engines);
+  _DirtyAllEngines();
 }
 
 void 
@@ -605,7 +608,7 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
     window->ForceRedraw();
   }
   
-  _DirtyAllEngines(_engines);
+  _DirtyAllEngines();
 }
 
 void
@@ -617,7 +620,7 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
     window->ForceRedraw();
     window->GetTool()->ResetSelection();
   }
-  _DirtyAllEngines(_engines);
+  _DirtyAllEngines();
 }
 
 void
@@ -695,7 +698,7 @@ Application::ToggleExec()
   _execute = 1 - _execute; 
   if (_execute)InitExec();
   else TerminateExec();
-  _DirtyAllEngines(_engines);
+  _DirtyAllEngines();
 };
 
 void 
