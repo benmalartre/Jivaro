@@ -957,10 +957,8 @@ GraphEditorUI::Draw()
   ImGui::SetWindowFontScale(1.0);
   ImGui::SetCursorPos(ImVec2(0, 0));
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    0, ICON_FA_RECYCLE, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)RefreshGraphCallback, this
-    );
+  UIUtils::AddIconButton(0, ICON_FA_RECYCLE, ICON_DEFAULT,
+    std::bind(RefreshGraphCallback, this));
   ImGui::SameLine();
 
   const pxr::GfVec2f mousePos = ImGui::GetMousePos() - _parent->GetMin();

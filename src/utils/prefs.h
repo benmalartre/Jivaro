@@ -2,24 +2,15 @@
 #define JVR_UTILS_PREFS_H
 
 #include "../common.h"
-#include <stdio.h>
-#include <string.h>
 
-#include <pxr/base/js/json.h>
-#include <pxr/base/js/value.h>
-#include <pxr/base/js/utils.h>
-#include <pxr/base/tf/token.h>
-#include <pxr/base/vt/value.h>
+#include <pxr/base/vt/dictionary.h>
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-struct PreferencesItem {
-  pxr::TfToken            _key;
-  pxr::VtValue            _value;
-};
-
 class Preferences {
+  using Catergorie = pxr::VtDictionary;
+
 public:
   Preferences();
   const std::string& GetRootFolder();

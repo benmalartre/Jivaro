@@ -35,19 +35,18 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoScrollbar;
 
 
-MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enabled, Callback cb)
+MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enabled, UIUtils::CALLBACK_FN cb)
   : ui(ui)
   , parent(NULL)
   , label(label)
   , selected(selected)
   , enabled(enabled)
   , callback(cb)
-  , args(args)
 {
 }
 
 MenuUI::Item& MenuUI::Item::Add(const std::string label,
-  bool selected, bool enabled, Callback cb)
+  bool selected, bool enabled, UIUtils::CALLBACK_FN cb)
 {
   items.push_back(MenuUI::Item(ui, label, selected, enabled, cb));
   return items.back();
@@ -103,7 +102,7 @@ bool MenuUI::Item::Draw()
   return true;
 }
 
-MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, Callback cb)
+MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, UIUtils::CALLBACK_FN cb)
 {
   _items.push_back(MenuUI::Item(this, label, selected, enabled, cb));
   return _items.back();

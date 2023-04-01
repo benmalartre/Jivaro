@@ -131,7 +131,7 @@ Delegate::GetShadingStyle(pxr::SdfPath const &id)
 pxr::HdDisplayStyle
 Delegate::GetDisplayStyle(pxr::SdfPath const& id)
 {
-  return pxr::HdDisplayStyle(2, false, true, false, true, false);
+  return pxr::HdDisplayStyle(1, false, true, false, true, false);
 }
 
 pxr::TfToken
@@ -246,8 +246,8 @@ void Delegate::UpdateScene()
     tracker.MarkRprimDirty(prim.first, 
       pxr::HdChangeTracker::Clean |
       pxr::HdChangeTracker::DirtyPoints |
-      pxr::HdChangeTracker::DirtyWidths /* |
-      pxr::HdChangeTracker::DirtyPrimvar*/
+      pxr::HdChangeTracker::DirtyWidths  |
+      pxr::HdChangeTracker::DirtyPrimvar
     );
   }
 }

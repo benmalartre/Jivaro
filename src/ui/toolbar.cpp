@@ -87,12 +87,12 @@ bool ToolbarButton::Draw()
   //ImGui::PushFont(window->GetRegularFont(0));
   bool clicked = false;
   if(toggable) {
-    if (UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN>(
+    if (UIUtils::AddCheckableIconButton(
       0, icon, enabled ? ICON_SELECTED : ICON_DEFAULT, func)) {
       enabled = 1 - enabled;
     }
   } else {
-    clicked = UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN>(
+    clicked = UIUtils::AddCheckableIconButton(
       0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
   }
   //ImGui::PopFont();

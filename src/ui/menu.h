@@ -17,8 +17,6 @@ class Command;
 class MenuUI : public BaseUI
 {
 public:
-  using Callback = std::function<void()>;
-
   struct Item {
     MenuUI*                     ui;
     Item*                       parent;
@@ -26,11 +24,10 @@ public:
     std::string                 label;
     bool                        selected;
     bool                        enabled;
-    pxr::VtArray<pxr::VtValue>  args;
-    Callback                    callback;
+    UIUtils::CALLBACK_FN        callback;
 
-    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, Callback cb=NULL);
-    Item& Add(const std::string label, bool selected, bool enabled, Callback cb=NULL);
+    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, UIUtils::CALLBACK_FN cb=NULL);
+    Item& Add(const std::string label, bool selected, bool enabled, UIUtils::CALLBACK_FN cb=NULL);
 
     bool Draw();
     pxr::GfVec2i ComputeSize();
@@ -45,7 +42,7 @@ public:
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsUnderBox();
 
-  Item& Add(const std::string label, bool selected, bool enabled, Callback cb=NULL);
+  Item& Add(const std::string label, bool selected, bool enabled, UIUtils::CALLBACK_FN cb=NULL);
 
 private:
   std::vector<Item>       _items;

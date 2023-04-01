@@ -95,9 +95,9 @@ void _XXX_CALLBACK__(int index)
 // TODO Share the code,
 static void DrawPropertyMiniButton(ImGuiID id=0)
 {
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
+  UIUtils::AddIconButton(
     id, ICON_FA_GEAR, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)_XXX_CALLBACK__, id);
+    std::bind(_XXX_CALLBACK__, id));
   ImGui::SameLine();
 }
 

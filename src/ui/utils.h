@@ -27,6 +27,7 @@
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/fonts.h"
+#include "../ui/utils.h"
 #include "../utils/icons.h"
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
@@ -44,33 +45,10 @@ const pxr::GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
 class View;
 class UIUtils {
 public:
-
-  struct _Callback {
-    std::function<void()> f;
-    void Execute() {
-      f();
-    }
-  };
-
-  template<typename Func, typename... Args>
-  struct _CallbackImpl : public Callback {
-    _CallbackImpl(Func func, Args... args) {
-      f = [func, args...]()
-      {
-        (func)(args...);
-      };
-    }
-  };
-
-  typedef std::unique_ptr<_Callback> Callback;
-
-  template<typename Func, typename... Args>
-  Callback RegisterCallback(Func func, Args&&... args) {
-    return std::make_unique(_CallbackImpl<Func, Args...>(func, args...));
-  }
-
   // callback prototype
-  typedef void(*CALLBACK_FN)(...);
+  using CALLBACK_FN = std::function<void()>;
+
+  //typedef void(*CALLBACK_FN)(...);
 
   static void HelpMarker(const char* desc);
 
@@ -85,20 +63,11 @@ public:
   template <typename MatrixType, int DataType, int Rows, int Cols>
   static pxr::VtValue AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
 
-  template<typename FuncT, typename ...ArgsT>
-  static void IconButton(const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddIconButton(const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
+  static void IconButton(const char* icon, short state, UIUtils::CALLBACK_FN func);
+  static bool AddIconButton(const char* icon, short state, UIUtils::CALLBACK_FN func);
+  static bool AddIconButton(ImGuiID id, const char* icon, short state, UIUtils::CALLBACK_FN func);
+  static bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, UIUtils::CALLBACK_FN func);
+  static bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, UIUtils::CALLBACK_FN func);
 
   static void AddPropertyMiniButton(const char* btnStr, int rowId, 
     const ImVec4& btnColor = ImVec4(0.0, 0.7, 0.0, 1.0));
@@ -123,34 +92,31 @@ void handleFunc(Func func, Args&&... args) {
 }
 
 
-template<typename Func, typename ...Args>
 void 
-UIUtils::IconButton(const char* icon, short state, Func func, Args... args)
+UIUtils::IconButton(const char* icon, short state, UIUtils::CALLBACK_FN func)
 {
   ImGui::BeginGroup();
-  ImGui::Button(icon, BUTTON_NORMAL_SIZE);
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))func();
   ImGui::EndGroup();
 }
 
-template<typename Func, typename ...Args>
 bool 
-UIUtils::AddIconButton(const char* icon, short state, Func func, Args... args)
+UIUtils::AddIconButton(const char* icon, short state, UIUtils::CALLBACK_FN func)
 {
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
-    func(args...);
+    func();
     return true;
   }
   return false;
 }
 
-template<typename Func, typename ...Args>
 bool 
-UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, Func func, Args... args)
+UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, UIUtils::CALLBACK_FN func)
 {
   ImGui::PushID(id);
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
-    func(args...);
+    func();
     ImGui::PopID();
     return true;
   }
@@ -159,15 +125,14 @@ UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, Func func, Arg
   return false;
 }
 
-template<typename Func, typename ...Args>
 bool 
-UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, Func func, Args... args)
+UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, UIUtils::CALLBACK_FN func)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushID(id);
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
-    func(args...);
+    func();
     ImGui::PopID();
     return true;
   }
@@ -176,9 +141,8 @@ UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, Fun
   return false;
 }
 
-template<typename Func, typename ...Args>
 bool 
-UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, Func func, Args... args)
+UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, UIUtils::CALLBACK_FN func)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
@@ -192,7 +156,7 @@ UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, Func 
   ImGui::PushID(id);
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
-    func(args...);
+    func();
     if(active) ImGui::PopStyleColor(3);
     ImGui::PopID();
     return true;

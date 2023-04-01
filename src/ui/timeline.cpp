@@ -191,43 +191,34 @@ void TimelineUI::MouseMove(int x, int y)
 
 void TimelineUI::DrawButtons()
 {
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)FirstFrameCallback, this
-    );
+  UIUtils::AddIconButton(0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
+    std::bind(FirstFrameCallback, this));
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)PreviousFrameCallback, this
-    );
+  UIUtils::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
+    std::bind(PreviousFrameCallback, this));
   ImGui::SameLine();
 
   if (!_playing) {
-    UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-      2, ICON_FA_PLAY , ICON_DEFAULT,
-      (UIUtils::CALLBACK_FN)PlaybackCallback, this);
+    UIUtils::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
+      std::bind(PlaybackCallback, this));
   } else {
-    UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-      2, ICON_FA_STOP , ICON_SELECTED,
-      (UIUtils::CALLBACK_FN)PlaybackCallback, this);
+    UIUtils::AddCheckableIconButton(2, ICON_FA_STOP , ICON_SELECTED,
+      std::bind(PlaybackCallback, this));
   }
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)NextFrameCallback, this);
+  UIUtils::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
+    std::bind(NextFrameCallback, this));
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-    4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)LastFrameCallback, this);
+  UIUtils::AddIconButton(4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
+    std::bind(LastFrameCallback, this));
   ImGui::SameLine();
 
-  UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-    5, ICON_FA_ROTATE,
+  UIUtils::AddCheckableIconButton(5, ICON_FA_ROTATE,
     _loop ? ICON_SELECTED : ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)LoopCallback, this);
+    std::bind(LoopCallback, this));
   ImGui::SameLine();
 }
 

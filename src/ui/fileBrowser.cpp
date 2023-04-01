@@ -138,11 +138,9 @@ void FileBrowserUI::_ResetSelected()
 
 void FileBrowserUI::_DrawPath()
 {
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, FileBrowserUI*>(
-    0,
-    ICON_FA_TRASH,
-    ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)&OnHomeCallback, this);
+  UIUtils::AddIconButton(0, ICON_FA_TRASH, ICON_DEFAULT,
+    std::bind(OnHomeCallback, this));
+
   ImGui::SameLine();
   size_t numTokens = _pathTokens.size();
   if(numTokens) {
