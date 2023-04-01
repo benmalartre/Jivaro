@@ -61,14 +61,10 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
 
 View::~View()
 {
-  std::cout << "delete view " << this << std::endl;
-  std::cout << _tab << ", " << _left << "," << _right << std::endl;
+  for (auto& ui : _uis)delete ui;
   if (_tab) delete _tab;
-  std::cout << "tab deleted" << std::endl;
   if (_left) delete _left;
-  std::cout << "left deleted" << std::endl;
   if (_right) delete _right;
-  std::cout << "right deleted" << std::endl;
 }
 
 void 
@@ -276,6 +272,7 @@ View* View::GetSibling()
 
 void View::DeleteChildren()
 {
+  std::cout << " dlete view : " << this << std::endl;
   if (_left)delete _left;
   if (_right) delete _right;
   _left = _right = NULL;

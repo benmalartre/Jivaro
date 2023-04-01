@@ -4,8 +4,6 @@
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
-#include "../ui/viewport.h"
-#include "../app/handle.h"
 #include <pxr/usd/usd/prim.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -22,6 +20,7 @@ enum TOOLS
 
 class Camera;
 class GLSLProgram;
+class BaseHandle;
 class Tool {
 public:
   Tool();

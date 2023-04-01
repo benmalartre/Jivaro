@@ -55,11 +55,6 @@ NewSceneCommand::NewSceneCommand(const std::string& filename)
   : Command(false)
 {
   Application* app = GetApplication();
-  //Workspace* workspace = app->GetWorkspace();
-  /*
-  if (workspace)delete workspace;
-  app->SetWorkspace(new Workspace());
-  */
   pxr::SdfFileFormatConstPtr usdaFormat = pxr::SdfFileFormat::FindByExtension("usda");
   pxr::SdfLayerRefPtr layer = pxr::SdfLayer::New(usdaFormat, filename);
   if (layer) {

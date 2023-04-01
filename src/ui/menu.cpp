@@ -137,7 +137,7 @@ MenuUI::MenuUI(View* parent)
   layoutItem.Add("Base", false, true, std::bind(SetLayoutCallback, GetWindow(), 0));
   layoutItem.Add("Raw", false, true, std::bind(SetLayoutCallback, GetWindow(), 1));
   layoutItem.Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 2));
-  layoutItem.Add("Random", false, true, std::bind(SetLayoutCallback, GetWindow(), 2));
+  layoutItem.Add("Random", false, true, std::bind(SetLayoutCallback, GetWindow(), 3));
 
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
@@ -253,21 +253,14 @@ static void OpenChildWindowCallback()
   Window* childWindow = Application::CreateChildWindow(200, 200, 400, 400, mainWindow);
   app->AddWindow(childWindow);
 
-  ViewportUI* viewport = new ViewportUI(childWindow->GetMainView());
+  app->SetLayout(childWindow, 1);
 
-  //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
-
-  childWindow->CollectLeaves();
   mainWindow->SetGLContext();
 }
 
 static void SetLayoutCallback(Window* window, short layout)
 {
-  std::cout << "set layout callback begin" << std::endl;
-  std::cout << window << ", " << layout << std::endl;
-  static size_t currentLayout = 0;
   GetApplication()->SetLayout(window, layout);
-  std::cout << "set layout callback end" << std::endl;
 }
 
 static void CreatePrimCallback()

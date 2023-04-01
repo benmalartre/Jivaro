@@ -200,6 +200,7 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
 
 static void _RecurseSplitRandomLayout(View* view, size_t depth, size_t maxDepth)
 {
+  std::cout << "recurse split..." << std::endl;
   if (depth > maxDepth)return;
   view->Split(RANDOM_0_1, rand() % 2);
   _RecurseSplitRandomLayout(view->GetLeft(), depth + 1, maxDepth);
@@ -266,8 +267,8 @@ static void _StandardLayout(Window* window)
   window->SplitView(centralView, 0.6, true);
 
   View* middleView = centralView->GetLeft();
-  View* topView = mainView->GetLeft();
-  topView->SetTabed(false);
+  View* menuView = mainView->GetLeft();
+  menuView->SetTabed(false);
 
   window->SplitView(middleView, 0.9, false);
 
@@ -286,17 +287,20 @@ static void _StandardLayout(Window* window)
 
   window->Resize(width, height);
 
+  /*
   new GraphEditorUI(graphView);
   new ViewportUI(viewportView);
   new TimelineUI(timelineView);
-  new MenuUI(topView);
+  */
+  new MenuUI(menuView);
+  /*
   new ToolbarUI(toolView, true);
   new ExplorerUI(explorerView);
+  */
 }
 
 static void _RawLayout(Window* window)
 {
-  std::cout << "raw layout" << std::endl;
   window->SetGLContext();
 
   View* mainView = window->GetMainView();
@@ -315,34 +319,27 @@ static void _RawLayout(Window* window)
   View* viewportView = middleView->GetLeft();
   View* timelineView = middleView->GetRight();
 
-  std::cout << "view splitted" << std::endl;
-  window->InvalidateViews();
   window->Resize(width, height);
 
-  std::cout << "window resize" << std::endl;
   new MenuUI(menuView);
-  new ViewportUI(viewportView);
-  new TimelineUI(timelineView);
-  std::cout << "raw layout end" << std::endl;
+  //new ViewportUI(viewportView);
+  //new TimelineUI(timelineView);
 }
 
 void
 Application::SetLayout(Window*  window, short layout)
 {
   if (layout == 0) {
-    std::cout << " add base layout command" << std::endl;
     _BaseLayout(window);
   } else if (layout == 1) {
-    std::cout << " add raw layout command" << std::endl;
     _RawLayout(window);
   }  else if(layout == 2) {
-    std::cout << " add standard layout command" << std::endl;
     _StandardLayout(window);
   }
   else {
     _RandomLayout(window);
   }
-  std::cout << " set layout ok" << std::endl;
+  window->ForceRedraw();
 }
 
 // init application
@@ -569,7 +566,6 @@ Application::Term()
 bool 
 Application::Update()
 {
-  std::cout << "aoolication update" << std::endl;
   ExecuteDeferredCommands();
 
   /*
@@ -592,7 +588,6 @@ Application::Update()
     if(!_time.IsPlaying())
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-  std::cout << "get time" << std::endl;
 
   glfwPollEvents();
 
@@ -602,7 +597,6 @@ Application::Update()
       GetActiveEngine()->SetDirty(true);
     }
   }
-  std::cout << "set engine dirty" << std::endl;
   
   // draw popup
   if (_popup) {
@@ -617,9 +611,6 @@ Application::Update()
     if (!_mainWindow->Update()) return false;
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
-
-  std::cout << "aoolication update end" << std::endl;
-
   
     
   return true;

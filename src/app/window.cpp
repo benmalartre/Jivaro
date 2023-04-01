@@ -243,10 +243,11 @@ Window::CaptureFramebuffer()
 
 
 // Resize
-//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------esiz
 void 
 Window::Resize(unsigned width, unsigned height)
 {
+  std::cout << "resize window !!!" << std::endl;
   _width = width;
   _height = height;
 
@@ -450,16 +451,8 @@ Window::DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& 
 void
 Window::InvalidateViews()
 {
-  std::cout << "invalidate views" << std::endl;
-  std::cout << "num leaves : " << _leaves.size() << std::endl;
   _activeView = _hoveredView = _activeLeaf = NULL;
-
-  _splitter->Resize(GetWidth(), GetHeight());
-  std::cout << "splittre resized" << std::endl;
-  CollectLeaves();
-  std::cout << "num leaves : " << _leaves.size() << std::endl;
 }
-
 
 // get context version infos
 //----------------------------------------------------------------------------
@@ -501,10 +494,11 @@ Window::SetGLContext()
 void 
 Window::Draw()
 {
-  std::cout << "window draw" << std::endl;
+  std::cout << "wwindow draw... " << std::endl;
   if (!_valid || _idle)return;
   SetGLContext();
   glBindVertexArray(_vao);
+
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -526,7 +520,6 @@ Window::Draw()
 
   glFlush();
   glFinish();
-  std::cout << "window draw end" << std::endl;
 }
 
 // draw
