@@ -143,9 +143,19 @@ Application::UpdatePopup()
 }
 
 void
-Application::ExecuteDeferred(CALLBACK_FN fn)
+Application::AddDeferredCommand(CALLBACK_FN fn)
 {
   _deferred.push_back(fn);
+}
+
+void
+Application::ExecuteDeferredCommands()
+{
+  // execute any registered command that could not been run during draw
+  if (_deferred.size()) {
+    for (size_t i = _deferred.size() - 1; i >= 0; --i)_deferred[i]();
+    _deferred.clear();
+  }
 }
 
 
@@ -472,8 +482,7 @@ Application::Term()
 bool 
 Application::Update()
 {
-  for (auto& deferred : _deferred)deferred();
-  _deferred.clear()
+  ExecuteDeferredCommands();
 
   /*
   if (_needCaptureFramebuffers) {

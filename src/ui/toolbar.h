@@ -55,7 +55,7 @@ struct ToolbarButton : public ToolbarItem {
   bool                        enabled;
 
   pxr::VtArray<pxr::VtValue>  args;
-  CALLBACK_FN        func;
+  CALLBACK_FN                 func;
   const char*                 icon;
 
   ToolbarButton(BaseUI* ui, short tool, const std::string& lbl, 

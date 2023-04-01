@@ -67,7 +67,7 @@ bool ToolbarSeparator::Draw()
 
 ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string& label, 
   const std::string& shortcut, const std::string& tooltip, const char* icon, bool toggable, 
-  bool enabled, UIUtils::CALLBACK_FN func, const pxr::VtArray<pxr::VtValue> args)
+  bool enabled, CALLBACK_FN func, const pxr::VtArray<pxr::VtValue> args)
   : ToolbarItem(ui, TOOLBAR_BUTTON)
   , tool(tool)
   , label(label)
@@ -111,42 +111,42 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
   ToolbarItem* selectItem = new ToolbarButton(
     this, TOOL_SELECT, "Select", "Space","selection tool",
     ICON_FA_ARROW_POINTER, false, true,
-    (UIUtils::CALLBACK_FN)&OnSelectCallback
+    OnSelectCallback
   );
   _items.push_back(selectItem);
 
   ToolbarItem* translateItem = new ToolbarButton(
     this, TOOL_TRANSLATE, "Translate", "T", "translation tool",
     ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, false, true,
-    (UIUtils::CALLBACK_FN)&OnTranslateCallback
+    OnTranslateCallback
   );
   _items.push_back(translateItem);
 
   ToolbarItem* rotateItem = new ToolbarButton(
     this, TOOL_ROTATE, "Rotate", "R", "rotation tool",
     ICON_FA_ROTATE, false, true,
-    (UIUtils::CALLBACK_FN)&OnRotateCallback
+    OnRotateCallback
   );
   _items.push_back(rotateItem);
 
   ToolbarItem* scaleItem = new ToolbarButton(
     this, TOOL_SCALE, "Scale", "S", "scale tool",
     ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , false, true,
-    (UIUtils::CALLBACK_FN)&OnScaleCallback
+    OnScaleCallback
   );
   _items.push_back(scaleItem);
 
   ToolbarItem* brushItem = new ToolbarButton(
     this, TOOL_BRUSH, "Brush", "B", "brush tool",
     ICON_FA_PAINTBRUSH, false, true,
-    (UIUtils::CALLBACK_FN)&OnBrushCallback
+    OnBrushCallback
   );
   _items.push_back(brushItem);
 
   ToolbarItem* playItem = new ToolbarButton(
     this, TOOL_NONE, "Play", "play", "launch engine",
     ICON_FA_SHUFFLE, true, false,
-    (UIUtils::CALLBACK_FN)&OnPlayCallback
+    OnPlayCallback
   );
   _items.push_back(playItem);
 }

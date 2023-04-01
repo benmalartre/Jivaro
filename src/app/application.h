@@ -105,7 +105,8 @@ public:
 
   // tools
   void SetActiveTool(short tool);
-  void ExecuteDeferred(CALLBACK_FN);
+  void AddDeferredCommand(CALLBACK_FN fn);
+  void ExecuteDeferredCommands();
 
   // engines
   void AddEngine(Engine* engine);
