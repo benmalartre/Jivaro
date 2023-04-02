@@ -144,7 +144,7 @@ Application::UpdatePopup()
 }
 
 void
-Application::AddDeferredCommand(CALLBACK_FN&& fn)
+Application::AddDeferredCommand(CALLBACK_FN fn)
 {
   _deferred.push_back(fn);
 }
@@ -201,163 +201,6 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
   _layer = stage->GetRootLayer();
 }
 
-static void _RecurseSplitRandomLayout(View* view, size_t depth, size_t maxDepth)
-{
-  if (depth > maxDepth)return;
-  view->Split(RANDOM_0_1, (rand() % 100) > 50);
-  _RecurseSplitRandomLayout(view->GetLeft(), depth + 1, maxDepth);
-  _RecurseSplitRandomLayout(view->GetRight(), depth + 1, maxDepth);
-}
-
-static void _BaseLayout(Window* window)
-{
-  window->SetGLContext();
-  window->ClearViews();
-  View* mainView = window->GetMainView();
-
-  int width, height;
-  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
-
-  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
-  View* menuView = mainView->GetLeft();
-  menuView->SetTabed(false);
-
-  window->Resize(width, height);
-  new MenuUI(menuView);
-}
-
-static void _RandomLayout(Window* window)
-{
-  window->SetGLContext();
-  window->ClearViews();
-  View* mainView = window->GetMainView();
-
-  int width, height;
-  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
-
-  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
-  View* menuView = mainView->GetLeft();
-  menuView->SetTabed(false);
-
-  window->Resize(width, height);
-  new MenuUI(menuView);
-}
-
-static void _StandardLayout(Window* window)
-{
-  std::cout << "standdard layout" << window << std::endl;
-  window->SetGLContext();
-  std::cout << "cleat virw" << std::endl;
-  window->ClearViews();
-
-  std::cout << "yeah" << std::endl;
-  View* mainView = window->GetMainView();
-
-
-  int width, height;
-  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
-  window->SplitView(mainView, 0.5, true, View::LFIXED, 22);
-
-  View* bottomView = mainView->GetRight();
-  window->SplitView(bottomView, 0.9, true, false);
-
-  View* timelineView = bottomView->GetRight();
-  timelineView->SetTabed(false);
-
-  View* centralView = bottomView->GetLeft();
-  window->SplitView(centralView, 0.6, true);
-
-  View* middleView = centralView->GetLeft();
-  View* menuView = mainView->GetLeft();
-  menuView->SetTabed(false);
-
-  window->SplitView(middleView, 0.8, false);
-
-  View* workingView = middleView->GetLeft();
-  window->SplitView(workingView, 0.25, false);
-
-  View* propertyView = middleView->GetRight();
-  View* leftTopView = workingView->GetLeft();
-  window->SplitView(leftTopView, 0.1, false, View::LFIXED, 32);
-
-  View* toolView = leftTopView->GetLeft();
-  toolView->SetTabed(false);
-  View* explorerView = leftTopView->GetRight();
-  View* viewportView = workingView->GetRight();
-  View* graphView = centralView->GetRight();
-
-  window->Resize(width, height);
-  
-  uint64_t Ts[8];
-  Ts[0] = CurrentTime();
-  ViewportUI* viewport = new ViewportUI(viewportView);
-  Ts[1] = CurrentTime();
-  new TimelineUI(timelineView);
-  Ts[2] = CurrentTime();
-  new MenuUI(menuView);
-  Ts[3] = CurrentTime();
-  new ToolbarUI(toolView, true);
-  Ts[4] = CurrentTime();
-  new ExplorerUI(explorerView);
-  Ts[5] = CurrentTime();
-  new PropertyEditorUI(propertyView);
-  Ts[6] = CurrentTime();
-  new GraphEditorUI(graphView);
-  Ts[7] = CurrentTime();
-  GetApplication()->SetActiveViewport(viewport);
-  
-
-  std::string names[7] = { "viewport", "timeline", "menu", "toolbar", "explorer", "property", "graph" };
-
-  for (size_t t = 0; t < 7; ++t) {
-    std::cout << names[t] << " : " << (double)((Ts[t+1] - Ts[t]) * 1e-9) << " seconds" << std::endl;
-  }
- 
-  
-}
-
-static void _RawLayout(Window* window)
-{
-  window->SetGLContext();
-  window->ClearViews();
-  View* mainView = window->GetMainView();
-
-  int width, height;
-  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
-
-  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
-  View* menuView = mainView->GetLeft();
-  menuView->SetTabed(false);
-
-  View* middleView = mainView->GetRight();
-  window->SplitView(middleView, 0.5, true, View::RFIXED, 64);
-
-  View* viewportView = middleView->GetLeft();
-  View* timelineView = middleView->GetRight();
-
-  window->Resize(width, height);
-
-  new MenuUI(menuView);
-  new ViewportUI(viewportView);
-  new TimelineUI(timelineView);
-}
-
-void
-Application::SetLayout(Window*  window, size_t layout)
-{
-  std::cout << "app set layout : " << layout << std::endl;
-  if (layout == 0) {
-    _BaseLayout(window);
-  } else if (layout == 1) {
-    _RawLayout(window);
-  }  else if(layout == 2) {
-    _StandardLayout(window);
-  } else {
-    _RandomLayout(window);
-  }
-  window->ForceRedraw();
-}
-
 // init application
 //----------------------------------------------------------------------------
 void 
@@ -398,7 +241,7 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
   // create window
-  _StandardLayout(_mainWindow);
+  _mainWindow->SetLayout(0);
   
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
@@ -494,9 +337,9 @@ Application::InitExec()
     for (pxr::UsdPrim prim : primRange) {
       if (prim.IsA<pxr::UsdGeomMesh>()) {
         Mesh* mesh = _execScene->AddMesh(prim.GetPath());
-        _solver->AddGeometry(mesh, 
+        _solver->AddGeometry(mesh,
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
-        
+
         Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
         _solver->AddGeometry(voxels,
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
@@ -504,30 +347,30 @@ Application::InitExec()
       }
     }
 
-    
+
     std::vector<Geometry*> colliders;
     for (auto& mesh : _execScene->GetMeshes()) {
       colliders.push_back(&mesh.second);
     }
     for(auto& collider: colliders)
       _solver->AddCollider(collider);
-    
+
 
     PBDParticle* system = _solver->GetSystem();
     _CreateSystemPoints(_execStage, system->Get(), 0.05);
 
-    
+
     _execInitialized = true;
   }
   */
 }
 
-void 
+void
 Application::UpdateExec(double time)
 {
   Scene* scene = _engines[0]->GetDelegate()->GetScene();
   scene->UpdateExec(time);
-  for(auto& engine: _engines) {
+  for (auto& engine : _engines) {
     engine->UpdateExec(time);
   }
   /*
@@ -549,7 +392,7 @@ Application::UpdateExec(double time)
     }
     mesh->Update(positions);
   }
-  
+
   if (time <= _startFrame) {
     _solver->Reset();
   }
@@ -561,7 +404,7 @@ Application::UpdateExec(double time)
   */
 }
 
-void 
+void
 Application::TerminateExec()
 {
   Scene* scene = _engines[0]->GetDelegate()->GetScene();
@@ -573,17 +416,15 @@ Application::TerminateExec()
 }
 
 
-void 
+void
 Application::Term()
 {
 
 }
 
-bool 
+bool
 Application::Update()
 {
-  ExecuteDeferredCommands();
-
   /*
   if (_needCaptureFramebuffers) {
     _mainWindow->CaptureFramebuffer();
@@ -591,7 +432,8 @@ Application::Update()
     _needCaptureFramebuffers = false;
   }
   */
-  
+  ExecuteDeferredCommands();
+
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
   double currentTime = glfwGetTime();
@@ -627,8 +469,6 @@ Application::Update()
     if (!_mainWindow->Update()) return false;
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
-  
-    
   return true;
 }
 

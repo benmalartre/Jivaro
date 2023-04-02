@@ -60,7 +60,7 @@ struct ToolbarButton : public ToolbarItem {
 
   ToolbarButton(BaseUI* ui, short tool, const std::string& lbl, 
     const std::string& sht, const std::string& tooltip, const char* icon, 
-    bool sel, bool enb, CALLBACK_FN&& f = NULL,
+    bool sel, bool enb, CALLBACK_FN f = NULL,
     const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
   ~ToolbarButton(){};
   bool Draw() override;

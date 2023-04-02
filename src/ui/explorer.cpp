@@ -86,9 +86,7 @@ static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, UIType::EXPLORER)
-  , _counter(0)
 {
-  _parent->SetDirty();
 }
 
 // destructor
@@ -120,6 +118,7 @@ ExplorerUI::Init()
 }
 */
 
+/*
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
 {
@@ -151,6 +150,7 @@ void
 ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
 }
+*/
 
 void
 ExplorerUI::DrawItemBackground(ImDrawList* drawList,
@@ -366,6 +366,8 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
 bool 
 ExplorerUI::Draw()
 {
+
+  return false;
   /// Draw the hierarchy of the stage
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();

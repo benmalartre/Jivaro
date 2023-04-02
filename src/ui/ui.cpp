@@ -22,6 +22,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
     _parent->AddUI(this);
     _parent->SetCurrent(this);
     _parent->SetFlag(View::LEAF);
+    _parent->SetDirty();
   }
 
   pxr::TfWeakPtr<BaseUI> me(this);
@@ -85,7 +86,8 @@ void BaseUI::DiscardEventsIfMouseInsideBox(const pxr::GfVec2f& min, const pxr::G
 Window* 
 BaseUI::GetWindow()
 {
-  return _parent->GetWindow();
+  if(_parent)return _parent->GetWindow();
+  return NULL;
 };
 
 // parent window height

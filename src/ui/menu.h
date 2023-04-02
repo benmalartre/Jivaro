@@ -21,33 +21,31 @@ public:
   struct Item {
     MenuUI*                     ui;
     Item*                       parent;
-    std::vector<Item>           items;
     std::string                 label;
     bool                        selected;
     bool                        enabled;
     CALLBACK_FN                 callback;
+    std::vector<Item>           items;
 
-    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN&& cb=NULL);
-    Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN&& cb=NULL);
-
-    bool Draw();
-    pxr::GfVec2i ComputeSize();
-    pxr::GfVec2i ComputePos();
+    Item* Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
   };
 
 public:
   MenuUI(View* parent);
   ~MenuUI();
 
+  pxr::GfVec2i ComputeSize(const Item& item);
+  pxr::GfVec2i ComputePos(const Item& item);
+
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsUnderBox();
 
-  Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN&& cb=NULL);
+  Item* Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
 private:
+  bool                    _Draw(const Item& item);
   std::vector<Item>       _items;
-  Item*                   _current;
   static ImGuiWindowFlags _flags;
   pxr::GfVec2i            _pos;
   pxr::GfVec2i            _size;
@@ -59,7 +57,6 @@ static void SaveFileCallback();
 static void NewFileCallback();
 static void OpenDemoCallback();
 static void OpenChildWindowCallback();
-static void SetLayoutCallback(Window* window, short layout);
 static void CreatePrimCallback();
 static void TriangulateCallback();
 static void FlattenGeometryCallback();

@@ -37,7 +37,7 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, unsig
   , _current(NULL)
   , _currentIdx(-1)
 {
-  if(_parent!=NULL)_window = _parent->_window;
+  if(_parent)_window = _parent->_window;
   if (_flags & View::TAB)CreateTab();
 }
 
@@ -55,18 +55,21 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   , _current(NULL)
   , _currentIdx(-1)
 {
-  if(_parent!=NULL)_window = _parent->_window;
+  if(_parent)_window = _parent->_window;
   if (_flags & View::TAB)CreateTab();
 }
 
 View::~View()
 {
+  std::cout << "destruct view : " << this << ":" << _uis.size() << std::endl;
   for (auto& ui : _uis) {
-    std::cout << ui->GetName() << std::endl;  delete ui;
+    std::cout << "    -> " << ui->GetName() << std::endl; delete ui;
   }
+ 
   if (_tab) delete _tab;
   if (_left) delete _left;
   if (_right) delete _right;
+  std::cout << "view destructed" << std::endl;
 }
 
 void 

@@ -105,7 +105,7 @@ public:
 
   // tools
   void SetActiveTool(size_t tool);
-  void AddDeferredCommand(CALLBACK_FN&& fn);
+  void AddDeferredCommand(CALLBACK_FN fn);
   void ExecuteDeferredCommands();
 
   // engines
@@ -115,9 +115,6 @@ public:
   Engine* GetActiveEngine();
   void SetActiveViewport(ViewportUI* viewport);
   void DirtyAllEngines();
-
-  // layout
-  void SetLayout(Window* window, size_t layout);
 
   // stage cache
   pxr::UsdStageRefPtr& GetStage(){return _stage;};

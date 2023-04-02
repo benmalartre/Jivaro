@@ -127,6 +127,7 @@ public:
   void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   void InvalidateViews();
   void ClearViews();
+  void SetLayout(size_t layout);
   
   // draw
   void SetGLContext();
@@ -163,6 +164,7 @@ public:
   static Window* GetUserData(GLFWwindow* window);
 
 private:
+  void                  _SetLayout();
   bool                  _idle;
   std::string           _name;
   GLFWwindow*           _window;
@@ -187,6 +189,8 @@ private:
   unsigned*             _pixels;
   bool                  _valid;
   int                   _forceRedraw;
+  int                   _layout;
+  bool                  _needUpdateLayout;
 
   // version number
   int                   _iOpenGLMajor;

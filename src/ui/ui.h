@@ -21,6 +21,7 @@ class View;
 class Window;
 class Application;
 
+
 enum UIType {
   MAINMENU,
   TIMELINE,

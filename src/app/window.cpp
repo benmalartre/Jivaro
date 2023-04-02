@@ -19,6 +19,23 @@
 #include "../geometry/shape.h"
 
 
+#include "../utils/files.h"
+#include "../utils/timer.h"
+#include "../utils/prefs.h"
+#include "../ui/fileBrowser.h"
+#include "../ui/viewport.h"
+#include "../ui/menu.h"
+#include "../ui/popup.h"
+#include "../ui/graphEditor.h"
+#include "../ui/timeline.h"
+#include "../ui/demo.h"
+#include "../ui/toolbar.h"
+#include "../ui/explorer.h"
+#include "../ui/layers.h"
+#include "../ui/layerEditor.h"
+#include "../ui/propertyEditor.h"
+#include "../ui/curveEditor.h"
+
 JVR_NAMESPACE_OPEN_SCOPE
 
 bool LEGACY_OPENGL = false;
@@ -39,7 +56,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 Window::Window(bool fullscreen, const std::string& name) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0),  _tex(0)
+  _name(name), _forceRedraw(3), _idle(false), _fbo(0),  _tex(0), _needUpdateLayout(true)
 {
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -74,7 +91,7 @@ Window::Window(bool fullscreen, const std::string& name) :
 Window::Window(int width, int height, const std::string& name):
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0)
+  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _needUpdateLayout(true)
 {
   _width = width;
   _height = height;
@@ -102,7 +119,7 @@ Window::Window(int x, int y, int width, int height,
   GLFWwindow* parent, const std::string& name, bool decorated) :
   _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0)
+  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _needUpdateLayout(true)
 {
   _width = width;
   _height = height;
@@ -220,6 +237,135 @@ Window::CreateChildWindow(
   return new Window(x, y, width, height, parent, name, decorated);
 }
 
+// layouts
+//----------------------------------------------------------------------------
+static void _BaseLayout(Window* window)
+{
+  window->ClearViews();
+  View* mainView = window->GetMainView();
+
+  int width, height;
+  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
+
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
+  View* menuView = mainView->GetLeft();
+  menuView->SetTabed(false);
+
+  window->Resize(width, height);
+  new MenuUI(menuView);
+}
+
+static void _RandomLayout(Window* window)
+{
+  window->ClearViews();
+  View* mainView = window->GetMainView();
+
+  int width, height;
+  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
+
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
+  View* menuView = mainView->GetLeft();
+  menuView->SetTabed(false);
+
+  window->Resize(width, height);
+  new MenuUI(menuView);
+
+
+
+}
+
+static void _StandardLayout(Window* window)
+{
+  std::cout << "standdard layout" << window << std::endl;
+  window->ClearViews();
+  View* mainView = window->GetMainView();
+
+  int width, height;
+  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 22);
+
+  View* bottomView = mainView->GetRight();
+  window->SplitView(bottomView, 0.9, true, false);
+
+  View* timelineView = bottomView->GetRight();
+  timelineView->SetTabed(false);
+
+  View* centralView = bottomView->GetLeft();
+  window->SplitView(centralView, 0.6, true);
+
+  View* middleView = centralView->GetLeft();
+  View* menuView = mainView->GetLeft();
+  menuView->SetTabed(false);
+
+  window->SplitView(middleView, 0.8, false);
+
+  View* workingView = middleView->GetLeft();
+  window->SplitView(workingView, 0.25, false);
+
+  View* propertyView = middleView->GetRight();
+  View* leftTopView = workingView->GetLeft();
+  window->SplitView(leftTopView, 0.1, false, View::LFIXED, 32);
+
+  View* toolView = leftTopView->GetLeft();
+  toolView->SetTabed(false);
+  View* explorerView = leftTopView->GetRight();
+  View* viewportView = workingView->GetRight();
+  View* graphView = centralView->GetRight();
+
+  window->Resize(width, height);
+
+  uint64_t Ts[8];
+  
+  Ts[0] = CurrentTime();
+  ViewportUI* viewport = new ViewportUI(viewportView);
+  Ts[1] = CurrentTime();
+  new TimelineUI(timelineView);
+  Ts[2] = CurrentTime();
+  new MenuUI(menuView);
+  Ts[3] = CurrentTime();
+  new ToolbarUI(toolView, true);
+  Ts[4] = CurrentTime();
+  new ExplorerUI(explorerView);
+  Ts[5] = CurrentTime();
+  new PropertyEditorUI(propertyView);
+  Ts[6] = CurrentTime();
+  new GraphEditorUI(graphView);
+  Ts[7] = CurrentTime();
+  GetApplication()->SetActiveViewport(viewport);
+
+  std::string names[7] = { "viewport", "timeline", "menu", "toolbar", "explorer", "property", "graph" };
+
+  for (size_t t = 0; t < 7; ++t) {
+    std::cout << names[t] << " : " << (double)((Ts[t + 1] - Ts[t]) * 1e-9) << " seconds" << std::endl;
+  }
+}
+
+static void _RawLayout(Window* window)
+{
+  window->SetGLContext();
+  window->ClearViews();
+  View* mainView = window->GetMainView();
+
+  int width, height;
+  glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
+
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
+  View* menuView = mainView->GetLeft();
+  menuView->SetTabed(false);
+
+  View* middleView = mainView->GetRight();
+  window->SplitView(middleView, 0.5, true, View::RFIXED, 64);
+
+  View* viewportView = middleView->GetLeft();
+  View* timelineView = middleView->GetRight();
+
+  window->Resize(width, height);
+
+  new MenuUI(menuView);
+  new ViewportUI(viewportView);
+  new TimelineUI(timelineView);
+}
+
 // force redraw
 //----------------------------------------------------------------------------
 void
@@ -232,10 +378,12 @@ Window::ForceRedraw()
 void
 Window::ClearViews()
 {
+  std::cout << "window : clear views ?" << std::endl;
   _activeView = _hoveredView = _activeView = _mainView;
   _mainView->Clear();
   _leaves.clear();
   _uic.clear();
+  std::cout << "window : clear views ok" << std::endl;
 }
 
 // ui names
@@ -267,7 +415,7 @@ Window::CaptureFramebuffer()
 
 
 // Resize
-//----------------------------------------------------------------------------esiz
+//----------------------------------------------------------------------------
 void 
 Window::Resize(unsigned width, unsigned height)
 {
@@ -301,6 +449,36 @@ Window::Resize(unsigned width, unsigned height)
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+// Layout
+//------------------------------------------------------------------------------
+void
+Window::_SetLayout()
+{
+  std::cout << "window set layout : " << _layout << std::endl;
+  if (_layout == 0) {
+    _BaseLayout(this);
+  }
+  else if (_layout == 1) {
+    _RawLayout(this);
+  }
+  else if (_layout == 2) {
+    _StandardLayout(this);
+  }
+  else {
+    _RandomLayout(this);
+  }
+  ForceRedraw();
+}
+
+void
+Window::SetLayout(size_t layout)
+{
+  if (layout != _layout) {
+    _layout = layout;
+    _needUpdateLayout = true;
+  }
 }
 
 void
@@ -524,6 +702,12 @@ void
 Window::Draw()
 {
   if (!_valid || _idle)return;
+
+  if (_needUpdateLayout) {
+    _SetLayout();
+    _needUpdateLayout = false;
+  }
+
   SetGLContext();
   glBindVertexArray(_vao);
   
@@ -531,7 +715,7 @@ Window::Draw()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-  
+
   // draw views
   if (_mainView)_mainView->Draw(_forceRedraw > 0);
   _forceRedraw = pxr::GfMax(0, _forceRedraw - 1);
@@ -1001,7 +1185,8 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   }
 }
 
-void FocusCallback(GLFWwindow* window, int focused)
+void 
+FocusCallback(GLFWwindow* window, int focused)
 {
   if (focused) {
     Window* parent = Window::GetUserData(window);
@@ -1114,6 +1299,15 @@ ResizeCallback(GLFWwindow* window, int width, int height)
   parent->SetGLContext();
   parent->Resize(width, height);
   glViewport(0, 0, width, height);
+}
+
+
+static void _RecurseSplitRandomLayout(View* view, size_t depth, size_t maxDepth)
+{
+  if (depth > maxDepth)return;
+  view->Split(RANDOM_0_1, (rand() % 100) > 50);
+  _RecurseSplitRandomLayout(view->GetLeft(), depth + 1, maxDepth);
+  _RecurseSplitRandomLayout(view->GetRight(), depth + 1, maxDepth);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
