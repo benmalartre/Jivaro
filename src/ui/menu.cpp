@@ -120,10 +120,10 @@ MenuUI::MenuUI(View* parent)
   demoMenu.Add("Child Window", false, true, std::bind(OpenChildWindowCallback));*/
 
   MenuUI::Item* layoutMenu = Add("Layout", false, true);
-  layoutMenu->Add("Base", false, true, std::bind(&Window::SetLayout, window, 0));
-  layoutMenu->Add("Raw", false, true, std::bind(&Window::SetLayout, window, 1));
-  layoutMenu->Add("Standard", false, true, std::bind(&Window::SetLayout, window, 2));
-  layoutMenu->Add("Random", false, true, std::bind(&Window::SetLayout, window, 3));
+  layoutMenu->Add("Base", false, true, std::bind(SetLayoutCallback, window, 0));
+  layoutMenu->Add("Raw", false, true, std::bind(SetLayoutCallback, window, 1));
+  layoutMenu->Add("Standard", false, true, std::bind(SetLayoutCallback, window, 2));
+  layoutMenu->Add("Random", false, true, std::bind(SetLayoutCallback, window, 3));
 
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }

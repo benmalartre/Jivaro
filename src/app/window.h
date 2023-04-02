@@ -164,7 +164,6 @@ public:
   static Window* GetUserData(GLFWwindow* window);
 
 private:
-  void                  _SetLayout();
   bool                  _idle;
   std::string           _name;
   GLFWwindow*           _window;
@@ -190,8 +189,7 @@ private:
   bool                  _valid;
   int                   _forceRedraw;
   int                   _layout;
-  bool                  _needUpdateLayout;
-
+ 
   // version number
   int                   _iOpenGLMajor;
   int                   _iOpenGLMinor;

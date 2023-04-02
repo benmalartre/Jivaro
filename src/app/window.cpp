@@ -454,30 +454,24 @@ Window::Resize(unsigned width, unsigned height)
 // Layout
 //------------------------------------------------------------------------------
 void
-Window::_SetLayout()
-{
-  std::cout << "window set layout : " << _layout << std::endl;
-  if (_layout == 0) {
-    _BaseLayout(this);
-  }
-  else if (_layout == 1) {
-    _RawLayout(this);
-  }
-  else if (_layout == 2) {
-    _StandardLayout(this);
-  }
-  else {
-    _RandomLayout(this);
-  }
-  ForceRedraw();
-}
-
-void
 Window::SetLayout(size_t layout)
 {
   if (layout != _layout) {
     _layout = layout;
-    _needUpdateLayout = true;
+    switch(_layout){
+    case 0:
+      _BaseLayout(this);
+      break;
+    case 1:
+      _RawLayout(this);
+      break;
+    case 2:
+      _StandardLayout(this);
+      break;
+    case 3:
+    default:
+      _RandomLayout(this);
+      break;
   }
 }
 
@@ -702,11 +696,6 @@ void
 Window::Draw()
 {
   if (!_valid || _idle)return;
-
-  if (_needUpdateLayout) {
-    _SetLayout();
-    _needUpdateLayout = false;
-  }
 
   SetGLContext();
   glBindVertexArray(_vao);
