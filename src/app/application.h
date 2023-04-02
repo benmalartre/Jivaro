@@ -103,8 +103,6 @@ public:
 
   // tools
   void SetActiveTool(size_t tool);
-  void AddDeferredCommand(CALLBACK_FN fn);
-  void ExecuteDeferredCommands();
 
   // engines
   void AddEngine(Engine* engine);
@@ -153,7 +151,6 @@ private:
 
   // command manager
   CommandManager                    _manager;
-  std::vector<CALLBACK_FN>          _deferred;
 
   // engines
   pxr::UsdStageCache                _stageCache;

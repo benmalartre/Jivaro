@@ -54,9 +54,8 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 // width/height window constructor
 //----------------------------------------------------------------------------
 Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool fullscreen, Window* parent) :
-  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), _name(name), 
-  _forceRedraw(3), _idle(false), _fbo(0), _tex(0)
+  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),_splitter(NULL), _dragSplitter(false),
+  _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _layout(0), _needUpdateLayout(true)
 {
   GLFWmonitor* monitor = NULL;
   if (fullscreen) {
@@ -71,16 +70,15 @@ Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool full
     _height = mode->height;
   }
   else {
-    _width = dimension[2] - dimension[0];
-    _height = dimension[3] - dimension[1];
+    _width = dimension[2];
+    _height = dimension[3];
   }
 
-  //glfwWindowHint(GLFW_DECORATED, false);
-
+  glfwWindowHint(GLFW_DECORATED, true);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, false);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
@@ -93,7 +91,7 @@ Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool full
   _window = glfwCreateWindow(_width, _height, name.c_str(), monitor, parent ? parent->GetGlfwWindow() : NULL);
   
   if(_window) {
-    glfwSetWindowPos(_window, dimension[0], dimension[1]);
+    //glfwSetWindowPos(_window, dimension[0], dimension[1]);
     Init();
   }
 }
@@ -226,7 +224,6 @@ static void _RandomLayout(Window* window)
 
 static void _StandardLayout(Window* window)
 {
-  std::cout << "standdard layout" << window << std::endl;
   window->ClearViews();
   View* mainView = window->GetMainView();
 
@@ -328,12 +325,10 @@ Window::ForceRedraw()
 void
 Window::ClearViews()
 {
-  std::cout << "window : clear views ?" << std::endl;
   _activeView = _hoveredView = _activeView = _mainView;
   _mainView->Clear();
   _leaves.clear();
   _uic.clear();
-  std::cout << "window : clear views ok" << std::endl;
 }
 
 // ui names
@@ -404,10 +399,9 @@ Window::Resize(unsigned width, unsigned height)
 // Layout
 //------------------------------------------------------------------------------
 void
-Window::SetLayout(size_t layout)
+Window::SetLayout()
 {
-  if (layout != _layout) {
-    _layout = layout;
+  if (_needUpdateLayout) {
     switch (_layout) {
     case 0:
       _BaseLayout(this);
@@ -423,6 +417,16 @@ Window::SetLayout(size_t layout)
       _RandomLayout(this);
       break;
     }
+    _needUpdateLayout = false;
+  }
+}
+
+void 
+Window::SetDesiredLayout(size_t layout)
+{
+  if (layout != _layout) {
+    _layout = layout;
+    _needUpdateLayout = true;
   }
 }
 
@@ -641,6 +645,24 @@ Window::SetGLContext()
   ImGui::SetCurrentContext(_context);
 }
 
+// deferred stuff
+//----------------------------------------------------------------------------
+void
+Window::AddDeferredCommand(CALLBACK_FN fn)
+{
+  _deferred.push_back(fn);
+}
+
+void
+Window::ExecuteDeferredCommands()
+{
+  // execute any registered command that could not been run during draw
+  if (_deferred.size()) {
+    for (size_t i = _deferred.size() - 1; i >= 0; --i)_deferred[i]();
+    _deferred.clear();
+  }
+}
+
 // draw
 //----------------------------------------------------------------------------
 void 
@@ -649,6 +671,8 @@ Window::Draw()
   if (!_valid || _idle)return;
 
   SetGLContext();
+  ExecuteDeferredCommands();
+
   glBindVertexArray(_vao);
   
   // start the imgui frame

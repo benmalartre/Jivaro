@@ -83,6 +83,8 @@ public:
 
   // tool
   Tool* GetTool() { return &_tool; };
+  void AddDeferredCommand(CALLBACK_FN fn);
+  void ExecuteDeferredCommands();
 
   // infos
   void GetContextVersionInfos();
@@ -125,7 +127,8 @@ public:
   void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   void InvalidateViews();
   void ClearViews();
-  void SetLayout(size_t layout);
+  void SetLayout();
+  void SetDesiredLayout(size_t layout);
   
   // draw
   void SetGLContext();
@@ -187,7 +190,8 @@ private:
   bool                  _valid;
   int                   _forceRedraw;
   int                   _layout;
- 
+  bool                  _needUpdateLayout;
+
   // version number
   int                   _iOpenGLMajor;
   int                   _iOpenGLMinor;
@@ -210,6 +214,9 @@ private:
   GLuint                _fbo;
   GLuint                _tex;
   UITypeCounter         _uic;
+
+  std::vector<CALLBACK_FN> _deferred;
+
 
 public:
   // static constructor

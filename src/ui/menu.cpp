@@ -329,7 +329,7 @@ static void FlattenGeometryCallback()
 
 static void SetLayoutCallback(Window* window, size_t layout)
 {
-  window->SetLayout(layout);
+  window->SetDesiredLayout(layout);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

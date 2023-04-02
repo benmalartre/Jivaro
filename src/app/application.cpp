@@ -140,22 +140,6 @@ Application::UpdatePopup()
   for (auto& childWindow : _childWindows)childWindow->ForceRedraw();
 }
 
-void
-Application::AddDeferredCommand(CALLBACK_FN fn)
-{
-  _deferred.push_back(fn);
-}
-
-void
-Application::ExecuteDeferredCommands()
-{
-  // execute any registered command that could not been run during draw
-  if (_deferred.size()) {
-    for (size_t i = _deferred.size() - 1; i >= 0; --i)_deferred[i]();
-    _deferred.clear();
-  }
-}
-
 
 // browse for file
 //----------------------------------------------------------------------------
@@ -429,7 +413,6 @@ Application::Update()
     _needCaptureFramebuffers = false;
   }
   */
-  ExecuteDeferredCommands();
 
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;

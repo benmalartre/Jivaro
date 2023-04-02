@@ -3,6 +3,7 @@
 #include "../ui/utils.h"
 #include "../ui/popup.h"
 #include "../app/view.h"
+#include "../app/window.h"
 #include "../app/application.h"
 #include "../command/block.h"
 
@@ -255,7 +256,7 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
 
     ColorPopupUI* popup = new ColorPopupUI((int)position[0], (int)position[1], 
       200, 300, attribute, timeCode);
-    GetApplication()->AddDeferredCommand(
+    GetApplication()->GetActiveWindow()->AddDeferredCommand(
       std::bind(&Application::SetPopup, GetApplication(), popup)
     );
     ImGui::PopStyleColor(3);
