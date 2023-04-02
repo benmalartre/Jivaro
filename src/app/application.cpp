@@ -17,6 +17,7 @@
 #include <pxr/imaging/LoFi/debugCodes.h>
 
 #include "../utils/files.h"
+#include "../utils/timer.h"
 #include "../utils/prefs.h"
 #include "../ui/fileBrowser.h"
 #include "../ui/viewport.h"
@@ -54,7 +55,8 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr), _execute(false)
+  _mainWindow(nullptr), _activeWindow(nullptr), _viewport(nullptr), 
+  _popup(nullptr), _execute(false)
 {  
   _mainWindow = CreateStandardWindow(width, height);
   _activeWindow = _mainWindow;
@@ -63,7 +65,8 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr), _execute(false)
+  _mainWindow(nullptr), _activeWindow(nullptr), _viewport(nullptr),
+  _popup(nullptr), _execute(false)
 {
   _mainWindow = CreateFullScreenWindow();
   _activeWindow = _mainWindow;
@@ -141,7 +144,7 @@ Application::UpdatePopup()
 }
 
 void
-Application::AddDeferredCommand(CALLBACK_FN fn)
+Application::AddDeferredCommand(CALLBACK_FN&& fn)
 {
   _deferred.push_back(fn);
 }
@@ -238,15 +241,16 @@ static void _RandomLayout(Window* window)
 
   window->Resize(width, height);
   new MenuUI(menuView);
-
-  View* mosaic = mainView->GetRight();
-  _RecurseSplitRandomLayout(mosaic, 0, 3);
 }
 
 static void _StandardLayout(Window* window)
 {
+  std::cout << "standdard layout" << window << std::endl;
   window->SetGLContext();
+  std::cout << "cleat virw" << std::endl;
   window->ClearViews();
+
+  std::cout << "yeah" << std::endl;
   View* mainView = window->GetMainView();
 
 
@@ -283,14 +287,33 @@ static void _StandardLayout(Window* window)
   View* graphView = centralView->GetRight();
 
   window->Resize(width, height);
-
-  new GraphEditorUI(graphView);
-  new ViewportUI(viewportView);
+  
+  uint64_t Ts[8];
+  Ts[0] = CurrentTime();
+  ViewportUI* viewport = new ViewportUI(viewportView);
+  Ts[1] = CurrentTime();
   new TimelineUI(timelineView);
+  Ts[2] = CurrentTime();
   new MenuUI(menuView);
+  Ts[3] = CurrentTime();
   new ToolbarUI(toolView, true);
+  Ts[4] = CurrentTime();
   new ExplorerUI(explorerView);
+  Ts[5] = CurrentTime();
   new PropertyEditorUI(propertyView);
+  Ts[6] = CurrentTime();
+  new GraphEditorUI(graphView);
+  Ts[7] = CurrentTime();
+  GetApplication()->SetActiveViewport(viewport);
+  
+
+  std::string names[7] = { "viewport", "timeline", "menu", "toolbar", "explorer", "property", "graph" };
+
+  for (size_t t = 0; t < 7; ++t) {
+    std::cout << names[t] << " : " << (double)((Ts[t+1] - Ts[t]) * 1e-9) << " seconds" << std::endl;
+  }
+ 
+  
 }
 
 static void _RawLayout(Window* window)
@@ -320,16 +343,16 @@ static void _RawLayout(Window* window)
 }
 
 void
-Application::SetLayout(Window*  window, short layout)
+Application::SetLayout(Window*  window, size_t layout)
 {
+  std::cout << "app set layout : " << layout << std::endl;
   if (layout == 0) {
     _BaseLayout(window);
   } else if (layout == 1) {
     _RawLayout(window);
   }  else if(layout == 2) {
     _StandardLayout(window);
-  }
-  else {
+  } else {
     _RandomLayout(window);
   }
   window->ForceRedraw();
@@ -668,7 +691,7 @@ Application::SetActiveViewport(ViewportUI* viewport)
 }
 
 void 
-Application::SetActiveTool(short t)
+Application::SetActiveTool(size_t t)
 {
   _mainWindow->GetTool()->SetActiveTool(t);
   for (auto& window : _childWindows) {

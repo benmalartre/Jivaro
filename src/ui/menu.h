@@ -27,8 +27,8 @@ public:
     bool                        enabled;
     CALLBACK_FN                 callback;
 
-    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN cb=NULL);
-    Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb=NULL);
+    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN&& cb=NULL);
+    Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN&& cb=NULL);
 
     bool Draw();
     pxr::GfVec2i ComputeSize();
@@ -43,7 +43,7 @@ public:
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsUnderBox();
 
-  Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb=NULL);
+  Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN&& cb=NULL);
 
 private:
   std::vector<Item>       _items;

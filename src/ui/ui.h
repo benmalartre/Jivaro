@@ -60,7 +60,7 @@ static const char* UITypeName[UIType::COUNT] = {
   "demo"
 };
 
-static std::map<std::string, int> UINameIndexMap;
+typedef std::map<std::string, int> UITypeCounter;
 
 
 class HeadUI;

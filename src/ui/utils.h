@@ -59,11 +59,11 @@ public:
   template <typename MatrixType, int DataType, int Rows, int Cols>
   static pxr::VtValue AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
 
-  static void IconButton(const char* icon, short state, CALLBACK_FN func);
-  static bool AddIconButton(const char* icon, short state, CALLBACK_FN func);
-  static bool AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
-  static bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
-  static bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
+  static void IconButton(const char* icon, short state, CALLBACK_FN&& func);
+  static bool AddIconButton(const char* icon, short state, CALLBACK_FN&& func);
+  static bool AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN&& func);
+  static bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN&& func);
+  static bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN&& func);
 
   static void AddPropertyMiniButton(const char* btnStr, int rowId, 
     const ImVec4& btnColor = ImVec4(0.0, 0.7, 0.0, 1.0));

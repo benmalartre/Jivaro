@@ -232,7 +232,25 @@ Window::ForceRedraw()
 void
 Window::ClearViews()
 {
+  _activeView = _hoveredView = _activeView = _mainView;
   _mainView->Clear();
+  _leaves.clear();
+  _uic.clear();
+}
+
+// ui names
+//----------------------------------------------------------------------------
+std::string
+Window::ComputeUniqueUIName(short type)
+{
+  std::string baseName = UITypeName[type];
+  if (_uic.find(baseName) != _uic.end()) {
+    _uic[baseName]++;
+  }
+  else {
+    _uic[baseName] = 1;
+  }
+  return baseName + std::to_string(_uic[baseName]);
 }
 
 // popup
@@ -256,7 +274,7 @@ Window::Resize(unsigned width, unsigned height)
   _width = width;
   _height = height;
 
-  CollectLeaves(_mainView);
+  CollectLeaves();
   _mainView->Resize(0, 0, _width, _height, true);
   _splitter->Resize(_width, _height);
 
@@ -400,22 +418,23 @@ Window::RemoveView(View* view)
   _mainView->SetDirty();
 }
 
-// collect leaves views (contains actual ui elements)
+// collect child leaves views from specified view
 //----------------------------------------------------------------------------
-void 
-Window::CollectLeaves(View* view)
+void _CollectLeaves(std::vector<View*>& leaves, View* view)
 {
-  std::cout << "collect leaves start" << std::endl;
-  if(view == NULL) view = _mainView;
-   _leaves.clear();
   if (view->GetFlag(View::LEAF)) {
-    _leaves.push_back(view);
-    view->SetDirty();
+    leaves.push_back(view);
   } else {
-    if(view->GetLeft())CollectLeaves(view->GetLeft());
-    if(view->GetRight())CollectLeaves(view->GetRight());
+    if (view->GetLeft())_CollectLeaves(leaves, view->GetLeft());
+    if (view->GetRight())_CollectLeaves(leaves, view->GetRight());
   }
-  std::cout << "collect leaves end" << std::endl;
+}
+
+void 
+Window::CollectLeaves()
+{
+  _leaves.clear();
+  _CollectLeaves(_leaves, _mainView);
 }
 
 // get view (leaf) under mouse
@@ -507,7 +526,7 @@ Window::Draw()
   if (!_valid || _idle)return;
   SetGLContext();
   glBindVertexArray(_vao);
-
+  
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();

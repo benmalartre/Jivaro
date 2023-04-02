@@ -35,7 +35,7 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoScrollbar;
 
 
-MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
+MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN&& cb)
   : ui(ui)
   , parent(NULL)
   , label(label)
@@ -46,12 +46,11 @@ MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enab
 }
 
 MenuUI::Item& MenuUI::Item::Add(const std::string label,
-  bool selected, bool enabled, CALLBACK_FN cb)
+  bool selected, bool enabled, CALLBACK_FN&& cb)
 {
   items.push_back(MenuUI::Item(ui, label, selected, enabled, cb));
   return items.back();
 }
-
 
 pxr::GfVec2i MenuUI::Item::ComputeSize()
 {
@@ -91,8 +90,7 @@ bool MenuUI::Item::Draw()
       }
       ImGui::EndMenu();
     } 
-  }
-  else {
+  } else {
     if (ImGui::MenuItem(label.c_str()) && callback) {
       callback();
       window->ForceRedraw();
@@ -102,7 +100,7 @@ bool MenuUI::Item::Draw()
   return true;
 }
 
-MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
+MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN&& cb)
 {
   _items.push_back(MenuUI::Item(this, label, selected, enabled, cb));
   return _items.back();
@@ -113,6 +111,7 @@ MenuUI::MenuUI(View* parent)
   : BaseUI(parent, UIType::MAINMENU)
   , _current(NULL)
 {
+  Window* window = GetWindow();
   MenuUI::Item& fileMenu = Add("File", false, true, NULL);
 
   fileMenu.Add("Open", false, true, std::bind(OpenFileCallback));
@@ -132,12 +131,11 @@ MenuUI::MenuUI(View* parent)
   demoItem.Add("Open Demo", false, true, std::bind(OpenDemoCallback));
   demoItem.Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
 
-  static int layoutIdx = 0;
   MenuUI::Item& layoutItem = Add("Layout", false, true);
-  layoutItem.Add("Base", false, true, std::bind(SetLayoutCallback, GetWindow(), 0));
-  layoutItem.Add("Raw", false, true, std::bind(SetLayoutCallback, GetWindow(), 1));
-  layoutItem.Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 2));
-  layoutItem.Add("Random", false, true, std::bind(SetLayoutCallback, GetWindow(), 3));
+  layoutItem.Add("Base", false, true, std::bind(SetLayoutCallback, window, 0));
+  layoutItem.Add("Raw", false, true, std::bind(SetLayoutCallback, window, 1));
+  layoutItem.Add("Standard", false, true, std::bind(SetLayoutCallback, window, 2));
+  layoutItem.Add("Random", false, true, std::bind(SetLayoutCallback, window, 3));
 
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
@@ -260,6 +258,7 @@ static void OpenChildWindowCallback()
 
 static void SetLayoutCallback(Window* window, short layout)
 {
+  std::cout << "set layout callback " << window << layout << std::endl;
   GetApplication()->SetLayout(window, layout);
 }
 

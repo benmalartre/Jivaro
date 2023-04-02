@@ -52,7 +52,8 @@ SplitterUI::BuildMap(int width, int height)
   // then for each leaf view assign an indexed color
   const std::vector<View*>& views = GetWindow()->GetLeaves();
   for (size_t viewIdx = 0; viewIdx < views.size(); ++viewIdx) {
-    if (views[viewIdx]->GetFlag(View::LFIXED) || views[viewIdx]->GetFlag(View::RFIXED))
+    if (views[viewIdx]->GetFlag(View::LFIXED) || 
+      views[viewIdx]->GetFlag(View::RFIXED))
       continue;
     
     pxr::GfVec2f sMin, sMax;

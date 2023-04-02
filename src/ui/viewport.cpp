@@ -64,7 +64,7 @@ ViewportUI::ViewportUI(View* parent)
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
-
+  
   const pxr::GfVec2i resolution = GetWindow()->GetResolution();
   {
     _drawTarget = pxr::GlfDrawTarget::New(resolution, false);
@@ -75,25 +75,22 @@ ViewportUI::ViewportUI(View* parent)
     _drawTexId = color->GetGlTextureName();
     _drawTarget->Unbind();
   }
-
+  
   {
-    _toolTarget = pxr::GlfDrawTarget::New(resolution, true /*multisamples*/);
+    _toolTarget = pxr::GlfDrawTarget::New(resolution, true);
     _toolTarget->Bind();
     _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
     _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-    auto color = _toolTarget->GetAttachment("color");
+     auto color = _toolTarget->GetAttachment("color");
     _toolTexId = color->GetGlTextureName();
     _toolTarget->Unbind();
   }
-
-  GetApplication()->SetActiveViewport(this);
 }
 
 // destructor
 ViewportUI::~ViewportUI()
 {
   Application* app = GetApplication();
-  
   if(_rendererNames)delete[] _rendererNames;
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;

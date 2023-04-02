@@ -6,6 +6,9 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+static int GLOBAL_UI_TYPE_COUNTER[UIType::COUNT];
+
+
 // constructor
 BaseUI::BaseUI(View* parent, short type, bool popup)
   : _parent(parent) 
@@ -32,14 +35,9 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
 std::string 
 BaseUI::ComputeUniqueName(short type)
 {
+  if(_parent)return _parent->GetWindow()->ComputeUniqueUIName(type);
   std::string baseName = UITypeName[type];
-  if (UINameIndexMap.find(baseName) != UINameIndexMap.end()) {
-    UINameIndexMap[baseName]++;
-  }
-  else {
-    UINameIndexMap[baseName] = 1;
-  }
-  return baseName + std::to_string(UINameIndexMap[baseName]);
+  return baseName + std::to_string(GLOBAL_UI_TYPE_COUNTER[type]++);
 }
 
 void BaseUI::OnNewSceneNotice(const NewSceneNotice& n)

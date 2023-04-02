@@ -10,7 +10,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 void
-UIUtils::IconButton(const char* icon, short state, CALLBACK_FN func)
+UIUtils::IconButton(const char* icon, short state, CALLBACK_FN&& func)
 {
   ImGui::BeginGroup();
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))func();
@@ -18,7 +18,7 @@ UIUtils::IconButton(const char* icon, short state, CALLBACK_FN func)
 }
 
 bool
-UIUtils::AddIconButton(const char* icon, short state, CALLBACK_FN func)
+UIUtils::AddIconButton(const char* icon, short state, CALLBACK_FN&& func)
 {
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
@@ -29,7 +29,7 @@ UIUtils::AddIconButton(const char* icon, short state, CALLBACK_FN func)
 }
 
 bool
-UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN&& func)
 {
   ImGui::PushID(id);
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
@@ -43,7 +43,7 @@ UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN fu
 }
 
 bool
-UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN&& func)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushID(id);
@@ -59,7 +59,7 @@ UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, CAL
 }
 
 bool
-UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN&& func)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;

@@ -81,6 +81,7 @@ public:
 
   // ui
   ImGuiContext* GetContext() { return _context; };
+  std::string ComputeUniqueUIName(short type);
 
   // tool
   Tool* GetTool() { return &_tool; };
@@ -120,7 +121,7 @@ public:
   View* GetActiveView(){return _activeView;};
   View* GetHoveredView() { return _hoveredView; };
   View* GetViewUnderMouse(int x, int y);
-  void CollectLeaves(View* view=NULL);
+  void CollectLeaves();
   const std::vector<View*>& GetLeaves();
   void DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
   void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
@@ -208,6 +209,7 @@ private:
   float                 _dpiY;
   GLuint                _fbo;
   GLuint                _tex;
+  UITypeCounter         _uic;
 
 public:
   // static constructor
