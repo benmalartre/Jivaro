@@ -36,15 +36,13 @@ public:
   ~Application();
 
     // create a fullscreen window
-  static Window* CreateFullScreenWindow();
+  static Window* CreateFullScreenWindow(const std::string& name);
 
   // create a standard window of specified size
-  static Window* CreateStandardWindow(int width, int height);
+  static Window* CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension);
 
   // create a child window
-  static Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
-    const std::string& name="Child", bool decorated=true);
-
+  static Window* CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent);
 
   // browse file
   std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 

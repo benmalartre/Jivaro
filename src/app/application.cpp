@@ -58,7 +58,7 @@ Application::Application(unsigned width, unsigned height):
   _mainWindow(nullptr), _activeWindow(nullptr), _viewport(nullptr), 
   _popup(nullptr), _execute(false)
 {  
-  _mainWindow = CreateStandardWindow(width, height);
+  _mainWindow = CreateStandardWindow(APPLICATION_NAME, pxr::GfVec4i(0,0,width, height));
   _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
   
@@ -68,7 +68,7 @@ Application::Application(bool fullscreen):
   _mainWindow(nullptr), _activeWindow(nullptr), _viewport(nullptr),
   _popup(nullptr), _execute(false)
 {
-  _mainWindow = CreateFullScreenWindow();
+  _mainWindow = CreateFullScreenWindow(APPLICATION_NAME);
   _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
 };
@@ -83,29 +83,26 @@ Application::~Application()
 // create full screen window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateFullScreenWindow()
+Application::CreateFullScreenWindow(const std::string& name)
 {
-  return Window::CreateFullScreenWindow();
+  return Window::CreateFullScreenWindow(name);
 }
 
 // create child window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateChildWindow(
-  int x, int y, int width, int height, Window* parent,
-  const std::string& name, bool decorated)
+Application::CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent)
 {
   return
-    Window::CreateChildWindow(x, y, width, height,
-      parent->GetGlfwWindow(), name, decorated);
+    Window::CreateChildWindow(name, dimension, parent);
 }
 
 // create standard window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateStandardWindow(int width, int height)
+Application::CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension)
 {
-  return Window::CreateStandardWindow(width, height);
+  return Window::CreateStandardWindow(name, dimension);
 }
 
 // popup

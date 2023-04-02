@@ -238,7 +238,7 @@ static void OpenChildWindowCallback()
 {
   Application* app = GetApplication();
   Window* mainWindow = app->GetMainWindow();
-  Window* childWindow = Application::CreateChildWindow(200, 200, 400, 400, mainWindow);
+  Window* childWindow = Application::CreateChildWindow("ChildWindow", pxr::GfVec4i(200, 200, 400, 400), mainWindow);
   app->AddWindow(childWindow);
 
   childWindow->SetLayout(1);
