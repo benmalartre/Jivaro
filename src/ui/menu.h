@@ -60,6 +60,7 @@ static void OpenChildWindowCallback();
 static void CreatePrimCallback();
 static void TriangulateCallback();
 static void FlattenGeometryCallback();
+static void SetLayoutCallback(Window*, size_t);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

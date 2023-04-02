@@ -68,10 +68,8 @@ class Window
 {
 public:
   // constructor
-  Window(int width, int height, const std::string& name);
-  Window(bool fullscreen, const std::string& name);
-  Window(int x, int y, int width, int height,
-    GLFWwindow* parent, const std::string& name, bool decorated=true);
+  Window(const std::string& name, const pxr::GfVec4i& dimension,
+    bool fullscreen=false, Window* parent=NULL);
 
   //destructor
   ~Window();
@@ -216,10 +214,9 @@ private:
 public:
   // static constructor
   //----------------------------------------------------------------------------
-  static Window* CreateFullScreenWindow();
-  static Window* CreateStandardWindow(int width, int height);
-  static Window* CreateChildWindow(int x, int y, int width, int height, GLFWwindow* parent,
-    const std::string& name="Child", bool decorated=true);
+  static Window* CreateFullScreenWindow(const std::string& name);
+  static Window* CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension);
+  static Window* CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent);
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

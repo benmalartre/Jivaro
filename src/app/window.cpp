@@ -51,52 +51,32 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
   ImGuiWindowFlags_NoBackground;
 
 
-// fullscreen window constructor
-//----------------------------------------------------------------------------
-Window::Window(bool fullscreen, const std::string& name) :
-  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0),  _tex(0), _needUpdateLayout(true)
-{
-  GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-  const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-  glfwWindowHint(GLFW_RED_BITS,mode->redBits);
-  glfwWindowHint(GLFW_GREEN_BITS,mode->greenBits);
-  glfwWindowHint(GLFW_BLUE_BITS,mode->blueBits);
-  glfwWindowHint(GLFW_REFRESH_RATE,mode->refreshRate);
-  
-  //glfwWindowHint(GLFW_DECORATED, false);
-  
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#else
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-#endif
-  glfwWindowHint(GLFW_STENCIL_BITS, 8);
-  glfwWindowHint(GLFW_SAMPLES, 4);
-
-  _window = glfwCreateWindow(mode->width, mode->height, "Jivaro",  monitor, NULL);
-  _width = mode->width;
-  _height = mode->height;
-  _shared = true;
-  if(_window) Init();
-}
-
 // width/height window constructor
 //----------------------------------------------------------------------------
-Window::Window(int width, int height, const std::string& name):
+Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool fullscreen, Window* parent) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _needUpdateLayout(true)
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), _name(name), 
+  _forceRedraw(3), _idle(false), _fbo(0), _tex(0)
 {
-  _width = width;
-  _height = height;
-  _shared = true;
+  GLFWmonitor* monitor = NULL;
+  if (fullscreen) {
+    monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+    _width = mode->width;
+    _height = mode->height;
+  }
+  else {
+    _width = dimension[2] - dimension[0];
+    _height = dimension[3] - dimension[1];
+  }
+
   //glfwWindowHint(GLFW_DECORATED, false);
+
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -108,40 +88,12 @@ Window::Window(int width, int height, const std::string& name):
 #endif
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
+
+  _shared = !(bool)parent;
+  _window = glfwCreateWindow(_width, _height, name.c_str(), monitor, parent ? parent->GetGlfwWindow() : NULL);
   
-  _window = glfwCreateWindow(_width,_height,"Jivaro",NULL,NULL);
-  if(_window) Init();
-}
-
-// child window constructor
-//----------------------------------------------------------------------------
-Window::Window(int x, int y, int width, int height, 
-  GLFWwindow* parent, const std::string& name, bool decorated) :
-  _pixels(NULL), _debounce(0), _mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), 
-  _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _needUpdateLayout(true)
-{
-  _width = width;
-  _height = height;
-  _shared = false;
-
-  glfwWindowHint(GLFW_DECORATED, decorated);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#else
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-#endif
-  glfwWindowHint(GLFW_STENCIL_BITS, 8);
-  glfwWindowHint(GLFW_FLOATING, true);
-  glfwWindowHint(GLFW_SAMPLES, 4);
-
-  _window = glfwCreateWindow(_width, _height, name.c_str(), NULL, parent);
-  if (_window) {
-    glfwSetWindowPos(_window, x, y);
+  if(_window) {
+    glfwSetWindowPos(_window, dimension[0], dimension[1]);
     Init();
   }
 }
@@ -214,27 +166,25 @@ Window::~Window()
 // create full screen window
 //----------------------------------------------------------------------------
 Window* 
-Window::CreateFullScreenWindow()
+Window::CreateFullScreenWindow(const std::string& name)
 {
-  return new Window(true, "Jivaro");
+  return new Window("Jivaro", pxr::GfVec4i(), true);
 }
 
 // create standard window
 //----------------------------------------------------------------------------
 Window*
-Window::CreateStandardWindow(int width, int height)
+Window::CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension)
 {
-  return new Window(width, height, "Jivaro");
+  return new Window(name, dimension, false);
 }
 
 // child window
 //----------------------------------------------------------------------------
 Window*
-Window::CreateChildWindow(
-  int x, int y, int width, int height, GLFWwindow* parent,
-  const std::string& name, bool decorated)
+Window::CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent)
 {
-  return new Window(x, y, width, height, parent, name, decorated);
+  return new Window(name, dimension, false, parent);
 }
 
 // layouts
@@ -458,7 +408,7 @@ Window::SetLayout(size_t layout)
 {
   if (layout != _layout) {
     _layout = layout;
-    switch(_layout){
+    switch (_layout) {
     case 0:
       _BaseLayout(this);
       break;
@@ -472,6 +422,7 @@ Window::SetLayout(size_t layout)
     default:
       _RandomLayout(this);
       break;
+    }
   }
 }
 
