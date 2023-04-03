@@ -51,18 +51,17 @@ SplitterUI::BuildMap(int width, int height)
   memset((void*)&_pixels[0], 0, numPixels * sizeof(int));
 
   // then for each leaf view assign an indexed color
-  const std::vector<View*>& views = GetWindow()->GetBranches();
+  const std::vector<View*>& views = GetWindow()->GetViews();
 
   for (size_t viewIdx = 0; viewIdx < views.size(); ++viewIdx) {
-    if (views[viewIdx]->GetFlag(View::LFIXED) || 
-      views[viewIdx]->GetFlag(View::RFIXED))
-      continue;
-    
+    View* current = views[viewIdx];
+    if (current->GetFlag(View::LEAF))continue;
+    if (current->GetFlag(View::LFIXED | View::RFIXED)) continue;
     pxr::GfVec2f sMin, sMax;
-    views[viewIdx]->GetSplitInfos(sMin, sMax, _width, _height);
+    current->GetSplitInfos(sMin, sMax, _width, _height);
     for (int y = sMin[1]; y < sMax[1]; ++y)
       for (int x = sMin[0]; x < sMax[0]; ++x)
-        _pixels[y * _width + x] = viewIdx;
+        _pixels[y * _width + x] = viewIdx + 1;
   }
 }
 
@@ -76,7 +75,7 @@ SplitterUI::Pick(int x, int y)
   int idx = y * _width + x;
   if(idx >= 0 && idx < (_width * _height))
   {
-    const std::vector<View*>& views = GetWindow()->GetBranches();
+    const std::vector<View*>& views = GetWindow()->GetViews();
     _hovered = views[_pixels[idx] - 1];
     return _pixels[idx] - 1;
   }
@@ -87,18 +86,14 @@ SplitterUI::Pick(int x, int y)
 bool 
 SplitterUI::Draw()
 {
-  
-  static bool open;
-  const std::vector<View*>& views = GetWindow()->GetBranches();
-  ImGui::Begin(_name.c_str(), &open, _flags);
+  const std::vector<View*>& views = GetWindow()->GetViews();
+  ImGui::Begin(_name.c_str(), NULL, _flags);
   ImGui::SetWindowPos(ImVec2(0, 0));
   ImGui::SetWindowSize(ImVec2(_width, _height));
-
-  ImDrawList* drawList = ImGui::GetForegroundDrawList();
   
   for(auto view : views)
   {
-    drawList->AddRectFilled(view->GetMin(), view->GetMax(), ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 0.1f), 0);
+    if (view->GetFlag(View::LEAF))continue;
     if(_cursor == ImGuiMouseCursor_ResizeEW) {
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     } else if(_cursor == ImGuiMouseCursor_ResizeNS) {

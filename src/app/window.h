@@ -121,7 +121,7 @@ public:
   View* GetViewUnderMouse(int x, int y);
   void CollectLeaves();
   const std::vector<View*>& GetLeaves();
-  const std::vector<View*>& GetBranches();
+  const std::vector<View*>& GetViews();
   void DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   void DiscardMouseEventsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   void InvalidateViews();
@@ -175,7 +175,7 @@ private:
   View*                 _activeLeaf;
   SplitterUI*           _splitter;
   bool                  _dragSplitter;
-  std::vector<View*>    _branches;
+  std::vector<View*>    _views;
   std::vector<View*>    _leaves;
   ImGuiContext*         _context;
   Tool                  _tool;
