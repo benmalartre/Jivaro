@@ -35,14 +35,8 @@ ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_NoScrollbar;
 
 
-MenuUI::Item*
-MenuUI::Item::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
-{
-  items.push_back({ this->ui, this, label, selected, enabled, cb });
-  return &items.back();
-}
-
-pxr::GfVec2i MenuUI::ComputeSize(const MenuUI::Item& item)
+pxr::GfVec2f 
+MenuUI::ComputeSize(const MenuUI::Item& item)
 {
   ImVec2 size(0, 0);
   ImGuiStyle& style = ImGui::GetStyle();
@@ -52,14 +46,15 @@ pxr::GfVec2i MenuUI::ComputeSize(const MenuUI::Item& item)
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
   }
-  return pxr::GfVec2i(size[0] * 2, size[1] * 2);
+  return pxr::GfVec2f(size[0] * 2, size[1] * 2);
 }
 
-pxr::GfVec2i MenuUI::ComputePos(const MenuUI::Item& item)
+pxr::GfVec2f
+MenuUI::ComputePos(const MenuUI::Item& item)
 {
   ImGuiStyle& style = ImGui::GetStyle();
   View* view = GetView();
-  pxr::GfVec2i pos(view->GetX() + style.WindowPadding[0], view->GetY());
+  pxr::GfVec2f pos(view->GetX() + style.WindowPadding[0], view->GetY());
   for (auto& subItem : item.items) {
     if (item.label == subItem.label) break;
     ImVec2 cur = ImGui::CalcTextSize(subItem.label.c_str());
@@ -68,10 +63,12 @@ pxr::GfVec2i MenuUI::ComputePos(const MenuUI::Item& item)
   return pos;
 }
 
-bool MenuUI::_Draw(const MenuUI::Item& item)
+bool
+MenuUI::_Draw(const MenuUI::Item& item)
 {
   if (item.items.size()) {    
     if (ImGui::BeginMenu(item.label.c_str())) {
+      _current = &item;
       for (auto& subItem : item.items) {
         if(_Draw(subItem))return true;
       }
@@ -80,6 +77,8 @@ bool MenuUI::_Draw(const MenuUI::Item& item)
   } else {
     if (ImGui::MenuItem(item.label.c_str())&& item.callback) {
       item.callback();
+      GetWindow()->ForceRedraw();
+      _current = NULL;
       return true;
     } 
   }
@@ -93,11 +92,18 @@ MenuUI::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb
   return &_items.back();
 }
 
+MenuUI::Item*
+MenuUI::Item::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
+{
+  items.push_back({ this->ui, this, label, selected, enabled, cb });
+  return &items.back();
+}
+
 
 // constructor
 MenuUI::MenuUI(View* parent)
   : BaseUI(parent, UIType::MAINMENU)
-  /*, _current(NULL)*/
+  , _current(NULL)
 {
   Window* window = GetWindow();
   MenuUI::Item* fileMenu = Add("File", false, true, NULL);
@@ -133,7 +139,8 @@ MenuUI::~MenuUI()
 {
 }
 
-void MenuUI::MouseButton(int button, int action, int mods)
+void 
+MenuUI::MouseButton(int button, int action, int mods)
 {
   _parent->SetDirty();
   if (action == GLFW_PRESS)
@@ -142,27 +149,26 @@ void MenuUI::MouseButton(int button, int action, int mods)
     _parent->SetInteracting(false);
 }
 
-void MenuUI::DirtyViewsUnderBox()
+void 
+MenuUI::DirtyViewsUnderBox()
 {
-  /*
   if (_current) {
-    _pos = _current->ComputePos();
-    _size = _current->ComputeSize();
+    _pos = ComputePos(*_current);
+    _size = ComputeSize(*_current);
+  } else {
+    _pos = pxr::GfVec2f(0, 0);
+    _size = pxr::GfVec2f(GetWidth(), 128);
   }
-  else {
-    */
-    _pos = pxr::GfVec2i(0, 0);
-    _size = pxr::GfVec2i(GetWidth(), 128);
-  //}
   _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
   _parent->SetDirty();
 }
 
 // overrides
-bool MenuUI::Draw()
+bool 
+MenuUI::Draw()
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  //if (!_parent->IsActive())_current = NULL;
+  if (!_parent->IsActive())_current = NULL;
   ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
@@ -176,9 +182,11 @@ bool MenuUI::Draw()
     ImGui::EndMainMenuBar();
   }
 
-  //bool dirty = (_current || active);
-  if (active) { DirtyViewsUnderBox(); }
-
+  if (_current || active) {
+    DirtyViewsUnderBox();
+    ImDrawList* drawList = ImGui::GetForegroundDrawList();
+    drawList->AddRect(_pos, _pos + _size, ImColor({ 255,0,0,255 }), 4.f, 0 4.f);
+  }
 
   ImGui::PopStyleColor(3);
 
@@ -241,7 +249,7 @@ static void OpenChildWindowCallback()
   Window* childWindow = Application::CreateChildWindow("ChildWindow", pxr::GfVec4i(200, 200, 400, 400), mainWindow);
   app->AddWindow(childWindow);
 
-  childWindow->SetLayout(1);
+  childWindow->SetDesiredLayout(1);
 
   mainWindow->SetGLContext();
 }

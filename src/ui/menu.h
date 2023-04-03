@@ -34,8 +34,8 @@ public:
   MenuUI(View* parent);
   ~MenuUI();
 
-  pxr::GfVec2i ComputeSize(const Item& item);
-  pxr::GfVec2i ComputePos(const Item& item);
+  pxr::GfVec2f ComputeSize(const Item& item);
+  pxr::GfVec2f ComputePos(const Item& item);
 
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
@@ -46,9 +46,10 @@ public:
 private:
   bool                    _Draw(const Item& item);
   std::vector<Item>       _items;
+  mutable const Item*     _current;
   static ImGuiWindowFlags _flags;
-  pxr::GfVec2i            _pos;
-  pxr::GfVec2i            _size;
+  pxr::GfVec2f            _pos;
+  pxr::GfVec2f            _size;
 };
 
 

@@ -55,7 +55,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 //----------------------------------------------------------------------------
 Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool fullscreen, Window* parent) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),_splitter(NULL), _dragSplitter(false),
-  _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _layout(0), _needUpdateLayout(true)
+  _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _layout(std::numeric_limits<size_t>::max()), _needUpdateLayout(true)
 {
   GLFWmonitor* monitor = NULL;
   if (fullscreen) {
@@ -401,6 +401,7 @@ Window::Resize(unsigned width, unsigned height)
 void
 Window::SetLayout()
 {
+  std::cout << "set layout " << _needUpdateLayout << std::endl;
   if (_needUpdateLayout) {
     switch (_layout) {
     case 0:
@@ -421,12 +422,19 @@ Window::SetLayout()
   }
 }
 
+size_t 
+Window::GetLayout() {
+  return _layout;
+}
+
 void 
 Window::SetDesiredLayout(size_t layout)
 {
   if (layout != _layout) {
     _layout = layout;
     _needUpdateLayout = true;
+  } else {
+    _needUpdateLayout = false;
   }
 }
 
@@ -579,7 +587,7 @@ Window::GetViewUnderMouse(int x, int y)
 }
 
 void 
-Window::DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+Window::DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
 {
   for (auto leaf : _leaves) {
     if (leaf->Intersect(min, size)) {
@@ -589,7 +597,7 @@ Window::DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
 }
 
 void
-Window::DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+Window::DiscardMouseEventsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
 {
   for (auto leaf : _leaves) {
     if (leaf->Intersect(min, size)) {
@@ -645,24 +653,6 @@ Window::SetGLContext()
   ImGui::SetCurrentContext(_context);
 }
 
-// deferred stuff
-//----------------------------------------------------------------------------
-void
-Window::AddDeferredCommand(CALLBACK_FN fn)
-{
-  _deferred.push_back(fn);
-}
-
-void
-Window::ExecuteDeferredCommands()
-{
-  // execute any registered command that could not been run during draw
-  if (_deferred.size()) {
-    for (size_t i = _deferred.size() - 1; i >= 0; --i)_deferred[i]();
-    _deferred.clear();
-  }
-}
-
 // draw
 //----------------------------------------------------------------------------
 void 
@@ -671,8 +661,7 @@ Window::Draw()
   if (!_valid || _idle)return;
 
   SetGLContext();
-  ExecuteDeferredCommands();
-
+  SetLayout();
   glBindVertexArray(_vao);
   
   // start the imgui frame

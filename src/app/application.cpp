@@ -126,7 +126,6 @@ Application::SetPopupDeferred(PopupUI* popup)
 }
 */
 
-
 void
 Application::UpdatePopup()
 {
@@ -138,6 +137,22 @@ Application::UpdatePopup()
   _popup = nullptr;
   _mainWindow->ForceRedraw();
   for (auto& childWindow : _childWindows)childWindow->ForceRedraw();
+}
+
+void
+Application::AddDeferredCommand(CALLBACK_FN fn)
+{
+  _deferred.push_back(fn);
+}
+
+void
+Application::ExecuteDeferredCommands()
+{
+  // execute any registered command that could not been run during draw
+  if (_deferred.size()) {
+    for (size_t i = _deferred.size() - 1; i >= 0; --i)_deferred[i]();
+    _deferred.clear();
+  }
 }
 
 
@@ -222,7 +237,7 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
   // create window
-  _mainWindow->SetLayout(0);
+  _mainWindow->SetDesiredLayout(0);
   
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
@@ -406,6 +421,7 @@ Application::Term()
 bool
 Application::Update()
 {
+  ExecuteDeferredCommands();
   /*
   if (_needCaptureFramebuffers) {
     _mainWindow->CaptureFramebuffer();
@@ -413,7 +429,6 @@ Application::Update()
     _needCaptureFramebuffers = false;
   }
   */
-
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
   double currentTime = glfwGetTime();

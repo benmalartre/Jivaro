@@ -83,8 +83,6 @@ public:
 
   // tool
   Tool* GetTool() { return &_tool; };
-  void AddDeferredCommand(CALLBACK_FN fn);
-  void ExecuteDeferredCommands();
 
   // infos
   void GetContextVersionInfos();
@@ -105,7 +103,7 @@ public:
   // size
   int GetWidth(){return _width;};
   int GetHeight(){return _height;};
-  pxr::GfVec2i GetResolution() { return pxr::GfVec2i(_width, _height); };
+  pxr::GfVec2f GetResolution() { return pxr::GfVec2f(_width, _height); };
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
@@ -123,12 +121,13 @@ public:
   View* GetViewUnderMouse(int x, int y);
   void CollectLeaves();
   const std::vector<View*>& GetLeaves();
-  void DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
-  void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
+  void DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
+  void DiscardMouseEventsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   void InvalidateViews();
   void ClearViews();
   void SetLayout();
   void SetDesiredLayout(size_t layout);
+  size_t GetLayout();
   
   // draw
   void SetGLContext();
@@ -214,9 +213,6 @@ private:
   GLuint                _fbo;
   GLuint                _tex;
   UITypeCounter         _uic;
-
-  std::vector<CALLBACK_FN> _deferred;
-
 
 public:
   // static constructor

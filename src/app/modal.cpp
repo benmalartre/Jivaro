@@ -32,6 +32,7 @@ void BaseModal::Init()
   mainWindow->SetIdle(true);
 
   _window = app->CreateChildWindow(_title, pxr::GfVec4i(_x, _y, _width, _height), mainWindow);
+  _window->SetDesiredLayout(_window->GetLayout());
 }
 
 void BaseModal::Term()
