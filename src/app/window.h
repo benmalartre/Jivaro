@@ -103,7 +103,7 @@ public:
   // size
   int GetWidth(){return _width;};
   int GetHeight(){return _height;};
-  pxr::GfVec2f GetResolution() { return pxr::GfVec2f(_width, _height); };
+  pxr::GfVec2i GetResolution() { return pxr::GfVec2i(_width, _height); };
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
@@ -121,6 +121,7 @@ public:
   View* GetViewUnderMouse(int x, int y);
   void CollectLeaves();
   const std::vector<View*>& GetLeaves();
+  const std::vector<View*>& GetViews();
   void DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   void DiscardMouseEventsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   void InvalidateViews();
@@ -174,6 +175,7 @@ private:
   View*                 _activeLeaf;
   SplitterUI*           _splitter;
   bool                  _dragSplitter;
+  std::vector<View*>    _views;
   std::vector<View*>    _leaves;
   ImGuiContext*         _context;
   Tool                  _tool;

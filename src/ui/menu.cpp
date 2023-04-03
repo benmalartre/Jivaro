@@ -36,11 +36,11 @@ ImGuiWindowFlags MenuUI::_flags =
 
 
 pxr::GfVec2f 
-MenuUI::ComputeSize(const MenuUI::Item& item)
+MenuUI::ComputeSize(const MenuUI::Item* item)
 {
   ImVec2 size(0, 0);
   ImGuiStyle& style = ImGui::GetStyle();
-  for (const auto& subItem : item.items) {
+  for (const auto& subItem : item->items) {
     ImVec2 labelSize = ImGui::CalcTextSize(subItem.label.c_str());
     ImVec2 cur(labelSize[0] + 2 * style.FramePadding[0], labelSize[1]);
     if (cur[0] > size[0])size[0] = cur[0];
@@ -50,13 +50,13 @@ MenuUI::ComputeSize(const MenuUI::Item& item)
 }
 
 pxr::GfVec2f
-MenuUI::ComputePos(const MenuUI::Item& item)
+MenuUI::ComputePos(const MenuUI::Item* item)
 {
   ImGuiStyle& style = ImGui::GetStyle();
   View* view = GetView();
   pxr::GfVec2f pos(view->GetX() + style.WindowPadding[0], view->GetY());
-  for (auto& subItem : item.items) {
-    if (item.label == subItem.label) break;
+  for (auto& subItem : _items) {
+    if (item->label == subItem.label) break;
     ImVec2 cur = ImGui::CalcTextSize(subItem.label.c_str());
     pos[0] += cur[0] + style.ItemSpacing[0];
   }
@@ -64,13 +64,14 @@ MenuUI::ComputePos(const MenuUI::Item& item)
 }
 
 bool
-MenuUI::_Draw(const MenuUI::Item& item)
+MenuUI::_Draw(const MenuUI::Item& item, size_t relativeIndex)
 {
   if (item.items.size()) {    
     if (ImGui::BeginMenu(item.label.c_str())) {
-      _current = &item;
+      _opened.push_back(relativeIndex);
+      size_t subItemIndex = 0;
       for (auto& subItem : item.items) {
-        if(_Draw(subItem))return true;
+        if(_Draw(subItem, subItemIndex++))return true;
       }
       ImGui::EndMenu();
     } 
@@ -78,7 +79,7 @@ MenuUI::_Draw(const MenuUI::Item& item)
     if (ImGui::MenuItem(item.label.c_str())&& item.callback) {
       item.callback();
       GetWindow()->ForceRedraw();
-      _current = NULL;
+      _opened.clear();
       return true;
     } 
   }
@@ -103,7 +104,6 @@ MenuUI::Item::Add(const std::string label, bool selected, bool enabled, CALLBACK
 // constructor
 MenuUI::MenuUI(View* parent)
   : BaseUI(parent, UIType::MAINMENU)
-  , _current(NULL)
 {
   Window* window = GetWindow();
   MenuUI::Item* fileMenu = Add("File", false, true, NULL);
@@ -111,19 +111,23 @@ MenuUI::MenuUI(View* parent)
   fileMenu->Add("Open", false, true, std::bind(OpenFileCallback));
   fileMenu->Add("Save", false, true, std::bind(SaveFileCallback));
   fileMenu->Add("New", false, true, std::bind(NewFileCallback));
-  /*
-  MenuUI::Item& testMenu = Add("Test", false, true, NULL);
-  testMenu.Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
-  testMenu.Add("Triangulate", false, true, std::bind(TriangulateCallback));
+  
+  MenuUI::Item* testMenu = Add("Test", false, true, NULL);
+  testMenu->Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
+  testMenu->Add("Triangulate", false, true, std::bind(TriangulateCallback));
 
-  MenuUI::Item& subMenu = testMenu.Add("SubMenu", false, true, NULL);
-  subMenu.Add("Sub0", false, true, NULL);
-  subMenu.Add("Sub1", false, true, NULL);
-  subMenu.Add("Sub2", false, true, NULL);
+  MenuUI::Item* subMenu = testMenu->Add("SubMenu", false, true, NULL);
+  subMenu->Add("Sub0", false, true, NULL);
+  subMenu->Add("Sub1", false, true, NULL);
+  MenuUI::Item* subSubMenu = subMenu->Add("Sub2", false, true, NULL);
 
-  MenuUI::Item& demoMenu = Add("Demo", false, true);
-  demoMenu.Add("Open Demo", false, true, std::bind(OpenDemoCallback));
-  demoMenu.Add("Child Window", false, true, std::bind(OpenChildWindowCallback));*/
+  subSubMenu->Add("SubSub0", false, true, NULL);
+  subSubMenu->Add("SubSub1", false, true, NULL);
+  subSubMenu->Add("SubSub2", false, true, NULL);
+
+  MenuUI::Item* demoMenu = Add("Demo", false, true);
+  demoMenu->Add("Open Demo", false, true, std::bind(OpenDemoCallback));
+  demoMenu->Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
 
   MenuUI::Item* layoutMenu = Add("Layout", false, true);
   layoutMenu->Add("Base", false, true, std::bind(SetLayoutCallback, window, 0));
@@ -150,25 +154,36 @@ MenuUI::MouseButton(int button, int action, int mods)
 }
 
 void 
-MenuUI::DirtyViewsUnderBox()
+MenuUI::DirtyViewsBehind()
 {
+  ImGuiStyle& style = ImGui::GetStyle();
+  View* view = GetView();
+  pxr::GfVec2f pmin(view->GetX() + style.WindowPadding[0], view->GetY());
+  pxr::GfVec2f pmax(view->GetX() + style.WindowPadding[0], view->GetY());
+
+  for (size_t opened : _opened) {
+
+  }
+  /*
   if (_current) {
-    _pos = ComputePos(*_current);
-    _size = ComputeSize(*_current);
+    _pos = ComputePos(_current);
+    _size = ComputeSize(_current);
   } else {
     _pos = pxr::GfVec2f(0, 0);
     _size = pxr::GfVec2f(GetWidth(), 128);
   }
   _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
   _parent->SetDirty();
+  */
 }
 
 // overrides
 bool 
 MenuUI::Draw()
 {
+  _opened.clear();
   const ImGuiStyle& style = ImGui::GetStyle();
-  if (!_parent->IsActive())_current = NULL;
+  if (!_parent->IsActive() && _opened.size())_opened.clear();
   ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
@@ -176,16 +191,27 @@ MenuUI::Draw()
   bool active = false;
   if (ImGui::BeginMainMenuBar())
   {
+    size_t itemIndex = 0;
     for (auto& item : _items) {
-      if (_Draw(item))active = true;
+      if (_Draw(item, itemIndex++))active = true;
     }
     ImGui::EndMainMenuBar();
   }
 
-  if (_current || active) {
-    DirtyViewsUnderBox();
+  if (_opened.size() || active) {
+    DirtyViewsBehind();
     ImDrawList* drawList = ImGui::GetForegroundDrawList();
-    drawList->AddRect(_pos, _pos + _size, ImColor({ 255,0,0,255 }), 4.f, 0, 4.f);
+    
+    //drawList->AddRect(_pos, _pos + _size, ImColor({ 255,0,0,255 }), 4.f, 0, 4.f);
+
+    pxr::GfVec2f pos = GetPosition() + pxr::GfVec2f(100, 200);
+    drawList->AddText(pos, ImColor({ 0,255,0,255 }), "opened : ");
+    pos += pxr::GfVec2f(64, 0);
+
+    for (auto& opened : _opened) {
+      pos += pxr::GfVec2f(32, 0);
+      drawList->AddText(pos, ImColor({ 0,255,0,255 }), (std::to_string(opened) + ",").c_str());
+    }
   }
 
   ImGui::PopStyleColor(3);

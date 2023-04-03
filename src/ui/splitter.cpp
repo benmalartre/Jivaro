@@ -46,11 +46,14 @@ SplitterUI::BuildMap(int width, int height)
   _valid = true;
   _width = width;
   _height = height;
+
   // fill with black
   memset((void*)&_pixels[0], 0, numPixels * sizeof(int));
 
   // then for each leaf view assign an indexed color
   const std::vector<View*>& views = GetWindow()->GetLeaves();
+  std::cout << "splitter build map : " << views.size() << " leaves" << std::endl;
+
   for (size_t viewIdx = 0; viewIdx < views.size(); ++viewIdx) {
     if (views[viewIdx]->GetFlag(View::LFIXED) || 
       views[viewIdx]->GetFlag(View::RFIXED))
@@ -85,16 +88,24 @@ SplitterUI::Pick(int x, int y)
 bool 
 SplitterUI::Draw()
 {
+  
   static bool open;
-  const std::vector<View*>& views = GetWindow()->GetLeaves();
+  const std::vector<View*>& views = GetWindow()->GetViews();
+  std::cout << "s^plitter draw : " << views.size() << std::endl;
   ImGui::Begin(_name.c_str(), &open, _flags);
   ImGui::SetWindowPos(ImVec2(0, 0));
   ImGui::SetWindowSize(ImVec2(_width, _height));
+
+  ImDrawList* drawList = ImGui::GetForegroundDrawList();
   
   for(auto view : views)
   {
+    std::cout << "loop view : is leaf : " << view->GetFlag(View::LEAF) << std::endl;
     if(view->GetFlag(View::LEAF)) continue;
 
+    drawList->AddRectFilled(view->GetMin(), view->GetMax(), ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f), 0);
+    std::cout << "view min : " << view->GetMin() << std::endl;
+    std::cout << "view max : " << view->GetMax() << std::endl;
     if(_cursor == ImGuiMouseCursor_ResizeEW) {
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     } else if(_cursor == ImGuiMouseCursor_ResizeNS) {

@@ -401,7 +401,6 @@ Window::Resize(unsigned width, unsigned height)
 void
 Window::SetLayout()
 {
-  std::cout << "set layout " << _needUpdateLayout << std::endl;
   if (_needUpdateLayout) {
     switch (_layout) {
     case 0:
@@ -555,13 +554,14 @@ Window::RemoveView(View* view)
 
 // collect child leaves views from specified view
 //----------------------------------------------------------------------------
-void _CollectLeaves(std::vector<View*>& leaves, View* view)
+void _CollectLeaves(std::vector<View*>& views, std::vector<View*>& leaves, View* view)
 {
   if (view->GetFlag(View::LEAF)) {
     leaves.push_back(view);
   } else {
-    if (view->GetLeft())_CollectLeaves(leaves, view->GetLeft());
-    if (view->GetRight())_CollectLeaves(leaves, view->GetRight());
+    views.push_back(view);
+    if (view->GetLeft())_CollectLeaves(views, leaves, view->GetLeft());
+    if (view->GetRight())_CollectLeaves(views, leaves, view->GetRight());
   }
 }
 
@@ -569,7 +569,8 @@ void
 Window::CollectLeaves()
 {
   _leaves.clear();
-  _CollectLeaves(_leaves, _mainView);
+  _views.clear();
+  _CollectLeaves(_views, _leaves, _mainView);
 }
 
 // get view (leaf) under mouse
@@ -616,6 +617,12 @@ const std::vector<View*>&
 Window::GetLeaves()
 {
   return _leaves;
+}
+
+const std::vector<View*>&
+Window::GetViews()
+{
+  return _views;
 }
 
 // get context version infos

@@ -65,7 +65,7 @@ ViewportUI::ViewportUI(View* parent)
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
   
-  const pxr::GfVec2f resolution = GetWindow()->GetResolution();
+  const pxr::GfVec2i resolution(GetWindow()->GetResolution());
   {
     _drawTarget = pxr::GlfDrawTarget::New(resolution, false);
     _drawTarget->Bind();
