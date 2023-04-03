@@ -185,7 +185,7 @@ MenuUI::Draw()
   if (_current || active) {
     DirtyViewsUnderBox();
     ImDrawList* drawList = ImGui::GetForegroundDrawList();
-    drawList->AddRect(_pos, _pos + _size, ImColor({ 255,0,0,255 }), 4.f, 0 4.f);
+    drawList->AddRect(_pos, _pos + _size, ImColor({ 255,0,0,255 }), 4.f, 0, 4.f);
   }
 
   ImGui::PopStyleColor(3);

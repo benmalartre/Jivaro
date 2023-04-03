@@ -98,9 +98,9 @@ public:
   void SetCurrent(BaseUI* ui) { _current = ui; };
 
   // cursor
-  void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
+  pxr::GfVec2f GetRelativeMousePosition(const int inX, const int inY);
   bool Contains(int x, int y);
-  bool Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
+  bool Intersect(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   
   // callbacks
   bool DrawTab();

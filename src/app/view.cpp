@@ -217,7 +217,7 @@ View::Contains(int x, int y)
 }
 
 bool
-View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+View::Intersect(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
 {
   pxr::GfRange2f viewRange(GetMin(), GetMax());
   pxr::GfRange2f boxRange(min, min + size);
@@ -286,14 +286,13 @@ void View::Clear()
 }
 
 // mouse positon relative to the view
-void 
-View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
+pxr::GfVec2f 
+View::GetRelativeMousePosition(const int inX, const int inY)
 {
   pxr::GfVec2f position = GetMin();
   int x = position[0];
   int y = position[1];
-  outX = inX - x;
-  outY = inY - y;
+  return pxr::GfVec2f(inX - x, inY - y);
 }
 
 float View::GetTabHeight() {
