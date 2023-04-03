@@ -118,6 +118,7 @@ bool FileBrowserUI::GetResult(size_t index, std::string& result)
   }
 }
 
+
 static void OnHomeCallback(FileBrowserUI* ui)
 {
   ui->SetPath("");
@@ -134,6 +135,40 @@ void FileBrowserUI::_ResetSelected()
   _selected.resize(numEntries);
   for(size_t i=0; i < _selected.size(); ++i) _selected[i] = false;
   _changed = true;
+}
+
+void FileBrowserUI::_Previous() 
+{
+  size_t numItems = _selected.size();
+  
+  if (numItems) {
+    bool found = false;
+    for (size_t i = numItems-1; i >=0; --i) {
+      if (_selected[i]) {
+        _selected[i] = false;
+        _selected[(i - 1) % numItems] = true;
+        found = true;
+      }
+    }
+    if (!found)  _selected[numItems-1] = true;
+  }
+
+}
+
+void FileBrowserUI::_Next()
+{
+  size_t numItems = _selected.size();
+  if (numItems) {
+    bool found = false;
+    for (size_t i = 0; i < numItems; ++i) {
+      if (_selected[i]) {
+        _selected[i] = false;
+        _selected[(i + 1) % numItems] = true;
+        found = true;
+      }
+    }
+    if (!found)_selected[0] = true;
+  }
 }
 
 void FileBrowserUI::_DrawPath()
@@ -288,5 +323,25 @@ bool FileBrowserUI::Draw()
   ImGui::End();
   return true;
 };
+
+void FileBrowserUI::Keyboard(int key, int scancode, int action, int mods)
+{
+  std::cout << "keyboad callback : " << key << "," << scancode << "," << action << "," << mods << std::endl;
+  if (action == GLFW_PRESS) {
+    std::cout << "key press : " << key << std::endl;
+    if (key == GLFW_KEY_DOWN) {
+      std::cout << "down !!" << std::endl;
+      _Next();
+    }
+    else if (key == GLFW_KEY_UP) {
+      std::cout << "up ! " << std::endl;
+      _Previous();
+    }
+    else if (key == GLFW_KEY_ENTER) {
+      std::cout << "enter :" << std::endl;
+      _browsing = false;
+    }
+   }
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE

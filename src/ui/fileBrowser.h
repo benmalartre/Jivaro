@@ -26,6 +26,7 @@ public:
 
   void MouseButton(int action, int button, int mods) override{};
   void MouseMove(int x, int y) override{};
+  void Keyboard(int key, int scancode, int action, int mods);
   bool Draw() override;
 
   void SetPath(const std::string& path);
@@ -55,6 +56,8 @@ public:
   bool GetResult(size_t index, std::string&);
 
   // selection
+  void _Next();
+  void _Previous();
   void _ResetSelected();
   inline bool _IsSelected(int idx) {
     return _selected[idx];
