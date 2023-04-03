@@ -51,8 +51,7 @@ SplitterUI::BuildMap(int width, int height)
   memset((void*)&_pixels[0], 0, numPixels * sizeof(int));
 
   // then for each leaf view assign an indexed color
-  const std::vector<View*>& views = GetWindow()->GetLeaves();
-  std::cout << "splitter build map : " << views.size() << " leaves" << std::endl;
+  const std::vector<View*>& views = GetWindow()->GetBranches();
 
   for (size_t viewIdx = 0; viewIdx < views.size(); ++viewIdx) {
     if (views[viewIdx]->GetFlag(View::LFIXED) || 
@@ -77,7 +76,7 @@ SplitterUI::Pick(int x, int y)
   int idx = y * _width + x;
   if(idx >= 0 && idx < (_width * _height))
   {
-    const std::vector<View*>& views = GetWindow()->GetLeaves();
+    const std::vector<View*>& views = GetWindow()->GetBranches();
     _hovered = views[_pixels[idx] - 1];
     return _pixels[idx] - 1;
   }
@@ -90,8 +89,7 @@ SplitterUI::Draw()
 {
   
   static bool open;
-  const std::vector<View*>& views = GetWindow()->GetViews();
-  std::cout << "s^plitter draw : " << views.size() << std::endl;
+  const std::vector<View*>& views = GetWindow()->GetBranches();
   ImGui::Begin(_name.c_str(), &open, _flags);
   ImGui::SetWindowPos(ImVec2(0, 0));
   ImGui::SetWindowSize(ImVec2(_width, _height));
@@ -100,12 +98,7 @@ SplitterUI::Draw()
   
   for(auto view : views)
   {
-    std::cout << "loop view : is leaf : " << view->GetFlag(View::LEAF) << std::endl;
-    if(view->GetFlag(View::LEAF)) continue;
-
-    drawList->AddRectFilled(view->GetMin(), view->GetMax(), ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f), 0);
-    std::cout << "view min : " << view->GetMin() << std::endl;
-    std::cout << "view max : " << view->GetMax() << std::endl;
+    drawList->AddRectFilled(view->GetMin(), view->GetMax(), ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 0.1f), 0);
     if(_cursor == ImGuiMouseCursor_ResizeEW) {
       ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     } else if(_cursor == ImGuiMouseCursor_ResizeNS) {
@@ -122,7 +115,7 @@ SplitterUI::Draw()
 View* 
 SplitterUI::GetViewByIndex(int index)
 {
-  return GetWindow()->GetLeaves()[index];
+  return GetWindow()->GetViews()[index];
 }
 
 void 

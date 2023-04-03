@@ -554,14 +554,14 @@ Window::RemoveView(View* view)
 
 // collect child leaves views from specified view
 //----------------------------------------------------------------------------
-void _CollectLeaves(std::vector<View*>& views, std::vector<View*>& leaves, View* view)
+void _CollectLeaves(std::vector<View*>& branches, std::vector<View*>& leaves, View* view)
 {
   if (view->GetFlag(View::LEAF)) {
     leaves.push_back(view);
   } else {
-    views.push_back(view);
-    if (view->GetLeft())_CollectLeaves(views, leaves, view->GetLeft());
-    if (view->GetRight())_CollectLeaves(views, leaves, view->GetRight());
+    branches.push_back(view);
+    if (view->GetLeft())_CollectLeaves(branches, leaves, view->GetLeft());
+    if (view->GetRight())_CollectLeaves(branches, leaves, view->GetRight());
   }
 }
 
@@ -569,8 +569,8 @@ void
 Window::CollectLeaves()
 {
   _leaves.clear();
-  _views.clear();
-  _CollectLeaves(_views, _leaves, _mainView);
+  _branches.clear();
+  _CollectLeaves(_branches, _leaves, _mainView);
 }
 
 // get view (leaf) under mouse
@@ -620,9 +620,9 @@ Window::GetLeaves()
 }
 
 const std::vector<View*>&
-Window::GetViews()
+Window::GetBranches()
 {
-  return _views;
+  return _branches;
 }
 
 // get context version infos
