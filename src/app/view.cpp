@@ -241,13 +241,8 @@ View::Draw(bool forceRedraw)
   else {
     if (DrawTab()) {
       Time& time = GetApplication()->GetTime();
-      std::cout << "draw ui :  " << this << std::endl;
-      if(_current) std::cout << "content : " << _current->GetName() << std::endl;
-      std::cout << "force redraw ? " << forceRedraw << std::endl;
-      std::cout << "inetacting ? " << GetFlag(INTERACTING) << std::endl;
-      std::cout << "dirty ? " << GetFlag(DIRTY) << std::endl;
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-        if (!_current->Draw() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
+        if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
           SetClean();
         }
       }
@@ -650,7 +645,7 @@ void
 View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 1;
+  _buffered = 3;
 }
 
 void 

@@ -52,16 +52,18 @@ MenuUI::Item& MenuUI::Item::Add(const std::string label,
   return items.back();
 }
 
-void MenuUI::Item::Draw(bool* modified)
+void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
 {
   View* view = ui->GetView();
   Window* window = view->GetWindow();
   if (items.size()) {
     if (ImGui::BeginMenu(label.c_str())) {
       ui->_current = this;
+      ui->_opened.push_back(itemIdx);
       *modified = true;
+      size_t subItemIdx = 0;
       for (auto& item : items) {
-        item.Draw(modified);
+        item.Draw(modified, subItemIdx++);
       }
       ImGui::EndMenu();
     }
@@ -120,12 +122,6 @@ MenuUI::~MenuUI()
 {
 }
 
-const std::vector<MenuUI::Item>& 
-MenuUI::GetItems()
-{
-  return _items;
-}
-
 pxr::GfVec2f
 MenuUI::_ComputeSize(const MenuUI::Item* item)
 {
@@ -154,7 +150,7 @@ MenuUI::_ComputePos(const MenuUI::Item* item)
     }
   }
   else {
-    for (auto& subItem : item->ui->GetItems()) {
+    for (auto& subItem : item->ui->_items) {
       if (item->label == subItem.label) break;
       pxr::GfVec2f cur = ImGui::CalcTextSize(subItem.label.c_str());
       pos[0] += cur[0] + style.ItemSpacing[0];
@@ -164,12 +160,14 @@ MenuUI::_ComputePos(const MenuUI::Item* item)
   return pos;
 }
 
-void MenuUI::MouseButton(int button, int action, int mods)
+void 
+MenuUI::MouseButton(int button, int action, int mods)
 {
   if (action == GLFW_PRESS) _parent->SetInteracting(true);
 }
 
-void MenuUI::DirtyViewsUnderBox()
+void 
+MenuUI::DirtyViewsBehind()
 {
   if (_current) {
     _pos = _ComputePos(_current);
@@ -178,7 +176,7 @@ void MenuUI::DirtyViewsUnderBox()
   else {
     const ImGuiStyle& style = ImGui::GetStyle();
     _pos = pxr::GfVec2f(0, 0);
-    _size = pxr::GfVec2f(GetWidth(),2 * ImGui::GetTextLineHeightWithSpacing());
+    _size = pxr::GfVec2f(GetWidth(), ImGui::GetTextLineHeightWithSpacing() + 2 * style.FramePadding.y);
   }
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
   drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.F);
@@ -186,7 +184,8 @@ void MenuUI::DirtyViewsUnderBox()
 }
 
 // overrides
-bool MenuUI::Draw()
+bool 
+MenuUI::Draw()
 {
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!_parent->IsActive())_current = NULL;
@@ -195,12 +194,14 @@ bool MenuUI::Draw()
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
 
   bool dirty = (bool)_current;
+  _opened.clear();
   if (ImGui::BeginMainMenuBar())
   {
-    for (auto& item : _items)item.Draw(&dirty);
+    size_t itemIdx = 0;
+    for (auto& item : _items)item.Draw(&dirty, itemIdx++);
     ImGui::EndMainMenuBar();
   }
-  if (dirty || ImGui::IsAnyItemHovered()) { DirtyViewsUnderBox(); }
+  if (dirty || ImGui::IsAnyItemHovered()) { DirtyViewsBehind(); }
   else { SetInteracting(false); };
 
   ImGui::PopStyleColor(3);

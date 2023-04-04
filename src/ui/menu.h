@@ -30,8 +30,8 @@ public:
     Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
     Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
-    void Draw(bool* modified);
-    
+    void Draw(bool* modified, size_t itemIdx);
+    friend MenuUI;
   };
   
 public:
@@ -40,8 +40,7 @@ public:
 
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
-  void DirtyViewsUnderBox();
-  const std::vector<Item>& GetItems();
+  void DirtyViewsBehind();
 
   Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 

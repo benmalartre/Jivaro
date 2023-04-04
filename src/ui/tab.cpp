@@ -72,7 +72,7 @@ ViewTabUI::Draw()
     ImColor(style.Colors[ImGuiCol_FrameBgHovered])
   );
 
-  /*
+  
   if (_parent->IsActive()) {
     drawList->AddRectFilled(
       min + pxr::GfVec2f(0, size[1] - 4),
@@ -80,8 +80,7 @@ ViewTabUI::Draw()
       ImColor(pxr::GfVec4f(1.f, 1.f, 1.f, 0.5f))
     );
   }
-  */
-
+  
   static ImGuiTabBarFlags tabBarFlags = 
     ImGuiTabBarFlags_AutoSelectNewTabs | 
     ImGuiTabBarFlags_Reorderable | 
