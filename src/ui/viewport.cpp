@@ -198,7 +198,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _lastX = (int)x;
     _lastY = (int)y;
-    GetApplication()->SetActiveViewport(this);
+    GetApplication()->SetActiveEngine(_engine);
     SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {

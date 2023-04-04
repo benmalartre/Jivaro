@@ -36,9 +36,6 @@ public:
   MenuUI(View* parent);
   ~MenuUI();
 
-  pxr::GfVec2f ComputeSize(const Item* item);
-  pxr::GfVec2f ComputePos(const Item* item);
-
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsBehind();
@@ -46,13 +43,14 @@ public:
   Item* Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
 private:
+  pxr::GfVec2f            _ComputeSize(const Item* item);
+  pxr::GfVec2f            _ComputePos(const Item* item, size_t subIndex);
   bool                    _Draw(const Item& item, size_t relativeIndex);
   std::vector<Item>       _items;
   std::vector<int>        _opened;
   static ImGuiWindowFlags _flags;
  
 };
-
 
 static void OpenFileCallback();
 static void SaveFileCallback();

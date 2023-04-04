@@ -273,13 +273,13 @@ static void _StandardLayout(Window* window)
   Ts[3] = CurrentTime();
   new ToolbarUI(toolView, true);
   Ts[4] = CurrentTime();
-  //new ExplorerUI(explorerView);
+  new ExplorerUI(explorerView);
   Ts[5] = CurrentTime();
   new PropertyEditorUI(propertyView);
   Ts[6] = CurrentTime();
   new GraphEditorUI(graphView);
   Ts[7] = CurrentTime();
-  GetApplication()->SetActiveViewport(viewport);
+  GetApplication()->SetActiveEngine(viewport->GetEngine());
 
   std::string names[7] = { "viewport", "timeline", "menu", "toolbar", "explorer", "property", "graph" };
 

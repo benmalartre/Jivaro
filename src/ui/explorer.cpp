@@ -94,21 +94,6 @@ ExplorerUI::~ExplorerUI()
 {
 }
 
-/*
-void 
-ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
-{
-  Update();
-}
-
-void
-ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
-{
-  Select();
-}
-*/
-
-/*
 void 
 ExplorerUI::Init()
 {
@@ -116,7 +101,6 @@ ExplorerUI::Init()
   _parent->SetDirty();
   _initialized = true;
 }
-*/
 
 
 void 

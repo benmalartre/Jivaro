@@ -36,7 +36,7 @@ ImGuiWindowFlags MenuUI::_flags =
 
 
 pxr::GfVec2f 
-MenuUI::ComputeSize(const MenuUI::Item* item)
+MenuUI::_ComputeSize(const MenuUI::Item* item)
 {
   ImVec2 size(0, 0);
   ImGuiStyle& style = ImGui::GetStyle();
@@ -46,19 +46,27 @@ MenuUI::ComputeSize(const MenuUI::Item* item)
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
   }
-  return pxr::GfVec2f(size[0] * 2, size[1] * 2);
+  return pxr::GfVec2f(size[0], size[1]);
 }
 
 pxr::GfVec2f
-MenuUI::ComputePos(const MenuUI::Item* item)
+MenuUI::_ComputePos(const MenuUI::Item* item, size_t subIndex)
 {
   ImGuiStyle& style = ImGui::GetStyle();
   View* view = GetView();
-  pxr::GfVec2f pos(view->GetX() + style.WindowPadding[0], view->GetY());
-  for (auto& subItem : _items) {
-    if (item->label == subItem.label) break;
-    ImVec2 cur = ImGui::CalcTextSize(subItem.label.c_str());
-    pos[0] += cur[0] + style.ItemSpacing[0];
+  pxr::GfVec2f pos(0,0);
+  if (item->parent) {
+    for (size_t idx = 0; idx < subIndex; ++idx) {
+      const pxr::GfVec2f cur = ImGui::CalcTextSize(_items[idx].label.c_str());
+      if (cur[0] > pos[0])pos[0] = cur[0];
+      pos[1] += cur[1] + style.ItemSpacing[0];
+    }
+  }
+  else {
+    for (size_t idx = 0; idx < subIndex; ++idx) {
+      const pxr::GfVec2f cur = ImGui::CalcTextSize(item->items[idx].label.c_str());
+      pos[0] += cur[0] + style.ItemSpacing[0];
+    }
   }
   return pos;
 }
@@ -156,25 +164,31 @@ MenuUI::MouseButton(int button, int action, int mods)
 void 
 MenuUI::DirtyViewsBehind()
 {
+  if (!_opened.size())return;
+
   ImGuiStyle& style = ImGui::GetStyle();
   View* view = GetView();
-  pxr::GfVec2f pmin(view->GetX() + style.WindowPadding[0], view->GetY());
-  pxr::GfVec2f pmax(view->GetX() + style.WindowPadding[0], view->GetY());
+  pxr::GfVec2f pos(view->GetX() + style.WindowPadding[0], view->GetY() + style.WindowPadding[1]);
+  pxr::GfVec2f size(GetWidth(), 128);
 
-  for (size_t opened : _opened) {
+  MenuUI::Item* current = &_items[_opened[0]];
+  pos += _ComputePos(NULL, _opened[0]);
+  size = _ComputeSize(current);
+  current->pos = pos;
+  current->size = size;
+  _parent->GetWindow()->DirtyViewsUnderBox(pos, size);
+  for (size_t subIdx = 1; subIdx < _opened.size(); ++subIdx) {
+    const pxr::GfVec2f subPos = _ComputePos(current, _opened[subIdx]);
+    const pxr::GfVec2f subSize = _ComputeSize(&current->items[subIdx]);
+    pos += subPos + size;
+    current->items[subIdx].pos = pos;
+    current->items[subIdx].size = subSize;
+    _parent->GetWindow()->DirtyViewsUnderBox(pos, subSize);
+    size = subSize;
+  }
 
-  }
-  /*
-  if (_current) {
-    _pos = ComputePos(_current);
-    _size = ComputeSize(_current);
-  } else {
-    _pos = pxr::GfVec2f(0, 0);
-    _size = pxr::GfVec2f(GetWidth(), 128);
-  }
-  _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
   _parent->SetDirty();
-  */
+  
 }
 
 // overrides
@@ -202,7 +216,18 @@ MenuUI::Draw()
     DirtyViewsBehind();
     ImDrawList* drawList = ImGui::GetForegroundDrawList();
     
-    //drawList->AddRect(_pos, _pos + _size, ImColor({ 255,0,0,255 }), 4.f, 0, 4.f);
+    MenuUI::Item* current = NULL;
+    for (auto& opened : _opened) {
+      if (current) {
+        current = &current->items[opened];
+      }
+      else {
+        current = &_items[opened];
+      }
+      drawList->AddRect(current->pos, current->pos + current->size, ImColor({ RANDOM_0_1,RANDOM_0_1, RANDOM_0_1, 1.f }), 4.f, 0, 4.f);
+    }
+
+      
 
     pxr::GfVec2f pos = GetPosition() + pxr::GfVec2f(100, 200);
     drawList->AddText(pos, ImColor({ 0,255,0,255 }), "opened : ");

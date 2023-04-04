@@ -11,18 +11,10 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class TimelineUI;
-class PropertyUI;
-class ViewportUI;
-class GraphEditorUI;
-class ExplorerUI;
-class LayersUI;
-class CurveEditorUI;
 class PopupUI;
 class Engine;
 class Window;
 class Scene;
-
 
 class Application : public pxr::TfWeakBase
 {
@@ -145,7 +137,6 @@ private:
   Selection                         _selection;
 
   // uis
-  //ViewportUI*                       _viewport;
   PopupUI*                          _popup;
 
   // time
