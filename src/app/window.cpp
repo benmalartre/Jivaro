@@ -620,6 +620,7 @@ Window::DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
 {
   for (auto leaf : _leaves) {
     if (leaf->Intersect(min, size)) {
+      std::cout << "dirty view under box " << leaf->GetCurrentUI()->GetName() << std::endl;
       leaf->SetDirty();
     }
   }

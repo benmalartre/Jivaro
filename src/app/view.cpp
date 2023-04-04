@@ -645,7 +645,7 @@ void
 View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 3;
+  _buffered = 1;
 }
 
 void 
