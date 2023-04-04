@@ -19,17 +19,20 @@ class MenuUI : public BaseUI
 {
 public:
   struct Item {
-    MenuUI*                     ui;
-    Item*                       parent;
+    MenuUI* ui;
+    Item* parent;
+    std::vector<Item>           items;
     std::string                 label;
     bool                        selected;
     bool                        enabled;
     CALLBACK_FN                 callback;
-    std::vector<Item>           items;
-    pxr::GfVec2f                pos;
-    pxr::GfVec2f                size;
 
-    Item* Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
+    Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
+    Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
+
+    bool Draw();
+    pxr::GfVec2i ComputeSize();
+    pxr::GfVec2i ComputePos();
   };
 
 public:
@@ -38,29 +41,28 @@ public:
 
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
-  void DirtyViewsBehind();
+  void DirtyViewsUnderBox();
 
-  Item* Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
+  Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
 private:
-  pxr::GfVec2f            _ComputeSize(const Item* item);
-  pxr::GfVec2f            _ComputePos(const Item* item, size_t subIndex);
-  bool                    _Draw(const Item& item, size_t relativeIndex);
   std::vector<Item>       _items;
-  std::vector<int>        _opened;
+  Item* _current;
   static ImGuiWindowFlags _flags;
- 
+  pxr::GfVec2i            _pos;
+  pxr::GfVec2i            _size;
 };
+
 
 static void OpenFileCallback();
 static void SaveFileCallback();
 static void NewFileCallback();
 static void OpenDemoCallback();
 static void OpenChildWindowCallback();
+static void SetLayoutCallback(Window* window, short layout);
 static void CreatePrimCallback();
 static void TriangulateCallback();
 static void FlattenGeometryCallback();
-static void SetLayoutCallback(Window*, size_t);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
