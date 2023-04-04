@@ -52,42 +52,16 @@ MenuUI::Item& MenuUI::Item::Add(const std::string label,
   return items.back();
 }
 
-
-pxr::GfVec2i MenuUI::Item::ComputeSize()
-{
-  ImVec2 size(0, 0);
-  ImGuiStyle& style = ImGui::GetStyle();
-  for (const auto& item : items) {
-    ImVec2 labelSize = ImGui::CalcTextSize(item.label.c_str());
-    ImVec2 cur(labelSize[0] + 2 * style.FramePadding[0], labelSize[1]);
-    if (cur[0] > size[0])size[0] = cur[0];
-    size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
-  }
-  return pxr::GfVec2i(size[0] * 2, size[1] * 2);
-}
-
-pxr::GfVec2i MenuUI::Item::ComputePos()
-{
-  ImGuiStyle& style = ImGui::GetStyle();
-  View* view = ui->GetView();
-  pxr::GfVec2i pos(view->GetX() + style.WindowPadding[0], view->GetY());
-  for (auto& item : ui->_items) {
-    if (label == item.label) break;
-    ImVec2 cur = ImGui::CalcTextSize(item.label.c_str());
-    pos[0] += cur[0] + style.ItemSpacing[0];
-  }
-  return pos;
-}
-
-bool MenuUI::Item::Draw()
+void MenuUI::Item::Draw(bool* modified)
 {
   View* view = ui->GetView();
   Window* window = view->GetWindow();
   if (items.size()) {
     if (ImGui::BeginMenu(label.c_str())) {
       ui->_current = this;
+      *modified = true;
       for (auto& item : items) {
-        item.Draw();
+        item.Draw(modified);
       }
       ImGui::EndMenu();
     }
@@ -99,7 +73,6 @@ bool MenuUI::Item::Draw()
       ui->_current = NULL;
     }
   }
-  return true;
 }
 
 MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
@@ -147,27 +120,69 @@ MenuUI::~MenuUI()
 {
 }
 
+const std::vector<MenuUI::Item>& 
+MenuUI::GetItems()
+{
+  return _items;
+}
+
+pxr::GfVec2f
+MenuUI::_ComputeSize(const MenuUI::Item* item)
+{
+  pxr::GfVec2f size(0, 0);
+  ImGuiStyle& style = ImGui::GetStyle();
+  for (const auto& subItem : item->items) {
+    pxr::GfVec2f labelSize = ImGui::CalcTextSize(subItem.label.c_str());
+    pxr::GfVec2f cur(labelSize[0] + 2 * style.FramePadding[0], labelSize[1]);
+    if (cur[0] > size[0])size[0] = cur[0];
+    size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
+  }
+  return pxr::GfVec2f(size[0] * 2, size[1] * 2);
+}
+
+pxr::GfVec2f
+MenuUI::_ComputePos(const MenuUI::Item* item)
+{
+  ImGuiStyle& style = ImGui::GetStyle();
+  View* view = item->ui->GetView();
+  pxr::GfVec2f pos(view->GetX() + style.WindowPadding[0], view->GetY());
+  if (item->parent) {
+    for (auto& subItem : item->parent->items) {
+      if (item->label == subItem.label) break;
+      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem.label.c_str());
+      pos[0] += cur[0] + style.ItemSpacing[0];
+    }
+  }
+  else {
+    for (auto& subItem : item->ui->GetItems()) {
+      if (item->label == subItem.label) break;
+      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem.label.c_str());
+      pos[0] += cur[0] + style.ItemSpacing[0];
+    }
+  }
+  
+  return pos;
+}
+
 void MenuUI::MouseButton(int button, int action, int mods)
 {
-  _parent->SetDirty();
-  if (action == GLFW_PRESS)
-    _parent->SetInteracting(true);
-  else if (action == GLFW_RELEASE)
-    _parent->SetInteracting(false);
+  if (action == GLFW_PRESS) _parent->SetInteracting(true);
 }
 
 void MenuUI::DirtyViewsUnderBox()
 {
   if (_current) {
-    _pos = _current->ComputePos();
-    _size = _current->ComputeSize();
+    _pos = _ComputePos(_current);
+    _size = _ComputeSize(_current);
   }
   else {
-    _pos = pxr::GfVec2i(0, 0);
-    _size = pxr::GfVec2i(GetWidth(), 128);
+    const ImGuiStyle& style = ImGui::GetStyle();
+    _pos = pxr::GfVec2f(0, 0);
+    _size = pxr::GfVec2f(GetWidth(),2 * ImGui::GetTextLineHeightWithSpacing());
   }
+  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.F);
   _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
-  _parent->SetDirty();
 }
 
 // overrides
@@ -179,22 +194,17 @@ bool MenuUI::Draw()
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
 
-  bool active = false;
+  bool dirty = (bool)_current;
   if (ImGui::BeginMainMenuBar())
   {
-    for (auto& item : _items) {
-      if (item.Draw())active = true;
-    }
+    for (auto& item : _items)item.Draw(&dirty);
     ImGui::EndMainMenuBar();
   }
-
-  bool dirty = _current || active;
-  if (dirty) { DirtyViewsUnderBox(); }
-
+  if (dirty || ImGui::IsAnyItemHovered()) { DirtyViewsUnderBox(); }
+  else { SetInteracting(false); };
 
   ImGui::PopStyleColor(3);
-
-  return _parent->IsInteracting() || ImGui::IsAnyItemHovered();
+  return dirty;
 
 }
 

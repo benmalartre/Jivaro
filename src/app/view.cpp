@@ -227,8 +227,8 @@ View::Intersect(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
 bool
 View::DrawTab()
 {
-  if (_tab) return (_tab->Draw());
-  return false;
+  if (_tab) return (!_tab->Draw());
+  return true;
 }
 
 void 
@@ -239,10 +239,15 @@ View::Draw(bool forceRedraw)
     if (_right)_right->Draw(forceRedraw);
   }
   else {
-    if (!DrawTab()) {
+    if (DrawTab()) {
       Time& time = GetApplication()->GetTime();
+      std::cout << "draw ui :  " << this << std::endl;
+      if(_current) std::cout << "content : " << _current->GetName() << std::endl;
+      std::cout << "force redraw ? " << forceRedraw << std::endl;
+      std::cout << "inetacting ? " << GetFlag(INTERACTING) << std::endl;
+      std::cout << "dirty ? " << GetFlag(DIRTY) << std::endl;
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-        if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
+        if (!_current->Draw() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
           SetClean();
         }
       }

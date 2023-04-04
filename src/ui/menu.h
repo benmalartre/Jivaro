@@ -19,8 +19,8 @@ class MenuUI : public BaseUI
 {
 public:
   struct Item {
-    MenuUI* ui;
-    Item* parent;
+    MenuUI*                     ui;
+    Item*                       parent;
     std::vector<Item>           items;
     std::string                 label;
     bool                        selected;
@@ -30,11 +30,10 @@ public:
     Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
     Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
-    bool Draw();
-    pxr::GfVec2i ComputeSize();
-    pxr::GfVec2i ComputePos();
+    void Draw(bool* modified);
+    
   };
-
+  
 public:
   MenuUI(View* parent);
   ~MenuUI();
@@ -42,15 +41,19 @@ public:
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsUnderBox();
+  const std::vector<Item>& GetItems();
 
   Item& Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
 private:
+  pxr::GfVec2f            _ComputeSize(const Item* item);
+  pxr::GfVec2f            _ComputePos(const Item* item);
   std::vector<Item>       _items;
-  Item* _current;
+  Item*                   _current;
+  std::vector<size_t>     _opened;
   static ImGuiWindowFlags _flags;
-  pxr::GfVec2i            _pos;
-  pxr::GfVec2i            _size;
+  pxr::GfVec2f            _pos;
+  pxr::GfVec2f            _size;
 };
 
 
