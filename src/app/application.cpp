@@ -55,8 +55,8 @@ const char* Application::APPLICATION_NAME = "Jivaro";
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), _viewport(nullptr), 
-  _popup(nullptr), _execute(false)
+  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
+  _execute(false), _activeEngine(nullptr)
 {  
   _mainWindow = CreateStandardWindow(APPLICATION_NAME, pxr::GfVec4i(0,0,width, height));
   _activeWindow = _mainWindow;
@@ -65,8 +65,8 @@ Application::Application(unsigned width, unsigned height):
 };
 
 Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), _viewport(nullptr),
-  _popup(nullptr), _execute(false)
+  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
+  _execute(false), _activeEngine(nullptr)
 {
   _mainWindow = CreateFullScreenWindow(APPLICATION_NAME);
   _activeWindow = _mainWindow;
@@ -490,11 +490,13 @@ void
 Application::AddEngine(Engine* engine)
 {
   _engines.push_back(engine);
+  _activeEngine = engine;
 }
 
 void 
 Application::RemoveEngine(Engine* engine)
 {
+  if (engine == _activeEngine)  _activeEngine = NULL;
   for (size_t i = 0; i < _engines.size(); ++i) {
     if (engine == _engines[i]) {
       _engines.erase(_engines.begin() + i);
@@ -512,17 +514,13 @@ void Application::DirtyAllEngines()
 
 Engine* Application::GetActiveEngine()
 {
-  if (_viewport)return _viewport->GetEngine();
+  return _activeEngine;
 }
 
 void 
-Application::SetActiveViewport(ViewportUI* viewport) 
+Application::SetActiveEngine(Engine* engine) 
 {
-  if (_viewport) {
-    _viewport->GetView()->ClearFlag(View::TIMEVARYING);
-  }
-  _viewport = viewport;
-  _viewport->GetView()->SetFlag(View::TIMEVARYING);
+  _activeEngine = engine;
 }
 
 void 

@@ -35,9 +35,9 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
 
   double minDist = std::numeric_limits<double>::max();
 
-  size_t i0 = INVALID_INDEX;
-  size_t i1 = INVALID_INDEX;
-  size_t i2 = INVALID_INDEX;
+  size_t i0 = GEOM_INVALID_INDEX;
+  size_t i1 = GEOM_INVALID_INDEX;
+  size_t i2 = GEOM_INVALID_INDEX;
 
   // pick a seed point close to the centroid
   for (size_t i = 0; i < n; ++i) {
@@ -98,7 +98,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
   // initialize a hash table for storing edges of the advancing convex hull
   _hashSize = static_cast<size_t>(std::llround(std::ceil(std::sqrt(n))));
   _hash.resize(_hashSize);
-  std::fill(_hash.begin(), _hash.end(), INVALID_INDEX);
+  std::fill(_hash.begin(), _hash.end(), GEOM_INVALID_INDEX);
 
   // initialize arrays for tracking the edges of the advancing convex hull
   _hullPrev.resize(n);
@@ -124,7 +124,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
   size_t maxTriangles = n < 3 ? 1 : 2 * n - 5;
   _triangles.reserve(maxTriangles * 3);
   _halfEdges.reserve(maxTriangles * 3);
-  _AddTriangle(i0, i1, i2, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX);
+  _AddTriangle(i0, i1, i2, GEOM_INVALID_INDEX, GEOM_INVALID_INDEX, GEOM_INVALID_INDEX);
 
   pxr::GfVec2d coord(std::numeric_limits<double>::quiet_NaN());
 
@@ -148,7 +148,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
     size_t key = _ComputeHash(coord);
     for (size_t j = 0; j < _hashSize; j++) {
       start = _hash[_FastMod(key + j, _hashSize)];
-      if (start != INVALID_INDEX && start != _hullNext[start]) break;
+      if (start != GEOM_INVALID_INDEX && start != _hullNext[start]) break;
     }
 
     start = _hullPrev[start];
@@ -158,20 +158,20 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
     while (q = _hullNext[e], !_Orient(coord, _coords[e], _coords[q])) {
       e = q;
       if (e == start) {
-        e = INVALID_INDEX;
+        e = GEOM_INVALID_INDEX;
         break;
       }
     }
 
-    if (e == INVALID_INDEX) continue; // likely a near-duplicate point; skip it
+    if (e == GEOM_INVALID_INDEX) continue; // likely a near-duplicate point; skip it
 
     // add the first triangle from the point
     size_t t = _AddTriangle(
       e,
       i,
       _hullNext[e],
-      INVALID_INDEX,
-      INVALID_INDEX,
+      GEOM_INVALID_INDEX,
+      GEOM_INVALID_INDEX,
       _hullTri[e]);
 
     _hullTri[i] = _Legalize(t + 2);
@@ -183,7 +183,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
     while (
       q = _hullNext[next],
       _Orient(coord, _coords[next], _coords[q])) {
-      t = _AddTriangle(next, i, q, _hullTri[i], INVALID_INDEX, _hullTri[next]);
+      t = _AddTriangle(next, i, q, _hullTri[i], GEOM_INVALID_INDEX, _hullTri[next]);
       _hullTri[i] = _Legalize(t + 2);
       _hullNext[next] = next; // mark as removed
       hullSize--;
@@ -195,7 +195,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
       while (
         q = _hullPrev[e],
         _Orient(coord, _coords[q], _coords[e])) {
-        t = _AddTriangle(q, i, e, INVALID_INDEX, _hullTri[e], _hullTri[q]);
+        t = _AddTriangle(q, i, e, GEOM_INVALID_INDEX, _hullTri[e], _hullTri[q]);
         _Legalize(t + 2);
         _hullTri[q] = t;
         _hullNext[e] = e; // mark as removed
@@ -257,7 +257,7 @@ Delaunay::_Legalize(size_t a)
     const size_t a0 = 3 * (a / 3);
     ar = a0 + (a + 2) % 3;
 
-    if (b == INVALID_INDEX) {
+    if (b == GEOM_INVALID_INDEX) {
       if (i > 0) {
         i--;
         a = _edgeStack[i];
@@ -288,7 +288,7 @@ Delaunay::_Legalize(size_t a)
       auto hbl = _halfEdges[bl];
 
       // edge swapped on the other side of the hull (rare); fix the halfedge reference
-      if (hbl == INVALID_INDEX) {
+      if (hbl == GEOM_INVALID_INDEX) {
         size_t e = _hullStart;
         do {
           if (_hullTri[e] == bl) {
@@ -358,7 +358,7 @@ Delaunay::_Link(size_t a, size_t b)
   else {
     throw std::runtime_error("Cannot link edge");
   }
-  if (b != INVALID_INDEX) {
+  if (b != GEOM_INVALID_INDEX) {
     size_t s2 = _halfEdges.size();
     if (b == s2) {
       _halfEdges.push_back(a);

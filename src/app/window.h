@@ -139,6 +139,9 @@ public:
   void SetIdle(bool value){_idle=value;};
   bool IsIdle(){return _idle;};
   void CaptureFramebuffer();
+  void BeginRepeatKey();
+  void EndRepeatKey();
+  bool ShouldRepeatKey();
 
   // fonts
   inline ImFont* GetFont(size_t index){return FONTS[index];};
@@ -205,6 +208,7 @@ private:
   ImGuiIO*              _io;
   int                   _guiId;
   bool                  _debounce;
+  uint64_t              _lastRepeatT;
 
   // fonts
   float                 _fontSize;

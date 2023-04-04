@@ -139,7 +139,8 @@ size_t GetVolumes(std::vector<EntryInfo>& entries)
   return entries.size();
 }
 
-size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
+size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries, 
+  bool ignoreCurrent, bool ignoreParent)
 {
   entries.clear();
   DIR *dir;
@@ -155,12 +156,14 @@ size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
           EntryInfo::Type::FILE,
           _IsHiddenFile(ent->d_name)
         });
-      } else if(ent->d_type == DT_DIR) {
-         entries.push_back({
-          (std::string)ent->d_name,
-          EntryInfo::Type::FOLDER,
-          _IsHiddenFile(ent->d_name)
-        });
+      } else if (ent->d_type == DT_DIR) {
+        if (ignoreCurrent && strcmp(ent->d_name, ".") == 0) continue;
+        if (ignoreParent && strcmp(ent->d_name, "..") == 0) continue;
+        entries.push_back({
+         (std::string)ent->d_name,
+         EntryInfo::Type::FOLDER,
+         _IsHiddenFile(ent->d_name)
+         });
       }
     }
     closedir (dir);

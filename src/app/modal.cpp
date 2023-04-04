@@ -87,6 +87,7 @@ ModalFileBrowser::ModalFileBrowser(int x, int y, const std::string& title,
 
     _ui = browser;
   }
+  _window->SetActiveView(view);
 }
 
 void ModalFileBrowser::_LoopImpl()

@@ -41,7 +41,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 bool LEGACY_OPENGL = false;
 
 int MAPPED_KEYS[GLFW_KEY_LAST + 1];
-bool KEY_MAP_INITIALIZED = false;
+static bool KEY_MAP_INITIALIZED = false;
+static float REPEAT_KEY_DURATION = 0.1f * 1e9;
 
 static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
   ImGuiWindowFlags_NoInputs |
@@ -272,7 +273,7 @@ static void _StandardLayout(Window* window)
   Ts[3] = CurrentTime();
   new ToolbarUI(toolView, true);
   Ts[4] = CurrentTime();
-  new ExplorerUI(explorerView);
+  //new ExplorerUI(explorerView);
   Ts[5] = CurrentTime();
   new PropertyEditorUI(propertyView);
   Ts[6] = CurrentTime();
@@ -357,6 +358,33 @@ Window::CaptureFramebuffer()
   glBlitFramebuffer(0, 0, _width, _height, 0, _height, _width, 0, GL_COLOR_BUFFER_BIT, GL_LINEAR);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
+
+
+// repeat key
+//----------------------------------------------------------------------------
+void 
+Window::BeginRepeatKey()
+{
+  _lastRepeatT = CurrentTime();
+}
+
+void 
+Window::EndRepeatKey()
+{
+  _lastRepeatT = std::numeric_limits<uint64_t>::max();
+}
+
+bool 
+Window::ShouldRepeatKey()
+{
+  uint64_t currentT = CurrentTime();
+  if ((currentT - _lastRepeatT) > REPEAT_KEY_DURATION) {
+    _lastRepeatT = currentT;
+    return true;
+  }
+  return false;
+}
+
 
 
 // Resize
@@ -884,9 +912,6 @@ KeyboardCallback(
 
   Time& time = app->GetTime();
   
-  if(action == GLFW_RELEASE) {
-    parent->SetDebounce(false);
-  }
   if (action == GLFW_PRESS) {
     switch(GetMappedKey(key))
     {
@@ -945,10 +970,18 @@ KeyboardCallback(
         View* view = parent->GetActiveView();
         if (view) {
           view->Keyboard(key, scancode, action, mods);
-          view->SetDirty();
+          parent->BeginRepeatKey();
         }
       }
     }
+  } else if (action == GLFW_REPEAT) {
+    View* view = parent->GetActiveView();
+    if (view && parent->ShouldRepeatKey()) {
+      view->Keyboard(key, scancode, action, mods);
+    }
+  } else if (action == GLFW_RELEASE) {
+    parent->SetDebounce(false);
+    parent->EndRepeatKey();
   }
   //  /* call tutorial keyboard handler */
   //  //device_key_pressed(key);
@@ -1070,16 +1103,13 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
         parent->EndDragSplitter();
         parent->Resize(width, height);
       }
-    }
-    else if (action == GLFW_PRESS || action == GLFW_REPEAT)
-    {
+    } else {
       if (splitterHovered) {
         View* activeView = parent->GetActiveView();
         if (activeView) { activeView->SetInteracting(false); };
         parent->SetActiveView(parent->GetSplitter()->GetHovered());
         parent->BeginDragSplitter();
-      }
-      else {
+      } else {
         View* view = parent->GetViewUnderMouse((int)x, (int)y);
         if (view) {
           parent->SetActiveView(view);

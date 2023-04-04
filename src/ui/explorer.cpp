@@ -118,7 +118,7 @@ ExplorerUI::Init()
 }
 */
 
-/*
+
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
 {
@@ -150,7 +150,7 @@ void
 ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
 }
-*/
+
 
 void
 ExplorerUI::DrawItemBackground(ImDrawList* drawList,
@@ -366,8 +366,6 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
 bool 
 ExplorerUI::Draw()
 {
-
-  return false;
   /// Draw the hierarchy of the stage
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();

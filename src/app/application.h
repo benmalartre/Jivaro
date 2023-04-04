@@ -109,9 +109,9 @@ public:
   // engines
   void AddEngine(Engine* engine);
   void RemoveEngine(Engine* engine);
-  std::vector<Engine*> GetEngines() { return _engines; };
+  void SetActiveEngine(Engine* engine);
   Engine* GetActiveEngine();
-  void SetActiveViewport(ViewportUI* viewport);
+  std::vector<Engine*> GetEngines() { return _engines; };
   void DirtyAllEngines();
 
   // stage cache
@@ -145,7 +145,7 @@ private:
   Selection                         _selection;
 
   // uis
-  ViewportUI*                       _viewport;
+  //ViewportUI*                       _viewport;
   PopupUI*                          _popup;
 
   // time
@@ -160,6 +160,7 @@ private:
   pxr::UsdStageRefPtr               _stage;
   pxr::SdfLayerRefPtr               _layer;
   std::vector<Engine*>              _engines;
+  Engine*                           _activeEngine;
   bool                              _execute;
 };
 

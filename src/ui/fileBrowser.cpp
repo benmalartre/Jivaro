@@ -8,6 +8,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 FileBrowserUI::FileBrowserUI(View* parent, Mode mode)
   : BaseUI(parent, UIType::FILEBROWSER)
   , _mode(mode)
+  , _current(0)
   , _browsing(true)
   , _canceled(false)
   , _changed(true)
@@ -28,7 +29,10 @@ void FileBrowserUI::SetPath(const std::string& path)
   } else {
     _GetRootEntries();
   }
-  _ResetSelected();
+  if (_ResetSelected()) {
+    _current = 0;
+    _selected[_current] = true;
+  }
 }
 
 void FileBrowserUI::AppendPath(const std::string& name)
@@ -39,6 +43,7 @@ void FileBrowserUI::AppendPath(const std::string& name)
     std::string newPath = _path + SEPARATOR + name;
     SetPath(newPath);
   }
+  _current = 0;
 }
 
 void FileBrowserUI::PopPath()
@@ -63,7 +68,10 @@ void FileBrowserUI::SetPathFromTokenIndex(size_t idx)
   }
   _pathTokens = SplitString(_path, SEPARATOR);
   _GetPathEntries();
-  _ResetSelected();
+  if (_ResetSelected()) {
+    _current = 0;
+    _selected[_current] = true;
+  }
 }
 
 void FileBrowserUI::SetFilters(const std::vector<std::string>& filters)
@@ -118,63 +126,36 @@ bool FileBrowserUI::GetResult(size_t index, std::string& result)
   }
 }
 
-
-static void OnHomeCallback(FileBrowserUI* ui)
-{
-  ui->SetPath("");
-}
-
-static void OnParentCallback(FileBrowserUI* ui)
-{
-  ui->PopPath();
-}
-
-void FileBrowserUI::_ResetSelected()
+size_t FileBrowserUI::_ResetSelected()
 {
   size_t numEntries = _entries.size();
   _selected.resize(numEntries);
-  for(size_t i=0; i < _selected.size(); ++i) _selected[i] = false;
+  for(size_t i=0; i < numEntries; ++i) _selected[i] = false;
+  _current = FILEBROWSER_INVALID_INDEX;
   _changed = true;
+  return numEntries;
 }
 
-void FileBrowserUI::_Previous() 
+void FileBrowserUI::_SelectPrevious(int mods) 
 {
-  size_t numItems = _selected.size();
-  
-  if (numItems) {
-    bool found = false;
-    for (size_t i = numItems-1; i >=0; --i) {
-      if (_selected[i]) {
-        _selected[i] = false;
-        _selected[(i - 1) % numItems] = true;
-        found = true;
-      }
-    }
-    if (!found)  _selected[numItems-1] = true;
-  }
-
+  size_t previous = _current > 0 ? _current - 1 : _selected.size() - 1;
+  if (!mods) _ResetSelected();
+  _selected[previous] = true;
+  _current = previous;
 }
 
-void FileBrowserUI::_Next()
+void FileBrowserUI::_SelectNext(int mods)
 {
-  size_t numItems = _selected.size();
-  if (numItems) {
-    bool found = false;
-    for (size_t i = 0; i < numItems; ++i) {
-      if (_selected[i]) {
-        _selected[i] = false;
-        _selected[(i + 1) % numItems] = true;
-        found = true;
-      }
-    }
-    if (!found)_selected[0] = true;
-  }
+  size_t next = (_current + 1) % _selected.size();
+  if (!mods) _ResetSelected();
+  _selected[next] = true;
+  _current = next;
 }
 
 void FileBrowserUI::_DrawPath()
 {
   UIUtils::AddIconButton(0, ICON_FA_TRASH, ICON_DEFAULT,
-    std::bind(OnHomeCallback, this));
+    std::bind(&FileBrowserUI::SetPath, this, ""));
 
   ImGui::SameLine();
   size_t numTokens = _pathTokens.size();
@@ -218,10 +199,10 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
       _browsing = false;
     }
   }
-
   ImVec2 pos = ImVec2(
     ImGui::GetCursorPosX(), 
-    ImGui::GetCursorPosY() - ImGui::GetScrollY());
+    ImGui::GetCursorPosY() - ImGui::GetScrollY() + ImGui::GetTextLineHeight());
+
   const float width = (float)GetWidth();
   if (_selected[idx]) {
     drawList->AddRectFilled(
@@ -256,7 +237,7 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
       ImVec2(fileIcon->size, fileIcon->size));
   }
   ImGui::SameLine();
-  ImGui::Text("%s", info.path.c_str());
+  ImGui::TextColored(_selected[idx] ? style.Colors[ImGuiCol_TabActive] : style.Colors[ImGuiCol_Text], "%s", info.path.c_str());
 
   return true;
 }
@@ -280,7 +261,7 @@ bool FileBrowserUI::_DrawEntries()
     ImGui::SetScrollY(0.f);
   }
 
-  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
   static bool flip = false;
   for (size_t i=0; i < _entries.size(); ++i) {
     if(_DrawEntry(drawList, i, flip)) {
@@ -315,31 +296,48 @@ bool FileBrowserUI::Draw()
 
   ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
   ImGui::SetWindowPos(_parent->GetMin());
+  ImGui::PushStyleColor(ImGuiCol_ChildBg, { 0,0,0,0 });
 
   _DrawPath();
   _DrawEntries();
   _DrawButtons();
-  
+
+  ImGui::PopStyleColor();
   ImGui::End();
   return true;
 };
 
+static size_t _GetFistSelectedIndex(std::vector<bool>& selected)
+{
+  for (size_t i = 0; i < selected.size(); ++i) {
+    if (selected[i]) return i;
+  }
+  return FILEBROWSER_INVALID_INDEX;
+}
+
 void FileBrowserUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  std::cout << "keyboad callback : " << key << "," << scancode << "," << action << "," << mods << std::endl;
-  if (action == GLFW_PRESS) {
-    std::cout << "key press : " << key << std::endl;
+
+  if (action == GLFW_PRESS || action == GLFW_REPEAT) {
     if (key == GLFW_KEY_DOWN) {
-      std::cout << "down !!" << std::endl;
-      _Next();
+      _SelectNext(mods);
     }
     else if (key == GLFW_KEY_UP) {
-      std::cout << "up ! " << std::endl;
-      _Previous();
+      _SelectPrevious(mods);
     }
     else if (key == GLFW_KEY_ENTER) {
-      std::cout << "enter :" << std::endl;
-      _browsing = false;
+      if (_current != FILEBROWSER_INVALID_INDEX) {
+        const EntryInfo& info = _entries[_current];
+        if (info.type == EntryInfo::Type::FOLDER) {
+          AppendPath(info.path);
+        }
+        else if (info.type == EntryInfo::Type::FILE) {
+          SetResult(info.path);
+          _browsing = false;
+        }
+      } else {
+        _canceled = true;
+      }
     }
    }
 }

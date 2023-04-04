@@ -2,6 +2,7 @@
 #define JVR_UI_FILEBROWSER_H
 
 #include <bitset>
+#include <limits>
 #include "../common.h"
 #include "../utils/icons.h"
 #include "../ui/ui.h"
@@ -10,6 +11,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 static size_t FILEBROWSER_LINE_HEIGHT = 20;
+static size_t FILEBROWSER_INVALID_INDEX = std::numeric_limits<size_t>::max();
 
 class FileBrowserUI : public BaseUI
 {
@@ -56,9 +58,9 @@ public:
   bool GetResult(size_t index, std::string&);
 
   // selection
-  void _Next();
-  void _Previous();
-  void _ResetSelected();
+  void _SelectNext(int mods);
+  void _SelectPrevious(int mods);
+  size_t _ResetSelected();
   inline bool _IsSelected(int idx) {
     return _selected[idx];
   }
@@ -70,6 +72,7 @@ private:
   std::vector<std::string> _directories;
   std::vector<std::string> _files;
   std::vector<std::string> _filters;
+  size_t                   _current;
   bool                     _canceled;
   bool                     _browsing;
   bool                     _changed;

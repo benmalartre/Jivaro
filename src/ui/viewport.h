@@ -111,8 +111,6 @@ class ViewportUI : public BaseUI
     int                                 _numRenderers;
     pxr::CameraUtilConformWindowPolicy  _conformWindowPolicy;
 
-    //uint64_t                            _counter;
-
 };
 JVR_NAMESPACE_CLOSE_SCOPE
 

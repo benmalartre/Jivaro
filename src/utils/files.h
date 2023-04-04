@@ -75,7 +75,8 @@ size_t GetVolumes(std::vector<EntryInfo>& entries);
 
 // get entries in directory
 //-----------------------------------------------------
-size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries);
+size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries,
+  bool ignoreCurrent=true, bool ignoreParent=false);
 
 // get files in directory
 //-----------------------------------------------------
