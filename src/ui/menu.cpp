@@ -129,11 +129,11 @@ MenuUI::_ComputeSize(const MenuUI::Item* item)
   ImGuiStyle& style = ImGui::GetStyle();
   for (const auto& subItem : item->items) {
     pxr::GfVec2f labelSize = ImGui::CalcTextSize(subItem.label.c_str());
-    pxr::GfVec2f cur(labelSize[0] + 2 * style.FramePadding[0], labelSize[1]);
+    pxr::GfVec2f cur(labelSize + pxr::GfVec2f(style.ItemSpacing.x , ImGui::GetTextLineHeightWithSpacing()));
     if (cur[0] > size[0])size[0] = cur[0];
-    size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
+    size[1] += cur[1];
   }
-  return pxr::GfVec2f(size[0] * 2, size[1] * 2);
+  return pxr::GfVec2f(size[0], size[1]);
 }
 
 pxr::GfVec2f
@@ -152,7 +152,7 @@ MenuUI::_ComputePos(const MenuUI::Item* item)
   else {
     for (auto& subItem : item->ui->_items) {
       if (item->label == subItem.label) break;
-      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem.label.c_str());
+      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem.label.c_str()) + pxr::GfVec2f(0, ImGui::GetTextLineHeightWithSpacing());
       pos[0] += cur[0] + style.ItemSpacing[0];
     }
   }
@@ -169,18 +169,32 @@ MenuUI::MouseButton(int button, int action, int mods)
 void 
 MenuUI::DirtyViewsBehind()
 {
-  if (_current) {
+  size_t numOpened = _opened.size();
+  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  
+  if (numOpened) {
+    std::cout << "opened : " << numOpened << std::endl;
+    MenuUI::Item* current = &_items[_opened[0]];
     _pos = _ComputePos(_current);
     _size = _ComputeSize(_current);
+    drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+    _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
+
+    for (size_t openedIdx = 1; openedIdx < numOpened; ++openedIdx) {
+
+    }
+    
   }
   else {
     const ImGuiStyle& style = ImGui::GetStyle();
     _pos = pxr::GfVec2f(0, 0);
     _size = pxr::GfVec2f(GetWidth(), ImGui::GetTextLineHeightWithSpacing() + 2 * style.FramePadding.y);
+
+    drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+    _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
   }
-  ImDrawList* drawList = ImGui::GetForegroundDrawList();
-  drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.F);
-  _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
+  
+  
 }
 
 // overrides

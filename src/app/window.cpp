@@ -273,7 +273,7 @@ static void _StandardLayout(Window* window)
   Ts[3] = CurrentTime();
   new ToolbarUI(toolView, true);
   Ts[4] = CurrentTime();
-  new ExplorerUI(explorerView);
+  //new ExplorerUI(explorerView);
   Ts[5] = CurrentTime();
   new PropertyEditorUI(propertyView);
   Ts[6] = CurrentTime();
