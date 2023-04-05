@@ -35,7 +35,7 @@ ImGuiWindowFlags_NoBackground |
 ImGuiWindowFlags_NoScrollbar;
 
 
-MenuUI::Item::Item(MenuUI* ui, Item* parent, const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
+MenuUI::Item::Item(MenuUI* ui, Item* parent, const std::string& label, bool selected, bool enabled, CALLBACK_FN cb)
   : ui(ui)
   , parent(parent)
   , label(label)
@@ -50,7 +50,7 @@ MenuUI::Item::~Item()
   for (auto& item : items)delete item;
 }
 
-MenuUI::Item* MenuUI::Item::Add(const std::string label,
+MenuUI::Item* MenuUI::Item::Add(const std::string& label,
   bool selected, bool enabled, CALLBACK_FN cb)
 {
   items.push_back(new MenuUI::Item(ui, this, label, selected, enabled, cb));
@@ -63,7 +63,6 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
   Window* window = view->GetWindow();
   if (items.size()) {
     if (ImGui::BeginMenu(label.c_str())) {
-      ui->_current = this;
       ui->_opened.push_back(itemIdx);
       *modified = true;
       size_t subItemIdx = 0;
@@ -77,12 +76,11 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
     if (ImGui::MenuItem(label.c_str()) && callback) {
       callback();
       window->ForceRedraw();
-      ui->_current = NULL;
     }
   }
 }
 
-MenuUI::Item* MenuUI::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
+MenuUI::Item* MenuUI::Add(const std::string& label, bool selected, bool enabled, CALLBACK_FN cb)
 {
   _items.push_back(new MenuUI::Item(this, NULL, label, selected, enabled, cb));
   return _items.back();
@@ -91,7 +89,6 @@ MenuUI::Item* MenuUI::Add(const std::string label, bool selected, bool enabled, 
 // constructor
 MenuUI::MenuUI(View* parent)
   : BaseUI(parent, UIType::MAINMENU)
-  , _current(NULL)
 {
   MenuUI::Item* fileMenu = Add("File", false, true, NULL);
 
@@ -132,7 +129,6 @@ MenuUI::MenuUI(View* parent)
 // destructor
 MenuUI::~MenuUI()
 {
-  for (auto& item : _items)delete item;
 }
 
 pxr::GfVec2f
@@ -166,7 +162,7 @@ MenuUI::_ComputePos(const MenuUI::Item* item)
   else {
     pos += pxr::GfVec2f(view->GetX() + style.WindowPadding[0], view->GetY());
     for (auto& subItem : item->ui->_items) {
-      if (item->label == subItem->label) break;
+      if (item->label == subItem->label.c_str()) break;
       pxr::GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str()) + pxr::GfVec2f(0, ImGui::GetTextLineHeightWithSpacing());
       pos[0] += cur[0] + style.ItemSpacing[0];
     }
@@ -189,29 +185,29 @@ MenuUI::DirtyViewsBehind()
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
   if (_opened.size()) {
-    const MenuUI::Item* current = _items[_opened[0]];
-    _pos = _ComputePos(current);
-    _size = _ComputeSize(current);
-    drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
-    GetWindow()->DirtyViewsUnderBox(_pos, _size);
+    MenuUI::Item* current = _items[_opened[0]];
+    pxr::GfVec2f pos = _ComputePos(current);
+    pxr::GfVec2f size = _ComputeSize(current);
+    drawList->AddRect(pos, pos + size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+    GetWindow()->DirtyViewsUnderBox(pos, size);
 
     for (size_t openedIdx = 1; openedIdx < numOpened; ++openedIdx) {
-      const MenuUI::Item* child = current->items[_opened[openedIdx]];
-      _pos += _ComputePos(child);
-      _size = _ComputeSize(child);
-      drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
-      GetWindow()->DirtyViewsUnderBox(_pos, _size);
+      MenuUI::Item* child = current->items[_opened[openedIdx]];
+      pos += _ComputePos(child);
+      size = _ComputeSize(child);
+      drawList->AddRect(pos, pos + size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+      GetWindow()->DirtyViewsUnderBox(pos, size);
       current = child;
     }
     
   }
   else {
     const ImGuiStyle& style = ImGui::GetStyle();
-    _pos = pxr::GfVec2f(0, 0);
-    _size = pxr::GfVec2f(GetWidth(), ImGui::GetTextLineHeightWithSpacing() + 2 * style.FramePadding.y);
+    pxr::GfVec2f pos = pxr::GfVec2f(0, 0);
+    pxr::GfVec2f size = pxr::GfVec2f(GetWidth(), ImGui::GetTextLineHeightWithSpacing() + 2 * style.FramePadding.y);
 
-    drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
-    _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
+    drawList->AddRect(pos, pos + size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+    _parent->GetWindow()->DirtyViewsUnderBox(pos, size);
   }
   
   
@@ -222,12 +218,11 @@ bool
 MenuUI::Draw()
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  if (!_parent->IsActive())_current = NULL;
   ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
 
-  bool dirty = (bool)_current;
+  bool dirty = false;
   _opened.clear();
   if (ImGui::BeginMainMenuBar())
   {

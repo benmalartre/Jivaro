@@ -21,15 +21,15 @@ public:
   struct Item {
     MenuUI*                     ui;
     Item*                       parent;
-    std::vector<Item*>          items;
     std::string                 label;
     bool                        selected;
     bool                        enabled;
     CALLBACK_FN                 callback;
+    std::vector<Item*>          items;
 
-    Item(MenuUI* ui, Item* parent, const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
+    Item(MenuUI* ui, Item* parent, const std::string& label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
     ~Item();
-    Item* Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
+    Item* Add(const std::string& label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
     void Draw(bool* modified, size_t itemIdx);
     friend MenuUI;
@@ -43,17 +43,14 @@ public:
   void MouseButton(int button, int action, int mods) override;
   void DirtyViewsBehind();
 
-  Item* Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
+  Item* Add(const std::string& label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
 private:
   pxr::GfVec2f            _ComputeSize(const Item* item);
   pxr::GfVec2f            _ComputePos(const Item* item);
   std::vector<Item*>      _items;
-  Item*                   _current;
   std::vector<size_t>     _opened;
   static ImGuiWindowFlags _flags;
-  pxr::GfVec2f            _pos;
-  pxr::GfVec2f            _size;
 };
 
 
