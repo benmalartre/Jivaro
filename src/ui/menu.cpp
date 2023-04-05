@@ -35,9 +35,9 @@ ImGuiWindowFlags_NoBackground |
 ImGuiWindowFlags_NoScrollbar;
 
 
-MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
+MenuUI::Item::Item(MenuUI* ui, Item* parent, const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
   : ui(ui)
-  , parent(NULL)
+  , parent(parent)
   , label(label)
   , selected(selected)
   , enabled(enabled)
@@ -45,10 +45,15 @@ MenuUI::Item::Item(MenuUI* ui, const std::string label, bool selected, bool enab
 {
 }
 
-MenuUI::Item& MenuUI::Item::Add(const std::string label,
+MenuUI::Item::~Item()
+{
+  for (auto& item : items)delete item;
+}
+
+MenuUI::Item* MenuUI::Item::Add(const std::string label,
   bool selected, bool enabled, CALLBACK_FN cb)
 {
-  items.push_back(MenuUI::Item(ui, label, selected, enabled, cb));
+  items.push_back(new MenuUI::Item(ui, this, label, selected, enabled, cb));
   return items.back();
 }
 
@@ -63,7 +68,7 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
       *modified = true;
       size_t subItemIdx = 0;
       for (auto& item : items) {
-        item.Draw(modified, subItemIdx++);
+        item->Draw(modified, subItemIdx++);
       }
       ImGui::EndMenu();
     }
@@ -77,9 +82,9 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
   }
 }
 
-MenuUI::Item& MenuUI::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
+MenuUI::Item* MenuUI::Add(const std::string label, bool selected, bool enabled, CALLBACK_FN cb)
 {
-  _items.push_back(MenuUI::Item(this, label, selected, enabled, cb));
+  _items.push_back(new MenuUI::Item(this, NULL, label, selected, enabled, cb));
   return _items.back();
 }
 
@@ -88,31 +93,38 @@ MenuUI::MenuUI(View* parent)
   : BaseUI(parent, UIType::MAINMENU)
   , _current(NULL)
 {
-  MenuUI::Item& fileMenu = Add("File", false, true, NULL);
+  MenuUI::Item* fileMenu = Add("File", false, true, NULL);
 
-  fileMenu.Add("Open", false, true, std::bind(OpenFileCallback));
-  fileMenu.Add("Save", false, true, std::bind(SaveFileCallback));
-  fileMenu.Add("New", false, true, std::bind(NewFileCallback));
+  fileMenu->Add("Open", false, true, std::bind(OpenFileCallback));
+  fileMenu->Add("Save", false, true, std::bind(SaveFileCallback));
+  fileMenu->Add("New", false, true, std::bind(NewFileCallback));
 
-  MenuUI::Item& testItem = Add("Test", false, true, NULL);
-  testItem.Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
-  testItem.Add("Triangulate", false, true, std::bind(TriangulateCallback));
+  MenuUI::Item* testItem = Add("Test", false, true, NULL);
+  testItem->Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
+  testItem->Add("Triangulate", false, true, std::bind(TriangulateCallback));
 
-  MenuUI::Item& subItem = testItem.Add("SubMenu", false, true, NULL);
-  subItem.Add("Sub0", false, true, NULL);
-  subItem.Add("Sub1", false, true, NULL);
-  subItem.Add("Sub2", false, true, NULL);
+  MenuUI::Item* subItem = testItem->Add("SubMenu", false, true, NULL);
+  subItem->Add("Sub0", false, true, NULL);
+  subItem->Add("Sub1", false, true, NULL);
+  MenuUI::Item* subSubItem = subItem->Add("Sub2", false, true, NULL);
 
-  MenuUI::Item& demoItem = Add("Demo", false, true);
-  demoItem.Add("Open Demo", false, true, std::bind(OpenDemoCallback));
-  demoItem.Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
+  subSubItem->Add("SubSub0", false, true, NULL);
+  subSubItem->Add("SubSub1", false, true, NULL);
+  subSubItem->Add("SubSub2", false, true, NULL);
+  subSubItem->Add("SubSub3", false, true, NULL);
+  subSubItem->Add("SubSub4", false, true, NULL);
+  subSubItem->Add("SubSub5", false, true, NULL);
+
+  MenuUI::Item* demoItem = Add("Demo", false, true);
+  demoItem->Add("Open Demo", false, true, std::bind(OpenDemoCallback));
+  demoItem->Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
 
   static int layoutIdx = 0;
-  MenuUI::Item& layoutItem = Add("Layout", false, true);
-  layoutItem.Add("Base", false, true, std::bind(SetLayoutCallback, GetWindow(), 0));
-  layoutItem.Add("Raw", false, true, std::bind(SetLayoutCallback, GetWindow(), 1));
-  layoutItem.Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 2));
-  layoutItem.Add("Random", false, true, std::bind(SetLayoutCallback, GetWindow(), 3));
+  MenuUI::Item* layoutItem = Add("Layout", false, true);
+  layoutItem->Add("Base", false, true, std::bind(SetLayoutCallback, GetWindow(), 0));
+  layoutItem->Add("Raw", false, true, std::bind(SetLayoutCallback, GetWindow(), 1));
+  layoutItem->Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 2));
+  layoutItem->Add("Random", false, true, std::bind(SetLayoutCallback, GetWindow(), 3));
 
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
@@ -120,6 +132,7 @@ MenuUI::MenuUI(View* parent)
 // destructor
 MenuUI::~MenuUI()
 {
+  for (auto& item : _items)delete item;
 }
 
 pxr::GfVec2f
@@ -128,7 +141,7 @@ MenuUI::_ComputeSize(const MenuUI::Item* item)
   pxr::GfVec2f size(0, 0);
   ImGuiStyle& style = ImGui::GetStyle();
   for (const auto& subItem : item->items) {
-    pxr::GfVec2f labelSize = ImGui::CalcTextSize(subItem.label.c_str());
+    pxr::GfVec2f labelSize = ImGui::CalcTextSize(subItem->label.c_str());
     pxr::GfVec2f cur(labelSize + pxr::GfVec2f(style.ItemSpacing.x , ImGui::GetTextLineHeightWithSpacing()));
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1];
@@ -141,18 +154,20 @@ MenuUI::_ComputePos(const MenuUI::Item* item)
 {
   ImGuiStyle& style = ImGui::GetStyle();
   View* view = item->ui->GetView();
-  pxr::GfVec2f pos(view->GetX() + style.WindowPadding[0], view->GetY());
+  pxr::GfVec2f pos(0.f);
   if (item->parent) {
+    pos[0] += _ComputeSize(item->parent)[0];
     for (auto& subItem : item->parent->items) {
-      if (item->label == subItem.label) break;
-      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem.label.c_str());
-      pos[0] += cur[0] + style.ItemSpacing[0];
+      if (item->label == subItem->label) break;
+      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str());
+      pos[1] += cur[1] + style.ItemSpacing[1];
     }
   }
   else {
+    pos += pxr::GfVec2f(view->GetX() + style.WindowPadding[0], view->GetY());
     for (auto& subItem : item->ui->_items) {
-      if (item->label == subItem.label) break;
-      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem.label.c_str()) + pxr::GfVec2f(0, ImGui::GetTextLineHeightWithSpacing());
+      if (item->label == subItem->label) break;
+      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str()) + pxr::GfVec2f(0, ImGui::GetTextLineHeightWithSpacing());
       pos[0] += cur[0] + style.ItemSpacing[0];
     }
   }
@@ -173,17 +188,17 @@ MenuUI::DirtyViewsBehind()
 
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
-  if (_current) {
-    MenuUI::Item* current = &_items[_opened[0]];
+  if (_opened.size()) {
+    const MenuUI::Item* current = _items[_opened[0]];
     _pos = _ComputePos(current);
     _size = _ComputeSize(current);
     drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
     GetWindow()->DirtyViewsUnderBox(_pos, _size);
 
     for (size_t openedIdx = 1; openedIdx < numOpened; ++openedIdx) {
-      MenuUI::Item* child = &current->items[_opened[openedIdx]];
-      _pos += _ComputePos(current);
-      _size = _ComputeSize(current);
+      const MenuUI::Item* child = current->items[_opened[openedIdx]];
+      _pos += _ComputePos(child);
+      _size = _ComputeSize(child);
       drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
       GetWindow()->DirtyViewsUnderBox(_pos, _size);
       current = child;
@@ -217,7 +232,7 @@ MenuUI::Draw()
   if (ImGui::BeginMainMenuBar())
   {
     size_t itemIdx = 0;
-    for (auto& item : _items)item.Draw(&dirty, itemIdx++);
+    for (auto& item : _items)item->Draw(&dirty, itemIdx++);
     ImGui::EndMainMenuBar();
   }
   if (dirty || ImGui::IsAnyItemHovered()) { DirtyViewsBehind(); }
