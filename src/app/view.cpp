@@ -433,6 +433,7 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
   sMin[1] = pxr::GfClamp(sMin[1], 0, height);
   sMax[0] = pxr::GfClamp(sMax[0], 0, width);
   sMax[1] = pxr::GfClamp(sMax[1], 0, height);
+
 }
 
 void
@@ -484,8 +485,8 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
 
   if(rationalize)
   {
-    ratio[0] = 1 / ((double)(_max[0] - _min[0]) / (double)w);
-    ratio[1] = 1 / ((double)(_max[1] - _min[1]) / (double)h);
+    ratio[0] = 1 / (((double)_max[0] - (double)_min[0]) / (double)w);
+    ratio[1] = 1 / (((double)_max[1] - (double)_min[1]) / (double)h);
   }
   _min = pxr::GfVec2f(x , y);
   _max = pxr::GfVec2f(x + w, y + h);
@@ -495,7 +496,7 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
     if(GetFlag(HORIZONTAL))
     {
       if (GetFlag(LFIXED)) _perc = (double)_fixedPixels / (double)h;
-      else if (GetFlag(RFIXED)) _perc = (double)(h - _fixedPixels) / (double)h;
+      else if (GetFlag(RFIXED)) _perc = ((double)h - _fixedPixels) / (double)h;
       
       double ph = (double)h * _perc;
       if (_left)_left->Resize(x, y, w, ph);
@@ -528,13 +529,13 @@ View::GetPercFromMousePosition(int x, int y)
   if(GetFlag(HORIZONTAL))
   {
     if(GetHeight()<0.01)return;
-    double perc = (double)(y - _min[1]) / (double)(_max[1] - _min[1]);
+    double perc = ((double)y - _min[1]) / ((double)_max[1] - _min[1]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
   else
   {
     if(GetWidth()<0.01)return;
-    double perc = (double)(x - _min[0]) / (double)(_max[0] - _min[0]);
+    double perc = ((double)x - _min[0]) / ((double)_max[0] - _min[0]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
   ComputeNumPixels(true);
