@@ -418,19 +418,21 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
     int h = GetMin()[1] + (GetMax()[1] - GetMin()[1]) * GetPerc();
     sMin[1] = h - SPLITTER_THICKNESS;
     sMax[1] = h + SPLITTER_THICKNESS;
-    sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > height) ? height : sMin[1]);
-    sMax[1] = (sMax[1] < 0) ? 0 : ((sMax[1] > height) ? height : sMax[1]);
   }
   else
   {
+    sMin[1] = GetMin()[1] - SPLITTER_THICKNESS;
+    sMax[1] = GetMax()[1] + SPLITTER_THICKNESS;
+
     int w = GetMin()[0] + (GetMax()[0] - GetMin()[0]) * GetPerc();
     sMin[0] = w - SPLITTER_THICKNESS;
     sMax[0] = w + SPLITTER_THICKNESS;
-    sMin[1] = GetMin()[1] - SPLITTER_THICKNESS;
-    sMax[1] = GetMax()[1] + SPLITTER_THICKNESS;
-    sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > width) ? width : sMin[1]);
-    sMax[1]= (sMax[1] < 0) ? 0 : ((sMax[1] > width) ? width : sMax[1]);
   }
+
+  sMin[0] = pxr::GfClamp(sMin[0], 0, width);
+  sMin[1] = pxr::GfClamp(sMin[1], 0, height);
+  sMax[0] = pxr::GfClamp(sMax[0], 0, width);
+  sMax[1] = pxr::GfClamp(sMax[1], 0, height);
 }
 
 void
@@ -439,7 +441,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   if(horizontal)SetFlag(HORIZONTAL);
   else ClearFlag(HORIZONTAL);
 
-  if (fixed && numPixels) {
+  if (fixed && numPixels > 0) {
     if (fixed & LFIXED) {
       SetFlag(LFIXED); 
       ClearFlag(RFIXED);
@@ -472,6 +474,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
     _left->TransferUIs(this);
   }
   RemoveTab();
+  _window->Resize(_window->GetWidth(), _window->GetHeight());
 }
 
 void 

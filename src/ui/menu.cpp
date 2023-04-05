@@ -170,18 +170,23 @@ void
 MenuUI::DirtyViewsBehind()
 {
   size_t numOpened = _opened.size();
+
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
-  
-  if (numOpened) {
-    std::cout << "opened : " << numOpened << std::endl;
+
+  if (_current) {
     MenuUI::Item* current = &_items[_opened[0]];
-    _pos = _ComputePos(_current);
-    _size = _ComputeSize(_current);
+    _pos = _ComputePos(current);
+    _size = _ComputeSize(current);
     drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
-    _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
+    GetWindow()->DirtyViewsUnderBox(_pos, _size);
 
     for (size_t openedIdx = 1; openedIdx < numOpened; ++openedIdx) {
-
+      MenuUI::Item* child = &current->items[_opened[openedIdx]];
+      _pos += _ComputePos(current);
+      _size = _ComputeSize(current);
+      drawList->AddRect(_pos, _pos + _size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+      GetWindow()->DirtyViewsUnderBox(_pos, _size);
+      current = child;
     }
     
   }

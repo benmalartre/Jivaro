@@ -5,6 +5,7 @@
 #include "../ui/tab.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "../app/application.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -150,18 +151,21 @@ ViewTabUI::Draw()
     Window* window = _parent->GetWindow();
     
     if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
-      _parent->Split(0.5, true);
-      window->Resize(window->GetWidth(), window->GetHeight());
+      GetApplication()->AddDeferredCommand(
+        std::bind(&View::Split, _parent, 0.5, true, false, 0)
+      );
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE)) {
-      _parent->Split(0.5, false);
-      window->Resize(window->GetWidth(), window->GetHeight());
+      GetApplication()->AddDeferredCommand(
+        std::bind(&View::Split, _parent, 0.5, false, false, 0)
+      );
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_TRASH, BUTTON_MINI_SIZE)) {
-      Window* window = _parent->GetWindow();
-      window->RemoveView(_parent);
+      GetApplication()->AddDeferredCommand(
+        std::bind(&Window::RemoveView, window, _parent)
+      );
     };
     ImGui::SameLine();
     ImGui::PopStyleVar();

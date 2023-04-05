@@ -150,7 +150,7 @@ Application::ExecuteDeferredCommands()
 {
   // execute any registered command that could not been run during draw
   if (_deferred.size()) {
-    for (size_t i = _deferred.size() - 1; i >= 0; --i)_deferred[i]();
+    for(int i = _deferred.size() - 1; i >= 0; --i) _deferred[i]();
     _deferred.clear();
   }
 }

@@ -273,7 +273,7 @@ static void _StandardLayout(Window* window)
   Ts[3] = CurrentTime();
   new ToolbarUI(toolView, true);
   Ts[4] = CurrentTime();
-  //new ExplorerUI(explorerView);
+  new ExplorerUI(explorerView);
   Ts[5] = CurrentTime();
   new PropertyEditorUI(propertyView);
   Ts[6] = CurrentTime();
@@ -392,6 +392,7 @@ Window::ShouldRepeatKey()
 void 
 Window::Resize(unsigned width, unsigned height)
 {
+  const bool resolutionChanged = (_width != width) || (_height != height);
   _width = width;
   _height = height;
 
@@ -402,26 +403,28 @@ Window::Resize(unsigned width, unsigned height)
   if(_width <= 0 || _height <= 0)_valid = false;
   else _valid = true;
 
-  if (_fbo) glDeleteFramebuffers(1, &_fbo);
-  if (_tex) glDeleteTextures(1, &_tex);
+  if (resolutionChanged) {
+    if (_fbo) glDeleteFramebuffers(1, &_fbo);
+    if (_tex) glDeleteTextures(1, &_tex);
 
-  // setup background buffer for popup window
-  glGenFramebuffers(1, &_fbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+    // setup background buffer for popup window
+    glGenFramebuffers(1, &_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
 
-  glGenTextures(1, &_tex);
-  glBindTexture(GL_TEXTURE_2D, _tex);
+    glGenTextures(1, &_tex);
+    glBindTexture(GL_TEXTURE_2D, _tex);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  }
 }
 
 // Layout
@@ -548,6 +551,10 @@ Window::SplitView(View* view, double perc, bool horizontal, int fixed, int numPi
 void 
 Window::RemoveView(View* view)
 {
+  if (view == _mainView) {
+    std::cerr << "[view] can't remove main view !" << std::endl;
+    return;
+  }
   if(_activeView == view)_activeView = NULL;
   if(_hoveredView == view)_hoveredView = NULL;
   View* parent = view->GetParent();
@@ -557,6 +564,9 @@ Window::RemoveView(View* view)
   } else if(parent->GetRight() == view) {
     sibling = parent->GetLeft();
   }
+  std::cout << "remove view " << view << std::endl;
+  std::cout << "sibling view " << sibling << std::endl;
+
   if (sibling) {
     if (sibling->GetFlag(View::LEAF)) {
       parent->TransferUIs(sibling);
@@ -571,13 +581,16 @@ Window::RemoveView(View* view)
       sibling->SetLeft(NULL);
       sibling->SetRight(NULL);
     }
+    std::cout << "delete sibbling" << std::endl;
     delete sibling;
   }
 
+  std::cout << "delete view" << std::endl;
   delete view;
   Resize(_width, _height);
   ForceRedraw();
   _mainView->SetDirty();
+  std::cout << "remove view done" << std::endl;
 }
 
 // collect child leaves views from specified view
