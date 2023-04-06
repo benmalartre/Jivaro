@@ -294,6 +294,13 @@ private:
 
 class BrushHandle : public BaseHandle {
 public:
+enum Mode {
+    ADD,
+    REMOVE,
+    MOVE,
+    SCALE,
+    BRUSH
+  };
   BrushHandle();
 
   void Draw(float width, float height) override;

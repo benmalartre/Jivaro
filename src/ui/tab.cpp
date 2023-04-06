@@ -56,9 +56,8 @@ ViewTabUI::Draw()
   ImGuiStyle& style = ImGui::GetStyle();
   const pxr::GfVec2f min(_parent->GetMin());
   const pxr::GfVec2f size(_parent->GetWidth(), GetHeight());
-  static bool open;
 
-  ImGui::Begin(_ComputeName(_id).c_str(), &open, ViewTabUI::_flags);
+  ImGui::Begin(_ComputeName(_id).c_str(), NULL, ViewTabUI::_flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
 
@@ -87,8 +86,6 @@ ViewTabUI::Draw()
     ImGuiTabBarFlags_Reorderable | 
     ImGuiTabBarFlags_FittingPolicyScroll;
 
-  int button_state = 0;
-
   if (ImGui::BeginTabBar(_ComputeName(_id, "TabBar").c_str(), tabBarFlags))
   {
     if (ImGui::TabItemButton(ICON_FA_GEAR, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
@@ -111,14 +108,12 @@ ViewTabUI::Draw()
     }
 
     // Submit our regular tabs
-
     BaseUI* current = _parent->GetCurrentUI();
     std::vector<BaseUI*>& uis = _parent->GetUIs();
     for (int n = 0; n < uis.size(); ++n)
     {
-      bool open = true;
       const char* name = UITypeName[uis[n]->GetType()];
-      if (ImGui::BeginTabItem(name, &open,
+      if (ImGui::BeginTabItem(name, NULL,
         ImGuiTabItemFlags_NoCloseButton | 
         ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | 
         ImGuiTabItemFlags_NoPushId))

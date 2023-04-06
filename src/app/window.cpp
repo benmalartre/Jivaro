@@ -297,7 +297,7 @@ static void _RawLayout(Window* window)
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
 
-  window->SplitView(mainView, 0.5, true, View::LFIXED, 32);
+  window->SplitView(mainView, 0.5, true, View::LFIXED, 24);
   View* menuView = mainView->GetLeft();
   menuView->SetTabed(false);
 
@@ -306,6 +306,7 @@ static void _RawLayout(Window* window)
 
   View* viewportView = middleView->GetLeft();
   View* timelineView = middleView->GetRight();
+  timelineView->SetTabed(false);
 
   window->Resize(width, height);
 

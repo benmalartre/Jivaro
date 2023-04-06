@@ -42,6 +42,7 @@ enum UIType {
   CONTENTBROWSER,
   DEBUG,
   DEMO,
+  ICON,
   COUNT
 };
 
@@ -61,7 +62,8 @@ static const char* UITypeName[UIType::COUNT] = {
   "textEditor",
   "contentBrowser",
   "debug",
-  "demo"
+  "demo",
+  "icon"
 };
 
 typedef std::map<std::string, int> UITypeCounter;

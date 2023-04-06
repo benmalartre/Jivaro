@@ -73,7 +73,7 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
     }
   }
   else {
-    if (ImGui::MenuItem(label.c_str()) && callback) {
+    if (ImGui::MenuItem(label.c_str(), NULL, selected, enabled) && callback) {
       callback();
       window->ForceRedraw();
     }
@@ -106,9 +106,9 @@ MenuUI::MenuUI(View* parent)
   MenuUI::Item* subSubItem = subItem->Add("Sub2", false, true, NULL);
 
   subSubItem->Add("SubSub0", false, true, NULL);
-  subSubItem->Add("SubSub1", false, true, NULL);
-  subSubItem->Add("SubSub2", false, true, NULL);
-  subSubItem->Add("SubSub3", false, true, NULL);
+  subSubItem->Add("SubSub1", true, true, NULL);
+  subSubItem->Add("SubSub2", false, false, NULL);
+  subSubItem->Add("SubSub3", true, false, NULL);
   subSubItem->Add("SubSub4", false, true, NULL);
   subSubItem->Add("SubSub5", false, true, NULL);
 
@@ -129,6 +129,7 @@ MenuUI::MenuUI(View* parent)
 // destructor
 MenuUI::~MenuUI()
 {
+  for(auto & item: _items)delete item;
 }
 
 pxr::GfVec2f
@@ -234,7 +235,7 @@ MenuUI::Draw()
   else { SetInteracting(false); };
 
   ImGui::PopStyleColor(3);
-  return dirty;
+  return dirty || ImGui::IsAnyItemHovered();
 
 }
 

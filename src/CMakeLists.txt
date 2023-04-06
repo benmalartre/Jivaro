@@ -21,6 +21,7 @@ add_executable(${TARGET}
   ui/ui.cpp
   ui/fonts.cpp
   ui/demo.cpp
+  ui/icon.cpp
   ui/textFilter.cpp
   ui/utils.cpp
   ui/popup.cpp
@@ -54,6 +55,8 @@ add_executable(${TARGET}
   #embree/device.cpp
   geometry/utils.cpp
   geometry/matrix.cpp
+  geometry/rbf.cpp
+  geometry/kabsch.cpp
   geometry/sampler.cpp
   geometry/voxels.cpp
   geometry/shape.cpp

@@ -17,7 +17,7 @@
 #include "../ui/textEditor.h"
 #include "../ui/debug.h"
 #include "../ui/demo.h"
-
+#include "../ui/icon.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -130,6 +130,9 @@ View::CreateUI(UIType type)
   /*case UIType::DEBUG:
     _current = new DebugUI(this);
     break;*/
+  case UIType::ICON:
+    _current = new IconUI(this);
+    break;
   default:
     break;
   }
