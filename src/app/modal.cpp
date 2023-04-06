@@ -50,7 +50,6 @@ void BaseModal::Loop()
 {
   while (!glfwWindowShouldClose(_window->GetGlfwWindow()) && _status == ACTIVE) {
     _window->Draw();
-    glfwSwapBuffers(_window->GetGlfwWindow());
     glfwPollEvents();
     _LoopImpl();
   }

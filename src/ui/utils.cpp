@@ -48,15 +48,15 @@ UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, CAL
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushID(id);
+  bool clicked = false;
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
     func();
-    ImGui::PopID();
-    return true;
+    clicked = true;
   }
   ImGui::PopID();
   ImGui::PopStyleColor();
-  return false;
+  return clicked;
 }
 
 bool
@@ -68,20 +68,17 @@ UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLB
   if (active) {
     ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(20, 20, 20, 255));
   }
-
+  bool clicked = false;
   ImGui::PushID(id);
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
     func();
-    if (active) ImGui::PopStyleColor(3);
-    ImGui::PopID();
-    return true;
+    clicked = true;
   }
-  if (active) ImGui::PopStyleColor(3);
+  if (active) ImGui::PopStyleColor(2);
   ImGui::PopID();
-  return false;
+  return clicked;
 }
 
 void 

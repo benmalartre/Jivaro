@@ -73,9 +73,10 @@ public:
   Delegate* GetDelegate() { return _delegate; };
 
 private:
-  bool    _dirty;
-  bool    _highlightSelection;
-  Delegate*  _delegate;
+  bool        _dirty;
+  bool        _highlightSelection;
+  Delegate*   _delegate;
+  //std::vector<View*> _views;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

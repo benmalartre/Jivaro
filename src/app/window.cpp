@@ -75,11 +75,11 @@ Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool full
     _height = dimension[3];
   }
 
-  glfwWindowHint(GLFW_DECORATED, true);
+  glfwWindowHint(GLFW_DECORATED, fullscreen - 1);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, false);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, true);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
@@ -92,7 +92,7 @@ Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool full
   _window = glfwCreateWindow(_width, _height, name.c_str(), monitor, parent ? parent->GetGlfwWindow() : NULL);
   
   if(_window) {
-    //glfwSetWindowPos(_window, dimension[0], dimension[1]);
+    if(parent)glfwSetWindowPos(_window, dimension[0], dimension[1]);
     Init();
   }
 }
@@ -732,7 +732,8 @@ Window::Draw()
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glBindVertexArray(0);
 
-  glFlush();
+  //glFlush();
+  glfwSwapBuffers(_window);
   glFinish();
 }
 

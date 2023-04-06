@@ -205,7 +205,7 @@ static void _InitControls()
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
   pxr::UsdPrim controlPrim = stage->DefinePrim(rootPrim.GetPath().AppendChild(pxr::TfToken("Controls")));
-  controlPrim.CreateAttribute(pxr::TfToken("Density"), pxr::SdfValueTypeNames->Int).Set(1000024);
+  controlPrim.CreateAttribute(pxr::TfToken("Density"), pxr::SdfValueTypeNames->Int).Set(10000);
   controlPrim.CreateAttribute(pxr::TfToken("Radius"), pxr::SdfValueTypeNames->Float).Set(0.1f);
   controlPrim.CreateAttribute(pxr::TfToken("Length"), pxr::SdfValueTypeNames->Float).Set(4.f);
   controlPrim.CreateAttribute(pxr::TfToken("Scale"), pxr::SdfValueTypeNames->Float).Set(1.f);
@@ -228,7 +228,6 @@ void _GenerateSample(pxr::UsdGeomMesh& mesh, pxr::VtArray<Sample>* samples, floa
 
   TriangulateMesh(counts, indices, triangles);
   ComputeVertexNormals(positions, counts, indices, triangles, normals);
-  
 }
 
 static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
@@ -263,17 +262,17 @@ static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfM
   mesh.GetFaceVertexCountsAttr().Get(&counts);
   mesh.GetFaceVertexIndicesAttr().Get(&indices);
 
-  uint64_t T1 = CurrentTime() - T;
-  T = CurrentTime();
+  //uint64_t T1 = CurrentTime() - T;
+  //T = CurrentTime();
   TriangulateMesh(counts, indices, triangles);
-  uint64_t T2 = CurrentTime() - T;
-  T = CurrentTime();
+  //uint64_t T2 = CurrentTime() - T;
+  //T = CurrentTime();
   ComputeVertexNormals(positions, counts, indices, triangles, normals);
-  uint64_t T3 = CurrentTime() - T;
-  T = CurrentTime();
+  //uint64_t T3 = CurrentTime() - T;
+  //T = CurrentTime();
   PoissonSampling(radius, density, positions, normals, triangles, samples);
-  uint64_t T4 = CurrentTime() - T;
-  T = CurrentTime();  
+  //uint64_t T4 = CurrentTime() - T;
+  //T = CurrentTime();  
 
   size_t numCVs = 4 * samples.size();
 
@@ -302,14 +301,15 @@ static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfM
     
     cvCounts[sampleIdx] = 4;
   }
-  uint64_t T5 = CurrentTime() - T; 
-  T = CurrentTime();
+  //uint64_t T5 = CurrentTime() - T; 
+  //T = CurrentTime();
 
   curve->SetTopology(points, radii, cvCounts);
 
-  uint64_t T6 = CurrentTime() - T;
-  T = CurrentTime();
+  //uint64_t T6 = CurrentTime() - T;
+  //T = CurrentTime();
 
+/*
   if (!((int)pxr::GfAbs(time*60) % 60)) {
     std::cout << "----------------- stochatics: " << std::endl;
     std::cout << "nb samples " << samples.size() << std::endl;
@@ -323,6 +323,7 @@ static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfM
     std::cout << "-----------------  results: " << std::endl;
     std::cout << "total time : " << (double)((T1 + T2 + T3 + T4 + T5 + T6) * 1e-9) << " seconds" << std::endl;
   }
+*/
 }
 
 void

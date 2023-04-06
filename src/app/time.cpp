@@ -79,7 +79,7 @@ void Time::StopPlayBack()
 bool Time::PlayBack()
 {
   _stopWatch.Stop();
-  if(_stopWatch.GetSeconds() > 60.f/_fps)
+  if(_stopWatch.GetSeconds() > (1.f/_fps))
   {
     if(_playForwardOrBackward)PreviousFrame();
     else NextFrame();

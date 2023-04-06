@@ -432,14 +432,12 @@ Application::Update()
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
   double currentTime = glfwGetTime();
+
   if (currentTime - lastTime > refreshRate) {
     lastTime = currentTime;
     if (_execute && (_time.IsPlaying() || _IsAnyEngineDirty())) {
       UpdateExec(_time.GetActiveTime());
     }
-  } else {
-    if(!_time.IsPlaying())
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   glfwPollEvents();
