@@ -18,6 +18,7 @@
 #include "../ui/debug.h"
 #include "../ui/demo.h"
 #include "../ui/icon.h"
+#include "../ui/tool.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -133,6 +134,9 @@ View::CreateUI(UIType type)
   case UIType::ICON:
     _current = new IconUI(this);
     break;
+  case UIType::TOOL:
+    _current = new ToolUI(this);
+    break;
   default:
     break;
   }
@@ -246,7 +250,7 @@ View::Draw(bool forceRedraw)
       Time& time = GetApplication()->GetTime();
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
         if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
-          //SetClean();
+          SetClean();
         }
       }
     }

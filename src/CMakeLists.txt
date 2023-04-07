@@ -31,6 +31,7 @@ add_executable(${TARGET}
   ui/splitter.cpp
   ui/tab.cpp
   ui/menu.cpp
+  ui/tool.cpp
   ui/textEditor.cpp
   ui/graphEditor.cpp
   ui/viewport.cpp
@@ -119,23 +120,23 @@ endif()
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
-    #${Python2_INCLUDE_DIRS}
+    ${Python2_INCLUDE_DIRS}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}
-    #${OPENVDB_INCLUDE_DIR}
+    ${OPENVDB_INCLUDE_DIR}
 	${BOOST_INCLUDE_DIR}
 	${ICON_AWESOME_DIR}
 )
 
 target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}
-  #{Python2_LIBRARIES}
+  ${Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}
   ${EMBREE_LIBRARIES}
   ${TBB_LIBRARIES}
-  #${OPENVDB_LIBRARIES}
+  ${OPENVDB_LIBRARIES}
   ${GLFW}
   ${ADDITIONAL_LIBRARIES}
 )

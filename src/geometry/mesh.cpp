@@ -94,25 +94,20 @@ Mesh::Mesh()
   : Geometry(Geometry::MESH)
 {
   _initialized = false;
-  _numTriangles = 0;
-  _numFaces = 0;
 }
 
 Mesh::Mesh(const Mesh* other, bool normalize)
   : Geometry(other, Geometry::MESH, normalize)
 {
   _initialized = true;
-  _numTriangles = other->_numTriangles;
-  _numSamples = other->_numSamples;
-  _numFaces = other->_numFaces;
-
   _normals = other->_normals;
 
-  _triangles.resize(_numTriangles);
+  size_t numTriangles = other->GetNumTriangles();
+  _triangles.resize(numTriangles);
   memcpy(
     &_triangles[0], 
     &other->_triangles[0], 
-    _numTriangles * sizeof(Triangle));
+    numTriangles * sizeof(Triangle));
 }
 
 Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
@@ -125,13 +120,11 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
   faceVertexCountsAttr.Get(&_faceVertexCounts, pxr::UsdTimeCode::Default());
   faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
-  _numFaces = _faceVertexCounts.size();
-  _numSamples = _faceVertexIndices.size();
 
   Init();
 }
 
-uint32_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
+size_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
 {
   size_t accum = 0;
   for(size_t i=0; i < face; ++i)accum += _faceVertexCounts[i];
@@ -147,12 +140,11 @@ void Mesh::SetAllEdgesLatencyReal()
 
 void Mesh::UpdateTopologyFromHalfEdges()
 {
-  _numFaces = _halfEdges.size() / 3;
-  _numSamples = _halfEdges.size();
-  _numTriangles = _numFaces;
+  size_t numFaces = _halfEdges.size() / 3;
+  size_t numSamples = _halfEdges.size();
 
-  _faceVertexCounts.assign(_numFaces, 3);
-  _faceVertexIndices.resize(_numSamples);
+  _faceVertexCounts.assign(numFaces, 3);
+  _faceVertexIndices.resize(numSamples);
   size_t faceVertexIndex = 0;
   for (auto& edge : _halfEdges) {
     _faceVertexIndices[faceVertexIndex++] = edge.vertex;
@@ -334,11 +326,12 @@ static void _RemoveEdge(pxr::VtArray<HalfEdge>& halfEdges, HalfEdge* edge)
 
 void Mesh::ComputeHalfEdges()
 {
-  _halfEdges.resize(_numTriangles * 3);
+  size_t numTriangles = GetNumTriangles();
+  _halfEdges.resize(numTriangles * 3);
 
   pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
   std::vector<bool> used;
-  used.assign(_numTriangles, false);
+  used.assign(numTriangles, false);
 
   HalfEdge* halfEdge = &_halfEdges[0];
   size_t numFaceTriangles;
@@ -390,7 +383,7 @@ void Mesh::ComputeHalfEdges()
   // verify that the mesh is clean:
   size_t numEntries = halfEdgesMap.size();
   bool problematic = false;
-  if(numEntries != (size_t)(_numTriangles * 3))problematic = true;
+  if(numEntries != (size_t)(numTriangles * 3))problematic = true;
 
   // populate the twin pointers by iterating over the hash map:
   uint64_t edgeIndex; 
@@ -592,9 +585,7 @@ void Mesh::SetTopology(
 )
 {
   _faceVertexCounts = faceVertexCounts;
-  _numFaces = _faceVertexCounts.size();
   _faceVertexIndices = faceVertexIndices;
-  _numSamples = _faceVertexIndices.size();
   _positions = positions;
   _normals = positions;
 
@@ -610,7 +601,6 @@ void Mesh::Init()
   
   // build triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
-  _numTriangles = _triangles.size();
 
   // compute normals
   ComputeVertexNormals(_positions, _faceVertexCounts, 
@@ -780,7 +770,6 @@ void Mesh::SplitEdge(size_t index)
   currentEdge.next = n1;
 
   numPoints++;
-  _numTriangles++;
   
   if (twinEdge) {
     HalfEdge* twinNextEdge = _GetNextEdge(twinEdge, HalfEdge::REAL);
@@ -810,7 +799,6 @@ void Mesh::SplitEdge(size_t index)
     twinEdge->next = n1;
 
     numPoints++;
-    _numTriangles++;
   }
 }
 

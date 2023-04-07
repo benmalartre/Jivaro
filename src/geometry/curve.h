@@ -51,12 +51,12 @@ public:
   const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
   pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
 
-  uint32_t GetNumCurves() const { return _cvCounts.size(); };
-  uint32_t GetNumCVs(uint32_t curveIndex)const;
-  uint32_t GetNumSegments(uint32_t curveIndex)const;
+  size_t GetNumCurves() const { return _cvCounts.size(); };
+  size_t GetNumCVs(uint32_t curveIndex)const;
+  size_t GetNumSegments(uint32_t curveIndex)const;
 
-  uint32_t GetTotalNumCVs()const;
-  uint32_t GetTotalNumSegments()const;
+  size_t GetTotalNumCVs()const;
+  size_t GetTotalNumSegments()const;
 
   float GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex);
 

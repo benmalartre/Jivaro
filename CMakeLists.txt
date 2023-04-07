@@ -101,7 +101,7 @@ endif()
 endforeach()
 
 # python
-# find_package(Python2 COMPONENTS Interpreter Development)
+find_package(Python2 COMPONENTS Interpreter Development)
 
 # boost
 if(UNIX)
@@ -119,7 +119,7 @@ set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
   program_options
-  #python27
+  python27
   regex
 )
 
@@ -154,8 +154,8 @@ foreach(TBB_LIB_NAME IN LISTS TBB_LIB_NAMES)
 endforeach()
 
 # openvdb
-#set(OPENVDB_INCLUDE_DIR "${USD_DIR}/include/openvdb")
-#set(OPENVDB_LIBRARY_DIR "${USD_DIR}/lib")
+set(OPENVDB_INCLUDE_DIR "${USD_DIR}/include/openvdb")
+set(OPENVDB_LIBRARY_DIR "${USD_DIR}/lib")
 
 # OpenGL
 find_package(OpenGL REQUIRED)

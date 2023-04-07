@@ -94,16 +94,13 @@ KabschSolver::Solve(bool solveRotation, bool solveScale, bool firstSolve)
       _ExtractRotation(covariantMatrix, &_rotation, 16);
     }
   }
-  /*
-  MTransformationMatrix S, R, T;
-  //S.setTranslation(_bndCentroid, MSpace::kWorld);
-  MVector scl(_scale, _scale, _scale);
-  S.setScale(&scl[0], MSpace::kWorld);
-  R.setRotationQuaternion(_rotation.x, _rotation.y, _rotation.z, _rotation.w);
-  T.setTranslation(_pntCentroid, MSpace::kWorld);
+  pxr::GfTransform S, R, T;
+  pxr::GfVec3f scale(_scale);
+  S.SetScale(scale);
+  R.SetRotation(_rotation);
+  T.SetTranslation(_pntCentroid);
 
-  _solved = S.asMatrix() * R.asMatrix() * T.asMatrix();
-  */
+  _solved = S.GetMatrix() * R.GetMatrix() * T.GetMatrix();
   return _solved;
 }
 

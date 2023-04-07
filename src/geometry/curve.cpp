@@ -38,7 +38,7 @@ Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
     normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
 }
 
-uint32_t 
+size_t 
 Curve::GetNumCVs(uint32_t curveIndex)const
 {
   if(curveIndex >= _cvCounts.size())
@@ -46,7 +46,7 @@ Curve::GetNumCVs(uint32_t curveIndex)const
   return _cvCounts[curveIndex];
 }
 
-uint32_t 
+size_t 
 Curve::GetNumSegments(uint32_t curveIndex)const
 {
   if (curveIndex >= _cvCounts.size())
@@ -54,13 +54,13 @@ Curve::GetNumSegments(uint32_t curveIndex)const
   return _cvCounts[curveIndex] - 1;
 }
 
-uint32_t 
+size_t 
 Curve::GetTotalNumCVs()const
 {
   return _positions.size();
 }
 
-uint32_t 
+size_t 
 Curve::GetTotalNumSegments()const
 {
   size_t numSegments = 0;

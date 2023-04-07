@@ -176,7 +176,7 @@ int
 BVH::GetGeometryIndex(Geometry* geom) const 
 {
   for (size_t index = 0; index < _geometries.size(); ++index) {
-    if(_geometries[index] == geom)return index;
+    if(_geometries[index] == geom)return static_cast<int>(index);
   }
   return -1;
 }
@@ -391,7 +391,7 @@ Mortom BVH::Cell::SortCellsByPair(
   }
 
   std::sort(mortoms.begin(), mortoms.end());
-  return { 0, _RecurseSortCellsByPair(mortoms, 0, numCells - 1) };
+  return { 0, _RecurseSortCellsByPair(mortoms, 0, static_cast<int>(numCells) - 1) };
 } 
 
 void BVH::Cell::_FinishSort(std::vector<Mortom>& cells)

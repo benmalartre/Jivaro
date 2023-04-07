@@ -4,6 +4,7 @@
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/quatd.h>
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/transform.h>
 #include <pxr/base/vt/array.h>
 
 #include "../common.h"

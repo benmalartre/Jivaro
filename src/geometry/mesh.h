@@ -84,11 +84,12 @@ public:
   pxr::VtArray<Triangle>& GetTriangles(){return _triangles;};
   pxr::VtArray<TrianglePair>& GetTrianglePairs() { return _trianglePairs; };
 
-  uint32_t GetNumTriangles()const {return _numTriangles;};
-  uint32_t GetNumSamples()const {return _numSamples;};
-  uint32_t GetNumFaces()const {return _numFaces;};
-  uint32_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
-  uint32_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
+  size_t GetNumTriangles()const {return _triangles.size();};
+  size_t GetNumSamples()const {return _faceVertexIndices.size();};
+  size_t GetNumFaces()const {return _faceVertexCounts.size();};
+
+  size_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
+  size_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
   void GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
   void GetCutEdgesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
 
@@ -147,11 +148,6 @@ public:
   };
 
 private:
-  // infos
-  uint32_t                            _numTriangles;
-  uint32_t                            _numSamples;
-  uint32_t                            _numFaces;
-
   // polygonal description
   pxr::VtArray<int>                   _faceVertexCounts;  
   pxr::VtArray<int>                   _faceVertexIndices;

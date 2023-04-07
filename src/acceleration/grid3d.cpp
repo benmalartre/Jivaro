@@ -123,7 +123,7 @@ void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries)
   if (!geometries.size())return;
 
   // compute bound of the scene
-  uint32_t totalNumElements = 0;
+  size_t totalNumElements = 0;
   _range.SetEmpty();
   for(Geometry* geom: geometries) {
     const pxr::GfBBox3d& bbox = geom->GetBoundingBox();

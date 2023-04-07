@@ -1,11 +1,3 @@
-
-#include <iostream>
-#include <array>
-#include <utility>
-#include "../imgui/imgui_impl_glfw.h"
-#include "../imgui/imgui_impl_opengl3.h"
-#include "../imgui/imgui_internal.h"
-
 #include "../ui/icon.h"
 #include "../app/view.h"
 #include "../app/window.h"

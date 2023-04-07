@@ -1290,10 +1290,10 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
       FrameAll();
     }
     else if (mappedKey == GLFW_KEY_TAB) {
-      NodePopupUI* popup = new NodePopupUI(
+      Application* app = GetApplication();
+      GraphPopupUI* popup = new GraphPopupUI(
         (int)GetX() + GetWidth() * 0.5f - 100, (int)GetY() + GetHeight() * 0.5 - 50, 200, 100);
-
-      GetApplication()->SetPopup(popup);
+      app->AddDeferredCommand(std::bind(&Application::SetPopup, app, popup));
     }
   }
 }

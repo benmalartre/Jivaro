@@ -775,10 +775,11 @@ Window::DrawPopup(PopupUI* popup)
   // render the imgui frame
   ImGui::Render();
 
-  
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glBindVertexArray(0);
-  glFlush();
+
+  //glFlush();
+  glfwSwapBuffers(_window);
   glFinish();
 }
 
