@@ -1207,7 +1207,7 @@ Shape::AddRing(short index, float radius, float section, size_t lats,
     pxr::GfMatrix4f(1.f),
     m);
 
-  component.SetBounds(pxr::GfVec3f(radius, section, 0.f));
+  component.SetBounds(pxr::GfVec3f(radius, (float)section, 0.f));
   return component;
 }
 

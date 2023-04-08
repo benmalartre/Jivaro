@@ -57,6 +57,7 @@ add_executable(${TARGET}
   geometry/utils.cpp
   geometry/matrix.cpp
   geometry/rbf.cpp
+  geometry/subdiv.cpp
   geometry/kabsch.cpp
   geometry/sampler.cpp
   geometry/voxels.cpp
@@ -125,8 +126,9 @@ target_include_directories(${TARGET}
     ${GLFW_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}
     ${OPENVDB_INCLUDE_DIR}
-	${BOOST_INCLUDE_DIR}
-	${ICON_AWESOME_DIR}
+    ${OPENSUBDIV_INCLUDE_DIR}
+	  ${BOOST_INCLUDE_DIR}
+	  ${ICON_AWESOME_DIR}
 )
 
 target_link_libraries(${TARGET}
@@ -137,6 +139,7 @@ target_link_libraries(${TARGET}
   ${EMBREE_LIBRARIES}
   ${TBB_LIBRARIES}
   ${OPENVDB_LIBRARIES}
+  ${OPENSUBDIV_LIBRARIES}
   ${GLFW}
   ${ADDITIONAL_LIBRARIES}
 )

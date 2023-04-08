@@ -1,17 +1,19 @@
 #ifndef JVR_GEOMETRY_MESH_H
 #define JVR_GEOMETRY_MESH_H
 
-#include "../common.h"
 #include "pxr/base/vt/array.h"
 #include "pxr/base/tf/hashmap.h"
+#include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <float.h>
-#include "triangle.h"
-#include "geometry.h"
+
+#include "../common.h"
+#include "../geometry/triangle.h"
+#include "../geometry/geometry.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -87,6 +89,7 @@ public:
   size_t GetNumTriangles()const {return _triangles.size();};
   size_t GetNumSamples()const {return _faceVertexIndices.size();};
   size_t GetNumFaces()const {return _faceVertexCounts.size();};
+  size_t GetNumEdges()const { return _uniqueEdges.size(); };
 
   size_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
   size_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
@@ -97,11 +100,15 @@ public:
   void ComputeNeighbors();
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
+  void Triangulate();
 
   void SetTopology(
     const pxr::VtArray<pxr::GfVec3f>& positions, 
     const pxr::VtArray<int>& faceVertexCounts, 
-    const pxr::VtArray<int>& faceVertexIndices);
+    const pxr::VtArray<int>& faceVertexIndices
+  );
+
+  void UpdateTopologyFromEdges();
 
   void Init();
 
@@ -109,10 +116,9 @@ public:
 
   // retopo
   void SetAllEdgesLatencyReal();
-  void UpdateTopologyFromHalfEdges();
-  void FlipEdge(size_t index);
-  void SplitEdge(size_t index);
-  void CollapseEdge(size_t index);
+  bool FlipEdge(size_t index);
+  bool SplitEdge(size_t index);
+  bool CollapseEdge(size_t index);
 
   // Flatten
   void DisconnectEdges(const pxr::VtArray<int>& edges);
@@ -123,6 +129,7 @@ public:
     const pxr::GfVec3f& direction, Location& point, float maxDistance);
 
   // test (to be removed)
+  void Random2DPattern();
   void PolygonSoup(size_t numPolygons, 
     const pxr::GfVec3f& minimum=pxr::GfVec3f(-1.f), 
     const pxr::GfVec3f& maximum=pxr::GfVec3f(1.f));

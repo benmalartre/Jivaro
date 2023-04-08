@@ -393,7 +393,7 @@ void ViewportUI::Render()
   _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
 
   _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
-  _renderParams.complexity = 1.25f;
+  _renderParams.complexity = 1.f;// 1.25f;
   _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
   _renderParams.showGuides = true;
   _renderParams.showRender = true;

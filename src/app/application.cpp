@@ -451,7 +451,6 @@ Application::Update()
   
   // draw popup
   if (_popup) {
-    std::cout << "we got popup : " << _popup->GetView()->GetWindow() << std::endl;
     Window* window = _popup->GetView()->GetWindow();
     window->DrawPopup(_popup);
     if (_popup->IsDone() || _popup->IsCancel()) {

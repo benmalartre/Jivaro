@@ -84,6 +84,7 @@ list(APPEND USD_LIB_NAMES
   usdAnimX
   vt
   cameraUtil
+  pxOsd
 )
 
 set(USD_LIBRARIES "")
@@ -102,6 +103,9 @@ endforeach()
 
 # python
 find_package(Python2 COMPONENTS Interpreter Development)
+
+# OpenGL
+find_package(OpenGL REQUIRED)
 
 # boost
 if(UNIX)
@@ -157,10 +161,6 @@ endforeach()
 set(OPENVDB_INCLUDE_DIR "${USD_DIR}/include/openvdb")
 set(OPENVDB_LIBRARY_DIR "${USD_DIR}/lib")
 
-# OpenGL
-find_package(OpenGL REQUIRED)
-
-
 list(APPEND OPENVDB_LIB_NAMES 
   openvdb
 )
@@ -170,6 +170,23 @@ foreach(OPENVDB_LIB_NAME IN LISTS OPENVDB_LIB_NAMES)
   set(OPENVDB_LIBRARIES 
     ${OPENVDB_LIBRARIES} 
       "${OPENVDB_LIBRARY_DIR}/${LIB_PREFIX}${OPENVDB_LIB_NAME}${LIB_DYNAMIC_EXT}"
+  )
+endforeach()
+
+# opensubdiv
+set(OPENSUBDIV_INCLUDE_DIR "${USD_DIR}/include/opensubdiv")
+set(OPENSUBDIV_LIBRARY_DIR "${USD_DIR}/lib")
+
+list(APPEND OPENSUBDIV_LIB_NAMES 
+  osdCPU
+  osdGPU
+)
+
+set(OPENSUBDIV_LIBRARIES "")
+foreach(OPENSUBDIV_LIB_NAME IN LISTS OPENSUBDIV_LIB_NAMES)
+  set(OPENSUBDIV_LIBRARIES 
+    ${OPENSUBDIV_LIBRARIES} 
+      "${OPENSUBDIV_LIBRARY_DIR}/${LIB_PREFIX}${OPENSUBDIV_LIB_NAME}${LIB_DYNAMIC_EXT}"
   )
 endforeach()
 
