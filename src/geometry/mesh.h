@@ -34,12 +34,13 @@ struct HalfEdge
 
   uint32_t                index;     // half edge index
   uint32_t                vertex;    // vertex index
-  //uint32_t                face;      // face index
-  struct HalfEdge*        twin;      // opposite half-edge
-  struct HalfEdge*        next;      // next half-edge
   uint8_t                 latency;   // edge latency
 
-  HalfEdge():vertex(0)/*,face(0),triangle(0)*/,twin(NULL),next(NULL),latency(REAL){};
+  struct HalfEdge*        twin;      // opposite half-edge
+  struct HalfEdge*        next;      // next half-edge
+
+
+  HalfEdge():vertex(0), twin(NULL), next(NULL),latency(REAL){};
   inline size_t GetTriangleIndex() const {return index / 3;};
   void GetTriangleNormal(const pxr::GfVec3f* positions, 
     pxr::GfVec3f& normal) const;
@@ -61,10 +62,15 @@ struct HalfEdge
 
 class Mesh : public Geometry {
 public:
+  enum Flag {
+    NEIGHBORS     = 1 << 0,
+    HALFEDGES     = 1 << 1,
+    TRIANGLEPAIRS = 1 << 2
+  };
   Mesh();
   Mesh(const Mesh* other, bool normalize = true);
   Mesh(const pxr::UsdGeomMesh& usdMesh);
-  virtual ~Mesh() {};
+  virtual ~Mesh();
 
   const pxr::VtArray<int>& GetFaceCounts() const { return _faceVertexCounts;};
   const pxr::VtArray<int>& GetFaceConnects() const { return _faceVertexIndices;};
@@ -84,7 +90,7 @@ public:
   pxr::GfVec3f GetNormal(const Location& point) const;
   Triangle* GetTriangle(uint32_t index){return &_triangles[index];};
   pxr::VtArray<Triangle>& GetTriangles(){return _triangles;};
-  pxr::VtArray<TrianglePair>& GetTrianglePairs() { return _trianglePairs; };
+  pxr::VtArray<TrianglePair>& GetTrianglePairs();
 
   size_t GetNumTriangles()const {return _triangles.size();};
   size_t GetNumSamples()const {return _faceVertexIndices.size();};
@@ -98,6 +104,9 @@ public:
 
   void ComputeHalfEdges();
   void ComputeNeighbors();
+  void ComputeUniqueEdges();
+  void ComputeTrianglePairs();
+
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
   void Triangulate();
@@ -119,6 +128,8 @@ public:
   bool FlipEdge(size_t index);
   bool SplitEdge(size_t index);
   bool CollapseEdge(size_t index);
+  bool RemovePoint(size_t index);
+  bool RemoveEdge(HalfEdge* edge);
 
   // Flatten
   void DisconnectEdges(const pxr::VtArray<int>& edges);
@@ -155,6 +166,7 @@ public:
   };
 
 private:
+  int                                 _flags;
   // polygonal description
   pxr::VtArray<int>                   _faceVertexCounts;  
   pxr::VtArray<int>                   _faceVertexIndices;
@@ -172,7 +184,7 @@ private:
   pxr::VtArray<TrianglePair>          _trianglePairs;
 
   // half-edge data
-  pxr::VtArray<HalfEdge>              _halfEdges;
+  pxr::VtArray<HalfEdge*>             _halfEdges;
   pxr::VtArray<int>                   _uniqueEdges;
   pxr::VtArray<int>                   _vertexHalfEdge;
 };

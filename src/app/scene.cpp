@@ -250,13 +250,12 @@ static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfM
   controlPrim.GetAttribute(pxr::TfToken("Frequency")).Get(&frequency);
   controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&width);
 
-  pxr::VtArray<Sample> samples;
-
   pxr::VtArray<pxr::GfVec3f> positions;
   pxr::VtArray<pxr::GfVec3f> normals;
   pxr::VtArray<int> counts;
   pxr::VtArray<int> indices;
   pxr::VtArray<Triangle> triangles;
+  pxr::VtArray<Sample> samples;
 
   mesh.GetPointsAttr().Get(&positions);
   mesh.GetFaceVertexCountsAttr().Get(&counts);
