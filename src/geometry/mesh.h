@@ -97,6 +97,9 @@ public:
   size_t GetNumFaces()const {return _faceVertexCounts.size();};
   size_t GetNumEdges()const { return _uniqueEdges.size(); };
 
+  size_t GetLongestEdgeIndex();
+  size_t GetShortestEdgeIndex();
+
   size_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
   size_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
   void GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
@@ -111,25 +114,22 @@ public:
   float AveragedTriangleArea();
   void Triangulate();
 
-  void SetTopology(
-    const pxr::VtArray<pxr::GfVec3f>& positions, 
-    const pxr::VtArray<int>& faceVertexCounts, 
-    const pxr::VtArray<int>& faceVertexIndices
-  );
-
-  void UpdateTopologyFromEdges();
-
   void Init();
-
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
 
-  // retopo
+  // topology
+  void SetTopology(
+    const pxr::VtArray<pxr::GfVec3f>& positions,
+    const pxr::VtArray<int>& faceVertexCounts,
+    const pxr::VtArray<int>& faceVertexIndices
+  );
   void SetAllEdgesLatencyReal();
   bool FlipEdge(size_t index);
   bool SplitEdge(size_t index);
   bool CollapseEdge(size_t index);
   bool RemovePoint(size_t index);
   bool RemoveEdge(HalfEdge* edge);
+  void UpdateTopologyFromEdges();
 
   // Flatten
   void DisconnectEdges(const pxr::VtArray<int>& edges);

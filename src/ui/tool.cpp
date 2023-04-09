@@ -156,7 +156,7 @@ bool ToolUI::Draw()
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh);
-      size_t edgeIdx = RANDOM_0_1 * (mesh.GetNumEdges() - 1);
+      size_t edgeIdx = mesh.GetShortestEdgeIndex();
       if (mesh.CollapseEdge(edgeIdx)) {
         mesh.UpdateTopologyFromEdges();
         _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
@@ -172,7 +172,7 @@ bool ToolUI::Draw()
       Mesh mesh(usdMesh);
       bool updated = false;
       for (size_t i = 0; i < 10; ++i) {
-        size_t edgeIdx = RANDOM_0_1 * (mesh.GetNumEdges() - 1);
+        size_t edgeIdx = mesh.GetShortestEdgeIndex();
         if (mesh.CollapseEdge(edgeIdx)) {
           updated = true;
         }
@@ -192,7 +192,7 @@ bool ToolUI::Draw()
       Mesh mesh(usdMesh);
       bool updated = false;
       for (size_t i = 0; i < 100; ++i) {
-        size_t edgeIdx = RANDOM_0_X(mesh.GetNumEdges() - 1);
+        size_t edgeIdx = mesh.GetShortestEdgeIndex();
         if (mesh.CollapseEdge(edgeIdx)) {
           updated = true;
         }
