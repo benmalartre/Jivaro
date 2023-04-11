@@ -1,6 +1,7 @@
 #ifndef JVR_GEOMETRY_HALFEDGE_H
 #define JVR_GEOMETRY_HALFEDGE_H
 
+#include <list>
 #include <pxr/base/vt/array.h>
 #include "../common.h"
 #include "../geometry/triangle.h"
@@ -64,7 +65,7 @@ public:
   size_t GetNumEdges() const { return _uniqueEdges.size(); };
   size_t GetNumHalfEdges() const { return _halfEdges.size(); };
   pxr::VtArray<HalfEdge*>& GetUniqueEdges() { return _uniqueEdges; };
-  pxr::VtArray<HalfEdge*>& GetEdges() { return _halfEdges; };
+  std::list<HalfEdge*>& GetEdges() { return _halfEdges; };
 
 protected:
   HalfEdge* _GetPreviousAdjacentEdge(HalfEdge* edge);
@@ -79,16 +80,21 @@ protected:
 private:
   // half-edge data
   pxr::VtArray<HalfEdge>               _rawHalfEdges;
-  pxr::VtArray<HalfEdge*>              _halfEdges;
-  pxr::VtArray<HalfEdge*>              _uniqueEdges;
+  std::list<HalfEdge*>                 _halfEdges;
   pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<int>                    _triangleHalfEdge;
   pxr::VtArray<int>                    _faceHalfEdge;
+
+  // unique-edge data
+  pxr::VtArray<HalfEdge*>              _uniqueEdges;
 
   // vertex data
   pxr::VtArray<bool>                   _boundary;
   pxr::VtArray<int>                    _shell;
   pxr::VtArray< pxr::VtArray<int>>     _neighbors;
+
+  HalfEdge*                            _shortest;
+  HalfEdge*                            _longest;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
