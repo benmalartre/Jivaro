@@ -479,7 +479,8 @@ void PBDSolver::AddConstraints(Geometry* geom, size_t offset)
   if (geom->GetType() == Geometry::MESH) {
     std::cout << "[solver] add constraints for mesh : " << std::endl;
     Mesh* mesh = (Mesh*)geom;
-    const pxr::VtArray<HalfEdge*>& edges = mesh->GetUniqueEdges();
+    pxr::VtArray<HalfEdge*> edges;
+    mesh->GetEdges(edges);
     std::cout << "[solver] num unique edges : " << edges.size() << std::endl;
     /*
     for (HalfEdge* edge : edges) {

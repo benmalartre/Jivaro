@@ -107,9 +107,10 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 {
   const size_t numPoints = mesh->GetNumPoints();
   const size_t numTriangles = mesh->GetNumTriangles();
-  _rawHalfEdges.resize(numTriangles * 3);
-  __halfEdges.resize(numTriangles * 3);
-  _halfEdges = &__halfEdges[0];
+
+  const size_t numHalfEdges = numTriangles * 3;
+  _rawHalfEdges.resize(numHalfEdges);
+  __halfEdges.resize(numHalfEdges);
 
   pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
 
@@ -158,7 +159,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       halfEdge->vertex = v2;
       halfEdge->next = halfEdge - 2;
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 2);
-      _halfEdges[halfEdge->index] = { halfEdge, &__halfEdges[halfEdge->index + 1] };
+      __halfEdges[halfEdge->index] = { halfEdge, &__halfEdges[(halfEdge->index + 1) % numHalfEdges] };
       halfEdge++;
 
       triangleIdx++;
@@ -166,6 +167,8 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
     }
   }
   __halfEdges.back().next = NULL;
+  _numHalfEdges = __halfEdges.size();
+  _halfEdges = &__halfEdges[0];
 
   // verify that the mesh is clean:
   size_t numEntries = halfEdgesMap.size();
@@ -197,27 +200,30 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   }
 
   // init unique edges
-  HalfEdgeGraph::Node* previous = NULL;
-  HalfEdgeGraph::Node* node = _halfEdges;
-  __uniqueEdges.clear();
-  __uniqueEdges.reserve(__halfEdges.size());
-  while(node) {
-    if (halfEdge->twin) {
-      if (halfEdge->vertex < halfEdge->twin->vertex) {
-        __uniqueEdges.push_back({ halfEdge, NULL });
-        if (previous) {
-          previous->next = &__uniqueEdges.back();
+  {
+    HalfEdgeGraph::Node* previous = NULL;
+    HalfEdgeGraph::Node* node = _halfEdges;
+    __uniqueEdges.clear();
+    __uniqueEdges.reserve(__halfEdges.size());
+    while (node) {
+      HalfEdge* edge = node->edge;
+      if (edge->twin) {
+        if (edge->vertex < edge->twin->vertex) {
+          __uniqueEdges.push_back({ edge, NULL });
         }
       }
-    }
-    else {
-      __uniqueEdges.push_back({ halfEdge, NULL });
-      if (previous) {
-        previous->next = &__uniqueEdges.back();
+      else {
+        __uniqueEdges.push_back({ edge, NULL });
       }
+      previous = node;
+      node = node->next;
     }
-    previous = node;
-    node = node->next;
+
+    _numUniqueEdges = __uniqueEdges.size();
+    for (size_t uniqueEdgeIdx = 0; uniqueEdgeIdx < (_numUniqueEdges - 1); ++uniqueEdgeIdx) {
+      __uniqueEdges[uniqueEdgeIdx].next = &__uniqueEdges[uniqueEdgeIdx + 1];
+    }
+    _uniqueEdges = &__uniqueEdges[0];
   }
 }
 
@@ -229,11 +235,12 @@ HalfEdgeGraph::_RemoveOneEdge(HalfEdge* edge, bool* modified)
   while (node) {
     if (node->edge == edge) {
       if (previous)previous->next = node->next;
-      else _halfEdges++;
+      else _halfEdges=node->next;
       _numHalfEdges--;
       *modified = true;
       break;
     }
+    previous = node;
     node = node->next;
   }
 }
@@ -271,7 +278,6 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
   }
 }
 
-
 void
 HalfEdgeGraph::RemoveUniqueEdge(HalfEdge* edge)
 {
@@ -284,8 +290,9 @@ HalfEdgeGraph::RemoveUniqueEdge(HalfEdge* edge)
   while (current) {
     if (current->edge == prev || current->edge == edge || current->edge == next) {
       if (previous)previous->next = current->next;
-      else _uniqueEdges++;
+      else _uniqueEdges = current->next;
       _numUniqueEdges--;
+      removed++;
     }
     previous = current;
     current = current->next;
@@ -318,7 +325,10 @@ HalfEdgeGraph::GetLongestEdge(const pxr::GfVec3f* positions)
   HalfEdge* longestEdge = NULL;
   while (current) {
     HalfEdge* unique = current->edge;
-    if (unique->latency != HalfEdge::REAL)continue;
+    if (unique->latency != HalfEdge::REAL) {
+      current = current->next;
+      continue;
+    }
     HalfEdge* next = unique->next;
     float edgeLength = (positions[next->vertex] - positions[unique->vertex]).GetLengthSq();
     if (edgeLength > maxLength) {
@@ -334,12 +344,16 @@ HalfEdgeGraph::GetLongestEdge(const pxr::GfVec3f* positions)
 HalfEdge* 
 HalfEdgeGraph::GetShortestEdge(const pxr::GfVec3f* positions)
 {
+  std::cout << "get shortest edge : " << std::endl;
   float minLength = std::numeric_limits<float>::max();
   HalfEdgeGraph::Node* current = _uniqueEdges;
   HalfEdge* shortestEdge = NULL;
   while (current) {
     HalfEdge* unique = current->edge;
-    if (unique->latency != HalfEdge::REAL)continue;
+    if (unique->latency != HalfEdge::REAL) {
+      current = current->next;
+      continue;
+    }
     HalfEdge* next = unique->next;
     float edgeLength = (positions[next->vertex] - positions[unique->vertex]).GetLengthSq();
     if (edgeLength < minLength) {
@@ -698,7 +712,6 @@ HalfEdgeGraph::CollapseEdge(HalfEdge* edge)
     RemovePoint(p2, p1);
     REMOVE_POINT_AVG_T.End();
   }
-  
   return true;
 }
 
@@ -717,7 +730,11 @@ HalfEdgeGraph::UpdateTopologyFromEdges(Mesh* mesh)
   HalfEdgeGraph::Node* node = _halfEdges;
   while (node) {
     HalfEdge* edge = node->edge;
-    if (edge->latency != HalfEdge::REAL || visited[edge->index])continue;
+
+    if (edge->latency != HalfEdge::REAL || visited[edge->index]) {
+      node = node->next;
+      continue;
+    }
 
     visited[edge->index] = true;
     const HalfEdge* start = edge;
@@ -728,15 +745,12 @@ HalfEdgeGraph::UpdateTopologyFromEdges(Mesh* mesh)
       visited[current->index] = true;
       faceConnects.push_back(current->vertex);
       faceVertexCount++;
-      if (faceVertexCount > 6)break;
       current = _GetNextEdge(current, HalfEdge::REAL);
     }
     faceCounts.push_back(faceVertexCount);
     node = node->next;
   }
   mesh->SetTopology(faceCounts, faceConnects, false);
-
-
 
 
   std::cout << "remove edge time : " << REMOVE_EDGE_AVG_T.Elapsed() << std::endl;

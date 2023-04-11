@@ -311,7 +311,6 @@ void Mesh::Init()
 
   // compute half-edges
   ComputeHalfEdges();
-  ComputeUniqueEdges();
   ComputeBoundingBox();
   // compute neighbors
   //ComputeNeighbors();

@@ -96,7 +96,9 @@ static void _CollapseEdges(size_t n)
     uint64_t T = CurrentTime();
     uint64_t t1 = 0, t2 = 0;
     for (size_t i = 0; i < n; ++i) {
+      std::cout << "get shortest edge : " << std::endl;
       HalfEdge* edge = mesh.GetShortestEdge();
+      std::cout << "shortest edge id " << edge->index << std::endl;
       t1 += CurrentTime() - T;
       T = CurrentTime();
       if (mesh.CollapseEdge(edge)) {
