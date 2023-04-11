@@ -38,12 +38,17 @@ struct HalfEdge
 };
 
 class HalfEdgeGraph {
-  friend Mesh;
 public:
+  struct Node {
+    HalfEdge* edge;
+    Node* next;
+  };
+
+  HalfEdgeGraph();
+  ~HalfEdgeGraph();
   void ComputeGraph(Mesh* mesh);
   void ComputeNeighbors(Mesh* mesh);
   void ComputeTrianglePairs(Mesh* mesh);
-  void ComputeUniqueEdges();
   void RemoveUniqueEdge(HalfEdge* edge);
   void AddUniqueEdge(HalfEdge* edge);
 
@@ -62,10 +67,10 @@ public:
   void UpdateTopologyFromEdges(Mesh* mesh);
 
   HalfEdge* Get(size_t index) const;
-  size_t GetNumEdges() const { return _uniqueEdges.size(); };
-  size_t GetNumHalfEdges() const { return _halfEdges.size(); };
-  pxr::VtArray<HalfEdge*>& GetUniqueEdges() { return _uniqueEdges; };
-  std::list<HalfEdge*>& GetEdges() { return _halfEdges; };
+  size_t GetNumEdges() const { return _numUniqueEdges; };
+  size_t GetNumHalfEdges() const { return _numHalfEdges; };
+
+  void GetEdges(pxr::VtArray<HalfEdge*>& edges);
 
 protected:
   HalfEdge* _GetPreviousAdjacentEdge(HalfEdge* edge);
@@ -77,16 +82,21 @@ protected:
   bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx);
   void _RemoveOneEdge(HalfEdge* edge, bool* modified);
 
+
 private:
   // half-edge data
   pxr::VtArray<HalfEdge>               _rawHalfEdges;
-  std::list<HalfEdge*>                 _halfEdges;
+  pxr::VtArray<Node>                   __halfEdges;
+  Node*                                _halfEdges;
+  size_t                               _numHalfEdges;
   pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<int>                    _triangleHalfEdge;
   pxr::VtArray<int>                    _faceHalfEdge;
 
   // unique-edge data
-  pxr::VtArray<HalfEdge*>              _uniqueEdges;
+  std::vector<Node>                    __uniqueEdges;
+  Node*                                _uniqueEdges;
+  size_t                               _numUniqueEdges;
 
   // vertex data
   pxr::VtArray<bool>                   _boundary;
@@ -95,6 +105,9 @@ private:
 
   HalfEdge*                            _shortest;
   HalfEdge*                            _longest;
+
+  friend Mesh;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
