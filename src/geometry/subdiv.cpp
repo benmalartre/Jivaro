@@ -106,7 +106,7 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
         }
     }
 
-    mesh->SetTopology(positions, faceCounts, faceConnects);
+    mesh->Set(positions, faceCounts, faceConnects);
   }
 
   delete refiner;

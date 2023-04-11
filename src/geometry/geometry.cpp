@@ -125,6 +125,20 @@ Geometry::ComputeBoundingBox()
 }
 
 void
+Geometry::AddPoint(const pxr::GfVec3f& pos)
+{
+  _positions.push_back(pos);
+  _normals.push_back(pos);
+}
+
+void 
+Geometry::RemovePoint(size_t index)
+{
+  _positions.erase(_positions.begin() + index);
+  _normals.erase(_normals.begin() + index);
+}
+
+void
 Geometry::Init(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
   size_t numPoints = positions.size();

@@ -479,13 +479,15 @@ void PBDSolver::AddConstraints(Geometry* geom, size_t offset)
   if (geom->GetType() == Geometry::MESH) {
     std::cout << "[solver] add constraints for mesh : " << std::endl;
     Mesh* mesh = (Mesh*)geom;
-    std::vector<HalfEdge*> edges = mesh->GetUniqueEdges();
+    const pxr::VtArray<HalfEdge*>& edges = mesh->GetUniqueEdges();
     std::cout << "[solver] num unique edges : " << edges.size() << std::endl;
+    /*
     for (HalfEdge* edge : edges) {
       PBDDistanceConstraint* constraint = new PBDDistanceConstraint();
       constraint->Init(this, edge->vertex + offset, edge->next->vertex + offset, 0.5f);
       _constraints.push_back(constraint);
     }
+    */
   } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;
     curve->GetTotalNumSegments();

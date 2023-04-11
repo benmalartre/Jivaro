@@ -66,6 +66,9 @@ public:
 
   size_t GetNumPoints()const {return _positions.size();};
 
+  void AddPoint(const pxr::GfVec3f& pos);
+  void RemovePoint(size_t index);
+
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
   void SetPositions(pxr::GfVec3f* positions, size_t n);

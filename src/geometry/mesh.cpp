@@ -16,83 +16,16 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void HalfEdge::GetTriangleNormal(const pxr::GfVec3f* positions, 
-  pxr::GfVec3f& normal) const
+const HalfEdge* 
+Mesh::GetLongestEdgeInTriangle(const HalfEdge* edge)
 {
-  pxr::GfVec3f ab = positions[vertex] - positions[next->vertex];
-  pxr::GfVec3f ac = positions[vertex] - positions[next->next->vertex];
-  normal = (ab ^ ac).GetNormalized();
-}
-
-void HalfEdge::GetVertexNormal(const pxr::GfVec3f* normals, 
-  pxr::GfVec3f& normal) const
-{
-  bool closed = false;
-  normal = normals[GetTriangleIndex()];
-  size_t numTriangles = 1;
-  HalfEdge* current = (HalfEdge*)this;
-  while(current->next->twin) {
-    current = current->next->twin;
-    if(current == this) {
-      closed = true;
-      break;
-    }
-    else {
-      normal += normals[current->GetTriangleIndex()];
-      numTriangles++;
-    }
-  }
-
-  if(!closed && this->twin) {
-    current = this->twin;
-    normal += normals[current->GetTriangleIndex()];
-    numTriangles++;
-    while(current->next->next->twin) {
-      current = current->next->next->twin;
-      normal += normals[current->GetTriangleIndex()];
-      numTriangles++;
-    }
-  }
-  normal *= 1.f/(float)numTriangles;
-}
-
-bool HalfEdge::GetFacing(const pxr::GfVec3f* positions, 
-  const pxr::GfVec3f& v) const
-{
-  pxr::GfVec3f tn;
-  GetTriangleNormal(positions, tn);
-  pxr::GfVec3f dir = (positions[vertex] - v).GetNormalized();
-  return pxr::GfDot(tn, dir) > 0.0;
-}
-
-bool HalfEdge::GetFacing(const pxr::GfVec3f* positions, 
-  const pxr::GfVec3f* normals, const pxr::GfVec3f& v) const
-{
-  pxr::GfVec3f dir = (positions[vertex] - v).GetNormalized();
-  return pxr::GfDot(normals[GetTriangleIndex()], dir) > 0.0;
-}
-
-float HalfEdge::GetDot(const pxr::GfVec3f* positions, 
-  const pxr::GfVec3f* normals, const pxr::GfVec3f& v) const
-{
-  pxr::GfVec3f dir = (positions[vertex] - v).GetNormalized();
-  return pxr::GfDot(normals[GetTriangleIndex()], dir);
-}
-
-HalfEdge* 
-HalfEdge::GetLongestInTriangle(const pxr::GfVec3f* positions, HalfEdge* edge)
-{
-  const float edge0 = (positions[edge->next->vertex] - positions[edge->vertex]).GetLength();
-  const float edge1 = (positions[edge->next->next->vertex] - positions[edge->next->vertex]).GetLength();
-  const float edge2 = (positions[edge->vertex] - positions[edge->next->next->vertex]).GetLength();
-  if (edge0 > edge1 && edge0 > edge2)return edge;
-  else if (edge1 > edge0 && edge1 > edge2)return edge->next;
-  else return edge->next->next;
+  return _halfEdges.GetLongestEdgeInTriangle(edge, &_positions[0]);
 }
 
 Mesh::Mesh()
   : Geometry(Geometry::MESH)
   , _flags(0)
+  , _halfEdges()
 {
   _initialized = false;
 }
@@ -129,10 +62,6 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
 
 Mesh::~Mesh()
 {
-  if (_flags & Mesh::HALFEDGES) {
-    for (auto& halfEdge : _halfEdges)delete halfEdge;
-    _halfEdges.clear();
-  }
 }
 
 size_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
@@ -144,9 +73,7 @@ size_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
 
 void Mesh::SetAllEdgesLatencyReal()
 {
-  for (auto& halfEdge : _halfEdges) {
-    halfEdge->latency = HalfEdge::REAL;
-  }
+  _halfEdges.SetAllEdgesLatencyReal();
 }
 
 
@@ -191,25 +118,31 @@ static bool _IsHalfEdgesUVSeparated(const HalfEdge* lhs, const HalfEdge* rhs)
 
 void Mesh::GetCutEdgesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts)
 {
+  /*
   cuts->reserve(_uniqueEdges.size());
-  for (const HalfEdge* halfEdge: _halfEdges) {
-    if (/*halfEdge.latency == HalfEdge::REAL && */halfEdge->twin) {
-      const pxr::GfVec2d& start_lhs = uvs[halfEdge->index];
-      const pxr::GfVec2d& end_lhs = uvs[halfEdge->next->index];
-      const pxr::GfVec2d& start_rhs = uvs[halfEdge->twin->next->index];
-      const pxr::GfVec2d& end_rhs = uvs[halfEdge->twin->next->next->index];
-      if (start_lhs != end_rhs) cuts->push_back(halfEdge->index);
-      if (end_rhs != start_rhs) cuts->push_back(halfEdge->twin->index);
+  for (const HalfEdge& halfEdge: _halfEdges) {
+    if (halfEdge.latency == HalfEdge::REAL && halfEdge.twin) {
+      const HalfEdge* next = &_halfEdges[halfEdge.next];
+      const pxr::GfVec2d& start_lhs = uvs[halfEdge.index];
+      const pxr::GfVec2d& end_lhs = uvs[next->index];
+      const HalfEdge* twin = &_halfEdges[halfEdge.twin];
+      const pxr::GfVec2d& start_rhs = uvs[twin->next];
+      const pxr::GfVec2d& end_rhs = uvs[_halfEdges[twin->next].next];
+      if (start_lhs != end_rhs) cuts->push_back(halfEdge.index);
+      if (end_rhs != start_rhs) cuts->push_back(halfEdge.twin);
     }
   }
+*/
 }
 
-pxr::GfVec3f Mesh::GetPosition(size_t idx) const
+pxr::GfVec3f 
+Mesh::GetPosition(size_t idx) const
 {
   return _positions[idx];
 }
 
-pxr::GfVec3f Mesh::GetTrianglePosition(const Triangle* T) const
+pxr::GfVec3f 
+Mesh::GetTrianglePosition(const Triangle* T) const
 {
   pxr::GfVec3f center(0.f);
   for(uint32_t v=0;v<3;v++) center += _positions[T->vertices[v]];
@@ -217,12 +150,14 @@ pxr::GfVec3f Mesh::GetTrianglePosition(const Triangle* T) const
   return center;
 }
 
-pxr::GfVec3f Mesh::GetTriangleVertexPosition(const Triangle *T, uint32_t index) const
+pxr::GfVec3f 
+Mesh::GetTriangleVertexPosition(const Triangle *T, uint32_t index) const
 {
   return _positions[T->vertices[index]];
 }
 
-pxr::GfVec3f Mesh::GetPosition(const Location& point) const
+pxr::GfVec3f 
+Mesh::GetPosition(const Location& point) const
 {
   const Triangle* T = &_triangles[point.id];
   pxr::GfVec3f pos(0.f);
@@ -231,7 +166,8 @@ pxr::GfVec3f Mesh::GetPosition(const Location& point) const
   return pos;
 }
 
-pxr::GfVec3f Mesh::GetTriangleNormal(const Triangle *T) const
+pxr::GfVec3f 
+Mesh::GetTriangleNormal(const Triangle *T) const
 {
   pxr::GfVec3f center(0.f);
   for(uint32_t v = 0; v < 3; ++v)
@@ -240,12 +176,14 @@ pxr::GfVec3f Mesh::GetTriangleNormal(const Triangle *T) const
   return center;
 }
 
-pxr::GfVec3f Mesh::GetTriangleVertexNormal(const Triangle *T, uint32_t index) const
+pxr::GfVec3f 
+Mesh::GetTriangleVertexNormal(const Triangle *T, uint32_t index) const
 {
   return _normals[T->vertices[index]];
 }
 
-pxr::GfVec3f Mesh::GetNormal(const Location& point) const
+pxr::GfVec3f 
+Mesh::GetNormal(const Location& point) const
 {
   const Triangle* T = &_triangles[point.id];
   pxr::GfVec3f nrm(0.f);
@@ -254,7 +192,8 @@ pxr::GfVec3f Mesh::GetNormal(const Location& point) const
   return nrm;
 }
 
-pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const
+pxr::GfVec3f 
+Mesh::GetTriangleNormal(uint32_t triangleID) const
 {
   const Triangle* T = &_triangles[triangleID];
   pxr::GfVec3f A = _positions[T->vertices[0]];
@@ -267,47 +206,16 @@ pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const
   return (B ^ C).GetNormalized();
 }
 
-const std::vector<HalfEdge*> Mesh::GetUniqueEdges()
+const pxr::VtArray<HalfEdge*>& 
+Mesh::GetUniqueEdges()
 {
-  size_t numUniqueEdges = _uniqueEdges.size();
-  if (!numUniqueEdges) {
-    ComputeHalfEdges();
-    numUniqueEdges = _uniqueEdges.size();
-  }
-  std::vector<HalfEdge*> halfEdges(numUniqueEdges);
-  for (size_t i = 0; i < numUniqueEdges; ++i) {
-    halfEdges[i] = _halfEdges[_uniqueEdges[i]];
-  }
-  return halfEdges;
-}
-
-
-static bool _GetEdgeLatency(int p0, int p1, const int* )
-{
-  return false;
-}
-
-static void _SetHalfEdgeLatency(HalfEdge* halfEdge, int numFaceTriangles, 
-  int faceTriangleIndex, int triangleEdgeIndex)
-{
-  if (numFaceTriangles == 1) {
-    halfEdge->latency = HalfEdge::REAL;
-  } else if (faceTriangleIndex == 0) {
-    if (triangleEdgeIndex == 2) halfEdge->latency = HalfEdge::IMPLICIT;
-    else halfEdge->latency = HalfEdge::REAL;
-  } else if (faceTriangleIndex == numFaceTriangles - 1) {
-    if (triangleEdgeIndex == 0) halfEdge->latency = HalfEdge::IMPLICIT;
-    else halfEdge->latency = HalfEdge::REAL;
-  } else {
-    if (triangleEdgeIndex == 1) halfEdge->latency = HalfEdge::REAL;
-    else halfEdge->latency = HalfEdge::IMPLICIT;
-  }
+  return _halfEdges.GetUniqueEdges();
 }
 
 bool Mesh::RemovePoint(size_t index)
 {
   if (index >= _positions.size()) {
-    std::cout << "erro index out of range" << std::endl;
+    std::cout << "error index out of range" << std::endl;
     return false;
   }
   _positions.erase(_positions.begin() + index);
@@ -316,187 +224,37 @@ bool Mesh::RemovePoint(size_t index)
   return true;
 }
 
-bool Mesh::RemoveEdge(HalfEdge* edge)
-{
-  for (size_t idx = 0; idx < _halfEdges.size(); ++idx) {
-    if (_halfEdges[idx] == edge) {
-      _halfEdges.erase(_halfEdges.begin() + idx);
-      size_t edgeIdx = edge->index;
-      delete edge;
-      for (auto& halfEdge : _halfEdges) {
-        if (halfEdge->index > edgeIdx)halfEdge->index--;
-      }
-      return true;
-    }
-  }
-
-  return false;
-}
-
 void Mesh::ComputeHalfEdges()
 {
-  size_t numTriangles = GetNumTriangles();
-  _halfEdges.resize(numTriangles * 3);
-
-  pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
-
-  size_t halfEdgeIdx = 0;
-  size_t numFaceTriangles;
-  size_t faceIdx = 0;
-  size_t offsetIdx = 0;
-  size_t triangleIdx = 0;
-  size_t faceTriangleIdx = 0;
-
-  for (const auto& faceVertexCount: _faceVertexCounts)
-  { 
-    numFaceTriangles = faceVertexCount - 2;
-    faceTriangleIdx = 0;
-    for (int faceTriangle = 0; faceTriangle < numFaceTriangles; ++faceTriangle)
-    {
-      const Triangle* tri = &_triangles[triangleIdx];
-      uint64_t v0 = tri->vertices[0];
-      uint64_t v1 = tri->vertices[1];
-      uint64_t v2 = tri->vertices[2];
-
-      // create three new half-edge for that triangle:
-      HalfEdge* halfEdge0 = new HalfEdge();
-      HalfEdge* halfEdge1 = new HalfEdge();
-      HalfEdge* halfEdge2 = new HalfEdge();
-
-      // half-edge that goes from A to B:
-      halfEdgesMap[v1 | (v0 << 32)] = halfEdge0;
-      halfEdge0->index = triangleIdx * 3;
-      halfEdge0->vertex = v0;
-      halfEdge0->next = halfEdge1;
-      _SetHalfEdgeLatency(halfEdge0, numFaceTriangles, faceTriangleIdx, 0);
-      _halfEdges[halfEdgeIdx++] = halfEdge0;
-
-      // half-edge that goes from B to C:
-      halfEdgesMap[v2 | (v1 << 32)] = halfEdge1;
-      halfEdge1->index = triangleIdx * 3 + 1;
-      halfEdge1->vertex = v1;
-      halfEdge1->next = halfEdge2;
-      _SetHalfEdgeLatency(halfEdge1, numFaceTriangles, faceTriangleIdx, 1);
-      _halfEdges[halfEdgeIdx++] = halfEdge1;
-
-      // half-edge that goes from C to A:
-      halfEdgesMap[v0 | (v2 << 32)] = halfEdge2;
-      halfEdge2->index = triangleIdx * 3 + 2;
-      halfEdge2->vertex = v2;
-      halfEdge2->next = halfEdge0;
-      _SetHalfEdgeLatency(halfEdge2, numFaceTriangles, faceTriangleIdx, 2);
-      _halfEdges[halfEdgeIdx++] = halfEdge2;
-
-      triangleIdx++;
-      faceTriangleIdx++;
-    }
-  }
-
-  // verify that the mesh is clean:
-  size_t numEntries = halfEdgesMap.size();
-  bool problematic = false;
-  if(numEntries != (size_t)(numTriangles * 3))problematic = true;
-
-  // populate the twin pointers by iterating over the hash map:
-  uint64_t edgeIndex; 
-  size_t boundaryCount = 0;
-  for(auto& halfEdge: halfEdgesMap)
-  {
-    edgeIndex = halfEdge.first;
-    
-    uint64_t twinIndex = ((edgeIndex & 0xffffffff) << 32) | (edgeIndex >> 32);
-    const auto& it = halfEdgesMap.find(twinIndex);
-    if(it != halfEdgesMap.end())
-    {
-      HalfEdge* twinEdge = (HalfEdge*)it->second;
-      twinEdge->twin = halfEdge.second;
-      halfEdge.second->twin = twinEdge;
-    }
-    else {
-      _boundary[halfEdge.second->vertex] = true;
-      _boundary[halfEdge.second->next->vertex] = true;
-      ++boundaryCount;
-    }
-  }
-
-  // reset flags
+  _halfEdges.ComputeGraph(this);
   _flags = Mesh::HALFEDGES;
 }
 
 void Mesh::ComputeUniqueEdges()
 {
-  _uniqueEdges.clear();
-  _uniqueEdges.reserve(_halfEdges.size());
-  size_t halfEdgeIndex = 0;
-  for (const HalfEdge* halfEdge : _halfEdges) {
-    if (halfEdge->twin) {
-      if (halfEdge->vertex < halfEdge->twin->vertex)
-        _uniqueEdges.push_back(halfEdgeIndex);
-    }
-    else {
-      _uniqueEdges.push_back(halfEdgeIndex);
-    }
-    halfEdgeIndex++;
-  }
+  _halfEdges.ComputeUniqueEdges();
 }
 
-size_t Mesh::GetLongestEdgeIndex()
+
+HalfEdge* Mesh::GetLongestEdge()
 {
-  float maxLength = 0.f;
-  size_t longestEdgeIdx = 0;
-  for (size_t edgeIdx : _uniqueEdges) {
-    if (_halfEdges[edgeIdx]->latency != HalfEdge::REAL)continue;
-    float edgeLength = (_positions[_halfEdges[edgeIdx]->next->vertex] - _positions[_halfEdges[edgeIdx]->vertex]).GetLength();
-    if (edgeLength > maxLength) {
-      longestEdgeIdx = edgeIdx;
-      maxLength = edgeLength;
-    }
-  }
-  return longestEdgeIdx;
+  return _halfEdges.GetLongestEdge(&_positions[0]);
 }
 
-size_t Mesh::GetShortestEdgeIndex()
+HalfEdge* Mesh::GetShortestEdge()
 {
-  float minLength = std::numeric_limits<float>::max();
-  size_t shortestEdgeIdx = 0;
-  for (size_t edgeIdx : _uniqueEdges) {
-    if (_halfEdges[edgeIdx]->latency != HalfEdge::REAL)continue;
-    float edgeLength = (_positions[_halfEdges[edgeIdx]->next->vertex] - _positions[_halfEdges[edgeIdx]->vertex]).GetLength();
-    if (edgeLength < minLength) {
-      shortestEdgeIdx = edgeIdx;
-      minLength = edgeLength;
-    }
-  }
-  return shortestEdgeIdx;
+  return _halfEdges.GetShortestEdge(&_positions[0]);
+}
+
+HalfEdge* Mesh::GetEdge(size_t index)
+{
+  return _halfEdges.Get(index);
 }
 
 void Mesh::ComputeTrianglePairs()
 {
-  std::vector<bool> used;
-  used.assign(GetNumTriangles(), false);
-
-  for (HalfEdge* halfEdge : _halfEdges) {
-    if (used[halfEdge->GetTriangleIndex()])continue;
-    HalfEdge* longest = HalfEdge::GetLongestInTriangle(GetPositionsCPtr(), halfEdge);
-    size_t triPairIdx = _trianglePairs.size();
-    if (longest->twin) {
-      _trianglePairs.push_back(TrianglePair(
-        triPairIdx,
-        &_triangles[longest->GetTriangleIndex()],
-        &_triangles[longest->twin->GetTriangleIndex()]
-      ));
-      used[longest->GetTriangleIndex()] = true;
-      used[longest->twin->GetTriangleIndex()] = true;
-    }
-    else {
-      _trianglePairs.push_back(TrianglePair(
-        triPairIdx,
-        &_triangles[longest->GetTriangleIndex()],
-        NULL
-      ));
-      used[longest->GetTriangleIndex()] = true;
-    }
-  }
+  _trianglePairs.clear();
+  _halfEdges.ComputeTrianglePairs(this);
   BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
 }
 
@@ -509,137 +267,18 @@ Mesh::GetTrianglePairs()
   return _trianglePairs;
 }
 
-static HalfEdge* _GetPreviousAdjacentEdge(Mesh* mesh, HalfEdge* edge)
-{
-  int vertex = edge->vertex;
-  HalfEdge* current = edge->next;
-  while (current->next->vertex != vertex) {
-    current = current->next;
-  }
-  if (current->twin)return current->twin->next;
-  return NULL;
-}
-
-static HalfEdge* _GetNextjacentEdge(Mesh* mesh, HalfEdge* edge)
-{
-  if (edge->twin)return edge->twin->next;
-  return NULL;
-
-}
-
-static HalfEdge* _GetNextEdge(const HalfEdge* edge, short latency = HalfEdge::ANY)
-{
-  HalfEdge* next = edge->next;
-  switch (latency) {
-    case HalfEdge::REAL:
-      if (next->latency == HalfEdge::REAL)return next;
-      else return next->twin ? _GetNextEdge(next->twin, HalfEdge::REAL) : next;
-    case HalfEdge::IMPLICIT:
-    case HalfEdge::VIRTUAL:
-    case HalfEdge::ANY:
-      return next;
-    default:
-      return next;
-  }
-}
-
-static HalfEdge* _GetPreviousEdge(const HalfEdge* edge, short latency=HalfEdge::ANY)
-{
-  int vertex = edge->vertex;
-  HalfEdge* current = edge->next;
-  HalfEdge* previous = NULL;
-  switch (latency) {
-    case HalfEdge::REAL:
-      previous = _GetPreviousEdge(edge);
-      if (previous->latency == HalfEdge::REAL)return previous;
-      if (previous->twin) return _GetPreviousEdge(previous, HalfEdge::REAL);
-      return previous;
-    case HalfEdge::IMPLICIT:
-    case HalfEdge::VIRTUAL:
-    case HalfEdge::ANY:
-      while (current->next->vertex != vertex)
-        current = current->next;
-      return current;
-    default:
-      while (current->next->vertex != vertex)
-        current = current->next;
-      return current;
-  }
-  
-}
-
-static bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
-{
-  for (int neighbor: neighbors) {
-    if (neighbor == idx)return true;
-  }
-  return false;
-}
 
 void Mesh::ComputeNeighbors()
 {
-  size_t numPoints = _positions.size();
-  _neighbors.clear();
-  _neighbors.resize(numPoints);
-
-  for (HalfEdge* halfEdge : _halfEdges) {
-    int edgeIndex = halfEdge->index;
-    int vertexIndex = halfEdge->vertex;
-    HalfEdge* startEdge = halfEdge;
-    HalfEdge* currentEdge = startEdge;
-    HalfEdge* nextEdge = NULL;
-    pxr::VtArray<int>& neighbors = _neighbors[vertexIndex];
-    if (!_IsNeighborRegistered(neighbors, startEdge->next->vertex)) {
-      neighbors.push_back(startEdge->next->vertex);
-    }
-
-    short state = 1;
-    while (state == 1) {
-      nextEdge = _GetNextjacentEdge(this, currentEdge);
-      if (!nextEdge) {
-        state = 0;
-      } else if (nextEdge == startEdge) {
-        state = -1;
-      } else {
-        if (!_IsNeighborRegistered(neighbors, nextEdge->next->vertex)) {
-          neighbors.push_back(nextEdge->next->vertex);
-        }
-        currentEdge = nextEdge;
-      }
-    }
-    
-    if(state == 0) {
-      HalfEdge* previousEdge = NULL;
-      currentEdge = startEdge;
-      previousEdge = _GetPreviousEdge(currentEdge);
-      if (!_IsNeighborRegistered(neighbors, previousEdge->vertex)) {
-        neighbors.push_back(previousEdge->vertex);
-      }
-      state = 1;
-      while (state == 1) {
-        previousEdge = _GetPreviousAdjacentEdge(this, currentEdge);
-        if (!previousEdge) {
-          state = 0;
-        }
-        else if (previousEdge == startEdge) {
-          state = -1;
-        }
-        else {
-          if (!_IsNeighborRegistered(neighbors, previousEdge->next->vertex)) {
-            neighbors.push_back(previousEdge->next->vertex);
-          }
-          currentEdge = previousEdge;
-        }
-      }
-    }
-  }
+  _halfEdges.ComputeNeighbors(this);
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
 }
 
-void Mesh::SetTopology(
+void Mesh::Set(
   const pxr::VtArray<pxr::GfVec3f>& positions,
   const pxr::VtArray<int>& faceVertexCounts,
-  const pxr::VtArray<int>& faceVertexIndices
+  const pxr::VtArray<int>& faceVertexIndices,
+  bool init
 )
 {
   _faceVertexCounts = faceVertexCounts;
@@ -647,42 +286,29 @@ void Mesh::SetTopology(
   _positions = positions;
   _normals = positions;
 
-  Init();
+  if(init)Init();
+}
+
+void Mesh::SetTopology(
+  const pxr::VtArray<int>& faceVertexCounts,
+  const pxr::VtArray<int>& faceVertexIndices,
+  bool init
+)
+{
+  _faceVertexCounts = faceVertexCounts;
+  _faceVertexIndices = faceVertexIndices;
+
+  if(init)Init();
 }
 
 void Mesh::UpdateTopologyFromEdges()
 {
-  _faceVertexCounts.clear();
-  _faceVertexIndices.clear();
-
-  std::vector<int> visited(_halfEdges.size(), 0);
-
-  HalfEdge* startEdge = NULL;
-  for (auto& halfEdge: _halfEdges) {
-    if (halfEdge->latency != HalfEdge::REAL || visited[halfEdge->index])continue;
-
-    visited[halfEdge->index] = true;
-    const HalfEdge* startEdge = halfEdge;
-    HalfEdge* currentEdge = _GetNextEdge(startEdge, HalfEdge::REAL);
-    _faceVertexIndices.push_back(startEdge->vertex);
-    size_t faceVertexCount = 1;
-    while (currentEdge != startEdge) {
-      visited[currentEdge->index] = true;
-      _faceVertexIndices.push_back(currentEdge->vertex);
-      faceVertexCount++;
-      currentEdge = _GetNextEdge(currentEdge, HalfEdge::REAL);
-    }
-    _faceVertexCounts.push_back(faceVertexCount);
-  }
+  _halfEdges.UpdateTopologyFromEdges(this);
 }
 
 void Mesh::Init()
 {
   size_t numPoints = _positions.size();
-  // initialize boundaries
-  _boundary.resize(numPoints);
-  memset(&_boundary[0], false, numPoints * sizeof(bool));
-  
   // build triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
 
@@ -704,34 +330,16 @@ Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
   _positions = positions;
 }
 
-const HalfEdge* 
-_GetNextCutEdge(const HalfEdge* edge, 
-  const std::vector<bool>& doCutEdge, int& cnt)
-{
-  HalfEdge* current = (HalfEdge*)edge;
-  while (current->next->twin) {
-    current = current->next->twin;
-    cnt++;
-    if (current == edge) {
-      return edge;
-    }
-    else {
-      if (doCutEdge[current->index]) {
-        return current;
-      }
-    }
-  }
-  return edge;
-}
-
 static int 
 _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
   HalfEdge* current = start;
+
   int count = 0;
+  /*
   bool search = true;
   while (search) {
-    if (current->twin) {
-      if (doCutEdge[current->index] && doCutEdge[current->twin->next->index]) {
+    if (current->twin != HalfEdge::INVALID_INDEX) {
+      if (doCutEdge[current->index] && doCutEdge[_halfEdges[current->twin]]) {
         count++;
       }
       current = current->twin->next;
@@ -741,7 +349,7 @@ _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
     if (current == start)search = false;
   }
   current = start;
-  /*
+  
   bool reverseSearch = true;
   while (reverseSearch) {
     HalfEdge* previous = _GetPreviousEdge(current)->twin;
@@ -757,231 +365,43 @@ _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
   return count;
 }
 
-bool Mesh::FlipEdge(size_t index)
+bool Mesh::FlipEdge(HalfEdge* edge)
 {
-  /* 
-  flip-flop two triangle by their common edge
-                                     
-       3 _ _ _ 2        3 _ _ _ 2    
-        |    /   2    3   \    |     
-        |   /  /|      |\  \   |     
-        |  /  / |      | \  \  |     
-        | /  /  |      |  \  \ |     
-        |/  /   |      |   \  \|     
-       0   /_ _ |      | _ _\   1    
-          0      1    0      1       
-  */
-  HalfEdge* edge = _halfEdges[index];
-
-  if (!edge->twin) {
-    std::cout << "flip edge : no twin edge ! aborted " << std::endl;
-    return false;
-  }
-
-  HalfEdge* twin = edge->twin;
-
-  HalfEdge* edges[6] = {
-    edge, edge->next, edge->next->next,
-    twin, twin->next, twin->next->next
-  };
-
-  uint32_t vertices[4] = {
-    edges[1]->vertex,
-    edges[2]->vertex,
-    edges[4]->vertex,
-    edges[5]->vertex
-  };
-
-  Triangle& t1 = _triangles[edge->GetTriangleIndex()];
-  Triangle& t2 = _triangles[twin->GetTriangleIndex()];
-
-  edges[0]->vertex = vertices[1];
-  edges[3]->vertex = vertices[3];
-  edges[0]->next = edges[5];
-  edges[1]->next = edges[0];
-  edges[2]->next = edges[4];
-  edges[3]->next = edges[2];
-  edges[4]->next = edges[3];
-  edges[5]->next = edges[1];
-
-  t1.vertices = pxr::GfVec3i(vertices[0], vertices[1], vertices[3]);
-  t2.vertices = pxr::GfVec3i(vertices[3], vertices[1], vertices[2]);
-
-  return true;
+  return _halfEdges.FlipEdge(edge);
 }
 
-bool Mesh::SplitEdge(size_t index)
+bool Mesh::SplitEdge(HalfEdge* edge)
 {
-  size_t numPoints = _positions.size();
-  size_t numEdges = _halfEdges.size();
-  HalfEdge* currentEdge = _halfEdges[index];
-  if (currentEdge->latency != HalfEdge::REAL)return false;
+  size_t numPoints = GetNumPoints();
+  const pxr::GfVec3f p =
+    (_positions[edge->vertex] + _positions[edge->next->vertex]) * 0.5f;
 
-  HalfEdge* twinEdge = currentEdge->twin;
-  if(twinEdge) _halfEdges.resize(numEdges + 6);
-  else _halfEdges.resize(numEdges + 3);
-
-  const pxr::GfVec3f p = (_positions[currentEdge->vertex] + _positions[currentEdge->next->vertex]) * 0.5f;
-  _positions.push_back(p);
-  _normals.push_back(p);
-
-  HalfEdge* nextEdge = _GetNextEdge(currentEdge, HalfEdge::REAL);
-  HalfEdge* previousEdge = _GetPreviousEdge(currentEdge, HalfEdge::REAL);
-
-  HalfEdge* halfEdge = _halfEdges[numEdges];
-  halfEdge->index = numEdges;
-  halfEdge->vertex = numPoints;
-  halfEdge->next = nextEdge;
-  halfEdge->latency = HalfEdge::REAL;
-  HalfEdge* n1 = halfEdge;
-  halfEdge++;
-
-  halfEdge->index = numEdges + 1;
-  halfEdge->vertex = numPoints;
-  halfEdge->next = previousEdge;
-  halfEdge->latency = HalfEdge::IMPLICIT;
-  HalfEdge* n2 = halfEdge;
-  halfEdge++;
-
-  halfEdge->index = numEdges + 2;
-  halfEdge->vertex = numPoints;
-  halfEdge->next = n2;
-  halfEdge->latency = HalfEdge::IMPLICIT;
-  HalfEdge* n3 = halfEdge;
-
-  nextEdge->next = n3;
-  currentEdge->next = n1;
-
-  numPoints++;
-  
-  if (twinEdge) {
-    HalfEdge* twinNextEdge = _GetNextEdge(twinEdge, HalfEdge::REAL);
-    HalfEdge* twinPreviousEdge = _GetPreviousEdge(twinEdge, HalfEdge::REAL);
-
-    halfEdge->index = numEdges + 3;
-    halfEdge->vertex = numPoints;
-    halfEdge->next = twinNextEdge;
-    halfEdge->latency = HalfEdge::REAL;
-    HalfEdge* n4 = halfEdge;
-    halfEdge++;
-
-    halfEdge->index = numEdges + 4;
-    halfEdge->vertex = numPoints;
-    halfEdge->next = twinNextEdge;
-    halfEdge->latency = HalfEdge::IMPLICIT;
-    HalfEdge* n5 = halfEdge;
-    halfEdge++;
-
-    halfEdge->index = numEdges + 5;
-    halfEdge->vertex = twinEdge->vertex;
-    halfEdge->next = n4;
-    halfEdge->latency = HalfEdge::IMPLICIT;
-    HalfEdge* n6 = halfEdge;
-
-    twinNextEdge->next = n3;
-    twinEdge->next = n1;
-
-    numPoints++;
-  }
-  return true;
+  AddPoint(p);
+  return _halfEdges.SplitEdge(edge, numPoints);
 }
 
-bool Mesh::CollapseEdge(size_t index)
+
+bool Mesh::CollapseEdge(HalfEdge* edge)
 {
-  HalfEdge* currentEdge = _halfEdges[index];
-  HalfEdge* twinEdge = currentEdge->twin;
+  size_t p1 = edge->vertex;
+  size_t p2 = edge->next->vertex;
 
-  if (currentEdge->latency != HalfEdge::REAL)return false;
-  size_t p1 = currentEdge->vertex;
-  size_t p2 = currentEdge->next->vertex;
-
-  {
-    HalfEdge* previousEdge = _GetPreviousEdge(currentEdge);
-    HalfEdge* nextEdge = _GetNextEdge(currentEdge);
-
-    if (previousEdge->twin) {
-      previousEdge->twin->twin = nextEdge->twin;
-      previousEdge->twin->latency = /*nextEdge->twin ? nextEdge->twin->latency :*/ HalfEdge::REAL;
+  if (_halfEdges.CollapseEdge(edge)) {
+    if (p1 > p2) {
+      _positions[p2] = (_positions[p1] + _positions[p2]) * 0.5f;
+      RemovePoint(p1);
     }
-    if (nextEdge->twin) {
-      nextEdge->twin->twin = previousEdge->twin;
-      nextEdge->twin->latency = /*previousEdge->twin ? previousEdge->twin->latency :*/ HalfEdge::REAL;
-    }
-
-    RemoveEdge(currentEdge);
-    RemoveEdge(previousEdge);
-    RemoveEdge(nextEdge);
-  }
-
-  if (twinEdge) {
-    HalfEdge* previousEdge = _GetPreviousEdge(twinEdge);
-    HalfEdge* nextEdge = _GetNextEdge(twinEdge);
-
-    if (previousEdge->twin) {
-      previousEdge->twin->twin = nextEdge->twin;
-      previousEdge->twin->latency = /*nextEdge->twin ? nextEdge->twin->latency :*/ HalfEdge::REAL;
-    }
-    if (nextEdge->twin) {
-      nextEdge->twin->twin = previousEdge->twin;
-      nextEdge->twin->latency = /*previousEdge->twin ? previousEdge->twin->latency :*/ HalfEdge::REAL;
-    }
-
-    RemoveEdge(twinEdge);
-    RemoveEdge(previousEdge);
-    RemoveEdge(nextEdge);
-  }
-
-  if (p1 > p2) {
-    _positions[p2] = (_positions[p1] + _positions[p2]) * 0.5f;
-    RemovePoint(p1);
-    for (auto& halfEdge : _halfEdges) {
-      if (halfEdge->vertex == p1)halfEdge->vertex = p2;
-      else if (halfEdge->vertex > p1)halfEdge->vertex--;
+    else {
+      _positions[p1] = (_positions[p1] + _positions[p2]) * 0.5f;
+      RemovePoint(p2);
     }
   }
-  else {
-    _positions[p1] = (_positions[p1] + _positions[p2]) * 0.5f;
-    RemovePoint(p2);
-    for (auto& halfEdge : _halfEdges) {
-      if (halfEdge->vertex == p2)halfEdge->vertex = p1;
-      else if (halfEdge->vertex > p2)halfEdge->vertex--;
-    }
-  }
-  ComputeUniqueEdges();
   return true;
 }
 
 void Mesh::DisconnectEdges(const pxr::VtArray<int>& cutEdges)
 {
-  size_t numHalfEdges = _halfEdges.size();
-  std::vector<std::vector<int>> insertedPoints(_positions.size());
-  std::vector<bool> doCutEdge(numHalfEdges);
 
-  pxr::VtArray<pxr::GfVec3f> points = _positions;
-  size_t baseNewPoints = points.size();
-  pxr::VtArray<int> indices = _faceVertexIndices;
-  for(size_t i = 0; i < numHalfEdges; ++i) doCutEdge[i] = false;
-  for(const auto& cutEdge: cutEdges) doCutEdge[cutEdge] = true;
-  /*
-  for(size_t faceVertex = 0; faceVertex < _faceVertexIndices.size(); ++faceVertex) {
-    if(doCutEdge[faceVertex]) {
-      if(! insertedPoints[_faceVertexIndices[faceVertex]].size()) {
-        insertedPoints[_faceVertexIndices[faceVertex]].push_back(baseNewPoints++);
-        points.push_back(_positions[_faceVertexIndices[faceVertex]]);
-      } else {
-        indices[faceVertex] = insertedPoints[_faceVertexIndices[faceVertex]][0];
-      }
-    }
-  }
-
-  SetTopology(points, _faceVertexCounts, indices);
-  */
-
-  for (size_t faceVertex = 0; faceVertex < _faceVertexIndices.size(); ++faceVertex) {
-    HalfEdge* halfEdge = _halfEdges[faceVertex];
-    int numCuts = _CountPointCuts(doCutEdge, halfEdge);
-    if(numCuts)std::cout << "NUM CUTS : " << numCuts << std::endl;
-  }
 }
 
 void Mesh::Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs, const pxr::TfToken& interpolation)
@@ -1044,18 +464,8 @@ float Mesh::AveragedTriangleArea()
 
 void Mesh::Triangulate()
 {
-  size_t numFaces = _halfEdges.size() / 3;
-  size_t numSamples = _halfEdges.size();
-
-  _faceVertexCounts.assign(numFaces, 3);
-  _faceVertexIndices.resize(numSamples);
-  size_t faceVertexIndex = 0;
-  for (auto& edge : _halfEdges) {
-    _faceVertexIndices[faceVertexIndex++] = edge->vertex;
-  }
-  for (auto& halfEdge : _halfEdges) {
-    halfEdge->latency = HalfEdge::REAL;
-  }
+  _halfEdges.SetAllEdgesLatencyReal();
+  UpdateTopologyFromEdges();
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 
@@ -1131,7 +541,7 @@ void Mesh::PolygonSoup(size_t numPolygons, const pxr::GfVec3f& minimum,
   for(size_t i=0; i < numPoints; ++i) {
     faceVertexConnect[i] = i;
   }
-  SetTopology(position, faceVertexCount, faceVertexConnect);
+  Set(position, faceVertexCount, faceVertexConnect);
 }
 
 void 
@@ -1155,7 +565,7 @@ Mesh::MaterializeSamples(const pxr::VtArray<pxr::GfVec3f>& points, float size)
     positions[p * 3 + 1] = points[p] + pxr::GfVec3f(size, 0, 0);
     positions[p * 3 + 2] = points[p] + pxr::GfVec3f(0, size, 0);
   }
-  SetTopology(positions, faceVertexCount, faceVertexConnect);
+  Set(positions, faceVertexCount, faceVertexConnect);
 }
 
 void Mesh::ColoredPolygonSoup(size_t numPolygons, 
@@ -1211,7 +621,7 @@ void Mesh::Random2DPattern()
   points[numFaces * 2] = pxr::GfVec3f(numFaces, 0, RANDOM_0_1);
   points[numFaces * 2 + 1] = pxr::GfVec3f(numFaces, 0, -RANDOM_0_1);
 
-  SetTopology(points, faceCounts, faceConnects);
+  Set(points, faceCounts, faceConnects);
 }
 
 
@@ -1289,7 +699,7 @@ void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& sp
   }
  
 
-  SetTopology(position, faceVertexCount, faceVertexConnect);
+  Set(position, faceVertexCount, faceVertexConnect);
 }
 
 void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
