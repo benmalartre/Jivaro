@@ -43,6 +43,8 @@ public:
   void ComputeNeighbors(Mesh* mesh);
   void ComputeTrianglePairs(Mesh* mesh);
   void ComputeUniqueEdges();
+  void RemoveUniqueEdge(HalfEdge* edge);
+  void AddUniqueEdge(HalfEdge* edge);
 
   const HalfEdge* GetLongestEdgeInTriangle(const HalfEdge* edge,
     const pxr::GfVec3f* positions);

@@ -1,4 +1,5 @@
 #include "../ui/tool.h"
+#include "../utils/timer.h"
 #include "../geometry/mesh.h"
 #include "../geometry/subdiv.h"
 #include "../app/selection.h"
@@ -84,6 +85,36 @@ static void _TestVtArray()
   }
 }
 
+static void _CollapseEdges(size_t n) 
+{
+  pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+  if (usdMesh.GetPrim().IsValid()) {
+    UndoBlock block;
+    Mesh mesh(usdMesh);
+    bool updated = false;
+
+    uint64_t T = CurrentTime();
+    uint64_t t1 = 0, t2 = 0;
+    for (size_t i = 0; i < n; ++i) {
+      HalfEdge* edge = mesh.GetShortestEdge();
+      t1 += CurrentTime() - T;
+      T = CurrentTime();
+      if (mesh.CollapseEdge(edge)) {
+        updated = true;
+      }
+      t2 += CurrentTime() - T;
+      T = CurrentTime();
+    }
+
+    std::cout << "shortest edge time : " << (t1 * 1e-9) << " seconds " << std::endl;
+    std::cout << "collapse edge time : " << (t2 * 1e-9) << " seconds " << std::endl;
+    if (updated) {
+      mesh.UpdateTopologyFromEdges();
+      _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
+    }
+  }
+}
+
 bool ToolUI::Draw()
 {
   static bool opened = false;
@@ -152,56 +183,21 @@ bool ToolUI::Draw()
   }
 
   if (ImGui::Button("Collapse Edge")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
-    if (usdMesh.GetPrim().IsValid()) {
-      UndoBlock block;
-      Mesh mesh(usdMesh);
-      HalfEdge* edge = mesh.GetShortestEdge();
-      if (mesh.CollapseEdge(edge)) {
-        mesh.UpdateTopologyFromEdges();
-        _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
-      }
-    }
+    _CollapseEdges(1);
   }
   ImGui::SameLine();
 
-  if (ImGui::Button("Collapse Edge X10")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
-    if (usdMesh.GetPrim().IsValid()) {
-      UndoBlock block;
-      Mesh mesh(usdMesh);
-      bool updated = false;
-      for (size_t i = 0; i < 10; ++i) {
-        HalfEdge* edge = mesh.GetShortestEdge();
-        if (mesh.CollapseEdge(edge)) {
-          updated = true;
-        }
-      }
-      if (updated) {
-        mesh.UpdateTopologyFromEdges();
-        _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
-      }
-    }
+  if (ImGui::Button("X10")) {
+    _CollapseEdges(10);
   }
   ImGui::SameLine();
 
-  if (ImGui::Button("Collapse Edge X100")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
-    if (usdMesh.GetPrim().IsValid()) {
-      UndoBlock block;
-      Mesh mesh(usdMesh);
-      bool updated = false;
-      for (size_t i = 0; i < 100; ++i) {
-        HalfEdge* edge = mesh.GetShortestEdge();
-        if (mesh.CollapseEdge(edge)) {
-          updated = true;
-        }
-      }
-      if (updated) {
-        mesh.UpdateTopologyFromEdges();
-        _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
-      }
-    }
+  if (ImGui::Button("X100")) {
+    _CollapseEdges(100);
+  }
+
+  if (ImGui::Button("X1000")) {
+    _CollapseEdges(1000);
   }
   
   if (ImGui::Button("Test VtArray")) {

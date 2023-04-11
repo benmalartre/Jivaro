@@ -3,8 +3,42 @@
 #include "../geometry/halfEdge.h"
 #include "../geometry/mesh.h"
 
+#include "../utils/timer.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+
+struct _T {
+  uint64_t t;
+  uint64_t accum;
+  size_t   num;
+  void Start() {
+    t = CurrentTime();
+  }
+  void End() {
+    accum += CurrentTime() - t;
+    num++;
+  };
+  void Reset() {
+    accum = 0;
+    num = 0;
+  };
+  double Average() {
+    if (num) {
+      return ((double)accum * 1e-9) / (double)num;
+    }
+    return 0;
+  }
+  double Elapsed() {
+    return (double)accum * 1e-9;
+  }
+};
+static _T REMOVE_EDGE_AVG_T = { 0,0};
+static _T REMOVE_POINT_AVG_T = { 0,0 };
+static _T COMPUTE_UNIQUE_EDGE_AVG_T = { 0,0 };
+
+
 
 HalfEdge* HalfEdgeGraph::Get(size_t index) const
 {
@@ -56,14 +90,12 @@ HalfEdgeGraph::_RemoveOneEdge(HalfEdge* edge, bool* modified)
 {
   for (size_t idx = 0; idx < _halfEdges.size(); ++idx) {
     if (_halfEdges[idx] == edge) {
-      
-      size_t edgeIdx = edge->index;
-      for (auto& halfEdge : _halfEdges) {
-        if (halfEdge->index > edgeIdx) halfEdge->index--;
-      }
-      
-      _halfEdges.erase(_halfEdges.begin() + idx);
+      // replace the current element with the back of the vector,
+      // then shrink the size of the vector by 1.
+      _halfEdges[idx] = std::move(_halfEdges.back());
+      _halfEdges.pop_back();
       *modified = true;
+      break;
     }
   }
 }
@@ -87,6 +119,7 @@ HalfEdgeGraph::RemoveEdge(HalfEdge* edge)
   _RemoveOneEdge(edge, &modified);
   _RemoveOneEdge(previous, &modified);
   _RemoveOneEdge(next, &modified);
+  return modified;
 }
 
 void
@@ -102,6 +135,7 @@ void
 HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 {
   size_t numTriangles = mesh->GetNumTriangles();
+  std::cout << "compute half edge graph : " << numTriangles << "(triangles)" << std::endl;
   _rawHalfEdges.resize(numTriangles * 3);
   _halfEdges.resize(numTriangles * 3);
 
@@ -114,7 +148,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   size_t triangleIdx = 0;
   size_t faceTriangleIdx = 0;
 
-  HalfEdge* halfEdge = &_rawHalfEdges[0];
+  HalfEdge* halfEdge = NULL;
   pxr::VtArray<Triangle>& triangles = mesh->GetTriangles();
 
   for (const auto& faceVertexCount: mesh->GetFaceCounts())
@@ -129,31 +163,34 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       uint64_t v2 = tri->vertices[2];
 
       // half-edge that goes from A to B:
+      halfEdge = &_rawHalfEdges[halfEdgeIdx];
       halfEdgesMap[v1 | (v0 << 32)] = halfEdge;
-      halfEdge->index = triangleIdx * 3;
+      halfEdge->index = halfEdgeIdx;
       halfEdge->vertex = v0;
-      halfEdge->next = halfEdge + 1;
+      halfEdge->next = &_rawHalfEdges[halfEdgeIdx+1];
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 0);
-      _halfEdges[halfEdge->index] = halfEdge;
-      halfEdge++;
+      _halfEdges[halfEdgeIdx] = halfEdge;
+      halfEdgeIdx++;
 
       // half-edge that goes from B to C:
+      halfEdge = &_rawHalfEdges[halfEdgeIdx];
       halfEdgesMap[v2 | (v1 << 32)] = halfEdge;
-      halfEdge->index = triangleIdx * 3 + 1;
+      halfEdge->index = halfEdgeIdx;
       halfEdge->vertex = v1;
-      halfEdge->next = halfEdge + 1;
+      halfEdge->next = &_rawHalfEdges[halfEdgeIdx + 1];
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 1);
-      _halfEdges[halfEdge->index] = halfEdge;
-      halfEdge++;
+      _halfEdges[halfEdgeIdx] = halfEdge;
+      halfEdgeIdx++;
 
       // half-edge that goes from C to A:
+      halfEdge = &_rawHalfEdges[halfEdgeIdx];
       halfEdgesMap[v0 | (v2 << 32)] = halfEdge;
-      halfEdge->index = triangleIdx * 3 + 2;
+      halfEdge->index = halfEdgeIdx;
       halfEdge->vertex = v2;
-      halfEdge->next = halfEdge - 2;
+      halfEdge->next = &_rawHalfEdges[halfEdgeIdx - 2];
       _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 2);
-      _halfEdges[halfEdge->index] = halfEdge;
-      halfEdge++;
+      _halfEdges[halfEdgeIdx] = halfEdge;
+      halfEdgeIdx++;
 
       triangleIdx++;
       faceTriangleIdx++;
@@ -185,6 +222,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       ++boundaryCount;
     }
   }
+  ComputeUniqueEdges();
 }
 
 void 
@@ -204,6 +242,27 @@ HalfEdgeGraph::ComputeUniqueEdges()
   }
 }
 
+void
+HalfEdgeGraph::RemoveUniqueEdge(HalfEdge* edge)
+{
+  HalfEdge* next = edge->next;
+  HalfEdge* prev = next->next;
+  size_t numUniqueEdges = _uniqueEdges.size();
+  for (int uniqueEdgeIdx = numUniqueEdges - 1; uniqueEdgeIdx >= 0; --uniqueEdgeIdx) {
+    HalfEdge* unique = _uniqueEdges[uniqueEdgeIdx];
+    if (unique == edge || unique == next || unique == prev) {
+      _uniqueEdges[uniqueEdgeIdx] = std::move(_uniqueEdges.back());
+      _uniqueEdges.pop_back();
+    }
+  }
+}
+
+void
+HalfEdgeGraph::AddUniqueEdge(HalfEdge* edge)
+{
+  _uniqueEdges.push_back(edge);
+}
+
 HalfEdge* 
 HalfEdgeGraph::GetLongestEdge(const pxr::GfVec3f* positions)
 {
@@ -213,7 +272,7 @@ HalfEdgeGraph::GetLongestEdge(const pxr::GfVec3f* positions)
     HalfEdge* unique = _uniqueEdges[uniqueEdgeIdx];
     if (unique->latency != HalfEdge::REAL)continue;
     HalfEdge* next = unique->next;
-    float edgeLength = (positions[next->vertex] - positions[unique->vertex]).GetLength();
+    float edgeLength = (positions[next->vertex] - positions[unique->vertex]).GetLengthSq();
     if (edgeLength > maxLength) {
       longestEdge = unique;
       maxLength = edgeLength;
@@ -231,7 +290,7 @@ HalfEdgeGraph::GetShortestEdge(const pxr::GfVec3f* positions)
     HalfEdge* unique = _uniqueEdges[uniqueEdgeIdx];
     if (unique->latency != HalfEdge::REAL)continue;
     HalfEdge* next = unique->next;
-    float edgeLength = (positions[next->vertex] - positions[unique->vertex]).GetLength();
+    float edgeLength = (positions[next->vertex] - positions[unique->vertex]).GetLengthSq();
     if (edgeLength < minLength) {
       shortestEdge = unique;
       minLength = edgeLength;
@@ -544,16 +603,32 @@ HalfEdgeGraph::CollapseEdge(HalfEdge* edge)
   size_t p1 = edge->vertex;
   size_t p2 = edge->next->vertex;
 
+  COMPUTE_UNIQUE_EDGE_AVG_T.Start();
+  RemoveUniqueEdge(edge);
+  COMPUTE_UNIQUE_EDGE_AVG_T.End();
+  REMOVE_EDGE_AVG_T.Start();
   RemoveEdge(edge);
-  if (twin) RemoveEdge(twin);
+  REMOVE_EDGE_AVG_T.End();
 
-  if (p1 > p2) {
-    RemovePoint(p1, p2);
-  } else {
-    RemovePoint(p2, p1);
+  if (twin) {
+    COMPUTE_UNIQUE_EDGE_AVG_T.Start();
+    RemoveUniqueEdge(twin);
+    COMPUTE_UNIQUE_EDGE_AVG_T.End();
+    REMOVE_EDGE_AVG_T.Start();
+    RemoveEdge(twin);
+    REMOVE_EDGE_AVG_T.End();
   }
 
-  ComputeUniqueEdges();
+  if (p1 > p2) {
+    REMOVE_POINT_AVG_T.Start();
+    RemovePoint(p1, p2);
+    REMOVE_POINT_AVG_T.End();
+  } else {
+    REMOVE_POINT_AVG_T.Start();
+    RemovePoint(p2, p1);
+    REMOVE_POINT_AVG_T.End();
+  }
+  
   return true;
 }
 
@@ -561,20 +636,19 @@ void
 HalfEdgeGraph::UpdateTopologyFromEdges(Mesh* mesh)
 {
   
+  std::cout << "Update Topology From Edges " << std::endl;
+  std::cout << "Num Raw Half Edges : " << _rawHalfEdges.size() << std::endl;
+  std::cout << "Num Used HalfEdges : " << _halfEdges.size() << std::endl;
   pxr::VtArray<int> faceCounts;
   pxr::VtArray<int> faceConnects;
   std::vector<int> visited(_rawHalfEdges.size(), 0);
-  std::cout << "num edges : " << visited.size() << std::endl;
   HalfEdge* startEdge = NULL;
   for (auto& halfEdge: _halfEdges) {
-    std::cout << halfEdge->index << ":" << visited[halfEdge->index] << std::endl;
     if (halfEdge->latency != HalfEdge::REAL || visited[halfEdge->index])continue;
 
     visited[halfEdge->index] = true;
     const HalfEdge* startEdge = halfEdge;
-    std::cout << "start edge : " << startEdge << std::endl;
     HalfEdge* currentEdge = _GetNextEdge(startEdge, HalfEdge::REAL);
-    std::cout << "current edge : " << currentEdge << std::endl;
     faceConnects.push_back(startEdge->vertex);
     size_t faceVertexCount = 1;
     while (currentEdge != startEdge) {
@@ -583,12 +657,18 @@ HalfEdgeGraph::UpdateTopologyFromEdges(Mesh* mesh)
       faceVertexCount++;
       if (faceVertexCount > 6)break;
       currentEdge = _GetNextEdge(currentEdge, HalfEdge::REAL);
-      std::cout << "current edge : " << currentEdge << std::endl;
     }
-    std::cout << "push face " << faceVertexCount << std::endl;
     faceCounts.push_back(faceVertexCount);
   }
   mesh->SetTopology(faceCounts, faceConnects, false);
+
+  std::cout << "remove edge time : " << REMOVE_EDGE_AVG_T.Elapsed() << std::endl;
+  std::cout << "remove point time : " << REMOVE_POINT_AVG_T.Elapsed() << std::endl;
+  std::cout << "compute unique edges time : " << COMPUTE_UNIQUE_EDGE_AVG_T.Elapsed() << std::endl;
+
+  REMOVE_EDGE_AVG_T.Reset();
+  REMOVE_POINT_AVG_T.Reset();
+  COMPUTE_UNIQUE_EDGE_AVG_T.Reset();
 }
 
 

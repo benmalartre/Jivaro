@@ -285,7 +285,7 @@ void Mesh::Set(
   _faceVertexIndices = faceVertexIndices;
   _positions = positions;
   _normals = positions;
-
+  std::cout << "mesh set init  ? " << init << std::endl;
   if(init)Init();
 }
 
@@ -317,8 +317,11 @@ void Mesh::Init()
     _faceVertexIndices, _triangles, _normals);
 
   // compute half-edges
+  std::cout << "compute half edges" << std::endl;
   ComputeHalfEdges();
+  std::cout << "compute unqiue edges" << std::endl;
   ComputeUniqueEdges();
+  std::cout << "compute bounding box" << std::endl;
   ComputeBoundingBox();
   // compute neighbors
   //ComputeNeighbors();
@@ -621,7 +624,9 @@ void Mesh::Random2DPattern()
   points[numFaces * 2] = pxr::GfVec3f(numFaces, 0, RANDOM_0_1);
   points[numFaces * 2 + 1] = pxr::GfVec3f(numFaces, 0, -RANDOM_0_1);
 
+  std::cout << "random 2 d pattern set" << std::endl;
   Set(points, faceCounts, faceConnects);
+  std::cout << "random 2 d pattern ok" << std::endl;
 }
 
 
