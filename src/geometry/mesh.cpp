@@ -206,10 +206,10 @@ Mesh::GetTriangleNormal(uint32_t triangleID) const
   return (B ^ C).GetNormalized();
 }
 
-void
-Mesh::GetEdges(pxr::VtArray<HalfEdge*>& edges)
+void 
+Mesh::GetEdges(pxr::VtArray<HalfEdge*>& edges, short latency)
 {
-  return _halfEdges.GetEdges(edges);
+  return _halfEdges.GetEdges(edges, latency);
 }
 
 bool Mesh::RemovePoint(size_t index)
@@ -240,10 +240,6 @@ HalfEdge* Mesh::GetShortestEdge()
   return _halfEdges.GetShortestEdge(&_positions[0]);
 }
 
-HalfEdge* Mesh::GetEdge(size_t index)
-{
-  return _halfEdges.Get(index);
-}
 
 void Mesh::ComputeTrianglePairs()
 {

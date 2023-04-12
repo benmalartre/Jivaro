@@ -96,9 +96,7 @@ static void _CollapseEdges(size_t n)
     uint64_t T = CurrentTime();
     uint64_t t1 = 0, t2 = 0;
     for (size_t i = 0; i < n; ++i) {
-      std::cout << "get shortest edge : " << std::endl;
       HalfEdge* edge = mesh.GetShortestEdge();
-      std::cout << "shortest edge id " << edge->index << std::endl;
       t1 += CurrentTime() - T;
       T = CurrentTime();
       if (mesh.CollapseEdge(edge)) {
@@ -176,11 +174,13 @@ bool ToolUI::Draw()
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh);
-      size_t edgeIdx = RANDOM_0_X(mesh.GetNumEdges()-1);
+      size_t edgeIdx = RANDOM_0_X(mesh.GetNumEdges(HalfEdge::REAL)-1);
+      /*
       if (mesh.FlipEdge(mesh.GetEdge(edgeIdx))) {
         mesh.UpdateTopologyFromEdges();
         _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
       }
+      */
     }
   }
 

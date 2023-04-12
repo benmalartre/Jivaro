@@ -3,6 +3,8 @@
 
 #include <list>
 #include <pxr/base/vt/array.h>
+#include <pxr/base/tf/hashMap.h>
+
 #include "../common.h"
 #include "../geometry/triangle.h"
 
@@ -37,26 +39,18 @@ struct HalfEdge
   */
 };
 
+
 class HalfEdgeGraph {
 public:
-  struct Node {
-    HalfEdge* edge;
-    Node* next;
-  };
-
-  HalfEdgeGraph();
-  ~HalfEdgeGraph();
   void ComputeGraph(Mesh* mesh);
   void ComputeNeighbors(Mesh* mesh);
   void ComputeTrianglePairs(Mesh* mesh);
-  void RemoveUniqueEdge(HalfEdge* edge);
-  void AddUniqueEdge(HalfEdge* edge);
 
   const HalfEdge* GetLongestEdgeInTriangle(const HalfEdge* edge,
     const pxr::GfVec3f* positions);
   
-  HalfEdge* GetLongestEdge(const pxr::GfVec3f* positions);
-  HalfEdge* GetShortestEdge(const pxr::GfVec3f* positions);
+  HalfEdge* GetLongestEdge(const pxr::GfVec3f* positions, short latency=HalfEdge::REAL);
+  HalfEdge* GetShortestEdge(const pxr::GfVec3f* positions, short latency=HalfEdge::REAL);
 
   void SetAllEdgesLatencyReal();
   bool FlipEdge(HalfEdge* edge);
@@ -66,11 +60,8 @@ public:
   void RemovePoint(size_t index, size_t replace);
   void UpdateTopologyFromEdges(Mesh* mesh);
 
-  HalfEdge* Get(size_t index) const;
-  size_t GetNumEdges() const { return _numUniqueEdges; };
-  size_t GetNumHalfEdges() const { return _numHalfEdges; };
-
-  void GetEdges(pxr::VtArray<HalfEdge*>& edges);
+  size_t GetNumEdges(short latency=HalfEdge::REAL) const;
+  void GetEdges(pxr::VtArray<HalfEdge*>&, short latency=HalfEdge::REAL);
 
 protected:
   HalfEdge* _GetPreviousAdjacentEdge(HalfEdge* edge);
@@ -85,18 +76,12 @@ protected:
 
 private:
   // half-edge data
-  pxr::VtArray<HalfEdge>               _rawHalfEdges;
-  pxr::VtArray<Node>                   __halfEdges;
-  Node*                                _halfEdges;
-  size_t                               _numHalfEdges;
+  pxr::VtArray<HalfEdge>               _halfEdges;
+  pxr::VtArray<HalfEdge*>              _usedEdges;
+
   pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<int>                    _triangleHalfEdge;
   pxr::VtArray<int>                    _faceHalfEdge;
-
-  // unique-edge data
-  std::vector<Node>                    __uniqueEdges;
-  Node*                                _uniqueEdges;
-  size_t                               _numUniqueEdges;
 
   // vertex data
   pxr::VtArray<bool>                   _boundary;
