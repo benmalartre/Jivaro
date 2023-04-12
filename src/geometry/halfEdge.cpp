@@ -119,10 +119,15 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   size_t triangleIdx = 0;
   size_t faceTriangleIdx = 0;
 
-
   HalfEdge* halfEdge = &_halfEdges[0];
   pxr::VtArray<Triangle>& triangles = mesh->GetTriangles();
   pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
+  _vertexHalfEdge.resize(numPoints);
+  _vertexUsed.resize(numPoints);
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    _vertexHalfEdge[pointIdx] = NULL;
+    _vertexUsed[pointIdx] = 0;
+  }
 
   for (const auto& faceVertexCount: mesh->GetFaceCounts())
   { 
@@ -137,6 +142,8 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
       // half-edge that goes from A to B:
       HalfEdge* h0 = halfEdge;
+      if (!_vertexHalfEdge[v0])_vertexHalfEdge[v0] = h0;
+      _vertexUsed[v0]++;
       halfEdgesMap[v1 | (v0 << 32)] = h0;
       h0->index = triangleIdx * 3;
       h0->vertex = tri->vertices[0];
@@ -147,6 +154,8 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
       // half-edge that goes from B to C:
       HalfEdge* h1 = halfEdge;
+      if (!_vertexHalfEdge[v1])_vertexHalfEdge[v1] = h1;
+      _vertexUsed[v1]++;
       halfEdgesMap[v2 | (v1 << 32)] = h1;
       h1->index = triangleIdx * 3 + 1;
       h1->vertex = tri->vertices[1];
@@ -157,6 +166,8 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
       // half-edge that goes from C to A:
       HalfEdge* h2 = halfEdge;
+      if (!_vertexHalfEdge[v2])_vertexHalfEdge[v2] = h2;
+      _vertexUsed[v2]++;
       halfEdgesMap[v0 | (v2 << 32)] = h2;
       h2->index = triangleIdx * 3 + 2;
       h2->vertex = tri->vertices[2];
@@ -244,10 +255,20 @@ HalfEdgeGraph::RemoveEdge(HalfEdge* edge)
 void
 HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 {
+  _vertexHalfEdge.erase(_vertexHalfEdge.begin() + index);
   for (auto& edge: _usedEdges) {
-    if (edge->vertex == index)edge->vertex = replace;
-    else if (edge->vertex > index)edge->vertex--;
+    if (edge->vertex == index) {
+      edge->vertex = replace;
+      _vertexUsed[edge->vertex]++;
+    }
+    else if (edge->vertex > index) {
+      _vertexUsed[edge->vertex]--;
+      edge->vertex--;
+      _vertexUsed[edge->vertex]++;
+    }
   }
+  _vertexUsed.pop_back();
+
 }
 
 HalfEdge* 

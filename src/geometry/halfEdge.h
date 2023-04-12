@@ -85,11 +85,12 @@ private:
   pxr::VtArray<HalfEdge>               _halfEdges;
   pxr::VtArray<HalfEdge*>              _usedEdges;
 
-  pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<int>                    _triangleHalfEdge;
   pxr::VtArray<int>                    _faceHalfEdge;
 
   // vertex data
+  pxr::VtArray<int>                    _vertexUsed;
+  pxr::VtArray<HalfEdge*>              _vertexHalfEdge;
   pxr::VtArray<bool>                   _boundary;
   pxr::VtArray<int>                    _shell;
   pxr::VtArray< pxr::VtArray<int>>     _neighbors;
