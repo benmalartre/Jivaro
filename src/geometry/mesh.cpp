@@ -19,7 +19,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 const HalfEdge* 
 Mesh::GetLongestEdgeInTriangle(const HalfEdge* edge)
 {
-  return _halfEdges.GetLongestEdgeInTriangle(edge, &_positions[0]);
+  return edge->GetLongestEdgeInTriangle(&_positions[0]);
 }
 
 Mesh::Mesh()

@@ -28,6 +28,9 @@ struct HalfEdge
   HalfEdge*               next;      // next half-edge
 
   HalfEdge():vertex(0), twin(NULL), next(NULL),latency(VIRTUAL){};
+
+  const HalfEdge* GetLongestEdgeInTriangle(const pxr::GfVec3f* positions) const;
+
   inline size_t GetTriangleIndex() const {return index / 3;};
 
   //HalfEdge* GetLongest(const pxr::GfVec3f* positions);
@@ -39,15 +42,13 @@ struct HalfEdge
   */
 };
 
+typedef pxr::TfHashMap<pxr::GfVec2i, HalfEdge*, pxr::TfHash> HalfEdgePtrMap;
 
 class HalfEdgeGraph {
 public:
   void ComputeGraph(Mesh* mesh);
   void ComputeNeighbors(Mesh* mesh);
   void ComputeTrianglePairs(Mesh* mesh);
-
-  const HalfEdge* GetLongestEdgeInTriangle(const HalfEdge* edge,
-    const pxr::GfVec3f* positions);
   
   HalfEdge* GetLongestEdge(const pxr::GfVec3f* positions, short latency=HalfEdge::REAL);
   HalfEdge* GetShortestEdge(const pxr::GfVec3f* positions, short latency=HalfEdge::REAL);
@@ -78,6 +79,8 @@ private:
   // half-edge data
   pxr::VtArray<HalfEdge>               _halfEdges;
   pxr::VtArray<HalfEdge*>              _usedEdges;
+  HalfEdgePtrMap                       _usedEdgeMap;
+
 
   pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<int>                    _triangleHalfEdge;

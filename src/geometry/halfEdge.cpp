@@ -38,18 +38,19 @@ static _T REMOVE_EDGE_AVG_T = { 0,0};
 static _T REMOVE_POINT_AVG_T = { 0,0 };
 
 
-const HalfEdge* 
-HalfEdgeGraph::GetLongestEdgeInTriangle(const HalfEdge* edge, const pxr::GfVec3f* positions)
+const HalfEdge*
+HalfEdge::GetLongestEdgeInTriangle(const pxr::GfVec3f* positions) const
 {
-  const HalfEdge* next = edge->next;
+  const HalfEdge* next = this->next;
   const HalfEdge* prev = next->next;
-  const float edge0 = (positions[next->vertex] - positions[edge->vertex]).GetLength();
+  const float edge0 = (positions[next->vertex] - positions[vertex]).GetLength();
   const float edge1 = (positions[prev->vertex] - positions[next->vertex]).GetLength();
-  const float edge2 = (positions[edge->vertex] - positions[prev->vertex]).GetLength();
-  if (edge0 > edge1 && edge0 > edge2)return edge;
+  const float edge2 = (positions[vertex] - positions[prev->vertex]).GetLength();
+  if (edge0 > edge1 && edge0 > edge2)return this;
   else if (edge1 > edge0 && edge1 > edge2)return next;
   else return prev;
 }
+
 
 void HalfEdgeGraph::SetAllEdgesLatencyReal()
 {
@@ -197,7 +198,6 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       ++boundaryCount;
     }
   }
-
 }
 
 void
@@ -295,7 +295,7 @@ HalfEdgeGraph::ComputeTrianglePairs(Mesh* mesh)
 
   for (auto& edge: _usedEdges) {
     if (used[edge->GetTriangleIndex()])continue;
-    const HalfEdge* longest = GetLongestEdgeInTriangle(edge, positions);
+    const HalfEdge* longest = edge->GetLongestEdgeInTriangle(positions);
     size_t triPairIdx = trianglePairs.size();
     if (longest->twin) {
       HalfEdge* twin = longest->twin;
