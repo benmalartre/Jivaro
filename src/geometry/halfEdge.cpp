@@ -175,6 +175,12 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   bool problematic = false;
   if(numEntries != (size_t)(numTriangles * 3))problematic = true;
 
+  /*
+  std::sort(_usedEdges.begin(), _usedEdges.end(), 
+    [](HalfEdge* a, HalfEdge* b) {if (a->twin && a->vertex > a->twin->vertex) {
+                                    return a->twin->vertex < b->vertex;
+                                  }else return a->vertex < b->vertex; });*/
+
   _boundary.resize(numPoints);
   memset(&_boundary[0], false, numPoints * sizeof(bool));
 

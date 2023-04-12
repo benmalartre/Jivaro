@@ -60,7 +60,7 @@ static inline uint64_t _SplitBy2bits(const uint32_t a) {
   return x;
 }
 
-uint32_t Encode2D(const pxr::GfVec2i& p)
+uint32_t MortomEncode2D(const pxr::GfVec2i& p)
 {
   return _SplitBy2bits(p[0]) | (_SplitBy2bits(p[1]) << 1);
 }
@@ -84,7 +84,7 @@ static inline uint64_t _SplitBy3bits(const uint32_t a) {
   return x;
 }
 
-uint64_t Encode3D(const pxr::GfVec3i& p)
+uint64_t MortomEncode3D(const pxr::GfVec3i& p)
 {
   return _SplitBy3bits(p[0]) | (_SplitBy3bits(p[1]) << 1) | (_SplitBy3bits(p[2]) << 2);
 }
@@ -109,9 +109,11 @@ static inline uint32_t _GetSecondBits(const uint64_t m) {
   return x;
 }
 
-pxr::GfVec2i Decode2D(uint32_t code)
+pxr::GfVec2i MortomDecode2D(uint32_t code)
 {
-  return pxr::GfVec2i();
+  uint32_t x = _GetSecondBits(code);
+  uint32_t y = _GetSecondBits(code >> 1);
+  return pxr::GfVec2i(x, y);
 }
 
 static uint64_t MORTOM_DECODE_3D_MASH[6] = { 
@@ -134,12 +136,54 @@ static inline uint32_t _GetThirdBits(const uint64_t m) {
   return x;
 }
 
-pxr::GfVec3i Decode3D(uint64_t code)
+pxr::GfVec3i MortomDecode3D(uint64_t code)
 {
   uint32_t x = _GetThirdBits(code);
   uint32_t y = _GetThirdBits(code >> 1);
   uint32_t z = _GetThirdBits(code >> 2);
   return pxr::GfVec3i(x, y, z);
 }
+
+uint32_t MortomLeadingZeros(const uint64_t x)
+{
+  uint32_t u32 = (x >> 32);
+  uint32_t result = u32 ? __builtin_clz(u32) : 32;
+  if (result == 32) {
+    u32 = x & 0xFFFFFFFFUL;
+    result += (u32 ? __builtin_clz(u32) : 32);
+  }
+  return result;
+}
+
+uint32_t MortomFindSplit(Mortom* mortoms, int first, int last)
+{
+  uint64_t firstCode = mortoms[first].code;
+  uint64_t lastCode = mortoms[last].code;
+
+  if (firstCode == lastCode)
+    return (first + last) >> 1;
+
+  uint32_t commonPrefix = MortomLeadingZeros(firstCode ^ lastCode);
+  uint32_t split = first;
+  uint32_t step = last - first;
+
+  do
+  {
+    step = (step + 1) >> 1;
+    uint32_t newSplit = split + step;
+
+    if (newSplit < last)
+    {
+      uint64_t splitCode = mortoms[newSplit].code;
+      uint32_t splitPrefix = MortomLeadingZeros(firstCode ^ splitCode);
+      if (splitPrefix > commonPrefix) {
+        split = newSplit;
+      }
+    }
+  } while (step > 1);
+
+  return split;
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

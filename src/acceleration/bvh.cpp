@@ -13,15 +13,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-#ifdef WIN32
-#include <intrin.h>
-static uint32_t __inline __builtin_clz(uint32_t x) {
-  unsigned long r = 0;
-  _BitScanReverse(&r, x);
-  return (31 - r);
-}
-#endif
-
 static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
 {
   lhs->SetLeft(rhs->GetLeft());
@@ -87,17 +78,6 @@ BVH::Cell::Cell(BVH::Cell* parent, Component* component, const pxr::GfRange3d& r
 {
   SetMin(range.GetMin());
   SetMax(range.GetMax());
-}
-
-uint32_t _CountLeadingZeros(const uint64_t x)
-{
-  uint32_t u32 = (x >> 32);
-  uint32_t result = u32 ? __builtin_clz(u32) : 32;
-  if (result == 32) {
-    u32 = x & 0xFFFFFFFFUL;
-    result += (u32 ? __builtin_clz(u32) : 32);
-  }
-  return result;
 }
 
 // distance
@@ -340,7 +320,7 @@ int _FindSplit(std::vector<Mortom>& mortoms,  int first, int last)
   if (firstCode == lastCode)
     return (first + last) >> 1;
 
-  int commonPrefix = _CountLeadingZeros(firstCode ^ lastCode);
+  int commonPrefix = MortomLeadingZeros(firstCode ^ lastCode);
   int split = first;
   int step = last - first;
 
@@ -352,7 +332,7 @@ int _FindSplit(std::vector<Mortom>& mortoms,  int first, int last)
     if (newSplit < last)
     {
       uint64_t splitCode = mortoms[newSplit].code;
-      int splitPrefix = _CountLeadingZeros(firstCode ^ splitCode);
+      int splitPrefix = MortomLeadingZeros(firstCode ^ splitCode);
       if (splitPrefix > commonPrefix) {
         split = newSplit;
       }
@@ -386,7 +366,7 @@ Mortom BVH::Cell::SortCellsByPair(
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     BVH::Cell* cell = (BVH::Cell*)cells[cellIdx].data;
     const pxr::GfVec3i p = WorldToMortom(*this, cell->GetMidpoint());
-    mortoms[cellIdx].code = Encode3D(p);
+    mortoms[cellIdx].code = MortomEncode3D(p);
     mortoms[cellIdx].data = cells[cellIdx].data;
   }
 

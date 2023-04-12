@@ -7,6 +7,7 @@
 
 #include "../common.h"
 #include "../geometry/triangle.h"
+#include "../acceleration/mortom.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -33,6 +34,13 @@ struct HalfEdge
 
   inline size_t GetTriangleIndex() const {return index / 3;};
 
+  bool operator <(const HalfEdge& other) const {
+    if (twin && vertex > twin->vertex) {
+      return twin->vertex < twin->next->vertex;
+    }
+    return vertex < next->vertex;
+  }
+
   //HalfEdge* GetLongest(const pxr::GfVec3f* positions);
   /*
   short GetFlags(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, 
@@ -41,8 +49,6 @@ struct HalfEdge
     const pxr::GfVec3f& v) const;
   */
 };
-
-typedef pxr::TfHashMap<pxr::GfVec2i, HalfEdge*, pxr::TfHash> HalfEdgePtrMap;
 
 class HalfEdgeGraph {
 public:
@@ -74,13 +80,10 @@ protected:
   bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx);
   void _RemoveOneEdge(HalfEdge* edge, bool* modified);
 
-
 private:
   // half-edge data
   pxr::VtArray<HalfEdge>               _halfEdges;
   pxr::VtArray<HalfEdge*>              _usedEdges;
-  HalfEdgePtrMap                       _usedEdgeMap;
-
 
   pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<int>                    _triangleHalfEdge;

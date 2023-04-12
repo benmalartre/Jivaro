@@ -92,13 +92,13 @@ public:
   static uint64_t ComputeCode(const BVH::Cell* root, const pxr::GfVec3d& point)
   {
     const pxr::GfVec3i p = WorldToMortom(*root, point);
-    return Encode3D(p);
+    return MortomEncode3D(p);
   }
 
   static pxr::GfVec3d ComputeCodeAsColor(BVH::Cell* root, const pxr::GfVec3d& point)
   {
     uint64_t mortom = ComputeCode(root, point);
-    pxr::GfVec3i p = Decode3D(mortom);
+    pxr::GfVec3i p = MortomDecode3D(mortom);
     return pxr::GfVec3d(p[0] / (float)MORTOM_MAX_L, p[1] / (float)MORTOM_MAX_L, p[2] / (float)MORTOM_MAX_L);
   }
 
