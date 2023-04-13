@@ -96,7 +96,11 @@ static void _CollapseEdges(size_t n)
     uint64_t T = CurrentTime();
     uint64_t t1 = 0, t2 = 0;
     for (size_t i = 0; i < n; ++i) {
-      HalfEdge* edge = mesh.GetShortestEdge();
+      HalfEdge* edge = mesh.GetRandomEdge();
+      if (!edge){
+        std::cerr << "ERR No edge to collpase !!" << std::endl; 
+        break;
+      }
       t1 += CurrentTime() - T;
       T = CurrentTime();
       if (mesh.CollapseEdge(edge)) {
@@ -174,7 +178,7 @@ bool ToolUI::Draw()
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh);
-      size_t edgeIdx = RANDOM_0_X(mesh.GetNumEdges(HalfEdge::REAL)-1);
+      size_t edgeIdx = RANDOM_0_X(mesh.GetNumEdges()-1);
       /*
       if (mesh.FlipEdge(mesh.GetEdge(edgeIdx))) {
         mesh.UpdateTopologyFromEdges();
@@ -200,6 +204,16 @@ bool ToolUI::Draw()
 
   if (ImGui::Button("X1000")) {
     _CollapseEdges(1000);
+  }
+  ImGui::SameLine();
+
+  if (ImGui::Button("50 %")) {
+    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    if (usdMesh.GetPrim().IsValid()) {
+      Mesh mesh(usdMesh);
+      std::cout << "mesh num eges : " << mesh.GetNumEdges() << std::endl;
+      _CollapseEdges(mesh.GetNumEdges() / 4);
+    }
   }
   
   if (ImGui::Button("Test VtArray")) {

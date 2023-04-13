@@ -14,25 +14,17 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Mesh;
 struct HalfEdge
 {
-  enum Latency {
-    REAL,
-    IMPLICIT,
-    VIRTUAL,
-    ANY
-  };
-
-  uint32_t                index;     // half edge index
+  uint32_t                index;
   uint32_t                vertex;    // vertex index
-  uint8_t                 latency;   // edge latency
-
   HalfEdge*               twin;      // opposite half-edge
+  HalfEdge*               prev;      // previous half-edge  
   HalfEdge*               next;      // next half-edge
 
-  HalfEdge():vertex(0), twin(NULL), next(NULL),latency(VIRTUAL){};
+  HalfEdge() : vertex(0), twin(NULL), prev(NULL), next(NULL){};
 
   const HalfEdge* GetLongestEdgeInTriangle(const pxr::GfVec3f* positions) const;
 
-  inline size_t GetTriangleIndex() const {return index / 3;};
+  inline size_t GetTriangleIndex() const { return 0; };
 
   bool operator <(const HalfEdge& other) const {
     if (twin && vertex > twin->vertex) {
@@ -56,29 +48,32 @@ public:
   void ComputeNeighbors(Mesh* mesh);
   void ComputeTrianglePairs(Mesh* mesh);
   
-  HalfEdge* GetLongestEdge(const pxr::GfVec3f* positions, short latency=HalfEdge::REAL);
-  HalfEdge* GetShortestEdge(const pxr::GfVec3f* positions, short latency=HalfEdge::REAL);
+  HalfEdge* GetLongestEdge(const pxr::GfVec3f* positions);
+  HalfEdge* GetShortestEdge(const pxr::GfVec3f* positions);
+  HalfEdge* GetRandomEdge();
 
-  void SetAllEdgesLatencyReal();
   bool FlipEdge(HalfEdge* edge);
   bool SplitEdge(HalfEdge* edge, size_t numPoints);
   bool CollapseEdge(HalfEdge* edge);
-  bool RemoveEdge(HalfEdge* edge);
+  void RemoveEdge(HalfEdge* edge, bool* removed);
   void RemovePoint(size_t index, size_t replace);
   void UpdateTopologyFromEdges(Mesh* mesh);
 
-  size_t GetNumEdges(short latency=HalfEdge::REAL) const;
-  void GetEdges(pxr::VtArray<HalfEdge*>&, short latency=HalfEdge::REAL);
+  size_t GetNumEdges() const;
+  const pxr::VtArray<HalfEdge*>& GetEdges();
+
+  const pxr::VtArray<int>& GetVertexNeighbors(const HalfEdge* edge);
 
 protected:
-  HalfEdge* _GetPreviousAdjacentEdge(HalfEdge* edge);
-  HalfEdge* _GetNextjacentEdge(HalfEdge* edge);
-  HalfEdge* _GetNextEdge(const HalfEdge* edge, short latency = HalfEdge::ANY);
-  HalfEdge* _GetPreviousEdge(const HalfEdge* edge, short latency = HalfEdge::ANY);
-  void _SetHalfEdgeLatency(HalfEdge* halfEdge, int numFaceTriangles, 
-    int faceTriangleIndex, int triangleEdgeIndex);
+  HalfEdge* _GetPreviousAdjacentEdge(const HalfEdge* edge);
+  HalfEdge* _GetNextAdjacentEdge(const HalfEdge* edge);
+  HalfEdge* _GetNextEdge(const HalfEdge* edge);
+  HalfEdge* _GetPreviousEdge(const HalfEdge* edge);
+  HalfEdge* _FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex);
+  bool _IsTriangle(const HalfEdge* edge);
   bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx);
   void _RemoveOneEdge(HalfEdge* edge, bool* modified);
+  void _ComputeVertexNeighbors(HalfEdge* edge, pxr::VtArray<int>& neighbors);
 
 private:
   // half-edge data

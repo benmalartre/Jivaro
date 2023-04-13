@@ -71,12 +71,6 @@ size_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
   return _faceVertexIndices[accum + vertex];
 }
 
-void Mesh::SetAllEdgesLatencyReal()
-{
-  _halfEdges.SetAllEdgesLatencyReal();
-}
-
-
 void Mesh::GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts)
 {
   size_t numVertices = _positions.size();
@@ -206,10 +200,10 @@ Mesh::GetTriangleNormal(uint32_t triangleID) const
   return (B ^ C).GetNormalized();
 }
 
-void 
-Mesh::GetEdges(pxr::VtArray<HalfEdge*>& edges, short latency)
+const pxr::VtArray<HalfEdge*>&
+Mesh::GetEdges()
 {
-  return _halfEdges.GetEdges(edges, latency);
+  return _halfEdges.GetEdges();
 }
 
 bool Mesh::RemovePoint(size_t index)
@@ -238,6 +232,11 @@ HalfEdge* Mesh::GetLongestEdge()
 HalfEdge* Mesh::GetShortestEdge()
 {
   return _halfEdges.GetShortestEdge(&_positions[0]);
+}
+
+HalfEdge* Mesh::GetRandomEdge()
+{
+  return _halfEdges.GetRandomEdge();
 }
 
 
@@ -452,8 +451,10 @@ float Mesh::AveragedTriangleArea()
 
 void Mesh::Triangulate()
 {
+  /*
   _halfEdges.SetAllEdgesLatencyReal();
   UpdateTopologyFromEdges();
+  */
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 

@@ -37,6 +37,14 @@ struct _T {
 static _T REMOVE_EDGE_AVG_T = { 0,0};
 static _T REMOVE_POINT_AVG_T = { 0,0 };
 
+/*
+// Using a custom function object to compare elements.
+struct
+{
+  bool operator() (const int l, const int r) const { return l > r; }
+} customLess;
+std::priority_queue minq3(data.begin(), data.end(), customLess);
+*/
 
 const HalfEdge*
 HalfEdge::GetLongestEdgeInTriangle(const pxr::GfVec3f* positions) const
@@ -51,140 +59,75 @@ HalfEdge::GetLongestEdgeInTriangle(const pxr::GfVec3f* positions) const
   else return prev;
 }
 
-
-void HalfEdgeGraph::SetAllEdgesLatencyReal()
-{
-  for (auto& usedEdge : _usedEdges) {
-    usedEdge->latency = HalfEdge::REAL;
-  }
-}
-
-
 size_t 
-HalfEdgeGraph::GetNumEdges(short latency) const
+HalfEdgeGraph::GetNumEdges() const
 {
   size_t numEdges = 0;
-  if (latency == HalfEdge::ANY)
-    return _usedEdges.size();
-  else
-    for (auto& usedEdge : _usedEdges)
-      if (usedEdge->latency == latency)numEdges++;
+  for (auto& usedEdge : _usedEdges)
+    if(!usedEdge->twin || usedEdge->vertex < usedEdge->next->vertex)
+      numEdges++;
 
   return numEdges;
 }
 
-void 
-HalfEdgeGraph::GetEdges(pxr::VtArray<HalfEdge*>& edges, short latency)
-{
-  edges.clear();
-  edges.reserve(_usedEdges.size());
-  if (latency == HalfEdge::ANY)
-    for (auto& usedEdge : _usedEdges)
-      edges.push_back(usedEdge);
-  else
-    for (auto& usedEdge : _usedEdges)
-      if (usedEdge->latency == latency)edges.push_back(usedEdge);
-}
 
-void 
-HalfEdgeGraph::_SetHalfEdgeLatency(HalfEdge* halfEdge, int numFaceTriangles, 
-  int faceTriangleIndex, int triangleEdgeIndex)
+const pxr::VtArray<HalfEdge*>& 
+HalfEdgeGraph::GetEdges()
 {
-  if (numFaceTriangles == 1) {
-    halfEdge->latency = HalfEdge::REAL;
-  } else if (faceTriangleIndex == 0) {
-    if (triangleEdgeIndex == 2) halfEdge->latency = HalfEdge::IMPLICIT;
-    else halfEdge->latency = HalfEdge::REAL;
-  } else if (faceTriangleIndex == numFaceTriangles - 1) {
-    if (triangleEdgeIndex == 0) halfEdge->latency = HalfEdge::IMPLICIT;
-    else halfEdge->latency = HalfEdge::REAL;
-  } else {
-    if (triangleEdgeIndex == 1) halfEdge->latency = HalfEdge::REAL;
-    else halfEdge->latency = HalfEdge::IMPLICIT;
-  }
+  return _usedEdges;
 }
 
 void 
 HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 {
   const size_t numPoints = mesh->GetNumPoints();
-  const size_t numTriangles = mesh->GetNumTriangles();
-  const size_t numHalfEdges = numTriangles * 3;
+  const pxr::VtArray<int>& faceConnects = mesh->GetFaceConnects();
+  size_t numHalfEdges = 0;
+  for (const auto& faceVertexCount : mesh->GetFaceCounts())
+    numHalfEdges += faceVertexCount;
+
   _halfEdges.resize(numHalfEdges);
   _usedEdges.resize(numHalfEdges);
 
-  size_t numFaceTriangles;
-  size_t faceIdx = 0;
-  size_t offsetIdx = 0;
-  size_t triangleIdx = 0;
-  size_t faceTriangleIdx = 0;
+  size_t faceOffsetIdx = 0;
+  size_t halfEdgeIdx = 0;
 
   HalfEdge* halfEdge = &_halfEdges[0];
-  pxr::VtArray<Triangle>& triangles = mesh->GetTriangles();
+
   pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
   _vertexHalfEdge.resize(numPoints);
-  _vertexUsed.resize(numPoints);
+
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     _vertexHalfEdge[pointIdx] = NULL;
-    _vertexUsed[pointIdx] = 0;
   }
 
   for (const auto& faceVertexCount: mesh->GetFaceCounts())
   { 
-    numFaceTriangles = faceVertexCount - 2;
-    faceTriangleIdx = 0;
-    for (int faceTriangle = 0; faceTriangle < numFaceTriangles; ++faceTriangle)
-    {
-      const Triangle* tri = &triangles[triangleIdx];
-      uint64_t v0 = tri->vertices[0];
-      uint64_t v1 = tri->vertices[1];
-      uint64_t v2 = tri->vertices[2];
+    for (size_t faceEdgeIdx = 0; faceEdgeIdx < faceVertexCount; ++faceEdgeIdx) {
+      // get vertices
+      size_t v0 = faceConnects[faceOffsetIdx + faceEdgeIdx];
+      size_t v1 = faceConnects[faceOffsetIdx + ((faceEdgeIdx + 1) % faceVertexCount)];
+      if (!_vertexHalfEdge[v0])_vertexHalfEdge[v0] = halfEdge;
+      size_t last = faceVertexCount - 1;
+      halfEdgesMap[v1 | (v0 << 32)] = halfEdge;
+      halfEdge->vertex = v0;
+      halfEdge->index = halfEdgeIdx++;
+      if (!faceEdgeIdx) {
+        halfEdge->prev = halfEdge + last;
+        halfEdge->next = halfEdge + 1;
+      } else if (faceEdgeIdx == last) {
+        halfEdge->prev = halfEdge - 1;
+        halfEdge->next = halfEdge - last;
+      } else {
+        halfEdge->prev = halfEdge - 1;
+        halfEdge->next = halfEdge + 1;
+      }
 
-      // half-edge that goes from A to B:
-      HalfEdge* h0 = halfEdge;
-      if (!_vertexHalfEdge[v0])_vertexHalfEdge[v0] = h0;
-      _vertexUsed[v0]++;
-      halfEdgesMap[v1 | (v0 << 32)] = h0;
-      h0->index = triangleIdx * 3;
-      h0->vertex = tri->vertices[0];
-      h0->next = halfEdge + 1;
-      _usedEdges[h0->index] = h0;
-      _SetHalfEdgeLatency(h0, numFaceTriangles, faceTriangleIdx, 0);
+      _usedEdges[faceOffsetIdx + faceEdgeIdx] = halfEdge;
       halfEdge++;
-
-      // half-edge that goes from B to C:
-      HalfEdge* h1 = halfEdge;
-      if (!_vertexHalfEdge[v1])_vertexHalfEdge[v1] = h1;
-      _vertexUsed[v1]++;
-      halfEdgesMap[v2 | (v1 << 32)] = h1;
-      h1->index = triangleIdx * 3 + 1;
-      h1->vertex = tri->vertices[1];
-      h1->next = halfEdge + 1;
-      _usedEdges[h1->index] = h1;
-      _SetHalfEdgeLatency(h1, numFaceTriangles, faceTriangleIdx, 1);
-      halfEdge++;
-
-      // half-edge that goes from C to A:
-      HalfEdge* h2 = halfEdge;
-      if (!_vertexHalfEdge[v2])_vertexHalfEdge[v2] = h2;
-      _vertexUsed[v2]++;
-      halfEdgesMap[v0 | (v2 << 32)] = h2;
-      h2->index = triangleIdx * 3 + 2;
-      h2->vertex = tri->vertices[2];
-      h2->next = halfEdge - 2;
-      _usedEdges[h2->index] = h2;
-      _SetHalfEdgeLatency(h2, numFaceTriangles, faceTriangleIdx, 2);
-      halfEdge++;
-
-      triangleIdx++;
-      faceTriangleIdx++;
     }
+    faceOffsetIdx += faceVertexCount;
   }
-
-  // verify that the mesh is clean:
-  size_t numEntries = _usedEdges.size();
-  bool problematic = false;
-  if(numEntries != (size_t)(numTriangles * 3))problematic = true;
 
   /*
   std::sort(_usedEdges.begin(), _usedEdges.end(), 
@@ -217,6 +160,33 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   }
 }
 
+
+const pxr::VtArray<int>&
+HalfEdgeGraph::GetVertexNeighbors(const HalfEdge* edge)
+{
+  return _neighbors[edge->vertex];
+
+}
+
+
+HalfEdge*
+HalfEdgeGraph::_FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex)
+{
+  HalfEdge* current = _GetNextAdjacentEdge(edge);
+  while (current && current != edge) {
+    if (current->next->vertex == endVertex)return current;
+    current = _GetNextAdjacentEdge(current);
+  }
+  if (!current) {
+    current = _GetPreviousAdjacentEdge(edge);
+    while (current && current != edge) {
+      if (current->next->vertex == endVertex)return current;
+      current = _GetPreviousAdjacentEdge(current);
+    }
+  }
+  return NULL;
+}
+
 void
 HalfEdgeGraph::_RemoveOneEdge(HalfEdge* edge, bool* modified)
 {
@@ -230,26 +200,48 @@ HalfEdgeGraph::_RemoveOneEdge(HalfEdge* edge, bool* modified)
   }
 }
 
-bool
-HalfEdgeGraph::RemoveEdge(HalfEdge* edge)
+void
+HalfEdgeGraph::RemoveEdge(HalfEdge* edge, bool* modified)
 {
-  bool modified = false;
-  HalfEdge* previous = _GetPreviousEdge(edge);
+  HalfEdge* prev = _GetPreviousEdge(edge);
   HalfEdge* next = _GetNextEdge(edge);
 
-  if (previous->twin) {
-    previous->twin->twin = next->twin;
-    previous->twin->latency = HalfEdge::REAL;
+  
+  if (edge->twin) {
+    pxr::VtArray<int> edgeNeighbors;
+    pxr::VtArray<int> twinNeighbors;
+    size_t commonNeighbors = 0;
+    _ComputeVertexNeighbors(edge, edgeNeighbors);
+    _ComputeVertexNeighbors(edge->twin, twinNeighbors);
+
+    for (auto& edgeNeighbor : edgeNeighbors)
+      for (auto& twinNeighbor : twinNeighbors)
+        commonNeighbors += (edgeNeighbor == twinNeighbor);
+
+    if (commonNeighbors > 2) {
+      std::cout << "problematic neighborhood : " << commonNeighbors << std::endl;
+      return;
+    }
   }
-  if (next->twin) {
-    next->twin->twin = previous->twin;
-    next->twin->latency = HalfEdge::REAL;
+  
+  bool isTriangle = _IsTriangle(edge);
+  if (edge->twin) edge->twin->twin = NULL;
+  if (isTriangle) {
+    if (prev->twin)prev->twin->twin = next->twin;
+    if (next->twin)next->twin->twin = prev->twin;
+
+    _RemoveOneEdge(edge, modified);
+    _RemoveOneEdge(prev, modified);
+    _RemoveOneEdge(next, modified);
+  }
+  else {
+    next->prev = prev;
+    prev->next = next;
+   
+    _RemoveOneEdge(edge, modified);
   }
 
-  _RemoveOneEdge(edge, &modified);
-  _RemoveOneEdge(previous, &modified);
-  _RemoveOneEdge(next, &modified);
-  return modified;
+  if (!*modified)std::cerr << "FAIL REMOVE EDGE " << edge->vertex << std::endl;
 }
 
 void
@@ -257,27 +249,17 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 {
   _vertexHalfEdge.erase(_vertexHalfEdge.begin() + index);
   for (auto& edge: _usedEdges) {
-    if (edge->vertex == index) {
-      edge->vertex = replace;
-      _vertexUsed[edge->vertex]++;
-    }
-    else if (edge->vertex > index) {
-      _vertexUsed[edge->vertex]--;
-      edge->vertex--;
-      _vertexUsed[edge->vertex]++;
-    }
+    if (edge->vertex == index) edge->vertex = replace;
+    else if (edge->vertex > index) edge->vertex--;
   }
-  _vertexUsed.pop_back();
-
 }
 
 HalfEdge* 
-HalfEdgeGraph::GetLongestEdge(const pxr::GfVec3f* positions, short latency)
+HalfEdgeGraph::GetLongestEdge(const pxr::GfVec3f* positions)
 {
   float maxLength = 0.f;
   HalfEdge* longestEdge = NULL;
   for (auto& used: _usedEdges) {
-    if (latency != HalfEdge::ANY && used->latency != latency) continue;
     if (used->vertex > used->next->vertex)continue;
     if (used->twin && used->vertex > used->twin->vertex)continue;
     HalfEdge* next = used->next;
@@ -292,12 +274,11 @@ HalfEdgeGraph::GetLongestEdge(const pxr::GfVec3f* positions, short latency)
 
 
 HalfEdge* 
-HalfEdgeGraph::GetShortestEdge(const pxr::GfVec3f* positions, short latency)
+HalfEdgeGraph::GetShortestEdge(const pxr::GfVec3f* positions)
 {
   float minLength = std::numeric_limits<float>::max();
   HalfEdge* shortestEdge = NULL;
   for (auto& used: _usedEdges) {
-    if (latency != HalfEdge::ANY && used->latency != latency)continue;
     if (used->twin && used->vertex > used->twin->vertex)continue;
     if (used->vertex > used->next->vertex)continue;
     HalfEdge* next = used->next;
@@ -309,6 +290,13 @@ HalfEdgeGraph::GetShortestEdge(const pxr::GfVec3f* positions, short latency)
   }
   return shortestEdge;
 }
+
+HalfEdge*
+HalfEdgeGraph::GetRandomEdge()
+{
+  return _usedEdges[RANDOM_0_X(_usedEdges.size() - 1)];
+}
+
 
 void 
 HalfEdgeGraph::ComputeTrianglePairs(Mesh* mesh)
@@ -346,75 +334,48 @@ HalfEdgeGraph::ComputeTrianglePairs(Mesh* mesh)
 }
 
 HalfEdge* 
-HalfEdgeGraph::_GetPreviousAdjacentEdge(HalfEdge* edge)
+HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
-  int vertex = edge->vertex;
-  HalfEdge* current = edge->next;
-  while (current->next->vertex != vertex) {
-    current = current->next;
-  }
-  if (current->twin)
-    return current->twin->next;
+  if (edge->twin)
+    return edge->twin->prev;
   return NULL;
 }
 
 HalfEdge* 
-HalfEdgeGraph::_GetNextjacentEdge(HalfEdge* edge)
+HalfEdgeGraph::_GetNextAdjacentEdge(const HalfEdge* edge)
 {
   if (edge->twin)
     return edge->twin->next;
+    
   return NULL;
 
 }
 
 HalfEdge* 
-HalfEdgeGraph::_GetNextEdge(const HalfEdge* edge, short latency)
+HalfEdgeGraph::_GetNextEdge(const HalfEdge* edge)
 {
-  HalfEdge* next = edge->next;
-  switch (latency) {
-    case HalfEdge::REAL:
-      if (next->latency == HalfEdge::REAL)
-        return next;
-      else if(next->twin) 
-        return _GetNextEdge(next->twin, HalfEdge::REAL);
-      else return next;
-    case HalfEdge::IMPLICIT:
-    case HalfEdge::VIRTUAL:
-    case HalfEdge::ANY:
-      return next;
-    default:
-      return next;
-  }
+  return edge->next;
 }
 
 HalfEdge* 
-HalfEdgeGraph::_GetPreviousEdge(const HalfEdge* edge, short latency)
+HalfEdgeGraph::_GetPreviousEdge(const HalfEdge* edge)
+{
+  return edge->prev;
+}
+
+bool
+HalfEdgeGraph::_IsTriangle(const HalfEdge* edge)
 {
   int vertex = edge->vertex;
+  int cnt = 1;
   HalfEdge* current = edge->next;
-  HalfEdge* previous = NULL;
-  switch (latency) {
-    case HalfEdge::REAL:
-      previous = _GetPreviousEdge(edge);
-      if (previous->latency == HalfEdge::REAL)
-        return previous;
-      else if (previous->twin) 
-        return _GetPreviousEdge(previous->twin, HalfEdge::REAL);
-      else
-        return previous;
-    case HalfEdge::IMPLICIT:
-    case HalfEdge::VIRTUAL:
-    case HalfEdge::ANY:
-      while (current->next->vertex != vertex)
-        current = current->next;
-      return current;
-    default:
-      while (current->next->vertex != vertex)
-        current = current->next;
-      return current;
+  while (current->vertex != vertex) {
+    cnt++;
+    current = current->next;
   }
-  
+  return (cnt == 3);
 }
+
 
 bool 
 HalfEdgeGraph::_IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
@@ -431,55 +392,26 @@ HalfEdgeGraph::ComputeNeighbors(Mesh* mesh)
   size_t numPoints = mesh->GetNumPoints();
   _neighbors.clear();
   _neighbors.resize(numPoints);
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    _ComputeVertexNeighbors(_vertexHalfEdge[pointIdx], _neighbors[pointIdx]);
+  }
+}
 
-  for (auto& edge: _usedEdges) {
-    HalfEdge* start = edge;
-    HalfEdge* current = start;
-    HalfEdge* next = NULL;
-    pxr::VtArray<int>& neighbors = _neighbors[edge->vertex];
-    if (!_IsNeighborRegistered(neighbors, start->next->vertex)) {
-      neighbors.push_back(start->next->vertex);
-    }
+void
+HalfEdgeGraph::_ComputeVertexNeighbors(HalfEdge* edge, pxr::VtArray<int>& neighbors)
+{
+  HalfEdge* current = edge;
+  do {
+    neighbors.push_back(current->next->vertex);
+    current = _GetNextAdjacentEdge(current);
+  } while(current && (current != edge));
 
-    short state = 1;
-    while (state == 1) {
-      next = _GetNextjacentEdge(current);
-      if (!next) {
-        state = 0;
-      } else if (next == start) {
-        state = -1;
-      } else {
-        if (!_IsNeighborRegistered(neighbors, next->next->vertex)) {
-          neighbors.push_back(next->next->vertex);
-        }
-        current = next;
-      }
-    }
-    
-    if(state == 0) {
-      HalfEdge* previous = NULL;
-      current = start;
-      previous = _GetPreviousEdge(current);
-      if (!_IsNeighborRegistered(neighbors, previous->vertex)) {
-        neighbors.push_back(previous->vertex);
-      }
-      state = 1;
-      while (state == 1) {
-        previous = _GetPreviousAdjacentEdge(current);
-        if (!previous) {
-          state = 0;
-        }
-        else if (previous == start) {
-          state = -1;
-        }
-        else {
-          if (!_IsNeighborRegistered(neighbors, previous->next->vertex)) {
-            neighbors.push_back(previous->next->vertex);
-          }
-          current = previous;
-        }
-      }
-    }
+  if (!current) {
+    HalfEdge* current = edge;
+    do {
+      neighbors.push_back(current->prev->vertex);
+      current = _GetPreviousAdjacentEdge(current);
+    } while (current && (current != edge));
   }
 }
 
@@ -517,7 +449,6 @@ HalfEdgeGraph::FlipEdge(HalfEdge* edge)
     edges[5]->vertex
   };
 
-  std::swap(edge->index, twin->index);
   edges[0]->vertex = vertices[3];
   edges[3]->vertex = vertices[1];
   edges[0]->next = edges[2];
@@ -526,7 +457,6 @@ HalfEdgeGraph::FlipEdge(HalfEdge* edge)
   edges[3]->next = edges[5];
   edges[4]->next = edges[3];
   edges[5]->next = edges[4];
-  std::swap(edges[2]->index, edges[5]->index);
 
   return true;
 }
@@ -619,32 +549,34 @@ HalfEdgeGraph::SplitEdge(HalfEdge* edge, size_t newPoint)
 bool 
 HalfEdgeGraph::CollapseEdge(HalfEdge* edge)
 {
+  
   HalfEdge* twin = edge->twin;
 
-  if (edge->latency != HalfEdge::REAL)return false;
   size_t p1 = edge->vertex;
   size_t p2 = edge->next->vertex;
 
+  bool modified = false;
   REMOVE_EDGE_AVG_T.Start();
-  RemoveEdge(edge);
+  RemoveEdge(edge, &modified);
   REMOVE_EDGE_AVG_T.End();
 
   if (twin) {
     REMOVE_EDGE_AVG_T.Start();
-    RemoveEdge(twin);
+    RemoveEdge(twin, &modified);
     REMOVE_EDGE_AVG_T.End();
   }
+  if (!modified)return false;
 
   if (p1 > p2) {
     REMOVE_POINT_AVG_T.Start();
     RemovePoint(p1, p2);
     REMOVE_POINT_AVG_T.End();
-  } else {
+  }
+  else {
     REMOVE_POINT_AVG_T.Start();
     RemovePoint(p2, p1);
     REMOVE_POINT_AVG_T.End();
   }
-  
   return true;
 }
 
@@ -658,27 +590,27 @@ HalfEdgeGraph::UpdateTopologyFromEdges(Mesh* mesh)
 
   pxr::VtArray<int> faceCounts;
   pxr::VtArray<int> faceConnects;
-  std::vector<int> visited(_halfEdges.size(), 0);
-  for (auto& edge: _usedEdges) {
-    if (edge->latency != HalfEdge::REAL || visited[edge->index])continue;
+  
+  std::map<HalfEdge*, bool> visited;
+  for (auto& edge : _usedEdges) 
+    visited.insert({ edge, false });
 
-    visited[edge->index] = true;
+  for (auto& edge: _usedEdges) {
+    if (visited[edge])continue;
+    visited[edge] = true;
     const HalfEdge* start = edge;
-    HalfEdge* current = _GetNextEdge(start, HalfEdge::REAL);
+    HalfEdge* current = _GetNextEdge(start);
     faceConnects.push_back(start->vertex);
     size_t faceVertexCount = 1;
     while (current != start) {
-      visited[current->index] = true;
+      visited[current] = true;
       faceConnects.push_back(current->vertex);
       faceVertexCount++;
-      current = _GetNextEdge(current, HalfEdge::REAL);
+      current = _GetNextEdge(current);
     }
     faceCounts.push_back(faceVertexCount);
   }
   mesh->SetTopology(faceCounts, faceConnects, false);
-
-  std::cout << "remove edge time : " << REMOVE_EDGE_AVG_T.Elapsed() << std::endl;
-  std::cout << "remove point time : " << REMOVE_POINT_AVG_T.Elapsed() << std::endl;
 
   REMOVE_EDGE_AVG_T.Reset();
   REMOVE_POINT_AVG_T.Reset();

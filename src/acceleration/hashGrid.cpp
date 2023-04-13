@@ -16,9 +16,8 @@ void
 HashGrid::Update(const std::vector<Geometry*>& geometries)
 {
   uint64_t T = CurrentTime();
-  _geometries = geometries;
   size_t numElements = 0;
-  for (const auto& geometry : _geometries) {
+  for (const auto& geometry : geometries) {
     numElements += geometry->GetNumPoints();
   }
 
@@ -26,13 +25,13 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
   _cellStart.resize(_tableSize + 1, 0);
   _cellEntries.resize(numElements, 0);
   _mapping.resize(numElements);
-  _points.resize(_geometries.size());
+  _points.resize(geometries.size());
 
   std::vector<int64_t> hashes(numElements);
 
   size_t elemIdx = 0;
-  for (size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx) {
-    const Geometry* geometry = _geometries[geomIdx];
+  for (size_t geomIdx = 0; geomIdx < geometries.size(); ++geomIdx) {
+    const Geometry* geometry = geometries[geomIdx];
     _points[geomIdx] = geometry->GetPositionsCPtr();
     size_t numPoints = geometry->GetNumPoints();
     const pxr::GfVec3f* points = geometry->GetPositionsCPtr();

@@ -48,7 +48,7 @@ public:
   pxr::GfVec3f GetTriangleVertexNormal(const Triangle* T, uint32_t index) const;    // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;                        // triangle normal
 
-  void GetEdges(pxr::VtArray<HalfEdge*>& edges, short latency=HalfEdge::REAL);
+  const pxr::VtArray<HalfEdge*>& GetEdges();
   const HalfEdge* GetLongestEdgeInTriangle(const HalfEdge* edge);
   
   pxr::GfVec3f GetPosition(const Location& point) const ;
@@ -60,10 +60,11 @@ public:
   size_t GetNumTriangles()const {return _triangles.size();};
   size_t GetNumSamples()const {return _faceVertexIndices.size();};
   size_t GetNumFaces()const {return _faceVertexCounts.size();};
-  size_t GetNumEdges(short latency=HalfEdge::REAL)const { return _halfEdges.GetNumEdges(latency); };
+  size_t GetNumEdges()const { return _halfEdges.GetNumEdges(); };
 
   HalfEdge* GetLongestEdge();
   HalfEdge* GetShortestEdge();
+  HalfEdge* GetRandomEdge();
 
   size_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
   size_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
@@ -93,7 +94,6 @@ public:
     const pxr::VtArray<int>& faceVertexIndices,
     bool init=true
   );
-  void SetAllEdgesLatencyReal();
   bool FlipEdge(HalfEdge* edge);
   bool SplitEdge(HalfEdge* edge);
   bool CollapseEdge(HalfEdge* edge);

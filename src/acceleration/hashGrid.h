@@ -96,7 +96,6 @@ public:
   pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
 
 private:
-  std::vector<Geometry*>            _geometries;
   std::vector<const pxr::GfVec3f*>  _points;
   std::vector<uint64_t>             _mapping;
   float                             _spacing;
