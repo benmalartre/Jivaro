@@ -2,6 +2,7 @@
 #include "../utils/timer.h"
 #include "../geometry/mesh.h"
 #include "../geometry/subdiv.h"
+#include "../geometry/tesselator.h"
 #include "../app/selection.h"
 #include "../app/notice.h"
 #include "../app/application.h"
@@ -55,67 +56,19 @@ struct Dummy_t {
   Dummy_t* next;
 };
 
-static void _TestVtArray()
-{
-  size_t n = 8;
-  pxr::VtArray<Dummy_t> dummys(n);
-
-  for (size_t i = 0; i < n; ++i) {
-    if (i == 0) {
-      dummys[i].previous = NULL;
-      dummys[i].next = &dummys[i + 1];
-    }
-    else if (i == n - 1) {
-      dummys[i].previous = &dummys[i - 1];
-      dummys[i].next = NULL;
-    }
-    else {
-      dummys[i].previous = &dummys[i - 1];
-      dummys[i].next = &dummys[i + 1];
-    }
-  }
-  for (auto& dummy : dummys) {
-    std::cout << &dummy << " : previous = " << dummy.previous << ", next = " << dummy.next << std::endl;
-  }
-
-  dummys.erase(dummys.begin() + n /2);
-  std::cout << "--------------------------------------------------------------------------------------" << std::endl;
-  for (auto& dummy : dummys) {
-    std::cout << &dummy << " : previous = " << dummy.previous << ", next = " << dummy.next << std::endl;
-  }
-}
-
-static void _CollapseEdges(size_t n) 
+static void _CollapseEdges(float factor) 
 {
   pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
     Mesh mesh(usdMesh);
-    bool updated = false;
+    float l = mesh.GetAverageEdgeLength() * factor;
+    std::cout << "average edge length = " << l << std::endl;
+    Tesselator tesselator(&mesh);
+    tesselator.Update(l);
 
-    uint64_t T = CurrentTime();
-    uint64_t t1 = 0, t2 = 0;
-    for (size_t i = 0; i < n; ++i) {
-      HalfEdge* edge = mesh.GetRandomEdge();
-      if (!edge){
-        std::cerr << "ERR No edge to collpase !!" << std::endl; 
-        break;
-      }
-      t1 += CurrentTime() - T;
-      T = CurrentTime();
-      if (mesh.CollapseEdge(edge)) {
-        updated = true;
-      }
-      t2 += CurrentTime() - T;
-      T = CurrentTime();
-    }
+    _SetMesh(usdMesh, tesselator.GetPositions(), tesselator.GetFaceCounts(), tesselator.GetFaceConnects());
 
-    std::cout << "shortest edge time : " << (t1 * 1e-9) << " seconds " << std::endl;
-    std::cout << "collapse edge time : " << (t2 * 1e-9) << " seconds " << std::endl;
-    if (updated) {
-      mesh.UpdateTopologyFromEdges();
-      _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
-    }
   }
 }
 
@@ -188,38 +141,16 @@ bool ToolUI::Draw()
     }
   }
 
+  static float factor = 0.95f;
+
   if (ImGui::Button("Collapse Edge")) {
-    _CollapseEdges(1);
+    _CollapseEdges(factor);
   }
   ImGui::SameLine();
+  ImGui::SliderFloat("##factor", &factor, 0.1f, 2.f);
 
-  if (ImGui::Button("X10")) {
-    _CollapseEdges(10);
-  }
-  ImGui::SameLine();
-
-  if (ImGui::Button("X100")) {
-    _CollapseEdges(100);
-  }
-
-  if (ImGui::Button("X1000")) {
-    _CollapseEdges(1000);
-  }
-  ImGui::SameLine();
-
-  if (ImGui::Button("50 %")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
-    if (usdMesh.GetPrim().IsValid()) {
-      Mesh mesh(usdMesh);
-      std::cout << "mesh num eges : " << mesh.GetNumEdges() << std::endl;
-      _CollapseEdges(mesh.GetNumEdges() / 4);
-    }
-  }
   
-  if (ImGui::Button("Test VtArray")) {
-    _TestVtArray();
-  }
-
+  
   ImGui::End();
 
   return ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused() || ImGui::IsAnyItemHovered();

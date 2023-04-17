@@ -62,9 +62,7 @@ public:
   size_t GetNumFaces()const {return _faceVertexCounts.size();};
   size_t GetNumEdges()const { return _halfEdges.GetNumEdges(); };
 
-  HalfEdge* GetLongestEdge();
-  HalfEdge* GetShortestEdge();
-  HalfEdge* GetRandomEdge();
+  float GetAverageEdgeLength();
 
   size_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
   size_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);

@@ -19,7 +19,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 const HalfEdge* 
 Mesh::GetLongestEdgeInTriangle(const HalfEdge* edge)
 {
-  return edge->GetLongestEdgeInTriangle(&_positions[0]);
+  return _halfEdges.GetLongestEdgeInTriangle(edge, &_positions[0]);
 }
 
 Mesh::Mesh()
@@ -224,19 +224,18 @@ void Mesh::ComputeHalfEdges()
   _flags = Mesh::HALFEDGES;
 }
 
-HalfEdge* Mesh::GetLongestEdge()
+float Mesh::GetAverageEdgeLength()
 {
-  return _halfEdges.GetLongestEdge(&_positions[0]);
-}
-
-HalfEdge* Mesh::GetShortestEdge()
-{
-  return _halfEdges.GetShortestEdge(&_positions[0]);
-}
-
-HalfEdge* Mesh::GetRandomEdge()
-{
-  return _halfEdges.GetRandomEdge();
+  const pxr::GfVec3f* positions = &_positions[0];
+  float accum = 0;
+  size_t cnt = 0;
+  for (auto& edge : _halfEdges.GetEdges()) {
+    if (_halfEdges.IsUnique(edge)) {
+      accum += _halfEdges.GetLength(edge, positions);
+      cnt++;
+    }
+  }
+  return cnt > 0 ? accum / (float)cnt : 0.f;
 }
 
 
@@ -359,9 +358,10 @@ bool Mesh::FlipEdge(HalfEdge* edge)
 
 bool Mesh::SplitEdge(HalfEdge* edge)
 {
+  const HalfEdge* next = _halfEdges.GetEdge(edge->next);
   size_t numPoints = GetNumPoints();
   const pxr::GfVec3f p =
-    (_positions[edge->vertex] + _positions[edge->next->vertex]) * 0.5f;
+    (_positions[edge->vertex] + _positions[next->vertex]) * 0.5f;
 
   AddPoint(p);
   return _halfEdges.SplitEdge(edge, numPoints);
@@ -370,8 +370,9 @@ bool Mesh::SplitEdge(HalfEdge* edge)
 
 bool Mesh::CollapseEdge(HalfEdge* edge)
 {
+  const HalfEdge* next = _halfEdges.GetEdge(edge->next);
   size_t p1 = edge->vertex;
-  size_t p2 = edge->next->vertex;
+  size_t p2 = next->vertex;
 
   if (_halfEdges.CollapseEdge(edge)) {
     if (p1 > p2) {

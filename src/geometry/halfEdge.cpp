@@ -47,16 +47,36 @@ std::priority_queue minq3(data.begin(), data.end(), customLess);
 */
 
 const HalfEdge*
-HalfEdge::GetLongestEdgeInTriangle(const pxr::GfVec3f* positions) const
+HalfEdgeGraph::GetLongestEdgeInTriangle(const HalfEdge* edge, const pxr::GfVec3f* positions) const
 {
-  const HalfEdge* next = this->next;
-  const HalfEdge* prev = next->next;
-  const float edge0 = (positions[next->vertex] - positions[vertex]).GetLength();
+  const HalfEdge* next = &_halfEdges[edge->next];
+  const HalfEdge* prev = &_halfEdges[edge->prev];
+  const float edge0 = (positions[next->vertex] - positions[edge->vertex]).GetLength();
   const float edge1 = (positions[prev->vertex] - positions[next->vertex]).GetLength();
-  const float edge2 = (positions[vertex] - positions[prev->vertex]).GetLength();
-  if (edge0 > edge1 && edge0 > edge2)return this;
+  const float edge2 = (positions[edge->vertex] - positions[prev->vertex]).GetLength();
+  if (edge0 > edge1 && edge0 > edge2)return edge;
   else if (edge1 > edge0 && edge1 > edge2)return next;
   else return prev;
+}
+
+float
+HalfEdgeGraph::GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const
+{
+  const HalfEdge* next = &_halfEdges[edge->next];
+  return (positions[next->vertex] - positions[edge->vertex]).GetLength();
+}
+
+float
+HalfEdgeGraph::GetLengthSq(const HalfEdge* edge, const pxr::GfVec3f* positions) const
+{
+  const HalfEdge* next = &_halfEdges[edge->next];
+  return (positions[next->vertex] - positions[edge->vertex]).GetLengthSq();
+}
+
+size_t 
+HalfEdgeGraph::GetCapacityEdges() const
+{
+  return _halfEdges.size();
 }
 
 size_t 
@@ -64,17 +84,79 @@ HalfEdgeGraph::GetNumEdges() const
 {
   size_t numEdges = 0;
   for (auto& usedEdge : _usedEdges)
-    if(!usedEdge->twin || usedEdge->vertex < usedEdge->next->vertex)
+    if(usedEdge->twin < 0 || usedEdge->vertex < _halfEdges[usedEdge->next].vertex)
       numEdges++;
 
   return numEdges;
 }
 
+HalfEdge*
+HalfEdgeGraph::GetEdge(int index)
+{
+  return &_halfEdges[index];
+}
+
+const HalfEdge*
+HalfEdgeGraph::GetEdge(int index) const
+{
+  return &_halfEdges[index];
+}
 
 const pxr::VtArray<HalfEdge*>& 
 HalfEdgeGraph::GetEdges()
 {
   return _usedEdges;
+}
+
+void
+HalfEdgeGraph::SortEdgesByLength(const pxr::GfVec3f* positions)
+{
+  std::sort(_usedEdges.begin(), _usedEdges.end(),
+    [this, positions](const HalfEdge* a, const HalfEdge* b) {
+    return GetLengthSq(a, positions) < GetLengthSq(b, positions);
+  });
+}
+
+bool
+HalfEdgeGraph::IsCollapsable(const HalfEdge* edge)
+{
+  if(!IsUnique(edge))return false;
+  if (edge->twin >= 0) {
+    pxr::VtArray<int> edgeNeighbors;
+    pxr::VtArray<int> twinNeighbors;
+    size_t commonNeighbors = 0;
+    const HalfEdge* twin = &_halfEdges[edge->twin];
+    _ComputeVertexNeighbors(edge, edgeNeighbors);
+    _ComputeVertexNeighbors(twin, twinNeighbors);
+
+    for (auto& edgeNeighbor : edgeNeighbors)
+      for (auto& twinNeighbor : twinNeighbors)
+        commonNeighbors += (edgeNeighbor == twinNeighbor);
+
+    if (commonNeighbors > 2) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+HalfEdgeGraph::IsAvailable(const HalfEdge* edge)
+{
+  return _FindInAvailableEdges(edge);
+}
+
+bool
+HalfEdgeGraph::IsUnique(const HalfEdge* edge)
+{
+  if (edge->twin < 0)return true;
+  else return edge->vertex < _halfEdges[edge->next].vertex;
+}
+
+bool
+HalfEdgeGraph::IsUsed(const HalfEdge* edge)
+{
+  return _halfEdgeUsed[_GetEdgeIndex(edge)];
 }
 
 void 
@@ -88,6 +170,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
   _halfEdges.resize(numHalfEdges);
   _usedEdges.resize(numHalfEdges);
+  _halfEdgeUsed.resize(numHalfEdges);
 
   size_t faceOffsetIdx = 0;
   size_t halfEdgeIdx = 0;
@@ -111,26 +194,31 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       size_t last = faceVertexCount - 1;
       halfEdgesMap[v1 | (v0 << 32)] = halfEdge;
       halfEdge->vertex = v0;
-      halfEdge->index = halfEdgeIdx++;
       if (!faceEdgeIdx) {
-        halfEdge->prev = halfEdge + last;
-        halfEdge->next = halfEdge + 1;
+        halfEdge->prev = _GetEdgeIndex(halfEdge + last);
+        halfEdge->next = _GetEdgeIndex(halfEdge + 1);
       } else if (faceEdgeIdx == last) {
-        halfEdge->prev = halfEdge - 1;
-        halfEdge->next = halfEdge - last;
+        halfEdge->prev = _GetEdgeIndex(halfEdge - 1);
+        halfEdge->next = _GetEdgeIndex(halfEdge - last);
       } else {
-        halfEdge->prev = halfEdge - 1;
-        halfEdge->next = halfEdge + 1;
+        halfEdge->prev = _GetEdgeIndex(halfEdge - 1);
+        halfEdge->next = _GetEdgeIndex(halfEdge + 1);
       }
-
+      _halfEdgeUsed[faceOffsetIdx + faceEdgeIdx] = true;
       _usedEdges[faceOffsetIdx + faceEdgeIdx] = halfEdge;
       halfEdge++;
     }
     faceOffsetIdx += faceVertexCount;
   }
 
-  /*
+  // sort edges by length
+  /*const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   std::sort(_usedEdges.begin(), _usedEdges.end(), 
+    [positions](HalfEdge* a, HalfEdge* b) {
+      return a->GetLengthSq(positions) < b->GetLengthSq(positions);
+    });
+  
+  std::sort(_usedEdges.begin(), _usedEdges.end(),
     [](HalfEdge* a, HalfEdge* b) {if (a->twin && a->vertex > a->twin->vertex) {
                                     return a->twin->vertex < b->vertex;
                                   }else return a->vertex < b->vertex; });*/
@@ -150,14 +238,16 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
     if(it != halfEdgesMap.end())
     {
       HalfEdge* twinEdge = (HalfEdge*)it->second;
-      twinEdge->twin = halfEdge.second;
-      halfEdge.second->twin = twinEdge;
+      twinEdge->twin = _GetEdgeIndex(halfEdge.second);
+      halfEdge.second->twin = _GetEdgeIndex(twinEdge);
     }
     else {
       _boundary[halfEdge.second->vertex] = true;
       ++boundaryCount;
     }
   }
+
+  for (auto& used : _usedEdges)_GetEdgeIndex(used);
 }
 
 
@@ -168,30 +258,46 @@ HalfEdgeGraph::GetVertexNeighbors(const HalfEdge* edge)
 
 }
 
+size_t 
+HalfEdgeGraph::_GetEdgeIndex(const HalfEdge* edge)
+{
+  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) / sizeof(HalfEdge);
+}
 
 HalfEdge*
 HalfEdgeGraph::_FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex)
 {
   HalfEdge* current = _GetNextAdjacentEdge(edge);
   while (current && current != edge) {
-    if (current->next->vertex == endVertex)return current;
+    if (_halfEdges[current->next].vertex == endVertex)return current;
     current = _GetNextAdjacentEdge(current);
   }
   if (!current) {
     current = _GetPreviousAdjacentEdge(edge);
     while (current && current != edge) {
-      if (current->next->vertex == endVertex)return current;
+      if (_halfEdges[current->next].vertex == endVertex)return current;
       current = _GetPreviousAdjacentEdge(current);
     }
   }
   return NULL;
 }
 
+bool
+HalfEdgeGraph::_FindInAvailableEdges(const HalfEdge* edge)
+{
+  for (auto& availableEdge : _availableEdges) {
+    if (availableEdge == edge)return true;
+  }
+  return false;
+}
+
 void
-HalfEdgeGraph::_RemoveOneEdge(HalfEdge* edge, bool* modified)
+HalfEdgeGraph::_RemoveOneEdge(const HalfEdge* edge, bool* modified)
 {
   for (size_t currentIdx = 0; currentIdx < _usedEdges.size(); ++currentIdx) {
     if (_usedEdges[currentIdx] == edge) {
+      _availableEdges.push_back(_usedEdges[currentIdx]);
+      _halfEdgeUsed[_GetEdgeIndex(edge)] = false;
       _usedEdges[currentIdx] = std::move(_usedEdges.back());
       _usedEdges.pop_back();
       *modified = true;
@@ -206,38 +312,19 @@ HalfEdgeGraph::RemoveEdge(HalfEdge* edge, bool* modified)
   HalfEdge* prev = _GetPreviousEdge(edge);
   HalfEdge* next = _GetNextEdge(edge);
 
-  
-  if (edge->twin) {
-    pxr::VtArray<int> edgeNeighbors;
-    pxr::VtArray<int> twinNeighbors;
-    size_t commonNeighbors = 0;
-    _ComputeVertexNeighbors(edge, edgeNeighbors);
-    _ComputeVertexNeighbors(edge->twin, twinNeighbors);
-
-    for (auto& edgeNeighbor : edgeNeighbors)
-      for (auto& twinNeighbor : twinNeighbors)
-        commonNeighbors += (edgeNeighbor == twinNeighbor);
-
-    if (commonNeighbors > 2) {
-      std::cout << "problematic neighborhood : " << commonNeighbors << std::endl;
-      return;
-    }
-  }
-  
   bool isTriangle = _IsTriangle(edge);
-  if (edge->twin) edge->twin->twin = NULL;
+  if (edge->twin > -1) _halfEdges[edge->twin].twin = -1;
   if (isTriangle) {
-    if (prev->twin)prev->twin->twin = next->twin;
-    if (next->twin)next->twin->twin = prev->twin;
+    if (prev->twin > -1)_halfEdges[prev->twin].twin = next->twin;
+    if (next->twin > -1)_halfEdges[next->twin].twin = prev->twin;
 
     _RemoveOneEdge(edge, modified);
     _RemoveOneEdge(prev, modified);
     _RemoveOneEdge(next, modified);
   }
   else {
-    next->prev = prev;
-    prev->next = next;
-   
+    next->prev = _GetEdgeIndex(prev);
+    prev->next = _GetEdgeIndex(next);
     _RemoveOneEdge(edge, modified);
   }
 
@@ -254,49 +341,6 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
   }
 }
 
-HalfEdge* 
-HalfEdgeGraph::GetLongestEdge(const pxr::GfVec3f* positions)
-{
-  float maxLength = 0.f;
-  HalfEdge* longestEdge = NULL;
-  for (auto& used: _usedEdges) {
-    if (used->vertex > used->next->vertex)continue;
-    if (used->twin && used->vertex > used->twin->vertex)continue;
-    HalfEdge* next = used->next;
-    float edgeLength = (positions[next->vertex] - positions[used->vertex]).GetLengthSq();
-    if (edgeLength > maxLength) {
-      longestEdge = used;
-      maxLength = edgeLength;
-    }
-  }
-  return longestEdge;
-}
-
-
-HalfEdge* 
-HalfEdgeGraph::GetShortestEdge(const pxr::GfVec3f* positions)
-{
-  float minLength = std::numeric_limits<float>::max();
-  HalfEdge* shortestEdge = NULL;
-  for (auto& used: _usedEdges) {
-    if (used->twin && used->vertex > used->twin->vertex)continue;
-    if (used->vertex > used->next->vertex)continue;
-    HalfEdge* next = used->next;
-    float edgeLength = (positions[next->vertex] - positions[used->vertex]).GetLengthSq();
-    if (edgeLength < minLength) {
-      shortestEdge = used;
-      minLength = edgeLength;
-    }
-  }
-  return shortestEdge;
-}
-
-HalfEdge*
-HalfEdgeGraph::GetRandomEdge()
-{
-  return _usedEdges[RANDOM_0_X(_usedEdges.size() - 1)];
-}
-
 
 void 
 HalfEdgeGraph::ComputeTrianglePairs(Mesh* mesh)
@@ -309,26 +353,26 @@ HalfEdgeGraph::ComputeTrianglePairs(Mesh* mesh)
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
   for (auto& edge: _usedEdges) {
-    if (used[edge->GetTriangleIndex()])continue;
-    const HalfEdge* longest = edge->GetLongestEdgeInTriangle(positions);
+    if (used[GetTriangleIndex(edge)])continue;
+    const HalfEdge* longest = GetLongestEdgeInTriangle(edge, positions);
     size_t triPairIdx = trianglePairs.size();
-    if (longest->twin) {
-      HalfEdge* twin = longest->twin;
+    if (longest->twin > -1) {
+      HalfEdge* twin = &_halfEdges[longest->twin];
       trianglePairs.push_back(TrianglePair(
         triPairIdx,
-        &triangles[longest->GetTriangleIndex()],
-        &triangles[twin->GetTriangleIndex()]
+        &triangles[GetTriangleIndex(longest)],
+        &triangles[GetTriangleIndex(twin)]
       ));
-      used[longest->GetTriangleIndex()] = true;
-      used[twin->GetTriangleIndex()] = true;
+      used[GetTriangleIndex(longest)] = true;
+      used[GetTriangleIndex(twin)] = true;
     }
     else {
       trianglePairs.push_back(TrianglePair(
         triPairIdx,
-        &triangles[longest->GetTriangleIndex()],
+        &triangles[GetTriangleIndex(longest)],
         NULL
       ));
-      used[longest->GetTriangleIndex()] = true;
+      used[GetTriangleIndex(longest)] = true;
     }
   }
 }
@@ -336,16 +380,16 @@ HalfEdgeGraph::ComputeTrianglePairs(Mesh* mesh)
 HalfEdge* 
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
-  if (edge->twin)
-    return edge->twin->prev;
+  if (edge->twin >= 0)
+    return &_halfEdges[_halfEdges[edge->twin].prev];
   return NULL;
 }
 
 HalfEdge* 
 HalfEdgeGraph::_GetNextAdjacentEdge(const HalfEdge* edge)
 {
-  if (edge->twin)
-    return edge->twin->next;
+  if (edge->twin >= 0)
+    return &_halfEdges[_halfEdges[edge->twin].next];
     
   return NULL;
 
@@ -354,13 +398,13 @@ HalfEdgeGraph::_GetNextAdjacentEdge(const HalfEdge* edge)
 HalfEdge* 
 HalfEdgeGraph::_GetNextEdge(const HalfEdge* edge)
 {
-  return edge->next;
+  return &_halfEdges[edge->next];
 }
 
 HalfEdge* 
 HalfEdgeGraph::_GetPreviousEdge(const HalfEdge* edge)
 {
-  return edge->prev;
+  return &_halfEdges[edge->prev];
 }
 
 bool
@@ -368,10 +412,10 @@ HalfEdgeGraph::_IsTriangle(const HalfEdge* edge)
 {
   int vertex = edge->vertex;
   int cnt = 1;
-  HalfEdge* current = edge->next;
+  HalfEdge* current = &_halfEdges[edge->next];
   while (current->vertex != vertex) {
     cnt++;
-    current = current->next;
+    current = &_halfEdges[current->next];
   }
   return (cnt == 3);
 }
@@ -398,48 +442,48 @@ HalfEdgeGraph::ComputeNeighbors(Mesh* mesh)
 }
 
 void
-HalfEdgeGraph::_ComputeVertexNeighbors(HalfEdge* edge, pxr::VtArray<int>& neighbors)
+HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors)
 {
-  HalfEdge* current = edge;
+  const HalfEdge* current = edge;
   do {
-    neighbors.push_back(current->next->vertex);
+    neighbors.push_back(_halfEdges[current->next].vertex);
     current = _GetNextAdjacentEdge(current);
   } while(current && (current != edge));
 
   if (!current) {
-    HalfEdge* current = edge;
+    const HalfEdge* current = edge;
     do {
-      neighbors.push_back(current->prev->vertex);
+      neighbors.push_back(_halfEdges[current->prev].vertex);
       current = _GetPreviousAdjacentEdge(current);
     } while (current && (current != edge));
   }
 }
 
-bool 
+bool
 HalfEdgeGraph::FlipEdge(HalfEdge* edge)
 {
-  /* 
+  /*
   flip-flop two triangle by their common edge
-                                     
-       3 _ _ _ 2        3 _ _ _ 2    
-        |    /   2    3   \    |     
-        |   /  /|      |\  \   |     
-        |  /  / |      | \  \  |     
-        | /  /  |      |  \  \ |     
-        |/  /   |      |   \  \|     
-       0   /_ _ |      | _ _\   1    
-          0      1    0      1       
+
+       3 _ _ _ 2        3 _ _ _ 2
+        |    /   2    3   \    |
+        |   /  /|      |\  \   |
+        |  /  / |      | \  \  |
+        | /  /  |      |  \  \ |
+        |/  /   |      |   \  \|
+       0   /_ _ |      | _ _\   1
+          0      1    0      1
   */
-  if (!edge->twin) {
+  if (edge->twin < 0) {
     std::cout << "flip edge : no twin edge ! aborted " << std::endl;
     return false;
   }
 
-  HalfEdge* twin = edge->twin;
+  HalfEdge* twin = &_halfEdges[edge->twin];
 
   HalfEdge* edges[6] = {
-    edge, edge->next, edge->next->next,
-    twin, twin->next, twin->next->next
+    edge, &_halfEdges[edge->next], &_halfEdges[edge->prev],
+    twin, &_halfEdges[twin->next], &_halfEdges[twin->prev]
   };
 
   uint32_t vertices[4] = {
@@ -451,12 +495,12 @@ HalfEdgeGraph::FlipEdge(HalfEdge* edge)
 
   edges[0]->vertex = vertices[3];
   edges[3]->vertex = vertices[1];
-  edges[0]->next = edges[2];
-  edges[1]->next = edges[0];
-  edges[2]->next = edges[1];
-  edges[3]->next = edges[5];
-  edges[4]->next = edges[3];
-  edges[5]->next = edges[4];
+  edges[0]->next = _GetEdgeIndex(edges[2]);
+  edges[1]->next = _GetEdgeIndex(edges[0]);
+  edges[2]->next = _GetEdgeIndex(edges[1]);
+  edges[3]->next = _GetEdgeIndex(edges[5]);
+  edges[4]->next = _GetEdgeIndex(edges[3]);
+  edges[5]->next = _GetEdgeIndex(edges[4]);
 
   return true;
 }
@@ -550,10 +594,11 @@ bool
 HalfEdgeGraph::CollapseEdge(HalfEdge* edge)
 {
   
-  HalfEdge* twin = edge->twin;
+  HalfEdge* twin = NULL;
+  if(edge->twin >= 0) twin = &_halfEdges[edge->twin];
 
   size_t p1 = edge->vertex;
-  size_t p2 = edge->next->vertex;
+  size_t p2 = _halfEdges[edge->next].vertex;
 
   bool modified = false;
   REMOVE_EDGE_AVG_T.Start();
@@ -583,11 +628,6 @@ HalfEdgeGraph::CollapseEdge(HalfEdge* edge)
 void 
 HalfEdgeGraph::UpdateTopologyFromEdges(Mesh* mesh)
 {
-  
-  std::cout << "Update Topology From Edges " << std::endl;
-  std::cout << "Num Raw Half Edges : " << _halfEdges.size() << std::endl;
-  std::cout << "Num Used HalfEdges : " << _usedEdges.size() << std::endl;
-
   pxr::VtArray<int> faceCounts;
   pxr::VtArray<int> faceConnects;
   
@@ -611,12 +651,32 @@ HalfEdgeGraph::UpdateTopologyFromEdges(Mesh* mesh)
     faceCounts.push_back(faceVertexCount);
   }
   mesh->SetTopology(faceCounts, faceConnects, false);
-
-  REMOVE_EDGE_AVG_T.Reset();
-  REMOVE_POINT_AVG_T.Reset();
 }
 
+void
+HalfEdgeGraph::UpdateTopologyFromEdges(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects)
+{
+  faceCounts.clear();
+  faceConnects.clear();
+  std::map<HalfEdge*, bool> visited;
+  for (auto& edge : _usedEdges)
+    visited.insert({ edge, false });
 
-
+  for (auto& edge : _usedEdges) {
+    if (visited[edge])continue;
+    visited[edge] = true;
+    const HalfEdge* start = edge;
+    HalfEdge* current = _GetNextEdge(start);
+    faceConnects.push_back(start->vertex);
+    size_t faceVertexCount = 1;
+    while (current != start) {
+      visited[current] = true;
+      faceConnects.push_back(current->vertex);
+      faceVertexCount++;
+      current = _GetNextEdge(current);
+    }
+    faceCounts.push_back(faceVertexCount);
+  }
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE
