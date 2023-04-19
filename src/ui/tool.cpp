@@ -1,3 +1,5 @@
+#include <pxr/usd/usdLux/light.h>
+
 #include "../ui/tool.h"
 #include "../utils/timer.h"
 #include "../geometry/mesh.h"
@@ -149,6 +151,27 @@ bool ToolUI::Draw()
   ImGui::SameLine();
   ImGui::SliderFloat("##factor", &factor, 0.1f, 2.f);
 
+  if (ImGui::Button("Add Light Edge")) {
+  }
+
+
+  if (ImGui::Button("Triangulate Face")) {
+    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    if (usdMesh.GetPrim().IsValid()) {
+      UndoBlock block;
+      Mesh mesh(usdMesh);
+      mesh.TriangulateFace(0);
+    }
+  }
+
+  if (ImGui::Button("Split Edge")) {
+    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    if (usdMesh.GetPrim().IsValid()) {
+      UndoBlock block;
+      Mesh mesh(usdMesh);
+      mesh.SplitEdge(0);
+    }
+  }
   
   
   ImGui::End();

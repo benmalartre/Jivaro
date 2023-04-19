@@ -200,7 +200,7 @@ Mesh::GetTriangleNormal(uint32_t triangleID) const
   return (B ^ C).GetNormalized();
 }
 
-const pxr::VtArray<HalfEdge*>&
+pxr::VtArray<HalfEdge>&
 Mesh::GetEdges()
 {
   return _halfEdges.GetEdges();
@@ -230,8 +230,8 @@ float Mesh::GetAverageEdgeLength()
   float accum = 0;
   size_t cnt = 0;
   for (auto& edge : _halfEdges.GetEdges()) {
-    if (_halfEdges.IsUnique(edge)) {
-      accum += _halfEdges.GetLength(edge, positions);
+    if (_halfEdges.IsUsed(&edge) && _halfEdges.IsUnique(&edge)) {
+      accum += _halfEdges.GetLength(&edge, positions);
       cnt++;
     }
   }
@@ -241,8 +241,57 @@ float Mesh::GetAverageEdgeLength()
 
 void Mesh::ComputeTrianglePairs()
 {
+  size_t numTriangles = _triangles.size();
   _trianglePairs.clear();
-  _halfEdges.ComputeTrianglePairs(this);
+
+  std::vector<bool> used;
+  used.assign(numTriangles, false);
+
+  std::vector<int> edgeTriangleIdx(_halfEdges.GetNumEdges());
+
+  const pxr::GfVec3f* positions = &_positions[0];
+
+  int baseFaceVertexIdx = 0;
+  int triangleIdx = 0;
+  for (int faceVertexCount : _faceVertexCounts)
+  {
+    for (int i = 1; i < faceVertexCount - 1; ++i)
+    {
+      HalfEdge* edge = _halfEdges.GetEdgeFromVertices(
+        _faceVertexIndices[baseFaceVertexIdx + i - 1], 
+        _faceVertexIndices[baseFaceVertexIdx + i]);
+      edgeTriangleIdx[_halfEdges._GetEdgeIndex(edge)] = triangleIdx;
+      triangleIdx++;
+    }
+    baseFaceVertexIdx += faceVertexCount;
+  }
+
+  /*
+  for (auto& edge: _halfEdges) {
+    if (!_halfEdgeUsed[_GetEdgeIndex(&edge)])continue;
+    if (used[edge.triangle])continue;
+    const HalfEdge* longest = GetLongestEdgeInTriangle(&edge, positions);
+    size_t triPairIdx = trianglePairs.size();
+    if (longest->twin > -1) {
+      HalfEdge* twin = &_halfEdges[longest->twin];
+      trianglePairs.push_back(TrianglePair(
+        triPairIdx,
+        &triangles[longest->triangle],
+        &triangles[twin->triangle]
+      ));
+      used[longest->triangle] = true;
+      used[twin->triangle] = true;
+    }
+    else {
+      trianglePairs.push_back(TrianglePair(
+        triPairIdx,
+        &triangles[longest->triangle],
+        NULL
+      ));
+      used[longest->triangle] = true;
+    }
+  }
+  */
   BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
 }
 
@@ -288,15 +337,11 @@ void Mesh::SetTopology(
   if(init)Init();
 }
 
-void Mesh::UpdateTopologyFromEdges()
-{
-  _halfEdges.UpdateTopologyFromEdges(this);
-}
-
 void Mesh::Init()
 {
   size_t numPoints = _positions.size();
-  // build triangles
+
+  // compute triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
 
   // compute normals
@@ -305,7 +350,10 @@ void Mesh::Init()
 
   // compute half-edges
   ComputeHalfEdges();
+
+  // compute bouding box
   ComputeBoundingBox();
+
   // compute neighbors
   //ComputeNeighbors();
 }
@@ -358,6 +406,18 @@ bool Mesh::FlipEdge(HalfEdge* edge)
 
 bool Mesh::SplitEdge(HalfEdge* edge)
 {
+  if (!edge) {
+    bool search = true;
+    while (search)
+      for (auto& hedge : _halfEdges.GetEdges())
+        if (_halfEdges.IsUsed(&hedge) && _halfEdges.IsUnique(&hedge))
+        {
+          edge = &hedge; search = false;
+        }
+  }
+
+  std::cout << "MESH SPLIT EDGE : " << _halfEdges._GetEdgeIndex(edge) << std::endl;
+
   const HalfEdge* next = _halfEdges.GetEdge(edge->next);
   size_t numPoints = GetNumPoints();
   const pxr::GfVec3f p =
@@ -452,10 +512,23 @@ float Mesh::AveragedTriangleArea()
 
 void Mesh::Triangulate()
 {
-  /*
-  _halfEdges.SetAllEdgesLatencyReal();
-  UpdateTopologyFromEdges();
-  */
+}
+
+void Mesh::TriangulateFace(size_t faceIdx)
+{
+  if (_faceVertexCounts[faceIdx] < 4) {
+    std::cerr << "[Mesh] can't triangulate face " << faceIdx << " (" << _faceVertexCounts[faceIdx] << "vertex)" << std::endl;
+    return;
+  }
+  size_t offset = 0;
+  for (size_t i = 0; i < faceIdx; ++i)offset += _faceVertexCounts[i];
+  size_t startIdx = _faceVertexIndices[offset];
+  size_t endIdx = _faceVertexIndices[offset + 1];
+
+  HalfEdge* vertexEdge = _halfEdges.GetEdgeFromVertices(startIdx, endIdx);
+  if (vertexEdge) {
+    _halfEdges._TriangulateFace(vertexEdge);
+  }
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 

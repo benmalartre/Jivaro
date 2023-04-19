@@ -48,7 +48,7 @@ public:
   pxr::GfVec3f GetTriangleVertexNormal(const Triangle* T, uint32_t index) const;    // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;                        // triangle normal
 
-  const pxr::VtArray<HalfEdge*>& GetEdges();
+  pxr::VtArray<HalfEdge>& GetEdges();
   const HalfEdge* GetLongestEdgeInTriangle(const HalfEdge* edge);
   
   pxr::GfVec3f GetPosition(const Location& point) const ;
@@ -71,11 +71,13 @@ public:
 
   void ComputeHalfEdges();
   void ComputeNeighbors();
+  void ComputeTriangles();
   void ComputeTrianglePairs();
 
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
   void Triangulate();
+  void TriangulateFace(size_t faceIdx);
 
   void Init();
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
@@ -96,7 +98,6 @@ public:
   bool SplitEdge(HalfEdge* edge);
   bool CollapseEdge(HalfEdge* edge);
   bool RemovePoint(size_t index);
-  void UpdateTopologyFromEdges();
 
   // Flatten
   void DisconnectEdges(const pxr::VtArray<int>& edges);

@@ -1,6 +1,7 @@
 // HalfEdge
 //----------------------------------------------
 #include "../geometry/halfEdge.h"
+#include "../geometry/triangle.h"
 #include "../geometry/mesh.h"
 
 #include "../utils/timer.h"
@@ -79,48 +80,66 @@ HalfEdgeGraph::GetCapacityEdges() const
   return _halfEdges.size();
 }
 
-size_t 
-HalfEdgeGraph::GetNumEdges() const
-{
-  size_t numEdges = 0;
-  for (auto& usedEdge : _usedEdges)
-    if(usedEdge->twin < 0 || usedEdge->vertex < _halfEdges[usedEdge->next].vertex)
-      numEdges++;
-
-  return numEdges;
-}
-
 HalfEdge*
 HalfEdgeGraph::GetEdge(int index)
 {
   return &_halfEdges[index];
 }
 
-const HalfEdge*
-HalfEdgeGraph::GetEdge(int index) const
+
+HalfEdge*
+HalfEdgeGraph::GetAvailableEdge()
 {
-  return &_halfEdges[index];
+  if (!_availableEdges.size())AllocateEdges(64);
+  HalfEdge* edge = _availableEdges.back();
+  _availableEdges.pop_back();
+  return edge;
 }
 
-const pxr::VtArray<HalfEdge*>& 
+size_t
+HalfEdgeGraph::GetNumEdges() const
+{
+  return _halfEdges.size();
+}
+
+pxr::VtArray<HalfEdge>& 
 HalfEdgeGraph::GetEdges()
 {
-  return _usedEdges;
+  return _halfEdges;
 }
 
-void
-HalfEdgeGraph::SortEdgesByLength(const pxr::GfVec3f* positions)
+HalfEdge* 
+HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end)
 {
-  std::sort(_usedEdges.begin(), _usedEdges.end(),
-    [this, positions](const HalfEdge* a, const HalfEdge* b) {
-    return GetLengthSq(a, positions) < GetLengthSq(b, positions);
-  });
+  HalfEdge* edge = _vertexHalfEdge[start];
+  if (edge) {
+    while (true) {
+      if (_halfEdges[edge->next].vertex == end)return edge;
+      edge = _GetNextAdjacentEdge(edge);
+      if (!edge || edge == _vertexHalfEdge[start])break;
+    }
+  }
+  edge = _vertexHalfEdge[start];
+  if (edge) {
+    while (true) {
+      if (_halfEdges[edge->next].vertex == end)return edge;
+      edge = _GetPreviousAdjacentEdge(edge);
+      if (!edge || edge == _vertexHalfEdge[start])break;
+    }
+  }
+  return NULL;
+}
+
+const HalfEdge*
+HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end) const
+{
+  return GetEdgeFromVertices(start, end);
 }
 
 bool
 HalfEdgeGraph::IsCollapsable(const HalfEdge* edge)
 {
-  if(!IsUnique(edge))return false;
+  const HalfEdge* next = &_halfEdges[edge->next];
   if (edge->twin >= 0) {
     pxr::VtArray<int> edgeNeighbors;
     pxr::VtArray<int> twinNeighbors;
@@ -141,12 +160,6 @@ HalfEdgeGraph::IsCollapsable(const HalfEdge* edge)
 }
 
 bool
-HalfEdgeGraph::IsAvailable(const HalfEdge* edge)
-{
-  return _FindInAvailableEdges(edge);
-}
-
-bool
 HalfEdgeGraph::IsUnique(const HalfEdge* edge)
 {
   if (edge->twin < 0)return true;
@@ -159,17 +172,21 @@ HalfEdgeGraph::IsUsed(const HalfEdge* edge)
   return _halfEdgeUsed[_GetEdgeIndex(edge)];
 }
 
+
 void 
 HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 {
   const size_t numPoints = mesh->GetNumPoints();
   const pxr::VtArray<int>& faceConnects = mesh->GetFaceConnects();
   size_t numHalfEdges = 0;
-  for (const auto& faceVertexCount : mesh->GetFaceCounts())
+  size_t numTriangles = 0;
+  
+  for (const auto& faceVertexCount : mesh->GetFaceCounts()) {
     numHalfEdges += faceVertexCount;
+    numTriangles += faceVertexCount - 2;
+  }
 
   _halfEdges.resize(numHalfEdges);
-  _usedEdges.resize(numHalfEdges);
   _halfEdgeUsed.resize(numHalfEdges);
 
   size_t faceOffsetIdx = 0;
@@ -186,11 +203,13 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
   for (const auto& faceVertexCount: mesh->GetFaceCounts())
   { 
+    size_t numFaceTriangles = faceVertexCount - 2;
     for (size_t faceEdgeIdx = 0; faceEdgeIdx < faceVertexCount; ++faceEdgeIdx) {
       // get vertices
       size_t v0 = faceConnects[faceOffsetIdx + faceEdgeIdx];
       size_t v1 = faceConnects[faceOffsetIdx + ((faceEdgeIdx + 1) % faceVertexCount)];
       if (!_vertexHalfEdge[v0])_vertexHalfEdge[v0] = halfEdge;
+
       size_t last = faceVertexCount - 1;
       halfEdgesMap[v1 | (v0 << 32)] = halfEdge;
       halfEdge->vertex = v0;
@@ -204,24 +223,12 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
         halfEdge->prev = _GetEdgeIndex(halfEdge - 1);
         halfEdge->next = _GetEdgeIndex(halfEdge + 1);
       }
+
       _halfEdgeUsed[faceOffsetIdx + faceEdgeIdx] = true;
-      _usedEdges[faceOffsetIdx + faceEdgeIdx] = halfEdge;
       halfEdge++;
     }
     faceOffsetIdx += faceVertexCount;
   }
-
-  // sort edges by length
-  /*const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-  std::sort(_usedEdges.begin(), _usedEdges.end(), 
-    [positions](HalfEdge* a, HalfEdge* b) {
-      return a->GetLengthSq(positions) < b->GetLengthSq(positions);
-    });
-  
-  std::sort(_usedEdges.begin(), _usedEdges.end(),
-    [](HalfEdge* a, HalfEdge* b) {if (a->twin && a->vertex > a->twin->vertex) {
-                                    return a->twin->vertex < b->vertex;
-                                  }else return a->vertex < b->vertex; });*/
 
   _boundary.resize(numPoints);
   memset(&_boundary[0], false, numPoints * sizeof(bool));
@@ -243,11 +250,10 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
     }
     else {
       _boundary[halfEdge.second->vertex] = true;
+      _boundary[_halfEdges[halfEdge.second->next].vertex] = true;
       ++boundaryCount;
     }
   }
-
-  for (auto& used : _usedEdges)_GetEdgeIndex(used);
 }
 
 
@@ -259,9 +265,21 @@ HalfEdgeGraph::GetVertexNeighbors(const HalfEdge* edge)
 }
 
 size_t 
-HalfEdgeGraph::_GetEdgeIndex(const HalfEdge* edge)
+HalfEdgeGraph::_GetEdgeIndex(const HalfEdge* edge) const
 {
   return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) / sizeof(HalfEdge);
+}
+
+size_t
+HalfEdgeGraph::_GetFaceVerticesCount(const HalfEdge* edge)
+{
+  size_t faceVerticesCount = 1;
+  HalfEdge* current = _GetNextEdge(edge);
+  while (current != edge) {
+    faceVerticesCount++;
+    current = &_halfEdges[current->next];
+  }
+  return faceVerticesCount;
 }
 
 HalfEdge*
@@ -294,16 +312,12 @@ HalfEdgeGraph::_FindInAvailableEdges(const HalfEdge* edge)
 void
 HalfEdgeGraph::_RemoveOneEdge(const HalfEdge* edge, bool* modified)
 {
-  for (size_t currentIdx = 0; currentIdx < _usedEdges.size(); ++currentIdx) {
-    if (_usedEdges[currentIdx] == edge) {
-      _availableEdges.push_back(_usedEdges[currentIdx]);
-      _halfEdgeUsed[_GetEdgeIndex(edge)] = false;
-      _usedEdges[currentIdx] = std::move(_usedEdges.back());
-      _usedEdges.pop_back();
-      *modified = true;
-      break;
-    }
-  }
+  int edgeIdx = _GetEdgeIndex(edge);
+  _availableEdges.push_back(&_halfEdges[edgeIdx]);
+  _halfEdgeUsed[edgeIdx] = false;
+  //_usedEdges[currentIdx] = std::move(_usedEdges.back());
+  //_usedEdges.pop_back();
+  *modified = true;
 }
 
 void
@@ -335,45 +349,10 @@ void
 HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 {
   _vertexHalfEdge.erase(_vertexHalfEdge.begin() + index);
-  for (auto& edge: _usedEdges) {
-    if (edge->vertex == index) edge->vertex = replace;
-    else if (edge->vertex > index) edge->vertex--;
-  }
-}
-
-
-void 
-HalfEdgeGraph::ComputeTrianglePairs(Mesh* mesh)
-{
-  std::vector<bool> used;
-  used.assign(mesh->GetNumTriangles(), false);
-  pxr::VtArray<Triangle>& triangles = mesh->GetTriangles();
-  pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
-  trianglePairs.clear();
-  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-
-  for (auto& edge: _usedEdges) {
-    if (used[GetTriangleIndex(edge)])continue;
-    const HalfEdge* longest = GetLongestEdgeInTriangle(edge, positions);
-    size_t triPairIdx = trianglePairs.size();
-    if (longest->twin > -1) {
-      HalfEdge* twin = &_halfEdges[longest->twin];
-      trianglePairs.push_back(TrianglePair(
-        triPairIdx,
-        &triangles[GetTriangleIndex(longest)],
-        &triangles[GetTriangleIndex(twin)]
-      ));
-      used[GetTriangleIndex(longest)] = true;
-      used[GetTriangleIndex(twin)] = true;
-    }
-    else {
-      trianglePairs.push_back(TrianglePair(
-        triPairIdx,
-        &triangles[GetTriangleIndex(longest)],
-        NULL
-      ));
-      used[GetTriangleIndex(longest)] = true;
-    }
+  for (auto& edge: _halfEdges) {
+    if (!_halfEdgeUsed[_GetEdgeIndex(&edge)])continue;
+    if (edge.vertex == index) edge.vertex = replace;
+    else if (edge.vertex > index) edge.vertex--;
   }
 }
 
@@ -420,6 +399,23 @@ HalfEdgeGraph::_IsTriangle(const HalfEdge* edge)
   return (cnt == 3);
 }
 
+void 
+HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
+{
+  std::cout << "## Triangulate Face with edge " << _GetEdgeIndex(edge) << std::endl;
+  std::cout << "num available edges : " << _availableEdges.size() << std::endl;
+  size_t numFaceVertices = _GetFaceVerticesCount(edge);
+  size_t numTriangles = numFaceVertices - 2;
+  size_t numAvailableEdges = _availableEdges.size();
+
+  std::cout << "num vertices in face : " << numFaceVertices << std::endl;
+
+  size_t numNewEdges = 3 + 2 * (numTriangles - 2);
+  std::cout << "num new edges : " << numNewEdges << std::endl;
+  if (numAvailableEdges < numNewEdges) {
+    AllocateEdges(64);
+  }
+}
 
 bool 
 HalfEdgeGraph::_IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
@@ -456,6 +452,27 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
       neighbors.push_back(_halfEdges[current->prev].vertex);
       current = _GetPreviousAdjacentEdge(current);
     } while (current && (current != edge));
+  }
+}
+
+void
+HalfEdgeGraph::AllocateEdges(size_t num)
+{
+  size_t first = _halfEdges.size();
+  _halfEdges.resize(first + num);
+  _halfEdgeUsed.resize(first + num);
+  size_t availableIdx = _availableEdges.size();
+  _availableEdges.resize(availableIdx + num);
+  for (size_t edgeIdx = first; edgeIdx < (first + num); ++edgeIdx) {
+    HalfEdge* edge = &_halfEdges[edgeIdx];
+    std::cout << "new edge " << _GetEdgeIndex(edge) << ", next : " << edge->next << ", prev : " << edge->prev <<
+      ", twin : " << edge->twin << std::endl;
+    _halfEdgeUsed[edgeIdx] = false;
+    _availableEdges[availableIdx++] = edge;
+  }
+
+  for (auto& availableEdge : _availableEdges) {
+    std::cout << "available edge : " << _GetEdgeIndex(availableEdge) << std::endl;
   }
 }
 
@@ -522,63 +539,73 @@ HalfEdgeGraph::SplitEdge(HalfEdge* edge, size_t newPoint)
         0       1     0      1    
                                   
   */
+  if (!_availableEdges.size()) {
+    AllocateEdges(64);
+  }
+  HalfEdge* twin = NULL;
+  if (edge->twin >= 0)twin = &_halfEdges[edge->twin];
+
+  HalfEdge* inserted = GetAvailableEdge();
+  size_t insertedIdx = _GetEdgeIndex(inserted);
+  HalfEdge* next = &_halfEdges[edge->next];
+  inserted->prev = _GetEdgeIndex(edge);
+  inserted->next = _GetEdgeIndex(next);
+  edge->next = insertedIdx;
+  next->prev = insertedIdx;
+  if (twin) {
+    inserted->twin = edge->twin;
+    edge->twin = _GetEdgeIndex(inserted);
+  }
   /*
   size_t numEdges = _halfEdges.size();
-  if (edge->latency != HalfEdge::REAL)return false;
 
   HalfEdge* twin = edge->twin;
   if(twin) _halfEdges.resize(numEdges + 6);
   else _halfEdges.resize(numEdges + 3);
 
-  HalfEdge* next = _GetNextEdge(edge, HalfEdge::REAL);
-  HalfEdge* previous = _GetPreviousEdge(edge, HalfEdge::REAL);
+  HalfEdge* next = _GetNextEdge(edge);
+  HalfEdge* previous = _GetPreviousEdge(edge);
 
   HalfEdge* halfEdge = _halfEdges[numEdges];
   halfEdge->index = numEdges;
   halfEdge->vertex = newPoint;
   halfEdge->next = next;
-  halfEdge->latency = HalfEdge::REAL;
   HalfEdge* n1 = halfEdge;
   halfEdge++;
 
   halfEdge->index = numEdges + 1;
   halfEdge->vertex = newPoint;
   halfEdge->next = previous;
-  halfEdge->latency = HalfEdge::IMPLICIT;
   HalfEdge* n2 = halfEdge;
   halfEdge++;
 
   halfEdge->index = numEdges + 2;
   halfEdge->vertex = newPoint;
   halfEdge->next = n2;
-  halfEdge->latency = HalfEdge::IMPLICIT;
   HalfEdge* n3 = halfEdge;
 
   next->next = n3;
   edge->next = n1;
   
   if (twin) {
-    HalfEdge* twinNext = _GetNextEdge(twin, HalfEdge::REAL);
-    HalfEdge* twinPrevious = _GetPreviousEdge(twin, HalfEdge::REAL);
+    HalfEdge* twinNext = _GetNextEdge(twin);
+    HalfEdge* twinPrevious = _GetPreviousEdge(twin);
 
     halfEdge->index = numEdges + 3;
     halfEdge->vertex = newPoint;
     halfEdge->next = twinNext;
-    halfEdge->latency = HalfEdge::REAL;
     HalfEdge* n4 = halfEdge;
     halfEdge++;
 
     halfEdge->index = numEdges + 4;
     halfEdge->vertex = newPoint;
     halfEdge->next = twinPrevious;
-    halfEdge->latency = HalfEdge::IMPLICIT;
     HalfEdge* n5 = halfEdge;
     halfEdge++;
 
     halfEdge->index = numEdges + 5;
     halfEdge->vertex = twin->vertex;
     halfEdge->next = n4;
-    halfEdge->latency = HalfEdge::IMPLICIT;
     HalfEdge* n6 = halfEdge;
 
     twinNext->next = n3;
@@ -625,52 +652,24 @@ HalfEdgeGraph::CollapseEdge(HalfEdge* edge)
   return true;
 }
 
-void 
-HalfEdgeGraph::UpdateTopologyFromEdges(Mesh* mesh)
-{
-  pxr::VtArray<int> faceCounts;
-  pxr::VtArray<int> faceConnects;
-  
-  std::map<HalfEdge*, bool> visited;
-  for (auto& edge : _usedEdges) 
-    visited.insert({ edge, false });
-
-  for (auto& edge: _usedEdges) {
-    if (visited[edge])continue;
-    visited[edge] = true;
-    const HalfEdge* start = edge;
-    HalfEdge* current = _GetNextEdge(start);
-    faceConnects.push_back(start->vertex);
-    size_t faceVertexCount = 1;
-    while (current != start) {
-      visited[current] = true;
-      faceConnects.push_back(current->vertex);
-      faceVertexCount++;
-      current = _GetNextEdge(current);
-    }
-    faceCounts.push_back(faceVertexCount);
-  }
-  mesh->SetTopology(faceCounts, faceConnects, false);
-}
 
 void
 HalfEdgeGraph::UpdateTopologyFromEdges(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects)
 {
   faceCounts.clear();
   faceConnects.clear();
-  std::map<HalfEdge*, bool> visited;
-  for (auto& edge : _usedEdges)
-    visited.insert({ edge, false });
+  std::vector<bool> visited(_halfEdges.size(), false);
 
-  for (auto& edge : _usedEdges) {
-    if (visited[edge])continue;
-    visited[edge] = true;
-    const HalfEdge* start = edge;
+  for (auto& edge : _halfEdges) {
+    int edgeIdx = _GetEdgeIndex(&edge);
+    if (!_halfEdgeUsed[edgeIdx] || visited[edgeIdx])continue;
+    visited[edgeIdx] = true;
+    const HalfEdge* start = &edge;
     HalfEdge* current = _GetNextEdge(start);
     faceConnects.push_back(start->vertex);
     size_t faceVertexCount = 1;
     while (current != start) {
-      visited[current] = true;
+      visited[_GetEdgeIndex(current)] = true;
       faceConnects.push_back(current->vertex);
       faceVertexCount++;
       current = _GetNextEdge(current);

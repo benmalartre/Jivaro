@@ -32,16 +32,18 @@ void Tesselator::_ComputeGraph()
 {
   _graph.ComputeGraph(_input);
   for (auto& edge : _graph.GetEdges()) {
-    _Vertex& vertex = _vertices[edge->vertex];
+    HalfEdge* current = &edge;
+    if (!_graph.IsUsed(current) || !_graph.IsUnique(current))continue;
+    _Vertex& vertex = _vertices[edge.vertex];
     vertex.valence++;
-    if (!vertex.edge)vertex.edge = edge;
-    _queue.push(edge);
+    if (!vertex.edge)vertex.edge = current;
+    _queue.push(current);
   }
 }
 
 bool Tesselator::CompareEdgeLengthDivergence(const HalfEdge* lhs, const HalfEdge* rhs)
 {
-  return (_graph.GetLength(lhs, &_positions[0]) - _length) <
+  return (_graph.GetLength(lhs, &_positions[0]) - _length) >
     (_graph.GetLength(rhs, &_positions[0]) - _length);
 }
 
@@ -68,18 +70,17 @@ void Tesselator::_BuildSplitEdgeQueue(float l)
   const float maxL = 4.f / 3.f * l;
   _ClearEdgeQueue();
   for (auto& edge : _graph.GetEdges())
-    if (_graph.GetLength(edge, &_positions[0]) > maxL) _queue.push(edge);
+    if (_graph.IsUsed(&edge) && _graph.IsUnique(&edge) && _graph.GetLength(&edge, &_positions[0]) > maxL) _queue.push(&edge);
 }
 
-void Tesselator::_BuildCollapseEdgeQueue(float l)
+void Tesselator::_BuildCollapseEdgeQueue(float minL)
 {
-  const float minL = 4.f / 5.f * l;
   _ClearEdgeQueue();
   for (auto& edge : _graph.GetEdges()) {
-    if (_graph.IsCollapsable(edge) && (_graph.GetLength(edge, &_positions[0]) < minL))
-      _queue.push(edge);
+    if (_graph.IsUsed(&edge) && _graph.IsUnique(&edge) && _graph.IsCollapsable(&edge) && (_graph.GetLength(&edge, &_positions[0]) < minL)) {
+      _queue.push(&edge);
+    }
   }
-  
 }
 
 void Tesselator::_ClearEdgeQueue()
@@ -89,29 +90,31 @@ void Tesselator::_ClearEdgeQueue()
 
 bool Tesselator::_CollapseEdges()
 {
-  std::cout << "collapse edges ..." << std::endl;
   float collapseLen = 4.f / 5.f * _length;
-
-  _BuildCollapseEdgeQueue(_length);
+  _BuildCollapseEdgeQueue(collapseLen);
   if (!_queue.size())return true;
+
+  std::cout << "queue size : " << _queue.size() << std::endl;
 
   while (!_queue.empty())
   {
     HalfEdge* edge = _queue.top();
-    if (_graph.IsUsed(edge) && _graph.GetLength(edge, &_positions[0]) < collapseLen) {
-      size_t p1 = edge->vertex;
-      size_t p2 = _graph.GetEdge(edge->next)->vertex;
-      if (_graph.CollapseEdge(edge)) {
-        if (p1 > p2) {
-          _positions[p2] = (_positions[p1] + _positions[p2]) * 0.5f;
-          _RemoveVertex(p1);
-        }
-        else {
-          _positions[p1] = (_positions[p1] + _positions[p2]) * 0.5f;
-          _RemoveVertex(p2);
-        }
+    if (!_graph.IsUsed(edge) || _graph.GetLength(edge, &_positions[0]) > collapseLen || !_graph.IsCollapsable(edge)) {
+      _queue.pop(); continue;
+    }
+    size_t p1 = edge->vertex;
+    size_t p2 = _graph.GetEdge(edge->next)->vertex;
+    if (_graph.CollapseEdge(edge)) {
+      if (p1 > p2) {
+        _positions[p2] = (_positions[p1] + _positions[p2]) * 0.5f;
+        _RemoveVertex(p1);
+      }
+      else {
+        _positions[p1] = (_positions[p1] + _positions[p2]) * 0.5f;
+        _RemoveVertex(p2);
       }
     }
+
     _queue.pop();
   }
   return false;
@@ -136,6 +139,7 @@ void Tesselator::Update(float l)
     std::cout << "done ? " << done << std::endl;
   }
  
+  std::cout << "UDPATE TOPOLOGY !!!" << std::endl;
   _graph.UpdateTopologyFromEdges(_faceCounts, _faceConnects);
   
 }

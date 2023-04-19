@@ -6,7 +6,6 @@
 #include <pxr/base/tf/hashMap.h>
 
 #include "../common.h"
-#include "../geometry/triangle.h"
 #include "../acceleration/mortom.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -26,34 +25,31 @@ class HalfEdgeGraph {
 public:
   void ComputeGraph(Mesh* mesh);
   void ComputeNeighbors(Mesh* mesh);
-  void ComputeTrianglePairs(Mesh* mesh);
- 
 
+  void AllocateEdges(size_t num);
   bool FlipEdge(HalfEdge* edge);
   bool SplitEdge(HalfEdge* edge, size_t numPoints);
   bool CollapseEdge(HalfEdge* edge);
   void RemoveEdge(HalfEdge* edge, bool* removed);
   void RemovePoint(size_t index, size_t replace);
-  void UpdateTopologyFromEdges(Mesh* mesh);
   void UpdateTopologyFromEdges(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects);
   bool IsCollapsable(const HalfEdge* edge);
-  bool IsAvailable(const HalfEdge* edge);
   bool IsUnique(const HalfEdge* edge);
   bool IsUsed(const HalfEdge* edge);
 
-  void SortEdgesByLength(const pxr::GfVec3f* positions);
   size_t GetNumEdges() const;
   size_t GetCapacityEdges() const;
   HalfEdge* GetEdge(int index);
-  const HalfEdge* GetEdge(int index) const;
-  const pxr::VtArray<HalfEdge*>& GetEdges();
+  HalfEdge* GetAvailableEdge();
+  pxr::VtArray<HalfEdge>& GetEdges();
+  HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
+  const HalfEdge* GetEdgeFromVertices(size_t start, size_t end) const;
 
   const pxr::VtArray<int>& GetVertexNeighbors(const HalfEdge* edge);
 
   const HalfEdge* GetLongestEdgeInTriangle(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
   float GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
   float GetLengthSq(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
-  inline int GetTriangleIndex(const HalfEdge* edge) const { return 0; };
 
   //HalfEdge* GetLongest(const pxr::GfVec3f* positions);
   /*
@@ -71,17 +67,19 @@ protected:
   HalfEdge* _FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex);
   bool _FindInAvailableEdges(const HalfEdge* edge);
   bool _IsTriangle(const HalfEdge* edge);
+  void _TriangulateFace(const HalfEdge* edge);
   
   bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx);
   void _RemoveOneEdge(const HalfEdge* edge, bool* modified);
   void _ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors);
-  size_t _GetEdgeIndex(const HalfEdge* edge);
+  size_t _GetEdgeIndex(const HalfEdge* edge) const;
+  size_t _GetFaceVerticesCount(const HalfEdge* edge);
+
 
 private:
   // half-edge data
   pxr::VtArray<bool>                   _halfEdgeUsed;
   pxr::VtArray<HalfEdge>               _halfEdges;
-  pxr::VtArray<HalfEdge*>              _usedEdges;
   pxr::VtArray<HalfEdge*>              _availableEdges;
 
   // vertex data
