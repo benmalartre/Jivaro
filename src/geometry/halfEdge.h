@@ -2,6 +2,7 @@
 #define JVR_GEOMETRY_HALFEDGE_H
 
 #include <queue>
+#include <iterator>
 #include <pxr/base/vt/array.h>
 #include <pxr/base/tf/hashMap.h>
 
@@ -23,6 +24,15 @@ struct HalfEdge
 
 class HalfEdgeGraph {
 public:
+ 
+  struct ItUniqueEdge {
+    HalfEdgeGraph*      edges;
+    int                 index;
+    
+    ItUniqueEdge(HalfEdgeGraph* graph);
+    HalfEdge* Next();
+  };
+
   void ComputeGraph(Mesh* mesh);
   void ComputeNeighbors(Mesh* mesh);
 
@@ -34,11 +44,10 @@ public:
   void RemovePoint(size_t index, size_t replace);
   void UpdateTopologyFromEdges(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects);
   bool IsCollapsable(const HalfEdge* edge);
-  bool IsUnique(const HalfEdge* edge);
-  bool IsUsed(const HalfEdge* edge);
+  bool IsUnique(const HalfEdge* edge) const;
+  bool IsUsed(const HalfEdge* edge) const;
 
   size_t GetNumEdges() const;
-  size_t GetCapacityEdges() const;
   HalfEdge* GetEdge(int index);
   HalfEdge* GetAvailableEdge();
   pxr::VtArray<HalfEdge>& GetEdges();

@@ -200,7 +200,7 @@ Mesh::GetTriangleNormal(uint32_t triangleID) const
   return (B ^ C).GetNormalized();
 }
 
-pxr::VtArray<HalfEdge>&
+const pxr::VtArray<HalfEdge>&
 Mesh::GetEdges()
 {
   return _halfEdges.GetEdges();
@@ -229,11 +229,12 @@ float Mesh::GetAverageEdgeLength()
   const pxr::GfVec3f* positions = &_positions[0];
   float accum = 0;
   size_t cnt = 0;
-  for (auto& edge : _halfEdges.GetEdges()) {
-    if (_halfEdges.IsUsed(&edge) && _halfEdges.IsUnique(&edge)) {
-      accum += _halfEdges.GetLength(&edge, positions);
-      cnt++;
-    }
+  HalfEdgeGraph::ItUniqueEdge it(&_halfEdges);
+  HalfEdge* edge = it.Next();
+  while(edge) {
+    accum += _halfEdges.GetLength(edge, positions);
+    cnt++;
+    edge = it.Next();
   }
   return cnt > 0 ? accum / (float)cnt : 0.f;
 }
@@ -406,15 +407,7 @@ bool Mesh::FlipEdge(HalfEdge* edge)
 
 bool Mesh::SplitEdge(HalfEdge* edge)
 {
-  if (!edge) {
-    bool search = true;
-    while (search)
-      for (auto& hedge : _halfEdges.GetEdges())
-        if (_halfEdges.IsUsed(&hedge) && _halfEdges.IsUnique(&hedge))
-        {
-          edge = &hedge; search = false;
-        }
-  }
+  if (!edge) edge = _halfEdges.GetEdge(0);
 
   std::cout << "MESH SPLIT EDGE : " << _halfEdges._GetEdgeIndex(edge) << std::endl;
 

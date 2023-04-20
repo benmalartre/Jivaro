@@ -31,13 +31,14 @@ void Tesselator::_RemoveVertex(size_t index)
 void Tesselator::_ComputeGraph()
 {
   _graph.ComputeGraph(_input);
-  for (auto& edge : _graph.GetEdges()) {
-    HalfEdge* current = &edge;
-    if (!_graph.IsUsed(current) || !_graph.IsUnique(current))continue;
-    _Vertex& vertex = _vertices[edge.vertex];
+  HalfEdgeGraph::ItUniqueEdge it(&_graph);
+  HalfEdge* edge = it.Next();
+  while(edge) {
+    _Vertex& vertex = _vertices[edge->vertex];
     vertex.valence++;
-    if (!vertex.edge)vertex.edge = current;
-    _queue.push(current);
+    if (!vertex.edge)vertex.edge = edge;
+    _queue.push(edge);
+    edge = it.Next();
   }
 }
 
@@ -69,17 +70,25 @@ void Tesselator::_BuildSplitEdgeQueue(float l)
 {
   const float maxL = 4.f / 3.f * l;
   _ClearEdgeQueue();
-  for (auto& edge : _graph.GetEdges())
-    if (_graph.IsUsed(&edge) && _graph.IsUnique(&edge) && _graph.GetLength(&edge, &_positions[0]) > maxL) _queue.push(&edge);
+  HalfEdgeGraph::ItUniqueEdge it(&_graph);
+  HalfEdge* edge = it.Next();
+  while (edge) {
+    if (_graph.GetLength(edge, &_positions[0]) > maxL) _queue.push(edge);
+    edge = it.Next();
+  }
 }
 
 void Tesselator::_BuildCollapseEdgeQueue(float minL)
 {
   _ClearEdgeQueue();
-  for (auto& edge : _graph.GetEdges()) {
-    if (_graph.IsUsed(&edge) && _graph.IsUnique(&edge) && _graph.IsCollapsable(&edge) && (_graph.GetLength(&edge, &_positions[0]) < minL)) {
-      _queue.push(&edge);
+  HalfEdgeGraph::ItUniqueEdge it(&_graph);
+  HalfEdge* edge = it.Next();
+  std::cout << "build collapse edge queue : " << edge << std::endl;
+  while (edge) {
+    if (_graph.IsCollapsable(edge) && (_graph.GetLength(edge, &_positions[0]) < minL)) {
+      _queue.push(edge);
     }
+    edge = it.Next();
   }
 }
 

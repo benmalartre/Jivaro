@@ -38,14 +38,24 @@ struct _T {
 static _T REMOVE_EDGE_AVG_T = { 0,0};
 static _T REMOVE_POINT_AVG_T = { 0,0 };
 
-/*
-// Using a custom function object to compare elements.
-struct
+
+HalfEdgeGraph::ItUniqueEdge::ItUniqueEdge(HalfEdgeGraph* graph)
 {
-  bool operator() (const int l, const int r) const { return l > r; }
-} customLess;
-std::priority_queue minq3(data.begin(), data.end(), customLess);
-*/
+  edges = graph;
+  index = -1;
+}
+
+HalfEdge* HalfEdgeGraph::ItUniqueEdge::Next()
+{
+  index++;
+  while (true) {
+    if (index >= edges->_halfEdges.size())return NULL;
+    HalfEdge* edge = &edges->_halfEdges[index];
+    if (!edges->IsUsed(edge) || !edges->IsUnique(edge))
+      index++;
+    else return edge;
+  }
+}
 
 const HalfEdge*
 HalfEdgeGraph::GetLongestEdgeInTriangle(const HalfEdge* edge, const pxr::GfVec3f* positions) const
@@ -74,12 +84,6 @@ HalfEdgeGraph::GetLengthSq(const HalfEdge* edge, const pxr::GfVec3f* positions) 
   return (positions[next->vertex] - positions[edge->vertex]).GetLengthSq();
 }
 
-size_t 
-HalfEdgeGraph::GetCapacityEdges() const
-{
-  return _halfEdges.size();
-}
-
 HalfEdge*
 HalfEdgeGraph::GetEdge(int index)
 {
@@ -99,7 +103,12 @@ HalfEdgeGraph::GetAvailableEdge()
 size_t
 HalfEdgeGraph::GetNumEdges() const
 {
-  return _halfEdges.size();
+  size_t numEdges = 0;
+  for (auto& edge : _halfEdges) {
+    size_t edgeIdx = _GetEdgeIndex(&edge);
+    if (_halfEdgeUsed[edgeIdx] && IsUnique(&edge))numEdges++;
+  }
+  return numEdges;
 }
 
 pxr::VtArray<HalfEdge>& 
@@ -160,14 +169,14 @@ HalfEdgeGraph::IsCollapsable(const HalfEdge* edge)
 }
 
 bool
-HalfEdgeGraph::IsUnique(const HalfEdge* edge)
+HalfEdgeGraph::IsUnique(const HalfEdge* edge) const
 {
   if (edge->twin < 0)return true;
   else return edge->vertex < _halfEdges[edge->next].vertex;
 }
 
 bool
-HalfEdgeGraph::IsUsed(const HalfEdge* edge)
+HalfEdgeGraph::IsUsed(const HalfEdge* edge) const
 {
   return _halfEdgeUsed[_GetEdgeIndex(edge)];
 }
@@ -274,7 +283,7 @@ size_t
 HalfEdgeGraph::_GetFaceVerticesCount(const HalfEdge* edge)
 {
   size_t faceVerticesCount = 1;
-  HalfEdge* current = _GetNextEdge(edge);
+  const HalfEdge* current = _GetNextEdge(edge);
   while (current != edge) {
     faceVerticesCount++;
     current = &_halfEdges[current->next];
@@ -391,7 +400,7 @@ HalfEdgeGraph::_IsTriangle(const HalfEdge* edge)
 {
   int vertex = edge->vertex;
   int cnt = 1;
-  HalfEdge* current = &_halfEdges[edge->next];
+  const HalfEdge* current = &_halfEdges[edge->next];
   while (current->vertex != vertex) {
     cnt++;
     current = &_halfEdges[current->next];
@@ -402,16 +411,11 @@ HalfEdgeGraph::_IsTriangle(const HalfEdge* edge)
 void 
 HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
 {
-  std::cout << "## Triangulate Face with edge " << _GetEdgeIndex(edge) << std::endl;
-  std::cout << "num available edges : " << _availableEdges.size() << std::endl;
   size_t numFaceVertices = _GetFaceVerticesCount(edge);
   size_t numTriangles = numFaceVertices - 2;
   size_t numAvailableEdges = _availableEdges.size();
 
-  std::cout << "num vertices in face : " << numFaceVertices << std::endl;
-
   size_t numNewEdges = 3 + 2 * (numTriangles - 2);
-  std::cout << "num new edges : " << numNewEdges << std::endl;
   if (numAvailableEdges < numNewEdges) {
     AllocateEdges(64);
   }

@@ -48,7 +48,7 @@ public:
   pxr::GfVec3f GetTriangleVertexNormal(const Triangle* T, uint32_t index) const;    // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;                        // triangle normal
 
-  pxr::VtArray<HalfEdge>& GetEdges();
+  const pxr::VtArray<HalfEdge>& GetEdges();
   const HalfEdge* GetLongestEdgeInTriangle(const HalfEdge* edge);
   
   pxr::GfVec3f GetPosition(const Location& point) const ;
