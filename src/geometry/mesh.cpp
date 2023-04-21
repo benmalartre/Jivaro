@@ -355,6 +355,15 @@ Mesh::GetTrianglePairs()
 }
 
 
+const pxr::VtArray<pxr::VtArray<int>>& 
+Mesh::GetNeighbors()
+{
+  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
+    _halfEdges.ComputeNeighbors(this);
+  }
+  return _halfEdges.GetNeighbors();
+}
+
 void Mesh::ComputeNeighbors()
 {
   _halfEdges.ComputeNeighbors(this);

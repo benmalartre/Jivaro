@@ -275,13 +275,16 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
     }
   }
 }
-
+const pxr::VtArray<pxr::VtArray<int>>&
+HalfEdgeGraph::GetNeighbors()
+{
+  return _neighbors;
+}
 
 const pxr::VtArray<int>&
 HalfEdgeGraph::GetVertexNeighbors(const HalfEdge* edge)
 {
   return _neighbors[edge->vertex];
-
 }
 
 size_t 

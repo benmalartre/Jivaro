@@ -56,6 +56,7 @@ public:
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
   const HalfEdge* GetEdgeFromVertices(size_t start, size_t end) const;
 
+  const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
   const pxr::VtArray<int>& GetVertexNeighbors(const HalfEdge* edge);
 
   size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions) const;

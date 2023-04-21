@@ -51,6 +51,7 @@ public:
   const pxr::VtArray<HalfEdge>& GetEdges();
   size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices);
 
+  const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
   void ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors);
   
   pxr::GfVec3f GetPosition(const Location& point) const ;

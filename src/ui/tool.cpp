@@ -177,29 +177,28 @@ static void _Voxelize(float radius)
 
 }
 
-static void _Smooth(int smoothIterations, bool parallel)
+static void _Smooth(int smoothIterations)
 {
   pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
     Mesh mesh(usdMesh);
     size_t numPoints = mesh.GetNumPoints();
-    Smooth<pxr::GfVec3f> smooth(numPoints, pxr::VtFloatArray());
     const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
-    pxr::VtArray<int> neighbors;
+    Smooth<pxr::GfVec3f> smooth(numPoints, pxr::VtFloatArray());
+    const pxr::VtArray<pxr::VtArray<int>>& neighbors = mesh.GetNeighbors();
 
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
       smooth.SetDatas(pointIdx, positions[pointIdx]);
-      mesh.ComputeNeighbors(pointIdx, neighbors);
-      smooth.SetNeighbors(pointIdx, neighbors.size(), &neighbors[0]);
+      smooth.SetNeighbors(pointIdx, neighbors[pointIdx].size(), &neighbors[pointIdx][0]);
+
     }
 
     smooth.Compute(smoothIterations);
 
     pxr::VtArray<GfVec3f> smoothed(numPoints);
-    for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    for(size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx)
       smoothed[pointIdx] = smooth.GetDatas(pointIdx);
-    }
 
     _SetMesh(usdMesh, smoothed, mesh.GetFaceCounts(), mesh.GetFaceConnects());
   }
@@ -335,10 +334,7 @@ bool ToolUI::Draw()
 
   static int smoothIteration = 32;
   if (ImGui::Button("Smooth")) {
-    _Smooth(smoothIteration, false);
-  }ImGui::SameLine();
-  if (ImGui::Button("Smooth Parallel")) {
-    _Smooth(smoothIteration, true);
+    _Smooth(smoothIteration);
   }ImGui::SameLine();
   ImGui::InputInt("##Iterations", &smoothIteration);
   

@@ -18,7 +18,7 @@ class Smooth
     Smooth(size_t numPoints, pxr::VtArray<float>& weights);
     ~Smooth();
     size_t GetNumPoints(){return _points.size();};
-    void SetNeighbors(size_t pointIndex, size_t numNeighbors, int* neighbors);
+    void SetNeighbors(size_t pointIndex, size_t numNeighbors, const int* neighbors);
     void SetDatas(size_t pointIndex, const T& data);
     const T& GetDatas(size_t pointIndex);
     void Compute(size_t numIterations);
@@ -36,7 +36,6 @@ private:
   std::vector<_Point>         _points;
   std::vector<float>          _weights;
   bool                        _flip;
-  size_t                      _numPoints;
 
 };
 
@@ -49,20 +48,20 @@ Smooth<T>::~Smooth()
 template <typename T>
 Smooth<T>::Smooth(size_t numPoints, pxr::VtArray<float>& weights)
 {
-  _numPoints = numPoints;
-  _weights.resize(_numPoints);
-  if (weights.size() == _numPoints) {
-    memcpy((void*)&_weights[0], (void*)&weights[0], _numPoints * sizeof(float));
+
+  _weights.resize(numPoints);
+  if (weights.size() == numPoints) {
+    memcpy((void*)&_weights[0], (void*)&weights[0], numPoints * sizeof(float));
   }
   else {
-    for (size_t pointIdx = 0; pointIdx < _numPoints; ++pointIdx)
+    for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx)
       _weights[pointIdx] = 1.f;
   }
   _points.resize(numPoints);
 }
 
 template <typename T>
-void Smooth<T>::SetNeighbors(size_t pointIndex, size_t numNeighbors, int* neighbors)
+void Smooth<T>::SetNeighbors(size_t pointIndex, size_t numNeighbors, const int* neighbors)
 {
   _points[pointIndex].neighbors.resize(numNeighbors);
   for (size_t iii = 0; iii < numNeighbors; ++iii)
