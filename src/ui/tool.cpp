@@ -170,6 +170,7 @@ bool ToolUI::Draw()
       UndoBlock block;
       Mesh mesh(usdMesh);
       mesh.SplitEdge(0);
+      _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }
   }
   

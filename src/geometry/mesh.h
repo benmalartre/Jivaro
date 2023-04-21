@@ -77,7 +77,7 @@ public:
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
   void Triangulate();
-  void TriangulateFace(size_t faceIdx);
+  void TriangulateFace(const HalfEdge* edge);
 
   void Init();
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);

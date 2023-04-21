@@ -89,10 +89,10 @@ private:
   // half-edge data
   pxr::VtArray<bool>                   _halfEdgeUsed;
   pxr::VtArray<HalfEdge>               _halfEdges;
-  pxr::VtArray<HalfEdge*>              _availableEdges;
+  std::queue<int>                      _availableEdges;
 
   // vertex data
-  pxr::VtArray<HalfEdge*>              _vertexHalfEdge;
+  pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<bool>                   _boundary;
   pxr::VtArray<int>                    _shell;
   pxr::VtArray< pxr::VtArray<int>>     _neighbors;

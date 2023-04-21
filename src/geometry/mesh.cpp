@@ -409,7 +409,7 @@ bool Mesh::SplitEdge(HalfEdge* edge)
 {
   if (!edge) edge = _halfEdges.GetEdge(0);
 
-  std::cout << "MESH SPLIT EDGE : " << _halfEdges._GetEdgeIndex(edge) << std::endl;
+  size_t edgeIdx = _halfEdges._GetEdgeIndex(edge);
 
   const HalfEdge* next = _halfEdges.GetEdge(edge->next);
   size_t numPoints = GetNumPoints();
@@ -417,7 +417,15 @@ bool Mesh::SplitEdge(HalfEdge* edge)
     (_positions[edge->vertex] + _positions[next->vertex]) * 0.5f;
 
   AddPoint(p);
-  return _halfEdges.SplitEdge(edge, numPoints);
+  
+  if (_halfEdges.SplitEdge(edge, numPoints)) {
+    // reallocation mess pointer retrieve edge
+    edge = _halfEdges.GetEdge(edgeIdx);
+    TriangulateFace(_halfEdges.GetEdge(edge->next));
+    _halfEdges.UpdateTopologyFromEdges(_faceVertexCounts, _faceVertexIndices);
+    return true;
+  }
+  return false;
 }
 
 
@@ -505,23 +513,25 @@ float Mesh::AveragedTriangleArea()
 
 void Mesh::Triangulate()
 {
+  size_t numTriangles = _triangles.size();
+  pxr::VtArray<int> faceVertexCount(numTriangles, 3);
+  pxr::VtArray<int> faceVertexConnect(numTriangles * 3);
+  for (size_t t = 0; t < numTriangles; ++t) {
+    memcpy(&faceVertexConnect[t * 3], &_triangles[t].vertices[0], sizeof(pxr::GfVec3i));
+  }
+  SetTopology(faceVertexCount, faceVertexConnect);
 }
 
-void Mesh::TriangulateFace(size_t faceIdx)
+void Mesh::TriangulateFace(const HalfEdge* edge)
 {
-  if (_faceVertexCounts[faceIdx] < 4) {
-    std::cerr << "[Mesh] can't triangulate face " << faceIdx << " (" << _faceVertexCounts[faceIdx] << "vertex)" << std::endl;
+  size_t numFaceVertices = _halfEdges._GetFaceVerticesCount(edge);
+  std::cout << "triangulate face with " << numFaceVertices << " vertices " << std::endl;
+  if (numFaceVertices < 4) {
+    std::cerr << "[Mesh] can't triangulate face (" << numFaceVertices << "vertex)" << std::endl;
     return;
   }
-  size_t offset = 0;
-  for (size_t i = 0; i < faceIdx; ++i)offset += _faceVertexCounts[i];
-  size_t startIdx = _faceVertexIndices[offset];
-  size_t endIdx = _faceVertexIndices[offset + 1];
 
-  HalfEdge* vertexEdge = _halfEdges.GetEdgeFromVertices(startIdx, endIdx);
-  if (vertexEdge) {
-    _halfEdges._TriangulateFace(vertexEdge);
-  }
+  _halfEdges._TriangulateFace(edge);
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 

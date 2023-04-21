@@ -140,15 +140,12 @@ void Tesselator::Update(float l)
 {
   _length = l;
 
- 
-  std::cout << "num collapsable edges : " << _queue.size() << std::endl;
+
   bool done = false;
   while (!done) {
     done = _CollapseEdges();
-    std::cout << "done ? " << done << std::endl;
   }
  
-  std::cout << "UDPATE TOPOLOGY !!!" << std::endl;
   _graph.UpdateTopologyFromEdges(_faceCounts, _faceConnects);
   
 }
