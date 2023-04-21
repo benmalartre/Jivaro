@@ -47,6 +47,7 @@ public:
   bool IsUnique(const HalfEdge* edge) const;
   bool IsUsed(const HalfEdge* edge) const;
 
+  size_t GetNumRawEdges() const;
   size_t GetNumEdges() const;
   HalfEdge* GetEdge(int index);
   HalfEdge* GetAvailableEdge();
@@ -56,7 +57,7 @@ public:
 
   const pxr::VtArray<int>& GetVertexNeighbors(const HalfEdge* edge);
 
-  const HalfEdge* GetLongestEdgeInTriangle(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
+  size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions) const;
   float GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
   float GetLengthSq(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
 
@@ -74,7 +75,7 @@ protected:
   HalfEdge* _GetNextEdge(const HalfEdge* edge);
   HalfEdge* _GetPreviousEdge(const HalfEdge* edge);
   HalfEdge* _FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex);
-  bool _IsTriangle(const HalfEdge* edge);
+  bool _IsTriangle(const HalfEdge* edge) const;
   void _TriangulateFace(const HalfEdge* edge);
   
   bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx);

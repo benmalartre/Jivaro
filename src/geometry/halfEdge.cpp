@@ -57,17 +57,15 @@ HalfEdge* HalfEdgeGraph::ItUniqueEdge::Next()
   }
 }
 
-const HalfEdge*
-HalfEdgeGraph::GetLongestEdgeInTriangle(const HalfEdge* edge, const pxr::GfVec3f* positions) const
+size_t
+HalfEdgeGraph::GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions) const
 {
-  const HalfEdge* next = &_halfEdges[edge->next];
-  const HalfEdge* prev = &_halfEdges[edge->prev];
-  const float edge0 = (positions[next->vertex] - positions[edge->vertex]).GetLength();
-  const float edge1 = (positions[prev->vertex] - positions[next->vertex]).GetLength();
-  const float edge2 = (positions[edge->vertex] - positions[prev->vertex]).GetLength();
-  if (edge0 > edge1 && edge0 > edge2)return edge;
-  else if (edge1 > edge0 && edge1 > edge2)return next;
-  else return prev;
+  const float edge0 = (positions[vertices[1]] - positions[vertices[0]]).GetLength();
+  const float edge1 = (positions[vertices[2]] - positions[vertices[1]]).GetLength();
+  const float edge2 = (positions[vertices[0]] - positions[vertices[2]]).GetLength();
+  if (edge0 > edge1 && edge0 > edge2)return 0;
+  else if (edge1 > edge0 && edge1 > edge2)return 1;
+  else return 2;
 }
 
 float
@@ -99,6 +97,12 @@ HalfEdgeGraph::GetAvailableEdge()
   _availableEdges.pop();
   _halfEdgeUsed[_GetEdgeIndex(edge)] = true;
   return edge;
+}
+
+size_t
+HalfEdgeGraph::GetNumRawEdges() const
+{
+  return _halfEdges.size();
 }
 
 size_t
@@ -388,7 +392,7 @@ HalfEdgeGraph::_GetPreviousEdge(const HalfEdge* edge)
 }
 
 bool
-HalfEdgeGraph::_IsTriangle(const HalfEdge* edge)
+HalfEdgeGraph::_IsTriangle(const HalfEdge* edge) const
 {
   int vertex = edge->vertex;
   int cnt = 1;

@@ -13,13 +13,15 @@
 #include "../geometry/mesh.h"
 #include "../geometry/utils.h"
 
+#include "../utils/timer.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const HalfEdge* 
-Mesh::GetLongestEdgeInTriangle(const HalfEdge* edge)
+size_t
+Mesh::GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices)
 {
-  return _halfEdges.GetLongestEdgeInTriangle(edge, &_positions[0]);
+  return _halfEdges.GetLongestEdgeInTriangle(vertices, &_positions[0]);
 }
 
 Mesh::Mesh()
@@ -240,15 +242,32 @@ float Mesh::GetAverageEdgeLength()
 }
 
 
+static int _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx, size_t polygonNumEdges, size_t triangleIdx)
+{
+  if (polygonNumEdges < 4)return -1;
+  if (polygonEdgeIdx == 0) {
+    if (triangleEdgeIdx == 2)return triangleIdx + 1;
+    else return -1;
+  } else if (polygonEdgeIdx == polygonNumEdges - 1) {
+    if (triangleEdgeIdx == 0)return triangleIdx - 1;
+    else return -1;
+  } else {
+    if (triangleEdgeIdx == 0)return triangleIdx - 1;
+    else if (triangleEdgeIdx == 2)return triangleIdx + 1;
+    else return -1;
+  }
+}
+
 void Mesh::ComputeTrianglePairs()
 {
   size_t numTriangles = _triangles.size();
+  uint64_t T = CurrentTime();
   _trianglePairs.clear();
 
   std::vector<bool> used;
   used.assign(numTriangles, false);
 
-  std::vector<int> edgeTriangleIdx(_halfEdges.GetNumEdges());
+  std::vector<std::pair<int, int>> edgeTriangleIdx(_halfEdges.GetNumRawEdges());
 
   const pxr::GfVec3f* positions = &_positions[0];
 
@@ -261,38 +280,72 @@ void Mesh::ComputeTrianglePairs()
       HalfEdge* edge = _halfEdges.GetEdgeFromVertices(
         _faceVertexIndices[baseFaceVertexIdx + i - 1], 
         _faceVertexIndices[baseFaceVertexIdx + i]);
-      edgeTriangleIdx[_halfEdges._GetEdgeIndex(edge)] = triangleIdx;
+      size_t edgeIndex = _halfEdges._GetEdgeIndex(edge);
+    
+      size_t longestEdgeIdx = GetLongestEdgeInTriangle(_triangles[triangleIdx].vertices);
+      edgeTriangleIdx[edgeIndex] = {
+        triangleIdx, 
+        _TwinTriangleIndex(i, longestEdgeIdx, faceVertexCount, triangleIdx)
+      };
+      if (i == 1) {
+        edgeTriangleIdx[edge->prev] = edgeTriangleIdx[edgeIndex];
+      }
+      else if (i == faceVertexCount - 2) {
+        edgeTriangleIdx[edge->next] = edgeTriangleIdx[edgeIndex];
+      }
+
       triangleIdx++;
     }
+
     baseFaceVertexIdx += faceVertexCount;
   }
 
-  /*
-  for (auto& edge: _halfEdges) {
-    if (!_halfEdgeUsed[_GetEdgeIndex(&edge)])continue;
-    if (used[edge.triangle])continue;
-    const HalfEdge* longest = GetLongestEdgeInTriangle(&edge, positions);
-    size_t triPairIdx = trianglePairs.size();
-    if (longest->twin > -1) {
-      HalfEdge* twin = &_halfEdges[longest->twin];
-      trianglePairs.push_back(TrianglePair(
-        triPairIdx,
-        &triangles[longest->triangle],
-        &triangles[twin->triangle]
-      ));
-      used[longest->triangle] = true;
-      used[twin->triangle] = true;
+  HalfEdgeGraph::ItUniqueEdge it(&_halfEdges);
+  HalfEdge* edge = it.Next();
+  uint32_t triPairIdx = 0;
+  size_t numMalformedTrianglePair = 0;
+  while (edge) {
+    size_t edgeIdx = _halfEdges._GetEdgeIndex(edge);
+    if (used[edgeTriangleIdx[edgeIdx].first]) {
+      edge = it.Next();  continue;
+    }
+
+    if (edgeTriangleIdx[edgeIdx].second < 0) {
+      if (edge->twin >= 0) {
+        _trianglePairs.push_back({
+            triPairIdx++,
+            &_triangles[edgeTriangleIdx[edgeIdx].first],
+            &_triangles[edgeTriangleIdx[edge->twin].first]
+          });
+        used[edgeTriangleIdx[edgeIdx].first] = true;
+        used[edgeTriangleIdx[edge->twin].first] = true;
+      }
+      else {
+        numMalformedTrianglePair++;
+        _trianglePairs.push_back({
+            triPairIdx++,
+            &_triangles[edgeTriangleIdx[edgeIdx].first]
+          });
+        used[edgeTriangleIdx[edgeIdx].first] = true;
+      }
     }
     else {
-      trianglePairs.push_back(TrianglePair(
-        triPairIdx,
-        &triangles[longest->triangle],
-        NULL
-      ));
-      used[longest->triangle] = true;
+      _trianglePairs.push_back({ 
+          triPairIdx++, 
+          &_triangles[edgeTriangleIdx[edgeIdx].first],
+          &_triangles[edgeTriangleIdx[edgeIdx].second] 
+        });
+      used[edgeTriangleIdx[edgeIdx].first] = true;
+      used[edgeTriangleIdx[edgeIdx].second] = true;
     }
+    
+    edge = it.Next();
   }
-  */
+
+  std::cout << "build trinagle pairs for " << _triangles.size() << " took " << ((CurrentTime() - T) * 1e-9) << " seconds " << std::endl;
+  std::cout << "num triangles : " << _triangles.size() << std::endl;
+  std::cout << "num triangle pairs : " << _trianglePairs.size() << std::endl;
+
   BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
 }
 
