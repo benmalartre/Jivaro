@@ -59,9 +59,9 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
       float const* pos = verts[firstVert + vert].GetPosition();
 
       verts[firstVert + vert].SetPosition(
-        pos[0] + RANDOM_LO_HI(-variance, variance), 
-        pos[1] + RANDOM_LO_HI(-variance, variance), 
-        pos[2] + RANDOM_LO_HI(-variance, variance)
+        pos[0] /*+ RANDOM_LO_HI(-variance, variance)*/, 
+        pos[1] /*+ RANDOM_LO_HI(-variance, variance)*/, 
+        pos[2] /*+ RANDOM_LO_HI(-variance, variance)*/
       );
     }
     firstVert += numVerts;

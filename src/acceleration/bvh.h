@@ -103,6 +103,7 @@ public:
   }
 
   Cell* GetRoot() { return &_root; };
+  const Cell* GetRoot() const { return &_root; };
   int GetGeometryIndex(Geometry* geom) const;
 
   

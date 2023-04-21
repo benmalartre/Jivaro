@@ -240,7 +240,7 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
           hit->Set(leftHit); return true;
         }
         else {
-          hit->Set(rightHit);; return true;
+          hit->Set(rightHit); return true;
         }
       }
       else if (leftHit.HasHit()) {

@@ -76,7 +76,7 @@ void Voxels::Trace(short axis)
   const pxr::GfVec3f* points = _geometry->GetPositionsCPtr();
 
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
-  const float eps = 0.00001f * size[axis];
+  const float eps = 0.000001f * size[axis];
 
   for (uint32_t x = 0; x < _resolution[(axis + 1) % 3]; ++x)
   {
@@ -89,7 +89,7 @@ void Voxels::Trace(short axis)
 
       pxr::GfVec3f rayStart = minExtents;
       rayStart[(axis + 1) % 3] += (x + 0.5f) * _radius;
-      rayStart[(axis + 2) % 3] += (y +0.5f) * _radius;
+      rayStart[(axis + 2) % 3] += (y + 0.5f) * _radius;
 
       while (true)
       {

@@ -52,6 +52,7 @@ public:
   HalfEdge* GetEdge(int index);
   HalfEdge* GetAvailableEdge();
   pxr::VtArray<HalfEdge>& GetEdges();
+  HalfEdge* GetEdgeFromVertex(size_t vertex);
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
   const HalfEdge* GetEdgeFromVertices(size_t start, size_t end) const;
 

@@ -299,42 +299,10 @@ bool
 TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3d baryCoords;
-  double distance;
-  bool frontFacing;
-  if (left) {
-    const pxr::GfVec3i& vertices = left->vertices;
-    if (ray.Intersect(
-      points[vertices[0]],
-      points[vertices[1]],
-      points[vertices[2]],
-      &distance, &baryCoords, &frontFacing, maxDistance)) {
-      if (distance < *minDistance) {
-        *minDistance = distance;
-        hit->SetElementIndex(left->id);
-        hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
-        hit->SetT(distance);
-        return true;
-      }
-    }
-  } 
-  if (right) {
-    const pxr::GfVec3i& vertices = right->vertices;
-    if (ray.Intersect(
-      points[vertices[0]],
-      points[vertices[1]],
-      points[vertices[2]],
-      &distance, &baryCoords, &frontFacing, maxDistance)) {
-      if (distance < *minDistance) {
-        *minDistance = distance;
-        hit->SetElementIndex(right->id);
-        hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
-        hit->SetT(distance);
-        return true;
-      }
-    }
-  }
-  return false;
+  bool hitSometing = false;
+  if (left && left->Raycast(points, ray, hit, maxDistance, minDistance))hitSometing = true;
+  if (right && right->Raycast(points, ray, hit, maxDistance, minDistance))hitSometing = true;
+  return hitSometing;
 }
 
 //-------------------------------------------------------

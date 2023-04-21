@@ -122,6 +122,12 @@ HalfEdgeGraph::GetEdges()
   return _halfEdges;
 }
 
+HalfEdge*
+HalfEdgeGraph::GetEdgeFromVertex(size_t vertex)
+{
+  return &_halfEdges[_vertexHalfEdge[vertex]];
+}
+
 HalfEdge* 
 HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end)
 {

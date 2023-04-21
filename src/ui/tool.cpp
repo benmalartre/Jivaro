@@ -1,10 +1,17 @@
 #include <pxr/usd/usdLux/light.h>
+#include <pxr/usd/usdGeom/points.h>
+#include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/primvarsApi.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
 
 #include "../ui/tool.h"
 #include "../utils/timer.h"
+#include "../acceleration/hashGrid.h"
 #include "../geometry/mesh.h"
 #include "../geometry/subdiv.h"
 #include "../geometry/tesselator.h"
+#include "../geometry/voxels.h"
+#include "../geometry/smooth.h"
 #include "../app/selection.h"
 #include "../app/notice.h"
 #include "../app/application.h"
@@ -29,6 +36,61 @@ ToolUI::~ToolUI()
 {
 }
 
+static void
+_SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
+{
+  std::vector<BVH::Cell*> cells;
+  bvh->GetRoot()->GetCells(cells);
+  size_t numPoints = cells.size();
+  pxr::VtArray<pxr::GfVec3f> points(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<int64_t> indices(numPoints);
+  pxr::VtArray<int> protoIndices(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  pxr::VtArray<int> curveVertexCount(1);
+  curveVertexCount[0] = numPoints;
+  pxr::VtArray<float> widths(numPoints);
+  widths[0] = 1.f;
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
+    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
+    protoIndices[pointIdx] = 0;
+    indices[pointIdx] = pointIdx;
+    colors[pointIdx] =
+      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
+        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
+    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+    widths[pointIdx] = RANDOM_0_1;
+  }
+
+  pxr::UsdGeomPointInstancer instancer =
+    pxr::UsdGeomPointInstancer::Define(stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("bvh_instancer")));
+
+  pxr::UsdGeomCube proto =
+    pxr::UsdGeomCube::Define(stage,
+      instancer.GetPath().AppendChild(pxr::TfToken("proto_cube")));
+  proto.CreateSizeAttr().Set(1.0);
+
+  instancer.CreatePositionsAttr().Set(points);
+  instancer.CreateProtoIndicesAttr().Set(protoIndices);
+  instancer.CreateScalesAttr().Set(scales);
+  instancer.CreateIdsAttr().Set(indices);
+  instancer.CreateOrientationsAttr().Set(rotations);
+  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
+  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
+  pxr::UsdGeomPrimvar colorPrimvar =
+    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+  colorPrimvar.SetElementSize(1);
+  colorPrimvar.Set(colors);
+
+
+
+}
+
 pxr::UsdGeomMesh _GetSelectedMesh()
 {
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
@@ -37,7 +99,6 @@ pxr::UsdGeomMesh _GetSelectedMesh()
     Selection::Item& item = selection->GetItem(0);
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
     if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
-      std::cout << "valid mesh selected : " << prim.GetPath() << std::endl;
       return pxr::UsdGeomMesh(prim);
     }
   }
@@ -53,11 +114,6 @@ static void _SetMesh(pxr::UsdGeomMesh& mesh, const pxr::VtVec3fArray& points,
   SceneChangedNotice().Send();
 }
 
-struct Dummy_t {
-  Dummy_t* previous;
-  Dummy_t* next;
-};
-
 static void _CollapseEdges(float factor) 
 {
   pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
@@ -72,6 +128,80 @@ static void _CollapseEdges(float factor)
     _SetMesh(usdMesh, tesselator.GetPositions(), tesselator.GetFaceCounts(), tesselator.GetFaceConnects());
 
   }
+}
+
+static void _Voxelize(float radius)
+{
+  pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+  if (usdMesh.GetPrim().IsValid()) {
+    UndoBlock block;
+    Mesh mesh(usdMesh);
+    Voxels voxels;
+    voxels.Init(&mesh, radius);
+    voxels.Trace(0);
+    voxels.Trace(1);
+    voxels.Trace(2);
+    voxels.Build();
+
+
+    const pxr::VtArray<pxr::GfVec3f>& positions = voxels.GetPositions();
+    pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+
+    _SetupBVHInstancer(stage, voxels.GetTree());
+
+    std::cout << "hash grid radius : " << (voxels.GetRadius() * 2.f) << std::endl;
+    HashGrid grid(voxels.GetRadius() * 2.f);
+    grid.Init({ (Geometry*)&voxels });
+
+    size_t numPoints = positions.size();
+    pxr::UsdGeomPoints points =
+      pxr::UsdGeomPoints::Define(
+        stage,
+        stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("Voxels")));
+
+    points.CreatePointsAttr().Set(pxr::VtValue(positions));
+
+    pxr::VtArray<float> widths(numPoints);
+    pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+    for (size_t p = 0; p < numPoints; ++p) {
+      widths[p] = radius;
+      colors[p] = grid.GetColor(positions[p]);
+    }
+    points.CreateWidthsAttr().Set(pxr::VtValue(widths));
+    points.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
+    //points.CreateNormalsAttr().Set(pxr::VtValue({pxr::GfVec3f(0, 1, 0)}));
+    points.CreateDisplayColorAttr().Set(pxr::VtValue(colors));
+    points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
+
+  }
+
+}
+
+static void _Smooth(int smooth)
+{
+  pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+  if (usdMesh.GetPrim().IsValid()) {
+    UndoBlock block;
+    Mesh mesh(usdMesh);
+    size_t numPoints = mesh.GetNumPoints();
+    Smooth<pxr::GfVec3f> smooth(numPoints, pxr::VtFloatArray());
+    const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
+    pxr::VtArray<int> neighbors;
+    for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+      smooth.SetDatas(pointIdx, positions[pointIdx]);
+      mesh.
+      smooth.SetNeighbors(pointIdx, )
+    }
+    smooth.SetDatas()
+    float l = mesh.GetAverageEdgeLength() * factor;
+    std::cout << "average edge length = " << l << std::endl;
+    Tesselator tesselator(&mesh);
+    tesselator.Update(l);
+
+    _SetMesh(usdMesh, tesselator.GetPositions(), tesselator.GetFaceCounts(), tesselator.GetFaceConnects());
+
+  }
+
 }
 
 bool ToolUI::Draw()
@@ -107,6 +237,18 @@ bool ToolUI::Draw()
       stage->SetDefaultPrim(usdMesh.GetPrim());
     }
   }
+
+  static float randFactor = 0.1f;
+  if (ImGui::Button("Randomize")) {
+    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    if (usdMesh.GetPrim().IsValid()) {
+      UndoBlock block;
+      Mesh mesh(usdMesh);
+      mesh.Randomize(randFactor);
+      _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
+    }
+  }ImGui::SameLine();
+  ImGui::InputFloat("Random", &randFactor);
 
   if (ImGui::Button("Smooth Mesh")) {
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
@@ -182,6 +324,18 @@ bool ToolUI::Draw()
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }
   }
+
+  static float voxelizeRadius = 0.5f;
+  if (ImGui::Button("Voxelize")) {
+    _Voxelize(voxelizeRadius);
+  }ImGui::SameLine();
+  ImGui::InputFloat("Radius", &voxelizeRadius);
+
+  static int smoothIteration = 1;
+  if (ImGui::Button("Smooth")) {
+    _Smooth(smoothIteration);
+  }ImGui::SameLine();
+  ImGui::InputInt("Smooth", &smoothIteration);
   
   
   ImGui::End();

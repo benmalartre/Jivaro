@@ -50,6 +50,8 @@ public:
 
   const pxr::VtArray<HalfEdge>& GetEdges();
   size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices);
+
+  void ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors);
   
   pxr::GfVec3f GetPosition(const Location& point) const ;
   pxr::GfVec3f GetNormal(const Location& point) const;

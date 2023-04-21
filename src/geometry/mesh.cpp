@@ -342,10 +342,6 @@ void Mesh::ComputeTrianglePairs()
     edge = it.Next();
   }
 
-  std::cout << "build trinagle pairs for " << _triangles.size() << " took " << ((CurrentTime() - T) * 1e-9) << " seconds " << std::endl;
-  std::cout << "num triangles : " << _triangles.size() << std::endl;
-  std::cout << "num triangle pairs : " << _trianglePairs.size() << std::endl;
-
   BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
 }
 
@@ -363,6 +359,12 @@ void Mesh::ComputeNeighbors()
 {
   _halfEdges.ComputeNeighbors(this);
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
+}
+
+void Mesh::ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors)
+{
+  HalfEdge* edge = _halfEdges.GetEdgeFromVertex(pointIdx);
+  _halfEdges._ComputeVertexNeighbors(edge, neighbors);
 }
 
 void Mesh::Set(
