@@ -177,7 +177,7 @@ static void _Voxelize(float radius)
 
 }
 
-static void _Smooth(int smooth)
+static void _Smooth(int smoothIterations, bool parallel)
 {
   pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
@@ -187,19 +187,21 @@ static void _Smooth(int smooth)
     Smooth<pxr::GfVec3f> smooth(numPoints, pxr::VtFloatArray());
     const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
     pxr::VtArray<int> neighbors;
+
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
       smooth.SetDatas(pointIdx, positions[pointIdx]);
-      mesh.
-      smooth.SetNeighbors(pointIdx, )
+      mesh.ComputeNeighbors(pointIdx, neighbors);
+      smooth.SetNeighbors(pointIdx, neighbors.size(), &neighbors[0]);
     }
-    smooth.SetDatas()
-    float l = mesh.GetAverageEdgeLength() * factor;
-    std::cout << "average edge length = " << l << std::endl;
-    Tesselator tesselator(&mesh);
-    tesselator.Update(l);
 
-    _SetMesh(usdMesh, tesselator.GetPositions(), tesselator.GetFaceCounts(), tesselator.GetFaceConnects());
+    smooth.Compute(smoothIterations);
 
+    pxr::VtArray<GfVec3f> smoothed(numPoints);
+    for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+      smoothed[pointIdx] = smooth.GetDatas(pointIdx);
+    }
+
+    _SetMesh(usdMesh, smoothed, mesh.GetFaceCounts(), mesh.GetFaceConnects());
   }
 
 }
@@ -331,11 +333,14 @@ bool ToolUI::Draw()
   }ImGui::SameLine();
   ImGui::InputFloat("Radius", &voxelizeRadius);
 
-  static int smoothIteration = 1;
+  static int smoothIteration = 32;
   if (ImGui::Button("Smooth")) {
-    _Smooth(smoothIteration);
+    _Smooth(smoothIteration, false);
   }ImGui::SameLine();
-  ImGui::InputInt("Smooth", &smoothIteration);
+  if (ImGui::Button("Smooth Parallel")) {
+    _Smooth(smoothIteration, true);
+  }ImGui::SameLine();
+  ImGui::InputInt("##Iterations", &smoothIteration);
   
   
   ImGui::End();

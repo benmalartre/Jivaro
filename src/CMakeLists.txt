@@ -58,7 +58,6 @@ add_executable(${TARGET}
   geometry/matrix.cpp
   geometry/rbf.cpp
   geometry/subdiv.cpp
-  geometry/smooth.cpp
   geometry/tesselator.cpp
   geometry/kabsch.cpp
   geometry/sampler.cpp

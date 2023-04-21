@@ -505,6 +505,7 @@ HalfEdgeGraph::ComputeNeighbors(Mesh* mesh)
 void
 HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors)
 {
+  neighbors.clear();
   const HalfEdge* current = edge;
   do {
     neighbors.push_back(_halfEdges[current->next].vertex);
