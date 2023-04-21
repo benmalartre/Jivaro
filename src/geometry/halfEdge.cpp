@@ -403,6 +403,19 @@ HalfEdgeGraph::_IsTriangle(const HalfEdge* edge)
 void 
 HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
 {
+  /*
+    triangulate a face given half-edge
+    will generate 2 * (numTriangles - 1) new half edges
+
+       3 _ _ _ 2      3 _ _ _ 2  
+        |     |     3   \    |   
+        |     |      |\  \   |   
+        |     |      | \  \  |   
+        |     |      |  \  \ |   
+        |     |      |   \  \|   
+        |_ _ _|      | _ _\   1  
+       0       1    0      1     
+  */
   size_t numFaceVertices = _GetFaceVerticesCount(edge);
   if (numFaceVertices < 4)return;
 
@@ -413,10 +426,10 @@ HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
   size_t currentIdx = _GetEdgeIndex(next);
   size_t nextIdx = _GetEdgeIndex(&_halfEdges[next->next]);
   size_t lastIdx = _GetEdgeIndex(prev);
+  size_t previousInsertedIdx;
 
   for (size_t t = 0; t < numTriangles; ++t) {
     if (t == 0) {
-      
       HalfEdge* inserted = GetAvailableEdge();
       size_t insertedIdx = _GetEdgeIndex(inserted);
       inserted->prev = currentIdx;
@@ -424,6 +437,7 @@ HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
       inserted->vertex = _halfEdges[nextIdx].vertex;
       _halfEdges[currentIdx].next = insertedIdx;
       _halfEdges[firstIdx].prev = insertedIdx;
+      previousInsertedIdx = insertedIdx;
     }
     else if (t == (numTriangles - 1)) {
       HalfEdge* inserted = GetAvailableEdge();
@@ -431,6 +445,8 @@ HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
       inserted->prev = lastIdx;
       inserted->next = currentIdx;
       inserted->vertex = _halfEdges[firstIdx].vertex;
+      inserted->twin = previousInsertedIdx;
+      _halfEdges[previousInsertedIdx].twin = insertedIdx;
       _halfEdges[currentIdx].prev = insertedIdx;
       _halfEdges[lastIdx].next = insertedIdx;
     }
@@ -442,11 +458,14 @@ HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
       left->next = currentIdx;
       left->prev = rightIdx;
       left->vertex = _halfEdges[firstIdx].vertex;
+      left->twin = previousInsertedIdx;
+      _halfEdges[previousInsertedIdx].twin = leftIdx;
       right->prev = currentIdx;
       right->next = leftIdx;
       right->vertex = _halfEdges[nextIdx].vertex;
       _halfEdges[currentIdx].prev = leftIdx;
       _halfEdges[currentIdx].next = rightIdx;
+      previousInsertedIdx = rightIdx;
     }
     currentIdx = nextIdx;
     nextIdx = _GetEdgeIndex(&_halfEdges[_halfEdges[nextIdx].next]);
@@ -523,6 +542,10 @@ HalfEdgeGraph::FlipEdge(HalfEdge* edge)
     std::cout << "flip edge : no twin edge ! aborted " << std::endl;
     return false;
   }
+  if (!_IsTriangle(edge) || !_IsTriangle(&_halfEdges[edge->twin])) {
+    std::cout << "flip edge : edges must belong to triangles ! aborted " << std::endl;
+    return false;
+  }
 
   HalfEdge* twin = &_halfEdges[edge->twin];
 
@@ -554,18 +577,18 @@ bool
 HalfEdgeGraph::SplitEdge(HalfEdge* edge, size_t newPoint)
 {
   /*
-  slip edge will create 3 new half edges for the edge
-  if there is a twin edge it will also create 3 new half edges for it
+  slip edge will create 1 new half edges for the edge starting at new point
+  if there is a twin edge it will also create 1 new half edges for it
                                   
                2              2  
-              /|             /|  
-             / |          3 / |  
-            /  |         3  \ |  
-           /   |         /\  \|  
-          /    |        /      1 
-         /_ _ _|       /_ _ \     
-        0       1     0      1    
-                                  
+              /|            /|   
+             / |           / |   
+            /  |          /  |   
+           /   |       3 x   |   
+          /    |        /    |   
+         /_ _ _|       /_ _ _|   
+        0       1     0       1  
+                                 
   */
   size_t edgeIdx = _GetEdgeIndex(edge);
 
