@@ -422,6 +422,9 @@ bool Mesh::SplitEdge(HalfEdge* edge)
     // reallocation mess pointer retrieve edge
     edge = _halfEdges.GetEdge(edgeIdx);
     TriangulateFace(_halfEdges.GetEdge(edge->next));
+    if (edge->twin >= 0) {
+      TriangulateFace(_halfEdges.GetEdge(edge->twin));
+    }
     _halfEdges.UpdateTopologyFromEdges(_faceVertexCounts, _faceVertexIndices);
     return true;
   }
@@ -525,9 +528,8 @@ void Mesh::Triangulate()
 void Mesh::TriangulateFace(const HalfEdge* edge)
 {
   size_t numFaceVertices = _halfEdges._GetFaceVerticesCount(edge);
-  std::cout << "triangulate face with " << numFaceVertices << " vertices " << std::endl;
   if (numFaceVertices < 4) {
-    std::cerr << "[Mesh] can't triangulate face (" << numFaceVertices << "vertex)" << std::endl;
+    std::cerr << "[Mesh] can't triangulate face with " << numFaceVertices << "vertices" << std::endl;
     return;
   }
 

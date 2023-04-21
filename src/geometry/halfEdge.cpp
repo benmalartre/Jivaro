@@ -310,19 +310,6 @@ HalfEdgeGraph::_FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex)
   return NULL;
 }
 
-bool
-HalfEdgeGraph::_FindInAvailableEdges(const HalfEdge* edge)
-{
-  std::queue<int> tmp = _availableEdges; //copy the original queue to the temporary queue
-
-  while (!tmp.empty())
-  {
-    if (edge == &_halfEdges[tmp.front()])return true;
-    tmp.pop();
-  }
-  return false;
-}
-
 void
 HalfEdgeGraph::_RemoveOneEdge(const HalfEdge* edge, bool* modified)
 {

@@ -74,7 +74,6 @@ protected:
   HalfEdge* _GetNextEdge(const HalfEdge* edge);
   HalfEdge* _GetPreviousEdge(const HalfEdge* edge);
   HalfEdge* _FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex);
-  bool _FindInAvailableEdges(const HalfEdge* edge);
   bool _IsTriangle(const HalfEdge* edge);
   void _TriangulateFace(const HalfEdge* edge);
   
