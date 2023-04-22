@@ -358,15 +358,19 @@ Mesh::GetTrianglePairs()
 const pxr::VtArray<pxr::VtArray<int>>& 
 Mesh::GetNeighbors()
 {
+  /*
   if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
     _halfEdges.ComputeNeighbors(this);
   }
   return _halfEdges.GetNeighbors();
+  */
+  static pxr::VtArray<pxr::VtArray<int>> empty;
+  return empty;
 }
 
 void Mesh::ComputeNeighbors()
 {
-  _halfEdges.ComputeNeighbors(this);
+  //_halfEdges.ComputeNeighbors(this);
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
 }
 
@@ -489,7 +493,7 @@ bool Mesh::SplitEdge(HalfEdge* edge)
     if (edge->twin >= 0) {
       TriangulateFace(_halfEdges.GetEdge(edge->twin));
     }
-    _halfEdges.UpdateTopologyFromEdges(_faceVertexCounts, _faceVertexIndices);
+    _halfEdges.ComputeTopology(_faceVertexCounts, _faceVertexIndices);
     return true;
   }
   return false;

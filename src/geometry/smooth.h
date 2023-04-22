@@ -4,7 +4,7 @@
 #include <functional>
 
 #include <pxr/base/vt/array.h>
-#include "pxr/base/work/loops.h"
+#include <pxr/base/work/loops.h>
 
 #include "../common.h"
 

@@ -34,15 +34,17 @@ public:
   };
 
   void ComputeGraph(Mesh* mesh);
-  void ComputeNeighbors(Mesh* mesh);
+  void ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors);
+  void ComputeTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const;
 
   void AllocateEdges(size_t num);
   bool FlipEdge(HalfEdge* edge);
   bool SplitEdge(HalfEdge* edge, size_t numPoints);
   bool CollapseEdge(HalfEdge* edge);
+  bool CollapseStar(HalfEdge* edge, pxr::VtArray<int>& neighbors);
   void RemoveEdge(HalfEdge* edge, bool* removed);
   void RemovePoint(size_t index, size_t replace);
-  void UpdateTopologyFromEdges(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects);
+  
   bool IsCollapsable(const HalfEdge* edge);
   bool IsUnique(const HalfEdge* edge) const;
   bool IsUsed(const HalfEdge* edge) const;
@@ -55,9 +57,6 @@ public:
   HalfEdge* GetEdgeFromVertex(size_t vertex);
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
   const HalfEdge* GetEdgeFromVertices(size_t start, size_t end) const;
-
-  const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
-  const pxr::VtArray<int>& GetVertexNeighbors(const HalfEdge* edge);
 
   size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions) const;
   float GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
@@ -73,14 +72,18 @@ public:
 
 protected:
   HalfEdge* _GetPreviousAdjacentEdge(const HalfEdge* edge);
+  const HalfEdge* _GetPreviousAdjacentEdge(const HalfEdge* edge) const;
   HalfEdge* _GetNextAdjacentEdge(const HalfEdge* edge);
+  const HalfEdge* _GetNextAdjacentEdge(const HalfEdge* edge) const;
   HalfEdge* _GetNextEdge(const HalfEdge* edge);
+  const HalfEdge* _GetNextEdge(const HalfEdge* edge) const;
   HalfEdge* _GetPreviousEdge(const HalfEdge* edge);
+  const HalfEdge* _GetPreviousEdge(const HalfEdge* edge) const;
   HalfEdge* _FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex);
   bool _IsTriangle(const HalfEdge* edge) const;
   void _TriangulateFace(const HalfEdge* edge);
+  void _UpdatePoint(size_t startIndex, size_t endIndex, size_t oldIndex, size_t replaceIdx);
   
-  bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx);
   void _RemoveOneEdge(const HalfEdge* edge, bool* modified);
   void _ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors);
   size_t _GetEdgeIndex(const HalfEdge* edge) const;
@@ -97,7 +100,6 @@ private:
   pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<bool>                   _boundary;
   pxr::VtArray<int>                    _shell;
-  pxr::VtArray< pxr::VtArray<int>>     _neighbors;
 
   friend Mesh;
 

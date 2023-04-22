@@ -125,7 +125,11 @@ static void _CollapseEdges(float factor)
     Tesselator tesselator(&mesh);
     tesselator.Update(l);
 
-    _SetMesh(usdMesh, tesselator.GetPositions(), tesselator.GetFaceCounts(), tesselator.GetFaceConnects());
+    pxr::VtArray<pxr::GfVec3f> positions;
+    pxr::VtArray<int> faceCounts, faceConnects;
+    tesselator.GetPositions(positions);
+    tesselator.GetTopology(faceCounts, faceConnects);
+    _SetMesh(usdMesh, positions, faceCounts, faceConnects);
 
   }
 }
@@ -292,7 +296,7 @@ bool ToolUI::Draw()
     _CollapseEdges(factor);
   }
   ImGui::SameLine();
-  ImGui::SliderFloat("##factor", &factor, 0.1f, 2.f);
+  ImGui::InputFloat("Radius", &factor);
 
   if (ImGui::Button("Add Light Edge")) {
   }
@@ -337,7 +341,7 @@ bool ToolUI::Draw()
     _Smooth(smoothIteration);
   }ImGui::SameLine();
   ImGui::InputInt("##Iterations", &smoothIteration);
-  
+
   
   ImGui::End();
 

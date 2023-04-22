@@ -14,8 +14,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Tesselator {
 public:
   struct _Vertex {
-    size_t    valence;
-    HalfEdge* edge;
+    size_t            valence;
+    pxr::GfVec3f      position;
+    pxr::VtArray<int> neighbors;
   };
 
   class _HalfEdgeLengthDivergence {
@@ -64,12 +65,10 @@ public:
 
   Tesselator(Mesh* mesh);
 
-  size_t GetNumEdges();
   void Update(float l);
 
-  const pxr::VtArray<pxr::GfVec3f>& GetPositions() const;
-  const pxr::VtArray<int>& GetFaceCounts() const;
-  const pxr::VtArray<int>& GetFaceConnects() const;
+  void GetPositions(pxr::VtArray<pxr::GfVec3f>&) const;
+  void GetTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const;
   const float DesiredLength() { return _length; };
 
   bool CompareEdgeLengthDivergence(const HalfEdge* lhs, const HalfEdge* rhs);
@@ -77,26 +76,30 @@ public:
   bool CompareEdgeLonger(const HalfEdge* lhs, const HalfEdge* rhs);
 
 protected:
+  float                      _GetLengthSq(const HalfEdge* edge);
+  float                      _GetLength(const HalfEdge* edge);
   void                       _BuildSplitEdgeQueue(float l);
   void                       _BuildCollapseEdgeQueue(float l);
   void                       _ClearEdgeQueue();
 
   void                       _InitVertices();
-  void                       _RemoveVertex(size_t index);
+  void                       _RemoveVertex(size_t index, size_t replace);
+  void                       _RemoveVertexRange(size_t startIdx, size_t endIdx, size_t index, size_t replace);
   void                       _ComputeGraph();
-  bool                       _CollapseEdges();            
+  bool                       _CollapseEdges();     
+  bool                       _IsCollapsable(const HalfEdge* edge);
+  bool                       _IsStarCollapsable(const HalfEdge* edge, float length);
 
 private:
   HalfEdgePriorityQueue       _queue;
   Mesh*                       _input;
   HalfEdgeGraph               _graph;
-  std::vector<_Vertex>        _vertices;
-
-  pxr::VtArray<int>           _faceCounts;
-  pxr::VtArray<int>           _faceConnects;
-  pxr::VtArray<pxr::GfVec3f>  _positions;
+  pxr::VtArray<_Vertex>       _vertices;
 
   float                       _length;
+
+
+  friend                      HalfEdgeGraph;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
