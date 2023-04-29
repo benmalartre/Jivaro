@@ -9,6 +9,7 @@
 #include "../ui/style.h"
 #include "../ui/explorer.h"
 #include "../app/application.h"
+#include "../app/commands.h"
 #include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/view.h"
@@ -85,9 +86,7 @@ static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, UIType::EXPLORER)
-  , _counter(0)
 {
-  _parent->SetDirty();
 }
 
 // destructor
@@ -95,21 +94,6 @@ ExplorerUI::~ExplorerUI()
 {
 }
 
-/*
-void 
-ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
-{
-  Update();
-}
-
-void
-ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
-{
-  Select();
-}
-*/
-
-/*
 void 
 ExplorerUI::Init()
 {
@@ -117,7 +101,7 @@ ExplorerUI::Init()
   _parent->SetDirty();
   _initialized = true;
 }
-*/
+
 
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
@@ -150,6 +134,7 @@ void
 ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
 }
+
 
 void
 ExplorerUI::DrawItemBackground(ImDrawList* drawList,

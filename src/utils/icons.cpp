@@ -46,7 +46,7 @@ GLuint CreateIconFromImage(const std::string& filename,
   int index, ICON_SIZE size)
 {
   pxr::HioImageSharedPtr img = pxr::HioImage::OpenForReading(filename);
-  size_t s = GetIconResolution(size); 
+  int s = GetIconResolution(size); 
   pxr::HioImage::StorageSpec storage;
   storage.width = s;
   storage.height = s ;

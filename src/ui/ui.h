@@ -3,6 +3,9 @@
 
 #include <map>
 
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
 #include "../common.h"
@@ -21,6 +24,7 @@ class View;
 class Window;
 class Application;
 
+
 enum UIType {
   MAINMENU,
   TIMELINE,
@@ -38,6 +42,8 @@ enum UIType {
   CONTENTBROWSER,
   DEBUG,
   DEMO,
+  ICON,
+  TOOL,
   COUNT
 };
 
@@ -57,10 +63,12 @@ static const char* UITypeName[UIType::COUNT] = {
   "textEditor",
   "contentBrowser",
   "debug",
-  "demo"
+  "demo",
+  "icon",
+  "tool"
 };
 
-static std::map<std::string, int> UINameIndexMap;
+typedef std::map<std::string, int> UITypeCounter;
 
 
 class HeadUI;
@@ -74,7 +82,7 @@ public:
   short GetType() { return _type; };
 
   // get parent window
-  Window* GetWindow();
+  virtual Window* GetWindow();
 
   // get the parent view
   View* GetView() { return _parent; };

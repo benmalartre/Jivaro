@@ -12,20 +12,24 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Geometry;
-
 class Intersector : public pxr::GfRange3d
 { 
 public:
-  virtual void Init(const std::vector<Geometry*>& geometries) = 0;
-  virtual void Update(const std::vector<Geometry*>& geometries) = 0;
-  virtual bool Raycast(const pxr::GfRay& ray, Hit* hit, 
-    double maxDistance=-1, double* minDistance=NULL) const = 0;
-  virtual bool Closest(const pxr::GfVec3f& point, Hit* hit, 
-    double maxDistance=-1.f, double* minDistance=NULL) const = 0;
+  enum ElementType {
+    POINT,
+    EDGE,
+    TRIANGLE,
+    POLYGON,
+    INVALID
+  };
 
-protected:
-  std::vector<Geometry*>  _geometries;
+public:
+  virtual void Init(const std::vector<Geometry*>& geometries) {};
+  virtual void Update(const std::vector<Geometry*>& geometries) {};
+  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+    double maxDistance=-1, double* minDistance=NULL) const = 0;
+  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance=-1.f) const = 0;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

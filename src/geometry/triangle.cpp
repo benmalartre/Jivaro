@@ -29,9 +29,10 @@ float Triangle::GetArea(const pxr::GfVec3f* points)
 //-------------------------------------------------------
 // Triangle Center
 //-------------------------------------------------------
-void Triangle::GetCenter(const pxr::GfVec3f* points, pxr::GfVec3f& center)
+pxr::GfVec3f 
+Triangle::GetCenter(const pxr::GfVec3f* points)
 {
-  center = (
+  return pxr::GfVec3f(
     points[vertices[0]] +
     points[vertices[1]] +
     points[vertices[2]]) / 3.0f;
@@ -40,17 +41,43 @@ void Triangle::GetCenter(const pxr::GfVec3f* points, pxr::GfVec3f& center)
 //-------------------------------------------------------
 // Triangle Normal
 //-------------------------------------------------------
-void Triangle::GetNormal(const pxr::GfVec3f* points, pxr::GfVec3f& normal)
+pxr::GfVec3f 
+Triangle::GetNormal(const pxr::GfVec3f* points)
 {
+
   // get triangle edges
   pxr::GfVec3f AB = points[vertices[1]]- points[vertices[0]];
   pxr::GfVec3f AC = points[vertices[2]] - points[vertices[0]];
   
   // cross product
-  normal = AB ^ AC;
+  pxr::GfVec3f normal = AB ^ AC;
   
   // normalize
   normal.Normalize();
+  return normal;
+}
+
+bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  pxr::GfVec3d baryCoords;
+  double distance;
+  bool frontFacing;
+
+  if (ray.Intersect(
+    points[vertices[0]],
+    points[vertices[1]],
+    points[vertices[2]],
+    &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
+    if (distance < *minDistance) {
+      *minDistance = distance;
+      hit->SetElementIndex(id);
+      hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
+      hit->SetT(distance);
+      return true;
+    }
+  }
+
 }
 
 //-------------------------------------------------------
@@ -135,7 +162,6 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hi
     if(minDistance) *minDistance = distance;
     hit->SetBarycentricCoordinates(pxr::GfVec3f(1.f - s - t, s, t));
     hit->SetElementIndex(id);
-    hit->SetElementType(Hit::TRIANGLE);
     hit->SetT(distance);
     return true;
   }
@@ -146,7 +172,7 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hi
 // Plane Box Test
 //-------------------------------------------------------
 bool Triangle::PlaneBoxTest(const pxr::GfVec3f& normal, 
-  const pxr::GfVec3f& point, const pxr::GfVec3f& box)
+  const pxr::GfVec3f& point, const pxr::GfVec3f& box) const
 {
   int q;
   
@@ -174,7 +200,7 @@ bool Triangle::PlaneBoxTest(const pxr::GfVec3f& normal,
 // Triangle Intersect Bounding Box
 //-------------------------------------------------------
 bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, 
-  const pxr::GfVec3f& boxhalfsize)
+  const pxr::GfVec3f& boxhalfsize) const
 {
   /*
   use separating axis theorem to test overlap between triangle and box
@@ -190,7 +216,6 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
 
   float min,max,p0,p1,p2,rad,fex,fey,fez;
     
-  // This is the fastest branch on Sun 
   // move everything so that the boxcenter is in (0,0,0)
   pxr::GfVec3f v0 = points[vertices[0]] - center;
   pxr::GfVec3f v1 = points[vertices[1]] - center;
@@ -241,32 +266,9 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
   // compute plane equation of triangle: normal*x+d=0
   pxr::GfVec3f normal = e0 ^ e1;
   
-  // -NJMP- (line removed here)
-  if(!PlaneBoxTest(normal, v0, boxhalfsize)) return false;	// -NJMP-
+  if(!PlaneBoxTest(normal, v0, boxhalfsize)) return false;
   
   return true;   // box and triangle overlaps
-}
-
-
-//-------------------------------------------------------
-// TrianglePair constructors
-//-------------------------------------------------------
-TrianglePair::TrianglePair()
-  : left(NULL)
-  , right(NULL)
-{
-}
-
-TrianglePair::TrianglePair(Triangle* t1)
-  : left(t1)
-  , right(NULL)
-{
-}
-
-TrianglePair::TrianglePair(Triangle* t1, Triangle* t2)
-  : left(t1)
-  , right(t2)
-{
 }
 
 //-------------------------------------------------------
@@ -276,6 +278,7 @@ pxr::GfRange3d
 TrianglePair::GetBoundingBox(const pxr::GfVec3f* points)
 {
   pxr::GfRange3d range;
+
   if (left) {
     range.UnionWith(points[left->vertices[0]]);
     range.UnionWith(points[left->vertices[1]]);
@@ -296,44 +299,10 @@ bool
 TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3d baryCoords;
-  double distance;
-  bool frontFacing;
-  if (left) {
-    const pxr::GfVec3i& vertices = left->vertices;
-    if (ray.Intersect(
-      points[vertices[0]],
-      points[vertices[1]],
-      points[vertices[2]],
-      &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
-      //if (distance < *minDistance) {
-        if(minDistance) *minDistance = distance;
-        hit->SetElementIndex(left->id);
-        hit->SetElementType(Hit::TRIANGLE);
-        hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
-        hit->SetT(distance);
-        return true;
-      //}
-    }
-  } 
-  if (right) {
-    const pxr::GfVec3i& vertices = right->vertices;
-    if (ray.Intersect(
-      points[vertices[0]],
-      points[vertices[1]],
-      points[vertices[2]],
-      &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
-      //if (distance < *minDistance) {
-      if(minDistance) *minDistance = distance;
-        hit->SetElementIndex(right->id);
-        hit->SetElementType(Hit::TRIANGLE);
-        hit->SetBarycentricCoordinates(pxr::GfVec3f(baryCoords));
-        hit->SetT(distance);
-        return true;
-      //}
-    }
-  }
-  return false;
+  bool hitSometing = false;
+  if (left && left->Raycast(points, ray, hit, maxDistance, minDistance))hitSometing = true;
+  if (right && right->Raycast(points, ray, hit, maxDistance, minDistance))hitSometing = true;
+  return hitSometing;
 }
 
 //-------------------------------------------------------
@@ -345,6 +314,16 @@ TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
 {
   return false;
 };
+
+//-------------------------------------------------------
+// TrianglePair touch box
+//-------------------------------------------------------
+bool 
+TrianglePair::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, 
+  const pxr::GfVec3f& boxhalfsize) const
+{
+  return false;
+}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

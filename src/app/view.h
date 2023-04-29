@@ -4,7 +4,6 @@
 
 #include <vector>
 #include "../common.h"
-#include "../ui/splitter.h"
 #include "../ui/utils.h"
 #include "../ui/tab.h"
 
@@ -31,7 +30,8 @@ public:
     TIMEVARYING         = 1 << 10,
     DISCARDMOUSEBUTTON  = 1 << 11,
     DISCARDMOUSEMOVE    = 1 << 12,
-    TAB                 = 1 << 13
+    TAB                 = 1 << 13,
+    FOCUS               = 1 << 14
   };
 
   View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, 
@@ -66,11 +66,14 @@ public:
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
     const int width, const int height);
 
+  void SetLeft(View* view){_left = view; if(view)view->_parent=this;};
+  void SetRight(View* view){_right = view; if(view)view->_parent=this;};
+  void SetParent(View* view){_parent = view;};
   inline View* GetLeft(){return _left;};
   inline View* GetRight(){return _right;};
   inline View* GetParent(){return _parent;};
   inline bool HasParent(){return _parent != NULL;};
-  void DeleteChildren();
+  void Clear();
 
   // tab
   ViewTabUI* GetTab() { return _tab; };
@@ -95,9 +98,9 @@ public:
   void SetCurrent(BaseUI* ui) { _current = ui; };
 
   // cursor
-  void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
+  pxr::GfVec2f GetRelativeMousePosition(const int inX, const int inY);
   bool Contains(int x, int y);
-  bool Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
+  bool Intersect(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   
   // callbacks
   bool DrawTab();
@@ -108,18 +111,20 @@ public:
   virtual void MouseWheel(int x, int y);
   virtual void Keyboard(int key, int scancode, int action, int mods);
   virtual void Input(int key);
+  virtual void Focus(int state);
 
   // flags
   inline bool GetFlag(short flag) const { return BITMASK_CHECK(_flags, flag); };
   inline void SetFlag(short flag) { BITMASK_SET(_flags, flag); };
   inline void ClearFlag(short flag) { BITMASK_CLEAR(_flags, flag); };
+  unsigned GetFlags(){ return _flags;};
+  void SetFlags(unsigned flags){_flags = flags;};
 
   void SetClean();
   void SetDirty();
   void SetTabed(bool tabed);
   void SetInteracting(bool value);
   bool IsInteracting();
-  void DirtyUnderPopup();
 
 private:
   pxr::GfVec2f          _min;

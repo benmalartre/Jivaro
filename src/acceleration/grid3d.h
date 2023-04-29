@@ -16,6 +16,7 @@ class Geometry;
 class Mesh;
 class Curve;
 class Points;
+struct Triangle;
 
 class Grid3DIntersector : public Intersector {
   enum ElemType {
@@ -94,8 +95,6 @@ public:
   pxr::GfVec3f GetCellPosition(uint32_t index);
   pxr::GfVec3f GetCellMin(uint32_t index);
   pxr::GfVec3f GetCellMax(uint32_t index);
-  Geometry* GetGeometry(size_t index){return _geometries[index];};
-  //void SetGeometry(Geometry* geom, size_t index){_mesh = mesh;};
   inline uint32_t NumCells(){return _numCells;};
   uint32_t* GetResolution(){return &_resolution[0];};
   inline uint32_t GetResolutionX(){return _resolution[0];};
@@ -115,10 +114,10 @@ public:
   void InsertPoints(size_t idx);
 
   // intersect a ray with the mesh
-  bool Raycast(const pxr::GfRay& ray, Hit* hitPoint, 
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hitPoint,
     double maxDistance=-1, double* minDistance=NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance = -1, double* minDistance = NULL) const override;
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1) const override;
 
   Cell* GetCell(uint32_t index);
   Cell* GetCell(uint32_t x, uint32_t y, uint32_t z);

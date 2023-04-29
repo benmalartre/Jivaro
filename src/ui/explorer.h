@@ -29,9 +29,7 @@ public:
   void MouseButton(int action, int button, int mods) override;
   void MouseMove(int x, int y) override;
   void Keyboard(int key, int scancode, int action, int mods) override;
-  //void Init();
-  //void Update();
-  //void Select();
+  void Init();
   bool Draw() override;
 
   void DrawItemBackground(ImDrawList* drawList, bool selected, bool& flip);
@@ -42,8 +40,6 @@ public:
   void DrawActive(const pxr::UsdPrim& prim, bool selected);
 
 private:
-  //void _UpdateSelection(Item* item, bool isLeaf);
-
   bool                          _locked;
   bool                          _flip;
   pxr::SdfPath                  _current;
@@ -53,8 +49,6 @@ private:
 
   static ImGuiWindowFlags       _flags;
   static ImGuiTreeNodeFlags     _treeFlags;
-
-  size_t _counter;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

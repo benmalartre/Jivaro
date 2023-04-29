@@ -53,13 +53,6 @@ Stroke::Stroke(const Stroke* other, bool normalize)
   }
 }
 
-void Stroke::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors) 
-{
-  _colorsInterpolation = interp;
-  _colors = colors;
-}
-
 uint32_t Stroke::GetNumCVs(uint32_t lineIndex)const
 {
   if(lineIndex >= _lines.size())

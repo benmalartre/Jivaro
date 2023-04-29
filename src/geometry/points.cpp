@@ -6,27 +6,22 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Points::~Points()
-{
-};
-
 Points::Points()
   : Geometry(Geometry::POINT)
 {
   _initialized = false;
-  _numPoints = 0;
 }
 
 Points::Points(const Points* other, bool normalize)
   : Geometry(other, Geometry::POINT, normalize)
 {
+  size_t numPoints = _positions.size();
   _initialized = true;
-  _numPoints = other->_numPoints;
 
   _normals = other->_normals;
 
-  _radius.resize(_numPoints);
-  memcpy(&_radius[0], &other->_radius[0], _numPoints * sizeof(float));
+  _radius.resize(numPoints);
+  memcpy(&_radius[0], &other->_radius[0], numPoints * sizeof(float));
 }
 
 Points::Points(const pxr::UsdGeomPoints& points)
@@ -34,8 +29,7 @@ Points::Points(const pxr::UsdGeomPoints& points)
 {
 
   pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
-  pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());
-  _numPoints = _points.size();
+  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
 
   pxr::UsdAttribute normalsAttr = points.GetNormalsAttr();
   if (normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
@@ -46,27 +40,19 @@ Points::Points(const pxr::UsdGeomPoints& points)
     widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
 }
 
-void Points::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors) 
-{
-  _colorsInterpolation = interp;
-  _colors = colors;
-}
-
 
 void Points::Init(
   const pxr::VtArray<pxr::GfVec3f>& positions, 
   const pxr::VtArray<float>& radius)
 {
   _radius = radius;
-  _points = positions;
+  _positions = positions;
   _normals = positions;
-  _numPoints = _points.size();
 }
 
 void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _points = positions;
+  _positions = positions;
 }
 
 void Points::Update(const pxr::VtArray<float>& radius)
@@ -77,16 +63,16 @@ void Points::Update(const pxr::VtArray<float>& radius)
 void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
   const pxr::VtArray<float>& radius)
 {
-  _points = positions;
+  _positions = positions;
   _radius = radius;
 }
 
 Point Points::Get(uint32_t index)
 {
-  if(index < _points.size())
-    return {index, index < _radius.size() ? _radius[index] : 1.f};   
+  if(index < _positions.size())
+    return Point(index, index < _radius.size() ? _radius[index] : 1.f);   
   else
-    return {INVALID_POINT_ID, 1.f}; 
+    return Point(); 
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

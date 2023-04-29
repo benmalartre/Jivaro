@@ -5,6 +5,7 @@
 #include "../ui/tab.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "../app/application.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -55,9 +56,8 @@ ViewTabUI::Draw()
   ImGuiStyle& style = ImGui::GetStyle();
   const pxr::GfVec2f min(_parent->GetMin());
   const pxr::GfVec2f size(_parent->GetWidth(), GetHeight());
-  static bool open;
 
-  ImGui::Begin(_ComputeName(_id).c_str(), &open, ViewTabUI::_flags);
+  ImGui::Begin(_ComputeName(_id).c_str(), NULL, ViewTabUI::_flags);
   ImGui::SetWindowPos(min);
   ImGui::SetWindowSize(size);
 
@@ -72,7 +72,7 @@ ViewTabUI::Draw()
     ImColor(style.Colors[ImGuiCol_FrameBgHovered])
   );
 
-  /*
+  
   if (_parent->IsActive()) {
     drawList->AddRectFilled(
       min + pxr::GfVec2f(0, size[1] - 4),
@@ -80,24 +80,20 @@ ViewTabUI::Draw()
       ImColor(pxr::GfVec4f(1.f, 1.f, 1.f, 0.5f))
     );
   }
-  */
-
+  
   static ImGuiTabBarFlags tabBarFlags = 
     ImGuiTabBarFlags_AutoSelectNewTabs | 
     ImGuiTabBarFlags_Reorderable | 
     ImGuiTabBarFlags_FittingPolicyScroll;
 
-  int button_state = 0;
-
   if (ImGui::BeginTabBar(_ComputeName(_id, "TabBar").c_str(), tabBarFlags))
   {
-    const char* popupName = _ComputeName(_id, "Popup").c_str();
     if (ImGui::TabItemButton(ICON_FA_GEAR, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
-      ImGui::OpenPopup(popupName);
+      ImGui::OpenPopup(_ComputeName(_id, "Popup").c_str());
       _invade = true;
     }
-    if (ImGui::BeginPopup(popupName))
+    if (ImGui::BeginPopup(_ComputeName(_id, "Popup").c_str()))
     {
       if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
       for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
@@ -112,14 +108,12 @@ ViewTabUI::Draw()
     }
 
     // Submit our regular tabs
-
     BaseUI* current = _parent->GetCurrentUI();
     std::vector<BaseUI*>& uis = _parent->GetUIs();
     for (int n = 0; n < uis.size(); ++n)
     {
-      bool open = true;
       const char* name = UITypeName[uis[n]->GetType()];
-      if (ImGui::BeginTabItem(name, &open,
+      if (ImGui::BeginTabItem(name, NULL,
         ImGuiTabItemFlags_NoCloseButton | 
         ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | 
         ImGuiTabItemFlags_NoPushId))
@@ -152,28 +146,21 @@ ViewTabUI::Draw()
     Window* window = _parent->GetWindow();
     
     if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
-      _parent->Split(0.5, true);
-      window->Resize(window->GetWidth(), window->GetHeight());
+      GetApplication()->AddDeferredCommand(
+        std::bind(&View::Split, _parent, 0.5, true, false, 0)
+      );
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE)) {
-      _parent->Split(0.5, false);
-      window->Resize(window->GetWidth(), window->GetHeight());
+      GetApplication()->AddDeferredCommand(
+        std::bind(&View::Split, _parent, 0.5, false, false, 0)
+      );
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_TRASH, BUTTON_MINI_SIZE)) {
-      /*
-      View* parent = _parent->GetParent();
-      View* other = _parent->GetSibling();
-      ViewTabUI* head = _parent->GetHead();
-      BaseUI* content = other->GetContent();
-      parent->SetHead(head);
-      parent->DeleteChildren();
-      //parent->SetContent(content);
-      _parent->GetWindow()->ForceRedraw();
-      */
-      std::cout << "not implemented yet..." << std::endl;
-
+      GetApplication()->AddDeferredCommand(
+        std::bind(&Window::RemoveView, window, _parent)
+      );
     };
     ImGui::SameLine();
     ImGui::PopStyleVar();
@@ -188,6 +175,11 @@ ViewTabUI::Draw()
 void ViewTabUI::MouseMove(int x, int y)
 {
 
+}
+
+void ViewTabUI::Focus(bool state)
+{
+  if (_invade && !state)_invade = false;
 }
 
 void ViewTabUI::MouseButton(int button, int action, int mods)

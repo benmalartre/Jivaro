@@ -1,6 +1,7 @@
 #ifndef JVR_UI_UTILS_H
 #define JVR_UI_UTILS_H
 #include <cassert>
+#include <functional>
 
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/base/gf/matrix2f.h>
@@ -26,6 +27,7 @@
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/fonts.h"
+#include "../ui/utils.h"
 #include "../utils/icons.h"
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
@@ -43,8 +45,6 @@ const pxr::GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
 class View;
 class UIUtils {
 public:
-  // callback prototype
-  typedef void(*CALLBACK_FN)(...);
 
   static void HelpMarker(const char* desc);
 
@@ -59,20 +59,11 @@ public:
   template <typename MatrixType, int DataType, int Rows, int Cols>
   static pxr::VtValue AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
 
-  template<typename FuncT, typename ...ArgsT>
-  static void IconButton(const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddIconButton(const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
+  static void IconButton(const char* icon, short state, CALLBACK_FN func);
+  static bool AddIconButton(const char* icon, short state, CALLBACK_FN func);
+  static bool AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
+  static bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
+  static bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
 
   static void AddPropertyMiniButton(const char* btnStr, int rowId, 
     const ImVec4& btnColor = ImVec4(0.0, 0.7, 0.0, 1.0));
@@ -85,86 +76,6 @@ public:
   static void AddPrimName(const pxr::SdfPrimSpecHandle& primSpec);
 
 };
-
-
-template<typename FuncT, typename ...ArgsT>
-void 
-UIUtils::IconButton(const char* icon, short state, FuncT func, ArgsT... args)
-{
-  ImGui::BeginGroup();
-  ImGui::Button(icon, BUTTON_NORMAL_SIZE);
-  ImGui::EndGroup();
-}
-
-template<typename FuncT, typename ...ArgsT>
-bool 
-UIUtils::AddIconButton(const char* icon, short state, FuncT func, ArgsT... args)
-{
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
-  {
-    func(args...);
-    return true;
-  }
-  return false;
-}
-
-template<typename FuncT, typename ...ArgsT>
-bool 
-UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
-{
-  ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
-    func(args...);
-    ImGui::PopID();
-    return true;
-  }
-
-  ImGui::PopID();
-  return false;
-}
-
-template<typename FuncT, typename ...ArgsT>
-bool 
-UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
-{
-  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
-  ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
-  {
-    func(args...);
-    ImGui::PopID();
-    return true;
-  }
-  ImGui::PopID();
-  ImGui::PopStyleColor();
-  return false;
-}
-
-template<typename FuncT, typename ...ArgsT>
-bool 
-UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
-{
-  ImGuiStyle* style = &ImGui::GetStyle();
-  ImVec4* colors = style->Colors;
-  const bool active = (state == ICON_SELECTED);
-  if(active) {
-    ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(20, 20, 20, 255));
-  }
-  
-  ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
-  {
-    func(args...);
-    if(active) ImGui::PopStyleColor(3);
-    ImGui::PopID();
-    return true;
-  }
-  if (active) ImGui::PopStyleColor(3);
-  ImGui::PopID();
-  return false;
-}
 
 template <typename MatrixType, int DataType, int Rows, int Cols>
 pxr::VtValue 
@@ -213,26 +124,26 @@ UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeC
 
 // ExtraArgsT is used to pass additional arguments as the function passed as visitor
 // might need more than the operation and the item
-template <typename PolicyT, typename FuncT, typename ...ExtraArgsT>
+template <typename Policy, typename Func, typename ...ExtraArgs>
 static void 
-IterateListEditorItems(const pxr::SdfListEditorProxy<PolicyT>& listEditor, const FuncT& call, ExtraArgsT... args) {
+IterateListEditorItems(const pxr::SdfListEditorProxy<Policy>& listEditor, const Func& call, ExtraArgs... args) {
   // TODO: should we check if the list is already all explicit ??
-  for (const typename PolicyT::value_type& item : listEditor.GetExplicitItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetExplicitItems()) {
     call("explicit", item, args...);
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetOrderedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetOrderedItems()) {
     call("ordered", item, args...);
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetAddedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetAddedItems()) {
     call("add", item, args...); // return "add" as TfToken instead ?
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetPrependedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetPrependedItems()) {
     call("prepend", item, args...);
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetAppendedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetAppendedItems()) {
     call("append", item, args...);
   }
-  for (const typename PolicyT::value_type& item : listEditor.GetDeletedItems()) {
+  for (const typename Policy::value_type& item : listEditor.GetDeletedItems()) {
     call("delete", item, args...);
   }
 }
@@ -244,9 +155,9 @@ inline const char* GetListEditorOperationName(int index) {
   return names[index];
 }
 
-template <typename PolicyT>
-void CreateListEditorOperation(pxr::SdfListEditorProxy<PolicyT>&& listEditor, int operation,
-  typename pxr::SdfListEditorProxy<PolicyT>::value_type item) {
+template <typename Policy>
+void CreateListEditorOperation(pxr::SdfListEditorProxy<Policy>&& listEditor, int operation,
+  typename pxr::SdfListEditorProxy<Policy>::value_type item) {
   switch (operation) {
   case 0:
     listEditor.Add(item);

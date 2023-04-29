@@ -28,10 +28,13 @@ public:
   void SetView(View* view);
   float GetHeight() { return _height;};
 
+  bool Invade() { return _invade; };
+
   // overrides
   bool Draw();
   void MouseMove(int x, int y);
   void MouseButton(int button, int action, int mods);
+  void Focus(bool state);
 
 private:
   static std::string      _ComputeName(int index, const char* suffix="");

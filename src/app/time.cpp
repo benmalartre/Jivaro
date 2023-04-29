@@ -21,11 +21,9 @@ void Time::Init(float start, float end, float fps)
 void Time::ComputeFramerate(double T)
 {
   _frameCount++;
-
   if (T - _lastT >= 1.0)
   {
     _framerate = _frameCount;
-
     _frameCount = 0;
     _lastT = T;
   }
@@ -81,7 +79,7 @@ void Time::StopPlayBack()
 bool Time::PlayBack()
 {
   _stopWatch.Stop();
-  if(_stopWatch.GetMilliseconds()>1000/_fps)
+  if(_stopWatch.GetSeconds() > (1.f/_fps))
   {
     if(_playForwardOrBackward)PreviousFrame();
     else NextFrame();
@@ -91,5 +89,6 @@ bool Time::PlayBack()
   }
   return false;
 } 
+
 JVR_NAMESPACE_CLOSE_SCOPE
 

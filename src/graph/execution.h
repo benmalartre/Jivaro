@@ -21,7 +21,7 @@ class ExecutionGraph : public Graph
   };
 
 public:
-  ExecutionGraph(pxr::UsdPrim& prim);
+  explicit ExecutionGraph(const pxr::UsdPrim& prim);
   ~ExecutionGraph();
 
 protected:

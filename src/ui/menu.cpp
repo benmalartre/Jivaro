@@ -1,113 +1,247 @@
 #include <memory>
+#include <functional>
+#include <tuple>
+
+#include <pxr/base/vt/array.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/primvar.h>
+
 #include "../common.h"
+#include "../utils/strings.h"
 #include "../ui/style.h"
 #include "../ui/menu.h"
-#include "../utils/strings.h"
-#include "../command/command.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
 #include "../app/modal.h"
 #include "../app/selection.h"
 #include "../app/notice.h"
+#include "../app/commands.h"
 
-
-#include <pxr/base/vt/array.h>
-#include <pxr/usd/usdGeom/mesh.h>
-#include <pxr/usd/usdGeom/primvar.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
 ImGuiWindowFlags MenuUI::_flags =
-  ImGuiWindowFlags_None |
-  ImGuiWindowFlags_MenuBar |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoCollapse |
-  ImGuiWindowFlags_NoNav |
-  ImGuiWindowFlags_NoScrollWithMouse |
-  ImGuiWindowFlags_NoBringToFrontOnFocus |
-  ImGuiWindowFlags_NoDecoration |
-  ImGuiWindowFlags_NoBackground |
-  ImGuiWindowFlags_NoScrollbar;
+ImGuiWindowFlags_None |
+ImGuiWindowFlags_MenuBar |
+ImGuiWindowFlags_NoMove |
+ImGuiWindowFlags_NoResize |
+ImGuiWindowFlags_NoCollapse |
+ImGuiWindowFlags_NoNav |
+ImGuiWindowFlags_NoScrollWithMouse |
+ImGuiWindowFlags_NoBringToFrontOnFocus |
+ImGuiWindowFlags_NoDecoration |
+ImGuiWindowFlags_NoBackground |
+ImGuiWindowFlags_NoScrollbar;
 
-MenuUI::Item::Item(MenuUI* ui, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
-  : ui(ui), label(lbl), shortcut(sht), selected(sel), func(f), args(a), parent(NULL)
+
+MenuUI::Item::Item(MenuUI* ui, Item* parent, const std::string& label, bool selected, bool enabled, CALLBACK_FN cb)
+  : ui(ui)
+  , parent(parent)
+  , label(label)
+  , selected(selected)
+  , enabled(enabled)
+  , callback(cb)
 {
 }
 
-MenuUI::Item& MenuUI::Item::AddItem(MenuUI* ui, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
+MenuUI::Item::~Item()
 {
-  items.push_back(MenuUI::Item(ui, lbl, sht, sel, enb, f, a));
+  for (auto& item : items)delete item;
+}
+
+MenuUI::Item* MenuUI::Item::Add(const std::string& label,
+  bool selected, bool enabled, CALLBACK_FN cb)
+{
+  items.push_back(new MenuUI::Item(ui, this, label, selected, enabled, cb));
   return items.back();
 }
 
-MenuUI::Item::Item(MenuUI::Item* parent, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
-  : ui(parent->ui), label(lbl), shortcut(sht), selected(sel), func(f), args(a), parent(parent)
-{
-}
-
-MenuUI::Item& MenuUI::Item::AddItem(MenuUI::Item* parent, const std::string lbl, const std::string sht,
-  bool sel, bool enb, MenuUI::PressedFunc f, const pxr::VtArray<pxr::VtValue>& a)
-{
-  items.push_back(MenuUI::Item(parent, lbl, sht, sel, enb, f, a));
-  return items.back();
-}
-
-pxr::GfVec2i MenuUI::Item::ComputeSize()
-{
-  ImVec2 size(0, 0);
-  ImGuiStyle& style = ImGui::GetStyle();
-  for (const auto& item : items) {
-    ImVec2 labelSize = ImGui::CalcTextSize(item.label.c_str());
-    ImVec2 shortcutSize = ImGui::CalcTextSize(item.shortcut.c_str());
-    ImVec2 cur(labelSize[0] + shortcutSize[0] + 2 * style.FramePadding[0], labelSize[1]);
-    if (cur[0] > size[0])size[0] = cur[0];
-    size[1] += cur[1] + style.ItemSpacing[1] + 2 * style.ItemInnerSpacing[1];
-  }
-  return pxr::GfVec2i(size[0] * 2, size[1] * 2);
-}
-
-pxr::GfVec2i MenuUI::Item::ComputePos()
-{
-  ImGuiStyle& style = ImGui::GetStyle();
-  View* view = ui->GetView();
-  pxr::GfVec2i pos(view->GetX() + style.WindowPadding[0], view->GetY());
-  for (auto& item : ui->_items) {
-    if (label == item.label) break;
-    ImVec2 cur = ImGui::CalcTextSize(item.label.c_str());
-    pos[0] += cur[0] + style.ItemSpacing[0];
-  }
-  return pos;
-}
-
-bool MenuUI::Item::Draw()
+void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
 {
   View* view = ui->GetView();
   Window* window = view->GetWindow();
-  if (items.size()) {    
+  if (items.size()) {
     if (ImGui::BeginMenu(label.c_str())) {
-      ui->_current = this;
+      ui->_opened.push_back(itemIdx);
+      *modified = true;
+      size_t subItemIdx = 0;
       for (auto& item : items) {
-        item.Draw();
+        item->Draw(modified, subItemIdx++);
       }
       ImGui::EndMenu();
-    } 
+    }
   }
   else {
-    if (ImGui::MenuItem(label.c_str(), shortcut.c_str()) && func) {
-      func(args);
+    if (ImGui::MenuItem(label.c_str(), NULL, selected, enabled) && callback) {
+      callback();
       window->ForceRedraw();
-      ui->_current = NULL;
-    } 
+    }
   }
-  return true;
 }
 
+MenuUI::Item* MenuUI::Add(const std::string& label, bool selected, bool enabled, CALLBACK_FN cb)
+{
+  _items.push_back(new MenuUI::Item(this, NULL, label, selected, enabled, cb));
+  return _items.back();
+}
+
+// constructor
+MenuUI::MenuUI(View* parent)
+  : BaseUI(parent, UIType::MAINMENU)
+{
+  MenuUI::Item* fileMenu = Add("File", false, true, NULL);
+
+  fileMenu->Add("Open", false, true, std::bind(OpenFileCallback));
+  fileMenu->Add("Save", false, true, std::bind(SaveFileCallback));
+  fileMenu->Add("New", false, true, std::bind(NewFileCallback));
+
+  MenuUI::Item* testItem = Add("Test", false, true, NULL);
+  testItem->Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
+  testItem->Add("Triangulate", false, true, std::bind(TriangulateCallback));
+
+  MenuUI::Item* subItem = testItem->Add("SubMenu", false, true, NULL);
+  subItem->Add("Sub0", false, true, NULL);
+  subItem->Add("Sub1", false, true, NULL);
+  MenuUI::Item* subSubItem = subItem->Add("Sub2", false, true, NULL);
+
+  subSubItem->Add("SubSub0", false, true, NULL);
+  subSubItem->Add("SubSub1", true, true, NULL);
+  subSubItem->Add("SubSub2", false, false, NULL);
+  subSubItem->Add("SubSub3", true, false, NULL);
+  subSubItem->Add("SubSub4", false, true, NULL);
+  subSubItem->Add("SubSub5", false, true, NULL);
+
+  MenuUI::Item* demoItem = Add("Demo", false, true);
+  demoItem->Add("Open Demo", false, true, std::bind(OpenDemoCallback));
+  demoItem->Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
+
+  static int layoutIdx = 0;
+  MenuUI::Item* layoutItem = Add("Layout", false, true);
+  layoutItem->Add("Base", false, true, std::bind(SetLayoutCallback, GetWindow(), 0));
+  layoutItem->Add("Raw", false, true, std::bind(SetLayoutCallback, GetWindow(), 1));
+  layoutItem->Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 2));
+  layoutItem->Add("Random", false, true, std::bind(SetLayoutCallback, GetWindow(), 3));
+
+  _parent->SetFlag(View::DISCARDMOUSEBUTTON);
+}
+
+// destructor
+MenuUI::~MenuUI()
+{
+  for(auto & item: _items)delete item;
+}
+
+pxr::GfVec2f
+MenuUI::_ComputeSize(const MenuUI::Item* item)
+{
+  pxr::GfVec2f size(0, 0);
+  ImGuiStyle& style = ImGui::GetStyle();
+  for (const auto& subItem : item->items) {
+    pxr::GfVec2f labelSize = ImGui::CalcTextSize(subItem->label.c_str());
+    pxr::GfVec2f cur(labelSize + pxr::GfVec2f(style.ItemSpacing.x , ImGui::GetTextLineHeightWithSpacing()));
+    if (cur[0] > size[0])size[0] = cur[0];
+    size[1] += cur[1];
+  }
+  return pxr::GfVec2f(size[0], size[1]);
+}
+
+pxr::GfVec2f
+MenuUI::_ComputePos(const MenuUI::Item* item)
+{
+  ImGuiStyle& style = ImGui::GetStyle();
+  View* view = item->ui->GetView();
+  pxr::GfVec2f pos(0.f);
+  if (item->parent) {
+    pos[0] += _ComputeSize(item->parent)[0];
+    for (auto& subItem : item->parent->items) {
+      if (item->label == subItem->label) break;
+      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str());
+      pos[1] += cur[1] + style.ItemSpacing[1];
+    }
+  }
+  else {
+    pos += pxr::GfVec2f(view->GetX() + style.WindowPadding[0], view->GetY());
+    for (auto& subItem : item->ui->_items) {
+      if (item->label == subItem->label.c_str()) break;
+      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str()) + pxr::GfVec2f(0, ImGui::GetTextLineHeightWithSpacing());
+      pos[0] += cur[0] + style.ItemSpacing[0];
+    }
+  }
+  
+  return pos;
+}
+
+void 
+MenuUI::MouseButton(int button, int action, int mods)
+{
+  if (action == GLFW_PRESS) _parent->SetInteracting(true);
+}
+
+void 
+MenuUI::DirtyViewsBehind()
+{
+  size_t numOpened = _opened.size();
+
+  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+
+  if (_opened.size()) {
+    MenuUI::Item* current = _items[_opened[0]];
+    pxr::GfVec2f pos = _ComputePos(current);
+    pxr::GfVec2f size = _ComputeSize(current);
+    drawList->AddRect(pos, pos + size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+    GetWindow()->DirtyViewsUnderBox(pos, size);
+
+    for (size_t openedIdx = 1; openedIdx < numOpened; ++openedIdx) {
+      MenuUI::Item* child = current->items[_opened[openedIdx]];
+      pos += _ComputePos(child);
+      size = _ComputeSize(child);
+      drawList->AddRect(pos, pos + size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+      GetWindow()->DirtyViewsUnderBox(pos, size);
+      current = child;
+    }
+    
+  }
+  else {
+    const ImGuiStyle& style = ImGui::GetStyle();
+    pxr::GfVec2f pos = pxr::GfVec2f(0, 0);
+    pxr::GfVec2f size = pxr::GfVec2f(GetWidth(), ImGui::GetTextLineHeightWithSpacing() + 2 * style.FramePadding.y);
+
+    drawList->AddRect(pos, pos + size, ImColor({ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+    _parent->GetWindow()->DirtyViewsUnderBox(pos, size);
+  }
+  
+  
+}
+
+// overrides
+bool 
+MenuUI::Draw()
+{
+  const ImGuiStyle& style = ImGui::GetStyle();
+  ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
+
+  bool dirty = false;
+  _opened.clear();
+  if (ImGui::BeginMainMenuBar())
+  {
+    size_t itemIdx = 0;
+    for (auto& item : _items)item->Draw(&dirty, itemIdx++);
+    ImGui::EndMainMenuBar();
+  }
+  if (dirty || ImGui::IsAnyItemHovered()) { DirtyViewsBehind(); }
+  else { SetInteracting(false); };
+
+  ImGui::PopStyleColor(3);
+  return dirty || ImGui::IsAnyItemHovered();
+
+}
+
+// --------------------------------------------------------------
+// Callbacks (maybe should live in another file)
+// --------------------------------------------------------------
 static void OpenFileCallback() {
   std::string folder = GetInstallationFolder();
   const char* filters[] = {
@@ -124,12 +258,12 @@ static void OpenFileCallback() {
   app->OpenScene(filename);
 }
 
-static void SaveFileCallback() 
+static void SaveFileCallback()
 {
   GetApplication()->SaveScene();
 }
 
-static void NewFileCallback() 
+static void NewFileCallback()
 {
   std::string folder = GetInstallationFolder();
   const char* filters[] = {
@@ -157,15 +291,17 @@ static void OpenChildWindowCallback()
 {
   Application* app = GetApplication();
   Window* mainWindow = app->GetMainWindow();
-  Window* childWindow = Application::CreateChildWindow(200, 200, 400, 400, mainWindow);
+  Window* childWindow = Application::CreateChildWindow("Child Window", pxr::GfVec4i(200, 200, 400, 400), mainWindow);
   app->AddWindow(childWindow);
 
-  ViewportUI* viewport = new ViewportUI(childWindow->GetMainView());
+  childWindow->SetDesiredLayout(1);
 
-  //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
-
-  childWindow->CollectLeaves();
   mainWindow->SetGLContext();
+}
+
+static void SetLayoutCallback(Window* window, short layout)
+{
+  window->SetDesiredLayout(layout);
 }
 
 static void CreatePrimCallback()
@@ -183,6 +319,7 @@ static void TriangulateCallback()
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
+    /*
     if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh mesh(prim);
       Mesh triangulated(mesh);
@@ -191,6 +328,8 @@ static void TriangulateCallback()
       mesh.GetFaceVertexCountsAttr().Set(pxr::VtValue(triangulated.GetFaceCounts()));
       mesh.GetFaceVertexIndicesAttr().Set(pxr::VtValue(triangulated.GetFaceConnects()));
     }
+    */
+    std::cout << "triangulate : " << prim.GetPath() << std::endl;
   }
 }
 
@@ -227,10 +366,10 @@ static void FlattenGeometryCallback()
           std::cout << flattened.GetNumPoints() << std::endl;
           pxr::VtArray<int> cuts;
           flattened.GetCutEdgesFromUVs(uvs, &cuts);
-          
+
           //cuts.clear();
           //flattened.GetCutVerticesFromUVs(uvs, &cuts);
-          
+
           flattened.DisconnectEdges(cuts);
           flattened.Flatten(uvs, interpolation);
 
@@ -244,95 +383,6 @@ static void FlattenGeometryCallback()
       */
     }
   }
-}
-
-// constructor
-MenuUI::MenuUI(View* parent) 
-  : BaseUI(parent, UIType::MAINMENU)
-  , _current(NULL)
-{
-  pxr::VtArray < pxr::VtValue > args;
-  MenuUI::Item& fileMenu = AddItem("File", "", false, true);
-  fileMenu.AddItem(this, "Open", "Ctrl+O", false, true, (MenuUI::PressedFunc)&OpenFileCallback);
-  fileMenu.AddItem(this, "Save", "Ctrl+S", false, true, (MenuUI::PressedFunc)&SaveFileCallback);
-  fileMenu.AddItem(this, "New", "Ctrl+N", false, true, (MenuUI::PressedFunc)&NewFileCallback);
- 
-  MenuUI::Item& testItem = AddItem("Test", "", false, true);
-  testItem.AddItem(this, "CreatePrim", "CTRL+P", false, true, (MenuUI::PressedFunc)&CreatePrimCallback);
-  testItem.AddItem(this, "Triangulate", "CTRL+P", false, true, (MenuUI::PressedFunc)&TriangulateCallback);
-  MenuUI::Item& subItem = testItem.AddItem(this, "SubMenu", "", false, true);
-  subItem.AddItem(&subItem, "Sub0", "", false, true);
-  subItem.AddItem(&subItem, "Sub1", "", false, true);
-  subItem.AddItem(&subItem, "Sub2", "", false, true);
-
-  MenuUI::Item& demoItem = AddItem("Demo", "", false, true);
-  demoItem.AddItem(this, "Open Demo", "Shift+D", false, true, (MenuUI::PressedFunc)&OpenDemoCallback);
-  demoItem.AddItem(this, "Child Window", "Shift+W", false, true, (MenuUI::PressedFunc)&OpenChildWindowCallback);
-
-  _parent->SetFlag(View::DISCARDMOUSEBUTTON);
-}
-
-// destructor
-MenuUI::~MenuUI()
-{
-}
-
-MenuUI::Item& MenuUI::AddItem(const std::string label, const std::string shortcut,
-  bool selected, bool enabled, MenuUI::PressedFunc func, const pxr::VtArray<pxr::VtValue> a)
-{
-  _items.push_back(MenuUI::Item(this, label, shortcut, selected, enabled, func, a));
-  return _items.back();
-}
-
-void MenuUI::MouseButton(int button, int action, int mods)
-{
-  _parent->SetDirty();
-  if (action == GLFW_PRESS)
-    _parent->SetInteracting(true);
-  else if (action == GLFW_RELEASE)
-    _parent->SetInteracting(false);
-}
-
-void MenuUI::DirtyViewsUnderBox()
-{
-  if (_current) {
-    _pos = _current->ComputePos();
-    _size = _current->ComputeSize();
-  }
-  else {
-    _pos = pxr::GfVec2i(0, 0);
-    _size = pxr::GfVec2i(GetWidth(), 128);
-  }
-  _parent->GetWindow()->DirtyViewsUnderBox(_pos, _size);
-  _parent->SetDirty();
-}
-
-// overrides
-bool MenuUI::Draw()
-{
-  const ImGuiStyle& style = ImGui::GetStyle();
-  if (!_parent->IsActive())_current = NULL;
-  ImGui::PushStyleColor(ImGuiCol_Header, style.Colors[ImGuiCol_WindowBg]);
-  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, style.Colors[ImGuiCol_ChildBg]);
-  ImGui::PushStyleColor(ImGuiCol_HeaderActive, style.Colors[ImGuiCol_ButtonActive]);
-
-  bool active = false;
-  if (ImGui::BeginMainMenuBar())
-  {
-    for (auto& item : _items) {
-      if(item.Draw())active = true;
-    }
-    ImGui::EndMainMenuBar();
-  }
-
-  bool dirty = _current || active;
-  if (dirty) {DirtyViewsUnderBox();}
-  
-  
-  ImGui::PopStyleColor(3);
-
-  return _parent->IsInteracting() || ImGui::IsAnyItemHovered();
-
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
