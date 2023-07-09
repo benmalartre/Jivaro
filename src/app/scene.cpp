@@ -84,7 +84,7 @@ Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 
 void Scene::Remove(const pxr::SdfPath & path)
 {
-  auto& primIt = _prims.find(path);
+  const auto& primIt = _prims.find(path);
   if (primIt != _prims.end()) {
     Geometry* geometry = primIt->second.geom;
     _prims.erase(primIt);

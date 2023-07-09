@@ -1,7 +1,8 @@
-#include <pxr/usd/usdLux/light.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/usd/usdLux/lightAPI.h>
 #include <pxr/usd/usdGeom/points.h>
 #include <pxr/usd/usdGeom/cube.h>
-#include <pxr/usd/usdGeom/primvarsApi.h>
+#include <pxr/usd/usdGeom/primvarsAPI.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
 
 #include "../ui/tool.h"
@@ -189,7 +190,8 @@ static void _Smooth(int smoothIterations)
     Mesh mesh(usdMesh);
     size_t numPoints = mesh.GetNumPoints();
     const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
-    Smooth<pxr::GfVec3f> smooth(numPoints, pxr::VtFloatArray());
+    pxr::VtFloatArray weights;
+    Smooth<pxr::GfVec3f> smooth(numPoints, weights);
     const pxr::VtArray<pxr::VtArray<int>>& neighbors = mesh.GetNeighbors();
 
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {

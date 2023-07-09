@@ -598,7 +598,7 @@ HalfEdgeGraph::FlipEdge(HalfEdge* edge)
     twin, &_halfEdges[twin->next], &_halfEdges[twin->prev]
   };
 
-  uint32_t vertices[4] = {
+  int vertices[4] = {
     edges[1]->vertex,
     edges[2]->vertex,
     edges[4]->vertex,

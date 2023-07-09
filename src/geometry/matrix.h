@@ -2,7 +2,9 @@
 #define JVR_GEOMETRY_MATRIX_H
 
 #include <vector>
+#include <algorithm>
 #include "../common.h"
+#include <pxr/base/gf/math.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -101,13 +103,13 @@ private:
 };
 
 template <typename T>
-Matrix<T>::Matrix<T>()
+Matrix<T>::Matrix()
   : _rows(0), _columns(0), _state(0)
 {
 }
 
 template <typename T>
-Matrix<T>::Matrix<T>(size_t rows, size_t columns)
+Matrix<T>::Matrix(size_t rows, size_t columns)
   : _rows(rows), _columns(columns), _state(0)
 {
   _matrix.resize(_rows * _columns);
@@ -138,8 +140,8 @@ template <typename T>
 Matrix<T> Matrix<T>::Transpose() {
   Matrix<T> result(this);
   result._SetTransposed(1 - _IsTransposed());
-  result._rows = _colums;
-  result._columns = rows;
+  result._rows = _columns;
+  result._columns = _rows;
   return result;
 }
 
@@ -147,7 +149,7 @@ template <typename T>
 void Matrix<T>::TransposeInPlace() {
   _SetTransposed(1 - _IsTransposed());
   size_t rows = _rows;
-  _rows = _colums;
+  _rows = _columns;
   _columns = rows;
 }
 
@@ -249,7 +251,7 @@ std::vector<T> Matrix<T>::GetRowsMinimum() const
   std::vector<T> results;
   results.resize(_rows);
   for (size_t i = 0; i < _rows; ++i) {
-    results[i] = GetRowMinimum(i)
+    results[i] = GetRowMinimum(i);
   }
   return results;
 }
@@ -271,7 +273,7 @@ std::vector<T> Matrix<T>::GetRowsMaximum() const
   std::vector<T> results;
   results.resize(_rows);
   for (size_t i = 0; i < _rows; ++i) {
-    results[i] = GetRowMaximum(i)
+    results[i] = GetRowMaximum(i);
   }
   return results;
 }
@@ -368,7 +370,7 @@ Matrix<T> Matrix<T>::Subtract(const Matrix<T>& other)
 template <typename T>
 Matrix<T> Matrix<T>::Multiply(const Matrix<T>& other)
 {
-  if (_columns == _other._rows) {
+  if (_columns == other._rows) {
     size_t i, j, k;
     Matrix result(_rows, _columns);
     for (size_t i = 0; i < _rows; ++i)
@@ -383,7 +385,7 @@ Matrix<T> Matrix<T>::Multiply(const Matrix<T>& other)
 template <typename T>
 void Matrix<T>::MultiplyInPlace(const Matrix<T>& other)
 {
-  if (_columns == _other._rows) {
+  if (_columns == other._rows) {
     size_t i, j, k;
     Matrix tmp(this);
     Clear();
@@ -391,7 +393,7 @@ void Matrix<T>::MultiplyInPlace(const Matrix<T>& other)
       for (size_t k = 0; k < other._columns; ++k)
         for (size_t j = 0; j < _columns; ++j)
           _matrix[GetIndex(i, j)] += tmp.Get(i, k) * other.Get(k, j);
-    return result;
+    return tmp;
   }
   return Matrix();
 }
@@ -435,10 +437,9 @@ template <typename T>
 void Matrix<T>::SwapRows(size_t a, size_t b)
 {
   for (size_t i = 0; i < _columns; ++i) {
-    std::swap(
-      _matrix.begin() + (a * _columns + i),
-      _matrix.begin() + (b * _columns + i)
-    );
+    auto tmp = _matrix.begin() + (a * _columns + i);
+    _matrix.begin() + (a * _columns + i) = _matrix.begin() + (b * _columns + i);
+    _matrix.begin() + (b * _columns + i) = tmp;
   }
 }
 
@@ -446,10 +447,9 @@ template <typename T>
 void Matrix<T>::SwapColumns(size_t a, size_t b)
 {
   for (size_t i = 0; i < _rows; ++i) {
-    std::swap(
-      _matrix.begin() + (_columns * i + a),
-      _matrix.begin() + (_columns * i + b)
-    );
+    auto tmp = _matrix.begin() + (_columns * i + a);
+    _matrix.begin() + (_columns * i + a) = _matrix.begin() + (_columns * i + b);
+    _matrix.begin() + (_columns * i + b) = tmp;
   }
 }
 
@@ -564,7 +564,9 @@ Matrix<T> Matrix<T>::LUDecomposition(Matrix<T>::Pivots& pivots)
     // pivot if necessary
     if (perm != column) {
       lu.SwapRows(perm, column);
-      std::swap(pivots.begin() + perm, pivots.begin() + column);
+      auto tmp = pivots.begin() + perm;
+      pivots.begin() + perm = pivots.begin() + column;
+      pivots.begin() + column = tmp;
       lu._SetEven(1 - lu._IsEven());
     }
 

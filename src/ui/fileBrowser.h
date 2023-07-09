@@ -28,7 +28,7 @@ public:
 
   void MouseButton(int action, int button, int mods) override{};
   void MouseMove(int x, int y) override{};
-  void Keyboard(int key, int scancode, int action, int mods);
+  void Keyboard(int key, int scancode, int action, int mods) override;
   bool Draw() override;
 
   void SetPath(const std::string& path);

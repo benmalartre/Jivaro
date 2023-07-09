@@ -4,7 +4,7 @@
 #include <queue>
 #include <iterator>
 #include <pxr/base/vt/array.h>
-#include <pxr/base/tf/hashMap.h>
+#include <pxr/base/tf/hashmap.h>
 
 #include "../common.h"
 #include "../acceleration/mortom.h"

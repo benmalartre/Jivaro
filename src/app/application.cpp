@@ -439,7 +439,7 @@ Application::Update()
       UpdateExec(_time.GetActiveTime());
     }
   }
-  
+
   glfwPollEvents();
 
   _time.ComputeFramerate(glfwGetTime());
@@ -503,12 +503,8 @@ Application::RemoveEngine(Engine* engine)
   }
 }
 
-<<<<<<< HEAD
-static void 
-_DirtyAllEngines(std::vector<Engine*>& engines)
-=======
-void Application::DirtyAllEngines()
->>>>>>> 55406548ad025095b8c00ca4e80879431bd18855
+void 
+Application::DirtyAllEngines()
 {
   for (auto& engine : _engines) {
     engine->SetDirty(true);

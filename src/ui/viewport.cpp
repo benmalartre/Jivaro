@@ -393,11 +393,7 @@ void ViewportUI::Render()
   _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
 
   _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
-<<<<<<< HEAD
-  _renderParams.complexity = 1.0f;
-=======
   _renderParams.complexity = 1.f;// 1.25f;
->>>>>>> 55406548ad025095b8c00ca4e80879431bd18855
   _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
   _renderParams.showGuides = true;
   _renderParams.showRender = true;
@@ -518,14 +514,10 @@ bool ViewportUI::Draw()
     
     if (_drawTexId) {
        drawList->AddImage(
-<<<<<<< HEAD
-         (ImTextureID)(uintptr_t)_drawTexId, 
-         min, min + size, ImVec2(0, 1), ImVec2(1, 0));
-=======
+
          (ImTextureID)(size_t)_drawTexId, 
          min, min + size, ImVec2(0, 1), 
          ImVec2(u, v));
->>>>>>> 55406548ad025095b8c00ca4e80879431bd18855
     } 
     
     if( shouldDrawTool && _toolTexId) {

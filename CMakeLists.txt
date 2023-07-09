@@ -123,7 +123,6 @@ set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
   program_options
-  python27
   regex
 )
 
@@ -158,12 +157,12 @@ foreach(TBB_LIB_NAME IN LISTS TBB_LIB_NAMES)
 endforeach()
 
 # openvdb
-set(OPENVDB_INCLUDE_DIR "${USD_DIR}/include/openvdb")
-set(OPENVDB_LIBRARY_DIR "${USD_DIR}/lib")
+# set(OPENVDB_INCLUDE_DIR "${USD_DIR}/include/openvdb")
+# set(OPENVDB_LIBRARY_DIR "${USD_DIR}/lib")
 
-list(APPEND OPENVDB_LIB_NAMES 
-  openvdb
-)
+#list(APPEND OPENVDB_LIB_NAMES 
+#  openvdb
+#)
 
 set(OPENVDB_LIBRARIES "")
 foreach(OPENVDB_LIB_NAME IN LISTS OPENVDB_LIB_NAMES)

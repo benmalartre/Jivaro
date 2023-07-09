@@ -41,8 +41,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 bool LEGACY_OPENGL = false;
 
 int MAPPED_KEYS[GLFW_KEY_LAST + 1];
-static bool KEY_MAP_INITIALIZED = false;
-static float REPEAT_KEY_DURATION = 0.1f * 1e9;
+bool KEY_MAP_INITIALIZED = false;
+float REPEAT_KEY_DURATION = 0.1f * 1e9;
 
 static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
   ImGuiWindowFlags_NoInputs |
