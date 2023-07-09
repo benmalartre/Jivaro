@@ -13,15 +13,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-#ifdef WIN32
-#include <intrin.h>
-static uint32_t __inline __builtin_clz(uint32_t x) {
-  unsigned long r = 0;
-  _BitScanReverse(&r, x);
-  return (31 - r);
-}
-#endif
-
 static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
 {
   lhs->SetLeft(rhs->GetLeft());
@@ -87,17 +78,6 @@ BVH::Cell::Cell(BVH::Cell* parent, Component* component, const pxr::GfRange3d& r
 {
   SetMin(range.GetMin());
   SetMax(range.GetMax());
-}
-
-uint32_t _CountLeadingZeros(const uint64_t x)
-{
-  uint32_t u32 = (x >> 32);
-  uint32_t result = u32 ? __builtin_clz(u32) : 32;
-  if (result == 32) {
-    u32 = x & 0xFFFFFFFFUL;
-    result += (u32 ? __builtin_clz(u32) : 32);
-  }
-  return result;
 }
 
 // distance
@@ -176,7 +156,7 @@ int
 BVH::GetGeometryIndex(Geometry* geom) const 
 {
   for (size_t index = 0; index < _geometries.size(); ++index) {
-    if(_geometries[index] == geom)return index;
+    if(_geometries[index] == geom)return static_cast<int>(index);
   }
   return -1;
 }
@@ -260,7 +240,7 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
           hit->Set(leftHit); return true;
         }
         else {
-          hit->Set(rightHit);; return true;
+          hit->Set(rightHit); return true;
         }
       }
       else if (leftHit.HasHit()) {
@@ -282,7 +262,6 @@ bool
 BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
   Hit* hit, double maxDistance) const
 {
-  double leftMinDistance, rightMinDistance;
   pxr::GfRange3d range(point, point);
   if (maxDistance < 0 || GetDistance(this, &range) < maxDistance) {
     if (IsLeaf()) {
@@ -341,7 +320,7 @@ int _FindSplit(std::vector<Mortom>& mortoms,  int first, int last)
   if (firstCode == lastCode)
     return (first + last) >> 1;
 
-  int commonPrefix = _CountLeadingZeros(firstCode ^ lastCode);
+  int commonPrefix = MortomLeadingZeros(firstCode ^ lastCode);
   int split = first;
   int step = last - first;
 
@@ -353,7 +332,7 @@ int _FindSplit(std::vector<Mortom>& mortoms,  int first, int last)
     if (newSplit < last)
     {
       uint64_t splitCode = mortoms[newSplit].code;
-      int splitPrefix = _CountLeadingZeros(firstCode ^ splitCode);
+      int splitPrefix = MortomLeadingZeros(firstCode ^ splitCode);
       if (splitPrefix > commonPrefix) {
         split = newSplit;
       }
@@ -387,12 +366,12 @@ Mortom BVH::Cell::SortCellsByPair(
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     BVH::Cell* cell = (BVH::Cell*)cells[cellIdx].data;
     const pxr::GfVec3i p = WorldToMortom(*this, cell->GetMidpoint());
-    mortoms[cellIdx].code = Encode3D(p);
+    mortoms[cellIdx].code = MortomEncode3D(p);
     mortoms[cellIdx].data = cells[cellIdx].data;
   }
 
   std::sort(mortoms.begin(), mortoms.end());
-  return { 0, _RecurseSortCellsByPair(mortoms, 0, numCells - 1) };
+  return { 0, _RecurseSortCellsByPair(mortoms, 0, static_cast<int>(numCells) - 1) };
 } 
 
 void BVH::Cell::_FinishSort(std::vector<Mortom>& cells)

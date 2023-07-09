@@ -2,7 +2,7 @@
 //----------------------------------------------
 #include "../geometry/curve.h"
 #include "../geometry/utils.h"
-
+#include "../geometry/sampler.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -10,51 +10,35 @@ Curve::Curve()
   : Geometry(Geometry::CURVE)
 {
   _initialized = false;
-  _numCurves = 0;
-  _numSegments = 0;
 }
 
 Curve::Curve(const Curve* other, bool normalize)
   : Geometry(other, Geometry::CURVE, normalize)
 {
   _initialized = true;
-  _numCurves = other->_numCurves;
-  _numSegments = other->_numSegments;
 
   _normals = other->_normals;
 
-  _cvCounts.resize(_numCurves);
-  memcpy(&_cvCounts[0], &other->_cvCounts[0], _numCurves * sizeof(int));
+  size_t numCurves = other->_cvCounts.size();
+  _cvCounts.resize(numCurves);
+  memcpy(&_cvCounts[0], &other->_cvCounts[0], numCurves * sizeof(int));
 }
 
 Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
   : Geometry(Geometry::CURVE)
 {
-  _numCurves = curve.GetCurveCount();
-
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
 
   pxr::UsdAttribute vertexCountsAttr = curve.GetCurveVertexCountsAttr();
   vertexCountsAttr.Get(&_cvCounts, pxr::UsdTimeCode::Default());
 
-  _numSegments = 0;
-  for (const auto& cvCount : _cvCounts) _numSegments += cvCount - 1;
-
   pxr::UsdAttribute normalsAttr = curve.GetNormalsAttr();
   if(normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
     normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
 }
 
-void 
-Curve::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors) 
-{
-  _colorsInterpolation = interp;
-  _colors = colors;
-}
-
-uint32_t 
+size_t 
 Curve::GetNumCVs(uint32_t curveIndex)const
 {
   if(curveIndex >= _cvCounts.size())
@@ -62,7 +46,7 @@ Curve::GetNumCVs(uint32_t curveIndex)const
   return _cvCounts[curveIndex];
 }
 
-uint32_t 
+size_t 
 Curve::GetNumSegments(uint32_t curveIndex)const
 {
   if (curveIndex >= _cvCounts.size())
@@ -70,16 +54,20 @@ Curve::GetNumSegments(uint32_t curveIndex)const
   return _cvCounts[curveIndex] - 1;
 }
 
-uint32_t 
+size_t 
 Curve::GetTotalNumCVs()const
 {
   return _positions.size();
 }
 
-uint32_t 
+size_t 
 Curve::GetTotalNumSegments()const
 {
-  return _numSegments;
+  size_t numSegments = 0;
+  for (const auto& cvCount : _cvCounts) {
+    numSegments += cvCount - 1;
+  }
+  return numSegments;
 }
 
 float 
@@ -105,9 +93,6 @@ Curve::Init(
   const pxr::VtArray<int>& counts)
 {
   _cvCounts = counts;
-  _numCurves = counts.size();
-  _numSegments = 0;
-  for(const auto& count: counts) _numSegments += count - 1;
   _positions = positions;
   _normals = positions;
 }
@@ -146,5 +131,95 @@ Curve::Closest(const pxr::GfVec3f& point, Hit* hit,
   return false;
 };
 
+size_t
+Curve::_PointIndex(size_t curveIdx, size_t cvIdx)
+{
+  size_t index = 0;
+  for (size_t c = 0; c < curveIdx; ++c) {
+    index += _cvCounts[c];
+  }
+  return index + cvIdx;
+}
+
+void 
+Curve::SetRadius(size_t curveIdx, size_t cvIdx, float radius)
+{
+  size_t pointIdx = _PointIndex(curveIdx, cvIdx);
+  _radius[pointIdx] = radius;
+}
+
+void 
+Curve::SetRadii(size_t curveIdx, float radius)
+{
+  size_t pointIdx = _PointIndex(curveIdx, 0);
+  for (size_t p = pointIdx; p < pointIdx + _cvCounts[curveIdx]; ++p) {
+    _radius[pointIdx] = radius;
+  }
+}
+
+void
+Curve::SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
+{
+  size_t numCVs = _cvCounts[curveIdx];
+
+  if (radii.size() == numCVs) {
+    size_t startIdx = _PointIndex(curveIdx, 0);
+    for (size_t cvIdx = 0; cvIdx < numCVs; ++cvIdx) {
+      _radius[startIdx + cvIdx] = radii[cvIdx];
+    }
+  }
+}
+
+void 
+Curve::SetTopology(
+  const pxr::VtArray<pxr::GfVec3f>& positions,
+  const pxr::VtArray<int>& cvCounts)
+{
+  _positions = positions;
+  _normals = positions;
+  _radius.resize(_positions.size());
+  _cvCounts = cvCounts;
+}
+
+void 
+Curve::SetTopology(
+  const pxr::VtArray<pxr::GfVec3f>& positions,
+  const pxr::VtArray<float>& radius,
+  const pxr::VtArray<int>& cvCounts)
+{
+  _positions = positions;
+  _normals = positions;
+  _radius = radius;
+  _cvCounts = cvCounts;
+}
+
+void
+Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N, 
+  const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, float width)
+{
+  size_t numCurves = samples.size();
+  _cvCounts.resize(numCurves);
+  size_t numCVs = N * numCurves;
+  _radius.resize(numCVs);
+  _positions.resize(numCVs);
+
+  std::fill(_cvCounts.begin(), _cvCounts.end(), N);
+
+  for (size_t s = 0; s < numCurves; ++s) {
+    const pxr::GfVec3f& origin = samples[s].GetPosition(positions);
+    const pxr::GfVec3f& normal = samples[s].GetNormal(normals);
+    const pxr::GfVec3f& tangent = samples[s].GetTangent(positions, normals);
+
+    _positions[s * 4] = origin;
+    _positions[s * 4 + 1] = origin + normal * 0.1 + tangent * 0.33;
+    _positions[s * 4 + 2] = origin + normal * 0.5 + tangent * 0.66;
+    _positions[s * 4 + 3] = origin + normal + tangent;
+
+    _radius[s * 4] = width;
+    _radius[s * 4 + 1] = width * 0.8;
+    _radius[s * 4 + 2] = width * 0.4;
+    _radius[s * 4 + 3] = width * 0.2;
+  }
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE

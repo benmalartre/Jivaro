@@ -7,10 +7,6 @@
 #include <pxr/base/trace/trace.h>
 #include <pxr/base/tf/debug.h>
 
-#include "../imgui/imgui_impl_glfw.h"
-#include "../imgui/imgui_impl_opengl3.h"
-#include "../imgui/imgui_internal.h"
-
 #include "../ui/debug.h"
 #include "../app/view.h"
 

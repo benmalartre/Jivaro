@@ -14,6 +14,10 @@
 #include "pxr/base/tf/diagnostic.h"
 #include "pxr/base/tf/callContext.h"
 #include "../app/engine.h"
+#include "../app/application.h"
+#include "../geometry/geometry.h"
+#include "../geometry/mesh.h"
+#include "../geometry/sampler.h"
 
 #include <iostream>
 
@@ -55,6 +59,25 @@ Engine::Engine(const pxr::HdDriver& driver)
     _GetUsdImagingDelegateId(), driver)
 {
   //SetRendererAov()
+}
+
+void Engine::InitExec(Scene* scene)
+{
+  _delegate = new Delegate(_GetRenderIndex(), _GetUsdImagingDelegateId());
+  _delegate->SetScene(scene);
+}
+
+
+void Engine::UpdateExec(double time)
+{
+  _delegate->UpdateScene();
+}
+
+void Engine::TerminateExec()
+{
+  _delegate->RemoveScene();
+  delete(_delegate);
+  _delegate = NULL;
 }
 
 

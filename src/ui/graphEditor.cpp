@@ -17,12 +17,12 @@
 
 #include "../utils/color.h"
 #include "../utils/keys.h"
+#include "../ui/popup.h"
 #include "../ui/graphEditor.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
-#include "../command/block.h"
-#include "../command/command.h"
+#include "../app/commands.h"
 #include "../graph/execution.h"
 #include "../graph/hierarchy.h"
 
@@ -757,7 +757,6 @@ GraphEditorUI::GetPort(Graph::Port* port)
 bool
 GraphEditorUI::Populate(Graph* graph)
 {
-  UndoBlock editBlock;
   Clear();
   _graph = graph;
 
@@ -958,10 +957,8 @@ GraphEditorUI::Draw()
   ImGui::SetWindowFontScale(1.0);
   ImGui::SetCursorPos(ImVec2(0, 0));
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    0, ICON_FA_RECYCLE, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)RefreshGraphCallback, this
-    );
+  UIUtils::AddIconButton(0, ICON_FA_RECYCLE, ICON_DEFAULT,
+    std::bind(RefreshGraphCallback, this));
   ImGui::SameLine();
 
   const pxr::GfVec2f mousePos = ImGui::GetMousePos() - _parent->GetMin();
@@ -1293,10 +1290,10 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
       FrameAll();
     }
     else if (mappedKey == GLFW_KEY_TAB) {
-      NodePopupUI* popup = new NodePopupUI(
+      Application* app = GetApplication();
+      GraphPopupUI* popup = new GraphPopupUI(
         (int)GetX() + GetWidth() * 0.5f - 100, (int)GetY() + GetHeight() * 0.5 - 50, 200, 100);
-
-      GetApplication()->SetPopup(popup);
+      app->AddDeferredCommand(std::bind(&Application::SetPopup, app, popup));
     }
   }
 }

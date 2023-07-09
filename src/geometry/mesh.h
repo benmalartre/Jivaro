@@ -1,17 +1,20 @@
 #ifndef JVR_GEOMETRY_MESH_H
 #define JVR_GEOMETRY_MESH_H
-
-#include "../common.h"
+#include <limits>
 #include "pxr/base/vt/array.h"
 #include "pxr/base/tf/hashmap.h"
+#include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <float.h>
-#include "triangle.h"
-#include "geometry.h"
+
+#include "../common.h"
+#include "../geometry/triangle.h"
+#include "../geometry/geometry.h"
+#include "../geometry/halfEdge.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -21,48 +24,17 @@ struct Location {
   pxr::GfVec3f          baryCoords;    // barycentric coordinates
 };
 
-struct HalfEdge
-{
-  enum Latency {
-    REAL,
-    IMPLICIT,
-    VIRTUAL,
-    ANY
-  };
-
-  uint32_t                index;     // half edge index
-  uint32_t                vertex;    // vertex index
-  //uint32_t                face;      // face index
-  struct HalfEdge*        twin;      // opposite half-edge
-  struct HalfEdge*        next;      // next half-edge
-  uint8_t                 latency;   // edge latency
-
-  HalfEdge():vertex(0)/*,face(0),triangle(0)*/,twin(NULL),next(NULL),latency(REAL){};
-  inline size_t GetTriangleIndex() const {return index / 3;};
-  void GetTriangleNormal(const pxr::GfVec3f* positions, 
-    pxr::GfVec3f& normal) const;
-  void GetVertexNormal(const pxr::GfVec3f* normals, pxr::GfVec3f& normal) const;
-  bool GetFacing(const pxr::GfVec3f* positions, const pxr::GfVec3f& v) const;
-  bool GetFacing(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals,
-    const pxr::GfVec3f& v) const;
-  float GetDot(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals,
-    const pxr::GfVec3f& v) const;
-  
-  static HalfEdge* GetLongestInTriangle(const pxr::GfVec3f* positions, HalfEdge* edge);
-  /*
-  short GetFlags(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, 
-    const pxr::GfVec3f& v, float creaseValue) const;
-  float GetWeight(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals,
-    const pxr::GfVec3f& v) const;
-  */
-};
-
 class Mesh : public Geometry {
 public:
+  enum Flag {
+    NEIGHBORS     = 1 << 0,
+    HALFEDGES     = 1 << 1,
+    TRIANGLEPAIRS = 1 << 2
+  };
   Mesh();
   Mesh(const Mesh* other, bool normalize = true);
   Mesh(const pxr::UsdGeomMesh& usdMesh);
-  virtual ~Mesh() {};
+  virtual ~Mesh();
 
   const pxr::VtArray<int>& GetFaceCounts() const { return _faceVertexCounts;};
   const pxr::VtArray<int>& GetFaceConnects() const { return _faceVertexIndices;};
@@ -76,48 +48,58 @@ public:
   pxr::GfVec3f GetTriangleVertexNormal(const Triangle* T, uint32_t index) const;    // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;                        // triangle normal
 
-  const std::vector<HalfEdge*> GetUniqueEdges();
+  const pxr::VtArray<HalfEdge>& GetEdges();
+  size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices);
+
+  const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
+  void ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors);
   
-  void SetDisplayColor(GeomInterpolation interp, 
-    const pxr::VtArray<pxr::GfVec3f>& colors);
-  const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
-  GeomInterpolation GetDisplayColorInterpolation() const {
-    return _colorsInterpolation;
-  };
   pxr::GfVec3f GetPosition(const Location& point) const ;
   pxr::GfVec3f GetNormal(const Location& point) const;
   Triangle* GetTriangle(uint32_t index){return &_triangles[index];};
   pxr::VtArray<Triangle>& GetTriangles(){return _triangles;};
-  pxr::VtArray<TrianglePair>& GetTrianglePairs() { return _trianglePairs; };
+  pxr::VtArray<TrianglePair>& GetTrianglePairs();
 
-  uint32_t GetNumTriangles()const {return _numTriangles;};
-  uint32_t GetNumSamples()const {return _numSamples;};
-  uint32_t GetNumFaces()const {return _numFaces;};
-  uint32_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
-  uint32_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
+  size_t GetNumTriangles()const {return _triangles.size();};
+  size_t GetNumSamples()const {return _faceVertexIndices.size();};
+  size_t GetNumFaces()const {return _faceVertexCounts.size();};
+  size_t GetNumEdges()const { return _halfEdges.GetNumEdges(); };
+
+  float GetAverageEdgeLength();
+
+  size_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
+  size_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
   void GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
   void GetCutEdgesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
 
   void ComputeHalfEdges();
   void ComputeNeighbors();
+  void ComputeTrianglePairs();
+
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
-
-  void SetTopology(
-    const pxr::VtArray<pxr::GfVec3f>& positions, 
-    const pxr::VtArray<int>& faceVertexCounts, 
-    const pxr::VtArray<int>& faceVertexIndices);
+  void Triangulate();
+  void TriangulateFace(const HalfEdge* edge);
 
   void Init();
-
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
 
-  // retopo
-  void SetAllEdgesLatencyReal();
-  void UpdateTopologyFromHalfEdges();
-  void FlipEdge(size_t index);
-  void SplitEdge(size_t index);
-  void CollapseEdge(size_t index);
+  // topology
+  void Set(
+    const pxr::VtArray<pxr::GfVec3f>& positions,
+    const pxr::VtArray<int>& faceVertexCounts,
+    const pxr::VtArray<int>& faceVertexIndices, 
+    bool init=true
+  );
+  void SetTopology(
+    const pxr::VtArray<int>& faceVertexCounts,
+    const pxr::VtArray<int>& faceVertexIndices,
+    bool init=true
+  );
+  bool FlipEdge(HalfEdge* edge);
+  bool SplitEdge(HalfEdge* edge);
+  bool CollapseEdge(HalfEdge* edge);
+  bool RemovePoint(size_t index);
 
   // Flatten
   void DisconnectEdges(const pxr::VtArray<int>& edges);
@@ -128,9 +110,14 @@ public:
     const pxr::GfVec3f& direction, Location& point, float maxDistance);
 
   // test (to be removed)
+  void Random2DPattern();
   void PolygonSoup(size_t numPolygons, 
     const pxr::GfVec3f& minimum=pxr::GfVec3f(-1.f), 
     const pxr::GfVec3f& maximum=pxr::GfVec3f(1.f));
+  void ColoredPolygonSoup(size_t numPolygons, 
+    const pxr::GfVec3f& minimum = pxr::GfVec3f(-1.f),
+    const pxr::GfVec3f& maximum = pxr::GfVec3f(1.f));
+  void MaterializeSamples(const pxr::VtArray<pxr::GfVec3f>& points, float size=0.1f);
   void OpenVDBSphere(const float radius, 
     const pxr::GfVec3f& center=pxr::GfVec3f(0.f));
   void Randomize(float value);
@@ -148,24 +135,12 @@ public:
     return false;
   };
 
-private:
-  // infos
-  uint32_t                            _numTriangles;
-  uint32_t                            _numSamples;
-  uint32_t                            _numFaces;
 
+private:
+  int                                 _flags;
   // polygonal description
   pxr::VtArray<int>                   _faceVertexCounts;  
   pxr::VtArray<int>                   _faceVertexIndices;
-
-  // colors
-  pxr::VtArray<pxr::GfVec3f>          _colors;
-  GeomInterpolation                   _colorsInterpolation;
-
-  // vertex data
-  pxr::VtArray<bool>                  _boundary;
-  pxr::VtArray<int>                   _shell;
-  pxr::VtArray< pxr::VtArray<int> >   _neighbors;
 
   // shell data (vertices)
   pxr::VtArray< pxr::VtArray<int> >   _shells;
@@ -175,9 +150,8 @@ private:
   pxr::VtArray<TrianglePair>          _trianglePairs;
 
   // half-edge data
-  pxr::VtArray<HalfEdge>              _halfEdges;
-  pxr::VtArray<int>                   _uniqueEdges;
-  pxr::VtArray<int>                   _vertexHalfEdge;
+  HalfEdgeGraph                       _halfEdges;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

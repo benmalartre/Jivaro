@@ -410,39 +410,30 @@ void
 LayersUI::DrawNavigation(pxr::SdfLayerRefPtr layer) 
 {
   if (!layer) return;
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
-    0,
-    ICON_FA_TRASH,
-    ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)&OnSetPreviousLayer, this);
+
+  UIUtils::AddIconButton(
+    0, ICON_FA_TRASH, ICON_DEFAULT,
+    std::bind(OnSetPreviousLayer));
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
-    0,
-    ICON_FA_TRASH,
-    ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)&OnSetNextLayer, this);
+  UIUtils::AddIconButton(
+    0, ICON_FA_TRASH, ICON_DEFAULT,
+    std::bind(OnSetNextLayer));
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
-    0,
-    ICON_FA_TRASH,
-    ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)&OnReloadLayer, this);
+  UIUtils::AddIconButton(
+    0, ICON_FA_TRASH, ICON_DEFAULT,
+    std::bind(OnReloadLayer));
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
-    0,
-    ICON_FA_TRASH,
-    ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)&OnSaveLayer, this);
+  UIUtils::AddIconButton(
+    0, ICON_FA_TRASH, ICON_DEFAULT,
+    std::bind(OnSaveLayer));
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, LayersUI*>(
-    0,
-    ICON_FA_TRASH,
-    ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)&OnSaveLayer, this);
+  UIUtils::AddIconButton(
+    0, ICON_FA_TRASH, ICON_DEFAULT,
+    std::bind(OnSaveLayer));
   ImGui::SameLine();
   /*
   if (ImGui::Button("Move up")) {

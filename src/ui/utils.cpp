@@ -3,11 +3,83 @@
 #include "../ui/utils.h"
 #include "../ui/popup.h"
 #include "../app/view.h"
+#include "../app/window.h"
 #include "../app/application.h"
 #include "../command/block.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+void
+UIUtils::IconButton(const char* icon, short state, CALLBACK_FN func)
+{
+  ImGui::BeginGroup();
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))func();
+  ImGui::EndGroup();
+}
+
+bool
+UIUtils::AddIconButton(const char* icon, short state, CALLBACK_FN func)
+{
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
+  {
+    func();
+    return true;
+  }
+  return false;
+}
+
+bool
+UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+{
+  ImGui::PushID(id);
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
+    func();
+    ImGui::PopID();
+    return true;
+  }
+
+  ImGui::PopID();
+  return false;
+}
+
+bool
+UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+{
+  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
+  ImGui::PushID(id);
+  bool clicked = false;
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
+  {
+    func();
+    clicked = true;
+  }
+  ImGui::PopID();
+  ImGui::PopStyleColor();
+  return clicked;
+}
+
+bool
+UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+{
+  ImGuiStyle* style = &ImGui::GetStyle();
+  ImVec4* colors = style->Colors;
+  const bool active = (state == ICON_SELECTED);
+  if (active) {
+    ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
+  }
+  bool clicked = false;
+  ImGui::PushID(id);
+  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
+  {
+    func();
+    clicked = true;
+  }
+  if (active) ImGui::PopStyleColor(2);
+  ImGui::PopID();
+  return clicked;
+}
 
 void 
 UIUtils::HelpMarker(const char* desc)
@@ -181,7 +253,9 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
 
     ColorPopupUI* popup = new ColorPopupUI((int)position[0], (int)position[1], 
       200, 300, attribute, timeCode);
-    GetApplication()->SetPopupDeferred(popup);
+    GetApplication()->AddDeferredCommand(
+      std::bind(&Application::SetPopup, GetApplication(), popup)
+    );
     ImGui::PopStyleColor(3);
     return pxr::VtValue();
   }

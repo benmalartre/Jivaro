@@ -6,7 +6,7 @@
 #include "../ui/layerEditor.h"
 #include "../app/view.h"
 #include "../app/application.h"
-
+#include "../app/commands.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -315,7 +315,7 @@ bool LayerEditorUI::Draw()
       if (ImGui::BeginPopupContextItem()) {
         if (ImGui::MenuItem("Add root prim")) {
           ADD_COMMAND(CreatePrimCommand,
-            GetApplication()->GetWorkspace()->GetWorkLayer(), "/root");
+            GetApplication()->GetCurrentLayer(), "/root");
         }
         ImGui::EndPopup();
       }

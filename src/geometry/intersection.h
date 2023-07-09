@@ -33,7 +33,6 @@ private:
   short         _elemType;
 };
 
-
 class Hit {
 private:
   friend class Intersector;

@@ -84,8 +84,8 @@ class ViewportUI : public BaseUI
   private:
     void                                _DrawPickMode();
     GLuint                              _texture;
-    int*                                _pixels;
-    int*                                _lowPixels;
+    //int*                                _pixels;
+    //int*                                _lowPixels;
     int                                 _width;
     int                                 _height;
     Camera*                             _camera;
@@ -110,8 +110,6 @@ class ViewportUI : public BaseUI
     const char**                        _rendererNames;
     int                                 _numRenderers;
     pxr::CameraUtilConformWindowPolicy  _conformWindowPolicy;
-
-    uint64_t                            _counter;
 
 };
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -21,15 +21,17 @@ add_executable(${TARGET}
   ui/ui.cpp
   ui/fonts.cpp
   ui/demo.cpp
+  ui/icon.cpp
   ui/textFilter.cpp
   ui/utils.cpp
   ui/popup.cpp
-  ui/debug.cpp
+  #ui/debug.cpp
   ui/fileBrowser.cpp
   ui/contentBrowser.cpp
   ui/splitter.cpp
   ui/tab.cpp
   ui/menu.cpp
+  ui/tool.cpp
   ui/textEditor.cpp
   ui/graphEditor.cpp
   ui/viewport.cpp
@@ -53,12 +55,18 @@ add_executable(${TARGET}
   #embree/context.cpp
   #embree/device.cpp
   geometry/utils.cpp
+  geometry/matrix.cpp
+  geometry/rbf.cpp
+  geometry/subdiv.cpp
+  geometry/tesselator.cpp
+  geometry/kabsch.cpp
   geometry/sampler.cpp
   geometry/voxels.cpp
   geometry/shape.cpp
   geometry/intersection.cpp
   geometry/point.cpp
   geometry/edge.cpp
+  geometry/halfEdge.cpp
   geometry/triangle.cpp
   geometry/delaunay.cpp
   geometry/geometry.cpp
@@ -87,6 +95,7 @@ add_executable(${TARGET}
   command/delegate.cpp
   command/manager.cpp
   app/time.cpp
+  app/commands.cpp
   app/notice.cpp
   app/handle.cpp
   app/camera.cpp
@@ -95,11 +104,10 @@ add_executable(${TARGET}
   app/modal.cpp
   app/scene.cpp
   app/engine.cpp
-  app/workspace.cpp
   app/picking.cpp
   app/selection.cpp
   app/tools.cpp
-  #app/delegate.cpp
+  app/delegate.cpp
   app/application.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
@@ -115,23 +123,25 @@ endif()
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
-    #${Python2_INCLUDE_DIRS}
+    ${Python2_INCLUDE_DIRS}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}
-    #${OPENVDB_INCLUDE_DIR}
-	${BOOST_INCLUDE_DIR}
-	${ICON_AWESOME_DIR}
+    ${OPENVDB_INCLUDE_DIR}
+    ${OPENSUBDIV_INCLUDE_DIR}
+	  ${BOOST_INCLUDE_DIR}
+	  ${ICON_AWESOME_DIR}
 )
 
 target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}
-  #{Python2_LIBRARIES}
+  ${Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}
   ${EMBREE_LIBRARIES}
   ${TBB_LIBRARIES}
-  #${OPENVDB_LIBRARIES}
+  ${OPENVDB_LIBRARIES}
+  ${OPENSUBDIV_LIBRARIES}
   ${GLFW}
   ${ADDITIONAL_LIBRARIES}
 )

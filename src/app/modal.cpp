@@ -31,7 +31,8 @@ void ModalBase::Init()
   Window* mainWindow = app->GetMainWindow();
   mainWindow->SetIdle(true);
 
-  _window = app->CreateChildWindow(_x, _y, _width, _height, mainWindow, _title);
+  _window = app->CreateChildWindow(_title, pxr::GfVec4i(_x, _y, _width, _height), mainWindow);
+  _window->SetDesiredLayout(_window->GetLayout());
 }
 
 void ModalBase::Term()
@@ -49,7 +50,6 @@ void ModalBase::Loop()
 {
   while (!glfwWindowShouldClose(_window->GetGlfwWindow()) && _status == ACTIVE) {
     _window->Draw();
-    glfwSwapBuffers(_window->GetGlfwWindow());
     glfwPollEvents();
     _LoopImpl();
   }
@@ -86,6 +86,7 @@ ModalFileBrowser::ModalFileBrowser(int x, int y, const std::string& title,
 
     _ui = browser;
   }
+  _window->SetActiveView(view);
 }
 
 void ModalFileBrowser::_LoopImpl()

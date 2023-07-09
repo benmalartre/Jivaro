@@ -6,6 +6,9 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+static int GLOBAL_UI_TYPE_COUNTER[UIType::COUNT];
+
+
 // constructor
 BaseUI::BaseUI(View* parent, short type, bool popup)
   : _parent(parent) 
@@ -19,6 +22,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
     _parent->AddUI(this);
     _parent->SetCurrent(this);
     _parent->SetFlag(View::LEAF);
+    _parent->SetDirty();
   }
 
   pxr::TfWeakPtr<BaseUI> me(this);
@@ -32,14 +36,9 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
 std::string 
 BaseUI::ComputeUniqueName(short type)
 {
+  if(_parent)return _parent->GetWindow()->ComputeUniqueUIName(type);
   std::string baseName = UITypeName[type];
-  if (UINameIndexMap.find(baseName) != UINameIndexMap.end()) {
-    UINameIndexMap[baseName]++;
-  }
-  else {
-    UINameIndexMap[baseName] = 1;
-  }
-  return baseName + std::to_string(UINameIndexMap[baseName]);
+  return baseName + std::to_string(GLOBAL_UI_TYPE_COUNTER[type]++);
 }
 
 void BaseUI::OnNewSceneNotice(const NewSceneNotice& n)
@@ -87,7 +86,8 @@ void BaseUI::DiscardEventsIfMouseInsideBox(const pxr::GfVec2f& min, const pxr::G
 Window* 
 BaseUI::GetWindow()
 {
-  return _parent->GetWindow();
+  if(_parent)return _parent->GetWindow();
+  return NULL;
 };
 
 // parent window height
@@ -96,7 +96,6 @@ BaseUI::GetWindowHeight()
 {
   return _parent->GetWindow()->GetHeight();
 };
-//void BaseUI::SetWindowContext(){_parent->GetWindow()->SetContext();};
 
 // ui dimensions
 pxr::GfVec2f BaseUI::GetPosition()
@@ -141,7 +140,6 @@ int BaseUI::GetHeight()
     return _parent->GetHeight() + 2;
   }
 }
-
 
 void 
 BaseUI::SetInteracting(bool state)

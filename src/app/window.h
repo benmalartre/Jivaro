@@ -5,7 +5,6 @@
 #include "../ui/ui.h"
 #include "../ui/fonts.h"
 #include "../ui/utils.h"
-#include "../ui/splitter.h"
 #include "../app/tools.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
@@ -20,7 +19,7 @@ extern bool LEGACY_OPENGL;
 class UsdEmbreeContext;
 class Application;
 class View;
-class Splitter;
+class SplitterUI;
 class BaseUI;
 class PopupUI;
 
@@ -69,10 +68,8 @@ class Window
 {
 public:
   // constructor
-  Window(int width, int height, const std::string& name);
-  Window(bool fullscreen, const std::string& name);
-  Window(int x, int y, int width, int height,
-    GLFWwindow* parent, const std::string& name, bool decorated=true);
+  Window(const std::string& name, const pxr::GfVec4i& dimension,
+    bool fullscreen=false, Window* parent=NULL);
 
   //destructor
   ~Window();
@@ -82,6 +79,7 @@ public:
 
   // ui
   ImGuiContext* GetContext() { return _context; };
+  std::string ComputeUniqueUIName(short type);
 
   // tool
   Tool* GetTool() { return &_tool; };
@@ -91,7 +89,6 @@ public:
   GLFWwindow* GetGlfwWindow(){return _window;};
   bool GetDebounce(){return _debounce;};
   void SetDebounce(bool debounce){_debounce=debounce;};
-  void CollectLeaves(View* view = NULL);
   const std::string& GetName() { return _name; };
 
   // imgui context
@@ -103,13 +100,10 @@ public:
   bool IsFullScreen(){return _fullscreen;};
   void SetFullScreen(bool fullscreen){_fullscreen = fullscreen;};
 
-  // children
-  //void AddChild(Window* child);
-  //void RemoveChild(Window* child);
-
   // size
   int GetWidth(){return _width;};
   int GetHeight(){return _height;};
+  pxr::GfVec2i GetResolution() { return pxr::GfVec2i(_width, _height); };
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
@@ -125,18 +119,29 @@ public:
   View* GetActiveView(){return _activeView;};
   View* GetHoveredView() { return _hoveredView; };
   View* GetViewUnderMouse(int x, int y);
-  void DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
-  void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
+  void CollectLeaves();
+  const std::vector<View*>& GetLeaves();
+  const std::vector<View*>& GetViews();
+  void DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
+  void DiscardMouseEventsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
+  void InvalidateViews();
+  void ClearViews();
+  void SetLayout();
+  void SetDesiredLayout(size_t layout);
+  size_t GetLayout();
   
   // draw
   void SetGLContext();
   void Draw();
-  void Draw(PopupUI* popup);
+  void DrawPopup(PopupUI* popup);
   bool PickSplitter(double mX, double mY);
   void ForceRedraw();
   void SetIdle(bool value){_idle=value;};
   bool IsIdle(){return _idle;};
   void CaptureFramebuffer();
+  void BeginRepeatKey();
+  void EndRepeatKey();
+  bool ShouldRepeatKey();
 
   // fonts
   inline ImFont* GetFont(size_t index){return FONTS[index];};
@@ -173,6 +178,7 @@ private:
   View*                 _activeLeaf;
   SplitterUI*           _splitter;
   bool                  _dragSplitter;
+  std::vector<View*>    _views;
   std::vector<View*>    _leaves;
   ImGuiContext*         _context;
   Tool                  _tool;
@@ -187,6 +193,8 @@ private:
   unsigned*             _pixels;
   bool                  _valid;
   int                   _forceRedraw;
+  int                   _layout;
+  bool                  _needUpdateLayout;
 
   // version number
   int                   _iOpenGLMajor;
@@ -200,6 +208,7 @@ private:
   ImGuiIO*              _io;
   int                   _guiId;
   bool                  _debounce;
+  uint64_t              _lastRepeatT;
 
   // fonts
   float                 _fontSize;
@@ -209,14 +218,14 @@ private:
   float                 _dpiY;
   GLuint                _fbo;
   GLuint                _tex;
+  UITypeCounter         _uic;
 
 public:
   // static constructor
   //----------------------------------------------------------------------------
-  static Window* CreateFullScreenWindow();
-  static Window* CreateStandardWindow(int width, int height);
-  static Window* CreateChildWindow(int x, int y, int width, int height, GLFWwindow* parent,
-    const std::string& name="Child", bool decorated=true);
+  static Window* CreateFullScreenWindow(const std::string& name);
+  static Window* CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension);
+  static Window* CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent);
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

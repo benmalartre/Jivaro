@@ -11,7 +11,6 @@
 #include <pxr/base/gf/bbox3d.h>
 
 #include "../common.h"
-#include "../geometry/point.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -65,7 +64,10 @@ public:
   void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
   void SetRadius(uint32_t index, float normal);
 
-  uint32_t GetNumPoints()const {return _positions.size();};
+  size_t GetNumPoints()const {return _positions.size();};
+
+  void AddPoint(const pxr::GfVec3f& pos);
+  void RemovePoint(size_t index);
 
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
@@ -87,7 +89,6 @@ public:
 protected:
   // infos
   short                               _type;
-  pxr::VtArray<Point>                 _points;
 
   // vertex data
   pxr::VtArray<pxr::GfVec3f>          _positions;
@@ -97,7 +98,7 @@ protected:
 
   // bounding box
   pxr::GfBBox3d                       _bbox;
-  bool _initialized;
+  bool                                _initialized;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

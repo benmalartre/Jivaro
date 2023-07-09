@@ -21,6 +21,8 @@ public:
 
   size_t GetNumCells();
   pxr::GfVec3f GetCellPosition(size_t cellIdx);
+  BVH* GetTree() { return &_bvh; };
+  const BVH* GetTree() const { return &_bvh; };
 
   float GetRadius() { return _radius; };
 

@@ -18,20 +18,12 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Point;
 class Points : public Geometry {
 public:
   Points();
   Points(const Points* other, bool normalize = true);
   Points(const pxr::UsdGeomPoints& points);
   virtual ~Points() {};
-
-  void SetDisplayColor(GeomInterpolation interp, 
-    const pxr::VtArray<pxr::GfVec3f>& colors);
-  const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
-  GeomInterpolation GetDisplayColorInterpolation() const {
-    return _colorsInterpolation;
-  };
 
   Point Get(uint32_t index);
 
@@ -57,10 +49,6 @@ public:
 private:
   // radius description
   pxr::VtArray<float>                 _radius;  
-
-  // colors
-  pxr::VtArray<pxr::GfVec3f>          _colors;
-  GeomInterpolation                   _colorsInterpolation;
 
 };
 

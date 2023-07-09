@@ -9,7 +9,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
 Geometry::Geometry()
 {
   _initialized = false;
@@ -28,8 +27,8 @@ Geometry::Geometry(const Geometry* other, short type, bool normalize)
   _type = type;
 
   _positions = other->_positions;
-  _points = other->_points;
   _normals = other->_positions;
+  _radius = other->_radius;
 
   _bbox = other->_bbox;
 
@@ -126,15 +125,26 @@ Geometry::ComputeBoundingBox()
 }
 
 void
+Geometry::AddPoint(const pxr::GfVec3f& pos)
+{
+  _positions.push_back(pos);
+  _normals.push_back(pos);
+}
+
+void 
+Geometry::RemovePoint(size_t index)
+{
+  _positions.erase(_positions.begin() + index);
+  _normals.erase(_normals.begin() + index);
+}
+
+void
 Geometry::Init(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
   size_t numPoints = positions.size();
   _positions = positions;
   _normals = positions;
-  _points.resize(numPoints);
-  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    _points[pointIdx] = Point(pointIdx, 1.f);
-  }
+  _radius.resize(numPoints);
 }
 
 void

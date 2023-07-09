@@ -4,7 +4,6 @@
 
 #include <vector>
 #include "../common.h"
-#include "../ui/splitter.h"
 #include "../ui/utils.h"
 #include "../ui/tab.h"
 
@@ -67,14 +66,14 @@ public:
   void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
     const int width, const int height);
 
-  void SetLeft(View* view){_left = view; _left->_parent = this;};
-  void SetRight(View* view){_right = view; _right->_parent = this;};
+  void SetLeft(View* view){_left = view; if(view)view->_parent=this;};
+  void SetRight(View* view){_right = view; if(view)view->_parent=this;};
   void SetParent(View* view){_parent = view;};
   inline View* GetLeft(){return _left;};
   inline View* GetRight(){return _right;};
   inline View* GetParent(){return _parent;};
   inline bool HasParent(){return _parent != NULL;};
-  void DeleteChildren();
+  void Clear();
 
   // tab
   ViewTabUI* GetTab() { return _tab; };
@@ -99,9 +98,9 @@ public:
   void SetCurrent(BaseUI* ui) { _current = ui; };
 
   // cursor
-  void GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY);
+  pxr::GfVec2f GetRelativeMousePosition(const int inX, const int inY);
   bool Contains(int x, int y);
-  bool Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
+  bool Intersect(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   
   // callbacks
   bool DrawTab();
@@ -126,7 +125,6 @@ public:
   void SetTabed(bool tabed);
   void SetInteracting(bool value);
   bool IsInteracting();
-  void DirtyUnderPopup();
 
 private:
   pxr::GfVec2f          _min;

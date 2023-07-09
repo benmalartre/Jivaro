@@ -17,7 +17,8 @@
 #include "../ui/textEditor.h"
 #include "../ui/debug.h"
 #include "../ui/demo.h"
-
+#include "../ui/icon.h"
+#include "../ui/tool.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -37,7 +38,7 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, unsig
   , _current(NULL)
   , _currentIdx(-1)
 {
-  if(_parent!=NULL)_window = _parent->_window;
+  if(_parent)_window = _parent->_window;
   if (_flags & View::TAB)CreateTab();
 }
 
@@ -55,15 +56,21 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   , _current(NULL)
   , _currentIdx(-1)
 {
-  if(_parent!=NULL)_window = _parent->_window;
+  if(_parent)_window = _parent->_window;
   if (_flags & View::TAB)CreateTab();
 }
 
 View::~View()
 {
+  std::cout << "destruct view : " << this << ":" << _uis.size() << std::endl;
+  for (auto& ui : _uis) {
+    std::cout << "    -> " << ui->GetName() << std::endl; delete ui;
+  }
+ 
   if (_tab) delete _tab;
   if (_left) delete _left;
   if (_right) delete _right;
+  std::cout << "view destructed" << std::endl;
 }
 
 void 
@@ -116,13 +123,19 @@ View::CreateUI(UIType type)
     _current = new DemoUI(this);
     break;
   case UIType::PROPERTYEDITOR:
-    _current = new PropertyUI(this);
+    _current = new PropertyEditorUI(this);
     break;
   case UIType::TEXTEDITOR:
     _current = new TextEditorUI(this);
     break;
-  case UIType::DEBUG:
+  /*case UIType::DEBUG:
     _current = new DebugUI(this);
+    break;*/
+  case UIType::ICON:
+    _current = new IconUI(this);
+    break;
+  case UIType::TOOL:
+    _current = new ToolUI(this);
     break;
   default:
     break;
@@ -211,7 +224,7 @@ View::Contains(int x, int y)
 }
 
 bool
-View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+View::Intersect(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
 {
   pxr::GfRange2f viewRange(GetMin(), GetMax());
   pxr::GfRange2f boxRange(min, min + size);
@@ -221,8 +234,8 @@ View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
 bool
 View::DrawTab()
 {
-  if (_tab) return (_tab->Draw());
-  return false;
+  if (_tab) return (!_tab->Draw());
+  return true;
 }
 
 void 
@@ -233,7 +246,7 @@ View::Draw(bool forceRedraw)
     if (_right)_right->Draw(forceRedraw);
   }
   else {
-    if (!DrawTab()) {
+    if (DrawTab()) {
       Time& time = GetApplication()->GetTime();
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
         if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
@@ -269,22 +282,24 @@ View* View::GetSibling()
   return NULL;
 }
 
-void View::DeleteChildren()
+void View::Clear()
 {
-  if (_left)delete _left;
+  if (_left) delete _left;
   if (_right) delete _right;
   _left = _right = NULL;
+  _current = NULL;
+  _currentIdx = -1;
+  SetFlag(LEAF);
 }
 
 // mouse positon relative to the view
-void 
-View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
+pxr::GfVec2f 
+View::GetRelativeMousePosition(const int inX, const int inY)
 {
   pxr::GfVec2f position = GetMin();
   int x = position[0];
   int y = position[1];
-  outX = inX - x;
-  outY = inY - y;
+  return pxr::GfVec2f(inX - x, inY - y);
 }
 
 float View::GetTabHeight() {
@@ -410,19 +425,22 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
     int h = GetMin()[1] + (GetMax()[1] - GetMin()[1]) * GetPerc();
     sMin[1] = h - SPLITTER_THICKNESS;
     sMax[1] = h + SPLITTER_THICKNESS;
-    sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > height) ? height : sMin[1]);
-    sMax[1] = (sMax[1] < 0) ? 0 : ((sMax[1] > height) ? height : sMax[1]);
   }
   else
   {
+    sMin[1] = GetMin()[1] - SPLITTER_THICKNESS;
+    sMax[1] = GetMax()[1] + SPLITTER_THICKNESS;
+
     int w = GetMin()[0] + (GetMax()[0] - GetMin()[0]) * GetPerc();
     sMin[0] = w - SPLITTER_THICKNESS;
     sMax[0] = w + SPLITTER_THICKNESS;
-    sMin[1] = GetMin()[1] - SPLITTER_THICKNESS;
-    sMax[1] = GetMax()[1] + SPLITTER_THICKNESS;
-    sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > width) ? width : sMin[1]);
-    sMax[1]= (sMax[1] < 0) ? 0 : ((sMax[1] > width) ? width : sMax[1]);
   }
+
+  sMin[0] = pxr::GfClamp(sMin[0], 0, width);
+  sMin[1] = pxr::GfClamp(sMin[1], 0, height);
+  sMax[0] = pxr::GfClamp(sMax[0], 0, width);
+  sMax[1] = pxr::GfClamp(sMax[1], 0, height);
+
 }
 
 void
@@ -431,7 +449,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   if(horizontal)SetFlag(HORIZONTAL);
   else ClearFlag(HORIZONTAL);
 
-  if (fixed && numPixels) {
+  if (fixed && numPixels > 0) {
     if (fixed & LFIXED) {
       SetFlag(LFIXED); 
       ClearFlag(RFIXED);
@@ -464,6 +482,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
     _left->TransferUIs(this);
   }
   RemoveTab();
+  _window->Resize(_window->GetWidth(), _window->GetHeight());
 }
 
 void 
@@ -473,8 +492,8 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
 
   if(rationalize)
   {
-    ratio[0] = 1 / ((double)(_max[0] - _min[0]) / (double)w);
-    ratio[1] = 1 / ((double)(_max[1] - _min[1]) / (double)h);
+    ratio[0] = 1 / (((double)_max[0] - (double)_min[0]) / (double)w);
+    ratio[1] = 1 / (((double)_max[1] - (double)_min[1]) / (double)h);
   }
   _min = pxr::GfVec2f(x , y);
   _max = pxr::GfVec2f(x + w, y + h);
@@ -484,7 +503,7 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
     if(GetFlag(HORIZONTAL))
     {
       if (GetFlag(LFIXED)) _perc = (double)_fixedPixels / (double)h;
-      else if (GetFlag(RFIXED)) _perc = (double)(h - _fixedPixels) / (double)h;
+      else if (GetFlag(RFIXED)) _perc = ((double)h - _fixedPixels) / (double)h;
       
       double ph = (double)h * _perc;
       if (_left)_left->Resize(x, y, w, ph);
@@ -517,13 +536,13 @@ View::GetPercFromMousePosition(int x, int y)
   if(GetFlag(HORIZONTAL))
   {
     if(GetHeight()<0.01)return;
-    double perc = (double)(y - _min[1]) / (double)(_max[1] - _min[1]);
+    double perc = ((double)y - _min[1]) / ((double)_max[1] - _min[1]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
   else
   {
     if(GetWidth()<0.01)return;
-    double perc = (double)(x - _min[0]) / (double)(_max[0] - _min[0]);
+    double perc = ((double)x - _min[0]) / ((double)_max[0] - _min[0]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
   ComputeNumPixels(true);

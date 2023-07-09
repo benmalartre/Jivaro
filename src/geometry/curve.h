@@ -14,11 +14,12 @@
 #include <pxr/usd/usdGeom/basisCurves.h>
 
 #include <float.h>
-#include "triangle.h"
-#include "geometry.h"
+#include "../geometry/triangle.h"
+#include "../geometry/geometry.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+struct Sample;
 struct CurveLocation {
   uint32_t  cid;      // curve index
   uint32_t  sid;      // segment index
@@ -32,24 +33,35 @@ public:
   Curve(const pxr::UsdGeomBasisCurves& curve);
   virtual ~Curve() {};
 
+  void SetRadius(size_t curveIdx, size_t cvIdx, float radius);
+  void SetRadii(size_t curveIdx, float radius);
+  void SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii);
+
+  void SetTopology(
+    const pxr::VtArray<pxr::GfVec3f>& positions,
+    const pxr::VtArray<int>& cvCounts
+  );
+
+  void SetTopology(
+    const pxr::VtArray<pxr::GfVec3f>& positions,
+    const pxr::VtArray<float>& radius,
+    const pxr::VtArray<int>& cvCounts
+  );
+
   const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
   pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
 
-  void SetDisplayColor(GeomInterpolation interp, 
-    const pxr::VtArray<pxr::GfVec3f>& colors);
-  const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
-  GeomInterpolation GetDisplayColorInterpolation() const {
-    return _colorsInterpolation;
-  };
+  size_t GetNumCurves() const { return _cvCounts.size(); };
+  size_t GetNumCVs(uint32_t curveIndex)const;
+  size_t GetNumSegments(uint32_t curveIndex)const;
 
-  uint32_t GetNumCurves() const { return _numCurves; };
-  uint32_t GetNumCVs(uint32_t curveIndex)const;
-  uint32_t GetNumSegments(uint32_t curveIndex)const;
-
-  uint32_t GetTotalNumCVs()const;
-  uint32_t GetTotalNumSegments()const;
+  size_t GetTotalNumCVs()const;
+  size_t GetTotalNumSegments()const;
 
   float GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex);
+
+  void MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
+    const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, float width);
 
   void Init(
     const pxr::VtArray<pxr::GfVec3f>& positions, 
@@ -70,16 +82,10 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 private:
-  // infos
-  uint32_t                            _numCurves;
-  uint32_t                            _numSegments;
+  size_t                              _PointIndex(size_t curveIdx, size_t cvIdx);
 
   // curves description
   pxr::VtArray<int>                   _cvCounts;
-
-  // colors
-  pxr::VtArray<pxr::GfVec3f>          _colors;
-  GeomInterpolation                   _colorsInterpolation;
 
 };
 

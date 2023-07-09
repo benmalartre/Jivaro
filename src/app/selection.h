@@ -3,11 +3,10 @@
 
 #include "../common.h"
 #include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usd/prim.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/imaging/hd/selection.h>
 #include <vector>
-#include <boost/optional.hpp>
-#include <boost/functional/hash.hpp>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -42,7 +41,7 @@ public:
 
   void ComputeHash();
   size_t GetHash() { return _hash; };
-	void AddItem(const pxr::SdfPath& item);
+  void AddItem(const pxr::SdfPath& path);
   void RemoveItem(const pxr::SdfPath& item);
   void ToggleItem(const pxr::SdfPath& item);
 

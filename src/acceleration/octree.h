@@ -11,6 +11,7 @@
 #include <pxr/base/gf/ray.h>
 #include "../common.h"
 #include "../geometry/geometry.h"
+#include "../geometry/component.h"
 #include "../acceleration/intersector.h"
 
 JVR_NAMESPACE_OPEN_SCOPE

@@ -12,8 +12,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Component;
-
 class Intersector : public pxr::GfRange3d
 { 
 public:

@@ -4,6 +4,16 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+//==================================================================================
+// HELPERS
+//==================================================================================
+void _GetManipTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
+  ManipXformVectors& vectors, pxr::UsdTimeCode& time)
+{
+  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
+    &vectors.pivot, &vectors.rotOrder, time);
+}
+
 void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, 
   const pxr::GfVec3f& b, const pxr::GfVec3f& c, float* u, float* v, float* w)
 {
@@ -95,6 +105,35 @@ TriangulateMesh(const pxr::VtArray<int>& counts,
   return num_triangles;
 }
 
+int
+TriangulateMesh(const pxr::VtArray<int>& counts,
+  const pxr::VtArray<int>& indices,
+  pxr::VtArray<int>& triangles)
+{
+  int num_triangles = 0;
+  for (int count : counts)
+  {
+    num_triangles += count - 2;
+  }
+
+  triangles.resize(num_triangles * 3);
+
+  int base = 0;
+  int tri = 0;
+  for (int count : counts)
+  {
+    for (int i = 1; i < count - 1; ++i)
+    {
+      for (int j = 0; j < 3; ++j) {
+        triangles[tri++] = indices[base + j];
+      }
+      tri++;
+    }
+    base += count;
+  }
+  return num_triangles;
+}
+
 void
 UpdateTriangles(pxr::VtArray<Triangle>& triangles, size_t removeVertexIdx)
 {
@@ -103,6 +142,14 @@ UpdateTriangles(pxr::VtArray<Triangle>& triangles, size_t removeVertexIdx)
       int idx = triangle.vertices[axis];
       triangle.vertices[axis] = idx < removeVertexIdx ? idx : idx - 1;
     }
+  }
+}
+
+void
+UpdateTriangles(pxr::VtArray<int>& triangles, size_t removeVertexIdx)
+{
+  for (size_t triangleIdx = 0; triangleIdx < triangles.size(); ++triangleIdx) {
+    triangles[triangleIdx] = triangles[triangleIdx] - (removeVertexIdx < triangles[triangleIdx]);
   }
 }
 

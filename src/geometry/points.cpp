@@ -40,13 +40,6 @@ Points::Points(const pxr::UsdGeomPoints& points)
     widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
 }
 
-void Points::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors) 
-{
-  _colorsInterpolation = interp;
-  _colors = colors;
-}
-
 
 void Points::Init(
   const pxr::VtArray<pxr::GfVec3f>& positions, 

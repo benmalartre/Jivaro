@@ -1,19 +1,45 @@
 #ifndef JVR_GEOMETRY_UTILS_H
 #define JVR_GEOMETRY_UTILS_H
 
-#include "../common.h"
-#include "triangle.h"
-#include <iostream>
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/base/gf/vec3i.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usdGeom/xformCommonAPI.h>
 
-#include "pxr/base/vt/array.h"
-#include "pxr/base/gf/vec3i.h"
-#include "pxr/base/gf/vec3f.h"
+#include "../common.h"
+#include "../geometry/triangle.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const double EPSILON = std::numeric_limits<double>::epsilon();
-const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
+struct ManipXformVectors {
+  pxr::GfVec3d translation;
+  pxr::GfVec3f rotation;
+  pxr::GfVec3f scale;
+  pxr::GfVec3f pivot;
+  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+};
+
+struct ManipTargetDesc {
+  pxr::SdfPath path;
+  pxr::GfMatrix4f base;
+  pxr::GfMatrix4f offset;
+  pxr::GfMatrix4f parent;
+  ManipXformVectors previous;
+  ManipXformVectors current;
+};
+
+typedef std::vector<ManipTargetDesc> ManipTargetDescList;
+
+void _GetManipTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
+  ManipXformVectors& vectors, pxr::UsdTimeCode& time);
+
+const double GEOM_EPSILON = std::numeric_limits<double>::epsilon();
+const std::size_t GEOM_INVALID_INDEX = std::numeric_limits<std::size_t>::max();
 
 template<typename T>
 static inline double ComputeDistanceSquared(const T& a, const T& b)
@@ -64,7 +90,7 @@ static inline bool CheckPointInSphere(const pxr::GfVec3d& center, float radius, 
 
 template<typename T>
 inline bool CheckPointsEquals(const T& a, const T& b) {
-  return pxr::GfIsClose(a, b, EPSILON);
+  return pxr::GfIsClose(a, b, GEOM_EPSILON);
 };
 
 /// Barycentric coordinates
@@ -84,6 +110,10 @@ int
 TriangulateMesh(const pxr::VtArray<int>& counts, 
                 const pxr::VtArray<int>& indices, 
                 pxr::VtArray<Triangle>& triangles);
+
+void
+UpdateTriangles(pxr::VtArray<Triangle>& triangles, size_t removeVertexIdx);
+
 
 /// Compute smooth vertex normals on a triangulated polymesh
 void 

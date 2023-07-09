@@ -21,16 +21,16 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 
-ImGuiWindowFlags ViewportUI::_flags = 
-  ImGuiWindowFlags_None |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoCollapse |
-  ImGuiWindowFlags_NoNav |
-  ImGuiWindowFlags_NoScrollWithMouse |
-  ImGuiWindowFlags_NoScrollbar |
-  ImGuiWindowFlags_NoBackground;
+ImGuiWindowFlags ViewportUI::_flags =
+ImGuiWindowFlags_None |
+ImGuiWindowFlags_NoMove |
+ImGuiWindowFlags_NoResize |
+ImGuiWindowFlags_NoTitleBar |
+ImGuiWindowFlags_NoCollapse |
+ImGuiWindowFlags_NoNav |
+ImGuiWindowFlags_NoScrollWithMouse |
+ImGuiWindowFlags_NoScrollbar;/* |
+  ImGuiWindowFlags_NoBackground;*/
 
 
 static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target, 
@@ -53,22 +53,19 @@ ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
   , _texture(0)
   , _drawMode((int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH)
-  , _pixels(nullptr)
   , _camera(new Camera("Camera"))
   , _valid(true)
   , _interactionMode(INTERACTION_NONE)
   , _engine(nullptr)
   , _rendererIndex(0)
   , _rendererNames(NULL)
-  , _counter(0)
   , _highlightSelection(true)
 {
   _camera->Set(pxr::GfVec3d(12,24,12),
               pxr::GfVec3d(0,0,0),
               pxr::GfVec3d(0,1,0));
-
-  const pxr::GfVec2i resolution(GetWidth(), GetHeight());
-
+  
+  const pxr::GfVec2i resolution(GetWindow()->GetResolution());
   {
     _drawTarget = pxr::GlfDrawTarget::New(resolution, false);
     _drawTarget->Bind();
@@ -78,27 +75,29 @@ ViewportUI::ViewportUI(View* parent)
     _drawTexId = color->GetGlTextureName();
     _drawTarget->Unbind();
   }
-
+  
   {
-    _toolTarget = pxr::GlfDrawTarget::New(resolution, true /*multisamples*/);
+    _toolTarget = pxr::GlfDrawTarget::New(resolution, true);
     _toolTarget->Bind();
     _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
     _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-    auto color = _toolTarget->GetAttachment("color");
+     auto color = _toolTarget->GetAttachment("color");
     _toolTexId = color->GetGlTextureName();
     _toolTarget->Unbind();
   }
-
-  GetApplication()->SetActiveViewport(this);
 }
 
 // destructor
 ViewportUI::~ViewportUI()
 {
+  Application* app = GetApplication();
   if(_rendererNames)delete[] _rendererNames;
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
-  if(_engine) delete _engine;
+  if (_engine) {
+    app->RemoveEngine(_engine);
+    delete _engine;
+  }
 }
 
 void ViewportUI::Init()
@@ -199,7 +198,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _lastX = (int)x;
     _lastY = (int)y;
-    GetApplication()->SetActiveViewport(this);
+    GetApplication()->SetActiveEngine(_engine);
     SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -377,13 +376,14 @@ void ViewportUI::Render()
   Application* app = GetApplication();
   Window* window = GetWindow();
 
+  const float& wh = window->GetHeight();
+  const float& h = GetHeight();
+  const float& w = GetWidth();
+
   _engine->SetRendererAov(pxr::HdAovTokens->color);
+
   _engine->SetRenderViewport(
-    pxr::GfVec4d(
-      0,
-      0,
-      static_cast<double>(GetWidth()),
-      static_cast<double>(GetHeight())));
+    pxr::GfVec4d(0, wh-(h), w, h));
 
   _engine->SetCameraState(
     _camera->GetViewMatrix(),
@@ -393,7 +393,11 @@ void ViewportUI::Render()
   _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
 
   _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
+<<<<<<< HEAD
   _renderParams.complexity = 1.0f;
+=======
+  _renderParams.complexity = 1.f;// 1.25f;
+>>>>>>> 55406548ad025095b8c00ca4e80879431bd18855
   _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
   _renderParams.showGuides = true;
   _renderParams.showRender = true;
@@ -407,7 +411,7 @@ void ViewportUI::Render()
   _renderParams.enableSceneMaterials = false;
   _renderParams.enableSceneLights = true;
   //_renderParams.colorCorrectionMode = ???
-  _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
+  _renderParams.clearColor = pxr::GfVec4f(0.25,0.25,0.25,1.0);
 
   if (_highlightSelection) {
     Selection* selection = app->GetSelection();
@@ -428,7 +432,6 @@ void ViewportUI::Render()
                _renderParams.clearColor[2],
                _renderParams.clearColor[3]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0, 0, GetWidth(), GetHeight());
 
   if (app->GetDisplayStage()->HasDefaultPrim()) {
     _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
@@ -487,33 +490,44 @@ bool ViewportUI::Draw()
    
     if (shouldDrawTool) {
       _toolTarget->Bind();
-      glViewport(0, 0, GetWidth(), GetHeight());
-
       // clear to black
       glClearColor(0.0f, 0.0f, 0.0f, 0.f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      tool->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
+      const float& wh = window->GetHeight();
+      const float& h = GetHeight();
+      const float& w = GetWidth();
+      tool->SetViewport(pxr::GfVec4f(0, wh - (h), w, h));
       tool->SetCamera(_camera);
       tool->Draw();
       _toolTarget->Unbind();
       _toolTarget->Resolve();
     }
-
+    
     const pxr::GfVec2f min(GetX(), GetY());
     const pxr::GfVec2f size(GetWidth(), GetHeight());
+    const float u = (float)GetWidth() / (float)window->GetWidth();
+    const float v = 1.f - (float)GetHeight() / (float)window->GetHeight();
+
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0, 0, 0, 1 });
 
     ImGui::Begin(_name.c_str(), NULL, _flags);
     ImGui::SetWindowPos(min);
     ImGui::SetWindowSize(size);
   
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-
+    
     if (_drawTexId) {
        drawList->AddImage(
+<<<<<<< HEAD
          (ImTextureID)(uintptr_t)_drawTexId, 
          min, min + size, ImVec2(0, 1), ImVec2(1, 0));
+=======
+         (ImTextureID)(size_t)_drawTexId, 
+         min, min + size, ImVec2(0, 1), 
+         ImVec2(u, v));
+>>>>>>> 55406548ad025095b8c00ca4e80879431bd18855
     } 
-
+    
     if( shouldDrawTool && _toolTexId) {
       drawList->AddImage(
         (ImTextureID)(uintptr_t)_toolTexId,
@@ -527,7 +541,7 @@ bool ViewportUI::Draw()
       0xFFFFFFFF, 
       msg.c_str());
 
-    msg = "FPS : "+ std::to_string(app->GetTime().GetFramerate());
+    msg = "Fps : "+ std::to_string(ImGui::GetIO().Framerate);
     drawList->AddText(
       ImVec2((min[0] + size[0]) - 128.f, (min[1] + size[1]) - 20),
       0xFFFFFFFF,
@@ -555,7 +569,8 @@ bool ViewportUI::Draw()
     //ImGui::PopFont();
     
     ImGui::End();
-
+    ImGui::PopStyleColor();
+  
     return GetView()->IsInteracting();
   }
   /*
@@ -609,11 +624,12 @@ pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
 
 void ViewportUI::Resize()
 {
+  Window* window = GetWindow();
   if(!_initialized)return;
   if(GetWidth() <= 0 || GetHeight() <= 0)_valid = false;
   else _valid = true;
   
-  GetWindow()->SetGLContext();
+  window->SetGLContext();
   double aspectRatio = (double)GetWidth()/(double)GetHeight();
   _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
     aspectRatio,
@@ -621,13 +637,16 @@ void ViewportUI::Resize()
     pxr::GfCamera::FOVHorizontal
   );
 
-  _drawTarget->Bind();
-  _drawTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-  _drawTarget->Unbind();
+  const pxr::GfVec2i& targetSize = _drawTarget->GetSize();
+  if (window->GetWidth() != targetSize[0] || window->GetHeight() != targetSize[1]) {
+    _drawTarget->Bind();
+    _drawTarget->SetSize(pxr::GfVec2i(window->GetWidth(), window->GetHeight()));
+    _drawTarget->Unbind();
 
-  _toolTarget->Bind();
-  _toolTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-  _toolTarget->Unbind();
+    _toolTarget->Bind();
+    _toolTarget->SetSize(pxr::GfVec2i(window->GetWidth(), window->GetHeight()));
+    _toolTarget->Unbind();
+  }
 
   _engine->SetDirty(true);
 }

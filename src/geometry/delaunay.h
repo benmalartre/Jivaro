@@ -100,7 +100,7 @@ class Delaunay {
   }
 
   static inline bool _CheckPointEquality(const pxr::GfVec2d& a, const pxr::GfVec2d& b) {
-    return pxr::GfIsClose(a, b, EPSILON);
+    return pxr::GfIsClose(a, b, GEOM_EPSILON);
   }
 
   // monotonically increases with real angle, but doesn't need expensive trigonometry

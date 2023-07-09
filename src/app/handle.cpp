@@ -7,27 +7,17 @@
 #include <pxr/usd/usdGeom/boundable.h>
 #include <pxr/usd/usdGeom/xformable.h>
 #include <pxr/usd/usdGeom/xformCache.h>
+#include <pxr/usd/usdGeom/xformOp.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
 
 #include "../app/handle.h"
 #include "../app/camera.h"
 #include "../app/selection.h"
 #include "../app/application.h"
-#include "../command/block.h"
-#include "../command/command.h"
+#include "../app/commands.h"
 #include "../geometry/utils.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
-
-//==================================================================================
-// HELPERS
-//==================================================================================
-void _GetHandleTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi, 
-  HandleTargetXformVectors& vectors, pxr::UsdTimeCode& time)
-{
-  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale, 
-    &vectors.pivot, &vectors.rotOrder, time);
-}
 
 //==================================================================================
 // BASE HANDLE IMPLEMENTATION
@@ -192,13 +182,13 @@ BaseHandle::ResetSelection()
         xformCache.GetParentToWorldTransform(prim));
       pxr::GfMatrix4f invParentMatrix(
         parentMatrix.GetInverse());
-      HandleTargetXformVectors vectors;
+      ManipXformVectors vectors;
       pxr::UsdGeomXformCommonAPI xformApi(prim);
       xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
         &vectors.pivot, &vectors.rotOrder, activeTime); 
       const pxr::GfMatrix4f rotationMatrix(
-        UsdGeomXformOp::GetOpTransform(
-          UsdGeomXformCommonAPI::ConvertRotationOrderToOpType(vectors.rotOrder), VtValue(vectors.rotation)));
+        pxr::UsdGeomXformOp::GetOpTransform(
+          pxr::UsdGeomXformCommonAPI::ConvertRotationOrderToOpType(vectors.rotOrder), VtValue(vectors.rotation)));
       const pxr::GfMatrix4f translationMatrix = pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(vectors.translation));
       const pxr::GfMatrix4f pivotMatrix = pxr::GfMatrix4f(1.f).SetTranslate(vectors.pivot);
       pxr::GfMatrix4f world( rotationMatrix * pivotMatrix * translationMatrix * parentMatrix);
@@ -691,7 +681,6 @@ TranslateHandle::_UpdateTargets(bool interacting)
     }
   }
   else {
-    
     pxr::UsdGeomXformCache xformCache(activeTime);
     for (auto& target : _targets) {
       pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
@@ -864,28 +853,28 @@ using RotationDesc = std::pair<pxr::GfVec3f, pxr::UsdGeomXformCommonAPI::Rotatio
 
 static 
 RotationDesc
-_ResolveRotation(HandleTargetDesc& target,
+_ResolveRotation(ManipTargetDesc& target,
   pxr::UsdGeomXformCommonAPI& xformApi, const pxr::GfMatrix4d& matrix,
   pxr::UsdTimeCode activeTime)
 {
-  const GfVec3d xAxis = target.parent.GetRow3(0);
-  const GfVec3d yAxis = target.parent.GetRow3(1);
-  const GfVec3d zAxis = target.parent.GetRow3(2);
+  const pxr::GfVec3d xAxis = target.parent.GetRow3(0);
+  const pxr::GfVec3d yAxis = target.parent.GetRow3(1);
+  const pxr::GfVec3d zAxis = target.parent.GetRow3(2);
 
   // Get latest rotation values to give a hint to the decompose function
-  HandleTargetXformVectors vectors;
+  ManipXformVectors vectors;
   xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
     &vectors.pivot, &vectors.rotOrder, activeTime);
-  double thetaTw = GfDegreesToRadians(vectors.rotation[0]);
-  double thetaFB = GfDegreesToRadians(vectors.rotation[1]);
-  double thetaLR = GfDegreesToRadians(vectors.rotation[2]);
+  double thetaTw = pxr::GfDegreesToRadians(vectors.rotation[0]);
+  double thetaFB = pxr::GfDegreesToRadians(vectors.rotation[1]);
+  double thetaLR = pxr::GfDegreesToRadians(vectors.rotation[2]);
   double thetaSw = 0.0;
 
   // Decompose the matrix in angle values
-  GfRotation::DecomposeRotation(matrix, xAxis, yAxis, zAxis, 1.0,
+  pxr::GfRotation::DecomposeRotation(matrix, xAxis, yAxis, zAxis, 1.0,
     &thetaTw, &thetaFB, &thetaLR, &thetaSw, true);
   return std::make_pair(
-    GfVec3f(GfRadiansToDegrees(thetaTw), GfRadiansToDegrees(thetaFB), GfRadiansToDegrees(thetaLR)),
+    pxr::GfVec3f(pxr::GfRadiansToDegrees(thetaTw), pxr::GfRadiansToDegrees(thetaFB), pxr::GfRadiansToDegrees(thetaLR)),
     vectors.rotOrder);
 }
 

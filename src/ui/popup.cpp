@@ -11,7 +11,7 @@
 #include "../app/window.h"
 #include "../app/view.h"
 #include "../app/application.h"
-
+#include "../app/commands.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -297,24 +297,24 @@ NamePopupUI::Draw()
 
 
 //===========================================================================================
-// NodePopupUI
+// GraphPopupUI
 //===========================================================================================
-NodePopupUI::NodePopupUI(int x, int y, int width, int height)
+GraphPopupUI::GraphPopupUI(int x, int y, int width, int height)
   : PopupUI(x, y, width, height)
   , _p(0)
   , _i(0)
 {
   _sync = true;
   memset(&_filter[0], (char)0, NODE_FILTER_SIZE * sizeof(char));
-  BuildNodeList();
+  _BuildNodeList();
 }
 
-NodePopupUI::~NodePopupUI()
+GraphPopupUI::~GraphPopupUI()
 {
 }
 
 void
-NodePopupUI::BuildNodeList()
+GraphPopupUI::_BuildNodeList()
 {
   _nodes.push_back("wrap");
   _nodes.push_back("collide");
@@ -328,7 +328,7 @@ NodePopupUI::BuildNodeList()
 }
 
 void
-NodePopupUI::MouseButton(int button, int action, int mods)
+GraphPopupUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
@@ -339,7 +339,7 @@ NodePopupUI::MouseButton(int button, int action, int mods)
 
 
 void 
-NodePopupUI::Keyboard(int key, int scancode, int action, int mods)
+GraphPopupUI::Keyboard(int key, int scancode, int action, int mods)
 {
   if (action == GLFW_PRESS || action == GLFW_REPEAT) {
     switch (GetMappedKey(key)) {
@@ -366,7 +366,7 @@ NodePopupUI::Keyboard(int key, int scancode, int action, int mods)
 }
 
 void
-NodePopupUI::Input(int key)
+GraphPopupUI::Input(int key)
 {
   _filter[_p++] = ConvertCodePointToUtf8(key).c_str()[0];
 }
@@ -377,7 +377,7 @@ static bool _FilterNodeName(const std::string& name, const char* filter)
 }
 
 void
-NodePopupUI::_FilterNodes()
+GraphPopupUI::_FilterNodes()
 {
   _filteredNodes.clear();
   for (auto& node : _nodes) {
@@ -388,7 +388,7 @@ NodePopupUI::_FilterNodes()
 }
 
 bool
-NodePopupUI::Draw()
+GraphPopupUI::Draw()
 {
   ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
   ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
