@@ -189,14 +189,14 @@ MenuUI::DirtyViewsBehind()
     MenuUI::Item* current = _items[_opened[0]];
     pxr::GfVec2f pos = _ComputePos(current);
     pxr::GfVec2f size = _ComputeSize(current);
-    drawList->AddRect(pos, pos + size, ImColor((ImVec4){ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+    drawList->AddRect(pos, pos + size, ImColor({ (float)RANDOM_0_1, (float)RANDOM_0_1, (float)RANDOM_0_1, 1.f }), 2.f);
     GetWindow()->DirtyViewsUnderBox(pos, size);
 
     for (size_t openedIdx = 1; openedIdx < numOpened; ++openedIdx) {
       MenuUI::Item* child = current->items[_opened[openedIdx]];
       pos += _ComputePos(child);
       size = _ComputeSize(child);
-      drawList->AddRect(pos, pos + size, ImColor((ImVec4){ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+      drawList->AddRect(pos, pos + size, ImColor({ (float)RANDOM_0_1, (float)RANDOM_0_1, (float)RANDOM_0_1, 1.f }), 2.f);
       GetWindow()->DirtyViewsUnderBox(pos, size);
       current = child;
     }
@@ -207,7 +207,7 @@ MenuUI::DirtyViewsBehind()
     pxr::GfVec2f pos = pxr::GfVec2f(0, 0);
     pxr::GfVec2f size = pxr::GfVec2f(GetWidth(), ImGui::GetTextLineHeightWithSpacing() + 2 * style.FramePadding.y);
 
-    drawList->AddRect(pos, pos + size, ImColor((ImVec4){ RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f }), 2.f);
+    drawList->AddRect(pos, pos + size, ImColor({ (float)RANDOM_0_1, (float)RANDOM_0_1, (float)RANDOM_0_1, 1.f }), 2.f);
     _parent->GetWindow()->DirtyViewsUnderBox(pos, size);
   }
   
