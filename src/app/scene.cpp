@@ -323,6 +323,7 @@ static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfM
     std::cout << "total time : " << (double)((T1 + T2 + T3 + T4 + T5 + T6) * 1e-9) << " seconds" << std::endl;
   }
 */
+  return pxr::HdChangeTracker::DirtyTopology;
 }
 
 void

@@ -387,8 +387,6 @@ void PBDSolver::RemoveGeometry(Geometry* geom)
 void PBDSolver::AddCollider(Geometry* collider)
 {
   /*
-  pxr::UsdStageRefPtr stage = GetApplication()->GetWorkspace()->GetExecStage();
-
   _colliders.push_back(collider);
   
   float radius = 0.2f;
