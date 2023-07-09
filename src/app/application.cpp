@@ -154,7 +154,7 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
 
   ModalFileBrowser browser(x, y, label, mode);
   browser.Loop();
-  if(browser.GetStatus() == BaseModal::Status::OK) {
+  if(browser.GetStatus() == ModalBase::Status::OK) {
     result = browser.GetResult();
   }
   browser.Term();  
@@ -407,7 +407,7 @@ Application::Update()
     _workspace->UpdateExec(GetTime().GetActiveTime());
   }
 
-  glfwSwapInterval(1);
+  //glfwSwapInterval(1);
   glfwPollEvents();
   // draw popup
   if (_popup) {
@@ -463,7 +463,8 @@ Application::RemoveEngine(Engine* engine)
   }
 }
 
-static void _DirtyAllEngines(std::vector<Engine*>& engines)
+static void 
+_DirtyAllEngines(std::vector<Engine*>& engines)
 {
   for (auto& engine : engines) {
     engine->SetDirty(true);

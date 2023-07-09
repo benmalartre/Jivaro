@@ -214,7 +214,7 @@ UIUtils::AddPropertyMiniButton(const char* btnStr, int rowId, const ImVec4& btnC
 
 void 
 UIUtils::AddAttributeDisplayName(const UsdAttribute& attribute) {
-  ImGui::Text(attribute.GetName().GetText());
+  ImGui::Text("%s", attribute.GetName().GetText());
 }
 
 void 

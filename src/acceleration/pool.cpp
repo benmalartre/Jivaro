@@ -19,28 +19,28 @@ WorkerThread(ThreadPool* pool)
 void
 ThreadPool::Semaphore::Reset(size_t count)
 {
-  std::unique_lock<std::mutex> lock(mtx);
-  cnt = count;
-  cv.notify_all();
+  std::unique_lock<std::mutex> lock(_mtx);
+  _cnt = count;
+  _cv.notify_all();
 }
 
 
 void
 ThreadPool::Semaphore::Notify()
 {
-  std::unique_lock<std::mutex> lock(mtx);
-  cnt++;
-  cv.notify_one();
+  std::unique_lock<std::mutex> lock(_mtx);
+  _cnt++;
+  _cv.notify_one();
 }
 
 void
 ThreadPool::Semaphore::Wait()
 {
-  std::unique_lock<std::mutex> lock(mtx);
-  while (cnt == 0) {
-    cv.wait(lock);
+  std::unique_lock<std::mutex> lock(_mtx);
+  while (_cnt == 0) {
+    _cv.wait(lock);
   }
-  cnt--;
+  _cnt--;
 }
 
 ThreadPool::Task*

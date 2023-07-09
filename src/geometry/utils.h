@@ -102,19 +102,19 @@ ComputeTriangleNormals( const pxr::VtArray<pxr::GfVec3f>& positions,
 /// Triangulate data
 /// No checks are made on data type or array bounds
 /// 
-template<typename DataType>
+template<typename T>
 void
 TriangulateDatas( const pxr::VtArray<Triangle>& triangles,
-                  const pxr::VtArray<DataType>& datas,
-                  pxr::VtArray<DataType>& result)
+                  const pxr::VtArray<T>& datas,
+                  pxr::VtArray<T>& result)
 {
   size_t numTriangles = triangles.size();
   result.resize(numTriangles * 3);
   for(int i = 0; i < numTriangles; ++i) {
-    const Triangle* T = &triangles[i];
-    result[i * 3    ] = datas[T->vertices[0]];
-    result[i * 3 + 1] = datas[T->vertices[1]];
-    result[i * 3 + 2] = datas[T->vertices[2]];
+    const Triangle* triangle = &triangles[i];
+    result[i * 3    ] = datas[triangle->vertices[0]];
+    result[i * 3 + 1] = datas[triangle->vertices[1]];
+    result[i * 3 + 2] = datas[triangle->vertices[2]];
   }
 };
 

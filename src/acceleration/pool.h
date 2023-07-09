@@ -24,16 +24,16 @@ public:
 
   class Semaphore {
   public:
-    Semaphore(size_t count=0) : cnt(count) {};
+    Semaphore(size_t count=0) : _cnt(count) {};
 
     void Reset(size_t count);
     void Notify();
     void Wait();
 
   private:
-    size_t                  cnt;
-    std::mutex              mtx;
-    std::condition_variable cv;
+    size_t                  _cnt;
+    std::mutex              _mtx;
+    std::condition_variable _cv;
   };
 
   void Init();

@@ -10,7 +10,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 // base class for modal window
-class BaseModal
+class ModalBase
 {
 public:
   enum Status {
@@ -22,8 +22,8 @@ public:
 
 
   // constructor
-  BaseModal(int x, int y, int width, int height, const std::string& title);
-  virtual ~BaseModal();
+  ModalBase(int x, int y, int width, int height, const std::string& title);
+  virtual ~ModalBase();
 
   // get data
   Status GetStatus(){return _status;};
@@ -48,7 +48,7 @@ protected:
 };
 
 // file browser
-class ModalFileBrowser : public BaseModal
+class ModalFileBrowser : public ModalBase
 {
 public:
   enum Mode {
@@ -70,7 +70,7 @@ private:
 };
 
 // folder browser
-class ModalFolderBrowser : public BaseModal
+class ModalFolderBrowser : public ModalBase
 {
 public:
   ModalFolderBrowser(int x, int y, const std::string& title);
@@ -83,14 +83,14 @@ private:
   std::string               _folder;
 };
 
-class ModalDemo : public BaseModal
+class ModalDemo : public ModalBase
 {
 public:
   ModalDemo(int x, int y, const std::string& title);
   void _LoopImpl() override;
 };
 
-class ModalMenu : public BaseModal
+class ModalMenu : public ModalBase
 {
 public:
   ModalMenu(int x, int y, const std::string& title);

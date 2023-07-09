@@ -109,11 +109,7 @@ Mesh::Mesh(const Mesh* other, bool normalize)
 
   _normals = other->_normals;
 
-  _triangles.resize(_numTriangles);
-  memcpy(
-    &_triangles[0], 
-    &other->_triangles[0], 
-    _numTriangles * sizeof(Triangle));
+  _triangles = other->_triangles;
 }
 
 Mesh::Mesh(const pxr::UsdGeomMesh& mesh)

@@ -91,32 +91,31 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
   return voxels;
 }
 
-  Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
-  {
-    if (!_stage->GetPrimAtPath(path).IsDefined()) {
-      pxr::UsdGeomBasisCurves usdCurve = pxr::UsdGeomBasisCurves::Define(_stage, path);
-      _curves[path] = Curve();
-    }
-    else {
-      pxr::UsdGeomBasisCurves usdCurve(_stage->GetPrimAtPath(path));
-     _curves[path] = Curve(usdCurve);
-    }
-    return &_curves[path];
+Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
+{
+  if (!_stage->GetPrimAtPath(path).IsDefined()) {
+    pxr::UsdGeomBasisCurves usdCurve = pxr::UsdGeomBasisCurves::Define(_stage, path);
+    _curves[path] = Curve();
   }
-
-  Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
-  {
-    if (!_stage->GetPrimAtPath(path).IsDefined()) {
-      pxr::UsdGeomPoints usdPoints = pxr::UsdGeomPoints::Define(_stage, path);
-      _points[path] = Points();
-    }
-    else {
-      pxr::UsdGeomPoints usdPoints(_stage->GetPrimAtPath(path));
-      _points[path] = Points(usdPoints);
-    }
-    return &_points[path];
+  else {
+    pxr::UsdGeomBasisCurves usdCurve(_stage->GetPrimAtPath(path));
+    _curves[path] = Curve(usdCurve);
   }
+  return &_curves[path];
+}
 
+Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
+{
+  if (!_stage->GetPrimAtPath(path).IsDefined()) {
+    pxr::UsdGeomPoints usdPoints = pxr::UsdGeomPoints::Define(_stage, path);
+    _points[path] = Points();
+  }
+  else {
+    pxr::UsdGeomPoints usdPoints(_stage->GetPrimAtPath(path));
+    _points[path] = Points(usdPoints);
+  }
+  return &_points[path];
+}
 
 void Scene::TestVoronoi()
 {

@@ -50,8 +50,8 @@ public:
   pxr::SdfLayerHandle AddLayerFromDisk(const std::string& filename);
   pxr::UsdStageRefPtr& AddExecStage();
   void RemoveExecStage();
-  pxr::UsdStageRefPtr& AddStageFromMemory(const std::string& name);
-  pxr::UsdStageRefPtr& AddStageFromDisk(const std::string& filename);
+  pxr::UsdStageRefPtr AddStageFromMemory(const std::string& name);
+  pxr::UsdStageRefPtr AddStageFromDisk(const std::string& filename);
   pxr::UsdStageRefPtr& GetWorkStage() { return _workStage; };
   pxr::UsdStageRefPtr& GetExecStage() { return _execStage; };
   pxr::UsdStageRefPtr& GetDisplayStage() { 
@@ -72,9 +72,9 @@ private:
   Scene*                    _execScene;
   bool                      _execInitialized;
 
-  PBDSolver*                _solver;
-  float                     _startFrame;
-  float                     _lastFrame;
+  //PBDSolver*                _solver;
+  //float                     _startFrame;
+  //float                     _lastFrame;
 };
 
 

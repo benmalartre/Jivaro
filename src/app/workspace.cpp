@@ -209,7 +209,7 @@ Workspace::OpenStage(const pxr::UsdStageRefPtr& stage)
   UndoRouter::Get().TrackLayer(_workStage->GetRootLayer());
 }
 
-pxr::UsdStageRefPtr&
+pxr::UsdStageRefPtr
 Workspace::AddStageFromMemory(const std::string& name)
 {
   /*
@@ -219,11 +219,11 @@ Workspace::AddStageFromMemory(const std::string& name)
   */
   pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory(name);
   UndoRouter::Get().TrackLayer(stage->GetRootLayer());
-  _stageCache.Insert(stage);
-  return stage;
+  pxr::UsdStageCache::Id id = _stageCache.Insert(stage);
+  return _stageCache.Find(id);
 }
 
-pxr::UsdStageRefPtr&
+pxr::UsdStageRefPtr
 Workspace::AddStageFromDisk(const std::string& filename)
 {
   
@@ -238,7 +238,7 @@ Workspace::AddStageFromDisk(const std::string& filename)
   UndoRouter::Get().TrackLayer(_workStage->GetRootLayer());
   //_workStage->GetRootLayer()->InsertSubLayerPath(layer->GetIdentifier());
   //_workStage->SetDefaultPrim(stage->GetDefaultPrim());
-  return stage;
+  return _workStage;
   /*
   std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
   std::string name = tokens.front();
@@ -308,32 +308,38 @@ static void _CreateSystemPoints(pxr::UsdStageRefPtr& stage, const pxr::VtArray<p
 void 
 Workspace::InitExec()
 {
-
   if (!_execInitialized) {
     _execStage = UsdStage::CreateInMemory("exec");
     _execScene = new Scene(_execStage);
-    _solver = new PBDSolver();
+    //_solver = new PBDSolver();
    
+    pxr::UsdPrim sphere = 
+      pxr::UsdGeomSphere::Define(_workStage, pxr::SdfPath(pxr::TfToken("/sphere"))).GetPrim();
+    _workStage->SetDefaultPrim(sphere);
+
+
     Time& time = GetApplication()->GetTime();
-    _startFrame = time.GetStartTime();
-    _lastFrame = time.GetActiveTime();
+    //_startFrame = time.GetStartTime();
+    //_lastFrame = time.GetActiveTime();
     
     _execStage->GetRootLayer()->TransferContent(_workStage->GetRootLayer());
     _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
       _workStage->GetDefaultPrim().GetPath()));
 
-    pxr::UsdGeomXformCache xformCache(_startFrame);
+    pxr::UsdGeomXformCache xformCache(time.GetStartTime());
 
     pxr::UsdPrimRange primRange = _execStage->TraverseAll();
     for (pxr::UsdPrim prim : primRange) {
       if (prim.IsA<pxr::UsdGeomMesh>()) {
         Mesh* mesh = _execScene->AddMesh(prim.GetPath());
+        /*
         _solver->AddGeometry(mesh, 
           pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
-        /*
+        
         Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
         _solver->AddGeometry(voxels,
-          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));*/
+          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
+        */
 
       }
     }
@@ -343,12 +349,11 @@ Workspace::InitExec()
     for (auto& mesh : _execScene->GetMeshes()) {
       colliders.push_back(&mesh.second);
     }
-    for(auto& collider: colliders)
-      _solver->AddCollider(collider);
+    //for(auto& collider: colliders) _solver->AddCollider(collider);
     
 
-    PBDParticle* system = _solver->GetSystem();
-    _CreateSystemPoints(_execStage, system->Get(), 0.05);
+    //PBDParticle* system = _solver->GetSystem();
+    //_CreateSystemPoints(_execStage, system->Get(), 0.05);
 
     
     _execInitialized = true;
@@ -377,7 +382,7 @@ Workspace::UpdateExec(double time)
     }
     mesh->Update(positions);
   }
-  */
+  
   if (time <= _startFrame) {
     _solver->Reset();
   }
@@ -386,12 +391,13 @@ Workspace::UpdateExec(double time)
     _execScene->Update(time);
   }
   _lastFrame = (float)time;
+  */
 }
 
 void 
 Workspace::TerminateExec()
 {
-  delete _solver;
+  //delete _solver;
 }
 
 struct DebugRay {
@@ -494,14 +500,15 @@ _SetupFlip(pxr::UsdStageRefPtr& stage)
   };
   mesh.CreateFaceVertexCountsAttr().Set(counts);
 
-  Mesh* __mesh = new Mesh(mesh);
-  __mesh->FlipEdge(0);
-  __mesh->FlipEdge(0);
-  __mesh->FlipEdge(0);
-  __mesh->UpdateTopologyFromHalfEdges();
+  Mesh __mesh(mesh);
+  __mesh.FlipEdge(0);
+  __mesh.FlipEdge(0);
+  __mesh.FlipEdge(0);
+  __mesh.UpdateTopologyFromHalfEdges();
 
-  mesh.GetFaceVertexCountsAttr().Set(__mesh->GetFaceCounts());
-  mesh.GetFaceVertexIndicesAttr().Set(__mesh->GetFaceConnects());
+  mesh.GetFaceVertexCountsAttr().Set(__mesh.GetFaceCounts());
+  mesh.GetFaceVertexIndicesAttr().Set(__mesh.GetFaceConnects());
+
 }
 
 static void 
