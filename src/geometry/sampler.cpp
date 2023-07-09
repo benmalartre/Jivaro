@@ -1,5 +1,6 @@
 #include <map>
 #include <unordered_map>
+#include <cassert>
 #include <pxr/base/gf/vec3i.h>
 #include <pxr/base/gf/range3f.h>
 #include "../geometry/sampler.h"

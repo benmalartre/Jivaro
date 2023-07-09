@@ -1,5 +1,6 @@
 // HalfEdge
 //----------------------------------------------
+#include <algorithm>
 #include <pxr/base/work/loops.h>
 #include "../geometry/halfEdge.h"
 #include "../geometry/triangle.h"
@@ -132,12 +133,10 @@ HalfEdgeGraph::GetEdgeFromVertex(size_t vertex)
 HalfEdge* 
 HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end)
 {
-  std::cout << "get edge from vertices " << start << ", " << end << std::endl;
   HalfEdge* edge = &_halfEdges[_vertexHalfEdge[start]];
   if (_halfEdges[edge->next].vertex == end)return edge;
   HalfEdge* current = _GetNextAdjacentEdge(edge);
   while (current && (current != edge)) {
-    std::cout << "next vertex : " << _halfEdges[current->next].vertex << std::endl;
     if (_halfEdges[current->next].vertex == end)return current;
     current = _GetNextAdjacentEdge(current);
   }
@@ -145,12 +144,10 @@ HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end)
   if (!current) {
     HalfEdge* current = _GetPreviousAdjacentEdge(edge);
     while (current && (current != edge)) {
-      std::cout << "prev vertex : " << _halfEdges[current->next].vertex << std::endl;
       if (_halfEdges[current->next].vertex == end)return current;
       current = _GetPreviousAdjacentEdge(current);
     }
   }
-  std::cout << "zobi vertex : " << std::endl;
   return NULL;
 }
 
@@ -158,6 +155,17 @@ const HalfEdge*
 HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end) const
 {
   return GetEdgeFromVertices(start, end);
+}
+
+void 
+HalfEdgeGraph::GetEdgeFromFace(const HalfEdge* edge, pxr::VtArray<int>& indices)
+{
+  indices.push_back(_GetEdgeIndex(edge));
+  const HalfEdge* current = &_halfEdges[edge->next];
+  while (current != edge) {
+    indices.push_back(_GetEdgeIndex(current));
+    current = &_halfEdges[current->next];
+  }
 }
 
 bool
@@ -231,7 +239,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       // get vertices
       size_t v0 = faceConnects[faceOffsetIdx + faceEdgeIdx];
       size_t v1 = faceConnects[faceOffsetIdx + ((faceEdgeIdx + 1) % faceVertexCount)];
-      if (!_vertexHalfEdge[v0])_vertexHalfEdge[v0] = _GetEdgeIndex(halfEdge);
+      if (_vertexHalfEdge[v0] < 0)_vertexHalfEdge[v0] = _GetEdgeIndex(halfEdge);
 
       size_t last = faceVertexCount - 1;
       halfEdgesMap[v1 | (v0 << 32)] = halfEdge;
@@ -329,6 +337,7 @@ HalfEdgeGraph::_RemoveOneEdge(const HalfEdge* edge, bool* modified)
 void
 HalfEdgeGraph::RemoveEdge(HalfEdge* edge, bool* modified)
 {
+  if (!_halfEdgeUsed[_GetEdgeIndex(edge)])return;
   HalfEdge* prev = _GetPreviousEdge(edge);
   HalfEdge* next = _GetNextEdge(edge);
 
@@ -376,16 +385,18 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 HalfEdge* 
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
-  if (edge->twin >= 0)
-    return &_halfEdges[_halfEdges[edge->twin].prev];
+  const HalfEdge* prev = &_halfEdges[edge->prev];
+  if (prev->twin >= 0)
+    return &_halfEdges[prev->twin];
   return NULL;
 }
 
 const HalfEdge*
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge) const
 {
-  if (edge->twin >= 0)
-    return &_halfEdges[_halfEdges[edge->twin].prev];
+  const HalfEdge* prev = &_halfEdges[edge->prev];
+  if (prev->twin >= 0)
+    return &_halfEdges[prev->twin];
   return NULL;
 }
 
@@ -528,21 +539,18 @@ HalfEdgeGraph::ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbo
 void
 HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors)
 {
-  std::cout << "compute vertex neighbors" << std::endl;
   const HalfEdge* current = edge;
   do {
     neighbors.push_back(_halfEdges[current->next].vertex);
     current = _GetNextAdjacentEdge(current);
-    std::cout << "next edge : " << current << std::endl;
   } while(current && (current != edge));
 
   if (!current) {
     const HalfEdge* current = edge;
     do {
-      neighbors.push_back(_halfEdges[current->prev].vertex);
+      neighbors.push_back(_halfEdges[current->next].vertex);
       current = _GetPreviousAdjacentEdge(current);
-      std::cout << "previous edge : " << current << std::endl;
-    } while (current && (current != edge));
+    } while (current);
   }
 }
 
@@ -706,31 +714,48 @@ HalfEdgeGraph::CollapseStar(HalfEdge* edge, pxr::VtArray<int>& neighbors)
 
   bool modified = false;
   size_t vertex = edge->vertex;
-  std::cout << "compute neighborhood" << std::endl;
   _ComputeVertexNeighbors(edge, neighbors);
-  std::cout << "neighbors : " << neighbors << std::endl;
+  std::sort(neighbors.begin(), neighbors.end(), std::greater<>());
+  
   pxr::VtArray<int> edgeIndices;
   for (auto& neighbor : neighbors) {
-    
     edgeIndices.push_back(_GetEdgeIndex(GetEdgeFromVertices(vertex, neighbor)));
-    std::cout << edgeIndices << std::endl;
   }
   for (auto& edgeIdx : edgeIndices) {
-    std::cout << "remove neighbor edge : " << edgeIdx << std::endl;
-    RemoveEdge(&_halfEdges[edgeIdx], &modified);
-    std::cout << "edge removed.." << std::endl;
+    HalfEdge* current = &_halfEdges[edgeIdx];
+    HalfEdge* twin = NULL;
+    if (current->twin >= 0) twin = &_halfEdges[current->twin];
+    RemoveEdge(current, &modified);
+    if (twin)RemoveEdge(twin, &modified);
   }
-
-  std::cout << "neighbors (before) " << neighbors << std::endl;
-  std::sort(neighbors.begin(), neighbors.end());
-  std::cout << "neighbors (after) " << neighbors << std::endl;
-  for(auto& neighbor: neighbors) RemovePoint(neighbor, vertex);
-
-
+  size_t lowest = neighbors.back();
+  if (vertex > lowest) {
+    for (size_t neighborIdx = 0; neighborIdx < neighbors.size()-1; ++neighborIdx) {
+      RemovePoint(neighbors[neighborIdx], lowest);
+    }
+    RemovePoint(vertex, lowest);
+  } else {
+    for (auto& neighbor : neighbors)
+      RemovePoint(neighbor, vertex);
+  }
   std::cout << "collapse start end .." << std::endl;
   return modified;
 }
 
+bool 
+HalfEdgeGraph::CollapseFace(HalfEdge* edge, pxr::VtArray<int>& vertices)
+{
+  vertices.clear();
+  vertices.push_back(edge->vertex);
+
+  pxr::VtArray<int> indices;
+  GetEdgeFromFace(edge, indices);
+
+
+
+  const HalfEdge* current = &_halfEdges[edge->next];
+  return false;
+}
 
 void
 HalfEdgeGraph::ComputeTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const

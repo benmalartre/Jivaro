@@ -1,3 +1,4 @@
+#include <boost/functional/hash.hpp>
 #include <pxr/usd/usdGeom/bboxCache.h>
 #include <pxr/usd/usdGeom/xformCache.h>
 #include <pxr/usd/usd/modelAPI.h>

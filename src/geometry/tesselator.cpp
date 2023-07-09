@@ -15,66 +15,43 @@ void
 Tesselator::_InitVertices()
 {
   size_t numPoints = _input->GetNumPoints();
-  _vertices.resize(numPoints);
+  _positions.resize(numPoints);
+  _valences.resize(numPoints);
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    _Vertex& vertex = _vertices[pointIdx];
-    vertex.valence = 0;
-    vertex.position = _input->GetPosition(pointIdx);
-  }
-}
-
-void
-Tesselator::_RemoveVertexRange(size_t startIdx, size_t endIdx, size_t index, size_t replace)
-{
-  for (size_t vertexIdx = startIdx; vertexIdx < endIdx; ++vertexIdx) {
-    _Vertex& vertex = _vertices[vertexIdx];
-    pxr::VtArray<int>& neighbors = vertex.neighbors;
-    for (size_t neighborIdx = 0; neighborIdx < neighbors.size() ; ++neighborIdx) {
-      if (neighbors[neighborIdx] == index) neighbors[neighborIdx] = replace;
-      else if (neighbors[neighborIdx] > index)neighbors[neighborIdx]--;
-    }
+    _positions[pointIdx] = _input->GetPosition(pointIdx);
+    _valences[pointIdx] = 0;
   }
 }
 
 void 
 Tesselator::_RemoveVertex(size_t index, size_t replace)
 {
-  pxr::WorkParallelForN(
-    _vertices.size(),
-    std::bind(&Tesselator::_RemoveVertexRange, this,
-      std::placeholders::_1, std::placeholders::_2, index, replace)
-  );
-  _vertices.erase(_vertices.begin() + index);
+  _positions.erase(_positions.begin() + index);
+  _valences.erase(_valences.begin() + index);
 }
 
 void 
 Tesselator::_ComputeGraph()
 {
-  size_t numVertices = _vertices.size();
+  size_t numVertices = _positions.size();
   _graph.ComputeGraph(_input);
   for (size_t vertexIdx = 0; vertexIdx < numVertices; ++vertexIdx) {
-    _Vertex* vertex = &_vertices[vertexIdx];
-    std::cout << "compute graph " << vertexIdx << std::endl;
-    HalfEdge* edge = _graph.GetEdgeFromVertex(vertexIdx);
-    std::cout << "edge from vertex : " << edge << std::endl;
-    _graph.ComputeNeighbors(edge, vertex->neighbors);
-    std::cout << "vertex neighbors : " << vertex->neighbors << std::endl;
-    vertex->valence = vertex->neighbors.size();
+    _valences[vertexIdx]++;
   }
 }
 
 float 
 Tesselator::_GetLengthSq(const HalfEdge* edge)
 {
-  return (_vertices[_graph.GetEdge(edge->next)->vertex].position - 
-  _vertices[edge->vertex].position).GetLengthSq();
+  return (_positions[_graph.GetEdge(edge->next)->vertex] - 
+    _positions[edge->vertex]).GetLengthSq();
 }
 
 float 
 Tesselator::_GetLength(const HalfEdge* edge)
 {
-  return (_vertices[_graph.GetEdge(edge->next)->vertex].position - 
-    _vertices[edge->vertex].position).GetLength();
+  return (_positions[_graph.GetEdge(edge->next)->vertex] - 
+    _positions[edge->vertex]).GetLength();
 }
 
 bool 
@@ -99,6 +76,7 @@ Tesselator::CompareEdgeLonger(const HalfEdge* lhs, const HalfEdge* rhs)
 bool
 Tesselator::_IsCollapsable(const HalfEdge* edge)
 {
+  /*
   if (edge->twin >= 0) {
     const HalfEdge* twin = _graph.GetEdge(edge->twin);
     const pxr::VtArray<int>& edgeNeighbors = _vertices[edge->vertex].neighbors;
@@ -113,19 +91,35 @@ Tesselator::_IsCollapsable(const HalfEdge* edge)
       return false;
     }
   }
+  */
   return true;
 }
 
 bool
 Tesselator::_IsStarCollapsable(const HalfEdge* edge, float squaredLen)
 {
+  if (!_graph.IsUsed(edge))return false;
   pxr::VtArray<int> neighbors;
   _graph.ComputeNeighbors(edge, neighbors);
-std::cout << "neighbors : " << neighbors << std::endl;
   for (auto& neighbor : neighbors) {
-    std::cout << squaredLen << " vs " << (_vertices[edge->vertex].position - _vertices[neighbor].position).GetLengthSq() << std::endl;
-    if ((_vertices[edge->vertex].position - _vertices[neighbor].position).GetLengthSq() > squaredLen)
+    if ((_positions[edge->vertex] - _positions[neighbor]).GetLengthSq() > squaredLen)
       return false;
+  }
+  return true;
+}
+
+bool
+Tesselator::_IsFaceCollapsable(const HalfEdge* edge, float squaredLen)
+{
+  if (!_graph.IsUsed(edge))return false;
+  pxr::VtArray<int> neighbors;
+  pxr::GfVec3f start = _positions[edge->vertex];
+  const HalfEdge* current = _graph.GetEdge(edge->next);
+  while (current != edge) {
+    pxr::GfVec3f end = _positions[current->vertex];
+    if ((end - start).GetLengthSq() > squaredLen)return false;
+    start = end;
+    current = _graph.GetEdge(current->next);
   }
   return true;
 }
@@ -173,36 +167,63 @@ bool Tesselator::_CollapseEdges()
     if (!_graph.IsUsed(edge) || _GetLengthSq(edge) > collapseLen || !_graph.IsCollapsable(edge)) {
       _queue.pop(); continue;
     }
-    if (_IsStarCollapsable(edge, collapseLen)) {
-      std::cout << "star collapsable " << edge << std::endl;
+    
+    //if (_IsStarCollapsable(edge, collapseLen)) {
+    if (_IsFaceCollapsable(edge, collapseLen)) {
+      std::cout << "face collapsable " << edge << std::endl;
       
       size_t vertex = edge->vertex;
       pxr::VtArray<int> neighbors;
-      _graph.CollapseStar(edge, neighbors);
+      if (_graph.CollapseFace(edge, neighbors)) {
 
-      pxr::GfVec3f average(0.f);
-      for (auto& neighbor : neighbors) 
-        average += _vertices[neighbor].position;
-      average /= neighbors.size();
-      _vertices[vertex].position = average;
+        std::cout << "num neighbors : " << neighbors.size() << std::endl;
+        pxr::GfVec3f average(0.f);
+        for (auto& neighbor : neighbors)
+          average += _positions[neighbor];
+        average += _positions[vertex];
+        average /= (neighbors.size() + 1);
+        std::cout << "average position : " << average << std::endl;
 
-      for (auto& neighbor : neighbors)
-        _RemoveVertex(neighbor, vertex);
-      
+
+        size_t lowest = neighbors.back();
+        if (vertex > lowest) {
+          std::cout << "keep vertex : " << lowest << std::endl;
+          std::cout << "remove vertices : ";
+          for (size_t neighborIdx = 0; neighborIdx < neighbors.size() - 1; ++neighborIdx) {
+            _RemoveVertex(neighbors[neighborIdx], lowest);
+            std::cout << neighbors[neighborIdx] << ",";
+          }
+          std::cout << std::endl;
+          _RemoveVertex(vertex, lowest);
+          _positions[lowest] = average;
+        }
+        
+        else {
+          std::cout << "keep vertex : " << vertex << std::endl;
+          std::cout << "remove vertices : " << neighbors << std::endl;
+          _positions[vertex] = average;
+          for (auto& neighbor : neighbors)
+            _RemoveVertex(neighbor, vertex);
+        }
+        std::cout << "vertices removed" << std::endl;
+      }
     } else {
+    
       size_t p1 = edge->vertex;
       size_t p2 = _graph.GetEdge(edge->next)->vertex;
       if (_graph.CollapseEdge(edge)) {
         if (p1 > p2) {
-          _vertices[p2].position = (_vertices[p1].position + _vertices[p2].position) * 0.5f;
+          _positions[p2] = (_positions[p1] + _positions[p2]) * 0.5f;
           _RemoveVertex(p1, p2);
         }
         else {
-          _vertices[p1].position = (_vertices[p1].position + _vertices[p2].position) * 0.5f;
+          _positions[p1] = (_positions[p1] + _positions[p2]) * 0.5f;
           _RemoveVertex(p2, p1);
         }
       }
+    
     }
+    
     _queue.pop();
   }
   return false;
@@ -229,10 +250,10 @@ void Tesselator::Update(float l)
 
 void Tesselator::GetPositions(pxr::VtArray<pxr::GfVec3f>& positions) const
 {
-  size_t numVertices = _vertices.size();
+  size_t numVertices = _positions.size();
   positions.resize(numVertices);
   for (size_t vertexIdx = 0; vertexIdx < numVertices; ++vertexIdx) {
-    positions[vertexIdx] = _vertices[vertexIdx].position;
+    positions[vertexIdx] = _positions[vertexIdx];
   }
 
 }

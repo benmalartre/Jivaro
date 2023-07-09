@@ -41,7 +41,7 @@ public:
 
   void ComputeHash();
   size_t GetHash() { return _hash; };
-	void AddItem(const pxr::SdfPath& item);
+  void AddItem(const pxr::SdfPath& path);
   void RemoveItem(const pxr::SdfPath& item);
   void ToggleItem(const pxr::SdfPath& item);
 
