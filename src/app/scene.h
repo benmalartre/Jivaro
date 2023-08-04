@@ -6,7 +6,7 @@
 #include <pxr/usd/usd/stageCache.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/base/tf/hashmap.h>
-#include <pxr/base/tf/denseHashset.h>
+#include <pxr/base/tf/denseHashSet.h>
 #include <pxr/usdImaging/usdImaging/delegate.h>
 
 

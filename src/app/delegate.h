@@ -11,7 +11,6 @@ class Scene;
 class Geometry;
 class Delegate : public pxr::HdSceneDelegate {
 public:
-  typedef pxr::TfHashMap< pxr::SdfPath, Geometry*, pxr::SdfPath::Hash > _PrimMap;
 
   Delegate(pxr::HdRenderIndex* parentIndex, pxr::SdfPath const& delegateID);
   ~Delegate();
@@ -23,7 +22,7 @@ public:
   // -----------------------------------------------------------------------//
 
   /// Returns true if the named option is enabled by the delegate.
-  virtual bool IsEnabled(pxr::TfToken const& option) const;
+  virtual bool IsEnabled(pxr::TfToken const& option) const override;
 
 
   // -----------------------------------------------------------------------//
@@ -31,13 +30,13 @@ public:
   // -----------------------------------------------------------------------//
 
   /// Gets the topological mesh data for a given prim.
-  virtual pxr::HdMeshTopology GetMeshTopology(pxr::SdfPath const& id);
+  virtual pxr::HdMeshTopology GetMeshTopology(pxr::SdfPath const& id) override;
 
   /// Gets the topological curve data for a given prim.
-  virtual pxr::HdBasisCurvesTopology GetBasisCurvesTopology(pxr::SdfPath const& id);
+  virtual pxr::HdBasisCurvesTopology GetBasisCurvesTopology(pxr::SdfPath const& id) override;
 
   /// Gets the subdivision surface tags (sharpness, holes, etc).
-  virtual pxr::PxOsdSubdivTags GetSubdivTags(pxr::SdfPath const& id);
+  virtual pxr::PxOsdSubdivTags GetSubdivTags(pxr::SdfPath const& id) override;
 
 
   /// Gets the axis aligned bounds of a prim.
@@ -47,28 +46,28 @@ public:
   ///
   /// The returned bounds does not include any displacement that
   /// might occur as the result of running shaders on the prim.
-  virtual pxr::GfRange3d GetExtent(pxr::SdfPath const & id);
+  virtual pxr::GfRange3d GetExtent(pxr::SdfPath const & id) override;
 
   /// Returns the object space transform, including all parent transforms.
-  virtual pxr::GfMatrix4d GetTransform(pxr::SdfPath const & id);
+  virtual pxr::GfMatrix4d GetTransform(pxr::SdfPath const & id) override;
 
   /// Returns the authored visible state of the prim.
-  virtual bool GetVisible(pxr::SdfPath const & id);
+  virtual bool GetVisible(pxr::SdfPath const & id) override;
 
   /// Returns the doubleSided state for the given prim.
-  virtual bool GetDoubleSided(pxr::SdfPath const & id);
+  virtual bool GetDoubleSided(pxr::SdfPath const & id) override;
 
   /// Returns the cullstyle for the given prim.
-  virtual pxr::HdCullStyle GetCullStyle(pxr::SdfPath const &id);
+  virtual pxr::HdCullStyle GetCullStyle(pxr::SdfPath const &id) override;
 
   /// Returns the shading style for the given prim.
-  virtual pxr::VtValue GetShadingStyle(pxr::SdfPath const &id);
+  virtual pxr::VtValue GetShadingStyle(pxr::SdfPath const &id) override;
 
   /// Returns the refinement level for the given prim in the range [0,8].
   ///
   /// The refinement level indicates how many iterations to apply when
   /// subdividing subdivision surfaces or other refinable primitives.
-  virtual pxr::HdDisplayStyle GetDisplayStyle(pxr::SdfPath const& id);
+  virtual pxr::HdDisplayStyle GetDisplayStyle(pxr::SdfPath const& id) override;
 
   virtual pxr::TfToken GetRenderTag(pxr::SdfPath const& id) override;
     
@@ -84,14 +83,14 @@ public:
                                     pxr::VtIntArray *outIndices) override;
 
   /// Returns the prim categories.
-  virtual pxr::VtArray<pxr::TfToken> GetCategories(pxr::SdfPath const& id);
+  virtual pxr::VtArray<pxr::TfToken> GetCategories(pxr::SdfPath const& id) override;
 
   /// Returns the categories for all instances in the instancer.
   virtual std::vector<pxr::VtArray<pxr::TfToken>>
-  GetInstanceCategories(pxr::SdfPath const &instancerId);
+  GetInstanceCategories(pxr::SdfPath const &instancerId) override;
 
   /// Returns the coordinate system bindings, or a nullptr if none are bound.
-  virtual pxr::HdIdVectorSharedPtr GetCoordSysBindings(pxr::SdfPath const& id);
+  virtual pxr::HdIdVectorSharedPtr GetCoordSysBindings(pxr::SdfPath const& id) override;
 
   virtual pxr::HdPrimvarDescriptorVector GetPrimvarDescriptors(pxr::SdfPath const& id,
     pxr::HdInterpolation interpolation) override;

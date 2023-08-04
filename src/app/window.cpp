@@ -56,7 +56,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 //----------------------------------------------------------------------------
 Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool fullscreen, Window* parent) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),_splitter(NULL), _dragSplitter(false),
-  _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _layout(std::numeric_limits<size_t>::max()), _needUpdateLayout(true)
+  _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _layout(std::numeric_limits<int>::max()), _needUpdateLayout(true)
 {
   GLFWmonitor* monitor = NULL;
   if (fullscreen) {
@@ -759,7 +759,7 @@ Window::DrawPopup(PopupUI* popup)
     ImGui::SetNextWindowSize(ImVec2(GetWidth(), GetHeight()));
     ImGui::Begin("##background", NULL, JVR_BACKGROUND_FLAGS);
     ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-    drawList->AddImage(ImTextureID(_tex), ImVec2(0, 0), ImVec2(_width, _height),
+    drawList->AddImage((ImTextureID)(uintptr_t)_tex, ImVec2(0, 0), ImVec2(_width, _height),
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
     ImGui::End();
   } else {

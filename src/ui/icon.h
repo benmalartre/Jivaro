@@ -11,9 +11,9 @@ class IconUI : public BaseUI
 {
 public:
   IconUI(View* parent);
-  ~IconUI()         override;
-  bool Draw()      override;
-  void MouseButton(int button, int action, int mods);
+  ~IconUI() override;
+  bool Draw() override;
+  void MouseButton(int button, int action, int mods) override;
   void MouseMove(int x, int y) override;
   void MouseWheel(int x, int y) override;
 
