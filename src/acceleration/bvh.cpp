@@ -277,25 +277,28 @@ BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
     }
     float leftDistance = FLT_MAX;
     float rightDistance = FLT_MAX;
-    if(_left)leftDistance = GetDistance(_left, &range);
-    if(_right)rightDistance = GetDistance(_right, &range);
+    if(_left)leftDistance = GetDistance(&range, _left);
+    if(_right)rightDistance = GetDistance(&range, _right);
+    if(!IsInside(point) && (leftDistance > maxDistance && rightDistance > maxDistance))
+      return false;
 
     Hit leftHit(*hit), rightHit(*hit);
+    bool leftHitSomething = false;
+    bool rightHitSomething = false;
     if(leftDistance < hit->GetT()) {
-      _left->Closest(points, point, &leftHit, maxDistance, minDistance);
+      if(_left->Closest(points, point, &leftHit, maxDistance, minDistance)){
+        leftHitSomething = true;
+        hit->Set(leftHit);
+      }
     }
     if(rightDistance < hit->GetT()) {
-      _right->Closest(points, point, &rightHit, maxDistance, minDistance);
+      if(_right->Closest(points, point, &rightHit, maxDistance, minDistance)){
+        rightHitSomething = true;
+        hit->Set(rightHit);
+      }
     }
-    if(rightHit.HasHit()) {
-      hit->Set(rightHit);
-      return true;
-    }
-    if(leftHit.HasHit()) {
-      hit->Set(leftHit);
-      return true;
-    }
-    return false;
+
+    return leftHitSomething || rightHitSomething;
   }  
 }
 
@@ -440,7 +443,8 @@ bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
 bool BVH::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
   double maxDistance) const
 {
-  return _root.Closest(points, point, hit, maxDistance);
+  double minDistance = FLT_MAX;
+  return _root.Closest(points, point, hit, maxDistance, &minDistance);
 }
 
 
