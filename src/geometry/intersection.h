@@ -48,8 +48,8 @@ public:
     , _coords(pxr::GfVec4f(0.f, 0.f, 0.f, FLT_MAX)) {};
 
   Hit(const Hit& other)
-    : _geomId(other._geomId)
-    , _elemId(other._elemId)
+    : _geomId(-1)
+    , _elemId(-1)
     , _coords(other._coords) {};
 
   Hit(int geomId, int elemId, const pxr::GfVec4f& coords)

@@ -414,7 +414,7 @@ void PBDSolver::AddCollider(Geometry* collider)
 
   _colliders = colliders;
 
-  std::cout << "### build bvh (mortom) : " << std::endl;
+  std::cout << "### build bvh (morton) : " << std::endl;
   for(auto& collider: _colliders) {
     std::cout << " collider : " << collider << std::endl;
   }

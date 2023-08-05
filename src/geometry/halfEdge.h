@@ -7,7 +7,7 @@
 #include <pxr/base/tf/hashmap.h>
 
 #include "../common.h"
-#include "../acceleration/mortom.h"
+#include "../acceleration/morton.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

@@ -114,6 +114,7 @@ public:
 
     protected:
       virtual void                _PopulatePorts() {};
+      
       Node*                       _parent;
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;

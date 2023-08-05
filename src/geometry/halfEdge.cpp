@@ -326,7 +326,7 @@ HalfEdgeGraph::_FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex)
 void
 HalfEdgeGraph::_RemoveOneEdge(const HalfEdge* edge, bool* modified)
 {
-  int edgeIdx = _GetEdgeIndex(edge);
+  const int edgeIdx = _GetEdgeIndex(edge);
   if (_halfEdgeUsed[edgeIdx]) {
     _availableEdges.push(edgeIdx);
     _halfEdgeUsed[edgeIdx] = false;

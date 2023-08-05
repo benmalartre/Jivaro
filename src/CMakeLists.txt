@@ -77,7 +77,7 @@ add_executable(${TARGET}
   geometry/perlin.cpp
   geometry/voronoi.cpp
   #geometry/vdb.cpp
-  acceleration/mortom.cpp
+  acceleration/morton.cpp
   acceleration/intersector.cpp
   acceleration/grid3d.cpp
   acceleration/bvh.cpp

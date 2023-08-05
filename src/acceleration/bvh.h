@@ -8,7 +8,7 @@
 #include <pxr/base/gf/range3d.h>
 #include "../geometry/intersection.h"
 #include "../geometry/component.h"
-#include "../acceleration/mortom.h"
+#include "../acceleration/morton.h"
 #include "../acceleration/intersector.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -63,20 +63,20 @@ public:
     void GetCells(std::vector<Cell*>& cells);
 
     Geometry* GetGeometry();
-    Mortom SortCellsByPair(std::vector<Mortom>& mortoms);
+    Mortom SortCellsByPair(std::vector<Mortom>& mortons);
     
 
     void Init(Geometry* geometry);
 
     bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
       double maxDistance = FLT_MAX, double* minDistance = NULL) const;
-    bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-      double maxDistance = FLT_MAX, double* minDistance = NULL) const;
+    bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
+      Hit* hit, double maxDistance = FLT_MAX, double* minDistance = NULL) const;
 
   protected:
     void _FinishSort(std::vector<Mortom>& cells);
-    Cell* _RecurseSortCellsByPair(std::vector<Mortom>& mortoms, int first, int last);
-    void _SortTrianglesByPair(std::vector<Mortom>& mortoms, Geometry* geometry);
+    Cell* _RecurseSortCellsByPair(std::vector<Mortom>& mortons, int first, int last);
+    void _SortTrianglesByPair(std::vector<Mortom>& mortons, Geometry* geometry);
 
   private:
     Cell*     _parent;
@@ -97,8 +97,8 @@ public:
 
   static pxr::GfVec3d ComputeCodeAsColor(BVH::Cell* root, const pxr::GfVec3d& point)
   {
-    uint64_t mortom = ComputeCode(root, point);
-    pxr::GfVec3i p = MortomDecode3D(mortom);
+    uint64_t morton = ComputeCode(root, point);
+    pxr::GfVec3i p = MortomDecode3D(morton);
     return pxr::GfVec3d(p[0] / (float)MORTOM_MAX_L, p[1] / (float)MORTOM_MAX_L, p[2] / (float)MORTOM_MAX_L);
   }
 
@@ -116,6 +116,7 @@ public:
 
 private:
   Cell                        _root;
+  std::vector<Cell*>          _leaves;
   std::vector<Geometry*>      _geometries;
 
 }; 

@@ -9,7 +9,7 @@
 #include <pxr/base/gf/range3d.h>
 #include "../geometry/intersection.h"
 #include "../geometry/component.h"
-#include "../acceleration/mortom.h"
+#include "../acceleration/morton.h"
 #include "../acceleration/intersector.h"
 
 JVR_NAMESPACE_OPEN_SCOPE

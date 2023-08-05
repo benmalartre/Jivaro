@@ -1,5 +1,5 @@
 
-#include "../acceleration/mortom.h"
+#include "../acceleration/morton.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -155,10 +155,10 @@ uint32_t MortomLeadingZeros(const uint64_t x)
   return result;
 }
 
-uint32_t MortomFindSplit(Mortom* mortoms, int first, int last)
+uint32_t MortomFindSplit(Mortom* mortons, int first, int last)
 {
-  uint64_t firstCode = mortoms[first].code;
-  uint64_t lastCode = mortoms[last].code;
+  uint64_t firstCode = mortons[first].code;
+  uint64_t lastCode = mortons[last].code;
 
   if (firstCode == lastCode)
     return (first + last) >> 1;
@@ -174,7 +174,7 @@ uint32_t MortomFindSplit(Mortom* mortoms, int first, int last)
 
     if (newSplit < last)
     {
-      uint64_t splitCode = mortoms[newSplit].code;
+      uint64_t splitCode = mortons[newSplit].code;
       uint32_t splitPrefix = MortomLeadingZeros(firstCode ^ splitCode);
       if (splitPrefix > commonPrefix) {
         split = newSplit;
