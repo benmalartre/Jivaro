@@ -246,6 +246,7 @@ OctreeIntersector::Closest(const pxr::GfVec3f* points,
       comp->Closest( positions, point , hit);
     }
   }
+  return hit->GetGeometryIndex() != -1 && hit->GetElementIndex() != -1;
 }
 
 void 

@@ -77,7 +77,7 @@ void Voxels::Trace(short axis)
 
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
   const float eps = 0.00001f * size[axis];
-
+/*
   for (uint32_t x = 0; x < _resolution[(axis + 1) % 3]; ++x)
   {
     for (uint32_t y = 0; y < _resolution[(axis + 2) % 3]; ++y)
@@ -117,19 +117,47 @@ void Voxels::Trace(short axis)
 
         }
         else {
-          /*
-          if (inside) {
-            // march along column setting bits 
-            uint32_t z = uint32_t(floorf((rayStart[2] - minExtents[2]) / _radius + 0.5f));
-            for (uint32_t k = z; k < _resolution[2]; ++k)
-              _data[_ComputeFlatIndex(x, y, k, axis)] += 1;
-          } */
           break;
         }
           
       }
     }
+  }*/
+
+  // TODO add a second pass checking voxels containing vertices
+  // create voxel checked vector 
+  // loop over geometry points
+  // find point voxel index (_ComputeFlatIndex)
+  // if voxel not marked as checked increment voxel data
+  // mark voxel as checked
+/*
+  std::vector<int> voxelChecked(GetNumCells(), 0);
+
+  for (size_t x = 0; x < _geometry->GetNumPoints(); ++x) {
+    const pxr::GfVec3f& point = points[x];
+    const pxr::GfVec3i index(
+      (point[0] - minExtents[0]) / size[0] *_resolution[0],
+      (point[1] - minExtents[1]) / size[1] *_resolution[1],
+      (point[2] - minExtents[2]) / size[2] *_resolution[2]);
+    const size_t flatIndex = _ComputeFlatIndex(index[0], index[1], index[2], 2);
+    if(!voxelChecked[flatIndex]) {
+      _data[flatIndex] += 3;
+      voxelChecked[flatIndex] = 1;
+    }
   }
+*/
+  // other method for surface voxel
+  // loop over each voxels
+  // make closest query to the bvh
+  // if closer than threshold increment voxel
+  const float threshold = 0.5f * _radius;
+  for(size_t cellIdx = 0; cellIdx < GetNumCells(); ++cellIdx) {
+    const pxr::GfVec3f point = GetCellPosition(cellIdx);
+    Hit hit;
+    if(_bvh.Closest(points, point, &hit, threshold))
+      _data[cellIdx] += 3;
+  }
+
 }
 
 pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)

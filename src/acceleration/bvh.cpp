@@ -240,54 +240,63 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
 
     if (leftHit.HasHit() && rightHit.HasHit()) {
       if (leftHit.GetT() < rightHit.GetT()) {
-        hit->Set(leftHit); return true;
+        hit->Set(leftHit); 
+        return true;
       }
       else {
-        hit->Set(rightHit); return true;
+        hit->Set(rightHit); 
+        return true;
       }
     }
     else if (leftHit.HasHit()) {
-      hit->Set(leftHit); return true;
+      hit->Set(leftHit); 
+      return true;
     }
     else if (rightHit.HasHit()) {
-      hit->Set(rightHit); return true;
-    }
-    else {
-      return false;
+      hit->Set(rightHit); 
+      return true;
     }
   }
+  return false;
 }
 
 bool 
 BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
-  Hit* hit, double maxDistance) const
+  Hit* hit, double maxDistance, double* minDistance) const
 {
-  pxr::GfRange3d range(point, point);
-  if (maxDistance < 0 || GetDistance(this, &range) < maxDistance) {
+  const pxr::GfVec3f offset(maxDistance);
+  pxr::GfRange3d range(GetMin() - offset, GetMax() + offset);
+
+  if (maxDistance < 0 || range.IsInside(point)) {
     if (IsLeaf()) {
       Component* component = (Component*)_data;
-      return component->Closest(points, point, hit, maxDistance);
+      return component->Closest(points, point, hit, maxDistance, minDistance);
     }
     else {
-      Hit leftHit, rightHit;
-      if (_left)_left->Closest(points, point, &leftHit, maxDistance);
-      if (_right)_right->Closest(points, point, &rightHit, maxDistance);
+      if(IsGeom()) {        
+        const BVH* intersector = GetIntersector();
+        hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
+      }
+      Hit leftHit(*hit), rightHit(*hit);
+      if (_left)_left->Closest(points, point, &leftHit, maxDistance, minDistance);
+      if (_right)_right->Closest(points, point, &rightHit, maxDistance, minDistance);
       if (leftHit.HasHit() && rightHit.HasHit()) {
         if (leftHit.GetT() < rightHit.GetT()) {
-          hit->Set(leftHit); return true;
+          hit->Set(leftHit); 
+          return true;
         }
         else {
-          hit->Set(rightHit); return true;
+          hit->Set(rightHit); 
+          return true;
         }
       }
       else if (leftHit.HasHit()) {
-        hit->Set(leftHit); return true;
+        hit->Set(leftHit); 
+        return true;
       }
       else if (rightHit.HasHit()) {
-        hit->Set(rightHit); return true;
-      }
-      else {
-        return false;
+        hit->Set(rightHit); 
+        return true;
       }
     }
   }

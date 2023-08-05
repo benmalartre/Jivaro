@@ -71,7 +71,7 @@ public:
     bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
       double maxDistance = FLT_MAX, double* minDistance = NULL) const;
     bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-      double maxDistance = FLT_MAX) const;
+      double maxDistance = FLT_MAX, double* minDistance = NULL) const;
 
   protected:
     void _FinishSort(std::vector<Mortom>& cells);
