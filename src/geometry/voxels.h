@@ -40,7 +40,7 @@ private:
   size_t _ComputeFlatIndex(size_t x, size_t y, size_t z, short axis);
 
   pxr::GfVec3i            _resolution;
-  std::vector<uint32_t>   _data;
+  std::vector<uint8_t>    _data;
   Geometry*               _geometry;
   BVH                     _bvh;
   float                   _radius;

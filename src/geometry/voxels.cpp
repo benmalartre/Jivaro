@@ -65,7 +65,7 @@ void Voxels::Init(Geometry* geometry, float radius)
   _bvh.Init({ _geometry });
 }
 
-// trace voxel grid (Z direction)
+// trace voxel grid (axis direction)
 //--------------------------------------------------------------------------------
 void Voxels::Trace(short axis)
 {
@@ -76,7 +76,7 @@ void Voxels::Trace(short axis)
   const pxr::GfVec3f* points = _geometry->GetPositionsCPtr();
 
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
-  const float eps = 0.000001f * size[axis];
+  const float eps = 0.00001f * size[axis];
 
   for (uint32_t x = 0; x < _resolution[(axis + 1) % 3]; ++x)
   {
@@ -105,11 +105,10 @@ void Voxels::Trace(short axis)
           uint32_t z = uint32_t(floorf((rayStart[axis] - minExtents[axis]) / _radius + 0.5f));
           uint32_t zend = std::min(uint32_t(floorf(zhit + 0.5f)), uint32_t(_resolution[axis] - 1));
 
-          if (inside)
-          {
+          if (inside) {
             // march along column setting bits 
             for (uint32_t k = z; k < zend; ++k)
-              _data[_ComputeFlatIndex(x, y, k, axis)] = uint32_t(-1);
+              _data[_ComputeFlatIndex(x, y, k, axis)] += 1;
           }
 
           inside = !inside;
@@ -118,12 +117,13 @@ void Voxels::Trace(short axis)
 
         }
         else {
+          /*
           if (inside) {
             // march along column setting bits 
             uint32_t z = uint32_t(floorf((rayStart[2] - minExtents[2]) / _radius + 0.5f));
             for (uint32_t k = z; k < _resolution[2]; ++k)
-              _data[_ComputeFlatIndex(x, y, k, axis)] = uint32_t(-1);
-          }
+              _data[_ComputeFlatIndex(x, y, k, axis)] += 1;
+          } */
           break;
         }
           
@@ -147,7 +147,7 @@ void Voxels::Build()
   size_t numCells = GetNumCells();
   _positions.clear();
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-    if (_data[cellIdx]) {
+    if (_data[cellIdx] > 1) {
       _positions.push_back(GetCellPosition(cellIdx));
     }
   }

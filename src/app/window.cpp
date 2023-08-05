@@ -218,9 +218,6 @@ static void _RandomLayout(Window* window)
 
   window->Resize(width, height);
   new MenuUI(menuView);
-
-
-
 }
 
 static void _StandardLayout(Window* window)

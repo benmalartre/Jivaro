@@ -220,42 +220,42 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   double maxDistance, double* minDistance) const
 {
   double enterDistance, exitDistance;
-  if (ray.Intersect(*this, &enterDistance, &exitDistance)) {
-    if(enterDistance > maxDistance) return false;
-    if (IsLeaf()) {
-      Component* component = (Component*)_data;
-      return component->Raycast(points, ray, hit, maxDistance, minDistance);
-    }
-    else {
-      if(IsGeom()) {        
-        const BVH* intersector = GetIntersector();
-        hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
-      }
-      Hit leftHit(*hit), rightHit(*hit);
-      if (_left)_left->Raycast(points, ray, &leftHit, maxDistance, minDistance);
-      if (_right)_right->Raycast(points, ray, &rightHit, maxDistance, minDistance);
+  if (!ray.Intersect(*this, &enterDistance, &exitDistance))
+    return false;
 
-      if (leftHit.HasHit() && rightHit.HasHit()) {
-        if (leftHit.GetT() < rightHit.GetT()) {
-          hit->Set(leftHit); return true;
-        }
-        else {
-          hit->Set(rightHit); return true;
-        }
-      }
-      else if (leftHit.HasHit()) {
+  if(enterDistance > maxDistance) 
+    return false;
+
+  if (IsLeaf()) {
+    Component* component = (Component*)_data;
+    return component->Raycast(points, ray, hit, maxDistance, minDistance);
+  } else {
+    if(IsGeom()) {        
+      const BVH* intersector = GetIntersector();
+      hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
+    }
+    Hit leftHit(*hit), rightHit(*hit);
+    if (_left)_left->Raycast(points, ray, &leftHit, maxDistance, minDistance);
+    if (_right)_right->Raycast(points, ray, &rightHit, maxDistance, minDistance);
+
+    if (leftHit.HasHit() && rightHit.HasHit()) {
+      if (leftHit.GetT() < rightHit.GetT()) {
         hit->Set(leftHit); return true;
       }
-      else if (rightHit.HasHit()) {
+      else {
         hit->Set(rightHit); return true;
       }
-      else {
-        return false;
-      }
+    }
+    else if (leftHit.HasHit()) {
+      hit->Set(leftHit); return true;
+    }
+    else if (rightHit.HasHit()) {
+      hit->Set(rightHit); return true;
+    }
+    else {
+      return false;
     }
   }
-  return false;
-  
 }
 
 bool 
