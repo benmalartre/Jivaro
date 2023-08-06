@@ -80,52 +80,69 @@ void Voxels::Trace(short axis)
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
   const float eps = 0.000001f * size[axis];
 
-  for (uint32_t x = 0; x < _resolution[(axis + 1) % 3]; ++x)
+  const auto workLambda = [&](const size_t beginIdx, const size_t endIdx)
   {
-    for (uint32_t y = 0; y < _resolution[(axis + 2) % 3]; ++y)
+    for (uint32_t x = beginIdx; x < endIdx; ++x)
     {
-      bool inside = false;
-
-      pxr::GfVec3f rayDir(0.f);
-      rayDir[axis] = 1.f;
-
-      pxr::GfVec3f rayStart = minExtents;
-      rayStart[(axis + 1) % 3] += (x + 0.5f) * _radius;
-      rayStart[(axis + 2) % 3] += (y + 0.5f) * _radius;
-
-      while (true)
+      for (uint32_t y = 0; y < _resolution[(axis + 2) % 3]; ++y)
       {
-        // calculate ray start
-        Hit hit;
-        double minDistance = DBL_MAX;
-        if (_bvh.Raycast(points, pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
+        bool inside = false;
+
+        pxr::GfVec3f rayDir(0.f);
+        rayDir[axis] = 1.f;
+
+        pxr::GfVec3f rayStart = minExtents;
+        rayStart[(axis + 1) % 3] += (x + 0.5f) * _radius;
+        rayStart[(axis + 2) % 3] += (y + 0.5f) * _radius;
+
+        while (true)
         {
-          // calculate cell in which intersection occurred
-          const float zpos = rayStart[axis] + hit.GetT() * rayDir[axis];
-          const float zhit = (zpos - minExtents[axis]) / _radius;
-
-          uint32_t z = uint32_t(floorf((rayStart[axis] - minExtents[axis]) / _radius + 0.5f));
-          uint32_t zend = std::min(uint32_t(floorf(zhit + 0.5f)), uint32_t(_resolution[axis] - 1));
-
-          if (inside)
+          // calculate ray start
+          Hit hit;
+          double minDistance = DBL_MAX;
+          if (_bvh.Raycast(points, pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
           {
-            // march along column setting bits 
-            for (uint32_t k = z; k < zend; ++k)
-              _data[_ComputeFlatIndex(x, y, k, axis)] += 1;
+            // calculate cell in which intersection occurred
+            const float zpos = rayStart[axis] + hit.GetT() * rayDir[axis];
+            const float zhit = (zpos - minExtents[axis]) / _radius;
+
+            uint32_t z = uint32_t(floorf((rayStart[axis] - minExtents[axis]) / _radius + 0.5f));
+            uint32_t zend = std::min(uint32_t(floorf(zhit + 0.5f)), uint32_t(_resolution[axis] - 1));
+
+            if (inside)
+            {
+              // march along column setting bits 
+              for (uint32_t k = z; k < zend; ++k)
+                _data[_ComputeFlatIndex(x, y, k, axis)] += 1;
+            }
+
+            inside = !inside;
+
+            rayStart += rayDir * (hit.GetT() + eps);
+
           }
-
-          inside = !inside;
-
-          rayStart += rayDir * (hit.GetT() + eps);
-
+          else {
+            break;
+          }
+            
         }
-        else {
-          break;
-        }
-          
       }
     }
-  }
+  };
+  /*
+  pxr::TfStopwatch sw;
+  sw.Start();
+  workLambda(0, _resolution[(axis + 1) % 3]);
+  sw.Stop();
+  std::cout << "serial trace took : " << sw.GetSeconds() << " seconds " << std::endl; 
+
+  sw.Reset();
+  sw.Start();
+  */
+  pxr::WorkParallelForN(_resolution[(axis + 1) % 3], workLambda, 1);
+  //sw.Stop();
+  //std::cout << "parallel trace took : " << sw.GetSeconds() << " seconds " << std::endl; 
+  
 }
 
 void Voxels::Proximity()

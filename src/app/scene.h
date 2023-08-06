@@ -17,6 +17,7 @@ class Mesh;
 class Curve;
 class Points;
 class Voxels;
+class Graph;
 struct Sample;
 
 struct _Prim {
@@ -24,7 +25,13 @@ struct _Prim {
   pxr::HdDirtyBits   bits;
 };
 
+struct _Graph {
+  Graph*             graph;
+  pxr::HdDirtyBits   bits;
+};
+
 typedef pxr::TfHashMap< pxr::SdfPath, _Prim, pxr::SdfPath::Hash > _PrimMap;
+typedef pxr::TfHashMap< pxr::SdfPath, _Graph, pxr::SdfPath::Hash > _GraphMap;
 
 class Scene  {
 public:

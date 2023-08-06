@@ -53,6 +53,7 @@ pxr::GfRange3d
 Delegate::GetExtent(pxr::SdfPath const& id)
 {
   if (_scene)return _scene->GetExtent(id);
+  return pxr::GfRange3d();
 }
 
 
