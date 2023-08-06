@@ -59,8 +59,8 @@ public:
     Cell* GetRight() { return _right; };
 
     // debug
-    void GetLeaves(std::vector<Cell*>& leaves);
-    void GetCells(std::vector<Cell*>& cells);
+    void GetLeaves(std::vector<Cell*>& leaves) const;
+    void GetCells(std::vector<Cell*>& cells) const;
 
     Geometry* GetGeometry();
     Morton SortCellsByPair(std::vector<Morton>& mortons);
@@ -115,9 +115,10 @@ public:
     double maxDistance) const override;
 
 private:
-  void _MortonSortLeaves();
+  void _BuildLeafMortons();
+  
   Cell                        _root;
-  std::vector<Cell*>          _leaves;
+  std::vector<Morton>         _mortons;
   std::vector<Geometry*>      _geometries;
 
 }; 

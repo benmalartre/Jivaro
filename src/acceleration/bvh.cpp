@@ -178,7 +178,7 @@ _RecurseGetLeaves(BVH::Cell* cell, std::vector<BVH::Cell*>& leaves)
 }
 
 void
-BVH::Cell::GetLeaves(std::vector<BVH::Cell*>& leaves)
+BVH::Cell::GetLeaves(std::vector<BVH::Cell*>& leaves) const
 {
   leaves.clear();
   if (_left)_RecurseGetLeaves(_left, leaves);
@@ -198,7 +198,7 @@ _RecurseGetCells(BVH::Cell* cell, std::vector<BVH::Cell*>& leaves)
 }
 
 void
-BVH::Cell::GetCells(std::vector<BVH::Cell*>& cells)
+BVH::Cell::GetCells(std::vector<BVH::Cell*>& cells) const
 {
   cells.clear();
   if (_left)_RecurseGetCells(_left, cells);
@@ -264,42 +264,11 @@ bool
 BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
   Hit* hit, double maxDistance, double* minDistance) const
 {  
-  pxr::GfRange3d range(point, point);
-
   if (IsLeaf()) {
     Component* component = (Component*)_data;
     return component->Closest(points, point, hit, maxDistance, minDistance);
   }
-  else {
-    if(IsGeom()) {        
-      const BVH* intersector = GetIntersector();
-      hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
-    }
-    float leftDistance = FLT_MAX;
-    float rightDistance = FLT_MAX;
-    if(_left)leftDistance = GetDistance(&range, _left);
-    if(_right)rightDistance = GetDistance(&range, _right);
-    if(!IsInside(point) && (leftDistance > maxDistance && rightDistance > maxDistance))
-      return false;
-
-    Hit leftHit(*hit), rightHit(*hit);
-    bool leftHitSomething = false;
-    bool rightHitSomething = false;
-    if(leftDistance < hit->GetT()) {
-      if(_left->Closest(points, point, &leftHit, maxDistance, minDistance)){
-        leftHitSomething = true;
-        hit->Set(leftHit);
-      }
-    }
-    if(rightDistance < hit->GetT()) {
-      if(_right->Closest(points, point, &rightHit, maxDistance, minDistance)){
-        rightHitSomething = true;
-        hit->Set(rightHit);
-      }
-    }
-
-    return leftHitSomething || rightHitSomething;
-  }  
+  return false;
 }
 
 void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geometry)
@@ -320,7 +289,8 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geom
   }
 }
 
-int _FindSplit(std::vector<Morton>& mortons,  int first, int last)
+int 
+_FindSplit(const std::vector<Morton>& mortons,  int first, int last)
 {
   uint64_t firstCode = mortons[first].code;
   uint64_t lastCode = mortons[last].code;
@@ -367,21 +337,20 @@ BVH::Cell::_RecurseSortCellsByPair(
 }
 
 void 
-BVH::_MortonSortLeaves()
+BVH::_BuildLeafMortons()
 {
-  size_t numLeaves = _leaves.size();
-  std::vector<Morton> mortons(numLeaves);
+  std::vector<BVH::Cell*> leaves;
+  _root.GetLeaves(leaves);
+  size_t numLeaves = leaves.size();
+  _mortons.resize(numLeaves);
   for (size_t leafIdx = 0; leafIdx < numLeaves; ++leafIdx) {
-    BVH::Cell* leaf = (BVH::Cell*)_leaves[leafIdx]->GetData();
+    BVH::Cell* leaf = (BVH::Cell*)leaves[leafIdx]->GetData();
     const pxr::GfVec3i p = WorldToMorton(*this, leaf->GetMidpoint());
-    mortons[leafIdx].code = MortonEncode3D(p);
-    mortons[leafIdx].data = _leaves[leafIdx]->GetData();
+    _mortons[leafIdx].code = MortonEncode3D(p);
+    _mortons[leafIdx].data = leaves[leafIdx]->GetData();
   }
 
-  std::sort(mortons.begin(), mortons.end());
-  for(size_t i = 0; i < numLeaves; ++i) {
-    _leaves[i] = (BVH::Cell*) mortons[i].data;
-  }
+  std::sort(_mortons.begin(), _mortons.end());
 }
 
 Morton BVH::Cell::SortCellsByPair(
@@ -444,7 +413,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _root.SetMax(cell->GetMax());
   _root.SetData((void*)this);
   cells.clear();
-  _root.GetLeaves(_leaves);
+  _BuildLeafMortons();
 }
 
 void
@@ -459,21 +428,37 @@ bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
   return _root.Raycast(points, ray, hit, maxDistance, minDistance);
 };
 
-bool BVH::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-  double maxDistance) const
+bool BVH::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
+  Hit* hit, double maxDistance) const
 {
-  const pxr::GfVec3i p = WorldToMorton(_root, point);
-  uint64_t code = MortonEncode3D(p);
+  const pxr::GfVec3f offset(maxDistance);
+  const pxr::GfVec3i p1 = WorldToMorton(_root, point - offset);
+  const pxr::GfVec3i p2 = WorldToMorton(_root, point + offset);
+  uint64_t code1 = MortonEncode3D(p1);
+  uint64_t code2 = MortonEncode3D(p2);
+
   double minDistance = FLT_MAX;
   const pxr::GfRange3d range(point, point);
+
+  int split = _FindSplit(_mortons, 0, _mortons.size() - 1);
+
+  return rand() > RAND_MAX / 2;
+
+  /*
   size_t index = 0;
-  for(auto& leaf: _leaves) {
-    if(leaf->IsInside(point) || GetDistance(&range, leaf) < hit->GetT()) {
+  for(auto& leaf: leaves) {
+    const pxr::GfVec3i p = WorldToMorton(_root, leaf->GetMidpoint());
+    uint64_t code = MortonEncode3D(p2);
+    if(code >= code1 && code <= code2) {
       //leaf->Closest(points, point, hit, maxDistance, &minDistance);
-      std::cout << "check cell id " << (index++) << std::endl;
     }
+     //if(leaf->IsInside(point) || GetDistance(&range, leaf) < hit->GetT()) {
+    //if(leaf->Closest(points, point, hit, maxDistance, &minDistance))return true;
+    //std::cout << "check cell id " << (index++) << std::endl;
+    //}
   }
   return hit->HasHit();
+  */
 }
 
 
