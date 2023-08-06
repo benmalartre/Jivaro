@@ -1,4 +1,6 @@
+#include <pxr/base/work/loops.h>
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/tf/stopwatch.h>
 #include "../geometry/voxels.h"
 #include "../geometry/geometry.h"
 #include "../geometry/intersection.h"
@@ -152,12 +154,32 @@ void Voxels::Trace(short axis)
   // if closer than threshold increment voxel
   const float threshold = 0.5f * _radius;
   std::cout << "num cells for query : " << GetNumCells() << std::endl;
-  for(size_t cellIdx = 0; cellIdx < GetNumCells(); ++cellIdx) {
-    const pxr::GfVec3f point = GetCellPosition(cellIdx);
-    Hit hit;
-    if(_bvh.Closest(points, point, &hit, threshold))
-      _data[cellIdx] += 3;
-  }
+
+  const auto workLambda = [&](const size_t beginIdx, const size_t endIdx)
+  {
+    for (size_t cellIdx = beginIdx; cellIdx < endIdx; ++cellIdx) {
+      const pxr::GfVec3f point = GetCellPosition(cellIdx);
+      Hit hit;
+      if(_bvh.Closest(points, point, &hit, threshold))
+        _data[cellIdx] += 3;
+    }
+  };
+
+  pxr::TfStopwatch sw;
+  /*
+  sw.Start();
+  
+  workLambda(0, GetNumCells());
+  
+  sw.Stop();
+  std::cout << "serial tooks " << sw.GetSeconds() << " seconds" << std::endl;
+  */
+
+  sw.Reset();
+  sw.Start();
+  pxr::WorkParallelForN(GetNumCells(), workLambda, 32);
+  sw.Stop();
+  std::cout << "parallel tooks " << sw.GetSeconds() << " seconds" << std::endl;
 }
 
 pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)

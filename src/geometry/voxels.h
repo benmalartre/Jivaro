@@ -36,6 +36,8 @@ public:
     return false;
   };
 
+  void ParallelClosest(const pxr::GfVec3f* points);
+
 private:
   size_t _ComputeFlatIndex(size_t x, size_t y, size_t z, short axis);
 
