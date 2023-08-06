@@ -135,7 +135,7 @@ static void _CollapseEdges(float factor)
   }
 }
 
-static void _Voxelize(float radius)
+static void _Voxelize(float radius, short axis)
 {
   pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
@@ -143,10 +143,10 @@ static void _Voxelize(float radius)
     Mesh mesh(usdMesh);
     Voxels voxels;
     voxels.Init(&mesh, radius);
-    voxels.Trace(0);
-    //voxels.Trace(1);
-    //voxels.Trace(2);
-    //voxels.Proximity();
+    if(axis & 1) voxels.Trace(0);
+    if(axis & 2) voxels.Trace(1);
+    if(axis & 4) voxels.Trace(2);
+    if(axis & 8) voxels.Proximity();
     voxels.Build();
 
 
@@ -334,8 +334,26 @@ bool ToolUI::Draw()
   }
 
   static float voxelizeRadius = 0.5f;
-  if (ImGui::Button("Voxelize")) {
-    _Voxelize(voxelizeRadius);
+  if (ImGui::Button("Voxelize X only")) {
+    _Voxelize(voxelizeRadius, 1);
+  }ImGui::SameLine();
+  if (ImGui::Button("Voxelize Y only")) {
+    _Voxelize(voxelizeRadius, 2);
+  }ImGui::SameLine();
+  if (ImGui::Button("Voxelize Z only")) {
+    _Voxelize(voxelizeRadius, 4);
+  };
+  if (ImGui::Button("Voxelize XY only")) {
+    _Voxelize(voxelizeRadius, 3);
+  }ImGui::SameLine();
+  if (ImGui::Button("Voxelize XZ only")) {
+    _Voxelize(voxelizeRadius, 5);
+  }ImGui::SameLine();
+  if (ImGui::Button("Voxelize YZ only")) {
+    _Voxelize(voxelizeRadius, 6);
+  };
+  if (ImGui::Button("Voxelize XYZ")) {
+    _Voxelize(voxelizeRadius, 7);
   }ImGui::SameLine();
   ImGui::InputFloat("Radius", &voxelizeRadius);
 
