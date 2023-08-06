@@ -79,7 +79,7 @@ void Voxels::Trace(short axis)
 
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
   const float eps = 0.00001f * size[axis];
-/*
+
   for (uint32_t x = 0; x < _resolution[(axis + 1) % 3]; ++x)
   {
     for (uint32_t y = 0; y < _resolution[(axis + 2) % 3]; ++y)
@@ -124,7 +124,12 @@ void Voxels::Trace(short axis)
           
       }
     }
-  }*/
+  }
+}
+
+void Voxels::Proximity()
+{
+  const pxr::GfVec3f* points = _geometry->GetPositionsCPtr();
 
   // TODO add a second pass checking voxels containing vertices
   // create voxel checked vector 
@@ -174,6 +179,7 @@ void Voxels::Trace(short axis)
   sw.Stop();
   std::cout << "serial tooks " << sw.GetSeconds() << " seconds" << std::endl;
   */
+  
 
   sw.Reset();
   sw.Start();

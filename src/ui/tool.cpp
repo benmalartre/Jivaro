@@ -146,6 +146,7 @@ static void _Voxelize(float radius)
     voxels.Trace(0);
     //voxels.Trace(1);
     //voxels.Trace(2);
+    //voxels.Proximity();
     voxels.Build();
 
 

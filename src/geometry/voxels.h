@@ -17,6 +17,7 @@ public:
   Voxels();
   void Init(Geometry* geometry, float radius);
   void Trace(short axis);
+  void Proximity();
   void Build();
 
   size_t GetNumCells();
@@ -35,8 +36,6 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
-
-  void ParallelClosest(const pxr::GfVec3f* points);
 
 private:
   size_t _ComputeFlatIndex(size_t x, size_t y, size_t z, short axis);
