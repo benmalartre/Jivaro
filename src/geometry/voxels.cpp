@@ -67,6 +67,8 @@ void Voxels::Init(Geometry* geometry, float radius)
   _bvh.Init({ _geometry });
 }
 
+// trace voxel grid (axis direction)
+//--------------------------------------------------------------------------------
 void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 {
   const pxr::GfRange3d& range(_geometry->GetBoundingBox().GetRange());
@@ -125,8 +127,6 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
   }
 }
 
-// trace voxel grid (axis direction)
-//--------------------------------------------------------------------------------
 void Voxels::Trace(short axis)
 {
   pxr::WorkParallelForN(
@@ -137,9 +137,10 @@ void Voxels::Trace(short axis)
       std::placeholders::_2,     // end)
       axis
     ), 1);
-  std::cout << "youpi c'est la fete !!" << std::endl;
 }
 
+// closest point query voxel grid
+//--------------------------------------------------------------------------------
 void Voxels::_ProximityWork(size_t begin, size_t end)
 {
   const pxr::GfVec3f* points = _geometry->GetPositionsCPtr();
@@ -159,7 +160,7 @@ void Voxels::Proximity()
     &Voxels::_ProximityWork, 
     this,
     std::placeholders::_1,     // begin
-    std::placeholders::_2
+    std::placeholders::_2      // end
   ), 32);
 }
 
