@@ -133,9 +133,7 @@ void Voxels::Trace(short axis)
       std::placeholders::_1,     // begin
       std::placeholders::_2,     // end)
       axis
-    ), 1); // grain size fixed to 1 eliminating one nested loop
-  
-  sw.Stop();
+    ), 1); // grain size fixed to 1 eliminating one nested loop  
 }
 
 // closest point query voxel grid
