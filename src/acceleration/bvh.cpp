@@ -302,7 +302,7 @@ BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
   }  
 }
 
-void BVH::Cell::_SortTrianglesByPair(std::vector<Mortom>& leaves, Geometry* geometry)
+void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geometry)
 {
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
@@ -320,7 +320,7 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Mortom>& leaves, Geometry* geom
   }
 }
 
-int _FindSplit(std::vector<Mortom>& mortons,  int first, int last)
+int _FindSplit(std::vector<Morton>& mortons,  int first, int last)
 {
   uint64_t firstCode = mortons[first].code;
   uint64_t lastCode = mortons[last].code;
@@ -328,7 +328,7 @@ int _FindSplit(std::vector<Mortom>& mortons,  int first, int last)
   if (firstCode == lastCode)
     return (first + last) >> 1;
 
-  int commonPrefix = MortomLeadingZeros(firstCode ^ lastCode);
+  int commonPrefix = MortonLeadingZeros(firstCode ^ lastCode);
   int split = first;
   int step = last - first;
 
@@ -340,7 +340,7 @@ int _FindSplit(std::vector<Mortom>& mortons,  int first, int last)
     if (newSplit < last)
     {
       uint64_t splitCode = mortons[newSplit].code;
-      int splitPrefix = MortomLeadingZeros(firstCode ^ splitCode);
+      int splitPrefix = MortonLeadingZeros(firstCode ^ splitCode);
       if (splitPrefix > commonPrefix) {
         split = newSplit;
       }
@@ -352,7 +352,7 @@ int _FindSplit(std::vector<Mortom>& mortons,  int first, int last)
 
 BVH::Cell*
 BVH::Cell::_RecurseSortCellsByPair(
-  std::vector<Mortom>& mortons,
+  std::vector<Morton>& mortons,
   int           first,
   int           last)
 {
@@ -366,15 +366,33 @@ BVH::Cell::_RecurseSortCellsByPair(
   return new BVH::Cell(this, left, right);
 }
 
-Mortom BVH::Cell::SortCellsByPair(
-  std::vector<Mortom>& cells)
+void 
+BVH::_MortonSortLeaves()
+{
+  size_t numLeaves = _leaves.size();
+  std::vector<Morton> mortons(numLeaves);
+  for (size_t leafIdx = 0; leafIdx < numLeaves; ++leafIdx) {
+    BVH::Cell* leaf = (BVH::Cell*)_leaves[leafIdx]->GetData();
+    const pxr::GfVec3i p = WorldToMorton(*this, leaf->GetMidpoint());
+    mortons[leafIdx].code = MortonEncode3D(p);
+    mortons[leafIdx].data = _leaves[leafIdx]->GetData();
+  }
+
+  std::sort(mortons.begin(), mortons.end());
+  for(size_t i = 0; i < numLeaves; ++i) {
+    _leaves[i] = (BVH::Cell*) mortons[i].data;
+  }
+}
+
+Morton BVH::Cell::SortCellsByPair(
+  std::vector<Morton>& cells)
 {
   size_t numCells = cells.size();
-  std::vector<Mortom> mortons(numCells);
+  std::vector<Morton> mortons(numCells);
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     BVH::Cell* cell = (BVH::Cell*)cells[cellIdx].data;
-    const pxr::GfVec3i p = WorldToMortom(*this, cell->GetMidpoint());
-    mortons[cellIdx].code = MortomEncode3D(p);
+    const pxr::GfVec3i p = WorldToMorton(*this, cell->GetMidpoint());
+    mortons[cellIdx].code = MortonEncode3D(p);
     mortons[cellIdx].data = cells[cellIdx].data;
   }
 
@@ -382,9 +400,9 @@ Mortom BVH::Cell::SortCellsByPair(
   return { 0, _RecurseSortCellsByPair(mortons, 0, static_cast<int>(numCells) - 1) };
 } 
 
-void BVH::Cell::_FinishSort(std::vector<Mortom>& cells)
+void BVH::Cell::_FinishSort(std::vector<Morton>& cells)
 {
-  Mortom morton = SortCellsByPair(cells);
+  Morton morton = SortCellsByPair(cells);
   _SwapCells(this, (BVH::Cell*)morton.data);
   cells.clear();
 }
@@ -393,7 +411,7 @@ void BVH::Cell::Init(Geometry* geometry)
 {
   _type = BVH::Cell::GEOM;
   if (geometry->GetType() == Geometry::MESH) {
-    std::vector<Mortom> leaves;
+    std::vector<Morton> leaves;
     _SortTrianglesByPair(leaves, geometry);
     _FinishSort(leaves);
   }
@@ -411,7 +429,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
-  std::vector<Mortom> cells;
+  std::vector<Morton> cells;
   cells.reserve(numColliders);
 
   for (Geometry* geom : _geometries) {
@@ -419,13 +437,14 @@ BVH::Init(const std::vector<Geometry*>& geometries)
     cells.push_back({ BVH::ComputeCode(&_root, bvh->GetMidpoint()), bvh });
   }
 
-  Mortom morton = _root.SortCellsByPair(cells);
+  Morton morton = _root.SortCellsByPair(cells);
   BVH::Cell* cell = (BVH::Cell*)morton.data;
   _root.SetLeft(cell);
   _root.SetMin(cell->GetMin());
   _root.SetMax(cell->GetMax());
   _root.SetData((void*)this);
   cells.clear();
+  _root.GetLeaves(_leaves);
 }
 
 void
@@ -443,8 +462,18 @@ bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
 bool BVH::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
   double maxDistance) const
 {
+  const pxr::GfVec3i p = WorldToMorton(_root, point);
+  uint64_t code = MortonEncode3D(p);
   double minDistance = FLT_MAX;
-  return _root.Closest(points, point, hit, maxDistance, &minDistance);
+  const pxr::GfRange3d range(point, point);
+  size_t index = 0;
+  for(auto& leaf: _leaves) {
+    if(leaf->IsInside(point) || GetDistance(&range, leaf) < hit->GetT()) {
+      //leaf->Closest(points, point, hit, maxDistance, &minDistance);
+      std::cout << "check cell id " << (index++) << std::endl;
+    }
+  }
+  return hit->HasHit();
 }
 
 

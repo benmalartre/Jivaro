@@ -24,32 +24,31 @@ static uint32_t __inline __builtin_clz(uint32_t x) {
 #define MORTOM_LONG_BITS  21
 #define MORTOM_MAX_L ((1 << (MORTOM_LONG_BITS)) - 1)
 
-struct Mortom {
+struct Morton {
   uint64_t  code;
-  void* data;
+  void*     data;
 
-  bool operator <(const Mortom& other) const {
+  bool operator <(const Morton& other) const {
     return code < other.code;
   }
 };
 
 
 // CONVERSION
-pxr::GfVec3d MortomToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p);
-pxr::GfVec3i WorldToMortom(const pxr::GfRange3d& range, const pxr::GfVec3d& p);
-void ClampMortom(pxr::GfVec3i& p);
+pxr::GfVec3d MortonToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p);
+pxr::GfVec3i WorldToMorton(const pxr::GfRange3d& range, const pxr::GfVec3d& p);
+void ClampMorton(pxr::GfVec3i& p);
 
 // ENCODING
-uint32_t MortomEncode2D(const pxr::GfVec2i& p);
-uint64_t MortomEncode3D(const pxr::GfVec3i& p);
+uint32_t MortonEncode2D(const pxr::GfVec2i& p);
+uint64_t MortonEncode3D(const pxr::GfVec3i& p);
 
 // DECODING
-pxr::GfVec2i MortomDecode2D(uint32_t code);
-pxr::GfVec3i MortomDecode3D(uint64_t code);
+pxr::GfVec2i MortonDecode2D(uint32_t code);
+pxr::GfVec3i MortonDecode3D(uint64_t code);
 
-uint32_t MortomLeadingZeros(const uint64_t x);
-
-uint32_t MortomFindSplit(Mortom* mortoms, int first, int last);
+uint32_t MortonLeadingZeros(const uint64_t x);
+uint32_t MortonFindSplit(Morton* mortoms, int first, int last);
  
 JVR_NAMESPACE_CLOSE_SCOPE
 

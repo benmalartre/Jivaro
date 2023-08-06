@@ -5,7 +5,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-pxr::GfVec3d MortomToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p)
+pxr::GfVec3d MortonToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p)
 {
   const pxr::GfVec3d scale(range.GetSize() / (float)MORTOM_MAX_L);
   const pxr::GfVec3d min(range.GetMin());
@@ -16,7 +16,7 @@ pxr::GfVec3d MortomToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p)
   );
 }
 
-pxr::GfVec3i WorldToMortom(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
+pxr::GfVec3i WorldToMorton(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
 {
   const pxr::GfVec3d scale(range.GetSize() / (float)MORTOM_MAX_L);
   const pxr::GfVec3d min(range.GetMin());
@@ -27,11 +27,11 @@ pxr::GfVec3i WorldToMortom(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
     (int)(invScale[1] * (p[1] - min[1])),
     (int)(invScale[2] * (p[2] - min[2]))
     });
-  ClampMortom(r);
+  ClampMorton(r);
   return r;
 }
 
-void ClampMortom(pxr::GfVec3i& p)
+void ClampMorton(pxr::GfVec3i& p)
 {
   for (size_t axis = 0; axis < 3; ++axis) {
     if (p[axis] < 0)p[axis] = 0;
@@ -60,7 +60,7 @@ static inline uint64_t _SplitBy2bits(const uint32_t a) {
   return x;
 }
 
-uint32_t MortomEncode2D(const pxr::GfVec2i& p)
+uint32_t MortonEncode2D(const pxr::GfVec2i& p)
 {
   return _SplitBy2bits(p[0]) | (_SplitBy2bits(p[1]) << 1);
 }
@@ -84,7 +84,7 @@ static inline uint64_t _SplitBy3bits(const uint32_t a) {
   return x;
 }
 
-uint64_t MortomEncode3D(const pxr::GfVec3i& p)
+uint64_t MortonEncode3D(const pxr::GfVec3i& p)
 {
   return _SplitBy3bits(p[0]) | (_SplitBy3bits(p[1]) << 1) | (_SplitBy3bits(p[2]) << 2);
 }
@@ -109,7 +109,7 @@ static inline uint32_t _GetSecondBits(const uint64_t m) {
   return x;
 }
 
-pxr::GfVec2i MortomDecode2D(uint32_t code)
+pxr::GfVec2i MortonDecode2D(uint32_t code)
 {
   uint32_t x = _GetSecondBits(code);
   uint32_t y = _GetSecondBits(code >> 1);
@@ -136,7 +136,7 @@ static inline uint32_t _GetThirdBits(const uint64_t m) {
   return x;
 }
 
-pxr::GfVec3i MortomDecode3D(uint64_t code)
+pxr::GfVec3i MortonDecode3D(uint64_t code)
 {
   uint32_t x = _GetThirdBits(code);
   uint32_t y = _GetThirdBits(code >> 1);
@@ -144,7 +144,7 @@ pxr::GfVec3i MortomDecode3D(uint64_t code)
   return pxr::GfVec3i(x, y, z);
 }
 
-uint32_t MortomLeadingZeros(const uint64_t x)
+uint32_t MortonLeadingZeros(const uint64_t x)
 {
   uint32_t u32 = (x >> 32);
   uint32_t result = u32 ? __builtin_clz(u32) : 32;
@@ -155,7 +155,7 @@ uint32_t MortomLeadingZeros(const uint64_t x)
   return result;
 }
 
-uint32_t MortomFindSplit(Mortom* mortons, int first, int last)
+uint32_t MortonFindSplit(Morton* mortons, int first, int last)
 {
   uint64_t firstCode = mortons[first].code;
   uint64_t lastCode = mortons[last].code;
@@ -163,7 +163,7 @@ uint32_t MortomFindSplit(Mortom* mortons, int first, int last)
   if (firstCode == lastCode)
     return (first + last) >> 1;
 
-  uint32_t commonPrefix = MortomLeadingZeros(firstCode ^ lastCode);
+  uint32_t commonPrefix = MortonLeadingZeros(firstCode ^ lastCode);
   uint32_t split = first;
   uint32_t step = last - first;
 
@@ -175,7 +175,7 @@ uint32_t MortomFindSplit(Mortom* mortons, int first, int last)
     if (newSplit < last)
     {
       uint64_t splitCode = mortons[newSplit].code;
-      uint32_t splitPrefix = MortomLeadingZeros(firstCode ^ splitCode);
+      uint32_t splitPrefix = MortonLeadingZeros(firstCode ^ splitCode);
       if (splitPrefix > commonPrefix) {
         split = newSplit;
       }

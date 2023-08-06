@@ -150,7 +150,7 @@ void Voxels::Trace(short axis)
   // loop over each voxels
   // make closest query to the bvh
   // if closer than threshold increment voxel
-  const float threshold = _radius;
+  const float threshold = 0.5f * _radius;
   for(size_t cellIdx = 0; cellIdx < GetNumCells(); ++cellIdx) {
     const pxr::GfVec3f point = GetCellPosition(cellIdx);
     Hit hit;

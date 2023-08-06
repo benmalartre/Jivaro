@@ -63,7 +63,7 @@ public:
     void GetCells(std::vector<Cell*>& cells);
 
     Geometry* GetGeometry();
-    Mortom SortCellsByPair(std::vector<Mortom>& mortons);
+    Morton SortCellsByPair(std::vector<Morton>& mortons);
     
 
     void Init(Geometry* geometry);
@@ -74,9 +74,9 @@ public:
       Hit* hit, double maxDistance = FLT_MAX, double* minDistance = NULL) const;
 
   protected:
-    void _FinishSort(std::vector<Mortom>& cells);
-    Cell* _RecurseSortCellsByPair(std::vector<Mortom>& mortons, int first, int last);
-    void _SortTrianglesByPair(std::vector<Mortom>& mortons, Geometry* geometry);
+    void _FinishSort(std::vector<Morton>& cells);
+    Cell* _RecurseSortCellsByPair(std::vector<Morton>& mortons, int first, int last);
+    void _SortTrianglesByPair(std::vector<Morton>& mortons, Geometry* geometry);
 
   private:
     Cell*     _parent;
@@ -91,14 +91,14 @@ public:
 
   static uint64_t ComputeCode(const BVH::Cell* root, const pxr::GfVec3d& point)
   {
-    const pxr::GfVec3i p = WorldToMortom(*root, point);
-    return MortomEncode3D(p);
+    const pxr::GfVec3i p = WorldToMorton(*root, point);
+    return MortonEncode3D(p);
   }
 
   static pxr::GfVec3d ComputeCodeAsColor(BVH::Cell* root, const pxr::GfVec3d& point)
   {
     uint64_t morton = ComputeCode(root, point);
-    pxr::GfVec3i p = MortomDecode3D(morton);
+    pxr::GfVec3i p = MortonDecode3D(morton);
     return pxr::GfVec3d(p[0] / (float)MORTOM_MAX_L, p[1] / (float)MORTOM_MAX_L, p[2] / (float)MORTOM_MAX_L);
   }
 
@@ -115,6 +115,7 @@ public:
     double maxDistance) const override;
 
 private:
+  void _MortonSortLeaves();
   Cell                        _root;
   std::vector<Cell*>          _leaves;
   std::vector<Geometry*>      _geometries;
