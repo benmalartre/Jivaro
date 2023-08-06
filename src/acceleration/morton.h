@@ -33,6 +33,12 @@ struct Morton {
   }
 };
 
+struct MortonTriplet {
+  Morton m0;
+  Morton m1;
+  Morton m2;
+};
+
 
 // CONVERSION
 pxr::GfVec3d MortonToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p);

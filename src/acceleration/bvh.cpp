@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iterator>
 
+#include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
@@ -100,6 +101,17 @@ GetDistance(const pxr::GfRange3d* lhs, const pxr::GfRange3d* rhs)
   float dx = _GetDistance1D(center[0], minimum[0] + half[0], maximum[0] - half[0]);
   float dy = _GetDistance1D(center[1], minimum[1] + half[1], maximum[1] - half[1]);
   float dz = _GetDistance1D(center[2], minimum[2] + half[2], maximum[2] - half[2]);
+  return pxr::GfSqrt(dx * dx + dy * dy + dz * dz);
+}
+
+static double 
+GetDistance(const pxr::GfRange3d& range, const pxr::GfVec3d& point)
+{
+  const pxr::GfVec3d& minimum = range.GetMin();
+  const pxr::GfVec3d& maximum = range.GetMax();
+  float dx = _GetDistance1D(point[0], minimum[0], maximum[0]);
+  float dy = _GetDistance1D(point[1], minimum[1], maximum[1]);
+  float dz = _GetDistance1D(point[2], minimum[2], maximum[2]);
   return pxr::GfSqrt(dx * dx + dy * dy + dz * dz);
 }
 
@@ -264,11 +276,24 @@ bool
 BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
   Hit* hit, double maxDistance, double* minDistance) const
 {  
-  if (IsLeaf()) {
+  if(IsLeaf()) {
+    std::cout << "this is fuckin leaf " << std::endl;
     Component* component = (Component*)_data;
     return component->Closest(points, point, hit, maxDistance, minDistance);
+  } else {
+    std::cout << "this is fuckin branch " << std::endl;
+    const pxr::GfVec3d offset(maxDistance);
+    const pxr::GfRange3d range(point - offset, point + offset);
+    bool leftHit = false;
+    bool rightHit = false;
+    if(_left && (_left->Contains(point) || !_left->IntersectWith(range).IsEmpty())) {
+      leftHit = _left->Closest(points, point, hit, maxDistance, minDistance);
+    }
+    if(_right && (_right->Contains(point) || !_right->IntersectWith(range).IsEmpty())) {
+      rightHit = _right->Closest(points, point, hit, maxDistance, minDistance);
+    }
+    return leftHit || rightHit;
   }
-  return false;
 }
 
 void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geometry)
@@ -337,17 +362,17 @@ BVH::Cell::_RecurseSortCellsByPair(
 }
 
 void 
-BVH::_BuildLeafMortons()
+BVH::_BuildCellMortons()
 {
-  std::vector<BVH::Cell*> leaves;
-  _root.GetLeaves(leaves);
-  size_t numLeaves = leaves.size();
-  _mortons.resize(numLeaves);
-  for (size_t leafIdx = 0; leafIdx < numLeaves; ++leafIdx) {
-    BVH::Cell* leaf = (BVH::Cell*)leaves[leafIdx]->GetData();
-    const pxr::GfVec3i p = WorldToMorton(*this, leaf->GetMidpoint());
-    _mortons[leafIdx].code = MortonEncode3D(p);
-    _mortons[leafIdx].data = leaves[leafIdx]->GetData();
+  std::vector<BVH::Cell*> cells;
+  _root.GetCells(cells);
+  size_t numCells = cells.size();
+  _mortons.resize(numCells);
+  for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
+    BVH::Cell* cell = cells[cellIdx];
+    const pxr::GfVec3i p = WorldToMorton(*this, cell->GetMidpoint());
+    _mortons[cellIdx].code = MortonEncode3D(p);
+    _mortons[cellIdx].data = (void*)cells[cellIdx];
   }
 
   std::sort(_mortons.begin(), _mortons.end());
@@ -413,7 +438,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _root.SetMax(cell->GetMax());
   _root.SetData((void*)this);
   cells.clear();
-  _BuildLeafMortons();
+  _BuildCellMortons();
 }
 
 void
@@ -431,18 +456,8 @@ bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
 bool BVH::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
   Hit* hit, double maxDistance) const
 {
-  const pxr::GfVec3f offset(maxDistance);
-  const pxr::GfVec3i p1 = WorldToMorton(_root, point - offset);
-  const pxr::GfVec3i p2 = WorldToMorton(_root, point + offset);
-  uint64_t code1 = MortonEncode3D(p1);
-  uint64_t code2 = MortonEncode3D(p2);
-
   double minDistance = FLT_MAX;
-  const pxr::GfRange3d range(point, point);
-
-  int split = _FindSplit(_mortons, 0, _mortons.size() - 1);
-
-  return rand() > RAND_MAX / 2;
+  return _root.Closest(points, point, hit, maxDistance, &minDistance);
 
   /*
   size_t index = 0;
