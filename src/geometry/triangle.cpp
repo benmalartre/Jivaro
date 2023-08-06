@@ -86,10 +86,15 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* h
 bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
   double maxDistance, double* minDistance) const
 {
+  const pxr::GfVec3f offset(maxDistance);
+  const pxr::GfRange3f range(point - offset, point + offset);
+  if(!Touch(points, range.GetMidpoint(), range.GetSize()))
+    return false;
+
   pxr::GfVec3f edge0 = points[vertices[1]] - points[vertices[0]];
   pxr::GfVec3f edge1 = points[vertices[2]] - points[vertices[0]];
   
-  pxr::GfVec3f v0 = points[vertices[1]] - point;
+  pxr::GfVec3f v0 = points[vertices[0]] - point;
   
   float a = edge0 * edge0;
   float b = edge0 * edge1;
@@ -158,7 +163,7 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hi
   closest += s * edge0 + t * edge1;
   
   float distance = (point - closest).GetLength();
-  if (distance < maxDistance && distance < hit->GetT()) {
+  if ((maxDistance < 0 || distance <= maxDistance) && distance < hit->GetT()) {
     if(minDistance) *minDistance = distance;
     hit->SetBarycentricCoordinates(pxr::GfVec3f(1.f - s - t, s, t));
     hit->SetElementIndex(id);

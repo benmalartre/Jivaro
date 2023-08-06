@@ -144,8 +144,8 @@ static void _Voxelize(float radius)
     Voxels voxels;
     voxels.Init(&mesh, radius);
     voxels.Trace(0);
-    voxels.Trace(1);
-    voxels.Trace(2);
+    //voxels.Trace(1);
+    //voxels.Trace(2);
     voxels.Build();
 
 
@@ -169,7 +169,7 @@ static void _Voxelize(float radius)
     pxr::VtArray<float> widths(numPoints);
     pxr::VtArray<pxr::GfVec3f> colors(numPoints);
     for (size_t p = 0; p < numPoints; ++p) {
-      widths[p] = radius;
+      widths[p] = radius * 0.9f;
       colors[p] = grid.GetColor(positions[p]);
     }
     points.CreateWidthsAttr().Set(pxr::VtValue(widths));

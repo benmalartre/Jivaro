@@ -277,19 +277,17 @@ BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
   Hit* hit, double maxDistance, double* minDistance) const
 {  
   if(IsLeaf()) {
-    std::cout << "this is fuckin leaf " << std::endl;
     Component* component = (Component*)_data;
     return component->Closest(points, point, hit, maxDistance, minDistance);
   } else {
-    std::cout << "this is fuckin branch " << std::endl;
     const pxr::GfVec3d offset(maxDistance);
     const pxr::GfRange3d range(point - offset, point + offset);
     bool leftHit = false;
     bool rightHit = false;
-    if(_left && (_left->Contains(point) || !_left->IntersectWith(range).IsEmpty())) {
+    if(_left && !range.IsOutside(*_left)) {
       leftHit = _left->Closest(points, point, hit, maxDistance, minDistance);
     }
-    if(_right && (_right->Contains(point) || !_right->IntersectWith(range).IsEmpty())) {
+    if(_right && !range.IsOutside(*_right)) {
       rightHit = _right->Closest(points, point, hit, maxDistance, minDistance);
     }
     return leftHit || rightHit;
@@ -361,23 +359,6 @@ BVH::Cell::_RecurseSortCellsByPair(
   return new BVH::Cell(this, left, right);
 }
 
-void 
-BVH::_BuildCellMortons()
-{
-  std::vector<BVH::Cell*> cells;
-  _root.GetCells(cells);
-  size_t numCells = cells.size();
-  _mortons.resize(numCells);
-  for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-    BVH::Cell* cell = cells[cellIdx];
-    const pxr::GfVec3i p = WorldToMorton(*this, cell->GetMidpoint());
-    _mortons[cellIdx].code = MortonEncode3D(p);
-    _mortons[cellIdx].data = (void*)cells[cellIdx];
-  }
-
-  std::sort(_mortons.begin(), _mortons.end());
-}
-
 Morton BVH::Cell::SortCellsByPair(
   std::vector<Morton>& cells)
 {
@@ -438,7 +419,6 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _root.SetMax(cell->GetMax());
   _root.SetData((void*)this);
   cells.clear();
-  _BuildCellMortons();
 }
 
 void
@@ -458,22 +438,6 @@ bool BVH::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
 {
   double minDistance = FLT_MAX;
   return _root.Closest(points, point, hit, maxDistance, &minDistance);
-
-  /*
-  size_t index = 0;
-  for(auto& leaf: leaves) {
-    const pxr::GfVec3i p = WorldToMorton(_root, leaf->GetMidpoint());
-    uint64_t code = MortonEncode3D(p2);
-    if(code >= code1 && code <= code2) {
-      //leaf->Closest(points, point, hit, maxDistance, &minDistance);
-    }
-     //if(leaf->IsInside(point) || GetDistance(&range, leaf) < hit->GetT()) {
-    //if(leaf->Closest(points, point, hit, maxDistance, &minDistance))return true;
-    //std::cout << "check cell id " << (index++) << std::endl;
-    //}
-  }
-  return hit->HasHit();
-  */
 }
 
 

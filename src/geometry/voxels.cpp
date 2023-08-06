@@ -130,7 +130,7 @@ void Voxels::Trace(short axis)
   // find point voxel index (_ComputeFlatIndex)
   // if voxel not marked as checked increment voxel data
   // mark voxel as checked
-/*
+  /*
   std::vector<int> voxelChecked(GetNumCells(), 0);
 
   for (size_t x = 0; x < _geometry->GetNumPoints(); ++x) {
@@ -145,19 +145,19 @@ void Voxels::Trace(short axis)
       voxelChecked[flatIndex] = 1;
     }
   }
-*/
+  */
   // other method for surface voxel
   // loop over each voxels
   // make closest query to the bvh
   // if closer than threshold increment voxel
   const float threshold = 0.5f * _radius;
+  std::cout << "num cells for query : " << GetNumCells() << std::endl;
   for(size_t cellIdx = 0; cellIdx < GetNumCells(); ++cellIdx) {
     const pxr::GfVec3f point = GetCellPosition(cellIdx);
     Hit hit;
     if(_bvh.Closest(points, point, &hit, threshold))
       _data[cellIdx] += 3;
   }
-
 }
 
 pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)
