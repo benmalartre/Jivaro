@@ -38,6 +38,8 @@ public:
   };
 
 private:
+  void _TraceWork(const size_t begin, const size_t end, short axis);
+  void _ProximityWork(size_t begin, size_t end);
   size_t _ComputeFlatIndex(size_t x, size_t y, size_t z, short axis);
 
   pxr::GfVec3i            _resolution;
