@@ -49,7 +49,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Application* APPLICATION = nullptr;
-const char* Application::APPLICATION_NAME = "Jivaro";
+const char* Application::name = "Jivaro";
 
 
 // constructor
@@ -58,7 +58,7 @@ Application::Application(unsigned width, unsigned height):
   _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
   _execute(false), _activeEngine(nullptr)
 {  
-  _mainWindow = CreateStandardWindow(APPLICATION_NAME, pxr::GfVec4i(0,0,width, height));
+  _mainWindow = CreateStandardWindow(name, pxr::GfVec4i(0,0,width, height));
   _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
   
@@ -68,7 +68,7 @@ Application::Application(bool fullscreen):
   _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
   _execute(false), _activeEngine(nullptr)
 {
-  _mainWindow = CreateFullScreenWindow(APPLICATION_NAME);
+  _mainWindow = CreateFullScreenWindow(name);
   _activeWindow = _mainWindow;
   _time.Init(1, 101, 24);
 };

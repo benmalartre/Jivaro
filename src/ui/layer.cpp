@@ -149,10 +149,10 @@ void ExplorerUI::_UpdateSelection(ExplorerItem* item, bool isLeaf)
 {
   if (isLeaf ? ImGui::IsItemClicked() : ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     if (!item->_selected) {
-      APPLICATION->AddToSelection(item->_prim.GetPath());
+      GetApplication()->AddToSelection(item->_prim.GetPath());
     }
     else {
-      APPLICATION->RemoveFromSelection(item->_prim.GetPath());
+      GetApplication()->RemoveFromSelection(item->_prim.GetPath());
     }
     item->_selected = !item->_selected;
     Notice::SelectionChanged().Send();

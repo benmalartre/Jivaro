@@ -19,7 +19,7 @@ class Scene;
 class Application : public pxr::TfWeakBase
 {
 public:
-  static const char* APPLICATION_NAME;
+  static const char* name;
   // constructor
   Application(unsigned width, unsigned height);
   Application(bool fullscreen=true);

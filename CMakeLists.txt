@@ -107,37 +107,6 @@ find_package(Python2 COMPONENTS Interpreter Development)
 # OpenGL
 find_package(OpenGL REQUIRED)
 
-# boost
-#if(UNIX)
-#  if(APPLE)
-#    set(BOOST_INCLUDE_DIR "{USD_INCLUDE_DIR}")
-#  else()
-#
-#  endif()
-#else()
-#	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_70")
-#endif()
-#
-#
-#set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
-#list(APPEND BOOST_LIB_NAMES 
-#  atomic
-#  program_options
-#  regex
-#)
-#
-#set(BOOST_LIBRARIES "")
-#set(BOOST_VERSION "")
-#if(NOT UNIX)
-#	set(BOOST_VERSION "-vc142-mt-x64-1_70")
-#endif()
-#foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
-#  set(BOOST_LIBRARIES 
-#    ${BOOST_LIBRARIES} 
-#      "${USD_LIBRARY_DIR}/${LIB_PREFIX}boost_${BOOST_LIB_NAME}${BOOST_VERSION}${LIB_DYNAMIC_EXT}"
-#  )
-#endforeach()
-
 # tbb
 set(TBB_INCLUDE_DIR "${USD_DIR}/include/tbb")
 set(TBB_LIBRARY_DIR "${USD_DIR}/lib")
