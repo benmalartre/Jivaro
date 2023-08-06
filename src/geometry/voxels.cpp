@@ -45,7 +45,6 @@ Voxels::_ComputeFlatIndex(size_t x, size_t y, size_t z, short axis)
   }
 }
 
-
 // init voxel grid 
 //--------------------------------------------------------------------------------
 void Voxels::Init(Geometry* geometry, float radius)
@@ -79,49 +78,47 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
   const float eps = 0.000001f * size[axis];
+  uint32_t x = begin;
 
-  for (uint32_t x = begin; x < end; ++x)
+  for (uint32_t y = 0; y < _resolution[(axis + 2) % 3]; ++y)
   {
-    for (uint32_t y = 0; y < _resolution[(axis + 2) % 3]; ++y)
+    bool inside = false;
+
+    pxr::GfVec3f rayDir(0.f);
+    rayDir[axis] = 1.f;
+
+    pxr::GfVec3f rayStart = minExtents;
+    rayStart[(axis + 1) % 3] += (x + 0.5f) * _radius;
+    rayStart[(axis + 2) % 3] += (y + 0.5f) * _radius;
+
+    while (true)
     {
-      bool inside = false;
-
-      pxr::GfVec3f rayDir(0.f);
-      rayDir[axis] = 1.f;
-
-      pxr::GfVec3f rayStart = minExtents;
-      rayStart[(axis + 1) % 3] += (x + 0.5f) * _radius;
-      rayStart[(axis + 2) % 3] += (y + 0.5f) * _radius;
-
-      while (true)
+      // calculate ray start
+      Hit hit;
+      double minDistance = DBL_MAX;
+      if (_bvh.Raycast(points, pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
       {
-        // calculate ray start
-        Hit hit;
-        double minDistance = DBL_MAX;
-        if (_bvh.Raycast(points, pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
+        // calculate cell in which intersection occurred
+        const float zpos = rayStart[axis] + hit.GetT() * rayDir[axis];
+        const float zhit = (zpos - minExtents[axis]) / _radius;
+
+        uint32_t z = uint32_t(floorf((rayStart[axis] - minExtents[axis]) / _radius + 0.5f));
+        uint32_t zend = std::min(uint32_t(floorf(zhit + 0.5f)), uint32_t(_resolution[axis] - 1));
+
+        if (inside)
         {
-          // calculate cell in which intersection occurred
-          const float zpos = rayStart[axis] + hit.GetT() * rayDir[axis];
-          const float zhit = (zpos - minExtents[axis]) / _radius;
-
-          uint32_t z = uint32_t(floorf((rayStart[axis] - minExtents[axis]) / _radius + 0.5f));
-          uint32_t zend = std::min(uint32_t(floorf(zhit + 0.5f)), uint32_t(_resolution[axis] - 1));
-
-          if (inside)
-          {
-            // march along column setting bits 
-            for (uint32_t k = z; k < zend; ++k)
-              _data[_ComputeFlatIndex(x, y, k, axis)] += 1;
-          }
-
-          inside = !inside;
-
-          rayStart += rayDir * (hit.GetT() + eps);
-
+          // march along column setting bits 
+          for (uint32_t k = z; k < zend; ++k)
+            _data[_ComputeFlatIndex(x, y, k, axis)] += 1;
         }
-        else {
-          break;
-        }
+
+        inside = !inside;
+
+        rayStart += rayDir * (hit.GetT() + eps);
+
+      }
+      else {
+        break;
       }
     }
   }
@@ -136,7 +133,9 @@ void Voxels::Trace(short axis)
       std::placeholders::_1,     // begin
       std::placeholders::_2,     // end)
       axis
-    ), 1);
+    ), 1); // grain size fixed to 1 eliminating one nested loop
+  
+  sw.Stop();
 }
 
 // closest point query voxel grid
