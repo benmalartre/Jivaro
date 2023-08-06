@@ -355,6 +355,9 @@ bool ToolUI::Draw()
   if (ImGui::Button("Voxelize XYZ")) {
     _Voxelize(voxelizeRadius, 7);
   }ImGui::SameLine();
+  if (ImGui::Button("Voxelize Surface")) {
+    _Voxelize(voxelizeRadius, 8);
+  }ImGui::SameLine();
   ImGui::InputFloat("Radius", &voxelizeRadius);
 
   static int smoothIteration = 32;

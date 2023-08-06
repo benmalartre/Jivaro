@@ -54,9 +54,9 @@ void Voxels::Init(Geometry* geometry, float radius)
   if (_radius < 0.0001) _radius = 0.0001;
   const pxr::GfVec3f size(geometry->GetBoundingBox().GetRange().GetSize());
   _resolution = pxr::GfVec3i(
-    pxr::GfClamp(size[0] / _radius, 1, std::numeric_limits<int>::max()),
-    pxr::GfClamp(size[1] / _radius, 1, std::numeric_limits<int>::max()),
-    pxr::GfClamp(size[2] / _radius, 1, std::numeric_limits<int>::max())
+    pxr::GfClamp(size[0] / _radius + 1, 1, std::numeric_limits<int>::max()),
+    pxr::GfClamp(size[1] / _radius + 1, 1, std::numeric_limits<int>::max()),
+    pxr::GfClamp(size[2] / _radius + 1, 1, std::numeric_limits<int>::max())
   );
   size_t numVoxels = GetNumCells();
   _data.resize(numVoxels);
@@ -168,7 +168,7 @@ pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)
   size_t y = (cellIdx / _resolution[0]) % _resolution[1];
   size_t z = cellIdx / (_resolution[0] * _resolution[1]);
 
-  return pxr::GfVec3f(range.GetMin()) + pxr::GfVec3f((x + 0.5f) * _radius, (y + 0.5f) * _radius, (z + 0.5f) * _radius);
+  return pxr::GfVec3f(range.GetMin()) + pxr::GfVec3f((x + 0.25f) * _radius, (y + 0.25f) * _radius, (z + 0.25f) * _radius);
 }
 
 void Voxels::Build()
