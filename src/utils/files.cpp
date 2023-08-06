@@ -86,19 +86,6 @@ size_t NumFilesInDirectory(const char* path)
   }
   */
 
-  /*
-  int num_files = 0;
-  for (auto i = boost::filesystem::directory_iterator(path);
-    i != boost::filesystem::directory_iterator(); i++)
-  {
-    const char* fname = (i->path()).c_str();
-    if (boost::filesystem::is_directory(i->path())
-      || !strncmp(fname, ".", 1)
-      || !strncmp(fname, "..", 2)
-      || !strncmp(fname, ".DS_Store", 9)) continue;
-    num_files++;
-  }
-  */
   return 0;
 }
 

@@ -71,8 +71,6 @@ public:
       _HashCoords = &HashGrid::_HashCoordsMuller;
       break;
     case PIXAR:
-      _HashCoords = &HashGrid::_HashCoordsPixar;
-      break;
     default:
       _HashCoords = &HashGrid::_HashCoordsPixar;
       break;

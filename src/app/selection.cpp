@@ -1,4 +1,3 @@
-#include <boost/functional/hash.hpp>
 #include <pxr/usd/usdGeom/bboxCache.h>
 #include <pxr/usd/usdGeom/xformCache.h>
 #include <pxr/usd/usd/modelAPI.h>
@@ -16,11 +15,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 void 
 Selection::Item::ComputeHash()
 {
-  hash = 0;
-  boost::hash_combine(hash, type);
-  boost::hash_combine(hash, path);
-  boost::hash_combine(hash, components);
-  boost::hash_combine(hash, weights);
+  hash = pxr::TfHash::Combine(
+    type,
+    path,
+    components,
+    weights);
 }
 
 void 
@@ -28,7 +27,7 @@ Selection::ComputeHash()
 {
   _hash = 0;
   for (auto& item: _items) {
-    boost::hash_combine(_hash, item.hash);
+   _hash = pxr::TfHash::Combine(_hash,item.hash);
   }
 }
 
