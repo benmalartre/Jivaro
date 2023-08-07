@@ -125,11 +125,11 @@ void Smooth<T>::Compute(size_t numIterations)
   for (size_t iterIdx = 0; iterIdx < numIterations; ++iterIdx) {
     WorkParallelForN(
       _points.size(), 
-      std::bind(&Smooth<T>::_ComputeRange, this, std::placeholders::_1, std::placeholders::_2, _flip)
+      std::bind(&Smooth<T>::_ComputeRange, this, std::placeholders::_1, std::placeholders::_2, _flip),
+      32
     );
     _flip = 1 - _flip;
   }
-
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

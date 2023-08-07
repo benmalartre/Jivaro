@@ -209,7 +209,7 @@ HalfEdgeGraph::IsUsed(const HalfEdge* edge) const
   return _halfEdgeUsed[_GetEdgeIndex(edge)];
 }
 
-
+// custom comparator for sorting half edge by key
 struct
 {
   inline bool operator() (const HalfEdgeKey& edge1, const HalfEdgeKey& edge2)
@@ -222,7 +222,7 @@ static HalfEdge*
 _FindTwinEdge(const HalfEdgesKeys& halfEdgesKeys, uint64_t twinKey)
 {
   int low = 0;
-  int high = halfEdgesKeys.size(); // Not n - 1
+  int high = halfEdgesKeys.size();
   while (low < high) {
     int mid =  low + (high - low) / 2;
     if(halfEdgesKeys[mid].first == twinKey)
@@ -258,8 +258,9 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
   HalfEdge* halfEdge = &_halfEdges[0];
 
+  size_t halfEdgeIndex = 0;
   HalfEdgesKeys halfEdgesKeys;
-  halfEdgesKeys.reserve(numHalfEdges);
+  halfEdgesKeys.resize(numHalfEdges);
 
   _vertexHalfEdge.resize(numPoints);
   memset(&_vertexHalfEdge[0], -1, numPoints * sizeof(int));
@@ -274,7 +275,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       if (_vertexHalfEdge[v0] < 0)_vertexHalfEdge[v0] = _GetEdgeIndex(halfEdge);
 
       size_t last = faceVertexCount - 1;
-      halfEdgesKeys.push_back({v1 | (v0 << 32), halfEdge});
+      halfEdgesKeys[halfEdgeIndex++] = {v1 | (v0 << 32), halfEdge};
       halfEdge->vertex = v0;
       if (!faceEdgeIdx) {
         halfEdge->prev = _GetEdgeIndex(halfEdge + last);
@@ -293,12 +294,13 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
     faceOffsetIdx += faceVertexCount;
   }
 
+  // sort the half-edges vector by edge key
+  std::sort(halfEdgesKeys.begin(), halfEdgesKeys.end(), _SortEdgeByKey);
+
   _boundary.resize(numPoints);
   memset(&_boundary[0], false, numPoints * sizeof(bool));
 
-  std::sort(halfEdgesKeys.begin(), halfEdgesKeys.end(), _SortEdgeByKey);
-
-  // populate the twin pointers by iterating over the key vector:
+  // populate the twin pointers by parallel processing the key vector:
   pxr::WorkParallelForEach(halfEdgesKeys.begin(), halfEdgesKeys.end(),
     [&](const HalfEdgeKey& halfEdge) {
       uint64_t edgeIndex = halfEdge.first;
