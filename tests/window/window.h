@@ -57,8 +57,6 @@ CharCallback(GLFWwindow* window, unsigned c);
 JVR_EXPORT void 
 ResizeCallback(GLFWwindow* window, int width, int height);
 
-JVR_EXPORT void 
-FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 
 
 class Window

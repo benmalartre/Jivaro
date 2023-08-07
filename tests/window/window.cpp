@@ -87,6 +87,7 @@ Window::Init()
     //glfwSetCharCallback(_window, CharCallback);
     glfwSetCursorPosCallback(_window, MouseMoveCallback);
     glfwSetWindowSizeCallback(_window, ResizeCallback);
+    glfwSetFramebufferSizeCallback(_window, FramebufferSizeCallback);
 
     // ui
     GetContentScale();
@@ -591,6 +592,7 @@ void
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   //if (ImGui::GetIO().WantCaptureMouse) return;
+  std::cout << "mouse move..." << std::endl;
 
   Window* parent = Window::GetUserData(window);
   View* view = parent->GetViewUnderMouse((int)x, (int)y);
@@ -702,6 +704,15 @@ ResizeCallback(GLFWwindow* window, int width, int height)
 {
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
   parent->Resize(width, height);
+  glViewport(0, 0, width, height);
+}
+
+void 
+FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+  std::cout << "resize frame buffer callback ..." << width << ", " << height << std::endl;
+  //Window* parent = (Window*)glfwGetWindowUserPointer(window);
+  //parent->Resize(width, height);
   glViewport(0, 0, width, height);
 }
 

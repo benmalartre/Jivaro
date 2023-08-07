@@ -55,8 +55,9 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 // width/height window constructor
 //----------------------------------------------------------------------------
 Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool fullscreen, Window* parent) :
-  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),_splitter(NULL), _dragSplitter(false),
-  _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), _fbo(0), _tex(0), _layout(std::numeric_limits<int>::max()), _needUpdateLayout(true)
+  _scale(1.f), _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), 
+  _fbo(0), _tex(0), _layout(std::numeric_limits<int>::max()), _needUpdateLayout(true)
 {
   GLFWmonitor* monitor = NULL;
   if (fullscreen) {
@@ -120,7 +121,7 @@ Window::Init()
   }
 
   // setup callbacks
-  glfwSetWindowSizeCallback(_window, ResizeCallback);
+  glfwSetWindowSizeCallback(_window, WindowSizeCallback);
   glfwSetMouseButtonCallback(_window, ClickCallback);
   glfwSetScrollCallback(_window, ScrollCallback);
   glfwSetKeyCallback(_window, KeyboardCallback);
@@ -393,8 +394,9 @@ Window::Resize(unsigned width, unsigned height)
   const bool resolutionChanged = (_width != width) || (_height != height);
   _width = width;
   _height = height;
+  _scale = 1.f;
 
-  if (resolutionChanged) {
+  //if (resolutionChanged) {
     if (_fbo) glDeleteFramebuffers(1, &_fbo);
     if (_tex) glDeleteTextures(1, &_tex);
 
@@ -415,7 +417,7 @@ Window::Resize(unsigned width, unsigned height)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  }
+  //}
 
   CollectLeaves();
   _mainView->Resize(0, 0, _width, _height, true);
@@ -709,14 +711,6 @@ Window::Draw()
   SetGLContext();
   SetLayout();
 
-  int width, height;
-  float displayScale = 1.f;
-  glfwGetWindowSize(_window, &width, &height);
-  if(width != _width) {
-    std::cout << "need rescale display fuck" << std::endl;
-    displayScale = width / _width;
-  }
-
   glBindVertexArray(_vao);
   
   // start the imgui frame
@@ -724,7 +718,8 @@ Window::Draw()
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  ImGui::GetStyle().ScaleAllSizes(displayScale);
+  ImGui::GetStyle().ScaleAllSizes(_scale);
+  ImGui::GetIO().FontGlobalScale = _scale;
 
   // draw views
   if (_mainView)_mainView->Draw(_forceRedraw > 0);
@@ -1209,12 +1204,6 @@ FocusCallback(GLFWwindow* window, int focused)
   }
 }
 
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
-{
-  std::cout << "framebuffer resized !!!" << width << ", " << height << std::endl;
-  glViewport(0, 0, width, height);
-}
-
 void 
 DisplayCallback(GLFWwindow* window)
 {
@@ -1314,7 +1303,7 @@ DisplayCallback(GLFWwindow* window)
 }
 
 void 
-ResizeCallback(GLFWwindow* window, int width, int height)
+WindowSizeCallback(GLFWwindow* window, int width, int height)
 {  
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
   glViewport(0, 0, width, height);

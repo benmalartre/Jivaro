@@ -56,7 +56,7 @@ CharCallback(GLFWwindow* window, unsigned c);
 // resize callback
 //----------------------------------------------------------------------------
 JVR_EXPORT void 
-ResizeCallback(GLFWwindow* window, int width, int height);
+WindowSizeCallback(GLFWwindow* window, int width, int height);
 
 // focus callback
 //----------------------------------------------------------------------------
@@ -102,9 +102,11 @@ public:
   // size
   int GetWidth(){return _width;};
   int GetHeight(){return _height;};
+  float GetScale(){return _scale;};
   pxr::GfVec2i GetResolution() { return pxr::GfVec2i(_width, _height); };
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
+  void SetScale(float scale){_scale = scale;};
   void Resize(unsigned width, unsigned height);
 
   // views
@@ -183,6 +185,7 @@ private:
   Tool                  _tool;
 
   // view datas
+  float                 _scale;
   bool                  _fullscreen;
   int                   _mouseMode;
   int                   _activeTool;
