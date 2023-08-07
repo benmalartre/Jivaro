@@ -185,9 +185,10 @@ static void _Voxelize(float radius, short axis)
 
 static void _Smooth(int smoothIterations)
 {
+  std::cout << "smooth called with " << smoothIterations << " iterations" << std::endl;
   pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
-    UndoBlock block;
+    
     Mesh mesh(usdMesh);
     size_t numPoints = mesh.GetNumPoints();
     const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
@@ -195,18 +196,24 @@ static void _Smooth(int smoothIterations)
     Smooth<pxr::GfVec3f> smooth(numPoints, weights);
     const pxr::VtArray<pxr::VtArray<int>>& neighbors = mesh.GetNeighbors();
 
+    std::cout << "num neighbors : " << neighbors.size() << std::endl;
+
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
       smooth.SetDatas(pointIdx, positions[pointIdx]);
       smooth.SetNeighbors(pointIdx, neighbors[pointIdx].size(), &neighbors[pointIdx][0]);
 
     }
-
+    std::cout << "before compute smooth " << std::endl;
     smooth.Compute(smoothIterations);
+    std::cout << "after compute smooth " << std::endl;
 
+    std::cout << "num points : " << numPoints << std::endl;
+    std::cout << "smooth size : " << smooth.GetNumPoints() << std::endl;
     pxr::VtArray<GfVec3f> smoothed(numPoints);
     for(size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx)
       smoothed[pointIdx] = smooth.GetDatas(pointIdx);
 
+    UndoBlock block;
     _SetMesh(usdMesh, smoothed, mesh.GetFaceCounts(), mesh.GetFaceConnects());
   }
 

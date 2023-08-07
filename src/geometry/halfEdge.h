@@ -34,6 +34,7 @@ public:
   };
 
   void ComputeGraph(Mesh* mesh);
+  void ComputeNeighbors();
   void ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors);
   void ComputeTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const;
 
@@ -55,6 +56,7 @@ public:
   HalfEdge* GetEdge(int index);
   HalfEdge* GetAvailableEdge();
   pxr::VtArray<HalfEdge>& GetEdges();
+  pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
   HalfEdge* GetEdgeFromVertex(size_t vertex);
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
   const HalfEdge* GetEdgeFromVertices(size_t start, size_t end) const;
@@ -102,6 +104,7 @@ private:
   pxr::VtArray<int>                    _vertexHalfEdge;
   pxr::VtArray<bool>                   _boundary;
   pxr::VtArray<int>                    _shell;
+  pxr::VtArray<pxr::VtArray<int>>      _neighbors;
 
   friend Mesh;
 

@@ -169,7 +169,7 @@ bool Tesselator::_CollapseEdges()
     }
     
     //if (_IsStarCollapsable(edge, collapseLen)) {
-    if (_IsFaceCollapsable(edge, collapseLen)) {
+    /*if (_IsFaceCollapsable(edge, collapseLen)) {
       std::cout << "face collapsable " << edge << std::endl;
       
       size_t vertex = edge->vertex;
@@ -207,7 +207,7 @@ bool Tesselator::_CollapseEdges()
         }
         std::cout << "vertices removed" << std::endl;
       }
-    } else {
+    } else { */
     
       size_t p1 = edge->vertex;
       size_t p2 = _graph.GetEdge(edge->next)->vertex;
@@ -222,7 +222,7 @@ bool Tesselator::_CollapseEdges()
         }
       }
     
-    }
+    //}
     
     _queue.pop();
   }

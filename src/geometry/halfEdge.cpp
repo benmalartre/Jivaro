@@ -90,6 +90,12 @@ HalfEdgeGraph::GetEdge(int index)
   return &_halfEdges[index];
 }
 
+pxr::VtArray<pxr::VtArray<int>>& 
+HalfEdgeGraph::GetNeighbors()
+{
+  return _neighbors;
+}
+
 
 HalfEdge*
 HalfEdgeGraph::GetAvailableEdge()
@@ -529,6 +535,73 @@ HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
   }
 }
 
+static bool 
+_IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
+{
+  for (int neighbor: neighbors) {
+    if (neighbor == idx)return true;
+  }
+  return false;
+}
+
+void HalfEdgeGraph::ComputeNeighbors()
+{
+  size_t numPoints = _boundary.size();
+  _neighbors.clear();
+  _neighbors.resize(numPoints);
+
+  for (HalfEdge& halfEdge : _halfEdges) {
+    int edgeIndex = _GetEdgeIndex(&halfEdge);
+    int vertexIndex = halfEdge.vertex;
+    HalfEdge* startEdge = &halfEdge;
+    HalfEdge* currentEdge = startEdge;
+    HalfEdge* nextEdge = NULL;
+    pxr::VtArray<int>& neighbors = _neighbors[vertexIndex];
+    if (!_IsNeighborRegistered(neighbors, _halfEdges[startEdge->next].vertex)) {
+      neighbors.push_back(_halfEdges[startEdge->next].vertex);
+    }
+
+    short state = 1;
+    while (state == 1) {
+      nextEdge = _GetNextAdjacentEdge(currentEdge);
+      if (!nextEdge) {
+        state = 0;
+      } else if (nextEdge == startEdge) {
+        state = -1;
+      } else {
+        if (!_IsNeighborRegistered(neighbors, _halfEdges[nextEdge->next].vertex)) {
+          neighbors.push_back(_halfEdges[nextEdge->next].vertex);
+        }
+        currentEdge = nextEdge;
+      }
+    }
+    
+    if(state == 0) {
+      HalfEdge* previousEdge = NULL;
+      currentEdge = startEdge;
+      previousEdge = _GetPreviousEdge(currentEdge);
+      if (!_IsNeighborRegistered(neighbors, previousEdge->vertex)) {
+        neighbors.push_back(previousEdge->vertex);
+      }
+      state = 1;
+      while (state == 1) {
+        previousEdge = _GetPreviousAdjacentEdge(currentEdge);
+        if (!previousEdge) {
+          state = 0;
+        }
+        else if (previousEdge == startEdge) {
+          state = -1;
+        }
+        else {
+          if (!_IsNeighborRegistered(neighbors, _halfEdges[previousEdge->next].vertex)) {
+            neighbors.push_back(_halfEdges[previousEdge->next].vertex);
+          }
+          currentEdge = previousEdge;
+        }
+      }
+    }
+  }
+}
 
 void
 HalfEdgeGraph::ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors)

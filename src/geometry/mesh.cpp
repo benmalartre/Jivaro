@@ -237,7 +237,8 @@ float Mesh::GetAverageEdgeLength()
 }
 
 
-static int _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx, size_t polygonNumEdges, size_t triangleIdx)
+static int _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx, 
+  size_t polygonNumEdges, size_t triangleIdx)
 {
   if (polygonNumEdges < 4)return -1;
   if (polygonEdgeIdx == 0) {
@@ -277,7 +278,8 @@ void Mesh::ComputeTrianglePairs()
         _faceVertexIndices[baseFaceVertexIdx + i]);
       size_t edgeIndex = _halfEdges._GetEdgeIndex(edge);
     
-      size_t longestEdgeIdx = GetLongestEdgeInTriangle(_triangles[triangleIdx].vertices);
+      size_t longestEdgeIdx = 
+        GetLongestEdgeInTriangle(_triangles[triangleIdx].vertices);
       edgeTriangleIdx[edgeIndex] = {
         triangleIdx, 
         _TwinTriangleIndex(i, longestEdgeIdx, faceVertexCount, triangleIdx)
@@ -353,19 +355,16 @@ Mesh::GetTrianglePairs()
 const pxr::VtArray<pxr::VtArray<int>>& 
 Mesh::GetNeighbors()
 {
-  /*
+  
   if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
-    _halfEdges.ComputeNeighbors(this);
+    _halfEdges.ComputeNeighbors();
   }
   return _halfEdges.GetNeighbors();
-  */
-  static pxr::VtArray<pxr::VtArray<int>> empty;
-  return empty;
 }
 
 void Mesh::ComputeNeighbors()
 {
-  //_halfEdges.ComputeNeighbors(this);
+  _halfEdges.ComputeNeighbors();
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
 }
 
@@ -419,7 +418,7 @@ void Mesh::Init()
   ComputeBoundingBox();
 
   // compute neighbors
-  //ComputeNeighbors();
+  ComputeNeighbors();
 }
 
 void 
@@ -519,7 +518,8 @@ void Mesh::DisconnectEdges(const pxr::VtArray<int>& cutEdges)
 
 }
 
-void Mesh::Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs, const pxr::TfToken& interpolation)
+void Mesh::Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs, 
+  const pxr::TfToken& interpolation)
 {
   if (interpolation == pxr::UsdGeomTokens->vertex) {
     for (size_t i = 0; i < uvs.size(); ++i) {
@@ -592,7 +592,8 @@ void Mesh::TriangulateFace(const HalfEdge* edge)
 {
   size_t numFaceVertices = _halfEdges._GetFaceVerticesCount(edge);
   if (numFaceVertices < 4) {
-    std::cerr << "[Mesh] can't triangulate face with " << numFaceVertices << "vertices" << std::endl;
+    std::cerr << "[Mesh] can't triangulate face with " << numFaceVertices << 
+      "vertices" << std::endl;
     return;
   }
 
