@@ -241,10 +241,6 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   _vertexHalfEdge.resize(numPoints);
   memset(&_vertexHalfEdge[0], -1, numPoints * sizeof(int));
 
-  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    _vertexHalfEdge[pointIdx] = -1;
-  }
-
   for (const auto& faceVertexCount: mesh->GetFaceCounts())
   { 
     size_t numFaceTriangles = faceVertexCount - 2;
