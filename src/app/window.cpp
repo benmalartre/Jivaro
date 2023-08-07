@@ -274,7 +274,7 @@ static void _StandardLayout(Window* window)
   Ts[5] = CurrentTime();
   new PropertyEditorUI(propertyView);
   Ts[6] = CurrentTime();
-  new GraphEditorUI(graphView);
+  //new GraphEditorUI(graphView);
   Ts[7] = CurrentTime();
   GetApplication()->SetActiveEngine(viewport->GetEngine());
 
@@ -394,13 +394,6 @@ Window::Resize(unsigned width, unsigned height)
   _width = width;
   _height = height;
 
-  CollectLeaves();
-  _mainView->Resize(0, 0, _width, _height, true);
-  _splitter->Resize(_width, _height);
-
-  if(_width <= 0 || _height <= 0)_valid = false;
-  else _valid = true;
-
   if (resolutionChanged) {
     if (_fbo) glDeleteFramebuffers(1, &_fbo);
     if (_tex) glDeleteTextures(1, &_tex);
@@ -423,6 +416,13 @@ Window::Resize(unsigned width, unsigned height)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
+
+  CollectLeaves();
+  _mainView->Resize(0, 0, _width, _height, true);
+  _splitter->Resize(_width, _height);
+
+  if(_width <= 0 || _height <= 0)_valid = false;
+  else _valid = true;
 }
 
 // Layout
@@ -708,12 +708,23 @@ Window::Draw()
 
   SetGLContext();
   SetLayout();
+
+  int width, height;
+  float displayScale = 1.f;
+  glfwGetWindowSize(_window, &width, &height);
+  if(width != _width) {
+    std::cout << "need rescale display fuck" << std::endl;
+    displayScale = width / _width;
+  }
+
   glBindVertexArray(_vao);
   
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+
+  ImGui::GetStyle().ScaleAllSizes(displayScale);
 
   // draw views
   if (_mainView)_mainView->Draw(_forceRedraw > 0);
@@ -724,8 +735,9 @@ Window::Draw()
 
   // render the imgui frame
   ImGui::Render();
-  
+
   glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
+
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glBindVertexArray(0);
 
@@ -1197,6 +1209,12 @@ FocusCallback(GLFWwindow* window, int focused)
   }
 }
 
+void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+  std::cout << "framebuffer resized !!!" << width << ", " << height << std::endl;
+  glViewport(0, 0, width, height);
+}
+
 void 
 DisplayCallback(GLFWwindow* window)
 {
@@ -1299,9 +1317,9 @@ void
 ResizeCallback(GLFWwindow* window, int width, int height)
 {  
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
+  glViewport(0, 0, width, height);
   parent->SetGLContext();
   parent->Resize(width, height);
-  glViewport(0, 0, width, height);
 }
 
 

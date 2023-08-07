@@ -412,7 +412,7 @@ void ViewportUI::Render()
   if (_highlightSelection) {
     Selection* selection = app->GetSelection();
     if (!selection->IsEmpty() && selection->IsObject()) {
-      _engine->SetSelected(selection->GetSelectedPrims());
+      _engine->SetSelected(selection->GetSelectedPaths());
     } else {
       _engine->ClearSelected();
     }

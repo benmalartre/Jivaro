@@ -128,9 +128,9 @@ View::CreateUI(UIType type)
   case UIType::TEXTEDITOR:
     _current = new TextEditorUI(this);
     break;
-  /*case UIType::DEBUG:
+  case UIType::DEBUG:
     _current = new DebugUI(this);
-    break;*/
+    break;
   case UIType::ICON:
     _current = new IconUI(this);
     break;

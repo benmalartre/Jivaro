@@ -30,7 +30,7 @@
 
 #if JVR_USE_NAMESPACES
 
-  #define JVR_NS AMN
+  #define JVR_NS JVR
   #define JVR_INTERNAL_NS amnInternal_v0_00__reserved__
   #define JVR_NS_GLOBAL ::JVR_NS
 

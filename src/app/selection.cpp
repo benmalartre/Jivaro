@@ -32,7 +32,7 @@ Selection::ComputeHash()
 }
 
 bool 
-Selection::IsSelected(const pxr::UsdPrim& prim)
+Selection::IsSelected(const pxr::UsdPrim& prim) const
 {
   const pxr::SdfPath primPath = prim.GetPath();
   for (auto& item : _items) {
@@ -42,13 +42,23 @@ Selection::IsSelected(const pxr::UsdPrim& prim)
 }
 
 bool 
-Selection::IsEmpty()
+Selection::IsSelected(const pxr::SdfPrimSpec& prim) const
+{
+  const pxr::SdfPath primPath = prim.GetPath();
+  for (auto& item : _items) {
+    if (item.path == primPath) return true;
+  }
+  return false;
+}
+
+bool 
+Selection::IsEmpty() const
 {
   return _items.size() == 0;
 }
 
 bool 
-Selection::IsObject()
+Selection::IsObject() const
 {
   for (auto& item : _items) {
     if (item.type == Type::PRIM) return true;
@@ -57,7 +67,7 @@ Selection::IsObject()
 }
 
 bool 
-Selection::IsComponent()
+Selection::IsComponent() const
 {
   for (auto& item : _items) {
     if (item.type == Type::VERTEX ||
@@ -68,7 +78,7 @@ Selection::IsComponent()
 }
 
 bool 
-Selection::IsAttribute()
+Selection::IsAttribute() const
 {
   for (auto& item : _items) {
     if (item.type == Type::ATTRIBUTE) return true;
@@ -175,14 +185,22 @@ Selection::Clear()
   ComputeHash();
 }
 
-pxr::SdfPathVector 
-Selection::GetSelectedPrims()
+pxr::SdfPath
+Selection::GetAnchorPath() const
 {
-  pxr::SdfPathVector selectedPrims;
+  pxr::SdfPathVector paths = GetSelectedPaths();
+  if(!paths.size()) return pxr::SdfPath::AbsoluteRootPath();
+  return paths[0];
+}
+
+pxr::SdfPathVector 
+Selection::GetSelectedPaths() const
+{
+  pxr::SdfPathVector selectedPaths;
   for (const auto& item : _items) {
-    selectedPrims.push_back(item.path);
+    selectedPaths.push_back(item.path);
   }
-  return selectedPrims;
+  return selectedPaths;
 }
 
 

@@ -9,7 +9,7 @@
 #include "../imgui/imgui_test.h"
 #include <pxr/base/arch/systemInfo.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // fullscreen window constructor
 //----------------------------------------------------------------------------
@@ -371,7 +371,7 @@ Window::ClearImgui()
 
 bool Window::UpdateActiveTool(int mouseX, int mouseY)
 {
-  if(_activeTool == AMN_TOOL_DRAG)
+  if(_activeTool == JVR_TOOL_DRAG)
   {
     if(_activeView)
     {
@@ -543,7 +543,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
   if (action == GLFW_RELEASE)
   {
-    parent->SetActiveTool(AMN_TOOL_NONE);
+    parent->SetActiveTool(JVR_TOOL_NONE);
     if(parent->GetActiveView())
     {
       parent->GetActiveView()->MouseButton(button, action, mods);
@@ -561,7 +561,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
 
     if(parent->PickSplitter(x, y))
     {
-      parent->SetActiveTool(AMN_TOOL_DRAG);
+      parent->SetActiveTool(JVR_TOOL_DRAG);
     }
     else if(parent->GetActiveView())
     {
@@ -597,7 +597,7 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   parent->PickSplitter(x, y);
   int width, height;
   glfwGetWindowSize(window, &width, &height);
-  if(parent->GetActiveTool() != AMN_TOOL_NONE)
+  if(parent->GetActiveTool() != JVR_TOOL_NONE)
   {
     parent->UpdateActiveTool(x, y);
   }
@@ -702,8 +702,7 @@ ResizeCallback(GLFWwindow* window, int width, int height)
 {
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
   parent->Resize(width, height);
-  //glfwGetFramebufferSize(window, &width, &height);
   glViewport(0, 0, width, height);
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

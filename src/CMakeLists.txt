@@ -25,7 +25,7 @@ add_executable(${TARGET}
   ui/textFilter.cpp
   ui/utils.cpp
   ui/popup.cpp
-  #ui/debug.cpp
+  ui/debug.cpp
   ui/fileBrowser.cpp
   ui/contentBrowser.cpp
   ui/splitter.cpp
@@ -95,6 +95,7 @@ add_executable(${TARGET}
   command/delegate.cpp
   command/manager.cpp
   app/time.cpp
+  app/utils.cpp
   app/commands.cpp
   app/notice.cpp
   app/handle.cpp

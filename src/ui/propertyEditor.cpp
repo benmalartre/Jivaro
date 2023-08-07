@@ -45,7 +45,7 @@ PropertyEditorUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
   Application* app = GetApplication();
   Selection* selection = app->GetSelection();
   if (selection->GetNumSelectedItems()) {
-    pxr::UsdPrim prim = app->GetWorkStage()->GetPrimAtPath(selection->GetSelectedPrims().back());
+    pxr::UsdPrim prim = app->GetWorkStage()->GetPrimAtPath(selection->GetSelectedPaths().back());
     SetPrim(prim);
   }
   else {

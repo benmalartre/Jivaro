@@ -219,7 +219,7 @@ SelectCommand::SelectCommand(short type,
   : Command(true)
 {
   Selection* selection = GetApplication()->GetSelection();
-  _previous = selection->GetSelectedPrims();
+  _previous = selection->GetSelectedPaths();
   switch (mode) {
   case SET:
     selection->Clear();

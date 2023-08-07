@@ -115,9 +115,6 @@ public:
     double maxDistance) const override;
 
 private:
-  bool _RecurseClosest(BVH::Cell* cell, const pxr::GfVec3f* points, 
-    const pxr::GfVec3f& point, Hit* hit, double maxDistance) const;
-
   Cell                        _root;
   std::vector<Geometry*>      _geometries;
 

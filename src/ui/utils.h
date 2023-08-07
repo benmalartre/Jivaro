@@ -23,6 +23,7 @@
 
 #include <pxr/usd/sdf/listEditorProxy.h>
 #include <pxr/usd/sdf/reference.h>
+#include <pxr/usd/sdf/listOp.h>
 
 #include "../common.h"
 #include "../ui/style.h"
@@ -35,12 +36,26 @@
 #include "../imgui/imgui_impl_glfw.h"
 #include "../imgui/imgui_stdlib.h"
 
+PXR_NAMESPACE_OPEN_SCOPE
+// Unfortunately Inherit and Specialize are just alias to SdfPath
+// To reuse templated code we create new type SdfInherit and SdfSpecialize 
+template <int InheritOrSpecialize> struct SdfInheritOrSpecialize : pxr::SdfPath {
+  SdfInheritOrSpecialize() : pxr::SdfPath() {}
+  SdfInheritOrSpecialize(const pxr::SdfPath &path) : pxr::SdfPath(path) {}
+};
+
+using SdfInherit = SdfInheritOrSpecialize<0>;
+using SdfSpecialize = SdfInheritOrSpecialize<1>;
+PXR_NAMESPACE_CLOSE_SCOPE
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 const pxr::GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
 const pxr::GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
 const pxr::GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
+
+/// Height of a row in the property editor
+constexpr float TABLE_ROW_DEFAULT_HEIGHT = 22.f;
 
 class View;
 class UIUtils {
@@ -124,36 +139,111 @@ UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeC
 
 // ExtraArgsT is used to pass additional arguments as the function passed as visitor
 // might need more than the operation and the item
-template <typename Policy, typename Func, typename ...ExtraArgs>
-static void 
-IterateListEditorItems(const pxr::SdfListEditorProxy<Policy>& listEditor, const Func& call, ExtraArgs... args) {
+template <typename PolicyT, typename FuncT, typename... ExtraArgsT>
+static void IterateListEditorItems(const pxr::SdfListEditorProxy<PolicyT> &listEditor, 
+  const FuncT &call, ExtraArgsT... args) 
+{
   // TODO: should we check if the list is already all explicit ??
-  for (const typename Policy::value_type& item : listEditor.GetExplicitItems()) {
-    call("explicit", item, args...);
+  for (const typename PolicyT::value_type &item : listEditor.GetExplicitItems()) {
+    call(pxr::SdfListOpTypeExplicit, item, args...);
   }
-  for (const typename Policy::value_type& item : listEditor.GetOrderedItems()) {
-    call("ordered", item, args...);
+  for (const typename PolicyT::value_type &item : listEditor.GetOrderedItems()) {
+    call(pxr::SdfListOpTypeOrdered, item, args...);
   }
-  for (const typename Policy::value_type& item : listEditor.GetAddedItems()) {
-    call("add", item, args...); // return "add" as TfToken instead ?
+  for (const typename PolicyT::value_type &item : listEditor.GetAddedItems()) {
+    call(pxr::SdfListOpTypeAdded, item, args...); // return "add" as TfToken instead ?
   }
-  for (const typename Policy::value_type& item : listEditor.GetPrependedItems()) {
-    call("prepend", item, args...);
+  for (const typename PolicyT::value_type &item : listEditor.GetPrependedItems()) {
+    call(pxr::SdfListOpTypePrepended, item, args...);
   }
-  for (const typename Policy::value_type& item : listEditor.GetAppendedItems()) {
-    call("append", item, args...);
+  for (const typename PolicyT::value_type &item : listEditor.GetAppendedItems()) {
+    call(pxr::SdfListOpTypeAppended, item, args...);
   }
-  for (const typename Policy::value_type& item : listEditor.GetDeletedItems()) {
-    call("delete", item, args...);
+  for (const typename PolicyT::value_type &item : listEditor.GetDeletedItems()) {
+    call(pxr::SdfListOpTypeDeleted, item, args...);
   }
 }
 
-/// The operations available on a SdfListEditor
-constexpr int GetListEditorOperationSize() { return 5; }
-inline const char* GetListEditorOperationName(int index) {
-  constexpr const char* names[GetListEditorOperationSize()] = { "Add", "Prepend", "Append", "Remove", "Explicit" };
-  return names[index];
+/// The list available on a SdfListEditor
+constexpr int GetListEditorOperationSize() { return 6; }
+
+template <typename IntOrSdfListOpT> inline const char *GetListEditorOperationName(IntOrSdfListOpT index) {
+    constexpr const char *names[GetListEditorOperationSize()] = 
+      {"explicit", "add", "delete", "ordered", "prepend", "append"};
+    return names[static_cast<int>(index)];
 }
+
+template <typename IntOrSdfListOpT> inline const char *GetListEditorOperationAbbreviation(IntOrSdfListOpT index) {
+    constexpr const char *names[GetListEditorOperationSize()] =
+      {"Ex", "Ad", "De", "Or", "Pr", "Ap"};
+    return names[static_cast<int>(index)];
+}
+
+template <typename PolicyT>
+inline void CreateListEditorOperation(pxr::SdfListEditorProxy<PolicyT> &&listEditor, pxr::SdfListOpType op,
+                                      typename pxr::SdfListEditorProxy<PolicyT>::value_type item) 
+{
+  switch (op) {
+  case pxr:: SdfListOpTypeAdded:
+    listEditor.GetAddedItems().push_back(item);
+    break;
+  case pxr::SdfListOpTypePrepended:
+    listEditor.GetPrependedItems().push_back(item);
+    break;
+  case pxr::SdfListOpTypeAppended:
+      listEditor.GetAppendedItems().push_back(item);
+      break;
+  case pxr::SdfListOpTypeDeleted:
+      listEditor.GetDeletedItems().push_back(item);
+      break;
+  case pxr::SdfListOpTypeExplicit:
+      listEditor.GetExplicitItems().push_back(item);
+      break;
+  case pxr::SdfListOpTypeOrdered:
+      listEditor.GetOrderedItems().push_back(item);
+      break;
+  default:
+      assert(0);
+  }
+}
+
+template <typename ListEditorT, typename OpOrIntT> 
+inline auto GetSdfListOpItems(ListEditorT &listEditor, OpOrIntT op_)
+ {
+    const pxr::SdfListOpType op = static_cast<pxr::SdfListOpType>(op_);
+    if (op == pxr::SdfListOpTypeOrdered) {
+        return listEditor.GetOrderedItems();
+    } else if (op == pxr::SdfListOpTypeAppended) {
+        return listEditor.GetAppendedItems();
+    } else if (op == pxr::SdfListOpTypeAdded) {
+        return listEditor.GetAddedItems();
+    } else if (op == pxr::SdfListOpTypePrepended) {
+        return listEditor.GetPrependedItems();
+    } else if (op == pxr::SdfListOpTypeDeleted) {
+        return listEditor.GetDeletedItems();
+    }
+    return listEditor.GetExplicitItems();
+};
+
+
+template <typename ListEditorT, typename OpOrIntT, typename ItemsT> 
+inline void SetSdfListOpItems(ListEditorT &listEditor, OpOrIntT op_, const ItemsT &items) 
+{
+    const pxr::SdfListOpType op = static_cast<pxr::SdfListOpType>(op_);
+    if (op == pxr::SdfListOpTypeOrdered) {
+        listEditor.SetOrderedItems(items);
+    } else if (op == pxr::SdfListOpTypeAppended) {
+        listEditor.SetAppendedItems(items);
+    } else if (op == pxr::SdfListOpTypeAdded) {
+        listEditor.SetAddedItems(items);
+    } else if (op == pxr::SdfListOpTypePrepended) {
+        listEditor.SetPrependedItems(items);
+    } else if (op == pxr::SdfListOpTypeDeleted) {
+        listEditor.SetDeletedItems(items);
+    } else {
+        listEditor.SetExplicitItems(items);
+    }
+};
 
 template <typename Policy>
 void CreateListEditorOperation(pxr::SdfListEditorProxy<Policy>&& listEditor, int operation,
@@ -179,6 +269,20 @@ void CreateListEditorOperation(pxr::SdfListEditorProxy<Policy>&& listEditor, int
   }
 }
 
+/// Composition
+void AddReferenceSummary(const char *operation, const pxr::SdfReference &assetPath, 
+  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId);
+
+void AddPayloadSummary(const char *operation, const pxr::SdfPayload &assetPath, 
+  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId);
+
+void AddInheritsSummary(const char *operation, const pxr::SdfPath &path, 
+  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId);
+
+void AddSpecializesSummary(const char *operation, const pxr::SdfPath &path, 
+  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId);
+
+
 /// Add modal dialogs to add composition on primspec (reference, payload, inherit, specialize)
 void AddPrimCreateReference(const pxr::SdfPrimSpecHandle &primSpec);
 void AddPrimCreatePayload(const pxr::SdfPrimSpecHandle &primSpec);
@@ -191,6 +295,28 @@ void AddPrimCompositions(const pxr::SdfPrimSpecHandle &primSpec);
 // Add a text summary of the composition
 void AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec);
 
+/// Function to convert a hash from usd to ImGuiID with a seed, to avoid collision with path coming from layer and stages.
+template <ImU32 seed, typename T> inline ImGuiID ToImGuiID(const T &val) {
+    return ImHashData(static_cast<const void *>(&val), sizeof(T), seed);
+}
+
+//// Correctly indent the tree nodes using a path. This is used when we are iterating in a list of paths as opposed to a tree.
+//// It allocates a vector which might not be optimal, but it should be used only on visible items, that should mitigate the
+//// allocation cost
+template <ImU32 seed, typename PathT> struct TreeIndenter {
+    TreeIndenter(const PathT &path) {
+        path.GetPrefixes(&prefixes);
+        for (int i = 0; i < prefixes.size(); ++i) {
+            ImGui::TreePushOverrideID(ToImGuiID<seed>(prefixes[i].GetHash()));
+        }
+    }
+    ~TreeIndenter() {
+        for (int i = 0; i < prefixes.size(); ++i) {
+            ImGui::TreePop();
+        }
+    }
+    std::vector<PathT> prefixes;
+};
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

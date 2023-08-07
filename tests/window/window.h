@@ -14,7 +14,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 class Application;
@@ -24,38 +24,42 @@ class BaseUI;
 
 // keyboard callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void
+JVR_EXPORT void
 KeyboardCallback(GLFWwindow* window, int key, int code, int action, int mods);
 
 // button callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 ClickCallback(GLFWwindow* window, int button, int action, int mods);
 
 // mouse move callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 MouseMoveCallback(GLFWwindow* window, double x, double y);
 
 // display callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 DisplayCallback(GLFWwindow* window);
 
 // scroll callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
 // char callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 CharCallback(GLFWwindow* window, unsigned c);
 
 // reshape callback
 //----------------------------------------------------------------------------
-AMN_EXPORT void 
+JVR_EXPORT void 
 ResizeCallback(GLFWwindow* window, int width, int height);
+
+JVR_EXPORT void 
+FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+
 
 class Window
 {
@@ -165,4 +169,4 @@ public:
   static Window* CreateStandardWindow(int width, int height);
 };
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

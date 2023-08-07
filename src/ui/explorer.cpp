@@ -233,7 +233,7 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
   Application* app = GetApplication();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
-    pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPrims();
+    pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ShowHideCommand, paths, ShowHideCommand::TOGGLE);
   }
@@ -260,7 +260,7 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
  
   if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
     _current = prim.GetPath();
-    pxr::SdfPathVector paths = selection->GetSelectedPrims();
+    pxr::SdfPathVector paths = selection->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ActivateCommand, paths, ActivateCommand::TOGGLE);
   }

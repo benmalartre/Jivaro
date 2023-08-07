@@ -536,7 +536,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {
   for (auto& engine : _engines) {
     if (!_selection.IsEmpty() && _selection.IsObject()) {
-      engine->SetSelected(_selection.GetSelectedPrims());
+      engine->SetSelected(_selection.GetSelectedPaths());
     } else {
       engine->ClearSelected();
     }
@@ -614,7 +614,7 @@ void
 Application::Delete()
 {
   Selection* selection = GetSelection();
-  const pxr::SdfPathVector& paths = selection->GetSelectedPrims();
+  const pxr::SdfPathVector& paths = selection->GetSelectedPaths();
   selection->Clear();
   ADD_COMMAND(DeletePrimCommand, GetWorkStage(), paths);
 }

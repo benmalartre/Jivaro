@@ -58,7 +58,8 @@ KabschSolver::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
 const pxr::GfMatrix4d&
 KabschSolver::Solve(bool solveRotation, bool solveScale, bool firstSolve)
 {
-  if(_points.size() != _binds.size())return pxr::GfMatrix4d(1.0);
+  static const pxr::GfMatrix4d _identity = pxr::GfMatrix4d(1.0);
+  if(_points.size() != _binds.size())return _identity;
   size_t numPoints = _points.size();
 
   // calculate the scale ratio

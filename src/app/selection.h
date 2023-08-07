@@ -55,17 +55,19 @@ public:
     Type type, std::vector<int> indices);
   void Clear();
 
-  bool IsEmpty();
-  bool IsObject();
-  bool IsComponent();
-  bool IsAttribute();
+  bool IsEmpty() const;
+  bool IsObject() const;
+  bool IsComponent() const;
+  bool IsAttribute() const;
 
   void SetMode(Mode mode) {_mode = mode; };
   Mode GetMode() { return _mode; };
 
   bool IsPickablePath(const pxr::UsdStage& stage, 
     const pxr::SdfPath& path);
-  pxr::SdfPathVector GetSelectedPrims();
+  pxr::SdfPathVector GetSelectedPaths() const;
+  pxr::SdfPath GetAnchorPath() const;
+
   size_t GetNumSelectedItems() { return _items.size(); };
   Item& operator[](size_t index) {
     return _items[index];
@@ -76,7 +78,8 @@ public:
   std::vector<Item>& GetItems() { return _items; };
   void SetItems(const std::vector<Item>& items) {_items = items;};
 
-  bool IsSelected(const pxr::UsdPrim& prim);
+  bool IsSelected(const pxr::UsdPrim& prim) const;
+  bool IsSelected(const pxr::SdfPrimSpec& prim) const;
 
 private:
   bool                        _CheckKind(Mode mode, const pxr::TfToken& kind);

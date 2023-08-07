@@ -63,7 +63,6 @@ ResizeCallback(GLFWwindow* window, int width, int height);
 JVR_EXPORT void
 FocusCallback(GLFWwindow* window, int focused);
 
-
 class Window
 {
 public:
