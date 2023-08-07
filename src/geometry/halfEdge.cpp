@@ -231,8 +231,15 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
   HalfEdge* halfEdge = &_halfEdges[0];
 
-  pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
+  // here we have a dual structure map/vector
+  // for better parallel work we use the vector as an iterator and the map for the lookup
+  HalfEdgesMap halfEdgesMap;
+  halfEdgesMap.reserve(numHalfEdges);
+  HalfEdgesKeyVector halfEdgesKey;
+  halfEdgesKey.reserve(numHalfEdges);
+
   _vertexHalfEdge.resize(numPoints);
+  memset(&_vertexHalfEdge[0], -1, numPoints * sizeof(int));
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     _vertexHalfEdge[pointIdx] = -1;
@@ -249,6 +256,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
       size_t last = faceVertexCount - 1;
       halfEdgesMap[v1 | (v0 << 32)] = halfEdge;
+      halfEdgesKey.push_back({v1 | (v0 << 32), halfEdge});
       halfEdge->vertex = v0;
       if (!faceEdgeIdx) {
         halfEdge->prev = _GetEdgeIndex(halfEdge + last);
@@ -270,27 +278,23 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   _boundary.resize(numPoints);
   memset(&_boundary[0], false, numPoints * sizeof(bool));
 
-  // populate the twin pointers by iterating over the hash map:
-  uint64_t edgeIndex;
-  size_t boundaryCount = 0;
-  for(auto& halfEdge: halfEdgesMap)
-  {
-    edgeIndex = halfEdge.first;
-    
-    uint64_t twinIndex = ((edgeIndex & 0xffffffff) << 32) | (edgeIndex >> 32);
-    const auto& it = halfEdgesMap.find(twinIndex);
-    if(it != halfEdgesMap.end())
-    {
-      HalfEdge* twinEdge = (HalfEdge*)it->second;
-      twinEdge->twin = _GetEdgeIndex(halfEdge.second);
-      halfEdge.second->twin = _GetEdgeIndex(twinEdge);
-    }
-    else {
-      _boundary[halfEdge.second->vertex] = true;
-      _boundary[_halfEdges[halfEdge.second->next].vertex] = true;
-      ++boundaryCount;
-    }
-  }
+  // populate the twin pointers by iterating over the key vector:
+  pxr::WorkParallelForEach(halfEdgesKey.begin(), halfEdgesKey.end(),
+    [&](const HalfEdgesKeyVector::value_type& halfEdge) {
+      uint64_t edgeIndex = halfEdge.first;
+      uint64_t twinIndex = ((edgeIndex & 0xffffffff) << 32) | (edgeIndex >> 32);
+      const auto& it = halfEdgesMap.find(twinIndex);
+      if(it != halfEdgesMap.end())
+      {
+        HalfEdge* twinEdge = (HalfEdge*)it->second;
+        twinEdge->twin = _GetEdgeIndex(halfEdge.second);
+        halfEdge.second->twin = _GetEdgeIndex(twinEdge);
+      }
+      else {
+        _boundary[halfEdge.second->vertex] = true;
+        _boundary[_halfEdges[halfEdge.second->next].vertex] = true;
+      }
+    });
 }
 
 size_t 

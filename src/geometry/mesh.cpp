@@ -404,21 +404,48 @@ void Mesh::Init()
 {
   size_t numPoints = _positions.size();
 
+  pxr::TfStopwatch sw;
+  sw.Start();
   // compute triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
+  sw.Stop();
+  double T0 = sw.GetSeconds();
 
   // compute normals
+  sw.Reset();
+  sw.Start();
   ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
+  sw.Stop();
+  double T1 = sw.GetSeconds();
 
   // compute half-edges
+  sw.Reset();
+  sw.Start();
   ComputeHalfEdges();
+  sw.Stop();
+  double T2 = sw.GetSeconds();
 
   // compute bouding box
+  sw.Reset();
+  sw.Start();
   ComputeBoundingBox();
+  sw.Stop();
+  double T3 = sw.GetSeconds();
 
   // compute neighbors
+  sw.Reset();
+  sw.Start();
   ComputeNeighbors();
+  sw.Stop();
+  double T4 = sw.GetSeconds();
+
+  std::cout << "triangulate : " << T0 << std::endl;
+  std::cout << "normals     : " << T1 << std::endl;
+  std::cout << "halfedges   : " << T2 << std::endl;
+  std::cout << "bbox        : " << T3 << std::endl;
+  std::cout << "neighbors   : " << T4 << std::endl;
+  std::cout << "total       : " << (T0 + T1 + T2 + T3 + T4) << std::endl;
 }
 
 void 

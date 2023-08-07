@@ -110,6 +110,9 @@ private:
 
 };
 
+using HalfEdgesMap = pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash>;
+using HalfEdgesKeyVector = std::vector<std::pair<uint64_t, HalfEdge*>>;
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -188,33 +188,46 @@ static void _Smooth(int smoothIterations)
   std::cout << "smooth called with " << smoothIterations << " iterations" << std::endl;
   pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
-    
+    pxr::TfStopwatch sw;
+    sw.Start();
     Mesh mesh(usdMesh);
+    sw.Stop();
+    std::cout << "convert usd mesh to mesh : " << sw.GetSeconds() << std::endl;
+
+    sw.Reset();
+    sw.Start();
     size_t numPoints = mesh.GetNumPoints();
     const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
     pxr::VtFloatArray weights;
     Smooth<pxr::GfVec3f> smooth(numPoints, weights);
     const pxr::VtArray<pxr::VtArray<int>>& neighbors = mesh.GetNeighbors();
 
-    std::cout << "num neighbors : " << neighbors.size() << std::endl;
-
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
       smooth.SetDatas(pointIdx, positions[pointIdx]);
       smooth.SetNeighbors(pointIdx, neighbors[pointIdx].size(), &neighbors[pointIdx][0]);
 
     }
-    std::cout << "before compute smooth " << std::endl;
-    smooth.Compute(smoothIterations);
-    std::cout << "after compute smooth " << std::endl;
+    sw.Stop();
+    std::cout << "init smooth data : " << sw.GetSeconds() << std::endl;
 
-    std::cout << "num points : " << numPoints << std::endl;
-    std::cout << "smooth size : " << smooth.GetNumPoints() << std::endl;
+    sw.Reset();
+    sw.Start();
+    smooth.Compute(smoothIterations);
+    sw.Stop();
+    std::cout << "compute smooth: " << sw.GetSeconds() << std::endl;
+
+    
+
     pxr::VtArray<GfVec3f> smoothed(numPoints);
     for(size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx)
       smoothed[pointIdx] = smooth.GetDatas(pointIdx);
 
+    sw.Reset();
+    sw.Start();
     UndoBlock block;
     _SetMesh(usdMesh, smoothed, mesh.GetFaceCounts(), mesh.GetFaceConnects());
+    sw.Stop();
+    std::cout << "set usd mesh: " << sw.GetSeconds() << std::endl;
   }
 
 }
