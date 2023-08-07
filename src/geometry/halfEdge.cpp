@@ -210,17 +210,44 @@ HalfEdgeGraph::IsUsed(const HalfEdge* edge) const
 }
 
 
+struct _SortEdgeByKey
+{
+  inline bool operator() (const HalfEdgeKey& edge1, const HalfEdgeKey& edge2)
+  {
+    return (edge1.first < edge2.first);
+  }
+};
+
+static HalfEdge*
+_FindTwinEdge(const HalfEdgesKeys& halfEdgesKeys, uint64_t twinKey)
+{
+  int low = 0;
+  int high = halfEdgesKeys.size(); // Not n - 1
+  while (low < high) {
+    int mid =  low + (high - low) / 2;
+    if(halfEdgesKeys[mid].first == twinKey)
+      return halfEdgesKeys[mid].second;
+
+    if (twinKey <= halfEdgesKeys[mid].first) {
+        high = mid;
+    } else {
+        low = mid + 1;
+    }
+  }
+  return NULL;
+}
+
 void 
 HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 {
   const size_t numPoints = mesh->GetNumPoints();
   const pxr::VtArray<int>& faceConnects = mesh->GetFaceConnects();
+  const pxr::VtArray<int>& faceVertexCounts = mesh->GetFaceCounts();
+
   size_t numHalfEdges = 0;
-  size_t numTriangles = 0;
   
   for (const auto& faceVertexCount : mesh->GetFaceCounts()) {
     numHalfEdges += faceVertexCount;
-    numTriangles += faceVertexCount - 2;
   }
 
   _halfEdges.resize(numHalfEdges);
@@ -231,17 +258,13 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
   HalfEdge* halfEdge = &_halfEdges[0];
 
-  // here we have a dual structure map/vector
-  // for better parallel work we use the vector as an iterator and the map for the lookup
-  HalfEdgesMap halfEdgesMap;
-  halfEdgesMap.reserve(numHalfEdges);
-  HalfEdgesKeyVector halfEdgesKey;
-  halfEdgesKey.reserve(numHalfEdges);
+  HalfEdgesKeys halfEdgesKeys;
+  halfEdgesKeys.reserve(numHalfEdges);
 
   _vertexHalfEdge.resize(numPoints);
   memset(&_vertexHalfEdge[0], -1, numPoints * sizeof(int));
 
-  for (const auto& faceVertexCount: mesh->GetFaceCounts())
+  for (const auto& faceVertexCount: faceVertexCounts)
   { 
     size_t numFaceTriangles = faceVertexCount - 2;
     for (size_t faceEdgeIdx = 0; faceEdgeIdx < faceVertexCount; ++faceEdgeIdx) {
@@ -251,8 +274,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       if (_vertexHalfEdge[v0] < 0)_vertexHalfEdge[v0] = _GetEdgeIndex(halfEdge);
 
       size_t last = faceVertexCount - 1;
-      halfEdgesMap[v1 | (v0 << 32)] = halfEdge;
-      halfEdgesKey.push_back({v1 | (v0 << 32), halfEdge});
+      halfEdgesKeys.push_back({v1 | (v0 << 32), halfEdge});
       halfEdge->vertex = v0;
       if (!faceEdgeIdx) {
         halfEdge->prev = _GetEdgeIndex(halfEdge + last);
@@ -275,14 +297,13 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   memset(&_boundary[0], false, numPoints * sizeof(bool));
 
   // populate the twin pointers by iterating over the key vector:
-  pxr::WorkParallelForEach(halfEdgesKey.begin(), halfEdgesKey.end(),
-    [&](const HalfEdgesKeyVector::value_type& halfEdge) {
+  pxr::WorkParallelForEach(halfEdgesKeys.begin(), halfEdgesKeys.end(),
+    [&](const HalfEdgeKey& halfEdge) {
       uint64_t edgeIndex = halfEdge.first;
       uint64_t twinIndex = ((edgeIndex & 0xffffffff) << 32) | (edgeIndex >> 32);
-      const auto& it = halfEdgesMap.find(twinIndex);
-      if(it != halfEdgesMap.end())
+      HalfEdge* twinEdge = _FindTwinEdge(halfEdgesKeys, twinIndex);
+      if(twinEdge)
       {
-        HalfEdge* twinEdge = (HalfEdge*)it->second;
         twinEdge->twin = _GetEdgeIndex(halfEdge.second);
         halfEdge.second->twin = _GetEdgeIndex(twinEdge);
       }
