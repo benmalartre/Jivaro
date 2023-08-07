@@ -210,13 +210,13 @@ HalfEdgeGraph::IsUsed(const HalfEdge* edge) const
 }
 
 
-struct _SortEdgeByKey
+struct
 {
   inline bool operator() (const HalfEdgeKey& edge1, const HalfEdgeKey& edge2)
   {
     return (edge1.first < edge2.first);
   }
-};
+} _SortEdgeByKey;
 
 static HalfEdge*
 _FindTwinEdge(const HalfEdgesKeys& halfEdgesKeys, uint64_t twinKey)
@@ -295,6 +295,8 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
   _boundary.resize(numPoints);
   memset(&_boundary[0], false, numPoints * sizeof(bool));
+
+  std::sort(halfEdgesKeys.begin(), halfEdgesKeys.end(), _SortEdgeByKey);
 
   // populate the twin pointers by iterating over the key vector:
   pxr::WorkParallelForEach(halfEdgesKeys.begin(), halfEdgesKeys.end(),
@@ -571,56 +573,13 @@ void HalfEdgeGraph::ComputeNeighbors()
   _neighbors.clear();
   _neighbors.resize(numPoints);
 
-  for (HalfEdge& halfEdge : _halfEdges) {
-    int edgeIndex = _GetEdgeIndex(&halfEdge);
-    int vertexIndex = halfEdge.vertex;
-    HalfEdge* startEdge = &halfEdge;
-    HalfEdge* currentEdge = startEdge;
-    HalfEdge* nextEdge = NULL;
-    pxr::VtArray<int>& neighbors = _neighbors[vertexIndex];
-    if (!_IsNeighborRegistered(neighbors, _halfEdges[startEdge->next].vertex)) {
-      neighbors.push_back(_halfEdges[startEdge->next].vertex);
-    }
+  std::vector<int> visited(numPoints, 0);
 
-    short state = 1;
-    while (state == 1) {
-      nextEdge = _GetNextAdjacentEdge(currentEdge);
-      if (!nextEdge) {
-        state = 0;
-      } else if (nextEdge == startEdge) {
-        state = -1;
-      } else {
-        if (!_IsNeighborRegistered(neighbors, _halfEdges[nextEdge->next].vertex)) {
-          neighbors.push_back(_halfEdges[nextEdge->next].vertex);
-        }
-        currentEdge = nextEdge;
-      }
-    }
-    
-    if(state == 0) {
-      HalfEdge* previousEdge = NULL;
-      currentEdge = startEdge;
-      previousEdge = _GetPreviousEdge(currentEdge);
-      if (!_IsNeighborRegistered(neighbors, previousEdge->vertex)) {
-        neighbors.push_back(previousEdge->vertex);
-      }
-      state = 1;
-      while (state == 1) {
-        previousEdge = _GetPreviousAdjacentEdge(currentEdge);
-        if (!previousEdge) {
-          state = 0;
-        }
-        else if (previousEdge == startEdge) {
-          state = -1;
-        }
-        else {
-          if (!_IsNeighborRegistered(neighbors, _halfEdges[previousEdge->next].vertex)) {
-            neighbors.push_back(_halfEdges[previousEdge->next].vertex);
-          }
-          currentEdge = previousEdge;
-        }
-      }
-    }
+  for (HalfEdge& halfEdge : _halfEdges) {
+    if(visited[halfEdge.vertex]) continue;
+
+    _ComputeVertexNeighbors(&halfEdge, _neighbors[halfEdge.vertex]);
+    visited[halfEdge.vertex]++;
   }
 }
 

@@ -442,6 +442,7 @@ void Mesh::Init()
 
   std::cout << "triangulate : " << T0 << std::endl;
   std::cout << "normals     : " << T1 << std::endl;
+  
   std::cout << "halfedges   : " << T2 << std::endl;
   std::cout << "bbox        : " << T3 << std::endl;
   std::cout << "neighbors   : " << T4 << std::endl;
