@@ -77,8 +77,8 @@ ViewTabUI::Draw()
   if (_parent->IsActive()) {
     drawList->AddRectFilled(
       min + pxr::GfVec2f(0, size[1] - 4),
-      min + size - pxr::GfVec2f(0, 3),
-      ImColor(pxr::GfVec4f(1.f, 1.f, 1.f, 0.5f))
+      min + size,
+      ImColor(pxr::GfVec4f(1.f, 1.f, 1.f, 0.25f))
     );
   }
   
