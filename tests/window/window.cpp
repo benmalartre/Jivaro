@@ -90,7 +90,6 @@ Window::Init()
     glfwSetFramebufferSizeCallback(_window, FramebufferSizeCallback);
 
     // ui
-    GetContentScale();
     SetupImgui();
 
     // screen space quad
@@ -262,13 +261,6 @@ void
 Window::SetContext()
 {
   glfwMakeContextCurrent(_window);
-}
-
-void 
-Window::GetContentScale()
-{
-  glfwGetWindowContentScale(_window, &_dpiX, &_dpiY);
-  //void glfwGetMonitorContentScale	(	NULL,xscale, yscale); 
 }
 
 // draw
@@ -710,7 +702,6 @@ ResizeCallback(GLFWwindow* window, int width, int height)
 void 
 FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
-  std::cout << "resize frame buffer callback ..." << width << ", " << height << std::endl;
   //Window* parent = (Window*)glfwGetWindowUserPointer(window);
   //parent->Resize(width, height);
   glViewport(0, 0, width, height);

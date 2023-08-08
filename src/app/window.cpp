@@ -55,7 +55,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 // width/height window constructor
 //----------------------------------------------------------------------------
 Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool fullscreen, Window* parent) :
-  _scale(1.f), _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
+  _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _splitter(NULL), _dragSplitter(false), _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), 
   _fbo(0), _tex(0), _layout(std::numeric_limits<int>::max()), _needUpdateLayout(true)
 {
@@ -394,9 +394,8 @@ Window::Resize(unsigned width, unsigned height)
   const bool resolutionChanged = (_width != width) || (_height != height);
   _width = width;
   _height = height;
-  _scale = 1.f;
 
-  //if (resolutionChanged) {
+  if (resolutionChanged) {
     if (_fbo) glDeleteFramebuffers(1, &_fbo);
     if (_tex) glDeleteTextures(1, &_tex);
 
@@ -417,7 +416,7 @@ Window::Resize(unsigned width, unsigned height)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  //}
+  }
 
   CollectLeaves();
   _mainView->Resize(0, 0, _width, _height, true);
@@ -711,15 +710,14 @@ Window::Draw()
   SetGLContext();
   SetLayout();
 
+  glViewport(0, 0, _width, _height);
+
   glBindVertexArray(_vao);
   
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-
-  ImGui::GetStyle().ScaleAllSizes(_scale);
-  ImGui::GetIO().FontGlobalScale = _scale;
 
   // draw views
   if (_mainView)_mainView->Draw(_forceRedraw > 0);
@@ -731,8 +729,7 @@ Window::Draw()
   // render the imgui frame
   ImGui::Render();
 
-  glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
-
+  ImDrawData* drawData = ImGui::GetDrawData();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   glBindVertexArray(0);
 
@@ -750,7 +747,7 @@ Window::DrawPopup(PopupUI* popup)
   SetGLContext();
   glBindVertexArray(_vao);
 
-  glViewport(0, 0, (int)_io->DisplaySize.x, (int)_io->DisplaySize.y);
+  glViewport(0, 0, _width, _height);
 
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
@@ -799,7 +796,7 @@ Window::SetupImgui()
   ImGui::SetCurrentContext(_context);
   
   _io = &(ImGui::GetIO());
-  //_io->FontAllowUserScaling = true;
+  _io->FontAllowUserScaling = true;
   /*
   // load fonts
   std::string exeFolder = GetInstallationFolder();
@@ -1309,8 +1306,8 @@ WindowSizeCallback(GLFWwindow* window, int width, int height)
   glViewport(0, 0, width, height);
   parent->SetGLContext();
   parent->Resize(width, height);
+  parent->Draw();
 }
-
 
 static void _RecurseSplitRandomLayout(View* view, size_t depth, size_t maxDepth)
 {

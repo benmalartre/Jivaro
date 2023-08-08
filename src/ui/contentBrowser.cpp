@@ -9,6 +9,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags ContentBrowserUI::_flags = 
+  ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_MenuBar |
   ImGuiWindowFlags_NoTitleBar |
