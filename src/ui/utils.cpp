@@ -375,86 +375,7 @@ void UIUtils::AddPrimName(const SdfPrimSpecHandle& primSpec)
   }
 }
 
-// 2 local struct to differentiate Inherit and Specialize which have the same underlying type
-struct Inherit {};
-struct Specialize {};
 
-static bool HasComposition(const pxr::SdfPrimSpecHandle &primSpec) 
-{
-  return primSpec->HasReferences() || primSpec->HasPayloads() || 
-    primSpec->HasInheritPaths() || primSpec->HasSpecializes();
-}
-
-inline pxr::SdfReferencesProxy 
-GetCompositionArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfReference &val) 
-{
-  return primSpec->GetReferenceList();
-}
-
-inline pxr::SdfPayloadsProxy 
-GetCompositionArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPayload &val) 
-{
-  return primSpec->GetPayloadList();
-}
-
-inline pxr::SdfInheritsProxy 
-GetCompositionArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfInherit &val) 
-{
-  return primSpec->GetInheritPathList();
-}
-
-inline pxr::SdfSpecializesProxy 
-GetCompositionArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfSpecialize &val) 
-{
-  return primSpec->GetSpecializesList();
-}
-
-inline void 
-ClearArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfReference &val) 
-{
-  return primSpec->ClearReferenceList();
-}
-
-inline void 
-ClearArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPayload &val) 
-{
-  return primSpec->ClearPayloadList();
-}
-
-inline void 
-ClearArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfInherit &val) 
-{
-  return primSpec->ClearInheritPathList();
-}
-
-inline void 
-ClearArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfSpecialize &val) 
-{
-  return primSpec->ClearSpecializesList();
-}
-
-
-inline void 
-SelectArcType(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfReference &ref) 
-{
-  auto realPath = ref.GetAssetPath().empty() ? primSpec->GetLayer()->GetRealPath()
-                                              : primSpec->GetLayer()->ComputeAbsolutePath(ref.GetAssetPath());
-  auto layerOrOpen = SdfLayer::FindOrOpen(realPath);
-  //ExecuteAfterDraw<EditorSetSelection>(layerOrOpen, ref.GetPrimPath());
-}
-
-inline void 
-SelectArcType(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPayload &pay) 
-{
-  auto realPath = primSpec->GetLayer()->ComputeAbsolutePath(pay.GetAssetPath());
-  auto layerOrOpen = SdfLayer::FindOrOpen(realPath);
-  //ExecuteAfterDraw<EditorSetSelection>(layerOrOpen, pay.GetPrimPath());
-}
-
-inline void 
-SelectArcType(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &path) {
-  //ExecuteAfterDraw<EditorSetSelection>(primSpec->GetLayer(), path);
-}
 
 /*
 /// Create a standard UI for entering a SdfPath.
@@ -628,187 +549,7 @@ inline void RemoveAssetPathFromList(pxr::SdfPrimSpecHandle primSpec,
     primSpec->GetPayloadList().RemoveItemEdits(item);
 }
 
-/// Remove SdfPath from their lists (Inherits and Specialize)
-template <typename ListT> inline 
-void RemovePathFromList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &item);
-template <> inline 
-void RemovePathFromList<pxr::SdfInherit>(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &item) 
-{
-    primSpec->GetInheritPathList().RemoveItemEdits(item);
-}
-template <> inline 
-void RemovePathFromList<pxr::SdfSpecialize>(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &item) 
-{
-    primSpec->GetSpecializesList().RemoveItemEdits(item);
-}
-
-///
-template <typename PathOriginT> 
-void AddSdfPathMenuItems(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &path) {
-  if (ImGui::MenuItem("Remove")) {
-    if (!primSpec)
-      return;
-    std::function<void()> removeAssetPath = [=]() { RemovePathFromList<PathOriginT>(primSpec, path); };
-    //ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), removeAssetPath);
-  }
-  if (ImGui::MenuItem("Copy path")) {
-    ImGui::SetClipboardText(path.GetString().c_str());
-  }
-}
-
-/// Draw the menu items for AssetPaths (SdfReference and SdfPayload)
-template <typename AssetPathT> 
-void AddAssetPathMenuItems(const pxr::SdfPrimSpecHandle &primSpec, const AssetPathT &assetPath) {
-
-  if (ImGui::MenuItem("Inspect")) {
-    auto realPath = primSpec->GetLayer()->ComputeAbsolutePath(assetPath.GetAssetPath());
-    //ExecuteAfterDraw<EditorFindOrOpenLayer>(realPath);
-  }
-  if (ImGui::MenuItem("Open as Stage")) {
-    auto realPath = primSpec->GetLayer()->ComputeAbsolutePath(assetPath.GetAssetPath());
-    //ExecuteAfterDraw<EditorOpenStage>(realPath);
-  }
-  ImGui::Separator();
-  if (ImGui::MenuItem("Remove")) {
-    // I am not 100% sure this is safe as we copy the primSpec instead of its location
-    // The command UsdFunctionCall will store it between here and the actual call, so between this time it
-    // might be invalidated by another process. Unlikely but possible
-    // TODO: make a command that stores the location of the prim
-    if (!primSpec)
-        return;
-    std::function<void()> removeAssetPath = [=]() { RemoveAssetPathFromList(primSpec, assetPath); };
-    //ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), removeAssetPath);
-  }
-  ImGui::Separator();
-  if (ImGui::MenuItem("Copy asset path")) {
-    ImGui::SetClipboardText(assetPath.GetAssetPath().c_str());
-  }
-}
-
-
-template <typename ListT>
-static void AddSdfPathRow(const char *operationName, const pxr::SdfPath &path,
-  pxr::SdfPrimSpecHandle &primSpec) {
-  ImGui::TableNextRow();
-  ImGui::TableSetColumnIndex(0);
-  if (ImGui::SmallButton(ICON_FA_TRASH)) { // TODO: replace with the proper mini button menu
-    if (!primSpec)
-      return;
-    // DUPLICATED CODE that should go away with the mini button menu
-    std::function<void()> removePath = [=]() { RemovePathFromList<ListT>(primSpec, path); };
-    //ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), removePath);
-  }
-  ImGui::TableSetColumnIndex(1);
-  ImGui::Text("%s", operationName);
-  ImGui::TableSetColumnIndex(2);
-  ImGui::Text("%s", path.GetString().c_str());
-  if (ImGui::BeginPopupContextItem(path.GetString().c_str())) {
-    AddSdfPathMenuItems<ListT>(primSpec, path);
-    ImGui::EndPopup();
-  }
-}
-
-// Add a row in a table for SdfReference or SdfPayload
-// It's templated to keep the formatting consistent between payloads and references
-// and avoid to duplicate the code
-template <typename AssetPathT>
-static void AddAssetPathRow(const char *operationName, const AssetPathT &item,
-                             const pxr::SdfPrimSpecHandle &primSpec) { // TODO:primSpec might not be useful here
-  ImGui::TableNextRow();
-  ImGui::TableSetColumnIndex(0);
-  if (ImGui::SmallButton(ICON_FA_TRASH)) { // TODO: replace with the proper menu
-    if (!primSpec)
-      return;
-    std::function<void()> removeAssetPath = [=]() { RemoveAssetPathFromList(primSpec, item); };
-    //ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), removeAssetPath);
-  }
-  ImGui::TableSetColumnIndex(1);
-  ImGui::Text("%s", operationName);
-  ImGui::TableSetColumnIndex(2);
-  std::string pathFormated;
-  if (!item.GetAssetPath().empty()) {
-    pathFormated += "@" + item.GetAssetPath() + "@";
-  }
-  if (!item.GetPrimPath().GetString().empty()) {
-    pathFormated += "<" + item.GetPrimPath().GetString() + ">";
-  }
-  ImGui::Text("%s", pathFormated.c_str());
-  if (ImGui::BeginPopupContextItem(item.GetPrimPath().GetString().c_str())) {
-    AddAssetPathMenuItems(primSpec, item);
-    ImGui::EndPopup();
-  }
-}
-
-void AddPrimPayloads(const pxr::SdfPrimSpecHandle &primSpec) {
-  if (!primSpec->HasPayloads())
-    return;
-  if (ImGui::BeginTable("##DrawPrimPayloads", 4, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-    //TableSetupColumns("", "Payloads", "", "");
-    ImGui::TableHeadersRow();
-    //IterateListEditorItems(primSpec->GetPayloadList(), AddAssetPathRow<SdfPayload>, primSpec);
-    ImGui::EndTable();
-  }
-}
-
-void AddPrimReferences(const pxr::SdfPrimSpecHandle &primSpec) {
-  if (!primSpec->HasReferences())
-    return;
-
-  if (ImGui::BeginTable("##DrawPrimReferences", 4, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-    //TableSetupColumns("", "References", "", "");
-    ImGui::TableHeadersRow();
-    //IterateListEditorItems(primSpec->GetReferenceList(), AddAssetPathRow<SdfReference>, primSpec);
-    ImGui::EndTable();
-  }
-}
-
-void AddPrimInherits(const pxr::SdfPrimSpecHandle &primSpec) {
-  if (!primSpec->HasInheritPaths())
-    return;
-  if (ImGui::BeginTable("##AddPrimInherits", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-    //TableSetupColumns("", "Inherit", "");
-    ImGui::TableHeadersRow();
-    //IterateListEditorItems(primSpec->GetInheritPathList(), AddSdfPathRow<Inherit>, primSpec);
-    ImGui::EndTable();
-  }
-}
-
-void AddPrimSpecializes(const pxr::SdfPrimSpecHandle &primSpec) {
-  if (!primSpec->HasSpecializes())
-    return;
-  if (ImGui::BeginTable("##AddPrimSpecializes", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-    //TableSetupColumns("", "Specialize", "");
-    ImGui::TableHeadersRow();
-    //IterateListEditorItems(primSpec->GetSpecializesList(), AddSdfPathRow<Specialize>, primSpec);
-    ImGui::EndTable();
-  }
-}
-
-void AddPrimCompositions(const pxr::SdfPrimSpecHandle &primSpec) {
-  if (!primSpec || !HasComposition(primSpec))
-      return;
-  if (ImGui::CollapsingHeader("Composition", ImGuiTreeNodeFlags_DefaultOpen)) {
-    AddPrimReferences(primSpec);
-    AddPrimPayloads(primSpec);
-    AddPrimInherits(primSpec);
-    AddPrimSpecializes(primSpec);
-  }
-}
-
 /////////////// Summaries used in the layer scene editor
-template<typename ArcT>
-inline void RemoveArc(const pxr::SdfPrimSpecHandle &primSpec, const ArcT &arc) {
-  std::function<void()> removeItem = [=]() {
-    GetCompositionArcList(primSpec, arc).RemoveItemEdits(arc);
-    // Also clear the arc list if there are no more items
-    if (GetCompositionArcList(primSpec, arc).HasKeys()) {
-      ClearArcList(primSpec, arc);
-    }
-  };
-  //ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), removeItem);
-}
-
-
 template <typename ArcT>
 inline void AddSdfPathSummary(std::string &&header, pxr::SdfListOpType operation, const pxr::SdfPath &path,
                                const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId) 
@@ -851,7 +592,7 @@ inline void AddAssetPathSummary(std::string &&header, SdfListOpType operation, c
     SelectArcType(primSpec, assetPath);
   }
   if (ImGui::BeginPopupContextItem("###AssetPathMenuItems")) {
-    AddAssetPathMenuItems(primSpec, assetPath);
+    AddAssetPathMenuItems<AssetPathT>(primSpec, assetPath);
     ImGui::EndPopup();
   }
   ImGui::PopID();
@@ -883,14 +624,35 @@ void AddSpecializesSummary(pxr::SdfListOpType operation, const pxr::SdfPath &pat
 }
 
 
-void AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec) {
+void 
+AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec) {
   if (!primSpec || !HasComposition(primSpec))
-      return;
-  int menuItemId = 0;
-  //IterateListEditorItems(primSpec->GetReferenceList(), AddReferenceSummary, primSpec, menuItemId);
-  //IterateListEditorItems(primSpec->GetPayloadList(), AddPayloadSummary, primSpec, menuItemId);
-  //IterateListEditorItems(primSpec->GetInheritPathList(), AddInheritsSummary, primSpec, menuItemId);
-  //IterateListEditorItems(primSpec->GetSpecializesList(), AddSpecializesSummary, primSpec, menuItemId);
+    return;
+  ImGui::PushStyleColor(ImGuiCol_Button, 0);
+  
+  // Buttons are too far appart
+  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, -FLT_MIN));
+  int buttonId = 0;
+  // First draw the Buttons, Ref, Pay etc
+  constexpr ImGuiPopupFlags buttonFlags = ImGuiPopupFlags_MouseButtonLeft;
+  
+  CREATE_COMPOSITION_BUTTON(Reference, Ref, Reference)
+  CREATE_COMPOSITION_BUTTON(Payload, Pay, Payload)
+  CREATE_COMPOSITION_BUTTON(InheritPath, Inh, InheritPath)
+  CREATE_COMPOSITION_BUTTON(Specialize, Inh, Specializes)
+
+  // TODO: stretch each paths to match the cell size. Add ellipsis at the beginning if they are too short
+  // The idea is to see the relevant informations, and be able to quicly click on them
+  // - another thought ... replace the common prefix by an ellipsis ? (only for asset paths)
+  int itemId = 0;
+
+  IterateListEditorItems(primSpec->GetReferenceList(), AddPathInRow<pxr::SdfReference>, primSpec, &itemId);
+  IterateListEditorItems(primSpec->GetPayloadList(), AddPathInRow<pxr::SdfPayload>, primSpec, &itemId);
+  IterateListEditorItems(primSpec->GetInheritPathList(), AddPathInRow<pxr::SdfInherit>, primSpec, &itemId);
+  IterateListEditorItems(primSpec->GetSpecializesList(), AddPathInRow<pxr::SdfSpecialize>, primSpec, &itemId);
+
+  ImGui::PopStyleVar();
+  ImGui::PopStyleColor();
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

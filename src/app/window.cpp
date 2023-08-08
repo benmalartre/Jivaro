@@ -710,6 +710,7 @@ Window::Draw()
   SetLayout();
 
   glBindVertexArray(_vao);
+  glViewport(0,0,_width, _height);
   
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();
@@ -743,6 +744,7 @@ Window::DrawPopup(PopupUI* popup)
   if (!_valid || _idle)return;
   SetGLContext();
   glBindVertexArray(_vao);
+  glViewport(0,0,_width, _height);
 
   // start the imgui frame
   ImGui_ImplOpenGL3_NewFrame();

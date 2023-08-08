@@ -135,12 +135,13 @@ void LayerTextEditCommand::Do() {
 //==================================================================================
 // Create Prim
 //==================================================================================
-CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const std::string& name) 
+CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name) 
   : Command(true)
 {
   if (!layer) return;
   UndoRouter::Get().TransferEdits(&_inverse);
-  SdfPrimSpecHandle primSpec = SdfPrimSpec::New(layer, name, SdfSpecifier::SdfSpecifierDef);
+  pxr::SdfPrimSpecHandle primSpec =
+    pxr::SdfPrimSpec::New(layer, name.GetString(), pxr::SdfSpecifier::SdfSpecifierDef);
   layer->InsertRootPrim(primSpec);
   layer->SetDefaultPrim(primSpec->GetNameToken());
   UndoRouter::Get().TransferEdits(&_inverse);
@@ -148,12 +149,12 @@ CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const std::strin
   std::cout << "created prim at " << primSpec->GetNameToken() << std::endl;
 }
 
-CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle primSpec, const std::string& name)
+CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name)
   : Command(true)
 {
-  if (!primSpec) return;
+  if (!spec) return;
   UndoRouter::Get().TransferEdits(&_inverse);
-  SdfPrimSpec::New(primSpec, name, SdfSpecifier::SdfSpecifierDef);
+  SdfPrimSpec::New(spec, name.GetString(), SdfSpecifier::SdfSpecifierDef);
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }

@@ -37,91 +37,6 @@ LayerEditorUI::~LayerEditorUI()
 {
 }
 
-#define CREATE_COMPOSITION_BUTTON(NAME_, ABBR_, LIST_)                                                                        \
-if (primSpec->Has##NAME_##s()) {                                                                                             \
-    if (buttonId > 0)                                                                                                        \
-        ImGui::SameLine();                                                                                                   \
-    ImGui::PushID(buttonId++);                                                                                               \
-    ImGui::SmallButton(#ABBR_);                                                                                              \
-    if (ImGui::BeginPopupContextItem(nullptr, buttonFlags)) {                                                                \
-        IterateListEditorItems(primSpec->Get##LIST_##List(), Add##LIST_##Summary, primSpec, buttonId);                \
-        ImGui::EndPopup();                                                                                                   \
-    }                                                                                                                        \
-    ImGui::PopID();                                                                                                          \
-}
-
-static bool _HasComposition(const SdfPrimSpecHandle &primSpec) {
-  return 
-    primSpec->HasReferences() || 
-    primSpec->HasPayloads() || 
-    primSpec->HasInheritPaths() ||
-    primSpec->HasSpecializes();
-}
-
-inline std::string _GetArcSummary(const SdfReference &arc) 
-{ 
-  return arc.IsInternal() ? arc.GetPrimPath().GetString() : arc.GetAssetPath(); 
-}
-
-inline std::string _GetArcSummary(const SdfPayload &arc) 
-{ 
-  return arc.GetAssetPath(); 
-}
-
-inline std::string _GetArcSummary(const SdfPath &arc) 
-{ 
-  return arc.GetString(); 
-}
-
-template <typename ArcT>
-inline
-void _AddPathInRow(pxr::SdfListOpType operation, const ArcT &assetPath, 
-  const pxr::SdfPrimSpecHandle &primSpec, int *itemId) {
-    std::string path;
-    path += _GetArcSummary(assetPath);
-    ImGui::PushID((*itemId)++);
-    ImGui::SameLine();
-    if(ImGui::Button(path.c_str())) {
-        SelectArcType(primSpec, assetPath);
-    }
-    if (ImGui::BeginPopupContextItem("###AssetPathMenuItems")) {
-        DrawArcTypeMenuItems(primSpec, assetPath);
-        ImGui::EndPopup();
-    }
-    ImGui::PopID();
-}
-
-void 
-_AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec) {
-  if (!primSpec || !_HasComposition(primSpec))
-    return;
-  ImGui::PushStyleColor(ImGuiCol_Button, 0);
-  
-  // Buttons are too far appart
-  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, -FLT_MIN));
-  int buttonId = 0;
-  // First draw the Buttons, Ref, Pay etc
-  constexpr ImGuiPopupFlags buttonFlags = ImGuiPopupFlags_MouseButtonLeft;
-  
-  //CREATE_COMPOSITION_BUTTON(Reference, Ref, Reference)
-  //CREATE_COMPOSITION_BUTTON(Payload, Pay, Payload)
-  //CREATE_COMPOSITION_BUTTON(InheritPath, Inh, InheritPath)
-  //CREATE_COMPOSITION_BUTTON(Specialize, Inh, Specializes)
-
-  // TODO: stretch each paths to match the cell size. Add ellipsis at the beginning if they are too short
-  // The idea is to see the relevant informations, and be able to quicly click on them
-  // - another thought ... replace the common prefix by an ellipsis ? (only for asset paths)
-  int itemId = 0;
-  /*
-  IterateListEditorItems(primSpec->GetReferenceList(), _AddPathInRow<SdfReference>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetPayloadList(), _AddPathInRow<SdfPayload>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetInheritPathList(), _AddPathInRow<SdfInheritsProxy>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetSpecializesList(), _AddPathInRow<SdfSpecializesProxy>, primSpec, &itemId);
-  */
-  ImGui::PopStyleVar();
-  ImGui::PopStyleColor();
-}
-
 static void 
 _HandleDragAndDrop(const pxr::SdfPrimSpecHandle &primSpec, const Selection &selection) 
 {
@@ -341,6 +256,7 @@ _AddTopNodeLayerRow(const SdfLayerRefPtr &layer, const Selection &selection, flo
       //DrawSublayerPathEditDialog(layer, "");
     }
     if (ImGui::MenuItem("Add root prim")) {
+      ADD_COMMAND(CreatePrimCommand, GetApplication()->GetWorkStage()->GetRootLayer(), pxr::SdfPath("ZOB"));
       //ExecuteAfterDraw<PrimNew>(layer, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
     }
     const char *clipboard = ImGui::GetClipboardText();
@@ -471,6 +387,7 @@ _AddTreeNodePopup(pxr::SdfPrimSpecHandle &primSpec)
     //DrawPrimCreateCompositionMenu(primSpec);
     ImGui::EndMenu();
   }
+
   ImGui::Separator();
   if (ImGui::MenuItem("Copy prim path")) {
     std::cout << "copy prim path..." << std::endl;
@@ -537,13 +454,17 @@ _AddSdfPrimRow(const pxr::SdfLayerRefPtr &layer, const pxr::SdfPath &primPath,
   const Selection &selection, int nodeId, float &selectedPosY) 
 {
   pxr::SdfPrimSpecHandle primSpec = layer->GetPrimAtPath(primPath);
+  std::cout << "add sdf prim row : " << primPath << std::endl;
 
   if (!primSpec)
     return;
 
   pxr::SdfPrimSpecHandle previousSelectedPrim;
 
+  std::cout << "selection anchor path : " << selection.GetAnchorPath() << std::endl;
+  
   auto selectedPrim = layer->GetPrimAtPath(selection.GetAnchorPath()); // TODO should we have a function for that ?
+  std::cout << "selected prim : " << selectedPrim << std::endl;
   bool primIsVariant = primPath.IsPrimVariantSelectionPath();
 
   ImGui::TableNextRow();
@@ -594,7 +515,7 @@ _AddSdfPrimRow(const pxr::SdfLayerRefPtr &layer, const pxr::SdfPath &primPath,
 
   // Draw composition summary
   ImGui::TableSetColumnIndex(3);
-  _AddPrimCompositionSummary(primSpec);
+  AddPrimCompositionSummary(primSpec);
   ImGui::SetItemAllowOverlap();
 
   // Draw children

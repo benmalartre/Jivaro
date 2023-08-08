@@ -77,7 +77,7 @@ ViewportUI::ViewportUI(View* parent)
   }
   
   {
-    _toolTarget = pxr::GlfDrawTarget::New(resolution, true);
+    _toolTarget = pxr::GlfDrawTarget::New(resolution, false);
     _toolTarget->Bind();
     _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
     _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
@@ -496,7 +496,6 @@ bool ViewportUI::Draw()
       tool->SetCamera(_camera);
       tool->Draw();
       _toolTarget->Unbind();
-      _toolTarget->Resolve();
     }
     
     const pxr::GfVec2f min(GetX(), GetY());

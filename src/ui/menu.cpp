@@ -306,7 +306,7 @@ static void SetLayoutCallback(Window* window, short layout)
 
 static void CreatePrimCallback()
 {
-  std::string name = RandomString(32);
+  pxr::SdfPath name(RandomString(32));
 
   ADD_COMMAND(CreatePrimCommand, GetApplication()->GetCurrentLayer(), name);
 }
