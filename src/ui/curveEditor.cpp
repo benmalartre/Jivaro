@@ -356,9 +356,11 @@ bool CurveEditorUI::Draw()
   const pxr::GfVec2f max(min + size);
   
   //if (!_active)return false;
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
   ImGui::PushClipRect(min, max, false);
   Application* app = GetApplication();
   /*

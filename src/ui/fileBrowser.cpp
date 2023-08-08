@@ -292,10 +292,12 @@ bool FileBrowserUI::Draw()
     ImGuiWindowFlags_NoTitleBar | 
     ImGuiWindowFlags_NoMove;
 
+  ImGui::SetNextWindowSize(_parent->GetMax() - _parent->GetMin());
+  ImGui::SetNextWindowPos(_parent->GetMin());
+
   ImGui::Begin(_name.c_str(), &opened, flags);
 
-  ImGui::SetWindowSize(_parent->GetMax() - _parent->GetMin());
-  ImGui::SetWindowPos(_parent->GetMin());
+  
   ImGui::PushStyleColor(ImGuiCol_ChildBg, { 0,0,0,0 });
 
   _DrawPath();

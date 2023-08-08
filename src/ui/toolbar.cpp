@@ -174,9 +174,12 @@ void ToolbarUI::Update()
 bool ToolbarUI::Draw()
 {
   bool opened;
+
+  ImGui::SetNextWindowSize(_parent->GetSize());
+  ImGui::SetNextWindowPos(_parent->GetMin());
+
   ImGui::Begin(_name.c_str(), &opened, _flags);
-  ImGui::SetWindowSize(_parent->GetSize());
-  ImGui::SetWindowPos(_parent->GetMin());
+  
 
   ImGui::PushClipRect(
     _parent->GetMin(),

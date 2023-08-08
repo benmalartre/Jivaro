@@ -330,9 +330,12 @@ PropertyEditorUI::Draw()
   bool opened;
   const pxr::GfVec2f pos(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
+
+  ImGui::SetNextWindowSize(size);
+  ImGui::SetNextWindowPos(pos);
+
   ImGui::Begin(_name.c_str(), &opened, _flags);
-  ImGui::SetWindowSize(size);
-  ImGui::SetWindowPos(pos);
+  
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
   drawList->AddRectFilled(

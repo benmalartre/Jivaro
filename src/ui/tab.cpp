@@ -56,10 +56,11 @@ ViewTabUI::Draw()
   ImGuiStyle& style = ImGui::GetStyle();
   const pxr::GfVec2f min(_parent->GetMin());
   const pxr::GfVec2f size(_parent->GetWidth(), GetHeight());
+  
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
 
   ImGui::Begin(_ComputeName(_id).c_str(), NULL, ViewTabUI::_flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
 
   _height = ImGui::GetTextLineHeight() + style.FramePadding[1] * 2 + style.WindowPadding[1];
 

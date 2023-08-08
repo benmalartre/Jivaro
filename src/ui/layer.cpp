@@ -267,10 +267,10 @@ bool ExplorerUI::Draw()
 {
   if (!_initialized)Init();
 
-  ImGui::Begin(_name.c_str(), NULL, _flags);
+  ImGui::SetNextWindowPos(_parent->GetMin());
+  ImGui::SetNextWindowSize(_parent->GetSize());
 
-  ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::SetWindowSize(_parent->GetSize());
+  ImGui::Begin(_name.c_str(), NULL, _flags);
 
   const ImVec2 localMousePos = ImGui::GetMousePos() - _parent->GetMin();
 

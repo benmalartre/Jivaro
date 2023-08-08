@@ -37,9 +37,11 @@ TextEditorUI::Draw()
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
 
   ImGui::Text("WARNING: this will slow down the application if the layer is big");
   ImGui::Text("        and will consume lots of memory. Use with care for now");

@@ -96,10 +96,12 @@ bool
 PopupUI::Draw()
 {
 
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+  
 
   pxr::GfVec4f color(
     RANDOM_0_1,
@@ -196,10 +198,13 @@ ColorPopupUI::Draw()
 {
   bool opened;
   const ImGuiStyle& style = ImGui::GetStyle();
+
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+  
 
   ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   drawList->AddRectFilled(
@@ -256,11 +261,14 @@ bool
 NamePopupUI::Draw()
 {
   static bool initialized = false;
+
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
   if (!initialized) {
-    ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-    ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+    
     initialized = true;
   }
 
@@ -459,10 +467,12 @@ SdfPathPopupUI::Draw()
 {
   bool opened;
 
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+  
 
   // TODO: We will probably want to browse in the scene hierarchy to select the path
     //   create a selection tree, one day

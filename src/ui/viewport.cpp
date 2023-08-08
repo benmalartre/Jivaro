@@ -506,9 +506,11 @@ bool ViewportUI::Draw()
 
     ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0, 0, 0, 1 });
 
+    ImGui::SetNextWindowPos(min);
+    ImGui::SetNextWindowSize(size);
+
     ImGui::Begin(_name.c_str(), NULL, _flags);
-    ImGui::SetWindowPos(min);
-    ImGui::SetWindowSize(size);
+    
   
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     

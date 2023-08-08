@@ -93,9 +93,11 @@ bool DebugUI::Draw()
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
 
   ImGui::PushItemWidth(100);
   ImGui::ListBox("##DebugPanels", &current_item, panels, 3);

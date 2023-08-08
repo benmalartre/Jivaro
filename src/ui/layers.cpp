@@ -466,10 +466,12 @@ LayersUI::DrawNavigation(pxr::SdfLayerRefPtr layer)
 
 bool LayersUI::Draw()
 {
+  ImGui::SetNextWindowPos(_parent->GetMin());
+  ImGui::SetNextWindowSize(_parent->GetSize());
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
-  ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::SetWindowSize(_parent->GetSize());
+  
 
   Application* app = GetApplication();
 

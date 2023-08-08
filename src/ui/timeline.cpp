@@ -396,9 +396,10 @@ bool TimelineUI::Draw()
 {
   if (!_initialized)Init();
 
+  ImGui::SetNextWindowPos(_parent->GetMin());
+  ImGui::SetNextWindowSize(_parent->GetSize());
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::SetWindowSize(_parent->GetSize());
+  
 
   DrawTimeSlider();
   DrawControls();

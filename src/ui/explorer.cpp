@@ -359,9 +359,12 @@ ExplorerUI::Draw()
 
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
+
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
 
   _items.clear();
   _mapping = 0;

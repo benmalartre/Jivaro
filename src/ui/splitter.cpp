@@ -87,9 +87,12 @@ bool
 SplitterUI::Draw()
 {
   const std::vector<View*>& views = GetWindow()->GetViews();
+
+  ImGui::SetNextWindowPos(ImVec2(0, 0));
+  ImGui::SetNextWindowSize(ImVec2(_width, _height));
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(ImVec2(0, 0));
-  ImGui::SetWindowSize(ImVec2(_width, _height));
+  
   
   for(auto view : views)
   {
