@@ -57,6 +57,7 @@ add_executable(${TARGET}
   geometry/utils.cpp
   geometry/matrix.cpp
   geometry/rbf.cpp
+  geometry/decomposition.cpp
   geometry/subdiv.cpp
   geometry/tesselator.cpp
   geometry/kabsch.cpp

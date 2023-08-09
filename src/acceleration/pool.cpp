@@ -62,6 +62,15 @@ ThreadPool::Init()
 }
 
 void 
+ThreadPool::Term()
+{
+  for(auto& worker: _workers) {
+    worker.detach();
+  }
+  _workers.clear();
+}
+
+void 
 ThreadPool::Signal()
 {
   _done++;

@@ -37,6 +37,7 @@ public:
   };
 
   void Init();
+  void Term();
   void BeginTasks();
   void AddTask(TaskFn fn, void* datas);
   void EndTasks();
