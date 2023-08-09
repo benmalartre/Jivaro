@@ -56,31 +56,31 @@ void PBDParticle::RemoveGeometry(PBDGeometry* geom)
 
 }
 
-void PBDParticle::Reset(size_t startIdx, size_t endIdx)
+void PBDParticle::Reset(size_t start, size_t end)
 {
-  for (size_t p = startIdx; p < endIdx; ++p) {
-    _position[p] = _rest[p];
-    _previous[p] = _rest[p] -_preload[p];
-    _force[p] = pxr::GfVec3f(0.f);
+  for (size_t index = start; index < end; ++index) {
+    _position[index] = _rest[index];
+    _previous[index] = _rest[index] -_preload[index];
+    _force[index] = pxr::GfVec3f(0.f);
   }
 }
 
-void PBDParticle::Integrate(size_t startIdx, size_t endIdx, float step)
+void PBDParticle::Integrate(size_t start, size_t end, float step)
 {
-  for(int p = startIdx; p < endIdx; ++p) {
-    pxr::GfVec3f& position = _position[p];
+  for(int index = start; index < end; ++index) {
+    pxr::GfVec3f& position = _position[index];
     pxr::GfVec3f tmp = position;
-    pxr::GfVec3f& previous = _previous[p];
-    position += position - previous + _force[p] * step * step;
+    pxr::GfVec3f& previous = _previous[index];
+    position += position - previous + _force[index] * step * step;
     previous = tmp;
   }
 }
 
-void PBDParticle::AccumulateForces(size_t startIdx, size_t endIdx, const pxr::GfVec3f& gravity)
+void PBDParticle::AccumulateForces(size_t start, size_t end, const pxr::GfVec3f& gravity)
 {
   size_t numParticles = GetNumParticles();
-  for (int p = startIdx; p < endIdx; ++p) {
-    _force[p] = gravity;
+  for (int index = start; index < end; ++index) {
+    _force[index] = gravity;
   }
 }
 

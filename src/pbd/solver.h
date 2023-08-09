@@ -3,7 +3,6 @@
 
 #include <pxr/base/gf/matrix4f.h>
 #include "../common.h"
-#include "../acceleration/pool.h"
 #include "../pbd/particle.h"
 #include "../pbd/constraint.h"
 
@@ -32,12 +31,10 @@ public:
   size_t GetNumConstraints() { return _constraints.size(); };
   PBDConstraint* GetConstraint(size_t idx) { return _constraints[idx]; };
 
-  void SetNumTasks(size_t numTasks) { _numTasks = numTasks; };
-  void _ParallelEvaluation(ThreadPool::TaskFn fn, size_t numElements, size_t numTasks);
+  void SetGrain(size_t grain) { _grain = grain; };
 
 private:
-  size_t                              _numTasks;
-  ThreadPool                          _pool;
+  size_t                              _grain;
   PBDParticle                         _system;
   pxr::GfVec3f                        _gravity;
   float                               _timeStep;
