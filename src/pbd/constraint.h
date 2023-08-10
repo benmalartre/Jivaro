@@ -32,6 +32,9 @@ namespace PBD {
     virtual bool Update(Solver* solver) { return true; };
     virtual bool Solve(Solver* solver, const unsigned int iter) { return true; };
 
+    virtual void ConstrainPositions(float di) {};
+    virtual void ConstrainVelocities() {};
+
     bool Contains(unsigned int body) {
       return std::find(_bodies.begin(), _bodies.end(), body) != _bodies.end();
     };
@@ -52,20 +55,6 @@ namespace PBD {
   protected:
     static int  TYPE_ID;
     float       _restLength;
-    float       _stiffness;
-  };
-
-  class RestoreConstraint : public Constraint
-  {
-  public:
-    RestoreConstraint() : Constraint(2), _stiffness(1.f) {}
-    virtual int& GetTypeId() const { return TYPE_ID; }
-
-    virtual bool Init(Solver* solver, const unsigned int p1, const float stiffness);
-    virtual bool Solve(Solver* solver, const unsigned int iter);
-
-  protected:
-    static int  TYPE_ID;
     float       _stiffness;
   };
 }

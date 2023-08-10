@@ -49,8 +49,8 @@ namespace PBD {
     size_t                              _substeps;
     bool                                _paused;		
     std::vector<Constraint*>            _constraints;
-    std::vector<Geometry*>              _colliders;
-    std::map<Geometry*, _Geometry>      _geometries;
+    //std::vector<Collider*>              _colliders;
+    std::vector<Body*>                  _bodies;
 
   };
 }

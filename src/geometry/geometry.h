@@ -95,7 +95,6 @@ protected:
   pxr::VtArray<pxr::GfVec3f>          _normals;
   pxr::VtArray<float>                 _radius;
 
-
   // bounding box
   pxr::GfBBox3d                       _bbox;
   bool                                _initialized;
