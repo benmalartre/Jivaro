@@ -85,6 +85,7 @@ add_executable(${TARGET}
   acceleration/octree.cpp
   acceleration/hashGrid.cpp
   pbd/body.cpp
+  pbd/force.cpp
   pbd/constraint.cpp
   pbd/solver.cpp
   anim/animx.cpp
@@ -129,8 +130,8 @@ target_include_directories(${TARGET}
     ${TBB_INCLUDE_DIR}
     ${OPENVDB_INCLUDE_DIR}
     ${OPENSUBDIV_INCLUDE_DIR}
-	  ${BOOST_INCLUDE_DIR}
-	  ${ICON_AWESOME_DIR}
+    ${BOOST_INCLUDE_DIR}
+    ${ICON_AWESOME_DIR}
 )
 
 target_link_libraries(${TARGET}

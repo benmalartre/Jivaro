@@ -1,10 +1,14 @@
 #ifndef JVR_PBD_SOLVER_H
 #define JVR_PBD_SOLVER_H
 
+#include <limits>
 #include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/vt/array.h>
 #include "../common.h"
 #include "../pbd/body.h"
 #include "../pbd/constraint.h"
+#include "../pbd/force.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -12,45 +16,66 @@ namespace PBD {
   class Solver
   {
   public:
+    const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
+
     Solver();
     ~Solver();
 
+    // setup
+    void AddBody(Geometry* geom, const pxr::GfMatrix4f& m);
+    void RemoveBody(Geometry* geom);
+    //void AddCollision(Geometry* geom);
+    //void RemoveCollision(Geometry* geom);
+    void AddConstraints(Geometry* geom, size_t offset);
+
+    // attributes
     float GetTimeStep() { return _timeStep; };
     void SetTimeStep(float step) { _timeStep = step; };
     const pxr::GfVec3f& GetGravity() { return _gravity; };
     void SetGravity(const pxr::GfVec3f& gravity) { _gravity = gravity; };
-    void AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m);
-    void RemoveGeometry(Geometry* geom);
-    void AddCollider(Geometry* colliders);
-    void AddConstraints(Geometry* geom, size_t offset);
+    size_t GetNumParticles() { return _position.size(); };
+    size_t GetNumConstraints() { return _constraints.size(); };
+    Body* GetBody(size_t index);
+    Body* GetBody(Geometry* geom);
+    size_t GetBodyIndex(Geometry* geom);
+    Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
+
+    // particles
+    pxr::VtArray<pxr::GfVec3f>& GetPosition() { return _position; };
+    pxr::VtArray<pxr::GfVec3f>& GetPredicted() { return _predicted; };
+    pxr::VtArray<pxr::GfVec3f>& GetVelocity() { return _velocity; };
+    pxr::GfVec3f* GetPositionPtr() { return &_position[0]; };
+    const pxr::GfVec3f* GetPositionCPtr() const { return &_position[0]; };
+    pxr::GfVec3f* GetPredictedPtr() { return &_predicted[0]; };
+    const pxr::GfVec3f* GetPredictedCPtr() const { return &_predicted[0]; };
+    pxr::GfVec3f* GetVelocityPtr() { return &_velocity[0]; };
+    const pxr::GfVec3f* GetVelocityPtr() const { return &_velocity[0]; };
+   
+    // solver
     void SatisfyConstraints();
-    void UpdateColliders();
+    void UpdateCollisions();
     void UpdateGeometries();
     void Reset();
     void Step();
-    Body* GetBody() { return &_body; };
-    size_t GetNumConstraints() { return _constraints.size(); };
-    Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
-
-    void SetGrain(size_t grain) { _grain = grain; };
-
-  protected:
-    void _Reset(size_t start, size_t end);
-    void _Integrate(size_t start, size_t end);
-    void _AccumulateForces(size_t start, size_t end);
-    void _SolveCollisions(size_t start, size_t end);
-    void _SatisfyConstraints(size_t start, size_t end);
 
   private:
     size_t                              _grain;
-    Body                                _body;
-    pxr::GfVec3f                        _gravity;
-    float                               _timeStep;
     size_t                              _substeps;
+    float                               _timeStep;
     bool                                _paused;		
+
+    // system
     std::vector<Constraint*>            _constraints;
-    //std::vector<Collider*>              _colliders;
+    std::vector</*Static*/Constraint>   _staticConstraints;
+    //std::vector<Collision*>              _collisions;
     std::vector<Body*>                  _bodies;
+    std::vector<Force*>                 _force;
+    pxr::GfVec3f                        _gravity;
+
+    // particles
+    pxr::VtArray<pxr::GfVec3f>          _position;
+    pxr::VtArray<pxr::GfVec3f>          _predicted;
+    pxr::VtArray<pxr::GfVec3f>          _velocity;
 
   };
 }

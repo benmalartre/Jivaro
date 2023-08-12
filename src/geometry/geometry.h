@@ -52,6 +52,10 @@ public:
   pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normals;};
   pxr::VtArray<float>& GetRadius() { return _radius; };
 
+  pxr::GfVec3f* GetPositionsPtr() { return &_positions[0]; };
+  pxr::GfVec3f* GetNormalsPtr() { return &_normals[0]; };
+  float* GetRadiusPtr() { return &_radius[0]; };
+
   const pxr::GfVec3f* GetPositionsCPtr() const {return &_positions[0];};
   const pxr::GfVec3f* GetNormalsCPtr() const {return &_normals[0];};
   const float* GetRadiusCPtr() const { return &_radius[0]; };

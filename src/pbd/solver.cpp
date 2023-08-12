@@ -37,7 +37,7 @@ namespace PBD {
     std::cout << "benchmark parallel evaluation" << std::endl;
     for (size_t grain = 1; grain <= 2048; grain *=2) {
       uint64_t startT = CurrentTime();
-      solver->SetGrain(grain);
+      //solver->SetGrain(grain);
       solver->Reset();
       for (size_t t = 0; t < 250; ++t) {
         solver->Step();
@@ -45,7 +45,7 @@ namespace PBD {
       std::cout << "[parallel] (grain: " << grain << ") took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
 
     }
-
+    /*
     uint64_t startT = CurrentTime();
     Body* body = solver->GetBody();
     size_t last = body->GetNumParticles();
@@ -69,6 +69,7 @@ namespace PBD {
       }
     }
     std::cout << "[serial] (1 thread) took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
+    */
 
   }
 
@@ -277,50 +278,6 @@ namespace PBD {
     }
     */
   }
-
-  void Solver::_AccumulateForces(size_t start, size_t end)
-  {
-    Body* body = GetBody();
-    pxr::GfVec3f* forces = body->GetForcesPtr();
-
-    for (int index = start; index < end; ++index) {
-      forces[index] = _gravity;
-    }
-  }
-
-  void Solver::_SolveCollisions(size_t start, size_t end)
-  {
-    Body* body = GetBody();
-    for (size_t i = start; i < end; ++i) {
-      pxr::GfVec3f& p = body->GetPosition(i);
-
-      //_position[i][0] = pxr::GfMin(pxr::GfMax(_position[i][0], -100.f), 100.f); 
-      p[1] = pxr::GfMax(p[1], 0.f);
-      //_position[i][2] = pxr::GfMin(pxr::GfMax(_position[i][2], 100.f), 100.f);
-    }
-  }
-
-  void Solver::_SatisfyConstraints(size_t start, size_t end)
-  {
-    Body* body = GetBody();
-    for (size_t i = start; i < end; ++i) {
-      Constraint* c = GetConstraint(i);
-      c->Solve(this, 1);
-    }
-  }
-
-  void Solver::_Integrate(size_t start, size_t end)
-  {
-    Body* body = GetBody();
-    body->AccumulateForces(start, end, GetGravity());
-    body->Integrate(start, end, GetTimeStep());
-  }
-
-  void Solver::_Reset(size_t start, size_t end)
-  {
-    Body* body = GetBody();
-    body->Reset(start, end);
-  }
   
 
   Solver::Solver()
@@ -341,35 +298,91 @@ namespace PBD {
   {
     UpdateColliders();
     // reset
-    pxr::WorkParallelForN(
-      _body.GetNumParticles(),
-      std::bind(&Solver::_Reset, this, std::placeholders::_1, std::placeholders::_2),
-      _grain
-    );
-  }
+    for (size_t p = 0; p < GetNumParticles(); ++p) {
 
-  void Solver::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
-  {
-    if (_geometries.find(geom) == _geometries.end()) {
-      _geometries[geom] = { 
-        geom, _body.GetNumParticles(), m, m.GetInverse() 
-      };
-      size_t offset = _body.AddGeometry(&_geometries[geom]);
-      AddConstraints(geom, offset);
     }
   }
 
-  void Solver::RemoveGeometry(Geometry* geom)
+  Body* Solver::GetBody(size_t index)
   {
-    if (_geometries.find(geom) != _geometries.end()) {
-      _body.RemoveGeometry(&_geometries[geom]);
-      _geometries.erase(geom);
-    }
+    if (index < _bodies.size())return _bodies[index];
+    return nullptr;
   }
 
-  void Solver::AddCollider(Geometry* collider)
+  Body* Solver::GetBody(Geometry* geom)
   {
-    /*
+    for (auto& body : _bodies) {
+      if (body->geometry == geom)return body;
+    }
+    return nullptr;
+  }
+
+  size_t Solver::GetBodyIndex(Geometry* geom)
+  {
+    for (size_t index = 0; index < _bodies.size(); ++index) {
+      if (_bodies[index]->geometry == geom)return index;
+    }
+    return Solver::INVALID_INDEX;
+  }
+
+  void Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix)
+  {
+    std::cout << "[system] add geometry : " << geom << std::endl;
+    size_t base = _position.size();
+    size_t add = geom->GetNumPoints();
+
+    size_t newSize = base + add;
+    _position.resize(newSize);
+
+
+    const pxr::VtArray<pxr::GfVec3f>& points = geom->GetPositions();
+    for (size_t p = 0; p < add; ++p) {
+      const pxr::GfVec3f pos = matrix.Transform(points[p]);
+      size_t idx = base + p;
+      _position[idx] = pos;
+    }
+
+    Body* body = new Body({ 1.f, 1.f, 1.f, base, points.size(), geom });
+    _bodies.push_back(body);
+
+      /*
+      float          damping;
+    float          radius;
+    float          mass;
+
+    size_t         offset;
+    size_t         numPoints;
+    
+    Geometry*      geometry;
+      */
+  }
+
+  void Solver::RemoveBody(Geometry* geom)
+  {
+    std::cout << "[system] remove geometry : " << geom << std::endl;
+    size_t index = GetBodyIndex(geom);
+    if (index == Solver::INVALID_INDEX) return;
+
+    Body* body = GetBody(index);
+    size_t base = body->offset;
+    size_t shift = body->numPoints;
+    size_t remaining = _position.size() - (base + shift);
+
+    for (size_t r = 0; r < remaining; ++r) {
+      _position[base + r] = _position[base + shift + r];
+    }
+
+    size_t newSize = _position.size() - shift;
+    _position.resize(newSize);
+
+    Body* body = _bodies[index];
+    _bodies.erase(_bodies.begin() + index);
+    delete body;
+  }
+
+  /*
+  void Solver::AddCollision(Geometry* collider)
+  {
     _colliders.push_back(collider);
     
     float radius = 0.2f;
@@ -420,12 +433,12 @@ namespace PBD {
 
 
     _SetupResults(stage, result);
-    */
+   
   }
 
   void Solver::UpdateColliders()
   {
-    /*
+
     BVH bvh;
     bvh.Init(_colliders);
     
@@ -451,8 +464,9 @@ namespace PBD {
         hit.GetPosition(_colliders[0]);
       }
     }
-    */
+   
   }
+  */
 
   void Solver::AddConstraints(Geometry* geom, size_t offset)
   {
@@ -507,39 +521,13 @@ namespace PBD {
   {
     UpdateColliders();
 
-    const size_t numParticles = _body.GetNumParticles();
-
-    // apply force
-    pxr::WorkParallelForN(
-      numParticles,
-      std::bind(&Solver::_AccumulateForces, this, std::placeholders::_1, 
-        std::placeholders::_2),
-      _grain
-    );
-
-    // integrate
-    pxr::WorkParallelForN(
-      numParticles,
-      std::bind(&Solver::_Integrate, this, std::placeholders::_1, 
-        std::placeholders::_2), 
-      _grain
-    );
-
-    // collisions
-    pxr::WorkParallelForN(
-      numParticles,
-      std::bind(&Solver::_SolveCollisions, this, std::placeholders::_1, 
-        std::placeholders::_2), 
-      _grain
-    );
-    //_ParallelEvaluation(_Integrate, _body.GetNumParticles(), _numTasks);
-    //_ParallelEvaluation(_SolveCollisions, _body.GetNumParticles(), _numTasks);
-    //_ParallelEvaluation(_SatisfyConstraints, GetNumConstraints(), _numTasks);
+   
     UpdateGeometries();
   }
 
   void Solver::UpdateGeometries()
   {
+    /*
     std::map<Geometry*, _Geometry>::iterator it = _geometries.begin();
     for (; it != _geometries.end(); ++it)
     {
@@ -553,6 +541,7 @@ namespace PBD {
       geom->SetPositions(&results[0], numPoints);
     }
   }
+  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
