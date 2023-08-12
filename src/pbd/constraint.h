@@ -10,7 +10,8 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 namespace PBD {
-  class Solver;
+
+  class Particles;
   class Constraint
   {
   public:
@@ -22,11 +23,11 @@ namespace PBD {
     size_t GetNumBodies() const { return _bodies.size(); }
     size_t GetNumParticles() const { return _particles.size(); };
     virtual ~Constraint() {};
-    virtual int& GetTypeId() const = 0;
+    virtual size_t& GetTypeId() const = 0;
 
-    virtual bool Init(Solver* solver) { return true; };
-    virtual bool Update(Solver* solver) { return true; };
-    virtual bool Solve(Solver* solver, const size_t iter) { return true; };
+    virtual bool Init(Particles* particles) { return true; };
+    virtual bool Update(Particles* particles) { return true; };
+    virtual bool Solve(Particles* particles, const size_t iter) { return true; };
 
     virtual void ConstrainPositions(float di) {};
     virtual void ConstrainVelocities() {};
@@ -36,6 +37,11 @@ namespace PBD {
     };
 
   protected:
+    enum ConstraintType {
+      DISTANCE = 1,
+      BEND
+    };
+
     pxr::VtArray<int> _bodies;
     pxr::VtArray<int> _particles;
   };
@@ -44,16 +50,17 @@ namespace PBD {
   {
   public:
     DistanceConstraint() : Constraint(2), _restLength(0.f), _stretchStiffness(1.f), _compressionStiffness(1.f) {}
-    virtual int& GetTypeId() const { return TYPE_ID; }
+    virtual size_t& GetTypeId() const { return TYPE_ID; }
 
-    virtual bool Init(Solver* solver, const size_t p1, const size_t p2, const float stiffness);
-    virtual bool Solve(Solver* solver, const size_t iter);
+    virtual bool Init(Particles* particles, const size_t p1, const size_t p2, 
+      const float stretchStiffnes, const float compressionStiffness);
+    virtual bool Solve(Particles* particles, const size_t iter);
 
   protected:
-    static int  TYPE_ID;
-    float       _restLength;
-    float       _stretchStiffness;
-    float       _compressionStiffness;
+    static size_t  TYPE_ID;
+    float          _restLength;
+    float          _stretchStiffness;
+    float          _compressionStiffness;
   };
 }
 

@@ -1,7 +1,7 @@
 #include <pxr/base/work/loops.h>
 
 #include "../pbd/force.h"
-#include "../pbd/body.h"
+#include "../pbd/particle.h"
 #include "../pbd/solver.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -14,8 +14,10 @@ namespace PBD {
     Body* body = solver->GetBody(index);
     if (!body) return;
 
-    size_t offset = body->offset;
-    size_t remove = body->numPoints;
+    const size_t offset = body->offset;
+    const size_t remove = body->numPoints;
+
+    if (_particles.back() < body->offset) return;
 
     size_t removeStart = Solver::INVALID_INDEX;
     size_t removeEnd = Solver::INVALID_INDEX;
@@ -51,7 +53,7 @@ namespace PBD {
 
   void GravitationalForce::Apply(Solver* solver, const float dt)
   {
-    pxr::GfVec3f* velocities = solver->GetVelocityPtr();
+    pxr::GfVec3f* velocities = solver->GetParticles()->GetVelocityPtr();
     if (HasParticles()) {
       for (const int& particle : _particles) {
         velocities[particle] += dt * _gravity;

@@ -84,7 +84,7 @@ add_executable(${TARGET}
   acceleration/bvh.cpp
   acceleration/octree.cpp
   acceleration/hashGrid.cpp
-  pbd/body.cpp
+  pbd/particle.cpp
   pbd/force.cpp
   pbd/constraint.cpp
   pbd/solver.cpp

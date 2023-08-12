@@ -25,17 +25,15 @@
 #include <pxr/usd/usdGeom/curves.h>
 
 
-
-
 JVR_NAMESPACE_OPEN_SCOPE
 
 namespace PBD {
 
-  static void 
-  BenchmarkParallelEvaluation(Solver* solver)
+  static void
+    BenchmarkParallelEvaluation(Solver* solver)
   {
     std::cout << "benchmark parallel evaluation" << std::endl;
-    for (size_t grain = 1; grain <= 2048; grain *=2) {
+    for (size_t grain = 1; grain <= 2048; grain *= 2) {
       uint64_t startT = CurrentTime();
       //solver->SetGrain(grain);
       solver->Reset();
@@ -57,11 +55,11 @@ namespace PBD {
       for (size_t i = 0; i < last; ++i) {
         pxr::GfVec3f& p = body->GetPosition(i);
 
-        //_position[i][0] = pxr::GfMin(pxr::GfMax(_position[i][0], -100.f), 100.f); 
+        //_position[i][0] = pxr::GfMin(pxr::GfMax(_position[i][0], -100.f), 100.f);
         p[1] = pxr::GfMax(p[1], 0.f);
         //_position[i][2] = pxr::GfMin(pxr::GfMax(_position[i][2], 100.f), 100.f);
       }
-      
+
       size_t numConstraints = solver->GetNumConstraints();
       for (size_t i = 0; i < numConstraints; ++i) {
         Constraint* c = solver->GetConstraint(i);
@@ -74,7 +72,7 @@ namespace PBD {
   }
 
   static void
-  _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
+    _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   {
     std::vector<BVH::Cell*> cells;
     std::cout << "setup instancer " << bvh->GetRoot() << std::endl;
@@ -120,7 +118,7 @@ namespace PBD {
     instancer.CreateOrientationsAttr().Set(rotations);
     instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
     pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
-    pxr::UsdGeomPrimvar colorPrimvar = 
+    pxr::UsdGeomPrimvar colorPrimvar =
       primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
     colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
     colorPrimvar.SetElementSize(1);
@@ -140,12 +138,12 @@ namespace PBD {
     crvColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
     crvColorPrimvar.SetElementSize(1);
     crvColorPrimvar.Set(colors);
-    
-    
+
+
   }
 
   static void
-  _SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
+    _SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
   {
     const pxr::VtArray<pxr::GfVec3f>& positions = voxels->GetPositions();
 
@@ -176,7 +174,7 @@ namespace PBD {
   }
 
   static void
-  _TestHashGrid(Voxels* voxels, float radius)
+    _TestHashGrid(Voxels* voxels, float radius)
   {
     size_t N = 1000000;
     float step = 10.f / float(N);
@@ -273,12 +271,12 @@ namespace PBD {
 
         std::cout << "query : " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
         std::cout << "----------------------------------------------------------------------" << std::endl;
-  
+
       }
     }
     */
   }
-  
+
 
   Solver::Solver()
     : _gravity(0, -1, 0)
@@ -296,7 +294,7 @@ namespace PBD {
 
   void Solver::Reset()
   {
-    UpdateColliders();
+    //UpdateColliders();
     // reset
     for (size_t p = 0; p < GetNumParticles(); ++p) {
 
@@ -328,33 +326,23 @@ namespace PBD {
   void Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix)
   {
     std::cout << "[system] add geometry : " << geom << std::endl;
-    size_t base = _position.size();
+    size_t base = _particles.GetNumParticles();
     size_t add = geom->GetNumPoints();
 
-    size_t newSize = base + add;
-    _position.resize(newSize);
-
-
-    const pxr::VtArray<pxr::GfVec3f>& points = geom->GetPositions();
-    for (size_t p = 0; p < add; ++p) {
-      const pxr::GfVec3f pos = matrix.Transform(points[p]);
-      size_t idx = base + p;
-      _position[idx] = pos;
-    }
-
-    Body* body = new Body({ 1.f, 1.f, 1.f, base, points.size(), geom });
+    Body* body = new Body({ 1.f, 1.f, 1.f, base, geom->GetNumPoints(), geom });
     _bodies.push_back(body);
+    _particles.AddBody(body, matrix);
 
-      /*
-      float          damping;
-    float          radius;
-    float          mass;
+    /*
+    float          damping;
+  float          radius;
+  float          mass;
 
-    size_t         offset;
-    size_t         numPoints;
-    
-    Geometry*      geometry;
-      */
+  size_t         offset;
+  size_t         numPoints;
+
+  Geometry*      geometry;
+    */
   }
 
   void Solver::RemoveBody(Geometry* geom)
@@ -364,18 +352,8 @@ namespace PBD {
     if (index == Solver::INVALID_INDEX) return;
 
     Body* body = GetBody(index);
-    size_t base = body->offset;
-    size_t shift = body->numPoints;
-    size_t remaining = _position.size() - (base + shift);
+    _particles.RemoveBody(body);
 
-    for (size_t r = 0; r < remaining; ++r) {
-      _position[base + r] = _position[base + shift + r];
-    }
-
-    size_t newSize = _position.size() - shift;
-    _position.resize(newSize);
-
-    Body* body = _bodies[index];
     _bodies.erase(_bodies.begin() + index);
     delete body;
   }
@@ -384,7 +362,7 @@ namespace PBD {
   void Solver::AddCollision(Geometry* collider)
   {
     _colliders.push_back(collider);
-    
+
     float radius = 0.2f;
     Voxels voxels;
     voxels.Init(collider, radius);
@@ -395,13 +373,13 @@ namespace PBD {
     _SetupVoxels(stage, &voxels, radius);
 
     _TestHashGrid(&voxels, radius);
-    
+
     BenchmarkParallelEvaluation(this);
-    
+
     size_t numRays = 2048;
     std::vector<pxr::GfRay> rays(numRays);
     for (size_t r = 0; r < numRays; ++r) {
-      rays[r] = pxr::GfRay(pxr::GfVec3f(0.f), 
+      rays[r] = pxr::GfRay(pxr::GfVec3f(0.f),
         pxr::GfVec3f(RANDOM_LO_HI(-1, 1), RANDOM_LO_HI(-1, 1), RANDOM_LO_HI(-1, 1)).GetNormalized());
     }
 
@@ -433,7 +411,7 @@ namespace PBD {
 
 
     _SetupResults(stage, result);
-   
+
   }
 
   void Solver::UpdateColliders()
@@ -441,7 +419,7 @@ namespace PBD {
 
     BVH bvh;
     bvh.Init(_colliders);
-    
+
     {
       double minDistance;
       Hit hit;
@@ -453,7 +431,7 @@ namespace PBD {
         std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
       }
     }
-    
+
     {
       pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
       double minDistance;
@@ -464,7 +442,7 @@ namespace PBD {
         hit.GetPosition(_colliders[0]);
       }
     }
-   
+
   }
   */
 
@@ -483,7 +461,8 @@ namespace PBD {
         _constraints.push_back(constraint);
       }
       */
-    } else if (geom->GetType() == Geometry::CURVE) {
+    }
+    else if (geom->GetType() == Geometry::CURVE) {
       Curve* curve = (Curve*)geom;
       curve->GetTotalNumSegments();
       for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
@@ -494,6 +473,7 @@ namespace PBD {
 
   void Solver::SatisfyConstraints()
   {
+    /*
     Time& time = GetApplication()->GetTime();
     for (int j = 0; j < 5; j++) {
       for (int i = 0; i < _constraints.size(); i++) {
@@ -502,26 +482,26 @@ namespace PBD {
       }
       // Constrain one particle of the cloth to origo
       _body.GetPosition(0) =
-        _body.GetRestPosition(0) + 
+        _body.GetRestPosition(0) +
           pxr::GfVec3f(0, sin(time.GetActiveTime()) * 5.f + 1.f, 0.f);
 
       for (int i = 0; i < _body.GetNumParticles(); ++i) {
         pxr::GfVec3f& p = _body.GetPosition(i);
 
 
-        //_position[i][0] = pxr::GfMin(pxr::GfMax(_position[i][0], -100.f), 100.f); 
+        //_position[i][0] = pxr::GfMin(pxr::GfMax(_position[i][0], -100.f), 100.f);
         p[1] = pxr::GfMax(p[1], 0.f);
         //_position[i][2] = pxr::GfMin(pxr::GfMax(_position[i][2], 100.f), 100.f);
       }
-
     }
+    */
   }
 
   void Solver::Step()
   {
-    UpdateColliders();
+    //UpdateColliders();
 
-   
+
     UpdateGeometries();
   }
 
@@ -542,6 +522,8 @@ namespace PBD {
     }
   }
   */
-}
+  }
+
+} // namespace PBD
 
 JVR_NAMESPACE_CLOSE_SCOPE

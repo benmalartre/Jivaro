@@ -5,7 +5,7 @@
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/vt/array.h>
 #include "../common.h"
-#include "../pbd/body.h"
+#include "../pbd/particle.h"
 #include "../pbd/constraint.h"
 #include "../pbd/force.h"
 
@@ -33,23 +33,13 @@ namespace PBD {
     void SetTimeStep(float step) { _timeStep = step; };
     const pxr::GfVec3f& GetGravity() { return _gravity; };
     void SetGravity(const pxr::GfVec3f& gravity) { _gravity = gravity; };
-    size_t GetNumParticles() { return _position.size(); };
+    size_t GetNumParticles() { return _particles.GetNumParticles(); };
     size_t GetNumConstraints() { return _constraints.size(); };
     Body* GetBody(size_t index);
     Body* GetBody(Geometry* geom);
     size_t GetBodyIndex(Geometry* geom);
     Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
-
-    // particles
-    pxr::VtArray<pxr::GfVec3f>& GetPosition() { return _position; };
-    pxr::VtArray<pxr::GfVec3f>& GetPredicted() { return _predicted; };
-    pxr::VtArray<pxr::GfVec3f>& GetVelocity() { return _velocity; };
-    pxr::GfVec3f* GetPositionPtr() { return &_position[0]; };
-    const pxr::GfVec3f* GetPositionCPtr() const { return &_position[0]; };
-    pxr::GfVec3f* GetPredictedPtr() { return &_predicted[0]; };
-    const pxr::GfVec3f* GetPredictedCPtr() const { return &_predicted[0]; };
-    pxr::GfVec3f* GetVelocityPtr() { return &_velocity[0]; };
-    const pxr::GfVec3f* GetVelocityPtr() const { return &_velocity[0]; };
+    Particles* GetParticles(){ return &_particles; };
    
     // solver
     void SatisfyConstraints();
@@ -65,17 +55,13 @@ namespace PBD {
     bool                                _paused;		
 
     // system
+    Particles                           _particles;
     std::vector<Constraint*>            _constraints;
     std::vector</*Static*/Constraint>   _staticConstraints;
     //std::vector<Collision*>              _collisions;
     std::vector<Body*>                  _bodies;
     std::vector<Force*>                 _force;
     pxr::GfVec3f                        _gravity;
-
-    // particles
-    pxr::VtArray<pxr::GfVec3f>          _position;
-    pxr::VtArray<pxr::GfVec3f>          _predicted;
-    pxr::VtArray<pxr::GfVec3f>          _velocity;
 
   };
 }
