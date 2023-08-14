@@ -1,6 +1,9 @@
 #ifndef JVR_GEOMETRY_MESH_H
 #define JVR_GEOMETRY_MESH_H
+
 #include <limits>
+#include <float.h>
+
 #include "pxr/base/vt/array.h"
 #include "pxr/base/tf/hashmap.h"
 #include <pxr/base/gf/matrix4f.h>
@@ -9,7 +12,6 @@
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/usd/usdGeom/mesh.h>
-#include <float.h>
 
 #include "../common.h"
 #include "../geometry/triangle.h"
@@ -110,7 +112,7 @@ public:
     const pxr::GfVec3f& direction, Location& point, float maxDistance);
 
   // test (to be removed)
-  void Random2DPattern();
+  void Random2DPattern(size_t numFaces);
   void PolygonSoup(size_t numPolygons, 
     const pxr::GfVec3f& minimum=pxr::GfVec3f(-1.f), 
     const pxr::GfVec3f& maximum=pxr::GfVec3f(1.f));

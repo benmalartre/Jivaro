@@ -757,9 +757,8 @@ Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
 }
 
 
-void Mesh::Random2DPattern()
+void Mesh::Random2DPattern(size_t numFaces)
 {
-  size_t numFaces = RANDOM_0_X(5) + 3;
   pxr::VtArray<pxr::GfVec3f> points(numFaces * 2 + 2);
   pxr::VtArray<int> faceCounts(numFaces * 2);
   pxr::VtArray<int> faceConnects(numFaces * 6);

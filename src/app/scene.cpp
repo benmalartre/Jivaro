@@ -15,6 +15,7 @@
 #include "../geometry/points.h"
 #include "../geometry/voxels.h"
 #include "../geometry/sampler.h"
+#include "../pbd/solver.h"
 #include "../app/scene.h"
 #include "../app/application.h"
 #include "../app/commands.h"
@@ -333,6 +334,21 @@ Scene::InitExec()
   pxr::UsdStageWeakPtr stage = app->GetStage();
   if (!stage) return;
 
+  std::cout << "youpiii c'est pardi !!!" << std::endl;
+  _solver = new Solver();
+  pxr::UsdPrimRange primRange = stage->TraverseAll();
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  for (pxr::UsdPrim prim : primRange) {
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      std::cout << "found a mesh to add to pbd scene : " << prim.GetPath() << std::endl;
+      pxr::UsdGeomMesh usdMesh(prim);
+      Mesh mesh(usdMesh);
+      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+      _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
+    }
+  }
+  _solver->AddForce(new GravitationalForce());
+  /*
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
 
@@ -354,12 +370,15 @@ Scene::InitExec()
       pxr::HdDirtyBits bits = _HairEmit(curve, usdMesh, xform, 0);
     }
   }
+  */
 }
 
 
 void 
 Scene::UpdateExec(double time)
 {
+  _solver->Step(0.01);
+  /*
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);
   
@@ -370,11 +389,12 @@ Scene::UpdateExec(double time)
     pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
     _HairEmit((Curve*)execPrim.second.geom, usdMesh, xform, time);
     execPrim.second.bits = pxr::HdChangeTracker::DirtyTopology;
-      /*pxr::HdChangeTracker::Clean |
+      pxr::HdChangeTracker::Clean |
       pxr::HdChangeTracker::DirtyPoints |
       pxr::HdChangeTracker::DirtyWidths |
-      pxr::HdChangeTracker::DirtyPrimvar;*/
+      pxr::HdChangeTracker::DirtyPrimvar;
   }
+  */
 }
 
 void 
@@ -396,6 +416,7 @@ Scene::TerminateExec()
       Remove(meshPath);
     }
   }
+  delete _solver;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

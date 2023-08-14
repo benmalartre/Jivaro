@@ -249,7 +249,7 @@ bool ToolUI::Draw()
   if (ImGui::Button("Create Random Mesh")) {
     
     Mesh mesh;
-    mesh.Random2DPattern();
+    mesh.Random2DPattern(32);
     UndoBlock block;
     //mesh.PolygonSoup(666, pxr::GfVec3f(-10.f), pxr::GfVec3f(10.f));
     pxr::UsdPrim defaultPrim = stage->GetDefaultPrim();

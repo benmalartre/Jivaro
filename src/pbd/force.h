@@ -10,34 +10,55 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
-namespace PBD {
-  class Solver;
-  class Force
-  {
-  public:
-    bool HasParticles() { return _particles.size() > 0; };
-    void SetParticles(const pxr::VtArray<int>& particles) { _particles = particles; };
 
-    void RemoveBody(Solver* solver, size_t index);
+class Particles;
+struct Body;
+class Force
+{
+public:
+  bool HasMask() const { return _mask.size() > 0; };
+  void SetMask(const pxr::VtArray<int>& mask) { _mask = mask; };
+  void RemoveMask() { _mask.clear(); }
+  size_t MaskSize() const { return _mask.size(); };
+  const int* GetMaskCPtr() const { return &_mask[0]; };
+  bool HasWeights() const { return _weights.size() > 0; };
+  void SetWeights(const pxr::VtArray<float>& weights) { _weights = weights; };
+  void RemoveWeights() { _weights.clear(); };
 
-    virtual void Apply(Solver* solver, const float dt) = 0;
+  void AddBody(Particles* particles, Body* body);
+  void RemoveBody(Particles* particles, Body* body);
 
-  protected:
-    pxr::VtArray<int> _particles;
-  };
+  virtual void Apply(pxr::GfVec3f* velocities, const float dt, const size_t index) const = 0;
 
-  class GravitationalForce : public Force
-  {
-  public:
-    GravitationalForce();
-    GravitationalForce(const pxr::GfVec3f& gravity);
+protected:
+  pxr::VtArray<int>   _mask;      // mask is in the list of active point indices
+  pxr::VtArray<float> _weights;   // if mask weights size must equals mask size 
+                                  // else weights size must equals num particles
+};
 
-    void Apply(Solver* solver, const float dt);
+class GravitationalForce : public Force
+{
+public:
+  GravitationalForce();
+  GravitationalForce(const pxr::GfVec3f& gravity);
 
-  private:
-    pxr::GfVec3f _gravity;
-  };
-} // namespace PBD
+  void Apply(pxr::GfVec3f* velocities, const float dt, const size_t index) const override;
+
+private:
+  pxr::GfVec3f _gravity;
+};
+
+class DampingForce : public Force
+{
+public:
+  DampingForce();
+  DampingForce(float damping);
+
+  void Apply(pxr::GfVec3f* velocities, const float dt, const size_t index) const override;
+
+private:
+  float _damp;
+};
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

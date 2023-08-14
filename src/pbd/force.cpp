@@ -1,70 +1,79 @@
-#include <pxr/base/work/loops.h>
-
 #include "../pbd/force.h"
 #include "../pbd/particle.h"
 #include "../pbd/solver.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-namespace PBD {
+void Force::AddBody(Particles* particles, Body* body)
+{
 
-  void Force::RemoveBody(Solver* solver, size_t index)
-  {
-    if (!HasParticles()) return;
-    Body* body = solver->GetBody(index);
-    if (!body) return;
+}
 
-    const size_t offset = body->offset;
-    const size_t remove = body->numPoints;
+void Force::RemoveBody(Particles* particles, Body* body)
+{
+  if (!HasMask()) return;
 
-    if (_particles.back() < body->offset) return;
+  const size_t offset = body->offset;
+  const size_t remove = body->numPoints;
 
-    size_t removeStart = Solver::INVALID_INDEX;
-    size_t removeEnd = Solver::INVALID_INDEX;
+  if (_mask.back() < body->offset) return;
 
-    for (size_t p = 0; p < _particles.size(); ++p) {
-      if (_particles[p] < offset) continue;
-      if (_particles[p] < offset + remove) {
-        if (removeStart == Solver::INVALID_INDEX) {
-          removeStart = p;
-          removeEnd = p;
-        } else {
-          removeEnd = p;
-        }
+  size_t removeStart = Solver::INVALID_INDEX;
+  size_t removeEnd = Solver::INVALID_INDEX;
+
+  for (size_t p = 0; p < _mask.size(); ++p) {
+    if (_mask[p] < offset) continue;
+    if (_mask[p] < offset + remove) {
+      if (removeStart == Solver::INVALID_INDEX) {
+        removeStart = p;
+        removeEnd = p;
       } else {
-        _particles[p] -= remove;
-      }
-
-      if (removeStart != Solver::INVALID_INDEX) {
-        _particles.erase(_particles.begin() + removeStart, _particles.begin() + removeEnd);
-      }
-    }
-  }
-
-  GravitationalForce::GravitationalForce() 
-    : _gravity(0.f, -9.18f, 0.f)
-  {
-  }
-
-  GravitationalForce::GravitationalForce(const pxr::GfVec3f& gravity) 
-    : _gravity(gravity)
-  {
-  }
-
-  void GravitationalForce::Apply(Solver* solver, const float dt)
-  {
-    pxr::GfVec3f* velocities = solver->GetParticles()->GetVelocityPtr();
-    if (HasParticles()) {
-      for (const int& particle : _particles) {
-        velocities[particle] += dt * _gravity;
+        removeEnd = p;
       }
     } else {
-      size_t numParticles = solver->GetNumParticles();
-      for (size_t particle = 0; particle < numParticles; ++particle) {
-        velocities[particle] += dt * _gravity;
-      }
+      _mask[p] -= remove;
+    }
+
+    if (removeStart != Solver::INVALID_INDEX) {
+      _mask.erase(_mask.begin() + removeStart, _mask.begin() + removeEnd);
     }
   }
-} // namespace PBD
+}
+
+GravitationalForce::GravitationalForce() 
+  : _gravity(0.f, -9.18f, 0.f)
+{
+}
+
+GravitationalForce::GravitationalForce(const pxr::GfVec3f& gravity) 
+  : _gravity(gravity)
+{
+}
+
+void GravitationalForce::Apply(pxr::GfVec3f* velocity, const float dt, size_t index) const
+{
+  if (HasWeights())
+    velocity[index] += dt * _gravity * _weights[index];
+  else
+    velocity[index] += dt * _gravity;
+}
+
+DampingForce::DampingForce()
+  : _damp(0.f)
+{
+}
+
+DampingForce::DampingForce(float damp)
+  : _damp(damp)
+{
+}
+
+void DampingForce::Apply(pxr::GfVec3f* velocity, const float dt, size_t index) const
+{
+  if (HasWeights())
+    velocity[index] -= velocity[index] * _damp * _weights[index] * dt;
+  else
+    velocity[index] -= velocity[index] * _damp * dt;
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -313,52 +313,6 @@ Application::InitExec()
   for(auto& engine: _engines) {
     engine->InitExec(scene);
   }
-  /*
-  if (!_execInitialized) {
-    _execStage = UsdStage::CreateInMemory("exec");
-    _execScene = new Scene(_execStage);
-    _solver = new PBDSolver();
-   
-    Time& time = GetApplication()->GetTime();
-    _startFrame = time.GetStartTime();
-    _lastFrame = time.GetActiveTime();
-    
-    _execStage->GetRootLayer()->TransferContent(_workStage->GetRootLayer());
-    _execStage->SetDefaultPrim(_execStage->GetPrimAtPath(
-      _workStage->GetDefaultPrim().GetPath()));
-
-    pxr::UsdGeomXformCache xformCache(_startFrame);
-
-    pxr::UsdPrimRange primRange = _execStage->TraverseAll();
-    for (pxr::UsdPrim prim : primRange) {
-      if (prim.IsA<pxr::UsdGeomMesh>()) {
-        Mesh* mesh = _execScene->AddMesh(prim.GetPath());
-        _solver->AddGeometry(mesh,
-          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
-
-        Voxels* voxels = _execScene->AddVoxels(prim.GetPath().AppendElementString("Voxels"), mesh, 0.2f);
-        _solver->AddGeometry(voxels,
-          pxr::GfMatrix4f(xformCache.GetLocalToWorldTransform(prim)));
-
-      }
-    }
-
-
-    std::vector<Geometry*> colliders;
-    for (auto& mesh : _execScene->GetMeshes()) {
-      colliders.push_back(&mesh.second);
-    }
-    for(auto& collider: colliders)
-      _solver->AddCollider(collider);
-
-
-    PBDParticle* system = _solver->GetSystem();
-    _CreateSystemPoints(_execStage, system->Get(), 0.05);
-
-
-    _execInitialized = true;
-  }
-  */
 }
 
 void
@@ -369,35 +323,6 @@ Application::UpdateExec(double time)
   for (auto& engine : _engines) {
     engine->UpdateExec(time);
   }
-  /*
-  for (auto& meshMapIt : _execScene->GetMeshes()) {
-    pxr::SdfPath path = meshMapIt.first;
-    Mesh* mesh = &meshMapIt.second;
-    pxr::VtArray<pxr::GfVec3f> positions;
-    pxr::UsdGeomMesh input(_workStage->GetPrimAtPath(path));
-
-    double t = pxr::GfSin(GetApplication()->GetTime().GetActiveTime() * 100);
-
-    input.GetPointsAttr().Get(&positions, time);
-    for (auto& position : positions) {
-      position += pxr::GfVec3f(
-        pxr::GfSin(position[0] + t),
-        pxr::GfCos(position[0] + t) * 5.0,
-        RANDOM_0_1 * 0.05
-      );
-    }
-    mesh->Update(positions);
-  }
-
-  if (time <= _startFrame) {
-    _solver->Reset();
-  }
-  if(time > _lastFrame) {
-    _solver->Step();
-    _execScene->Update(time);
-  }
-  _lastFrame = (float)time;
-  */
 }
 
 void

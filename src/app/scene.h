@@ -19,6 +19,7 @@ class Points;
 class Voxels;
 class Graph;
 struct Sample;
+class Solver;
 
 struct _Prim {
   Geometry*          geom;
@@ -106,11 +107,11 @@ public:
 
 
 private:
+  Solver*                                                     _solver;
   _PrimMap                                                    _prims;
   typedef pxr::VtArray<Sample>                                _Samples;
   typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Sources;
   pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash>  _sourcesMap;
-  pxr::TfHashMap<pxr::SdfPath, _Samples, pxr::SdfPath::Hash>  _samplesMap;
 };
 
 

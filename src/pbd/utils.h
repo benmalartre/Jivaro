@@ -1,16 +1,19 @@
 #ifndef JVR_PBD_UTILS_H
 #define JVR_PBD_UTILS_H
 
+#include <pxr/usd/usd/stage.h>
 #include "../common.h"
 
-#incluse <pxr/base/gf/vec3d.h>
-#incluse <pxr/base/gf/matrix3d.h>
-#incluse <pxr/base/gf/quaterniond.h>
+
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/matrix3d.h>
+#include <pxr/base/gf/quatd.h>
+
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void ExtractRotation(const pxr::GfMatrix3 &A, pxr::GfQuaternion &q,
+void ExtractRotation(const pxr::GfMatrix3d &A, pxr::GfQuaternion &q,
   const unsigned int maxIter)
 {
   for (unsigned int iter = 0; iter < maxIter; ++iter)
