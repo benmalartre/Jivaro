@@ -93,20 +93,19 @@ ViewTabUI::Draw()
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
       ImGui::OpenPopup(_ComputeName(_id, "Uis").c_str());
       _invade = true;
-
-      if (ImGui::BeginPopup(_ComputeName(_id, "Uis").c_str()))
-      {
-        if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
-        for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
-          ImGui::Selectable(UITypeName[n]);
-          if (ImGui::IsItemClicked()) {
-            _parent->CreateUI(UIType(n));
-            _current = _parent->GetUIs().size() - 1;
-            _invade = false;
-          }
+    }
+    if (ImGui::BeginPopup(_ComputeName(_id, "Uis").c_str()))
+    {
+      if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
+      for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
+        ImGui::Selectable(UITypeName[n]);
+        if (ImGui::IsItemClicked()) {
+          _parent->CreateUI(UIType(n));
+          _current = _parent->GetUIs().size() - 1;
+          _invade = false;
         }
-        ImGui::EndPopup();
       }
+      ImGui::EndPopup();
     }
     
     // Submit our regular tabs
@@ -143,34 +142,33 @@ ViewTabUI::Draw()
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
       ImGui::OpenPopup(_ComputeName(_id, "View").c_str());
       _invade = true;
-
-      if (ImGui::BeginPopup(_ComputeName(_id, "View").c_str()))
-      {
-        if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
-        ImGui::Selectable("Split Horizontaly");
-        if (ImGui::IsItemClicked()) {
-          GetApplication()->AddDeferredCommand(
-            std::bind(&View::Split, _parent, 0.5, true, false, 0));
-          _invade = false;
-        }
-
-        ImGui::Selectable("Split Verticaly");
-        if (ImGui::IsItemClicked()) {
-          GetApplication()->AddDeferredCommand(
-            std::bind(&View::Split, _parent, 0.5, false, false, 0));
-          _invade = false;
-        }
-
-        ImGui::Selectable("Delete View");
-        if (ImGui::IsItemClicked()) {
-          Window* window = _parent->GetWindow();
-          GetApplication()->AddDeferredCommand(
-            std::bind(&Window::RemoveView, window, _parent));
-          _invade = false;
-        }
-        
-        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopup(_ComputeName(_id, "View").c_str()))
+    {
+      if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
+      ImGui::Selectable("Split Horizontaly");
+      if (ImGui::IsItemClicked()) {
+        GetApplication()->AddDeferredCommand(
+          std::bind(&View::Split, _parent, 0.5, true, false, 0));
+        _invade = false;
       }
+
+      ImGui::Selectable("Split Verticaly");
+      if (ImGui::IsItemClicked()) {
+        GetApplication()->AddDeferredCommand(
+          std::bind(&View::Split, _parent, 0.5, false, false, 0));
+        _invade = false;
+      }
+
+      ImGui::Selectable("Delete View");
+      if (ImGui::IsItemClicked()) {
+        Window* window = _parent->GetWindow();
+        GetApplication()->AddDeferredCommand(
+          std::bind(&Window::RemoveView, window, _parent));
+        _invade = false;
+      }
+      
+      ImGui::EndPopup();
     }
   };
     

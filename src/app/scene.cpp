@@ -349,6 +349,14 @@ Scene::InitExec()
       _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
+    } else if (prim.IsA<pxr::UsdGeomPoints>()) {
+      std::cout << "found a points to add to pbd scene : " << prim.GetPath() << std::endl;
+      pxr::UsdGeomPoints usdPoints(prim);
+      Points points(usdPoints);
+      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+      _solver->AddBody((Geometry*)&points, pxr::GfMatrix4f(xform));
+
+      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     }
   }
   _solver->AddForce(new GravitationalForce());
