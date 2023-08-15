@@ -149,12 +149,19 @@ void TimelineUI::DrawButtons()
     });
   ImGui::SameLine();
 
-  UIUtils::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
+  if (!_playing) {
+    UIUtils::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
     [&](){
       _playing = 1 - _playing;
-      if (_playing) time.StartPlayBack();
-      else time.StopPlayBack();
+      time.StartPlayBack();
     });
+  } else {
+    UIUtils::AddCheckableIconButton(2, ICON_FA_STOP , ICON_SELECTED,
+    [&](){
+      _playing = 1 - _playing;
+      time.StopPlayBack();
+    });
+  }
   ImGui::SameLine();
 
   UIUtils::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
