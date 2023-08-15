@@ -75,7 +75,9 @@ public:
 
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
-  void SetPositions(pxr::GfVec3f* positions, size_t n);
+
+  void SetPositions(const pxr::GfVec3f* positions, size_t n);
+  void SetRadii(const float* radii, size_t n);
   void Normalize();
   void ComputeBoundingBox();
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };

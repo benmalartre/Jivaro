@@ -177,7 +177,6 @@ Scene::IsPoints(const pxr::SdfPath& id)
 pxr::TfToken
 Scene::GetRenderTag(pxr::SdfPath const& id)
 {
-
   if(_prims.find(id)!=_prims.end()) {
     return pxr::HdRenderTagTokens->geometry;
   }
@@ -188,6 +187,8 @@ pxr::VtValue
 Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
   if (key == pxr::HdTokens->points) {
+    std::cout << "get points for " << id << std::endl;
+    std::cout << "point : " << _prims[id].geom->GetPositions() << std::endl;
     return pxr::VtValue(_prims[id].geom->GetPositions());
   } else if (key == pxr::HdTokens->displayColor) {
     pxr::VtArray<pxr::GfVec3f> colors(_prims[id].geom->GetNumPoints());
@@ -338,6 +339,9 @@ Scene::InitExec()
   _solver = new Solver();
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
+  _Sources sources;
   for (pxr::UsdPrim prim : primRange) {
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       std::cout << "found a mesh to add to pbd scene : " << prim.GetPath() << std::endl;
@@ -345,9 +349,19 @@ Scene::InitExec()
       Mesh mesh(usdMesh);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
+
+      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     }
   }
   _solver->AddForce(new GravitationalForce());
+
+  pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Display")));
+  _sourcesMap[pointsPath] = sources;
+  Points* points = AddPoints(pointsPath);
+  Particles* particles = _solver->GetParticles();
+  const size_t numParticles = _solver->GetNumParticles();
+  points->SetPositions(particles->GetPositionCPtr(), numParticles);
+  points->SetRadii(particles->GetRadiusCPtr(), numParticles);
   /*
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
@@ -377,24 +391,33 @@ Scene::InitExec()
 void 
 Scene::UpdateExec(double time)
 {
-  _solver->Step(0.01);
-  /*
+  _solver->Step(0.1);
+  
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);
   
   for (auto& execPrim : _prims) {
+    /*
     pxr::UsdPrim usdPrim = stage->GetPrimAtPath(_sourcesMap[execPrim.first].first);
     pxr::UsdGeomMesh usdMesh(usdPrim);
 
     pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
     _HairEmit((Curve*)execPrim.second.geom, usdMesh, xform, time);
-    execPrim.second.bits = pxr::HdChangeTracker::DirtyTopology;
+    */
+    if (execPrim.first.GetNameToken() == pxr::TfToken("Display")) {
+      Points* points = (Points*)GetGeometry(execPrim.first);
+      points->SetPositions(
+        _solver->GetParticles()->GetPositionCPtr(), 
+        _solver->GetNumParticles()
+      );
+    }
+   std::cout << "dirty exec prim : " << execPrim.first << std::endl;
+    execPrim.second.bits = /*pxr::HdChangeTracker::DirtyTopology;*/
       pxr::HdChangeTracker::Clean |
       pxr::HdChangeTracker::DirtyPoints |
       pxr::HdChangeTracker::DirtyWidths |
       pxr::HdChangeTracker::DirtyPrimvar;
   }
-  */
 }
 
 void 

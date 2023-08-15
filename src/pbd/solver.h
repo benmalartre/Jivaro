@@ -72,6 +72,9 @@ public:
 private:
   void _ApplyForce(size_t begin, size_t end, const Force* force, const float dt);
   void _ApplyForceMasked(size_t begin, size_t end, const Force* force, const float dt);
+  void _IntegrateParticles(size_t begin, size_t end, const float dt);
+  void _UpdateParticles(size_t begin, size_t end, const float dt);
+
   size_t                              _solverIterations;
   size_t                              _collisionIterations;
   float                               _sleepThreshold;

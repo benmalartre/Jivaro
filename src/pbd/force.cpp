@@ -40,6 +40,13 @@ void Force::RemoveBody(Particles* particles, Body* body)
   }
 }
 
+bool Force::Affects(size_t index) const {
+  if (!HasMask())return true;
+  const size_t bitsIdx = index / sizeof(int);
+  if (bitsIdx >= _mask.size())return false;
+  return BITMASK_CHECK(_mask[bitsIdx], index % sizeof(int));
+}
+
 GravitationalForce::GravitationalForce() 
   : _gravity(0.f, -9.18f, 0.f)
 {

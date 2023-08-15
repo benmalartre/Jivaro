@@ -241,9 +241,50 @@ void Solver::_ApplyForce(size_t begin, size_t end, const Force* force, const flo
 void Solver::_ApplyForceMasked(size_t begin, size_t end, const Force* force, const float dt)
 {
   pxr::GfVec3f* velocity = _particles.GetVelocityPtr();
-  const int* mask = force->GetMaskCPtr();
   for (size_t index = begin; index < end; ++index) {
-    force->Apply(velocity, dt, mask[index]);
+    if(force->Affects(index))
+      force->Apply(velocity, dt, index);
+  }
+}
+
+void Solver::_IntegrateParticles(size_t begin, size_t end, const float dt)
+{
+  pxr::GfVec3f* predicted = _particles.GetPredictedPtr();
+  const pxr::GfVec3f* position = _particles.GetPositionCPtr();
+  const pxr::GfVec3f* velocity = _particles.GetVelocityCPtr();
+
+  // apply external forces
+  for (const Force* force : _force) {
+    if (force->HasMask())
+      _ApplyForceMasked(begin, end, force, dt);
+    else
+      _ApplyForce(begin, end, force, dt);
+  }
+
+  // compute predicted position
+  for (size_t index = begin; index < end; ++index) {
+    predicted[index] = position[index] + dt * velocity[index];
+  }
+}
+
+void Solver::_UpdateParticles(size_t begin, size_t end, const float dt)
+{
+  const pxr::GfVec3f* predicted = _particles.GetPredictedCPtr();
+  pxr::GfVec3f* position = _particles.GetPositionPtr();
+  pxr::GfVec3f* velocity = _particles.GetVelocityPtr();
+
+  float invDt = 1.f / dt;
+  float threshold2 = _sleepThreshold * dt;
+  threshold2 *= threshold2;
+
+  for(size_t index = begin; index < end; ++index) {
+    pxr::GfVec3f d = predicted[index] - position[index];
+    velocity[index] = d * invDt;
+    const float m = velocity[index].GetLengthSq();
+    if (m < threshold2)
+      velocity[index] = pxr::GfVec3f(0.f);
+
+    position[index] = predicted[index];
   }
 }
 
@@ -253,48 +294,41 @@ void Solver::Step(float dt)
   if (!numParticles)return;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
-  std::cout << "num available threads : " << numThreads << std::endl;
-  std::cout << "num forces : " << _force.size() << std::endl;
+  //std::cout << "num available threads : " << numThreads << std::endl;
+  //std::cout << "num forces : " << _force.size() << std::endl;
   
   if (numParticles >= 2 * numThreads) {
-    std::cout << "parallel step " << std::endl;
+    //std::cout << "parallel step " << std::endl;
     const size_t grain = numParticles / numThreads;
-    for (const Force* force : _force) {
-      if (force->HasMask()) {
-        pxr::WorkParallelForN(
-          numParticles,
-          std::bind(&Solver::_ApplyForce, this,
-            std::placeholders::_1, std::placeholders::_2, force, dt), grain);
-      } else {
+    //std::cout << "grain size : " << grain << std::endl;
 
-        pxr::WorkParallelForN(
-          force->MaskSize(),
-          std::bind(&Solver::_ApplyForceMasked, this,
-            std::placeholders::_1, std::placeholders::_2, force, dt), grain);
-      }
-    }
+    // integrate particles
+    pxr::WorkParallelForN(
+      numParticles,
+      std::bind(&Solver::_IntegrateParticles, this,
+        std::placeholders::_1, std::placeholders::_2, dt), grain);
+
+    // TODO solve constraints and collisions
+
+    // update particles
+    pxr::WorkParallelForN(
+      numParticles,
+      std::bind(&Solver::_UpdateParticles, this,
+        std::placeholders::_1, std::placeholders::_2, dt), grain);
+
   } else {
-    std::cout << "serial step " << std::endl;
-    for (const Force* force : _force) {
-      if (force->HasMask()) {
-        _ApplyForce(0, numParticles, force, dt);
-      }
-      else {
-        _ApplyForceMasked(0, force->MaskSize(), force, dt);
-      }
-    }
+    //std::cout << "serial step " << std::endl;
+
+    // integrate particles
+    _IntegrateParticles(0, numParticles, dt);
+
+    // TODO solve constraints and collisions
+
+    // update particles
+    _UpdateParticles(0, numParticles, dt);
   }
 
-  std::cout << "force applied !!" << std::endl;
-  // apply external forces
-  pxr::GfVec3f* velocity = _particles.GetVelocityPtr();
-  //for(auto& force: _force) force->Apply(velocity, 0.01, )
-
-  /*
-  for (size_t particleIdx = 0; particleIdx < numParticles; ++particleIdx) {
-    velocity[particleIdx] -= velocity[particleIdx] * _bodies[particleIdx]->damping * dt;
-  }
-  */
+  //std::cout << _particles.GetPredicted() << std::endl;
 
   UpdateGeometries();
 }

@@ -110,7 +110,8 @@ private:
   Solver*                                                     _solver;
   _PrimMap                                                    _prims;
   typedef pxr::VtArray<Sample>                                _Samples;
-  typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Sources;
+  typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Source;
+  typedef pxr::VtArray<_Source>                               _Sources;
   pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash>  _sourcesMap;
 };
 

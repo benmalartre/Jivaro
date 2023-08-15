@@ -25,6 +25,8 @@ public:
   void SetWeights(const pxr::VtArray<float>& weights) { _weights = weights; };
   void RemoveWeights() { _weights.clear(); };
 
+  bool Affects(size_t index) const;
+
   void AddBody(Particles* particles, Body* body);
   void RemoveBody(Particles* particles, Body* body);
 

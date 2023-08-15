@@ -154,12 +154,21 @@ Geometry::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 }
 
 void
-Geometry::SetPositions(pxr::GfVec3f* positions, size_t n)
+Geometry::SetPositions(const pxr::GfVec3f* positions, size_t n)
 {
   if (n != _positions.size()) {
     _positions.resize(n);
   }
   memmove(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
+}
+
+void
+Geometry::SetRadii(const float* radii, size_t n)
+{
+  if (n != _radius.size()) {
+    _radius.resize(n);
+  }
+  memmove(&_radius[0], radii, n * sizeof(float));
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

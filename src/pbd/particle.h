@@ -47,7 +47,7 @@ public:
   pxr::GfVec3f* GetPredictedPtr(size_t idx=0) { return &_predicted[idx]; };
   const pxr::GfVec3f* GetPredictedCPtr(size_t idx=0) const { return &_predicted[idx]; };
   pxr::GfVec3f* GetVelocityPtr(size_t idx=0) { return &_velocity[idx]; };
-  const pxr::GfVec3f* GetVelocityPtr(size_t idx=0) const { return &_velocity[idx]; };
+  const pxr::GfVec3f* GetVelocityCPtr(size_t idx=0) const { return &_velocity[idx]; };
   pxr::VtArray<pxr::GfVec3f>& GetVelocity() { return _velocity; };
 
 private:
