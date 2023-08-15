@@ -1,9 +1,13 @@
-#include <iostream>
+#include <sstream>
 #include <iomanip>
 
 #include <pxr/usd/sdf/fileFormat.h>
 
+#include "../acceleration/bvh.h"
 #include "../app/utils.h"
+#include "../pbd/solver.h"
+
+JVR_NAMESPACE_OPEN_SCOPE
 
 std::string FindNextAvailableTokenString(std::string prefix) {
     // Find number in the prefix
@@ -22,14 +26,16 @@ std::string FindNextAvailableTokenString(std::string prefix) {
         newName << prefix.substr(0, end + 1) << std::setfill('0') << std::setw(padding) << value;
         // Looking for existing token with the same name.
         // There might be a better solution here
-    } while (TfToken::Find(newName.str()) != TfToken());
+    } while (pxr::TfToken::Find(newName.str()) != pxr::TfToken());
     return newName.str();
 }
 
 const std::vector<std::string> GetUsdValidExtensions() {
-    const auto usdExtensions = SdfFileFormat::FindAllFileFormatExtensions();
+    const auto usdExtensions = pxr::SdfFileFormat::FindAllFileFormatExtensions();
     std::vector<std::string> validExtensions;
     auto addDot = [](const std::string &str) { return "." + str; };
     std::transform(usdExtensions.cbegin(), usdExtensions.cend(), std::back_inserter(validExtensions), addDot);
     return validExtensions;
 }
+
+JVR_NAMESPACE_CLOSE_SCOPE

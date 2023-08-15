@@ -67,7 +67,7 @@ public:
   void UpdateCollisions();
   void UpdateGeometries();
   void Reset();
-  void Step(float dt);
+  void Step(float dt, bool serial=false);
 
 private:
   void _ApplyForce(size_t begin, size_t end, const Force* force, const float dt);

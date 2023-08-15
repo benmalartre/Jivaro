@@ -187,8 +187,6 @@ pxr::VtValue
 Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
   if (key == pxr::HdTokens->points) {
-    std::cout << "get points for " << id << std::endl;
-    std::cout << "point : " << _prims[id].geom->GetPositions() << std::endl;
     return pxr::VtValue(_prims[id].geom->GetPositions());
   } else if (key == pxr::HdTokens->displayColor) {
     pxr::VtArray<pxr::GfVec3f> colors(_prims[id].geom->GetNumPoints());

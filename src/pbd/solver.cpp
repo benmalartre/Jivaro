@@ -14,15 +14,6 @@
 #include <iostream>
 
 #include <pxr/base/work/loops.h>
-#include <pxr/usd/usdGeom/mesh.h>
-#include <pxr/usd/usdGeom/cube.h>
-#include <pxr/usd/usdGeom/sphere.h>
-#include <pxr/usd/usdGeom/basisCurves.h>
-#include <pxr/usd/usdGeom/points.h>
-#include <pxr/usd/usdGeom/xform.h>
-#include <pxr/usd/usdGeom/pointInstancer.h>
-#include <pxr/usd/usdGeom/primvarsAPI.h>
-#include <pxr/usd/usdGeom/curves.h>
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -278,17 +269,20 @@ void Solver::_UpdateParticles(size_t begin, size_t end, const float dt)
   threshold2 *= threshold2;
 
   for(size_t index = begin; index < end; ++index) {
+    // update velocity
     pxr::GfVec3f d = predicted[index] - position[index];
     velocity[index] = d * invDt;
     const float m = velocity[index].GetLengthSq();
     if (m < threshold2)
       velocity[index] = pxr::GfVec3f(0.f);
 
+    // update position
     position[index] = predicted[index];
+    if (position[index][1] < 0.f)position[index][1] = 0.f;
   }
 }
 
-void Solver::Step(float dt)
+void Solver::Step(float dt, bool serial)
 {
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
@@ -297,7 +291,7 @@ void Solver::Step(float dt)
   //std::cout << "num available threads : " << numThreads << std::endl;
   //std::cout << "num forces : " << _force.size() << std::endl;
   
-  if (numParticles >= 2 * numThreads) {
+  if (!serial && numParticles >= 2 * numThreads) {
     //std::cout << "parallel step " << std::endl;
     const size_t grain = numParticles / numThreads;
     //std::cout << "grain size : " << grain << std::endl;
@@ -350,253 +344,6 @@ void Solver::UpdateGeometries()
   }
 }
 */
-}
-
-//------------------------------------------------------------------------------------
-// Utilities
-//------------------------------------------------------------------------------------
-void BenchmarkParallelEvaluation(Solver* solver)
-{
-  std::cout << "benchmark parallel evaluation" << std::endl;
-  for (size_t grain = 1; grain <= 2048; grain *= 2) {
-    uint64_t startT = CurrentTime();
-    //solver->SetGrain(grain);
-    solver->Reset();
-    for (size_t t = 0; t < 250; ++t) {
-      solver->Step(0.01);
-    }
-    std::cout << "[parallel] (grain: " << grain << ") took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
-
-  }
-  /*
-  uint64_t startT = CurrentTime();
-  Body* body = solver->GetBody();
-  size_t last = body->GetNumParticles();
-  body->Reset(0, last);
-  for (size_t t = 0; t < 250; ++t) {
-    body->AccumulateForces(0, last, solver->GetGravity());
-    body->Integrate(0, last, solver->GetTimeStep());
-
-    for (size_t i = 0; i < last; ++i) {
-      pxr::GfVec3f& p = body->GetPosition(i);
-
-      //_position[i][0] = pxr::GfMin(pxr::GfMax(_position[i][0], -100.f), 100.f);
-      p[1] = pxr::GfMax(p[1], 0.f);
-      //_position[i][2] = pxr::GfMin(pxr::GfMax(_position[i][2], 100.f), 100.f);
-    }
-
-    size_t numConstraints = solver->GetNumConstraints();
-    for (size_t i = 0; i < numConstraints; ++i) {
-      Constraint* c = solver->GetConstraint(i);
-      c->Solve(solver, 1);
-    }
-  }
-  std::cout << "[serial] (1 thread) took " << ((CurrentTime() - startT) * 1e-9) << " seconds" << std::endl;
-  */
-
-}
-
-static void SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
-{
-  std::vector<BVH::Cell*> cells;
-  std::cout << "setup instancer " << bvh->GetRoot() << std::endl;
-  bvh->GetRoot()->GetCells(cells);
-  size_t numPoints = cells.size();
-  pxr::VtArray<pxr::GfVec3f> points(numPoints);
-  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
-  pxr::VtArray<int64_t> indices(numPoints);
-  pxr::VtArray<int> protoIndices(numPoints);
-  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  pxr::VtArray<int> curveVertexCount(1);
-  curveVertexCount[0] = numPoints;
-  pxr::VtArray<float> widths(numPoints);
-  widths[0] = 1.f;
-
-  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
-    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
-    protoIndices[pointIdx] = 0;
-    indices[pointIdx] = pointIdx;
-    colors[pointIdx] =
-      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
-        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
-    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
-    widths[pointIdx] = RANDOM_0_1;
-  }
-
-  /*
-  pxr::UsdGeomPointInstancer instancer =
-    pxr::UsdGeomPointInstancer::Define(stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("bvh_instancer")));
-
-  pxr::UsdGeomCube proto =
-    pxr::UsdGeomCube::Define(stage,
-      instancer.GetPath().AppendChild(pxr::TfToken("proto_cube")));
-  proto.CreateSizeAttr().Set(1.0);
-
-  instancer.CreatePositionsAttr().Set(points);
-  instancer.CreateProtoIndicesAttr().Set(protoIndices);
-  instancer.CreateScalesAttr().Set(scales);
-  instancer.CreateIdsAttr().Set(indices);
-  instancer.CreateOrientationsAttr().Set(rotations);
-  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
-  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
-  pxr::UsdGeomPrimvar colorPrimvar =
-    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
-  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
-  colorPrimvar.SetElementSize(1);
-  colorPrimvar.Set(colors);
-  */
-
-  pxr::UsdGeomBasisCurves curve =
-    pxr::UsdGeomBasisCurves::Define(stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("bvh_curve")));
-
-  curve.CreatePointsAttr().Set(points);
-  curve.CreateWidthsAttr().Set(widths);
-  curve.SetWidthsInterpolation(pxr::UsdGeomTokens->vertex);
-  curve.CreateCurveVertexCountsAttr().Set(curveVertexCount);
-
-  pxr::UsdGeomPrimvar crvColorPrimvar = curve.CreateDisplayColorPrimvar();
-  crvColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
-  crvColorPrimvar.SetElementSize(1);
-  crvColorPrimvar.Set(colors);
-
-
-}
-
-static void SetupVoxels(pxr::UsdStageRefPtr& stage, Voxels* voxels, float radius)
-{
-  const pxr::VtArray<pxr::GfVec3f>& positions = voxels->GetPositions();
-
-  std::cout << "hash grid radius : " << (voxels->GetRadius() * 2.f) << std::endl;
-  HashGrid grid(voxels->GetRadius() * 2.f);
-  grid.Init({ (Geometry*)voxels });
-
-  size_t numPoints = positions.size();
-  pxr::UsdGeomPoints points =
-    pxr::UsdGeomPoints::Define(
-      stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("Voxels")));
-
-  points.CreatePointsAttr().Set(pxr::VtValue(positions));
-
-  pxr::VtArray<float> widths(numPoints);
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  for (size_t p = 0; p < numPoints; ++p) {
-    widths[p] = radius;
-    colors[p] = grid.GetColor(positions[p]);
-  }
-  points.CreateWidthsAttr().Set(pxr::VtValue(widths));
-  points.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
-  //points.CreateNormalsAttr().Set(pxr::VtValue({pxr::GfVec3f(0, 1, 0)}));
-  points.CreateDisplayColorAttr().Set(pxr::VtValue(colors));
-  points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
-
-}
-
-static void TestHashGrid(Voxels* voxels, float radius)
-{
-  size_t N = 1000000;
-  float step = 10.f / float(N);
-  std::vector<std::vector<int>> result1;
-  std::vector<std::vector<int>> result2;
-  const pxr::GfVec3f* points = voxels->GetPositionsCPtr();
-  {
-    std::cout << "HashGrid MULLER : " << radius << std::endl;
-    HashGrid grid(radius * 2.f, HashGrid::MULLER);
-    grid.Init({ (Geometry*)voxels });
-    result1.resize(N);
-    std::vector<int> closests(voxels->GetNumPoints());
-    size_t falsePositive = 0;
-    size_t numChecks = 0;
-    uint64_t T = CurrentTime();
-    for (size_t t = 0; t < N; ++t) {
-      //std::cout << "search closests for query point " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
-      const pxr::GfVec3f point(0.f, t * step, 0.f);
-      size_t n = grid.Closests(point, radius, closests);
-      if (!n) continue;
-      numChecks += n;
-      //std::cout << "found " << n << " closests points with search radius " << radius << std::endl;
-      for (size_t c = 0; c < n; ++c) {
-        if ((points[closests[c]] - point).GetLengthSq() < (radius * radius)) {
-          result1[t].push_back(closests[c]);
-        }
-        else {
-          //std::cout << closests[c] << " : " << points[closests[c]] << std::endl;
-          falsePositive++;
-        }
-      }
-    }
-    std::cout << "  closests took " << ((CurrentTime() - T) * 1e-9) << " seconds for " << N << " points " << std::endl;
-    std::cout << "  false positives : " << falsePositive << std::endl;
-    std::cout << "  num checks : " << numChecks << std::endl;
-  }
-
-  {
-    std::cout << "HashGrid PIXAR : " << radius << std::endl;
-    HashGrid grid(radius * 2.f, HashGrid::PIXAR);
-    grid.Init({ (Geometry*)voxels });
-    result2.resize(N);
-    std::vector<int> closests(voxels->GetNumPoints());
-    size_t falsePositive = 0;
-    size_t numChecks = 0;
-    uint64_t T = CurrentTime();
-    for (size_t t = 0; t < N; ++t) {
-      //std::cout << "search closests for query point " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
-      const pxr::GfVec3f point(0.f, t * step, 0.f);
-      size_t n = grid.Closests(point, radius, closests);
-      if (!n) continue;
-      numChecks += n;
-      //std::cout << "found " << n << " closests points with search radius " << radius << std::endl;
-      for (size_t c = 0; c < n; ++c) {
-        if ((points[closests[c]] - point).GetLengthSq() < (radius * radius)) {
-          result2[t].push_back(closests[c]);
-        }
-        else {
-          //std::cout << closests[c] << " : " << points[closests[c]] << std::endl;
-          falsePositive++;
-        }
-      }
-    }
-    std::cout << "  closests took " << ((CurrentTime() - T) * 1e-9) << " seconds for " << N << " points " << std::endl;
-    std::cout << "  false positives : " << falsePositive << std::endl;
-    std::cout << "  num checks : " << numChecks << std::endl;
-  }
-
-  /*
-  std::cout << "compare results : " << std::endl;
-  for (size_t t = 0; t < 100; ++t) {
-    size_t s1 = result1[t].size();
-    size_t s2 = result2[t].size();
-    std::cout << "frame " << t << ": " << s1 << " vs " << s2 << std::endl;
-    if (s1 == s2) {
-      std::cout << "content equal ? " << (result1[t] == result2[t]) << std::endl;
-    }
-    else {
-
-      std::cout << "content can not match because different size" << std::endl;
-      std::cout << "result 1 : ";
-      for (auto& e1 : result1[t]) std::cout << e1 << ",";
-      std::cout << std::endl;
-      std::cout << "points 1 : ";
-      for (auto& e1 : result1[t]) std::cout << points[e1] << ",";
-      std::cout << std::endl;
-
-      std::cout << "result 2 : ";
-      for (auto& e2 : result2[t]) std::cout << e2 << ",";
-      std::cout << std::endl;
-      std::cout << "points 2 : ";
-      for (auto& e2 : result2[t]) std::cout << points[e2] << ",";
-      std::cout << std::endl;
-
-      std::cout << "query : " << pxr::GfVec3f(0.f, t * 0.1f, 0.f) << std::endl;
-      std::cout << "----------------------------------------------------------------------" << std::endl;
-
-    }
-  }
-  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

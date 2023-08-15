@@ -24,6 +24,14 @@ struct Body
   Geometry*      geometry;
 };
 
+enum BodyType
+{
+  RIGID,
+  SOFT,
+  CLOTH,
+  HAIR
+};
+
 class Particles
 {
 public:
