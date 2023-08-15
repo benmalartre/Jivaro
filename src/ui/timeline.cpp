@@ -9,62 +9,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static void
-PlaybackCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  ui->_playing = 1 - ui->_playing;
-  if (ui->_playing) time.StartPlayBack();
-  else time.StopPlayBack();
-}
-
-static void
-PreviousFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  time.PreviousFrame();
-}
-
-static void
-NextFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  time.NextFrame();
-}
-
-static void
-FirstFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  ui->_currentTime = ui->_startTime;
-  time.SetActiveTime(ui->_currentTime);
-}
-
-static void
-LastFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  ui->_currentTime = ui->_endTime;
-  time.SetActiveTime(ui->_currentTime);
-}
-
-static void
-LoopCallback(TimelineUI* ui)
-{
-  ui->_loop = 1 - ui->_loop;
-  Application* app = GetApplication();
-  Time& time = app->GetTime();
-  time.SetLoop(ui->_loop);
-}
-
-static void
-SetFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  time.SetActiveTime(ui->_currentTime);
-}
-
-
 ImGuiWindowFlags TimelineUI::_flags = 
   ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoResize |
@@ -191,34 +135,47 @@ void TimelineUI::MouseMove(int x, int y)
 
 void TimelineUI::DrawButtons()
 {
+  Time& time = GetApplication()->GetTime();
   UIUtils::AddIconButton(0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
-    std::bind(FirstFrameCallback, this));
+    [&](){
+      _currentTime = _startTime;
+      time.SetActiveTime(_currentTime);
+    });
   ImGui::SameLine();
 
   UIUtils::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
-    std::bind(PreviousFrameCallback, this));
+    [&](){
+      time.PreviousFrame();
+    });
   ImGui::SameLine();
 
-  if (!_playing) {
-    UIUtils::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
-      std::bind(PlaybackCallback, this));
-  } else {
-    UIUtils::AddCheckableIconButton(2, ICON_FA_STOP , ICON_SELECTED,
-      std::bind(PlaybackCallback, this));
-  }
+  UIUtils::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
+    [&](){
+      _playing = 1 - _playing;
+      if (_playing) time.StartPlayBack();
+      else time.StopPlayBack();
+    });
   ImGui::SameLine();
 
   UIUtils::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
-    std::bind(NextFrameCallback, this));
+    [&](){
+      time.NextFrame();
+    });
   ImGui::SameLine();
 
   UIUtils::AddIconButton(4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
-    std::bind(LastFrameCallback, this));
+    [&](){
+      _currentTime = _endTime;
+      time.SetActiveTime(_currentTime);
+    });
   ImGui::SameLine();
 
   UIUtils::AddCheckableIconButton(5, ICON_FA_ROTATE,
     _loop ? ICON_SELECTED : ICON_DEFAULT,
-    std::bind(LoopCallback, this));
+    [&](){
+      _loop = 1 - _loop;
+      time.SetLoop(_loop);
+    });
   ImGui::SameLine();
 }
 
