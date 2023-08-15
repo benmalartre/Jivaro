@@ -91,23 +91,24 @@ ViewTabUI::Draw()
   {
     if (ImGui::TabItemButton(ICON_FA_CARET_DOWN, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
-      ImGui::OpenPopup(_ComputeName(_id, "Popup").c_str());
+      ImGui::OpenPopup(_ComputeName(_id, "Uis").c_str());
       _invade = true;
-    }
-    if (ImGui::BeginPopup(_ComputeName(_id, "Popup").c_str()))
-    {
-      if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
-      for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
-        ImGui::Selectable(UITypeName[n]);
-        if (ImGui::IsItemClicked()) {
-          _parent->CreateUI(UIType(n));
-          _current = _parent->GetUIs().size() - 1;
-          _invade = false;
-        }
-      }
-      ImGui::EndPopup();
-    }
 
+      if (ImGui::BeginPopup(_ComputeName(_id, "Uis").c_str()))
+      {
+        if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
+        for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
+          ImGui::Selectable(UITypeName[n]);
+          if (ImGui::IsItemClicked()) {
+            _parent->CreateUI(UIType(n));
+            _current = _parent->GetUIs().size() - 1;
+            _invade = false;
+          }
+        }
+        ImGui::EndPopup();
+      }
+    }
+    
     // Submit our regular tabs
     BaseUI* current = _parent->GetCurrentUI();
     std::vector<BaseUI*>& uis = _parent->GetUIs();
@@ -126,43 +127,56 @@ ViewTabUI::Draw()
         ImGui::EndTabItem();
       }
     }
-    /*
-    if(uis.size() && ImGui::TabItemButton(ICON_FA_ERASER, 
-      ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
-      _parent->RemoveUI(current);
-    }
-    */
 
-    ImGui::SameLine(_parent->GetWidth()-30);
-    /*
-    if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
-      GetApplication()->AddDeferredCommand(
-        std::bind(&View::Split, _parent, 0.5, true, false, 0)
-      );
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE)) {
-      GetApplication()->AddDeferredCommand(
-        std::bind(&View::Split, _parent, 0.5, false, false, 0)
-      );
-    }
-    
-    ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_GEAR, BUTTON_MINI_SIZE)) {
-      GetApplication()->AddDeferredCommand(
-        std::bind(&Window::RemoveView, window, _parent)
-      );
-    };
-    ImGui::SameLine();
-    */
-   if (ImGui::TabItemButton(ICON_FA_BARS, ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
+    ImGui::EndTabBar();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
+    ImGui::SetCursorPos(
+      ImVec2(
+        _parent->GetWidth() - 
+        (BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]),
+        0
+      ));
+
+    if (ImGui::Button(ICON_FA_BARS, BUTTON_MINI_SIZE)) {
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
-      ImGui::OpenPopup(_ComputeName(_id, "Popup").c_str());
+      ImGui::OpenPopup(_ComputeName(_id, "View").c_str());
       _invade = true;
-    }
 
-     ImGui::EndTabBar();
-  }
+      if (ImGui::BeginPopup(_ComputeName(_id, "View").c_str()))
+      {
+        if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
+        ImGui::Selectable("Split Horizontaly");
+        if (ImGui::IsItemClicked()) {
+          GetApplication()->AddDeferredCommand(
+            std::bind(&View::Split, _parent, 0.5, true, false, 0));
+          _invade = false;
+        }
+
+        ImGui::Selectable("Split Verticaly");
+        if (ImGui::IsItemClicked()) {
+          GetApplication()->AddDeferredCommand(
+            std::bind(&View::Split, _parent, 0.5, false, false, 0));
+          _invade = false;
+        }
+
+        ImGui::Selectable("Delete View");
+        if (ImGui::IsItemClicked()) {
+          Window* window = _parent->GetWindow();
+          GetApplication()->AddDeferredCommand(
+            std::bind(&Window::RemoveView, window, _parent));
+          _invade = false;
+        }
+        
+        ImGui::EndPopup();
+      }
+    }
+  };
+    
+
+  ImGui::PopStyleVar();
+  ImGui::PopStyleColor();
 
   ImGui::End();
   return _invade;
