@@ -89,7 +89,7 @@ ViewTabUI::Draw()
 
   if (ImGui::BeginTabBar(_ComputeName(_id, "TabBar").c_str(), tabBarFlags))
   {
-    if (ImGui::TabItemButton(ICON_FA_GEAR, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
+    if (ImGui::TabItemButton(ICON_FA_CARET_DOWN, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
       ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
       ImGui::OpenPopup(_ComputeName(_id, "Popup").c_str());
       _invade = true;
@@ -115,7 +115,6 @@ ViewTabUI::Draw()
     {
       const char* name = UITypeName[uis[n]->GetType()];
       if (ImGui::BeginTabItem(name, NULL,
-        ImGuiTabItemFlags_NoCloseButton | 
         ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | 
         ImGuiTabItemFlags_NoPushId))
       {
@@ -127,25 +126,15 @@ ViewTabUI::Draw()
         ImGui::EndTabItem();
       }
     }
+    /*
     if(uis.size() && ImGui::TabItemButton(ICON_FA_ERASER, 
       ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
       _parent->RemoveUI(current);
     }
+    */
 
-
-    ImGui::EndTabBar();
-
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-    ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
-    ImGui::SetCursorPos(
-      ImVec2(
-        _parent->GetWidth() - 
-        (3 * BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]),
-        0
-      ));
-
-    Window* window = _parent->GetWindow();
-    
+    ImGui::SameLine(_parent->GetWidth()-30);
+    /*
     if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
       GetApplication()->AddDeferredCommand(
         std::bind(&View::Split, _parent, 0.5, true, false, 0)
@@ -157,15 +146,22 @@ ViewTabUI::Draw()
         std::bind(&View::Split, _parent, 0.5, false, false, 0)
       );
     }
+    
     ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_TRASH, BUTTON_MINI_SIZE)) {
+    if (ImGui::Button(ICON_FA_GEAR, BUTTON_MINI_SIZE)) {
       GetApplication()->AddDeferredCommand(
         std::bind(&Window::RemoveView, window, _parent)
       );
     };
     ImGui::SameLine();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor();
+    */
+   if (ImGui::TabItemButton(ICON_FA_BARS, ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
+      ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
+      ImGui::OpenPopup(_ComputeName(_id, "Popup").c_str());
+      _invade = true;
+    }
+
+     ImGui::EndTabBar();
   }
 
   ImGui::End();

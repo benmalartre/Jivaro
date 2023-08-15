@@ -358,8 +358,8 @@ Scene::InitExec()
   Points* points = AddPoints(pointsPath);
   Particles* particles = _solver->GetParticles();
   const size_t numParticles = _solver->GetNumParticles();
-  points->SetPositions(particles->GetPositionCPtr(), numParticles);
-  points->SetRadii(particles->GetRadiusCPtr(), numParticles);
+  points->SetPositions(&particles->position[0], numParticles);
+  points->SetRadii(&particles->radius[0], numParticles);
   /*
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
@@ -389,7 +389,7 @@ Scene::InitExec()
 void 
 Scene::UpdateExec(double time)
 {
-  _solver->Step(0.1);
+  _solver->Step(0.01);
   
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);
@@ -405,7 +405,7 @@ Scene::UpdateExec(double time)
     if (execPrim.first.GetNameToken() == pxr::TfToken("Display")) {
       Points* points = (Points*)GetGeometry(execPrim.first);
       points->SetPositions(
-        _solver->GetParticles()->GetPositionCPtr(), 
+        &_solver->GetParticles()->position[0], 
         _solver->GetNumParticles()
       );
     }

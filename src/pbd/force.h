@@ -10,9 +10,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
-
-class Particles;
+struct Particles;
 struct Body;
+
 class Force
 {
 public:

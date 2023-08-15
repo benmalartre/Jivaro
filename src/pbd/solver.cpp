@@ -223,7 +223,7 @@ void Solver::AddConstraints(Geometry* geom, size_t offset)
 
 void Solver::_ApplyForce(size_t begin, size_t end, const Force* force, const float dt)
 {
-  pxr::GfVec3f* velocity = _particles.GetVelocityPtr();
+  pxr::GfVec3f* velocity = &_particles.velocity[0];
   for (size_t index = begin; index < end; ++index) {
     force->Apply(velocity, dt, index);
   }
@@ -231,7 +231,7 @@ void Solver::_ApplyForce(size_t begin, size_t end, const Force* force, const flo
 
 void Solver::_ApplyForceMasked(size_t begin, size_t end, const Force* force, const float dt)
 {
-  pxr::GfVec3f* velocity = _particles.GetVelocityPtr();
+  pxr::GfVec3f* velocity = &_particles.velocity[0];
   for (size_t index = begin; index < end; ++index) {
     if(force->Affects(index))
       force->Apply(velocity, dt, index);
@@ -240,9 +240,9 @@ void Solver::_ApplyForceMasked(size_t begin, size_t end, const Force* force, con
 
 void Solver::_IntegrateParticles(size_t begin, size_t end, const float dt)
 {
-  pxr::GfVec3f* predicted = _particles.GetPredictedPtr();
-  const pxr::GfVec3f* position = _particles.GetPositionCPtr();
-  const pxr::GfVec3f* velocity = _particles.GetVelocityCPtr();
+  pxr::GfVec3f* predicted = &_particles.predicted[0];
+  const pxr::GfVec3f* position = &_particles.position[0];
+  const pxr::GfVec3f* velocity = &_particles.velocity[0];
 
   // apply external forces
   for (const Force* force : _force) {
@@ -260,9 +260,9 @@ void Solver::_IntegrateParticles(size_t begin, size_t end, const float dt)
 
 void Solver::_UpdateParticles(size_t begin, size_t end, const float dt)
 {
-  const pxr::GfVec3f* predicted = _particles.GetPredictedCPtr();
-  pxr::GfVec3f* position = _particles.GetPositionPtr();
-  pxr::GfVec3f* velocity = _particles.GetVelocityPtr();
+  const pxr::GfVec3f* predicted = &_particles.predicted[0];
+  pxr::GfVec3f* position = &_particles.position[0];
+  pxr::GfVec3f* velocity = &_particles.velocity[0];
 
   float invDt = 1.f / dt;
   float threshold2 = _sleepThreshold * dt;

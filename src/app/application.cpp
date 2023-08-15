@@ -28,7 +28,6 @@
 #include "../ui/demo.h"
 #include "../ui/toolbar.h"
 #include "../ui/explorer.h"
-#include "../ui/layers.h"
 #include "../ui/layerEditor.h"
 #include "../ui/propertyEditor.h"
 #include "../ui/curveEditor.h"

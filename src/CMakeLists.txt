@@ -37,7 +37,6 @@ add_executable(${TARGET}
   ui/viewport.cpp
   ui/timeline.cpp
   ui/toolbar.cpp
-  ui/layers.cpp
   ui/layerEditor.cpp
   ui/explorer.cpp
   ui/propertyEditor.cpp

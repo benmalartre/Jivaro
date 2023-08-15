@@ -16,7 +16,7 @@ bool DistanceConstraint::Init(Particles* particles,
   _particles[0] = p1;
   _particles[1] = p2;
 
-  const pxr::GfVec3f* positions = particles->GetPositionCPtr();
+  const pxr::GfVec3f* positions = &particles->position[0];
   _restLength = (positions[p2] - positions[p1]).GetLength();
 
   return true;
@@ -27,8 +27,8 @@ bool DistanceConstraint::Solve(Particles* particles, const size_t iter)
   const size_t p1 = _particles[0];
   const size_t p2 = _particles[1];
 
-  pxr::GfVec3f* positions = particles->GetPositionPtr();
-  const float* masses = particles->GetMassCPtr();
+  pxr::GfVec3f* positions = &particles->position[0];
+  const float* masses = &particles->mass[0];
 
   pxr::GfVec3f& x1 = positions[p1];
   pxr::GfVec3f& x2 = positions[p2];
@@ -55,7 +55,7 @@ bool DistanceConstraint::Solve(Particles* particles, const size_t iter)
 
 void DistanceConstraint::Apply(Particles* particles, const size_t index)
 {
-  pxr::GfVec3f* positions = particles->GetPositionPtr();
+  pxr::GfVec3f* positions = &particles->position[0];
   size_t p = _GetParticleIndex(index);
   if(p != Constraint::INVALID_INDEX)positions[index] += _corrections[p];
 }
