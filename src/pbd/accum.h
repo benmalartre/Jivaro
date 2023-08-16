@@ -6,6 +6,7 @@
 #include <pxr/base/vt/array.h>
 
 #include "../common.h"
+#include "../pbd/mask.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -18,7 +19,7 @@ class Force;
 // indices usage are encoded in _indices bits
 // _values only store used indices data
 template <typename T>
-class Accum
+class Accum : Mask
 {
 public:
   Accum(size_t numPoints, const std::vector<Constraint*>& constraints, size_t start, size_t end);

@@ -13,8 +13,10 @@ bool DistanceConstraint::Init(Particles* particles,
 {
   _stretchStiffness = stretchStiffness;
   _compressionStiffness = compressionStiffness;
-  _particles[0] = p1;
-  _particles[1] = p2;
+  _p[0] = p1;
+  _p[1] = p2;
+
+  memset(&_c[0], 0.f, 2 * sizeof(pxr::GfVec3f));
 
   const pxr::GfVec3f* positions = &particles->position[0];
   _restLength = (positions[p2] - positions[p1]).GetLength();
@@ -24,40 +26,50 @@ bool DistanceConstraint::Init(Particles* particles,
 
 bool DistanceConstraint::Solve(Particles* particles, const size_t iter)
 { 
-  const size_t p1 = _particles[0];
-  const size_t p2 = _particles[1];
+  memset(&_c[0], 0.f, 2 * sizeof(pxr::GfVec3f));
 
-  pxr::GfVec3f* positions = &particles->position[0];
-  const float* masses = &particles->mass[0];
+  const pxr::GfVec3f& x1 = particles->predicted[_p[0]];
+  const pxr::GfVec3f& x2 = particles->predicted[_p[1]];
 
-  pxr::GfVec3f& x1 = positions[p1];
-  pxr::GfVec3f& x2 = positions[p2];
+  const float im1 = 
+    pxr::GfIsClose(particles->mass[_p[0]], 0, 0.0000001) ? 
+    0.f : 
+    1.f / particles->mass[_p[0]];
 
-  const float invMass1 = pxr::GfIsClose(masses[p1], 0, 0.0000001) ? 0.f : 1.f / masses[p1];
-  const float invMass2 = pxr::GfIsClose(masses[p2], 0, 0.0000001) ? 0.f : 1.f / masses[p2];
+  const float im2 =
+    pxr::GfIsClose(particles->mass[_p[1]], 0, 0.0000001) ? 
+    0.f : 
+    1.f / particles->mass[_p[1]];
 
-  float weightSum = invMass1 + invMass2;
-  if (pxr::GfIsClose(weightSum, 0.0, 0.0000001))
+  float sum = im1 + im2;
+  if (pxr::GfIsClose(sum, 0.f, 0.0000001f))
     return false;
 
   pxr::GfVec3f n = x2 - x1;
   float d = n.GetLength();
-  n.Normalize();
+  if (pxr::GfIsClose(d, _restLength, 0.0000001f))return false;
+  if (!n.Normalize()) {
+    std::cout << "fail normlaize :(" << x1 << ", " << x2 << std::endl;
+  }
 
-  pxr::GfVec3f corr;
-  corr = _stretchStiffness * n * ((double)d - _restLength) / weightSum;
+  pxr::GfVec3f c;
+  if(d < _restLength)
+    c = _compressionStiffness * n * (d - _restLength) * sum;
+  else 
+    c = _stretchStiffness * n * (d - _restLength) * sum;
 
-  _corrections[0] = invMass1 * corr;
-  _corrections[1] = -invMass2 * corr;
+  _c[0] = im1 * c;
+  _c[1] = -im2 * c;
+
 
   return true;
 }
 
-void DistanceConstraint::Apply(Particles* particles, const size_t index)
+// this one has to happen serialy
+void DistanceConstraint::Apply(Particles* particles, const float dt)
 {
-  pxr::GfVec3f* positions = &particles->position[0];
-  size_t p = _GetParticleIndex(index);
-  if(p != Constraint::INVALID_INDEX)positions[index] += _corrections[p];
+  particles->predicted[_p[0]] += _c[0] * dt;
+  particles->predicted[_p[1]] += _c[1] * dt;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

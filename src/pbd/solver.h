@@ -7,11 +7,13 @@
 
 #include "../common.h"
 #include "../pbd/particle.h"
-#include "../pbd/constraint.h"
-#include "../pbd/force.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+struct Particles;
+class Constraint;
+class Force;
+class Collision;
 class Solver
 {
 public:
@@ -38,7 +40,7 @@ public:
   size_t GetNumParticles() { return _particles.GetNumParticles(); };
   size_t GetNumConstraints() { return _constraints.size(); };
   size_t GetNumForces() { return _force.size(); };
-  //size_t GetNumCollisions() { return _collisions.size(); };
+  size_t GetNumCollisions() { return _collisions.size(); };
 
   // bodies
   void AddBody(Geometry* geom, const pxr::GfMatrix4f& m);
@@ -56,10 +58,9 @@ public:
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
 
   // collisions
-  /*
   void AddCollision(Collision* collision) { _collisions.push_back(collision); };
   Collision* GetCollision(size_t idx = 0) { return _collisions[idx]; };
-  */
+
   // particles
   Particles* GetParticles() { return &_particles; };
   
@@ -70,20 +71,20 @@ public:
   void Step(float dt, bool serial=false);
 
 private:
-  void _ApplyForce(size_t begin, size_t end, const Force* force, const float dt);
-  void _ApplyForceMasked(size_t begin, size_t end, const Force* force, const float dt);
   void _IntegrateParticles(size_t begin, size_t end, const float dt);
   void _UpdateParticles(size_t begin, size_t end, const float dt);
 
   size_t                              _solverIterations;
   size_t                              _collisionIterations;
   float                               _sleepThreshold;
+  float                               _timeStep;
+  float                               _startFrame;
   bool                                _paused;		
 
   // system
   Particles                           _particles;
   std::vector<Constraint*>            _constraints;
-  //std::vector<Collision*>           _collisions;
+  std::vector<Collision*>             _collisions;
   std::vector<Body*>                  _bodies;
   std::vector<Force*>                 _force;
   pxr::GfVec3f                        _gravity;

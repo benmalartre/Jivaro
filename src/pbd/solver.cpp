@@ -6,6 +6,8 @@
 #include "../geometry/curve.h"
 #include "../app/application.h"
 #include "../pbd/constraint.h"
+#include "../pbd/force.h"
+#include "../pbd/collision.h"
 #include "../pbd/solver.h"
 #include "../utils/timer.h"
 #include "../app/time.h"
@@ -24,6 +26,7 @@ Solver::Solver()
   , _collisionIterations(2)
   , _paused(true)
 {
+  _timeStep = 1.f / GetApplication()->GetTime().GetFPS();
 }
 
 Solver::~Solver()
@@ -203,15 +206,14 @@ void Solver::AddConstraints(Geometry* geom, size_t offset)
     Mesh* mesh = (Mesh*)geom;
     const pxr::VtArray<HalfEdge>& edges = mesh->GetEdges();
     std::cout << "[solver] num unique edges : " << edges.size() << std::endl;
-    /*
-    for (HalfEdge* edge : edges) {
+   
+    for (const HalfEdge& edge : edges) {
       DistanceConstraint* constraint = new DistanceConstraint();
-      constraint->Init(this, edge->vertex + offset, edge->next->vertex + offset, 0.5f);
+      constraint->Init(&_particles, edge.vertex + offset, edges[edge.next].vertex + offset, 0.5f, 0.5f);
       _constraints.push_back(constraint);
     }
-    */
-  }
-  else if (geom->GetType() == Geometry::CURVE) {
+    std::cout << "num constraints : " << _constraints.size() << std::endl;
+  } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;
     curve->GetTotalNumSegments();
     for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
@@ -220,39 +222,18 @@ void Solver::AddConstraints(Geometry* geom, size_t offset)
   }
 }
 
-
-void Solver::_ApplyForce(size_t begin, size_t end, const Force* force, const float dt)
-{
-  pxr::GfVec3f* velocity = &_particles.velocity[0];
-  for (size_t index = begin; index < end; ++index) {
-    force->Apply(velocity, dt, index);
-  }
-}
-
-void Solver::_ApplyForceMasked(size_t begin, size_t end, const Force* force, const float dt)
-{
-  pxr::GfVec3f* velocity = &_particles.velocity[0];
-  for (size_t index = begin; index < end; ++index) {
-    if(force->Affects(index))
-      force->Apply(velocity, dt, index);
-  }
-}
-
 void Solver::_IntegrateParticles(size_t begin, size_t end, const float dt)
 {
-  pxr::GfVec3f* predicted = &_particles.predicted[0];
-  const pxr::GfVec3f* position = &_particles.position[0];
-  const pxr::GfVec3f* velocity = &_particles.velocity[0];
+  pxr::GfVec3f* velocity = &_particles.velocity[0];
 
   // apply external forces
   for (const Force* force : _force) {
-    if (force->HasMask())
-      _ApplyForceMasked(begin, end, force, dt);
-    else
-      _ApplyForce(begin, end, force, dt);
+    force->Apply(begin, end, velocity, dt);
   }
 
   // compute predicted position
+  pxr::GfVec3f* predicted = &_particles.predicted[0];
+  const pxr::GfVec3f* position = &_particles.position[0];
   for (size_t index = begin; index < end; ++index) {
     predicted[index] = position[index] + dt * velocity[index];
   }
@@ -278,7 +259,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end, const float dt)
 
     // update position
     position[index] = predicted[index];
-    if (position[index][1] < 0.f)position[index][1] = 0.f;
+    if (position[index][1] < -5.f)position[index][1] = -5.f;
   }
 }
 
@@ -288,9 +269,12 @@ void Solver::Step(float dt, bool serial)
   if (!numParticles)return;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
+  size_t numConstraints = _constraints.size();
+
   //std::cout << "num available threads : " << numThreads << std::endl;
   //std::cout << "num forces : " << _force.size() << std::endl;
   
+ 
   if (!serial && numParticles >= 2 * numThreads) {
     //std::cout << "parallel step " << std::endl;
     const size_t grain = numParticles / numThreads;
@@ -303,6 +287,12 @@ void Solver::Step(float dt, bool serial)
         std::placeholders::_1, std::placeholders::_2, dt), grain);
 
     // TODO solve constraints and collisions
+    // solve constraints
+    pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
+      [&](Constraint* constraint) {constraint->Solve(&_particles, 1); });
+
+    // apply constraint serially
+    for (auto& constraint : _constraints)constraint->Apply(&_particles, dt);
 
     // update particles
     pxr::WorkParallelForN(
@@ -310,13 +300,17 @@ void Solver::Step(float dt, bool serial)
       std::bind(&Solver::_UpdateParticles, this,
         std::placeholders::_1, std::placeholders::_2, dt), grain);
 
-  } else {
+  }
+  else {
     //std::cout << "serial step " << std::endl;
 
     // integrate particles
     _IntegrateParticles(0, numParticles, dt);
 
     // TODO solve constraints and collisions
+    for (auto& constraint : _constraints) constraint->Solve(&_particles, 1);
+    // apply constraint serially
+    for (auto& constraint : _constraints)constraint->Apply(&_particles, dt);
 
     // update particles
     _UpdateParticles(0, numParticles, dt);
@@ -324,7 +318,7 @@ void Solver::Step(float dt, bool serial)
 
   //std::cout << _particles.GetPredicted() << std::endl;
 
-  UpdateGeometries();
+  //UpdateGeometries();
 }
 
 void Solver::UpdateGeometries()

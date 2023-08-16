@@ -18,8 +18,8 @@ Accum<T>::Accum(size_t numPoints, const std::vector<Constraint*>& constraints, s
     const int* particles = constraint->GetParticlesCPtr();
     for(size_t p = 0; p < numParticles; ++p) {
       BITMASK_SET(
-        indices[particles[p] % sizeof(int)], 
-        particles[p] / sizeof(int));
+        _indices[particles[p] / sizeof(int)], 
+        particles[p] % sizeof(int));
     }
   }
 }

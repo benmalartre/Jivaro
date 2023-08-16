@@ -40,9 +40,10 @@ public:
   ~Scene();
 
   void Init(const pxr::UsdStageRefPtr& stage);
+  void Update(const pxr::UsdStageRefPtr& stage, double time);
+
   void Save(const std::string& filename);
   void Export(const std::string& filename);
-  void Update(double time);
 
   Mesh* AddMesh(const pxr::SdfPath& path, 
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());

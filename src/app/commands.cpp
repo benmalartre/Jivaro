@@ -87,7 +87,7 @@ SaveLayerCommand::SaveLayerCommand(pxr::SdfLayerHandle layer)
 SaveLayerAsCommand::SaveLayerAsCommand(pxr::SdfLayerHandle layer, const std::string& path)
   : Command(false)
 {
-  auto newLayer = SdfLayer::CreateNew(path);
+  auto newLayer = pxr::SdfLayer::CreateNew(path);
   if (newLayer && layer) {
     newLayer->TransferContent(layer);
     newLayer->Save();

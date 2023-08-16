@@ -15,6 +15,7 @@
 #include "../geometry/points.h"
 #include "../geometry/voxels.h"
 #include "../geometry/sampler.h"
+#include "../pbd/force.h"
 #include "../pbd/solver.h"
 #include "../app/scene.h"
 #include "../app/application.h"
@@ -37,6 +38,11 @@ Scene::Init(const pxr::UsdStageRefPtr& stage)
 }
 
 void
+Scene::Update(const pxr::UsdStageRefPtr& stage, double time)
+{
+}
+
+void
 Scene::Save(const std::string& filename)
 {
 
@@ -48,10 +54,7 @@ Scene::Export(const std::string& filename)
   
 }
 
-void
-Scene::Update(double time)
-{
-}
+
 
 Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
@@ -346,7 +349,10 @@ Scene::InitExec()
       pxr::UsdGeomMesh usdMesh(prim);
       Mesh mesh(usdMesh);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+      std::cout << "xform : " << xform << std::endl;
+      size_t offset = _solver->GetNumParticles();
       _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
+      _solver->AddConstraints((Geometry*)&mesh, offset);
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
@@ -397,7 +403,13 @@ Scene::InitExec()
 void 
 Scene::UpdateExec(double time)
 {
-  _solver->Step(0.01);
+  const size_t subSteps = 5;
+  const float dt = (1.f / GetApplication()->GetTime().GetFPS()) / subSteps;
+  if (pxr::GfIsClose(time, GetApplication()->GetTime().GetStartTime(), 0.01))
+    _solver->Reset();
+  else
+    for (size_t i = 0; i < subSteps; ++i)
+      _solver->Step(dt, true);
   
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);
@@ -417,7 +429,7 @@ Scene::UpdateExec(double time)
         _solver->GetNumParticles()
       );
     }
-   std::cout << "dirty exec prim : " << execPrim.first << std::endl;
+
     execPrim.second.bits = /*pxr::HdChangeTracker::DirtyTopology;*/
       pxr::HdChangeTracker::Clean |
       pxr::HdChangeTracker::DirtyPoints |

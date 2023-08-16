@@ -85,9 +85,9 @@ _HandleDragAndDrop(pxr::SdfLayerHandle layer, const Selection &selection)
   if (ImGui::BeginDragDropTarget()) {
     ImGuiDragDropFlags targetFlags = 0;
     if (const ImGuiPayload *pl = ImGui::AcceptDragDropPayload("DND", targetFlags)) {
-      pxr::SdfPathVector source(*(SdfPathVector *)pl->Data);
+      pxr::SdfPathVector source(*(pxr::SdfPathVector *)pl->Data);
       //ExecuteAfterDraw<PrimReparent>(layer, source, SdfPath::AbsoluteRootPath());
-      std::cout << "reparent under " << SdfPath::AbsoluteRootPath() << std::endl;
+      std::cout << "reparent under " << pxr::SdfPath::AbsoluteRootPath() << std::endl;
     }
     ImGui::EndDragDropTarget();
   }
@@ -108,7 +108,7 @@ void
 _AddMiniToolbar(pxr::SdfLayerRefPtr layer, const pxr::SdfPrimSpecHandle &prim) 
 {
   if (ImGui::Button(ICON_FA_PLUS)) {
-      if (prim == SdfPrimSpecHandle()) {
+      if (prim == pxr::SdfPrimSpecHandle()) {
         //ExecuteAfterDraw<PrimNew>(layer, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
       } else {
         //ExecuteAfterDraw<PrimNew>(prim, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
@@ -225,7 +225,7 @@ _AddLayerNavigation(pxr::SdfLayerRefPtr layer) {
 }
 
 static void 
-_AddTopNodeLayerRow(const SdfLayerRefPtr &layer, const Selection &selection, float &selectedPosY) 
+_AddTopNodeLayerRow(const pxr::SdfLayerRefPtr &layer, const Selection &selection, float &selectedPosY) 
 {
   ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap;
   int nodeId = 0;
@@ -234,7 +234,7 @@ _AddTopNodeLayerRow(const SdfLayerRefPtr &layer, const Selection &selection, flo
   }
   ImGui::TableNextRow();
   ImGui::TableSetColumnIndex(0);
-  auto rootPrim = layer->GetPrimAtPath(SdfPath::AbsoluteRootPath());
+  auto rootPrim = layer->GetPrimAtPath(pxr::SdfPath::AbsoluteRootPath());
   _AddBackgroundSelection(rootPrim, selection, selection.IsSelected(rootPrim.GetSpec()));
   _HandleDragAndDrop(layer, selection);
   ImGui::SetItemAllowOverlap();
@@ -314,30 +314,30 @@ void TraverseOpenedPaths(const pxr::SdfLayerRefPtr &layer, std::vector<pxr::SdfP
   ImGuiWindow *window = g.CurrentWindow;
   ImGuiStorage *storage = window->DC.StateStorage;
   while (!st.empty()) {
-    const SdfPath path = st.top();
+    const pxr::SdfPath path = st.top();
     st.pop();
     const ImGuiID pathHash = IdOf(path.GetHash());
     const bool isOpen = storage->GetInt(pathHash, 0) != 0;
     if (isOpen) {
-      if (layer->HasField(path, SdfChildrenKeys->PrimChildren)) {
-        const std::vector<TfToken> &children =
-          layer->GetFieldAs<std::vector<TfToken>>(path, SdfChildrenKeys->PrimChildren);
+      if (layer->HasField(path, pxr::SdfChildrenKeys->PrimChildren)) {
+        const std::vector<pxr::TfToken> &children =
+          layer->GetFieldAs<std::vector<pxr::TfToken>>(path, pxr::SdfChildrenKeys->PrimChildren);
         for (auto it = children.rbegin(); it != children.rend(); ++it) {
           st.push(path.AppendChild(*it));
         }
       }
-      if (layer->HasField(path, SdfChildrenKeys->VariantSetChildren)) {
-        const std::vector<TfToken> &variantSetchildren =
-          layer->GetFieldAs<std::vector<TfToken>>(path, SdfChildrenKeys->VariantSetChildren);
+      if (layer->HasField(path, pxr::SdfChildrenKeys->VariantSetChildren)) {
+        const std::vector<pxr::TfToken> &variantSetchildren =
+          layer->GetFieldAs<std::vector<pxr::TfToken>>(path, pxr::SdfChildrenKeys->VariantSetChildren);
         // Skip the variantSet paths and show only the variantSetChildren
         for (auto vSetIt = variantSetchildren.rbegin(); vSetIt != variantSetchildren.rend(); ++vSetIt) {
           auto variantSetPath = path.AppendVariantSelection(*vSetIt, "");
-          if (layer->HasField(variantSetPath, SdfChildrenKeys->VariantChildren)) {
-            const std::vector<TfToken> &variantChildren =
-              layer->GetFieldAs<std::vector<TfToken>>(variantSetPath, SdfChildrenKeys->VariantChildren);
+          if (layer->HasField(variantSetPath, pxr::SdfChildrenKeys->VariantChildren)) {
+            const std::vector<pxr::TfToken> &variantChildren =
+              layer->GetFieldAs<std::vector<pxr::TfToken>>(variantSetPath, pxr::SdfChildrenKeys->VariantChildren);
             const std::string &variantSet = variantSetPath.GetVariantSelection().first;
             for (auto vChildrenIt = variantChildren.rbegin(); vChildrenIt != variantChildren.rend(); ++vChildrenIt) {
-              st.push(path.AppendVariantSelection(TfToken(variantSet), *vChildrenIt));
+              st.push(path.AppendVariantSelection(pxr::TfToken(variantSet), *vChildrenIt));
             }
           }
         }
@@ -424,11 +424,11 @@ _AddTreeNodePrimName(const bool &primIsVariant, pxr::SdfPrimSpecHandle &primSpec
   auto unfolded = ImGui::TreeNodeBehavior(IdOf(primSpec->GetPath().GetHash()), nodeFlags, primSpecName.c_str());
 
   // Edition of the prim name
-  static SdfPrimSpecHandle editNamePrim;
+  static pxr::SdfPrimSpecHandle editNamePrim;
   if (!ImGui::IsItemToggledOpen() && ImGui::IsItemClicked()) {
       //ExecuteAfterDraw<EditorSetSelection>(primSpec->GetLayer(), primSpec->GetPath());
-      if (editNamePrim != SdfPrimSpecHandle() && editNamePrim != primSpec) {
-          editNamePrim = SdfPrimSpecHandle();
+      if (editNamePrim != pxr::SdfPrimSpecHandle() && editNamePrim != primSpec) {
+          editNamePrim = pxr::SdfPrimSpecHandle();
       }
       if (!primIsVariant && ImGui::IsMouseDoubleClicked(0)) {
           editNamePrim = primSpec;
@@ -439,7 +439,7 @@ _AddTreeNodePrimName(const bool &primIsVariant, pxr::SdfPrimSpecHandle &primSpec
       ImGui::SetCursorPos(cursor);
       UIUtils::AddPrimSpecifier(primSpec); // Draw the prim name editor
       if (ImGui::IsItemDeactivatedAfterEdit() || !ImGui::IsItemFocused()) {
-          editNamePrim = SdfPrimSpecHandle();
+          editNamePrim = pxr::SdfPrimSpecHandle();
       }
       ImGui::PopStyleColor();
   }
@@ -487,7 +487,7 @@ _AddSdfPrimRow(const pxr::SdfLayerRefPtr &layer, const pxr::SdfPath &primPath,
   auto childrenNames = primSpec->GetNameChildren();
 
   ImGui::SameLine();
-  TreeIndenter<LayerHierarchyEditorSeed, SdfPath> indenter(primPath);
+  TreeIndenter<LayerHierarchyEditorSeed, pxr::SdfPath> indenter(primPath);
   bool unfolded = _AddTreeNodePrimName(primIsVariant, primSpec, selection, childrenNames.empty());
 
   // Right click will open the quick edit popup menu
@@ -623,7 +623,7 @@ bool LayerEditorUI::Draw()
 
         ImGui::TableHeadersRow();
 
-        std::vector<SdfPath> paths;
+        std::vector<pxr::SdfPath> paths;
 
         // Find all the opened paths
         paths.reserve(1024);
@@ -632,13 +632,13 @@ bool LayerEditorUI::Draw()
         int nodeId = 0;
         float selectedPosY = -1;
         const size_t arraySize = paths.size();
-        SdfPathVector pathPrefixes;
+        pxr::SdfPathVector pathPrefixes;
         ImGuiListClipper clipper;
         clipper.Begin(static_cast<int>(arraySize));
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                 ImGui::PushID(row);
-                const SdfPath &path = paths[row];
+                const pxr::SdfPath &path = paths[row];
                 if (path.IsAbsoluteRootPath()) {
                     _AddTopNodeLayerRow(_layer, *selection, selectedPosY);
                 } else {

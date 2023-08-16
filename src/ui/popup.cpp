@@ -158,12 +158,12 @@ bool ColorPopupUI::Terminate()
     if (_isArray) {
       pxr::VtArray<pxr::GfVec3f> value = { _color };
       pxr::VtArray<pxr::GfVec3f> previous = { _original };
-      UsdAttributeVector attributes = { _attribute };
+      pxr::UsdAttributeVector attributes = { _attribute };
       ADD_COMMAND(SetAttributeCommand, attributes, 
         pxr::VtValue(value), pxr::VtValue(previous), pxr::UsdTimeCode::Default());
     }
     else {
-      UsdAttributeVector attributes = { _attribute };
+      pxr::UsdAttributeVector attributes = { _attribute };
        ADD_COMMAND(SetAttributeCommand, attributes,
          pxr::VtValue(_color), pxr::VtValue(_original), pxr::UsdTimeCode::Default());
     }

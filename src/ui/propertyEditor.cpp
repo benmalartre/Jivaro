@@ -103,7 +103,7 @@ static void DrawPropertyMiniButton(ImGuiID id=0)
 }
 
 void
-PropertyEditorUI::_DrawAttributeTypeInfo(const UsdAttribute& attribute) 
+PropertyEditorUI::_DrawAttributeTypeInfo(const pxr::UsdAttribute& attribute) 
 {
   pxr::SdfValueTypeName attributeTypeName = attribute.GetTypeName();
   pxr::TfToken attributeRoleName = attribute.GetRoleName();
@@ -207,15 +207,15 @@ PropertyEditorUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 }
 
 
-VtValue 
-PropertyEditorUI::_DrawAttributeValue(const UsdAttribute& attribute, 
+pxr::VtValue 
+PropertyEditorUI::_DrawAttributeValue(const pxr::UsdAttribute& attribute, 
   const pxr::UsdTimeCode& timeCode) 
 {
   pxr::VtValue value;
   attribute.Get(&value, timeCode);
   if(value.IsHolding<pxr::TfToken>()) {
     return UIUtils::AddTokenWidget(attribute, timeCode);
-  } else if (attribute.GetRoleName() == TfToken("Color")) {
+  } else if (attribute.GetRoleName() == pxr::TfToken("Color")) {
     return UIUtils::AddColorWidget(attribute, timeCode);
   }
   return UIUtils::AddAttributeWidget(attribute, timeCode);
@@ -226,7 +226,7 @@ PropertyEditorUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
   const pxr::UsdTimeCode& currentTime) 
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  VtValue value;
+  pxr::VtValue value;
   const bool hasValue = attribute.Get(&value, currentTime);
   const bool hasConnections = attribute.HasAuthoredConnections();
   
@@ -247,11 +247,11 @@ PropertyEditorUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
   }
 
   else if (hasValue) {
-    VtValue modified = _DrawAttributeValue(attribute, currentTime);
+    pxr::VtValue modified = _DrawAttributeValue(attribute, currentTime);
     if (!modified.IsEmpty()) {
       pxr::UsdAttributeVector attributes = { attribute };
       ADD_COMMAND(SetAttributeCommand, attributes, modified, value, 
-        attribute.GetNumTimeSamples() ? currentTime : UsdTimeCode::Default());
+        attribute.GetNumTimeSamples() ? currentTime : pxr::UsdTimeCode::Default());
       _parent->SetInteracting(true);
     }
   }
