@@ -203,15 +203,19 @@ void Solver::AddConstraints(Geometry* geom, size_t offset)
   std::cout << "[solver] add constraints for type " << geom->GetType() << std::endl;
   if (geom->GetType() == Geometry::MESH) {
     std::cout << "[solver] add constraints for mesh : " << std::endl;
-    Mesh* mesh = (Mesh*)geom;
-    const pxr::VtArray<HalfEdge>& edges = mesh->GetEdges();
-    std::cout << "[solver] num unique edges : " << edges.size() << std::endl;
-   
-    for (const HalfEdge& edge : edges) {
+    Mesh* mesh = (Mesh*)geom;   
+
+    HalfEdgeGraph::ItUniqueEdge it(mesh->GetEdgesGraph());
+    const auto& edges = mesh->GetEdges();
+
+    HalfEdge* edge = it.Next();
+    while (edge) {
       DistanceConstraint* constraint = new DistanceConstraint();
-      constraint->Init(&_particles, edge.vertex + offset, edges[edge.next].vertex + offset, 0.5f, 0.5f);
+      constraint->Init(&_particles, edge->vertex + offset, edges[edge->next].vertex + offset, 0.5f, 0.5f);
       _constraints.push_back(constraint);
+      edge = it.Next();
     }
+
     std::cout << "num constraints : " << _constraints.size() << std::endl;
   } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;

@@ -197,10 +197,16 @@ Mesh::GetTriangleNormal(uint32_t triangleID) const
   return (B ^ C).GetNormalized();
 }
 
-const pxr::VtArray<HalfEdge>&
+pxr::VtArray<HalfEdge>&
 Mesh::GetEdges()
 {
   return _halfEdges.GetEdges();
+}
+
+HalfEdgeGraph&
+Mesh::GetEdgesGraph()
+{
+  return _halfEdges;
 }
 
 bool Mesh::RemovePoint(size_t index)
@@ -226,7 +232,7 @@ float Mesh::GetAverageEdgeLength()
   const pxr::GfVec3f* positions = &_positions[0];
   float accum = 0;
   size_t cnt = 0;
-  HalfEdgeGraph::ItUniqueEdge it(&_halfEdges);
+  HalfEdgeGraph::ItUniqueEdge it(_halfEdges);
   HalfEdge* edge = it.Next();
   while(edge) {
     accum += _halfEdges.GetLength(edge, positions);
@@ -297,7 +303,7 @@ void Mesh::ComputeTrianglePairs()
     baseFaceVertexIdx += faceVertexCount;
   }
 
-  HalfEdgeGraph::ItUniqueEdge it(&_halfEdges);
+  HalfEdgeGraph::ItUniqueEdge it(_halfEdges);
   HalfEdge* edge = it.Next();
   uint32_t triPairIdx = 0;
   size_t numMalformedTrianglePair = 0;

@@ -34,9 +34,9 @@ void Collision::FindContacts(Particles* particles)
 
 void Collision::ResolveContacts(Particles* particles, const float dt)
 {
-  pxr::WorkParallelForN(particles->GetNumParticles(),
+  pxr::WorkParallelForN(GetNumContacts(),
     std::bind(&Collision::_ResolveContacts, this,
-      std::placeholders::_1, std::placeholders::_2, particles, dt));
+      std::placeholders::_1, std::placeholders::_2, particles, dt), 1);
 }
 
 void Collision::FindContactsSerial(Particles* particles)
@@ -48,7 +48,7 @@ void Collision::FindContactsSerial(Particles* particles)
 
 void Collision::ResolveContactsSerial(Particles* particles, const float dt)
 {
-  _ResolveContacts(0, particles->GetNumParticles(), particles, dt);
+  _ResolveContacts(0, GetNumContacts(), particles, dt);
 }
 
 
@@ -97,13 +97,11 @@ void PlaneCollision::_FindContacts(size_t begin, size_t end, Particles* particle
   }
 }
  
-
-
 void PlaneCollision::_ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt)
 {
-  for (size_t index = begin; index < end; ++index) {
-    if (!CheckHit(index))continue;
-
+  const pxr::VtArray<int>& contacts = GetContacts();
+  for (size_t contact = begin; contact < end; ++contact) {
+    size_t index = contacts[contact];
     float radius = particles->radius[index];
     float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
 

@@ -29,7 +29,7 @@ public:
     HalfEdgeGraph*      edges;
     int                 index;
     
-    ItUniqueEdge(HalfEdgeGraph* graph);
+    ItUniqueEdge(const HalfEdgeGraph& graph);
     HalfEdge* Next();
   };
 

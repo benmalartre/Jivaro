@@ -33,7 +33,10 @@ public:
   void RemoveBody(Particles* particles, Body* body);
   */
 
-  
+  size_t GetNumContacts() { return _contacts.size(); };
+  const pxr::VtArray<int>& GetContacts() const { return _contacts; };
+  pxr::VtArray<int>& GetContacts() { return _contacts; };
+
   virtual void FindContacts(Particles* particles);
   virtual void ResolveContacts(Particles* particles, const float dt);
 

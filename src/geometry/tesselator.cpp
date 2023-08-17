@@ -129,7 +129,7 @@ void Tesselator::_BuildSplitEdgeQueue(float l)
 {
   const float maxL = 4.f / 3.f * (l * l);
   _ClearEdgeQueue();
-  HalfEdgeGraph::ItUniqueEdge it(&_graph);
+  HalfEdgeGraph::ItUniqueEdge it(_graph);
   HalfEdge* edge = it.Next();
   while (edge) {
     if (_GetLengthSq(edge) > maxL) _queue.push(edge);
@@ -140,7 +140,7 @@ void Tesselator::_BuildSplitEdgeQueue(float l)
 void Tesselator::_BuildCollapseEdgeQueue(float minL)
 {
   _ClearEdgeQueue();
-  HalfEdgeGraph::ItUniqueEdge it(&_graph);
+  HalfEdgeGraph::ItUniqueEdge it(_graph);
   HalfEdge* edge = it.Next();
   while (edge) {
     if (_graph.IsCollapsable(edge) && (_GetLengthSq(edge) < minL)) {

@@ -41,9 +41,9 @@ static _T REMOVE_EDGE_AVG_T = { 0,0};
 static _T REMOVE_POINT_AVG_T = { 0,0 };
 
 
-HalfEdgeGraph::ItUniqueEdge::ItUniqueEdge(HalfEdgeGraph* graph)
+HalfEdgeGraph::ItUniqueEdge::ItUniqueEdge(const HalfEdgeGraph& graph)
 {
-  edges = graph;
+  edges = (HalfEdgeGraph*)&graph;
   index = -1;
 }
 
@@ -95,7 +95,6 @@ HalfEdgeGraph::GetNeighbors()
 {
   return _neighbors;
 }
-
 
 HalfEdge*
 HalfEdgeGraph::GetAvailableEdge()

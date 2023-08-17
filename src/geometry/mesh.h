@@ -50,7 +50,8 @@ public:
   pxr::GfVec3f GetTriangleVertexNormal(const Triangle* T, uint32_t index) const;    // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;                        // triangle normal
 
-  const pxr::VtArray<HalfEdge>& GetEdges();
+  pxr::VtArray<HalfEdge>& GetEdges();
+  HalfEdgeGraph& GetEdgesGraph();
   size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices);
 
   const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
