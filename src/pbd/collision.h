@@ -33,18 +33,21 @@ public:
   void RemoveBody(Particles* particles, Body* body);
   */
 
-  virtual void FindContacts(size_t begin, size_t end, Particles* particles, const float dt) = 0;
-  virtual void ResolveContacts() = 0;
+  virtual void ResetContacts(Particles* particles);
+  virtual void BuildContacts(Particles* particles);
+  virtual void FindContacts(Particles* particles) = 0;
+  virtual void ResolveContacts(Particles* particles, const float dt) = 0;
   //virtual void Apply();
 
 protected:
+  virtual void _FindContacts(size_t begin, size_t end, Particles* particles) = 0;
+  virtual void _ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt) = 0;
   //pxr::VtArray<int>           _mask;        // mask is in the list of active point indices
   //pxr::VtArray<float>         _weights;     // if mask weights size must equals mask size 
                                             // else weights size must equals num particles
   
   pxr::VtArray<int>           _hits;        // hits encode vertex hit in the int list bits
-  pxr::VtArray<pxr::GfVec3f>  _contacts[2]; // double buffer contacts (write/read)
-  bool                        _flop;
+  pxr::VtArray<int>           _contacts;    // flat list of contact vertex
 };
 
 class PlaneCollision : public Collision
@@ -53,8 +56,12 @@ public:
   PlaneCollision();
   PlaneCollision(const pxr::GfVec3f& normal, const pxr::GfVec3f& position = pxr::GfVec3f(0.f));
 
-  void FindContacts(size_t begin, size_t end, Particles* particles, const float dt) override;
-  void ResolveContacts() override;
+  void FindContacts(Particles* particles) override;
+  void ResolveContacts(Particles* particles, const float dt) override;
+
+protected:
+  void _FindContacts(size_t begin, size_t end, Particles* particles) override;
+  void _ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt) override;
 
 private:
   pxr::GfVec3f _position;

@@ -71,6 +71,8 @@ public:
   void Step(float dt, bool serial=false);
 
 private:
+  void _ResetCollisions();
+  void _ResolveCollisions(size_t begin, size_t end, const float dt);
   void _IntegrateParticles(size_t begin, size_t end, const float dt);
   void _UpdateParticles(size_t begin, size_t end, const float dt);
 

@@ -17,6 +17,7 @@
 #include "../geometry/sampler.h"
 #include "../pbd/force.h"
 #include "../pbd/solver.h"
+#include "../pbd/collision.h"
 #include "../app/scene.h"
 #include "../app/application.h"
 #include "../app/commands.h"
@@ -336,7 +337,6 @@ Scene::InitExec()
   pxr::UsdStageWeakPtr stage = app->GetStage();
   if (!stage) return;
 
-  std::cout << "youpiii c'est pardi !!!" << std::endl;
   _solver = new Solver();
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
@@ -345,18 +345,15 @@ Scene::InitExec()
   _Sources sources;
   for (pxr::UsdPrim prim : primRange) {
     if (prim.IsA<pxr::UsdGeomMesh>()) {
-      std::cout << "found a mesh to add to pbd scene : " << prim.GetPath() << std::endl;
       pxr::UsdGeomMesh usdMesh(prim);
       Mesh mesh(usdMesh);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      std::cout << "xform : " << xform << std::endl;
       size_t offset = _solver->GetNumParticles();
       _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
       _solver->AddConstraints((Geometry*)&mesh, offset);
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
-      std::cout << "found a points to add to pbd scene : " << prim.GetPath() << std::endl;
       pxr::UsdGeomPoints usdPoints(prim);
       Points points(usdPoints);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
@@ -366,6 +363,7 @@ Scene::InitExec()
     }
   }
   _solver->AddForce(new GravitationalForce());
+  _solver->AddCollision(new PlaneCollision());
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Display")));
   _sourcesMap[pointsPath] = sources;
@@ -409,7 +407,7 @@ Scene::UpdateExec(double time)
     _solver->Reset();
   else
     for (size_t i = 0; i < subSteps; ++i)
-      _solver->Step(dt, true);
+      _solver->Step(dt, false);
   
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);

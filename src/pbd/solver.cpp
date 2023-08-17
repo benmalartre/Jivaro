@@ -239,6 +239,21 @@ void Solver::_IntegrateParticles(size_t begin, size_t end, const float dt)
   }
 }
 
+void Solver::_ResetCollisions()
+{
+  for (auto& collision : _collisions) {
+    collision->ResetContacts(&_particles);
+  }
+}
+
+void Solver::_ResolveCollisions(size_t begin, size_t end, const float dt)
+{
+  for (auto& collision : _collisions) {
+    collision->FindContacts(&_particles);
+    collision->ResolveContacts(&_particles, dt);
+  }
+}
+
 void Solver::_UpdateParticles(size_t begin, size_t end, const float dt)
 {
   const pxr::GfVec3f* predicted = &_particles.predicted[0];
@@ -259,7 +274,6 @@ void Solver::_UpdateParticles(size_t begin, size_t end, const float dt)
 
     // update position
     position[index] = predicted[index];
-    if (position[index][1] < -5.f)position[index][1] = -5.f;
   }
 }
 
@@ -273,8 +287,7 @@ void Solver::Step(float dt, bool serial)
 
   //std::cout << "num available threads : " << numThreads << std::endl;
   //std::cout << "num forces : " << _force.size() << std::endl;
-  
- 
+
   if (!serial && numParticles >= 2 * numThreads) {
     //std::cout << "parallel step " << std::endl;
     const size_t grain = numParticles / numThreads;
@@ -286,7 +299,13 @@ void Solver::Step(float dt, bool serial)
       std::bind(&Solver::_IntegrateParticles, this,
         std::placeholders::_1, std::placeholders::_2, dt), grain);
 
-    // TODO solve constraints and collisions
+    // solve collisions
+    _ResetCollisions();
+    pxr::WorkParallelForN(
+      numParticles,
+      std::bind(&Solver::_ResolveCollisions, this,
+        std::placeholders::_1, std::placeholders::_2, dt), grain);
+
     // solve constraints
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
       [&](Constraint* constraint) {constraint->Solve(&_particles, 1); });
@@ -307,7 +326,11 @@ void Solver::Step(float dt, bool serial)
     // integrate particles
     _IntegrateParticles(0, numParticles, dt);
 
-    // TODO solve constraints and collisions
+    // solve collisions
+    _ResetCollisions();
+    _ResolveCollisions(0, numParticles, dt);
+
+    // solve constraints
     for (auto& constraint : _constraints) constraint->Solve(&_particles, 1);
     // apply constraint serially
     for (auto& constraint : _constraints)constraint->Apply(&_particles, dt);

@@ -48,9 +48,7 @@ bool DistanceConstraint::Solve(Particles* particles, const size_t iter)
   pxr::GfVec3f n = x2 - x1;
   float d = n.GetLength();
   if (pxr::GfIsClose(d, _restLength, 0.0000001f))return false;
-  if (!n.Normalize()) {
-    std::cout << "fail normlaize :(" << x1 << ", " << x2 << std::endl;
-  }
+  n.Normalize();
 
   pxr::GfVec3f c;
   if(d < _restLength)
@@ -60,7 +58,6 @@ bool DistanceConstraint::Solve(Particles* particles, const size_t iter)
 
   _c[0] = im1 * c;
   _c[1] = -im2 * c;
-
 
   return true;
 }
