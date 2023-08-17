@@ -71,6 +71,18 @@ public:
   PlaneCollision();
   PlaneCollision(const pxr::GfVec3f& normal, const pxr::GfVec3f& position = pxr::GfVec3f(0.f));
 
+  void Set(const pxr::GfVec3f& position, const pxr::GfVec3f& normal) {
+    _position = position; _normal = normal;
+  };
+  void SetPosition(const pxr::GfVec3f& position) {
+    _position = position;
+  };
+  void SetNormal(const pxr::GfVec3f& normal) {
+    _normal = normal; 
+  };
+  void SetDistance(const float distance) { 
+    _distance = distance; 
+  };
 protected:
   void _FindContacts(size_t begin, size_t end, Particles* particles) override;
   void _ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt) override;

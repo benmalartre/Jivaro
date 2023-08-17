@@ -75,6 +75,7 @@ private:
   void _IntegrateParticles(size_t begin, size_t end, const float dt);
   void _UpdateParticles(size_t begin, size_t end, const float dt);
 
+  size_t                              _subSteps;
   size_t                              _solverIterations;
   size_t                              _collisionIterations;
   float                               _sleepThreshold;

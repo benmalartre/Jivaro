@@ -10,13 +10,13 @@ void Collision::_ResetContacts(Particles* particles)
 {
   const size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles / sizeof(int) + 1);
+  _contacts.reserve(numParticles);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
 }
 
 void Collision::_BuildContacts(Particles* particles)
 {
   _contacts.clear();
-  _contacts.reserve(particles->GetNumParticles());
   for (size_t index = 0; index < particles->GetNumParticles(); ++index) {
     if (CheckHit(index))
       _contacts.push_back(index);
@@ -88,6 +88,7 @@ PlaneCollision::PlaneCollision(const pxr::GfVec3f& normal, const pxr::GfVec3f& p
 void PlaneCollision::_FindContacts(size_t begin, size_t end, Particles* particles)
 {
   for (size_t index = begin; index < end; ++index) {
+    if (!Affects(index))continue;
     float radius = particles->radius[index];
     float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
 

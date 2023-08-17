@@ -22,6 +22,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
+  , _subSteps(5)
   , _solverIterations(4)
   , _collisionIterations(2)
   , _paused(true)
