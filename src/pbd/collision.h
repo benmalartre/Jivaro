@@ -37,6 +37,13 @@ public:
   virtual void BuildContacts(Particles* particles);
   virtual void FindContacts(Particles* particles) = 0;
   virtual void ResolveContacts(Particles* particles, const float dt) = 0;
+
+  inline bool CheckHit(size_t index) {
+    return BITMASK_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
+  };
+  inline void SetHit(size_t index) {
+    BITMASK_SET(_hits[index / sizeof(int)], index % sizeof(int));
+  };
   //virtual void Apply();
 
 protected:
@@ -44,8 +51,9 @@ protected:
   virtual void _ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt) = 0;
   //pxr::VtArray<int>           _mask;        // mask is in the list of active point indices
   //pxr::VtArray<float>         _weights;     // if mask weights size must equals mask size 
-                                            // else weights size must equals num particles
-  
+                                              // else weights size must equals num particles
+
+private:
   pxr::VtArray<int>           _hits;        // hits encode vertex hit in the int list bits
   pxr::VtArray<int>           _contacts;    // flat list of contact vertex
 };

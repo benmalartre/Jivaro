@@ -18,7 +18,7 @@ void Collision::BuildContacts(Particles* particles)
   _contacts.clear();
   _contacts.reserve(particles->GetNumParticles());
   for (size_t index = 0; index < particles->GetNumParticles(); ++index) {
-    if (BITMASK_CHECK(_hits[index / sizeof(int)], index % sizeof(int)))
+    if (CheckHit(index))
       _contacts.push_back(index);
   }
 }
@@ -63,7 +63,7 @@ void PlaneCollision::_FindContacts(size_t begin, size_t end, Particles* particle
     float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
 
     if (d < 0.0) {
-      BITMASK_SET(_hits[index / sizeof(int)], index % sizeof(int));
+      SetHit(index);
     }
   }
 }
@@ -72,7 +72,7 @@ void PlaneCollision::FindContacts(Particles* particles)
 {
   ResetContacts(particles);
   pxr::WorkParallelForN(particles->GetNumParticles(),
-    std::bind(&Collision::_FindContacts, this,
+    std::bind(&PlaneCollision::_FindContacts, this,
       std::placeholders::_1, std::placeholders::_2, particles));
   BuildContacts(particles);
 }
@@ -80,7 +80,7 @@ void PlaneCollision::FindContacts(Particles* particles)
 void PlaneCollision::_ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt)
 {
   for (size_t index = begin; index < end; ++index) {
-    if (!BITMASK_CHECK(_hits[index / sizeof(int)], index % sizeof(int)))continue;
+    if (!CheckHit(index))continue;
 
     float radius = particles->radius[index];
     float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
@@ -96,7 +96,7 @@ void PlaneCollision::_ResolveContacts(size_t begin, size_t end, Particles* parti
 void PlaneCollision::ResolveContacts(Particles* particles, const float dt)
 {
   pxr::WorkParallelForN(particles->GetNumParticles(),
-    std::bind(&Collision::_ResolveContacts, this,
+    std::bind(&PlaneCollision::_ResolveContacts, this,
       std::placeholders::_1, std::placeholders::_2, particles));
 }
 
