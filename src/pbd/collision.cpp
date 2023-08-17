@@ -6,14 +6,14 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Collision::ResetContacts(Particles* particles)
+void Collision::_ResetContacts(Particles* particles)
 {
   const size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
 }
 
-void Collision::BuildContacts(Particles* particles)
+void Collision::_BuildContacts(Particles* particles)
 {
   _contacts.clear();
   _contacts.reserve(particles->GetNumParticles());
@@ -22,6 +22,35 @@ void Collision::BuildContacts(Particles* particles)
       _contacts.push_back(index);
   }
 }
+
+void Collision::FindContacts(Particles* particles)
+{
+  _ResetContacts(particles);
+  pxr::WorkParallelForN(particles->GetNumParticles(),
+    std::bind(&Collision::_FindContacts, this,
+      std::placeholders::_1, std::placeholders::_2, particles));
+  _BuildContacts(particles);
+}
+
+void Collision::ResolveContacts(Particles* particles, const float dt)
+{
+  pxr::WorkParallelForN(particles->GetNumParticles(),
+    std::bind(&Collision::_ResolveContacts, this,
+      std::placeholders::_1, std::placeholders::_2, particles, dt));
+}
+
+void Collision::FindContactsSerial(Particles* particles)
+{
+  _ResetContacts(particles);
+  _FindContacts(0, particles->GetNumParticles(), particles);
+  _BuildContacts(particles);
+}
+
+void Collision::ResolveContactsSerial(Particles* particles, const float dt)
+{
+  _ResolveContacts(0, particles->GetNumParticles(), particles, dt);
+}
+
 
 /*
 void Collision::AddBody(Particles* particles, Body* body)
@@ -68,14 +97,7 @@ void PlaneCollision::_FindContacts(size_t begin, size_t end, Particles* particle
   }
 }
  
-void PlaneCollision::FindContacts(Particles* particles)
-{
-  ResetContacts(particles);
-  pxr::WorkParallelForN(particles->GetNumParticles(),
-    std::bind(&PlaneCollision::_FindContacts, this,
-      std::placeholders::_1, std::placeholders::_2, particles));
-  BuildContacts(particles);
-}
+
 
 void PlaneCollision::_ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt)
 {
@@ -92,13 +114,5 @@ void PlaneCollision::_ResolveContacts(size_t begin, size_t end, Particles* parti
     }
   }
 }
-
-void PlaneCollision::ResolveContacts(Particles* particles, const float dt)
-{
-  pxr::WorkParallelForN(particles->GetNumParticles(),
-    std::bind(&PlaneCollision::_ResolveContacts, this,
-      std::placeholders::_1, std::placeholders::_2, particles));
-}
-
 
 JVR_NAMESPACE_CLOSE_SCOPE

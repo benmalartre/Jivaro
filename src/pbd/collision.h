@@ -33,10 +33,12 @@ public:
   void RemoveBody(Particles* particles, Body* body);
   */
 
-  virtual void ResetContacts(Particles* particles);
-  virtual void BuildContacts(Particles* particles);
-  virtual void FindContacts(Particles* particles) = 0;
-  virtual void ResolveContacts(Particles* particles, const float dt) = 0;
+  
+  virtual void FindContacts(Particles* particles);
+  virtual void ResolveContacts(Particles* particles, const float dt);
+
+  virtual void FindContactsSerial(Particles* particles);
+  virtual void ResolveContactsSerial(Particles* particles, const float dt);
 
   inline bool CheckHit(size_t index) {
     return BITMASK_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
@@ -47,6 +49,8 @@ public:
   //virtual void Apply();
 
 protected:
+  virtual void _ResetContacts(Particles* particles);
+  virtual void _BuildContacts(Particles* particles);
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles) = 0;
   virtual void _ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt) = 0;
   //pxr::VtArray<int>           _mask;        // mask is in the list of active point indices
@@ -63,9 +67,6 @@ class PlaneCollision : public Collision
 public:
   PlaneCollision();
   PlaneCollision(const pxr::GfVec3f& normal, const pxr::GfVec3f& position = pxr::GfVec3f(0.f));
-
-  void FindContacts(Particles* particles) override;
-  void ResolveContacts(Particles* particles, const float dt) override;
 
 protected:
   void _FindContacts(size_t begin, size_t end, Particles* particles) override;

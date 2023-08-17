@@ -239,18 +239,18 @@ void Solver::_IntegrateParticles(size_t begin, size_t end, const float dt)
   }
 }
 
-void Solver::_ResetCollisions()
+void Solver::_ResolveCollisions(const float dt, bool serial)
 {
-  for (auto& collision : _collisions) {
-    collision->ResetContacts(&_particles);
-  }
-}
-
-void Solver::_ResolveCollisions(size_t begin, size_t end, const float dt)
-{
-  for (auto& collision : _collisions) {
-    collision->FindContacts(&_particles);
-    collision->ResolveContacts(&_particles, dt);
+  if (serial) {
+    for (auto& collision : _collisions) {
+      collision->FindContactsSerial(&_particles);
+      collision->ResolveContactsSerial(&_particles, dt);
+    }
+  } else {
+    for (auto& collision : _collisions) {
+      collision->FindContacts(&_particles);
+      collision->ResolveContacts(&_particles, dt);
+    }
   }
 }
 
@@ -300,11 +300,7 @@ void Solver::Step(float dt, bool serial)
         std::placeholders::_1, std::placeholders::_2, dt), grain);
 
     // solve collisions
-    _ResetCollisions();
-    pxr::WorkParallelForN(
-      numParticles,
-      std::bind(&Solver::_ResolveCollisions, this,
-        std::placeholders::_1, std::placeholders::_2, dt), grain);
+    _ResolveCollisions(dt, false);
 
     // solve constraints
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
@@ -327,8 +323,7 @@ void Solver::Step(float dt, bool serial)
     _IntegrateParticles(0, numParticles, dt);
 
     // solve collisions
-    _ResetCollisions();
-    _ResolveCollisions(0, numParticles, dt);
+    _ResolveCollisions(dt, true);
 
     // solve constraints
     for (auto& constraint : _constraints) constraint->Solve(&_particles, 1);
