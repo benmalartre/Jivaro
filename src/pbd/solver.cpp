@@ -281,6 +281,34 @@ void Solver::_UpdateParticles(size_t begin, size_t end, const float dt)
   }
 }
 
+struct _T {
+  uint64_t t;
+  uint64_t accum;
+  size_t   num;
+  void Start() {
+    t = CurrentTime();
+  }
+  void End() {
+    accum += CurrentTime() - t;
+    num++;
+  };
+  void Reset() {
+    accum = 0;
+    num = 0;
+  };
+  double Average() {
+    if (num) {
+      return ((double)accum * 1e-9) / (double)num;
+    }
+    return 0;
+  }
+  double Elapsed() {
+    return (double)accum * 1e-9;
+  }
+};
+static _T REMOVE_EDGE_AVG_T = { 0,0 };
+static _T REMOVE_POINT_AVG_T = { 0,0 };
+
 void Solver::Step(float dt, bool serial)
 {
   const size_t numParticles = _particles.GetNumParticles();

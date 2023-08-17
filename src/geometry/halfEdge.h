@@ -26,8 +26,8 @@ class HalfEdgeGraph {
 public:
  
   struct ItUniqueEdge {
-    HalfEdgeGraph*      edges;
-    int                 index;
+    const HalfEdgeGraph&      graph;
+    int                       index;
     
     ItUniqueEdge(const HalfEdgeGraph& graph);
     HalfEdge* Next();

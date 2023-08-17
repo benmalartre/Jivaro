@@ -11,49 +11,19 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
-struct _T {
-  uint64_t t;
-  uint64_t accum;
-  size_t   num;
-  void Start() {
-    t = CurrentTime();
-  }
-  void End() {
-    accum += CurrentTime() - t;
-    num++;
-  };
-  void Reset() {
-    accum = 0;
-    num = 0;
-  };
-  double Average() {
-    if (num) {
-      return ((double)accum * 1e-9) / (double)num;
-    }
-    return 0;
-  }
-  double Elapsed() {
-    return (double)accum * 1e-9;
-  }
-};
-static _T REMOVE_EDGE_AVG_T = { 0,0};
-static _T REMOVE_POINT_AVG_T = { 0,0 };
-
-
 HalfEdgeGraph::ItUniqueEdge::ItUniqueEdge(const HalfEdgeGraph& graph)
+  : graph(graph)
+  , index(-1)
 {
-  edges = (HalfEdgeGraph*)&graph;
-  index = -1;
 }
 
 HalfEdge* HalfEdgeGraph::ItUniqueEdge::Next()
 {
   index++;
   while (true) {
-    if (index >= edges->_halfEdges.size())return NULL;
-    HalfEdge* edge = &edges->_halfEdges[index];
-    if (!edges->IsUsed(edge) || !edges->IsUnique(edge))
+    if (index >= graph._halfEdges.size())return NULL;
+    HalfEdge* edge = (HalfEdge*)&graph._halfEdges[index];
+    if (!graph.IsUsed(edge) || !graph.IsUnique(edge))
       index++;
     else return edge;
   }
@@ -737,26 +707,18 @@ HalfEdgeGraph::CollapseEdge(HalfEdge* edge)
   size_t p2 = _halfEdges[edge->next].vertex;
 
   bool modified = false;
-  REMOVE_EDGE_AVG_T.Start();
   RemoveEdge(edge, &modified);
-  REMOVE_EDGE_AVG_T.End();
 
   if (twin) {
-    REMOVE_EDGE_AVG_T.Start();
     RemoveEdge(twin, &modified);
-    REMOVE_EDGE_AVG_T.End();
   }
   if (!modified)return false;
 
   if (p1 > p2) {
-    REMOVE_POINT_AVG_T.Start();
     RemovePoint(p1, p2);
-    REMOVE_POINT_AVG_T.End();
   }
   else {
-    REMOVE_POINT_AVG_T.Start();
     RemovePoint(p2, p1);
-    REMOVE_POINT_AVG_T.End();
   }
   return true;
 }
