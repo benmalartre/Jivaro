@@ -100,7 +100,7 @@ void PlaneCollision::_ResolveContact(size_t index, Particles* particles, const f
   float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
 
   if (d < 0.0) {
-    pxr::GfVec3f delta = _normal * -d;// * dt;
+    pxr::GfVec3f delta = _normal * -d /** dt*/;
     particles->position[index] += delta;
     particles->predicted[index] += delta;
   }

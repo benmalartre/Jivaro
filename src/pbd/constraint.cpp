@@ -91,8 +91,8 @@ bool StretchConstraint::Solve(Particles* particles)
     else
       c = _stretch * n * (d - rest) * sum;
 
-    _correction[_edges[edge * 2]] = im1 * c;
-    _correction[_edges[edge * 2 + 1]] = -im2 * c;
+    _correction[_edges[edge * 2]] += im1 * c;
+    _correction[_edges[edge * 2 + 1]] += -im2 * c;
   }
 
   return true;
