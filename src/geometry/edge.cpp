@@ -34,8 +34,6 @@ Edge::GetNormal(Geometry* geom)
     case Geometry::MESH:
     case Geometry::CURVE:
     {
-      Mesh* mesh = (Mesh*)geom;
-
       // get points normals
       pxr::GfVec3f norm0 = geom->GetNormal(vertices[0]);
       pxr::GfVec3f norm1 = geom->GetNormal(vertices[1]);
@@ -47,10 +45,8 @@ Edge::GetNormal(Geometry* geom)
 
     case Geometry::POINT:
     {
-      Points* points = (Points*)geom;
-
       // get point normals
-      normal = points->GetNormal(vertices[0]);
+      normal = geom->GetNormal(vertices[0]);
       break;
     }
   }

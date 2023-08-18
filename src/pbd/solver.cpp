@@ -43,7 +43,9 @@ void Solver::Reset()
   //UpdateColliders();
   // reset
   for (size_t p = 0; p < GetNumParticles(); ++p) {
-
+    _particles.position[p] = _particles.rest[p];
+    _particles.predicted[p] = _particles.rest[p];
+    _particles.velocity[p] = pxr::GfVec3f(0.f);
   }
 }
 
@@ -69,7 +71,7 @@ size_t Solver::GetBodyIndex(Geometry* geom)
   return Solver::INVALID_INDEX;
 }
 
-void Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix)
+Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix)
 {
   std::cout << "[system] add geometry : " << geom << std::endl;
   size_t base = _particles.GetNumParticles();
@@ -83,7 +85,7 @@ void Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix)
 
   std::cout << "num particles after add : " << _particles.GetNumParticles() << std::endl;
 
-
+  return _bodies.back();
 
   /*
   float          damping;
@@ -199,24 +201,16 @@ void Solver::UpdateColliders()
 }
 */
 
-void Solver::AddConstraints(Geometry* geom, size_t offset)
+void Solver::AddConstraints(Body* body)
 {
+  Geometry* geom = body->geometry;
   std::cout << "[solver] add constraints for type " << geom->GetType() << std::endl;
   if (geom->GetType() == Geometry::MESH) {
     std::cout << "[solver] add constraints for mesh : " << std::endl;
     Mesh* mesh = (Mesh*)geom;   
 
-    HalfEdgeGraph::ItUniqueEdge it(mesh->GetEdgesGraph());
-    const auto& edges = mesh->GetEdges();
-
-    HalfEdge* edge = it.Next();
-    while (edge) {
-      DistanceConstraint* constraint = new DistanceConstraint();
-      constraint->Init(&_particles, edge->vertex + offset, edges[edge->next].vertex + offset, 0.5f, 0.5f);
-      _constraints.push_back(constraint);
-      edge = it.Next();
-    }
-
+    StretchConstraint* stretch = new StretchConstraint(body);
+    _constraints.push_back(stretch);
     std::cout << "num constraints : " << _constraints.size() << std::endl;
   } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;
@@ -337,7 +331,7 @@ void Solver::Step(float dt, bool serial)
 
     // solve constraints
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
-      [&](Constraint* constraint) {constraint->Solve(&_particles, 1); });
+      [&](Constraint* constraint) {constraint->Solve(&_particles); });
 
     // apply constraint serially
     for (auto& constraint : _constraints)constraint->Apply(&_particles, dt);
@@ -359,7 +353,7 @@ void Solver::Step(float dt, bool serial)
     _ResolveCollisions(dt, true);
 
     // solve constraints
-    for (auto& constraint : _constraints) constraint->Solve(&_particles, 1);
+    for (auto& constraint : _constraints) constraint->Solve(&_particles);
     // apply constraint serially
     for (auto& constraint : _constraints)constraint->Apply(&_particles, dt);
 

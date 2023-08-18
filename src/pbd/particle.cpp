@@ -13,6 +13,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   size_t index = body.size() ? body.back() + 1 : 0;
   mass.resize(newSize);
   radius.resize(newSize);
+  rest.resize(newSize);
   position.resize(newSize);
   predicted.resize(newSize);
   velocity.resize(newSize);
@@ -24,6 +25,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
     size_t idx = base + p;
     mass[idx] = 1.f;
     radius[idx] = 0.5f;
+    rest[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
     velocity[idx] = pxr::GfVec3f(0.f);
@@ -43,6 +45,7 @@ void Particles::RemoveBody(Body* b)
     rhi = base + shift + r;
     mass[lhi] = mass[rhi];
     radius[lhi] = radius[rhi];
+    rest[lhi] = rest[rhi];
     position[lhi] = position[rhi];
     predicted[lhi] = predicted[rhi];
     velocity[lhi] = velocity[rhi];
@@ -52,6 +55,7 @@ void Particles::RemoveBody(Body* b)
   size_t newSize = position.size() - shift;
   mass.resize(newSize);
   radius.resize(newSize);
+  rest.resize(newSize);
   position.resize(newSize);
   predicted.resize(newSize);
   velocity.resize(newSize);

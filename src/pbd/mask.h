@@ -30,7 +30,9 @@ public:
   }
 
 protected:     
-  std::vector<int> _mask;         // bits vector encoding particles use mask
+  std::vector<int> _mask;                     // bits vector encoding particles usage mask
+  //pxr::VtArray<float>         _weights;     // if mask weights size must equals mask size 
+                                              // else weights size must equals num particles
 };
 
 

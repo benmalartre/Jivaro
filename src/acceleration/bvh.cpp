@@ -251,20 +251,15 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     if (_right)_right->Raycast(points, ray, &rightHit, maxDistance, minDistance);
 
     if (leftHit.HasHit() && rightHit.HasHit()) {
-      if (leftHit.GetT() < rightHit.GetT()) {
+      if (leftHit.GetT() < rightHit.GetT())
         hit->Set(leftHit); 
-        return true;
-      }
-      else {
+      else
         hit->Set(rightHit); 
-        return true;
-      }
-    }
-    else if (leftHit.HasHit()) {
+       return true;
+    } else if (leftHit.HasHit()) {
       hit->Set(leftHit); 
       return true;
-    }
-    else if (rightHit.HasHit()) {
+    } else if (rightHit.HasHit()) {
       hit->Set(rightHit); 
       return true;
     }

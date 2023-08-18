@@ -24,7 +24,7 @@ public:
   
   //void AddCollision(Geometry* geom);
   //void RemoveCollision(Geometry* geom);
-  void AddConstraints(Geometry* geom, size_t offset);
+  void AddConstraints(Body* body);
 
   // attributes
   size_t GetSolverIterations() { return _solverIterations; };
@@ -43,7 +43,7 @@ public:
   size_t GetNumCollisions() { return _collisions.size(); };
 
   // bodies
-  void AddBody(Geometry* geom, const pxr::GfMatrix4f& m);
+  Body* AddBody(Geometry* geom, const pxr::GfMatrix4f& m);
   void RemoveBody(Geometry* geom);
   Body* GetBody(size_t index);
   Body* GetBody(Geometry* geom);

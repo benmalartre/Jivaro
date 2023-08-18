@@ -12,64 +12,67 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 struct Particles;
+struct Body;
+
 class Constraint
 {
 public:
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(const size_t numberOfParticles)
+  Constraint(Body* body)
   {
-    _p.resize(numberOfParticles);
-    _c.resize(numberOfParticles);
+    _body.resize(1);
+    _body[0] = body;
   }
 
-  size_t GetNumParticles() const { return _p.size(); };
+  Constraint(Body* body1, Body* body2)
+  {
+    _body.resize(2);
+    _body[0] = body1;
+    _body[1] = body2;
+  }
+
+  virtual size_t GetNumParticles();
   virtual ~Constraint() {};
   virtual size_t& GetTypeId() const = 0;
 
-  virtual bool Init(Particles* particles) { return true; };
   virtual bool Update(Particles* particles) { return true; };
-  virtual bool Solve(Particles* particles, const size_t iter) = 0;
+  virtual bool Solve(Particles* particles) = 0;
 
   // this one has to be called serially 
   // as two constraints can move the same point
   virtual void Apply(Particles* particles, const float dt) = 0;
 
-  pxr::VtArray<int>& GetParticles() {return _p;};
-  int* GetParticlesPtr() {return &_p[0];};
-  const int* GetParticlesCPtr() const {return &_p[0];};
+  pxr::VtArray<Body*>& GetBodies() {return _body;};
+  Body* GetBody(size_t index) {return _body[index];};
+  const Body* GetBody(size_t index) const {return _body[index];};
 
 protected:
-  inline size_t _GetParticleIndex(size_t index) {
-    for (size_t p = 0; p < _p.size(); ++p)
-      if (_p[p] == index) return p;
-    return INVALID_INDEX;
-  }
   enum ConstraintType {
-    DISTANCE = 1,
-    BEND
+    STRETCH = 1,
+    BEND,
+    RIGID
   };
 
-  pxr::VtArray<int>          _p;
-  pxr::VtArray<pxr::GfVec3f> _c;
+  pxr::VtArray<Body*>        _body;
+  pxr::VtArray<pxr::GfVec3f> _correction;
 };
 
-class DistanceConstraint : public Constraint
+class StretchConstraint : public Constraint
 {
 public:
-  DistanceConstraint() : Constraint(2), _restLength(0.f), _stretchStiffness(1.f), _compressionStiffness(1.f) {}
+  StretchConstraint(Body* body, const float stretchStiffness=0.5f, const float compressionStiffness=0.5f);
   virtual size_t& GetTypeId() const { return TYPE_ID; }
 
-  bool Init(Particles* particles, const size_t p1, const size_t p2, 
-    const float stretchStiffnes, const float compressionStiffness);
-  bool Solve(Particles* particles, const size_t iter);
+  bool Solve(Particles* particles) override;
   void Apply(Particles* particles, const float dt) override;
 
 protected:
-  static size_t  TYPE_ID;
-  float          _restLength;
-  float          _stretchStiffness;
-  float          _compressionStiffness;
+  static size_t         TYPE_ID;
+  pxr::VtArray<float>   _rest;
+  pxr::VtArray<int>     _edges;
+  float                 _stretch;
+  float                 _compression;
   
 };
 

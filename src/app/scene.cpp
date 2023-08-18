@@ -344,13 +344,13 @@ Scene::InitExec()
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
   _Sources sources;
   for (pxr::UsdPrim prim : primRange) {
+    size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh usdMesh(prim);
       Mesh mesh(usdMesh);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      size_t offset = _solver->GetNumParticles();
-      _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
-      _solver->AddConstraints((Geometry*)&mesh, offset);
+      Body* body = _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
+      _solver->AddConstraints(body);
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
@@ -363,6 +363,16 @@ Scene::InitExec()
     }
   }
   _solver->AddForce(new GravitationalForce());
+
+  /*
+  pxr::GfVec3f pos;
+  for (size_t x = 0; x < 12; ++x) {
+    pxr::GfMatrix4f m(1.f);
+    m.SetTranslate(pxr::GfVec3f(0.f, RANDOM_0_X(5) - 2.5, (2.f * x) - 6.f));
+    _solver->AddCollision(new SphereCollision(m, 5.f));
+  }
+  */
+
   _solver->AddCollision(new PlaneCollision());
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Display")));
