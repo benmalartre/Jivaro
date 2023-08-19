@@ -69,6 +69,11 @@
   (((value) - (inmin))*((outmax)-(outmin))/((inmax)-(inmin))+(outmin))
 
 // x=target variable, y=mask
+#define BIT_SET(x,y) ((x) |= ( 1 << y))
+#define BIT_CLEAR(x,y) ((x) &= (~(1 << y)))
+#define BIT_FLIP(x,y) ((x) ^= (1 << y))
+#define BIT_CHECK(x,y) ((x) & (1 << y))
+
 #define BITMASK_SET(x,y) ((x) |= (y))
 #define BITMASK_CLEAR(x,y) ((x) &= (~(y)))
 #define BITMASK_FLIP(x,y) ((x) ^= (y))

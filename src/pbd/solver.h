@@ -68,12 +68,14 @@ public:
   void UpdateCollisions();
   void UpdateGeometries();
   void Reset();
-  void Step(float dt, bool serial=false);
+  void Step(bool serial=false);
 
 private:
   void _ResolveCollisions(const float dt, bool serial=false);
   void _IntegrateParticles(size_t begin, size_t end, const float dt);
   void _UpdateParticles(size_t begin, size_t end, const float dt);
+  void _StepOneSerial(const float dt);
+  void _StepOne(const float dt, size_t grain);
 
   size_t                              _subSteps;
   size_t                              _solverIterations;

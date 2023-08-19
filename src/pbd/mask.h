@@ -26,7 +26,7 @@ public:
     if (!HasMask())return true;
     const size_t bitsIdx = index / sizeof(int);
     if (bitsIdx >= _mask.size())return false;
-    return BITMASK_CHECK(_mask[bitsIdx], index % sizeof(int));
+    return BIT_CHECK(_mask[bitsIdx], index % sizeof(int));
   }
 
 protected:     

@@ -52,7 +52,7 @@ StretchConstraint::StretchConstraint(Body* body, const float stretchStiffness, c
   */
 }
 
-bool StretchConstraint::Solve(Particles* particles)
+bool StretchConstraint::Solve(Particles* particles, const float di)
 { 
 
   const size_t numPoints = _body[0]->numPoints;
@@ -60,20 +60,20 @@ bool StretchConstraint::Solve(Particles* particles)
 
   const size_t numEdges = _edges.size() / 2;
   for (size_t edge = 0; edge < numEdges; ++edge) {
-    const size_t p1 = _edges[edge * 2] + _body[0]->offset;
-    const size_t p2 = _edges[edge * 2 + 1] + _body[0]->offset;
-    const pxr::GfVec3f& x1 = particles->predicted[p1];
-    const pxr::GfVec3f& x2 = particles->predicted[p2];
+    const size_t p1 = _edges[edge * 2];
+    const size_t p2 = _edges[edge * 2 + 1];
+    const pxr::GfVec3f& x1 = particles->predicted[p1 + _body[0]->offset];
+    const pxr::GfVec3f& x2 = particles->predicted[p2 + _body[0]->offset];
 
     const float im1 =
-      pxr::GfIsClose(particles->mass[p1], 0, 0.0000001) ?
+      pxr::GfIsClose(particles->mass[p1 + _body[0]->offset], 0, 0.0000001) ?
       0.f :
-      1.f / particles->mass[p1];
+      1.f / particles->mass[p1 + _body[0]->offset];
 
     const float im2 =
-      pxr::GfIsClose(particles->mass[p2], 0, 0.0000001) ?
+      pxr::GfIsClose(particles->mass[p2 + _body[0]->offset], 0, 0.0000001) ?
       0.f :
-      1.f / particles->mass[p2];
+      1.f / particles->mass[p2 + _body[0]->offset];
 
     float sum = im1 + im2;
     if (pxr::GfIsClose(sum, 0.f, 0.0000001f))
@@ -91,8 +91,8 @@ bool StretchConstraint::Solve(Particles* particles)
     else
       c = _stretch * n * (d - rest) * sum;
 
-    _correction[_edges[edge * 2]] += im1 * c;
-    _correction[_edges[edge * 2 + 1]] += -im2 * c;
+    _correction[p1] += im1 * c * di;
+    _correction[p2] += -im2 * c * di;
   }
 
   return true;
@@ -100,12 +100,12 @@ bool StretchConstraint::Solve(Particles* particles)
 }
 
 // this one has to happen serialy
-void StretchConstraint::Apply(Particles* particles, const float dt)
+void StretchConstraint::Apply(Particles* particles)
 {
   const size_t numPoints = _body[0]->numPoints;
   const size_t offset = _body[0]->offset;
   for (size_t point = 0; point < numPoints; ++point) {
-    particles->predicted[point + offset] += _correction[point] * dt;
+    particles->predicted[point + offset] += _correction[point];
   }
 }
 

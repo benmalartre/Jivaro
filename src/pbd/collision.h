@@ -45,10 +45,10 @@ public:
   virtual void ResolveContactsSerial(Particles* particles, const float dt);
 
   inline bool CheckHit(size_t index) {
-    return BITMASK_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
+    return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
   };
   inline void SetHit(size_t index) {
-    BITMASK_SET(_hits[index / sizeof(int)], index % sizeof(int));
+    BIT_SET(_hits[index / sizeof(int)], index % sizeof(int));
   };
   //virtual void Apply();
 

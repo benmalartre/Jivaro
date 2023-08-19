@@ -45,6 +45,8 @@ void Collision::FindContacts(Particles* particles)
     std::bind(&Collision::_FindContacts, this,
       std::placeholders::_1, std::placeholders::_2, particles));
   _BuildContacts(particles);
+  std::cout << "particles size : " << particles->GetNumParticles() << std::endl;
+  std::cout << "collision size : " << _contacts.size() << std::endl;
 }
 
 void Collision::ResolveContacts(Particles* particles, const float dt)
@@ -88,7 +90,6 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles)
   if (!Affects(index))return;
   float radius = particles->radius[index];
   float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
-
   if (d < 0.0) {
     SetHit(index);
   }
@@ -127,7 +128,7 @@ void SphereCollision::_FindContact(size_t index, Particles* particles)
 {
   if (!Affects(index))return;
   const float radius2 = _radius * _radius;
-  const pxr::GfVec3f local = _invXform.Transform(particles->position[index]);
+  const pxr::GfVec3f local = _invXform.Transform(particles->predicted[index]);
   if (local.GetLengthSq() < radius2) {
     SetHit(index);
   }
@@ -139,7 +140,7 @@ void SphereCollision::_ResolveContact(size_t index, Particles* particles, const 
   const pxr::GfVec3f& predicted = particles->predicted[index];
   const pxr::GfVec3f local = _invXform.Transform(predicted);
   if (local.GetLengthSq() < radius2) {
-    const pxr::GfVec3f corrected = _xform.TransformDir(local.GetNormalized() * _radius - local);
+    const pxr::GfVec3f corrected = _xform.TransformDir(local.GetNormalized() * _radius - local) * dt;
     particles->position[index] += corrected;
     particles->predicted[index] += corrected;
   }

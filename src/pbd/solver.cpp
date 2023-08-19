@@ -22,9 +22,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(5)
-  , _solverIterations(4)
-  , _collisionIterations(2)
+  , _subSteps(12)
+  , _solverIterations(1)
+  , _collisionIterations(1)
   , _paused(true)
 {
   _timeStep = 1.f / GetApplication()->GetTime().GetFPS();
@@ -304,10 +304,70 @@ struct _T {
 static _T REMOVE_EDGE_AVG_T = { 0,0 };
 static _T REMOVE_POINT_AVG_T = { 0,0 };
 
-void Solver::Step(float dt, bool serial)
+
+void Solver::_StepOneSerial(const float dt)
+{
+  const size_t numParticles = _particles.GetNumParticles();
+  const float dc = 1.f / _collisionIterations;
+  const float ds = 1.f / _solverIterations;
+
+  // integrate particles
+  _IntegrateParticles(0, numParticles, dt);
+
+  // solve collisions
+  for (size_t ci = 0; ci < _collisionIterations; ++ci)
+    _ResolveCollisions(dc, false);
+
+  // solve constraints
+  for (size_t ci = 0; ci < _solverIterations; ++ci) {
+    for (auto& constraint : _constraints) constraint->Solve(&_particles, ds);
+    // apply constraint serially
+    for (auto& constraint : _constraints)constraint->Apply(&_particles);
+  }
+
+  // update particles
+  _UpdateParticles(0, numParticles, dt);
+}
+
+void Solver::_StepOne(const float dt, size_t grain)
+{
+  //std::cout << "grain size : " << grain << std::endl;
+  const size_t numParticles = _particles.GetNumParticles();
+  const float dc = 1.f / _collisionIterations;
+  const float ds = 1.f / _solverIterations;
+
+  // integrate particles
+  pxr::WorkParallelForN(
+    numParticles,
+    std::bind(&Solver::_IntegrateParticles, this,
+      std::placeholders::_1, std::placeholders::_2, dt), grain);
+
+  // solve collisions
+  for (size_t ci = 0; ci < _collisionIterations; ++ci)
+    _ResolveCollisions(dc, false);
+
+  // solve constraints
+  for (size_t ci = 0; ci < _solverIterations; ++ci) {
+    pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
+      [&](Constraint* constraint) {constraint->Solve(&_particles, ds); });
+
+    // apply constraint serially
+    for (auto& constraint : _constraints)constraint->Apply(&_particles);
+  }
+
+  // update particles
+  pxr::WorkParallelForN(
+    numParticles,
+    std::bind(&Solver::_UpdateParticles, this,
+      std::placeholders::_1, std::placeholders::_2, dt), grain);
+
+}
+
+void Solver::Step(bool serial)
 {
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
+  const float dt = (1.f / GetApplication()->GetTime().GetFPS()) / _subSteps;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
   size_t numConstraints = _constraints.size();
@@ -318,47 +378,13 @@ void Solver::Step(float dt, bool serial)
   if (!serial && numParticles >= 2 * numThreads) {
     //std::cout << "parallel step " << std::endl;
     const size_t grain = numParticles / numThreads;
-    //std::cout << "grain size : " << grain << std::endl;
-
-    // integrate particles
-    pxr::WorkParallelForN(
-      numParticles,
-      std::bind(&Solver::_IntegrateParticles, this,
-        std::placeholders::_1, std::placeholders::_2, dt), grain);
-
-    // solve collisions
-    _ResolveCollisions(dt, false);
-
-    // solve constraints
-    pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
-      [&](Constraint* constraint) {constraint->Solve(&_particles); });
-
-    // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles, dt);
-
-    // update particles
-    pxr::WorkParallelForN(
-      numParticles,
-      std::bind(&Solver::_UpdateParticles, this,
-        std::placeholders::_1, std::placeholders::_2, dt), grain);
-
+    for(size_t si = 0; si < _subSteps; ++si)
+      _StepOne(dt, grain);
   }
   else {
     //std::cout << "serial step " << std::endl;
-
-    // integrate particles
-    _IntegrateParticles(0, numParticles, dt);
-
-    // solve collisions
-    _ResolveCollisions(dt, true);
-
-    // solve constraints
-    for (auto& constraint : _constraints) constraint->Solve(&_particles);
-    // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles, dt);
-
-    // update particles
-    _UpdateParticles(0, numParticles, dt);
+    for (size_t si = 0; si < _subSteps; ++si)
+      _StepOneSerial(dt);
   }
 
   //std::cout << _particles.GetPredicted() << std::endl;
