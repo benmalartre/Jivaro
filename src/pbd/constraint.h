@@ -76,6 +76,23 @@ protected:
   
 };
 
+class BendConstraint : public Constraint
+{
+public:
+  BendConstraint(Body* body, const float stiffness = 0.5f);
+  virtual size_t& GetTypeId() const { return TYPE_ID; }
+
+  bool Solve(Particles* particles, const float di) override;
+  void Apply(Particles* particles) override;
+
+protected:
+  static size_t         TYPE_ID;
+  pxr::VtArray<float>   _rest;
+  pxr::VtArray<int>     _edges;
+  float                 _stiffness;
+
+};
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_PBD_PARTICLE_H

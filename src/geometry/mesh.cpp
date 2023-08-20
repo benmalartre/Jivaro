@@ -327,7 +327,8 @@ void Mesh::ComputeTrianglePairs()
         numMalformedTrianglePair++;
         _trianglePairs.push_back({
             triPairIdx++,
-            &_triangles[edgeTriangleIdx[edgeIdx].first]
+            &_triangles[edgeTriangleIdx[edgeIdx].first],
+            NULL
           });
         used[edgeTriangleIdx[edgeIdx].first] = true;
       }

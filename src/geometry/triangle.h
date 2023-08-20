@@ -96,22 +96,13 @@ struct TrianglePair : public Component {
   Triangle* left;
   Triangle* right;
 
-  TrianglePair()
-    : Component()
-    , left(NULL)
-    , right(NULL) {};
-
-  TrianglePair(uint32_t index, Triangle* t1)
-   : Component(index)
-    , left(t1)
-    , right(NULL) {};
-
   TrianglePair(uint32_t index, Triangle* t1, Triangle* t2)
     : Component(index)
     , left(t1)
     , right(t2) {};
 
   pxr::GfRange3d GetBoundingBox(const pxr::GfVec3f* points);
+  pxr::GfVec4i GetVertices();
 
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;

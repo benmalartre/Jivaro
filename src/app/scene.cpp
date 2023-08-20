@@ -350,7 +350,7 @@ Scene::InitExec()
       Mesh mesh(usdMesh);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Body* body = _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
-      //_solver->AddConstraints(body);
+      _solver->AddConstraints(body);
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
@@ -363,18 +363,16 @@ Scene::InitExec()
     }
   }
   _solver->AddForce(new GravitationalForce());
-  /*
-  _solver->AddForce(new DampingForce());
-
+  
+  //_solver->AddForce(new DampingForce());
   
   pxr::GfVec3f pos;
   for (size_t x = 0; x < 12; ++x) {
     pxr::GfMatrix4f m(1.f);
     m.SetTranslate(pxr::GfVec3f(0.f, RANDOM_0_X(5) - 2.5, (2.f * x) - 6.f));
-    _solver->AddCollision(new SphereCollision(m, 5.f));
+    _solver->AddCollision(new SphereCollision(m, 1.f));
   }
-  */
-  
+ 
 
   _solver->AddCollision(new PlaneCollision());
 
@@ -417,7 +415,7 @@ Scene::UpdateExec(double time)
   if (pxr::GfIsClose(time, GetApplication()->GetTime().GetStartTime(), 0.01))
     _solver->Reset();
   else
-    _solver->Step(true);
+    _solver->Step(false);
   
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);

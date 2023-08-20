@@ -45,8 +45,6 @@ void Collision::FindContacts(Particles* particles)
     std::bind(&Collision::_FindContacts, this,
       std::placeholders::_1, std::placeholders::_2, particles));
   _BuildContacts(particles);
-  std::cout << "particles size : " << particles->GetNumParticles() << std::endl;
-  std::cout << "collision size : " << _contacts.size() << std::endl;
 }
 
 void Collision::ResolveContacts(Particles* particles, const float dt)
@@ -101,7 +99,7 @@ void PlaneCollision::_ResolveContact(size_t index, Particles* particles, const f
   float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
 
   if (d < 0.0) {
-    pxr::GfVec3f delta = _normal * -d /** dt*/;
+    pxr::GfVec3f delta = _normal * -d * dt;
     particles->position[index] += delta;
     particles->predicted[index] += delta;
   }

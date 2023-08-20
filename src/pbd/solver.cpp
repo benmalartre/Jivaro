@@ -22,7 +22,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(12)
+  , _subSteps(6)
   , _solverIterations(1)
   , _collisionIterations(1)
   , _paused(true)
@@ -211,6 +211,10 @@ void Solver::AddConstraints(Body* body)
 
     StretchConstraint* stretch = new StretchConstraint(body);
     _constraints.push_back(stretch);
+
+    BendConstraint* bend = new BendConstraint(body);
+    _constraints.push_back(bend);
+
     std::cout << "num constraints : " << _constraints.size() << std::endl;
   } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;
@@ -308,8 +312,8 @@ static _T REMOVE_POINT_AVG_T = { 0,0 };
 void Solver::_StepOneSerial(const float dt)
 {
   const size_t numParticles = _particles.GetNumParticles();
-  const float dc = 1.f / _collisionIterations;
-  const float ds = 1.f / _solverIterations;
+  const float dc = 1.f / static_cast<float>(_collisionIterations);
+  const float ds = dt / static_cast<float>(_solverIterations);
 
   // integrate particles
   _IntegrateParticles(0, numParticles, dt);
@@ -333,8 +337,8 @@ void Solver::_StepOne(const float dt, size_t grain)
 {
   //std::cout << "grain size : " << grain << std::endl;
   const size_t numParticles = _particles.GetNumParticles();
-  const float dc = 1.f / _collisionIterations;
-  const float ds = 1.f / _solverIterations;
+  const float dc = 1.f / static_cast<float>(_collisionIterations);
+  const float ds = dt / static_cast<float>(_solverIterations);
 
   // integrate particles
   pxr::WorkParallelForN(

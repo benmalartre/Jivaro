@@ -16,9 +16,6 @@ GravitationalForce::GravitationalForce(const pxr::GfVec3f& gravity)
 {
 }
 
-
-
-
 void GravitationalForce::Apply(size_t begin, size_t end, pxr::GfVec3f* velocity, float dt) const
 {
   for (size_t index = begin; index < end; ++index) {

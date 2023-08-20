@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "../geometry/triangle.h"
 #include "../geometry/mesh.h"
 #include "../acceleration/intersector.h"
@@ -274,6 +275,34 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
   if(!PlaneBoxTest(normal, v0, boxhalfsize)) return false;
   
   return true;   // box and triangle overlaps
+}
+
+//-------------------------------------------------------
+// TrianglePair vertices
+//-------------------------------------------------------
+pxr::GfVec4i 
+TrianglePair::GetVertices()
+{
+  if (!right)
+    return pxr::GfVec4i(left->vertices[0], left->vertices[1], left->vertices[2], -1);
+
+  std::vector<int> indices(6);
+  for (size_t i = 0; i < 3; ++i) {
+    indices[i] = left->vertices[i];
+    indices[i + 3] = right->vertices[i];
+  }
+  std::sort(indices.begin(), indices.begin() + 6);
+  pxr::GfVec4i vertices(indices[0], -1, -1, -1);
+  size_t c = 1;
+  for (size_t i = 1; i < 6; ++i) {
+    if (indices[i] != indices[i - 1]) {
+      vertices[c++] = indices[i];
+    }
+  }
+
+  std::cout << "Triangle Pair vertices : " << vertices << std::endl;
+
+  return vertices;
 }
 
 //-------------------------------------------------------
