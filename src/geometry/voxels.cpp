@@ -11,7 +11,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 // constructor
 //--------------------------------------------------------------------------------
 Voxels::Voxels()
-  : Geometry(Geometry::VOXEL)
+  : Geometry(Geometry::VOXEL, pxr::GfMatrix4d(1.0))
   , _geometry(NULL)
   , _radius(1.f)
 {

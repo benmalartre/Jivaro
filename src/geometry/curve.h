@@ -30,7 +30,7 @@ class Curve : public Geometry {
 public:
   Curve();
   Curve(const Curve* other, bool normalize = true);
-  Curve(const pxr::UsdGeomBasisCurves& curve);
+  Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world);
   virtual ~Curve() {};
 
   void SetRadius(size_t curveIdx, size_t cvIdx, float radius);

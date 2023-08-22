@@ -7,7 +7,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Curve::Curve()
-  : Geometry(Geometry::CURVE)
+  : Geometry(Geometry::CURVE, pxr::GfMatrix4d(1.0))
 {
   _initialized = false;
 }
@@ -24,8 +24,8 @@ Curve::Curve(const Curve* other, bool normalize)
   memcpy(&_cvCounts[0], &other->_cvCounts[0], numCurves * sizeof(int));
 }
 
-Curve::Curve(const pxr::UsdGeomBasisCurves& curve)
-  : Geometry(Geometry::CURVE)
+Curve::Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world)
+  : Geometry(Geometry::CURVE, world)
 {
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());

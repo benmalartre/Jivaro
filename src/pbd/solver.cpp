@@ -22,9 +22,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(6)
-  , _solverIterations(1)
+  , _subSteps(12)
+  , _solverIterations(4)
   , _collisionIterations(1)
+  , _sleepThreshold(0.1f)
   , _paused(true)
 {
   _timeStep = 1.f / GetApplication()->GetTime().GetFPS();
@@ -79,7 +80,7 @@ Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix)
 
   std::cout << "num particles before add : " << base << std::endl;
 
-  Body* body = new Body({ 1.f, 1.f, 1.f, base, geom->GetNumPoints(), geom });
+  Body* body = new Body({ 1.f, 0.1f, 1.f, base, geom->GetNumPoints(), geom });
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
@@ -225,13 +226,46 @@ void Solver::AddConstraints(Body* body)
   }
 }
 
+void Solver::GetConstraintsByType(short type, pxr::VtArray<Constraint*>& results)
+{
+  for(auto& constraint: _constraints)
+    if(constraint->GetTypeId() == type)
+      results.push_back(constraint);
+}
+
+void Solver::LockPoints()
+{
+  size_t particleIdx = 0;
+  const pxr::GfVec3f* positions = &_particles.position[0];
+  std::cout << "num particles : " << _particles.position.size() << std::endl;
+  for (auto& body : _bodies) {
+    std::cout << "lock points for body " << body << std::endl;
+    std::cout << "geometry : " << body->geometry << std::endl;
+    pxr::GfBBox3d bbox = body->geometry->GetBoundingBox();
+    std::cout << "bbox : " << bbox << std::endl;
+
+    std::cout << "num positions : " << body->numPoints << std::endl;
+    float height = bbox.GetRange().GetSize()[1] / 10.f;
+    for (size_t p = 0; p < body->numPoints; ++p) {
+      if ((bbox.GetRange().GetMax()[1] - positions[p + body->offset][1]) < height) {
+        std::cout << "lock particle " << particleIdx << std::endl;
+        _particles.mass[particleIdx] = 0.f;
+        std::cout << "particle locked" << std::endl;
+      }
+      
+      particleIdx++;
+    }
+  }
+}
+
 void Solver::_IntegrateParticles(size_t begin, size_t end, const float dt)
 {
   pxr::GfVec3f* velocity = &_particles.velocity[0];
+  float* mass = &_particles.mass[0];
 
   // apply external forces
   for (const Force* force : _force) {
-    force->Apply(begin, end, velocity, dt);
+    force->Apply(begin, end, velocity, mass, dt);
   }
 
   // compute predicted position
@@ -313,7 +347,7 @@ void Solver::_StepOneSerial(const float dt)
 {
   const size_t numParticles = _particles.GetNumParticles();
   const float dc = 1.f / static_cast<float>(_collisionIterations);
-  const float ds = dt / static_cast<float>(_solverIterations);
+  const float ds = 1.f / static_cast<float>(_solverIterations);
 
   // integrate particles
   _IntegrateParticles(0, numParticles, dt);
@@ -324,9 +358,9 @@ void Solver::_StepOneSerial(const float dt)
 
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
-    for (auto& constraint : _constraints) constraint->Solve(&_particles, ds);
+    for (auto& constraint : _constraints) constraint->Solve(&_particles);
     // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles);
+    for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
   }
 
   // update particles
@@ -338,7 +372,7 @@ void Solver::_StepOne(const float dt, size_t grain)
   //std::cout << "grain size : " << grain << std::endl;
   const size_t numParticles = _particles.GetNumParticles();
   const float dc = 1.f / static_cast<float>(_collisionIterations);
-  const float ds = dt / static_cast<float>(_solverIterations);
+  const float ds = 1.f / static_cast<float>(_solverIterations);
 
   // integrate particles
   pxr::WorkParallelForN(
@@ -353,10 +387,10 @@ void Solver::_StepOne(const float dt, size_t grain)
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
-      [&](Constraint* constraint) {constraint->Solve(&_particles, ds); });
+      [&](Constraint* constraint) {constraint->Solve(&_particles); });
 
     // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles);
+    for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
   }
 
   // update particles
@@ -371,7 +405,7 @@ void Solver::Step(bool serial)
 {
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
-  const float dt = (1.f / GetApplication()->GetTime().GetFPS()) / _subSteps;
+  const float dt = _timeStep / _subSteps;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
   size_t numConstraints = _constraints.size();

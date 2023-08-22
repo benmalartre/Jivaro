@@ -7,7 +7,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Points::Points()
-  : Geometry(Geometry::POINT)
+  : Geometry(Geometry::POINT, pxr::GfMatrix4d(1.0))
 {
   _initialized = false;
 }
@@ -24,8 +24,8 @@ Points::Points(const Points* other, bool normalize)
   memcpy(&_radius[0], &other->_radius[0], numPoints * sizeof(float));
 }
 
-Points::Points(const pxr::UsdGeomPoints& points)
-  : Geometry(Geometry::POINT)
+Points::Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
+  : Geometry(Geometry::POINT, world)
 {
 
   pxr::UsdAttribute pointsAttr = points.GetPointsAttr();

@@ -22,7 +22,7 @@ class Points : public Geometry {
 public:
   Points();
   Points(const Points* other, bool normalize = true);
-  Points(const pxr::UsdGeomPoints& points);
+  Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world);
   virtual ~Points() {};
 
   Point Get(uint32_t index);

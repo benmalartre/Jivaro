@@ -13,12 +13,16 @@ Geometry::Geometry()
 {
   _initialized = false;
   _type = INVALID;
+  _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  _matrix = pxr::GfMatrix4d(1.0);
 }
 
-Geometry::Geometry(short type)
+Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
 {
   _initialized = false;
   _type = type;
+  _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  _matrix = world;
 }
 
 Geometry::Geometry(const Geometry* other, short type, bool normalize)
@@ -27,10 +31,13 @@ Geometry::Geometry(const Geometry* other, short type, bool normalize)
   _type = type;
 
   _positions = other->_positions;
-  _normals = other->_positions;
+  _normals = other->_normals;
   _radius = other->_radius;
+  _colors = other->_colors;
+  _wirecolor = other->_wirecolor;
 
   _bbox = other->_bbox;
+  _matrix = other->_matrix;
 
   if (normalize) {
     Normalize();
@@ -80,6 +87,15 @@ Geometry::GetNormal(uint32_t index) const
   return _normals[index];
 }
 
+pxr::GfVec3f
+Geometry::GetColor(uint32_t index) const
+{
+  if (HasColors())
+    return _colors[index];
+  else
+    return _wirecolor;
+}
+
 float
 Geometry::GetRadius(uint32_t index) const
 {
@@ -120,7 +136,7 @@ Geometry::ComputeBoundingBox()
   }
   range.SetMin(min);
   range.SetMax(max);
-  _bbox.Set(range, pxr::GfMatrix4d(1.0));
+  _bbox.Set(range, _matrix);
    
 }
 

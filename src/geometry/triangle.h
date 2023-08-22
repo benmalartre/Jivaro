@@ -101,8 +101,8 @@ struct TrianglePair : public Component {
     , left(t1)
     , right(t2) {};
 
-  pxr::GfRange3d GetBoundingBox(const pxr::GfVec3f* points);
-  pxr::GfVec4i GetVertices();
+  pxr::GfRange3d GetBoundingBox(const pxr::GfVec3f* points) const;
+  pxr::GfVec4i GetVertices() const;
 
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;

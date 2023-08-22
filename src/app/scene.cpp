@@ -18,6 +18,7 @@
 #include "../pbd/force.h"
 #include "../pbd/solver.h"
 #include "../pbd/collision.h"
+#include "../pbd/constraint.h"
 #include "../app/scene.h"
 #include "../app/application.h"
 #include "../app/commands.h"
@@ -193,9 +194,14 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
   if (key == pxr::HdTokens->points) {
     return pxr::VtValue(_prims[id].geom->GetPositions());
   } else if (key == pxr::HdTokens->displayColor) {
-    pxr::VtArray<pxr::GfVec3f> colors(_prims[id].geom->GetNumPoints());
-    for (auto& color : colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    return pxr::VtValue(colors);
+    pxr::VtArray<pxr::GfVec3f>& colors(_prims[id].geom->GetColors());
+    if(colors.size())
+      return pxr::VtValue(colors);
+    else {
+      const pxr::GfVec3f& wirecolor = _prims[id].geom->GetWirecolor();
+      colors = { wirecolor };
+      return pxr::VtValue(colors);
+    }
   } else if (key == pxr::HdTokens->widths) {
     return pxr::VtValue(_prims[id].geom->GetRadius());
   }
@@ -347,7 +353,7 @@ Scene::InitExec()
     size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh usdMesh(prim);
-      Mesh mesh(usdMesh);
+      Mesh mesh(usdMesh, xformCache.GetLocalToWorldTransform(prim));
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Body* body = _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform));
       _solver->AddConstraints(body);
@@ -355,7 +361,7 @@ Scene::InitExec()
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
       pxr::UsdGeomPoints usdPoints(prim);
-      Points points(usdPoints);
+      Points points(usdPoints, xformCache.GetLocalToWorldTransform(prim));
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       _solver->AddBody((Geometry*)&points, pxr::GfMatrix4f(xform));
 
@@ -363,9 +369,10 @@ Scene::InitExec()
     }
   }
   _solver->AddForce(new GravitationalForce());
+  _solver->LockPoints();
   
   //_solver->AddForce(new DampingForce());
-  
+  /*
   pxr::GfVec3f pos;
   for (size_t x = 0; x < 12; ++x) {
     pxr::GfMatrix4f m(1.f);
@@ -373,8 +380,9 @@ Scene::InitExec()
     _solver->AddCollision(new SphereCollision(m, 1.f));
   }
  
-
+  */
   _solver->AddCollision(new PlaneCollision());
+ 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Display")));
   _sourcesMap[pointsPath] = sources;
@@ -383,6 +391,33 @@ Scene::InitExec()
   const size_t numParticles = _solver->GetNumParticles();
   points->SetPositions(&particles->position[0], numParticles);
   points->SetRadii(&particles->radius[0], numParticles);
+
+  
+
+  pxr::VtArray<Constraint*> bendConstraints;
+  _solver->GetConstraintsByType(Constraint::BEND, bendConstraints);
+  if (bendConstraints.size()) {
+    std::cout << "we have some bend constraints lets draw them !!" << std::endl;
+    pxr::SdfPath bendPath(rootId.AppendChild(pxr::TfToken("Bend")));
+    _sourcesMap[bendPath] = sources;
+    Curve* curve = AddCurve(bendPath);
+    pxr::VtArray<pxr::GfVec3f> positions;
+    pxr::VtArray<float> radii;
+    pxr::VtArray<int> cvCounts;
+    for (const auto& bendConstraint : bendConstraints) {
+      pxr::VtArray<pxr::GfVec3f> points;
+      bendConstraint->GetPoints(_solver->GetParticles(), points);
+      for (auto& point : points) {
+        positions.push_back(point);
+        radii.push_back(0.02f);
+      }
+      for (size_t e = 0; e < points.size() / 2; ++e) {
+        cvCounts.push_back(2);
+      }
+    }
+    curve->SetTopology(positions, radii, cvCounts);
+  }
+
   /*
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
@@ -434,6 +469,25 @@ Scene::UpdateExec(double time)
         &_solver->GetParticles()->position[0], 
         _solver->GetNumParticles()
       );
+    } else if (execPrim.first.GetNameToken() == pxr::TfToken("Bend")) {
+      pxr::VtArray<Constraint*> bendConstraints;
+      _solver->GetConstraintsByType(Constraint::BEND, bendConstraints);
+      Curve* curve = (Curve*)GetGeometry(execPrim.first);
+      pxr::VtArray<pxr::GfVec3f> positions;
+      pxr::VtArray<float> radii;
+      pxr::VtArray<int> cvCounts;
+      for (const auto& bendConstraint : bendConstraints) {
+        pxr::VtArray<pxr::GfVec3f> points;
+        bendConstraint->GetPoints(_solver->GetParticles(), points);
+        for (auto& point : points) {
+          positions.push_back(point);
+          radii.push_back(0.02f);
+        }
+        for (size_t e = 0; e < points.size() / 2; ++e) {
+          cvCounts.push_back(2);
+        }
+      }
+      curve->SetTopology(positions, radii, cvCounts);
     }
 
     execPrim.second.bits = /*pxr::HdChangeTracker::DirtyTopology;*/

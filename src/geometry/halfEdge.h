@@ -60,7 +60,7 @@ public:
   HalfEdge* GetEdgeFromVertex(size_t vertex);
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
   const HalfEdge* GetEdgeFromVertices(size_t start, size_t end) const;
-  void GetEdgeFromFace(const HalfEdge* edge, pxr::VtArray<int>& indices);
+  void GetEdgesFromFace(const HalfEdge* edge, pxr::VtArray<int>& indices);
 
   size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions) const;
   float GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const;

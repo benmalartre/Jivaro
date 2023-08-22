@@ -35,7 +35,7 @@ public:
   };
   Mesh();
   Mesh(const Mesh* other, bool normalize = true);
-  Mesh(const pxr::UsdGeomMesh& usdMesh);
+  Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world);
   virtual ~Mesh();
 
   const pxr::VtArray<int>& GetFaceCounts() const { return _faceVertexCounts;};

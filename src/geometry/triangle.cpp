@@ -281,7 +281,7 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
 // TrianglePair vertices
 //-------------------------------------------------------
 pxr::GfVec4i 
-TrianglePair::GetVertices()
+TrianglePair::GetVertices() const
 {
   if (!right)
     return pxr::GfVec4i(left->vertices[0], left->vertices[1], left->vertices[2], -1);
@@ -297,7 +297,8 @@ TrianglePair::GetVertices()
   for (size_t i = 1; i < 6; ++i) {
     if (indices[i] != indices[i - 1]) {
       vertices[c++] = indices[i];
-    }
+    } 
+    if (c > 3)break;
   }
 
   std::cout << "Triangle Pair vertices : " << vertices << std::endl;
@@ -309,7 +310,7 @@ TrianglePair::GetVertices()
 // TrianglePair bounding box
 //-------------------------------------------------------
 pxr::GfRange3d
-TrianglePair::GetBoundingBox(const pxr::GfVec3f* points)
+TrianglePair::GetBoundingBox(const pxr::GfVec3f* points) const
 {
   pxr::GfRange3d range;
 

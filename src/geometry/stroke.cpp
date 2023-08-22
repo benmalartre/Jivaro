@@ -31,7 +31,7 @@ Stroke::~Stroke()
 };
 
 Stroke::Stroke()
-  : Geometry(Geometry::STROKE)
+  : Geometry(Geometry::STROKE, pxr::GfMatrix4d(1.0))
 {
   _initialized = false;
   _numLines = 0;

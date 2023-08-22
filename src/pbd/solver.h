@@ -56,6 +56,7 @@ public:
   // constraints
   void AddConstraint(Constraint* constraint) { _constraints.push_back(constraint); };
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
+  void GetConstraintsByType(short type, pxr::VtArray<Constraint*>& results);
 
   // collisions
   void AddCollision(Collision* collision) { _collisions.push_back(collision); };
@@ -63,6 +64,7 @@ public:
 
   // particles
   Particles* GetParticles() { return &_particles; };
+  void LockPoints();
   
   // solver
   void UpdateCollisions();

@@ -133,7 +133,7 @@ HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end) const
 }
 
 void 
-HalfEdgeGraph::GetEdgeFromFace(const HalfEdge* edge, pxr::VtArray<int>& indices)
+HalfEdgeGraph::GetEdgesFromFace(const HalfEdge* edge, pxr::VtArray<int>& indices)
 {
   indices.push_back(_GetEdgeIndex(edge));
   const HalfEdge* current = &_halfEdges[edge->next];
@@ -765,7 +765,7 @@ HalfEdgeGraph::CollapseFace(HalfEdge* edge, pxr::VtArray<int>& vertices)
   vertices.push_back(edge->vertex);
 
   pxr::VtArray<int> indices;
-  GetEdgeFromFace(edge, indices);
+  GetEdgesFromFace(edge, indices);
 
 
 

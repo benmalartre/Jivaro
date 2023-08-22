@@ -25,7 +25,7 @@ Mesh::GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices)
 }
 
 Mesh::Mesh()
-  : Geometry(Geometry::MESH)
+  : Geometry(Geometry::MESH, pxr::GfMatrix4d(1.0))
   , _flags(0)
   , _halfEdges()
 {
@@ -42,8 +42,8 @@ Mesh::Mesh(const Mesh* other, bool normalize)
   _triangles = other->_triangles;
 }
 
-Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
-  : Geometry(Geometry::MESH)
+Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
+  : Geometry(Geometry::MESH, world)
   , _flags(0)
 {
   pxr::UsdAttribute pointsAttr = mesh.GetPointsAttr();

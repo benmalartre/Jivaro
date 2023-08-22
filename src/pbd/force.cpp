@@ -16,14 +16,14 @@ GravitationalForce::GravitationalForce(const pxr::GfVec3f& gravity)
 {
 }
 
-void GravitationalForce::Apply(size_t begin, size_t end, pxr::GfVec3f* velocity, float dt) const
+void GravitationalForce::Apply(size_t begin, size_t end, pxr::GfVec3f* velocity, float* mass, float dt) const
 {
   for (size_t index = begin; index < end; ++index) {
     if (!Affects(index))continue;
     if (HasWeights())
-      velocity[index] += dt * _gravity * _weights[index];
+      velocity[index] += _gravity * _weights[index] * mass[index] * dt;
     else
-      velocity[index] += dt * _gravity;
+      velocity[index] += _gravity * mass[index] *  dt;
   }
 }
 
@@ -39,14 +39,14 @@ DampingForce::DampingForce(float damp)
 {
 }
 
-void DampingForce::Apply(size_t begin, size_t end, pxr::GfVec3f* velocity, float dt) const
+void DampingForce::Apply(size_t begin, size_t end, pxr::GfVec3f* velocity, float* mass, float dt) const
 {
   for (size_t index = begin; index < end; ++index) {
     if (!Affects(index))continue;
     if (HasWeights())
-      velocity[index] -= velocity[index] * _damp * _weights[index] * dt;
+      velocity[index] -= velocity[index] * _damp * _weights[index] * mass[index] * dt;
     else
-      velocity[index] -= velocity[index] * _damp * dt;
+      velocity[index] -= velocity[index] * _damp * mass[index] * dt;
   }
 
 }
