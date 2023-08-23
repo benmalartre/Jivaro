@@ -22,7 +22,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(6)
+  , _subSteps(8)
   , _solverIterations(4)
   , _collisionIterations(1)
   , _sleepThreshold(0.1f)
@@ -212,10 +212,8 @@ void Solver::AddConstraints(Body* body)
     StretchConstraint* stretch = new StretchConstraint(body);
     _constraints.push_back(stretch);
 
-    /*
-    BendConstraint* bend = new BendConstraint(body, 0.05f);
+    BendConstraint* bend = new BendConstraint(body, RANDOM_0_1);
     _constraints.push_back(bend);
-    */
 
     std::cout << "num constraints : " << _constraints.size() << std::endl;
   } else if (geom->GetType() == Geometry::CURVE) {
@@ -359,9 +357,9 @@ void Solver::_StepOneSerial(const float dt)
 
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
-    for (auto& constraint : _constraints) constraint->Solve(&_particles);
+    for (auto& constraint : _constraints) constraint->Solve(&_particles, ds);
     // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
+    //for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
   }
 
   // update particles
@@ -388,10 +386,10 @@ void Solver::_StepOne(const float dt, size_t grain)
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
-      [&](Constraint* constraint) {constraint->Solve(&_particles); });
+      [&](Constraint* constraint) {constraint->Solve(&_particles, ds); });
 
     // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
+    //for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
   }
 
   // update particles

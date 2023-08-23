@@ -369,17 +369,17 @@ Scene::InitExec()
     }
   }
   _solver->AddForce(new GravitationalForce());
-  //_solver->LockPoints();
+  _solver->LockPoints();
   
   //_solver->AddForce(new DampingForce());
-  
+  /*
   pxr::GfVec3f pos;
   for (size_t x = 0; x < 12; ++x) {
     pxr::GfMatrix4f m(1.f);
     m.SetTranslate(pxr::GfVec3f(0.f, RANDOM_0_X(5) - 2.5, (2.f * x) - 6.f));
     _solver->AddCollision(new SphereCollision(m, 5.f));
   }
- 
+  */
  
   _solver->AddCollision(new PlaneCollision());
  
@@ -470,8 +470,9 @@ Scene::UpdateExec(double time)
         _solver->GetNumParticles()
       );
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Bend")) {
+      /*
       pxr::VtArray<Constraint*> constraints;
-      _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
+      _solver->GetConstraintsByType(Constraint::BEND, constraints);
       Curve* curve = (Curve*)GetGeometry(execPrim.first);
       pxr::VtArray<pxr::GfVec3f> positions;
       pxr::VtArray<float> radii;
@@ -488,6 +489,7 @@ Scene::UpdateExec(double time)
         }
       }
       curve->SetTopology(positions, radii, cvCounts);
+      */
     }
 
     execPrim.second.bits = /*pxr::HdChangeTracker::DirtyTopology;*/

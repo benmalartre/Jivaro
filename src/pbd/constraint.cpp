@@ -44,7 +44,7 @@ StretchConstraint::StretchConstraint(Body* body, const float stretchStiffness, c
   }
 }
 
-bool StretchConstraint::Solve(Particles* particles)
+bool StretchConstraint::Solve(Particles* particles, const float di)
 { 
   ResetCorrection();
 
@@ -83,8 +83,8 @@ bool StretchConstraint::Solve(Particles* particles)
     else
       c = _stretch * n * (d - rest) * sum;
 
-    _correction[i1] += im1 * c;
-    _correction[i2] += -im2 * c;
+    particles->predicted[p1] += im1 * c * di;
+    particles->predicted[p2] += -im2 * c * di;
   }
 
   return true;
@@ -152,7 +152,7 @@ BendConstraint::BendConstraint(Body* body, const float stiffness)
   }
 }
 
-bool BendConstraint::Solve(Particles* particles)
+bool BendConstraint::Solve(Particles* particles, const float di)
 {
   ResetCorrection();
 
@@ -198,9 +198,9 @@ bool BendConstraint::Solve(Particles* particles)
     if (pxr::GfIsClose(w, 0.f, 0.0000001f))
       continue;
 
-    _correction[i1] += _stiffness * (2.f * im1 / w) * dir;
-    _correction[i2] += _stiffness * (2.f * im2 / w) * dir;
-    _correction[i3] += -_stiffness * (4.f * im3 / w) * dir;
+    particles->predicted[p1] += _stiffness * (2.f * im1 / w) * dir * di;
+    particles->predicted[p2] += _stiffness * (2.f * im2 / w) * dir * di;
+    particles->predicted[p3] += -_stiffness * (4.f * im3 / w) * dir * di;
   }
 
   return true;

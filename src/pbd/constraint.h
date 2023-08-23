@@ -44,7 +44,7 @@ public:
   virtual size_t& GetTypeId() const = 0;
 
   virtual bool Update(Particles* particles) { return true; };
-  virtual bool Solve(Particles* particles) = 0;
+  virtual bool Solve(Particles* particles, const float di) = 0;
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) = 0;
 
   // this one has to be called serially 
@@ -67,7 +67,7 @@ public:
   StretchConstraint(Body* body, const float stretchStiffness=0.5f, const float compressionStiffness=0.5f);
   virtual size_t& GetTypeId() const override { return TYPE_ID; }
 
-  bool Solve(Particles* particles) override;
+  bool Solve(Particles* particles, const float di) override;
   void Apply(Particles* particles, const float di) override;
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
   
@@ -87,7 +87,7 @@ public:
   BendConstraint(Body* body, const float stiffness = 0.1f);
   virtual size_t& GetTypeId() const override { return TYPE_ID; }
 
-  bool Solve(Particles* particles) override;
+  bool Solve(Particles* particles, const float di) override;
   void Apply(Particles* particles, const float di) override;
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
 
