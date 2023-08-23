@@ -29,7 +29,7 @@ void GravitationalForce::Apply(size_t begin, size_t end, pxr::GfVec3f* velocity,
 
 DampingForce::DampingForce()
   : Force()
-  , _damp(0.f)
+  , _damp(0.5f)
 {
 }
 

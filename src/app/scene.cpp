@@ -369,18 +369,18 @@ Scene::InitExec()
     }
   }
   _solver->AddForce(new GravitationalForce());
-  _solver->LockPoints();
+  //_solver->LockPoints();
   
   //_solver->AddForce(new DampingForce());
-  /*
+  
   pxr::GfVec3f pos;
   for (size_t x = 0; x < 12; ++x) {
     pxr::GfMatrix4f m(1.f);
     m.SetTranslate(pxr::GfVec3f(0.f, RANDOM_0_X(5) - 2.5, (2.f * x) - 6.f));
-    _solver->AddCollision(new SphereCollision(m, 1.f));
+    _solver->AddCollision(new SphereCollision(m, 5.f));
   }
  
-  */
+ 
   _solver->AddCollision(new PlaneCollision());
  
 
@@ -394,9 +394,9 @@ Scene::InitExec()
 
   
 
-  pxr::VtArray<Constraint*> bendConstraints;
-  _solver->GetConstraintsByType(Constraint::BEND, bendConstraints);
-  if (bendConstraints.size()) {
+  pxr::VtArray<Constraint*> constraints;
+  _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
+  if (constraints.size()) {
     std::cout << "we have some bend constraints lets draw them !!" << std::endl;
     pxr::SdfPath bendPath(rootId.AppendChild(pxr::TfToken("Bend")));
     _sourcesMap[bendPath] = sources;
@@ -404,9 +404,9 @@ Scene::InitExec()
     pxr::VtArray<pxr::GfVec3f> positions;
     pxr::VtArray<float> radii;
     pxr::VtArray<int> cvCounts;
-    for (const auto& bendConstraint : bendConstraints) {
+    for (const auto& constraint : constraints) {
       pxr::VtArray<pxr::GfVec3f> points;
-      bendConstraint->GetPoints(_solver->GetParticles(), points);
+      constraint->GetPoints(_solver->GetParticles(), points);
       for (auto& point : points) {
         positions.push_back(point);
         radii.push_back(0.02f);
@@ -470,15 +470,15 @@ Scene::UpdateExec(double time)
         _solver->GetNumParticles()
       );
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Bend")) {
-      pxr::VtArray<Constraint*> bendConstraints;
-      _solver->GetConstraintsByType(Constraint::BEND, bendConstraints);
+      pxr::VtArray<Constraint*> constraints;
+      _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
       Curve* curve = (Curve*)GetGeometry(execPrim.first);
       pxr::VtArray<pxr::GfVec3f> positions;
       pxr::VtArray<float> radii;
       pxr::VtArray<int> cvCounts;
-      for (const auto& bendConstraint : bendConstraints) {
+      for (const auto& constraint : constraints) {
         pxr::VtArray<pxr::GfVec3f> points;
-        bendConstraint->GetPoints(_solver->GetParticles(), points);
+        constraint->GetPoints(_solver->GetParticles(), points);
         for (auto& point : points) {
           positions.push_back(point);
           radii.push_back(0.02f);

@@ -22,7 +22,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(12)
+  , _subSteps(6)
   , _solverIterations(4)
   , _collisionIterations(1)
   , _sleepThreshold(0.1f)
@@ -208,13 +208,14 @@ void Solver::AddConstraints(Body* body)
   std::cout << "[solver] add constraints for type " << geom->GetType() << std::endl;
   if (geom->GetType() == Geometry::MESH) {
     std::cout << "[solver] add constraints for mesh : " << std::endl;
-    Mesh* mesh = (Mesh*)geom;   
 
     StretchConstraint* stretch = new StretchConstraint(body);
     _constraints.push_back(stretch);
 
-    BendConstraint* bend = new BendConstraint(body);
+    /*
+    BendConstraint* bend = new BendConstraint(body, 0.05f);
     _constraints.push_back(bend);
+    */
 
     std::cout << "num constraints : " << _constraints.size() << std::endl;
   } else if (geom->GetType() == Geometry::CURVE) {

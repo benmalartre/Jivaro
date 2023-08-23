@@ -239,7 +239,7 @@ bool ToolUI::Draw()
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
-
+  Time& time = GetApplication()->GetTime();
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);
 
@@ -267,11 +267,12 @@ bool ToolUI::Draw()
   }
 
   static float randFactor = 0.1f;
+  pxr::UsdTimeCode timeCode(time.GetActiveTime());
   if (ImGui::Button("Randomize")) {
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
-      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
       mesh.Randomize(randFactor);
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }
@@ -282,8 +283,10 @@ bool ToolUI::Draw()
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
     if(usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
-      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
+      std::cout << "subdivide ..." << std::endl;
       _SubdivideMesh(&mesh, 1);
+      std::cout << "subdiv done !" << std::endl;
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }
   }
@@ -292,7 +295,7 @@ bool ToolUI::Draw()
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
-      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
       mesh.Triangulate();
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }
@@ -302,7 +305,7 @@ bool ToolUI::Draw()
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
-      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
       size_t edgeIdx = RANDOM_0_X(mesh.GetNumEdges()-1);
       /*
       if (mesh.FlipEdge(mesh.GetEdge(edgeIdx))) {
@@ -329,7 +332,7 @@ bool ToolUI::Draw()
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
-      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
       mesh.TriangulateFace(0);
     }
   }
@@ -338,7 +341,7 @@ bool ToolUI::Draw()
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
-      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
       mesh.ComputeTrianglePairs();
     }
   }
@@ -347,7 +350,7 @@ bool ToolUI::Draw()
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
-      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
       mesh.SplitEdge(0);
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }

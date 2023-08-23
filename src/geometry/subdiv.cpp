@@ -8,6 +8,7 @@ using namespace OpenSubdiv;
 
 void _SubdivideMesh(Mesh* mesh, int refineLevel)
 {
+  std::cout << "subdivide mesh with level " << refineLevel << std::endl;
   // Populate a topology descriptor with our raw data
   Sdc::SchemeType type = Sdc::SCHEME_CATMARK;
 
@@ -17,7 +18,6 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
   Far::TopologyDescriptor desc;
   desc.numVertices = mesh->GetNumPoints();
   desc.numFaces = mesh->GetNumFaces();
-
   desc.numVertsPerFace = &mesh->GetFaceCounts()[0];
   desc.vertIndicesPerFace = &mesh->GetFaceConnects()[0];
 
@@ -44,6 +44,7 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
     verts[i].SetPosition(points[i][0], points[i][1], points[i][2]);
   }
 
+  std::cout << "num coarse verts " << nCoarseVerts << std::endl;
 
   // Interpolate vertex primvar data
   Far::PrimvarRefiner primvarRefiner(*refiner);
@@ -51,7 +52,8 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
   _Vertex* src = verts;
   size_t firstVert = 0;
   
-  for (int level = 0; level <= refineLevel; ++level) {
+  for (int level = 1; level <= refineLevel; ++level) {
+    /*
     float variance = (refineLevel - level) / 10.f;
     Far::TopologyLevel const& refLevel = refiner->GetLevel(level);
     size_t numVerts = refLevel.GetNumVertices();
@@ -59,18 +61,21 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
       float const* pos = verts[firstVert + vert].GetPosition();
 
       verts[firstVert + vert].SetPosition(
-        pos[0] /*+ RANDOM_LO_HI(-variance, variance)*/, 
-        pos[1] /*+ RANDOM_LO_HI(-variance, variance)*/, 
-        pos[2] /*+ RANDOM_LO_HI(-variance, variance)*/
+        pos[0] + RANDOM_LO_HI(-variance, variance), 
+        pos[1] + RANDOM_LO_HI(-variance, variance), 
+        pos[2] + RANDOM_LO_HI(-variance, variance)
       );
     }
     firstVert += numVerts;
     if(level > 0) {
+    */
       _Vertex* dst = src + refiner->GetLevel(level - 1).GetNumVertices();
       primvarRefiner.Interpolate(level, src, dst);
       src = dst;
-    }
+    //}
   }
+
+  std::cout << "interpolated vertex prim vars" << std::endl;
 
   { // Output of the highest level refined -----------
     Far::TopologyLevel const & refLastLevel = refiner->GetLevel(refineLevel);
@@ -105,6 +110,14 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
           faceConnects.push_back(faceVerts[vert]);
         }
     }
+
+    std::cout << " num verts " << numVerts << std::endl;
+    std::cout << " num faces " << numFaces << std::endl;
+
+    std::cout << "position size : " << positions.size() << std::endl;
+    std::cout << "face connects : " << faceConnects << std::endl;
+    std::cout << "face counts : " << faceCounts << std::endl;
+
 
     mesh->Set(positions, faceCounts, faceConnects);
   }

@@ -38,7 +38,7 @@ StretchConstraint::StretchConstraint(Body* body, const float stretchStiffness, c
       size_t a = edge->vertex;
       size_t b = edges[edge->next].vertex;
       _edges.push_back(pxr::GfVec2i(a, b));
-      _rest.push_back(m.Transform(positions[b] - positions[a]).GetLength());
+      _rest.push_back((m.Transform(positions[b]) - m.Transform(positions[a])).GetLength());
       edge = it.Next();
     }
   }
@@ -106,8 +106,8 @@ void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3
   const size_t numEdges = _edges.size();
   results.resize(2 * numEdges);
   for (size_t edge = 0; edge < numEdges; ++edge) {
-    results[edge * 2    ] = particles->position[_edges[edge][0]];
-    results[edge * 2 + 1] = particles->position[_edges[edge][1]];
+    results[edge * 2    ] = particles->position[_edges[edge][0] + _body[0]->offset];
+    results[edge * 2 + 1] = particles->position[_edges[edge][1] + _body[0]->offset];
   }
 }
 
@@ -133,8 +133,8 @@ BendConstraint::BendConstraint(Body* body, const float stiffness)
         float minCosine = 0.f;
         for (const auto& n2 : neighbors[p]) {
           if (n1 == n2)continue;
-          const pxr::GfVec3f e0 = m.Transform(positions[n1] - positions[p]);
-          const pxr::GfVec3f e1 = m.Transform(positions[n2] - positions[p]);
+          const pxr::GfVec3f e0 = positions[n1] - positions[p];
+          const pxr::GfVec3f e1 = positions[n2] - positions[p];
           float cosine = pxr::GfDot(e0, e1) / (e0.GetLength() * e1.GetLength());
           if (cosine < minCosine) {
             minCosine = cosine;
@@ -144,8 +144,8 @@ BendConstraint::BendConstraint(Body* body, const float stiffness)
         if (best >= 0 && existing[best] != n1) {
           existing[n1] = best;
           _edges.push_back(pxr::GfVec3i(n1, best, p));
-          pxr::GfVec3f center = m.Transform(positions[n1] + positions[best] + positions[p]) / 3.f;
-          _rest.push_back((m.Transform(positions[p]) - center).GetLength());
+          pxr::GfVec3f center = (positions[n1] + positions[best] + positions[p]) / 3.f;
+          _rest.push_back((positions[p] - center).GetLength());
         }
       }
     }
@@ -178,16 +178,29 @@ bool BendConstraint::Solve(Particles* particles)
 
     dir *= (1.f - (_rest[edge] / dist));
 
-    const float m1 = particles->mass[p1];
-    const float m2 = particles->mass[p2];
-    const float m3 = particles->mass[p3];
+    const float im1 =
+      pxr::GfIsClose(particles->mass[p1], 0, 0.0000001f) ?
+      0.f :
+      1.f / particles->mass[p1];
 
-    const float w = m1 + m2 + 2.f * m3;
-    if (pxr::GfIsClose(w, 0.f, 0.0000001f))continue;
+    const float im2 =
+      pxr::GfIsClose(particles->mass[p2], 0, 0.0000001f) ?
+      0.f :
+      1.f / particles->mass[p2];
 
-    _correction[i1] += _stiffness * (2.f * m1 / w) * dir;
-    _correction[i2] += _stiffness * (2.f * m2 / w) * dir;
-    _correction[i3] += -_stiffness * (4.f * m3 / w) * dir;
+    const float im3 =
+      pxr::GfIsClose(particles->mass[p3], 0, 0.0000001f) ?
+      0.f :
+      1.f / particles->mass[p3];
+
+
+    float w = im1 + 2.f * im2 + im3;
+    if (pxr::GfIsClose(w, 0.f, 0.0000001f))
+      continue;
+
+    _correction[i1] += _stiffness * (2.f * im1 / w) * dir;
+    _correction[i2] += _stiffness * (2.f * im2 / w) * dir;
+    _correction[i3] += -_stiffness * (4.f * im3 / w) * dir;
   }
 
   return true;
@@ -208,8 +221,8 @@ void BendConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>&
   const size_t numEdges = _edges.size();
   results.resize(2 * numEdges);
   for (size_t edge = 0; edge < numEdges; ++edge) {
-    results[edge * 2] = particles->position[_edges[edge][0]];
-    results[edge * 2 + 1] = particles->position[_edges[edge][1]];
+    results[edge * 2] = particles->position[_edges[edge][0] + _body[0]->offset];
+    results[edge * 2 + 1] = particles->position[_edges[edge][1] + _body[0]->offset];
   }
 }
 

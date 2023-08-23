@@ -65,7 +65,7 @@ class StretchConstraint : public Constraint
 {
 public:
   StretchConstraint(Body* body, const float stretchStiffness=0.5f, const float compressionStiffness=0.5f);
-  virtual size_t& GetTypeId() const { return TYPE_ID; }
+  virtual size_t& GetTypeId() const override { return TYPE_ID; }
 
   bool Solve(Particles* particles) override;
   void Apply(Particles* particles, const float di) override;
@@ -84,8 +84,8 @@ protected:
 class BendConstraint : public Constraint
 {
 public:
-  BendConstraint(Body* body, const float stiffness = 0.5f);
-  virtual size_t& GetTypeId() const { return TYPE_ID; }
+  BendConstraint(Body* body, const float stiffness = 0.1f);
+  virtual size_t& GetTypeId() const override { return TYPE_ID; }
 
   bool Solve(Particles* particles) override;
   void Apply(Particles* particles, const float di) override;
