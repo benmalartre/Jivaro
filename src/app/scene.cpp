@@ -240,6 +240,23 @@ void _GenerateSample(pxr::UsdGeomMesh& mesh, pxr::VtArray<Sample>* samples, floa
   ComputeVertexNormals(positions, counts, indices, triangles, normals);
 }
 
+void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatrix4f& m)
+{
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+
+  Mesh mesh;
+  mesh.TriangularGrid2D(10.f, 10.f, m, size);
+  std::cout << "triangular grid infos : " << std::endl;
+  std::cout << "num points : " << mesh.GetNumPoints() << std::endl;
+  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
+
+  usdMesh.CreatePointsAttr().Set(mesh.GetPositions());
+  usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts());
+  usdMesh.CreateFaceVertexIndicesAttr().Set(mesh.GetFaceConnects());
+}
+
 static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
 {
   uint64_t T = CurrentTime();
@@ -348,6 +365,17 @@ Scene::InitExec()
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
+
+  pxr::GfQuatf rotation(90.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0, 0, 1));
+  pxr::GfMatrix4f matrix = 
+    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 5.f, 0.f)) *
+    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(10.f));
+  float size = 0.5f;
+  
+  pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken( "cloth"));
+  _GenerateClothMesh(clothPath, size, matrix);
+  
+  
   _Sources sources;
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
@@ -369,7 +397,7 @@ Scene::InitExec()
     }
   }
   _solver->AddForce(new GravitationalForce());
-  _solver->LockPoints();
+  //_solver->LockPoints();
   
   //_solver->AddForce(new DampingForce());
   /*

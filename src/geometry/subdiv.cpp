@@ -8,7 +8,6 @@ using namespace OpenSubdiv;
 
 void _SubdivideMesh(Mesh* mesh, int refineLevel)
 {
-  std::cout << "subdivide mesh with level " << refineLevel << std::endl;
   // Populate a topology descriptor with our raw data
   Sdc::SchemeType type = Sdc::SCHEME_CATMARK;
 
@@ -44,8 +43,6 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
     verts[i].SetPosition(points[i][0], points[i][1], points[i][2]);
   }
 
-  std::cout << "num coarse verts " << nCoarseVerts << std::endl;
-
   // Interpolate vertex primvar data
   Far::PrimvarRefiner primvarRefiner(*refiner);
 
@@ -74,8 +71,6 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
       src = dst;
     //}
   }
-
-  std::cout << "interpolated vertex prim vars" << std::endl;
 
   { // Output of the highest level refined -----------
     Far::TopologyLevel const & refLastLevel = refiner->GetLevel(refineLevel);
@@ -110,16 +105,9 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
           faceConnects.push_back(faceVerts[vert]);
         }
     }
-
-    std::cout << " num verts " << numVerts << std::endl;
-    std::cout << " num faces " << numFaces << std::endl;
-
-    std::cout << "position size : " << positions.size() << std::endl;
-    std::cout << "face connects : " << faceConnects << std::endl;
-    std::cout << "face counts : " << faceCounts << std::endl;
-
-
+    std::cout << "set mesh : " << mesh << std::endl;
     mesh->Set(positions, faceCounts, faceConnects);
+    std::cout << "mesh set !" << std::endl;
   }
 
   delete refiner;

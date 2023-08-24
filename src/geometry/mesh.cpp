@@ -410,50 +410,26 @@ void Mesh::SetTopology(
 void Mesh::Init()
 {
   size_t numPoints = _positions.size();
-
-  pxr::TfStopwatch sw;
-  sw.Start();
+  std::cout << "init mesh : " << numPoints << " (nb points) " << std::endl;
   // compute triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
-  sw.Stop();
-  double T0 = sw.GetSeconds();
 
   // compute normals
-  sw.Reset();
-  sw.Start();
   ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
-  sw.Stop();
-  double T1 = sw.GetSeconds();
+    std::cout << "0" << std::endl;
 
   // compute half-edges
-  sw.Reset();
-  sw.Start();
   ComputeHalfEdges();
-  sw.Stop();
-  double T2 = sw.GetSeconds();
+  std::cout << "1" << std::endl;
 
   // compute bouding box
-  sw.Reset();
-  sw.Start();
   ComputeBoundingBox();
-  sw.Stop();
-  double T3 = sw.GetSeconds();
+  std::cout << "2" << std::endl;
 
   // compute neighbors
-  sw.Reset();
-  sw.Start();
   ComputeNeighbors();
-  sw.Stop();
-  double T4 = sw.GetSeconds();
-
-  std::cout << "triangulate : " << T0 << std::endl;
-  std::cout << "normals     : " << T1 << std::endl;
-  
-  std::cout << "halfedges   : " << T2 << std::endl;
-  std::cout << "bbox        : " << T3 << std::endl;
-  std::cout << "neighbors   : " << T4 << std::endl;
-  std::cout << "total       : " << (T0 + T1 + T2 + T3 + T4) << std::endl;
+  std::cout << "3" << std::endl;
 }
 
 void 

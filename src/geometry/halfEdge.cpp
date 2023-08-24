@@ -382,12 +382,15 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
   );
 }
 
+// TODO alternative method for compute vertex neighborhood
+// now we can miss some vertex neighborhood when there are holes in the geometry
+// resulting in half-edges without twins
 HalfEdge* 
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
   const HalfEdge* prev = &_halfEdges[edge->prev];
   if (prev->twin >= 0)
-    return &_halfEdges[prev->twin];
+    return &_halfEdges[_halfEdges[prev->twin].prev];
   return NULL;
 }
 
@@ -396,7 +399,7 @@ HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge) const
 {
   const HalfEdge* prev = &_halfEdges[edge->prev];
   if (prev->twin >= 0)
-    return &_halfEdges[prev->twin];
+    return &_halfEdges[_halfEdges[prev->twin].prev];
   return NULL;
 }
 
@@ -567,15 +570,15 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
   do {
     neighbors.push_back(_halfEdges[current->next].vertex);
     current = _GetNextAdjacentEdge(current);
-  } while(current && (current != edge));
+    if(current == edge)return;
+  } while(current);
 
-  if (!current) {
-    const HalfEdge* current = edge;
-    do {
-      neighbors.push_back(_halfEdges[current->next].vertex);
-      current = _GetPreviousAdjacentEdge(current);
-    } while (current);
-  }
+  current = edge;
+  do {
+    neighbors.push_back(_halfEdges[current->prev].vertex);
+    current = _GetPreviousAdjacentEdge(current);
+    if(current == edge)return;
+  } while (current);
 }
 
 void
