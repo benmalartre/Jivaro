@@ -108,7 +108,6 @@ void Solver::RemoveBody(Geometry* geom)
 
   Body* body = GetBody(index);
   _particles.RemoveBody(body);
-  _particles = _particles;
 
   _bodies.erase(_bodies.begin() + index);
   delete body;
@@ -212,7 +211,7 @@ void Solver::AddConstraints(Body* body)
     StretchConstraint* stretch = new StretchConstraint(body);
     _constraints.push_back(stretch);
 
-    BendConstraint* bend = new BendConstraint(body, RANDOM_0_1);
+    BendConstraint* bend = new BendConstraint(body, 0.05);
     _constraints.push_back(bend);
 
     std::cout << "num constraints : " << _constraints.size() << std::endl;
@@ -238,21 +237,9 @@ void Solver::LockPoints()
   const pxr::GfVec3f* positions = &_particles.position[0];
   std::cout << "num particles : " << _particles.position.size() << std::endl;
   for (auto& body : _bodies) {
-    std::cout << "lock points for body " << body << std::endl;
-    std::cout << "geometry : " << body->geometry << std::endl;
-    pxr::GfBBox3d bbox = body->geometry->GetBoundingBox();
-    std::cout << "bbox : " << bbox << std::endl;
-
-    std::cout << "num positions : " << body->numPoints << std::endl;
-    float height = bbox.GetRange().GetSize()[1] / 10.f;
-    for (size_t p = 0; p < body->numPoints; ++p) {
-      if ((bbox.GetRange().GetMax()[1] - positions[p + body->offset][1]) < height) {
-        std::cout << "lock particle " << particleIdx << std::endl;
-        _particles.mass[particleIdx] = 0.f;
-        std::cout << "particle locked" << std::endl;
-      }
-      
-      particleIdx++;
+    size_t numPoints = body->numPoints;
+    for(size_t point = 0; point < 10; ++point) {
+      _particles.mass[point + body->offset] = 0.f;
     }
   }
 }
@@ -357,9 +344,9 @@ void Solver::_StepOneSerial(const float dt)
 
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
-    for (auto& constraint : _constraints) constraint->Solve(&_particles, ds);
+    for (auto& constraint : _constraints) constraint->Solve(&_particles);
     // apply constraint serially
-    //for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
+    for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
   }
 
   // update particles
@@ -386,10 +373,10 @@ void Solver::_StepOne(const float dt, size_t grain)
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
-      [&](Constraint* constraint) {constraint->Solve(&_particles, ds); });
+      [&](Constraint* constraint) {constraint->Solve(&_particles); });
 
     // apply constraint serially
-    //for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
+    for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
   }
 
   // update particles

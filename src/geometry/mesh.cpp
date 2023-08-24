@@ -373,6 +373,18 @@ void Mesh::ComputeNeighbors()
 {
   _halfEdges.ComputeNeighbors();
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
+
+  /// TODO alternative compute neighbor method
+  /*
+  pxr::VtArray<pxr::VtArray<int>> neighbors(_positions.size());
+  size_t faceConnectIdx = 0;
+  for(const auto& faceCount: _faceCounts) {
+    for(size_t i = 0; i < faceCount; ++i) {
+
+    }
+    faceConnectIdx += faceCount;
+  }
+  */
 }
 
 void Mesh::ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors)
@@ -410,26 +422,21 @@ void Mesh::SetTopology(
 void Mesh::Init()
 {
   size_t numPoints = _positions.size();
-  std::cout << "init mesh : " << numPoints << " (nb points) " << std::endl;
   // compute triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
 
   // compute normals
   ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
-    std::cout << "0" << std::endl;
 
   // compute half-edges
   ComputeHalfEdges();
-  std::cout << "1" << std::endl;
 
   // compute bouding box
   ComputeBoundingBox();
-  std::cout << "2" << std::endl;
 
   // compute neighbors
   ComputeNeighbors();
-  std::cout << "3" << std::endl;
 }
 
 void 

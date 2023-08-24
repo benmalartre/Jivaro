@@ -18,6 +18,7 @@ class Force : public Mask
 {
 public:
   Force() : Mask() {};
+  virtual ~Force() {};
   bool HasWeights() const { return _weights.size() > 0; };
   void SetWeights(const pxr::VtArray<float>& weights) { _weights = weights; };
   void RemoveWeights() { _weights.clear(); };
