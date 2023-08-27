@@ -280,7 +280,7 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
 //-------------------------------------------------------
 // TrianglePair vertices
 //-------------------------------------------------------
-bool _IsVertexShared(size_t vertex, const pxr::GfVec3i& tri1, const pxr::GfVec3i& tri2)
+static bool _IsVertexShared(size_t vertex, const pxr::GfVec3i& tri1, const pxr::GfVec3i& tri2)
 {
   bool check = false;
   for(size_t i = 0; i < 3; ++i) {
@@ -316,9 +316,8 @@ TrianglePair::GetVertices() const
     if(_IsVertexShared(right->vertices[vertexIdx], left->vertices, right->vertices))
       continue;
     vertices[3] = right->vertices[vertexIdx];
+    break;
   }
-
-  std::cout << "Triangle Pair vertices : " << vertices << std::endl;
 
   return vertices;
 }

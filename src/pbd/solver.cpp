@@ -206,10 +206,10 @@ void Solver::AddConstraints(Body* body)
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
 
-/*
+
     StretchConstraint* stretch = new StretchConstraint(body, RANDOM_0_1, RANDOM_0_1);
     _constraints.push_back(stretch);
-
+/*
     BendConstraint* bend = new BendConstraint(body, RANDOM_0_1);
     _constraints.push_back(bend);
 */

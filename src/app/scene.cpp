@@ -370,7 +370,7 @@ Scene::InitExec()
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 1.f, 0.f)) *
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
-  float size = 0.5f;
+  float size = 0.25f;
   
   for(size_t x = 0; x < 5; ++x) {
     std::string name = "cloth" + std::to_string(x);
@@ -424,8 +424,6 @@ Scene::InitExec()
   const size_t numParticles = _solver->GetNumParticles();
   points->SetPositions(&particles->position[0], numParticles);
   points->SetRadii(&particles->radius[0], numParticles);
-
-  
 
   pxr::VtArray<Constraint*> constraints;
   _solver->GetConstraintsByType(Constraint::DIHEDRAL, constraints);

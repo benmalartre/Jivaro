@@ -90,7 +90,7 @@ class BendConstraint : public Constraint
 {
 public:
   BendConstraint(Body* body, const float stiffness = 0.1f);
-  BendConstraint(Body* body, pxr::VtArray<pxr::GfVec3i>& edges,
+  BendConstraint(Body* body, const pxr::VtArray<pxr::GfVec3i>& edges,
     const float stiffness = 0.1f);
   virtual size_t& GetTypeId() const override { return TYPE_ID; }
 
@@ -110,6 +110,8 @@ class DihedralConstraint : public Constraint
 {
 public:
   DihedralConstraint(Body* body, const float stiffness = 0.1f);
+  DihedralConstraint(Body* body, const pxr::VtArray<pxr::GfVec4i>& edges,
+    const float stiffness = 0.1f);
   virtual size_t& GetTypeId() const override { return TYPE_ID; }
 
   bool Solve(Particles* particles) override;
