@@ -207,14 +207,15 @@ void Solver::AddConstraints(Body* body)
   if (geom->GetType() == Geometry::MESH) {
 
 
-    StretchConstraint* stretch = new StretchConstraint(body, RANDOM_0_1, RANDOM_0_1);
-    _constraints.push_back(stretch);
+    //StretchConstraint* stretch = new StretchConstraint(body, RANDOM_0_1, RANDOM_0_1);
+    //_constraints.push_back(stretch);
+    CreateStretchConstraints(body, _constraints, 0.5f, 0.5f);
 /*
     BendConstraint* bend = new BendConstraint(body, RANDOM_0_1);
     _constraints.push_back(bend);
 */
-   DihedralConstraint* dihedral = new DihedralConstraint(body, RANDOM_0_1);
-   _constraints.push_back(dihedral);
+   //DihedralConstraint* dihedral = new DihedralConstraint(body, RANDOM_0_1);
+   //_constraints.push_back(dihedral);
 
   } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;

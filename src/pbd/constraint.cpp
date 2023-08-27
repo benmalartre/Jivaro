@@ -53,7 +53,7 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<pxr::GfVec2i
   , _compression(compressionStiffness) 
   , _edges(edges)
 {
-  _correction.resize(body->numPoints);
+  _correction.resize(_edges.size() * 2);
 
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
@@ -107,8 +107,8 @@ bool StretchConstraint::Solve(Particles* particles)
     else
       c = _stretch * n * (d - rest) * sum;
 
-    _correction[i1] += im1 * c;
-    _correction[i2] += -im2 * c;
+    _correction[index * 2] += im1 * c;
+    _correction[index * 2 + 1] += -im2 * c;
   }
 
   return true;
@@ -118,11 +118,18 @@ bool StretchConstraint::Solve(Particles* particles)
 // this one has to happen serialy
 void StretchConstraint::Apply(Particles* particles, const float di)
 {
-  const size_t numPoints = _body[0]->numPoints;
+  //const size_t numPoints = _body[0]->numPoints;
   const size_t offset = _body[0]->offset;
+  size_t corrIdx = 0;
+  for(const auto& edge: _edges) {
+    particles->predicted[edge[0] + offset] += _correction[corrIdx++] * di;
+    particles->predicted[edge[1] + offset] += _correction[corrIdx++] * di;
+  }
+  /*
   for (size_t point = 0; point < numPoints; ++point) {
     particles->predicted[point + offset] += _correction[point] * di;
   }
+  */
 }
 
 void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
@@ -134,6 +141,44 @@ void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3
     results[edge * 2 + 1] = particles->position[_edges[edge][1] + _body[0]->offset];
   }
 }
+
+void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+  const float stretchStiffness, const float compressionStiffness)
+{
+  pxr::VtArray<pxr::GfVec2i> allEdges;
+
+  if (body->geometry->GetType() == Geometry::MESH) {
+    
+    Mesh* mesh = (Mesh*)body->geometry;
+    const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+    HalfEdgeGraph::ItUniqueEdge it(mesh->GetEdgesGraph());
+    const auto& edges = mesh->GetEdges();
+    const pxr::GfMatrix4d& m = mesh->GetMatrix();
+    HalfEdge* edge = it.Next();
+    while (edge) {
+      size_t a = edge->vertex;
+      size_t b = edges[edge->next].vertex;
+      allEdges.push_back(pxr::GfVec2i(a, b));
+      edge = it.Next();
+    }
+  }
+
+  size_t numEdges = allEdges.size();
+  std::cout << "num edges for stretch constraint : " << numEdges << std::endl;
+  size_t first = 0;
+  size_t last = pxr::GfMin(Constraint::BlockSize, numEdges);
+  while(true) {
+    pxr::VtArray<pxr::GfVec2i> blockEdges(allEdges.begin()+first, allEdges.begin()+last);
+    std::cout << "block edges size : " << blockEdges.size() << std::endl;
+    StretchConstraint* stretch = new StretchConstraint(body, blockEdges, 
+      stretchStiffness, compressionStiffness);
+    constraints.push_back(stretch);
+    first += Constraint::BlockSize;
+    if(first >= numEdges)break;
+    last = pxr::GfMin(last + Constraint::BlockSize, numEdges);
+  }
+}
+
 
 
 size_t BendConstraint::TYPE_ID = Constraint::BEND;

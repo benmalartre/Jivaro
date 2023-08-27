@@ -6,6 +6,9 @@
 
 #include <pxr/base/vt/array.h>
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec3i.h>
+#include <pxr/base/gf/vec4i.h>
 #include <pxr/base/gf/matrix4f.h>
 
 #include "../common.h"
@@ -18,6 +21,7 @@ struct Body;
 class Constraint
 {
 public:
+  constexpr static size_t BlockSize = 256;
   enum ConstraintType {
     STRETCH = 1,
     BEND,
@@ -83,14 +87,17 @@ protected:
   pxr::VtArray<pxr::GfVec2i>    _edges;
   float                         _stretch;
   float                         _compression;
-  
 };
+
+void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+  const float stretchStiffness=0.5f, const float compressionStiffness=0.5f);
+
 
 class BendConstraint : public Constraint
 {
 public:
   BendConstraint(Body* body, const float stiffness = 0.1f);
-  BendConstraint(Body* body, const pxr::VtArray<pxr::GfVec3i>& edges,
+  BendConstraint(Body* body, const pxr::VtArray<pxr::GfVec3i>& edges, 
     const float stiffness = 0.1f);
   virtual size_t& GetTypeId() const override { return TYPE_ID; }
 
@@ -103,8 +110,10 @@ protected:
   pxr::VtArray<float>           _rest;
   pxr::VtArray<pxr::GfVec3i>    _edges;
   float                         _stiffness;
-
 };
+
+void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints);
+
 
 class DihedralConstraint : public Constraint
 {
@@ -125,6 +134,8 @@ protected:
   float                         _stiffness;
 
 };
+
+void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraints);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

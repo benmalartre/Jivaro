@@ -89,10 +89,10 @@ private:
 
   // system
   Particles                           _particles;
-  std::vector<Constraint*>            _constraints;
-  std::vector<Collision*>             _collisions;
-  std::vector<Body*>                  _bodies;
-  std::vector<Force*>                 _force;
+  pxr::VtArray<Constraint*>           _constraints;
+  pxr::VtArray<Collision*>            _collisions;
+  pxr::VtArray<Body*>                 _bodies;
+  pxr::VtArray<Force*>                _force;
   pxr::GfVec3f                        _gravity;
 };
 
