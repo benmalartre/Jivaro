@@ -280,25 +280,42 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
 //-------------------------------------------------------
 // TrianglePair vertices
 //-------------------------------------------------------
+bool _IsVertexShared(size_t vertex, const pxr::GfVec3i& tri1, const pxr::GfVec3i& tri2)
+{
+  bool check = false;
+  for(size_t i = 0; i < 3; ++i) {
+    if(tri1[i] == vertex){check=true; break;};
+  }
+  if(!check)return false;
+  for(size_t i = 0; i < 3; ++i) {
+    if(tri2[i] == vertex){return true;};
+  }
+  return false;
+}
+
 pxr::GfVec4i 
 TrianglePair::GetVertices() const
 {
   if (!right)
     return pxr::GfVec4i(left->vertices[0], left->vertices[1], left->vertices[2], -1);
 
-  std::vector<int> indices(6);
-  for (size_t i = 0; i < 3; ++i) {
-    indices[i] = left->vertices[i];
-    indices[i + 3] = right->vertices[i];
+  size_t sharedIdx = 0;
+  pxr::GfVec4i vertices(-1);
+
+  // left triangle
+  for(size_t vertexIdx = 0; vertexIdx < 3; ++vertexIdx) {
+    if(_IsVertexShared(left->vertices[vertexIdx], left->vertices, right->vertices)) {
+      vertices[sharedIdx++] = left->vertices[vertexIdx];
+    } else {
+      vertices[2] = left->vertices[vertexIdx];
+    }
   }
-  std::sort(indices.begin(), indices.begin() + 6);
-  pxr::GfVec4i vertices(indices[0], -1, -1, -1);
-  size_t c = 1;
-  for (size_t i = 1; i < 6; ++i) {
-    if (indices[i] != indices[i - 1]) {
-      vertices[c++] = indices[i];
-    } 
-    if (c > 3)break;
+
+   // right triangle
+  for(size_t vertexIdx = 0; vertexIdx < 3; ++vertexIdx) {
+    if(_IsVertexShared(right->vertices[vertexIdx], left->vertices, right->vertices))
+      continue;
+    vertices[3] = right->vertices[vertexIdx];
   }
 
   std::cout << "Triangle Pair vertices : " << vertices << std::endl;

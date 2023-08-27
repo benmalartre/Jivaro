@@ -21,7 +21,8 @@ void Constraint::ResetCorrection()
 
 size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
 
-StretchConstraint::StretchConstraint(Body* body, const float stretchStiffness, const float compressionStiffness)
+StretchConstraint::StretchConstraint(Body* body, const float stretchStiffness, 
+  const float compressionStiffness)
   : Constraint(body)
   , _stretch(stretchStiffness)
   , _compression(compressionStiffness) 
@@ -42,6 +43,26 @@ StretchConstraint::StretchConstraint(Body* body, const float stretchStiffness, c
       _rest.push_back((m.Transform(positions[b]) - m.Transform(positions[a])).GetLength());
       edge = it.Next();
     }
+  }
+}
+
+StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& edges,
+  const float stretchStiffness, const float compressionStiffness)
+  : Constraint(body)
+  , _stretch(stretchStiffness)
+  , _compression(compressionStiffness) 
+  , _edges(edges)
+{
+  _correction.resize(body->numPoints);
+
+  const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
+  const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
+  size_t numEdges = _edges.size();
+  _rest.resize(numEdges);
+  for(size_t edgeIdx = 0; edgeIdx < numEdges; ++edgeIdx) {
+    const auto& edge = _edges[edgeIdx];
+    _rest[edgeIdx] = 
+      (m.Transform(positions[edge[1]]) - m.Transform(positions[edge[0]])).GetLength()
   }
 }
 
@@ -155,6 +176,26 @@ BendConstraint::BendConstraint(Body* body, const float stiffness)
   }
 }
 
+BendConstraint::BendConstraint(Body* body, const pxr::VtArray<pxr::GfVec3i>& edges,
+  const float stiffness)
+  : Constraint(body)
+  , _stiffness(stiffness)
+  , _edges(edges)
+{
+  _correction.resize(body->numPoints);
+
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  const pxr::GfMatrix4d& m = mesh->GetMatrix();
+
+  size_t numEdges = _edges.size();
+  _rest.resize(numEdges);
+  for(size_t edgeIdx = 0; edgeIdx < numEdges; ++edgeIdx) {
+    const auto& edge = _edges[edgeIdx];
+    pxr::GfVec3f center = (positions[edge[0]] + positions[edge[1]] + positions[edge[2]]) / 3.f;
+    _rest[edgeIdx] = (positions[edge[2]] - center).GetLength();
+  }
+}
+
 bool BendConstraint::Solve(Particles* particles)
 {
   ResetCorrection();
@@ -242,10 +283,8 @@ DihedralConstraint::DihedralConstraint(Body* body, const float stiffness)
     const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
     pxr::VtArray<TrianglePair> triPairs;
     mesh->GetAllTrianglePairs(triPairs);
-    std::cout << "num tri pairs : " << triPairs.size() << std::endl;
     for(const auto& triPair: triPairs) {
       pxr::GfVec4i vertices = triPair.GetVertices();
-      std::cout << "tri pair vertices : " << vertices << std::endl;
       _vertices.push_back(vertices);
 
       const pxr::GfVec3f& p0 = mesh->GetPosition(vertices[0]);
@@ -274,7 +313,74 @@ bool DihedralConstraint::Solve(Particles* particles)
 {
   ResetCorrection();
 
-  
+  // derivatives from Bridson, Simulation of Clothing with Folds and Wrinkles
+  // his modes correspond to the derivatives of the bending angle arccos(n1 dot n2) with correct scaling
+  for(const auto& vertices: _vertices) {
+    const size_t i1 = vertices[0];
+    const size_t i2 = vertices[1];
+    const size_t i3 = vertices[2];
+    const size_t i4 = vertices[3];
+
+    const size_t p1 = i1 + _body[0]->offset;
+    const size_t p2 = i2 + _body[0]->offset;
+    const size_t p3 = i3 + _body[0]->offset;
+    const size_t p4 = i4 + _body[0]->offset;
+
+    const pxr::GfVec3f& x1 = particles->predicted[p1];
+    const pxr::GfVec3f& x2 = particles->predicted[p2];
+    const pxr::GfVec3f& x3 = particles->predicted[p3];
+    const pxr::GfVec3f& x4 = particles->predicted[p4];
+
+    pxr::GfVec3f e = x2 - x1;
+    double edgeLen = e.GetLength();
+    if (edgeLen < 1e-9) continue;
+
+    float invEdgeLen = 1.f / edgeLen;
+
+    pxr::GfVec3f n1 = pxr::GfCross(p2 - p0, e); 
+    n1 /= n1.GetLengthSq();
+
+    pxr::GfVec3f n2 = pxr::GfCross(p3 - p0, e);
+    n2 /= n2.GetLengthSq();
+
+    pxr::GfVec3f d0 = edgeLen * n1;
+    pxr::GfVec3f d1 = edgeLen * n2;
+    pxr::GfVec3f d2 = pxr::GfDot(p0 - p3, e) * invElen * n1 + Vector3d.Dot(p1 - p3, e) * invElen * n2;
+    Vector3d d3 = Vector3d.Dot(p2 - p0, e) * invElen * n1 + Vector3d.Dot(p2 - p1, e) * invElen * n2;
+
+            n1.Normalize();
+            n2.Normalize();
+            double dot = Vector3d.Dot(n1, n2);
+
+            if (dot < -1.0) dot = -1.0;
+            if (dot > 1.0) dot = 1.0;
+			double phi = Math.Acos(dot);
+
+            // fast approximation
+            //double phi = (-0.6981317 * dot * dot - 0.8726646) * dot + 1.570796;	
+
+            double lambda = (d0.SqrMagnitude + d1.SqrMagnitude + d2.SqrMagnitude + d3.SqrMagnitude) * invMass;
+
+            if (lambda == 0.0) return;
+
+            double stiffness = BendStiffness;
+
+            // stability
+            // 1.5 is the largest magic number I found to be stable in all cases :-)
+            //if (stiffness > 0.5 && Math.Abs(phi - RestAngle) > 1.5)		
+            //	stiffness = 0.5;
+
+            lambda = (phi - RestAngle) / lambda * stiffness;
+
+            if (Vector3d.Dot(Vector3d.Cross(n1, n2), e) > 0.0)
+                lambda = -lambda;
+
+            Body.Predicted[i0] += -invMass * lambda * d0 * di;
+            Body.Predicted[i1] += -invMass * lambda * d1 * di;
+            Body.Predicted[i2] += -invMass * lambda * d2 * di;
+            Body.Predicted[i3] += -invMass * lambda * d3 * di;
+
+        }
 
   return true;
 }

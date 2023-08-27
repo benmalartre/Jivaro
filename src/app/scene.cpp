@@ -428,7 +428,7 @@ Scene::InitExec()
   
 
   pxr::VtArray<Constraint*> constraints;
-  _solver->GetConstraintsByType(Constraint::BEND, constraints);
+  _solver->GetConstraintsByType(Constraint::DIHEDRAL, constraints);
   if (constraints.size()) {
     std::cout << "we have some bend constraints lets draw them !!" << std::endl;
     pxr::SdfPath bendPath(rootId.AppendChild(pxr::TfToken("Bend")));
@@ -505,7 +505,7 @@ Scene::UpdateExec(double time)
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Bend")) {
       
       pxr::VtArray<Constraint*> constraints;
-      _solver->GetConstraintsByType(Constraint::BEND, constraints);
+      _solver->GetConstraintsByType(Constraint::DIHEDRAL, constraints);
       Curve* curve = (Curve*)GetGeometry(execPrim.first);
       pxr::VtArray<pxr::GfVec3f> positions;
       pxr::VtArray<float> radii;
