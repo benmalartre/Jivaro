@@ -8,15 +8,10 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-size_t Constraint::GetNumParticles()
-{
-  return _body[0]->numPoints;
-}
-
 void Constraint::ResetCorrection()
 {
-  const size_t numPoints = _correction.size();
-  memset(&_correction[0], 0.f, numPoints * sizeof(pxr::GfVec3f));
+  const size_t numCorrections = _correction.size();
+  memset(&_correction[0], 0.f, numCorrections * sizeof(pxr::GfVec3f));
 }
 
 size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
@@ -53,11 +48,10 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<pxr::GfVec2i
   , _compression(compressionStiffness) 
   , _edges(edges)
 {
-  _correction.resize(_edges.size() * 2);
-
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
   size_t numEdges = _edges.size();
+  _correction.resize(numEdges * 2);
   _rest.resize(numEdges);
   for(size_t edgeIdx = 0; edgeIdx < numEdges; ++edgeIdx) {
     const auto& edge = _edges[edgeIdx];
@@ -118,18 +112,12 @@ bool StretchConstraint::Solve(Particles* particles)
 // this one has to happen serialy
 void StretchConstraint::Apply(Particles* particles, const float di)
 {
-  //const size_t numPoints = _body[0]->numPoints;
   const size_t offset = _body[0]->offset;
   size_t corrIdx = 0;
   for(const auto& edge: _edges) {
     particles->predicted[edge[0] + offset] += _correction[corrIdx++] * di;
     particles->predicted[edge[1] + offset] += _correction[corrIdx++] * di;
   }
-  /*
-  for (size_t point = 0; point < numPoints; ++point) {
-    particles->predicted[point + offset] += _correction[point] * di;
-  }
-  */
 }
 
 void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
@@ -164,12 +152,10 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
   }
 
   size_t numEdges = allEdges.size();
-  std::cout << "num edges for stretch constraint : " << numEdges << std::endl;
   size_t first = 0;
   size_t last = pxr::GfMin(Constraint::BlockSize, numEdges);
   while(true) {
     pxr::VtArray<pxr::GfVec2i> blockEdges(allEdges.begin()+first, allEdges.begin()+last);
-    std::cout << "block edges size : " << blockEdges.size() << std::endl;
     StretchConstraint* stretch = new StretchConstraint(body, blockEdges, 
       stretchStiffness, compressionStiffness);
     constraints.push_back(stretch);
@@ -227,12 +213,11 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<pxr::GfVec3i>& edg
   , _stiffness(stiffness)
   , _edges(edges)
 {
-  _correction.resize(body->numPoints);
-
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
 
   size_t numEdges = _edges.size();
+  _correction.resize(numEdges * 3);
   _rest.resize(numEdges);
   for(size_t edgeIdx = 0; edgeIdx < numEdges; ++edgeIdx) {
     const auto& edge = _edges[edgeIdx];
@@ -287,9 +272,9 @@ bool BendConstraint::Solve(Particles* particles)
     if (pxr::GfIsClose(w, 0.f, 0.0000001f))
       continue;
 
-    _correction[i1] += _stiffness * (2.f * im1 / w) * dir;
-    _correction[i2] += _stiffness * (2.f * im2 / w) * dir;
-    _correction[i3] += -_stiffness * (4.f * im3 / w) * dir;
+    _correction[edge * 3    ] += _stiffness * (2.f * im1 / w) * dir;
+    _correction[edge * 3 + 1] += _stiffness * (2.f * im2 / w) * dir;
+    _correction[edge * 3 + 2] += -_stiffness * (4.f * im3 / w) * dir;
   }
 
   return true;
@@ -298,10 +283,12 @@ bool BendConstraint::Solve(Particles* particles)
 // this one has to happen serialy
 void BendConstraint::Apply(Particles* particles, const float di)
 {
-  const size_t numPoints = _body[0]->numPoints;
   const size_t offset = _body[0]->offset;
-  for (size_t point = 0; point < numPoints; ++point) {
-    particles->predicted[point + offset] += _correction[point] * di;
+  size_t corrIdx = 0;
+  for(const auto& edge: _edges) {
+    particles->predicted[edge[0] + offset] += _correction[corrIdx++] * di;
+    particles->predicted[edge[1] + offset] += _correction[corrIdx++] * di;
+    particles->predicted[edge[2] + offset] += _correction[corrIdx++] * di;
   }
 }
 
@@ -312,6 +299,53 @@ void BendConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>&
   for (size_t edge = 0; edge < numEdges; ++edge) {
     results[edge * 2] = particles->position[_edges[edge][0] + _body[0]->offset];
     results[edge * 2 + 1] = particles->position[_edges[edge][1] + _body[0]->offset];
+  }
+}
+
+void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+  const float stiffness)
+{
+  pxr::VtArray<pxr::GfVec3i> allEdges;
+
+  if (body->geometry->GetType() == Geometry::MESH) {
+    Mesh* mesh = (Mesh*)body->geometry;
+    const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+    const size_t numPoints = mesh->GetNumPoints();
+    const auto& neighbors = mesh->GetNeighbors();
+    const pxr::GfMatrix4d& m = mesh->GetMatrix();
+    std::map<int, int> existing;
+    for (size_t p = 0; p < numPoints; ++p) {
+      for (const auto& n1 : neighbors[p]) {
+        int best = -1;
+        float minCosine = 0.f;
+        for (const auto& n2 : neighbors[p]) {
+          if (n1 == n2)continue;
+          const pxr::GfVec3f e0 = positions[n1] - positions[p];
+          const pxr::GfVec3f e1 = positions[n2] - positions[p];
+          float cosine = pxr::GfDot(e0, e1) / (e0.GetLength() * e1.GetLength());
+          if (cosine < minCosine) {
+            minCosine = cosine;
+            best = n2;
+          }
+        }
+        if (best >= 0 && existing[best] != n1) {
+          existing[n1] = best;
+          allEdges.push_back(pxr::GfVec3i(n1, best, p));
+        }
+      }
+    }
+  }
+
+  size_t numEdges = allEdges.size();
+  size_t first = 0;
+  size_t last = pxr::GfMin(Constraint::BlockSize, numEdges);
+  while(true) {
+    pxr::VtArray<pxr::GfVec3i> blockEdges(allEdges.begin()+first, allEdges.begin()+last);
+    BendConstraint* bend = new BendConstraint(body, blockEdges, stiffness);
+    constraints.push_back(bend);
+    first += Constraint::BlockSize;
+    if(first >= numEdges)break;
+    last = pxr::GfMin(last + Constraint::BlockSize, numEdges);
   }
 }
 
@@ -360,11 +394,10 @@ DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<pxr::GfVec
   , _stiffness(stiffness)
   , _vertices(vertices)
 {
-  _correction.resize(body->numPoints);
-
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
 
   size_t numVertices = _vertices.size();
+  _correction.resize(numVertices * 4);
   _rest.resize(numVertices);
   size_t index = 0;
   for(const auto& vertices: _vertices) {
@@ -378,9 +411,6 @@ DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<pxr::GfVec
     pxr::GfVec3f n2 = pxr::GfCross(p3 - p1, p2 - p1);
     n2 *= 1.f / n2.GetLengthSq();
 
-    std::cout << "n1 : " << n1 << std::endl;
-    std::cout << "n2 : " << n2 << std::endl;
-
     n1.Normalize();
     n2.Normalize();
     float dot = pxr::GfDot(n1, n2);
@@ -389,7 +419,6 @@ DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<pxr::GfVec
     if (dot > 1.f) dot = 1.f;
 
     _rest[index++] = acos(dot);
-    std::cout << "rest angle : " << _rest.back() << std::endl;;
   }
 }
 
@@ -399,9 +428,9 @@ bool DihedralConstraint::Solve(Particles* particles)
 
   // derivatives from Bridson, Simulation of Clothing with Folds and Wrinkles
   // his modes correspond to the derivatives of the bending angle arccos(n1 dot n2) with correct scaling
-  size_t verticesIdx = 0;
-
-  for(const auto& vertices: _vertices) {
+  for(size_t verticesIdx = 0; verticesIdx < _vertices.size(); ++verticesIdx) {
+    const auto& vertices = _vertices[verticesIdx];
+    
     const size_t i0 = vertices[0];
     const size_t i1 = vertices[1];
     const size_t i2 = vertices[2];
@@ -432,7 +461,7 @@ bool DihedralConstraint::Solve(Particles* particles)
       0.f :
       1.f / particles->mass[i3 + _body[0]->offset];
 
-    const float rest = _rest[verticesIdx++];
+    const float rest = _rest[verticesIdx];
 
     pxr::GfVec3f e = p3 - p2;
     float edgeLen = e.GetLength();
@@ -484,10 +513,10 @@ bool DihedralConstraint::Solve(Particles* particles)
     if (pxr::GfDot(pxr::GfCross(n1, n2), e) > 0.0)
       lambda = -lambda;
 
-    _correction[i0] += -im0 * lambda * d0;
-    _correction[i1] += -im1 * lambda * d1;
-    _correction[i2] += -im2 * lambda * d2;
-    _correction[i3] += -im3 * lambda * d3;
+    _correction[verticesIdx * 4    ] += -im0 * lambda * d0;
+    _correction[verticesIdx * 4 + 1] += -im1 * lambda * d1;
+    _correction[verticesIdx * 4 + 2] += -im2 * lambda * d2;
+    _correction[verticesIdx * 4 + 3] += -im3 * lambda * d3;
   }
 
   return true;
@@ -496,10 +525,13 @@ bool DihedralConstraint::Solve(Particles* particles)
 // this one has to happen serialy
 void DihedralConstraint::Apply(Particles* particles, const float di)
 {
-  const size_t numPoints = _body[0]->numPoints;
   const size_t offset = _body[0]->offset;
-  for (size_t point = 0; point < numPoints; ++point) {
-    particles->predicted[point + offset] += _correction[point] * di;
+  size_t corrIdx = 0;
+  for(const auto& vertices: _vertices) {
+    particles->predicted[vertices[0] + offset] += _correction[corrIdx++] * di;
+    particles->predicted[vertices[1] + offset] += _correction[corrIdx++] * di;
+    particles->predicted[vertices[2] + offset] += _correction[corrIdx++] * di;
+    particles->predicted[vertices[3] + offset] += _correction[corrIdx++] * di;
   }
 }
 
@@ -512,6 +544,36 @@ void DihedralConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec
     results[elem * 2 + 1] = particles->position[_vertices[elem][3] + _body[0]->offset];
   }
 }
+
+void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+  const float stiffness)
+{
+  pxr::VtArray<pxr::GfVec4i> allVertices;
+
+  if (body->geometry->GetType() == Geometry::MESH) {
+    Mesh* mesh = (Mesh*)body->geometry;
+    const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+    pxr::VtArray<TrianglePair> triPairs;
+    mesh->GetAllTrianglePairs(triPairs);
+    for(const auto& triPair: triPairs) {
+      pxr::GfVec4i vertices = triPair.GetVertices();
+      allVertices.push_back(vertices);
+    }
+  }
+
+  size_t numVertices = allVertices.size();
+  size_t first = 0;
+  size_t last = pxr::GfMin(Constraint::BlockSize, numVertices);
+  while(true) {
+    pxr::VtArray<pxr::GfVec4i> blockEdges(allVertices.begin()+first, allVertices.begin()+last);
+    DihedralConstraint* dihedral = new DihedralConstraint(body, blockEdges, stiffness);
+    constraints.push_back(dihedral);
+    first += Constraint::BlockSize;
+    if(first >= numVertices)break;
+    last = pxr::GfMin(last + Constraint::BlockSize, numVertices);
+  }
+}
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -214,6 +214,8 @@ void Solver::AddConstraints(Body* body)
     BendConstraint* bend = new BendConstraint(body, RANDOM_0_1);
     _constraints.push_back(bend);
 */
+   //CreateBendConstraints(body, _constraints, 0.5f);
+   CreateDihedralConstraints(body, _constraints, 0.5f);
    //DihedralConstraint* dihedral = new DihedralConstraint(body, RANDOM_0_1);
    //_constraints.push_back(dihedral);
 

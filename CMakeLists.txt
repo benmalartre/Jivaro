@@ -1,4 +1,6 @@
 cmake_minimum_required (VERSION 3.0.0)
+set(CMAKE_OSX_ARCHITECTURES arm64)
+set(ONLY_ACTIVE_ARCH        YES)
 project (jivaro)
 
 # Require C++14
@@ -102,7 +104,7 @@ endif()
 endforeach()
 
 # python
-find_package(Python2 COMPONENTS Interpreter Development)
+find_package(Python3 COMPONENTS Interpreter Development)
 
 # OpenGL
 find_package(OpenGL REQUIRED)
@@ -122,7 +124,7 @@ endif()
 set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
-  program_options
+  #program_options
   regex
 )
 

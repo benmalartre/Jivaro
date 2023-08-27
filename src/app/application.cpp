@@ -14,7 +14,6 @@
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/imaging/hd/renderPassState.h>
-#include <pxr/imaging/LoFi/debugCodes.h>
 
 #include "../utils/files.h"
 #include "../utils/timer.h"

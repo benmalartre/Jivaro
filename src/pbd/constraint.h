@@ -21,7 +21,7 @@ struct Body;
 class Constraint
 {
 public:
-  constexpr static size_t BlockSize = 256;
+  constexpr static size_t BlockSize = 1024;
   enum ConstraintType {
     STRETCH = 1,
     BEND,
@@ -44,7 +44,6 @@ public:
     _body[1] = body2;
   }
 
-  virtual size_t GetNumParticles();
   virtual ~Constraint() {};
   virtual size_t& GetTypeId() const = 0;
 
@@ -112,7 +111,8 @@ protected:
   float                         _stiffness;
 };
 
-void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints);
+void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+  const float stiffness=0.5f);
 
 
 class DihedralConstraint : public Constraint
@@ -135,7 +135,8 @@ protected:
 
 };
 
-void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraints);
+void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+  const float stiffness=0.5f);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

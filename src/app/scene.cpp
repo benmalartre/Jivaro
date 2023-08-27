@@ -370,9 +370,9 @@ Scene::InitExec()
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 1.f, 0.f)) *
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
-  float size = 0.1f;
+  float size = 0.25f;
   
-  for(size_t x = 0; x < 1; ++x) {
+  for(size_t x = 0; x < 5; ++x) {
     std::string name = "cloth" + std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(clothPath, size, 

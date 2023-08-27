@@ -8,10 +8,10 @@
 #include <pxr/usd/ar/asset.h>
 #include <pxr/usd/ar/resolver.h>
 #include <pxr/imaging/hio/image.h>
-#include <pxr/imaging/hio/stb_image.h>
-#include <pxr/imaging/hio/stb_image_resize.h>
 
 #include "../common.h"
+#include "../stb/stb_image.h"
+#include "../stb/stb_image_resize.h"
 #include "../utils/files.h"
 #include "../utils/glutils.h"
 
