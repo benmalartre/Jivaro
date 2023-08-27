@@ -618,6 +618,76 @@ void Mesh::TriangulateFace(const HalfEdge* edge)
   _halfEdges._TriangulateFace(edge);
 }
 
+void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs)
+{
+  pxr::VtArray<int> edgeTriIndex(_halfEdges.GetNumRawEdges(), -1);
+
+  int triangleIdx = -1;
+  int edgeIdx = 0;
+  for(auto& faceVertexCount: _faceVertexCounts) {
+    for(int vertexIdx = 0; vertexIdx < faceVertexCount; ++vertexIdx) {
+      if(vertexIdx == 0) {
+        edgeTriIndex[edgeIdx++] = triangleIdx + 1;
+      } else if(vertexIdx == (faceVertexCount-1)) {
+        edgeTriIndex[edgeIdx++] = triangleIdx;
+      } else {
+        edgeTriIndex[edgeIdx++] = ++triangleIdx;
+      }
+    }
+  }
+
+  std::cout << "num edges : " << _halfEdges.GetNumRawEdges() << std::endl;
+
+  uint32_t triPairIdx = 0;
+  triangleIdx = 0;
+  edgeIdx = 0;
+  for(auto& faceVertexCount: _faceVertexCounts) {
+    for(int vertexIdx = 1; vertexIdx < (faceVertexCount - 1); ++vertexIdx) {
+      
+      HalfEdge* e = _halfEdges.GetEdge(edgeIdx + vertexIdx);
+      HalfEdge* p = _halfEdges.GetEdge(e->prev);
+      HalfEdge* n = _halfEdges.GetEdge(e->next);
+
+      std::cout << "tid : " << triangleIdx << std::endl;
+      Triangle* t = &_triangles[triangleIdx++];
+      std::cout << "rid : " << t->id << std::endl;
+      
+      if(e->twin >= 0) {
+        std::cout << "twin : " << e->twin << std::endl;
+        std::cout << "edge tri idx : " << edgeTriIndex[e->twin] << std::endl;
+
+        Triangle* o = &_triangles[edgeTriIndex[e->twin]];
+        std::cout << t->id << " vs " << o->id << std::endl;
+        if(t->id < o->id) {
+          pairs.push_back({triPairIdx++, t, o});
+        }
+      }
+
+      Triangle* lo = &_triangles[edgeTriIndex[_halfEdges.GetEdgeIndex(p)]];
+      if(t->id < lo->id) {
+        pairs.push_back({triPairIdx++, t, lo});
+      }
+
+      Triangle* ro = &_triangles[edgeTriIndex[_halfEdges.GetEdgeIndex(n)]];
+      if(t->id < ro->id) {
+        pairs.push_back({triPairIdx++, t, ro});
+      }
+      std::cout << "num tri pairs : " << pairs.size() << std::endl;
+    }
+    edgeIdx += faceVertexCount;
+  }
+/*
+  pxr::VtArray<int> visited(_triangles.size(), 0);
+  edgeIdx = 0;
+  for(auto& halfEdge: _halfEdges.GetEdges()) {
+    Triangle* tri = &_triangles[edgeTriIndex[edgeIdx++]];
+    if(visited[tri->id])continue;
+    visited[tri->id]++;
+  }
+*/
+
+}
+
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 
   const pxr::GfVec3f& direction, Location& result, float maxDistance)
 {

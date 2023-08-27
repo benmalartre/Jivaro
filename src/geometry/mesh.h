@@ -84,6 +84,8 @@ public:
   void Triangulate();
   void TriangulateFace(const HalfEdge* edge);
 
+  void GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs);
+
   void Init();
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
 

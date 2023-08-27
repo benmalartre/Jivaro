@@ -221,7 +221,9 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
   _halfEdges.resize(numHalfEdges);
   _halfEdgeUsed.resize(numHalfEdges);
+  _halfEdgeFace.resize(numHalfEdges);
 
+  size_t faceIdx = 0;
   size_t faceOffsetIdx = 0;
   size_t halfEdgeIdx = 0;
 
@@ -258,9 +260,11 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
       }
 
       _halfEdgeUsed[faceOffsetIdx + faceEdgeIdx] = true;
+      _halfEdgeFace[faceOffsetIdx + faceEdgeIdx] = faceIdx;
       halfEdge++;
     }
     faceOffsetIdx += faceVertexCount;
+    faceIdx++;
   }
 
   // sort the half-edges vector by edge key
@@ -289,6 +293,12 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 
 size_t 
 HalfEdgeGraph::_GetEdgeIndex(const HalfEdge* edge) const
+{
+  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) / sizeof(HalfEdge);
+}
+
+size_t 
+HalfEdgeGraph::GetEdgeIndex(const HalfEdge* edge) const
 {
   return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) / sizeof(HalfEdge);
 }

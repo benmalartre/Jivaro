@@ -21,6 +21,7 @@ public:
   enum ConstraintType {
     STRETCH = 1,
     BEND,
+    DIHEDRAL,
     RIGID
   };
 
@@ -95,6 +96,24 @@ protected:
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
   pxr::VtArray<pxr::GfVec3i>    _edges;
+  float                         _stiffness;
+
+};
+
+class DihedralConstraint : public Constraint
+{
+public:
+  DihedralConstraint(Body* body, const float stiffness = 0.1f);
+  virtual size_t& GetTypeId() const override { return TYPE_ID; }
+
+  bool Solve(Particles* particles) override;
+  void Apply(Particles* particles, const float di) override;
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+
+protected:
+  static size_t                 TYPE_ID;
+  pxr::VtArray<float>           _rest;
+  pxr::VtArray<pxr::GfVec4i>    _vertices;
   float                         _stiffness;
 
 };

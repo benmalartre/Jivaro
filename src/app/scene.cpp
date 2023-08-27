@@ -369,11 +369,16 @@ Scene::InitExec()
   pxr::GfQuatf rotation(90.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0, 0, 1));
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 1.f, 0.f)) *
-    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(10.f));
-  float size = 0.2f;
+    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
+  float size = 0.5f;
   
-  pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken( "cloth"));
-  _GenerateClothMesh(clothPath, size, matrix);
+  for(size_t x = 0; x < 5; ++x) {
+    std::string name = "cloth" + std::to_string(x);
+    pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
+    _GenerateClothMesh(clothPath, size, 
+      matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 0.f, 0.f)));
+  }
+  
   
   
   _Sources sources;
@@ -423,7 +428,7 @@ Scene::InitExec()
   
 
   pxr::VtArray<Constraint*> constraints;
-  _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
+  _solver->GetConstraintsByType(Constraint::BEND, constraints);
   if (constraints.size()) {
     std::cout << "we have some bend constraints lets draw them !!" << std::endl;
     pxr::SdfPath bendPath(rootId.AppendChild(pxr::TfToken("Bend")));
@@ -498,7 +503,7 @@ Scene::UpdateExec(double time)
         _solver->GetNumParticles()
       );
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Bend")) {
-      /*
+      
       pxr::VtArray<Constraint*> constraints;
       _solver->GetConstraintsByType(Constraint::BEND, constraints);
       Curve* curve = (Curve*)GetGeometry(execPrim.first);
@@ -517,7 +522,7 @@ Scene::UpdateExec(double time)
         }
       }
       curve->SetTopology(positions, radii, cvCounts);
-      */
+      
     }
 
     execPrim.second.bits = /*pxr::HdChangeTracker::DirtyTopology;*/

@@ -204,17 +204,18 @@ void Solver::UpdateColliders()
 void Solver::AddConstraints(Body* body)
 {
   Geometry* geom = body->geometry;
-  std::cout << "[solver] add constraints for type " << geom->GetType() << std::endl;
   if (geom->GetType() == Geometry::MESH) {
-    std::cout << "[solver] add constraints for mesh : " << std::endl;
 
-    StretchConstraint* stretch = new StretchConstraint(body);
+/*
+    StretchConstraint* stretch = new StretchConstraint(body, RANDOM_0_1, RANDOM_0_1);
     _constraints.push_back(stretch);
 
-    BendConstraint* bend = new BendConstraint(body, 0.05);
+    BendConstraint* bend = new BendConstraint(body, RANDOM_0_1);
     _constraints.push_back(bend);
+*/
+   DihedralConstraint* dihedral = new DihedralConstraint(body, RANDOM_0_1);
+   _constraints.push_back(dihedral);
 
-    std::cout << "num constraints : " << _constraints.size() << std::endl;
   } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;
     curve->GetTotalNumSegments();
@@ -235,7 +236,6 @@ void Solver::LockPoints()
 {
   size_t particleIdx = 0;
   const pxr::GfVec3f* positions = &_particles.position[0];
-  std::cout << "num particles : " << _particles.position.size() << std::endl;
   for (auto& body : _bodies) {
     size_t numPoints = body->numPoints;
     for(size_t point = 0; point < 10; ++point) {
