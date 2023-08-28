@@ -6,6 +6,7 @@
 #include <pxr/base/gf/matrix4f.h>
 
 #include "../common.h"
+#include "../geometry/intersection.h"
 #include "../pbd/mask.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -18,6 +19,10 @@ struct Body;
 class Collision : public Mask
 {
 public:
+  struct _Hit {
+    pxr::GfVec3f delta;
+    pxr::GfVec3f normal;
+  };
 /*
   bool HasMask() const { return _mask.size() > 0; };
   void SetMask(const pxr::VtArray<int>& mask) { _mask = mask; };
@@ -40,9 +45,11 @@ public:
 
   virtual void FindContacts(Particles* particles);
   virtual void ResolveContacts(Particles* particles, const float dt);
+  virtual void UpdateVelocity(Particles* particles, const float dt);
 
   virtual void FindContactsSerial(Particles* particles);
   virtual void ResolveContactsSerial(Particles* particles, const float dt);
+  virtual void UpdateVelocitySerial(Particles* particles, const float dt);
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
@@ -59,11 +66,16 @@ protected:
   virtual void _ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt);
   
   virtual void _FindContact(size_t index, Particles* particles) = 0;
-  virtual void _ResolveContact(size_t index, Particles* particles, const float dt) = 0;
+  virtual void _ResolveContact(size_t index, Particles* particles, const float dt, _Hit* hit) = 0;
 
 private:
   pxr::VtArray<int>           _hits;        // hits encode vertex hit in the int list bits
   pxr::VtArray<int>           _contacts;    // flat list of contact vertex
+  pxr::VtArray<pxr::GfVec3f>  _deltas;
+  pxr::VtArray<pxr::GfVec3f>  _normals;
+
+  float                       _restitution;
+  float                       _friction;
 };
 
 class PlaneCollision : public Collision
@@ -79,7 +91,7 @@ public:
 
 protected:
   void _FindContact(size_t index, Particles* particles) override;
-  void _ResolveContact(size_t index, Particles* particles, const float dt) override;
+  void _ResolveContact(size_t index, Particles* particles, const float dt, _Hit* hit) override;
 
 private:
   pxr::GfVec3f _position;
@@ -121,7 +133,7 @@ public:
 
 protected:
   void _FindContact(size_t index, Particles* particles) override;
-  void _ResolveContact(size_t index, Particles* particles, const float dt) override;
+  void _ResolveContact(size_t index, Particles* particles, const float dt, _Hit* hit) override;
 
 private:
   pxr::GfMatrix4f _xform;

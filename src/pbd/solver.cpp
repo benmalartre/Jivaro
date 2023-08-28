@@ -209,13 +209,13 @@ void Solver::AddConstraints(Body* body)
 
     //StretchConstraint* stretch = new StretchConstraint(body, RANDOM_0_1, RANDOM_0_1);
     //_constraints.push_back(stretch);
-    CreateStretchConstraints(body, _constraints, 0.5f, 0.5f);
+    CreateStretchConstraints(body, _constraints, RANDOM_0_1);
 /*
     BendConstraint* bend = new BendConstraint(body, RANDOM_0_1);
     _constraints.push_back(bend);
 */
    //CreateBendConstraints(body, _constraints, 0.5f);
-   CreateDihedralConstraints(body, _constraints, 0.5f);
+   CreateDihedralConstraints(body, _constraints, RANDOM_0_1);
    //DihedralConstraint* dihedral = new DihedralConstraint(body, RANDOM_0_1);
    //_constraints.push_back(dihedral);
 
@@ -276,6 +276,19 @@ void Solver::_ResolveCollisions(const float dt, bool serial)
     for (auto& collision : _collisions) {
       collision->FindContacts(&_particles);
       collision->ResolveContacts(&_particles, dt);
+    }
+  }
+}
+
+void Solver::_UpdateCollisions(const float dt, bool serial)
+{
+  if (serial) {
+    for (auto& collision : _collisions) {
+      collision->UpdateVelocitySerial(&_particles, dt);
+    }
+  } else {
+    for (auto& collision : _collisions) {
+      collision->UpdateVelocity(&_particles, dt);
     }
   }
 }
@@ -354,11 +367,12 @@ void Solver::_StepOneSerial(const float dt)
 
   // update particles
   _UpdateParticles(0, numParticles, dt);
+  // solve collisions
+  _UpdateCollisions(dt, false);
 }
 
-void Solver::_StepOne(const float dt, size_t grain)
+void Solver::_StepOne(const float dt)
 {
-  //std::cout << "grain size : " << grain << std::endl;
   const size_t numParticles = _particles.GetNumParticles();
   const float dc = 1.f / static_cast<float>(_collisionIterations);
   const float ds = 1.f / static_cast<float>(_solverIterations);
@@ -367,11 +381,7 @@ void Solver::_StepOne(const float dt, size_t grain)
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_IntegrateParticles, this,
-      std::placeholders::_1, std::placeholders::_2, dt), grain);
-
-  // solve collisions
-  for (size_t ci = 0; ci < _collisionIterations; ++ci)
-    _ResolveCollisions(dc, false);
+      std::placeholders::_1, std::placeholders::_2, dt));
 
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
@@ -382,11 +392,18 @@ void Solver::_StepOne(const float dt, size_t grain)
     for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
   }
 
+  // solve collisions
+  for (size_t ci = 0; ci < _collisionIterations; ++ci)
+    _ResolveCollisions(dc, false);
+
   // update particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_UpdateParticles, this,
-      std::placeholders::_1, std::placeholders::_2, dt), grain);
+      std::placeholders::_1, std::placeholders::_2, dt));
+
+  // update velocities
+  _UpdateCollisions(dt, false);
 
 }
 
@@ -404,9 +421,9 @@ void Solver::Step(bool serial)
 
   if (!serial && numParticles >= 2 * numThreads) {
     //std::cout << "parallel step " << std::endl;
-    const size_t grain = numParticles / numThreads;
+    //const size_t grain = numParticles / numThreads;
     for(size_t si = 0; si < _subSteps; ++si)
-      _StepOne(dt, grain);
+      _StepOne(dt);
   }
   else {
     //std::cout << "serial step " << std::endl;

@@ -31,14 +31,16 @@ public:
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(Body* body, const pxr::VtArray<int>& elems=pxr::VtArray<int>())
+  Constraint(Body* body, const float stiffness, const pxr::VtArray<int>& elems=pxr::VtArray<int>()) 
+    : _elements(elems)
+    , _stiffness(stiffness)
   {
     _body.resize(1);
     _body[0] = body;
-    _elements = elems;
   }
 
-  Constraint(Body* body1, Body* body2)
+  Constraint(Body* body1, Body* body2, const float stiffness)
+    : _stiffness(stiffness)
   {
     _body.resize(2);
     _body[0] = body1;
@@ -66,13 +68,14 @@ protected:
   pxr::VtArray<Body*>        _body;
   pxr::VtArray<int>          _elements;
   pxr::VtArray<pxr::GfVec3f> _correction;
+  float                      _stiffness;
 };
 
 class StretchConstraint : public Constraint
 {
 public:
-  StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
-    const float stretchStiffness=0.5f, const float compressionStiffness=0.5f);
+  StretchConstraint(Body* body, const pxr::VtArray<int>& elems, 
+    const float stiffness=0.5f);
 
   virtual size_t& GetTypeId() const override { return TYPE_ID; };
   virtual size_t& GetElementSize() const override { return ELEM_SIZE; };
@@ -85,12 +88,10 @@ public:
 protected:
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
-  float                         _stretch;
-  float                         _compression;
 };
 
-void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
-  const float stretchStiffness=0.5f, const float compressionStiffness=0.5f);
+void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints, 
+  const float stiffness=0.5f);
 
 
 class BendConstraint : public Constraint
@@ -110,7 +111,6 @@ public:
 protected:
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
-  float                         _stiffness;
 };
 
 void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
@@ -134,7 +134,6 @@ public:
 protected:
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
-  float                         _stiffness;
 
 };
 

@@ -2,7 +2,19 @@
 #include "../pbd/particle.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
+/*
+struct Body
+{
+  float          damping;
+  float          radius;
+  float          mass;
 
+  size_t         offset;
+  size_t         numPoints;
+  
+  Geometry*      geometry;
+};
+*/
 
 void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
 {
@@ -11,6 +23,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   size_t add = geom->GetNumPoints();
   size_t newSize = base + add;
   size_t index = body.size() ? body.back() + 1 : 0;
+  float w = pxr::GfIsClose(b->mass, 0.f, 0.0000001f) ? 0.f : 1.f / b->mass;
   mass.resize(newSize);
   radius.resize(newSize);
   rest.resize(newSize);
@@ -23,8 +36,8 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   for (size_t p = 0; p < add; ++p) {
     const pxr::GfVec3f pos = m.Transform(points[p]);
     size_t idx = base + p;
-    mass[idx] = 1.f;
-    radius[idx] = 0.1f;
+    mass[idx] = w;
+    radius[idx] = b->radius;
     rest[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;

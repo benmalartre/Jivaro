@@ -28,10 +28,8 @@ size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
 size_t StretchConstraint::ELEM_SIZE = 2;
 
 StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
-  const float stretchStiffness, const float compressionStiffness)
-  : Constraint(body, elems)
-  , _stretch(stretchStiffness)
-  , _compression(compressionStiffness) 
+  const float stiffness)
+  : Constraint(body, stiffness, elems)
 {
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
@@ -58,15 +56,8 @@ bool StretchConstraint::Solve(Particles* particles)
     const pxr::GfVec3f& x0 = particles->predicted[p0];
     const pxr::GfVec3f& x1 = particles->predicted[p1];
 
-    const float im0 =
-      pxr::GfIsClose(particles->mass[p0], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[p0];
-
-    const float im1 =
-      pxr::GfIsClose(particles->mass[p1], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[p1];
+    const float im0 = particles->mass[p0];
+    const float im1 = particles->mass[p1];
 
     float sum = im0 + im1;
     if (pxr::GfIsClose(sum, 0.f, 0.0000001f))
@@ -80,11 +71,8 @@ bool StretchConstraint::Solve(Particles* particles)
 
     n.Normalize();
 
-    pxr::GfVec3f c;
-    if (d < rest)
-      c = _compression * n * (d - rest) * sum;
-    else
-      c = _stretch * n * (d - rest) * sum;
+    pxr::GfVec3f c = _stiffness * n * (d - rest) * sum;
+
 
     _correction[elemIdx * ELEM_SIZE + 0] += im0 * c;
     _correction[elemIdx * ELEM_SIZE + 1] += -im1 * c;
@@ -107,7 +95,7 @@ void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3
 }
 
 void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
-  const float stretchStiffness, const float compressionStiffness)
+  const float stiffness)
 {
   pxr::VtArray<int> allElements;
 
@@ -133,8 +121,7 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
   size_t last = pxr::GfMin(Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
   while(true) {
     pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
-    StretchConstraint* stretch = new StretchConstraint(body, blockElements, 
-      stretchStiffness, compressionStiffness);
+    StretchConstraint* stretch = new StretchConstraint(body, blockElements, stiffness);
     constraints.push_back(stretch);
     first += Constraint::BlockSize * StretchConstraint::ELEM_SIZE;
     if(first >= numElements)break;
@@ -147,8 +134,7 @@ size_t BendConstraint::ELEM_SIZE = 3;
 
 BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
   const float stiffness)
-  : Constraint(body, elems)
-  , _stiffness(stiffness)
+  : Constraint(body, stiffness, elems)
 {
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
@@ -191,21 +177,9 @@ bool BendConstraint::Solve(Particles* particles)
 
     dir *= (1.f - (_rest[elemIdx] / dist));
 
-    const float im0 =
-      pxr::GfIsClose(particles->mass[p0], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[p0];
-
-    const float im1 =
-      pxr::GfIsClose(particles->mass[p1], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[p1];
-
-    const float im2 =
-      pxr::GfIsClose(particles->mass[p2], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[p2];
-
+    const float im0 = particles->mass[p0];
+    const float im1 = particles->mass[p1];
+    const float im2 = particles->mass[p2];
 
     float w = im0 + 2.f * im1 + im2;
     if (pxr::GfIsClose(w, 0.f, 0.0000001f))
@@ -285,8 +259,7 @@ size_t DihedralConstraint::ELEM_SIZE = 4;
 
 DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<int>& elems,
   const float stiffness)
-  : Constraint(body, elems)
-  , _stiffness(stiffness)
+  : Constraint(body, stiffness, elems)
 {
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
 
@@ -335,25 +308,10 @@ bool DihedralConstraint::Solve(Particles* particles)
     const pxr::GfVec3f& p2 = particles->predicted[i2 + _body[0]->offset];
     const pxr::GfVec3f& p3 = particles->predicted[i3 + _body[0]->offset];
 
-    const float im0 =
-      pxr::GfIsClose(particles->mass[i0 + _body[0]->offset], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[i0 + _body[0]->offset];
-
-    const float im1 =
-      pxr::GfIsClose(particles->mass[i1 + _body[0]->offset], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[i1 + _body[0]->offset];
-
-    const float im2 =
-      pxr::GfIsClose(particles->mass[i2 + _body[0]->offset], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[i2 + _body[0]->offset];
-
-    const float im3 =
-      pxr::GfIsClose(particles->mass[i3 + _body[0]->offset], 0, 0.0000001f) ?
-      0.f :
-      1.f / particles->mass[i3 + _body[0]->offset];
+    const float im0 = particles->mass[i0 + _body[0]->offset];
+    const float im1 = particles->mass[i1 + _body[0]->offset];
+    const float im2 = particles->mass[i2 + _body[0]->offset];
+    const float im3 = particles->mass[i3 + _body[0]->offset];
 
     const float rest = _rest[elemIdx];
 
@@ -386,9 +344,6 @@ bool DihedralConstraint::Solve(Particles* particles)
     if (dot > 1.0) dot = 1.0;
 		float phi = acos(dot);
 
-    // fast approximation
-    //double phi = (-0.6981317 * dot * dot - 0.8726646) * dot + 1.570796;	
-
     float lambda = (
       d0.GetLengthSq() * im0 +
       d1.GetLengthSq() * im1 + 
@@ -396,11 +351,6 @@ bool DihedralConstraint::Solve(Particles* particles)
       d3.GetLengthSq() * im3);
 
     if (lambda == 0.0) continue;
-
-    // stability
-    // 1.5 is the largest magic number I found to be stable in all cases :-)
-    //if (stiffness > 0.5 && Math.Abs(phi - RestAngle) > 1.5)		
-    //	stiffness = 0.5;
 
     lambda = (phi - rest) / lambda * _stiffness;
 

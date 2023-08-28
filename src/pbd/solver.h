@@ -74,10 +74,11 @@ public:
 
 private:
   void _ResolveCollisions(const float dt, bool serial=false);
+  void _UpdateCollisions(const float dt, bool serial=false);
   void _IntegrateParticles(size_t begin, size_t end, const float dt);
   void _UpdateParticles(size_t begin, size_t end, const float dt);
   void _StepOneSerial(const float dt);
-  void _StepOne(const float dt, size_t grain);
+  void _StepOne(const float dt);
 
   size_t                              _subSteps;
   size_t                              _solverIterations;

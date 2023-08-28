@@ -254,6 +254,11 @@ void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatri
   usdMesh.CreatePointsAttr().Set(mesh.GetPositions());
   usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts());
   usdMesh.CreateFaceVertexIndicesAttr().Set(mesh.GetFaceConnects());
+
+  pxr::UsdPrim usdPrim = usdMesh.GetPrim();
+  usdPrim.CreateAttribute(pxr::TfToken("StretchStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
+  usdPrim.CreateAttribute(pxr::TfToken("CompressionStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
+  usdPrim.CreateAttribute(pxr::TfToken("BendStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
 }
 
 pxr::UsdGeomSphere _GenerateCollideSphere(const pxr::SdfPath& path, double radius, const pxr::GfMatrix4f& m)
@@ -387,9 +392,9 @@ Scene::InitExec()
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 1.f, 0.f)) *
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
-  float size = .5f;
+  float size = .25f;
   
-  for(size_t x = 0; x < 5; ++x) {
+  for(size_t x = 0; x < 2; ++x) {
     std::string name = "cloth" + std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(clothPath, size, 
@@ -433,8 +438,6 @@ Scene::InitExec()
   double radius;
   for (auto& sphere: spheres) {
     sphere.GetRadiusAttr().Get(&radius);
-    std::cout << "ADD collision sphere : " << radius << ", " << 
-      sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()) << std::endl;
     _solver->AddCollision(
       new SphereCollision(
         pxr::GfMatrix4f(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default())), (float)radius)
@@ -460,10 +463,12 @@ Scene::InitExec()
     pxr::SdfPath bendPath(rootId.AppendChild(pxr::TfToken("Constraints")));
     _sourcesMap[bendPath] = sources;
     Curve* curve = AddCurve(bendPath);
+
     pxr::VtArray<pxr::GfVec3f> positions;
     pxr::VtArray<pxr::GfVec3f> colors;
     pxr::VtArray<float> radii;
     pxr::VtArray<int> cvCounts;
+    
     for (const auto& constraint : constraints) {
       pxr::VtArray<pxr::GfVec3f> points;
       constraint->GetPoints(_solver->GetParticles(), points);
@@ -519,13 +524,6 @@ Scene::UpdateExec(double time)
   pxr::UsdGeomXformCache xformCache(time);
   
   for (auto& execPrim : _prims) {
-    /*
-    pxr::UsdPrim usdPrim = stage->GetPrimAtPath(_sourcesMap[execPrim.first].first);
-    pxr::UsdGeomMesh usdMesh(usdPrim);
-
-    pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(usdPrim);
-    _HairEmit((Curve*)execPrim.second.geom, usdMesh, xform, time);
-    */
     if (execPrim.first.GetNameToken() == pxr::TfToken("Display")) {
       Points* points = (Points*)GetGeometry(execPrim.first);
       points->SetPositions(
