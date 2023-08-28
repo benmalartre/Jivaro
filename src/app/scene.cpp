@@ -424,7 +424,7 @@ Scene::InitExec()
   const size_t numParticles = _solver->GetNumParticles();
   points->SetPositions(&particles->position[0], numParticles);
   points->SetRadii(&particles->radius[0], numParticles);
-
+/*
   pxr::VtArray<Constraint*> constraints;
   _solver->GetConstraintsByType(Constraint::DIHEDRAL, constraints);
   if (constraints.size()) {
@@ -433,22 +433,27 @@ Scene::InitExec()
     _sourcesMap[bendPath] = sources;
     Curve* curve = AddCurve(bendPath);
     pxr::VtArray<pxr::GfVec3f> positions;
+    pxr::VtArray<pxr::GfVec3f> colors;
     pxr::VtArray<float> radii;
     pxr::VtArray<int> cvCounts;
     for (const auto& constraint : constraints) {
       pxr::VtArray<pxr::GfVec3f> points;
       constraint->GetPoints(_solver->GetParticles(), points);
+      pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
       for (auto& point : points) {
         positions.push_back(point);
         radii.push_back(0.02f);
+        colors.push_back(color);
       }
       for (size_t e = 0; e < points.size() / 2; ++e) {
         cvCounts.push_back(2);
       }
     }
     curve->SetTopology(positions, radii, cvCounts);
-  }
+    curve->SetColors(&colors[0], colors.size());
 
+  }
+*/
   /*
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));

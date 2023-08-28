@@ -187,4 +187,13 @@ Geometry::SetRadii(const float* radii, size_t n)
   memmove(&_radius[0], radii, n * sizeof(float));
 }
 
+void
+Geometry::SetColors(const pxr::GfVec3f* colors, size_t n)
+{
+  if (n != _colors.size()) {
+    _colors.resize(n);
+  }
+  memmove(&_colors[0], colors, n * sizeof(pxr::GfVec3f));
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

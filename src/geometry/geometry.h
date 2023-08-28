@@ -91,6 +91,7 @@ public:
 
   void SetPositions(const pxr::GfVec3f* positions, size_t n);
   void SetRadii(const float* radii, size_t n);
+  void SetColors(const pxr::GfVec3f* colors, size_t n);
   void Normalize();
   void ComputeBoundingBox();
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
