@@ -342,12 +342,12 @@ Application::Update()
   */
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
-  double currentTime = glfwGetTime();
+  double currentTime = GetTime().GetActiveTime();
 
-  if (currentTime - lastTime > refreshRate) {
+  if (currentTime != lastTime) {
     lastTime = currentTime;
-    if (_execute && (_time.IsPlaying() || _IsAnyEngineDirty())) {
-      UpdateExec(_time.GetActiveTime());
+    if (_execute) {
+      UpdateExec(currentTime);
     }
   }
 

@@ -140,12 +140,14 @@ void TimelineUI::DrawButtons()
     [&](){
       _currentTime = _startTime;
       time.SetActiveTime(_currentTime);
+      GetApplication()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
   UIUtils::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
     [&](){
       time.PreviousFrame();
+      GetApplication()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
@@ -167,6 +169,7 @@ void TimelineUI::DrawButtons()
   UIUtils::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
     [&](){
       time.NextFrame();
+      GetApplication()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
@@ -174,6 +177,7 @@ void TimelineUI::DrawButtons()
     [&](){
       _currentTime = _endTime;
       time.SetActiveTime(_currentTime);
+      GetApplication()->DirtyAllEngines();
     });
   ImGui::SameLine();
 

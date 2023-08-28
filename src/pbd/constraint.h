@@ -31,10 +31,11 @@ public:
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(Body* body)
+  Constraint(Body* body, const pxr::VtArray<int>& elems=pxr::VtArray<int>())
   {
     _body.resize(1);
     _body[0] = body;
+    _elements = elems;
   }
 
   Constraint(Body* body1, Body* body2)
@@ -46,6 +47,7 @@ public:
 
   virtual ~Constraint() {};
   virtual size_t& GetTypeId() const = 0;
+  virtual size_t& GetElementSize() const = 0;
 
   virtual bool Update(Particles* particles) { return true; };
   virtual bool Solve(Particles* particles) = 0;
@@ -53,7 +55,7 @@ public:
 
   // this one has to be called serially 
   // as two constraints can move the same point
-  virtual void Apply(Particles* particles, const float di) = 0;
+  virtual void Apply(Particles* particles, const float di);
 
   pxr::VtArray<Body*>& GetBodies() {return _body;};
   Body* GetBody(size_t index) {return _body[index];};
@@ -62,28 +64,27 @@ public:
 
 protected:
   pxr::VtArray<Body*>        _body;
+  pxr::VtArray<int>          _elements;
   pxr::VtArray<pxr::GfVec3f> _correction;
 };
 
 class StretchConstraint : public Constraint
 {
 public:
-  StretchConstraint(Body* body, const float stretchStiffness=0.5f, 
-    const float compressionStiffness=0.5f);
-  StretchConstraint(Body* body, const pxr::VtArray<pxr::GfVec2i>& edges,
+  StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
     const float stretchStiffness=0.5f, const float compressionStiffness=0.5f);
 
-  virtual size_t& GetTypeId() const override { return TYPE_ID; }
+  virtual size_t& GetTypeId() const override { return TYPE_ID; };
+  virtual size_t& GetElementSize() const override { return ELEM_SIZE; };
 
   bool Solve(Particles* particles) override;
-  void Apply(Particles* particles, const float di) override;
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
-  
+
+  static size_t                 ELEM_SIZE;
 
 protected:
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
-  pxr::VtArray<pxr::GfVec2i>    _edges;
   float                         _stretch;
   float                         _compression;
 };
@@ -95,19 +96,20 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
 class BendConstraint : public Constraint
 {
 public:
-  BendConstraint(Body* body, const float stiffness = 0.1f);
-  BendConstraint(Body* body, const pxr::VtArray<pxr::GfVec3i>& edges, 
+  BendConstraint(Body* body, const pxr::VtArray<int>& elems, 
     const float stiffness = 0.1f);
-  virtual size_t& GetTypeId() const override { return TYPE_ID; }
+
+  virtual size_t& GetTypeId() const override { return TYPE_ID; };
+  virtual size_t& GetElementSize() const override { return ELEM_SIZE; };
 
   bool Solve(Particles* particles) override;
-  void Apply(Particles* particles, const float di) override;
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+
+  static size_t                 ELEM_SIZE;
 
 protected:
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
-  pxr::VtArray<pxr::GfVec3i>    _edges;
   float                         _stiffness;
 };
 
@@ -118,19 +120,20 @@ void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
 class DihedralConstraint : public Constraint
 {
 public:
-  DihedralConstraint(Body* body, const float stiffness = 0.1f);
-  DihedralConstraint(Body* body, const pxr::VtArray<pxr::GfVec4i>& edges,
+  DihedralConstraint(Body* body, const pxr::VtArray<int>& elems,
     const float stiffness = 0.1f);
-  virtual size_t& GetTypeId() const override { return TYPE_ID; }
+
+  virtual size_t& GetTypeId() const override { return TYPE_ID; };
+  virtual size_t& GetElementSize() const override { return ELEM_SIZE; };
 
   bool Solve(Particles* particles) override;
-  void Apply(Particles* particles, const float di) override;
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+
+  static size_t                 ELEM_SIZE;
 
 protected:
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
-  pxr::VtArray<pxr::GfVec4i>    _vertices;
   float                         _stiffness;
 
 };

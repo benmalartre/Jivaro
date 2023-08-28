@@ -244,7 +244,6 @@ void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatri
 {
   Application* app = GetApplication();
   pxr::UsdStageWeakPtr stage = app->GetStage();
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
   Mesh mesh;
   mesh.TriangularGrid2D(10.f, 10.f, m, size);
@@ -255,6 +254,24 @@ void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatri
   usdMesh.CreatePointsAttr().Set(mesh.GetPositions());
   usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts());
   usdMesh.CreateFaceVertexIndicesAttr().Set(mesh.GetFaceConnects());
+}
+
+pxr::UsdGeomSphere _GenerateCollideSphere(const pxr::SdfPath& path, double radius, const pxr::GfMatrix4f& m)
+{
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+  pxr::UsdGeomSphere usdSphere = pxr::UsdGeomSphere::Define(stage, path);
+
+  usdSphere.CreateRadiusAttr().Set(radius);
+
+  double real;
+  usdSphere.GetRadiusAttr().Get(&real);
+
+  pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();
+  op.Set(pxr::GfMatrix4d(m));
+
+  return usdSphere;
+
 }
 
 static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
@@ -370,7 +387,7 @@ Scene::InitExec()
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 1.f, 0.f)) *
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
-  float size = 0.25f;
+  float size = .5f;
   
   for(size_t x = 0; x < 5; ++x) {
     std::string name = "cloth" + std::to_string(x);
@@ -378,8 +395,14 @@ Scene::InitExec()
     _GenerateClothMesh(clothPath, size, 
       matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 0.f, 0.f)));
   }
-  
-  
+
+  std::vector<pxr::UsdGeomSphere> spheres;
+  for(size_t x = 0; x < 5; ++x) {
+    std::string name = "collide" + std::to_string(x);
+    pxr::SdfPath collidePath = rootId.AppendChild(pxr::TfToken(name));
+    spheres.push_back(_GenerateCollideSphere(collidePath, 0.4f + RANDOM_0_1 * 0.2f, 
+      matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, -3.f, 2.f))));
+  }
   
   _Sources sources;
   for (pxr::UsdPrim prim : primRange) {
@@ -405,14 +428,19 @@ Scene::InitExec()
   _solver->LockPoints();
   
   //_solver->AddForce(new DampingForce());
-  /*
+  
   pxr::GfVec3f pos;
-  for (size_t x = 0; x < 12; ++x) {
-    pxr::GfMatrix4f m(1.f);
-    m.SetTranslate(pxr::GfVec3f(0.f, RANDOM_0_X(5) - 2.5, (2.f * x) - 6.f));
-    _solver->AddCollision(new SphereCollision(m, 5.f));
+  double radius;
+  for (auto& sphere: spheres) {
+    sphere.GetRadiusAttr().Get(&radius);
+    std::cout << "ADD collision sphere : " << radius << ", " << 
+      sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()) << std::endl;
+    _solver->AddCollision(
+      new SphereCollision(
+        pxr::GfMatrix4f(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default())), (float)radius)
+    );
   }
-  */
+  
  
   _solver->AddCollision(new PlaneCollision());
  
@@ -424,12 +452,12 @@ Scene::InitExec()
   const size_t numParticles = _solver->GetNumParticles();
   points->SetPositions(&particles->position[0], numParticles);
   points->SetRadii(&particles->radius[0], numParticles);
-/*
+
   pxr::VtArray<Constraint*> constraints;
-  _solver->GetConstraintsByType(Constraint::DIHEDRAL, constraints);
+  _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
   if (constraints.size()) {
     std::cout << "we have some bend constraints lets draw them !!" << std::endl;
-    pxr::SdfPath bendPath(rootId.AppendChild(pxr::TfToken("Bend")));
+    pxr::SdfPath bendPath(rootId.AppendChild(pxr::TfToken("Constraints")));
     _sourcesMap[bendPath] = sources;
     Curve* curve = AddCurve(bendPath);
     pxr::VtArray<pxr::GfVec3f> positions;
@@ -451,9 +479,8 @@ Scene::InitExec()
     }
     curve->SetTopology(positions, radii, cvCounts);
     curve->SetColors(&colors[0], colors.size());
-
   }
-*/
+
   /*
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
@@ -505,10 +532,10 @@ Scene::UpdateExec(double time)
         &_solver->GetParticles()->position[0], 
         _solver->GetNumParticles()
       );
-    } else if (execPrim.first.GetNameToken() == pxr::TfToken("Bend")) {
+    } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
       
       pxr::VtArray<Constraint*> constraints;
-      _solver->GetConstraintsByType(Constraint::DIHEDRAL, constraints);
+      _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
       Curve* curve = (Curve*)GetGeometry(execPrim.first);
       pxr::VtArray<pxr::GfVec3f> positions;
       pxr::VtArray<float> radii;
