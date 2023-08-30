@@ -32,27 +32,9 @@ public:
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
   Constraint(size_t elementSize, Body* body, float stiffness, float compliance, 
-    const pxr::VtArray<int>& elems=pxr::VtArray<int>()) 
-    : _elements(elems)
-    , _stiffness(stiffness)
-    , _compliance(compliance)
-  {
-    const size_t numElements = elems.size() / elementSize;
-    _body.resize(1);
-    _body[0] = body;
-    _lagrange.resize(numElements);
-    _gradient.resize(elementSize);
-    _correction.resize(_elements.size());
+    const pxr::VtArray<int>& elems=pxr::VtArray<int>());
 
-  }
-
-  Constraint(Body* body1, Body* body2, const float stiffness)
-    : _stiffness(stiffness)
-  {
-    _body.resize(2);
-    _body[0] = body1;
-    _body[1] = body2;
-  }
+  Constraint(Body* body1, Body* body2, const float stiffness);
 
   virtual ~Constraint() {};
   virtual size_t GetTypeId() const = 0;
@@ -61,6 +43,7 @@ public:
     return _elements.size() / GetElementSize();
   };
 
+  virtual void ResetLagrangeMultiplier();
   virtual bool Solve(Particles* particles, const float dt);
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) = 0;
 
@@ -71,15 +54,14 @@ public:
   pxr::VtArray<Body*>& GetBodies() {return _body;};
   Body* GetBody(size_t index) {return _body[index];};
   const Body* GetBody(size_t index) const {return _body[index];};
-  void ResetCorrection();
-  virtual void ResetLagrangeMultiplier() {
-    memset(&_lagrange[0], 0.f, _lagrange.size()*sizeof(float));
-  };
 
 protected:
+  float _ComputeLagrangeMultiplier(Particles* particles, size_t index=0);
+  void _ResetCorrection();
+  
+
   virtual float _CalculateValue(Particles* particles, size_t index) = 0;
   virtual void _CalculateGradient(Particles* particles, size_t index) = 0;
-  float _ComputeLagrangeMultiplier(Particles* particles, size_t index=0);
 
   pxr::VtArray<Body*>           _body;
   pxr::VtArray<int>             _elements;
@@ -94,7 +76,7 @@ class StretchConstraint : public Constraint
 {
 public:
   StretchConstraint(Body* body, const pxr::VtArray<int>& elems, 
-    const float stiffness=0.5f, const float compliance=0.f);
+    const float stiffness=0.5f, const float compliance=0.5f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };

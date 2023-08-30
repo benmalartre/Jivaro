@@ -81,8 +81,8 @@ private:
   size_t                              _subSteps;
   size_t                              _solverIterations;
   float                               _sleepThreshold;
+  float                               _frameTime;
   float                               _stepTime;
-  float                               _physicTime;
   float                               _startFrame;
   bool                                _paused;		
 

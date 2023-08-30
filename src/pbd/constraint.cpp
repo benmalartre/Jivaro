@@ -8,6 +8,29 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+Constraint::Constraint(size_t elementSize, Body* body, float stiffness, float compliance, 
+  const pxr::VtArray<int>& elems) 
+  : _elements(elems)
+  , _stiffness(stiffness)
+  , _compliance(compliance)
+{
+  const size_t numElements = elems.size() / elementSize;
+  _body.resize(1);
+  _body[0] = body;
+  _lagrange.resize(numElements);
+  _gradient.resize(elementSize);
+  _correction.resize(_elements.size());
+
+}
+
+Constraint::Constraint(Body* body1, Body* body2, const float stiffness)
+  : _stiffness(stiffness)
+{
+  _body.resize(2);
+  _body[0] = body1;
+  _body[1] = body2;
+}
+
 float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elemIdx)
 {
   const size_t N = GetElementSize();
@@ -24,7 +47,7 @@ float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elemId
 
 bool Constraint::Solve(Particles* particles, const float dt)
 {
-  ResetCorrection();
+  _ResetCorrection();
 
   const size_t N = GetElementSize();
   const size_t numElements = _elements.size() / N;
@@ -62,10 +85,14 @@ bool Constraint::Solve(Particles* particles, const float dt)
   return true;
 }
 
-void Constraint::ResetCorrection()
+void Constraint::_ResetCorrection()
 {
-  const size_t numCorrections = _correction.size();
-  memset(&_correction[0], 0.f, numCorrections * sizeof(pxr::GfVec3f));
+  memset(&_correction[0], 0.f, _correction.size() * sizeof(pxr::GfVec3f));
+}
+
+void Constraint::ResetLagrangeMultiplier()
+{
+  memset(&_lagrange[0], 0.f, _lagrange.size()*sizeof(float));
 }
 
 // this one has to happen serialy
