@@ -26,7 +26,7 @@ public:
   void AddBody(Particles* particles, Body* body);
   void RemoveBody(Particles* particles, Body* body);
 
-  virtual void Apply(size_t begin, size_t end, pxr::GfVec3f* velocities, float* mass, float dt) const = 0;
+  virtual void Apply(size_t begin, size_t end, Particles* particles, float dt) const = 0;
 
 protected:
   pxr::VtArray<float> _weights;   // if mask weights size must equals mask size 
@@ -39,7 +39,7 @@ public:
   GravitationalForce();
   GravitationalForce(const pxr::GfVec3f& gravity);
 
-  void Apply(size_t begin, size_t end, pxr::GfVec3f* velocities, float* mass, float dt) const override;
+  void Apply(size_t begin, size_t end, Particles* particles, float dt) const override;
 
 private:
   pxr::GfVec3f _gravity;
@@ -51,7 +51,7 @@ public:
   DampingForce();
   DampingForce(float damping);
 
-  void Apply(size_t begin, size_t end, pxr::GfVec3f* velocities, float* mass, float dt) const override;
+  void Apply(size_t begin, size_t end, Particles* particles, float dt) const override;
 
 private:
   float _damp;

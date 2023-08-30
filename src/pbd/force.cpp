@@ -6,7 +6,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 GravitationalForce::GravitationalForce() 
   : Force()
-  , _gravity(0.f, -9.18f, 0.f)
+  , _gravity(0.f, -9.8f, 0.f)
 {
 }
 
@@ -16,14 +16,17 @@ GravitationalForce::GravitationalForce(const pxr::GfVec3f& gravity)
 {
 }
 
-void GravitationalForce::Apply(size_t begin, size_t end, pxr::GfVec3f* velocity, float* mass, float dt) const
+void GravitationalForce::Apply(size_t begin, size_t end, Particles* particles, float dt) const
 {
+  pxr::GfVec3f* velocity = &particles->velocity[0];
+  const float* mass = &particles->mass[0];
+  const float* weight = &particles->weight[0];
   for (size_t index = begin; index < end; ++index) {
     if (!Affects(index))continue;
     if (HasWeights())
-      velocity[index] += _gravity * _weights[index] * mass[index] * dt;
+      velocity[index] += _gravity * mass[index] * _weights[index] * weight[index] * dt;
     else
-      velocity[index] += _gravity * mass[index] *  dt;
+      velocity[index] += _gravity * mass[index] * weight[index] * dt;
   }
 }
 
@@ -39,14 +42,17 @@ DampingForce::DampingForce(float damp)
 {
 }
 
-void DampingForce::Apply(size_t begin, size_t end, pxr::GfVec3f* velocity, float* mass, float dt) const
+void DampingForce::Apply(size_t begin, size_t end, Particles* particles, float dt) const
 {
+  pxr::GfVec3f* velocity = &particles->velocity[0];
+  const float* mass = &particles->mass[0];
+  const float* weight = &particles->weight[0];
   for (size_t index = begin; index < end; ++index) {
     if (!Affects(index))continue;
     if (HasWeights())
-      velocity[index] -= velocity[index] * _damp * _weights[index] * mass[index] * dt;
+      velocity[index] -= velocity[index] * _damp * _weights[index] * weight[index] * dt;
     else
-      velocity[index] -= velocity[index] * _damp * mass[index] * dt;
+      velocity[index] -= velocity[index] * _damp * weight[index] * dt;
   }
 
 }

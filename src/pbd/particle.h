@@ -39,7 +39,8 @@ struct Particles
   void RemoveBody(Body* body);
 
   pxr::VtArray<int>          body;
-  pxr::VtArray<float>        mass;  // here we store inverse mass really
+  pxr::VtArray<float>        mass;
+  pxr::VtArray<float>        weight; // inverse mass
   pxr::VtArray<float>        radius;
   pxr::VtArray<pxr::GfVec3f> rest;
   pxr::VtArray<pxr::GfVec3f> position;

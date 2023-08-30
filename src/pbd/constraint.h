@@ -31,7 +31,7 @@ public:
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(size_t elementSize, Body* body, float stiffness, float compliance, 
+  Constraint(size_t elementSize, Body* body, float stiffness, 
     const pxr::VtArray<int>& elems=pxr::VtArray<int>());
 
   Constraint(Body* body1, Body* body2, const float stiffness);
@@ -76,7 +76,7 @@ class StretchConstraint : public Constraint
 {
 public:
   StretchConstraint(Body* body, const pxr::VtArray<int>& elems, 
-    const float stiffness=0.5f, const float compliance=0.5f);
+    const float stiffness=0.5f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
@@ -94,14 +94,14 @@ protected:
 };
 
 void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints, 
-  const float stiffness=0.5f, const float compliance=0.5f);
+  const float stiffness=0.5f);
 
 
 class BendConstraint : public Constraint
 {
 public:
   BendConstraint(Body* body, const pxr::VtArray<int>& elems, 
-    const float stiffness = 0.1f, const float compliance=0.5f);
+    const float stiffness = 0.1f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
@@ -126,7 +126,7 @@ class DihedralConstraint : public Constraint
 {
 public:
   DihedralConstraint(Body* body, const pxr::VtArray<int>& elems,
-    const float stiffness = 0.1f, const float compliance=0.5f);
+    const float stiffness = 0.1f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };

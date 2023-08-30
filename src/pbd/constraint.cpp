@@ -8,17 +8,17 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Constraint::Constraint(size_t elementSize, Body* body, float stiffness, float compliance, 
+Constraint::Constraint(size_t elementSize, Body* body, float stiffness, 
   const pxr::VtArray<int>& elems) 
   : _elements(elems)
   , _stiffness(stiffness)
-  , _compliance(compliance)
+  , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
 {
   const size_t numElements = elems.size() / elementSize;
   _body.resize(1);
   _body[0] = body;
-  _lagrange.resize(numElements);
   _gradient.resize(elementSize);
+  _lagrange.resize(numElements);
   _correction.resize(_elements.size());
 
 }
@@ -36,11 +36,11 @@ float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elemId
   const size_t N = GetElementSize();
   float result = 0.f;
   for(size_t n = 0; n < N; ++n) {
-    const float& m = particles->mass[_elements[elemIdx * N + n]];
+    const float& w = particles->weight[_elements[elemIdx * N + n]];
     result += 
-      _gradient[n][0] * m * _gradient[n][0] +
-      _gradient[n][1] * m * _gradient[n][1] +
-      _gradient[n][2] * m * _gradient[n][2];
+      _gradient[n][0] * w * _gradient[n][0] +
+      _gradient[n][1] * w * _gradient[n][1] +
+      _gradient[n][2] * w * _gradient[n][2];
   }
   return result;
 }
@@ -76,9 +76,23 @@ bool Constraint::Solve(Particles* particles, const float dt)
 
     for(size_t n = 0; n < N; ++n) {
       _correction[elemIdx * N + n] += 
-        (_gradient[n] * particles->mass[_elements[elemIdx * N + n]] * deltaLagrange);
+        (_gradient[n] * particles->weight[_elements[elemIdx * N + n]] * deltaLagrange);
     }
 
+/*
+    // Calculate time-scaled compliance
+    const double alpha_tilde = m_compliance / (m_delta_time * m_delta_time);
+
+    // Calculate \Delta lagrange multiplier
+    const double delta_lagrange_multiplier =
+        (-C - alpha_tilde * m_lagrange_multiplier) /
+        (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C + alpha_tilde);
+
+    // Calculate \Delta x
+    const Eigen::Matrix<double, Num * 3, 1> delta_x =
+        delta_lagrange_multiplier * m_inv_M.asDiagonal() * grad_C;
+    assert(!delta_x.hasNaN());
+*/
     // Update the lagrange multiplier
     _lagrange[elemIdx] += deltaLagrange;
   }
@@ -109,8 +123,8 @@ size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
 size_t StretchConstraint::ELEM_SIZE = 2;
 
 StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
-  const float stiffness, const float compliance)
-  : Constraint(ELEM_SIZE, body, stiffness, compliance, elems)
+  const float stiffness)
+  : Constraint(ELEM_SIZE, body, stiffness, elems)
 {
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
@@ -127,18 +141,18 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
 float StretchConstraint::_CalculateValue(Particles* particles, size_t elemIdx)
 {
   const size_t offset = _body[0]->offset;
-  const int* elements = &_elements[elemIdx * ELEM_SIZE];
-  const pxr::GfVec3f& x0 = particles->predicted[elements[0] + offset];
-  const pxr::GfVec3f& x1 = particles->predicted[elements[1] + offset];
+
+  const pxr::GfVec3f& x0 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& x1 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 1] + offset];
   return (x0 - x1).GetLength() - _rest[elemIdx];
 }
 
 void StretchConstraint::_CalculateGradient(Particles* particles, size_t elemIdx)
 {
-  const int* elements = &_elements[elemIdx * ELEM_SIZE];
   const size_t offset = _body[0]->offset;
-  const pxr::GfVec3f& x0 = particles->predicted[elements[0] + offset];
-  const pxr::GfVec3f& x1 = particles->predicted[elements[1] + offset];
+
+  const pxr::GfVec3f& x0 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& x1 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 1] + offset];
 
   const pxr::GfVec3f r = x0 - x1;
 
@@ -171,7 +185,7 @@ void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3
 }
 
 void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
-  const float stiffness, const float compliance)
+  const float stiffness)
 {
   pxr::VtArray<int> allElements;
 
@@ -197,7 +211,7 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
   size_t last = pxr::GfMin(Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
   while(true) {
     pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
-    StretchConstraint* stretch = new StretchConstraint(body, blockElements, stiffness, compliance);
+    StretchConstraint* stretch = new StretchConstraint(body, blockElements, stiffness);
     constraints.push_back(stretch);
     first += Constraint::BlockSize * StretchConstraint::ELEM_SIZE;
     if(first >= numElements)break;
@@ -209,8 +223,8 @@ size_t BendConstraint::TYPE_ID = Constraint::BEND;
 size_t BendConstraint::ELEM_SIZE = 3;
 
 BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
-  const float stiffness, const float compliance)
-  : Constraint(ELEM_SIZE, body, stiffness, compliance, elems)
+  const float stiffness)
+  : Constraint(ELEM_SIZE, body, stiffness, elems)
 {
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
@@ -335,8 +349,8 @@ size_t DihedralConstraint::TYPE_ID = Constraint::DIHEDRAL;
 size_t DihedralConstraint::ELEM_SIZE = 4;
 
 DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<int>& elems,
-  const float stiffness, const float compliance)
-  : Constraint(ELEM_SIZE, body, stiffness, compliance, elems)
+  const float stiffness)
+  : Constraint(ELEM_SIZE, body, stiffness, elems)
 {
   const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
 

@@ -12,6 +12,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   size_t index = body.size() ? body.back() + 1 : 0;
   float w = pxr::GfIsClose(b->mass, 0.f, 0.0000001f) ? 0.f : 1.f / b->mass;
   mass.resize(newSize);
+  weight.resize(newSize);
   radius.resize(newSize);
   rest.resize(newSize);
   position.resize(newSize);
@@ -23,7 +24,8 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   for (size_t p = 0; p < add; ++p) {
     const pxr::GfVec3f pos = m.Transform(points[p]);
     size_t idx = base + p;
-    mass[idx] = w;
+    mass[idx] = b->mass;
+    weight[idx] = w;
     radius[idx] = b->radius;
     rest[idx] = pos;
     position[idx] = pos;
@@ -44,6 +46,7 @@ void Particles::RemoveBody(Body* b)
     lhi = base + r;
     rhi = base + shift + r;
     mass[lhi] = mass[rhi];
+    weight[lhi] = weight[rhi];
     radius[lhi] = radius[rhi];
     rest[lhi] = rest[rhi];
     position[lhi] = position[rhi];
@@ -54,6 +57,7 @@ void Particles::RemoveBody(Body* b)
 
   size_t newSize = position.size() - shift;
   mass.resize(newSize);
+  weight.resize(newSize);
   radius.resize(newSize);
   rest.resize(newSize);
   position.resize(newSize);

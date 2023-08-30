@@ -23,7 +23,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 Solver::Solver()
   : _gravity(0, -9.18, 0)
   , _subSteps(1)
-  , _solverIterations(32)
+  , _solverIterations(16)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
@@ -205,7 +205,7 @@ void Solver::AddConstraints(Body* body)
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
 
-    CreateStretchConstraints(body, _constraints, 0.5f, 0.05f);
+    CreateStretchConstraints(body, _constraints, 100.f);
 /*
     CreateBendConstraints(vody, _constraints, 0.5f);
 */
@@ -237,6 +237,7 @@ void Solver::LockPoints()
     size_t numPoints = body->numPoints;
     for(size_t point = 0; point < 10; ++point) {
       _particles.mass[point + body->offset] = 0.f;
+      _particles.weight[point + body->offset] = 0.f;
     }
   }
 }
@@ -244,11 +245,10 @@ void Solver::LockPoints()
 void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
   pxr::GfVec3f* velocity = &_particles.velocity[0];
-  float* mass = &_particles.mass[0];
 
   // apply external forces
   for (const Force* force : _force) {
-    force->Apply(begin, end, velocity, mass, _stepTime);
+    force->Apply(begin, end, &_particles, _stepTime);
   }
 
   // compute predicted position
@@ -347,9 +347,13 @@ void Solver::_StepOneSerial()
   _IntegrateParticles(0, numParticles);
 
   // solve collisions
-  _ResolveCollisions(false);
+  //_ResolveCollisions(false);
 
   // solve constraints
+  for(auto& constraint: _constraints) {
+    constraint->ResetLagrangeMultiplier();
+  }
+
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
     /*
     for (auto& constraint : _constraints) constraint->Solve(&_particles, ds);
@@ -363,7 +367,7 @@ void Solver::_StepOneSerial()
   // update particles
   _UpdateParticles(0, numParticles);
   // solve collisions
-  _UpdateCollisions(true);
+  //_UpdateCollisions(true);
 }
 
 void Solver::_StepOne()
@@ -377,9 +381,12 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // solve collisions
-  _ResolveCollisions(false);
+  //_ResolveCollisions(false);
 
   // solve constraints
+  for(auto& constraint: _constraints) {
+    constraint->ResetLagrangeMultiplier();
+  }
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
       [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
@@ -395,7 +402,7 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // update velocities
-  _UpdateCollisions(false);
+  //_UpdateCollisions(false);
 
 }
 
@@ -407,9 +414,6 @@ void Solver::Step(bool serial)
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
   size_t numConstraints = _constraints.size();
 
-  for(auto& constraint: _constraints) {
-    constraint->ResetLagrangeMultiplier();
-  }
 
   //std::cout << "num available threads : " << numThreads << std::endl;
   //std::cout << "num forces : " << _force.size() << std::endl;
