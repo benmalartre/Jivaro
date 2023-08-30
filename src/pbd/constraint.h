@@ -81,6 +81,8 @@ public:
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
+  //bool Solve(Particles* particles, const float dt) override;
+
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
 
   static size_t                 ELEM_SIZE;

@@ -36,11 +36,11 @@ float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elemId
   const size_t N = GetElementSize();
   float result = 0.f;
   for(size_t n = 0; n < N; ++n) {
-    const float& w = particles->weight[_elements[elemIdx * N + n]];
+    const float& m = particles->mass[_elements[elemIdx * N + n]];
     result += 
-      _gradient[n][0] * w * _gradient[n][0] +
-      _gradient[n][1] * w * _gradient[n][1] +
-      _gradient[n][2] * w * _gradient[n][2];
+      _gradient[n][0] * m * _gradient[n][0] +
+      _gradient[n][1] * m * _gradient[n][1] +
+      _gradient[n][2] * m * _gradient[n][2];
   }
   return result;
 }
@@ -58,7 +58,7 @@ bool Constraint::Solve(Particles* particles, const float dt)
     _CalculateGradient(particles, elemIdx);
 
     // Skip if the gradient is sufficiently small
-    constexpr double very_small_value = 1e-12;
+    constexpr float very_small_value = 1e-12;
     float gradientNorm = 0.f;
     for(const auto& grad: _gradient)
       gradientNorm += grad.GetLength();
@@ -75,26 +75,13 @@ bool Constraint::Solve(Particles* particles, const float dt)
       (_ComputeLagrangeMultiplier(particles, elemIdx) + alpha);
 
     for(size_t n = 0; n < N; ++n) {
-      _correction[elemIdx * N + n] += 
-        (_gradient[n] * particles->weight[_elements[elemIdx * N + n]] * deltaLagrange);
+     _correction[elemIdx * N + n] += 
+        (_gradient[n] * particles->mass[_elements[elemIdx * N + n]] * deltaLagrange);
     }
 
-/*
-    // Calculate time-scaled compliance
-    const double alpha_tilde = m_compliance / (m_delta_time * m_delta_time);
-
-    // Calculate \Delta lagrange multiplier
-    const double delta_lagrange_multiplier =
-        (-C - alpha_tilde * m_lagrange_multiplier) /
-        (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C + alpha_tilde);
-
-    // Calculate \Delta x
-    const Eigen::Matrix<double, Num * 3, 1> delta_x =
-        delta_lagrange_multiplier * m_inv_M.asDiagonal() * grad_C;
-    assert(!delta_x.hasNaN());
-*/
     // Update the lagrange multiplier
     _lagrange[elemIdx] += deltaLagrange;
+
   }
   return true;
 }
@@ -115,7 +102,7 @@ void Constraint::Apply(Particles* particles)
   const size_t offset = _body[0]->offset;
   size_t corrIdx = 0;
   for(const auto& elem: _elements) {
-    particles->predicted[elem + offset] += _correction[corrIdx++];
+    particles->predicted[elem + offset] += (_correction[corrIdx++]);
   }
 }
 
@@ -144,7 +131,7 @@ float StretchConstraint::_CalculateValue(Particles* particles, size_t elemIdx)
 
   const pxr::GfVec3f& x0 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 0] + offset];
   const pxr::GfVec3f& x1 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 1] + offset];
-  return (x0 - x1).GetLength() - _rest[elemIdx];
+  return (x1 - x0).GetLength() - _rest[elemIdx];
 }
 
 void StretchConstraint::_CalculateGradient(Particles* particles, size_t elemIdx)
@@ -154,7 +141,7 @@ void StretchConstraint::_CalculateGradient(Particles* particles, size_t elemIdx)
   const pxr::GfVec3f& x0 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 0] + offset];
   const pxr::GfVec3f& x1 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 1] + offset];
 
-  const pxr::GfVec3f r = x0 - x1;
+  const pxr::GfVec3f r = x1 - x0;
 
   const float dist = r.GetLength();
 
@@ -168,9 +155,50 @@ void StretchConstraint::_CalculateGradient(Particles* particles, size_t elemIdx)
     ).GetNormalized() : 
     (1.f / dist) * r;
 
-  _gradient[0] = n;
-  _gradient[1] = -n;
+  _gradient[0] = -n;
+  _gradient[1] = n;
 }
+
+/*
+bool StretchConstraint::Solve(Particles* particles, const float dt)
+{ 
+  _ResetCorrection();
+
+  const size_t numElements = _elements.size() / ELEM_SIZE;
+  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
+    const size_t i0 = _elements[elemIdx * ELEM_SIZE + 0];
+    const size_t i1 = _elements[elemIdx * ELEM_SIZE + 1];
+    const size_t p0 = i0 + _body[0]->offset;
+    const size_t p1 = i1 + _body[0]->offset;
+    const pxr::GfVec3f& x0 = particles->predicted[p0];
+    const pxr::GfVec3f& x1 = particles->predicted[p1];
+
+    const float im0 = particles->mass[p0];
+    const float im1 = particles->mass[p1];
+
+    float sum = im0 + im1;
+    if (pxr::GfIsClose(sum, 0.f, 0.0000001f))
+      continue;
+
+    pxr::GfVec3f n = x1 - x0;
+    const float d = n.GetLength();
+    const float rest = _rest[elemIdx];
+    if (pxr::GfIsClose(d, rest, 0.0000001f))
+      continue;
+
+    n.Normalize();
+
+    pxr::GfVec3f c = _stiffness * n * (d - rest) * sum;
+
+
+    _correction[elemIdx * ELEM_SIZE + 0] += im0 * c * dt;
+    _correction[elemIdx * ELEM_SIZE + 1] += -im1 * c * dt;
+  }
+
+  return true;
+  
+}
+*/
 
 void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
 {

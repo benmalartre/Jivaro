@@ -41,7 +41,7 @@ public:
   size_t GetNumCollisions() { return _collisions.size(); };
 
   // bodies
-  Body* AddBody(Geometry* geom, const pxr::GfMatrix4f& m);
+  Body* AddBody(Geometry* geom, const pxr::GfMatrix4f& m, float mass);
   void RemoveBody(Geometry* geom);
   Body* GetBody(size_t index);
   Body* GetBody(Geometry* geom);

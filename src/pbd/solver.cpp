@@ -23,11 +23,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 Solver::Solver()
   : _gravity(0, -9.18, 0)
   , _subSteps(1)
-  , _solverIterations(16)
+  , _solverIterations(8)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
-  _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
+  _frameTime = 1.f / 60.f;//GetApplication()->GetTime().GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
 }
 
@@ -71,7 +71,7 @@ size_t Solver::GetBodyIndex(Geometry* geom)
   return Solver::INVALID_INDEX;
 }
 
-Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix)
+Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
 {
   std::cout << "[system] add geometry : " << geom << std::endl;
   size_t base = _particles.GetNumParticles();
@@ -79,7 +79,7 @@ Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix)
 
   std::cout << "num particles before add : " << base << std::endl;
 
-  Body* body = new Body({ 1.f, 0.1f, 1.f, base, geom->GetNumPoints(), geom });
+  Body* body = new Body({ 1.f, 0.1f, mass, base, geom->GetNumPoints(), geom });
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
@@ -205,7 +205,7 @@ void Solver::AddConstraints(Body* body)
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
 
-    CreateStretchConstraints(body, _constraints, 100.f);
+    CreateStretchConstraints(body, _constraints, RANDOM_LO_HI(100.f, 2000.f));
 /*
     CreateBendConstraints(vody, _constraints, 0.5f);
 */
@@ -237,7 +237,6 @@ void Solver::LockPoints()
     size_t numPoints = body->numPoints;
     for(size_t point = 0; point < 10; ++point) {
       _particles.mass[point + body->offset] = 0.f;
-      _particles.weight[point + body->offset] = 0.f;
     }
   }
 }
@@ -248,7 +247,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
   // apply external forces
   for (const Force* force : _force) {
-    force->Apply(begin, end, &_particles, _stepTime);
+    force->Apply(begin, end, &_particles, _frameTime);
   }
 
   // compute predicted position
@@ -387,6 +386,7 @@ void Solver::_StepOne()
   for(auto& constraint: _constraints) {
     constraint->ResetLagrangeMultiplier();
   }
+
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
       [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });

@@ -20,13 +20,12 @@ void GravitationalForce::Apply(size_t begin, size_t end, Particles* particles, f
 {
   pxr::GfVec3f* velocity = &particles->velocity[0];
   const float* mass = &particles->mass[0];
-  const float* weight = &particles->weight[0];
   for (size_t index = begin; index < end; ++index) {
     if (!Affects(index))continue;
     if (HasWeights())
-      velocity[index] += _gravity * mass[index] * _weights[index] * weight[index] * dt;
+      velocity[index] += _gravity * _weights[index] * mass[index] * dt;
     else
-      velocity[index] += _gravity * mass[index] * weight[index] * dt;
+      velocity[index] += _gravity * mass[index] * dt;
   }
 }
 
@@ -46,13 +45,12 @@ void DampingForce::Apply(size_t begin, size_t end, Particles* particles, float d
 {
   pxr::GfVec3f* velocity = &particles->velocity[0];
   const float* mass = &particles->mass[0];
-  const float* weight = &particles->weight[0];
   for (size_t index = begin; index < end; ++index) {
     if (!Affects(index))continue;
     if (HasWeights())
-      velocity[index] -= velocity[index] * _damp * _weights[index] * weight[index] * dt;
+      velocity[index] -= velocity[index] * _damp * _weights[index] * mass[index] * dt;
     else
-      velocity[index] -= velocity[index] * _damp * weight[index] * dt;
+      velocity[index] -= velocity[index] * _damp * mass[index] * dt;
   }
 
 }
