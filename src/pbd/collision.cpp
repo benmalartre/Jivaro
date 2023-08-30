@@ -44,6 +44,14 @@ void Collision::_ResolveContacts(size_t begin, size_t end, Particles* particles,
   }
 }
 
+void Collision::_UpdateVelocities(size_t begin, size_t end, Particles* particles, const float invDt)
+{
+  for (size_t index = begin; index < end; ++index) {
+    _UpdateVelocity(index, particles, invDt);
+  }
+}
+
+
 void Collision::FindContacts(Particles* particles)
 {
   _ResetContacts(particles);
@@ -60,9 +68,11 @@ void Collision::ResolveContacts(Particles* particles, const float dt)
       std::placeholders::_1, std::placeholders::_2, particles, dt), 1);
 }
 
-void Collision::UpdateVelocity(Particles* particles,  const float dt)
+void Collision::UpdateVelocities(Particles* particles,  const float invDt)
 {
-  
+  pxr::WorkParallelForN(GetNumContacts(),
+    std::bind(&Collision::_UpdateVelocities, this,
+      std::placeholders::_1, std::placeholders::_2, particles, invDt), 1);
 }
 
 void Collision::FindContactsSerial(Particles* particles)
@@ -77,23 +87,18 @@ void Collision::ResolveContactsSerial(Particles* particles, const float dt)
   _ResolveContacts(0, GetNumContacts(), particles, dt);
 }
 
-void Collision::UpdateVelocitySerial(Particles* particles,  const float dt)
+void Collision::UpdateVelocitiesSerial(Particles* particles,  const float invDt)
 {
-  
+  _UpdateVelocities(0, GetNumContacts(), particles, invDt);
 }
 
 //----------------------------------------------------------------------------------------
 // Plane Collision
 //----------------------------------------------------------------------------------------
-PlaneCollision::PlaneCollision()
-  : _position(0.f, 0.f, 0.f)
-  , _normal(0.f, 1.f, 0.f)
-  , _distance(0.1f)
-{
-}
-
-PlaneCollision::PlaneCollision(const pxr::GfVec3f& normal, const pxr::GfVec3f& position) 
-  : _position(position)
+PlaneCollision::PlaneCollision(const float restitution, const float friction,
+  const pxr::GfVec3f& normal, const pxr::GfVec3f& position, const float distance) 
+  : Collision(restitution, friction)
+  , _position(position)
   , _normal(normal)
   , _distance(0.1f)
 {
@@ -103,7 +108,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles)
 {
   if (!Affects(index))return;
   float radius = particles->radius[index];
-  float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
+  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) + _distance - radius;
   if (d < 0.0) {
     SetHit(index);
   }
@@ -112,7 +117,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles)
 void PlaneCollision::_ResolveContact(size_t index, Particles* particles, const float dt, Collision::_Hit* hit)
 {
   float radius = particles->radius[index];
-  float d = pxr::GfDot(_normal, particles->predicted[index]) + _distance - radius;
+  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) + _distance - radius;
 
   pxr::GfVec3f delta = _normal * -d * dt;
   particles->position[index] += delta;
@@ -122,18 +127,21 @@ void PlaneCollision::_ResolveContact(size_t index, Particles* particles, const f
   hit->normal = _normal;
 }
 
+void PlaneCollision::_UpdateVelocity(size_t index, Particles* particles, const float invDt)
+{
+  
+  //particles->velocity[_contacts[index]] += 
+  //  _normals[index] * _restitution * _deltas[index].GetLength() /** invDt*/+
+  //  pxr::GfVec3f(_deltas[index][0] * _friction, 0.f, _deltas[index][2] * _friction) /** invDt*/;
+}
+
 //----------------------------------------------------------------------------------------
 // Sphere Collision
 //----------------------------------------------------------------------------------------
-SphereCollision::SphereCollision()
-  : _xform(1.f)
-  , _invXform(1.f)
-  , _radius(1.f)
-{
-}
-
-SphereCollision::SphereCollision(const pxr::GfMatrix4f& xform, const float radius)
-  : _xform(xform)
+SphereCollision::SphereCollision(const float restitution, const float friction,
+  const pxr::GfMatrix4f& xform, const float radius)
+  : Collision(restitution, friction)
+  , _xform(xform)
   , _invXform(xform.GetInverse())
   , _radius(radius)
 {
@@ -160,6 +168,11 @@ void SphereCollision::_ResolveContact(size_t index, Particles* particles, const 
 
   hit->delta = corrected;
   hit->normal = _invXform.Transform(particles->position[index]).GetNormalized();
+}
+
+void SphereCollision::_UpdateVelocity(size_t index, Particles* particles, const float invDt)
+{
+  //particles->velocity[_contacts[index]] += _normals[index] * _restitution * _deltas[index].GetLength();
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -134,6 +134,7 @@ target_include_directories(${TARGET}
     ${OPENSUBDIV_INCLUDE_DIR}
     ${BOOST_INCLUDE_DIR}
     ${ICON_AWESOME_DIR}
+    ${EIGEN_INCLUDE_DIR}
 )
 
 target_link_libraries(${TARGET}

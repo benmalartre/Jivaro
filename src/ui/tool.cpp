@@ -2,6 +2,7 @@
 #include <pxr/usd/usdLux/lightAPI.h>
 #include <pxr/usd/usdGeom/points.h>
 #include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/primvarsAPI.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
 
@@ -245,7 +246,10 @@ bool ToolUI::Draw()
 
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
-  
+  if (ImGui::Button("Create Root Prim")) {
+    pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+    stage->SetDefaultPrim(root.GetPrim());
+  } ImGui::SameLine();
   if (ImGui::Button("Create Random Mesh")) {
     
     Mesh mesh;
@@ -264,7 +268,7 @@ bool ToolUI::Draw()
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
       stage->SetDefaultPrim(usdMesh.GetPrim());
     }
-  }
+  } 
 
   static float randFactor = 0.1f;
   pxr::UsdTimeCode timeCode(time.GetActiveTime());

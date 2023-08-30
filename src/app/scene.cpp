@@ -247,6 +247,7 @@ void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatri
 
   Mesh mesh;
   mesh.TriangularGrid2D(10.f, 10.f, m, size);
+  //mesh.Randomize(0.1f);
   std::cout << "triangular grid infos : " << std::endl;
   std::cout << "num points : " << mesh.GetNumPoints() << std::endl;
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
@@ -388,27 +389,31 @@ Scene::InitExec()
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
 
-  pxr::GfQuatf rotation(90.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0, 0, 1));
+  pxr::GfQuatf rotate(45.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
+  rotate.Normalize();
   pxr::GfMatrix4f matrix = 
-    pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(0.f, 1.f, 0.f)) *
-    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
+    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f)) *
+    pxr::GfMatrix4f(1.f).SetRotate(rotate);
   float size = .25f;
+  
   
   for(size_t x = 0; x < 2; ++x) {
     std::string name = "cloth" + std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(clothPath, size, 
-      matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 0.f, 0.f)));
+      matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 5.f, 0.f)));
   }
 
   std::vector<pxr::UsdGeomSphere> spheres;
+  /*
   for(size_t x = 0; x < 5; ++x) {
     std::string name = "collide" + std::to_string(x);
     pxr::SdfPath collidePath = rootId.AppendChild(pxr::TfToken(name));
     spheres.push_back(_GenerateCollideSphere(collidePath, 0.4f + RANDOM_0_1 * 0.2f, 
       matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, -3.f, 2.f))));
   }
-  
+  */
+
   _Sources sources;
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
@@ -436,17 +441,16 @@ Scene::InitExec()
   
   pxr::GfVec3f pos;
   double radius;
+  float restitution = 0.25;
+  float friction = 0.5f;
   for (auto& sphere: spheres) {
     sphere.GetRadiusAttr().Get(&radius);
-    _solver->AddCollision(
-      new SphereCollision(
-        pxr::GfMatrix4f(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default())), (float)radius)
-    );
-  }
-  
- 
-  _solver->AddCollision(new PlaneCollision());
- 
+    pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+    _solver->AddCollision(new SphereCollision(restitution, friction, m, (float)radius));
+  } 
+
+  _solver->AddCollision(new PlaneCollision(0.5f, 1.f, 
+    pxr::GfVec3f(0.f, 1.f, 0.f),pxr::GfVec3f(0.f, -0.1f, 0.f)));
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Display")));
   _sourcesMap[pointsPath] = sources;
@@ -468,7 +472,7 @@ Scene::InitExec()
     pxr::VtArray<pxr::GfVec3f> colors;
     pxr::VtArray<float> radii;
     pxr::VtArray<int> cvCounts;
-    
+
     for (const auto& constraint : constraints) {
       pxr::VtArray<pxr::GfVec3f> points;
       constraint->GetPoints(_solver->GetParticles(), points);

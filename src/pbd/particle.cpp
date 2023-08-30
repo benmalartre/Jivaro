@@ -2,19 +2,6 @@
 #include "../pbd/particle.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
-/*
-struct Body
-{
-  float          damping;
-  float          radius;
-  float          mass;
-
-  size_t         offset;
-  size_t         numPoints;
-  
-  Geometry*      geometry;
-};
-*/
 
 void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
 {

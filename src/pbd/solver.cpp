@@ -22,13 +22,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(5)
-  , _solverIterations(5)
-  , _collisionIterations(1)
+  , _subSteps(8)
+  , _solverIterations(1)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
-  _timeStep = 1.f / GetApplication()->GetTime().GetFPS();
+  _stepTime = 1.f / GetApplication()->GetTime().GetFPS();
+  _physicTime = _stepTime / static_cast<float>(_subSteps);
 }
 
 Solver::~Solver()
@@ -206,18 +206,13 @@ void Solver::AddConstraints(Body* body)
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
 
-
-    //StretchConstraint* stretch = new StretchConstraint(body, RANDOM_0_1, RANDOM_0_1);
-    //_constraints.push_back(stretch);
-    CreateStretchConstraints(body, _constraints, RANDOM_0_1);
+    CreateStretchConstraints(body, _constraints, 10.f);
 /*
-    BendConstraint* bend = new BendConstraint(body, RANDOM_0_1);
-    _constraints.push_back(bend);
+    CreateBendConstraints(vody, _constraints, 0.5f);
 */
    //CreateBendConstraints(body, _constraints, 0.5f);
-   CreateDihedralConstraints(body, _constraints, RANDOM_0_1);
-   //DihedralConstraint* dihedral = new DihedralConstraint(body, RANDOM_0_1);
-   //_constraints.push_back(dihedral);
+   //CreateDihedralConstraints(body, _constraints, 0.1f);
+
 
   } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;
@@ -247,60 +242,61 @@ void Solver::LockPoints()
   }
 }
 
-void Solver::_IntegrateParticles(size_t begin, size_t end, const float dt)
+void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
   pxr::GfVec3f* velocity = &_particles.velocity[0];
   float* mass = &_particles.mass[0];
 
   // apply external forces
   for (const Force* force : _force) {
-    force->Apply(begin, end, velocity, mass, dt);
+    force->Apply(begin, end, velocity, mass, _physicTime);
   }
 
   // compute predicted position
   pxr::GfVec3f* predicted = &_particles.predicted[0];
   const pxr::GfVec3f* position = &_particles.position[0];
   for (size_t index = begin; index < end; ++index) {
-    predicted[index] = position[index] + dt * velocity[index];
+    predicted[index] = position[index] + _physicTime * velocity[index];
   }
 }
 
-void Solver::_ResolveCollisions(const float dt, bool serial)
+void Solver::_ResolveCollisions(bool serial)
 {
   if (serial) {
     for (auto& collision : _collisions) {
       collision->FindContactsSerial(&_particles);
-      collision->ResolveContactsSerial(&_particles, dt);
+      collision->ResolveContactsSerial(&_particles, _physicTime);
     }
   } else {
     for (auto& collision : _collisions) {
       collision->FindContacts(&_particles);
-      collision->ResolveContacts(&_particles, dt);
+      collision->ResolveContacts(&_particles, _physicTime);
     }
   }
 }
 
-void Solver::_UpdateCollisions(const float dt, bool serial)
+void Solver::_UpdateCollisions(bool serial)
 {
+  const float invDt = 1.f / _physicTime;
   if (serial) {
     for (auto& collision : _collisions) {
-      collision->UpdateVelocitySerial(&_particles, dt);
+      collision->UpdateVelocitiesSerial(&_particles, invDt);
     }
   } else {
     for (auto& collision : _collisions) {
-      collision->UpdateVelocity(&_particles, dt);
+      collision->UpdateVelocities(&_particles, invDt);
     }
   }
 }
 
-void Solver::_UpdateParticles(size_t begin, size_t end, const float dt)
+void Solver::_UpdateParticles(size_t begin, size_t end)
 {
   const pxr::GfVec3f* predicted = &_particles.predicted[0];
   pxr::GfVec3f* position = &_particles.position[0];
   pxr::GfVec3f* velocity = &_particles.velocity[0];
 
-  float invDt = 1.f / dt;
-  float threshold2 = _sleepThreshold * dt;
+  float invDt = 1.f / _physicTime;
+  float threshold2 = _sleepThreshold * _physicTime;
   threshold2 *= threshold2;
 
   for(size_t index = begin; index < end; ++index) {
@@ -345,65 +341,63 @@ static _T REMOVE_EDGE_AVG_T = { 0,0 };
 static _T REMOVE_POINT_AVG_T = { 0,0 };
 
 
-void Solver::_StepOneSerial(const float dt)
+void Solver::_StepOneSerial()
 {
   const size_t numParticles = _particles.GetNumParticles();
-  const float dc = 1.f / static_cast<float>(_collisionIterations);
-  const float ds = 1.f / static_cast<float>(_solverIterations);
 
   // integrate particles
-  _IntegrateParticles(0, numParticles, dt);
+  _IntegrateParticles(0, numParticles);
 
   // solve collisions
-  for (size_t ci = 0; ci < _collisionIterations; ++ci)
-    _ResolveCollisions(dc, false);
+  _ResolveCollisions(false);
 
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
-    for (auto& constraint : _constraints) constraint->Solve(&_particles);
+    /*
+    for (auto& constraint : _constraints) constraint->Solve(&_particles, ds);
     // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
+    for (auto& constraint : _constraints)constraint->Apply(&_particles);
+    */
+    for (auto& constraint : _constraints) constraint->Solve(&_particles, _physicTime);
+    for (auto& constraint : _constraints)constraint->Apply(&_particles);
   }
 
   // update particles
-  _UpdateParticles(0, numParticles, dt);
+  _UpdateParticles(0, numParticles);
   // solve collisions
-  _UpdateCollisions(dt, false);
+  _UpdateCollisions(true);
 }
 
-void Solver::_StepOne(const float dt)
+void Solver::_StepOne()
 {
   const size_t numParticles = _particles.GetNumParticles();
-  const float dc = 1.f / static_cast<float>(_collisionIterations);
-  const float ds = 1.f / static_cast<float>(_solverIterations);
 
   // integrate particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_IntegrateParticles, this,
-      std::placeholders::_1, std::placeholders::_2, dt));
+      std::placeholders::_1, std::placeholders::_2));
+
+  // solve collisions
+  _ResolveCollisions(false);
 
   // solve constraints
   for (size_t ci = 0; ci < _solverIterations; ++ci) {
     pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
-      [&](Constraint* constraint) {constraint->Solve(&_particles); });
+      [&](Constraint* constraint) {constraint->Solve(&_particles, _physicTime); });
 
     // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles, ds);
+    for (auto& constraint : _constraints)constraint->Apply(&_particles);
   }
-
-  // solve collisions
-  for (size_t ci = 0; ci < _collisionIterations; ++ci)
-    _ResolveCollisions(dc, false);
 
   // update particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_UpdateParticles, this,
-      std::placeholders::_1, std::placeholders::_2, dt));
+      std::placeholders::_1, std::placeholders::_2));
 
   // update velocities
-  _UpdateCollisions(dt, false);
+  _UpdateCollisions(false);
 
 }
 
@@ -411,10 +405,13 @@ void Solver::Step(bool serial)
 {
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
-  const float dt = _timeStep / _subSteps;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
   size_t numConstraints = _constraints.size();
+
+  for(auto& constraint: _constraints) {
+    constraint->ResetLagrangeMultiplier();
+  }
 
   //std::cout << "num available threads : " << numThreads << std::endl;
   //std::cout << "num forces : " << _force.size() << std::endl;
@@ -423,12 +420,12 @@ void Solver::Step(bool serial)
     //std::cout << "parallel step " << std::endl;
     //const size_t grain = numParticles / numThreads;
     for(size_t si = 0; si < _subSteps; ++si)
-      _StepOne(dt);
+      _StepOne();
   }
   else {
     //std::cout << "serial step " << std::endl;
     for (size_t si = 0; si < _subSteps; ++si)
-      _StepOneSerial(dt);
+      _StepOneSerial();
   }
 
   //std::cout << _particles.GetPredicted() << std::endl;

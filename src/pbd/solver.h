@@ -29,8 +29,6 @@ public:
   // attributes
   size_t GetSolverIterations() { return _solverIterations; };
   void SetSolverIterations(size_t iterations) { _solverIterations = iterations; };
-  size_t GetCollisionIterations() { return _collisionIterations; };
-  void SetCollisionIterations(size_t iterations) { _collisionIterations = iterations; };
   float GetSleepThreshold() { return _sleepThreshold; };
   void SetSleepThreshold(float threshold) { _sleepThreshold = threshold; };
   const pxr::GfVec3f& GetGravity() { return _gravity; };
@@ -73,18 +71,18 @@ public:
   void Step(bool serial=false);
 
 private:
-  void _ResolveCollisions(const float dt, bool serial=false);
-  void _UpdateCollisions(const float dt, bool serial=false);
-  void _IntegrateParticles(size_t begin, size_t end, const float dt);
-  void _UpdateParticles(size_t begin, size_t end, const float dt);
-  void _StepOneSerial(const float dt);
-  void _StepOne(const float dt);
+  void _ResolveCollisions(bool serial=false);
+  void _UpdateCollisions(bool serial=false);
+  void _IntegrateParticles(size_t begin, size_t end);
+  void _UpdateParticles(size_t begin, size_t end);
+  void _StepOneSerial();
+  void _StepOne();
 
   size_t                              _subSteps;
   size_t                              _solverIterations;
-  size_t                              _collisionIterations;
   float                               _sleepThreshold;
-  float                               _timeStep;
+  float                               _stepTime;
+  float                               _physicTime;
   float                               _startFrame;
   bool                                _paused;		
 

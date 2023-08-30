@@ -75,6 +75,7 @@ public:
   Matrix LUDecomposition(Pivots& pivots);
   int SolveLU(Pivots& pivots, Vector& b, Vector& x);
   Matrix Inverse();
+  Matrix AsDiagonal();
   void InverseInPlace();
 
 private:
@@ -469,6 +470,25 @@ Matrix<T> Matrix<T>::Inverse()
     }
   }
   return result;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::AsDiagonal()
+{
+  if(_rows == 1) {
+    Matrix<T> diagonal(_columns, _columns);
+    for(size_t c = 0; c < _columns; ++c) {
+      diagonal.Set(c, c, this->_matrix[c]);
+    }
+    return diagonal;
+  } else if(_columns == 1) {
+    Matrix<T> diagonal(_rows, _rows);
+    for(size_t c = 0; c < _columns; ++c) {
+      diagonal.Set(c, c, this->_matrix[c]);
+    }
+    return diagonal;
+  }
+  return Matrix<T>();
 }
 
 template <typename T>
