@@ -415,13 +415,15 @@ Scene::InitExec()
   */
 
   _Sources sources;
+  float mass = 0.1f;
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh usdMesh(prim);
       Mesh mesh(usdMesh, xformCache.GetLocalToWorldTransform(prim));
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      Body* body = _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform), RANDOM_LO_HI(0.5f, 5.f));
+      Body* body = _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform), mass);
+      mass *= 2;
       _solver->AddConstraints(body);
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });

@@ -22,8 +22,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(1)
-  , _solverIterations(8)
+  , _subSteps(8)
+  , _solverIterations(1)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {

@@ -23,9 +23,9 @@ void GravitationalForce::Apply(size_t begin, size_t end, Particles* particles, f
   for (size_t index = begin; index < end; ++index) {
     if (!Affects(index))continue;
     if (HasWeights())
-      velocity[index] += _gravity * _weights[index] * mass[index] * dt;
+      velocity[index] += _gravity * _weights[index] * mass[index] * dt * dt;
     else
-      velocity[index] += _gravity * mass[index] * dt;
+      velocity[index] += _gravity * mass[index] * dt *dt;
   }
 }
 
