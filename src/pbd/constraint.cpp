@@ -18,7 +18,6 @@ Constraint::Constraint(size_t elementSize, Body* body, float stiffness,
   _body.resize(1);
   _body[0] = body;
   _gradient.resize(elementSize);
-  _lagrange.resize(numElements);
   _correction.resize(_elements.size());
 }
 
@@ -70,17 +69,12 @@ bool Constraint::Solve(Particles* particles, const float dt)
 
     // Calculate \Delta lagrange multiplier
     const float deltaLagrange =
-      (-C - alpha * _lagrange[elemIdx]) /
-      (_ComputeLagrangeMultiplier(particles, elemIdx) + alpha);
+      -C / (_ComputeLagrangeMultiplier(particles, elemIdx) + alpha);
 
     for(size_t n = 0; n < N; ++n) {
      _correction[elemIdx * N + n] += 
         (_gradient[n] * particles->mass[_elements[elemIdx * N + n]] * deltaLagrange);
     }
-
-    // Update the lagrange multiplier
-    _lagrange[elemIdx] += deltaLagrange;
-
   }
   return true;
 }
@@ -88,11 +82,6 @@ bool Constraint::Solve(Particles* particles, const float dt)
 void Constraint::_ResetCorrection()
 {
   memset(&_correction[0], 0.f, _correction.size() * sizeof(pxr::GfVec3f));
-}
-
-void Constraint::ResetLagrangeMultiplier()
-{
-  memset(&_lagrange[0], 0.f, _lagrange.size()*sizeof(float));
 }
 
 // this one has to happen serialy

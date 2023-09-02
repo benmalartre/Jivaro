@@ -43,7 +43,6 @@ public:
     return _elements.size() / GetElementSize();
   };
 
-  virtual void ResetLagrangeMultiplier();
   virtual bool Solve(Particles* particles, const float dt);
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) = 0;
 
@@ -67,7 +66,6 @@ protected:
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _correction;
   pxr::VtArray<pxr::GfVec3f>    _gradient;
-  pxr::VtArray<float>           _lagrange;
   float                         _stiffness;
   float                         _compliance;
 };

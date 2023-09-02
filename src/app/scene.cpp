@@ -459,8 +459,8 @@ Scene::InitExec()
     _solver->AddCollision(new SphereCollision(restitution, friction, m, (float)radius));
   } 
 
-  /*_solver->AddCollision(new PlaneCollision(0.5f, 1.f, 
-    pxr::GfVec3f(0.f, 1.f, 0.f),pxr::GfVec3f(0.f, -0.1f, 0.f)));*/
+  _solver->AddCollision(new PlaneCollision(0.5f, 1.f, 
+    pxr::GfVec3f(0.f, 1.f, 0.f),pxr::GfVec3f(0.f, -0.1f, 0.f)));
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;

@@ -130,9 +130,9 @@ void PlaneCollision::_ResolveContact(size_t index, Particles* particles, const f
 void PlaneCollision::_UpdateVelocity(size_t index, Particles* particles, const float invDt)
 {
   
-  //particles->velocity[_contacts[index]] += 
-  //  _normals[index] * _restitution * _deltas[index].GetLength() /** invDt*/+
-  //  pxr::GfVec3f(_deltas[index][0] * _friction, 0.f, _deltas[index][2] * _friction) /** invDt*/;
+  particles->velocity[_contacts[index]] += 
+    _normals[index] * _restitution * _deltas[index].GetLength() * invDt+
+    pxr::GfVec3f(_deltas[index][0] * _friction, 0.f, _deltas[index][2] * _friction) * invDt;
 }
 
 //----------------------------------------------------------------------------------------

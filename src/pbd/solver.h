@@ -27,8 +27,6 @@ public:
   void AddConstraints(Body* body);
 
   // attributes
-  size_t GetSolverIterations() { return _solverIterations; };
-  void SetSolverIterations(size_t iterations) { _solverIterations = iterations; };
   float GetSleepThreshold() { return _sleepThreshold; };
   void SetSleepThreshold(float threshold) { _sleepThreshold = threshold; };
   const pxr::GfVec3f& GetGravity() { return _gravity; };
@@ -80,7 +78,6 @@ private:
   void _StepOne();
 
   size_t                              _subSteps;
-  size_t                              _solverIterations;
   float                               _sleepThreshold;
   float                               _frameTime;
   float                               _stepTime;

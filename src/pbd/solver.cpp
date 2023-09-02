@@ -23,7 +23,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 Solver::Solver()
   : _gravity(0, -9.18, 0)
   , _subSteps(8)
-  , _solverIterations(1)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
@@ -206,8 +205,8 @@ void Solver::AddConstraints(Body* body)
       "(compliance="<< (1.f/__stretchStiffness) << ")" <<std::endl;
     //__stretchStiffness *= 2.f;
 
-    //CreateBendConstraints(body, _constraints, __bendStiffness);
-    CreateDihedralConstraints(body, _constraints, __bendStiffness);
+    CreateBendConstraints(body, _constraints, __bendStiffness);
+    //CreateDihedralConstraints(body, _constraints, __bendStiffness);
     std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
       "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
     __bendStiffness *= 10.f;
@@ -369,27 +368,16 @@ void Solver::_StepOneSerial()
   _IntegrateParticles(0, numParticles);
 
   // solve collisions
-  //_ResolveCollisions(false);
+  _ResolveCollisions(false);
 
   // solve constraints
-  for(auto& constraint: _constraints) {
-    constraint->ResetLagrangeMultiplier();
-  }
-
-  for (size_t ci = 0; ci < _solverIterations; ++ci) {
-    /*
-    for (auto& constraint : _constraints) constraint->Solve(&_particles, ds);
-    // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles);
-    */
-    for (auto& constraint : _constraints)constraint->Solve(&_particles, _stepTime);
-    for (auto& constraint : _constraints)constraint->Apply(&_particles);
-  }
+  for (auto& constraint : _constraints)constraint->Solve(&_particles, _stepTime);
+  for (auto& constraint : _constraints)constraint->Apply(&_particles);
 
   // update particles
   _UpdateParticles(0, numParticles);
   // solve collisions
-  //_UpdateCollisions(true);
+  _UpdateCollisions(true);
 }
 
 void Solver::_StepOne()
@@ -403,20 +391,14 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // solve collisions
-  //_ResolveCollisions(false);
+  _ResolveCollisions(false);
 
   // solve constraints
-  for(auto& constraint: _constraints) {
-    constraint->ResetLagrangeMultiplier();
-  }
+  pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
+    [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
 
-  for (size_t ci = 0; ci < _solverIterations; ++ci) {
-    pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
-      [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
-
-    // apply constraint serially
-    for (auto& constraint : _constraints)constraint->Apply(&_particles);
-  }
+  // apply constraint serially
+  for (auto& constraint : _constraints)constraint->Apply(&_particles);
 
   // update particles
   pxr::WorkParallelForN(
@@ -425,7 +407,7 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // update velocities
-  //_UpdateCollisions(false);
+  _UpdateCollisions(false);
 
 }
 
