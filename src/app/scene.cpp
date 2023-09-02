@@ -197,11 +197,14 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
   if (key == pxr::HdTokens->points) {
     return pxr::VtValue(_prims[id].geom->GetPositions());
   } else if (key == pxr::HdTokens->displayColor) {
+    //std::cout << "delegate get display color for " << id << std::endl;
     pxr::VtArray<pxr::GfVec3f>& colors(_prims[id].geom->GetColors());
+    //std::cout << "num colors : " << colors.size() << std::endl;
     if(colors.size())
       return pxr::VtValue(colors);
     else {
       const pxr::GfVec3f& wirecolor = _prims[id].geom->GetWirecolor();
+      //std::cout << "use wire color : " << wirecolor << std::endl;
       colors = { wirecolor };
       return pxr::VtValue(colors);
     }
@@ -251,8 +254,6 @@ void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatri
   Mesh mesh;
   mesh.TriangularGrid2D(10.f, 10.f, m, size);
   //mesh.Randomize(0.1f);
-  std::cout << "triangular grid infos : " << std::endl;
-  std::cout << "num points : " << mesh.GetNumPoints() << std::endl;
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
   usdMesh.CreatePointsAttr().Set(mesh.GetPositions());
@@ -425,6 +426,7 @@ Scene::InitExec()
       pxr::UsdGeomMesh usdMesh(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
+      mesh->SetWirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
       AddMesh(prim.GetPath(), mesh);
       
       Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass);
@@ -460,7 +462,7 @@ Scene::InitExec()
   /*_solver->AddCollision(new PlaneCollision(0.5f, 1.f, 
     pxr::GfVec3f(0.f, 1.f, 0.f),pxr::GfVec3f(0.f, -0.1f, 0.f)));*/
 
-  pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Display")));
+  pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;
   Points* points = AddPoints(pointsPath);
   Particles* particles = _solver->GetParticles();
@@ -495,7 +497,7 @@ Scene::InitExec()
       }
     }
     curve->SetTopology(positions, radii, cvCounts);
-    curve->SetColors(&colors[0], colors.size());
+    //curve->SetColors(&colors[0], colors.size());
   }
 
   /*
@@ -536,12 +538,11 @@ Scene::UpdateExec(double time)
   pxr::UsdGeomXformCache xformCache(time);
   
   for (auto& execPrim : _prims) {
-    if (execPrim.first.GetNameToken() == pxr::TfToken("Display")) {
+    if (execPrim.first.GetNameToken() == pxr::TfToken("Particles")) {
       Points* points = (Points*)GetGeometry(execPrim.first);
-      points->SetPositions(
-        &_solver->GetParticles()->position[0], 
-        _solver->GetNumParticles()
-      );
+      const size_t numParticles = _solver->GetNumParticles();
+      points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
+      points->SetColors(&_solver->GetParticles()->color[0], numParticles);
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
       
       pxr::VtArray<Constraint*> constraints;

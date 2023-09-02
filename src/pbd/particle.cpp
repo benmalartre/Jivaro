@@ -18,6 +18,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   predicted.resize(newSize);
   velocity.resize(newSize);
   body.resize(newSize);
+  color.resize(newSize);
 
   const pxr::VtArray<pxr::GfVec3f>& points = geom->GetPositions();
   for (size_t p = 0; p < add; ++p) {
@@ -30,6 +31,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
     predicted[idx] = pos;
     velocity[idx] = pxr::GfVec3f(0.f);
     body[idx] = index;
+    color[idx] = b->wirecolor;
   }
 }
 
@@ -50,6 +52,7 @@ void Particles::RemoveBody(Body* b)
     predicted[lhi] = predicted[rhi];
     velocity[lhi] = velocity[rhi];
     body[lhi] = body[rhi] - 1;
+    color[lhi] = color[rhi];
   }
 
   size_t newSize = position.size() - shift;
@@ -60,6 +63,7 @@ void Particles::RemoveBody(Body* b)
   predicted.resize(newSize);
   velocity.resize(newSize);
   body.resize(newSize);
+  color.resize(newSize);
   
 }
 

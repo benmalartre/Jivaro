@@ -293,6 +293,9 @@ static bool _IsVertexShared(size_t vertex, const pxr::GfVec3i& tri1, const pxr::
   return false;
 }
 
+//-------------------------------------------------------
+// TrianglePair vertices
+//-------------------------------------------------------
 pxr::GfVec4i 
 TrianglePair::GetVertices() const
 {

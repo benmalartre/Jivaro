@@ -27,6 +27,7 @@ else()
 	set(LIB_PREFIX "")
     set(LIB_DYNAMIC_EXT ".lib")
     set(LIB_STATIC_EXT ".lib")
+  add_definitions("/MP")
 endif()
 
 # nfd (native file dialog)

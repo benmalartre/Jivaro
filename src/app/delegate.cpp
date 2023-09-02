@@ -70,15 +70,12 @@ Delegate::SamplePrimvar(pxr::SdfPath const& id,
   float* sampleTimes,
   pxr::VtValue* sampleValues)
 {
-  std::cout << "sample prim var : " << id << ":" << key << std::endl;
+  //std::cout << "sample prim var : " << id << ":" << key << std::endl;
   if (key == pxr::HdTokens->widths) {
     auto& prims = _scene->GetPrims();
     if (prims.find(id) != prims.end()) {
-      std::cout << "set sample widths : " << std::endl;
+      //std::cout << "set sample widths : " << std::endl;
       *sampleValues = pxr::VtValue(prims[id].geom->GetRadius());
-    }
-    else {
-      std::cout << "prim not found " << id << std::endl;
     }
     return 1;
   }
@@ -97,7 +94,7 @@ Delegate::SampleIndexedPrimvar(pxr::SdfPath const& id,
   /*return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
     sampleIndices);
     */
-  std::cout << "sample index primvar not implemented" << std::endl;
+  //std::cout << "sample index primvar not implemented" << std::endl;
   return 0;
 }
 
@@ -145,6 +142,7 @@ Delegate::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue
 Delegate::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
+  //std::cout << "delegate get " << id << ": " << key << std::endl;
   return _scene->Get(id, key);
 }
 
@@ -154,7 +152,7 @@ pxr::VtValue
 Delegate::GetIndexedPrimvar(pxr::SdfPath const& id, pxr::TfToken const& key, 
                                         pxr::VtIntArray *outIndices) 
 {
-  std::cout << "get indexed prim var : " << id << ":" << key << std::endl;
+  //std::cout << "get indexed prim var : " << id << ":" << key << std::endl;
   return pxr::VtValue();
 }
 
@@ -183,6 +181,7 @@ Delegate::GetCoordSysBindings(pxr::SdfPath const& id)
 pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath const& id,
   pxr::HdInterpolation interpolation)
 {
+  //std::cout << "delegate get primvar descriptor : " << id << " : interpolation = " << interpolation << std::endl;
   pxr::HdPrimvarDescriptorVector primvars;
   if (interpolation == pxr::HdInterpolationVertex) {
     primvars.emplace_back(pxr::HdTokens->points, interpolation,

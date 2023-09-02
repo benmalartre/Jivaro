@@ -79,7 +79,8 @@ Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
 
   std::cout << "num particles before add : " << base << std::endl;
 
-  Body* body = new Body({ 1.f, 0.1f, mass, base, geom->GetNumPoints(), geom });
+  pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  Body* body = new Body({ 1.f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
@@ -192,21 +193,28 @@ void Solver::UpdateColliders()
 void Solver::AddConstraints(Body* body)
 {
   // 0.1, 0.01, 0.001, 0.0001, 0.00001
-  static float __stiffness = 100.f;
+  static float __stretchStiffness = 2000.f;
+  static float __bendStiffness = 0.0001f;
+
   static int __bodyIdx = 0;
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
     
-    CreateStretchConstraints(body, _constraints, __stiffness);
+    CreateStretchConstraints(body, _constraints, __stretchStiffness);
 
-    //CreateBendConstraints(body, _constraints, __stiffness);
-    std::cout << "body " << (__bodyIdx++) <<  " stiffness : " <<  __stiffness <<
-      "(compliance="<< (1.f/__stiffness) << ")" <<std::endl;
-    __stiffness *= 2.f;
+    std::cout << "body " << (__bodyIdx) <<  " stretch stiffness : " <<  __stretchStiffness <<
+      "(compliance="<< (1.f/__stretchStiffness) << ")" <<std::endl;
+    //__stretchStiffness *= 2.f;
 
+    //CreateBendConstraints(body, _constraints, __bendStiffness);
+    CreateDihedralConstraints(body, _constraints, __bendStiffness);
+    std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
+      "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
+    __bendStiffness *= 10.f;
 
-   //CreateBendConstraints(body, _constraints, 0.5f);
-   //CreateDihedralConstraints(body, _constraints, 0.1f);
+    __bodyIdx++;
+
+   //
 
 
   } else if (geom->GetType() == Geometry::CURVE) {

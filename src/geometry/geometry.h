@@ -89,6 +89,7 @@ public:
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
 
+  void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
   void SetPositions(const pxr::GfVec3f* positions, size_t n);
   void SetRadii(const float* radii, size_t n);
   void SetColors(const pxr::GfVec3f* colors, size_t n);

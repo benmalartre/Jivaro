@@ -21,6 +21,7 @@ struct Body
   size_t         offset;
   size_t         numPoints;
   
+  pxr::GfVec3f   wirecolor;
   Geometry*      geometry;
 };
 
@@ -45,6 +46,7 @@ struct Particles
   pxr::VtArray<pxr::GfVec3f> position;
   pxr::VtArray<pxr::GfVec3f> predicted;
   pxr::VtArray<pxr::GfVec3f> velocity;
+  pxr::VtArray<pxr::GfVec3f> color;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
