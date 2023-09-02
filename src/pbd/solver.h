@@ -63,6 +63,7 @@ public:
   // particles
   Particles* GetParticles() { return &_particles; };
   void LockPoints();
+  void WeightBoundaries();
   
   // solver
   void UpdateCollisions();

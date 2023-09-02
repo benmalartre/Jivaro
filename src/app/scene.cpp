@@ -56,12 +56,15 @@ Scene::Export(const std::string& filename)
   
 }
 
-
-
 Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
-  _prims[path] = { new Mesh() };
+  _prims[path] = { new Mesh(xfo) };
   return (Mesh*)_prims[path].geom;
+}
+
+void Scene::AddMesh(const pxr::SdfPath& path, Mesh* mesh)
+{
+  _prims[path] = {mesh};
 }
 
 Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
@@ -397,7 +400,7 @@ Scene::InitExec()
   float size = .25f;
   
   
-  for(size_t x = 0; x < 5; ++x) {
+  for(size_t x = 0; x < 1; ++x) {
     std::string name = "cloth" + std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(clothPath, size, 
@@ -415,15 +418,17 @@ Scene::InitExec()
   */
 
   _Sources sources;
-  float mass = 0.1f;
+  float mass = 0.2f;
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh usdMesh(prim);
-      Mesh mesh(usdMesh, xformCache.GetLocalToWorldTransform(prim));
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      Body* body = _solver->AddBody((Geometry*)&mesh, pxr::GfMatrix4f(xform), mass);
-      mass *= 2;
+      Mesh* mesh = new Mesh(usdMesh, xform);
+      AddMesh(prim.GetPath(), mesh);
+      
+      Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass);
+      //mass *= 2;
       _solver->AddConstraints(body);
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
@@ -437,6 +442,7 @@ Scene::InitExec()
     }
   }
   _solver->AddForce(new GravitationalForce());
+  _solver->WeightBoundaries();
   _solver->LockPoints();
   
   //_solver->AddForce(new DampingForce());

@@ -68,6 +68,8 @@ public:
   float GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
   float GetLengthSq(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
 
+  const pxr::VtArray<bool>&  GetBoundaries(){return _boundary;};
+
   //HalfEdge* GetLongest(const pxr::GfVec3f* positions);
   /*
   short GetFlags(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals,

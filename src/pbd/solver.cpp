@@ -22,7 +22,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(8)
+  , _subSteps(64)
   , _solverIterations(1)
   , _sleepThreshold(0.1f)
   , _paused(true)
@@ -86,17 +86,6 @@ Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
   std::cout << "num particles after add : " << _particles.GetNumParticles() << std::endl;
 
   return _bodies.back();
-
-  /*
-  float          damping;
-float          radius;
-float          mass;
-
-size_t         offset;
-size_t         numPoints;
-
-Geometry*      geometry;
-  */
 }
 
 void Solver::RemoveBody(Geometry* geom)
@@ -202,13 +191,17 @@ void Solver::UpdateColliders()
 
 void Solver::AddConstraints(Body* body)
 {
+  // 0.1, 0.01, 0.001, 0.0001, 0.00001
+  static float __stiffness = 100.f;
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
+    
+    CreateStretchConstraints(body, _constraints, __stiffness);
 
-    CreateStretchConstraints(body, _constraints, RANDOM_LO_HI(100.f, 2000.f));
-/*
-    CreateBendConstraints(vody, _constraints, 0.5f);
-*/
+    CreateBendConstraints(body, _constraints, __stiffness);
+
+    __stiffness *= 10.f;
+
    //CreateBendConstraints(body, _constraints, 0.5f);
    //CreateDihedralConstraints(body, _constraints, 0.1f);
 
@@ -239,6 +232,25 @@ void Solver::LockPoints()
       _particles.mass[point + body->offset] = 0.f;
     }
   }
+}
+
+void Solver::WeightBoundaries()
+{
+  for(const auto& body: _bodies) {
+    size_t offset = body->offset;
+    size_t numPoints = body->numPoints;
+  
+    if(body->geometry->GetType() == Geometry::MESH) {
+      Mesh* mesh = (Mesh*)body->geometry;
+      HalfEdgeGraph* graph = mesh->GetEdgesGraph();
+      const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
+      for(size_t p = 0; p < boundaries.size(); ++p){
+        if(boundaries[p]) {
+          _particles.mass[p + offset] *= 0.5f;
+        }
+      }
+    }
+  } 
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)

@@ -33,7 +33,7 @@ public:
     HALFEDGES     = 1 << 1,
     TRIANGLEPAIRS = 1 << 2
   };
-  Mesh();
+  Mesh(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Mesh(const Mesh* other, bool normalize = true);
   Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world);
   virtual ~Mesh();
@@ -51,7 +51,7 @@ public:
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;                        // triangle normal
 
   pxr::VtArray<HalfEdge>& GetEdges();
-  HalfEdgeGraph& GetEdgesGraph();
+  HalfEdgeGraph* GetEdgesGraph();
   size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices);
 
   const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();

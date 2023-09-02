@@ -47,6 +47,7 @@ public:
 
   Mesh* AddMesh(const pxr::SdfPath& path, 
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  void AddMesh(const pxr::SdfPath& path, Mesh* mesh);
   Curve* AddCurve(const pxr::SdfPath& path, 
     const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
   Points* AddPoints(const pxr::SdfPath& path, 

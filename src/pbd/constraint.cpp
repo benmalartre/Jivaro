@@ -20,7 +20,6 @@ Constraint::Constraint(size_t elementSize, Body* body, float stiffness,
   _gradient.resize(elementSize);
   _lagrange.resize(numElements);
   _correction.resize(_elements.size());
-
 }
 
 Constraint::Constraint(Body* body1, Body* body2, const float stiffness)
@@ -141,64 +140,22 @@ void StretchConstraint::_CalculateGradient(Particles* particles, size_t elemIdx)
   const pxr::GfVec3f& x0 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 0] + offset];
   const pxr::GfVec3f& x1 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 1] + offset];
 
-  const pxr::GfVec3f r = x1 - x0;
+  const pxr::GfVec3f delta = x1 - x0;
 
-  const float dist = r.GetLength();
+  const float length = delta.GetLength();
 
   constexpr float epsilon = 1e-24;
-  const pxr::GfVec3f n = 
-    (dist < epsilon) ? 
+  const pxr::GfVec3f direction = 
+    (length < epsilon) ? 
     pxr::GfVec3f(
       RANDOM_LO_HI(-1.f, 1.f), 
       RANDOM_LO_HI(-1.f, 1.f), 
       RANDOM_LO_HI(-1.f, 1.f)
-    ).GetNormalized() : 
-    (1.f / dist) * r;
+    ).GetNormalized() : delta / length;
 
-  _gradient[0] = -n;
-  _gradient[1] = n;
+  _gradient[0] = -direction;
+  _gradient[1] = direction;
 }
-
-/*
-bool StretchConstraint::Solve(Particles* particles, const float dt)
-{ 
-  _ResetCorrection();
-
-  const size_t numElements = _elements.size() / ELEM_SIZE;
-  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    const size_t i0 = _elements[elemIdx * ELEM_SIZE + 0];
-    const size_t i1 = _elements[elemIdx * ELEM_SIZE + 1];
-    const size_t p0 = i0 + _body[0]->offset;
-    const size_t p1 = i1 + _body[0]->offset;
-    const pxr::GfVec3f& x0 = particles->predicted[p0];
-    const pxr::GfVec3f& x1 = particles->predicted[p1];
-
-    const float im0 = particles->mass[p0];
-    const float im1 = particles->mass[p1];
-
-    float sum = im0 + im1;
-    if (pxr::GfIsClose(sum, 0.f, 0.0000001f))
-      continue;
-
-    pxr::GfVec3f n = x1 - x0;
-    const float d = n.GetLength();
-    const float rest = _rest[elemIdx];
-    if (pxr::GfIsClose(d, rest, 0.0000001f))
-      continue;
-
-    n.Normalize();
-
-    pxr::GfVec3f c = _stiffness * n * (d - rest) * sum;
-
-
-    _correction[elemIdx * ELEM_SIZE + 0] += im0 * c * dt;
-    _correction[elemIdx * ELEM_SIZE + 1] += -im1 * c * dt;
-  }
-
-  return true;
-  
-}
-*/
 
 void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
 {
@@ -221,7 +178,7 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
     
     Mesh* mesh = (Mesh*)body->geometry;
     const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-    HalfEdgeGraph::ItUniqueEdge it(mesh->GetEdgesGraph());
+    HalfEdgeGraph::ItUniqueEdge it(*mesh->GetEdgesGraph());
     const auto& edges = mesh->GetEdges();
     const pxr::GfMatrix4d& m = mesh->GetMatrix();
     HalfEdge* edge = it.Next();
@@ -266,6 +223,75 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
       positions[_elements[elemIdx * ELEM_SIZE + 2]]) / 3.f;
     _rest[elemIdx] = (positions[_elements[elemIdx * ELEM_SIZE + 2]] - center).GetLength();
   }
+}
+
+float BendConstraint::_CalculateValue(Particles* particles, size_t index)
+{
+  const size_t offset = _body[0]->offset;
+
+  const pxr::GfVec3f& x0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& x1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
+  const pxr::GfVec3f& x2 = particles->predicted[_elements[index * ELEM_SIZE + 2] + offset];
+
+  const pxr::GfVec3f center = (x0 + x1 + x2) / 3.f;
+  pxr::GfVec3f delta = x2 - center;
+
+  const float length = delta.GetLength();
+  if (pxr::GfIsClose(length, 0.f, 0.0000001f))return 1.f;
+
+  return 1.f - (_rest[index] / length);
+}
+
+/*
+void StretchConstraint::_CalculateGradient(Particles* particles, size_t elemIdx)
+{
+  const size_t offset = _body[0]->offset;
+
+  const pxr::GfVec3f& x0 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& x1 = particles->predicted[_elements[elemIdx * ELEM_SIZE + 1] + offset];
+
+  const pxr::GfVec3f delta = x1 - x0;
+
+  const float length = delta.GetLength();
+
+  constexpr float epsilon = 1e-24;
+  const pxr::GfVec3f direction = 
+    (length < epsilon) ? 
+    pxr::GfVec3f(
+      RANDOM_LO_HI(-1.f, 1.f), 
+      RANDOM_LO_HI(-1.f, 1.f), 
+      RANDOM_LO_HI(-1.f, 1.f)
+    ).GetNormalized() : delta / length;
+
+  _gradient[0] = -direction;
+  _gradient[1] = direction;
+}
+*/
+
+void BendConstraint::_CalculateGradient(Particles* particles, size_t index)
+{
+  const size_t offset = _body[0]->offset;
+
+  const pxr::GfVec3f& x0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& x1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
+  const pxr::GfVec3f& x2 = particles->predicted[_elements[index * ELEM_SIZE + 2] + offset];
+
+  const pxr::GfVec3f center = (x0 + x1 + x2) / 3.f;
+  pxr::GfVec3f delta = x2 - center;
+  const float length = delta.GetLength();
+  
+  constexpr float epsilon = 1e-24;
+  const pxr::GfVec3f direction = 
+    (length < epsilon) ? 
+    pxr::GfVec3f(
+      RANDOM_LO_HI(-1.f, 1.f), 
+      RANDOM_LO_HI(-1.f, 1.f), 
+      RANDOM_LO_HI(-1.f, 1.f)
+    ).GetNormalized() : delta / length;
+
+  _gradient[0] = 2.f * direction;
+  _gradient[1] = 2.f * direction;
+  _gradient[2] = -4.f * direction;
 }
 
 /*

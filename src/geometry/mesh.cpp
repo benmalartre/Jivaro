@@ -24,8 +24,8 @@ Mesh::GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices)
   return _halfEdges.GetLongestEdgeInTriangle(vertices, &_positions[0]);
 }
 
-Mesh::Mesh()
-  : Geometry(Geometry::MESH, pxr::GfMatrix4d(1.0))
+Mesh::Mesh(const pxr::GfMatrix4d& xfo)
+  : Geometry(Geometry::MESH, xfo)
   , _flags(0)
   , _halfEdges()
 {
@@ -203,10 +203,10 @@ Mesh::GetEdges()
   return _halfEdges.GetEdges();
 }
 
-HalfEdgeGraph&
+HalfEdgeGraph*
 Mesh::GetEdgesGraph()
 {
-  return _halfEdges;
+  return &_halfEdges;
 }
 
 bool Mesh::RemovePoint(size_t index)
