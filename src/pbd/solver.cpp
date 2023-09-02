@@ -22,7 +22,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(24)
+  , _subSteps(20)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
@@ -79,7 +79,7 @@ Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
   std::cout << "num particles before add : " << base << std::endl;
 
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  Body* body = new Body({ 1.f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
+  Body* body = new Body({ 0.5f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
@@ -206,7 +206,7 @@ void Solver::AddConstraints(Body* body)
     //__stretchStiffness *= 2.f;
 
     //CreateBendConstraints(body, _constraints, __bendStiffness);
-    //CreateDihedralConstraints(body, _constraints, __bendStiffness);
+    CreateDihedralConstraints(body, _constraints, __bendStiffness);
     std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
       "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
     __bendStiffness *= 10.f;
@@ -266,6 +266,7 @@ void Solver::WeightBoundaries()
 void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
   pxr::GfVec3f* velocity = &_particles.velocity[0];
+  int* body = &_particles.body[0];
 
   // apply external forces
   for (const Force* force : _force) {
@@ -277,6 +278,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   const pxr::GfVec3f* position = &_particles.position[0];
   for (size_t index = begin; index < end; ++index) {
     predicted[index] = position[index] + _stepTime * velocity[index];
+    velocity[index] *= (1.f - _bodies[body[index]]->damping);
   }
 }
 
