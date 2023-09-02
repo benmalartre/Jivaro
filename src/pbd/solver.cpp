@@ -22,11 +22,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(8)
+  , _subSteps(24)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
-  _frameTime = 1.f / 60.f;//GetApplication()->GetTime().GetFPS();
+  _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
 }
 
@@ -192,7 +192,7 @@ void Solver::UpdateColliders()
 void Solver::AddConstraints(Body* body)
 {
   // 0.1, 0.01, 0.001, 0.0001, 0.00001
-  static float __stretchStiffness = 2000.f;
+  static float __stretchStiffness = 10000.f;
   static float __bendStiffness = 0.0001f;
 
   static int __bodyIdx = 0;
@@ -205,8 +205,8 @@ void Solver::AddConstraints(Body* body)
       "(compliance="<< (1.f/__stretchStiffness) << ")" <<std::endl;
     //__stretchStiffness *= 2.f;
 
-    CreateBendConstraints(body, _constraints, __bendStiffness);
-    //CreateDihedralConstraints(body, _constraints, __bendStiffness);
+    //CreateBendConstraints(body, _constraints, __bendStiffness);
+    CreateDihedralConstraints(body, _constraints, __bendStiffness);
     std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
       "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
     __bendStiffness *= 10.f;
