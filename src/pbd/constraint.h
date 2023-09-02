@@ -26,15 +26,16 @@ public:
     STRETCH = 1,
     BEND,
     DIHEDRAL,
+    COLLISION,
     RIGID
   };
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(size_t elementSize, Body* body, float stiffness, 
+  Constraint(size_t elementSize, Body* body, float stiffness, float damping,
     const pxr::VtArray<int>& elems=pxr::VtArray<int>());
 
-  Constraint(Body* body1, Body* body2, const float stiffness);
+  Constraint(Body* body1, Body* body2, float stiffness, float damping);
 
   virtual ~Constraint() {};
   virtual size_t GetTypeId() const = 0;
@@ -68,13 +69,14 @@ protected:
   pxr::VtArray<pxr::GfVec3f>    _gradient;
   float                         _stiffness;
   float                         _compliance;
+  float                         _damping;
 };
 
 class StretchConstraint : public Constraint
 {
 public:
   StretchConstraint(Body* body, const pxr::VtArray<int>& elems, 
-    const float stiffness=0.5f);
+    float stiffness=0.5f, float damping=0.05f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
@@ -92,14 +94,14 @@ protected:
 };
 
 void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints, 
-  const float stiffness=0.5f);
+  float stiffness=0.5f, float damping=0.05f);
 
 
 class BendConstraint : public Constraint
 {
 public:
   BendConstraint(Body* body, const pxr::VtArray<int>& elems, 
-    const float stiffness = 0.1f);
+    float stiffness = 0.1f, float damping=0.05f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
@@ -117,14 +119,14 @@ protected:
 };
 
 void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
-  const float stiffness=0.5f);
+  float stiffness=0.5f, float damping=0.05f);
 
 
 class DihedralConstraint : public Constraint
 {
 public:
   DihedralConstraint(Body* body, const pxr::VtArray<int>& elems,
-    const float stiffness = 0.1f);
+    float stiffness=0.1f, float damping=0.05f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
@@ -142,7 +144,33 @@ protected:
 };
 
 void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
-  const float stiffness=0.5f);
+  float stiffness=0.5f, float damping=0.05f);
+
+
+class CollisionConstraint : public Constraint
+{
+public:
+  CollisionConstraint(Body* body, const pxr::VtArray<int>& elems,
+    float stiffness = 0.1f, float damping=0.05f);
+
+  virtual size_t GetTypeId() const override { return TYPE_ID; };
+  virtual size_t GetElementSize() const override { return ELEM_SIZE; };
+
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+
+  static size_t                 ELEM_SIZE;
+
+protected:
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
+  static size_t                 TYPE_ID;
+  pxr::VtArray<pxr::GfVec3f>    _normal;
+  pxr::VtArray<float>           _depth;
+
+};
+
+void CreateCollisionConstraint(Body* body, pxr::VtArray<Constraint*>& constraints,
+  float stiffness = 0.5f, float damping=0.05f);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

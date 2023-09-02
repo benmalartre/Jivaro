@@ -195,18 +195,19 @@ void Solver::AddConstraints(Body* body)
   static float __stretchStiffness = 5000.f;
   static float __bendStiffness = 0.0001f;
 
+
   static int __bodyIdx = 0;
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
     
-    CreateStretchConstraints(body, _constraints, __stretchStiffness);
+    CreateStretchConstraints(body, _constraints, __stretchStiffness, 0.5f);
 
     std::cout << "body " << (__bodyIdx) <<  " stretch stiffness : " <<  __stretchStiffness <<
       "(compliance="<< (1.f/__stretchStiffness) << ")" <<std::endl;
     //__stretchStiffness *= 2.f;
 
     //CreateBendConstraints(body, _constraints, __bendStiffness);
-    CreateDihedralConstraints(body, _constraints, __bendStiffness);
+    //CreateDihedralConstraints(body, _constraints, __bendStiffness, 0.05f);
     std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
       "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
     __bendStiffness *= 10.f;
@@ -278,7 +279,6 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   const pxr::GfVec3f* position = &_particles.position[0];
   for (size_t index = begin; index < end; ++index) {
     predicted[index] = position[index] + _stepTime * velocity[index];
-    velocity[index] *= (1.f - _bodies[body[index]]->damping);
   }
 }
 
@@ -313,6 +313,7 @@ void Solver::_UpdateCollisions(bool serial)
 
 void Solver::_UpdateParticles(size_t begin, size_t end)
 {
+  const int* body = &_particles.body[0];
   const pxr::GfVec3f* predicted = &_particles.predicted[0];
   pxr::GfVec3f* position = &_particles.position[0];
   pxr::GfVec3f* velocity = &_particles.velocity[0];
