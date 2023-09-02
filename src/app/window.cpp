@@ -30,6 +30,7 @@
 #include "../ui/timeline.h"
 #include "../ui/demo.h"
 #include "../ui/toolbar.h"
+#include "../ui/tool.h"
 #include "../ui/explorer.h"
 #include "../ui/layerEditor.h"
 #include "../ui/propertyEditor.h"
@@ -79,10 +80,12 @@ Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool full
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, true);
+  
 #ifdef __APPLE__
+  glfwWindowHint(GLFW_DOUBLEBUFFER, false);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
+  glfwWindowHint(GLFW_DOUBLEBUFFER, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 #endif
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
@@ -274,6 +277,7 @@ static void _StandardLayout(Window* window)
   Ts[5] = CurrentTime();
   new PropertyEditorUI(propertyView);
   Ts[6] = CurrentTime();
+  new ToolUI(graphView);
   //new GraphEditorUI(graphView);
   Ts[7] = CurrentTime();
   GetApplication()->SetActiveEngine(viewport->GetEngine());

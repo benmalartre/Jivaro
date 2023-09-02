@@ -22,7 +22,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
   : _gravity(0, -9.18, 0)
-  , _subSteps(64)
+  , _subSteps(8)
   , _solverIterations(1)
   , _sleepThreshold(0.1f)
   , _paused(true)
@@ -193,14 +193,17 @@ void Solver::AddConstraints(Body* body)
 {
   // 0.1, 0.01, 0.001, 0.0001, 0.00001
   static float __stiffness = 100.f;
+  static int __bodyIdx = 0;
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
     
     CreateStretchConstraints(body, _constraints, __stiffness);
 
-    CreateBendConstraints(body, _constraints, __stiffness);
+    //CreateBendConstraints(body, _constraints, __stiffness);
+    std::cout << "body " << (__bodyIdx++) <<  " stiffness : " <<  __stiffness <<
+      "(compliance="<< (1.f/__stiffness) << ")" <<std::endl;
+    __stiffness *= 2.f;
 
-    __stiffness *= 10.f;
 
    //CreateBendConstraints(body, _constraints, 0.5f);
    //CreateDihedralConstraints(body, _constraints, 0.1f);

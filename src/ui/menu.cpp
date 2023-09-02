@@ -275,8 +275,7 @@ static void NewFileCallback()
   int numFilters = 4;
 
   Application* app = GetApplication();
-  std::string filename =
-    app->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
+  std::string filename = "hello_world";
   ADD_COMMAND(NewSceneCommand, filename);
 }
 

@@ -395,12 +395,12 @@ Scene::InitExec()
   pxr::GfQuatf rotate(45.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
   rotate.Normalize();
   pxr::GfMatrix4f matrix = 
-    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f)) *
-    pxr::GfMatrix4f(1.f).SetRotate(rotate);
+    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));/**
+    pxr::GfMatrix4f(1.f).SetRotate(rotate);*/
   float size = .25f;
   
   
-  for(size_t x = 0; x < 1; ++x) {
+  for(size_t x = 0; x < 8; ++x) {
     std::string name = "cloth" + std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(clothPath, size, 
@@ -418,7 +418,7 @@ Scene::InitExec()
   */
 
   _Sources sources;
-  float mass = 0.2f;
+  float mass = 0.1f;
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {

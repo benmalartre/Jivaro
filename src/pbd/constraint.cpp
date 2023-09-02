@@ -279,7 +279,7 @@ void BendConstraint::_CalculateGradient(Particles* particles, size_t index)
   const pxr::GfVec3f center = (x0 + x1 + x2) / 3.f;
   pxr::GfVec3f delta = x2 - center;
   const float length = delta.GetLength();
-  
+
   constexpr float epsilon = 1e-24;
   const pxr::GfVec3f direction = 
     (length < epsilon) ? 
@@ -289,9 +289,9 @@ void BendConstraint::_CalculateGradient(Particles* particles, size_t index)
       RANDOM_LO_HI(-1.f, 1.f)
     ).GetNormalized() : delta / length;
 
-  _gradient[0] = 2.f * direction;
-  _gradient[1] = 2.f * direction;
-  _gradient[2] = -4.f * direction;
+  _gradient[0] = -2.f * direction;
+  _gradient[1] = -2.f * direction;
+  _gradient[2] = 4.f * direction;
 }
 
 /*
