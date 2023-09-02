@@ -192,7 +192,7 @@ void Solver::UpdateColliders()
 void Solver::AddConstraints(Body* body)
 {
   // 0.1, 0.01, 0.001, 0.0001, 0.00001
-  static float __stretchStiffness = 10000.f;
+  static float __stretchStiffness = 5000.f;
   static float __bendStiffness = 0.0001f;
 
   static int __bodyIdx = 0;
@@ -206,7 +206,7 @@ void Solver::AddConstraints(Body* body)
     //__stretchStiffness *= 2.f;
 
     //CreateBendConstraints(body, _constraints, __bendStiffness);
-    CreateDihedralConstraints(body, _constraints, __bendStiffness);
+    //CreateDihedralConstraints(body, _constraints, __bendStiffness);
     std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
       "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
     __bendStiffness *= 10.f;
@@ -367,12 +367,12 @@ void Solver::_StepOneSerial()
   // integrate particles
   _IntegrateParticles(0, numParticles);
 
-  // solve collisions
-  _ResolveCollisions(false);
-
   // solve constraints
   for (auto& constraint : _constraints)constraint->Solve(&_particles, _stepTime);
   for (auto& constraint : _constraints)constraint->Apply(&_particles);
+
+   // solve collisions
+  _ResolveCollisions(false);
 
   // update particles
   _UpdateParticles(0, numParticles);
@@ -390,12 +390,12 @@ void Solver::_StepOne()
     std::bind(&Solver::_IntegrateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
-  // solve collisions
-  _ResolveCollisions(false);
-
   // solve constraints
   pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
     [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
+
+  // solve collisions
+  _ResolveCollisions(false);
 
   // apply constraint serially
   for (auto& constraint : _constraints)constraint->Apply(&_particles);

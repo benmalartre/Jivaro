@@ -120,8 +120,8 @@ void PlaneCollision::_ResolveContact(size_t index, Particles* particles, const f
   float d = pxr::GfDot(_normal, particles->predicted[index] - _position) + _distance - radius;
 
   pxr::GfVec3f delta = _normal * -d * dt;
-  particles->position[index] += delta;
   particles->predicted[index] += delta;
+  particles->position[index] = particles->predicted[index];
 
   hit->delta = delta;
   hit->normal = _normal;
@@ -129,10 +129,9 @@ void PlaneCollision::_ResolveContact(size_t index, Particles* particles, const f
 
 void PlaneCollision::_UpdateVelocity(size_t index, Particles* particles, const float invDt)
 {
-  
+  const pxr::GfVec3f tangent = pxr::GfVec3f(-_deltas[index][0], 0.f, -_deltas[index][2]).GetNormalized();
   particles->velocity[_contacts[index]] += 
-    _normals[index] * _restitution * _deltas[index].GetLength() * invDt+
-    pxr::GfVec3f(_deltas[index][0] * _friction, 0.f, _deltas[index][2] * _friction) * invDt;
+    _normals[index] * _restitution * _deltas[index].GetLength() * invDt + tangent * _friction * invDt;
 }
 
 //----------------------------------------------------------------------------------------
