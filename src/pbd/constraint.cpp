@@ -486,6 +486,13 @@ void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraint
 size_t CollisionConstraint::TYPE_ID = Constraint::COLLISION;
 size_t CollisionConstraint::ELEM_SIZE = 1;
 
+CollisionConstraint::CollisionConstraint(Body* body, const pxr::VtArray<int>& elems,
+  float stiffness, float damping)
+  : Constraint(ELEM_SIZE, body, stiffness, damping, elems)
+{
+
+}
+
 float CollisionConstraint::_CalculateValue(Particles* particles, size_t index)
 {
   const size_t offset = _body[0]->offset;
@@ -500,6 +507,10 @@ void CollisionConstraint::_CalculateGradient(Particles* particles, size_t index)
 {
   _gradient[0] = _normal[index];
   _gradient[1] = pxr::GfVec3f(0.f);
+}
+
+void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
+{
 }
 
 

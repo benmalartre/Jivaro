@@ -25,7 +25,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
     const pxr::GfVec3f pos = m.Transform(points[p]);
     size_t idx = base + p;
     mass[idx] = w;
-    radius[idx] = b->radius;
+    radius[idx] = b->radius * RANDOM_0_1;
     rest[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;

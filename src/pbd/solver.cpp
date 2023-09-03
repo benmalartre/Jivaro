@@ -272,12 +272,12 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
   pxr::GfVec3f* velocity = &_particles.velocity[0];
   int* body = &_particles.body[0];
-
+  
   // update velocity
   for (size_t index = begin; index < end; ++index) {
     velocity[index] -= (velocity[index] * _bodies[body[index]]->damping);
   }
-
+  
   // apply external forces
   for (const Force* force : _force) {
     force->Apply(begin, end, &_particles, _frameTime);
@@ -291,33 +291,23 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   }
 }
 
-void Solver::_ResolveCollisions(bool serial)
+void Solver::_FindContacts(bool serial)
 {
+  
   if (serial) {
     for (auto& collision : _collisions) {
-      collision->FindContactsSerial(&_particles);
-      collision->ResolveContactsSerial(&_particles, 1.f);
+      collision->FindContactsSerial(&_particles, _bodies);
     }
   } else {
     for (auto& collision : _collisions) {
-      collision->FindContacts(&_particles);
-      collision->ResolveContacts(&_particles, 1.f);
+      collision->FindContacts(&_particles, _bodies);
     }
   }
 }
 
 void Solver::_UpdateCollisions(bool serial)
 {
-  const float invDt = 1.f / _stepTime;
-  if (serial) {
-    for (auto& collision : _collisions) {
-      collision->UpdateVelocitiesSerial(&_particles, invDt);
-    }
-  } else {
-    for (auto& collision : _collisions) {
-      collision->UpdateVelocities(&_particles, invDt);
-    }
-  }
+
 }
 
 void Solver::_UpdateParticles(size_t begin, size_t end)
@@ -335,6 +325,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
     const float m = velocity[index].GetLengthSq();
+    
     if (m < threshold2)
       velocity[index] = pxr::GfVec3f(0.f);
 
@@ -383,11 +374,12 @@ void Solver::_StepOneSerial()
   for (auto& constraint : _constraints)constraint->Solve(&_particles, _stepTime);
   for (auto& constraint : _constraints)constraint->Apply(&_particles);
 
-   // solve collisions
-  _ResolveCollisions(false);
+  // solve collisions
+  //_ResolveCollisions(false);
 
   // update particles
   _UpdateParticles(0, numParticles);
+
   // solve collisions
   _UpdateCollisions(true);
 }
@@ -406,11 +398,11 @@ void Solver::_StepOne()
   pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
     [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
 
-  // solve collisions
-  _ResolveCollisions(false);
-
   // apply constraint serially
   for (auto& constraint : _constraints)constraint->Apply(&_particles);
+
+  // solve collisions
+  //_ResolveCollisions(false);
 
   // update particles
   pxr::WorkParallelForN(
@@ -431,7 +423,7 @@ void Solver::Step(bool serial)
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
   size_t numConstraints = _constraints.size();
 
-
+  _FindContacts(serial);
   //std::cout << "num available threads : " << numThreads << std::endl;
   //std::cout << "num forces : " << _force.size() << std::endl;
 

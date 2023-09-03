@@ -15,12 +15,13 @@ class Geometry;
 
 struct Particles;
 struct Body;
+class Constraint;
 
 class Collision : public Mask
 {
 public:
   struct _Hit {
-    pxr::GfVec3f delta;
+    float        depth;
     pxr::GfVec3f normal;
   };
 
@@ -44,16 +45,11 @@ public:
   */
 
   size_t GetNumContacts() { return _contacts.size(); };
-  const pxr::VtArray<int>& GetContacts() const { return _contacts; };
-  pxr::VtArray<int>& GetContacts() { return _contacts; };
+  const pxr::VtArray<Constraint*>& GetContacts() const { return _contacts; };
+  pxr::VtArray<Constraint*>& GetContacts() { return _contacts; };
 
-  virtual void FindContacts(Particles* particles);
-  virtual void ResolveContacts(Particles* particles, const float dt);
-  virtual void UpdateVelocities(Particles* particles, const float invDt);
-
-  virtual void FindContactsSerial(Particles* particles);
-  virtual void ResolveContactsSerial(Particles* particles, const float dt);
-  virtual void UpdateVelocitiesSerial(Particles* particles, const float invDt);
+  virtual void FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies);
+  virtual void FindContactsSerial(Particles* particles, const pxr::VtArray<Body*>& bodies);
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
@@ -65,20 +61,13 @@ public:
 
 protected:
   virtual void _ResetContacts(Particles* particles);
-  virtual void _BuildContacts(Particles* particles);
+  virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies);
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles);
-  virtual void _ResolveContacts(size_t begin, size_t end, Particles* particles, const float dt);
-  virtual void _UpdateVelocities(size_t begin, size_t end, Particles* particles, const float invDt);
   
   virtual void _FindContact(size_t index, Particles* particles) = 0;
-  virtual void _ResolveContact(size_t index, Particles* particles, const float dt, _Hit* hit) = 0;
-  virtual void _UpdateVelocity(size_t index, Particles* articles, const float invDt) = 0;
 
-protected:
   pxr::VtArray<int>           _hits;        // hits encode vertex hit in the int list bits
-  pxr::VtArray<int>           _contacts;    // flat list of contact vertex
-  pxr::VtArray<pxr::GfVec3f>  _deltas;
-  pxr::VtArray<pxr::GfVec3f>  _normals;
+  pxr::VtArray<Constraint*>   _contacts;    // flat list of contact constraints
 
   float                       _restitution;
   float                       _friction;
@@ -98,8 +87,6 @@ public:
 
 protected:
   void _FindContact(size_t index, Particles* particles) override;
-  void _ResolveContact(size_t index, Particles* particles, const float dt, _Hit* hit) override;
-  void _UpdateVelocity(size_t index, Particles* articles, const float invDt) override;
 
 private:
   pxr::GfVec3f _position;
@@ -141,8 +128,6 @@ public:
 
 protected:
   void _FindContact(size_t index, Particles* particles) override;
-  void _ResolveContact(size_t index, Particles* particles, const float dt, _Hit* hit) override;
-  void _UpdateVelocity(size_t index, Particles* articles, const float invDt) override;
 
 private:
   pxr::GfMatrix4f _xform;

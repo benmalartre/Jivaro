@@ -70,6 +70,7 @@ public:
   void Step(bool serial=false);
 
 private:
+  void _FindContacts(bool serial = false);
   void _ResolveCollisions(bool serial=false);
   void _UpdateCollisions(bool serial=false);
   void _IntegrateParticles(size_t begin, size_t end);
@@ -87,6 +88,7 @@ private:
   // system
   Particles                           _particles;
   pxr::VtArray<Constraint*>           _constraints;
+  pxr::VtArray<Constraint*>           _contacts;
   pxr::VtArray<Collision*>            _collisions;
   pxr::VtArray<Body*>                 _bodies;
   pxr::VtArray<Force*>                _force;
