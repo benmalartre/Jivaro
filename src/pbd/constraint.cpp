@@ -19,7 +19,7 @@ Constraint::Constraint(size_t elementSize, Body* body, float stiffness,
   _body.resize(1);
   _body[0] = body;
   _gradient.resize(elementSize);
-  _correction.resize(_elements.size());
+  _correction.resize(_elements.size() * 2);
 }
 
 Constraint::Constraint(Body* body1, Body* body2, float stiffness, float damping)
@@ -34,9 +34,9 @@ Constraint::Constraint(Body* body1, Body* body2, float stiffness, float damping)
 float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elemIdx)
 {
   const size_t N = GetElementSize();
-  float result = 0.f;
+  float result = 0.f, m;
   for(size_t n = 0; n < N; ++n) {
-    const float& m = particles->mass[_elements[elemIdx * N + n]];
+    m = particles->mass[_elements[elemIdx * N + n]];
     result += 
       _gradient[n][0] * m * _gradient[n][0] +
       _gradient[n][1] * m * _gradient[n][1] +
@@ -47,10 +47,14 @@ float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elemId
 
 bool Constraint::Solve(Particles* particles, const float dt)
 {
+  const size_t offset = _body[0]->offset;
   _ResetCorrection();
 
   const size_t N = GetElementSize();
   const size_t numElements = _elements.size() / N;
+  size_t compIdx;
+  float m;
+  pxr::GfVec3f damp;
   for(size_t elemIdx = 0; elemIdx  < numElements; ++elemIdx) {
     const float C = _CalculateValue(particles, elemIdx);
 
@@ -74,12 +78,17 @@ bool Constraint::Solve(Particles* particles, const float dt)
       -C / (_ComputeLagrangeMultiplier(particles, elemIdx) + alpha);
 
     for(size_t n = 0; n < N; ++n) {
-     _correction[elemIdx * N + n] += 
-        (_gradient[n] * particles->mass[_elements[elemIdx * N + n]] * deltaLagrange);
+      compIdx = _elements[elemIdx * N + n] + offset;
+      m = particles->mass[compIdx];
+      damp = -pxr::GfDot((particles->predicted[compIdx] - particles->position[compIdx]) * dt,
+        _gradient[n]) * _gradient[n] * _damping;
+     _correction[elemIdx * N + n] +=
+        (_gradient[n] * m * deltaLagrange) + damp * m;
     }
   }
   return true;
 }
+
 
 void Constraint::_ResetCorrection()
 {
@@ -92,7 +101,7 @@ void Constraint::Apply(Particles* particles)
   const size_t offset = _body[0]->offset;
   size_t corrIdx = 0;
   for(const auto& elem: _elements) {
-    particles->predicted[elem + offset] += (_correction[corrIdx++]);
+    particles->predicted[elem + offset] += _correction[corrIdx++];
   }
 }
 
@@ -119,23 +128,19 @@ float StretchConstraint::_CalculateValue(Particles* particles, size_t index)
 {
   const size_t offset = _body[0]->offset;
 
-  const pxr::GfVec3f& x0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& x1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
-  return (x1 - x0).GetLength() - _rest[index];
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
+  return (p1 - p0).GetLength() - _rest[index];
 }
 
 void StretchConstraint::_CalculateGradient(Particles* particles, size_t index)
 {
   const size_t offset = _body[0]->offset;
 
-  const pxr::GfVec3f& p0 = particles->position[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& p1 = particles->position[_elements[index * ELEM_SIZE + 1] + offset];
-  const pxr::GfVec3f& x0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& x1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
 
-  const pxr::GfVec3f delta = x1 - x0;
-  const pxr::GfVec3f velocity = ((x0 - p0) + (x1 - p1)) * 0.5f;
-
+  const pxr::GfVec3f delta = p1 - p0;
   const float length = delta.GetLength();
 
   constexpr float epsilon = 1e-24;
@@ -176,9 +181,10 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
     const auto& edges = mesh->GetEdges();
     const pxr::GfMatrix4d& m = mesh->GetMatrix();
     HalfEdge* edge = it.Next();
+    size_t a, b;
     while (edge) {
-      size_t a = edge->vertex;
-      size_t b = edges[edge->next].vertex;
+      a = edge->vertex;
+      b = edges[edge->next].vertex;
       allElements.push_back(a);
       allElements.push_back(b);
       edge = it.Next();
@@ -223,12 +229,12 @@ float BendConstraint::_CalculateValue(Particles* particles, size_t index)
 {
   const size_t offset = _body[0]->offset;
 
-  const pxr::GfVec3f& x0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& x1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
-  const pxr::GfVec3f& x2 = particles->predicted[_elements[index * ELEM_SIZE + 2] + offset];
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
+  const pxr::GfVec3f& p2 = particles->predicted[_elements[index * ELEM_SIZE + 2] + offset];
 
-  const pxr::GfVec3f center = (x0 + x1 + x2) / 3.f;
-  pxr::GfVec3f delta = x2 - center;
+  const pxr::GfVec3f center = (p0 + p1 + p2) / 3.f;
+  pxr::GfVec3f delta = p2 - center;
 
   const float length = delta.GetLength();
   if (pxr::GfIsClose(length, 0.f, 0.0000001f))return 1.f;
@@ -240,12 +246,12 @@ void BendConstraint::_CalculateGradient(Particles* particles, size_t index)
 {
   const size_t offset = _body[0]->offset;
 
-  const pxr::GfVec3f& x0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& x1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
-  const pxr::GfVec3f& x2 = particles->predicted[_elements[index * ELEM_SIZE + 2] + offset];
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
+  const pxr::GfVec3f& p2 = particles->predicted[_elements[index * ELEM_SIZE + 2] + offset];
 
-  const pxr::GfVec3f center = (x0 + x1 + x2) / 3.f;
-  pxr::GfVec3f delta = x2 - center;
+  const pxr::GfVec3f center = (p0 + p1 + p2) / 3.f;
+  pxr::GfVec3f delta = p2 - center;
   const float length = delta.GetLength();
 
   constexpr float epsilon = 1e-24;

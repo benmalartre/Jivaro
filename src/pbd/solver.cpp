@@ -79,7 +79,7 @@ Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
   std::cout << "num particles before add : " << base << std::endl;
 
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  Body* body = new Body({ 0.01f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
+  Body* body = new Body({ 0.f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
@@ -194,13 +194,17 @@ void Solver::AddConstraints(Body* body)
   // 0.1, 0.01, 0.001, 0.0001, 0.00001
   static float __stretchStiffness = 1000.f;
   static float __bendStiffness = 0.0001f;
+  static float __damping = 0.1f;
 
 
   static int __bodyIdx = 0;
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
     
-    CreateStretchConstraints(body, _constraints, __stretchStiffness, 1.f);
+    CreateStretchConstraints(body, _constraints, __stretchStiffness, __damping);
+    __damping += 0.1f;
+
+    std::cout << "damping : " << __damping << std::endl;
 
     std::cout << "body " << (__bodyIdx) <<  " stretch stiffness : " <<  __stretchStiffness <<
       "(compliance="<< (1.f/__stretchStiffness) << ")" <<std::endl;
