@@ -79,7 +79,7 @@ Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
   std::cout << "num particles before add : " << base << std::endl;
 
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  Body* body = new Body({ 0.5f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
+  Body* body = new Body({ 0.01f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
@@ -192,7 +192,7 @@ void Solver::UpdateColliders()
 void Solver::AddConstraints(Body* body)
 {
   // 0.1, 0.01, 0.001, 0.0001, 0.00001
-  static float __stretchStiffness = 5000.f;
+  static float __stretchStiffness = 1000.f;
   static float __bendStiffness = 0.0001f;
 
 
@@ -200,7 +200,7 @@ void Solver::AddConstraints(Body* body)
   Geometry* geom = body->geometry;
   if (geom->GetType() == Geometry::MESH) {
     
-    CreateStretchConstraints(body, _constraints, __stretchStiffness, 0.5f);
+    CreateStretchConstraints(body, _constraints, __stretchStiffness, 1.f);
 
     std::cout << "body " << (__bodyIdx) <<  " stretch stiffness : " <<  __stretchStiffness <<
       "(compliance="<< (1.f/__stretchStiffness) << ")" <<std::endl;
@@ -268,6 +268,11 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
   pxr::GfVec3f* velocity = &_particles.velocity[0];
   int* body = &_particles.body[0];
+
+  // update velocity
+  for (size_t index = begin; index < end; ++index) {
+    velocity[index] -= (velocity[index] * _bodies[body[index]]->damping);
+  }
 
   // apply external forces
   for (const Force* force : _force) {

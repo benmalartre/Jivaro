@@ -68,12 +68,10 @@ bool Constraint::Solve(Particles* particles, const float dt)
 
     // Calculate time-scaled compliance
     const float alpha = _compliance / (dt * dt);
-    /*const float beta = _damping * (dt * dt);
-    const float gamma = alpha * beta /dt;*/
 
     // Calculate delta lagrange multiplier
     const float deltaLagrange =
-      -C / (_ComputeLagrangeMultiplier(particles, elemIdx) + alpha) * (1.f - _damping);
+      -C / (_ComputeLagrangeMultiplier(particles, elemIdx) + alpha);
 
     for(size_t n = 0; n < N; ++n) {
      _correction[elemIdx * N + n] += 
@@ -130,10 +128,13 @@ void StretchConstraint::_CalculateGradient(Particles* particles, size_t index)
 {
   const size_t offset = _body[0]->offset;
 
+  const pxr::GfVec3f& p0 = particles->position[_elements[index * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& p1 = particles->position[_elements[index * ELEM_SIZE + 1] + offset];
   const pxr::GfVec3f& x0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
   const pxr::GfVec3f& x1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
 
   const pxr::GfVec3f delta = x1 - x0;
+  const pxr::GfVec3f velocity = ((x0 - p0) + (x1 - p1)) * 0.5f;
 
   const float length = delta.GetLength();
 
