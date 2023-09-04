@@ -21,7 +21,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
-  : _gravity(0, -9.18, 0)
+  : _gravity(0, -9.8, 0)
   , _subSteps(20)
   , _sleepThreshold(0.1f)
   , _paused(true)
@@ -302,11 +302,11 @@ void Solver::_FindContacts(bool serial)
   _ClearContacts();
   if (serial) {
     for (auto& collision : _collisions) {
-      collision->FindContactsSerial(&_particles, _bodies, _contacts);
+      collision->FindContactsSerial(&_particles, _bodies, _contacts, _stepTime);
     }
   } else {
     for (auto& collision : _collisions) {
-      collision->FindContacts(&_particles, _bodies, _contacts);
+      collision->FindContacts(&_particles, _bodies, _contacts, _stepTime);
     }
   }
 }
@@ -332,6 +332,14 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 
     // update position
     position[index] = predicted[index];
+  }
+}
+
+void Solver::_UpdateVelocities(size_t begin, size_t end)
+{
+  const float invDt = 1.f / _stepTime;
+  for (size_t index = begin; index < end; ++index) {
+    _contacts[index]->UpdateVelocity(&_particles, invDt);
   }
 }
 
@@ -383,22 +391,25 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
 void Solver::_StepOneSerial()
 {
   const size_t numParticles = _particles.GetNumParticles();
+  const size_t numContacts = _contacts.size();
 
   // integrate particles
   _IntegrateParticles(0, numParticles);
 
   // solve and apply constraint
-  _SolveConstraints(_constraints, true);
   _SolveConstraints(_contacts, true);
+  _SolveConstraints(_constraints, true);
 
   // update particles
   _UpdateParticles(0, numParticles);
+  _UpdateVelocities(0, numContacts);
 
 }
 
 void Solver::_StepOne()
 {
   const size_t numParticles = _particles.GetNumParticles();
+  const size_t numContacts = _contacts.size();
 
   // integrate particles
   pxr::WorkParallelForN(
@@ -407,16 +418,19 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // solve and apply constraint
-  _SolveConstraints(_constraints, false);
   _SolveConstraints(_contacts, false);
-
+  _SolveConstraints(_constraints, false);
+  
   // update particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_UpdateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
-
+  pxr::WorkParallelForN(
+    numContacts,
+    std::bind(&Solver::_UpdateVelocities, this,
+      std::placeholders::_1, std::placeholders::_2));
 }
 
 void Solver::Step(bool serial)
@@ -425,7 +439,6 @@ void Solver::Step(bool serial)
   if (!numParticles)return;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
-  size_t numConstraints = _constraints.size();
 
   _FindContacts(serial);
   //std::cout << "num available threads : " << numThreads << std::endl;

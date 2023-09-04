@@ -46,7 +46,7 @@ float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elemId
   return result;
 }
 
-bool Constraint::Solve(Particles* particles, const float dt)
+void Constraint::Solve(Particles* particles, float dt)
 {
   _ResetCorrection();
 
@@ -85,7 +85,6 @@ bool Constraint::Solve(Particles* particles, const float dt)
        pxr::GfDot(particles->velocity[partIdx] * dt * dt,  _gradient[N]) * _gradient[N] * _damping;
     }
   }
-  return true;
 }
 
 
@@ -497,7 +496,7 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision, const
   _gradient.resize(ELEM_SIZE + 1);
 }
 
-bool CollisionConstraint::Solve(Particles* particles, const float dt)
+void CollisionConstraint::Solve(Particles* particles, float dt)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
   const size_t offset = _body[0]->offset;
@@ -505,7 +504,19 @@ bool CollisionConstraint::Solve(Particles* particles, const float dt)
     _correction[elemIdx] = 
       _collision->ResolveContact(particles, _elements[elemIdx] + offset);
   }
-  return true;
+}
+
+void CollisionConstraint::UpdateVelocity(Particles* particles, float invDt)
+{
+  const size_t numElements = _elements.size() / ELEM_SIZE;
+  const size_t offset = _body[0]->offset;
+  pxr::GfVec3f correction;
+  size_t partIdx;
+  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
+    partIdx = _elements[elemIdx] + offset;
+    correction = _collision->ResolveVelocity(particles, partIdx) /** invDt*/;
+    particles->velocity[partIdx] += correction;
+  }
 }
 
 void CollisionConstraint::Apply(Particles* particles)

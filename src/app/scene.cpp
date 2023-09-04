@@ -247,6 +247,28 @@ void _GenerateSample(pxr::UsdGeomMesh& mesh, pxr::VtArray<Sample>* samples, floa
 }
 
 
+pxr::UsdPrim _GenerateGroundBox(const pxr::SdfPath& path)
+{
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+
+
+  pxr::UsdGeomCube ground = 
+    pxr::UsdGeomCube::Define(stage, path.AppendChild(pxr::TfToken("Ground")));
+
+  ground.CreateSizeAttr().Set(1.0);
+  
+  ground.AddScaleOp(UsdGeomXformOp::PrecisionFloat).Set(pxr::GfVec3f(100.f, 1.f, 100.f));
+  ground.AddTranslateOp(UsdGeomXformOp::PrecisionFloat).Set(pxr::GfVec3f(0.f, -0.5f, 0.f));
+  
+
+  pxr::UsdPrim usdPrim = ground.GetPrim();
+  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
+  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
+
+  return ground.GetPrim();
+}
+
 pxr::UsdPrim _GenerateSolver(const pxr::SdfPath& path, const pxr::TfToken& name)
 {
   Application* app = GetApplication();
@@ -420,6 +442,8 @@ Scene::InitExec()
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));/**
     pxr::GfMatrix4f(1.f).SetRotate(rotate);*/
   float size = .25f;
+
+  _GenerateGroundBox(rootId);
   
   
   for(size_t x = 0; x < 3; ++x) {
@@ -479,7 +503,7 @@ Scene::InitExec()
     _solver->AddCollision(new SphereCollision(restitution, friction, m, (float)radius));
   } 
 
-  _solver->AddCollision(new PlaneCollision(0.f, 1.f, 
+  _solver->AddCollision(new PlaneCollision(0.1f, 1.f, 
     pxr::GfVec3f(0.f, 1.f, 0.f),pxr::GfVec3f(0.f, -0.1f, 0.f)));
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));

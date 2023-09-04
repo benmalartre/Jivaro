@@ -45,7 +45,9 @@ public:
     return _elements.size() / GetElementSize();
   };
 
-  virtual bool Solve(Particles* particles, const float dt);
+  virtual void Solve(Particles* particles, float dt);
+  virtual void UpdateVelocity(Particles* particles, float invDt) {};
+
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) = 0;
 
   // this one has to be called serially 
@@ -156,7 +158,8 @@ public:
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  virtual bool Solve(Particles* particles, const float dt) override;
+  virtual void Solve(Particles* particles, float dt) override;
+  void UpdateVelocity(Particles* particles, float invDt) override;
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
 
   // this one has to be called serially 

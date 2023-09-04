@@ -78,6 +78,7 @@ private:
 
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);
+  void _UpdateVelocities(size_t begin, size_t end);
   void _StepOneSerial();
   void _StepOne();
 

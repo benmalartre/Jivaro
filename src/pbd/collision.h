@@ -45,11 +45,12 @@ public:
   */
 
   virtual void FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
-    pxr::VtArray<Constraint*>& constraints);
+    pxr::VtArray<Constraint*>& constraints, float dt);
   virtual void FindContactsSerial(Particles* particles, const pxr::VtArray<Body*>& bodies,
-    pxr::VtArray<Constraint*>& constraint);
+    pxr::VtArray<Constraint*>& constraint, float dt);
 
   virtual pxr::GfVec3f ResolveContact(Particles* particles, size_t index) = 0;
+  virtual pxr::GfVec3f ResolveVelocity(Particles* particles, size_t index) = 0;
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
@@ -63,9 +64,9 @@ protected:
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
     pxr::VtArray<Constraint*>& contacts);
-  virtual void _FindContacts(size_t begin, size_t end, Particles* particles);
+  virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float dt);
   
-  virtual void _FindContact(size_t index, Particles* particles) = 0;
+  virtual void _FindContact(size_t index, Particles* particles, float dt) = 0;
 
   pxr::VtArray<int>           _hits;        // hits encode vertex hit in the int list bits
   size_t                      _numContacts;
@@ -81,6 +82,7 @@ public:
     const pxr::GfVec3f& position = pxr::GfVec3f(0.f), const float distance=0.1f);
 
   pxr::GfVec3f ResolveContact(Particles* particles, size_t index) override;
+  pxr::GfVec3f ResolveVelocity(Particles* particles, size_t index) override;
 
   inline void Set(const pxr::GfVec3f& position, const pxr::GfVec3f& normal);
   inline void SetPosition(const pxr::GfVec3f& position);
@@ -88,7 +90,7 @@ public:
   inline void SetDistance(const float distance);
 
 protected:
-  void _FindContact(size_t index, Particles* particles) override;
+  void _FindContact(size_t index, Particles* particles, float dt) override;
 
 private:
   pxr::GfVec3f _position;
@@ -125,13 +127,14 @@ public:
     const pxr::GfMatrix4f& xform=pxr::GfMatrix4f(1.f), float radius=1.f);
 
   pxr::GfVec3f ResolveContact(Particles* particles, size_t index) override;
+  pxr::GfVec3f ResolveVelocity(Particles* particles, size_t index) override;
 
   inline void Set(const pxr::GfMatrix4f& xform, const float radius);
   inline void SetXform(const pxr::GfMatrix4f& xform);
   inline void SetRadius(const float radius);
 
 protected:
-  void _FindContact(size_t index, Particles* particles) override;
+  void _FindContact(size_t index, Particles* particles, float dt) override;
 
 private:
   pxr::GfMatrix4f _xform;
