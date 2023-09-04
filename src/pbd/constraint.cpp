@@ -516,7 +516,7 @@ void CollisionConstraint::Apply(Particles* particles)
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
     partIdx = _elements[elemIdx] + offset;
     particles->predicted[partIdx] += _correction[elemIdx];
-    particles->position[partIdx] += _correction[elemIdx] * (1.f - _damping);
+    particles->position[partIdx] += _correction[elemIdx];
   }
 }
 

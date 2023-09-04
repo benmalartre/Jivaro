@@ -10,7 +10,6 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   size_t add = geom->GetNumPoints();
   size_t size = base + add;
   size_t index = body.size() ? body.back() + 1 : 0;
-  std::cout << "add body with index : " << index << std::endl;
   float w = pxr::GfIsClose(b->mass, 0.f, 0.0000001f) ? 0.f : 1.f / b->mass;
   mass.resize(size);
   radius.resize(size);
@@ -27,7 +26,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
     pos = m.Transform(points[p]);
     size_t idx = base + p;
     mass[idx] = w;
-    radius[idx] = b->radius * RANDOM_0_1;
+    radius[idx] = b->radius;
     rest[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
@@ -66,7 +65,6 @@ void Particles::RemoveBody(Body* b)
   velocity.resize(size);
   body.resize(size);
   color.resize(size);
-  
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
