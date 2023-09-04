@@ -86,7 +86,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
 {
   if (!Affects(index))return;
   float radius = particles->radius[index];
-  float d = pxr::GfDot(_normal, particles->predicted[index] + particles->velocity[index] * dt - _position) - (radius + _distance);
+  float d = pxr::GfDot(_normal, particles->predicted[index] + particles->velocity[index] * dt - _position) - _distance - radius;
   if (d < 0.f) {
     SetHit(index);
   }
@@ -94,16 +94,15 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
 
 pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index)
 {
-  float radius = particles->radius[index];
-  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - radius;
+  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - particles->radius[index];
   if (d < 0.f) return _normal * -d;
   else return pxr::GfVec3f(0.f);
 }
 
 pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, size_t index)
 {
-  const pxr::GfVec3f tangent = pxr::GfVec3f(-particles->velocity[index][0], 0.f, -particles->velocity[index][2]);
-  return /*_normal * _restitution * _deltas[index].GetLength() * invDt +*/ tangent * _friction;
+  return _normal * _restitution * (particles->predicted[index] - particles->position[index]).GetLength() + 
+    pxr::GfVec3f(-particles->velocity[index][0], 0.f, -particles->velocity[index][2]) * _friction;
 }
 
 //----------------------------------------------------------------------------------------

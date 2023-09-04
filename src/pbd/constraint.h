@@ -48,7 +48,8 @@ public:
   virtual void Solve(Particles* particles, float dt);
   virtual void UpdateVelocity(Particles* particles, float invDt) {};
 
-  virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) = 0;
+  virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
+    pxr::VtArray<float>& radius) = 0;
 
   // this one has to be called serially 
   // as two constraints can move the same point
@@ -83,7 +84,8 @@ public:
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
+    pxr::VtArray<float>& radius) override;
 
   static size_t                 ELEM_SIZE;
 
@@ -108,7 +110,8 @@ public:
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
+    pxr::VtArray<float>& radius) override;
 
   static size_t                 ELEM_SIZE;
 
@@ -133,7 +136,8 @@ public:
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
+    pxr::VtArray<float>& radius) override;
 
   static size_t                 ELEM_SIZE;
 
@@ -160,7 +164,8 @@ public:
 
   virtual void Solve(Particles* particles, float dt) override;
   void UpdateVelocity(Particles* particles, float invDt) override;
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
+    pxr::VtArray<float>& radius) override;
 
   // this one has to be called serially 
   // as two constraints can move the same point

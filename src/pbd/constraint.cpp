@@ -155,15 +155,16 @@ void StretchConstraint::_CalculateGradient(Particles* particles, size_t index)
   _gradient[2] = direction;
 }
 
-void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
+void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
-  results.resize(numElements * 2);
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    results[elemIdx * ELEM_SIZE    ] = 
-      particles->position[_elements[elemIdx * ELEM_SIZE + 0] + _body[0]->offset];
-    results[elemIdx * ELEM_SIZE + 1] = 
-      particles->position[_elements[elemIdx * ELEM_SIZE + 1] + _body[0]->offset];
+    positions.push_back(
+      particles->position[_elements[elemIdx * ELEM_SIZE + 0] + _body[0]->offset]);
+    positions.push_back(
+      particles->position[_elements[elemIdx * ELEM_SIZE + 1] + _body[0]->offset]);
+    radius.push_back(0.02f);
+    radius.push_back(0.02f);
   }
 }
 
@@ -270,15 +271,16 @@ void BendConstraint::_CalculateGradient(Particles* particles, size_t index)
   _gradient[3] = (p1 - p0).GetNormalized();
 }
 
-void BendConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
+void BendConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
-  results.resize(numElements * 2);
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    results[elemIdx * ELEM_SIZE + 0] = 
-      particles->position[_elements[elemIdx * ELEM_SIZE + 0] + _body[0]->offset];
-    results[elemIdx * ELEM_SIZE + 1] = 
-      particles->position[_elements[elemIdx * ELEM_SIZE + 1] + _body[0]->offset];
+    positions.push_back(
+      particles->position[_elements[elemIdx * ELEM_SIZE + 0] + _body[0]->offset]);
+    positions.push_back(
+      particles->position[_elements[elemIdx * ELEM_SIZE + 1] + _body[0]->offset]);
+    radius.push_back(0.02f);
+    radius.push_back(0.02f);
   }
 }
 
@@ -445,13 +447,15 @@ void DihedralConstraint::_CalculateGradient(Particles* particles, size_t elemIdx
   _gradient[4] = e.GetNormalized();
 }
 
-void DihedralConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
+void DihedralConstraint::GetPoints(Particles* particles,
+  pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
-  results.resize( numElements * 2);
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    results[elemIdx * 2] = particles->position[_elements[elemIdx * ELEM_SIZE + 2] + _body[0]->offset];
-    results[elemIdx * 2 + 1] = particles->position[_elements[elemIdx * ELEM_SIZE + 3] + _body[0]->offset];
+    positions.push_back(particles->position[_elements[elemIdx * ELEM_SIZE + 2] + _body[0]->offset]);
+    positions.push_back(particles->position[_elements[elemIdx * ELEM_SIZE + 3] + _body[0]->offset]);
+    radius.push_back(0.02f);
+    radius.push_back(0.02f);
   }
 }
 
@@ -531,12 +535,12 @@ void CollisionConstraint::Apply(Particles* particles)
   }
 }
 
-void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results)
+void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
-  results.resize(numElements);
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    results[elemIdx] = particles->position[_elements[elemIdx] + _body[0]->offset];
+    positions.push_back(particles->position[_elements[elemIdx] + _body[0]->offset]);
+    radius.push_back(0.05f);
   }
 }
 

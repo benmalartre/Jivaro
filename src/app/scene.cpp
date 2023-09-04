@@ -503,7 +503,7 @@ Scene::InitExec()
     _solver->AddCollision(new SphereCollision(restitution, friction, m, (float)radius));
   } 
 
-  _solver->AddCollision(new PlaneCollision(0.1f, 1.f, 
+  _solver->AddCollision(new PlaneCollision(1.f, 1.f, 
     pxr::GfVec3f(0.f, 1.f, 0.f),pxr::GfVec3f(0.f, -0.1f, 0.f)));
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
@@ -526,25 +526,24 @@ Scene::InitExec()
     _sourcesMap[bendPath] = sources;
     Curve* curve = AddCurve(bendPath);
 
-    pxr::VtArray<pxr::GfVec3f> positions;
+    pxr::VtArray<pxr::GfVec3f> points;
     pxr::VtArray<pxr::GfVec3f> colors;
     pxr::VtArray<float> radii;
     pxr::VtArray<int> cvCounts;
 
     for (const auto& constraint : constraints) {
-      pxr::VtArray<pxr::GfVec3f> points;
-      constraint->GetPoints(_solver->GetParticles(), points);
+      constraint->GetPoints(_solver->GetParticles(), points, radii);
       pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
       for (auto& point : points) {
-        positions.push_back(point);
-        radii.push_back(0.02f);
+        //positions.push_back(point);
+        //radii.push_back(0.02f);
         colors.push_back(color);
       }
       for (size_t e = 0; e < points.size() / 2; ++e) {
         cvCounts.push_back(2);
       }
     }
-    curve->SetTopology(positions, radii, cvCounts);
+    curve->SetTopology(points, radii, cvCounts);
     //curve->SetColors(&colors[0], colors.size());
   }
 
@@ -584,22 +583,33 @@ Scene::UpdateExec(double time)
   
   pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);
+
+  const size_t numParticles = _solver->GetNumParticles();
+  Geometry* geom;
   
   for (auto& execPrim : _prims) {
     if (execPrim.first.GetNameToken() == pxr::TfToken("Particles")) {
       Points* points = (Points*)GetGeometry(execPrim.first);
-      const size_t numParticles = _solver->GetNumParticles();
+      
       points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
       points->SetColors(&_solver->GetParticles()->color[0], numParticles);
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Collisions")) {
 
       const pxr::VtArray<Constraint*>& contacts = _solver->GetContacts();
+      if (!contacts.size())continue;
       Points* points = (Points*)GetGeometry(execPrim.first);
       const size_t numContacts = contacts.size();
-      /*
-      points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
-      points->SetColors(&_solver->GetParticles()->color[0], numParticles);
-      */
+      pxr::VtArray<pxr::GfVec3f> positions;
+      pxr::VtArray<float> radii;
+      positions.reserve(numParticles);
+      radii.reserve(numParticles);
+      for (auto& contact : contacts) {
+        contact->GetPoints(_solver->GetParticles(), positions, radii);
+      }
+      
+      points->SetPositions(&positions[0], positions.size());
+      points->SetRadii(&radii[0], radii.size());
+      
 
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
       
@@ -610,13 +620,8 @@ Scene::UpdateExec(double time)
       pxr::VtArray<float> radii;
       pxr::VtArray<int> cvCounts;
       for (const auto& constraint : constraints) {
-        pxr::VtArray<pxr::GfVec3f> points;
-        constraint->GetPoints(_solver->GetParticles(), points);
-        for (auto& point : points) {
-          positions.push_back(point);
-          radii.push_back(0.02f);
-        }
-        for (size_t e = 0; e < points.size() / 2; ++e) {
+        constraint->GetPoints(_solver->GetParticles(), positions, radii);
+        for (size_t e = 0; e < positions.size() / 2; ++e) {
           cvCounts.push_back(2);
         }
       }
