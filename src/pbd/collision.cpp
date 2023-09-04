@@ -21,22 +21,26 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
   size_t numBodies = bodies.size();
 
   pxr::VtArray<int> elements;
-  int bodyIdx = 0;
+  _numContacts = 0;
+  size_t numConstraints = 0;
+  int bodyIdx = -1;
   for (size_t index = 0; index < numParticles; ++index) {
     if (CheckHit(index)) {
       if (particles->body[index] != bodyIdx) {
         if (elements.size()) {
-          contacts.push_back(new CollisionConstraint(bodies[particles->body[bodyIdx]], this, elements));
+          contacts.push_back(new CollisionConstraint(bodies[bodyIdx], this, elements));
+          _numContacts += elements.size();
+          numConstraints++;
           elements.clear();
-          bodyIdx = particles->body[index];
-          continue;
-        } 
+        }
         bodyIdx = particles->body[index];
-      }
-      elements.push_back(index - bodies[bodyIdx]->offset);
+      } 
+      elements.push_back(index - bodies[particles->body[index]]->offset);
     }
   } if (elements.size()) {
-    contacts.push_back(new CollisionConstraint(bodies[particles->body[bodyIdx]], this, elements));
+    contacts.push_back(new CollisionConstraint(bodies[bodyIdx], this, elements));
+    _numContacts += elements.size();
+    numConstraints++;
   }
 }
 
@@ -74,7 +78,7 @@ PlaneCollision::PlaneCollision(const float restitution, const float friction,
   : Collision(restitution, friction)
   , _position(position)
   , _normal(normal)
-  , _distance(0.1f)
+  , _distance(distance)
 {
 }
 
@@ -82,18 +86,18 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles)
 {
   if (!Affects(index))return;
   float radius = particles->radius[index];
-  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) + _distance - radius;
-  if (d < 0.0) {
+  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - (radius + _distance);
+  if (d < 0.f) {
     SetHit(index);
   }
 }
 
-pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index, const float dt)
+pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index)
 {
   float radius = particles->radius[index];
-  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) + _distance - radius;
-
-  return _normal * -d * dt;
+  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - radius;
+  if (d < 0.f)return _normal * -d;
+  else return pxr::GfVec3f(0.f);
 }
 
 //----------------------------------------------------------------------------------------
@@ -118,7 +122,7 @@ void SphereCollision::_FindContact(size_t index, Particles* particles)
   }
 }
 
-pxr::GfVec3f SphereCollision::ResolveContact(Particles* particles, size_t index, const float dt)
+pxr::GfVec3f SphereCollision::ResolveContact(Particles* particles, size_t index)
 {
   return pxr::GfVec3f(0.f);
 }

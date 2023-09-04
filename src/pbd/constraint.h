@@ -171,13 +171,10 @@ protected:
   static size_t                 TYPE_ID;
 
   Collision*                    _collision;
-  pxr::VtArray<pxr::GfVec3f>    _normal;
-  pxr::VtArray<float>           _depth;
-
 };
 
-void CreateCollisionConstraint(Body* body, pxr::VtArray<Constraint*>& constraints,
-  float stiffness = -1.f, float damping=0.25f, float restitution=0.2f, float friction=0.2f);
+void CreateCollisionConstraint(Body* body, Collision* collision, pxr::VtArray<Constraint*>& constraints,
+  float stiffness = -1.f, float damping=0.25f);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

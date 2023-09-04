@@ -8,21 +8,23 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   Geometry* geom = b->geometry;
   size_t base = position.size();
   size_t add = geom->GetNumPoints();
-  size_t newSize = base + add;
+  size_t size = base + add;
   size_t index = body.size() ? body.back() + 1 : 0;
+  std::cout << "add body with index : " << index << std::endl;
   float w = pxr::GfIsClose(b->mass, 0.f, 0.0000001f) ? 0.f : 1.f / b->mass;
-  mass.resize(newSize);
-  radius.resize(newSize);
-  rest.resize(newSize);
-  position.resize(newSize);
-  predicted.resize(newSize);
-  velocity.resize(newSize);
-  body.resize(newSize);
-  color.resize(newSize);
+  mass.resize(size);
+  radius.resize(size);
+  rest.resize(size);
+  position.resize(size);
+  predicted.resize(size);
+  velocity.resize(size);
+  body.resize(size);
+  color.resize(size);
 
   const pxr::VtArray<pxr::GfVec3f>& points = geom->GetPositions();
+  pxr::GfVec3f pos;
   for (size_t p = 0; p < add; ++p) {
-    const pxr::GfVec3f pos = m.Transform(points[p]);
+    pos = m.Transform(points[p]);
     size_t idx = base + p;
     mass[idx] = w;
     radius[idx] = b->radius * RANDOM_0_1;
@@ -55,15 +57,15 @@ void Particles::RemoveBody(Body* b)
     color[lhi] = color[rhi];
   }
 
-  size_t newSize = position.size() - shift;
-  mass.resize(newSize);
-  radius.resize(newSize);
-  rest.resize(newSize);
-  position.resize(newSize);
-  predicted.resize(newSize);
-  velocity.resize(newSize);
-  body.resize(newSize);
-  color.resize(newSize);
+  size_t size = position.size() - shift;
+  mass.resize(size);
+  radius.resize(size);
+  rest.resize(size);
+  position.resize(size);
+  predicted.resize(size);
+  velocity.resize(size);
+  body.resize(size);
+  color.resize(size);
   
 }
 

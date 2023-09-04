@@ -389,7 +389,6 @@ void Solver::_StepOneSerial()
 
   // solve and apply constraint
   _SolveConstraints(_constraints, true);
-  std::cout << "contacts size : " << _contacts.size() << std::endl;
   _SolveConstraints(_contacts, true);
 
   // update particles

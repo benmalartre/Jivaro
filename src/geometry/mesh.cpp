@@ -677,10 +677,6 @@ void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs)
     }
     edgeIdx += faceVertexCount;
   }
-
-  std::cout << "get all tri pairs " << std::endl;
-  std::cout << "num tri pairs : " << pairs.size() << std::endl;
-  std::cout << "num tri : " << _triangles.size() << std::endl;
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 

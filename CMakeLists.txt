@@ -12,10 +12,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
 if(WIN32)
-  set(CMAKE_CXX_FLAGS_RELEASE "/O2")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall /Zc:inline-")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:inline-")
 else()
   set(CMAKE_CXX_FLAGS "-Wall -Wextra")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3")
