@@ -246,7 +246,25 @@ void _GenerateSample(pxr::UsdGeomMesh& mesh, pxr::VtArray<Sample>* samples, floa
   ComputeVertexNormals(positions, counts, indices, triangles, normals);
 }
 
-void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatrix4f& m)
+
+pxr::UsdPrim _GenerateSolver(const pxr::SdfPath& path, const pxr::TfToken& name)
+{
+  Application* app = GetApplication();
+  pxr::UsdStageWeakPtr stage = app->GetStage();
+
+
+  pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path.AppendChild(name));
+
+
+  pxr::UsdPrim usdPrim = usdXform.GetPrim();
+  usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(20);
+  usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(0.01f);
+  usdPrim.CreateAttribute(pxr::TfToken("Gravity"), pxr::SdfValueTypeNames->Vector3f).Set(pxr::GfVec3f(0.f, -9.8f, 0.f));
+
+  return usdPrim;
+}
+
+pxr::UsdGeomMesh _GenerateClothMesh(const pxr::SdfPath& path, const pxr::TfToken& name, float size, const pxr::GfMatrix4f& m)
 {
   Application* app = GetApplication();
   pxr::UsdStageWeakPtr stage = app->GetStage();
@@ -254,7 +272,7 @@ void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatri
   Mesh mesh;
   mesh.TriangularGrid2D(10.f, 10.f, m, size);
   //mesh.Randomize(0.1f);
-  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
+  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path.AppendChild(name));
 
   usdMesh.CreatePointsAttr().Set(mesh.GetPositions());
   usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts());
@@ -262,8 +280,12 @@ void _GenerateClothMesh(const pxr::SdfPath& path, float size, const pxr::GfMatri
 
   pxr::UsdPrim usdPrim = usdMesh.GetPrim();
   usdPrim.CreateAttribute(pxr::TfToken("StretchStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
-  usdPrim.CreateAttribute(pxr::TfToken("CompressionStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
   usdPrim.CreateAttribute(pxr::TfToken("BendStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
+
+  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
+  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
+
+  return usdMesh;
 }
 
 pxr::UsdGeomSphere _GenerateCollideSphere(const pxr::SdfPath& path, double radius, const pxr::GfMatrix4f& m)
@@ -281,7 +303,6 @@ pxr::UsdGeomSphere _GenerateCollideSphere(const pxr::SdfPath& path, double radiu
   op.Set(pxr::GfMatrix4d(m));
 
   return usdSphere;
-
 }
 
 static pxr::HdDirtyBits _HairEmit(Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
@@ -403,8 +424,7 @@ Scene::InitExec()
   
   for(size_t x = 0; x < 8; ++x) {
     std::string name = "cloth" + std::to_string(x);
-    pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
-    _GenerateClothMesh(clothPath, size, 
+    _GenerateClothMesh(rootId, pxr::TfToken(name), size,
       matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 5.f, 0.f)));
   }
 
@@ -469,6 +489,10 @@ Scene::InitExec()
   const size_t numParticles = _solver->GetNumParticles();
   points->SetPositions(&particles->position[0], numParticles);
   points->SetRadii(&particles->radius[0], numParticles);
+
+  pxr::SdfPath collisionsPath(rootId.AppendChild(pxr::TfToken("Collisions")));
+  _sourcesMap[collisionsPath] = sources;
+  Points* collisions = AddPoints(collisionsPath);
 
   pxr::VtArray<Constraint*> constraints;
   _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
@@ -543,6 +567,16 @@ Scene::UpdateExec(double time)
       const size_t numParticles = _solver->GetNumParticles();
       points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
       points->SetColors(&_solver->GetParticles()->color[0], numParticles);
+    } else if (execPrim.first.GetNameToken() == pxr::TfToken("Collisions")) {
+
+      const pxr::VtArray<Constraint*>& contacts = _solver->GetContacts();
+      Points* points = (Points*)GetGeometry(execPrim.first);
+      const size_t numContacts = contacts.size();
+      /*
+      points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
+      points->SetColors(&_solver->GetParticles()->color[0], numParticles);
+      */
+
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
       
       pxr::VtArray<Constraint*> constraints;

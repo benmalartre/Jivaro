@@ -57,6 +57,8 @@ public:
   // collisions
   void AddCollision(Collision* collision) { _collisions.push_back(collision); };
   Collision* GetCollision(size_t idx = 0) { return _collisions[idx]; };
+  pxr::VtArray<Constraint*>& GetContacts() { return _contacts; };
+  const pxr::VtArray<Constraint*>& GetContacts() const { return _contacts; };
 
   // particles
   Particles* GetParticles() { return &_particles; };
@@ -70,9 +72,10 @@ public:
   void Step(bool serial=false);
 
 private:
+  void _ClearContacts();
   void _FindContacts(bool serial = false);
-  void _ResolveCollisions(bool serial=false);
-  void _UpdateCollisions(bool serial=false);
+  void _SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial=false);
+
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);
   void _StepOneSerial();

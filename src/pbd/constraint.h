@@ -17,6 +17,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 struct Particles;
 struct Body;
+class Collision;
 
 class Constraint
 {
@@ -59,7 +60,6 @@ protected:
   float _ComputeLagrangeMultiplier(Particles* particles, size_t index=0);
   void _ResetCorrection();
   
-
   virtual float _CalculateValue(Particles* particles, size_t index) = 0;
   virtual void _CalculateGradient(Particles* particles, size_t index) = 0;
 
@@ -150,27 +150,34 @@ void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraint
 class CollisionConstraint : public Constraint
 {
 public:
-  CollisionConstraint(Body* body, const pxr::VtArray<int>& elems,
-    float stiffness = 0.1f, float damping=0.05f);
+  CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
+    float stiffness = -1.f, float damping=0.25f, float restitution=0.2f, float friction=0.2f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
+  virtual bool Solve(Particles* particles, const float dt) override;
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results) override;
+
+  // this one has to be called serially 
+  // as two constraints can move the same point
+  virtual void Apply(Particles* particles) override;
 
   static size_t                 ELEM_SIZE;
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
+  float _CalculateValue(Particles* particles, size_t index) override { return 0.f; };
+  void _CalculateGradient(Particles * particles, size_t index) override {};
   static size_t                 TYPE_ID;
+
+  Collision*                    _collision;
   pxr::VtArray<pxr::GfVec3f>    _normal;
   pxr::VtArray<float>           _depth;
 
 };
 
 void CreateCollisionConstraint(Body* body, pxr::VtArray<Constraint*>& constraints,
-  float stiffness = 0.5f, float damping=0.05f);
+  float stiffness = -1.f, float damping=0.25f, float restitution=0.2f, float friction=0.2f);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

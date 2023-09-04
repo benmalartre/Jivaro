@@ -291,23 +291,24 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   }
 }
 
+void Solver::_ClearContacts()
+{
+  for (auto& contact : _contacts)delete contact;
+  _contacts.clear();
+}
+
 void Solver::_FindContacts(bool serial)
 {
-  
+  _ClearContacts();
   if (serial) {
     for (auto& collision : _collisions) {
-      collision->FindContactsSerial(&_particles, _bodies);
+      collision->FindContactsSerial(&_particles, _bodies, _contacts);
     }
   } else {
     for (auto& collision : _collisions) {
-      collision->FindContacts(&_particles, _bodies);
+      collision->FindContacts(&_particles, _bodies, _contacts);
     }
   }
-}
-
-void Solver::_UpdateCollisions(bool serial)
-{
-
 }
 
 void Solver::_UpdateParticles(size_t begin, size_t end)
@@ -363,6 +364,22 @@ static _T REMOVE_EDGE_AVG_T = { 0,0 };
 static _T REMOVE_POINT_AVG_T = { 0,0 };
 
 
+void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial)
+{
+  if (serial) {
+    // solve constraints
+    for (auto& constraint : constraints)constraint->Solve(&_particles, _stepTime);
+    // apply result
+    for (auto& constraint : constraints)constraint->Apply(&_particles);
+  } else {
+    // solve constraints
+    pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
+      [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
+    // apply constraint serially
+    for (auto& constraint : constraints)constraint->Apply(&_particles);
+  }
+}
+
 void Solver::_StepOneSerial()
 {
   const size_t numParticles = _particles.GetNumParticles();
@@ -370,18 +387,14 @@ void Solver::_StepOneSerial()
   // integrate particles
   _IntegrateParticles(0, numParticles);
 
-  // solve constraints
-  for (auto& constraint : _constraints)constraint->Solve(&_particles, _stepTime);
-  for (auto& constraint : _constraints)constraint->Apply(&_particles);
-
-  // solve collisions
-  //_ResolveCollisions(false);
+  // solve and apply constraint
+  _SolveConstraints(_constraints, true);
+  std::cout << "contacts size : " << _contacts.size() << std::endl;
+  _SolveConstraints(_contacts, true);
 
   // update particles
   _UpdateParticles(0, numParticles);
 
-  // solve collisions
-  _UpdateCollisions(true);
 }
 
 void Solver::_StepOne()
@@ -394,15 +407,9 @@ void Solver::_StepOne()
     std::bind(&Solver::_IntegrateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
-  // solve constraints
-  pxr::WorkParallelForEach(_constraints.begin(), _constraints.end(),
-    [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
-
-  // apply constraint serially
-  for (auto& constraint : _constraints)constraint->Apply(&_particles);
-
-  // solve collisions
-  //_ResolveCollisions(false);
+  // solve and apply constraint
+  _SolveConstraints(_constraints, false);
+  _SolveConstraints(_contacts, false);
 
   // update particles
   pxr::WorkParallelForN(
@@ -410,8 +417,6 @@ void Solver::_StepOne()
     std::bind(&Solver::_UpdateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
-  // update velocities
-  _UpdateCollisions(false);
 
 }
 

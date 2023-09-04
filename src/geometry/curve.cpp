@@ -184,12 +184,12 @@ Curve::SetTopology(
 void 
 Curve::SetTopology(
   const pxr::VtArray<pxr::GfVec3f>& positions,
-  const pxr::VtArray<float>& radius,
+  const pxr::VtArray<float>& radii,
   const pxr::VtArray<int>& cvCounts)
 {
   _positions = positions;
   _normals = positions;
-  _radius = radius;
+  _radius = radii;
   _cvCounts = cvCounts;
 }
 

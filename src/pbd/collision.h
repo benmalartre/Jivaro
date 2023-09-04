@@ -44,12 +44,12 @@ public:
   void RemoveBody(Particles* particles, Body* body);
   */
 
-  size_t GetNumContacts() { return _contacts.size(); };
-  const pxr::VtArray<Constraint*>& GetContacts() const { return _contacts; };
-  pxr::VtArray<Constraint*>& GetContacts() { return _contacts; };
+  virtual void FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
+    pxr::VtArray<Constraint*>& constraints);
+  virtual void FindContactsSerial(Particles* particles, const pxr::VtArray<Body*>& bodies,
+    pxr::VtArray<Constraint*>& constraint);
 
-  virtual void FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies);
-  virtual void FindContactsSerial(Particles* particles, const pxr::VtArray<Body*>& bodies);
+  virtual pxr::GfVec3f ResolveContact(Particles* particles, size_t index, const float dt) = 0;
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
@@ -61,13 +61,13 @@ public:
 
 protected:
   virtual void _ResetContacts(Particles* particles);
-  virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies);
+  virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
+    pxr::VtArray<Constraint*>& contacts);
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles);
   
   virtual void _FindContact(size_t index, Particles* particles) = 0;
 
   pxr::VtArray<int>           _hits;        // hits encode vertex hit in the int list bits
-  pxr::VtArray<Constraint*>   _contacts;    // flat list of contact constraints
 
   float                       _restitution;
   float                       _friction;
@@ -79,6 +79,8 @@ public:
   PlaneCollision(const float restitution=0.5f, const float friction= 0.5f,
     const pxr::GfVec3f& normal=pxr::GfVec3f(0.f, 1.f, 0.f), 
     const pxr::GfVec3f& position = pxr::GfVec3f(0.f), const float distance=0.f);
+
+  pxr::GfVec3f ResolveContact(Particles* particles, size_t index, const float dt) override;
 
   inline void Set(const pxr::GfVec3f& position, const pxr::GfVec3f& normal);
   inline void SetPosition(const pxr::GfVec3f& position);
@@ -121,6 +123,8 @@ class SphereCollision : public Collision
 public:
   SphereCollision(const float restitution=0.5f, const float friction= 0.5f,
     const pxr::GfMatrix4f& xform=pxr::GfMatrix4f(1.f), float radius=1.f);
+
+  pxr::GfVec3f ResolveContact(Particles* particles, size_t index, const float dt) override;
 
   inline void Set(const pxr::GfMatrix4f& xform, const float radius);
   inline void SetXform(const pxr::GfMatrix4f& xform);
