@@ -87,7 +87,6 @@ void Constraint::Solve(Particles* particles, float dt)
   }
 }
 
-
 void Constraint::_ResetCorrection()
 {
   memset(&_correction[0], 0.f, _correction.size() * sizeof(pxr::GfVec3f));
@@ -504,22 +503,23 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
   const size_t offset = _body[0]->offset;
+
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
     _correction[elemIdx] = 
       _collision->ResolveContact(particles, _elements[elemIdx] + offset);
   }
 }
 
-void CollisionConstraint::UpdateVelocity(Particles* particles, float invDt)
+void CollisionConstraint::UpdateVelocity(Particles* particles, float dt)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
   const size_t offset = _body[0]->offset;
-  pxr::GfVec3f correction;
   size_t partIdx;
+
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
     partIdx = _elements[elemIdx] + offset;
-    correction = _collision->ResolveVelocity(particles, partIdx) /** invDt*/;
-    particles->velocity[partIdx] += correction;
+    particles->velocity[partIdx] += 
+      _collision->ResolveVelocity(particles, _correction[elemIdx].GetLength(), partIdx) * dt;
   }
 }
 

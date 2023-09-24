@@ -193,7 +193,7 @@ void Solver::AddConstraints(Body* body)
 {
   // 0.1, 0.01, 0.001, 0.0001, 0.00001
   static float __stretchStiffness = 5000.f;
-  static float __bendStiffness = 0.001f;// 0.0001f;
+  static float __bendStiffness = 1.f;// 0.0001f;
   static float __damping = 0.f;
 
 
@@ -302,11 +302,11 @@ void Solver::_FindContacts(bool serial)
   _ClearContacts();
   if (serial) {
     for (auto& collision : _collisions) {
-      collision->FindContactsSerial(&_particles, _bodies, _contacts, _stepTime);
+      collision->FindContactsSerial(&_particles, _bodies, _contacts, _frameTime);
     }
   } else {
     for (auto& collision : _collisions) {
-      collision->FindContacts(&_particles, _bodies, _contacts, _stepTime);
+      collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
     }
   }
 }
@@ -319,16 +319,10 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   pxr::GfVec3f* velocity = &_particles.velocity[0];
 
   float invDt = 1.f / _stepTime;
-  float threshold2 = _sleepThreshold * _stepTime;
-  threshold2 *= threshold2;
 
   for(size_t index = begin; index < end; ++index) {
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
-    const float m = velocity[index].GetLengthSq();
-    
-    if (m < threshold2)
-      velocity[index] = pxr::GfVec3f(0.f);
 
     // update position
     position[index] = predicted[index];
@@ -337,9 +331,10 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 
 void Solver::_UpdateVelocities(size_t begin, size_t end)
 {
+  const float dt2 = _stepTime * _stepTime;
   const float invDt = 1.f / _stepTime;
   for (size_t index = begin; index < end; ++index) {
-    _contacts[index]->UpdateVelocity(&_particles, invDt);
+    _contacts[index]->UpdateVelocity(&_particles, 1.f);
   }
 }
 
@@ -403,6 +398,7 @@ void Solver::_StepOneSerial()
   // update particles
   _UpdateParticles(0, numParticles);
   _UpdateVelocities(0, numContacts);
+  
 
 }
 

@@ -51,7 +51,6 @@ void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, fl
   }
 }
 
-
 void Collision::FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies, 
   pxr::VtArray<Constraint*>& contacts, float dt)
 {
@@ -99,10 +98,10 @@ pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index)
   else return pxr::GfVec3f(0.f);
 }
 
-pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, size_t index)
+pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, float depth, size_t index)
 {
-  return _normal * _restitution * (particles->predicted[index] - particles->position[index]).GetLength() + 
-    pxr::GfVec3f(-particles->velocity[index][0], 0.f, -particles->velocity[index][2]) * _friction;
+  pxr::GfVec3f tangent(-particles->velocity[index][0], 0.f, -particles->velocity[index][2]);
+  return _normal * _restitution * depth + tangent * _friction;
 }
 
 //----------------------------------------------------------------------------------------
@@ -121,7 +120,7 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
 {
   if (!Affects(index))return;
   const float radius2 = _radius * _radius;
-  const pxr::GfVec3f local = _invXform.Transform(particles->predicted[index] + particles->velocity[index] * dt);
+  const pxr::GfVec3f local = _invXform.Transform(particles->predicted[index] + particles->velocity[index] * dt * 2.f);
   if (local.GetLengthSq() < radius2) {
     SetHit(index);
   }
@@ -132,7 +131,7 @@ pxr::GfVec3f SphereCollision::ResolveContact(Particles* particles, size_t index)
   return pxr::GfVec3f(0.f);
 }
 
-pxr::GfVec3f SphereCollision::ResolveVelocity(Particles* particles, size_t index)
+pxr::GfVec3f SphereCollision::ResolveVelocity(Particles* particles, float depth, size_t index)
 {
   return pxr::GfVec3f(0.f);
 }

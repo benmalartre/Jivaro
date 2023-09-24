@@ -518,6 +518,7 @@ Scene::InitExec()
   _sourcesMap[collisionsPath] = sources;
   Points* collisions = AddPoints(collisionsPath);
 
+  /*
   pxr::VtArray<Constraint*> constraints;
   _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
   if (constraints.size()) {
@@ -546,6 +547,8 @@ Scene::InitExec()
     curve->SetTopology(points, radii, cvCounts);
     //curve->SetColors(&colors[0], colors.size());
   }
+  */
+
 
   /*
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
@@ -612,7 +615,7 @@ Scene::UpdateExec(double time)
       
 
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
-      
+      /*
       pxr::VtArray<Constraint*> constraints;
       _solver->GetConstraintsByType(Constraint::STRETCH, constraints);
       Curve* curve = (Curve*)GetGeometry(execPrim.first);
@@ -621,11 +624,12 @@ Scene::UpdateExec(double time)
       pxr::VtArray<int> cvCounts;
       for (const auto& constraint : constraints) {
         constraint->GetPoints(_solver->GetParticles(), positions, radii);
-        for (size_t e = 0; e < positions.size() / 2; ++e) {
-          cvCounts.push_back(2);
-        }
+      }
+      for (size_t e = 0; e < positions.size() / 2; ++e) {
+        cvCounts.push_back(2);
       }
       curve->SetTopology(positions, radii, cvCounts);
+      */
     }
 
     execPrim.second.bits = /*pxr::HdChangeTracker::DirtyTopology;*/
