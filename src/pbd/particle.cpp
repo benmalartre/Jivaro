@@ -1,4 +1,5 @@
 #include "../geometry/geometry.h"
+#include "../geometry/points.h"
 #include "../pbd/particle.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -20,19 +21,23 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   body.resize(size);
   color.resize(size);
 
-  const pxr::VtArray<pxr::GfVec3f>& points = geom->GetPositions();
-  pxr::GfVec3f pos;
-  for (size_t p = 0; p < add; ++p) {
-    pos = m.Transform(points[p]);
-    size_t idx = base + p;
-    mass[idx] = w;
-    radius[idx] = b->radius;
-    rest[idx] = pos;
-    position[idx] = pos;
-    predicted[idx] = pos;
-    velocity[idx] = pxr::GfVec3f(0.f);
-    body[idx] = index;
-    color[idx] = b->wirecolor;
+  if(geom->GetType() >= Geometry::POINT) {
+    const pxr::VtArray<pxr::GfVec3f>& points = ((Points*)geom)->GetPositions();
+    pxr::GfVec3f pos;
+    for (size_t p = 0; p < add; ++p) {
+      pos = m.Transform(points[p]);
+      size_t idx = base + p;
+      mass[idx] = w;
+      radius[idx] = b->radius;
+      rest[idx] = pos;
+      position[idx] = pos;
+      predicted[idx] = pos;
+      velocity[idx] = pxr::GfVec3f(0.f);
+      body[idx] = index;
+      color[idx] = b->wirecolor;
+    }
+  } else {
+    // TODO implement implicit geometries here
   }
 }
 

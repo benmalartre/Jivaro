@@ -6,9 +6,17 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 //-------------------------------------------------------
+// Point Radius
+//-------------------------------------------------------
+float Point::GetRadius(Points* geom)
+{
+  return geom->GetRadius(id);
+}
+
+//-------------------------------------------------------
 // Point Position
 //-------------------------------------------------------
-pxr::GfVec3f Point::GetPosition(Geometry* geom)
+pxr::GfVec3f Point::GetPosition(Points* geom)
 {
   return geom->GetPosition(id);
 }
@@ -16,7 +24,7 @@ pxr::GfVec3f Point::GetPosition(Geometry* geom)
 //-------------------------------------------------------
 // Point Normal
 //-------------------------------------------------------
-pxr::GfVec3f Point::GetNormal(Geometry* geom)
+pxr::GfVec3f Point::GetNormal(Points* geom)
 {
   pxr::GfVec3f normal = pxr::GfVec3f(0.f, 1.f, 0.f);
   switch(geom->GetType()) {

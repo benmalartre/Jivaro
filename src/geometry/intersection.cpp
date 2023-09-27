@@ -35,7 +35,7 @@ Hit::GetPosition(Geometry* geometry) const
     {
       Mesh* mesh = (Mesh*)geometry;
 
-      Triangle* triangle = mesh->GetTriangle(_elemId);
+      const Triangle* triangle = mesh->GetTriangle(_elemId);
       const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
       return pxr::GfVec3f( 
         pxr::GfVec3f(positions[triangle->vertices[0]]) * _coords[0] +

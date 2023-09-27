@@ -10,22 +10,18 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Geometry;
+class Points;
 class Hit;
 struct Point : public Component {
 
   Point()
-    : Component()
-    , radius(1.f) {};
-  Point(uint32_t index, float radius = 1.f)
-    : Component(index)
-    , radius(radius) {};
+    : Component(){};
+  Point(uint32_t index)
+    : Component(index){};
 
-  float radius;
-
-  float GetRadius(){return radius;};
-  pxr::GfVec3f GetPosition(Geometry* geom);
-  pxr::GfVec3f GetNormal(Geometry* geom);
+  float GetRadius(Points* geom);
+  pxr::GfVec3f GetPosition(Points* geom);
+  pxr::GfVec3f GetNormal(Points* geom);
   
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;

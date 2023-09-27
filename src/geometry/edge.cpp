@@ -9,7 +9,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 // Edge Center
 //-------------------------------------------------------
 pxr::GfVec3f 
-Edge::GetCenter(Geometry* geom)
+Edge::GetCenter(Points* geom)
 {
   return (geom->GetPosition(vertices[0]) + geom->GetPosition(vertices[1])) * 0.5f;
 }
@@ -18,7 +18,7 @@ Edge::GetCenter(Geometry* geom)
 // Edge Point Position
 //-------------------------------------------------------
 pxr::GfVec3f 
-Edge::GetPosition(Geometry* geom, short idx)
+Edge::GetPosition(Points* geom, short idx)
 {
   return geom->GetPosition(vertices[idx]%2);
 }
@@ -27,7 +27,7 @@ Edge::GetPosition(Geometry* geom, short idx)
 // Point Normal
 //-------------------------------------------------------
 pxr::GfVec3f 
-Edge::GetNormal(Geometry* geom)
+Edge::GetNormal(Points* geom)
 {
   pxr::GfVec3f normal(0.f,1.f,0.f);
   switch(geom->GetType()) {

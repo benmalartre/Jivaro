@@ -1,6 +1,7 @@
 #include <unordered_map>
 #include "../acceleration/hashGrid.h"
 #include "../geometry/geometry.h"
+#include "../geometry/points.h"
 #include "../utils/color.h"
 #include "../utils/timer.h"
 
@@ -32,16 +33,20 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
   size_t elemIdx = 0;
   for (size_t geomIdx = 0; geomIdx < geometries.size(); ++geomIdx) {
     const Geometry* geometry = geometries[geomIdx];
-    _points[geomIdx] = geometry->GetPositionsCPtr();
-    size_t numPoints = geometry->GetNumPoints();
-    const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
-    for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-      hashes[elemIdx] = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
-      _mapping[elemIdx] = _ComputeElementKey(geomIdx, pointIdx);
-      _cellStart[hashes[elemIdx]]++;
-      elemIdx++;
+    if(geometry->GetType() >= Geometry::POINT) {
+      Points* geom = (Points*)geometry;
+      _points[geomIdx] = geom->GetPositionsCPtr();
+      size_t numPoints = geom->GetNumPoints();
+      const pxr::GfVec3f* points = geom->GetPositionsCPtr();
+      for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+        hashes[elemIdx] = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
+        _mapping[elemIdx] = _ComputeElementKey(geomIdx, pointIdx);
+        _cellStart[hashes[elemIdx]]++;
+        elemIdx++;
+      }
+    } else {
+      // TODO implement implicit geometry insertion here
     }
-    geomIdx++;
   }
 
   size_t start = 0;

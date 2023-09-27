@@ -15,18 +15,14 @@
 
 #include <float.h>
 #include "../geometry/triangle.h"
-#include "../geometry/geometry.h"
+#include "../geometry/points.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 struct Sample;
-struct CurveLocation {
-  uint32_t  cid;      // curve index
-  uint32_t  sid;      // segment index
-  float     u;        // u along segment
-};
+class CurveLocation;
 
-class Curve : public Geometry {
+class Curve : public Points {
 public:
   Curve();
   Curve(const Curve* other, bool normalize = true);
@@ -87,6 +83,28 @@ private:
   // curves description
   pxr::VtArray<int>                   _cvCounts;
 
+};
+
+class CurveLocation : public Location {
+public:
+  void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
+    bool worldSpace=true) const override;
+  void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
+    bool worldSpace=true) const override;
+
+  void Set(uint32_t cid, uint32_t sid, float u) {
+    _cid = cid;
+    _sid = sid;
+    _u = u;
+  };
+  void SetCurveIndex(uint32_t cid) {_cid = cid;};
+  void SetSegmentIndex(uint32_t sid) {_sid = sid;};
+  void SetU(float u) {_u = u;};
+
+private:
+  uint32_t  _cid;      // curve index
+  uint32_t  _sid;      // segment index
+  float     _u;        // u along segment
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

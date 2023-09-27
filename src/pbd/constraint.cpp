@@ -109,8 +109,12 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
   float stiffness, float damping)
   : Constraint(ELEM_SIZE, body, stiffness, damping, elems)
 {
+  if(body->geometry->GetType() < Geometry::POINT) {
+    // TODO add warning message here
+    return;
+  }
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
-  const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
+  const pxr::GfVec3f* positions = ((Points*)body->geometry)->GetPositionsCPtr();
   size_t numElements = _elements.size() / ELEM_SIZE;
   _rest.resize(numElements);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
@@ -210,7 +214,11 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
   float stiffness, float damping)
   : Constraint(ELEM_SIZE, body, stiffness, damping, elems)
 {
-  const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
+  if(body->geometry->GetType() < Geometry::POINT) {
+    // TODO add warning message here
+    return;
+  }
+  const pxr::GfVec3f* positions = ((Points*)body->geometry)->GetPositionsCPtr();
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
 
   size_t numElements = _elements.size() / ELEM_SIZE;
@@ -346,7 +354,11 @@ DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<int>& elem
   float stiffness, float damping)
   : Constraint(ELEM_SIZE, body, stiffness, damping, elems)
 {
-  const pxr::GfVec3f* positions = body->geometry->GetPositionsCPtr();
+  if(body->geometry->GetType() < Geometry::POINT) {
+    // TODO add warning message here
+    return;
+  }
+  const pxr::GfVec3f* positions = ((Points*)body->geometry)->GetPositionsCPtr();
   const pxr::GfMatrix4d& m = body->geometry->GetMatrix();
   const size_t numElements = _elements.size() / ELEM_SIZE;
   const size_t offset = body->offset;

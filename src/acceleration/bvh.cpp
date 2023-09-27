@@ -293,7 +293,7 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geom
 {
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
-  const pxr::GfVec3f* points = geometry->GetPositionsCPtr();
+  const pxr::GfVec3f* points = mesh->GetPositionsCPtr();
 
   pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
   leaves.reserve(trianglePairs.size());

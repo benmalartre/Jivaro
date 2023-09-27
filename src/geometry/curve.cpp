@@ -7,13 +7,13 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Curve::Curve()
-  : Geometry(Geometry::CURVE, pxr::GfMatrix4d(1.0))
+  : Points(Geometry::CURVE, pxr::GfMatrix4d(1.0))
 {
   _initialized = false;
 }
 
 Curve::Curve(const Curve* other, bool normalize)
-  : Geometry(other, Geometry::CURVE, normalize)
+  : Points(other, normalize)
 {
   _initialized = true;
 
@@ -25,7 +25,7 @@ Curve::Curve(const Curve* other, bool normalize)
 }
 
 Curve::Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world)
-  : Geometry(Geometry::CURVE, world)
+  : Points(Geometry::CURVE, world)
 {
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
@@ -220,6 +220,46 @@ Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
     _radius[s * 4 + 2] = width * 0.4;
     _radius[s * 4 + 3] = width * 0.2;
   }
+}
+
+void
+CurveLocation::GetPosition(const Geometry* geom, 
+  pxr::GfVec3f* pos, bool worldSpace) const
+{
+  if(geom->GetType() != Geometry::CURVE) return;
+  
+  const Curve* curve = (const Curve*)geom;
+  /*
+  const Triangle* T = mesh->GetTriangle(_id);
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+
+  for(uint32_t i = 0; i < 3; ++i) 
+    *pos += positions[T->vertices[i]] * _baryCoords[i];
+
+  if(worldSpace) {
+    mesh->GetMatrix().Transform(*pos);
+  }
+  */
+}
+
+void
+CurveLocation::GetNormal(const Geometry* geom,
+  pxr::GfVec3f* nrm, bool worldSpace) const
+{
+  if(geom->GetType() != Geometry::CURVE) return;
+  
+  const Curve* curve = (const Curve*)geom;
+  /*
+  const Triangle* T = mesh->GetTriangle(_id);
+  const pxr::GfVec3f* normals = mesh->GetNormalsCPtr();
+
+  for(uint32_t i=0;i<3;i++) 
+    *nrm += normals[T->vertices[i]] * _baryCoords[i];
+
+  if(worldSpace) {
+    mesh->GetMatrix().TransformDir(*nrm);
+  }
+  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

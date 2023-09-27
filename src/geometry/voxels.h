@@ -6,16 +6,16 @@
 #include <pxr/base/vt/array.h>
 #include "../common.h"
 #include "../acceleration/bvh.h"
-#include "../geometry/geometry.h"
+#include "../geometry/points.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Geometry;
+class Points;
 
-class Voxels : public Geometry {
+class Voxels : public Points {
 public:
   Voxels();
-  void Init(Geometry* geometry, float radius);
+  void Init(Points* geometry, float radius);
   void Trace(short axis);
   void Proximity();
   void Build();
@@ -44,7 +44,7 @@ private:
 
   pxr::GfVec3i            _resolution;
   std::vector<uint8_t>    _data;
-  Geometry*               _geometry;
+  Points*                 _geometry;
   BVH                     _bvh;
   float                   _radius;
 };

@@ -134,13 +134,17 @@ void OctreeIntersector::Cell::BuildTree(Component* components, size_t num, Geome
 {
   ClearTree();
     
+  if(geometry->GetType() < Geometry::POINT) {
+    // TODO add warning message here
+    return;
+  }
   // loop over all elements, insert all leaves to the tree
   for(size_t i = 0; i < num; ++i)
   {
     Insert(&components[i]);
   }
     
-  Split(geometry->GetPositionsCPtr());
+  Split(((Points*)geometry)->GetPositionsCPtr());
 }
 
 // split tree

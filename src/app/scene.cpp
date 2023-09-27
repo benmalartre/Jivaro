@@ -146,14 +146,19 @@ pxr::GfRange3d
 Scene::GetExtent(pxr::SdfPath const& id)
 {
   pxr::GfRange3d range;
-  pxr::VtVec3fArray points;
   if (_prims.find(id) != _prims.end()) {
-    points = _prims[id].geom->GetPositions();
+    if(_prims[id].geom->GetType() < Geometry::POINT) {
+      // TODO implicit geometry handling
+    } else {
+      const pxr::VtVec3fArray& points = 
+        ((Points*)_prims[id].geom)->GetPositions();
+      TF_FOR_ALL(it, points) {
+        range.UnionWith(*it);
+      }
+    }
   }
  
-  TF_FOR_ALL(it, points) {
-    range.UnionWith(*it);
-  }
+  
   return range;
 }
 
@@ -195,21 +200,38 @@ pxr::VtValue
 Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
   if (key == pxr::HdTokens->points) {
-    return pxr::VtValue(_prims[id].geom->GetPositions());
+    if(_prims[id].geom->GetType() < Geometry::POINT) {
+      // TODO implicit geometry handling
+      return pxr::VtValue();
+    } else {
+      return pxr::VtValue(((Points*)_prims[id].geom)->GetPositions());
+    }
   } else if (key == pxr::HdTokens->displayColor) {
-    //std::cout << "delegate get display color for " << id << std::endl;
-    pxr::VtArray<pxr::GfVec3f>& colors(_prims[id].geom->GetColors());
-    //std::cout << "num colors : " << colors.size() << std::endl;
-    if(colors.size())
-      return pxr::VtValue(colors);
-    else {
-      const pxr::GfVec3f& wirecolor = _prims[id].geom->GetWirecolor();
-      //std::cout << "use wire color : " << wirecolor << std::endl;
-      colors = { wirecolor };
-      return pxr::VtValue(colors);
+    if(_prims[id].geom->GetType() < Geometry::POINT) {
+      // TODO implicit geometry handling
+      return pxr::VtValue();
+    } else {
+      //std::cout << "delegate get display color for " << id << std::endl;
+      pxr::VtArray<pxr::GfVec3f>& colors = 
+        ((Points*)_prims[id].geom)->GetColors();
+      //std::cout << "num colors : " << colors.size() << std::endl;
+      if(colors.size())
+        return pxr::VtValue(colors);
+      else {
+        const pxr::GfVec3f& wirecolor = _prims[id].geom->GetWirecolor();
+        //std::cout << "use wire color : " << wirecolor << std::endl;
+        colors = { wirecolor };
+        return pxr::VtValue(colors);
+      }
     }
   } else if (key == pxr::HdTokens->widths) {
-    return pxr::VtValue(_prims[id].geom->GetRadius());
+    if(_prims[id].geom->GetType() < Geometry::POINT) {
+      // TODO implicit geometry handling
+      return pxr::VtValue();
+    } else {
+      return pxr::VtValue(((Points*)_prims[id].geom)->GetRadius());
+    }
+    
   }
   return pxr::VtValue();
 }

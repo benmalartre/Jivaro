@@ -15,18 +15,27 @@
 
 #include "../common.h"
 #include "../geometry/triangle.h"
-#include "../geometry/geometry.h"
+#include "../geometry/points.h"
 #include "../geometry/halfEdge.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-struct Location {
-  Geometry*             geometry;      // geometry ptr
-  uint32_t              id;            // element index
-  pxr::GfVec3f          baryCoords;    // barycentric coordinates
+class MeshLocation : public Location {
+public:
+  void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
+    bool worldSpace=true) const override;
+  void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
+    bool worldSpace=true) const override;
+
+  void SetBaryCoords(const pxr::GfVec3f& coords) {_baryCoords = coords;};
+  void SetId(int id) {_id = id;};
+
+private:
+  uint32_t              _id;            // triangle index
+  pxr::GfVec3f          _baryCoords;    // barycentric coordinates
 };
 
-class Mesh : public Geometry {
+class Mesh : public Points {
 public:
   enum Flag {
     NEIGHBORS     = 1 << 0,
@@ -57,9 +66,9 @@ public:
   const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
   void ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors);
   
-  pxr::GfVec3f GetPosition(const Location& point) const ;
-  pxr::GfVec3f GetNormal(const Location& point) const;
-  Triangle* GetTriangle(uint32_t index){return &_triangles[index];};
+  //pxr::GfVec3f GetPosition(const Location& point) const ;
+  //pxr::GfVec3f GetNormal(const Location& point) const;
+  const Triangle* GetTriangle(uint32_t index) const {return &_triangles[index];};
   pxr::VtArray<Triangle>& GetTriangles(){return _triangles;};
   pxr::VtArray<TrianglePair>& GetTrianglePairs();
 
@@ -112,7 +121,7 @@ public:
 
   void Inflate(uint32_t index, float value);
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
-    const pxr::GfVec3f& direction, Location& point, float maxDistance);
+    const pxr::GfVec3f& direction, MeshLocation& location, float maxDistance);
 
   // test (to be removed)
   void Random2DPattern(size_t numFaces);

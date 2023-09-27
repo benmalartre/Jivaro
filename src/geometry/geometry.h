@@ -26,10 +26,15 @@ enum GeomInterpolation : short {
 };
 
 class Hit;
+
 class Geometry {
 public:
   enum Type {
     INVALID,
+    SPHERE,
+    CUBE,
+    CONE, 
+    CAPSULE,
     POINT,
     CURVE,
     MESH,
@@ -43,58 +48,16 @@ public:
   Geometry(const Geometry* other, short type, bool normalize);
   virtual ~Geometry() {};
 
-  short GetType() { return _type; };
-
-  bool HasNormals() const { return _normals.size() > 0; };
-  bool HasColors() const { return _colors.size() > 0; };
-  bool HasRadius() const { return _radius.size() > 0; };
-
-  const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
-  const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _positions;};
-  const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normals;};
-  const pxr::VtArray<pxr::GfVec3f>& GetColors() const { return _colors; };
-  const pxr::VtArray<float>& GetRadius() const { return _radius; };
-
-  pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _positions;};
-  pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normals;};
-  pxr::VtArray<pxr::GfVec3f>& GetColors() { return _colors; };
-  pxr::VtArray<float>& GetRadius() { return _radius; };
-
-  pxr::GfVec3f* GetPositionsPtr() { return &_positions[0]; };
-  pxr::GfVec3f* GetNormalsPtr() { return &_normals[0]; };
-  pxr::GfVec3f* GetColorsPtr() { return &_colors[0]; };
-  float* GetRadiusPtr() { return &_radius[0]; };
-
-  const pxr::GfVec3f* GetPositionsCPtr() const {return &_positions[0];};
-  const pxr::GfVec3f* GetNormalsCPtr() const {return &_normals[0];};
-  const pxr::GfVec3f* GetColorsCPtr() const { return &_colors[0]; };
-  const float* GetRadiusCPtr() const { return &_radius[0]; };
-
-  pxr::GfVec3f GetPosition(uint32_t index) const;
-  pxr::GfVec3f GetNormal(uint32_t index) const;
-  pxr::GfVec3f GetColor(uint32_t index)const;
-  float GetRadius(uint32_t index) const;
-
-  void SetPosition(uint32_t index, const pxr::GfVec3f& position);
-  void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
-  void SetRadius(uint32_t index, float normal);
-  void SetMatrix(const pxr::GfMatrix4d& matrix) { _matrix = matrix; };
-
-  size_t GetNumPoints()const {return _positions.size();};
-  const pxr::GfMatrix4d& GetMatrix() const { return _matrix; };
-
-  void AddPoint(const pxr::GfVec3f& pos);
-  void RemovePoint(size_t index);
-
-  void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
-  void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
+  short GetType() const { return _type; };
+  virtual size_t GetNumPoints() const {return 1;};
 
   void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
-  void SetPositions(const pxr::GfVec3f* positions, size_t n);
-  void SetRadii(const float* radii, size_t n);
-  void SetColors(const pxr::GfVec3f* colors, size_t n);
-  void Normalize();
-  void ComputeBoundingBox();
+  const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
+
+  void SetMatrix(const pxr::GfMatrix4d& matrix) { _matrix = matrix; };
+  const pxr::GfMatrix4d& GetMatrix() const { return _matrix; };
+
+  virtual void ComputeBoundingBox() = 0;
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
   const pxr::GfBBox3d& GetBoundingBox() const { return _bbox; };
 
@@ -111,18 +74,37 @@ protected:
   // infos
   short                               _type;
 
-  // vertex data
-  pxr::VtArray<pxr::GfVec3f>          _positions;
-  pxr::VtArray<pxr::GfVec3f>          _normals;
-  pxr::VtArray<pxr::GfVec3f>          _colors;
-  pxr::VtArray<float>                 _radius;
-
   // bounding box
   pxr::GfMatrix4d                     _matrix;
   pxr::GfBBox3d                       _bbox;
   bool                                _initialized;
   pxr::GfVec3f                        _wirecolor;
 };
+
+class Location {
+public:
+  virtual void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
+    bool worldSpace=true) const = 0;
+  virtual void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
+    bool worldSpace=true) const = 0;
+  friend class Geometry;
+};
+
+class SphereLocation : public Location {
+public:
+  SphereLocation(float longitude, float latitude)
+    : _longitude(longitude), _latitude(latitude) {};
+
+  void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
+    bool worldSpace=true) const override;
+  void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
+    bool worldSpace=true) const override;
+
+private:
+  float _longitude;
+  float _latitude;
+};
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
