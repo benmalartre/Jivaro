@@ -64,7 +64,7 @@ Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
   const float distance = (point - points[id]).GetLength();
   if ((maxDistance <= 0.f || distance < maxDistance ) && distance < hit->GetT()) {
     hit->SetElementIndex(id);
-    hit->SetBarycentricCoordinates(pxr::GfVec3f(0.f));
+    hit->SetCoordinates(pxr::GfVec3f(0.f));
     hit->SetT(distance);
     return true;
   }

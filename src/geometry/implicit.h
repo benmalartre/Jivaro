@@ -25,6 +25,24 @@ public:
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+private:
+  float                    _radius;  
+
+};
+
+class Cube : public Geometry {
+public:
+  Cube();
+  Cube(const Cube* other, bool normalize = true);
+  Cube(const pxr::UsdGeomCube& sphere, const pxr::GfMatrix4d& world);
+  virtual ~Cube() {};
+
+  // query 3d position on geometry
+  bool Raycast(const pxr::GfRay& ray, Hit* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
@@ -34,8 +52,53 @@ public:
   };
 
 private:
-  // radius description
+  float                    _size;  
+
+};
+
+class Cone : public Geometry {
+public:
+  Cone();
+  Cone(const Cone* other, bool normalize = true);
+  Cone(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
+  virtual ~Cone() {};
+
+  // query 3d position on geometry
+  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override {
+    return false;
+  };
+  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override {
+    return false;
+  };
+
+private:
   float                    _radius;  
+  float                    _height;
+
+};
+
+class Capsule : public Geometry {
+public:
+  Capsule();
+  Capsule(const Cone* other, bool normalize = true);
+  Capsule(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
+  virtual ~Capsule() {};
+
+  // query 3d position on geometry
+  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override {
+    return false;
+  };
+  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override {
+    return false;
+  };
+
+private:
+  float                    _radius;  
+  float                    _height;
 
 };
 

@@ -12,27 +12,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Intersector;
 class Geometry;
 
-class Tracer {
-public:
-  enum ElementType {
-    POINT,
-    EDGE,
-    TRIANGLE,
-    GEOMETRY
-  };
-
-  void SetGeometry(Geometry* geom) { _geometry = geom; };
-  void SetElementType(short type) { _elemType = type; };
-
-  Geometry* GetGeometry() { return _geometry; };
-  short GetElementType() { return _elemType; };
-
-private:
-  friend class Intersector;
-  Geometry*     _geometry;
-  short         _elemType;
-};
-
 class Hit {
 private:
   friend class Intersector;
@@ -61,10 +40,13 @@ public:
   void Set(const Hit& other);
   void SetGeometryIndex(int id) { _geomId = id; };
   void SetElementIndex(int id) { _elemId = id; };
-  void SetBarycentricCoordinates(const pxr::GfVec3f& coords) { 
+  void SetCoordinates(const pxr::GfVec3f& coords) { 
     _coords[0] = coords[0]; 
     _coords[1] = coords[1];
     _coords[2] = coords[2];
+  };
+  void SetCoordinates(const pxr::GfVec4f& coords) { 
+    _coords = coords;
   };
   void SetT(float t) { _coords[3] = t;};
 

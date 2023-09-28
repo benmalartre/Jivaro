@@ -54,8 +54,9 @@ public:
   void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
   const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
 
-  void SetMatrix(const pxr::GfMatrix4d& matrix) { _matrix = matrix; };
+  void SetMatrix(const pxr::GfMatrix4d& matrix);
   const pxr::GfMatrix4d& GetMatrix() const { return _matrix; };
+  const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
 
   virtual void ComputeBoundingBox() = 0;
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
@@ -76,6 +77,7 @@ protected:
 
   // bounding box
   pxr::GfMatrix4d                     _matrix;
+  pxr::GfMatrix4d                     _invMatrix;
   pxr::GfBBox3d                       _bbox;
   bool                                _initialized;
   pxr::GfVec3f                        _wirecolor;

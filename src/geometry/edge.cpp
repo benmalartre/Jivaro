@@ -85,7 +85,7 @@ Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
   float distance = (point - closest).GetLength();
   if (distance < maxDistance && distance < *minDistance) {
     if (minDistance) *minDistance = distance;
-    hit->SetBarycentricCoordinates(pxr::GfVec3f(0.5f));
+    hit->SetCoordinates(pxr::GfVec3f(0.5f));
     hit->SetElementIndex(id);
     hit->SetT(distance);
     return true;

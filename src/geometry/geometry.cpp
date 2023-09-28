@@ -14,7 +14,8 @@ Geometry::Geometry()
   _initialized = false;
   _type = INVALID;
   _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  _matrix = pxr::GfMatrix4d(1.0);
+  _matrix = _invMatrix = pxr::GfMatrix4d(1.0);
+  
 }
 
 Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
@@ -23,6 +24,7 @@ Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
   _type = type;
   _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   _matrix = world;
+  _invMatrix = world.GetInverse();
 }
 
 Geometry::Geometry(const Geometry* other, short type, bool normalize)
@@ -33,6 +35,14 @@ Geometry::Geometry(const Geometry* other, short type, bool normalize)
 
   _bbox = other->_bbox;
   _matrix = other->_matrix;
+  _invMatrix = other->_invMatrix;
 }
+
+void 
+Geometry::SetMatrix(const pxr::GfMatrix4d& matrix) 
+{ 
+  _matrix = matrix; 
+  _invMatrix = matrix.GetInverse();
+};
 
 JVR_NAMESPACE_CLOSE_SCOPE
