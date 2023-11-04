@@ -33,7 +33,6 @@ Stroke::~Stroke()
 Stroke::Stroke()
   : Geometry(Geometry::STROKE, pxr::GfMatrix4d(1.0))
 {
-  _initialized = false;
   _numLines = 0;
   _type = STROKE;
 }
@@ -41,7 +40,6 @@ Stroke::Stroke()
 Stroke::Stroke(const Stroke* other, bool normalize)
   : Geometry(other, Geometry::STROKE, normalize)
 {
-  _initialized = true;
   _numLines = other->_numLines;
   _type = STROKE;
 

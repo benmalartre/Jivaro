@@ -62,9 +62,6 @@ public:
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
   const pxr::GfBBox3d& GetBoundingBox() const { return _bbox; };
 
-  bool IsInitialized(){return _initialized;};
-  void SetInitialized(bool initialized){_initialized = initialized;};
-
   // query 3d position on geometry
   virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
     double maxDistance=-1.0, double* minDistance=NULL) const = 0;
@@ -79,7 +76,6 @@ protected:
   pxr::GfMatrix4d                     _matrix;
   pxr::GfMatrix4d                     _invMatrix;
   pxr::GfBBox3d                       _bbox;
-  bool                                _initialized;
   pxr::GfVec3f                        _wirecolor;
 };
 

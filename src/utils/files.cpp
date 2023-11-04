@@ -44,12 +44,12 @@ bool CreateDirectory(const std::string& path)
 
 int GetFileSize(const std::string& filePath)
 {
-    struct stat results;
-    
-    if (stat((const char*)filePath.c_str(), &results) == 0)
-      return results.st_size;
-    else
-      return -1;
+  struct stat results;
+  
+  if (stat((const char*)filePath.c_str(), &results) == 0)
+    return results.st_size;
+  else
+    return -1;
 }
 
 std::string GetFileName(const std::string& filePath)
@@ -163,18 +163,18 @@ size_t GetFilesInDirectory(const char* path, std::vector<std::string>& filenames
 {
   filenames.clear();
 #ifdef _WIN32
-    std::string search_path = std::string(path) + "/*.*";
-    WIN32_FIND_DATA fd;
-    HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
-    if (hFind != INVALID_HANDLE_VALUE) {
-      do {
-        if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-          !strncmp(fd.cFileName, ".DS_Store", 9)) continue;
-        filenames.push_back(fd.cFileName);
-      } while (::FindNextFile(hFind, &fd));
-      ::FindClose(hFind);
-    }
-    return 0;
+  std::string search_path = std::string(path) + "/*.*";
+  WIN32_FIND_DATA fd;
+  HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    do {
+      if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+        !strncmp(fd.cFileName, ".DS_Store", 9)) continue;
+      filenames.push_back(fd.cFileName);
+    } while (::FindNextFile(hFind, &fd));
+    ::FindClose(hFind);
+  }
+  return 0;
 #else
   DIR *dir;
   struct dirent *ent;
@@ -222,8 +222,8 @@ File::File(const std::string& fileName)
 void File::_CreatePath(const std::string& directory, 
   const std::string& name, const std::string& extension)
 {
-    if(EndsWithString(name, extension)) path = directory+SEPARATOR+name;
-    else path = directory+SEPARATOR+name+extension;
+  if(EndsWithString(name, extension)) path = directory+SEPARATOR+name;
+  else path = directory+SEPARATOR+name+extension;
 }
 
 bool File::Open(FILE_MODE mode)
@@ -245,7 +245,7 @@ bool File::Close()
     
 void File::Write(const std::string& s)
 {
-    *file << s << "\n";
+  *file << s << "\n";
 }
 
 uint64_t File::GetFileLength()
@@ -275,13 +275,13 @@ std::string File::Read()
     
 std::string File::ReadAll()
 {
-    file->seekg(0, std::ios::end);
-    content.reserve(file->tellg());
-    file->seekg(0, std::ios::beg);
-    
-    content.assign((std::istreambuf_iterator<char>(*file)),
-                    std::istreambuf_iterator<char>());
-    return content;
+  file->seekg(0, std::ios::end);
+  content.reserve(file->tellg());
+  file->seekg(0, std::ios::beg);
+  
+  content.assign((std::istreambuf_iterator<char>(*file)),
+                  std::istreambuf_iterator<char>());
+  return content;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

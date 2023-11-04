@@ -9,21 +9,17 @@ JVR_NAMESPACE_OPEN_SCOPE
 Points::Points()
   : Geometry(Geometry::POINT, pxr::GfMatrix4d(1.0))
 {
-  _initialized = false;
 }
 
 Points::Points(Geometry::Type type, const pxr::GfMatrix4d& matrix)
   : Geometry(type, matrix)
 {
-  _initialized = false;
 }
 
 Points::Points(const Points* other, bool normalize)
   : Geometry(other, other->GetType(), normalize)
 {
   size_t numPoints = _positions.size();
-  _initialized = true;
-
   _positions = other->_positions;
   _normals = other->_normals;
   _radius = other->_radius;

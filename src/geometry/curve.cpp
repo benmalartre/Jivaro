@@ -9,16 +9,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 Curve::Curve()
   : Points(Geometry::CURVE, pxr::GfMatrix4d(1.0))
 {
-  _initialized = false;
 }
 
 Curve::Curve(const Curve* other, bool normalize)
   : Points(other, normalize)
 {
-  _initialized = true;
-
-  _normals = other->_normals;
-
   size_t numCurves = other->_cvCounts.size();
   _cvCounts.resize(numCurves);
   memcpy(&_cvCounts[0], &other->_cvCounts[0], numCurves * sizeof(int));

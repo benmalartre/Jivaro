@@ -23,14 +23,12 @@ Mesh::Mesh(const pxr::GfMatrix4d& xfo)
   , _flags(0)
   , _halfEdges()
 {
-  _initialized = false;
 }
 
 Mesh::Mesh(const Mesh* other, bool normalize)
   : Points(other, normalize)
   , _flags(0)
 {
-  _initialized = true;
   _normals = other->_normals;
 
   _triangles = other->_triangles;
