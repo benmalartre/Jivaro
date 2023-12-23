@@ -219,8 +219,6 @@ void Solver::AddConstraints(Body* body)
     __bodyIdx++;
 
    //
-
-
   } else if (geom->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geom;
     curve->GetTotalNumSegments();
@@ -274,9 +272,11 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   int* body = &_particles.body[0];
   
   // update velocity
+  /*
   for (size_t index = begin; index < end; ++index) {
     velocity[index] -= (velocity[index] * _bodies[body[index]]->damping);
   }
+  */
   
   // apply external forces
   for (const Force* force : _force) {
@@ -331,8 +331,6 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 
 void Solver::_UpdateVelocities(size_t begin, size_t end)
 {
-  const float dt2 = _stepTime * _stepTime;
-  const float invDt = 1.f / _stepTime;
   for (size_t index = begin; index < end; ++index) {
     _contacts[index]->UpdateVelocity(&_particles, 1.f);
   }
@@ -392,14 +390,12 @@ void Solver::_StepOneSerial()
   _IntegrateParticles(0, numParticles);
 
   // solve and apply constraint
-  _SolveConstraints(_contacts, true);
   _SolveConstraints(_constraints, true);
+  _SolveConstraints(_contacts, true);
 
   // update particles
   _UpdateParticles(0, numParticles);
   _UpdateVelocities(0, numContacts);
-  
-
 }
 
 void Solver::_StepOne()
@@ -414,8 +410,8 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // solve and apply constraint
-  _SolveConstraints(_contacts, false);
   _SolveConstraints(_constraints, false);
+  _SolveConstraints(_contacts, false);
   
   // update particles
   pxr::WorkParallelForN(

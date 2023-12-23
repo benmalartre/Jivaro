@@ -37,11 +37,16 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
       } 
       elements.push_back(index - bodies[particles->body[index]]->offset);
     }
-  } if (elements.size()) {
+  } 
+  
+  if (elements.size()) {
     contacts.push_back(new CollisionConstraint(bodies[bodyIdx], this, elements));
     _numContacts += elements.size();
     numConstraints++;
   }
+
+  std::cout << "build contacts :" << std::endl;
+  std::cout << "num : " << contacts.size() << std::endl;
 }
 
 void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, float dt)
@@ -101,6 +106,7 @@ pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index)
 pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, float depth, size_t index)
 {
   pxr::GfVec3f tangent(-particles->velocity[index][0], 0.f, -particles->velocity[index][2]);
+
   return _normal * _restitution * depth + tangent * _friction;
 }
 

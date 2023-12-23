@@ -93,6 +93,8 @@ Cube::Raycast(const pxr::GfRay& ray, Hit* hit,
   pxr::GfRay invRay(ray);
   invRay.Transform(GetInverseMatrix());
   double enterDistance, exitDistance;
+
+  /*
   if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
     pxr::GfVec3f local(ray.GetPoint(enterDistance));
     pxr::GfVec3f world(GetMatrix().Transform(local));
@@ -106,6 +108,7 @@ Cube::Raycast(const pxr::GfRay& ray, Hit* hit,
       return true;
     }
   }
+  */
 
   return false;
 }
@@ -114,6 +117,7 @@ bool
 Cube::Closest(const pxr::GfVec3f& point, Hit* hit,
   double maxDistance, double* minDistance) const
 {
+  /*
   pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
   pxr::GfVec3f closest = GetMatrix().Transform(local);  
   float distance = (point - closest).GetLength();
@@ -125,6 +129,7 @@ Cube::Closest(const pxr::GfVec3f& point, Hit* hit,
     hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
     return true;
   }
+  */
   return false;
 }
 
