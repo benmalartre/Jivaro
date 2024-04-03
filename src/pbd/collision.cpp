@@ -44,9 +44,6 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
     _numContacts += elements.size();
     numConstraints++;
   }
-
-  std::cout << "build contacts :" << std::endl;
-  std::cout << "num : " << contacts.size() << std::endl;
 }
 
 void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, float dt)
