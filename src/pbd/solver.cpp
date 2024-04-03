@@ -268,6 +268,7 @@ void Solver::WeightBoundaries()
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
+
   pxr::GfVec3f* velocity = &_particles.velocity[0];
   int* body = &_particles.body[0];
   
@@ -285,8 +286,11 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
   // compute predicted position
   pxr::GfVec3f* predicted = &_particles.predicted[0];
+  pxr::GfVec3f* previous = &_particles.previous[0];
   const pxr::GfVec3f* position = &_particles.position[0];
+  
   for (size_t index = begin; index < end; ++index) {
+    previous[index] = position[index];
     predicted[index] = position[index] + _stepTime * velocity[index];
   }
 }
@@ -326,13 +330,6 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 
     // update position
     position[index] = predicted[index];
-  }
-}
-
-void Solver::_UpdateVelocities(size_t begin, size_t end)
-{
-  for (size_t index = begin; index < end; ++index) {
-    _contacts[index]->UpdateVelocity(&_particles, 1.f);
   }
 }
 
@@ -395,7 +392,6 @@ void Solver::_StepOneSerial()
 
   // update particles
   _UpdateParticles(0, numParticles);
-  _UpdateVelocities(0, numContacts);
 }
 
 void Solver::_StepOne()
@@ -419,10 +415,6 @@ void Solver::_StepOne()
     std::bind(&Solver::_UpdateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
-  pxr::WorkParallelForN(
-    numContacts,
-    std::bind(&Solver::_UpdateVelocities, this,
-      std::placeholders::_1, std::placeholders::_2));
 }
 
 void Solver::Step(bool serial)

@@ -93,18 +93,18 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
   }
 }
 
-pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index)
+pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index, float dt)
 {
   float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - particles->radius[index];
-  if (d < 0.f) return _normal * -d;
+
+  // Tangential component of relative motion
+  const pxr::GfVec3f tangent = 
+    (particles->velocity[index] - (_normal * pxr::GfDot(particles->velocity[index], _normal))) * -1.f;
+
+
+  if (d < 0.f) return _normal * -d + tangent * _friction * dt;
   else return pxr::GfVec3f(0.f);
-}
 
-pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, float depth, size_t index)
-{
-  pxr::GfVec3f tangent(-particles->velocity[index][0], 0.f, -particles->velocity[index][2]);
-
-  return _normal * _restitution * depth + tangent * _friction;
 }
 
 //----------------------------------------------------------------------------------------
@@ -129,14 +129,10 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
   }
 }
 
-pxr::GfVec3f SphereCollision::ResolveContact(Particles* particles, size_t index)
+pxr::GfVec3f SphereCollision::ResolveContact(Particles* particles, size_t index, float dt)
 {
   return pxr::GfVec3f(0.f);
 }
 
-pxr::GfVec3f SphereCollision::ResolveVelocity(Particles* particles, float depth, size_t index)
-{
-  return pxr::GfVec3f(0.f);
-}
 
 JVR_NAMESPACE_CLOSE_SCOPE

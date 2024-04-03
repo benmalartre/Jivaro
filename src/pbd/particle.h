@@ -43,6 +43,7 @@ struct Particles
   pxr::VtArray<float>        mass; // inverse mass
   pxr::VtArray<float>        radius;
   pxr::VtArray<pxr::GfVec3f> rest;
+  pxr::VtArray<pxr::GfVec3f> previous;
   pxr::VtArray<pxr::GfVec3f> position;
   pxr::VtArray<pxr::GfVec3f> predicted;
   pxr::VtArray<pxr::GfVec3f> velocity;

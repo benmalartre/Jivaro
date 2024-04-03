@@ -22,8 +22,7 @@ public:
   Solver();
   ~Solver();
   
-  //void AddCollision(Geometry* geom);
-  //void RemoveCollision(Geometry* geom);
+
   void AddConstraints(Body* body);
 
   // attributes
@@ -78,7 +77,6 @@ private:
 
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);
-  void _UpdateVelocities(size_t begin, size_t end);
   void _StepOneSerial();
   void _StepOne();
 

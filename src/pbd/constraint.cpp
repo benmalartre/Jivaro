@@ -518,20 +518,7 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
     _correction[elemIdx] = 
-      _collision->ResolveContact(particles, _elements[elemIdx] + offset);
-  }
-}
-
-void CollisionConstraint::UpdateVelocity(Particles* particles, float dt)
-{
-  const size_t numElements = _elements.size() / ELEM_SIZE;
-  const size_t offset = _body[0]->offset;
-  size_t partIdx;
-
-  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    partIdx = _elements[elemIdx] + offset;
-    particles->velocity[partIdx] += 
-      _collision->ResolveVelocity(particles, _correction[elemIdx].GetLength(), partIdx) * dt;
+      _collision->ResolveContact(particles, _elements[elemIdx] + offset, dt);
   }
 }
 

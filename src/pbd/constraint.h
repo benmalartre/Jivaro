@@ -46,7 +46,6 @@ public:
   };
 
   virtual void Solve(Particles* particles, float dt);
-  virtual void UpdateVelocity(Particles* particles, float dt) {};
 
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
     pxr::VtArray<float>& radius) = 0;
@@ -163,7 +162,6 @@ public:
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
   virtual void Solve(Particles* particles, float dt) override;
-  void UpdateVelocity(Particles* particles, float dt) override;
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
     pxr::VtArray<float>& radius) override;
 
