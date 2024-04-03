@@ -22,6 +22,10 @@ public:
   void SetMask(const std::vector<int>& used);
   void RemoveMask();
 
+  bool HasWeights() const { return _weights.size() > 0; };
+  void SetWeights(const std::vector<float>& weights) { _weights = weights; };
+  void RemoveWeights() { _weights.clear(); };
+
   inline bool Affects(size_t index) const {
     if (!HasMask())return true;
     const size_t bitsIdx = index / sizeof(int);
@@ -30,8 +34,8 @@ public:
   }
 
 protected:     
-  std::vector<int> _mask;                     // bits vector encoding particles usage mask
-  //pxr::VtArray<float>         _weights;     // if mask weights size must equals mask size 
+  std::vector<int>            _mask;          // bits vector encoding particles usage mask
+  std::vector<float>          _weights;       // if mask weights size must equals mask size 
                                               // else weights size must equals num particles
 };
 

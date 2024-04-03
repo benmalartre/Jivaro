@@ -19,18 +19,12 @@ class Force : public Mask
 public:
   Force() : Mask() {};
   virtual ~Force() {};
-  bool HasWeights() const { return _weights.size() > 0; };
-  void SetWeights(const pxr::VtArray<float>& weights) { _weights = weights; };
-  void RemoveWeights() { _weights.clear(); };
+  
 
   void AddBody(Particles* particles, Body* body);
   void RemoveBody(Particles* particles, Body* body);
 
   virtual void Apply(size_t begin, size_t end, Particles* particles, float dt) const = 0;
-
-protected:
-  pxr::VtArray<float> _weights;   // if mask weights size must equals mask size 
-                                  // else weights size must equals num particles
 };
 
 class GravitationalForce : public Force
