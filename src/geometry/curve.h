@@ -15,13 +15,13 @@
 
 #include <float.h>
 #include "../geometry/triangle.h"
-#include "../geometry/points.h"
+#include "../geometry/deformable.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 struct Sample;
 
-class Curve : public Points {
+class Curve : public Deformable {
 public:
   Curve();
   Curve(const Curve* other, bool normalize = true);

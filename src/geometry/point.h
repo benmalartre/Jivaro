@@ -10,7 +10,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Points;
+class Deformable;
 class Location;
 struct Point : public Component {
 
@@ -19,9 +19,9 @@ struct Point : public Component {
   Point(uint32_t index)
     : Component(index){};
 
-  float GetRadius(Points* geom);
-  pxr::GfVec3f GetPosition(Points* geom);
-  pxr::GfVec3f GetNormal(Points* geom);
+  float GetRadius(Deformable* geom);
+  pxr::GfVec3f GetPosition(Deformable* geom);
+  pxr::GfVec3f GetNormal(Deformable* geom);
   
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;

@@ -7,12 +7,12 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Curve::Curve()
-  : Points(Geometry::CURVE, pxr::GfMatrix4d(1.0))
+  : Deformable(Geometry::CURVE, pxr::GfMatrix4d(1.0))
 {
 }
 
 Curve::Curve(const Curve* other, bool normalize)
-  : Points(other, normalize)
+  : Deformable(other, normalize)
 {
   size_t numCurves = other->_cvCounts.size();
   _cvCounts.resize(numCurves);
@@ -20,7 +20,7 @@ Curve::Curve(const Curve* other, bool normalize)
 }
 
 Curve::Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world)
-  : Points(Geometry::CURVE, world)
+  : Deformable(Geometry::CURVE, world)
 {
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());

@@ -1,6 +1,5 @@
 #include "../geometry/edge.h"
-#include "../geometry/points.h"
-#include "../geometry/mesh.h"
+#include "../geometry/deformable.h"
 #include "../geometry/intersection.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -9,7 +8,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 // Edge Center
 //-------------------------------------------------------
 pxr::GfVec3f 
-Edge::GetCenter(Points* geom)
+Edge::GetCenter(Deformable* geom)
 {
   return (geom->GetPosition(vertices[0]) + geom->GetPosition(vertices[1])) * 0.5f;
 }
@@ -18,7 +17,7 @@ Edge::GetCenter(Points* geom)
 // Edge Point Position
 //-------------------------------------------------------
 pxr::GfVec3f 
-Edge::GetPosition(Points* geom, short idx)
+Edge::GetPosition(Deformable* geom, short idx)
 {
   return geom->GetPosition(vertices[idx]%2);
 }
@@ -27,7 +26,7 @@ Edge::GetPosition(Points* geom, short idx)
 // Point Normal
 //-------------------------------------------------------
 pxr::GfVec3f 
-Edge::GetNormal(Points* geom)
+Edge::GetNormal(Deformable* geom)
 {
   pxr::GfVec3f normal(0.f,1.f,0.f);
   switch(geom->GetType()) {

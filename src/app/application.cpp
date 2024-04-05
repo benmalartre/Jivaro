@@ -275,32 +275,38 @@ Application::Init()
 void 
 Application::InitExec()
 {
+  /*
   Scene* scene = new Scene();
   scene->InitExec();
   for(auto& engine: _engines) {
     engine->InitExec(scene);
   }
+  */
 }
 
 void
 Application::UpdateExec(double time)
 {
+  /*
   Scene* scene = _engines[0]->GetDelegate()->GetScene();
   scene->UpdateExec(time);
   for (auto& engine : _engines) {
     engine->UpdateExec(time);
   }
+  */
 }
 
 void
 Application::TerminateExec()
 {
+  /*
   Scene* scene = _engines[0]->GetDelegate()->GetScene();
   for (auto& engine : _engines) {
     engine->TerminateExec();
   }
   delete scene;
   //delete _solver;
+  */
 }
 
 

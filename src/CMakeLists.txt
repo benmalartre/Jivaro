@@ -44,6 +44,8 @@ add_executable(${TARGET}
   graph/graph.cpp
   graph/execution.cpp
   graph/hierarchy.cpp
+  #exec/node.cpp 
+  #exec/network.cpp 
   #embree/oiio.cpp
   #embree/jpeg.cpp
   #embree/utils.cpp
@@ -71,6 +73,7 @@ add_executable(${TARGET}
   geometry/delaunay.cpp
   geometry/geometry.cpp
   geometry/implicit.cpp
+  geometry/deformable.cpp
   geometry/points.cpp
   geometry/mesh.cpp
   geometry/curve.cpp
@@ -114,6 +117,8 @@ add_executable(${TARGET}
   app/tools.cpp
   app/delegate.cpp
   app/application.cpp
+  #tests/location.cpp
+  tests/pbd.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp

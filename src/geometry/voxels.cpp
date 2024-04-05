@@ -1,8 +1,11 @@
 #include <pxr/base/work/loops.h>
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/bbox3d.h>
+#include <pxr/base/gf/range3f.h>
+#include <pxr/base/gf/range3d.h>
 #include <pxr/base/tf/stopwatch.h>
 #include "../geometry/voxels.h"
-#include "../geometry/points.h"
+#include "../geometry/deformable.h"
 #include "../geometry/intersection.h"
 #include "../acceleration/bvh.h"
 
@@ -11,7 +14,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 // constructor
 //--------------------------------------------------------------------------------
 Voxels::Voxels()
-  : Points(Geometry::VOXEL, pxr::GfMatrix4d(1.0))
+  : Deformable(Geometry::VOXEL, pxr::GfMatrix4d(1.0))
   , _geometry(NULL)
   , _radius(1.f)
 {
@@ -47,7 +50,7 @@ Voxels::_ComputeFlatIndex(size_t x, size_t y, size_t z, short axis)
 
 // init voxel grid 
 //--------------------------------------------------------------------------------
-void Voxels::Init(Points* geometry, float radius)
+void Voxels::Init(Deformable* geometry, float radius)
 {
   _radius = radius;
   _geometry = geometry;

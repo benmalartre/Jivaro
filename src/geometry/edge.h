@@ -10,7 +10,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Points;
+class Deformable;
 class Location;
 struct Edge : public Component {
 
@@ -28,9 +28,9 @@ struct Edge : public Component {
   uint32_t GetStartIndex(){return vertices[0];};
   uint32_t GetEndIndex(){return vertices[1];};
   float GetRadius(){return radius;};
-  pxr::GfVec3f GetCenter(Points* geom);
-  pxr::GfVec3f GetPosition(Points* geom, short idx);
-  pxr::GfVec3f GetNormal(Points* geom);
+  pxr::GfVec3f GetCenter(Deformable* geom);
+  pxr::GfVec3f GetPosition(Deformable* geom, short idx);
+  pxr::GfVec3f GetNormal(Deformable* geom);
 
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;

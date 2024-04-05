@@ -243,7 +243,8 @@ void Delegate::UpdateScene()
 {
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
-    tracker.MarkRprimDirty(prim.first, prim.second.bits);
+    if(prim.second.bits != pxr::HdChangeTracker::Clean)
+      tracker.MarkRprimDirty(prim.first, prim.second.bits);
   }
 }
 

@@ -45,6 +45,7 @@ public:
   inline size_t GetNumElements() const{
     return _elements.size() / GetElementSize();
   };
+  const pxr::VtArray<int>& GetElements() {return _elements;};
 
   virtual void Solve(Particles* particles, float dt);
 
@@ -136,7 +137,7 @@ public:
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
 
   static size_t                 ELEM_SIZE;
@@ -162,11 +163,13 @@ public:
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
+    pxr::VtArray<float>& radius) override;
+
   virtual void Solve(Particles* particles, float dt) override;
 
   void StoreContactsLocation(Particles* particles, float dt);
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
-    pxr::VtArray<float>& radius) override;
+
 
   // this one has to be called serially 
   // as two constraints can move the same point
@@ -181,7 +184,7 @@ protected:
   static size_t                 TYPE_ID;
 
   Collision*                    _collision;
-  std::vector<Location>              _contacts;
+  std::vector<Location>         _contacts;
   std::vector<float>            _length;
 };
 

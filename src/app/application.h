@@ -116,9 +116,9 @@ public:
   void SetExec(bool state);
   bool GetExec();
 
-  void InitExec();
-  void UpdateExec(double time);
-  void TerminateExec();
+  virtual void InitExec();
+  virtual void UpdateExec(double time);
+  virtual void TerminateExec();
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};

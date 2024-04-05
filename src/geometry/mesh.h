@@ -15,12 +15,12 @@
 
 #include "../common.h"
 #include "../geometry/triangle.h"
-#include "../geometry/points.h"
+#include "../geometry/deformable.h"
 #include "../geometry/halfEdge.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Mesh : public Points {
+class Mesh : public Deformable {
 public:
   enum Flag {
     NEIGHBORS     = 1 << 0,

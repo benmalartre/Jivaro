@@ -20,14 +20,14 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Mesh::Mesh(const pxr::GfMatrix4d& xfo)
-  : Points(Geometry::MESH, xfo)
+  : Deformable(Geometry::MESH, xfo)
   , _flags(0)
   , _halfEdges()
 {
 }
 
 Mesh::Mesh(const Mesh* other, bool normalize)
-  : Points(other, normalize)
+  : Deformable(other, normalize)
   , _flags(0)
 {
   _normals = other->_normals;
@@ -36,7 +36,7 @@ Mesh::Mesh(const Mesh* other, bool normalize)
 }
 
 Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
-  : Points(Geometry::MESH, world)
+  : Deformable(Geometry::MESH, world)
   , _flags(0)
 {
   pxr::UsdAttribute pointsAttr = mesh.GetPointsAttr();

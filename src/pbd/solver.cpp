@@ -72,25 +72,19 @@ size_t Solver::GetBodyIndex(Geometry* geom)
 
 Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
 {
-  std::cout << "[system] add geometry : " << geom << std::endl;
   size_t base = _particles.GetNumParticles();
   size_t add = geom->GetNumPoints();
-
-  std::cout << "num particles before add : " << base << std::endl;
 
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   Body* body = new Body({ 0.001f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
-  std::cout << "num particles after add : " << _particles.GetNumParticles() << std::endl;
-
   return _bodies.back();
 }
 
 void Solver::RemoveBody(Geometry* geom)
 {
-  std::cout << "[system] remove geometry : " << geom << std::endl;
   size_t index = GetBodyIndex(geom);
   if (index == Solver::INVALID_INDEX) return;
 

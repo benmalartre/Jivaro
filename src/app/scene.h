@@ -36,6 +36,10 @@ typedef pxr::TfHashMap< pxr::SdfPath, _Graph, pxr::SdfPath::Hash > _GraphMap;
 
 class Scene  {
 public:
+  typedef pxr::VtArray<Sample>                                _Samples;
+  typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Source;
+  typedef pxr::VtArray<_Source>                               _Sources;
+
   Scene();
   ~Scene();
 
@@ -45,20 +49,18 @@ public:
   void Save(const std::string& filename);
   void Export(const std::string& filename);
 
-  Mesh* AddMesh(const pxr::SdfPath& path, 
-    const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  Mesh* AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
   void AddMesh(const pxr::SdfPath& path, Mesh* mesh);
-  Curve* AddCurve(const pxr::SdfPath& path, 
-    const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
-  Points* AddPoints(const pxr::SdfPath& path, 
-    const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  Curve* AddCurve(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  void AddCurve(const pxr::SdfPath& path, Curve* curve);
+  Points* AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  void AddPoints(const pxr::SdfPath& path, Points* points);
   Voxels* AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius);
 
   void Remove(const pxr::SdfPath& path);
   bool IsMesh(const pxr::SdfPath& path);
   bool IsCurves(const pxr::SdfPath& path);
   bool IsPoints(const pxr::SdfPath& path);
-
 
   _PrimMap& GetPrims() { return _prims; };
   const _PrimMap& GetPrims() const { return _prims; };
@@ -103,17 +105,10 @@ public:
   pxr::HdPrimvarDescriptorVector GetPrimvarDescriptors(pxr::SdfPath const& id,
     pxr::HdInterpolation interpolation);
 
-  void InitExec();
-  void UpdateExec(double time);
-  void TerminateExec();
-
 
 private:
   Solver*                                                     _solver;
   _PrimMap                                                    _prims;
-  typedef pxr::VtArray<Sample>                                _Samples;
-  typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Source;
-  typedef pxr::VtArray<_Source>                               _Sources;
   pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash>  _sourcesMap;
 };
 
