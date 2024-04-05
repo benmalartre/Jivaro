@@ -22,7 +22,7 @@ static pxr::GfVec3i _Faces[4] = {
 bool Tetrahedralize::_IsInside(const pxr::GfVec3f& p, double minDist = 0.0)
 {
   size_t numIn = 0;
-  Locationhit;
+  Location hit;
   const pxr::GfVec3f* _geometry->GetPositionsCPtr();
   for(size_t i = 0; i < 6; ++i) {
     if(_bvh.Raycast(points, pxr::GfRay(p, _Dirs[i]), 

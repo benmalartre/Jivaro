@@ -96,21 +96,21 @@ __forceinline void init_Ray(Ray &ray,
 
 typedef Ray Ray1;
 
-__forceinline RTCRayLocation* RTCRayHit_(Ray& ray) {
-  return (RTCRayLocation*)&ray;
+__forceinline RTCRayHit* RTCRayHit_(Ray& ray) {
+  return (RTCRayHit*)&ray;
 }
 
-__forceinline RTCRayLocation* RTCRayHit1_(Ray& ray) {
-  return (RTCRayLocation*)&ray;
+__forceinline RTCRayHit* RTCRayHit1_(Ray& ray) {
+  return (RTCRayHit*)&ray;
 }
 
 __forceinline RTCRay* RTCRay_(Ray& ray) {
   return (RTCRay*)&ray;
 }
 
-__forceinline RTCLocation* RTCHit_(Ray& ray)
+__forceinline RTCHit* RTCHit_(Ray& ray)
 {
-  RTCLocation* hit_ptr = (RTCLocation*)&(ray.Ng.x);
+  RTCHit* hit_ptr = (RTCHit*)&(ray.Ng.x);
   return hit_ptr;
 }
 

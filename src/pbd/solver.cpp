@@ -143,7 +143,7 @@ void Solver::AddCollision(Geometry* collider)
   T = CurrentTime();
   for (auto& ray : rays) {
     double minDistance = DBL_MAX;
-    Locationhit;
+    Location hit;
     const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
     if (bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
       result.push_back(hit.GetPosition(colliders[hit.GetGeometryIndex()]));
@@ -165,7 +165,7 @@ void Solver::UpdateColliders()
 
   {
     double minDistance;
-    Locationhit;
+    Location hit;
     if (bvh.Closest(pxr::GfVec3f(0.f), &hit, -1, &minDistance)) {
       std::cout << "CLOSEST HIT :" << std::endl;
       pxr::GfVec3f position;
@@ -178,7 +178,7 @@ void Solver::UpdateColliders()
   {
     pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
     double minDistance;
-    Locationhit;
+    Location hit;
     const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
     if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
       pxr::GfVec3f position;

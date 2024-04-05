@@ -520,7 +520,7 @@ void CollisionConstraint::StoreContactsLocation(Particles* particles, float dt)
   float radius = particles->radius[index];
   float d = pxr::GfDot(_normal, particles->predicted[index] + particles->velocity[index] * dt - _position) - _distance - radius;
   if (d < 0.f) {
-    SetLocation(index);
+    SetHit(index);
   }
   */
   const size_t numElements = _elements.size() / ELEM_SIZE;

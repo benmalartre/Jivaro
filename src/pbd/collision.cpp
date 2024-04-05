@@ -26,7 +26,7 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
   size_t numConstraints = 0;
   int bodyIdx = -1;
   for (size_t index = 0; index < numParticles; ++index) {
-    if (CheckLocation(index)) {
+    if (CheckHit(index)) {
       if (particles->body[index] != bodyIdx) {
         if (elements.size()) {
           constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
@@ -94,7 +94,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
   float radius = particles->radius[index];
   float d = pxr::GfDot(_normal, particles->predicted[index] + particles->velocity[index] * dt - _position) - _distance - radius;
   if (d < 0.f) {
-    SetLocation(index);
+    SetHit(index);
   }
 }
 
@@ -138,7 +138,7 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
   const float radius2 = _radius * _radius;
   const pxr::GfVec3f local = _invXform.Transform(particles->predicted[index] + particles->velocity[index] * dt * 2.f);
   if (local.GetLengthSq() < radius2) {
-    SetLocation(index);
+    SetHit(index);
   }
 }
 
