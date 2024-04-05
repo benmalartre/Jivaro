@@ -404,7 +404,7 @@ void ViewportUI::Render()
   _renderParams.enableIdRender = false;
   _renderParams.enableSampleAlphaToCoverage = true;
   _renderParams.highlight = true;
-  _renderParams.enableSceneMaterials = false;
+  _renderParams.enableSceneMaterials = true;
   _renderParams.enableSceneLights = true;
   //_renderParams.colorCorrectionMode = ???
   _renderParams.clearColor = pxr::GfVec4f(0.25,0.25,0.25,1.0);

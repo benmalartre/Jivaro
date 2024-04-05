@@ -435,16 +435,16 @@ Window::SetLayout()
 {
   if (_needUpdateLayout) {
     switch (_layout) {
-    case 0:
+    case WINDOW_LAYOUT_BASE:
       _BaseLayout(this);
       break;
-    case 1:
+    case WINDOW_LAYOUT_RAW:
       _RawLayout(this);
       break;
-    case 2:
+    case WINDOW_LAYOUT_STANDARD:
       _StandardLayout(this);
       break;
-    case 3:
+    case WINDOW_LAYOUT_RANDOM:
     default:
       _RandomLayout(this);
       break;

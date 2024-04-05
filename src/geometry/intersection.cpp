@@ -5,6 +5,7 @@
 
 #include "../geometry/intersection.h"
 #include "../geometry/geometry.h"
+#include "../geometry/implicit.h"
 #include "../geometry/mesh.h"
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
@@ -12,7 +13,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 //=================================================================================================
-// HIT CLASS
+// LOCATION CLASS
 //=================================================================================================
 void 
 Location::Set(const Location& other) {
@@ -22,49 +23,55 @@ Location::Set(const Location& other) {
 }
 
 pxr::GfVec3f 
-Location::GetPosition(Geometry* geometry) const 
+Location::GetPosition(Geometry* geometry, bool worldSpace) const 
 {
-  /*
-  Geometry*     _geom;
-  pxr::GfVec3f  _baryCoords;
-  short         _elemType;
-  int           _elemId;
-  */
   switch (geometry->GetType()) {
+    case Geometry::PLANE:
+    {
+      // for a plane intersection simply return _coords 
+      // that contains intersection point offset coordinates
+      if(worldSpace)
+        return geometry->GetMatrix().Transform(pxr::GfVec3f(_coords[0], _coords[1], _coords[2]));
+      else
+        return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]);
+    }
+
+    case Geometry::CUBE:
+    {
+      Cube* cube = (Cube*)geometry;
+      return pxr::GfVec3f(0.f);
+    }
+
+    case Geometry::SPHERE:
+    {
+      Sphere* sphere = (Sphere*)geometry;
+      return pxr::GfVec3f(0.f);
+    }
+
     case Geometry::MESH:
     {
       Mesh* mesh = (Mesh*)geometry;
 
       const Triangle* triangle = mesh->GetTriangle(_elemId);
       const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-      return pxr::GfVec3f( 
-        pxr::GfVec3f(positions[triangle->vertices[0]]) * _coords[0] +
-        pxr::GfVec3f(positions[triangle->vertices[1]]) * _coords[1] +
-        pxr::GfVec3f(positions[triangle->vertices[2]]) * _coords[2]);
+      if(worldSpace)
+        return geometry->GetMatrix().Transform(
+          pxr::GfVec3f( 
+            pxr::GfVec3f(positions[triangle->vertices[0]]) * _coords[0] +
+            pxr::GfVec3f(positions[triangle->vertices[1]]) * _coords[1] +
+            pxr::GfVec3f(positions[triangle->vertices[2]]) * _coords[2])
+          );
+      else
+        return pxr::GfVec3f( 
+          pxr::GfVec3f(positions[triangle->vertices[0]]) * _coords[0] +
+          pxr::GfVec3f(positions[triangle->vertices[1]]) * _coords[1] +
+          pxr::GfVec3f(positions[triangle->vertices[2]]) * _coords[2]
+        );
     }
+
     case Geometry::CURVE:
     {
-      /*
-      void
-CurveLocation::GetPosition(const Geometry* geom, 
-  pxr::GfVec3f* pos, bool worldSpace) const
-{
-  if(geom->GetType() != Geometry::CURVE) return;
-  
-  const Curve* curve = (const Curve*)geom;
-
-}
-
-void
-CurveLocation::GetNormal(const Geometry* geom,
-  pxr::GfVec3f* nrm, bool worldSpace) const
-{
-  if(geom->GetType() != Geometry::CURVE) return;
-  
-  const Curve* curve = (const Curve*)geom;
-
-}
-      */
+     
     }
     case Geometry::POINT:
     {
@@ -78,13 +85,13 @@ CurveLocation::GetNormal(const Geometry* geom,
 }
 
 pxr::GfVec3f
-Location::GetPosition(const pxr::GfRay& ray) const
+Location::GetPosition(const pxr::GfRay& ray, bool worldSpace) const
 {
   return pxr::GfVec3f(ray.GetPoint(_coords[3]));
 }
 
 pxr::GfVec3f
-Location::GetNormal(Geometry* geometry) const
+Location::GetNormal(Geometry* geometry, bool wolrdSpace) const
 {
   switch (geometry->GetType()) {
     case Geometry::MESH:

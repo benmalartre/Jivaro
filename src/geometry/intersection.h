@@ -55,9 +55,9 @@ public:
   int GetElementIndex() { return _elemId; };
   const pxr::GfVec4f& GetBarycentricCoordinates() { return _coords; };
   float GetT() { return _coords[3]; };
-  pxr::GfVec3f GetPosition(Geometry* geometry) const;
-  pxr::GfVec3f GetPosition(const pxr::GfRay& ray) const;
-  pxr::GfVec3f GetNormal(Geometry* geometry) const;
+  pxr::GfVec3f GetPosition(Geometry* geometry, bool worldSpace=true) const;
+  pxr::GfVec3f GetPosition(const pxr::GfRay& ray, bool worldSpace=true) const;
+  pxr::GfVec3f GetNormal(Geometry* geometry, bool worldSpace=true) const;
   bool IsValid() { return _geomId >= 0 && _elemId >= 0; };
 };
 

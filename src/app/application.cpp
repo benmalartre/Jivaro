@@ -188,25 +188,6 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
 void 
 Application::Init()
 {
- #ifdef _WIN32
-  std::string filename =
-    //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
-    //"C:/Users/graph/Documents/bmal/src/USD_ASSETS/Kitchen_set/Kitchen_set.usd";
-    //"E:/Projects/RnD/USD_BUILD/assets/Contour/JackTurbulized.usda";
-    //"E:/Projects/RnD/USD/extras/usd/examples/usdGeomExamples/basisCurves.usda";
-    //"E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd";
-    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
-    //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
-    //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
-    //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
-#else
-  std::string filename = 
-    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
-#endif
-
-  // build test scene
-  //pxr::TestScene(filename);
-  // create imaging gl engine
   //TfDebug::Enable(HD_MDI);
   //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
   //TfDebug::Enable(GLF_DEBUG_CONTEXT_CAPS);
@@ -223,7 +204,7 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
   // create window
-  _mainWindow->SetDesiredLayout(2);
+  _mainWindow->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
   
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
@@ -278,7 +259,7 @@ Application::Init()
   //TestStageUI(graph, _stages);
 
  
-  _mainWindow->CollectLeaves();
+  //_mainWindow->CollectLeaves();
  
   /*Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   AddWindow(childWindow);
