@@ -58,7 +58,7 @@ public:
   pxr::GfVec3f GetPosition(Geometry* geometry) const;
   pxr::GfVec3f GetPosition(const pxr::GfRay& ray) const;
   pxr::GfVec3f GetNormal(Geometry* geometry) const;
-  bool HasLocation() { return _elemId >= 0; };
+  bool HasHit() { return _geomId >= 0 && _elemId >= 0; };
 };
 
 static pxr::GfPlane DEFAULT_PLANE(pxr::GfVec3d(0, 1, 0), pxr::GfVec3d(0));
