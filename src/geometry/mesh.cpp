@@ -12,6 +12,7 @@
 
 #include "../geometry/mesh.h"
 #include "../geometry/utils.h"
+#include "../geometry/intersection.h"
 
 #include "../utils/timer.h"
 
@@ -652,7 +653,7 @@ void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs)
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 
-  const pxr::GfVec3f& direction, MeshLocation& result, float maxDistance)
+  const pxr::GfVec3f& direction, Hit& result, float maxDistance)
 {
   pxr::GfRay ray(origin, direction);
 
@@ -675,8 +676,8 @@ bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin,
       if(distance < minDistance)
       {
         minDistance = distance;
-        result.SetBaryCoords(pxr::GfVec3f(baryCoords));
-        result.SetId(tri->id);
+        result.SetCoordinates(pxr::GfVec3f(baryCoords));
+        result.SetElementIndex(tri->id);
         hit = true;
       }
     }
@@ -966,42 +967,6 @@ size_t
 Mesh::GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices)
 {
   return _halfEdges.GetLongestEdgeInTriangle(vertices, &_positions[0]);
-}
-
-void
-MeshLocation::GetPosition(const Geometry* geom, 
-  pxr::GfVec3f* pos, bool worldSpace) const
-{
-  if(geom->GetType() != Geometry::MESH) return;
-  
-  const Mesh* mesh = (const Mesh*)geom;
-  const Triangle* T = mesh->GetTriangle(_id);
-  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-
-  for(uint32_t i = 0; i < 3; ++i) 
-    *pos += positions[T->vertices[i]] * _baryCoords[i];
-
-  if(worldSpace) {
-    mesh->GetMatrix().Transform(*pos);
-  }
-}
-
-void
-MeshLocation::GetNormal(const Geometry* geom,
-  pxr::GfVec3f* nrm, bool worldSpace) const
-{
-  if(geom->GetType() != Geometry::MESH) return;
-  
-  const Mesh* mesh = (const Mesh*)geom;
-  const Triangle* T = mesh->GetTriangle(_id);
-  const pxr::GfVec3f* normals = mesh->GetNormalsCPtr();
-
-  for(uint32_t i=0;i<3;i++) 
-    *nrm += normals[T->vertices[i]] * _baryCoords[i];
-
-  if(worldSpace) {
-    mesh->GetMatrix().TransformDir(*nrm);
-  }
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

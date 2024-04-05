@@ -44,7 +44,27 @@ Hit::GetPosition(Geometry* geometry) const
     }
     case Geometry::CURVE:
     {
+      /*
+      void
+CurveLocation::GetPosition(const Geometry* geom, 
+  pxr::GfVec3f* pos, bool worldSpace) const
+{
+  if(geom->GetType() != Geometry::CURVE) return;
+  
+  const Curve* curve = (const Curve*)geom;
 
+}
+
+void
+CurveLocation::GetNormal(const Geometry* geom,
+  pxr::GfVec3f* nrm, bool worldSpace) const
+{
+  if(geom->GetType() != Geometry::CURVE) return;
+  
+  const Curve* curve = (const Curve*)geom;
+
+}
+      */
     }
     case Geometry::POINT:
     {

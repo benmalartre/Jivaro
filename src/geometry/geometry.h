@@ -80,45 +80,6 @@ protected:
   pxr::GfVec3f                        _wirecolor;
 };
 
-class Location {
-public:
-  virtual void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
-    bool worldSpace=true) const = 0;
-  virtual void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
-    bool worldSpace=true) const = 0;
-  friend class Geometry;
-};
-
-class PlaneLocation : public Location {
-public:
-  PlaneLocation(pxr::GfVec3f& offset)
-    : _offset(offset){};
-
-  void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
-    bool worldSpace=true) const override;
-  void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
-    bool worldSpace=true) const override;
-
-private:
-  pxr::GfVec3f _offset;
-};
-
-class SphereLocation : public Location {
-public:
-  SphereLocation(float longitude, float latitude)
-    : _longitude(longitude), _latitude(latitude) {};
-
-  void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
-    bool worldSpace=true) const override;
-  void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
-    bool worldSpace=true) const override;
-
-private:
-  float _longitude;
-  float _latitude;
-};
-
-
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_GEOMETRY_GEOMETRY_H

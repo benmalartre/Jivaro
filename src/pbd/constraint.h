@@ -18,7 +18,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 struct Particles;
 struct Body;
 class Collision;
-class Location;
+class Hit;
 
 class Constraint
 {
@@ -181,7 +181,7 @@ protected:
   static size_t                 TYPE_ID;
 
   Collision*                    _collision;
-  std::vector<Location* >       _contacts;
+  std::vector<Hit>              _contacts;
   std::vector<float>            _length;
 };
 

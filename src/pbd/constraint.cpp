@@ -516,7 +516,19 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision, const
 
 void CollisionConstraint::StoreContactsLocation(Particles* particles, float dt)
 {
-
+  /*
+  float radius = particles->radius[index];
+  float d = pxr::GfDot(_normal, particles->predicted[index] + particles->velocity[index] * dt - _position) - _distance - radius;
+  if (d < 0.f) {
+    SetHit(index);
+  }
+  */
+  const size_t numElements = _elements.size() / ELEM_SIZE;
+  const size_t offset = _body[0]->offset;
+  pxr::GfVec3f contact;
+  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
+    contact = _collision->ResolveContact(particles, _elements[elemIdx] + offset, dt);
+  }
 }
 
 void CollisionConstraint::Solve(Particles* particles, float dt)

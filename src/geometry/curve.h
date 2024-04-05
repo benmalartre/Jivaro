@@ -20,7 +20,6 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 struct Sample;
-class CurveLocation;
 
 class Curve : public Points {
 public:
@@ -66,10 +65,10 @@ public:
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
 
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
-    const pxr::GfVec3f& direction, CurveLocation& location, float maxDistance);
+    const pxr::GfVec3f& direction, Hit& location, float maxDistance);
 
   bool Closest(const pxr::GfVec3f& point, 
-    CurveLocation& location, float maxDistance);
+    Hit& location, float maxDistance);
 
   // query 3d position on geometry (unaccelarated)
   bool Raycast(const pxr::GfRay& ray, Hit* hit,
@@ -83,28 +82,6 @@ private:
   // curves description
   pxr::VtArray<int>                   _cvCounts;
 
-};
-
-class CurveLocation : public Location {
-public:
-  void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
-    bool worldSpace=true) const override;
-  void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
-    bool worldSpace=true) const override;
-
-  void Set(uint32_t cid, uint32_t sid, float u) {
-    _cid = cid;
-    _sid = sid;
-    _u = u;
-  };
-  void SetCurveIndex(uint32_t cid) {_cid = cid;};
-  void SetSegmentIndex(uint32_t sid) {_sid = sid;};
-  void SetU(float u) {_u = u;};
-
-private:
-  uint32_t  _cid;      // curve index
-  uint32_t  _sid;      // segment index
-  float     _u;        // u along segment
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

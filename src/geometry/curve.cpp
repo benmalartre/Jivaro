@@ -100,14 +100,14 @@ Curve::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 
 bool 
 Curve::ClosestIntersection(const pxr::GfVec3f& origin, 
-  const pxr::GfVec3f& direction, CurveLocation& location, float maxDistance)
+  const pxr::GfVec3f& direction, Hit& location, float maxDistance)
 {
   return false;
 }
 
 bool 
 Curve::Closest(const pxr::GfVec3f& point, 
-  CurveLocation& location, float maxDistance)
+  Hit& location, float maxDistance)
 {
   return false;
 }
@@ -217,44 +217,5 @@ Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
   }
 }
 
-void
-CurveLocation::GetPosition(const Geometry* geom, 
-  pxr::GfVec3f* pos, bool worldSpace) const
-{
-  if(geom->GetType() != Geometry::CURVE) return;
-  
-  const Curve* curve = (const Curve*)geom;
-  /*
-  const Triangle* T = mesh->GetTriangle(_id);
-  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-
-  for(uint32_t i = 0; i < 3; ++i) 
-    *pos += positions[T->vertices[i]] * _baryCoords[i];
-
-  if(worldSpace) {
-    mesh->GetMatrix().Transform(*pos);
-  }
-  */
-}
-
-void
-CurveLocation::GetNormal(const Geometry* geom,
-  pxr::GfVec3f* nrm, bool worldSpace) const
-{
-  if(geom->GetType() != Geometry::CURVE) return;
-  
-  const Curve* curve = (const Curve*)geom;
-  /*
-  const Triangle* T = mesh->GetTriangle(_id);
-  const pxr::GfVec3f* normals = mesh->GetNormalsCPtr();
-
-  for(uint32_t i=0;i<3;i++) 
-    *nrm += normals[T->vertices[i]] * _baryCoords[i];
-
-  if(worldSpace) {
-    mesh->GetMatrix().TransformDir(*nrm);
-  }
-  */
-}
 
 JVR_NAMESPACE_CLOSE_SCOPE

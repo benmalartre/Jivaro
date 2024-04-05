@@ -15,11 +15,6 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-struct Location {
-  Geometry*             geometry;      // geometry ptr
-  uint32_t              id;            // element index
-  pxr::GfVec3f          baryCoords;    // barycentric coordinates
-};
 
 struct HalfEdge
 {
