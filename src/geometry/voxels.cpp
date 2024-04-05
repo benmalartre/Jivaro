@@ -94,7 +94,7 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
     while (true)
     {
       // calculate ray start
-      Hit hit;
+      Location hit;
       double minDistance = DBL_MAX;
       if (_bvh.Raycast(points, pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
       {
@@ -145,7 +145,7 @@ void Voxels::_ProximityWork(size_t begin, size_t end)
 
   for (size_t cell = begin; cell < end; ++cell) {
     const pxr::GfVec3f point = GetCellPosition(cell);
-    Hit hit;
+    Location hit;
     if(_bvh.Closest(points, point, &hit, threshold))
       _data[cell] += 3;
   }

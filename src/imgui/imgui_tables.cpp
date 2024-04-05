@@ -1105,7 +1105,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     // [Part 9] Allocate draw channels and setup background cliprect
     TableSetupDrawChannels(table);
 
-    // [Part 10] Hit testing on borders
+    // [Part 10] Locationtesting on borders
     if (table->Flags & ImGuiTableFlags_Resizable)
         TableUpdateBorders(table);
     table_instance->LastFirstRowHeight = 0.0f;

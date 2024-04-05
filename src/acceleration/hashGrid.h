@@ -79,11 +79,11 @@ public:
 
   void Init(const std::vector<Geometry*>& geometries) override;
   void Update(const std::vector<Geometry*>& geometries) override;
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance, double* minDistance = NULL) const override {
     return false;
   }
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const override {
     return false;
   }

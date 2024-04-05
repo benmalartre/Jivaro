@@ -11,7 +11,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Points;
-class Hit;
+class Location;
 struct Edge : public Component {
 
   Edge()
@@ -32,9 +32,9 @@ struct Edge : public Component {
   pxr::GfVec3f GetPosition(Points* geom, short idx);
   pxr::GfVec3f GetNormal(Points* geom);
 
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Touch(const pxr::GfVec3f* points, 
     const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const override;

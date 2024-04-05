@@ -20,7 +20,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
-class Hit;
+class Location;
 struct Component {
 
   uint32_t id;
@@ -31,9 +31,9 @@ struct Component {
 
   virtual bool Touch(const pxr::GfVec3f* points, 
     const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const = 0;
-  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const = 0;
-  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const = 0;
 
 };

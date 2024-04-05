@@ -63,7 +63,7 @@ Edge::Intersect(const Edge& other, float epsilon)
 }
 
 bool 
-Edge::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+Edge::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
@@ -78,7 +78,7 @@ Edge::Touch(const pxr::GfVec3f* points,
 
 
 bool 
-Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   pxr::GfVec3f closest;

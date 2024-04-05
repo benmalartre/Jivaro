@@ -12,7 +12,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Intersector;
 class Geometry;
 
-class Hit {
+class Location{
 private:
   friend class Intersector;
   int           _geomId;
@@ -21,23 +21,23 @@ private:
 
 public:
   // Constructors
-  Hit() 
+  Location() 
     : _geomId(-1)
     , _elemId(-1)
     , _coords(pxr::GfVec4f(0.f, 0.f, 0.f, FLT_MAX)) {};
 
-  Hit(const Hit& other)
+  Location(const Location& other)
     : _geomId(other._geomId)
     , _elemId(other._elemId)
     , _coords(other._coords) {};
 
-  Hit(int geomId, int elemId, const pxr::GfVec4f& coords)
+  Location(int geomId, int elemId, const pxr::GfVec4f& coords)
     : _geomId(geomId)
     , _elemId(elemId)
     , _coords(coords) {};
 
   // Setters
-  void Set(const Hit& other);
+  void Set(const Location& other);
   void SetGeometryIndex(int id) { _geomId = id; };
   void SetElementIndex(int id) { _elemId = id; };
   void SetCoordinates(const pxr::GfVec3f& coords) { 
@@ -58,7 +58,7 @@ public:
   pxr::GfVec3f GetPosition(Geometry* geometry) const;
   pxr::GfVec3f GetPosition(const pxr::GfRay& ray) const;
   pxr::GfVec3f GetNormal(Geometry* geometry) const;
-  bool HasHit() { return _elemId >= 0; };
+  bool HasLocation() { return _elemId >= 0; };
 };
 
 static pxr::GfPlane DEFAULT_PLANE(pxr::GfVec3d(0, 1, 0), pxr::GfVec3d(0));

@@ -25,7 +25,7 @@ enum GeomInterpolation : short {
   GeomInterpolationCount
 };
 
-class Hit;
+class Location;
 
 class Geometry {
 public:
@@ -64,9 +64,9 @@ public:
   const pxr::GfBBox3d& GetBoundingBox() const { return _bbox; };
 
   // query 3d position on geometry
-  virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance=-1.0, double* minDistance=NULL) const = 0;
-  virtual bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const = 0;
 
 protected:

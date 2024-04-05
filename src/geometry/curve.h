@@ -65,15 +65,15 @@ public:
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
 
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
-    const pxr::GfVec3f& direction, Hit& location, float maxDistance);
+    const pxr::GfVec3f& direction, Location& location, float maxDistance);
 
   bool Closest(const pxr::GfVec3f& point, 
-    Hit& location, float maxDistance);
+    Location& location, float maxDistance);
 
   // query 3d position on geometry (unaccelarated)
-  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 private:

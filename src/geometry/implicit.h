@@ -26,9 +26,9 @@ public:
   virtual ~Sphere() {};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 private:
@@ -44,9 +44,9 @@ public:
   virtual ~Plane() {};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 private:
@@ -64,9 +64,9 @@ public:
   virtual ~Cube() {};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 private:
@@ -82,9 +82,9 @@ public:
   virtual ~Cone() {};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 private:
@@ -101,11 +101,11 @@ public:
   virtual ~Capsule() {};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };

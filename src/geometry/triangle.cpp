@@ -58,7 +58,7 @@ Triangle::GetNormal(const pxr::GfVec3f* points)
   return normal;
 }
 
-bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   pxr::GfVec3d baryCoords;
@@ -84,7 +84,7 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* h
 //-------------------------------------------------------
 // Triangle Closest Point
 //-------------------------------------------------------
-bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   const pxr::GfVec3f offset(maxDistance);
@@ -350,7 +350,7 @@ TrianglePair::GetBoundingBox(const pxr::GfVec3f* points) const
 // TrianglePair raycast
 //-------------------------------------------------------
 bool
-TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   bool hitSometing = false;
@@ -364,7 +364,7 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hi
 //-------------------------------------------------------
 bool 
 TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
-  Hit* hit, double maxDistance, double* minDistance) const
+  Location* hit, double maxDistance, double* minDistance) const
 {
   bool hitSometing = false;
   if (left && left->Closest(points, point, hit, maxDistance, minDistance))hitSometing = true;

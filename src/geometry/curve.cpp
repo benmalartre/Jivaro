@@ -100,27 +100,27 @@ Curve::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 
 bool 
 Curve::ClosestIntersection(const pxr::GfVec3f& origin, 
-  const pxr::GfVec3f& direction, Hit& location, float maxDistance)
+  const pxr::GfVec3f& direction, Location& location, float maxDistance)
 {
   return false;
 }
 
 bool 
 Curve::Closest(const pxr::GfVec3f& point, 
-  Hit& location, float maxDistance)
+  Location& location, float maxDistance)
 {
   return false;
 }
 
 bool 
-Curve::Raycast(const pxr::GfRay& ray, Hit* hit,
+Curve::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
 };
 
 bool 
-Curve::Closest(const pxr::GfVec3f& point, Hit* hit,
+Curve::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;

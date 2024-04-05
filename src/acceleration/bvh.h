@@ -68,10 +68,10 @@ public:
 
     void Init(Geometry* geometry);
 
-    bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+    bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
       double maxDistance = FLT_MAX, double* minDistance = NULL) const;
     bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
-      Hit* hit, double maxDistance = FLT_MAX, double* minDistance = NULL) const;
+      Location* hit, double maxDistance = FLT_MAX, double* minDistance = NULL) const;
 
   protected:
     void _FinishSort(std::vector<Morton>& cells);
@@ -109,9 +109,9 @@ public:
   
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update(const std::vector<Geometry*>& geometries) override;
-  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance, double* minDistance = NULL) const override;
-  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const override;
 
 private:

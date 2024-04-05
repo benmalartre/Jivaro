@@ -47,10 +47,10 @@ public:
   virtual pxr::GfVec3f ResolveContact(Particles* particles, size_t index, float dt) = 0;
   virtual pxr::GfVec3f ResolveVelocity(Particles* particles, size_t index, float dt) = 0;
 
-  inline bool CheckHit(size_t index) {
+  inline bool CheckLocation(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
   };
-  inline void SetHit(size_t index) {
+  inline void SetLocation(size_t index) {
     BIT_SET(_hits[index / sizeof(int)], index % sizeof(int));
   };
   //virtual void Apply();

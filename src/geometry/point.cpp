@@ -51,14 +51,14 @@ pxr::GfVec3f Point::GetNormal(Points* geom)
 }
 
 bool 
-Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
 }
 
 bool 
-Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
+Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   const float distance = (point - points[id]).GetLength();

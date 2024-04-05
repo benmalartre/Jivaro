@@ -653,7 +653,7 @@ void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs)
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 
-  const pxr::GfVec3f& direction, Hit& result, float maxDistance)
+  const pxr::GfVec3f& direction, Location& result, float maxDistance)
 {
   pxr::GfRay ray(origin, direction);
 

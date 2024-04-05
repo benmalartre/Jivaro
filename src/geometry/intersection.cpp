@@ -15,14 +15,14 @@ JVR_NAMESPACE_OPEN_SCOPE
 // HIT CLASS
 //=================================================================================================
 void 
-Hit::Set(const Hit& other) {
+Location::Set(const Location& other) {
   _geomId = other._geomId;
   _elemId = other._elemId;
   _coords = other._coords;
 }
 
 pxr::GfVec3f 
-Hit::GetPosition(Geometry* geometry) const 
+Location::GetPosition(Geometry* geometry) const 
 {
   /*
   Geometry*     _geom;
@@ -78,13 +78,13 @@ CurveLocation::GetNormal(const Geometry* geom,
 }
 
 pxr::GfVec3f
-Hit::GetPosition(const pxr::GfRay& ray) const
+Location::GetPosition(const pxr::GfRay& ray) const
 {
   return pxr::GfVec3f(ray.GetPoint(_coords[3]));
 }
 
 pxr::GfVec3f
-Hit::GetNormal(Geometry* geometry) const
+Location::GetNormal(Geometry* geometry) const
 {
   switch (geometry->GetType()) {
     case Geometry::MESH:

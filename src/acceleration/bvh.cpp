@@ -228,7 +228,7 @@ BVH::Cell::GetGeometry()
 }
 
 bool
-BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   double enterDistance, exitDistance;
@@ -246,20 +246,20 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
       const BVH* intersector = GetIntersector();
       hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
     }
-    Hit leftHit(*hit), rightHit(*hit);
+    Location leftHit(*hit), rightHit(*hit);
     if (_left)_left->Raycast(points, ray, &leftHit, maxDistance, minDistance);
     if (_right)_right->Raycast(points, ray, &rightHit, maxDistance, minDistance);
 
-    if (leftHit.HasHit() && rightHit.HasHit()) {
+    if (leftHit.HasLocation() && rightHit.HasLocation()) {
       if (leftHit.GetT() < rightHit.GetT())
         hit->Set(leftHit); 
       else
         hit->Set(rightHit); 
        return true;
-    } else if (leftHit.HasHit()) {
+    } else if (leftHit.HasLocation()) {
       hit->Set(leftHit); 
       return true;
-    } else if (rightHit.HasHit()) {
+    } else if (rightHit.HasLocation()) {
       hit->Set(rightHit); 
       return true;
     }
@@ -269,7 +269,7 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
 
 bool 
 BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
-  Hit* hit, double maxDistance, double* minDistance) const
+  Location* hit, double maxDistance, double* minDistance) const
 {  
   if(IsLeaf()) {
     Component* component = (Component*)_data;
@@ -283,9 +283,9 @@ BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
       leftHit = _left->Closest(points, point, hit, maxDistance, minDistance);
     }
     if(_right && !range.IsOutside(*_right)) {
-      rightHit = _right->Closest(points, point, hit, maxDistance, minDistance);
+      rightHit= _right->Closest(points, point, hit, maxDistance, minDistance);
     }
-    return leftHit || rightHit;
+    return leftHit|| rightHit;
   }
 }
 
@@ -422,14 +422,14 @@ BVH::Update(const std::vector<Geometry*>& geometries)
 
 }
 
-bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
+bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return _root.Raycast(points, ray, hit, maxDistance, minDistance);
 };
 
 bool BVH::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
-  Hit* hit, double maxDistance) const
+  Location* hit, double maxDistance) const
 {
   double minDistance = FLT_MAX;
   return _root.Closest(points, point, hit, maxDistance, &minDistance);

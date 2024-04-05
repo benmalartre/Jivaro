@@ -50,7 +50,7 @@ Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
 }
 
 bool 
-Plane::Raycast(const pxr::GfRay& ray, Hit* hit,
+Plane::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   /*
@@ -74,7 +74,7 @@ Plane::Raycast(const pxr::GfRay& ray, Hit* hit,
   return false;
 }
 
-bool Plane::Closest(const pxr::GfVec3f& point, Hit* hit,
+bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   /*
@@ -113,7 +113,7 @@ Sphere::Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world)
 }
 
 bool 
-Sphere::Raycast(const pxr::GfRay& ray, Hit* hit,
+Sphere::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   pxr::GfRay invRay(ray);
@@ -135,7 +135,7 @@ Sphere::Raycast(const pxr::GfRay& ray, Hit* hit,
   return false;
 }
 
-bool Sphere::Closest(const pxr::GfVec3f& point, Hit* hit,
+bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
@@ -172,7 +172,7 @@ Cube::Cube(const pxr::UsdGeomCube& cube, const pxr::GfMatrix4d& world)
 }
 
 bool 
-Cube::Raycast(const pxr::GfRay& ray, Hit* hit,
+Cube::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   pxr::GfRay invRay(ray);
@@ -199,7 +199,7 @@ Cube::Raycast(const pxr::GfRay& ray, Hit* hit,
 }
 
 bool 
-Cube::Closest(const pxr::GfVec3f& point, Hit* hit,
+Cube::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   /*
@@ -242,7 +242,7 @@ Cone::Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world)
 }
 
 bool 
-Cone::Raycast(const pxr::GfRay& ray, Hit* hit,
+Cone::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   pxr::GfRay invRay(ray);
@@ -265,7 +265,7 @@ Cone::Raycast(const pxr::GfRay& ray, Hit* hit,
 }
 
 bool 
-Cone::Closest(const pxr::GfVec3f& point, Hit* hit,
+Cone::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;

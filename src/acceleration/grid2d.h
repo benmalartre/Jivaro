@@ -26,7 +26,7 @@ class Grid2DIntersector : public Intersector {
   };
 
   typedef bool (Grid2DIntersector::*IntersectFunc)(
-    Geometry* geometry, const pxr::GfRay &ray, Hit* hit, 
+    Geometry* geometry, const pxr::GfRay &ray, Location* hit, 
     double maxDistance, double* minDistance);
 
   static uint32_t SLICE_INDICES[27*3];
@@ -61,7 +61,7 @@ public:
     void Insert(Triangle* triangle) { 
       _elements.push_back({0, (void*)triangle}); 
     };
-    bool Raycast(Geometry* geom, const pxr::GfRay& ray, Hit* hit, 
+    bool Raycast(Geometry* geom, const pxr::GfRay& ray, Location* hit, 
       double maxDistance=-1, double* minDistance=NULL) const;
     
 
@@ -110,9 +110,9 @@ public:
   void InsertPoints(Points* points);
 
   // intersect a ray with the mesh
-  bool Raycast(const pxr::GfRay& ray, Hit* hitPoint, 
+  bool Raycast(const pxr::GfRay& ray, Location* hitPoint, 
     double maxDistance=-1, double* minDistance=NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1, double* minDistance = NULL) const override;
 
   Cell* GetCell(uint32_t index);
