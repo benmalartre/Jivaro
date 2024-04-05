@@ -468,7 +468,7 @@ Scene::InitExec()
   _GenerateGroundBox(rootId);
   
   
-  for(size_t x = 0; x < 3; ++x) {
+  for(size_t x = 0; x < 12; ++x) {
     std::string name = "cloth" + std::to_string(x);
     _GenerateClothMesh(rootId, pxr::TfToken(name), size,
       matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 5.f, 0.f)));

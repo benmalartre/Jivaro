@@ -17,6 +17,7 @@ void Collision::_ResetContacts(Particles* particles)
 void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
   pxr::VtArray<Constraint*>& contacts)
 {
+  CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->position.size();
   size_t numBodies = bodies.size();
 
@@ -28,7 +29,9 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
     if (CheckHit(index)) {
       if (particles->body[index] != bodyIdx) {
         if (elements.size()) {
-          contacts.push_back(new CollisionConstraint(bodies[bodyIdx], this, elements));
+          constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
+          constraint->StoreContactsLocation(particles, 1.f);
+          contacts.push_back(constraint);
           _numContacts += elements.size();
           numConstraints++;
           elements.clear();
@@ -40,7 +43,9 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
   } 
   
   if (elements.size()) {
-    contacts.push_back(new CollisionConstraint(bodies[bodyIdx], this, elements));
+    constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
+    constraint->StoreContactsLocation(particles, 1.f);
+    contacts.push_back(constraint);
     _numContacts += elements.size();
     numConstraints++;
   }
@@ -97,12 +102,20 @@ pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index, 
 {
   float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - particles->radius[index];
 
+  if (d < 0.f) return _position + _normal * -d;
+  else return particles->position[index];
+
+}
+
+pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, size_t index, float dt)
+{
+  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - particles->radius[index];
+
   // Tangential component of relative motion
   const pxr::GfVec3f tangent = 
     (particles->velocity[index] - (_normal * pxr::GfDot(particles->velocity[index], _normal))) * -1.f;
 
-
-  if (d < 0.f) return _normal * -d + tangent * _friction * dt;
+  if (d < 0.f) return _normal * -d * _restitution + tangent * _friction * dt;
   else return pxr::GfVec3f(0.f);
 
 }
@@ -133,6 +146,12 @@ pxr::GfVec3f SphereCollision::ResolveContact(Particles* particles, size_t index,
 {
   return pxr::GfVec3f(0.f);
 }
+
+pxr::GfVec3f SphereCollision::ResolveVelocity(Particles* particles, size_t index, float dt)
+{
+  return pxr::GfVec3f(0.f);
+}
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

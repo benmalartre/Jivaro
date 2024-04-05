@@ -18,6 +18,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 struct Particles;
 struct Body;
 class Collision;
+class Location;
 
 class Constraint
 {
@@ -162,6 +163,8 @@ public:
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
   virtual void Solve(Particles* particles, float dt) override;
+
+  void StoreContactsLocation(Particles* particles, float dt);
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
     pxr::VtArray<float>& radius) override;
 
@@ -172,11 +175,14 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
+  
   float _CalculateValue(Particles* particles, size_t index) override { return 0.f; };
   void _CalculateGradient(Particles * particles, size_t index) override {};
   static size_t                 TYPE_ID;
 
   Collision*                    _collision;
+  std::vector<Location* >       _contacts;
+  std::vector<float>            _length;
 };
 
 void CreateCollisionConstraint(Body* body, Collision* collision, pxr::VtArray<Constraint*>& constraints,

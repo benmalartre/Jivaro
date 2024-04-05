@@ -1,4 +1,11 @@
-// IMPLICIT GEOMETRIES (SPHERE, CUBE, CONE, CAPSULE)
+//--------------------------------------------------
+// Implicit Geometries
+// 
+// Plane
+// Sphere
+// Cube
+// Cone
+// Capsule
 //--------------------------------------------------
 
 #include "../geometry/implicit.h"
@@ -7,6 +14,84 @@
 #include <pxr/base/gf/ray.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
+Plane::Plane()
+  : Geometry(Geometry::PLANE, pxr::GfMatrix4d(1.0))
+{
+}
+
+Plane::Plane(const Plane* other, bool normalize)
+  : Geometry(other, Geometry::PLANE, normalize)
+{
+  _normal = other->_normal;
+  _width = other->_width;
+  _length = other->_length;
+  _doubleSided = other->_doubleSided;
+}
+
+Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
+  : Geometry(Geometry::PLANE, world)
+{
+  pxr::TfToken axis;
+  pxr::UsdAttribute axisAttr = plane.GetAxisAttr();
+  axisAttr.Get(&axis, pxr::UsdTimeCode::Default());
+  if (axis == pxr::UsdGeomTokens->x)
+    _normal = pxr::GfVec3f(1.f, 0.f, 0.f);
+  else if (axis == pxr::UsdGeomTokens->y)
+    _normal = pxr::GfVec3f(0.f, 1.f, 0.f);
+  else
+    _normal = pxr::GfVec3f(0.f, 0.f, 1.f);
+
+  pxr::UsdAttribute widthAttr = plane.GetWidthAttr();
+  widthAttr.Get(&_width, pxr::UsdTimeCode::Default());
+  pxr::UsdAttribute lengthAttr = plane.GetLengthAttr();
+  lengthAttr.Get(&_length, pxr::UsdTimeCode::Default());
+  pxr::UsdAttribute doubleSidedAttr = plane.GetDoubleSidedAttr();
+  doubleSidedAttr.Get(&_doubleSided, pxr::UsdTimeCode::Default());
+}
+
+bool 
+Plane::Raycast(const pxr::GfRay& ray, Hit* hit,
+  double maxDistance, double* minDistance) const
+{ 
+  /*
+  pxr::GfRay invRay(ray);
+  invRay.Transform(GetInverseMatrix());
+  double enterDistance, exitDistance;
+  if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
+    pxr::GfVec3f local(ray.GetPoint(enterDistance));
+    pxr::GfVec3f world(GetMatrix().Transform(local));
+    float distance = (ray.GetStartPoint() - world).GetLength();
+    if(distance < maxDistance && distance < *minDistance) {
+      *minDistance = distance;
+      // store spherical coordinates
+      float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+      float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+      hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+      return true;
+    }
+  }
+  */
+  return false;
+}
+
+bool Plane::Closest(const pxr::GfVec3f& point, Hit* hit,
+  double maxDistance, double* minDistance) const
+{
+  /*
+  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
+  pxr::GfVec3f closest = GetMatrix().Transform(local);  
+  float distance = (point - closest).GetLength();
+  if(distance < maxDistance && distance < *minDistance) {
+    *minDistance = distance;
+    // store spherical coordinates
+    float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+    float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+    hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+    return true;
+  }
+  */
+  return false;
+}
 
 Sphere::Sphere()
   : Geometry(Geometry::SPHERE, pxr::GfMatrix4d(1.0))

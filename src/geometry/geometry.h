@@ -31,6 +31,7 @@ class Geometry {
 public:
   enum Type {
     INVALID,
+    PLANE,
     SPHERE,
     CUBE,
     CONE, 
@@ -86,6 +87,20 @@ public:
   virtual void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
     bool worldSpace=true) const = 0;
   friend class Geometry;
+};
+
+class PlaneLocation : public Location {
+public:
+  PlaneLocation(pxr::GfVec3f& offset)
+    : _offset(offset){};
+
+  void GetPosition(const Geometry* geom, pxr::GfVec3f* pos,
+    bool worldSpace=true) const override;
+  void GetNormal(const Geometry* geom, pxr::GfVec3f* nrm,
+    bool worldSpace=true) const override;
+
+private:
+  pxr::GfVec3f _offset;
 };
 
 class SphereLocation : public Location {

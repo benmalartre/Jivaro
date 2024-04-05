@@ -45,6 +45,7 @@ public:
     pxr::VtArray<Constraint*>& constraint, float dt);
 
   virtual pxr::GfVec3f ResolveContact(Particles* particles, size_t index, float dt) = 0;
+  virtual pxr::GfVec3f ResolveVelocity(Particles* particles, size_t index, float dt) = 0;
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
@@ -77,6 +78,7 @@ public:
     const pxr::GfVec3f& position = pxr::GfVec3f(0.f), const float distance=0.1f);
 
   pxr::GfVec3f ResolveContact(Particles* particles, size_t index, float dt) override;
+  pxr::GfVec3f ResolveVelocity(Particles* particles, size_t index, float dt) override;
 
   inline void Set(const pxr::GfVec3f& position, const pxr::GfVec3f& normal);
   inline void SetPosition(const pxr::GfVec3f& position);
@@ -121,6 +123,7 @@ public:
     const pxr::GfMatrix4f& xform=pxr::GfMatrix4f(1.f), float radius=1.f);
 
   pxr::GfVec3f ResolveContact(Particles* particles, size_t index, float dt) override;
+  pxr::GfVec3f ResolveVelocity(Particles* particles, size_t index, float dt) override;
 
   inline void Set(const pxr::GfMatrix4f& xform, float radius);
   inline void SetXform(const pxr::GfMatrix4f& xform);

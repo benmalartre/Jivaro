@@ -9,6 +9,7 @@
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/usd/usdGeom/tokens.h>
+#include <pxr/usd/usdGeom/plane.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/cone.h>
@@ -33,6 +34,26 @@ public:
 private:
   float                    _radius;  
 
+};
+
+class Plane : public Geometry {
+public:
+  Plane();
+  Plane(const Plane* other, bool normalize = true);
+  Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world);
+  virtual ~Plane() {};
+
+  // query 3d position on geometry
+  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+private:
+  pxr::GfVec3f                _normal;
+  float                       _width;
+  float                       _length;
+  bool                        _doubleSided;
 };
 
 class Cube : public Geometry {
