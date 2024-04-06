@@ -119,6 +119,7 @@ add_executable(${TARGET}
   app/application.cpp
   #tests/location.cpp
   tests/pbd.cpp
+  tests/hair.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp
