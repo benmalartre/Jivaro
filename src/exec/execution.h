@@ -1,7 +1,9 @@
 #ifndef JVR_EXEC_EXECUTION_H
 #define JVR_EXEC_EXECUTION_H
 
+#include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
+#include <pxr/imaging/hd/changeTracker.h>
 #include "../common.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -9,6 +11,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Scene;
 class Execution {
 public:
+  typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Source;
+  typedef pxr::VtArray<_Source>                               _Sources;
+  
   friend class Scene;
   Execution() = delete;
   Execution(Scene* scene) : _scene(scene) {};

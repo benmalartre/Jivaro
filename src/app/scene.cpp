@@ -199,6 +199,16 @@ Scene::IsPoints(const pxr::SdfPath& id)
   return (_prims.find(id) != _prims.end() && _prims[id].geom->GetType() == Geometry::POINT);
 }
 
+const pxr::SdfPath
+Scene::GetPrimPath(Geometry* geom) const
+{
+  for (auto& prim : _prims) {
+    if(prim.second.geom == geom)return prim.first;
+  }
+  return pxr::SdfPath();
+}
+
+
 pxr::TfToken
 Scene::GetRenderTag(pxr::SdfPath const& id)
 {

@@ -138,7 +138,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
 
   std::vector<pxr::UsdGeomSphere> spheres;
-  Scene::_Sources sources;
+  _Sources sources;
   float mass = 0.1f;
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();

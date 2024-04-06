@@ -37,9 +37,6 @@ typedef pxr::TfHashMap< pxr::SdfPath, _Graph, pxr::SdfPath::Hash > _GraphMap;
 
 class Scene  {
 public:
-  typedef pxr::VtArray<Sample>                                _Samples;
-  typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Source;
-  typedef pxr::VtArray<_Source>                               _Sources;
   friend class Execution;
 
   Scene();
@@ -64,6 +61,7 @@ public:
   bool IsCurves(const pxr::SdfPath& path);
   bool IsPoints(const pxr::SdfPath& path);
 
+  const pxr::SdfPath GetPrimPath(Geometry* geom) const;
   _PrimMap& GetPrims() { return _prims; };
   const _PrimMap& GetPrims() const { return _prims; };
 
@@ -111,7 +109,6 @@ public:
 private:
   Solver*                                                     _solver;
   _PrimMap                                                    _prims;
-  pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash>  _sourcesMap;
 };
 
 
