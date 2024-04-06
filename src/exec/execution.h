@@ -8,11 +8,17 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Scene;
 class Execution {
+public:
   friend class Scene;
+  Execution() = delete;
   Execution(Scene* scene) : _scene(scene) {};
   virtual void InitExec(pxr::UsdStageRefPtr& stage) = 0;
-  virtual void UpdateExec(pxr::UsdStageRefPtr& stage, double time) = 0;
+  virtual void UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime) = 0;
   virtual void TerminateExec(pxr::UsdStageRefPtr& stage) = 0;
+
+public:
+  Scene* GetScene(){return _scene;};
+  const Scene* GetScene() const {return _scene;};
 
 protected:
   Scene* _scene;

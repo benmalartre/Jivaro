@@ -31,6 +31,7 @@
 #include "../app/view.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+#include "../tests/pbd.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -42,7 +43,7 @@ const char* Application::name = "Jivaro";
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):
   _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _execute(false), _activeEngine(nullptr)
+  _execute(false), _activeEngine(nullptr), _exec(nullptr)
 {  
   _mainWindow = CreateStandardWindow(name, pxr::GfVec4i(0,0,width, height));
   _activeWindow = _mainWindow;
@@ -52,7 +53,7 @@ Application::Application(unsigned width, unsigned height):
 
 Application::Application(bool fullscreen):
   _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _execute(false), _activeEngine(nullptr)
+  _execute(false), _activeEngine(nullptr), _exec(nullptr)
 {
   _mainWindow = CreateFullScreenWindow(name);
   _activeWindow = _mainWindow;
@@ -273,40 +274,38 @@ Application::Init()
 }
 
 void 
-Application::InitExec()
+Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  /*
-  Scene* scene = new Scene();
-  scene->InitExec();
+  _exec = new TestPBD(new Scene());
+  _exec->InitExec(stage);
+
   for(auto& engine: _engines) {
-    engine->InitExec(scene);
+    engine->InitExec(_exec->GetScene());
   }
-  */
+  
 }
 
 void
-Application::UpdateExec(double time)
+Application::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
-  /*
-  Scene* scene = _engines[0]->GetDelegate()->GetScene();
-  scene->UpdateExec(time);
+  _exec->UpdateExec(stage, time, startTime);
+
   for (auto& engine : _engines) {
     engine->UpdateExec(time);
   }
-  */
+  
 }
 
 void
-Application::TerminateExec()
+Application::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
-  /*
-  Scene* scene = _engines[0]->GetDelegate()->GetScene();
   for (auto& engine : _engines) {
     engine->TerminateExec();
   }
-  delete scene;
+  delete _exec;
+  _exec = nullptr;
   //delete _solver;
-  */
+  
 }
 
 
@@ -330,11 +329,12 @@ Application::Update()
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
   double currentTime = GetTime().GetActiveTime();
+  double startTime = GetTime().GetStartTime();
 
   if (currentTime != lastTime) {
     lastTime = currentTime;
     if (_execute) {
-      UpdateExec(currentTime);
+      UpdateExec(_stage, currentTime, startTime);
     }
   }
 
@@ -554,8 +554,8 @@ void
 Application::ToggleExec() 
 {
   _execute = 1 - _execute; 
-  if (_execute)InitExec();
-  else TerminateExec();
+  if (_execute)InitExec(_stage);
+  else TerminateExec(_stage);
   DirtyAllEngines();
 };
 

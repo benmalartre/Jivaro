@@ -3,6 +3,7 @@
 
 #include <pxr/usd/usd/stageCache.h>
 #include "../common.h"
+#include "../exec/execution.h"
 #include "../app/time.h"
 #include "../app/notice.h"
 #include "../app/selection.h"
@@ -116,9 +117,9 @@ public:
   void SetExec(bool state);
   bool GetExec();
 
-  virtual void InitExec();
-  virtual void UpdateExec(double time);
-  virtual void TerminateExec();
+  virtual void InitExec(pxr::UsdStageRefPtr& stage);
+  virtual void UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime);
+  virtual void TerminateExec(pxr::UsdStageRefPtr& stage);
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
@@ -126,6 +127,9 @@ public:
   pxr::UsdStageRefPtr GetWorkStage();
 
   pxr::SdfLayerRefPtr GetCurrentLayer();
+
+protected:
+  Execution*                        _exec;
 
 private:
   bool                              _IsAnyEngineDirty();
@@ -153,6 +157,7 @@ private:
   std::vector<Engine*>              _engines;
   Engine*                           _activeEngine;
   bool                              _execute;
+
 };
 
 extern Application* APPLICATION;

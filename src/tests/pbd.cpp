@@ -211,9 +211,6 @@ pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeo
 
 void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  /*
-  Application* app = GetApplication();
-  pxr::UsdStageWeakPtr stage = app->GetStage();
   if (!stage) return;
 
   _solver = new Solver();
@@ -228,12 +225,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
   float size = .25f;
 
-  _GenerateGroundBox(rootId);
+  _GenerateGroundBox(stage, rootId);
   
   
   for(size_t x = 0; x < 6; ++x) {
     std::string name = "cloth" + std::to_string(x);
-    _GenerateClothMesh(rootId, pxr::TfToken(name), size,
+    _GenerateClothMesh(stage, rootId, pxr::TfToken(name), size,
       matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 5.f, 0.f)));
   }
 
@@ -299,19 +296,16 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   collisions->SetPositions(&particles->position[0], numParticles);
   collisions->SetRadii(&particles->radius[0], numParticles);
   collisions->SetColors(&particles->color[0], numParticles);
-  */
 }
 
 
-void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time)
+void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
-  /*
-  if (pxr::GfIsClose(time, GetApplication()->GetTime().GetStartTime(), 0.01))
+  if (pxr::GfIsClose(time, startTime, 0.01))
     _solver->Reset();
   else
     _solver->Step(false);
   
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
   pxr::UsdGeomXformCache xformCache(time);
 
   const size_t numParticles = _solver->GetNumParticles();
@@ -356,14 +350,10 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time)
       pxr::HdChangeTracker::DirtyWidths |
       pxr::HdChangeTracker::DirtyPrimvar;
   }
-  */
 }
 
 void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
-  /*
-  Application* app = GetApplication();
-  pxr::UsdStageWeakPtr stage = app->GetStage();
   if (!stage) return;
 
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
@@ -379,7 +369,7 @@ void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)
     }
   }
   delete _solver;
-  */
+
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -20,6 +20,7 @@ class Voxels;
 class Graph;
 struct Sample;
 class Solver;
+class Execution;
 
 struct _Prim {
   Geometry*          geom;
@@ -39,6 +40,7 @@ public:
   typedef pxr::VtArray<Sample>                                _Samples;
   typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Source;
   typedef pxr::VtArray<_Source>                               _Sources;
+  friend class Execution;
 
   Scene();
   ~Scene();
