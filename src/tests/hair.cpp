@@ -32,6 +32,20 @@ float length, amplitude, frequency, width, scale, radius;
 static void _InitControls(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+
+  pxr::UsdPrim controlPrim = stage->DefinePrim(rootPrim.GetPath().AppendChild(pxr::TfToken("Controls")));
+  controlPrim.CreateAttribute(pxr::TfToken("Density"), pxr::SdfValueTypeNames->Int).Set(10000);
+  controlPrim.CreateAttribute(pxr::TfToken("Radius"), pxr::SdfValueTypeNames->Float).Set(0.1f);
+  controlPrim.CreateAttribute(pxr::TfToken("Length"), pxr::SdfValueTypeNames->Float).Set(4.f);
+  controlPrim.CreateAttribute(pxr::TfToken("Scale"), pxr::SdfValueTypeNames->Float).Set(1.f);
+  controlPrim.CreateAttribute(pxr::TfToken("Amplitude"), pxr::SdfValueTypeNames->Float).Set(0.5f);
+  controlPrim.CreateAttribute(pxr::TfToken("Frequency"), pxr::SdfValueTypeNames->Float).Set(1.f);
+  controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
+}
+
+static void _QueryControls(pxr::UsdStageRefPtr& stage)
+{
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::UsdPrim controlPrim = rootPrim.GetChild(pxr::TfToken("Controls"));
 
   controlPrim.GetAttribute(pxr::TfToken("Density")).Get(&density);
@@ -46,7 +60,7 @@ static void _InitControls(pxr::UsdStageRefPtr& stage)
 pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
 {
   uint64_t T = CurrentTime();
-
+std::cout << "Hair Emit" << std::endl;
   _InitControls(stage);
   pxr::HdDirtyBits bits = pxr::HdChangeTracker::Clean;
  
@@ -61,9 +75,15 @@ pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeo
   mesh.GetFaceVertexCountsAttr().Get(&counts);
   mesh.GetFaceVertexIndicesAttr().Get(&indices);
 
+  std::cout << "Mesh QUeried" << std::endl;
+
+  _QueryControls(stage);
+  std::cout << "Controls QUeried" << std::endl;
+
   //uint64_t T1 = CurrentTime() - T;
   //T = CurrentTime();
   TriangulateMesh(counts, indices, triangles);
+  std::cout << "num triangles : " << triangles.size() / 3 << std::endl;
   //uint64_t T2 = CurrentTime() - T;
   //T = CurrentTime();
   ComputeVertexNormals(positions, counts, indices, triangles, normals);
@@ -73,7 +93,11 @@ pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeo
   //uint64_t T4 = CurrentTime() - T;
   //T = CurrentTime();  
 
+  std::cout << "Poisson Sampling" << std::endl;
+
   size_t numCVs = 4 * samples.size();
+
+  std::cout << "num cvs : " << numCVs << std::endl;
 
   pxr::VtArray<pxr::GfVec3f> points(numCVs);
   pxr::VtArray<float> radii(numCVs);
@@ -120,15 +144,17 @@ void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
-  _Sources sources;
 
   for (pxr::UsdPrim prim : primRange) {
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       Curve* curve = new Curve();
       _HairEmit(stage, curve, pxr::UsdGeomMesh(prim), pxr::GfMatrix4d(1.0), 1.f);
       
-      _scene->AddCurve(prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair"))), curve);
-      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
+      _Sources sources;
+      pxr::SdfPath hairPath = prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair")));
+      _scene->AddCurve(hairPath, curve);
+      sources.push_back({ hairPath, pxr::HdChangeTracker::Clean });
+      _sourcesMap[hairPath] = sources;
     }
   }
   
@@ -137,6 +163,9 @@ void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
+  for(auto& source: _sourcesMap) {
+    std::cout << source.first << std::endl;
+  }
 }
 
 void TestHair::TerminateExec(pxr::UsdStageRefPtr& stage)
