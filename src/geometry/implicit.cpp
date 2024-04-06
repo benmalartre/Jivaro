@@ -356,13 +356,13 @@ Capsule::Capsule(const Capsule* other, bool normalize)
 Capsule::Capsule(const pxr::UsdGeomCapsule& capsule, const pxr::GfMatrix4d& world)
   : Geometry(Geometry::CAPSULE, world)
 {
-  pxr::UsdAttribute radiusAttr = cone.GetRadiusAttr();
+  pxr::UsdAttribute radiusAttr = capsule.GetRadiusAttr();
   radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
 
-  pxr::UsdAttribute heightAttr = cone.GetHeightAttr();
+  pxr::UsdAttribute heightAttr = capsule.GetHeightAttr();
   heightAttr.Get(&_height, pxr::UsdTimeCode::Default());
 
-  pxr::UsdAttribute axisAttr = cone.GetAxisAttr();
+  pxr::UsdAttribute axisAttr = capsule.GetAxisAttr();
   axisAttr.Get(&_axis, pxr::UsdTimeCode::Default());
 
 }
