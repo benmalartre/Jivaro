@@ -75,12 +75,12 @@ pxr::UsdPrim _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
 }
 
 pxr::UsdGeomMesh _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  const pxr::TfToken& name, float size, const pxr::GfMatrix4f& m)
+  float size, const pxr::GfMatrix4f& m)
 {
   Mesh mesh;
   mesh.TriangularGrid2D(10.f, 10.f, m, size);
   //mesh.Randomize(0.1f);
-  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path.AppendChild(name));
+  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
   usdMesh.CreatePointsAttr().Set(mesh.GetPositions());
   usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts());
@@ -133,8 +133,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   
   for(size_t x = 0; x < 6; ++x) {
     std::string name = "cloth" + std::to_string(x);
-    _GenerateClothMesh(stage, rootId, pxr::TfToken(name), size,
+    pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
+    _GenerateClothMesh(stage, clothPath, size,
       matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 5.f, 0.f)));
+    
   }
 
   std::vector<pxr::UsdGeomSphere> spheres;
@@ -151,7 +153,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass);
       //mass *= 2;
       _solver->AddConstraints(body);
-
+      _bodyMap[prim.GetPath()] = body;
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
       pxr::UsdGeomPoints usdPoints(prim);
@@ -256,7 +258,9 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
     } else {
       pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
       if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
+
         std::cout << "we have a fuckin mesh : " << usdPrim.GetPath() << std::endl;
+
       }
     }
 
