@@ -114,6 +114,24 @@ pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeo
 
 void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
 {
+   if (!stage) return;
+
+  pxr::UsdPrimRange primRange = stage->TraverseAll();
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+
+  _Sources sources;
+
+  for (pxr::UsdPrim prim : primRange) {
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      Curve* curve = new Curve();
+      _HairEmit(stage, curve, pxr::UsdGeomMesh(prim), pxr::GfMatrix4d(1.0), 1.f);
+      
+      _scene->AddCurve(prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair"))), curve);
+      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
+    }
+  }
+  
 }
 
 

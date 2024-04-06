@@ -116,6 +116,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
+  _InitControls(stage);
   _solver = new Solver();
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
@@ -217,12 +218,6 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
   const size_t numParticles = _solver->GetNumParticles();
   const pxr::GfVec3f hitColor(1.f, 0.2f, 0.3f);
   Geometry* geom;
-  
-  for(Body* body: _solver->GetBodies()) {
-    std::cout << "damping : " << body->damping << std::endl;
-    std::cout << "radius : " << body->radius << std::endl;
-    std::cout << "mass : " << body->mass << std::endl;
-  }
  
   for (auto& execPrim : _scene->GetPrims()) {
 
@@ -258,12 +253,18 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
     } else {
       pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
       if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
-
-        std::cout << "we have a fuckin mesh : " << usdPrim.GetPath() << std::endl;
-
+        std::cout << "we found a mesh check for associated body" << std::endl;
+        const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
+        if (bodyIt != _bodyMap.end()) {
+          Body* body = bodyIt->second;
+          std::cout << "body found for " << bodyIt->first << ": " << body << std::endl;
+          Mesh* mesh = (Mesh*)execPrim.second.geom;
+          mesh->SetPositions(&_solver->GetParticles()->position[body->offset], mesh->GetNumPoints());
+        } else {
+          std::cout << "no body found for " << bodyIt->first << std::endl;
+        }
       }
     }
-
 
     execPrim.second.bits =
       pxr::HdChangeTracker::Clean |

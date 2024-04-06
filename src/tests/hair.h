@@ -15,8 +15,9 @@ public:
   void UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime=1.0) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 private:
-  Solver*                                                      _solver;
-  pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash>   _sourcesMap;
+  pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash> _sourcesMap;
+  pxr::TfHashMap<pxr::SdfPath, Body*, pxr::SdfPath::Hash>    _bodyMap;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
