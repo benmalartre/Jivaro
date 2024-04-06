@@ -172,30 +172,64 @@ Cube::Cube(const pxr::UsdGeomCube& cube, const pxr::GfMatrix4d& world)
   sizeAttr.Get(&_size, pxr::UsdTimeCode::Default());
 }
 
+// return cube face index for intersection point
+// -X = 0
+//  X = 1
+// -Y = 2
+//  Y = 3
+// -Z = 4
+//  Z = 5
+size_t _IntersectionToCubeFaceIndex(const pxr::GfVec3f& intersection, float size)
+{
+  if(pxr::GfIsClose(intersection[0], -size, 0.0000001f))return 0;
+  else if(pxr::GfIsClose(intersection[1], size, 0.0000001f))return 1;
+  if(pxr::GfIsClose(intersection[2], -size, 0.0000001f))return 2;
+  else if(pxr::GfIsClose(intersection[3], size, 0.0000001f))return 3;
+  if(pxr::GfIsClose(intersection[4], -size, 0.0000001f))return 4;
+  else return 5;
+}
+
 bool 
 Cube::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   pxr::GfRay invRay(ray);
-  invRay.Transform(GetInverseMatrix());
-  double enterDistance, exitDistance;
+    invRay.Transform(GetInverseMatrix());
+    double enterDistance, exitDistance;
+    float latitude, longitude;
 
-  /*
-  if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
-    pxr::GfVec3f local(ray.GetPoint(enterDistance));
-    pxr::GfVec3f world(GetMatrix().Transform(local));
-    float distance = (ray.GetStartPoint() - world).GetLength();
-    if(distance < maxDistance && distance < *minDistance) {
-      *minDistance = distance;
-      // store spherical coordinates
-      float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-      float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-      hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+
+  if(invRay.Intersect(pxr::GfRange3d(pxr::GfVec3f(-_size*0.5f), pxr::GfVec3f(_size*0.5)), &enterDistance, &exitDistance)) {
+    pxr::GfVec3f intersection(ray.GetPoint(enterDistance));
+    
+    if(enterDistance < maxDistance && enterDistance < *minDistance) {
+      *minDistance = enterDistance;
+      const size_t faceIdx = _IntersectionToCubeFaceIndex(intersection, _size);
+      switch(faceIdx) {
+        case 0:
+        case 1:
+          longitude = intersection[2];
+          latitude = intersection[1];
+          hit->SetCoordinates(pxr::GfVec3f(faceIdx, longitude, latitude));
+          break;
+
+        case 2:
+        case 3:
+          longitude = intersection[0];
+          latitude = intersection[2];
+          hit->SetCoordinates(pxr::GfVec3f(faceIdx, longitude, latitude));
+          break;
+
+        case 4:
+        case 5:
+          longitude = intersection[0];
+          latitude = intersection[1];
+          hit->SetCoordinates(pxr::GfVec3f(faceIdx, longitude, latitude));
+          break;
+      }
       return true;
     }
   }
-  */
-
   return false;
 }
 
