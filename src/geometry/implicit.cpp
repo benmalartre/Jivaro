@@ -12,6 +12,7 @@
 #include "../geometry/utils.h"
 #include "../geometry/intersection.h"
 #include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/range3d.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 Plane::Plane()
@@ -194,62 +195,66 @@ Cube::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   pxr::GfRay invRay(ray);
-    invRay.Transform(GetInverseMatrix());
-    double enterDistance, exitDistance;
-    float latitude, longitude;
+  invRay.Transform(GetInverseMatrix());
+  double distance;
+  float latitude, longitude;
 
 
-  if(invRay.Intersect(pxr::GfRange3d(pxr::GfVec3f(-_size*0.5f), pxr::GfVec3f(_size*0.5)), &enterDistance, &exitDistance)) {
-    pxr::GfVec3f intersection(ray.GetPoint(enterDistance));
-    
-    if(enterDistance < maxDistance && enterDistance < *minDistance) {
-      *minDistance = enterDistance;
-      const size_t faceIdx = _IntersectionToCubeFaceIndex(intersection, _size);
-      switch(faceIdx) {
-        case 0:
-        case 1:
-          longitude = intersection[2];
-          latitude = intersection[1];
-          hit->SetCoordinates(pxr::GfVec3f(faceIdx, longitude, latitude));
-          break;
-
-        case 2:
-        case 3:
-          longitude = intersection[0];
-          latitude = intersection[2];
-          hit->SetCoordinates(pxr::GfVec3f(faceIdx, longitude, latitude));
-          break;
-
-        case 4:
-        case 5:
-          longitude = intersection[0];
-          latitude = intersection[1];
-          hit->SetCoordinates(pxr::GfVec3f(faceIdx, longitude, latitude));
-          break;
-      }
+  if(invRay.Intersect(pxr::GfRange3d(pxr::GfVec3f(-_size*0.5f), pxr::GfVec3f(_size*0.5)), &distance, NULL)) {
+    const pxr::GfVec3f intersection(ray.GetPoint(distance));
+    const pxr::GfVec3f world = GetMatrix().Transform(intersection);
+    distance = (world - pxr::GfVec3f(ray.GetStartPoint())).GetLength();
+    if(distance < maxDistance && distance < *minDistance) {
+      *minDistance = distance;
+      hit->SetCoordinates(world);
       return true;
     }
   }
   return false;
 }
 
+
+bool _PointInsideCube(const pxr::GfVec3f& point, const pxr::GfRange3d& box) 
+{
+  return (
+    point[0] > box.GetMin()[0] && point[0] < box.GetMax()[0] &&
+    point[1] > box.GetMin()[1] && point[1] < box.GetMax()[1] &&
+    point[2] > box.GetMin()[2] && point[2] < box.GetMax()[2]
+  );
+}
+
+float _PointDistanceToRange1D(float p, float lower, float upper)
+{
+  if(p < lower)return lower - p;
+  else if(p > upper) return p - upper;
+  else return 0.f;
+}
+
+float _PointDistanceToBox(const pxr::GfVec3f& point, const pxr::GfRange3d& box)
+{
+  float dx = _PointDistanceToRange1D(point[0], box.GetMin()[0], box.GetMax()[0]);
+  float dy = _PointDistanceToRange1D(point[1], box.GetMin()[1], box.GetMax()[1]);
+  float dz = _PointDistanceToRange1D(point[2], box.GetMin()[2], box.GetMax()[2]);
+
+  if (_PointInsideCube(point, box))
+    return pxr::GfMin(dx, pxr::GfMin(dy, dz));
+  else
+    return pxr::GfSqr(dx * dx + dy * dy + dz * dz);
+}
+
 bool 
 Cube::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  /*
-  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  pxr::GfVec3f closest = GetMatrix().Transform(local);  
-  float distance = (point - closest).GetLength();
-  if(distance < maxDistance && distance < *minDistance) {
-    *minDistance = distance;
-    // store spherical coordinates
-    float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-    float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-    hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
-    return true;
+  pxr::GfVec3f relative = GetInverseMatrix().Transform(point);
+  float latitude, longitude;
+  int faceIdx = -1;
+  float distance, closestDistance = FLT_MAX;
+  distance = relative[0] + _size * 0.5f;
+  if(distance  < closestDistance) {
+    closestDistance = distance;
+    faceIdx = 0; 
   }
-  */
   return false;
 }
 
