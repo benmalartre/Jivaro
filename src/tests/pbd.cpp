@@ -243,7 +243,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::UsdGeomMesh usdMesh(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
-      mesh->SetWirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
       _scene->AddMesh(prim.GetPath(), mesh);
       
       Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass);
@@ -281,6 +280,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->AddCollision(new PlaneCollision(1.f, 1.f, 
     pxr::GfVec3f(0.f, 1.f, 0.f), pxr::GfVec3f(0.f, -0.1f, 0.f)));
 
+/*
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;
   Points* points = _scene->AddPoints(pointsPath);
@@ -296,6 +296,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   collisions->SetPositions(&particles->position[0], numParticles);
   collisions->SetRadii(&particles->radius[0], numParticles);
   collisions->SetColors(&particles->color[0], numParticles);
+*/
 }
 
 
@@ -312,7 +313,18 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
   const pxr::GfVec3f hitColor(1.f, 0.2f, 0.3f);
   Geometry* geom;
   
+  for(Body* body: _solver->GetBodies()) {
+    std::cout << "damping : " << body->damping << std::endl;
+    std::cout << "radius : " << body->radius << std::endl;
+    std::cout << "mass : " << body->mass << std::endl;
+  }
+ 
   for (auto& execPrim : _scene->GetPrims()) {
+    pxr::UsdPrim prim = stage->GetPrimAtPath(execPrim.first);
+    if(prim.IsA<pxr::UsdGeomMesh>()) {
+
+    }
+    /*
     if (execPrim.first.GetNameToken() == pxr::TfToken("Particles")) {
       Points* points = (Points*)_scene->GetGeometry(execPrim.first);
 
@@ -341,8 +353,9 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
         }
       }
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
-
+      
     }
+    */
 
     execPrim.second.bits =
       pxr::HdChangeTracker::Clean |
