@@ -90,6 +90,7 @@ public:
 private:
   float                    _radius;  
   float                    _height;
+  pxr::TfToken             _axis;
 
 };
 
@@ -102,18 +103,14 @@ public:
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override {
-    return false;
-  };
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override {
-    return false;
-  };
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 private:
   float                    _radius;  
   float                    _height;
-
+  pxr::TfToken             _axis;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

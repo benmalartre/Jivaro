@@ -15,6 +15,10 @@
 #include <pxr/base/gf/range3d.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+//-------------------------------------------------------------------------------------------------
+// Plane Implicit Geometry
+//-------------------------------------------------------------------------------------------------
 Plane::Plane()
   : Geometry(Geometry::PLANE, pxr::GfMatrix4d(1.0))
 {
@@ -95,6 +99,9 @@ bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
   return false;
 }
 
+//-------------------------------------------------------------------------------------------------
+// Sphere Implicit Geometry
+//-------------------------------------------------------------------------------------------------
 Sphere::Sphere()
   : Geometry(Geometry::SPHERE, pxr::GfMatrix4d(1.0))
 {
@@ -154,6 +161,9 @@ bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
   return false;
 }
 
+//-------------------------------------------------------------------------------------------------
+// Cube Implicit Geometry
+//-------------------------------------------------------------------------------------------------
 Cube::Cube()
   : Geometry(Geometry::CUBE, pxr::GfMatrix4d(1.0))
 {
@@ -230,36 +240,34 @@ float _PointDistanceToRange1D(float p, float lower, float upper)
   else return 0.f;
 }
 
-float _PointDistanceToBox(const pxr::GfVec3f& point, const pxr::GfRange3d& box)
+pxr::GfVec3f _PointToBox(const pxr::GfVec3f& point, const pxr::GfRange3d& box)
 {
   float dx = _PointDistanceToRange1D(point[0], box.GetMin()[0], box.GetMax()[0]);
   float dy = _PointDistanceToRange1D(point[1], box.GetMin()[1], box.GetMax()[1]);
   float dz = _PointDistanceToRange1D(point[2], box.GetMin()[2], box.GetMax()[2]);
 
-  if (_PointInsideCube(point, box))
-    return pxr::GfMin(dx, pxr::GfMin(dy, dz));
-  else
-    return pxr::GfSqr(dx * dx + dy * dy + dz * dz);
+  return point - pxr::GfVec3f(dx, dy, dz);
 }
 
 bool 
 Cube::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3f relative = GetInverseMatrix().Transform(point);
-  float latitude, longitude;
-  int faceIdx = -1;
-  float distance, closestDistance = FLT_MAX;
-  distance = relative[0] + _size * 0.5f;
-  if(distance  < closestDistance) {
-    closestDistance = distance;
-    faceIdx = 0; 
-  }
+  const pxr::GfVec3f relative = GetInverseMatrix().Transform(point);
+  const pxr::GfRange3d range(pxr::GfVec3f(-_size*0.5), pxr::GfVec3f(_size*0.5));
+  const pxr::GfVec3f closest = _PointToBox(relative, range);
+ 
   return false;
 }
 
+//-------------------------------------------------------------------------------------------------
+// Cone Implicit Geometry
+//-------------------------------------------------------------------------------------------------
 Cone::Cone()
   : Geometry(Geometry::CONE, pxr::GfMatrix4d(1.0))
+  , _radius(0.5f)
+  , _height(1.f)
+  , _axis(pxr::UsdGeomTokens->y)
 {
 }
 
@@ -268,6 +276,7 @@ Cone::Cone(const Cone* other, bool normalize)
 {
   _radius = other->_radius;
   _height = other->_height;
+  _axis = other->_axis;
 }
 
 Cone::Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world)
@@ -278,6 +287,9 @@ Cone::Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world)
 
   pxr::UsdAttribute heightAttr = cone.GetHeightAttr();
   heightAttr.Get(&_height, pxr::UsdTimeCode::Default());
+
+  pxr::UsdAttribute axisAttr = cone.GetAxisAttr();
+  axisAttr.Get(&_axis, pxr::UsdTimeCode::Default());
 
 }
 
@@ -322,4 +334,48 @@ Cone::Closest(const pxr::GfVec3f& point, Location* hit,
   return false;
 }
 
+//-------------------------------------------------------------------------------------------------
+// Capsule Implicit Geometry
+//-------------------------------------------------------------------------------------------------
+Capsule::Capsule()
+  : Geometry(Geometry::CAPSULE, pxr::GfMatrix4d(1.0))
+  , _radius(0.1f)
+  , _height(1.f)
+  , _axis(pxr::UsdGeomTokens->y)
+{
+}
+
+Capsule::Capsule(const Capsule* other, bool normalize)
+  : Geometry(other, Geometry::CAPSULE, normalize)
+{
+  _radius = other->_radius;
+  _height = other->_height;
+  _axis = other->_axis;
+}
+
+Capsule::Capsule(const pxr::UsdGeomCapsule& capsule, const pxr::GfMatrix4d& world)
+  : Geometry(Geometry::CAPSULE, world)
+{
+  pxr::UsdAttribute radiusAttr = cone.GetRadiusAttr();
+  radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+
+  pxr::UsdAttribute heightAttr = cone.GetHeightAttr();
+  heightAttr.Get(&_height, pxr::UsdTimeCode::Default());
+
+  pxr::UsdAttribute axisAttr = cone.GetAxisAttr();
+  axisAttr.Get(&_axis, pxr::UsdTimeCode::Default());
+
+}
+
+bool Capsule::Raycast(const pxr::GfRay& ray, Location* hit,
+  double maxDistance, double* minDistance) const
+{ 
+  return false;
+}
+
+bool Capsule::Closest(const pxr::GfVec3f& point, Location* hit,
+  double maxDistance, double* minDistance) const
+{
+  return false;
+}
 JVR_NAMESPACE_CLOSE_SCOPE
