@@ -43,27 +43,11 @@ static void _InitControls(pxr::UsdStageRefPtr& stage)
   controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&width);
 }
 
-void _GenerateSample(pxr::UsdGeomMesh& mesh, pxr::VtArray<Sample>* samples, float minRadius = 0.1, size_t density = 1024)
-{
-  pxr::VtArray<pxr::GfVec3f> positions;
-  pxr::VtArray<pxr::GfVec3f> normals;
-  pxr::VtArray<int> counts;
-  pxr::VtArray<int> indices;
-  pxr::VtArray<Triangle> triangles;
-
-  mesh.GetPointsAttr().Get(&positions);
-  mesh.GetFaceVertexCountsAttr().Get(&counts);
-  mesh.GetFaceVertexIndicesAttr().Get(&indices);
-
-  TriangulateMesh(counts, indices, triangles);
-  ComputeVertexNormals(positions, counts, indices, triangles, normals);
-}
-
 pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
 {
   uint64_t T = CurrentTime();
 
-
+  _InitControls(stage);
   pxr::HdDirtyBits bits = pxr::HdChangeTracker::Clean;
  
   pxr::VtArray<pxr::GfVec3f> positions;
