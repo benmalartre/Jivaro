@@ -11,11 +11,6 @@ Points::Points()
 {
 }
 
-Points::Points(short type, const pxr::GfMatrix4d& matrix)
-  : Deformable(type, matrix)
-{
-}
-
 Points::Points(const Points* other, bool normalize)
   : Deformable(other, normalize)
 {
