@@ -15,10 +15,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 extern ImFontAtlas* SHARED_ATLAS;
 
-#define NUM_FONT_SIZE 4
+#define NUM_FONT_SIZE 3
 extern ImFont* FONTS[NUM_FONT_SIZE];
 extern ImFont* DEFAULT_FONT;
-static float FONT_SIZE[NUM_FONT_SIZE] = { 16.f, 32.f, 64.f, 128.f };
+static float FONT_SIZE[NUM_FONT_SIZE] = { 32.f, 48.f, 64.f };
 
 
 void CreateFontAtlas();

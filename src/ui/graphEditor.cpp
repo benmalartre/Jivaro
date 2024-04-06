@@ -402,6 +402,16 @@ GraphEditorUI::Node::~Node()
 }
 
 
+int 
+GraphEditorUI::Node::GetColor() const
+{
+  pxr::UsdUINodeGraphNodeAPI api(_node->GetPrim());
+  pxr::GfVec3f color;
+  api.GetDisplayColorAttr().Get(&color);
+  return PackColor3<pxr::GfVec3f>(color);
+   
+}
+
 GraphEditorUI::Port* 
 GraphEditorUI::Node::GetPort(const pxr::TfToken& name)
 {
@@ -494,14 +504,14 @@ GraphEditorUI::Node::Write()
     pxr::UsdUINodeGraphNodeAPI api = 
       pxr::UsdUINodeGraphNodeAPI::Apply(_node->GetPrim());
     api.CreatePosAttr().Set(_pos);
-    //api.CreateSizeAttr().Set(_size);
-    //api.CreateExpansionStateAttr().Set(_expended);
+    api.CreateSizeAttr().Set(_size);
+    api.CreateExpansionStateAttr().Set(_expended);
     api.CreateDisplayColorAttr().Set(UnpackColor3<pxr::GfVec3f>(_color));
   } else {
     pxr::UsdUINodeGraphNodeAPI api(_node->GetPrim());
     api.GetPosAttr().Set(_pos);
-    //api.GetSizeAttr().Set(_size);
-    //api.GetExpansionStateAttr().Set(_expended);
+    api.GetSizeAttr().Set(_size);
+    api.GetExpansionStateAttr().Set(_expended);
     api.GetDisplayColorAttr().Set(UnpackColor3<pxr::GfVec3f>(_color));
   }
 }
@@ -512,11 +522,20 @@ GraphEditorUI::Node::Read()
   if (_node->GetPrim().HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
     pxr::UsdUINodeGraphNodeAPI api(_node->GetPrim());
     api.GetPosAttr().Get(&_pos);
-    //api.GetSizeAttr().Get(&_size);
-    //api.GetExpansionStateAttr().Get(&_expended);
+    api.GetSizeAttr().Get(&_size);
+    api.GetExpansionStateAttr().Get(&_expended);
     pxr::GfVec3f color;
     api.GetDisplayColorAttr().Get(&color);
     _color = PackColor3<pxr::GfVec3f>(color);
+    std::cout << "color : " << _color << std::endl;
+  } else {
+    pxr::UsdUINodeGraphNodeAPI api = 
+      pxr::UsdUINodeGraphNodeAPI::Apply(_node->GetPrim());
+    api.CreatePosAttr().Set(pxr::GfVec2f(0.f));
+    api.CreateSizeAttr().Set(pxr::GfVec2f(100,100));
+    api.CreateExpansionStateAttr().Set(0);
+    //api.CreateDisplayColorAttr().Set(UnpackColor3<pxr::GfVec3f>(RANDOM_LO_HI(0,65565)));
+    api.CreateDisplayColorAttr().Set(pxr::GfVec3f(0.5f,0.5f,0.5f));
   }
 }
 
@@ -533,8 +552,9 @@ void
 GraphEditorUI::Node::Draw(GraphEditorUI* editor) 
 {
   Window* window = editor->GetWindow();
+
   ImDrawList* drawList = ImGui::GetWindowDrawList();
-  const pxr::GfVec3f nodeColor = UnpackColor3<pxr::GfVec3f>(_color);
+  const pxr::GfVec3f nodeColor = UnpackColor3<pxr::GfVec3f>(GetColor());
   if (IsVisible(editor)) {
     const float scale = editor->GetScale();
     const pxr::GfVec2f offset = editor->GetOffset();
@@ -632,6 +652,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     GraphEditorUI::Connexion* connexion = NULL;
     if (expended != COLLAPSED) {
+      ImGui::PushFont(editor->GetView()->GetWindow()->GetFont(1));
       int numPorts = _ports.size();
       for (int i = 0; i < numPorts; ++i) {
         if (expended == EXPENDED) _ports[i].Draw(editor);
@@ -639,6 +660,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
           if (_ports[i].IsConnected(editor, connexion->Get())) _ports[i].Draw(editor);
         }
       }
+      ImGui::PopFont();
     }
   }
 } 
@@ -770,6 +792,7 @@ GraphEditorUI::Populate(Graph* graph)
       _connexions.push_back(new GraphEditorUI::Connexion(start, end, connexion, GRAPH_COLOR_FLOAT));
     }
   }
+  UpdateFont();
   return true;
 }
 
@@ -830,18 +853,8 @@ GraphEditorUI::Term()
 void 
 GraphEditorUI::UpdateFont()
 {
-   _fontIndex = size_t(pxr::GfSqrt(_scale));
-   switch(_fontIndex) {
-     case 0:
-       _fontScale = _scale;
-       break;
-     case 1:
-       _fontScale = _scale * 0.5f;
-       break;
-     default:
-       _fontScale = RESCALE(_scale, _fontIndex, _fontIndex * _fontIndex, 0.5, 1.0);
-       break;
-   }
+  _fontIndex = 2;
+  _fontScale = 0.25f * _scale;
 }
 
 // draw grid

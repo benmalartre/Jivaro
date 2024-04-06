@@ -74,6 +74,7 @@ public:
   static const pxr::TfToken NodeExpendState[3];
 
   enum GraphType {
+    PIPELINE,
     HIERARCHY,
     MATERIAL,
     EXECUTION
@@ -116,15 +117,14 @@ protected:
       virtual void SetSize(const pxr::GfVec2f& size);
       virtual void SetColor(const pxr::GfVec3f& color);
       void SetColor(int color);
-      const pxr::GfVec2f& GetPosition() const { return _pos; };
-      const pxr::GfVec2f& GetSize() const { return _size; };
-      float GetWidth() const { return _size[0]; };
-      float GetHeight() const { return _size[1]; };
-      float GetX() const { return _pos[0]; };
-      float GetY() const { return _pos[1]; };
-      const int GetColor() const { return _color; };
-      
-      
+      virtual const pxr::GfVec2f& GetPosition() const { return _pos; };
+      virtual const pxr::GfVec2f& GetSize() const { return _size; };
+      virtual float GetWidth() const { return _size[0]; };
+      virtual float GetHeight() const { return _size[1]; };
+      virtual float GetX() const { return _pos[0]; };
+      virtual float GetY() const { return _pos[1]; };
+      virtual int GetColor() const { return _color; };
+
       void SetState(size_t flag, bool value);
       bool GetState(size_t flag);
       virtual bool Contains(const pxr::GfVec2f& position, 
@@ -229,6 +229,8 @@ protected:
       short GetDirty() { return _dirty; };
       void SetDirty(short dirty) { _dirty = dirty; };
 
+      int GetColor() const override;
+
       void Write();
       void Read();
 
@@ -240,7 +242,7 @@ protected:
       short                       _dirty;
 
       // data
-      Graph::Node* _node;
+      Graph::Node*                _node;
   };
 
   struct Marquee {
