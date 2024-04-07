@@ -652,7 +652,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     GraphEditorUI::Connexion* connexion = NULL;
     if (expended != COLLAPSED) {
-      ImGui::PushFont(editor->GetView()->GetWindow()->GetFont(FONT_SMALL, 1));
+      ImGui::PushFont(editor->GetView()->GetWindow()->GetFont(FONT_MEDIUM , editor->GetFontIndex()));
       int numPorts = _ports.size();
       for (int i = 0; i < numPorts; ++i) {
         if (expended == EXPENDED) _ports[i].Draw(editor);
