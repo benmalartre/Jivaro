@@ -270,8 +270,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   // sort the half-edges vector by edge key
   std::sort(halfEdgesKeys.begin(), halfEdgesKeys.end(), _SortEdgeByKey);
 
-  _boundary.resize(numPoints);
-  memset(&_boundary[0], false, numPoints * sizeof(bool));
+  _boundary.resize(numPoints, false);
 
   // populate the twin pointers by parallel processing the key vector:
   pxr::WorkParallelForEach(halfEdgesKeys.begin(), halfEdgesKeys.end(),
@@ -285,22 +284,23 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
         halfEdge.second->twin = _GetEdgeIndex(twinEdge);
       }
       else {
+        halfEdge.second->twin = -1;
         _boundary[halfEdge.second->vertex] = true;
         _boundary[_halfEdges[halfEdge.second->next].vertex] = true;
       }
-    });
+  });
 }
 
 size_t 
 HalfEdgeGraph::_GetEdgeIndex(const HalfEdge* edge) const
 {
-  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) / sizeof(HalfEdge);
+  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) * HALFEDGE_RECIPROCAL_SIZE;
 }
 
 size_t 
 HalfEdgeGraph::GetEdgeIndex(const HalfEdge* edge) const
 {
-  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) / sizeof(HalfEdge);
+  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) * HALFEDGE_RECIPROCAL_SIZE;
 }
 
 size_t
@@ -398,18 +398,16 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 HalfEdge* 
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
-  const HalfEdge* prev = &_halfEdges[edge->prev];
-  if (prev->twin >= 0)
-    return &_halfEdges[_halfEdges[prev->twin].prev];
+  if (edge->twin >= 0)
+    return &_halfEdges[_halfEdges[edge->twin].prev];
   return NULL;
 }
 
 const HalfEdge*
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge) const
 {
-  const HalfEdge* prev = &_halfEdges[edge->prev];
-  if (prev->twin >= 0)
-    return &_halfEdges[_halfEdges[prev->twin].prev];
+  if (edge->twin >= 0)
+    return &_halfEdges[_halfEdges[edge->twin].prev];
   return NULL;
 }
 
@@ -576,18 +574,17 @@ HalfEdgeGraph::ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbo
 void
 HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors)
 {
+
   const HalfEdge* current = edge;
   do {
-    std::cout << "stuck in first loop" << std::endl;
     neighbors.push_back(_halfEdges[current->next].vertex);
     current = _GetNextAdjacentEdge(current);
     if(current == edge)return;
   } while(current);
 
-  current = edge;
+  current = &_halfEdges[edge->prev];
   do {
-    std::cout << "stuck in second loop" << std::endl;
-    neighbors.push_back(_halfEdges[current->prev].vertex);
+    neighbors.push_back(current->vertex);
     current = _GetPreviousAdjacentEdge(current);
     if(current == edge)return;
   } while (current);
