@@ -1,11 +1,3 @@
-#include <pxr/base/vt/array.h>
-#include <pxr/usd/usd/prim.h>
-#include <pxr/usd/usd/primRange.h>
-#include <pxr/usd/usdGeom/sphere.h>
-#include <pxr/usd/usdGeom/xform.h>
-#include <pxr/usd/usdGeom/xformOp.h>
-#include <pxr/imaging/hd/changeTracker.h>
-
 #include "../geometry/sampler.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
@@ -23,6 +15,7 @@
 #include "../app/scene.h"
 #include "../app/application.h"
 
+#include "../tests/utils.h"
 #include "../tests/hair.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -153,7 +146,6 @@ void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
   
 }
 
-
 void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
   _QueryControls(stage);
@@ -162,19 +154,33 @@ void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startT
     const pxr::SdfPath& path = source.first;
     _Sources& sources = source.second;
 
-    Curve* curve = (Curve*)_scene->GetGeometry(path);
+    Scene::_Prim* prim = _scene->GetPrim(path);
+    Curve* curve = (Curve*)prim->geom;
 
     double time = GetApplication()->GetTime().GetActiveTime();
     pxr::UsdGeomXformCache xformCache(time);
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+    pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
     pxr::UsdGeomMesh mesh(stage->GetPrimAtPath(sources[0].first));
-    _HairEmit(stage, curve, mesh, xformCache.GetLocalToWorldTransform(mesh.GetPrim()), time);
+    prim->bits = _HairEmit(stage, curve, mesh, xformCache.GetLocalToWorldTransform(mesh.GetPrim()), time);    
   }
 }
 
 void TestHair::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
+  if (!stage) return;
+
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  pxr::SdfPath rootId = rootPrim.GetPath();
+
+  pxr::UsdPrimRange primRange = stage->TraverseAll();
+
+   for (pxr::UsdPrim prim : primRange) {
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      pxr::SdfPath hairPath = prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair")));
+      _scene->Remove(hairPath);
+    }
+  }
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

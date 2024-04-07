@@ -22,21 +22,21 @@ struct Sample;
 class Solver;
 class Execution;
 
-struct _Prim {
-  Geometry*          geom;
-  pxr::HdDirtyBits   bits;
-};
-
-struct _Graph {
-  Graph*             graph;
-  pxr::HdDirtyBits   bits;
-};
-
-typedef pxr::TfHashMap< pxr::SdfPath, _Prim, pxr::SdfPath::Hash > _PrimMap;
-typedef pxr::TfHashMap< pxr::SdfPath, _Graph, pxr::SdfPath::Hash > _GraphMap;
-
 class Scene  {
 public:
+  struct _Prim {
+    Geometry*          geom;
+    pxr::HdDirtyBits   bits;
+  };
+
+  struct _Graph {
+    Graph*             graph;
+    pxr::HdDirtyBits   bits;
+  };
+
+  typedef pxr::TfHashMap< pxr::SdfPath, _Prim, pxr::SdfPath::Hash > _PrimMap;
+  typedef pxr::TfHashMap< pxr::SdfPath, _Graph, pxr::SdfPath::Hash > _GraphMap;
+  
   friend class Execution;
 
   Scene();
@@ -65,6 +65,7 @@ public:
   _PrimMap& GetPrims() { return _prims; };
   const _PrimMap& GetPrims() const { return _prims; };
 
+ _Prim* GetPrim(const pxr::SdfPath& path);
   Geometry* GetGeometry(const pxr::SdfPath& path);
 
   /// Gets the topological mesh data for a given prim.

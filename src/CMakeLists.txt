@@ -118,8 +118,10 @@ add_executable(${TARGET}
   app/delegate.cpp
   app/application.cpp
   #tests/location.cpp
+  tests/utils.cpp
   tests/pbd.cpp
   tests/hair.cpp
+  tests/particles.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp

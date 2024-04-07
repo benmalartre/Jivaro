@@ -33,6 +33,7 @@
 #include "../app/tools.h"
 #include "../tests/pbd.h"
 #include "../tests/hair.h"
+#include "../tests/particles.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -278,7 +279,7 @@ void
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
   //_exec = new TestPBD(new Scene());
-  _exec = new TestHair(new Scene());
+  _exec = new TestParticles(new Scene());
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {

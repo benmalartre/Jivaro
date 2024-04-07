@@ -501,56 +501,34 @@ void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraint
 size_t CollisionConstraint::TYPE_ID = Constraint::COLLISION;
 size_t CollisionConstraint::ELEM_SIZE = 1;
 
-CollisionConstraint::CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
-  float stiffness, float damping, float restitution, float friction)
+CollisionConstraint::CollisionConstraint(Body* body, Collision* collision, short type, 
+  const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
   : Constraint(ELEM_SIZE, body, stiffness, damping, elems)
   , _collision(collision)
+  , _type(type)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
   _correction.resize(numElements);
   _gradient.resize(ELEM_SIZE + 1);
-
-  _contacts.resize(numElements);
-  _length.resize(numElements);
 }
 
-void CollisionConstraint::StoreContactsLocation(Particles* particles, float dt)
+float CollisionConstraint::_CalculateValue(Particles* particles, size_t index)
 {
   /*
-  float radius = particles->radius[index];
-  float d = pxr::GfDot(_normal, particles->predicted[index] + particles->velocity[index] * dt - _position) - _distance - radius;
-  if (d < 0.f) {
-    SetHit(index);
-  }
+  const Eigen::Vector3d& x = m_particles[0]->p;
+  return m_n.transpose() * x - m_d;
+  
+  const size_t offset = _body[0]->offset;
+
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
+  return -((p1 - p0).GetLength() - _rest[index]);
   */
-  const size_t numElements = _elements.size() / ELEM_SIZE;
-  const size_t offset = _body[0]->offset;
-  pxr::GfVec3f contact;
-  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    contact = _collision->ResolveContact(particles, _elements[elemIdx] + offset, dt);
-  }
 }
 
-void CollisionConstraint::Solve(Particles* particles, float dt)
+void CollisionConstraint::_CalculateGradient(Particles* particles, size_t index)
 {
-  const size_t numElements = _elements.size() / ELEM_SIZE;
-  const size_t offset = _body[0]->offset;
-  pxr::GfVec3f contact;
-  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    contact = _collision->ResolveContact(particles, _elements[elemIdx] + offset, dt);
-  }
-}
-
-void CollisionConstraint::Apply(Particles* particles)
-{
-  const size_t numElements = _elements.size() / ELEM_SIZE;
-  const size_t offset = _body[0]->offset;
-  size_t partIdx;
-  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    partIdx = _elements[elemIdx] + offset;
-    particles->predicted[partIdx] += _correction[elemIdx];
-    particles->position[partIdx] += _correction[elemIdx];
-  }
+  _gradient[0] = _collision->GetContactNormal(index);
 }
 
 void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)

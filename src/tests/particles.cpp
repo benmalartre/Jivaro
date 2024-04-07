@@ -15,12 +15,11 @@
 #include "../app/scene.h"
 
 #include "../tests/utils.h"
-#include "../tests/pbd.h"
+#include "../tests/particles.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
-void _InitControls(pxr::UsdStageRefPtr& stage)
+static void _InitControls(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
@@ -34,7 +33,7 @@ void _InitControls(pxr::UsdStageRefPtr& stage)
   controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
 }
 
-void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
+void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
@@ -52,17 +51,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float size = .25f;
 
   _GenerateCollideGround(stage, rootId);
-  
-  
-  for(size_t x = 0; x < 6; ++x) {
-    std::string name = "cloth" + std::to_string(x);
-    pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
-    _GenerateClothMesh(stage, clothPath, size,
-      matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 5.f, 0.f)));
-    
-  }
+  //_GenerateCollideSpheres(32);
 
-  std::vector<pxr::UsdGeomSphere> spheres;
+  
   _Sources sources;
   float mass = 0.1f;
   for (pxr::UsdPrim prim : primRange) {
@@ -74,8 +65,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _scene->AddMesh(prim.GetPath(), mesh);
       
       Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass);
-      //mass *= 2;
-      _solver->AddConstraints(body);
       _bodyMap[prim.GetPath()] = body;
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
@@ -90,20 +79,20 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     }
   }
   _solver->AddForce(new GravitationalForce());
-  _solver->WeightBoundaries();
-  _solver->LockPoints();
-  
+
   //_solver->AddForce(new DampingForce());
   
   pxr::GfVec3f pos;
   double radius;
   float restitution = 0.25;
   float friction = 0.5f;
+  /*
   for (auto& sphere: spheres) {
     sphere.GetRadiusAttr().Get(&radius);
     pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
     _solver->AddCollision(new SphereCollision(restitution, friction, m, (float)radius));
   } 
+  */
 
   _solver->AddCollision(new PlaneCollision(1.f, 1.f, 
     pxr::GfVec3f(0.f, 1.f, 0.f), pxr::GfVec3f(0.f, -0.1f, 0.f)));
@@ -128,7 +117,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 }
 
 
-void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
+void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
   if (pxr::GfIsClose(time, startTime, 0.01))
     _solver->Reset();
@@ -196,7 +185,7 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
   }
 }
 
-void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)
+void TestParticles::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 

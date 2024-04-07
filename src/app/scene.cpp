@@ -122,6 +122,15 @@ Scene::GetGeometry(const pxr::SdfPath& path)
   return NULL;
 }
 
+Scene::_Prim*
+Scene::GetPrim(const pxr::SdfPath& path)
+{
+  if (_prims.find(path) != _prims.end()) {
+    return &_prims[path];
+  }
+  return NULL;
+}
+
 // -----------------------------------------------------------------------//
 /// \name Rprim Aspects
 // -----------------------------------------------------------------------//

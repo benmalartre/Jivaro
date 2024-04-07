@@ -157,7 +157,14 @@ void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraint
 class CollisionConstraint : public Constraint
 {
 public:
-  CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
+  enum Type {
+    PLANE,
+    SPHERE,
+    CUBE,
+    CAPSULE,
+    MESH
+  };
+  CollisionConstraint(Body* body, Collision* collision, short type, const pxr::VtArray<int>& elems,
     float stiffness = -1.f, float damping=0.25f, float restitution=0.2f, float friction=0.2f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
@@ -166,30 +173,19 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
 
-  virtual void Solve(Particles* particles, float dt) override;
-
-  void StoreContactsLocation(Particles* particles, float dt);
-
-
-  // this one has to be called serially 
-  // as two constraints can move the same point
-  virtual void Apply(Particles* particles) override;
-
   static size_t                 ELEM_SIZE;
 
 protected:
-  
-  float _CalculateValue(Particles* particles, size_t index) override { return 0.f; };
-  void _CalculateGradient(Particles * particles, size_t index) override {};
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles * particles, size_t index) override;
   static size_t                 TYPE_ID;
 
+  short                         _type;
   Collision*                    _collision;
-  std::vector<Location>         _contacts;
-  std::vector<float>            _length;
 };
 
-void CreateCollisionConstraint(Body* body, Collision* collision, pxr::VtArray<Constraint*>& constraints,
-  float stiffness = -1.f, float damping=0.25f);
+void CreateCollisionConstraint(Body* body, Collision* collision, 
+  pxr::VtArray<Constraint*>& constraints, float stiffness = -1.f, float damping=0.25f);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
