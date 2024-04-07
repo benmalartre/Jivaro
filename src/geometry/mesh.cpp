@@ -396,20 +396,30 @@ void Mesh::Init()
 {
   size_t numPoints = _positions.size();
   // compute triangles
+  std::cout << "triangulate ..." << std::endl;
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
+  std::cout << "ok ! " << std::endl;
 
   // compute normals
+  std::cout << "compute normals ..." << std::endl;
   ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
+  std::cout << "ok ! " << std::endl;
 
   // compute half-edges
+  std::cout << "compute half-edges ..." << std::endl;
   ComputeHalfEdges();
+  std::cout << "ok ! " << std::endl;
 
   // compute bouding box
+  std::cout << "compute bounding box ..." << std::endl;
   ComputeBoundingBox();
+  std::cout << "ok ! " << std::endl;
 
   // compute neighbors
+  std::cout << "compute neighbors ..." << std::endl;
   ComputeNeighbors();
+  std::cout << "ok ! " << std::endl;
 }
 
 void 

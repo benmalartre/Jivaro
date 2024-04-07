@@ -578,6 +578,7 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
 {
   const HalfEdge* current = edge;
   do {
+    std::cout << "stuck in first loop" << std::endl;
     neighbors.push_back(_halfEdges[current->next].vertex);
     current = _GetNextAdjacentEdge(current);
     if(current == edge)return;
@@ -585,6 +586,7 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
 
   current = edge;
   do {
+    std::cout << "stuck in second loop" << std::endl;
     neighbors.push_back(_halfEdges[current->prev].vertex);
     current = _GetPreviousAdjacentEdge(current);
     if(current == edge)return;

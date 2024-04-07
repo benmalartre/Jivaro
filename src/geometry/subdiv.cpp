@@ -20,7 +20,6 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
   desc.numVertsPerFace = &mesh->GetFaceCounts()[0];
   desc.vertIndicesPerFace = &mesh->GetFaceConnects()[0];
 
-
   // Instantiate a Far::TopologyRefiner from the descriptor
   Far::TopologyRefiner* refiner =
     Far::TopologyRefinerFactory<Far::TopologyDescriptor>::Create(desc,
@@ -28,7 +27,6 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
 
   // Uniformly refine the topology up to 'refineLevel'
   refiner->RefineUniform(Far::TopologyRefiner::UniformOptions(refineLevel));
-
 
   // Allocate a buffer for vertex primvar data. The buffer length is set to
   // be the sum of all children vertices up to the highest level of refinement.
@@ -105,9 +103,8 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
           faceConnects.push_back(faceVerts[vert]);
         }
     }
-    std::cout << "set mesh : " << mesh << std::endl;
+
     mesh->Set(positions, faceCounts, faceConnects);
-    std::cout << "mesh set !" << std::endl;
   }
 
   delete refiner;
