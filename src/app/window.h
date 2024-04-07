@@ -150,7 +150,7 @@ public:
   bool ShouldRepeatKey();
 
   // fonts
-  inline ImFont* GetFont(size_t index){return FONTS[index];};
+  inline ImFont* GetFont(size_t size, size_t index);
 
   // tool
   inline void SetActiveTool(int tool) {
@@ -230,6 +230,17 @@ public:
   static Window* CreateFullScreenWindow(const std::string& name);
   static Window* CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension);
   static Window* CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent);
+};
+
+// fonts
+ImFont* Window::GetFont(size_t size, size_t index) 
+{ 
+  if(size == FONT_SMALL)
+    return FONTS_SMALL[index];
+  else if(size == FONT_MEDIUM)
+    return FONTS_MEDIUM[index];
+  else
+    return FONTS_LARGE[index];
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

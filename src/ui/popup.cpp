@@ -421,10 +421,10 @@ GraphPopupUI::Draw()
   for(auto& node : _filteredNodes) {
     std::cout << node.c_str() << std::endl;
     if (idx == _i) {
-      ImGui::PushFont(GetWindow()->GetFont(1));
+      ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 1));
       ImGui::TextColored(ImVec4(1.0,1.0,1.0,1.0), "%s", node.c_str());
     } else {
-      ImGui::PushFont(GetWindow()->GetFont(1));
+      ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 1));
       ImGui::TextColored(ImVec4(0.75,0.75,0.75,1.0), "%s", node.c_str());
     }
     ImGui::PopFont();

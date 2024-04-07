@@ -5,7 +5,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 
 ImFontAtlas* SHARED_ATLAS = NULL;
-ImFont* FONTS[NUM_FONT_SIZE] = {};
+ImFont* FONTS_SMALL[NUM_FONT_SIZE] = {};
+ImFont* FONTS_MEDIUM[NUM_FONT_SIZE] = {};
+ImFont* FONTS_LARGE[NUM_FONT_SIZE] = {};
 ImFont* DEFAULT_FONT = NULL;
 
 //
@@ -40,14 +42,28 @@ void CreateFontAtlas()
     &iconsConfig, 
     iconRanges);
   
-  // load fonts
+  // load graph fonts
   std::string exeFolder = GetInstallationFolder();
   std::string fontPath;
   for (int i = 0; i < NUM_FONT_SIZE; ++i) {
-    FONTS[i] = SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
+    FONTS_SMALL[i] = SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
       ibmplexsansmediumfree_compressed_data,
       ibmplexsansmediumfree_compressed_size,
-      FONT_SIZE[i],
+      FONT_SIZE_SMALL * FONT_SIZE_FACTOR[i],
+      NULL,
+      SHARED_ATLAS->GetGlyphRangesDefault());
+
+    FONTS_MEDIUM[i] = SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
+      ibmplexsansmediumfree_compressed_data,
+      ibmplexsansmediumfree_compressed_size,
+      FONT_SIZE_MEDIUM * FONT_SIZE_FACTOR[i],
+      NULL,
+      SHARED_ATLAS->GetGlyphRangesDefault());
+
+    FONTS_LARGE[i] = SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
+      ibmplexsansmediumfree_compressed_data,
+      ibmplexsansmediumfree_compressed_size,
+      FONT_SIZE_LARGE * FONT_SIZE_FACTOR[i],
       NULL,
       SHARED_ATLAS->GetGlyphRangesDefault());
   }

@@ -652,7 +652,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     GraphEditorUI::Connexion* connexion = NULL;
     if (expended != COLLAPSED) {
-      ImGui::PushFont(editor->GetView()->GetWindow()->GetFont(1));
+      ImGui::PushFont(editor->GetView()->GetWindow()->GetFont(FONT_SMALL, 1));
       int numPorts = _ports.size();
       for (int i = 0; i < numPorts; ++i) {
         if (expended == EXPENDED) _ports[i].Draw(editor);
@@ -853,8 +853,14 @@ GraphEditorUI::Term()
 void 
 GraphEditorUI::UpdateFont()
 {
-  _fontIndex = 2;
-  _fontScale = 0.25f * _scale;
+  if(_scale <= 0.5f)
+    _fontIndex = 0;
+  else if(_scale <= 1.f)
+    _fontIndex = 1;
+  else
+    _fontIndex = 2;
+  
+  _fontScale = _scale / FONT_SIZE_FACTOR[_fontIndex];
 }
 
 // draw grid
@@ -927,7 +933,7 @@ GraphEditorUI::Draw()
     for (auto& connexion : _connexions) {
       connexion->Draw(this);
     }
-    ImGui::PushFont(GetWindow()->GetFont(GetFontIndex()));
+    ImGui::PushFont(GetWindow()->GetFont(FONT_LARGE, GetFontIndex()));
     for (auto& node : _nodes) {
       node->Draw(this);
     }

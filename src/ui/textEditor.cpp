@@ -53,7 +53,7 @@ TextEditorUI::Draw()
   ImGui::PushItemWidth(-FLT_MIN);
   ImGuiWindow *currentWindow = ImGui::GetCurrentWindow();
   ImVec2 sizeArg(0, currentWindow->Size[1] - 120);
-  ImGui::PushFont(GetWindow()->GetFont(0));
+  ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 0));
   {
     //ScopedStyleColor color(ImGuiCol_FrameBg, ImVec4{0.0, 0.0, 0.0, 1.0});
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4{ 0.0, 0.0, 0.0, 1.0 });
