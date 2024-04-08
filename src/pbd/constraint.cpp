@@ -529,7 +529,7 @@ pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, float depth, 
 
 float CollisionConstraint::_CalculateValue(Particles* particles, size_t index)
 {
-  return _collision->GetContactTime(index);
+  return -(_collision->GetContactPosition(_elements[index])).GetLength() * _collision->GetContactTime(index);
 }
 
 void CollisionConstraint::_CalculateGradient(Particles* particles, size_t index)

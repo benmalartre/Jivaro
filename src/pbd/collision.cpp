@@ -125,7 +125,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const
   const pxr::GfVec3f intersection = _position + _normal * -d;
   float ld = (intersection - particles->position[elem]).GetLength();
   location.SetCoordinates(intersection);
-  location.SetT((predicted - intersection).GetLength());
+  location.SetT(0.02f);
 
 }
 
