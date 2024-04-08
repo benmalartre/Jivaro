@@ -501,11 +501,10 @@ void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraint
 size_t CollisionConstraint::TYPE_ID = Constraint::COLLISION;
 size_t CollisionConstraint::ELEM_SIZE = 1;
 
-CollisionConstraint::CollisionConstraint(Body* body, Collision* collision, short type, 
+CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
   const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
   : Constraint(ELEM_SIZE, body, stiffness, damping, elems)
   , _collision(collision)
-  , _type(type)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
   _correction.resize(numElements);
@@ -514,6 +513,16 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision, short
 
 float CollisionConstraint::_CalculateValue(Particles* particles, size_t index)
 {
+  int elemIdx = _elements[index];
+  const pxr::GfVec3f normal = _collision->GetContactNormal(index);
+  const pxr::GfVec3f velocity = (particles->predicted[elemIdx] - particles->position[elemIdx] -_collision->GetContactPosition(index))* _collision->GetContactTime(index);
+  float d = pxr::GfDot(normal, velocity) - particles->radius[elemIdx];
+  if (d < 0.f) return d;
+  else return 0.f;
+
+
+
+  //const pxr::GfVec3f& p = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
   /*
   const Eigen::Vector3d& x = m_particles[0]->p;
   return m_n.transpose() * x - m_d;
@@ -524,6 +533,7 @@ float CollisionConstraint::_CalculateValue(Particles* particles, size_t index)
   const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
   return -((p1 - p0).GetLength() - _rest[index]);
   */
+  return 1.f;
 }
 
 void CollisionConstraint::_CalculateGradient(Particles* particles, size_t index)

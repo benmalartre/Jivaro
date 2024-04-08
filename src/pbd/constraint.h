@@ -157,14 +157,7 @@ void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraint
 class CollisionConstraint : public Constraint
 {
 public:
-  enum Type {
-    PLANE,
-    SPHERE,
-    CUBE,
-    CAPSULE,
-    MESH
-  };
-  CollisionConstraint(Body* body, Collision* collision, short type, const pxr::VtArray<int>& elems,
+  CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
     float stiffness = -1.f, float damping=0.25f, float restitution=0.2f, float friction=0.2f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
@@ -180,7 +173,6 @@ protected:
   void _CalculateGradient(Particles * particles, size_t index) override;
   static size_t                 TYPE_ID;
 
-  short                         _type;
   Collision*                    _collision;
 };
 

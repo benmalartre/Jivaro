@@ -47,10 +47,11 @@ public:
   virtual void ResolveContact(Particles* particles, size_t index, float dt, Location& location) = 0;
   virtual void ResolveVelocity(Particles* particles, size_t index, float dt, pxr::GfVec3f& velocity) = 0;
 
-  void StoreContactsLocation(Particles* particles, int* elements, size_t n, Body* body, size_t geomId, float dt);
+  void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId);
 
   virtual pxr::GfVec3f GetContactPosition(size_t index){return pxr::GfVec3f(0.f);};
   virtual pxr::GfVec3f GetContactNormal(size_t index){return pxr::GfVec3f(0.f, 1.f, 0.f);}
+  virtual float GetContactTime(size_t index){return 1.f;}
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
@@ -67,11 +68,13 @@ protected:
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float dt);
   
   virtual void _FindContact(size_t index, Particles* particles, float dt) = 0;
+  virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location) = 0;
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>           _hits;
   size_t                      _numContacts;
   std::vector<Location>       _contacts;
+  std::vector<float>          _time;
   float                       _restitution;
   float                       _friction;
 };
@@ -93,6 +96,7 @@ public:
 
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
+  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location) override;
 
 private:
   pxr::GfVec3f                 _position;
@@ -137,6 +141,7 @@ public:
 
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
+  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location) override;
 
 private:
   pxr::GfMatrix4f             _xform;

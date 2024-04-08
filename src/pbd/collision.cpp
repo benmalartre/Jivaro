@@ -30,6 +30,7 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
       if (particles->body[index] != bodyIdx) {
         if (elements.size()) {
           constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
+          StoreContactsLocation(particles, & elements[0], elements.size(), bodies[0], bodyIdx);
           //constraint->StoreContactsLocation(particles, 1.f, particles->body[index]);
           contacts.push_back(constraint);
           _numContacts += elements.size();
@@ -45,6 +46,7 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
   if (elements.size()) {
     constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
     //constraint->StoreContactsLocation(particles, 1.f, bodyIdx);
+    StoreContactsLocation(particles, & elements[0], elements.size(), bodies[0], bodyIdx);
     contacts.push_back(constraint);
     _numContacts += elements.size();
     numConstraints++;
@@ -76,13 +78,15 @@ void Collision::FindContactsSerial(Particles* particles, const pxr::VtArray<Body
   _BuildContacts(particles, bodies, contacts);
 }
 
-void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, Body* body, size_t geomId, float dt)
+void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId)
 {
   const size_t offset = ((Body*)body + geomId * sizeof(Body))->offset;
   pxr::GfVec3f contact;
-  _contacts.resize(numElements);
-  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
+  _contacts.resize(n);
+  _time.resize(n);
+  for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
     _contacts[elemIdx].SetGeometryIndex(geomId);
+    _StoreContactLocation(particles, elements[elemIdx], body, _contacts[elemIdx]);
 
   }
 }
@@ -109,6 +113,12 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
     SetHit(index);
   }
 }
+
+void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location)
+{
+
+}
+
 
 void PlaneCollision::ResolveContact(Particles* particles, size_t index, float dt, Location& location)
 {
@@ -154,6 +164,11 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
   if (local.GetLengthSq() < radius2) {
     SetHit(index);
   }
+}
+
+void SphereCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location)
+{
+
 }
 
 void SphereCollision::ResolveContact(Particles* particles, size_t index, float dt, Location& location)
