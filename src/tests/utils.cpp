@@ -1,11 +1,16 @@
-#include <pxr/usd/usdGeom/xform.h>
-#include <pxr/usd/usdGeom/xformOp.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdGeom/xformOp.h>
 #include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/imaging/hd/changeTracker.h>
 
-#include "../geometry/mesh.h"
 #include "../tests/utils.h"
+#include "../geometry/mesh.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 

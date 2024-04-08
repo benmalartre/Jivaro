@@ -94,6 +94,10 @@ public:
   inline void SetNormal(const pxr::GfVec3f& normal);
   inline void SetDistance(float distance);
 
+  virtual pxr::GfVec3f GetContactPosition(size_t index) override{return _position;};
+  virtual pxr::GfVec3f GetContactNormal(size_t index) override{return _normal;};
+  virtual float GetContactTime(size_t index) override{return _time[index];};
+
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location) override;

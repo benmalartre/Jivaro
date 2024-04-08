@@ -108,7 +108,8 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
 {
   if (!Affects(index))return;
   float radius = particles->radius[index];
-  float d = pxr::GfDot(_normal, particles->predicted[index] + particles->velocity[index] * dt - _position) - _distance - radius;
+  const pxr::GfVec3f predicted = particles->predicted[index] + particles->velocity[index] * dt ;
+  float d = pxr::GfDot(_normal, predicted - _position) - _distance - radius;
   if (d < 0.f) {
     SetHit(index);
   }
@@ -116,7 +117,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
 
 void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location)
 {
-
+  //location.SetCoordinates(
 }
 
 
@@ -168,7 +169,6 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location)
 {
-
 }
 
 void SphereCollision::ResolveContact(Particles* particles, size_t index, float dt, Location& location)
