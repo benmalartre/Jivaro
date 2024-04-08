@@ -53,6 +53,8 @@ public:
   virtual pxr::GfVec3f GetContactNormal(size_t index){return pxr::GfVec3f(0.f, 1.f, 0.f);}
   virtual float GetContactTime(size_t index){return 1.f;}
 
+  Location& GetContact(size_t index){return _contacts[_p2c[index]];};
+
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
   };
@@ -72,6 +74,8 @@ protected:
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>           _hits;
+  std::vector<int>            _p2c;
+  std::vector<int>            _c2p;
   size_t                      _numContacts;
   std::vector<Location>       _contacts;
   float                       _restitution;
@@ -92,11 +96,17 @@ public:
   inline void SetPosition(const pxr::GfVec3f& position);
   inline void SetNormal(const pxr::GfVec3f& normal);
 
-/*
-  virtual pxr::GfVec3f GetContactPosition(size_t index) override{return _position;};
-  virtual pxr::GfVec3f GetContactNormal(size_t index) override{return _normal;};
-  virtual float GetContactTime(size_t index) override{return _time[index];};
-*/
+
+  virtual pxr::GfVec3f GetContactPosition(size_t index) override {
+    return _contacts[_p2c[index]].GetPointCoordinates();
+  };
+  virtual pxr::GfVec3f GetContactNormal(size_t index) override {
+    return _normal;
+  };
+  virtual float GetContactTime(size_t index) override {
+    return _contacts[_p2c[index]].GetT();
+  };
+
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt) override;

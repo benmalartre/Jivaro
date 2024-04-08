@@ -21,19 +21,22 @@ void Collision::_BuildContacts(Particles* particles, const pxr::VtArray<Body*>& 
   size_t numParticles = particles->position.size();
   size_t numBodies = bodies.size();
 
+  _p2c.resize(numParticles, -1);
+  _c2p.reserve(numParticles);
   pxr::VtArray<int> elements;
   _numContacts = 0;
   size_t numConstraints = 0;
   int bodyIdx = -1;
   for (size_t index = 0; index < numParticles; ++index) {
     if (CheckHit(index)) {
+      _p2c[index] = _numContacts++;
+      _c2p.push_back(index);
       if (particles->body[index] != bodyIdx) {
         if (elements.size()) {
           constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
           StoreContactsLocation(particles, & elements[0], elements.size(), bodies[0], bodyIdx, dt);
           //constraint->StoreContactsLocation(particles, 1.f, particles->body[index]);
           contacts.push_back(constraint);
-          _numContacts += elements.size();
           numConstraints++;
           elements.clear();
         }
@@ -106,7 +109,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
 {
   if (!Affects(index))return;
   float radius = particles->radius[index];
-  const pxr::GfVec3f predicted = particles->predicted[index] + particles->velocity[index] * dt ;
+  const pxr::GfVec3f predicted = particles->position[index] + particles->velocity[index] * dt ;
   float d = pxr::GfDot(_normal, predicted - _position) - radius;
   if (d < 0.f) {
     SetHit(index);
@@ -116,11 +119,14 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
 void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt)
 {
   float radius = particles->radius[elem];
-  const pxr::GfVec3f predicted = particles->predicted[elem] + particles->velocity[elem] * dt;
-  float l = (predicted - particles->predicted[elem]).GetLength();
-  float d = pxr::GfDot(_normal, particles->predicted[elem] - _position) - radius;
-  location.SetCoordinates(_position + _normal * -d);
-  location.SetT(l-d);
+  const pxr::GfVec3f predicted = particles->position[elem] + particles->velocity[elem] * dt;
+  float lt = (predicted - particles->position[elem]).GetLength();
+  float d = pxr::GfDot(_normal, predicted - _position) - radius;
+  const pxr::GfVec3f intersection = _position + _normal * -d;
+  float ld = (intersection - particles->position[elem]).GetLength();
+  location.SetCoordinates(intersection);
+  location.SetT((predicted - intersection).GetLength());
+
 }
 
 

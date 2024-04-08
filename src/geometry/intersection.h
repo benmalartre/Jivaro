@@ -54,6 +54,8 @@ public:
   int GetGeometryIndex() { return _geomId; };
   int GetElementIndex() { return _elemId; };
   const pxr::GfVec4f& GetBarycentricCoordinates() { return _coords; };
+  const pxr::GfVec3f& GetPointCoordinates() { return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]); };
+  
   float GetT() { return _coords[3]; };
   pxr::GfVec3f GetPosition(Geometry* geometry, bool worldSpace=true) const;
   pxr::GfVec3f GetPosition(const pxr::GfRay& ray, bool worldSpace=true) const;

@@ -511,29 +511,25 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
   _gradient.resize(ELEM_SIZE + 1);
 }
 
+/*
+pxr::GfVec3f PlaneCollision::ResolveContact(Particles* particles, size_t index)
+{
+  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - particles->radius[index];
+  if (d < 0.f) return _normal * -d;
+  else return pxr::GfVec3f(0.f);
+}
+
+pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, float depth, size_t index)
+{
+  pxr::GfVec3f tangent(-particles->velocity[index][0], 0.f, -particles->velocity[index][2]);
+
+  return _normal * _restitution * depth + tangent * _friction;
+}
+*/
+
 float CollisionConstraint::_CalculateValue(Particles* particles, size_t index)
 {
-  int elemIdx = _elements[index];
-  const pxr::GfVec3f normal = _collision->GetContactNormal(index);
-  const pxr::GfVec3f velocity = (particles->predicted[elemIdx] - particles->position[elemIdx] -_collision->GetContactPosition(index))* _collision->GetContactTime(index);
-  float d = pxr::GfDot(normal, velocity) - particles->radius[elemIdx];
-  if (d < 0.f) return d;
-  else return 0.f;
-
-
-
-  //const pxr::GfVec3f& p = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  /*
-  const Eigen::Vector3d& x = m_particles[0]->p;
-  return m_n.transpose() * x - m_d;
-  
-  const size_t offset = _body[0]->offset;
-
-  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
-  return -((p1 - p0).GetLength() - _rest[index]);
-  */
-  return 1.f;
+  return _collision->GetContactTime(index);
 }
 
 void CollisionConstraint::_CalculateGradient(Particles* particles, size_t index)
@@ -545,7 +541,7 @@ void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVe
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
   for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    positions.push_back(particles->position[_elements[elemIdx] + _body[0]->offset]);
+    positions.push_back(_collision->GetContactPosition(_elements[elemIdx]));
     radius.push_back(0.05f);
   }
 }
