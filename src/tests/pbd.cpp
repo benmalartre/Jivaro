@@ -51,7 +51,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
   float size = .25f;
 
-  _GenerateCollideGround(stage, rootId);
+  _GenerateCollidePlane(stage, rootId);
   
   
   for(size_t x = 0; x < 6; ++x) {

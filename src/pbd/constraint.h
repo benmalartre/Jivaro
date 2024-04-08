@@ -158,11 +158,13 @@ class CollisionConstraint : public Constraint
 {
 public:
   CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
-    float stiffness = -1.f, float damping=0.25f, float restitution=0.2f, float friction=0.2f);
+    float stiffness = -1.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
+  Collision* GetCollision() {return _collision;};
+  const Collision* GetCollision() const { return _collision; };
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
 

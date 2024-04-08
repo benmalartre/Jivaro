@@ -11,7 +11,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-pxr::UsdPrim _GenerateCollideGround(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
+pxr::UsdPrim _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
 
 pxr::UsdPrim _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   float size, const pxr::GfMatrix4f& m);

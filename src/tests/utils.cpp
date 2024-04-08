@@ -1,6 +1,7 @@
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primRange.h>
+#include <pxr/usd/usdGeom/plane.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/xform.h>
@@ -14,17 +15,18 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-pxr::UsdPrim _GenerateCollideGround(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+pxr::UsdPrim _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
 {
+  const float width = 100.f;
+  const float length = 100.f;
+  pxr::UsdGeomPlane ground =
+    pxr::UsdGeomPlane::Define(stage, path.AppendChild(pxr::TfToken("Ground")));
 
-  pxr::UsdGeomCube ground =
-    pxr::UsdGeomCube::Define(stage, path.AppendChild(pxr::TfToken("Ground")));
+  ground.CreateWidthAttr().Set(width);
+  ground.CreateLengthAttr().Set(length);
+  ground.CreateAxisAttr().Set(pxr::UsdGeomTokens->y);
 
-  ground.CreateSizeAttr().Set(1.0);
-
-  ground.AddScaleOp(pxr::UsdGeomXformOp::PrecisionFloat).Set(pxr::GfVec3f(100.f, 1.f, 100.f));
-  ground.AddTranslateOp(pxr::UsdGeomXformOp::PrecisionFloat).Set(pxr::GfVec3f(0.f, -0.5f, 0.f));
-
+  ground.AddTranslateOp(pxr::UsdGeomXformOp::PrecisionFloat).Set(pxr::GfVec3f(0.f, 0.f, 0.f));
 
   pxr::UsdPrim usdPrim = ground.GetPrim();
   usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);

@@ -51,16 +51,18 @@ public:
   void SetT(float t) { _coords[3] = t;};
 
   // Getters
-  int GetGeometryIndex() { return _geomId; };
-  int GetElementIndex() { return _elemId; };
-  const pxr::GfVec4f& GetBarycentricCoordinates() { return _coords; };
-  const pxr::GfVec3f& GetPointCoordinates() { return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]); };
-  
-  float GetT() { return _coords[3]; };
+  int GetGeometryIndex() const { return _geomId; };
+  int GetElementIndex() const { return _elemId; };
+  const pxr::GfVec4f& GetBarycentricCoordinates() const {
+    return _coords; };
+  const pxr::GfVec3f& GetPointCoordinates() const { 
+    return *(pxr::GfVec3f*)&_coords;};
+
+  float GetT() const { return _coords[3]; };
   pxr::GfVec3f GetPosition(Geometry* geometry, bool worldSpace=true) const;
   pxr::GfVec3f GetPosition(const pxr::GfRay& ray, bool worldSpace=true) const;
   pxr::GfVec3f GetNormal(Geometry* geometry, bool worldSpace=true) const;
-  bool IsValid() { return _geomId >= 0 && _elemId >= 0; };
+  bool IsValid() const { return _geomId >= 0 && _elemId >= 0; };
 };
 
 static pxr::GfPlane DEFAULT_PLANE(pxr::GfVec3d(0, 1, 0), pxr::GfVec3d(0));

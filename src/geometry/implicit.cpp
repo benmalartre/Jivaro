@@ -22,6 +22,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 Plane::Plane()
   : Geometry(Geometry::PLANE, pxr::GfMatrix4d(1.0))
 {
+  _normal = pxr::GfVec3f(0.f, 1.f, 0.f);
+  _width = 100.f;
+  _length = 100.f;
+  _doubleSided = false;
 }
 
 Plane::Plane(const Plane* other, bool normalize)
@@ -53,6 +57,11 @@ Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
   lengthAttr.Get(&_length, pxr::UsdTimeCode::Default());
   pxr::UsdAttribute doubleSidedAttr = plane.GetDoubleSidedAttr();
   doubleSidedAttr.Get(&_doubleSided, pxr::UsdTimeCode::Default());
+}
+
+void Plane::ComputeBoundingBox()
+{
+
 }
 
 bool 

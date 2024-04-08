@@ -7,6 +7,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Scene;
+class Plane;
 class TestParticles : public Execution {
 public:
   friend class Scene;
@@ -16,6 +17,7 @@ public:
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 private:
   Solver*                                                    _solver;
+  Plane*                                                     _ground;
   pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash> _sourcesMap;
   pxr::TfHashMap<pxr::SdfPath, Body*, pxr::SdfPath::Hash>    _bodyMap;
 

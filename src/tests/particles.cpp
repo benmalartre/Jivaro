@@ -3,6 +3,7 @@
 #include "../geometry/mesh.h"
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
+#include "../geometry/implicit.h"
 #include "../geometry/triangle.h"
 #include "../geometry/utils.h"
 #include "../pbd/particle.h"
@@ -39,18 +40,19 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   _InitControls(stage);
   _solver = new Solver();
+  _ground = new Plane();
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
 
-  pxr::GfQuatf rotate(45.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
+  pxr::GfQuatf rotate(45.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, -1.0f, 1.f));
   rotate.Normalize();
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
   float size = .25f;
 
-  _GenerateCollideGround(stage, rootId);
+  pxr::UsdPrim ground = _GenerateCollidePlane(stage, rootId);
   //_GenerateCollideSpheres(32);
 
   
@@ -94,8 +96,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(1.f, 1.f, 
-    pxr::GfVec3f(0.f, 1.f, 0.f), pxr::GfVec3f(0.f, -0.1f, 0.f)));
+  _solver->AddCollision(new PlaneCollision(1.f, 1.f, _ground->GetNormal(), _ground->GetOrigin()));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
@@ -133,12 +134,13 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
   for (auto& execPrim : _scene->GetPrims()) {
 
     if (execPrim.first.GetNameToken() == pxr::TfToken("Particles")) {
-      Points* points = (Points*)_scene->GetGeometry(execPrim.first);
+     Points* points = (Points*)_scene->GetGeometry(execPrim.first);
 
       points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
       points->SetColors(&_solver->GetParticles()->color[0], numParticles);
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Collisions")) {
       const pxr::VtArray<Constraint*>& contacts = _solver->GetContacts();
+      
       if (!contacts.size())continue;
 
       Points* points = (Points*)_scene->GetGeometry(execPrim.first);
@@ -150,11 +152,13 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
       memset(&radii[0], 0.f, numParticles * sizeof(float));
 
       for (auto& contact : contacts) {
-        const size_t offsetIdx = contact->GetBody(0)->offset;
+        const CollisionConstraint* constraint = (CollisionConstraint*)contact;
+        const Collision* collision = constraint->GetCollision();
+        const size_t offsetIdx = constraint->GetBody(0)->offset;
         
         const pxr::VtArray<int>& elements = contact->GetElements();
         for(int elem: elements) {
-          positions[elem + offsetIdx] = _solver->GetParticles()->position[elem + offsetIdx];
+          positions[elem + offsetIdx] = collision->GetContactPosition(elem);
           radii[elem + offsetIdx] = 0.2f;
           colors[elem + offsetIdx] = hitColor;
         }
@@ -162,6 +166,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
       
     } else {
+      
       pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
       if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
         std::cout << "we found a mesh check for associated body" << std::endl;
@@ -175,6 +180,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
           std::cout << "no body found for " << bodyIt->first << std::endl;
         }
       }
+      
     }
 
     execPrim.second.bits =

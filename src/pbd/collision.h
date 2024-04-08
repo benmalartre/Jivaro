@@ -49,9 +49,9 @@ public:
 
   void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float dt);
 
-  virtual pxr::GfVec3f GetContactPosition(size_t index){return pxr::GfVec3f(0.f);};
-  virtual pxr::GfVec3f GetContactNormal(size_t index){return pxr::GfVec3f(0.f, 1.f, 0.f);}
-  virtual float GetContactTime(size_t index){return 1.f;}
+  virtual pxr::GfVec3f GetContactPosition(size_t index) const {return pxr::GfVec3f(0.f);};
+  virtual pxr::GfVec3f GetContactNormal(size_t index) const {return pxr::GfVec3f(0.f, 1.f, 0.f);}
+  virtual float GetContactT(size_t index) const {return 1.f;}
 
   Location& GetContact(size_t index){return _contacts[_p2c[index]];};
 
@@ -96,16 +96,12 @@ public:
   inline void SetPosition(const pxr::GfVec3f& position);
   inline void SetNormal(const pxr::GfVec3f& normal);
 
-
-  virtual pxr::GfVec3f GetContactPosition(size_t index) override {
-    return _contacts[_p2c[index]].GetPointCoordinates();
-  };
-  virtual pxr::GfVec3f GetContactNormal(size_t index) override {
-    return _normal;
-  };
-  virtual float GetContactTime(size_t index) override {
-    return _contacts[_p2c[index]].GetT();
-  };
+  virtual pxr::GfVec3f GetContactPosition(size_t index) const override { 
+    return _contacts[_p2c[index]].GetPointCoordinates();};
+  virtual pxr::GfVec3f GetContactNormal(size_t index) const override { 
+    return _normal;};
+  virtual float GetContactT(size_t index) const override {
+    return _contacts[_p2c[index]].GetT();};
 
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;

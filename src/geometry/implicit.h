@@ -43,11 +43,25 @@ public:
   Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world);
   virtual ~Plane() {};
 
+  pxr::GfVec3f GetNormal(bool worldSpace=true) {
+    return worldSpace ? 
+      _matrix.TransformDir(_normal) : 
+      _normal;
+  };
+
+  pxr::GfVec3f GetOrigin(bool worldSpace=true) {
+    return worldSpace ? 
+      pxr::GfVec3f(_matrix[3][0], _matrix[3][1], _matrix[3][2]) : 
+      pxr::GfVec3f(0.f);
+  };
+
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+  void ComputeBoundingBox() override;
 
 private:
   pxr::GfVec3f                _normal;
