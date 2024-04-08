@@ -76,6 +76,7 @@ private:
   void _ClearContacts();
   void _FindContacts(bool serial = false);
   void _SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial=false);
+  void _SolveVelocities();
 
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);

@@ -41,13 +41,21 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _InitControls(stage);
   _solver = new Solver();
   _ground = new Plane();
+
+  pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
+  rotate.Normalize();
+
+  _ground->SetMatrix(
+    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -5.f, 0.f))); /*
+    pxr::GfMatrix4d().SetRotate(rotate))*/
+  //);
+
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
 
-  pxr::GfQuatf rotate(45.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, -1.0f, 1.f));
-  rotate.Normalize();
+  
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
   float size = .25f;
@@ -169,6 +177,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
       
       pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
       if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
+        /*
         std::cout << "we found a mesh check for associated body" << std::endl;
         const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
         if (bodyIt != _bodyMap.end()) {
@@ -179,6 +188,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
         } else {
           std::cout << "no body found for " << bodyIt->first << std::endl;
         }
+        */
       }
       
     }
