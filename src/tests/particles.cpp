@@ -45,9 +45,10 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
   rotate.Normalize();
 
+/*
   _ground->SetMatrix(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -5.f, 0.f)) *
-    pxr::GfMatrix4d().SetRotate(rotate));
+    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -2.f, 0.f)) *
+    pxr::GfMatrix4d().SetRotate(rotate));*/
 
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());

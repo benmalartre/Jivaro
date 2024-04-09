@@ -29,14 +29,14 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
       pos = m.Transform(points[p]);
       size_t idx = base + p;
       mass[idx] = w;
-      radius[idx] = b->radius * RANDOM_0_1;
+      radius[idx] = b->radius;
       rest[idx] = pos;
       previous[idx] = pos;
       position[idx] = pos;
       predicted[idx] = pos;
       velocity[idx] = pxr::GfVec3f(0.f);
       body[idx] = index;
-      color[idx] = b->wirecolor *RANDOM_0_1;
+      color[idx] = b->wirecolor;
     }
   } else {
     // TODO implement implicit geometries here

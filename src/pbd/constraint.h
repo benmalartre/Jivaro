@@ -18,7 +18,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 struct Particles;
 struct Body;
 class Collision;
-class Location;
 
 class Constraint
 {

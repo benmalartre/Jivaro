@@ -76,7 +76,7 @@ Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
   size_t add = geom->GetNumPoints();
 
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  Body* body = new Body({ 0.001f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom });
+  Body* body = new Body({ 0.001f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom, (mass > 0)});
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
@@ -374,14 +374,17 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
   }
 }
 
-void Solver::_CollisionResponse(pxr::VtArray<Constraint*>& constraints)
+void Solver::_SolveContactResponses()
 {
-
+  for (auto& collision : _collisions) {
+    size_t numContacts = collision->GetNumContacts();
+    if (!numContacts) continue;
+    collision->SolveContactResponses(&_particles, _stepTime);
+  }
 }
 
 void Solver::_SolveVelocities()
 {
-
   for (auto& collision : _collisions) {
     size_t numContacts = collision->GetNumContacts();
     if (!numContacts) continue;
@@ -400,13 +403,13 @@ void Solver::_StepOneSerial()
   // solve and apply constraint
   _SolveConstraints(_constraints, true);
   _SolveConstraints(_contacts, true);
-  _CollisionResponse(_constraints);
+  _SolveContactResponses();
 
   // update particles
   _UpdateParticles(0, numParticles);
 
   // solve velocities
-  _SolveVelocities();
+  //_SolveVelocities();
 }
 
 void Solver::_StepOne()
@@ -423,7 +426,7 @@ void Solver::_StepOne()
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
   _SolveConstraints(_contacts, false);
-  _CollisionResponse(_constraints);
+  _SolveContactResponses();
   
   // update particles
   pxr::WorkParallelForN(
@@ -432,7 +435,7 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // solve velocities
-  _SolveVelocities();
+  //_SolveVelocities();
 
 }
 

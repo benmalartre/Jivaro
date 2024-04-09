@@ -48,6 +48,7 @@ public:
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float dt);
 
   virtual void SolveVelocities(Particles* particles, float dt);
+  virtual void SolveContactResponses(Particles* particles, float dt);
 
   virtual const pxr::GfVec3f& GetContactPosition(size_t index) const {
     return _contacts[_p2c[index]].GetPosition();};

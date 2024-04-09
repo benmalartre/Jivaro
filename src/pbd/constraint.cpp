@@ -125,21 +125,21 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
 }
 
 
-float StretchConstraint::_CalculateValue(Particles* particles, size_t index)
+float StretchConstraint::_CalculateValue(Particles* particles, size_t elem)
 {
   const size_t offset = _body[0]->offset;
 
-  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
-  return -((p1 - p0).GetLength() - _rest[index]);
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[elem * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[elem * ELEM_SIZE + 1] + offset];
+  return -((p1 - p0).GetLength() - _rest[elem]);
 }
 
-void StretchConstraint::_CalculateGradient(Particles* particles, size_t index)
+void StretchConstraint::_CalculateGradient(Particles* particles, size_t elem)
 {
   const size_t offset = _body[0]->offset;
 
-  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[elem * ELEM_SIZE + 0] + offset];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[elem * ELEM_SIZE + 1] + offset];
 
   const pxr::GfVec3f delta = p1 - p0;
   const float length = delta.GetLength();
@@ -529,8 +529,10 @@ pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, float depth, 
 
 float CollisionConstraint::_CalculateValue(Particles* particles, size_t elem)
 {
-  return (pxr::GfDot(particles->predicted[_elements[elem]] - _collision->GetContactPosition(_elements[elem]),
-    _collision->GetContactNormal(elem)) + particles->radius[_elements[elem]]);
+  const size_t index = _elements[elem];
+  float d = pxr::GfDot(particles->predicted[index], _collision->GetContactNormal(index)) - particles->radius[index];
+
+  return d < 0.f ? d : 0.f;
 }
 
 void CollisionConstraint::_CalculateGradient(Particles* particles, size_t elem)

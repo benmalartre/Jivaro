@@ -269,7 +269,7 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
     ImColor(0, 0, 0, 255),
     _port->GetLabel().GetText());
 
-  if(Get()->GetFlags() & Graph::Port::INPUT) {
+  if(Get()->GetFlags() & Graph::Port::OUTPUT) {
     drawList->AddCircleFilled(
       p + _pos * scale,
       GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
@@ -277,7 +277,7 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
     );
   }
 
-  if (Get()->GetFlags() & Graph::Port::OUTPUT) {
+  if (Get()->GetFlags() & Graph::Port::INPUT) {
     drawList->AddCircleFilled(
       p + (_pos + pxr::GfVec2f(_node->GetWidth(), 0.f)) * scale,
       GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,

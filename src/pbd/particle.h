@@ -23,6 +23,8 @@ struct Body
   
   pxr::GfVec3f   wirecolor;
   Geometry*      geometry;
+
+  bool           simulated;
 };
 
 enum BodyType
