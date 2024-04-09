@@ -107,7 +107,7 @@ void Collision::SolveContactResponses(Particles* particles, float dt)
     const pxr::GfVec3f intersection = GetContactPosition(_c2p[elem]);
 
     particles->position[_c2p[elem]] = intersection;
-    particles->predicted[_c2p[elem]] = intersection + GetContactResponse(_c2p[elem]) * dt;
+    particles->predicted[_c2p[elem]] = intersection + GetContactResponse(_c2p[elem]) * _restitution;
   }
   
 }
@@ -147,7 +147,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, cons
 
   location.SetPosition(intersection);
   location.SetNormal(_normal);
-  location.SetResponse(reflected.GetNormalized() * (vi/vl) * _restitution);
+  location.SetResponse(reflected.GetNormalized() * (vl - vi) * _restitution * 0.f);
 
 }
 

@@ -532,7 +532,7 @@ float CollisionConstraint::_CalculateValue(Particles* particles, size_t elem)
   const size_t index = _elements[elem];
   float d = pxr::GfDot(particles->predicted[index], _collision->GetContactNormal(index)) - particles->radius[index];
 
-  return d < 0.f ? d : 0.f;
+  return d > 0.f ? -d: 0.f;
 }
 
 void CollisionConstraint::_CalculateGradient(Particles* particles, size_t elem)

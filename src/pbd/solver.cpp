@@ -403,7 +403,7 @@ void Solver::_StepOneSerial()
   // solve and apply constraint
   _SolveConstraints(_constraints, true);
   _SolveConstraints(_contacts, true);
-  _SolveContactResponses();
+  //_SolveContactResponses();
 
   // update particles
   _UpdateParticles(0, numParticles);
@@ -426,7 +426,7 @@ void Solver::_StepOne()
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
   _SolveConstraints(_contacts, false);
-  _SolveContactResponses();
+  //_SolveContactResponses();
   
   // update particles
   pxr::WorkParallelForN(
