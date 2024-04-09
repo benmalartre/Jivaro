@@ -374,10 +374,11 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
 
 void Solver::_SolveVelocities()
 {
+
   for (auto& collision : _collisions) {
     size_t numContacts = collision->GetNumContacts();
     if (!numContacts) continue;
-    collision->SolveVelocities(&_particles, collision->GetContactIndices(), numContacts, _stepTime);
+    collision->SolveVelocities(&_particles, _stepTime);
   }
 }
 
@@ -393,11 +394,11 @@ void Solver::_StepOneSerial()
   _SolveConstraints(_constraints, true);
   _SolveConstraints(_contacts, true);
 
-  // solve velocities
-  _SolveVelocities();
-
   // update particles
   _UpdateParticles(0, numParticles);
+
+  // solve velocities
+  //_SolveVelocities();
 }
 
 void Solver::_StepOne()
@@ -414,14 +415,15 @@ void Solver::_StepOne()
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
   _SolveConstraints(_contacts, false);
-
-  _SolveVelocities();
   
   // update particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_UpdateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
+
+  // solve velocities
+  //_SolveVelocities();
 
 }
 

@@ -63,7 +63,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::UsdPrim ground = _GenerateCollidePlane(stage, rootId);
   //_GenerateCollideSpheres(32);
 
-  
   _Sources sources;
   float mass = 0.1f;
   for (pxr::UsdPrim prim : primRange) {
@@ -177,7 +176,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
       
       pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
       if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
-        /*
+        
         std::cout << "we found a mesh check for associated body" << std::endl;
         const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
         if (bodyIt != _bodyMap.end()) {
@@ -188,7 +187,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
         } else {
           std::cout << "no body found for " << bodyIt->first << std::endl;
         }
-        */
+        
       }
       
     }

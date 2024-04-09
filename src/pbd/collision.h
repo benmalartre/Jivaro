@@ -46,12 +46,13 @@ public:
 
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float dt);
 
-  virtual void SolveVelocities(Particles* particles, int* elements, size_t n, float dt);
+  virtual void SolveVelocities(Particles* particles, float dt);
 
   virtual pxr::GfVec3f GetContactPosition(size_t index) const {return pxr::GfVec3f(0.f);};
   virtual pxr::GfVec3f GetContactNormal(size_t index) const {return pxr::GfVec3f(0.f, 1.f, 0.f);}
   virtual float GetContactT(size_t index) const {return 1.f;}
 
+  size_t GetNumContacts(){return _contacts.size();};
   Location& GetContact(size_t index){return _contacts[_p2c[index]];};
 
   inline bool CheckHit(size_t index) {
@@ -60,10 +61,6 @@ public:
   inline void SetHit(size_t index) {
     BIT_SET(_hits[index / sizeof(int)], index % sizeof(int));
   };
-  //virtual void Apply();
-
-  int* GetContactIndices() {return &_c2p[0];};
-  size_t GetNumContacts(){return _c2p.size();};
 
 protected:
   virtual void _ResetContacts(Particles* particles);
@@ -74,7 +71,7 @@ protected:
   virtual void _FindContact(size_t index, Particles* particles, float dt) = 0;
   virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt) = 0;
 
-  virtual void _SolveVelocity(Particles* particles, size_t index, float dt, pxr::GfVec3f& velocity) = 0;
+  virtual void _SolveVelocity(Particles* particles, size_t index, float dt) = 0;
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>           _hits;
@@ -107,7 +104,7 @@ public:
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt) override;
-  void _SolveVelocity(Particles* particles, size_t index, float dt, pxr::GfVec3f& velocity) override;
+  void _SolveVelocity(Particles* particles, size_t index, float dt) override;
 
 private:
   pxr::GfVec3f                 _position;
@@ -143,7 +140,7 @@ public:
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt) override;
-  void _SolveVelocity(Particles* particles, size_t index, float dt, pxr::GfVec3f& velocity) override;
+  void _SolveVelocity(Particles* particles, size_t index, float dt) override;
 
 private:
   pxr::GfMatrix4f             _xform;
