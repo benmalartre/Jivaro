@@ -102,7 +102,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(1.f, 0.f, _ground->GetNormal(), _ground->GetOrigin()));
+  _solver->AddCollision(new PlaneCollision(1.f, 0.5f, _ground->GetNormal(), _ground->GetOrigin()));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
@@ -216,7 +216,7 @@ void TestParticles::TerminateExec(pxr::UsdStageRefPtr& stage)
     }
   }
   delete _solver;
-
+  delete _ground;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

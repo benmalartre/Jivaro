@@ -118,28 +118,30 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
   SetHit(index, d < 0.f);
 }
 
-void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt)
+void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt)
 {
   const pxr::GfVec3f predicted(particles->position[elem] + particles->velocity[elem] * dt);
   float d = pxr::GfDot(_normal, predicted - _position) - particles->radius[elem];
   const pxr::GfVec3f intersection = predicted + _normal * -d;
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], d);
   location.SetCoordinates(coords);
+
+  location.SetPosition(intersection);
+  location.SetNormal(_normal);
+  location.SetResponse(pxr::GfVec3f(0.f));
 }
 
 void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
-
   if(!CheckHit(index))return;
+  return;
   // Tangential component of relative motion
   const pxr::GfVec3f tangent = 
     (particles->velocity[index] - (_normal * pxr::GfDot(particles->velocity[index], _normal))) * -1.f;
 
   const pxr::GfVec3f velocity = 
-    _normal * _contacts[_p2c[index]].GetT() * _restitution  + tangent * _friction ;
+    _normal * _contacts[_p2c[index]].GetT() * _restitution/* + tangent * _friction*/;
 
-  particles->position[index] += velocity * dt;
-  particles->predicted[index] += velocity * dt;
   particles->velocity[index] += velocity;
   
 }
@@ -164,7 +166,7 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
   SetHit(index, local.GetLengthSq() < radius2);
 }
 
-void SphereCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt)
+void SphereCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt)
 {
 }
 

@@ -4,6 +4,7 @@
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
 #include "../geometry/triangle.h"
+#include "../geometry/implicit.h"
 #include "../geometry/utils.h"
 #include "../pbd/particle.h"
 #include "../pbd/force.h"
@@ -40,19 +41,27 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   _InitControls(stage);
   _solver = new Solver();
+  _ground = new Plane();
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
 
-  pxr::GfQuatf rotate(45.f*DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
+   pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
   rotate.Normalize();
-  pxr::GfMatrix4f matrix = 
-    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
+
+  _ground->SetMatrix(
+    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
+
   float size = .25f;
 
   _GenerateCollidePlane(stage, rootId);
   
+
+  rotate = pxr::GfQuatf(45.f * DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
+  rotate.Normalize();
+  pxr::GfMatrix4f matrix =
+    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
   
   for(size_t x = 0; x < 6; ++x) {
     std::string name = "cloth" + std::to_string(x);
@@ -105,8 +114,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddCollision(new SphereCollision(restitution, friction, m, (float)radius));
   } 
 
-  _solver->AddCollision(new PlaneCollision(1.f, 1.f, 
-    pxr::GfVec3f(0.f, 1.f, 0.f), pxr::GfVec3f(0.f, -0.1f, 0.f)));
+   _solver->AddCollision(new PlaneCollision(1.f, 0.5f, _ground->GetNormal(), _ground->GetOrigin()));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
@@ -213,6 +221,7 @@ void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)
     }
   }
   delete _solver;
+  delete _ground;
 
 }
 

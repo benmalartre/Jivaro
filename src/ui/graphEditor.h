@@ -82,7 +82,7 @@ public:
 
   enum GraphDirection {
     VERTICAL,
-    HORIZONTAL
+    HORIZONTAL,
   };
 
   enum ItemState {

@@ -242,15 +242,12 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
       // TODO implicit geometry handling
       return pxr::VtValue();
     } else {
-      //std::cout << "delegate get display color for " << id << std::endl;
       pxr::VtArray<pxr::GfVec3f>& colors = 
         ((Points*)_prims[id].geom)->GetColors();
-      //std::cout << "num colors : " << colors.size() << std::endl;
       if(colors.size())
         return pxr::VtValue(colors);
       else {
         const pxr::GfVec3f& wirecolor = _prims[id].geom->GetWirecolor();
-        //std::cout << "use wire color : " << wirecolor << std::endl;
         colors = { wirecolor };
         return pxr::VtValue(colors);
       }

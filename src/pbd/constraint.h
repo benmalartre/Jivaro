@@ -163,10 +163,12 @@ public:
   virtual size_t GetTypeId() const override { return TYPE_ID; };
   virtual size_t GetElementSize() const override { return ELEM_SIZE; };
 
+  void GetResponse(Particles* particles);
   Collision* GetCollision() {return _collision;};
   const Collision* GetCollision() const { return _collision; };
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
+
 
   static size_t                 ELEM_SIZE;
 

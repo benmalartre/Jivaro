@@ -23,17 +23,12 @@ Location::Set(const Location& other) {
 }
 
 pxr::GfVec3f 
-Location::GetPosition(Geometry* geometry, bool worldSpace) const 
+Location::GetPosition(Geometry* geometry) const 
 {
   switch (geometry->GetType()) {
     case Geometry::PLANE:
     {
-      // for a plane intersection simply return _coords 
-      // that contains intersection point offset coordinates
-      if(worldSpace)
-        return geometry->GetMatrix().Transform(pxr::GfVec3f(_coords[0], _coords[1], _coords[2]));
-      else
-        return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]);
+      return geometry->GetMatrix().Transform(pxr::GfVec3f(_coords[0], _coords[1], _coords[2]));
     }
 
     case Geometry::CUBE:
@@ -54,18 +49,11 @@ Location::GetPosition(Geometry* geometry, bool worldSpace) const
 
       const Triangle* triangle = mesh->GetTriangle(_elemId);
       const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-      if(worldSpace)
-        return geometry->GetMatrix().Transform(
-          pxr::GfVec3f( 
-            pxr::GfVec3f(positions[triangle->vertices[0]]) * _coords[0] +
-            pxr::GfVec3f(positions[triangle->vertices[1]]) * _coords[1] +
-            pxr::GfVec3f(positions[triangle->vertices[2]]) * _coords[2])
-          );
-      else
-        return pxr::GfVec3f( 
+      return geometry->GetMatrix().Transform(
+        pxr::GfVec3f( 
           pxr::GfVec3f(positions[triangle->vertices[0]]) * _coords[0] +
           pxr::GfVec3f(positions[triangle->vertices[1]]) * _coords[1] +
-          pxr::GfVec3f(positions[triangle->vertices[2]]) * _coords[2]
+          pxr::GfVec3f(positions[triangle->vertices[2]]) * _coords[2])
         );
     }
 
@@ -85,13 +73,13 @@ Location::GetPosition(Geometry* geometry, bool worldSpace) const
 }
 
 pxr::GfVec3f
-Location::GetPosition(const pxr::GfRay& ray, bool worldSpace) const
+Location::GetPosition(const pxr::GfRay& ray) const
 {
   return pxr::GfVec3f(ray.GetPoint(_coords[3]));
 }
 
 pxr::GfVec3f
-Location::GetNormal(Geometry* geometry, bool wolrdSpace) const
+Location::GetNormal(Geometry* geometry) const
 {
   switch (geometry->GetType()) {
     case Geometry::MESH:

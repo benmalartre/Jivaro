@@ -281,10 +281,11 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   // compute predicted position
   pxr::GfVec3f* predicted = &_particles.predicted[0];
   pxr::GfVec3f* previous = &_particles.previous[0];
-  const pxr::GfVec3f* position = &_particles.position[0];
+  pxr::GfVec3f* position = &_particles.position[0];
   
   for (size_t index = begin; index < end; ++index) {
     previous[index] = position[index];
+    position[index] = predicted[index];
     predicted[index] = position[index] + _stepTime * velocity[index];
   }
 }
@@ -363,6 +364,7 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
     for (auto& constraint : constraints)constraint->Solve(&_particles, _stepTime);
     // apply result
     for (auto& constraint : constraints)constraint->Apply(&_particles);
+
   } else {
     // solve constraints
     pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
@@ -370,6 +372,11 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
     // apply constraint serially
     for (auto& constraint : constraints)constraint->Apply(&_particles);
   }
+}
+
+void Solver::_CollisionResponse(pxr::VtArray<Constraint*>& constraints)
+{
+
 }
 
 void Solver::_SolveVelocities()
@@ -393,6 +400,7 @@ void Solver::_StepOneSerial()
   // solve and apply constraint
   _SolveConstraints(_constraints, true);
   _SolveConstraints(_contacts, true);
+  _CollisionResponse(_constraints);
 
   // update particles
   _UpdateParticles(0, numParticles);
@@ -415,6 +423,7 @@ void Solver::_StepOne()
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
   _SolveConstraints(_contacts, false);
+  _CollisionResponse(_constraints);
   
   // update particles
   pxr::WorkParallelForN(

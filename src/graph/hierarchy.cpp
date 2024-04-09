@@ -44,8 +44,8 @@ HierarchyGraph::HierarchyNode::HierarchyNode(pxr::UsdPrim& prim,
 
 void HierarchyGraph::HierarchyNode::_PopulatePorts()
 {
-  _ports.push_back(Graph::Port(this, Graph::Port::RIGHT | Graph::Port::HIDDEN, ParentPortToken));
-  _ports.push_back(Graph::Port(this, Graph::Port::LEFT | Graph::Port::HIDDEN, ChildrenPortToken));
+  _ports.push_back(Graph::Port(this, Graph::Port::OUTPUT | Graph::Port::HIDDEN, ParentPortToken));
+  _ports.push_back(Graph::Port(this, Graph::Port::INPUT | Graph::Port::HIDDEN, ChildrenPortToken));
 }
 
 void

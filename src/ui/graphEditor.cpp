@@ -269,7 +269,7 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
     ImColor(0, 0, 0, 255),
     _port->GetLabel().GetText());
 
-  if(Get()->GetFlags() & Graph::Port::LEFT) {
+  if(Get()->GetFlags() & Graph::Port::INPUT) {
     drawList->AddCircleFilled(
       p + _pos * scale,
       GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
@@ -277,7 +277,7 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
     );
   }
 
-  if (Get()->GetFlags() & Graph::Port::RIGHT) {
+  if (Get()->GetFlags() & Graph::Port::OUTPUT) {
     drawList->AddCircleFilled(
       p + (_pos + pxr::GfVec2f(_node->GetWidth(), 0.f)) * scale,
       GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
@@ -527,7 +527,6 @@ GraphEditorUI::Node::Read()
     pxr::GfVec3f color;
     api.GetDisplayColorAttr().Get(&color);
     _color = PackColor3<pxr::GfVec3f>(color);
-    std::cout << "color : " << _color << std::endl;
   } else {
     pxr::UsdUINodeGraphNodeAPI api = 
       pxr::UsdUINodeGraphNodeAPI::Apply(_node->GetPrim());

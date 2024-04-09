@@ -527,16 +527,17 @@ pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, float depth, 
 }
 */
 
-float CollisionConstraint::_CalculateValue(Particles* particles, size_t index)
+float CollisionConstraint::_CalculateValue(Particles* particles, size_t elem)
 {
-  return (pxr::GfDot(particles->predicted[_elements[index]] - _collision->GetContactPosition(_elements[index]),
-    _collision->GetContactNormal(index)) + particles->radius[_elements[index]]);
+  return (pxr::GfDot(particles->predicted[_elements[elem]] - _collision->GetContactPosition(_elements[elem]),
+    _collision->GetContactNormal(elem)) + particles->radius[_elements[elem]]);
 }
 
-void CollisionConstraint::_CalculateGradient(Particles* particles, size_t index)
+void CollisionConstraint::_CalculateGradient(Particles* particles, size_t elem)
 {
-  _gradient[0] = _collision->GetContactNormal(index);
+  _gradient[0] = _collision->GetContactNormal(_elements[elem]);
 }
+
 
 void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {

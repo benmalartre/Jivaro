@@ -35,11 +35,7 @@ public:
       enum Flag {
         INPUT = 1,
         OUTPUT = 2,
-        LEFT = 4,
-        TOP = 8,
-        BOTTOM = 16,
-        RIGHT = 32,
-        HIDDEN = 64
+        HIDDEN = 4
       };
 
       Port() {};
