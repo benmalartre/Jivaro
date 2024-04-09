@@ -95,7 +95,7 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
 void Collision::SolveVelocities(Particles* particles, float dt)
 {
   for (size_t elemIdx = 0; elemIdx < _contacts.size(); ++elemIdx) {
-    if(_p2c[_c2p[elemIdx]] > -1)_SolveVelocity(particles, _c2p[elemIdx], dt);
+    _SolveVelocity(particles, _c2p[elemIdx], dt);
   }
 }
 
@@ -115,9 +115,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
   if (!Affects(index))return;
   const pxr::GfVec3f predicted(particles->position[index] + particles->velocity[index] * dt);
   float d = pxr::GfDot(_normal, predicted - _position) - particles->radius[index];
-  if (d < 0.f) {
-    SetHit(index);
-  }
+  SetHit(index, d < 0.f);
 }
 
 void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt)
@@ -131,12 +129,18 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const
 
 void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
+
+  if(!CheckHit(index))return;
   // Tangential component of relative motion
   const pxr::GfVec3f tangent = 
     (particles->velocity[index] - (_normal * pxr::GfDot(particles->velocity[index], _normal))) * -1.f;
 
-  particles->velocity[index] += _normal * _contacts[_p2c[index]].GetT() * _restitution/* + tangent * _friction * dt*/;
+  const pxr::GfVec3f velocity = 
+    _normal * _contacts[_p2c[index]].GetT() * _restitution  + tangent * _friction ;
 
+  particles->position[index] += velocity * dt;
+  particles->predicted[index] += velocity * dt;
+  particles->velocity[index] += velocity;
   
 }
 
@@ -157,9 +161,7 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
   if (!Affects(index))return;
   const float radius2 = _radius * _radius;
   const pxr::GfVec3f local = _invXform.Transform(particles->predicted[index] + particles->velocity[index] * dt * 2.f);
-  if (local.GetLengthSq() < radius2) {
-    SetHit(index);
-  }
+  SetHit(index, local.GetLengthSq() < radius2);
 }
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt)

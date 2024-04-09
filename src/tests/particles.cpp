@@ -46,9 +46,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   rotate.Normalize();
 
   _ground->SetMatrix(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -5.f, 0.f))); /*
-    pxr::GfMatrix4d().SetRotate(rotate))*/
-  //);
+    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -5.f, 0.f)) *
+    pxr::GfMatrix4d().SetRotate(rotate));
 
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
@@ -103,7 +102,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(1.f, 1.f, _ground->GetNormal(), _ground->GetOrigin()));
+  _solver->AddCollision(new PlaneCollision(1.f, 0.f, _ground->GetNormal(), _ground->GetOrigin()));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
