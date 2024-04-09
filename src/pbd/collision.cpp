@@ -95,7 +95,7 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
 void Collision::SolveVelocities(Particles* particles, float dt)
 {
   for (size_t elemIdx = 0; elemIdx < _contacts.size(); ++elemIdx) {
-    _SolveVelocity(particles, _c2p[elemIdx], dt);
+    if(_p2c[_c2p[elemIdx]] > -1)_SolveVelocity(particles, _c2p[elemIdx], dt);
   }
 }
 
@@ -125,7 +125,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int elem, const
   const pxr::GfVec3f predicted(particles->position[elem] + particles->velocity[elem] * dt);
   float d = pxr::GfDot(_normal, predicted - _position) - particles->radius[elem];
   const pxr::GfVec3f intersection = predicted + _normal * -d;
-  const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], -d);
+  const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], d);
   location.SetCoordinates(coords);
 }
 

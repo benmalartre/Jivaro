@@ -398,7 +398,7 @@ void Solver::_StepOneSerial()
   _UpdateParticles(0, numParticles);
 
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
 }
 
 void Solver::_StepOne()
@@ -423,7 +423,7 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
 
 }
 
