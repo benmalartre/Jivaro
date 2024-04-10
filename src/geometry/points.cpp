@@ -36,4 +36,5 @@ Points::Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
     widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
 }
 
+
 JVR_NAMESPACE_CLOSE_SCOPE

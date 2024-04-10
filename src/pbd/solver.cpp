@@ -21,8 +21,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
-  : _gravity(0, -9.8, 0)
-  , _subSteps(24)
+  : _subSteps(32)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
@@ -294,6 +293,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
 void Solver::_ClearContacts()
 {
+  std::cout << "clear contacts ..." << std::endl;
   for (auto& contact : _contacts)delete contact;
   _contacts.clear();
 }
@@ -384,14 +384,6 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
   }
 }
 
-void Solver::_SolveContactResponses()
-{
-  for (auto& collision : _collisions) {
-    size_t numContacts = collision->GetNumContacts();
-    if (!numContacts) continue;
-    collision->SolveContactResponses(&_particles, _stepTime);
-  }
-}
 
 void Solver::_SolveVelocities()
 {
@@ -413,13 +405,12 @@ void Solver::_StepOneSerial()
   // solve and apply constraint
   _SolveConstraints(_constraints, true);
   _SolveConstraints(_contacts, true);
-  //_SolveContactResponses();
 
   // update particles
   _UpdateParticles(0, numParticles);
 
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
 }
 
 void Solver::_StepOne()
@@ -436,7 +427,6 @@ void Solver::_StepOne()
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
   _SolveConstraints(_contacts, false);
-  //_SolveContactResponses();
   
   // update particles
   pxr::WorkParallelForN(
@@ -445,7 +435,7 @@ void Solver::_StepOne()
       std::placeholders::_1, std::placeholders::_2));
 
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
 
 }
 

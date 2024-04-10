@@ -28,8 +28,6 @@ public:
   // attributes
   float GetSleepThreshold() { return _sleepThreshold; };
   void SetSleepThreshold(float threshold) { _sleepThreshold = threshold; };
-  const pxr::GfVec3f& GetGravity() { return _gravity; };
-  void SetGravity(const pxr::GfVec3f& gravity) { _gravity = gravity; };
 
   // system
   size_t GetNumParticles() { return _particles.GetNumParticles(); };
@@ -76,7 +74,6 @@ private:
   void _ClearContacts();
   void _FindContacts(bool serial = false);
   void _SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial=false);
-  void _SolveContactResponses();
   void _SolveVelocities();
   
   void _IntegrateParticles(size_t begin, size_t end);
@@ -98,7 +95,6 @@ private:
   pxr::VtArray<Collision*>            _collisions;
   pxr::VtArray<Body*>                 _bodies;
   pxr::VtArray<Force*>                _force;
-  pxr::GfVec3f                        _gravity;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

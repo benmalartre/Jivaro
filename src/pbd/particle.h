@@ -55,6 +55,7 @@ struct Particles
   pxr::VtArray<pxr::GfVec3f> position;
   pxr::VtArray<pxr::GfVec3f> predicted;
   pxr::VtArray<pxr::GfVec3f> velocity;
+  pxr::VtArray<pxr::GfVec3f> correction; // velocity correction post solve
   pxr::VtArray<pxr::GfVec3f> color;
 
 };

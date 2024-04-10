@@ -90,7 +90,6 @@ add_executable(${TARGET}
   #pbd/accum.cpp
   pbd/collision.cpp
   pbd/mask.cpp
-  pbd/contact.cpp
   pbd/particle.cpp
   pbd/force.cpp
   pbd/constraint.cpp

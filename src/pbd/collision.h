@@ -24,44 +24,30 @@ public:
   Collision(float restitution=0.f, float friction=0.f) 
     : _restitution(restitution)
     , _friction(friction) {};
-/*
-  bool HasMask() const { return _mask.size() > 0; };
-  void SetMask(const pxr::VtArray<int>& mask) { _mask = mask; };
-  void RemoveMask() { _mask.clear(); }
-  size_t MaskSize() const { return _mask.size(); };
-  const int* GetMaskCPtr() const { return &_mask[0]; };
-  bool HasWeights() const { return _weights.size() > 0; };
-  void SetWeights(const pxr::VtArray<float>& weights) { _weights = weights; };
-  void RemoveWeights() { _weights.clear(); };
 
-  bool Affects(size_t index) const;
-
+  /*
   void AddBody(Particles* particles, Body* body);
   void RemoveBody(Particles* particles, Body* body);
   */
 
   virtual void FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
-    pxr::VtArray<Constraint*>& constraints, float dt);
+    pxr::VtArray<Constraint*>& constraints, float ft);
   virtual void FindContactsSerial(Particles* particles, const pxr::VtArray<Body*>& bodies,
-    pxr::VtArray<Constraint*>& constraint, float dt);
+    pxr::VtArray<Constraint*>& constraint, float ft);
 
-  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float dt);
-  virtual void UpdateContactsLocation(float it);
+  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float ft);
 
   virtual void SolveVelocities(Particles* particles, float dt);
-  virtual void SolveContactResponses(Particles* particles, float dt);
 
   virtual const pxr::GfVec3f& GetContactPosition(size_t index) const {
-    return _contacts[_p2c[index]].GetPosition();};
+    return _contacts[_p2c[index]].GetPointCoordinates();};
   virtual const pxr::GfVec3f& GetContactNormal(size_t index) const {
-    return _contacts[_p2c[index]].GetNormal();};
+    return pxr::GfVec3f(0.f, 1.f, 0.f);};
   virtual float GetContactT(size_t index) const {
     return _contacts[_p2c[index]].GetT();};
-  virtual const pxr::GfVec3f& GetContactResponse(size_t index) const {
-    return _contacts[_p2c[index]].GetResponse();};
 
   size_t GetNumContacts(){return _contacts.size();};
-  Contact& GetContact(size_t index){return _contacts[_p2c[index]];};
+  Location& GetContact(size_t index){return _contacts[_p2c[index]];};
   const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 
@@ -80,11 +66,11 @@ protected:
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
     pxr::VtArray<Constraint*>& contacts, float dt);
-  virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float dt);
+  virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
   
-  virtual void _FindContact(size_t index, Particles* particles, float dt) = 0;
-  virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt) = 0;
-  virtual void _UpdateContactLocation(Contact& location, float it) = 0;
+  virtual void _FindContact(size_t index, Particles* particles, float ft) = 0;
+  virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) = 0;
+
   virtual void _SolveVelocity(Particles* particles, size_t index, float dt) = 0;
 
   // hits encode vertex hit in the int list bits
@@ -92,7 +78,7 @@ protected:
   std::vector<int>            _p2c;
   std::vector<int>            _c2p;
   size_t                      _numContacts;
-  std::vector<Contact>        _contacts;
+  std::vector<Location>       _contacts;
   float                       _restitution;
   float                       _friction;
 };
@@ -108,13 +94,14 @@ public:
   inline void SetPosition(const pxr::GfVec3f& position);
   inline void SetNormal(const pxr::GfVec3f& normal);
 
+  const pxr::GfVec3f& GetContactNormal(size_t index) const {return _normal;};
+  
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
 
 protected:
-  void _FindContact(size_t index, Particles* particles, float dt) override;
-  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt) override;
-  void _UpdateContactLocation(Contact& location, float it) override;
+  void _FindContact(size_t index, Particles* particles, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
 
 private:
@@ -152,9 +139,8 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
 
 protected:
-  void _FindContact(size_t index, Particles* particles, float dt) override;
-  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt) override;
-  void _UpdateContactLocation(Contact& location, float it) override;
+  void _FindContact(size_t index, Particles* particles, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
 
 private:
