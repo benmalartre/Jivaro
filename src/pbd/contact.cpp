@@ -2,6 +2,10 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+bool Contact::GetHit() const
+{
+  return _hit;
+}
 
 pxr::GfVec3f Contact::GetPosition() const
 {

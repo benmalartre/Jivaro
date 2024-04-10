@@ -45,6 +45,8 @@ void Solver::Reset()
     _particles.position[p] = _particles.rest[p];
     _particles.predicted[p] = _particles.rest[p];
     _particles.velocity[p] = pxr::GfVec3f(0.f);
+    if(_particles.state[p] != Particles::MUTE)
+      _particles.state[p] = Particles::ACTIVE;
   }
 }
 
@@ -286,7 +288,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   for (size_t index = begin; index < end; ++index) {
     previous[index] = position[index];
     position[index] = predicted[index];
-    predicted[index] = position[index] + _stepTime * velocity[index];
+    predicted[index] = position[index] + velocity[index] * _stepTime;
   }
 }
 
@@ -316,12 +318,20 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   const pxr::GfVec3f* predicted = &_particles.predicted[0];
   pxr::GfVec3f* position = &_particles.position[0];
   pxr::GfVec3f* velocity = &_particles.velocity[0];
+  short* state = &_particles.state[0];
 
   float invDt = 1.f / _stepTime;
 
   for(size_t index = begin; index < end; ++index) {
+    if (_particles.state[index] != Particles::ACTIVE)continue;
     // update velocity
-    velocity[index] = (predicted[index] - position[index]) * invDt;
+    velocity[index] = (predicted[index] - position[index]) * _stepTime;
+    /*
+    if (velocity[index].GetLength() < 0.0000001f) {
+      state[index] = Particles::IDLE;
+      velocity[index] = pxr::GfVec3f(0.f);
+    }
+    */
 
     // update position
     position[index] = predicted[index];

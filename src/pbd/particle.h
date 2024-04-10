@@ -37,10 +37,16 @@ enum BodyType
 
 struct Particles
 {
+  enum State {MUTE, IDLE, ACTIVE};
+
   size_t GetNumParticles() { return position.size(); };
   void AddBody(Body* body, const pxr::GfMatrix4f& matrix);
   void RemoveBody(Body* body);
 
+  void SetAllState(short state);
+  void SetBodyState(Body* body, short state);
+
+  pxr::VtArray<short>        state;
   pxr::VtArray<int>          body;
   pxr::VtArray<float>        mass; // inverse mass
   pxr::VtArray<float>        radius;
@@ -50,6 +56,7 @@ struct Particles
   pxr::VtArray<pxr::GfVec3f> predicted;
   pxr::VtArray<pxr::GfVec3f> velocity;
   pxr::VtArray<pxr::GfVec3f> color;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

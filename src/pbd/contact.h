@@ -29,16 +29,19 @@ public:
     , _normal(normal)
     , _response(response) {};
 
+  bool GetHit() const;
   pxr::GfVec3f GetPosition() const;
   pxr::GfVec3f GetNormal() const;
   pxr::GfVec3f GetResponse() const;
 
   void Set(const Contact& other);
+  void SetHit(bool hit) { _hit = hit; };
   void SetPosition(const pxr::GfVec3f& position) { _position = position; };
   void SetNormal(const pxr::GfVec3f& normal) { _normal = normal; };
   void SetResponse(const pxr::GfVec3f& response) { _response = response; };
 
 protected:
+  bool          _hit;
   pxr::GfVec3f  _position;
   pxr::GfVec3f  _normal;
   pxr::GfVec3f  _response;

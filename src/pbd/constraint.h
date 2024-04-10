@@ -173,9 +173,8 @@ public:
 
 protected:
   float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles * particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
   static size_t                 TYPE_ID;
-
   Collision*                    _collision;
 };
 

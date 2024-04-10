@@ -21,7 +21,7 @@ void GravitationalForce::Apply(size_t begin, size_t end, Particles* particles, f
   pxr::GfVec3f* velocity = &particles->velocity[0];
   const float* mass = &particles->mass[0];
   for (size_t index = begin; index < end; ++index) {
-    if (!Affects(index))continue;
+    if (!Affects(index) || particles->state[index] != Particles::ACTIVE)continue;
     if(pxr::GfIsClose(mass[index], 0.f, 0.0000001f))continue;
     if (HasWeights())
       velocity[index] += _gravity * _weights[index] * mass[index] * dt * dt;

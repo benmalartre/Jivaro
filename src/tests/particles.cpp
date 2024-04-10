@@ -122,6 +122,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   collisions->SetRadii(&particles->radius[0], numParticles);
   collisions->SetColors(&particles->color[0], numParticles);
 
+  _solver->GetParticles()->SetAllState(Particles::ACTIVE);
+
 }
 
 

@@ -46,6 +46,7 @@ public:
     pxr::VtArray<Constraint*>& constraint, float dt);
 
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float dt);
+  virtual void UpdateContactsLocation(float it);
 
   virtual void SolveVelocities(Particles* particles, float dt);
   virtual void SolveContactResponses(Particles* particles, float dt);
@@ -80,7 +81,7 @@ protected:
   
   virtual void _FindContact(size_t index, Particles* particles, float dt) = 0;
   virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt) = 0;
-
+  virtual void _UpdateContactLocation(Contact& location, float it) = 0;
   virtual void _SolveVelocity(Particles* particles, size_t index, float dt) = 0;
 
   // hits encode vertex hit in the int list bits
@@ -107,6 +108,7 @@ public:
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt) override;
+  void _UpdateContactLocation(Contact& location, float it) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
 
 private:
@@ -143,6 +145,7 @@ public:
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt) override;
+  void _UpdateContactLocation(Contact& location, float it) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
 
 private:

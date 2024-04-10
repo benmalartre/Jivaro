@@ -21,6 +21,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
   velocity.resize(size);
   body.resize(size);
   color.resize(size);
+  state.resize(size);
 
   if(geom->GetType() >= Geometry::POINT) {
     const pxr::VtArray<pxr::GfVec3f>& points = ((Points*)geom)->GetPositions();
@@ -37,6 +38,7 @@ void Particles::AddBody(Body* b, const pxr::GfMatrix4f& m)
       velocity[idx] = pxr::GfVec3f(0.f);
       body[idx] = index;
       color[idx] = b->wirecolor;
+      state[idx] = IDLE;
     }
   } else {
     // TODO implement implicit geometries here
@@ -62,6 +64,7 @@ void Particles::RemoveBody(Body* b)
     velocity[lhi] = velocity[rhi];
     body[lhi] = body[rhi] - 1;
     color[lhi] = color[rhi];
+    state[lhi] = state[rhi];
   }
 
   size_t size = position.size() - shift;
@@ -74,6 +77,23 @@ void Particles::RemoveBody(Body* b)
   velocity.resize(size);
   body.resize(size);
   color.resize(size);
+  state.resize(size);
 }
+
+void Particles::SetAllState( short s)
+{
+  for(auto& _state: state) _state = s;
+}
+
+void Particles::SetBodyState(Body* b, short s)
+{
+  const size_t begin = b->offset;
+  const size_t end = begin +b->numPoints;
+
+  for (size_t r = begin; r < end; ++r) {
+    state[r] = s;
+  }
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
