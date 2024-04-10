@@ -325,7 +325,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   for(size_t index = begin; index < end; ++index) {
     if (_particles.state[index] != Particles::ACTIVE)continue;
     // update velocity
-    velocity[index] = (predicted[index] - position[index]) * _stepTime;
+    velocity[index] = (predicted[index] - position[index]) * invDt;
     /*
     if (velocity[index].GetLength() < 0.0000001f) {
       state[index] = Particles::IDLE;

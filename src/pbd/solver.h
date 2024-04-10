@@ -66,7 +66,7 @@ public:
   void LockPoints();
   void WeightBoundaries();
   
-  // solver
+  // solver 
   void UpdateCollisions();
   void UpdateGeometries();
   void Reset();

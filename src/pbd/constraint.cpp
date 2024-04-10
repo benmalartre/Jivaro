@@ -32,12 +32,12 @@ Constraint::Constraint(Body* body1, Body* body2, float stiffness, float damping)
   _body[1] = body2;
 }
 
-float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elemIdx)
+float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elem)
 {
   const size_t N = GetElementSize();
   float result = 0.f, m;
   for(size_t n = 0; n < N; ++n) {
-    m = particles->mass[_elements[elemIdx * N + n]];
+    m = particles->mass[_elements[elem * N + n]];
     result += 
       _gradient[n][0] * m * _gradient[n][0] +
       _gradient[n][1] * m * _gradient[n][1] +
@@ -54,12 +54,12 @@ void Constraint::Solve(Particles* particles, float dt)
   const float rN = 1.f / static_cast<float>(N);
   const size_t numElements = _elements.size() / N;
   const size_t offset = _body[0]->offset;
-  size_t compIdx, partIdx;
-  for(size_t elemIdx = 0; elemIdx  < numElements; ++elemIdx) {
-    const float C = _CalculateValue(particles, elemIdx);
+  size_t comp, part;
+  for(size_t elem = 0; elem  < numElements; ++elem) {
+    const float C = _CalculateValue(particles, elem);
 
     // Calculate the derivative of the constraint function
-    _CalculateGradient(particles, elemIdx);
+    _CalculateGradient(particles, elem);
 
     // Skip if the gradient is sufficiently small
     constexpr float very_small_value = 1e-12;
@@ -75,14 +75,14 @@ void Constraint::Solve(Particles* particles, float dt)
 
     // Calculate delta lagrange multiplier
     const float deltaLagrange =
-      -C / (_ComputeLagrangeMultiplier(particles, elemIdx) + alpha);
+      -C / (_ComputeLagrangeMultiplier(particles, elem) + alpha);
 
     for(size_t n = 0; n < N; ++n) {
-      compIdx = elemIdx * N + n;
-      partIdx = _elements[compIdx] + offset;
-     _correction[compIdx] +=
-       (_gradient[n] * particles->mass[partIdx] * deltaLagrange) - 
-       pxr::GfDot(particles->velocity[partIdx] * dt * dt,  _gradient[N]) * _gradient[N] * _damping;
+      comp = elem * N + n;
+      part = _elements[comp] + offset;
+     _correction[comp] +=
+       (_gradient[n] * particles->mass[part] * deltaLagrange) - 
+       pxr::GfDot(particles->velocity[part] * dt * dt,  _gradient[N]) * _gradient[N] * _damping;
     }
   }
 }
@@ -527,14 +527,17 @@ pxr::GfVec3f PlaneCollision::ResolveVelocity(Particles* particles, float depth, 
 }
 */
 
-float CollisionConstraint::_CalculateValue(Particles* particles, size_t index)
+float CollisionConstraint::_CalculateValue(Particles* particles, size_t elem)
 {
-  return pxr::GfDot(particles->position[_elements[index]] - _collision->GetContactPosition(_elements[index]),
-    _collision->GetContactNormal(index))/* - particles->radius[_elements[index]]*/;
+  const size_t offset = _body[0]->offset;
+  const size_t index = _elements[elem] + offset;
+  return _collision->GetValue(particles, index);
 }
 
-void CollisionConstraint::_CalculateGradient(Particles* particles, size_t index)
+void CollisionConstraint::_CalculateGradient(Particles* particles, size_t elem)
 {
+  const size_t offset = _body[0]->offset;
+  const size_t index = _elements[elem] + offset;
   _gradient[0] = _collision->GetContactNormal(index);
 }
 

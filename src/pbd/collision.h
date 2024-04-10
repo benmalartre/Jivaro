@@ -65,6 +65,9 @@ public:
   const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 
+  virtual float GetValue(Particles* particles, size_t index) = 0;
+  virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0;
+
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
   };
@@ -105,6 +108,9 @@ public:
   inline void SetPosition(const pxr::GfVec3f& position);
   inline void SetNormal(const pxr::GfVec3f& normal);
 
+  float GetValue(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
+
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& location, float dt) override;
@@ -141,6 +147,9 @@ public:
   inline void Set(const pxr::GfMatrix4f& xform, float radius);
   inline void SetXform(const pxr::GfMatrix4f& xform);
   inline void SetRadius(float radius);
+
+  float GetValue(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
 
 protected:
   void _FindContact(size_t index, Particles* particles, float dt) override;

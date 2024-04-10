@@ -60,11 +60,11 @@ public:
   const Body* GetBody(size_t index) const {return _body[index];};
 
 protected:
-  float _ComputeLagrangeMultiplier(Particles* particles, size_t index=0);
+  float _ComputeLagrangeMultiplier(Particles* particles, size_t elem=0);
   void _ResetCorrection();
   
-  virtual float _CalculateValue(Particles* particles, size_t index) = 0;
-  virtual void _CalculateGradient(Particles* particles, size_t index) = 0;
+  virtual float _CalculateValue(Particles* particles, size_t elem) = 0;
+  virtual void _CalculateGradient(Particles* particles, size_t elem) = 0;
 
   pxr::VtArray<Body*>           _body;
   pxr::VtArray<int>             _elements;

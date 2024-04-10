@@ -138,7 +138,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float dt)
 {
   if (!Affects(index))return;
   const pxr::GfVec3f predicted(particles->position[index] + particles->velocity[index] * dt);
-  float d = pxr::GfDot(_normal, predicted - _position)/* - particles->radius[index]*/;
+  float d = pxr::GfDot(_normal, predicted - _position) - particles->radius[index];
   SetHit(index, d < 0.f);
 }
 
@@ -147,7 +147,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, cons
   const pxr::GfVec3f velocity = particles->velocity[index] * dt;
   const float vl = velocity.GetLength();
   const pxr::GfVec3f predicted(particles->position[index] + velocity);
-  float d = pxr::GfDot(_normal, predicted - _position)/* - particles->radius[index]*/;
+  float d = pxr::GfDot(_normal, predicted - _position) - particles->radius[index];
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], -d);
@@ -181,6 +181,18 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
   particles->velocity[index] += velocity;
   
 }
+
+float PlaneCollision::GetValue(Particles* particles, size_t index)
+{
+  float d = pxr::GfDot(_normal, particles->position[index] - _position) - particles->radius[index];
+  return d < 0.f ? d : 0.f;
+}
+  
+pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
+{
+  return _normal;
+}
+
 
 //----------------------------------------------------------------------------------------
 // Sphere Collision
@@ -224,6 +236,16 @@ void SphereCollision::_SolveVelocity(Particles* particles, size_t index, float d
   */
 }
 
+
+float SphereCollision::GetValue(Particles* particles, size_t index)
+{
+  return 0.f;
+}
+  
+pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
+{
+  return pxr::GfVec3f(0.f);
+}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE
