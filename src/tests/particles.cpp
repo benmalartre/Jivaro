@@ -103,7 +103,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.5f));
+  _solver->AddCollision(new PlaneCollision(_ground, 0.25f, 0.25f));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));

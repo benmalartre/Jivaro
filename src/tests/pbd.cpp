@@ -124,7 +124,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     //_solver->AddCollision(new SphereCollision(restitution, friction, );
   } 
 
-   _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.5f));
+   _solver->AddCollision(new PlaneCollision(_ground, 0.5f, 0.5f));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));

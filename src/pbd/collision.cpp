@@ -154,24 +154,10 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
   if(!CheckHit(index))return;
     // need to rehabilit contact and save computation in there
     
-  const float d = pxr::GfDot(_normal, particles->predicted[index] - _position)  - particles->radius[index];
-  const pxr::GfVec3f intersection = _normal * -d + _position;
-
-  pxr::GfVec3f velocity = particles->predicted[index] - particles->previous[index];
-  const float newL = velocity.GetLength();
-
-  particles->velocity[index] = velocity.GetNormalized() * newL * _restitution * 0.f;
-  /*
-  // Tangential component of relative motion
-  const pxr::GfVec3f tangent = 
-    (particles->velocity[index] - (_normal * pxr::GfDot(particles->velocity[index], _normal))) * -1.f;
-
-  const pxr::GfVec3f velocity = 
-    _normal * _contacts[_p2c[index]].GetT() * _restitution + tangent * _friction;
-
-  particles->velocity[index] = velocity;
-
-  */
+  const float pL = particles->previous[index].GetLength();
+  const float vL = particles->velocity[index].GetLength();
+  particles->velocity[index] += _normal * (pL - vL) * _restitution;
+  
   
 }
 

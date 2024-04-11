@@ -273,7 +273,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
     velocity[index] -= (velocity[index] * _bodies[body[index]]->damping);
   }
   */
-  
+
   // apply external forces
   for (const Force* force : _force) {
     force->Apply(begin, end, &_particles, _frameTime);
@@ -281,11 +281,10 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
   // compute predicted position
   pxr::GfVec3f* predicted = &_particles.predicted[0];
-  pxr::GfVec3f* previous = &_particles.previous[0];
   pxr::GfVec3f* position = &_particles.position[0];
-  
+
   for (size_t index = begin; index < end; ++index) {
-    previous[index] = position[index];
+
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
   }
@@ -318,6 +317,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   const pxr::GfVec3f* predicted = &_particles.predicted[0];
   pxr::GfVec3f* position = &_particles.position[0];
   pxr::GfVec3f* velocity = &_particles.velocity[0];
+  pxr::GfVec3f* previous = &_particles.previous[0];
   short* state = &_particles.state[0];
 
   float invDt = 1.f / _stepTime;
@@ -325,6 +325,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   for(size_t index = begin; index < end; ++index) {
     if (_particles.state[index] != Particles::ACTIVE)continue;
     // update velocity
+    previous[index] = velocity[index];
     velocity[index] = (predicted[index] - position[index]) * invDt;
     /*
     if (velocity[index].GetLength() < 0.0000001f) {
@@ -394,12 +395,6 @@ void Solver::_SolveVelocities()
   }
 }
 
-void Solver::_StorePreColisionState()
-{
-  memcpy(&_particles.previous[0],  &_particles.predicted[0], 
-    _particles.GetNumParticles() * sizeof(pxr::GfVec3f));
-}
-
 void Solver::_StepOneSerial()
 {
   const size_t numParticles = _particles.GetNumParticles();
@@ -410,7 +405,6 @@ void Solver::_StepOneSerial()
 
   // solve and apply constraint
   _SolveConstraints(_constraints, true);
-  _StorePreColisionState();
   _SolveConstraints(_contacts, true);
 
   // update particles
@@ -433,7 +427,6 @@ void Solver::_StepOne()
 
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
-  _StorePreColisionState();
   _SolveConstraints(_contacts, false);
   
   // update particles

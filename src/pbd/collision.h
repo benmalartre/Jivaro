@@ -90,7 +90,7 @@ class PlaneCollision : public Collision
 public:
   PlaneCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
 
-  const pxr::GfVec3f& GetContactNormal(size_t index) const{return _normal;};
+  const pxr::GfVec3f& GetContactNormal(size_t index) const {return _normal;};
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;

@@ -71,7 +71,6 @@ public:
   void Step(bool serial=false);
 
 private:
-  void _StorePreColisionState();
   void _ClearContacts();
   void _FindContacts(bool serial = false);
   void _SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial=false);
