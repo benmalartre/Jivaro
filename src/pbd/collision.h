@@ -8,7 +8,6 @@
 #include "../common.h"
 #include "../geometry/intersection.h"
 #include "../pbd/mask.h"
-#include "../pbd/contact.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -21,8 +20,9 @@ class Constraint;
 class Collision : public Mask
 {
 public:
-  Collision(float restitution=0.f, float friction=0.f) 
-    : _restitution(restitution)
+  Collision(Geometry* collider, float restitution=0.f, float friction=0.f) 
+    : _collider(collider)
+    , _restitution(restitution)
     , _friction(friction) {};
 
   /*
@@ -81,21 +81,17 @@ protected:
   std::vector<Location>       _contacts;
   float                       _restitution;
   float                       _friction;
+  Geometry*                   _collider;
+
 };
 
 class PlaneCollision : public Collision
 {
 public:
-  PlaneCollision(const float restitution=0.5f, const float friction= 0.5f,
-    const pxr::GfVec3f& normal=pxr::GfVec3f(0.f, 1.f, 0.f), 
-    const pxr::GfVec3f& position = pxr::GfVec3f(0.f));
+  PlaneCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
 
-  inline void Set(const pxr::GfVec3f& position, const pxr::GfVec3f& normal);
-  inline void SetPosition(const pxr::GfVec3f& position);
-  inline void SetNormal(const pxr::GfVec3f& normal);
+  const pxr::GfVec3f& GetContactNormal(size_t index) const{return _normal;};
 
-  const pxr::GfVec3f& GetContactNormal(size_t index) const {return _normal;};
-  
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
 
@@ -103,33 +99,18 @@ protected:
   void _FindContact(size_t index, Particles* particles, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
+  void _UpdatePositionAndNormal();
 
 private:
-  pxr::GfVec3f                 _position;
-  pxr::GfVec3f                 _normal;
-};
+  pxr::GfVec3f _position;
+  pxr::GfVec3f _normal;
 
-void PlaneCollision::Set(const pxr::GfVec3f& position, const pxr::GfVec3f& normal) 
-{ 
-  _position = position; 
-  _normal = normal;
-};
-
-void PlaneCollision::SetPosition(const pxr::GfVec3f& position) 
-{ 
-  _position = position; 
-};
-
-void PlaneCollision::SetNormal(const pxr::GfVec3f& normal) 
-{ 
-  _normal = normal; 
 };
 
 class SphereCollision : public Collision
 {
 public:
-  SphereCollision(const float restitution=0.5f, const float friction= 0.5f,
-    const pxr::GfMatrix4f& xform=pxr::GfMatrix4f(1.f), float radius=1.f);
+  SphereCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
 
   inline void Set(const pxr::GfMatrix4f& xform, float radius);
   inline void SetXform(const pxr::GfMatrix4f& xform);

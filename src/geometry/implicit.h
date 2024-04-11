@@ -25,6 +25,8 @@ public:
   Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
   virtual ~Sphere() {};
 
+  float GetRadius() { return _radius; };
+
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;

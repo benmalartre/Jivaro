@@ -394,6 +394,12 @@ void Solver::_SolveVelocities()
   }
 }
 
+void Solver::_StorePreColisionState()
+{
+  memcpy(&_particles.previous[0],  &_particles.predicted[0], 
+    _particles.GetNumParticles() * sizeof(pxr::GfVec3f));
+}
+
 void Solver::_StepOneSerial()
 {
   const size_t numParticles = _particles.GetNumParticles();
@@ -404,6 +410,7 @@ void Solver::_StepOneSerial()
 
   // solve and apply constraint
   _SolveConstraints(_constraints, true);
+  _StorePreColisionState();
   _SolveConstraints(_contacts, true);
 
   // update particles
@@ -426,6 +433,7 @@ void Solver::_StepOne()
 
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
+  _StorePreColisionState();
   _SolveConstraints(_contacts, false);
   
   // update particles

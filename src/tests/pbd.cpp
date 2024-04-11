@@ -64,14 +64,25 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
   
   for(size_t x = 0; x < 6; ++x) {
+
     std::string name = "cloth" + std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(stage, clothPath, size,
-      matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x*6.f, 5.f, 0.f)));
+      matrix * pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 5.f, 0.f)));
     
   }
 
-  std::vector<pxr::UsdGeomSphere> spheres;
+  std::vector<Sphere*> spheres;
+  
+  for (size_t x = 0; x < 3; ++x) {
+    std::string name = "sphere_collide_" + std::to_string(x);
+    pxr::SdfPath collidePath = rootId.AppendChild(pxr::TfToken(name));
+    _GenerateCollideSphere(stage, collidePath, RANDOM_0_1 + 1.f, 
+      pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f)));
+
+    //sphere.GetRadiusAttr().Get(&radius);
+    //pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+  }
   _Sources sources;
   float mass = 0.1f;
   for (pxr::UsdPrim prim : primRange) {
@@ -109,12 +120,11 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
-    sphere.GetRadiusAttr().Get(&radius);
-    pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
-    _solver->AddCollision(new SphereCollision(restitution, friction, m, (float)radius));
+    
+    //_solver->AddCollision(new SphereCollision(restitution, friction, );
   } 
 
-   _solver->AddCollision(new PlaneCollision(1.f, 0.5f, _ground->GetNormal(), _ground->GetOrigin()));
+   _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.5f));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));

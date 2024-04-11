@@ -87,7 +87,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     }
   }
-  _solver->AddForce(new GravitationalForce());
+  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -2.f, 0.f)));
 
   //_solver->AddForce(new DampingForce());
   
@@ -103,7 +103,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(1.f, 0.5f, _ground->GetNormal(), _ground->GetOrigin()));
+  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.5f));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
