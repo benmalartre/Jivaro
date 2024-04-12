@@ -250,50 +250,6 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
   }
 }
 
-float BendConstraint::_CalculateValue(Particles* particles, size_t index)
-{
-  const size_t offset = _body[0]->offset;
-
-  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
-  const pxr::GfVec3f& p2 = particles->predicted[_elements[index * ELEM_SIZE + 2] + offset];
-
-  const pxr::GfVec3f center = (p0 + p1 + p2) / 3.f;
-  pxr::GfVec3f delta = p2 - center;
-
-  const float length = delta.GetLength();
-  if (pxr::GfIsClose(length, 0.f, 0.0000001f))return 1.f;
-
-  return 1.f - (_rest[index] / length);
-}
-
-void BendConstraint::_CalculateGradient(Particles* particles, size_t index)
-{
-  const size_t offset = _body[0]->offset;
-
-  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1] + offset];
-  const pxr::GfVec3f& p2 = particles->predicted[_elements[index * ELEM_SIZE + 2] + offset];
-
-  const pxr::GfVec3f center = (p0 + p1 + p2) / 3.f;
-  pxr::GfVec3f delta = p2 - center;
-  const float length = delta.GetLength();
-
-  constexpr float epsilon = 1e-24;
-  const pxr::GfVec3f direction = 
-    (length < epsilon) ? 
-    pxr::GfVec3f(
-      RANDOM_LO_HI(-1.f, 1.f), 
-      RANDOM_LO_HI(-1.f, 1.f), 
-      RANDOM_LO_HI(-1.f, 1.f)
-    ).GetNormalized() : delta / length;
-
-  _gradient[0] = -direction;
-  _gradient[1] = -direction;
-  _gradient[2] = 2 * direction;
-  _gradient[3] = (p1 - p0).GetNormalized();
-}
-
 void BendConstraint::Solve(Particles* particles, float dt)
 {
   _ResetCorrection();
@@ -343,22 +299,20 @@ void BendConstraint::Solve(Particles* particles, float dt)
     }
     
     float alpha = 0.0;
-    if (!pxr::GfIsClose(_stiffness, 0.f, 1e-6f))
+    if (pxr::GfAbs(_stiffness) > 1e-6)
     {
       alpha = 1.f / (_stiffness * dt * dt);
       sumNormGradient += alpha;
     }
 
-    // exit early if required
-    if (pxr::GfAbs(sumNormGradient) > 1e-6)
-    {
-      const float deltaLambda = -energy / sumNormGradient;
+    if (pxr::GfAbs(sumNormGradient) < 1e-6)continue;
 
-      _correction[elem * ELEM_SIZE + 0] += deltaLambda * invMass[2] * gradient[2];
-      _correction[elem * ELEM_SIZE + 1] += deltaLambda * invMass[3] * gradient[3];
-      _correction[elem * ELEM_SIZE + 2] += deltaLambda * invMass[0] * gradient[0];
-      _correction[elem * ELEM_SIZE + 3] += deltaLambda * invMass[1] * gradient[1];
-    }
+    const float deltaLambda = -energy / sumNormGradient;
+
+    _correction[elem * ELEM_SIZE + 0] += deltaLambda * invMass[2] * gradient[2];
+    _correction[elem * ELEM_SIZE + 1] += deltaLambda * invMass[3] * gradient[3];
+    _correction[elem * ELEM_SIZE + 2] += deltaLambda * invMass[0] * gradient[0];
+    _correction[elem * ELEM_SIZE + 3] += deltaLambda * invMass[1] * gradient[1];
   }
 }
 
