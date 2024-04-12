@@ -20,7 +20,6 @@ public:
   Force() : Mask() {};
   virtual ~Force() {};
   
-
   void AddBody(Particles* particles, Body* body);
   void RemoveBody(Particles* particles, Body* body);
 

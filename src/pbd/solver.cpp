@@ -20,8 +20,9 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Solver::Solver()
-  : _subSteps(20)
+Solver::Solver(const pxr::UsdPrim& prim)
+  : _prim(prim)
+  , _subSteps(20)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
@@ -74,8 +75,6 @@ size_t Solver::GetBodyIndex(Geometry* geom)
 Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
 {
   size_t base = _particles.GetNumParticles();
-  size_t add = geom->GetNumPoints();
-
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   Body* body = new Body({ 0.001f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom, (mass > 0)});
   _bodies.push_back(body);
@@ -205,7 +204,7 @@ void Solver::AddConstraints(Body* body)
     //__stretchStiffness *= 2.f;
 
     //CreateBendConstraints(body, _constraints, __bendStiffness, __damping);
-    CreateDihedralConstraints(body, _constraints, __bendStiffness, __damping);
+    //CreateDihedralConstraints(body, _constraints, __bendStiffness, __damping);
     std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
       "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
     //__bendStiffness *= 10.f;
@@ -369,12 +368,23 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
     for (auto& constraint : constraints)constraint->Apply(&_particles);
 
   } else {
+
+    uint64_t startTime = CurrentTime();
+
     // solve constraints
     pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
       [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
+    uint64_t solveTime = CurrentTime() - startTime;
+    
     // apply constraint serially
     for (auto& constraint : constraints)constraint->Apply(&_particles);
+    uint64_t applyTime = (CurrentTime() - startTime)-solveTime;
+
+    //std::cout << "num constraints : " << constraints.size() << std::endl;
+    //std::cout << "solve constraints time : " << (double)(solveTime * 1e-9) << " seconds" << std::endl;
+    //std::cout << "apply constraints time : " << (double)(applyTime * 1e-9) << " seconds" << std::endl;
   }
+
 }
 
 

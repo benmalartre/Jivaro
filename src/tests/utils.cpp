@@ -12,19 +12,19 @@
 #include "../tests/utils.h"
 #include "../geometry/mesh.h"
 #include "../geometry/implicit.h"
+#include "../pbd/solver.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Geometry* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
 {
-  const float width = 100.f;
-  const float length = 100.f;
+  const double width = 100;
+  const double length = 100;
   pxr::UsdGeomPlane usdGround =
     pxr::UsdGeomPlane::Define(stage, path);
 
   usdGround.CreateWidthAttr().Set(width);
   usdGround.CreateLengthAttr().Set(length);
-  usdGround.CreateExtentAttr().Set(pxr::GfVec3f(length, width, length));
   usdGround.CreateAxisAttr().Set(pxr::UsdGeomTokens->y);
 
   pxr::UsdPrim usdPrim = usdGround.GetPrim();
@@ -38,29 +38,28 @@ Geometry* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& 
   return ground;
 }
 
-pxr::UsdPrim _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+Solver* _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
 {
   pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
 
   pxr::UsdPrim usdPrim = usdXform.GetPrim();
   usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(20);
   usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(0.01f);
-  usdPrim.CreateAttribute(pxr::TfToken("Gravity"), pxr::SdfValueTypeNames->Vector3f).Set(pxr::GfVec3f(0.f, -9.8f, 0.f));
 
-  return usdPrim;
+  return new Solver(usdPrim);
 }
 
-pxr::UsdPrim _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  float size, const pxr::GfMatrix4f& m)
+Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+  float size, const pxr::GfMatrix4d& m)
 {
-  Mesh mesh;
-  mesh.TriangularGrid2D(10.f, 10.f, m, size);
+  Mesh* mesh = new Mesh(m);
+  mesh->TriangularGrid2D(10.f, 10.f, pxr::GfMatrix4f(m), size);
   //mesh.Randomize(0.1f);
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
-  usdMesh.CreatePointsAttr().Set(mesh.GetPositions());
-  usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts());
-  usdMesh.CreateFaceVertexIndicesAttr().Set(mesh.GetFaceConnects());
+  usdMesh.CreatePointsAttr().Set(mesh->GetPositions());
+  usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
+  usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
 
   pxr::UsdPrim usdPrim = usdMesh.GetPrim();
   usdPrim.CreateAttribute(pxr::TfToken("StretchStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
@@ -69,12 +68,13 @@ pxr::UsdPrim _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& 
   usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
   usdPrim.CreateAttribute(pxr::TfToken("Serial"), pxr::SdfValueTypeNames->Bool).Set(false);
 
-  return usdMesh.GetPrim();
+  return mesh;
 }
 
-pxr::UsdPrim _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  double radius, const pxr::GfMatrix4f& m)
+Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+  double radius, const pxr::GfMatrix4d& m)
 {
+  Sphere* sphere = new Sphere(m);
   pxr::UsdGeomSphere usdSphere = pxr::UsdGeomSphere::Define(stage, path);
 
   usdSphere.CreateRadiusAttr().Set(radius);
@@ -82,9 +82,10 @@ pxr::UsdPrim _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPa
   double real;
   usdSphere.GetRadiusAttr().Get(&real);
 
+
   pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();
   op.Set(pxr::GfMatrix4d(m));
 
-  return usdSphere.GetPrim();
+  return sphere;
 }
 JVR_NAMESPACE_CLOSE_SCOPE

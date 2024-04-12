@@ -4,6 +4,7 @@
 #include <limits>
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/vt/array.h>
+#include <pxr/usd/usd/prim.h>
 
 #include "../common.h"
 #include "../pbd/particle.h"
@@ -19,7 +20,7 @@ class Solver
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
-  Solver();
+  Solver(const pxr::UsdPrim& prim);
   ~Solver();
   
 
@@ -76,7 +77,6 @@ private:
   void _SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial=false);
   void _SolveVelocities();
 
-  
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);
   void _StepOneSerial();
@@ -88,6 +88,7 @@ private:
   float                               _stepTime;
   float                               _startFrame;
   bool                                _paused;		
+  pxr::UsdPrim                        _prim;
 
   // system
   Particles                           _particles;

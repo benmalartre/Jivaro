@@ -87,6 +87,8 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
 
+  //void Solve(Particles* particles, float dt) override;
+
   static size_t                 ELEM_SIZE;
 
 protected:

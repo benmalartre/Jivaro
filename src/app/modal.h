@@ -1,6 +1,5 @@
 #ifndef JVR_APPLICATION_MODAL_H
 #define JVR_APPLICATION_MODAL_H
-#pragma once
 
 #include "../common.h"
 #include "window.h"

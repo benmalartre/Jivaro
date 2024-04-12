@@ -26,7 +26,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 Application* APPLICATION = nullptr;
 const char* Application::name = "Jivaro";
 
-
 // constructor
 //----------------------------------------------------------------------------
 Application::Application(unsigned width, unsigned height):

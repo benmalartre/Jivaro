@@ -19,7 +19,7 @@ public:
   inline float GetActiveTime(){return _activeTime;};
   inline float GetFPS(){return _fps;};
   inline float GetSpeed(){return _speed;};
-  inline bool GetLoop(){return _loop;};
+  inline bool  GetLoop(){return _loop;};
   inline float GetFramerate() { return _framerate; };
 
   inline void SetMinTime(float time){_minTime = time;};

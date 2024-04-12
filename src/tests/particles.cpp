@@ -39,12 +39,14 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   _InitControls(stage);
-  _solver = new Solver();
+
   
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
+  const pxr::SdfPath  rootId = rootPrim.GetPath();
+  pxr::SdfPath solverId = rootId.AppendChild(pxr::TfToken("Solver"));
+  _solver = _GenerateSolver(stage, solverId);
 
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
@@ -98,7 +100,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.5f));
 
 
-  pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
+  pxr::SdfPath pointsPath(solverId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;
   Points* points = _scene->AddPoints(pointsPath);
   Particles* particles = _solver->GetParticles();
@@ -107,7 +109,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   points->SetRadii(&particles->radius[0], numParticles);
   points->SetColors(&particles->color[0], numParticles);
 
-  pxr::SdfPath collisionsPath(rootId.AppendChild(pxr::TfToken("Collisions")));
+  pxr::SdfPath collisionsPath(solverId.AppendChild(pxr::TfToken("Collisions")));
   _sourcesMap[collisionsPath] = sources;
   Points* collisions = _scene->AddPoints(collisionsPath);
   collisions->SetPositions(&particles->position[0], numParticles);
