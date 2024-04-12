@@ -128,7 +128,6 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
   }
 }
 
-/*
 void StretchConstraint::Solve(Particles* particles, float dt)
 {
   _ResetCorrection();
@@ -172,40 +171,6 @@ void StretchConstraint::Solve(Particles* particles, float dt)
     _correction[elem * ELEM_SIZE + 1] -= im1 * correction;
   }
 }
-*/
-
-float StretchConstraint::_CalculateValue(Particles* particles, size_t elem)
-{
-  const size_t offset = _body[0]->offset;
-
-  const pxr::GfVec3f& p0 = particles->predicted[_elements[elem * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& p1 = particles->predicted[_elements[elem * ELEM_SIZE + 1] + offset];
-  return -((p1 - p0).GetLength() - _rest[elem]);
-}
-
-void StretchConstraint::_CalculateGradient(Particles* particles, size_t elem)
-{
-  const size_t offset = _body[0]->offset;
-
-  const pxr::GfVec3f& p0 = particles->predicted[_elements[elem * ELEM_SIZE + 0] + offset];
-  const pxr::GfVec3f& p1 = particles->predicted[_elements[elem * ELEM_SIZE + 1] + offset];
-
-  const pxr::GfVec3f delta = p1 - p0;
-  const float length = delta.GetLength();
-
-  constexpr float epsilon = 1e-24;
-  const pxr::GfVec3f direction = 
-    (length < epsilon) ? 
-    pxr::GfVec3f(
-      RANDOM_LO_HI(-1.f, 1.f), 
-      RANDOM_LO_HI(-1.f, 1.f), 
-      RANDOM_LO_HI(-1.f, 1.f)
-    ).GetNormalized() : delta / length;
-
-  _gradient[0] = direction;
-  _gradient[1] = -direction;
-  _gradient[2] = direction;
-}
 
 void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
@@ -244,8 +209,6 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
   }
 
   size_t numElements = allElements.size();
-  std::cout << "scretch constraint num elements : " << (numElements/2) << std::endl;
-  size_t counter = 0;
   size_t first = 0;
   size_t last = pxr::GfMin(Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
   while(true) {
@@ -253,11 +216,9 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
     StretchConstraint* stretch = new StretchConstraint(body, blockElements, stiffness, damping);
     constraints.push_back(stretch);
     first += Constraint::BlockSize * StretchConstraint::ELEM_SIZE;
-    counter++;
     if(first >= numElements)break;
     last = pxr::GfMin(last + Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
   }
-  std::cout << "generated " << counter << "stretch constraints" << std::endl;
 
 
 }
@@ -331,6 +292,74 @@ void BendConstraint::_CalculateGradient(Particles* particles, size_t index)
   _gradient[1] = -direction;
   _gradient[2] = 2 * direction;
   _gradient[3] = (p1 - p0).GetNormalized();
+}
+
+void BendConstraint::Solve(Particles* particles, float dt)
+{
+  _ResetCorrection();
+
+  const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
+
+  const size_t offset = _body[0]->offset;
+
+  const pxr::GfVec3f* x[4];
+  float invMass[4];
+  
+  for(size_t elem = 0; elem  < numElements; ++elem) {
+
+    const size_t a = _elements[elem * ELEM_SIZE + 0] + offset;
+    const size_t b = _elements[elem * ELEM_SIZE + 1] + offset;
+    const size_t c = _elements[elem * ELEM_SIZE + 2] + offset;
+
+    const pxr::GfVec3f center = 
+      (particles->predicted[a] + particles->predicted[b] + particles->predicted[c]) / 3.f;
+
+    x[0] = &particles->predicted[c];
+    x[1] = &center;
+    x[2] = &particles->predicted[a];
+    x[3] = &particles->predicted[b];
+
+    invMass[0] = particles->mass[c];
+    invMass[1] = (particles->mass[a] + particles->mass[b] + particles->mass[c]) / 3.f;
+    invMass[2] = particles->mass[a];
+    invMass[3] = particles->mass[b];
+
+    float energy = 0.0;
+    for (unsigned char k = 0; k < 4; k++)
+      for (unsigned char j = 0; j < 4; j++)
+        energy += pxr::GfDot(*x[k], *x[j]);
+    energy *= 0.5;
+
+    pxr::GfVec3f gradient[4];
+    for (unsigned char k = 0; k < 4; k++)
+      for (unsigned char j = 0; j < 4; j++)
+        gradient[j] += *x[k];
+
+    float sumNormGradient = 0.0;
+    for (unsigned int j = 0; j < 4; j++)
+    {
+      if (invMass[j] != 0.0)
+        sumNormGradient += invMass[j] * gradient[j].GetLengthSq();
+    }
+    
+    float alpha = 0.0;
+    if (!pxr::GfIsClose(_stiffness, 0.f, 1e-6f))
+    {
+      alpha = 1.f / (_stiffness * dt * dt);
+      sumNormGradient += alpha;
+    }
+
+    // exit early if required
+    if (pxr::GfAbs(sumNormGradient) > 1e-6)
+    {
+      const float deltaLambda = -energy / sumNormGradient;
+
+      _correction[elem * ELEM_SIZE + 0] += deltaLambda * invMass[2] * gradient[2];
+      _correction[elem * ELEM_SIZE + 1] += deltaLambda * invMass[3] * gradient[3];
+      _correction[elem * ELEM_SIZE + 2] += deltaLambda * invMass[0] * gradient[0];
+      _correction[elem * ELEM_SIZE + 3] += deltaLambda * invMass[1] * gradient[1];
+    }
+  }
 }
 
 void BendConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)

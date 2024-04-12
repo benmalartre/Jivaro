@@ -203,7 +203,7 @@ void Solver::AddConstraints(Body* body)
       "(compliance="<< (1.f/__stretchStiffness) << ")" <<std::endl;
     //__stretchStiffness *= 2.f;
 
-    //CreateBendConstraints(body, _constraints, __bendStiffness, __damping);
+    CreateBendConstraints(body, _constraints, __bendStiffness, __damping);
     //CreateDihedralConstraints(body, _constraints, __bendStiffness, __damping);
     std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
       "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;

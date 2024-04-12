@@ -63,8 +63,8 @@ protected:
   float _ComputeLagrangeMultiplier(Particles* particles, size_t elem=0);
   void _ResetCorrection();
   
-  virtual float _CalculateValue(Particles* particles, size_t elem) = 0;
-  virtual void _CalculateGradient(Particles* particles, size_t elem) = 0;
+  virtual float _CalculateValue(Particles* particles, size_t elem) {return 0.f;};
+  virtual void _CalculateGradient(Particles* particles, size_t elem) {};
 
   pxr::VtArray<Body*>           _body;
   pxr::VtArray<int>             _elements;
@@ -87,13 +87,11 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
 
-  //void Solve(Particles* particles, float dt) override;
+  void Solve(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
 
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
@@ -114,6 +112,8 @@ public:
 
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
     pxr::VtArray<float>& radius) override;
+
+  void Solve(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
