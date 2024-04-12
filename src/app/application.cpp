@@ -1,19 +1,5 @@
 #include <iostream>
 #include <string>
-#include <pxr/base/tf/debug.h>
-#include <pxr/base/tf/refPtr.h>
-#include <pxr/usd/sdf/layer.h>
-#include <pxr/usd/sdf/layerStateDelegate.h>
-#include <pxr/base/tf/refPtr.h>
-#include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
-#include <pxr/usd/usdGeom/sphere.h>
-#include <pxr/usd/usdGeom/cube.h>
-#include <pxr/usd/usdGeom/bboxCache.h>
-#include <pxr/usd/usdGeom/xformCommonAPI.h>
-#include <pxr/usd/usdGeom/mesh.h>
-#include <pxr/usd/usdGeom/cube.h>
-#include <pxr/usd/usdGeom/xform.h>
-#include <pxr/imaging/hd/renderPassState.h>
 
 #include "../utils/files.h"
 #include "../utils/timer.h"
