@@ -396,30 +396,20 @@ void Mesh::Init()
 {
   size_t numPoints = _positions.size();
   // compute triangles
-  std::cout << "triangulate ..." << std::endl;
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
-  std::cout << "ok ! " << std::endl;
 
   // compute normals
-  std::cout << "compute normals ..." << std::endl;
   ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
-  std::cout << "ok ! " << std::endl;
 
   // compute half-edges
-  std::cout << "compute half-edges ..." << std::endl;
   ComputeHalfEdges();
-  std::cout << "ok ! " << std::endl;
 
   // compute bouding box
-  std::cout << "compute bounding box ..." << std::endl;
   ComputeBoundingBox();
-  std::cout << "ok ! " << std::endl;
 
   // compute neighbors
-  std::cout << "compute neighbors ..." << std::endl;
   ComputeNeighbors();
-  std::cout << "ok ! " << std::endl;
 }
 
 void 
@@ -820,15 +810,18 @@ void Mesh::Random2DPattern(size_t numFaces)
 
 void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& space, float size)
 {
+  const float scaleY = 1.5708;;
+  const float invScaleY = 1.f/scaleY;
+
   size_t numX = (width / size ) * 0.5 + 1;
-  size_t numY = (height / size) + 1;
+  size_t numY = (height / size) * invScaleY + 1;
   size_t numPoints = numX * numY;
   size_t numTriangles = (numX - 1) * 2 * (numY - 1);
   size_t numSamples = numTriangles * 3;
   pxr::VtArray<pxr::GfVec3f> position(numPoints);
 
   float spaceX = size * 2.0 / width;
-  float spaceY = size / height;
+  float spaceY = size / height * scaleY;
 
   for(size_t y = 0; y < numY; ++y) {
     for(size_t x = 0; x < numX; ++x) {

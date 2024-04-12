@@ -56,6 +56,9 @@ public:
   void AddPoints(const pxr::SdfPath& path, Points* points);
   Voxels* AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius);
 
+  Geometry* AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  void AddGeometry(const pxr::SdfPath& path, Geometry* geom);
+
   void Remove(const pxr::SdfPath& path);
   bool IsMesh(const pxr::SdfPath& path);
   bool IsCurves(const pxr::SdfPath& path);

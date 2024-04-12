@@ -12,6 +12,7 @@
 #include "../utils/timer.h"
 #include "../geometry/utils.h"
 #include "../geometry/geometry.h"
+#include "../geometry/implicit.h"
 #include "../geometry/mesh.h"
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
@@ -44,6 +45,16 @@ Scene::Init(const pxr::UsdStageRefPtr& stage)
 void
 Scene::Update(const pxr::UsdStageRefPtr& stage, double time)
 {
+  pxr::UsdTimeCode activeTime = pxr::UsdTimeCode(time);
+  pxr::UsdGeomXformCache xformCache(activeTime);
+  bool resetXformCache;
+
+  for(auto& itPrim: _prims) {
+    pxr::UsdPrim prim = stage->GetPrimAtPath(itPrim.first);
+    Geometry* geometry = itPrim.second.geom;
+    pxr::GfMatrix4d matrix(xformCache.GetLocalTransformation(prim, &resetXformCache));
+    geometry->SetMatrix(matrix);
+  }
 }
 
 void
@@ -79,6 +90,31 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
   voxels->Trace(2);
   voxels->Build();
   return voxels;
+}
+
+
+Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo)
+{
+  if (type == Geometry::PLANE) {
+    _prims[path] = { new Plane(xfo) };
+    return _prims[path].geom;
+  } else if (type == Geometry::SPHERE) {
+    _prims[path] = { new Sphere(xfo) };
+    return _prims[path].geom;
+  } else if (type == Geometry::MESH) {
+    _prims[path] = { new Mesh(xfo) };
+    return _prims[path].geom;
+  } else if (type == Geometry::CURVE) {
+    _prims[path] = { new Curve(xfo) };
+    return _prims[path].geom;
+  } else {
+    return NULL;
+  }
+}
+
+void Scene::AddGeometry(const pxr::SdfPath& path, Geometry* geom)
+{
+  _prims[path] = {geom};
 }
 
 Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
@@ -187,7 +223,7 @@ Scene::GetExtent(pxr::SdfPath const& id)
 pxr::GfMatrix4d
 Scene::GetTransform(pxr::SdfPath const & id)
 {
-    return pxr::GfMatrix4d(1);
+  if(_prims.find(id) != _prims.end())return _prims[id].geom->GetMatrix(); 
 }
 
 bool 

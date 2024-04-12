@@ -23,7 +23,7 @@ struct Sample;
 
 class Curve : public Deformable {
 public:
-  Curve();
+  Curve(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Curve(const Curve* other, bool normalize = true);
   Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world);
   virtual ~Curve() {};

@@ -11,35 +11,36 @@
 
 #include "../tests/utils.h"
 #include "../geometry/mesh.h"
-
+#include "../geometry/implicit.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-pxr::UsdPrim _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+Geometry* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
 {
   const float width = 100.f;
   const float length = 100.f;
-  pxr::UsdGeomPlane ground =
-    pxr::UsdGeomPlane::Define(stage, path.AppendChild(pxr::TfToken("Ground")));
+  pxr::UsdGeomPlane usdGround =
+    pxr::UsdGeomPlane::Define(stage, path);
 
-  ground.CreateWidthAttr().Set(width);
-  ground.CreateLengthAttr().Set(length);
-  ground.CreateAxisAttr().Set(pxr::UsdGeomTokens->y);
+  usdGround.CreateWidthAttr().Set(width);
+  usdGround.CreateLengthAttr().Set(length);
+  usdGround.CreateExtentAttr().Set(pxr::GfVec3f(length, width, length));
+  usdGround.CreateAxisAttr().Set(pxr::UsdGeomTokens->y);
 
-  ground.AddTranslateOp(pxr::UsdGeomXformOp::PrecisionFloat).Set(pxr::GfVec3f(0.f, 0.f, 0.f));
-
-  pxr::UsdPrim usdPrim = ground.GetPrim();
+  pxr::UsdPrim usdPrim = usdGround.GetPrim();
   usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
   usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
 
-  return ground.GetPrim();
+  Plane* ground = new Plane();
+  ground->SetMatrix(
+    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
+
+  return ground;
 }
 
-pxr::UsdPrim _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, const pxr::TfToken& name)
+pxr::UsdPrim _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
 {
-
-  pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path.AppendChild(name));
-
+  pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
 
   pxr::UsdPrim usdPrim = usdXform.GetPrim();
   usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(20);

@@ -21,7 +21,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver()
-  : _subSteps(32)
+  : _subSteps(20)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
@@ -266,13 +266,6 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
   pxr::GfVec3f* velocity = &_particles.velocity[0];
   int* body = &_particles.body[0];
-  
-  // update velocity
-  /*
-  for (size_t index = begin; index < end; ++index) {
-    velocity[index] -= (velocity[index] * _bodies[body[index]]->damping);
-  }
-  */
 
   // apply external forces
   for (const Force* force : _force) {
@@ -292,7 +285,6 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
 void Solver::_ClearContacts()
 {
-  std::cout << "clear contacts ..." << std::endl;
   for (auto& contact : _contacts)delete contact;
   _contacts.clear();
 }
@@ -325,7 +317,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   for(size_t index = begin; index < end; ++index) {
     if (_particles.state[index] != Particles::ACTIVE)continue;
     // update velocity
-    previous[index] = velocity[index];
+    previous[index] = position[index];
     velocity[index] = (predicted[index] - position[index]) * invDt;
     /*
     if (velocity[index].GetLength() < 0.0000001f) {

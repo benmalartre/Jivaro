@@ -76,7 +76,6 @@ public:
   void SetColors(const pxr::VtArray<pxr::GfVec3f>& colors);
 
   void Normalize();
-
   void ComputeBoundingBox() override;
 
   Point Get(uint32_t index);

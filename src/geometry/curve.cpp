@@ -6,8 +6,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Curve::Curve()
-  : Deformable(Geometry::CURVE, pxr::GfMatrix4d(1.0))
+Curve::Curve(const pxr::GfMatrix4d& xfo)
+  : Deformable(Geometry::CURVE, xfo)
 {
 }
 

@@ -59,7 +59,7 @@ public:
   const pxr::GfMatrix4d& GetMatrix() const { return _matrix; };
   const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
 
-  virtual void ComputeBoundingBox() = 0;
+  virtual void ComputeBoundingBox() {};
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
   const pxr::GfBBox3d& GetBoundingBox() const { return _bbox; };
 

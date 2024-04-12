@@ -687,7 +687,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::GfMatrix4f invParentMatrix(
         xformCache.GetParentToWorldTransform(targetPrim).GetInverse());
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
-      target.current.translation = pxr::GfVec3d(xformMatrix.GetRow3(3) - target.previous.pivot);
+      target.current.translation = pxr::GfVec3f(xformMatrix.GetRow3(3)) - target.previous.pivot;
     }
     ADD_COMMAND(TranslateCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
   }
@@ -865,6 +865,7 @@ _ResolveRotation(ManipTargetDesc& target,
   ManipXformVectors vectors;
   xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
     &vectors.pivot, &vectors.rotOrder, activeTime);
+
   double thetaTw = pxr::GfDegreesToRadians(vectors.rotation[0]);
   double thetaFB = pxr::GfDegreesToRadians(vectors.rotation[1]);
   double thetaLR = pxr::GfDegreesToRadians(vectors.rotation[2]);

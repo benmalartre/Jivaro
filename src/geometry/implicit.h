@@ -20,12 +20,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Sphere : public Geometry {
 public:
-  Sphere();
+  Sphere(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Sphere(const Sphere* other, bool normalize = true);
   Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
   virtual ~Sphere() {};
 
-  float GetRadius() { return _radius; };
+  float GetRadius() {return _radius;};
+  pxr::GfVec3f GetCenter(){return pxr::GfVec3f(GetMatrix().GetRow3(3));};
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
@@ -40,7 +41,7 @@ private:
 
 class Plane : public Geometry {
 public:
-  Plane();
+  Plane(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Plane(const Plane* other, bool normalize = true);
   Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world);
   virtual ~Plane() {};
@@ -63,8 +64,6 @@ public:
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
-  void ComputeBoundingBox() override;
-
 private:
   pxr::GfVec3f                _normal;
   float                       _width;
@@ -74,7 +73,7 @@ private:
 
 class Cube : public Geometry {
 public:
-  Cube();
+  Cube(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Cube(const Cube* other, bool normalize = true);
   Cube(const pxr::UsdGeomCube& sphere, const pxr::GfMatrix4d& world);
   virtual ~Cube() {};
@@ -92,7 +91,7 @@ private:
 
 class Cone : public Geometry {
 public:
-  Cone();
+  Cone(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Cone(const Cone* other, bool normalize = true);
   Cone(const pxr::UsdGeomCone& sphere, const pxr::GfMatrix4d& world);
   virtual ~Cone() {};
@@ -112,7 +111,7 @@ private:
 
 class Capsule : public Geometry {
 public:
-  Capsule();
+  Capsule(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Capsule(const Capsule* other, bool normalize = true);
   Capsule(const pxr::UsdGeomCapsule& sphere, const pxr::GfMatrix4d& world);
   virtual ~Capsule() {};

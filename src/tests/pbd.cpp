@@ -14,6 +14,7 @@
 #include "../utils/timer.h"
 
 #include "../app/scene.h"
+#include "../app/application.h"
 
 #include "../tests/utils.h"
 #include "../tests/pbd.h"
@@ -41,29 +42,31 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   _InitControls(stage);
   _solver = new Solver();
-  _ground = new Plane();
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
-
+  pxr::SdfPath rootId = rootPrim.GetPath();
    pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
   rotate.Normalize();
 
+  // create collide ground
+  const pxr::SdfPath groundId = rootId.AppendChild(pxr::TfToken("Ground"));
+  _ground = (Plane*)_GenerateCollidePlane(stage, groundId);
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
-
-  float size = .25f;
-
-  _GenerateCollidePlane(stage, rootId);
+  _scene->AddGeometry(groundId, _ground);
   
+  // create solver with attributes
+  _GenerateSolver(stage, rootId.AppendChild(pxr::TfToken("Solver")));
 
+  // create cloth meshes
+  float size = .1f;
   rotate = pxr::GfQuatf(45.f * DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
   rotate.Normalize();
   pxr::GfMatrix4f matrix =
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
   
-  for(size_t x = 0; x < 6; ++x) {
+  for(size_t x = 0; x < 1; ++x) {
 
     std::string name = "cloth" + std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
@@ -97,7 +100,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       //mass *= 2;
       _solver->AddConstraints(body);
       _bodyMap[prim.GetPath()] = body;
-      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
+      //sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
       pxr::UsdGeomPoints usdPoints(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
@@ -109,7 +112,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     }
   }
-  _solver->AddForce(new GravitationalForce());
+  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -0.98f,0.f)));
   _solver->WeightBoundaries();
   _solver->LockPoints();
   
@@ -124,7 +127,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     //_solver->AddCollision(new SphereCollision(restitution, friction, );
   } 
 
-   _solver->AddCollision(new PlaneCollision(_ground, 0.5f, 0.5f));
+
+  _solver->AddCollision(new PlaneCollision(_ground, 0.f, 1.f));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
@@ -148,6 +152,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
+  _scene->Update(stage, time);
   if (pxr::GfIsClose(time, startTime, 0.01))
     _solver->Reset();
   else
@@ -184,7 +189,7 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
         const pxr::VtArray<int>& elements = contact->GetElements();
         for(int elem: elements) {
           positions[elem + offsetIdx] = _solver->GetParticles()->position[elem + offsetIdx];
-          radii[elem + offsetIdx] = 0.2f;
+          radii[elem + offsetIdx] = 0.02f;
           colors[elem + offsetIdx] = hitColor;
         }
       }
@@ -193,15 +198,12 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
     } else {
       pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
       if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
-        std::cout << "we found a mesh check for associated body" << std::endl;
         const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
         if (bodyIt != _bodyMap.end()) {
           Body* body = bodyIt->second;
-          std::cout << "body found for " << bodyIt->first << ": " << body << std::endl;
           Mesh* mesh = (Mesh*)execPrim.second.geom;
           mesh->SetPositions(&_solver->GetParticles()->position[body->offset], mesh->GetNumPoints());
         } else {
-          std::cout << "no body found for " << bodyIt->first << std::endl;
         }
       }
     }

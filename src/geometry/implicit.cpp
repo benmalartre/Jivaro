@@ -19,8 +19,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------------------------------------------------
 // Plane Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Plane::Plane()
-  : Geometry(Geometry::PLANE, pxr::GfMatrix4d(1.0))
+Plane::Plane(const pxr::GfMatrix4d& xfo)
+  : Geometry(Geometry::PLANE, xfo)
 {
   _normal = pxr::GfVec3f(0.f, 1.f, 0.f);
   _width = 100.f;
@@ -57,11 +57,6 @@ Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
   lengthAttr.Get(&_length, pxr::UsdTimeCode::Default());
   pxr::UsdAttribute doubleSidedAttr = plane.GetDoubleSidedAttr();
   doubleSidedAttr.Get(&_doubleSided, pxr::UsdTimeCode::Default());
-}
-
-void Plane::ComputeBoundingBox()
-{
-
 }
 
 bool 
@@ -111,8 +106,8 @@ bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
 //-------------------------------------------------------------------------------------------------
 // Sphere Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Sphere::Sphere()
-  : Geometry(Geometry::SPHERE, pxr::GfMatrix4d(1.0))
+Sphere::Sphere(const pxr::GfMatrix4d& xfo)
+  : Geometry(Geometry::SPHERE, xfo)
 {
 }
 
@@ -173,8 +168,8 @@ bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
 //-------------------------------------------------------------------------------------------------
 // Cube Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Cube::Cube()
-  : Geometry(Geometry::CUBE, pxr::GfMatrix4d(1.0))
+Cube::Cube(const pxr::GfMatrix4d& xfo)
+  : Geometry(Geometry::CUBE, xfo)
 {
   _size = 1.f;
 }
@@ -272,8 +267,8 @@ Cube::Closest(const pxr::GfVec3f& point, Location* hit,
 //-------------------------------------------------------------------------------------------------
 // Cone Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Cone::Cone()
-  : Geometry(Geometry::CONE, pxr::GfMatrix4d(1.0))
+Cone::Cone(const pxr::GfMatrix4d& xfo)
+  : Geometry(Geometry::CONE, xfo)
   , _radius(0.5f)
   , _height(1.f)
   , _axis(pxr::UsdGeomTokens->y)
@@ -346,8 +341,8 @@ Cone::Closest(const pxr::GfVec3f& point, Location* hit,
 //-------------------------------------------------------------------------------------------------
 // Capsule Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Capsule::Capsule()
-  : Geometry(Geometry::CAPSULE, pxr::GfMatrix4d(1.0))
+Capsule::Capsule(const pxr::GfMatrix4d& xfo)
+  : Geometry(Geometry::CAPSULE, xfo)
   , _radius(0.1f)
   , _height(1.f)
   , _axis(pxr::UsdGeomTokens->y)

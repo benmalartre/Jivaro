@@ -40,27 +40,19 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   _InitControls(stage);
   _solver = new Solver();
-  _ground = new Plane();
-
-  pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
-  rotate.Normalize();
-
-/*
-  _ground->SetMatrix(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -2.f, 0.f)) *
-    pxr::GfMatrix4d().SetRotate(rotate));*/
-
+  
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("Solver"));
 
-  
   pxr::GfMatrix4f matrix = 
     pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
   float size = .25f;
 
-  pxr::UsdPrim ground = _GenerateCollidePlane(stage, rootId);
+  pxr::SdfPath groundId = rootId.AppendChild(pxr::TfToken("Ground"));
+  _ground = (Plane*)_GenerateCollidePlane(stage, groundId);
+  _scene->AddGeometry(groundId, _ground);
   //_GenerateCollideSpheres(32);
 
   _Sources sources;
@@ -87,7 +79,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     }
   }
-  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -2.f, 0.f)));
+  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -5.f, 0.f)));
 
   //_solver->AddForce(new DampingForce());
   
@@ -103,7 +95,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(_ground, 0.25f, 0.25f));
+  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.5f));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
@@ -148,6 +140,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
       points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
       points->SetColors(&_solver->GetParticles()->color[0], numParticles);
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Collisions")) {
+      /*
       const pxr::VtArray<Constraint*>& contacts = _solver->GetContacts();
       
       if (!contacts.size())continue;
@@ -172,6 +165,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
           colors[elem + offsetIdx] = hitColor;
         }
       }
+      */
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
       
     } else {
@@ -179,15 +173,12 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
       pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
       if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
         
-        std::cout << "we found a mesh check for associated body" << std::endl;
         const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
         if (bodyIt != _bodyMap.end()) {
           Body* body = bodyIt->second;
-          std::cout << "body found for " << bodyIt->first << ": " << body << std::endl;
           Mesh* mesh = (Mesh*)execPrim.second.geom;
           mesh->SetPositions(&_solver->GetParticles()->position[body->offset], mesh->GetNumPoints());
         } else {
-          std::cout << "no body found for " << bodyIt->first << std::endl;
         }
         
       }

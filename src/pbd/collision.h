@@ -20,7 +20,7 @@ class Constraint;
 class Collision : public Mask
 {
 public:
-  Collision(Geometry* collider, float restitution=0.f, float friction=0.f) 
+  Collision(Geometry* collider, float restitution=0.5f, float friction=0.5f) 
     : _collider(collider)
     , _restitution(restitution)
     , _friction(friction) {};
