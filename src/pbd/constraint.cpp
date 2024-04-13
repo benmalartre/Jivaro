@@ -480,10 +480,14 @@ void DihedralConstraint::Solve(Particles* particles, float dt)
     pxr::GfVec3f n2 = pxr::GfCross(p3 - p1, p2 - p1);
     n2 /= n2.GetLengthSq();
 
-    pxr::GfVec3f d0 = elen * n1;
-    pxr::GfVec3f d1 = elen * n2;
-    pxr::GfVec3f d2 = pxr::GfDot((p0 - p3), e) * invElen * n1 + pxr::GfDot((p1 - p3), e) * invElen * n2;
-    pxr::GfVec3f d3 = pxr::GfDot((p2 - p0), e) * invElen * n1 + pxr::GfDot((p2 - p1), e) * invElen * n2;
+    pxr::GfVec3f d0 = elen * n1 * invMass0;
+    pxr::GfVec3f d1 = elen * n2 * invMass1;
+    pxr::GfVec3f d2 =
+      (pxr::GfDot((p0 - p3), e) * invElen * n1 + 
+        pxr::GfDot((p1 - p3), e) * invElen * n2) * invMass2;
+    pxr::GfVec3f d3 = 
+      (pxr::GfDot((p2 - p0), e) * invElen * n1 + 
+        pxr::GfDot((p2 - p1), e) * invElen * n2) * invMass3;
 
     n1.Normalize();
     n2.Normalize();
@@ -495,11 +499,7 @@ void DihedralConstraint::Solve(Particles* particles, float dt)
 
     // Real phi = (-0.6981317 * dot * dot - 0.8726646) * dot + 1.570796;	// fast approximation
 
-    float lambda =
-      invMass0 * d0.GetLengthSq() +
-      invMass1 * d1.GetLengthSq() +
-      invMass2 * d2.GetLengthSq() +
-      invMass3 * d3.GetLengthSq();
+    float lambda = d0.GetLengthSq() + d1.GetLengthSq() + d2.GetLengthSq() + d3.GetLengthSq();
 
     if (lambda == 0.0) continue;
 
@@ -509,16 +509,15 @@ void DihedralConstraint::Solve(Particles* particles, float dt)
     //	stiffness = 0.5;
 
     lambda = (phi - _rest[elem]) / lambda * _stiffness;
-    lambda = 0;
     if (pxr::GfDot(n1 ^ n2, e) > 0.0)
       lambda = -lambda;
 
 	  const pxr::GfVec3f correction(0.f);
 
-    _correction[elem * ELEM_SIZE + 0] -= -invMass0 * lambda * d0;
-    _correction[elem * ELEM_SIZE + 1] -= invMass1 * lambda * d1;
-    _correction[elem * ELEM_SIZE + 2] -= invMass2 * lambda * d2;
-    _correction[elem * ELEM_SIZE + 3] -= invMass3 * lambda * d3;
+    _correction[elem * ELEM_SIZE + 0] -= lambda * d0;
+    _correction[elem * ELEM_SIZE + 1] -= lambda * d1;
+    _correction[elem * ELEM_SIZE + 2] -= lambda * d2;
+    _correction[elem * ELEM_SIZE + 3] -= lambda * d3;
   }
 }
 void DihedralConstraint::GetPoints(Particles* particles,
