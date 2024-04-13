@@ -87,7 +87,7 @@ private:
   void _StepOneSerial();
   void _StepOne();
 
-  size_t                              _subSteps;
+  int                                 _subSteps;
   float                               _sleepThreshold;
   float                               _frameTime;
   float                               _stepTime;

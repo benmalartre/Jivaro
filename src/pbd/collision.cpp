@@ -150,6 +150,8 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, cons
 void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
+  
+  
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->velocity[index] - pxr::GfVec3f(0.f);
   const float vn = pxr::GfDot(v, _normal);
@@ -157,11 +159,11 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
   const float vtLen = vt.GetLength();
 
   // Friction
-  if (vtLen > 0.000001 && _friction > 1e-6) {
+  if (vtLen > 1e-6 && _friction > 1e-6) {
     float lambdaN = -(1.f/_friction);
     const float Fn = -lambdaN / (dt * dt);
     const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
-    particles->velocity[index] -= vt.GetNormalized() * friction;
+    //particles->velocity[index] -= vt.GetNormalized() * friction;
   }
   
   // Restitution
@@ -169,7 +171,14 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
   const float vnTilde = GetContactT(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
-  particles->velocity[index] += _normal * restitution;
+  //particles->velocity[index] += _normal * restitution;
+
+  if(index < 10) {
+    std::cout << "p " << index << ": ";
+    std::cout << "e " << e << ", ";
+    std::cout << "vn " << vn << ", ";
+    std::cout << "vt " << vnTilde << ", " << std::endl;
+  }
 }
 
 float PlaneCollision::GetValue(Particles* particles, size_t index)

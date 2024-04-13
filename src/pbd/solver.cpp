@@ -97,6 +97,7 @@ void _Timer::Update() {
 }
 
 void _Timer::Log() {
+  return;
   for (size_t t = 0; t < _n; ++t) {
     std::cout << "## " << _names[t] << ": ";
     std::cout << "  - accum : " << _accums[t];
@@ -357,28 +358,6 @@ void Solver::WeightBoundaries()
   } 
 }
 
-void Solver::_IntegrateParticles(size_t begin, size_t end)
-{
-
-  pxr::GfVec3f* velocity = &_particles.velocity[0];
-  int* body = &_particles.body[0];
-
-  // apply external forces
-  for (const Force* force : _force) {
-    force->Apply(begin, end, &_particles, _frameTime);
-  }
-
-  // compute predicted position
-  pxr::GfVec3f* predicted = &_particles.predicted[0];
-  pxr::GfVec3f* position = &_particles.position[0];
-
-  for (size_t index = begin; index < end; ++index) {
-
-    position[index] = predicted[index];
-    predicted[index] = position[index] + velocity[index] * _stepTime;
-  }
-}
-
 void Solver::_ClearContacts()
 {
   for (auto& contact : _contacts)delete contact;
@@ -398,6 +377,28 @@ void Solver::_FindContacts(bool serial)
       collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
       previous = _contacts.size();
     }
+  }
+}
+
+void Solver::_IntegrateParticles(size_t begin, size_t end)
+{
+
+  pxr::GfVec3f* velocity = &_particles.velocity[0];
+  int* body = &_particles.body[0];
+
+  // apply external forces
+  for (const Force* force : _force) {
+    force->Apply(begin, end, &_particles, _frameTime);
+  }
+
+  // compute predicted position
+  pxr::GfVec3f* predicted = &_particles.predicted[0];
+  pxr::GfVec3f* position = &_particles.position[0];
+
+  for (size_t index = begin; index < end; ++index) {
+
+    position[index] = predicted[index];
+    predicted[index] = position[index] + velocity[index] * _stepTime;
   }
 }
 
@@ -438,21 +439,12 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
     for (auto& constraint : constraints)constraint->Apply(&_particles);
 
   } else {
-
-    uint64_t startTime = CurrentTime();
-
     // solve constraints
     pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
       [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
-    uint64_t solveTime = CurrentTime() - startTime;
     
     // apply constraint serially
     for (auto& constraint : constraints)constraint->Apply(&_particles);
-    uint64_t applyTime = (CurrentTime() - startTime)-solveTime;
-
-    //std::cout << "num constraints : " << constraints.size() << std::endl;
-    //std::cout << "solve constraints time : " << (double)(solveTime * 1e-9) << " seconds" << std::endl;
-    //std::cout << "apply constraints time : " << (double)(applyTime * 1e-9) << " seconds" << std::endl;
   }
 
 }
@@ -529,13 +521,8 @@ void Solver::Step(double time, bool serial)
   _timer->Start();
   _FindContacts(serial);
   _timer->Stop();
-  std::cout << "num available threads : " << numThreads << std::endl;
-  std::cout << "num forces : " << _force.size() << std::endl;
 
   if (!serial && numParticles >= 2 * numThreads) {
-    std::cout << "parallel step: " << std::endl;
-    std::cout << "sub steps (desired): " << _subSteps << std::endl;
-    std::cout << "sub steps (really) step " << (1.f / _stepTime) << std::endl;
     //const size_t grain = numParticles / numThreads;
     for(size_t si = 0; si < _subSteps; ++si)
       _StepOne();
@@ -575,10 +562,8 @@ void Solver::UpdateGeometries()
 
 void Solver::UpdateParameters(const pxr::UsdPrim& prim, double time)
 {
-  std::cout << "---------------------------------------------------------------------" << std::endl;
   prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
-  std::cout << "SUB STEPS : " << _subSteps << std::endl;
-  _stepTime = 1.f / (static_cast<float>(_subSteps) / _frameTime);
+  _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
 }
 

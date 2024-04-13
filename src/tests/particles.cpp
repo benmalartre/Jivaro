@@ -33,6 +33,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
   _solver = _GenerateSolver(stage, _solverId);
+  _scene->AddGeometry(_solverId, _solver);
 
   // create collide ground
   _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
