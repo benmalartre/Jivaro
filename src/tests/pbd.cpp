@@ -102,7 +102,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       std::cout << "points added to solver" << std::endl;
     }
   }
-  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -0.98f,0.f)));
+  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -9.8f,0.f)));
   _solver->WeightBoundaries();
   _solver->LockPoints();
   

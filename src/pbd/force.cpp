@@ -6,7 +6,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 GravitationalForce::GravitationalForce() 
   : Force()
-  , _gravity(0.f, -0.98f, 0.f)
+  , _gravity(0.f, -9.8f, 0.f)
 {
 }
 

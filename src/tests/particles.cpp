@@ -65,7 +65,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     }
   }
-  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -0.98f, 0.f)));
+  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -9.8f, 0.f)));
   //_solver->AddForce(new DampingForce());
   
   pxr::GfVec3f pos;
