@@ -32,65 +32,6 @@ Constraint::Constraint(Body* body1, Body* body2, float stiffness, float damping)
   _body[1] = body2;
 }
 
-float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t index)
-{
-  const size_t N = GetElementSize();
-  float result = 0.f, m;
-  for(size_t n = 0; n < N; ++n) {
-    m = particles->mass[index + n];
-    result += 
-      _gradient[n][0] * m * _gradient[n][0] +
-      _gradient[n][1] * m * _gradient[n][1] +
-      _gradient[n][2] * m * _gradient[n][2];
-  }
-  return result;
-}
-
-void Constraint::Solve(Particles* particles, float dt)
-{
-  _ResetCorrection();
-
-  const size_t N = GetElementSize();
-  const size_t numElements = _elements.size() >> (N-1);
-  const size_t offset = _body[0]->offset;
-  const float invDt2 = 1.f / (dt * dt);
-  constexpr float very_small_value = 1e-12;
-  size_t comp, part;
-  for(size_t elem = 0; elem  < numElements; ++elem) {
-    const float C = _CalculateValue(particles, elem);
-
-    // Calculate the derivative of the constraint function
-    _CalculateGradient(particles, elem);
-
-    // Skip if the gradient is sufficiently small
-    
-    float gradientNorm = 0.f;
-    for(size_t n = 0; n < N; ++n)
-      gradientNorm += _gradient[n].GetLengthSq();
-    
-    if(gradientNorm < very_small_value)
-      continue;
-
-    // Calculate time-scaled compliance
-    const float alpha = _compliance * invDt2;
-
-    part = _elements[elem * N];
-    // Calculate delta lagrange multiplier
-    const float deltaLagrange =
-      -C / (_ComputeLagrangeMultiplier(particles, part) + alpha);
-
-    for(size_t n = 0; n < N; ++n) {
-      comp = elem * N + n;
-      part = _elements[comp] + offset;
-     _correction[comp] +=
-       (_gradient[n] * particles->mass[part] * deltaLagrange) - 
-       pxr::GfDot(particles->velocity[part] * dt * dt,  _gradient[N]) * _gradient[N] * _damping;
-    }
-  }
-}
-
-
-
 void Constraint::_ResetCorrection()
 {
   memset(&_correction[0], 0.f, _correction.size() * sizeof(pxr::GfVec3f));
@@ -418,6 +359,7 @@ DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<int>& elem
   }
 }
 
+/*
 float DihedralConstraint::_CalculateValue(Particles* particles, size_t elem)
 {
   const size_t offset = _body[0]->offset;
@@ -497,7 +439,87 @@ void DihedralConstraint::_CalculateGradient(Particles* particles, size_t elem)
     invEdgeLen * pxr::GfDot(p2 - p1, e) * n2);
   _gradient[4] = e.GetNormalized();
 }
+*/
 
+void DihedralConstraint::Solve(Particles* particles, float dt)
+{
+  _ResetCorrection();
+
+  const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
+
+  const size_t offset = _body[0]->offset;
+  
+  for(size_t elem = 0; elem  < numElements; ++elem) {
+
+    const size_t a = _elements[elem * ELEM_SIZE + 0] + offset;
+    const size_t b = _elements[elem * ELEM_SIZE + 1] + offset;
+    const size_t c = _elements[elem * ELEM_SIZE + 2] + offset;
+    const size_t d = _elements[elem * ELEM_SIZE + 3] + offset;
+
+    const pxr::GfVec3f& p0 = particles->predicted[a];
+    const pxr::GfVec3f& p1 = particles->predicted[b];
+    const pxr::GfVec3f& p2 = particles->predicted[c];
+    const pxr::GfVec3f& p3 = particles->predicted[d];
+
+    const float invMass0 = particles->mass[a];
+    const float invMass1 = particles->mass[b];
+    const float invMass2 = particles->mass[a];
+    const float invMass3 = particles->mass[b];
+
+    if (invMass0 == 0.0 && invMass1 == 0.0)continue;
+
+    pxr::GfVec3f e = p3 - p2;
+    float elen = e.GetLength();
+    if (elen < 1e-6) continue;
+
+    float invElen = 1.f / elen;
+
+    pxr::GfVec3f n1 = (p2 - p0) ^ (p3 - p0); 
+    n1 /= n1.GetLengthSq();
+    pxr::GfVec3f n2 = (p3 - p1) ^ (p2 - p1); 
+    n2 /= n2.GetLengthSq();
+
+    pxr::GfVec3f d0 = elen * n1;
+    pxr::GfVec3f d1 = elen * n2;
+    pxr::GfVec3f d2 = pxr::GfDot((p0 - p3), e) * invElen * n1 + pxr::GfDot((p1 - p3), e) * invElen * n2;
+    pxr::GfVec3f d3 = pxr::GfDot((p2 - p0), e) * invElen * n1 + pxr::GfDot((p2 - p1), e) * invElen * n2;
+
+    n1.Normalize();
+    n2.Normalize();
+    float dot = pxr::GfDot(n1, n2);
+
+    if (dot < -1.f) dot = -1.f;
+    if (dot > 1.f) dot = 1.f;
+    float phi = std::acosf(dot);
+
+    // Real phi = (-0.6981317 * dot * dot - 0.8726646) * dot + 1.570796;	// fast approximation
+
+    float lambda =
+      invMass0 * d0.GetLengthSq() +
+      invMass1 * d1.GetLengthSq() +
+      invMass2 * d2.GetLengthSq() +
+      invMass3 * d3.GetLengthSq();
+
+    if (lambda == 0.0) continue;
+
+    // stability
+    // 1.5 is the largest magic number I found to be stable in all cases :-)
+    //if (stiffness > 0.5 && fabs(phi - b.restAngle) > 1.5)		
+    //	stiffness = 0.5;
+
+    lambda = (phi - _rest[elem]) / lambda * _stiffness;
+
+    if (pxr::GfDot(n1 ^ n2, e) > 0.0)
+      lambda = -lambda;
+
+	  const pxr::GfVec3f correction(0.f);
+
+    _correction[elem * ELEM_SIZE + 0] -= invMass0 * lambda * d0;
+    _correction[elem * ELEM_SIZE + 1] -= invMass1 * lambda * d1;
+    _correction[elem * ELEM_SIZE + 2] -= invMass2 * lambda * d2;
+    _correction[elem * ELEM_SIZE + 3] -= invMass3 * lambda * d3;
+  }
+}
 void DihedralConstraint::GetPoints(Particles* particles,
   pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
