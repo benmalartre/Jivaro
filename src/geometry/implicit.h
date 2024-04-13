@@ -10,6 +10,7 @@
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/plane.h>
+#include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/cone.h>
@@ -17,6 +18,14 @@
 #include "../geometry/geometry.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+class Xform : public Geometry {
+public:
+  Xform(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
+  Xform(const Xform* other);
+  Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
+  virtual ~Xform() {};
+};
 
 class Sphere : public Geometry {
 public:
@@ -36,7 +45,7 @@ public:
 
 private:
   float                    _radius;  
-  
+
 };
 
 class Plane : public Geometry {

@@ -25,7 +25,7 @@ Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
   _invMatrix = world.GetInverse();
 }
 
-Geometry::Geometry(const Geometry* other, short type, bool normalize)
+Geometry::Geometry(const Geometry* other, short type)
 {
   _type = type;
   _wirecolor = other->_wirecolor;

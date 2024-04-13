@@ -17,6 +17,24 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 //-------------------------------------------------------------------------------------------------
+// Null Implicit Geometry
+//-------------------------------------------------------------------------------------------------
+Xform::Xform(const pxr::GfMatrix4d& xfo)
+  : Geometry(Geometry::XFORM, xfo)
+{
+}
+
+Xform::Xform(const Xform* other)
+  : Geometry(other, Geometry::XFORM)
+{
+}
+
+Xform::Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
+  : Geometry(Geometry::XFORM, world)
+{
+}
+
+//-------------------------------------------------------------------------------------------------
 // Plane Implicit Geometry
 //-------------------------------------------------------------------------------------------------
 Plane::Plane(const pxr::GfMatrix4d& xfo)

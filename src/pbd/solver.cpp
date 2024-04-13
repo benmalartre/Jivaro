@@ -4,6 +4,7 @@
 #include "../geometry/mesh.h"
 #include "../geometry/voxels.h"
 #include "../geometry/curve.h"
+#include "../geometry/implicit.h"
 #include "../app/application.h"
 #include "../pbd/constraint.h"
 #include "../pbd/force.h"
@@ -20,8 +21,91 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+// Helpers for benchmark time inside the solver
+class _Timer {
+public:
+  void Init(size_t n, const char** names);
+  void Start(size_t index = 0);
+  void Next();
+  void Stop();
+  void Update();
+  void Log();
+
+protected:
+  struct _Ts {
+    void Start() { t = CurrentTime(); }
+    void End() { accum += CurrentTime() - t; num++; };
+    void Reset() { accum = 0; num = 0; };
+    double Average() { return num ? ((double)accum * 1e-9) / (double)num : 0; }
+    double Elapsed() { return (double)accum * 1e-9; }
+
+    uint64_t t;
+    uint64_t accum;
+    size_t   num;
+  };
+
+private:
+  bool                      _rec;
+  size_t                    _n;
+  size_t                    _c;
+
+  std::vector<std::string>  _names;
+  std::vector<_Ts>           _timers;
+  std::vector<double>       _accums;
+  std::vector<double>       _avgs;
+};
+
+
+void _Timer::Init(size_t numTimes, const char** names)
+{
+  _n = numTimes;
+  _c = 0;
+  _timers.resize(_n, { 0,0,0 });
+  _accums.resize(_n, 0.0);
+  _avgs.resize(_n, 0.0);
+  _names.resize(_n);
+  for (size_t t = 0; t < _n; ++t)
+    _names[t] = names[t];
+}
+
+void _Timer::Start(size_t index)
+{
+  _c = index;
+  _timers[_c].Start();
+  _rec = true;
+}
+
+void _Timer::Next()
+{
+  if (_rec)_timers[_c++].End();
+  if (_c >= _n)_c = 0;
+  _timers[_c].Start();
+}
+
+void _Timer::Stop()
+{
+  if (_rec = true) _timers[_c].End();
+  _rec = false;
+}
+
+void _Timer::Update() {
+  for (size_t t = 0; t < _n; ++t) {
+    _accums[t] += _timers[t].Elapsed();
+    _avgs[t] = (_avgs[t] + _timers[t].Average()) / 2.0;
+    _timers[t].Reset();
+  }
+}
+
+void _Timer::Log() {
+  for (size_t t = 0; t < _n; ++t) {
+    std::cout << "## " << _names[t] << ": ";
+    std::cout << "  - accum : " << _accums[t];
+    std::cout << "  - avg : " << _avgs[t] << std::endl;
+  }
+}
+
 static const size_t NUM_TIMES = 5;
-static char* TIME_NAMES[NUM_TIMES] = {
+static const char* TIME_NAMES[NUM_TIMES] = {
   "find contacts",
   "integrate particles",
   "solve constraints",
@@ -29,8 +113,8 @@ static char* TIME_NAMES[NUM_TIMES] = {
   "solve velocities"
 };
 
-Solver::Solver(const pxr::UsdPrim& prim)
-  : _prim(prim)
+Solver::Solver(const Geometry* geom)
+  : Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
   , _subSteps(5)
   , _sleepThreshold(0.1f)
   , _paused(true)
@@ -39,7 +123,8 @@ Solver::Solver(const pxr::UsdPrim& prim)
   UpdateParameters(pxr::UsdTimeCode::Default().GetValue());
 
   //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
-  _timer.Init(NUM_TIMES);
+  _timer = new _Timer();
+  _timer->Init(NUM_TIMES, &TIME_NAMES[0]);
 }
 
 Solver::~Solver()
@@ -408,42 +493,43 @@ void Solver::_StepOne()
   const size_t numParticles = _particles.GetNumParticles();
   const size_t numContacts = _contacts.size();
 
-  _timer.Start(1); 
+  _timer->Start(1); 
   // integrate particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_IntegrateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
-  _timer.Next();
+  _timer->Next();
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
   _SolveConstraints(_contacts, false);
   
-  _timer.Next();
+  _timer->Next();
   // update particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_UpdateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
-  _timer.Next();
+  _timer->Next();
   // solve velocities
   _SolveVelocities();
-  _timer.Stop();
+  _timer->Stop();
 
 }
 
-void Solver::Step(bool serial)
+void Solver::Step(double time, bool serial)
 {
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
+  UpdateParameters(time);
 
-  _timer.Start();
+  _timer->Start();
   _FindContacts(serial);
-  _timer.Stop();
+  _timer->Stop();
   std::cout << "num available threads : " << numThreads << std::endl;
   std::cout << "num forces : " << _force.size() << std::endl;
 
@@ -461,8 +547,8 @@ void Solver::Step(bool serial)
       _StepOneSerial();
   }
 
-
-  _timer.Log();
+  _timer->Update();
+  _timer->Log();
 
   //std::cout << _particles.GetPredicted() << std::endl;
 
@@ -488,11 +574,13 @@ void Solver::UpdateGeometries()
 */
 }
 
-void Solver::UpdateParameters(double time)
+void Solver::UpdateParameters(const pxr::UsdPrim& prim, double time)
 {
-  _prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
+  std::cout << "---------------------------------------------------------------------" << std::endl;
+  prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
+  std::cout << "SUB STEPS : " << _subSteps << std::endl;
   _stepTime = 1.f / (static_cast<float>(_subSteps) / _frameTime);
-  _prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
+  prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

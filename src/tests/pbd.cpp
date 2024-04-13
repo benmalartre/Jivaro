@@ -40,7 +40,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene->AddGeometry(groundId, _ground);
   
   // create solver with attributes
-  _solver = _GenerateSolver(stage, rootId.AppendChild(pxr::TfToken("Solver")));
+  const pxr::SdfPath solverId = rootId.AppendChild(pxr::TfToken("Solver"));
+  _solver = _GenerateSolver(stage, solverId);
+  _scene->AddGeometry(solverId, _solver);
 
   // create cloth meshes
   float size = .1f;

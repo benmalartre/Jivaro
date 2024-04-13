@@ -20,6 +20,8 @@ private:
   Plane*                                                     _ground;
   pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash> _sourcesMap;
   pxr::TfHashMap<pxr::SdfPath, Body*, pxr::SdfPath::Hash>    _bodyMap;
+  pxr::SdfPath                                               _groundId;
+  pxr::SdfPath                                               _solverId;
 
 };
 

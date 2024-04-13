@@ -31,11 +31,11 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   const pxr::SdfPath  rootId = rootPrim.GetPath();
   
     // create solver with attributes
-  const pxr::SdfPath solverId = rootId.AppendChild(pxr::TfToken("Solver"));
+  _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
   _solver = _GenerateSolver(stage, solverId);
 
   // create collide ground
-  const pxr::SdfPath groundId = rootId.AppendChild(pxr::TfToken("Ground"));
+  _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
   _ground = _GenerateCollidePlane(stage, groundId);
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
@@ -106,7 +106,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
   _scene->Update(stage, time);
-  _solver->UpdateParameters(time);
+  _solver->UpdateParameters(stage->GetPrimAtPath(_solverId), time);
 
   if (pxr::GfIsClose(time, startTime, 0.01))
     _solver->Reset();
