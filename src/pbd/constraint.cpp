@@ -463,8 +463,8 @@ void DihedralConstraint::Solve(Particles* particles, float dt)
 
     const float invMass0 = particles->mass[a];
     const float invMass1 = particles->mass[b];
-    const float invMass2 = particles->mass[a];
-    const float invMass3 = particles->mass[b];
+    const float invMass2 = particles->mass[c];
+    const float invMass3 = particles->mass[d];
 
     if (invMass0 == 0.0 && invMass1 == 0.0)continue;
 
@@ -474,9 +474,10 @@ void DihedralConstraint::Solve(Particles* particles, float dt)
 
     float invElen = 1.f / elen;
 
-    pxr::GfVec3f n1 = (p2 - p0) ^ (p3 - p0); 
+    pxr::GfVec3f n1 = pxr::GfCross(p2 - p0, p3 - p0);
     n1 /= n1.GetLengthSq();
-    pxr::GfVec3f n2 = (p3 - p1) ^ (p2 - p1); 
+
+    pxr::GfVec3f n2 = pxr::GfCross(p3 - p1, p2 - p1);
     n2 /= n2.GetLengthSq();
 
     pxr::GfVec3f d0 = elen * n1;
@@ -488,9 +489,9 @@ void DihedralConstraint::Solve(Particles* particles, float dt)
     n2.Normalize();
     float dot = pxr::GfDot(n1, n2);
 
-    if (dot < -1.f) dot = -1.f;
-    if (dot > 1.f) dot = 1.f;
-    float phi = std::acosf(dot);
+    if (dot < -1.0) dot = -1.0;
+    if (dot >  1.0) dot =  1.0;
+    float phi = acos(dot);	
 
     // Real phi = (-0.6981317 * dot * dot - 0.8726646) * dot + 1.570796;	// fast approximation
 
@@ -508,13 +509,13 @@ void DihedralConstraint::Solve(Particles* particles, float dt)
     //	stiffness = 0.5;
 
     lambda = (phi - _rest[elem]) / lambda * _stiffness;
-
+    lambda = 0;
     if (pxr::GfDot(n1 ^ n2, e) > 0.0)
       lambda = -lambda;
 
 	  const pxr::GfVec3f correction(0.f);
 
-    _correction[elem * ELEM_SIZE + 0] -= invMass0 * lambda * d0;
+    _correction[elem * ELEM_SIZE + 0] -= -invMass0 * lambda * d0;
     _correction[elem * ELEM_SIZE + 1] -= invMass1 * lambda * d1;
     _correction[elem * ELEM_SIZE + 2] -= invMass2 * lambda * d2;
     _correction[elem * ELEM_SIZE + 3] -= invMass3 * lambda * d3;
