@@ -22,12 +22,12 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Solver::Solver(const pxr::UsdPrim& prim)
   : _prim(prim)
-  , _subSteps(20)
+  , _subSteps(5)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
   _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
-  _stepTime = _frameTime / static_cast<float>(_subSteps);
+  UpdateParameters(pxr::UsdTimeCode::Default().GetValue());
 }
 
 Solver::~Solver()
@@ -491,6 +491,13 @@ void Solver::UpdateGeometries()
   }
 }
 */
+}
+
+void Solver::UpdateParameters(double time)
+{
+  _prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
+  _stepTime = 1.f / static_cast<float>(_subSteps / _frameTime);
+  _prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

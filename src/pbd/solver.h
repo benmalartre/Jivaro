@@ -66,6 +66,7 @@ public:
   void WeightBoundaries();
   
   // solver 
+  void UpdateParameters(double time);
   void UpdateCollisions();
   void UpdateGeometries();
   void Reset();

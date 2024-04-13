@@ -80,7 +80,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.25f));
+  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.f));
 
   pxr::SdfPath pointsPath(solverId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;
@@ -106,6 +106,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
   _scene->Update(stage, time);
+  _solver->UpdateParameters(time);
+
   if (pxr::GfIsClose(time, startTime, 0.01))
     _solver->Reset();
   else

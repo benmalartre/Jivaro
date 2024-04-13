@@ -141,7 +141,8 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, cons
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  const pxr::GfVec3f vRel = velocity - /*collider velocity*/ pxr::GfVec3f(0.f);
+  const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
+  const pxr::GfVec3f vRel = velocity - vPlane;
   const float vn = pxr::GfDot(vRel, _normal);
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
@@ -149,10 +150,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, cons
 
 void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
-
-  if(!CheckHit(index))return;
-    // need to rehabilit contact and save computation in there
-    
+  if(!CheckHit(index))return;    
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->velocity[index] - pxr::GfVec3f(0.f);
   const float vn = pxr::GfDot(v, _normal);
@@ -160,19 +158,18 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
   const float vtLen = vt.GetLength();
 
   // Friction
-  float lambdaN = -0.001f;
-  if (vtLen > 0.000001) {
+  if (vtLen > 0.000001 && _friction > 1e-6) {
+    float lambdaN = -(1.f/_friction);
     const float Fn = -lambdaN / (dt * dt);
     const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
     particles->velocity[index] -= vt.GetNormalized() * friction;
   }
   
   // Restitution
-  _restitution = 1.f;
   const float threshold = 1e-6;
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
-  const float vnTilde = GetContactT(index);
-  const float restitution = -vn + pxr::GfMin(-e * vnTilde, 0.f);
+  const float vnTilde = GetContactT(index) * dt;
+  const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->velocity[index] += _normal * restitution;
 }
 
