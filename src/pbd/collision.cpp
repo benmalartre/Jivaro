@@ -135,14 +135,13 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float ft)
 void PlaneCollision::_StoreContactLocation(Particles* particles, int index, const Body* body, Location & location, float ft)
 {
   const pxr::GfVec3f velocity = particles->velocity[index] * ft;
-  const float vl = velocity.GetLength();
   const pxr::GfVec3f predicted(particles->position[index] + velocity);
   float d = pxr::GfDot(_normal, predicted - _position)  - particles->radius[index];
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
   const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
-  const pxr::GfVec3f vRel = velocity - vPlane;
+  const pxr::GfVec3f vRel = particles->velocity[index] - vPlane;
   const float vn = pxr::GfDot(vRel, _normal);
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
@@ -168,7 +167,7 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
   // Restitution
   const float threshold = 1e-6;
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
-  const float vnTilde = GetContactT(index) * dt;
+  const float vnTilde = GetContactT(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->velocity[index] += _normal * restitution;
 }

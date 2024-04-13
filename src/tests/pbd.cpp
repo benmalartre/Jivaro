@@ -113,7 +113,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
-    std::cout << "add sphere collision to solver : " << sphere->GetRadius() <<"," << sphere->GetCenter() << std::endl;
     _solver->AddCollision(new SphereCollision(sphere, restitution, friction));
   } 
 

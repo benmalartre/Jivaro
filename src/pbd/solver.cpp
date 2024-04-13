@@ -20,6 +20,15 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+static const size_t NUM_TIMES = 5;
+static char* TIME_NAMES[NUM_TIMES] = {
+  "find contacts",
+  "integrate particles",
+  "solve constraints",
+  "update particles",
+  "solve velocities"
+};
+
 Solver::Solver(const pxr::UsdPrim& prim)
   : _prim(prim)
   , _subSteps(5)
@@ -28,6 +37,9 @@ Solver::Solver(const pxr::UsdPrim& prim)
 {
   _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
   UpdateParameters(pxr::UsdTimeCode::Default().GetValue());
+
+  //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
+  _timer.Init(NUM_TIMES);
 }
 
 Solver::~Solver()
@@ -298,9 +310,7 @@ void Solver::_FindContacts(bool serial)
   } else {
     size_t previous = 0;
     for (auto& collision : _collisions) {
-      std::cout << "find contacts for collision : " << collision->GetTypeId() << std::endl;
       collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-      std::cout << "num contacts found : " << (_contacts.size() - previous) << std::endl;
       previous = _contacts.size();
     }
   }
@@ -333,35 +343,6 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     position[index] = predicted[index];
   }
 }
-
-struct _T {
-  uint64_t t;
-  uint64_t accum;
-  size_t   num;
-  void Start() {
-    t = CurrentTime();
-  }
-  void End() {
-    accum += CurrentTime() - t;
-    num++;
-  };
-  void Reset() {
-    accum = 0;
-    num = 0;
-  };
-  double Average() {
-    if (num) {
-      return ((double)accum * 1e-9) / (double)num;
-    }
-    return 0;
-  }
-  double Elapsed() {
-    return (double)accum * 1e-9;
-  }
-};
-static _T REMOVE_EDGE_AVG_T = { 0,0 };
-static _T REMOVE_POINT_AVG_T = { 0,0 };
-
 
 void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial)
 {
@@ -401,6 +382,8 @@ void Solver::_SolveVelocities()
   }
 }
 
+
+
 void Solver::_StepOneSerial()
 {
   const size_t numParticles = _particles.GetNumParticles();
@@ -425,24 +408,29 @@ void Solver::_StepOne()
   const size_t numParticles = _particles.GetNumParticles();
   const size_t numContacts = _contacts.size();
 
+  _timer.Start(1); 
   // integrate particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_IntegrateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
+  _timer.Next();
   // solve and apply constraint
   _SolveConstraints(_constraints, false);
   _SolveConstraints(_contacts, false);
   
+  _timer.Next();
   // update particles
   pxr::WorkParallelForN(
     numParticles,
     std::bind(&Solver::_UpdateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
 
+  _timer.Next();
   // solve velocities
   _SolveVelocities();
+  _timer.Stop();
 
 }
 
@@ -453,12 +441,16 @@ void Solver::Step(bool serial)
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
+  _timer.Start();
   _FindContacts(serial);
-  //std::cout << "num available threads : " << numThreads << std::endl;
-  //std::cout << "num forces : " << _force.size() << std::endl;
+  _timer.Stop();
+  std::cout << "num available threads : " << numThreads << std::endl;
+  std::cout << "num forces : " << _force.size() << std::endl;
 
   if (!serial && numParticles >= 2 * numThreads) {
-    //std::cout << "parallel step " << std::endl;
+    std::cout << "parallel step: " << std::endl;
+    std::cout << "sub steps (desired): " << _subSteps << std::endl;
+    std::cout << "sub steps (really) step " << (1.f / _stepTime) << std::endl;
     //const size_t grain = numParticles / numThreads;
     for(size_t si = 0; si < _subSteps; ++si)
       _StepOne();
@@ -468,6 +460,9 @@ void Solver::Step(bool serial)
     for (size_t si = 0; si < _subSteps; ++si)
       _StepOneSerial();
   }
+
+
+  _timer.Log();
 
   //std::cout << _particles.GetPredicted() << std::endl;
 
@@ -496,7 +491,7 @@ void Solver::UpdateGeometries()
 void Solver::UpdateParameters(double time)
 {
   _prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
-  _stepTime = 1.f / static_cast<float>(_subSteps / _frameTime);
+  _stepTime = 1.f / (static_cast<float>(_subSteps) / _frameTime);
   _prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
 }
 
