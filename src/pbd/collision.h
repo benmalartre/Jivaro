@@ -90,8 +90,6 @@ class PlaneCollision : public Collision
 public:
   PlaneCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
 
-  const pxr::GfVec3f& GetContactNormal(size_t index) const {return _normal;};
-
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
 
@@ -112,10 +110,6 @@ class SphereCollision : public Collision
 public:
   SphereCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
 
-  inline void Set(const pxr::GfMatrix4f& xform, float radius);
-  inline void SetXform(const pxr::GfMatrix4f& xform);
-  inline void SetRadius(float radius);
-
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
 
@@ -123,30 +117,13 @@ protected:
   void _FindContact(size_t index, Particles* particles, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
+  void _UpdateCenterAndRadius();
 
 private:
-  pxr::GfMatrix4f             _xform;
-  pxr::GfMatrix4f             _invXform;
+  pxr::GfVec3f                _center;
   float                       _radius;
 };
 
-void SphereCollision::Set(const pxr::GfMatrix4f& xform, float radius) 
-{ 
-  _xform = xform;
-  _invXform = xform.GetInverse(); 
-  _radius = radius; 
-};
-
-void SphereCollision::SetXform(const pxr::GfMatrix4f& xform)
-{
-  _xform = xform;
-  _invXform = xform.GetInverse();
-};
-
-void SphereCollision::SetRadius(float radius) 
-{ 
-  _radius = radius; 
-};
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

@@ -152,35 +152,24 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
     // need to rehabilit contact and save computation in there
     
   // Relative normal and tangential velocities
-  // subtract collider velocity from point velocity
   const pxr::GfVec3f v = particles->velocity[index] - pxr::GfVec3f(0.f);
   const float vn = pxr::GfDot(v, _normal);
   const pxr::GfVec3f vt = v - _normal * vn;
-  const float vt_len = vt.GetLength();
+  const float vtLen = vt.GetLength();
 
-  /*
-  // (30) Friction
-  float lambda_n = -0.001f;
-  if (vt_len > 0.000001) {
-    const float Fn = -lambda_n / (dt * dt);
-    const float friction = pxr::GfMin(dt * _friction * Fn, vt_len);
+  // Friction
+  float lambdaN = -0.001f;
+  if (vtLen > 0.000001) {
+    const float Fn = -lambdaN / (dt * dt);
+    const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
     particles->velocity[index] -= vt.GetNormalized() * friction;
   }
-  */
-/* (34) Restitution
-  *
-  * To avoid jittering we set e = 0 if vn is small (`threshold`).
-  * 
-  * Note: min() was replaced with max() due to the flipped sign convention.
-  *
-  * Note: `vn_tilde` is calculated in ContactSet before the position solve (Eq. 29)
-  */
-
-
+  
+  // Restitution
   const float threshold = 2.f * 5.f * dt;
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
-  const float vn_tilde = GetContactT(index);
-  const float restitution = -vn + pxr::GfMin(-e * vn_tilde, 0.f);
+  const float vnTilde = GetContactT(index);
+  const float restitution = -vn + pxr::GfMin(-e * vnTilde, 0.f);
   particles->velocity[index] += _normal * restitution;
 }
 
@@ -205,10 +194,16 @@ SphereCollision::SphereCollision(Geometry* collider,   float restitution, float 
   : Collision(collider, restitution, friction)
 {
   Sphere* sphere = (Sphere*)collider;
-  /*
-  _radius = sphere->GetRadius();
-  */
+  _UpdateCenterAndRadius();
 }
+
+void SphereCollision::_UpdateCenterAndRadius()
+{
+  Sphere* sphere = (Sphere*)_collider;
+  _center =  sphere->GetCenter(true);
+  _radius = sphere->GetRadius();
+}
+
 
 void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
 {

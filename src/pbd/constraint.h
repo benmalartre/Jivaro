@@ -152,6 +152,11 @@ void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraint
 class CollisionConstraint : public Constraint
 {
 public:
+  enum Type {
+    POINT,
+    SELF
+  };
+  
   CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
     float stiffness = -1.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
