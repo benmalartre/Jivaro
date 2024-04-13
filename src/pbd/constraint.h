@@ -77,8 +77,8 @@ public:
   StretchConstraint(Body* body, const pxr::VtArray<int>& elems, 
     float stiffness=0.5f, float damping=0.05f);
 
-  virtual size_t GetTypeId() const override { return TYPE_ID; };
-  virtual size_t GetElementSize() const override { return ELEM_SIZE; };
+  size_t GetTypeId() const override { return TYPE_ID; };
+  size_t GetElementSize() const override { return ELEM_SIZE; };
 
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
@@ -103,8 +103,8 @@ public:
   BendConstraint(Body* body, const pxr::VtArray<int>& elems, 
     float stiffness = 0.1f, float damping=0.05f);
 
-  virtual size_t GetTypeId() const override { return TYPE_ID; };
-  virtual size_t GetElementSize() const override { return ELEM_SIZE; };
+  size_t GetTypeId() const override { return TYPE_ID; };
+  size_t GetElementSize() const override { return ELEM_SIZE; };
 
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
     pxr::VtArray<float>& radius) override;
@@ -128,8 +128,8 @@ public:
   DihedralConstraint(Body* body, const pxr::VtArray<int>& elems,
     float stiffness=0.1f, float damping=0.05f);
 
-  virtual size_t GetTypeId() const override { return TYPE_ID; };
-  virtual size_t GetElementSize() const override { return ELEM_SIZE; };
+  size_t GetTypeId() const override { return TYPE_ID; };
+  size_t GetElementSize() const override { return ELEM_SIZE; };
 
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
@@ -156,12 +156,12 @@ public:
     POINT,
     SELF
   };
-  
+
   CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
     float stiffness = -1.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
-  virtual size_t GetTypeId() const override { return TYPE_ID; };
-  virtual size_t GetElementSize() const override { return ELEM_SIZE; };
+  size_t GetTypeId() const override { return TYPE_ID; };
+  size_t GetElementSize() const override { return ELEM_SIZE; };
 
   void GetResponse(Particles* particles);
   Collision* GetCollision() {return _collision;};

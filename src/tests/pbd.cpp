@@ -33,7 +33,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   rotate.Normalize();
 
   // create collide ground
-  std::cout << "collide ground" << std::endl;
   const pxr::SdfPath groundId = rootId.AppendChild(pxr::TfToken("Ground"));
   _ground = _GenerateCollidePlane(stage, groundId);
   _ground->SetMatrix(
@@ -41,11 +40,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene->AddGeometry(groundId, _ground);
   
   // create solver with attributes
-  std::cout << "solver" << std::endl;
   _solver = _GenerateSolver(stage, rootId.AppendChild(pxr::TfToken("Solver")));
 
   // create cloth meshes
-  std::cout << "cloth" << std::endl;
   float size = .1f;
   rotate = pxr::GfQuatf(45.f * DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
   rotate.Normalize();
@@ -67,8 +64,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << "collide sphere" << std::endl;
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collidePath = rootId.AppendChild(pxr::TfToken(name));
-    _GenerateCollideSphere(stage, collidePath, RANDOM_0_1 + 1.f, 
-      pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f)));
+    spheres.push_back(
+      _GenerateCollideSphere(stage, collidePath, RANDOM_0_1 + 1.f, 
+      pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f))));
 
     //sphere.GetRadiusAttr().Get(&radius);
     //pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
@@ -115,12 +113,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
-    
-    //_solver->AddCollision(new SphereCollision(restitution, friction, );
+    std::cout << "add sphere collision to solver : " << sphere->GetRadius() <<"," << sphere->GetCenter() << std::endl;
+    _solver->AddCollision(new SphereCollision(sphere, restitution, friction));
   } 
 
 
-  _solver->AddCollision(new PlaneCollision(_ground, 0.f, 1.f));
+  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 1.f));
 
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));

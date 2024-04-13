@@ -296,8 +296,12 @@ void Solver::_FindContacts(bool serial)
       collision->FindContactsSerial(&_particles, _bodies, _contacts, _frameTime);
     }
   } else {
+    size_t previous = 0;
     for (auto& collision : _collisions) {
+      std::cout << "find contacts for collision : " << collision->GetTypeId() << std::endl;
       collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+      std::cout << "num contacts found : " << (_contacts.size() - previous) << std::endl;
+      previous = _contacts.size();
     }
   }
 }

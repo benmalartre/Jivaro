@@ -36,7 +36,7 @@ public:
 
 private:
   float                    _radius;  
-
+  
 };
 
 class Plane : public Geometry {

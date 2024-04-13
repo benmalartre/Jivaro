@@ -263,8 +263,8 @@ Application::Init()
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  _exec = new TestPBD(new Scene());
-  //_exec = new TestParticles(new Scene());
+  //_exec = new TestPBD(new Scene());
+    _exec = new TestParticles(new Scene());
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {

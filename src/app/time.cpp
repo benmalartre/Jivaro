@@ -9,7 +9,7 @@ void Time::Init(float start, float end, float fps)
   _activeTime = _startTime;
   _endTime = end;
   _maxTime = _endTime;
-  _loop = false;
+  _loop = true;
   _fps = fps;
   _speed = 1.f;
   _playback = false;

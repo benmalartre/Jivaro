@@ -20,42 +20,26 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static void _InitControls(pxr::UsdStageRefPtr& stage)
-{
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-
-  pxr::UsdPrim controlPrim = stage->DefinePrim(rootPrim.GetPath().AppendChild(pxr::TfToken("Controls")));
-  controlPrim.CreateAttribute(pxr::TfToken("Density"), pxr::SdfValueTypeNames->Int).Set(10000);
-  controlPrim.CreateAttribute(pxr::TfToken("Radius"), pxr::SdfValueTypeNames->Float).Set(0.1f);
-  controlPrim.CreateAttribute(pxr::TfToken("Length"), pxr::SdfValueTypeNames->Float).Set(4.f);
-  controlPrim.CreateAttribute(pxr::TfToken("Scale"), pxr::SdfValueTypeNames->Float).Set(1.f);
-  controlPrim.CreateAttribute(pxr::TfToken("Amplitude"), pxr::SdfValueTypeNames->Float).Set(0.5f);
-  controlPrim.CreateAttribute(pxr::TfToken("Frequency"), pxr::SdfValueTypeNames->Float).Set(1.f);
-  controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
-}
 
 void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  _InitControls(stage);
-
-  
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   const pxr::SdfPath  rootId = rootPrim.GetPath();
-  pxr::SdfPath solverId = rootId.AppendChild(pxr::TfToken("Solver"));
+  
+    // create solver with attributes
+  const pxr::SdfPath solverId = rootId.AppendChild(pxr::TfToken("Solver"));
   _solver = _GenerateSolver(stage, solverId);
 
-  pxr::GfMatrix4f matrix = 
-    pxr::GfMatrix4f(1.f).SetScale(pxr::GfVec3f(5.f));
-  float size = .25f;
-
-  pxr::SdfPath groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-  _ground = (Plane*)_GenerateCollidePlane(stage, groundId);
+  // create collide ground
+  const pxr::SdfPath groundId = rootId.AppendChild(pxr::TfToken("Ground"));
+  _ground = _GenerateCollidePlane(stage, groundId);
+  _ground->SetMatrix(
+    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
   _scene->AddGeometry(groundId, _ground);
-  //_GenerateCollideSpheres(32);
 
   _Sources sources;
   float mass = 0.1f;
@@ -81,8 +65,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     }
   }
-  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -5.f, 0.f)));
-
+  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -0.98f, 0.f)));
   //_solver->AddForce(new DampingForce());
   
   pxr::GfVec3f pos;
@@ -97,8 +80,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.5f));
-
+  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.25f));
 
   pxr::SdfPath pointsPath(solverId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;
@@ -123,6 +105,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
+  _scene->Update(stage, time);
   if (pxr::GfIsClose(time, startTime, 0.01))
     _solver->Reset();
   else

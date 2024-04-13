@@ -20,6 +20,13 @@ class Constraint;
 class Collision : public Mask
 {
 public:
+  enum Type {
+    PLANE = 1,
+    SPHERE,
+    MESH,
+    SELF
+  };
+
   Collision(Geometry* collider, float restitution=0.5f, float friction=0.5f) 
     : _collider(collider)
     , _restitution(restitution)
@@ -29,6 +36,8 @@ public:
   void AddBody(Particles* particles, Body* body);
   void RemoveBody(Particles* particles, Body* body);
   */
+  virtual ~Collision() {};
+  virtual size_t GetTypeId() const = 0;
 
   virtual void FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
     pxr::VtArray<Constraint*>& constraints, float ft);
@@ -89,6 +98,7 @@ class PlaneCollision : public Collision
 {
 public:
   PlaneCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
+  size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
@@ -100,8 +110,9 @@ protected:
   void _UpdatePositionAndNormal();
 
 private:
-  pxr::GfVec3f _position;
-  pxr::GfVec3f _normal;
+  static size_t                 TYPE_ID;
+  pxr::GfVec3f                  _position;
+  pxr::GfVec3f                  _normal;
 
 };
 
@@ -109,6 +120,7 @@ class SphereCollision : public Collision
 {
 public:
   SphereCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
+  size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
@@ -120,8 +132,9 @@ protected:
   void _UpdateCenterAndRadius();
 
 private:
-  pxr::GfVec3f                _center;
-  float                       _radius;
+  static size_t                 TYPE_ID;
+  pxr::GfVec3f                  _center;
+  float                         _radius;
 };
 
 

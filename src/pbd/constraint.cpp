@@ -590,7 +590,7 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     pxr::GfVec3f n = _collision->GetGradient(particles, index);
     const float invMass = particles->mass[index];
 
-    float K = invMass;
+    float K = invMass + 1.f;
     if (d < 1e-6) continue;
 
     n /= d;

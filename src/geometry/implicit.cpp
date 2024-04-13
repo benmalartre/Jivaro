@@ -109,6 +109,7 @@ bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
 Sphere::Sphere(const pxr::GfMatrix4d& xfo)
   : Geometry(Geometry::SPHERE, xfo)
 {
+  _radius = 1.f;
 }
 
 Sphere::Sphere(const Sphere* other, bool normalize)
@@ -122,7 +123,6 @@ Sphere::Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world)
 {
   pxr::UsdAttribute radiusAttr = sphere.GetRadiusAttr();
   radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
-
 }
 
 bool 
