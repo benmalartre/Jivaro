@@ -114,6 +114,20 @@ PlaneCollision::PlaneCollision(Geometry* collider,  float restitution, float fri
   _UpdatePositionAndNormal();
 }
 
+float PlaneCollision::GetValue(Particles* particles, size_t index)
+{
+  const float d =
+    pxr::GfDot(_normal, particles->predicted[index] - _position) -
+    particles->radius[index];
+  return d < 0.f ? -d : 0.f;
+}
+
+pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
+{
+  return _normal;
+}
+
+
 void PlaneCollision::_UpdatePositionAndNormal()
 {
   Plane* plane = (Plane*)_collider;
@@ -125,7 +139,6 @@ void PlaneCollision::_UpdatePositionAndNormal()
 void PlaneCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
   if (!Affects(index))return;
-  _UpdatePositionAndNormal();
 
   const pxr::GfVec3f predicted(particles->position[index] + particles->velocity[index] * ft);
   float d = pxr::GfDot(_normal, predicted - _position)  - particles->radius[index];
@@ -163,7 +176,7 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
     float lambdaN = -(1.f/_friction);
     const float Fn = -lambdaN / (dt * dt);
     const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
-    //particles->velocity[index] -= vt.GetNormalized() * friction;
+    particles->velocity[index] -= vt.GetNormalized() * friction;
   }
   
   // Restitution
@@ -171,7 +184,7 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
   const float vnTilde = GetContactT(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
-  //particles->velocity[index] += _normal * restitution;
+  particles->velocity[index] += _normal * restitution;
 
   if(index < 10) {
     std::cout << "p " << index << ": ";
@@ -180,20 +193,6 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
     std::cout << "vt " << vnTilde << ", " << std::endl;
   }
 }
-
-float PlaneCollision::GetValue(Particles* particles, size_t index)
-{
-  const float d = 
-    pxr::GfDot(_normal, particles->predicted[index] - _position)  - 
-    particles->radius[index];
-  return d < 0.f ? d : 0.f;
-}
-  
-pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
-{
-  return _normal;
-}
-
 
 //----------------------------------------------------------------------------------------
 // Sphere Collision

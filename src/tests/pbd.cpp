@@ -33,16 +33,16 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   rotate.Normalize();
 
   // create collide ground
-  const pxr::SdfPath groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-  _ground = _GenerateCollidePlane(stage, groundId);
+  _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
+  _ground = _GenerateCollidePlane(stage, _groundId);
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
-  _scene->AddGeometry(groundId, _ground);
+  _scene->AddGeometry(_groundId, _ground);
   
   // create solver with attributes
-  const pxr::SdfPath solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(stage, solverId);
-  _scene->AddGeometry(solverId, _solver);
+  _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
+  _solver = _GenerateSolver(stage, _solverId);
+  _scene->AddGeometry(_solverId, _solver);
 
   // create cloth meshes
   float size = .1f;
@@ -59,6 +59,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       matrix * pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 5.f, 0.f)));
     
   }
+  std::cout << "created cloth meshes" << std::endl;
 
   std::vector<Sphere*> spheres;
   
@@ -73,6 +74,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     //sphere.GetRadiusAttr().Get(&radius);
     //pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
   }
+  
   _Sources sources;
   float mass = 0.1f;
   for (pxr::UsdPrim prim : primRange) {
@@ -88,7 +90,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       //mass *= 2;
       std::cout << "add constraints to solver" << std::endl;
       _solver->AddConstraints(body);
-      std::cout << "constyraint added" << std::endl;
+      std::cout << "constraint added" << std::endl;
       _bodyMap[prim.GetPath()] = body;
       
       //sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });

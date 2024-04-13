@@ -646,6 +646,8 @@ View::RescaleRight()
 void
 View::SetClean()
 {
+  // temporariraly view are always redraw cause of glitch (double buffer maybe) on windows
+  return; 
   if (_buffered <= 0) {
     ClearFlag(DIRTY);
   }

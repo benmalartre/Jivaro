@@ -158,7 +158,7 @@ public:
   };
 
   CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
-    float stiffness = -1.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
+    float stiffness = 1.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };

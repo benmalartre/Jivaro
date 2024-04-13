@@ -452,6 +452,7 @@ void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool seri
 
 void Solver::_SolveVelocities()
 {
+  return;
   for (auto& collision : _collisions) {
     size_t numContacts = collision->GetNumContacts();
     if (!numContacts) continue;

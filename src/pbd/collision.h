@@ -72,6 +72,7 @@ public:
   };
 
 protected:
+  virtual void _Update() {};
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
     pxr::VtArray<Constraint*>& contacts, float dt);
@@ -104,10 +105,13 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
 
 protected:
+  void _UpdatePositionAndNormal();
+  void _Update() override { _UpdatePositionAndNormal(); };
   void _FindContact(size_t index, Particles* particles, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
-  void _UpdatePositionAndNormal();
+  
+   
 
 private:
   static size_t                 TYPE_ID;
@@ -126,10 +130,12 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
 
 protected:
+  void _UpdateCenterAndRadius();
+  void _Update() override { _UpdateCenterAndRadius(); };
   void _FindContact(size_t index, Particles* particles, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
-  void _UpdateCenterAndRadius();
+  
 
 private:
   static size_t                 TYPE_ID;
