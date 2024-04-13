@@ -95,7 +95,15 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
 
 Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo)
 {
-  if (type == Geometry::PLANE) {
+  const auto& primIt = _prims.find(path);
+  if( primIt != _prims.end())
+    return primIt->second.geom;
+
+  if(type == Geometry::XFORM) {
+    _prims[path] = {new Xform(xfo)};
+    return _prims[path].geom;
+  }
+  else if (type == Geometry::PLANE) {
     _prims[path] = { new Plane(xfo) };
     return _prims[path].geom;
   } else if (type == Geometry::SPHERE) {

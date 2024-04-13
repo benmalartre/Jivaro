@@ -41,6 +41,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
   _scene->AddGeometry(_groundId, _ground);
+  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.f));
 
   _Sources sources;
   float mass = 0.1f;
@@ -81,7 +82,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.f));
+  
 
   pxr::SdfPath pointsPath(_solverId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;

@@ -167,7 +167,7 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
       points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
       points->SetColors(&_solver->GetParticles()->color[0], numParticles);
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Collisions")) {
-      /*
+      
       const pxr::VtArray<Constraint*>& contacts = _solver->GetContacts();
       if (!contacts.size())continue;
 
@@ -189,7 +189,7 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTi
           colors[elem + offsetIdx] = hitColor;
         }
       }
-      */
+      
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
       
     } else {

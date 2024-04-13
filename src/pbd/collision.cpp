@@ -65,6 +65,8 @@ void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, fl
   }
 }
 
+void Collision::Update(){}
+
 void Collision::FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies, 
   pxr::VtArray<Constraint*>& contacts, float ft)
 {
@@ -116,10 +118,8 @@ PlaneCollision::PlaneCollision(Geometry* collider,  float restitution, float fri
 
 float PlaneCollision::GetValue(Particles* particles, size_t index)
 {
-  const float d =
-    pxr::GfDot(_normal, particles->predicted[index] - _position) -
+  return pxr::GfDot(_normal, particles->predicted[index] - _position) -
     particles->radius[index];
-  return d < 0.f ? -d : 0.f;
 }
 
 pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
@@ -127,6 +127,10 @@ pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
   return _normal;
 }
 
+void PlaneCollision::Update() 
+{
+  _UpdatePositionAndNormal();
+}
 
 void PlaneCollision::_UpdatePositionAndNormal()
 {
@@ -164,7 +168,6 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
 {
   if(!CheckHit(index))return;    
   
-  
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->velocity[index] - pxr::GfVec3f(0.f);
   const float vn = pxr::GfDot(v, _normal);
@@ -195,6 +198,11 @@ SphereCollision::SphereCollision(Geometry* collider,   float restitution, float 
   : Collision(collider, restitution, friction)
 {
   Sphere* sphere = (Sphere*)collider;
+  _UpdateCenterAndRadius();
+}
+
+void SphereCollision::Update()
+{
   _UpdateCenterAndRadius();
 }
 

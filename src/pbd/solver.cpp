@@ -137,7 +137,7 @@ Solver::~Solver()
 
 void Solver::Reset()
 {
-  //UpdateColliders();
+  UpdateCollisions();
   // reset
   for (size_t p = 0; p < GetNumParticles(); ++p) {
     _particles.position[p] = _particles.rest[p];
@@ -248,38 +248,8 @@ void Solver::AddCollision(Geometry* collider)
   _SetupResults(stage, result);
 
 }
-
-void Solver::UpdateColliders()
-{
-
-  BVH bvh;
-  bvh.Init(_colliders);
-
-  {
-    double minDistance;
-    Location hit;
-    if (bvh.Closest(pxr::GfVec3f(0.f), &hit, -1, &minDistance)) {
-      std::cout << "CLOSEST HIT :" << std::endl;
-      pxr::GfVec3f position;
-      hit.GetPosition(&position);
-      std::cout << "   pos : " << position << std::endl;
-      std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
-    }
-  }
-
-  {
-    pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
-    double minDistance;
-    Location hit;
-    const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
-    if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
-      pxr::GfVec3f position;
-      hit.GetPosition(_colliders[0]);
-    }
-  }
-
-}
 */
+
 
 void Solver::AddConstraints(Body* body)
 {
@@ -540,6 +510,41 @@ void Solver::Step(double time, bool serial)
   //UpdateGeometries();
 }
 
+void Solver::UpdateCollisions()
+{
+  for(size_t i = 0; i < _collisions.size(); ++i){
+    _collisions[i]->Update();
+  }
+  /*
+  BVH bvh;
+  bvh.Init(_colliders);
+
+  {
+    double minDistance;
+    Location hit;
+    if (bvh.Closest(pxr::GfVec3f(0.f), &hit, -1, &minDistance)) {
+      std::cout << "CLOSEST HIT :" << std::endl;
+      pxr::GfVec3f position;
+      hit.GetPosition(&position);
+      std::cout << "   pos : " << position << std::endl;
+      std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
+    }
+  }
+
+  {
+    pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
+    double minDistance;
+    Location hit;
+    const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
+    if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
+      pxr::GfVec3f position;
+      hit.GetPosition(_colliders[0]);
+    }
+  }
+  */
+}
+
+
 void Solver::UpdateGeometries()
 {
   /*
@@ -565,5 +570,9 @@ void Solver::UpdateParameters(const pxr::UsdPrim& prim, double time)
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
 }
+
+
+
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
