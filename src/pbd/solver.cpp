@@ -113,14 +113,14 @@ static const char* TIME_NAMES[NUM_TIMES] = {
   "solve velocities"
 };
 
-Solver::Solver(const Geometry* geom)
-  : Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
+Solver::Solver(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
+  : Xform(xform, world)
   , _subSteps(5)
   , _sleepThreshold(0.1f)
   , _paused(true)
 {
   _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
-  UpdateParameters(pxr::UsdTimeCode::Default().GetValue());
+  UpdateParameters(xform.GetPrim(), pxr::UsdTimeCode::Default().GetValue());
 
   //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
   _timer = new _Timer();
@@ -525,7 +525,6 @@ void Solver::Step(double time, bool serial)
   if (!numParticles)return;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
-  UpdateParameters(time);
 
   _timer->Start();
   _FindContacts(serial);

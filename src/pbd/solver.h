@@ -9,6 +9,7 @@
 
 #include "../common.h"
 #include "../pbd/particle.h"
+#include "../geometry/implicit.h"
 #include "../utils/timer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -19,11 +20,11 @@ class Force;
 class Collision;
 class Geometry;
 class _Timer;
-class Solver {
+class Solver : public Xform {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
-  Solver(const Geometry* geom);
+  Solver(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   ~Solver();
   
 

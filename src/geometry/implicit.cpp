@@ -47,7 +47,7 @@ Plane::Plane(const pxr::GfMatrix4d& xfo)
 }
 
 Plane::Plane(const Plane* other, bool normalize)
-  : Geometry(other, Geometry::PLANE, normalize)
+  : Geometry(other, Geometry::PLANE)
 {
   _normal = other->_normal;
   _width = other->_width;
@@ -131,7 +131,7 @@ Sphere::Sphere(const pxr::GfMatrix4d& xfo)
 }
 
 Sphere::Sphere(const Sphere* other, bool normalize)
-  : Geometry(other, Geometry::SPHERE, normalize)
+  : Geometry(other, Geometry::SPHERE)
 {
   _radius = other->_radius;
 }
@@ -193,7 +193,7 @@ Cube::Cube(const pxr::GfMatrix4d& xfo)
 }
 
 Cube::Cube(const Cube* other, bool normalize)
-  : Geometry(other, Geometry::CUBE, normalize)
+  : Geometry(other, Geometry::CUBE)
 {
   _size = other->_size;
 }
@@ -294,7 +294,7 @@ Cone::Cone(const pxr::GfMatrix4d& xfo)
 }
 
 Cone::Cone(const Cone* other, bool normalize)
-  : Geometry(other, Geometry::CONE, normalize)
+  : Geometry(other, Geometry::CONE)
 {
   _radius = other->_radius;
   _height = other->_height;
@@ -368,7 +368,7 @@ Capsule::Capsule(const pxr::GfMatrix4d& xfo)
 }
 
 Capsule::Capsule(const Capsule* other, bool normalize)
-  : Geometry(other, Geometry::CAPSULE, normalize)
+  : Geometry(other, Geometry::CAPSULE)
 {
   _radius = other->_radius;
   _height = other->_height;

@@ -32,14 +32,14 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
     // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(stage, solverId);
+  _solver = _GenerateSolver(stage, _solverId);
 
   // create collide ground
   _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-  _ground = _GenerateCollidePlane(stage, groundId);
+  _ground = _GenerateCollidePlane(stage, _groundId);
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
-  _scene->AddGeometry(groundId, _ground);
+  _scene->AddGeometry(_groundId, _ground);
 
   _Sources sources;
   float mass = 0.1f;
@@ -82,7 +82,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.f));
 
-  pxr::SdfPath pointsPath(solverId.AppendChild(pxr::TfToken("Particles")));
+  pxr::SdfPath pointsPath(_solverId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;
   Points* points = _scene->AddPoints(pointsPath);
   Particles* particles = _solver->GetParticles();
@@ -91,7 +91,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   points->SetRadii(&particles->radius[0], numParticles);
   points->SetColors(&particles->color[0], numParticles);
 
-  pxr::SdfPath collisionsPath(solverId.AppendChild(pxr::TfToken("Collisions")));
+  pxr::SdfPath collisionsPath(_solverId.AppendChild(pxr::TfToken("Collisions")));
   _sourcesMap[collisionsPath] = sources;
   Points* collisions = _scene->AddPoints(collisionsPath);
   collisions->SetPositions(&particles->position[0], numParticles);

@@ -12,7 +12,7 @@ Deformable::Deformable(short type, const pxr::GfMatrix4d& matrix)
 }
 
 Deformable::Deformable(const Deformable* other, bool normalize)
-  : Geometry(other, other->GetType(), normalize)
+  : Geometry(other, other->GetType())
 {
   size_t numPoints = _positions.size();
   _positions = other->_positions;
