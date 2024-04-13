@@ -167,12 +167,11 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius) override;
 
+  void Solve(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
   static size_t                 TYPE_ID;
   Collision*                    _collision;
 };
