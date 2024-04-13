@@ -66,9 +66,9 @@ public:
 
   // query 3d position on geometry
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
-    double maxDistance=-1.0, double* minDistance=NULL) const = 0;
+    double maxDistance=-1.0, double* minDistance=NULL) const {return false;};
   virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const = 0;
+    double maxDistance = -1.0, double* minDistance = NULL) const {return false;};
 
 protected:
   // infos

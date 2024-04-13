@@ -46,7 +46,7 @@ Solver* _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
   usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(20);
   usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(0.01f);
 
-  return new Solver(usdPrim);
+  return new Solver(usdXform, pxr::GfMatrix4d(1.f));
 }
 
 Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
