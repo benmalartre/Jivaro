@@ -178,20 +178,13 @@ void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt
     const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
     particles->velocity[index] -= vt.GetNormalized() * friction;
   }
-  
+
   // Restitution
   const float threshold = 1e-6;
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
   const float vnTilde = GetContactT(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->velocity[index] += _normal * restitution;
-
-  if(index < 10) {
-    std::cout << "p " << index << ": ";
-    std::cout << "e " << e << ", ";
-    std::cout << "vn " << vn << ", ";
-    std::cout << "vt " << vnTilde << ", " << std::endl;
-  }
 }
 
 //----------------------------------------------------------------------------------------
