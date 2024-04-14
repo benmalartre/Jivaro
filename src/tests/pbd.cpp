@@ -146,6 +146,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
   _scene->Update(stage, time);
+  _solver->UpdateCollisions();
   _solver->UpdateParameters(stage->GetPrimAtPath(_solverId), time);
 
   if (pxr::GfIsClose(time, startTime, 0.01))

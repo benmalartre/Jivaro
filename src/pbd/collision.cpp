@@ -167,7 +167,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, cons
 void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
-  
+
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->velocity[index] - pxr::GfVec3f(0.f);
   const float vn = pxr::GfDot(v, _normal);

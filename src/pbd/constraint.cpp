@@ -504,11 +504,18 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     const size_t index = _elements[elem] + offset;
     const float invMass = particles->mass[index];
     const float d = _collision->GetValue(particles, index);
-    if(d<0.f) {
-      pxr::GfVec3f n = _collision->GetGradient(particles, index);
+    if (d > 0.f) continue;
 
-      _correction[elem * ELEM_SIZE + 0] += invMass * n * -d * dt;// *_damping;
-    }
+    pxr::GfVec3f n = _collision->GetGradient(particles, index);
+
+    const float im0 = particles->mass[index];
+    const float im1 = 0.f;
+
+    float K = im0 + im1 + 1.f;
+    
+    const pxr::GfVec3f correction = n * (1.f / K) * -d;//* _damping;
+
+    _correction[elem * ELEM_SIZE + 0] += im0 * correction;
 
   }
 }
