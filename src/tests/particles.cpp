@@ -105,7 +105,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 }
 
 
-void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
+void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene->Update(stage, time);
   _solver->Update(stage, time);

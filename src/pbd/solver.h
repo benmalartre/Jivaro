@@ -110,7 +110,7 @@ private:
   pxr::VtArray<Collision*>            _collisions;
   pxr::VtArray<Body*>                 _bodies;
   pxr::VtArray<Force*>                _force;
-  std::map<void*, Geometry*>          _childrens;
+  std::map<Geometry*, pxr::SdfPath>   _childrens;
 
   // timing
   _Timer*                             _timer;

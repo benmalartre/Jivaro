@@ -146,13 +146,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene->Update(stage, time);
-  _solver->UpdateCollisions();
-  _solver->UpdateParameters(stage, time);
+  _solver->Update(stage, time);
 
-  if (pxr::GfIsClose(time, startTime, 0.01))
-    _solver->Reset();
-  else
-    _solver->Step();
   
   pxr::UsdGeomXformCache xformCache(time);
 

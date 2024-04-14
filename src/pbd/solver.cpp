@@ -492,8 +492,7 @@ void Solver::RemoveChild(Geometry* geometry)
 
 pxr::SdfPath Solver::GetChild(Geometry* geometry)
 {
-  auto& childrenIt = _childrens.begin();
-  if(childrenIt != _childrens.end())return childrenIt->second;
+  if (_childrens.find(geometry))return _childrens[geometry];
   return pxr::SdfPath();
 }
 
