@@ -12,7 +12,7 @@ public:
   friend class Scene;
   TestHair(Scene* scene) : Execution(scene){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime=1.0) override;
+  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 private:
   pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash> _sourcesMap;

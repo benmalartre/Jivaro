@@ -44,7 +44,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.f));
   _solver->AddChild(_ground, _groundId);
 
-  _Sources sources;
   float mass = 0.1f;
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
@@ -56,7 +55,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       _solver->AddChild(mesh, prim.GetPath());
       
       Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass);
-      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
       pxr::UsdGeomPoints usdPoints(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
@@ -64,8 +62,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       _scene->AddPoints(prim.GetPath(), points);
 
       _solver->AddBody((Geometry*)points, pxr::GfMatrix4f(xform), RANDOM_LO_HI(0.5f, 5.f));
+      _solver->AddChild(points, prim.GetPath());
 
-      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     }
   }
   _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -9.8f, 0.f)));
@@ -83,23 +81,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  /*
-  pxr::SdfPath pointsPath(_solverId.AppendChild(pxr::TfToken("Particles")));
-  _sourcesMap[pointsPath] = sources;
-  Points* points = _scene->AddPoints(pointsPath);
-  Particles* particles = _solver->GetParticles();
-  const size_t numParticles = _solver->GetNumParticles();
-  points->SetPositions(&particles->position[0], numParticles);
-  points->SetRadii(&particles->radius[0], numParticles);
-  points->SetColors(&particles->color[0], numParticles);
-
-  pxr::SdfPath collisionsPath(_solverId.AppendChild(pxr::TfToken("Collisions")));
-  _sourcesMap[collisionsPath] = sources;
-  Points* collisions = _scene->AddPoints(collisionsPath);
-  collisions->SetPositions(&particles->position[0], numParticles);
-  collisions->SetRadii(&particles->radius[0], numParticles);
-  collisions->SetColors(&particles->color[0], numParticles);
-  */
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
 
 }

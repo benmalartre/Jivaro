@@ -146,7 +146,7 @@ void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
   
 }
 
-void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
+void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _QueryControls(stage);
 

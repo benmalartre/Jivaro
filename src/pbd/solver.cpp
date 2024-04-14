@@ -492,13 +492,15 @@ void Solver::RemoveChild(Geometry* geometry)
 
 pxr::SdfPath Solver::GetChild(Geometry* geometry)
 {
-  if (_childrens.find(geometry))return _childrens[geometry];
-  return pxr::SdfPath();
+  if (_childrens.find(geometry)!=_childrens.end())
+    return _childrens[geometry];
+  return 
+    pxr::SdfPath();
 }
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
-  UpdateCollisions(stage);
+  UpdateCollisions(stage, time);
  
   if (pxr::GfIsClose(time, _startFrame, 0.001f))
     Reset();

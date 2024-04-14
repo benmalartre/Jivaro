@@ -118,7 +118,7 @@ public:
   bool GetExec();
 
   virtual void InitExec(pxr::UsdStageRefPtr& stage);
-  virtual void UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime);
+  virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time);
   virtual void TerminateExec(pxr::UsdStageRefPtr& stage);
 
   // usd stages

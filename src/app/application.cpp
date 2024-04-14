@@ -274,9 +274,9 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
 }
 
 void
-Application::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
+Application::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  _exec->UpdateExec(stage, time, startTime);
+  _exec->UpdateExec(stage, time);
 
   for (auto& engine : _engines) {
     engine->UpdateExec(time);
