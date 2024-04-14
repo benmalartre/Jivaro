@@ -42,6 +42,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
   _scene->AddGeometry(_groundId, _ground);
   _solver->AddCollision(new PlaneCollision(_ground, 1.f, 0.f));
+  _solver->AddChild(_ground, _groundId);
 
   _Sources sources;
   float mass = 0.1f;
@@ -52,9 +53,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene->AddMesh(prim.GetPath(), mesh);
+      _solver->AddChild(mesh, prim.GetPath());
       
       Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass);
-      _bodyMap[prim.GetPath()] = body;
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
       pxr::UsdGeomPoints usdPoints(prim);
@@ -82,8 +83,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   } 
   */
 
-  
-
+  /*
   pxr::SdfPath pointsPath(_solverId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;
   Points* points = _scene->AddPoints(pointsPath);
@@ -99,7 +99,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   collisions->SetPositions(&particles->position[0], numParticles);
   collisions->SetRadii(&particles->radius[0], numParticles);
   collisions->SetColors(&particles->color[0], numParticles);
-
+  */
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
 
 }
@@ -108,13 +108,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime)
 {
   _scene->Update(stage, time);
-  _solver->UpdateCollisions();
-  _solver->UpdateParameters(stage->GetPrimAtPath(_solverId), time);
-
-  if (pxr::GfIsClose(time, startTime, 0.01))
-    _solver->Reset();
-  else
-    _solver->Step(false);
+  _solver->Update(stage, time);
   
   pxr::UsdGeomXformCache xformCache(time);
 
@@ -162,7 +156,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
       
       pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
       if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
-        
+        /*
         const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
         if (bodyIt != _bodyMap.end()) {
           Body* body = bodyIt->second;
@@ -170,6 +164,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, double time, double s
           mesh->SetPositions(&_solver->GetParticles()->position[body->offset], mesh->GetNumPoints());
         } else {
         }
+        */
         
       }
       

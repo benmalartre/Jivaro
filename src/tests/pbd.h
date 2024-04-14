@@ -13,7 +13,7 @@ public:
   friend class Scene;
   TestPBD(Scene* scene) : Execution(scene){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, double time, double startTime=1.0) override;
+  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 private:
   Solver*                                                    _solver;

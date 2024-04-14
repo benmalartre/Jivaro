@@ -39,7 +39,7 @@ public:
   virtual ~Collision() {};
   virtual size_t GetTypeId() const = 0;
 
-  virtual void Update();
+  virtual void Update(const pxr::UsdPrim& prim, double time);
   virtual void FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
     pxr::VtArray<Constraint*>& constraints, float ft);
   virtual void FindContactsSerial(Particles* particles, const pxr::VtArray<Body*>& bodies,
@@ -73,7 +73,8 @@ public:
   };
 
 protected:
-  virtual void _Update() {};
+  virtual void _Update(const pxr::UsdPrim& prim, double time) {};
+  virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
     pxr::VtArray<Constraint*>& contacts, float dt);
@@ -104,15 +105,13 @@ public:
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  void Update() override;
+  void Update(const pxr::UsdPrim& prim, double time) override;
 
 protected:
   void _UpdatePositionAndNormal();
   void _FindContact(size_t index, Particles* particles, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
   void _SolveVelocity(Particles* particles, size_t index, float dt) override;
-  
-   
 
 private:
   static size_t                 TYPE_ID;
@@ -129,7 +128,7 @@ public:
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  void Update() override;
+  void Update(const pxr::UsdPrim& prim, double time) override;
 
 protected:
   void _UpdateCenterAndRadius();

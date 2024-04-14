@@ -65,7 +65,13 @@ void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, fl
   }
 }
 
-void Collision::Update(){}
+void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
+{
+  prim.GetAttribute(pxr::TfToken("Restitution")).Get(&_restitution, time);
+  prim.GetAttribute(pxr::TfToken("Friction")).Get(&_friction, time);
+}
+
+void Collision::Update(const pxr::UsdPrim& prim, double time){}
 
 void Collision::FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies, 
   pxr::VtArray<Constraint*>& contacts, float ft)
@@ -127,9 +133,10 @@ pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
   return _normal;
 }
 
-void PlaneCollision::Update() 
+void PlaneCollision::Update(const pxr::UsdPrim& prim, double time) 
 {
   _UpdatePositionAndNormal();
+  _UpdateParameters(prim, time);
 }
 
 void PlaneCollision::_UpdatePositionAndNormal()
@@ -201,9 +208,10 @@ SphereCollision::SphereCollision(Geometry* collider,   float restitution, float 
   _UpdateCenterAndRadius();
 }
 
-void SphereCollision::Update()
+void SphereCollision::Update(const pxr::UsdPrim& prim, double time)
 {
   _UpdateCenterAndRadius();
+  _UpdateParameters(prim, time);
 }
 
 void SphereCollision::_UpdateCenterAndRadius()

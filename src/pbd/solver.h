@@ -3,9 +3,11 @@
 
 #include <string>
 #include <limits>
+#include <map>
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/stage.h>
 
 #include "../common.h"
 #include "../pbd/particle.h"
@@ -23,7 +25,6 @@ class _Timer;
 class Solver : public Xform {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
-
   Solver(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   ~Solver();
   
@@ -70,16 +71,22 @@ public:
   void WeightBoundaries();
   
   // solver 
-  void UpdateParameters( const pxr::UsdPrim& prim, double time);
-  void UpdateCollisions();
+  void Update(pxr::UsdStageRefPtr& stage, float time);
+  void UpdateParameters(pxr::UsdStageRefPtr& stage, float time);
+  void UpdateCollisions(pxr::UsdStageRefPtr& stage, float time);
   void UpdateGeometries();
   void Reset();
-  void Step(double time, bool serial=false);
+  void Step();
+
+  // childrens
+  void AddChild(Geometry* geom, const pxr::SdfPath& path);
+  void RemoveChild(Geometry* geometry);
+  pxr::SdfPath GetChild(Geometry* geom);
 
 private:
   void _ClearContacts();
-  void _FindContacts(bool serial = false);
-  void _SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial=false);
+  void _FindContacts();
+  void _SolveConstraints(pxr::VtArray<Constraint*>& constraints);
   void _SolveVelocities();
 
   void _IntegrateParticles(size_t begin, size_t end);
@@ -87,12 +94,13 @@ private:
   void _StepOneSerial();
   void _StepOne();
 
-  int                              _subSteps;
+  int                                 _subSteps;
   float                               _sleepThreshold;
   float                               _frameTime;
   float                               _stepTime;
   float                               _startFrame;
-  bool                                _paused;		
+  bool                                _paused;	
+  bool                                _serial;	
   Geometry*                           _geom;
 
   // system
@@ -102,6 +110,7 @@ private:
   pxr::VtArray<Collision*>            _collisions;
   pxr::VtArray<Body*>                 _bodies;
   pxr::VtArray<Force*>                _force;
+  std::map<void*, Geometry*>          _childrens;
 
   // timing
   _Timer*                             _timer;

@@ -103,7 +103,7 @@ void StretchConstraint::Solve(Particles* particles, float dt)
       K += alpha;
     }
 
-	  if (pxr::GfAbs(K) < 1e-6f) continue;
+	  if (pxr::GfAbs(K) == 0.f) continue;
 
 	  const pxr::GfVec3f correction = n * -(1.f / K) * C * _damping;
 
@@ -506,17 +506,26 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     const float d = _collision->GetValue(particles, index);
     if (d > 0.f) continue;
 
-    pxr::GfVec3f n = _collision->GetGradient(particles, index);
-
     const float im0 = particles->mass[index];
+    pxr::GfVec3f n = _collision->GetGradient(particles, index);
+    _correction[elem * ELEM_SIZE] += im0 * n * -d * dt;
+    /*
+    
     const float im1 = 0.f;
 
-    float K = im0 + im1 + 1.f;
-    
-    const pxr::GfVec3f correction = n * (1.f / K) * -d;//* _damping;
+    float K = im0 + im1;
+    float alpha = 0.0;
+    if (!pxr::GfIsClose(_stiffness, 0.0, 1e-6f))
+    {
+      alpha = 1.f / (_stiffness * 100 * dt * dt);
+      K += alpha;
+    }
 
-    _correction[elem * ELEM_SIZE + 0] += im0 * correction;
+	  if (pxr::GfAbs(K) == 0.f) continue;
 
+	  const pxr::GfVec3f correction = n * -(1.f / K) * _damping;
+    _correction[elem * ELEM_SIZE] += im0  * correction;
+    */
   }
 }
 

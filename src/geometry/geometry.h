@@ -9,6 +9,7 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
+#include <pxr/usd/sdf/path.h>
 
 #include "../common.h"
 
@@ -73,6 +74,7 @@ public:
 protected:
   // infos
   short                               _type;
+  pxr::SdfPath                        _path;
 
   // bounding box
   pxr::GfMatrix4d                     _matrix;

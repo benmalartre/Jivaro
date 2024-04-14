@@ -119,9 +119,10 @@ Solver::Solver(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
   , _subSteps(5)
   , _sleepThreshold(0.1f)
   , _paused(true)
+  , _serial(false)
+  , _startFrame(1.f)
 {
   _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
-  UpdateParameters(xform.GetPrim(), pxr::UsdTimeCode::Default().GetValue());
 
   //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
   _timer = new _Timer();
@@ -137,7 +138,6 @@ Solver::~Solver()
 
 void Solver::Reset()
 {
-  UpdateCollisions();
   // reset
   for (size_t p = 0; p < GetNumParticles(); ++p) {
     _particles.position[p] = _particles.rest[p];
@@ -272,7 +272,7 @@ void Solver::AddConstraints(Body* body)
     //__stretchStiffness *= 2.f;
 
     //  CreateBendConstraints(body, _constraints, __bendStiffness, __damping);
-    CreateDihedralConstraints(body, _constraints, __bendStiffness, __damping);
+    //CreateDihedralConstraints(body, _constraints, __bendStiffness, __damping);
     std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
       "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
     //__bendStiffness *= 10.f;
@@ -334,10 +334,10 @@ void Solver::_ClearContacts()
   _contacts.clear();
 }
 
-void Solver::_FindContacts(bool serial)
+void Solver::_FindContacts()
 {
   _ClearContacts();
-  if (serial) {
+  if (_serial) {
     for (auto& collision : _collisions) {
       collision->FindContactsSerial(&_particles, _bodies, _contacts, _frameTime);
     }
@@ -400,9 +400,9 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   }
 }
 
-void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints, bool serial)
+void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints)
 {
-  if (serial) {
+  if (_serial) {
     // solve constraints
     for (auto& constraint : constraints)constraint->Solve(&_particles, _stepTime);
     // apply result
@@ -439,8 +439,8 @@ void Solver::_StepOneSerial()
   _IntegrateParticles(0, numParticles);
 
   // solve and apply constraint
-  _SolveConstraints(_constraints, true);
-  _SolveConstraints(_contacts, true);
+  _SolveConstraints(_constraints);
+  _SolveConstraints(_contacts);
 
   // update particles
   _UpdateParticles(0, numParticles);
@@ -463,8 +463,8 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve and apply constraint
-  _SolveConstraints(_constraints, false);
-  _SolveConstraints(_contacts, false);
+  _SolveConstraints(_constraints);
+  _SolveConstraints(_contacts);
   
   _timer->Next();
   // update particles
@@ -480,7 +480,34 @@ void Solver::_StepOne()
 
 }
 
-void Solver::Step(double time, bool serial)
+void Solver::AddChild(Geometry* geom, const pxr::SdfPath& path)
+{
+ _childrens[geom] = path;
+}
+
+void Solver::RemoveChild(Geometry* geometry)
+{
+  _childrens.erase(geometry);
+}
+
+pxr::SdfPath Solver::GetChild(Geometry* geometry)
+{
+  auto& childrenIt = _childrens.begin();
+  if(childrenIt != _childrens.end())return childrenIt->second;
+  return pxr::SdfPath();
+}
+
+void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
+{
+  UpdateCollisions(stage);
+ 
+  if (pxr::GfIsClose(time, _startFrame, 0.001f))
+    Reset();
+  else
+    Step();
+}
+
+void Solver::Step()
 {
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
@@ -488,10 +515,10 @@ void Solver::Step(double time, bool serial)
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
   _timer->Start();
-  _FindContacts(serial);
+  _FindContacts();
   _timer->Stop();
 
-  if (!serial && numParticles >= 2 * numThreads) {
+  if (!_serial && numParticles >= 2 * numThreads) {
     //const size_t grain = numParticles / numThreads;
     for(size_t si = 0; si < _subSteps; ++si)
       _StepOne();
@@ -510,7 +537,7 @@ void Solver::Step(double time, bool serial)
   //UpdateGeometries();
 }
 
-void Solver::UpdateCollisions()
+void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
   for(size_t i = 0; i < _collisions.size(); ++i){
     _collisions[i]->Update();
@@ -564,8 +591,10 @@ void Solver::UpdateGeometries()
 */
 }
 
-void Solver::UpdateParameters(const pxr::UsdPrim& prim, double time)
+void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
+  pxr::SdfPath path = GetChild(_geom);
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
   prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
