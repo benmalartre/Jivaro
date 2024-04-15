@@ -11,7 +11,8 @@
 #include <pxr/base/gf/vec4i.h>
 #include <pxr/base/gf/matrix4f.h>
 
-#include "../common.h"
+#include "../pbd/element.h"
+#include "../pbd/mask.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -19,7 +20,7 @@ struct Particles;
 struct Body;
 class Collision;
 
-class Constraint
+class Constraint : public Mask
 {
 public:
   constexpr static size_t BlockSize = 1024;
@@ -69,6 +70,7 @@ protected:
   float                         _stiffness;
   float                         _compliance;
   float                         _damping;
+  pxr::TfToken                  _key;
 };
 
 class StretchConstraint : public Constraint

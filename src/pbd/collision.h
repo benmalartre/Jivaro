@@ -16,6 +16,7 @@ class Geometry;
 struct Particles;
 struct Body;
 class Constraint;
+class Solver;
 
 class Collision : public Mask
 {
@@ -28,7 +29,8 @@ public:
   };
 
   Collision(Geometry* collider, float restitution=0.5f, float friction=0.5f) 
-    : _collider(collider)
+    : Mask(Element::COLLISION)
+    , _collider(collider)
     , _restitution(restitution)
     , _friction(friction) {};
 
@@ -49,6 +51,7 @@ public:
 
   virtual void SolveVelocities(Particles* particles, float dt);
 
+  virtual Geometry* GetGeometry(){return _collider;};
   virtual const pxr::GfVec3f& GetContactPosition(size_t index) const {
     return _contacts[_p2c[index]].GetPointCoordinates();};
   virtual const pxr::GfVec3f& GetContactNormal(size_t index) const {
@@ -94,6 +97,7 @@ protected:
   float                       _restitution;
   float                       _friction;
   Geometry*                   _collider;
+  pxr::TfToken                _key;
 
 };
 

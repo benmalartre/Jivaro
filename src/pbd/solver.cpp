@@ -1,7 +1,12 @@
+#include <iostream>
+
+#include <pxr/base/work/loops.h>
+
 #include "../acceleration/bvh.h"
 #include "../acceleration/hashGrid.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
+#include "../geometry/points.h"
 #include "../geometry/voxels.h"
 #include "../geometry/curve.h"
 #include "../geometry/implicit.h"
@@ -12,12 +17,7 @@
 #include "../pbd/solver.h"
 #include "../utils/timer.h"
 #include "../app/time.h"
-
-
-#include <iostream>
-
-#include <pxr/base/work/loops.h>
-
+#include "../app/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -114,19 +114,27 @@ static const char* TIME_NAMES[NUM_TIMES] = {
   "solve velocities"
 };
 
-Solver::Solver(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
+Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
   : Xform(xform, world)
+  , _scene(scene)
   , _subSteps(5)
   , _sleepThreshold(0.1f)
   , _paused(true)
   , _serial(false)
   , _startFrame(1.f)
+  , _id(xform.GetPrim().GetPath())
 {
   _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
 
   //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
   _timer = new _Timer();
   _timer->Init(NUM_TIMES, &TIME_NAMES[0]);
+  _points = new Points();
+
+  pxr::SdfPath pointsId = _id.AppendChild(pxr::TfToken("Particles"));
+  AddElement(&_particles, _points, pointsId);
+  _scene->AddGeometry(pointsId, _points);
+  
 }
 
 Solver::~Solver()
@@ -134,17 +142,18 @@ Solver::~Solver()
   for (auto& body : _bodies)delete body;
   for (auto& force : _force)delete force;
   for (auto& constraint : _constraints)delete constraint;
+  delete _points;
 }
 
 void Solver::Reset()
 {
   // reset
   for (size_t p = 0; p < GetNumParticles(); ++p) {
-    _particles.position[p] = _particles.rest[p];
-    _particles.predicted[p] = _particles.rest[p];
-    _particles.velocity[p] = pxr::GfVec3f(0.f);
-    if(_particles.state[p] != Particles::MUTE)
-      _particles.state[p] = Particles::ACTIVE;
+    _particles._position[p] = _particles._rest[p];
+    _particles._predicted[p] = _particles._rest[p];
+    _particles._velocity[p] = pxr::GfVec3f(0.f);
+    if(_particles._state[p] != Particles::MUTE)
+      _particles._state[p] = Particles::ACTIVE;
   }
 }
 
@@ -157,7 +166,7 @@ Body* Solver::GetBody(size_t index)
 Body* Solver::GetBody(Geometry* geom)
 {
   for (auto& body : _bodies) {
-    if (body->geometry == geom)return body;
+    if (body->GetGeometry() == geom)return body;
   }
   return nullptr;
 }
@@ -165,19 +174,21 @@ Body* Solver::GetBody(Geometry* geom)
 size_t Solver::GetBodyIndex(Geometry* geom)
 {
   for (size_t index = 0; index < _bodies.size(); ++index) {
-    if (_bodies[index]->geometry == geom)return index;
+    if (_bodies[index]->GetGeometry() == geom)return index;
   }
   return Solver::INVALID_INDEX;
 }
 
-Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass)
+Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass, float radius, float damping)
 {
   size_t base = _particles.GetNumParticles();
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  Body* body = new Body({ 0.001f, 0.1f, mass, base, geom->GetNumPoints(), wirecolor, geom, (mass > 0)});
+  Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
+  
   _bodies.push_back(body);
   _particles.AddBody(body, matrix);
 
+  //_AddElement()
   return _bodies.back();
 }
 
@@ -260,7 +271,7 @@ void Solver::AddConstraints(Body* body)
 
 
   static int __bodyIdx = 0;
-  Geometry* geom = body->geometry;
+  Geometry* geom = body->GetGeometry();
   if (geom->GetType() == Geometry::MESH) {
     
     CreateStretchConstraints(body, _constraints, __stretchStiffness, __damping);
@@ -300,11 +311,11 @@ void Solver::GetConstraintsByType(short type, pxr::VtArray<Constraint*>& results
 void Solver::LockPoints()
 {
   size_t particleIdx = 0;
-  const pxr::GfVec3f* positions = &_particles.position[0];
+  const pxr::GfVec3f* positions = &_particles._position[0];
   for (auto& body : _bodies) {
-    size_t numPoints = body->numPoints;
+    size_t numPoints = body->GetNumPoints();
     for(size_t point = 0; point < 10; ++point) {
-      _particles.mass[point + body->offset] = 0.f;
+      _particles._mass[point + body->GetOffset()] = 0.f;
     }
   }
 }
@@ -312,16 +323,16 @@ void Solver::LockPoints()
 void Solver::WeightBoundaries()
 {
   for(const auto& body: _bodies) {
-    size_t offset = body->offset;
-    size_t numPoints = body->numPoints;
+    size_t offset = body->GetOffset();
+    size_t numPoints = body->GetNumPoints();
   
-    if(body->geometry->GetType() == Geometry::MESH) {
-      Mesh* mesh = (Mesh*)body->geometry;
+    if(body->GetGeometry()->GetType() == Geometry::MESH) {
+      Mesh* mesh = (Mesh*)body->GetGeometry();
       HalfEdgeGraph* graph = mesh->GetEdgesGraph();
       const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
       for(size_t p = 0; p < boundaries.size(); ++p){
         if(boundaries[p]) {
-          _particles.mass[p + offset] *= 0.5f;
+          _particles._mass[p + offset] *= 0.5f;
         }
       }
     }
@@ -353,8 +364,8 @@ void Solver::_FindContacts()
 void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
 
-  pxr::GfVec3f* velocity = &_particles.velocity[0];
-  int* body = &_particles.body[0];
+  pxr::GfVec3f* velocity = &_particles._velocity[0];
+  int* body = &_particles._body[0];
 
   // apply external forces
   for (const Force* force : _force) {
@@ -362,8 +373,8 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   }
 
   // compute predicted position
-  pxr::GfVec3f* predicted = &_particles.predicted[0];
-  pxr::GfVec3f* position = &_particles.position[0];
+  pxr::GfVec3f* predicted = &_particles._predicted[0];
+  pxr::GfVec3f* position = &_particles._position[0];
 
   for (size_t index = begin; index < end; ++index) {
 
@@ -374,17 +385,17 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
 void Solver::_UpdateParticles(size_t begin, size_t end)
 {
-  const int* body = &_particles.body[0];
-  const pxr::GfVec3f* predicted = &_particles.predicted[0];
-  pxr::GfVec3f* position = &_particles.position[0];
-  pxr::GfVec3f* velocity = &_particles.velocity[0];
-  pxr::GfVec3f* previous = &_particles.previous[0];
-  short* state = &_particles.state[0];
+  const int* body = &_particles._body[0];
+  const pxr::GfVec3f* predicted = &_particles._predicted[0];
+  pxr::GfVec3f* position = &_particles._position[0];
+  pxr::GfVec3f* velocity = &_particles._velocity[0];
+  pxr::GfVec3f* previous = &_particles._previous[0];
+  short* state = &_particles._state[0];
 
   float invDt = 1.f / _stepTime;
 
   for(size_t index = begin; index < end; ++index) {
-    if (_particles.state[index] != Particles::ACTIVE)continue;
+    if (_particles._state[index] != Particles::ACTIVE)continue;
     // update velocity
     previous[index] = position[index];
     velocity[index] = (predicted[index] - position[index]) * invDt;
@@ -480,22 +491,33 @@ void Solver::_StepOne()
 
 }
 
-void Solver::AddChild(Geometry* geom, const pxr::SdfPath& path)
+void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
 {
- _childrens[geom] = path;
+  _elements[element] = std::make_pair(path, geom);
+
+  //else TF_WARN("There is already an element named %s", path.GetText());
 }
 
-void Solver::RemoveChild(Geometry* geometry)
+void Solver::RemoveElement(Element* element)
 {
-  _childrens.erase(geometry);
+  _elements.erase(element);
 }
 
-pxr::SdfPath Solver::GetChild(Geometry* geometry)
+pxr::SdfPath Solver::GetElementPath(Element* element)
 {
-  if (_childrens.find(geometry)!=_childrens.end())
-    return _childrens[geometry];
-  return 
-    pxr::SdfPath();
+  return _elements[element].first;
+}
+
+Geometry* Solver::GetElementGeometry(Element* element)
+{
+  return _elements[element].second;
+}
+
+Element* Solver::GetElement(const pxr::SdfPath& path)
+{
+  for(auto& elem: _elements) 
+    if(elem.second.first == path)return elem.first;
+  return NULL;
 }
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
@@ -541,7 +563,13 @@ void Solver::Step()
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
   for(size_t i = 0; i < _collisions.size(); ++i){
-    _collisions[i]->Update();
+    pxr::SdfPath path = GetElementPath(_collisions[i]);
+    pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+    if (prim.IsValid()) {
+      std::cout << " we have valid collision geometry : " << path << std::endl;
+      _collisions[i]->Update(prim, time);
+    }
+    
   }
   /*
   BVH bvh;
@@ -594,8 +622,7 @@ void Solver::UpdateGeometries()
 
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
-  pxr::SdfPath path = GetChild(_geom);
-  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  pxr::UsdPrim prim = stage->GetPrimAtPath(_id);
   prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);

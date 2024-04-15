@@ -3,16 +3,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Mask::Mask()
-{
-
-}
-
-Mask::Mask(const std::vector<int>& used)
-{
-  SetMask(used);
-}
-
 void Mask::SetMask(const std::vector<int>& used)
 {
   const size_t numBytes = used.size() / sizeof(int) + 1;

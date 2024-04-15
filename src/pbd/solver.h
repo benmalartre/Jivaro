@@ -6,10 +6,13 @@
 #include <map>
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/vt/array.h>
+#include <pxr/base/tf/callContext.h>
+#include <pxr/base/tf/warning.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/stage.h>
 
 #include "../common.h"
+#include "../pbd/element.h"
 #include "../pbd/particle.h"
 #include "../geometry/implicit.h"
 #include "../utils/timer.h"
@@ -21,14 +24,18 @@ class Constraint;
 class Force;
 class Collision;
 class Geometry;
+class Points;
+class Scene;
 class _Timer;
 class Solver : public Xform {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
-  Solver(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
+
+  typedef std::map<Element*, std::pair<pxr::SdfPath, Geometry*>> _ElementMap;
+
+  Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   ~Solver();
   
-
   void AddConstraints(Body* body);
 
   // attributes
@@ -44,7 +51,7 @@ public:
   // bodies
   pxr::VtArray<Body*> GetBodies(){return _bodies;};
   const pxr::VtArray<Body*> GetBodies() const {return _bodies;};
-  Body* AddBody(Geometry* geom, const pxr::GfMatrix4f& m, float mass);
+  Body* AddBody(Geometry* geom, const pxr::GfMatrix4f& m, float mass, float radius, float damping);
   void RemoveBody(Geometry* geom);
   Body* GetBody(size_t index);
   Body* GetBody(Geometry* geom);
@@ -78,10 +85,14 @@ public:
   void Reset();
   void Step();
 
-  // childrens
-  void AddChild(Geometry* geom, const pxr::SdfPath& path);
-  void RemoveChild(Geometry* geometry);
-  pxr::SdfPath GetChild(Geometry* geom);
+  // elements
+  void AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path);
+  void RemoveElement(Element* element);
+  pxr::SdfPath GetElementPath(Element* element);
+  Geometry* GetElementGeometry(Element* element);
+  Element* GetElement(const pxr::SdfPath& path);
+  const _ElementMap& GetElements(){return _elements;};
+
 
 private:
   void _ClearContacts();
@@ -101,7 +112,6 @@ private:
   float                               _startFrame;
   bool                                _paused;	
   bool                                _serial;	
-  Geometry*                           _geom;
 
   // system
   Particles                           _particles;
@@ -110,10 +120,17 @@ private:
   pxr::VtArray<Collision*>            _collisions;
   pxr::VtArray<Body*>                 _bodies;
   pxr::VtArray<Force*>                _force;
-  std::map<Geometry*, pxr::SdfPath>   _childrens;
+
+  // scene
+  _ElementMap                         _elements;
+  Scene*                              _scene;
+  Points*                             _points;
+  pxr::SdfPath                        _id;
 
   // timing
   _Timer*                             _timer;
+
+  friend class Particles;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

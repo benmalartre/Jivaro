@@ -112,7 +112,7 @@ Deformable::GetNormal(uint32_t index) const
 pxr::GfVec3f
 Deformable::GetColor(uint32_t index) const
 {
-  if (HasColors())
+  if (HaveColors())
     return _colors[index];
   else
     return _wirecolor;

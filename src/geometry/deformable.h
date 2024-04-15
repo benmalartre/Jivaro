@@ -80,9 +80,9 @@ public:
 
   Point Get(uint32_t index);
 
-  bool HasNormals() const { return _normals.size() > 0; };
-  bool HasColors() const { return _colors.size() > 0; };
-  bool HasRadius() const { return _radius.size() > 0; };
+  bool HaveNormals() const { return _haveNormals; };
+  bool HaveColors() const { return _haveColors; };
+  bool HaveRadius() const { return _haveRadius; };
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
@@ -97,8 +97,11 @@ public:
 protected:
   // vertex data
   pxr::VtArray<pxr::GfVec3f>          _positions;
+  bool                                _haveNormals;
   pxr::VtArray<pxr::GfVec3f>          _normals;
+  bool                                _haveColors;
   pxr::VtArray<pxr::GfVec3f>          _colors;
+  bool                                _haveRadius;
   pxr::VtArray<float>                 _radius;
 };
 

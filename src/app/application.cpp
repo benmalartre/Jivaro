@@ -316,13 +316,12 @@ Application::Update()
   */
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
-  double currentTime = GetTime().GetActiveTime();
-  double startTime = GetTime().GetStartTime();
+  float currentTime(GetTime().GetActiveTime());
 
   if (currentTime != lastTime) {
     lastTime = currentTime;
     if (_execute) {
-      UpdateExec(_stage, currentTime, startTime);
+      UpdateExec(_stage, currentTime);
     }
   }
 

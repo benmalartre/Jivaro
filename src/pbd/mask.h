@@ -1,20 +1,23 @@
 #ifndef JVR_PBD_MASK_H
 #define JVR_PBD_MASK_H
 
-#include <vector>
-#include <limits>
-
-#include "../common.h"
+#include "../pbd/element.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Mask
+class Mask : public Element
 {
 public:
   static const size_t INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Mask();
-  Mask(const std::vector<int>& used);
+  enum Type {
+    CONSTRAINT,
+    COLLISION,
+    FORCE
+  };
+
+  Mask(short type) : Element(type) {};
+  Mask(short type, const std::vector<int>& used) : Element(type) { SetMask(used); };
 
   bool HasMask() const { return _mask.size() > 0; };
   size_t MaskSize() const { return _mask.size(); };
@@ -37,6 +40,7 @@ protected:
   std::vector<int>            _mask;          // bits vector encoding particles usage mask
   std::vector<float>          _weights;       // if mask weights size must equals mask size 
                                               // else weights size must equals num particles
+    friend class Particles;
 };
 
 

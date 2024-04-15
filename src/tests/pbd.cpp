@@ -41,7 +41,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(stage, _solverId);
+  _solver = _GenerateSolver(_scene, stage, _solverId);
   _scene->AddGeometry(_solverId, _solver);
 
   // create cloth meshes
@@ -76,7 +76,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
   
   _Sources sources;
-  float mass = 0.1f;
+ 
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {
@@ -85,7 +85,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene->AddMesh(prim.GetPath(), mesh);
       std::cout << "add mesh to solver" << std::endl;
-      Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass);
+      Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 1.f, 0.1f, 0.1f);
       std::cout << "mesh added" << std::endl;
       //mass *= 2;
       std::cout << "add constraints to solver" << std::endl;
@@ -100,7 +100,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Points* points = new Points(usdPoints, xform);
       _scene->AddPoints(prim.GetPath(), points);
       std::cout << "add points to solver" << std::endl;
-      _solver->AddBody((Geometry*)points, pxr::GfMatrix4f(xform), RANDOM_LO_HI(0.5f, 5.f));
+      _solver->AddBody((Geometry*)points, pxr::GfMatrix4f(xform), 1.f, 0.1f, 0.1f);
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
       std::cout << "points added to solver" << std::endl;
@@ -129,16 +129,16 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   Points* points = _scene->AddPoints(pointsPath);
   Particles* particles = _solver->GetParticles();
   const size_t numParticles = _solver->GetNumParticles();
-  points->SetPositions(&particles->position[0], numParticles);
-  points->SetRadii(&particles->radius[0], numParticles);
-  points->SetColors(&particles->color[0], numParticles);
+  points->SetPositions(&particles->_position[0], numParticles);
+  points->SetRadii(&particles->_radius[0], numParticles);
+  points->SetColors(&particles->_color[0], numParticles);
 
   pxr::SdfPath collisionsPath(rootId.AppendChild(pxr::TfToken("Collisions")));
   _sourcesMap[collisionsPath] = sources;
   Points* collisions = _scene->AddPoints(collisionsPath);
-  collisions->SetPositions(&particles->position[0], numParticles);
-  collisions->SetRadii(&particles->radius[0], numParticles);
-  collisions->SetColors(&particles->color[0], numParticles);
+  collisions->SetPositions(&particles->_position[0], numParticles);
+  collisions->SetRadii(&particles->_radius[0], numParticles);
+  collisions->SetColors(&particles->_color[0], numParticles);
 
 }
 
@@ -160,8 +160,8 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     if (execPrim.first.GetNameToken() == pxr::TfToken("Particles")) {
       Points* points = (Points*)_scene->GetGeometry(execPrim.first);
 
-      points->SetPositions(&_solver->GetParticles()->position[0], numParticles);
-      points->SetColors(&_solver->GetParticles()->color[0], numParticles);
+      points->SetPositions(&_solver->GetParticles()->_position[0], numParticles);
+      points->SetColors(&_solver->GetParticles()->_color[0], numParticles);
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Collisions")) {
       
       const pxr::VtArray<Constraint*>& contacts = _solver->GetContacts();
@@ -176,11 +176,11 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       memset(&radii[0], 0.f, numParticles * sizeof(float));
 
       for (auto& contact : contacts) {
-        const size_t offsetIdx = contact->GetBody(0)->offset;
+        const size_t offsetIdx = contact->GetBody(0)->GetOffset();
         
         const pxr::VtArray<int>& elements = contact->GetElements();
         for(int elem: elements) {
-          positions[elem + offsetIdx] = _solver->GetParticles()->position[elem + offsetIdx];
+          positions[elem + offsetIdx] = _solver->GetParticles()->_position[elem + offsetIdx];
           radii[elem + offsetIdx] = 0.02f;
           colors[elem + offsetIdx] = hitColor;
         }
@@ -195,7 +195,7 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
         if (bodyIt != _bodyMap.end()) {
           Body* body = bodyIt->second;
           Mesh* mesh = (Mesh*)execPrim.second.geom;
-          mesh->SetPositions(&_solver->GetParticles()->position[body->offset], mesh->GetNumPoints());
+          mesh->SetPositions(&_solver->GetParticles()->_position[body->GetOffset()], mesh->GetNumPoints());
         } else {
         }
       }

@@ -15,13 +15,18 @@ class Solver;
 class Mesh;
 class Sphere;
 class Plane;
+class Points;
+class Scene;
 
-Solver* _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
 
-Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
+Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
+
+Points* _GeneratePoints(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
 
 Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   float size, const pxr::GfMatrix4d& m);
+
+Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
 
 Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   double radius, const pxr::GfMatrix4d& m);

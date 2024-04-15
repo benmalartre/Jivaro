@@ -2,29 +2,51 @@
 #define JVR_PBD_PARTICLE_H
 
 #include <pxr/base/vt/array.h>
+#include <pxr/base/tf/token.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/matrix4f.h>
 
 #include "../common.h"
+#include "../pbd/element.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
-struct Body
+class Body : public Element
 {
-  float          damping;
-  float          radius;
-  float          mass;
 
-  size_t         offset;
-  size_t         numPoints;
-  
-  pxr::GfVec3f   wirecolor;
-  Geometry*      geometry;
+public:
+  Body(Geometry* geom, size_t offset, size_t n, const pxr::GfVec3f& color,
+    float mass=1.f, float radius=0.01f, float damping=0.1f)
+  : Element(Element::BODY)
+  , _geometry(geom)
+  , _offset(offset)
+  , _numPoints(n)
+  , _mass(mass)
+  , _radius(radius)
+  , _damping(damping)
+  , _color(color){}
 
-  bool           simulated;
+
+  Geometry* GetGeometry(){return _geometry;};
+  size_t GetOffset(){return _offset;};
+  size_t GetNumPoints(){return _numPoints;};
+
+  float GetMass(){return _mass;};
+  float GetRadius(){return _radius;};
+  pxr::GfVec3f GetColor(){return _color;};
+
+protected:
+  Geometry*     _geometry;
+  size_t        _offset;
+  size_t        _numPoints;
+  float         _damping;
+  float         _radius;
+  float         _mass;
+  pxr::GfVec3f  _color;
+  //bool     _simulated;
 };
 
 enum BodyType
@@ -35,27 +57,30 @@ enum BodyType
   HAIR
 };
 
-struct Particles
+class Particles : public Element
 {
+public:
   enum State {MUTE, IDLE, ACTIVE};
 
-  size_t GetNumParticles() { return position.size(); };
+  Particles() : Element(Element::PARTICLES){};
+
+  size_t GetNumParticles() { return _position.size(); };
   void AddBody(Body* body, const pxr::GfMatrix4f& matrix);
   void RemoveBody(Body* body);
 
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);
 
-  pxr::VtArray<short>        state;
-  pxr::VtArray<int>          body;
-  pxr::VtArray<float>        mass; // inverse mass
-  pxr::VtArray<float>        radius;
-  pxr::VtArray<pxr::GfVec3f> rest;
-  pxr::VtArray<pxr::GfVec3f> previous;
-  pxr::VtArray<pxr::GfVec3f> position;
-  pxr::VtArray<pxr::GfVec3f> predicted;
-  pxr::VtArray<pxr::GfVec3f> velocity;
-  pxr::VtArray<pxr::GfVec3f> color;
+  pxr::VtArray<short>        _state;
+  pxr::VtArray<int>          _body;
+  pxr::VtArray<float>        _mass; // inverse mass
+  pxr::VtArray<float>        _radius;
+  pxr::VtArray<pxr::GfVec3f> _rest;
+  pxr::VtArray<pxr::GfVec3f> _previous;
+  pxr::VtArray<pxr::GfVec3f> _position;
+  pxr::VtArray<pxr::GfVec3f> _predicted;
+  pxr::VtArray<pxr::GfVec3f> _velocity;
+  pxr::VtArray<pxr::GfVec3f> _color;
 
 };
 

@@ -7,10 +7,12 @@
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/xformOp.h>
 #include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/points.h>
 #include <pxr/imaging/hd/changeTracker.h>
 
 #include "../tests/utils.h"
 #include "../geometry/mesh.h"
+#include "../geometry/points.h"
 #include "../geometry/implicit.h"
 #include "../pbd/solver.h"
 
@@ -39,7 +41,7 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
   return ground;
 }
 
-Solver* _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
 {
   pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
 
@@ -47,7 +49,35 @@ Solver* _GenerateSolver(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
   usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(20);
   usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(0.01f);
 
-  return new Solver(usdXform, pxr::GfMatrix4d(1.f));
+  return new Solver(scene, usdXform, pxr::GfMatrix4d(1.f));
+}
+
+Points* _GeneratePoints(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+{
+  Points* points = new Points();
+
+  pxr::UsdGeomPoints usdPoints = pxr::UsdGeomPoints::Define(stage, path);
+
+  pxr::VtArray<pxr::GfVec3f> position;
+  pxr::VtArray<float> width;
+  pxr::VtArray<pxr::GfVec3f> color;
+
+  for(size_t x = 0; x < 10; ++x)
+    for(size_t y = 0; y < 10; ++y) {
+    position.push_back(pxr::GfVec3f(x-5, 7.f, y-5));
+    width.push_back(0.005f);
+    color.push_back(pxr::GfVec3f(RANDOM_0_1, 1.f, 0.75f));
+  }
+
+  usdPoints.CreatePointsAttr().Set(pxr::VtValue(position));
+  usdPoints.CreateWidthsAttr().Set(pxr::VtValue(width));
+  //points.CreateNormalsAttr().Set(pxr::VtValue({pxr::GfVec3f(0, 1, 0)}));
+  usdPoints.CreateDisplayColorAttr(pxr::VtValue(color));
+  usdPoints.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
+
+
+
+  return points;
 }
 
 Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 

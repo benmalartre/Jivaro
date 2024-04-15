@@ -17,13 +17,14 @@ struct Body;
 class Force : public Mask
 {
 public:
-  Force() : Mask() {};
+  Force() : Mask(Element::FORCE) {};
   virtual ~Force() {};
   
   void AddBody(Particles* particles, Body* body);
   void RemoveBody(Particles* particles, Body* body);
 
   virtual void Apply(size_t begin, size_t end, Particles* particles, float dt) const = 0;
+
 };
 
 class GravitationalForce : public Force
