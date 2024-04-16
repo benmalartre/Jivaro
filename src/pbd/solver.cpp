@@ -131,11 +131,14 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   _timer = new _Timer();
   _timer->Init(NUM_TIMES, &TIME_NAMES[0]);
   _points = new Points();
+  _contactPoints = new Points();
 
   _pointsId = _solverId.AppendChild(pxr::TfToken("Particles"));
+  _contactPointsId = _solverId.AppendChild(pxr::TfToken("Contacts"));
   AddElement(&_particles, _points, _pointsId);
+  AddElement(&_particles, _contactPoints, _contactPointsId);
   _scene->AddGeometry(_pointsId, _points);
-  
+  _scene->AddGeometry(_contactPointsId, _contactPoints);
 }
 
 Solver::~Solver()
@@ -287,7 +290,7 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
 
 }
 
-void Solver::GetConstraintsByType(short type, pxr::VtArray<Constraint*>& results)
+void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
 {
   for(auto& constraint: _constraints)
     if(constraint->GetTypeId() == type)
@@ -397,7 +400,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   }
 }
 
-void Solver::_SolveConstraints(pxr::VtArray<Constraint*>& constraints)
+void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 {
   if (_serial) {
     // solve constraints
@@ -443,7 +446,7 @@ void Solver::_StepOneSerial()
   _UpdateParticles(0, numParticles);
 
   // solve velocities
-  _SolveVelocities();
+  //_SolveVelocities();
 }
 
 void Solver::_StepOne()
@@ -472,7 +475,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  _SolveVelocities();
+  //_SolveVelocities();
   
   _timer->Stop();
 
@@ -528,6 +531,15 @@ Element* Solver::GetElement(const pxr::SdfPath& path)
   return NULL;
 }
 
+void _GetContactPositions(Solver* solver, std::vector<pxr::GfVec3f>& contacts)
+{
+  for (size_t i = 0; i < _collision.size(); ++i) {
+    std::vector<Location>& contacts = _collision[i]->GetContacts();
+    for(auto& contact: contacts)
+      contacts.push_back(contact.GetPointCoordinates());
+  }
+}
+
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
 
@@ -540,6 +552,10 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     _points->SetPositions(&_particles._position[0], numParticles);
     _points->SetRadii(&_particles._radius[0], numParticles);
     _points->SetColors(&_particles._color[0], numParticles);
+
+    pxr::VtArray<pxr::GfVec3f> contactPositions;
+    _GetContactPositions(this, contactPositions);
+    _contactPoints->SetPositions(&contactPositions[0], _contacts.size());
 
     Scene::_Prim* prim = _scene->GetPrim(_pointsId);
     prim->bits = pxr::HdChangeTracker::AllDirty;

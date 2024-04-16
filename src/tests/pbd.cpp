@@ -68,7 +68,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collidePath = rootId.AppendChild(pxr::TfToken(name));
     spheres[collidePath] =
-      _GenerateCollideSphere(stage, collidePath, RANDOM_0_1 + 1.f, 
+      _GenerateCollideSphere(stage, collidePath, RANDOM_0_1 + 4.f, 
       pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f)));
 
     //sphere.GetRadiusAttr().Get(&radius);
@@ -106,7 +106,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
-    std::cout << "add sphere collision..." << std::endl;
     Collision* collision = new SphereCollision(sphere.second, restitution, friction);
     _solver->AddElement(collision, sphere.second, sphere.first);
   } 
@@ -142,7 +141,7 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       points->SetColors(&_solver->GetParticles()->_color[0], numParticles);
     } else if (execPrim.first.GetNameToken() == pxr::TfToken("Collisions")) {
       
-      const pxr::VtArray<Constraint*>& contacts = _solver->GetContacts();
+      const std::vector<Constraint*>& contacts = _solver->GetContacts();
       if (!contacts.size())continue;
 
       Points* points = (Points*)_scene->GetGeometry(execPrim.first);

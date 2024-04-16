@@ -469,7 +469,7 @@ bool Mesh::SplitEdge(HalfEdge* edge)
   const pxr::GfVec3f p =
     (_positions[edge->vertex] + _positions[next->vertex]) * 0.5f;
 
-  AddPoint(p);
+  AddPoint(p, 0.01f);
   
   if (_halfEdges.SplitEdge(edge, numPoints)) {
     // reallocation mess pointer retrieve edge

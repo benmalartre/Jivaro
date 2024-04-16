@@ -180,7 +180,7 @@ void Voxels::Build()
   RemoveAllPoints();
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     if (_data[cellIdx] > 1) {
-      AddPoint(GetCellPosition(cellIdx));
+      AddPoint(GetCellPosition(cellIdx), _radius);
     }
   }
 }

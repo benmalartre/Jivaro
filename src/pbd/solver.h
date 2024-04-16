@@ -51,8 +51,8 @@ public:
   size_t GetNumCollisions() { return _collisions.size(); };
 
   // bodies
-  pxr::VtArray<Body*> GetBodies(){return _bodies;};
-  const pxr::VtArray<Body*> GetBodies() const {return _bodies;};
+  std::vector<Body*> GetBodies(){return _bodies;};
+  const std::vector<Body*> GetBodies() const {return _bodies;};
   Body* CreateBody(Geometry* geom, const pxr::GfMatrix4f& m, float mass, float radius, float damping);
   void AddBody(Body* body);
   void RemoveBody(Geometry* geom);
@@ -67,18 +67,18 @@ public:
   // constraints
   void AddConstraint(Constraint* constraint) { _constraints.push_back(constraint); };
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
-  void GetConstraintsByType(short type, pxr::VtArray<Constraint*>& results);
+  void GetConstraintsByType(short type, std::vector<Constraint*>& results);
 
   // contacts
   void AddContact(Constraint* contact) { _contacts.push_back(contact); };
   Constraint* GetContact(size_t idx) { return _contacts[idx]; };
-  void GetContactByType(short type, pxr::VtArray<Constraint*>& results);
+  void GetContactByType(short type, std::vector<Constraint*>& results);
 
   // collisions
   void AddCollision(Collision* collision);
   Collision* GetCollision(size_t idx = 0) { return _collisions[idx]; };
-  pxr::VtArray<Constraint*>& GetContacts() { return _contacts; };
-  const pxr::VtArray<Constraint*>& GetContacts() const { return _contacts; };
+  std::vector<Constraint*>& GetContacts() { return _contacts; };
+  const std::vector<Constraint*>& GetContacts() const { return _contacts; };
 
   // particles
   Particles* GetParticles() { return &_particles; };
@@ -106,7 +106,7 @@ public:
 private:
   void _ClearContacts();
   void _FindContacts();
-  void _SolveConstraints(pxr::VtArray<Constraint*>& constraints);
+  void _SolveConstraints(std::vector<Constraint*>& constraints);
   void _SolveVelocities();
 
   void _IntegrateParticles(size_t begin, size_t end);
@@ -124,17 +124,19 @@ private:
 
   // system
   Particles                           _particles;
-  pxr::VtArray<Constraint*>           _constraints;
-  pxr::VtArray<Constraint*>           _contacts;
-  pxr::VtArray<Collision*>            _collisions;
-  pxr::VtArray<Body*>                 _bodies;
-  pxr::VtArray<Force*>                _force;
+  std::vector<Constraint*>            _constraints;
+  std::vector<Constraint*>            _contacts;
+  std::vector<Collision*>             _collisions;
+  std::vector<Body*>                  _bodies;
+  std::vector<Force*>                 _force;
 
   // scene
   _ElementMap                         _elements;
   Scene*                              _scene;
   Points*                             _points;
+  Points*                             _contactPoints;
   pxr::SdfPath                        _pointsId;
+  pxr::SdfPath                        _contactPointsId;
   pxr::SdfPath                        _solverId;
 
   // timing

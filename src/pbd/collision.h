@@ -59,6 +59,7 @@ public:
   virtual float GetContactT(size_t index) const {
     return _contacts[_p2c[index]].GetT();};
 
+  std::vector<Location>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
   Location& GetContact(size_t index){return _contacts[_p2c[index]];};
   const std::vector<int>& GetP2C(){return _p2c;};

@@ -54,26 +54,36 @@ public:
   void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
   void SetRadius(uint32_t index, float normal);
 
-  void AddPoint(const pxr::GfVec3f& pos);
+  void AddPoint(const pxr::GfVec3f& pos, float radius, 
+                const pxr::GfVec3f* normal=NULL, const pxr::GfVec3f* color=NULL);
   void RemovePoint(size_t index);
   void RemoveAllPoints();
 
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Init(const pxr::VtArray<pxr::GfVec3f>& positions, 
-    const pxr::VtArray<float>& radius);
+            const pxr::VtArray<float>& radius);
+  void Init(const pxr::VtArray<pxr::GfVec3f>& positions, 
+            const pxr::VtArray<float>& radius,
+            const pxr::VtArray<pxr::GfVec3f>& colors);
+  void Init(const pxr::VtArray<pxr::GfVec3f>& positions, 
+            const pxr::VtArray<float>& radius,
+            const pxr::VtArray<pxr::GfVec3f>& colors,
+            const pxr::VtArray<pxr::GfVec3f>& normals);
 
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
   void Update(const pxr::VtArray<float>& radius);
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions,
     const pxr::VtArray<float>& radius);
-
+  
   void SetPositions(const pxr::GfVec3f* positions, size_t n);
   void SetRadii(const float* radii, size_t n);
   void SetColors(const pxr::GfVec3f* colors, size_t n);
+  void SetNormals(const pxr::GfVec3f* normals, size_t n);
 
   void SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions);
   void SetRadii(const pxr::VtArray<float>& radii);
   void SetColors(const pxr::VtArray<pxr::GfVec3f>& colors);
+  void SetNormals(const pxr::VtArray<pxr::GfVec3f>& normals);
 
   void Normalize();
   void ComputeBoundingBox() override;
@@ -95,6 +105,8 @@ public:
   };
 
 protected:
+  void _ValidateNumPoints(size_t n);
+
   // vertex data
   pxr::VtArray<pxr::GfVec3f>          _positions;
   bool                                _haveNormals;
