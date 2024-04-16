@@ -26,7 +26,7 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   _p2c.resize(numParticles, -1);
   _c2p.clear();
   _c2p.reserve(numParticles);
-  size_t c2p_idx = 0;
+  _c2pIdx = 0;
   pxr::VtArray<int> elements;
   _numContacts = 0;
   size_t numConstraints = 0;
@@ -70,6 +70,13 @@ void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 {
   prim.GetAttribute(pxr::TfToken("Restitution")).Get(&_restitution, time);
   prim.GetAttribute(pxr::TfToken("Friction")).Get(&_friction, time);
+}
+
+void Collision::Init(size_t numParticles) 
+{
+  _p2c.resize(numParticles, -1);
+  _c2p.resize(numParticles, -1);
+  _c2pIdx = 0;
 }
 
 void Collision::Update(const pxr::UsdPrim& prim, double time){}
@@ -124,7 +131,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
 
-  const pxr::GfVec3f normal = GetContactNormal(index);
+  pxr::GfVec3f normal = GetContactNormal(index);
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->_velocity[index] - pxr::GfVec3f(0.f);
   const float vn = pxr::GfDot(v, normal);
@@ -279,7 +286,7 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
   return dL > 0.0000001f ? delta/dL : delta;
 }
 
-const pxr::GfVec3f& SphereCollision::GetContactNormal(size_t index) const 
+const pxr::GfVec3f SphereCollision::GetContactNormal(size_t index) const 
 {
   const pxr::GfVec3f delta = GetContactPosition(index) - _center;
   const float dL = delta.GetLengthSq();

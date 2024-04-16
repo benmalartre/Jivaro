@@ -110,8 +110,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, sphere.second, sphere.first);
   } 
 
-  Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);
-  _solver->AddElement(collision, _ground, _groundId);
+  //Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);
+  //_solver->AddElement(collision, _ground, _groundId);
 
   _scene->Update(stage, _solver->GetStartFrame());
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);

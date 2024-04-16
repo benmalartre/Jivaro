@@ -288,13 +288,7 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
     } else {
       pxr::VtArray<pxr::GfVec3f>& colors =
         ((Points*)_prims[id].geom)->GetColors();
-      if(colors.size())
-        return pxr::VtValue(colors);
-      else {
-        const pxr::GfVec3f& wirecolor = _prims[id].geom->GetWirecolor();
-        colors = { wirecolor };
-        return pxr::VtValue(colors);
-      }
+      if(colors.size())return pxr::VtValue(colors);
     }
   } else if (key == pxr::HdTokens->widths) {
     if(_prims[id].geom->GetType() < Geometry::POINT) {

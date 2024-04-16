@@ -44,6 +44,7 @@ public:
   virtual ~Collision() {};
   virtual size_t GetTypeId() const = 0;
 
+  virtual void Init(size_t numParticles);
   virtual void Update(const pxr::UsdPrim& prim, double time);
   virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft);
@@ -55,9 +56,9 @@ public:
   virtual void SolveVelocities(Particles* particles, float dt);
 
   virtual Geometry* GetGeometry(){return _collider;};
-  virtual const pxr::GfVec3f& GetContactPosition(size_t index) const {
+  virtual const pxr::GfVec3f GetContactPosition(size_t index) const {
     return _contacts[_p2c[index]].GetPointCoordinates();};
-  virtual const pxr::GfVec3f& GetContactNormal(size_t index) const {
+  virtual const pxr::GfVec3f GetContactNormal(size_t index) const {
     return pxr::GfVec3f(0.f, 1.f, 0.f);};
   virtual float GetContactT(size_t index) const {
     return _contacts[_p2c[index]].GetT();};
@@ -96,6 +97,8 @@ protected:
   pxr::VtArray<int>           _hits;
   std::vector<int>            _p2c;
   std::vector<int>            _c2p;
+  size_t                      _c2pIdx;
+  size_t                      _numParticles;
   size_t                      _numContacts;
   std::vector<Location>       _contacts;
   float                       _restitution;
@@ -118,7 +121,7 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
-  const pxr::GfVec3f& GetContactNormal(size_t index) const override {return _normal;};
+  const pxr::GfVec3f GetContactNormal(size_t index) const override {return _normal;};
 
 protected:
   void _UpdatePositionAndNormal();
@@ -142,7 +145,7 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
   
-  const pxr::GfVec3f& GetContactNormal(size_t index) const override;
+  const pxr::GfVec3f GetContactNormal(size_t index) const override;
 
 protected:
   void _UpdateCenterAndRadius();
