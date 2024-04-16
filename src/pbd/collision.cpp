@@ -232,8 +232,22 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
   SetHit(index, delta.GetLengthSq() < radius2);
 }
 
-void SphereCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float dt)
+void SphereCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft)
 {
+  const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
+  const pxr::GfVec3f predicted(particles->_position[index] + velocity);
+
+  const pxr::GfVec3f normal = predicted - _center;
+  float d = normal.GetLength() - _radius;
+  normal.Normalize();
+  const pxr::GfVec3f intersection = _center + delta * -d;
+
+  const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
+  const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
+  const float vn = pxr::GfDot(vRel, normal);
+  
+  const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
+  location.SetCoordinates(coords);
 }
 
 

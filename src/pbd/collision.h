@@ -86,7 +86,7 @@ protected:
   virtual void _FindContact(size_t index, Particles* particles, float ft) = 0;
   virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) = 0;
 
-  virtual void _SolveVelocity(Particles* particles, size_t index, float dt) = 0;
+  virtual void _SolveVelocity(Particles* particles, size_t index, float dt);
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>           _hits;
@@ -115,7 +115,6 @@ protected:
   void _UpdatePositionAndNormal();
   void _FindContact(size_t index, Particles* particles, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
-  void _SolveVelocity(Particles* particles, size_t index, float dt) override;
 
 private:
   static size_t                 TYPE_ID;
@@ -138,7 +137,6 @@ protected:
   void _UpdateCenterAndRadius();
   void _FindContact(size_t index, Particles* particles, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
-  void _SolveVelocity(Particles* particles, size_t index, float dt) override;
   
 
 private:

@@ -280,7 +280,7 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
       if(geom->GetType() == Geometry::MESH) {
         CreateDihedralConstraints(body, _constraints, stiffness, damping);
       } else {
-        TF_WARN("Dihedral constraints can only be applied on meshes !");
+        //TF_WARN("Dihedral constraints can only be applied on meshes !");
       }
       break;
   }

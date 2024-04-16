@@ -1,6 +1,7 @@
 #include <pxr/base/work/loops.h>
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
+#include "../geometry/curve.h"
 #include "../pbd/constraint.h"
 #include "../pbd/collision.h"
 #include "../pbd/particle.h"
@@ -135,7 +136,7 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
   pxr::VtArray<int> allElements;
   Geometry* geometry = body->GetGeometry();
   if (geometry->GetType() == Geometry::MESH) {
-    
+
     Mesh* mesh = (Mesh*)geometry;
     const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
     HalfEdgeGraph::ItUniqueEdge it(*mesh->GetEdgesGraph());
@@ -157,7 +158,7 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
     for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
       size_t numCVs = curve->GetNumCVs(curveIdx);
       size_t numSegments = curve->GetNumSegments(curveIdx);
-      for(size_t segmentIdx = 0; segmentIdx < numSegments; ++numSegments) {
+      for (size_t segmentIdx = 0; segmentIdx < numSegments; ++numSegments) {
         allElements.push_back(curveStartIdx + segmentIdx);
         allElements.push_back(curveStartIdx + segmentIdx + 1);
       }
@@ -337,6 +338,7 @@ void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
         allElements.push_back(curveStartIdx + segmentIdx + 2);
       }
       curveStartIdx += numCVs;
+    }
   }
 
   size_t numElements = allElements.size();

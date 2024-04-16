@@ -36,7 +36,7 @@ public:
   Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   ~Solver();
   
-  void CreateConstraints(Body* body, short type, float stiffness=10000.f, float 0.1f);
+  void CreateConstraints(Body* body, short type, float stiffness=10000.f, float damping=0.1f);
 
   // attributes
   float GetSleepThreshold() { return _sleepThreshold; };
