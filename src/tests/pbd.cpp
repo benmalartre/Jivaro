@@ -63,7 +63,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   std::map<pxr::SdfPath, Sphere*> spheres;
   
-  for (size_t x = 0; x < 3; ++x) {
+  for (size_t x = 0; x < 1; ++x) {
     std::cout << "collide sphere" << std::endl;
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collidePath = rootId.AppendChild(pxr::TfToken(name));
@@ -74,9 +74,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     //sphere.GetRadiusAttr().Get(&radius);
     //pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
   }
-  
-  _Sources sources;
- 
+   
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {
@@ -84,10 +82,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene->AddMesh(prim.GetPath(), mesh);
+
       Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
       _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.2f);
       _solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.2f);
       _solver->AddElement(body, mesh, prim.GetPath());
+
       _bodyMap[prim.GetPath()] = body;
     }
   }
@@ -106,12 +106,13 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
+    std::cout << "add sphere collision..." << std::endl;
     Collision* collision = new SphereCollision(sphere.second, restitution, friction);
     _solver->AddElement(collision, sphere.second, sphere.first);
   } 
 
-  Collision* collision = new PlaneCollision(_ground, 1.f, 1.f);
-  _solver->AddElement(collision, _ground, _groundId);
+  //Collision* collision = new PlaneCollision(_ground, 1.f, 1.f);
+  //_solver->AddElement(collision, _ground, _groundId);
 
   _scene->Update(stage, _solver->GetStartFrame());
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);

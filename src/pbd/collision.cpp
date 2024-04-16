@@ -111,6 +111,40 @@ void Collision::SolveVelocities(Particles* particles, float dt)
   }
 }
 
+void Collision::_Update(const pxr::UsdPrim& prim, double time)
+{
+  const pxr::UsdGeomXformable xform = pxr::UsdGeomXformable(prim);
+  const pxr::GfMatrix4d matrix = xform.ComputeLocalToWorldTransform(time);
+  _collider->SetMatrix(matrix);
+}
+
+void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
+{
+  if(!CheckHit(index))return;    
+
+  // Relative normal and tangential velocities
+  const pxr::GfVec3f v = particles->_velocity[index] - pxr::GfVec3f(0.f);
+  const float vn = pxr::GfDot(v, GetContactNormal(index));
+  const pxr::GfVec3f vt = v - GetContactNormal(index) * vn;
+  const float vtLen = vt.GetLength();
+
+  // Friction
+  if (vtLen > 1e-6 && _friction > 1e-6) {
+    float lambdaN = -(1.f/_friction);
+    const float Fn = -lambdaN / (dt * dt);
+    const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
+    particles->_velocity[index] -= vt.GetNormalized() * friction;
+  }
+
+  // Restitution
+  const float threshold = 1e-6;
+  const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
+  const float vnTilde = GetContactT(index);
+  const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
+  particles->_velocity[index] += GetContactNormal(index) * restitution;
+}
+
+
 //----------------------------------------------------------------------------------------
 // Plane Collision
 //----------------------------------------------------------------------------------------
@@ -172,31 +206,6 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, cons
   location.SetCoordinates(coords);
 }
 
-void PlaneCollision::_SolveVelocity(Particles* particles, size_t index, float dt)
-{
-  if(!CheckHit(index))return;    
-
-  // Relative normal and tangential velocities
-  const pxr::GfVec3f v = particles->_velocity[index] - pxr::GfVec3f(0.f);
-  const float vn = pxr::GfDot(v, _normal);
-  const pxr::GfVec3f vt = v - _normal * vn;
-  const float vtLen = vt.GetLength();
-
-  // Friction
-  if (vtLen > 1e-6 && _friction > 1e-6) {
-    float lambdaN = -(1.f/_friction);
-    const float Fn = -lambdaN / (dt * dt);
-    const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
-    particles->_velocity[index] -= vt.GetNormalized() * friction;
-  }
-
-  // Restitution
-  const float threshold = 1e-6;
-  const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
-  const float vnTilde = GetContactT(index);
-  const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
-  particles->_velocity[index] += _normal * restitution;
-}
 
 //----------------------------------------------------------------------------------------
 // Sphere Collision
@@ -211,6 +220,7 @@ SphereCollision::SphereCollision(Geometry* collider,   float restitution, float 
 
 void SphereCollision::Update(const pxr::UsdPrim& prim, double time)
 {
+  _Update(prim, time);
   _UpdateCenterAndRadius();
   _UpdateParameters(prim, time);
 }
@@ -223,56 +233,40 @@ void SphereCollision::_UpdateCenterAndRadius()
 }
 
 
-void SphereCollision::_FindContact(size_t index, Particles* particles, float dt)
+void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
-
   if (!Affects(index))return;
   const float radius2 = _radius * _radius;
-  const pxr::GfVec3f delta = (particles->_predicted[index] + particles->_velocity[index] * dt * 2.f) - _center;
+  const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
+  const pxr::GfVec3f delta = predicted - _center;
   SetHit(index, delta.GetLengthSq() < radius2);
 }
 
-void SphereCollision::_StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft)
+void SphereCollision::_StoreContactLocation(Particles* particles, int index, const Body* body, Location& location, float ft)
 {
   const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->_position[index] + velocity);
 
-  const pxr::GfVec3f normal = predicted - _center;
-  float d = normal.GetLength() - _radius;
-  normal.Normalize();
-  const pxr::GfVec3f intersection = _center + delta * -d;
+  pxr::GfVec3f normal = predicted - _center;
+  const float nL = normal.GetLength();
+
+  if (!pxr::GfIsClose(nL, 0.f, 1.e-6)) normal.Normalize();
+  else normal = pxr::GfVec3f(0.f, 1.f, 0.f);
+
+  const pxr::GfVec3f intersection = _center + normal * -(_radius - nL - particles->_radius[index]);
 
   const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
   const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
   const float vn = pxr::GfDot(vRel, normal);
-  
+
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
 }
 
 
-void SphereCollision::_SolveVelocity(Particles* particles, size_t index, float dt)
-{
-  /*
-  float d = pxr::GfDot(_normal, particles->predicted[index] - _position) - particles->radius[index];
-
-  // Tangential component of relative motion
-  const pxr::GfVec3f tangent = 
-    (particles->velocity[index] - (_normal * pxr::GfDot(particles->velocity[index], _normal))) * -1.f;
-
-  if (d < 0.f) velocity += _normal * -d * _restitution + tangent * _friction * dt;
-  */
-}
-
-
 float SphereCollision::GetValue(Particles* particles, size_t index)
 {
-
-  const float radius2 = _radius * _radius;
-  const float d = 
-    (particles->_predicted[index] - _center).GetLengthSq();
-  return (d < _radius) ? -d : 0.f;
-
+  return (particles->_predicted[index] - _center).GetLength() - particles->_radius[index];
 }
   
 pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
@@ -280,5 +274,9 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
   return (particles->_predicted[index] - _center).GetNormalized();
 }
 
+const pxr::GfVec3f& SphereCollision::GetContactNormal(size_t index) const 
+{
+  return (GetContactPosition(index) - _center).GetNormalized();
+};
 
 JVR_NAMESPACE_CLOSE_SCOPE

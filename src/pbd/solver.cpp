@@ -592,11 +592,10 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
-    std::cout << "update collision for " << path << std::endl;
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
     if (prim.IsValid()) {
       _collisions[i]->Update(prim, time);
-    } else std::cout << "prim invalid :'" << std::endl;
+    }
     
   }
   /*

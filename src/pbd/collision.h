@@ -76,7 +76,7 @@ public:
   };
 
 protected:
-  virtual void _Update(const pxr::UsdPrim& prim, double time) {};
+  virtual void _Update(const pxr::UsdPrim& prim, double time);
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
@@ -111,6 +111,8 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
+  const pxr::GfVec3f& GetContactNormal(size_t index) const override {return _normal;};
+
 protected:
   void _UpdatePositionAndNormal();
   void _FindContact(size_t index, Particles* particles, float ft) override;
@@ -132,6 +134,8 @@ public:
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
+  
+  const pxr::GfVec3f& GetContactNormal(size_t index) const override;
 
 protected:
   void _UpdateCenterAndRadius();
