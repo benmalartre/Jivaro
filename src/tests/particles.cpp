@@ -42,7 +42,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
   _scene->AddGeometry(_groundId, _ground);
   Collision* collision = new PlaneCollision(_ground, 1.f, 0.f);
-  _solver->AddCollision(collision);
   _solver->AddElement(collision, _ground, _groundId);
 
   float mass = 0.0765f;
@@ -59,7 +58,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene->AddMesh(prim.GetPath(), mesh);
-      Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass, radius, damping);
+      Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass, radius, damping);
       _solver->AddElement(body, mesh, prim.GetPath());
       Scene::_Prim* sPrim = _scene->GetPrim(prim.GetPath());
       sPrim->bits = pxr::HdChangeTracker::AllDirty;
@@ -69,7 +68,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       Points* points = new Points(usdPoints, xform);
       _scene->AddPoints(prim.GetPath(), points);
 
-      Body* body = _solver->AddBody((Geometry*)points, pxr::GfMatrix4f(xform), mass, radius, damping);
+      Body* body = _solver->CreateBody((Geometry*)points, pxr::GfMatrix4f(xform), mass, radius, damping);
       _solver->AddElement(body, points, prim.GetPath());
     } else if(prim.IsA<pxr::UsdGeomBasisCurves>()) {
 

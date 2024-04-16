@@ -61,15 +61,15 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
   std::cout << "created cloth meshes" << std::endl;
 
-  std::vector<Sphere*> spheres;
+  std::map<pxr::SdfPath, Sphere*> spheres;
   
   for (size_t x = 0; x < 3; ++x) {
     std::cout << "collide sphere" << std::endl;
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collidePath = rootId.AppendChild(pxr::TfToken(name));
-    spheres.push_back(
+    spheres[collidePath] =
       _GenerateCollideSphere(stage, collidePath, RANDOM_0_1 + 1.f, 
-      pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f))));
+      pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f)));
 
     //sphere.GetRadiusAttr().Get(&radius);
     //pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
@@ -84,32 +84,16 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene->AddMesh(prim.GetPath(), mesh);
-      std::cout << "add mesh to solver" << std::endl;
-      Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
-      std::cout << "mesh added" << std::endl;
-      //mass *= 2;
-      std::cout << "add constraints to solver" << std::endl;
-      _solver->AddConstraints(body);
-      std::cout << "constraint added" << std::endl;
+      Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
+      _solver->CreateConstraints(body);
+      _solver->AddElement(body, mesh, prim.GetPath());
       _bodyMap[prim.GetPath()] = body;
-      
-      //sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
-    } else if (prim.IsA<pxr::UsdGeomPoints>()) {
-      pxr::UsdGeomPoints usdPoints(prim);
-      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      Points* points = new Points(usdPoints, xform);
-      _scene->AddPoints(prim.GetPath(), points);
-      std::cout << "add points to solver" << std::endl;
-      _solver->AddBody((Geometry*)points, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
-
-      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
-      std::cout << "points added to solver" << std::endl;
     }
   }
   Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.8f, 0.f));
   _solver->AddForce(gravity);
 
-  _solver->AddElement(gravity, NULL, _groundId);
+  //_solver->AddElement(gravity, NULL, _groundId);
 
   _solver->WeightBoundaries();
   _solver->LockPoints();
@@ -121,28 +105,16 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
-    _solver->AddCollision(new SphereCollision(sphere, restitution, friction));
+    Collision* collision = new SphereCollision(sphere.second, restitution, friction);
+    _solver->AddElement(collision, sphere.second, sphere.first);
   } 
 
   Collision* collision = new PlaneCollision(_ground, 1.f, 1.f);
-  _solver->AddCollision(collision);
   _solver->AddElement(collision, _ground, _groundId);
 
-  pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
-  _sourcesMap[pointsPath] = sources;
-  Points* points = _scene->AddPoints(pointsPath);
-  Particles* particles = _solver->GetParticles();
-  const size_t numParticles = _solver->GetNumParticles();
-  points->SetPositions(&particles->_position[0], numParticles);
-  points->SetRadii(&particles->_radius[0], numParticles);
-  points->SetColors(&particles->_color[0], numParticles);
-
-  pxr::SdfPath collisionsPath(rootId.AppendChild(pxr::TfToken("Collisions")));
-  _sourcesMap[collisionsPath] = sources;
-  Points* collisions = _scene->AddPoints(collisionsPath);
-  collisions->SetPositions(&particles->_position[0], numParticles);
-  collisions->SetRadii(&particles->_radius[0], numParticles);
-  collisions->SetColors(&particles->_color[0], numParticles);
+  _scene->Update(stage, _solver->GetStartFrame());
+  _solver->GetParticles()->SetAllState(Particles::ACTIVE);
+  _solver->Update(stage, _solver->GetStartFrame());
 
 }
 

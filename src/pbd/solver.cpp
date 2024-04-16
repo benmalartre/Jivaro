@@ -180,17 +180,19 @@ size_t Solver::GetBodyIndex(Geometry* geom)
   return Solver::INVALID_INDEX;
 }
 
-Body* Solver::AddBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass, float radius, float damping)
+
+Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass, float radius, float damping)
 {
   size_t base = _particles.GetNumParticles();
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
-  
-  _bodies.push_back(body);
   _particles.AddBody(body, matrix);
+  return body;
+}
 
-  //_AddElement()
-  return _bodies.back();
+void Solver::AddBody(Body* body)
+{
+  _bodies.push_back(body);
 }
 
 void Solver::RemoveBody(Geometry* geom)
@@ -263,43 +265,26 @@ void Solver::AddCollision(Collision* collision)
 
 
 
-void Solver::AddConstraints(Body* body)
+void Solver::CreateConstraints(Body* body, short type, float stiffness, float damping)
 {
-  // 0.1, 0.01, 0.001, 0.0001, 0.00001
-  static float __stretchStiffness = 10000.f;
-  static float __bendStiffness = 1000.f;// 0.0001f;
-  static float __damping = 0.25f;
-
-
-  static int __bodyIdx = 0;
   Geometry* geom = body->GetGeometry();
-  if (geom->GetType() == Geometry::MESH) {
-    
-    CreateStretchConstraints(body, _constraints, __stretchStiffness, __damping);
 
-    std::cout << "damping : " << __damping << std::endl;
-
-    std::cout << "body " << (__bodyIdx) <<  " stretch stiffness : " <<  __stretchStiffness <<
-      "(compliance="<< (1.f/__stretchStiffness) << ")" <<std::endl;
-    //__stretchStiffness *= 2.f;
-
-    //  CreateBendConstraints(body, _constraints, __bendStiffness, __damping);
-    //CreateDihedralConstraints(body, _constraints, __bendStiffness, __damping);
-    std::cout << "body " << (__bodyIdx) <<  " bend stiffness : " <<  __bendStiffness <<
-      "(compliance="<< (1.f/__bendStiffness) << ")" <<std::endl;
-    //__bendStiffness *= 10.f;
-    __damping += 0.2f;
-
-    __bodyIdx++;
-
-   //
-  } else if (geom->GetType() == Geometry::CURVE) {
-    Curve* curve = (Curve*)geom;
-    curve->GetTotalNumSegments();
-    for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
-
-    }
+  switch(type) {
+    case Constraint::STRETCH:
+      CreateStretchConstraints(body, _constraints, stiffness, damping);
+      break;
+    case Constraint::BEND:
+      CreateBendConstraints(body, _constraints, stiffness, damping);
+      break;
+    case Constraint::DIHEDRAL:
+      if(geom->GetType() == Geometry::MESH) {
+        CreateDihedralConstraints(body, _constraints, stiffness, damping);
+      } else {
+        TF_WARN("Dihedral constraints can only be applied on meshes !");
+      }
+      break;
   }
+
 }
 
 void Solver::GetConstraintsByType(short type, pxr::VtArray<Constraint*>& results)
@@ -496,6 +481,27 @@ void Solver::_StepOne()
 void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
 {
   _elements[element] = std::make_pair(path, geom);
+  switch(element->GetType()) {
+    case Element::COLLISION:
+      AddCollision((Collision*)element);
+      break;
+
+    case Element::CONTACT:
+      AddContact((Constraint*)element);
+      break;
+
+    case Element::CONSTRAINT:
+      AddConstraint((Constraint*)element);
+      break;
+
+    case Element::FORCE:
+      AddForce((Force*)element);
+      break;
+
+    case Element::BODY:
+      AddBody((Body*)element);
+      break;
+  }
 
   //else TF_WARN("There is already an element named %s", path.GetText());
 }

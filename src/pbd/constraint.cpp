@@ -150,6 +150,19 @@ void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints
       allElements.push_back(b);
       edge = it.Next();
     }
+  } else if (geometry->GetType() == Geometry::CURVE) {
+    Curve* curve = (Curve*)geometry;
+    size_t totalNumSegments = curve->GetTotalNumSegments();
+    size_t curveStartIdx = 0;
+    for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
+      size_t numCVs = curve->GetNumCVs(curveIdx);
+      size_t numSegments = curve->GetNumSegments(curveIdx);
+      for(size_t segmentIdx = 0; segmentIdx < numSegments; ++numSegments) {
+        allElements.push_back(curveStartIdx + segmentIdx);
+        allElements.push_back(curveStartIdx + segmentIdx + 1);
+      }
+      curveStartIdx += numCVs;
+    }
   }
 
   size_t numElements = allElements.size();
@@ -311,6 +324,19 @@ void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
         }
       }
     }
+  } else if (geometry->GetType() == Geometry::CURVE) {
+    Curve* curve = (Curve*)geometry;
+    size_t totalNumSegments = curve->GetTotalNumSegments();
+    size_t curveStartIdx = 0;
+    for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
+      size_t numCVs = curve->GetNumCVs(curveIdx);
+      size_t numSegments = curve->GetNumSegments(curveIdx);
+      for(size_t segmentIdx = 0; segmentIdx < numSegments - 1; ++numSegments) {
+        allElements.push_back(curveStartIdx + segmentIdx);
+        allElements.push_back(curveStartIdx + segmentIdx + 1);
+        allElements.push_back(curveStartIdx + segmentIdx + 2);
+      }
+      curveStartIdx += numCVs;
   }
 
   size_t numElements = allElements.size();
@@ -520,11 +546,10 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     if (d >= 0.f) continue;
 
     pxr::GfVec3f n = _collision->GetGradient(particles, index);
+
     const float im0 = particles->_mass[index];
-
     const float im1 = 0.f;
-
-    float K = im0;
+    float K = im0 + im1;
 
     float alpha = 0.0;
     if (!pxr::GfIsClose(_stiffness, 0.0, 1e-6f))
@@ -535,7 +560,7 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 
 	  if (pxr::GfAbs(K) == 0.f) continue;
 
-    const pxr::GfVec3f correction = n * -(1.f / K) * d;
+	  const pxr::GfVec3f correction = n * -(1.f / K) * d * _damping;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
   

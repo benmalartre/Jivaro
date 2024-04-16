@@ -36,7 +36,7 @@ public:
   Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   ~Solver();
   
-  void AddConstraints(Body* body);
+  void CreateConstraints(Body* body, short type, float stiffness=10000.f, float 0.1f);
 
   // attributes
   float GetSleepThreshold() { return _sleepThreshold; };
@@ -53,7 +53,8 @@ public:
   // bodies
   pxr::VtArray<Body*> GetBodies(){return _bodies;};
   const pxr::VtArray<Body*> GetBodies() const {return _bodies;};
-  Body* AddBody(Geometry* geom, const pxr::GfMatrix4f& m, float mass, float radius, float damping);
+  Body* CreateBody(Geometry* geom, const pxr::GfMatrix4f& m, float mass, float radius, float damping);
+  void AddBody(Body* body);
   void RemoveBody(Geometry* geom);
   Body* GetBody(size_t index);
   Body* GetBody(Geometry* geom);
@@ -67,6 +68,11 @@ public:
   void AddConstraint(Constraint* constraint) { _constraints.push_back(constraint); };
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
   void GetConstraintsByType(short type, pxr::VtArray<Constraint*>& results);
+
+  // contacts
+  void AddContact(Constraint* contact) { _contacts.push_back(contact); };
+  Constraint* GetContact(size_t idx) { return _contacts[idx]; };
+  void GetContactByType(short type, pxr::VtArray<Constraint*>& results);
 
   // collisions
   void AddCollision(Collision* collision);
