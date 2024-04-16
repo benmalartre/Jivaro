@@ -41,7 +41,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
   _scene->AddGeometry(_groundId, _ground);
-  Collision* collision = new PlaneCollision(_ground, 1.f, 0.f);
+  Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 0.f);
   _solver->AddElement(collision, _ground, _groundId);
 
   float mass = 0.0765f;

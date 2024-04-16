@@ -106,12 +106,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
-    Collision* collision = new SphereCollision(sphere.second, restitution, friction);
+    Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
     _solver->AddElement(collision, sphere.second, sphere.first);
   } 
 
-  //Collision* collision = new PlaneCollision(_ground, 1.f, 1.f);
-  //_solver->AddElement(collision, _ground, _groundId);
+  Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);
+  _solver->AddElement(collision, _ground, _groundId);
 
   _scene->Update(stage, _solver->GetStartFrame());
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
@@ -134,55 +134,23 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
  
   for (auto& execPrim : _scene->GetPrims()) {
 
-    if (execPrim.first.GetNameToken() == pxr::TfToken("Particles")) {
-      Points* points = (Points*)_scene->GetGeometry(execPrim.first);
+    pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
+    if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
+      const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
+      if (bodyIt != _bodyMap.end()) {
+        Body* body = bodyIt->second;
+        Mesh* mesh = (Mesh*)execPrim.second.geom;
+        mesh->SetPositions(&_solver->GetParticles()->_position[body->GetOffset()], mesh->GetNumPoints());
+      } 
 
-      points->SetPositions(&_solver->GetParticles()->_position[0], numParticles);
-      points->SetColors(&_solver->GetParticles()->_color[0], numParticles);
-    } else if (execPrim.first.GetNameToken() == pxr::TfToken("Collisions")) {
-      
-      const std::vector<Constraint*>& contacts = _solver->GetContacts();
-      if (!contacts.size())continue;
-
-      Points* points = (Points*)_scene->GetGeometry(execPrim.first);
-
-      pxr::VtArray<pxr::GfVec3f>& positions = points->GetPositions();
-      pxr::VtArray<pxr::GfVec3f>& colors = points->GetColors();
-      pxr::VtArray<float>& radii = points->GetRadius();
-
-      memset(&radii[0], 0.f, numParticles * sizeof(float));
-
-      for (auto& contact : contacts) {
-        const size_t offsetIdx = contact->GetBody(0)->GetOffset();
-        
-        const pxr::VtArray<int>& elements = contact->GetElements();
-        for(int elem: elements) {
-          positions[elem + offsetIdx] = _solver->GetParticles()->_position[elem + offsetIdx];
-          radii[elem + offsetIdx] = 0.02f;
-          colors[elem + offsetIdx] = hitColor;
-        }
-      }
-      
-    } else if (execPrim.first.GetNameToken() == pxr::TfToken("Constraints")) {
-      
-    } else {
-      pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
-      if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
-        const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
-        if (bodyIt != _bodyMap.end()) {
-          Body* body = bodyIt->second;
-          Mesh* mesh = (Mesh*)execPrim.second.geom;
-          mesh->SetPositions(&_solver->GetParticles()->_position[body->GetOffset()], mesh->GetNumPoints());
-        } else {
-        }
-      }
+      execPrim.second.bits =
+        pxr::HdChangeTracker::Clean |
+        pxr::HdChangeTracker::DirtyPoints |
+        pxr::HdChangeTracker::DirtyWidths |
+        pxr::HdChangeTracker::DirtyPrimvar;
     }
 
-    execPrim.second.bits =
-      pxr::HdChangeTracker::Clean |
-      pxr::HdChangeTracker::DirtyPoints |
-      pxr::HdChangeTracker::DirtyWidths |
-      pxr::HdChangeTracker::DirtyPrimvar;
+    
   }
 }
 

@@ -15,6 +15,8 @@ class Geometry;
 
 struct Particles;
 struct Body;
+
+class Points;
 class Constraint;
 class Solver;
 
@@ -28,8 +30,9 @@ public:
     SELF
   };
 
-  Collision(Geometry* collider, float restitution=0.5f, float friction=0.5f) 
+  Collision(Geometry* collider, const pxr::SdfPath& path, float restitution=0.5f, float friction=0.5f) 
     : Mask(Element::COLLISION)
+    , _id(path)
     , _collider(collider)
     , _restitution(restitution)
     , _friction(friction) {};
@@ -100,12 +103,15 @@ protected:
   Geometry*                   _collider;
   pxr::TfToken                _key;
 
+  Points*                     _points;
+  pxr::SdfPath                _id;
+
 };
 
 class PlaneCollision : public Collision
 {
 public:
-  PlaneCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
+  PlaneCollision(Geometry* collider, const pxr::SdfPath& path, float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
@@ -129,7 +135,7 @@ private:
 class SphereCollision : public Collision
 {
 public:
-  SphereCollision(Geometry* collider, float restitution=0.5f, float friction= 0.5f);
+  SphereCollision(Geometry* collider, const pxr::SdfPath& path, float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;

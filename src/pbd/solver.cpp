@@ -131,14 +131,11 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   _timer = new _Timer();
   _timer->Init(NUM_TIMES, &TIME_NAMES[0]);
   _points = new Points();
-  _contactPoints = new Points();
+
 
   _pointsId = _solverId.AppendChild(pxr::TfToken("Particles"));
-  _contactPointsId = _solverId.AppendChild(pxr::TfToken("Contacts"));
   AddElement(&_particles, _points, _pointsId);
-  AddElement(&_particles, _contactPoints, _contactPointsId);
   _scene->AddGeometry(_pointsId, _points);
-  _scene->AddGeometry(_contactPointsId, _contactPoints);
 }
 
 Solver::~Solver()
@@ -446,7 +443,7 @@ void Solver::_StepOneSerial()
   _UpdateParticles(0, numParticles);
 
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
 }
 
 void Solver::_StepOne()
@@ -475,7 +472,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
   
   _timer->Stop();
 
@@ -531,13 +528,18 @@ Element* Solver::GetElement(const pxr::SdfPath& path)
   return NULL;
 }
 
-void _GetContactPositions(Solver* solver, pxr::VtArray<pxr::GfVec3f>& results)
+void Solver::_GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions,
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
 {
-  auto& collisions = solver->GetCollisions();
-  for (size_t i = 0; i < collisions.size(); ++i) {
-    std::vector<Location>& contacts = collisions[i]->GetContacts();
-    for(auto& contact: contacts)
-      results.push_back(pxr::GfVec3f(contact.GetPointCoordinates()));
+  for (size_t i = 0; i < _collisions.size(); ++i) {
+    std::vector<Location>& contacts = _collisions[i]->GetContacts();
+    const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    float r = 0.2f;
+    for (auto& contact : contacts) {
+      positions.push_back(pxr::GfVec3f(contact.GetPointCoordinates()));
+      radius.push_back(r);
+      colors.push_back(color);
+    }
   }
 }
 
@@ -554,22 +556,17 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     _points->SetRadii(&_particles._radius[0], numParticles);
     _points->SetColors(&_particles._color[0], numParticles);
 
-    pxr::VtArray<pxr::GfVec3f> contactPositions;
-    _GetContactPositions(this, contactPositions);
-    _contactPoints->SetPositions(&contactPositions[0], _contacts.size());
-
     Scene::_Prim* prim = _scene->GetPrim(_pointsId);
     prim->bits = pxr::HdChangeTracker::AllDirty;
   } else {
     Step();
+
     _points->SetPositions(&_particles._position[0], numParticles);
     
     Scene::_Prim* prim = _scene->GetPrim(_pointsId);
     prim->bits = 
-      pxr::HdChangeTracker::Clean |
-      pxr::HdChangeTracker::DirtyPoints |
-      pxr::HdChangeTracker::DirtyWidths |
-      pxr::HdChangeTracker::DirtyPrimvar;
+      pxr::HdChangeTracker::Clean | pxr::HdChangeTracker::DirtyPoints |
+      pxr::HdChangeTracker::DirtyWidths | pxr::HdChangeTracker::DirtyPrimvar;
   }
 
   
@@ -610,9 +607,7 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-    if (prim.IsValid()) {
-      _collisions[i]->Update(prim, time);
-    }
+    _collisions[i]->Update(prim, time);
     
   }
   /*

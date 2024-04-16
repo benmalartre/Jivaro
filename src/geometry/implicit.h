@@ -34,6 +34,7 @@ public:
   Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
   virtual ~Sphere() {};
 
+  void SetRadius(float radius){_radius = radius;};
   float GetRadius() {return _radius;};
   pxr::GfVec3f GetCenter(){return pxr::GfVec3f(GetMatrix().GetRow3(3));};
 
