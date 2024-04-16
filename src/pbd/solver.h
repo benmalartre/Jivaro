@@ -69,7 +69,7 @@ public:
   void GetConstraintsByType(short type, pxr::VtArray<Constraint*>& results);
 
   // collisions
-  void AddCollision(Collision* collision) { _collisions.push_back(collision); };
+  void AddCollision(Collision* collision);
   Collision* GetCollision(size_t idx = 0) { return _collisions[idx]; };
   pxr::VtArray<Constraint*>& GetContacts() { return _contacts; };
   const pxr::VtArray<Constraint*>& GetContacts() const { return _contacts; };
@@ -128,7 +128,8 @@ private:
   _ElementMap                         _elements;
   Scene*                              _scene;
   Points*                             _points;
-  pxr::SdfPath                        _id;
+  pxr::SdfPath                        _pointsId;
+  pxr::SdfPath                        _solverId;
 
   // timing
   _Timer*                             _timer;

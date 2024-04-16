@@ -21,17 +21,6 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-void _UpdatePoints(Scene* scene, Points* points, Solver* solver, const pxr::SdfPath& path) {
-  if (!points)return;
-  size_t numParticles = solver->GetParticles()->_position.size();
-  points->SetPositions(&solver->GetParticles()->_position[0], numParticles);
-  points->SetRadii(&solver->GetParticles()->_radius[0], numParticles);
-  points->SetColors(&solver->GetParticles()->_color[0], numParticles);
-
-  Scene::_Prim* prim = scene->GetPrim(path);
-  prim->bits = pxr::HdChangeTracker::AllDirty;
-}
-
 
 
 void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
@@ -90,8 +79,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->AddForce(gravity);
   _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
 
-  _solver->Reset();
-  _UpdatePoints(_scene, _solver->GetPoints(), _solver, _solverId.AppendChild(pxr::TfToken("Particles")));
+  
   //_solver->AddForce(new DampingForce());
   
   pxr::GfVec3f pos;
@@ -107,8 +95,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   */
 
   _scene->Update(stage, _solver->GetStartFrame());
-  _solver->Update(stage, _solver->GetStartFrame());
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
+  _solver->Update(stage, _solver->GetStartFrame());
 
 }
 
@@ -126,8 +114,8 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
   const Solver::_ElementMap& elements = _solver->GetElements();
 
-
   for (auto& elemIt = elements.begin(); elemIt != elements.end(); ++elemIt) {
+    /*
     Element* element = elemIt->first;
     pxr::SdfPath path = elemIt->second.first;
     Geometry* geometry = elemIt->second.second;
@@ -135,23 +123,20 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     if (path.GetNameToken() == pxr::TfToken("Particles")) {
 
       Points* points = (Points*)geometry;
-      _UpdatePoints(_scene, points, _solver, path);
+
       if (!points)continue;
       points->SetPositions(&_solver->GetParticles()->_position[0], numParticles);
-      points->SetRadii(&_solver->GetParticles()->_radius[0], numParticles);
-      points->SetColors(&_solver->GetParticles()->_color[0], numParticles);
 
       Scene::_Prim* prim = _scene->GetPrim(path);
-      prim->bits = pxr::HdChangeTracker::AllDirty;
-      /*
+      prim->bits = 
         pxr::HdChangeTracker::Clean |
         pxr::HdChangeTracker::DirtyPoints |
         pxr::HdChangeTracker::DirtyWidths |
-        pxr::HdChangeTracker::DirtyPrimvar;*/
+        pxr::HdChangeTracker::DirtyPrimvar;
     }
 
 
-    /*
+    
     if (elemIt.second.first.GetNameToken() == pxr::TfToken("Particles")) {
       Particles* particles = (Particles*)elemIt.first;
 

@@ -122,7 +122,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   , _paused(true)
   , _serial(false)
   , _startFrame(1.f)
-  , _id(xform.GetPrim().GetPath())
+  , _solverId(xform.GetPrim().GetPath())
 {
   _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
@@ -132,9 +132,9 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   _timer->Init(NUM_TIMES, &TIME_NAMES[0]);
   _points = new Points();
 
-  pxr::SdfPath pointsId = _id.AppendChild(pxr::TfToken("Particles"));
-  AddElement(&_particles, _points, pointsId);
-  _scene->AddGeometry(pointsId, _points);
+  _pointsId = _solverId.AppendChild(pxr::TfToken("Particles"));
+  AddElement(&_particles, _points, _pointsId);
+  _scene->AddGeometry(_pointsId, _points);
   
 }
 
@@ -205,11 +205,11 @@ void Solver::RemoveBody(Geometry* geom)
   delete body;
 }
 
-/*
-void Solver::AddCollision(Geometry* collider)
-{
-  _colliders.push_back(collider);
 
+void Solver::AddCollision(Collision* collision)
+{
+  _collisions.push_back(collision);
+/*
   float radius = 0.2f;
   Voxels voxels;
   voxels.Init(collider, radius);
@@ -258,9 +258,9 @@ void Solver::AddCollision(Geometry* collider)
 
 
   _SetupResults(stage, result);
-
-}
 */
+}
+
 
 
 void Solver::AddConstraints(Body* body)
@@ -524,12 +524,32 @@ Element* Solver::GetElement(const pxr::SdfPath& path)
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
+
+  UpdateParameters(stage, time);
   UpdateCollisions(stage, time);
  
-  if (pxr::GfIsClose(time, _startFrame, 0.001f))
+  size_t numParticles = _particles.GetNumParticles();
+  if (pxr::GfIsClose(time, _startFrame, 0.001f)) {
     Reset();
-  else
+    _points->SetPositions(&_particles._position[0], numParticles);
+    _points->SetRadii(&_particles._radius[0], numParticles);
+    _points->SetColors(&_particles._color[0], numParticles);
+
+    Scene::_Prim* prim = _scene->GetPrim(_pointsId);
+    prim->bits = pxr::HdChangeTracker::AllDirty;
+  } else {
     Step();
+    _points->SetPositions(&_particles._position[0], numParticles);
+    
+    Scene::_Prim* prim = _scene->GetPrim(_pointsId);
+    prim->bits = 
+      pxr::HdChangeTracker::Clean |
+      pxr::HdChangeTracker::DirtyPoints |
+      pxr::HdChangeTracker::DirtyWidths |
+      pxr::HdChangeTracker::DirtyPrimvar;
+  }
+
+  
 }
 
 void Solver::Step()
@@ -566,10 +586,11 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
+    std::cout << "update collision for " << path << std::endl;
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
     if (prim.IsValid()) {
       _collisions[i]->Update(prim, time);
-    }
+    } else std::cout << "prim invalid :'" << std::endl;
     
   }
   /*
@@ -623,7 +644,7 @@ void Solver::UpdateGeometries()
 
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
-  pxr::UsdPrim prim = stage->GetPrimAtPath(_id);
+  pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
   prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);

@@ -85,7 +85,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene->AddMesh(prim.GetPath(), mesh);
       std::cout << "add mesh to solver" << std::endl;
-      Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 1.f, 0.1f, 0.1f);
+      Body* body = _solver->AddBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
       std::cout << "mesh added" << std::endl;
       //mass *= 2;
       std::cout << "add constraints to solver" << std::endl;
@@ -100,13 +100,17 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Points* points = new Points(usdPoints, xform);
       _scene->AddPoints(prim.GetPath(), points);
       std::cout << "add points to solver" << std::endl;
-      _solver->AddBody((Geometry*)points, pxr::GfMatrix4f(xform), 1.f, 0.1f, 0.1f);
+      _solver->AddBody((Geometry*)points, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
 
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
       std::cout << "points added to solver" << std::endl;
     }
   }
-  _solver->AddForce(new GravitationalForce(pxr::GfVec3f(0.f, -9.8f,0.f)));
+  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.8f, 0.f));
+  _solver->AddForce(gravity);
+
+  _solver->AddElement(gravity, NULL, _groundId);
+
   _solver->WeightBoundaries();
   _solver->LockPoints();
   
@@ -120,9 +124,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddCollision(new SphereCollision(sphere, restitution, friction));
   } 
 
-
-  _solver->AddCollision(new PlaneCollision(_ground, 1.f, 1.f));
-
+  Collision* collision = new PlaneCollision(_ground, 1.f, 1.f);
+  _solver->AddCollision(collision);
+  _solver->AddElement(collision, _ground, _groundId);
 
   pxr::SdfPath pointsPath(rootId.AppendChild(pxr::TfToken("Particles")));
   _sourcesMap[pointsPath] = sources;
