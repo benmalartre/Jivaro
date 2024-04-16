@@ -42,10 +42,10 @@ public:
   virtual size_t GetTypeId() const = 0;
 
   virtual void Update(const pxr::UsdPrim& prim, double time);
-  virtual void FindContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
-    pxr::VtArray<Constraint*>& constraints, float ft);
-  virtual void FindContactsSerial(Particles* particles, const pxr::VtArray<Body*>& bodies,
-    pxr::VtArray<Constraint*>& constraint, float ft);
+  virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
+    std::vector<Constraint*>& constraints, float ft);
+  virtual void FindContactsSerial(Particles* particles, const std::vector<Body*>& bodies,
+    std::vector<Constraint*>& constraint, float ft);
 
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float ft);
 
@@ -80,8 +80,8 @@ protected:
   virtual void _Update(const pxr::UsdPrim& prim, double time);
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
-  virtual void _BuildContacts(Particles* particles, const pxr::VtArray<Body*>& bodies,
-    pxr::VtArray<Constraint*>& contacts, float dt);
+  virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
+    std::vector<Constraint*>& contacts, float dt);
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
   
   virtual void _FindContact(size_t index, Particles* particles, float ft) = 0;

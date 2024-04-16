@@ -130,7 +130,7 @@ void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3
   }
 }
 
-void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
   float stiffness, float damping)
 {
   pxr::VtArray<int> allElements;
@@ -290,7 +290,7 @@ void BendConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>&
   }
 }
 
-void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
   float stiffness, float damping)
 {
   pxr::VtArray<int> allElements;
@@ -489,7 +489,7 @@ void DihedralConstraint::GetPoints(Particles* particles,
   }
 }
 
-void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints,
   float stiffness, float damping)
 {
   pxr::VtArray<int> allElements;
@@ -578,7 +578,7 @@ void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVe
   }
 }
 
-void CreateCollisionConstraint(Body* body, Collision* collision, pxr::VtArray<Constraint*>& constraints,
+void CreateCollisionConstraint(Body* body, Collision* collision, std::vector<Constraint*>& constraints,
   float stiffness, float damping)
 {
 }

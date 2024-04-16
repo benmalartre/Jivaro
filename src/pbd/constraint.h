@@ -95,7 +95,7 @@ protected:
   pxr::VtArray<float>           _rest;
 };
 
-void CreateStretchConstraints(Body* body, pxr::VtArray<Constraint*>& constraints, 
+void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
   float stiffness=0.5f, float damping=0.05f);
 
 
@@ -120,7 +120,7 @@ protected:
   pxr::VtArray<float>           _rest;
 };
 
-void CreateBendConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
   float stiffness=0.5f, float damping=0.05f);
 
 
@@ -147,7 +147,7 @@ protected:
 
 };
 
-void CreateDihedralConstraints(Body* body, pxr::VtArray<Constraint*>& constraints,
+void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints,
   float stiffness=0.5f, float damping=0.05f);
 
 
@@ -181,7 +181,7 @@ protected:
 };
 
 void CreateCollisionConstraint(Body* body, Collision* collision, 
-  pxr::VtArray<Constraint*>& constraints, float stiffness = -1.f, float damping=0.25f);
+  std::vector<Constraint*>& constraints, float stiffness = -1.f, float damping=0.25f);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

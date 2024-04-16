@@ -531,12 +531,13 @@ Element* Solver::GetElement(const pxr::SdfPath& path)
   return NULL;
 }
 
-void _GetContactPositions(Solver* solver, std::vector<pxr::GfVec3f>& contacts)
+void _GetContactPositions(Solver* solver, pxr::VtArray<pxr::GfVec3f>& results)
 {
-  for (size_t i = 0; i < _collision.size(); ++i) {
-    std::vector<Location>& contacts = _collision[i]->GetContacts();
+  auto& collisions = solver->GetCollisions();
+  for (size_t i = 0; i < collisions.size(); ++i) {
+    std::vector<Location>& contacts = collisions[i]->GetContacts();
     for(auto& contact: contacts)
-      contacts.push_back(contact.GetPointCoordinates());
+      results.push_back(pxr::GfVec3f(contact.GetPointCoordinates()));
   }
 }
 

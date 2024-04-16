@@ -75,6 +75,7 @@ public:
   void GetContactByType(short type, std::vector<Constraint*>& results);
 
   // collisions
+  std::vector<Collision*> GetCollisions(){return _collisions;};
   void AddCollision(Collision* collision);
   Collision* GetCollision(size_t idx = 0) { return _collisions[idx]; };
   std::vector<Constraint*>& GetContacts() { return _contacts; };
