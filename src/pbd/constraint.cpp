@@ -510,34 +510,40 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
   const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
   const size_t offset = _body[0]->GetOffset();
 
+
   for(size_t elem = 0; elem  < numElements; ++elem) {
 
 
     const size_t index = _elements[elem] + offset;
     const float invMass = particles->_mass[index];
     const float d = _collision->GetValue(particles, index);
-    if (d > 0.f) continue;
+    if (d >= 0.f) continue;
 
-    const float im0 = particles->_mass[index];
     pxr::GfVec3f n = _collision->GetGradient(particles, index);
-    _correction[elem * ELEM_SIZE] += im0 * n * -d * dt;
+    const float im0 = particles->_mass[index];
+    _correction[elem * ELEM_SIZE + 0] += im0 * n * -d * dt;
     /*
-    
-    const float im1 = 0.f;
 
-    float K = im0 + im1;
+   
+    
+
+    const float im1 = 1.f;
+
+    float K = im0;
+
     float alpha = 0.0;
     if (!pxr::GfIsClose(_stiffness, 0.0, 1e-6f))
     {
-      alpha = 1.f / (_stiffness * 100 * dt * dt);
+      alpha = 1.f / (_stiffness * dt * dt);
       K += alpha;
     }
 
 	  if (pxr::GfAbs(K) == 0.f) continue;
 
-	  const pxr::GfVec3f correction = n * -(1.f / K) * _damping;
-    _correction[elem * ELEM_SIZE] += im0  * correction;
+    const pxr::GfVec3f correction = n * -(1.f / K) * d * _damping;
+
     */
+  
   }
 }
 

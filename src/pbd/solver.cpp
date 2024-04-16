@@ -56,9 +56,9 @@ private:
 };
 
 
-void _Timer::Init(size_t numTimes, const char** names)
+void _Timer::Init(size_t n, const char** names)
 {
-  _n = numTimes;
+  _n = n;
   _c = 0;
   _timers.resize(_n, { 0,0,0 });
   _accums.resize(_n, 0.0);
@@ -125,6 +125,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   , _id(xform.GetPrim().GetPath())
 {
   _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
+  _stepTime = _frameTime / static_cast<float>(_subSteps);
 
   //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
   _timer = new _Timer();
@@ -397,7 +398,6 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   for(size_t index = begin; index < end; ++index) {
     if (_particles._state[index] != Particles::ACTIVE)continue;
     // update velocity
-    previous[index] = position[index];
     velocity[index] = (predicted[index] - position[index]) * invDt;
     /*
     if (velocity[index].GetLength() < 0.0000001f) {
@@ -407,6 +407,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     */
 
     // update position
+    previous[index] = position[index];
     position[index] = predicted[index];
   }
 }
@@ -471,12 +472,12 @@ void Solver::_StepOne()
     numParticles,
     std::bind(&Solver::_IntegrateParticles, this,
       std::placeholders::_1, std::placeholders::_2));
-
+  
   _timer->Next();
   // solve and apply constraint
   _SolveConstraints(_constraints);
   _SolveConstraints(_contacts);
-  
+
   _timer->Next();
   // update particles
   pxr::WorkParallelForN(
@@ -487,6 +488,7 @@ void Solver::_StepOne()
   _timer->Next();
   // solve velocities
   _SolveVelocities();
+  
   _timer->Stop();
 
 }
@@ -566,7 +568,6 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
     if (prim.IsValid()) {
-      std::cout << " we have valid collision geometry : " << path << std::endl;
       _collisions[i]->Update(prim, time);
     }
     

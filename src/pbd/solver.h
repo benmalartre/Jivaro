@@ -41,6 +41,8 @@ public:
   // attributes
   float GetSleepThreshold() { return _sleepThreshold; };
   void SetSleepThreshold(float threshold) { _sleepThreshold = threshold; };
+  float GetStartFrame() { return _startFrame; };
+  void SetStartFrame(float startFrame) { _startFrame = startFrame; };
 
   // system
   size_t GetNumParticles() { return _particles.GetNumParticles(); };
@@ -76,6 +78,7 @@ public:
   Particles* GetParticles() { return &_particles; };
   void LockPoints();
   void WeightBoundaries();
+  Points* GetPoints(){return _points;};
   
   // solver 
   void Update(pxr::UsdStageRefPtr& stage, float time);

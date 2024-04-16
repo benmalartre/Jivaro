@@ -42,9 +42,9 @@ protected:
   Geometry*     _geometry;
   size_t        _offset;
   size_t        _numPoints;
-  float         _damping;
-  float         _radius;
   float         _mass;
+  float         _radius;
+  float         _damping;
   pxr::GfVec3f  _color;
   //bool     _simulated;
 };

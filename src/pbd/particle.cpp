@@ -13,7 +13,7 @@ void Particles::AddBody(Body* body, const pxr::GfMatrix4f& matrix)
   size_t add = geom->GetNumPoints();
   size_t size = base + add;
   size_t index = _body.size() ? _body.back() + 1 : 0;
-  float w = pxr::GfIsClose(body->GetMass(), 0.f, 0.0000001f) ? 0.f : 1.f / body->GetMass();
+  float w = pxr::GfIsClose(body->GetMass(), 0.f, 0.000001f) ? 0.f : 1.f / body->GetMass();
   _mass.resize(size);
   _radius.resize(size);
   _rest.resize(size);
