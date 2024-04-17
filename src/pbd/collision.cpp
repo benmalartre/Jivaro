@@ -131,7 +131,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
 
-  pxr::GfVec3f normal = GetContactNormal(index);
+  pxr::GfVec3f normal = GetGradient(particles, index);
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->_velocity[index] - pxr::GfVec3f(0.f);
   const float vn = pxr::GfDot(v, normal);
@@ -230,11 +230,6 @@ SphereCollision::SphereCollision(Geometry* collider, const pxr::SdfPath& path, f
 
 void SphereCollision::Update(const pxr::UsdPrim& prim, double time)
 {
-  double radius;
-  prim.GetAttribute(pxr::UsdGeomTokens->radius).Get(&radius, time);
-  Sphere* sphere = (Sphere*)_collider;
-  sphere->SetRadius(radius);
-
   _Update(prim, time);
   _UpdateCenterAndRadius();
   _UpdateParameters(prim, time);
@@ -245,14 +240,19 @@ void SphereCollision::_UpdateCenterAndRadius()
   Sphere* sphere = (Sphere*)_collider;
   _center = sphere->GetCenter();
   _radius = sphere->GetRadius();
-}
+  std::cout << "sphere matrix " <<  sphere->GetMatrix() << std::endl;
+  std::cout << "sphere inversese matrix " << sphere->GetInverseMatrix() << std::endl;
+  std::cout << "sphere center " << _center << std::endl;
+  std::cout << "sphere radius " << _radius << std::endl;
+} 
 
 
 void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
   if (!Affects(index))return;
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
-  SetHit(index, (predicted - _center).GetLength() < (_radius + particles->_radius[index]));
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
+  SetHit(index, local.GetLength() < (_radius + particles->_radius[index]));
 }
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int index, const Body* body, Location& location, float ft)
@@ -260,37 +260,39 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index, con
   const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->_position[index] + velocity);
 
-  const pxr::GfVec3f normal = (predicted - _center).GetNormalized();
-  const pxr::GfVec3f intersection = _center + normal * (_radius + particles->_radius[index]);
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted).GetNormalized();
+  const pxr::GfVec3f projected = local * (_radius + particles->_radius[index]);
+  const pxr::GfVec3f intersection = _collider->GetMatrix().Transform(projected);
 
+  pxr::GfVec3f normal = _collider->GetMatrix().TransformDir(local);
   const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
   const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
   const float vn = pxr::GfDot(vRel, normal);
 
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
-
-  if(index <10)std::cout << index << " : " << coords << std::endl;
 }
 
 float SphereCollision::GetValue(Particles* particles, size_t index)
 {
-  const pxr::GfVec3f normal = (particles->_predicted[index] - _center);
-  return normal.GetLength() - _radius - particles->_radius[index];
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->_predicted[index]).GetNormalized();
+  const pxr::GfVec3f projected = local * (_radius + particles->_radius[index]);
+  const pxr::GfVec3f intersection = _collider->GetMatrix().Transform(projected);
+
+  return (intersection - _center).GetLength();
 }
   
 pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
 {
-  const pxr::GfVec3f delta = particles->_predicted[index] - _center;
-  const float dL = delta.GetLengthSq();
-  return dL > 0.0000001f ? delta/dL : delta;
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->_predicted[index]).GetNormalized();
+  const pxr::GfVec3f gradient = _collider->GetMatrix().TransformDir(local);
+
+  return gradient;
 }
 
 const pxr::GfVec3f SphereCollision::GetContactNormal(size_t index) const 
 {
-  const pxr::GfVec3f delta = GetContactPosition(index) - _center;
-  const float dL = delta.GetLengthSq();
-  return dL > 0.0000001f ? delta/dL : delta;
+  return (GetContactPosition(index) - _center).GetNormalized();
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

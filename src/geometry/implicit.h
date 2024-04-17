@@ -34,8 +34,8 @@ public:
   Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
   virtual ~Sphere() {};
 
-  void SetRadius(float radius){_radius = radius;};
-  float GetRadius() {return _radius;};
+  void SetRadius(double radius){_radius = radius;};
+  double GetRadius() {return _radius;};
   pxr::GfVec3f GetCenter(){return pxr::GfVec3f(GetMatrix().GetRow3(3));};
 
   // query 3d position on geometry
@@ -44,8 +44,12 @@ public:
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
+protected:
+  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, 
+    const pxr::GfMatrix4d& matrix, float time) override;
+
 private:
-  float                    _radius;  
+  double                    _radius;  
 
 };
 
@@ -74,7 +78,12 @@ public:
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
+protected:
+  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, 
+    const pxr::GfMatrix4d& matrix, float time) override;
+
 private:
+  pxr::TfToken                _axis;
   pxr::GfVec3f                _normal;
   float                       _width;
   float                       _length;
@@ -93,6 +102,10 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+protected:
+  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, 
+    const pxr::GfMatrix4d& matrix, float time) override;
 
 private:
   float                    _size;  

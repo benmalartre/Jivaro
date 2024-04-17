@@ -58,23 +58,7 @@ Plane::Plane(const Plane* other, bool normalize)
 Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
   : Geometry(Geometry::PLANE, world)
 {
-  pxr::TfToken axis;
-  pxr::UsdAttribute axisAttr = plane.GetAxisAttr();
-  axisAttr.Get(&axis, pxr::UsdTimeCode::Default());
-
-  if (axis == pxr::UsdGeomTokens->x)
-    _normal = pxr::GfVec3f(1.f, 0.f, 0.f);
-  else if (axis == pxr::UsdGeomTokens->y)
-    _normal = pxr::GfVec3f(0.f, 1.f, 0.f);
-  else
-    _normal = pxr::GfVec3f(0.f, 0.f, 1.f);
-
-  pxr::UsdAttribute widthAttr = plane.GetWidthAttr();
-  widthAttr.Get(&_width, pxr::UsdTimeCode::Default());
-  pxr::UsdAttribute lengthAttr = plane.GetLengthAttr();
-  lengthAttr.Get(&_length, pxr::UsdTimeCode::Default());
-  pxr::UsdAttribute doubleSidedAttr = plane.GetDoubleSidedAttr();
-  doubleSidedAttr.Get(&_doubleSided, pxr::UsdTimeCode::Default());
+  _Sync(plane.GetPrim(), world, pxr::UsdTimeCode::Default().GetValue());
 }
 
 bool 
@@ -119,6 +103,28 @@ bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
   }
   */
   return false;
+}
+
+Geometry::DirtyState 
+Plane::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+{
+
+  size_t state  = _GetAttrValue<pxr::TfToken>(prim, pxr::UsdGeomTokens->axis, time, &_axis);
+
+  if(state = Geometry::DirtyState::ATTRIBUTE) {
+    if (_axis == pxr::UsdGeomTokens->x)
+      _normal = pxr::GfVec3f(1.f, 0.f, 0.f);
+    else if (_axis == pxr::UsdGeomTokens->y)
+      _normal = pxr::GfVec3f(0.f, 1.f, 0.f);
+    else
+      _normal = pxr::GfVec3f(0.f, 0.f, 1.f);
+  }
+
+  state |= _GetAttrValue<float>(prim, pxr::UsdGeomTokens->width, time, &_width);
+  state |= _GetAttrValue<float>(prim, pxr::UsdGeomTokens->length, time, &_length);
+  state |= _GetAttrValue<bool>(prim, pxr::UsdGeomTokens->doubleSided, time, &_doubleSided);
+
+  return (Geometry::DirtyState)state;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -181,6 +187,12 @@ bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
     return true;
   }
   return false;
+}
+
+Geometry::DirtyState 
+Sphere::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+{
+  return _GetAttrValue<double>(prim, pxr::UsdGeomTokens->radius, time, &_radius);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -280,6 +292,19 @@ Cube::Closest(const pxr::GfVec3f& point, Location* hit,
   const pxr::GfVec3f closest = _PointToBox(relative, range);
  
   return false;
+}
+
+Geometry::DirtyState 
+Cube::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+{
+  pxr::UsdGeomCube usdCube(prim);
+  float size;
+  usdCube.GetSizeAttr().Get(&size, time);
+  if (!pxr::GfIsClose(_size, size, 1.e6f)) {
+    _size = size;
+    return Geometry::DirtyState::ATTRIBUTE;
+  }
+  return Geometry::DirtyState::CLEAN;
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -10,6 +10,7 @@
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usd/prim.h>
 
 #include "../common.h"
 
@@ -46,6 +47,15 @@ public:
     VOXEL
   };
 
+  enum DirtyState : size_t {
+    CLEAN     = 0,
+    TRANSFORM = 1,
+    DEFORM    = 2,
+    TOPOLOGY  = 4,
+    ATTRIBUTE = 8,
+    ALLDIRTY  = 15
+  };
+
   Geometry();
   Geometry(short type, const pxr::GfMatrix4d& world);
   Geometry(const Geometry* other, short type);
@@ -65,6 +75,8 @@ public:
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
   const pxr::GfBBox3d& GetBoundingBox() const { return _bbox; };
 
+  virtual DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time);
+
   // query 3d position on geometry
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance=-1.0, double* minDistance=NULL) const {return false;};
@@ -72,6 +84,13 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const {return false;};
 
 protected:
+  virtual DirtyState _Sync(pxr::UsdPrim& prim, 
+    const pxr::GfMatrix4d& matrix, float time) { return DirtyState::CLEAN;};
+
+  template<typename T>
+  DirtyState _GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, 
+    float time, T *value);
+
   // infos
   short                               _type;
   pxr::SdfPath                        _path;
@@ -82,6 +101,22 @@ protected:
   pxr::GfBBox3d                       _bbox;
   pxr::GfVec3f                        _wirecolor;
 };
+
+template<typename T>
+Geometry::DirtyState
+Geometry::_GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, float time, T *value)
+{
+  pxr::UsdAttribute attr = prim.GetAttribute(name);
+  if(!attr.IsValid())return DirtyState::CLEAN;
+
+  T tmp;
+  attr.Get(&tmp, time);
+  if(tmp != *value) {
+    *value = tmp;
+    return DirtyState::ATTRIBUTE;
+  }
+  return DirtyState::CLEAN;
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

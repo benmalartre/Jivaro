@@ -42,4 +42,12 @@ Geometry::SetMatrix(const pxr::GfMatrix4d& matrix)
   _invMatrix = matrix.GetInverse();
 };
 
+Geometry::DirtyState 
+Geometry::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+{
+  _matrix = matrix; 
+  _invMatrix = matrix.GetInverse();
+  return _Sync(prim, matrix, time);
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

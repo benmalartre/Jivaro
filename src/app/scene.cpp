@@ -47,13 +47,12 @@ Scene::Update(const pxr::UsdStageRefPtr& stage, double time)
 {
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode(time);
   pxr::UsdGeomXformCache xformCache(activeTime);
-  bool resetXformCache;
 
   for(auto& itPrim: _prims) {
     pxr::UsdPrim prim = stage->GetPrimAtPath(itPrim.first);
     Geometry* geometry = itPrim.second.geom;
-    pxr::GfMatrix4d matrix(xformCache.GetLocalTransformation(prim, &resetXformCache));
-    geometry->SetMatrix(matrix);
+    pxr::GfMatrix4d matrix(xformCache.	GetLocalToWorldTransform(prim));
+    geometry->Sync(prim, matrix, time);
   }
 }
 

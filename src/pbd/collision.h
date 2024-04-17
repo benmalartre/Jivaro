@@ -42,7 +42,7 @@ public:
   void RemoveBody(Particles* particles, Body* body);
   */
   virtual ~Collision() {};
-  virtual size_t GetTypeId() const = 0;
+  virtual size_t GetTypeId() const = 0; // pure virtual
 
   virtual void Init(size_t numParticles);
   virtual void Update(const pxr::UsdPrim& prim, double time);
@@ -51,15 +51,15 @@ public:
   virtual void FindContactsSerial(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraint, float ft);
 
-  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float ft);
+  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
+    const Body* body, size_t geomId, float ft);
 
   virtual void SolveVelocities(Particles* particles, float dt);
 
   virtual Geometry* GetGeometry(){return _collider;};
   virtual const pxr::GfVec3f GetContactPosition(size_t index) const {
     return _contacts[_p2c[index]].GetPointCoordinates();};
-  virtual const pxr::GfVec3f GetContactNormal(size_t index) const {
-    return pxr::GfVec3f(0.f, 1.f, 0.f);};
+  virtual const pxr::GfVec3f GetContactNormal(size_t index) const  = 0; // pure virtual
   virtual float GetContactT(size_t index) const {
     return _contacts[_p2c[index]].GetT();};
 
@@ -70,7 +70,7 @@ public:
   const std::vector<int>& GetC2P(){return _c2p;};
 
   virtual float GetValue(Particles* particles, size_t index) = 0;
-  virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0;
+  virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
@@ -88,8 +88,8 @@ protected:
     std::vector<Constraint*>& contacts, float dt);
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
   
-  virtual void _FindContact(size_t index, Particles* particles, float ft) = 0;
-  virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) = 0;
+  virtual void _FindContact(size_t index, Particles* particles, float ft) = 0; // pure virtual
+  virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) = 0; // pure virrtual
 
   virtual void _SolveVelocity(Particles* particles, size_t index, float dt);
 

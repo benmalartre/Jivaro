@@ -472,7 +472,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  _SolveVelocities();
+  //_SolveVelocities();
   
   _timer->Stop();
 
