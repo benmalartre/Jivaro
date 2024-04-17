@@ -18,6 +18,7 @@ Deformable::Deformable(const Deformable* other, bool normalize)
   : Geometry(other, other->GetType())
 {
   size_t numPoints = _positions.size();
+  _previous = other->_previous;
   _positions = other->_positions;
   _haveNormals = other->_haveNormals;
   _normals = other->_normals;
@@ -29,7 +30,10 @@ Deformable::Deformable(const Deformable* other, bool normalize)
 
 void Deformable::_ValidateNumPoints(size_t n)
 {
-  if (n != _positions.size()) {_positions.resize(n);}
+  if (n != _positions.size()) {
+    _positions.resize(n);
+    _previous.resize(n);
+  }
   if(_haveNormals && n != _normals.size())_normals.resize(n);
   if(_haveRadius && n != _radius.size())_radius.resize(n);
   if (_haveColors && n != _colors.size())_colors.resize(n);
@@ -40,6 +44,7 @@ void
 Deformable::SetPositions(const pxr::GfVec3f* positions, size_t n)
 {
   _ValidateNumPoints(n);
+  _previous = _positions;
   memmove(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
 }
 
@@ -71,6 +76,7 @@ void
 Deformable::SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
   _ValidateNumPoints(positions.size());
+  _previous = _positions;
   _positions = positions;
 }
 
@@ -130,6 +136,12 @@ Deformable::Normalize()
 }
 
 pxr::GfVec3f 
+Deformable::GetPrevious(uint32_t index) const
+{
+  return _previous[index];
+}
+
+pxr::GfVec3f 
 Deformable::GetPosition(uint32_t index) const
 {
   return _positions[index];
@@ -154,6 +166,12 @@ float
 Deformable::GetRadius(uint32_t index) const
 {
   return _radius[index];
+}
+
+void
+Deformable::SetPrevious(uint32_t index, const pxr::GfVec3f& previous)
+{
+  _previous[index] = previous;
 }
 
 void
@@ -197,6 +215,7 @@ Deformable::ComputeBoundingBox()
 void 
 Deformable::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
+  _previous = _positions;
   _positions = positions;
 }
 

@@ -38,15 +38,20 @@ Geometry::Geometry(const Geometry* other, short type)
 void 
 Geometry::SetMatrix(const pxr::GfMatrix4d& matrix) 
 { 
+  _prevMatrix = _matrix;
   _matrix = matrix; 
   _invMatrix = matrix.GetInverse();
 };
 
+const pxr::GfVec3f Geometry::GetVelocity() const
+{
+  return pxr::GfVec3f(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
+}
+
 Geometry::DirtyState 
 Geometry::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
 {
-  _matrix = matrix; 
-  _invMatrix = matrix.GetInverse();
+  SetMatrix(matrix);
   return _Sync(prim, matrix, time);
 }
 

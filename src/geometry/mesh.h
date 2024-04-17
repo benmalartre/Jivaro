@@ -80,6 +80,7 @@ public:
 
   void Init();
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
+  DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time);
 
   // topology
   void Set(

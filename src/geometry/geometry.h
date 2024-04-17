@@ -69,7 +69,10 @@ public:
 
   void SetMatrix(const pxr::GfMatrix4d& matrix);
   const pxr::GfMatrix4d& GetMatrix() const { return _matrix; };
+  const pxr::GfMatrix4d& GetPreviousMatrix() const { return _prevMatrix; };
   const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
+
+  const pxr::GfVec3f GetVelocity() const;
 
   virtual void ComputeBoundingBox() {};
   pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
@@ -97,6 +100,7 @@ protected:
 
   // bounding box
   pxr::GfMatrix4d                     _matrix;
+  pxr::GfMatrix4d                     _prevMatrix;
   pxr::GfMatrix4d                     _invMatrix;
   pxr::GfBBox3d                       _bbox;
   pxr::GfVec3f                        _wirecolor;

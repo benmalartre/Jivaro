@@ -418,6 +418,12 @@ Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
   _positions = positions;
 }
 
+Geometry::DirtyState 
+Mesh::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+{
+  return Geometry::DirtyState::CLEAN;
+}
+
 static int 
 _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
   HalfEdge* current = start;

@@ -61,8 +61,12 @@ public:
   virtual const pxr::GfVec3f GetContactPosition(size_t index) const {
     return _contacts[_p2c[index]].GetPointCoordinates();};
   virtual const pxr::GfVec3f GetContactNormal(size_t index) const  = 0; // pure virtual
+  virtual const pxr::GfVec3f GetContactVelocity(size_t index) const {
+    return _collider->GetVelocity();
+  }
   virtual float GetContactT(size_t index) const {
     return _contacts[_p2c[index]].GetT();};
+
 
   std::vector<Location>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
@@ -122,7 +126,6 @@ public:
   void Update(const pxr::UsdPrim& prim, double time) override;
 
   const pxr::GfVec3f GetContactNormal(size_t index) const override {return _normal;};
-
 protected:
   void _UpdatePositionAndNormal();
   void _FindContact(size_t index, Particles* particles, float ft) override;

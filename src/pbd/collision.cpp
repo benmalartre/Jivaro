@@ -113,7 +113,6 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
   }
 }
 
-
 void Collision::SolveVelocities(Particles* particles, float dt)
 {
   for (size_t elemIdx = 0; elemIdx < _contacts.size(); ++elemIdx) {
@@ -142,7 +141,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 
   // Restitution
   const float threshold = 2.f * 9.81 * dt;
-  const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
+  const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution * dt;
   const float vnTilde = GetContactT(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->_velocity[index] += normal * restitution;
@@ -205,7 +204,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
+  const pxr::GfVec3f vPlane = _collider->GetVelocity(); // plane velocity
   const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
   const float vn = pxr::GfDot(vRel, _normal);
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
@@ -258,7 +257,7 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = _center + normal * (_radius + particles->_radius[index]);
 
-  const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
+  const pxr::GfVec3f vPlane = _collider->GetVelocity(); // sphere velocity
   const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
   const float vn = pxr::GfDot(vRel, normal);
 

@@ -25,31 +25,37 @@ public:
 
   size_t GetNumPoints()const override {return _positions.size();};
 
+  const pxr::VtArray<pxr::GfVec3f>& GetPrevious() const {return _previous;};
   const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _positions;};
   const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normals;};
   const pxr::VtArray<pxr::GfVec3f>& GetColors() const { return _colors; };
   const pxr::VtArray<float>& GetRadius() const { return _radius; };
 
+  pxr::VtArray<pxr::GfVec3f>& GetPrevious() {return _previous;};
   pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _positions;};
   pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normals;};
   pxr::VtArray<pxr::GfVec3f>& GetColors() { return _colors; };
   pxr::VtArray<float>& GetRadius() { return _radius; };
 
+  pxr::GfVec3f* GetPreviousPtr() { return &_previous[0]; };
   pxr::GfVec3f* GetPositionsPtr() { return &_positions[0]; };
   pxr::GfVec3f* GetNormalsPtr() { return &_normals[0]; };
   pxr::GfVec3f* GetColorsPtr() { return &_colors[0]; };
   float* GetRadiusPtr() { return &_radius[0]; };
 
+  const pxr::GfVec3f* GetPreviousCPtr() const {return &_previous[0];};
   const pxr::GfVec3f* GetPositionsCPtr() const {return &_positions[0];};
   const pxr::GfVec3f* GetNormalsCPtr() const {return &_normals[0];};
   const pxr::GfVec3f* GetColorsCPtr() const { return &_colors[0]; };
   const float* GetRadiusCPtr() const { return &_radius[0]; };
 
+  pxr::GfVec3f GetPrevious(uint32_t index) const;
   pxr::GfVec3f GetPosition(uint32_t index) const;
   pxr::GfVec3f GetNormal(uint32_t index) const;
   pxr::GfVec3f GetColor(uint32_t index)const;
   float GetRadius(uint32_t index) const;
 
+  void SetPrevious(uint32_t index, const pxr::GfVec3f& position);
   void SetPosition(uint32_t index, const pxr::GfVec3f& position);
   void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
   void SetRadius(uint32_t index, float normal);
@@ -108,6 +114,7 @@ protected:
   void _ValidateNumPoints(size_t n);
 
   // vertex data
+  pxr::VtArray<pxr::GfVec3f>          _previous;
   pxr::VtArray<pxr::GfVec3f>          _positions;
   bool                                _haveNormals;
   pxr::VtArray<pxr::GfVec3f>          _normals;
