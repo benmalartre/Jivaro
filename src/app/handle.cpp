@@ -10,6 +10,7 @@
 #include <pxr/usd/usdGeom/xformOp.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
 
+#include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/camera.h"
 #include "../app/selection.h"
@@ -678,6 +679,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
       xformApi.SetTranslate(xformMatrix.GetRow3(3) - target.previous.pivot, activeTime);
+      AttributeChangedNotice().Send();
     }
   }
   else {

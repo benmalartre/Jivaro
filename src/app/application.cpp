@@ -263,8 +263,9 @@ Application::Init()
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  _exec = new TestPBD(new Scene());
+  //_exec = new TestPBD(new Scene());
   //_exec = new TestParticles(new Scene());
+  _exec = new TestHair(new Scene());
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {
@@ -290,10 +291,10 @@ Application::TerminateExec(pxr::UsdStageRefPtr& stage)
   for (auto& engine : _engines) {
     engine->TerminateExec();
   }
+  Scene* scene = _exec->GetScene();
+  delete scene;
   delete _exec;
-  _exec = nullptr;
-  //delete _solver;
-  
+  _exec = nullptr;  
 }
 
 
@@ -459,6 +460,9 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
+  if (_execute) {
+    UpdateExec(_stage, _time.GetActiveTime());
+  }
   _mainWindow->ForceRedraw();
   _mainWindow->GetTool()->ResetSelection();
   for (auto& window : _childWindows) {
