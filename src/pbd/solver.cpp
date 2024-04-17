@@ -419,10 +419,10 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 
 void Solver::_SolveVelocities()
 {
+  const float dt = _frameTime * _stepTime;
   for (auto& collision : _collisions) {
-    size_t numContacts = collision->GetNumContacts();
-    if (!numContacts) continue;
-    collision->SolveVelocities(&_particles, _stepTime);
+    if (!collision->GetNumContacts()) continue;
+    collision->SolveVelocities(&_particles, dt);
   }
 }
 
@@ -472,7 +472,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  _SolveVelocities();
+  //_SolveVelocities();
   
   _timer->Stop();
 

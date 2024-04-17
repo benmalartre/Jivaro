@@ -139,7 +139,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   }
 
   // Restitution
-  const float threshold = 1e-6;
+  const float threshold = 2.f * 9.81 * dt;
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
   const float vnTilde = GetContactT(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
@@ -268,7 +268,7 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index,
 
 float SphereCollision::GetValue(Particles* particles, size_t index)
 {
-  return (particles->_predicted[index] - _center).GetLength() - 
+  return (particles->_predicted[index] - _center).GetLength() -
     _radius - particles->_radius[index];
 }
   
