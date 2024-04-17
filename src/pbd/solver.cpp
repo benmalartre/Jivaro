@@ -419,10 +419,9 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 
 void Solver::_SolveVelocities()
 {
-  const float dt = _frameTime * _stepTime;
   for (auto& collision : _collisions) {
     if (!collision->GetNumContacts()) continue;
-    collision->SolveVelocities(&_particles, dt);
+    collision->SolveVelocities(&_particles, _stepTime);
   }
 }
 
@@ -472,7 +471,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
   
   _timer->Stop();
 
@@ -661,6 +660,7 @@ void Solver::UpdateGeometries()
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
+  _frameTime = 1.f / static_cast<float>(GetApplication()->GetTime()->GetFPS());
   prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);

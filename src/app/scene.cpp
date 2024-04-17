@@ -50,7 +50,6 @@ Scene::Update(const pxr::UsdStageRefPtr& stage, double time)
 
   for(auto& itPrim: _prims) {
     pxr::UsdPrim prim = stage->GetPrimAtPath(itPrim.first);
-    std::cout << "update prim " << prim.GetPath() << std::endl;
     Geometry* geometry = itPrim.second.geom;
     pxr::GfMatrix4d matrix(xformCache.GetLocalToWorldTransform(prim));
     geometry->Sync(prim, matrix, time);

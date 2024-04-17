@@ -233,19 +233,15 @@ void SphereCollision::_UpdateCenterAndRadius()
   Sphere* sphere = (Sphere*)_collider;
   _center = sphere->GetCenter();
   _radius = sphere->GetRadius();
-  std::cout << "sphere matrix " <<  sphere->GetMatrix() << std::endl;
-  std::cout << "sphere inversese matrix " << sphere->GetInverseMatrix() << std::endl;
-  std::cout << "sphere center " << _center << std::endl;
-  std::cout << "sphere radius " << _radius << std::endl;
 } 
 
 
 void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
   if (!Affects(index))return;
-  const float radius2 = pxr::GfPow(_radius + particles->_radius[index], 2);
+  const float radius = _radius + particles->_radius[index];
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
-  SetHit(index, (predicted - _center).GetLengthSq() < radius2);
+  SetHit(index, (predicted - _center).GetLength() < radius);
 }
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int index, 
@@ -256,6 +252,8 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index,
   pxr::GfVec3f normal = predicted - _center;
   const float nL = normal.GetLength();
   if(nL>0.0000001f)normal.Normalize();
+  else normal = pxr::GfVec3f(0.f,0.f,0.f);
+
   const pxr::GfVec3f intersection = _center + normal * (_radius + particles->_radius[index]);
 
   const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity

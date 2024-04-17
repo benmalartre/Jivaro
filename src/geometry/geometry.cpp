@@ -47,7 +47,6 @@ Geometry::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
 {
   _matrix = matrix; 
   _invMatrix = matrix.GetInverse();
-  std::cout << "sync prim " << prim.GetPath() << ":" << matrix << std::endl;
   return _Sync(prim, matrix, time);
 }
 
