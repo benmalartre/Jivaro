@@ -77,8 +77,8 @@ public:
     }
   };
 
-  void Init(const std::vector<Geometry*>& geometries) override;
-  void Update(const std::vector<Geometry*>& geometries) override;
+  virtual void Init(const std::vector<Geometry*>& geometries) override;
+  virtual void Update() override;
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance, double* minDistance = NULL) const override {
     return false;

@@ -10,15 +10,16 @@ JVR_NAMESPACE_OPEN_SCOPE
 void 
 HashGrid::Init(const std::vector<Geometry*>& geometries)
 {
-  Update(geometries);
+  _Init(geometries);
+  Update();
 }
 
-void 
-HashGrid::Update(const std::vector<Geometry*>& geometries)
+void
+HashGrid::Update()
 {
   uint64_t T = CurrentTime();
   size_t numElements = 0;
-  for (const auto& geometry : geometries) {
+  for (const auto& geometry : _geometries) {
     numElements += geometry->GetNumPoints();
   }
 
@@ -26,13 +27,13 @@ HashGrid::Update(const std::vector<Geometry*>& geometries)
   _cellStart.resize(_tableSize + 1, 0);
   _cellEntries.resize(numElements, 0);
   _mapping.resize(numElements);
-  _points.resize(geometries.size());
+  _points.resize(_geometries.size());
 
   std::vector<int64_t> hashes(numElements);
 
   size_t elemIdx = 0;
-  for (size_t geomIdx = 0; geomIdx < geometries.size(); ++geomIdx) {
-    const Geometry* geometry = geometries[geomIdx];
+  for (size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx) {
+    const Geometry* geometry = _geometries[geomIdx];
     if(geometry->GetType() >= Geometry::POINT) {
       Points* geom = (Points*)geometry;
       _points[geomIdx] = geom->GetPositionsCPtr();

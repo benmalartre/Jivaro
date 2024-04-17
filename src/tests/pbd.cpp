@@ -107,8 +107,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
-    Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
-    _solver->AddElement(collision, sphere.second, sphere.first);
+   Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
+   _solver->AddElement(collision, sphere.second, sphere.first);
   } 
 
   Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);

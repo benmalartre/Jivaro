@@ -25,18 +25,24 @@ public:
   };
 
 public:
+  Intersector(){};
+  virtual ~Intersector(){};
+
   int GetGeometryIndex(Geometry* geom) const;
   const std::vector<Geometry*>& GetGeometries() const {return _geometries;};
   const Geometry* GetGeometry(size_t index) const {return _geometries[index];};
 
-  virtual void Init(const std::vector<Geometry*>& geometries) {};
+  virtual void Init(const std::vector<Geometry*>& geometries) = 0;
+
+  // overriden by derived classes
   virtual void Update() {};
   virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance=-1, double* minDistance=NULL) const = 0;
   virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
     double maxDistance=-1.f) const = 0;
 
-private:
+protected:
+  virtual void _Init(const std::vector<Geometry*>& geometries){_geometries = geometries;};
    std::vector<Geometry*>      _geometries;
 }; 
 

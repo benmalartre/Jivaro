@@ -197,7 +197,7 @@ void Grid3DIntersector::Init(const std::vector<Geometry*>& geometries)
   
 }
 
-void Grid3DIntersector::Update(const std::vector<Geometry*>& geometries)
+void Grid3DIntersector::Update()
 {
 
 }

@@ -44,7 +44,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create collide spheres
   std::map<pxr::SdfPath, Sphere*> spheres;
-  for (size_t x = 0; x < 128; ++x) {
+  for (size_t x = 0; x < 32; ++x) {
     std::cout << "collide sphere" << std::endl;
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));

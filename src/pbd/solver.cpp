@@ -146,16 +146,54 @@ Solver::~Solver()
   delete _points;
 }
 
-void Solver::Reset()
+void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
 {
-  // reset
-  for (size_t p = 0; p < GetNumParticles(); ++p) {
-    _particles._position[p] = _particles._rest[p];
-    _particles._predicted[p] = _particles._rest[p];
-    _particles._velocity[p] = pxr::GfVec3f(0.f);
-    if(_particles._state[p] != Particles::MUTE)
-      _particles._state[p] = Particles::ACTIVE;
+  _elements[element] = std::make_pair(path, geom);
+  switch(element->GetType()) {
+    case Element::COLLISION:
+      AddCollision((Collision*)element);
+      break;
+
+    case Element::CONTACT:
+      AddContact((Constraint*)element);
+      break;
+
+    case Element::CONSTRAINT:
+      AddConstraint((Constraint*)element);
+      break;
+
+    case Element::FORCE:
+      AddForce((Force*)element);
+      break;
+
+    case Element::BODY:
+      AddBody((Body*)element);
+      break;
   }
+
+  //else TF_WARN("There is already an element named %s", path.GetText());
+}
+
+void Solver::RemoveElement(Element* element)
+{
+  _elements.erase(element);
+}
+
+pxr::SdfPath Solver::GetElementPath(Element* element)
+{
+  return _elements[element].first;
+}
+
+Geometry* Solver::GetElementGeometry(Element* element)
+{
+  return _elements[element].second;
+}
+
+Element* Solver::GetElement(const pxr::SdfPath& path)
+{
+  for(auto& elem: _elements) 
+    if(elem.second.first == path)return elem.first;
+  return NULL;
 }
 
 Body* Solver::GetBody(size_t index)
@@ -413,7 +451,6 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
     // apply constraint serially
     for (auto& constraint : constraints)constraint->Apply(&_particles);
   }
-
 }
 
 
@@ -443,6 +480,7 @@ void Solver::_StepOneSerial()
 
   // solve velocities
   _SolveVelocities();
+
 }
 
 void Solver::_StepOne()
@@ -475,56 +513,6 @@ void Solver::_StepOne()
   
   _timer->Stop();
 
-}
-
-void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
-{
-  _elements[element] = std::make_pair(path, geom);
-  switch(element->GetType()) {
-    case Element::COLLISION:
-      AddCollision((Collision*)element);
-      break;
-
-    case Element::CONTACT:
-      AddContact((Constraint*)element);
-      break;
-
-    case Element::CONSTRAINT:
-      AddConstraint((Constraint*)element);
-      break;
-
-    case Element::FORCE:
-      AddForce((Force*)element);
-      break;
-
-    case Element::BODY:
-      AddBody((Body*)element);
-      break;
-  }
-
-  //else TF_WARN("There is already an element named %s", path.GetText());
-}
-
-void Solver::RemoveElement(Element* element)
-{
-  _elements.erase(element);
-}
-
-pxr::SdfPath Solver::GetElementPath(Element* element)
-{
-  return _elements[element].first;
-}
-
-Geometry* Solver::GetElementGeometry(Element* element)
-{
-  return _elements[element].second;
-}
-
-Element* Solver::GetElement(const pxr::SdfPath& path)
-{
-  for(auto& elem: _elements) 
-    if(elem.second.first == path)return elem.first;
-  return NULL;
 }
 
 void Solver::_GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions,
@@ -566,8 +554,18 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
       pxr::HdChangeTracker::Clean | pxr::HdChangeTracker::DirtyPoints |
       pxr::HdChangeTracker::DirtyWidths | pxr::HdChangeTracker::DirtyPrimvar;
   }
+}
 
-  
+void Solver::Reset()
+{
+  // reset
+  for (size_t p = 0; p < GetNumParticles(); ++p) {
+    _particles._position[p] = _particles._rest[p];
+    _particles._predicted[p] = _particles._rest[p];
+    _particles._velocity[p] = pxr::GfVec3f(0.f);
+    if(_particles._state[p] != Particles::MUTE)
+      _particles._state[p] = Particles::ACTIVE;
+  }
 }
 
 void Solver::Step()
@@ -591,7 +589,6 @@ void Solver::Step()
     for (size_t si = 0; si < _subSteps; ++si)
       _StepOneSerial();
   }
-
   _timer->Update();
   _timer->Log();
 

@@ -108,7 +108,7 @@ public:
 
   // geometries
   void Init(const std::vector<Geometry*>& geometries) override;
-  void Update(const std::vector<Geometry*>& geometries) override;
+  void Update() override;
   void InsertMesh(size_t idx);
   void InsertCurve(size_t idx);
   void InsertPoints(size_t idx);

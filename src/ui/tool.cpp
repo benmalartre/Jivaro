@@ -158,7 +158,7 @@ static void _Voxelize(float radius, short axis)
 
     std::cout << "hash grid radius : " << (voxels.GetRadius() * 2.f) << std::endl;
     HashGrid grid(voxels.GetRadius() * 2.f);
-    grid.Init({ (Geometry*)&voxels });
+    //grid.Init({ (Geometry*)&voxels });
 
     size_t numPoints = positions.size();
     pxr::UsdGeomPoints points =

@@ -553,11 +553,9 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     const float im1 = 0.f;
     float K = im0 + im1;
 
-    float alpha = 0.0;
     if (!pxr::GfIsClose(_stiffness, 0.0, 1e-6f))
     {
-      alpha = 1.f / (_stiffness * dt * dt);
-      K += alpha;
+      K += 1.f / (_stiffness * dt * dt);
     }
 
 	  if (pxr::GfAbs(K) == 0.f) continue;

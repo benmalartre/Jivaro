@@ -19,6 +19,7 @@ struct Body;
 class Points;
 class Constraint;
 class Solver;
+class BVH;
 
 class Collision : public Mask
 {
@@ -172,6 +173,7 @@ public:
   const pxr::GfVec3f GetContactNormal(size_t index) const override;
 
 protected:
+  void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
   void _FindContact(size_t index, Particles* particles, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
@@ -179,8 +181,7 @@ protected:
 
 private:
   static size_t                 TYPE_ID;
-  pxr::GfVec3f                  _center;
-  float                         _radius;
+  BVH*                          _bvh;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

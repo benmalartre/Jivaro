@@ -9,6 +9,7 @@
 #include <pxr/base/gf/ray.h>
 #include "../acceleration/bvh.h"
 #include "../acceleration/morton.h"
+#include "../geometry/component.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 
@@ -290,7 +291,7 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geom
   leaves.reserve(trianglePairs.size());
   for (auto& trianglePair : trianglePairs) {
     BVH::Cell* leaf =
-      new BVH::Cell(this, &trianglePair, trianglePair.GetBoundingBox(points));
+      new BVH::Cell(this, &trianglePair, trianglePair.GetLocalBoundingBox(geometry));
 
     const BVH::Cell* root = GetRoot();
     BVH::ComputeCode(root, leaf->GetMidpoint());
@@ -307,7 +308,7 @@ _RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
   
   if (cell->IsLeaf()) {
     Component* component = (Component*)cell->GetData();
-    const pxr::GfRange3f range = component->GetBoundingBox(geometry);
+    const pxr::GfRange3f range = component->GetWorldBoundingBox(geometry);
     cell->SetMin(range.GetMin());
     cell->SetMax(range.GetMax());
     return range;

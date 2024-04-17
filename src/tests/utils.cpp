@@ -46,7 +46,7 @@ Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::Sdf
   pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
 
   pxr::UsdPrim usdPrim = usdXform.GetPrim();
-  usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(20);
+  usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(5);
   usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(0.01f);
 
   return new Solver(scene, usdXform, pxr::GfMatrix4d(1.f));

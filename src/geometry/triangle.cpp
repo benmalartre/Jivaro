@@ -66,13 +66,13 @@ Triangle::GetWorldBoundingBox(const Geometry* geometry) const
 {
 
   const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfMatrix4f& matrix = geometry->GetMatrix();
+  const pxr::GfMatrix4d& matrix = geometry->GetMatrix();
 
   pxr::GfRange3f range;
 
-  range.UnionWith(matrix.Transform(points[_vertices[0]]));
-  range.UnionWith(matrix.Transform(points[_vertices[1]]));
-  range.UnionWith(matrix.Transform(points[_vertices[2]]));
+  range.UnionWith(matrix.Transform(points[vertices[0]]));
+  range.UnionWith(matrix.Transform(points[vertices[1]]));
+  range.UnionWith(matrix.Transform(points[vertices[2]]));
  
   return range;
 }
@@ -84,9 +84,9 @@ Triangle::GetLocalBoundingBox(const Geometry* geometry) const
   const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
   pxr::GfRange3f range;
 
-  range.UnionWith(points[_vertices[0]]);
-  range.UnionWith(points[_vertices[1]]);
-  range.UnionWith(points[_vertices[2]]);
+  range.UnionWith(points[vertices[0]]);
+  range.UnionWith(points[vertices[1]]);
+  range.UnionWith(points[vertices[2]]);
  
   return range;
 }
@@ -366,17 +366,18 @@ TrianglePair::GetWorldBoundingBox(const Geometry* geometry) const
 {
   const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
   const pxr::GfMatrix4d matrix = geometry->GetMatrix();
+
   pxr::GfRange3f range;
 
   if (left) {
-    range.UnionWith(points[left->vertices[0]]);
-    range.UnionWith(points[left->vertices[1]]);
-    range.UnionWith(points[left->vertices[2]]);
+    range.UnionWith(matrix.Transform(points[left->vertices[0]]));
+    range.UnionWith(matrix.Transform(points[left->vertices[1]]));
+    range.UnionWith(matrix.Transform(points[left->vertices[2]]));
   } 
   if (right) {
-    range.UnionWith(points[right->vertices[0]]);
-    range.UnionWith(points[right->vertices[1]]);
-    range.UnionWith(points[right->vertices[2]]);
+    range.UnionWith(matrix.Transform(points[right->vertices[0]]));
+    range.UnionWith(matrix.Transform(points[right->vertices[1]]));
+    range.UnionWith(matrix.Transform(points[right->vertices[2]]));
   }
   return range;
 }

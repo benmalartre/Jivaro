@@ -2,6 +2,8 @@
 
 #include "../geometry/geometry.h"
 #include "../geometry/implicit.h"
+#include "../geometry/mesh.h"
+#include "../acceleration/bvh.h"
 #include "../pbd/collision.h"
 #include "../pbd/particle.h"
 #include "../pbd/solver.h"
@@ -300,8 +302,8 @@ void MeshCollision::Update(const pxr::UsdPrim& prim, double time)
 
 void MeshCollision::_CreateAccelerationStructure()
 {
-  BVH bvh;
-  _bvh.Init({_collider});
+  //_bvh = new BVH({_collider});
+  //_bvh.Init({_collider});
 
   /*
   std::cout << "   build boundary volume hierarchy : " << ((CurrentTime() - T) * 1e-9) << std::endl;
@@ -329,15 +331,18 @@ void MeshCollision::_UpdateAccelerationStructure()
 
 void MeshCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
+  /*
   if (!Affects(index))return;
   const float radius = _radius + particles->_radius[index];
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
   SetHit(index, (predicted - _center).GetLength() < radius);
+  */
 }
 
 void MeshCollision::_StoreContactLocation(Particles* particles, int index, 
   const Body* body, Location& location, float ft)
 {
+  /*
   const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->_position[index] + velocity);
   pxr::GfVec3f normal = predicted - _center;
@@ -353,22 +358,24 @@ void MeshCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
+  */
 }
 
 float MeshCollision::GetValue(Particles* particles, size_t index)
 {
-  return (particles->_predicted[index] - _center).GetLength() -
-    _radius - particles->_radius[index];
+  return 0.f;
+  /*return (particles->_predicted[index] - _center).GetLength() -
+    _radius - particles->_radius[index];*/
 }
   
 pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
 {
-  return (particles->_predicted[index] - _center).GetNormalized();
+  return pxr::GfVec3f(0.f);// return (particles->_predicted[index] - _center).GetNormalized();
 }
 
 const pxr::GfVec3f MeshCollision::GetContactNormal(size_t index) const 
 {
-  return (GetContactPosition(index) - _center).GetNormalized();
+  return (GetContactPosition(index)).GetNormalized();
 };
 
 
