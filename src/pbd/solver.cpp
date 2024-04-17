@@ -545,9 +545,7 @@ void Solver::_GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions,
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
-
   UpdateParameters(stage, time);
-  UpdateCollisions(stage, time);
  
   size_t numParticles = _particles.GetNumParticles();
   if (pxr::GfIsClose(time, _startFrame, 0.001f)) {
@@ -604,12 +602,6 @@ void Solver::Step()
 
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
-  for(size_t i = 0; i < _collisions.size(); ++i){
-    pxr::SdfPath path = GetElementPath(_collisions[i]);
-    pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-    _collisions[i]->Update(prim, time);
-    
-  }
   /*
   BVH bvh;
   bvh.Init(_colliders);

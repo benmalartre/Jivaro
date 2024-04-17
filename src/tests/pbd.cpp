@@ -66,10 +66,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   for (size_t x = 0; x < 1; ++x) {
     std::cout << "collide sphere" << std::endl;
     std::string name = "sphere_collide_" + std::to_string(x);
-    pxr::SdfPath collidePath = rootId.AppendChild(pxr::TfToken(name));
-    spheres[collidePath] =
-      _GenerateCollideSphere(stage, collidePath, RANDOM_0_1 + 4.f, 
+    pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
+    spheres[collideId] =
+      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 4.f, 
       pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f)));
+
+    _scene->AddGeometry(collideId, spheres[collideId]);
 
     //sphere.GetRadiusAttr().Get(&radius);
     //pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));

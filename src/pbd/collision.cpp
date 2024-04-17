@@ -118,15 +118,6 @@ void Collision::SolveVelocities(Particles* particles, float dt)
   }
 }
 
-void Collision::_Update(const pxr::UsdPrim& prim, double time)
-{
-  if (prim.IsValid()) {
-    const pxr::UsdGeomXformable xform = pxr::UsdGeomXformable(prim);
-    const pxr::GfMatrix4d matrix = xform.ComputeLocalToWorldTransform(time);
-    _collider->SetMatrix(matrix);
-  }
-}
-
 void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
@@ -180,7 +171,6 @@ pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
 
 void PlaneCollision::Update(const pxr::UsdPrim& prim, double time) 
 {
-  _Update(prim, time);
   _UpdatePositionAndNormal();
   _UpdateParameters(prim, time);
 }
@@ -230,7 +220,6 @@ SphereCollision::SphereCollision(Geometry* collider, const pxr::SdfPath& path, f
 
 void SphereCollision::Update(const pxr::UsdPrim& prim, double time)
 {
-  _Update(prim, time);
   _UpdateCenterAndRadius();
   _UpdateParameters(prim, time);
 }

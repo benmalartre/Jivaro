@@ -81,7 +81,6 @@ public:
   };
 
 protected:
-  virtual void _Update(const pxr::UsdPrim& prim, double time);
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
