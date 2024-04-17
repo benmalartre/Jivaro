@@ -562,7 +562,7 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 
 	  if (pxr::GfAbs(K) == 0.f) continue;
 
-	  const pxr::GfVec3f correction = n * -(1.f / K) * d * _damping;
+	  const pxr::GfVec3f correction = n * (1.f / K) * -d;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
   

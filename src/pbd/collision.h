@@ -159,6 +159,30 @@ private:
 };
 
 
+class MeshCollision : public Collision
+{
+public:
+  MeshCollision(Geometry* collider, const pxr::SdfPath& path, float restitution=0.5f, float friction= 0.5f);
+  size_t GetTypeId() const override { return TYPE_ID; };
+
+  float GetValue(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
+  void Update(const pxr::UsdPrim& prim, double time) override;
+  
+  const pxr::GfVec3f GetContactNormal(size_t index) const override;
+
+protected:
+  void _UpdateAccelerationStructure();
+  void _FindContact(size_t index, Particles* particles, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
+  
+
+private:
+  static size_t                 TYPE_ID;
+  pxr::GfVec3f                  _center;
+  float                         _radius;
+};
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_PBD_COLLISION_H

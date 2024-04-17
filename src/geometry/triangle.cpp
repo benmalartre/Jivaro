@@ -58,6 +58,21 @@ Triangle::GetNormal(const pxr::GfVec3f* points)
   return normal;
 }
 
+//-------------------------------------------------------
+// Triangle bounding box
+//-------------------------------------------------------
+pxr::GfRange3f
+Triangle::GetBoundingBox(const pxr::GfVec3f* points) const
+{
+  pxr::GfRange3f range;
+
+  range.UnionWith(points[_vertices[0]]);
+  range.UnionWith(points[_vertices[1]]);
+  range.UnionWith(points[_vertices[2]]);
+ 
+  return range;
+}
+
 bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
@@ -328,10 +343,10 @@ TrianglePair::GetVertices() const
 //-------------------------------------------------------
 // TrianglePair bounding box
 //-------------------------------------------------------
-pxr::GfRange3d
+pxr::GfRange3f
 TrianglePair::GetBoundingBox(const pxr::GfVec3f* points) const
 {
-  pxr::GfRange3d range;
+  pxr::GfRange3f range;
 
   if (left) {
     range.UnionWith(points[left->vertices[0]]);

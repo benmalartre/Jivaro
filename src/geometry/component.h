@@ -12,6 +12,7 @@
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/range3f.h>
 #include "../common.h"
 
 #define INVALID_POINT_ID std::numeric_limits<uint32_t>::max()
@@ -35,6 +36,8 @@ struct Component {
     double maxDistance = -1.0, double* minDistance = NULL) const = 0;
   virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const = 0;
+
+  virtual pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* points) const = 0;
 
 };
 

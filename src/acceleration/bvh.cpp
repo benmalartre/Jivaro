@@ -307,6 +307,32 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geom
   }
 }
 
+static pxr::GfRange3f 
+_RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
+{
+  if(cell->IsGeom()) {
+    geometry = cell->GetGeometry();
+  } 
+  
+  if (cell->IsLeaf()) {
+    Component* component = (Component*)cell->GetData();
+    return component->Raycast(points, ray, hit, maxDistance, minDistance);
+  } else {
+    if (cell->GetLeft()) {
+      _RecurseUpdateCells(cell->GetLeft());
+    }
+    if (cell->GetRight()) {
+      _RecurseUpdateCells(cell->GetRight());
+    }
+  }
+}
+
+
+pxr::GfRange3f BVH::Cell:UpdateCells()
+{
+
+}
+
 int 
 _FindSplit(const std::vector<Morton>& mortons,  int first, int last)
 {
@@ -417,7 +443,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 }
 
 void
-BVH::Update(const std::vector<Geometry*>& geometries)
+BVH::Update()
 {
 
 }

@@ -280,4 +280,93 @@ const pxr::GfVec3f SphereCollision::GetContactNormal(size_t index) const
   return (GetContactPosition(index) - _center).GetNormalized();
 };
 
+//----------------------------------------------------------------------------------------
+// Mesh Collision
+//----------------------------------------------------------------------------------------
+size_t MeshCollision::TYPE_ID = Collision::MESH;
+MeshCollision::MeshCollision(Geometry* collider, const pxr::SdfPath& path, 
+  float restitution, float friction)
+  : Collision(collider, path, restitution, friction)
+{
+  Mesh* mesh = (Mesh*)_collider;
+  _CreateAccelerationStructure();
+}
+
+void MeshCollision::Update(const pxr::UsdPrim& prim, double time)
+{
+  _UpdateAccelerationStructure();
+  _UpdateParameters(prim, time);
+}
+
+void MeshCollision::_CreateAccelerationStructure()
+{
+  BVH bvh;
+  _bvh.Init({_collider});
+  std::cout << "   build boundary volume hierarchy : " << ((CurrentTime() - T) * 1e-9) << std::endl;
+
+  T = CurrentTime();
+  for (auto& ray : rays) {
+    double minDistance = DBL_MAX;
+    Location hit;
+    const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
+    if (bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
+      result.push_back(hit.GetPosition(colliders[hit.GetGeometryIndex()]));
+    }
+  }
+  std::cout << "   hit time (" << numRays << " rays) : " << ((CurrentTime() - T) * 1e-9) << std::endl;
+  _SetupBVHInstancer(stage, &bvh);
+
+} 
+
+void MeshCollision::_UpdateAccelerationStructure()
+{
+
+} 
+
+
+void MeshCollision::_FindContact(size_t index, Particles* particles, float ft)
+{
+  if (!Affects(index))return;
+  const float radius = _radius + particles->_radius[index];
+  const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
+  SetHit(index, (predicted - _center).GetLength() < radius);
+}
+
+void MeshCollision::_StoreContactLocation(Particles* particles, int index, 
+  const Body* body, Location& location, float ft)
+{
+  const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
+  const pxr::GfVec3f predicted(particles->_position[index] + velocity);
+  pxr::GfVec3f normal = predicted - _center;
+  const float nL = normal.GetLength();
+  if(nL>0.0000001f)normal.Normalize();
+  else normal = pxr::GfVec3f(0.f,0.f,0.f);
+
+  const pxr::GfVec3f intersection = _center + normal * (_radius + particles->_radius[index]);
+
+  const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
+  const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
+  const float vn = pxr::GfDot(vRel, normal);
+
+  const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
+  location.SetCoordinates(coords);
+}
+
+float MeshCollision::GetValue(Particles* particles, size_t index)
+{
+  return (particles->_predicted[index] - _center).GetLength() -
+    _radius - particles->_radius[index];
+}
+  
+pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
+{
+  return (particles->_predicted[index] - _center).GetNormalized();
+}
+
+const pxr::GfVec3f MeshCollision::GetContactNormal(size_t index) const 
+{
+  return (GetContactPosition(index) - _center).GetNormalized();
+};
+
+
 JVR_NAMESPACE_CLOSE_SCOPE

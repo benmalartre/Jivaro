@@ -61,6 +61,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
   std::cout << "created cloth meshes" << std::endl;
 
+  // create collide spheres
   std::map<pxr::SdfPath, Sphere*> spheres;
   
   for (size_t x = 0; x < 1; ++x) {
@@ -103,8 +104,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   
   //_solver->AddForce(new DampingForce());
   
-  pxr::GfVec3f pos;
-  double radius;
   float restitution = 0.25;
   float friction = 0.5f;
   for (auto& sphere: spheres) {
@@ -127,13 +126,6 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _scene->Update(stage, time);
   _solver->Update(stage, time);
 
-  
-  pxr::UsdGeomXformCache xformCache(time);
-
-  const size_t numParticles = _solver->GetNumParticles();
-  const pxr::GfVec3f hitColor(1.f, 0.2f, 0.3f);
-  Geometry* geom;
- 
   for (auto& execPrim : _scene->GetPrims()) {
 
     pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);

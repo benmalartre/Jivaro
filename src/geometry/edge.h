@@ -41,6 +41,8 @@ struct Edge : public Component {
 
   bool Intersect(const Edge& other, float epsilon=0.0001);
 
+  pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* points) const override;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

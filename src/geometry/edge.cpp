@@ -93,4 +93,11 @@ Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* h
 }
 
 
+pxr::GfRange3f
+Edge::GetBoundingBox(const pxr::GfVec3f* points) const
+{
+  const pxr::GfVec3f extent(0.1)
+  return pxr::GfRange3f().UnionWith(points[_id]-extent).UnionWith(points[_id]+extent);
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

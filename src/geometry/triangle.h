@@ -90,6 +90,9 @@ struct Triangle : public Component{
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
     const pxr::GfVec3f& boxhalfsize) const override;
+
+  pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* points) const override;
+
 };
 
 struct TrianglePair : public Component {
@@ -101,7 +104,6 @@ struct TrianglePair : public Component {
     , left(t1)
     , right(t2) {};
 
-  pxr::GfRange3d GetBoundingBox(const pxr::GfVec3f* points) const;
   pxr::GfVec4i GetVertices() const;
 
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
@@ -110,6 +112,9 @@ struct TrianglePair : public Component {
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Touch(const pxr::GfVec3f* points, 
     const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const override;
+
+  pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* points) const override;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

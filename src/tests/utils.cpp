@@ -113,9 +113,8 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
   double real;
   usdSphere.GetRadiusAttr().Get(&real);
 
-
-  //pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();
-  //op.Set(pxr::GfMatrix4d(m));
+  pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();
+  op.Set(pxr::GfMatrix4d(m));
 
   return sphere;
 }

@@ -41,8 +41,20 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
   _scene->AddGeometry(_groundId, _ground);
-  Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 0.f);
-  _solver->AddElement(collision, _ground, _groundId);
+
+  // create collide spheres
+  std::map<pxr::SdfPath, Sphere*> spheres;
+  for (size_t x = 0; x < 128; ++x) {
+    std::cout << "collide sphere" << std::endl;
+    std::string name = "sphere_collide_" + std::to_string(x);
+    pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
+    spheres[collideId] =
+      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 4.f, 
+      pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(RANDOM_LO_HI(-5.f,5.f), RANDOM_0_1, RANDOM_LO_HI(-5.f,5.f))));
+
+    _scene->AddGeometry(collideId, spheres[collideId]);
+  }
+   
 
   float mass = 0.0765f;
   float radius = 0.25f;
@@ -78,24 +90,21 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->AddForce(gravity);
   _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
 
-  
-  //_solver->AddForce(new DampingForce());
-  
-  pxr::GfVec3f pos;
-  double r;
+
   float restitution = 0.25;
   float friction = 0.5f;
-  /*
-  for (auto& sphere: spheres) {
-    sphere.GetRadiusAttr().Get(&r);
-    pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
-    _solver->AddCollision(new SphereCollision(restitution, friction, m, (float)r));
-  } 
-  */
+  for (auto& sphere : spheres) {
+    Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
+    _solver->AddElement(collision, sphere.second, sphere.first);
+  }
+
+  Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);
+  _solver->AddElement(collision, _ground, _groundId);
 
   _scene->Update(stage, _solver->GetStartFrame());
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _solver->GetStartFrame());
+
 
 }
 
