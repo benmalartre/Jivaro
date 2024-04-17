@@ -41,7 +41,8 @@ struct Edge : public Component {
 
   bool Intersect(const Edge& other, float epsilon=0.0001);
 
-  pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* points) const override;
+  pxr::GfRange3f GetWorldBoundingBox(const Geometry* geometry) const override;
+  pxr::GfRange3f GetLocalBoundingBox(const Geometry* geometry) const override;
 
 };
 

@@ -164,15 +164,6 @@ BVH::Cell::GetIntersector() const
   return (BVH*) GetRoot()->GetData();
 }
 
-int
-BVH::GetGeometryIndex(Geometry* geom) const 
-{
-  for (size_t index = 0; index < _geometries.size(); ++index) {
-    if(_geometries[index] == geom)return static_cast<int>(index);
-  }
-  return -1;
-}
-
 static void 
 _RecurseGetLeaves(BVH::Cell* cell, std::vector<BVH::Cell*>& leaves)
 {
@@ -316,21 +307,19 @@ _RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
   
   if (cell->IsLeaf()) {
     Component* component = (Component*)cell->GetData();
-    return component->Raycast(points, ray, hit, maxDistance, minDistance);
+    const pxr::GfRange3f range = component->GetBoundingBox(geometry);
+    cell->SetMin(range.GetMin());
+    cell->SetMax(range.GetMax());
+    return range;
   } else {
+    pxr::GfRange3f range;
     if (cell->GetLeft()) {
-      _RecurseUpdateCells(cell->GetLeft());
+      range.UnionWith(_RecurseUpdateCells(cell->GetLeft(), geometry));
     }
     if (cell->GetRight()) {
-      _RecurseUpdateCells(cell->GetRight());
+      range.UnionWith(_RecurseUpdateCells(cell->GetRight(), geometry));
     }
   }
-}
-
-
-pxr::GfRange3f BVH::Cell:UpdateCells()
-{
-
 }
 
 int 

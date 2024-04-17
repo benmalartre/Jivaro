@@ -104,9 +104,7 @@ public:
 
   Cell* GetRoot() { return &_root; };
   const Cell* GetRoot() const { return &_root; };
-  int GetGeometryIndex(Geometry* geom) const;
 
-  
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update() override;
   virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
@@ -116,7 +114,6 @@ public:
 
 private:
   Cell                        _root;
-  std::vector<Geometry*>      _geometries;
 
 }; 
 

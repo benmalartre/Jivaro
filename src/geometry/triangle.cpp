@@ -62,8 +62,26 @@ Triangle::GetNormal(const pxr::GfVec3f* points)
 // Triangle bounding box
 //-------------------------------------------------------
 pxr::GfRange3f
-Triangle::GetBoundingBox(const pxr::GfVec3f* points) const
+Triangle::GetWorldBoundingBox(const Geometry* geometry) const
 {
+
+  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
+  const pxr::GfMatrix4f& matrix = geometry->GetMatrix();
+
+  pxr::GfRange3f range;
+
+  range.UnionWith(matrix.Transform(points[_vertices[0]]));
+  range.UnionWith(matrix.Transform(points[_vertices[1]]));
+  range.UnionWith(matrix.Transform(points[_vertices[2]]));
+ 
+  return range;
+}
+
+pxr::GfRange3f
+Triangle::GetLocalBoundingBox(const Geometry* geometry) const
+{
+
+  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
   pxr::GfRange3f range;
 
   range.UnionWith(points[_vertices[0]]);
@@ -344,8 +362,29 @@ TrianglePair::GetVertices() const
 // TrianglePair bounding box
 //-------------------------------------------------------
 pxr::GfRange3f
-TrianglePair::GetBoundingBox(const pxr::GfVec3f* points) const
+TrianglePair::GetWorldBoundingBox(const Geometry* geometry) const
 {
+  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
+  const pxr::GfMatrix4d matrix = geometry->GetMatrix();
+  pxr::GfRange3f range;
+
+  if (left) {
+    range.UnionWith(points[left->vertices[0]]);
+    range.UnionWith(points[left->vertices[1]]);
+    range.UnionWith(points[left->vertices[2]]);
+  } 
+  if (right) {
+    range.UnionWith(points[right->vertices[0]]);
+    range.UnionWith(points[right->vertices[1]]);
+    range.UnionWith(points[right->vertices[2]]);
+  }
+  return range;
+}
+
+pxr::GfRange3f
+TrianglePair::GetLocalBoundingBox(const Geometry* geometry) const
+{
+  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
   pxr::GfRange3f range;
 
   if (left) {

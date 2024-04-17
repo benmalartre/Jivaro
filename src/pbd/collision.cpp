@@ -302,6 +302,8 @@ void MeshCollision::_CreateAccelerationStructure()
 {
   BVH bvh;
   _bvh.Init({_collider});
+
+  /*
   std::cout << "   build boundary volume hierarchy : " << ((CurrentTime() - T) * 1e-9) << std::endl;
 
   T = CurrentTime();
@@ -315,6 +317,7 @@ void MeshCollision::_CreateAccelerationStructure()
   }
   std::cout << "   hit time (" << numRays << " rays) : " << ((CurrentTime() - T) * 1e-9) << std::endl;
   _SetupBVHInstancer(stage, &bvh);
+  */
 
 } 
 

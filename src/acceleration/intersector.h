@@ -12,6 +12,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+class Geometry;
 class Intersector : public pxr::GfRange3d
 { 
 public:
@@ -24,12 +25,19 @@ public:
   };
 
 public:
+  int GetGeometryIndex(Geometry* geom) const;
+  const std::vector<Geometry*>& GetGeometries() const {return _geometries;};
+  const Geometry* GetGeometry(size_t index) const {return _geometries[index];};
+
   virtual void Init(const std::vector<Geometry*>& geometries) {};
-  virtual void Update(const std::vector<Geometry*>& geometries) {};
+  virtual void Update() {};
   virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
     double maxDistance=-1, double* minDistance=NULL) const = 0;
   virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
     double maxDistance=-1.f) const = 0;
+
+private:
+   std::vector<Geometry*>      _geometries;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

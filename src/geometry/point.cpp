@@ -80,5 +80,24 @@ Point::Touch(const pxr::GfVec3f* points,
   return false;
 }
 
+pxr::GfRange3f
+Point::GetWorldBoundingBox(const Geometry* points) const
+{
+  const pxr::GfVec3* points = ((Deformable*)geometry)->GetPositionsCPtr();
+  const pxr::GfMatrix4f& matrix = geometry->GetMatrix();
+  const pxr::GfVec3f extent(0.01f);
+
+  return pxr::GfRange3f().UnionWith(matrix.Transform(points[_id]-extent));
+}
+
+pxr::GfRange3f
+Point::GetLocalBoundingBox(const Geometry* points) const
+{
+  const pxr::GfVec3* points = ((Deformable*)geometry)->GetPositionsCPtr();
+  const pxr::GfVec3f extent(0.01f);
+
+  return pxr::GfRange3f().UnionWith(points[_id]-extent);
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
