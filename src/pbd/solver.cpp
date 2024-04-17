@@ -472,7 +472,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
   
   _timer->Stop();
 
@@ -545,6 +545,7 @@ void Solver::_GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions,
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
+  UpdateCollisions(stage, time);
   UpdateParameters(stage, time);
  
   size_t numParticles = _particles.GetNumParticles();
@@ -602,6 +603,12 @@ void Solver::Step()
 
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
+  for(size_t i = 0; i < _collisions.size(); ++i){
+    pxr::SdfPath path = GetElementPath(_collisions[i]);
+    pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+    _collisions[i]->Update(prim, time);
+
+  }
   /*
   BVH bvh;
   bvh.Init(_colliders);

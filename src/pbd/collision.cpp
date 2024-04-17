@@ -99,7 +99,8 @@ void Collision::FindContactsSerial(Particles* particles, const std::vector<Body*
   _BuildContacts(particles, bodies, contacts, ft);
 }
 
-void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, const Body* body, size_t geomId, float ft)
+void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, 
+  const Body* body, size_t geomId, float ft)
 {
   const size_t offset = ((Body*)body + geomId * sizeof(Body))->GetOffset();
   pxr::GfVec3f contact;
@@ -151,7 +152,8 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 //----------------------------------------------------------------------------------------
 size_t PlaneCollision::TYPE_ID = Collision::PLANE;
 
-PlaneCollision::PlaneCollision(Geometry* collider, const pxr::SdfPath& path, float restitution, float friction) 
+PlaneCollision::PlaneCollision(Geometry* collider, const pxr::SdfPath& path, 
+  float restitution, float friction) 
   : Collision(collider, path, restitution, friction)
 {
   Plane* plane = (Plane*)collider;
@@ -192,7 +194,8 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float ft)
   SetHit(index, d < 0.f);
 }
 
-void PlaneCollision::_StoreContactLocation(Particles* particles, int index, const Body* body, Location & location, float ft)
+void PlaneCollision::_StoreContactLocation(Particles* particles, int index, 
+  const Body* body, Location & location, float ft)
 {
   const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->_position[index] + velocity);
@@ -211,7 +214,8 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, cons
 // Sphere Collision
 //----------------------------------------------------------------------------------------
 size_t SphereCollision::TYPE_ID = Collision::SPHERE;
-SphereCollision::SphereCollision(Geometry* collider, const pxr::SdfPath& path, float restitution, float friction)
+SphereCollision::SphereCollision(Geometry* collider, const pxr::SdfPath& path, 
+  float restitution, float friction)
   : Collision(collider, path, restitution, friction)
 {
   Sphere* sphere = (Sphere*)collider;
@@ -239,21 +243,21 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
   if (!Affects(index))return;
+  const float radius2 = pxr::GfPow(_radius + particles->_radius[index], 2);
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
-  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
-  SetHit(index, local.GetLength() < (_radius + particles->_radius[index]));
+  SetHit(index, (predicted - _center).GetLengthSq() < radius2);
 }
 
-void SphereCollision::_StoreContactLocation(Particles* particles, int index, const Body* body, Location& location, float ft)
+void SphereCollision::_StoreContactLocation(Particles* particles, int index, 
+  const Body* body, Location& location, float ft)
 {
   const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->_position[index] + velocity);
+  pxr::GfVec3f normal = predicted - _center;
+  const float nL = normal.GetLength();
+  if(nL>0.0000001f)normal.Normalize();
+  const pxr::GfVec3f intersection = _center + normal * (_radius + particles->_radius[index]);
 
-  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted).GetNormalized();
-  const pxr::GfVec3f projected = local * (_radius + particles->_radius[index]);
-  const pxr::GfVec3f intersection = _collider->GetMatrix().Transform(projected);
-
-  pxr::GfVec3f normal = _collider->GetMatrix().TransformDir(local);
   const pxr::GfVec3f vPlane(0.f, 0.f, 0.f); // plane velocity
   const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
   const float vn = pxr::GfDot(vRel, normal);
@@ -264,19 +268,13 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index, con
 
 float SphereCollision::GetValue(Particles* particles, size_t index)
 {
-  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->_predicted[index]).GetNormalized();
-  const pxr::GfVec3f projected = local * (_radius + particles->_radius[index]);
-  const pxr::GfVec3f intersection = _collider->GetMatrix().Transform(projected);
-
-  return (intersection - _center).GetLength();
+  return (particles->_predicted[index] - _center).GetLength() - 
+    _radius - particles->_radius[index];
 }
   
 pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
 {
-  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->_predicted[index]).GetNormalized();
-  const pxr::GfVec3f gradient = _collider->GetMatrix().TransformDir(local);
-
-  return gradient;
+  return (particles->_predicted[index] - _center).GetNormalized();
 }
 
 const pxr::GfVec3f SphereCollision::GetContactNormal(size_t index) const 
