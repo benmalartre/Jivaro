@@ -17,7 +17,7 @@ class Sphere;
 class Plane;
 class Points;
 class Scene;
-
+class BVH;
 
 Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
 
@@ -30,6 +30,8 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
 
 Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   double radius, const pxr::GfMatrix4d& m);
+
+void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

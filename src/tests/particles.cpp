@@ -2,6 +2,7 @@
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 #include "../geometry/curve.h"
+#include "../geometry/voxels.h"
 #include "../geometry/points.h"
 #include "../geometry/implicit.h"
 #include "../geometry/triangle.h"
@@ -14,6 +15,8 @@
 #include "../utils/timer.h"
 
 #include "../app/scene.h"
+#include "../app/application.h"
+#include "../command/block.h"
 
 #include "../tests/utils.h"
 #include "../tests/particles.h"
@@ -21,6 +24,25 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
+static void _Voxelize(pxr::UsdGeomMesh& usdMesh, pxr::SdfPath& path, float radius, short axis)
+{
+  if (usdMesh.GetPrim().IsValid()) {
+    UndoBlock block;
+    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+    Voxels voxels;
+    voxels.Init(&mesh, radius);
+    if(axis & 1) voxels.Trace(0);
+    if(axis & 2) voxels.Trace(1);
+    if(axis & 4) voxels.Trace(2);
+    if(axis & 8) voxels.Proximity();
+    voxels.Build();
+
+    const pxr::VtArray<pxr::GfVec3f>& positions = voxels.GetPositions();
+    pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+
+    _SetupBVHInstancer(stage, path, voxels.GetTree());
+  }
+}
 
 
 void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
@@ -68,12 +90,23 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh usdMesh(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+      pxr::SdfPath voxelId = usdMesh.GetPath().AppendChild(pxr::TfToken("voxels"));
+      _Voxelize(usdMesh, voxelId, 0.1, 7);
+      pxr::UsdPrim voxels = stage->GetPrimAtPath(voxelId);
+      Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
+      _scene->AddPoints(prim.GetPath(), points);
+
+      Body* body = _solver->CreateBody((Geometry*)points, pxr::GfMatrix4f(xform), mass, radius, damping);
+      _solver->AddElement(body, points, prim.GetPath());
+      /*
+      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene->AddMesh(prim.GetPath(), mesh);
       Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass, radius, damping);
       _solver->AddElement(body, mesh, prim.GetPath());
       Scene::_Prim* sPrim = _scene->GetPrim(prim.GetPath());
       sPrim->bits = pxr::HdChangeTracker::AllDirty;
+      */
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
       pxr::UsdGeomPoints usdPoints(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);

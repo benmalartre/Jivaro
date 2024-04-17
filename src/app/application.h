@@ -22,8 +22,7 @@ class Application : public pxr::TfWeakBase
 public:
   static const char* name;
   // constructor
-  Application(unsigned width, unsigned height);
-  Application(bool fullscreen=true);
+  Application();
 
   // destructor
   ~Application();
@@ -42,7 +41,7 @@ public:
     const int numFilters, const char* name="Browse", bool readOrWrite=false);
   
   // init application
-  void Init();
+  void Init(unsigned width, unsigned height, bool fullscreen=false);
   void Term();
 
   // update application
@@ -160,9 +159,11 @@ private:
 
 };
 
-extern Application* APPLICATION;
 
-static Application* GetApplication() { return APPLICATION; };
+static Application* GetApplication() { 
+  static Application __APP;
+  return &__APP; 
+};
 
 #define ADD_COMMAND(CMD, ...) \
 GetApplication()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));

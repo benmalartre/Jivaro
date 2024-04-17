@@ -8,12 +8,15 @@
 #include <pxr/usd/usdGeom/xformOp.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/points.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
+#include <pxr/usd/usdGeom/primvarsApi.h>
 #include <pxr/imaging/hd/changeTracker.h>
 
 #include "../tests/utils.h"
 #include "../geometry/mesh.h"
 #include "../geometry/points.h"
 #include "../geometry/implicit.h"
+#include "../acceleration/bvh.h"
 #include "../pbd/solver.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -118,4 +121,55 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 
   return sphere;
 }
+
+void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
+{
+  std::vector<BVH::Cell*> cells;
+  bvh->GetRoot()->GetCells(cells);
+  size_t numPoints = cells.size();
+  pxr::VtArray<pxr::GfVec3f> points(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<int64_t> indices(numPoints);
+  pxr::VtArray<int> protoIndices(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  pxr::VtArray<int> curveVertexCount(1);
+  curveVertexCount[0] = numPoints;
+  pxr::VtArray<float> widths(numPoints);
+  widths[0] = 1.f;
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
+    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
+    protoIndices[pointIdx] = 0;
+    indices[pointIdx] = pointIdx;
+    colors[pointIdx] =
+      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
+        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
+    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+    widths[pointIdx] = RANDOM_0_1;
+  }
+
+  pxr::UsdGeomPointInstancer instancer =
+    pxr::UsdGeomPointInstancer::Define(stage,path);
+
+  pxr::UsdGeomCube proto =
+    pxr::UsdGeomCube::Define(stage,
+      path.AppendChild(pxr::TfToken("proto_cube")));
+  proto.CreateSizeAttr().Set(1.0);
+
+  instancer.CreatePositionsAttr().Set(points);
+  instancer.CreateProtoIndicesAttr().Set(protoIndices);
+  instancer.CreateScalesAttr().Set(scales);
+  instancer.CreateIdsAttr().Set(indices);
+  instancer.CreateOrientationsAttr().Set(rotations);
+  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
+  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
+  pxr::UsdGeomPrimvar colorPrimvar =
+    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+  colorPrimvar.SetElementSize(1);
+  colorPrimvar.Set(colors);
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -23,28 +23,18 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Application* APPLICATION = nullptr;
 const char* Application::name = "Jivaro";
 
-// constructor
+  // constructor
 //----------------------------------------------------------------------------
-Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _execute(false), _activeEngine(nullptr), _exec(nullptr)
+Application::Application()
+  : _mainWindow(nullptr)
+  , _activeWindow(nullptr)
+  , _popup(nullptr)
+  , _execute(false)
+  , _activeEngine(nullptr)
+  , _exec(nullptr)
 {  
-  _mainWindow = CreateStandardWindow(name, pxr::GfVec4i(0,0,width, height));
-  _activeWindow = _mainWindow;
-  _time.Init(1, 101, 24);
-  
-};
-
-Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _execute(false), _activeEngine(nullptr), _exec(nullptr)
-{
-  _mainWindow = CreateFullScreenWindow(name);
-  _activeWindow = _mainWindow;
-  _time.Init(1, 101, 24);
 };
 
 // destructor
@@ -174,8 +164,17 @@ Application::SetStage(pxr::UsdStageRefPtr& stage)
 // init application
 //----------------------------------------------------------------------------
 void 
-Application::Init()
+Application::Init(unsigned width, unsigned height, bool fullscreen)
 {
+  if(fullscreen) {
+    _mainWindow = CreateFullScreenWindow(name);
+  } else {
+    _mainWindow = CreateStandardWindow(name, pxr::GfVec4i(0,0,width, height));
+  }
+  
+  _activeWindow = _mainWindow;
+  _time.Init(1, 101, 24);
+  
   //TfDebug::Enable(HD_MDI);
   //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
   //TfDebug::Enable(GLF_DEBUG_CONTEXT_CAPS);
@@ -264,8 +263,8 @@ void
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
   //_exec = new TestPBD(new Scene());
-  //_exec = new TestParticles(new Scene());
-  _exec = new TestHair(new Scene());
+  _exec = new TestParticles(new Scene());
+  //_exec = new TestHair(new Scene());
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {

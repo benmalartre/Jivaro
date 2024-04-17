@@ -10,9 +10,10 @@ int main(void)
 {
   glfwInit();
   BuildKeyMap();
-  APPLICATION = new Application(1024,720);
-  APPLICATION->Init();
-  while (APPLICATION->Update());
+  Application* app = GetApplication();
+  app->Init(1024, 720);
+  while (app->Update());
   glfwTerminate();
+  delete app;
   return 1;
 }
