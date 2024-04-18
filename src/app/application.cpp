@@ -17,10 +17,12 @@
 #include "../app/view.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+
+#include "../tests/raycast.h"
+#include "../tests/particles.h"
 #include "../tests/pbd.h"
 #include "../tests/hair.h"
-#include "../tests/particles.h"
-#include "../tests/raycast.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -274,7 +276,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  _exec = new TestRaycast();
+  _exec = CreateTestRaycast();
   //_exec = new TestParticles();
   //_exec = new TestPBD();
   //_exec = new TestHair();

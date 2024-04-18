@@ -16,13 +16,42 @@
 #include "../pbd/solver.h"
 #include "../utils/timer.h"
 
-#include "../app/application.h"
-#include "../command/block.h"
-
-#include "../tests/utils.h"
 #include "../tests/raycast.h"
 
+#include "../app/application.h"
+
+#include "../tests/utils.h"
+
 JVR_NAMESPACE_OPEN_SCOPE
+
+class Curve;
+class Mesh;
+class Points;
+class BVH;
+
+class TestRaycast : public Execution {
+public:
+  friend class Scene;
+  TestRaycast() : Execution(){};
+  void InitExec(pxr::UsdStageRefPtr& stage) override;
+  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+private:
+  Mesh                                                        _mesh;
+  Curve                                                       _rays;
+  Points                                                      _hits;
+  BVH                                                         _bvh;
+  pxr::SdfPath                                                _meshId;
+  pxr::SdfPath                                                _raysId;
+  pxr::SdfPath                                                _hitsId;
+  pxr::SdfPath                                                _bvhId;
+
+};
+
+Execution* CreateTestRaycast()
+{
+  return new TestRaycast();
+}
 
 
 void _UpdateRays(Mesh* mesh, Curve* rays) 
@@ -48,7 +77,14 @@ void _UpdateRays(Mesh* mesh, Curve* rays)
   }
 
   rays->SetTopology(points, radiis, counts);
-  
+}
+
+void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes)
+{
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  for (pxr::UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<pxr::UsdGeomMesh>())
+      meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
 }
 
 void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
@@ -66,14 +102,24 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 10.f, 0.f));
 
-  _meshId = rootId.AppendChild(pxr::TfToken("Emitter"));
+  _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, 32, 32, scale * rotate * translate);
-  _scene.AddGeometry(_meshId, _mesh);
+  _scene.AddGeometry(_meshId, &_mesh);
 
-  _raysId = rootId.AppendChild(pxr::TfToken("Rays"));
+  _raysId = rootId.AppendChild(pxr::TfToken("rays"));
   _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
 
-  _UpdateRays(_mesh, _rays);
+  _UpdateRays(&_mesh, &_rays);
+
+  // create bvh
+  std::vector<Geometry*> meshes;
+  _TraverseStageFindingMeshes(stage, meshes);
+  if(meshes.size()) {
+    _bvh.Init(meshes);
+    _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
+    _SetupBVHInstancer(stage, _bvhId, &_bvh);
+
+  }
 
   Scene::_Prim* prim = _scene.GetPrim(_raysId);
   prim->bits = pxr::HdChangeTracker::AllDirty;
@@ -89,7 +135,7 @@ void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Update(stage, time);
 
-  _UpdateRays(_mesh, _rays);
+  _UpdateRays(&_mesh, &_rays);
   Scene::_Prim* prim = _scene.GetPrim(_raysId);
   prim->bits = pxr::HdChangeTracker::DirtyTopology;
 }
@@ -99,10 +145,7 @@ void TestRaycast::TerminateExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   stage->RemovePrim(_meshId);
-  std::cout << "delete mesh : " << _mesh << std::endl;
-  std::cout << "delete rays : " << _rays << std::endl;
-  delete _mesh;
-  delete _rays;
+  stage->RemovePrim(_bvhId);
 
 }
 

@@ -1,5 +1,5 @@
-#ifndef JVR_APPLICATION_SCENE_H
-#define JVR_APPLICATION_SCENE_H
+#ifndef JVR_GEOMETRY_SCENE_H
+#define JVR_GEOMETRY_SCENE_H
 #include <vector>
 #include "../common.h"
 #include <pxr/usd/usd/stage.h>
@@ -57,7 +57,7 @@ public:
   Voxels* AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius);
   void AddVoxels(const pxr::SdfPath& path, Voxels* voxels);
 
-  Geometry* AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  Geometry* AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo);
   void AddGeometry(const pxr::SdfPath& path, Geometry* geom);
 
   void RemoveGeometry(const pxr::SdfPath& path);
@@ -121,4 +121,4 @@ private:
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // JVR_APPLICATION_SCENE_H
+#endif // JVR_GEOMETRY_SCENE_H

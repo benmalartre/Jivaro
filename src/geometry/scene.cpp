@@ -19,13 +19,6 @@
 #include "../geometry/voxels.h"
 #include "../geometry/sampler.h"
 #include "../geometry/scene.h"
-#include "../pbd/force.h"
-#include "../pbd/solver.h"
-#include "../pbd/collision.h"
-#include "../pbd/constraint.h"
-#include "../app/application.h"
-#include "../app/commands.h"
-
 
 JVR_NAMESPACE_OPEN_SCOPE
 

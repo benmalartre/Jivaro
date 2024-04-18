@@ -21,6 +21,28 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+class TestPBD : public Execution {
+public:
+  friend class Scene;
+  TestPBD() : Execution(){};
+  void InitExec(pxr::UsdStageRefPtr& stage) override;
+  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+private:
+  Solver*                                                    _solver;
+  Plane*                                                     _ground;
+  pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash> _sourcesMap;
+  pxr::TfHashMap<pxr::SdfPath, Body*, pxr::SdfPath::Hash>    _bodyMap;
+  pxr::SdfPath                                               _groundId;
+  pxr::SdfPath                                               _solverId;
+};
+
+Execution* CreateTestPBD()
+{
+  return new TestPBD();
+}
+
+
 void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
