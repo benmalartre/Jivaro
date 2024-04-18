@@ -127,21 +127,16 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
 
-  pxr::GfVec3f normal = GetGradient(particles, index);
+  pxr::GfVec3f normal = GetContactNormal(index);
 
   // Relative normal and tangential velocities
-  const pxr::GfVec3f v = particles->_velocity[index] - pxr::GfVec3f(0.f);
+  const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index) * dt;
   const float vn = pxr::GfDot(v, normal);
   const pxr::GfVec3f vt = v - normal * vn;
   const float vtLen = vt.GetLength();
 
   // Friction
-  if (vtLen > 1e-6 && _friction > 1e-6) {
-    float lambdaN = -(1.f/_friction);
-    const float Fn = -lambdaN / (dt * dt);
-    const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
-    particles->_velocity[index] -= vt.GetNormalized() * friction;
-  }
+  particles->_velocity[index] -= vt.GetNormalized() * _friction;
 
   // Restitution
   const float threshold = 2.f * 9.81 * dt;
