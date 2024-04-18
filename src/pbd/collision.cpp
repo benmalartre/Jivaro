@@ -75,9 +75,6 @@ void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 
   prim.GetAttribute(pxr::TfToken("Restitution")).Get(&_restitution, time);
   prim.GetAttribute(pxr::TfToken("Friction")).Get(&_friction, time);
-
-    std::cout << "update collision parameters : " << prim.GetPath() << "friction : " << 
-      _friction << ", restitution : " << _restitution << std::endl;
 }
 
 void Collision::Init(size_t numParticles) 
@@ -210,9 +207,8 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  const pxr::GfVec3f vSphere = _collider->GetVelocity(); // sphere velocity
-  const pxr::GfVec3f vRel = vSphere - particles->_velocity[index];
-  const float vn = pxr::GfDot(vRel, _normal);
+  const pxr::GfVec3f relativeVelocity = particles->_velocity[index] - _collider->GetVelocity();
+  const float vn = pxr::GfDot(relativeVelocity, _normal);
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
 }
@@ -263,9 +259,8 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = _center + normal * (_radius + particles->_radius[index]);
 
-  const pxr::GfVec3f vPlane = _collider->GetVelocity(); // sphere velocity
-  const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
-  const float vn = pxr::GfDot(vRel, normal);
+  const pxr::GfVec3f relativeVelocity = particles->_velocity[index] - _collider->GetVelocity();
+  const float vn = pxr::GfDot(relativeVelocity, normal);
 
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);

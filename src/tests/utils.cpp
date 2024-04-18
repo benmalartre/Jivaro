@@ -35,7 +35,6 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
   pxr::UsdPrim usdPrim = usdGround.GetPrim();
   usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(0.5f);
   usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(0.5f);
-  usdPrim.CreateAttribute(pxr::TfToken("Serial"), pxr::SdfValueTypeNames->Bool).Set(false);
 
   Plane* ground = new Plane();
   ground->SetMatrix(
@@ -115,6 +114,11 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 
   double real;
   usdSphere.GetRadiusAttr().Get(&real);
+
+  pxr::UsdPrim usdPrim = usdSphere.GetPrim();
+  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(0.5f);
+  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(0.5f);
+
 
   pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();
   op.Set(pxr::GfMatrix4d(m));
