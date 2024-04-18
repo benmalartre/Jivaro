@@ -16,28 +16,29 @@ Points::Points()
 Points::Points(const Points* other, bool normalize)
   : Deformable(other, normalize)
 {
-  size_t numPoints = _positions.size();
-  _positions = other->_positions;
+  const Deformable* deformable = (const Deformable*)other;
+  _positions = deformable->GetPositions();
   _previous = _positions;
-  _haveRadius = other->HaveRadius();
-  if (_haveRadius)_radius = other->GetRadius();
-  _haveNormals = other->HaveNormals();
-  if (_haveNormals)_normals = other->GetNormals();
-  _haveColors = other->HaveColors();
-  if (_haveColors)_colors = other->GetColors();
+  _haveRadius = deformable->HaveRadius();
+  if (_haveRadius)_radius = deformable->GetRadius();
+  _haveNormals = deformable->HaveNormals();
+  if (_haveNormals)_normals = deformable->GetNormals();
+  _haveColors = deformable->HaveColors();
+  if (_haveColors)_colors = deformable->GetColors();
 }
 
 Points::Points(const Voxels* voxels)
-  : Deformable(other, false)
+  : Deformable(voxels, false)
 {
-  _positions = voxels->GetPositions();
+  const Deformable* deformable = (const Deformable*)voxels;
+  _positions = deformable->GetPositions();
   _previous = _positions;
-  _haveRadius = voxels->HaveRadius();
-  if(_haveRadius)_radius = voxels->GetRadius();
-  _haveNormals = voxels->HaveNormals();
-  if(_haveNormals)_normals = voxels->GetNormals();
-  _haveColors = voxels->HaveColors();
-  if(_haveColors)_colors = voxels->GetColors();
+  _haveRadius = deformable->HaveRadius();
+  if(_haveRadius)_radius = deformable->GetRadius();
+  _haveNormals = deformable->HaveNormals();
+  if(_haveNormals)_normals = deformable->GetNormals();
+  _haveColors = deformable->HaveColors();
+  if(_haveColors)_colors = deformable->GetColors();
 }
 
 Points::Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
@@ -54,8 +55,6 @@ Points::Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
   if (widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue())
     widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
 }
-
-Points::Points(Voxels)
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -125,6 +125,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   if(!CheckHit(index))return;    
 
   pxr::GfVec3f normal = GetGradient(particles, index);
+
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->_velocity[index] - pxr::GfVec3f(0.f);
   const float vn = pxr::GfDot(v, normal);
@@ -141,12 +142,11 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 
   // Restitution
   const float threshold = 2.f * 9.81 * dt;
-  const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution * dt;
+  const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
   const float vnTilde = GetContactT(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->_velocity[index] += normal * restitution;
 }
-
 
 //----------------------------------------------------------------------------------------
 // Plane Collision
@@ -191,7 +191,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float ft)
   if (!Affects(index))return;
 
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
-  float d = pxr::GfDot(_normal, predicted - _position)  - particles->_radius[index];
+  float d = pxr::GfDot(_normal, predicted - _position)  - particles->_radius[index] * 1.2f;
   SetHit(index, d < 0.f);
 }
 
@@ -204,9 +204,9 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  const pxr::GfVec3f vPlane = _collider->GetVelocity(); // plane velocity
+  const pxr::GfVec3f vPlane = _collider->GetVelocity(); // sphere velocity
   const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
-  const float vn = pxr::GfDot(vRel, _normal);
+  const float vn = pxr::GfDot(vRel, _normal * -1.f);
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
 }
@@ -240,7 +240,7 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
   if (!Affects(index))return;
-  const float radius = _radius + particles->_radius[index];
+  const float radius = _radius + particles->_radius[index] * 1.2f;
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
   SetHit(index, (predicted - _center).GetLength() < radius);
 }

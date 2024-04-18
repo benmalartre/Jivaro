@@ -91,6 +91,11 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
   return voxels;
 }
 
+void Scene::AddVoxels(const pxr::SdfPath& path, Voxels* voxels)
+{
+  _prims[path] = { voxels };
+}
+
 
 Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo)
 {

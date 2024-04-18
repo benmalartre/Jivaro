@@ -5,6 +5,7 @@
 #include <limits>
 #include <map>
 #include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/rotation.h>
 #include <pxr/base/vt/array.h>
 #include <pxr/base/tf/callContext.h>
 #include <pxr/base/tf/warning.h>

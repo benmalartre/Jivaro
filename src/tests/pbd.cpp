@@ -94,7 +94,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _bodyMap[prim.GetPath()] = body;
     }
   }
-  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.8f, 0.f));
+  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
   _solver->AddForce(gravity);
 
   //_solver->AddElement(gravity, NULL, _groundId);

@@ -24,17 +24,18 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-static Points* _Voxelize(pxr::UsdGeomMesh& usdMesh, pxr::SdfPath& path, float radius)
+static Voxels* _Voxelize(pxr::UsdGeomMesh& usdMesh, pxr::SdfPath& path, float radius)
 {
   Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
-  Voxels voxels;
-  voxels.Init(&mesh, radius);
-  voxels.Trace(0);
-  voxels.Trace(1);
-  voxels.Trace(2);
-  voxels.Build();
+  Voxels *voxels = new Voxels();
+  voxels->Init(&mesh, radius);
+  voxels->Trace(0);
+  voxels->Trace(1);
+  voxels->Trace(2);
+  voxels->Build();
 
-  return new Points(&voxels);
+  std::cout << "voxels num cells : " << voxels->GetNumCells() << std::endl;
+  return voxels;
 }
 
 
@@ -59,16 +60,27 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create collide spheres
   std::map<pxr::SdfPath, Sphere*> spheres;
+  pxr::GfVec3f offset(10.f, 0.f, 0.f);
+  pxr::GfVec3f axis(0.f,1.f,0.f);
+  size_t n = 32;
+  const double rStep = 360.0 / static_cast<double>(n);
+
   for (size_t x = 0; x < 32; ++x) {
-    std::cout << "collide sphere" << std::endl;
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
+    pxr::GfRotation rotate(axis, x * rStep);
     spheres[collideId] =
-      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 4.f, 
-      pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(RANDOM_LO_HI(-5.f,5.f), RANDOM_0_1, RANDOM_LO_HI(-5.f,5.f))));
+      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d(1.f).SetTranslate(rotate.TransformDir(offset)));
 
     _scene->AddGeometry(collideId, spheres[collideId]);
   }
+
+  std::string name = "sphere_collide_ctr";
+  pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
+  spheres[collideId] =
+    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
+
+  _scene->AddGeometry(collideId, spheres[collideId]);
    
 
   float mass = 0.0765f;
@@ -84,13 +96,14 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::UsdGeomMesh usdMesh(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       pxr::SdfPath voxelId = usdMesh.GetPath().AppendChild(pxr::TfToken("voxels"));
-      Point* points = _Voxelize(usdMesh, voxelId, 0.05);
+
+      Voxels* voxels = _Voxelize(usdMesh, voxelId, 0.25);
       
       //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
-      _scene->AddPoints(voxelId, xform);
+      _scene->AddVoxels(voxelId, voxels);
 
-      Body* body = _solver->CreateBody((Geometry*)points, pxr::GfMatrix4f(xform), mass, radius, damping);
-      _solver->AddElement(body, (Geometry*)points, prim.GetPath());
+      Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(xform), mass, radius, damping);
+      _solver->AddElement(body, (Geometry*)voxels, prim.GetPath());
       
       /*
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
@@ -105,7 +118,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::UsdGeomPoints usdPoints(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Points* points = new Points(usdPoints, xform);
-      _scene->AddPoints(prim.GetPath(), points);
+      _scene->AddGeometry(prim.GetPath(), points);
 
       Body* body = _solver->CreateBody((Geometry*)points, pxr::GfMatrix4f(xform), mass, radius, damping);
       _solver->AddElement(body, points, prim.GetPath());
@@ -113,19 +126,19 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
     }
   }
-  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.8f, 0.f));
+  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
   _solver->AddForce(gravity);
   _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
 
 
-  float restitution = 0.25;
-  float friction = 0.5f;
+  float restitution = 0.f;
+  float friction = 1.f;
   for (auto& sphere : spheres) {
     Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
     _solver->AddElement(collision, sphere.second, sphere.first);
   }
 
-  Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);
+  Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
   _solver->AddElement(collision, _ground, _groundId);
 
   _scene->Update(stage, _solver->GetStartFrame());

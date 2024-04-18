@@ -555,6 +555,20 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 	  const pxr::GfVec3f correction = n * (1.f / K) * -d;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
+
+/*
+    const pxr::GfVec3f pPrev = particles->_previous[index];
+    const pxr::GfVec3f cPrev = _collision->GetContactPreviousPosition(index);
+
+    // relative motion
+    const pxr::GfVec3f dp = (particles->_predicted[index] - pPrev) - (_collision->GetContactPosition(index) - cPrev) * dt;
+
+    // tangential component
+    pxr::GfVec3f dpT = dp - n * pxr::GfDot(dp, n);
+    dpT *= - 1.f;
+    
+    _correction[elem * ELEM_SIZE + 0] += im0 * dpT * dt;
+  */
   
   }
 }

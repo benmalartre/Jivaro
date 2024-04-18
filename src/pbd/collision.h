@@ -67,6 +67,11 @@ public:
   virtual float GetContactT(size_t index) const {
     return _contacts[_p2c[index]].GetT();};
 
+  virtual const pxr::GfVec3f GetContactPreviousPosition(size_t index) const {
+    return _collider->GetPreviousMatrix().Transform(
+      _collider->GetInverseMatrix().Transform(_contacts[_p2c[index]].GetPointCoordinates()));
+  }
+
 
   std::vector<Location>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
