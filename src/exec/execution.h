@@ -5,6 +5,7 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/imaging/hd/changeTracker.h>
 #include "../common.h"
+#include "../geometry/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -16,17 +17,17 @@ public:
   
   friend class Scene;
   Execution() = delete;
-  Execution(Scene* scene) : _scene(scene) {};
+  Execution() {};
   virtual void InitExec(pxr::UsdStageRefPtr& stage) = 0;
   virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time) = 0;
   virtual void TerminateExec(pxr::UsdStageRefPtr& stage) = 0;
 
 public:
-  Scene* GetScene(){return _scene;};
-  const Scene* GetScene() const {return _scene;};
+  Scene* GetScene(){return &_scene;};
+  const Scene* GetScene() const {return &_scene;};
 
 protected:
-  Scene* _scene;
+  Scene _scene;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

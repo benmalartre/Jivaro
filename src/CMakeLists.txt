@@ -80,6 +80,7 @@ add_executable(${TARGET}
   geometry/stroke.cpp
   geometry/perlin.cpp
   geometry/voronoi.cpp
+  geometry/scene.cpp
   #geometry/vdb.cpp
   acceleration/morton.cpp
   acceleration/intersector.cpp
@@ -109,7 +110,6 @@ add_executable(${TARGET}
   app/view.cpp
   app/window.cpp
   app/modal.cpp
-  app/scene.cpp
   app/engine.cpp
   app/picking.cpp
   app/selection.cpp

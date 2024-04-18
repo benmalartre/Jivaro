@@ -18,13 +18,14 @@
 #include "../geometry/points.h"
 #include "../geometry/voxels.h"
 #include "../geometry/sampler.h"
+#include "../geometry/scene.h"
 #include "../pbd/force.h"
 #include "../pbd/solver.h"
 #include "../pbd/collision.h"
 #include "../pbd/constraint.h"
 #include "../app/application.h"
 #include "../app/commands.h"
-#include "../app/scene.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -128,6 +129,13 @@ void Scene::AddGeometry(const pxr::SdfPath& path, Geometry* geom)
 {
   _prims[path] = {geom};
 }
+
+
+void Scene::RemoveGeometry(const pxr::SdfPath& path)
+{
+  if(_prims.find(path) != _prims.end())_prims.erase(path);
+}
+
 
 Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
 {

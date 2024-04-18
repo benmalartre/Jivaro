@@ -421,7 +421,14 @@ Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 Geometry::DirtyState 
 Mesh::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
 {
-  return Geometry::DirtyState::CLEAN;
+  if(prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>())
+  {
+    pxr::UsdGeomMesh usdMesh(prim);
+    const size_t nbPositions = _positions.size();
+    usdMesh.GetPointsAttr().Get(&_positions, time);
+  }
+  SetMatrix(matrix);
+  return _Sync(prim, matrix, time);
 }
 
 static int 

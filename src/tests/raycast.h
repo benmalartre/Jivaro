@@ -11,7 +11,7 @@ class Mesh;
 class TestRaycast : public Execution {
 public:
   friend class Scene;
-  TestRaycast(Scene* scene) : Execution(scene){};
+  TestRaycast() : Execution(){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;

@@ -10,6 +10,7 @@
 #include "../geometry/voxels.h"
 #include "../geometry/curve.h"
 #include "../geometry/implicit.h"
+#include "../geometry/scene.h"
 #include "../app/application.h"
 #include "../pbd/constraint.h"
 #include "../pbd/force.h"
@@ -17,7 +18,7 @@
 #include "../pbd/solver.h"
 #include "../utils/timer.h"
 #include "../app/time.h"
-#include "../app/scene.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 

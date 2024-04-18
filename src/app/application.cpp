@@ -5,6 +5,7 @@
 #include "../utils/timer.h"
 #include "../utils/prefs.h"
 #include "../ui/popup.h"
+#include "../geometry/scene.h"
 #include "../app/application.h"
 #include "../app/commands.h"
 #include "../app/modal.h"
@@ -12,7 +13,6 @@
 #include "../app/handle.h"
 #include "../app/engine.h"
 #include "../app/selection.h"
-#include "../app/scene.h"
 #include "../app/window.h"
 #include "../app/view.h"
 #include "../app/camera.h"
@@ -300,11 +300,11 @@ Application::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 void
 Application::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
+  
   for (auto& engine : _engines) {
     engine->TerminateExec();
   }
-  Scene* scene = _exec->GetScene();
-  delete scene;
+  _exec->TerminateExec(stage);
   delete _exec;
   _exec = nullptr;  
 }

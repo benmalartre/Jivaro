@@ -11,7 +11,7 @@ class Plane;
 class TestParticles : public Execution {
 public:
   friend class Scene;
-  TestParticles(Scene* scene) : Execution(scene){};
+  TestParticles() : Execution(){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;

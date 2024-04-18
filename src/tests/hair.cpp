@@ -5,6 +5,7 @@
 #include "../geometry/points.h"
 #include "../geometry/triangle.h"
 #include "../geometry/utils.h"
+#include "../geometry/scene.h"
 #include "../pbd/particle.h"
 #include "../pbd/force.h"
 #include "../pbd/constraint.h"
@@ -12,7 +13,7 @@
 #include "../pbd/solver.h"
 #include "../utils/timer.h"
 
-#include "../app/scene.h"
+
 #include "../app/application.h"
 
 #include "../tests/utils.h"
@@ -138,7 +139,7 @@ void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
       
       _Sources sources;
       pxr::SdfPath hairPath = prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair")));
-      _scene->AddCurve(hairPath, curve);
+      _scene.AddCurve(hairPath, curve);
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
       _sourcesMap[hairPath] = sources;
     }
@@ -154,7 +155,7 @@ void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     const pxr::SdfPath& path = source.first;
     _Sources& sources = source.second;
 
-    Scene::_Prim* prim = _scene->GetPrim(path);
+    Scene::_Prim* prim = _scene.GetPrim(path);
     Curve* curve = (Curve*)prim->geom;
 
     double time = Application::Get()->GetTime().GetActiveTime();
@@ -178,7 +179,7 @@ void TestHair::TerminateExec(pxr::UsdStageRefPtr& stage)
    for (pxr::UsdPrim prim : primRange) {
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::SdfPath hairPath = prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair")));
-      _scene->Remove(hairPath);
+      _scene.Remove(hairPath);
     }
   }
 }

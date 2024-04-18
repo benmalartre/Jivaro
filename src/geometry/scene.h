@@ -60,6 +60,8 @@ public:
   Geometry* AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
   void AddGeometry(const pxr::SdfPath& path, Geometry* geom);
 
+  void RemoveGeometry(const pxr::SdfPath& path);
+
   void Remove(const pxr::SdfPath& path);
   bool IsMesh(const pxr::SdfPath& path);
   bool IsCurves(const pxr::SdfPath& path);

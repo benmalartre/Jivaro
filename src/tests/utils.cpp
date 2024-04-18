@@ -6,6 +6,7 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/xformOp.h>
+#include <pxr/usd/usdGeom/xformCommonApi.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/points.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
@@ -116,7 +117,8 @@ Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
   usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
 
-  usdMesh.AddTransformOp().Set(m);
+  pxr::UsdGeomXformOp op = usdMesh.AddTransformOp();
+  op.Set(m, pxr::UsdTimeCode::Default());
 
   return mesh;
 }

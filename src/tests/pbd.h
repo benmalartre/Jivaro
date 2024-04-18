@@ -11,7 +11,7 @@ class Plane;
 class TestPBD : public Execution {
 public:
   friend class Scene;
-  TestPBD(Scene* scene) : Execution(scene){};
+  TestPBD() : Execution(){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;

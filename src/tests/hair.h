@@ -10,7 +10,7 @@ class Scene;
 class TestHair : public Execution {
 public:
   friend class Scene;
-  TestHair(Scene* scene) : Execution(scene){};
+  TestHair() : Execution(){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;

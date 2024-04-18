@@ -1,7 +1,7 @@
 
 #include "../app/delegate.h"
-#include "../app/scene.h"
 #include "../geometry/geometry.h"
+#include "../geometry/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

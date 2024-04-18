@@ -6,6 +6,7 @@
 #include "../geometry/triangle.h"
 #include "../geometry/implicit.h"
 #include "../geometry/utils.h"
+#include "../geometry/scene.h"
 #include "../pbd/particle.h"
 #include "../pbd/force.h"
 #include "../pbd/constraint.h"
@@ -13,7 +14,6 @@
 #include "../pbd/solver.h"
 #include "../utils/timer.h"
 
-#include "../app/scene.h"
 #include "../app/application.h"
 
 #include "../tests/utils.h"
@@ -37,12 +37,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _ground = _GenerateCollidePlane(stage, _groundId);
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
-  _scene->AddGeometry(_groundId, _ground);
+  _scene.AddGeometry(_groundId, _ground);
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(_scene, stage, _solverId);
-  _scene->AddGeometry(_solverId, _solver);
+  _solver = _GenerateSolver(&_scene, stage, _solverId);
+  _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
   float size = .1f;
@@ -72,7 +72,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 4.f, 
       pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f)));
 
-    _scene->AddGeometry(collideId, spheres[collideId]);
+    _scene.AddGeometry(collideId, spheres[collideId]);
 
     //sphere.GetRadiusAttr().Get(&radius);
     //pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
@@ -84,7 +84,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::UsdGeomMesh usdMesh(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
-      _scene->AddMesh(prim.GetPath(), mesh);
+      _scene.AddMesh(prim.GetPath(), mesh);
 
       Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
       _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
@@ -114,7 +114,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);
   _solver->AddElement(collision, _ground, _groundId);
 
-  _scene->Update(stage, _solver->GetStartFrame());
+  _scene.Update(stage, _solver->GetStartFrame());
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _solver->GetStartFrame());
 
@@ -123,10 +123,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  _scene->Update(stage, time);
+  _scene.Update(stage, time);
   _solver->Update(stage, time);
 
-  for (auto& execPrim : _scene->GetPrims()) {
+  for (auto& execPrim : _scene.GetPrims()) {
 
     pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
     if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
@@ -161,7 +161,7 @@ void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::TfToken meshName(prim.GetName().GetString() + "RT");
       pxr::SdfPath meshPath(rootId.AppendChild(meshName));
-      _scene->Remove(meshPath);
+      _scene.Remove(meshPath);
     }
   }
   delete _solver;
