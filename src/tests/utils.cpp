@@ -83,10 +83,10 @@ Points* _GeneratePoints(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
 }
 
 Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  float size, const pxr::GfMatrix4d& m)
+  float spacing, const pxr::GfMatrix4d& m)
 {
   Mesh* mesh = new Mesh(m);
-  mesh->TriangularGrid2D(10.f, 10.f, pxr::GfMatrix4f(m), size);
+  mesh->TriangularGrid2D(spacing, pxr::GfMatrix4f(m));
   //mesh.Randomize(0.1f);
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
@@ -108,7 +108,7 @@ Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   size_t subdX, size_t subdY, const pxr::GfMatrix4d& m)
 {
   Mesh* mesh = new Mesh(m);
-  mesh->RegularGrid2D(subdX, subdY, pxr::GfMatrix4f(m));
+  mesh->RegularGrid2D(0.05);
   //mesh.Randomize(0.1f);
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 

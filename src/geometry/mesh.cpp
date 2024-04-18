@@ -763,7 +763,7 @@ void Mesh::ColoredPolygonSoup(size_t numPolygons,
 {
   //mesh->PolygonSoup(65535);
   pxr::GfMatrix4f space(1.f);
-  TriangularGrid2D(10.f, 6.f, space, 0.2f);
+  TriangularGrid2D(0.05f, space);
   Randomize(0.05f);
 }
 
@@ -818,15 +818,15 @@ void Mesh::RegularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
 
   size_t num = (1.f / spacing ) * 0.5 + 1;
   size_t numPoints = num * num;
-  size_t numTriangles = (num - 1) * 2 * (num - 1);
-  size_t numSamples = numTriangles * 3;
+  size_t numPolygons = (num - 1) * (num - 1);
+  size_t numSamples = numPolygons * 4;
   pxr::VtArray<pxr::GfVec3f> position(numPoints);
 
   float space = 1.f / static_cast<float>(num);
 
   for(size_t y = 0; y < num; ++y) {
     for(size_t x = 0; x < num; ++x) {
-      size_t vertexId = y * numX + x;
+      size_t vertexId = y * num + x;
       position[vertexId][0] = x * space;
       position[vertexId][1] = 0.f;
       position[vertexId][2] = y * space;
@@ -834,36 +834,22 @@ void Mesh::RegularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
     }
   }
   
-  pxr::VtArray<int> faceVertexCount(numTriangles);
-  for(size_t i=0; i < numTriangles; ++i) {
-    faceVertexCount[i] = 3;
+  pxr::VtArray<int> faceVertexCount(numPolygons);
+  for(size_t i=0; i < numPolygons; ++i) {
+    faceVertexCount[i] = 4;
   }
 
-  size_t numRows = numY - 1;
-  size_t numTrianglesPerRow = (numX - 1) ;
+  size_t numRows = num - 1;
+  size_t numPolygonPerRow = (num - 1) ;
   pxr::VtArray<int> faceVertexConnect(numSamples);
   
   size_t k = 0;
   for(size_t i=0; i < numRows; ++i) {
-    for (size_t j = 0; j < numTrianglesPerRow; ++j) {
-      if (i % 2 == 0) {
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1; 
-        faceVertexConnect[k++] = i * numX + j + 1;
-        faceVertexConnect[k++] = i * numX + j;
-
-        faceVertexConnect[k++] = i * numX + j; 
-        faceVertexConnect[k++] = (i + 1) * numX + j;
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
-      }
-      else {
-        faceVertexConnect[k++] = (i + 1) * numX + j; 
-        faceVertexConnect[k++] = i * numX + j + 1;
-        faceVertexConnect[k++] = i * numX + j;
-
-        faceVertexConnect[k++] = i * numX + j + 1; 
-        faceVertexConnect[k++] = (i + 1) * numX + j;
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
-      }
+    for (size_t j = 0; j < numPolygonPerRow; ++j) {
+      faceVertexConnect[k++] = (i + 1) * num + j + 1; 
+      faceVertexConnect[k++] = i * num + j + 1;
+      faceVertexConnect[k++] = i * num + j;
+      faceVertexConnect[k++] = (i + 1) * num + j; 
     }
   }
   

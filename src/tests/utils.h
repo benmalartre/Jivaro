@@ -25,8 +25,11 @@ Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::Sdf
 
 Points* _GeneratePoints(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
 
+Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+  size_t subdX=8, size_t subdY=8, const pxr::GfMatrix4d& m=pxr::GfMatrix4d(1.0));
+
 Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  float size, const pxr::GfMatrix4d& m);
+  float spacing=0.025f, const pxr::GfMatrix4d& m=pxr::GfMatrix4d(1.0));
 
 Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
 

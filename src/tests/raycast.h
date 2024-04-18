@@ -6,8 +6,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Scene;
-class Plane;
+class Curve;
+class Mesh;
 class TestRaycast : public Execution {
 public:
   friend class Scene;
@@ -17,7 +17,7 @@ public:
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 private:
   Mesh*                                                       _mesh;
-  Line*                                                       _rays;
+  Curve*                                                      _rays;
   pxr::SdfPath                                                _meshId;
   pxr::SdfPath                                                _raysId;
 
