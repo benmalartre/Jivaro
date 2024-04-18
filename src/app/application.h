@@ -78,6 +78,7 @@ public:
 
   // time
   Time& GetTime() { return _time; };
+  const Time& GetTime() const { return _time; };
 
   // window
   Window* GetMainWindow() {return _mainWindow;};

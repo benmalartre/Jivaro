@@ -60,12 +60,13 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create collide spheres
   std::map<pxr::SdfPath, Sphere*> spheres;
+  /*
   pxr::GfVec3f offset(10.f, 0.f, 0.f);
   pxr::GfVec3f axis(0.f,1.f,0.f);
-  size_t n = 32;
+  size_t n = 8;
   const double rStep = 360.0 / static_cast<double>(n);
 
-  for (size_t x = 0; x < 32; ++x) {
+  for (size_t x = 0; x < n; ++x) {
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
     pxr::GfRotation rotate(axis, x * rStep);
@@ -74,7 +75,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
     _scene->AddGeometry(collideId, spheres[collideId]);
   }
-
+  */
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =

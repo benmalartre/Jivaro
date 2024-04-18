@@ -367,7 +367,9 @@ void Solver::WeightBoundaries()
 
 void Solver::_ClearContacts()
 {
-  for(auto& color: _particles._color)color = pxr::GfVec3f(0.2f,1.f,0.5f);
+  
+  for(size_t p = 0; p < _particles.GetNumParticles(); ++p)
+    _particles._color[p] = _particles._velocity[p] ;
   for (auto& contact : _contacts)delete contact;
   _contacts.clear();
 }
@@ -512,7 +514,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
   
   _timer->Stop();
 

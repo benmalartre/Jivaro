@@ -136,6 +136,8 @@ public:
   virtual bool Draw()=0;
   virtual void Resize(){};
 
+  inline bool IsInteracting(){return _interacting;};
+
   // notices callbacks
   virtual void OnNewSceneNotice(const NewSceneNotice& n);
   virtual void OnSceneChangedNotice(const SceneChangedNotice& n);
