@@ -5,11 +5,12 @@
 
 
 JVR_NAMESPACE_OPEN_SCOPE
-
+class Voxels;
 class Points : public Deformable {
 public:
   Points();
   Points(const Points* other, bool normalize = true);
+  Points(const Voxels* voxels);
   Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world);
   virtual ~Points() {};
 

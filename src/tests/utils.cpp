@@ -125,7 +125,7 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
 {
   std::vector<BVH::Cell*> cells;
-  bvh->GetRoot()->GetCells(cells);
+  bvh->GetRoot()->GetLeaves(cells);
   size_t numPoints = cells.size();
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);

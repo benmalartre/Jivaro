@@ -537,9 +537,7 @@ Application::OpenScene(const std::string& filename)
 void
 Application::NewScene(const std::string& filename)
 {
-  std::cout << "new scene commmand" << std::endl;
   ADD_COMMAND(NewSceneCommand, filename);
-  std::cout << "command added..." << std::endl;
 }
 
 void Application::SaveScene()

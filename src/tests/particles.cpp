@@ -24,24 +24,17 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-static void _Voxelize(pxr::UsdGeomMesh& usdMesh, pxr::SdfPath& path, float radius, short axis)
+static Points* _Voxelize(pxr::UsdGeomMesh& usdMesh, pxr::SdfPath& path, float radius)
 {
-  if (usdMesh.GetPrim().IsValid()) {
-    UndoBlock block;
-    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
-    Voxels voxels;
-    voxels.Init(&mesh, radius);
-    if(axis & 1) voxels.Trace(0);
-    if(axis & 2) voxels.Trace(1);
-    if(axis & 4) voxels.Trace(2);
-    if(axis & 8) voxels.Proximity();
-    voxels.Build();
+  Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+  Voxels voxels;
+  voxels.Init(&mesh, radius);
+  voxels.Trace(0);
+  voxels.Trace(1);
+  voxels.Trace(2);
+  voxels.Build();
 
-    const pxr::VtArray<pxr::GfVec3f>& positions = voxels.GetPositions();
-    pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
-
-    _SetupBVHInstancer(stage, path, voxels.GetTree());
-  }
+  return new Points(&voxels);
 }
 
 
@@ -91,13 +84,14 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::UsdGeomMesh usdMesh(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       pxr::SdfPath voxelId = usdMesh.GetPath().AppendChild(pxr::TfToken("voxels"));
-      _Voxelize(usdMesh, voxelId, 0.1, 7);
-      pxr::UsdPrim voxels = stage->GetPrimAtPath(voxelId);
-      Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
-      _scene->AddPoints(prim.GetPath(), points);
+      Point* points = _Voxelize(usdMesh, voxelId, 0.05);
+      
+      //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
+      _scene->AddPoints(voxelId, xform);
 
       Body* body = _solver->CreateBody((Geometry*)points, pxr::GfMatrix4f(xform), mass, radius, damping);
-      _solver->AddElement(body, points, prim.GetPath());
+      _solver->AddElement(body, (Geometry*)points, prim.GetPath());
+      
       /*
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
