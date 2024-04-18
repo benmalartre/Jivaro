@@ -679,8 +679,8 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
       xformApi.SetTranslate(xformMatrix.GetRow3(3) - target.previous.pivot, activeTime);
-      AttributeChangedNotice().Send();
     }
+    if(!app->GetTime().IsPlaying())AttributeChangedNotice().Send();
   }
   else {
     pxr::UsdGeomXformCache xformCache(activeTime);
@@ -898,6 +898,7 @@ RotateHandle::_UpdateTargets(bool interacting)
         _ResolveRotation(target, xformApi, xformMatrix, activeTime);
       xformApi.SetRotate(rotation.first, rotation.second, activeTime);
     }
+    if(!app->GetTime().IsPlaying())AttributeChangedNotice().Send();
   }
   else {
     pxr::UsdGeomXformCache xformCache(activeTime);
@@ -1304,6 +1305,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
       api.SetScale(target.previous.scale + 
         pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]), activeTime);
     }
+    if(!app->GetTime().IsPlaying())AttributeChangedNotice().Send();
   }
   else {
     pxr::UsdGeomXformCache xformCache(activeTime);

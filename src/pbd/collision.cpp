@@ -11,6 +11,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+const float Collision::TOLERANCE_FACTOR = 1.1f;
+
 void Collision::_ResetContacts(Particles* particles)
 {
   const size_t numParticles = particles->GetNumParticles();
@@ -70,8 +72,12 @@ void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, fl
 
 void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 {
+
   prim.GetAttribute(pxr::TfToken("Restitution")).Get(&_restitution, time);
   prim.GetAttribute(pxr::TfToken("Friction")).Get(&_friction, time);
+
+    std::cout << "update collision parameters : " << prim.GetPath() << "friction : " << 
+      _friction << ", restitution : " << _restitution << std::endl;
 }
 
 void Collision::Init(size_t numParticles) 
@@ -191,7 +197,7 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float ft)
   if (!Affects(index))return;
 
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
-  float d = pxr::GfDot(_normal, predicted - _position)  - particles->_radius[index] * 1.2f;
+  float d = pxr::GfDot(_normal, predicted - _position)  - particles->_radius[index] * TOLERANCE_FACTOR;
   SetHit(index, d < 0.f);
 }
 
@@ -204,9 +210,9 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  const pxr::GfVec3f vPlane = _collider->GetVelocity(); // sphere velocity
-  const pxr::GfVec3f vRel = particles->_velocity[index] - vPlane;
-  const float vn = pxr::GfDot(vRel, _normal * -1.f);
+  const pxr::GfVec3f vSphere = _collider->GetVelocity(); // sphere velocity
+  const pxr::GfVec3f vRel = vSphere - particles->_velocity[index];
+  const float vn = pxr::GfDot(vRel, _normal);
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
 }
@@ -240,7 +246,7 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
   if (!Affects(index))return;
-  const float radius = _radius + particles->_radius[index] * 1.2f;
+  const float radius = _radius + particles->_radius[index] * TOLERANCE_FACTOR;
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
   SetHit(index, (predicted - _center).GetLength() < radius);
 }

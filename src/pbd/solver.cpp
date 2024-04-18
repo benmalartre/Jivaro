@@ -664,7 +664,4 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 }
 
 
-
-
-
 JVR_NAMESPACE_CLOSE_SCOPE

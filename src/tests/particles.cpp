@@ -131,8 +131,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
 
 
-  float restitution = 0.f;
-  float friction = 1.f;
+  float restitution = 1.f;
+  float friction = 0.f;
   for (auto& sphere : spheres) {
     Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
     _solver->AddElement(collision, sphere.second, sphere.first);

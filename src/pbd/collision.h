@@ -91,6 +91,8 @@ public:
   };
 
 protected:
+  static const float TOLERANCE_FACTOR;
+  
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
