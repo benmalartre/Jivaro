@@ -38,7 +38,6 @@ Tool::SetProgram(GLSLProgram* pgm)
 void 
 Tool::SetCamera(Camera* camera)
 {
-  _ResetActiveTool();
   if (!_active) return;
   _active->SetCamera(camera);
 
@@ -93,6 +92,7 @@ void Tool::SetActiveTool(short tool)
 {
   _last = _current;
   _current = tool;
+  _ResetActiveTool();
 }
 
 bool Tool::IsActive()
@@ -107,6 +107,10 @@ bool Tool::IsInteracting() {
   else {
     return false;
   }
+}
+
+short Tool::GetActiveTool(){
+  return _current;
 }
 
 void Tool::Draw()

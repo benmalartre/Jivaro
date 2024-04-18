@@ -309,6 +309,8 @@ Application::TerminateExec(pxr::UsdStageRefPtr& stage)
   _exec->TerminateExec(stage);
   delete _exec;
   _exec = nullptr;  
+  SetActiveTool(Tools::TOOL_NONE)
+  NewSceneNotice().Send();
 }
 
 
@@ -425,9 +427,13 @@ Application::SetActiveEngine(Engine* engine)
 void 
 Application::SetActiveTool(size_t t)
 {
-  _mainWindow->GetTool()->SetActiveTool(t);
-  for (auto& window : _childWindows) {
-    window->GetTool()->SetActiveTool(t);
+  Tool* tool = _mainWindow->GetTool();
+  size_t lastActiveTool = tool->GetActiveTool();
+  if(t != lastActiveTool) {
+    tool->SetActiveTool(t);
+    for (auto& window : _childWindows) {
+      window->GetTool()->SetActiveTool(t);
+    }
   }
 }
 
