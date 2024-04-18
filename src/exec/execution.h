@@ -16,8 +16,7 @@ public:
   typedef pxr::VtArray<_Source>                               _Sources;
   
   friend class Scene;
-  Execution() = delete;
-  Execution() {};
+
   virtual void InitExec(pxr::UsdStageRefPtr& stage) = 0;
   virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time) = 0;
   virtual void TerminateExec(pxr::UsdStageRefPtr& stage) = 0;

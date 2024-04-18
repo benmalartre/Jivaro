@@ -70,10 +70,8 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _mesh = _GenerateMeshGrid(stage, _meshId, 32, 32, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
-
   _raysId = rootId.AppendChild(pxr::TfToken("Rays"));
-  _rays = new Curve();
-  _scene.AddGeometry(_raysId, _rays);
+  _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
 
   _UpdateRays(_mesh, _rays);
 
@@ -93,16 +91,16 @@ void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
   _UpdateRays(_mesh, _rays);
   Scene::_Prim* prim = _scene.GetPrim(_raysId);
-  prim->bits = pxr::HdChangeTracker::AllDirty;
+  prim->bits = pxr::HdChangeTracker::DirtyTopology;
 }
 
 void TestRaycast::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
+
   stage->RemovePrim(_meshId);
-  
-  _scene.RemoveGeometry(_meshId);
-  _scene.RemoveGeometry(_raysId);
+  std::cout << "delete mesh : " << _mesh << std::endl;
+  std::cout << "delete rays : " << _rays << std::endl;
   delete _mesh;
   delete _rays;
 
