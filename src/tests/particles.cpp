@@ -83,7 +83,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _scene->AddGeometry(collideId, spheres[collideId]);
    
 
-  float mass = 0.0765f;
+  float mass = 0.1f;
   float radius = 0.25f;
   float damping = 0.1f;
 
@@ -98,6 +98,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       pxr::SdfPath voxelId = usdMesh.GetPath().AppendChild(pxr::TfToken("voxels"));
 
       Voxels* voxels = _Voxelize(usdMesh, voxelId, 0.25);
+      pxr::SdfPath bvhId(pxr::TfToken("/bvh"));
+      _SetupBVHInstancer(stage, bvhId,voxels->GetTree());
       
       //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
       _scene->AddVoxels(voxelId, voxels);

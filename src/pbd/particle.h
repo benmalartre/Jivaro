@@ -76,7 +76,8 @@ public:
 
   pxr::VtArray<short>        _state;
   pxr::VtArray<int>          _body;
-  pxr::VtArray<float>        _mass; // inverse mass
+  pxr::VtArray<float>        _mass;
+  pxr::VtArray<float>        _invMass;
   pxr::VtArray<float>        _radius;
   pxr::VtArray<pxr::GfVec3f> _rest;
   pxr::VtArray<pxr::GfVec3f> _previous;

@@ -15,6 +15,7 @@ void Particles::AddBody(Body* body, const pxr::GfMatrix4f& matrix)
   size_t index = _body.size() ? _body.back() + 1 : 0;
   float w = pxr::GfIsClose(body->GetMass(), 0.f, 0.000001f) ? 0.f : 1.f / body->GetMass();
   _mass.resize(size);
+  _invMass.resize(size);
   _radius.resize(size);
   _rest.resize(size);
   _previous.resize(size);
@@ -32,7 +33,8 @@ void Particles::AddBody(Body* body, const pxr::GfMatrix4f& matrix)
   for (size_t p = 0; p < numPoints; ++p) {
     pos = matrix.Transform(points[p]);
     idx = base + p;
-    _mass[idx] = w;
+    _mass[idx] = body->GetMass();
+    _invMass[idx] = w;
     _radius[idx] = body->GetRadius();
     _rest[idx] = pos;
     _previous[idx] = pos;
@@ -59,6 +61,7 @@ void Particles::RemoveBody(Body* b)
     lhi = base + r;
     rhi = base + shift + r;
     _mass[lhi]      = _mass[rhi];
+    _invMass[lhi]   = _invMass[rhi];
     _radius[lhi]    = _radius[rhi];
     _rest[lhi]      = _rest[rhi];
     _previous[lhi]  = _previous[rhi];
@@ -72,6 +75,7 @@ void Particles::RemoveBody(Body* b)
 
   size_t size = _position.size() - shift;
   _mass.resize(size);
+  _invMass.resize(size);
   _radius.resize(size);
   _rest.resize(size);
   _previous.resize(size);
@@ -86,6 +90,7 @@ void Particles::RemoveBody(Body* b)
 void Particles::RemoveAllBodies()
 {
   _mass.clear();
+  _invMass.clear();
   _radius.clear();
   _rest.clear();
   _previous.clear();

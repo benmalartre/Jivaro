@@ -340,6 +340,7 @@ void Solver::LockPoints()
     size_t numPoints = body->GetNumPoints();
     for(size_t point = 0; point < 10; ++point) {
       _particles._mass[point + body->GetOffset()] = 0.f;
+      _particles._invMass[point + body->GetOffset()] = 0.f;
     }
   }
 }
@@ -357,6 +358,7 @@ void Solver::WeightBoundaries()
       for(size_t p = 0; p < boundaries.size(); ++p){
         if(boundaries[p]) {
           _particles._mass[p + offset] *= 0.5f;
+          _particles._invMass[p + offset] = 1.f / _particles._mass[p + offset];
         }
       }
     }
@@ -394,7 +396,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
   // apply external forces
   for (const Force* force : _force) {
-    force->Apply(begin, end, &_particles, _frameTime);
+    force->Apply(begin, end, &_particles, _stepTime);
   }
 
   // compute predicted position

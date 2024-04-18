@@ -285,7 +285,6 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geom
 {
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
-  const pxr::GfVec3f* points = mesh->GetPositionsCPtr();
 
   pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
   leaves.reserve(trianglePairs.size());
@@ -408,9 +407,13 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 {
   _geometries = geometries;
   size_t numColliders = _geometries.size();
-  pxr::GfRange3d accum = _geometries[0]->GetBoundingBox().GetRange();
+  pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox();
+  bbox.Transform(_geometries[0]->GetMatrix());
+  pxr::GfRange3d accum = bbox.GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
-    accum.UnionWith(_geometries[i]->GetBoundingBox().GetRange());
+    pxr::GfBBox3d bbox = _geometries[i]->GetBoundingBox();
+    bbox.Transform(_geometries[i]->GetMatrix());
+    accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());

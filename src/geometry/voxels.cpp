@@ -73,14 +73,13 @@ void Voxels::Init(Deformable* geometry, float radius)
 //--------------------------------------------------------------------------------
 void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 {
-  const pxr::GfRange3d& range(_geometry->GetBoundingBox().GetRange());
+  pxr::GfBBox3d bbox = _geometry->GetBoundingBox();
+  bbox.Transform(_geometry->GetMatrix());
+  const pxr::GfRange3d& range(bbox.GetRange());
   const pxr::GfVec3f size(range.GetSize());
   const pxr::GfVec3f minExtents(range.GetMin());
 
-  // make a copy as we want world space position
-  pxr::GfMatrix4d matrix = _geometry->GetMatrix();
-  pxr::VtArray<pxr::GfVec3f> points = _geometry->GetPositions();
-  for(auto& point: points) point = matrix.Transform(point);
+  const pxr::GfVec3f* points = _geometry->GetPositionsCPtr();
 
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
   const float eps = 0.000001f * size[axis];
@@ -102,7 +101,7 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
       // calculate ray start
       Location hit;
       double minDistance = DBL_MAX;
-      if (_bvh.Raycast(&points[0], pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
+      if (_bvh.Raycast(points, pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
       {
         // calculate cell in which intersection occurred
         const float zpos = rayStart[axis] + hit.GetT() * rayDir[axis];

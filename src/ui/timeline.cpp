@@ -192,7 +192,7 @@ void TimelineUI::DrawButtons()
 
 void TimelineUI::DrawControls()
 {
-  Application* app = Application::Get();
+  const Time& time = Application::Get().GetTime();
   int width = GetWidth();
   int height = GetHeight();
 
@@ -309,13 +309,13 @@ void TimelineUI::DrawTimeSlider()
     pxr::GfVec2f(xmax, ymax),
     frontColor, rounding, corners_none);
 
-  Application* app = Application::Get();
+  const Time& time = Application::Get()->GetTime();
 
   xmin += 2 * TIMELINE_SLIDER_THICKNESS;
   xmax -= 2 * TIMELINE_SLIDER_THICKNESS;
 
   static const float minBlockWidth = 16.f;
-  int numFrames = (app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
+  int numFrames = (time.GetEndTime() - time.GetStartTime());
   const float currentBlockWidth = (float)GetWidth() / (float)numFrames;
 
   int numFramesToSkip = pxr::GfMax(1.f, pxr::GfFloor(minBlockWidth/currentBlockWidth));
@@ -325,7 +325,7 @@ void TimelineUI::DrawTimeSlider()
   {
     if (i % numFramesToSkip > 0)continue;
     float perc = i * incr;
-    if (((int)(i - app->GetTime().GetStartTime()) % (int)_fps) == 0)
+    if (((int)(i - time.GetStartTime()) % (int)_fps) == 0)
     {
       pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin);
       pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
@@ -341,8 +341,8 @@ void TimelineUI::DrawTimeSlider()
 
   // draw slider
   float sliderPerc =
-    (float)(app->GetTime().GetActiveTime() - app->GetTime().GetStartTime()) /
-    (float)(app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
+    (float)(time.GetActiveTime() - time.GetStartTime()) /
+    (float)(time.GetEndTime() - time.GetStartTime());
   float sliderX = (xmin * (1 - sliderPerc) + xmax * sliderPerc);
   drawList->AddRectFilled(
     pxr::GfVec2f(sliderX - TIMELINE_SLIDER_THICKNESS, ymin),

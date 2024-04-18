@@ -55,4 +55,14 @@ Geometry::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
   return _Sync(prim, matrix, time);
 }
 
+
+const pxr::GfBBox3d& 
+Geometry::GetBoundingBox(bool worldSpace) const 
+{ 
+  if(!worldSpace)return _bbox;
+  pxr::GfBBox3d world(_bbox);
+  world.Transform(_matrix);
+  return world;
+};
+
 JVR_NAMESPACE_CLOSE_SCOPE
