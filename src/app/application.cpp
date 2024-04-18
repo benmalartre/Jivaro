@@ -309,7 +309,7 @@ Application::TerminateExec(pxr::UsdStageRefPtr& stage)
   _exec->TerminateExec(stage);
   delete _exec;
   _exec = nullptr;  
-  SetActiveTool(Tools::TOOL_NONE)
+  SetActiveTool(Tool::NONE);
   NewSceneNotice().Send();
 }
 

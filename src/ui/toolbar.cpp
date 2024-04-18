@@ -24,32 +24,32 @@ static void _SetActiveTool(short tool)
 
 static void OnTranslateCallback()
 {
-  _SetActiveTool(TOOL_TRANSLATE);
+  _SetActiveTool(Tool::TRANSLATE);
 }
 
 static void OnRotateCallback()
 {
-  _SetActiveTool(TOOL_ROTATE);
+  _SetActiveTool(Tool::ROTATE);
 }
 
 static void OnScaleCallback()
 {
-  _SetActiveTool(TOOL_SCALE);
+  _SetActiveTool(Tool::SCALE);
 }
 
 static void OnSelectCallback()
 {
-  _SetActiveTool(TOOL_SELECT);
+  _SetActiveTool(Tool::SELECT);
 }
 
 static void OnBrushCallback()
 {
-  _SetActiveTool(TOOL_BRUSH);
+  _SetActiveTool(Tool::BRUSH);
 }
 
 static void OnPlayCallback()
 {
-  _SetActiveTool(TOOL_NONE);
+  _SetActiveTool(Tool::NONE);
   Application::Get()->ToggleExec();
 }
 
@@ -109,42 +109,42 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
   , _vertical(vertical)
 {
   ToolbarItem* selectItem = new ToolbarButton(
-    this, TOOL_SELECT, "Select", "Space","selection tool",
+    this, Tool::SELECT, "Select", "Space","selection tool",
     ICON_FA_ARROW_POINTER, false, true,
     OnSelectCallback
   );
   _items.push_back(selectItem);
 
   ToolbarItem* translateItem = new ToolbarButton(
-    this, TOOL_TRANSLATE, "Translate", "T", "translation tool",
+    this, Tool::TRANSLATE, "Translate", "T", "translation tool",
     ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, false, true,
     OnTranslateCallback
   );
   _items.push_back(translateItem);
 
   ToolbarItem* rotateItem = new ToolbarButton(
-    this, TOOL_ROTATE, "Rotate", "R", "rotation tool",
+    this, Tool::ROTATE, "Rotate", "R", "rotation tool",
     ICON_FA_ROTATE, false, true,
     OnRotateCallback
   );
   _items.push_back(rotateItem);
 
   ToolbarItem* scaleItem = new ToolbarButton(
-    this, TOOL_SCALE, "Scale", "S", "scale tool",
+    this, Tool::SCALE, "Scale", "S", "scale tool",
     ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , false, true,
     OnScaleCallback
   );
   _items.push_back(scaleItem);
 
   ToolbarItem* brushItem = new ToolbarButton(
-    this, TOOL_BRUSH, "Brush", "B", "brush tool",
+    this, Tool::BRUSH, "Brush", "B", "brush tool",
     ICON_FA_PAINTBRUSH, false, true,
     OnBrushCallback
   );
   _items.push_back(brushItem);
 
   ToolbarItem* playItem = new ToolbarButton(
-    this, TOOL_NONE, "Play", "play", "launch engine",
+    this, Tool::NONE, "Play", "play", "launch engine",
     ICON_FA_SHUFFLE, true, false,
     OnPlayCallback
   );
@@ -163,7 +163,7 @@ void ToolbarUI::Update()
   for (auto& item : this->_items) {
     if (item->type == TOOLBAR_BUTTON) {
       ToolbarButton* button = (ToolbarButton*)item;
-      if (button->tool == TOOL_NONE) continue;
+      if (button->tool == Tool::NONE) continue;
       if (button->enabled && button->tool != window->GetActiveTool()) {
         button->enabled = false;
       }

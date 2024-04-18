@@ -15,14 +15,14 @@ class Tool {
 public:
   enum Type
   {
-    TOOL_NONE,
-    TOOL_SELECT,
-    TOOL_TRANSLATE,
-    TOOL_ROTATE,
-    TOOL_SCALE,
-    TOOL_BRUSH
+    NONE,
+    SELECT,
+    TRANSLATE,
+    ROTATE,
+    SCALE,
+    BRUSH
   };
-  
+
   Tool();
   ~Tool();
 

@@ -12,8 +12,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 Tool::Tool()
   : _interacting(false)
   , _active(NULL)
-  , _last(TOOL_NONE)
-  , _current(TOOL_NONE)
+  , _last(Tool::NONE)
+  , _current(Tool::NONE)
 {
 }
 
@@ -57,22 +57,22 @@ Tool::_ResetActiveTool()
   if (_last != _current) {
     if (_active)delete _active;
     switch (_current) {
-    case TOOL_NONE:
+    case Tool::NONE:
       _active = NULL;
       break;
-    case TOOL_SELECT:
+    case Tool::SELECT:
       _active = new SelectHandle();
       break;
-    case TOOL_BRUSH:
+    case Tool::BRUSH:
       _active = new BrushHandle();
       break;
-    case TOOL_SCALE:
+    case Tool::SCALE:
       _active = new ScaleHandle();
       break;
-    case TOOL_ROTATE:
+    case Tool::ROTATE:
       _active = new RotateHandle();
       break;
-    case TOOL_TRANSLATE:
+    case Tool::TRANSLATE:
       _active = new TranslateHandle();
       break;
     default:
@@ -97,7 +97,7 @@ void Tool::SetActiveTool(short tool)
 
 bool Tool::IsActive()
 {
-  return (_current != TOOL_NONE);
+  return (_current != Tool::NONE);
 }
 
 bool Tool::IsInteracting() {
