@@ -32,11 +32,15 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   const pxr::SdfPath  rootId = rootPrim.GetPath();
   
   // create mesh that will be source of rays
-  pxr::GfMatrix4d matrix;
-  matrix.SetTranslate(pxr::GfVec3f(0.f, 5.f, 0.f));
+  pxr::GfQuatf rotation(180.f * DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
+  rotation.Normalize();
+
+  pxr::GfMatrix4d scale = pxr::GfMatrix4d(1.f).SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
+  pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
+  pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 10.f, 0.f));
 
   _meshId = rootId.AppendChild(pxr::TfToken("Emitter"));
-  _mesh = _GenerateMeshGrid(stage, _meshId, 32, 32, matrix);
+  _mesh = _GenerateMeshGrid(stage, _meshId, 32, 32, scale * rotate * translate);
   _scene->AddGeometry(_meshId, _mesh);
 
   _scene->Update(stage, 1);

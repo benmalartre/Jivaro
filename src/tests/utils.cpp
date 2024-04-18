@@ -86,7 +86,7 @@ Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   float spacing, const pxr::GfMatrix4d& m)
 {
   Mesh* mesh = new Mesh(m);
-  mesh->TriangularGrid2D(spacing, pxr::GfMatrix4f(m));
+  mesh->TriangularGrid2D(spacing);
   //mesh.Randomize(0.1f);
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
@@ -115,6 +115,8 @@ Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdMesh.CreatePointsAttr().Set(mesh->GetPositions());
   usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
   usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
+
+  usdMesh.AddTransformOp().Set(m);
 
   return mesh;
 }

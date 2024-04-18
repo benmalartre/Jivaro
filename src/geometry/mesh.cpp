@@ -827,9 +827,9 @@ void Mesh::RegularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
   for(size_t y = 0; y < num; ++y) {
     for(size_t x = 0; x < num; ++x) {
       size_t vertexId = y * num + x;
-      position[vertexId][0] = x * space;
+      position[vertexId][0] = x * space - 0.5f;
       position[vertexId][1] = 0.f;
-      position[vertexId][2] = y * space;
+      position[vertexId][2] = y * space - 0.5f;
       position[vertexId] = matrix.Transform(position[vertexId]);
     }
   }
@@ -887,9 +887,9 @@ void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
     for(size_t x = 0; x < numX; ++x) {
       size_t vertexId = y * numX + x;
       if(y %2 == 0)position[vertexId][0] = x * spaceX + spaceX * 0.5f;
-      else position[vertexId][0] = x * spaceX;
+      else position[vertexId][0] = x * spaceX - 0.5f;
       position[vertexId][1] = 0.f;
-      position[vertexId][2] = y * spaceY;
+      position[vertexId][2] = y * spaceY - 0.5f;
       position[vertexId] = matrix.Transform(position[vertexId]);
     }
   }
