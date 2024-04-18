@@ -11,7 +11,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_FACTOR = 1.1f;
+const float Collision::TOLERANCE_FACTOR = 1.2f;
 
 void Collision::_ResetContacts(Particles* particles)
 {
@@ -211,6 +211,8 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
   const float vn = pxr::GfDot(relativeVelocity, _normal);
   const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
   location.SetCoordinates(coords);
+
+  particles->_color[index] = pxr::GfVec3f((1.f - d), d, 0.2f);
 }
 
 //----------------------------------------------------------------------------------------

@@ -19,6 +19,8 @@ class Points;
 class Scene;
 class BVH;
 
+
+void _AddMainDemoLight();
 Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);
 
 Points* _GeneratePoints(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path);

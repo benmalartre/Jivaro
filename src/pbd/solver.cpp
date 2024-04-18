@@ -365,6 +365,7 @@ void Solver::WeightBoundaries()
 
 void Solver::_ClearContacts()
 {
+  for(auto& color: _particles._color)color = pxr::GfVec3f(0.2f,1.f,0.5f);
   for (auto& contact : _contacts)delete contact;
   _contacts.clear();
 }
@@ -548,6 +549,7 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     Step();
 
     _points->SetPositions(&_particles._position[0], numParticles);
+    _points->SetColors(&_particles._color[0], numParticles);
     
     Scene::_Prim* prim = _scene->GetPrim(_pointsId);
     prim->bits = 
