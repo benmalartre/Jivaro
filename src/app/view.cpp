@@ -247,7 +247,7 @@ View::Draw(bool forceRedraw)
   }
   else {
     if (DrawTab() || forceRedraw) {
-      Time& time = GetApplication()->GetTime();
+      Time& time = Application::Get()->GetTime();
       if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
         if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
           SetClean();

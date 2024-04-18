@@ -45,7 +45,7 @@ TextEditorUI::Draw()
 
   ImGui::Text("WARNING: this will slow down the application if the layer is big");
   ImGui::Text("        and will consume lots of memory. Use with care for now");
-  _layer = GetApplication()->GetWorkStage()->GetRootLayer();
+  _layer = Application::Get()->GetWorkStage()->GetRootLayer();
   if (_layer) {
     _layer->ExportToString(&layerText);
     ImGui::Text("%s", _layer->GetDisplayName().c_str());

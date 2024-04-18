@@ -459,7 +459,7 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
-  if (_execute) {
+  if (_execute && _exec) {
     UpdateExec(_stage, _time.GetActiveTime());
   }
   _mainWindow->ForceRedraw();
@@ -526,7 +526,9 @@ Application::OpenScene(const std::string& filename)
 void
 Application::NewScene(const std::string& filename)
 {
+  std::cout << "new scene commmand" << std::endl;
   ADD_COMMAND(NewSceneCommand, filename);
+  std::cout << "command added..." << std::endl;
 }
 
 void Application::SaveScene()

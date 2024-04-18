@@ -280,7 +280,7 @@ static void _StandardLayout(Window* window)
   new ToolUI(graphView);
   //new GraphEditorUI(graphView);
   Ts[7] = CurrentTime();
-  GetApplication()->SetActiveEngine(viewport->GetEngine());
+  Application::Get()->SetActiveEngine(viewport->GetEngine());
 
   std::string names[7] = { "viewport", "timeline", "menu", "toolbar", "explorer", "property", "graph" };
 
@@ -764,7 +764,7 @@ Window::DrawPopup(PopupUI* popup)
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
     ImGui::End();
   } else {
-    for (Engine* engine : GetApplication()->GetEngines()) {
+    for (Engine* engine : Application::Get()->GetEngines()) {
       engine->SetHighlightSelection(false);
       engine->SetDirty(true);
     }
@@ -876,7 +876,7 @@ bool Window::Update()
   if (IsIdle())return true;
   if (glfwWindowShouldClose(_window)) {
     if (!_shared) {
-      GetApplication()->RemoveWindow(this);
+      Application::Get()->RemoveWindow(this);
       delete this;
     }
     return false;
@@ -919,7 +919,7 @@ KeyboardCallback(
 {
   ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   PopupUI* popup = app->GetPopup();
   if (popup) {
     popup->Keyboard(key, scancode, action, mods);
@@ -1086,7 +1086,7 @@ void
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
   Window* parent = Window::GetUserData(window);
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   app->SetActiveWindow(parent);
   ImGui::SetCurrentContext(parent->GetContext());
   
@@ -1142,7 +1142,7 @@ void
 ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = GetApplication()->GetPopup();
+  PopupUI* popup = Application::Get()->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
   ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
   if (popup) {
@@ -1156,7 +1156,7 @@ void
 CharCallback(GLFWwindow* window, unsigned c)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = GetApplication()->GetPopup();
+  PopupUI* popup = Application::Get()->GetPopup();
   ImGui_ImplGlfw_CharCallback(window, c);
   if (popup) {
     popup->Input(c);
@@ -1169,7 +1169,7 @@ void
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = GetApplication()->GetPopup();
+  PopupUI* popup = Application::Get()->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
   View* hovered = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
@@ -1197,7 +1197,7 @@ FocusCallback(GLFWwindow* window, int focused)
 {
   if (focused) {
     Window* parent = Window::GetUserData(window);
-    GetApplication()->SetFocusWindow(parent);
+    Application::Get()->SetFocusWindow(parent);
   }
 }
 

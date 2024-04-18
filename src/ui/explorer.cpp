@@ -110,7 +110,7 @@ ExplorerUI::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
   if (x > GetX() + (GetWidth() - 50)) return;
 
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_RELEASE) {
       if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
@@ -230,7 +230,7 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
   const char* visibleIcon = ICON_FA_EYE;
   const char* invisibleIcon = ICON_FA_EYE_SLASH;
 
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
     pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPaths();
@@ -254,7 +254,7 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
   const char* activeIcon = ICON_FA_RIGHT_TO_BRACKET;
   const char* inactiveIcon = ICON_FA_PAUSE;
 
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Selection* selection = app->GetSelection();
   
  
@@ -351,7 +351,7 @@ bool
 ExplorerUI::Draw()
 {
   /// Draw the hierarchy of the stage
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   const ImGuiStyle& style = ImGui::GetStyle();

@@ -16,7 +16,7 @@ ImGuiWindowFlags ToolbarUI::_flags =
 
 static void _SetActiveTool(short tool) 
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   app->SetActiveTool(tool);
   app->GetMainWindow()->SetActiveTool(tool);
   SelectionChangedNotice().Send();
@@ -50,7 +50,7 @@ static void OnBrushCallback()
 static void OnPlayCallback()
 {
   _SetActiveTool(TOOL_NONE);
-  GetApplication()->ToggleExec();
+  Application::Get()->ToggleExec();
 }
 
 

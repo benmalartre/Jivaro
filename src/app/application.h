@@ -120,6 +120,9 @@ public:
   virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time);
   virtual void TerminateExec(pxr::UsdStageRefPtr& stage);
 
+  // singleton 
+  static Application *Get();
+
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
   pxr::UsdStageRefPtr GetDisplayStage();
@@ -129,6 +132,8 @@ public:
 
 protected:
   Execution*                        _exec;
+  static Application*               _singleton;
+
 
 private:
   bool                              _IsAnyEngineDirty();
@@ -159,14 +164,17 @@ private:
 
 };
 
+Application* Application::_singleton=nullptr;
 
-static Application* GetApplication() { 
-  static Application __APP;
-  return &__APP; 
+Application* Application::Get() { 
+  if(_singleton==nullptr){
+        _singleton = new Application();
+    }
+    return _singleton; 
 };
 
 #define ADD_COMMAND(CMD, ...) \
-GetApplication()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));
+Application::Get()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));
 
 JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR
 

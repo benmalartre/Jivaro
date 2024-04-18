@@ -95,8 +95,8 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 
 pxr::UsdGeomMesh _GetSelectedMesh()
 {
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
-  Selection* selection = GetApplication()->GetSelection();
+  pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
+  Selection* selection = Application::Get()->GetSelection();
   if (selection->GetNumSelectedItems() > 0) {
     Selection::Item& item = selection->GetItem(0);
     pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
@@ -152,7 +152,7 @@ static void _Voxelize(float radius, short axis)
 
 
     const pxr::VtArray<pxr::GfVec3f>& positions = voxels.GetPositions();
-    pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+    pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
 
     _SetupBVHInstancer(stage, voxels.GetTree());
 
@@ -239,8 +239,8 @@ bool ToolUI::Draw()
   const pxr::GfVec2f pos(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
-  pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
-  Time& time = GetApplication()->GetTime();
+  pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
+  Time& time = Application::Get()->GetTime();
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);
 

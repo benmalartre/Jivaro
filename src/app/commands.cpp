@@ -31,7 +31,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   : Command(false)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   if (strlen(filename.c_str()) > 0) {
      std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
     std::string name = tokens.front();
@@ -54,7 +54,7 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 NewSceneCommand::NewSceneCommand(const std::string& filename)
   : Command(false)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::SdfFileFormatConstPtr usdaFormat = pxr::SdfFileFormat::FindByExtension("usda");
   pxr::SdfLayerRefPtr layer = pxr::SdfLayer::New(usdaFormat, filename);
   if (layer) {
@@ -219,7 +219,7 @@ SelectCommand::SelectCommand(short type,
   const pxr::SdfPathVector& paths, int mode)
   : Command(true)
 {
-  Selection* selection = GetApplication()->GetSelection();
+  Selection* selection = Application::Get()->GetSelection();
   _previous = selection->GetSelectedPaths();
   switch (mode) {
   case SET:
@@ -241,7 +241,7 @@ SelectCommand::SelectCommand(short type,
 
 void SelectCommand::Do()
 {
-  Selection* selection = GetApplication()->GetSelection();
+  Selection* selection = Application::Get()->GetSelection();
   std::vector<Selection::Item> previous = selection->GetItems();
   //election->SetItems(_previous);
   //_previous = previous;
@@ -254,7 +254,7 @@ void SelectCommand::Do()
 ShowHideCommand::ShowHideCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
   case SHOW:
@@ -309,7 +309,7 @@ void ShowHideCommand::Do() {
 ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
   : Command(true)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
   case ACTIVATE:
@@ -552,7 +552,7 @@ MoveNodeCommand::MoveNodeCommand(
   , _nodes(nodes)
   , _offset(offset)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
     pxr::UsdPrim prim = stage->GetPrimAtPath(node);
@@ -595,7 +595,7 @@ ExpendNodeCommand::ExpendNodeCommand(
   : Command(true)
   , _nodes(nodes)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
     pxr::UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
@@ -623,7 +623,7 @@ ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::Sd
   , _source(source)
   , _destination(destination)
 {
-  pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
+  pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
   pxr::UsdPrim lhsPrim = stage->GetPrimAtPath(source.GetPrimPath());
   pxr::UsdPrim rhsPrim = stage->GetPrimAtPath(destination.GetPrimPath());
   if (!lhsPrim.IsValid() || !rhsPrim.IsValid()) {

@@ -40,7 +40,7 @@ TimelineUI::Init()
 void 
 TimelineUI::Update()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Time& time = app->GetTime();
   _minTime = time.GetMinTime();
   _startTime = time.GetStartTime();
@@ -56,7 +56,7 @@ TimelineUI::Update()
 void 
 TimelineUI::ValidateTime()
 {
-  Time& time = GetApplication()->GetTime();
+  Time& time = Application::Get()->GetTime();
 
   _currentTime = time.GetActiveTime();
   if (_minTime >= _maxTime)_maxTime = _minTime + 1;
@@ -97,7 +97,7 @@ TimelineUI::_PositionToTime(const pxr::GfVec2f& position)
 
 void TimelineUI::MouseButton(int button, int action, int mods)
 {
-  Time& time = GetApplication()->GetTime();
+  Time& time = Application::Get()->GetTime();
   double x, y;
   glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
 
@@ -119,7 +119,7 @@ void TimelineUI::MouseMove(int x, int y)
 {
   _frame = _GetFrameUnderMouse(x, y);
   if (_interacting) {
-    Time& time = GetApplication()->GetTime();
+    Time& time = Application::Get()->GetTime();
     _frame = _GetFrameUnderMouse(x, y);
     if (static_cast<int>(_frame) != static_cast<int>(_lastFrame)) {
       _currentTime = _frame;
@@ -135,19 +135,19 @@ void TimelineUI::MouseMove(int x, int y)
 
 void TimelineUI::DrawButtons()
 {
-  Time& time = GetApplication()->GetTime();
+  Time& time = Application::Get()->GetTime();
   UIUtils::AddIconButton(0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
     [&](){
       _currentTime = _startTime;
       time.SetActiveTime(_currentTime);
-      GetApplication()->DirtyAllEngines();
+      Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
   UIUtils::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
     [&](){
       time.PreviousFrame();
-      GetApplication()->DirtyAllEngines();
+      Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
@@ -169,7 +169,7 @@ void TimelineUI::DrawButtons()
   UIUtils::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
     [&](){
       time.NextFrame();
-      GetApplication()->DirtyAllEngines();
+      Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
@@ -177,7 +177,7 @@ void TimelineUI::DrawButtons()
     [&](){
       _currentTime = _endTime;
       time.SetActiveTime(_currentTime);
-      GetApplication()->DirtyAllEngines();
+      Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
@@ -192,7 +192,7 @@ void TimelineUI::DrawButtons()
 
 void TimelineUI::DrawControls()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   int width = GetWidth();
   int height = GetHeight();
 
@@ -309,7 +309,7 @@ void TimelineUI::DrawTimeSlider()
     pxr::GfVec2f(xmax, ymax),
     frontColor, rounding, corners_none);
 
-  Application* app = GetApplication();
+  Application* app = Application::Get();
 
   xmin += 2 * TIMELINE_SLIDER_THICKNESS;
   xmax -= 2 * TIMELINE_SLIDER_THICKNESS;

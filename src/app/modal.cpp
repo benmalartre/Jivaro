@@ -27,7 +27,7 @@ ModalBase::~ModalBase()
 
 void ModalBase::Init()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Window* mainWindow = app->GetMainWindow();
   mainWindow->SetIdle(true);
 
@@ -39,7 +39,7 @@ void ModalBase::Term()
 {
   if(_window) delete _window;
   
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Window* mainWindow = app->GetMainWindow();
   
   mainWindow->SetIdle(false);

@@ -124,7 +124,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   , _startFrame(1.f)
   , _solverId(xform.GetPrim().GetPath())
 {
-  _frameTime = 1.f / GetApplication()->GetTime().GetFPS();
+  _frameTime = 1.f / Application::Get()->GetTime().GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
 
   //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
@@ -657,7 +657,7 @@ void Solver::UpdateGeometries()
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
-  _frameTime = 1.f / static_cast<float>(GetApplication()->GetTime().GetFPS());
+  _frameTime = 1.f / static_cast<float>(Application::Get()->GetTime().GetFPS());
   prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);

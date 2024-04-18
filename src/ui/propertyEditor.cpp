@@ -42,7 +42,7 @@ PropertyEditorUI::SetPrim(const pxr::UsdPrim& prim)
 void 
 PropertyEditorUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Selection* selection = app->GetSelection();
   if (selection->GetNumSelectedItems()) {
     pxr::UsdPrim prim = app->GetWorkStage()->GetPrimAtPath(selection->GetSelectedPaths().back());
@@ -151,7 +151,7 @@ PropertyEditorUI::_DrawXformsCommon(pxr::UsdTimeCode time)
         target.current.translation.data(), 3, NULL, NULL, DecimalPrecision);
       
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        ADD_COMMAND(TranslateCommand, GetApplication()->GetWorkStage(), targets, time);
+        ADD_COMMAND(TranslateCommand, Application::Get()->GetWorkStage(), targets, time);
       }
 
       // Rotation
@@ -166,7 +166,7 @@ PropertyEditorUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Rotation", target.current.rotation.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        ADD_COMMAND(RotateCommand, GetApplication()->GetWorkStage(), targets, time);
+        ADD_COMMAND(RotateCommand, Application::Get()->GetWorkStage(), targets, time);
       }
       // Scale
       ImGui::TableNextRow();
@@ -180,7 +180,7 @@ PropertyEditorUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Scale", target.current.scale.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        ADD_COMMAND(ScaleCommand, GetApplication()->GetWorkStage(), targets, time);
+        ADD_COMMAND(ScaleCommand, Application::Get()->GetWorkStage(), targets, time);
       }
 
       ImGui::TableNextRow();
@@ -193,7 +193,7 @@ PropertyEditorUI::_DrawXformsCommon(pxr::UsdTimeCode time)
       ImGui::TableSetColumnIndex(2);
       ImGui::InputFloat3("Pivot", target.current.pivot.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        ADD_COMMAND(PivotCommand, GetApplication()->GetWorkStage(), targets, time);
+        ADD_COMMAND(PivotCommand, Application::Get()->GetWorkStage(), targets, time);
       }
 
       // TODO rotation order
@@ -325,7 +325,7 @@ PropertyEditorUI::Draw()
   
   if (!_initialized)_initialized = true;
 
-  Time& time = GetApplication()->GetTime();
+  Time& time = Application::Get()->GetTime();
   
   bool opened;
   const pxr::GfVec2f pos(GetX(), GetY());

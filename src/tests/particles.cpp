@@ -38,7 +38,7 @@ static void _Voxelize(pxr::UsdGeomMesh& usdMesh, pxr::SdfPath& path, float radiu
     voxels.Build();
 
     const pxr::VtArray<pxr::GfVec3f>& positions = voxels.GetPositions();
-    pxr::UsdStageRefPtr stage = GetApplication()->GetStage();
+    pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
 
     _SetupBVHInstancer(stage, path, voxels.GetTree());
   }

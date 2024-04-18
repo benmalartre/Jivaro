@@ -252,7 +252,7 @@ static void OpenFileCallback() {
   };
   int numFilters = 4;
 
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   std::string filename =
     app->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
   app->OpenScene(filename);
@@ -260,12 +260,13 @@ static void OpenFileCallback() {
 
 static void SaveFileCallback()
 {
-  GetApplication()->SaveScene();
+  Application::Get()->SaveScene();
 }
 
 static void NewFileCallback()
 {
   std::string folder = GetInstallationFolder();
+  std::cout << "new file callback" << std::endl;
   const char* filters[] = {
     ".usd",
     ".usda",
@@ -274,7 +275,9 @@ static void NewFileCallback()
   };
   int numFilters = 4;
 
-  Application* app = GetApplication();
+  std::cout << "get app" << std::endl;
+  Application* app = Application::Get();
+  std::cout << "app " << app << std::endl;
   std::string filename = "hello_world";
   ADD_COMMAND(NewSceneCommand, filename);
 }
@@ -288,7 +291,7 @@ static void OpenDemoCallback()
 
 static void OpenChildWindowCallback()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Window* mainWindow = app->GetMainWindow();
   Window* childWindow = Application::CreateChildWindow("Child Window", pxr::GfVec4i(200, 200, 400, 400), mainWindow);
   app->AddWindow(childWindow);
@@ -307,12 +310,12 @@ static void CreatePrimCallback()
 {
   pxr::SdfPath name(RandomString(32));
 
-  ADD_COMMAND(CreatePrimCommand, GetApplication()->GetCurrentLayer(), name);
+  ADD_COMMAND(CreatePrimCommand, Application::Get()->GetCurrentLayer(), name);
 }
 
 static void TriangulateCallback()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   const pxr::UsdStageRefPtr& stage = app->GetWorkStage();
   Selection* selection = app->GetSelection();
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
@@ -334,7 +337,7 @@ static void TriangulateCallback()
 
 static void FlattenGeometryCallback()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   const pxr::UsdStageRefPtr& stage = app->GetWorkStage();
   Selection* selection = app->GetSelection();
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {

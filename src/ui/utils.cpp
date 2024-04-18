@@ -255,8 +255,8 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
 
     ColorPopupUI* popup = new ColorPopupUI((int)position[0], (int)position[1], 
       200, 300, attribute, timeCode);
-    GetApplication()->AddDeferredCommand(
-      std::bind(&Application::SetPopup, GetApplication(), popup)
+    Application::Get()->AddDeferredCommand(
+      std::bind(&Application::SetPopup, Application::Get(), popup)
     );
     ImGui::PopStyleColor(3);
     return pxr::VtValue();

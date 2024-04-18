@@ -745,12 +745,12 @@ GraphEditorUI::~GraphEditorUI()
 static void
 RefreshGraphCallback(GraphEditorUI* editor)
 {
-  Selection* selection = GetApplication()->GetSelection();
+  Selection* selection = Application::Get()->GetSelection();
 
   if (selection->GetNumSelectedItems()) {
     Selection::Item& item = selection->GetItem(0);
     if (item.type == Selection::PRIM) {
-      pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
+      pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
       pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
       
       if (selected.IsValid()) {
@@ -987,12 +987,12 @@ GraphEditorUI::Draw()
   }
   DiscardEventsIfMouseInsideBox(pxr::GfVec2f(0, 0), pxr::GfVec2f(100, 64));
   if (ImGui::Button("TEST")) {
-    Selection* selection = GetApplication()->GetSelection();
+    Selection* selection = Application::Get()->GetSelection();
     bool done = false;
     if (selection->GetNumSelectedItems()) {
       Selection::Item& item = selection->GetItem(0);
       if (item.type == Selection::PRIM) {
-        pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
+        pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
         pxr::UsdPrim selected = stage->GetPrimAtPath(item.path);
         if (selected.IsValid() && selected.IsA<pxr::UsdShadeNodeGraph>()) {
           std::cout << "test button!" << std::endl;
@@ -1013,9 +1013,9 @@ GraphEditorUI::Draw()
   if (ImGui::Button("SAVE")) {
     const std::string identifier = "./usd/graph.usda";
     //pxr::UsdStageRefPtr stage = pxr::UsdStage::CreateInMemory();
-    //stage->GetRootLayer()->TransferContent(GetApplication()->GetStage()->GetRootLayer());
-    std::cout << "ON SAVE DEFAULT PRIM : " << GetApplication()->GetDisplayStage()->GetDefaultPrim().GetPath() << std::endl;
-    GetApplication()->GetDisplayStage()->Export(identifier);
+    //stage->GetRootLayer()->TransferContent(Application::Get()->GetStage()->GetRootLayer());
+    std::cout << "ON SAVE DEFAULT PRIM : " << Application::Get()->GetDisplayStage()->GetDefaultPrim().GetPath() << std::endl;
+    Application::Get()->GetDisplayStage()->Export(identifier);
   }
   ImGui::SameLine();
 
@@ -1251,11 +1251,11 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
       } else if(diff_ms > 10 && diff_ms < 250){
         switch(mods) {
         case GLFW_MOD_SHIFT :
-          GetApplication()->AddToSelection(GetSelectedNodesPath());
+          Application::Get()->AddToSelection(GetSelectedNodesPath());
           break;
          
         default :
-          GetApplication()->SetSelection(GetSelectedNodesPath());
+          Application::Get()->SetSelection(GetSelectedNodesPath());
           break;
         }
       }
@@ -1310,7 +1310,7 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
       FrameAll();
     }
     else if (mappedKey == GLFW_KEY_TAB) {
-      Application* app = GetApplication();
+      Application* app = Application::Get();
       GraphPopupUI* popup = new GraphPopupUI(
         (int)GetX() + GetWidth() * 0.5f - 100, (int)GetY() + GetHeight() * 0.5 - 50, 200, 100);
       app->AddDeferredCommand(std::bind(&Application::SetPopup, app, popup));

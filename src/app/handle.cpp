@@ -165,7 +165,7 @@ BaseHandle::SetVisibility(short axis)
 void 
 BaseHandle::ResetSelection()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
@@ -491,7 +491,7 @@ BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVe
 void 
 BaseHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::GfRay ray(
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
@@ -669,7 +669,7 @@ TranslateHandle::Update(float x, float y, float width, float height)
 void
 TranslateHandle::_UpdateTargets(bool interacting)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
@@ -691,7 +691,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
       target.current.translation = pxr::GfVec3f(xformMatrix.GetRow3(3)) - target.previous.pivot;
     }
-    ADD_COMMAND(TranslateCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(TranslateCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
   }
 }
 
@@ -884,7 +884,7 @@ _ResolveRotation(ManipTargetDesc& target,
 void
 RotateHandle::_UpdateTargets(bool interacting)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
@@ -916,7 +916,7 @@ RotateHandle::_UpdateTargets(bool interacting)
       target.current.rotOrder = rotation.second;
     }
     
-    ADD_COMMAND(RotateCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(RotateCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
   }
 }
 
@@ -1292,7 +1292,7 @@ ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
 void
 ScaleHandle::_UpdateTargets(bool interacting)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
@@ -1317,7 +1317,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
         pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]);
     }
 
-    ADD_COMMAND(ScaleCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(ScaleCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
   }
 }
 

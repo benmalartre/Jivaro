@@ -90,7 +90,7 @@ ViewportUI::ViewportUI(View* parent)
 // destructor
 ViewportUI::~ViewportUI()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   if(_rendererNames)delete[] _rendererNames;
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
@@ -102,7 +102,7 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::Init()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   if (_engine) {
     app->RemoveEngine(_engine);
     delete _engine;
@@ -198,7 +198,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _lastX = (int)x;
     _lastY = (int)y;
-    GetApplication()->SetActiveEngine(_engine);
+    Application::Get()->SetActiveEngine(_engine);
     SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -288,7 +288,7 @@ void ViewportUI::MouseMove(int x, int y)
 
 void ViewportUI::MouseWheel(int x, int y)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   _camera->Dolly(
     static_cast<double>(x) / static_cast<double>(GetWidth()), 
     static_cast<double>(x) / static_cast<double>(GetHeight())
@@ -299,20 +299,20 @@ void ViewportUI::MouseWheel(int x, int y)
 
 void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   int mappedKey = GetMappedKey(key);
   if (action == GLFW_PRESS) {
     switch (mappedKey) {
       case GLFW_KEY_A:
       {
-        _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
+        _camera->FrameSelection(Application::Get()->GetStageBoundingBox());
         _engine->SetDirty(true);
         break;
       }
       case GLFW_KEY_F:
       {
         if (app->GetSelection()->IsEmpty())return;
-        _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
+        _camera->FrameSelection(Application::Get()->GetSelectionBoundingBox());
         _engine->SetDirty(true);
         break;
       }
@@ -373,7 +373,7 @@ static bool ComboWidget(const char* label, BaseUI* ui,
 
 void ViewportUI::Render()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Window* window = GetWindow();
 
   const float& wh = window->GetHeight();
@@ -448,7 +448,7 @@ ViewportUI::_DrawPickMode()
     ICON_FA_HAND_POINTER "   Component",
     ICON_FA_HAND_POINTER "SubComponent",
   };
-  Selection* selection = GetApplication()->GetSelection();
+  Selection* selection = Application::Get()->GetSelection();
   if (ImGui::BeginCombo("##Pick mode", pickModeStr[int(selection->GetMode())], ImGuiComboFlags_NoArrowButton)) {
     if (ImGui::Selectable(pickModeStr[0])) {
       selection->SetMode(Selection::Mode::ASSEMBLY);
@@ -471,7 +471,7 @@ ViewportUI::_DrawPickMode()
 
 bool ViewportUI::Draw()
 {    
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Window* window = GetWindow();
   if (!_initialized)Init();
   if(!_valid)return false;  
@@ -703,7 +703,7 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 bool ViewportUI::Pick(int x, int y, int mods)
 {
   if (y - GetY() < 32) return false;
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   if (!stage)return false;
@@ -719,7 +719,7 @@ bool ViewportUI::Pick(int x, int y, int mods)
   if (_engine->TestIntersection(
     pickFrustum.ComputeViewMatrix(),
     pickFrustum.ComputeProjectionMatrix(),
-    GetApplication()->GetDisplayStage()->GetPseudoRoot(),
+    Application::Get()->GetDisplayStage()->GetPseudoRoot(),
     _renderParams,
     &outHitPoint,
     &outHitNormal,

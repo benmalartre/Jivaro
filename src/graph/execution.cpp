@@ -14,7 +14,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 ExecutionGraph* TestUsdExecAPI()
 {
   UndoBlock editBlock;
-  pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
+  pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
 
   const pxr::SdfPath GRAPH_PATH("/graph");
   const pxr::TfToken GET("get");

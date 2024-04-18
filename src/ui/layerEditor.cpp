@@ -256,7 +256,7 @@ _AddTopNodeLayerRow(const pxr::SdfLayerRefPtr &layer, const Selection &selection
       //DrawSublayerPathEditDialog(layer, "");
     }
     if (ImGui::MenuItem("Add root prim")) {
-      ADD_COMMAND(CreatePrimCommand, GetApplication()->GetWorkStage()->GetRootLayer(), pxr::SdfPath("ZOB"));
+      ADD_COMMAND(CreatePrimCommand, Application::Get()->GetWorkStage()->GetRootLayer(), pxr::SdfPath("ZOB"));
       //ExecuteAfterDraw<PrimNew>(layer, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
     }
     const char *clipboard = ImGui::GetClipboardText();
@@ -396,7 +396,7 @@ _AddTreeNodePopup(pxr::SdfPrimSpecHandle &primSpec)
 
   /*
   NamePopupUI* popup = new NamePopupUI((int)200, (int)200, 200, 300);
-  GetApplication()->SetPopup(popup);
+  Application::Get()->SetPopup(popup);
   */
 }
 
@@ -546,8 +546,8 @@ bool LayerEditorUI::Draw()
     ImColor(style.Colors[ImGuiCol_WindowBg])
   );
 
-  _layer = GetApplication()->GetWorkStage()->GetRootLayer();
-  const Selection* selection = GetApplication()->GetSelection();
+  _layer = Application::Get()->GetWorkStage()->GetRootLayer();
+  const Selection* selection = Application::Get()->GetSelection();
   if (_layer) {
     _AddLayerNavigation(_layer);
     //DrawMiniToolbar(_layer, _prim);
@@ -587,7 +587,7 @@ bool LayerEditorUI::Draw()
       if (ImGui::BeginPopupContextItem()) {
         if (ImGui::MenuItem("Add root prim")) {
           ADD_COMMAND(CreatePrimCommand,
-            GetApplication()->GetCurrentLayer(), "/root");
+            Application::Get()->GetCurrentLayer(), "/root");
         }
         ImGui::EndPopup();
       }

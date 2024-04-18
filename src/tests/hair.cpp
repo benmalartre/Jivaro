@@ -157,7 +157,7 @@ void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     Scene::_Prim* prim = _scene->GetPrim(path);
     Curve* curve = (Curve*)prim->geom;
 
-    double time = GetApplication()->GetTime().GetActiveTime();
+    double time = Application::Get()->GetTime().GetActiveTime();
     pxr::UsdGeomXformCache xformCache(time);
     pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 

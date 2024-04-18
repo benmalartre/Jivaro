@@ -10,7 +10,7 @@ int main(void)
 {
   glfwInit();
   BuildKeyMap();
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   app->Init(1024, 720);
   while (app->Update());
   glfwTerminate();

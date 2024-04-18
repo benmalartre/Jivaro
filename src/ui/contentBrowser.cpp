@@ -280,8 +280,8 @@ bool ContentBrowserUI::Draw()
   static ContentBrowserOptions options;
   DrawContentBrowserMenuBar(options);
 
-  //Workspace* workspace = GetApplication()->GetWorkspace();
-  Application* app = GetApplication();
+  //Workspace* workspace = Application::Get()->GetWorkspace();
+  Application* app = Application::Get();
   // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
   pxr::SdfLayerHandle selectedLayer(app->GetCurrentLayer());
   pxr::SdfLayerHandle selectedStage(app->GetWorkStage() 
