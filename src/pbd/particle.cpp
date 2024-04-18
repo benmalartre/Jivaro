@@ -10,8 +10,8 @@ void Particles::AddBody(Body* body, const pxr::GfMatrix4f& matrix)
   if(geom->GetType() < Geometry::POINT) return;
 
   size_t base = _position.size();
-  size_t add = geom->GetNumPoints();
-  size_t size = base + add;
+  size_t numPoints = geom->GetNumPoints();
+  size_t size = base + numPoints;
   size_t index = _body.size() ? _body.back() + 1 : 0;
   float w = pxr::GfIsClose(body->GetMass(), 0.f, 0.000001f) ? 0.f : 1.f / body->GetMass();
   _mass.resize(size);
@@ -29,7 +29,7 @@ void Particles::AddBody(Body* body, const pxr::GfMatrix4f& matrix)
   const pxr::VtArray<pxr::GfVec3f>& points = ((Points*)geom)->GetPositions();
   pxr::GfVec3f pos;
   size_t idx;
-  for (size_t p = 0; p < add; ++p) {
+  for (size_t p = 0; p < numPoints; ++p) {
     pos = matrix.Transform(points[p]);
     idx = base + p;
     _mass[idx] = w;
@@ -41,8 +41,11 @@ void Particles::AddBody(Body* body, const pxr::GfMatrix4f& matrix)
     _velocity[idx] = pxr::GfVec3f(0.f);
     _body[idx] = index;
     _color[idx] = body->GetColor();
-    _state[idx] = IDLE;
+    _state[idx] = ACTIVE;
   }
+
+  body->SetOffset(base);
+  body->SetNumPoints(numPoints);
 }
 
 void Particles::RemoveBody(Body* b) 
@@ -78,6 +81,20 @@ void Particles::RemoveBody(Body* b)
   _body.resize(size);
   _color.resize(size);
   _state.resize(size);
+}
+
+void Particles::RemoveAllBodies()
+{
+  _mass.clear();
+  _radius.clear();
+  _rest.clear();
+  _previous.clear();
+  _position.clear();
+  _predicted.clear();
+  _velocity.clear();
+  _body.clear();
+  _color.clear();
+  _state.clear();
 }
 
 void Particles::SetAllState( short s)

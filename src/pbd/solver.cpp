@@ -510,7 +510,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  _SolveVelocities();
+  //_SolveVelocities();
   
   _timer->Stop();
 
@@ -561,13 +561,13 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 void Solver::Reset()
 {
   // reset
-  for (size_t p = 0; p < GetNumParticles(); ++p) {
-    _particles._position[p] = _particles._rest[p];
-    _particles._predicted[p] = _particles._rest[p];
-    _particles._velocity[p] = pxr::GfVec3f(0.f);
-    if(_particles._state[p] != Particles::MUTE)
-      _particles._state[p] = Particles::ACTIVE;
-  }
+  size_t offset = 0;
+  _particles.RemoveAllBodies();
+
+  for (size_t b = 0; b < _bodies.size(); ++b)
+    _particles.AddBody(_bodies[b], pxr::GfMatrix4f(_bodies[b]->GetGeometry()->GetMatrix()));
+
+
 }
 
 void Solver::Step()

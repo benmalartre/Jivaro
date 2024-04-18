@@ -72,7 +72,6 @@ public:
       _collider->GetInverseMatrix().Transform(_contacts[_p2c[index]].GetPointCoordinates()));
   }
 
-
   std::vector<Location>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
   Location& GetContact(size_t index){return _contacts[_p2c[index]];};
@@ -90,9 +89,12 @@ public:
     else BIT_CLEAR(_hits[index / sizeof(int)], index % sizeof(int));
   };
 
+  float GetFriction() const {return _friction;};
+  float GetRestitution() const {return _restitution;};
+
 protected:
   static const float TOLERANCE_FACTOR;
-  
+
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,

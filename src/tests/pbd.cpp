@@ -87,7 +87,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _scene->AddMesh(prim.GetPath(), mesh);
 
       Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::STRETCH, 20000.f, 0.f);
+      _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
       //_solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.f);
       _solver->AddElement(body, mesh, prim.GetPath());
 

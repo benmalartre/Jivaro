@@ -127,7 +127,8 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
 
-  pxr::GfVec3f normal = GetContactNormal(index);
+  //pxr::GfVec3f normal = GetContactNormal(index);
+  pxr::GfVec3f normal = GetGradient(particles, index);
 
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index) * dt;

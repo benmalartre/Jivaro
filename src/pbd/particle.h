@@ -29,6 +29,8 @@ public:
   , _damping(damping)
   , _color(color){}
 
+  void SetOffset(size_t offset){_offset = offset;};
+  void SetNumPoints(size_t numPoints){_numPoints = numPoints;};
 
   Geometry* GetGeometry(){return _geometry;};
   size_t GetOffset(){return _offset;};
@@ -67,6 +69,7 @@ public:
   size_t GetNumParticles() { return _position.size(); };
   void AddBody(Body* body, const pxr::GfMatrix4f& matrix);
   void RemoveBody(Body* body);
+  void RemoveAllBodies();
 
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);

@@ -273,8 +273,8 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  _exec = new TestPBD(new Scene());
-  //_exec = new TestParticles(new Scene());
+  _exec = new TestParticles(new Scene());
+  //_exec = new TestPBD(new Scene());
   //_exec = new TestHair(new Scene());
   _exec->InitExec(stage);
 

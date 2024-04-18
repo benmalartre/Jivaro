@@ -109,12 +109,13 @@ void StretchConstraint::Solve(Particles* particles, float dt)
 
 	  if (pxr::GfAbs(K) == 0.f) continue;
 
-	  const pxr::GfVec3f correction = n * -(1.f / K) * C * _damping;
+	  const pxr::GfVec3f correction = n * -(1.f / K) * C * dt;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
     _correction[elem * ELEM_SIZE + 1] -= im1 * correction;
   }
 }
+
 
 void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
@@ -538,7 +539,7 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
   const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
   const size_t offset = _body[0]->GetOffset();
 
-  for(size_t elem = 0; elem  < numElements; ++elem) {
+  for (size_t elem = 0; elem < numElements; ++elem) {
 
     const size_t index = _elements[elem] + offset;
     const float invMass = particles->_mass[index];
@@ -550,25 +551,27 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     const float im0 = particles->_mass[index];
     float K = im0 + _compliance * dt * dt;
 
-	  if (pxr::GfAbs(K) == 0.f) continue;
+    if (pxr::GfAbs(K) == 0.f) continue;
 
-	  const pxr::GfVec3f correction = n * (1.f / K) * -d;
+    const pxr::GfVec3f correction = n * (1.f / K) * -d;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
 
-/*
+    
     const pxr::GfVec3f pPrev = particles->_previous[index];
     const pxr::GfVec3f cPrev = _collision->GetContactPreviousPosition(index);
 
     // relative motion
-    const pxr::GfVec3f dp = (particles->_predicted[index] - pPrev) - (_collision->GetContactPosition(index) - cPrev);
+    const pxr::GfVec3f dp = (particles->_predicted[index] - pPrev) - (_collision->GetContactPosition(index) - cPrev) * dt;
 
     // tangential component
-    const pxr::GfVec3f dpT = dp - n * pxr::GfDot(dp, n);
+    pxr::GfVec3f dpT = dp - n * pxr::GfDot(dp, n);
+    dpT *= - 1.f;
 
-    _correction[elem * ELEM_SIZE + 0] += im0 * dpT;
-  */
-  
+    _correction[elem * ELEM_SIZE + 0] += im0 * dpT * _collision->GetFriction();
+    
+
+
   }
 }
 
