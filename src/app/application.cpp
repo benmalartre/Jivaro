@@ -25,7 +25,18 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 const char* Application::name = "Jivaro";
 
-  // constructor
+// singleton
+//----------------------------------------------------------------------------
+Application* Application::_singleton=nullptr;
+
+Application* Application::Get() { 
+  if(_singleton==nullptr){
+        _singleton = new Application();
+    }
+    return _singleton; 
+};
+
+// constructor
 //----------------------------------------------------------------------------
 Application::Application()
   : _mainWindow(nullptr)

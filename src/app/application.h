@@ -164,15 +164,6 @@ private:
 
 };
 
-Application* Application::_singleton=nullptr;
-
-Application* Application::Get() { 
-  if(_singleton==nullptr){
-        _singleton = new Application();
-    }
-    return _singleton; 
-};
-
 #define ADD_COMMAND(CMD, ...) \
 Application::Get()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));
 
