@@ -11,7 +11,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_FACTOR = 1.2f;
+const float Collision::TOLERANCE_FACTOR = 1.05f;
 
 void Collision::_ResetContacts(Particles* particles)
 {

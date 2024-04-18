@@ -813,21 +813,89 @@ void Mesh::Random2DPattern(size_t numFaces)
   Set(points, faceCounts, faceConnects);
 }
 
-
-void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& space, float size)
+void Mesh::RegularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
 {
-  const float scaleY = 1.5708;;
+
+  size_t num = (1.f / spacing ) * 0.5 + 1;
+  size_t numPoints = num * num;
+  size_t numTriangles = (num - 1) * 2 * (num - 1);
+  size_t numSamples = numTriangles * 3;
+  pxr::VtArray<pxr::GfVec3f> position(numPoints);
+
+  float space = 1.f / static_cast<float>(num);
+
+  for(size_t y = 0; y < num; ++y) {
+    for(size_t x = 0; x < num; ++x) {
+      size_t vertexId = y * numX + x;
+      position[vertexId][0] = x * space;
+      position[vertexId][1] = 0.f;
+      position[vertexId][2] = y * space;
+      position[vertexId] = matrix.Transform(position[vertexId]);
+    }
+  }
+  
+  pxr::VtArray<int> faceVertexCount(numTriangles);
+  for(size_t i=0; i < numTriangles; ++i) {
+    faceVertexCount[i] = 3;
+  }
+
+  size_t numRows = numY - 1;
+  size_t numTrianglesPerRow = (numX - 1) ;
+  pxr::VtArray<int> faceVertexConnect(numSamples);
+  
+  size_t k = 0;
+  for(size_t i=0; i < numRows; ++i) {
+    for (size_t j = 0; j < numTrianglesPerRow; ++j) {
+      if (i % 2 == 0) {
+        faceVertexConnect[k++] = (i + 1) * numX + j + 1; 
+        faceVertexConnect[k++] = i * numX + j + 1;
+        faceVertexConnect[k++] = i * numX + j;
+
+        faceVertexConnect[k++] = i * numX + j; 
+        faceVertexConnect[k++] = (i + 1) * numX + j;
+        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
+      }
+      else {
+        faceVertexConnect[k++] = (i + 1) * numX + j; 
+        faceVertexConnect[k++] = i * numX + j + 1;
+        faceVertexConnect[k++] = i * numX + j;
+
+        faceVertexConnect[k++] = i * numX + j + 1; 
+        faceVertexConnect[k++] = (i + 1) * numX + j;
+        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
+      }
+    }
+  }
+  
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  for(size_t i=0; i < numPoints / 3; ++i) {
+    pxr::GfVec3f color(
+      RANDOM_0_1,
+      RANDOM_0_1,
+      RANDOM_0_1
+    );
+    colors[i * 3] = color;
+    colors[i * 3 + 1] = color;
+    colors[i * 3 + 2] = color;
+  }
+ 
+  Set(position, faceVertexCount, faceVertexConnect);
+}
+
+void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
+{
+  const float scaleY = 1.5708;
   const float invScaleY = 1.f/scaleY;
 
-  size_t numX = (width / size ) * 0.5 + 1;
-  size_t numY = (height / size) * invScaleY + 1;
+  size_t numX = (1.f / spacing ) * 0.5 + 1;
+  size_t numY = (1.f / spacing) * invScaleY + 1;
   size_t numPoints = numX * numY;
   size_t numTriangles = (numX - 1) * 2 * (numY - 1);
   size_t numSamples = numTriangles * 3;
   pxr::VtArray<pxr::GfVec3f> position(numPoints);
 
-  float spaceX = size * 2.0 / width;
-  float spaceY = size / height * scaleY;
+  float spaceX = spacing * 2.0;
+  float spaceY = spacing * scaleY;
 
   for(size_t y = 0; y < numY; ++y) {
     for(size_t x = 0; x < numX; ++x) {
@@ -836,7 +904,7 @@ void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& sp
       else position[vertexId][0] = x * spaceX;
       position[vertexId][1] = 0.f;
       position[vertexId][2] = y * spaceY;
-      position[vertexId] = space.Transform(position[vertexId]);
+      position[vertexId] = matrix.Transform(position[vertexId]);
     }
   }
   

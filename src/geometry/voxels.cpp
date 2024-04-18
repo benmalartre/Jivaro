@@ -55,7 +55,7 @@ void Voxels::Init(Deformable* geometry, float radius)
   _radius = radius;
   _geometry = geometry;
   if (_radius < 0.0001) _radius = 0.0001;
-  const pxr::GfVec3f size(geometry->GetBoundingBox().GetRange().GetSize());
+  const pxr::GfVec3f size(geometry->GetBoundingBox(true).GetRange().GetSize());
   _resolution = pxr::GfVec3i(
     pxr::GfClamp(size[0] / _radius + 1, 1, std::numeric_limits<int>::max()),
     pxr::GfClamp(size[1] / _radius + 1, 1, std::numeric_limits<int>::max()),
@@ -73,8 +73,7 @@ void Voxels::Init(Deformable* geometry, float radius)
 //--------------------------------------------------------------------------------
 void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 {
-  pxr::GfBBox3d bbox = _geometry->GetBoundingBox();
-  bbox.Transform(_geometry->GetMatrix());
+  pxr::GfBBox3d bbox = _geometry->GetBoundingBox(true);
   const pxr::GfRange3d& range(bbox.GetRange());
   const pxr::GfVec3f size(range.GetSize());
   const pxr::GfVec3f minExtents(range.GetMin());

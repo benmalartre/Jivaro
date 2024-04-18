@@ -44,7 +44,7 @@ BVH::Cell::Cell(BVH::Cell* parent, Geometry* geometry)
   , _type(BVH::Cell::GEOM)
 {
   if (geometry) {
-    const pxr::GfRange3d& range = geometry->GetBoundingBox().GetRange();
+    const pxr::GfRange3d& range = geometry->GetBoundingBox(true).GetRange();
     SetMin(range.GetMin());
     SetMax(range.GetMax());
     Init(geometry);
@@ -290,7 +290,7 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geom
   leaves.reserve(trianglePairs.size());
   for (auto& trianglePair : trianglePairs) {
     BVH::Cell* leaf =
-      new BVH::Cell(this, &trianglePair, trianglePair.GetLocalBoundingBox(geometry));
+      new BVH::Cell(this, &trianglePair, trianglePair.GetWorldBoundingBox(geometry));
 
     const BVH::Cell* root = GetRoot();
     BVH::ComputeCode(root, leaf->GetMidpoint());
@@ -407,12 +407,10 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 {
   _geometries = geometries;
   size_t numColliders = _geometries.size();
-  pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox();
-  bbox.Transform(_geometries[0]->GetMatrix());
+  const pxr::GfBBox3d& bbox = _geometries[0]->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
-    pxr::GfBBox3d bbox = _geometries[i]->GetBoundingBox();
-    bbox.Transform(_geometries[i]->GetMatrix());
+    const pxr::GfBBox3d& bbox = _geometries[i]->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());

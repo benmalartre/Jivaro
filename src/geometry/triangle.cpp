@@ -365,7 +365,7 @@ pxr::GfRange3f
 TrianglePair::GetWorldBoundingBox(const Geometry* geometry) const
 {
   const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfMatrix4d matrix = geometry->GetMatrix();
+  const pxr::GfMatrix4d& matrix = geometry->GetMatrix();
 
   pxr::GfRange3f range;
 

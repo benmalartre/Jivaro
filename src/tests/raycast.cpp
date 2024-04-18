@@ -24,31 +24,16 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-static Voxels* _Voxelize(pxr::UsdGeomMesh& usdMesh, pxr::SdfPath& path, float radius)
-{
-  Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
-  Voxels *voxels = new Voxels();
-  voxels->Init(&mesh, radius);
-  voxels->Trace(0);
-  voxels->Trace(1);
-  voxels->Trace(2);
-  voxels->Build();
-
-  std::cout << "voxels num cells : " << voxels->GetNumCells() << std::endl;
-  return voxels;
-}
-
-
-void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
+void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   const pxr::SdfPath  rootId = rootPrim.GetPath();
   
-    // create solver with particles
-  _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(_scene, stage, _solverId);
+  // create mesh that will be source of rays
+  _meshId = rootId.AppendChild(pxr::TfToken("Emitter"));
+  _mesh = _GenerateMeshGrid(_scene, stage, _meshId);
   _scene->AddGeometry(_solverId, _solver);
 
   // create collide ground

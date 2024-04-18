@@ -121,6 +121,7 @@ add_executable(${TARGET}
   tests/pbd.cpp
   tests/hair.cpp
   tests/particles.cpp
+  tests/raycast.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp

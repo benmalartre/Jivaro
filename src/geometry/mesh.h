@@ -119,8 +119,8 @@ public:
   void OpenVDBSphere(const float radius, 
     const pxr::GfVec3f& center=pxr::GfVec3f(0.f));
   void Randomize(float value);
-  void TriangularGrid2D(float width, float height, 
-    const pxr::GfMatrix4f& space, float size);
+  void TriangularGrid2D(float spacing, const pxr::GfMatrix4f& space);
+  void RegularGrid2D(float spacing, const pxr::GfMatrix4f& space);
   void VoronoiDiagram(const std::vector<pxr::GfVec3f>& points);
 
   // query 3d position on geometry

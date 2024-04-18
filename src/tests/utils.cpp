@@ -104,6 +104,21 @@ Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   return mesh;
 }
 
+Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+  size_t subdX, size_t subdY, const pxr::GfMatrix4d& m)
+{
+  Mesh* mesh = new Mesh(m);
+  mesh->RegularGrid2D(subdX, subdY, pxr::GfMatrix4f(m));
+  //mesh.Randomize(0.1f);
+  pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
+
+  usdMesh.CreatePointsAttr().Set(mesh->GetPositions());
+  usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
+  usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
+
+  return mesh;
+}
+
 Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   double radius, const pxr::GfMatrix4d& m)
 {
