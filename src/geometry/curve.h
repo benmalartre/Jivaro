@@ -50,7 +50,7 @@ public:
     const pxr::VtArray<pxr::GfVec3f>& positions, 
     const pxr::VtArray<int>& counts);
 
-  void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
+  DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time) override;
 
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
     const pxr::GfVec3f& direction, Location& location, float maxDistance);

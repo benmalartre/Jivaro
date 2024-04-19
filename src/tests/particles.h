@@ -5,7 +5,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Execution* CreateTestParticles();
+extern Execution* CreateTestParticles();
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

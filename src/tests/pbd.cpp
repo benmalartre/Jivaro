@@ -136,7 +136,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);
   _solver->AddElement(collision, _ground, _groundId);
 
-  _scene.Update(stage, _solver->GetStartFrame());
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _solver->GetStartFrame());
 
@@ -145,7 +144,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  _scene.Update(stage, time);
+  _scene.Sync(stage, time);
   _solver->Update(stage, time);
 
   for (auto& execPrim : _scene.GetPrims()) {

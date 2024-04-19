@@ -234,8 +234,6 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
-  std::cout << "num rays : " << pxr::GfPow(n, 2.f) << std::endl;
-
   //_AddAnimationSamples(stage, _meshId);
 
   // create rays
@@ -249,18 +247,17 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
   _hitsId = rootId.AppendChild(pxr::TfToken("hits"));
   _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
 
-  _scene.Update(stage, 1);
   _UpdateHits();
 
 }
 
 void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  _scene.Update(stage, time);
+  _scene.Sync(stage, time);
   
   if (_meshes.size()) {
     _bvh.Update();
-    _UpdateBVHInstancer(stage, _bvhId, &_bvh, time);
+    _UpdateBVHInstancer(stage, &_bvh, _leaves);
     _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
   }
 

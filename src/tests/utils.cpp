@@ -198,70 +198,25 @@ Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BV
 
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time)
 {
-  std::cout << "update point instancer" << std::endl;
   std::vector<BVH::Cell*> cells;
   bvh->GetRoot()->GetCells(cells);
   size_t numPoints = cells.size();
+
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);
-  pxr::VtArray<int64_t> indices(numPoints);
-  pxr::VtArray<int> protoIndices(numPoints);
-  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+  pxr::VtArray<pxr::GfVec3f> rotations(numPoints);
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
     scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
-    protoIndices[pointIdx] = 0;
-    indices[pointIdx] = pointIdx;
-    colors[pointIdx] =
-      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
-        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
   }
 
+  instancer.GetPositionsAttr().Set(points);
+  instancer.GetScalesAttr().Set(scales);
+  instancer.GetOrientationsAttr().Set(rotations);
 
-  pxr::UsdGeomPointInstancer instancer(stage->GetPrimAtPath(path));
-
-  instancer.GetPositionsAttr().Set(points, time);
-  instancer.GetProtoIndicesAttr().Set(protoIndices);
-  instancer.GetScalesAttr().Set(scales, time);
-  instancer.GetIdsAttr().Set(indices, time);
-  instancer.GetOrientationsAttr().Set(rotations, time);
-  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
-  pxr::UsdGeomPrimvar colorPrimvar =
-  primvarsApi.GetPrimvar(pxr::UsdGeomTokens->primvarsDisplayColor);
-  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
-  colorPrimvar.SetElementSize(1);
-  colorPrimvar.Set(colors);
 }
 
-/*
-void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh, Instancer* instancer)
-{
-  std::vector<BVH::Cell*> cells;
-  bvh->GetRoot()->GetCells(cells);
-  size_t numPoints = cells.size();
-  pxr::VtArray<pxr::GfVec3f> points(numPoints);
-  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-
-  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
-    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
-    colors[pointIdx] =
-      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
-        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
-  }
-
-  instancer->Set(
-    points,
-    nullptr,
-    nullptr,
-    &scales,
-    nullptr,
-    &colors);
-}
-*/
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -225,7 +225,7 @@ void Delegate::SetScene(Scene* scene) {
         break;
 
       case Geometry::INSTANCER:
-        index.InsertRprim(pxr::HdPrimTypeTokens->instancer, this, prim.first);
+        index.InsertInstancer(this, prim.first);
         break;
     }
     pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();

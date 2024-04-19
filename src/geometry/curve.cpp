@@ -84,12 +84,6 @@ Curve::Init(
   _normals = positions;
 }
 
-void 
-Curve::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
-{
-  _positions = positions;
-}
-
 bool 
 Curve::ClosestIntersection(const pxr::GfVec3f& origin, 
   const pxr::GfVec3f& direction, Location& location, float maxDistance)

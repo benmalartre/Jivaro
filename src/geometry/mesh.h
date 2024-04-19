@@ -67,9 +67,10 @@ public:
 
   void GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs);
 
-  void Init();
-  void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
-  DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time);
+  void Prepare(bool connectivity=true);
+
+  DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time) override;
+
 
   // points (deformation)
   void SetPositions(const pxr::GfVec3f* positions, size_t n) override;

@@ -234,7 +234,6 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _hitsId = rootId.AppendChild(pxr::TfToken("hits"));
   _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
 
-  _scene.Update(stage, 1);
   _UpdateHits();
 
 }
@@ -242,7 +241,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
 void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   std::cout << "update exec" << std::endl;
-  _scene.Update(stage, time);
+  _scene.Sync(stage, time);
   std::cout << "scene updated" << std::endl;
   _UpdateRays();
   std::cout << "rays updated" << std::endl;

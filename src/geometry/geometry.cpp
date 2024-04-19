@@ -76,7 +76,6 @@ Geometry::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
   return _Sync(prim, matrix, time);
 }
 
-
 const pxr::GfBBox3d& 
 Geometry::GetBoundingBox(bool worldSpace) const 
 { 

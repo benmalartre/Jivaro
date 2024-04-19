@@ -38,7 +38,7 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
   faceVertexCountsAttr.Get(&_faceVertexCounts, pxr::UsdTimeCode::Default());
   faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
 
-  Init();
+  Prepare();
 }
 
 Mesh::~Mesh()
@@ -368,7 +368,7 @@ void Mesh::Set(
   _faceVertexIndices = faceVertexIndices;
   _positions = positions;
   _normals = positions;
-  if(init)Init();
+  if(init)Prepare();
 }
 
 void Mesh::SetTopology(
@@ -380,7 +380,7 @@ void Mesh::SetTopology(
   _faceVertexCounts = faceVertexCounts;
   _faceVertexIndices = faceVertexIndices;
 
-  if(init)Init();
+  if(init)Prepare();
 }
 
 void Mesh::SetPositions(const pxr::GfVec3f* positions, size_t n)
@@ -404,7 +404,7 @@ void Mesh::SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions)
   }
 }
 
-void Mesh::Init()
+void Mesh::Prepare(bool connectivity)
 {
   size_t numPoints = _positions.size();
   // compute triangles
@@ -414,28 +414,24 @@ void Mesh::Init()
   ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
 
-  // compute half-edges
-  ComputeHalfEdges();
-
   // compute bouding box
   ComputeBoundingBox();
 
-  // compute neighbors
-  ComputeNeighbors();
-}
+  if(connectivity) {
+    // compute half-edges
+    ComputeHalfEdges();
 
-void 
-Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
-{
-  _positions = positions;
+    // compute neighbors
+    ComputeNeighbors();
+  }
 }
 
 Geometry::DirtyState 
 Mesh::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
 {
-  std::cout << "sync mesh : " << prim.GetPath() << std::endl;
   if(prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>())
   {
+    _previous = _positions;
     pxr::UsdGeomMesh usdMesh(prim);
     const size_t nbPositions = _positions.size();
     usdMesh.GetPointsAttr().Get(&_positions, time);

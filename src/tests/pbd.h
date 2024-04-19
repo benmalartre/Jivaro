@@ -5,7 +5,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Execution* CreateTestPBD();
+extern Execution* CreateTestPBD();
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

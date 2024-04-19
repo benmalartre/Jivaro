@@ -43,7 +43,7 @@ public:
   ~Scene();
 
   void Init(const pxr::UsdStageRefPtr& stage);
-  void Update(const pxr::UsdStageRefPtr& stage, double time);
+  void Sync(const pxr::UsdStageRefPtr& stage, double time);
 
   void Save(const std::string& filename);
   void Export(const std::string& filename);

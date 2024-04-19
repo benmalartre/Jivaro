@@ -28,6 +28,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 const char* Application::name = "Jivaro";
 
+extern Execution* CreateTestPBD();
+
 // singleton
 //----------------------------------------------------------------------------
 Application* Application::_singleton=nullptr;
@@ -278,9 +280,9 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
   _exec = CreateTestBVH();
   //_exec = CreateTestRaycast();
-  //_exec = new TestParticles();
-  //_exec = new TestPBD();
-  //_exec = new TestHair();
+  //_exec = CreateTestParticles();
+  //_exec = CreateTestPBD();
+  //_exec = CreateTestHair();
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {

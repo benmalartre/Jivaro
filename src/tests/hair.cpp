@@ -21,10 +21,28 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-int density;
-float length, amplitude, frequency, width, scale, radius;
+class TestHair : public Execution {
+public:
+  friend class Scene;
+  TestHair() : Execution(){};
+  void InitExec(pxr::UsdStageRefPtr& stage) override;
+  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 
-static void _InitControls(pxr::UsdStageRefPtr& stage)
+protected:
+  void _InitControls(pxr::UsdStageRefPtr& stage);
+  void _QueryControls(pxr::UsdStageRefPtr& stage);
+  pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, 
+    pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time);
+
+
+private:
+  pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash> _sourcesMap;
+  int _density;
+  float _length, _amplitude, _frequency, _width, _scale, _radius;
+};
+
+void TestHair::_InitControls(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
@@ -38,21 +56,22 @@ static void _InitControls(pxr::UsdStageRefPtr& stage)
   controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
 }
 
-static void _QueryControls(pxr::UsdStageRefPtr& stage)
+void TestHair::_QueryControls(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::UsdPrim controlPrim = rootPrim.GetChild(pxr::TfToken("Controls"));
 
-  controlPrim.GetAttribute(pxr::TfToken("Density")).Get(&density);
-  controlPrim.GetAttribute(pxr::TfToken("Radius")).Get(&radius);
-  controlPrim.GetAttribute(pxr::TfToken("Length")).Get(&length);
-  controlPrim.GetAttribute(pxr::TfToken("Scale")).Get(&scale);
-  controlPrim.GetAttribute(pxr::TfToken("Amplitude")).Get(&amplitude);
-  controlPrim.GetAttribute(pxr::TfToken("Frequency")).Get(&frequency);
-  controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&width);
+  controlPrim.GetAttribute(pxr::TfToken("Density")).Get(&_density);
+  controlPrim.GetAttribute(pxr::TfToken("Radius")).Get(&_radius);
+  controlPrim.GetAttribute(pxr::TfToken("Length")).Get(&_length);
+  controlPrim.GetAttribute(pxr::TfToken("Scale")).Get(&_scale);
+  controlPrim.GetAttribute(pxr::TfToken("Amplitude")).Get(&_amplitude);
+  controlPrim.GetAttribute(pxr::TfToken("Frequency")).Get(&_frequency);
+  controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&_width);
 }
 
-pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time)
+pxr::HdDirtyBits TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& mesh, 
+  pxr::GfMatrix4d& xform, double time)
 {
   uint64_t T = CurrentTime();
   pxr::HdDirtyBits bits = pxr::HdChangeTracker::Clean;
@@ -76,7 +95,7 @@ pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeo
   ComputeVertexNormals(positions, counts, indices, triangles, normals);
   //uint64_t T3 = CurrentTime() - T;
   //T = CurrentTime();
-  PoissonSampling(radius, density, positions, normals, triangles, samples);
+  PoissonSampling(_radius, _density, positions, normals, triangles, samples);
   //uint64_t T4 = CurrentTime() - T;
   //T = CurrentTime();  
 
@@ -93,18 +112,18 @@ pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeo
     const pxr::GfVec3f& tangent = samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
     const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
     const pxr::GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
-    const float tangentFactor = pxr::GfCos(position[2] * scale + time * frequency) * amplitude;
+    const float tangentFactor = pxr::GfCos(position[2] * _scale + time * _frequency) * _amplitude;
 
 
     points[sampleIdx * 4] = xform.Transform(position);
-    points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * length + bitangent * tangentFactor * 0.2);
-    points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * length + bitangent * tangentFactor * 0.6);
-    points[sampleIdx * 4 + 3] = xform.Transform(position + normal * length + bitangent * tangentFactor);
+    points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * _length + bitangent * tangentFactor * 0.2);
+    points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * _length + bitangent * tangentFactor * 0.6);
+    points[sampleIdx * 4 + 3] = xform.Transform(position + normal * _length + bitangent * tangentFactor);
 
-    radii[sampleIdx * 4] = width * 1.f;
-    radii[sampleIdx * 4 + 1] = width * 0.8f;
-    radii[sampleIdx * 4 + 2] = width * 0.4f;
-    radii[sampleIdx * 4 + 3] = width * 0.2f;
+    radii[sampleIdx * 4] = _width * 1.f;
+    radii[sampleIdx * 4 + 1] = _width * 0.8f;
+    radii[sampleIdx * 4 + 2] = _width * 0.4f;
+    radii[sampleIdx * 4 + 3] = _width * 0.2f;
 
     cvCounts[sampleIdx] = 4;
   }

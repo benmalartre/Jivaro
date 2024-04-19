@@ -38,7 +38,7 @@ Scene::Init(const pxr::UsdStageRefPtr& stage)
 }
 
 void
-Scene::Update(const pxr::UsdStageRefPtr& stage, double time)
+Scene::Sync(const pxr::UsdStageRefPtr& stage, double time)
 {
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode(time);
   pxr::UsdGeomXformCache xformCache(activeTime);
