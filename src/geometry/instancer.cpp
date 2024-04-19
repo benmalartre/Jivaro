@@ -21,19 +21,19 @@ Instancer::Instancer(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
     pxr::UsdGeomPointInstancer instancer(prim);
     const size_t numInstances = _positions.size();
 
-    pxr::UsdAttribute protoIndicesAttr instancer.GetProtoIndicesAttr();
-    protoIndicesAttr.Get(&_protoINdices, pxr::UsdTimeCode::Default());
+    pxr::UsdAttribute protoIndicesAttr = instancer.GetProtoIndicesAttr();
+    protoIndicesAttr.Get(&_protoIndices, pxr::UsdTimeCode::Default());
 
-    pxr::UsdAttribute idsAttr = points.GetIdsAttr();
+    pxr::UsdAttribute idsAttr = instancer.GetIdsAttr();
     if (idsAttr.IsDefined() && idsAttr.HasAuthoredValue())
       idsAttr.Get(&_indices, pxr::UsdTimeCode::Default());
 
-    pxr::UsdAttribute scalesAttr = points.GetScalesAttr();
+    pxr::UsdAttribute scalesAttr = instancer.GetScalesAttr();
     if (scalesAttr.IsDefined() && scalesAttr.HasAuthoredValue())
       scalesAttr.Get(&_scales, pxr::UsdTimeCode::Default());
     else _scales.resize(numInstances, pxr::GfVec3f(1.f));
 
-    pxr::UsdAttribute orientationsAttr = points.GetOrientationAttr();
+    pxr::UsdAttribute orientationsAttr = instancer.GetOrientationsAttr();
     if (orientationsAttr.IsDefined() && orientationsAttr.HasAuthoredValue())
       orientationsAttr.Get(&_rotations, pxr::UsdTimeCode::Default());
     else _scales.resize(numInstances, pxr::GfVec3f(1.f));

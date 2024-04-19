@@ -193,7 +193,7 @@ Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BV
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
 
-  return new Instancer(instancer, pxr::GfMatrix4d());
+  return new Instancer(instancer.GetPrim(), pxr::GfMatrix4d());
 }
 
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time)

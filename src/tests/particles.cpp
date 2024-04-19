@@ -142,7 +142,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     } else if (prim.IsA<pxr::UsdGeomPoints>()) {
       pxr::UsdGeomPoints usdPoints(prim);
       pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      Points* points = new Points(usdPoints, xform);
+      Points* points = new Points(usdPoints.GetPrim(), xform);
       _scene.AddGeometry(prim.GetPath(), points);
 
       Body* body = _solver->CreateBody((Geometry*)points, pxr::GfMatrix4f(xform), mass, radius, damping);
