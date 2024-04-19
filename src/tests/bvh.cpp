@@ -248,6 +248,7 @@ void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
   if (_meshes.size()) {
     _bvh.Update();
+    _UpdateBVHInstancer(stage, _bvhId, &_bvh)
   }
 
   _UpdateRays();

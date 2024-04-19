@@ -156,10 +156,6 @@ void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh
   pxr::VtArray<int> protoIndices(numPoints);
   pxr::VtArray<pxr::GfQuath> rotations(numPoints);
   pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  pxr::VtArray<int> curveVertexCount(1);
-  curveVertexCount[0] = numPoints;
-  pxr::VtArray<float> widths(numPoints);
-  widths[0] = 1.f;
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
@@ -170,7 +166,6 @@ void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh
       pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
         pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
-    widths[pointIdx] = RANDOM_0_1;
   }
 
   pxr::UsdGeomPointInstancer instancer =
@@ -193,6 +188,32 @@ void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh
   colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
+}
+
+void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, double time)
+{
+  std::vector<BVH::Cell*> cells;
+  bvh->GetRoot()->GetCells(cells);
+  size_t numPoints = cells.size();
+  pxr::VtArray<pxr::GfVec3f> points(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
+    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
+    colors[pointIdx] =
+      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
+        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
+  }
+
+  pxr::UsdGeomPointInstancer instancer(stage->GetPrimAtPath(path));
+
+  instancer.GetPositionsAttr().Set(points, time);
+  instancer.GetScalesAttr().Set(scales, time);
+  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
+  pxr::UsdGeomPrimvar colorPrimvar = primvarsApi.GetPrimvar(pxr::UsdGeomTokens->primvarsDisplayColor);
+  colorPrimvar.Set(colors, time);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

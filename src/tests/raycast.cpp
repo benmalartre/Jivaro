@@ -143,7 +143,7 @@ void TestRaycast::_UpdateHits()
   hits.resize(numRays, false);
 
    pxr::WorkParallelForN(_rays->GetNumCurves(),
-    std::bind(&_FindHits, std::placeholders::_1, 
+    std::bind(&TestRaycast::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0]));
 
   // need accumulate result
