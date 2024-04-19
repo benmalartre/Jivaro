@@ -3,6 +3,7 @@
 
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
+#include <pxr/base/work/loops.h>
 #include <pxr/imaging/hd/changeTracker.h>
 #include "../common.h"
 #include "../geometry/scene.h"

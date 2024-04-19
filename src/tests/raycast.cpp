@@ -87,7 +87,7 @@ void _UpdateRays()
 }
 
 
-void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::VtArray<pxr::GfVec3f>& results, pxr::VtArray<bool>& hits)
+void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results, bool* hits)
 {
   for (size_t index = begin; index < end; ++index) {
     pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
@@ -105,7 +105,6 @@ void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::VtA
 
 void _UpdateHits()
 {
-  pxr::VtArray<pxr::GfVec3f> result;
   const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
   const size_t numRays = _rays->GetNumPoints() >> 1;
 
@@ -116,14 +115,13 @@ void _UpdateHits()
 
    pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&_FindHits, std::placeholders::_1, 
-      std::placeholders::_2, positions, points, hits));
+      std::placeholders::_2, positions, &points[0], &hits[0]));
 
   
   std::cout << "raycast " << _rays->GetNumCurves() << "rays took : " << 
     ((CurrentTime() - startT) * 1e-9) << " seconds to complete" << std::endl;
 
   pxr::VtArray<pxr::GfVec3f> result;
-  result.reserve(numRays());
   for(size_t r = 0; r < numRays; ++r) {
     if(hits[r])result.push_back(points[r]);
   }
