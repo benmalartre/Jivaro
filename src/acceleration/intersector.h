@@ -31,6 +31,7 @@ public:
   int GetGeometryIndex(Geometry* geom) const;
   const std::vector<Geometry*>& GetGeometries() const {return _geometries;};
   const Geometry* GetGeometry(size_t index) const {return _geometries[index];};
+  Geometry* GetGeometry(size_t index) {return _geometries[index];};
 
   virtual void Init(const std::vector<Geometry*>& geometries) = 0;
 

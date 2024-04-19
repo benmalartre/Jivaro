@@ -96,7 +96,6 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
-  /*
   // find meshes in the scene
   std::vector<Geometry*> meshes;
   _TraverseStageFindingMeshes(stage, meshes);
@@ -110,7 +109,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
     //_SetupBVHInstancer(stage, _bvhId, &_bvh);
 
   }
-  */
+  
   // create mesh that will be source of rays
   pxr::GfQuatf rotation(180.f * DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
   rotation.Normalize();
@@ -123,10 +122,15 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _mesh = _GenerateMeshGrid(stage, _meshId, 32, 32, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
+  // create rays
   _raysId = rootId.AppendChild(pxr::TfToken("rays"));
   _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
 
   _UpdateRays(_mesh, _rays);
+
+  // create hits
+  _hitsId = rootId.AppendChild(pxr::TfToken("hits"));
+  _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
 
   _scene.Update(stage, 1);
 
@@ -141,6 +145,26 @@ void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _UpdateRays(_mesh, _rays);
   Scene::_Prim* prim = _scene.GetPrim(_raysId);
   prim->bits = pxr::HdChangeTracker::AllDirty;
+
+  pxr::VtArray<pxr::GfVec3f> result;
+  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
+  for (size_t c= 0; _rays->GetNumCurves(); ++c) {
+    pxr::GfRay ray(positions[c*2], positions[c*2+1] - positions[c*2]);
+    double minDistance = DBL_MAX;
+    Location hit;
+    const pxr::GfVec3f* points = _mesh->GetPositionsCPtr();
+    if (_bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
+      Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
+      result.push_back(hit.GetPosition(collided));
+    }
+  }
+
+  _hits->SetPositions(result);
+  pxr::VtArray<float> radiis(result.size(), 0.1);
+  _hits->SetRadii(radiis);
+  prim = _scene.GetPrim(_hitsId);
+  prim->bits = pxr::HdChangeTracker::DirtyTopology;
+
 }
 
 void TestRaycast::TerminateExec(pxr::UsdStageRefPtr& stage)
