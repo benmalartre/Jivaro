@@ -118,7 +118,7 @@ Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::Gf
     _prims[path] = { new Capsule(xfo) };
     return _prims[path].geom;
   } else if (type == Geometry::POINT) {
-    _prims[path] = { new Points(Geometry::POINT, xfo) };
+    _prims[path] = { new Points(xfo) };
     return _prims[path].geom;
   } else if (type == Geometry::CURVE) {
     _prims[path] = { new Curve(xfo) };
