@@ -337,6 +337,7 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geom
 static pxr::GfRange3f 
 _RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
 {
+  pxr::GfRange3f accum;
   if(cell->IsGeom()) {
     geometry = cell->GetGeometry();
   } 
@@ -348,14 +349,17 @@ _RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
     cell->SetMax(range.GetMax());
     return range;
   } else {
-    pxr::GfRange3f range;
+    
     if (cell->GetLeft()) {
-      range.UnionWith(_RecurseUpdateCells(cell->GetLeft(), geometry));
+      accum.UnionWith(_RecurseUpdateCells(cell->GetLeft(), geometry));
     }
     if (cell->GetRight()) {
-      range.UnionWith(_RecurseUpdateCells(cell->GetRight(), geometry));
+      accum.UnionWith(_RecurseUpdateCells(cell->GetRight(), geometry));
     }
   }
+  cell->SetMin(accum.GetMin());
+  cell->SetMax(accum.GetMax());
+  return accum;
 }
 
 int 
@@ -472,7 +476,8 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 void
 BVH::Update()
 {
-
+  pxr::GfRange3f newRange = _RecurseUpdateCells(&_root,NULL);
+  std::cout << "Update Bound Volume Hierarchy !!!" << std::endl;
 }
 
 bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,

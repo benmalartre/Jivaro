@@ -206,8 +206,11 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
   // create bvh
   if (_meshes.size()) {
     _bvh.Init(_meshes);
-    _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
-    _SetupBVHInstancer(stage, _bvhId, &_bvh);
+
+    for(size_t m = 0; m < _meshes.size();++m) {
+      pxr::SdfPath meshId = rootId.AppendChild(pxr::TfToken("mesh_"+std::to_string(m)));
+      _scene.AddGeometry(meshId, _meshes[m]);
+    }
   }
   
   // create mesh that will be source of rays
@@ -245,10 +248,11 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
 void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Update(stage, time);
-
+  std::cout << "bvh update " << _meshes.size() << " meshes present" << std::endl;
   if (_meshes.size()) {
     _bvh.Update();
-    _UpdateBVHInstancer(stage, _bvhId, &_bvh)
+    _UpdateBVHInstancer(stage, _bvhId, &_bvh, time);
+    _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::AllDirty);
   }
 
   _UpdateRays();

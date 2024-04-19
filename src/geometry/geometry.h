@@ -31,6 +31,12 @@ class Location;
 
 class Geometry {
 public:
+  enum Sync {
+    INPUT = 1,
+    OUTPUT = 2,
+    PASSTHROUGH = 4
+  };
+
   enum Type {
     INVALID,
     XFORM,
@@ -64,6 +70,13 @@ public:
   short GetType() const { return _type; };
   virtual size_t GetNumPoints() const {return 1;};
 
+  bool IsInput(){return _io & IO::INPUT;};
+  bool IsOutput(){return _io & IO::OUTPUT;};
+  bool IsPassthrough(){return _io & IO::PASSTHROUGH;};
+  void SetInputOnly() {_io = IO::INPUT;};
+  void SetOutputOnly() {_io = IO::OUTPUT;};
+  void SetInputOutput() {_io = IO::INPUT|IO::OUTPUT;};
+
   void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
   const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
 
@@ -94,6 +107,7 @@ protected:
     float time, T *value);
 
   // infos
+  short                               _io;
   short                               _type;
   pxr::SdfPath                        _path;
 

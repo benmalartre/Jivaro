@@ -190,8 +190,9 @@ void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh
   colorPrimvar.Set(colors);
 }
 
-void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, double time)
+void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time)
 {
+  std::cout << "update point instancer" << std::endl;
   std::vector<BVH::Cell*> cells;
   bvh->GetRoot()->GetCells(cells);
   size_t numPoints = cells.size();
@@ -209,11 +210,11 @@ void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bv
 
   pxr::UsdGeomPointInstancer instancer(stage->GetPrimAtPath(path));
 
-  instancer.GetPositionsAttr().Set(points, time);
-  instancer.GetScalesAttr().Set(scales, time);
+  instancer.GetPositionsAttr().Set(points);
+  instancer.GetScalesAttr().Set(scales);
   pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
   pxr::UsdGeomPrimvar colorPrimvar = primvarsApi.GetPrimvar(pxr::UsdGeomTokens->primvarsDisplayColor);
-  colorPrimvar.Set(colors, time);
+  colorPrimvar.Set(colors);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
