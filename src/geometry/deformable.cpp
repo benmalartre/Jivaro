@@ -30,7 +30,8 @@ Deformable::Deformable(const Deformable* other, bool normalize)
 
 void Deformable::_ValidateNumPoints(size_t n)
 {
-  if (n != _positions.size()) {
+  std::cout << "validate num points " << n << " vs " << GetNumPoints() << std::endl;
+  if (n != GetNumPoints()) {
     _positions.resize(n);
     _previous.resize(n);
   }
@@ -44,8 +45,8 @@ void
 Deformable::SetPositions(const pxr::GfVec3f* positions, size_t n)
 {
   _ValidateNumPoints(n);
-  _previous = _positions;
-  memmove(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
+  memcpy(&_previous[0], &_positions[0], n * sizeof(pxr::GfVec3f));
+  memcpy(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
 }
 
 void
@@ -53,7 +54,7 @@ Deformable::SetNormals(const pxr::GfVec3f* normals, size_t n)
 {
   _haveNormals = true;
   _ValidateNumPoints(n);
-  memmove(&_normals[0], normals, n * sizeof(pxr::GfVec3f));
+  memcpy(&_normals[0], normals, n * sizeof(pxr::GfVec3f));
 }
 
 void
@@ -61,7 +62,7 @@ Deformable::SetRadii(const float* radii, size_t n)
 {
   _haveRadius = true;
   _ValidateNumPoints(n);
-  memmove(&_radius[0], radii, n * sizeof(float));
+  memcpy(&_radius[0], radii, n * sizeof(float));
 }
 
 void
@@ -69,39 +70,44 @@ Deformable::SetColors(const pxr::GfVec3f* colors, size_t n)
 {
   _haveColors = true;
   _ValidateNumPoints(n);
-  memmove(&_colors[0], colors, n * sizeof(pxr::GfVec3f));
+  memcpy(&_colors[0], colors, n * sizeof(pxr::GfVec3f));
 }
 
 void
 Deformable::SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
-  _ValidateNumPoints(positions.size());
-  _previous = _positions;
-  _positions = positions;
+  const size_t n = positions.size();
+  std::cout << "set position " << n << std::endl;
+  _ValidateNumPoints(n);
+  memcpy(&_previous[0], &_positions[0], n * sizeof(pxr::GfVec3f));
+  memcpy(&_positions[0], &positions[0], n * sizeof(pxr::GfVec3f));
 }
 
 void
 Deformable::SetNormals(const pxr::VtArray<pxr::GfVec3f>& normals)
 {
   _haveNormals = true;
-  _ValidateNumPoints(normals.size());
-  _normals = normals;
+  const size_t n = normals.size();
+  _ValidateNumPoints(n);
+  memcpy(&_normals[0], &normals[0], n * sizeof(pxr::GfVec3f));
 }
 
 void
 Deformable::SetRadii(const pxr::VtArray<float>& radius)
 {
   _haveRadius = true;
-  _ValidateNumPoints(radius.size());
-  _radius = radius;
+  const size_t n = radius.size();
+  _ValidateNumPoints(n);
+  memcpy(&_radius[0], &radius[0], n * sizeof(float));
 }
 
 void
 Deformable::SetColors(const pxr::VtArray<pxr::GfVec3f>& colors)
 {
   _haveColors = true;
-  _ValidateNumPoints(colors.size());
-  _colors = colors;
+  const size_t n = colors.size();
+  _ValidateNumPoints(n);
+  memcpy(&_colors[0], &colors[0], n * sizeof(pxr::GfVec3f));
 }
 
 void

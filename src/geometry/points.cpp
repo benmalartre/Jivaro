@@ -8,8 +8,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Points::Points()
-  : Deformable(Geometry::POINT, pxr::GfMatrix4d(1.0))
+Points::Points(const pxr::GfMatrix4d& m)
+  : Deformable(Geometry::POINT, m)
 {
 }
 

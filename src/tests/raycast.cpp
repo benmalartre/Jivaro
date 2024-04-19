@@ -97,9 +97,13 @@ void _UpdateHits()
     }
   }
 
-  //_hits->SetPositions(result);
-  //pxr::VtArray<float> radiis(result.size(), 0.1);
-  //_hits->SetRadii(radiis);
+std::cout << "result : " << result << std::endl;
+
+  _hits->SetPositions(result);
+  /*
+  pxr::VtArray<float> radiis(result.size(), 0.1);
+  _hits->SetRadii(radiis);
+*/
 }
 
 void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes)
@@ -150,6 +154,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
 
   _UpdateRays();
+  _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker ::AllDirty);
 
   // create hits
   _hitsId = rootId.AppendChild(pxr::TfToken("hits"));
@@ -165,10 +170,10 @@ void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _scene.Update(stage, time);
 
   _UpdateRays();
-  _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker ::AllDirty);
+  _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker ::DirtyPoints);
 
   _UpdateHits();
-  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker ::DirtyTopology);
+  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::AllDirty);
 
 }
 

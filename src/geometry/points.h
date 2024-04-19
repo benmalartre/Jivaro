@@ -8,7 +8,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Voxels;
 class Points : public Deformable {
 public:
-  Points();
+  Points(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Points(const Points* other, bool normalize = true);
   Points(const Voxels* voxels);
   Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world);
