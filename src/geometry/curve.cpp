@@ -11,12 +11,12 @@ Curve::Curve(const pxr::GfMatrix4d& xfo)
 {
 }
 
-Curve::Curve(const Curve* other, bool normalize)
+Curve::Curve(const Curve& other, bool normalize)
   : Deformable(other, normalize)
 {
-  size_t numCurves = other->_cvCounts.size();
+  size_t numCurves = other._cvCounts.size();
   _cvCounts.resize(numCurves);
-  memcpy(&_cvCounts[0], &other->_cvCounts[0], numCurves * sizeof(int));
+  memcpy(&_cvCounts[0], &other._cvCounts[0], numCurves * sizeof(int));
 }
 
 Curve::Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world)

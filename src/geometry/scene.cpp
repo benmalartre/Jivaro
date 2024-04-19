@@ -17,6 +17,7 @@
 #include "../geometry/curve.h"
 #include "../geometry/points.h"
 #include "../geometry/voxels.h"
+#include "../geometry/instancer.h"
 #include "../geometry/sampler.h"
 #include "../geometry/scene.h"
 
@@ -117,13 +118,16 @@ Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::Gf
     _prims[path] = { new Capsule(xfo) };
     return _prims[path].geom;
   } else if (type == Geometry::POINT) {
-    _prims[path] = { new Points(xfo) };
+    _prims[path] = { new Points(Geometry::POINT, xfo) };
     return _prims[path].geom;
   } else if (type == Geometry::CURVE) {
     _prims[path] = { new Curve(xfo) };
     return _prims[path].geom;
   } else if (type == Geometry::MESH) {
     _prims[path] = { new Mesh(xfo) };
+    return _prims[path].geom;
+  } else if (type == Geometry::INSTANCER) {
+    _prims[path] = { new Instancer(xfo) };
     return _prims[path].geom;
   } else {
     return NULL;

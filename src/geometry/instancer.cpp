@@ -1,23 +1,23 @@
-// Points
+// Instancer
 //----------------------------------------------
-#include "../geometry/points.h"
+#include "../geometry/instancer.h"
 #include "../geometry/utils.h"
-#include "../geometry/voxels.h"
 
 #include <pxr/base/gf/ray.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Points::Points(short type, const pxr::GfMatrix4d& m)
-  : Deformable(type, m)
+Instancer::Instancer(const pxr::GfMatrix4d& m)
+  : Points(Geometry::INSTANCER, m)
 {
+  _haveNormals = false;
+  _haveColors = false;
 }
 
-Points::Points(const Points& other, bool normalize)
-  : Deformable(other, normalize)
-{
-  const Deformable* deformable = (const Deformable*)&other;
-  _positions = deformable->GetPositions();
+Instancer::Instancer(const Deformable* other)
+  : Points(Geometry::INSTANCER)
+
+  _positions = other->GetPositions();
   _previous = _positions;
   _haveRadius = deformable->HaveRadius();
   if (_haveRadius)_radius = deformable->GetRadius();
@@ -27,7 +27,7 @@ Points::Points(const Points& other, bool normalize)
   if (_haveColors)_colors = deformable->GetColors();
 }
 
-Points::Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
+Instancer::Instancer(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
   : Deformable(Geometry::POINT, world)
 {
   pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
@@ -41,6 +41,21 @@ Points::Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
   if (widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue())
     widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
 }
+
+void Instancer::Set(
+  const pxr::VtArray<pxr::GfVec3f>&  positions, 
+  const pxr::VtArray<int>*           protoIndices=nullptr,
+  const pxr::VtArray<int64_t>*       indices=nullptr,
+  const pxr::VtArray<pxr::GfVec3f>*  scales=nullptr,
+  const pxr::VtArray<pxr::GfQuath>*  rotations=nullptr,
+  const pxr::VtArray<pxr::GfVec3f>*  colors=nullptr)
+{
+  const size_t n = positions.size();
+  Deformable::_ValidateNumPoints(n);
+  SetPositions(positions);
+  
+}
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

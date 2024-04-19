@@ -45,7 +45,7 @@ public:
     DEL
   };
   Stroke();
-  Stroke(const Stroke* other, bool normalize = true);
+  Stroke(const Stroke& other, bool normalize = true);
   virtual ~Stroke();
 
   const pxr::VtArray<StrokeLine>& GetLines() const { return _lines;};

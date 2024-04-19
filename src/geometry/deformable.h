@@ -20,7 +20,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Deformable : public Geometry {
 public:
   Deformable(short type, const pxr::GfMatrix4d& matrix=pxr::GfMatrix4d(1.f));
-  Deformable(const Deformable* other, bool normalize = true);
+  Deformable(const Deformable& other, bool normalize = true);
   virtual ~Deformable() {};
 
   size_t GetNumPoints()const override {return _positions.size();};
@@ -95,8 +95,12 @@ public:
   };
 
 protected:
-  void _ValidateNumPoints(size_t n);
+  virtual void _ValidateNumPoints(size_t n);
 
+  // todo have extensible list of attribute referenced by their name
+  // with some predefined ans we can append new ones
+  //std::map<pxr::TfToken, Attribute>  _attributes;
+  
   // vertex data
   pxr::VtArray<pxr::GfVec3f>          _previous;
   pxr::VtArray<pxr::GfVec3f>          _positions;

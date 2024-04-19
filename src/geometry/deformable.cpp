@@ -14,17 +14,17 @@ Deformable::Deformable(short type, const pxr::GfMatrix4d& matrix)
 {
 }
 
-Deformable::Deformable(const Deformable* other, bool normalize)
-  : Geometry(other, other->GetType())
+Deformable::Deformable(const Deformable& other, bool normalize)
+  : Geometry(other, other.GetType())
 {
-  _previous = other->_previous;
-  _positions = other->_positions;
-  _haveNormals = other->_haveNormals;
-  _normals = other->_normals;
-  _haveRadius = other->_haveRadius;
-  _radius = other->_radius;
-  _haveColors = other->_haveColors;
-  _colors = other->_colors;
+  _previous = other._previous;
+  _positions = other._positions;
+  _haveNormals = other._haveNormals;
+  _normals = other._normals;
+  _haveRadius = other._haveRadius;
+  _radius = other._radius;
+  _haveColors = other._haveColors;
+  _colors = other._colors;
 }
 
 void Deformable::_ValidateNumPoints(size_t n)

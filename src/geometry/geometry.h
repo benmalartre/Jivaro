@@ -62,7 +62,7 @@ public:
 
   Geometry();
   Geometry(short type, const pxr::GfMatrix4d& world);
-  Geometry(const Geometry* other, short type);
+  Geometry(const Geometry& other, short type);
   virtual ~Geometry() {};
 
   short GetType() const { return _type; };

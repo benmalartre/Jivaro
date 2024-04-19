@@ -28,7 +28,7 @@ public:
     TRIANGLEPAIRS = 1 << 2
   };
   Mesh(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Mesh(const Mesh* other, bool normalize = true);
+  Mesh(const Mesh& other, bool normalize = true);
   Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world);
   virtual ~Mesh();
 

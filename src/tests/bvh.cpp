@@ -258,10 +258,9 @@ void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   
   if (_meshes.size()) {
     _bvh.Update();
-    _SetupBVHInstancer(stage, _bvhId, &_bvh);
+     _UpdateBVHInstancer(stage, _bvhId, &_bvh);
     _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::AllDirty);
   }
-
 
   _UpdateRays();
   _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker::DirtyPoints);

@@ -25,14 +25,14 @@ Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
   SetMatrix(world);
 }
 
-Geometry::Geometry(const Geometry* other, short type)
+Geometry::Geometry(const Geometry& other, short type)
 {
   _type = type;
-  _mode = other->_mode;
-  _wirecolor = other->_wirecolor;
+  _mode = other._mode;
+  _wirecolor = other._wirecolor;
   
-  _bbox = other->_bbox;
-  SetMatrix(other->GetMatrix());
+  _bbox = other._bbox;
+  SetMatrix(other.GetMatrix());
 }
 
 void 

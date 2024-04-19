@@ -37,17 +37,17 @@ Stroke::Stroke()
   _type = STROKE;
 }
 
-Stroke::Stroke(const Stroke* other, bool normalize)
+Stroke::Stroke(const Stroke& other, bool normalize)
   : Geometry(other, Geometry::STROKE)
 {
-  _numLines = other->_numLines;
+  _numLines = other._numLines;
   _type = STROKE;
 
-  _input = other->_input;
+  _input = other._input;
   _lines.resize(_numLines);
   for(size_t i = 0; i < _numLines; ++i) {
-    _lines[i].points = other->_lines[i].points;
-    _lines[i].widths = other->_lines[i].widths;
+    _lines[i].points = other._lines[i].points;
+    _lines[i].widths = other._lines[i].widths;
   }
 }
 

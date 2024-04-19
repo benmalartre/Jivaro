@@ -276,11 +276,11 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  _exec = CreateTestBVH();
+  //_exec = CreateTestBVH();
   //_exec = CreateTestRaycast();
   //_exec = new TestParticles();
   //_exec = new TestPBD();
-  //_exec = new TestHair();
+  _exec = new TestHair();
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {
