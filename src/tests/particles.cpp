@@ -170,7 +170,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _solver->GetStartFrame());
 
-
 }
 
 
@@ -178,92 +177,7 @@ void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Update(stage, time);
   _solver->Update(stage, time);
-  
-  pxr::UsdGeomXformCache xformCache(time);
 
-  const size_t numParticles = _solver->GetNumParticles();
-
-  Geometry* geom;
-
-  const Solver::_ElementMap& elements = _solver->GetElements();
-
-  for (auto& elemIt = elements.begin(); elemIt != elements.end(); ++elemIt) {
-    /*
-    Element* element = elemIt->first;
-    pxr::SdfPath path = elemIt->second.first;
-    Geometry* geometry = elemIt->second.second;
-
-    if (path.GetNameToken() == pxr::TfToken("Particles")) {
-
-      Points* points = (Points*)geometry;
-
-      if (!points)continue;
-      points->SetPositions(&_solver->GetParticles()->_position[0], numParticles);
-
-      Scene::_Prim* prim = _scene.GetPrim(path);
-      prim->bits = 
-        pxr::HdChangeTracker::Clean |
-        pxr::HdChangeTracker::DirtyPoints |
-        pxr::HdChangeTracker::DirtyWidths |
-        pxr::HdChangeTracker::DirtyPrimvar;
-    }
-
-
-    
-    if (elemIt.second.first.GetNameToken() == pxr::TfToken("Particles")) {
-      Particles* particles = (Particles*)elemIt.first;
-
-      Points* points = (Points*)elemIt.first;
-
-      points->SetPositions(&_solver->GetParticles()->_position[0], numParticles);
-      points->SetColors(&_solver->GetParticles()->_color[0], numParticles);
-    } else if (elemIt.second.first.GetNameToken() == pxr::TfToken("Collisions")) {
-      
-      const pxr::VtArray<Constraint*>& contacts = _solver->GetContacts();
-      
-      if (!contacts.size())continue;
-
-      Points* points = (Points*)elemIt.first;
-
-      pxr::VtArray<pxr::GfVec3f>& positions = points->GetPositions();
-      pxr::VtArray<pxr::GfVec3f>& colors = points->GetColors();
-      pxr::VtArray<float>& radii = points->GetRadius();
-
-      memset(&radii[0], 0.f, numParticles * sizeof(float));
-
-      for (auto& contact : contacts) {
-        CollisionConstraint* constraint = (CollisionConstraint*)contact;
-        Collision* collision = constraint->GetCollision();
-        size_t offsetIdx = constraint->GetBody(0)->GetOffset();
-        
-        const pxr::VtArray<int>& elements = contact->GetElements();
-        for(int elem: elements) {
-          positions[elem + offsetIdx] = collision->GetContactPosition(elem);
-          radii[elem + offsetIdx] = 0.2f;
-          colors[elem + offsetIdx] = hitColor;
-        }
-      }
-      
-    } else if (elemIt.second.first.GetNameToken() == pxr::TfToken("Constraints")) {
-      
-    } else {
-      
-      pxr::UsdPrim usdPrim = stage->GetPrimAtPath(elemIt.second.first);
-      if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
-        
-        const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
-        if (bodyIt != _bodyMap.end()) {
-          Body* body = bodyIt->second;
-          Mesh* mesh = (Mesh*)execPrim.second.geom;
-          mesh->SetPositions(&_solver->GetParticles()->position[body->offset], mesh->GetNumPoints());
-        } else {
-        }
-        
-        
-      }
-    }
-    */
-  }
 }
 
 void TestParticles::TerminateExec(pxr::UsdStageRefPtr& stage)

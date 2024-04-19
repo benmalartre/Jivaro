@@ -223,9 +223,13 @@ void Delegate::SetScene(Scene* scene) {
       case Geometry::POINT:
         index.InsertRprim(pxr::HdPrimTypeTokens->points, this, prim.first);
         break;
+
+      case Geometry::INSTANCER:
+        index.InsertRprim(pxr::HdPrimTypeTokens->instancer, this, prim.first);
+        break;
     }
     pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
-    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyTopology);
+    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::AllDirty);
   }
 }
 
@@ -246,8 +250,10 @@ void Delegate::UpdateScene()
 {
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
-    if(prim.second.bits != pxr::HdChangeTracker::Clean)
+    if(prim.second.bits != pxr::HdChangeTracker::Clean) {
+      std::cout << "dirty : " << prim.first << std::endl;
       tracker.MarkRprimDirty(prim.first, prim.second.bits);
+    }
   }
 }
 

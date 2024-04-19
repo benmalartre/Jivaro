@@ -39,6 +39,7 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 
 Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh);
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time);
+//void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh, Instancer* instancer);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

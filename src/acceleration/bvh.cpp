@@ -477,7 +477,8 @@ void
 BVH::Update()
 {
   pxr::GfRange3f newRange = _RecurseUpdateCells(&_root,NULL);
-  std::cout << "Update Bound Volume Hierarchy !!!" << std::endl;
+  SetMin(newRange.GetMin());
+  SetMax(newRange.GetMax());
 }
 
 bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,

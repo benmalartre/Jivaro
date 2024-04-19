@@ -5,6 +5,7 @@
 #include "../geometry/voxels.h"
 #include "../geometry/points.h"
 #include "../geometry/implicit.h"
+#include "../geometry/instancer.h"
 #include "../geometry/triangle.h"
 #include "../geometry/utils.h"
 #include "../geometry/scene.h"
@@ -49,7 +50,7 @@ private:
   Curve*                    _rays;
   Points*                   _hits;
   BVH                       _bvh;
-  Xform*                    _tree;
+  Instancer*                _leaves;
   pxr::SdfPath              _meshId;
   pxr::SdfPath              _raysId;
   pxr::SdfPath              _hitsId;
@@ -215,9 +216,9 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
     }
 
     _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
-    Instancer* bvh = _SetupBVHInstancer(stage, _bvhId, &_bvh);
-    //bvh->SetOutputOnly();
-    _scene.AddGeometry(_bvhId, (Geometry*)bvh );
+    _leaves = _SetupBVHInstancer(stage, _bvhId, &_bvh);
+    _scene.AddGeometry(_bvhId, (Geometry*)_leaves );
+    _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
   }
   
   // create mesh that will be source of rays
@@ -257,9 +258,9 @@ void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _scene.Update(stage, time);
   
   if (_meshes.size()) {
-    _bvh.Update();
+    _bvh.Init(_meshes);
      _UpdateBVHInstancer(stage, _bvhId, &_bvh, time);
-    _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::AllDirty);
+    _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
   }
 
   _UpdateRays();
