@@ -433,6 +433,7 @@ Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
 Geometry::DirtyState 
 Mesh::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
 {
+  std::cout << "sync mesh : " << prim.GetPath() << std::endl;
   if(prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>())
   {
     pxr::UsdGeomMesh usdMesh(prim);

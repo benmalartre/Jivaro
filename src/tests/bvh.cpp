@@ -56,6 +56,7 @@ private:
   pxr::SdfPath              _hitsId;
   pxr::SdfPath              _bvhId;
   std::vector<Geometry*>    _meshes;
+  std::vector<pxr::SdfPath> _meshesId;
 
 };
 
@@ -174,6 +175,7 @@ void TestBVH::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
         xformCache.GetLocalToWorldTransform(prim)));
+      _meshesId.push_back(prim.GetPath());
     }
       
 }
@@ -210,8 +212,7 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
     _bvh.Init(_meshes);
 
     for(size_t m = 0; m < _meshes.size();++m) {
-      pxr::SdfPath meshId = rootId.AppendChild(pxr::TfToken("mesh_"+std::to_string(m)));
-      _scene.AddGeometry(meshId, _meshes[m]);
+      _scene.AddGeometry(_meshesId[m], _meshes[m]);
       _meshes[m]->SetInputOnly();
     }
 
@@ -258,8 +259,8 @@ void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _scene.Update(stage, time);
   
   if (_meshes.size()) {
-    _bvh.Init(_meshes);
-     _UpdateBVHInstancer(stage, _bvhId, &_bvh, time);
+    _bvh.Update();
+    _UpdateBVHInstancer(stage, _bvhId, &_bvh, time);
     _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
   }
 

@@ -46,7 +46,9 @@ Scene::Update(const pxr::UsdStageRefPtr& stage, double time)
   for(auto& itPrim: _prims) {
     pxr::UsdPrim prim = stage->GetPrimAtPath(itPrim.first);
     Geometry* geometry = itPrim.second.geom;
-    if (!geometry->IsInput() || !prim.IsValid())continue;
+    if (!geometry->IsInput() || !prim.IsValid()) {
+      continue;
+    }
     pxr::GfMatrix4d matrix(xformCache.GetLocalToWorldTransform(prim));
     geometry->Sync(prim, matrix, time);
   }
@@ -95,6 +97,7 @@ void Scene::AddVoxels(const pxr::SdfPath& path, Voxels* voxels)
 
 Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo)
 {
+
   const auto& primIt = _prims.find(path);
   if( primIt != _prims.end())
     return primIt->second.geom;
