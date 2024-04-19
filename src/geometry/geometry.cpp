@@ -12,6 +12,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 Geometry::Geometry()
 {
   _type = INVALID;
+  _mode = INPUT|OUTPUT;
   _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   SetMatrix(pxr::GfMatrix4d(1.0));
 }
@@ -19,6 +20,7 @@ Geometry::Geometry()
 Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
 {
   _type = type;
+  _mode = INPUT|OUTPUT;
   _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   SetMatrix(world);
 }
@@ -26,6 +28,7 @@ Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
 Geometry::Geometry(const Geometry* other, short type)
 {
   _type = type;
+  _mode = other->_mode;
   _wirecolor = other->_wirecolor;
   
   _bbox = other->_bbox;

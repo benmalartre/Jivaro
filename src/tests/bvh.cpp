@@ -49,6 +49,7 @@ private:
   Curve*                    _rays;
   Points*                   _hits;
   BVH                       _bvh;
+  Xform*                    _tree;
   pxr::SdfPath              _meshId;
   pxr::SdfPath              _raysId;
   pxr::SdfPath              _hitsId;
@@ -210,7 +211,13 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
     for(size_t m = 0; m < _meshes.size();++m) {
       pxr::SdfPath meshId = rootId.AppendChild(pxr::TfToken("mesh_"+std::to_string(m)));
       _scene.AddGeometry(meshId, _meshes[m]);
+      _meshes[m]->SetInputOnly();
     }
+
+    _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
+    Xform* bvh = _SetupBVHInstancer(stage, _bvhId, &_bvh);
+    //bvh->SetOutputOnly();
+    _scene.AddGeometry(_bvhId, bvh );
   }
   
   // create mesh that will be source of rays
@@ -248,12 +255,13 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
 void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Update(stage, time);
-  std::cout << "bvh update " << _meshes.size() << " meshes present" << std::endl;
+  
   if (_meshes.size()) {
     _bvh.Update();
-    _UpdateBVHInstancer(stage, _bvhId, &_bvh, time);
+    _SetupBVHInstancer(stage, _bvhId, &_bvh);
     _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::AllDirty);
   }
+
 
   _UpdateRays();
   _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker::DirtyPoints);
@@ -261,7 +269,6 @@ void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
   _UpdateHits();
   _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::AllDirty);
-
 }
 
 void TestBVH::TerminateExec(pxr::UsdStageRefPtr& stage)

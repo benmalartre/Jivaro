@@ -14,6 +14,7 @@
 #include <pxr/imaging/hd/changeTracker.h>
 
 #include "../tests/utils.h"
+#include "../geometry/implicit.h"
 #include "../geometry/mesh.h"
 #include "../geometry/points.h"
 #include "../geometry/implicit.h"
@@ -126,7 +127,7 @@ Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
 Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   double radius, const pxr::GfMatrix4d& m)
 {
-  Sphere* sphere = new Sphere(m);
+  
   pxr::UsdGeomSphere usdSphere = pxr::UsdGeomSphere::Define(stage, path);
 
   usdSphere.CreateRadiusAttr().Set(radius);
@@ -142,10 +143,11 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
   pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();
   op.Set(pxr::GfMatrix4d(m));
 
+  Sphere* sphere = new Sphere(usdSphere, m);
   return sphere;
 }
 
-void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
+Xform* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
 {
   std::vector<BVH::Cell*> cells;
   bvh->GetRoot()->GetCells(cells);
@@ -169,7 +171,7 @@ void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh
   }
 
   pxr::UsdGeomPointInstancer instancer =
-    pxr::UsdGeomPointInstancer::Define(stage,path);
+    pxr::UsdGeomPointInstancer::Define(stage, path);
 
   pxr::UsdGeomCube proto =
     pxr::UsdGeomCube::Define(stage,
@@ -188,6 +190,8 @@ void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh
   colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
+
+  return new Xform(pxr::UsdGeomXform(instancer), pxr::GfMatrix4d());
 }
 
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time)
@@ -210,11 +214,11 @@ void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bv
 
   pxr::UsdGeomPointInstancer instancer(stage->GetPrimAtPath(path));
 
-  instancer.GetPositionsAttr().Set(points);
-  instancer.GetScalesAttr().Set(scales);
+  instancer.GetPositionsAttr().Set(points, time);
+  instancer.GetScalesAttr().Set(scales, time);
   pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
   pxr::UsdGeomPrimvar colorPrimvar = primvarsApi.GetPrimvar(pxr::UsdGeomTokens->primvarsDisplayColor);
-  colorPrimvar.Set(colors);
+  colorPrimvar.Set(colors, time);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

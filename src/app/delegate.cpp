@@ -205,9 +205,13 @@ void Delegate::SetScene(Scene* scene) {
     }
   }
   _scene = scene;
-  if (_scene) {
-    for (auto& prim : _scene->GetPrims()) {
-      switch (prim.second.geom->GetType()) {
+  if (!_scene)return;
+  
+  for (auto& prim : _scene->GetPrims()) {
+    Geometry* geometry = prim.second.geom;
+    if (!geometry->IsOutput())continue;
+
+    switch (geometry->GetType()) {
       case Geometry::MESH:
         index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, prim.first);
         break;
@@ -219,10 +223,9 @@ void Delegate::SetScene(Scene* scene) {
       case Geometry::POINT:
         index.InsertRprim(pxr::HdPrimTypeTokens->points, this, prim.first);
         break;
-      }
-      pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
-      tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyTopology);
     }
+    pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
+    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::DirtyTopology);
   }
 }
 

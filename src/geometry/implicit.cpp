@@ -32,6 +32,7 @@ Xform::Xform(const Xform* other)
 Xform::Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
   : Geometry(Geometry::XFORM, world)
 {
+  _Sync(xform.GetPrim(), world, pxr::UsdTimeCode::Default().GetValue());
 }
 
 //-------------------------------------------------------------------------------------------------

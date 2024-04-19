@@ -12,6 +12,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Solver;
+class Xform;
 class Mesh;
 class Sphere;
 class Plane;
@@ -36,7 +37,7 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
 Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   double radius, const pxr::GfMatrix4d& m);
 
-void _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh);
+Xform* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh);
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time);
 
 JVR_NAMESPACE_CLOSE_SCOPE

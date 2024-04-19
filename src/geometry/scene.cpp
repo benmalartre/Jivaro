@@ -45,6 +45,7 @@ Scene::Update(const pxr::UsdStageRefPtr& stage, double time)
   for(auto& itPrim: _prims) {
     pxr::UsdPrim prim = stage->GetPrimAtPath(itPrim.first);
     Geometry* geometry = itPrim.second.geom;
+    if (!geometry->IsInput() || !prim.IsValid())continue;
     pxr::GfMatrix4d matrix(xformCache.GetLocalToWorldTransform(prim));
     geometry->Sync(prim, matrix, time);
   }
@@ -100,21 +101,29 @@ Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::Gf
   if(type == Geometry::XFORM) {
     _prims[path] = {new Xform(xfo)};
     return _prims[path].geom;
-  }
-  else if (type == Geometry::PLANE) {
+  } else if (type == Geometry::PLANE) {
     _prims[path] = { new Plane(xfo) };
     return _prims[path].geom;
   } else if (type == Geometry::SPHERE) {
     _prims[path] = { new Sphere(xfo) };
     return _prims[path].geom;
-  } else if (type == Geometry::MESH) {
-    _prims[path] = { new Mesh(xfo) };
+  } else if (type == Geometry::CUBE) {
+    _prims[path] = { new Cube(xfo) };
+    return _prims[path].geom;
+  } else if (type == Geometry::CONE) {
+    _prims[path] = { new Cone(xfo) };
+    return _prims[path].geom;
+  } else if (type == Geometry::CAPSULE) {
+    _prims[path] = { new Capsule(xfo) };
+    return _prims[path].geom;
+  } else if (type == Geometry::POINT) {
+    _prims[path] = { new Points(xfo) };
     return _prims[path].geom;
   } else if (type == Geometry::CURVE) {
     _prims[path] = { new Curve(xfo) };
     return _prims[path].geom;
-  } else if (type == Geometry::POINT) {
-    _prims[path] = { new Points(xfo) };
+  } else if (type == Geometry::MESH) {
+    _prims[path] = { new Mesh(xfo) };
     return _prims[path].geom;
   } else {
     return NULL;
@@ -289,28 +298,31 @@ Scene::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue 
 Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
+  const _Prim& prim = _prims[id];
+  const short type = prim.geom->GetType();
+
   if (key == pxr::HdTokens->points) {
-    if(_prims[id].geom->GetType() < Geometry::POINT) {
+    if(type < Geometry::POINT) {
       // TODO implicit geometry handling
       return pxr::VtValue();
     } else {
-      return pxr::VtValue(((Points*)_prims[id].geom)->GetPositions());
+      return pxr::VtValue(((Points*)prim.geom)->GetPositions());
     }
   } else if (key == pxr::HdTokens->displayColor) {
-    if(_prims[id].geom->GetType() < Geometry::POINT) {
+    if(type < Geometry::POINT) {
       // TODO implicit geometry handling
       return pxr::VtValue();
     } else {
       pxr::VtArray<pxr::GfVec3f>& colors =
-        ((Points*)_prims[id].geom)->GetColors();
+        ((Points*)prim.geom)->GetColors();
       if(colors.size())return pxr::VtValue(colors);
     }
   } else if (key == pxr::HdTokens->widths) {
-    if(_prims[id].geom->GetType() < Geometry::POINT) {
+    if(type < Geometry::POINT) {
       // TODO implicit geometry handling
       return pxr::VtValue();
     } else {
-      return pxr::VtValue(((Points*)_prims[id].geom)->GetRadius());
+      return pxr::VtValue(((Points*)prim.geom)->GetRadius());
     }
     
   }
