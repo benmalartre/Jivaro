@@ -318,17 +318,17 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       }
       case GLFW_KEY_S:
       {
-        app->SetActiveTool(TOOL_SCALE);
+        app->SetActiveTool(Tool::SCALE);
         break;
       }
       case GLFW_KEY_R:
       {
-        app->SetActiveTool(TOOL_ROTATE);
+        app->SetActiveTool(Tool::ROTATE);
         break;
       }
       case GLFW_KEY_T:
       {
-        app->SetActiveTool(TOOL_TRANSLATE);
+        app->SetActiveTool(Tool::TRANSLATE);
         break;
       }
     }

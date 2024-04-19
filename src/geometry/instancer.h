@@ -25,12 +25,17 @@ public:
            const pxr::VtArray<pxr::GfQuath>*  rotations=nullptr,
            const pxr::VtArray<pxr::GfVec3f>*  colors=nullptr);
 
+  bool HaveIndices(){return _indices.size() > 0 && _positions.size() == _indices.size();};
+  const pxr::VtArray<pxr::GfVec3f>& GetProtoIndices() const {return _protoIndices;};
+  const pxr::VtArray<pxr::GfVec3f>& GetIndices() const {return _indices;};
+  const pxr::VtArray<pxr::GfVec3f>& GetScales() const {return _scales;};
+  const pxr::VtArray<pxr::GfVec3f>& GetRotations() const {return _rotations;};
+
 private:
   pxr::VtArray<pxr::GfVec3f>      _scales;
   pxr::VtArray<int64_t>           _indices;
   pxr::VtArray<int>               _protoIndices;
   pxr::VtArray<pxr::GfQuath>      _rotations;
-  pxr::VtArray<pxr::GfVec3f>      _colors;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

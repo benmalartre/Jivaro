@@ -305,30 +305,36 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
   const _Prim& prim = _prims[id];
   const short type = prim.geom->GetType();
 
-  if (key == pxr::HdTokens->points) {
-    if(type < Geometry::POINT) {
-      // TODO implicit geometry handling
-      return pxr::VtValue();
-    } else {
-      return pxr::VtValue(((Points*)prim.geom)->GetPositions());
+  if(type == Geometry::INSTANCER) {
+    Instancer* instancer = (Instancer*)prim.geom;
+    if (key == pxr::HdTokens->points) {
+      return pxr::VtValue(instancer->GetPositions());
+    } else if (key == pxr::HdTokens->displayColor) {
+      return pxr::VtValue(instancer->GetColors());
+    } else if (key == pxr::HdTokens->protoIndices) {
+      return pxr::VtValue(instancer->GetProtoIndices());
+    } else if (key == pxr::HdTokens->indices) {
+      return instancer->HaveIndices() ? 
+        pxr::VtValue(instancer->GetIndices()) :  pxr::VtValue();
+    } else if (key == pxr::HdTokens->scales) {
+      return pxr::VtValue(instancer->GetScales());
+    } else if (key == pxr::HdTokens->rotations) {
+      return pxr::VtValue(instancer->GetRotations());
     }
-  } else if (key == pxr::HdTokens->displayColor) {
-    if(type < Geometry::POINT) {
-      // TODO implicit geometry handling
-      return pxr::VtValue();
-    } else {
+  } else {
+    if (key == pxr::HdTokens->points) {
+      return pxr::VtValue(((Deformable*)prim.geom)->GetPositions());
+    } else if (key == pxr::HdTokens->displayColor) {
       pxr::VtArray<pxr::GfVec3f>& colors =
         ((Points*)prim.geom)->GetColors();
       if(colors.size())return pxr::VtValue(colors);
-    }
-  } else if (key == pxr::HdTokens->widths) {
-    if(type < Geometry::POINT) {
-      // TODO implicit geometry handling
-      return pxr::VtValue();
-    } else {
+    } else if (key == pxr::HdTokens->widths) {
       return pxr::VtValue(((Points*)prim.geom)->GetRadius());
+    } else if (key == pxr::HdTokens->normals) {
+      if(((Deformable*)prim.geom)->HaveNormals) {
+        return pxr::VtValue(((Points*)prim.geom)->GetNormals());
+      }
     }
-    
   }
   return pxr::VtValue();
 }

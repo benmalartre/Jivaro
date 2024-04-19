@@ -53,9 +53,36 @@ void Instancer::Set(
   const size_t n = positions.size();
   Deformable::_ValidateNumPoints(n);
   SetPositions(positions);
+  if(protoIndices && protoIndices->size() == n) {
+    _protoIndices = *protoIndices;
+  } else {
+    _protoIndices.resize(n, 0);
+  }
   
+  if(indices && indices->size() == n) {
+    _indices = *indices;
+  }
+
+  if(scales && scales->size() == n) {
+    _scales = *scales;
+  } else {
+    _scales.resize(n, pxr::GfVec3f(1.f));
+  }
+
+  if(rotations && rotations->size() == n) {
+    _rotations = *rotations;
+  } else {
+    _rotations.resize(n, pxr::GfQuath(1.f));
+  }
+
+  if(colors && colors->size() == n) {
+    _colors = *colors;
+  } else {
+    _colors.resize(n);
+    for(auto& color: _colors)
+      color = pxr::GfVEc3f(RANDOM_0_1,RANDOM_0_1,RANDOM_0_1);
+  }
+
 }
-
-
 
 JVR_NAMESPACE_CLOSE_SCOPE
