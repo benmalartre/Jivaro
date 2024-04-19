@@ -25,14 +25,22 @@ Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
   SetMatrix(world);
 }
 
-Geometry::Geometry(const Geometry& other, short type)
+Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
 {
-  _type = type;
-  _mode = other._mode;
-  _wirecolor = other._wirecolor;
-  
-  _bbox = other._bbox;
-  SetMatrix(other.GetMatrix());
+  if(prim.IsA<pxr::UsdGeomXform>())_type = Geometry::XFORM;
+  else if(prim.IsA<pxr::UsdGeomPlane>())_type = Geometry::PLANE;
+  else if(prim.IsA<pxr::UsdGeomSphere>())_type = Geometry::SPHERE;
+  else if(prim.IsA<pxr::UsdGeomCapsule>())_type = Geometry::CAPSULE;
+  else if(prim.IsA<pxr::UsdGeomCone>())_type = Geometry::CONE;
+  else if(prim.IsA<pxr::UsdGeomCube>())_type = Geometry::CUBE;
+  else if(prim.IsA<pxr::UsdGeomBasisCurves>())_type = Geometry::CURVE;
+  else if(prim.IsA<pxr::UsdGeomMesh>())_type = Geometry::MESH;
+  else if(prim.IsA<pxr::UsdGeomPoints>())_type = Geometry::POINT;
+  else if(prim.IsA<pxr::UsdGeomPointInstancer>())_type = Geometry::INSTANCER;
+  else _type = Geometry::INVALID;
+  _mode = INPUT|OUTPUT;
+  _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  SetMatrix(world);
 }
 
 void 

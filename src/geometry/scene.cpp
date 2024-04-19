@@ -306,20 +306,24 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
   const short type = prim.geom->GetType();
 
   if(type == Geometry::INSTANCER) {
+    std::cout << "request attribute " << key << " for instancer " << std::endl;
     Instancer* instancer = (Instancer*)prim.geom;
-    if (key == pxr::HdTokens->points) {
+    if (key == pxr::HdInstancerTokens->instanceTranslations) {
       return pxr::VtValue(instancer->GetPositions());
     } else if (key == pxr::HdTokens->displayColor) {
       return pxr::VtValue(instancer->GetColors());
-    } else if (key == pxr::HdTokens->protoIndices) {
+    } else if (key == pxr::HdInstancerTokens->instanceIndexBase) {
       return pxr::VtValue(instancer->GetProtoIndices());
     } else if (key == pxr::HdTokens->indices) {
       return instancer->HaveIndices() ? 
         pxr::VtValue(instancer->GetIndices()) :  pxr::VtValue();
-    } else if (key == pxr::HdTokens->scales) {
+    } else if (key == pxr::HdInstancerTokens->instanceScales) {
       return pxr::VtValue(instancer->GetScales());
-    } else if (key == pxr::HdTokens->rotations) {
+    } else if (key == pxr::HdInstancerTokens->instanceRotations) {
       return pxr::VtValue(instancer->GetRotations());
+    }
+    else {
+
     }
   } else {
     if (key == pxr::HdTokens->points) {
@@ -331,7 +335,7 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
     } else if (key == pxr::HdTokens->widths) {
       return pxr::VtValue(((Points*)prim.geom)->GetRadius());
     } else if (key == pxr::HdTokens->normals) {
-      if(((Deformable*)prim.geom)->HaveNormals) {
+      if(((Deformable*)prim.geom)->HaveNormals()) {
         return pxr::VtValue(((Points*)prim.geom)->GetNormals());
       }
     }

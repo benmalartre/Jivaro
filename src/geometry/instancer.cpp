@@ -14,19 +14,6 @@ Instancer::Instancer(const pxr::GfMatrix4d& m)
   _haveColors = false;
 }
 
-Instancer::Instancer(const Deformable* other)
-  : Points(Geometry::INSTANCER)
-
-  _positions = other->GetPositions();
-  _previous = _positions;
-  _haveRadius = deformable->HaveRadius();
-  if (_haveRadius)_radius = deformable->GetRadius();
-  _haveNormals = deformable->HaveNormals();
-  if (_haveNormals)_normals = deformable->GetNormals();
-  _haveColors = deformable->HaveColors();
-  if (_haveColors)_colors = deformable->GetColors();
-}
-
 Instancer::Instancer(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
   : Deformable(Geometry::POINT, world)
 {

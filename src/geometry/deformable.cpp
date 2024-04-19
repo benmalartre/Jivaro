@@ -14,8 +14,9 @@ Deformable::Deformable(short type, const pxr::GfMatrix4d& matrix)
 {
 }
 
-Deformable::Deformable(const Deformable& other, bool normalize)
-  : Geometry(other, other.GetType())
+  
+Deformable::Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix)
+  : Geometry(prim, matrix)
 {
   _previous = other._previous;
   _positions = other._positions;

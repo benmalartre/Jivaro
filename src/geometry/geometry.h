@@ -1,18 +1,33 @@
 #ifndef JVR_GEOMETRY_GEOMETRY_H
 #define JVR_GEOMETRY_GEOMETRY_H
 
+#include <limits>
 #include <float.h>
+
+#include "../common.h"
 
 #include "pxr/base/vt/array.h"
 #include "pxr/base/tf/hashmap.h"
-#include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
+#include <pxr/base/gf/quath.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/ray.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usdGeom/tokens.h>
+#include <pxr/usd/usdGeom/basisCurves.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
+#include <pxr/usd/usdGeom/plane.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/cone.h>
+#include <pxr/usd/usdGeom/capsule.h>
 
-#include "../common.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -62,7 +77,7 @@ public:
 
   Geometry();
   Geometry(short type, const pxr::GfMatrix4d& world);
-  Geometry(const Geometry& other, short type);
+  Geometry(const pxr::UsdPrim& other, const pxr::GfMatrix4d& world);
   virtual ~Geometry() {};
 
   short GetType() const { return _type; };

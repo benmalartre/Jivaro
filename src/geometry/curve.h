@@ -1,19 +1,6 @@
 #ifndef JVR_GEOMETRY_CURVE_H
 #define JVR_GEOMETRY_CURVE_H
 
-
-#include "../common.h"
-#include "pxr/base/vt/array.h"
-#include "pxr/base/tf/hashmap.h"
-#include <pxr/base/gf/matrix4d.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/vec3d.h>
-#include <pxr/base/gf/bbox3d.h>
-#include <pxr/base/gf/ray.h>
-#include <pxr/usd/usdGeom/tokens.h>
-#include <pxr/usd/usdGeom/basisCurves.h>
-
-#include <float.h>
 #include "../geometry/triangle.h"
 #include "../geometry/deformable.h"
 
@@ -24,7 +11,6 @@ struct Sample;
 class Curve : public Deformable {
 public:
   Curve(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Curve(const Curve& other, bool normalize = true);
   Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world);
   virtual ~Curve() {};
 

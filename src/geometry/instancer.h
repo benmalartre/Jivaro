@@ -1,11 +1,6 @@
 #ifndef JVR_GEOMETRY_INSTANCER_H
 #define JVR_GEOMETRY_INSTANCER_H
 
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/quath.h>
-#include <pxr/base/gf/matrix4d.h>
-#include <pxr/usd/usdGeom/pointInstancer.h>
-
 #include "../geometry/deformable.h"
 
 
@@ -14,7 +9,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Instancer : public Points {
 public:
   Instancer(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Instancer(const Deformable* other, bool normalize = true);
   Instancer(const pxr::UsdGeomPointInstancer& instancer, const pxr::GfMatrix4d& world);
   virtual ~Instancer() {};
 
@@ -26,10 +20,10 @@ public:
            const pxr::VtArray<pxr::GfVec3f>*  colors=nullptr);
 
   bool HaveIndices(){return _indices.size() > 0 && _positions.size() == _indices.size();};
-  const pxr::VtArray<pxr::GfVec3f>& GetProtoIndices() const {return _protoIndices;};
-  const pxr::VtArray<pxr::GfVec3f>& GetIndices() const {return _indices;};
+  const pxr::VtArray<int>& GetProtoIndices() const {return _protoIndices;};
+  const pxr::VtArray<int64_t>& GetIndices() const {return _indices;};
   const pxr::VtArray<pxr::GfVec3f>& GetScales() const {return _scales;};
-  const pxr::VtArray<pxr::GfVec3f>& GetRotations() const {return _rotations;};
+  const pxr::VtArray<pxr::GfQuath>& GetRotations() const {return _rotations;};
 
 private:
   pxr::VtArray<pxr::GfVec3f>      _scales;

@@ -24,11 +24,6 @@ Xform::Xform(const pxr::GfMatrix4d& xfo)
 {
 }
 
-Xform::Xform(const Xform& other)
-  : Geometry(other, Geometry::XFORM)
-{
-}
-
 Xform::Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
   : Geometry(Geometry::XFORM, world)
 {
@@ -45,15 +40,6 @@ Plane::Plane(const pxr::GfMatrix4d& xfo)
   _width = 100.f;
   _length = 100.f;
   _doubleSided = false;
-}
-
-Plane::Plane(const Plane& other, bool normalize)
-  : Geometry(other, Geometry::PLANE)
-{
-  _normal = other._normal;
-  _width = other._width;
-  _length = other._length;
-  _doubleSided = other._doubleSided;
 }
 
 Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
@@ -137,12 +123,6 @@ Sphere::Sphere(const pxr::GfMatrix4d& xfo)
   _radius = 1.f;
 }
 
-Sphere::Sphere(const Sphere& other, bool normalize)
-  : Geometry(other, Geometry::SPHERE)
-{
-  _radius = other._radius;
-}
-
 Sphere::Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world)
   : Geometry(Geometry::SPHERE, world)
 {
@@ -203,12 +183,6 @@ Cube::Cube(const pxr::GfMatrix4d& xfo)
   : Geometry(Geometry::CUBE, xfo)
 {
   _size = 1.f;
-}
-
-Cube::Cube(const Cube& other, bool normalize)
-  : Geometry(other, Geometry::CUBE)
-{
-  _size = other._size;
 }
 
 Cube::Cube(const pxr::UsdGeomCube& cube, const pxr::GfMatrix4d& world)
@@ -319,14 +293,6 @@ Cone::Cone(const pxr::GfMatrix4d& xfo)
 {
 }
 
-Cone::Cone(const Cone& other, bool normalize)
-  : Geometry(other, Geometry::CONE)
-{
-  _radius = other._radius;
-  _height = other._height;
-  _axis = other._axis;
-}
-
 Cone::Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world)
   : Geometry(Geometry::CONE, world)
 {
@@ -391,14 +357,6 @@ Capsule::Capsule(const pxr::GfMatrix4d& xfo)
   , _height(1.f)
   , _axis(pxr::UsdGeomTokens->y)
 {
-}
-
-Capsule::Capsule(const Capsule& other, bool normalize)
-  : Geometry(other, Geometry::CAPSULE)
-{
-  _radius = other._radius;
-  _height = other._height;
-  _axis = other._axis;
 }
 
 Capsule::Capsule(const pxr::UsdGeomCapsule& capsule, const pxr::GfMatrix4d& world)

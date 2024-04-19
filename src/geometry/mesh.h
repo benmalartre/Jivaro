@@ -1,19 +1,6 @@
 #ifndef JVR_GEOMETRY_MESH_H
 #define JVR_GEOMETRY_MESH_H
 
-#include <limits>
-#include <float.h>
-
-#include "pxr/base/vt/array.h"
-#include "pxr/base/tf/hashmap.h"
-#include <pxr/base/gf/matrix4f.h>
-#include <pxr/base/gf/matrix4d.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/vec3d.h>
-#include <pxr/base/gf/bbox3d.h>
-#include <pxr/usd/usdGeom/mesh.h>
-
-#include "../common.h"
 #include "../geometry/triangle.h"
 #include "../geometry/deformable.h"
 #include "../geometry/halfEdge.h"
@@ -28,7 +15,6 @@ public:
     TRIANGLEPAIRS = 1 << 2
   };
   Mesh(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Mesh(const Mesh& other, bool normalize = true);
   Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world);
   virtual ~Mesh();
 

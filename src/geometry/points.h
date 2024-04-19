@@ -9,7 +9,6 @@ class Voxels;
 class Points : public Deformable {
 public:
   Points(short type=Geometry::POINT, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Points(const Points& other, bool normalize = true);
   Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world);
   virtual ~Points() {};
 

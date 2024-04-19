@@ -13,20 +13,6 @@ Points::Points(short type, const pxr::GfMatrix4d& m)
 {
 }
 
-Points::Points(const Points& other, bool normalize)
-  : Deformable(other, normalize)
-{
-  const Deformable* deformable = (const Deformable*)&other;
-  _positions = deformable->GetPositions();
-  _previous = _positions;
-  _haveRadius = deformable->HaveRadius();
-  if (_haveRadius)_radius = deformable->GetRadius();
-  _haveNormals = deformable->HaveNormals();
-  if (_haveNormals)_normals = deformable->GetNormals();
-  _haveColors = deformable->HaveColors();
-  if (_haveColors)_colors = deformable->GetColors();
-}
-
 Points::Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
   : Deformable(Geometry::POINT, world)
 {

@@ -26,14 +26,6 @@ Mesh::Mesh(const pxr::GfMatrix4d& xfo)
 {
 }
 
-Mesh::Mesh(const Mesh& other, bool normalize)
-  : Deformable(other, normalize)
-  , _flags(0)
-{
-  _normals = other._normals;
-  _triangles = other._triangles;
-}
-
 Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
   : Deformable(Geometry::MESH, world)
   , _flags(0)

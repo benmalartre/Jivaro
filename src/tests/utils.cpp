@@ -147,11 +147,12 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
   return sphere;
 }
 
-Xform* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
+Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
 {
   std::vector<BVH::Cell*> cells;
   bvh->GetRoot()->GetCells(cells);
   size_t numPoints = cells.size();
+
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);
   pxr::VtArray<int64_t> indices(numPoints);
@@ -191,7 +192,7 @@ Xform* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* b
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
 
-  return new Xform(pxr::UsdGeomXform(instancer), pxr::GfMatrix4d());
+  return new Instancer(instancer, pxr::GfMatrix4d());
 }
 
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time)
