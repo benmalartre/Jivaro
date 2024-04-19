@@ -183,7 +183,7 @@ Scene::GetPrim(const pxr::SdfPath& path)
 void 
 Scene::MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits)
 {
-  Scene::_Prim* prim = _scene.GetPrim(_raysId);
+  Scene::_Prim* prim = GetPrim(path);
   if(prim)prim->bits = bits; 
 }
 

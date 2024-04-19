@@ -84,21 +84,22 @@ void _UpdateRays()
 void _UpdateHits()
 {
   pxr::VtArray<pxr::GfVec3f> result;
-  const pxr::GfVec3f* positions = ((Deformable*)_bvh.GetGeometry(0))->GetPositionsCPtr();
-  for (size_t c= 0; _rays->GetNumCurves(); ++c) {
+  const pxr::GfVec3f* points = ((Deformable*)_bvh.GetGeometry(0))->GetPositionsCPtr();
+  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
+
+  for (size_t c= 0; c < _rays->GetNumCurves(); ++c) {
     pxr::GfRay ray(positions[c*2], positions[c*2+1] - positions[c*2]);
     double minDistance = DBL_MAX;
     Location hit;
-    const pxr::GfVec3f* points = _mesh->GetPositionsCPtr();
     if (_bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
       result.push_back(hit.GetPosition(collided));
     }
   }
 
-  _hits->SetPositions(result);
-  pxr::VtArray<float> radiis(result.size(), 0.1);
-  _hits->SetRadii(radiis);
+  //_hits->SetPositions(result);
+  //pxr::VtArray<float> radiis(result.size(), 0.1);
+  //_hits->SetRadii(radiis);
 }
 
 void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes)
@@ -128,7 +129,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
     _bvh.Init(meshes);
     _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
     std::cout << "setup bvh instancer" << std::endl;
-    //_SetupBVHInstancer(stage, _bvhId, &_bvh);
+    _SetupBVHInstancer(stage, _bvhId, &_bvh);
 
   }
   
@@ -141,7 +142,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 10.f, 0.f));
 
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
-  _mesh = _GenerateMeshGrid(stage, _meshId, 32, 32, scale * rotate * translate);
+  _mesh = _GenerateMeshGrid(stage, _meshId, 4, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
   // create rays
@@ -164,10 +165,10 @@ void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _scene.Update(stage, time);
 
   _UpdateRays();
-  _scene.MarkPrimDirty(_raysId, pxr::AllDirty);
+  _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker ::AllDirty);
 
   _UpdateHits();
-  _scene.MarkPrimDirty(_hitsId, pxr::DirtyTopology);
+  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker ::DirtyTopology);
 
 }
 

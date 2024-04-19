@@ -106,10 +106,10 @@ Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
 }
 
 Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  size_t subdX, size_t subdY, const pxr::GfMatrix4d& m)
+  size_t subd, const pxr::GfMatrix4d& m)
 {
   Mesh* mesh = new Mesh(m);
-  mesh->RegularGrid2D(0.05);
+  mesh->RegularGrid2D(1.f/subd);
   //mesh.Randomize(0.1f);
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
