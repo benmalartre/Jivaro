@@ -1,8 +1,19 @@
 // Points
 //----------------------------------------------
+
+#include <pxr/base/gf/ray.h>
+
+#include <pxr/usd/usdGeom/tokens.h>
+#include <pxr/usd/usdGeom/basisCurves.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/points.h>
+#include <pxr/usd/usdGeom/pointBased.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
+
 #include "../geometry/deformable.h"
 #include "../geometry/utils.h"
-#include <pxr/base/gf/ray.h>
+
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -14,18 +25,33 @@ Deformable::Deformable(short type, const pxr::GfMatrix4d& matrix)
 {
 }
 
-  
 Deformable::Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix)
   : Geometry(prim, matrix)
 {
-  _previous = other._previous;
-  _positions = other._positions;
-  _haveNormals = other._haveNormals;
-  _normals = other._normals;
-  _haveRadius = other._haveRadius;
-  _radius = other._radius;
-  _haveColors = other._haveColors;
-  _colors = other._colors;
+  if(prim.IsA<pxr::UsdGeomPointBased>()) {
+    pxr::UsdGeomPointBased pointBased(prim);
+
+    pxr::UsdAttribute pointsAttr = pointBased.GetPointsAttr();
+    pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
+    _previous = _positions;
+
+    pxr::UsdAttribute normalsAttr = pointBased.GetNormalsAttr();
+    if(normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue()) {
+      _haveNormals = true;
+      normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
+    }
+  }
+
+  if(prim.IsA<pxr::UsdGeomPoints>()) {
+    pxr::UsdGeomPoints points(prim);
+    pxr::UsdAttribute widthsAttr = points.GetWidthsAttr();
+      if(widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue()) {
+        _haveRadius = true;
+        widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+      }
+  }
+
+ 
 }
 
 void Deformable::_ValidateNumPoints(size_t n)

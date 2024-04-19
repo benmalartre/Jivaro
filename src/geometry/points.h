@@ -1,6 +1,8 @@
 #ifndef JVR_GEOMETRY_POINTS_H
 #define JVR_GEOMETRY_POINTS_H
 
+#include <pxr/usd/usdGeom/points.h>
+
 #include "../geometry/deformable.h"
 
 

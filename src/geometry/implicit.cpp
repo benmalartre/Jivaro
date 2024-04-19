@@ -1,18 +1,17 @@
-//--------------------------------------------------
-// Implicit Geometries
-// 
-// Plane
-// Sphere
-// Cube
-// Cone
-// Capsule
-//--------------------------------------------------
+#include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/range3d.h>
+
+#include <pxr/usd/usdGeom/plane.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/cone.h>
+#include <pxr/usd/usdGeom/capsule.h>
 
 #include "../geometry/implicit.h"
 #include "../geometry/utils.h"
 #include "../geometry/intersection.h"
-#include <pxr/base/gf/ray.h>
-#include <pxr/base/gf/range3d.h>
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 

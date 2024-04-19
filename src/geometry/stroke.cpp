@@ -38,7 +38,7 @@ Stroke::Stroke()
 }
 
 Stroke::Stroke(const Stroke& other, bool normalize)
-  : Geometry(other, Geometry::STROKE)
+  : Geometry(Geometry::STROKE, other.GetMatrix())
 {
   _numLines = other._numLines;
   _type = STROKE;

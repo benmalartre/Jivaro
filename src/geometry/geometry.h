@@ -17,19 +17,6 @@
 #include <pxr/base/gf/ray.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/prim.h>
-#include <pxr/usd/usdGeom/tokens.h>
-#include <pxr/usd/usdGeom/basisCurves.h>
-#include <pxr/usd/usdGeom/mesh.h>
-#include <pxr/usd/usdGeom/points.h>
-#include <pxr/usd/usdGeom/pointBased.h>
-#include <pxr/usd/usdGeom/pointInstancer.h>
-#include <pxr/usd/usdGeom/plane.h>
-#include <pxr/usd/usdGeom/xform.h>
-#include <pxr/usd/usdGeom/sphere.h>
-#include <pxr/usd/usdGeom/cube.h>
-#include <pxr/usd/usdGeom/cone.h>
-#include <pxr/usd/usdGeom/capsule.h>
-
 
 
 JVR_NAMESPACE_OPEN_SCOPE

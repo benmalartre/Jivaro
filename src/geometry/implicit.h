@@ -1,6 +1,13 @@
 #ifndef JVR_GEOMETRY_IMPLICIT_H
 #define JVR_GEOMETRY_IMPLICIT_H
 
+#include <pxr/usd/usdGeom/plane.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/cone.h>
+#include <pxr/usd/usdGeom/capsule.h>
+
 #include "../geometry/geometry.h"
 
 JVR_NAMESPACE_OPEN_SCOPE

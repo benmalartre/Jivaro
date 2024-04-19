@@ -1,6 +1,9 @@
 #ifndef JVR_GEOMETRY_MESH_H
 #define JVR_GEOMETRY_MESH_H
 
+#include <pxr/usd/usdGeom/mesh.h>
+
+
 #include "../geometry/triangle.h"
 #include "../geometry/deformable.h"
 #include "../geometry/halfEdge.h"

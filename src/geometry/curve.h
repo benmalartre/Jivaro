@@ -1,6 +1,8 @@
 #ifndef JVR_GEOMETRY_CURVE_H
 #define JVR_GEOMETRY_CURVE_H
 
+#include <pxr/usd/usdGeom/basisCurves.h>
+
 #include "../geometry/triangle.h"
 #include "../geometry/deformable.h"
 
