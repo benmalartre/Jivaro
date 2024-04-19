@@ -82,6 +82,10 @@ public:
   void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
   DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time);
 
+  // points (deformation)
+  void SetPositions(const pxr::GfVec3f* positions, size_t n) override;
+  void SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions) override;
+
   // topology
   void Set(
     const pxr::VtArray<pxr::GfVec3f>& positions,

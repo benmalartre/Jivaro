@@ -58,6 +58,7 @@ Execution* CreateTestRaycast()
 
 void _UpdateRays() 
 {
+  const double time = Application::Get()->GetTime().GetActiveTime();
   const size_t numRays = _mesh->GetNumPoints();
   const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
   const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
@@ -72,12 +73,13 @@ void _UpdateRays()
   radiis.resize(numRays * 2);
   colors.resize(numRays * 2);
   counts.resize(numRays);
+
   for(size_t r = 0; r < numRays; ++r) {
     counts[r] = 2;
     radiis[r*2]   = 0.01f;
     radiis[r*2+1]   = 0.01f;
     points[r*2]   = matrix.Transform(positions[r]);
-    points[r*2+1] = matrix.Transform(positions[r]) + matrix.TransformDir(normals[r]);
+    points[r*2+1] = matrix.Transform(positions[r]);
     colors[r*2]   = pxr::GfVec3f(0.66f,0.66f,0.66f);
     colors[r*2+1] = pxr::GfVec3f(0.66f,0.66f,0.66f);
   }
@@ -86,7 +88,7 @@ void _UpdateRays()
   _rays->SetColors(colors);
 }
 
-
+// thread task
 void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results, bool* hits)
 {
   for (size_t index = begin; index < end; ++index) {
@@ -103,25 +105,24 @@ void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfV
   }
 }
 
+// parallelize raycast
 void _UpdateHits()
 {
   const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
-  const size_t numRays = _rays->GetNumPoints() >> 1;
+  size_t numRays = _rays->GetNumPoints() >> 1;
 
   pxr::VtArray<pxr::GfVec3f> points(numRays);
   pxr::VtArray<bool> hits(numRays, false);
 
-  uint64_t startT = CurrentTime();
+  hits.resize(numRays, false);
 
    pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&_FindHits, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0]));
 
-  
-  std::cout << "raycast " << _rays->GetNumCurves() << "rays took : " << 
-    ((CurrentTime() - startT) * 1e-9) << " seconds to complete" << std::endl;
-
+  // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
+  result.reserve(numRays);
   for(size_t r = 0; r < numRays; ++r) {
     if(hits[r])result.push_back(points[r]);
   }
@@ -187,9 +188,12 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, 0.f));
 
+  const size_t n = 512;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
-  _mesh = _GenerateMeshGrid(stage, _meshId, 1024, scale * rotate * translate);
+  _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
+
+  std::cout << "num rays : " << pxr::GfPow(n, 2.f) << std::endl;
 
   _AddAnimationSamples(stage, _meshId);
 
