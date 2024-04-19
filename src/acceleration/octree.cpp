@@ -144,7 +144,7 @@ void OctreeIntersector::Cell::BuildTree(Component* components, size_t num, Geome
     Insert(&components[i]);
   }
     
-  Split(((Points*)geometry)->GetPositionsCPtr());
+  Split(((Deformable*)geometry)->GetPositionsCPtr());
 }
 
 // split tree
@@ -208,15 +208,15 @@ OctreeIntersector::Update()
 }
 
 bool 
-OctreeIntersector::Raycast(const pxr::GfVec3f* points, 
-  const pxr::GfRay& ray, Location* hit, double maxDistance, double* minDistance) const
+OctreeIntersector::Raycast(const pxr::GfRay& ray, Location* hit, 
+  double maxDistance, double* minDistance) const
 {
   return false;
 }
 
 bool 
-OctreeIntersector::Closest(const pxr::GfVec3f* points, 
-  const pxr::GfVec3f& point, Location* hit, double maxDistance) const
+OctreeIntersector::Closest(const pxr::GfVec3f& point, 
+  Location* hit, double maxDistance) const
 {
   Cell* closestCell = NULL;
   _GetClosestCell(point, closestCell);

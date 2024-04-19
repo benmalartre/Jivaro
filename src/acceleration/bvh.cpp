@@ -219,8 +219,18 @@ BVH::Cell::GetGeometry()
   else return NULL;
 }
 
+const Geometry*
+BVH::Cell::GetGeometry() const
+{
+  const BVH::Cell* geom = GetGeom();
+  if (geom) {
+    return (Geometry*)geom->_data;
+  }
+  else return NULL;
+}
+
 bool
-BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
+BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   double enterDistance, exitDistance;
@@ -231,18 +241,18 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* 
     return false;
 
   if (IsLeaf()) {
+    const Geometry* geometry = GetGeometry();
+    const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)_data;
     return component->Raycast(points, ray, hit, maxDistance, minDistance);
   } else {
-    const pxr::GfVec3f* newPoints = points;
     if(IsGeom()) {        
       const BVH* intersector = GetIntersector();
       hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
-      newPoints = ((Deformable*)_data)->GetPositionsCPtr();
     }
     Location leftHit(*hit), rightHit(*hit);
-    if (_left)_left->Raycast(newPoints, ray, &leftHit, maxDistance, minDistance);
-    if (_right)_right->Raycast(newPoints, ray, &rightHit, maxDistance, minDistance);
+    if (_left)_left->Raycast(ray, &leftHit, maxDistance, minDistance);
+    if (_right)_right->Raycast(ray, &rightHit, maxDistance, minDistance);
 
     if (leftHit.IsValid() && rightHit.IsValid()) {
       if (leftHit.GetT() < rightHit.GetT())
@@ -262,28 +272,28 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* 
 }
 
 bool 
-BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
-  Location* hit, double maxDistance, double* minDistance) const
+BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit, 
+  double maxDistance, double* minDistance) const
 {  
   if(IsLeaf()) {
+    const Geometry* geometry = GetGeometry();
+    const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)_data;
     return component->Closest(points, point, hit, maxDistance, minDistance);
   } else {
-    const pxr::GfVec3f* newPoints = points;
     if(IsGeom()) {        
       const BVH* intersector = GetIntersector();
       hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
-      newPoints = ((Deformable*)_data)->GetPositionsCPtr();
     }
     const pxr::GfVec3d offset(maxDistance);
     const pxr::GfRange3d range(point - offset, point + offset);
     bool leftHit = false;
     bool rightHit = false;
     if(_left && !range.IsOutside(*_left)) {
-      leftHit = _left->Closest(newPoints, point, hit, maxDistance, minDistance);
+      leftHit = _left->Closest(point, hit, maxDistance, minDistance);
     }
     if(_right && !range.IsOutside(*_right)) {
-      rightHit= _right->Closest(newPoints, point, hit, maxDistance, minDistance);
+      rightHit= _right->Closest(point, hit, maxDistance, minDistance);
     }
     return leftHit|| rightHit;
   }
@@ -447,17 +457,17 @@ BVH::Update()
 
 }
 
-bool BVH::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
+bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  return _root.Raycast(points, ray, hit, maxDistance, minDistance);
+  return _root.Raycast(ray, hit, maxDistance, minDistance);
 };
 
-bool BVH::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
+bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
   double minDistance = FLT_MAX;
-  return _root.Closest(points, point, hit, maxDistance, &minDistance);
+  return _root.Closest(point, hit, maxDistance, &minDistance);
 }
 
 

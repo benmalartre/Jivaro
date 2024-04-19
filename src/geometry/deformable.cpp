@@ -17,7 +17,6 @@ Deformable::Deformable(short type, const pxr::GfMatrix4d& matrix)
 Deformable::Deformable(const Deformable* other, bool normalize)
   : Geometry(other, other->GetType())
 {
-  size_t numPoints = _positions.size();
   _previous = other->_previous;
   _positions = other->_positions;
   _haveNormals = other->_haveNormals;
@@ -216,27 +215,6 @@ Deformable::ComputeBoundingBox()
    
 }
 
-void 
-Deformable::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
-{
-  _previous = _positions;
-  _positions = positions;
-}
-
-void 
-Deformable::Update(const pxr::VtArray<float>& radius)
-{
-  _radius = radius;
-}
-
-void 
-Deformable::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
-  const pxr::VtArray<float>& radius)
-{
-  _positions = positions;
-  _radius = radius;
-}
-
 void
 Deformable::AddPoint(const pxr::GfVec3f& pos, float radius, const pxr::GfVec3f* normal, const pxr::GfVec3f* color)
 {
@@ -263,49 +241,6 @@ Deformable::RemoveAllPoints()
   _radius.clear();
   _normals.clear();
   _colors.clear();
-}
-
-void
-Deformable::Init(const pxr::VtArray<pxr::GfVec3f>& positions)
-{
-  size_t numPoints = positions.size();
-  _positions = positions;
-
-}
-
-void
-Deformable::Init(const pxr::VtArray<pxr::GfVec3f>& positions, const pxr::VtArray<float>& radii)
-{
-  size_t numPoints = positions.size();
-  _positions = positions;
-  _haveRadius = true;
-  _radius = radii;
-}
-
-void
-Deformable::Init(const pxr::VtArray<pxr::GfVec3f>& positions, const pxr::VtArray<float>& radii,
-                const pxr::VtArray<pxr::GfVec3f>& colors)
-{
-  size_t numPoints = positions.size();
-  _positions = positions;
-  _haveRadius = true;
-  _radius = radii;
-  _haveColors = true;
-  _colors = colors;
-}
-
-void
-Deformable::Init(const pxr::VtArray<pxr::GfVec3f>& positions, const pxr::VtArray<float>& radii,
-                const pxr::VtArray<pxr::GfVec3f>& colors, const pxr::VtArray<pxr::GfVec3f>& normals)
-{
-  size_t numPoints = positions.size();
-  _positions = positions;
-  _haveRadius = true;
-  _radius = radii;
-  _haveColors = true;
-  _colors = colors;
-  _haveNormals = true;
-  _normals = normals;
 }
 
 Point Deformable::Get(uint32_t index)

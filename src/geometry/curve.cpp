@@ -137,42 +137,14 @@ Curve::_PointIndex(size_t curveIdx, size_t cvIdx)
 }
 
 void 
-Curve::SetRadius(size_t curveIdx, size_t cvIdx, float radius)
-{
-  size_t pointIdx = _PointIndex(curveIdx, cvIdx);
-  _radius[pointIdx] = radius;
-}
-
-void 
-Curve::SetRadii(size_t curveIdx, float radius)
-{
-  size_t pointIdx = _PointIndex(curveIdx, 0);
-  for (size_t p = pointIdx; p < pointIdx + _cvCounts[curveIdx]; ++p) {
-    _radius[pointIdx] = radius;
-  }
-}
-
-void
-Curve::SetRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
-{
-  size_t numCVs = _cvCounts[curveIdx];
-
-  if (radii.size() == numCVs) {
-    size_t startIdx = _PointIndex(curveIdx, 0);
-    for (size_t cvIdx = 0; cvIdx < numCVs; ++cvIdx) {
-      _radius[startIdx + cvIdx] = radii[cvIdx];
-    }
-  }
-}
-
-void 
 Curve::SetTopology(
   const pxr::VtArray<pxr::GfVec3f>& positions,
   const pxr::VtArray<int>& cvCounts)
 {
-  _positions = positions;
-  _normals = positions;
-  _radius.resize(_positions.size());
+  SetPositions(positions);
+  _haveRadius = false;
+  _haveNormals = false;
+  _haveColors = false;
   _cvCounts = cvCounts;
 }
 
@@ -182,10 +154,40 @@ Curve::SetTopology(
   const pxr::VtArray<float>& radii,
   const pxr::VtArray<int>& cvCounts)
 {
-  _positions = positions;
-  _normals = positions;
-  _radius = radii;
+  SetPositions(positions);
+  SetRadii(radii);
+  _haveNormals = false;
+  _haveColors = false;
   _cvCounts = cvCounts;
+}
+
+void
+Curve::SetCurveRadius(size_t curveIdx, size_t cvIdx, float radius)
+{
+  size_t pointIdx = _PointIndex(curveIdx, cvIdx);
+  _radius[pointIdx] = radius;
+}
+
+void
+Curve::SetCurveRadii(size_t curveIdx, float radius)
+{
+  size_t pointIdx = _PointIndex(curveIdx, 0);
+  for (size_t p = pointIdx; p < pointIdx + _cvCounts[curveIdx]; ++p) {
+    _radius[pointIdx] = radius;
+  }
+}
+
+void
+Curve::SetCurveRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
+{
+  size_t numCVs = _cvCounts[curveIdx];
+
+  if (radii.size() == numCVs) {
+    size_t startIdx = _PointIndex(curveIdx, 0);
+    for (size_t cvIdx = 0; cvIdx < numCVs; ++cvIdx) {
+      _radius[startIdx + cvIdx] = radii[cvIdx];
+    }
+  }
 }
 
 void

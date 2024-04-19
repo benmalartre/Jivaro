@@ -119,9 +119,9 @@ protected:
 public:
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update() override;
-  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
+  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance=-1, double* minDistance=NULL) const override;
-  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
+  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance=-1.f) const override;
 
 private:

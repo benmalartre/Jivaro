@@ -78,8 +78,6 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
   const pxr::GfVec3f size(range.GetSize());
   const pxr::GfVec3f minExtents(range.GetMin());
 
-  const pxr::GfVec3f* points = _geometry->GetPositionsCPtr();
-
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
   const float eps = 0.000001f * size[axis];
   uint32_t x = begin;
@@ -100,7 +98,7 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
       // calculate ray start
       Location hit;
       double minDistance = DBL_MAX;
-      if (_bvh.Raycast(points, pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
+      if (_bvh.Raycast(pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
       {
         // calculate cell in which intersection occurred
         const float zpos = rayStart[axis] + hit.GetT() * rayDir[axis];
@@ -150,7 +148,7 @@ void Voxels::_ProximityWork(size_t begin, size_t end)
   for (size_t cell = begin; cell < end; ++cell) {
     const pxr::GfVec3f point = GetCellPosition(cell);
     Location hit;
-    if(_bvh.Closest(points, point, &hit, threshold))
+    if(_bvh.Closest(point, &hit, threshold))
       _data[cell] += 3;
   }
 }

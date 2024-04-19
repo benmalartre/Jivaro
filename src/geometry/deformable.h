@@ -65,34 +65,18 @@ public:
   void RemovePoint(size_t index);
   void RemoveAllPoints();
 
-  void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
-  void Init(const pxr::VtArray<pxr::GfVec3f>& positions, 
-            const pxr::VtArray<float>& radius);
-  void Init(const pxr::VtArray<pxr::GfVec3f>& positions, 
-            const pxr::VtArray<float>& radius,
-            const pxr::VtArray<pxr::GfVec3f>& colors);
-  void Init(const pxr::VtArray<pxr::GfVec3f>& positions, 
-            const pxr::VtArray<float>& radius,
-            const pxr::VtArray<pxr::GfVec3f>& colors,
-            const pxr::VtArray<pxr::GfVec3f>& normals);
+  virtual void SetPositions(const pxr::GfVec3f* positions, size_t n);
+  virtual void SetRadii(const float* radii, size_t n);
+  virtual void SetColors(const pxr::GfVec3f* colors, size_t n);
+  virtual void SetNormals(const pxr::GfVec3f* normals, size_t n);
 
-  void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
-  void Update(const pxr::VtArray<float>& radius);
-  void Update(const pxr::VtArray<pxr::GfVec3f>& positions,
-    const pxr::VtArray<float>& radius);
-  
-  void SetPositions(const pxr::GfVec3f* positions, size_t n);
-  void SetRadii(const float* radii, size_t n);
-  void SetColors(const pxr::GfVec3f* colors, size_t n);
-  void SetNormals(const pxr::GfVec3f* normals, size_t n);
+  virtual void SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions);
+  virtual void SetRadii(const pxr::VtArray<float>& radii);
+  virtual void SetColors(const pxr::VtArray<pxr::GfVec3f>& colors);
+  virtual void SetNormals(const pxr::VtArray<pxr::GfVec3f>& normals);
 
-  void SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions);
-  void SetRadii(const pxr::VtArray<float>& radii);
-  void SetColors(const pxr::VtArray<pxr::GfVec3f>& colors);
-  void SetNormals(const pxr::VtArray<pxr::GfVec3f>& normals);
-
-  void Normalize();
-  void ComputeBoundingBox() override;
+  virtual void Normalize();
+  virtual void ComputeBoundingBox() override;
 
   Point Get(uint32_t index);
 
@@ -101,11 +85,11 @@ public:
   bool HaveRadius() const { return _haveRadius; };
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };

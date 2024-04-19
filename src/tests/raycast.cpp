@@ -66,32 +66,36 @@ void _UpdateRays()
   pxr::VtArray<pxr::GfVec3f> points;
   pxr::VtArray<float> radiis;
   pxr::VtArray<int> counts;
+  pxr::VtArray<pxr::GfVec3f> colors;
 
   points.resize(numRays * 2);
   radiis.resize(numRays * 2);
+  colors.resize(numRays * 2);
   counts.resize(numRays);
   for(size_t r = 0; r < numRays; ++r) {
     counts[r] = 2;
-    radiis[r*2]   = 0.05f;
-    radiis[r*2+1]   = 0.025f;
+    radiis[r*2]   = 0.01f;
+    radiis[r*2+1]   = 0.01f;
     points[r*2]   = matrix.Transform(positions[r]);
     points[r*2+1] = matrix.Transform(positions[r]) + matrix.TransformDir(normals[r]);
+    colors[r*2]   = pxr::GfVec3f(0.66f,0.66f,0.66f);
+    colors[r*2+1] = pxr::GfVec3f(0.66f,0.66f,0.66f);
   }
 
   _rays->SetTopology(points, radiis, counts); 
+  _rays->SetColors(colors);
 }
 
 void _UpdateHits()
 {
   pxr::VtArray<pxr::GfVec3f> result;
-  const pxr::GfVec3f* points = ((Deformable*)_bvh.GetGeometry(0))->GetPositionsCPtr();
   const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
 
   for (size_t c= 0; c < _rays->GetNumCurves(); ++c) {
     pxr::GfRay ray(positions[c*2], positions[c*2+1] - positions[c*2]);
     double minDistance = DBL_MAX;
     Location hit;
-    if (_bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
+    if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
       result.push_back(hit.GetPosition(collided));
     }
@@ -102,7 +106,7 @@ void _UpdateHits()
   pxr::VtArray<float> radiis(result.size(), 0.2);
   _hits->SetRadii(radiis);
 
-  pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
+  pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.66f, 0.33f));
   _hits->SetColors(colors);
 
 }

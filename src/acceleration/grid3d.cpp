@@ -202,7 +202,7 @@ void Grid3DIntersector::Update()
 
 }
 
-bool Grid3DIntersector::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
+bool Grid3DIntersector::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
     double bmin, bmax;
@@ -278,7 +278,7 @@ bool Grid3DIntersector::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ra
     return hit;
 }
 
-bool Grid3DIntersector::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
+bool Grid3DIntersector::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance) const
 {
   return false;

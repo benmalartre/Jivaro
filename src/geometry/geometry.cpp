@@ -13,26 +13,22 @@ Geometry::Geometry()
 {
   _type = INVALID;
   _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  _matrix = _invMatrix = pxr::GfMatrix4d(1.0);
-  
+  SetMatrix(pxr::GfMatrix4d(1.0));
 }
 
 Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
 {
   _type = type;
   _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  _matrix = world;
-  _invMatrix = world.GetInverse();
+  SetMatrix(world);
 }
 
 Geometry::Geometry(const Geometry* other, short type)
 {
   _type = type;
   _wirecolor = other->_wirecolor;
-
   _bbox = other->_bbox;
-  _matrix = other->_matrix;
-  _invMatrix = other->_invMatrix;
+  SetMatrix(other->GetMatrix());
 }
 
 void 
