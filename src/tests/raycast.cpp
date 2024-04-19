@@ -29,6 +29,15 @@ class Mesh;
 class Points;
 class BVH;
 
+Mesh*             _mesh;
+Curve*            _rays;
+Points*           _hits;
+BVH               _bvh;
+pxr::SdfPath      _meshId;
+pxr::SdfPath      _raysId;
+pxr::SdfPath      _hitsId;
+pxr::SdfPath      _bvhId;
+
 class TestRaycast : public Execution {
 public:
   friend class Scene;
@@ -37,14 +46,7 @@ public:
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 private:
-  Mesh*                                                       _mesh;
-  Curve*                                                      _rays;
-  Points*                                                     _hits;
-  BVH                                                         _bvh;
-  pxr::SdfPath                                                _meshId;
-  pxr::SdfPath                                                _raysId;
-  pxr::SdfPath                                                _hitsId;
-  pxr::SdfPath                                                _bvhId;
+  
 
 };
 
@@ -54,12 +56,12 @@ Execution* CreateTestRaycast()
 }
 
 
-void _UpdateRays(Mesh* mesh, Curve* rays) 
+void _UpdateRays() 
 {
-  const size_t numRays = mesh->GetNumPoints();
-  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-  const pxr::GfVec3f* normals = mesh->GetNormalsCPtr();
-  const pxr::GfMatrix4f matrix(mesh->GetMatrix());
+  const size_t numRays = _mesh->GetNumPoints();
+  const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
+  const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
+  const pxr::GfMatrix4f matrix(_mesh->GetMatrix());
 
   pxr::VtArray<pxr::GfVec3f> points;
   pxr::VtArray<float> radiis;
@@ -76,7 +78,27 @@ void _UpdateRays(Mesh* mesh, Curve* rays)
     points[r*2+1] = matrix.Transform(positions[r]) + matrix.TransformDir(normals[r]);
   }
 
-  rays->SetTopology(points, radiis, counts);
+  _rays->SetTopology(points, radiis, counts); 
+}
+
+void _UpdateHits()
+{
+  pxr::VtArray<pxr::GfVec3f> result;
+  const pxr::GfVec3f* positions = ((Deformable*)_bvh.GetGeometry(0))->GetPositionsCPtr();
+  for (size_t c= 0; _rays->GetNumCurves(); ++c) {
+    pxr::GfRay ray(positions[c*2], positions[c*2+1] - positions[c*2]);
+    double minDistance = DBL_MAX;
+    Location hit;
+    const pxr::GfVec3f* points = _mesh->GetPositionsCPtr();
+    if (_bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
+      Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
+      result.push_back(hit.GetPosition(collided));
+    }
+  }
+
+  _hits->SetPositions(result);
+  pxr::VtArray<float> radiis(result.size(), 0.1);
+  _hits->SetRadii(radiis);
 }
 
 void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes)
@@ -126,44 +148,26 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _raysId = rootId.AppendChild(pxr::TfToken("rays"));
   _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
 
-  _UpdateRays(_mesh, _rays);
+  _UpdateRays();
 
   // create hits
   _hitsId = rootId.AppendChild(pxr::TfToken("hits"));
   _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
 
   _scene.Update(stage, 1);
-
-  Scene::_Prim* prim = _scene.GetPrim(_raysId);
-  prim->bits = pxr::HdChangeTracker::AllDirty;  
+  _UpdateHits();
 
 }
 
 void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Update(stage, time);
-  _UpdateRays(_mesh, _rays);
-  Scene::_Prim* prim = _scene.GetPrim(_raysId);
-  prim->bits = pxr::HdChangeTracker::AllDirty;
 
-  pxr::VtArray<pxr::GfVec3f> result;
-  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
-  for (size_t c= 0; _rays->GetNumCurves(); ++c) {
-    pxr::GfRay ray(positions[c*2], positions[c*2+1] - positions[c*2]);
-    double minDistance = DBL_MAX;
-    Location hit;
-    const pxr::GfVec3f* points = _mesh->GetPositionsCPtr();
-    if (_bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
-      Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
-      result.push_back(hit.GetPosition(collided));
-    }
-  }
+  _UpdateRays();
+  _scene.MarkPrimDirty(_raysId, pxr::AllDirty);
 
-  _hits->SetPositions(result);
-  pxr::VtArray<float> radiis(result.size(), 0.1);
-  _hits->SetRadii(radiis);
-  prim = _scene.GetPrim(_hitsId);
-  prim->bits = pxr::HdChangeTracker::DirtyTopology;
+  _UpdateHits();
+  _scene.MarkPrimDirty(_hitsId, pxr::DirtyTopology);
 
 }
 

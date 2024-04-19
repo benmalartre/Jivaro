@@ -180,6 +180,13 @@ Scene::GetPrim(const pxr::SdfPath& path)
   return NULL;
 }
 
+void 
+Scene::MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits)
+{
+  Scene::_Prim* prim = _scene.GetPrim(_raysId);
+  if(prim)prim->bits = bits; 
+}
+
 // -----------------------------------------------------------------------//
 /// \name Rprim Aspects
 // -----------------------------------------------------------------------//

@@ -234,13 +234,15 @@ BVH::Cell::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* 
     Component* component = (Component*)_data;
     return component->Raycast(points, ray, hit, maxDistance, minDistance);
   } else {
+    const pxr::GfVec3f* newPoints = points;
     if(IsGeom()) {        
       const BVH* intersector = GetIntersector();
       hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
+      newPoints = ((Deformable*)_data)->GetPositionsCPtr();
     }
     Location leftHit(*hit), rightHit(*hit);
-    if (_left)_left->Raycast(points, ray, &leftHit, maxDistance, minDistance);
-    if (_right)_right->Raycast(points, ray, &rightHit, maxDistance, minDistance);
+    if (_left)_left->Raycast(newPoints, ray, &leftHit, maxDistance, minDistance);
+    if (_right)_right->Raycast(newPoints, ray, &rightHit, maxDistance, minDistance);
 
     if (leftHit.IsValid() && rightHit.IsValid()) {
       if (leftHit.GetT() < rightHit.GetT())
@@ -267,15 +269,21 @@ BVH::Cell::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point,
     Component* component = (Component*)_data;
     return component->Closest(points, point, hit, maxDistance, minDistance);
   } else {
+    const pxr::GfVec3f* newPoints = points;
+    if(IsGeom()) {        
+      const BVH* intersector = GetIntersector();
+      hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
+      newPoints = ((Deformable*)_data)->GetPositionsCPtr();
+    }
     const pxr::GfVec3d offset(maxDistance);
     const pxr::GfRange3d range(point - offset, point + offset);
     bool leftHit = false;
     bool rightHit = false;
     if(_left && !range.IsOutside(*_left)) {
-      leftHit = _left->Closest(points, point, hit, maxDistance, minDistance);
+      leftHit = _left->Closest(newPoints, point, hit, maxDistance, minDistance);
     }
     if(_right && !range.IsOutside(*_right)) {
-      rightHit= _right->Closest(points, point, hit, maxDistance, minDistance);
+      rightHit= _right->Closest(newPoints, point, hit, maxDistance, minDistance);
     }
     return leftHit|| rightHit;
   }

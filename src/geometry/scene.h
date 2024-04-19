@@ -71,8 +71,10 @@ public:
   _PrimMap& GetPrims() { return _prims; };
   const _PrimMap& GetPrims() const { return _prims; };
 
- _Prim* GetPrim(const pxr::SdfPath& path);
+  _Prim* GetPrim(const pxr::SdfPath& path);
   Geometry* GetGeometry(const pxr::SdfPath& path);
+
+  void MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits);
 
   /// Gets the topological mesh data for a given prim.
   pxr::HdMeshTopology GetMeshTopology(pxr::SdfPath const& id);
