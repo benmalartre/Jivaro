@@ -1,17 +1,6 @@
 #ifndef JVR_GEOMETRY_DEFORMABLE_H
 #define JVR_GEOMETRY_DEFORMABLE_H
 
-
-#include "../common.h"
-#include "pxr/base/vt/array.h"
-#include "pxr/base/tf/hashmap.h"
-#include <pxr/base/gf/matrix4d.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/vec3d.h>
-#include <pxr/base/gf/bbox3d.h>
-#include <pxr/usd/usdGeom/tokens.h>
-#include <pxr/usd/usdGeom/points.h>
-#include <float.h>
 #include "../geometry/point.h"
 #include "../geometry/geometry.h"
 
@@ -20,7 +9,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Deformable : public Geometry {
 public:
   Deformable(short type, const pxr::GfMatrix4d& matrix=pxr::GfMatrix4d(1.f));
-  Deformable(const pxr::UsdPointBased& pri, const pxr::GfMatrix4d& matrix=pxr::GfMatrix4d(1.f));
+  Deformable(const pxr::UsdGeomPointBased& pri, const pxr::GfMatrix4d& matrix=pxr::GfMatrix4d(1.f));
   virtual ~Deformable() {};
 
   size_t GetNumPoints()const override {return _positions.size();};
