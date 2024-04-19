@@ -13,19 +13,9 @@ Points::Points(short type, const pxr::GfMatrix4d& m)
 {
 }
 
-Points::Points(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
-  : Deformable(Geometry::POINT, world)
+Points::Points(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
+  : Deformable(prim, world)
 {
-  pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
-  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
-
-  pxr::UsdAttribute normalsAttr = points.GetNormalsAttr();
-  if (normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
-    normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
-
-  pxr::UsdAttribute widthsAttr = points.GetWidthsAttr();
-  if (widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue())
-    widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
 }
 
 

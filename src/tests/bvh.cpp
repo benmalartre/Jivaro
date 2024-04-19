@@ -215,9 +215,9 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
     }
 
     _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
-    Xform* bvh = _SetupBVHInstancer(stage, _bvhId, &_bvh);
+    Instancer* bvh = _SetupBVHInstancer(stage, _bvhId, &_bvh);
     //bvh->SetOutputOnly();
-    _scene.AddGeometry(_bvhId, bvh );
+    _scene.AddGeometry(_bvhId, (Geometry*)bvh );
   }
   
   // create mesh that will be source of rays

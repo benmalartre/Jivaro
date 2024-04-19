@@ -1,15 +1,18 @@
 #ifndef JVR_GEOMETRY_INSTANCER_H
 #define JVR_GEOMETRY_INSTANCER_H
 
+#include <pxr/usd/usdGeom/pointInstancer.h>
+
+
 #include "../geometry/deformable.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Instancer : public Points {
+class Instancer : public Deformable {
 public:
   Instancer(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Instancer(const pxr::UsdGeomPointInstancer& instancer, const pxr::GfMatrix4d& world);
+  Instancer(const pxr::UsdPrim& instancer, const pxr::GfMatrix4d& world);
   virtual ~Instancer() {};
 
   void Set(const pxr::VtArray<pxr::GfVec3f>&  positions, 

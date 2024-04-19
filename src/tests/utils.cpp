@@ -18,6 +18,7 @@
 #include "../geometry/mesh.h"
 #include "../geometry/points.h"
 #include "../geometry/implicit.h"
+#include "../geometry/instancer.h"
 #include "../acceleration/bvh.h"
 #include "../pbd/solver.h"
 

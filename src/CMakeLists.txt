@@ -77,6 +77,7 @@ add_executable(${TARGET}
   geometry/points.cpp
   geometry/mesh.cpp
   geometry/curve.cpp
+  geometry/instancer.cpp
   geometry/stroke.cpp
   geometry/perlin.cpp
   geometry/voronoi.cpp

@@ -8,37 +8,48 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Instancer::Instancer(const pxr::GfMatrix4d& m)
-  : Points(Geometry::INSTANCER, m)
+  : Deformable(Geometry::INSTANCER, m)
 {
   _haveNormals = false;
   _haveColors = false;
 }
 
-Instancer::Instancer(const pxr::UsdGeomPoints& points, const pxr::GfMatrix4d& world)
-  : Deformable(Geometry::POINT, world)
+Instancer::Instancer(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
+  : Deformable(prim, world)
 {
-  pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
-  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
+  if (prim.IsA<pxr::UsdGeomPointInstancer>()) {
+    pxr::UsdGeomPointInstancer instancer(prim);
+    const size_t numInstances = _positions.size();
 
-  pxr::UsdAttribute normalsAttr = points.GetNormalsAttr();
-  if (normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
-    normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
+    pxr::UsdAttribute protoIndicesAttr instancer.GetProtoIndicesAttr();
+    protoIndicesAttr.Get(&_protoINdices, pxr::UsdTimeCode::Default());
 
-  pxr::UsdAttribute widthsAttr = points.GetWidthsAttr();
-  if (widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue())
-    widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+    pxr::UsdAttribute idsAttr = points.GetIdsAttr();
+    if (idsAttr.IsDefined() && idsAttr.HasAuthoredValue())
+      idsAttr.Get(&_indices, pxr::UsdTimeCode::Default());
+
+    pxr::UsdAttribute scalesAttr = points.GetScalesAttr();
+    if (scalesAttr.IsDefined() && scalesAttr.HasAuthoredValue())
+      scalesAttr.Get(&_scales, pxr::UsdTimeCode::Default());
+    else _scales.resize(numInstances, pxr::GfVec3f(1.f));
+
+    pxr::UsdAttribute orientationsAttr = points.GetOrientationAttr();
+    if (orientationsAttr.IsDefined() && orientationsAttr.HasAuthoredValue())
+      orientationsAttr.Get(&_rotations, pxr::UsdTimeCode::Default());
+    else _scales.resize(numInstances, pxr::GfVec3f(1.f));
+
+  }
 }
 
 void Instancer::Set(
   const pxr::VtArray<pxr::GfVec3f>&  positions, 
-  const pxr::VtArray<int>*           protoIndices=nullptr,
-  const pxr::VtArray<int64_t>*       indices=nullptr,
-  const pxr::VtArray<pxr::GfVec3f>*  scales=nullptr,
-  const pxr::VtArray<pxr::GfQuath>*  rotations=nullptr,
-  const pxr::VtArray<pxr::GfVec3f>*  colors=nullptr)
+  const pxr::VtArray<int>*           protoIndices,
+  const pxr::VtArray<int64_t>*       indices,
+  const pxr::VtArray<pxr::GfVec3f>*  scales,
+  const pxr::VtArray<pxr::GfQuath>*  rotations,
+  const pxr::VtArray<pxr::GfVec3f>*  colors)
 {
   const size_t n = positions.size();
-  Deformable::_ValidateNumPoints(n);
   SetPositions(positions);
   if(protoIndices && protoIndices->size() == n) {
     _protoIndices = *protoIndices;
@@ -66,8 +77,8 @@ void Instancer::Set(
     _colors = *colors;
   } else {
     _colors.resize(n);
-    for(auto& color: _colors)
-      color = pxr::GfVEc3f(RANDOM_0_1,RANDOM_0_1,RANDOM_0_1);
+    for(size_t c = 0; c << _colors.size(); ++c)
+      _colors[c] = pxr::GfVec3f(RANDOM_0_1,RANDOM_0_1,RANDOM_0_1);
   }
 
 }
