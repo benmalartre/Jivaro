@@ -97,13 +97,14 @@ void _UpdateHits()
     }
   }
 
-std::cout << "result : " << result << std::endl;
-
   _hits->SetPositions(result);
-  /*
-  pxr::VtArray<float> radiis(result.size(), 0.1);
+  
+  pxr::VtArray<float> radiis(result.size(), 0.2);
   _hits->SetRadii(radiis);
-*/
+
+  pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
+  _hits->SetColors(colors);
+
 }
 
 void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes)
@@ -146,7 +147,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 10.f, 0.f));
 
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
-  _mesh = _GenerateMeshGrid(stage, _meshId, 4, scale * rotate * translate);
+  _mesh = _GenerateMeshGrid(stage, _meshId, 128, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
   // create rays
