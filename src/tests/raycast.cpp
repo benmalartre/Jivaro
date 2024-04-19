@@ -86,19 +86,46 @@ void _UpdateRays()
   _rays->SetColors(colors);
 }
 
-void _UpdateHits()
-{
-  pxr::VtArray<pxr::GfVec3f> result;
-  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
 
-  for (size_t c= 0; c < _rays->GetNumCurves(); ++c) {
-    pxr::GfRay ray(positions[c*2], positions[c*2+1] - positions[c*2]);
+void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::VtArray<pxr::GfVec3f>& results, pxr::VtArray<bool>& hits)
+{
+  for (size_t index = begin; index < end; ++index) {
+    pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
     double minDistance = DBL_MAX;
     Location hit;
     if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
-      result.push_back(hit.GetPosition(collided));
+      results[index] = hit.GetPosition(collided);
+      hits[index] = true;
+    } else {
+      hits[index] = false;
     }
+  }
+}
+
+void _UpdateHits()
+{
+  pxr::VtArray<pxr::GfVec3f> result;
+  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
+  const size_t numRays = _rays->GetNumPoints() >> 1;
+
+  pxr::VtArray<pxr::GfVec3f> points(numRays);
+  pxr::VtArray<bool> hits(numRays, false);
+
+  uint64_t startT = CurrentTime();
+
+   pxr::WorkParallelForN(_rays->GetNumCurves(),
+    std::bind(&_FindHits, std::placeholders::_1, 
+      std::placeholders::_2, positions, points, hits));
+
+  
+  std::cout << "raycast " << _rays->GetNumCurves() << "rays took : " << 
+    ((CurrentTime() - startT) * 1e-9) << " seconds to complete" << std::endl;
+
+  pxr::VtArray<pxr::GfVec3f> result;
+  result.reserve(numRays());
+  for(size_t r = 0; r < numRays; ++r) {
+    if(hits[r])result.push_back(points[r]);
   }
 
   _hits->SetPositions(result);
@@ -106,7 +133,7 @@ void _UpdateHits()
   pxr::VtArray<float> radiis(result.size(), 0.2);
   _hits->SetRadii(radiis);
 
-  pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.66f, 0.33f));
+  pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.5f, 0.0f));
   _hits->SetColors(colors);
 
 }
@@ -119,6 +146,22 @@ void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometr
       meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
     }
       
+}
+
+void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
+{
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  if(prim.IsValid()) {
+    pxr::UsdGeomXformable xformable(prim);
+    pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
+    pxr::GfMatrix4d scale = pxr::GfMatrix4d(1.f).SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
+    pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
+    pxr::GfMatrix4d translate1 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, -10.f));
+    pxr::GfMatrix4d translate2 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, 10.f));
+    auto op = xformable.GetTransformOp();
+    op.Set(scale * rotate * translate1, 1);
+    op.Set(scale * rotate * translate2, 101);
+  }
 }
 
 void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
@@ -134,25 +177,23 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create bvh
   if (meshes.size()) {
-    std::cout << "num meshes " << meshes.size() << std::endl;
     _bvh.Init(meshes);
     _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
-    std::cout << "setup bvh instancer" << std::endl;
     _SetupBVHInstancer(stage, _bvhId, &_bvh);
-
   }
   
   // create mesh that will be source of rays
-  pxr::GfQuatf rotation(180.f * DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
-  rotation.Normalize();
+  pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
 
   pxr::GfMatrix4d scale = pxr::GfMatrix4d(1.f).SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
-  pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 10.f, 0.f));
+  pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, 0.f));
 
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
-  _mesh = _GenerateMeshGrid(stage, _meshId, 128, scale * rotate * translate);
+  _mesh = _GenerateMeshGrid(stage, _meshId, 1024, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
+
+  _AddAnimationSamples(stage, _meshId);
 
   // create rays
   _raysId = rootId.AppendChild(pxr::TfToken("rays"));
