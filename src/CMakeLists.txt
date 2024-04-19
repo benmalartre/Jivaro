@@ -122,6 +122,7 @@ add_executable(${TARGET}
   tests/hair.cpp
   tests/particles.cpp
   tests/raycast.cpp
+  tests/bvh.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp

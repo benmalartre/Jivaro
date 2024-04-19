@@ -22,7 +22,7 @@
 #include "../tests/particles.h"
 #include "../tests/pbd.h"
 #include "../tests/hair.h"
-
+#include "../tests/bvh.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -276,7 +276,8 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  _exec = CreateTestRaycast();
+  _exec = CreateTestBVH();
+  //_exec = CreateTestRaycast();
   //_exec = new TestParticles();
   //_exec = new TestPBD();
   //_exec = new TestHair();

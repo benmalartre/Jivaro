@@ -395,7 +395,7 @@ void Mesh::SetTopology(
 void Mesh::SetPositions(const pxr::GfVec3f* positions, size_t n)
 {
   if(n == GetNumPoints()) {
-    memmove(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
+    memcpy(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
     // recompute normals
     ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
@@ -406,7 +406,7 @@ void Mesh::SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions)
 {
   const size_t n = positions.size();
   if(n == GetNumPoints()) {
-    memmove(&_positions[0], &positions[0], n * sizeof(pxr::GfVec3f));
+    _positions = positions;
     // recompute normals
     ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);

@@ -16,11 +16,10 @@
 #include "../pbd/solver.h"
 #include "../utils/timer.h"
 
-#include "../tests/raycast.h"
-
-#include "../app/application.h"
+#include "../tests/bvh.h"
 
 #include "../tests/utils.h"
+#include "../app/application.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -29,44 +28,46 @@ class Mesh;
 class Points;
 class BVH;
 
-class TestRaycast : public Execution {
+
+class TestBVH : public Execution {
 public:
   friend class Scene;
-  TestRaycast() : Execution(){};
+  TestBVH() : Execution(){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
-
-protected:
-  void _UpdateRays() ;
-  void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
-    pxr::GfVec3f* results, bool* hits);
-  void _UpdateHits();
-  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes);
+  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
   void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
 
+protected:
+  void _UpdateRays();
+  void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results, bool* hits);
+  void _UpdateHits();
+
 private:
-  Mesh*             _mesh;
-  Curve*            _rays;
-  Points*           _hits;
-  BVH               _bvh;
-  pxr::SdfPath      _meshId;
-  pxr::SdfPath      _raysId;
-  pxr::SdfPath      _hitsId;
-  pxr::SdfPath      _bvhId;
+  Mesh*                     _mesh;
+  Curve*                    _rays;
+  Points*                   _hits;
+  BVH                       _bvh;
+  pxr::SdfPath              _meshId;
+  pxr::SdfPath              _raysId;
+  pxr::SdfPath              _hitsId;
+  pxr::SdfPath              _bvhId;
+  std::vector<Geometry*>    _meshes;
 
 };
 
-Execution* CreateTestRaycast()
+Execution* CreateTestBVH()
 {
-  return new TestRaycast();
+  return new TestBVH();
 }
 
 
-void TestRaycast::_UpdateRays() 
+void TestBVH::_UpdateRays() 
 {
   const double time = Application::Get()->GetTime().GetActiveTime();
   const size_t numRays = _mesh->GetNumPoints();
+  /*
   const size_t num = std::sqrt(numRays);
   pxr::VtArray<pxr::GfVec3f> deformed(numRays);
 
@@ -84,6 +85,7 @@ void TestRaycast::_UpdateRays()
     }
   }
   _mesh->SetPositions(deformed);
+  */
 
   const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
   const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
@@ -114,7 +116,7 @@ void TestRaycast::_UpdateRays()
 }
 
 // thread task
-void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
+void TestBVH::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
   pxr::GfVec3f* results, bool* hits)
 {
   for (size_t index = begin; index < end; ++index) {
@@ -132,7 +134,7 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
 }
 
 // parallelize raycast
-void TestRaycast::_UpdateHits()
+void TestBVH::_UpdateHits()
 {
   const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
   size_t numRays = _rays->GetNumPoints() >> 1;
@@ -142,8 +144,8 @@ void TestRaycast::_UpdateHits()
 
   hits.resize(numRays, false);
 
-   pxr::WorkParallelForN(_rays->GetNumCurves(),
-    std::bind(&_FindHits, std::placeholders::_1, 
+  pxr::WorkParallelForN(_rays->GetNumCurves(),
+    std::bind(&TestBVH::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0]));
 
   // need accumulate result
@@ -163,17 +165,18 @@ void TestRaycast::_UpdateHits()
 
 }
 
-void TestRaycast::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes)
+void TestBVH::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   for (pxr::UsdPrim prim : stage->TraverseAll())
     if (prim.IsA<pxr::UsdGeomMesh>()) {
-      meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
+      _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+        xformCache.GetLocalToWorldTransform(prim)));
     }
       
 }
 
-void TestRaycast::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
+void TestBVH::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(path);
   if(prim.IsValid()) {
@@ -189,7 +192,7 @@ void TestRaycast::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath&
   }
 }
 
-void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
+void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
@@ -198,30 +201,30 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
 
   // find meshes in the scene
   std::vector<Geometry*> meshes;
-  _TraverseStageFindingMeshes(stage, meshes);
+  _TraverseStageFindingMeshes(stage);
 
   // create bvh
-  if (meshes.size()) {
-    _bvh.Init(meshes);
-    //_bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
-    //_SetupBVHInstancer(stage, _bvhId, &_bvh);
+  if (_meshes.size()) {
+    _bvh.Init(_meshes);
+    _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
+    _SetupBVHInstancer(stage, _bvhId, &_bvh);
   }
   
   // create mesh that will be source of rays
-  pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
+  pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 180.f);
 
   pxr::GfMatrix4d scale = pxr::GfMatrix4d(1.f).SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
-  pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, 0.f));
+  pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
 
-  const size_t n = 512;
+  const size_t n = 32;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
   std::cout << "num rays : " << pxr::GfPow(n, 2.f) << std::endl;
 
-  _AddAnimationSamples(stage, _meshId);
+  //_AddAnimationSamples(stage, _meshId);
 
   // create rays
   _raysId = rootId.AppendChild(pxr::TfToken("rays"));
@@ -239,9 +242,13 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
 
 }
 
-void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Update(stage, time);
+
+  if (_meshes.size()) {
+    _bvh.Update();
+  }
 
   _UpdateRays();
   _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker::DirtyPoints);
@@ -252,12 +259,12 @@ void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
 }
 
-void TestRaycast::TerminateExec(pxr::UsdStageRefPtr& stage)
+void TestBVH::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
   stage->RemovePrim(_meshId);
-  //stage->RemovePrim(_bvhId);
+  stage->RemovePrim(_bvhId);
 
 }
 
