@@ -32,10 +32,8 @@ struct Component {
 
   virtual bool Touch(const pxr::GfVec3f* points, 
     const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const = 0;
-  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const = 0;
-  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const = 0;
+  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const = 0;
+  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const = 0;
 
   virtual pxr::GfRange3f GetLocalBoundingBox(const Geometry* geometry) const = 0;
   virtual pxr::GfRange3f GetWorldBoundingBox(const Geometry* geometry) const = 0;

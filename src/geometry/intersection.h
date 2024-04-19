@@ -63,6 +63,9 @@ public:
   virtual pxr::GfVec3f GetPosition(Geometry* geometry) const;
   virtual pxr::GfVec3f GetPosition(const pxr::GfRay& ray) const;
   virtual pxr::GfVec3f GetNormal(Geometry* geometry) const;
+
+  virtual float GetDistance(Geometry* geometry, const pxr::GfVec3f& other);
+  
   bool IsValid() const { return _geomId >= 0 && _elemId >= 0; };
 };
 

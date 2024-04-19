@@ -62,8 +62,7 @@ Edge::Intersect(const Edge& other, float epsilon)
 }
 
 bool 
-Edge::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
-  double maxDistance, double* minDistance) const
+Edge::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const
 {
   return false;
 }
@@ -77,18 +76,8 @@ Edge::Touch(const pxr::GfVec3f* points,
 
 
 bool 
-Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
-  double maxDistance, double* minDistance) const
+Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
-  pxr::GfVec3f closest;
-  float distance = (point - closest).GetLength();
-  if (distance < maxDistance && distance < *minDistance) {
-    if (minDistance) *minDistance = distance;
-    hit->SetCoordinates(pxr::GfVec3f(0.5f));
-    hit->SetElementIndex(id);
-    hit->SetT(distance);
-    return true;
-  }
   return false;
 }
 

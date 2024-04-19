@@ -84,10 +84,8 @@ struct Triangle : public Component{
     const pxr::GfVec3f& box) const;
 
   // overrides
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const override;
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const override;
   bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
     const pxr::GfVec3f& boxhalfsize) const override;
 
@@ -106,10 +104,8 @@ struct TrianglePair : public Component {
 
   pxr::GfVec4i GetVertices() const;
 
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const override;
+  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const override;
   bool Touch(const pxr::GfVec3f* points, 
     const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const override;
 

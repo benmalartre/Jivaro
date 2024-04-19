@@ -98,6 +98,13 @@ Location::GetNormal(Geometry* geometry) const
   return pxr::GfVec3f();
 }
 
+float 
+Location::GetDistance(Geometry* geometry, const pxr::GfVec3f& other)
+{
+  const pxr::GfVec3f world = geometry->GetMatrix().Transform(GetPosition(geometry));
+  return (world - other).GetLength();
+}
+
 //=================================================================================================
 // INTERSECTION ROUTINES
 //=================================================================================================

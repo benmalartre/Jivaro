@@ -242,9 +242,19 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
 
   if (IsLeaf()) {
     const Geometry* geometry = GetGeometry();
+    pxr::GfRay localRay(ray);
+    localRay.Transform(geometry->GetInverseMatrix());
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)_data;
-    return component->Raycast(points, ray, hit, maxDistance, minDistance);
+    Location localHit(*hit);
+    if (component->Raycast(points, localRay, &localHit)) {
+      const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
+      const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
+      if (distance < *minDistance && distance < maxDistance) {
+        hit->Set(localHit);
+        *minDistance = distance;
+      }
+    }
   } else {
     if(IsGeom()) {        
       const BVH* intersector = GetIntersector();
@@ -279,7 +289,15 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
     const Geometry* geometry = GetGeometry();
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)_data;
-    return component->Closest(points, point, hit, maxDistance, minDistance);
+    pxr::GfVec3f localPoint = geometry->GetInverseMatrix().Transform(point);
+    Location localHit(*hit);
+    if (component->Closest(points, localPoint, &localHit)) {
+      const float distance = (point - geometry->GetMatrix().Transform(localPoint)).GetLength();
+      if (distance < *minDistance) {
+        hit->Set(localHit);
+        *minDistance = distance;
+      }
+    }
   } else {
     if(IsGeom()) {        
       const BVH* intersector = GetIntersector();

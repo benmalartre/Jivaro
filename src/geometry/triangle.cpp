@@ -91,8 +91,7 @@ Triangle::GetLocalBoundingBox(const Geometry* geometry) const
   return range;
 }
 
-bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
-  double maxDistance, double* minDistance) const
+bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const
 {
   pxr::GfVec3d baryCoords;
   double distance;
@@ -103,13 +102,11 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locati
     points[vertices[1]],
     points[vertices[2]],
     &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
-    if (distance < *minDistance) {
-      *minDistance = distance;
-      hit->SetElementIndex(id);
-      hit->SetCoordinates(pxr::GfVec3f(baryCoords));
-      hit->SetT(distance);
-      return true;
-    }
+
+    hit->SetElementIndex(id);
+    hit->SetCoordinates(pxr::GfVec3f(baryCoords));
+    hit->SetT(distance);
+    return true;
   }
   return false;
 }
@@ -117,14 +114,8 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locati
 //-------------------------------------------------------
 // Triangle Closest Point
 //-------------------------------------------------------
-bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
-  double maxDistance, double* minDistance) const
+bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
-  const pxr::GfVec3f offset(maxDistance);
-  const pxr::GfRange3f range(point - offset, point + offset);
-  if(!Touch(points, range.GetMidpoint(), range.GetSize()))
-    return false;
-
   pxr::GfVec3f edge0 = points[vertices[1]] - points[vertices[0]];
   pxr::GfVec3f edge1 = points[vertices[2]] - points[vertices[0]];
   
@@ -197,14 +188,12 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Lo
   closest += s * edge0 + t * edge1;
   
   float distance = (point - closest).GetLength();
-  if ((maxDistance < 0 || distance <= maxDistance) && distance < hit->GetT()) {
-    if(minDistance) *minDistance = distance;
-    hit->SetCoordinates(pxr::GfVec3f(1.f - s - t, s, t));
-    hit->SetElementIndex(id);
-    hit->SetT(distance);
-    return true;
-  }
-  return false;
+
+  hit->SetCoordinates(pxr::GfVec3f(1.f - s - t, s, t));
+  hit->SetElementIndex(id);
+  hit->SetT(distance);
+  return true;
+  
 }
 
 //-------------------------------------------------------
@@ -405,12 +394,11 @@ TrianglePair::GetLocalBoundingBox(const Geometry* geometry) const
 // TrianglePair raycast
 //-------------------------------------------------------
 bool
-TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
-  double maxDistance, double* minDistance) const
+TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const
 {
   bool hitSometing = false;
-  if (left && left->Raycast(points, ray, hit, maxDistance, minDistance))hitSometing = true;
-  if (right && right->Raycast(points, ray, hit, maxDistance, minDistance))hitSometing = true;
+  if (left && left->Raycast(points, ray, hit))hitSometing = true;
+  if (right && right->Raycast(points, ray, hit))hitSometing = true;
   return hitSometing;
 }
 
@@ -418,12 +406,11 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locatio
 // TrianglePair closest point
 //-------------------------------------------------------
 bool 
-TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, 
-  Location* hit, double maxDistance, double* minDistance) const
+TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
   bool hitSometing = false;
-  if (left && left->Closest(points, point, hit, maxDistance, minDistance))hitSometing = true;
-  if (right && right->Closest(points, point, hit, maxDistance, minDistance))hitSometing = true;
+  if (left && left->Closest(points, point, hit))hitSometing = true;
+  if (right && right->Closest(points, point, hit))hitSometing = true;
   return hitSometing;
 };
 

@@ -27,6 +27,7 @@ Geometry::Geometry(const Geometry* other, short type)
 {
   _type = type;
   _wirecolor = other->_wirecolor;
+  
   _bbox = other->_bbox;
   SetMatrix(other->GetMatrix());
 }

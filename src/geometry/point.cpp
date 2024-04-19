@@ -53,23 +53,14 @@ pxr::GfVec3f Point::GetNormal(Deformable* geom)
 }
 
 bool 
-Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit,
-  double maxDistance, double* minDistance) const
+Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const
 {
   return false;
 }
 
 bool 
-Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit,
-  double maxDistance, double* minDistance) const
+Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
-  const float distance = (point - points[id]).GetLength();
-  if ((maxDistance <= 0.f || distance < maxDistance ) && distance < hit->GetT()) {
-    hit->SetElementIndex(id);
-    hit->SetCoordinates(pxr::GfVec3f(0.f));
-    hit->SetT(distance);
-    return true;
-  }
   return false;
 }
 
