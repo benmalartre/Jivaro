@@ -438,13 +438,8 @@ void
 Mesh::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time)
 {
-  std::cout << "injct mesh " << prim.GetPath() << std::endl;
   if(prim.IsA<pxr::UsdGeomMesh>()) {
     pxr::UsdGeomMesh usdMesh(prim);
-    std::cout << "inject geometry" << std::endl;
-    std::cout << GetPositions() << std::endl;
-    std::cout << GetFaceCounts() << std::endl;
-    std::cout << GetFaceConnects() << std::endl;
 
     usdMesh.CreatePointsAttr().Set(GetPositions(), time);
     usdMesh.CreateFaceVertexCountsAttr().Set(GetFaceCounts(), time);

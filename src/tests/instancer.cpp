@@ -2,6 +2,7 @@
 
 #include "../geometry/instancer.h"
 #include "../geometry/mesh.h"
+#include "../geometry/perlin.h"
 #include "../tests/instancer.h"
 #include "../tests/utils.h"
 
@@ -26,6 +27,24 @@ void _GenerateRandomTriangle(Mesh* proto)
   proto->Set(positions, faceCounts, faceIndices);
 }
 
+void _GenerateRandomGround(Mesh* ground)
+{
+  ground->RegularGrid2D(0.005);
+  pxr::VtArray<pxr::GfVec3f>& positions = ground->GetPositions();
+
+  float octaves = 3;
+  float persistence = 0.5f;
+
+  for(size_t p = 0; p < positions.size(); ++p) {
+    positions[p][1] += Perlin::Perlin3D(
+      positions[p][0], 
+      positions[p][1], 
+      positions[p][2], 
+      octaves, 
+      persistence);
+  }
+}
+
 void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
@@ -41,6 +60,7 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
 
   _proto1Id = rootId.AppendChild(pxr::TfToken("proto1"));
   _proto2Id = rootId.AppendChild(pxr::TfToken("proto2"));
+  _groundId = rootId.AppendChild(pxr::TfToken("ground"));
   _instancerId = rootId.AppendChild(pxr::TfToken("instancer"));
 
   _proto1 = new Mesh();
@@ -48,8 +68,14 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   _proto2 = new Mesh;
   _GenerateRandomTriangle(_proto2);
 
+  _ground = new Mesh();
+  _GenerateRandomGround(_ground);
+
+
+
   _scene.InjectGeometry(stage, _proto1Id, _proto1, 1.f);
   _scene.InjectGeometry(stage, _proto2Id, _proto2, 1.f);
+  _scene.InjectGeometry(stage, _groundId, _ground, 1.f);
 
   //_instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d(1.f));
 }

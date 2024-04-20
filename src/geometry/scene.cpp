@@ -160,7 +160,6 @@ void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage,
  const pxr::SdfPath& path, Geometry* geometry, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-  std::cout << "Inject Geometry : " << path << std::endl;
   if(!prim.IsValid()) {
     switch (geometry->GetType()) {
       case Geometry::XFORM:
