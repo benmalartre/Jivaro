@@ -324,9 +324,11 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geom
 
   pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
   leaves.reserve(trianglePairs.size());
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
   for (auto& trianglePair : trianglePairs) {
     BVH::Cell* leaf =
-      new BVH::Cell(this, &trianglePair, trianglePair.GetWorldBoundingBox(geometry));
+      new BVH::Cell(this, &trianglePair, trianglePair.GetBoundingBox(positions, matrix));
 
     const BVH::Cell* root = GetRoot();
     BVH::ComputeCode(root, leaf->GetMidpoint());
@@ -343,11 +345,17 @@ _RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
   } 
   
   if (cell->IsLeaf()) {
-    Component* component = (Component*)cell->GetData();
-    const pxr::GfRange3f range = component->GetWorldBoundingBox(geometry);
-    cell->SetMin(range.GetMin());
-    cell->SetMax(range.GetMax());
-    return range;
+    if (geometry->GetType() >= Geometry::POINT) {
+      Component* component = (Component*)cell->GetData();
+      const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+      const pxr::GfRange3f range = component->GetBoundingBox(positions, geometry->GetMatrix());
+      cell->SetMin(range.GetMin());
+      cell->SetMax(range.GetMax());
+      return range;
+    } else {
+      // todo handle implicit geometries
+    }
+   
   } else {
     
     if (cell->GetLeft()) {

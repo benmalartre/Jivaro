@@ -84,7 +84,7 @@ Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* h
 pxr::GfRange3f 
 Edge::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const
 {
-  const pxr::GfVec3f extent(_radius);
+  const pxr::GfVec3f extent(radius);
 
   pxr::GfRange3f range;
   range.UnionWith(m.Transform(positions[vertices[0]] - extent));

@@ -74,7 +74,7 @@ Point::Touch(const pxr::GfVec3f* points,
 pxr::GfRange3f 
 Point::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const
 {
-  const pxr::GfVec3f extent(_radius);
+  const pxr::GfVec3f extent(0.05f);
 
   pxr::GfRange3f range;
   range.UnionWith(m.Transform(positions[id])-extent);
