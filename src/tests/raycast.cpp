@@ -1,4 +1,5 @@
 #include "../geometry/sampler.h"
+#include "../geometry/location.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 #include "../geometry/curve.h"
@@ -6,6 +7,7 @@
 #include "../geometry/points.h"
 #include "../geometry/implicit.h"
 #include "../geometry/triangle.h"
+#include "../geometry/edge.h"
 #include "../geometry/utils.h"
 #include "../geometry/scene.h"
 
@@ -82,9 +84,28 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
     pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
     double minDistance = DBL_MAX;
     Location hit;
+    Deformable* deformable;
     if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
-      results[index] = hit.GetPosition(collided);
+      switch (collided->GetType()) {
+        case Geometry::MESH:
+        {
+          Mesh* mesh = (Mesh*)collided;
+          Triangle* triangle = mesh->GetTriangle(hit.GetElementIndex());
+          results[index] = hit.GetPosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+          break;
+        }
+        case Geometry::CURVE:
+        {
+          //Curve* curve = (Curve*)collided;
+          //Edge* edge = curve->GetEdge(hit.GetElementIndex());
+          //results[index] = hit.GetPosition(collided->GetPositionsCPtr(), &edge->vertices[0], 2, curve->GetMatrix());
+          break;
+        }
+      default:
+        continue;
+      }
+      
       hits[index] = true;
     } else {
       hits[index] = false;

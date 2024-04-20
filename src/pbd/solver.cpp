@@ -4,6 +4,7 @@
 
 #include "../acceleration/bvh.h"
 #include "../acceleration/hashGrid.h"
+#include "../geometry/location.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 #include "../geometry/points.h"

@@ -1,4 +1,9 @@
-<
+#include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec2d.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/plane.h>
 #include "../geometry/intersection.h"
 
 JVR_NAMESPACE_OPEN_SCOPE

@@ -5,6 +5,7 @@
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/tf/stopwatch.h>
 #include "../geometry/voxels.h"
+#include "../geometry/location.h"
 #include "../geometry/deformable.h"
 #include "../geometry/intersection.h"
 #include "../acceleration/bvh.h"

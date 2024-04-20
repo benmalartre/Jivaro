@@ -10,15 +10,26 @@
 #include <pxr/base/gf/vec3f.h>
 
 #include "../common.h"
-#include "../geometry/location.h"
 #include "../geometry/triangle.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+/// Sample points
+struct Sample
+{
+  pxr::GfVec3i  elemIdx;
+  int           cellIdx;
+  pxr::GfVec3f  baryWeights;
+
+  pxr::GfVec3f GetPosition(const pxr::GfVec3f* positions) const;
+  pxr::GfVec3f GetNormal(const pxr::GfVec3f* normals) const;
+  pxr::GfVec3f GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) const;
+
+};
 
 #define DOT_EPSILON 33.f
 struct Cell {
-  std::vector<Location> samples;
+  std::vector<Sample> samples;
   int                 firstSampleIdx;
   int                 sampleCnt;
 };
@@ -29,14 +40,8 @@ void PoissonSampling(
   const pxr::VtArray<pxr::GfVec3f>& points,
   const pxr::VtArray<pxr::GfVec3f>& normals,
   const pxr::VtArray<int>& triangles,
-  pxr::VtArray<Location>& samples);
+  pxr::VtArray<Sample>& samples);
 
-void PoissonSampling(
-  float radius, int nbSamples,
-  const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& normals,
-  const pxr::VtArray<Triangle>& triangles,
-  pxr::VtArray<Location>& samples);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

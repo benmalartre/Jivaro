@@ -6,12 +6,12 @@
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/plane.h>
+
 #include "../common.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Intersector;
-class Geometry;
 
 class Location{
 protected:
@@ -60,11 +60,12 @@ public:
     return *(pxr::GfVec3f*)&_coords;};
 
   virtual float GetT() const { return _coords[3]; };
-  virtual pxr::GfVec3f GetPosition(Geometry* geometry) const;
-  virtual pxr::GfVec3f GetPosition(const pxr::GfRay& ray) const;
-  virtual pxr::GfVec3f GetNormal(Geometry* geometry) const;
 
-  virtual float GetDistance(Geometry* geometry, const pxr::GfVec3f& other);
+  virtual pxr::GfVec3f GetPosition(const pxr::GfVec3f* positions, int* elements, size_t sz
+    const pxr::GfMatrix4d&) const;
+
+  virtual pxr::GfVec3f GetNormal(const pxr::GfVec3f* positions, int* elements, size_t sz
+    const pxr::GfMatrix4d&) const;
   
   bool IsValid() const { return _geomId >= 0 && _elemId >= 0; };
 };
