@@ -50,8 +50,6 @@ public:
     const pxr::VtArray<pxr::GfVec3f>& positions, 
     const pxr::VtArray<int>& counts);
 
-  DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time) override;
-
   bool ClosestIntersection(const pxr::GfVec3f& origin, 
     const pxr::GfVec3f& direction, Location& location, float maxDistance);
 
@@ -63,6 +61,12 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+protected:
+  DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
 private:
   size_t                              _PointIndex(size_t curveIdx, size_t cvIdx);

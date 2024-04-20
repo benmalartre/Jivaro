@@ -110,7 +110,7 @@ protected:
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()){};
 
   template<typename T>
-  DirtyState _GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, float time, T* value);
+  DirtyState _GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, const pxr::UsdTimeCode& time, T* value);
 
   // infos
   short                               _mode;
@@ -127,7 +127,7 @@ protected:
 
 template<typename T>
 Geometry::DirtyState
-Geometry::_GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, float time, T *value)
+Geometry::_GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, const pxr::UsdTimeCode& time, T *value)
 {
   pxr::UsdAttribute attr = prim.GetAttribute(name);
   if(!attr.IsValid())return DirtyState::CLEAN;

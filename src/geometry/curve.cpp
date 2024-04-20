@@ -1,5 +1,6 @@
 // Curve
 //----------------------------------------------
+#include <pxr/usd/usdGeom/basisCurves.h>
 #include "../geometry/curve.h"
 #include "../geometry/utils.h"
 #include "../geometry/sampler.h"
@@ -81,12 +82,6 @@ Curve::Set(
 {
   _cvCounts = counts;
   SetPositions(positions);
-}
-
-Geometry::DirtyState 
-Curve::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
-{
-  return Geometry::CLEAN;
 }
 
 bool 
@@ -207,6 +202,31 @@ Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
     _radius[s * 4 + 1] = width * 0.8;
     _radius[s * 4 + 2] = width * 0.4;
     _radius[s * 4 + 3] = width * 0.2;
+  }
+}
+
+Geometry::DirtyState 
+Curve::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+{
+  if(prim.IsValid() && prim.IsA<pxr::UsdGeomCurves>())
+  {
+    _previous = _positions;
+    pxr::UsdGeomBasisCurves usdCurve(prim);
+    const size_t nbPositions = _positions.size();
+    usdCurve.GetPointsAttr().Get(&_positions, time);
+  }
+  return Geometry::DirtyState::DEFORM;
+}
+
+void 
+Curve::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time)
+{
+  if(prim.IsA<pxr::UsdGeomCurves>()) {
+    pxr::UsdGeomCurves usdCurve(prim);
+
+    //usdCurve.CreatePointsAttr().Set(GetPositions(), time);
+    //usdCurve.CreateCurveVertexCountsAttr().Set(GetCvCounts(), time);
   }
 }
 

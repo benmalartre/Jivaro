@@ -127,7 +127,7 @@ public:
 protected:
   DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
-  virtual void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
 private:

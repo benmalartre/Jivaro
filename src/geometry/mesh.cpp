@@ -336,7 +336,7 @@ Mesh::GetNeighbors()
 void Mesh::ComputeNeighbors()
 {
   if (!BITMASK_CHECK(_flags, Mesh::HALFEDGES)) {
-    _halfEdges.ComputeHalfEdges();
+    ComputeHalfEdges();
   }
   _halfEdges.ComputeNeighbors();
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
@@ -421,7 +421,7 @@ void Mesh::Prepare(bool connectivity)
 }
 
 Geometry::DirtyState 
-Mesh::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+Mesh::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   if(prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>())
   {
@@ -430,8 +430,7 @@ Mesh::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
     const size_t nbPositions = _positions.size();
     usdMesh.GetPointsAttr().Get(&_positions, time);
   }
-  SetMatrix(matrix);
-  return _Sync(prim, matrix, time);
+  return Geometry::DirtyState::DEFORM;
 }
 
 void 
@@ -441,9 +440,9 @@ Mesh::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   if(prim.IsA<pxr::UsdGeomMesh>()) {
     pxr::UsdGeomMesh usdMesh(prim);
 
-    usdMesh.CreatePointsAttr().Set(GetPositions(), time);
-    usdMesh.CreateFaceVertexCountsAttr().Set(GetFaceCounts(), time);
-    usdMesh.CreateFaceVertexIndicesAttr().Set(GetFaceConnects(), time);
+    //usdMesh.CreatePointsAttr().Set(GetPositions(), time);
+    //usdMesh.CreateFaceVertexCountsAttr().Set(GetFaceCounts(), time);
+    //usdMesh.CreateFaceVertexIndicesAttr().Set(GetFaceConnects(), time);
   }
 }
 
