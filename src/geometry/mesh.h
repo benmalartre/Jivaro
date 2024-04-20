@@ -40,6 +40,7 @@ public:
   const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
   void ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors);
   
+  Triangle* GetTriangle(uint32_t index) {return &_triangles[index];};
   const Triangle* GetTriangle(uint32_t index) const {return &_triangles[index];};
   pxr::VtArray<Triangle>& GetTriangles(){return _triangles;};
   pxr::VtArray<TrianglePair>& GetTrianglePairs();

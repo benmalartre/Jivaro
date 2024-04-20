@@ -12,6 +12,7 @@
 
 #include "../geometry/mesh.h"
 #include "../geometry/utils.h"
+#include "../geometry/location.h"
 #include "../geometry/intersection.h"
 
 #include "../utils/timer.h"

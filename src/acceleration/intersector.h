@@ -8,11 +8,13 @@
 #include <pxr/base/gf/range3f.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
+#include "../geometry/location.h"
 #include "../geometry/intersection.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
+class Location;
 class Intersector : public pxr::GfRange3d
 { 
 public:

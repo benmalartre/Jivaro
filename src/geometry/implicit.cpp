@@ -10,6 +10,7 @@
 
 #include "../geometry/implicit.h"
 #include "../geometry/utils.h"
+#include "../geometry/location.h"
 #include "../geometry/intersection.h"
 
 

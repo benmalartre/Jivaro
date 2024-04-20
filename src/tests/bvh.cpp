@@ -88,7 +88,24 @@ void TestBVH::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
     Location hit;
     if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
-      results[index] = hit.GetPosition(collided);
+      switch (collided->GetType()) {
+      case Geometry::MESH:
+      {
+        Mesh* mesh = (Mesh*)collided;
+        Triangle* triangle = mesh->GetTriangle(hit.GetElementIndex());
+        results[index] = hit.GetPosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+        break;
+      }
+      case Geometry::CURVE:
+      {
+        //Curve* curve = (Curve*)collided;
+        //Edge* edge = curve->GetEdge(hit.GetElementIndex());
+        //results[index] = hit.GetPosition(collided->GetPositionsCPtr(), &edge->vertices[0], 2, curve->GetMatrix());
+        break;
+      }
+      default:
+        continue;
+      }
       hits[index] = true;
     } else {
       hits[index] = false;

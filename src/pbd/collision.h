@@ -6,6 +6,7 @@
 #include <pxr/base/gf/matrix4f.h>
 
 #include "../common.h"
+#include "../geometry/location.h"
 #include "../geometry/intersection.h"
 #include "../pbd/mask.h"
 

@@ -61,10 +61,10 @@ public:
 
   virtual float GetT() const { return _coords[3]; };
 
-  virtual pxr::GfVec3f GetPosition(const pxr::GfVec3f* positions, int* elements, size_t sz
+  virtual pxr::GfVec3f GetPosition(const pxr::GfVec3f* positions, int* elements, size_t sz,
     const pxr::GfMatrix4d&) const;
 
-  virtual pxr::GfVec3f GetNormal(const pxr::GfVec3f* positions, int* elements, size_t sz
+  virtual pxr::GfVec3f GetNormal(const pxr::GfVec3f* positions, int* elements, size_t sz,
     const pxr::GfMatrix4d&) const;
   
   bool IsValid() const { return _geomId >= 0 && _elemId >= 0; };

@@ -18,25 +18,25 @@ Location::GetPosition(const pxr::GfVec3f* positions, int* elements, size_t sz,
  const pxr::GfMatrix4d& m) const 
 {
   pxr::GfVec3f result;
-  if(elements) {
+  if(elements)
     for(size_t d = 0; d < sz; ++d) 
       result += positions[elements[d]] * _coords[d];
   else 
-    result += positions[_elemIdx];
+    result += positions[_elemId];
 
   return m.Transform(result);
 }
 
 pxr::GfVec3f
-GetNormal(const pxr::GfVec3f* normals, int* elements, size_t sz, 
+Location::GetNormal(const pxr::GfVec3f* normals, int* elements, size_t sz, 
   const pxr::GfMatrix4d& m) const
 {
   pxr::GfVec3f result;
-  if(elements) {
-    for(size_t d = 0; d < sz; ++d) 
-      result += normals[elements[_elemIdx * dim + d]] * _coords[d];
-  else 
-    result += normals[_elemIdx];
+  if (elements)
+    for (size_t d = 0; d < sz; ++d)
+      result += normals[elements[d]] * _coords[d];
+  else
+    result += normals[_elemId];
 
   return m.TransformDir(result);
 }
