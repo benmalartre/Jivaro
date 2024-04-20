@@ -8,7 +8,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-struct Sample;
+struct Location;
 
 class Curve : public Deformable {
 public:
