@@ -757,29 +757,6 @@ void Mesh::PolygonSoup(size_t numPolygons, const pxr::GfVec3f& minimum,
   Set(position, faceVertexCount, faceVertexConnect);
 }
 
-void 
-Mesh::MaterializeSamples(const pxr::VtArray<pxr::GfVec3f>& points, float size)
-{
-  size_t numTriangles = points.size();
-  size_t numPoints = numTriangles * 3;
-  pxr::VtArray<int> faceVertexCount(numTriangles);
-  for (size_t i = 0; i < numTriangles; ++i) {
-    faceVertexCount[i] = 3;
-  }
-
-  pxr::VtArray<int> faceVertexConnect(numPoints);
-  for (size_t i = 0; i < numPoints; ++i) {
-    faceVertexConnect[i] = i;
-  }
-
-  pxr::VtArray<pxr::GfVec3f> positions(numPoints);
-  for (size_t p = 0; p < numTriangles; ++p) {
-    positions[p * 3] = points[p] - pxr::GfVec3f(size, 0, 0);
-    positions[p * 3 + 1] = points[p] + pxr::GfVec3f(size, 0, 0);
-    positions[p * 3 + 2] = points[p] + pxr::GfVec3f(0, size, 0);
-  }
-  Set(positions, faceVertexCount, faceVertexConnect);
-}
 
 void Mesh::ColoredPolygonSoup(size_t numPolygons, 
   const pxr::GfVec3f& minimum, const pxr::GfVec3f& maximum)

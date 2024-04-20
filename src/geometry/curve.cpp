@@ -176,35 +176,6 @@ Curve::SetCurveRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
   }
 }
 
-void
-Curve::MaterializeSamples(const pxr::VtArray<Sample>& samples, int N, 
-  const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, float width)
-{
-  size_t numCurves = samples.size();
-  _cvCounts.resize(numCurves);
-  size_t numCVs = N * numCurves;
-  _radius.resize(numCVs);
-  _positions.resize(numCVs);
-
-  std::fill(_cvCounts.begin(), _cvCounts.end(), N);
-
-  for (size_t s = 0; s < numCurves; ++s) {
-    const pxr::GfVec3f& origin = samples[s].GetPosition(positions);
-    const pxr::GfVec3f& normal = samples[s].GetNormal(normals);
-    const pxr::GfVec3f& tangent = samples[s].GetTangent(positions, normals);
-
-    _positions[s * 4] = origin;
-    _positions[s * 4 + 1] = origin + normal * 0.1 + tangent * 0.33;
-    _positions[s * 4 + 2] = origin + normal * 0.5 + tangent * 0.66;
-    _positions[s * 4 + 3] = origin + normal + tangent;
-
-    _radius[s * 4] = width;
-    _radius[s * 4 + 1] = width * 0.8;
-    _radius[s * 4 + 2] = width * 0.4;
-    _radius[s * 4 + 3] = width * 0.2;
-  }
-}
-
 Geometry::DirtyState 
 Curve::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {

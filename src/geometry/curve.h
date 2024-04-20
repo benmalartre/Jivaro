@@ -43,9 +43,6 @@ public:
 
   float GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex);
 
-  void MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
-    const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, float width);
-
   void Set(
     const pxr::VtArray<pxr::GfVec3f>& positions, 
     const pxr::VtArray<int>& counts);

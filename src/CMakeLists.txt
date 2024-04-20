@@ -65,6 +65,7 @@ add_executable(${TARGET}
   geometry/sampler.cpp
   geometry/voxels.cpp
   geometry/shape.cpp
+  geometry/location.cpp
   geometry/intersection.cpp
   geometry/point.cpp
   geometry/edge.cpp

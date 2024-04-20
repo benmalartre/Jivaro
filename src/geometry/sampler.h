@@ -10,26 +10,15 @@
 #include <pxr/base/gf/vec3f.h>
 
 #include "../common.h"
+#include "../geometry/location.h"
 #include "../geometry/triangle.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-/// Sample points
-struct Sample
-{
-  pxr::GfVec3i  elemIdx;
-  int           cellIdx;
-  pxr::GfVec3f  baryWeights;
-
-  pxr::GfVec3f GetPosition(const pxr::GfVec3f* positions) const;
-  pxr::GfVec3f GetNormal(const pxr::GfVec3f* normals) const;
-  pxr::GfVec3f GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) const;
-
-};
 
 #define DOT_EPSILON 33.f
 struct Cell {
-  std::vector<Sample> samples;
+  std::vector<Location> samples;
   int                 firstSampleIdx;
   int                 sampleCnt;
 };
