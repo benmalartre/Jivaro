@@ -204,13 +204,16 @@ void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bv
 
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);
-  pxr::VtArray<pxr::GfVec3f> rotations(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
     scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
   }
+
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  pxr::UsdGeomPointInstancer instancer(prim);
 
   instancer.GetPositionsAttr().Set(points);
   instancer.GetScalesAttr().Set(scales);

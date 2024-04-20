@@ -23,27 +23,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class TestParticles : public Execution {
-public:
-  friend class Scene;
-  TestParticles() : Execution(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
-private:
-  Solver*                                                    _solver;
-  Plane*                                                     _ground;
-  Points*                                                    _points;
-  pxr::SdfPath                                               _groundId;
-  pxr::SdfPath                                               _solverId;
-  pxr::SdfPath                                               _pointsId;
 
-};
-
-Execution* CreateTestParticles()
-{
-  return new TestParticles();
-}
 
 
 static Voxels* _Voxelize(pxr::UsdGeomMesh& usdMesh, pxr::SdfPath& path, float radius)

@@ -46,7 +46,7 @@ public:
   void MaterializeSamples(const pxr::VtArray<Sample>& samples, int N,
     const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, float width);
 
-  void Init(
+  void Set(
     const pxr::VtArray<pxr::GfVec3f>& positions, 
     const pxr::VtArray<int>& counts);
 

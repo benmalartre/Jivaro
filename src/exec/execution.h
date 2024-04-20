@@ -1,11 +1,11 @@
 #ifndef JVR_EXEC_EXECUTION_H
 #define JVR_EXEC_EXECUTION_H
 
+#include <pxr/base/tf/hashMap.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/base/work/loops.h>
 #include <pxr/imaging/hd/changeTracker.h>
-#include "../common.h"
 #include "../geometry/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE

@@ -24,46 +24,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Curve;
-class Mesh;
-class Points;
-class BVH;
-
-
-class TestBVH : public Execution {
-public:
-  friend class Scene;
-  TestBVH() : Execution(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
-  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
-  void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
-
-protected:
-  void _UpdateRays();
-  void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results, bool* hits);
-  void _UpdateHits();
-
-private:
-  Mesh*                     _mesh;
-  Curve*                    _rays;
-  Points*                   _hits;
-  BVH                       _bvh;
-  Instancer*                _leaves;
-  pxr::SdfPath              _meshId;
-  pxr::SdfPath              _raysId;
-  pxr::SdfPath              _hitsId;
-  pxr::SdfPath              _bvhId;
-  std::vector<Geometry*>    _meshes;
-  std::vector<pxr::SdfPath> _meshesId;
-
-};
-
-Execution* CreateTestBVH()
-{
-  return new TestBVH();
-}
 
 
 void TestBVH::_UpdateRays() 
@@ -229,7 +189,7 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
 
-  const size_t n = 32;
+  const size_t n = 512;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
@@ -257,16 +217,20 @@ void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   
   if (_meshes.size()) {
     _bvh.Update();
-    _UpdateBVHInstancer(stage, &_bvh, _leaves);
+    _UpdateBVHInstancer(stage, _bvhId, &_bvh, time);
     _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
   }
 
   _UpdateRays();
-  _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker::DirtyPoints);
-  _scene.MarkPrimDirty(_meshId, pxr::HdChangeTracker::AllDirty);
+  _scene.MarkPrimDirty(_raysId, 
+    pxr::HdChangeTracker::DirtyPoints);
+
+  _scene.MarkPrimDirty(_meshId, 
+    pxr::HdChangeTracker::DirtyPoints|
+    pxr::HdChangeTracker::DirtyTransform);
 
   _UpdateHits();
-  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::AllDirty);
+  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::DirtyTopology);
 }
 
 void TestBVH::TerminateExec(pxr::UsdStageRefPtr& stage)

@@ -75,13 +75,18 @@ Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
 
 
 void 
-Curve::Init(
+Curve::Set(
   const pxr::VtArray<pxr::GfVec3f>& positions, 
   const pxr::VtArray<int>& counts)
 {
   _cvCounts = counts;
-  _positions = positions;
-  _normals = positions;
+  SetPositions(positions);
+}
+
+Geometry::DirtyState 
+Curve::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+{
+  return Geometry::CLEAN;
 }
 
 bool 

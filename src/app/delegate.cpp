@@ -251,7 +251,6 @@ void Delegate::UpdateScene()
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
     if(prim.second.bits != pxr::HdChangeTracker::Clean) {
-      std::cout << "dirty : " << prim.first << std::endl;
       tracker.MarkRprimDirty(prim.first, prim.second.bits);
     }
   }

@@ -102,17 +102,6 @@ add_executable(${TARGET}
   command/router.cpp
   command/delegate.cpp
   command/manager.cpp
-
-  #tests/location.cpp
-  tests/utils.cpp
-  tests/pbd.cpp
-  tests/hair.cpp
-  tests/particles.cpp
-  tests/raycast.cpp
-  tests/bvh.cpp
-  #tests/stageGraph.cpp
-  #tests/stageUI.cpp
-
   app/time.cpp
   app/utils.cpp
   app/commands.cpp
@@ -128,6 +117,16 @@ add_executable(${TARGET}
   app/tools.cpp
   app/delegate.cpp
   app/application.cpp
+  #tests/location.cpp
+  tests/utils.cpp
+  tests/pbd.cpp
+  tests/hair.cpp
+  tests/particles.cpp
+  tests/raycast.cpp
+  tests/bvh.cpp
+  tests/instancer.cpp
+  #tests/stageGraph.cpp
+  #tests/stageUI.cpp
   main.cpp
 )
 

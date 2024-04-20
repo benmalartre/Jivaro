@@ -23,12 +23,11 @@
 #include "../tests/pbd.h"
 #include "../tests/hair.h"
 #include "../tests/bvh.h"
+#include "../tests/instancer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 const char* Application::name = "Jivaro";
-
-extern Execution* CreateTestPBD();
 
 // singleton
 //----------------------------------------------------------------------------
@@ -278,7 +277,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  _exec = CreateTestBVH();
+  _exec = new TestInstancer();
   //_exec = CreateTestRaycast();
   //_exec = CreateTestParticles();
   //_exec = CreateTestPBD();

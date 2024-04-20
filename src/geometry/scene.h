@@ -3,7 +3,6 @@
 #include <vector>
 #include "../common.h"
 #include <pxr/usd/usd/stage.h>
-#include <pxr/usd/usd/stageCache.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/base/tf/hashmap.h>
 #include <pxr/base/tf/denseHashSet.h>
