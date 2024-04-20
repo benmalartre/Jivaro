@@ -68,8 +68,7 @@ Edge::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) 
 }
 
 bool 
-Edge::Touch(const pxr::GfVec3f* points, 
-  const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const
+Edge::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const
 {
   return false;
 }

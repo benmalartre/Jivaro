@@ -65,10 +65,9 @@ Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* 
 }
 
 bool
-Point::Touch(const pxr::GfVec3f* points, 
-  const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const
+Point::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const
 {
-  
+
   return false;
 }
 

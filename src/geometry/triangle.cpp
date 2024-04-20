@@ -93,6 +93,7 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locati
   return false;
 }
 
+
 //-------------------------------------------------------
 // Triangle Closest Point
 //-------------------------------------------------------
@@ -100,9 +101,9 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Lo
 {
   pxr::GfVec3f edge0 = points[vertices[1]] - points[vertices[0]];
   pxr::GfVec3f edge1 = points[vertices[2]] - points[vertices[0]];
-  
   pxr::GfVec3f v0 = points[vertices[0]] - point;
-  
+  pxr::GfVec3f closest = points[vertices[0]];
+
   float a = edge0 * edge0;
   float b = edge0 * edge1;
   float c = edge1 * edge1;
@@ -166,7 +167,6 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Lo
     }
   }
   
-  pxr::GfVec3f closest = points[vertices[0]];
   closest += s * edge0 + t * edge1;
   
   float distance = (point - closest).GetLength();
@@ -279,14 +279,6 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
   if(!PlaneBoxTest(normal, v0, boxhalfsize)) return false;
   
   return true;   // box and triangle overlaps
-}
-
-//-------------------------------------------------------
-// Triangle Intersect Other Triangle
-//-------------------------------------------------------
-bool Triangle::Touch(const pxr::GfVec3f* points, const Triangle& other, Location* lt0, Location* lt1) const
-{
-  return false;
 }
 
 //-------------------------------------------------------

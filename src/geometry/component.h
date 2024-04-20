@@ -8,7 +8,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <limits>
-  
+
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/ray.h>
@@ -30,8 +30,7 @@ struct Component {
   Component(uint32_t index) : id(index) {};
   uint32_t GetIndex(){return id;};
 
-  virtual bool Touch(const pxr::GfVec3f* points, 
-    const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const = 0;
+  virtual bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const = 0;
   virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const = 0;
   virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const = 0;
 

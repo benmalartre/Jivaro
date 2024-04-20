@@ -33,8 +33,7 @@ struct Edge : public Component {
 
   bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const override;
   bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const override;
-  bool Touch(const pxr::GfVec3f* points, 
-    const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const override;
+  bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const override;
 
   bool Intersect(const Edge& other, float epsilon=0.0001);
 
