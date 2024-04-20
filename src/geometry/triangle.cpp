@@ -282,6 +282,14 @@ bool Triangle::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
 }
 
 //-------------------------------------------------------
+// Triangle Intersect Other Triangle
+//-------------------------------------------------------
+bool Triangle::Touch(const pxr::GfVec3f* points, const Triangle& other, Location* lt0, Location* lt1) const
+{
+  return false;
+}
+
+//-------------------------------------------------------
 // TrianglePair vertices
 //-------------------------------------------------------
 static bool _IsVertexShared(size_t vertex, const pxr::GfVec3i& tri1, const pxr::GfVec3i& tri2)

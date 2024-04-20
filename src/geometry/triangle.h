@@ -4,7 +4,6 @@
 #ifndef JVR_GEOMETRY_TRIANGLE_H
 #define JVR_GEOMETRY_TRIANGLE_H
 
-#include "../common.h"
 #include "../geometry/component.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -88,6 +87,7 @@ struct Triangle : public Component{
   bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const override;
   bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
     const pxr::GfVec3f& boxhalfsize) const override;
+  bool Touch(const pxr::GfVec3f* points, const Triangle& other, Location* lt0, Location* lt1) const;
 
   pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const override;
 

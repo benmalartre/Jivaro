@@ -117,7 +117,7 @@ public:
 
 private:
   Cell                        _root;
-
+  std::vector<Cell*>          _geometryCells;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

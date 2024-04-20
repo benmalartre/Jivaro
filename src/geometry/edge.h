@@ -4,7 +4,6 @@
 #ifndef JVR_GEOMETRY_EDGE_H
 #define JVR_GEOMETRY_EDGE_H
 
-#include "../common.h"
 #include "../geometry/component.h"
 
 

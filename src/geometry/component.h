@@ -8,7 +8,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <limits>
-
+  
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/ray.h>
