@@ -29,7 +29,7 @@ protected:
   void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
 
 private:
-  std::vector<Mesh*>        _subjects; 
+  std::vector<Geometry*>    _subjects; 
   Mesh*                     _mesh;
   Curve*                    _rays;
   Points*                   _hits;

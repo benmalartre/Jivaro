@@ -201,7 +201,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, 0.f));
 
-  const size_t n = 512;
+  const size_t n = 64;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
@@ -222,6 +222,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
 
   _UpdateHits();
+  UpdateExec(stage, Application::Get()->GetTime().GetActiveTime());
 
 }
 

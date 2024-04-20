@@ -27,8 +27,7 @@ struct Point : public Component {
   bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const override;
   bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const override;
 
-  pxr::GfRange3f GetWorldBoundingBox(const Geometry* points) const override;
-  pxr::GfRange3f GetLocalBoundingBox(const Geometry* points) const override;
+  pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const override;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

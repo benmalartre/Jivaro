@@ -71,23 +71,15 @@ Point::Touch(const pxr::GfVec3f* points,
   return false;
 }
 
-pxr::GfRange3f
-Point::GetWorldBoundingBox(const Geometry* geometry) const
+pxr::GfRange3f 
+Point::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const
 {
-  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfMatrix4d& matrix = geometry->GetMatrix();
-  const pxr::GfVec3f extent(0.01f);
+  const pxr::GfVec3f extent(_radius);
 
-  return pxr::GfRange3f().UnionWith(matrix.Transform(points[id]-extent));
-}
-
-pxr::GfRange3f
-Point::GetLocalBoundingBox(const Geometry* geometry) const
-{
-  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfVec3f extent(0.01f);
-
-  return pxr::GfRange3f().UnionWith(points[id]-extent);
+  pxr::GfRange3f range;
+  range.UnionWith(m.Transform(positions[id])-extent);
+  range.UnionWith(m.Transform(positions[id])+extent);
+  return range;
 }
 
 

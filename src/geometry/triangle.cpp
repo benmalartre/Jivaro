@@ -61,32 +61,14 @@ Triangle::GetNormal(const pxr::GfVec3f* points)
 //-------------------------------------------------------
 // Triangle bounding box
 //-------------------------------------------------------
-pxr::GfRange3f
-Triangle::GetWorldBoundingBox(const Geometry* geometry) const
+pxr::GfRange3f 
+Triangle::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const
 {
-
-  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfMatrix4d& matrix = geometry->GetMatrix();
-
   pxr::GfRange3f range;
 
-  range.UnionWith(matrix.Transform(points[vertices[0]]));
-  range.UnionWith(matrix.Transform(points[vertices[1]]));
-  range.UnionWith(matrix.Transform(points[vertices[2]]));
- 
-  return range;
-}
-
-pxr::GfRange3f
-Triangle::GetLocalBoundingBox(const Geometry* geometry) const
-{
-
-  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  pxr::GfRange3f range;
-
-  range.UnionWith(points[vertices[0]]);
-  range.UnionWith(points[vertices[1]]);
-  range.UnionWith(points[vertices[2]]);
+  range.UnionWith(m.Transform(positions[vertices[0]]));
+  range.UnionWith(m.Transform(positions[vertices[1]]));
+  range.UnionWith(m.Transform(positions[vertices[2]]));
  
   return range;
 }
@@ -350,42 +332,20 @@ TrianglePair::GetVertices() const
 //-------------------------------------------------------
 // TrianglePair bounding box
 //-------------------------------------------------------
-pxr::GfRange3f
-TrianglePair::GetWorldBoundingBox(const Geometry* geometry) const
+pxr::GfRange3f 
+TrianglePair::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const
 {
-  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfMatrix4d& matrix = geometry->GetMatrix();
-
   pxr::GfRange3f range;
 
   if (left) {
-    range.UnionWith(matrix.Transform(points[left->vertices[0]]));
-    range.UnionWith(matrix.Transform(points[left->vertices[1]]));
-    range.UnionWith(matrix.Transform(points[left->vertices[2]]));
+    range.UnionWith(m.Transform(positions[left->vertices[0]]));
+    range.UnionWith(m.Transform(positions[left->vertices[1]]));
+    range.UnionWith(m.Transform(positions[left->vertices[2]]));
   } 
   if (right) {
-    range.UnionWith(matrix.Transform(points[right->vertices[0]]));
-    range.UnionWith(matrix.Transform(points[right->vertices[1]]));
-    range.UnionWith(matrix.Transform(points[right->vertices[2]]));
-  }
-  return range;
-}
-
-pxr::GfRange3f
-TrianglePair::GetLocalBoundingBox(const Geometry* geometry) const
-{
-  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  pxr::GfRange3f range;
-
-  if (left) {
-    range.UnionWith(points[left->vertices[0]]);
-    range.UnionWith(points[left->vertices[1]]);
-    range.UnionWith(points[left->vertices[2]]);
-  } 
-  if (right) {
-    range.UnionWith(points[right->vertices[0]]);
-    range.UnionWith(points[right->vertices[1]]);
-    range.UnionWith(points[right->vertices[2]]);
+    range.UnionWith(m.Transform(positions[right->vertices[0]]));
+    range.UnionWith(m.Transform(positions[right->vertices[1]]));
+    range.UnionWith(m.Transform(positions[right->vertices[2]]));
   }
   return range;
 }

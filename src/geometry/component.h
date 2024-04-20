@@ -35,8 +35,7 @@ struct Component {
   virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const = 0;
   virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const = 0;
 
-  virtual pxr::GfRange3f GetLocalBoundingBox(const Geometry* geometry) const = 0;
-  virtual pxr::GfRange3f GetWorldBoundingBox(const Geometry* geometry) const = 0;
+  virtual pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const = 0;
 
 };
 

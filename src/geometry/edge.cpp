@@ -81,33 +81,19 @@ Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* h
   return false;
 }
 
-pxr::GfRange3f
-Edge::GetWorldBoundingBox(const Geometry* geometry) const
+pxr::GfRange3f 
+Edge::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const
 {
-  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfMatrix4d& matrix = geometry->GetMatrix();
-  const pxr::GfVec3f extent(0.01f);
+  const pxr::GfVec3f extent(_radius);
 
   pxr::GfRange3f range;
-  range.UnionWith(matrix.Transform(points[vertices[0]] - extent));
-  range.UnionWith(matrix.Transform(points[vertices[0]] + extent));
-  range.UnionWith(matrix.Transform(points[vertices[1]] - extent));
-  range.UnionWith(matrix.Transform(points[vertices[1]] + extent));
+  range.UnionWith(m.Transform(positions[vertices[0]] - extent));
+  range.UnionWith(m.Transform(positions[vertices[0]] + extent));
+  range.UnionWith(m.Transform(positions[vertices[1]] - extent));
+  range.UnionWith(m.Transform(positions[vertices[1]] + extent));
   return range;
 }
 
-pxr::GfRange3f
-Edge::GetLocalBoundingBox(const Geometry* geometry) const
-{
-  const pxr::GfVec3f* points = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfVec3f extent(0.01f);
 
-  pxr::GfRange3f range;
-  range.UnionWith(points[vertices[0]] - extent);
-  range.UnionWith(points[vertices[0]] + extent);
-  range.UnionWith(points[vertices[1]] - extent);
-  range.UnionWith(points[vertices[1]] + extent);
-  return range;
-}
 
 JVR_NAMESPACE_CLOSE_SCOPE
