@@ -93,18 +93,19 @@ void Instancer::Set(
     );
   }
 
-void Instancer::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& code)
+void Instancer::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 {
   pxr::UsdGeomPointInstancer instancer(prim);
-
-  instancer.CreatePositionsAttr().Set(_positions);
-  instancer.CreateProtoIndicesAttr().Set(_protoIndices);
-  instancer.CreateScalesAttr().Set(_scales);
-  //instancer.CreateIdsAttr().Set(indices);
-  instancer.CreateOrientationsAttr().Set(_rotations);
-
+  
+  instancer.CreatePositionsAttr().Set(_positions, time);
+  instancer.CreateScalesAttr().Set(_scales, time);
+  instancer.CreateOrientationsAttr().Set(_rotations, time);
+  instancer.CreateProtoIndicesAttr().Set(_protoIndices, time);
   for(size_t p = 0; p < _prototypes.size(); ++p)
     instancer.CreatePrototypesRel().AddTarget(_prototypes[p]);
+
+  if(_indices.size() == _positions.size())
+    instancer.CreateIdsAttr().Set(_indices, time);
 
   //if(_haveColors)
   pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
@@ -112,7 +113,7 @@ void Instancer::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent, const
     primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
   colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
   colorPrimvar.SetElementSize(1);
-  colorPrimvar.Set(_colors);
+  colorPrimvar.Set(_colors, time);
 
 }
 

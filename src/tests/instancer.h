@@ -17,12 +17,10 @@ public:
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 
 private:
-  Mesh*                     _proto1;
-  Mesh*                     _proto2;
+  std::vector<Mesh*>        _protos;
   Mesh*                     _ground;
   Instancer*                _instancer;
-  pxr::SdfPath              _proto1Id;
-  pxr::SdfPath              _proto2Id;
+  std::vector<pxr::SdfPath> _protosId;
   pxr::SdfPath              _groundId;
   pxr::SdfPath              _instancerId;
 

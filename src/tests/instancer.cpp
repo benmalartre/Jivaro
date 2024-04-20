@@ -46,9 +46,8 @@ void _GenerateRandomGround(Mesh* ground)
   }
 }
 
-Instancer* _SetupInstancer()
+Instancer* _GenerateInstancer(size_t numPoints, size_t numPrototypes)
 {
-  size_t numPoints = 32;
 
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);
@@ -60,7 +59,7 @@ Instancer* _SetupInstancer()
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     points[pointIdx] = pxr::GfVec3f(RANDOM_LO_HI(-5,5), pointIdx, RANDOM_LO_HI(-5,5));
     scales[pointIdx] = pxr::GfVec3f(RANDOM_0_1 + 0.5);
-    protoIndices[pointIdx] = 0;
+    protoIndices[pointIdx] = RANDOM_LO_HI(0, numPrototypes-1);
     indices[pointIdx] = pointIdx;
     colors[pointIdx] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
@@ -88,7 +87,7 @@ void _UpdateInstancer(Instancer* instancer, float time)
   //pxr::VtArray<pxr::GfQuath> rotations(numPoints);
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    //points[pointIdx] += pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
+    points[pointIdx] += pxr::GfVec3f(RANDOM_LO_HI(-1,1), RANDOM_LO_HI(-1,1), RANDOM_LO_HI(-1,1));
     //scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
     //rotations[pointIdx] = pxr::GfQuath::GetIdentity();
   }
@@ -102,6 +101,7 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
 
+  // root prim
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   if(!rootPrim.IsValid()) {
     pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
@@ -109,34 +109,41 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
     stage->SetDefaultPrim(rootPrim);
   }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
+  const size_t numProtos = 8;
 
-  _proto1Id = rootId.AppendChild(pxr::TfToken("proto1"));
-  _proto2Id = rootId.AppendChild(pxr::TfToken("proto2"));
-  _groundId = rootId.AppendChild(pxr::TfToken("ground"));
+  // instancer
   _instancerId = rootId.AppendChild(pxr::TfToken("instancer"));
+  _instancer = _GenerateInstancer(32, numProtos);
 
-  _proto1 = new Mesh();
-  _GenerateRandomTriangle(_proto1);
-  _proto2 = new Mesh;
-  _GenerateRandomTriangle(_proto2);
+  // prototypes
 
+  _protos.resize(numProtos);
+  _protosId.resize(numProtos);
+  for(size_t p  =0; p < numProtos; ++p) {
+    _protosId[p] = rootId.AppendChild(pxr::TfToken("proto_"+std::to_string(p)));
+    _protos[p] = new Mesh();
+    _GenerateRandomTriangle(_protos[p]);
+    _instancer->AddPrototype(_protosId[p]);
+  }
+
+  // ground
+  _groundId = rootId.AppendChild(pxr::TfToken("ground"));
   _ground = new Mesh(pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f)));
   _GenerateRandomGround(_ground);
 
-  _scene.InjectGeometry(stage, _proto1Id, _proto1, 1.f);
-  _scene.InjectGeometry(stage, _proto2Id, _proto2, 1.f);
-  _scene.InjectGeometry(stage, _groundId, _ground, 1.f);
-
-  _instancer = new Instancer();
-  _instancer->AddPrototype(_proto1Id);
-  _instancer->AddPrototype(_proto2Id);
-
-  _scene.InjectGeometry(stage, _groundId, _ground, 1.f);
-  /*
-  for(size_t i = 0; i < 101 ; i+= 10) {
-    _scene.InjectGeometry(stage, _instancerId, _instancer, (float)i);
+  // inject in usd scene
+  for(size_t p  =0; p < numProtos; ++p) {
+    _scene.InjectGeometry(stage, _protosId[p], _protos[p], 1.f);
   }
-  */
+  _scene.InjectGeometry(stage, _groundId, _ground, 1.f);
+  _scene.InjectGeometry(stage, _instancerId, _instancer, 1.f);
+  
+  for(size_t i = 2; i < 101 ; i+= 10) {
+    float time = i;
+    _UpdateInstancer(_instancer, time);
+    _scene.InjectGeometry(stage, _instancerId, _instancer, time);
+  }
+  
 
   //_instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d(1.f));
 }

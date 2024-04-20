@@ -144,15 +144,16 @@ void Scene::AddGeometry(const pxr::SdfPath& path, Geometry* geom)
 
 
 pxr::GfMatrix4d _GetParentXform(const pxr::UsdPrim& prim,
-  const pxr::UsdTimeCode& time) {
+  const pxr::UsdTimeCode& time) 
+{
   const pxr::UsdPrim& parent = prim.GetParent();
-  if (!parent.IsValid())return pxr::GfMatrix4d(1.f);
+  if (!parent.IsValid())return pxr::GfMatrix4d();
 
   if (parent.IsA<pxr::UsdGeomXformable>()) {
     pxr::UsdGeomXformable xformable(parent);
     return xformable.ComputeLocalToWorldTransform(time);
   } else {
-    _GetParentXform(parent, time);
+    return _GetParentXform(parent, time);
   }
 }
 
