@@ -44,7 +44,7 @@ BVH::Cell::Cell(BVH::Cell* parent, Geometry* geometry)
   , _type(BVH::Cell::GEOM)
 {
   if (geometry) {
-    const pxr::GfRange3d& range = geometry->GetBoundingBox(true).GetRange();
+    const pxr::GfRange3d range = geometry->GetBoundingBox(true).GetRange();
     SetMin(range.GetMin());
     SetMax(range.GetMax());
     Init(geometry);
@@ -448,7 +448,7 @@ void BVH::Cell::Init(Geometry* geometry)
     _SortTrianglesByPair(leaves, geometry);
     _FinishSort(leaves);
   } else if (geometry->GetType() == Geometry::CURVE) {
-    
+
   }
 }
 
@@ -457,10 +457,10 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 {
   _geometries = geometries;
   size_t numColliders = _geometries.size();
-  const pxr::GfBBox3d& bbox = _geometries[0]->GetBoundingBox(true);
+  const pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
   for (size_t i = 1; i < numColliders; ++i) {
-    const pxr::GfBBox3d& bbox = _geometries[i]->GetBoundingBox(true);
+    const pxr::GfBBox3d bbox = _geometries[i]->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());

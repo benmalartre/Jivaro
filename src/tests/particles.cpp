@@ -27,14 +27,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 static Voxels* _Voxelize(Mesh* mesh, float radius)
 {
-  std::cout << "voxelize begin" << std::endl;
   Voxels *voxels = new Voxels();
   voxels->Init(mesh, radius);
   voxels->Trace(0);
   voxels->Trace(1);
   voxels->Trace(2);
   voxels->Build();
-  std::cout << "voxelize end" << std::endl;
+
   return voxels;
 }
 
@@ -108,8 +107,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
-  Voxels* voxels = _Voxelize(emitter, 0.1f);
-  std::cout << "voxels num points " << voxels->GetNumPoints() << std::endl;
+  Voxels* voxels = _Voxelize(emitter, 0.05f);
+
+  std::cout << "voxels num cells " << voxels->GetNumCells() << std::endl;
 
   //pxr::SdfPath bvhId = _solverId.AppendChild(pxr::TfToken("bvh"));
   //_SetupBVHInstancer(stage, bvhId,voxels->GetTree());

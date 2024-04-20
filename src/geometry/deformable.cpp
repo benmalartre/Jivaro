@@ -237,17 +237,19 @@ Deformable::ComputeBoundingBox()
 void
 Deformable::AddPoint(const pxr::GfVec3f& pos, float radius, const pxr::GfVec3f* normal, const pxr::GfVec3f* color)
 {
+  _previous.push_back(pos);
   _positions.push_back(pos);
   _radius.push_back(radius);
 
   if(_haveNormals && normal)_normals.push_back(*normal);
-  if(_haveColors && color)_colors.push_back(pos);
+  if(_haveColors && color)_colors.push_back(*color);
 }
 
 void 
 Deformable::RemovePoint(size_t index)
 {
   _positions.erase(_positions.begin() + index);
+  _previous.erase(_previous.begin() + index);
   if(_haveRadius)_radius.erase(_radius.begin() + index);
   if(_haveNormals)_normals.erase(_normals.begin() + index);
   if(_haveColors)_colors.erase(_colors.begin() + index);

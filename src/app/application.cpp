@@ -279,9 +279,10 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
-  _exec = new TestParticles();
+  //_exec = new TestParticles();
   //_exec = CreateTestPBD();
   //_exec = CreateTestHair();
+  _exec = new TestBVH();
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {
@@ -333,23 +334,25 @@ Application::Update()
     _needCaptureFramebuffers = false;
   }
   */
-  static double lastTime = 0.f;
-  static double refreshRate = 1.f / 60.f;
-  float currentTime(GetTime().GetActiveTime());
-
-  if (currentTime != lastTime) {
-    lastTime = currentTime;
-    if (_execute) {
-      UpdateExec(_stage, currentTime);
-    }
-  }
 
   glfwPollEvents();
-
   _time.ComputeFramerate(glfwGetTime());
+
+  static double lastTime = 0.f;
+  static double refreshRate = 1.f / 60.f;
+  static int playback;
+  float currentTime(_time.GetActiveTime());
+  
   if (_time.IsPlaying()) {
-    if (_time.PlayBack()) {
+    playback = _time.PlayBack();
+    if (playback != Time::PLAYBACK_WAITING) {
+      if(_execute) UpdateExec(_stage, currentTime);
       GetActiveEngine()->SetDirty(true);
+    }
+  } else {
+    if (currentTime != lastTime) {
+      lastTime = currentTime;
+      if (_execute) UpdateExec(_stage, currentTime);
     }
   }
   
@@ -366,6 +369,20 @@ Application::Update()
     if (!_mainWindow->Update()) return false;
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
+
+  if(_time.IsPlaying() && playback != Time::PLAYBACK_WAITING) {
+    switch(playback) {
+      case Time::PLAYBACK_NEXT:
+          _time.NextFrame(); break;
+      case Time::PLAYBACK_PREVIOUS:
+          _time.PreviousFrame(); break;
+      case Time::PLAYBACK_FIRST:
+          _time.FirstFrame(); break;
+      case Time::PLAYBACK_LAST:
+          _time.LastFrame(); break;
+    }
+  }
+
   return true;
 }
 

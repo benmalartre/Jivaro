@@ -1,4 +1,4 @@
-#include "time.h"
+#include "../app/time.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -63,31 +63,42 @@ void Time::LastFrame()
 
 void Time::StartPlayBack(bool backward)
 {
-  _stopWatch.Reset();
+  _t = CurrentTime();
+  _chronometer = 0.0;
   _playback = true;
   _playForwardOrBackward = backward;
-  _stopWatch.Start();
   PlayBack();
 }
 
 void Time::StopPlayBack()
 {
-  _stopWatch.Stop();
+
   _playback=false;
 }
 
-bool Time::PlayBack()
+int Time::PlayBack()
 {
-  _stopWatch.Stop();
-  if(_stopWatch.GetSeconds() > (1.f/_fps))
-  {
-    if(_playForwardOrBackward)PreviousFrame();
-    else NextFrame();
-    _stopWatch.Reset();
-    _stopWatch.Start();
-    return true;
-  }
-  return false;
+  uint64_t t = CurrentTime();
+  _chronometer += (t - _t) * 1e-9;
+  _t = t;
+
+  if(_chronometer < (1.f/_fps))
+    return PLAYBACK_WAITING;
+
+  _chronometer = 0.f;
+  
+  if(!_playForwardOrBackward && _activeTime > _endTime)
+    return _loop ? PLAYBACK_FIRST : PLAYBACK_STOP;
+
+  else if(_playForwardOrBackward && _activeTime < _startTime)
+    return _loop ? PLAYBACK_LAST : PLAYBACK_STOP;
+
+  else if(!_playForwardOrBackward)
+    return PLAYBACK_NEXT;
+
+  else return PLAYBACK_PREVIOUS;
+
+  
 } 
 
 JVR_NAMESPACE_CLOSE_SCOPE

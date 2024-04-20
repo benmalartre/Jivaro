@@ -249,7 +249,7 @@ void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     pxr::HdChangeTracker::DirtyTransform);
 
   _UpdateHits();
-  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::DirtyTopology);
+  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::AllDirty);
 }
 
 void TestBVH::TerminateExec(pxr::UsdStageRefPtr& stage)

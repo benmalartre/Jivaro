@@ -53,7 +53,6 @@ Voxels::_ComputeFlatIndex(size_t x, size_t y, size_t z, short axis)
 //--------------------------------------------------------------------------------
 void Voxels::Init(Deformable* geometry, float radius)
 {
-  std::cout << "bbox" << geometry->GetBoundingBox(true).GetRange() << std::endl;
   _radius = radius;
   _geometry = geometry;
   if (_radius < 0.0001) _radius = 0.0001;
@@ -66,10 +65,8 @@ void Voxels::Init(Deformable* geometry, float radius)
   size_t numVoxels = GetNumCells();
   _data.resize(numVoxels);
   memset(&_data[0], 0, numVoxels * sizeof(uint8_t));
-std::cout << "compute bvh" << std::endl;
   // build an aabb tree of the geometry
   _bvh.Init({ _geometry });
-  std::cout << "bvh ok"  << std::endl;
 }
 
 // trace voxel grid (axis direction)
@@ -180,11 +177,15 @@ void Voxels::Build()
 {
   size_t numCells = GetNumCells();
   RemoveAllPoints();
+  size_t numHits = 0;
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     if (_data[cellIdx] > 1) {
       AddPoint(GetCellPosition(cellIdx), _radius);
+      numHits++;
     }
   }
+
+  std::cout << "num hits : " << numHits << std::endl;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -1,16 +1,23 @@
 #ifndef JVR_APP_TIME_H
 #define JVR_APP_TIME_H
 
-#pragma once
-
 #include "../common.h"
-#include "pxr/base/tf/stopwatch.h"
+#include "../utils/timer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
 class Time {
+
 public:
+  enum PlaybackValue {
+    PLAYBACK_WAITING,
+    PLAYBACK_NEXT,
+    PLAYBACK_PREVIOUS,
+    PLAYBACK_LAST,
+    PLAYBACK_FIRST,
+    PLAYBACK_STOP
+  };
+
   void Init(float start, float end, float fps);
   inline float GetMinTime(){return _minTime;};
   inline float GetStartTime(){return _startTime;};
@@ -37,12 +44,13 @@ public:
   void LastFrame();
   void StartPlayBack(bool backward=false);
   void StopPlayBack();
-  bool PlayBack();
+  int PlayBack();
   bool IsPlaying(){return _playback;};
   
   void ComputeFramerate(double T);
 private:
-  pxr::TfStopwatch                  _stopWatch;
+  uint64_t                          _t;
+  double                            _chronometer;
   float                             _activeTime;
   float                             _startTime;
   float                             _endTime;
