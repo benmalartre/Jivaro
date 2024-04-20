@@ -1,4 +1,5 @@
 #include "../geometry/instancer.h"
+#include "../geometry/mesh.h"
 #include "../tests/instancer.h"
 #include "../tests/utils.h"
 
@@ -18,6 +19,8 @@ void _GenerateRandomTriangle(Mesh* proto)
     positions[i][1] = RANDOM_LO_HI(-1.f, 1.f);
     positions[i][2] = RANDOM_LO_HI(-1.f, 1.f);
   }
+  pxr::VtArray<int> faceCounts = { 3 };
+  pxr::VtArray<int> faceIndices = { 0, 1, 2 };
   proto->Set(positions, faceCounts, faceIndices);
 }
 
@@ -30,7 +33,7 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
 
   _proto1Id = rootId.AppendChild(pxr::TfToken("proto1"));
   _proto2Id = rootId.AppendChild(pxr::TfToken("proto2"));
-  _instancerId = root.AppendChild(pxr::TfToken("instancer"));
+  _instancerId = rootId.AppendChild(pxr::TfToken("instancer"));
 
   _proto1 = new Mesh();
   _GenerateRandomTriangle(_proto1);
@@ -40,7 +43,7 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   //_proto1->InsertInStage(stage, _proto1Id);
   //_proto2->InsertInStage(stage, _proto2Id);
 
-  _instancer = _scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d(1.f));
+  _instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d(1.f));
 }
 
 void TestInstancer::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
