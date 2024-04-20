@@ -30,7 +30,7 @@ public:
     OUTPUT = 2
   };
 
-  enum Type : short {
+  enum Type : int {
     INVALID,
     XFORM,
     PLANE,
@@ -65,11 +65,11 @@ public:
   };
 
   Geometry();
-  Geometry(short type, const pxr::GfMatrix4d& world);
+  Geometry(int type, const pxr::GfMatrix4d& world);
   Geometry(const pxr::UsdPrim& other, const pxr::GfMatrix4d& world);
   virtual ~Geometry() {};
 
-  short GetType() const { return _type; };
+  int GetType() const { return _type; };
   virtual size_t GetNumPoints() const {return 1;};
 
   bool IsInput(){return _mode & Mode::INPUT;};
@@ -91,7 +91,10 @@ public:
   virtual void ComputeBoundingBox() {};
   const pxr::GfBBox3d& GetBoundingBox(bool worldSpace=true) const;
 
-  virtual DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time);
+  virtual DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
+  virtual void Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
 
   // query 3d position on geometry
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
@@ -100,16 +103,18 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const {return false;};
 
 protected:
-  virtual DirtyState _Sync(pxr::UsdPrim& prim, 
-    const pxr::GfMatrix4d& matrix, float time) { return DirtyState::CLEAN;};
+  virtual DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) { return DirtyState::CLEAN;};
+
+  virtual void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()){};
 
   template<typename T>
-  DirtyState _GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, 
-    float time, T *value);
+  DirtyState _GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, float time, T* value);
 
   // infos
   short                               _mode;
-  short                               _type;
+  int                                 _type;
   pxr::SdfPath                        _path;
 
   // bounding box

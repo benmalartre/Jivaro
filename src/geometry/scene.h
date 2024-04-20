@@ -59,6 +59,9 @@ public:
   Geometry* AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo);
   void AddGeometry(const pxr::SdfPath& path, Geometry* geom);
 
+  void InjectGeometry(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+    Geometry* geometry, float time);
+
   void RemoveGeometry(const pxr::SdfPath& path);
 
   void Remove(const pxr::SdfPath& path);

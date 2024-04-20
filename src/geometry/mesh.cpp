@@ -188,7 +188,7 @@ bool Mesh::RemovePoint(size_t index)
 void Mesh::ComputeHalfEdges()
 {
   _halfEdges.ComputeGraph(this);
-  _flags = Mesh::HALFEDGES;
+  BITMASK_SET(_flags, Mesh::HALFEDGES);
 }
 
 float Mesh::GetAverageEdgeLength()
@@ -335,20 +335,11 @@ Mesh::GetNeighbors()
 
 void Mesh::ComputeNeighbors()
 {
+  if (!BITMASK_CHECK(_flags, Mesh::HALFEDGES)) {
+    _halfEdges.ComputeHalfEdges();
+  }
   _halfEdges.ComputeNeighbors();
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
-
-  /// TODO alternative compute neighbor method
-  /*
-  pxr::VtArray<pxr::VtArray<int>> neighbors(_positions.size());
-  size_t faceConnectIdx = 0;
-  for(const auto& faceCount: _faceCounts) {
-    for(size_t i = 0; i < faceCount; ++i) {
-
-    }
-    faceConnectIdx += faceCount;
-  }
-  */
 }
 
 void Mesh::ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors)
@@ -423,6 +414,9 @@ void Mesh::Prepare(bool connectivity)
 
     // compute neighbors
     ComputeNeighbors();
+  } else {
+    BITMASK_CLEAR(_flags,Mesh::HALFEDGES|Mesh::NEIGHBORS);
+
   }
 }
 
@@ -438,6 +432,19 @@ Mesh::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
   }
   SetMatrix(matrix);
   return _Sync(prim, matrix, time);
+}
+
+void 
+Mesh::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time)
+{
+  if(prim.IsA<pxr::UsdGeomMesh>()) {
+    pxr::UsdGeomMesh usdMesh(prim);
+
+    usdMesh.CreatePointsAttr().Set(GetPositions(), time);
+    usdMesh.CreateFaceVertexCountsAttr().Set(GetFaceCounts(), time);
+    usdMesh.CreateFaceVertexIndicesAttr().Set(GetFaceConnects(), time);
+  }
 }
 
 static int 

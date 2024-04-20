@@ -69,9 +69,6 @@ public:
 
   void Prepare(bool connectivity=true);
 
-  DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time) override;
-
-
   // points (deformation)
   void SetPositions(const pxr::GfVec3f* positions, size_t n) override;
   void SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions) override;
@@ -127,6 +124,11 @@ public:
     return false;
   };
 
+protected:
+  DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  virtual void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
 private:
   int                                 _flags;

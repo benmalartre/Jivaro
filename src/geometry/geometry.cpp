@@ -30,7 +30,7 @@ Geometry::Geometry()
   SetMatrix(pxr::GfMatrix4d(1.0));
 }
 
-Geometry::Geometry(short type, const pxr::GfMatrix4d& world)
+Geometry::Geometry(int type, const pxr::GfMatrix4d& world)
 {
   _type = type;
   _mode = INPUT|OUTPUT;
@@ -76,6 +76,21 @@ Geometry::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
   return _Sync(prim, matrix, time);
 }
 
+void Geometry::Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomXformable xformable(prim);
+  pxr::UsdGeomXformOp op = xformable.MakeMatrixXform();
+
+  pxr::GfMatrix4d local = parent.GetInverse() * GetMatrix();
+  op.Set(local, time);
+
+  pxr::UsdGeomBoundable usdBoundable(prim);
+  usdBoundable.CreateExtentAttr().Set(_bbox, time);
+
+  _Inject(prim, parent, time);
+}
+
 const pxr::GfBBox3d& 
 Geometry::GetBoundingBox(bool worldSpace) const 
 { 
@@ -84,5 +99,6 @@ Geometry::GetBoundingBox(bool worldSpace) const
   world.Transform(_matrix);
   return world;
 };
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

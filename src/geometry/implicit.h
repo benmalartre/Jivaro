@@ -17,31 +17,9 @@ public:
   Xform(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   virtual ~Xform() {};
-};
 
-class Sphere : public Geometry {
-public:
-  Sphere(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
-  virtual ~Sphere() {};
-
-  void SetRadius(double radius){_radius = radius;};
-  double GetRadius() {return _radius;};
-  pxr::GfVec3f GetCenter(){return pxr::GfVec3f(GetMatrix().GetRow3(3));};
-
-  // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override;
-
-protected:
-  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, 
-    const pxr::GfMatrix4d& matrix, float time) override;
-
-private:
-  double                    _radius;  
-
+  void Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 };
 
 class Plane : public Geometry {
@@ -49,6 +27,7 @@ public:
   Plane(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world);
   virtual ~Plane() {};
+
 
   pxr::GfVec3f GetNormal(bool worldSpace=true) {
     return worldSpace ? 
@@ -69,8 +48,11 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, 
-    const pxr::GfMatrix4d& matrix, float time) override;
+  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
   pxr::TfToken                _axis;
@@ -78,6 +60,34 @@ private:
   float                       _width;
   float                       _length;
   bool                        _doubleSided;
+};
+
+class Sphere : public Geometry {
+public:
+  Sphere(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
+  Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
+  virtual ~Sphere() {};
+
+  void SetRadius(double radius){_radius = radius;};
+  double GetRadius() {return _radius;};
+  pxr::GfVec3f GetCenter(){return pxr::GfVec3f(GetMatrix().GetRow3(3));};
+
+  // query 3d position on geometry
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+protected:
+  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+
+private:
+  double                    _radius;  
+
 };
 
 class Cube : public Geometry {
@@ -93,8 +103,11 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, 
-    const pxr::GfMatrix4d& matrix, float time) override;
+  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
   float                    _size;  
@@ -112,6 +125,12 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+protected:
+  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
   float                    _radius;  
@@ -131,6 +150,12 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+protected:
+  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
   float                    _radius;  

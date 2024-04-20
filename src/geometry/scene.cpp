@@ -143,6 +143,89 @@ void Scene::AddGeometry(const pxr::SdfPath& path, Geometry* geom)
 }
 
 
+const pxr::GfMatrix4d& _GetParentXform(const pxr::UsdPrim& prim,
+  const pxr::UsdTimeCode& time) {
+  const pxr::UsdPrim& parent = prim.GetParent();
+  if (!parent.IsValid())return pxr::GfMatrix4d(1.f);
+
+  if (parent.IsA<pxr::UsdGeomXformable>()) {
+    pxr::UsdGeomXformable xformable(parent);
+    return xformable.ComputeLocalToWorldTransform(time);
+  } else {
+    _GetParentXform(parent, time);
+  }
+}
+
+void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage, 
+ const pxr::SdfPath& path, Geometry* geometry, float time)
+{
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  if(!prim.IsValid()) {
+    switch (geometry->GetType()) {
+      case Geometry::XFORM:
+        prim = pxr::UsdGeomXform::Define(stage, path).GetPrim();
+        break;
+      case Geometry::PLANE:
+        prim = pxr::UsdGeomPlane::Define(stage, path).GetPrim();
+        break;
+      case Geometry::SPHERE:
+        prim = pxr::UsdGeomSphere::Define(stage, path).GetPrim();
+        break;
+      case Geometry::CONE:
+        prim = pxr::UsdGeomCone::Define(stage, path).GetPrim();
+        break;
+      case Geometry::CUBE:
+        prim = pxr::UsdGeomCube::Define(stage, path).GetPrim();
+        break;
+      case Geometry::CAPSULE:
+        prim = pxr::UsdGeomCapsule::Define(stage, path).GetPrim();
+        break;
+      case Geometry::POINT:
+        prim = pxr::UsdGeomPoints::Define(stage, path).GetPrim();
+        break;
+      case Geometry::CURVE:
+        prim = pxr::UsdGeomBasisCurves::Define(stage, path).GetPrim();
+        break;
+      case Geometry::MESH:
+        prim = pxr::UsdGeomMesh::Define(stage, path).GetPrim();
+        break;
+      case Geometry::INSTANCER:
+        prim = pxr::UsdGeomPointInstancer::Define(stage, path).GetPrim();
+        break;
+      default:
+        return;
+    }
+  }
+
+  const pxr::GfMatrix4d& parent = _GetParentXform(prim, time);
+
+  switch (geometry->GetType()) {
+    case Geometry::XFORM:
+      ((Xform*)geometry)->Inject(prim, parent, time);
+      break;
+    case Geometry::PLANE:
+      break;
+    case Geometry::SPHERE:
+      break;
+    case Geometry::CONE:
+      break;
+    case Geometry::CUBE:
+      break;
+    case Geometry::CAPSULE:
+      break;
+    case Geometry::POINT:
+      break;
+    case Geometry::CURVE:
+      break;
+    case Geometry::MESH:
+      break;
+    case Geometry::INSTANCER:
+      break;
+    default:
+      return;
+  }
+}
+
 void Scene::RemoveGeometry(const pxr::SdfPath& path)
 {
   if(_prims.find(path) != _prims.end())_prims.erase(path);

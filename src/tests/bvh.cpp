@@ -209,6 +209,8 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
 
   _UpdateHits();
 
+  UpdateExec(stage, 1);
+
 }
 
 void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)

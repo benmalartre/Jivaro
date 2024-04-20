@@ -1,3 +1,5 @@
+#include <pxr/usd/usdGeom/xform.h>
+
 #include "../geometry/instancer.h"
 #include "../geometry/mesh.h"
 #include "../tests/instancer.h"
@@ -28,7 +30,13 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
+
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  if(!rootPrim.IsValid()) {
+    pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+    rootPrim = root.GetPrim();
+    stage->SetDefaultPrim(rootPrim);
+  }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
   _proto1Id = rootId.AppendChild(pxr::TfToken("proto1"));
@@ -40,15 +48,15 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   _proto2 = new Mesh;
   _GenerateRandomTriangle(_proto1);
 
-  //_proto1->InsertInStage(stage, _proto1Id);
-  //_proto2->InsertInStage(stage, _proto2Id);
+  _scene.InjectGeometry(stage, _proto1Id, _proto1, 1.f);
+  _scene.InjectGeometry(stage, _proto2Id, _proto2, 1.f);
 
-  _instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d(1.f));
+  //_instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d(1.f));
 }
 
 void TestInstancer::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  _scene.Sync(stage, time);
+  //_scene.Sync(stage, time);
   
 }
 

@@ -35,6 +35,7 @@ Xform::Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
 Plane::Plane(const pxr::GfMatrix4d& xfo)
   : Geometry(Geometry::PLANE, xfo)
 {
+  _axis = pxr::UsdGeomTokens->y;
   _normal = pxr::GfVec3f(0.f, 1.f, 0.f);
   _width = 100.f;
   _length = 100.f;
@@ -92,7 +93,7 @@ bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Plane::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+Plane::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
 
   size_t state  = _GetAttrValue<pxr::TfToken>(prim, pxr::UsdGeomTokens->axis, time, &_axis);
@@ -112,6 +113,18 @@ Plane::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
 
   return (Geometry::DirtyState)state;
 }
+
+void 
+Plane::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomPlane usdPlane(prim);
+  usdPlane.CreateWidthAttr().Set(_width, time);
+  usdPlane.CreateLengthAttr().Set(_length, time);
+  usdPlane.CreateAxisAttr().Set(_axis);
+  _Inject(prim, parent, time);
+}
+
 
 //-------------------------------------------------------------------------------------------------
 // Sphere Implicit Geometry
@@ -170,10 +183,20 @@ bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Sphere::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+Sphere::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   return _GetAttrValue<double>(prim, pxr::UsdGeomTokens->radius, time, &_radius);
 }
+
+void 
+Sphere::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomSphere usdPlane(prim);
+  usdPlane.CreateRadiusAttr().Set(_radius, time);
+  _Inject(prim, parent, time);
+}
+
 
 //-------------------------------------------------------------------------------------------------
 // Cube Implicit Geometry
@@ -269,7 +292,7 @@ Cube::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Cube::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
+Cube::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   pxr::UsdGeomCube usdCube(prim);
   float size;
@@ -280,6 +303,16 @@ Cube::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, float time)
   }
   return Geometry::DirtyState::CLEAN;
 }
+
+void 
+Cube::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomCube usdCube(prim);
+  usdCube.CreateSizeAttr().Set(_size, time);
+  _Inject(prim, parent, time);
+}
+
 
 //-------------------------------------------------------------------------------------------------
 // Cone Implicit Geometry
@@ -347,6 +380,47 @@ Cone::Closest(const pxr::GfVec3f& point, Location* hit,
   return false;
 }
 
+Geometry::DirtyState 
+Cone::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomCone usdCone(prim);
+  float height;
+  int state = Geometry::CLEAN;
+
+  usdCone.GetHeightAttr().Get(&height, time);
+  if (!pxr::GfIsClose(_height, height, 1.e6f)) {
+    _height = height;
+    BITMASK_SET(state, Geometry::DirtyState::ATTRIBUTE);
+  }
+
+  float radius;
+  usdCone.GetRadiusAttr().Get(&radius, time);
+  if (!pxr::GfIsClose(_radius, radius, 1.e6f)) {
+    _radius = radius;
+    BITMASK_SET(state, Geometry::DirtyState::ATTRIBUTE);
+  }
+
+  pxr::GfToken axis;
+  usdCone.GetAxisAttr().Get(&axis, time);
+  if (_axis != axis) {
+    _axis = axis;
+    BITMASK_SET(state, Geometry::DirtyState::ATTRIBUTE);
+  }
+
+  return state;
+}
+
+void 
+Cone::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomCone usdCone(prim);
+  usdCone.CreateHeightAttr().Set(_height, time);
+  usdCone.CreateRadiusAttr().Set(_radius, time);
+  usdCone.CreateAxisAttr().Set(_axis, time);
+  _Inject(prim, parent, time);
+}
+
 //-------------------------------------------------------------------------------------------------
 // Capsule Implicit Geometry
 //-------------------------------------------------------------------------------------------------
@@ -383,4 +457,47 @@ bool Capsule::Closest(const pxr::GfVec3f& point, Location* hit,
 {
   return false;
 }
+
+
+Geometry::DirtyState 
+Capsule::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomCube usdCapsule(prim);
+  float height;
+  int state = Geometry::CLEAN;
+
+  usdCapsule.GetHeightAttr().Get(&height, time);
+  if (!pxr::GfIsClose(_height, height, 1.e6f)) {
+    _height = height;
+    BITMASK_SET(state, Geometry::DirtyState::ATTRIBUTE);
+  }
+
+  float radius;
+  usdCapsule.GetRadiusAttr().Get(&radius, time);
+  if (!pxr::GfIsClose(_radius, radius, 1.e6f)) {
+    _radius = radius;
+    BITMASK_SET(state, Geometry::DirtyState::ATTRIBUTE);
+  }
+
+  pxr::GfToken axis;
+  usdCapsule.GetAxisAttr().Get(&axis, time);
+  if (_axis != axis) {
+    _axis = axis;
+    BITMASK_SET(state, Geometry::DirtyState::ATTRIBUTE);
+  }
+
+  return state;
+}
+
+void 
+Capsule::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomCapsule usdCapsule(prim);
+  usdCapsule.CreateHeightAttr().Set(_height, time);
+  usdCapsule.CreateRadiusAttr().Set(_radius, time);
+  usdCapsule.CreateAxisAttr().Set(_axis, time);
+  _Inject(prim, parent, time);
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE
