@@ -30,23 +30,6 @@ void TestRaycast::_UpdateRays()
 {
   const double time = Application::Get()->GetTime().GetActiveTime();
   const size_t numRays = _mesh->GetNumPoints();
-  const size_t num = std::sqrt(numRays);
-  pxr::VtArray<pxr::GfVec3f> deformed(numRays);
-
-  const float speed = 0.25f;
-  const float amplitude = 0.1f;
-  const float frequency = 5.f;
-  float xf, yf, zf;
-  for(size_t z = 0; z < num; ++z) {
-    for (size_t x = 0; x < num; ++x) {
-      xf = (float)x/(float)num - 0.5;
-      zf = (float)z/(float)num - 0.5;
-      yf = pxr::GfSin(zf*frequency + time*speed) * amplitude;
-      
-      deformed[x + z * num] = pxr::GfVec3f(xf, yf, zf);
-    }
-  }
-  _mesh->SetPositions(deformed);
 
   const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
   const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
@@ -64,12 +47,12 @@ void TestRaycast::_UpdateRays()
 
   for(size_t r = 0; r < numRays; ++r) {
     counts[r] = 2;
-    radiis[r*2]   = 0.001f;
-    radiis[r*2+1]   = 0.001f;
+    radiis[r*2]   = 0.01f;
+    radiis[r*2+1]   = 0.01f;
     points[r*2]   = matrix.Transform(positions[r]);
     points[r*2+1] = matrix.Transform(positions[r] + normals[r]);
-    colors[r*2]   = pxr::GfVec3f(0.66f,0.66f,0.66f);
-    colors[r*2+1] = pxr::GfVec3f(0.66f,0.66f,0.66f);
+    colors[r*2]   = pxr::GfVec3f(0.25f);
+    colors[r*2+1] = pxr::GfVec3f(0.25f);
   }
 
   _rays->SetTopology(points, radiis, counts); 

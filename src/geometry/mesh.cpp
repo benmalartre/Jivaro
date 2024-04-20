@@ -816,57 +816,66 @@ void Mesh::Random2DPattern(size_t numFaces)
 
 void Mesh::RegularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
 {
-
   size_t num = (1.f / spacing ) * 0.5 + 1;
   size_t numPoints = num * num;
   size_t numPolygons = (num - 1) * (num - 1);
   size_t numSamples = numPolygons * 4;
-  pxr::VtArray<pxr::GfVec3f> position(numPoints);
+  pxr::VtArray<pxr::GfVec3f> positions(numPoints);
 
   float space = 1.f / static_cast<float>(num);
 
   for(size_t y = 0; y < num; ++y) {
     for(size_t x = 0; x < num; ++x) {
       size_t vertexId = y * num + x;
-      position[vertexId][0] = x * space - 0.5f;
-      position[vertexId][1] = 0.f;
-      position[vertexId][2] = y * space - 0.5f;
-      position[vertexId] = matrix.Transform(position[vertexId]);
+      positions[vertexId][0] = x * space - 0.5f;
+      positions[vertexId][1] = 0.f;
+      positions[vertexId][2] = y * space - 0.5f;
+      positions[vertexId] = matrix.Transform(positions[vertexId]);
     }
   }
   
-  pxr::VtArray<int> faceVertexCount(numPolygons);
+  pxr::VtArray<int> faceCounts(numPolygons);
   for(size_t i=0; i < numPolygons; ++i) {
-    faceVertexCount[i] = 4;
+    faceCounts[i] = 4;
   }
 
   size_t numRows = num - 1;
   size_t numPolygonPerRow = (num - 1) ;
-  pxr::VtArray<int> faceVertexConnect(numSamples);
+  pxr::VtArray<int> faceIndices(numSamples);
   
   size_t k = 0;
   for(size_t i=0; i < numRows; ++i) {
     for (size_t j = 0; j < numPolygonPerRow; ++j) {
-      faceVertexConnect[k++] = (i + 1) * num + j + 1; 
-      faceVertexConnect[k++] = i * num + j + 1;
-      faceVertexConnect[k++] = i * num + j;
-      faceVertexConnect[k++] = (i + 1) * num + j; 
+      faceIndices[k++] = (i + 1) * num + j + 1; 
+      faceIndices[k++] = i * num + j + 1;
+      faceIndices[k++] = i * num + j;
+      faceIndices[k++] = (i + 1) * num + j; 
     }
   }
-  
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  for(size_t i=0; i < numPoints / 3; ++i) {
-    pxr::GfVec3f color(
-      RANDOM_0_1,
-      RANDOM_0_1,
-      RANDOM_0_1
-    );
-    colors[i * 3] = color;
-    colors[i * 3 + 1] = color;
-    colors[i * 3 + 2] = color;
-  }
  
-  Set(position, faceVertexCount, faceVertexConnect);
+  Set(positions, faceCounts, faceIndices);
+}
+
+void Mesh::Cube()
+{
+  pxr::VtArray<pxr::GfVec3f> positions = {
+    {-0.5f, -0.5f, -0.5f}, { 0.5f, -0.5f, -0.5f},
+    {-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, -0.5f},
+    {-0.5f, -0.5f,  0.5f}, { 0.5f, -0.5f,  0.5f},
+    {-0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f,  0.5f}
+  };
+
+  pxr::VtArray<int> faceCounts = {
+    4,4,4,4,4,4
+  };
+
+  pxr::VtArray<int> faceIndices = {
+    0,2,3,1,4,5,7,6,
+    0,4,6,2,1,3,7,5,
+    0,1,5,4,2,6,7,3
+  };
+
+  Set(positions, faceCounts, faceIndices);
 }
 
 void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
@@ -879,7 +888,7 @@ void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
   size_t numPoints = numX * numY;
   size_t numTriangles = (numX - 1) * 2 * (numY - 1);
   size_t numSamples = numTriangles * 3;
-  pxr::VtArray<pxr::GfVec3f> position(numPoints);
+  pxr::VtArray<pxr::GfVec3f> positions(numPoints);
 
   float spaceX = spacing * 2.0;
   float spaceY = spacing * scaleY;
@@ -887,61 +896,47 @@ void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
   for(size_t y = 0; y < numY; ++y) {
     for(size_t x = 0; x < numX; ++x) {
       size_t vertexId = y * numX + x;
-      if(y %2 == 0)position[vertexId][0] = x * spaceX + spaceX * 0.5f;
-      else position[vertexId][0] = x * spaceX - 0.5f;
-      position[vertexId][1] = 0.f;
-      position[vertexId][2] = y * spaceY - 0.5f;
-      position[vertexId] = matrix.Transform(position[vertexId]);
+      if(y %2 == 0)positions[vertexId][0] = x * spaceX + spaceX * 0.5f;
+      else positions[vertexId][0] = x * spaceX - 0.5f;
+      positions[vertexId][1] = 0.f;
+      positions[vertexId][2] = y * spaceY - 0.5f;
+      positions[vertexId] = matrix.Transform(positions[vertexId]);
     }
   }
   
-  pxr::VtArray<int> faceVertexCount(numTriangles);
+  pxr::VtArray<int> faceCounts(numTriangles);
   for(size_t i=0; i < numTriangles; ++i) {
-    faceVertexCount[i] = 3;
+    faceCounts[i] = 3;
   }
 
   size_t numRows = numY - 1;
   size_t numTrianglesPerRow = (numX - 1) ;
-  pxr::VtArray<int> faceVertexConnect(numSamples);
+  pxr::VtArray<int> faceIndices(numSamples);
   
   size_t k = 0;
   for(size_t i=0; i < numRows; ++i) {
     for (size_t j = 0; j < numTrianglesPerRow; ++j) {
       if (i % 2 == 0) {
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1; 
-        faceVertexConnect[k++] = i * numX + j + 1;
-        faceVertexConnect[k++] = i * numX + j;
+        faceIndices[k++] = (i + 1) * numX + j + 1; 
+        faceIndices[k++] = i * numX + j + 1;
+        faceIndices[k++] = i * numX + j;
 
-        faceVertexConnect[k++] = i * numX + j; 
-        faceVertexConnect[k++] = (i + 1) * numX + j;
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
+        faceIndices[k++] = i * numX + j; 
+        faceIndices[k++] = (i + 1) * numX + j;
+        faceIndices[k++] = (i + 1) * numX + j + 1;
       }
       else {
-        faceVertexConnect[k++] = (i + 1) * numX + j; 
-        faceVertexConnect[k++] = i * numX + j + 1;
-        faceVertexConnect[k++] = i * numX + j;
+        faceIndices[k++] = (i + 1) * numX + j; 
+        faceIndices[k++] = i * numX + j + 1;
+        faceIndices[k++] = i * numX + j;
 
-        faceVertexConnect[k++] = i * numX + j + 1; 
-        faceVertexConnect[k++] = (i + 1) * numX + j;
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
+        faceIndices[k++] = i * numX + j + 1; 
+        faceIndices[k++] = (i + 1) * numX + j;
+        faceIndices[k++] = (i + 1) * numX + j + 1;
       }
     }
   }
-  
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  for(size_t i=0; i < numPoints / 3; ++i) {
-    pxr::GfVec3f color(
-      RANDOM_0_1,
-      RANDOM_0_1,
-      RANDOM_0_1
-    );
-    colors[i * 3] = color;
-    colors[i * 3 + 1] = color;
-    colors[i * 3 + 2] = color;
-  }
- 
-
-  Set(position, faceVertexCount, faceVertexConnect);
+  Set(positions, faceCounts, faceIndices);
 }
 
 void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)

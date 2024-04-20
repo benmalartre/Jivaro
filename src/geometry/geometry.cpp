@@ -95,13 +95,14 @@ void Geometry::Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   _Inject(prim, parent, time);
 }
 
-const pxr::GfBBox3d& 
+const pxr::GfBBox3d 
 Geometry::GetBoundingBox(bool worldSpace) const 
 { 
   if(!worldSpace)return _bbox;
-  pxr::GfBBox3d world(_bbox);
-  world.Transform(_matrix);
-  return world;
+
+  pxr::GfBBox3d worldBBox(_bbox.GetRange());
+  worldBBox.Transform(_matrix);
+  return worldBBox;
 };
 
 

@@ -278,8 +278,8 @@ void
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
   //_exec = new TestInstancer();
-  _exec = new TestRaycast();
-  //_exec = CreateTestParticles();
+  //_exec = new TestRaycast();
+  _exec = new TestParticles();
   //_exec = CreateTestPBD();
   //_exec = CreateTestHair();
   _exec->InitExec(stage);

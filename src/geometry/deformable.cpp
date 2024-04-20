@@ -227,17 +227,9 @@ void
 Deformable::ComputeBoundingBox()
 {
   pxr::GfRange3d range;
-  range.SetEmpty();
-  auto min = range.GetMin();
-  auto max = range.GetMax();
-  for (const auto& point : _positions) {
-    for (short i = 0; i < 3; ++i) {
-      if (point[i] < min[i])min[i] = point[i];
-      if (point[i] > max[i])max[i] = point[i];
-    }
-  }
-  range.SetMin(min);
-  range.SetMax(max);
+  for (const auto& position : _positions)
+    range.ExtendBy(position);
+  
   _bbox.Set(range, _matrix);
    
 }

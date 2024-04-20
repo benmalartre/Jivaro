@@ -447,6 +447,8 @@ void BVH::Cell::Init(Geometry* geometry)
     std::vector<Morton> leaves;
     _SortTrianglesByPair(leaves, geometry);
     _FinishSort(leaves);
+  } else if (geometry->GetType() == Geometry::CURVE) {
+    
   }
 }
 

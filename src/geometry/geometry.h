@@ -89,7 +89,7 @@ public:
   const pxr::GfVec3f GetVelocity() const;
 
   virtual void ComputeBoundingBox() {};
-  const pxr::GfBBox3d& GetBoundingBox(bool worldSpace=true) const;
+  const pxr::GfBBox3d GetBoundingBox(bool worldSpace=true) const;
 
   virtual DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
