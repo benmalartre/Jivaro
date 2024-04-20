@@ -440,9 +440,9 @@ Mesh::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   if(prim.IsA<pxr::UsdGeomMesh>()) {
     pxr::UsdGeomMesh usdMesh(prim);
 
-    //usdMesh.CreatePointsAttr().Set(GetPositions(), time);
-    //usdMesh.CreateFaceVertexCountsAttr().Set(GetFaceCounts(), time);
-    //usdMesh.CreateFaceVertexIndicesAttr().Set(GetFaceConnects(), time);
+    usdMesh.CreatePointsAttr().Set(GetPositions(), time);
+    usdMesh.CreateFaceVertexCountsAttr().Set(GetFaceCounts(), time);
+    usdMesh.CreateFaceVertexIndicesAttr().Set(GetFaceConnects(), time);
   }
 }
 

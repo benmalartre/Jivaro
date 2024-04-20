@@ -225,8 +225,8 @@ Curve::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   if(prim.IsA<pxr::UsdGeomCurves>()) {
     pxr::UsdGeomCurves usdCurve(prim);
 
-    //usdCurve.CreatePointsAttr().Set(GetPositions(), time);
-    //usdCurve.CreateCurveVertexCountsAttr().Set(GetCvCounts(), time);
+    usdCurve.CreatePointsAttr().Set(GetPositions(), time);
+    usdCurve.CreateCurveVertexCountsAttr().Set(GetCvCounts(), time);
   }
 }
 

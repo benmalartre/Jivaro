@@ -119,9 +119,9 @@ Plane::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   const pxr::UsdTimeCode& time)
 {
   pxr::UsdGeomPlane usdPlane(prim);
-  //usdPlane.CreateWidthAttr().Set(_width, time);
-  //usdPlane.CreateLengthAttr().Set(_length, time);
-  //usdPlane.CreateAxisAttr().Set(_axis);
+  usdPlane.CreateWidthAttr().Set(_width, time);
+  usdPlane.CreateLengthAttr().Set(_length, time);
+  usdPlane.CreateAxisAttr().Set(_axis);
 }
 
 
@@ -192,7 +192,7 @@ Sphere::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   const pxr::UsdTimeCode& time)
 {
   pxr::UsdGeomSphere usdPlane(prim);
-  //usdPlane.CreateRadiusAttr().Set(_radius, time);
+  usdPlane.CreateRadiusAttr().Set(_radius, time);
 }
 
 
@@ -301,7 +301,7 @@ Cube::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   const pxr::UsdTimeCode& time)
 {
   pxr::UsdGeomCube usdCube(prim);
-  //usdCube.CreateSizeAttr().Set(_size, time);
+  usdCube.CreateSizeAttr().Set(_size, time);
 }
 
 
@@ -382,9 +382,9 @@ Cone::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   const pxr::UsdTimeCode& time)
 {
   pxr::UsdGeomCone usdCone(prim);
-  ///usdCone.CreateHeightAttr().Set(_height, time);
-  //usdCone.CreateRadiusAttr().Set(_radius, time);
-  //usdCone.CreateAxisAttr().Set(_axis, time);
+  usdCone.CreateHeightAttr().Set(_height, time);
+  usdCone.CreateRadiusAttr().Set(_radius, time);
+  usdCone.CreateAxisAttr().Set(_axis, time);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -437,9 +437,9 @@ Capsule::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   const pxr::UsdTimeCode& time)
 {
   pxr::UsdGeomCapsule usdCapsule(prim);
-  //usdCapsule.CreateHeightAttr().Set(_height, time);
-  //usdCapsule.CreateRadiusAttr().Set(_radius, time);
-  //usdCapsule.CreateAxisAttr().Set(_axis, time);
+  usdCapsule.CreateHeightAttr().Set(_height, time);
+  usdCapsule.CreateRadiusAttr().Set(_radius, time);
+  usdCapsule.CreateAxisAttr().Set(_axis, time);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
