@@ -160,6 +160,7 @@ void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage,
  const pxr::SdfPath& path, Geometry* geometry, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  std::cout << "Inject Geometry : " << path << std::endl;
   if(!prim.IsValid()) {
     switch (geometry->GetType()) {
       case Geometry::XFORM:
@@ -198,32 +199,8 @@ void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage,
   }
 
   const pxr::GfMatrix4d& parent = _GetParentXform(prim, time);
-
-  switch (geometry->GetType()) {
-    case Geometry::XFORM:
-      ((Xform*)geometry)->Inject(prim, parent, time);
-      break;
-    case Geometry::PLANE:
-      break;
-    case Geometry::SPHERE:
-      break;
-    case Geometry::CONE:
-      break;
-    case Geometry::CUBE:
-      break;
-    case Geometry::CAPSULE:
-      break;
-    case Geometry::POINT:
-      break;
-    case Geometry::CURVE:
-      break;
-    case Geometry::MESH:
-      break;
-    case Geometry::INSTANCER:
-      break;
-    default:
-      return;
-  }
+  geometry->Inject(prim, parent, time);
+  
 }
 
 void Scene::RemoveGeometry(const pxr::SdfPath& path)

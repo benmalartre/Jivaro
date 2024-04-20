@@ -46,7 +46,7 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   _proto1 = new Mesh();
   _GenerateRandomTriangle(_proto1);
   _proto2 = new Mesh;
-  _GenerateRandomTriangle(_proto1);
+  _GenerateRandomTriangle(_proto2);
 
   _scene.InjectGeometry(stage, _proto1Id, _proto1, 1.f);
   _scene.InjectGeometry(stage, _proto2Id, _proto2, 1.f);
