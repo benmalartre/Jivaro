@@ -64,8 +64,8 @@ void TestRaycast::_UpdateRays()
 
   for(size_t r = 0; r < numRays; ++r) {
     counts[r] = 2;
-    radiis[r*2]   = 0.01f;
-    radiis[r*2+1]   = 0.01f;
+    radiis[r*2]   = 0.001f;
+    radiis[r*2+1]   = 0.001f;
     points[r*2]   = matrix.Transform(positions[r]);
     points[r*2+1] = matrix.Transform(positions[r] + normals[r]);
     colors[r*2]   = pxr::GfVec3f(0.66f,0.66f,0.66f);
@@ -145,12 +145,14 @@ void TestRaycast::_UpdateHits()
 
 }
 
-void TestRaycast::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes)
+void TestRaycast::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   for (pxr::UsdPrim prim : stage->TraverseAll())
     if (prim.IsA<pxr::UsdGeomMesh>()) {
-      meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
+      _subjects.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
+      _subjectsId.push_back(prim.GetPath());
+      _subjects.back()->SetInputOnly();
     }
       
 }
@@ -179,14 +181,17 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
   // find meshes in the scene
-  std::vector<Geometry*> meshes;
-  _TraverseStageFindingMeshes(stage, meshes);
+  _TraverseStageFindingMeshes(stage);
 
   // create bvh
-  if (meshes.size()) {
-    _bvh.Init(meshes);
-    //_bvhId = rootId.AppendChild(pxr::TfToken("bvh"));
-    //_SetupBVHInstancer(stage, _bvhId, &_bvh);
+  if (_subjects.size()) {
+
+    _bvh.Init(_subjects);
+
+    for(size_t s = 0; s < _subjects.size();++s) {
+      _scene.AddGeometry(_subjectsId[s], _subjects[s]);
+    }
+
   }
   
   // create mesh that will be source of rays
@@ -222,19 +227,14 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  std::cout << "update exec" << std::endl;
   _scene.Sync(stage, time);
-  std::cout << "scene updated" << std::endl;
+   _bvh.Update();
   _UpdateRays();
-  std::cout << "rays updated" << std::endl;
   _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker::DirtyPoints);
   _scene.MarkPrimDirty(_meshId, pxr::HdChangeTracker::AllDirty);
-  std::cout << "dirty updated" << std::endl;
 
   _UpdateHits();
-  std::cout << "hits updated" << std::endl;
   _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::AllDirty);
-  std::cout << "dirty updated" << std::endl;
 
 }
 

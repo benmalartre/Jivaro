@@ -277,8 +277,8 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  _exec = new TestInstancer();
-  //_exec = CreateTestRaycast();
+  //_exec = new TestInstancer();
+  _exec = new TestRaycast();
   //_exec = CreateTestParticles();
   //_exec = CreateTestPBD();
   //_exec = CreateTestHair();

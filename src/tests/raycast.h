@@ -25,18 +25,22 @@ protected:
   void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
     pxr::GfVec3f* results, bool* hits);
   void _UpdateHits();
-  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage, std::vector<Geometry*>& meshes);
+  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
   void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
 
 private:
-  Mesh*             _mesh;
-  Curve*            _rays;
-  Points*           _hits;
-  BVH               _bvh;
-  pxr::SdfPath      _meshId;
-  pxr::SdfPath      _raysId;
-  pxr::SdfPath      _hitsId;
-  pxr::SdfPath      _bvhId;
+  std::vector<Mesh*>        _subjects; 
+  Mesh*                     _mesh;
+  Curve*                    _rays;
+  Points*                   _hits;
+  BVH                       _bvh;
+
+  std::vector<pxr::SdfPath> _subjectsId;
+  pxr::SdfPath              _meshId;
+  pxr::SdfPath              _raysId;
+  pxr::SdfPath              _hitsId;
+  pxr::SdfPath              _bvhId;
+  
 
 };
 
