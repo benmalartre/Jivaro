@@ -1,8 +1,9 @@
 #ifndef JVR_GEOMETRY_INSTANCER_H
 #define JVR_GEOMETRY_INSTANCER_H
 
+#include <pxr/base/gf/ray.h>
+#include <pxr/usd/usdGeom/primvarsApi.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
-
 
 #include "../geometry/deformable.h"
 
@@ -28,11 +29,19 @@ public:
   const pxr::VtArray<pxr::GfVec3f>& GetScales() const {return _scales;};
   const pxr::VtArray<pxr::GfQuath>& GetRotations() const {return _rotations;};
 
+  void AddPrototype(pxr::SdfPath& path);
+  void RemoveProptotype(pxr::SdfPath& path);
+
+protected:
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+
 private:
   pxr::VtArray<pxr::GfVec3f>      _scales;
   pxr::VtArray<int64_t>           _indices;
   pxr::VtArray<int>               _protoIndices;
   pxr::VtArray<pxr::GfQuath>      _rotations;
+  std::vector<pxr::SdfPath>       _prototypes;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -1,9 +1,6 @@
-// Instancer
-//----------------------------------------------
 #include "../geometry/instancer.h"
 #include "../geometry/utils.h"
 
-#include <pxr/base/gf/ray.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -80,6 +77,42 @@ void Instancer::Set(
     for(size_t c = 0; c << _colors.size(); ++c)
       _colors[c] = pxr::GfVec3f(RANDOM_0_1,RANDOM_0_1,RANDOM_0_1);
   }
+}
+
+  void Instancer::AddPrototype(pxr::SdfPath& path)
+  {
+    for(auto& proto: _prototypes)
+      if(path == proto)return;
+    _prototypes.push_back(path);
+  }
+
+  void Instancer::RemoveProptotype(pxr::SdfPath& path)
+  {
+    _prototypes.erase(
+      std::find(_prototypes.begin(), _prototypes.end(), path)
+    );
+  }
+
+void Instancer::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& code)
+{
+  pxr::UsdGeomPointInstancer instancer(prim);
+
+  instancer.CreatePositionsAttr().Set(_positions);
+  instancer.CreateProtoIndicesAttr().Set(_protoIndices);
+  instancer.CreateScalesAttr().Set(_scales);
+  //instancer.CreateIdsAttr().Set(indices);
+  instancer.CreateOrientationsAttr().Set(_rotations);
+
+  for(size_t p = 0; p < _prototypes.size(); ++p)
+    instancer.CreatePrototypesRel().AddTarget(_prototypes[p]);
+
+  //if(_haveColors)
+  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
+  pxr::UsdGeomPrimvar colorPrimvar =
+    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+  colorPrimvar.SetElementSize(1);
+  colorPrimvar.Set(_colors);
 
 }
 

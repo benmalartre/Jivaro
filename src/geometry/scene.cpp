@@ -143,7 +143,7 @@ void Scene::AddGeometry(const pxr::SdfPath& path, Geometry* geom)
 }
 
 
-const pxr::GfMatrix4d& _GetParentXform(const pxr::UsdPrim& prim,
+pxr::GfMatrix4d _GetParentXform(const pxr::UsdPrim& prim,
   const pxr::UsdTimeCode& time) {
   const pxr::UsdPrim& parent = prim.GetParent();
   if (!parent.IsValid())return pxr::GfMatrix4d(1.f);

@@ -32,8 +32,9 @@ void _GenerateRandomGround(Mesh* ground)
   ground->RegularGrid2D(0.005);
   pxr::VtArray<pxr::GfVec3f>& positions = ground->GetPositions();
 
-  float octaves = 3;
+  float octaves = 16;
   float persistence = 0.5f;
+  float amplitude = 0.2f;
 
   for(size_t p = 0; p < positions.size(); ++p) {
     positions[p][1] += Perlin::Perlin3D(
@@ -41,9 +42,60 @@ void _GenerateRandomGround(Mesh* ground)
       positions[p][1], 
       positions[p][2], 
       octaves, 
-      persistence);
+      persistence) * amplitude;
   }
 }
+
+Instancer* _SetupInstancer()
+{
+  size_t numPoints = 32;
+
+  pxr::VtArray<pxr::GfVec3f> points(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<int64_t> indices(numPoints);
+  pxr::VtArray<int> protoIndices(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    points[pointIdx] = pxr::GfVec3f(RANDOM_LO_HI(-5,5), pointIdx, RANDOM_LO_HI(-5,5));
+    scales[pointIdx] = pxr::GfVec3f(RANDOM_0_1 + 0.5);
+    protoIndices[pointIdx] = 0;
+    indices[pointIdx] = pointIdx;
+    colors[pointIdx] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+  }
+
+  Instancer* instancer = new Instancer;
+  instancer->Set(
+    points, 
+    &protoIndices,
+    &indices,
+    &scales,
+    &rotations,
+    &colors
+  );
+
+  return instancer;
+}
+
+void _UpdateInstancer(Instancer* instancer, float time)
+{
+  size_t numPoints = instancer->GetNumPoints();
+
+  pxr::VtArray<pxr::GfVec3f> points = instancer->GetPositions();
+  //pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  //pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    //points[pointIdx] += pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
+    //scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
+    //rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+  }
+
+  instancer->SetPositions(points);
+}
+
 
 void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
 {
@@ -68,14 +120,23 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   _proto2 = new Mesh;
   _GenerateRandomTriangle(_proto2);
 
-  _ground = new Mesh();
+  _ground = new Mesh(pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f)));
   _GenerateRandomGround(_ground);
-
-
 
   _scene.InjectGeometry(stage, _proto1Id, _proto1, 1.f);
   _scene.InjectGeometry(stage, _proto2Id, _proto2, 1.f);
   _scene.InjectGeometry(stage, _groundId, _ground, 1.f);
+
+  _instancer = new Instancer();
+  _instancer->AddPrototype(_proto1Id);
+  _instancer->AddPrototype(_proto2Id);
+
+  _scene.InjectGeometry(stage, _groundId, _ground, 1.f);
+  /*
+  for(size_t i = 0; i < 101 ; i+= 10) {
+    _scene.InjectGeometry(stage, _instancerId, _instancer, (float)i);
+  }
+  */
 
   //_instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d(1.f));
 }

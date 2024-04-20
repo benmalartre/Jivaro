@@ -82,11 +82,15 @@ void Geometry::Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   pxr::UsdGeomXformable xformable(prim);
   pxr::UsdGeomXformOp op = xformable.MakeMatrixXform();
 
-  //pxr::GfMatrix4d local = parent.GetInverse() * GetMatrix();
-  //op.Set(local, time);
+  pxr::GfMatrix4d local = GetMatrix() * parent.GetInverse();
+  op.Set(local, time);
 
-  //pxr::UsdGeomBoundable usdBoundable(prim);
-  //usdBoundable.CreateExtentAttr().Set(_bbox, time);
+  
+  pxr::UsdGeomBoundable usdBoundable(prim);
+  pxr::VtArray<pxr::GfVec3f> bounds(2);
+  bounds[0] = pxr::GfVec3f(_bbox.GetRange().GetMin());
+  bounds[1] = pxr::GfVec3f(_bbox.GetRange().GetMax());
+  usdBoundable.CreateExtentAttr().Set(bounds, time);
 
   _Inject(prim, parent, time);
 }
