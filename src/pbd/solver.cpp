@@ -530,7 +530,7 @@ void Solver::_GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions,
     const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     float r = 0.2f;
     for (auto& contact : contacts) {
-      positions.push_back(pxr::GfVec3f(contact.GetPointCoordinates()));
+      positions.push_back(contact.GetCoordinates());
       radius.push_back(r);
       colors.push_back(color);
     }

@@ -72,7 +72,6 @@ void Time::StartPlayBack(bool backward)
 
 void Time::StopPlayBack()
 {
-
   _playback=false;
 }
 

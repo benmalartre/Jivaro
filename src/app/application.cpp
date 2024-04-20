@@ -279,10 +279,10 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
-  //_exec = new TestParticles();
+  _exec = new TestParticles();
   //_exec = CreateTestPBD();
   //_exec = CreateTestHair();
-  _exec = new TestBVH();
+  //_exec = new TestBVH();
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {
@@ -343,6 +343,7 @@ Application::Update()
   static int playback;
   float currentTime(_time.GetActiveTime());
   
+  // execution if needed
   if (_time.IsPlaying()) {
     playback = _time.PlayBack();
     if (playback != Time::PLAYBACK_WAITING) {
@@ -370,6 +371,7 @@ Application::Update()
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
 
+  // playback if needed
   if(_time.IsPlaying() && playback != Time::PLAYBACK_WAITING) {
     switch(playback) {
       case Time::PLAYBACK_NEXT:

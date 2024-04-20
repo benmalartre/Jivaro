@@ -205,8 +205,9 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f relativeVelocity = velocity - _collider->GetVelocity();
   const float vn = pxr::GfDot(relativeVelocity, _normal);
-  const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
-  location.SetCoordinates(coords);
+
+  location.SetCoordinates(intersection);
+  location.SetT(vn);
 
   particles->_color[index] = pxr::GfVec3f((1.f - d), d, 0.2f);
 }
@@ -260,8 +261,8 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index,
   const pxr::GfVec3f relativeVelocity = velocity - _collider->GetVelocity();
   const float vn = pxr::GfDot(relativeVelocity, normal);
 
-  const pxr::GfVec4f coords(intersection[0], intersection[1], intersection[2], vn);
-  location.SetCoordinates(coords);
+  location.SetCoordinates(intersection);
+  location.SetT(vn);
 }
 
 float SphereCollision::GetValue(Particles* particles, size_t index)

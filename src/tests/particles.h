@@ -1,6 +1,7 @@
 #ifndef JVR_TEST_PARTICLES_H
 #define JVR_TEST_PARTICLES_H
 
+#include "../acceleration/bvh.h"
 #include "../exec/execution.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -23,6 +24,8 @@ private:
   pxr::SdfPath                                               _groundId;
   pxr::SdfPath                                               _solverId;
   pxr::SdfPath                                               _pointsId;
+
+  BVH                                                        _bvh;
 
 };
 

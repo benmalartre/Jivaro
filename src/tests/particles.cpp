@@ -107,12 +107,18 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
+
   Voxels* voxels = _Voxelize(emitter, 0.05f);
 
   std::cout << "voxels num cells " << voxels->GetNumCells() << std::endl;
 
-  //pxr::SdfPath bvhId = _solverId.AppendChild(pxr::TfToken("bvh"));
-  //_SetupBVHInstancer(stage, bvhId,voxels->GetTree());
+  pxr::SdfPath bvhId = _solverId.AppendChild(pxr::TfToken("bvh"));
+
+  _bvh.Init({ emitter });
+  Geometry* instancer = (Geometry*)_SetupBVHInstancer(stage, bvhId, voxels->GetTree());
+  _scene.AddGeometry(bvhId, instancer);
+  _scene.MarkPrimDirty(bvhId, pxr::HdChangeTracker::DirtyInstancer);
+
   
   //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
 

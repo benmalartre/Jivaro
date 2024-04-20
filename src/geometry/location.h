@@ -46,20 +46,13 @@ public:
     _coords[1] = coords[1];
     _coords[2] = coords[2];
   };
-  void SetCoordinates(const pxr::GfVec4f& coords) { 
-    _coords = coords;
-  };
   void SetT(float t) { _coords[3] = t;};
 
   // Getters
   int GetGeometryIndex() const { return _geomId; };
   int GetElementIndex() const { return _elemId; };
-  const pxr::GfVec4f& GetBarycentricCoordinates() const {
-    return _coords; };
-  const pxr::GfVec3f& GetPointCoordinates() const { 
-    return *(pxr::GfVec3f*)&_coords;};
-
-  virtual float GetT() const { return _coords[3]; };
+  const pxr::GfVec3f& GetCoordinates() const { return *(pxr::GfVec3f*)&_coords;};
+  float GetT() const { return _coords[3]; };
 
   virtual pxr::GfVec3f GetPosition(const pxr::GfVec3f* positions, int* elements, size_t sz,
     const pxr::GfMatrix4d&) const;

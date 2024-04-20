@@ -73,8 +73,10 @@ void Voxels::Init(Deformable* geometry, float radius)
 //--------------------------------------------------------------------------------
 void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 {
+  std::cout << "geometry matrix : " << _geometry->GetMatrix() << std::endl;
+  std::cout << "geometry inverse matrix : " << _geometry->GetInverseMatrix() << std::endl;
   pxr::GfBBox3d bbox = _geometry->GetBoundingBox(true);
-  const pxr::GfRange3d& range(bbox.GetRange());
+  const pxr::GfRange3d range(bbox.GetRange());
   const pxr::GfVec3f size(range.GetSize());
   const pxr::GfVec3f minExtents(range.GetMin());
 
@@ -165,7 +167,7 @@ void Voxels::Proximity()
 
 pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)
 {
-  const pxr::GfRange3d& range = _geometry->GetBoundingBox().GetRange();
+  const pxr::GfRange3d& range = _geometry->GetBoundingBox(true).GetRange();
   size_t x = cellIdx % _resolution[0];
   size_t y = (cellIdx / _resolution[0]) % _resolution[1];
   size_t z = cellIdx / (_resolution[0] * _resolution[1]);

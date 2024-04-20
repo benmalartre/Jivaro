@@ -250,8 +250,9 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
     if (component->Raycast(points, localRay, &localHit)) {
       const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
       const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
-      if (distance < *minDistance && distance < maxDistance) {
-        hit->Set(localHit);
+      if (distance < *minDistance /*&& distance < maxDistance*/) {
+        hit->SetBarycentricCoordinates(localHit->GetBarycentricCoordinates());
+        hit->SetT(distance);
         *minDistance = distance;
       }
     }

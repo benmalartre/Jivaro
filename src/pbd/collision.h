@@ -60,7 +60,7 @@ public:
 
   virtual Geometry* GetGeometry(){return _collider;};
   virtual const pxr::GfVec3f GetContactPosition(size_t index) const {
-    return _contacts[_p2c[index]].GetPointCoordinates();};
+    return _contacts[_p2c[index]].GetCoordinates();};
   virtual const pxr::GfVec3f GetContactNormal(size_t index) const  = 0; // pure virtual
   virtual const pxr::GfVec3f GetContactVelocity(size_t index) const {
     return _collider->GetVelocity();
@@ -70,7 +70,7 @@ public:
 
   virtual const pxr::GfVec3f GetContactPreviousPosition(size_t index) const {
     return _collider->GetPreviousMatrix().Transform(
-      _collider->GetInverseMatrix().Transform(_contacts[_p2c[index]].GetPointCoordinates()));
+      _collider->GetInverseMatrix().Transform(_contacts[_p2c[index]].GetCoordinates()));
   }
 
   std::vector<Location>& GetContacts(){return _contacts;};
