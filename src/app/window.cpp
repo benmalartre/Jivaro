@@ -927,7 +927,7 @@ KeyboardCallback(
     return;
   }
 
-  Time& time = app->GetTime();
+  Time* time = Time::Get();
   
   if (action == GLFW_PRESS) {
     switch(GetMappedKey(key))
@@ -954,25 +954,25 @@ KeyboardCallback(
       }
       case GLFW_KEY_SPACE:
       {
-        if (time.IsPlaying()) {
-          time.SetLoop(false);
-          time.StopPlayback();
+        if (time->IsPlaying()) {
+          time->SetLoop(false);
+          time->StopPlayback();
         }
         else {
-          time.SetLoop(true);
-          time.StartPlayback();
+          time->SetLoop(true);
+          time->StartPlayback();
         }
         break;
       }
       case GLFW_KEY_LEFT:
       {
-        time.PreviousFrame();
+        time->PreviousFrame();
         break;
       }
 
       case GLFW_KEY_RIGHT:
       {
-        time.NextFrame();
+        time->NextFrame();
         break;
       }
 

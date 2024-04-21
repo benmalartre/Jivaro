@@ -66,7 +66,7 @@ Geometry::SetMatrix(const pxr::GfMatrix4d& matrix)
 
 const pxr::GfVec3f Geometry::GetVelocity() const
 {
-  return pxr::GfVec3f(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
+  return pxr::GfVec3f(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3)) * 24.f;
 }
 
 Geometry::DirtyState 

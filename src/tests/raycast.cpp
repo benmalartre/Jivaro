@@ -28,7 +28,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 void TestRaycast::_UpdateRays() 
 {
-  const double time = Application::Get()->GetTime().GetActiveTime();
+  const double time = Time::Get()->GetActiveTime();
   const size_t numRays = _mesh->GetNumPoints();
 
   const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
@@ -205,7 +205,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
 
   _UpdateHits();
-  UpdateExec(stage, Application::Get()->GetTime().GetActiveTime());
+  UpdateExec(stage, Time::Get()->GetActiveTime());
 
 }
 

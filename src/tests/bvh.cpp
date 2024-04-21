@@ -28,7 +28,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 void TestBVH::_UpdateRays() 
 {
-  const double time = Application::Get()->GetTime().GetActiveTime();
+  const double time = Time::Get()->GetActiveTime();
   const size_t numRays = _mesh->GetNumPoints();
   /*
   const size_t num = std::sqrt(numRays);

@@ -41,24 +41,24 @@ void
 TimelineUI::Update()
 {
   Application* app = Application::Get();
-  Time& time = app->GetTime();
-  _minTime = time.GetMinTime();
-  _startTime = time.GetStartTime();
-  _endTime = time.GetEndTime();
-  _maxTime = time.GetMaxTime();
-  _currentTime = time.GetActiveTime();
-  _loop = time.GetLoop();
-  _fps = time.GetFPS();
-  _playing = time.IsPlaying();
+  Time* time = Time::Get();
+  _minTime = time->GetMinTime();
+  _startTime = time->GetStartTime();
+  _endTime = time->GetEndTime();
+  _maxTime = time->GetMaxTime();
+  _currentTime = time->GetActiveTime();
+  _loop = time->GetLoop();
+  _fps = time->GetFPS();
+  _playing = time->IsPlaying();
   _parent->SetDirty();
 }
 
 void 
 TimelineUI::ValidateTime()
 {
-  Time& time = Application::Get()->GetTime();
+  Time* time = Time.Get();
 
-  _currentTime = time.GetActiveTime();
+  _currentTime = time->GetActiveTime();
   if (_minTime >= _maxTime)_maxTime = _minTime + 1;
   if (_endTime > _maxTime)_maxTime = _endTime;
   if (_startTime < _minTime)_startTime = _minTime;
@@ -66,12 +66,12 @@ TimelineUI::ValidateTime()
   if (_currentTime < _startTime)_currentTime = _startTime;
   else if (_currentTime > _endTime)_currentTime = _endTime;
   
-  time.SetMinTime(_minTime);
-  time.SetStartTime(_startTime);
-  time.SetEndTime(_endTime);
-  time.SetMaxTime(_maxTime);
-  time.SetActiveTime(_currentTime);
-  time.SetLoop(_loop);
+  time->SetMinTime(_minTime);
+  time->SetStartTime(_startTime);
+  time->SetEndTime(_endTime);
+  time->SetMaxTime(_maxTime);
+  time->SetActiveTime(_currentTime);
+  time->SetLoop(_loop);
 }
 
 float 
@@ -97,7 +97,7 @@ TimelineUI::_PositionToTime(const pxr::GfVec2f& position)
 
 void TimelineUI::MouseButton(int button, int action, int mods)
 {
-  Time& time = Application::Get()->GetTime();
+  Time* time = Time::Get();
   double x, y;
   glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
 
@@ -113,7 +113,7 @@ void TimelineUI::MouseButton(int button, int action, int mods)
       SetInteracting(false);
       _frame = _GetFrameUnderMouse(x, y);
       _currentTime = _frame;
-      time.SetActiveTime(_frame);
+      time->SetActiveTime(_frame);
     }
   }
   _parent->SetDirty();
@@ -123,11 +123,11 @@ void TimelineUI::MouseMove(int x, int y)
 {
   _frame = _GetFrameUnderMouse(x, y);
   if (_interacting) {
-    Time& time = Application::Get()->GetTime();
+    Time* time = Time::Get();
     _frame = _GetFrameUnderMouse(x, y);
     if (static_cast<int>(_frame) != static_cast<int>(_lastFrame)) {
       _currentTime = _frame;
-      time.SetActiveTime(_frame);
+      time->SetActiveTime(_frame);
       AttributeChangedNotice().Send();
       _lastFrame = _frame;
       _parent->GetWindow()->ForceRedraw();
@@ -139,18 +139,18 @@ void TimelineUI::MouseMove(int x, int y)
 
 void TimelineUI::DrawButtons()
 {
-  Time& time = Application::Get()->GetTime();
+  Time* time = Time::Get();
   UIUtils::AddIconButton(0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
     [&](){
       _currentTime = _startTime;
-      time.SetActiveTime(_currentTime);
+      time->SetActiveTime(_currentTime);
       Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
   UIUtils::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
     [&](){
-      time.PreviousFrame();
+      time->PreviousFrame();
       Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
@@ -159,20 +159,20 @@ void TimelineUI::DrawButtons()
     UIUtils::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
     [&](){
       _playing = 1 - _playing;
-      time.StartPlayback();
+      time->StartPlayback();
     });
   } else {
     UIUtils::AddCheckableIconButton(2, ICON_FA_STOP , ICON_SELECTED,
     [&](){
       _playing = 1 - _playing;
-      time.StopPlayback();
+      time->StopPlayback();
     });
   }
   ImGui::SameLine();
 
   UIUtils::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
     [&](){
-      time.NextFrame();
+      time->NextFrame();
       Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
@@ -180,7 +180,7 @@ void TimelineUI::DrawButtons()
   UIUtils::AddIconButton(4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
     [&](){
       _currentTime = _endTime;
-      time.SetActiveTime(_currentTime);
+      time->SetActiveTime(_currentTime);
       Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
@@ -189,14 +189,14 @@ void TimelineUI::DrawButtons()
     _loop ? ICON_SELECTED : ICON_DEFAULT,
     [&](){
       _loop = 1 - _loop;
-      time.SetLoop(_loop);
+      time->SetLoop(_loop);
     });
   ImGui::SameLine();
 }
 
 void TimelineUI::DrawControls()
 {
-  Time& time = Application::Get()->GetTime();
+  Time* time = Time::Get();
   int width = GetWidth();
   int height = GetHeight();
 
@@ -211,7 +211,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _minTime != time.GetMinTime())
+  if (!ImGui::IsItemActive() && _minTime != time->GetMinTime())
   {
     ValidateTime();
   }
@@ -223,7 +223,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _startTime != time.GetStartTime())
+  if (!ImGui::IsItemActive() && _startTime != time->GetStartTime())
   {
     ValidateTime();
   }
@@ -244,7 +244,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _currentTime != time.GetActiveTime())
+  if (!ImGui::IsItemActive() && _currentTime != time->GetActiveTime())
   {
     ValidateTime();
   }
@@ -258,7 +258,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _endTime != time.GetEndTime())
+  if (!ImGui::IsItemActive() && _endTime != time->GetEndTime())
   {
     ValidateTime();
   }
@@ -267,7 +267,7 @@ void TimelineUI::DrawControls()
   ImGui::SetNextItemWidth(60);
   ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTime,
     NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _maxTime != time.GetMaxTime())
+  if (!ImGui::IsItemActive() && _maxTime != time->GetMaxTime())
   {
     ValidateTime();
   }
@@ -313,13 +313,13 @@ void TimelineUI::DrawTimeSlider()
     pxr::GfVec2f(xmax, ymax),
     frontColor, rounding, corners_none);
 
-  Time& time = Application::Get()->GetTime();
+  Time* time = Time::Get();
 
   xmin += 2 * TIMELINE_SLIDER_THICKNESS;
   xmax -= 2 * TIMELINE_SLIDER_THICKNESS;
 
   static const float minBlockWidth = 16.f;
-  int numFrames = (time.GetEndTime() - time.GetStartTime());
+  int numFrames = (time->GetEndTime() - time->GetStartTime());
   const float currentBlockWidth = (float)GetWidth() / (float)numFrames;
 
   int numFramesToSkip = pxr::GfMax(1.f, pxr::GfFloor(minBlockWidth/currentBlockWidth));
@@ -329,7 +329,7 @@ void TimelineUI::DrawTimeSlider()
   {
     if (i % numFramesToSkip > 0)continue;
     float perc = i * incr;
-    if (((int)(i - time.GetStartTime()) % (int)_fps) == 0)
+    if (((int)(i - time->GetStartTime()) % (int)_fps) == 0)
     {
       pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin);
       pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
@@ -345,8 +345,8 @@ void TimelineUI::DrawTimeSlider()
 
   // draw slider
   float sliderPerc =
-    (float)(time.GetActiveTime() - time.GetStartTime()) /
-    (float)(time.GetEndTime() - time.GetStartTime());
+    (float)(time->GetActiveTime() - time->GetStartTime()) /
+    (float)(time->GetEndTime() - time->GetStartTime());
   float sliderX = (xmin * (1 - sliderPerc) + xmax * sliderPerc);
   drawList->AddRectFilled(
     pxr::GfVec2f(sliderX - TIMELINE_SLIDER_THICKNESS, ymin),

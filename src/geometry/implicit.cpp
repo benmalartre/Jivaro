@@ -55,7 +55,8 @@ pxr::GfVec3f Plane::GetNormal(float t)
   return pxr::GfSlerp(t, _prevMatrix.TransformDir(_normal), _matrix.TransformDir(_normal));
 };
 
-pxr::GfVec3f Plane::GetOrigin(float t) {
+pxr::GfVec3f Plane::GetOrigin(float t) 
+{
   if(t==1.f)return pxr::GfVec3f(_matrix.GetRow3(3));
   return pxr::GfVec3f(_prevMatrix.GetRow3(3) * (1.f - t) + _matrix.GetRow3(3) * t);
 };

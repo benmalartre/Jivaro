@@ -2,6 +2,18 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+// singleton
+//----------------------------------------------------------------------------
+Time* Time::_singleton=nullptr;
+
+Time* Time::Get() { 
+  if(_singleton==nullptr){
+        _singleton = new Time();
+    }
+    return _singleton; 
+};
+
+
 void Time::Init(float start, float end, float fps)
 {
   _startTime = start;

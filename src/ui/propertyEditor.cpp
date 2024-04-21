@@ -325,7 +325,7 @@ PropertyEditorUI::Draw()
   
   if (!_initialized)_initialized = true;
 
-  Time& time = Application::Get()->GetTime();
+  Time& time = *Time::Get();
   
   bool opened;
   const pxr::GfVec2f pos(GetX(), GetY());

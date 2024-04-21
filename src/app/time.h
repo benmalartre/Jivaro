@@ -48,6 +48,10 @@ public:
   bool IsPlaying(){return _playback;};
   
   void ComputeFramerate(double T);
+
+  // singleton 
+  static Time *Get();
+
 private:
   uint64_t                          _t;
   double                            _chronometer;

@@ -240,7 +240,7 @@ bool ToolUI::Draw()
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
   pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
-  Time& time = Application::Get()->GetTime();
+  Time* time = Time::Get();
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);
 
@@ -271,7 +271,7 @@ bool ToolUI::Draw()
   } 
 
   static float randFactor = 0.1f;
-  pxr::UsdTimeCode timeCode(time.GetActiveTime());
+  pxr::UsdTimeCode timeCode(time->GetActiveTime());
   if (ImGui::Button("Randomize")) {
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
