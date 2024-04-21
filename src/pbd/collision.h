@@ -50,10 +50,8 @@ public:
   virtual void Update(const pxr::UsdPrim& prim, double time);
   virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft);
-  virtual void FindContactsSerial(Particles* particles, const std::vector<Body*>& bodies,
-    std::vector<Constraint*>& constraint, float ft);
 
-  virtual void UpdateContacts(float t);
+  virtual void UpdateContacts(float t) {};
 
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
     const Body* body, size_t geomId, float ft);
@@ -127,6 +125,8 @@ public:
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
+
+  void UpdateContacts(float t) override;
 
   pxr::GfVec3f GetContactNormal(size_t index, float t=1.f) const override;
 

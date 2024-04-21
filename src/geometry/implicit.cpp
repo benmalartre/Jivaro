@@ -49,6 +49,17 @@ Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
   _Sync(plane.GetPrim(), world, pxr::UsdTimeCode::Default().GetValue());
 }
 
+pxr::GfVec3f Plane::GetNormal(float t=1.f) 
+{
+  if(t==1.f)return _matrix.TransformDir(_normal);
+  return pxr::GfSlerp(_previousMatrix.TransformDir(_normal), _matrix.TransformDir(_normal), t);
+};
+
+pxr::GfVec3f Plane::GetOrigin(float t) {
+  if(t==1.f)return _matrix.GetRow3(3);
+  return _previousMatrix.GetRow3(3) * (1.f - t) + _matrix.GetRow3(3) * t;
+};
+
 bool 
 Plane::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const

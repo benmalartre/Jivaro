@@ -97,19 +97,6 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
   _BuildContacts(particles, bodies, contacts, ft);
 }
 
-void Collision::FindContactsSerial(Particles* particles, const std::vector<Body*>& bodies,
-  std::vector<Constraint*>& contacts, float ft)
-{
-  _ResetContacts(particles);
-  _FindContacts(0, particles->GetNumParticles(), particles, ft);
-  _BuildContacts(particles, bodies, contacts, ft);
-}
-
-void Collision::UpdateContacts(float t)
-{
-  //for(auto& contact: _contacts)
-}
-
 void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, 
   const Body* body, size_t geomId, float ft)
 {
@@ -214,6 +201,21 @@ void PlaneCollision::Update(const pxr::UsdPrim& prim, double time)
 {
   _UpdatePositionAndNormal();
   _UpdateParameters(prim, time);
+}
+
+void PlaneCollision::UpdateContacts(float t)
+{
+  Plane* plane = (Plane*)_collider;
+  plane->SetOrigin(
+    _collider->GetMatrix().GetRow3(3) * t + 
+    _collider->GetPreviousMatrix().GetRow3(3) * (1-t));
+
+  const pxr::GfVec3f normal = plane->GetNormal(false);
+  plane->SetNormal( 
+    _collider->GetMatrix().TransformDir(normal) * t +
+    _collider->GetPreviousMatrix().TransformDir(normal) * (1.f-t);
+
+  
 }
 
 void PlaneCollision::_UpdatePositionAndNormal()

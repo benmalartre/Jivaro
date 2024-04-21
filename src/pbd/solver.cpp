@@ -122,7 +122,6 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   , _subSteps(5)
   , _sleepThreshold(0.1f)
   , _paused(true)
-  , _serial(false)
   , _startFrame(1.f)
   , _solverId(xform.GetPrim().GetPath())
 {
@@ -379,16 +378,22 @@ void Solver::_ClearContacts()
 void Solver::_FindContacts()
 {
   _ClearContacts();
-  if (_serial) {
-    for (auto& collision : _collisions) {
-      collision->FindContactsSerial(&_particles, _bodies, _contacts, _frameTime);
-    }
-  } else {
-    size_t previous = 0;
-    for (auto& collision : _collisions) {
-      collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-      previous = _contacts.size();
-    }
+
+  size_t previous = 0;
+  for (auto& collision : _collisions) {
+    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+    previous = _contacts.size();
+  }
+}
+
+void Solver::_UpdateContacts()
+{
+  _ClearContacts();
+
+  size_t previous = 0;
+  for (auto& collision : _collisions) {
+    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+    previous = _contacts.size();
   }
 }
 
@@ -444,20 +449,14 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 
 void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 {
-  if (_serial) {
-    // solve constraints
-    for (auto& constraint : constraints)constraint->Solve(&_particles, _stepTime);
-    // apply result
-    for (auto& constraint : constraints)constraint->Apply(&_particles);
 
-  } else {
-    // solve constraints
-    pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
-      [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
-    
-    // apply constraint serially
-    for (auto& constraint : constraints)constraint->Apply(&_particles);
-  }
+  // solve constraints
+  pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
+    [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
+  
+  // apply constraint serially
+  for (auto& constraint : constraints)constraint->Apply(&_particles);
+
 }
 
 
@@ -467,27 +466,6 @@ void Solver::_SolveVelocities()
     if (!collision->GetNumContacts()) continue;
     collision->SolveVelocities(&_particles, _frameTime, _stepTime, _t);
   }
-}
-
-
-void Solver::_StepOneSerial()
-{
-  const size_t numParticles = _particles.GetNumParticles();
-  const size_t numContacts = _contacts.size();
-
-  // integrate particles
-  _IntegrateParticles(0, numParticles);
-
-  // solve and apply constraint
-  _SolveConstraints(_constraints);
-  _SolveConstraints(_contacts);
-
-  // update particles
-  _UpdateParticles(0, numParticles);
-
-  // solve velocities
-  _SolveVelocities();
-  _t += _stepTime;
 }
 
 void Solver::_StepOne()
@@ -591,16 +569,10 @@ void Solver::Step()
   _FindContacts();
   _timer->Stop();
 
-  if (!_serial && numParticles >= 2 * numThreads) {
-    //const size_t grain = numParticles / numThreads;
-    for(size_t si = 0; si < _subSteps; ++si)
-      _StepOne();
-  }
-  else {
-    //std::cout << "serial step " << std::endl;
-    for (size_t si = 0; si < _subSteps; ++si)
-      _StepOneSerial();
-  }
+
+  for(size_t si = 0; si < _subSteps; ++si)
+    _StepOne();
+  
   _timer->Update();
   _timer->Log();
 

@@ -27,17 +27,8 @@ public:
   virtual ~Plane() {};
 
 
-  pxr::GfVec3f GetNormal(bool worldSpace=true) {
-    return worldSpace ? 
-      _matrix.TransformDir(_normal) : 
-      _normal;
-  };
-
-  pxr::GfVec3f GetOrigin(bool worldSpace=true) {
-    return worldSpace ? 
-      pxr::GfVec3f(_matrix[3][0], _matrix[3][1], _matrix[3][2]) : 
-      pxr::GfVec3f(0.f);
-  };
+  pxr::GfVec3f GetNormal(float t=1.f);
+  pxr::GfVec3f GetOrigin(float t);
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,

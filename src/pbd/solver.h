@@ -108,6 +108,7 @@ public:
 private:
   void _ClearContacts();
   void _FindContacts();
+  void _UpdateContacts();
   void _GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions, 
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors);
   void _SolveConstraints(std::vector<Constraint*>& constraints);
@@ -115,7 +116,6 @@ private:
 
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);
-  void _StepOneSerial();
   void _StepOne();
 
   int                                 _subSteps;
@@ -125,7 +125,6 @@ private:
   float                               _t;
   float                               _startFrame;
   bool                                _paused;	
-  bool                                _serial;	
 
   // system
   Particles                           _particles;
