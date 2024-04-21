@@ -188,7 +188,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   }
   
   _activeWindow = _mainWindow;
-  _time.Init(1, 101, 24);
+  Time::Get()->Init(1, 101, 24);
   
   //TfDebug::Enable(HD_MDI);
   //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
@@ -336,16 +336,17 @@ Application::Update()
   */
 
   glfwPollEvents();
-  _time.ComputeFramerate(glfwGetTime());
+  Time::Get()->ComputeFramerate(glfwGetTime());
 
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
   static int playback;
-  float currentTime(_time.GetActiveTime());
+  float currentTime(Time::Get()->GetActiveTime());
   
+  Time* time = Time::Get();
   // execution if needed
-  if (_time.IsPlaying()) {
-    playback = _time.Playback();
+  if (time->IsPlaying()) {
+    playback = time->Playback();
     if (playback != Time::PLAYBACK_WAITING) {
       if(_execute) UpdateExec(_stage, currentTime);
       GetActiveEngine()->SetDirty(true);
@@ -373,18 +374,18 @@ Application::Update()
   }
 
   // playback if needed
-  if(_time.IsPlaying() && playback != Time::PLAYBACK_WAITING) {
+  if(time->IsPlaying() && playback != Time::PLAYBACK_WAITING) {
     switch(playback) {
       case Time::PLAYBACK_NEXT:
-        _time.NextFrame(); break;
+        time->NextFrame(); break;
       case Time::PLAYBACK_PREVIOUS:
-        _time.PreviousFrame(); break;
+        time->PreviousFrame(); break;
       case Time::PLAYBACK_FIRST:
-        _time.FirstFrame(); break;
+        time->FirstFrame(); break;
       case Time::PLAYBACK_LAST:
-        _time.LastFrame(); break;
+        time->LastFrame(); break;
       case Time::PLAYBACK_STOP:
-        _time.StopPlayback(); break;
+        time->StopPlayback(); break;
     }
   }
 
@@ -505,7 +506,7 @@ void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
   if (_execute && _exec) {
-    UpdateExec(_stage, _time.GetActiveTime());
+    UpdateExec(_stage, Time::Get()->GetActiveTime());
   }
   _mainWindow->ForceRedraw();
   _mainWindow->GetTool()->ResetSelection();
@@ -664,7 +665,7 @@ Application::GetStageBoundingBox()
   pxr::GfBBox3d bbox;
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
-    pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
+    pxr::UsdTimeCode(Time::Get()->GetActiveTime()), purposes, false, false);
   return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
 }
 
@@ -679,7 +680,7 @@ Application::GetSelectionBoundingBox()
     pxr::UsdGeomTokens->render
   };
   pxr::UsdGeomBBoxCache bboxCache(
-    pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
+    pxr::UsdTimeCode(Time::Get()->GetActiveTime()), purposes, false, false);
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const Selection::Item& item = _selection[n];
     if (item.type == Selection::Type::PRIM) {

@@ -56,7 +56,7 @@ TimelineUI::Update()
 void 
 TimelineUI::ValidateTime()
 {
-  Time* time = Time.Get();
+  Time* time = Time::Get();
 
   _currentTime = time->GetActiveTime();
   if (_minTime >= _maxTime)_maxTime = _minTime + 1;

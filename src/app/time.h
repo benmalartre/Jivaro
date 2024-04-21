@@ -69,6 +69,8 @@ private:
   double                            _lastT;
   size_t                            _frameCount;
   size_t                            _framerate;
+
+  static Time*                      _singleton;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
