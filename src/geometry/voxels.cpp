@@ -73,7 +73,7 @@ void Voxels::Init(Deformable* geometry, float radius)
 //--------------------------------------------------------------------------------
 void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 {
-  pxr::GfBBox3d bbox = _geometry->GetBoundingBox(false);
+  pxr::GfBBox3d bbox = _geometry->GetBoundingBox(true);
   const pxr::GfRange3d range(bbox.GetRange());
   const pxr::GfVec3f size(range.GetSize());
   const pxr::GfVec3f minExtents(range.GetMin());

@@ -42,9 +42,9 @@ public:
   void NextFrame();
   void FirstFrame();
   void LastFrame();
-  void StartPlayBack(bool backward=false);
-  void StopPlayBack();
-  int PlayBack();
+  void StartPlayback(bool backward=false);
+  void StopPlayback();
+  int Playback();
   bool IsPlaying(){return _playback;};
   
   void ComputeFramerate(double T);

@@ -100,8 +100,7 @@ Geometry::GetBoundingBox(bool worldSpace) const
 { 
   if(!worldSpace)return _bbox;
 
-  pxr::GfBBox3d worldBBox(_bbox.GetRange());
-  worldBBox.Transform(_matrix);
+  pxr::GfBBox3d worldBBox( _bbox.ComputeAlignedRange());
   return worldBBox;
 };
 

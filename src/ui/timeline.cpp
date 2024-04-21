@@ -159,13 +159,13 @@ void TimelineUI::DrawButtons()
     UIUtils::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
     [&](){
       _playing = 1 - _playing;
-      time.StartPlayBack();
+      time.StartPlayback();
     });
   } else {
     UIUtils::AddCheckableIconButton(2, ICON_FA_STOP , ICON_SELECTED,
     [&](){
       _playing = 1 - _playing;
-      time.StopPlayBack();
+      time.StopPlayback();
     });
   }
   ImGui::SameLine();

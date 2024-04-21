@@ -65,7 +65,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create collide spheres
   std::map<pxr::SdfPath, Sphere*> spheres;
-  /*
+  
   pxr::GfVec3f offset(10.f, 0.f, 0.f);
   pxr::GfVec3f axis(0.f,1.f,0.f);
   size_t n = 8;
@@ -87,9 +87,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
 
   _scene.AddGeometry(collideId, spheres[collideId]);
-  */
+  
 
-  pxr::GfVec3f axis(RANDOM_LO_HI(-1.f, 1.f), RANDOM_LO_HI(-1.f, 1.f), RANDOM_LO_HI(-1.f, 1.f));
+  axis = pxr::GfVec3f(RANDOM_LO_HI(-1.f, 1.f), RANDOM_LO_HI(-1.f, 1.f), RANDOM_LO_HI(-1.f, 1.f));
   axis.Normalize();
 
   pxr::GfRotation rotation(axis, RANDOM_LO_HI(0.f, 360.f));
@@ -108,16 +108,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
 
-  Voxels* voxels = _Voxelize(emitter, 0.05f);
+  Voxels* voxels = _Voxelize(emitter, 0.5f);
 
   std::cout << "voxels num cells " << voxels->GetNumCells() << std::endl;
-
-  pxr::SdfPath bvhId = _solverId.AppendChild(pxr::TfToken("bvh"));
-
-  _bvh.Init({ emitter });
-  Geometry* instancer = (Geometry*)_SetupBVHInstancer(stage, bvhId, voxels->GetTree());
-  _scene.AddGeometry(bvhId, instancer);
-  _scene.MarkPrimDirty(bvhId, pxr::HdChangeTracker::DirtyInstancer);
 
   
   //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
@@ -125,8 +118,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   float mass = 0.1f;
   float radius = 0.25f;
   float damping = 0.1f;
-  //Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);
-  //_solver->AddElement(body, voxels, emitterId);
+  Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);
+  _solver->AddElement(body, voxels, emitterId);
   
   /*
 
@@ -163,6 +156,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
     }
   }
+
+  */
   Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
   _solver->AddForce(gravity);
   _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
@@ -177,7 +172,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
   _solver->AddElement(collision, _ground, _groundId);
-  */
+
 
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _solver->GetStartFrame());
@@ -187,8 +182,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  // _scene.Sync(stage, time);
-  //_solver->Update(stage, time);
+  _scene.Sync(stage, time);
+  _solver->Update(stage, time);
 
 }
 

@@ -345,7 +345,7 @@ Application::Update()
   
   // execution if needed
   if (_time.IsPlaying()) {
-    playback = _time.PlayBack();
+    playback = _time.Playback();
     if (playback != Time::PLAYBACK_WAITING) {
       if(_execute) UpdateExec(_stage, currentTime);
       GetActiveEngine()->SetDirty(true);
@@ -375,13 +375,15 @@ Application::Update()
   if(_time.IsPlaying() && playback != Time::PLAYBACK_WAITING) {
     switch(playback) {
       case Time::PLAYBACK_NEXT:
-          _time.NextFrame(); break;
+        _time.NextFrame(); break;
       case Time::PLAYBACK_PREVIOUS:
-          _time.PreviousFrame(); break;
+        _time.PreviousFrame(); break;
       case Time::PLAYBACK_FIRST:
-          _time.FirstFrame(); break;
+        _time.FirstFrame(); break;
       case Time::PLAYBACK_LAST:
-          _time.LastFrame(); break;
+        _time.LastFrame(); break;
+      case Time::PLAYBACK_STOP:
+        _time.StopPlayback(); break;
     }
   }
 

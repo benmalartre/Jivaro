@@ -956,11 +956,11 @@ KeyboardCallback(
       {
         if (time.IsPlaying()) {
           time.SetLoop(false);
-          time.StopPlayBack();
+          time.StopPlayback();
         }
         else {
           time.SetLoop(true);
-          time.StartPlayBack();
+          time.StartPlayback();
         }
         break;
       }

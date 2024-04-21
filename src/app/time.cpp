@@ -61,21 +61,21 @@ void Time::LastFrame()
   _activeTime = _endTime;
 }
 
-void Time::StartPlayBack(bool backward)
+void Time::StartPlayback(bool backward)
 {
   _t = CurrentTime();
   _chronometer = 0.0;
   _playback = true;
   _playForwardOrBackward = backward;
-  PlayBack();
+  Playback();
 }
 
-void Time::StopPlayBack()
+void Time::StopPlayback()
 {
   _playback=false;
 }
 
-int Time::PlayBack()
+int Time::Playback()
 {
   uint64_t t = CurrentTime();
   _chronometer += (t - _t) * 1e-9;
