@@ -55,13 +55,13 @@ public:
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
     const Body* body, size_t geomId, float ft);
 
-  virtual void SolveVelocities(Particles* particles, float ft, float dt, float t);
+  virtual void SolveVelocities(Particles* particles, float dt, float t);
 
   virtual Geometry* GetGeometry(){return _collider;};
   virtual pxr::GfVec3f GetContactPosition(size_t index, float t=1.f) const;
   virtual pxr::GfVec3f GetContactNormal(size_t index, float t=1.f) const  = 0; // pure virtual
-  virtual pxr::GfVec3f GetContactVelocity(size_t index) const;
-  virtual float GetContactT(size_t index, float t) const;
+  virtual pxr::GfVec3f GetContactVelocity(size_t index, float t=1.f) const;
+  virtual float GetContactNormalVelocity(size_t index) const;
 
   std::vector<Contact>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
@@ -95,7 +95,7 @@ protected:
   virtual void _FindContact(size_t index, Particles* particles, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) = 0; // pure virrtual
 
-  virtual void _SolveVelocity(Particles* particles, size_t index, float ft, float dt, float t);
+  virtual void _SolveVelocity(Particles* particles, size_t index, float dt, float t);
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>           _hits;

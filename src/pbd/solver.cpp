@@ -460,7 +460,7 @@ void Solver::_SolveVelocities()
 {
   for (auto& collision : _collisions) {
     if (!collision->GetNumContacts()) continue;
-    collision->SolveVelocities(&_particles, _frameTime, _stepTime, _t);
+    collision->SolveVelocities(&_particles, _stepTime, _t);
   }
 }
 

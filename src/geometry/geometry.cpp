@@ -13,11 +13,13 @@
 #include <pxr/usd/usdGeom/cone.h>
 #include <pxr/usd/usdGeom/capsule.h>
 
+
 #include "../geometry/geometry.h"
 #include "../geometry/point.h"
 #include "../geometry/edge.h"
 #include "../geometry/triangle.h"
 #include "../geometry/utils.h"
+#include "../app/time.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -64,9 +66,17 @@ Geometry::SetMatrix(const pxr::GfMatrix4d& matrix)
   _invMatrix = matrix.GetInverse();
 };
 
-const pxr::GfVec3f Geometry::GetVelocity() const
+const pxr::GfVec3f Geometry::GetVelocity(float t) const
 {
-  return pxr::GfVec3f(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3)) * Time::Get()->GetFPS();
+  const pxr::GfVec3f velocity(
+    (_matrix.GetRow3(3) -_prevMatrix.GetRow3(3)) * Time::Get()->GetFPS());
+  if(t == 1.f) return velocity;
+
+  const pxr::GfVec3f previous = 
+    _prevMatrix.Transform(_invMatrix.Transform(velocity));
+    
+  return pxr::GfSlerp(t, previous, velocity);
+
 }
 
 Geometry::DirtyState 

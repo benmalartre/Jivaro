@@ -24,6 +24,7 @@
 #include "../tests/hair.h"
 #include "../tests/bvh.h"
 #include "../tests/instancer.h"
+#include "../tests/velocity.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -279,10 +280,11 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
-  _exec = new TestParticles();
+  //_exec = new TestParticles();
   //_exec = CreateTestPBD();
   //_exec = CreateTestHair();
   //_exec = new TestBVH();
+  _exec = new TestVelocity();
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {

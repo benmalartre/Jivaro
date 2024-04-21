@@ -28,7 +28,7 @@ public:
 
 
   pxr::GfVec3f GetNormal(float t=1.f);
-  pxr::GfVec3f GetOrigin(float t);
+  pxr::GfVec3f GetOrigin(float t=1.f);
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
