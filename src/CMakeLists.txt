@@ -90,6 +90,7 @@ add_executable(${TARGET}
   acceleration/bvh.cpp
   acceleration/octree.cpp
   acceleration/hashGrid.cpp
+  #pbd/contact.cpp
   pbd/collision.cpp
   pbd/mask.cpp
   pbd/particle.cpp

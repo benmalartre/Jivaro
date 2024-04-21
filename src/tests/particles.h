@@ -17,6 +17,10 @@ public:
   void InitExec(pxr::UsdStageRefPtr& stage) override;
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+
+protected:
+  void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
+  
 private:
   Solver*                                                    _solver;
   Plane*                                                     _ground;
@@ -26,6 +30,7 @@ private:
   pxr::SdfPath                                               _pointsId;
 
   BVH                                                        _bvh;
+  float                                                      _lastTime;
 
 };
 

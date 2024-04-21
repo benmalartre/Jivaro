@@ -122,6 +122,7 @@ private:
   float                               _sleepThreshold;
   float                               _frameTime;
   float                               _stepTime;
+  float                               _t;
   float                               _startFrame;
   bool                                _paused;	
   bool                                _serial;	

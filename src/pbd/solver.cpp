@@ -465,7 +465,7 @@ void Solver::_SolveVelocities()
 {
   for (auto& collision : _collisions) {
     if (!collision->GetNumContacts()) continue;
-    collision->SolveVelocities(&_particles, _stepTime);
+    collision->SolveVelocities(&_particles, _frameTime, _stepTime, _t);
   }
 }
 
@@ -487,7 +487,7 @@ void Solver::_StepOneSerial()
 
   // solve velocities
   _SolveVelocities();
-
+  _t += _stepTime;
 }
 
 void Solver::_StepOne()
@@ -519,6 +519,8 @@ void Solver::_StepOne()
   _SolveVelocities();
   
   _timer->Stop();
+
+  _t += _stepTime;
 
 }
 
@@ -582,6 +584,8 @@ void Solver::Step()
   if (!numParticles)return;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
+
+  _t = 0.f;
 
   _timer->Start();
   _FindContacts();

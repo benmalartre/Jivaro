@@ -18,7 +18,7 @@ public:
   void Init(Deformable* geometry, float radius);
   void Trace(short axis);
   void Proximity();
-  void Build();
+  void Build(float randomize=0.f);
 
   size_t GetNumCells();
   pxr::GfVec3f GetCellPosition(size_t cellIdx);

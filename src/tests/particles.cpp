@@ -32,9 +32,28 @@ static Voxels* _Voxelize(Mesh* mesh, float radius)
   voxels->Trace(0);
   voxels->Trace(1);
   voxels->Trace(2);
-  voxels->Build();
+  voxels->Build(0.05f);
 
   return voxels;
+}
+
+void TestParticles::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
+{
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  if(prim.IsValid()) {
+    pxr::UsdGeomXformable xformable(prim);
+    pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
+    pxr::GfMatrix4d scale = pxr::GfMatrix4d(1.f).SetScale(pxr::GfVec3f(1.f, 1.f, 1.f));
+    pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
+    pxr::GfMatrix4d translate1 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 8.f, 0.f));
+    pxr::GfMatrix4d translate2 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 2.f, 0.f));
+    auto op = xformable.GetTransformOp();
+    op.Set(scale * rotate * translate1, 1);
+    op.Set(scale * rotate * translate2, 26);
+    op.Set(scale * rotate * translate1, 51);
+    op.Set(scale * rotate * translate2, 76);
+    op.Set(scale * rotate * translate1, 101);
+  }
 }
 
 
@@ -85,6 +104,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
     _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
+
+  _AddAnimationSamples(stage, collideId);
 
   _scene.AddGeometry(collideId, spheres[collideId]);
   
@@ -173,9 +194,10 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
   _solver->AddElement(collision, _ground, _groundId);
 
-
+  _lastTime = _solver->GetStartFrame();
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
-  _solver->Update(stage, _solver->GetStartFrame());
+  _solver->Update(stage, _lastTime);
+  
 
 }
 
@@ -183,7 +205,10 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
-  _solver->Update(stage, time);
+  if(time != _lastTime) {
+    _solver->Update(stage, time);
+    _lastTime = time;
+  }
 
 }
 

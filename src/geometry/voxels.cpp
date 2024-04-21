@@ -173,14 +173,19 @@ pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)
   return pxr::GfVec3f(range.GetMin()) + pxr::GfVec3f((x + 0.25f) * _radius, (y + 0.25f) * _radius, (z + 0.25f) * _radius);
 }
 
-void Voxels::Build()
+void Voxels::Build(float randomize)
 {
   size_t numCells = GetNumCells();
   RemoveAllPoints();
   size_t numHits = 0;
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     if (_data[cellIdx] > 1) {
-      AddPoint(GetCellPosition(cellIdx), _radius);
+      const pxr::GfVec3f offset(
+        RANDOM_0_1 * randomize * _radius,
+        RANDOM_0_1 * randomize * _radius,
+        RANDOM_0_1 * randomize * _radius);
+
+      AddPoint(GetCellPosition(cellIdx) + offset, _radius);
       numHits++;
     }
   }

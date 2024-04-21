@@ -349,6 +349,7 @@ Application::Update()
     if (playback != Time::PLAYBACK_WAITING) {
       if(_execute) UpdateExec(_stage, currentTime);
       GetActiveEngine()->SetDirty(true);
+      lastTime = currentTime;
     }
   } else {
     if (currentTime != lastTime) {
