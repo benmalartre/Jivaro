@@ -553,7 +553,9 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 
     if (pxr::GfAbs(K) == 0.f) continue;
 
-    const pxr::GfVec3f correction = n * (1.f / K) * -d;
+    const float restitution = 1.f + _collision->GetRestitution();
+
+    const pxr::GfVec3f correction = n * (1.f / K * restitution) * -d;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
 
@@ -562,17 +564,16 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     const pxr::GfVec3f cPrev = _collision->GetContactPreviousPosition(index);
 
     // relative motion
-    const pxr::GfVec3f dp = (particles->_predicted[index] - pPrev) - (_collision->GetContactPosition(index) - cPrev) * dt;
+    const pxr::GfVec3f dp = 
+      (particles->_predicted[index] - pPrev) - 
+      (_collision->GetContactPosition(index) - cPrev);
 
     // tangential component
-    pxr::GfVec3f dpT = dp - n * pxr::GfDot(dp, n);
+    pxr::GfVec3f dpT = dp - n * pxr::GfDot(dp, n) * dt * dt;
     dpT *= - 1.f;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * dpT * _collision->GetFriction();
     */
-    
-
-
   }
 }
 

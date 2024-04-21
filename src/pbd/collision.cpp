@@ -132,24 +132,21 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   pxr::GfVec3f normal = GetGradient(particles, index);
 
   // Relative normal and tangential velocities
-  const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index) * 1 / 0.041;
+  const pxr::GfVec3f v = particles->_velocity[index] * 0.041 - GetContactVelocity(index);
   const float vn = pxr::GfDot(v, normal);
   const pxr::GfVec3f vt = v - normal * vn;
   const float vtLen = vt.GetLength();
 
   // Friction
-  if (vtLen > 0.000001f) {
-    const float Fn = -0.0005f / (dt * dt);
-    const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
-    particles->_velocity[index] -= vt * friction;
-  }
+  particles->_velocity[index] -= vt * _friction;
 
   // Restitution
   const float threshold = 2.f * 9.81 * dt;
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
   const float vnTilde = GetContactT(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
-  particles->_velocity[index] += normal * restitution;
+  particles->_velocity[index] += normal * restitution * dt;
+ 
 }
 
 //----------------------------------------------------------------------------------------
@@ -208,7 +205,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  const pxr::GfVec3f relativeVelocity = particles->_velocity[index] - _collider->GetVelocity();
+  const pxr::GfVec3f relativeVelocity = velocity - _collider->GetVelocity();
   const float vn = pxr::GfDot(relativeVelocity, _normal);
 
   location.SetCoordinates(intersection);
@@ -258,8 +255,8 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index,
   const pxr::GfVec3f predicted(particles->_position[index] + velocity);
   pxr::GfVec3f normal = predicted - _center;
   const float nL = normal.GetLength();
-  if(nL>0.0000001f)normal.Normalize();
-  else normal = pxr::GfVec3f(0.f,0.f,0.f);
+  if (nL > 0.0000001f)normal.Normalize();
+  else normal = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1).GetNormalized();
 
   const pxr::GfVec3f intersection = _center + normal * (_radius + particles->_radius[index]);
 
@@ -268,6 +265,8 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index,
 
   location.SetCoordinates(intersection);
   location.SetT(vn);
+
+  particles->_color[index] = pxr::GfVec3f(0.5f,1.f,0.7f);
 }
 
 float SphereCollision::GetValue(Particles* particles, size_t index)

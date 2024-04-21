@@ -126,16 +126,16 @@ void ViewportUI::Init()
 
   pxr::GlfSimpleMaterial material;
   pxr::GlfSimpleLight simpleLight;
-  simpleLight.SetAmbient({ 0.2, 0.2, 0.2, 1.0 });
+  simpleLight.SetAmbient({ 0.5, 0.3, 0.4, 1.0 });
   simpleLight.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
   simpleLight.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
   simpleLight.SetPosition({ 200, 200, 200, 1.0 });
   pxr::GlfSimpleLightVector lights;
   lights.push_back(simpleLight);
 
-  material.SetAmbient({ 0.25f, 0.1f, 0.15f, 1.f });
-  material.SetDiffuse({ 1.0, 0.75f, 0.9f, 1.f });
-  material.SetSpecular({ 0.5f, 0.2f, 0.3f, 1.f });
+  material.SetAmbient({ 0.2f, 0.2f, 0.2f, 1.f });
+  material.SetDiffuse({ 1.0, 1.f, 1.f, 1.f });
+  material.SetSpecular({ 0.5f, 0.5f, 0.5f, 1.f });
   auto lightingContext = pxr::GlfSimpleLightingContext::New();
 
   _engine->SetLightingState(lights,
