@@ -28,8 +28,7 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
 {
   const double width = 100;
   const double length = 100;
-  pxr::UsdGeomPlane usdGround =
-    pxr::UsdGeomPlane::Define(stage, path);
+  pxr::UsdGeomPlane usdGround = pxr::UsdGeomPlane::Define(stage, path);
 
   usdGround.CreateWidthAttr().Set(width);
   usdGround.CreateLengthAttr().Set(length);
@@ -39,11 +38,7 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
   usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(0.5f);
   usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(0.5f);
 
-  Plane* ground = new Plane();
-  ground->SetMatrix(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
-
-  return ground;
+  return new Plane(usdGround, pxr::GfMatrix4d(1.0));
 }
 
 Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)

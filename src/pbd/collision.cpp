@@ -206,6 +206,9 @@ void PlaneCollision::Update(const pxr::UsdPrim& prim, double time)
 void PlaneCollision::UpdateContacts(float t)
 {
   Plane* plane = (Plane*)_collider;
+  _normal = plane->GetNormal(t);
+  _position = plane->GetOrigin(t);
+
   for (auto& contact : _contacts) {
 
   }

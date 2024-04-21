@@ -40,13 +40,14 @@ static Voxels* _Voxelize(Mesh* mesh, float radius)
 void TestParticles::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+
   if(prim.IsValid()) {
     pxr::UsdGeomXformable xformable(prim);
-    pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
+    pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 45.f);
     pxr::GfMatrix4d scale = pxr::GfMatrix4d(1.f).SetScale(pxr::GfVec3f(1.f, 1.f, 1.f));
     pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
-    pxr::GfMatrix4d translate1 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 8.f, 0.f));
-    pxr::GfMatrix4d translate2 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 2.f, 0.f));
+    pxr::GfMatrix4d translate1 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, 0.f));
+    pxr::GfMatrix4d translate2 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 5.f, 0.f));
     auto op = xformable.GetTransformOp();
     op.Set(scale * rotate * translate1, 1);
     op.Set(scale * rotate * translate2, 26);
@@ -78,8 +79,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   // create collide ground
   _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
   _ground = _GenerateCollidePlane(stage, _groundId);
-  _ground->SetMatrix(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
+  /*_ground->SetMatrix(
+    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));*/
+    _AddAnimationSamples(stage, _groundId);
   _scene.AddGeometry(_groundId, _ground);
 
   // create collide spheres
@@ -89,7 +91,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfVec3f axis(0.f,1.f,0.f);
   size_t n = 8;
   const double rStep = 360.0 / static_cast<double>(n);
-
+/*
   for (size_t x = 0; x < n; ++x) {
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
@@ -105,10 +107,12 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   spheres[collideId] =
     _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
 
-  _AddAnimationSamples(stage, collideId);
+    _AddAnimationSamples(stage, collideId);
+
 
   _scene.AddGeometry(collideId, spheres[collideId]);
   
+*/
 
   axis = pxr::GfVec3f(RANDOM_LO_HI(-1.f, 1.f), RANDOM_LO_HI(-1.f, 1.f), RANDOM_LO_HI(-1.f, 1.f));
   axis.Normalize();

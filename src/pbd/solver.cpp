@@ -388,12 +388,8 @@ void Solver::_FindContacts()
 
 void Solver::_UpdateContacts()
 {
-  _ClearContacts();
-
-  size_t previous = 0;
   for (auto& collision : _collisions) {
-    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-    previous = _contacts.size();
+    collision->UpdateContacts(_t);
   }
 }
 
