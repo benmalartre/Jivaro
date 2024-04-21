@@ -6,8 +6,7 @@
 #include <pxr/base/gf/matrix4f.h>
 
 #include "../common.h"
-#include "../geometry/location.h"
-#include "../geometry/intersection.h"
+#include "../pbd/contact.h"
 #include "../pbd/mask.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -64,7 +63,7 @@ public:
   virtual pxr::GfVec3f GetContactVelocity(size_t index) const;
   virtual float GetContactT(size_t index, float t) const;
 
-  std::vector<Location>& GetContacts(){return _contacts;};
+  std::vector<Contact>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
   Location& GetContact(size_t index){return _contacts[_p2c[index]];};
   const std::vector<int>& GetP2C(){return _p2c;};
@@ -105,7 +104,7 @@ protected:
   size_t                      _c2pIdx;
   size_t                      _numParticles;
   size_t                      _numContacts;
-  std::vector<Location>       _contacts;
+  std::vector<Contact>        _contacts;
   float                       _restitution;
   float                       _friction;
   Geometry*                   _collider;

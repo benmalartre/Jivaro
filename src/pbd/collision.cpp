@@ -206,14 +206,9 @@ void PlaneCollision::Update(const pxr::UsdPrim& prim, double time)
 void PlaneCollision::UpdateContacts(float t)
 {
   Plane* plane = (Plane*)_collider;
-  plane->SetOrigin(
-    _collider->GetMatrix().GetRow3(3) * t + 
-    _collider->GetPreviousMatrix().GetRow3(3) * (1-t));
+  for (auto& contact : _contacts) {
 
-  const pxr::GfVec3f normal = plane->GetNormal(false);
-  plane->SetNormal( 
-    _collider->GetMatrix().TransformDir(normal) * t +
-    _collider->GetPreviousMatrix().TransformDir(normal) * (1.f-t);
+  }
 
   
 }
