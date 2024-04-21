@@ -134,7 +134,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float ft, flo
 
   if(!CheckHit(index))return;    
 
-  pxr::GfVec3f normal = GetContactNormal(particles, index, t) * ft;
+  pxr::GfVec3f normal = GetContactNormal(index, t) * ft;
 
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->_velocity[index] * ft - GetContactVelocity(index);
@@ -152,13 +152,13 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float ft, flo
   // Restitution
   const float threshold = 2.f * 9.81 * dt;
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
-  const float vnTilde = GetContactT(index);
+  const float vnTilde = GetContactT(index, t);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->_velocity[index] += normal * restitution * dt;
  
 }
 
-const pxr::GfVec3f Collision::GetContactPosition(size_t index, float t) const 
+pxr::GfVec3f Collision::GetContactPosition(size_t index, float t) const 
 {
   if(t==1.f) {
     return _contacts[_p2c[index]].GetCoordinates();
@@ -167,7 +167,7 @@ const pxr::GfVec3f Collision::GetContactPosition(size_t index, float t) const
       _collider->GetInverseMatrix().Transform(_contacts[_p2c[index]].GetCoordinates());
 
     if(t==0.f) {
-      return _collider->GetPreviousMatrix.Transform(local);
+      return _collider->GetPreviousMatrix().Transform(local);
     }
 
     const pxr::GfMatrix4d& cM = _collider->GetMatrix();
@@ -176,12 +176,12 @@ const pxr::GfVec3f Collision::GetContactPosition(size_t index, float t) const
   }
 }
 
-virtual const pxr::GfVec3f GetContactVelocity(size_t index) const 
+pxr::GfVec3f Collision::GetContactVelocity(size_t index) const 
 {
   return _collider->GetVelocity();
 }
 
-virtual float GetContactT(size_t index, float t) const 
+float Collision::GetContactT(size_t index, float t) const 
 {
   return _contacts[_p2c[index]].GetT();
 }
@@ -251,7 +251,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
   particles->_color[index] = pxr::GfVec3f((1.f - d), d, 0.2f);
 }
 
-const pxr::GfVec3f PlaneCollision::GetContactNormal(size_t index, float t) const 
+pxr::GfVec3f PlaneCollision::GetContactNormal(size_t index, float t) const 
 {
   if(t==1.f) {
     return _normal;
@@ -260,7 +260,7 @@ const pxr::GfVec3f PlaneCollision::GetContactNormal(size_t index, float t) const
       _collider->GetInverseMatrix().TransformDir(_normal);
 
     if(t==0.f) {
-      return _collider->GetPreviousMatrix.Transform(local);
+      return _collider->GetPreviousMatrix().Transform(local);
     }
 
     const pxr::GfMatrix4d& cM = _collider->GetMatrix();
@@ -336,13 +336,11 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
   return (particles->_predicted[index] - _center).GetNormalized();
 }
 
-const pxr::GfVec3f SphereCollision::GetContactNormal(size_t index, float t) const 
+pxr::GfVec3f SphereCollision::GetContactNormal(size_t index, float t) const 
 {
   const pxr::GfVec3f prevCenter = 
     _collider->GetPreviousMatrix().Transform(
       _collider->GetInverseMatrix().Transform(_center));
-
-  return (particles->_predicted[index] - _center).GetNormalized();
 
   if(t==1.f) {
     return (_contacts[_p2c[index]].GetCoordinates() - _center).GetNormalized();
@@ -351,7 +349,7 @@ const pxr::GfVec3f SphereCollision::GetContactNormal(size_t index, float t) cons
       _collider->GetInverseMatrix().Transform(_contacts[_p2c[index]].GetCoordinates());
 
     if(t==0.f) {
-      return _collider->GetPreviousMatrix.Transform(local) - prevCenter;
+      return _collider->GetPreviousMatrix().Transform(local) - prevCenter;
     }
 
     const pxr::GfMatrix4d& cM = _collider->GetMatrix();
@@ -451,7 +449,7 @@ pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
   return pxr::GfVec3f(0.f);// return (particles->_predicted[index] - _center).GetNormalized();
 }
 
-const pxr::GfVec3f MeshCollision::GetContactPosition(size_t index, float t) const 
+pxr::GfVec3f MeshCollision::GetContactPosition(size_t index, float t) const 
 {
   return GetContactPosition(index);
 };

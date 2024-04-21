@@ -1,14 +1,14 @@
 #ifndef JVR_PBD_UTILS_H
 #define JVR_PBD_UTILS_H
 
-#include <pxr/usd/usd/stage.h>
-#include "../common.h"
 
 
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/matrix3d.h>
 #include <pxr/base/gf/quatd.h>
 #include <pxr/base/gf/transform.h>
+
+#include "../common.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -37,8 +37,9 @@ void ExtractRotation(const pxr::GfMatrix3d &A, pxr::GfQuaternion &q,
 }
 */
 
-pxr::GfMatrix4d InterpolateMatrices(const pxr::GfMatrix4d& m0, const pxr::GfMatrix4d& m1)
+pxr::GfMatrix4d InterpolateMatrices(const pxr::GfMatrix4d& m0, const pxr::GfMatrix4d& m1, float t)
 {
+  
   pxr::GfVec3f s0(
     pxr::GfVec3f(m0[0][0], m0[1][0], m0[2][0]).GetLength(),
     pxr::GfVec3f(m0[0][1], m0[1][1], m0[2][1]).GetLength(),
@@ -48,17 +49,17 @@ pxr::GfMatrix4d InterpolateMatrices(const pxr::GfMatrix4d& m0, const pxr::GfMatr
     pxr::GfVec3f(m1[0][0], m1[1][0], m1[2][0]).GetLength(),
     pxr::GfVec3f(m1[0][1], m1[1][1], m1[2][1]).GetLength(),
     pxr::GfVec3f(m1[0][2], m1[1][2], m1[2][2]).GetLength());
-  /*
+
   const pxr::GfTransform interpolated(
     s0 * t + s1 * (1 - t),                                                // interpolated scale
-    pxr::GfVec3d(0.f),                                                    // pivot orientation
-    m0.ExtractRotationQuat() * t * m1.ExtractRotationQuat() * (1 - t),    // interpolated rotation
+    pxr::GfRotation(),                                                    // pivot orientation
+    m0.ExtractRotation() * t * m1.ExtractRotation() * (1 - t),            // interpolated rotation
     pxr::GfVec3d(0.f),                                                    // pivot position
     m0.ExtractTranslation() * t + m1.ExtractTranslation() * (1 - t)       // interpolated translation
   );
   return interpolated.GetMatrix();
-  */
-  return pxr::GfTransform().GetMatrix();
 }
+
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_PBD_UTILS_H
