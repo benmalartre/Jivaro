@@ -51,7 +51,9 @@ Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
 
 pxr::GfVec3f Plane::GetNormal(float t) 
 {
-  if(t==1.f)return pxr::GfVec3f(_matrix.TransformDir(_normal));
+  if(t==0.f)return pxr::GfVec3f(_matrix.TransformDir(_normal));
+
+  
   return pxr::GfSlerp(t, _prevMatrix.TransformDir(_normal), _matrix.TransformDir(_normal));
 };
 

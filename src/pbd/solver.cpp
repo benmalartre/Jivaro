@@ -303,7 +303,7 @@ void Solver::_FindContacts()
 void Solver::_UpdateContacts()
 {
   for (auto& collision : _collisions) {
-    collision->UpdateContacts(_t);
+    collision->UpdateContacts(&_particles, _t);
   }
 }
 

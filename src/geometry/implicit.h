@@ -27,8 +27,8 @@ public:
   virtual ~Plane() {};
 
 
-  pxr::GfVec3f GetNormal(float t=1.f);
-  pxr::GfVec3f GetOrigin(float t=1.f);
+  pxr::GfVec3f GetNormal(float t=0.f);
+  pxr::GfVec3f GetOrigin(float t=0.f);
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,

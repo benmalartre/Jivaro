@@ -129,10 +129,10 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   if(!CheckHit(index))return;    
 
   /*
-  particles->_position[index] = GetContactPosition(index, t);
+  particles->_position[index] = GetContactPosition(index);
   particles->_predicted[index] = particles->_position[index];
   particles->_velocity[index] *= 0.f;
-  */
+  
 
   pxr::GfVec3f normal = GetContactNormal(index);
 
@@ -155,7 +155,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   const float vnTilde = GetContactNormalVelocity(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->_velocity[index] += normal * restitution * dt;
- 
+ */
 }
 
 pxr::GfVec3f Collision::GetContactPosition(size_t index) const 
@@ -208,14 +208,14 @@ void PlaneCollision::Update(const pxr::UsdPrim& prim, double time)
   _UpdateParameters(prim, time);
 }
 
-void PlaneCollision::UpdateContacts(float t)
+void PlaneCollision::UpdateContacts(Particles* particles,   float t)
 {
   Plane* plane = (Plane*)_collider;
   _normal = plane->GetNormal(t);
   _position = plane->GetOrigin(t);
 
   for (auto& contact : _contacts) {
-    //contact->Update(Particles* particles, const pxr::GfVec3f* positions);
+    contact.Update(_collider, particles, t);
   }
 
   

@@ -122,7 +122,8 @@ protected:
   pxr::GfMatrix4d                     _matrix;
   pxr::GfMatrix4d                     _prevMatrix;
   pxr::GfMatrix4d                     _invMatrix;
-  pxr::GfVec3f                        _velocity;
+  pxr::GfVec3f                        _velocity;  // positional velocity
+  pxr::GfVec3f                        _omega;     // rotational velocity
   pxr::GfBBox3d                       _bbox;
   pxr::GfVec3f                        _wirecolor;
 };
