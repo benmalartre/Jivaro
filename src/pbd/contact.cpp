@@ -54,7 +54,7 @@ void Contact::Update(Geometry* geometry, Particles* particles, size_t index)
       case Geometry::PLANE:
         Plane* plane = (Plane*)geometry;
         _normal = plane->GetNormal();
-        _d = -pxr::GfDot(_normal, particles->_predicted[index] - plane->GetOrigin()) - particles->_radius[index];
+        _d = pxr::GfDot(_normal, particles->_predicted[index] - plane->GetOrigin()) - particles->_radius[index];
         break;
 
      }
@@ -66,7 +66,7 @@ void Contact::Update(Geometry* geometry, Particles* particles, size_t index)
 
     const pxr::GfVec3f delta = position - particles->_predicted[index];
 
-    _d = -pxr::GfDot(delta, _normal);
+    _d = pxr::GfDot(delta, _normal);
   }
 }
 

@@ -543,15 +543,14 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 
     const size_t index = _elements[elem] + offset;
     const float invMass = particles->_invMass[index];
-    const float d = _collision->GetValue(particles, index);
+    const float d = _collision->GetContactPenetrationDepth(index);
     if (d >= 0.f) continue;
 
-    pxr::GfVec3f n = _collision->GetGradient(particles, index);
+    pxr::GfVec3f n = _collision->GetContactNormal(index);
 
     const float im0 = particles->_invMass[index];
 
-    const pxr::GfVec3f restitution = 
-      n * (particles->_mass[index] * (1.f + _collision->GetRestitution())) * -d;
+    const pxr::GfVec3f restitution = n * (particles->_mass[index] /** (1.f + _collision->GetRestitution())*/) * -d;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * restitution;
 
