@@ -10,6 +10,7 @@ class Mask : public Element
 {
 public:
   static const size_t INVALID_INDEX = std::numeric_limits<int>::max();
+  static const size_t INT_BITS = sizeof(int);
 
   struct Iterator {
     Iterator(const Mask* mask, size_t begin, size_t end) 
@@ -33,11 +34,9 @@ public:
     int Next() {
       _cur++;
       if (_complete) return _cur < _end ? _cur : INVALID_INDEX;
-      while((_cur < _end) && 
-        (BIT_CHECK(_values[_cur / sizeof(int)], _cur % sizeof(int)) != true)) {
-        _cur++;
-      }
-      return _cur < _end ? _cur : INVALID_INDEX;
+      if(_cur >= _end)return INVALID_INDEX;
+      if(BIT_CHECK(_values[_cur / INT_BITS], _cur % INT_BITS))return _cur;
+      else return Next();
     }
 
     const Mask*     _mask;
@@ -68,7 +67,6 @@ public:
   void RemoveWeights() { _weights.clear(); };
 
 protected:     
-  size_t                      _size;          // unmasked particles size for this element
   std::vector<int>            _mask;          // used particles flag stored in bits
   std::vector<float>          _weights;       // if mask weights size must equals mask size 
                                               // else weights size must equals num particles

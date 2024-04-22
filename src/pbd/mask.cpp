@@ -5,10 +5,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 void Mask::SetMask(size_t n, const std::vector<int>& used)
 {
-  _mask.resize((n +1)/sizeof(int), 0);
+  _mask.resize((n +1)/INT_BITS, 0);
 
   for(auto& index: used)
-    BIT_SET(_mask[index / sizeof(int)], index % sizeof(int));
+    BIT_SET(_mask[index / INT_BITS], index % INT_BITS);
 
 }
 

@@ -72,11 +72,11 @@ public:
   virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
 
   inline bool CheckHit(size_t index) {
-    return BIT_CHECK(_hits[index / sizeof(int)], index % sizeof(int));
+    return BIT_CHECK(_hits[index / Mask::INT_BITS], index % Mask::INT_BITS);
   };
   inline void SetHit(size_t index, bool hit) {
-    if(hit) BIT_SET(_hits[index / sizeof(int)], index % sizeof(int));
-    else BIT_CLEAR(_hits[index / sizeof(int)], index % sizeof(int));
+    if(hit) BIT_SET(_hits[index / Mask::INT_BITS], index % Mask::INT_BITS);
+    else BIT_CLEAR(_hits[index / Mask::INT_BITS], index % Mask::INT_BITS);
   };
 
   float GetFriction() const {return _friction;};

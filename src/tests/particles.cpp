@@ -143,7 +143,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
 
-  Voxels* voxels = _Voxelize(emitter, 1.f);
+  Voxels* voxels = _Voxelize(emitter, 0.1f);
 
   std::cout << "voxels num cells " << voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << voxels->GetNumPoints() << std::endl;
@@ -214,15 +214,19 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _lastTime);
 
-  const pxr::VtArray<pxr::GfVec3f>& positions = _solver->GetParticles()->_position;
+  Particles* particles = _solver->GetParticles();
+
   pxr::GfRange3f range;
-  for(auto& pos: positions) {
+  for(auto& pos: particles->_position) {
     range = range.UnionWith(pos);
   }
   std::vector<int> used;
   for(size_t p = 0; p < _solver->GetNumParticles(); ++p)
-    if(positions[p][1] < range.GetMidpoint()[1])used.push_back(p);
-  collision->SetMask(_solver->GetNumParticles(), used);
+    if (particles->_position[p][1] < range.GetMidpoint()[1]) {
+      used.push_back(p);
+      particles->_color[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    }
+  gravity->SetMask(_solver->GetNumParticles(), used);
   
 
 }
