@@ -64,18 +64,20 @@ Geometry::SetMatrix(const pxr::GfMatrix4d& matrix)
   _prevMatrix = _matrix;
   _matrix = matrix; 
   _invMatrix = matrix.GetInverse();
+  _ComputeVelocity();
 };
+
+
+void Geometry::_ComputeVelocity()
+{
+  const pxr::GfVec3f delta(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
+  _velocity = pxr::GfVec3f(delta / (1.f / Time::Get()->GetFrameDuration()));
+
+}
 
 const pxr::GfVec3f Geometry::GetVelocity(float t) const
 {
-  const pxr::GfVec3f velocity(
-    (_matrix.GetRow3(3) -_prevMatrix.GetRow3(3)) * Time::Get()->GetFPS());
-  if(t == 1.f) return velocity;
-
-  const pxr::GfVec3f previous = 
-    _prevMatrix.Transform(_invMatrix.Transform(velocity));
-    
-  return pxr::GfSlerp(t, previous, velocity);
+  return _velocity;
 
 }
 

@@ -45,13 +45,17 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestVelocity::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  const pxr::GfVec3f pos(_xfo->GetMatrix().GetRow3(3));
+  _scene.Sync(stage, time);
+  const pxr::GfVec3f pos(0.f);//(_xfo->GetMatrix().GetRow3(3));
   const pxr::GfVec3f vel = _xfo->GetVelocity();
+
+  std::cout << "velocity : " << vel << std::endl;
 
   pxr::VtArray<pxr::GfVec3f> positions(2);
   positions[0] = pos;
   positions[1] = pos + vel;
-  //_curve->SetPositions(positions);
+  _curve->SetPositions(positions);
+  _scene.MarkPrimDirty(_curveId, pxr::HdChangeTracker::DirtyPoints);
 }
 
 void TestVelocity::TerminateExec(pxr::UsdStageRefPtr& stage)

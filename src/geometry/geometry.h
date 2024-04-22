@@ -103,6 +103,7 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const {return false;};
 
 protected:
+  void _ComputeVelocity();
   virtual DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) { return DirtyState::CLEAN;};
 
@@ -121,6 +122,7 @@ protected:
   pxr::GfMatrix4d                     _matrix;
   pxr::GfMatrix4d                     _prevMatrix;
   pxr::GfMatrix4d                     _invMatrix;
+  pxr::GfVec3f                        _velocity;
   pxr::GfBBox3d                       _bbox;
   pxr::GfVec3f                        _wirecolor;
 };

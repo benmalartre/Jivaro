@@ -16,6 +16,7 @@ Time* Time::Get() {
 
 void Time::Init(float start, float end, float fps)
 {
+  fps = pxr::GfMin(fps, 0.0001f);
   _startTime = start;
   _minTime = _startTime;
   _activeTime = _startTime;
@@ -23,6 +24,7 @@ void Time::Init(float start, float end, float fps)
   _maxTime = _endTime;
   _loop = true;
   _fps = fps;
+  _frame = 1.f / fps;
   _speed = 1.f;
   _playback = false;
   _playForwardOrBackward = false;

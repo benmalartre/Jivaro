@@ -28,13 +28,14 @@ public:
   inline float GetSpeed(){return _speed;};
   inline bool  GetLoop(){return _loop;};
   inline float GetFramerate() { return _framerate; };
+  inline float GetFrameDuration() { return _frame;};
 
   inline void SetMinTime(float time){_minTime = time;};
   inline void SetStartTime(float time){_startTime = time;};
   inline void SetEndTime(float time){_endTime = time;};
   inline void SetMaxTime(float time){_maxTime = time;};
   inline void SetActiveTime(float time){_activeTime = time;};
-  inline void SetFPS(float fps){_fps = fps;};
+  inline void SetFPS(float fps){_fps = fps; _frame = 1.f/_fps;};
   inline void SetSpeed(float speed){_speed = speed;};
   inline void SetLoop(bool loop){_loop = loop;};
 
@@ -62,6 +63,7 @@ private:
   float                             _maxTime;
   float                             _fps;
   float                             _speed;
+  float                             _frame;
   bool                              _loop;
   bool                              _playForwardOrBackward;
   bool                              _playback;
