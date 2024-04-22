@@ -17,7 +17,6 @@
 #include "../pbd/force.h"
 #include "../pbd/collision.h"
 #include "../pbd/solver.h"
-#include "../utils/timer.h"
 #include "../app/time.h"
 
 

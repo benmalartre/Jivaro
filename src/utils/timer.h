@@ -17,6 +17,8 @@
 	#include <windows.h>
 #endif
 
+JVR_NAMESPACE_OPEN_SCOPE
+
 static uint64_t CurrentTime() {
   static uint64_t is_init = 0;
 #if defined(__APPLE__)
@@ -140,5 +142,7 @@ void Timer::Log() {
     std::cout << "  - avg : " << _avgs[t] << std::endl;
   }
 }
+
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_UTILS_TIMER_H

@@ -13,10 +13,11 @@
 #include <pxr/usd/usd/stage.h>
 
 #include "../common.h"
+#include "../utils/timer.h"
+#include "../geometry/implicit.h"
 #include "../pbd/element.h"
 #include "../pbd/particle.h"
-#include "../geometry/implicit.h"
-#include "../utils/timer.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
