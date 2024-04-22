@@ -12,8 +12,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Constraint::Constraint(size_t elementSize, Body* body, float stiffness, 
   float damping, const pxr::VtArray<int>& elems) 
-  : Mask(Element::CONSTRAINT)
-  , _elements(elems)
+  : _elements(elems)
   , _stiffness(stiffness)
   , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
   , _damping(damping)
@@ -25,8 +24,7 @@ Constraint::Constraint(size_t elementSize, Body* body, float stiffness,
 }
 
 Constraint::Constraint(Body* body1, Body* body2, float stiffness, float damping)
-  : Mask(Element::CONSTRAINT)
-  , _stiffness(stiffness)
+  : _stiffness(stiffness)
   , _damping(damping)
 {
   _body.resize(2);
@@ -183,8 +181,6 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
     if(first >= numElements)break;
     last = pxr::GfMin(last + Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
   }
-
-
 }
 
 size_t BendConstraint::TYPE_ID = Constraint::BEND;

@@ -285,10 +285,6 @@ void Solver::WeightBoundaries()
 
 void Solver::_ClearContacts()
 {
-  for (auto& collision : _collisions) {
-    collision->UpdateContacts(1.f);
-  }
-
   for (auto& contact : _contacts)delete contact;
   _contacts.clear();
 }
@@ -374,10 +370,12 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 
 void Solver::_SolveVelocities()
 {
-  return;
   for (auto& collision : _collisions) {
     if (!collision->GetNumContacts()) continue;
-    collision->SolveVelocities(&_particles, _stepTime, _t);
+    pxr::WorkParallelForN(
+      collision->GetNumContacts(),
+      std::bind(&Collision::SolveVelocities, collision,
+        std::placeholders::_1, std::placeholders::_2, &_particles, _stepTime, _t));
   }
 }
 

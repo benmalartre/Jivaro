@@ -23,6 +23,8 @@ class BVH;
 class Collision : public Mask
 {
 public:
+  typedef std::map<Constraint*, std::vector<Contact>> ContactsMap;
+
   enum Type {
     PLANE = 1,
     SPHERE,
@@ -54,7 +56,7 @@ public:
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
     const Body* body, size_t geomId, float ft);
 
-  virtual void SolveVelocities(Particles* particles, float dt, float t);
+  virtual void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt, float t);
 
   virtual Geometry* GetGeometry(){return _collider;};
   virtual pxr::GfVec3f GetContactPosition(size_t index, float t=1.f) const;
@@ -72,11 +74,11 @@ public:
   virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
 
   inline bool CheckHit(size_t index) {
-    return BIT_CHECK(_hits[index / Mask::INT_BITS], index % Mask::INT_BITS);
+    return BIT_CHECK(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
   };
   inline void SetHit(size_t index, bool hit) {
-    if(hit) BIT_SET(_hits[index / Mask::INT_BITS], index % Mask::INT_BITS);
-    else BIT_CLEAR(_hits[index / Mask::INT_BITS], index % Mask::INT_BITS);
+    if(hit) BIT_SET(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
+    else BIT_CLEAR(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
   };
 
   float GetFriction() const {return _friction;};
@@ -88,7 +90,7 @@ protected:
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
-    std::vector<Constraint*>& contacts, float dt);
+    std::vector<Constraint*>& constraints, float dt);
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
   
   virtual void _FindContact(size_t index, Particles* particles, float ft) = 0; // pure virtual
@@ -102,7 +104,6 @@ protected:
   std::vector<int>                  _c2p;
   size_t                            _c2pIdx;
   size_t                            _numParticles;
-  size_t                            _numContacts;
   std::vector<Contact>              _contacts;
   float                             _restitution;
   float                             _friction;

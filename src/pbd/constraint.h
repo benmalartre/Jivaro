@@ -20,7 +20,7 @@ struct Particles;
 struct Body;
 class Collision;
 
-class Constraint : public Mask
+class Constraint
 {
 public:
   constexpr static size_t BlockSize = 1024;

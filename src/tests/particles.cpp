@@ -143,7 +143,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
 
-  Voxels* voxels = _Voxelize(emitter, 0.1f);
+  Voxels* voxels = _Voxelize(emitter, 0.5f);
 
   std::cout << "voxels num cells " << voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << voxels->GetNumPoints() << std::endl;
@@ -226,7 +226,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       used.push_back(p);
       particles->_color[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     }
-  gravity->SetMask(_solver->GetNumParticles(), used);
+  //collision->SetMask(_solver->GetNumParticles(), used);
   
 
 }
