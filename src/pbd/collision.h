@@ -62,7 +62,7 @@ public:
   virtual pxr::GfVec3f GetContactNormal(size_t index) const;
   virtual pxr::GfVec3f GetContactVelocity(size_t index) const;
   virtual float GetContactNormalVelocity(size_t index) const;
-  virtual float GetContactPenetrationDepth(size_t index) const;
+  virtual float GetContactDepth(size_t index) const;
 
   std::vector<Contact>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};

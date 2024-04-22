@@ -51,16 +51,19 @@ Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
 
 pxr::GfVec3f Plane::GetNormal(float t) 
 {
-  if(t==0.f)return pxr::GfVec3f(_matrix.TransformDir(_normal));
+  const pxr::GfVec3f normal = _matrix.TransformDir(_normal);
+  if(t==0.f)return normal;
 
-  
-  return pxr::GfSlerp(t, _prevMatrix.TransformDir(_normal), _matrix.TransformDir(_normal));
+  const pxr::GfMatrix4d projected = (_matrix * pxr::GfMatrix4d(1.f).SetRotate(_omega);
+  const pxr::GfVec3f next = projected.TransformDir(_normal);
+  return pxr::GfSlerp(t, normal, next);
 };
 
 pxr::GfVec3f Plane::GetOrigin(float t) 
 {
-  if(t==1.f)return pxr::GfVec3f(_matrix.GetRow3(3));
-  return pxr::GfVec3f(_prevMatrix.GetRow3(3) * (1.f - t) + _matrix.GetRow3(3) * t);
+  const pxr::GfVec3f origin(_matrix.GetRow3(3));
+  if(t==0.f)return origin;
+  return origin * (1.f - t) + (origin + _velocity) * t;
 };
 
 bool 

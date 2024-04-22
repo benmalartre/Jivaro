@@ -17,7 +17,7 @@ public:
 
   pxr::GfVec3f GetNormal() const {return _normal;};
   float GetNormalVelocity() const { return _nrmV; };
-  float GetPenetrationDepth(){return _d;};
+  float GetPenetrationDepth() const {return _d;};
 
 private:
   pxr::GfVec3f      _normal;   // contact normal

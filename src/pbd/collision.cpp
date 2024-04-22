@@ -178,7 +178,7 @@ float Collision::GetContactNormalVelocity(size_t index) const
   return _contacts[_p2c[index]].GetNormalVelocity();
 }
 
-float Collision::GetContactPenetrationDepth(size_t index) const
+float Collision::GetContactDepth(size_t index) const
 {
   return _contacts[_p2c[index]].GetPenetrationDepth();
 }

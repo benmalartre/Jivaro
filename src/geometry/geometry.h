@@ -14,6 +14,7 @@
 #include <pxr/base/gf/quath.h>
 #include <pxr/base/gf/matrix4f.h>
 #include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/rotation.h>
 #include <pxr/base/gf/ray.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/prim.h>
@@ -123,7 +124,7 @@ protected:
   pxr::GfMatrix4d                     _prevMatrix;
   pxr::GfMatrix4d                     _invMatrix;
   pxr::GfVec3f                        _velocity;  // positional velocity
-  pxr::GfVec3f                        _omega;     // rotational velocity
+  pxr::GfQuatf                        _omega;     // rotational velocity
   pxr::GfBBox3d                       _bbox;
   pxr::GfVec3f                        _wirecolor;
 };
