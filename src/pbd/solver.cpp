@@ -47,7 +47,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
 
   //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
   _timer = new Timer();
-  _timer->Init(NUM_TIMES, &TIME_NAMES[0]);
+  _timer->Init("xpbd solver", NUM_TIMES, &TIME_NAMES[0]);
   _points = new Points();
 
 
