@@ -33,7 +33,8 @@ public:
     int Next() {
       _cur++;
       if (_complete) return _cur < _end ? _cur : INVALID_INDEX;
-      while(_cur < _end && BIT_CHECK(_values[_cur / sizeof(int)], _cur % sizeof(int)) != true) {
+      while((_cur < _end) && 
+        (BIT_CHECK(_values[_cur / sizeof(int)], _cur % sizeof(int)) != true)) {
         _cur++;
       }
       return _cur < _end ? _cur : INVALID_INDEX;
@@ -45,7 +46,7 @@ public:
     size_t          _end;
     size_t          _cur;
     bool            _complete;
-    };
+  };
 
   enum Type {
     CONSTRAINT,
