@@ -86,7 +86,7 @@ public:
   const pxr::GfMatrix4d& GetPreviousMatrix() const { return _prevMatrix; };
   const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
 
-  const pxr::GfVec3f GetVelocity(float t=1.f) const;
+  const pxr::GfVec3f GetVelocity() const;
 
   virtual void ComputeBoundingBox() {};
   const pxr::GfBBox3d GetBoundingBox(bool worldSpace=true) const;

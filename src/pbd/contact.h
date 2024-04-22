@@ -11,10 +11,12 @@ class CollisionConstraint;
 class Contact : public Location
 {
 public:
-  void Init(Particles* particles, const pxr::GfVec3f* positions);
-  void Update(Particles* particles, const pxr::GfVec3f* positions);
+  void Init(Geometry* geometry, Particles* particles, size_t index);
+  void Update(Geometry* geometry, Particles* particles, size_t index);
 
+  pxr::GfVec3f GetNormal() const {return _normal;};
   float GetNormalVelocity() const { return _nrmV; };
+  float GetPenetrationDepth(){return _d;};
 
 private:
   pxr::GfVec3f      _normal;   // contact normal

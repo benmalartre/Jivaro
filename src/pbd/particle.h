@@ -32,13 +32,12 @@ public:
   void SetOffset(size_t offset){_offset = offset;};
   void SetNumPoints(size_t numPoints){_numPoints = numPoints;};
 
-  Geometry* GetGeometry(){return _geometry;};
-  size_t GetOffset(){return _offset;};
-  size_t GetNumPoints(){return _numPoints;};
-
-  float GetMass(){return _mass;};
-  float GetRadius(){return _radius;};
-  pxr::GfVec3f GetColor(){return _color;};
+  Geometry* GetGeometry() const {return _geometry;};
+  size_t GetOffset() const {return _offset;};
+  size_t GetNumPoints() const {return _numPoints;};
+  float GetMass() const {return _mass;};
+  float GetRadius() const {return _radius;};
+  pxr::GfVec3f GetColor() const {return _color;};
 
 protected:
   Geometry*     _geometry;

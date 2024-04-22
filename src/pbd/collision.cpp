@@ -110,29 +110,31 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
     _contacts.push_back(Contact());
     _contacts.back().SetGeometryIndex(geomId);
     _StoreContactLocation(particles, elements[elemIdx], body, _contacts.back(), ft);
+    _contacts.back().Init(body->GetGeometry(), particles, elements[elemIdx]);
   }
 }
 
-void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, float dt, float t)
+void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, float dt)
 {
   for (size_t elemIdx = begin; elemIdx < end; ++elemIdx) {
-    _SolveVelocity(particles, _c2p[elemIdx], dt, t);
+    _SolveVelocity(particles, _c2p[elemIdx], dt);
   }
 }
 
-void Collision::_SolveVelocity(Particles* particles, size_t index, float dt, float t)
+void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
 
+  /*
   particles->_position[index] = GetContactPosition(index, t);
   particles->_predicted[index] = particles->_position[index];
   particles->_velocity[index] *= 0.f;
+  */
 
-/*
-  pxr::GfVec3f normal = GetContactNormal(index, t);
+  pxr::GfVec3f normal = GetContactNormal(index);
 
   // Relative normal and tangential velocities
-  const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index, t);
+  const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index);
   const float vn = pxr::GfDot(v, normal);
   const pxr::GfVec3f vt = v - normal * vn;
   const float vtLen = vt.GetLength();
@@ -150,32 +152,22 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt, flo
   const float vnTilde = GetContactNormalVelocity(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->_velocity[index] += normal * restitution * dt;
-*/
  
 }
 
-pxr::GfVec3f Collision::GetContactPosition(size_t index, float t) const 
+pxr::GfVec3f Collision::GetContactPosition(size_t index) const 
 {
   return _contacts[_p2c[index]].GetCoordinates();
-  if(t==1.f) {
-    return _contacts[_p2c[index]].GetCoordinates();
-  } else { 
-    const pxr::GfVec3f local = 
-      _collider->GetInverseMatrix().Transform(_contacts[_p2c[index]].GetCoordinates());
-
-    if(t==0.f) {
-      return _collider->GetPreviousMatrix().Transform(local);
-    }
-
-    const pxr::GfMatrix4d& cM = _collider->GetMatrix();
-    const pxr::GfMatrix4d& pM = _collider->GetPreviousMatrix();
-    return InterpolateMatrices(pM, cM, t).Transform(local);
-  }
 }
 
-pxr::GfVec3f Collision::GetContactVelocity(size_t index, float t) const 
+pxr::GfVec3f Collision::GetContactNormal(size_t index) const 
 {
-  return _collider->GetVelocity(t);
+  return _contacts[_p2c[index]].GetNormal();
+}
+
+pxr::GfVec3f Collision::GetContactVelocity(size_t index) const 
+{
+  return _collider->GetVelocity();
 }
 
 float Collision::GetContactNormalVelocity(size_t index) const 
@@ -250,31 +242,13 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  const pxr::GfVec3f relativeVelocity = velocity - _collider->GetVelocity(1.f);
+  const pxr::GfVec3f relativeVelocity = velocity - _collider->GetVelocity();
   const float vn = pxr::GfDot(relativeVelocity, _normal);
 
   location.SetCoordinates(intersection);
   location.SetT(vn);
 
   particles->_color[index] = pxr::GfVec3f((1.f - d), d, 0.5f);
-}
-
-pxr::GfVec3f PlaneCollision::GetContactNormal(size_t index, float t) const 
-{
-  if(t==1.f) {
-    return _normal;
-  } else { 
-    const pxr::GfVec3f local = 
-      _collider->GetInverseMatrix().TransformDir(_normal);
-
-    if(t==0.f) {
-      return _collider->GetPreviousMatrix().Transform(local);
-    }
-
-    const pxr::GfMatrix4d& cM = _collider->GetMatrix();
-    const pxr::GfMatrix4d& pM = _collider->GetPreviousMatrix();
-    return InterpolateMatrices(pM, cM, t).Transform(local);
-  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -343,27 +317,6 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
   return (particles->_predicted[index] - _center).GetNormalized();
 }
 
-pxr::GfVec3f SphereCollision::GetContactNormal(size_t index, float t) const 
-{
-  const pxr::GfVec3f prevCenter = 
-    _collider->GetPreviousMatrix().Transform(
-      _collider->GetInverseMatrix().Transform(_center));
-
-  if(t==1.f) {
-    return (_contacts[_p2c[index]].GetCoordinates() - _center).GetNormalized();
-  } else { 
-    const pxr::GfVec3f local = 
-      _collider->GetInverseMatrix().Transform(_contacts[_p2c[index]].GetCoordinates());
-
-    if(t==0.f) {
-      return _collider->GetPreviousMatrix().Transform(local) - prevCenter;
-    }
-
-    const pxr::GfMatrix4d& cM = _collider->GetMatrix();
-    const pxr::GfMatrix4d& pM = _collider->GetPreviousMatrix();
-    return InterpolateMatrices(pM, cM, t).Transform(local) - (prevCenter * (1 - t) + _center * t);
-  }
-}
 
 //----------------------------------------------------------------------------------------
 // Mesh Collision
@@ -455,17 +408,6 @@ pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
 {
   return pxr::GfVec3f(0.f);// return (particles->_predicted[index] - _center).GetNormalized();
 }
-
-pxr::GfVec3f MeshCollision::GetContactPosition(size_t index, float t) const 
-{
-  return GetContactPosition(index);
-};
-
-
-pxr::GfVec3f MeshCollision::GetContactNormal(size_t index, float t) const 
-{
-  return (GetContactPosition(index)).GetNormalized();
-};
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

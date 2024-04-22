@@ -29,7 +29,10 @@ void Contact::Init(Geometry* geometry, Particles* particles, size_t index)
   size_t n = _GetElementDimensionFromGeometry(geometry);
 
   if(n == 0) {
-
+    if(geometry->GetType() == Geometry::PLANE) {
+      Plane* plane = (Plane*)geometry;
+      _normal = plane->GetNormal;
+    }
   } else {
     _normal = GetNormal(geometry->GetPositionsCPtr(), 
     &_elemId[0], n, geometry->GetMatrix());
@@ -44,14 +47,21 @@ void Contact::Update(Geometry* geometry, Particles* particles, size_t index)
   size_t n = _GetElementDimensionFromGeometry(geometry);
 
   if(n == 0) {
-     
+     switch(geometry->GetType()) {
+      case Geometry::PLANE:
+        Plane* plane = (Plane*)geometry;
+        _normal = plane->GetNormal();
+        _d = -pxr::GfDot(_normal, particles->_predicted[index] - _position) - particles->_radius[index];
+        break;
+
+     }
   } else {
     const pxr::GfVec3f position = GetPosition(geometry->GetPositionsCPtr(), 
       &_elemId[0], n, geometry->GetMatrix());
 
     _normal = GetNormal(geometry->GetPositionsCPtr(), &_elemId[0], n, geometry->GetMatrix());
 
-    const pxr::GfVec3f delta = position - particles->_position[index];
+    const pxr::GfVec3f delta = position - particles->_predicted[index];
 
     _d = -pxr::GfDot(delta, _normal);
   }

@@ -75,10 +75,9 @@ void Geometry::_ComputeVelocity()
 
 }
 
-const pxr::GfVec3f Geometry::GetVelocity(float t) const
+const pxr::GfVec3f Geometry::GetVelocity() const
 {
   return _velocity;
-
 }
 
 Geometry::DirtyState 

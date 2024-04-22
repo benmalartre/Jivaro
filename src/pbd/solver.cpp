@@ -375,7 +375,7 @@ void Solver::_SolveVelocities()
     pxr::WorkParallelForN(
       collision->GetNumContacts(),
       std::bind(&Collision::SolveVelocities, collision,
-        std::placeholders::_1, std::placeholders::_2, &_particles, _stepTime, _t));
+        std::placeholders::_1, std::placeholders::_2, &_particles, _stepTime));
   }
 }
 
