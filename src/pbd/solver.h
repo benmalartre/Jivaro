@@ -27,7 +27,7 @@ class Collision;
 class Geometry;
 class Points;
 class Scene;
-class _Timer;
+class Timer;
 class Solver : public Xform {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
@@ -142,7 +142,7 @@ private:
   pxr::SdfPath                        _solverId;
 
   // timing
-  _Timer*                             _timer;
+  Timer*                              _timer;
 
   friend class Particles;
 };

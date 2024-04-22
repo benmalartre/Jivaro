@@ -55,32 +55,90 @@ static uint64_t CurrentTime() {
 #endif
 }
 
-template <class> struct ExecutionTimer;
-
-// execution time timer decorator
-template <class R, class... Args>
-struct ExecutionTimer<R(Args ...)> {
+// Helpers for benchmark time inside the solver
+class Timer {
 public:
-    ExecutionTimer(std::function<R(Args...)> func): f_(func) { } 
+  void Init(const char* name, size_t n, const char** names);
+  void Start(size_t index = 0);
+  void Next();
+  void Stop();
+  void Update();
+  void Log();
 
-    R operator ()(Args ... args) {
-        uint64_t startT = CurrentTime();
+protected:
+  struct _Ts {
+    void Start() { t = CurrentTime(); }
+    void End() { accum += CurrentTime() - t; num++; };
+    void Reset() { accum = 0; num = 0; };
+    double Average() { return num ? ((double)accum * 1e-9) / (double)num : 0; }
+    double Elapsed() { return (double)accum * 1e-9; }
 
-        R result = f_(args...); 
-
-        std::cout << "Timer took " << (CurrentTime() - startT) * 1e-9 
-            << " seconds..." << std::endl;
-
-        return result;   
-    }   
+    uint64_t t;
+    uint64_t accum;
+    size_t   num;
+  };
 
 private:
-    std::function<R(Args ...)> f_; 
+  bool                      _rec;
+  size_t                    _n;
+  size_t                    _c;
+
+  std::string               _name;
+  std::vector<std::string>  _names;
+  std::vector<_Ts>           _timers;
+  std::vector<double>       _accums;
+  std::vector<double>       _avgs;
 };
 
-template <class R, class... Args>
-ExecutionTimer<R(Args ...)> TIMER_DECORATOR(R (*f)(Args ...)) {
-    return ExecutionTimer<R(Args...)>(std::function<R(Args...)>(f));    
+
+void Timer::Init(const char* name, size_t n, const char** names)
+{
+  _name = name;
+  _n = n;
+  _c = 0;
+  _timers.resize(_n, { 0,0,0 });
+  _accums.resize(_n, 0.0);
+  _avgs.resize(_n, 0.0);
+  _names.resize(_n);
+  for (size_t t = 0; t < _n; ++t)
+    _names[t] = names[t];
+}
+
+void Timer::Start(size_t index)
+{
+  _c = index;
+  _timers[_c].Start();
+  _rec = true;
+}
+
+void Timer::Next()
+{
+  if (_rec)_timers[_c++].End();
+  if (_c >= _n)_c = 0;
+  _timers[_c].Start();
+}
+
+void Timer::Stop()
+{
+  if (_rec = true) _timers[_c].End();
+  _rec = false;
+}
+
+void Timer::Update() {
+  for (size_t t = 0; t < _n; ++t) {
+    _accums[t] += _timers[t].Elapsed();
+    _avgs[t] = (_avgs[t] + _timers[t].Average()) / 2.0;
+    _timers[t].Reset();
+  }
+}
+
+void Timer::Log() {
+  std::cout << "------------------   time :   " << _name << std::endl;
+  for (size_t t = 0; t < _n; ++t) {
+    std::cout << "## " << _names[t] << ": ";
+    std::cout << "  - accum : " << _accums[t];
+    std::cout << "  - avg : " << _avgs[t] << std::endl;
+  }
 }
 
 #endif // JVR_UTILS_TIMER_H

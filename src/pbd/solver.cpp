@@ -23,90 +23,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-// Helpers for benchmark time inside the solver
-class _Timer {
-public:
-  void Init(size_t n, const char** names);
-  void Start(size_t index = 0);
-  void Next();
-  void Stop();
-  void Update();
-  void Log();
-
-protected:
-  struct _Ts {
-    void Start() { t = CurrentTime(); }
-    void End() { accum += CurrentTime() - t; num++; };
-    void Reset() { accum = 0; num = 0; };
-    double Average() { return num ? ((double)accum * 1e-9) / (double)num : 0; }
-    double Elapsed() { return (double)accum * 1e-9; }
-
-    uint64_t t;
-    uint64_t accum;
-    size_t   num;
-  };
-
-private:
-  bool                      _rec;
-  size_t                    _n;
-  size_t                    _c;
-
-  std::vector<std::string>  _names;
-  std::vector<_Ts>           _timers;
-  std::vector<double>       _accums;
-  std::vector<double>       _avgs;
-};
-
-
-void _Timer::Init(size_t n, const char** names)
-{
-  _n = n;
-  _c = 0;
-  _timers.resize(_n, { 0,0,0 });
-  _accums.resize(_n, 0.0);
-  _avgs.resize(_n, 0.0);
-  _names.resize(_n);
-  for (size_t t = 0; t < _n; ++t)
-    _names[t] = names[t];
-}
-
-void _Timer::Start(size_t index)
-{
-  _c = index;
-  _timers[_c].Start();
-  _rec = true;
-}
-
-void _Timer::Next()
-{
-  if (_rec)_timers[_c++].End();
-  if (_c >= _n)_c = 0;
-  _timers[_c].Start();
-}
-
-void _Timer::Stop()
-{
-  if (_rec = true) _timers[_c].End();
-  _rec = false;
-}
-
-void _Timer::Update() {
-  for (size_t t = 0; t < _n; ++t) {
-    _accums[t] += _timers[t].Elapsed();
-    _avgs[t] = (_avgs[t] + _timers[t].Average()) / 2.0;
-    _timers[t].Reset();
-  }
-}
-
-void _Timer::Log() {
-  std::cout << "------------------   time :   " << Time::Get()->GetActiveTime() << std::endl;
-  for (size_t t = 0; t < _n; ++t) {
-    std::cout << "## " << _names[t] << ": ";
-    std::cout << "  - accum : " << _accums[t];
-    std::cout << "  - avg : " << _avgs[t] << std::endl;
-  }
-}
-
 static const size_t NUM_TIMES = 7;
 static const char* TIME_NAMES[NUM_TIMES] = {
   "find contacts",
@@ -131,7 +47,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   _stepTime = _frameTime / static_cast<float>(_subSteps);
 
   //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
-  _timer = new _Timer();
+  _timer = new Timer();
   _timer->Init(NUM_TIMES, &TIME_NAMES[0]);
   _points = new Points();
 
@@ -401,17 +317,15 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   pxr::GfVec3f* velocity = &_particles._velocity[0];
   int* body = &_particles._body[0];
 
-  // apply external forces
-  for (const Force* force : _force) {
-    force->Apply(begin, end, &_particles, _stepTime);
-  }
-
   // compute predicted position
   pxr::GfVec3f* predicted = &_particles._predicted[0];
   pxr::GfVec3f* position = &_particles._position[0];
 
   for (size_t index = begin; index < end; ++index) {
-
+    // apply external forces
+    for (const Force* force : _force) {
+      force->Apply(&_particles, index, _stepTime);
+    }
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
   }
@@ -579,7 +493,7 @@ void Solver::Step()
     _StepOne();
   
   _timer->Update();
-  _timer->Log();
+  //_timer->Log();
 
   //std::cout << _particles.GetPredicted() << std::endl;
 
