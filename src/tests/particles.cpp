@@ -149,7 +149,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
   //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
 
-  float mass = 0.1f;
+  float mass = 2.f;
   float radius = 0.25f;
   float damping = 0.1f;
   Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);

@@ -17,7 +17,6 @@ struct Particles;
 struct Body;
 
 class Points;
-class Constraint;
 class Solver;
 class BVH;
 
@@ -98,20 +97,20 @@ protected:
   virtual void _SolveVelocity(Particles* particles, size_t index, float dt, float t);
 
   // hits encode vertex hit in the int list bits
-  pxr::VtArray<int>           _hits;
-  std::vector<int>            _p2c;
-  std::vector<int>            _c2p;
-  size_t                      _c2pIdx;
-  size_t                      _numParticles;
-  size_t                      _numContacts;
-  std::vector<Contact>        _contacts;
-  float                       _restitution;
-  float                       _friction;
-  Geometry*                   _collider;
-  pxr::TfToken                _key;
+  pxr::VtArray<int>                 _hits;
+  std::vector<int>                  _p2c;
+  std::vector<int>                  _c2p;
+  size_t                            _c2pIdx;
+  size_t                            _numParticles;
+  size_t                            _numContacts;
+  std::vector<Contact>              _contacts;
+  float                             _restitution;
+  float                             _friction;
+  Geometry*                         _collider;
+  pxr::TfToken                      _key;
 
-  Points*                     _points;
-  pxr::SdfPath                _id;
+  Points*                           _points;
+  pxr::SdfPath                      _id;
 
 };
 

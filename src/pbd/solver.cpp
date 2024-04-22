@@ -99,7 +99,7 @@ void _Timer::Update() {
 }
 
 void _Timer::Log() {
-  return;
+  std::cout << "------------------   time :   " << Time::Get()->GetActiveTime() << std::endl;
   for (size_t t = 0; t < _n; ++t) {
     std::cout << "## " << _names[t] << ": ";
     std::cout << "  - accum : " << _accums[t];
@@ -107,11 +107,13 @@ void _Timer::Log() {
   }
 }
 
-static const size_t NUM_TIMES = 5;
+static const size_t NUM_TIMES = 7;
 static const char* TIME_NAMES[NUM_TIMES] = {
   "find contacts",
+  "update contacts",
   "integrate particles",
   "solve constraints",
+  "solve contacts",
   "update particles",
   "solve velocities"
 };
@@ -458,6 +460,7 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 
 void Solver::_SolveVelocities()
 {
+  return;
   for (auto& collision : _collisions) {
     if (!collision->GetNumContacts()) continue;
     collision->SolveVelocities(&_particles, _stepTime, _t);
@@ -469,7 +472,10 @@ void Solver::_StepOne()
   const size_t numParticles = _particles.GetNumParticles();
   const size_t numContacts = _contacts.size();
 
-  _timer->Start(1); 
+  _timer->Start(1);
+  _UpdateContacts();
+
+  _timer->Next();
   // integrate particles
   pxr::WorkParallelForN(
     numParticles,
@@ -479,6 +485,9 @@ void Solver::_StepOne()
   _timer->Next();
   // solve and apply constraint
   _SolveConstraints(_constraints);
+
+  _timer->Next();
+  // solve and apply contacts
   _SolveConstraints(_contacts);
 
   _timer->Next();

@@ -6,6 +6,8 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Particles;
+class Constraint;
+class CollisionConstraint;
 class Contact : public Location
 {
 public:
@@ -20,7 +22,6 @@ private:
   pxr::GfVec3f      _relV;     // relative velocity
   float             _nrmV;     // normal velocity
 };
-
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

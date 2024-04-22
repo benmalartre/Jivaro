@@ -45,8 +45,10 @@ public:
   inline size_t GetNumElements() const{
     return _elements.size() / GetElementSize();
   };
+  inline bool HaveElements(){return _elements.size() > 0;};
   const pxr::VtArray<int>& GetElements() {return _elements;};
-
+  virtual void SetElements(const pxr::VtArray<int>& elements);
+  
   virtual void Solve(Particles* particles, float dt) = 0;
 
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
@@ -66,7 +68,6 @@ protected:
   pxr::VtArray<Body*>           _body;
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _correction;
-  pxr::VtArray<pxr::GfVec3f>    _gradient;
   float                         _stiffness;
   float                         _compliance;
   float                         _damping;

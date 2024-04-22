@@ -21,7 +21,6 @@ Constraint::Constraint(size_t elementSize, Body* body, float stiffness,
   const size_t numElements = elems.size() / elementSize;
   _body.resize(1);
   _body[0] = body;
-  _gradient.resize(elementSize + 1);
   _correction.resize(_elements.size());
 }
 
@@ -33,6 +32,12 @@ Constraint::Constraint(Body* body1, Body* body2, float stiffness, float damping)
   _body.resize(2);
   _body[0] = body1;
   _body[1] = body2;
+}
+
+void Constraint::SetElements(const pxr::VtArray<int>& elems)
+{
+  const size_t numElements = _elements.size() / GetElementSize();
+  _correction.resize(numElements);
 }
 
 void Constraint::_ResetCorrection()
@@ -529,7 +534,6 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
   _correction.resize(numElements);
-  _gradient.resize(ELEM_SIZE + 1);
 }
 
 void CollisionConstraint::Solve(Particles* particles, float dt)

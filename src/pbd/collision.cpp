@@ -34,19 +34,17 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   _c2pIdx = 0;
   pxr::VtArray<int> elements;
   _numContacts = 0;
-  size_t numConstraints = 0;
   int bodyIdx = -1;
 
   for (size_t index = 0; index < numParticles; ++index) {
     if (CheckHit(index)) {
       _p2c[index] = _numContacts++;
       _c2p.push_back(index);
-      if (particles->_body[index] != bodyIdx) {
+      if (particles->_body[index] != bodyIdx || elements.size() >= Constraint::BlockSize) {
         if (elements.size()) {
           constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
           StoreContactsLocation(particles, & elements[0], elements.size(), bodies[0], bodyIdx, ft);
           contacts.push_back(constraint);
-          numConstraints++;
           elements.clear();
         }
         bodyIdx = particles->_body[index];
@@ -60,7 +58,6 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
     StoreContactsLocation(particles, & elements[0], elements.size(), bodies[0], bodyIdx, ft);
     contacts.push_back(constraint);
     _numContacts += elements.size();
-    numConstraints++;
   }
 }
 
@@ -121,10 +118,11 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt, flo
 
   if(!CheckHit(index))return;    
 
-  //particles->_position[index] = GetContactPosition(index, t);
-  //particles->_predicted[index] = particles->_position[index];
-  //particles->_velocity[index] *= 0.1f;
+  particles->_position[index] = GetContactPosition(index, t);
+  particles->_predicted[index] = particles->_position[index];
+  particles->_velocity[index] *= 0.1f;
 
+/*
   pxr::GfVec3f normal = GetContactNormal(index, t);
 
   // Relative normal and tangential velocities
@@ -146,7 +144,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt, flo
   const float vnTilde = GetContactNormalVelocity(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
   particles->_velocity[index] += normal * restitution * dt;
-
+*/
  
 }
 
@@ -215,7 +213,7 @@ void PlaneCollision::UpdateContacts(float t)
   _position = plane->GetOrigin(t);
 
   for (auto& contact : _contacts) {
-
+    //contact->Update(Particles* particles, const pxr::GfVec3f* positions);
   }
 
   
