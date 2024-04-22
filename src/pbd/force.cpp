@@ -16,20 +16,22 @@ GravitationalForce::GravitationalForce(const pxr::GfVec3f& gravity)
 {
 }
 
-void GravitationalForce::Apply(Particles* particles, size_t index, float dt) const
+void GravitationalForce::Apply(size_t begin, size_t end, Particles* particles, float dt) const
 {
-  if (!Affects(index) || particles->_state[index] != Particles::ACTIVE)return;
-
   const float* mass = &particles->_mass[0];
   const float* invMass = &particles->_invMass[0];
   pxr::GfVec3f* velocity = &particles->_velocity[0];
-  pxr::GfVec3f force;
 
-  force = _gravity * mass[index];
-  if (HasWeights())
-    velocity[index] += force * _weights[index] * invMass[index] * dt;
+  Mask::Iterator iterator((const Mask*)this, begin, end);
+
+  if(HasWeights())
+    for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
+      velocity[index] += _gravity * mass[index] * _weights[index] * invMass[index] * dt;
+    }
   else
-    velocity[index] += force * invMass[index] * dt;
+    for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
+      velocity[index] += _gravity * mass[index] * invMass[index] * dt;
+    }
 }
 
 DampingForce::DampingForce()
@@ -44,21 +46,22 @@ DampingForce::DampingForce(float damp)
 {
 }
 
-void DampingForce::Apply(Particles* particles, size_t index, float dt) const
+void DampingForce::Apply(size_t begin, size_t end, Particles* particles, float dt) const
 {
-  if (!Affects(index) || particles->_state[index] != Particles::ACTIVE)return;
- 
-  pxr::GfVec3f* velocity = &particles->_velocity[0];
   const float* mass = &particles->_mass[0];
   const float* invMass = &particles->_invMass[0];
-  pxr::GfVec3f force;
+  pxr::GfVec3f* velocity = &particles->_velocity[0];
 
-  force = _damp * velocity[index] * mass[index];
-  if (HasWeights())
-    velocity[index] -= force * _weights[index] *invMass[index] * dt;
-  else
-    velocity[index] -= force * invMass[index] * dt;
-
+  if(HasWeights())
+    for(size_t index = begin; index < end; ++index) {
+      if (particles->_state[index] != Particles::ACTIVE)continue;
+      velocity[index] -= _damp * velocity[index] * mass[index] * _weights[index] *invMass[index] * dt;
+    }
+  else 
+    for(size_t index = begin; index < end; ++index) {
+      if (particles->_state[index] != Particles::ACTIVE)continue;
+      velocity[index] -= _damp * velocity[index] * mass[index] * invMass[index] * dt;
+    }
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

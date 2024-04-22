@@ -45,7 +45,6 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   _frameTime = 1.f / Time::Get()->GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
 
-  //for (size_t i = 0; i < NUM_TIMES; ++i) T_timers[i].Reset();
   _timer = new Timer();
   _timer->Init("xpbd solver", NUM_TIMES, &TIME_NAMES[0]);
   _points = new Points();
@@ -62,6 +61,7 @@ Solver::~Solver()
   for (auto& force : _force)delete force;
   for (auto& constraint : _constraints)delete constraint;
   delete _points;
+  delete _timer;
 }
 
 void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
@@ -285,9 +285,10 @@ void Solver::WeightBoundaries()
 
 void Solver::_ClearContacts()
 {
-  
-  for(size_t p = 0; p < _particles.GetNumParticles(); ++p)
-    _particles._color[p] = _particles._velocity[p] ;
+  for (auto& collision : _collisions) {
+    collision->UpdateContacts(1.f);
+  }
+
   for (auto& contact : _contacts)delete contact;
   _contacts.clear();
 }
@@ -320,11 +321,11 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   pxr::GfVec3f* predicted = &_particles._predicted[0];
   pxr::GfVec3f* position = &_particles._position[0];
 
+  // apply external forces
+  for (const Force* force : _force)
+    force->Apply(begin, end, &_particles, _stepTime);
+
   for (size_t index = begin; index < end; ++index) {
-    // apply external forces
-    for (const Force* force : _force) {
-      force->Apply(&_particles, index, _stepTime);
-    }
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
   }
@@ -492,7 +493,7 @@ void Solver::Step()
     _StepOne();
   
   _timer->Update();
-  //_timer->Log();
+  _timer->Log();
 
   //std::cout << _particles.GetPredicted() << std::endl;
 

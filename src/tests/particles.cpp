@@ -136,6 +136,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::SdfPath emitterId = _solverId.AppendChild(pxr::TfToken("emitter"));
   Mesh* emitter = new Mesh(scale * rotate * translate);
   emitter->Cube();
+  emitter->SetInputOnly();
 
   _scene.MarkPrimDirty(emitterId, pxr::HdChangeTracker::AllDirty);
   
@@ -194,8 +195,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   */
   Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
-  _solver->AddForce(gravity);
   _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
+
+  
 
 
   float restitution = 0.5f;
@@ -206,6 +208,12 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   }
 
   Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
+
+  std::vector<int> used;
+  for(size_t p = 0; p < _solver->GetNumParticles(); ++p)
+    if(RANDOM_0_1 < 0.5)used.push_back(p);
+  collision->SetMask(_solver->GetNumParticles(), used);
+
   _solver->AddElement(collision, _ground, _groundId);
 
   _lastTime = _solver->GetStartFrame();

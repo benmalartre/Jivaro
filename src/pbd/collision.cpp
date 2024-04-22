@@ -36,7 +36,8 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   _numContacts = 0;
   int bodyIdx = -1;
 
-  for (size_t index = 0; index < numParticles; ++index) {
+  Mask::Iterator iterator(this, 0, numParticles);
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     if (CheckHit(index)) {
       _p2c[index] = _numContacts++;
       _c2p.push_back(index);
@@ -63,7 +64,8 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
 
 void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, float ft)
 {
-  for (size_t index = begin; index < end; ++index) {
+  Mask::Iterator iterator(this, begin, end);
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     _FindContact(index, particles, ft);
   }
 }
@@ -229,8 +231,6 @@ void PlaneCollision::_UpdatePositionAndNormal()
 
 void PlaneCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
-  if (!Affects(index))return;
-
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
   float d = pxr::GfDot(_normal, predicted - _position)  - particles->_radius[index] * TOLERANCE_FACTOR;
   SetHit(index, d < 0.f);
@@ -300,7 +300,6 @@ void SphereCollision::_UpdateCenterAndRadius()
 
 void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
-  if (!Affects(index))return;
   const float radius = _radius + particles->_radius[index] * TOLERANCE_FACTOR;
   const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->_position[index] + velocity);
