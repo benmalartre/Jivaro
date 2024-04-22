@@ -293,17 +293,18 @@ void Solver::_FindContacts()
 {
   _ClearContacts();
 
-  size_t previous = 0;
+  // update collider on the end of the frame
+  _UpdateContacts(1.f);
+
   for (auto& collision : _collisions) {
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-    previous = _contacts.size();
   }
 }
 
-void Solver::_UpdateContacts()
+void Solver::_UpdateContacts(float t)
 {
   for (auto& collision : _collisions) {
-    collision->UpdateContacts(&_particles, _t);
+    collision->UpdateContacts(&_particles, t);
   }
 }
 
@@ -385,7 +386,7 @@ void Solver::_StepOne()
   const size_t numContacts = _contacts.size();
 
   _timer->Start(1);
-  _UpdateContacts();
+  _UpdateContacts(_t);
 
   _timer->Next();
   // integrate particles

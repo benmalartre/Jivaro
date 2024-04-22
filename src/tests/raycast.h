@@ -1,5 +1,5 @@
-#ifndef JVR_TEST_PBD_H
-#define JVR_TEST_PBD_H
+#ifndef JVR_TEST_RAYCAST_H
+#define JVR_TEST_RAYCAST_H
 
 #include "../acceleration/bvh.h"
 #include "../exec/execution.h"

@@ -29,45 +29,61 @@ int _GetElementDimensionFromGeometry(Geometry* geometry)
 
 void Contact::Init(Geometry* geometry, Particles* particles, size_t index)
 {
-  size_t n = _GetElementDimensionFromGeometry(geometry);
-
-  if(n == 0) {
-    if(geometry->GetType() == Geometry::PLANE) {
+  switch(geometry->GetType()) {
+    case Geometry::PLANE:
+    {
       Plane* plane = (Plane*)geometry;
       _normal = plane->GetNormal();
+      _d = pxr::GfDot(_normal, particles->_position[index] - plane->GetOrigin()) - particles->_radius[index];
+      break;
     }
-  } else {
-    const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
-    _normal = ComputeNormal(positions, &_elemId, n, geometry->GetMatrix());
+    case Geometry::SPHERE:
+      break;
 
-    _relV = particles->_velocity[index] - geometry->GetVelocity();
-    _nrmV = pxr::GfDot(_relV, _normal);
+    case Geometry::POINT:
+    case Geometry::CURVE:
+    case Geometry::MESH:
+    {
+      size_t n = _GetElementDimensionFromGeometry(geometry);
+      const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+      _normal = ComputeNormal(positions, &_elemId, n, geometry->GetMatrix());
+
+      _relV = particles->_velocity[index] - geometry->GetVelocity();
+      _nrmV = pxr::GfDot(_relV, _normal);
+      break;
+    }
   }
 }
 
-void Contact::Update(Geometry* geometry, Particles* particles, size_t index)
+void Contact::Update(Geometry* geometry, Particles* particles, size_t index, float t)
 {
-  size_t n = _GetElementDimensionFromGeometry(geometry);
-
-  if(n == 0) {
-     switch(geometry->GetType()) {
-      case Geometry::PLANE:
-        Plane* plane = (Plane*)geometry;
-        _normal = plane->GetNormal();
-        _d = pxr::GfDot(_normal, particles->_predicted[index] - plane->GetOrigin()) - particles->_radius[index];
+  switch(geometry->GetType()) {
+    case Geometry::PLANE:
+    {
+      Plane* plane = (Plane*)geometry;
+      _normal = plane->GetNormal(t);
+      _d = pxr::GfDot(_normal, particles->_position[index] - plane->GetOrigin(t)) - particles->_radius[index];
+      break;
+    }
+    case Geometry::SPHERE:
         break;
 
-     }
-  } else {
-    const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
-    const pxr::GfVec3f position = ComputePosition(positions, &_elemId, n, geometry->GetMatrix());
+    case Geometry::POINT:
+    case Geometry::CURVE:
+    case Geometry::MESH:
+    {
+      size_t n = _GetElementDimensionFromGeometry(geometry);
+      const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+      const pxr::GfVec3f position = ComputePosition(positions, &_elemId, n, geometry->GetMatrix());
 
-    _normal = ComputeNormal(positions, &_elemId, n, geometry->GetMatrix());
+      _normal = ComputeNormal(positions, &_elemId, n, geometry->GetMatrix());
 
-    const pxr::GfVec3f delta = position - particles->_predicted[index];
+      const pxr::GfVec3f delta = position - particles->_predicted[index];
 
-    _d = pxr::GfDot(delta, _normal);
-  }
+      _d = pxr::GfDot(delta, _normal);
+      break;
+    }
+    }
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

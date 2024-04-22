@@ -13,13 +13,15 @@ class Contact : public Location
 {
 public:
   void Init(Geometry* geometry, Particles* particles, size_t index);
-  void Update(Geometry* geometry, Particles* particles, size_t index);
+  void Update(Geometry* geometry, Particles* particles, size_t index, float t);
 
+  pxr::GfVec3f GetPosition() const {return _position;};
   pxr::GfVec3f GetNormal() const {return _normal;};
   float GetNormalVelocity() const { return _nrmV; };
-  float GetPenetrationDepth() const {return _d;};
+  float GetDepth() const {return _d;};
 
 private:
+  pxr::GfVec3f      _position; // contact position
   pxr::GfVec3f      _normal;   // contact normal
   float             _d;        // penetration depth
   pxr::GfVec3f      _relV;     // relative velocity

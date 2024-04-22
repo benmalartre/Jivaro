@@ -7,6 +7,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Solver;
 class Plane;
+class Body;
 
 class TestPBD : public Execution {
 public:
@@ -23,11 +24,6 @@ private:
   pxr::SdfPath                                               _groundId;
   pxr::SdfPath                                               _solverId;
 };
-
-Execution* CreateTestPBD()
-{
-  return new TestPBD();
-}
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

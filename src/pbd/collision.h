@@ -66,7 +66,7 @@ public:
 
   std::vector<Contact>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
-  Location& GetContact(size_t index){return _contacts[_p2c[index]];};
+  Contact& GetContact(size_t index){return _contacts[_p2c[index]];};
   const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 
@@ -94,7 +94,7 @@ protected:
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
   
   virtual void _FindContact(size_t index, Particles* particles, float ft) = 0; // pure virtual
-  virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) = 0; // pure virrtual
+  virtual void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& contact, float ft) = 0; // pure virrtual
 
   virtual void _SolveVelocity(Particles* particles, size_t index, float dt);
 
@@ -129,7 +129,7 @@ public:
 protected:
   void _UpdatePositionAndNormal();
   void _FindContact(size_t index, Particles* particles, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& contact, float ft) override;
 
 private:
   static size_t                 TYPE_ID;
@@ -151,7 +151,7 @@ public:
 protected:
   void _UpdateCenterAndRadius();
   void _FindContact(size_t index, Particles* particles, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& contact, float ft) override;
   
 
 private:
@@ -175,7 +175,7 @@ protected:
   void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
   void _FindContact(size_t index, Particles* particles, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Location& location, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, const Body* body, Contact& contact, float ft) override;
   
 
 private:

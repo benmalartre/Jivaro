@@ -51,7 +51,7 @@ public:
   // Getters
   int GetGeometryIndex() const { return _geomId; };
   int GetElementIndex() const { return _elemId; };
-  const pxr::GfVec3f& GetCoordinates() const { return *(pxr::GfVec3f*)&_coords;};
+  const pxr::GfVec3f GetCoordinates() const { return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]);};
   float GetT() const { return _coords[3]; };
 
   virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, int* elements, size_t sz,

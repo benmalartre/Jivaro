@@ -552,8 +552,8 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 
     const pxr::GfVec3f restitution = n * (particles->_mass[index] /** (1.f + _collision->GetRestitution())*/) * -d;
 
-    _correction[elem * ELEM_SIZE + 0] += im0 * restitution;
-
+    _correction[elem * ELEM_SIZE + 0] += im0 * restitution * dt;
+/*
     // relative motion
     const pxr::GfVec3f dp =
       (particles->_predicted[index] - particles->_previous[index]) -
@@ -566,7 +566,7 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
       dpT * pxr::GfMin(particles->_mass[index] * _collision->GetFriction() * dt, 0.f);
 
     _correction[elem * ELEM_SIZE + 0] += im0 * friction;
-  
+  */
     
   }
 }

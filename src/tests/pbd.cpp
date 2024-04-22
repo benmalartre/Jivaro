@@ -62,22 +62,35 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
   std::cout << "created cloth meshes" << std::endl;
 
-  // create collide spheres
+   // create collide spheres
   std::map<pxr::SdfPath, Sphere*> spheres;
   
-  for (size_t x = 0; x < 1; ++x) {
-    std::cout << "collide sphere" << std::endl;
+  pxr::GfVec3f offset(10.f, 0.f, 0.f);
+  pxr::GfVec3f axis(0.f,1.f,0.f);
+  size_t n = 8;
+  const double rStep = 360.0 / static_cast<double>(n);
+/*
+  for (size_t x = 0; x < n; ++x) {
     std::string name = "sphere_collide_" + std::to_string(x);
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
+    pxr::GfRotation rotate(axis, x * rStep);
     spheres[collideId] =
-      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 4.f, 
-      pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 0.f, 0.f)));
+      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d(1.f).SetTranslate(rotate.TransformDir(offset)));
 
     _scene.AddGeometry(collideId, spheres[collideId]);
-
-    //sphere.GetRadiusAttr().Get(&radius);
-    //pxr::GfMatrix4f m(sphere.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
   }
+  
+  std::string name = "sphere_collide_ctr";
+  pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
+  spheres[collideId] =
+    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
+
+    _AddAnimationSamples(stage, collideId);
+
+
+  _scene.AddGeometry(collideId, spheres[collideId]);
+  
+*/
    
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
@@ -95,28 +108,27 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _bodyMap[prim.GetPath()] = body;
     }
   }
-  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
-  _solver->AddForce(gravity);
 
   //_solver->AddElement(gravity, NULL, _groundId);
 
   _solver->WeightBoundaries();
   _solver->LockPoints();
   
-  //_solver->AddForce(new DampingForce());
+  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
+  _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
+
   
-  float restitution = 0.25;
+
+
+  float restitution = 0.5f;
   float friction = 0.5f;
-  for (auto& sphere: spheres) {
-   Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
-   _solver->AddElement(collision, sphere.second, sphere.first);
-  } 
+  for (auto& sphere : spheres) {
+    Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
+    _solver->AddElement(collision, sphere.second, sphere.first);
+  }
 
-  Collision* collision = new PlaneCollision(_ground, _groundId, 1.f, 1.f);
+  Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
   _solver->AddElement(collision, _ground, _groundId);
-
-  _solver->GetParticles()->SetAllState(Particles::ACTIVE);
-  _solver->Update(stage, _solver->GetStartFrame());
 
 }
 

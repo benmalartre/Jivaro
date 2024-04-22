@@ -18,26 +18,25 @@ const float Collision::TOLERANCE_FACTOR = 1.05f;
 
 void Collision::_ResetContacts(Particles* particles)
 {
-  std::cout << "reset contact" << std::endl;
   const size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
   _contacts.clear();
   _contacts.reserve(numParticles);
-  std::cout << "reset contact OK" << std::endl;
+  _p2c.resize(numParticles, -1);
+  _c2p.clear();
+  _c2p.reserve(numParticles);
+
 }
 
 void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints, float ft)
 {
-  std::cout << "build contact" << std::endl;
   CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->_position.size();
   size_t numBodies = bodies.size();
 
-  _p2c.resize(numParticles, -1);
-  _c2p.clear();
-  _c2p.reserve(numParticles);
+  
   pxr::VtArray<int> elements;
   int bodyIdx = -1;
 
@@ -67,7 +66,6 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
     constraints.push_back(constraint);
   }
 
-  std::cout << "build contact OK" << std::endl;
 }
 
 void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, float ft)
@@ -87,8 +85,6 @@ void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 
 void Collision::Init(size_t numParticles) 
 {
-  _p2c.resize(numParticles, -1);
-  _c2p.resize(numParticles, -1);
 }
 
 void Collision::Update(const pxr::UsdPrim& prim, double time){}
@@ -107,13 +103,13 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
   const Body* body, size_t geomId, float ft)
 {
   const size_t offset = ((Body*)body + geomId * sizeof(Body))->GetOffset();
-  size_t numContacts = _contacts.size();
-  _contacts.resize(numContacts + n);
+  const size_t numContacts = _contacts.size();
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
-    Contact& contact = _contacts[numContacts + elemIdx];
+    _contacts.push_back(Contact());
+    Contact& contact = _contacts.back();
     contact.SetGeometryIndex(geomId);
+    contact.Init(_collider, particles, elements[elemIdx]);
     _StoreContactLocation(particles, elements[elemIdx], body, contact, ft);
-    contact.Init(body->GetGeometry(), particles, elements[elemIdx]);
   }
 }
 
@@ -128,12 +124,15 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
 
-  /*
-  particles->_position[index] = GetContactPosition(index);
-  particles->_predicted[index] = particles->_position[index];
+  const pxr::GfVec3f position = GetContactPosition(index);
+  
+  particles->_predicted[index] = position;
+  particles->_position[index] = position;
+
+
   particles->_velocity[index] *= 0.f;
   
-
+  /*
   pxr::GfVec3f normal = GetContactNormal(index);
 
   // Relative normal and tangential velocities
@@ -180,7 +179,7 @@ float Collision::GetContactNormalVelocity(size_t index) const
 
 float Collision::GetContactDepth(size_t index) const
 {
-  return _contacts[_p2c[index]].GetPenetrationDepth();
+  return _contacts[_p2c[index]].GetDepth();
 }
 
 
@@ -220,8 +219,10 @@ void PlaneCollision::UpdateContacts(Particles* particles,   float t)
   _normal = plane->GetNormal(t);
   _position = plane->GetOrigin(t);
 
+  size_t idx = 0;
   for (auto& contact : _contacts) {
-    contact.Update(_collider, particles, t);
+
+    contact.Update(_collider, particles, _c2p[idx++], t );
   }
 
   
@@ -243,19 +244,15 @@ void PlaneCollision::_FindContact(size_t index, Particles* particles, float ft)
 }
 
 void PlaneCollision::_StoreContactLocation(Particles* particles, int index, 
-  const Body* body, Location & location, float ft)
+  const Body* body, Contact & contact, float ft)
 {
-  const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
-  const pxr::GfVec3f predicted(particles->_position[index] + velocity);
+  const pxr::GfVec3f predicted = particles->_position[index] + particles->_velocity[index] * ft;
   float d = pxr::GfDot(_normal, predicted - _position)  - particles->_radius[index];
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  const pxr::GfVec3f relativeVelocity = velocity - _collider->GetVelocity();
-  const float vn = pxr::GfDot(relativeVelocity, _normal);
-
-  location.SetCoordinates(intersection);
-  location.SetT(vn);
+  contact.SetCoordinates(intersection);
+  contact.SetT(d);
 
   particles->_color[index] = pxr::GfVec3f((1.f - d), d, 0.5f);
 }
@@ -295,7 +292,7 @@ void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 }
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int index, 
-  const Body* body, Location& location, float ft)
+  const Body* body, Contact& location, float ft)
 {
   const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->_position[index] + velocity);
@@ -385,7 +382,7 @@ void MeshCollision::_FindContact(size_t index, Particles* particles, float ft)
 }
 
 void MeshCollision::_StoreContactLocation(Particles* particles, int index, 
-  const Body* body, Location& location, float ft)
+  const Body* body, Contact& location, float ft)
 {
   /*
   const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
