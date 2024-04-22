@@ -35,7 +35,7 @@ public:
   inline void SetEndTime(float time){_endTime = time;};
   inline void SetMaxTime(float time){_maxTime = time;};
   inline void SetActiveTime(float time){_activeTime = time;};
-  inline void SetFPS(float fps){_fps = fps; _frame = 1.f/_fps;};
+  inline void SetFPS(float fps){_fps = fps > 1e-6 ? fps : 1e-6; _frame = 1.f/_fps;};
   inline void SetSpeed(float speed){_speed = speed;};
   inline void SetLoop(bool loop){_loop = loop;};
 
@@ -48,14 +48,12 @@ public:
   int Playback();
   bool IsPlaying(){return _playback;};
   
-  void ComputeFramerate(double T);
+  void ComputeFramerate();
 
   // singleton 
   static Time *Get();
 
 private:
-  uint64_t                          _t;
-  double                            _chronometer;
   float                             _activeTime;
   float                             _startTime;
   float                             _endTime;
@@ -68,9 +66,15 @@ private:
   bool                              _playForwardOrBackward;
   bool                              _playback;
 
-  double                            _lastT;
-  size_t                            _frameCount;
+  // main loop
+  uint64_t                           _lastT;
   size_t                            _framerate;
+  size_t                            _frameCount;
+
+  // playing
+  uint64_t                          _chronometer;
+
+  
 
   static Time*                      _singleton;
 };

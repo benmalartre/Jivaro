@@ -16,15 +16,14 @@ Time* Time::Get() {
 
 void Time::Init(float start, float end, float fps)
 {
-  fps = pxr::GfMin(fps, 0.0001f);
   _startTime = start;
   _minTime = _startTime;
   _activeTime = _startTime;
   _endTime = end;
   _maxTime = _endTime;
   _loop = true;
-  _fps = fps;
-  _frame = 1.f / fps;
+  _fps = fps > 1e-6 ? fps : 1e-6;
+  _frame = 1.f / _fps;
   _speed = 1.f;
   _playback = false;
   _playForwardOrBackward = false;
@@ -32,10 +31,11 @@ void Time::Init(float start, float end, float fps)
   _frameCount = 0;
 }
 
-void Time::ComputeFramerate(double T)
+void Time::ComputeFramerate()
 {
   _frameCount++;
-  if (T - _lastT >= 1.0)
+  uint64_t T = CurrentTime();
+  if (T - _lastT >= 1000)
   {
     _framerate = _frameCount;
     _frameCount = 0;
@@ -77,8 +77,7 @@ void Time::LastFrame()
 
 void Time::StartPlayback(bool backward)
 {
-  _t = CurrentTime();
-  _chronometer = 0.0;
+  _chronometer = 0;
   _playback = true;
   _playForwardOrBackward = backward;
   Playback();
@@ -92,10 +91,9 @@ void Time::StopPlayback()
 int Time::Playback()
 {
   uint64_t t = CurrentTime();
-  _chronometer += (t - _t) * 1e-9;
-  _t = t;
+  _chronometer += (t - _lastT);
 
-  if(_chronometer < (1.f/_fps))
+  if(_chronometer < (_frame * 1000))
     return PLAYBACK_WAITING;
 
   _chronometer = 0.f;

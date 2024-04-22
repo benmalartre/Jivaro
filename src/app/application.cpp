@@ -338,7 +338,7 @@ Application::Update()
   */
 
   glfwPollEvents();
-  Time::Get()->ComputeFramerate(glfwGetTime());
+  Time::Get()->ComputeFramerate();
 
   static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
