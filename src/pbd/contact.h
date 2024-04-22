@@ -6,8 +6,9 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Particles;
-class Constraint;
-class CollisionConstraint;
+class Plane;
+class Sphere;
+class Mesh;
 class Contact : public Location
 {
 public:

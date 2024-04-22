@@ -7,6 +7,8 @@
 #include "../pbd/utils.h"
 #include "../pbd/collision.h"
 #include "../pbd/particle.h"
+#include "../pbd/contact.h"
+#include "../pbd/particle.h"
 #include "../pbd/solver.h"
 #include "../pbd/constraint.h"
 
@@ -105,12 +107,13 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
   const Body* body, size_t geomId, float ft)
 {
   const size_t offset = ((Body*)body + geomId * sizeof(Body))->GetOffset();
-
+  size_t numContacts = _contacts.size();
+  _contacts.resize(numContacts + n);
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
-    _contacts.push_back(Contact());
-    _contacts.back().SetGeometryIndex(geomId);
-    _StoreContactLocation(particles, elements[elemIdx], body, _contacts.back(), ft);
-    _contacts.back().Init(body->GetGeometry(), particles, elements[elemIdx]);
+    Contact& contact = _contacts[numContacts + elemIdx];
+    contact.SetGeometryIndex(geomId);
+    _StoreContactLocation(particles, elements[elemIdx], body, contact, ft);
+    contact.Init(body->GetGeometry(), particles, elements[elemIdx]);
   }
 }
 

@@ -15,7 +15,7 @@ class Geometry;
 
 struct Particles;
 struct Body;
-
+class Constraint;
 class Points;
 class Solver;
 class BVH;
@@ -23,7 +23,6 @@ class BVH;
 class Collision : public Mask
 {
 public:
-  typedef std::map<Constraint*, std::vector<Contact>> ContactsMap;
 
   enum Type {
     PLANE = 1,
