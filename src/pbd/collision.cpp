@@ -72,7 +72,7 @@ void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, fl
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    _FindContact(index, particles, ft);
+    _FindContact(particles, index, ft);
   }
 }
 
@@ -143,7 +143,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index);
   const float vn = pxr::GfDot(v, normal);
   if(pxr::GfIsClose(vn, 0.f, 0.000001f)) {
-    
+
   }
   const pxr::GfVec3f vt = v - normal * vn;
   const float vtLen = vt.GetLength();
@@ -242,26 +242,36 @@ void PlaneCollision::_UpdatePositionAndNormal()
 }
 
 
-void PlaneCollision::_FindContact(size_t index, Particles* particles, float ft)
+void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
-  const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
-  float d = pxr::GfDot(_normal, predicted - _position)  - particles->_radius[index] * TOLERANCE_FACTOR;
-  SetHit(index, d < 0.f);
+  const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
+  Plane* plane = (Plane*)_collider;
+  pxr::GfRay ray(particles->_position[index], velocity);
+  double distance;
+  bool frontFacing;
+  
+  if (ray.Intersect(plane->Get(), &distance, &frontFacing)) {
+    SetHit(index, frontFacing && distance > (velocity.GetLength() - particles->_radius[index]));
+  }
+  
 }
 
 void PlaneCollision::_StoreContactLocation(Particles* particles, int index, 
   int geomId, Contact & contact, float ft)
 {
-  const pxr::GfVec3f predicted = particles->_position[index] + particles->_velocity[index] * ft;
-  float d = pxr::GfDot(_normal, predicted - _position)  - particles->_radius[index];
+  const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
+  pxr::GfRay ray(particles->_position[index], velocity);
+  Plane* plane = (Plane*)_collider;
+  double distance;
+  ray.Intersect(plane->Get(), &distance);
 
-  const pxr::GfVec3f intersection = predicted + _normal * -d;
+  const pxr::GfVec3f intersection(ray.GetPoint(distance));
 
   contact.Init(this, particles, index, geomId);
   contact.SetCoordinates(intersection);
-  contact.SetT(d);
+  contact.SetT(distance);
 
-  particles->_color[index] = pxr::GfVec3f((1.f - d), d, 0.5f);
+  particles->_color[index] = pxr::GfVec3f((1.f - distance), distance, 0.5f);
 }
 
 //----------------------------------------------------------------------------------------
@@ -290,7 +300,7 @@ void SphereCollision::_UpdateCenterAndRadius()
 } 
 
 
-void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
+void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const float radius = _radius + particles->_radius[index] * TOLERANCE_FACTOR;
   const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
@@ -387,7 +397,7 @@ void MeshCollision::_UpdateAccelerationStructure()
 } 
 
 
-void MeshCollision::_FindContact(size_t index, Particles* particles, float ft)
+void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   /*
   if (!Affects(index))return;

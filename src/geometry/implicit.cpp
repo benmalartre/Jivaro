@@ -59,6 +59,11 @@ pxr::GfVec3f Plane::GetOrigin()
   return pxr::GfVec3f(_matrix.GetRow3(3));
 };
 
+pxr::GfPlane Plane::Get()
+{
+  return pxr::GfPlane(GetNormal(), GetOrigin());
+}
+
 bool 
 Plane::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const

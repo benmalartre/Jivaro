@@ -94,7 +94,7 @@ protected:
     std::vector<Constraint*>& constraints, float dt);
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
   
-  virtual void _FindContact(size_t index, Particles* particles, float ft) = 0; // pure virtual
+  virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) = 0; // pure virrtual
 
   virtual void _SolveVelocity(Particles* particles, size_t index, float dt);
@@ -129,7 +129,7 @@ public:
 
 protected:
   void _UpdatePositionAndNormal();
-  void _FindContact(size_t index, Particles* particles, float ft) override;
+  void _FindContact(Particles* particles, size_t index, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;
 
 private:
@@ -152,7 +152,7 @@ public:
   
 protected:
   void _UpdateCenterAndRadius();
-  void _FindContact(size_t index, Particles* particles, float ft) override;
+  void _FindContact(Particles* particles, size_t index, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;
   
 
@@ -176,7 +176,7 @@ public:
 protected:
   void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
-  void _FindContact(size_t index, Particles* particles, float ft) override;
+  void _FindContact(Particles* particles, size_t index, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;
   
 
