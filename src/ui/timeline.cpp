@@ -140,6 +140,7 @@ void TimelineUI::MouseMove(int x, int y)
 void TimelineUI::DrawButtons()
 {
   Time* time = Time::Get();
+  _playing = time->IsPlaying();
   UIUtils::AddIconButton(0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
     [&](){
       _currentTime = _startTime;

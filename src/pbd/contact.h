@@ -15,13 +15,16 @@ public:
   void Init(Geometry* geometry, Particles* particles, size_t index);
   void Update(Geometry* geometry, Particles* particles, size_t index, float t);
 
-  pxr::GfVec3f GetPosition() const {return _position;};
+  size_t GetParticleIndex() const {return _id;};
   pxr::GfVec3f GetNormal() const {return _normal;};
+  pxr::GfVec3f GetVelocity() const {return _velocity;};
   float GetNormalVelocity() const { return _nrmV; };
   float GetDepth() const {return _d;};
 
 private:
-  pxr::GfVec3f      _position; // contact position
+  size_t            _id;       // particle id
+  pxr::GfVec3f      _velocity; // contact linear velocity
+  pxr::GfQuatf      _torque;   // contact angular velocity
   pxr::GfVec3f      _normal;   // contact normal
   float             _d;        // penetration depth
   pxr::GfVec3f      _relV;     // relative velocity

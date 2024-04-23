@@ -967,12 +967,14 @@ KeyboardCallback(
       case GLFW_KEY_LEFT:
       {
         time->PreviousFrame();
+        TimeChangedNotice().Send();
         break;
       }
 
       case GLFW_KEY_RIGHT:
       {
         time->NextFrame();
+        TimeChangedNotice().Send();
         break;
       }
 

@@ -67,6 +67,7 @@ public:
   void NewSceneCallback(const NewSceneNotice& n); 
   void SceneChangedCallback(const SceneChangedNotice& n);
   void AttributeChangedCallback(const AttributeChangedNotice& n);
+  void TimeChangedCallback(const TimeChangedNotice& n);
   void UndoStackNoticeCallback(const UndoStackNotice& n);
 
   // commands

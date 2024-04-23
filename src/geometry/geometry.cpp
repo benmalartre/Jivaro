@@ -70,16 +70,33 @@ Geometry::SetMatrix(const pxr::GfMatrix4d& matrix)
 
 void Geometry::_ComputeVelocity()
 {
-  //const pxr::GfVec3f deltaP(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
-  //_velocity = pxr::GfVec3f(deltaP / (1.f / Time::Get()->GetFrameDuration()));
-  _velocity = pxr::GfVec3f(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
+  _prevVelocity = _velocity;
+  const pxr::GfVec3f deltaP(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
+  _velocity = pxr::GfVec3f(deltaP / (1.f / Time::Get()->GetFrameDuration()));
+  //_velocity = pxr::GfVec3f(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
 
   const pxr::GfRotation rotation = _matrix.ExtractRotation();
   const pxr::GfRotation previous = _prevMatrix.ExtractRotation();
-  const pxr::GfRotation deltaR = (rotation.GetInverse() * previous)/*/ (1.f / Time::Get()->GetFrameDuration())*/;
+  const pxr::GfRotation deltaR = (previous.GetInverse() * rotation) / (1.f / Time::Get()->GetFrameDuration());
   
+  _prevOmega = _omega;
   _omega = pxr::GfQuatf(deltaR.GetQuat());
 
+}
+
+const pxr::GfQuatf Geometry::GetPreviousTorque() const
+{
+  return _prevOmega;
+}
+
+const pxr::GfQuatf Geometry::GetTorque() const
+{
+  return _omega;
+}
+
+const pxr::GfVec3f Geometry::GetPreviousVelocity() const
+{
+  return _prevVelocity;
 }
 
 const pxr::GfVec3f Geometry::GetVelocity() const

@@ -108,7 +108,6 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
     _contacts.push_back(Contact());
     Contact& contact = _contacts.back();
     contact.SetGeometryIndex(geomId);
-    contact.Init(_collider, particles, elements[elemIdx]);
     _StoreContactLocation(particles, elements[elemIdx], body, contact, ft);
   }
 }
@@ -123,10 +122,7 @@ void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, 
 void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
-
-  const pxr::GfVec3f position = GetContactPosition(index);
   
-
   pxr::GfVec3f normal = GetContactNormal(index);
 
   // Relative normal and tangential velocities
@@ -147,7 +143,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
   const float vnTilde = GetContactNormalVelocity(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
-  particles->_velocity[index] += normal * restitution * dt;
+  particles->_velocity[index] += normal * restitution;
  
 }
 
@@ -163,7 +159,7 @@ pxr::GfVec3f Collision::GetContactNormal(size_t index) const
 
 pxr::GfVec3f Collision::GetContactVelocity(size_t index) const 
 {
-  return _collider->GetVelocity();
+  return _contacts[_p2c[index]].GetVelocity();
 }
 
 float Collision::GetContactNormalVelocity(size_t index) const 
@@ -216,15 +212,15 @@ void PlaneCollision::UpdateContacts(Particles* particles,   float t)
   size_t idx = 0;
   for (auto& contact : _contacts) {
 
-    contact.Update(_collider, particles, _c2p[idx++], t );
+    contact.Update(_collider, particles, _c2p[idx++], t);
   }
 }
 
 void PlaneCollision::_UpdatePositionAndNormal()
 {
   Plane* plane = (Plane*)_collider;
-  _position =  plane->GetOrigin(true);
-  _normal = plane->GetNormal(true);
+  _position =  plane->GetOrigin();
+  _normal = plane->GetNormal();
 }
 
 
@@ -243,6 +239,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
+  contact.Init(_collider, particles, index);
   contact.SetCoordinates(intersection);
   contact.SetT(d);
 

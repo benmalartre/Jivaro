@@ -44,6 +44,7 @@ void TestParticles::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPat
   if(prim.IsValid()) {
     pxr::UsdGeomXformable xformable(prim);
     pxr::GfVec3d scale = pxr::GfVec3f(1.f, 1.f, 1.f);
+    pxr::GfVec3d translate0 = pxr::GfVec3f(0.f, 0.f, 0.f);
     pxr::GfVec3d translate1 = pxr::GfVec3f(0.f, -10.f, 0.f);
     pxr::GfVec3d translate2 = pxr::GfVec3f(0.f, 10.f, 0.f);
 
@@ -51,18 +52,19 @@ void TestParticles::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPat
     op.Set(scale);
 
     op = xformable.AddRotateZOp();
-    op.Set( 45.f, 1);
+    op.Set( 0.f, 1);
     op.Set(-45.f, 26);
     op.Set( 45.f, 51);
     op.Set(-45.f, 76);
-    op.Set( 45.f, 101);
+    op.Set( 0.f, 101);
 
     op = xformable.AddTranslateOp();
-    op.Set(translate1, 1);
-    op.Set(translate2, 26);
-    op.Set(translate1, 51);
-    op.Set(translate2, 76);
-    op.Set(translate1, 101);
+    op.Set(translate0, 101);
+    op.Set(translate2, 126);
+    op.Set(translate1, 151);
+    op.Set(translate2, 176);
+    op.Set(translate0, 201);
+
   }
 }
 

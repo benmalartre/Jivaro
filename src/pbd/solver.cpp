@@ -293,7 +293,6 @@ void Solver::_FindContacts()
 {
   _ClearContacts();
 
-  // update collider on the end of the frame
   _UpdateContacts(1.f);
 
   for (auto& collision : _collisions) {

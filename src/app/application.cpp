@@ -204,6 +204,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::TimeChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
   // create window
@@ -515,6 +516,19 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
   for (auto& window : _childWindows) {
     window->ForceRedraw();
     window->GetTool()->ResetSelection();
+  }
+  DirtyAllEngines();
+}
+
+void
+Application::TimeChangedCallback(const TimeChangedNotice& n)
+{
+  if (_execute && _exec) {
+    UpdateExec(_stage, Time::Get()->GetActiveTime());
+  }
+  _mainWindow->ForceRedraw();
+  for (auto& window : _childWindows) {
+    window->ForceRedraw();
   }
   DirtyAllEngines();
 }

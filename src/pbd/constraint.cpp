@@ -546,27 +546,35 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     const float d = _collision->GetContactDepth(index);
     if (d >= 0.f) continue;
 
-    pxr::GfVec3f n = _collision->GetContactNormal(index);
+    pxr::GfVec3f normal = _collision->GetContactNormal (index);
 
     const float im0 = particles->_invMass[index];
 
-    const pxr::GfVec3f restitution = n * (particles->_mass[index] /** (1.f + _collision->GetRestitution())*/) * -d;
+    float K = im0;
 
-    _correction[elem * ELEM_SIZE + 0] += im0 * restitution * dt;
+    float alpha = 0.0;
+    if (!pxr::GfIsClose(_stiffness, 0.0, 1e-6f))
+    {
+      alpha = 1.f / (_stiffness * dt * dt);
+      K += alpha;
+    }
+
+	  if (pxr::GfAbs(K) == 0.f) continue;
+
+	  const pxr::GfVec3f correction = normal * (particles->_mass[index] * (1.f + _collision->GetRestitution())) * -d;
+
+    _correction[elem * ELEM_SIZE + 0] += im0 * correction;
+
 /*
     // relative motion
-    const pxr::GfVec3f dp =
-      (particles->_predicted[index] - particles->_previous[index]) -
-      _collision->GetContactVelocity(index);
+    const pxr::GfVec3f relM = particles->_velocity[index] - _collision->GetContactVelocity(index);
+    
+    // tangential component of relative motion 
+    pxr::GfVec3f relT = (relM - normal * pxr::GfDot(relM, normal)) * -_collision->GetFriction();
 
-    // tangential component
-    const pxr::GfVec3f dpT = dp - n * pxr::GfDot(dp, n);
-
-    const pxr::GfVec3f friction = 
-      dpT * pxr::GfMin(particles->_mass[index] * _collision->GetFriction() * dt, 0.f);
-
-    _correction[elem * ELEM_SIZE + 0] += im0 * friction;
-  */
+    _correction[elem * ELEM_SIZE + 0] += im0 * relT * dt;
+    */
+    
     
   }
 }

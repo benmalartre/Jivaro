@@ -71,6 +71,16 @@ AttributeChangedNotice::~AttributeChangedNotice()
 
 ////////////////////////////////////////////////////////////
 
+TimeChangedNotice::TimeChangedNotice()
+{
+}
+
+TimeChangedNotice::~TimeChangedNotice()
+{
+}
+
+////////////////////////////////////////////////////////////
+
 UndoStackNotice::UndoStackNotice()
 {
 }
