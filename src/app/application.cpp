@@ -315,6 +315,7 @@ Application::TerminateExec(pxr::UsdStageRefPtr& stage)
   _exec->TerminateExec(stage);
   delete _exec;
   _exec = nullptr;  
+  _execute = false;
   SetActiveTool(Tool::NONE);
   NewSceneNotice().Send();
 }
@@ -487,6 +488,8 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 void 
 Application::NewSceneCallback(const NewSceneNotice& n)
 {
+  if(_exec) TerminateExec(_stage);
+
   _selection.Clear();
   _manager.Clear();
   DirtyAllEngines();
@@ -495,6 +498,8 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
+  if(_exec) TerminateExec(_stage);
+
   _mainWindow->GetTool()->ResetSelection();
   _mainWindow->ForceRedraw();
   for (auto& window : _childWindows) {
@@ -508,7 +513,7 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
-  if (_execute && _exec) {
+  if (_exec && _execute) {
     UpdateExec(_stage, Time::Get()->GetActiveTime());
   }
   _mainWindow->ForceRedraw();
@@ -523,7 +528,7 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 void
 Application::TimeChangedCallback(const TimeChangedNotice& n)
 {
-  if (_execute && _exec) {
+  if (_exec && _execute) {
     UpdateExec(_stage, Time::Get()->GetActiveTime());
   }
   _mainWindow->ForceRedraw();

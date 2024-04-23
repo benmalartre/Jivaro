@@ -994,9 +994,28 @@ KeyboardCallback(
       }
     }
   } else if (action == GLFW_REPEAT) {
-    View* view = parent->GetActiveView();
-    if (view && parent->ShouldRepeatKey()) {
-      view->Keyboard(key, scancode, action, mods);
+    switch (GetMappedKey(key))
+    {
+      case GLFW_KEY_LEFT:
+      {
+        time->PreviousFrame();
+        TimeChangedNotice().Send();
+        break;
+      }
+
+      case GLFW_KEY_RIGHT:
+      {
+        time->NextFrame();
+        TimeChangedNotice().Send();
+        break;
+      }
+
+      default:
+      {
+        View* view = parent->GetActiveView();
+        if (view && parent->ShouldRepeatKey())
+          view->Keyboard(key, scancode, action, mods);
+      }
     }
   } else if (action == GLFW_RELEASE) {
     parent->SetDebounce(false);

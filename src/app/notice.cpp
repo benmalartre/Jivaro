@@ -15,6 +15,7 @@ TF_REGISTRY_FUNCTION(TfType)
   TfType::Define<SelectionChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<SceneChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<AttributeChangedNotice, TfType::Bases<BaseNotice> >();
+  TfType::Define<TimeChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<UndoStackNotice, TfType::Bases<BaseNotice> >();
 }
 
