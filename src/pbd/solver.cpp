@@ -367,7 +367,7 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 
 }
 
-
+// this can not work as multiple thread can writ eto same velocities
 void Solver::_SolveVelocities()
 {
   for (auto& collision : _collisions) {

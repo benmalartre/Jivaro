@@ -16,14 +16,16 @@ public:
   void Init(Collision* collision, Particles* particles, size_t index, size_t geomId);
   void Update(Collision* collision, Particles* particles, size_t index);
 
-  pxr::GfVec3f GetNormal() const {return _normal;};
+  const pxr::GfVec3f& GetNormal() const {return _normal;};
+  const pxr::GfVec3f& GetVelocity() const {return _velocity;};
   float GetNormalVelocity() const { return _nrmV; };
   float GetDepth() const {return _d;};
 
 private:
   pxr::GfVec3f      _normal;   // contact normal
+  pxr::GfVec3f      _velocity; // relative velocity
+
   float             _d;        // penetration depth
-  pxr::GfVec3f      _relV;     // relative velocity
   float             _nrmV;     // normal velocity
 };
 

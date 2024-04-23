@@ -112,7 +112,7 @@ void StretchConstraint::Solve(Particles* particles, float dt)
 
 	  if (pxr::GfAbs(K) == 0.f) continue;
 
-	  const pxr::GfVec3f correction = n * -(1.f / K) * C * dt;
+	  const pxr::GfVec3f correction = n * -(1.f / K) * C;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
     _correction[elem * ELEM_SIZE + 1] -= im1 * correction;
@@ -540,40 +540,25 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
   const size_t offset = _body[0]->GetOffset();
 
   for (size_t elem = 0; elem < numElements; ++elem) {
-
     const size_t index = _elements[elem] + offset;
-    const float invMass = particles->_invMass[index];
+    const float im0 = particles->_invMass[index];
     const float d = _collision->GetContactDepth(index);
     if (d >= 0.f) continue;
 
     pxr::GfVec3f normal = _collision->GetContactNormal (index);
 
-    const float im0 = particles->_invMass[index];
-
-    float K = im0;
-
-    float alpha = 0.0;
-    if (!pxr::GfIsClose(_stiffness, 0.0, 1e-6f))
-    {
-      alpha = 1.f / (_stiffness * dt * dt);
-      K += alpha;
-    }
-
-	  if (pxr::GfAbs(K) == 0.f) continue;
-
-	  const pxr::GfVec3f correction = normal * particles->_mass[index] * -d;
+	  const pxr::GfVec3f correction = normal * - particles->_mass[index] * d;
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
 
     // relative motion
-    const pxr::GfVec3f relM = particles->_velocity[index] - _collision->GetContactVelocity(index);
+    const pxr::GfVec3f relM = 
+      (particles->_velocity[index] - _collision->GetVelocity(particles, index)) * dt;
     
     // tangential component of relative motion 
-    pxr::GfVec3f relT = (relM - normal * pxr::GfDot(relM, normal)) * -(particles->_mass[index] * _collision->GetFriction());
+    pxr::GfVec3f relT = relM - normal * - particles->_mass[index] * pxr::GfCross(relM, normal).GetLength();
 
-    _correction[elem * ELEM_SIZE + 0] += im0 * relT * dt;
-  
-    
+    _correction[elem * ELEM_SIZE + 0] -= im0 * relT * _collision->GetFriction();
     
   }
 }

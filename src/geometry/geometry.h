@@ -87,7 +87,7 @@ public:
   const pxr::GfMatrix4d& GetPreviousMatrix() const { return _prevMatrix; };
   const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
 
-  const pxr::GfQuatf GetTorque() const;
+  const pxr::GfVec3f GetTorque() const;
   const pxr::GfVec3f GetVelocity() const;
 
   virtual void ComputeBoundingBox() {};
@@ -125,7 +125,7 @@ protected:
   pxr::GfMatrix4d                     _prevMatrix;
   pxr::GfMatrix4d                     _invMatrix;
   pxr::GfVec3f                        _velocity;  // positional velocity
-  pxr::GfQuatf                        _omega;     // rotational velocity
+  pxr::GfVec3f                        _omega;     // rotational velocity
   pxr::GfBBox3d                       _bbox;
   pxr::GfVec3f                        _wirecolor;
 };

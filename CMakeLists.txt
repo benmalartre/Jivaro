@@ -41,6 +41,8 @@ endif()
 # nfd (native file dialog)
 set(NFD_INCLUDE_DIR "./utils/nfd/include")
 
+
+
 # glfw
 if(NOT DEFINED GLFW_DIR)
 	message(FATAL_ERROR "No GLFW_DIR variable set! GLFW installation path must be passed to cmake!!!")
@@ -54,7 +56,7 @@ if(NOT DEFINED USD_DIR)
 endif()
 
 # eigen
-set(EIGEN_INCLUDE_DIR "/Users/malartrebenjamin/Documents/RnD/eigen-3.4.0")
+set(EIGEN_INCLUDE_DIR "C:/Users/graph/Documents/bmal/src/eigen-3.4.0")
 
 #set(USD_DIR "/Users/benmalartre/Documents/RnD/USD_BUILD")
 set(USD_INCLUDE_DIR "${USD_DIR}/include")

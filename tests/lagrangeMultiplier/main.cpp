@@ -44,11 +44,12 @@ float LagrangeMultiplierEigen(size_t N, const VectorXf& gradient, float* w)
 
 int main (int argc, char *argv[])
 {
-  int64_t sT, eT;
-  float eR, cR;
-  for(size_t n = 16; n <= 4096; n <<= 1) {
-    pxr::GfVec3f grad[n];
-    float w[n];
+  uint64_t sT;
+  double eT, cT;
+  double eR, cR;
+  for(size_t n = 1024; n <= 1000000; n <<= 1) {
+    std::vector<pxr::GfVec3f> grad(n);
+    std::vector<float> w(n);
     for(size_t i = 0; i < n; ++i) {
       grad[i] = pxr::GfVec3f(RANDOM_LO_HI(-1, 1), RANDOM_LO_HI(-1, 1), RANDOM_LO_HI(-1, 1));
       w[i] = RANDOM_0_1;
@@ -62,15 +63,16 @@ int main (int argc, char *argv[])
       gradient(m * 3 + 2) = grad[m][2];
     }
 
-    sT = CurrentTime();
-    eR = LagrangeMultiplierEigen(n, gradient, w);
-    eT = CurrentTime() - sT;
+
+    sT = JVR::CurrentTime();
+    eR = LagrangeMultiplierEigen(n, gradient, &w[0]);
+    eT = (double)((JVR::CurrentTime() - sT) * 1e-9);
     std::cout << "eigen  (" << n << ") : " << eR << " took " << eT << std::endl;
    
-    sT = CurrentTime();
-    cR = LagrangeMultiplierCustom(n, grad, w);
-    eT = CurrentTime() - sT;
-    std::cout << "custom (" << n << ") : " << cR << " took " << eT << std::endl;
+    sT = JVR::CurrentTime();
+    cR = LagrangeMultiplierCustom(n, &grad[0], &w[0]);
+    cT = (double)((JVR::CurrentTime() - sT) * 1e-9);
+    std::cout << "custom (" << n << ") : " << cR << " took " << cT << std::endl;
 
   }
 

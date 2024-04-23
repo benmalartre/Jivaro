@@ -24,7 +24,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
+  float friction, float restitution)
 {
   const double width = 100;
   const double length = 100;
@@ -35,50 +36,24 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
   usdGround.CreateAxisAttr().Set(pxr::UsdGeomTokens->y);
 
   pxr::UsdPrim usdPrim = usdGround.GetPrim();
-  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(0.5f);
-  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(0.5f);
+  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(restitution);
+  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(friction);
 
   return new Plane(usdGround, pxr::GfMatrix4d(1.0));
 }
 
-Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
+  size_t subSteps, float sleepThreshold)
 {
   pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
 
   pxr::UsdPrim usdPrim = usdXform.GetPrim();
-  usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(5);
-  usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(0.01f);
+  usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(subSteps);
+  usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(sleepThreshold);
 
   return new Solver(scene, usdXform, pxr::GfMatrix4d(1.f));
 }
 
-Points* _GeneratePoints(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
-{
-  Points* points = new Points();
-
-  pxr::UsdGeomPoints usdPoints = pxr::UsdGeomPoints::Define(stage, path);
-
-  pxr::VtArray<pxr::GfVec3f> position;
-  pxr::VtArray<float> width;
-  pxr::VtArray<pxr::GfVec3f> color;
-
-  for(size_t x = 0; x < 10; ++x)
-    for(size_t y = 0; y < 10; ++y) {
-    position.push_back(pxr::GfVec3f(x-5, 7.f, y-5));
-    width.push_back(0.005f);
-    color.push_back(pxr::GfVec3f(RANDOM_0_1, 1.f, 0.75f));
-  }
-
-  usdPoints.CreatePointsAttr().Set(pxr::VtValue(position));
-  usdPoints.CreateWidthsAttr().Set(pxr::VtValue(width));
-  //points.CreateNormalsAttr().Set(pxr::VtValue({pxr::GfVec3f(0, 1, 0)}));
-  usdPoints.CreateDisplayColorAttr(pxr::VtValue(color));
-  usdPoints.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
-
-
-
-  return points;
-}
 
 Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   float spacing, const pxr::GfMatrix4d& m)
@@ -121,7 +96,7 @@ Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
 }
 
 Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  double radius, const pxr::GfMatrix4d& m)
+  double radius, const pxr::GfMatrix4d& m, float friction, float restitution)
 {
   
   pxr::UsdGeomSphere usdSphere = pxr::UsdGeomSphere::Define(stage, path);
@@ -132,8 +107,8 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
   usdSphere.GetRadiusAttr().Get(&real);
 
   pxr::UsdPrim usdPrim = usdSphere.GetPrim();
-  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(0.5f);
-  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(0.5f);
+  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(restitution);
+  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(friction);
 
 
   pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();

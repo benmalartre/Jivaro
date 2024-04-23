@@ -51,12 +51,12 @@ void TestParticles::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPat
     pxr::UsdGeomXformOp op = xformable.AddScaleOp();
     op.Set(scale);
 
-    op = xformable.AddRotateZOp();
+    op = xformable.AddRotateYOp();
     op.Set( 0.f, 1);
-    op.Set(-45.f, 26);
-    op.Set( 45.f, 51);
-    op.Set(-45.f, 76);
-    op.Set( 0.f, 101);
+    //op.Set(-45.f, 26);
+    //op.Set( 45.f, 51);
+    //op.Set(-45.f, 76);
+    op.Set( 720.f, 101);
 
     op = xformable.AddTranslateOp();
     op.Set(translate0, 101);
@@ -72,6 +72,12 @@ void TestParticles::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPat
 void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
+
+  float mass = 2.f;
+  float radius = 0.25f;
+  float damping = 0.1f;
+  float restitution = 0.05f;
+  float friction = 0.9f;
 
   // get root prim
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
@@ -89,7 +95,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create collide ground
   _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-  _ground = _GenerateCollidePlane(stage, _groundId);
+  _ground = _GenerateCollidePlane(stage, _groundId, friction, restitution);
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
   //_AddAnimationSamples(stage, _groundId);
@@ -116,7 +122,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
-    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
+    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f), friction, restitution);
 
     _AddAnimationSamples(stage, collideId);
 
@@ -152,9 +158,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
   //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
 
-  float mass = 2.f;
-  float radius = 0.25f;
-  float damping = 0.1f;
   Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);
   _solver->AddElement(body, voxels, emitterId);
   
@@ -201,8 +204,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
 
 
-  float restitution = 0.5f;
-  float friction = 0.5f;
+
   for (auto& sphere : spheres) {
     Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
     _solver->AddElement(collision, sphere.second, sphere.first);

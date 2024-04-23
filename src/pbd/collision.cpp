@@ -135,21 +135,24 @@ void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, 
 void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
-  
+
   const  pxr::GfVec3f normal = GetContactNormal(index);
   const  float depth = GetContactDepth(index);
 
+  particles->_velocity[index] = GetContactVelocity(index);
+  return;
+
   // Relative normal and tangential velocities
-  const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index);
+  const pxr::GfVec3f v = (particles->_velocity[index] - GetContactVelocity(index)) * dt;
   const float vn = pxr::GfDot(v, normal);
   const pxr::GfVec3f vt = v - normal * vn;
   const float vtLen = vt.GetLength();
 
   // Friction
   if (vtLen > 0.000001) {
-    const float Fn = -0.f / (dt * dt);
+    const float Fn = -0.5f / (dt * dt);
     const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
-    particles->_velocity[index] -= vt.GetNormalized() * _friction;
+    particles->_velocity[index] -= vt.GetNormalized() * friction;
   }
 
   // Restitution
@@ -173,7 +176,7 @@ pxr::GfVec3f Collision::GetContactNormal(size_t index) const
 
 pxr::GfVec3f Collision::GetContactVelocity(size_t index) const 
 {
-  return _collider->GetVelocity();
+  return _contacts[_p2c[index]].GetVelocity();
 }
 
 float Collision::GetContactNormalVelocity(size_t index) const 
@@ -329,9 +332,11 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
 
 pxr::GfVec3f SphereCollision::GetVelocity(Particles* particles, size_t index)
 {
-  const pxr::GfQuatf torque = _collider->GetTorque();
-  const pxr::GfVec3f tangent = (GetGradient(particles, index) ^ torque.Transform(pxr::GfVec3f(0.f, 1.f, 0.f)));
-  return _collider->GetVelocity() + tangent;
+  const pxr::GfVec3f tangent =
+    (GetGradient(particles, index) ^ _collider->GetTorque()).GetNormalized();
+
+  return _collider->GetVelocity() + tangent * torque.GetLength();
+   
 };
 
 
