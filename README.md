@@ -1,6 +1,6 @@
 # Jivaro
 
-this is where i experiment with usd and software devellopment
+This is where i experiment with usd and software devellopment
 
 ![UI preview of Jivaro](jivaro.png)
 
