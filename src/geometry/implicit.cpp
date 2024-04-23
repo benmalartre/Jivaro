@@ -49,21 +49,14 @@ Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
   _Sync(plane.GetPrim(), world, pxr::UsdTimeCode::Default().GetValue());
 }
 
-pxr::GfVec3f Plane::GetNormal(float t) 
+pxr::GfVec3f Plane::GetNormal() 
 {
-  const pxr::GfVec3f normal = _matrix.TransformDir(_normal);
-  if(t==1.f)return normal;
-
-  const pxr::GfVec3f previous = _prevMatrix.TransformDir(_normal);
-  return pxr::GfSlerp(t, previous, normal);
+  return _matrix.TransformDir(_normal);
 };
 
-pxr::GfVec3f Plane::GetOrigin(float t) 
+pxr::GfVec3f Plane::GetOrigin() 
 {
-  const pxr::GfVec3f origin(_matrix.GetRow3(3));
-  if(t==1.f)return origin;
-
-  return origin - _velocity * t;
+  return pxr::GfVec3f(_matrix.GetRow3(3));
 };
 
 bool 

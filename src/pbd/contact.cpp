@@ -27,17 +27,16 @@ int _GetElementDimensionFromGeometry(Geometry* geometry)
   return 0;
 }
 
-void Contact::Init(Geometry* geometry, Particles* particles, size_t index)
+void Contact::Init(Geometry* geometry, Particles* particles, size_t index, size_t geomId)
 {
-  _id = index;
+  _geomId = geomId;
   switch(geometry->GetType()) {
     case Geometry::PLANE:
     {
       Plane* plane = (Plane*)geometry;
-      _normal = plane->GetNormal(0.f);
-      _d = pxr::GfDot(_normal, particles->_position[index] - plane->GetOrigin(0.f)) - particles->_radius[index];
-      _velocity = geometry->GetVelocity();
-      _relV = particles->_velocity[index] - _velocity;
+      _normal = plane->GetNormal();
+      _d = pxr::GfDot(_normal, particles->_position[index] - plane->GetOrigin()) - particles->_radius[index];
+      _relV = particles->_velocity[index] - geometry->GetVelocity();
       _nrmV = pxr::GfDot(_relV, _normal);
       break;
     }
@@ -52,7 +51,6 @@ void Contact::Init(Geometry* geometry, Particles* particles, size_t index)
       const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
       _normal = ComputeNormal(positions, &_elemId, n, geometry->GetMatrix());
 
-      _velocity = geometry->GetVelocity();
       _relV = particles->_velocity[index] - geometry->GetVelocity();
       _nrmV = pxr::GfDot(_relV, _normal);
       break;
@@ -66,10 +64,8 @@ void Contact::Update(Geometry* geometry, Particles* particles, size_t index, flo
     case Geometry::PLANE:
     {
       Plane* plane = (Plane*)geometry;
-      _normal = plane->GetNormal(t);
-      _velocity = pxr::GfSlerp(t, geometry->GetPreviousVelocity(), geometry->GetVelocity());
-      _torque = pxr::GfSlerp(t, geometry->GetPreviousTorque(), geometry->GetTorque());
-      _d = pxr::GfDot(_normal, particles->_position[index] - plane->GetOrigin(t)) - particles->_radius[index];
+      _normal = plane->GetNormal();
+      _d = pxr::GfDot(_normal, particles->_position[index] - plane->GetOrigin()) - particles->_radius[index];
       break;
     }
     case Geometry::SPHERE:
