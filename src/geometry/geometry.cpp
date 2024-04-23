@@ -70,14 +70,14 @@ Geometry::SetMatrix(const pxr::GfMatrix4d& matrix)
 
 void Geometry::_ComputeVelocity()
 {
+  const float frameDuration = Time::Get()->GetFrameDuration();
   _prevVelocity = _velocity;
   const pxr::GfVec3f deltaP(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
-  _velocity = pxr::GfVec3f(deltaP / (1.f / Time::Get()->GetFrameDuration()));
-  //_velocity = pxr::GfVec3f(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
+  _velocity = pxr::GfVec3f(deltaP / frameDuration);
 
   const pxr::GfRotation rotation = _matrix.ExtractRotation();
   const pxr::GfRotation previous = _prevMatrix.ExtractRotation();
-  const pxr::GfRotation deltaR = (previous * rotation.GetInverse()) / (1.f / Time::Get()->GetFrameDuration());
+  const pxr::GfRotation deltaR = (previous.GetInverse() * rotation) / frameDuration;
   
   _prevOmega = _omega;
   _omega = pxr::GfQuatf(deltaR.GetQuat());
