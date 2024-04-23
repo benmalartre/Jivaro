@@ -61,7 +61,7 @@ public:
   virtual pxr::GfVec3f GetContactPosition(size_t index) const;
   virtual pxr::GfVec3f GetContactNormal(size_t index) const;
   virtual pxr::GfVec3f GetContactVelocity(size_t index) const;
-  virtual float GetContactNormalVelocity(size_t index) const;
+  virtual float GetContactSpeed(size_t index) const;
   virtual float GetContactDepth(size_t index) const;
 
   std::vector<Contact>& GetContacts(){return _contacts;};

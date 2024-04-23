@@ -18,7 +18,7 @@ public:
 
   const pxr::GfVec3f& GetNormal() const {return _normal;};
   const pxr::GfVec3f& GetVelocity() const {return _velocity;};
-  float GetNormalVelocity() const { return _nrmV; };
+  float GetSpeed() const { return _speed; };
   float GetDepth() const {return _d;};
 
 private:
@@ -26,7 +26,7 @@ private:
   pxr::GfVec3f      _velocity; // relative velocity
 
   float             _d;        // penetration depth
-  float             _nrmV;     // normal velocity
+  float             _speed;    // normal speed
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -43,7 +43,7 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
 }
 
 Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
-  size_t subSteps, float sleepThreshold)
+  int subSteps, float sleepThreshold)
 {
   pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
 

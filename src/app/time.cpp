@@ -90,8 +90,7 @@ void Time::StopPlayback()
 
 int Time::Playback()
 {
-  uint64_t t = CurrentTime();
-  _chronometer += (t - _lastT);
+  _chronometer += (CurrentTime() - _lastT);
 
   if(_chronometer < (_frame * 1000))
     return PLAYBACK_WAITING;

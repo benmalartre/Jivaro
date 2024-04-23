@@ -26,11 +26,11 @@ void GravitationalForce::Apply(size_t begin, size_t end, Particles* particles, f
 
   if(HasWeights())
     for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-      velocity[index] += _gravity * mass[index] * _weights[index] * invMass[index] * dt;
+      velocity[index] += _gravity * _weights[index] * invMass[index] * dt;
     }
   else
     for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-      velocity[index] += _gravity * mass[index] * invMass[index] * dt;
+      velocity[index] += _gravity * invMass[index] * dt;
     }
 }
 
@@ -55,12 +55,12 @@ void DampingForce::Apply(size_t begin, size_t end, Particles* particles, float d
   if(HasWeights())
     for(size_t index = begin; index < end; ++index) {
       if (particles->_state[index] != Particles::ACTIVE)continue;
-      velocity[index] -= _damp * velocity[index] * mass[index] * _weights[index] *invMass[index] * dt;
+      velocity[index] -= _damp * velocity[index]  * _weights[index] *invMass[index] * dt;
     }
   else 
     for(size_t index = begin; index < end; ++index) {
       if (particles->_state[index] != Particles::ACTIVE)continue;
-      velocity[index] -= _damp * velocity[index] * mass[index] * invMass[index] * dt;
+      velocity[index] -= _damp * velocity[index] * invMass[index] * dt;
     }
 }
 

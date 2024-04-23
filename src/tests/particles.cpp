@@ -73,7 +73,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  float mass = 2.f;
+  float mass = 4.f;
   float radius = 0.25f;
   float damping = 0.1f;
   float restitution = 0.05f;
@@ -124,7 +124,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   spheres[collideId] =
     _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f), friction, restitution);
 
-    _AddAnimationSamples(stage, collideId);
+    //_AddAnimationSamples(stage, collideId);
 
 
   _scene.AddGeometry(collideId, spheres[collideId]);
