@@ -3,6 +3,7 @@
 #include "../geometry/deformable.h"
 #include "../pbd/contact.h"
 #include "../pbd/particle.h"
+#include "../pbd/collision.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -27,9 +28,16 @@ int _GetElementDimensionFromGeometry(Geometry* geometry)
   return 0;
 }
 
-void Contact::Init(Geometry* geometry, Particles* particles, size_t index, size_t geomId)
+void Contact::Init(Collision* collision, Particles* particles, size_t index, size_t geomId)
 {
   _geomId = geomId;
+
+  _normal = collision->GetGradient(particles, index);
+  _d = collision->GetValue(particles, index);
+  _relV = particles->_velocity[index] - collision->GetVelocity(particles, index);
+  _nrmV = pxr::GfDot(_relV, _normal);
+
+  /*
   switch(geometry->GetType()) {
     case Geometry::PLANE:
     {
@@ -41,7 +49,18 @@ void Contact::Init(Geometry* geometry, Particles* particles, size_t index, size_
       break;
     }
     case Geometry::SPHERE:
+     {
+      Sphere* sphere = (Sphere*)geometry;
+      _normal = (particles->_position[index] - sphere->GetCenter());
+      const float nL = _normal.GetLength();
+      if(nL > 0.000001f)_normal.Normalize();
+      else _normal = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1).GetNormalized();
+
+      _d = pxr::GfDot(_normal, particles->_position[index] - plane->GetOrigin()) - particles->_radius[index];
+      _relV = particles->_velocity[index] - geometry->GetVelocity();
+      _nrmV = pxr::GfDot(_relV, _normal);
       break;
+    }
 
     case Geometry::POINT:
     case Geometry::CURVE:
@@ -56,10 +75,15 @@ void Contact::Init(Geometry* geometry, Particles* particles, size_t index, size_
       break;
     }
   }
+  */
 }
 
-void Contact::Update(Geometry* geometry, Particles* particles, size_t index, float t)
+void Contact::Update(Collision* collision, Particles* particles, size_t index)
 {
+  _normal = collision->GetGradient(particles, index);
+  _d = collision->GetValue(particles, index);
+
+  /*
   switch(geometry->GetType()) {
     case Geometry::PLANE:
     {
@@ -87,6 +111,7 @@ void Contact::Update(Geometry* geometry, Particles* particles, size_t index, flo
       break;
     }
     }
+  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

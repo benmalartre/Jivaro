@@ -9,11 +9,12 @@ class Particles;
 class Plane;
 class Sphere;
 class Mesh;
+class Collision;
 class Contact : public Location
 {
 public:
-  void Init(Geometry* geometry, Particles* particles, size_t index, size_t geomId);
-  void Update(Geometry* geometry, Particles* particles, size_t index, float t);
+  void Init(Collision* collision, Particles* particles, size_t index, size_t geomId);
+  void Update(Collision* collision, Particles* particles, size_t index);
 
   pxr::GfVec3f GetNormal() const {return _normal;};
   float GetNormalVelocity() const { return _nrmV; };

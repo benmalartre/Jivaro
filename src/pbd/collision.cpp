@@ -76,6 +76,15 @@ void Collision::_FindContacts(size_t begin, size_t end, Particles* particles, fl
   }
 }
 
+void Collision::UpdateContacts(Particles* particles)
+{
+  size_t idx = 0;
+  for (auto& contact : _contacts) {
+
+    contact.Update(this, particles, _c2p[idx++]);
+  }
+}
+
 void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 {
 
@@ -203,7 +212,8 @@ void PlaneCollision::Update(const pxr::UsdPrim& prim, double time)
   _UpdateParameters(prim, time);
 }
 
-void PlaneCollision::UpdateContacts(Particles* particles,   float t)
+/*
+void PlaneCollision::UpdateContacts(Particles* particles)
 {
   Plane* plane = (Plane*)_collider;
   _normal = plane->GetNormal();
@@ -212,9 +222,10 @@ void PlaneCollision::UpdateContacts(Particles* particles,   float t)
   size_t idx = 0;
   for (auto& contact : _contacts) {
 
-    contact.Update(_collider, particles, _c2p[idx++], t);
+    contact.Update(_collider, particles, _c2p[idx++]);
   }
 }
+*/
 
 void PlaneCollision::_UpdatePositionAndNormal()
 {
@@ -239,7 +250,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index,
 
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
-  contact.Init(_collider, particles, index, geomId);
+  contact.Init(this, particles, index, geomId);
   contact.SetCoordinates(intersection);
   contact.SetT(d);
 
@@ -275,28 +286,27 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(size_t index, Particles* particles, float ft)
 {
   const float radius = _radius + particles->_radius[index] * TOLERANCE_FACTOR;
-  const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
-  const pxr::GfVec3f predicted(particles->_position[index] + velocity);
+  const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
   SetHit(index, (predicted - _center).GetLength() < radius);
 }
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int index, 
-  int geomId, Contact& location, float ft)
+  int geomId, Contact& contact, float ft)
 {
-  const pxr::GfVec3f velocity = particles->_velocity[index] * ft;
-  const pxr::GfVec3f predicted(particles->_position[index] + velocity);
+  const pxr::GfVec3f predicted(particles->_position[index] + particles->_velocity[index] * ft);
+
   pxr::GfVec3f normal = predicted - _center;
   const float nL = normal.GetLength();
   if (nL > 0.0000001f)normal.Normalize();
   else normal = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1).GetNormalized();
 
-  const pxr::GfVec3f intersection = _center + normal * (_radius + particles->_radius[index]);
+  const float d = nL - (_radius + particles->_radius[index]);
 
-  const pxr::GfVec3f relativeVelocity = particles->_velocity[index];
-  const float vn = pxr::GfDot(relativeVelocity, normal);
+  const pxr::GfVec3f intersection = predicted  + normal * -d;
 
-  location.SetCoordinates(intersection);
-  location.SetT(vn);
+  contact.Init(this, particles, index, geomId);
+  contact.SetCoordinates(intersection);
+  contact.SetT(d);
 
   particles->_color[index] = pxr::GfVec3f(0.5f,1.f,0.7f);
 }

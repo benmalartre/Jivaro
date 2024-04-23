@@ -90,9 +90,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   // create collide ground
   _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
   _ground = _GenerateCollidePlane(stage, _groundId);
-  /*_ground->SetMatrix(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));*/
-    _AddAnimationSamples(stage, _groundId);
+  _ground->SetMatrix(
+    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
+  //_AddAnimationSamples(stage, _groundId);
   _scene.AddGeometry(_groundId, _ground);
 
   // create collide spheres
@@ -112,7 +112,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
     _scene.AddGeometry(collideId, spheres[collideId]);
   }
-  
+  */
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
@@ -123,7 +123,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   _scene.AddGeometry(collideId, spheres[collideId]);
   
-*/
 
   axis = pxr::GfVec3f(RANDOM_LO_HI(-1.f, 1.f), RANDOM_LO_HI(-1.f, 1.f), RANDOM_LO_HI(-1.f, 1.f));
   axis.Normalize();

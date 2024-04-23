@@ -50,7 +50,7 @@ public:
   virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft);
 
-  virtual void UpdateContacts(Particles* particles, float t) {};
+  virtual void UpdateContacts(Particles* particles);
 
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
     const Body* body, size_t geomId, float ft);
@@ -72,6 +72,9 @@ public:
 
   virtual float GetValue(Particles* particles, size_t index) = 0;
   virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
+  virtual pxr::GfVec3f GetVelocity(Particles* particles, size_t index) {
+    return _collider->GetVelocity();
+  };
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
@@ -124,7 +127,7 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
-  void UpdateContacts(Particles* particles, float t) override;
+  //void UpdateContacts(Particles* particles) override;
 
 protected:
   void _UpdatePositionAndNormal();
