@@ -565,7 +565,6 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
 
     _correction[elem * ELEM_SIZE + 0] += im0 * correction;
 
-/*
     // relative motion
     const pxr::GfVec3f relM = particles->_velocity[index] - _collision->GetContactVelocity(index);
     
@@ -573,7 +572,7 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     pxr::GfVec3f relT = (relM - normal * pxr::GfDot(relM, normal)) * -_collision->GetFriction();
 
     _correction[elem * ELEM_SIZE + 0] += im0 * relT * dt;
-    */
+  
     
     
   }

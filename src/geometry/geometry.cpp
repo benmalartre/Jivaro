@@ -77,7 +77,7 @@ void Geometry::_ComputeVelocity()
 
   const pxr::GfRotation rotation = _matrix.ExtractRotation();
   const pxr::GfRotation previous = _prevMatrix.ExtractRotation();
-  const pxr::GfRotation deltaR = (previous.GetInverse() * rotation) / (1.f / Time::Get()->GetFrameDuration());
+  const pxr::GfRotation deltaR = (previous * rotation.GetInverse()) / (1.f / Time::Get()->GetFrameDuration());
   
   _prevOmega = _omega;
   _omega = pxr::GfQuatf(deltaR.GetQuat());

@@ -18,6 +18,7 @@ public:
   size_t GetParticleIndex() const {return _id;};
   pxr::GfVec3f GetNormal() const {return _normal;};
   pxr::GfVec3f GetVelocity() const {return _velocity;};
+  pxr::GfQuatf GetTorque() const {return _torque;};
   float GetNormalVelocity() const { return _nrmV; };
   float GetDepth() const {return _d;};
 

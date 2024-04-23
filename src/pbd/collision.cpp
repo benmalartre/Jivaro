@@ -122,8 +122,8 @@ void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, 
 void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
 {
   if(!CheckHit(index))return;    
-  
-  pxr::GfVec3f normal = GetContactNormal(index);
+ 
+  const  pxr::GfVec3f normal = GetContactNormal(index);
 
   // Relative normal and tangential velocities
   const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index);
@@ -135,7 +135,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   if (vtLen > 0.000001) {
     const float Fn = -0.f / (dt * dt);
     const float friction = pxr::GfMin(dt * _friction * Fn, vtLen);
-    particles->_velocity[index] -= vt.GetNormalized() * _friction;
+    particles->_velocity[index] -= vt.GetNormalized() * _friction * dt;
   }
 
   // Restitution
@@ -143,7 +143,7 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
   const float vnTilde = GetContactNormalVelocity(index);
   const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
-  particles->_velocity[index] += normal * restitution;
+  particles->_velocity[index] += normal * restitution * dt;
  
 }
 
