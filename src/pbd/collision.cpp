@@ -120,6 +120,11 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
   }
 }
 
+pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
+{
+  return _collider->GetVelocity();
+};
+
 void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, float dt)
 {
   for (size_t elemIdx = begin; elemIdx < end; ++elemIdx) {
@@ -321,6 +326,13 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
 {
   return (particles->_predicted[index] - _center).GetNormalized();
 }
+
+pxr::GfVec3f SphereCollision::GetVelocity(Particles* particles, size_t index)
+{
+  const pxr::GfQuatf torque = _collider->GetTorque();
+  const pxr::GfVec3f tangent = (GetGradient(particles, index) ^ torque.Transform(pxr::GfVec3f(0.f, 1.f, 0.f)));
+  return _collider->GetVelocity() + tangent;
+};
 
 
 //----------------------------------------------------------------------------------------

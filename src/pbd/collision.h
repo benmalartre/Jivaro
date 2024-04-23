@@ -72,9 +72,7 @@ public:
 
   virtual float GetValue(Particles* particles, size_t index) = 0;
   virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
-  virtual pxr::GfVec3f GetVelocity(Particles* particles, size_t index) {
-    return _collider->GetVelocity();
-  };
+  virtual pxr::GfVec3f GetVelocity(Particles* particles, size_t index);
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
@@ -149,6 +147,7 @@ public:
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetVelocity(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
   
 protected:
