@@ -257,12 +257,12 @@ void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
 void Solver::LockPoints()
 {
   size_t particleIdx = 0;
-  const pxr::GfVec3f* positions = &_particles._position[0];
+  const pxr::GfVec3f* positions = _particles.GetPositionCPtr();
   for (auto& body : _bodies) {
     size_t numPoints = body->GetNumPoints();
     for(size_t point = 0; point < 10; ++point) {
-      _particles._mass[point + body->GetOffset()] = 0.f;
-      _particles._invMass[point + body->GetOffset()] = 0.f;
+      _particles.SetMass(point + body->GetOffset(), 0.f);
+      _particles.SetInvMass(point + body->GetOffset(), 0.f);
     }
   }
 }
@@ -279,8 +279,9 @@ void Solver::WeightBoundaries()
       const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
       for(size_t p = 0; p < boundaries.size(); ++p){
         if(boundaries[p]) {
-          _particles._mass[p + offset] *= 0.5f;
-          _particles._invMass[p + offset] = 1.f / _particles._mass[p + offset];
+          size_t index = p + offset;
+          _particles.SetMass(index, _particles.GetMass(index) * 0.5f);
+          _particles.SetInvMass(index,1.f / _particles.GetMass(index));
         }
       }
     }
@@ -313,13 +314,11 @@ void Solver::_UpdateContacts(float t)
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
-
-  pxr::GfVec3f* velocity = &_particles._velocity[0];
-  int* body = &_particles._body[0];
+  const pxr::GfVec3f* velocity = _particles.GetVelocityCPtr();
 
   // compute predicted position
-  pxr::GfVec3f* predicted = &_particles._predicted[0];
-  pxr::GfVec3f* position = &_particles._position[0];
+  pxr::GfVec3f* predicted = _particles.GetPredictedPtr();
+  pxr::GfVec3f* position = _particles.GetPositionPtr();
 
   // apply external forces
   for (const Force* force : _force)
@@ -334,17 +333,17 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
 void Solver::_UpdateParticles(size_t begin, size_t end)
 {
-  const int* body = &_particles._body[0];
-  const pxr::GfVec3f* predicted = &_particles._predicted[0];
-  pxr::GfVec3f* position = &_particles._position[0];
-  pxr::GfVec3f* velocity = &_particles._velocity[0];
-  pxr::GfVec3f* previous = &_particles._previous[0];
-  short* state = &_particles._state[0];
+  const int* body = _particles.GetBodyCPtr();
+  const pxr::GfVec3f* predicted = _particles.GetPredictedCPtr();
+  pxr::GfVec3f* position = _particles.GetPositionPtr();
+  pxr::GfVec3f* velocity = _particles.GetVelocityPtr();
+  pxr::GfVec3f* previous = _particles.GetPreviousPtr()  ;
+  short* state = _particles.GetStatePtr();
 
   float invDt = 1.f / _stepTime;
 
   for(size_t index = begin; index < end; ++index) {
-    if (_particles._state[index] != Particles::ACTIVE)continue;
+    if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
     /*
@@ -447,17 +446,17 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
   size_t numParticles = _particles.GetNumParticles();
   if (pxr::GfIsClose(time, _startFrame, 0.001f)) {
     Reset();
-    _points->SetPositions(&_particles._position[0], numParticles);
-    _points->SetRadii(&_particles._radius[0], numParticles);
-    _points->SetColors(&_particles._color[0], numParticles);
+    _points->SetPositions(_particles.GetPositionCPtr(), numParticles);
+    _points->SetRadii(_particles.GetRadiusCPtr(), numParticles);
+    _points->SetColors(_particles.GetColorCPtr(), numParticles);
 
     Scene::_Prim* prim = _scene->GetPrim(_pointsId);
     prim->bits = pxr::HdChangeTracker::AllDirty;
   } else {
     Step();
 
-    _points->SetPositions(&_particles._position[0], numParticles);
-    _points->SetColors(&_particles._color[0], numParticles);
+    _points->SetPositions(_particles.GetPositionCPtr(), numParticles);
+    _points->SetColors(_particles.GetColorCPtr(), numParticles);
     
     Scene::_Prim* prim = _scene->GetPrim(_pointsId);
     prim->bits = 

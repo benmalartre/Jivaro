@@ -218,14 +218,14 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   std::cout << "particles : " << particles << std::endl;
 
   pxr::GfRange3f range;
-  for(auto& pos: particles->Positions()) {
-    range = range.UnionWith(pos);
+  for (size_t p = 0; p < particles->GetNumParticles(); ++p) {
+    range = range.UnionWith(particles->GetPosition(p));
   }
   std::vector<int> used;
   for(size_t p = 0; p < _solver->GetNumParticles(); ++p)
-    if (particles->Position(p][1] < range.GetMidpoint()[1]) {
+    if (particles->GetPosition(p)[1] < range.GetMidpoint()[1]) {
       used.push_back(p);
-      particles->_color[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+      particles->SetColor(p, pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
     }
   //collision->SetMask(_solver->GetNumParticles(), used);
   
