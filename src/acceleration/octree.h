@@ -24,7 +24,7 @@ struct Point;
 struct Edge;
 struct Triangle;
 
-class OctreeIntersector : public Intersector {
+class Octree : public Intersector {
 public: 
   class Cell {
 

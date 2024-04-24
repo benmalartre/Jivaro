@@ -26,6 +26,9 @@ class Location;
 
 class Geometry {
 public:
+  static float FrameDuration; 
+  static void SetFrameDuration(float duration) { FrameDuration = duration; };
+
   enum Mode : short {
     INPUT = 1,
     OUTPUT = 2

@@ -18,17 +18,18 @@
 #include "../../src/utils/timer.h"
 #include "../../src/geometry/mesh.h"
 #include "../../src/acceleration/bvh.h"
-
+#include "../../src/acceleration/grid3d.h"
+#include "../../src/acceleration/octree.h"
 
 JVR_NAMESPACE_USING_DIRECTIVE
 
 int main (int argc, char *argv[])
 {
-  if(argc != 1) {
+  if(argc != 2) {
     std::cout << "you have to pass a usd filename " << std::endl;
     return -1;
   }
-  std::string filename = argv[0];
+  std::string filename = argv[1];
 
   pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
 
@@ -43,6 +44,19 @@ int main (int argc, char *argv[])
     Mesh *mesh = new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim));
 
     uint64_t sT = CurrentTime();
+    BVH bvh;
+    bvh.Init({mesh});
+    std::cout << "bvh build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
+
+    sT = CurrentTime();
+    Octree octree;
+    octree.Init({mesh});
+    std::cout << "octree build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
+
+    sT = CurrentTime();
+    Grid3D grid;
+    grid.Init({mesh});
+    std::cout << "grid build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
   }
 
   return 0;

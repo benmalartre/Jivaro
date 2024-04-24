@@ -1,4 +1,6 @@
+#include "../geometry/geometry.h>
 #include "../app/time.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -30,6 +32,13 @@ void Time::Init(float start, float end, float fps)
   _lastT = 0;
   _frameCount = 0;
 }
+
+void Time::SetFPS(float fps)
+{
+  _fps = fps > 1e-6 ? fps : 1e-6; 
+  _frame = 1.f/_fps;
+  Geometry::SetFrameDuration(_frame);
+};
 
 void Time::ComputeFramerate()
 {

@@ -13,10 +13,10 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-const int OctreeIntersector::MAX_ELEMENTS_NUMBER = 32;
+const int Octree::MAX_ELEMENTS_NUMBER = 32;
 
 // destructor
-OctreeIntersector::Cell::~Cell()
+Octree::Cell::~Cell()
 {
   for (int i=0; i<8; i++)
   {
@@ -27,7 +27,7 @@ OctreeIntersector::Cell::~Cell()
 }
 
 // clear tree
-void OctreeIntersector::Cell::ClearTree()
+void Octree::Cell::ClearTree()
 {
   for (int i=0; i<8; i++)
   {
@@ -38,7 +38,7 @@ void OctreeIntersector::Cell::ClearTree()
 }
 
 // get distance
-float OctreeIntersector::Cell::GetDistance(const pxr::GfVec3f &point) const
+float Octree::Cell::GetDistance(const pxr::GfVec3f &point) const
 {
   float dx = _GetDistance1D(point[0], _min[0], _max[0]);
   float dy = _GetDistance1D(point[1], _min[1], _max[1]);
@@ -47,7 +47,7 @@ float OctreeIntersector::Cell::GetDistance(const pxr::GfVec3f &point) const
 }
 
 // intersect sphere
-bool OctreeIntersector::Cell::IntersectSphere(const pxr::GfVec3f& center, const float radius) const
+bool Octree::Cell::IntersectSphere(const pxr::GfVec3f& center, const float radius) const
 {
   float r2 = radius * radius;
   float dmin = 0;
@@ -61,7 +61,7 @@ bool OctreeIntersector::Cell::IntersectSphere(const pxr::GfVec3f& center, const 
 }
 
 // get bounding box
-void OctreeIntersector::Cell::GetBoundingBox(const pxr::GfVec3f* points, pxr::VtArray<int>& vertices)
+void Octree::Cell::GetBoundingBox(const pxr::GfVec3f* points, pxr::VtArray<int>& vertices)
 {
   // reset bounding box
   _min[0] = FLT_MAX;
@@ -98,7 +98,7 @@ void OctreeIntersector::Cell::GetBoundingBox(const pxr::GfVec3f* points, pxr::Vt
 
 
 // get furthest corner
-void OctreeIntersector::Cell::GetFurthestCorner(const pxr::GfVec3f& point, pxr::GfVec3f& corner)
+void Octree::Cell::GetFurthestCorner(const pxr::GfVec3f& point, pxr::GfVec3f& corner)
 {
   pxr::GfVec3f delta;
   float dist;
@@ -130,7 +130,7 @@ void OctreeIntersector::Cell::GetFurthestCorner(const pxr::GfVec3f& point, pxr::
 }
 
 // build tree
-void OctreeIntersector::Cell::BuildTree(Component* components, size_t num, Geometry* geometry)
+void Octree::Cell::BuildTree(Component* components, size_t num, Geometry* geometry)
 {
   ClearTree();
     
@@ -148,7 +148,7 @@ void OctreeIntersector::Cell::BuildTree(Component* components, size_t num, Geome
 }
 
 // split tree
-void OctreeIntersector::Cell::Split(const pxr::GfVec3f* points)
+void Octree::Cell::Split(const pxr::GfVec3f* points)
 {
   int esz = _elements.size();
 
@@ -196,26 +196,26 @@ void OctreeIntersector::Cell::Split(const pxr::GfVec3f* points)
 }
 
 void 
-OctreeIntersector::Init(const std::vector<Geometry*>& geometries)
+Octree::Init(const std::vector<Geometry*>& geometries)
 {
 
 }
 
 void 
-OctreeIntersector::Update()
+Octree::Update()
 {
 
 }
 
 bool 
-OctreeIntersector::Raycast(const pxr::GfRay& ray, Location* hit, 
+Octree::Raycast(const pxr::GfRay& ray, Location* hit, 
   double maxDistance, double* minDistance) const
 {
   return false;
 }
 
 bool 
-OctreeIntersector::Closest(const pxr::GfVec3f& point, 
+Octree::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
   Cell* closestCell = NULL;
@@ -254,7 +254,7 @@ OctreeIntersector::Closest(const pxr::GfVec3f& point,
 }
 
 void 
-OctreeIntersector::_GetClosestCell(const pxr::GfVec3f& point, Cell*& closestCell) const
+Octree::_GetClosestCell(const pxr::GfVec3f& point, Cell*& closestCell) const
 {
   float closestDistance = FLT_MAX;
     
@@ -276,7 +276,7 @@ OctreeIntersector::_GetClosestCell(const pxr::GfVec3f& point, Cell*& closestCell
 }
 
 void 
-OctreeIntersector::_RecurseGetClosestCell(const pxr::GfVec3f& point, const Cell* cell, 
+Octree::_RecurseGetClosestCell(const pxr::GfVec3f& point, const Cell* cell, 
   float& closestDistance, Cell*& closestCell) const
 {
   if(cell==NULL)return;
@@ -314,7 +314,7 @@ OctreeIntersector::_RecurseGetClosestCell(const pxr::GfVec3f& point, const Cell*
 }
 
 void 
-OctreeIntersector::_GetNearbyCells(const pxr::GfVec3f& point, const Cell* cell, 
+Octree::_GetNearbyCells(const pxr::GfVec3f& point, const Cell* cell, 
     std::vector<Cell*>& cells, float closestDistance) const
 {
   // the case of low polygon count
@@ -328,7 +328,7 @@ OctreeIntersector::_GetNearbyCells(const pxr::GfVec3f& point, const Cell* cell,
 }
 
 void 
-OctreeIntersector::_RecurseGetNearbyCells(const Cell* cell, const pxr::GfVec3f& center, 
+Octree::_RecurseGetNearbyCells(const Cell* cell, const pxr::GfVec3f& center, 
     const float radius, std::vector<Cell*>& cells) const
 {
   if(cell == NULL) return;

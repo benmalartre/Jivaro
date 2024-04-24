@@ -19,10 +19,11 @@
 #include "../geometry/edge.h"
 #include "../geometry/triangle.h"
 #include "../geometry/utils.h"
-#include "../app/time.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+float Geometry::FrameDuration = 1.f / 24.f;
 
 Geometry::Geometry()
 {
@@ -70,15 +71,14 @@ Geometry::SetMatrix(const pxr::GfMatrix4d& matrix)
 
 void Geometry::_ComputeVelocity()
 {
-  const float frameDuration = Time::Get()->GetFrameDuration();
   const pxr::GfVec3f deltaP(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
-  _velocity = pxr::GfVec3f(deltaP / frameDuration);
+  _velocity = pxr::GfVec3f(deltaP / Geometry::FrameDuration);
 
   const pxr::GfQuatd rotation = _matrix.ExtractRotationQuat();
   const pxr::GfQuatd previous = _prevMatrix.ExtractRotationQuat();
   const pxr::GfQuatd deltaR = (previous * rotation.GetInverse());
   
-  _omega = pxr::GfVec3f(deltaR.GetImaginary() * (deltaR.GetReal() / frameDuration));
+  _omega = pxr::GfVec3f(deltaR.GetImaginary() * (deltaR.GetReal() / Geometry::FrameDuration));
 
 }
 

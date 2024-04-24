@@ -35,7 +35,7 @@ public:
   inline void SetEndTime(float time){_endTime = time;};
   inline void SetMaxTime(float time){_maxTime = time;};
   inline void SetActiveTime(float time){_activeTime = time;};
-  inline void SetFPS(float fps){_fps = fps > 1e-6 ? fps : 1e-6; _frame = 1.f/_fps;};
+  void SetFPS(float fps);
   inline void SetSpeed(float speed){_speed = speed;};
   inline void SetLoop(bool loop){_loop = loop;};
 

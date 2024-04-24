@@ -12,11 +12,13 @@ set(PUBLIC_HEADERS
 
 add_executable(${TARGET}
   ../../src/utils/timer.cpp
-  ../../src/acceleration/intersector.h>
+  ../../src/acceleration/intersector.cpp>
   ../../src/acceleration/bvh.cpp
   ../../src/acceleration/grid3d.cpp
   ../../src/acceleration/octree.cpp
+  ../../src/acceleration/morton.cpp
   ../../src/geometry/utils.cpp
+  ../../src/geometry/location.cpp
   ../../src/geometry/point.cpp
   ../../src/geometry/triangle.cpp
   ../../src/geometry/halfEdge.cpp

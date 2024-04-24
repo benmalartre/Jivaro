@@ -13,34 +13,37 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
+class Point;
+class Edge;
+class Triangle;
 class Mesh;
 class Curve;
 class Points;
 struct Triangle;
 
-class Grid3DIntersector : public Intersector {
+class Grid3D : public Intersector {
   enum ElemType {
     POINT,
     EDGE,
     TRIANGLE,
-    POLYGON
+    NUM_ELEM_TYPES
   };
 
-  typedef bool (Grid3DIntersector::*IntersectFunc)(
+  typedef bool (Grid3D::*IntersectFunc)(
     Geometry* geometry, const pxr::GfRay &ray, Location* hit, 
     double maxDistance, double* minDistance);
 
   static uint32_t SLICE_INDICES[27*3];
 public:
   
-  struct Element {
+  struct _Component {
     uint16_t    geometry;
     void*       ptr;
   };
 
-  struct ElementContainer {
-    ElemType type;
-    std::vector<Element> elements;
+  struct _ElementContainer {
+    ElemType              type;
+    std::vector<_Component> components;
   };
 
   struct Cell
@@ -62,10 +65,10 @@ public:
 #endif
 
     bool Contains(const pxr::GfVec3f& pos);
-    //void insert(Vertex* V){_points.push_back(V);};
-    //void Insert(Point* point);
-    //void Insert(Edge* edge);
+    void Insert(uint16_t geometryIndex, Point* point);
+    void Insert(uint16_t geometryIndex, Edge* edge);
     void Insert(uint16_t geometryIndex, Triangle* triangle);
+
     bool Raycast(Geometry* geom, const pxr::GfRay& ray, Location* hit, 
       double maxDistance=-1, double* minDistance=NULL) const;
     
@@ -77,17 +80,17 @@ public:
     static bool CheckNeighborBit(const uint32_t neighborBits, uint32_t index);
 
     // data
-    std::vector<Geometry*>        _geometries;
-    std::vector<ElementContainer> _elements;
-    pxr::GfVec3f                  _color;
-    uint32_t                      _index;
-    bool                          _hit;
-    uint32_t                      _neighborBits;
+    std::vector<Geometry*>          _geometries;
+    _ElementContainer               _elements[NUM_ELEM_TYPES];
+    pxr::GfVec3f                    _color;
+    uint32_t                        _index;
+    bool                            _hit;
+    uint32_t                        _neighborBits;
 
   };
 
-  Grid3DIntersector():_cells(NULL),_numCells(0){};
-  ~Grid3DIntersector()
+  Grid3D():_cells(NULL),_numCells(0){};
+  ~Grid3D()
   {
       DeleteCells();
   }
@@ -103,15 +106,14 @@ public:
   void ResetCells();
   // delete all cells
   void DeleteCells();
-  // clear all rays
-  void ClearRays() { _rays.clear(); };
 
   // geometries
   void Init(const std::vector<Geometry*>& geometries) override;
   void Update() override;
-  void InsertMesh(size_t idx);
-  void InsertCurve(size_t idx);
-  void InsertPoints(size_t idx);
+
+  void InsertMesh(Mesh* mesh, size_t idx);
+  void InsertCurve(Curve* curve, size_t idx);
+  void InsertPoints(Points* points, size_t idx);
 
   // intersect a ray with the mesh
   bool Raycast(const pxr::GfRay& ray, Location* hitPoint,
@@ -133,7 +135,6 @@ public:
     uint32_t& index);
 
 private:
-  ElemType                _elementType;
   // bounding box of the mesh
   uint32_t                _resolution[3];
   pxr::GfVec3f            _cellDimension;
@@ -142,16 +143,7 @@ private:
   Cell**                  _cells;
   uint32_t                _numCells;
 
-  // rays tested for intersection
-  std::vector<pxr::GfRay> _rays;
-  uint32_t                _numRays;
 
-
-  // place an element into intersected cells
-  //void PlacePoint(void);
-  //void PlaceEdge(HalfEdge* he);
-  //void PlaceTriangle(Triangle* t);
-  //void PlacePoint(Vertex* V);
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
