@@ -9,22 +9,48 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
-void Grid3D::Cell::Insert(uint16_t geometryIndex, Point* point)
+void Grid3D::Cell::Insert(Geometry* geometry, Point* point)
 {
-  _elements[Grid3D::POINT].components.push_back({geometryIndex, (void*)point});
+  _components[geometry].push_back((Component*)point);
 }
 
-void Grid3D::Cell::Insert(uint16_t geometryIndex, Edge* edge)
+void Grid3D::Cell::Insert(Geometry* geometry, Edge* edge)
 {
-  _elements[Grid3D::EDGE].components.push_back({geometryIndex, (void*)edge});
+  _components[geometry].push_back((Component*)edge);
 }
 
-void Grid3D::Cell::Insert(uint16_t geometryIndex, Triangle* triangle)
+void Grid3D::Cell::Insert(Geometry* geometry, Triangle* triangle)
 {
-  _elements[Grid3D::TRIANGLE].components.push_back({geometryIndex, (void*)triangle});
+  _components[geometry].push_back((Component*)triangle);
 }
 
+bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
+  Location* hit, double maxDistance, double* minDistance) const
+{
+  auto& componentsIt = _components.find(geometry);
+  if (componentsIt == _components.end()) return false;
+
+  const _Components& components = componentsIt->second;
+  pxr::GfRay localRay(ray);
+  localRay.Transform(geometry->GetInverseMatrix());
+  const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+  Location localHit(*hit);
+  bool hitSomething = false;
+  
+  for (Component* component : components){
+    if (component->Raycast(points, localRay, &localHit)) {
+      const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
+      const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
+      if (distance < *minDistance && distance < maxDistance) {
+        hit->Set(localHit);
+        hit->SetT(distance);
+        *minDistance = distance;
+        hitSomething = true;
+      }
+    }
+  }
+  return hitSomething;
+}
 
 // delete all cells
 void Grid3D::DeleteCells()
@@ -35,14 +61,6 @@ void Grid3D::DeleteCells()
     if (_cells[i] != NULL) delete _cells[i];
   delete [] _cells;
   _cells = NULL;
-}
-
-// reset all cells
-void Grid3D::ResetCells()
-{
-  if(_cells)
-    for (uint32_t i = 0; i < _numCells; ++i)
-      if (_cells[i] != NULL) _cells[i]->_hit = false;
 }
 
 void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
@@ -61,10 +79,10 @@ void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
   {
     pxr::GfVec3f tmin(FLT_MAX,FLT_MAX,FLT_MAX);
     pxr::GfVec3f tmax(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-    Triangle& triangle = mesh->GetTriangle(i);
-    pxr::GfVec3f A = matrix.Transform(positions[triangle.vertices[0]]);
-    pxr::GfVec3f B = matrix.Transform(positions[triangle.vertices[1]]);
-    pxr::GfVec3f C = matrix.Transform(positions[triangle.vertices[2]]);
+    Triangle* triangle = mesh->GetTriangle(i);
+    pxr::GfVec3f A = matrix.Transform(positions[triangle->vertices[0]]);
+    pxr::GfVec3f B = matrix.Transform(positions[triangle->vertices[1]]);
+    pxr::GfVec3f C = matrix.Transform(positions[triangle->vertices[2]]);
 
     for (uint8_t k = 0; k < 3; ++k) {
       if (A[k] < tmin[k]) tmin[k] = A[k];
@@ -96,8 +114,8 @@ void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
       for (uint32_t y = ymin; y <= ymax; ++y)
         for (uint32_t x = xmin; x <= xmax; ++x) {
           uint32_t o = z * _resolution[0] * _resolution[1] + y * _resolution[0] + x;
-          if (_cells[o] == NULL) _cells[o] = new Cell(o);
-          _cells[o]->Insert(geomIdx, &triangle);
+          if (_cells[o] == NULL) _cells[o] = new Cell(o, _geometries.size());
+          _cells[o]->Insert((Geometry*)mesh, triangle);
         }
   }
 }
@@ -115,15 +133,15 @@ void Grid3D::InsertPoints(Points* points, size_t idx)
 
 size_t _GetNumComponentsFromGeometryType(Geometry* geometry)
 {
-  switch (geom->GetType()) {
+  switch (geometry->GetType()) {
     case Geometry::MESH:
-      return ((Mesh*)geom)->GetNumTriangles();
+      return ((Mesh*)geometry)->GetNumTriangles();
 
     case Geometry::CURVE:
-      return ((Curve*)geom)->GetTotalNumSegments();
+      return ((Curve*)geometry)->GetTotalNumSegments();
 
     case Geometry::POINT:
-      return ((Points*)geom)->GetNumPoints();
+      return ((Points*)geometry)->GetNumPoints();
   }
   return 0;
 }
@@ -144,7 +162,7 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
     _range.UnionWith(pxr::GfRange3f(
       pxr::GfVec3f(range.GetMin()), pxr::GfVec3f(range.GetMax())));
 
-    totalNumElements += _GetNumComponentsFromGeometryType(geometry)
+    totalNumElements += _GetNumComponentsFromGeometryType(geometry);
   }
 
   // create the grid
@@ -185,7 +203,6 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
         break;
     }
   }
-  
 }
 
 void Grid3D::Update()
@@ -238,22 +255,16 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
 
     // start cell
     uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
-    if(_cells[o] != NULL) _cells[o]->_hit = true;
 
     // walk through each cell of the grid and test for an intersection if
     // current cell contains geometry
     while(1) {
         uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
-        if (_cells[o] != NULL)
-        {
-          /*
-            if (_cells[o]->Raycast(_mesh, ray, hit, maxDistance, minDistance))
-            {
-                _cells[o]->_hit = true;
-                hit = true;
-            }
-            */
-        }
+        if (_cells[o] != NULL) 
+          for(size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx)
+            _cells[o]->Raycast(_geometries[geomIdx], ray, hit, maxDistance, minDistance);
+            
+
         uint8_t k =
           ((nextCrossingT[0] < nextCrossingT[1]) << 2) +
           ((nextCrossingT[0] < nextCrossingT[2]) << 1) +
@@ -294,58 +305,6 @@ pxr::GfVec3f Grid3D::GetCellMin(uint32_t index){
 pxr::GfVec3f Grid3D::GetCellMax(uint32_t index){
   return GetCellPosition(index) + _cellDimension * 0.5f;
 }
-
-bool Grid3D::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
-  Location* hit, double maxDistance, double* minDistance) const
-{
-  /*
-  pxr::GfVec3f p0, p1, p2;
-  pxr::GfVec3d baryCoords;
-  double distance;
-
-  bool frontFacing;
-  Triangle* tri;
-  for(unsigned t = 0;t<_elements.size();t++) {
-    switch(_elements[t].)
-    tri = (Triangle*)_elements[t].ptr;
-    p0 = mesh->GetPosition(tri, 0);
-    p1 = mesh->GetPosition(tri, 1);
-    p2 = mesh->GetPosition(tri, 2);
-    frontFacing = false;
-
-    if(ray.Intersect(p0, p1, p2, &distance, &baryCoords, &frontFacing, 
-      maxDistance)) {
-      if(distance < *minDistance) {
-        *minDistance = distance;
-        hit->SetGeometry(geom);
-        hit->SetElementIndex(tri->id);
-        
-        hit->id = tri->id;
-        hit-> = pxr::GfVec3f(baryCoords);
-        hit = true;
-
-      }
-    }
-  }
-  return hit;
-  */
-    return false;
-}
-
-/*
-    switch(_elementType) {
-    case POINT:
-      break;
-    case EDGE:
-      break;
-    case TRIANGLE:
-    {
-      break;
-    }
-    case POLYGON:
-      break;
-*/
-
 
 uint32_t Grid3D::SLICE_INDICES[27*3] = {    
   // X_SLICE
@@ -472,53 +431,49 @@ void Grid3D::XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, ui
     index = z * (GetResolutionX() * GetResolutionY()) + y * GetResolutionX() + x;
 }
 
-void Grid3D::GetNeighbors(uint32_t index, std::vector<uint32_t>& neighbors){
+void Grid3D::GetNeighbors(uint32_t index, std::vector<uint32_t>& neighbors) {
   Grid3D::Cell* cell = _cells[index];
-    uint32_t neighborBits = 0;
-    uint32_t x, y, z, c, n;
-    Grid3D::Cell::InitNeighborBits(neighborBits);
-    IndexToXYZ(index, x, y, z);
-    if(x==0)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 0,0);
-    else if(x==_resolution[0]-1)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 0,2);
-    if(y==0)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 1,0);
-    else if(y==_resolution[1]-1)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 1,2);
-    if(z==0)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 2,0);
-    else if(z==_resolution[2]-1)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 2,2);
+  uint32_t neighborBits = 0;
+  uint32_t x, y, z, c, n;
+  Grid3D::Cell::InitNeighborBits(neighborBits);
+  IndexToXYZ(index, x, y, z);
+  if (x == 0)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 0, 0);
+  else if (x == _resolution[0] - 1)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 0, 2);
+  if (y == 0)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 1, 0);
+  else if (y == _resolution[1] - 1)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 1, 2);
+  if (z == 0)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 2, 0);
+  else if (z == _resolution[2] - 1)Grid3D::Cell::ClearNeighborBitsSlice(neighborBits, 2, 2);
 
-    for(z=0;z<3;++z){
-        for(y=0;y<3;++y){
-            for(x=0;x<3;++x){
-                c = z * 9 + y * 3 + x;
-                if(c==13)continue;
-                if(Grid3D::Cell::CheckNeighborBit(neighborBits, c)){
-                    n = index;
-                    if(z == 0){
-                        n -= (_resolution[0] * _resolution[1]);
-                    }
-                    else if(z == 2){
-                        n += (_resolution[0] * _resolution[1]);
-                    }
+  for (z = 0; z < 3; ++z)
+    for (y = 0; y < 3; ++y)
+      for (x = 0; x < 3; ++x) {
+        c = z * 9 + y * 3 + x;
+        if (c == 13)continue;
+        if (Grid3D::Cell::CheckNeighborBit(neighborBits, c)) {
+          n = index;
+          if (z == 0)
+            n -= (_resolution[0] * _resolution[1]);
 
-                    if(y==0){
-                        n -= _resolution[0];
-                    }
-                    else if(y == 2){
-                        n += _resolution[0];
-                    }
+          else if (z == 2)
+            n += (_resolution[0] * _resolution[1]);
 
-                    if(x == 0){
-                        n -= 1;
-                    }
-                    else if(x == 2){
-                        n += 1;    
-                    }
-                    
-                    neighbors.push_back(n);
-                }
-            }
-        }            
-    }
+          if (y == 0)
+            n -= _resolution[0];
+
+          else if (y == 2)
+            n += _resolution[0];
+
+          if (x == 0)
+            n -= 1;
+
+          else if (x == 2)
+            n += 1;
+
+          neighbors.push_back(n);
+        }
+      }
 }
+
 
 void 
 Grid3D::GetNeighbors(uint32_t index, std::vector<Grid3D::Cell*>& neighbors)

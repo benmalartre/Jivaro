@@ -71,11 +71,13 @@ public:
     void Init(Geometry* geometry);
 
     bool Raycast(const pxr::GfRay& ray, Location* hit,
-      double maxDistance = FLT_MAX, double* minDistance = NULL) const;
+      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
     bool Closest(const pxr::GfVec3f& point, Location* hit, 
-      double maxDistance = FLT_MAX, double* minDistance = NULL) const;
+      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
 
   protected:
+    bool _LeafRaycast(const pxr::GfRay& ray, Location* hit, 
+      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
     void _FinishSort(std::vector<Morton>& cells);
     Cell* _RecurseSortCellsByPair(std::vector<Morton>& mortons, int first, int last);
     void _SortTrianglesByPair(std::vector<Morton>& mortons, Geometry* geometry);

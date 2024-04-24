@@ -40,10 +40,10 @@ public:
   // overriden by derived classes
   virtual void Update() {};
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
-    double maxDistance=-1, double* minDistance=NULL) const = 0;
+    double maxDistance=DBL_MAX, double* minDistance=NULL) const = 0;
     
   virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
-    double maxDistance=-1.f) const = 0;
+    double maxDistance=DBL_MAX) const = 0;
 
 protected:
   virtual void _Init(const std::vector<Geometry*>& geometries){_geometries = geometries;};
