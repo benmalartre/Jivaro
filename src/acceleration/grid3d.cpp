@@ -27,10 +27,12 @@ void Grid3D::Cell::Insert(Geometry* geometry, Triangle* triangle)
 bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
   Location* hit, double maxDistance, double* minDistance) const
 {
+  std::cout << "cell raycast : " << geometry << std::endl;
   auto& componentsIt = _components.find(geometry);
   if (componentsIt == _components.end()) return false;
 
   const _Components& components = componentsIt->second;
+  std::cout << "num components : " << components.size() << std::endl;
   pxr::GfRay localRay(ray);
   localRay.Transform(geometry->GetInverseMatrix());
   const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
@@ -115,7 +117,7 @@ void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
         for (uint32_t x = xmin; x <= xmax; ++x) {
           uint32_t o = z * _resolution[0] * _resolution[1] + y * _resolution[0] + x;
           if (_cells[o] == NULL) _cells[o] = new Cell(o, _geometries.size());
-          _cells[o]->Insert((Geometry*)mesh, triangle);
+            _cells[o]->Insert((Geometry*)mesh, triangle);
         }
   }
 }
@@ -213,71 +215,72 @@ void Grid3D::Update()
 bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
-    double bmin, bmax;
-    // if the ray doesn't intersect the grid return
-    if(!ray.Intersect(pxr::GfBBox3d(
-      pxr::GfRange3d(_range.GetMin(), _range.GetMax())), &bmin, &bmax))
+  double bmin, bmax;
+  // if the ray doesn't intersect the grid return
+  if(!ray.Intersect(pxr::GfBBox3d(
+    pxr::GfRange3d(_range.GetMin(), _range.GetMax())), &bmin, &bmax))
+  {
+    return false;
+  }
+
+  // initialization step
+  int32_t exit[3], step[3], cell[3];
+  pxr::GfVec3d deltaT, nextCrossingT;
+  pxr::GfVec3d invdir = -1.0 * ray.GetDirection();
+
+  for (uint8_t i = 0; i < 3; ++i) {
+    // convert ray starting point to cell coordinates
+    double rayOrigCell = 
+      ((ray.GetPoint(0.f)[i] + ray.GetDirection()[i] * bmin) - 
+        _range.GetMin()[i]);
+    cell[i] = CLAMP(floor(rayOrigCell / _cellDimension[i]), 0, _resolution[i] - 1);
+    if(fabs(ray.GetDirection()[i]) < 0.0000001)
     {
-        return false;
+      deltaT[i] = 0;
+      nextCrossingT[i] = maxDistance;
+      exit[i] = cell[i];
+      step[i] = 0;
     }
-
-    // initialization step
-    int32_t exit[3], step[3], cell[3];
-    pxr::GfVec3d deltaT, nextCrossingT;
-    pxr::GfVec3d invdir = -1.0 * ray.GetDirection();
-
-    for (uint8_t i = 0; i < 3; ++i) {
-        // convert ray starting point to cell coordinates
-        double rayOrigCell = 
-          ((ray.GetPoint(0.f)[i] + ray.GetDirection()[i] * bmin) - 
-            _range.GetMin()[i]);
-        cell[i] = CLAMP(floor(rayOrigCell / _cellDimension[i]), 0, _resolution[i] - 1);
-        if(fabs(ray.GetDirection()[i]) < 0.0000001)
-        {
-            deltaT[i] = 0;
-            nextCrossingT[i] = maxDistance;
-            exit[i] = cell[i];
-            step[i] = 0;
-        }
-        else if (ray.GetDirection()[i] < 0.0) {
-            deltaT[i] = -_cellDimension[i] * invdir[i];
-            nextCrossingT[i] = bmin + (cell[i] * _cellDimension[i] - rayOrigCell) * invdir[i];
-            exit[i] = -1;
-            step[i] = -1;
-        }
-        else {
-            deltaT[i] = _cellDimension[i] * invdir[i];
-            nextCrossingT[i] = bmin + ((cell[i] + 1)  * _cellDimension[i] - rayOrigCell) * invdir[i];
-            exit[i] = _resolution[i];
-            step[i] = 1;
-        }
+    else if (ray.GetDirection()[i] < 0.0) {
+      deltaT[i] = -_cellDimension[i] * invdir[i];
+      nextCrossingT[i] = bmin + (cell[i] * _cellDimension[i] - rayOrigCell) * invdir[i];
+      exit[i] = -1;
+      step[i] = -1;
     }
+    else {
+      deltaT[i] = _cellDimension[i] * invdir[i];
+      nextCrossingT[i] = bmin + ((cell[i] + 1)  * _cellDimension[i] - rayOrigCell) * invdir[i];
+      exit[i] = _resolution[i];
+      step[i] = 1;
+    }
+  }
 
-    // start cell
+  // start cell
+  uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
+
+  // walk through each cell of the grid and test for an intersection if
+  // current cell contains geometry
+  while(1) {
     uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
+    std::cout << "cell id " << o << ": " << _cells[0] << std::endl;
+    if (_cells[o] != NULL) 
+      for(size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx)
+        _cells[o]->Raycast(_geometries[geomIdx], ray, hit, maxDistance, minDistance);
+        
 
-    // walk through each cell of the grid and test for an intersection if
-    // current cell contains geometry
-    while(1) {
-        uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
-        if (_cells[o] != NULL) 
-          for(size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx)
-            _cells[o]->Raycast(_geometries[geomIdx], ray, hit, maxDistance, minDistance);
-            
+    uint8_t k =
+      ((nextCrossingT[0] < nextCrossingT[1]) << 2) +
+      ((nextCrossingT[0] < nextCrossingT[2]) << 1) +
+      ((nextCrossingT[1] < nextCrossingT[2]));
+    static const uint8_t map[8] = {2, 1, 2, 1, 2, 2, 0, 0};
+    uint8_t axis = map[k];
+    if (maxDistance <= nextCrossingT[axis]) break;
+    cell[axis] += step[axis];
+    if (cell[axis] == exit[axis]) break;
+    nextCrossingT[axis] += deltaT[axis];
+  }
 
-        uint8_t k =
-          ((nextCrossingT[0] < nextCrossingT[1]) << 2) +
-          ((nextCrossingT[0] < nextCrossingT[2]) << 1) +
-          ((nextCrossingT[1] < nextCrossingT[2]));
-        static const uint8_t map[8] = {2, 1, 2, 1, 2, 2, 0, 0};
-        uint8_t axis = map[k];
-        if (maxDistance <= nextCrossingT[axis]) break;
-        cell[axis] += step[axis];
-        if (cell[axis] == exit[axis]) break;
-        nextCrossingT[axis] += deltaT[axis];
-    }
-
-    return hit;
+  return hit->IsValid();
 }
 
 bool Grid3D::Closest(const pxr::GfVec3f& point, Location* hit,

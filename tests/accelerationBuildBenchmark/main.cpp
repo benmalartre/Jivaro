@@ -61,7 +61,7 @@ int main (int argc, char *argv[])
     std::cout << "bvh raycast ";
     if (bvh.Raycast(ray, &bvhHit, DBL_MAX, &bvhDistance))
     {
-      pxr::GfVec3i triangleVertices = mesh->GetTriangle(gridHit.GetElementIndex())->vertices;
+      pxr::GfVec3i triangleVertices = mesh->GetTriangle(bvhHit.GetElementIndex())->vertices;
       pxr::GfVec3f intersection = bvhHit.ComputePosition(mesh->GetPositionsCPtr(), &triangleVertices[0], 3, mesh->GetMatrix());
       std::cout << "bvh hit : " << intersection << std::endl;
       std::cout << "ray result : " << ray.GetPoint(bvhDistance) << std::endl;
@@ -84,6 +84,8 @@ int main (int argc, char *argv[])
     std::cout << "grid raycast ";
     if (grid.Raycast(ray, &gridHit, DBL_MAX, &gridDistance))
     {
+      std::cout << "we hit gird something" << std::endl;
+      std::cout << "element inde " << gridHit.GetElementIndex() << std::endl;
       pxr::GfVec3i triangleVertices = mesh->GetTriangle(gridHit.GetElementIndex())->vertices;
       pxr::GfVec3f intersection = gridHit.ComputePosition(mesh->GetPositionsCPtr(), &triangleVertices[0], 3, mesh->GetMatrix());
       std::cout << "grid hit : " << intersection << std::endl;

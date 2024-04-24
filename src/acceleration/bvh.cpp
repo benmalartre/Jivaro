@@ -257,7 +257,7 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
       }
     }
   } else {
-    if(IsGeom()) {        
+    if(IsGeom()) {       
       const BVH* intersector = GetIntersector();
       hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
     }
@@ -266,11 +266,8 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
     if (_right)_right->Raycast(ray, &rightHit, maxDistance, minDistance);
 
     if (leftHit.IsValid() && rightHit.IsValid()) {
-      if (leftHit.GetT() < rightHit.GetT())
-        hit->Set(leftHit); 
-      else
-        hit->Set(rightHit); 
-       return true;
+      hit->Set(leftHit.GetT() < rightHit.GetT() ? leftHit : rightHit); 
+      return true;
     } else if (leftHit.IsValid()) {
       hit->Set(leftHit); 
       return true;
