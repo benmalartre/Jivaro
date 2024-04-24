@@ -73,7 +73,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  float mass = 4.f;
+  float mass = 1.f;
   float radius = 0.25f;
   float damping = 0.1f;
   float restitution = 0.05f;

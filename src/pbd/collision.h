@@ -147,7 +147,6 @@ public:
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  pxr::GfVec3f GetVelocity(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
   
 protected:

@@ -24,6 +24,7 @@ void Contact::Update(Collision* collision, Particles* particles, size_t index)
   _normal = collision->GetGradient(particles, index);
   _d = collision->GetValue(particles, index);
   _velocity = collision->GetVelocity(particles, index);
+  
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

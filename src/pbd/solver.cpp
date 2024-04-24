@@ -321,14 +321,15 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   pxr::GfVec3f* predicted = &_particles._predicted[0];
   pxr::GfVec3f* position = &_particles._position[0];
 
+  // apply external forces
+  for (const Force* force : _force)
+    force->Apply(begin, end, &_particles, _stepTime);
+
   for (size_t index = begin; index < end; ++index) {
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
   }
 
-  // apply external forces
-  for (const Force* force : _force)
-    force->Apply(begin, end, &_particles, _stepTime);
 }
 
 void Solver::_UpdateParticles(size_t begin, size_t end)

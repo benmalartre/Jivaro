@@ -122,7 +122,11 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
 
 pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
 {
-  return _collider->GetVelocity();
+  const pxr::GfVec3f torque = _collider->GetTorque();
+  const pxr::GfVec3f tangent =
+    (GetGradient(particles, index) ^ torque).GetNormalized();
+
+  return _collider->GetVelocity() + tangent * torque.GetLength();
 };
 
 void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, float dt)
@@ -137,15 +141,13 @@ void Collision::_SolveVelocity(Particles* particles, size_t index, float dt)
   if(!CheckHit(index))return;    
 
   const  pxr::GfVec3f normal = GetContactNormal(index);
-  const float depth = GetContactDepth(index);
 
   // Relative normal and tangential velocities
-  const pxr::GfVec3f v = particles->_velocity[index] - GetContactVelocity(index);
-  const float vn = pxr::GfDot(v, normal);
-  if(pxr::GfIsClose(vn, 0.f, 0.000001f)) {
+  const pxr::GfVec3f velocity = 
+   (particles->_velocity[index] - GetContactVelocity(index));
+  const float vn = pxr::GfDot(velocity, normal);
 
-  }
-  const pxr::GfVec3f vt = v - normal * vn;
+  const pxr::GfVec3f vt = velocity - normal * vn;
   const float vtLen = vt.GetLength();
 
   // Friction
@@ -218,21 +220,6 @@ void PlaneCollision::Update(const pxr::UsdPrim& prim, double time)
   _UpdatePositionAndNormal();
   _UpdateParameters(prim, time);
 }
-
-/*
-void PlaneCollision::UpdateContacts(Particles* particles)
-{
-  Plane* plane = (Plane*)_collider;
-  _normal = plane->GetNormal();
-  _position = plane->GetOrigin();
-
-  size_t idx = 0;
-  for (auto& contact : _contacts) {
-
-    contact.Update(_collider, particles, _c2p[idx++]);
-  }
-}
-*/
 
 void PlaneCollision::_UpdatePositionAndNormal()
 {
@@ -329,15 +316,6 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
   return (particles->_predicted[index] - _center).GetNormalized();
 }
 
-pxr::GfVec3f SphereCollision::GetVelocity(Particles* particles, size_t index)
-{
-  const pxr::GfVec3f torque = _collider->GetTorque();
-  const pxr::GfVec3f tangent =
-    (GetGradient(particles, index) ^ torque).GetNormalized();
-
-  return _collider->GetVelocity() + tangent * torque.GetLength();
-   
-};
 
 
 //----------------------------------------------------------------------------------------
