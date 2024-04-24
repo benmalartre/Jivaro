@@ -50,8 +50,8 @@ int main (int argc, char *argv[])
     pxr::GfRay ray(origin, direction);
 
     Location gridHit, bvhHit;
-    double maxDistance = DBL_MAX;
-    double gridDistance = DBL_MAX, bvhDistance = DBL_MAX;
+    double gridDistance = DBL_MAX;
+    double bvhDistance = DBL_MAX;
 
     uint64_t sT = CurrentTime();
     BVH bvh;
@@ -59,7 +59,7 @@ int main (int argc, char *argv[])
     std::cout << "bvh build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
 
     std::cout << "bvh raycast ";
-    if (bvh.Raycast(ray, &bvhHit, maxDistance, &bvhDistance))
+    if (bvh.Raycast(ray, &bvhHit, DBL_MAX, &bvhDistance))
     {
       pxr::GfVec3i triangleVertices = mesh->GetTriangle(gridHit.GetElementIndex())->vertices;
       pxr::GfVec3f intersection = bvhHit.ComputePosition(mesh->GetPositionsCPtr(), &triangleVertices[0], 3, mesh->GetMatrix());
@@ -82,7 +82,7 @@ int main (int argc, char *argv[])
     
 
     std::cout << "grid raycast ";
-    if (grid.Raycast(ray, &gridHit, maxDistance, &gridDistance))
+    if (grid.Raycast(ray, &gridHit, DBL_MAX, &gridDistance))
     {
       pxr::GfVec3i triangleVertices = mesh->GetTriangle(gridHit.GetElementIndex())->vertices;
       pxr::GfVec3f intersection = gridHit.ComputePosition(mesh->GetPositionsCPtr(), &triangleVertices[0], 3, mesh->GetMatrix());
