@@ -12,10 +12,20 @@ set(PUBLIC_HEADERS
 
 add_executable(${TARGET}
   ../../src/utils/timer.cpp
-  ../../src/acceleration/bvh.h
-  ../../src/acceleration/grid3d.h
-  ../../src/acceleration/octree.h
+  ../../src/acceleration/intersector.h>
+  ../../src/acceleration/bvh.cpp
+  ../../src/acceleration/grid3d.cpp
+  ../../src/acceleration/octree.cpp
+  ../../src/geometry/utils.cpp
+  ../../src/geometry/point.cpp
+  ../../src/geometry/triangle.cpp
+  ../../src/geometry/halfEdge.cpp
+  ../../src/geometry/geometry.cpp
+  ../../src/geometry/deformable.cpp
+  ../../src/geometry/implicit.cpp
+  ../../src/geometry/points.cpp
   ../../src/geometry/mesh.cpp
+  ../../src/geometry/curve.cpp
   main.cpp
 )
 
@@ -24,12 +34,14 @@ target_include_directories(${TARGET}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${USD_INCLUDE_DIR}
     ${BOOST_INCLUDE_DIR}
+    ${TBB_INCLUDE_DIR}
 
 )
 
 target_link_libraries(${TARGET}
   ${USD_LIBRARIES}
   ${BOOST_LIBRARIES}
+  ${TBB_LIBRARIES}
 )
 
 #if (APPLE)
