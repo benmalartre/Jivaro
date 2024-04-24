@@ -20,7 +20,9 @@
 #include "../geometry/implicit.h"
 #include "../geometry/instancer.h"
 #include "../acceleration/bvh.h"
+#include "../pbd/tokens.h"
 #include "../pbd/solver.h"
+#include "../pbd/force.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -51,7 +53,18 @@ Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::Sdf
   usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(subSteps);
   usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(sleepThreshold);
 
-  return new Solver(scene, usdXform, pxr::GfMatrix4d(1.f));
+  usdPrim.CreateAttribute(pxr::TfToken("Gravity"), pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(0.f, -9.81f, 0.f));
+  usdPrim.CreateAttribute(pxr::TfToken("Damp"), pxr::SdfValueTypeNames->Float).Set(0.1f);
+
+  Solver* solver = new Solver(scene, usdXform, pxr::GfMatrix4d(1.f));
+
+  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
+  solver->AddElement(gravity, NULL, path.AppendChild(PBDTokens->gravity));
+
+  Force* damp = new DampingForce();
+  solver->AddElement(damp, NULL, path.AppendChild(PBDTokens->damp));
+
+  return solver;
 }
 
 

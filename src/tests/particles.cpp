@@ -202,7 +202,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
 
   
-
+  Force* damp = new DampingForce();
+  _solver->AddElement(damp, NULL, _solverId.AppendChild(pxr::TfToken("Damping")));
 
 
   for (auto& sphere : spheres) {

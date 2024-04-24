@@ -33,6 +33,8 @@ public:
   GravitationalForce();
   GravitationalForce(const pxr::GfVec3f& gravity);
 
+  void Set(const pxr::GfVec3f& gravity){_gravity = gravity;};
+
   void Apply(size_t begin, size_t end, Particles* particles, float dt) const override;
 
 private:
@@ -45,6 +47,7 @@ public:
   DampingForce();
   DampingForce(float damping);
 
+  void Set(float damp){_damp = damp;};
   void Apply(size_t begin, size_t end, Particles* particles, float dt) const override;
 
 private:

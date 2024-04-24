@@ -81,6 +81,8 @@ void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& pa
       break;
 
     case Element::FORCE:
+      if(path.GetNameToken() == pxr::TfToken("Gravity"))_gravity = (Force*)element;
+      else if(path.GetNameToken() == pxr::TfToken("Damp"))_damp = (Force*)element;
       AddForce((Force*)element);
       break;
 
@@ -562,6 +564,10 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
+
+  pxr::GfVec3f gravity;
+  prim.GetAttribute(pxr::TfToken("Gravity")).Get(&gravity, time);
+  if(_gravity)((GravitationalForce*)_gravity)->Set(gravity);
 }
 
 

@@ -35,7 +35,7 @@ public:
 
   typedef std::map<Element*, std::pair<pxr::SdfPath, Geometry*>> _ElementMap;
 
-  Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
+  explicit Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   ~Solver();
   
   void CreateConstraints(Body* body, short type, float stiffness=10000.f, float damping=0.1f);
@@ -134,6 +134,8 @@ private:
   std::vector<Collision*>             _collisions;
   std::vector<Body*>                  _bodies;
   std::vector<Force*>                 _force;
+  Force*                              _gravity;
+  Force*                              _damp;
 
   // scene
   _ElementMap                         _elements;
