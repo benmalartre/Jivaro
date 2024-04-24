@@ -25,9 +25,9 @@ void GravityForce::Update(float time)
 
 void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float dt) const
 {
-  const float* mass = &particles->_mass[0];
-  const float* invMass = &particles->_invMass[0];
-  pxr::GfVec3f* velocity = &particles->_velocity[0];
+  const float* mass = &particles->Mass(0);
+  const float* invMass = &particles->InvMass(0);
+  pxr::GfVec3f* velocity = &particles->Velocity(0);
 
 
   Mask::Iterator iterator((const Mask*)this, begin, end);
@@ -63,13 +63,13 @@ void DampForce::Update(float time)
 
 void DampForce::Apply(size_t begin, size_t end, Particles* particles, float dt) const
 {
-  const float* mass = &particles->_mass[0];
-  const float* invMass = &particles->_invMass[0];
-  pxr::GfVec3f* velocity = &particles->_velocity[0];
+  const float* mass = &particles->Mass(0);
+  const float* invMass = &particles->InvMass(0);
+  pxr::GfVec3f* velocity = &particles->Velocity(0);
 
   if(HasWeights())
     for(size_t index = begin; index < end; ++index) {
-      if (particles->_state[index] != Particles::ACTIVE)continue;
+      if (particles->State(index) != Particles::ACTIVE)continue;
       velocity[index] -= _damp * velocity[index]  * _weights[index] *invMass[index] * dt;
     }
   else 

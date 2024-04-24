@@ -86,9 +86,7 @@ Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   pxr::UsdPrim usdPrim = usdMesh.GetPrim();
   usdPrim.CreateAttribute(pxr::TfToken("StretchStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
   usdPrim.CreateAttribute(pxr::TfToken("BendStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
-  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
-  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
-  usdPrim.CreateAttribute(pxr::TfToken("Serial"), pxr::SdfValueTypeNames->Bool).Set(false);
+
 
   return mesh;
 }
@@ -123,8 +121,8 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
   usdSphere.GetRadiusAttr().Get(&real);
 
   pxr::UsdPrim usdPrim = usdSphere.GetPrim();
-  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(restitution);
-  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(friction);
+  usdPrim.CreateAttribute(PBDTokens->restitution, pxr::SdfValueTypeNames->Float).Set(restitution);
+  usdPrim.CreateAttribute(PBDTokens->friction, pxr::SdfValueTypeNames->Float).Set(friction);
 
 
   pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();

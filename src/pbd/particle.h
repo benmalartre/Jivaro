@@ -73,6 +73,55 @@ public:
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);
 
+  inline const short& State(size_t index) const{return _state[index];};
+  inline const int& Body(size_t index) const{return _body[index];};
+  inline const float& Mass(size_t index) const{return _mass[index];};
+  inline const float& InvMass(size_t index) const{return _invMass[index];};
+  inline const float& Radius(size_t index) const{return _radius[index];};
+  inline const pxr::GfVec3f& Rest(size_t index) const{return _rest[index];};
+  inline const pxr::GfVec3f& Previous(size_t index) const{return _previous[index];};
+  inline const pxr::GfVec3f& Position(size_t index) const{return _position[index];};
+  inline const pxr::GfVec3f& Predicted(size_t index) const{return _predicted[index];};
+  inline const pxr::GfVec3f& Velocity(size_t index) const{return _velocity[index];};
+  inline const pxr::GfVec3f& Color(size_t index) const{return _color[index];};
+
+  inline short& State(size_t index) {return _state[index];};
+  inline int& Body(size_t index) {return _body[index];};
+  inline float& Mass(size_t index) {return _mass[index];};
+  inline float& InvMass(size_t index) {return _invMass[index];};
+  inline float& Radius(size_t index) {return _radius[index];};
+  inline pxr::GfVec3f& Rest(size_t index) {return _rest[index];};
+  inline pxr::GfVec3f& Previous(size_t index) {return _previous[index];};
+  inline pxr::GfVec3f& Position(size_t index) {return _position[index];};
+  inline pxr::GfVec3f& Predicted(size_t index) {return _predicted[index];};
+  inline pxr::GfVec3f& Velocity(size_t index) {return _velocity[index];};
+  inline pxr::GfVec3f& Color(size_t index) {return _color[index];};
+
+  inline const auto& pxr::VtArray<short>& StateArray() const {return _state;};
+  inline const auto& pxr::VtArray<int>& BodyArray() const {return _body;};
+  inline const auto& pxr::VtArray<float>& MassArray() const {return _mass;};
+  inline const auto& pxr::VtArray<float>& InvMassArray() const {return _invMasses;};
+  inline const auto& pxr::VtArray<float>& RadiusArray() const {return _radius;};
+  inline const auto& pxr::VtArray<pxr::GfVec3f>& RestArray() const {return _rest;};
+  inline const auto& pxr::VtArray<pxr::GfVec3f>& PreviousArray() const {return _previous;};
+  inline const auto& pxr::VtArray<pxr::GfVec3f>& PositionArray() const {return _position;};
+  inline const auto& pxr::VtArray<pxr::GfVec3f>& PredictedArray() const {return _predicted;};
+  inline const auto& pxr::VtArray<pxr::GfVec3f>& VelocityArray() const {return _velocity;};
+  inline const auto& pxr::VtArray<pxr::GfVec3f>& ColorArray() const {return _color;};
+
+  inline auto& pxr::VtArray<short>& StateArray() {return _state;};
+  inline auto& pxr::VtArray<int>& BodyArray() {return _body;};
+  inline auto& pxr::VtArray<float>& MassArray() {return _mass;};
+  inline auto& pxr::VtArray<float>& InvMassArray() {return _invMasses;};
+  inline auto& pxr::VtArray<float>& RadiusArray() {return _radius;};
+  inline auto& pxr::VtArray<pxr::GfVec3f>& RestArray() {return _rest;};
+  inline auto& pxr::VtArray<pxr::GfVec3f>& PreviousArray() {return _previous;};
+  inline auto& pxr::VtArray<pxr::GfVec3f>& PositionArray() {return _position;};
+  inline auto& pxr::VtArray<pxr::GfVec3f>& PredictedArray() {return _predicted;};
+  inline auto& pxr::VtArray<pxr::GfVec3f>& VelocityArray() {return _velocity;};
+  inline auto& pxr::VtArray<pxr::GfVec3f>& ColorArray() {return _color;};
+
+private:
   pxr::VtArray<short>        _state;
   pxr::VtArray<int>          _body;
   pxr::VtArray<float>        _mass;

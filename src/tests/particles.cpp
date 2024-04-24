@@ -218,12 +218,12 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   std::cout << "particles : " << particles << std::endl;
 
   pxr::GfRange3f range;
-  for(auto& pos: particles->_position) {
+  for(auto& pos: particles->Positions()) {
     range = range.UnionWith(pos);
   }
   std::vector<int> used;
   for(size_t p = 0; p < _solver->GetNumParticles(); ++p)
-    if (particles->_position[p][1] < range.GetMidpoint()[1]) {
+    if (particles->Position(p][1] < range.GetMidpoint()[1]) {
       used.push_back(p);
       particles->_color[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     }
@@ -236,6 +236,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
+
   if(time != _lastTime) {
     _solver->Update(stage, time);
     _lastTime = time;
