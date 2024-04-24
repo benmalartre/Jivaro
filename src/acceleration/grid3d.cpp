@@ -29,23 +29,20 @@ void Grid3D::Cell::Insert(uint16_t geometryIndex, Triangle* triangle)
 // delete all cells
 void Grid3D::DeleteCells()
 {
-  if(_cells)
-  {
-    for (uint32_t i = 0; i < _numCells; ++i)
-      if (_cells[i] != NULL) delete _cells[i];
-    delete [] _cells;
-    _cells = NULL;
-  }
+  if(!_cells)return;
+
+  for (uint32_t i = 0; i < _numCells; ++i)
+    if (_cells[i] != NULL) delete _cells[i];
+  delete [] _cells;
+  _cells = NULL;
 }
 
 // reset all cells
 void Grid3D::ResetCells()
 {
   if(_cells)
-  {
     for (uint32_t i = 0; i < _numCells; ++i)
       if (_cells[i] != NULL) _cells[i]->_hit = false;
-  }
 }
 
 void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
@@ -59,56 +56,50 @@ void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
   const pxr::GfVec3f bboxMin = _range.GetMin();
   const pxr::GfVec3f bboxMax = _range.GetMax();
 
-  size_t numInsertedTriangles = 0;
-
   // insert all the triangles in the cells
   for(uint32_t i=0;i<numTriangles;i++)
   {
-      pxr::GfVec3f tmin(FLT_MAX,FLT_MAX,FLT_MAX);
-      pxr::GfVec3f tmax(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-      Triangle& triangle = mesh->GetTriangle(i);
-      pxr::GfVec3f A = matrix.Transform(positions[triangle.vertices[0]]);
-      pxr::GfVec3f B = matrix.Transform(positions[triangle.vertices[1]]);
-      pxr::GfVec3f C = matrix.Transform(positions[triangle.vertices[2]]);
+    pxr::GfVec3f tmin(FLT_MAX,FLT_MAX,FLT_MAX);
+    pxr::GfVec3f tmax(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+    Triangle& triangle = mesh->GetTriangle(i);
+    pxr::GfVec3f A = matrix.Transform(positions[triangle.vertices[0]]);
+    pxr::GfVec3f B = matrix.Transform(positions[triangle.vertices[1]]);
+    pxr::GfVec3f C = matrix.Transform(positions[triangle.vertices[2]]);
 
-      for (uint8_t k = 0; k < 3; ++k) {
-          if (A[k] < tmin[k]) tmin[k] = A[k];
-          if (B[k] < tmin[k]) tmin[k] = B[k];
-          if (C[k] < tmin[k]) tmin[k] = C[k];
-          if (A[k] > tmax[k]) tmax[k] = A[k];
-          if (B[k] > tmax[k]) tmax[k] = B[k];
-          if (C[k] > tmax[k]) tmax[k] = C[k];
-      }
-      
-      // convert to cell coordinates
-      tmin[0] = (tmin[0] - bboxMin[0]) * invDimensions[0];
-      tmin[1] = (tmin[1] - bboxMin[1]) * invDimensions[1];
-      tmin[2] = (tmin[2] - bboxMin[2]) * invDimensions[2];
-      
-      tmax[0] = (tmax[0] - bboxMin[0]) * invDimensions[0];
-      tmax[1] = (tmax[1] - bboxMin[1]) * invDimensions[1];
-      tmax[2] = (tmax[2] - bboxMin[2]) * invDimensions[2];
-      
-      uint32_t zmin = CLAMP(floor(tmin[2]), 0, _resolution[2] - 1);
-      uint32_t zmax = CLAMP(floor(tmax[2]), 0, _resolution[2] - 1);
-      uint32_t ymin = CLAMP(floor(tmin[1]), 0, _resolution[1] - 1);
-      uint32_t ymax = CLAMP(floor(tmax[1]), 0, _resolution[1] - 1);
-      uint32_t xmin = CLAMP(floor(tmin[0]), 0, _resolution[0] - 1);
-      uint32_t xmax = CLAMP(floor(tmax[0]), 0, _resolution[0] - 1);
-      
-      // loop over all the cells the triangle overlaps and insert
-      for (uint32_t z = zmin; z <= zmax; ++z)
-        for (uint32_t y = ymin; y <= ymax; ++y)
-          for (uint32_t x = xmin; x <= xmax; ++x) {
-            uint32_t o = z * _resolution[0] * _resolution[1] + y * _resolution[0] + x;
-            if (_cells[o] == NULL) _cells[o] = new Cell(o);
-            _cells[o]->Insert(geomIdx, &triangle);
-            numInsertedTriangles++;
-          }
+    for (uint8_t k = 0; k < 3; ++k) {
+      if (A[k] < tmin[k]) tmin[k] = A[k];
+      if (B[k] < tmin[k]) tmin[k] = B[k];
+      if (C[k] < tmin[k]) tmin[k] = C[k];
+      if (A[k] > tmax[k]) tmax[k] = A[k];
+      if (B[k] > tmax[k]) tmax[k] = B[k];
+      if (C[k] > tmax[k]) tmax[k] = C[k];
+    }
+    
+    // convert to cell coordinates
+    tmin[0] = (tmin[0] - bboxMin[0]) * invDimensions[0];
+    tmin[1] = (tmin[1] - bboxMin[1]) * invDimensions[1];
+    tmin[2] = (tmin[2] - bboxMin[2]) * invDimensions[2];
+    
+    tmax[0] = (tmax[0] - bboxMin[0]) * invDimensions[0];
+    tmax[1] = (tmax[1] - bboxMin[1]) * invDimensions[1];
+    tmax[2] = (tmax[2] - bboxMin[2]) * invDimensions[2];
+    
+    uint32_t zmin = CLAMP(floor(tmin[2]), 0, _resolution[2] - 1);
+    uint32_t zmax = CLAMP(floor(tmax[2]), 0, _resolution[2] - 1);
+    uint32_t ymin = CLAMP(floor(tmin[1]), 0, _resolution[1] - 1);
+    uint32_t ymax = CLAMP(floor(tmax[1]), 0, _resolution[1] - 1);
+    uint32_t xmin = CLAMP(floor(tmin[0]), 0, _resolution[0] - 1);
+    uint32_t xmax = CLAMP(floor(tmax[0]), 0, _resolution[0] - 1);
+    
+    // loop over all the cells the triangle overlaps and insert
+    for (uint32_t z = zmin; z <= zmax; ++z)
+      for (uint32_t y = ymin; y <= ymax; ++y)
+        for (uint32_t x = xmin; x <= xmax; ++x) {
+          uint32_t o = z * _resolution[0] * _resolution[1] + y * _resolution[0] + x;
+          if (_cells[o] == NULL) _cells[o] = new Cell(o);
+          _cells[o]->Insert(geomIdx, &triangle);
+        }
   }
-
-  std::cout << "num triangles : " << numTriangles << std::endl;
-  std::cout << "num inserted triangle : " << numInsertedTriangles << std::endl;
 }
 
 void Grid3D::InsertCurve(Curve* curve, size_t idx)
@@ -121,78 +112,23 @@ void Grid3D::InsertPoints(Points* points, size_t idx)
   //Points* points = (Points*)_geometries[idx];
 }
 
-/*
-void Grid3D::PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points, 
-  const MMatrix& M, float cellSize)
+
+size_t _GetNumComponentsFromGeometryType(Geometry* geometry)
 {
-  // delete old cells
-  deleteCells();
+  switch (geom->GetType()) {
+    case Geometry::MESH:
+      return ((Mesh*)geom)->GetNumTriangles();
 
-  // compute bound of the scene
-  uint32_t totalNumPoints = points.size();
+    case Geometry::CURVE:
+      return ((Curve*)geom)->GetTotalNumSegments();
 
-  _bbox.compute(mesh);
-
-  // create the grid
-  pxr::GfVec3f size = _bbox.max() - _bbox.min();
-
- cellSize = fmax(cellSize, 0.01f);
-  //float desiredCellSize = area*12;
-  for (uint8_t i = 0; i < 3; ++i) {
-      _resolution[i] = ceil(size[i] * 1.0f/cellSize)+1;
-      _resolution[i] = MAX(uint32_t(1), MIN(_resolution[i], uint32_t(128)));
+    case Geometry::POINT:
+      return ((Points*)geom)->GetNumPoints();
   }
-
-  _cellDimension.x = size.x /(float)(_resolution[0]-1);
-  _cellDimension.y = size.y /(float)(_resolution[1]-1);
-  _cellDimension.z = size.z /(float)(_resolution[2]-1);
-
-  // allocate memory
-  _nc = _resolution[0] * _resolution[1] * _resolution[2];
-  if(_nc > 0)_cells = new Grid3D::Cell* [_nc];
-  else{
-    _cells = NULL;
-    return;
-  }
-
-  // set all pointers to NULL
-  memset(_cells, 0x0, sizeof(Grid3D::Cell*) * _nc);
-
-  Vertex* V;
-  pxr::GfVec3f P, R;
-  pxr::GfVec3f invDimensions(
-    1/_cellDimension[0],
-    1/_cellDimension[1],
-    1/_cellDimension[2]);
-
-  // insert all the points in the cells
-  for(uint32_t i=0;i<totalNumPoints;i++)
-  {
-      V = points[i];
-      P = MPoint(V->_position) * M;
-
-      // convert to cell coordinates
-      R.x = (P.x - _bbox.min().x + 0.5f * _cellDimension[0]) * invDimensions.x;
-      R.y = (P.y - _bbox.min().y + 0.5f * _cellDimension[1]) * invDimensions.y;
-      R.z = (P.z - _bbox.min().z + 0.5f * _cellDimension[2]) * invDimensions.z;
-
-      uint32_t idz = CLAMP(floor(R[2]), 0, _resolution[2] - 1);
-      uint32_t idy = CLAMP(floor(R[1]), 0, _resolution[1] - 1);
-      uint32_t idx = CLAMP(floor(R[0]), 0, _resolution[0] - 1);
-
-      // insert vertex in cell
-      uint32_t o = 
-        idz * _resolution[0] * _resolution[1] + idy * _resolution[0] + idx;
-      if (_cells[o] == NULL) 
-        _cells[o] = new Cell(o);
-      //_cells[o]->_color = MVector(0.5,0.5,0.5);
-      _cells[o]->Insert(V);
-      _cells[o]->_grid = this;
-    }
+  return 0;
 }
-*/
 
-// place a triangle mesh in the grid
+// construct the grid from a list of geometries
 void Grid3D::Init(const std::vector<Geometry*>& geometries)
 {
   // delete old cells
@@ -202,31 +138,13 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
   // compute bound of the scene
   size_t totalNumElements = 0;
   _range.SetEmpty();
-  for(Geometry* geom: geometries) {
-    const pxr::GfBBox3d& bbox = geom->GetBoundingBox();
+  for(Geometry* geometry: geometries) {
+    const pxr::GfBBox3d& bbox = geometry->GetBoundingBox();
     const pxr::GfRange3d& range = bbox.GetRange();
     _range.UnionWith(pxr::GfRange3f(
       pxr::GfVec3f(range.GetMin()), pxr::GfVec3f(range.GetMax())));
-    switch (geom->GetType()) {
-      case Geometry::MESH:
-      {
-        Mesh* mesh = (Mesh*)geom;
-        totalNumElements += mesh->GetNumTriangles();
-        break;
-      }
-      case Geometry::CURVE:
-      {
-        Curve* curve = (Curve*)geom;
-        totalNumElements += curve->GetTotalNumSegments();
-        break;
-      }
-      case Geometry::POINT:
-      {
-        Points* points = (Points*)geom;
-        totalNumElements += points->GetNumPoints();
-        break;
-      }
-    }
+
+    totalNumElements += _GetNumComponentsFromGeometryType(geometry)
   }
 
   // create the grid

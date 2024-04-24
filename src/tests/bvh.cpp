@@ -92,8 +92,8 @@ void TestBVH::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
       case Geometry::MESH:
       {
         Mesh* mesh = (Mesh*)collided;
-        Triangle* triangle = mesh->GetTriangle(hit.GetElementIndex());
-        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+        Triangle& triangle = mesh->GetTriangle(hit.GetElementIndex());
+        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle.vertices[0], 3, mesh->GetMatrix());
         break;
       }
       case Geometry::CURVE:
