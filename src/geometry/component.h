@@ -13,6 +13,7 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/range3f.h>
+
 #include "../common.h"
 
 #define INVALID_POINT_ID std::numeric_limits<uint32_t>::max()

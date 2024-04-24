@@ -3,6 +3,7 @@
 
 #include <pxr/usd/usdGeom/basisCurves.h>
 
+#include "../geometry/component.h"
 #include "../geometry/triangle.h"
 #include "../geometry/deformable.h"
 

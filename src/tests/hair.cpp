@@ -137,7 +137,7 @@ void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
       
       _Sources sources;
       pxr::SdfPath hairPath = prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair")));
-      _scene.AddCurve(hairPath, curve);
+      _scene.AddGeometry(hairPath, curve);
       sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
       _sourcesMap[hairPath] = sources;
     }

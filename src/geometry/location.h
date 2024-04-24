@@ -54,10 +54,10 @@ public:
   const pxr::GfVec3f GetCoordinates() const { return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]);};
   float GetT() const { return _coords[3]; };
 
-  virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, int* elements, size_t sz,
+  virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, const int* elements, size_t sz,
     const pxr::GfMatrix4d&) const;
 
-  virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, int* elements, size_t sz,
+  virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, const int* elements, size_t sz,
     const pxr::GfMatrix4d&) const;
   
   bool IsValid() const { return _geomId >= 0 && _elemId >= 0; };

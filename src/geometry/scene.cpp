@@ -72,11 +72,6 @@ Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
   return (Mesh*)_prims[path].geom;
 }
 
-void Scene::AddMesh(const pxr::SdfPath& path, Mesh* mesh)
-{
-  _prims[path] = {mesh};
-}
-
 Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
 {
   _prims[path] = { new Voxels() };
@@ -88,12 +83,6 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
   voxels->Build();
   return voxels;
 }
-
-void Scene::AddVoxels(const pxr::SdfPath& path, Voxels* voxels)
-{
-  _prims[path] = { voxels, pxr::HdChangeTracker::Clean };
-}
-
 
 Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo)
 {
@@ -215,20 +204,10 @@ Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
   return (Curve*)_prims[path].geom;
 }
 
-void Scene::AddCurve(const pxr::SdfPath & path, Curve* curve)
-{
-  _prims[path] = { curve };
-}
-
 Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
 {
   _prims[path] = { new Points() };
   return (Points*)_prims[path].geom;
-}
-
-void Scene::AddPoints(const pxr::SdfPath& path, Points* points)
-{
- _prims[path] = {points};
 }
 
 void Scene::Remove(const pxr::SdfPath & path)

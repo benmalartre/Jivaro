@@ -14,7 +14,7 @@ Location::Set(const Location& other) {
 }
 
 pxr::GfVec3f 
-Location::ComputePosition(const pxr::GfVec3f* positions, int* elements, size_t sz,
+Location::ComputePosition(const pxr::GfVec3f* positions, const int* elements, size_t sz,
  const pxr::GfMatrix4d& m) const 
 {
   pxr::GfVec3f result;
@@ -28,7 +28,7 @@ Location::ComputePosition(const pxr::GfVec3f* positions, int* elements, size_t s
 }
 
 pxr::GfVec3f
-Location::ComputeNormal(const pxr::GfVec3f* normals, int* elements, size_t sz, 
+Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t sz, 
   const pxr::GfMatrix4d& m) const
 {
   pxr::GfVec3f result;

@@ -68,6 +68,17 @@ void TestParticles::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPat
   }
 }
 
+void TestParticles::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
+{
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  for (pxr::UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
+      _meshesId.push_back(prim.GetPath());
+      _meshes.back()->SetInputOnly();
+    } 
+}
+
 
 void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
@@ -87,6 +98,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     stage->SetDefaultPrim(rootPrim);
   }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
+
+  // find meshes for collision
+  _TraverseStageFindingMeshes(stage);
   
     // create solver with particles
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
@@ -161,43 +175,19 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);
   _solver->AddElement(body, voxels, emitterId);
   std::cout << "added particles" << std::endl;
-  /*
 
-  pxr::UsdPrimRange primRange = stage->TraverseAll();
+
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
 
-  for (pxr::UsdPrim prim : primRange) {
-    size_t offset = _solver->GetNumParticles();
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
-
-      pxr::UsdGeomMesh usdMesh(prim);
-      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      pxr::SdfPath voxelId = usdMesh.GetPath().AppendChild(pxr::TfToken("voxels"));
-
-      
-      
-      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      Mesh* mesh = new Mesh(usdMesh, xform);
-      _scene.AddMesh(prim.GetPath(), mesh);
-      Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), mass, radius, damping);
-      _solver->AddElement(body, mesh, prim.GetPath());
-      Scene::_Prim* sPrim = _scene.GetPrim(prim.GetPath());
-      sPrim->bits = pxr::HdChangeTracker::AllDirty;
-
-    } else if (prim.IsA<pxr::UsdGeomPoints>()) {
-      pxr::UsdGeomPoints usdPoints(prim);
-      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      Points* points = new Points(usdPoints.GetPrim(), xform);
-      _scene.AddGeometry(prim.GetPath(), points);
-
-      Body* body = _solver->CreateBody((Geometry*)points, pxr::GfMatrix4f(xform), mass, radius, damping);
-      _solver->AddElement(body, points, prim.GetPath());
-    } else if(prim.IsA<pxr::UsdGeomBasisCurves>()) {
-
-    }
+  for(size_t i = 0; i < _meshes.size(); ++i) {
+    pxr::UsdPrim prim = stage->GetPrimAtPath(_meshesId[i]);
+    pxr::UsdGeomMesh usdMesh(prim);
+    pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+    _scene.AddGeometry(prim.GetPath(), (Mesh*)_meshes[i]);
+    Collision* collision = new MeshCollision(_meshes[i], prim.GetPath(), restitution, friction);
+    _solver->AddElement(collision, _meshes[i], prim.GetPath());
+    std::cout << "Add mesh collision " << prim.GetPath() << std::endl;
   }
-
-  */
 
 
   for (auto& sphere : spheres) {

@@ -136,8 +136,7 @@ void TestRaycast::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
       _subjects.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
       _subjectsId.push_back(prim.GetPath());
       _subjects.back()->SetInputOnly();
-    }
-      
+    } 
 }
 
 void TestRaycast::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)

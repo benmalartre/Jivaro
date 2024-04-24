@@ -20,6 +20,7 @@ public:
 
 protected:
   void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
+  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
   
 private:
   Solver*                                                    _solver;
@@ -31,6 +32,9 @@ private:
 
   BVH                                                        _bvh;
   float                                                      _lastTime;
+
+  std::vector<Geometry*>                                     _meshes;
+  std::vector<pxr::SdfPath>                                  _meshesId;
 
 };
 

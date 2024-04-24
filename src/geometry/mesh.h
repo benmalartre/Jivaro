@@ -3,7 +3,7 @@
 
 #include <pxr/usd/usdGeom/mesh.h>
 
-
+#include "../geometry/component.h"
 #include "../geometry/triangle.h"
 #include "../geometry/deformable.h"
 #include "../geometry/halfEdge.h"
@@ -117,13 +117,9 @@ public:
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override {
-    return false;
-  };
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const override {
-    return false;
-  };
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
   DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 

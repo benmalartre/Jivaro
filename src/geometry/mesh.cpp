@@ -1028,4 +1028,37 @@ Mesh::GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices)
   return _halfEdges.GetLongestEdgeInTriangle(vertices, &_positions[0]);
 }
 
+// query 3d position on geometry
+bool 
+Mesh::Raycast(const pxr::GfRay& ray, Location* hit,
+  double maxDistance, double* minDistance) const
+{
+  const pxr::GfVec3f* positions = &_positions[0];
+  pxr::GfRay localRay(ray);
+  localRay.Transform(_invMatrix);
+
+  Location localHit;
+  localHit.SetGeometryIndex(0);
+  for(const Triangle& triangle: _triangles)
+    triangle.Raycast(positions, localRay, &localHit);
+
+  bool success = false;
+  if(localHit.IsValid()) {
+    const Triangle* hitTri = &_triangles[localHit.GetElementIndex()];
+    const pxr::GfVec3f intersection = localHit.ComputePosition(positions, &hitTri->vertices[0], 3, _matrix);
+    const float distance = (ray.GetStartPoint() - intersection).GetLength();
+    hit->Set(localHit);
+    hit->SetT(distance);
+    success = true;
+  } 
+  return success;
+};
+
+bool 
+Mesh::Closest(const pxr::GfVec3f& point, Location* hit,
+  double maxDistance, double* minDistance) const 
+{
+  return false;
+};
+
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -1,7 +1,7 @@
 
-#include "common.h"
-#include "utils/keys.h"
-#include "app/application.h"
+#include "../common.h"
+#include "../utils/keys.h"
+#include "../app/application.h"
 
 JVR_NAMESPACE_USING_DIRECTIVE
 

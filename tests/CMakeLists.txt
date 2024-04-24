@@ -3,3 +3,4 @@
 add_subdirectory (notice)
 add_subdirectory (torus)
 add_subdirectory (lagrangeMultiplier)
+add_subdirectory (accelerationBuildBenchmark)
