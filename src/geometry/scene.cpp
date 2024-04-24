@@ -91,7 +91,7 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
 
 void Scene::AddVoxels(const pxr::SdfPath& path, Voxels* voxels)
 {
-  _prims[path] = { voxels, pxr::HdChangeTracker::AllDirty };
+  _prims[path] = { voxels, pxr::HdChangeTracker::Clean };
 }
 
 
@@ -103,34 +103,34 @@ Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::Gf
     return primIt->second.geom;
 
   if(type == Geometry::XFORM) {
-    _prims[path] = {new Xform(xfo), pxr::HdChangeTracker::AllDirty};
+    _prims[path] = {new Xform(xfo), pxr::HdChangeTracker::Clean};
     return _prims[path].geom;
   } else if (type == Geometry::PLANE) {
-    _prims[path] = { new Plane(xfo), pxr::HdChangeTracker::AllDirty};
+    _prims[path] = { new Plane(xfo), pxr::HdChangeTracker::Clean};
     return _prims[path].geom;
   } else if (type == Geometry::SPHERE) {
-    _prims[path] = { new Sphere(xfo), pxr::HdChangeTracker::AllDirty };
+    _prims[path] = { new Sphere(xfo), pxr::HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::CUBE) {
-    _prims[path] = { new Cube(xfo), pxr::HdChangeTracker::AllDirty };
+    _prims[path] = { new Cube(xfo), pxr::HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::CONE) {
-    _prims[path] = { new Cone(xfo), pxr::HdChangeTracker::AllDirty };
+    _prims[path] = { new Cone(xfo), pxr::HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::CAPSULE) {
-    _prims[path] = { new Capsule(xfo), pxr::HdChangeTracker::AllDirty };
+    _prims[path] = { new Capsule(xfo), pxr::HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::POINT) {
-    _prims[path] = { new Points(xfo), pxr::HdChangeTracker::AllDirty };
+    _prims[path] = { new Points(xfo), pxr::HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::CURVE) {
-    _prims[path] = { new Curve(xfo), pxr::HdChangeTracker::AllDirty };
+    _prims[path] = { new Curve(xfo), pxr::HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::MESH) {
-    _prims[path] = { new Mesh(xfo), pxr::HdChangeTracker::AllDirty };
+    _prims[path] = { new Mesh(xfo), pxr::HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::INSTANCER) {
-    _prims[path] = { new Instancer(xfo), pxr::HdChangeTracker::AllDirty };
+    _prims[path] = { new Instancer(xfo), pxr::HdChangeTracker::Clean };
     return _prims[path].geom;
   } else {
     return NULL;

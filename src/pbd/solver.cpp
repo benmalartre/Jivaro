@@ -12,7 +12,7 @@
 #include "../geometry/curve.h"
 #include "../geometry/implicit.h"
 #include "../geometry/scene.h"
-#include "../app/application.h"
+#include "../pbd/tokens.h"
 #include "../pbd/constraint.h"
 #include "../pbd/force.h"
 #include "../pbd/collision.h"
@@ -41,6 +41,8 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   , _paused(true)
   , _startFrame(1.f)
   , _solverId(xform.GetPrim().GetPath())
+  , _gravity(nullptr)
+  , _damp(nullptr)
 {
   _frameTime = 1.f / Time::Get()->GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
@@ -81,8 +83,8 @@ void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& pa
       break;
 
     case Element::FORCE:
-      if(path.GetNameToken() == pxr::TfToken("Gravity"))_gravity = (Force*)element;
-      else if(path.GetNameToken() == pxr::TfToken("Damp"))_damp = (Force*)element;
+      if(path.GetNameToken() == PBDTokens->gravity)_gravity = (Force*)element;
+      else if(path.GetNameToken() == PBDTokens->damp)_damp = (Force*)element;
       AddForce((Force*)element);
       break;
 
@@ -319,14 +321,14 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   pxr::GfVec3f* predicted = &_particles._predicted[0];
   pxr::GfVec3f* position = &_particles._position[0];
 
-  // apply external forces
-  for (const Force* force : _force)
-    force->Apply(begin, end, &_particles, _stepTime);
-
   for (size_t index = begin; index < end; ++index) {
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
   }
+
+  // apply external forces
+  for (const Force* force : _force)
+    force->Apply(begin, end, &_particles, _stepTime);
 }
 
 void Solver::_UpdateParticles(size_t begin, size_t end)
@@ -565,9 +567,8 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
 
-  pxr::GfVec3f gravity;
-  prim.GetAttribute(pxr::TfToken("Gravity")).Get(&gravity, time);
-  if(_gravity)((GravitationalForce*)_gravity)->Set(gravity);
+  if(_gravity)_gravity->Update(time);
+  if (_damp)_damp->Update(time);
 }
 
 

@@ -160,7 +160,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);
   _solver->AddElement(body, voxels, emitterId);
-  
+  std::cout << "added particles" << std::endl;
   /*
 
   pxr::UsdPrimRange primRange = stage->TraverseAll();
@@ -198,12 +198,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   }
 
   */
-  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
-  _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
-
-  
-  Force* damp = new DampingForce();
-  _solver->AddElement(damp, NULL, _solverId.AppendChild(pxr::TfToken("Damping")));
 
 
   for (auto& sphere : spheres) {
@@ -214,11 +208,14 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
   _solver->AddElement(collision, _ground, _groundId);
 
+  std::cout << "added ground" << std::endl;
+
   _lastTime = _solver->GetStartFrame();
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _lastTime);
 
   Particles* particles = _solver->GetParticles();
+  std::cout << "particles : " << particles << std::endl;
 
   pxr::GfRange3f range;
   for(auto& pos: particles->_position) {

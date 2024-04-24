@@ -38,8 +38,8 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
   usdGround.CreateAxisAttr().Set(pxr::UsdGeomTokens->y);
 
   pxr::UsdPrim usdPrim = usdGround.GetPrim();
-  usdPrim.CreateAttribute(pxr::TfToken("Restitution"), pxr::SdfValueTypeNames->Float).Set(restitution);
-  usdPrim.CreateAttribute(pxr::TfToken("Friction"), pxr::SdfValueTypeNames->Float).Set(friction);
+  usdPrim.CreateAttribute(PBDTokens->restitution, pxr::SdfValueTypeNames->Float).Set(restitution);
+  usdPrim.CreateAttribute(PBDTokens->friction, pxr::SdfValueTypeNames->Float).Set(friction);
 
   return new Plane(usdGround, pxr::GfMatrix4d(1.0));
 }
@@ -50,18 +50,21 @@ Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::Sdf
   pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
 
   pxr::UsdPrim usdPrim = usdXform.GetPrim();
-  usdPrim.CreateAttribute(pxr::TfToken("SubSteps"), pxr::SdfValueTypeNames->Int).Set(subSteps);
-  usdPrim.CreateAttribute(pxr::TfToken("SleepThreshold"), pxr::SdfValueTypeNames->Float).Set(sleepThreshold);
+  usdPrim.CreateAttribute(PBDTokens->substeps, pxr::SdfValueTypeNames->Int).Set(subSteps);
+  usdPrim.CreateAttribute(PBDTokens->sleepThreshold, pxr::SdfValueTypeNames->Float).Set(sleepThreshold);
 
-  usdPrim.CreateAttribute(pxr::TfToken("Gravity"), pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(0.f, -9.81f, 0.f));
-  usdPrim.CreateAttribute(pxr::TfToken("Damp"), pxr::SdfValueTypeNames->Float).Set(0.1f);
+  usdPrim.CreateAttribute(PBDTokens->gravity, pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(0.f, -9.81f, 0.f));
+  pxr::UsdAttribute gravityAttr = usdPrim.GetAttribute(PBDTokens->gravity);
+    
+  usdPrim.CreateAttribute(PBDTokens->damp, pxr::SdfValueTypeNames->Float).Set(0.1f);
+  pxr::UsdAttribute dampAttr = usdPrim.GetAttribute(PBDTokens->damp);
 
   Solver* solver = new Solver(scene, usdXform, pxr::GfMatrix4d(1.f));
 
-  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
+  Force* gravity = new GravityForce(gravityAttr);
   solver->AddElement(gravity, NULL, path.AppendChild(PBDTokens->gravity));
 
-  Force* damp = new DampingForce();
+  Force* damp = new DampForce(dampAttr);
   solver->AddElement(damp, NULL, path.AppendChild(PBDTokens->damp));
 
   return solver;

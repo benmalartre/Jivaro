@@ -114,11 +114,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->WeightBoundaries();
   _solver->LockPoints();
   
-  Force* gravity = new GravitationalForce(pxr::GfVec3f(0.f, -9.81f, 0.f));
-  _solver->AddElement(gravity, NULL, _solverId.AppendChild(pxr::TfToken("Gravity")));
-
-  
-
 
   float restitution = 0.5f;
   float friction = 0.5f;
