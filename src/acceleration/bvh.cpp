@@ -502,7 +502,21 @@ bool BVH::Closest(const pxr::GfVec3f& point,
   return _root.Closest(point, hit, maxDistance, &minDistance);
 }
 
-
-
+void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
+  pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors)
+{
+  std::vector<BVH::Cell*> cells;
+  _root.GetLeaves(cells);
+  size_t numCells = cells.size();
+  positions.resize(numCells);
+  sizes.resize(numCells);
+  colors.resize(numCells);
+  for (size_t l = 0; l < cells.size(); ++l) {
+    positions[l] = pxr::GfVec3f(cells[l]->GetMidpoint());
+    sizes[l] = pxr::GfVec3f(cells[l]->GetSize());
+    colors[l] = pxr::GfVec3f(ComputeCodeAsColor(GetRoot(), 
+      pxr::GfVec3f(cells[l]->GetMidpoint())));
+  }
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE

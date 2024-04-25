@@ -109,6 +109,10 @@ public:
   Cell* GetRoot() { return &_root; };
   const Cell* GetRoot() const { return &_root; };
 
+  // visual debug
+  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
+    pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors) override;
+
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update() override;
 

@@ -137,25 +137,20 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 
 Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
 {
-  std::vector<BVH::Cell*> cells;
-  bvh->GetRoot()->GetCells(cells);
-  size_t numPoints = cells.size();
+  pxr::VtArray<pxr::GfVec3f> points;
+  pxr::VtArray<pxr::GfVec3f> scales;
+  pxr::VtArray<pxr::GfVec3f> colors;
 
-  pxr::VtArray<pxr::GfVec3f> points(numPoints);
-  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  bvh->GetCells(points, scales, colors);
+  size_t numPoints = points.size();
+
   pxr::VtArray<int64_t> indices(numPoints);
   pxr::VtArray<int> protoIndices(numPoints);
   pxr::VtArray<pxr::GfQuath> rotations(numPoints);
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
-    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
     protoIndices[pointIdx] = 0;
     indices[pointIdx] = pointIdx;
-    colors[pointIdx] =
-      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
-        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
   }
 
