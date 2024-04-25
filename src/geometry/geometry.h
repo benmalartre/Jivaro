@@ -136,7 +136,8 @@ protected:
 
 template<typename T>
 Geometry::DirtyState
-Geometry::_GetAttrValue(const pxr::UsdPrim& prim, const pxr::TfToken& name, const pxr::UsdTimeCode& time, T *value)
+Geometry::_GetAttrValue(const pxr::UsdPrim& prim, const pxr::TfToken& name, 
+  const pxr::UsdTimeCode& time, T *value)
 {
   pxr::UsdAttribute attr = prim.GetAttribute(name);
   if(!attr.IsValid())return DirtyState::CLEAN;
