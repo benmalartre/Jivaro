@@ -308,4 +308,16 @@ pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points)
   };
 }
 
+static size_t
+GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions)
+{
+  const float edge0 = (positions[vertices[1]] - positions[vertices[0]]).GetLengthSq();
+  const float edge1 = (positions[vertices[2]] - positions[vertices[1]]).GetLengthSq();
+  const float edge2 = (positions[vertices[0]] - positions[vertices[2]]).GetLengthSq();
+  if (edge0 > edge1 && edge0 > edge2)return 0;
+  else if (edge1 > edge0 && edge1 > edge2)return 1;
+  else return 2;
+}
+
+
 JVR_NAMESPACE_CLOSE_SCOPE

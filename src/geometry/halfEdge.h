@@ -64,7 +64,6 @@ public:
   void GetEdgesFromFace(const HalfEdge* edge, pxr::VtArray<int>& indices);
   size_t GetFaceFromEdge(const HalfEdge* edge);
 
-  size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions) const;
   float GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
   float GetLengthSq(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
 

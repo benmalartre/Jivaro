@@ -340,15 +340,6 @@ bool ToolUI::Draw()
       mesh.TriangulateFace(0);
     }
   }
-  ImGui::SameLine();
-  if (ImGui::Button("Triangle Pairs")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
-    if (usdMesh.GetPrim().IsValid()) {
-      UndoBlock block;
-      Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
-      mesh.ComputeTrianglePairs();
-    }
-  }
 
   if (ImGui::Button("Split Edge")) {
     pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();

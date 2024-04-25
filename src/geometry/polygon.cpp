@@ -11,12 +11,12 @@ pxr::GfVec3f
 Polygon::GetCenter(Deformable* geom)
 {
   const pxr::GfVec3f* points = geom->GetPositionsCPtr();
-  pxr::GfVec3f accum = points[triangles[t]->vertices[0]];
+  pxr::GfVec3f accum = points[triangles[t]->vertices[]];
   size_t numTriangles = triangles.size();
-  for(size_t t = 0; t < triangles.size(); ++t) {
+  for(size_t t = 0; t < numTriangles; ++t) {
     accum += points[triangles[t]->vertices[1]];
   }
-  accum += points[triangles[tria]->vertices[1]];
+  accum += points[triangles[numTriangles-1]->vertices[1]];
   accum /= triangles.size
 }
 

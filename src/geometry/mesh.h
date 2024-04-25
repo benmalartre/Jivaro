@@ -10,6 +10,36 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+
+class TrianglePairGraph {
+public:
+  using _Keys = std::vector<std::pair<uint64_t, int>>;
+  using _Key  = _Keys::value_type;
+  using _Pairs = std::vector<std::pair<int, int>> ;
+  using _Pair = _Pairs::value_type;
+  
+  TrianglePairGraph(const pxr::VtArray<int>& faceCounts, 
+    const pxr::VtArray<int>& faceIndices);
+
+  _Pairs& GetPairs() { return _pairs; };
+
+
+protected:
+  void _RemoveTriangleOpenEdges(int tri);
+  bool _PairTriangles(int tri0, int tri11, bool isOpenEdgeTriangle);
+  bool _PairTriangle(_Key common, int tri);
+  void _SingleTriangle(int tri, bool isOpenEdgeTriangle);
+
+private:
+  _Keys                 _openEdges;
+  _Keys                 _allEdges;
+  std::vector<bool>     _paired;
+  _Pairs                _pairs;
+
+};
+
+
+
 class Mesh : public Deformable {
 public:
   enum Flag {
@@ -35,7 +65,6 @@ public:
 
   pxr::VtArray<HalfEdge>& GetEdges();
   HalfEdgeGraph* GetEdgesGraph();
-  size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices);
 
   const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
   void ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors);

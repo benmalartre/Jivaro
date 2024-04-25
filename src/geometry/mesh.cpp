@@ -20,6 +20,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+
 Mesh::Mesh(const pxr::GfMatrix4d& xfo)
   : Deformable(Geometry::MESH, xfo)
   , _flags(0)
@@ -225,40 +226,102 @@ static int _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx,
   }
 }
 
-void Mesh::ComputeTrianglePairs()
+
+
+
+void TrianglePairGraph::_RemoveTriangleOpenEdges(int tri)
 {
-  size_t numTriangles = _triangles.size();
-  _trianglePairs.clear();
+  size_t shift = 0;
+  size_t numOpenEdges = _openEdges.size();
+  for(size_t o = 0; o < numOpenEdges; ++o) {
+    if(_openEdges[o].second == tri)shift++;
+    if(shift>0 && (o + shift) < numOpenEdges) {
+      _openEdges[o] = _openEdges[o+shift];
+    } 
+  }
+  size_t size = numOpenEdges - shift;
+  if(shift > 0)_openEdges.resize(size > 0 ? size : 0);
+}
 
-  std::vector<bool> used;
-  used.assign(numTriangles, false);
+void TrianglePairGraph::_SingleTriangle(int tri, bool isOpenEdgeTriangle)
+{
+  _paired[tri] = true;
+  _pairs.push_back(std::make_pair(tri, -1));
 
-  std::vector<std::pair<int, int>> edgeTriangleIdx(_halfEdges.GetNumRawEdges());
+  if (isOpenEdgeTriangle) _RemoveTriangleOpenEdges(tri);
+}
 
-  const pxr::GfVec3f* positions = &_positions[0];
+bool TrianglePairGraph::_PairTriangles(int tri0, int tri1, bool isOpenEdgeTriangle)
+{
+  if(_paired[tri0] || _paired[tri1])return false;
+
+  _paired[tri0] = true;
+  _paired[tri1] = true;
+  _pairs.push_back(std::make_pair(tri0, tri1));
+
+  if(isOpenEdgeTriangle) _RemoveTriangleOpenEdges(tri1);
+  return true;
+}
+
+bool TrianglePairGraph::_PairTriangle(TrianglePairGraph::_Key common, int tri)
+{
+  if(_paired[tri])return false;
+
+  int pairedTriangle = -1;
+  size_t numOpenEdges = _openEdges.size();
+  for(size_t o = 0; o < numOpenEdges; ++o) {
+    uint64_t value = _openEdges[0].first; 
+    uint64_t reversed = ((value & 0xffffffff) << 32) | (value>> 32);
+    if(_openEdges[o].first == reversed) 
+      return _PairTriangles(tri, _openEdges[0].second, true);
+  }
+  return false;
+}
+
+TrianglePairGraph::TrianglePairGraph(
+  const pxr::VtArray<int>& faceVertexCounts, 
+  const pxr::VtArray<int>& faceVertexIndices)
+{
+  int numTriangles = 0;
+  for(int faceVertexCount : faceVertexCounts)numTriangles += faceVertexCount - 2;
+
+  _allEdges.resize(numTriangles * 3);
+  _paired.resize(numTriangles, false);
 
   int baseFaceVertexIdx = 0;
   int triangleIdx = 0;
-  for (int faceVertexCount : _faceVertexCounts)
-  {
-    for (int i = 1; i < faceVertexCount - 1; ++i)
-    {
-      HalfEdge* edge = _halfEdges.GetEdgeFromVertices(
-        _faceVertexIndices[baseFaceVertexIdx + i - 1], 
-        _faceVertexIndices[baseFaceVertexIdx + i]);
-      size_t edgeIndex = _halfEdges._GetEdgeIndex(edge);
-    
-      size_t longestEdgeIdx = 
-        GetLongestEdgeInTriangle(_triangles[triangleIdx].vertices);
-      edgeTriangleIdx[edgeIndex] = {
-        triangleIdx, 
-        _TwinTriangleIndex(i, longestEdgeIdx, faceVertexCount, triangleIdx)
-      };
-      if (i == 1) {
-        edgeTriangleIdx[edge->prev] = edgeTriangleIdx[edgeIndex];
+  int trianglePairIdx;
+  int triangleEdgeIdx = 0;
+
+  TrianglePairGraph::_Key key0, key1, key2;
+
+  for (int faceVertexCount : faceVertexCounts) {
+    for (int i = 1; i < faceVertexCount - 1; ++i) {
+      int a = faceVertexIndices[baseFaceVertexIdx        ];
+      int b = faceVertexIndices[baseFaceVertexIdx + i    ];
+      int c = faceVertexIndices[baseFaceVertexIdx + i + 1];
+
+      key0 = { b | (a << 32), triangleIdx};
+      key1 = { c | (b << 32), triangleIdx};
+      key2 = { a | (c << 32), triangleIdx};
+
+      _allEdges[triangleEdgeIdx++] = key0;
+      _allEdges[triangleEdgeIdx++] = key1;
+      _allEdges[triangleEdgeIdx++] = key2;
+      if (faceVertexCount == 3) {
+        _SingleTriangle(triangleIdx, false);
       }
-      else if (i == faceVertexCount - 2) {
-        edgeTriangleIdx[edge->next] = edgeTriangleIdx[edgeIndex];
+      // we first pair by triangle by polygon if possible
+      else if(((i-1) % 2) == 0 ) {
+        _PairTriangles(triangleIdx, triangleIdx+1, false);
+      } // else try pair with open edges from the list
+      else {
+        if(i < (faceVertexCount-2) && !_PairTriangle(key0, triangleIdx))
+          _openEdges.push_back(key0);
+
+        if(!_paired[triangleIdx] && !_PairTriangle(key1, triangleIdx))
+          _openEdges.push_back(key1);
+
       }
 
       triangleIdx++;
@@ -266,48 +329,16 @@ void Mesh::ComputeTrianglePairs()
 
     baseFaceVertexIdx += faceVertexCount;
   }
+}
 
-  HalfEdgeGraph::ItUniqueEdge it(_halfEdges);
-  HalfEdge* edge = it.Next();
-  uint32_t triPairIdx = 0;
-  size_t numMalformedTrianglePair = 0;
-  while (edge) {
-    size_t edgeIdx = _halfEdges._GetEdgeIndex(edge);
-    if (used[edgeTriangleIdx[edgeIdx].first]) {
-      edge = it.Next();  continue;
-    }
-
-    if (edgeTriangleIdx[edgeIdx].second < 0) {
-      if (edge->twin >= 0) {
-        _trianglePairs.push_back({
-            triPairIdx++,
-            &_triangles[edgeTriangleIdx[edgeIdx].first],
-            &_triangles[edgeTriangleIdx[edge->twin].first]
-          });
-        used[edgeTriangleIdx[edgeIdx].first] = true;
-        used[edgeTriangleIdx[edge->twin].first] = true;
-      }
-      else {
-        numMalformedTrianglePair++;
-        _trianglePairs.push_back({
-            triPairIdx++,
-            &_triangles[edgeTriangleIdx[edgeIdx].first],
-            NULL
-          });
-        used[edgeTriangleIdx[edgeIdx].first] = true;
-      }
-    }
-    else {
-      _trianglePairs.push_back({ 
-          triPairIdx++, 
-          &_triangles[edgeTriangleIdx[edgeIdx].first],
-          &_triangles[edgeTriangleIdx[edgeIdx].second] 
-        });
-      used[edgeTriangleIdx[edgeIdx].first] = true;
-      used[edgeTriangleIdx[edgeIdx].second] = true;
-    }
-    
-    edge = it.Next();
+void Mesh::ComputeTrianglePairs()
+{
+  TrianglePairGraph graph(_faceVertexCounts, _faceVertexIndices);
+  _trianglePairs.clear();
+  uint32_t triPairId = 0;
+  for(auto& triPair: graph.GetPairs()) {
+    _trianglePairs.push_back({ triPairId++, &_triangles[triPair.first],
+       triPair.second >= 0 ? &_triangles[triPair.second] : NULL});
   }
 
   BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
@@ -1019,12 +1050,6 @@ Mesh::Randomize(float value)
       RANDOM_LO_HI(-value, value),
       RANDOM_LO_HI(-value, value));
   }
-}
-
-size_t
-Mesh::GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices)
-{
-  return _halfEdges.GetLongestEdgeInTriangle(vertices, &_positions[0]);
 }
 
 // query 3d position on geometry

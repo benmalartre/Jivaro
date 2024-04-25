@@ -454,7 +454,7 @@ void BVH::Cell::Init(Geometry* geometry)
   _type = BVH::Cell::GEOM;
   if (geometry->GetType() == Geometry::MESH) {
     std::vector<Morton> leaves;
-    _MortonSortTriangles(leaves, geometry);
+    _MortonSortTrianglePairs(leaves, geometry);
     _FinishSort(leaves);
   } else if (geometry->GetType() == Geometry::CURVE) {
 

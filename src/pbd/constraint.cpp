@@ -496,7 +496,7 @@ void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints
 {
   pxr::VtArray<int> allElements;
   Geometry* geometry = body->GetGeometry();
-  if (geometry->GetType() == Geometry::MESH) {
+  if (geometry->GetType() == Geometry::MESH) {  
     Mesh* mesh = (Mesh*)geometry;
     const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
     pxr::VtArray<TrianglePair> triPairs;

@@ -158,6 +158,11 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
 pxr::GfPlane 
 ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points);
 
+/// Longest edge in a triangle
+static size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, 
+  const pxr::GfVec3f* positions);
+
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif

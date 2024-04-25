@@ -29,17 +29,6 @@ HalfEdge* HalfEdgeGraph::ItUniqueEdge::Next()
   }
 }
 
-size_t
-HalfEdgeGraph::GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions) const
-{
-  const float edge0 = (positions[vertices[1]] - positions[vertices[0]]).GetLength();
-  const float edge1 = (positions[vertices[2]] - positions[vertices[1]]).GetLength();
-  const float edge2 = (positions[vertices[0]] - positions[vertices[2]]).GetLength();
-  if (edge0 > edge1 && edge0 > edge2)return 0;
-  else if (edge1 > edge0 && edge1 > edge2)return 1;
-  else return 2;
-}
-
 float
 HalfEdgeGraph::GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const
 {
