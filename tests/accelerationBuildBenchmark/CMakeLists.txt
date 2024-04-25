@@ -28,6 +28,9 @@ add_executable(${TARGET}
   ../../src/geometry/points.cpp
   ../../src/geometry/mesh.cpp
   ../../src/geometry/curve.cpp
+  ../../src/geometry/voxels.cpp
+  ../../src/geometry/instancer.cpp
+  ../../src/geometry/scene.cpp
   main.cpp
 )
 

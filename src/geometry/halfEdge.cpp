@@ -109,20 +109,25 @@ HalfEdge*
 HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end)
 {
   HalfEdge* edge = &_halfEdges[_vertexHalfEdge[start]];
-  if (_halfEdges[edge->next].vertex == end)return edge;
-  HalfEdge* current = _GetNextAdjacentEdge(edge);
-  while (current && (current != edge)) {
-    if (_halfEdges[current->next].vertex == end)return current;
-    current = _GetNextAdjacentEdge(current);
-  }
-
-  if (!current) {
-    HalfEdge* current = _GetPreviousAdjacentEdge(edge);
+  if(edge) {
+    if (_halfEdges[edge->next].vertex == end)return edge;
+    HalfEdge* current = _GetNextAdjacentEdge(edge);
     while (current && (current != edge)) {
       if (_halfEdges[current->next].vertex == end)return current;
-      current = _GetPreviousAdjacentEdge(current);
+      current = _GetNextAdjacentEdge(current);
     }
   }
+  edge = &_halfEdges[_vertexHalfEdge[end]];
+  if(edge) {
+    if (_halfEdges[edge->next].vertex == start)return edge;
+
+    HalfEdge* current = _GetNextAdjacentEdge(edge);
+    while (current && (current != edge)) {
+      if (_halfEdges[current->next].vertex == start)return current;
+      current = _GetNextAdjacentEdge(current);
+    }
+  }
+  
   return NULL;
 }
 
@@ -294,13 +299,13 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 size_t 
 HalfEdgeGraph::_GetEdgeIndex(const HalfEdge* edge) const
 {
-  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) * HALFEDGE_RECIPROCAL_SIZE;
+  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) / sizeof(HalfEdge);
 }
 
 size_t 
 HalfEdgeGraph::GetEdgeIndex(const HalfEdge* edge) const
 {
-  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) * HALFEDGE_RECIPROCAL_SIZE;
+  return ((intptr_t)edge - (intptr_t)&_halfEdges[0]) / sizeof(HalfEdge);
 }
 
 size_t

@@ -66,6 +66,8 @@ void Grid3D::DeleteCells()
 
 void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
 {
+  std::cout << "insert mesh : " << geomIdx << " : " << mesh << std::endl;
+
   size_t numTriangles = mesh->GetNumTriangles();
   const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
@@ -76,11 +78,11 @@ void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
   const pxr::GfVec3f bboxMax(GetMax());
 
   // insert all the triangles in the cells
-  for(uint32_t i=0;i<numTriangles;i++)
+  for(uint32_t t = 0; t < numTriangles; ++t)
   {
     pxr::GfVec3f tmin(FLT_MAX,FLT_MAX,FLT_MAX);
     pxr::GfVec3f tmax(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-    Triangle* triangle = mesh->GetTriangle(i);
+    Triangle* triangle = mesh->GetTriangle(t);
     pxr::GfVec3f A = matrix.Transform(positions[triangle->vertices[0]]);
     pxr::GfVec3f B = matrix.Transform(positions[triangle->vertices[1]]);
     pxr::GfVec3f C = matrix.Transform(positions[triangle->vertices[2]]);
@@ -147,11 +149,12 @@ size_t _GetGeometryNumComponents(Geometry* geometry)
 // construct the grid from a list of geometries
 void Grid3D::Init(const std::vector<Geometry*>& geometries)
 {
+  std::cout << "init grid 3d with " << geometries.size() << " geometries" << std::endl;
   _geometries = geometries;
   // delete old cells
   DeleteCells();
 
-  if (!geometries.size())return;
+  if (!_geometries.size())return;
 
   // compute bound of the scene
   size_t totalNumComponents = _GetGeometryNumComponents(_geometries[0]);
@@ -164,6 +167,8 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
+
+  std::cout << "bbox " << *this << std::endl;
 
   // create the grid
   pxr::GfVec3f size(GetMax() - GetMin());

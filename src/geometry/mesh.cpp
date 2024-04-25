@@ -228,7 +228,6 @@ static int _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx,
 void Mesh::ComputeTrianglePairs()
 {
   size_t numTriangles = _triangles.size();
-  uint64_t T = CurrentTime();
   _trianglePairs.clear();
 
   std::vector<bool> used;

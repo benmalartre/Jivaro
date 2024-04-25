@@ -144,7 +144,7 @@ BVH::Cell::GetRoot() const
     if (parent->IsRoot()) return parent;
     parent = parent->_parent;
   }
-  return this;
+  return NULL;
 }
 
 const BVH::Cell*
@@ -156,7 +156,7 @@ BVH::Cell::GetGeom() const
     if (parent->IsGeom()) return parent;
     parent = parent->_parent;
   }
-  return this;
+  return NULL;
 }
 
 const BVH* 
@@ -318,21 +318,27 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
 
 void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& leaves, Geometry* geometry)
 {
+  std::cout << "sort triangles by pair " << geometry << std::endl;
+  
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
-
+  std::cout << "is this a fuckin mesh ? " << mesh << std::endl;
+  std::cout << "num vertices " << mesh->GetNumPoints() << std::endl;
   pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
-  leaves.reserve(trianglePairs.size());
+  std::cout << "num triangle pairs : " << trianglePairs.size() << std::endl;
+  leaves.resize(trianglePairs.size());
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
-  for (auto& trianglePair : trianglePairs) {
+  for (size_t t = 0; t < trianglePairs.size(); ++t) {
     BVH::Cell* leaf =
-      new BVH::Cell(this, &trianglePair, trianglePair.GetBoundingBox(positions, matrix));
+      new BVH::Cell(this, &trianglePairs[t], trianglePairs[t].GetBoundingBox(positions, matrix));
 
     const BVH::Cell* root = GetRoot();
     BVH::ComputeCode(root, leaf->GetMidpoint());
-    leaves.push_back({ BVH::ComputeCode(root, leaf->GetMidpoint()), leaf });
+    leaves[t] = { BVH::ComputeCode(root, leaf->GetMidpoint()), leaf };
   }
+    std::cout << "sort triangles by pair ok : " << leaves.size() << std::endl;
+
 }
 
 static pxr::GfRange3f 
@@ -434,9 +440,11 @@ Morton BVH::Cell::SortCellsByPair(
 
 void BVH::Cell::_FinishSort(std::vector<Morton>& cells)
 {
+  std::cout << "finish sort " << std::endl;
   Morton morton = SortCellsByPair(cells);
+  std::cout << "cell sorted " << std::endl;
   _SwapCells(this, (BVH::Cell*)morton.data);
-  cells.clear();
+  std::cout << "cell swapoed" << std::endl;
 }
 
 void BVH::Cell::Init(Geometry* geometry)
@@ -455,20 +463,23 @@ void
 BVH::Init(const std::vector<Geometry*>& geometries)
 {
   _geometries = geometries;
-  size_t numColliders = _geometries.size();
+  size_t numGeometries = _geometries.size();
   const pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
-  for (size_t i = 1; i < numColliders; ++i) {
+  for (size_t i = 1; i < numGeometries; ++i) {
     const pxr::GfBBox3d bbox = _geometries[i]->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
+  std::cout << "bbox " << *this << std::endl;
+
   std::vector<Morton> cells;
-  cells.reserve(numColliders);
+  cells.reserve(numGeometries);
 
   for (Geometry* geom : _geometries) {
+    std::cout << "build geometry cell" << std::endl;
     BVH::Cell* bvh = new BVH::Cell(&_root, geom);
     cells.push_back({ BVH::ComputeCode(&_root, bvh->GetMidpoint()), bvh });
   }

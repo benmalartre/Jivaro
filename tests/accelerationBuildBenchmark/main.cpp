@@ -19,75 +19,76 @@
 
 #include "../../src/common.h"
 #include "../../src/utils/timer.h"
-#include "../../src/geometry/mesh.h"
 #include "../../src/acceleration/intersector.h"
 #include "../../src/acceleration/bvh.h"
 #include "../../src/acceleration/grid3d.h"
 #include "../../src/acceleration/octree.h"
+#include "../../src/geometry/mesh.h"
+#include "../../src/geometry/scene.h"
+
 
 JVR_NAMESPACE_USING_DIRECTIVE
 
+std::vector<Geometry*>    _meshes;
+std::vector<pxr::SdfPath> _meshesId;
+size_t                    _numRays = 1000;
 
+void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
+{
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  for (pxr::UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+        xformCache.GetLocalToWorldTransform(prim)));
+      _meshesId.push_back(prim.GetPath());
+    }
+      
+}
 
 // thread task
 void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
   pxr::GfVec3f* results, bool* hits, Intersector* intersector)
 {
   for (size_t index = begin; index < end; ++index) {
-    pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
+    pxr::GfRay ray(positions[index * 2], positions[index * 2 + 1] - positions[index * 2]);
     double minDistance = DBL_MAX;
     Location hit;
-    if (intersector->Raycast(ray, &hit, DBL_MAX, &minDistance)) {
-      Geometry* collided = intersector->GetGeometry(hit.GetGeometryIndex());
+    if (intersector->Raycast(ray, &hit, DBL_MAX, &minDistance)) {      Geometry* collided = intersector->GetGeometry(hit.GetGeometryIndex());
       switch (collided->GetType()) {
-      case Geometry::MESH:
-      {
-        Mesh* mesh = (Mesh*)collided;
-        Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
-        break;
+        case Geometry::MESH:
+        {
+          Mesh* mesh = (Mesh*)collided;
+          Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
+          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+          hits[index] = true;
+        }
       }
-      case Geometry::CURVE:
-      {
-        //Curve* curve = (Curve*)collided;
-        //Edge* edge = curve->GetEdge(hit.GetElementIndex());
-        //results[index] = hit.GetPosition(collided->GetPositionsCPtr(), &edge->vertices[0], 2, curve->GetMatrix());
-        break;
-      }
-      default:
-        continue;
-      }
-      hits[index] = true;
-    } else {
-      hits[index] = false;
-    }
+    } else hits[index] = false;
   }
 }
 
 
-void _Raycast(size_t numRays, Intersector* intersector, const char* title)
+
+void _Raycast(const pxr::GfVec3f* positions, Intersector* intersector, const char* title)
 {
-  std::cout << title << " raycast... " << std::endl;
+  std::cout << title << " raycast  " << _numRays << " random rays..." << std::endl;
   uint64_t sT = CurrentTime();
 
-  pxr::VtArray<pxr::GfVec3f> positions(2*numRays);
-  for(size_t p=0; p<(2*numRays);++p) 
-    positions[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  pxr::VtArray<pxr::GfVec3f> points(_numRays);
+  pxr::VtArray<bool> hits(_numRays, false);
 
-  pxr::VtArray<pxr::GfVec3f> points(numRays);
-  pxr::VtArray<bool> hits(numRays, false);
-  pxr::VtArray<pxr::GfVec3f> results(numRays);
+  hits.resize(_numRays, false);
 
-  pxr::WorkParallelForN(numRays,
+  pxr::WorkParallelForN(_numRays,
     std::bind(&_FindHits, std::placeholders::_1, 
-      std::placeholders::_2, &positions[0], &points[0], &hits[0], intersector));
+      std::placeholders::_2, positions, &points[0], &hits[0], intersector));
 
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
-  result.reserve(numRays);
+  result.reserve(_numRays);
   size_t numHits = 0;
-  for(size_t r = 0; r < numRays; ++r) {
-    if(hits[r]) {result.push_back(points[r]);numHits++;};
+  for(size_t p = 0; p < _numRays; p++) {
+    if(hits[p]) {result.push_back(points[p]);numHits++;};
   }
 
   std::cout << title << " time : " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
@@ -107,32 +108,35 @@ int main (int argc, char *argv[])
 
   pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
 
-  pxr::SdfPath firstMeshId;
+  Scene scene;
 
-  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  for (pxr::UsdPrim prim : stage->TraverseAll())
-    if (prim.IsA<pxr::UsdGeomMesh>()) {firstMeshId = prim.GetPath(); break;} 
+  _TraverseStageFindingMeshes(stage);
+  if(_meshes.size()) {
 
-  pxr::UsdPrim prim = stage->GetPrimAtPath(firstMeshId);
-  if(prim.IsValid()) {
-    Mesh *mesh = new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim));
+    for (size_t m = 0; m < _meshes.size(); ++m) {
+      scene.AddGeometry(_meshesId[m], _meshes[m]);
+      _meshes[m]->SetInputOnly();
+    }
 
+    scene.Sync(stage, 1.f);
+
+    pxr::VtArray<pxr::GfVec3f> rays(2*_numRays);
+    for(size_t p=0; p<(2*_numRays);++p) 
+      rays[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
 
     uint64_t sT = CurrentTime();
     BVH bvh;
-    bvh.Init({mesh});
+    bvh.Init({_meshes});
     std::cout << "bvh build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
 
-    _Raycast(1000, &bvh, "bvh");
-
-
+    _Raycast(&rays[0], &bvh, "bvh");
 
     sT = CurrentTime();
     Grid3D grid;
-    grid.Init({mesh});
+    grid.Init({_meshes});
     std::cout << "grid build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
 
-    _Raycast(1000, &grid, "grid");
+    _Raycast(&rays[0], &grid, "grid");
  
 
   }

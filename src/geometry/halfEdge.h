@@ -22,8 +22,6 @@ struct HalfEdge
   HalfEdge() : vertex(-1), twin(-1), prev(-1), next(-1){};
 };
 
-#define HALFEDGE_RECIPROCAL_SIZE (1.0 / (double)sizeof(HalfEdge))
-
 class HalfEdgeGraph {
 public:
  

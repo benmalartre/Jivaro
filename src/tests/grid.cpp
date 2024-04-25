@@ -187,13 +187,17 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
   // find meshes in the scene
-  std::vector<Geometry*> meshes;
   _TraverseStageFindingMeshes(stage);
+
+  std::cout << "num meshes : " << _meshes.size() << std::endl;
 
   // create bvh
   if (_meshes.size()) {
+    std::cout << "init grid..." << std::endl;
     _grid.Init(_meshes);
+    std::cout << "init bvh..." << std::endl;
     _bvh.Init(_meshes);
+    
 
     for(size_t m = 0; m < _meshes.size();++m) {
       _scene.AddGeometry(_meshesId[m], _meshes[m]);
