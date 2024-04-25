@@ -96,8 +96,6 @@ void TestGrid::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions
           results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
           break;
         }
-        default:
-          continue;
       }
       hits[index] = true;
     } else {

@@ -18,6 +18,7 @@ class Geometry;
 class BVH : public Intersector
 {
 public:
+
   class Cell : public pxr::GfRange3d
   {
   public:
@@ -80,7 +81,8 @@ public:
       double maxDistance = DBL_MAX, double* minDistance = NULL) const;
     void _FinishSort(std::vector<Morton>& cells);
     Cell* _RecurseSortCellsByPair(std::vector<Morton>& mortons, int first, int last);
-    void _SortTrianglesByPair(std::vector<Morton>& mortons, Geometry* geometry);
+    void _MortonSortTriangles(std::vector<Morton>& mortons, Geometry* geometry);
+    void _MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry* geometry);
 
   private:
     Cell*     _parent;

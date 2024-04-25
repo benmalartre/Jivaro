@@ -373,11 +373,12 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   pxr::GfRay ray(particles->GetVelocity(index), particles->GetPosition(index));
   Mesh* mesh = (Mesh*)_collider;
   Location hit;
-  mesh->Raycast(ray, &hit);
-  SetHit(index, false);
-  const float radius = particles->GetRadius(index);
-  const pxr::GfVec3f predicted(particles->GetPosition(index) + particles->GetVelocity(index) * ft);
+  //mesh->Raycast(ray, &hit);
+  //SetHit(index, false);
+  //const float radius = particles->GetRadius(index);
+  //const pxr::GfVec3f predicted(particles->GetPosition(index) + particles->GetVelocity(index) * ft);
   //SetHit(index, (predicted - _center).GetLength() < radius);
+  SetHit(index, false);
 }
 
 void MeshCollision::_StoreContactLocation(Particles* particles, int index, 

@@ -26,7 +26,6 @@ static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
   delete rhs;
 }
 
-
 BVH::Cell::Cell()
   : _parent(NULL)
   , _left(NULL)
@@ -316,7 +315,7 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
   }
 }
 
-void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& mortons, Geometry* geometry)
+void BVH::Cell::_MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry* geometry)
 {
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
@@ -329,6 +328,26 @@ void BVH::Cell::_SortTrianglesByPair(std::vector<Morton>& mortons, Geometry* geo
   for (size_t t = 0; t < numTrianglePairs; ++t) {
     BVH::Cell* leaf =
       new BVH::Cell(this, &trianglePairs[t], trianglePairs[t].GetBoundingBox(positions, matrix));
+
+    const BVH::Cell* root = GetRoot();
+    mortons[t] = { BVH::ComputeCode(root, leaf->GetMidpoint()), leaf };
+  }
+}
+
+
+void BVH::Cell::_MortonSortTriangles(std::vector<Morton>& mortons, Geometry* geometry)
+{
+  if (geometry->GetType() != Geometry::MESH)return;
+  Mesh* mesh = (Mesh*)geometry;
+
+  pxr::VtArray<Triangle>& triangles = mesh->GetTriangles();
+  size_t numTriangles = triangles.size();
+  mortons.resize(numTriangles);
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
+  for (size_t t = 0; t < numTriangles; ++t) {
+    BVH::Cell* leaf =
+      new BVH::Cell(this, &triangles[t], triangles[t].GetBoundingBox(positions, matrix));
 
     const BVH::Cell* root = GetRoot();
     mortons[t] = { BVH::ComputeCode(root, leaf->GetMidpoint()), leaf };
@@ -435,7 +454,7 @@ void BVH::Cell::Init(Geometry* geometry)
   _type = BVH::Cell::GEOM;
   if (geometry->GetType() == Geometry::MESH) {
     std::vector<Morton> leaves;
-    _SortTrianglesByPair(leaves, geometry);
+    _MortonSortTriangles(leaves, geometry);
     _FinishSort(leaves);
   } else if (geometry->GetType() == Geometry::CURVE) {
 
