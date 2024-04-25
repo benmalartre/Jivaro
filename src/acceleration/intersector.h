@@ -27,7 +27,6 @@ public:
   };
 
 public:
-  Intersector(){};
   virtual ~Intersector(){};
 
   int GetGeometryIndex(Geometry* geom) const;

@@ -266,7 +266,7 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
     if (_right)_right->Raycast(ray, &rightHit, maxDistance, minDistance);
 
     if (leftHit.IsValid() && rightHit.IsValid()) {
-      hit->Set(leftHit.GetT() < rightHit.GetT() ? leftHit : rightHit); 
+      hit->Set((leftHit.GetT() < rightHit.GetT()) ? leftHit : rightHit); 
       return true;
     } else if (leftHit.IsValid()) {
       hit->Set(leftHit); 

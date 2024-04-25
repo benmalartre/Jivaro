@@ -45,8 +45,8 @@ int main (int argc, char *argv[])
   if(prim.IsValid()) {
     Mesh *mesh = new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim));
 
-    pxr::GfVec3f origin(0.f, 10.f, 0.f);
-    pxr::GfVec3f direction(0.f, -1.f, 0.f);
+    pxr::GfVec3f origin(0.f, 0.f, 0.f);
+    pxr::GfVec3f direction(RANDOM_0_1 - 0.5f, RANDOM_0_1 - 0.5f, RANDOM_0_1 - 0.5f);
     pxr::GfRay ray(origin, direction);
 
     Location gridHit, bvhHit;
@@ -61,12 +61,12 @@ int main (int argc, char *argv[])
     std::cout << "bvh raycast ";
     if (bvh.Raycast(ray, &bvhHit, DBL_MAX, &bvhDistance))
     {
-      pxr::GfVec3i triangleVertices = mesh->GetTriangle(bvhHit.GetElementIndex())->vertices;
+      pxr::GfVec3i triangleVertices = mesh->GetTriangle(bvhHit.GetComponentIndex())->vertices;
       pxr::GfVec3f intersection = bvhHit.ComputePosition(mesh->GetPositionsCPtr(), &triangleVertices[0], 3, mesh->GetMatrix());
-      std::cout << "bvh hit : " << intersection << std::endl;
-      std::cout << "ray result : " << ray.GetPoint(bvhDistance) << std::endl;
+      std::cout << "bvh hit    : " << intersection << std::endl;
+      std::cout << "ray result : " << ray.GetPoint(bvhHit.GetT()) << std::endl;
     }
-    std::cout << "hit shit!!!" << std::endl;
+    else std::cout << "hit shit!!!" << std::endl;
 
     /*
     sT = CurrentTime();
@@ -81,18 +81,14 @@ int main (int argc, char *argv[])
     std::cout << "grid build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
     
 
-    std::cout << "grid raycast ";
     if (grid.Raycast(ray, &gridHit, DBL_MAX, &gridDistance))
     {
-      std::cout << "we hit gird something" << std::endl;
-      std::cout << "element inde " << gridHit.GetElementIndex() << std::endl;
-      pxr::GfVec3i triangleVertices = mesh->GetTriangle(gridHit.GetElementIndex())->vertices;
+      pxr::GfVec3i triangleVertices = mesh->GetTriangle(gridHit.GetComponentIndex())->vertices;
       pxr::GfVec3f intersection = gridHit.ComputePosition(mesh->GetPositionsCPtr(), &triangleVertices[0], 3, mesh->GetMatrix());
-      std::cout << "grid hit : " << intersection << std::endl;
+      std::cout << "grid hit    : " << intersection << std::endl;
       std::cout << "ray result : " << ray.GetPoint(gridDistance) << std::endl;
     }
-
-std::cout << "hit shit!!!"<<std::endl;
+    else  std::cout << "hit shit!!!"<<std::endl;
 
 
   }

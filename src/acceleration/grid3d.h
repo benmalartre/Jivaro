@@ -42,7 +42,7 @@ public:
 
   struct Cell
   {
-    Cell(uint32_t index, size_t numGeometries):_index(index){};
+    Cell(uint32_t id):index(id){};
 
     void Insert(Geometry* geometry, Point* point);
     void Insert(Geometry* geometry, Edge* edge);
@@ -59,9 +59,9 @@ public:
     static bool CheckNeighborBit(const uint32_t neighborBits, uint32_t index);
 
     // data
-    std::map<Geometry*, _Components>      _components;
-    uint32_t                              _index;
-    uint32_t                              _neighborBits;
+    std::map<Geometry*, _Components>      components;
+    uint32_t                              index;
+    uint32_t                              neighborBits;
 
   };
 
@@ -70,7 +70,6 @@ public:
   {
       DeleteCells();
   }
-  pxr::GfRange3f* GetRange(){return &_range;};
   pxr::GfVec3f GetCellPosition(uint32_t index);
   pxr::GfVec3f GetCellMin(uint32_t index);
   pxr::GfVec3f GetCellMax(uint32_t index);
@@ -116,7 +115,6 @@ private:
   // bounding box of the mesh
   uint32_t                _resolution[3];
   pxr::GfVec3f            _cellDimension;
-  pxr::GfRange3f          _range;
   // cells
   Cell**                  _cells;
   uint32_t                _numCells;

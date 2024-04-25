@@ -250,7 +250,7 @@ Octree::Closest(const pxr::GfVec3f& point,
       comp->Closest( positions, point , hit);
     }
   }
-  return hit->GetGeometryIndex() != -1 && hit->GetElementIndex() != -1;
+  return hit->GetGeometryIndex() != -1 && hit->GetComponentIndex() != -1;
 }
 
 void 

@@ -14,33 +14,35 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Intersector;
 
 class Location{
+  static const int INVALID_INDEX = -1;
+  static const int AWAITING_INDEX = INT_MAX;
 protected:
   friend class Intersector;
   int           _geomId;
-  int           _elemId;
+  int           _compId;
   pxr::GfVec4f  _coords;
 
 public:
   // Constructors
   Location() 
     : _geomId(-1)
-    , _elemId(-1)
+    , _compId(-1)
     , _coords(pxr::GfVec4f(0.f, 0.f, 0.f, FLT_MAX)) {};
 
   Location(const Location& other)
     : _geomId(other._geomId)
-    , _elemId(other._elemId)
+    , _compId(other._compId)
     , _coords(other._coords) {};
 
-  Location(int geomId, int elemId, const pxr::GfVec4f& coords)
+  Location(int geomId, int compId, const pxr::GfVec4f& coords)
     : _geomId(geomId)
-    , _elemId(elemId)
+    , _compId(compId)
     , _coords(coords) {};
 
   // Setters
   void Set(const Location& other);
   void SetGeometryIndex(int id) { _geomId = id; };
-  void SetElementIndex(int id) { _elemId = id; };
+  void SetComponentIndex(int id) { _compId = id; };
   void SetCoordinates(const pxr::GfVec3f& coords) { 
     _coords[0] = coords[0]; 
     _coords[1] = coords[1];
@@ -50,7 +52,7 @@ public:
 
   // Getters
   int GetGeometryIndex() const { return _geomId; };
-  int GetElementIndex() const { return _elemId; };
+  int GetComponentIndex() const { return _compId; };
   const pxr::GfVec3f GetCoordinates() const { return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]);};
   float GetT() const { return _coords[3]; };
 
@@ -60,7 +62,7 @@ public:
   virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, const int* elements, size_t sz,
     const pxr::GfMatrix4d&) const;
   
-  bool IsValid() const { return _geomId >= 0 && _elemId >= 0; };
+  bool IsValid() const { return _geomId >= 0 && _compId >= 0; };
 };
 
 

@@ -9,7 +9,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 void 
 Location::Set(const Location& other) {
   _geomId = other._geomId;
-  _elemId = other._elemId;
+  _compId = other._compId;
   _coords = other._coords;
 }
 
@@ -22,7 +22,7 @@ Location::ComputePosition(const pxr::GfVec3f* positions, const int* elements, si
     for(size_t d = 0; d < sz; ++d) 
       result += positions[elements[d]] * _coords[d];
   else 
-    result += positions[_elemId];
+    result += positions[_compId];
 
   return m.Transform(result);
 }
@@ -36,7 +36,7 @@ Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t
     for (size_t d = 0; d < sz; ++d)
       result += normals[elements[d]] * _coords[d];
   else
-    result += normals[_elemId];
+    result += normals[_compId];
 
   return m.TransformDir(result);
 }

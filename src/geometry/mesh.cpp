@@ -707,7 +707,7 @@ bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin,
       {
         minDistance = distance;
         result.SetCoordinates(pxr::GfVec3f(baryCoords));
-        result.SetElementIndex(tri->id);
+        result.SetComponentIndex(tri->id);
         hit = true;
       }
     }
@@ -1044,7 +1044,7 @@ Mesh::Raycast(const pxr::GfRay& ray, Location* hit,
 
   bool success = false;
   if(localHit.IsValid()) {
-    const Triangle* hitTri = &_triangles[localHit.GetElementIndex()];
+    const Triangle* hitTri = &_triangles[localHit.GetComponentIndex()];
     const pxr::GfVec3f intersection = localHit.ComputePosition(positions, &hitTri->vertices[0], 3, _matrix);
     const float distance = (ray.GetStartPoint() - intersection).GetLength();
     hit->Set(localHit);

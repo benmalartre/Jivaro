@@ -85,7 +85,7 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locati
     points[vertices[2]],
     &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
 
-    hit->SetElementIndex(id);
+    hit->SetComponentIndex(id);
     hit->SetCoordinates(pxr::GfVec3f(baryCoords));
     hit->SetT(distance);
     return true;
@@ -172,7 +172,7 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Lo
   float distance = (point - closest).GetLength();
 
   hit->SetCoordinates(pxr::GfVec3f(1.f - s - t, s, t));
-  hit->SetElementIndex(id);
+  hit->SetComponentIndex(id);
   hit->SetT(distance);
   return true;
   
