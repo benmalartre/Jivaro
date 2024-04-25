@@ -101,15 +101,14 @@ public:
   void GetNeighbors(uint32_t index, std::vector<Cell*>& neighbors);
   void GetNeighbors(uint32_t index, std::vector<uint32_t>& neighbors);
   void GetIndices(uint32_t index, uint32_t& X, uint32_t& Y, uint32_t& Z);
-  void GetCellIndexAndWeights(const pxr::GfVec3f& pos, uint32_t& index, 
-    pxr::GfVec3f& weights);
   pxr::GfVec3f GetCellDimension(){return _cellDimension;};
   void IndexToXYZ(const uint32_t index, uint32_t& x, uint32_t& y, uint32_t& z);
   void XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, 
     uint32_t& index);
+  pxr::GfVec3f GetColorXYZ(const uint32_t index);
 
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
-    pxr::VtArray<pxr::GfVec3f>& sizes, short flag=0) override;
+    pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
 
 protected:

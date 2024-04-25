@@ -36,7 +36,8 @@ public:
   Geometry* GetGeometry(size_t index) {return _geometries[index];};
 
   //used for visually debug
-  virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, short flag=0){};
+  virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
+    pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors){};
 
 
   virtual void Init(const std::vector<Geometry*>& geometries) = 0;

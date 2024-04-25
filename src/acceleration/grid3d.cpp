@@ -24,6 +24,7 @@ void Grid3D::Cell::Insert(Geometry* geometry, Triangle* triangle)
   components[geometry].push_back((Component*)triangle);
 }
 
+
 bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
   Location* hit, double maxDistance, double* minDistance) const
 {
@@ -130,22 +131,6 @@ void Grid3D::InsertPoints(Points* points, size_t idx)
   //Points* points = (Points*)_geometries[idx];
 }
 
-
-size_t _GetNumComponentsFromGeometryType(Geometry* geometry)
-{
-  switch (geometry->GetType()) {
-    case Geometry::MESH:
-      return ((Mesh*)geometry)->GetNumTriangles();
-
-    case Geometry::CURVE:
-      return ((Curve*)geometry)->GetTotalNumSegments();
-
-    case Geometry::POINT:
-      return ((Points*)geometry)->GetNumPoints();
-  }
-  return 0;
-}
-
 size_t _GetGeometryNumComponents(Geometry* geometry)
 {
   switch(geometry->GetType()) {
@@ -222,7 +207,7 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
 
 void Grid3D::Update()
 {
-
+  Init(_geometries);
 }
 
 bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
@@ -400,33 +385,24 @@ Grid3D::Cell* Grid3D::GetCell(const pxr::GfVec3f& pos){
 }
 
 
-void Grid3D::GetCellIndexAndWeights(const pxr::GfVec3f& pos,
-                                    uint32_t& index,
-                                    pxr::GfVec3f& weights){
+pxr::GfVec3f Grid3D::GetColorXYZ(const uint32_t index)
+{
   pxr::GfVec3f rescale;
   pxr::GfVec3f invDimensions(1.f/(_cellDimension[0]),
                              1.f/(_cellDimension[1]),
                              1.f/(_cellDimension[2]));
 
   // convert to cell coordinates
-  const pxr::GfVec3d& bboxMin = GetMin();
-  rescale[0] = (pos[0] - bboxMin[0] - 0.5f * _cellDimension[0]) * invDimensions[0];
-  rescale[1] = (pos[1] - bboxMin[1] - 0.5f * _cellDimension[1]) * invDimensions[1];
-  rescale[2] = (pos[2] - bboxMin[2] - 0.5f * _cellDimension[2]) * invDimensions[2];
+  uint32_t x, y, z;
+  IndexToXYZ(index, x, y, z);
 
+  pxr::GfVec3f color;
+  color[0] = static_cast<float>(x) / _resolution[0];
+  color[1] = static_cast<float>(y) / _resolution[1];
+  color[2] = static_cast<float>(z) / _resolution[2];
 
-  uint32_t idz = CLAMP(floor(rescale[2]), 0, _resolution[2] - 2);
-  uint32_t idy = CLAMP(floor(rescale[1]), 0, _resolution[1] - 2);
-  uint32_t idx = CLAMP(floor(rescale[0]), 0, _resolution[0] - 2);
+  return color;
 
-  weights[0] = MIN(MAX((((rescale[0] - idx) * 
-    _cellDimension[0]) / _cellDimension[0]), 0.f), 1.f);
-  weights[1] = MIN(MAX((((rescale[1] - idy) * 
-    _cellDimension[1]) / _cellDimension[1]), 0.f), 1.f);
-  weights[2] = MIN(MAX((((rescale[2] - idz) * 
-    _cellDimension[2]) / _cellDimension[2]), 0.f), 1.f);
-
-  index = _resolution[0]*_resolution[1]*idz + _resolution[0]*idy + idx;
 }
 
 void Grid3D::IndexToXYZ(const uint32_t index, uint32_t& x, uint32_t& y, uint32_t& z)
@@ -500,16 +476,17 @@ Grid3D::GetNeighbors(uint32_t index, std::vector<Grid3D::Cell*>& neighbors)
   }
 }
 
-void Grid3D::GetCells(pxr::VtArray<pxr::GfVec3f>& pos, 
-  pxr::VtArray<pxr::GfVec3f>& scl, short flag)
+void Grid3D::GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
+  pxr::VtArray<pxr::GfVec3f>& scales, pxr::VtArray<pxr::GfVec3f>& colors)
 {
   for(size_t c = 0; c < _numCells; ++c) {
     if(_cells[c]) {
-      pos.push_back(GetCellPosition(c));
-      scl.push_back(GetCellMax(c) - GetCellMin(c));
+      const pxr::GfVec3f scale(GetCellMax(c) - GetCellMin(c));
+      positions.push_back(GetCellPosition(c)+scale*0.5f);
+      scales.push_back(scale);
+      colors.push_back(GetColorXYZ(c));
     }
   }
-    
 }
 
 

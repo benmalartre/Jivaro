@@ -80,31 +80,24 @@ void TestGrid::_UpdateRays()
 
 // thread task
 void TestGrid::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
-  pxr::GfVec3f* results, bool* hits)
+  pxr::GfVec3f* results, bool* hits, Intersector* intersector)
 {
   for (size_t index = begin; index < end; ++index) {
     pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
     double minDistance = DBL_MAX;
     Location hit;
-    if (_grid.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
-      Geometry* collided = _grid.GetGeometry(hit.GetGeometryIndex());
+    if (intersector->Raycast(ray, &hit, DBL_MAX, &minDistance)) {
+      Geometry* collided = intersector->GetGeometry(hit.GetGeometryIndex());
       switch (collided->GetType()) {
-      case Geometry::MESH:
-      {
-        Mesh* mesh = (Mesh*)collided;
-        Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
-        break;
-      }
-      case Geometry::CURVE:
-      {
-        //Curve* curve = (Curve*)collided;
-        //Edge* edge = curve->GetEdge(hit.GetElementIndex());
-        //results[index] = hit.GetPosition(collided->GetPositionsCPtr(), &edge->vertices[0], 2, curve->GetMatrix());
-        break;
-      }
-      default:
-        continue;
+        case Geometry::MESH:
+        {
+          Mesh* mesh = (Mesh*)collided;
+          Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
+          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+          break;
+        }
+        default:
+          continue;
       }
       hits[index] = true;
     } else {
@@ -116,31 +109,38 @@ void TestGrid::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions
 // parallelize raycast
 void TestGrid::_UpdateHits()
 {
-  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
+  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();  
   size_t numRays = _rays->GetNumPoints() >> 1;
 
   pxr::VtArray<pxr::GfVec3f> points(numRays);
   pxr::VtArray<bool> hits(numRays, false);
 
-  hits.resize(numRays, false);
-
+/*
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
-      std::placeholders::_2, positions, &points[0], &hits[0]));
+      std::placeholders::_2, positions, &points[0], &hits[0], &_grid));
+*/
+  pxr::WorkParallelForN(_rays->GetNumCurves(),
+    std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
+      std::placeholders::_2, positions, &points[0], &hits[0], &_bvh));
 
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
+  pxr::VtArray<pxr::GfVec3f> colors;
+  pxr::VtArray<float> radiis;
   result.reserve(numRays);
+  colors.reserve(numRays);
   for(size_t r = 0; r < numRays; ++r) {
-    if(hits[r])result.push_back(points[r]);
+    if(hits[r]) {
+      result.push_back(points[r]);
+      colors.push_back({1.f, 0.f, 0.f});
+      radiis.push_back( 0.1f);
+    }
   }
+  
 
   _hits->SetPositions(result);
-  
-  pxr::VtArray<float> radiis(result.size(), 0.2);
   _hits->SetRadii(radiis);
-
-  pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.5f, 0.0f));
   _hits->SetColors(colors);
 
 }
@@ -187,6 +187,7 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
   // create bvh
   if (_meshes.size()) {
     _grid.Init(_meshes);
+    _bvh.Init(_meshes);
 
     for(size_t m = 0; m < _meshes.size();++m) {
       _scene.AddGeometry(_meshesId[m], _meshes[m]);
@@ -194,9 +195,9 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
     }
 
     _gridId = rootId.AppendChild(pxr::TfToken("grid"));
-    _leaves = _SetupGridInstancer(stage, _gridId, &_grid);
-    _scene.AddGeometry(_gridId, (Geometry*)_leaves );
-    _scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::DirtyInstancer);
+    //_leaves = _SetupGridInstancer(stage, _gridId, &_grid);
+    //_scene.AddGeometry(_gridId, (Geometry*)_leaves );
+    //_scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::DirtyInstancer);
   }
   
   // create mesh that will be source of rays
@@ -236,6 +237,7 @@ void TestGrid::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   
   if (_meshes.size()) {
     _grid.Update();
+    _bvh.Update();
     _UpdateGridInstancer(stage, _gridId, &_grid, time);
     _scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::DirtyInstancer);
   }

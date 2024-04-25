@@ -1,7 +1,9 @@
-#ifndef JVR_TEST_BVH_H
-#define JVR_TEST_BVH_H
+#ifndef JVR_TEST_GRID_H
+#define JVR_TEST_GRID_H
 
+#include "../acceleration/intersector.h"
 #include "../acceleration/grid3d.h"
+#include "../acceleration/bvh.h"
 #include "../exec/execution.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -26,7 +28,8 @@ public:
 
 protected:
   void _UpdateRays();
-  void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results, bool* hits);
+  void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
+     pxr::GfVec3f* results, bool* hits, Intersector* intersector);
   void _UpdateHits();
 
 private:
@@ -34,6 +37,7 @@ private:
   Curve*                    _rays;
   Points*                   _hits;
   Grid3D                    _grid;
+  BVH                       _bvh;
   Instancer*                _leaves;
   pxr::SdfPath              _meshId;
   pxr::SdfPath              _raysId;
@@ -46,4 +50,4 @@ private:
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // JVR_TEST_BVH_H
+#endif // JVR_TEST_GRID_H

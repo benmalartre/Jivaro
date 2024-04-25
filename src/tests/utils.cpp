@@ -211,28 +211,20 @@ void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bv
 
 Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid)
 {
-  pxr::VtArray<pxr::GfVec3f> pos;
-  pxr::VtArray<pxr::GfVec3f> scl;
-  grid->GetCells(pos, scl);
-  size_t numPoints = pos.size();
+  pxr::VtArray<pxr::GfVec3f> points;
+  pxr::VtArray<pxr::GfVec3f> scales;
+  pxr::VtArray<pxr::GfVec3f> colors;
 
-  pxr::VtArray<pxr::GfVec3f> points(numPoints);
-  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  grid->GetCells(points, scales, colors);
+  size_t numPoints = points.size();
+
   pxr::VtArray<int64_t> indices(numPoints);
   pxr::VtArray<int> protoIndices(numPoints);
   pxr::VtArray<pxr::GfQuath> rotations(numPoints);
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    pxr::GfVec3f GetCellPosition(uint32_t index);
-  pxr::GfVec3f GetCellMin(uint32_t index);
-  pxr::GfVec3f GetCellMax(uint32_t index);
-
-    points[pointIdx] = pos[pointIdx];
-    scales[pointIdx] = scl[pointIdx];
     protoIndices[pointIdx] = 0;
     indices[pointIdx] = pointIdx;
-    colors[pointIdx] = pxr::GfVec3f(RANDOM_0_1);
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
   }
 
