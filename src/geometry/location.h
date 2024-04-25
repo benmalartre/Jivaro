@@ -49,16 +49,18 @@ public:
   // Getters
   int GetGeometryIndex() const { return _geomId; };
   int GetComponentIndex() const { return _compId; };
-  const pxr::GfVec3f GetCoordinates() const { return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]);};
+  const pxr::GfVec3f GetCoordinates() const { 
+    return pxr::GfVec3f(_coords[0], _coords[1], _coords[2]);};
   float GetT() const { return _coords[3]; };
 
-  virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, const int* elements, size_t sz,
-    const pxr::GfMatrix4d&) const;
+  virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, 
+    const int* elements, size_t sz, const pxr::GfMatrix4d&) const;
 
-  virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, const int* elements, size_t sz,
-    const pxr::GfMatrix4d&) const;
+  virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, 
+    const int* elements, size_t sz, const pxr::GfMatrix4d&) const;
   
-  bool IsValid() const { return _geomId != INVALID_INDEX && _compId != INVALID_INDEX; };
+  inline bool IsValid() const { 
+    return (_geomId > INVALID_INDEX) && (_compId > INVALID_INDEX); };
 
 protected:
   friend class Intersector;

@@ -254,29 +254,30 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
         hit->Set(localHit);
         hit->SetT(distance);
         *minDistance = distance;
+        return true;
       }
     }
+    return false;
   } else {
     if(IsGeom()) {       
       const BVH* intersector = GetIntersector();
       hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
     }
     Location leftHit(*hit), rightHit(*hit);
-    if (_left)_left->Raycast(ray, &leftHit, maxDistance, minDistance);
-    if (_right)_right->Raycast(ray, &rightHit, maxDistance, minDistance);
+    bool leftFound(false), rightFound(false);
+    if (_left && _left->Raycast(ray, &leftHit, maxDistance, minDistance))leftFound=true;
+    if (_right && _right->Raycast(ray, &rightHit, maxDistance, minDistance))rightFound=true;
 
-    if (leftHit.IsValid() && rightHit.IsValid()) {
-      hit->Set((leftHit.GetT() < rightHit.GetT()) ? leftHit : rightHit); 
-      return true;
-    } else if (leftHit.IsValid()) {
-      hit->Set(leftHit); 
-      return true;
-    } else if (rightHit.IsValid()) {
-      hit->Set(rightHit); 
-      return true;
-    }
+    if (leftFound && rightFound) {
+      if(leftHit.GetT()<rightHit.GetT()) 
+        { hit->Set(leftHit);} else {hit->Set(rightHit);return true;}
+    } else if (leftFound) {
+      { hit->Set(leftHit); return true;}
+    } else if (rightFound) {
+      { hit->Set(rightHit); return true;}
+    } return false;
   }
-  return false;
+  
 }
 
 bool 
