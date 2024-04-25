@@ -181,7 +181,7 @@ Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BV
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time)
 {
   std::vector<BVH::Cell*> cells;
-  bvh->GetRoot()->GetCells(cells);
+  bvh->GetRoot()->GetLeaves(cells);
   size_t numPoints = cells.size();
 
   pxr::VtArray<pxr::GfVec3f> points(numPoints);

@@ -109,7 +109,7 @@ public:
   Cell* GetRoot() { return &_root; };
   const Cell* GetRoot() const { return &_root; };
 
-  // visual debug
+   // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
     pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
@@ -124,6 +124,7 @@ public:
 private:
   Cell                        _root;
   std::vector<Cell*>          _geometryCells;
+  std::vector<Cell*>          _leaves;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE
