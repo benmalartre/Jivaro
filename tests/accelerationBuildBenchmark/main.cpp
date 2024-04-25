@@ -53,7 +53,8 @@ void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
     pxr::GfRay ray(positions[index * 2], positions[index * 2 + 1] - positions[index * 2]);
     double minDistance = DBL_MAX;
     Location hit;
-    if (intersector->Raycast(ray, &hit, DBL_MAX, &minDistance)) {      Geometry* collided = intersector->GetGeometry(hit.GetGeometryIndex());
+    if (intersector->Raycast(ray, &hit, DBL_MAX, &minDistance)) {
+      Geometry* collided = intersector->GetGeometry(hit.GetGeometryIndex());
       switch (collided->GetType()) {
         case Geometry::MESH:
         {
