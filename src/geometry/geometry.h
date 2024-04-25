@@ -96,7 +96,7 @@ public:
   virtual void ComputeBoundingBox() {};
   const pxr::GfBBox3d GetBoundingBox(bool worldSpace=true) const;
 
-  virtual DirtyState Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  virtual DirtyState Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
   virtual void Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
@@ -136,7 +136,7 @@ protected:
 
 template<typename T>
 Geometry::DirtyState
-Geometry::_GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, const pxr::UsdTimeCode& time, T *value)
+Geometry::_GetAttrValue(const pxr::UsdPrim& prim, const pxr::TfToken& name, const pxr::UsdTimeCode& time, T *value)
 {
   pxr::UsdAttribute attr = prim.GetAttribute(name);
   if(!attr.IsValid())return DirtyState::CLEAN;
