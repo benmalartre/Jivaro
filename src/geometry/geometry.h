@@ -116,7 +116,8 @@ protected:
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()){};
 
   template<typename T>
-  DirtyState _GetAttrValue(pxr::UsdPrim& prim, const pxr::TfToken& name, const pxr::UsdTimeCode& time, T* value);
+  DirtyState _GetAttrValue(const pxr::UsdPrim& prim, const pxr::TfToken& name, 
+    const pxr::UsdTimeCode& time, T* value);
 
   // infos
   short                               _mode;
