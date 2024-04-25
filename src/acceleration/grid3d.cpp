@@ -34,12 +34,11 @@ bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
   pxr::GfRay localRay(ray);
   localRay.Transform(geometry->GetInverseMatrix());
   const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
- 
-  bool hitSomething = false;
-  for (Component* component : components){
-    Location localHit(*hit);
-    if (component->Raycast(points, localRay, &localHit)) {
 
+  bool hitSomething = false;
+  Location localHit(*hit);
+  for (Component* component : components){
+    if (component->Raycast(points, localRay, &localHit)) {
       const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
       const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
       if (distance < *minDistance && distance < maxDistance) {
@@ -147,6 +146,19 @@ size_t _GetNumComponentsFromGeometryType(Geometry* geometry)
   return 0;
 }
 
+size_t _GetGeometryNumComponents(Geometry* geometry)
+{
+  switch(geometry->GetType()) {
+    case Geometry::POINT:
+      return ((Points*)geometry)->GetNumPoints();
+    case Geometry::CURVE:
+      return ((Curve*)geometry)->GetTotalNumSegments();
+    case Geometry::MESH:
+      return ((Mesh*)geometry)->GetNumTriangles();
+  }
+  return 0;
+}
+
 // construct the grid from a list of geometries
 void Grid3D::Init(const std::vector<Geometry*>& geometries)
 {
@@ -157,23 +169,24 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
   if (!geometries.size())return;
 
   // compute bound of the scene
-  size_t totalNumElements = 0;
-   const pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox(true);
+  size_t totalNumComponents = _GetGeometryNumComponents(_geometries[0]);
+  const pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
   for (size_t i = 1; i < _geometries.size(); ++i) {
+    totalNumComponents += _GetGeometryNumComponents(_geometries[i]);
     const pxr::GfBBox3d bbox = _geometries[i]->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
-
   // create the grid
   pxr::GfVec3f size(GetMax() - GetMin());
 
   //float desiredCellSize = area*12;
   float cubeRoot = 
-    powf(1 * totalNumElements / (size[0] * size[1] * size[2]), 1 / 3.f);
+    powf(1 * totalNumComponents / (size[0] * size[1] * size[2]), 1 / 3.f);
+
   for (uint8_t i = 0; i < 3; ++i) {
     _resolution[i] = floor(size[i] * cubeRoot);
     _resolution[i] = 
@@ -255,7 +268,7 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
 
   // start cell
   uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
-
+  bool hitSomething = false;
   // walk through each cell of the grid and test for an intersection if
   // current cell contains geometry
   while(true) {
@@ -263,7 +276,7 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
     if (_cells[o] != NULL) 
       for(size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx)
         if(_cells[o]->Raycast(_geometries[geomIdx], ray, hit, maxDistance, minDistance))
-          hit->SetGeometryIndex(geomIdx);
+          {hit->SetGeometryIndex(geomIdx); hitSomething=true;}
         
     uint8_t k =
       ((nextCrossingT[0] < nextCrossingT[1]) << 2) +
@@ -277,8 +290,7 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
     if (cell[axis] == exit[axis]) break;
     nextCrossingT[axis] += deltaT[axis];
   }
-
-  return hit->IsValid();
+  return hitSomething;
 }
 
 bool Grid3D::Closest(const pxr::GfVec3f& point, Location* hit,
@@ -486,6 +498,18 @@ Grid3D::GetNeighbors(uint32_t index, std::vector<Grid3D::Cell*>& neighbors)
       neighbors.push_back(_cells[indices[i]]);
     }
   }
+}
+
+void Grid3D::GetCells(pxr::VtArray<pxr::GfVec3f>& pos, 
+  pxr::VtArray<pxr::GfVec3f>& scl, short flag)
+{
+  for(size_t c = 0; c < _numCells; ++c) {
+    if(_cells[c]) {
+      pos.push_back(GetCellPosition(c));
+      scl.push_back(GetCellMax(c) - GetCellMin(c));
+    }
+  }
+    
 }
 
 

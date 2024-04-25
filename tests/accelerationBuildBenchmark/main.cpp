@@ -25,6 +25,7 @@
 
 JVR_NAMESPACE_USING_DIRECTIVE
 
+
 int main (int argc, char *argv[])
 {
   if(argc != 2) {
@@ -45,50 +46,56 @@ int main (int argc, char *argv[])
   if(prim.IsValid()) {
     Mesh *mesh = new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim));
 
-    pxr::GfVec3f origin(0.f, 0.f, 0.f);
-    pxr::GfVec3f direction(RANDOM_0_1 - 0.5f, RANDOM_0_1 - 0.5f, RANDOM_0_1 - 0.5f);
-    pxr::GfRay ray(origin, direction);
-
     Location gridHit, bvhHit;
     double gridDistance = DBL_MAX;
     double bvhDistance = DBL_MAX;
+
+    size_t N = 120;
+    std::vector<pxr::GfRay> rays(N);
+    for(size_t x=0; x < N; ++x) {
+      rays[x].SetEnds(pxr::GfVec3f(0.f), pxr::GfVec3f(RANDOM_0_1 - 0.5f, RANDOM_0_1 - 0.5f, RANDOM_0_1 - 0.5f));
+    }
+
+    std::vector<pxr::GfVec3f> bvhItsec(N);
+    std::vector<pxr::GfVec3f> gridItsec(N);
 
     uint64_t sT = CurrentTime();
     BVH bvh;
     bvh.Init({mesh});
     std::cout << "bvh build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
 
-    std::cout << "bvh raycast ";
-    if (bvh.Raycast(ray, &bvhHit, DBL_MAX, &bvhDistance))
-    {
-      pxr::GfVec3i triangleVertices = mesh->GetTriangle(bvhHit.GetComponentIndex())->vertices;
-      pxr::GfVec3f intersection = bvhHit.ComputePosition(mesh->GetPositionsCPtr(), &triangleVertices[0], 3, mesh->GetMatrix());
-      std::cout << "bvh hit    : " << intersection << std::endl;
-      std::cout << "ray result : " << ray.GetPoint(bvhHit.GetT()) << std::endl;
-    }
-    else std::cout << "hit shit!!!" << std::endl;
-
-    /*
+    std::cout << "bvh raycast... ";
     sT = CurrentTime();
-    Octree octree;
-    octree.Init({mesh});
-    std::cout << "octree build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
-    */
+    for(size_t x = 0; x< N; ++x) {
+      if (bvh.Raycast(rays[x], &bvhHit, DBL_MAX, &bvhDistance)) {
+        bvhItsec[x] = bvhHit.ComputePosition(mesh->GetPositionsCPtr(), 
+         &(mesh->GetTriangle(bvhHit.GetComponentIndex())->vertices)[0], 3, mesh->GetMatrix());
+      }
+    }
+    std::cout << "bvh raycast took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
 
     sT = CurrentTime();
     Grid3D grid;
     grid.Init({mesh});
     std::cout << "grid build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
     
-
-    if (grid.Raycast(ray, &gridHit, DBL_MAX, &gridDistance))
-    {
-      pxr::GfVec3i triangleVertices = mesh->GetTriangle(gridHit.GetComponentIndex())->vertices;
-      pxr::GfVec3f intersection = gridHit.ComputePosition(mesh->GetPositionsCPtr(), &triangleVertices[0], 3, mesh->GetMatrix());
-      std::cout << "grid hit    : " << intersection << std::endl;
-      std::cout << "ray result : " << ray.GetPoint(gridDistance) << std::endl;
+    std::cout << "grid raycast... ";
+    sT = CurrentTime();
+    for(size_t x = 0; x< N; ++x) {
+      if (grid.Raycast(rays[x], &gridHit, DBL_MAX, &gridDistance)) {
+          gridItsec[x] = gridHit.ComputePosition(mesh->GetPositionsCPtr(), 
+          &(mesh->GetTriangle(gridHit.GetComponentIndex())->vertices)[0], 3, mesh->GetMatrix());
+      }
     }
-    else  std::cout << "hit shit!!!"<<std::endl;
+    std::cout << "grid raycast took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
+
+    for(size_t x = 0; x < N; ++x) {
+      if((bvhItsec[x] - gridItsec[x]).GetLength() > 0.000001f) {
+        std::cout << x << " problematic " << std::endl;
+        std::cout << bvhItsec[x] << " vs " << gridItsec[x] << std::endl;
+        std::cout << rays[x] << std::endl;
+      }
+    }
 
 
   }

@@ -13,4 +13,5 @@ Intersector::GetGeometryIndex(Geometry* geom) const
   return -1;
 }
 
+
 JVR_NAMESPACE_CLOSE_SCOPE

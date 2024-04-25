@@ -108,6 +108,10 @@ public:
   void XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, 
     uint32_t& index);
 
+  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
+    pxr::VtArray<pxr::GfVec3f>& sizes, short flag=0) override;
+
+
 protected:
 
 

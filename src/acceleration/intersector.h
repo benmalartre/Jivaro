@@ -8,6 +8,7 @@
 #include <pxr/base/gf/range3f.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/bbox3d.h>
+#include <pxr/base/vt/array.h>
 #include "../geometry/location.h"
 #include "../geometry/intersection.h"
 
@@ -33,6 +34,10 @@ public:
   const std::vector<Geometry*>& GetGeometries() const {return _geometries;};
   const Geometry* GetGeometry(size_t index) const {return _geometries[index];};
   Geometry* GetGeometry(size_t index) {return _geometries[index];};
+
+  //used for visually debug
+  virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, short flag=0){};
+
 
   virtual void Init(const std::vector<Geometry*>& geometries) = 0;
 

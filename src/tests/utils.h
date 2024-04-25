@@ -19,6 +19,7 @@ class Plane;
 class Points;
 class Scene;
 class BVH;
+class Grid3D;
 class Instancer;
 
 void _AddMainDemoLight();
@@ -39,6 +40,9 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 
 Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh);
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time);
+
+Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid);
+void _UpdateGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* bvh, float time);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

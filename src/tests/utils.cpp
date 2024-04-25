@@ -20,6 +20,7 @@
 #include "../geometry/implicit.h"
 #include "../geometry/instancer.h"
 #include "../acceleration/bvh.h"
+#include "../acceleration/grid3d.h"
 #include "../pbd/tokens.h"
 #include "../pbd/solver.h"
 #include "../pbd/force.h"
@@ -132,6 +133,8 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
   return sphere;
 }
 
+
+
 Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
 {
   std::vector<BVH::Cell*> cells;
@@ -204,6 +207,85 @@ void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bv
   instancer.GetOrientationsAttr().Set(rotations);
 
 }
+
+
+Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid)
+{
+  pxr::VtArray<pxr::GfVec3f> pos;
+  pxr::VtArray<pxr::GfVec3f> scl;
+  grid->GetCells(pos, scl);
+  size_t numPoints = pos.size();
+
+  pxr::VtArray<pxr::GfVec3f> points(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<int64_t> indices(numPoints);
+  pxr::VtArray<int> protoIndices(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    pxr::GfVec3f GetCellPosition(uint32_t index);
+  pxr::GfVec3f GetCellMin(uint32_t index);
+  pxr::GfVec3f GetCellMax(uint32_t index);
+
+    points[pointIdx] = pos[pointIdx];
+    scales[pointIdx] = scl[pointIdx];
+    protoIndices[pointIdx] = 0;
+    indices[pointIdx] = pointIdx;
+    colors[pointIdx] = pxr::GfVec3f(RANDOM_0_1);
+    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+  }
+
+  pxr::UsdGeomPointInstancer instancer =
+    pxr::UsdGeomPointInstancer::Define(stage, path);
+
+  pxr::UsdGeomCube proto =
+    pxr::UsdGeomCube::Define(stage,
+      path.AppendChild(pxr::TfToken("proto_cube")));
+  proto.CreateSizeAttr().Set(1.0);
+
+  instancer.CreatePositionsAttr().Set(points);
+  instancer.CreateProtoIndicesAttr().Set(protoIndices);
+  instancer.CreateScalesAttr().Set(scales);
+  instancer.CreateIdsAttr().Set(indices);
+  instancer.CreateOrientationsAttr().Set(rotations);
+  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
+  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
+  pxr::UsdGeomPrimvar colorPrimvar =
+    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+  colorPrimvar.SetElementSize(1);
+  colorPrimvar.Set(colors);
+
+  return new Instancer(instancer.GetPrim(), pxr::GfMatrix4d());
+}
+
+void _UpdateGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid, float time)
+{
+  /*
+  std::vector<BVH::Cell*> cells;
+  bvh->GetRoot()->GetCells(cells);
+  size_t numPoints = cells.size();
+
+  pxr::VtArray<pxr::GfVec3f> points(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
+    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
+    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+  }
+
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  pxr::UsdGeomPointInstancer instancer(prim);
+
+  instancer.GetPositionsAttr().Set(points);
+  instancer.GetScalesAttr().Set(scales);
+  instancer.GetOrientationsAttr().Set(rotations);
+  */
+}
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -14,15 +14,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Intersector;
 
 class Location{
-  static const int INVALID_INDEX = -1;
-  static const int AWAITING_INDEX = INT_MAX;
-protected:
-  friend class Intersector;
-  int           _geomId;
-  int           _compId;
-  pxr::GfVec4f  _coords;
 
 public:
+  static const int INVALID_INDEX = -1;
+  static const int AWAITING_INDEX = INT_MAX;
+  
   // Constructors
   Location() 
     : _geomId(-1)
@@ -62,7 +58,13 @@ public:
   virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, const int* elements, size_t sz,
     const pxr::GfMatrix4d&) const;
   
-  bool IsValid() const { return _geomId >= 0 && _compId >= 0; };
+  bool IsValid() const { return _geomId != INVALID_INDEX && _compId != INVALID_INDEX; };
+
+protected:
+  friend class Intersector;
+  int           _geomId;
+  int           _compId;
+  pxr::GfVec4f  _coords;
 };
 
 
