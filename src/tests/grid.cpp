@@ -112,28 +112,34 @@ void TestGrid::_UpdateHits()
   const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();  
   size_t numRays = _rays->GetNumPoints() >> 1;
 
-  pxr::VtArray<pxr::GfVec3f> points(numRays);
-  pxr::VtArray<bool> hits(numRays, false);
+  pxr::VtArray<pxr::GfVec3f> points(numRays * 2);
+  pxr::VtArray<bool> hits(numRays * 2, false);
 
-/*
+
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0], &_grid));
-*/
+
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
-      std::placeholders::_2, positions, &points[0], &hits[0], &_bvh));
+      std::placeholders::_2, positions, &points[numRays], &hits[numRays], &_bvh));
 
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
   pxr::VtArray<pxr::GfVec3f> colors;
   pxr::VtArray<float> radiis;
-  result.reserve(numRays);
-  colors.reserve(numRays);
+  result.reserve(numRays * 2);
+  colors.reserve(numRays * 2);
+  radiis.reserve(numRays * 2);
   for(size_t r = 0; r < numRays; ++r) {
     if(hits[r]) {
       result.push_back(points[r]);
       colors.push_back({1.f, 0.f, 0.f});
+      radiis.push_back( 0.05f);
+    }
+    if(hits[r+numRays]) {
+      result.push_back(points[r+numRays]+pxr::GfVec3f(RANDOM_0_1*0.05));
+      colors.push_back({0.f, 1.f, 0.f});
       radiis.push_back( 0.1f);
     }
   }
