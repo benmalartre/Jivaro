@@ -39,7 +39,7 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
   void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
@@ -70,7 +70,7 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
   void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
@@ -94,7 +94,7 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
   void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
@@ -118,7 +118,7 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
   void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
@@ -143,7 +143,7 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
   void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;

@@ -177,7 +177,7 @@ Curve::SetCurveRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
 }
 
 Geometry::DirtyState 
-Curve::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Curve::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   if(prim.IsValid() && prim.IsA<pxr::UsdGeomCurves>())
   {

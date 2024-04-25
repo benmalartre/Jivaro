@@ -453,7 +453,7 @@ void Mesh::Prepare(bool connectivity)
 }
 
 Geometry::DirtyState 
-Mesh::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Mesh::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   if(prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>())
   {

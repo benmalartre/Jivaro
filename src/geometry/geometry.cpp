@@ -93,7 +93,7 @@ const pxr::GfVec3f Geometry::GetVelocity() const
 }
 
 Geometry::DirtyState 
-Geometry::Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Geometry::Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   SetMatrix(matrix);
   return _Sync(prim, matrix, time);

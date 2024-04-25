@@ -109,7 +109,7 @@ bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Plane::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Plane::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
 
   size_t state  = _GetAttrValue<pxr::TfToken>(prim, pxr::UsdGeomTokens->axis, time, &_axis);
@@ -198,7 +198,7 @@ bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Sphere::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Sphere::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   return _GetAttrValue<double>(prim, pxr::UsdGeomTokens->radius, time, &_radius);
 }
@@ -306,7 +306,7 @@ Cube::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Cube::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Cube::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   return _GetAttrValue<float>(prim, pxr::UsdGeomTokens->size, time, &_size);
 
@@ -388,7 +388,7 @@ Cone::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Cone::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Cone::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   return Geometry::DirtyState::CLEAN;
 }
@@ -442,7 +442,7 @@ bool Capsule::Closest(const pxr::GfVec3f& point, Location* hit,
 
 
 Geometry::DirtyState 
-Capsule::_Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Capsule::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
 
   return Geometry::DirtyState::CLEAN;

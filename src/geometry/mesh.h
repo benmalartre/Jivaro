@@ -151,7 +151,7 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
   void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;

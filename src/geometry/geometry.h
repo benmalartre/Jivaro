@@ -109,7 +109,7 @@ public:
 
 protected:
   void _ComputeVelocity();
-  virtual DirtyState _Sync(pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  virtual DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) { return DirtyState::CLEAN;};
 
   virtual void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
