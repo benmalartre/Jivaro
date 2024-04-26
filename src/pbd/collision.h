@@ -6,6 +6,7 @@
 #include <pxr/base/gf/matrix4f.h>
 
 #include "../common.h"
+#include "../acceleration/hashGrid.h"
 #include "../pbd/contact.h"
 #include "../pbd/mask.h"
 
@@ -188,8 +189,7 @@ private:
 class SelfCollision : public Collision
 {
 public:
-  SelfCollision(Particles* particles, const pxr::SdfPath& path, 
-    float restitution=0.5f, float friction= 0.5f);
+  SelfCollision(Particles* particles, const pxr::SdfPath& path,  float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
@@ -197,7 +197,6 @@ public:
   void Update(const pxr::UsdPrim& prim, double time) override;
 
 protected:
-  void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
   void _FindContact(Particles* particles, size_t index, float ft) override;
   void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;

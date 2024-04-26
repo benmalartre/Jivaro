@@ -427,33 +427,29 @@ SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path,
   float restitution, float friction)
   : Collision(NULL, path, restitution, friction)
   , _particles(particles)
+  , _grid(NULL)
 {
-  _CreateAccelerationStructure();
 }
 
 void SelfCollision::Update(const pxr::UsdPrim& prim, double time)
 {
   _UpdateAccelerationStructure();
-  _UpdateParameters(prim, time);
+  //_UpdateParameters(prim, time);
 }
 
-void SelfCollision::_CreateAccelerationStructure()
-{
-  _grid = new HashGrid();
-} 
 
 void SelfCollision::_UpdateAccelerationStructure()
 {
-  Points points;
+  if(_grid) delete _grid;
+  _grid = new HashGrid();
   size_t numParticles = _particles->GetNumParticles();
-  points.SetPositions(_particles->GetPositionCPtr(), numParticles);
-  //_grid->Init({ &points });
+  _grid->Init(numParticles,_particles->GetPositionCPtr() , 1.f);
 } 
 
 
 void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
-  
+  particles->SetColor(index, _grid->GetColor(particles->GetPredicted(index)));
   SetHit(index, false);
 }
 
@@ -465,6 +461,7 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index,
 
 float SelfCollision::GetValue(Particles* particles, size_t index)
 {
+
   return 0.f;
  
 }

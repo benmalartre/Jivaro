@@ -19,6 +19,7 @@ struct PBDTokensType {
     const pxr::TfToken damp;
     const pxr::TfToken friction;
     const pxr::TfToken restitution;
+    const pxr::TfToken selfCollide;
 
     const std::vector<pxr::TfToken> allTokens;
 };

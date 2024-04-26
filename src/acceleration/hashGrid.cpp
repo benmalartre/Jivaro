@@ -1,29 +1,31 @@
 #include "../acceleration/hashGrid.h"
+#include "../utils/color.h"
 #include "../utils/timer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 void 
-HashGrid::Init(size_t n, const pxr::GfVec3f* points, float radius)
+HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
 {
   uint64_t T = CurrentTime();
   _points = points;
+  _spacing = spacing;
   _n = n;
-  _tableSize = 2 * n;
+  _tableSize = 2 * _n;
   _cellStart.resize(_tableSize + 1, 0);
-  _cellEntries.resize(n, 0);
-  _mapping.resize(n);
+  _cellEntries.resize(_n, 0);
+  _mapping.resize(_n);
 
-  std::vector<int64_t> hashes(n);
+  std::vector<int64_t> hashes(_n);
 
   size_t elemIdx = 0;
   for (size_t pointIdx = 0; pointIdx < _n; ++pointIdx) {
-    
     hashes[elemIdx] = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
     _mapping[elemIdx] = pointIdx;
     _cellStart[hashes[elemIdx]]++;
     elemIdx++;
   }
+
 
   size_t start = 0;
   for (size_t tableIdx = 0; tableIdx < _tableSize; ++tableIdx) {

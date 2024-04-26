@@ -9,13 +9,15 @@ PBDTokensType::PBDTokensType() :
   damp                  ("damp",                  pxr::TfToken::Immortal),
   friction              ("friction",              pxr::TfToken::Immortal),
   restitution           ("restitution",           pxr::TfToken::Immortal),
+  selfCollide           ("selfCollide",           pxr::TfToken::Immortal),
   allTokens({
     substeps,
     sleepThreshold,
     gravity,
     damp,
     friction,
-    restitution
+    restitution,
+    selfCollide
   })
 {
 }

@@ -164,7 +164,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
 
-  Voxels* voxels = _Voxelize(emitter, 0.5f);
+  Voxels* voxels = _Voxelize(emitter, 0.25f);
 
   std::cout << "voxels num cells " << voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << voxels->GetNumPoints() << std::endl;
@@ -175,6 +175,10 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);
   _solver->AddElement(body, voxels, emitterId);
   std::cout << "added particles" << std::endl;
+
+  pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
+  Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);
+  _solver->AddElement(selfCollide, NULL, selfCollideId);
 
 
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
@@ -195,8 +199,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, sphere.second, sphere.first);
   }
 
-  Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
-  _solver->AddElement(collision, _ground, _groundId);
+  Collision* planeCollide = new PlaneCollision(_ground, _groundId, restitution, friction);
+  _solver->AddElement(planeCollide, _ground, _groundId);
 
   std::cout << "added ground" << std::endl;
 
