@@ -12,7 +12,7 @@ set(PUBLIC_HEADERS
 
 add_executable(${TARGET}
   ../../src/utils/timer.cpp
-  ../../src/acceleration/intersector.cpp>
+  ../../src/acceleration/intersector.cpp
   ../../src/acceleration/bvh.cpp
   ../../src/acceleration/grid3d.cpp
   ../../src/acceleration/octree.cpp
