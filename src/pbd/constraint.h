@@ -154,8 +154,9 @@ void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints
 
 class CollisionConstraint : public Constraint
 {
+  typedef void (CollisionConstraint::*SolveFunc)(Particles* particles, float dt);
 public:
-  enum Type {
+  enum Mode {
     POINT,
     SELF
   };
@@ -163,10 +164,12 @@ public:
   CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
     float stiffness=0.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
+  CollisionConstraint(Particles* particles, SelfCollision* collision, const pxr::VtArray<int>& elems,
+    float stiffness=0.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
+
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetResponse(Particles* particles);
   Collision* GetCollision() {return _collision;};
   const Collision* GetCollision() const { return _collision; };
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
@@ -177,12 +180,17 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
+  void _SolvePoint(Particles* particles, float dt);
+  void _SolveSelf(Particles* particles, float dt);
+
   static size_t                 TYPE_ID;
+  Mode                          _mode;
+  size_t                        _offset;
   Collision*                    _collision;
+  SolveFunc                     _Solve;
+
 };
 
-void CreateCollisionConstraint(Body* body, Collision* collision, 
-  std::vector<Constraint*>& constraints, float stiffness = -1.f, float damping=0.25f);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

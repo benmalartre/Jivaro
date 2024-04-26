@@ -42,9 +42,6 @@ protected:
     );
   };
 
-  // get element position
-  const pxr::GfVec3f& _GetPoint(size_t elemIdx);
-
 public:
   enum HashMethod {
     MULLER,
@@ -68,16 +65,18 @@ public:
 
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const  {    return false;}
-  size_t Closests(const pxr::GfVec3f& point, float maxDist, 
+  size_t Closests(size_t index, const pxr::GfVec3f* positions,
     std::vector<int>& closests);
 
   void SetSpacing(float spacing) { _spacing = spacing; };
   pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
 
+protected:
+  void _ClosestsFromHash(size_t index, const pxr::GfVec3f* positions, 
+    int64_t hash, std::vector<int>& neighbors);
+
 private:
 size_t                              _n;
-  const pxr::GfVec3f*               _points;
-  std::vector<uint64_t>             _mapping;
   float                             _spacing;
   size_t                            _tableSize;
   std::vector<int>                  _cellStart;

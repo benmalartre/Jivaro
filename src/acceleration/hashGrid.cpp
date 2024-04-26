@@ -8,24 +8,22 @@ void
 HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
 {
   uint64_t T = CurrentTime();
-  _points = points;
   _spacing = spacing;
   _n = n;
   _tableSize = 2 * _n;
-  _cellStart.resize(_tableSize + 1, 0);
-  _cellEntries.resize(_n, 0);
-  _mapping.resize(_n);
+  _cellStart.resize(_tableSize + 1);
+  memset(&_cellStart[0], 0, _cellStart.size() * sizeof(int));
+  _cellEntries.resize(_n);
+  memset(&_cellEntries[0], 0, _cellEntries.size() * sizeof(int));
 
   std::vector<int64_t> hashes(_n);
 
   size_t elemIdx = 0;
   for (size_t pointIdx = 0; pointIdx < _n; ++pointIdx) {
     hashes[elemIdx] = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
-    _mapping[elemIdx] = pointIdx;
     _cellStart[hashes[elemIdx]]++;
     elemIdx++;
   }
-
 
   size_t start = 0;
   for (size_t tableIdx = 0; tableIdx < _tableSize; ++tableIdx) {
@@ -47,36 +45,39 @@ HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
 
 }
 
-size_t 
-HashGrid::Closests(const pxr::GfVec3f& point, 
-  float maxDist, std::vector<int>& closests)
+void 
+HashGrid::_ClosestsFromHash(size_t index, const pxr::GfVec3f* positions, 
+  int64_t hash, std::vector<int>& closests)
 {
-  const pxr::GfVec3i minCoord = _IntCoords(point - pxr::GfVec3f(maxDist));
-  const pxr::GfVec3i maxCoord = _IntCoords(point + pxr::GfVec3f(maxDist));
 
-  size_t closestIdx = 0;
-  for (int xi = minCoord[0]; xi <= maxCoord[0]; ++xi) {
-    for (int yi = minCoord[1]; yi <= maxCoord[1]; ++yi) {
-      for (int zi = minCoord[2]; zi <= maxCoord[2]; ++zi) {
-        int64_t h = (this->*_HashCoords)(pxr::GfVec3i(xi, yi, zi));
-
-        size_t start = _cellStart[h];
-        size_t end = _cellStart[h + 1];
-
-        for (size_t i = start; i < end; ++i) {
-          closests[closestIdx] = _cellEntries[i];
-          closestIdx++;
-        }
-      }
-    }
+  const pxr::GfVec3f& point = positions[index];
+  int num = _cellStart[hash + 1] - _cellStart[hash];
+  const float spacingTwo = _spacing * _spacing;
+  for (size_t n = 0; n < num; ++n) {
+    int neighborIdx = _cellEntries[_cellStart[hash] + n];
+    if(neighborIdx == index)continue;
+    if((point - positions[neighborIdx]).GetLengthSq() < spacingTwo)
+      closests.push_back(neighborIdx);
   }
-  return closestIdx;
 }
 
-const pxr::GfVec3f& 
-HashGrid::_GetPoint(size_t elemIdx)
+size_t 
+HashGrid::Closests(size_t index, const pxr::GfVec3f* positions,
+  std::vector<int>& closests)
 {
-  return _points[elemIdx];
+  closests.clear();
+  const pxr::GfVec3i centerCoords = _IntCoords(positions[index]);
+
+  const pxr::GfVec3i minCoords = centerCoords - pxr::GfVec3i(1);
+  const pxr::GfVec3i maxCoords = centerCoords + pxr::GfVec3i(1);
+
+  for (int x = minCoords[0]; x <= maxCoords[0]; ++x)
+    for (int y = minCoords[1]; y <= maxCoords[1]; ++y)
+      for (int z = minCoords[2]; z <= maxCoords[2]; ++z)
+        _ClosestsFromHash(index, positions, 
+          (this->*_HashCoords)(pxr::GfVec3i(x, y, z)), closests);
+
+  return closests.size();
 }
 
 pxr::GfVec3f

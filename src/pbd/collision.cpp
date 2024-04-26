@@ -39,7 +39,6 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   size_t numParticles = particles->GetNumParticles();
   size_t numBodies = bodies.size();
 
-  
   pxr::VtArray<int> elements;
   int bodyIdx = -1;
 
@@ -424,39 +423,109 @@ pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
 size_t SelfCollision::TYPE_ID = Collision::SELF;
 
 SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path, 
-  float restitution, float friction)
+  float restitution, float friction, float radius)
   : Collision(NULL, path, restitution, friction)
+  , _radius(radius)
   , _particles(particles)
   , _grid(NULL)
 {
+  
+  _UpdateAccelerationStructure();
+}
+
+SelfCollision::~SelfCollision()
+{
+  
 }
 
 void SelfCollision::Update(const pxr::UsdPrim& prim, double time)
 {
   _UpdateAccelerationStructure();
-  //_UpdateParameters(prim, time);
 }
 
+size_t SelfCollision::GetNumNeighbors(size_t index)
+{
+  return _numNeighbors[index];
+}
+
+int* SelfCollision::GetNeighbors(size_t index)
+{
+  return &_neighbors[_neighborMap[index]];
+}
+
+void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
+  std::vector<Constraint*>& constraints, float ft)
+{
+  CollisionConstraint* constraint = NULL;
+  size_t numParticles = particles->GetNumParticles();
+
+  pxr::VtArray<int> elements;
+
+  _numNeighbors.resize(particles->GetNumParticles());
+  _neighborsOffset.resize(particles->GetNumParticles());
+
+  size_t neighborsOffset = 0;
+  Mask::Iterator iterator(this, 0, numParticles);
+  size_t particleToContactIdx = 0;
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
+    if (CheckHit(index)) {
+      _p2c[index] = particleToContactIdx++;
+      _c2p.push_back(index);
+      if (elements.size() >= Constraint::BlockSize) {
+        if (elements.size()) {
+          constraint = new CollisionConstraint(particles, this, elements);
+
+          StoreContactsLocation(particles, &elements[0], elements.size(), bodies[0], bodyIdx, ft);
+          constraints.push_back(constraint);
+          elements.clear();
+        }
+      }
+      elements.push_back(index - bodies[particles->GetBody(index)]->GetOffset());
+    }
+  }
+
+  if (elements.size()) {
+    constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
+    StoreContactsLocation(particles, &elements[0], elements.size(), bodies[0], bodyIdx, ft);
+    constraints.push_back(constraint);
+  }
+
+}
 
 void SelfCollision::_UpdateAccelerationStructure()
-{
-  if(_grid) delete _grid;
-  _grid = new HashGrid();
+{  
   size_t numParticles = _particles->GetNumParticles();
-  _grid->Init(numParticles,_particles->GetPositionCPtr() , 1.f);
+  _grid.Init(numParticles,_particles->GetPositionCPtr() , 2.f * _radius);
 } 
 
 
 void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
-  particles->SetColor(index, _grid->GetColor(particles->GetPredicted(index)));
+
+  const pxr::GfVec3f predicted(particles->GetPosition(index) + particles->GetVelocity(index) * ft);
+
+  std::vector<int> closests;
+  _grid.Closests(index, particles->GetPositionCPtr(), closests);
+
+
+  for(int closest: closests) {
+    std::cout << closest << ",";
+    if ((predicted - particles->GetPosition(closest)).GetLength() <
+      (particles->GetRadius(index) + particles->GetRadius(closest))) {
+      particles->SetColor(index, _grid.GetColor(particles->GetPredicted(index)));
+      particles->SetColor(closest, _grid.GetColor(particles->GetPredicted(index)));
+      SetHit(index, true);
+      return;
+    }
+  }
+
   SetHit(index, false);
 }
 
 void SelfCollision::_StoreContactLocation(Particles* particles, int index,
   int geomId, Contact& location, float ft)
 {
- 
+ std::cout << "store contact location"
 }
 
 float SelfCollision::GetValue(Particles* particles, size_t index)

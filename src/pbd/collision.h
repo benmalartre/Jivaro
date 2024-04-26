@@ -167,7 +167,8 @@ private:
 class MeshCollision : public Collision
 {
 public:
-  MeshCollision(Geometry* collider, const pxr::SdfPath& path, float restitution=0.5f, float friction= 0.5f);
+  MeshCollision(Geometry* collider, const pxr::SdfPath& path, 
+    float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
@@ -188,24 +189,40 @@ private:
 
 class SelfCollision : public Collision
 {
+
 public:
-  SelfCollision(Particles* particles, const pxr::SdfPath& path,  float restitution=0.5f, float friction= 0.5f);
+  SelfCollision(Particles* particles, const pxr::SdfPath& path,  
+    float restitution=0.5f, float friction= 0.5f, float radius=0.1f);
+  ~SelfCollision();
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
+  size_t GetNumNeighbors(size_t index);
+  int* GetNeighbors(size_t index);
+
 protected:
   void _UpdateAccelerationStructure();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, int geomId, 
+    Contact& contact, float ft) override;
+
+  void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
+  std::vector<Constraint*>& constraints, float ft) override;
   
 
 private:
   static size_t                 TYPE_ID;
-  HashGrid*                     _grid;
+  float                         _radius;
+  HashGrid                      _grid;
   Particles*                    _particles;
+
+  std::vector<int>              _neighbors;          // flat list of all neighbor particles
+  std::vector<int>              _numNeighbors;       // per particle num neighbor
+  std::vector<int>              _neighborsOffset;    // per particle neighbor access in flat list
+  
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
