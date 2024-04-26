@@ -18,7 +18,7 @@ class Geometry;
 
 #define HASH_GRID_MIN_SPACING 0.0000001f
 
-class HashGrid : public Intersector
+class HashGrid
 {
 protected:
   typedef int64_t (HashGrid::*HashFunc)(const pxr::GfVec3i& intCoords);
@@ -45,19 +45,6 @@ protected:
   // get element position
   const pxr::GfVec3f& _GetPoint(size_t elemIdx);
 
-  // element mapping (geometry index, point index)
-  inline int64_t _ComputeElementKey(int32_t meshIdx, int32_t pointIdx) {
-    return (static_cast<int64_t>(meshIdx) << 32) | pointIdx;
-  }
-
-  inline int32_t _GetGeometryIndexFromElementKey(int64_t key) {
-    return static_cast<int32_t>(key >> 32);
-  }
-
-  inline int32_t _GetPointIndexFromElementKey(int64_t key) {
-    return static_cast<int32_t>(key & 0xffffffff);
-  }
-
 public:
   enum HashMethod {
     MULLER,
@@ -77,16 +64,10 @@ public:
     }
   };
 
-  virtual void Init(const std::vector<Geometry*>& geometries) override;
-  virtual void Update() override;
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
-    double maxDistance, double* minDistance = NULL) const override {
-    return false;
-  }
+   void Init(size_t n, const pxr::GfVec3f* positions, float radius);
+
   bool Closest(const pxr::GfVec3f& point, Location* hit,
-    double maxDistance) const override {
-    return false;
-  }
+    double maxDistance) const  {    return false;}
   size_t Closests(const pxr::GfVec3f& point, float maxDist, 
     std::vector<int>& closests);
 
@@ -94,7 +75,8 @@ public:
   pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
 
 private:
-  std::vector<const pxr::GfVec3f*>  _points;
+size_t                              _n;
+  const pxr::GfVec3f*               _points;
   std::vector<uint64_t>             _mapping;
   float                             _spacing;
   size_t                            _tableSize;

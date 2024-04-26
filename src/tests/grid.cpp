@@ -213,7 +213,7 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
 
-  const size_t n = 32;
+  const size_t n = 256;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);

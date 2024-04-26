@@ -447,8 +447,7 @@ void SelfCollision::_UpdateAccelerationStructure()
   Points points;
   size_t numParticles = _particles->GetNumParticles();
   points.SetPositions(_particles->GetPositionCPtr(), numParticles);
-  points.SetRadius(_particles->GetRadiusCPtr(), numParticles);
-  points.SetPrevious(_particles->GetPreviousPtr(), numParticles);
+  //_grid->Init({ &points });
 } 
 
 

@@ -74,6 +74,7 @@ Deformable::SetPositions(const pxr::GfVec3f* positions, size_t n)
   memmove(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
 }
 
+
 void
 Deformable::SetNormals(const pxr::GfVec3f* normals, size_t n)
 {
