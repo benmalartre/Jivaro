@@ -538,7 +538,7 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
 
 CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* collision, 
   const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
-  : Constraint(ELEM_SIZE, body, stiffness, damping, elems)
+  : Constraint(ELEM_SIZE, NULL, stiffness, damping, elems)
   , _collision(collision)
   , _mode(CollisionConstraint::SELF)
 {
@@ -585,6 +585,8 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
   SelfCollision* collision = (SelfCollision*)_collision;
 
   const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
+  const pxr::GfVec3f* positions = particles->GetPositionCPtr();
+  const float* radius = particles->GetRadiusCPtr();
 
   for (size_t elem = 0; elem < numElements; ++elem) {
     const size_t index = _elements[elem];
@@ -592,82 +594,34 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 
     size_t numNeighbors = collision->GetNumNeighbors(index);
     int* neighbors = collision->GetNeighbors(index);
-    const float d = collision->GetContactDepth(index);
-    if (d >= 0.f) continue;
+    for(size_t neighbor = 0; neighbor < numNeighbors; ++neighbor) {
+      pxr::GfVec3f delta = positions[neighbors[neighbor]] - positions[index];
 
-    pxr::GfVec3f normal = collision->GetContactNormal (index);
+      const float d = delta.GetLength() - (radius[neighbors[neighbor]] + radius[index]);
+      if (d >= 0.f) continue;
 
-    const pxr::GfVec3f correction = normal * -d;
+      const pxr::GfVec3f normal = delta.GetNormalized();
 
-    _correction[elem * ELEM_SIZE + 0] += im0 * correction;
-    
-    // relative motion
-    const pxr::GfVec3f relM = 
-      (particles->GetVelocity(index) - collision->GetVelocity(particles, index)) * dt;
+      const pxr::GfVec3f correction = normal * -d;
 
-    // tangential component of relative motion 
-    pxr::GfVec3f relT = relM - normal * pxr::GfCross(relM, normal).GetLength();
+      _correction[elem * ELEM_SIZE + 0] += im0 * correction;
+      
+      // relative motion
+      const pxr::GfVec3f relM = 
+        (particles->GetVelocity(index) - particles->GetVelocity(neighbors[neighbor])) * dt;
 
-    _correction[elem * ELEM_SIZE + 0] -= im0 * relT * collision->GetFriction();
+      // tangential component of relative motion   
+      pxr::GfVec3f relT = relM - normal * pxr::GfCross(relM, normal).GetLength();
+
+      _correction[elem * ELEM_SIZE + 0] -= im0 * relT * collision->GetFriction();
+    }
+
   }
 }
 
 void CollisionConstraint::Solve(Particles* particles, float dt)
 {
-  _ResetCorrection();
-
-  if(_mode == CollisionConstraint::POINT) {
-    const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
-    const size_t offset = _body[0]->GetOffset();
-
-    for (size_t elem = 0; elem < numElements; ++elem) {
-      const size_t index = _elements[elem] + offset;
-      const float im0 = particles->GetInvMass(index);
-      const float d = _collision->GetContactDepth(index);
-      if (d >= 0.f) continue;
-
-      pxr::GfVec3f normal = _collision->GetContactNormal (index);
-
-      const pxr::GfVec3f correction = normal * -d;
-
-      _correction[elem * ELEM_SIZE + 0] += im0 * correction;
-      
-      // relative motion
-      const pxr::GfVec3f relM = 
-        (particles->GetVelocity(index) - _collision->GetVelocity(particles, index)) * dt;
-
-      // tangential component of relative motion 
-      pxr::GfVec3f relT = relM - normal * pxr::GfCross(relM, normal).GetLength();
-
-      _correction[elem * ELEM_SIZE + 0] -= im0 * relT * _collision->GetFriction();
-    }
-  } else if (mode == CollisionConstraint::SELF) {
-    SelfCollision* collision = (SelfCollision*)_collision;
-    Collision::_Pairs& pairs = collision->GetPairs();
-    const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
-
-    for (size_t elem = 0; elem < numElements; ++elem) {
-      const size_t index = _elements[elem];
-      const float im0 = particles->GetInvMass(index);
-      const float d = collision->GetContactDepth(index);
-      if (d >= 0.f) continue;
-
-      pxr::GfVec3f normal = collision->GetContactNormal (index);
-
-      const pxr::GfVec3f correction = normal * -d;
-
-      _correction[elem * ELEM_SIZE + 0] += im0 * correction;
-      
-      // relative motion
-      const pxr::GfVec3f relM = 
-        (particles->GetVelocity(index) - collision->GetVelocity(particles, index)) * dt;
-
-      // tangential component of relative motion 
-      pxr::GfVec3f relT = relM - normal * pxr::GfCross(relM, normal).GetLength();
-
-      _correction[elem * ELEM_SIZE + 0] -= im0 * relT * collision->GetFriction();
-    }
-  }
+   (this->*_Solve)(particles, dt);
 }
 
 void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)

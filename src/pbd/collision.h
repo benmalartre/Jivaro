@@ -33,7 +33,8 @@ public:
     SELF
   };
 
-  Collision(Geometry* collider, const pxr::SdfPath& path, float restitution=0.5f, float friction=0.5f) 
+  Collision(Geometry* collider, const pxr::SdfPath& path, 
+    float restitution=0.5f, float friction=0.5f) 
     : Mask(Element::COLLISION)
     , _id(path)
     , _collider(collider)
@@ -55,7 +56,7 @@ public:
   virtual void UpdateContacts(Particles* particles);
 
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
-    const Body* body, size_t geomId, float ft);
+    size_t geomId, float ft);
 
   virtual void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt);
 
@@ -83,6 +84,7 @@ public:
     if(hit) BIT_SET(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
     else BIT_CLEAR(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
   };
+  size_t GetNumHits();
 
   float GetFriction() const {return _friction;};
   float GetRestitution() const {return _restitution;};
@@ -97,7 +99,8 @@ protected:
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
-  virtual void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) = 0; // pure virrtual
+  virtual void _StoreContactLocation(Particles* particles, int elem, int other, 
+    Contact& contact, float ft) = 0; // pure virrtual
 
   virtual void _SolveVelocity(Particles* particles, size_t index, float dt);
 
@@ -120,7 +123,8 @@ protected:
 class PlaneCollision : public Collision
 {
 public:
-  PlaneCollision(Geometry* collider, const pxr::SdfPath& path, float restitution=0.5f, float friction= 0.5f);
+  PlaneCollision(Geometry* collider, const pxr::SdfPath& path, 
+    float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
@@ -132,7 +136,8 @@ public:
 protected:
   void _UpdatePositionAndNormal();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, int other, 
+    Contact& contact, float ft) override;
 
 private:
   static size_t                 TYPE_ID;
@@ -144,7 +149,8 @@ private:
 class SphereCollision : public Collision
 {
 public:
-  SphereCollision(Geometry* collider, const pxr::SdfPath& path, float restitution=0.5f, float friction= 0.5f);
+  SphereCollision(Geometry* collider, const pxr::SdfPath& path, 
+    float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
@@ -154,7 +160,8 @@ public:
 protected:
   void _UpdateCenterAndRadius();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, int other, 
+    Contact& contact, float ft) override;
   
 
 private:
@@ -179,7 +186,8 @@ protected:
   void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, int other,
+    Contact& contact, float ft) override;
   
 
 private:
@@ -200,28 +208,29 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
+  size_t GetTotalNumNeighbors();
   size_t GetNumNeighbors(size_t index);
   int* GetNeighbors(size_t index);
 
 protected:
   void _UpdateAccelerationStructure();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, int geomId, 
+  void _StoreContactsLocation(Particles* particles, int* elements, 
+    size_t n, float ft);
+  void _StoreContactLocation(Particles* particles, int index, int other, 
     Contact& contact, float ft) override;
 
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
-  std::vector<Constraint*>& constraints, float ft) override;
-  
+  std::vector<Constraint*>& constraints, float ft);
 
 private:
-  static size_t                 TYPE_ID;
-  float                         _radius;
-  HashGrid                      _grid;
-  Particles*                    _particles;
-
-  std::vector<int>              _neighbors;          // flat list of all neighbor particles
-  std::vector<int>              _numNeighbors;       // per particle num neighbor
-  std::vector<int>              _neighborsOffset;    // per particle neighbor access in flat list
+  static size_t        TYPE_ID;
+  float                _radius;
+  HashGrid             _grid;
+  Particles*           _particles;
+  std::vector<int>     _neighbors;          // flat list of all neighbor particles
+  std::vector<int>     _counts;             // per particle num neighbor
+  std::vector<int>     _offsets;            // per particle neighbors access in flat list
   
 };
 
