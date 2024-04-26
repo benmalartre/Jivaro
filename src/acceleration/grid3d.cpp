@@ -28,7 +28,7 @@ void Grid3D::Cell::Insert(Geometry* geometry, Triangle* triangle)
 bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
   Location* hit, double maxDistance, double* minDistance) const
 {
-  auto& componentsIt = components.find(geometry);
+  const auto& componentsIt = components.find(geometry);
   if (componentsIt == components.end()) return false;
 
   const _Components& components = componentsIt->second;

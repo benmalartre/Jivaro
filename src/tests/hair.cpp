@@ -133,7 +133,9 @@ void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
   for (pxr::UsdPrim prim : primRange) {
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       Curve* curve = new Curve();
-      _HairEmit(stage, curve, pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim), 1.f);
+      pxr::UsdGeomMesh usdMesh(prim);
+      pxr::GfMatrix4d matrix = xformCache.GetLocalToWorldTransform(prim);
+      _HairEmit(stage, curve, usdMesh, matrix, 1.f);
       
       _Sources sources;
       pxr::SdfPath hairPath = prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair")));
@@ -161,7 +163,8 @@ void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
     pxr::UsdGeomMesh mesh(stage->GetPrimAtPath(sources[0].first));
-    prim->bits = _HairEmit(stage, curve, mesh, xformCache.GetLocalToWorldTransform(mesh.GetPrim()), time);    
+    pxr::GfMatrix4d matrix = xformCache.GetLocalToWorldTransform(mesh.GetPrim());
+    prim->bits = _HairEmit(stage, curve, mesh, matrix, time);    
   }
 }
 
