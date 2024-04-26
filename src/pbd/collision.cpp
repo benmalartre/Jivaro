@@ -3,7 +3,9 @@
 #include "../geometry/geometry.h"
 #include "../geometry/implicit.h"
 #include "../geometry/mesh.h"
+#include "../geometry/points.h"
 #include "../acceleration/bvh.h"
+#include "../acceleration/hashGrid.h"
 #include "../pbd/utils.h"
 #include "../pbd/tokens.h"
 #include "../pbd/collision.h"
@@ -415,5 +417,62 @@ pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
   return pxr::GfVec3f(0.f);// return (particles->GetPredicted(index) - _center).GetNormalized();
 }
 
+
+//----------------------------------------------------------------------------------------
+// Self Collision
+//----------------------------------------------------------------------------------------
+size_t SelfCollision::TYPE_ID = Collision::SELF;
+
+SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path, 
+  float restitution, float friction)
+  : Collision(NULL, path, restitution, friction)
+  , _particles(particles)
+{
+  _CreateAccelerationStructure();
+}
+
+void SelfCollision::Update(const pxr::UsdPrim& prim, double time)
+{
+  _UpdateAccelerationStructure();
+  _UpdateParameters(prim, time);
+}
+
+void SelfCollision::_CreateAccelerationStructure()
+{
+  _grid = new HashGrid();
+} 
+
+void SelfCollision::_UpdateAccelerationStructure()
+{
+  Points points;
+  size_t numParticles = _particles->GetNumParticles();
+  points.SetPositions(_particles->GetPositionCPtr(), numParticles);
+  points.SetRadius(_particles->GetRadiusCPtr(), numParticles);
+  points.SetPrevious(_particles->GetPreviousPtr(), numParticles);
+} 
+
+
+void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
+{
+  
+  SetHit(index, false);
+}
+
+void SelfCollision::_StoreContactLocation(Particles* particles, int index,
+  int geomId, Contact& location, float ft)
+{
+ 
+}
+
+float SelfCollision::GetValue(Particles* particles, size_t index)
+{
+  return 0.f;
+ 
+}
+  
+pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index)
+{
+  return pxr::GfVec3f(0.f);
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE

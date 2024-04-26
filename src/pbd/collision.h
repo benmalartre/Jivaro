@@ -19,6 +19,7 @@ class Constraint;
 class Points;
 class Solver;
 class BVH;
+class HashGrid;
 
 class Collision : public Mask
 {
@@ -182,6 +183,30 @@ protected:
 private:
   static size_t                 TYPE_ID;
   BVH*                          _bvh;
+};
+
+class SelfCollision : public Collision
+{
+public:
+  SelfCollision(Particles* particles, const pxr::SdfPath& path, 
+    float restitution=0.5f, float friction= 0.5f);
+  size_t GetTypeId() const override { return TYPE_ID; };
+
+  float GetValue(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
+  void Update(const pxr::UsdPrim& prim, double time) override;
+
+protected:
+  void _CreateAccelerationStructure();
+  void _UpdateAccelerationStructure();
+  void _FindContact(Particles* particles, size_t index, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, int geomId, Contact& contact, float ft) override;
+  
+
+private:
+  static size_t                 TYPE_ID;
+  HashGrid*                     _grid;
+  Particles*                    _particles;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
