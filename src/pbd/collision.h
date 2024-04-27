@@ -207,10 +207,11 @@ public:
   void Update(const pxr::UsdPrim& prim, double time) override;
 
   pxr::GfVec3f GetVelocity(Particles* particles, size_t index) override;
+  void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt) override;
 
-  size_t GetTotalNumContacts();
-  size_t GetNumContacts(size_t index);
-  Contact* GetContacts(size_t index);
+  size_t GetTotalNumContacts() const;
+  size_t GetNumContacts(size_t index) const;
+  const   Contact* GetContacts(size_t index) const;
 
   pxr::GfVec3f GetContactPosition(size_t index) const override;
   pxr::GfVec3f GetContactNormal(size_t index) const override;

@@ -473,24 +473,24 @@ void SelfCollision::Update(const pxr::UsdPrim& prim, double time)
   _UpdateAccelerationStructure();
 }
 
-size_t SelfCollision::GetNumContacts(size_t index)
+// 
+// Contacts
+//
+size_t SelfCollision::GetNumContacts(size_t index) const
 {
   return _counts[index];
 }
 
- size_t SelfCollision::GetTotalNumContacts()
+ size_t SelfCollision::GetTotalNumContacts() const
  {
     return _contacts.size();
  }
 
-Contact* SelfCollision::GetContacts(size_t index)
+const Contact* SelfCollision::GetContacts(size_t index) const
 {
   return &_contacts[_offsets[index]];
 }
 
-// 
-// Contacts
-//
 void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
   std::vector<Constraint*>& constraints, float ft)
 {
@@ -648,30 +648,63 @@ pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index)
   return (particles->GetVelocity(index) - particles->GetVelocity(other));
 };
 
-pxr::GfVec3f SelfCollision::GetContactPosition(size_t index) const 
+void SelfCollision::SolveVelocities(size_t begin, size_t end, Particles* particles, float dt)
+{
+  for (size_t elemIdx = begin; elemIdx < end; ++elemIdx) {
+    size_t index = _c2p[elemIdx];
+    if(!CheckHit(index))return;    
+
+    const  pxr::GfVec3f normal = GetContactNormal(elemIdx);
+
+    // Relative normal and tangential velocities
+    const pxr::GfVec3f velocity = 
+    (particles->GetVelocity(index) - GetContactVelocity(elemIdx));
+    const float vn = pxr::GfDot(velocity, normal);
+
+    const pxr::GfVec3f vt = velocity - normal * vn;
+    const float vtLen = vt.GetLength();
+
+    // Friction
+    if (vtLen > 0.000001) {
+      const float friction = pxr::GfMin(dt * _friction, vtLen);
+      particles->GetVelocity(index) -= vt.GetNormalized() * friction;
+    }
+
+    // Restitution
+    const float threshold = 2.f * 9.81 * dt;
+    const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
+    const float vnTilde = GetContactSpeed(elemIdx);
+    const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
+    particles->GetVelocity(index) += normal * restitution;
+  }
+}
+
+
+pxr::GfVec3f Collision::GetContactPosition(size_t index) const 
 {
   return _contacts[index].GetCoordinates();
 }
 
-pxr::GfVec3f SelfCollision::GetContactNormal(size_t index) const 
+pxr::GfVec3f Collision::GetContactNormal(size_t index) const 
 {
   return _contacts[index].GetNormal();
 }
 
-pxr::GfVec3f SelfCollision::GetContactVelocity(size_t index) const 
+pxr::GfVec3f Collision::GetContactVelocity(size_t index) const 
 {
   return _contacts[index].GetVelocity();
 }
 
-float SelfCollision::GetContactSpeed(size_t index) const 
+float Collision::GetContactSpeed(size_t index) const 
 {
   return _contacts[index].GetSpeed();
 }
 
-float SelfCollision::GetContactDepth(size_t index) const
+float Collision::GetContactDepth(size_t index) const
 {
   return _contacts[index].GetDepth();
 }
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE
