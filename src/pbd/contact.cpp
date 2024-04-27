@@ -16,7 +16,7 @@ void Contact::Init(Collision* collision, Particles* particles, size_t index, siz
   _normal = collision->GetGradient(particles, index);
   _d = collision->GetValue(particles, index);
   _velocity = collision->GetVelocity(particles, index);
-  _speed = pxr::GfDot(particles->GetVelocity(index) - _velocity, _normal);
+  _speed = pxr::GfDot(particles->velocity[index] - _velocity, _normal);
 }
 
 void Contact::Update(Collision* collision, Particles* particles, size_t index)

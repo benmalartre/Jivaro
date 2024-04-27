@@ -141,7 +141,7 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       if (bodyIt != _bodyMap.end()) {
         Body* body = bodyIt->second;
         Mesh* mesh = (Mesh*)execPrim.second.geom;
-        mesh->SetPositions(_solver->GetParticles()->GetPositionCPtr(body->GetOffset()), mesh->GetNumPoints());
+        mesh->SetPositions(&_solver->GetParticles()->position[body->GetOffset()], mesh->GetNumPoints());
       } 
 
       execPrim.second.bits =

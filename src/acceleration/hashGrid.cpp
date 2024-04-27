@@ -7,21 +7,27 @@ JVR_NAMESPACE_OPEN_SCOPE
 void 
 HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
 {
-  uint64_t T = CurrentTime();
   _spacing = spacing;
   _n = n;
   _tableSize = 2 * _n;
   _cellStart.resize(_tableSize + 1);
-  memset(&_cellStart[0], 0, _cellStart.size() * sizeof(int));
   _cellEntries.resize(_n);
-  memset(&_cellEntries[0], 0, _cellEntries.size() * sizeof(int));
+  _hashes.resize(_n);
 
-  std::vector<int64_t> hashes(_n);
+  Update(points);
+}
+
+void 
+HashGrid::Update(const pxr::GfVec3f* points)
+{
+  uint64_t T = CurrentTime();
+  memset(&_cellStart[0], 0, _cellStart.size() * sizeof(int));
+  memset(&_cellEntries[0], 0, _cellEntries.size() * sizeof(int));
 
   size_t elemIdx = 0;
   for (size_t pointIdx = 0; pointIdx < _n; ++pointIdx) {
-    hashes[elemIdx] = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
-    _cellStart[hashes[elemIdx]]++;
+    _hashes[elemIdx] = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
+    _cellStart[_hashes[elemIdx]]++;
     elemIdx++;
   }
 
@@ -33,15 +39,10 @@ HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
   _cellStart[_tableSize] = start;
 
   for (size_t elemIdx = 0; elemIdx < _n; ++elemIdx) {
-    const int64_t h = hashes[elemIdx];
+    const int64_t h = _hashes[elemIdx];
     _cellStart[h]--;
     _cellEntries[_cellStart[h]] = elemIdx;
   }
-
-  std::cout << "  update took " << ((CurrentTime() - T) * 1e-9) << " seconds for " << n << std::endl;
-  std::cout << "  method : " << _hashMethod << std::endl;
-  std::cout << "  num elements : " << n << std::endl;
-  std::cout << "  table size : " << _tableSize << std::endl;
 
 }
 

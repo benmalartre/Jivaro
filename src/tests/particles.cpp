@@ -85,7 +85,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 1.f;
-  float radius = 0.5f;
+  float radius = 0.25f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;
@@ -172,13 +172,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
   //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
 
-  Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius*0.5, damping);
+  Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);
   _solver->AddElement(body, voxels, emitterId);
   std::cout << "added particles" << std::endl;
-
-  pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-  Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);
-  _solver->AddElement(selfCollide, NULL, selfCollideId);
 
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
 
@@ -203,6 +199,12 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   std::cout << "added ground" << std::endl;
 
+    pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
+  Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);
+  _solver->AddElement(selfCollide, NULL, selfCollideId);
+
+  std::cout << "added self collision constraint" << std::endl;
+
   _lastTime = _solver->GetStartFrame();
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _lastTime);
@@ -212,13 +214,13 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   pxr::GfRange3f range;
   for (size_t p = 0; p < particles->GetNumParticles(); ++p) {
-    range = range.UnionWith(particles->GetPosition(p));
+    range = range.UnionWith(particles->position[p]);
   }
   std::vector<int> used;
   for(size_t p = 0; p < _solver->GetNumParticles(); ++p)
-    if (particles->GetPosition(p)[1] < range.GetMidpoint()[1]) {
+    if (particles->position[p][1] < range.GetMidpoint()[1]) {
       used.push_back(p);
-      particles->SetColor(p, pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
+      particles->color[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     }
   //collision->SetMask(_solver->GetNumParticles(), used);
   
