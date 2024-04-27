@@ -164,7 +164,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
 
-  Voxels* voxels = _Voxelize(emitter, 0.25f);
+  Voxels* voxels = _Voxelize(emitter, 2.f);
 
   std::cout << "voxels num cells " << voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << voxels->GetNumPoints() << std::endl;

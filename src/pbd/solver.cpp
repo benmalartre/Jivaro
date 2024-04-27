@@ -298,14 +298,13 @@ void Solver::_FindContacts()
 {
   _ClearContacts();
 
-  _UpdateContacts(1.f);
-
   for (auto& collision : _collisions) {
+    collision->UpdateContacts(&_particles);
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
   }
 }
 
-void Solver::_UpdateContacts(float t)
+void Solver::_UpdateContacts()
 {
   for (auto& collision : _collisions) {
     collision->UpdateContacts(&_particles);
@@ -328,7 +327,6 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
   }
-
 }
 
 void Solver::_UpdateParticles(size_t begin, size_t end)
@@ -389,7 +387,7 @@ void Solver::_StepOne()
   const size_t numContacts = _contacts.size();
 
   _timer->Start(1);
-  _UpdateContacts(_t);
+  _UpdateContacts();
 
   _timer->Next();
   // integrate particles
@@ -415,7 +413,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  _SolveVelocities();
+  //_SolveVelocities();
   
   _timer->Stop();
 
@@ -427,11 +425,11 @@ void Solver::_GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions,
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
 {
   for (size_t i = 0; i < _collisions.size(); ++i) {
-    std::vector<Contact>& contacts = _collisions[i]->GetContacts();
+    std::vector<Contact*>& contacts = _collisions[i]->GetContacts();
     const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     float r = 0.2f;
     for (auto& contact : contacts) {
-      positions.push_back(contact.GetCoordinates());
+      positions.push_back(contact->GetCoordinates());
       radius.push_back(r);
       colors.push_back(color);
     }

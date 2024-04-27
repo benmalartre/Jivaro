@@ -39,6 +39,14 @@ public:
       else return Next();
     }
 
+    int End() {
+      int next = _cur + 1;
+      if (_complete) return next < _end ? false : true;
+      if(next >= _end)return true;
+      if(BIT_CHECK(_values[next / INT_BITS], next % INT_BITS))return false;
+      else return End();
+    }
+
     const Mask*     _mask;
     const int*      _values;
     size_t          _beg;

@@ -12,7 +12,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 void Contact::Init(Collision* collision, Particles* particles, size_t index, size_t geomId)
 {
   _geomId = geomId;
-
   _normal = collision->GetGradient(particles, index);
   _d = collision->GetValue(particles, index);
   _velocity = collision->GetVelocity(particles, index);

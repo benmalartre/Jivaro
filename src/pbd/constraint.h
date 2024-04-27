@@ -35,10 +35,8 @@ public:
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(size_t elementSize, Body* body, float stiffness, float damping,
+  Constraint(size_t elementSize, size_t offset, float stiffness, float damping,
     const pxr::VtArray<int>& elems=pxr::VtArray<int>());
-
-  Constraint(Body* body1, Body* body2, float stiffness, float damping);
 
   virtual ~Constraint() {};
   virtual size_t GetTypeId() const = 0;
@@ -59,14 +57,11 @@ public:
   // as two constraints can move the same point
   virtual void Apply(Particles* particles);
 
-  pxr::VtArray<Body*>& GetBodies() {return _body;};
-  Body* GetBody(size_t index) {return _body[index];};
-  const Body* GetBody(size_t index) const {return _body[index];};
 
 protected:
   void _ResetCorrection();
 
-  pxr::VtArray<Body*>           _body;
+  size_t                        _offset;
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _correction;
   float                         _stiffness;
@@ -158,7 +153,7 @@ class CollisionConstraint : public Constraint
   typedef void (CollisionConstraint::*SolveFunc)(Particles* particles, float dt);
 public:
   enum Mode {
-    POINT,
+    GEOM,
     SELF
   };
 
@@ -181,7 +176,7 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
-  void _SolvePoint(Particles* particles, float dt);
+  void _SolveGeom(Particles* particles, float dt);
   void _SolveSelf(Particles* particles, float dt);
 
   static size_t                 TYPE_ID;

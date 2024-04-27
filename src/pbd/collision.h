@@ -52,11 +52,8 @@ public:
   virtual void Update(const pxr::UsdPrim& prim, double time);
   virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft);
-
+  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft);
   virtual void UpdateContacts(Particles* particles);
-
-  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
-    size_t geomId, float ft);
 
   virtual void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt);
 
@@ -67,9 +64,9 @@ public:
   virtual float GetContactSpeed(size_t index) const;
   virtual float GetContactDepth(size_t index) const;
 
-  std::vector<Contact>& GetContacts(){return _contacts;};
+  std::vector<Contact*>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
-  Contact& GetContact(size_t index){return _contacts[_p2c[index]];};
+  Contact* GetContact(size_t index){return _contacts[_p2c[index]];};
   const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 
@@ -90,7 +87,7 @@ public:
   float GetRestitution() const {return _restitution;};
 
 protected:
-  static const float TOLERANCE_FACTOR;
+  static const float TOLERANCE_MARGIN;
 
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
@@ -99,8 +96,7 @@ protected:
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
-  virtual void _StoreContactLocation(Particles* particles, int elem, int other, 
-    Contact& contact, float ft) = 0; // pure virrtual
+  virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
 
   virtual void _SolveVelocity(Particles* particles, size_t index, float dt);
 
@@ -109,7 +105,7 @@ protected:
   std::vector<int>                  _p2c;
   std::vector<int>                  _c2p;
   size_t                            _numParticles;
-  std::vector<Contact>              _contacts;
+  std::vector<Contact*>             _contacts;
   float                             _restitution;
   float                             _friction;
   Geometry*                         _collider;
@@ -136,8 +132,7 @@ public:
 protected:
   void _UpdatePositionAndNormal();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, int other, 
-    Contact& contact, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
 
 private:
   static size_t                 TYPE_ID;
@@ -160,8 +155,7 @@ public:
 protected:
   void _UpdateCenterAndRadius();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, int other, 
-    Contact& contact, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
   
 
 private:
@@ -186,8 +180,7 @@ protected:
   void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, int other,
-    Contact& contact, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
   
 
 private:
@@ -199,6 +192,11 @@ class SelfCollision : public Collision
 {
 
 public:
+  static const size_t MAX_COLLIDE_PARTICLES = 8;
+
+  using _Contacts = std::vector<Contact*>;
+  using _ParticleContacts = std::vector<_Contacts>;
+
   SelfCollision(Particles* particles, const pxr::SdfPath& path,  
     float restitution=0.5f, float friction= 0.5f, float radius=0.1f);
   ~SelfCollision();
@@ -208,20 +206,29 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
-  size_t GetTotalNumNeighbors();
-  size_t GetNumNeighbors(size_t index);
-  int* GetNeighbors(size_t index);
+  pxr::GfVec3f GetVelocity(Particles* particles, size_t index) override;
+
+  size_t GetTotalNumContacts();
+  size_t GetNumContacts(size_t index);
+  Contact* GetContacts(size_t index);
+
+
+  void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
+    std::vector<Constraint*>& constraints, float ft)override;
+
+  void UpdateContacts(Particles* particles) override;
+  void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt) override;
 
 protected:
   void _UpdateAccelerationStructure();
+  void _FindContacts(size_t begin, size_t end, Particles* particles, float ft) override;
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactsLocation(Particles* particles, int* elements, 
-    size_t n, float ft);
-  void _StoreContactLocation(Particles* particles, int index, int other, 
-    Contact& contact, float ft) override;
+  void _ResetContacts(Particles* particles) override;
+  void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact, float ft);
+
 
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
-  std::vector<Constraint*>& constraints, float ft);
+    std::vector<Constraint*>& constraints, float ft)override;
 
 private:
   static size_t        TYPE_ID;
@@ -231,6 +238,7 @@ private:
   std::vector<int>     _neighbors;          // flat list of all neighbor particles
   std::vector<int>     _counts;             // per particle num neighbor
   std::vector<int>     _offsets;            // per particle neighbors access in flat list
+  _ParticleContacts    _datas;              // per particle vector of contact filled in parallel
   
 };
 
