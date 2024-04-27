@@ -85,7 +85,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 1.f;
-  float radius = 0.25f;
+  float radius = 0.5f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;
@@ -164,7 +164,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
 
-  Voxels* voxels = _Voxelize(emitter, 0.25f);
+  Voxels* voxels = _Voxelize(emitter, radius);
 
   std::cout << "voxels num cells " << voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << voxels->GetNumPoints() << std::endl;
@@ -172,9 +172,10 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
   //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
 
-  Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius, damping);
+  Body* body = _solver->CreateBody((Geometry*)voxels, pxr::GfMatrix4f(), mass, radius*0.5, damping);
   _solver->AddElement(body, voxels, emitterId);
   std::cout << "added particles" << std::endl;
+
 
   pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
   Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);

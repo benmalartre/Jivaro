@@ -64,9 +64,9 @@ public:
   virtual float GetContactSpeed(size_t index) const;
   virtual float GetContactDepth(size_t index) const;
 
-  std::vector<Contact*>& GetContacts(){return _contacts;};
+  std::vector<Contact>& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.size();};
-  Contact* GetContact(size_t index){return _contacts[_p2c[index]];};
+  Contact& GetContact(size_t index){return _contacts[_p2c[index]];};
   const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 
@@ -105,7 +105,7 @@ protected:
   std::vector<int>                  _p2c;
   std::vector<int>                  _c2p;
   size_t                            _numParticles;
-  std::vector<Contact*>             _contacts;
+  std::vector<Contact>              _contacts;
   float                             _restitution;
   float                             _friction;
   Geometry*                         _collider;
@@ -194,7 +194,7 @@ class SelfCollision : public Collision
 public:
   static const size_t MAX_COLLIDE_PARTICLES = 8;
 
-  using _Contacts = std::vector<Contact*>;
+  using _Contacts = std::vector<Contact>;
   using _ParticleContacts = std::vector<_Contacts>;
 
   SelfCollision(Particles* particles, const pxr::SdfPath& path,  
@@ -212,12 +212,14 @@ public:
   size_t GetNumContacts(size_t index);
   Contact* GetContacts(size_t index);
 
+  pxr::GfVec3f GetContactPosition(size_t index) const override;
+  pxr::GfVec3f GetContactNormal(size_t index) const override;
+  pxr::GfVec3f GetContactVelocity(size_t index) const override;
+  float GetContactSpeed(size_t index) const override;
+  float GetContactDepth(size_t index) const override;
 
   void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
     std::vector<Constraint*>& constraints, float ft)override;
-
-  void UpdateContacts(Particles* particles) override;
-  void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt) override;
 
 protected:
   void _UpdateAccelerationStructure();

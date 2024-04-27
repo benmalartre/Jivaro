@@ -13,7 +13,7 @@ class Collision;
 class Contact : public Location
 {
 public:
-  void Init(Collision* collision, Particles* particles, size_t index, size_t geomId);
+  void Init(Collision* collision, Particles* particles, size_t index, size_t other);
   void Update(Collision* collision, Particles* particles, size_t index);
 
   const pxr::GfVec3f& GetNormal() const {return _normal;};

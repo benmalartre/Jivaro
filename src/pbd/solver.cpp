@@ -413,7 +413,7 @@ void Solver::_StepOne()
 
   _timer->Next();
   // solve velocities
-  //_SolveVelocities();
+  _SolveVelocities();
   
   _timer->Stop();
 
@@ -425,11 +425,11 @@ void Solver::_GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions,
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
 {
   for (size_t i = 0; i < _collisions.size(); ++i) {
-    std::vector<Contact*>& contacts = _collisions[i]->GetContacts();
+    std::vector<Contact>& contacts = _collisions[i]->GetContacts();
     const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     float r = 0.2f;
     for (auto& contact : contacts) {
-      positions.push_back(contact->GetCoordinates());
+      positions.push_back(contact.GetCoordinates());
       radius.push_back(r);
       colors.push_back(color);
     }

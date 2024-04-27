@@ -564,7 +564,6 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 {
   _ResetCorrection();
 
-  return;
   SelfCollision* collision = (SelfCollision*)_collision;
 
   const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
@@ -577,25 +576,25 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 
     size_t numContacts = collision->GetNumContacts(index);
     Contact* contacts = collision->GetContacts(index);
+
     for(size_t contact = 0; contact < numContacts; ++contact) {
 
       const float d = contacts[contact].GetDepth();
       if (d >= 0.f) continue;
 
       const pxr::GfVec3f normal = contacts[contact].GetNormal();
-
       const pxr::GfVec3f correction = normal * -d;
 
-      _correction[elem * ELEM_SIZE + 0] += im0 * correction;
+      _correction[elem] += im0 * correction;
       /*
       // relative motion
       const pxr::GfVec3f relM = 
-        (particles->GetVelocity(index) - particles->GetVelocity(neighbors[neighbor])) * dt;
+        (particles->GetVelocity(index) - contacts[contact].GetVelocity()) * dt;
 
       // tangential component of relative motion   
       pxr::GfVec3f relT = relM - normal * pxr::GfCross(relM, normal).GetLength();
 
-      _correction[elem * ELEM_SIZE + 0] -= im0 * relT * collision->GetFriction();
+      _correction[elem * ELEM_SIZE + 0] -= im0 * relT * collision->GetFriction(); 
       */
     }
 
