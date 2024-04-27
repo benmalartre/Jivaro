@@ -514,6 +514,7 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _contacts.clear();
   _contacts.reserve(numParticles*MAX_COLLIDE_PARTICLES);
   _p2c.clear();
+  _p2c.reserve(numParticles*MAX_COLLIDE_PARTICLES);
   _c2p.clear();
   _c2p.reserve(numParticles*MAX_COLLIDE_PARTICLES);
 
@@ -533,22 +534,22 @@ void SelfCollision::_FindContacts(size_t begin, size_t end, Particles* particles
 void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const pxr::GfVec3f predicted(particles->GetPosition(index) + particles->GetVelocity(index) * ft);
-
+  
   std::vector<int> closests;
   _grid.Closests(index, particles->GetPositionCPtr(), closests);
 
   bool intersect = false;
-  const pxr::GfVec3f color = particles->GetColor(index);
   for(int closest: closests) {
-    if ((predicted - particles->GetPosition(closest)).GetLength() <
-      (particles->GetRadius(index) + particles->GetRadius(closest) + Collision::TOLERANCE_MARGIN)) {
+    const pxr::GfVec3f otherPredicted(particles->GetPosition(closest) + particles->GetVelocity(closest) * ft);
+
+    if ((predicted - otherPredicted).GetLength() < (particles->GetRadius(index) + particles->GetRadius(closest))*2.f) {
         Contact contact;
         _StoreContactLocation(particles, index, closest, &contact, ft);
-        particles->SetColor(closest, color);
         _datas[index].push_back(contact);
         intersect = true;
     }
   }
+  if(intersect)particles->SetColor(index, pxr::GfVec3f(0.3f,1.f,0.7f));
   SetHit(index, intersect);
 }
 
@@ -556,19 +557,20 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 void SelfCollision::_StoreContactLocation(Particles* particles, int index, int other, Contact* contact, float ft)
 {
   const pxr::GfVec3f predicted(particles->GetPosition(index) + particles->GetVelocity(index) * ft);
+  const pxr::GfVec3f otherPredicted(particles->GetPosition(other) + particles->GetVelocity(other) * ft);
 
-  pxr::GfVec3f normal = predicted - particles->GetPosition(other);
+  pxr::GfVec3f normal = predicted - otherPredicted;
   const float nL = normal.GetLength();
   if (nL > 0.0000001f)normal.Normalize();
   else normal = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1).GetNormalized();
 
-  const float d = nL - (particles->GetRadius(other) - particles->GetRadius(index) + Collision::TOLERANCE_MARGIN);
+  const float d = nL - (particles->GetRadius(index) + particles->GetRadius(index));
 
   const pxr::GfVec3f intersection = predicted  + normal * -d;
 
   contact->Init(this, particles, index, other);
   contact->SetCoordinates(intersection);
-  contact->SetT(d);
+  contact->SetT(-d);
 
   particles->GetColor(index) = pxr::GfVec3f(0.5f,1.f,0.7f);
 }
@@ -629,14 +631,14 @@ void SelfCollision::_UpdateAccelerationStructure()
 float SelfCollision::GetValue(Particles* particles, size_t index)
 {
   const size_t other = _contacts[index].GetComponentIndex();
-  const float rest = particles->GetRadius(index) + particles->GetRadius(other);
-  return pxr::GfMin(rest, (particles->GetPredicted(index) - particles->GetPredicted(other)).GetLength() - rest);
+  return (particles->GetPredicted(index) - particles->GetPredicted(other)).GetLength() - 
+    (particles->GetRadius(index) + particles->GetRadius(other) * 2.f);
 }
   
 pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index)
 {
   size_t other = _contacts[index].GetComponentIndex();
-  return (particles->GetPredicted(other) - particles->GetPredicted(index)).GetNormalized();
+  return (particles->GetPredicted(index) - particles->GetPredicted(other)).GetNormalized();
 }
 
 // Velocity
@@ -654,6 +656,12 @@ void SelfCollision::SolveVelocities(size_t begin, size_t end, Particles* particl
 
     if(!CheckHit(index))return;    
 
+
+    particles->SetPredicted(index, GetContactPosition(elemIdx));
+    particles->SetPosition(index, GetContactPosition(elemIdx));
+    particles->SetVelocity(index, particles->GetVelocity(index) * 0.1f);
+
+/*
     const  pxr::GfVec3f normal = GetContactNormal(elemIdx);
 
     // Relative normal and tangential velocities
@@ -667,7 +675,7 @@ void SelfCollision::SolveVelocities(size_t begin, size_t end, Particles* particl
     // Friction
     if (vtLen > 0.000001) {
       const float friction = pxr::GfMin(dt * _friction, vtLen);
-      particles->GetVelocity(index) -= vt.GetNormalized() * friction;
+      particles->GetVelocity(index) -= vt.GetNormalized() * friction * 0.5f;
     }
 
     // Restitution
@@ -675,8 +683,8 @@ void SelfCollision::SolveVelocities(size_t begin, size_t end, Particles* particl
     const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
     const float vnTilde = GetContactSpeed(elemIdx);
     const float restitution = -vn + pxr::GfMax(-e * vnTilde, 0.f);
-    particles->GetVelocity(index) += normal * restitution;
-
+    particles->GetVelocity(index) += normal * restitution * 0.5f;
+*/
   }
 }
 
