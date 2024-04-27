@@ -176,11 +176,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver->AddElement(body, voxels, emitterId);
   std::cout << "added particles" << std::endl;
 
-
   pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
   Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);
   _solver->AddElement(selfCollide, NULL, selfCollideId);
-
 
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
 

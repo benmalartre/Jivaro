@@ -58,6 +58,7 @@ public:
   virtual void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt);
 
   virtual Geometry* GetGeometry(){return _collider;};
+  virtual size_t GetContactComponent(size_t index) const;
   virtual pxr::GfVec3f GetContactPosition(size_t index) const;
   virtual pxr::GfVec3f GetContactNormal(size_t index) const;
   virtual pxr::GfVec3f GetContactVelocity(size_t index) const;
@@ -97,8 +98,6 @@ protected:
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
-
-  virtual void _SolveVelocity(Particles* particles, size_t index, float dt);
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>                 _hits;
@@ -212,12 +211,6 @@ public:
   size_t GetTotalNumContacts() const;
   size_t GetNumContacts(size_t index) const;
   const   Contact* GetContacts(size_t index) const;
-
-  pxr::GfVec3f GetContactPosition(size_t index) const override;
-  pxr::GfVec3f GetContactNormal(size_t index) const override;
-  pxr::GfVec3f GetContactVelocity(size_t index) const override;
-  float GetContactSpeed(size_t index) const override;
-  float GetContactDepth(size_t index) const override;
 
   void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
     std::vector<Constraint*>& constraints, float ft)override;
