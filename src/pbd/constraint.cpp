@@ -527,7 +527,6 @@ CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* co
   , _mode(CollisionConstraint::SELF)
   , _Solve(&CollisionConstraint::_SolveSelf)
 {
-  std::cout << "create self collision constraint with " << elems.size() << " elements " << std::endl;
  const size_t numElements = _elements.size() / ELEM_SIZE;
   _correction.resize(numElements);
 }
@@ -563,13 +562,12 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 {
-  std::cout << "solve self collision" << std::endl;
   _ResetCorrection();
 
+  return;
   SelfCollision* collision = (SelfCollision*)_collision;
 
   const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
-  std::cout << "self collision num elements " << numElements << std::endl;
   const pxr::GfVec3f* positions = particles->GetPositionCPtr();
   const float* radius = particles->GetRadiusCPtr();
 
@@ -577,18 +575,14 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
     const size_t index = _elements[elem];
     const float im0 = particles->GetInvMass(index);
 
-    std::cout << "query collision " << collision << std::endl;
     size_t numContacts = collision->GetNumContacts(index);
-    std::cout << "num contacts : " << numContacts << std::endl;
     Contact* contacts = collision->GetContacts(index);
-    std::cout << "contacts addr : " << contacts << std::endl;
     for(size_t contact = 0; contact < numContacts; ++contact) {
 
       const float d = contacts[contact].GetDepth();
-      std::cout << "delta : " << d << std::endl;
       if (d >= 0.f) continue;
 
-      const pxr::GfVec3f normal = delta.GetNormalized();
+      const pxr::GfVec3f normal = contacts[contact].GetNormal();
 
       const pxr::GfVec3f correction = normal * -d;
 

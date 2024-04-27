@@ -78,6 +78,7 @@ void Collision::_ResetContacts(Particles* particles)
   const size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
+  for(auto& contact: _contacts)delete contact;
   _contacts.clear();
   _contacts.reserve(numParticles);
   _p2c.resize(numParticles, -1);
@@ -530,6 +531,7 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
 
+  for(auto& contact: _contacts)delete contact;
   _contacts.clear();
   _contacts.reserve(numParticles*MAX_COLLIDE_PARTICLES);
   _p2c.resize(numParticles, -1);
@@ -558,16 +560,18 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
   _grid.Closests(index, particles->GetPositionCPtr(), closests);
 
   bool intersect = false;
+  const pxr::GfVec3f color = particles->GetColor(index);
   for(int closest: closests) {
     if ((predicted - particles->GetPosition(closest)).GetLength() <
       (particles->GetRadius(index) + particles->GetRadius(closest) + Collision::TOLERANCE_MARGIN)) {
         Contact* contact = new Contact();
         _StoreContactLocation(particles, index, closest, contact, ft);
+        particles->SetColor(closest, color);
         _datas[index].push_back(contact);
         intersect = true;
     }
   }
-  SetHit(index, false);
+  SetHit(index, intersect);
 }
 
 
