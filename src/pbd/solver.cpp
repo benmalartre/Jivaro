@@ -372,10 +372,13 @@ void Solver::_SolveVelocities()
 {
   for (auto& collision : _collisions) {
     if (!collision->GetNumContacts()) continue;
+     collision->SolveVelocities(0, collision->GetNumContacts(), &_particles, _stepTime);
+    /*
     pxr::WorkParallelForN(
       collision->GetNumContacts(),
       std::bind(&Collision::SolveVelocities, collision,
         std::placeholders::_1, std::placeholders::_2, &_particles, _stepTime));
+    */
   }
 }
 
@@ -559,9 +562,9 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
   _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
-  prim.GetAttribute(pxr::TfToken("SubSteps")).Get(&_subSteps, time);
+  prim.GetAttribute(PBDTokens->substeps).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
-  prim.GetAttribute(pxr::TfToken("SleepThreshold")).Get(&_sleepThreshold, time);
+  prim.GetAttribute(PBDTokens->sleepThreshold).Get(&_sleepThreshold, time);
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);

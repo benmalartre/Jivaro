@@ -14,7 +14,7 @@ class Geometry;
 class Element
 {
 public:
-  enum Type { PARTICLES, BODY, COLLISION, FORCE, CONSTRAINT, CONTACT };
+  enum Type { BODY, COLLISION, FORCE, CONSTRAINT, CONTACT };
   short GetType() {return _type;};
 
   virtual void UpdateParameters(pxr::UsdPrim& prim, float time) {};

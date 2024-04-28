@@ -197,7 +197,7 @@ public:
   using _ParticleContacts = std::vector<_Contacts>;
 
   SelfCollision(Particles* particles, const pxr::SdfPath& path,  
-    float restitution=0.5f, float friction= 0.5f, float radius=0.1f);
+    float restitution=0.5f, float friction= 0.5f, float thickness=0.25f);
   ~SelfCollision();
   size_t GetTypeId() const override { return TYPE_ID; };
 
@@ -228,8 +228,8 @@ protected:
 
 private:
   static size_t        TYPE_ID;
-  float                _radius;
   HashGrid             _grid;
+  float                _thickness;
   Particles*           _particles;
   std::vector<int>     _neighbors;          // flat list of all neighbor particles
   std::vector<int>     _counts;             // per particle num neighbor
