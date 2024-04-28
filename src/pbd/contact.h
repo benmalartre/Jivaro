@@ -41,11 +41,11 @@ public:
   Contacts() : n(0), m(1), data(NULL), used(NULL){};
   virtual ~Contacts() { delete[] data; delete[] used; };
 
-  Contact& Get(size_t index=0) const {
-    return data[index];
+  Contact* Get(size_t index=0) const {
+    return &data[index];
   };
-  Contact& Get(size_t first, size_t second) const {
-    return data[first * m + second];
+  Contact* Get(size_t first, size_t second) const {
+    return &data[first * m + second];
   };
 
   void Resize(size_t n, size_t m=PARTICLE_MAX_CONTACTS);
@@ -53,8 +53,8 @@ public:
 
   bool Use(size_t index){return used[index] > 0;};
 
-  Contact& UseContact(size_t index);
-  Contact& GetContact(size_t index, size_t second);
+  Contact* UseContact(size_t index);
+  Contact* GetContact(size_t index, size_t second);
   size_t GetNumContacts(size_t index) const;
   size_t GetTotalNumContacts() const;
 
