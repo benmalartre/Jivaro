@@ -464,7 +464,7 @@ SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path,
   , _grid(NULL)
   , _thickness(thickness)
 {
-  _grid.Init(_particles->GetNumParticles(), &_particles->position[0], 2.f * _thickness);
+  _grid.Init(_particles->GetNumParticles(), &_particles->position[0], _thickness);
 }
 
 SelfCollision::~SelfCollision()
@@ -515,14 +515,13 @@ void SelfCollision::_ResetContacts(Particles* particles)
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
 
   _contacts.clear();
-  _contacts.reserve(numParticles*MAX_COLLIDE_PARTICLES);
+  _contacts.reserve(numParticles * PARTICLE_MAX_COLLIDE);
   _p2c.clear();
-  _p2c.reserve(numParticles*MAX_COLLIDE_PARTICLES);
+  _p2c.reserve(numParticles * PARTICLE_MAX_COLLIDE);
   _c2p.clear();
-  _c2p.reserve(numParticles*MAX_COLLIDE_PARTICLES);
+  _c2p.reserve(numParticles * PARTICLE_MAX_COLLIDE);
 
   _datas.resize(numParticles);
-  for (_Contacts& contacts : _datas) contacts.clear();
 
 }
 
@@ -547,11 +546,12 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
     if ((predicted - otherPredicted).GetLength() < (_thickness+TOLERANCE_MARGIN)) {
         Contact contact;
+        
         particles->color[index] = _grid.GetColor(particles->position[index]);
         particles->color[closest] = _grid.GetColor(particles->position[index]);
         _StoreContactLocation(particles, index, closest, &contact, ft);
-        //_datas[index].push_back({closest, contact});
-        intersect = false;
+        _datas[index].push_back({closest, contact});
+        intersect = true;
     }
   }
   SetHit(index, intersect);
@@ -560,6 +560,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 void SelfCollision::_StoreContactLocation(Particles* particles, int index, int other, Contact* contact, float ft)
 {
+  return;
   const pxr::GfVec3f predicted(particles->position[index] + particles->velocity[index] * ft);
   const pxr::GfVec3f otherPredicted(particles->position[other] + particles->velocity[other] * ft);
 
@@ -611,9 +612,10 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
     _offsets[index] = contactsOffset;
     if(_counts[index]) {
       for(_Contact& contact: _datas[index]) {
-        _contacts.push_back(contact.contact); 
+        _contacts.push_back(contact.data); 
         _c2p.push_back(index); 
         _ids.push_back(contact.id);
+        _p2c.push_back(contactIdx++);
       };
 
       contactsOffset += _counts[index];

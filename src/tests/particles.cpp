@@ -201,8 +201,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   std::cout << "added ground" << std::endl;
 
- pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-  Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, radius * 0.5f );
+  pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
+  Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, radius );
   _solver->AddElement(selfCollide, NULL, selfCollideId);
 
   std::cout << "added self collision constraint" << std::endl;

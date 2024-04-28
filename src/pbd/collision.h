@@ -23,27 +23,19 @@ class BVH;
 class HashGrid;
 
 
-static const size_t PARTICLE_MAX_COLLIDE = 16;
-
-struct _Contact {
-  int      id;
-  Contact  contact;
-
-  _Contact() :id(Location::INVALID_INDEX) {};
-  _Contact(int id) :id(id) {};
-  _Contact(int id, const Contact& contact) :id(id), contact(contact) {};
-
-  _Contact(const _Contact& other) { id = other.id; contact = other.contact; };
-};
-
-using _Contacts = std::vector<_Contact>;
-using _ParticleContacts = std::vector<_Contacts>;
-
-
-
 class Collision : public Mask
 {
 public:
+
+  static const size_t PARTICLE_MAX_COLLIDE = 16;
+
+  struct _Contact {
+    int      id;
+    Contact  data;
+  };
+
+  using _Contacts = std::vector<_Contact>;
+  using _ParticleContacts = std::vector<_Contacts>;
 
   enum Type {
     PLANE = 1,
@@ -245,12 +237,11 @@ private:
   HashGrid             _grid;
   float                _thickness;
   Particles*           _particles;
-  std::vector<Contact> _contacts;
   std::vector<int>     _ids;                // contact component id
   std::vector<int>     _counts;             // per particle num neighbor
   std::vector<int>     _offsets;            // per particle neighbors access in flat list
   _ParticleContacts    _datas;              // per particle vector of contact filled in parallel
-  std:vector<int>      _available;          // as we allocate blocks of contacts, track available one
+
   
 };
 
