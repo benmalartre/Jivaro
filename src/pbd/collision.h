@@ -27,16 +27,6 @@ class Collision : public Mask
 {
 public:
 
-  static const size_t PARTICLE_MAX_COLLIDE = 16;
-
-  struct _Contact {
-    int      id;
-    Contact  data;
-  };
-
-  using _Contacts = std::vector<_Contact>;
-  using _ParticleContacts = std::vector<_Contacts>;
-
   enum Type {
     PLANE = 1,
     SPHERE,
@@ -233,15 +223,13 @@ protected:
     std::vector<Constraint*>& constraints, float ft)override;
 
 private:
-  static size_t        TYPE_ID;
-  HashGrid             _grid;
-  float                _thickness;
-  Particles*           _particles;
-  std::vector<int>     _ids;                // contact component id
-  std::vector<int>     _counts;             // per particle num neighbor
-  std::vector<int>     _offsets;            // per particle neighbors access in flat list
-  _ParticleContacts    _datas;              // per particle vector of contact filled in parallel
-
+  static size_t                 TYPE_ID;
+  HashGrid                      _grid;
+  float                         _thickness;
+  Particles*                    _particles;
+  std::vector<int>              _counts;             // per particle num neighbor
+  std::vector<int>              _offsets;            // per particle neighbors access in flat list
+  _Contacts                     _datas;              // per particle vector of contact filled in parallel
   
 };
 
