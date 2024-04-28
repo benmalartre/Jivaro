@@ -30,7 +30,7 @@ void Contact::Update(Collision* collision, Particles* particles, size_t index)
 void Contacts::Resize(size_t N, size_t M) {
   ResetUse();
 
-  if(data && n == N)return;
+  if(data && n == N && m == M)return;
   else if(data) {delete [] data; delete [] used;}
 
   n = N;

@@ -48,12 +48,12 @@ size_t Collision::GetNumHits()
 void Collision::UpdateContacts(Particles* particles)
 {
   size_t idx = 0;
-  for (size_t c = 0; c  < _counts.size();++c) {
-    if (!_counts[c])continue;
-    Contact* contacts = _contacts[c];
-    for (size_t i = 0; i < _counts[c]; ++i)
-      contacts[i].Update(this, particles, _c2p[idx++]);
-  }
+
+  for (size_t c = 0; c < particles->GetNumParticles(); ++c)
+    if (_contacts.Use(c))
+      for (size_t d = 0; d < _contacts.GetNumContacts(c); ++d) 
+        _contacts.Get(c, d).Update(this, particles, _c2p[idx++]);
+
 }
 
 void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
@@ -69,7 +69,7 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
 void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft)
 {
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
-    _StoreContactLocation(particles, elements[elemIdx], _contacts[elemIdx], ft);
+    _StoreContactLocation(particles, elements[elemIdx], &_contacts.Get(elemIdx), ft);
   }
 }
 
@@ -201,33 +201,33 @@ void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, 
 
 size_t Collision::GetContactComponent(size_t index) const
 {
-  return _contacts[_p2c[index]].GetComponentIndex();
+  return _contacts.Get(_p2c[index]).GetComponentIndex();
 }
 
 
 pxr::GfVec3f Collision::GetContactPosition(size_t index) const 
 {
-  return _contacts[_p2c[index]].GetCoordinates();
+  return _contacts.Get(_p2c[index]).GetCoordinates();
 }
 
 pxr::GfVec3f Collision::GetContactNormal(size_t index) const 
 {
-  return _contacts[_p2c[index]].GetNormal();
+  return _contacts.Get(_p2c[index]).GetNormal();
 }
 
 pxr::GfVec3f Collision::GetContactVelocity(size_t index) const 
 {
-  return _contacts[_p2c[index]].GetVelocity();
+  return _contacts.Get(_p2c[index]).GetVelocity();
 }
 
 float Collision::GetContactSpeed(size_t index) const 
 {
-  return _contacts[_p2c[index]].GetSpeed();
+  return _contacts.Get(_p2c[index]).GetSpeed();
 }
 
 float Collision::GetContactDepth(size_t index) const
 {
-  return _contacts[_p2c[index]].GetDepth();
+  return _contacts.Get(_p2c[index]).GetDepth();
 }
 
 
@@ -486,12 +486,12 @@ size_t SelfCollision::GetNumContacts(size_t index) const
 
  size_t SelfCollision::GetTotalNumContacts() const
  {
-    return _contacts.size();
+    return _contacts.GetTotalNumContacts();
  }
 
 const Contact* SelfCollision::GetContacts(size_t index) const
 {
-  return _contacts.Get(_offsets[index]);
+  return &_contacts.Get(_offsets[index]);
 }
 
 void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
@@ -519,8 +519,7 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _c2p.clear();
   _c2p.reserve(numParticles * PARTICLE_MAX_CONTACTS);
 
-  _datas.Resize(numParticles);
-  _datas.ResetUse();
+  _contacts.Resize(numParticles);
 
   std::cout << "self-collision reset contacts" << std::endl;
 
@@ -550,7 +549,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
     const pxr::GfVec3f otherPredicted(particles->position[closest] + particles->velocity[closest] * ft);
 
     if ((predicted - otherPredicted).GetLength() < (_thickness+TOLERANCE_MARGIN)) {
-        Contact& contact = _datas.UseContact(index);
+        Contact& contact = _contacts.UseContact(index);
         _StoreContactLocation(particles, index, closest, &contact, ft);
         contact.SetComponentIndex(closest);
 
@@ -593,9 +592,7 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
   CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
 
-  size_t numContacts = 0;
-  for (size_t p = 0; p< numParticles; ++p)
-    numContacts += _datas.GetNumContacts(p);
+  size_t numContacts = _contacts.GetTotalNumContacts();
 
   pxr::VtArray<int> elements;
 
@@ -609,11 +606,10 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
   size_t contactIdx = 0;
   Mask::Iterator iterator(this, 0, numParticles);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    _counts[index] = _datas.GetNumContacts(index);
+    _counts[index] = _contacts.GetNumContacts(index);
     _offsets[index] = contactsOffset;
     if(_counts[index]) {
       for(size_t c = 0; c < _counts[index]; ++c) {
-        _contacts.push_back(_datas.GetContact(index, c)); 
         _c2p.push_back(index); 
       };
 
@@ -639,13 +635,13 @@ void SelfCollision::_UpdateAccelerationStructure()
 
 float SelfCollision::GetValue(Particles* particles, size_t index)
 {
-  const size_t other = _contacts[index].GetComponentIndex();
+  const size_t other = _contacts.Get(index).GetComponentIndex();
   return (particles->predicted[index] - particles->predicted[other]).GetLength() - _thickness;
 }
   
 pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index)
 {
-  size_t other = _contacts[index].GetComponentIndex();
+  size_t other = _contacts.Get(index).GetComponentIndex();
   return (particles->predicted[index] - particles->predicted[other]).GetNormalized();
 }
 
@@ -654,10 +650,10 @@ pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index)
 {
   pxr::GfVec3f velocity;
   for(size_t i = 0; i < _counts[index]; ++i) {
-    velocity += particles->velocity[_contacts[_offsets[index]+i].GetComponentIndex()];
+    velocity += particles->velocity[_contacts.Get(_offsets[index]+i).GetComponentIndex()];
   }
   return velocity * 1.f / static_cast<float>(_counts[index]);
-  size_t other = _contacts[index].GetComponentIndex();
+  size_t other = _contacts.Get(index).GetComponentIndex();
   return particles->velocity[other];
 };
 
