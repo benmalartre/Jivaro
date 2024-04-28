@@ -236,7 +236,8 @@ Deformable::ComputeBoundingBox()
 }
 
 void
-Deformable::AddPoint(const pxr::GfVec3f& pos, float radius, const pxr::GfVec3f* normal, const pxr::GfVec3f* color)
+Deformable::AddPoint(const pxr::GfVec3f& pos, float radius, 
+  const pxr::GfVec3f* normal, const pxr::GfVec3f* color)
 {
   _previous.push_back(pos);
   _positions.push_back(pos);
