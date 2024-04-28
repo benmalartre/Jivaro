@@ -7,7 +7,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 void 
 HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
 {
-  _spacing = spacing;
+  _spacing = spacing>1e-6 ? spacing : 1e-6;
+  _scl = 1.f/_spacing;
   _n = n;
   _tableSize = 2 * _n;
   _cellStart.resize(_tableSize + 1);

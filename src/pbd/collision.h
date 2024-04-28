@@ -22,6 +22,25 @@ class Solver;
 class BVH;
 class HashGrid;
 
+
+static const size_t PARTICLE_MAX_COLLIDE = 16;
+
+struct _Contact {
+  int      id;
+  Contact  contact;
+
+  _Contact() :id(Location::INVALID_INDEX) {};
+  _Contact(int id) :id(id) {};
+  _Contact(int id, const Contact& contact) :id(id), contact(contact) {};
+
+  _Contact(const _Contact& other) { id = other.id; contact = other.contact; };
+};
+
+using _Contacts = std::vector<_Contact>;
+using _ParticleContacts = std::vector<_Contacts>;
+
+
+
 class Collision : public Mask
 {
 public:
@@ -191,10 +210,6 @@ class SelfCollision : public Collision
 {
 
 public:
-  static const size_t MAX_COLLIDE_PARTICLES = 8;
-
-  using _Contacts = std::vector<Contact>;
-  using _ParticleContacts = std::vector<_Contacts>;
 
   SelfCollision(Particles* particles, const pxr::SdfPath& path,  
     float restitution=0.5f, float friction= 0.5f, float thickness=0.25f);
@@ -222,7 +237,6 @@ protected:
   void _ResetContacts(Particles* particles) override;
   void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact, float ft);
 
-
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft)override;
 
@@ -231,10 +245,12 @@ private:
   HashGrid             _grid;
   float                _thickness;
   Particles*           _particles;
-  std::vector<int>     _neighbors;          // flat list of all neighbor particles
+  std::vector<Contact> _contacts;
+  std::vector<int>     _ids;                // contact component id
   std::vector<int>     _counts;             // per particle num neighbor
   std::vector<int>     _offsets;            // per particle neighbors access in flat list
   _ParticleContacts    _datas;              // per particle vector of contact filled in parallel
+  std:vector<int>      _available;          // as we allocate blocks of contacts, track available one
   
 };
 

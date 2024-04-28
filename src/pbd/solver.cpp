@@ -311,7 +311,7 @@ void Solver::_UpdateContacts()
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
-  const pxr::GfVec3f* velocity = &_particles.velocity[0];
+  pxr::GfVec3f* velocity = &_particles.velocity[0];
 
   // compute predicted position
   pxr::GfVec3f* predicted = &_particles.predicted[0];
@@ -321,8 +321,11 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   for (const Force* force : _force)
     force->Apply(begin, end, &_particles, _stepTime);
 
+  float lV, maxV = 10.f;
   for (size_t index = begin; index < end; ++index) {
     position[index] = predicted[index];
+    lV = velocity[index].GetLength();
+    if(lV > maxV)velocity[index] *= maxV/lV;
     predicted[index] = position[index] + velocity[index] * _stepTime;
   }
 }
