@@ -66,9 +66,9 @@ public:
   virtual float GetContactSpeed(size_t index) const;
   virtual float GetContactDepth(size_t index) const;
 
-  std::vector<Contact>& GetContacts(){return _contacts;};
-  size_t GetNumContacts(){return _contacts.size();};
-  Contact& GetContact(size_t index){return _contacts[_p2c[index]];};
+  Contacts& GetContacts(){return _contacts;};
+  size_t GetNumContacts(){return _contacts.GetTotalNumContacts();};
+  Contact& GetContact(size_t index){return *(_contacts[_p2c[index]]);};
   const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 
@@ -105,7 +105,7 @@ protected:
   std::vector<int>                  _p2c;
   std::vector<int>                  _c2p;
   size_t                            _numParticles;
-  std::vector<Contact>              _contacts;
+  Contacts                          _contacts;   
   float                             _restitution;
   float                             _friction;
   Geometry*                         _collider;
@@ -229,7 +229,6 @@ private:
   Particles*                    _particles;
   std::vector<int>              _counts;             // per particle num neighbor
   std::vector<int>              _offsets;            // per particle neighbors access in flat list
-  _Contacts                     _datas;              // per particle vector of contact filled in parallel
   
 };
 

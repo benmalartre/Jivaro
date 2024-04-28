@@ -48,9 +48,11 @@ size_t Collision::GetNumHits()
 void Collision::UpdateContacts(Particles* particles)
 {
   size_t idx = 0;
-  for (auto& contact : _contacts) {
-
-    contact.Update(this, particles, _c2p[idx++]);
+  for (size_t c = 0; c  < _counts.size();++c) {
+    if (!_counts[c])continue;
+    Contact* contacts = _contacts[c];
+    for (size_t i = 0; i < _counts[c]; ++i)
+      contacts[i].Update(this, particles, _c2p[idx++]);
   }
 }
 
@@ -492,7 +494,7 @@ size_t SelfCollision::GetNumContacts(size_t index) const
 
 const Contact* SelfCollision::GetContacts(size_t index) const
 {
-  return &_contacts[_offsets[index]];
+  return _contacts.Get(_offsets[index]);
 }
 
 void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
@@ -522,6 +524,7 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _c2p.reserve(numParticles * PARTICLE_MAX_CONTACTS);
 
   _datas.Resize(numParticles);
+  _datas.ResetUse();
 
   std::cout << "self-collision reset contacts" << std::endl;
 
@@ -551,9 +554,12 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
     const pxr::GfVec3f otherPredicted(particles->position[closest] + particles->velocity[closest] * ft);
 
     if ((predicted - otherPredicted).GetLength() < (_thickness+TOLERANCE_MARGIN)) {
-        Contact& contact = _datas[index][numCollide];
+        Contact& contact = _datas.UseContact(index);
         _StoreContactLocation(particles, index, closest, &contact, ft);
         contact.SetComponentIndex(closest);
+
+        particles->color[index] = _grid.GetColor(particles->position[index]);
+        particles->color[closest] = _grid.GetColor(particles->position[index]);
         intersect = true;
     }
   }
