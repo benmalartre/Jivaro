@@ -110,8 +110,7 @@ private:
   void _ClearContacts();
   void _FindContacts();
   void _UpdateContacts();
-  void _GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions, 
-    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors);
+
   void _SolveConstraints(std::vector<Constraint*>& constraints);
   void _SolveVelocities();
 

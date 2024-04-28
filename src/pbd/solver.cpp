@@ -425,21 +425,6 @@ void Solver::_StepOne()
 
 }
 
-void Solver::_GetContactPositions(pxr::VtArray<pxr::GfVec3f>& positions,
-  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
-{
-  for (size_t i = 0; i < _collisions.size(); ++i) {
-    std::vector<Contact>& contacts = _collisions[i]->GetContacts();
-    const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    float r = 0.2f;
-    for (auto& contact : contacts) {
-      positions.push_back(contact.GetCoordinates());
-      radius.push_back(r);
-      colors.push_back(color);
-    }
-  }
-}
-
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
   UpdateCollisions(stage, time);

@@ -17,7 +17,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = 0.1f;
+const float Collision::TOLERANCE_MARGIN = 0.025f;
 
 //
 // Hits  (parallel First Pass)
@@ -69,9 +69,7 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
 void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft)
 {
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
-    Contact contact;
-    _StoreContactLocation(particles, elements[elemIdx], &contact, ft);
-    _contacts.push_back(contact);
+    _StoreContactLocation(particles, elements[elemIdx], _contacts[elemIdx], ft);
   }
 }
 
@@ -80,8 +78,7 @@ void Collision::_ResetContacts(Particles* particles)
   const size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
-  _contacts.clear();
-  _contacts.reserve(numParticles);
+  _contacts.Resize(numParticles, 1);
   _p2c.resize(numParticles, -1);
   _c2p.clear();
   _c2p.reserve(numParticles);
@@ -517,8 +514,7 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
 
-  _contacts.clear();
-  _contacts.reserve(numParticles * PARTICLE_MAX_CONTACTS);
+  _contacts.Resize(numParticles);
   _p2c.clear();
   _c2p.clear();
   _c2p.reserve(numParticles * PARTICLE_MAX_CONTACTS);
@@ -600,9 +596,6 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
   size_t numContacts = 0;
   for (size_t p = 0; p< numParticles; ++p)
     numContacts += _datas.GetNumContacts(p);
-
-  _contacts.clear();
-  _contacts.reserve(numContacts);
 
   pxr::VtArray<int> elements;
 

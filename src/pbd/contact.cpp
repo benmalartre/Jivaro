@@ -27,31 +27,28 @@ void Contact::Update(Collision* collision, Particles* particles, size_t index)
 }
 
 
-void Contacts::Resize(size_t N) {
+void Contacts::Resize(size_t N, size_t M) {
+  ResetUse();
+
   if(data && n == N)return;
   else if(data) {delete [] data; delete [] used;}
 
   n = N;
-  data = new Contact[n * PARTICLE_MAX_CONTACTS];
+  m = M;
+  data = new Contact[n * m];
   used = new size_t[n];
-  memset(&used[0], 0, n * sizeof(size_t));
 };
 
 void 
 Contacts::ResetUse() { 
-  for (size_t i = 0; i < n;++i)used[i] = 0;
+  memset(&used[0], 0, n * sizeof(size_t));
 };
 
 Contact& 
 Contacts::UseContact(size_t index) {
   size_t available = used[index];
   used[index]++;
-  return data[index * PARTICLE_MAX_CONTACTS + available];
-}
-  
-Contact& 
-Contact::GetContact(size_t index, size_t second){
-  return data[index * PARTICLE_MAX_CONTACTS + second];
+  return data[index * m + available];
 }
 
 size_t 

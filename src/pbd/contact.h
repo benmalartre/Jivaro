@@ -38,17 +38,24 @@ static const size_t PARTICLE_MAX_CONTACTS = 16;
 class Contacts {
 
 public:
-  Contacts() : n(0), data(NULL), used(NULL){};
+  Contacts() : n(0), m(1), data(NULL), used(NULL){};
   virtual ~Contacts() { delete[] data; delete[] used; };
 
   Contact* operator [](int index) {
-    return &data[index * PARTICLE_MAX_CONTACTS];
+    return &data[index * m];
   };
   const Contact* operator [](int index) const {
-    return &data[index * PARTICLE_MAX_CONTACTS];
+    return &data[index * m];
   }; 
 
-  void Resize(size_t N);
+  Contact& Get(size_t index) const {
+    return data[index];
+  };
+  Contact& Get(size_t first, size_t second) const {
+    return data[index * m + second];
+  };
+
+  void Resize(size_t n, size_t m=PARTICLE_MAX_CONTACTS);
   void ResetUse();
 
   Contact& UseContact(size_t index);
@@ -58,6 +65,7 @@ public:
 
 private:
   size_t                n;
+  size_t                m;
   size_t*               used;
   Contact*              data;
 };
