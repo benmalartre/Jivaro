@@ -28,20 +28,26 @@ void Contact::Update(Collision* collision, Particles* particles, size_t index)
 
 void Contacts::Resize(size_t N, size_t M) {
   std::cout << "contacts resize " << std::endl;
-  if(data && n == N && m == M){ResetUse(); return;}
-  else if(data) {delete [] data; delete [] used;}
+  if(data && n == N && m == M){ResetAllUse(); return;}
+  else if(data) {delete [] data;}
 std::cout << "data delete or inexistant create it " << std::endl;
   n = N;
   m = M;
   data = new Contact[n * m];
-  used = new size_t[n];
+  used.resize(n);
+  ResetAllUse();
 std::cout << "data created " << std::endl;
 
 };
 
+void Contacts::ResetUse(size_t index)
+{
+  used[index] = 0;
+}
+
 void 
-Contacts::ResetUse() { 
-  memset(&used[0], 0, n * sizeof(size_t));
+Contacts::ResetAllUse() { 
+  memset(&used[0], 0, n * sizeof(int));
 };
 
 Contact* 

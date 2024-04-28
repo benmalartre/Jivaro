@@ -59,6 +59,7 @@ void Collision::UpdateContacts(Particles* particles)
 void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
   std::vector<Constraint*>& constraints, float ft)
 {
+
   _ResetContacts(particles);
   pxr::WorkParallelForN(particles->GetNumParticles(),
     std::bind(&Collision::_FindContacts, this,
@@ -78,10 +79,13 @@ void Collision::_ResetContacts(Particles* particles)
   const size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
-  _contacts.Resize(numParticles, 1);
+  
   _p2c.resize(numParticles, -1);
   _c2p.clear();
   _c2p.reserve(numParticles);
+
+  _contacts.Resize(numParticles, 1);
+  _contacts.ResetAllUse();
 
 }
 
@@ -509,7 +513,6 @@ void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>&
 
 void SelfCollision::_ResetContacts(Particles* particles)
 {
-  std::cout << "self-collision reset contacts" << std::endl;
   size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
@@ -518,9 +521,8 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _c2p.clear();
   _c2p.reserve(numParticles * PARTICLE_MAX_CONTACTS);
 
-    _contacts.Resize(numParticles, PARTICLE_MAX_CONTACTS);
+  _contacts.Resize(numParticles, PARTICLE_MAX_CONTACTS);
 
-  std::cout << "self-collision reset contacts" << std::endl;
 
 }
 

@@ -285,28 +285,11 @@ void Solver::WeightBoundaries()
     }
   } 
 }
-
-void Solver::_ClearContacts()
-{
-  for (auto& contact : _contacts)delete contact;
-  _contacts.clear();
-}
-
-void Solver::_FindContacts()
-{
-  _ClearContacts();
-
-  for (auto& collision : _collisions) {
-    collision->UpdateContacts(&_particles);
-    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-  }
-}
-
+  
 void Solver::_UpdateContacts()
 {
-  for (auto& collision : _collisions) {
+  for (auto& collision : _collisions)
     collision->UpdateContacts(&_particles);
-  }
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
@@ -472,9 +455,13 @@ void Solver::Step()
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
   _t = 0.f;
-
   _timer->Start();
-  _FindContacts();
+  for (auto& contact : _contacts)delete contact;
+  _contacts.clear();
+
+  for (auto& collision : _collisions)
+    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+
   _timer->Stop();
 
 

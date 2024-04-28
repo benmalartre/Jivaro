@@ -107,8 +107,6 @@ public:
 
 
 private:
-  void _ClearContacts();
-  void _FindContacts();
   void _UpdateContacts();
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);

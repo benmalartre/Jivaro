@@ -38,8 +38,8 @@ static const size_t PARTICLE_MAX_CONTACTS = 16;
 class Contacts {
 
 public:
-  Contacts() : n(0), m(1), data(NULL), used(NULL){};
-  virtual ~Contacts() { delete[] data; delete[] used; };
+  Contacts() : n(0), m(1), data(NULL){};
+  virtual ~Contacts() { delete[] data; };
 
   Contact* Get(size_t index=0) const {
     return &data[index];
@@ -49,7 +49,8 @@ public:
   };
 
   void Resize(size_t n, size_t m=PARTICLE_MAX_CONTACTS);
-  void ResetUse();
+  void ResetUse(size_t index);
+  void ResetAllUse();
 
   bool Use(size_t index){return used[index] > 0;};
 
@@ -61,7 +62,7 @@ public:
 private:
   size_t                n;
   size_t                m;
-  size_t*               used;
+  std::vector<int>      used;
   Contact*              data;
 };
 
