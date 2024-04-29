@@ -18,6 +18,9 @@ public:
   Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   virtual ~Xform() {};
 
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override{};
+
 };
 
 class Plane : public Geometry {

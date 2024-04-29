@@ -113,7 +113,7 @@ protected:
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) { return DirtyState::CLEAN;};
 
   virtual void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()){};
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) = 0;
 
   template<typename T>
   DirtyState _GetAttrValue(const pxr::UsdPrim& prim, const pxr::TfToken& name, 

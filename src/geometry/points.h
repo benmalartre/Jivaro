@@ -14,6 +14,12 @@ public:
   Points(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world);
   virtual ~Points() {};
 
+protected:
+  DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+    
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

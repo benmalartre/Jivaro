@@ -232,12 +232,13 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << "added self collision" << std::endl;
   }
 
+ 
+
   _lastTime = _solver->GetStartFrame();
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
   _solver->Update(stage, _lastTime);
 
   Particles* particles = _solver->GetParticles();
-  std::cout << "particles : " << particles << std::endl;
 
   pxr::GfRange3f range;
   for (size_t p = 0; p < particles->GetNumParticles(); ++p) {
@@ -250,6 +251,12 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       particles->color[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     }
   //collision->SetMask(_solver->GetNumParticles(), used);
+
+  _solver->Update(stage, _solver->GetStartFrame());
+
+   Points* points = _solver->GetPoints();
+  pxr::SdfPath pointsPrimId = _solver->GetPointsId().AppendChild(pxr::TfToken("zob"));
+  _scene.InjectGeometry(stage, pointsPrimId, _solver->GetPoints(), 1.f);
   
 
 }

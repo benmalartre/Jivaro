@@ -88,6 +88,7 @@ public:
   void LockPoints();
   void WeightBoundaries();
   Points* GetPoints(){return _points;};
+  pxr::SdfPath GetPointsId(){return _pointsId;};
   
   // solver 
   void Update(pxr::UsdStageRefPtr& stage, float time);
