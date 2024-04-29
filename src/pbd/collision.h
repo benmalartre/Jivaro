@@ -208,7 +208,7 @@ public:
   size_t GetNumContacts(size_t index) const;
   const   Contact* GetContacts(size_t index) const;
 
-  void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
+  void FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
     std::vector<Constraint*>& constraints, float ft)override;
 
 protected:
