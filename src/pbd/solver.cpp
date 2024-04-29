@@ -275,13 +275,6 @@ void Solver::UpdatePoints()
   _points->SetRadii(&_particles.radius[0], numParticles);
   _points->SetColors(&_particles.color[0], numParticles);
 
-  std::cout << "----------------" << std::endl;
-    std::cout << _particles.position << std::endl;
-    std::cout << _particles.radius << std::endl;
-    std::cout << _particles.color << std::endl;
-    std::cout << "----------------" << std::endl;
-
-
   _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
 }
 
@@ -497,33 +490,6 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
     _collisions[i]->Update(prim, time);
 
   }
-  /*
-  BVH bvh;
-  bvh.Init(_colliders);
-
-  {
-    double minDistance;
-    Location hit;
-    if (bvh.Closest(pxr::GfVec3f(0.f), &hit, -1, &minDistance)) {
-      std::cout << "CLOSEST HIT :" << std::endl;
-      pxr::GfVec3f position;
-      hit.GetPosition(&position);
-      std::cout << "   pos : " << position << std::endl;
-      std::cout << "   tri : " << hit.GetElementIndex() << std::endl;
-    }
-  }
-
-  {
-    pxr::GfRay ray(pxr::GfVec3f(0.f, 5.f, 0.f), pxr::GfVec3f(0.f, -1.f, 0.f));
-    double minDistance;
-    Location hit;
-    const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
-    if (bvh.Raycast(points, ray, &hit, -1, &minDistance)) {
-      pxr::GfVec3f position;
-      hit.GetPosition(_colliders[0]);
-    }
-  }
-  */
 }
 
 
