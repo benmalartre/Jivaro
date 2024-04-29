@@ -50,8 +50,6 @@ Deformable::Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix)
         widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
       }
   }
-
- 
 }
 
 void Deformable::_ValidateNumPoints(size_t n)

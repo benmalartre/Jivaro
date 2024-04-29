@@ -67,8 +67,8 @@ public:
   virtual float GetContactDepth(size_t index) const;
 
   Contacts& GetContacts(){return _contacts;};
-  size_t GetNumContacts(){return _contacts.GetTotalNumContacts();};
-  Contact* GetContact(size_t index){return _contacts.Get(_p2c[index]);};
+  size_t GetNumContacts(){return _contacts.GetTotalNumUsed();};
+  Contact* GetContact(size_t index){return _contacts.GetPtr(_p2c[index]);};
   const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 
@@ -83,7 +83,6 @@ public:
     if(hit) BIT_SET(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
     else BIT_CLEAR(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
   };
-  size_t GetNumHits();
 
   float GetFriction() const {return _friction;};
   float GetRestitution() const {return _restitution;};

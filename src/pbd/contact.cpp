@@ -27,49 +27,47 @@ void Contact::Update(Collision* collision, Particles* particles, size_t index)
 }
 
 void Contacts::Resize(size_t N, size_t M) {
-  std::cout << "contacts resize " << std::endl;
-  if(data && n == N && m == M){ResetAllUse(); return;}
+  if(data && n == N && m == M){ResetAllUsed(); return;}
   else if(data) {delete [] data;}
-std::cout << "data delete or inexistant create it " << std::endl;
+
   n = N;
   m = M;
   data = new Contact[n * m];
   used.resize(n);
-  ResetAllUse();
-std::cout << "data created " << std::endl;
+  ResetAllUsed();
 
 };
 
-void Contacts::ResetUse(size_t index)
+void Contacts::ResetUsed(size_t index)
 {
   used[index] = 0;
 }
 
 void 
-Contacts::ResetAllUse() { 
+Contacts::ResetAllUsed() { 
   memset(&used[0], 0, n * sizeof(int));
 };
 
 Contact* 
-Contacts::UseContact(size_t index) {
+Contacts::Use(size_t index) {
   size_t available = used[index];
   used[index]++;
   return &data[index * m + available];
 }
 
 Contact* 
-Contacts::GetContact(size_t index, size_t second) {
+Contacts::Get(size_t index, size_t second) {
   return &data[index * m + second];
 }
 
 size_t 
-Contacts::GetNumContacts(size_t index) const
+Contacts::GetNum(size_t index) const
 {
   return used[index];
 }
 
 size_t 
-Contacts::GetTotalNumContacts() const {
+Contacts::GetTotalNum() const {
   size_t numContacts = 0;
   for(size_t x=0; x < n; ++x) numContacts += used[x];
   return numContacts;

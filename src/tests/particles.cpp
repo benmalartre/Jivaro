@@ -85,7 +85,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 1.f;
-  float radius = 0.25f;
+  float radius = 0.5f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;
@@ -153,14 +153,33 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 25.f, 0.f));
 
+  pxr::SdfPath emitterId;
 
-  pxr::SdfPath emitterId = _solverId.AppendChild(pxr::TfToken("emitter"));
-  Mesh* emitter = new Mesh(scale * rotate * translate);
-  emitter->Cube();
+  Application* app = Application::Get();
+  Selection* selection = app->GetSelection();
+  Mesh* emitter = NULL;
+
+  if(selection->GetNumSelectedItems()) {
+    for(size_t selected = 0; selected < selection->GetNumSelectedItems(); ++selected) {
+      Selection::Item item = selection->GetItem(selected);
+      if(item.type != Selection::PRIM) continue;
+      pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
+      if(prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
+        emitterId = item.path;
+        emitter = new Mesh(pxr::UsdGeomMesh(prim), 
+          pxr::UsdGeomMesh(prim).ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+        break;
+      }
+    }
+  }
+  if(emitterId.IsEmpty()) {
+    emitterId = _solverId.AppendChild(pxr::TfToken("emitter"));
+    emitter = new Mesh(scale * rotate * translate);
+    emitter->Cube();
+    
+  }
+
   emitter->SetInputOnly();
-
-  _scene.MarkPrimDirty(emitterId, pxr::HdChangeTracker::AllDirty);
-  
   _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
 
 
@@ -201,11 +220,14 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   std::cout << "added ground" << std::endl;
 
-  pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-  Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, 0.05f );
-  _solver->AddElement(selfCollide, NULL, selfCollideId);
+  bool createSelfCollision = false;
+  if (createSelfCollision) {
+    pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, 0.05f);
+    _solver->AddElement(selfCollide, NULL, selfCollideId);
 
-  std::cout << "added self collision constraint" << std::endl;
+    std::cout << "added self collision constraint" << std::endl;
+  }
 
   _lastTime = _solver->GetStartFrame();
   _solver->GetParticles()->SetAllState(Particles::ACTIVE);
