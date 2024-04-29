@@ -24,6 +24,7 @@
 #include "../tests/pbd.h"
 #include "../tests/hair.h"
 #include "../tests/bvh.h"
+#include "../tests/points.h"
 #include "../tests/instancer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -279,8 +280,9 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
+  _exec = new TestPoints();
   //_exec = new TestGrid();
-  _exec = new TestParticles();
+  //_exec = new TestParticles();
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
   //_exec = new TestPBD();
@@ -308,15 +310,13 @@ Application::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 void
 Application::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
-  
   for (auto& engine : _engines) {
     engine->TerminateExec();
   }
   _exec->TerminateExec(stage);
   delete _exec;
-  _exec = nullptr;  
+  _exec = NULL;  
   _execute = false;
-  SetActiveTool(Tool::NONE);
   NewSceneNotice().Send();
 }
 

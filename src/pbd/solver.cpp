@@ -52,6 +52,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   _points = new Points();
 
   _pointsId = _solverId.AppendChild(pxr::TfToken("Particles"));
+
   _scene->AddGeometry(_pointsId, _points);
 }
 
@@ -145,6 +146,7 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float ma
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
   _particles.AddBody(body, matrix);
+  UpdatePoints();
   return body;
 }
 
@@ -263,6 +265,16 @@ void Solver::LockPoints()
       _particles.invMass[point + _body->GetOffset()] = 0.f;
     }
   }
+}
+
+void Solver::UpdatePoints()
+{
+  size_t numParticles = _particles.GetNumParticles();
+  _points->SetPositions(&_particles.position[0], numParticles);
+  _points->SetRadii(&_particles.radius[0], numParticles);
+  _points->SetColors(&_particles.color[0], numParticles);
+
+  _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
 }
 
 void Solver::WeightBoundaries()
@@ -415,18 +427,15 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     _points->SetRadii(&_particles.radius[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
 
-    Scene::_Prim* prim = _scene->GetPrim(_pointsId);
-    prim->bits = pxr::HdChangeTracker::AllDirty;
+    _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
   } else {
     Step();
 
     _points->SetPositions(&_particles.position[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
     
-    Scene::_Prim* prim = _scene->GetPrim(_pointsId);
-    prim->bits = 
-      pxr::HdChangeTracker::Clean | pxr::HdChangeTracker::DirtyPoints |
-      pxr::HdChangeTracker::DirtyWidths | pxr::HdChangeTracker::DirtyPrimvar;
+    _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
+
   }
 }
 
@@ -437,7 +446,7 @@ void Solver::Reset()
   _particles.RemoveAllBodies();
 
   for (size_t b = 0; b < _bodies.size(); ++b)
-    _particles.AddBody(_bodies[b], pxr::GfMatrix4f(_bodies[b]->GetGeometry()->GetMatrix()));
+    _particles.AddBody(_bodies[b], pxr::GfMatrix4f(*_bodies[b]->GetGeometry()->GetMatrix()));
 
 
 }

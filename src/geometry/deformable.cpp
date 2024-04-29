@@ -69,7 +69,7 @@ Deformable::SetPositions(const pxr::GfVec3f* positions, size_t n)
 {
   _ValidateNumPoints(n);
   memcpy(&_previous[0], &_positions[0], n * sizeof(pxr::GfVec3f));
-  memmove(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
+  memcpy(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
 }
 
 
@@ -78,7 +78,7 @@ Deformable::SetNormals(const pxr::GfVec3f* normals, size_t n)
 {
   _haveNormals = true;
   _ValidateNumPoints(n);
-  memmove(&_normals[0], normals, n * sizeof(pxr::GfVec3f));
+  memcpy(&_normals[0], normals, n * sizeof(pxr::GfVec3f));
 }
 
 void
@@ -86,7 +86,7 @@ Deformable::SetRadii(const float* radii, size_t n)
 {
   _haveRadius = true;
   _ValidateNumPoints(n);
-  memmove(&_radius[0], radii, n * sizeof(float));
+  memcpy(&_radius[0], radii, n * sizeof(float));
 }
 
 void
@@ -94,7 +94,7 @@ Deformable::SetColors(const pxr::GfVec3f* colors, size_t n)
 {
   _haveColors = true;
   _ValidateNumPoints(n);
-  memmove(&_colors[0], colors, n * sizeof(pxr::GfVec3f));
+  memcpy(&_colors[0], colors, n * sizeof(pxr::GfVec3f));
 }
 
 void
@@ -103,7 +103,7 @@ Deformable::SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions)
   const size_t n = positions.size();
   _ValidateNumPoints(n);
   memcpy(&_previous[0], &_positions[0], n * sizeof(pxr::GfVec3f));
-  memmove(&_positions[0], &positions[0], n * sizeof(pxr::GfVec3f));
+  memcpy(&_positions[0], &positions[0], n * sizeof(pxr::GfVec3f));
 }
 
 void
@@ -112,7 +112,7 @@ Deformable::SetNormals(const pxr::VtArray<pxr::GfVec3f>& normals)
   _haveNormals = true;
   const size_t n = normals.size();
   _ValidateNumPoints(n);
-  memmove(&_normals[0], &normals[0], n * sizeof(pxr::GfVec3f));
+  memcpy(&_normals[0], &normals[0], n * sizeof(pxr::GfVec3f));
 }
 
 void
@@ -121,7 +121,7 @@ Deformable::SetRadii(const pxr::VtArray<float>& radius)
   _haveRadius = true;
   const size_t n = radius.size();
   _ValidateNumPoints(n);
-  memmove(&_radius[0], &radius[0], n * sizeof(float));
+  memcpy(&_radius[0], &radius[0], n * sizeof(float));
 }
 
 void
@@ -130,7 +130,7 @@ Deformable::SetColors(const pxr::VtArray<pxr::GfVec3f>& colors)
   _haveColors = true;
   const size_t n = colors.size();
   _ValidateNumPoints(n);
-  memmove(&_colors[0], &colors[0], n * sizeof(pxr::GfVec3f));
+  memcpy(&_colors[0], &colors[0], n * sizeof(pxr::GfVec3f));
 }
 
 void

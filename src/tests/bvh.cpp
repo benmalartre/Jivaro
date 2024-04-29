@@ -52,7 +52,7 @@ void TestBVH::_UpdateRays()
 
   const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
   const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
-  const pxr::GfMatrix4f matrix(_mesh->GetMatrix());
+  const pxr::GfMatrix4d matrix = *_mesh->GetMatrix();
 
   pxr::VtArray<pxr::GfVec3f> points;
   pxr::VtArray<float> radiis;
@@ -69,7 +69,7 @@ void TestBVH::_UpdateRays()
     radiis[r*2]   = 0.01f;
     radiis[r*2+1]   = 0.01f;
     points[r*2]   = matrix.Transform(positions[r]);
-    points[r*2+1] = matrix.Transform(positions[r] + normals[r]);
+    points[r*2+1] = matrix.Transform(positions[r] + normals[r]* 0.2);
     colors[r*2]   = pxr::GfVec3f(0.66f,0.66f,0.66f);
     colors[r*2+1] = pxr::GfVec3f(0.66f,0.66f,0.66f);
   }
@@ -93,7 +93,9 @@ void TestBVH::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
       {
         Mesh* mesh = (Mesh*)collided;
         Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+
+        std::cout << mesh->GetMatrix() << std::endl;
+        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, *mesh->GetMatrix());
         break;
       }
       case Geometry::CURVE:
@@ -120,9 +122,8 @@ void TestBVH::_UpdateHits()
   size_t numRays = _rays->GetNumPoints() >> 1;
 
   pxr::VtArray<pxr::GfVec3f> points(numRays);
+  for(size_t i = 0; i< numRays; ++i)points[i] = positions[i*2];
   pxr::VtArray<bool> hits(numRays, false);
-
-  hits.resize(numRays, false);
 
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestBVH::_FindHits, this, std::placeholders::_1, 
@@ -206,7 +207,7 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
 
-  const size_t n = 512;
+  const size_t n = 64;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);

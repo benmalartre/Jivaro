@@ -25,10 +25,10 @@ protected:
 private:
   Solver*                                                    _solver;
   Plane*                                                     _ground;
-  Points*                                                    _points;
+  Voxels*                                                    _voxels;
   pxr::SdfPath                                               _groundId;
   pxr::SdfPath                                               _solverId;
-  pxr::SdfPath                                               _pointsId;
+  pxr::SdfPath                                               _voxelsId;
 
   BVH                                                        _bvh;
   float                                                      _lastTime;

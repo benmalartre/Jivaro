@@ -52,7 +52,7 @@ void TestGrid::_UpdateRays()
 
   const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
   const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
-  const pxr::GfMatrix4f matrix(_mesh->GetMatrix());
+  const pxr::GfMatrix4d& matrix = *_mesh->GetMatrix();
 
   pxr::VtArray<pxr::GfVec3f> points;
   pxr::VtArray<float> radiis;
@@ -93,7 +93,7 @@ void TestGrid::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions
         {
           Mesh* mesh = (Mesh*)collided;
           Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, *mesh->GetMatrix());
           break;
         }
       }

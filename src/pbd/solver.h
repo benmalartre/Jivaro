@@ -86,6 +86,7 @@ public:
   // particles
   Particles* GetParticles() { return &_particles; };
   void LockPoints();
+  void UpdatePoints();
   void WeightBoundaries();
   Points* GetPoints(){return _points;};
   pxr::SdfPath GetPointsId(){return _pointsId;};

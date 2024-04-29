@@ -116,7 +116,7 @@ public:
     pxr::VtValue* samples, pxr::VtIntArray* indices) override;
 
   void SetScene(Scene* scene);
-  Scene* RemoveScene();
+  void RemoveScene();
   Scene* GetScene() { return _scene; };
   void UpdateScene();
 

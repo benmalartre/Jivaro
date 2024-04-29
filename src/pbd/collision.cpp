@@ -185,7 +185,7 @@ size_t Collision::GetContactComponent(size_t index) const
 
 pxr::GfVec3f Collision::GetContactPosition(size_t index) const 
 {
-  return _contacts.Get(_p2c[index])->GetCoordinates();
+  return pxr::GfVec3f(_contacts.Get(_p2c[index])->GetCoordinates());
 }
 
 pxr::GfVec3f Collision::GetContactNormal(size_t index) const 

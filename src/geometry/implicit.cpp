@@ -71,7 +71,7 @@ Plane::Raycast(const pxr::GfRay& ray, Location* hit,
 
   pxr::GfRay invRay(ray);
   pxr::GfPlane plane(_normal, 0.f);
-  invRay.Transform(GetInverseMatrix());
+  invRay.Transform(*GetInverseMatrix());
   double distance;
   bool frontFacing;
   const float hw= _width * 0.5f;
@@ -162,11 +162,11 @@ Sphere::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   pxr::GfRay invRay(ray);
-  invRay.Transform(GetInverseMatrix());
+  invRay.Transform(*GetInverseMatrix());
   double enterDistance, exitDistance;
   if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
     pxr::GfVec3f local(ray.GetPoint(enterDistance));
-    pxr::GfVec3f world(GetMatrix().Transform(local));
+    pxr::GfVec3f world(GetMatrix()->Transform(local));
     float distance = (ray.GetStartPoint() - world).GetLength();
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
@@ -183,8 +183,8 @@ Sphere::Raycast(const pxr::GfRay& ray, Location* hit,
 bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  pxr::GfVec3f closest = GetMatrix().Transform(local);  
+  pxr::GfVec3f local = GetInverseMatrix()->Transform(point).GetNormalized() * _radius;
+  pxr::GfVec3f closest = GetMatrix()->Transform(local);  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
@@ -250,14 +250,14 @@ Cube::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   pxr::GfRay invRay(ray);
-  invRay.Transform(GetInverseMatrix());
+  invRay.Transform(*GetInverseMatrix());
   double distance;
   float latitude, longitude;
 
 
   if(invRay.Intersect(pxr::GfRange3d(pxr::GfVec3f(-_size*0.5f), pxr::GfVec3f(_size*0.5)), &distance, NULL)) {
     const pxr::GfVec3f intersection(ray.GetPoint(distance));
-    const pxr::GfVec3f world = GetMatrix().Transform(intersection);
+    const pxr::GfVec3f world = GetMatrix()->Transform(intersection);
     distance = (world - pxr::GfVec3f(ray.GetStartPoint())).GetLength();
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
@@ -298,7 +298,7 @@ bool
 Cube::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  const pxr::GfVec3f relative = GetInverseMatrix().Transform(point);
+  const pxr::GfVec3f relative = GetInverseMatrix()->Transform(point);
   const pxr::GfRange3d range(pxr::GfVec3f(-_size*0.5), pxr::GfVec3f(_size*0.5));
   const pxr::GfVec3f closest = _PointToBox(relative, range);
  
@@ -351,11 +351,11 @@ Cone::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   pxr::GfRay invRay(ray);
-  invRay.Transform(GetInverseMatrix());
+  invRay.Transform(*GetInverseMatrix());
   double enterDistance, exitDistance;
   if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
     pxr::GfVec3f local(ray.GetPoint(enterDistance));
-    pxr::GfVec3f world(GetMatrix().Transform(local));
+    pxr::GfVec3f world(GetMatrix()->Transform(local));
     float distance = (ray.GetStartPoint() - world).GetLength();
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
@@ -373,8 +373,8 @@ bool
 Cone::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  pxr::GfVec3f closest = GetMatrix().Transform(local);  
+  pxr::GfVec3f local = GetInverseMatrix()->Transform(point).GetNormalized() * _radius;
+  pxr::GfVec3f closest = GetMatrix()->Transform(local);  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;

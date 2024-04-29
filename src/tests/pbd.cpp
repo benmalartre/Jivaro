@@ -101,7 +101,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _scene.AddGeometry(prim.GetPath(), mesh);
 
       Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
+      _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.f);
       //_solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.f);
       _solver->AddElement(body, mesh, prim.GetPath());
 
@@ -113,7 +113,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   _solver->WeightBoundaries();
   _solver->LockPoints();
-  
 
   float restitution = 0.5f;
   float friction = 0.5f;

@@ -13,6 +13,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Scene;
 class Execution {
 public:
+  virtual ~Execution(){};
   typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Source;
   typedef pxr::VtArray<_Source>                               _Sources;
   

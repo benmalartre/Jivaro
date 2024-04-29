@@ -60,7 +60,8 @@ Delegate::GetExtent(pxr::SdfPath const& id)
 pxr::GfMatrix4d
 Delegate::GetTransform(pxr::SdfPath const & id)
 {
-    return pxr::GfMatrix4d(1);
+  if (_scene)return _scene->GetTransform(id);
+  return pxr::GfMatrix4d(1);
 }
 
 size_t
@@ -228,22 +229,23 @@ void Delegate::SetScene(Scene* scene) {
         index.InsertInstancer(this, prim.first);
         break;
     }
-    pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
-    tracker.MarkRprimDirty(prim.first, pxr::HdChangeTracker::AllDirty);
+    
+    if(prim.second.bits != pxr::HdChangeTracker::Clean) {
+      pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
+      tracker.MarkRprimDirty(prim.first, prim.second.bits);
+    }
+    
   }
 }
 
-Scene* Delegate::RemoveScene() {
+void Delegate::RemoveScene() {
   pxr::HdRenderIndex& index = GetRenderIndex();
   if (_scene) {
     for (auto& prim : _scene->GetPrims()) {
       index.RemoveRprim(prim.first);
     }
-    Scene* scene = _scene;
     _scene = NULL;
-    return scene;
   }
-  return NULL;
 }
 
 void Delegate::UpdateScene()

@@ -33,7 +33,7 @@ bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
 
   const _Components& components = componentsIt->second;
   pxr::GfRay localRay(ray);
-  localRay.Transform(geometry->GetInverseMatrix());
+  localRay.Transform(*geometry->GetInverseMatrix());
   const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
 
   bool hitSomething = false;
@@ -41,7 +41,7 @@ bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
   for (Component* component : components){
     if (component->Raycast(points, localRay, &localHit)) {
       const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
-      const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
+      const float distance = (ray.GetStartPoint() - geometry->GetMatrix()->Transform(localPoint)).GetLength();
       if (distance < *minDistance && distance < maxDistance) {
         hit->Set(localHit);
         hit->SetT(distance);
@@ -66,10 +66,8 @@ void Grid3D::DeleteCells()
 
 void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
 {
-  std::cout << "insert mesh : " << geomIdx << " : " << mesh << std::endl;
-
   size_t numTriangles = mesh->GetNumTriangles();
-  const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
+  const pxr::GfMatrix4d& matrix = *mesh->GetMatrix();
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
   pxr::GfVec3f invDimensions(1.f / _cellDimension[0], 1.f / _cellDimension[1], 1.f / _cellDimension[2]);
@@ -149,7 +147,6 @@ size_t _GetGeometryNumComponents(Geometry* geometry)
 // construct the grid from a list of geometries
 void Grid3D::Init(const std::vector<Geometry*>& geometries)
 {
-  std::cout << "init grid 3d with " << geometries.size() << " geometries" << std::endl;
   _geometries = geometries;
   // delete old cells
   DeleteCells();
@@ -167,8 +164,6 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
-
-  std::cout << "bbox " << *this << std::endl;
 
   // create the grid
   pxr::GfVec3f size(GetMax() - GetMin());

@@ -86,7 +86,7 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locati
     &distance, &baryCoords, &frontFacing/*, maxDistance*/)) {
 
     hit->SetComponentIndex(id);
-    hit->SetCoordinates(pxr::GfVec3f(baryCoords));
+    hit->SetCoordinates(baryCoords);
     hit->SetT(distance);
     return true;
   }

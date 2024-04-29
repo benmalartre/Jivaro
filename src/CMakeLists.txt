@@ -130,6 +130,7 @@ add_executable(${TARGET}
   tests/bvh.cpp
   tests/instancer.cpp
   tests/grid.cpp
+  tests/points.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp
