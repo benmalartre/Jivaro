@@ -280,9 +280,8 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
-  //_exec = new TestGrid();
-  //_exec = new TestVelocity();
-  _exec = new TestParticles();
+  _exec = new TestGrid();
+  //_exec = new TestParticles();
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
   //_exec = new TestPBD();

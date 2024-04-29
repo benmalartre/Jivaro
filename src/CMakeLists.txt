@@ -129,7 +129,6 @@ add_executable(${TARGET}
   tests/raycast.cpp
   tests/bvh.cpp
   tests/instancer.cpp
-  tests/velocity.cpp
   tests/grid.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
