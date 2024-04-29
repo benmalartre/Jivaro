@@ -96,11 +96,11 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh usdMesh(prim);
-      pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+      const pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene.AddGeometry(prim.GetPath(), mesh);
 
-      Body* body = _solver->CreateBody((Geometry*)mesh, pxr::GfMatrix4f(xform), 0.1f, 0.1f, 0.1f);
+      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, 0.1f, 0.1f);
       _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.f);
       //_solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.f);
       _solver->AddElement(body, mesh, prim.GetPath());

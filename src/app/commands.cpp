@@ -343,23 +343,6 @@ void ActivateCommand::Do() {
 }
 
 //==================================================================================
-// Transform Helper
-//==================================================================================
-static void _EnsureXformCommonAPI(pxr::UsdPrim& prim, const pxr::UsdTimeCode& timeCode)
-{
-  pxr::GfVec3d translation;
-  pxr::GfVec3f rotation;
-  pxr::GfVec3f scale;
-  pxr::GfVec3f pivot;
-  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
-  pxr::UsdGeomXformCommonAPI api(prim);
-  api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
-  pxr::UsdGeomXformable xformable(prim);
-  xformable.ClearXformOpOrder();
-  api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
-}
-
-//==================================================================================
 // Translate
 //==================================================================================
 TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage, 
@@ -398,7 +381,11 @@ RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage,
   : Command(true)
 {
   for (auto& target: targets) {
+    pxr::UsdPrim prim = stage->GetPrimAtPath(target.path);
     pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    if (!xformApi) {
+      _EnsureXformCommonAPI(prim, timeCode);
+    }
     xformApi.SetRotate(target.previous.rotation, target.previous.rotOrder, timeCode);
   }
   UndoRouter::Get().TransferEdits(&_inverse);

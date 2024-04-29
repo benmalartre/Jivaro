@@ -43,8 +43,8 @@ public:
   // attributes
   float GetSleepThreshold() { return _sleepThreshold; };
   void SetSleepThreshold(float threshold) { _sleepThreshold = threshold; };
-  float GetStartFrame() { return _startFrame; };
-  void SetStartFrame(float startFrame) { _startFrame = startFrame; };
+  float GetStartTime() { return _startTime; };
+  void SetStartTime(float startFrame) { _startTime = startFrame; };
 
   // system
   size_t GetNumParticles() { return _particles.GetNumParticles(); };
@@ -55,7 +55,8 @@ public:
   // bodies
   std::vector<Body*> GetBodies(){return _bodies;};
   const std::vector<Body*> GetBodies() const {return _bodies;};
-  Body* CreateBody(Geometry* geom, const pxr::GfMatrix4f& m, float mass, float radius, float damping);
+  Body* CreateBody(Geometry* geom, const pxr::GfMatrix4d& m, 
+    float mass, float radius, float damping);
   void AddBody(Body* body);
   void RemoveBody(Geometry* geom);
   Body* GetBody(size_t index);
@@ -120,10 +121,11 @@ private:
 
   int                                 _subSteps;
   float                               _sleepThreshold;
+  float                               _startTime;
   float                               _frameTime;
   float                               _stepTime;
   float                               _t;
-  float                               _startFrame;
+
   bool                                _paused;	
 
   // system

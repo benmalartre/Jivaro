@@ -60,6 +60,10 @@ struct HandleTargetGeometryDesc {
 
 typedef std::vector<HandleTargetGeometryDesc> HandleTargetGeometryDescList;
 
+
+void _EnsureXformCommonAPI(pxr::UsdPrim& prim, const pxr::UsdTimeCode& timeCode);
+
+
 class BaseHandle {
 public:
   enum State {

@@ -63,7 +63,7 @@ struct Particles
   enum State {MUTE, IDLE, ACTIVE};
 
   size_t GetNumParticles() { return position.size(); };
-  void AddBody(Body* body, const pxr::GfMatrix4f& matrix);
+  void AddBody(Body* body, const pxr::GfMatrix4d& matrix);
   void RemoveBody(Body* body);
   void RemoveAllBodies();
 

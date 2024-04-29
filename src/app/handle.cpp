@@ -21,6 +21,23 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
+// Create XformCommonAPI
+//==================================================================================
+void _EnsureXformCommonAPI(pxr::UsdPrim& prim, const pxr::UsdTimeCode& timeCode)
+{
+  pxr::GfVec3d translation;
+  pxr::GfVec3f rotation;
+  pxr::GfVec3f scale;
+  pxr::GfVec3f pivot;
+  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+  pxr::UsdGeomXformCommonAPI api(prim);
+  api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
+  pxr::UsdGeomXformable xformable(prim);
+  xformable.ClearXformOpOrder();
+  api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
+}
+
+//==================================================================================
 // BASE HANDLE IMPLEMENTATION
 //==================================================================================
 void 
@@ -170,7 +187,7 @@ BaseHandle::ResetSelection()
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   if (!stage)return;
-  pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default()/*Time::Get()->GetActiveTime()*/;
+  pxr::UsdTimeCode activeTime = Time::Get()->GetActiveTime();
   pxr::UsdGeomXformCache xformCache(activeTime);
   _targets.clear();
   bool resetXformCache;

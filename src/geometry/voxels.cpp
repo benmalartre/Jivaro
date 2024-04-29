@@ -165,7 +165,7 @@ void Voxels::Proximity()
 
 pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)
 {
-  const pxr::GfRange3d& range = _geometry->GetBoundingBox(true).GetRange();
+  const pxr::GfRange3d range(_geometry->GetBoundingBox(true).GetRange());
   size_t x = cellIdx % _resolution[0];
   size_t y = (cellIdx / _resolution[0]) % _resolution[1];
   size_t z = cellIdx / (_resolution[0] * _resolution[1]);
@@ -189,8 +189,6 @@ void Voxels::Build(float randomize)
       numHits++;
     }
   }
-
-  std::cout << "num hits : " << numHits << std::endl;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

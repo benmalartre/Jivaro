@@ -4,7 +4,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Particles::AddBody(Body* addBody, const pxr::GfMatrix4f& matrix)
+void Particles::AddBody(Body* addBody, const pxr::GfMatrix4d& matrix)
 {
   Geometry* geom = addBody->GetGeometry();
   if(geom->GetType() < Geometry::POINT) return;
@@ -27,7 +27,11 @@ void Particles::AddBody(Body* addBody, const pxr::GfMatrix4f& matrix)
   state.resize(size);
 
 
-  const pxr::VtArray<pxr::GfVec3f>& points = ((Points*)geom)->GetPositions();
+  const pxr::VtArray<pxr::GfVec3f>& points = ((Deformable*)geom)->GetPositions();
+  std::cout << "#######################" << std::endl;
+  std::cout << points << std::endl;
+  std::cout << "#######################" << std::endl;
+
   pxr::GfVec3f pos;
   size_t idx;
   for (size_t p = 0; p < numPoints; ++p) {

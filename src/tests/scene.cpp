@@ -29,10 +29,11 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-  std::cout << "scene destructor called" << std::endl;
+  std::cout << "pxr::GfMatrix4d()uctor called" << std::endl;
+  std::cout << "num prims : " << _prims.size() << std::endl;
   for(auto& prim: _prims) {
     std::cout << prim.first << std::endl;
-    std::cout << prim.second.geom << std::endl;
+    std::cout << prim.second << std::endl;
     if(prim.second.geom)delete prim.second.geom;
   }
   std::cout << "detructed scene" << std::endl;

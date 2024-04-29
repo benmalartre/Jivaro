@@ -39,7 +39,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   , _subSteps(5)
   , _sleepThreshold(0.1f)
   , _paused(true)
-  , _startFrame(1.f)
+  , _startTime(1.f)
   , _solverId(xform.GetPrim().GetPath())
   , _gravity(nullptr)
   , _damp(nullptr)
@@ -49,11 +49,9 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
 
   _timer = new Timer();
   _timer->Init("xpbd solver", NUM_TIMES, &TIME_NAMES[0]);
-  _points = new Points();
 
   _pointsId = _solverId.AppendChild(pxr::TfToken("Particles"));
-
-  _scene->AddGeometry(_pointsId, _points);
+  _points = (Points*)_scene->AddGeometry(_pointsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
 }
 
 Solver::~Solver()
@@ -61,6 +59,7 @@ Solver::~Solver()
   for (auto& body : _bodies)delete body;
   for (auto& force : _force)delete force;
   for (auto& constraint : _constraints)delete constraint;
+  _scene->RemoveGeometry(_pointsId);
   delete _points;
   delete _timer;
 }
@@ -140,12 +139,14 @@ size_t Solver::GetBodyIndex(Geometry* geom)
 }
 
 
-Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4f& matrix, float mass, float radius, float damping)
+Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix, 
+  float mass, float radius, float damping)
 {
   size_t base = _particles.GetNumParticles();
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
   _particles.AddBody(body, matrix);
+
   UpdatePoints();
   return body;
 }
@@ -273,6 +274,13 @@ void Solver::UpdatePoints()
   _points->SetPositions(&_particles.position[0], numParticles);
   _points->SetRadii(&_particles.radius[0], numParticles);
   _points->SetColors(&_particles.color[0], numParticles);
+
+  std::cout << "----------------" << std::endl;
+    std::cout << _particles.position << std::endl;
+    std::cout << _particles.radius << std::endl;
+    std::cout << _particles.color << std::endl;
+    std::cout << "----------------" << std::endl;
+
 
   _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
 }
@@ -421,7 +429,7 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
   UpdateParameters(stage, time);
  
   size_t numParticles = _particles.GetNumParticles();
-  if (pxr::GfIsClose(time, _startFrame, 0.001f)) {
+  if (pxr::GfIsClose(time, _startTime, 0.001f)) {
     Reset();
     _points->SetPositions(&_particles.position[0], numParticles);
     _points->SetRadii(&_particles.radius[0], numParticles);
@@ -431,11 +439,10 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
   } else {
     Step();
 
+
     _points->SetPositions(&_particles.position[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
-    
     _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
-
   }
 }
 
@@ -445,8 +452,10 @@ void Solver::Reset()
   size_t offset = 0;
   _particles.RemoveAllBodies();
 
-  for (size_t b = 0; b < _bodies.size(); ++b)
-    _particles.AddBody(_bodies[b], pxr::GfMatrix4f(_bodies[b]->GetGeometry()->GetMatrix()));
+  for (size_t b = 0; b < _bodies.size(); ++b) {
+    const pxr::GfMatrix4d& matrix = _bodies[b]->GetGeometry()->GetMatrix();
+    _particles.AddBody(_bodies[b], matrix);
+  }
 
 
 }
