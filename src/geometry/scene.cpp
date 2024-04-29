@@ -306,7 +306,7 @@ Scene::GetExtent(pxr::SdfPath const& id)
 pxr::GfMatrix4d
 Scene::GetTransform(pxr::SdfPath const & id)
 {
-  if(_prims.find(id) != _prims.end())return *_prims[id].geom->GetMatrix(); 
+  if(_prims.find(id) != _prims.end())return _prims[id].geom->GetMatrix(); 
   return pxr::GfMatrix4d(1.0);
 }
 

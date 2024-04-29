@@ -446,7 +446,7 @@ void Solver::Reset()
   _particles.RemoveAllBodies();
 
   for (size_t b = 0; b < _bodies.size(); ++b)
-    _particles.AddBody(_bodies[b], pxr::GfMatrix4f(*_bodies[b]->GetGeometry()->GetMatrix()));
+    _particles.AddBody(_bodies[b], pxr::GfMatrix4f(_bodies[b]->GetGeometry()->GetMatrix()));
 
 
 }

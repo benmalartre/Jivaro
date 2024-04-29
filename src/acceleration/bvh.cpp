@@ -241,14 +241,18 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
 
   if (IsLeaf()) {
     const Geometry* geometry = GetGeometry();
+    const pxr::GfMatrix4d matrix = geometry->GetMatrix();
+    const pxr::GfMatrix4d invMatrix = geometry->GetInverseMatrix();
     pxr::GfRay localRay(ray);
-    localRay.Transform(*geometry->GetInverseMatrix());
+
+    localRay.Transform(invMatrix);
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+    
     Component* component = (Component*)_data;
     Location localHit(*hit);
     if (component->Raycast(points, localRay, &localHit)) {
       const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetT()));
-      const double distance = (ray.GetStartPoint() - geometry->GetMatrix()->Transform(localPoint)).GetLength();
+      const double distance = (ray.GetStartPoint() - matrix.Transform(localPoint)).GetLength();
       if ((distance < *minDistance) && (distance < maxDistance)) {
         hit->Set(localHit);
         hit->SetT(distance);
@@ -287,10 +291,10 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
     const Geometry* geometry = GetGeometry();
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)_data;
-    pxr::GfVec3f localPoint = geometry->GetInverseMatrix()->Transform(point);
+    pxr::GfVec3f localPoint = geometry->GetInverseMatrix().Transform(point);
     Location localHit(*hit);
     if (component->Closest(points, localPoint, &localHit)) {
-      const double distance = (point - geometry->GetMatrix()->Transform(localPoint)).GetLength();
+      const double distance = (point - geometry->GetMatrix().Transform(localPoint)).GetLength();
       if (distance < *minDistance) {
         hit->Set(localHit);
         *minDistance = distance;
@@ -324,7 +328,7 @@ void BVH::Cell::_MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry*
   size_t numTrianglePairs = trianglePairs.size();
   mortons.resize(numTrianglePairs);
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-  const pxr::GfMatrix4d& matrix = *mesh->GetMatrix();
+  const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
   for (size_t t = 0; t < numTrianglePairs; ++t) {
     BVH::Cell* leaf =
       new BVH::Cell(this, &trianglePairs[t], trianglePairs[t].GetBoundingBox(positions, matrix));
@@ -344,7 +348,7 @@ void BVH::Cell::_MortonSortTriangles(std::vector<Morton>& mortons, Geometry* geo
   size_t numTriangles = triangles.size();
   mortons.resize(numTriangles);
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-  const pxr::GfMatrix4d& matrix = *mesh->GetMatrix();
+  const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
   for (size_t t = 0; t < numTriangles; ++t) {
     BVH::Cell* leaf =
       new BVH::Cell(this, &triangles[t], triangles[t].GetBoundingBox(positions, matrix));
@@ -366,7 +370,8 @@ _RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
     if (geometry->GetType() >= Geometry::POINT) {
       Component* component = (Component*)cell->GetData();
       const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
-      const pxr::GfRange3f range = component->GetBoundingBox(positions, *geometry->GetMatrix());
+      const pxr::GfMatrix4d& matrix = geometry->GetMatrix();
+      const pxr::GfRange3f range = component->GetBoundingBox(positions, matrix);
       cell->SetMin(range.GetMin());
       cell->SetMax(range.GetMax());
       return range;

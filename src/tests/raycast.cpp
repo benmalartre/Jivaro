@@ -33,7 +33,7 @@ void TestRaycast::_UpdateRays()
 
   const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
   const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
-  const pxr::GfMatrix4d matrix = *_mesh->GetMatrix();
+  const pxr::GfMatrix4d matrix = _mesh->GetMatrix();
 
   pxr::VtArray<pxr::GfVec3f> points;
   pxr::VtArray<float> radiis;
@@ -70,12 +70,13 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
     Deformable* deformable;
     if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
+      pxr::GfMatrix4d matrix = collided->GetMatrix();
       switch (collided->GetType()) {
         case Geometry::MESH:
         {
           Mesh* mesh = (Mesh*)collided;
           Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, *mesh->GetMatrix());
+          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, matrix);
           break;
         }
         case Geometry::CURVE:

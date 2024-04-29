@@ -33,7 +33,7 @@ bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
 
   const _Components& components = componentsIt->second;
   pxr::GfRay localRay(ray);
-  localRay.Transform(*geometry->GetInverseMatrix());
+  localRay.Transform(geometry->GetInverseMatrix());
   const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
 
   bool hitSomething = false;
@@ -41,7 +41,7 @@ bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
   for (Component* component : components){
     if (component->Raycast(points, localRay, &localHit)) {
       const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
-      const float distance = (ray.GetStartPoint() - geometry->GetMatrix()->Transform(localPoint)).GetLength();
+      const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
       if (distance < *minDistance && distance < maxDistance) {
         hit->Set(localHit);
         hit->SetT(distance);
@@ -67,7 +67,7 @@ void Grid3D::DeleteCells()
 void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
 {
   size_t numTriangles = mesh->GetNumTriangles();
-  const pxr::GfMatrix4d& matrix = *mesh->GetMatrix();
+  const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
   pxr::GfVec3f invDimensions(1.f / _cellDimension[0], 1.f / _cellDimension[1], 1.f / _cellDimension[2]);

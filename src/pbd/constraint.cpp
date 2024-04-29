@@ -57,7 +57,7 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
     // TODO add warning message here
     return;
   }
-  const pxr::GfMatrix4d& m = *geometry->GetMatrix();
+  const pxr::GfMatrix4d& m = geometry->GetMatrix();
   const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
   size_t numElements = _elements.size() / ELEM_SIZE;
   _rest.resize(numElements);
@@ -134,7 +134,7 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
     const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
     HalfEdgeGraph::ItUniqueEdge it(*mesh->GetEdgesGraph());
     const auto& edges = mesh->GetEdges();
-    const pxr::GfMatrix4d& m = *mesh->GetMatrix();
+    const pxr::GfMatrix4d& m = mesh->GetMatrix();
     HalfEdge* edge = it.Next();
     size_t a, b;
     while (edge) {
@@ -186,7 +186,7 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
     return;
   }
   const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfMatrix4d& m = *geometry->GetMatrix();
+  const pxr::GfMatrix4d& m = geometry->GetMatrix();
 
   size_t numElements = _elements.size() / ELEM_SIZE;
   _rest.resize(numElements);
@@ -290,7 +290,7 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
     const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
     const size_t numPoints = mesh->GetNumPoints();
     const auto& neighbors = mesh->GetNeighbors();
-    const pxr::GfMatrix4d& m = *mesh->GetMatrix();
+    const pxr::GfMatrix4d& m = mesh->GetMatrix();
     std::map<int, int> existing;
     for (size_t p = 0; p < numPoints; ++p) {
       for (const auto& n1 : neighbors[p]) {
@@ -364,7 +364,7 @@ DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<int>& elem
     return;
   }
   const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
-  const pxr::GfMatrix4d& m = *geometry->GetMatrix();
+  const pxr::GfMatrix4d& m = geometry->GetMatrix();
   const size_t numElements = _elements.size() / ELEM_SIZE;
   _rest.resize(numElements);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {

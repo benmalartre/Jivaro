@@ -64,7 +64,7 @@ public:
 
   void SetRadius(double radius){_radius = radius;};
   double GetRadius() {return _radius;};
-  pxr::GfVec3f GetCenter(){return pxr::GfVec3f(GetMatrix()->GetRow3(3));};
+  pxr::GfVec3f GetCenter(){return pxr::GfVec3f(GetMatrix().GetRow3(3));};
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,

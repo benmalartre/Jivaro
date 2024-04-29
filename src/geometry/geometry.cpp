@@ -105,7 +105,7 @@ void Geometry::Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   pxr::UsdGeomXformable xformable(prim);
   pxr::UsdGeomXformOp op = xformable.MakeMatrixXform();
 
-  pxr::GfMatrix4d local = parent.GetInverse() * *GetMatrix();
+  pxr::GfMatrix4d local = parent.GetInverse() * GetMatrix();
   op.Set(local, time);
 
   pxr::UsdGeomBoundable usdBoundable(prim);
