@@ -553,8 +553,7 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 
     // relative motion
     const pxr::GfVec3f relative = 
-      ((particles->velocity[index] + _correction[elem * ELEM_SIZE + 0]) - 
-        _collision->GetVelocity(particles, index)) * dt;
+      (particles->velocity[index] - _collision->GetVelocity(particles, index)) * dt;
 
     // tangential component of relative motion 
     pxr::GfVec3f tangential = relative - normal * pxr::GfDot(relative, normal);
@@ -588,7 +587,7 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       const float d = contacts[contact].GetDepth();
 
       if (d < 0.f) 
-        _correction[elem] += im0 * contacts[contact].GetNormal() * -d * invContacts;
+        _correction[elem] += im0 * contacts[contact].GetNormal() * -d * invContacts * dt;
 
     }
 

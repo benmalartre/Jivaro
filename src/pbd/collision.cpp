@@ -137,7 +137,6 @@ void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 // Velocity
 pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
 {
-
   const pxr::GfVec3f torque = _collider->GetTorque();
   const pxr::GfVec3f tangent =
     (GetGradient(particles, index) ^ torque).GetNormalized();
@@ -145,11 +144,12 @@ pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
   return _collider->GetVelocity() + tangent * torque.GetLength();
 };
 
-void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, float dt)
+void Collision::SolveVelocities(Particles* particles, float dt)
 {
-  for (size_t elemIdx = begin; elemIdx < end; ++elemIdx) {
-    size_t index = _c2p[elemIdx];
-    if (!CheckHit(index))return;
+  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
+    if(!CheckHit(index))continue;
+
     const  pxr::GfVec3f normal = GetContactNormal(index);
 
     // Relative normal and tangential velocities
@@ -172,6 +172,8 @@ void Collision::SolveVelocities(size_t begin, size_t end, Particles* particles, 
     const float vnTilde = GetContactSpeed(index);
     const float restitution = -vn + pxr::GfMax(-_restitution   * vnTilde, 0.f);
     particles->velocity[index] += normal * restitution;
+
+    particles->velocity[index] *=0.1f;
   }
 }
 
@@ -646,26 +648,29 @@ pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index)
   return velocity;
 };
 
-void SelfCollision::SolveVelocities(size_t begin, size_t end, Particles* particles, float dt)
+void SelfCollision::SolveVelocities(Particles* particles, float dt)
 {
-  for (size_t elemIdx = begin; elemIdx < end; ++elemIdx) {
+  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
 
-    size_t index = _c2p[elemIdx];
-  
-    if(!CheckHit(index))return;    
+    if(!CheckHit(index))continue;
 
+    Contact* contacts = _contacts.Get(index);
+    for(size_t c = 0; c < _counts[index]; ++c) {
+      
+      const size_t other = contacts[c].GetComponentIndex();
+      const float vL = particles->velocity[index].GetLength();
+      const pxr::GfVec3f avgVelocity = (particles->velocity[index] + particles->velocity[other])*0.5f;
 
-    const size_t other = GetContactComponent(elemIdx);
-    const float vL = particles->velocity[index].GetLength();
-    const pxr::GfVec3f avgVelocity = (particles->velocity[index] + particles->velocity[other])*0.5f;
+      particles->velocity[index] += (avgVelocity - particles->velocity[index]);
 
-    particles->velocity[index] += (avgVelocity - particles->velocity[index]);
-
-    const pxr::GfVec3f v1 = particles->velocity[index];
-    const pxr::GfVec3f v2 = particles->velocity[other];
-    const pxr::GfVec3f vAvg = (v1 + v2) * 0.5f;
-    particles->velocity[index] += .5f * (vAvg - v1);
-
+      const pxr::GfVec3f v1 = particles->velocity[index];
+      const pxr::GfVec3f v2 = particles->velocity[other];
+      const pxr::GfVec3f vAvg = (v1 + v2) * 0.5f;
+      particles->velocity[index] += .5f * (vAvg - v1);
+      particles->velocity[other] += .5f * (vAvg - v2);
+    }
+   
   /*
     size_t other = GetContactComponent(elemIdx);
     const pxr::GfVec3f normal = GetContactNormal(elemIdx);

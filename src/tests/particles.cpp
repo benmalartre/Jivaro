@@ -215,10 +215,13 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, sphere.second, sphere.first);
   }
 
-  Collision* planeCollide = new PlaneCollision(_ground, _groundId, restitution, friction);
-  _solver->AddElement(planeCollide, _ground, _groundId);
+  bool createGroundCollision = true;
+  if(createGroundCollision) {
+    Collision* planeCollide = new PlaneCollision(_ground, _groundId, restitution, friction);
+    _solver->AddElement(planeCollide, _ground, _groundId);
 
-  std::cout << "added ground" << std::endl;
+    std::cout << "added ground collision" << std::endl;
+  }
 
   bool createSelfCollision = false;
   if (createSelfCollision) {
@@ -226,7 +229,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, 0.05f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
 
-    std::cout << "added self collision constraint" << std::endl;
+    std::cout << "added self collision" << std::endl;
   }
 
   _lastTime = _solver->GetStartFrame();

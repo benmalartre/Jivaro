@@ -56,7 +56,7 @@ public:
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft);
   virtual void UpdateContacts(Particles* particles);
 
-  virtual void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt);
+  virtual void SolveVelocities(Particles* particles, float dt);
 
   virtual Geometry* GetGeometry(){return _collider;};
   virtual size_t GetContactComponent(size_t index) const;
@@ -202,7 +202,7 @@ public:
   void Update(const pxr::UsdPrim& prim, double time) override;
 
   pxr::GfVec3f GetVelocity(Particles* particles, size_t index) override;
-  void SolveVelocities(size_t begin, size_t end, Particles* particles, float dt) override;
+  void SolveVelocities(Particles* particles, float dt) override;
 
   size_t GetTotalNumContacts() const;
   size_t GetNumContacts(size_t index) const;

@@ -356,18 +356,9 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 // this can not work as multiple thread can writ eto same velocities
 void Solver::_SolveVelocities()
 {
-  std::cout << "solver : solve velocities" << std::endl;
-  bool doSerial = false;
   for (auto& collision : _collisions) {
-    std::cout << "collision have " << collision->GetNumContacts() << " contacts !" << std::endl;
     if (!collision->GetNumContacts()) continue;
-    if(doSerial)
-      collision->SolveVelocities(0, collision->GetNumContacts(), &_particles, _stepTime);
-    else
-      pxr::WorkParallelForN(
-        collision->GetNumContacts(),
-        std::bind(&Collision::SolveVelocities, collision,
-          std::placeholders::_1, std::placeholders::_2, &_particles, _stepTime));
+      collision->SolveVelocities(&_particles, _stepTime);
 
   }
 }
