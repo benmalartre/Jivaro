@@ -60,7 +60,7 @@ Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::Sdf
   usdPrim.CreateAttribute(PBDTokens->damp, pxr::SdfValueTypeNames->Float).Set(0.1f);
   pxr::UsdAttribute dampAttr = usdPrim.GetAttribute(PBDTokens->damp);
 
-  Solver* solver = new Solver(scene, usdXform, pxr::GfMatrix4d(1.f));
+  Solver* solver = new Solver(scene, usdXform, pxr::GfMatrix4d(1.0));
 
   Force* gravity = new GravityForce(gravityAttr);
   solver->AddElement(gravity, NULL, path.AppendChild(PBDTokens->gravity));
@@ -175,7 +175,7 @@ Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BV
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
 
-  return new Instancer(instancer.GetPrim(), pxr::GfMatrix4d());
+  return new Instancer(instancer.GetPrim(), pxr::GfMatrix4d(1.0));
 }
 
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time)
@@ -244,7 +244,7 @@ Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, G
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
 
-  return new Instancer(instancer.GetPrim(), pxr::GfMatrix4d());
+  return new Instancer(instancer.GetPrim(), pxr::GfMatrix4d(1.0));
 }
 
 void _UpdateGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid, float time)

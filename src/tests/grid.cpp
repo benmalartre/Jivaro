@@ -88,12 +88,13 @@ void TestGrid::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions
     Location hit;
     if (intersector->Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = intersector->GetGeometry(hit.GetGeometryIndex());
+      const pxr::GfMatrix4d& matrix = collided->GetMatrix();
       switch (collided->GetType()) {
         case Geometry::MESH:
         {
           Mesh* mesh = (Mesh*)collided;
           Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &matrix);
           break;
         }
       }
@@ -167,10 +168,10 @@ void TestGrid::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& pa
   if(prim.IsValid()) {
     pxr::UsdGeomXformable xformable(prim);
     pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
-    pxr::GfMatrix4d scale = pxr::GfMatrix4d(1.f).SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
-    pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
-    pxr::GfMatrix4d translate1 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, -10.f));
-    pxr::GfMatrix4d translate2 = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 0.f, 10.f));
+    pxr::GfMatrix4d scale = pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
+    pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
+    pxr::GfMatrix4d translate1 = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 0.f, -10.f));
+    pxr::GfMatrix4d translate2 = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 0.f, 10.f));
     auto op = xformable.GetTransformOp();
     op.Set(scale * rotate * translate1, 1);
     op.Set(scale * rotate * translate2, 101);
@@ -209,9 +210,9 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
   // create mesh that will be source of rays
   pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 180.f);
 
-  pxr::GfMatrix4d scale = pxr::GfMatrix4d(1.f).SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
-  pxr::GfMatrix4d rotate = pxr::GfMatrix4d(1.f).SetRotate(rotation);
-  pxr::GfMatrix4d translate = pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
+  pxr::GfMatrix4d scale = pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
+  pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
+  pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
 
   const size_t n = 256;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));

@@ -61,7 +61,7 @@ pxr::GfMatrix4d
 Delegate::GetTransform(pxr::SdfPath const & id)
 {
   if (_scene)return _scene->GetTransform(id);
-  return pxr::GfMatrix4d(1);
+  return pxr::GfMatrix4d(1.0);
 }
 
 size_t

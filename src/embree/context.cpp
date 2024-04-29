@@ -78,7 +78,7 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
       TranslateInstance(
         this, 
         master, 
-        pxr::GfMatrix4d(1).SetTranslate(
+        pxr::GfMatrix4d().SetTranslate(
           pxr::GfVec3d(sin(ta) * radius, 6, -cos(ta) * radius)
         ),
         _scene

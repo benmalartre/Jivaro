@@ -128,7 +128,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
     pxr::GfRotation rotate(axis, x * rStep);
     spheres[collideId] =
-      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d(1.f).SetTranslate(rotate.TransformDir(offset)));
+      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d().SetTranslate(rotate.TransformDir(offset)));
 
     _scene.AddGeometry(collideId, spheres[collideId]);
   }
@@ -136,7 +136,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
-    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f), friction, restitution);
+    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.0), friction, restitution);
 
     //_AddAnimationSamples(stage, collideId);
 

@@ -15,7 +15,7 @@ Location::Set(const Location& other) {
 
 pxr::GfVec3f 
 Location::ComputePosition(const pxr::GfVec3f* positions, const int* elements, size_t sz,
- const pxr::GfMatrix4d& m) const 
+ const pxr::GfMatrix4d* m) const 
 {
   pxr::GfVec3f result;
   if(elements)
@@ -24,12 +24,13 @@ Location::ComputePosition(const pxr::GfVec3f* positions, const int* elements, si
   else 
     result += positions[_compId];
 
-  return m.Transform(result);
+
+  return m ? m->Transform(result) : result;
 }
 
 pxr::GfVec3f
 Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t sz, 
-  const pxr::GfMatrix4d& m) const
+  const pxr::GfMatrix4d* m) const
 {
   pxr::GfVec3f result;
   if (elements)
@@ -38,7 +39,7 @@ Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t
   else
     result += normals[_compId];
 
-  return m.TransformDir(result);
+  return m ? m->TransformDir(result) : result;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

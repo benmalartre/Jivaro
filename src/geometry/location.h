@@ -54,10 +54,10 @@ public:
   double GetT() const { return _coords[3]; };
 
   virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, 
-    const int* elements, size_t sz, const pxr::GfMatrix4d&) const;
+    const int* elements, size_t sz, const pxr::GfMatrix4d* m) const;
 
   virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, 
-    const int* elements, size_t sz, const pxr::GfMatrix4d&) const;
+    const int* elements, size_t sz, const pxr::GfMatrix4d* m) const;
   
   inline bool IsValid() const { 
     return (_geomId > INVALID_INDEX) && (_compId > INVALID_INDEX); };

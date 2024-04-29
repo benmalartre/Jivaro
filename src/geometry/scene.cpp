@@ -141,7 +141,7 @@ pxr::GfMatrix4d _GetParentXform(const pxr::UsdPrim& prim,
   const pxr::UsdTimeCode& time) 
 {
   const pxr::UsdPrim& parent = prim.GetParent();
-  if (!parent.IsValid())return pxr::GfMatrix4d();
+  if (!parent.IsValid())return pxr::GfMatrix4d(1.0);
 
   if (parent.IsA<pxr::UsdGeomXformable>()) {
     pxr::UsdGeomXformable xformable(parent);

@@ -145,7 +145,7 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   }
   
 
-  //_instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d(1.f));
+  //_instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d());
 }
 
 void TestInstancer::UpdateExec(pxr::UsdStageRefPtr& stage, float time)

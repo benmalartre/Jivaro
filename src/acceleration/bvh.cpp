@@ -241,18 +241,16 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
 
   if (IsLeaf()) {
     const Geometry* geometry = GetGeometry();
-    const pxr::GfMatrix4d matrix = geometry->GetMatrix();
-    const pxr::GfMatrix4d invMatrix = geometry->GetInverseMatrix();
     pxr::GfRay localRay(ray);
 
-    localRay.Transform(invMatrix);
+    localRay.Transform(geometry->GetInverseMatrix());
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     
     Component* component = (Component*)_data;
     Location localHit(*hit);
     if (component->Raycast(points, localRay, &localHit)) {
       const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetT()));
-      const double distance = (ray.GetStartPoint() - matrix.Transform(localPoint)).GetLength();
+      const double distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
       if ((distance < *minDistance) && (distance < maxDistance)) {
         hit->Set(localHit);
         hit->SetT(distance);

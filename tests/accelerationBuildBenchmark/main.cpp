@@ -55,12 +55,13 @@ void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
     Location hit;
     if (intersector->Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = intersector->GetGeometry(hit.GetGeometryIndex());
+      const pxr::GfMatrix4d& matrix = collided->GetMatrix();
       switch (collided->GetType()) {
         case Geometry::MESH:
         {
           Mesh* mesh = (Mesh*)collided;
           Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, mesh->GetMatrix());
+          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &matrix);
           hits[index] = true;
         }
       }

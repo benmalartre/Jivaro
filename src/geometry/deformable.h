@@ -8,8 +8,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Deformable : public Geometry {
 public:
-  Deformable(short type, const pxr::GfMatrix4d& matrix=pxr::GfMatrix4d(1.f));
-  Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix=pxr::GfMatrix4d(1.f));
+  Deformable(short type, const pxr::GfMatrix4d& matrix=pxr::GfMatrix4d(1.0));
+  Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix=pxr::GfMatrix4d(1.0));
   virtual ~Deformable() {};
 
   size_t GetNumPoints()const override {return _positions.size();};

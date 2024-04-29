@@ -47,9 +47,9 @@ public:
   void Save(const std::string& filename);
   void Export(const std::string& filename);
 
-  Mesh* AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
-  Curve* AddCurve(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
-  Points* AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d());
+  Mesh* AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
+  Curve* AddCurve(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
+  Points* AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Voxels* AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius);
 
   Geometry* AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo);

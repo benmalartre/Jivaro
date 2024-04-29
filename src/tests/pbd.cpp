@@ -50,14 +50,14 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   rotate = pxr::GfQuatf(45.f * DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
   rotate.Normalize();
   pxr::GfMatrix4d matrix =
-    pxr::GfMatrix4d(1.0).SetScale(pxr::GfVec3f(5.f));
+    pxr::GfMatrix4d().SetScale(pxr::GfVec3f(5.f));
   
   for(size_t x = 0; x < 0; ++x) {
     
     std::string name = "cloth" + std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(stage, clothPath, size,
-      matrix * pxr::GfMatrix4d(1.f).SetTranslate(pxr::GfVec3f(x * 6.f, 5.f, 0.f)));
+      matrix * pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(x * 6.f, 5.f, 0.f)));
     
   }
   std::cout << "created cloth meshes" << std::endl;
@@ -75,7 +75,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
     pxr::GfRotation rotate(axis, x * rStep);
     spheres[collideId] =
-      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d(1.f).SetTranslate(rotate.TransformDir(offset)));
+      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d().SetTranslate(rotate.TransformDir(offset)));
 
     _scene.AddGeometry(collideId, spheres[collideId]);
   }
@@ -83,7 +83,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
-    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
+    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d());
 
     _AddAnimationSamples(stage, collideId);
 
