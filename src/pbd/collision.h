@@ -68,7 +68,7 @@ public:
 
   Contacts& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.GetTotalNumUsed();};
-  Contact* GetContact(size_t index){return _contacts.GetPtr(_p2c[index]);};
+  Contact* GetContact(size_t index){return _contacts.Get(_p2c[index]);};
   const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 

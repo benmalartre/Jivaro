@@ -55,19 +55,14 @@ Contacts::Use(size_t index) {
   return &data[index * m + available];
 }
 
-Contact* 
-Contacts::Get(size_t index, size_t second) {
-  return &data[index * m + second];
-}
-
 size_t 
-Contacts::GetNum(size_t index) const
+Contacts::GetNumUsed(size_t index) const
 {
   return used[index];
 }
 
 size_t 
-Contacts::GetTotalNum() const {
+Contacts::GetTotalNumUsed() const {
   size_t numContacts = 0;
   for(size_t x=0; x < n; ++x) numContacts += used[x];
   return numContacts;
