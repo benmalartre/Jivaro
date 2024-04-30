@@ -85,7 +85,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 1.f;
-  float radius = 2.f;
+  float radius = 0.25f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;
@@ -183,8 +183,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
   _voxels = _Voxelize(emitter, radius);
 
-  std::cout << _voxels->GetPositions() << std::endl;
-
   std::cout << "voxels num cells " << _voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << _voxels->GetNumPoints() << std::endl;
 
@@ -224,7 +222,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, 0.05f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
 
-    std::cout << "added self collision" << std::endl;
   }
 
   _lastTime = FLT_MAX;
@@ -246,22 +243,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   //collision->SetMask(_solver->GetNumParticles(), used);
 
   UpdateExec(stage, _solver->GetStartTime());
-
-  {
-    Points* points = new Points();
-    pxr::SdfPath pointsId = rootId.AppendChild(pxr::TfToken("Particles"));
-
-    Particles* particles = _solver->GetParticles();
-    std::cout << "num particles : " << particles->GetNumParticles() << std::endl;
-    std::cout << particles->position << std::endl;
-    std::cout << particles->radius << std::endl;
-    std::cout << particles->color << std::endl;
-    points->SetPositions(particles->position);
-    points->SetRadii(particles->radius);
-    points->SetColors(particles->color);
-
-    _scene.AddGeometry(pointsId, points);
-  }
 
 }
 

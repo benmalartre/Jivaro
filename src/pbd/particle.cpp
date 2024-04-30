@@ -27,7 +27,7 @@ void Particles::AddBody(Body* addBody, const pxr::GfMatrix4d& matrix)
   state.resize(size);
 
 
-  const pxr::VtArray<pxr::GfVec3f>& points = ((Deformable*)geom)->GetPositions()
+  const pxr::VtArray<pxr::GfVec3f>& points = ((Deformable*)geom)->GetPositions();
   pxr::GfVec3f pos;
   size_t idx;
   for (size_t p = 0; p < numPoints; ++p) {

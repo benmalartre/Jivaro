@@ -49,7 +49,7 @@ HashGrid::Update(const pxr::GfVec3f* points)
 
 void 
 HashGrid::_ClosestsFromHash(size_t index, const pxr::GfVec3f* positions, 
-  int64_t hash, std::vector<int>& closests)
+  int64_t hash, std::vector<int>& closests) const 
 {
 
   const pxr::GfVec3f& point = positions[index];
@@ -65,7 +65,7 @@ HashGrid::_ClosestsFromHash(size_t index, const pxr::GfVec3f* positions,
 
 size_t 
 HashGrid::Closests(size_t index, const pxr::GfVec3f* positions,
-  std::vector<int>& closests)
+  std::vector<int>& closests) const
 {
   closests.clear();
   const pxr::GfVec3i centerCoords = _IntCoords(positions[index]);

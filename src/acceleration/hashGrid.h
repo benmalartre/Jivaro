@@ -21,20 +21,20 @@ class Geometry;
 class HashGrid
 {
 protected:
-  typedef int64_t (HashGrid::*HashFunc)(const pxr::GfVec3i& intCoords);
+  typedef int64_t (HashGrid::*HashFunc)(const pxr::GfVec3i& intCoords) const;
 
   // hash from integer coordinates
-  inline int64_t _HashCoordsMuller(const pxr::GfVec3i& intCoords) {
+  inline int64_t _HashCoordsMuller(const pxr::GfVec3i& intCoords) const {
     int64_t h = (intCoords[0] * 92837111) ^ (intCoords[1] * 689287499) ^ (intCoords[2] * 283923481);
     return std::abs(h) % _tableSize;
   };
-  inline int64_t _HashCoordsPixar(const pxr::GfVec3i& intCoords) {
+  inline int64_t _HashCoordsPixar(const pxr::GfVec3i& intCoords) const {
     int64_t h = pxr::TfHash()(intCoords);
     return std::abs(h) % _tableSize;
   };
 
   // integer coordinates
-  inline pxr::GfVec3i _IntCoords(const pxr::GfVec3f& coords) {
+  inline pxr::GfVec3i _IntCoords(const pxr::GfVec3f& coords) const{
     return pxr::GfVec3i(
       std::floorf(coords[0] * _scl),
       std::floorf(coords[1] * _scl),
@@ -67,14 +67,14 @@ public:
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const  {    return false;}
   size_t Closests(size_t index, const pxr::GfVec3f* positions,
-    std::vector<int>& closests);
+    std::vector<int>& closests) const;
 
   void SetSpacing(float spacing) { _spacing = spacing > 0.000001f ? spacing : 0.000001f; _scl = 1.f/_spacing; };
   pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
 
 protected:
   void _ClosestsFromHash(size_t index, const pxr::GfVec3f* positions, 
-    int64_t hash, std::vector<int>& neighbors);
+    int64_t hash, std::vector<int>& neighbors) const;
 
 private:
 size_t                              _n;

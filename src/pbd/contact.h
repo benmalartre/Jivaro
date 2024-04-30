@@ -39,8 +39,8 @@ static const size_t PARTICLE_MAX_CONTACTS = 16;
 class Contacts {
 
 public:
-  Contacts() : n(0), m(1), data(NULL){};
-  virtual ~Contacts() { delete[] data; };
+  Contacts() : n(0), m(1), data(NULL), used(NULL){};
+  virtual ~Contacts() { delete[] data; delete[] used;};
 
   Contact* Get(size_t index, size_t second=0) const {
     return &data[index * m + second];
@@ -59,7 +59,7 @@ public:
 private:
   size_t                n;
   size_t                m;
-  std::vector<int>      used;
+  int*                  used;
   Contact*              data;
 };
 

@@ -35,7 +35,7 @@ public:
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(size_t elementSize, size_t offset, float stiffness, float damping,
+  Constraint(size_t elementSize, float stiffness, float damping,
     const pxr::VtArray<int>& elems=pxr::VtArray<int>());
 
   virtual ~Constraint() {};
@@ -61,7 +61,6 @@ public:
 protected:
   void _ResetCorrection();
 
-  size_t                        _offset;
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _correction;
   float                         _stiffness;
@@ -181,7 +180,6 @@ protected:
 
   static size_t                 TYPE_ID;
   Mode                          _mode;
-  size_t                        _offset;
   Collision*                    _collision;
   SolveFunc                     _Solve;
 

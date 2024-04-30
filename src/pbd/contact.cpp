@@ -28,12 +28,12 @@ void Contact::Update(Collision* collision, Particles* particles, size_t index)
 
 void Contacts::Resize(size_t N, size_t M) {
   if(data && n == N && m == M){ResetAllUsed(); return;}
-  else if(data) {delete [] data;}
+  else if(data) {delete [] data;delete [] used;}
 
   n = N;
   m = M;
   data = new Contact[n * m];
-  used.resize(n);
+  used = new int[n];
   ResetAllUsed();
 
 };
