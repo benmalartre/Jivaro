@@ -10,6 +10,7 @@ class Plane;
 class Sphere;
 class Mesh;
 class Collision;
+class SelfCollision;
 
 
 class Contact : public Location {
@@ -17,8 +18,10 @@ public:
   Contact(){};
   virtual ~Contact(){};
 
-  void Init(Collision* collision, Particles* particles, size_t index, size_t other);
+  void Init(Collision* collision, Particles* particles, size_t index);
+  void Init(SelfCollision* collision, Particles* particles, size_t index, size_t other);
   void Update(Collision* collision, Particles* particles, size_t index);
+  void Update(SelfCollision* collision, Particles* particles, size_t index, size_t other);
 
   const pxr::GfVec3f& GetNormal() const {return _normal;};
   const pxr::GfVec3f& GetVelocity() const {return _velocity;};

@@ -538,21 +538,12 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
     if (d >= 0.f) continue;
 
     pxr::GfVec3f normal = 
-      _collision->GetContactNormal (index) +  pxr::GfVec3f(RANDOM_LO_HI(-1.f,1.f), 
+      _collision->GetContactNormal (index)  +  pxr::GfVec3f(RANDOM_LO_HI(-1.f,1.f), 
         RANDOM_LO_HI(-1.f,1.f), RANDOM_LO_HI(-1.f,1.f)) * 0.01f;
 
     const pxr::GfVec3f correction = normal * -d;
 
     _correction[elem] += im0 * correction;
-
-    // relative motion
-    const pxr::GfVec3f relative = 
-      (particles->velocity[index] - _collision->GetContactVelocity(index));
-
-    // tangential component of relative motion 
-    pxr::GfVec3f tangential = relative - normal * pxr::GfDot(relative, normal);
-
-    _correction[elem * ELEM_SIZE + 0] -= im0 * tangential * dt;
     
   }
 }

@@ -301,8 +301,11 @@ void Solver::WeightBoundaries()
   
 void Solver::_UpdateContacts()
 {
+  std::cout << "update contacts..." << std::endl;
   for (auto& collision : _collisions)
     collision->UpdateContacts(&_particles);
+
+  std::cout << "update contacts ok" << std::endl;
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)

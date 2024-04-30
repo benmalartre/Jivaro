@@ -197,11 +197,15 @@ public:
   ~SelfCollision();
   size_t GetTypeId() const override { return TYPE_ID; };
 
-  float GetValue(Particles* particles, size_t index) override;
-  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  void Update(const pxr::UsdPrim& prim, double time) override;
+  float GetValue(Particles* particles, size_t index) override{return 0.f;};
+  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override{return pxr::GfVec3f(0.f);};
+  float GetValue(Particles* particles, size_t index, size_t other);;
+  pxr::GfVec3f GetGradient(Particles* particles, size_t index, size_t other);
+  pxr::GfVec3f GetVelocity(Particles* particles, size_t index, size_t other);
 
-  pxr::GfVec3f GetVelocity(Particles* particles, size_t index) override;
+  void UpdateContacts(Particles* particles) override;
+
+  void Update(const pxr::UsdPrim& prim, double time) override;
   void SolveVelocities(Particles* particles, float dt) override;
 
   size_t GetTotalNumContacts() const;
@@ -226,8 +230,6 @@ private:
   HashGrid                      _grid;
   float                         _thickness;
   Particles*                    _particles;
-  std::vector<int>              _counts;             // per particle num neighbor
-  std::vector<int>              _offsets;            // per particle neighbors access in flat list
   
 };
 
