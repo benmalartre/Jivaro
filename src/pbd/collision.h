@@ -68,8 +68,6 @@ public:
 
   Contacts& GetContacts(){return _contacts;};
   size_t GetNumContacts(){return _contacts.GetTotalNumUsed();};
-  Contact* GetContact(size_t index){return _contacts.Get(_p2c[index]);};
-  const std::vector<int>& GetP2C(){return _p2c;};
   const std::vector<int>& GetC2P(){return _c2p;};
 
   virtual float GetValue(Particles* particles, size_t index) = 0;
@@ -101,7 +99,6 @@ protected:
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>                 _hits;
-  std::vector<int>                  _p2c;
   std::vector<int>                  _c2p;
   size_t                            _numParticles;
   Contacts                          _contacts;   

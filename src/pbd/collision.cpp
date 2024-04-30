@@ -57,9 +57,6 @@ void Collision::_ResetContacts(Particles* particles)
   const size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
-  
-  _p2c.resize(numParticles);
-  memset(&_p2c[0], -1, numParticles * sizeof(int));
 
   _c2p.clear();
   _c2p.reserve(numParticles);
@@ -83,7 +80,6 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   size_t particleToContactIdx = 0;
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     if (CheckHit(index)) {
-      _p2c[index] = particleToContactIdx++;
       _c2p.push_back(index);
       if (particles->body[index] != bodyIdx || elements.size() >= Constraint::BlockSize) {
         if (elements.size()) {
@@ -505,7 +501,6 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _hits.resize(numParticles / sizeof(int) + 1);
   memset(&_hits[0], 0, _hits.size() * sizeof(int));
 
-  _p2c.clear();
   _c2p.clear();
   _c2p.reserve(numParticles * PARTICLE_MAX_CONTACTS);
 
@@ -600,7 +595,6 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
     if(numUsed) {
       for(size_t c = 0; c < numUsed; ++c) {
         _c2p.push_back(index); 
-        _p2c.push_back(contactIdx++);
       };
 
       elements.push_back(index);
@@ -644,7 +638,6 @@ pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index, size
 
 void SelfCollision::SolveVelocities(Particles* particles, float dt)
 {
-  return;
   Mask::Iterator iterator(this, 0, particles->GetNumParticles());
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
 
@@ -652,44 +645,30 @@ void SelfCollision::SolveVelocities(Particles* particles, float dt)
 
     for(size_t c = 0; c < GetNumContacts(index); ++c) {
       
-      const size_t other = GetContactComponent(index, c);
-      const float vL = particles->velocity[index].GetLength();
-      const pxr::GfVec3f avgVelocity = (particles->velocity[index] + particles->velocity[other])*0.5f;
+      size_t other = GetContactComponent(index, c);
+      const pxr::GfVec3f normal = GetContactNormal(index, c);
 
-      particles->velocity[index] += (avgVelocity - particles->velocity[index]);
+      // Relative normal and tangential velocities
+      const pxr::GfVec3f velocity = particles->velocity[index] - particles->velocity[other];
+      const float vn = pxr::GfDot(velocity, normal);
+      const float vnn = pxr::GfDot(velocity.GetNormalized(), normal);
 
-      const pxr::GfVec3f v1 = particles->velocity[index];
-      const pxr::GfVec3f v2 = particles->velocity[other];
-      const pxr::GfVec3f vAvg = (v1 + v2) * 0.5f;
-      particles->velocity[index] += .5f * (vAvg - v1);
-      particles->velocity[other] += .5f * (vAvg - v2);
-    }
-   
-  /*
-    size_t other = GetContactComponent(elemIdx);
-    const pxr::GfVec3f normal = GetContactNormal(elemIdx);
+      const pxr::GfVec3f vt = velocity - normal * vn;
+      const float vtLen = vt.GetLength();
 
-    const pxr::GfVec3f relativeVelocity = 
-      particles->velocity[index] - particles->velocity[other];
+      // Friction
+      if (vn < 0.f) {
+        particles->velocity[index] -= vt * vnn  * _friction * 0.5f;
+      }
 
-    // Relative normal and tangential velocities
-    const float speed = pxr::GfDot(relativeVelocity, normal);
-
-    const pxr::GfVec3f vt = particles->velocity[index] - normal * speed;
-    const float vtLen = vt.GetLength();
-
-    // Friction
-    if (vtLen > 0.000001) {
-      const float friction = pxr::GfMin(dt * _friction, vtLen);
-      particles->velocity[index] -= vt.GetNormalized() * friction * 0.5;
+      // Restitution
+      const float threshold = 2.f * 9.81 * dt;
+      const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
+      const float vnTilde = GetContactSpeed(index, c);
+      const float restitution = -vn + pxr::GfMax(-_restitution   * vnTilde, 0.f);
+      particles->velocity[index] += normal * restitution * 0.5f;
     }
 
-    // Restitution
-    const float speedTilde = GetContactSpeed(elemIdx);
-    const float restitution = -speed + pxr::GfMax(-_restitution * speedTilde, 0.f);
-    particles->velocity[index] += normal * restitution * 0.5;
-
-  */
   }
   
 }
