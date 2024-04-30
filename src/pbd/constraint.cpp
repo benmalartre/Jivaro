@@ -573,7 +573,7 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       const float d = contacts[contact].GetDepth();
 
       if (d < 0.f) 
-        _correction[elem] += im0 / (im0 + im1) * contacts[contact].GetNormal() * d;
+        _correction[elem] += im0 / (im0 + im1) * contacts[contact].GetNormal() * -d;
 
     }
   }
