@@ -541,9 +541,7 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
       _collision->GetContactNormal (index)  +  pxr::GfVec3f(RANDOM_LO_HI(-1.f,1.f), 
         RANDOM_LO_HI(-1.f,1.f), RANDOM_LO_HI(-1.f,1.f)) * 0.01f;
 
-    const pxr::GfVec3f correction = normal * -d;
-
-    _correction[elem] += im0 * correction;
+    _correction[elem] += im0 * normal * -d;
     
   }
 }
@@ -565,17 +563,16 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
     size_t numContacts = collision->GetNumContacts(index);
     if(!numContacts) continue;
 
-    const Contact* contacts = collision->GetContacts(index);
-
-    for(size_t contact = 0; contact < numContacts; ++contact) {
-      const  size_t other = contacts[contact].GetComponentIndex();
+    for(size_t c = 0; c < numContacts; ++c) {
+      const  size_t other = collision->GetContactComponent(index, c);
       const float im1 = particles->invMass[index];
-      const float d = contacts[contact].GetDepth();
+      const float d = collision->GetContactDepth(index, c);
 
-      if (d < 0.f) 
-        _correction[elem] += im0 * contacts[contact].GetNormal() * -d;
-
+      if (d < 0.f) {
+        _correction[elem] += im0 * collision->GetContactNormal(index, c) * -d * 0.5f;
+      }
     }
+   
   }
 }
 

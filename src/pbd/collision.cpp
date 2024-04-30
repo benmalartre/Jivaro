@@ -175,11 +175,15 @@ void Collision::SolveVelocities(Particles* particles, float dt)
   }
 }
 
+size_t Collision::GetContactHit(size_t index, size_t second) const
+{
+  return _contacts.Get(index, second)->GetHit();
+}
+
 size_t Collision::GetContactComponent(size_t index, size_t second) const
 {
   return _contacts.Get(index, second)->GetComponentIndex();
 }
-
 
 pxr::GfVec3f Collision::GetContactPosition(size_t index, size_t second) const 
 {
@@ -621,13 +625,13 @@ void SelfCollision::_UpdateAccelerationStructure()
 
 float SelfCollision::GetValue(Particles* particles, size_t index, size_t other)
 {
-  return (particles->predicted[index] - particles->predicted[other]).GetLength() - 
+  return (particles->predicted[other] - particles->predicted[index]).GetLength() - 
     (particles->radius[index] + particles->radius[other] + _thickness);
 }
   
 pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size_t other)
 {
-  return (particles->predicted[index] - particles->predicted[other]).GetNormalized();
+  return (particles->predicted[other] - particles->predicted[index]).GetNormalized();
 }
 
 // Velocity
@@ -644,7 +648,9 @@ void SelfCollision::SolveVelocities(Particles* particles, float dt)
     if(!CheckHit(index))continue;
 
     for(size_t c = 0; c < GetNumContacts(index); ++c) {
-      
+      if(!GetContactHit(index, c))continue;
+
+      /*
       size_t other = GetContactComponent(index, c);
       const pxr::GfVec3f normal = GetContactNormal(index, c);
 
@@ -658,7 +664,7 @@ void SelfCollision::SolveVelocities(Particles* particles, float dt)
 
       // Friction
       if (vn < 0.f) {
-        particles->velocity[index] -= vt * vnn  * _friction * 0.5f;
+        particles->velocity[index] -= vt  * _friction;
       }
 
       // Restitution
@@ -666,7 +672,11 @@ void SelfCollision::SolveVelocities(Particles* particles, float dt)
       const float e = pxr::GfAbs(vn) <= threshold ? 0.0 : _restitution;
       const float vnTilde = GetContactSpeed(index, c);
       const float restitution = -vn + pxr::GfMax(-_restitution   * vnTilde, 0.f);
-      particles->velocity[index] += normal * restitution * 0.5f;
+      particles->velocity[index] += normal * -vn;
+      */
+
+     particles->velocity[index] = pxr::GfVec3f(0.f);
+     particles->state[index] = Particles::IDLE;
     }
 
   }

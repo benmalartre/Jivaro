@@ -59,6 +59,7 @@ public:
   virtual void SolveVelocities(Particles* particles, float dt);
 
   virtual Geometry* GetGeometry(){return _collider;};
+   virtual size_t GetContactHit(size_t index, size_t second=0) const;
   virtual size_t GetContactComponent(size_t index, size_t second=0) const;
   virtual pxr::GfVec3f GetContactPosition(size_t index, size_t second=0) const;
   virtual pxr::GfVec3f GetContactNormal(size_t index, size_t second=0) const;

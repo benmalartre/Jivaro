@@ -301,11 +301,8 @@ void Solver::WeightBoundaries()
   
 void Solver::_UpdateContacts()
 {
-  std::cout << "update contacts..." << std::endl;
   for (auto& collision : _collisions)
     collision->UpdateContacts(&_particles);
-
-  std::cout << "update contacts ok" << std::endl;
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
@@ -322,6 +319,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
   float lV, maxV = 10.f;
   for (size_t index = begin; index < end; ++index) {
+    if(_particles.state[index] != Particles::ACTIVE)continue;
     position[index] = predicted[index];
     lV = velocity[index].GetLength();
     if(lV > maxV)velocity[index] *= maxV/lV;
@@ -344,12 +342,11 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
-    /*
+    
     if (velocity[index].GetLength() < 0.0000001f) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
     }
-    */
 
     // update position
     previous[index] = position[index];
@@ -452,6 +449,8 @@ void Solver::Reset()
     const pxr::GfMatrix4d& matrix = _bodies[b]->GetGeometry()->GetMatrix();
     _particles.AddBody(_bodies[b], matrix);
   }
+
+  _particles.SetAllState(Particles::ACTIVE);
 
 
 }
