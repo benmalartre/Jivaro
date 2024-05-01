@@ -565,11 +565,11 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 
     for(size_t c = 0; c < numContacts; ++c) {
       const  size_t other = collision->GetContactComponent(index, c);
-      const float im1 = particles->invMass[index];
+      const float im1 = particles->invMass[other];
       const float d = collision->GetContactDepth(index, c);
 
       if (d < 0.f) {
-        _correction[elem] += im0 * collision->GetContactNormal(index, c) * -d * 0.5f;
+        _correction[elem] += im0 * collision->GetContactNormal(index, c) * -d;
       }
     }
    
