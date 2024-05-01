@@ -566,11 +566,13 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
     for(size_t c = 0; c < numContacts; ++c) {
       const  size_t other = collision->GetContactComponent(index, c);
       const float im1 = particles->invMass[other];
-      const float d = collision->GetContactDepth(index, c);
 
-      if (d < 0.f) {
-        _correction[elem] += im0 * collision->GetContactNormal(index, c) * -d;
-      }
+      pxr::GfVec3f delta = particles->predicted[index] - particles->predicted[other];
+      float dL = delta.GetLength();
+      float minL =  particles->radius[index] + particles->radius[other];
+      if(dL > minL)continue;
+      const float d = (minL - dL) / dL;
+      _correction[elem] += im0 * delta * d * 0.5f * dt;
     }
    
   }

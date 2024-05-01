@@ -72,11 +72,6 @@ Solver::~Solver()
   delete _timer;
 }
 
-void Solver::SetGravity(const pxr::GfVec3f& gravity)
-{
-  if(_gravity)_gravity->Set(gravity);
-}
-
 void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
 {
   _elements[element] = std::make_pair(path, geom);

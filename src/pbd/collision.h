@@ -98,6 +98,8 @@ protected:
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
 
+  virtual void _SolveVelocities(size_t begin, size_t end, Particles* particles, float dt);
+
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>                 _hits;
   std::vector<int>                  _c2p;
@@ -191,7 +193,7 @@ class SelfCollision : public Collision
 public:
 
   SelfCollision(Particles* particles, const pxr::SdfPath& path,  
-    float restitution=0.5f, float friction= 0.5f, float thickness=0.25f);
+    float restitution=0.5f, float friction= 0.5f, float thickness=0.f);
   ~SelfCollision();
   size_t GetTypeId() const override { return TYPE_ID; };
 
@@ -222,6 +224,8 @@ protected:
 
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft)override;
+
+  void _SolveVelocities(size_t begin, size_t end, Particles* particles, float dt) override;
 
 private:
   static size_t                 TYPE_ID;

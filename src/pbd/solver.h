@@ -69,7 +69,6 @@ public:
   void SetBodyVelocity(Body* body, const pxr::GfVec3f& velocity);
 
   // forces
-  void SetGravity(const pxr::GfVec3f& gravity);
   void AddForce(Force* force) { _force.push_back(force); };
   Force* GetForce(size_t idx) { return _force[idx]; };
 

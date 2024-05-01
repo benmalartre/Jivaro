@@ -19,6 +19,9 @@ public:
   
 private:
   Solver*        _solver;
+  pxr::SdfPath   _solverId;
+  Plane*         _ground;
+  pxr::SdfPath   _groundId;
   Points*        _points0;
   pxr::SdfPath   _points0Id;
   Points*        _points1;
