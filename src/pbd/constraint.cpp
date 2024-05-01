@@ -89,11 +89,11 @@ void StretchConstraint::Solve(Particles* particles, float dt)
     const float d = n.GetLength();
     const float C = d - _rest[elem];
 
-    if(d < 1e-6) continue;
+    if(d < 1e-6f) continue;
 
-    n /= d;
+    n.Normalize();
     float alpha = 0.0;
-    if (!pxr::GfIsClose(_stiffness, 0.0, 1e-6f))
+    if (!pxr::GfIsClose(_stiffness, 0.f, 1e-6f))
     {
       alpha = 1.f / (_stiffness * dt * dt);
       K += alpha;
@@ -572,7 +572,7 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       float minL =  particles->radius[index] + particles->radius[other];
       if(dL > minL)continue;
       const float d = (minL - dL) / dL;
-      _correction[elem] += im0 * delta * d * 0.5f * dt;
+      _correction[elem] += im0 * delta * d /** 0.5f*/ * dt;
     }
    
   }

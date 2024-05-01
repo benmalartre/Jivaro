@@ -665,8 +665,8 @@ void SelfCollision::_SolveVelocities(size_t begin, size_t end, Particles* partic
       particles->velocity[index] += correction0;
       particles->velocity[other] += correction1;
 
-      particles->velocity[index]  *= 0.75f;
-      particles->velocity[other]  *= 0.75f;
+      //particles->velocity[index]  *= 0.75f;
+      //particles->velocity[other]  *= 0.75f;
     
     }
 
