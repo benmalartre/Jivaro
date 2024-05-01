@@ -32,12 +32,17 @@ public:
   void SetOffset(size_t offset){_offset = offset;};
   void SetNumPoints(size_t numPoints){_numPoints = numPoints;};
 
+  void SetVelocity(const pxr::GfVec3f& velocity){_velocity=velocity;};
+  void SetTorque(const pxr::GfVec3f& torque){_torque=torque;};
+
   Geometry* GetGeometry() const {return _geometry;};
   size_t GetOffset() const {return _offset;};
   size_t GetNumPoints() const {return _numPoints;};
   float GetMass() const {return _mass;};
   float GetRadius() const {return _radius;};
   pxr::GfVec3f GetColor() const {return _color;};
+  pxr::GfVec3f GetVelocity() const {return _velocity;};
+  pxr::GfVec3f GetTorque() const {return _torque;};
 
 protected:
   Geometry*     _geometry;
@@ -47,6 +52,9 @@ protected:
   float         _radius;
   float         _damping;
   pxr::GfVec3f  _color;
+  pxr::GfVec3f  _velocity;
+  pxr::GfVec3f  _torque;
+
   //bool     _simulated;
 };
 

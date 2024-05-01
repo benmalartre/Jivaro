@@ -62,12 +62,6 @@ Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::Sdf
 
   Solver* solver = new Solver(scene, usdXform, pxr::GfMatrix4d(1.0));
 
-  Force* gravity = new GravityForce(gravityAttr);
-  solver->AddElement(gravity, NULL, path.AppendChild(PBDTokens->gravity));
-
-  Force* damp = new DampForce(dampAttr);
-  solver->AddElement(damp, NULL, path.AppendChild(PBDTokens->damp));
-
   return solver;
 }
 

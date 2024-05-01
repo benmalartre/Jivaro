@@ -52,6 +52,14 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
 
   _pointsId = _solverId.AppendChild(pxr::TfToken("Particles"));
   _points = (Points*)_scene->AddGeometry(_pointsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
+
+  pxr::UsdAttribute gravityAttr = xform.GetPrim().GetAttribute(PBDTokens->gravity);
+   _gravity = new GravityForce(gravityAttr);
+  AddElement(_gravity, NULL, _solverId.AppendChild(PBDTokens->gravity));
+
+  pxr::UsdAttribute dampAttr = xform.GetPrim().GetAttribute(PBDTokens->damp);
+  _damp = new DampForce(dampAttr);
+  AddElement(_damp, NULL, _solverId.AppendChild(PBDTokens->damp));
 }
 
 Solver::~Solver()
@@ -62,6 +70,11 @@ Solver::~Solver()
   _scene->RemoveGeometry(_pointsId);
   delete _points;
   delete _timer;
+}
+
+void Solver::SetGravity(const pxr::GfVec3f& gravity)
+{
+  if(_gravity)_gravity->Set(gravity);
 }
 
 void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
@@ -81,8 +94,6 @@ void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& pa
       break;
 
     case Element::FORCE:
-      if(path.GetNameToken() == PBDTokens->gravity)_gravity = (Force*)element;
-      else if(path.GetNameToken() == PBDTokens->damp)_damp = (Force*)element;
       AddForce((Force*)element);
       break;
 
@@ -166,6 +177,16 @@ void Solver::RemoveBody(Geometry* geom)
 
   _bodies.erase(_bodies.begin() + index);
   delete body;
+}
+
+void Solver::SetBodyVelocity(Body* body, const pxr::GfVec3f& velocity)
+{
+  const size_t offset = body->GetOffset();
+  const size_t num = body->GetNumPoints();
+  body->SetVelocity(velocity);
+  for(size_t index = 0; index < num; ++index) {
+    _particles.velocity[index + offset] = velocity;
+  }
 }
 
 

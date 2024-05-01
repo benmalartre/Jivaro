@@ -131,6 +131,7 @@ add_executable(${TARGET}
   tests/instancer.cpp
   tests/grid.cpp
   tests/points.cpp
+  tests/velocity.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp

@@ -40,7 +40,7 @@ void Particles::AddBody(Body* addBody, const pxr::GfMatrix4d& matrix)
     previous[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
-    velocity[idx] = pxr::GfVec3f(0.f);
+    velocity[idx] = addBody->GetVelocity();
     body[idx] = index;
     color[idx] = addBody->GetColor();
     state[idx] = ACTIVE;

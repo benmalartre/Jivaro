@@ -26,6 +26,7 @@
 #include "../tests/bvh.h"
 #include "../tests/points.h"
 #include "../tests/instancer.h"
+#include "../tests/velocity.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -280,9 +281,10 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
+  _exec = new TestVelocity();
   //_exec = new TestPoints();
   //_exec = new TestGrid();
-  _exec = new TestParticles();
+  //_exec = new TestParticles();
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
   //_exec = new TestPBD();

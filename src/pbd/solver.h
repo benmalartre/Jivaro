@@ -24,11 +24,14 @@ JVR_NAMESPACE_OPEN_SCOPE
 struct Particles;
 class Constraint;
 class Force;
+class GravityForce;
+class DampForce;
 class Collision;
 class Geometry;
 class Points;
 class Scene;
 class Timer;
+
 class Solver : public Xform {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
@@ -63,7 +66,10 @@ public:
   Body* GetBody(Geometry* geom);
   size_t GetBodyIndex(Geometry* geom);
 
+  void SetBodyVelocity(Body* body, const pxr::GfVec3f& velocity);
+
   // forces
+  void SetGravity(const pxr::GfVec3f& gravity);
   void AddForce(Force* force) { _force.push_back(force); };
   Force* GetForce(size_t idx) { return _force[idx]; };
 
@@ -135,8 +141,8 @@ private:
   std::vector<Collision*>             _collisions;
   std::vector<Body*>                  _bodies;
   std::vector<Force*>                 _force;
-  Force*                              _gravity;
-  Force*                              _damp;
+  GravityForce*                       _gravity;
+  DampForce*                          _damp;
 
   // scene
   _ElementMap                         _elements;
