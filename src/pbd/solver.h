@@ -122,14 +122,12 @@ private:
 
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);
-  void _StepOne();
 
   int                                 _subSteps;
   float                               _sleepThreshold;
   float                               _startTime;
   float                               _frameTime;
   float                               _stepTime;
-  float                               _t;
 
   bool                                _paused;	
 

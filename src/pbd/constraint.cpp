@@ -525,9 +525,7 @@ void CollisionConstraint::Solve(Particles* particles, float dt)
     const float d = _collision->GetContactDepth(index);
     if (d >= 0.f) continue;
 
-    pxr::GfVec3f normal = 
-      _collision->GetContactNormal (index)  +  pxr::GfVec3f(RANDOM_LO_HI(-1.f,1.f), 
-        RANDOM_LO_HI(-1.f,1.f), RANDOM_LO_HI(-1.f,1.f)) * 0.01f;
+    pxr::GfVec3f normal = _collision->GetContactNormal (index);
 
     _correction[elem] += im0 * normal * -d;
     

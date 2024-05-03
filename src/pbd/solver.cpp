@@ -359,7 +359,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
     
-    if (velocity[index].GetLength() < 0.0000001f) {
+    if (velocity[index].GetLength() < _sleepThreshold) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
     }
@@ -390,46 +390,6 @@ void Solver::_SolveVelocities()
       collision->SolveVelocities(&_particles, _stepTime);
 
   }
-}
-
-void Solver::_StepOne()
-{
-  const size_t numParticles = _particles.GetNumParticles();
-  const size_t numContacts = _contacts.size();
-
-  _timer->Start(1);
-  _UpdateContacts();
-
-  _timer->Next();
-  // integrate particles
-  pxr::WorkParallelForN(
-    numParticles,
-    std::bind(&Solver::_IntegrateParticles, this,
-      std::placeholders::_1, std::placeholders::_2));
-  
-  _timer->Next();
-  // solve and apply constraint
-  _SolveConstraints(_constraints);
-
-  _timer->Next();
-  // solve and apply contacts
-  _SolveConstraints(_contacts);
-
-  _timer->Next();
-  // update particles
-  pxr::WorkParallelForN(
-    numParticles,
-    std::bind(&Solver::_UpdateParticles, this,
-      std::placeholders::_1, std::placeholders::_2));
-
-  _timer->Next();
-  // solve velocities
-  _SolveVelocities();
-  
-  _timer->Stop();
-
-  _t += _stepTime;
-
 }
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
@@ -478,7 +438,6 @@ void Solver::Step()
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
-  _t = 0.f;
   _timer->Start();
   for (auto& contact : _contacts)delete contact;
   _contacts.clear();
@@ -488,9 +447,42 @@ void Solver::Step()
 
   _timer->Stop();
 
+  const size_t numContacts = _contacts.size();
 
-  for(size_t si = 0; si < _subSteps; ++si)
-    _StepOne();
+  for(size_t si = 0; si < _subSteps; ++si) {
+
+    _timer->Start(1);
+    _UpdateContacts();
+
+    _timer->Next();
+    // integrate particles
+    pxr::WorkParallelForN(
+      numParticles,
+      std::bind(&Solver::_IntegrateParticles, this,
+        std::placeholders::_1, std::placeholders::_2));
+    
+    _timer->Next();
+    // solve and apply constraint
+    _SolveConstraints(_constraints);
+
+    _timer->Next();
+    // solve and apply contacts
+    _SolveConstraints(_contacts);
+
+    _timer->Next();
+    // update particles
+    pxr::WorkParallelForN(
+      numParticles,
+      std::bind(&Solver::_UpdateParticles, this,
+        std::placeholders::_1, std::placeholders::_2));
+
+    _timer->Next();
+    // solve velocities
+    _SolveVelocities();
+    
+    _timer->Stop();
+
+  }
   
   _timer->Update();
   _timer->Log();
