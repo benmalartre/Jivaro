@@ -3,7 +3,7 @@ set(CMAKE_OSX_ARCHITECTURES arm64)
 set(ONLY_ACTIVE_ARCH        YES)
 project (jivaro)
 
-# Require C++14
+# Require C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)

@@ -114,6 +114,11 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   // instancer
   _instancerId = rootId.AppendChild(pxr::TfToken("instancer"));
   _instancer = _GenerateInstancer(32, numProtos);
+  _scene.AddGeometry(_instancerId, _instancer);
+
+  _scene.MarkPrimDirty(_instancerId, pxr::HdChangeTracker::DirtyTransform |
+                                   pxr::HdChangeTracker::DirtyPrimvar |
+                                   pxr::HdChangeTracker::DirtyInstanceIndex);
 
   // prototypes
 
@@ -135,13 +140,14 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   for(size_t p  =0; p < numProtos; ++p) {
     _scene.InjectGeometry(stage, _protosId[p], _protos[p], 1.f);
   }
-  _scene.InjectGeometry(stage, _groundId, _ground, 1.f);
-  _scene.InjectGeometry(stage, _instancerId, _instancer, 1.f);
+  //_scene.InjectGeometry(stage, _groundId, _ground, 1.f);
+  _scene.AddGeometry(_groundId, _ground);
+  //_scene.InjectGeometry(stage, _instancerId, _instancer, 1.f);
   
   for(size_t i = 2; i < 101 ; i+= 10) {
     float time = i;
     _UpdateInstancer(_instancer, time);
-    _scene.InjectGeometry(stage, _instancerId, _instancer, time);
+    //_scene.InjectGeometry(stage, _instancerId, _instancer, time);
   }
   
 

@@ -245,6 +245,13 @@ Scene::GetPrim(const pxr::SdfPath& path)
   return NULL;
 }
 
+pxr::SdfPath
+Scene::GetInstancerBinding(const pxr::SdfPath& path)
+{
+  return pxr::SdfPath();
+}
+
+
 void 
 Scene::MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits)
 {

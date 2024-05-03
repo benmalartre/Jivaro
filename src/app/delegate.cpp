@@ -71,7 +71,6 @@ Delegate::SamplePrimvar(pxr::SdfPath const& id,
   float* sampleTimes,
   pxr::VtValue* sampleValues)
 {
-  //std::cout << "sample prim var : " << id << ":" << key << std::endl;
   if (key == pxr::HdTokens->widths) {
     auto& prims = _scene->GetPrims();
     if (prims.find(id) != prims.end()) {
@@ -143,7 +142,6 @@ Delegate::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue
 Delegate::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
-  //std::cout << "delegate get " << id << ": " << key << std::endl;
   return _scene->Get(id, key);
 }
 
@@ -153,7 +151,6 @@ pxr::VtValue
 Delegate::GetIndexedPrimvar(pxr::SdfPath const& id, pxr::TfToken const& key, 
                                         pxr::VtIntArray *outIndices) 
 {
-  //std::cout << "get indexed prim var : " << id << ":" << key << std::endl;
   return pxr::VtValue();
 }
 
@@ -174,6 +171,34 @@ pxr::HdIdVectorSharedPtr
 Delegate::GetCoordSysBindings(pxr::SdfPath const& id)
 {
     return nullptr;
+}
+
+// -------------------------------------------------------------------------- //
+// Instancer Support Methods
+// -------------------------------------------------------------------------- //
+pxr::VtIntArray
+Delegate::GetInstanceIndices(pxr::SdfPath const &instancerId,
+  pxr::SdfPath const &prototypeId)
+{
+ std::cout << "get instance indices..." << std::endl;
+}
+
+pxr::GfMatrix4d
+Delegate::GetInstancerTransform(pxr::SdfPath const &instancerId)
+{
+  std::cout << "get instancer transforml..." << std::endl;
+}
+
+pxr::SdfPathVector
+Delegate::GetInstancerPrototypes(pxr::SdfPath const &instancerId)
+{
+  std::cout << "get instancer prototypes..." << std::endl;
+}
+
+pxr::SdfPath
+Delegate::GetInstancerId(pxr::SdfPath const& primId)
+{
+    return _scene->GetInstancerBinding(primId);
 }
 
 // -------------------------------------------------------------------------- //
@@ -207,6 +232,8 @@ void Delegate::SetScene(Scene* scene) {
   }
   _scene = scene;
   if (!_scene)return;
+
+  pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   
   for (auto& prim : _scene->GetPrims()) {
     Geometry* geometry = prim.second.geom;
@@ -230,8 +257,7 @@ void Delegate::SetScene(Scene* scene) {
         break;
     }
     
-    if(prim.second.bits != pxr::HdChangeTracker::Clean) {
-      pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
+    if(prim.second.bits != pxr::HdChangeTracker::Clean) {  
       tracker.MarkRprimDirty(prim.first, prim.second.bits);
     }
     

@@ -42,7 +42,7 @@ void Particles::AddBody(Body* addBody, const pxr::GfMatrix4d& matrix)
     predicted[idx] = pos;
     velocity[idx] = addBody->GetVelocity();
     body[idx] = index;
-    color[idx] = addBody->GetColor();
+    color[idx] = pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6);
     state[idx] = ACTIVE;
   }
 

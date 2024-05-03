@@ -849,7 +849,7 @@ Window::ClearImgui()
   ImGui::DestroyContext(_context);
   // Cleanup
   if(_shared) {
-    ImGui_ImplOpenGL3_Shutdown();
+    //ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
   }
 }

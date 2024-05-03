@@ -273,7 +273,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Cont
   contact->SetCoordinates(intersection);
   contact->SetT(d);
 
-  particles->color[index] = pxr::GfVec3f(1.f, 1.f, 0.f);
+  //particles->color[index] = pxr::GfVec3f(1.f, 1.f, 0.f);
 }
 
 //----------------------------------------------------------------------------------------
@@ -326,7 +326,7 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index, Con
   contact->SetCoordinates(intersection);
   contact->SetT(d);
 
-  particles->color[index] = pxr::GfVec3f(0.5f,1.f,0.7f);
+  //particles->color[index] = pxr::GfVec3f(0.5f,1.f,0.7f);
 }
 
 float SphereCollision::GetValue(Particles* particles, size_t index)
@@ -581,7 +581,7 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
 void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints, float ft)
 {
-  CollisionConstraint* constraint = NULL;
+  SelfCollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
 
   size_t numContacts = _contacts.GetTotalNumUsed();
@@ -597,14 +597,16 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
     if(numUsed) {
       for(size_t c = 0; c < numUsed; ++c) {
         _c2p.push_back(index); 
-      };
 
-      elements.push_back(index);
+        size_t other = GetContactComponent(index, c);
+        elements.push_back(index);
+        elements.push_back(other);
+      };
     } 
     
     if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
       if (elements.size()) {
-        constraint = new CollisionConstraint(particles, this, elements);
+        constraint = new SelfCollisionConstraint(particles, this, elements);
         constraints.push_back(constraint);
         elements.clear();
       } 
@@ -650,24 +652,24 @@ void SelfCollision::_SolveVelocities(size_t begin, size_t end, Particles* partic
 
     if(!CheckHit(index))continue;
 
+    pxr::GfVec3f correction;
+    float numHits = 0;
     for(size_t c = 0; c < GetNumContacts(index); ++c) {
-      //if(!GetContactHit(index, c))continue;
-
+      if(!GetContactHit(index, c))continue;
+      numHits+=1.f;
       size_t other = GetContactComponent(index, c);
       const pxr::GfVec3f normal = GetContactNormal(index, c);
+      const float d = GetContactDepth(index, c);
+      const float r = particles->radius[index] + particles->radius[other];
 
       const pxr::GfVec3f velocity = 
         (particles->velocity[index] + particles->velocity[other]) * 0.5f;
 
-      const pxr::GfVec3f correction0 = velocity - particles->velocity[index];
-      const pxr::GfVec3f correction1 = velocity - particles->velocity[other];
+      correction = velocity - particles->velocity[index];
 
-      particles->velocity[index] += correction0;
-      particles->velocity[other] += correction1;
-
-      //particles->velocity[index]  *= 0.75f;
-      //particles->velocity[other]  *= 0.75f;
-    
+    }
+    if(numHits) {
+      particles->velocity[index] += correction / numHits;
     }
 
   }

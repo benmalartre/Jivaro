@@ -71,6 +71,7 @@ public:
 
   _Prim* GetPrim(const pxr::SdfPath& path);
   Geometry* GetGeometry(const pxr::SdfPath& path);
+  pxr::SdfPath GetInstancerBinding(const pxr::SdfPath& path);
 
   void MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits);
 

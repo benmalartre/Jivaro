@@ -511,22 +511,10 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
   const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
   : Constraint(ELEM_SIZE, stiffness, damping, elems)
   , _collision(collision)
-  , _mode(CollisionConstraint::GEOM)
-  , _Solve(&CollisionConstraint::_SolveGeom)
 {
 }
 
-CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* collision, 
-  const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
-  : Constraint(ELEM_SIZE, stiffness, damping, elems)
-  , _collision(collision)
-  , _mode(CollisionConstraint::SELF)
-  , _Solve(&CollisionConstraint::_SolveSelf)
-{
-}
-
-
-void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
+void CollisionConstraint::Solve(Particles* particles, float dt)
 {
   _ResetCorrection();
   const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
@@ -546,43 +534,6 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
   }
 }
 
-void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
-{
-  _ResetCorrection();
-
-  SelfCollision* collision = (SelfCollision*)_collision;
-
-  const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
-  const pxr::GfVec3f* positions = &particles->position[0];
-  const float* radius = &particles->radius[0];
-
-  for (size_t elem = 0; elem < numElements; ++elem) {
-    const size_t index = _elements[elem];
-    const float im0 = particles->invMass[index];
-
-    size_t numContacts = collision->GetNumContacts(index);
-    if(!numContacts) continue;
-
-    for(size_t c = 0; c < numContacts; ++c) {
-      const  size_t other = collision->GetContactComponent(index, c);
-      const float im1 = particles->invMass[other];
-
-      pxr::GfVec3f delta = particles->predicted[index] - particles->predicted[other];
-      float dL = delta.GetLength();
-      float minL =  particles->radius[index] + particles->radius[other];
-      if(dL > minL)continue;
-      const float d = (minL - dL) / dL;
-      _correction[elem] += im0 * delta * d /** 0.5f*/ * dt;
-    }
-   
-  }
-}
-
-void CollisionConstraint::Solve(Particles* particles, float dt)
-{
-  (this->*_Solve)(particles, dt);
-}
-
 void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
@@ -594,6 +545,60 @@ void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVe
 
 void CreateCollisionConstraint(Body* body, Collision* collision, std::vector<Constraint*>& constraints,
   float stiffness, float damping)
+{
+}
+
+// SelfCollision Constraint
+//--------------------------------------------------------------------------------------------------
+size_t SelfCollisionConstraint::TYPE_ID = Constraint::COLLISION;
+size_t SelfCollisionConstraint::ELEM_SIZE = 2;
+
+SelfCollisionConstraint::SelfCollisionConstraint(Particles* particles, SelfCollision* collision, 
+  const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
+  : Constraint(ELEM_SIZE, stiffness, damping, elems)
+  , _collision(collision)
+{
+}
+
+void SelfCollisionConstraint::Solve(Particles* particles, float dt)
+{
+  _ResetCorrection();
+
+  SelfCollision* collision = (SelfCollision*)_collision;
+
+  const size_t numElements = _elements.size() >> (ELEM_SIZE - 1);
+  const pxr::GfVec3f* positions = &particles->position[0];
+  const float* radius = &particles->radius[0];
+
+  for (size_t elem = 0; elem < numElements; ++elem) {
+    const size_t index = _elements[elem*2];
+    const size_t other = _elements[elem*2+1];
+    const float im0 = particles->invMass[index];
+    const float im1 = particles->invMass[other];
+
+    pxr::GfVec3f normal = (particles->predicted[other] - particles->predicted[index]);
+    const float d = normal.GetLength() - (particles->radius[index] + particles->radius[other]);
+    normal.Normalize();
+    if(d < 0.f) {
+      _correction[elem * 2 + 0] += im0 / (im0 + im1) * normal * -d;
+      _correction[elem * 2 + 1] += im1 / (im0 + im1) * normal * d;
+    }
+  }
+}
+
+
+void SelfCollisionConstraint::GetPoints(Particles* particles, 
+  pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
+{
+  const size_t numElements = _elements.size() / ELEM_SIZE;
+  for (size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
+    positions.push_back(_collision->GetContactPosition(_elements[elemIdx]));
+    radius.push_back(0.05f);
+  }
+}
+
+void CreateSelfCollisionConstraint(Body* body, SelfCollision* collision, 
+  std::vector<Constraint*>& constraints, float stiffness, float damping)
 {
 }
 

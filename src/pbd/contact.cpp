@@ -20,6 +20,7 @@ void Contact::Init(Collision* collision, Particles* particles, size_t index)
 void Contact::Init(SelfCollision* collision, Particles* particles, size_t index, size_t other)
 {
   _compId = other;
+  _geomId = index;
   _normal = collision->GetGradient(particles, index, other);
   _d = collision->GetValue(particles, index, other);
   _hit = _d < 0;

@@ -95,6 +95,13 @@ public:
   virtual pxr::HdPrimvarDescriptorVector GetPrimvarDescriptors(pxr::SdfPath const& id,
     pxr::HdInterpolation interpolation) override;
 
+  virtual pxr::VtIntArray GetInstanceIndices(pxr::SdfPath const& instancerId,
+                                          pxr::SdfPath const& prototypeId) override;
+
+  virtual pxr::SdfPathVector GetInstancerPrototypes(pxr::SdfPath const& instancerId)override;
+  virtual pxr::GfMatrix4d GetInstancerTransform(pxr::SdfPath const& instancerId)override;
+
+  virtual pxr::SdfPath GetInstancerId(pxr::SdfPath const& primId) override;
   // Motion samples
   /*
   virtual size_t
@@ -122,6 +129,7 @@ public:
 
 private:
   Scene* _scene;
+  pxr::SdfPath _instancerId;
 
 };
 
