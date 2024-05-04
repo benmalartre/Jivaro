@@ -86,7 +86,7 @@ void Instancer::Set(
     _prototypes.push_back(path);
   }
 
-  void Instancer::RemoveProptotype(pxr::SdfPath& path)
+  void Instancer::RemovePrototype(pxr::SdfPath& path)
   {
     _prototypes.erase(
       std::find(_prototypes.begin(), _prototypes.end(), path)

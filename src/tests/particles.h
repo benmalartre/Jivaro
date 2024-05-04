@@ -9,6 +9,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Solver;
 class Plane;
 class Points;
+class Sphere;
+class Particles;
 
 class TestParticles : public Execution {
 public:
@@ -21,20 +23,21 @@ public:
 protected:
   void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
   void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
-  
+
 private:
-  Solver*                                                    _solver;
-  Plane*                                                     _ground;
-  Voxels*                                                    _voxels;
-  pxr::SdfPath                                               _groundId;
-  pxr::SdfPath                                               _solverId;
-  pxr::SdfPath                                               _voxelsId;
+  Solver*           _solver;
+  Plane*            _ground;
+  Voxels*           _voxels;
 
-  BVH                                                        _bvh;
-  float                                                      _lastTime;
+  pxr::SdfPath      _groundId;
+  pxr::SdfPath      _solverId;
+  pxr::SdfPath      _voxelsId;
 
-  std::vector<Geometry*>                                     _meshes;
-  std::vector<pxr::SdfPath>                                  _meshesId;
+  BVH               _bvh;
+  float             _lastTime;
+
+  std::vector<Geometry*>    _meshes;
+  std::vector<pxr::SdfPath> _meshesId;
 
 };
 

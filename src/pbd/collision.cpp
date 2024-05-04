@@ -11,7 +11,6 @@
 #include "../pbd/collision.h"
 #include "../pbd/particle.h"
 #include "../pbd/contact.h"
-#include "../pbd/particle.h"
 #include "../pbd/solver.h"
 #include "../pbd/constraint.h"
 
@@ -455,7 +454,7 @@ SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path,
   , _grid(NULL)
   , _thickness(0.f)
 {
-  _grid.Init(_particles->GetNumParticles(), &_particles->position[0], _particles->radius[0]*0.5);
+  _grid.Init(_particles->GetNumParticles(), &_particles->position[0], _particles->radius[0]);
 }
 
 SelfCollision::~SelfCollision()
@@ -587,7 +586,7 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
 void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints, float ft)
 {
-  SelfCollisionConstraint* constraint = NULL;
+  CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
 
   size_t numContacts = _contacts.GetTotalNumUsed();
@@ -604,15 +603,13 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
       for(size_t c = 0; c < numUsed; ++c) {
         _c2p.push_back(index); 
 
-        size_t other = GetContactComponent(index, c);
         elements.push_back(index);
-        elements.push_back(other);
       };
     } 
     
     if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
       if (elements.size()) {
-        constraint = new SelfCollisionConstraint(particles, this, elements);
+        constraint = new CollisionConstraint(particles, this, elements);
         constraints.push_back(constraint);
         elements.clear();
       } 

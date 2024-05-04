@@ -30,7 +30,7 @@ public:
   const pxr::VtArray<pxr::GfQuath>& GetRotations() const {return _rotations;};
 
   void AddPrototype(pxr::SdfPath& path);
-  void RemoveProptotype(pxr::SdfPath& path);
+  void RemovePrototype(pxr::SdfPath& path);
 
 protected:
   void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,

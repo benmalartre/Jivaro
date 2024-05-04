@@ -151,36 +151,15 @@ class CollisionConstraint : public Constraint
 {
   typedef void (CollisionConstraint::*SolveFunc)(Particles* particles, float dt);
 public:
+  enum Mode {
+    GEOM,
+    SELF
+  };
 
   CollisionConstraint(Body* body, Collision* collision, const pxr::VtArray<int>& elems,
     float stiffness=0.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
-
-  size_t GetTypeId() const override { return TYPE_ID; };
-  size_t GetElementSize() const override { return ELEM_SIZE; };
-
-  Collision* GetCollision() {return _collision;};
-  const Collision* GetCollision() const { return _collision; };
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
-    pxr::VtArray<float>& radius) override;
-
-  void Solve(Particles* particles, float dt) override;
-
-  static size_t                 ELEM_SIZE;
-
-protected:
-
-  static size_t                 TYPE_ID;
-  Collision*                    _collision;
-
-};
-
-class SelfCollisionConstraint : public Constraint
-{
-  typedef void (SelfCollisionConstraint::*SolveFunc)(Particles* particles, float dt);
-public:
-
-  SelfCollisionConstraint(Particles* particles, SelfCollision* collision, const pxr::VtArray<int>& elems,
+  CollisionConstraint(Particles* particles, SelfCollision* collision, const pxr::VtArray<int>& elems,
     float stiffness=0.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
@@ -192,12 +171,17 @@ public:
     pxr::VtArray<float>& radius) override;
 
   void Solve(Particles* particles, float dt) override;
-  
+
   static size_t                 ELEM_SIZE;
 
 protected:
+  void _SolveGeom(Particles* particles, float dt);
+  void _SolveSelf(Particles* particles, float dt);
+
   static size_t                 TYPE_ID;
+  Mode                          _mode;
   Collision*                    _collision;
+  SolveFunc                     _Solve;
 
 };
 

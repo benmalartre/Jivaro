@@ -4,6 +4,7 @@
 #include "../geometry/curve.h"
 #include "../geometry/voxels.h"
 #include "../geometry/points.h"
+#include "../geometry/instancer.h"
 #include "../geometry/implicit.h"
 #include "../geometry/triangle.h"
 #include "../geometry/utils.h"
@@ -85,7 +86,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 1.f;
-  float radius = 2.f;
+  float radius = 0.5f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;
@@ -174,7 +175,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
   }
 
-  _voxels = _Voxelize(emitter, radius);
+  _voxels = _Voxelize(emitter, radius * 2);
   delete emitter;
 
   std::cout << "voxels num cells " << _voxels->GetNumCells() << std::endl;
@@ -233,7 +234,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   std::cout << "update first frame" << std::endl;
   Particles* particles = _solver->GetParticles();
 
-
   pxr::GfRange3f range;
   for (size_t p = 0; p < particles->GetNumParticles(); ++p) {
     range = range.UnionWith(particles->position[p]);
@@ -246,6 +246,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     }
   //collision->SetMask(_solver->GetNumParticles(), used);
 
+
   UpdateExec(stage, _solver->GetStartTime());
 
 }
@@ -253,11 +254,9 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  std::cout << "sync scene" << std::endl;
   _scene.Sync(stage, time);
 
   if(time != _lastTime) {
-    std::cout << "update solver at time " << time << std::endl;
     _solver->Update(stage, time);
     _lastTime = time;
   }
