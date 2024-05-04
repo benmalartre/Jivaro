@@ -27,7 +27,8 @@ void Collision::UpdateContacts(Particles* particles)
   size_t idx = 0;
 
   for (size_t c = 0; c < particles->GetNumParticles(); ++c)
-    _contacts.Get(c)->Update(this, particles, _c2p[idx++]);
+    if(_contacts.IsUsed(c))
+      _contacts.Get(c)->Update(this, particles, _c2p[idx++]);
 
 }
 

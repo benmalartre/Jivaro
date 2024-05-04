@@ -37,7 +37,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   : Xform(xform, world)
   , _scene(scene)
   , _subSteps(5)
-  , _sleepThreshold(0.1f)
+  , _sleepThreshold(0.001f)
   , _paused(true)
   , _startTime(1.f)
   , _solverId(xform.GetPrim().GetPath())
@@ -64,9 +64,9 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
 
 Solver::~Solver()
 {
+  for (auto& constraint : _constraints)delete constraint;
   for (auto& body : _bodies)delete body;
   for (auto& force : _force)delete force;
-  for (auto& constraint : _constraints)delete constraint;
   _scene->RemoveGeometry(_pointsId);
   delete _points;
   delete _timer;
@@ -317,6 +317,7 @@ void Solver::WeightBoundaries()
   
 void Solver::_UpdateContacts()
 {
+  std::cout << "upate contacts..." << std::endl;
   for (auto& collision : _collisions)
     collision->UpdateContacts(&_particles);
 }
@@ -394,25 +395,36 @@ void Solver::_SolveVelocities()
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
+  std::cout << "update collisions" << std::endl;
   UpdateCollisions(stage, time);
+  std::cout << "update params" << std::endl;
   UpdateParameters(stage, time);
  
   size_t numParticles = _particles.GetNumParticles();
   if (pxr::GfIsClose(time, _startTime, 0.001f)) {
+    std::cout << "reset solver" << std::endl;
     Reset();
+    std::cout << "set points" << std::endl;
+    
     _points->SetPositions(&_particles.position[0], numParticles);
     _points->SetRadii(&_particles.radius[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
+    std::cout << "mark points dirty" << std::endl;
 
     _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
   } else {
+    std::cout << "step solver" << std::endl;
     Step();
-
+    std::cout << "set points" << std::endl;
 
     _points->SetPositions(&_particles.position[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
+    std::cout << "mark points dirty" << std::endl;
     _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
   }
+
+  std::cout << "position [0] : " << _particles.position[0] << std::endl;
+  std::cout << "velocity [0] : " << _particles.velocity[0] << std::endl;
 }
 
 void Solver::Reset()
@@ -435,57 +447,66 @@ void Solver::Step()
 {
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
+  std::cout << "num particles : " << numParticles << std::endl;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
+  std::cout << "num threads : " << numThreads << std::endl;
 
-  _timer->Start();
+  
+  std::cout << "num sub steps : "  << _subSteps << std::endl;
+
+  //_timer->Start();
+  std::cout << "clear old contacts" << std::endl;
   for (auto& contact : _contacts)delete contact;
   _contacts.clear();
 
+  std::cout << "find new contacts" << std::endl;
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
-  _timer->Stop();
+  //_timer->Stop();
 
   const size_t numContacts = _contacts.size();
+  std::cout << "num contacts : " << numContacts << std::endl;
 
   for(size_t si = 0; si < _subSteps; ++si) {
 
-    _timer->Start(1);
+    std::cout << "Step : " <<std::endl;
+    //_timer->Start(1);
     _UpdateContacts();
-
-    _timer->Next();
+    std::cout << "0 ";
+    //_timer->Next();
     // integrate particles
     pxr::WorkParallelForN(
       numParticles,
       std::bind(&Solver::_IntegrateParticles, this,
         std::placeholders::_1, std::placeholders::_2));
-    
-    _timer->Next();
+    std::cout << "1 ";
+    //_timer->Next();
     // solve and apply constraint
     _SolveConstraints(_constraints);
-
-    _timer->Next();
+    std::cout << "2 ";
+    //_timer->Next();
     // solve and apply contacts
     _SolveConstraints(_contacts);
-
-    _timer->Next();
+    std::cout << "3 ";
+    //_timer->Next();
     // update particles
     pxr::WorkParallelForN(
       numParticles,
       std::bind(&Solver::_UpdateParticles, this,
         std::placeholders::_1, std::placeholders::_2));
-
-    _timer->Next();
+    std::cout << "4 ";
+    //_timer->Next();
     // solve velocities
     _SolveVelocities();
-    
-    _timer->Stop();
+    std::cout << "5 ";
+    //_timer->Stop();
 
   }
   
-  _timer->Update();
-  _timer->Log();
+  //_timer->Update();
+  //_timer->Log();
 
   //std::cout << _particles.GetPredicted() << std::endl;
 

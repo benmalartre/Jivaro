@@ -107,13 +107,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _solver = _GenerateSolver(&_scene, stage, _solverId);
   _scene.AddGeometry(_solverId, _solver);
 
-  // create collide ground
-  _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-  _ground = _GenerateCollidePlane(stage, _groundId, friction, restitution);
-  _ground->SetMatrix(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
-  //_AddAnimationSamples(stage, _groundId);
-  _scene.AddGeometry(_groundId, _ground);
 
   // create collide spheres
   std::map<pxr::SdfPath, Sphere*> spheres;
@@ -182,6 +175,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   }
 
   _voxels = _Voxelize(emitter, radius);
+  delete emitter;
 
   std::cout << "voxels num cells " << _voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << _voxels->GetNumPoints() << std::endl;
@@ -189,10 +183,11 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
   //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
   pxr::GfMatrix4d matrix(1.0);
-  Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius*0.5f, damping);
+  Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius, damping);
   _solver->AddElement(body, _voxels, emitterId);
   std::cout << "added particles" << std::endl;
 
+/*
   for(size_t i = 0; i < _meshes.size(); ++i) {
     pxr::UsdPrim prim = stage->GetPrimAtPath(_meshesId[i]);
     pxr::UsdGeomMesh usdMesh(prim);
@@ -201,15 +196,24 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, _meshes[i], prim.GetPath());
     std::cout << "Add mesh collision " << prim.GetPath() << std::endl;
   }
-
+*/
 
   for (auto& sphere : spheres) {
     Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
     _solver->AddElement(collision, sphere.second, sphere.first);
   }
+  std::cout<< "added sphere collision" <<std::endl;
 
   bool createGroundCollision = true;
   if(createGroundCollision) {
+    // create collide ground
+    _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
+    _ground = _GenerateCollidePlane(stage, _groundId, friction, restitution);
+    _ground->SetMatrix(
+      pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
+    //_AddAnimationSamples(stage, _groundId);
+    _scene.AddGeometry(_groundId, _ground);
+
     Collision* planeCollide = new PlaneCollision(_ground, _groundId, restitution, friction);
     _solver->AddElement(planeCollide, _ground, _groundId);
 
@@ -221,14 +225,14 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, 0.05f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
-
+    std::cout << "added self collision" << std::endl;
   }
 
   _lastTime = FLT_MAX;
-  _solver->GetParticles()->SetAllState(Particles::ACTIVE);
-  _solver->Update(stage, _lastTime);
 
+  std::cout << "update first frame" << std::endl;
   Particles* particles = _solver->GetParticles();
+
 
   pxr::GfRange3f range;
   for (size_t p = 0; p < particles->GetNumParticles(); ++p) {
@@ -249,9 +253,11 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
+  std::cout << "sync scene" << std::endl;
   _scene.Sync(stage, time);
 
   if(time != _lastTime) {
+    std::cout << "update solver at time " << time << std::endl;
     _solver->Update(stage, time);
     _lastTime = time;
   }

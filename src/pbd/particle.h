@@ -27,6 +27,7 @@ public:
   , _mass(mass)
   , _radius(radius)
   , _damping(damping)
+  , _velocity(0.f)
   , _color(color){}
 
   void SetOffset(size_t offset){_offset = offset;};
