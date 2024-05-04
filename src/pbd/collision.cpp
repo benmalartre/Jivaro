@@ -134,7 +134,7 @@ void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 
 // Velocity
 pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
-{
+{  
   const pxr::GfVec3f torque = _collider->GetTorque();
   const pxr::GfVec3f tangent =
     (GetGradient(particles, index) ^ torque).GetNormalized();
@@ -180,7 +180,7 @@ void Collision::_SolveVelocities(size_t begin, size_t end, Particles* particles,
     particles->velocity[index] += normal * restitution;
     */
 
-    particles->velocity[index] = pxr::GfVec3f(0.f);
+    particles->velocity[index] *= 0.f;
     particles->position[index] = GetContactPosition(index);
     particles->predicted[index] = GetContactPosition(index);
     
@@ -272,7 +272,7 @@ void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
   const pxr::GfVec3f predicted = particles->position[index] + particles->velocity[index] * ft;
-  float d = pxr::GfDot(_normal, predicted - _position)  - particles->radius[index];
+  float d = pxr::GfDot(predicted - _position, _normal)  - particles->radius[index];
   const pxr::GfVec3f intersection = predicted + _normal * -d;
 
   contact->Init(this, particles, index);
@@ -453,7 +453,7 @@ SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path,
   : Collision(NULL, path, restitution, friction)
   , _particles(particles)
   , _grid(NULL)
-  , _thickness(thickness)
+  , _thickness(0.f)
 {
   _grid.Init(_particles->GetNumParticles(), &_particles->position[0], _particles->radius[0]*0.5);
 }
@@ -573,7 +573,7 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
 
   const float d = nL - (particles->radius[index] + particles->radius[other] + _thickness);
 
-  const pxr::GfVec3f intersection = predicted  + normal * -d * 0.5;
+  const pxr::GfVec3f intersection = predicted  + normal * -d;
 
   contact->Init(this, particles, index, other);
   contact->SetCoordinates(intersection);
@@ -658,6 +658,11 @@ void SelfCollision::_SolveVelocities(size_t begin, size_t end, Particles* partic
 
     if(!CheckHit(index))continue;
 
+    particles->velocity[index] *= 0.1f;
+    particles->position[index] = GetContactPosition(index);
+    particles->predicted[index] = GetContactPosition(index);
+
+/*
     pxr::GfVec3f correction;
     float numHits = 0;
     for(size_t c = 0; c < GetNumContacts(index); ++c) {
@@ -673,8 +678,8 @@ void SelfCollision::_SolveVelocities(size_t begin, size_t end, Particles* partic
 
       particles->velocity[index] += correction0;
       particles->velocity[other] += correction1;
-
     }
+*/
 
 
   }

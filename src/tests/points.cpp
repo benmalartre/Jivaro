@@ -25,17 +25,17 @@ void TestPoints::InitExec(pxr::UsdStageRefPtr& stage)
   size_t N = 1024;
   float length = 5.f;
   pxr::VtArray<pxr::GfVec3f> positions(N);
-  pxr::VtArray<float> radius(N);
+  pxr::VtArray<float> widths(N);
   pxr::VtArray<pxr::GfVec3f> colors(N);
 
 
   for(size_t n = 0; n < N; ++n) {
     positions[n] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1) * length;
-    radius[n] = 0.25f;
+    widths[n] = 0.25f;
     colors[n] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   }
   _points->SetPositions(positions);
-  _points->SetRadii(radius);
+  _points->SetWidths(widths);
   _points->SetColors(colors);
 
   _scene.AddGeometry(_pointsId, _points);

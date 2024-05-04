@@ -10,9 +10,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------
 // Point Radius
 //-------------------------------------------------------
-float Point::GetRadius(Deformable* geom)
+float Point::GetWidth(Deformable* geom)
 {
-  return geom->GetRadius(id);
+  return geom->GetWidth(id);
 }
 
 //-------------------------------------------------------

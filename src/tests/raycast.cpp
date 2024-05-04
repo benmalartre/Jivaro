@@ -123,8 +123,8 @@ void TestRaycast::_UpdateHits()
 
   _hits->SetPositions(result);
   
-  pxr::VtArray<float> radiis(result.size(), 0.2);
-  _hits->SetRadii(radiis);
+  pxr::VtArray<float> widths(result.size(), 0.2);
+  _hits->SetWidths(widths);
 
   pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.5f, 0.0f));
   _hits->SetColors(colors);

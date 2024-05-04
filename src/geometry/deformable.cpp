@@ -19,7 +19,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Deformable::Deformable(short type, const pxr::GfMatrix4d& matrix)
   : Geometry(type, matrix)
-  , _haveRadius(false)
+  , _haveWidths(false)
   , _haveNormals(false)
   , _haveColors(false)
 {
@@ -46,8 +46,8 @@ Deformable::Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix)
     pxr::UsdGeomPoints points(prim);
     pxr::UsdAttribute widthsAttr = points.GetWidthsAttr();
       if(widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue()) {
-        _haveRadius = true;
-        widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+        _haveWidths = true;
+        widthsAttr.Get(&_widths, pxr::UsdTimeCode::Default());
       }
   }
 }
@@ -59,7 +59,7 @@ void Deformable::_ValidateNumPoints(size_t n)
     _previous.resize(n);
   }
   if(_haveNormals && n != _normals.size())_normals.resize(n);
-  if(_haveRadius && n != _radius.size())_radius.resize(n);
+  if(_haveWidths && n != _widths.size())_widths.resize(n);
   if (_haveColors && n != _colors.size())_colors.resize(n);
 
 }
@@ -82,11 +82,11 @@ Deformable::SetNormals(const pxr::GfVec3f* normals, size_t n)
 }
 
 void
-Deformable::SetRadii(const float* radii, size_t n)
+Deformable::SetWidths(const float* widths, size_t n)
 {
-  _haveRadius = true;
+  _haveWidths = true;
   _ValidateNumPoints(n);
-  memcpy(&_radius[0], radii, n * sizeof(float));
+  memcpy(&_widths[0], widths, n * sizeof(float));
 }
 
 void
@@ -116,12 +116,12 @@ Deformable::SetNormals(const pxr::VtArray<pxr::GfVec3f>& normals)
 }
 
 void
-Deformable::SetRadii(const pxr::VtArray<float>& radius)
+Deformable::SetWidths(const pxr::VtArray<float>& widths)
 {
-  _haveRadius = true;
-  const size_t n = radius.size();
+  _haveWidths = true;
+  const size_t n = widths.size();
   _ValidateNumPoints(n);
-  memcpy(&_radius[0], &radius[0], n * sizeof(float));
+  memcpy(&_widths[0], &widths[0], n * sizeof(float));
 }
 
 void
@@ -192,9 +192,9 @@ Deformable::GetColor(uint32_t index) const
 }
 
 float
-Deformable::GetRadius(uint32_t index) const
+Deformable::GetWidth(uint32_t index) const
 {
-  return _radius[index];
+  return _widths[index];
 }
 
 void
@@ -216,9 +216,9 @@ Deformable::SetNormal(uint32_t index, const pxr::GfVec3f& normal)
 }
 
 void 
-Deformable::SetRadius(uint32_t index, float radius)
+Deformable::SetWidth(uint32_t index, float width)
 {
-  _radius[index] = radius;
+  _widths[index] = width;
 }
 
 
@@ -234,12 +234,12 @@ Deformable::ComputeBoundingBox()
 }
 
 void
-Deformable::AddPoint(const pxr::GfVec3f& pos, float radius, 
+Deformable::AddPoint(const pxr::GfVec3f& pos, float width, 
   const pxr::GfVec3f* normal, const pxr::GfVec3f* color)
 {
   _previous.push_back(pos);
   _positions.push_back(pos);
-  _radius.push_back(radius);
+  _widths.push_back(width);
 
   if(_haveNormals && normal)_normals.push_back(*normal);
   if(_haveColors && color)_colors.push_back(*color);
@@ -250,7 +250,7 @@ Deformable::RemovePoint(size_t index)
 {
   _positions.erase(_positions.begin() + index);
   _previous.erase(_previous.begin() + index);
-  if(_haveRadius)_radius.erase(_radius.begin() + index);
+  if(_haveWidths)_widths.erase(_widths.begin() + index);
   if(_haveNormals)_normals.erase(_normals.begin() + index);
   if(_haveColors)_colors.erase(_colors.begin() + index);
 }
@@ -259,7 +259,7 @@ void
 Deformable::RemoveAllPoints()
 {
   _positions.clear();
-  _radius.clear();
+  _widths.clear();
   _normals.clear();
   _colors.clear();
 }

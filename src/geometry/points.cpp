@@ -38,7 +38,7 @@ Points::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
   if(prim.IsA<pxr::UsdGeomPoints>()) {
     pxr::UsdGeomPoints usdPoints(prim);
     usdPoints.CreatePointsAttr().Set(GetPositions(), time);
-    usdPoints.CreateWidthsAttr().Set(GetRadius(), time);
+    usdPoints.CreateWidthsAttr().Set(GetWidths(), time);
     usdPoints.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
   }
 }

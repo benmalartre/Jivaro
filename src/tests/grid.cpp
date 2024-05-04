@@ -126,26 +126,26 @@ void TestGrid::_UpdateHits()
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
   pxr::VtArray<pxr::GfVec3f> colors;
-  pxr::VtArray<float> radiis;
+  pxr::VtArray<float> widths;
   result.reserve(numRays * 2);
   colors.reserve(numRays * 2);
-  radiis.reserve(numRays * 2);
+  widths.reserve(numRays * 2);
   for(size_t r = 0; r < numRays; ++r) {
     if(hits[r]) {
       result.push_back(points[r]);
       colors.push_back({1.f, 0.f, 0.f});
-      radiis.push_back( 0.05f);
+      widths.push_back( 0.05f);
     }
     if(hits[r+numRays]) {
       result.push_back(points[r+numRays]+pxr::GfVec3f(RANDOM_0_1*0.05));
       colors.push_back({0.f, 1.f, 0.f});
-      radiis.push_back( 0.1f);
+      widths.push_back( 0.1f);
     }
   }
   
 
   _hits->SetPositions(result);
-  _hits->SetRadii(radiis);
+  _hits->SetWidths(widths);
   _hits->SetColors(colors);
 
 }

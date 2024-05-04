@@ -14,20 +14,20 @@ Points* _CreateGridPoint(const pxr::GfVec3f& center, size_t N)
   size_t numPoints = N * N;
 
   pxr::VtArray<pxr::GfVec3f> positions(numPoints);
-  pxr::VtArray<float> radius(numPoints);
+  pxr::VtArray<float> widths(numPoints);
   pxr::VtArray<pxr::GfVec3f> colors(numPoints);
 
   for(size_t z = 0; z < N; ++z) 
     for(size_t y = 0; y< N; ++y) {
       positions[z * N + y] = pxr::GfVec3f(center[0], center[1] + y, center[2] + z);
-      radius[z * N + y] = 1.f;
+      widths[z * N + y] = 1.f;
       colors[z * N + y] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     }
 
   Points* points= new Points();
 
   points->SetPositions(positions);
-  points->SetRadii(radius);
+  points->SetWidths(widths);
   points->SetColors(colors);
   points->SetInputOnly();
 

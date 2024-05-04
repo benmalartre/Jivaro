@@ -288,7 +288,7 @@ void Solver::UpdatePoints()
 {
   size_t numParticles = _particles.GetNumParticles();
   _points->SetPositions(&_particles.position[0], numParticles);
-  _points->SetRadii(&_particles.radius[0], numParticles);
+  _points->SetWidths(&_particles.radius[0], numParticles);
   _points->SetColors(&_particles.color[0], numParticles);
 
   _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
@@ -407,7 +407,7 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     std::cout << "set points" << std::endl;
     
     _points->SetPositions(&_particles.position[0], numParticles);
-    _points->SetRadii(&_particles.radius[0], numParticles);
+    _points->SetWidths(&_particles.radius[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
     std::cout << "mark points dirty" << std::endl;
 

@@ -17,9 +17,9 @@ public:
   Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world);
   virtual ~Curve() {};
 
-  void SetCurveRadius(size_t curveIdx, size_t cvIdx, float radius);
-  void SetCurveRadii(size_t curveIdx, float radius);
-  void SetCurveRadii(size_t curveIdx, const pxr::VtArray<float>& radii);
+  void SetCurveWidth(size_t curveIdx, size_t cvIdx, float width);
+  void SetCurveWidths(size_t curveIdx, float width);
+  void SetCurveWidths(size_t curveIdx, const pxr::VtArray<float>& widths);
 
   void SetTopology(
     const pxr::VtArray<pxr::GfVec3f>& positions,
@@ -28,7 +28,7 @@ public:
 
   void SetTopology(
     const pxr::VtArray<pxr::GfVec3f>& positions,
-    const pxr::VtArray<float>& radius,
+    const pxr::VtArray<float>& widths,
     const pxr::VtArray<int>& cvCounts
   );
 

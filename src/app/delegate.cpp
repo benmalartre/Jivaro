@@ -75,7 +75,7 @@ Delegate::SamplePrimvar(pxr::SdfPath const& id,
     auto& prims = _scene->GetPrims();
     if (prims.find(id) != prims.end()) {
       //std::cout << "set sample widths : " << std::endl;
-      //*sampleValues = pxr::VtValue(prims[id].geom->GetRadius());
+      //*sampleValues = pxr::VtValue(prims[id].geom->GetWidths());
     }
     return 1;
   }

@@ -18,36 +18,36 @@ public:
   const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _positions;};
   const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normals;};
   const pxr::VtArray<pxr::GfVec3f>& GetColors() const { return _colors; };
-  const pxr::VtArray<float>& GetRadius() const { return _radius; };
+  const pxr::VtArray<float>& GetWidths() const { return _widths; };
 
   pxr::VtArray<pxr::GfVec3f>& GetPrevious() {return _previous;};
   pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _positions;};
   pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normals;};
   pxr::VtArray<pxr::GfVec3f>& GetColors() { return _colors; };
-  pxr::VtArray<float>& GetRadius() { return _radius; };
+  pxr::VtArray<float>& GetWidths() { return _widths; };
 
   pxr::GfVec3f* GetPreviousPtr() { return &_previous[0]; };
   pxr::GfVec3f* GetPositionsPtr() { return &_positions[0]; };
   pxr::GfVec3f* GetNormalsPtr() { return &_normals[0]; };
   pxr::GfVec3f* GetColorsPtr() { return &_colors[0]; };
-  float* GetRadiusPtr() { return &_radius[0]; };
+  float* GetWidthsPtr() { return &_widths[0]; };
 
   const pxr::GfVec3f* GetPreviousCPtr() const {return &_previous[0];};
   const pxr::GfVec3f* GetPositionsCPtr() const {return &_positions[0];};
   const pxr::GfVec3f* GetNormalsCPtr() const {return &_normals[0];};
   const pxr::GfVec3f* GetColorsCPtr() const { return &_colors[0]; };
-  const float* GetRadiusCPtr() const { return &_radius[0]; };
+  const float* GetWidthsCPtr() const { return &_widths[0]; };
 
   pxr::GfVec3f GetPrevious(uint32_t index) const;
   pxr::GfVec3f GetPosition(uint32_t index) const;
   pxr::GfVec3f GetNormal(uint32_t index) const;
   pxr::GfVec3f GetColor(uint32_t index)const;
-  float GetRadius(uint32_t index) const;
+  float GetWidth(uint32_t index) const;
 
   void SetPrevious(uint32_t index, const pxr::GfVec3f& position);
   void SetPosition(uint32_t index, const pxr::GfVec3f& position);
   void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
-  void SetRadius(uint32_t index, float normal);
+  void SetWidth(uint32_t index, float normal);
 
   void AddPoint(const pxr::GfVec3f& pos, float radius, 
                 const pxr::GfVec3f* normal=NULL, const pxr::GfVec3f* color=NULL);
@@ -55,12 +55,12 @@ public:
   void RemoveAllPoints();
 
   virtual void SetPositions(const pxr::GfVec3f* positions, size_t n);
-  virtual void SetRadii(const float* radii, size_t n);
+  virtual void SetWidths(const float* widths, size_t n);
   virtual void SetColors(const pxr::GfVec3f* colors, size_t n);
   virtual void SetNormals(const pxr::GfVec3f* normals, size_t n);
 
   virtual void SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions);
-  virtual void SetRadii(const pxr::VtArray<float>& radii);
+  virtual void SetWidths(const pxr::VtArray<float>& widths);
   virtual void SetColors(const pxr::VtArray<pxr::GfVec3f>& colors);
   virtual void SetNormals(const pxr::VtArray<pxr::GfVec3f>& normals);
 
@@ -71,7 +71,7 @@ public:
 
   bool HaveNormals() const { return _haveNormals; };
   bool HaveColors() const { return _haveColors; };
-  bool HaveRadius() const { return _haveRadius; };
+  bool HaveWidths() const { return _haveWidths; };
 
   // query 3d position on geometry
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
@@ -97,8 +97,8 @@ protected:
   pxr::VtArray<pxr::GfVec3f>          _normals;
   bool                                _haveColors;
   pxr::VtArray<pxr::GfVec3f>          _colors;
-  bool                                _haveRadius;
-  pxr::VtArray<float>                 _radius;
+  bool                                _haveWidths;
+  pxr::VtArray<float>                 _widths;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -294,21 +294,17 @@ Scene::GetBasisCurvesTopology(pxr::SdfPath const& id)
 pxr::GfRange3d 
 Scene::GetExtent(pxr::SdfPath const& id)
 {
-  pxr::GfRange3d range;
   if (_prims.find(id) != _prims.end()) {
-    if(_prims[id].geom->GetType() < Geometry::POINT) {
+    Geometry* geometry = _prims[id].geom;
+    if(geometry->GetType() < Geometry::POINT) {
       // TODO implicit geometry handling
     } else {
-      const pxr::VtVec3fArray& points = 
-        ((Points*)_prims[id].geom)->GetPositions();
-      TF_FOR_ALL(it, points) {
-        range.UnionWith(*it);
-      }
+     return geometry->GetBoundingBox().GetRange();
     }
   }
  
   
-  return range;
+  return pxr::GfRange3d();
 }
 
 
@@ -390,7 +386,7 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
         ((Points*)prim.geom)->GetColors();
       if(colors.size())return pxr::VtValue(colors);
     } else if (key == pxr::HdTokens->widths) {
-      return pxr::VtValue(((Points*)prim.geom)->GetRadius());
+      return pxr::VtValue(((Points*)prim.geom)->GetWidths());
     } else if (key == pxr::HdTokens->normals) {
       if(((Deformable*)prim.geom)->HaveNormals()) {
         return pxr::VtValue(((Points*)prim.geom)->GetNormals());

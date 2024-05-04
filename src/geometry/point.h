@@ -18,7 +18,7 @@ struct Point : public Component {
   Point(uint32_t index)
     : Component(index){};
 
-  float GetRadius(Deformable* geom);
+  float GetWidth(Deformable* geom);
   pxr::GfVec3f GetPosition(Deformable* geom);
   pxr::GfVec3f GetNormal(Deformable* geom);
   

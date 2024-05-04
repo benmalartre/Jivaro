@@ -220,7 +220,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << "added ground collision" << std::endl;
   }
 
-  bool createSelfCollision = false;
+  bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, 0.05f);

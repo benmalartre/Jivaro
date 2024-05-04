@@ -128,7 +128,7 @@ Curve::SetTopology(
   const pxr::VtArray<int>& cvCounts)
 {
   SetPositions(positions);
-  _haveRadius = false;
+  _haveWidths = false;
   _haveNormals = false;
   _haveColors = false;
   _cvCounts = cvCounts;
@@ -137,41 +137,41 @@ Curve::SetTopology(
 void 
 Curve::SetTopology(
   const pxr::VtArray<pxr::GfVec3f>& positions,
-  const pxr::VtArray<float>& radii,
+  const pxr::VtArray<float>& widths,
   const pxr::VtArray<int>& cvCounts)
 {
   SetPositions(positions);
-  SetRadii(radii);
+  SetWidths(widths);
   _haveNormals = false;
   _haveColors = false;
   _cvCounts = cvCounts;
 }
 
 void
-Curve::SetCurveRadius(size_t curveIdx, size_t cvIdx, float radius)
+Curve::SetCurveWidth(size_t curveIdx, size_t cvIdx, float width)
 {
   size_t pointIdx = _PointIndex(curveIdx, cvIdx);
-  _radius[pointIdx] = radius;
+  _widths[pointIdx] = width;
 }
 
 void
-Curve::SetCurveRadii(size_t curveIdx, float radius)
+Curve::SetCurveWidths(size_t curveIdx, float width)
 {
   size_t pointIdx = _PointIndex(curveIdx, 0);
   for (size_t p = pointIdx; p < pointIdx + _cvCounts[curveIdx]; ++p) {
-    _radius[pointIdx] = radius;
+    _widths[pointIdx] = width;
   }
 }
 
 void
-Curve::SetCurveRadii(size_t curveIdx, const pxr::VtArray<float>& radii)
+Curve::SetCurveWidths(size_t curveIdx, const pxr::VtArray<float>& widths)
 {
   size_t numCVs = _cvCounts[curveIdx];
 
-  if (radii.size() == numCVs) {
+  if (widths.size() == numCVs) {
     size_t startIdx = _PointIndex(curveIdx, 0);
     for (size_t cvIdx = 0; cvIdx < numCVs; ++cvIdx) {
-      _radius[startIdx + cvIdx] = radii[cvIdx];
+      _widths[startIdx + cvIdx] = widths[cvIdx];
     }
   }
 }
