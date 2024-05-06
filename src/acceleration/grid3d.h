@@ -42,16 +42,17 @@ public:
 
   struct Cell
   {
-    Cell(uint32_t id):index(id){};
+    Cell(uint32_t id, uint32_t numGeometries):index(id){
+      components.resize(numGeometries);
+    };
 
-    void Insert(Geometry* geometry, Point* point);
-    void Insert(Geometry* geometry, Edge* edge);
-    void Insert(Geometry* geometry, Triangle* triangle);
+    void Insert(size_t geomIdx, Point* point);
+    void Insert(size_t geomIdx, Edge* edge);
+    void Insert(size_t geomIdx, Triangle* triangle);
 
-    bool Raycast(Geometry* geom, const pxr::GfRay& ray, Location* hit, 
-      double maxDistance=-1, double* minDistance=NULL) const;
+    bool Raycast(const std::vector<Geometry*>& geometries, const pxr::GfRay& ray, 
+      Location* hit, double maxDistance=-1, double* minDistance=NULL) const;
     
-
     // neighboring bits
     static void InitNeighborBits(uint32_t& neighborBits);
     static void ClearNeighborBitsSlice(uint32_t& neighborBits, short axis, 
@@ -59,7 +60,7 @@ public:
     static bool CheckNeighborBit(const uint32_t neighborBits, uint32_t index);
 
     // data
-    std::map<Geometry*, _Components>      components;
+    std::vector<_Components>              components; // components stored by geometry
     uint32_t                              index;
     uint32_t                              neighborBits;
 

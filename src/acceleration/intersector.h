@@ -19,6 +19,7 @@ class Location;
 class Intersector : public pxr::GfRange3d
 { 
 public:
+ static const int INVALID_GEOMETRY = INT_MAX;
   enum ElementType {
     POINT,
     EDGE,
@@ -30,10 +31,11 @@ public:
 public:
   virtual ~Intersector(){};
 
-  int GetGeometryIndex(Geometry* geom) const;
+  size_t GetGeometryIndex(Geometry* geom) const;
   const std::vector<Geometry*>& GetGeometries() const {return _geometries;};
   const Geometry* GetGeometry(size_t index) const {return _geometries[index];};
   Geometry* GetGeometry(size_t index) {return _geometries[index];};
+  size_t GetNumGeometries() const {return _geometries.size();};
 
   //used for visually debug
   virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 

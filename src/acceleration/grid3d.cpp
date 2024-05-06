@@ -9,44 +9,48 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Grid3D::Cell::Insert(Geometry* geometry, Point* point)
+void Grid3D::Cell::Insert(size_t geomIdx, Point* point)
 {
-  components[geometry].push_back((Component*)point);
+  components[geomIdx].push_back((Component*)point);
 }
 
-void Grid3D::Cell::Insert(Geometry* geometry, Edge* edge)
+void Grid3D::Cell::Insert(size_t geomIdx, Edge* edge)
 {
-  components[geometry].push_back((Component*)edge);
+  components[geomIdx].push_back((Component*)edge);
 }
 
-void Grid3D::Cell::Insert(Geometry* geometry, Triangle* triangle)
+void Grid3D::Cell::Insert(size_t geomIdx, Triangle* triangle)
 {
-  components[geometry].push_back((Component*)triangle);
+  components[geomIdx].push_back((Component*)triangle);
 }
 
 
-bool Grid3D::Cell::Raycast(Geometry* geometry, const pxr::GfRay& ray,
+
+
+bool Grid3D::Cell::Raycast(const std::vector<Geometry*>& geometries, const pxr::GfRay& ray,
   Location* hit, double maxDistance, double* minDistance) const
 {
-  const auto& componentsIt = components.find(geometry);
-  if (componentsIt == components.end()) return false;
-
-  const _Components& components = componentsIt->second;
-  pxr::GfRay localRay(ray);
-  localRay.Transform(geometry->GetInverseMatrix());
-  const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
-
   bool hitSomething = false;
-  Location localHit(*hit);
-  for (Component* component : components){
-    if (component->Raycast(points, localRay, &localHit)) {
-      const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
-      const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
-      if (distance < *minDistance && distance < maxDistance) {
-        hit->Set(localHit);
-        hit->SetT(distance);
-        *minDistance = distance;
-        hitSomething = true;
+  for (size_t geomIdx = 0; geomIdx < components.size(); ++geomIdx) {
+    if (!components[geomIdx].size())continue;
+
+    const Geometry* geometry = geometries[geomIdx];
+    pxr::GfRay localRay(ray);
+    localRay.Transform(geometry->GetInverseMatrix());
+    const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+
+    Location localHit(*hit);
+    for (Component* component : components[geomIdx]) {
+      if (component->Raycast(points, localRay, &localHit)) {
+        const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
+        const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
+        if (distance < *minDistance && distance < maxDistance) {
+          hit->Set(localHit);
+          hit->SetT(distance);
+          hit->SetGeometryIndex(geomIdx);
+          *minDistance = distance;
+          hitSomething = true;
+        }
       }
     }
   }
@@ -75,8 +79,9 @@ void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
   const pxr::GfVec3f bboxMin(GetMin());
   const pxr::GfVec3f bboxMax(GetMax());
 
+
   // insert all the triangles in the cells
-  for(uint32_t t = 0; t < numTriangles; ++t)
+  for(size_t t = 0; t < numTriangles; ++t)
   {
     pxr::GfVec3f tmin(FLT_MAX,FLT_MAX,FLT_MAX);
     pxr::GfVec3f tmax(-FLT_MAX,-FLT_MAX,-FLT_MAX);
@@ -115,8 +120,8 @@ void Grid3D::InsertMesh(Mesh* mesh, size_t geomIdx)
       for (uint32_t y = ymin; y <= ymax; ++y)
         for (uint32_t x = xmin; x <= xmax; ++x) {
           uint32_t o = z * _resolution[0] * _resolution[1] + y * _resolution[0] + x;
-          if (_cells[o] == NULL) _cells[o] = new Cell(o);
-          _cells[o]->Insert((Geometry*)mesh, triangle);
+          if (_cells[o] == NULL) _cells[o] = new Cell(o, GetNumGeometries());
+          _cells[o]->Insert(geomIdx, triangle);
         }
   }
 }
@@ -259,9 +264,8 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   while(true) {
     uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
     if (_cells[o] != NULL) 
-      for(size_t geomIdx = 0; geomIdx < _geometries.size(); ++geomIdx)
-        if(_cells[o]->Raycast(_geometries[geomIdx], ray, hit, maxDistance, minDistance))
-          {hit->SetGeometryIndex(geomIdx); hitSomething=true;}
+      if(_cells[o]->Raycast(_geometries, ray, hit, maxDistance, minDistance))
+        hitSomething=true;
         
     uint8_t k =
       ((nextCrossingT[0] < nextCrossingT[1]) << 2) +
