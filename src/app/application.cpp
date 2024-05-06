@@ -285,13 +285,13 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
   //_exec = new TestPendulum();
   //_exec = new TestVelocity();
   //_exec = new TestPoints();
-  //_exec = new TestGrid();
+  _exec = new TestGrid();
   //_exec = new TestParticles();
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
   //_exec = new TestPBD();
   //_exec = new TestHair();
-  _exec = new TestBVH();
+  //_exec = new TestBVH();
   _exec->InitExec(stage);
 
   for(auto& engine: _engines) {

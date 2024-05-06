@@ -1,3 +1,4 @@
+#include "../utils/timer.h"
 #include "../geometry/sampler.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
@@ -111,17 +112,27 @@ void TestGrid::_UpdateHits()
   const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();  
   size_t numRays = _rays->GetNumPoints() >> 1;
 
+  std::cout << "num rays : " << numRays << std::endl;
+
   pxr::VtArray<pxr::GfVec3f> points(numRays * 2);
   pxr::VtArray<bool> hits(numRays * 2, false);
 
 
+  uint64_t startT = CurrentTime();
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0], &_grid));
+  uint64_t bvhRaycastT = CurrentTime() - startT;
+  std::cout << "raycast bvh : " << ((double)bvhRaycastT * 1e-9) << " seconds" << std::endl;
 
+  startT = CurrentTime();
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[numRays], &hits[numRays], &_bvh));
+  uint64_t gridRaycastT = CurrentTime() - startT;
+  std::cout << "raycast grid : " << ((double)gridRaycastT * 1e-9) << " seconds" << std::endl;
+
+
 
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
@@ -160,21 +171,22 @@ void TestGrid::_UpdateHits()
 bool TestGrid::_CompareHits(const pxr::VtArray<bool>& hits, const  pxr::VtArray<pxr::GfVec3f> points)
 {
   size_t numRays = hits.size() / 2;
-  size_t cntError = 0;
+  size_t cntHitError = 0;
+  size_t cntCoordError = 0;
   for(size_t r = 0; r < numRays; ++r) {
     if(hits[r] != hits[r+numRays]) {
-      cntError++;
-      std::cout << r << "hit diverge between grid and bvh" << std::endl;
+      cntHitError++;
     } else {
       if((points[r]-points[r+numRays]).GetLength() > 0.001f){
-         cntError++;
-        std::cout << r << "coordinates diverge between grid and bvh" << std::endl;
-        std::cout << points[r] << std::endl;
-        std::cout << points[r+numRays] << std::endl;
+         cntCoordError++;
       }
     }
   }
-  return cntError == 0;
+
+  std::cout << "num hit error : " << cntHitError << std::endl;
+  std::cout << "num coord error : " << cntCoordError << std::endl;
+
+  return cntHitError == 0 && cntCoordError == 0;
 }
 
 void TestGrid::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
@@ -223,8 +235,18 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
       _meshes[m]->SetInputOnly();
     }
 
-    _grid.Init(_meshes);
+    uint64_t startT = CurrentTime();
     _bvh.Init(_meshes);
+    uint64_t bvhBuildT = CurrentTime() - startT;
+    std::cout << "build bvh : " << ((double)bvhBuildT * 1e-9) << " seconds" << std::endl;
+
+
+    startT = CurrentTime();
+    _grid.Init(_meshes);
+    uint64_t gridBuildT = CurrentTime() - startT;
+    std::cout << "build grid : " << ((double)gridBuildT * 1e-9) << " seconds" << std::endl;
+    
+    
     
 
 
@@ -241,7 +263,7 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
 
-  const size_t n = 8;
+  const size_t n = 1024;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
@@ -268,9 +290,16 @@ void TestGrid::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _scene.Sync(stage, time);
   
   if (_meshes.size()) {
-    _grid.Update();
+    uint64_t startT = CurrentTime();
     _bvh.Update();
-    _UpdateGridInstancer(stage, _gridId, &_grid, time);
+    uint64_t bvhUpdateT = CurrentTime() - startT;
+    std::cout << "update bvh : " << ((double)bvhUpdateT * 1e-9) << " seconds" << std::endl;
+
+     startT = CurrentTime();
+    _grid.Update();
+    uint64_t gridUpdateT = CurrentTime() - startT;
+    std::cout << "update grid : " << ((double)gridUpdateT * 1e-9) << " seconds" << std::endl;
+    //_UpdateGridInstancer(stage, _gridId, &_grid, time);
     _scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::DirtyInstancer);
   }
 

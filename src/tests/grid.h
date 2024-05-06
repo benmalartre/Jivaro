@@ -39,7 +39,6 @@ private:
   Points*                   _hits;
   Grid3D                    _grid;
   BVH                       _bvh;
-  Instancer*                _leaves;
   pxr::SdfPath              _meshId;
   pxr::SdfPath              _raysId;
   pxr::SdfPath              _hitsId;
