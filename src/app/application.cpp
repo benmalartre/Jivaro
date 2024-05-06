@@ -27,6 +27,7 @@
 #include "../tests/points.h"
 #include "../tests/instancer.h"
 #include "../tests/velocity.h"
+#include "../tests/pendulum.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -281,10 +282,11 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 void 
 Application::InitExec(pxr::UsdStageRefPtr& stage)
 {
+  _exec = new TestPendulum();
   //_exec = new TestVelocity();
   //_exec = new TestPoints();
   //_exec = new TestGrid();
-  _exec = new TestParticles();
+  //_exec = new TestParticles();
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
   //_exec = new TestPBD();
@@ -344,7 +346,6 @@ Application::Update()
   glfwPollEvents();
   Time::Get()->ComputeFramerate();
 
-  static double lastTime = 0.f;
   static double refreshRate = 1.f / 60.f;
   static int playback;
   float currentTime(Time::Get()->GetActiveTime());
@@ -356,11 +357,11 @@ Application::Update()
     if (playback != Time::PLAYBACK_WAITING) {
       if(_execute) UpdateExec(_stage, currentTime);
       GetActiveEngine()->SetDirty(true);
-      lastTime = currentTime;
+      _lastTime = currentTime;
     }
   } else {
-    if (currentTime != lastTime) {
-      lastTime = currentTime;
+    if (currentTime != _lastTime) {
+      _lastTime = currentTime;
       if (_execute) UpdateExec(_stage, currentTime);
     }
   }
@@ -532,12 +533,14 @@ Application::TimeChangedCallback(const TimeChangedNotice& n)
 {
   if (_exec && _execute) {
     UpdateExec(_stage, Time::Get()->GetActiveTime());
+    
   }
   _mainWindow->ForceRedraw();
   for (auto& window : _childWindows) {
     window->ForceRedraw();
   }
   DirtyAllEngines();
+  _lastTime = Time::Get()->GetActiveTime();
 }
 
 void

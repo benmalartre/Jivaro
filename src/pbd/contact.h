@@ -29,7 +29,10 @@ public:
   float GetDepth() const {return _d;};
   bool GetHit() const {return _hit;};
 
+  void SetHit(bool hit) {_hit=hit;};
+
 private:
+  pxr::GfVec3f      _previous; // contact previous position
   pxr::GfVec3f      _normal;   // contact normal
   pxr::GfVec3f      _velocity; // relative velocity
 
@@ -62,11 +65,13 @@ public:
   size_t GetNumUsed(size_t index) const;
   size_t GetTotalNumUsed() const;
 
+
 private:
   size_t                n;
   size_t                m;
   int*                  used;
   Contact*              data;
+  std::mutex            mutex;
 };
 
 

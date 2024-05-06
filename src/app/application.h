@@ -130,6 +130,7 @@ public:
 
 protected:
   Execution*                        _exec;
+  double                            _lastTime;
   static Application*               _singleton;
 
 

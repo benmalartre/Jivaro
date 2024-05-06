@@ -39,6 +39,7 @@ void Contact::Update(SelfCollision* collision, Particles* particles, size_t inde
 {
   _normal = collision->GetGradient(particles, index, other);
   _d = collision->GetValue(particles, index, other);
+  _hit = _d < 0;
   _velocity = collision->GetVelocity(particles, index, other);
   
 }

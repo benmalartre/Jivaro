@@ -20,7 +20,7 @@ Points* _CreateGridPoint(const pxr::GfVec3f& center, size_t N)
   for(size_t z = 0; z < N; ++z) 
     for(size_t y = 0; y< N; ++y) {
       positions[z * N + y] = pxr::GfVec3f(center[0], center[1] + y, center[2] + z);
-      widths[z * N + y] = 1.f;
+      widths[z * N + y] = 0.25f;
       colors[z * N + y] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     }
 
@@ -48,14 +48,14 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
   {
-    _points0 = _CreateGridPoint(pxr::GfVec3f(-1.f, 2.f, 0.f), 4);
+    _points0 = _CreateGridPoint(pxr::GfVec3f(-1.f, 2.f, 0.f), 16);
     _points0Id = rootId.AppendChild(pxr::TfToken("Points0"));
 
     _scene.AddGeometry(_points0Id, _points0);
   }
 
   {
-    _points1 = _CreateGridPoint(pxr::GfVec3f(1.f, 2.f, 0.f), 4);
+    _points1 = _CreateGridPoint(pxr::GfVec3f(1.f, 2.f, 0.f), 16);
     _points1Id = rootId.AppendChild(pxr::TfToken("Points1"));
 
     _scene.AddGeometry(_points1Id, _points1);
@@ -65,10 +65,10 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
   _solver = _GenerateSolver(&_scene, stage, _solverId);
 
 
-  Body* body0 = _solver->CreateBody(_points0, pxr::GfMatrix4d(1.0), 1.f, 1.f, 0.1f);
+  Body* body0 = _solver->CreateBody(_points0, pxr::GfMatrix4d(1.0), 0.1f, 0.25f, 0.1f);
   _solver->SetBodyVelocity(body0, pxr::GfVec3f(1.f, 0.f, 0.f));
   _solver->AddElement(body0, _points0, _points0Id);
-  Body* body1 = _solver->CreateBody(_points1, pxr::GfMatrix4d(1.0), 1.f, 1.f, 0.1f);
+  Body* body1 = _solver->CreateBody(_points1, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f);
   _solver->SetBodyVelocity(body1, pxr::GfVec3f(-1.f, 0.f, 0.f));
   _solver->AddElement(body1, _points1, _points1Id);
 
@@ -88,13 +88,14 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << "added ground collision" << std::endl;
   }
 
-  bool createSelfCollision = true;
+   bool createSelfCollision = false;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.25f, 0.25f, 0.05f);
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.25f, 0.25f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
 
   }
+  
 
   _solver->Update(stage, _solver->GetStartTime());
 }

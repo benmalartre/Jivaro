@@ -26,11 +26,19 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
+  // get root prim
+  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  if(!rootPrim.IsValid()) {
+    pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+    rootPrim = root.GetPrim();
+    stage->SetDefaultPrim(rootPrim);
+  }
+  const pxr::SdfPath  rootId = rootPrim.GetPath();
+
+
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::SdfPath rootId = rootPrim.GetPath();
-   pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
+  pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
   rotate.Normalize();
 
   // create collide ground
@@ -46,18 +54,14 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .1f;
-  rotate = pxr::GfQuatf(45.f * DEGREES_TO_RADIANS, pxr::GfVec3f(0.f, 0.f, 1.f));
-  rotate.Normalize();
-  pxr::GfMatrix4d matrix =
-    pxr::GfMatrix4d().SetScale(pxr::GfVec3f(5.f));
+  float size = .025f;
+
   
-  for(size_t x = 0; x < 0; ++x) {
-    
-    std::string name = "cloth" + std::to_string(x);
+  for(size_t x = 0; x < 1; ++x) {
+    std::string name = "cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
-    _GenerateClothMesh(stage, clothPath, size,
-      matrix * pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(x * 6.f, 5.f, 0.f)));
+    _GenerateClothMesh(stage, clothPath, size, 
+    pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f, 0.f}));
     
   }
   std::cout << "created cloth meshes" << std::endl;
@@ -100,9 +104,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene.AddGeometry(prim.GetPath(), mesh);
 
-      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, 0.1f, 0.1f);
+      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.5f, 0.2f, 0.1f);
       _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
-      _solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.f);
+      _solver->CreateConstraints(body, Constraint::DIHEDRAL, 2000.f, 0.f);
       _solver->AddElement(body, mesh, prim.GetPath());
 
       _bodyMap[prim.GetPath()] = body;
@@ -111,9 +115,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   //_solver->AddElement(gravity, NULL, _groundId);
 
-  _solver->WeightBoundaries();
-  _solver->LockPoints();
-
   float restitution = 0.5f;
   float friction = 0.5f;
   for (auto& sphere : spheres) {
@@ -121,8 +122,19 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, sphere.second, sphere.first);
   }
 
-  Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
-  _solver->AddElement(collision, _ground, _groundId);
+  bool createGroundCollision = true;
+  if(createGroundCollision) {
+    Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
+    _solver->AddElement(collision, _ground, _groundId);
+  }
+
+  bool createSelfCollision = false;
+  if (createSelfCollision) {
+    pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);
+    _solver->AddElement(selfCollide, NULL, selfCollideId);
+    std::cout << "added self collision" << std::endl;
+  }
 
 }
 

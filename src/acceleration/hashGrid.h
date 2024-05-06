@@ -49,7 +49,7 @@ public:
   };
 
   HashGrid(float spacing = 1.f, short hashMethod=MULLER) 
-    : _tableSize(0), _spacing(spacing>0.000001f ? spacing : 0.000001f), _scl(1.f/_spacing), _hashMethod(hashMethod) {
+    : _tableSize(0), _spacing(spacing>1e-6f ? spacing : 1e-6f), _scl(1.f/_spacing), _hashMethod(hashMethod) {
     switch (_hashMethod) {
     case MULLER:
       _HashCoords = &HashGrid::_HashCoordsMuller;
@@ -67,14 +67,10 @@ public:
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const  {    return false;}
   size_t Closests(size_t index, const pxr::GfVec3f* positions,
-    std::vector<int>& closests) const;
+    std::vector<int>& closests, float distance) const;
 
-  void SetSpacing(float spacing) { _spacing = spacing > 0.000001f ? spacing : 0.000001f; _scl = 1.f/_spacing; };
+  void SetSpacing(float spacing) { _spacing = spacing > 1e-6f ? spacing : 1e-6f; _scl = 1.f/_spacing; };
   pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
-
-protected:
-  void _ClosestsFromHash(size_t index, const pxr::GfVec3f* positions, 
-    int64_t hash, std::vector<int>& neighbors) const;
 
 private:
 size_t                              _n;
@@ -83,7 +79,6 @@ size_t                              _n;
   size_t                            _tableSize;
   std::vector<int>                  _cellStart;
   std::vector<int>                  _cellEntries;
-  std::vector<int64_t>              _hashes;
   short                             _hashMethod;
   HashFunc                          _HashCoords;
 }; 

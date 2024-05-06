@@ -85,7 +85,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  float mass = 1.f;
+  float mass = 0.1f;
   float radius = 0.5f;
   float damping = 0.1f;
   float restitution = 0.05f;
@@ -224,7 +224,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction, 0.05f);
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
     std::cout << "added self collision" << std::endl;
   }

@@ -24,7 +24,7 @@ class Instancer;
 
 void _AddMainDemoLight();
 Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
-  int subSteps=5, float sleepThreshold=0.01f);
+  int subSteps=5, float sleepThreshold=0.001f);
 
 Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   size_t subd=8, const pxr::GfMatrix4d& m=pxr::GfMatrix4d(1.0));

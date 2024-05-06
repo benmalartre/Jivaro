@@ -913,23 +913,22 @@ void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
   const float scaleY = 1.5708;
   const float invScaleY = 1.f/scaleY;
 
-  size_t numX = (1.f / spacing ) * 0.5 + 1;
-  size_t numY = (1.f / spacing) * invScaleY + 1;
+  size_t numX = (1.f / spacing )+ 1;
+  size_t numY = (1.f / spacing) + 1;
   size_t numPoints = numX * numY;
   size_t numTriangles = (numX - 1) * 2 * (numY - 1);
   size_t numSamples = numTriangles * 3;
   pxr::VtArray<pxr::GfVec3f> positions(numPoints);
 
-  float spaceX = spacing * 2.0;
+  float spaceX = spacing * 2.f;
   float spaceY = spacing * scaleY;
 
   for(size_t y = 0; y < numY; ++y) {
     for(size_t x = 0; x < numX; ++x) {
       size_t vertexId = y * numX + x;
-      if(y %2 == 0)positions[vertexId][0] = x * spaceX + spaceX * 0.5f;
-      else positions[vertexId][0] = x * spaceX - 0.5f;
+      positions[vertexId][0] = spaceX * x - 0.5f;
       positions[vertexId][1] = 0.f;
-      positions[vertexId][2] = y * spaceY - 0.5f;
+      positions[vertexId][2] = spaceY * y - 0.5f;
       positions[vertexId] = matrix.Transform(positions[vertexId]);
     }
   }

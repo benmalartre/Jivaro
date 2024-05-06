@@ -25,9 +25,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 static const size_t NUM_TIMES = 7;
 static const char* TIME_NAMES[NUM_TIMES] = {
   "find contacts",
-  "update contacts",
   "integrate particles",
   "solve constraints",
+  "update contacts",
   "solve contacts",
   "update particles",
   "solve velocities"
@@ -307,8 +307,11 @@ void Solver::WeightBoundaries()
       for(size_t p = 0; p < boundaries.size(); ++p){
         if(boundaries[p]) {
           size_t index = p + offset;
-          _particles.mass[index] *= 0.5f;
-          _particles.invMass[index] = 1.f / _particles.mass[index];
+          
+          if(_particles.mass[index] > 0.f) {
+            _particles.mass[index] *= 1.2f;
+            _particles.invMass[index] = 1.f / _particles.mass[index];
+          }
         }
       }
     }
@@ -317,7 +320,6 @@ void Solver::WeightBoundaries()
   
 void Solver::_UpdateContacts()
 {
-  std::cout << "upate contacts..." << std::endl;
   for (auto& collision : _collisions)
     collision->UpdateContacts(&_particles);
 }
@@ -334,12 +336,10 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   for (const Force* force : _force)
     force->Apply(begin, end, &_particles, _stepTime);
 
-  float lV, maxV = 10.f;
   for (size_t index = begin; index < end; ++index) {
     if(_particles.state[index] != Particles::ACTIVE)continue;
+
     position[index] = predicted[index];
-    lV = velocity[index].GetLength();
-    if(lV > maxV)velocity[index] *= maxV/lV;
     predicted[index] = position[index] + velocity[index] * _stepTime;
   }
 }
@@ -360,6 +360,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
     
+  
     if (velocity[index].GetLength() < _sleepThreshold) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
@@ -387,7 +388,7 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 void Solver::_SolveVelocities()
 {
   for (auto& collision : _collisions) {
-    if (!collision->GetNumContacts()) continue;
+    if (!collision->GetTotalNumContacts()) continue;
       collision->SolveVelocities(&_particles, _stepTime);
 
   }
@@ -395,16 +396,12 @@ void Solver::_SolveVelocities()
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
-  std::cout << "update collisions" << std::endl;
   UpdateCollisions(stage, time);
-  std::cout << "update params" << std::endl;
   UpdateParameters(stage, time);
  
   size_t numParticles = _particles.GetNumParticles();
   if (pxr::GfIsClose(time, _startTime, 0.001f)) {
-    std::cout << "reset solver" << std::endl;
     Reset();
-    std::cout << "set points" << std::endl;
 
     pxr::VtArray<float> widths(numParticles);
     for(size_t r=0; r < numParticles; ++r)widths[r] = _particles.radius[r] * 2.f;
@@ -412,22 +409,16 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     _points->SetPositions(&_particles.position[0], numParticles);
     _points->SetWidths(&widths[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
-    std::cout << "mark points dirty" << std::endl;
 
     _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
   } else {
-    std::cout << "step solver" << std::endl;
     Step();
-    std::cout << "set points" << std::endl;
 
     _points->SetPositions(&_particles.position[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
-    std::cout << "mark points dirty" << std::endl;
     _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
   }
 
-  std::cout << "position [0] : " << _particles.position[0] << std::endl;
-  std::cout << "velocity [0] : " << _particles.velocity[0] << std::endl;
 }
 
 void Solver::Reset()
@@ -441,6 +432,9 @@ void Solver::Reset()
     _particles.AddBody(_bodies[b], matrix);
   }
 
+  //WeightBoundaries();
+  //LockPoints();
+
   _particles.SetAllState(Particles::ACTIVE);
 
 
@@ -448,62 +442,51 @@ void Solver::Reset()
 
 void Solver::Step()
 {
+  std::cout << "################# STEP !!!" << std::endl;
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
-  std::cout << "num particles : " << numParticles << std::endl;
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
-  std::cout << "num threads : " << numThreads << std::endl;
-
-  
-  std::cout << "num sub steps : "  << _subSteps << std::endl;
 
   //_timer->Start();
-  std::cout << "clear old contacts" << std::endl;
   for (auto& contact : _contacts)delete contact;
-  _contacts.clear();
+    _contacts.clear();
 
-  std::cout << "find new contacts" << std::endl;
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
   //_timer->Stop();
 
   const size_t numContacts = _contacts.size();
-  std::cout << "num contacts : " << numContacts << std::endl;
 
   for(size_t si = 0; si < _subSteps; ++si) {
 
-    std::cout << "Step : " <<std::endl;
-    //_timer->Start(1);
-    _UpdateContacts();
-    std::cout << "0 ";
-    //_timer->Next();
+   
+    //_timer->Start1();
     // integrate particles
     pxr::WorkParallelForN(
       numParticles,
       std::bind(&Solver::_IntegrateParticles, this,
         std::placeholders::_1, std::placeholders::_2));
-    std::cout << "1 ";
     //_timer->Next();
     // solve and apply constraint
     _SolveConstraints(_constraints);
-    std::cout << "2 ";
+
+     //_timer->Next();
+    _UpdateContacts();
+
     //_timer->Next();
     // solve and apply contacts
     _SolveConstraints(_contacts);
-    std::cout << "3 ";
     //_timer->Next();
     // update particles
     pxr::WorkParallelForN(
       numParticles,
       std::bind(&Solver::_UpdateParticles, this,
         std::placeholders::_1, std::placeholders::_2));
-    std::cout << "4 ";
     //_timer->Next();
     // solve velocities
     _SolveVelocities();
-    std::cout << "5 ";
     //_timer->Stop();
 
   }
