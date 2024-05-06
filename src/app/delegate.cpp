@@ -181,18 +181,21 @@ Delegate::GetInstanceIndices(pxr::SdfPath const &instancerId,
   pxr::SdfPath const &prototypeId)
 {
  std::cout << "get instance indices..." << std::endl;
+ return pxr::VtIntArray();
 }
 
 pxr::GfMatrix4d
 Delegate::GetInstancerTransform(pxr::SdfPath const &instancerId)
 {
   std::cout << "get instancer transforml..." << std::endl;
+  return pxr::GfMatrix4d();
 }
 
 pxr::SdfPathVector
 Delegate::GetInstancerPrototypes(pxr::SdfPath const &instancerId)
 {
   std::cout << "get instancer prototypes..." << std::endl;
+  return pxr::SdfPathVector();
 }
 
 pxr::SdfPath

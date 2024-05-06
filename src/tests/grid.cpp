@@ -130,24 +130,51 @@ void TestGrid::_UpdateHits()
   result.reserve(numRays * 2);
   colors.reserve(numRays * 2);
   widths.reserve(numRays * 2);
+  size_t bvhHits = 0, gridHits = 0;
   for(size_t r = 0; r < numRays; ++r) {
     if(hits[r]) {
-      result.push_back(points[r]);
+      result.push_back(points[r]+pxr::GfVec3f(RANDOM_0_1*0.05));
       colors.push_back({1.f, 0.f, 0.f});
-      widths.push_back( 0.05f);
+      widths.push_back( 0.25f);
+      bvhHits++;
     }
     if(hits[r+numRays]) {
       result.push_back(points[r+numRays]+pxr::GfVec3f(RANDOM_0_1*0.05));
       colors.push_back({0.f, 1.f, 0.f});
-      widths.push_back( 0.1f);
+      widths.push_back( 0.25f);
+      gridHits++;
     }
   }
   
+  std::cout << "bvh hits : " << bvhHits << std::endl;
+  std::cout << "grid hits : " << gridHits << std::endl;
 
   _hits->SetPositions(result);
   _hits->SetWidths(widths);
   _hits->SetColors(colors);
 
+  _CompareHits(hits, points);
+
+}
+
+bool TestGrid::_CompareHits(const pxr::VtArray<bool>& hits, const  pxr::VtArray<pxr::GfVec3f> points)
+{
+  size_t numRays = hits.size() / 2;
+  size_t cntError = 0;
+  for(size_t r = 0; r < numRays; ++r) {
+    if(hits[r] != hits[r+numRays]) {
+      cntError++;
+      std::cout << r << "hit diverge between grid and bvh" << std::endl;
+    } else {
+      if((points[r]-points[r+numRays]).GetLength() > 0.001f){
+         cntError++;
+        std::cout << r << "coordinates diverge between grid and bvh" << std::endl;
+        std::cout << points[r] << std::endl;
+        std::cout << points[r+numRays] << std::endl;
+      }
+    }
+  }
+  return cntError == 0;
 }
 
 void TestGrid::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
@@ -214,12 +241,12 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
 
-  const size_t n = 256;
+  const size_t n = 8;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
-  //_AddAnimationSamples(stage, _meshId);
+  _AddAnimationSamples(stage, _meshId);
 
   // create rays
   _raysId = rootId.AppendChild(pxr::TfToken("rays"));
@@ -231,8 +258,6 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
   // create hits
   _hitsId = rootId.AppendChild(pxr::TfToken("hits"));
   _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
-
-  _UpdateHits();
 
   UpdateExec(stage, 1);
 

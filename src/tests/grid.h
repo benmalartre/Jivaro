@@ -31,6 +31,7 @@ protected:
   void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
      pxr::GfVec3f* results, bool* hits, Intersector* intersector);
   void _UpdateHits();
+  bool _CompareHits(const pxr::VtArray<bool>& hits, const  pxr::VtArray<pxr::GfVec3f> points);
 
 private:
   Mesh*                     _mesh;

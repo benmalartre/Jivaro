@@ -68,17 +68,17 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
     double minDistance = DBL_MAX;
     Location hit;
     Deformable* deformable;
+    hits[index] = false;
     if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
       const pxr::GfMatrix4d& matrix = collided->GetMatrix();
-      
       switch (collided->GetType()) {
         case Geometry::MESH:
         {
           Mesh* mesh = (Mesh*)collided;
           Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
           results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), 
-            &triangle->vertices[0], 3, &matrix);
+            &triangle->vertices[0], 3, NULL);
           break;
         }
         case Geometry::CURVE:
@@ -93,9 +93,7 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
       }
       
       hits[index] = true;
-    } else {
-      hits[index] = false;
-    }
+    } 
   }
 }
 
@@ -109,10 +107,12 @@ void TestRaycast::_UpdateHits()
   pxr::VtArray<bool> hits(numRays, false);
 
   hits.resize(numRays, false);
-
+/*
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestRaycast::_FindHits, this, std::placeholders::_1, 
-      std::placeholders::_2, positions, &points[0], &hits[0]));
+      std::placeholders::_2, positions, &points[0], &hits[0]));*/
+
+    _FindHits(0, _rays->GetNumCurves(), positions, &points[0], &hits[0]);
 
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
@@ -123,7 +123,7 @@ void TestRaycast::_UpdateHits()
 
   _hits->SetPositions(result);
   
-  pxr::VtArray<float> widths(result.size(), 0.2);
+  pxr::VtArray<float> widths(result.size(), 0.2f);
   _hits->SetWidths(widths);
 
   pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.5f, 0.0f));
@@ -190,8 +190,6 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
-
-  std::cout << "num rays : " << pxr::GfPow(n, 2.f) << std::endl;
 
   _AddAnimationSamples(stage, _meshId);
 

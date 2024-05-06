@@ -54,10 +54,9 @@ Deformable::Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix)
 
 void Deformable::_ValidateNumPoints(size_t n)
 {
-  if (n != GetNumPoints()) {
-    _positions.resize(n);
-    _previous.resize(n);
-  }
+  if (n != _positions.size()) _positions.resize(n);
+  if (n != _previous.size()) _previous.resize(n);
+
   if(_haveNormals && n != _normals.size())_normals.resize(n);
   if(_haveWidths && n != _widths.size())_widths.resize(n);
   if (_haveColors && n != _colors.size())_colors.resize(n);

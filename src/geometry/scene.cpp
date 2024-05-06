@@ -29,13 +29,9 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-  std::cout << "scene destructor called" << std::endl;
   for(auto& prim: _prims) {
-    std::cout << prim.first << std::endl;
-    std::cout << prim.second.geom << std::endl;
     if(prim.second.geom)delete prim.second.geom;
   }
-  std::cout << "detructed scene" << std::endl;
 }
 
 void 

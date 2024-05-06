@@ -24,8 +24,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
-
 void TestBVH::_UpdateRays() 
 {
   const double time = Time::Get()->GetActiveTime();
@@ -138,7 +136,7 @@ void TestBVH::_UpdateHits()
 
   _hits->SetPositions(result);
   
-  pxr::VtArray<float> widths(result.size(), 0.2);
+  pxr::VtArray<float> widths(result.size(), 0.2f);
   _hits->SetWidths(widths);
 
   pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.5f, 0.0f));

@@ -86,9 +86,9 @@ public:
   const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
 
   void SetMatrix(const pxr::GfMatrix4d& matrix);
-  const pxr::GfMatrix4d GetMatrix() const { return _matrix; };
-  const pxr::GfMatrix4d GetPreviousMatrix() const { return _prevMatrix; };
-  const pxr::GfMatrix4d GetInverseMatrix() const { return _invMatrix; };
+  const pxr::GfMatrix4d& GetMatrix() const { return _matrix; };
+  const pxr::GfMatrix4d& GetPreviousMatrix() const { return _prevMatrix; };
+  const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
 
   const pxr::GfVec3f GetTorque() const;
   const pxr::GfVec3f GetVelocity() const;

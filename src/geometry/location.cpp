@@ -17,29 +17,30 @@ pxr::GfVec3f
 Location::ComputePosition(const pxr::GfVec3f* positions, const int* elements, size_t sz,
  const pxr::GfMatrix4d* m) const 
 {
-  pxr::GfVec3f result;
+  pxr::GfVec3f result(0.f);
   if(elements)
     for(size_t d = 0; d < sz; ++d) 
       result += positions[elements[d]] * _coords[d];
   else 
     result += positions[_compId];
 
-
-  return m ? m->Transform(result) : result;
+  if(m)return m->Transform(result);
+  else return result;
 }
 
 pxr::GfVec3f
 Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t sz, 
   const pxr::GfMatrix4d* m) const
 {
-  pxr::GfVec3f result;
+  pxr::GfVec3f result(0.f);
   if (elements)
     for (size_t d = 0; d < sz; ++d)
       result += normals[elements[d]] * _coords[d];
   else
     result += normals[_compId];
 
-  return m ? m->TransformDir(result) : result;
+  if(m)return m->TransformDir(result);
+  else return result;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
