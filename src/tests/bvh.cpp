@@ -86,7 +86,7 @@ void TestBVH::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
     Location hit;
     if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
-      const pxr::GfMatrix4d& matrix = _mesh->GetMatrix();
+      const pxr::GfMatrix4d& matrix = collided->GetMatrix();
       switch (collided->GetType()) {
       case Geometry::MESH:
       {

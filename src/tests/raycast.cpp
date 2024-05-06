@@ -78,7 +78,7 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
           Mesh* mesh = (Mesh*)collided;
           Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
           results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), 
-            &triangle->vertices[0], 3, NULL);
+            &triangle->vertices[0], 3, &matrix);
           break;
         }
         case Geometry::CURVE:
@@ -107,12 +107,10 @@ void TestRaycast::_UpdateHits()
   pxr::VtArray<bool> hits(numRays, false);
 
   hits.resize(numRays, false);
-/*
+
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestRaycast::_FindHits, this, std::placeholders::_1, 
-      std::placeholders::_2, positions, &points[0], &hits[0]));*/
-
-    _FindHits(0, _rays->GetNumCurves(), positions, &points[0], &hits[0]);
+      std::placeholders::_2, positions, &points[0], &hits[0]));
 
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
@@ -176,7 +174,6 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
     for(size_t s = 0; s < _subjects.size();++s) {
       _scene.AddGeometry(_subjectsId[s], _subjects[s]);
     }
-
   }
   
   // create mesh that will be source of rays

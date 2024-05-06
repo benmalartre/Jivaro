@@ -233,7 +233,7 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   double enterDistance, exitDistance;
-  if (!ray.Intersect(*this, &enterDistance, &exitDistance))
+  if (!ray.Intersect(pxr::GfBBox3d(*this), &enterDistance, &exitDistance))
     return false;
 
   if(enterDistance > maxDistance) 

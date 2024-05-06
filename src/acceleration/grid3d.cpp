@@ -213,9 +213,9 @@ void Grid3D::Update()
 bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  double bmin, bmax;
+  double enterDistance, exitDistance;
   // if the ray doesn't intersect the grid return
-  if(!ray.Intersect(pxr::GfBBox3d(*this), &bmin, &bmax))
+  if(!ray.Intersect(pxr::GfBBox3d(*this), &enterDistance, &exitDistance))
   {
     return false;
   }
@@ -228,7 +228,7 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   for (uint8_t i = 0; i < 3; ++i) {
     // convert ray starting point to cell coordinates
     double rayOrigCell = 
-      ((ray.GetPoint(0.f)[i] + ray.GetDirection()[i] * bmin) - GetMin()[i]);
+      ((ray.GetPoint(0.f)[i] + ray.GetDirection()[i] * enterDistance) - GetMin()[i]);
     cell[i] = CLAMP(floor(rayOrigCell / _cellDimension[i]), 0, _resolution[i] - 1);
     if(fabs(ray.GetDirection()[i]) < 0.0000001)
     {
@@ -239,13 +239,13 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
     }
     else if (ray.GetDirection()[i] < 0.0) {
       deltaT[i] = -_cellDimension[i] * invdir[i];
-      nextCrossingT[i] = bmin + (cell[i] * _cellDimension[i] - rayOrigCell) * invdir[i];
+      nextCrossingT[i] = enterDistance + (cell[i] * _cellDimension[i] - rayOrigCell) * invdir[i];
       exit[i] = -1;
       step[i] = -1;
     }
     else {
       deltaT[i] = _cellDimension[i] * invdir[i];
-      nextCrossingT[i] = bmin + ((cell[i] + 1)  * _cellDimension[i] - rayOrigCell) * invdir[i];
+      nextCrossingT[i] = enterDistance + ((cell[i] + 1)  * _cellDimension[i] - rayOrigCell) * invdir[i];
       exit[i] = _resolution[i];
       step[i] = 1;
     }

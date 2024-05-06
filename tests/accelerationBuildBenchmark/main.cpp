@@ -31,7 +31,7 @@ JVR_NAMESPACE_USING_DIRECTIVE
 
 std::vector<Geometry*>    _meshes;
 std::vector<pxr::SdfPath> _meshesId;
-size_t                    _numRays = 5;
+size_t                    _numRays = 10000;
 
 void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
 {
@@ -51,7 +51,6 @@ void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
 {
   for (size_t index = begin; index < end; ++index) {
     pxr::GfRay ray(positions[index * 2], positions[index * 2 + 1] - positions[index * 2]);
-    std::cout << "ray " << ray << std::endl;
     double minDistance = DBL_MAX;
     Location hit;
     hits[index] = false;
@@ -65,7 +64,6 @@ void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
           Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
           results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &matrix);
           hits[index] = true;
-          std::cout << "hit  " << hit.GetComponentIndex() << " : " << hit.GetCoordinates() << std::endl;
         }
       }
     }
@@ -84,17 +82,19 @@ void _Raycast(const pxr::GfVec3f* positions, Intersector* intersector, const cha
 
   hits.resize(_numRays, false);
 
-/*
   pxr::WorkParallelForN(_numRays,
     std::bind(&_FindHits, std::placeholders::_1, 
-      std::placeholders::_2, positions, &points[0], &hits[0], intersector));*/
-  _FindHits(0, _numRays, positions, &points[0], &hits[0], intersector);
+      std::placeholders::_2, positions, &points[0], &hits[0], intersector));
+
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
   result.reserve(_numRays);
   size_t numHits = 0;
   for(size_t p = 0; p < _numRays; ++p) {
-    if(hits[p]) {result.push_back(points[p]);numHits++;};
+    if(hits[p]) {
+      result.push_back(points[p]);
+      numHits++;
+    };
   }
 
   std::cout << title << " time : " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
