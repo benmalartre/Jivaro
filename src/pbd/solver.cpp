@@ -180,7 +180,7 @@ void Solver::SetBodyVelocity(Body* body, const pxr::GfVec3f& velocity)
   const size_t num = body->GetNumPoints();
   body->SetVelocity(velocity);
   for(size_t index = 0; index < num; ++index) {
-    _particles.velocity[index + offset] = velocity;
+    _particles.velocity[index + offset] = velocity * _particles.invMass[index + offset];
   }
 }
 
@@ -271,16 +271,11 @@ void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
       results.push_back(constraint);
 }
 
-void Solver::LockPoints()
+void Solver::LockPoints(Body* body, pxr::VtArray<int>& elements)
 {
-  size_t particleIdx = 0;
-  const pxr::GfVec3f* positions = &_particles.position[0];
-  for (auto& _body : _bodies) {
-    size_t numPoints = _body->GetNumPoints();
-    for(size_t point = 0; point < 10; ++point) {
-      _particles.mass[point + _body->GetOffset()] = 0.f;
-      _particles.invMass[point + _body->GetOffset()] = 0.f;
-    }
+  for(size_t i = 0; i < elements.size(); ++i) {
+    _particles.mass[elements[i] + body->GetOffset()] = 0.f;
+    _particles.invMass[elements[i] + body->GetOffset()] = 0.f;
   }
 }
 
@@ -432,7 +427,7 @@ void Solver::Reset()
   }
 
   WeightBoundaries();
-  LockPoints();
+  //LockPoints();
 
   _particles.SetAllState(Particles::ACTIVE);
 
@@ -458,7 +453,8 @@ void Solver::Step()
   const size_t numContacts = _contacts.size();
 
   for(size_t si = 0; si < _subSteps; ++si) {
-
+    //_timer->Next();
+    _UpdateContacts();
    
     //_timer->Start1();
     // integrate particles
@@ -470,8 +466,7 @@ void Solver::Step()
     // solve and apply constraint
     _SolveConstraints(_constraints);
 
-     //_timer->Next();
-    _UpdateContacts();
+
 
     //_timer->Next();
     // solve and apply contacts

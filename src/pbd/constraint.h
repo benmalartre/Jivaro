@@ -165,7 +165,7 @@ public:
     float stiffness=0.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
-  size_t GetElementSize() const override { return _mode==GEOM ? 1 : 2; };
+  size_t GetElementSize() const override { return 1; };
 
   Collision* GetCollision() {return _collision;};
   const Collision* GetCollision() const { return _collision; };

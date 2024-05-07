@@ -25,7 +25,7 @@ void Time::Init(float start, float end, float fps)
   _maxTime = _endTime;
   _loop = true;
   _fps = fps > 1e-6 ? fps : 1e-6;
-  _frame = 1000.f / _fps;
+  _frame = 1e6f / _fps;
   _speed = 1.f;
   _playback = false;
   _playForwardOrBackward = false;
@@ -35,7 +35,7 @@ void Time::Init(float start, float end, float fps)
 void Time::SetFPS(float fps)
 {
   _fps = fps > 1e-6 ? fps : 1e-6; 
-  _frame = 1000.f/_fps;
+  _frame = 1e6f/_fps;
   Geometry::SetFrameDuration(_frame);
 };
 
@@ -87,7 +87,7 @@ void Time::StopPlayback()
 
 int Time::Playback()
 {
-  _chronometer = (double)(CurrentTime() - _lastT) * 1e-6f;
+  _chronometer = CurrentTime() - _lastT;
 
   if(_chronometer < _frame)
     return PLAYBACK_WAITING;

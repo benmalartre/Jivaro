@@ -29,7 +29,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 static Voxels* _Voxelize(Mesh* mesh, float radius)
 {
   Voxels *voxels = new Voxels();
-  voxels->Init(mesh, radius);
+  voxels->Init(mesh, radius*2.5f);
   voxels->Trace(0);
   voxels->Trace(1);
   voxels->Trace(2);
@@ -85,7 +85,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  float mass = 0.2f;
+  float mass = 1.f;
   float radius = 0.5f;
   float damping = 0.1f;
   float restitution = 0.05f;
@@ -175,7 +175,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
   }
 
-  _voxels = _Voxelize(emitter, radius * 2);
+  _voxels = _Voxelize(emitter, radius);
   delete emitter;
 
   std::cout << "voxels num cells " << _voxels->GetNumCells() << std::endl;
@@ -221,7 +221,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << "added ground collision" << std::endl;
   }
 
-  bool createSelfCollision = false;
+  bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);

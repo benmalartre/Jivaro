@@ -59,7 +59,7 @@ private:
   float                             _maxTime;
   float                             _fps;
   float                             _speed;
-  float                             _frame;
+  uint64_t                          _frame;  // frame duration in micro seconds
   bool                              _loop;
   bool                              _playForwardOrBackward;
   bool                              _playback;

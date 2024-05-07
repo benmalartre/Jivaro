@@ -91,7 +91,7 @@ public:
 
   // particles
   Particles* GetParticles() { return &_particles; };
-  void LockPoints();
+  void LockPoints(Body* body, pxr::VtArray<int>& elements);
   void UpdatePoints();
   void WeightBoundaries();
   Points* GetPoints(){return _points;};

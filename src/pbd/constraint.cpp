@@ -504,7 +504,7 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
 
 CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* collision, 
   const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
-  : Constraint(2, stiffness, damping, elems)
+  : Constraint(1, stiffness, damping, elems)
   , _collision(collision)
   , _mode(CollisionConstraint::SELF)
   , _Solve(&CollisionConstraint::_SolveSelf)
@@ -552,65 +552,39 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 
   SelfCollision* collision = (SelfCollision*)_collision;
 
-  const size_t numElements = _elements.size() >> 1;
-  const pxr::GfVec3f* positions = &particles->position[0];
+  const size_t numElements = _elements.size();
+  const pxr::GfVec3f* position = &particles->position[0];
+  const pxr::GfVec3f* predicted = &particles->predicted[0];
   const float* radius = &particles->radius[0];
+  const float* invMass = &particles->invMass[0];
 
   for (size_t elem = 0; elem < numElements; ++elem) {
-    const size_t index = _elements[elem * 2];
-    const  size_t other = _elements[elem * 2 + 1];
-    const float minDistance = particles->radius[index] + particles->radius[other];
+    const size_t index = _elements[elem];
 
-    const pxr::GfVec3f delta = (particles->predicted[index] - particles->predicted[other]);
-    const float distance = delta.GetLength();
+    size_t numHits = 0;
+    for(size_t c = 0; c < collision->GetNumContacts(index); ++c) {
+      const size_t other = collision->GetContactComponent(index, c);
+      const float minDistance = particles->radius[index] + particles->radius[other];
 
-    const float w0 = particles->invMass[index];
-    const float w1 = particles->invMass[other];
+      const pxr::GfVec3f delta = particles->predicted[index] - particles->predicted[other];
+      const float distance = delta.GetLength();
+      const float w0 = invMass[index];
+      const float w1 = invMass[other];
 
-    if(distance > minDistance || w0 + w1 < 1e-6) continue;
+      if(distance > minDistance || w0 + w1 < 1e-6)continue;
 
-    const pxr::GfVec3f gradient = delta /(distance + EPSILON);
-    
-    const float denom = w0 + w1;
-    const float lambda = (distance - minDistance)  / denom;
-    const pxr::GfVec3f common = gradient * lambda * dt;
- 
-    _correction[elem * 2    ] -= w0 * common;
-    _correction[elem * 2 + 1] += w1  * common;
-    
-    const pxr::GfVec3f relativeVelocity = 
-      ((particles->predicted[index] + _correction[elem * 2    ]) - particles->position[index]) - 
-      ((particles->predicted[other] + _correction[elem * 2 + 1]) - particles->position[other]);
-    const pxr::GfVec3f friction = _ComputeFriction(common, relativeVelocity) * dt;
+      const float d = (minDistance - distance) / distance;
+      _correction[elem] += w0 / (w0 + w1) * delta * d;
 
-    _correction[elem * 2    ] += w0 * friction;
-    _correction[elem * 2 + 1] -= w1 * friction;
-  
+       pxr::GfVec3f relativeVelocity = ((particles->predicted[index] + _correction[elem]) - particles->previous[index]) - 
+       ((particles->predicted[other]) - particles->previous[other]);
+		  pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
+      //_correction[elem] +=  friction;
 
+      numHits++;
+    }
+    //if(numHits)_correction[elem] /= static_cast<float>(numHits);
   }
-    /*
-    const size_t a = _elements[elem * ELEM_SIZE + 0];
-    const size_t b = _elements[elem * ELEM_SIZE + 1];
-
-    const float w0 = particles->invMass[a];
-    const float w1 = particles->invMass[b];
-
-    float K = w0 + w1;
-    pxr::GfVec3f normal = particles->predicted[a] - particles->predicted[b];
-    const float d = normal.GetLength();
-    
-    if(d < 1e-6f || K < 1e-6f) continue;
-
-    const float C = d - _rest[elem];
-    normal.Normalize();
-    if (!pxr::GfIsClose(_stiffness, 0.f, 1e-6f))
-      K += 1.f / (_stiffness * dt * dt);
-
-	  const pxr::GfVec3f correction = normal * (1.f / K) * C;
-
-    _correction[elem * ELEM_SIZE + 0] -= w0 * correction;
-    _correction[elem * ELEM_SIZE + 1] += w1 * correction;
-    */
 }
 
 void CollisionConstraint::Solve(Particles* particles, float dt)

@@ -35,7 +35,7 @@ static uint64_t CurrentTime() {
     now = mach_absolute_time();
     now *= info.numer;
     now /= info.denom;
-    return now;
+    return now / 1000;
 #elif defined(__linux)
     static struct timespec linux_rate;
     if (0 == is_init) {
@@ -45,19 +45,19 @@ static uint64_t CurrentTime() {
     uint64_t now;
     struct timespec spec;
     clock_gettime(CLOCKID, &spec);
-    now = spec.tv_sec * 1.0e9 + spec.tv_nsec;
+    now = spec.tv_sec * 1.0e6 + spec.tv_nsec;
     return now;
 #elif defined(_WIN32)
     static LARGE_INTEGER win_frequency;
-    static double nanoseconds_per_count;
+    static double microseconds_per_count;
     if (0 == is_init) {
       QueryPerformanceFrequency(&win_frequency);
-      nanoseconds_per_count = 1.0e9 / win_frequency.QuadPart;
+      microseconds_per_count = 1.0e6 / win_frequency.QuadPart;
       is_init = 1;
     }
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
-    return (uint64_t) (now.QuadPart * nanoseconds_per_count);
+    return (uint64_t) (now.QuadPart * microseconds_per_count);
 #else
   return 0;
 #endif
