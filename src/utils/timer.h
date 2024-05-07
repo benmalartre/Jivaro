@@ -49,13 +49,15 @@ static uint64_t CurrentTime() {
     return now;
 #elif defined(_WIN32)
     static LARGE_INTEGER win_frequency;
+    static double nanoseconds_per_count;
     if (0 == is_init) {
       QueryPerformanceFrequency(&win_frequency);
+      nanoseconds_per_count = 1.0e9 / win_frequency.QuadPart;
       is_init = 1;
     }
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
-    return (uint64_t) ((1e9 * now.QuadPart)  / win_frequency.QuadPart);
+    return (uint64_t) (now.QuadPart * nanoseconds_per_count);
 #else
   return 0;
 #endif

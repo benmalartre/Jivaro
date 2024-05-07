@@ -25,32 +25,20 @@ void Time::Init(float start, float end, float fps)
   _maxTime = _endTime;
   _loop = true;
   _fps = fps > 1e-6 ? fps : 1e-6;
-  _frame = 1.f / _fps;
+  _frame = 1000.f / _fps;
   _speed = 1.f;
   _playback = false;
   _playForwardOrBackward = false;
   _lastT = 0;
-  _frameCount = 0;
 }
 
 void Time::SetFPS(float fps)
 {
   _fps = fps > 1e-6 ? fps : 1e-6; 
-  _frame = 1.f/_fps;
+  _frame = 1000.f/_fps;
   Geometry::SetFrameDuration(_frame);
 };
 
-void Time::ComputeFramerate()
-{
-  _frameCount++;
-  uint64_t T = CurrentTime();
-  if (T - _lastT >= 1000)
-  {
-    _framerate = _frameCount;
-    _frameCount = 0;
-    _lastT = T;
-  }
-}
 // time
 void Time::PreviousFrame()
 {
@@ -99,12 +87,12 @@ void Time::StopPlayback()
 
 int Time::Playback()
 {
-  _chronometer += (CurrentTime() - _lastT);
+  _chronometer = (double)(CurrentTime() - _lastT) * 1e-6f;
 
-  if(_chronometer < (_frame * 1000))
+  if(_chronometer < _frame)
     return PLAYBACK_WAITING;
 
-  _chronometer = 0.f;
+  _lastT = CurrentTime();
   
   if(!_playForwardOrBackward && _activeTime > _endTime)
     return _loop ? PLAYBACK_FIRST : PLAYBACK_STOP;

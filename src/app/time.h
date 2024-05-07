@@ -27,7 +27,6 @@ public:
   inline float GetFPS(){return _fps;};
   inline float GetSpeed(){return _speed;};
   inline bool  GetLoop(){return _loop;};
-  inline float GetFramerate() { return _framerate; };
   inline float GetFrameDuration() { return _frame;};
 
   inline void SetMinTime(float time){_minTime = time;};
@@ -48,7 +47,6 @@ public:
   int Playback();
   bool IsPlaying(){return _playback;};
   
-  void ComputeFramerate();
 
   // singleton 
   static Time *Get();
@@ -68,8 +66,6 @@ private:
 
   // main loop
   uint64_t                           _lastT;
-  size_t                            _framerate;
-  size_t                            _frameCount;
 
   // playing
   uint64_t                          _chronometer;

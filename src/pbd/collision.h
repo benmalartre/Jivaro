@@ -79,6 +79,7 @@ public:
 
   virtual float GetValue(Particles* particles, size_t index) = 0;
   virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
+  virtual pxr::GfVec3f GetSDF(Particles* particles, size_t index) = 0;
   virtual pxr::GfVec3f GetVelocity(Particles* particles, size_t index);
 
   inline bool CheckHit(size_t index) {
@@ -130,6 +131,7 @@ public:
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetSDF(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
   //void UpdateContacts(Particles* particles) override;
@@ -155,6 +157,7 @@ public:
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetSDF(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
   
 protected:
@@ -179,6 +182,7 @@ public:
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetSDF(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
 protected:
@@ -207,6 +211,7 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override{return pxr::GfVec3f(0.f);};
   float GetValue(Particles* particles, size_t index, size_t other);;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index, size_t other);
+  pxr::GfVec3f GetSDF(Particles* particles, size_t index) override;
   pxr::GfVec3f GetVelocity(Particles* particles, size_t index, size_t other);
 
   void UpdateContacts(Particles* particles) override;

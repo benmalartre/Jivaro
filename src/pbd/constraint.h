@@ -25,6 +25,7 @@ class Constraint
 {
 public:
   constexpr static size_t BlockSize = 1024;
+  constexpr static float EPSILON = 1e-6f;
   enum Type {
     STRETCH = 1,
     BEND,
@@ -150,6 +151,7 @@ void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints
 class CollisionConstraint : public Constraint
 {
   typedef void (CollisionConstraint::*SolveFunc)(Particles* particles, float dt);
+
 public:
   enum Mode {
     GEOM,
@@ -176,6 +178,8 @@ public:
 protected:
   void _SolveGeom(Particles* particles, float dt);
   void _SolveSelf(Particles* particles, float dt);
+
+  pxr::GfVec3f _ComputeFriction(const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity);
 
   static size_t                 TYPE_ID;
   Mode                          _mode;

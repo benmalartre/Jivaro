@@ -359,8 +359,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
-    
-  
+
     if (velocity[index].GetLength() < _sleepThreshold) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
@@ -432,8 +431,8 @@ void Solver::Reset()
     _particles.AddBody(_bodies[b], matrix);
   }
 
-  //WeightBoundaries();
-  //LockPoints();
+  WeightBoundaries();
+  LockPoints();
 
   _particles.SetAllState(Particles::ACTIVE);
 
@@ -442,7 +441,6 @@ void Solver::Reset()
 
 void Solver::Step()
 {
-  std::cout << "################# STEP !!!" << std::endl;
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
 

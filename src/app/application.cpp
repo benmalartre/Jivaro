@@ -285,8 +285,8 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
   //_exec = new TestPendulum();
   //_exec = new TestVelocity();
   //_exec = new TestPoints();
-  _exec = new TestGrid();
-  //_exec = new TestParticles();
+  //_exec = new TestGrid();
+  _exec = new TestParticles();
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
   //_exec = new TestPBD();
@@ -344,13 +344,14 @@ Application::Update()
   */
 
   glfwPollEvents();
-  Time::Get()->ComputeFramerate();
+  //Time::Get()->ComputeFramerate();
 
   static double refreshRate = 1.f / 60.f;
   static int playback;
-  float currentTime(Time::Get()->GetActiveTime());
-  
   Time* time = Time::Get();
+  float currentTime(time->GetActiveTime());
+  
+  
   // execution if needed
   if (time->IsPlaying()) {
     playback = time->Playback();

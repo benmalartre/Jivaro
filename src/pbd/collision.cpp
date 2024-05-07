@@ -16,7 +16,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = 0.05f;
+const float Collision::TOLERANCE_MARGIN = 0.1f;
 
 // 
 // Contacts
@@ -34,7 +34,6 @@ void Collision::UpdateContacts(Particles* particles)
 void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
   std::vector<Constraint*>& constraints, float ft)
 {
-
   _ResetContacts(particles);
   pxr::WorkParallelForN(particles->GetNumParticles(),
     std::bind(&Collision::_FindContacts, this,
@@ -151,7 +150,7 @@ void Collision::SolveVelocities(Particles* particles, float dt)
 
 void Collision::_SolveVelocities(size_t begin, size_t end, Particles* particles, float dt)
 {
-
+  return;
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     if(!CheckHit(index))continue;
@@ -257,6 +256,13 @@ pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
   return _normal;
 }
 
+pxr::GfVec3f PlaneCollision::GetSDF(Particles* particles, size_t index)
+{
+  float d = GetValue(particles, index);
+  if(d < 0.f)return _normal * -d;
+  else return pxr::GfVec3f(0.f);
+}
+
 void PlaneCollision::Update(const pxr::UsdPrim& prim, double time) 
 {
   _UpdatePositionAndNormal();
@@ -355,6 +361,13 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
   return (particles->predicted[index] - _center).GetNormalized();
 }
 
+pxr::GfVec3f SphereCollision::GetSDF(Particles* particles, size_t index)
+{
+  float d = GetValue(particles, index);
+  if(d < 0.f)return GetGradient(particles, index) * -d;
+  else return pxr::GfVec3f(0.f);
+}
+
 
 
 
@@ -451,6 +464,11 @@ pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
   return pxr::GfVec3f(0.f);// return (particles->predicted[index] - _center).GetNormalized();
 }
 
+pxr::GfVec3f MeshCollision::GetSDF(Particles* particles, size_t index)
+{
+  return pxr::GfVec3f(0.f);
+}
+
 
 //----------------------------------------------------------------------------------------
 // Self Collision
@@ -463,7 +481,7 @@ SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path,
   , _particles(particles)
   , _grid(NULL)
 {
-  _grid.Init(_particles->GetNumParticles(), &_particles->predicted[0], _particles->radius[0] * 2.f);
+  _grid.Init(_particles->GetNumParticles(), &_particles->predicted[0], _particles->radius[0] * 2.f + TOLERANCE_MARGIN);
 }
 
 SelfCollision::~SelfCollision()
@@ -550,6 +568,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
   _grid.Closests(index, &particles->position[0], closests, particles->radius[index]);
 
   for(int closest: closests) {
+    if(closest > index) continue;
     if(numCollide >= PARTICLE_MAX_CONTACTS)break;
 
     if ((particles->position[index] - particles->position[closest]).GetLength() < 
@@ -635,6 +654,11 @@ pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size
   return (particles->predicted[index] - particles->predicted[other]).GetNormalized();
 }
 
+pxr::GfVec3f SelfCollision::GetSDF(Particles* particles, size_t index)
+{
+  return pxr::GfVec3f(0.f);
+}
+
 // Velocity
 pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index, size_t other)
 {
@@ -651,6 +675,7 @@ void SelfCollision::SolveVelocities(Particles* particles, float dt)
 
 void SelfCollision::_SolveVelocities(size_t begin, size_t end, Particles* particles, float dt)
 {
+  return;
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     if(!CheckHit(index))continue;
@@ -660,11 +685,9 @@ void SelfCollision::_SolveVelocities(size_t begin, size_t end, Particles* partic
     for(size_t c = 0; c < GetNumContacts(index); ++c) {
       if(!GetContactHit(index, c))continue;
       const size_t other = GetContactComponent(index, c);
-      const float im0 = particles->invMass[index];
-      const float im1 = particles->invMass[other];
       const pxr::GfVec3f velocity = (particles->velocity[index] + particles->velocity[other]);
-      particles->velocity[index] += velocity * im0 / (im0 + im1) - particles->velocity[index];
-      particles->velocity[other] += velocity * im1 / (im0 + im1) - particles->velocity[other];
+      particles->velocity[index] += velocity  - particles->velocity[index];
+      particles->velocity[other] += velocity  - particles->velocity[other];
 
     }
 
