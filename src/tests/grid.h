@@ -37,6 +37,7 @@ private:
   Mesh*                     _mesh;
   Curve*                    _rays;
   Points*                   _hits;
+  Instancer*                _leaves;
   Grid3D                    _grid;
   BVH                       _bvh;
   pxr::SdfPath              _meshId;

@@ -34,42 +34,36 @@ class Grid3D : public Intersector {
     Geometry* geometry, const pxr::GfRay &ray, Location* hit, 
     double maxDistance, double* minDistance);
 
-  static uint32_t SLICE_INDICES[27*3];
 public:
 
   typedef std::vector<Component*> _Components;
 
-
   struct Cell
   {
-    Cell(uint32_t id, uint32_t numGeometries):index(id){
-      components.resize(numGeometries);
-    };
+    Cell(uint32_t id):index(id){};
 
-    void Insert(size_t geomIdx, Point* point);
-    void Insert(size_t geomIdx, Edge* edge);
-    void Insert(size_t geomIdx, Triangle* triangle);
+    void Insert(Point* point);
+    void Insert(Edge* edge);
+    void Insert(Triangle* triangle);
 
-    bool Raycast(const std::vector<Geometry*>& geometries, const pxr::GfRay& ray, 
+    bool Raycast(const Geometry* geometry, const pxr::GfRay& ray, 
       Location* hit, double maxDistance=-1, double* minDistance=NULL) const;
     
-    // neighboring bits
-    static void InitNeighborBits(uint32_t& neighborBits);
-    static void ClearNeighborBitsSlice(uint32_t& neighborBits, short axis, 
-      short slice);
-    static bool CheckNeighborBit(const uint32_t neighborBits, uint32_t index);
-
     // data
-    std::vector<_Components>              components; // components stored by geometry
+    _Components                           components;
     uint32_t                              index;
-    uint32_t                              neighborBits;
+
+  };
+
+  struct Node
+  {
 
   };
 
   Grid3D():_cells(NULL),_numCells(0){};
   ~Grid3D()
   {
-      DeleteCells();
+     DeleteCells();
   }
   pxr::GfVec3f GetCellPosition(uint32_t index);
   pxr::GfVec3f GetCellMin(uint32_t index);
@@ -86,11 +80,11 @@ public:
   void Init(const std::vector<Geometry*>& geometries) override;
   void Update() override;
 
-  void InsertMesh(Mesh* mesh, size_t idx);
-  void InsertCurve(Curve* curve, size_t idx);
-  void InsertPoints(Points* points, size_t idx);
+  void InsertMesh(Mesh* mesh);
+  void InsertCurve(Curve* curve);
+  void InsertPoints(Points* points);
 
-  // intersect a ray with the mesh
+  // intersect a ray with the grid
   bool Raycast(const pxr::GfRay& ray, Location* hitPoint,
     double maxDistance=DBL_MAX, double* minDistance=NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
@@ -99,9 +93,7 @@ public:
   Cell* GetCell(uint32_t index);
   Cell* GetCell(uint32_t x, uint32_t y, uint32_t z);
   Cell* GetCell(const pxr::GfVec3f& pos);
-  void GetNeighbors(uint32_t index, std::vector<Cell*>& neighbors);
-  void GetNeighbors(uint32_t index, std::vector<uint32_t>& neighbors);
-  void GetIndices(uint32_t index, uint32_t& X, uint32_t& Y, uint32_t& Z);
+  
   pxr::GfVec3f GetCellDimension(){return _cellDimension;};
   void IndexToXYZ(const uint32_t index, uint32_t& x, uint32_t& y, uint32_t& z);
   void XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, 
@@ -111,19 +103,33 @@ public:
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
     pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
-
 protected:
 
 
 private:
-  // bounding box of the mesh
   uint32_t                _resolution[3];
   pxr::GfVec3f            _cellDimension;
   // cells
   Cell**                  _cells;
   uint32_t                _numCells;
 
+};
 
+class MultiGrid3D : public Intersector
+{
+public:
+  // geometries
+  void Init(const std::vector<Geometry*>& geometries) override;
+  void Update() override;
+
+  // intersect a ray with the multi-grid
+  bool Raycast(const pxr::GfRay& ray, Location* hitPoint,
+    double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
+    double maxDistance = DBL_MAX) const override;
+
+private:
+  std::vector<Grid3D>  _grids;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

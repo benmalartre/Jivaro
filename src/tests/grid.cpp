@@ -246,14 +246,11 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
     uint64_t gridBuildT = CurrentTime() - startT;
     std::cout << "build grid : " << ((double)gridBuildT * 1e-9) << " seconds" << std::endl;
     
-    
-    
-
 
     _gridId = rootId.AppendChild(pxr::TfToken("grid"));
-    //_leaves = _SetupGridInstancer(stage, _gridId, &_grid);
-    //_scene.AddGeometry(_gridId, (Geometry*)_leaves );
-    //_scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::DirtyInstancer);
+    _leaves = _SetupGridInstancer(stage, _gridId, &_grid);
+    _scene.AddGeometry(_gridId, (Geometry*)_leaves );
+    _scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::AllDirty);
   }
   
   // create mesh that will be source of rays
