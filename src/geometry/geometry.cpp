@@ -26,22 +26,28 @@ JVR_NAMESPACE_OPEN_SCOPE
 float Geometry::FrameDuration = 1.f / 24.f;
 
 Geometry::Geometry()
+  : _type(INVALID)
+  , _mode(INPUT|OUTPUT)
+  , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
+  , _prim()
 {
-  _type = INVALID;
-  _mode = INPUT|OUTPUT;
-  _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   SetMatrix(pxr::GfMatrix4d(1.0));
 }
 
 Geometry::Geometry(int type, const pxr::GfMatrix4d& world)
+  : _type(type)
+  , _mode(INPUT|OUTPUT)
+  , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
+  , _prim()
 {
-  _type = type;
-  _mode = INPUT|OUTPUT;
-  _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   SetMatrix(world);
 }
 
 Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
+  : _type(INVALID)
+  , _mode(INPUT|OUTPUT)
+  , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
+  , _prim(prim)
 {
   if(prim.IsA<pxr::UsdGeomXform>())_type = Geometry::XFORM;
   else if(prim.IsA<pxr::UsdGeomPlane>())_type = Geometry::PLANE;
@@ -54,8 +60,7 @@ Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
   else if(prim.IsA<pxr::UsdGeomPoints>())_type = Geometry::POINT;
   else if(prim.IsA<pxr::UsdGeomPointInstancer>())_type = Geometry::INSTANCER;
   else _type = Geometry::INVALID;
-  _mode = INPUT|OUTPUT;
-  _wirecolor = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+
   SetMatrix(world);
 }
 
@@ -93,28 +98,28 @@ const pxr::GfVec3f Geometry::GetVelocity() const
 }
 
 Geometry::DirtyState 
-Geometry::Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Geometry::Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   SetMatrix(matrix);
-  return _Sync(prim, matrix, time);
+  return _Sync(matrix, time);
 }
 
-void Geometry::Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+void Geometry::Inject(const pxr::GfMatrix4d& parent,
   const pxr::UsdTimeCode& time)
 {
-  pxr::UsdGeomXformable xformable(prim);
+  pxr::UsdGeomXformable xformable(_prim);
   pxr::UsdGeomXformOp op = xformable.MakeMatrixXform();
 
   pxr::GfMatrix4d local = parent.GetInverse() * GetMatrix();
   op.Set(local, time);
 
-  pxr::UsdGeomBoundable usdBoundable(prim);
+  pxr::UsdGeomBoundable usdBoundable(_prim);
   pxr::VtArray<pxr::GfVec3f> bounds(2);
   bounds[0] = pxr::GfVec3f(_bbox.GetRange().GetMin());
   bounds[1] = pxr::GfVec3f(_bbox.GetRange().GetMax());
   usdBoundable.CreateExtentAttr().Set(bounds, time);
 
-  _Inject(prim, parent, time);
+  _Inject(parent, time);
 }
 
 const pxr::GfBBox3d 

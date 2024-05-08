@@ -453,12 +453,12 @@ void Mesh::Prepare(bool connectivity)
 }
 
 Geometry::DirtyState 
-Mesh::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Mesh::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  if(prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>())
+  if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomMesh>())
   {
     _previous = _positions;
-    pxr::UsdGeomMesh usdMesh(prim);
+    pxr::UsdGeomMesh usdMesh(_prim);
     const size_t nbPositions = _positions.size();
     usdMesh.GetPointsAttr().Get(&_positions, time);
   }
@@ -466,11 +466,11 @@ Mesh::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::
 }
 
 void 
-Mesh::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+Mesh::_Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time)
 {
-  if(prim.IsA<pxr::UsdGeomMesh>()) {
-    pxr::UsdGeomMesh usdMesh(prim);
+  if(_prim.IsA<pxr::UsdGeomMesh>()) {
+    pxr::UsdGeomMesh usdMesh(_prim);
 
     usdMesh.CreatePointsAttr().Set(GetPositions(), time);
     usdMesh.CreateFaceVertexCountsAttr().Set(GetFaceCounts(), time);

@@ -25,9 +25,9 @@ Xform::Xform(const pxr::GfMatrix4d& xfo)
 }
 
 Xform::Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
-  : Geometry(Geometry::XFORM, world)
+  : Geometry(xform.GetPrim(), world)
 {
-  _Sync(xform.GetPrim(), world, pxr::UsdTimeCode::Default().GetValue());
+  _Sync(world, pxr::UsdTimeCode::Default().GetValue());
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -44,9 +44,9 @@ Plane::Plane(const pxr::GfMatrix4d& xfo)
 }
 
 Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
-  : Geometry(Geometry::PLANE, world)
+  : Geometry(plane.GetPrim(), world)
 {
-  _Sync(plane.GetPrim(), world, pxr::UsdTimeCode::Default().GetValue());
+  _Sync(world, pxr::UsdTimeCode::Default().GetValue());
 }
 
 pxr::GfVec3f Plane::GetNormal() 
@@ -109,10 +109,10 @@ bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Plane::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Plane::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
 
-  size_t state  = _GetAttrValue<pxr::TfToken>(prim, pxr::UsdGeomTokens->axis, time, &_axis);
+  size_t state  = _GetAttrValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
 
   if(state = Geometry::DirtyState::ATTRIBUTE) {
     if (_axis == pxr::UsdGeomTokens->x)
@@ -123,18 +123,18 @@ Plane::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr:
       _normal = pxr::GfVec3f(0.f, 0.f, 1.f);
   }
 
-  state |= _GetAttrValue<float>(prim, pxr::UsdGeomTokens->width, time, &_width);
-  state |= _GetAttrValue<float>(prim, pxr::UsdGeomTokens->length, time, &_length);
-  state |= _GetAttrValue<bool>(prim, pxr::UsdGeomTokens->doubleSided, time, &_doubleSided);
+  state |= _GetAttrValue<float>(pxr::UsdGeomTokens->width, time, &_width);
+  state |= _GetAttrValue<float>(pxr::UsdGeomTokens->length, time, &_length);
+  state |= _GetAttrValue<bool>(pxr::UsdGeomTokens->doubleSided, time, &_doubleSided);
 
   return (Geometry::DirtyState)state;
 }
 
 void 
-Plane::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+Plane::_Inject(const pxr::GfMatrix4d& parent,
   const pxr::UsdTimeCode& time)
 {
-  pxr::UsdGeomPlane usdPlane(prim);
+  pxr::UsdGeomPlane usdPlane(_prim);
   usdPlane.CreateWidthAttr().Set(_width, time);
   usdPlane.CreateLengthAttr().Set(_length, time);
   usdPlane.CreateAxisAttr().Set(_axis);
@@ -151,7 +151,7 @@ Sphere::Sphere(const pxr::GfMatrix4d& xfo)
 }
 
 Sphere::Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world)
-  : Geometry(Geometry::SPHERE, world)
+  : Geometry(sphere.GetPrim(), world)
 {
   pxr::UsdAttribute radiusAttr = sphere.GetRadiusAttr();
   radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
@@ -198,16 +198,15 @@ bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Sphere::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Sphere::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  return _GetAttrValue<double>(prim, pxr::UsdGeomTokens->radius, time, &_radius);
+  return _GetAttrValue<double>(pxr::UsdGeomTokens->radius, time, &_radius);
 }
 
 void 
-Sphere::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
-  const pxr::UsdTimeCode& time)
+Sphere::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 {
-  pxr::UsdGeomSphere usdPlane(prim);
+  pxr::UsdGeomSphere usdPlane(_prim);
   usdPlane.CreateRadiusAttr().Set(_radius, time);
 }
 
@@ -222,7 +221,7 @@ Cube::Cube(const pxr::GfMatrix4d& xfo)
 }
 
 Cube::Cube(const pxr::UsdGeomCube& cube, const pxr::GfMatrix4d& world)
-  : Geometry(Geometry::CUBE, world)
+  : Geometry(cube.GetPrim(), world)
 {
   pxr::UsdAttribute sizeAttr = cube.GetSizeAttr();
   sizeAttr.Get(&_size, pxr::UsdTimeCode::Default());
@@ -306,17 +305,16 @@ Cube::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Cube::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Cube::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  return _GetAttrValue<float>(prim, pxr::UsdGeomTokens->size, time, &_size);
+  return _GetAttrValue<float>(pxr::UsdGeomTokens->size, time, &_size);
 
 }
 
 void 
-Cube::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
-  const pxr::UsdTimeCode& time)
+Cube::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 {
-  pxr::UsdGeomCube usdCube(prim);
+  pxr::UsdGeomCube usdCube(_prim);
   usdCube.CreateSizeAttr().Set(_size, time);
 }
 
@@ -333,7 +331,7 @@ Cone::Cone(const pxr::GfMatrix4d& xfo)
 }
 
 Cone::Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world)
-  : Geometry(Geometry::CONE, world)
+  : Geometry(cone.GetPrim(), world)
 {
   pxr::UsdAttribute radiusAttr = cone.GetRadiusAttr();
   radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
@@ -388,16 +386,15 @@ Cone::Closest(const pxr::GfVec3f& point, Location* hit,
 }
 
 Geometry::DirtyState 
-Cone::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Cone::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   return Geometry::DirtyState::CLEAN;
 }
 
 void 
-Cone::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
-  const pxr::UsdTimeCode& time)
+Cone::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 {
-  pxr::UsdGeomCone usdCone(prim);
+  pxr::UsdGeomCone usdCone(_prim);
   usdCone.CreateHeightAttr().Set(_height, time);
   usdCone.CreateRadiusAttr().Set(_radius, time);
   usdCone.CreateAxisAttr().Set(_axis, time);
@@ -415,7 +412,7 @@ Capsule::Capsule(const pxr::GfMatrix4d& xfo)
 }
 
 Capsule::Capsule(const pxr::UsdGeomCapsule& capsule, const pxr::GfMatrix4d& world)
-  : Geometry(Geometry::CAPSULE, world)
+  : Geometry(capsule.GetPrim(), world)
 {
   pxr::UsdAttribute radiusAttr = capsule.GetRadiusAttr();
   radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
@@ -442,17 +439,16 @@ bool Capsule::Closest(const pxr::GfVec3f& point, Location* hit,
 
 
 Geometry::DirtyState 
-Capsule::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Capsule::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-
   return Geometry::DirtyState::CLEAN;
 }
 
 void 
-Capsule::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+Capsule::_Inject(const pxr::GfMatrix4d& parent,
   const pxr::UsdTimeCode& time)
 {
-  pxr::UsdGeomCapsule usdCapsule(prim);
+  pxr::UsdGeomCapsule usdCapsule(_prim);
   usdCapsule.CreateHeightAttr().Set(_height, time);
   usdCapsule.CreateRadiusAttr().Set(_radius, time);
   usdCapsule.CreateAxisAttr().Set(_axis, time);

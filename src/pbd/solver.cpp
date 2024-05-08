@@ -64,14 +64,12 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
 
 Solver::~Solver()
 {
-  std::cout << "delete solver" << std::endl;
   for (auto& constraint : _constraints)delete constraint;
   for (auto& body : _bodies)delete body;
   for (auto& force : _force)delete force;
   _scene->RemoveGeometry(_pointsId);
   delete _points;
   delete _timer;
-  std::cout << "solver deleted" << std::endl;
 }
 
 void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
@@ -219,7 +217,6 @@ void Solver::AddConstraint(Constraint* constraint)
 { 
   _constraints.push_back(constraint); 
   const pxr::VtArray<int>& elements = constraint->GetElements();
-  for(const auto& elem: elements)_particles.counter[elem][0]+=1.f;
 };
 
 void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
@@ -272,9 +269,6 @@ void Solver::WeightBoundaries(Body* body)
 
 void Solver::_PrepareContacts()
 {
-  //_timer->Start();
-  for (auto& x : _particles.counter)x[1] = 0.f;
-
   for (auto& contact : _contacts)
     delete contact;
   _contacts.clear();
@@ -282,9 +276,7 @@ void Solver::_PrepareContacts()
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
-  for (auto& contact : _contacts)
-    for (auto& elem : contact->GetElements())
-      _particles.counter[elem][1]+=1.f;
+  _particles.ResetCounter(_contacts, 1);
 
   //_timer->Stop();
 }
@@ -386,7 +378,6 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::Reset()
 {
-  std::cout << "reset solver" << std::endl;
   // reset
   _particles.RemoveAllBodies();
 
@@ -394,6 +385,8 @@ void Solver::Reset()
     const pxr::GfMatrix4d& matrix = _bodies[b]->GetGeometry()->GetMatrix();
     _particles.AddBody(_bodies[b], matrix);
   }
+
+  _particles.ResetCounter(_constraints, 0);
 
   if(_bodies.size()) {
     WeightBoundaries(_bodies[0]);

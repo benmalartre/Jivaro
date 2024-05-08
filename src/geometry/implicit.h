@@ -18,7 +18,7 @@ public:
   Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   virtual ~Xform() {};
 
-  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override{};
 
 };
@@ -42,10 +42,10 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
-  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
@@ -73,10 +73,10 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
-  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
@@ -97,10 +97,10 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
-  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
@@ -121,9 +121,9 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
-  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
@@ -146,9 +146,9 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
-  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:

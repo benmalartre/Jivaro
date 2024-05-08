@@ -35,7 +35,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
-
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
@@ -50,11 +49,11 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(&_scene, stage, _solverId);
+  _solver = _GenerateSolver(&_scene, stage, _solverId, 16);
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .1f;
+  float size = .05f;
 
   
   for(size_t x = 0; x < 1; ++x) {
@@ -83,8 +82,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
 
   _scene.AddGeometry(collideId, spheres[collideId]);
+  
 
-    std::cout << "created collide spher" << std::endl;
   
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
@@ -94,12 +93,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene.AddGeometry(prim.GetPath(), mesh);
 
-      std::cout << "create body" << std::endl;
-      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, 0.1f, 0.1f);
-        std::cout << "created body" << std::endl;
-      _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.f);
-        std::cout << "created constraints" << std::endl;
-      //_solver->CreateConstraints(body, Constraint::DIHEDRAL, 2000.f, 0.f);
+      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 2.f, 0.1f, 0.1f);
+      //_solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
+      _solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.f);
       _solver->AddElement(body, mesh, prim.GetPath());
     }
   }
@@ -119,7 +115,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, _ground, _groundId);
   }
 
-  bool createSelfCollision = true;
+  bool createSelfCollision = false;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);

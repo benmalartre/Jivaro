@@ -177,12 +177,12 @@ Curve::SetCurveWidths(size_t curveIdx, const pxr::VtArray<float>& widths)
 }
 
 Geometry::DirtyState 
-Curve::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Curve::_Sync( const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  if(prim.IsValid() && prim.IsA<pxr::UsdGeomCurves>())
+  if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomCurves>())
   {
     _previous = _positions;
-    pxr::UsdGeomBasisCurves usdCurve(prim);
+    pxr::UsdGeomBasisCurves usdCurve(_prim);
     const size_t nbPositions = _positions.size();
     usdCurve.GetPointsAttr().Get(&_positions, time);
   }
@@ -190,11 +190,10 @@ Curve::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr:
 }
 
 void 
-Curve::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time)
+Curve::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 {
-  if(prim.IsA<pxr::UsdGeomCurves>()) {
-    pxr::UsdGeomCurves usdCurve(prim);
+  if(_prim.IsA<pxr::UsdGeomCurves>()) {
+    pxr::UsdGeomCurves usdCurve(_prim);
 
     usdCurve.CreatePointsAttr().Set(GetPositions(), time);
     usdCurve.CreateCurveVertexCountsAttr().Set(GetCvCounts(), time);

@@ -12,6 +12,7 @@ void Contact::Init(Collision* collision, Particles* particles, size_t index)
 {
   _normal = collision->GetGradient(particles, index);
   _initDepth = collision->GetValue(particles, index);
+  if(_initDepth > 0.f) _initDepth = 0.f;
   _velocity = collision->GetVelocity(particles, index);
 }
 
@@ -21,6 +22,7 @@ void Contact::Init(SelfCollision* collision, Particles* particles, size_t index,
   _geomId = index;
   _normal = collision->GetGradient(particles, index, other);
   _initDepth = collision->GetValue(particles, index, other);
+  if(_initDepth > 0.f) _initDepth = 0.f;
   _velocity = collision->GetVelocity(particles, index, other);
 }
 

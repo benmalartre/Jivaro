@@ -13,6 +13,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
+class Constraint;
 
 class Body : public Element
 {
@@ -83,6 +84,8 @@ struct Particles
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);
 
+  void ResetCounter(const std::vector<Constraint*>& constraints, size_t c);
+
   void _EnsureDataSize(size_t size);
 
   pxr::VtArray<short>        state;
@@ -91,6 +94,7 @@ struct Particles
   pxr::VtArray<float>        invMass;
   pxr::VtArray<float>        radius;
   pxr::VtArray<pxr::GfVec3f> rest;
+  pxr::VtArray<pxr::GfQuatf> rotation;
   pxr::VtArray<pxr::GfVec3f> position;
   pxr::VtArray<pxr::GfVec3f> predicted;
   pxr::VtArray<pxr::GfVec3f> velocity;

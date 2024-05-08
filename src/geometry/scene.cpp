@@ -53,7 +53,7 @@ Scene::Sync(const pxr::UsdStageRefPtr& stage, double time)
       continue;
     }
     pxr::GfMatrix4d matrix(xformCache.GetLocalToWorldTransform(prim));
-    geometry->Sync(prim, matrix, time);
+    geometry->Sync(matrix, time);
   }
 }
 
@@ -191,7 +191,8 @@ void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage,
   }
 
   const pxr::GfMatrix4d& parent = _GetParentXform(prim, time);
-  geometry->Inject(prim, parent, time);
+  geometry->SetPrim(prim);
+  geometry->Inject(parent, time);
   
 }
 

@@ -1,6 +1,7 @@
 #include "../geometry/geometry.h"
 #include "../geometry/points.h"
 #include "../pbd/particle.h"
+#include "../pbd/constraint.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -9,17 +10,18 @@ void Particles::_EnsureDataSize(size_t desired)
 {
   if(state.size() > desired)return;
   size_t size = ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
-  mass.resize(size, 1.f);
-  invMass.resize(size, 1.f);
-  radius.resize(size, 1.f);
-  rest.resize(size, 0.f);
-  position.resize(size, pxr::GfVec3f(0.f));
-  predicted.resize(size, pxr::GfVec3f(0.f));
-  velocity.resize(size, pxr::GfVec3f(0.f));
-  body.resize(size, 0);
-  color.resize(size, pxr::GfVec3f(0.f));
-  state.resize(size, 0);
-  counter.resize(size, pxr::GfVec2f(0.f));
+  mass.resize(size);
+  invMass.resize(size);
+  radius.resize(size);
+  rest.resize(size);
+  position.resize(size);
+  predicted.resize(size);
+  rotation.resize(size);
+  velocity.resize(size);
+  body.resize(size);
+  color.resize(size);
+  state.resize(size);
+  counter.resize(size);
 }
 
 void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
@@ -46,6 +48,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
     rest[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
+    rotation[idx] = pxr::GfQuatf(1.f);
     velocity[idx] = item->GetVelocity();
     body[idx] = index;
     color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f;
@@ -74,6 +77,7 @@ void Particles::RemoveBody(Body* item)
     rest[lhi]      = rest[rhi];
     position[lhi]  = position[rhi];
     predicted[lhi] = predicted[rhi];
+    rotation[lhi]  = rotation[rhi];
     velocity[lhi]  = velocity[rhi];
     body[lhi]      = body[rhi] - 1;
     color[lhi]     = color[rhi];
@@ -88,6 +92,7 @@ void Particles::RemoveBody(Body* item)
   rest.resize(size);
   position.resize(size);
   predicted.resize(size);
+  rotation.resize(size);
   velocity.resize(size);
   body.resize(size);
   color.resize(size);
@@ -105,14 +110,13 @@ void Particles::RemoveAllBodies()
   rest.clear();
   position.clear();
   predicted.clear();
+  rotation.clear();
   velocity.clear();
   body.clear();
   color.clear();
   state.clear();
   counter.clear();
   num = 0;
-
-  std::cout << "clear particles " << num << std::endl;
 }
 
 void Particles::SetAllState( short s)
@@ -128,6 +132,15 @@ void Particles::SetBodyState(Body* item, short s)
   for (size_t r = begin; r < end; ++r) {
     state[r] = s;
   }
+}
+
+void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t c)
+{
+  for (auto& item: counter)item[c] = 0.f;
+
+  for (auto& constraint : constraints)
+    for (auto& elem : constraint->GetElements())
+      counter[elem][c]+=1.f;
 }
 
 

@@ -96,9 +96,10 @@ public:
   virtual void ComputeBoundingBox() {};
   const pxr::GfBBox3d GetBoundingBox(bool worldSpace=true) const;
 
-  virtual DirtyState Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  void SetPrim(const pxr::UsdPrim& prim){_prim = prim;};
+  virtual DirtyState Sync(const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
-  virtual void Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  virtual void Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
 
   // query 3d position on geometry
@@ -109,20 +110,21 @@ public:
 
 protected:
   void _ComputeVelocity();
-  virtual DirtyState _Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, 
+  virtual DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) { return DirtyState::CLEAN;};
 
-  virtual void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  virtual void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) = 0;
 
   template<typename T>
-  DirtyState _GetAttrValue(const pxr::UsdPrim& prim, const pxr::TfToken& name, 
+  DirtyState _GetAttrValue(const pxr::TfToken& name, 
     const pxr::UsdTimeCode& time, T* value);
 
   // infos
   short                               _mode;
   int                                 _type;
   pxr::SdfPath                        _path;
+  pxr::UsdPrim                        _prim;
 
   // bounding box
   pxr::GfMatrix4d                     _matrix;
@@ -136,10 +138,10 @@ protected:
 
 template<typename T>
 Geometry::DirtyState
-Geometry::_GetAttrValue(const pxr::UsdPrim& prim, const pxr::TfToken& name, 
+Geometry::_GetAttrValue(const pxr::TfToken& name, 
   const pxr::UsdTimeCode& time, T *value)
 {
-  pxr::UsdAttribute attr = prim.GetAttribute(name);
+  pxr::UsdAttribute attr = _prim.GetAttribute(name);
   if(!attr.IsValid())return DirtyState::CLEAN;
 
   T tmp;

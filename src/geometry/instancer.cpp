@@ -93,9 +93,9 @@ void Instancer::Set(
     );
   }
 
-void Instancer::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
+void Instancer::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 {
-  pxr::UsdGeomPointInstancer instancer(prim);
+  pxr::UsdGeomPointInstancer instancer(_prim);
   
   instancer.CreatePositionsAttr().Set(_positions, time);
   instancer.CreateScalesAttr().Set(_scales, time);

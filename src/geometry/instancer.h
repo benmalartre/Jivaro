@@ -33,7 +33,7 @@ public:
   void RemovePrototype(pxr::SdfPath& path);
 
 protected:
-  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
 private:

@@ -19,12 +19,12 @@ Points::Points(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
 }
 
 Geometry::DirtyState 
-Points::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Points::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  if(prim.IsValid() && prim.IsA<pxr::UsdGeomPoints>())
+  if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomPoints>())
   {
     _previous = _positions;
-    pxr::UsdGeomPoints usdPoints(prim);
+    pxr::UsdGeomPoints usdPoints(_prim);
     const size_t nbPositions = _positions.size();
     usdPoints.GetPointsAttr().Get(&_positions, time);
   }
@@ -32,11 +32,11 @@ Points::_Sync(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix, const pxr
 }
 
 void 
-Points::_Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+Points::_Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time)
 {
-  if(prim.IsA<pxr::UsdGeomPoints>()) {
-    pxr::UsdGeomPoints usdPoints(prim);
+  if(_prim.IsA<pxr::UsdGeomPoints>()) {
+    pxr::UsdGeomPoints usdPoints(_prim);
     usdPoints.CreatePointsAttr().Set(GetPositions(), time);
     usdPoints.CreateWidthsAttr().Set(GetWidths(), time);
     usdPoints.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);

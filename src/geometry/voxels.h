@@ -42,7 +42,7 @@ private:
   void _ProximityWork(size_t begin, size_t end);
   size_t _ComputeFlatIndex(size_t x, size_t y, size_t z, short axis);
 
-  void _Inject(pxr::UsdPrim& prim, const pxr::GfMatrix4d& parent,
+  void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default())override{};
 
   pxr::GfVec3i            _resolution;

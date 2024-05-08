@@ -16,7 +16,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = 0.05f;
+const float Collision::TOLERANCE_MARGIN = 0.1f;
 
 // 
 // Contacts
@@ -209,7 +209,6 @@ void PlaneCollision::_UpdatePositionAndNormal()
   _position =  plane->GetOrigin();
   _normal = plane->GetNormal();
 }
-
 
 void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
