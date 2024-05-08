@@ -60,6 +60,7 @@ public:
 
 
 protected:
+  float _ComputeLagrangeMultiplier(Particles* particles, size_t elem);
   void _ResetCorrection();
 
   pxr::VtArray<int>             _elements;

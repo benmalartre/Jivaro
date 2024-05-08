@@ -13,7 +13,7 @@ Curve::Curve(const pxr::GfMatrix4d& xfo)
 }
 
 Curve::Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world)
-  : Deformable(Geometry::CURVE, world)
+  : Deformable(curve.GetPrim(), world)
 {
   pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());

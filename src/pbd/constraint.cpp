@@ -174,7 +174,7 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
   const pxr::GfMatrix4d& m = geometry->GetMatrix();
 
   size_t numElements = _elements.size() / ELEM_SIZE;
-  _rest.resize(numElements * 2);
+  _rest.resize(numElements);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
     pxr::GfVec3f center = (
       m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0]]),
@@ -192,8 +192,8 @@ void BendConstraint::Solve(Particles* particles, float dt)
   const size_t numElements = _elements.size() / ELEM_SIZE;
   const float alpha = _compliance / (dt * dt);
 
-  pxr::GfVec3f x0, x1, x2, center, h;
-  float w0, w1, w2, W, hL;
+  pxr::GfVec3f x0, x1, x2, center, h, correction;
+  float w0, w1, w2, W, hL, C;
   size_t a, b, c;
   
   for(size_t elem = 0; elem  < numElements; ++elem) {
@@ -216,12 +216,13 @@ void BendConstraint::Solve(Particles* particles, float dt)
     center = (x0 + x1 + x2) / 3.f;
     h = x1 - center;
     hL = h.GetLength();
-    if(hL>1e-6f)h *= (1.f - _rest[elem] / hL);
-    else h = particles->rotation[b].Transform(pxr::GfVec3f(_rest[elem], 0.f, 0.f));
 
-    _correction[elem * ELEM_SIZE + 0] +=  2.f * w0 / (W + alpha) * h;
-    _correction[elem * ELEM_SIZE + 1] += -4.f * w1 / (W + alpha) * h;
-    _correction[elem * ELEM_SIZE + 2] +=  2.f * w2 / (W + alpha) * h; 
+    if(hL>1e-6f)correction = h * (1.f - (_rest[elem] / hL));
+    else correction = pxr::GfVec3f(0.f);
+
+    _correction[elem * ELEM_SIZE + 0] += (2.f * w0 / W) * correction;
+    _correction[elem * ELEM_SIZE + 1] -= (4.f * w1 / W) * correction;
+    _correction[elem * ELEM_SIZE + 1] += (2.f * w2 / W) * correction; 
   }
 }
 
@@ -268,9 +269,9 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
         }
         if (best >= 0 && existing[best] != n1) {
           existing[n1] = best;
-          allElements.push_back(n1);
-          allElements.push_back(p);
-          allElements.push_back(best);
+          allElements.push_back(n1 + body->GetOffset());
+          allElements.push_back(p + body->GetOffset());
+          allElements.push_back(best + body->GetOffset());
         }
       }
     }
@@ -349,55 +350,58 @@ void DihedralConstraint::Solve(Particles* particles, float dt)
 {
   _ResetCorrection();
 
-  const size_t numElements = _elements.size() / ELEM_SIZE;
+  size_t numElements = _elements.size() / ELEM_SIZE;
+  size_t a, b, c, d;
+  pxr::GfVec3f x0, x1, x2, x3, e, n1, n2, d0, d1, d2, d3;
+  float w0, w1, w2, w3, eL, invL, dot, phi, lambda;
   
   for(size_t elem = 0; elem  < numElements; ++elem) {
 
-    const size_t a = _elements[elem * ELEM_SIZE + 0];
-    const size_t b = _elements[elem * ELEM_SIZE + 1];
-    const size_t c = _elements[elem * ELEM_SIZE + 2];
-    const size_t d = _elements[elem * ELEM_SIZE + 3];
+    a = _elements[elem * ELEM_SIZE + 0];
+    b = _elements[elem * ELEM_SIZE + 1];
+    c = _elements[elem * ELEM_SIZE + 2];
+    d = _elements[elem * ELEM_SIZE + 3];
 
-    const pxr::GfVec3f& p0 = particles->predicted[a];
-    const pxr::GfVec3f& p1 = particles->predicted[b];
-    const pxr::GfVec3f& p2 = particles->predicted[c];
-    const pxr::GfVec3f& p3 = particles->predicted[d];
+    x0 = particles->predicted[a];
+    x1 = particles->predicted[b];
+    x2 = particles->predicted[c];
+    x3 = particles->predicted[d];
 
-    const float w0 = particles->invMass[a];
-    const float w1 = particles->invMass[b];
-    const float w2 = particles->invMass[c];
-    const float w3 = particles->invMass[d];
+    w0 = particles->invMass[a];
+    w1 = particles->invMass[b];
+    w2 = particles->invMass[c];
+    w3 = particles->invMass[d];
 
     if (w0 == 0.f && w1 == 0.f)continue;
 
-    pxr::GfVec3f e = p3 - p2;
-    float eL = e.GetLength();
+    e = x3 - x2;
+    eL = e.GetLength();
     if (eL < 1e-6) continue;
 
-    float invL = 1.f / eL;
+    invL = 1.f / eL;
 
-    pxr::GfVec3f n1 = pxr::GfCross(p2 - p0, p3 - p0);
+    n1 = pxr::GfCross(x2 - x0, x3 - x0);
     n1 /= n1.GetLengthSq();
 
-    pxr::GfVec3f n2 = pxr::GfCross(p3 - p1, p2 - p1);
+    n2 = pxr::GfCross(x3 - x1, x2 - x1);
     n2 /= n2.GetLengthSq();
 
-    pxr::GfVec3f d0 = eL * n1 * w0;
-    pxr::GfVec3f d1 = eL * n2 * w1;
-    pxr::GfVec3f d2 = (pxr::GfDot(p0 - p3, e) * invL * n1 + pxr::GfDot(p1 - p3, e) * invL * n2) * w2;
-    pxr::GfVec3f d3 = (pxr::GfDot(p2 - p0, e) * invL * n1 + pxr::GfDot(p2 - p1, e) * invL * n2) * w3;
+    d0 = eL * n1 * w0;
+    d1 = eL * n2 * w1;
+    d2 = (pxr::GfDot(x0 - x3, e) * invL * n1 + pxr::GfDot(x1 - x3, e) * invL * n2) * w2;
+    d3 = (pxr::GfDot(x2 - x0, e) * invL * n1 + pxr::GfDot(x2 - x1, e) * invL * n2) * w3;
 
     n1.Normalize();
     n2.Normalize();
-    float dot = pxr::GfDot(n1, n2);
+    dot = pxr::GfDot(n1, n2);
 
     if (dot < -1.0) dot = -1.0;
     if (dot >  1.0) dot =  1.0;
-    float phi = acos(dot);	
+    phi = acos(dot);	
 
     // Real phi = (-0.6981317 * dot * dot - 0.8726646) * dot + 1.570796;	// fast approximation
 
-    float lambda = d0.GetLengthSq() + d1.GetLengthSq() + d2.GetLengthSq() + d3.GetLengthSq();
+    lambda = d0.GetLengthSq() + d1.GetLengthSq() + d2.GetLengthSq() + d3.GetLengthSq();
 
     if (lambda == 0.0) continue;
 

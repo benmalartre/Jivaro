@@ -83,8 +83,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   _scene.AddGeometry(collideId, spheres[collideId]);
   
-
-  
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
     if (prim.IsA<pxr::UsdGeomMesh>()) {
@@ -93,8 +91,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene.AddGeometry(prim.GetPath(), mesh);
 
-      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 2.f, 0.1f, 0.1f);
-      //_solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
+      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.5f, 0.1f, 0.1f);
+      _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
       _solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.f);
       _solver->AddElement(body, mesh, prim.GetPath());
     }

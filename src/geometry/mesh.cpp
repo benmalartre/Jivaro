@@ -29,7 +29,7 @@ Mesh::Mesh(const pxr::GfMatrix4d& xfo)
 }
 
 Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
-  : Deformable(Geometry::MESH, world)
+  : Deformable(mesh.GetPrim(), world)
   , _flags(0)
 {
   pxr::UsdAttribute pointsAttr = mesh.GetPointsAttr();
