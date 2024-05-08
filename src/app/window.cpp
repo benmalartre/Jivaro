@@ -1111,7 +1111,6 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   app->SetActiveWindow(parent);
   ImGui::SetCurrentContext(parent->GetContext());
   
-
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
   double x, y;
   glfwGetCursorPos(window, &x, &y);

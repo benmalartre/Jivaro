@@ -64,6 +64,7 @@ protected:
 
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _correction;
+  float                         _stiffness;
   float                         _compliance;
   float                         _damping;
   pxr::TfToken                  _key;

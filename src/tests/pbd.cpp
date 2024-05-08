@@ -54,7 +54,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .025f;
+  float size = .02f;
 
   
   for(size_t x = 0; x < 1; ++x) {
@@ -73,28 +73,18 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfVec3f axis(0.f,1.f,0.f);
   size_t n = 8;
   const double rStep = 360.0 / static_cast<double>(n);
-/*
-  for (size_t x = 0; x < n; ++x) {
-    std::string name = "sphere_collide_" + std::to_string(x);
-    pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
-    pxr::GfRotation rotate(axis, x * rStep);
-    spheres[collideId] =
-      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d().SetTranslate(rotate.TransformDir(offset)));
 
-    _scene.AddGeometry(collideId, spheres[collideId]);
-  }
-  
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
-    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d());
+    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
 
-    _AddAnimationSamples(stage, collideId);
+  //_AddAnimationSamples(stage, collideId);
 
 
   _scene.AddGeometry(collideId, spheres[collideId]);
   
-*/
+
    
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
@@ -104,8 +94,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene.AddGeometry(prim.GetPath(), mesh);
 
-      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 1.f, 0.2f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
+      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, 0.1f, 0.1f);
+      _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.f);
       //_solver->CreateConstraints(body, Constraint::DIHEDRAL, 2000.f, 0.f);
       _solver->AddElement(body, mesh, prim.GetPath());
 
@@ -144,44 +134,13 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _scene.Sync(stage, time);
   _solver->Update(stage, time);
 
-  for (auto& execPrim : _scene.GetPrims()) {
 
-    pxr::UsdPrim usdPrim = stage->GetPrimAtPath(execPrim.first);
-    if (usdPrim.IsValid() && usdPrim.IsA<pxr::UsdGeomMesh>()) {
-      const auto& bodyIt = _bodyMap.find(usdPrim.GetPath());
-      if (bodyIt != _bodyMap.end()) {
-        Body* body = bodyIt->second;
-        Mesh* mesh = (Mesh*)execPrim.second.geom;
-        mesh->SetPositions(&_solver->GetParticles()->position[body->GetOffset()], mesh->GetNumPoints());
-      } 
-
-      execPrim.second.bits =
-        pxr::HdChangeTracker::Clean |
-        pxr::HdChangeTracker::DirtyPoints |
-        pxr::HdChangeTracker::DirtyWidths |
-        pxr::HdChangeTracker::DirtyPrimvar;
-    }
-
-    
-  }
 }
 
 void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::SdfPath rootId = rootPrim.GetPath().AppendChild(pxr::TfToken("test"));
-
-  pxr::UsdPrimRange primRange = stage->TraverseAll();
-
-  for (pxr::UsdPrim prim : primRange) {
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
-      pxr::TfToken meshName(prim.GetName().GetString() + "RT");
-      pxr::SdfPath meshPath(rootId.AppendChild(meshName));
-      _scene.Remove(meshPath);
-    }
-  }
   delete _solver;
   delete _ground;
 

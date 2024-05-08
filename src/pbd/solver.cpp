@@ -184,68 +184,15 @@ void Solver::SetBodyVelocity(Body* body, const pxr::GfVec3f& velocity)
   }
 }
 
-
 void Solver::AddCollision(Collision* collision)
 {
   _collisions.push_back(collision);
-/*
-  float radius = 0.2f;
-  Voxels voxels;
-  voxels.Init(collider, radius);
-  voxels.Trace(0);
-  voxels.Trace(1);
-  voxels.Trace(2);
-  voxels.Build();
-  _SetupVoxels(stage, &voxels, radius);
-
-  _TestHashGrid(&voxels, radius);
-
-  BenchmarkParallelEvaluation(this);
-
-  size_t numRays = 2048;
-  std::vector<pxr::GfRay> rays(numRays);
-  for (size_t r = 0; r < numRays; ++r) {
-    rays[r] = pxr::GfRay(pxr::GfVec3f(0.f),
-      pxr::GfVec3f(RANDOM_LO_HI(-1, 1), RANDOM_LO_HI(-1, 1), RANDOM_LO_HI(-1, 1)).GetNormalized());
-  }
-
-  std::vector<pxr::GfVec3f> result;
-
-
-  _colliders = colliders;
-
-  std::cout << "### build bvh (morton) : " << std::endl;
-  for(auto& collider: _colliders) {
-    std::cout << " collider : " << collider << std::endl;
-  }
-  uint64_t T = CurrentTime();
-  BVH bvh;
-  bvh.Init(_colliders);
-  std::cout << "   build boundary volume hierarchy : " << ((CurrentTime() - T) * 1e-9) << std::endl;
-
-  T = CurrentTime();
-  for (auto& ray : rays) {
-    double minDistance = DBL_MAX;
-    Location hit;
-    const pxr::GfVec3f* points = _colliders[0]->GetPositionsCPtr();
-    if (bvh.Raycast(points, ray, &hit, DBL_MAX, &minDistance)) {
-      result.push_back(hit.GetPosition(colliders[hit.GetGeometryIndex()]));
-    }
-  }
-  std::cout << "   hit time (" << numRays << " rays) : " << ((CurrentTime() - T) * 1e-9) << std::endl;
-  _SetupBVHInstancer(stage, &bvh);
-
-
-  _SetupResults(stage, result);
-*/
 }
-
-
 
 void Solver::CreateConstraints(Body* body, short type, float stiffness, float damping)
 {
   Geometry* geom = body->GetGeometry();
-
+  size_t start = _constraints.size();
   switch(type) {
     case Constraint::STRETCH:
       CreateStretchConstraints(body, _constraints, stiffness, damping);
@@ -261,14 +208,16 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
       }
       break;
   }
-
+  size_t end = _constraints.size();
+  for(size_t c = start; c < end; ++c)
+    AddConstraint(_constraints[c]);
 }
 
 void Solver::AddConstraint(Constraint* constraint) 
 { 
   _constraints.push_back(constraint); 
   const pxr::VtArray<int>& elements = constraint->GetElements();
-  for(const auto& elem: elements)_particles.m[elem]++;
+  for(const auto& elem: elements)_particles.cnt[elem][0]+=1.f;
 };
 
 void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
@@ -280,9 +229,10 @@ void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
 
 void Solver::LockPoints(Body* body, pxr::VtArray<int>& elements)
 {
+  const size_t offset = body->GetOffset();
   for(size_t i = 0; i < elements.size(); ++i) {
-    _particles.mass[elements[i] + body->GetOffset()] = 0.f;
-    _particles.invMass[elements[i] + body->GetOffset()] = 0.f;
+    _particles.mass[elements[i] + offset] = 0.f;
+    _particles.invMass[elements[i] + offset] = 0.f;
   }
 }
 
@@ -296,36 +246,35 @@ void Solver::UpdatePoints()
   _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
 }
 
-void Solver::WeightBoundaries()
+void Solver::WeightBoundaries(Body* body)
 {
-  for(const auto& _body: _bodies) {
-    size_t offset = _body->GetOffset();
-    size_t numPoints = _body->GetNumPoints();
-  
-    if(_body->GetGeometry()->GetType() == Geometry::MESH) {
-      Mesh* mesh = (Mesh*)_body->GetGeometry();
-      HalfEdgeGraph* graph = mesh->GetEdgesGraph();
-      const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
-      for(size_t p = 0; p < boundaries.size(); ++p){
-        if(boundaries[p]) {
-          size_t index = p + offset;
-          
-          if(_particles.mass[index] > 0.f) {
-            _particles.mass[index] *= 1.2f;
-            _particles.invMass[index] = 1.f / _particles.mass[index];
-          }
+  size_t offset = body->GetOffset();
+  size_t numPoints = body->GetNumPoints();
+
+  if(body->GetGeometry()->GetType() == Geometry::MESH) {
+    Mesh* mesh = (Mesh*)body->GetGeometry();
+    HalfEdgeGraph* graph = mesh->GetEdgesGraph();
+    const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
+    for(size_t p = 0; p < boundaries.size(); ++p){
+      if(boundaries[p]) {
+        size_t index = p + offset;
+        
+        if(_particles.mass[index] > 0.f) {
+          _particles.mass[index] *= 1.2f;
+          _particles.invMass[index] = 1.f / _particles.mass[index];
         }
       }
     }
-  } 
+  }
 }
 
 void Solver::_PrepareContacts()
 {
   //_timer->Start();
-  memset(&_particles.n[0], 0, _particles.GetNumParticles() * sizeof(int));
+  for (auto& x : _particles.cnt)x[1] = 0.f;
 
-  for (auto& contact : _contacts)delete contact;
+  for (auto& contact : _contacts)
+    delete contact;
   _contacts.clear();
 
   for (auto& collision : _collisions)
@@ -333,7 +282,7 @@ void Solver::_PrepareContacts()
 
   for (auto& contact : _contacts)
     for (auto& elem : contact->GetElements())
-      _particles.n[elem]++;
+      _particles.cnt[elem][1]+=1.f;
 
   //_timer->Stop();
 }
@@ -357,7 +306,11 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
     force->Apply(begin, end, &_particles, _stepTime);
 
   for (size_t index = begin; index < end; ++index) {
-    //if(_particles.state[index] != Particles::ACTIVE)continue;
+    if(_particles.state[index] == Particles::IDLE)
+      if((predicted[index] - position[index]).GetLength() > _sleepThreshold )
+        _particles.state[index] = Particles::ACTIVE;
+
+    if(_particles.state[index] != Particles::ACTIVE)continue;
 
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
@@ -370,23 +323,21 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   const pxr::GfVec3f* predicted = &_particles.predicted[0];
   pxr::GfVec3f* position = &_particles.position[0];
   pxr::GfVec3f* velocity = &_particles.velocity[0];
-  pxr::GfVec3f* previous = &_particles.previous[0];
   short* state = &_particles.state[0];
 
   float invDt = 1.f / _stepTime;
 
   for(size_t index = begin; index < end; ++index) {
-    //if (state[index] != Particles::ACTIVE)continue;
+    if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
 
     if (velocity[index].GetLength() < _sleepThreshold) {
       //state[index] = Particles::IDLE;
-      velocity[index] = pxr::GfVec3f(0.f);
+      //velocity[index] = pxr::GfVec3f(0.f);
     }
 
     // update position
-    previous[index] = position[index];
     position[index] = predicted[index];
   }
 }
@@ -434,7 +385,6 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 void Solver::Reset()
 {
   // reset
-  size_t offset = 0;
   _particles.RemoveAllBodies();
 
   for (size_t b = 0; b < _bodies.size(); ++b) {
@@ -442,8 +392,10 @@ void Solver::Reset()
     _particles.AddBody(_bodies[b], matrix);
   }
 
-  WeightBoundaries();
-  //LockPoints();
+  if(_bodies.size()) {
+    WeightBoundaries(_bodies[0]);
+    LockPoints(_bodies[0], pxr::VtArray<int>({0,1,2,3,4,5,6,7,8,9}));
+  }
 
   _particles.SetAllState(Particles::ACTIVE);
 }
@@ -457,6 +409,7 @@ void Solver::Step()
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
+  size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
   _PrepareContacts();
 
   for(size_t si = 0; si < _subSteps; ++si) {
@@ -466,7 +419,8 @@ void Solver::Step()
     pxr::WorkParallelForN(
       numParticles,
       std::bind(&Solver::_IntegrateParticles, this,
-        std::placeholders::_1, std::placeholders::_2));
+        std::placeholders::_1, std::placeholders::_2), packetSize);
+
     //_timer->Next();
     // solve and apply constraint
     _SolveConstraints(_constraints);
@@ -476,12 +430,13 @@ void Solver::Step()
     _UpdateContacts();
     // solve and apply contacts
     _SolveConstraints(_contacts);
+
     //_timer->Next();
     // update particles
     pxr::WorkParallelForN(
       numParticles,
       std::bind(&Solver::_UpdateParticles, this,
-        std::placeholders::_1, std::placeholders::_2));
+        std::placeholders::_1, std::placeholders::_2), packetSize);
     //_timer->Next();
     // solve velocities
     //_timer->Stop();
@@ -490,8 +445,6 @@ void Solver::Step()
   
   //_timer->Update();
   //_timer->Log();
-
-  //std::cout << _particles.GetPredicted() << std::endl;
 
   //UpdateGeometries();
 }

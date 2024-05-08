@@ -13,6 +13,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 Constraint::Constraint(size_t elementSize, float stiffness, 
   float damping, const pxr::VtArray<int>& elems) 
   : _elements(elems)
+  , _stiffness(stiffness)
   , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
   , _damping(damping)
 {
@@ -36,9 +37,11 @@ void Constraint::_ResetCorrection()
 void Constraint::Apply(Particles* particles)
 {
   size_t corrIdx = 0;
-  for(const auto& elem: _elements) {
-    particles->predicted[elem] += _correction[corrIdx++] / static_cast<float>(particles->m[elem]);
-  }
+  for(const auto& elem: _elements) 
+    if(particles->cnt[elem][0]>0.f)
+      particles->predicted[elem] += _correction[corrIdx++] / particles->cnt[elem][0];
+    else
+      particles->predicted[elem] += _correction[corrIdx++];
 }
 
 size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
@@ -75,27 +78,27 @@ void StretchConstraint::Solve(Particles* particles, float dt)
     const size_t a = _elements[elem * ELEM_SIZE + 0];
     const size_t b = _elements[elem * ELEM_SIZE + 1];
 
+    const pxr::GfVec3f p0 = particles->predicted[a];
+    const pxr::GfVec3f p1 = particles->predicted[b];
+
     const float w0 = particles->invMass[a];
     const float w1 = particles->invMass[b];
 
-    float K = w0 + w1;
-    pxr::GfVec3f normal = particles->predicted[a] - particles->predicted[b];
-    const float d = normal.GetLength();
-    
-    if(d < 1e-6f || K < 1e-6f) continue;
+    float w = w0 + w1;
+    pxr::GfVec3f normal = p0 - p1;
+    const float distance = normal.GetLength();
+    const float C = distance - _rest[elem];
 
-    const float C = d - _rest[elem];
-    normal.Normalize();
-    K += _compliance * dt * dt;
+    if(distance < 1e-6f || w < 1e-6f) continue;
 
-	  const pxr::GfVec3f correction = normal * (1.f / K) * C;
+    w += _compliance / (dt * dt);
 
-    _correction[elem * ELEM_SIZE + 0] -= w0 * correction;
-    _correction[elem * ELEM_SIZE + 1] += w1 * correction;
+	  const pxr::GfVec3f correction = normal.GetNormalized() * -(1.f / w) * C;
+
+    _correction[elem * ELEM_SIZE + 0] += w0 * correction;
+    _correction[elem * ELEM_SIZE + 1] -= w1 * correction;
   }
 }
-
-
 void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;
@@ -123,9 +126,11 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
     const pxr::GfMatrix4d& m = mesh->GetMatrix();
     HalfEdge* edge = it.Next();
     size_t a, b;
+    pxr::VtArray<int> neighbors;
     while (edge) {
       a = edge->vertex;
       b = edges[edge->next].vertex;
+
       allElements.push_back(a);
       allElements.push_back(b);
       edge = it.Next();
@@ -506,7 +511,10 @@ void CollisionConstraint::Apply(Particles* particles)
 {
   size_t corrIdx = 0;
   for(const auto& elem: _elements)
-    particles->predicted[elem] += _correction[corrIdx++] / static_cast<float>(particles->n[elem]) ;
+    if(particles->cnt[elem][1]>0.f)
+      particles->predicted[elem] += _correction[corrIdx++] / particles->cnt[elem][1] ;
+    else 
+      particles->predicted[elem] += _correction[corrIdx++] ;
 
 }
 
@@ -514,7 +522,7 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correctio
 {
   pxr::GfVec3f friction(0.f);
   float correctionLength = correction.GetLength();
-  if (_collision->GetFriction() > 0 && correctionLength > 0)
+  if (_collision->GetFriction() > 0 && correctionLength > 0.f)
   {
     pxr::GfVec3f correctionNorm = correction / correctionLength;
 
@@ -527,7 +535,7 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correctio
   return friction;
 }
 
-static float vMax = 10.f;
+static float vMax = 25.f;
 
 void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 {
@@ -550,6 +558,8 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
   }
 }
 
+static float selfVMax = 1.f;
+
 void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 {
   _ResetCorrection();
@@ -566,7 +576,7 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       const float minDistance = particles->radius[index] + particles->radius[other];
 
       const pxr::GfVec3f gradient = particles->predicted[index] - particles->predicted[other];
-      const float distance = gradient.GetLength() + pxr::GfMax(-collision->GetContactInitDepth(index, c) - vMax * dt, 0.f);
+      const float distance = gradient.GetLength() + pxr::GfMax(-collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
       const float w0 = particles->invMass[index];
       const float w1 = particles->invMass[other];
       float w = w0 + w1;

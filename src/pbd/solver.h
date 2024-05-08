@@ -93,7 +93,7 @@ public:
   Particles* GetParticles() { return &_particles; };
   void LockPoints(Body* body, pxr::VtArray<int>& elements);
   void UpdatePoints();
-  void WeightBoundaries();
+  void WeightBoundaries(Body* body);
   Points* GetPoints(){return _points;};
   pxr::SdfPath GetPointsId(){return _pointsId;};
   
@@ -104,6 +104,7 @@ public:
   void UpdateGeometries();
   void Reset();
   void Step();
+  size_t GetPacketSize(){return _packet;};
 
   // elements
   void AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path);
@@ -130,6 +131,7 @@ private:
   float                               _stepTime;
 
   bool                                _paused;	
+  size_t                              _packet;
 
   // system
   Particles                           _particles;

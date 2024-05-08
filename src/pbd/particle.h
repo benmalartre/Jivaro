@@ -85,13 +85,11 @@ struct Particles
   pxr::VtArray<float>        invMass;
   pxr::VtArray<float>        radius;
   pxr::VtArray<pxr::GfVec3f> rest;
-  pxr::VtArray<pxr::GfVec3f> previous;
   pxr::VtArray<pxr::GfVec3f> position;
   pxr::VtArray<pxr::GfVec3f> predicted;
   pxr::VtArray<pxr::GfVec3f> velocity;
   pxr::VtArray<pxr::GfVec3f> color;
-  pxr::VtArray<int>          n;
-  pxr::VtArray<int>          m;
+  pxr::VtArray<pxr::GfVec2f> cnt;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

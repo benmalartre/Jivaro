@@ -86,7 +86,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 0.1f;
-  float radius = 0.5f;
+  float radius = 0.25f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;
@@ -186,7 +186,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d matrix(1.0);
   Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius, damping);
   _solver->AddElement(body, _voxels, emitterId);
-  std::cout << "added particles" << std::endl;
+  std::cout << "added particles" << _solver->GetNumParticles() << std::endl;
+
 
 /*
   for(size_t i = 0; i < _meshes.size(); ++i) {
