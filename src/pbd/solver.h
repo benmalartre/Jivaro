@@ -78,7 +78,6 @@ public:
   void GetConstraintsByType(short type, std::vector<Constraint*>& results);
 
   // contacts
-  void PrepareContacts();
   void AddContact(Constraint* contact) { _contacts.push_back(contact); };
   Constraint* GetContact(size_t idx) { return _contacts[idx]; };
   void GetContactByType(short type, std::vector<Constraint*>& results);
@@ -116,6 +115,7 @@ public:
 
 
 private:
+  void _PrepareContacts();
   void _UpdateContacts();
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);

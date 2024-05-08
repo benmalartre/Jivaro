@@ -75,8 +75,10 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
 
   Mask::Iterator iterator(this, 0, numParticles);
   size_t particleToContactIdx = 0;
+  size_t numHits = 0;
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     if (CheckHit(index)) {
+      numHits++;
       _c2p.push_back(index);
       if (particles->body[index] != bodyIdx || elements.size() >= Constraint::BlockSize) {
         if (elements.size()) {

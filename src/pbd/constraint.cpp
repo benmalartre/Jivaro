@@ -13,7 +13,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 Constraint::Constraint(size_t elementSize, float stiffness, 
   float damping, const pxr::VtArray<int>& elems) 
   : _elements(elems)
-  , _stiffness(stiffness)
   , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
   , _damping(damping)
 {
@@ -21,8 +20,6 @@ Constraint::Constraint(size_t elementSize, float stiffness,
 
   _correction.resize(_elements.size());
 }
-
-
 
 void Constraint::SetElements(const pxr::VtArray<int>& elems)
 {
@@ -89,8 +86,7 @@ void StretchConstraint::Solve(Particles* particles, float dt)
 
     const float C = d - _rest[elem];
     normal.Normalize();
-    if (!pxr::GfIsClose(_stiffness, 0.f, 1e-6f))
-      K += 1.f / (_stiffness * dt * dt);
+    K += _compliance * dt * dt;
 
 	  const pxr::GfVec3f correction = normal * (1.f / K) * C;
 
@@ -229,22 +225,16 @@ void BendConstraint::Solve(Particles* particles, float dt)
       for (j = 0; j < 4; j++)
         gradient[j] += x[k];
 
-    accum = 0.0;
+    alpha = 0.0;
     for (j = 0; j < 4; j++)
     {
-      accum += im[j] * gradient[j].GetLengthSq();
+      alpha += im[j] * gradient[j].GetLengthSq();
     }
     
-    alpha = 0.0;
-    if (pxr::GfAbs(_stiffness) > 1e-6)
-    {
-      alpha = 1.f / (_stiffness * dt * dt);
-      accum += alpha;
-    }
+    alpha += _compliance * dt * dt;
+    if (pxr::GfAbs(alpha) < 1e-6)continue;
 
-    if (pxr::GfAbs(accum) < 1e-6)continue;
-
-    lambda = -energy / accum;
+    lambda = -energy / alpha;
 
     _correction[elem * ELEM_SIZE + 0] += lambda * im[0] * gradient[0];
     _correction[elem * ELEM_SIZE + 1] += lambda * im[1] * gradient[1];
@@ -537,7 +527,7 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correctio
   return friction;
 }
 
-static float vMax = 1.f;
+static float vMax = 10.f;
 
 void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 {
@@ -548,7 +538,7 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
     const size_t index = _elements[elem];
 
     const pxr::GfVec3f normal = _collision->GetContactNormal(index);
-    const float d = _collision->GetContactDepth(index)+  pxr::GfMax(-_collision->GetContactInitDepth(index) - vMax * dt, 0.f) ;
+    const float d = _collision->GetContactDepth(index) + pxr::GfMax(-_collision->GetContactInitDepth(index) - vMax * dt, 0.f) ;
     if(d > 0.f)continue;
 
     _correction[elem] += normal * -d;
@@ -556,6 +546,7 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
     pxr::GfVec3f relativeVelocity = (particles->predicted[index] + _correction[elem]) - particles->position[index] - _collision->GetContactVelocity(index);
 		pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
     _correction[elem] +=  friction;
+  
   }
 }
 

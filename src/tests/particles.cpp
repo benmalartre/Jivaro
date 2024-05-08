@@ -199,11 +199,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   }
 */
 
-  for (auto& sphere : spheres) {
-    Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
-    _solver->AddElement(collision, sphere.second, sphere.first);
-  }
-  std::cout<< "added sphere collision" <<std::endl;
+  
 
   bool createGroundCollision = true;
   if(createGroundCollision) {
@@ -220,6 +216,12 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
     std::cout << "added ground collision" << std::endl;
   }
+
+  for (auto& sphere : spheres) {
+    Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
+    _solver->AddElement(collision, sphere.second, sphere.first);
+  }
+  std::cout<< "added sphere collision" <<std::endl;
 
   bool createSelfCollision = true;
   if (createSelfCollision) {

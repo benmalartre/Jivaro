@@ -319,6 +319,24 @@ void Solver::WeightBoundaries()
     }
   } 
 }
+
+void Solver::_PrepareContacts()
+{
+  //_timer->Start();
+  memset(&_particles.n[0], 0, _particles.GetNumParticles() * sizeof(int));
+
+  for (auto& contact : _contacts)delete contact;
+  _contacts.clear();
+
+  for (auto& collision : _collisions)
+    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+
+  for (auto& contact : _contacts)
+    for (auto& elem : contact->GetElements())
+      _particles.n[elem]++;
+
+  //_timer->Stop();
+}
   
 void Solver::_UpdateContacts()
 {
@@ -430,26 +448,7 @@ void Solver::Reset()
   _particles.SetAllState(Particles::ACTIVE);
 }
 
-void Solver::PrepareContacts()
-{
-  //_timer->Start();
-  memset(&_particles.n[0], 0, _particles.GetNumParticles() * sizeof(int));
 
-  for (auto& contact : _contacts)delete contact;
-    _contacts.clear();
-
-  for (auto& collision : _collisions)
-    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-
-  for(auto& contact: _contacts)
-    for(auto& elem: contact->GetElements())
-      _particles.n[elem]++;
-
-  //_timer->Stop();
-
-
-
-}
 
 void Solver::Step()
 {
@@ -458,11 +457,10 @@ void Solver::Step()
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
-  PrepareContacts();
+  _PrepareContacts();
 
   for(size_t si = 0; si < _subSteps; ++si) {
     
-   
     //_timer->Start1();
     // integrate particles
     pxr::WorkParallelForN(
