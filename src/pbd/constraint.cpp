@@ -13,7 +13,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 Constraint::Constraint(size_t elementSize, float stiffness, 
   float damping, const pxr::VtArray<int>& elems) 
   : _elements(elems)
-  , _stiffness(stiffness)
   , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
   , _damping(damping)
 {
@@ -38,10 +37,7 @@ void Constraint::Apply(Particles* particles)
 {
   size_t corrIdx = 0;
   for(const auto& elem: _elements) 
-    if(particles->cnt[elem][0]>0.f)
-      particles->predicted[elem] += _correction[corrIdx++] / particles->cnt[elem][0];
-    else
-      particles->predicted[elem] += _correction[corrIdx++];
+    particles->predicted[elem] += _correction[corrIdx++] / particles->counter[elem][0];
 }
 
 size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
@@ -118,7 +114,6 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
   pxr::VtArray<int> allElements;
   Geometry* geometry = body->GetGeometry();
   if (geometry->GetType() == Geometry::MESH) {
-
     Mesh* mesh = (Mesh*)geometry;
     const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
     HalfEdgeGraph::ItUniqueEdge it(*mesh->GetEdgesGraph());
@@ -126,11 +121,9 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
     const pxr::GfMatrix4d& m = mesh->GetMatrix();
     HalfEdge* edge = it.Next();
     size_t a, b;
-    pxr::VtArray<int> neighbors;
     while (edge) {
       a = edge->vertex;
       b = edges[edge->next].vertex;
-
       allElements.push_back(a);
       allElements.push_back(b);
       edge = it.Next();
@@ -511,10 +504,7 @@ void CollisionConstraint::Apply(Particles* particles)
 {
   size_t corrIdx = 0;
   for(const auto& elem: _elements)
-    if(particles->cnt[elem][1]>0.f)
-      particles->predicted[elem] += _correction[corrIdx++] / particles->cnt[elem][1] ;
-    else 
-      particles->predicted[elem] += _correction[corrIdx++] ;
+    particles->predicted[elem] += _correction[corrIdx++] / particles->counter[elem][1] ;
 
 }
 

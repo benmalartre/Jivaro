@@ -104,7 +104,6 @@ public:
   void UpdateGeometries();
   void Reset();
   void Step();
-  size_t GetPacketSize(){return _packet;};
 
   // elements
   void AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path);
@@ -131,7 +130,6 @@ private:
   float                               _stepTime;
 
   bool                                _paused;	
-  size_t                              _packet;
 
   // system
   Particles                           _particles;

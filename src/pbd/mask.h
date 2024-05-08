@@ -56,7 +56,6 @@ public:
   };
 
   enum Type {
-    CONSTRAINT,
     COLLISION,
     FORCE
   };

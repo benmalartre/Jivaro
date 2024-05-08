@@ -59,18 +59,12 @@ public:
 
   virtual Geometry* GetGeometry(){return _collider;};
 
-  virtual size_t GetContactHit(size_t index, size_t c=0) const;
   virtual size_t GetContactComponent(size_t index, size_t c=0) const;
   virtual pxr::GfVec3f GetContactPosition(size_t index, size_t c=0) const;
   virtual pxr::GfVec3f GetContactNormal(size_t index, size_t c=0) const;
   virtual pxr::GfVec3f GetContactVelocity(size_t index, size_t c=0) const;
-  virtual float GetContactSpeed(size_t index, size_t c=0) const;
   virtual float GetContactDepth(size_t index, size_t c=0) const;
-   virtual float GetContactInitDepth(size_t index, size_t c=0) const;
-
-  virtual size_t GetNumHits(size_t index) const;
-
-  virtual void SetContactHit(size_t index, size_t c=0, bool hit=true);
+  virtual float GetContactInitDepth(size_t index, size_t c=0) const;
 
   Contacts& GetContacts(){return _contacts;};
   size_t GetNumContacts(size_t index){return _contacts.GetNumUsed(index);};

@@ -4,28 +4,36 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Particles::AddBody(Body* addBody, const pxr::GfMatrix4d& matrix)
+
+void Particles::_EnsureDataSize(size_t size)
 {
-  Geometry* geom = addBody->GetGeometry();
+  if(state.size() > size)return;
+  size_t newSize = ((size + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+  mass.resize(newSize);
+  invMass.resize(newSize);
+  radius.resize(newSize);
+  rest.resize(newSize);
+  position.resize(newSize);
+  predicted.resize(newSize);
+  velocity.resize(newSize);
+  body.resize(newSize);
+  color.resize(newSize);
+  state.resize(newSize);
+  counter.resize(newSize);
+}
+
+void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
+{
+  Geometry* geom = item->GetGeometry();
   if(geom->GetType() < Geometry::POINT) return;
 
-  size_t base = position.size();
+  size_t base = num;
   size_t numPoints = geom->GetNumPoints();
+  _EnsureDataSize(base + numPoints);
   size_t size = base + numPoints;
   size_t index = body.size() ? body.back() + 1 : 0;
-  float m = addBody->GetMass();
+  float m = item->GetMass();
   float w = pxr::GfIsClose(m, 0.f, 0.000001f) ? 0.f : 1.f / m;
-  mass.resize(size);
-  invMass.resize(size);
-  radius.resize(size);
-  rest.resize(size);
-  position.resize(size);
-  predicted.resize(size);
-  velocity.resize(size);
-  body.resize(size);
-  color.resize(size);
-  state.resize(size);
-  cnt.resize(size);
 
   const pxr::VtArray<pxr::GfVec3f>& points = ((Deformable*)geom)->GetPositions();
   pxr::GfVec3f pos;
@@ -34,25 +42,26 @@ void Particles::AddBody(Body* addBody, const pxr::GfMatrix4d& matrix)
     pos = matrix.Transform(points[idx - base]);
     mass[idx] = m;
     invMass[idx] = w;
-    radius[idx] = addBody->GetRadius();
+    radius[idx] = item->GetRadius();
     rest[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
-    velocity[idx] = addBody->GetVelocity();
+    velocity[idx] = item->GetVelocity();
     body[idx] = index;
-    color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + addBody->GetColor()) * 0.5f;
+    color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f;
     state[idx] = ACTIVE;
-    cnt[idx] = pxr::GfVec2f(0.f);
+    counter[idx] = pxr::GfVec2f(0.f);
   }
 
-  addBody->SetOffset(base);
-  addBody->SetNumPoints(numPoints);
+  item->SetOffset(base);
+  item->SetNumPoints(numPoints);
+  num += numPoints;
 }
 
-void Particles::RemoveBody(Body* removeBody) 
+void Particles::RemoveBody(Body* item) 
 {
-  const size_t base = removeBody->GetOffset();
-  const size_t shift = removeBody->GetNumPoints();
+  const size_t base = item->GetOffset();
+  const size_t shift = item->GetNumPoints();
   const size_t remaining = GetNumParticles() - (base + shift);
   size_t lhi, rhi;
 
@@ -69,8 +78,7 @@ void Particles::RemoveBody(Body* removeBody)
     body[lhi]      = body[rhi] - 1;
     color[lhi]     = color[rhi];
     state[lhi]     = state[rhi];
-    cnt[lhi]       = cnt[rhi];
-
+    counter[lhi]   = counter[rhi];
   }
 
   size_t size = position.size() - shift;
@@ -84,7 +92,9 @@ void Particles::RemoveBody(Body* removeBody)
   body.resize(size);
   color.resize(size);
   state.resize(size);
-  cnt.resize(size);
+  counter.resize(size);
+
+  num -= shift;
 }
 
 void Particles::RemoveAllBodies()
@@ -99,7 +109,8 @@ void Particles::RemoveAllBodies()
   body.clear();
   color.clear();
   state.clear();
-  cnt.clear();
+  counter.clear();
+  num = 0;
 }
 
 void Particles::SetAllState( short s)
@@ -107,10 +118,10 @@ void Particles::SetAllState( short s)
   for(auto& _s: state) _s = s;
 }
 
-void Particles::SetBodyState(Body* b, short s)
+void Particles::SetBodyState(Body* item, short s)
 {
-  const size_t begin = b->GetOffset();
-  const size_t end = begin +b->GetNumPoints();
+  const size_t begin = item->GetOffset();
+  const size_t end = begin +item->GetNumPoints();
 
   for (size_t r = begin; r < end; ++r) {
     state[r] = s;

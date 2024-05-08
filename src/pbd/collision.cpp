@@ -142,11 +142,6 @@ pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
   return _collider->GetVelocity() + tangent * torque.GetLength();
 };
 
-size_t Collision::GetContactHit(size_t index, size_t c) const
-{
-  return _contacts.Get(index, c)->GetHit();
-}
-
 size_t Collision::GetContactComponent(size_t index, size_t c) const
 {
   return _contacts.Get(index, c)->GetComponentIndex();
@@ -167,11 +162,6 @@ pxr::GfVec3f Collision::GetContactVelocity(size_t index, size_t c) const
   return _contacts.Get(index, c)->GetVelocity();
 }
 
-float Collision::GetContactSpeed(size_t index, size_t c) const 
-{
-  return _contacts.Get(index, c)->GetSpeed();
-}
-
 float Collision::GetContactDepth(size_t index, size_t c) const
 {
   return _contacts.Get(index, c)->GetDepth();
@@ -180,20 +170,6 @@ float Collision::GetContactDepth(size_t index, size_t c) const
 float Collision::GetContactInitDepth(size_t index, size_t c) const
 {
   return _contacts.Get(index, c)->GetInitDepth();
-}
-
-size_t Collision::GetNumHits(size_t index) const
-{
-  size_t numHits = 0;
-  for(size_t c = 0; c < _contacts.GetNumUsed(index); ++c) 
-    numHits += _contacts.Get(index, c)->GetHit();
-  return numHits;
-}
-
-
-void Collision::SetContactHit(size_t index, size_t c, bool hit)
-{
-  _contacts.Get(index, c)->SetHit(hit);
 }
 
 
@@ -470,7 +446,6 @@ void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>&
 
 void SelfCollision::UpdateContacts(Particles* particles)
 {
-
   Mask::Iterator iterator(this, 0, particles->GetNumParticles());
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     if (_contacts.IsUsed(index))
@@ -478,8 +453,7 @@ void SelfCollision::UpdateContacts(Particles* particles)
         size_t other = _contacts.Get(index, c)->GetComponentIndex();
         _contacts.Get(index, c)->Update(this, particles, index, other);
       }
-  }
-    
+  } 
 }
 
 void SelfCollision::_ResetContacts(Particles* particles)

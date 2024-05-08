@@ -69,15 +69,18 @@ enum BodyType
 
 struct Particles
 {
+  constexpr static size_t BLOCK_SIZE = 2048;
   enum State {MUTE, IDLE, ACTIVE};
 
-  size_t GetNumParticles() { return position.size(); };
+  size_t GetNumParticles() { return num; };
   void AddBody(Body* body, const pxr::GfMatrix4d& matrix);
   void RemoveBody(Body* body);
   void RemoveAllBodies();
 
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);
+
+  void _EnsureDataSize(size_t size);
 
   pxr::VtArray<short>        state;
   pxr::VtArray<int>          body;
@@ -89,7 +92,9 @@ struct Particles
   pxr::VtArray<pxr::GfVec3f> predicted;
   pxr::VtArray<pxr::GfVec3f> velocity;
   pxr::VtArray<pxr::GfVec3f> color;
-  pxr::VtArray<pxr::GfVec2f> cnt;
+  pxr::VtArray<pxr::GfVec2f> counter;
+
+  size_t                     num;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

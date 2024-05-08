@@ -11,11 +11,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 void Contact::Init(Collision* collision, Particles* particles, size_t index)
 {
   _normal = collision->GetGradient(particles, index);
-  _d = collision->GetValue(particles, index);
-  _hit = _d < 0;
-  _initDepth = _d;
+  _initDepth = collision->GetValue(particles, index);
   _velocity = collision->GetVelocity(particles, index);
-  _speed = pxr::GfDot(particles->velocity[index] - _velocity, _normal);
 }
 
 void Contact::Init(SelfCollision* collision, Particles* particles, size_t index, size_t other)
@@ -23,31 +20,24 @@ void Contact::Init(SelfCollision* collision, Particles* particles, size_t index,
   _compId = other;
   _geomId = index;
   _normal = collision->GetGradient(particles, index, other);
-  _d = collision->GetValue(particles, index, other);
-  _hit = _d < 0;
-  _initDepth = _d;
+  _initDepth = collision->GetValue(particles, index, other);
   _velocity = collision->GetVelocity(particles, index, other);
-  _speed = pxr::GfDot(particles->velocity[index] - _velocity, _normal);
 }
 
 void Contact::Update(Collision* collision, Particles* particles, size_t index)
 {
   _normal = collision->GetGradient(particles, index);
-  _d = collision->GetValue(particles, index);
-  _hit = _d < 0;
+  _depth = collision->GetValue(particles, index);
+  _hit = _depth < 0;
   _velocity = collision->GetVelocity(particles, index);
-  _speed = pxr::GfDot(particles->velocity[index] - _velocity, _normal);
 }
 
 void Contact::Update(SelfCollision* collision, Particles* particles, size_t index, size_t other)
 {
   _normal = collision->GetGradient(particles, index, other);
-  _d = collision->GetValue(particles, index, other);
-  _hit = _d < 0;
+  _depth = collision->GetValue(particles, index, other);
+  _hit = _depth < 0;
   _velocity = collision->GetVelocity(particles, index, other);
-  _speed = pxr::GfDot(particles->velocity[index] - _velocity, _normal);
-
-  
 }
 
 void Contacts::Resize(size_t N, size_t M) {

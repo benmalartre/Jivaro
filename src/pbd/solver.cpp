@@ -217,7 +217,7 @@ void Solver::AddConstraint(Constraint* constraint)
 { 
   _constraints.push_back(constraint); 
   const pxr::VtArray<int>& elements = constraint->GetElements();
-  for(const auto& elem: elements)_particles.cnt[elem][0]+=1.f;
+  for(const auto& elem: elements)_particles.counter[elem][0]+=1.f;
 };
 
 void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
@@ -271,7 +271,7 @@ void Solver::WeightBoundaries(Body* body)
 void Solver::_PrepareContacts()
 {
   //_timer->Start();
-  for (auto& x : _particles.cnt)x[1] = 0.f;
+  for (auto& x : _particles.counter)x[1] = 0.f;
 
   for (auto& contact : _contacts)
     delete contact;
@@ -282,7 +282,7 @@ void Solver::_PrepareContacts()
 
   for (auto& contact : _contacts)
     for (auto& elem : contact->GetElements())
-      _particles.cnt[elem][1]+=1.f;
+      _particles.counter[elem][1]+=1.f;
 
   //_timer->Stop();
 }

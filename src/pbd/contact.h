@@ -25,21 +25,18 @@ public:
 
   const pxr::GfVec3f& GetNormal() const {return _normal;};
   const pxr::GfVec3f& GetVelocity() const {return _velocity;};
-  float GetSpeed() const { return _speed; };
-  float GetDepth() const {return _d;};
+  float GetDepth() const {return _depth;};
   float GetInitDepth() const {return _initDepth;};
 
   bool GetHit() const {return _hit;};
   void SetHit(bool hit) {_hit=hit;};
 
 private:
-  pxr::GfVec3f      _previous; // contact previous position
   pxr::GfVec3f      _normal;   // contact normal
   pxr::GfVec3f      _velocity; // relative velocity
 
-  float             _initDepth;// initial penetration depth
-  float             _d;        // penetration depth
-  float             _speed;    // normal speed
+  float             _initDepth;// start frame penetration depth
+  float             _depth;    // current substep penetration depth
 
   bool              _hit;      // is penetrating 
 };

@@ -94,8 +94,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene.AddGeometry(prim.GetPath(), mesh);
 
-      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, 0.1f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.f);
+      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, 0.04f, 0.1f);
+      _solver->CreateConstraints(body, Constraint::STRETCH, 10.f, 0.f);
       //_solver->CreateConstraints(body, Constraint::DIHEDRAL, 2000.f, 0.f);
       _solver->AddElement(body, mesh, prim.GetPath());
 
@@ -118,12 +118,11 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, _ground, _groundId);
   }
 
-  bool createSelfCollision = true;
+  bool createSelfCollision = false;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
-    std::cout << "added self collision" << std::endl;
   }
 
 }
@@ -140,9 +139,8 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
-
+  _scene.RemoveGeometry(_solverId);
   delete _solver;
-  delete _ground;
 
 }
 

@@ -150,9 +150,6 @@ private:
   pxr::VtArray<int>                   _shell;
   pxr::VtArray< pxr::VtArray<int> >   _neighbors;
 
-  // shell data (vertices)
-  pxr::VtArray< pxr::VtArray<int> >   _shells;
-
   // triangle data
   pxr::VtArray<Triangle>              _triangles;
 
