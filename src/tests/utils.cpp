@@ -82,6 +82,8 @@ Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdPrim.CreateAttribute(pxr::TfToken("StretchStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
   usdPrim.CreateAttribute(pxr::TfToken("BendStiffness"), pxr::SdfValueTypeNames->Float).Set(RANDOM_0_1);
 
+  usdPrim.CreateAttribute(pxr::TfToken("Mass"), pxr::SdfValueTypeNames->Float).Set(1.f);
+
   usdMesh.MakeMatrixXform().Set(m);
 
   return mesh;

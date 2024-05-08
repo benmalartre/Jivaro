@@ -174,6 +174,10 @@ public:
 
   void Solve(Particles* particles, float dt) override;
 
+  // this one has to be called serially 
+  // as two constraints can move the same point
+  void Apply(Particles* particles) override;
+
 
 protected:
   void _SolveGeom(Particles* particles, float dt);

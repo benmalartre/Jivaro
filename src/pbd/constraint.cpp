@@ -40,7 +40,7 @@ void Constraint::Apply(Particles* particles)
 {
   size_t corrIdx = 0;
   for(const auto& elem: _elements) {
-    particles->predicted[elem] += _correction[corrIdx++];
+    particles->predicted[elem] += _correction[corrIdx++] / static_cast<float>(particles->m[elem]);
   }
 }
 
@@ -511,6 +511,15 @@ CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* co
 {
 }
 
+// this one has to happen serialy
+void CollisionConstraint::Apply(Particles* particles)
+{
+  size_t corrIdx = 0;
+  for(const auto& elem: _elements)
+    particles->predicted[elem] += _correction[corrIdx++] / static_cast<float>(particles->n[elem]) ;
+
+}
+
 pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity)
 {
   pxr::GfVec3f friction(0.f);
@@ -528,6 +537,7 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correctio
   return friction;
 }
 
+static float vMax = 10.f;
 
 void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 {
@@ -536,10 +546,14 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 
   for (size_t elem = 0; elem < numElements; ++elem) {
     const size_t index = _elements[elem];
-    const float w0 = particles->invMass[index];
-    _correction[elem] += _collision->GetSDF(particles, index);
 
-    pxr::GfVec3f relativeVelocity = (particles->predicted[index] + _correction[elem]) - particles->position[index];
+    const pxr::GfVec3f normal = _collision->GetContactNormal(index);
+    const float d = _collision->GetContactDepth(index)+  pxr::GfMax(-_collision->GetContactInitDepth(index) - vMax * dt, 0.f) ;
+    if(d > 0.f)continue;
+
+    _correction[elem] += normal * -d;
+
+    pxr::GfVec3f relativeVelocity = (particles->predicted[index] + _correction[elem]) - particles->position[index] - _collision->GetContactVelocity(index);
 		pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
     _correction[elem] +=  friction;
 
@@ -561,29 +575,31 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
   for (size_t elem = 0; elem < numElements; ++elem) {
     const size_t index = _elements[elem];
 
-    size_t numHits = 0;
     for(size_t c = 0; c < collision->GetNumContacts(index); ++c) {
       const size_t other = collision->GetContactComponent(index, c);
       const float minDistance = particles->radius[index] + particles->radius[other];
 
-      const pxr::GfVec3f delta = particles->predicted[index] - particles->predicted[other];
-      const float distance = delta.GetLength();
+      const pxr::GfVec3f gradient = particles->predicted[index] - particles->predicted[other];
+      const float distance = gradient.GetLength() + pxr::GfMax(-collision->GetContactInitDepth(index, c) - vMax * dt, 0.f);
       const float w0 = invMass[index];
       const float w1 = invMass[other];
+      float K = w0 + w1;
 
-      if(distance > minDistance || w0 + w1 < 1e-6)continue;
+      if(distance > minDistance || K < 1e-6)continue;
 
       const float d = (minDistance - distance) / distance;
-      _correction[elem] += w0 / (w0 + w1) * delta * d;
 
-       pxr::GfVec3f relativeVelocity = ((particles->predicted[index] + _correction[elem]) - particles->previous[index]) - 
-       ((particles->predicted[other]) - particles->previous[other]);
-		  pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
-      //_correction[elem] +=  friction;
 
-      numHits++;
+      const pxr::GfVec3f thisCorrection =  w0 / K *  gradient * d;
+      const pxr::GfVec3f otherCorrection = w1 / K * gradient * -d;
+
+      _correction[elem] += thisCorrection;
+
+       pxr::GfVec3f relativeVelocity = ((particles->predicted[index] + _correction[elem]) - particles->position[index]) - 
+       ((particles->predicted[other] + otherCorrection) - particles->position[other]);
+		  pxr::GfVec3f friction = _ComputeFriction(thisCorrection, relativeVelocity);
+      _correction[elem] += w0 / K * friction;
     }
-    //if(numHits)_correction[elem] /= static_cast<float>(numHits);
   }
 }
 

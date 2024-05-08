@@ -56,7 +56,6 @@ public:
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft);
   virtual void UpdateContacts(Particles* particles);
 
-  virtual void SolveVelocities(Particles* particles, float dt);
 
   virtual Geometry* GetGeometry(){return _collider;};
 
@@ -67,6 +66,7 @@ public:
   virtual pxr::GfVec3f GetContactVelocity(size_t index, size_t c=0) const;
   virtual float GetContactSpeed(size_t index, size_t c=0) const;
   virtual float GetContactDepth(size_t index, size_t c=0) const;
+   virtual float GetContactInitDepth(size_t index, size_t c=0) const;
 
   virtual size_t GetNumHits(size_t index) const;
 
@@ -104,8 +104,6 @@ protected:
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
-
-  virtual void _SolveVelocities(size_t begin, size_t end, Particles* particles, float dt);
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>                 _hits;
@@ -217,7 +215,6 @@ public:
   void UpdateContacts(Particles* particles) override;
 
   void Update(const pxr::UsdPrim& prim, double time) override;
-  void SolveVelocities(Particles* particles, float dt) override;
 
   size_t GetTotalNumContacts() const;
   size_t GetNumContacts(size_t index) const;
@@ -235,8 +232,6 @@ protected:
 
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft)override;
-
-  void _SolveVelocities(size_t begin, size_t end, Particles* particles, float dt) override;
 
 private:
   static size_t                 TYPE_ID;

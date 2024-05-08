@@ -27,8 +27,9 @@ public:
   const pxr::GfVec3f& GetVelocity() const {return _velocity;};
   float GetSpeed() const { return _speed; };
   float GetDepth() const {return _d;};
-  bool GetHit() const {return _hit;};
+  float GetInitDepth() const {return _initDepth;};
 
+  bool GetHit() const {return _hit;};
   void SetHit(bool hit) {_hit=hit;};
 
 private:
@@ -36,6 +37,7 @@ private:
   pxr::GfVec3f      _normal;   // contact normal
   pxr::GfVec3f      _velocity; // relative velocity
 
+  float             _initDepth;// initial penetration depth
   float             _d;        // penetration depth
   float             _speed;    // normal speed
 

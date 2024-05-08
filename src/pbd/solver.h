@@ -73,11 +73,12 @@ public:
   Force* GetForce(size_t idx) { return _force[idx]; };
 
   // constraints
-  void AddConstraint(Constraint* constraint) { _constraints.push_back(constraint); };
+  void AddConstraint(Constraint* constraint);
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
   void GetConstraintsByType(short type, std::vector<Constraint*>& results);
 
   // contacts
+  void PrepareContacts();
   void AddContact(Constraint* contact) { _contacts.push_back(contact); };
   Constraint* GetContact(size_t idx) { return _contacts[idx]; };
   void GetContactByType(short type, std::vector<Constraint*>& results);
@@ -118,7 +119,6 @@ private:
   void _UpdateContacts();
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);
-  void _SolveVelocities();
 
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);

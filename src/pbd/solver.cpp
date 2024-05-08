@@ -264,6 +264,13 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
 
 }
 
+void Solver::AddConstraint(Constraint* constraint) 
+{ 
+  _constraints.push_back(constraint); 
+  const pxr::VtArray<int>& elements = constraint->GetElements();
+  for(const auto& elem: elements)_particles.m[elem]++;
+};
+
 void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
 {
   for(auto& constraint: _constraints)
@@ -378,15 +385,6 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 
 }
 
-// this can not work as multiple thread can writ eto same velocities
-void Solver::_SolveVelocities()
-{
-  for (auto& collision : _collisions) {
-    if (!collision->GetTotalNumContacts()) continue;
-      collision->SolveVelocities(&_particles, _stepTime);
-
-  }
-}
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
@@ -430,6 +428,25 @@ void Solver::Reset()
   //LockPoints();
 
   _particles.SetAllState(Particles::ACTIVE);
+}
+
+void Solver::PrepareContacts()
+{
+  //_timer->Start();
+  memset(&_particles.n[0], 0, _particles.GetNumParticles() * sizeof(int));
+
+  for (auto& contact : _contacts)delete contact;
+    _contacts.clear();
+
+  for (auto& collision : _collisions)
+    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+
+  for(auto& contact: _contacts)
+    for(auto& elem: contact->GetElements())
+      _particles.n[elem]++;
+
+  //_timer->Stop();
+
 
 
 }
@@ -441,20 +458,10 @@ void Solver::Step()
 
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
-  //_timer->Start();
-  for (auto& contact : _contacts)delete contact;
-    _contacts.clear();
-
-  for (auto& collision : _collisions)
-    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-
-  //_timer->Stop();
-
-  const size_t numContacts = _contacts.size();
+  PrepareContacts();
 
   for(size_t si = 0; si < _subSteps; ++si) {
-    //_timer->Next();
-    _UpdateContacts();
+    
    
     //_timer->Start1();
     // integrate particles
@@ -466,9 +473,9 @@ void Solver::Step()
     // solve and apply constraint
     _SolveConstraints(_constraints);
 
-
-
     //_timer->Next();
+    //_timer->Next();
+    _UpdateContacts();
     // solve and apply contacts
     _SolveConstraints(_contacts);
     //_timer->Next();
@@ -479,7 +486,6 @@ void Solver::Step()
         std::placeholders::_1, std::placeholders::_2));
     //_timer->Next();
     // solve velocities
-    _SolveVelocities();
     //_timer->Stop();
 
   }

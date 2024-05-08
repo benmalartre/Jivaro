@@ -25,6 +25,8 @@ void Particles::AddBody(Body* addBody, const pxr::GfMatrix4d& matrix)
   body.resize(size);
   color.resize(size);
   state.resize(size);
+  n.resize(size);
+  m.resize(size);
 
   const pxr::VtArray<pxr::GfVec3f>& points = ((Deformable*)geom)->GetPositions();
   pxr::GfVec3f pos;
@@ -43,6 +45,8 @@ void Particles::AddBody(Body* addBody, const pxr::GfMatrix4d& matrix)
     body[idx] = index;
     color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + addBody->GetColor()) * 0.5f;
     state[idx] = ACTIVE;
+    n[idx] = 0;
+    m[idx] = 0;
   }
 
   addBody->SetOffset(base);
@@ -70,6 +74,8 @@ void Particles::RemoveBody(Body* removeBody)
     body[lhi]      = body[rhi] - 1;
     color[lhi]     = color[rhi];
     state[lhi]     = state[rhi];
+    n[lhi]         = n[rhi];
+    m[lhi]         = m[rhi];
   }
 
   size_t size = position.size() - shift;
@@ -84,6 +90,8 @@ void Particles::RemoveBody(Body* removeBody)
   body.resize(size);
   color.resize(size);
   state.resize(size);
+  n.resize(size);
+  m.resize(size);
 }
 
 void Particles::RemoveAllBodies()
@@ -99,6 +107,8 @@ void Particles::RemoveAllBodies()
   body.clear();
   color.clear();
   state.clear();
+  n.clear();
+  m.clear();
 }
 
 void Particles::SetAllState( short s)

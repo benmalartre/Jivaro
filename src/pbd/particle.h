@@ -90,6 +90,8 @@ struct Particles
   pxr::VtArray<pxr::GfVec3f> predicted;
   pxr::VtArray<pxr::GfVec3f> velocity;
   pxr::VtArray<pxr::GfVec3f> color;
+  pxr::VtArray<int>          n;
+  pxr::VtArray<int>          m;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
