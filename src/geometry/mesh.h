@@ -162,9 +162,6 @@ private:
   pxr::VtArray<int>                   _faceVertexCounts;  
   pxr::VtArray<int>                   _faceVertexIndices;
 
-  // shell data (vertices)
-  pxr::VtArray< pxr::VtArray<int> >   _shells;
-
   // triangle data
   pxr::VtArray<Triangle>              _triangles;
   pxr::VtArray<TrianglePair>          _trianglePairs;

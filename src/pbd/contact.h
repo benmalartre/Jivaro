@@ -28,8 +28,6 @@ public:
   float GetDepth() const {return _depth;};
   float GetInitDepth() const {return _initDepth;};
 
-  bool GetHit() const {return _hit;};
-  void SetHit(bool hit) {_hit=hit;};
 
 private:
   pxr::GfVec3f      _normal;   // contact normal
@@ -37,8 +35,6 @@ private:
 
   float             _initDepth;// start frame penetration depth
   float             _depth;    // current substep penetration depth
-
-  bool              _hit;      // is penetrating 
 };
 
 

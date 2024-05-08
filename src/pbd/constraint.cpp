@@ -74,27 +74,25 @@ void StretchConstraint::Solve(Particles* particles, float dt)
     const size_t a = _elements[elem * ELEM_SIZE + 0];
     const size_t b = _elements[elem * ELEM_SIZE + 1];
 
-    const pxr::GfVec3f p0 = particles->predicted[a];
-    const pxr::GfVec3f p1 = particles->predicted[b];
-
     const float w0 = particles->invMass[a];
     const float w1 = particles->invMass[b];
 
     float w = w0 + w1;
-    pxr::GfVec3f normal = p0 - p1;
+    pxr::GfVec3f normal = particles->predicted[a] - particles->predicted[b];
     const float distance = normal.GetLength();
-    const float C = distance - _rest[elem];
-
+    
     if(distance < 1e-6f || w < 1e-6f) continue;
 
+    const float C = distance - _rest[elem];
     w += _compliance / (dt * dt);
 
-	  const pxr::GfVec3f correction = normal.GetNormalized() * -(1.f / w) * C;
+	  const pxr::GfVec3f correction = normal.GetNormalized() * (1.f / w) * C;
 
-    _correction[elem * ELEM_SIZE + 0] += w0 * correction;
-    _correction[elem * ELEM_SIZE + 1] -= w1 * correction;
+    _correction[elem * ELEM_SIZE + 0] -= w0 * correction;
+    _correction[elem * ELEM_SIZE + 1] += w1 * correction;
   }
 }
+
 void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<float>& radius)
 {
   const size_t numElements = _elements.size() / ELEM_SIZE;

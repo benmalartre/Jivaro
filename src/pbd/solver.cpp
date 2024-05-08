@@ -64,12 +64,14 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
 
 Solver::~Solver()
 {
+  std::cout << "delete solver" << std::endl;
   for (auto& constraint : _constraints)delete constraint;
   for (auto& body : _bodies)delete body;
   for (auto& force : _force)delete force;
   _scene->RemoveGeometry(_pointsId);
   delete _points;
   delete _timer;
+  std::cout << "solver deleted" << std::endl;
 }
 
 void Solver::AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path)
@@ -384,6 +386,7 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::Reset()
 {
+  std::cout << "reset solver" << std::endl;
   // reset
   _particles.RemoveAllBodies();
 

@@ -16,7 +16,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = 0.1f;
+const float Collision::TOLERANCE_MARGIN = 0.05f;
 
 // 
 // Contacts
@@ -483,7 +483,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
   std::vector<int> closests;
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, particles->radius[index] * 2.f + TOLERANCE_MARGIN);
+  _grid.Closests(index, &particles->predicted[0], closests, particles->radius[index] * 2.f);
 
   for(int closest: closests) {
     if(numCollide >= PARTICLE_MAX_CONTACTS)break;

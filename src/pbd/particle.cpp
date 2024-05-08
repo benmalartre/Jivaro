@@ -5,21 +5,21 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-void Particles::_EnsureDataSize(size_t size)
+void Particles::_EnsureDataSize(size_t desired)
 {
-  if(state.size() > size)return;
-  size_t newSize = ((size + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
-  mass.resize(newSize);
-  invMass.resize(newSize);
-  radius.resize(newSize);
-  rest.resize(newSize);
-  position.resize(newSize);
-  predicted.resize(newSize);
-  velocity.resize(newSize);
-  body.resize(newSize);
-  color.resize(newSize);
-  state.resize(newSize);
-  counter.resize(newSize);
+  if(state.size() > desired)return;
+  size_t size = ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+  mass.resize(size, 1.f);
+  invMass.resize(size, 1.f);
+  radius.resize(size, 1.f);
+  rest.resize(size, 0.f);
+  position.resize(size, pxr::GfVec3f(0.f));
+  predicted.resize(size, pxr::GfVec3f(0.f));
+  velocity.resize(size, pxr::GfVec3f(0.f));
+  body.resize(size, 0);
+  color.resize(size, pxr::GfVec3f(0.f));
+  state.resize(size, 0);
+  counter.resize(size, pxr::GfVec2f(0.f));
 }
 
 void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
@@ -31,7 +31,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   size_t numPoints = geom->GetNumPoints();
   _EnsureDataSize(base + numPoints);
   size_t size = base + numPoints;
-  size_t index = body.size() ? body.back() + 1 : 0;
+  size_t index = num > 0 ? body[num - 1] + 1 : 0;
   float m = item->GetMass();
   float w = pxr::GfIsClose(m, 0.f, 0.000001f) ? 0.f : 1.f / m;
 
@@ -62,7 +62,7 @@ void Particles::RemoveBody(Body* item)
 {
   const size_t base = item->GetOffset();
   const size_t shift = item->GetNumPoints();
-  const size_t remaining = GetNumParticles() - (base + shift);
+  const size_t remaining = num - (base + shift);
   size_t lhi, rhi;
 
   for (size_t r = 0; r < remaining; ++r) {
@@ -81,7 +81,7 @@ void Particles::RemoveBody(Body* item)
     counter[lhi]   = counter[rhi];
   }
 
-  size_t size = position.size() - shift;
+  size_t size = ((num - shift + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
   mass.resize(size);
   invMass.resize(size);
   radius.resize(size);
@@ -111,6 +111,8 @@ void Particles::RemoveAllBodies()
   state.clear();
   counter.clear();
   num = 0;
+
+  std::cout << "clear particles " << num << std::endl;
 }
 
 void Particles::SetAllState( short s)

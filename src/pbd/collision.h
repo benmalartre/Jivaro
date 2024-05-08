@@ -17,6 +17,7 @@ class Geometry;
 struct Particles;
 struct Body;
 class Constraint;
+class CollisionConstraint;
 class Points;
 class Solver;
 class BVH;
@@ -223,9 +224,9 @@ protected:
     std::vector<Constraint*>& constraints, float ft)override;
 
 private:
-  static size_t                 TYPE_ID;
-  HashGrid                      _grid;
-  Particles*                    _particles;
+  static size_t                     TYPE_ID;
+  HashGrid                          _grid;
+  Particles*                        _particles;
   
 };
 

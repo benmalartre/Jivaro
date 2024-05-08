@@ -69,8 +69,11 @@ enum BodyType
 
 struct Particles
 {
-  constexpr static size_t BLOCK_SIZE = 2048;
+  const static size_t BLOCK_SIZE = 1024;
   enum State {MUTE, IDLE, ACTIVE};
+
+  Particles() :num(0){};
+  ~Particles(){};
 
   size_t GetNumParticles() { return num; };
   void AddBody(Body* body, const pxr::GfMatrix4d& matrix);

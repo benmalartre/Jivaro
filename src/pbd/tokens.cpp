@@ -10,6 +10,8 @@ PBDTokensType::PBDTokensType() :
   friction              ("friction",              pxr::TfToken::Immortal),
   restitution           ("restitution",           pxr::TfToken::Immortal),
   selfCollide           ("selfCollide",           pxr::TfToken::Immortal),
+  stretchStiffness      ("stretchStiffness",      pxr::TfToken::Immortal),
+  bendStiffness         ("bendStiffness",         pxr::TfToken::Immortal),
   allTokens({
     substeps,
     sleepThreshold,
@@ -17,7 +19,9 @@ PBDTokensType::PBDTokensType() :
     damp,
     friction,
     restitution,
-    selfCollide
+    selfCollide,
+    stretchStiffness,
+    bendStiffness
   })
 {
 }
