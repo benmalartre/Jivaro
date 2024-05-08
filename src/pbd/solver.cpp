@@ -339,7 +339,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
     force->Apply(begin, end, &_particles, _stepTime);
 
   for (size_t index = begin; index < end; ++index) {
-    if(_particles.state[index] != Particles::ACTIVE)continue;
+    //if(_particles.state[index] != Particles::ACTIVE)continue;
 
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
@@ -358,12 +358,12 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   float invDt = 1.f / _stepTime;
 
   for(size_t index = begin; index < end; ++index) {
-    if (state[index] != Particles::ACTIVE)continue;
+    //if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
 
     if (velocity[index].GetLength() < _sleepThreshold) {
-      state[index] = Particles::IDLE;
+      //state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
     }
 

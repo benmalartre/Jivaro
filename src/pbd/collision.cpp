@@ -219,13 +219,6 @@ pxr::GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
   return _normal;
 }
 
-pxr::GfVec3f PlaneCollision::GetSDF(Particles* particles, size_t index)
-{
-  float d = GetValue(particles, index) ;
-  if(d < 0.f)return _normal * -d;
-  else return pxr::GfVec3f(0.f);
-}
-
 void PlaneCollision::Update(const pxr::UsdPrim& prim, double time) 
 {
   _UpdatePositionAndNormal();
@@ -245,7 +238,6 @@ void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
   const pxr::GfVec3f predicted(particles->position[index] + particles->velocity[index] * ft);
   float d = pxr::GfDot(_normal, predicted - _position)  - (particles->radius[index] + TOLERANCE_MARGIN);
   SetHit(index, d < 0.f);
-  
 }
 
 void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
@@ -322,14 +314,6 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
 {
   return (particles->predicted[index] - _center).GetNormalized();
 }
-
-pxr::GfVec3f SphereCollision::GetSDF(Particles* particles, size_t index)
-{
-  float d = GetValue(particles, index);
-  if(d < 0.f)return GetGradient(particles, index) * -d;
-  else return pxr::GfVec3f(0.f);
-}
-
 
 
 
@@ -424,11 +408,6 @@ float MeshCollision::GetValue(Particles* particles, size_t index)
 pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
 {
   return pxr::GfVec3f(0.f);// return (particles->predicted[index] - _center).GetNormalized();
-}
-
-pxr::GfVec3f MeshCollision::GetSDF(Particles* particles, size_t index)
-{
-  return pxr::GfVec3f(0.f);
 }
 
 
@@ -604,11 +583,6 @@ float SelfCollision::GetValue(Particles* particles, size_t index, size_t other)
 pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size_t other)
 {
   return (particles->predicted[index] - particles->predicted[other]).GetNormalized();
-}
-
-pxr::GfVec3f SelfCollision::GetSDF(Particles* particles, size_t index)
-{
-  return pxr::GfVec3f(0.f);
 }
 
 // Velocity
