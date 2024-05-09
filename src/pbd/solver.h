@@ -29,6 +29,7 @@ class DampForce;
 class Collision;
 class Geometry;
 class Points;
+class Curve;
 class Scene;
 class Timer;
 
@@ -76,6 +77,7 @@ public:
   void AddConstraint(Constraint* constraint);
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
   void GetConstraintsByType(short type, std::vector<Constraint*>& results);
+  void UpdateCurves();
 
   // contacts
   void AddContact(Constraint* contact) { _contacts.push_back(contact); };
@@ -145,7 +147,9 @@ private:
   _ElementMap                         _elements;
   Scene*                              _scene;
   Points*                             _points;
+  Curve*                              _curves;
   pxr::SdfPath                        _pointsId;
+  pxr::SdfPath                        _curvesId;
   pxr::SdfPath                        _solverId;
 
   // timing

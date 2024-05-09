@@ -14,12 +14,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Mesh;
 struct HalfEdge
 {
+  static const int INVALID_INDEX = -1;
   int vertex;    // vertex index
   int twin;      // opposite half-edge
   int prev;      // previous half-edge  
   int next;      // next half-edge
 
-  HalfEdge() : vertex(-1), twin(-1), prev(-1), next(-1){};
+  HalfEdge() : vertex(INVALID_INDEX), twin(INVALID_INDEX), prev(INVALID_INDEX), next(INVALID_INDEX){};
 };
 
 class HalfEdgeGraph {
@@ -56,7 +57,8 @@ public:
   HalfEdge* GetEdge(int index);
   size_t GetEdgeIndex(const HalfEdge* edge) const;
   HalfEdge* GetAvailableEdge();
-  pxr::VtArray<HalfEdge>& GetEdges();
+  pxr::VtArray<HalfEdge>& GetEdges(){return _halfEdges;};
+  const pxr::VtArray<HalfEdge>& GetEdges() const{return _halfEdges;};
   pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
   HalfEdge* GetEdgeFromVertex(size_t vertex);
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
@@ -67,7 +69,7 @@ public:
   float GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
   float GetLengthSq(const HalfEdge* edge, const pxr::GfVec3f* positions) const;
 
-  const pxr::VtArray<bool>&  GetBoundaries(){return _boundary;};
+  const pxr::VtArray<bool>&  GetBoundaries() const {return _boundary;};
 
   //HalfEdge* GetLongest(const pxr::GfVec3f* positions);
   /*
@@ -92,7 +94,7 @@ protected:
   void _UpdatePoint(size_t startIndex, size_t endIndex, size_t oldIndex, size_t replaceIdx);
   
   void _RemoveOneEdge(const HalfEdge* edge, bool* modified);
-  void _ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors);
+  void _ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors, bool connected=false);
   size_t _GetEdgeIndex(const HalfEdge* edge) const;
   size_t _GetFaceVerticesCount(const HalfEdge* edge);
 

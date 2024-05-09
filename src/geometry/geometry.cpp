@@ -60,7 +60,6 @@ Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
   else if(prim.IsA<pxr::UsdGeomPoints>())_type = Geometry::POINT;
   else if(prim.IsA<pxr::UsdGeomPointInstancer>())_type = Geometry::INSTANCER;
   else _type = Geometry::INVALID;
-
   SetMatrix(world);
 }
 

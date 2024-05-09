@@ -163,18 +163,6 @@ Mesh::GetTriangleNormal(uint32_t triangleID) const
   return (B ^ C).GetNormalized();
 }
 
-pxr::VtArray<HalfEdge>&
-Mesh::GetEdges()
-{
-  return _halfEdges.GetEdges();
-}
-
-HalfEdgeGraph*
-Mesh::GetEdgesGraph()
-{
-  return &_halfEdges;
-}
-
 bool Mesh::RemovePoint(size_t index)
 {
   if (index >= _positions.size()) {
@@ -372,6 +360,7 @@ void Mesh::ComputeNeighbors()
   _halfEdges.ComputeNeighbors();
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
 }
+
 
 void Mesh::ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors)
 {
@@ -926,7 +915,7 @@ void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
   for(size_t y = 0; y < numY; ++y) {
     for(size_t x = 0; x < numX; ++x) {
       size_t vertexId = y * numX + x;
-      positions[vertexId][0] = spaceX * x - 0.5f;
+      positions[vertexId][0] = spaceX * x - 0.5f /*- spaceX * (y % 2 +1)*/;
       positions[vertexId][1] = 0.f;
       positions[vertexId][2] = spaceY * y - 0.5f;
       positions[vertexId] = matrix.Transform(positions[vertexId]);
@@ -945,24 +934,46 @@ void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
   size_t k = 0;
   for(size_t i=0; i < numRows; ++i) {
     for (size_t j = 0; j < numTrianglesPerRow; ++j) {
-      if (i % 2 == 0) {
-        faceIndices[k++] = (i + 1) * numX + j + 1; 
-        faceIndices[k++] = i * numX + j + 1;
-        faceIndices[k++] = i * numX + j;
+      if(i%2) {
+        if (j % 2)  {
+          faceIndices[k++] = (i + 1) * numX + j + 1; 
+          faceIndices[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j;
 
-        faceIndices[k++] = i * numX + j; 
-        faceIndices[k++] = (i + 1) * numX + j;
-        faceIndices[k++] = (i + 1) * numX + j + 1;
-      }
-      else {
-        faceIndices[k++] = (i + 1) * numX + j; 
-        faceIndices[k++] = i * numX + j + 1;
-        faceIndices[k++] = i * numX + j;
+          faceIndices[k++] = i * numX + j; 
+          faceIndices[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = (i + 1) * numX + j + 1;
+        }
+        else {
+          faceIndices[k++] = (i + 1) * numX + j; 
+          faceIndices[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j;
 
-        faceIndices[k++] = i * numX + j + 1; 
-        faceIndices[k++] = (i + 1) * numX + j;
-        faceIndices[k++] = (i + 1) * numX + j + 1;
+          faceIndices[k++] = i * numX + j + 1; 
+          faceIndices[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = (i + 1) * numX + j + 1;
+        }
+      } else {
+        if (j % 2)  {
+          faceIndices[k++] = (i + 1) * numX + j; 
+          faceIndices[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j;
+
+          faceIndices[k++] = i * numX + j + 1; 
+          faceIndices[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = (i + 1) * numX + j + 1;
+        }
+        else {
+          faceIndices[k++] = (i + 1) * numX + j + 1; 
+          faceIndices[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j;
+
+          faceIndices[k++] = i * numX + j; 
+          faceIndices[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = (i + 1) * numX + j + 1;
+        }
       }
+      
     }
   }
   Set(positions, faceCounts, faceIndices);

@@ -52,7 +52,7 @@ public:
   virtual void Solve(Particles* particles, float dt) = 0;
 
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
-    pxr::VtArray<float>& radius) = 0;
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) = 0;
 
   // this one has to be called serially 
   // as two constraints can move the same point
@@ -60,7 +60,6 @@ public:
 
 
 protected:
-  float _ComputeLagrangeMultiplier(Particles* particles, size_t elem);
   void _ResetCorrection();
 
   pxr::VtArray<int>             _elements;
@@ -68,6 +67,7 @@ protected:
   float                         _compliance;
   float                         _damping;
   pxr::TfToken                  _key;
+  pxr::GfVec3f                  _color;
 };
 
 class StretchConstraint : public Constraint
@@ -80,14 +80,13 @@ public:
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
-    pxr::VtArray<float>& radius) override;
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
   void Solve(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
 protected:
-
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
 };
@@ -106,7 +105,7 @@ public:
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
-    pxr::VtArray<float>& radius) override;
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
   void Solve(Particles* particles, float dt) override;
 
@@ -131,14 +130,13 @@ public:
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
-    pxr::VtArray<float>& radius) override;
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
   void Solve(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
 protected:
-
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
 
@@ -170,7 +168,7 @@ public:
   Collision* GetCollision() {return _collision;};
   const Collision* GetCollision() const { return _collision; };
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
-    pxr::VtArray<float>& radius) override;
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
   void Solve(Particles* particles, float dt) override;
 

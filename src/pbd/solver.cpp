@@ -53,6 +53,9 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   _pointsId = _solverId.AppendChild(pxr::TfToken("Particles"));
   _points = (Points*)_scene->AddGeometry(_pointsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
 
+  _curvesId = _solverId.AppendChild(pxr::TfToken("Constraints"));
+  _curves = (Curve*)_scene->AddGeometry(_curvesId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
+
   pxr::UsdAttribute gravityAttr = xform.GetPrim().GetAttribute(PBDTokens->gravity);
    _gravity = new GravityForce(gravityAttr);
   AddElement(_gravity, NULL, _solverId.AppendChild(PBDTokens->gravity));
@@ -68,6 +71,7 @@ Solver::~Solver()
   for (auto& body : _bodies)delete body;
   for (auto& force : _force)delete force;
   _scene->RemoveGeometry(_pointsId);
+  delete _curves;
   delete _points;
   delete _timer;
 }
@@ -245,6 +249,30 @@ void Solver::UpdatePoints()
   _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
 }
 
+void Solver::UpdateCurves()
+{
+  size_t numConstraints = _constraints.size();
+
+  pxr::VtArray<pxr::GfVec3f> positions;
+  pxr::VtArray<float> widths;
+  pxr::VtArray<pxr::GfVec3f> colors;
+  pxr::VtArray<int> counts;
+
+  for(size_t c = 0; c < numConstraints; ++c) {
+    if(_constraints[c]->GetTypeId() != Constraint::BEND)continue;
+    _constraints[c]->GetPoints(&_particles, positions, widths, colors);
+
+    for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
+      counts.push_back(2);
+
+  }
+
+  _curves->SetTopology(positions, widths, counts);
+  _curves->SetColors(colors);
+
+  _scene->MarkPrimDirty(_curvesId, pxr::HdChangeTracker::AllDirty);
+}
+
 void Solver::WeightBoundaries(Body* body)
 {
   size_t offset = body->GetOffset();
@@ -372,6 +400,8 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     _points->SetPositions(&_particles.position[0], numParticles);
     _points->SetColors(&_particles.color[0], numParticles);
     _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
+
+    UpdateCurves();
   }
 
 }

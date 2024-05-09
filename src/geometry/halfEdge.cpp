@@ -13,7 +13,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 HalfEdgeGraph::ItUniqueEdge::ItUniqueEdge(const HalfEdgeGraph& graph)
   : graph(graph)
-  , index(-1)
+  , index(HalfEdge::INVALID_INDEX)
 {
 }
 
@@ -80,12 +80,6 @@ HalfEdgeGraph::GetNumEdges() const
     if (_halfEdgeUsed[edgeIdx] && IsUnique(&edge))numEdges++;
   }
   return numEdges;
-}
-
-pxr::VtArray<HalfEdge>& 
-HalfEdgeGraph::GetEdges()
-{
-  return _halfEdges;
 }
 
 HalfEdge*
@@ -228,7 +222,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   halfEdgesKeys.resize(numHalfEdges);
 
   _vertexHalfEdge.resize(numPoints);
-  memset(&_vertexHalfEdge[0], -1, numPoints * sizeof(int));
+  memset(&_vertexHalfEdge[0], HalfEdge::INVALID_INDEX, numPoints * sizeof(int));
 
   for (const auto& faceVertexCount: faceVertexCounts)
   { 
@@ -278,7 +272,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
         halfEdge.second->twin = _GetEdgeIndex(twinEdge);
       }
       else {
-        halfEdge.second->twin = -1;
+        halfEdge.second->twin = HalfEdge::INVALID_INDEX;
         _boundary[halfEdge.second->vertex] = true;
         _boundary[_halfEdges[halfEdge.second->next].vertex] = true;
       }
@@ -346,10 +340,10 @@ HalfEdgeGraph::RemoveEdge(HalfEdge* edge, bool* modified)
   HalfEdge* next = _GetNextEdge(edge);
 
   bool isTriangle = _IsTriangle(edge);
-  if (edge->twin > -1) _halfEdges[edge->twin].twin = -1;
+  if (edge->twin > HalfEdge::INVALID_INDEX) _halfEdges[edge->twin].twin = HalfEdge::INVALID_INDEX;
   if (isTriangle) {
-    if (prev->twin > -1)_halfEdges[prev->twin].twin = next->twin;
-    if (next->twin > -1)_halfEdges[next->twin].twin = prev->twin;
+    if (prev->twin > HalfEdge::INVALID_INDEX)_halfEdges[prev->twin].twin = next->twin;
+    if (next->twin > HalfEdge::INVALID_INDEX)_halfEdges[next->twin].twin = prev->twin;
 
     _RemoveOneEdge(edge, modified);
     _RemoveOneEdge(prev, modified);
@@ -566,22 +560,50 @@ HalfEdgeGraph::ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbo
 }
 
 void
-HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors)
+HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors, bool connected)
 {
+  if(connected) {
+    const HalfEdge* current = edge;
+    do {
+      neighbors.push_back(_halfEdges[current->next].vertex);
+      current = _GetNextAdjacentEdge(current);
+      if(current == edge)return;
+    } while(current);
 
-  const HalfEdge* current = edge;
-  do {
-    neighbors.push_back(_halfEdges[current->next].vertex);
-    current = _GetNextAdjacentEdge(current);
-    if(current == edge)return;
-  } while(current);
+    current = &_halfEdges[edge->prev];
+    do {
+      neighbors.push_back(current->vertex);
+      current = _GetPreviousAdjacentEdge(current);
+      if(current == edge)return;
+    } while (current);
+  } else {
+    const HalfEdge* current = edge;
+    do {
+      HalfEdge* next = _GetNextEdge(current);
+      do {
+        if(_GetNextEdge(next) != current || next->twin == HalfEdge::INVALID_INDEX || current->twin == HalfEdge::INVALID_INDEX)
+          neighbors.push_back(next->vertex);
+        next = _GetNextEdge(next);
+      } while (next != current);
+      current = _GetNextAdjacentEdge(current);
+      if(current == edge)return;
+    } while(current);
 
-  current = &_halfEdges[edge->prev];
-  do {
-    neighbors.push_back(current->vertex);
-    current = _GetPreviousAdjacentEdge(current);
-    if(current == edge)return;
-  } while (current);
+    current = &_halfEdges[edge->prev];
+    if(current->twin == HalfEdge::INVALID_INDEX)return;
+    current = &_halfEdges[current->twin];
+    do {
+      HalfEdge* next = _GetNextEdge(current);
+      do {
+        if(_GetPreviousEdge(next) != current || _GetNextEdge(next)->twin == HalfEdge::INVALID_INDEX)
+          neighbors.push_back(next->vertex);
+        next = _GetNextEdge(next);
+      } while (next != current);
+      current = _GetNextAdjacentEdge(current);
+      if(current == edge)return;
+    } while(current);
+  }
+  
 }
 
 void
