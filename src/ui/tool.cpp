@@ -201,11 +201,10 @@ static void _Smooth(int smoothIterations)
     const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
     pxr::VtFloatArray weights;
     Smooth<pxr::GfVec3f> smooth(numPoints, weights);
-    const pxr::VtArray<pxr::VtArray<int>>& neighbors = mesh.GetNeighbors();
 
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
       smooth.SetDatas(pointIdx, positions[pointIdx]);
-      smooth.SetNeighbors(pointIdx, neighbors[pointIdx].size(), &neighbors[pointIdx][0]);
+      smooth.SetNeighbors(pointIdx, mesh.GetNumAdjacents(pointIdx), mesh.GetAdjacents(pointIdx));
 
     }
     sw.Stop();

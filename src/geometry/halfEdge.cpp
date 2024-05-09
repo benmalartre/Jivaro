@@ -49,12 +49,6 @@ HalfEdgeGraph::GetEdge(int index)
   return &_halfEdges[index];
 }
 
-pxr::VtArray<pxr::VtArray<int>>& 
-HalfEdgeGraph::GetNeighbors()
-{
-  return _neighbors;
-}
-
 HalfEdge*
 HalfEdgeGraph::GetAvailableEdge()
 {
@@ -541,14 +535,22 @@ void HalfEdgeGraph::ComputeNeighbors()
 {
   size_t numPoints = _boundary.size();
   _neighbors.clear();
-  _neighbors.resize(numPoints);
+  _neighborsCount.resize(numPoints);
+  _neighborsOffset.resize(numPoints);
 
   std::vector<int> visited(numPoints, 0);
 
+  pxr::VtArray<int> neighbors;
+  size_t neighborsOffset = 0;
+
   for (HalfEdge& halfEdge : _halfEdges) {
     if(visited[halfEdge.vertex]) continue;
-
-    _ComputeVertexNeighbors(&halfEdge, _neighbors[halfEdge.vertex]);
+    neighbors.clear();
+    _ComputeVertexNeighbors(&halfEdge, neighbors, true);
+    for(auto& neighbor: neighbors)_neighbors.push_back(neighbor);
+    _neighborsCount[halfEdge.vertex] = neighbors.size();
+    _neighborsOffset[halfEdge.vertex] = neighborsOffset;
+    neighborsOffset += neighbors.size();
     visited[halfEdge.vertex]++;
   }
 }
@@ -581,8 +583,11 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
     do {
       HalfEdge* next = _GetNextEdge(current);
       do {
-        if(_GetNextEdge(next) != current || next->twin == HalfEdge::INVALID_INDEX || current->twin == HalfEdge::INVALID_INDEX)
+        if (_boundary[current->vertex] && _boundary[next->vertex])
           neighbors.push_back(next->vertex);
+        else if (_GetNextEdge(next) != current)
+          neighbors.push_back(next->vertex);
+
         next = _GetNextEdge(next);
       } while (next != current);
       current = _GetNextAdjacentEdge(current);
@@ -595,7 +600,9 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
     do {
       HalfEdge* next = _GetNextEdge(current);
       do {
-        if(_GetPreviousEdge(next) != current || _GetNextEdge(next)->twin == HalfEdge::INVALID_INDEX)
+        if (_boundary[current->vertex] && _boundary[next->vertex])
+          neighbors.push_back(next->vertex);
+        else if (_GetNextEdge(next) != current)
           neighbors.push_back(next->vertex);
         next = _GetNextEdge(next);
       } while (next != current);
@@ -824,6 +831,42 @@ HalfEdgeGraph::ComputeTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>&
     }
     faceCounts.push_back(faceVertexCount);
   }
+}
+
+size_t 
+HalfEdgeGraph::GetNumNeighbors(size_t index)
+{
+  return _neighborsCount[index];
+}
+
+const int*  
+HalfEdgeGraph::GetNeighbors(size_t index)
+{
+  return &_neighbors[_neighborsOffset[index]];
+}
+
+int  
+HalfEdgeGraph::GetNeighbor(size_t index, size_t neighbor)
+{
+  return _neighbors[_neighborsOffset[index]+neighbor];
+}
+
+size_t  
+HalfEdgeGraph::GetNumAdjacents(size_t index)
+{
+  return _adjacentsCount[index];
+}
+
+const int*  
+HalfEdgeGraph::GetAdjacents(size_t index)
+{
+  return &_adjacents[_adjacentsOffset[index]];
+}
+
+int  
+HalfEdgeGraph::GetAdjacent(size_t index, size_t adjacent)
+{
+   return _adjacents[_adjacentsOffset[index]+adjacent];
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

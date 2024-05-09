@@ -342,14 +342,65 @@ Mesh::GetTrianglePairs()
 }
 
 
-const pxr::VtArray<pxr::VtArray<int>>& 
-Mesh::GetNeighbors()
+size_t
+Mesh::GetNumAdjacents(size_t index)
 {
+  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
+    _halfEdges.ComputeAdjacents();
+    BITMASK_SET(_flags, Mesh::ADJACENTS);
+  }
+  return _halfEdges.GetNumAdjacents(index);
+}
+
+const int* 
+Mesh::GetAdjacents(size_t index)
+{
+  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
+    _halfEdges.ComputeAdjacents();
+    BITMASK_SET(_flags, Mesh::ADJACENTS);
+  }
+  return _halfEdges.GetAdjacents(index);
+}
+
+int 
+Mesh::GetAdjacent(size_t index, size_t adjacent)
+{
+  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
+    _halfEdges.ComputeAdjacents();
+    BITMASK_SET(_flags, Mesh::ADJACENTS);
+  }
+  return _halfEdges.GetAdjacent(index, adjacent);
+}
   
+
+size_t
+Mesh::GetNumNeighbors(size_t index)
+{
   if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
     _halfEdges.ComputeNeighbors();
+    BITMASK_SET(_flags, Mesh::NEIGHBORS);
   }
-  return _halfEdges.GetNeighbors();
+  return _halfEdges.GetNumNeighbors(index);
+}
+
+const int* 
+Mesh::GetNeighbors(size_t index)
+{
+  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
+    _halfEdges.ComputeNeighbors();
+    BITMASK_SET(_flags, Mesh::NEIGHBORS);
+  }
+  return _halfEdges.GetNeighbors(index);
+}
+
+int 
+Mesh::GetNeighbor(size_t index, size_t neighbor) 
+{
+  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
+    _halfEdges.ComputeNeighbors();
+    BITMASK_SET(_flags, Mesh::NEIGHBORS);
+  }
+  return _halfEdges.GetNeighbor(index, neighbor);
 }
 
 void Mesh::ComputeNeighbors()
@@ -361,12 +412,6 @@ void Mesh::ComputeNeighbors()
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
 }
 
-
-void Mesh::ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors)
-{
-  HalfEdge* edge = _halfEdges.GetEdgeFromVertex(pointIdx);
-  _halfEdges._ComputeVertexNeighbors(edge, neighbors);
-}
 
 void Mesh::Set(
   const pxr::VtArray<pxr::GfVec3f>& positions,

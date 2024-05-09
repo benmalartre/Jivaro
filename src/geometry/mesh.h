@@ -43,9 +43,10 @@ private:
 class Mesh : public Deformable {
 public:
   enum Flag {
-    NEIGHBORS     = 1 << 0,
-    HALFEDGES     = 1 << 1,
-    TRIANGLEPAIRS = 1 << 2
+    ADJACENTS     = 1 << 0,
+    NEIGHBORS     = 1 << 1,
+    HALFEDGES     = 1 << 2,
+    TRIANGLEPAIRS = 1 << 3
   };
   Mesh(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world);
@@ -68,8 +69,14 @@ public:
   const pxr::VtArray<HalfEdge>& GetEdges()const{return _halfEdges.GetEdges();};
   const HalfEdgeGraph* GetEdgesGraph()const{return &_halfEdges;};
 
-  const pxr::VtArray<pxr::VtArray<int>>& GetNeighbors();
-  void ComputeNeighbors(size_t pointIdx, pxr::VtArray<int>& neighbors);
+
+  size_t GetNumAdjacents(size_t index);
+  const int* GetAdjacents(size_t index);
+  int GetAdjacent(size_t index, size_t adjacent);
+  
+  size_t GetNumNeighbors(size_t index);
+  const int* GetNeighbors(size_t index);
+  int GetNeighbor(size_t index, size_t neighbor);
   
   Triangle* GetTriangle(uint32_t index) {return &_triangles[index];};
   const Triangle* GetTriangle(uint32_t index) const {return &_triangles[index];};
