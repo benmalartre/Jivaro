@@ -97,6 +97,7 @@ public:
 
   void ComputeHalfEdges();
   void ComputeNeighbors();
+  void ComputeAdjacents();
   void ComputeTrianglePairs();
 
   float TriangleArea(uint32_t index);

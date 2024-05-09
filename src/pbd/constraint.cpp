@@ -284,13 +284,13 @@ int _FindBestVertex(const pxr::GfVec3f* positions, size_t p, size_t n, const int
   int best = -1;
   float minCosine = FLT_MAX;
   for (size_t o = 0; o < num; ++o) {
-    if (n == neighbors[o])continue;
-    const pxr::GfVec3f e0 = (positions[n] - positions[p]);
+    if (neighbors[n] == neighbors[o])continue;
+    const pxr::GfVec3f e0 = (positions[neighbors[n]] - positions[p]);
     const pxr::GfVec3f e1 = (positions[neighbors[o]] - positions[p]);
     float cosine = pxr::GfDot(e0, e1) / (e0.GetLength() * e1.GetLength());
     if (cosine < minCosine) {
       minCosine = cosine;
-      best = neighbors[o];
+      best = o;
     }
   }
   return best;
@@ -326,21 +326,22 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
       } else {
         size_t numNeighbors = mesh->GetNumNeighbors(p);
         const int* neighbors = mesh->GetNeighbors(p);
+        std::cout << p << ": ";
+        for(size_t n = 0; n < numNeighbors; ++n) std::cout << neighbors[n] << ",";
+        std::cout << std::endl;
         for (size_t n = 0; n < numNeighbors; ++n) {
-          int best = _FindBestVertex(positions, p, neighbors[n], neighbors, numNeighbors);
+          int o = _FindBestVertex(positions, p, n, neighbors, numNeighbors);
 
-          if (best > n) {
-            allElements.push_back(n + offset);
+          if (o > -1 && neighbors[o] > neighbors[n]) {
+            allElements.push_back(neighbors[n] + offset);
             allElements.push_back(p + offset);
-            allElements.push_back(best + offset);
+            allElements.push_back(neigbors[o] + offset);
             cnt++;
           }
         }
       }
-     
     }
-    std::cout << "collected " << cnt << " candidates for bend constraint " << std::endl;
-    std::cout << allElements << std::endl;
+
   } else if (geometry->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geometry;
     size_t totalNumSegments = curve->GetTotalNumSegments();

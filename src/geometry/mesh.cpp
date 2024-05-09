@@ -371,6 +371,17 @@ Mesh::GetAdjacent(size_t index, size_t adjacent)
   }
   return _halfEdges.GetAdjacent(index, adjacent);
 }
+
+void 
+Mesh::ComputeAdjacents()
+{
+  if (!BITMASK_CHECK(_flags, Mesh::HALFEDGES)) {
+    ComputeHalfEdges();
+  }
+  _halfEdges.ComputeAdjacents();
+  BITMASK_SET(_flags, Mesh::ADJACENTS);
+}
+
   
 
 size_t
@@ -478,7 +489,10 @@ void Mesh::Prepare(bool connectivity)
     // compute half-edges
     ComputeHalfEdges();
 
-    // compute neighbors
+    // compute adjacents (connected vertices)
+    ComputeAdjacents();
+
+    // compute neighbors (first ring vertices)
     ComputeNeighbors();
   } else {
     BITMASK_CLEAR(_flags,Mesh::HALFEDGES|Mesh::NEIGHBORS);

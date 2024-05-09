@@ -36,8 +36,8 @@ public:
 
   void ComputeGraph(Mesh* mesh);
   void ComputeNeighbors();
-  void ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors);
   void ComputeAdjacents();
+  void ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors);
   void ComputeAdjacents(const HalfEdge* edge, pxr::VtArray<int>& adjacents);
   void ComputeTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const;
 
@@ -69,7 +69,7 @@ public:
   size_t GetNumAdjacents(size_t index);
   const int* GetAdjacents(size_t index);
   int GetAdjacent(size_t index, size_t adjacent);
-  
+
   HalfEdge* GetEdgeFromVertex(size_t vertex);
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
   const HalfEdge* GetEdgeFromVertices(size_t start, size_t end) const;

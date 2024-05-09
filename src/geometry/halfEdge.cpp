@@ -531,6 +531,36 @@ _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
   return false;
 }
 
+void HalfEdgeGraph::ComputeAdjacents()
+{
+  size_t numPoints = _boundary.size();
+  _adjacents.clear();
+  _adjacentsCount.resize(numPoints);
+  _adjacentsOffset.resize(numPoints);
+
+  std::vector<int> visited(numPoints, 0);
+
+  pxr::VtArray<int> adjacents;
+  size_t adjacentsOffset = 0;
+
+  for (HalfEdge& halfEdge : _halfEdges) {
+    if(visited[halfEdge.vertex]) continue;
+    adjacents.clear();
+    _ComputeVertexNeighbors(&halfEdge, adjacents, false);
+    for(auto& adjacent: adjacents)_adjacents.push_back(adjacent);
+    _adjacentsCount[halfEdge.vertex] = adjacents.size();
+    _adjacentsOffset[halfEdge.vertex] = adjacentsOffset;
+    adjacentsOffset += adjacents.size();
+    visited[halfEdge.vertex]++;
+  }
+}
+
+void
+HalfEdgeGraph::ComputeAdjacents(const HalfEdge* edge, pxr::VtArray<int>& adjacents)
+{
+  _ComputeVertexNeighbors(edge, adjacents, true);
+}
+
 void HalfEdgeGraph::ComputeNeighbors()
 {
   size_t numPoints = _boundary.size();
@@ -546,7 +576,7 @@ void HalfEdgeGraph::ComputeNeighbors()
   for (HalfEdge& halfEdge : _halfEdges) {
     if(visited[halfEdge.vertex]) continue;
     neighbors.clear();
-    _ComputeVertexNeighbors(&halfEdge, neighbors, true);
+    _ComputeVertexNeighbors(&halfEdge, neighbors, false);
     for(auto& neighbor: neighbors)_neighbors.push_back(neighbor);
     _neighborsCount[halfEdge.vertex] = neighbors.size();
     _neighborsOffset[halfEdge.vertex] = neighborsOffset;
@@ -558,7 +588,7 @@ void HalfEdgeGraph::ComputeNeighbors()
 void
 HalfEdgeGraph::ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors)
 {
-  _ComputeVertexNeighbors(edge, neighbors);
+  _ComputeVertexNeighbors(edge, neighbors, false);
 }
 
 void
@@ -610,7 +640,6 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
       if(current == edge)return;
     } while(current);
   }
-  
 }
 
 void
