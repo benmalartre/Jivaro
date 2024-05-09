@@ -343,8 +343,8 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
     const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
 
     for (size_t p = 0; p < numPoints; ++p) {
-      size_t numNeighbors = mesh->GetNumAdjacents(p);
-      const int* neighbors = mesh->GetAdjacents(p);
+      size_t numNeighbors = mesh->GetNumNeighbors(p);
+      const int* neighbors = mesh->GetNeighbors(p);
 
       if(boundaries[p]) {
         if(numNeighbors <= 2)continue;
