@@ -149,6 +149,8 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
   }
 
   size_t numElements = allElements.size();
+  std::cout << "num stretch spring : " << (numElements/2) << std::endl;
+  size_t numBlocks = 0;
   size_t first = 0;
   size_t last = pxr::GfMin(Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
   while(true) {
@@ -158,7 +160,9 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
     first += Constraint::BlockSize * StretchConstraint::ELEM_SIZE;
     if(first >= numElements)break;
     last = pxr::GfMin(last + Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
+    numBlocks++;
   }
+  std::cout << "spit in " << numBlocks << " blocks of " << Constraint::BlockSize << std::endl;
 }
 
 size_t BendConstraint::TYPE_ID = Constraint::BEND;
@@ -200,7 +204,7 @@ void BendConstraint::Solve(Particles* particles, float dt)
   const size_t numElements = _elements.size() / ELEM_SIZE;
   const float alpha = _compliance / (dt * dt);
 
-  pxr::GfVec3f x0, x1, x2, center, h;
+  pxr::GfVec3f x0, x1, x2, center, h, correction;
   float w0, w1, w2, W, hL, C;
   size_t a, b, c;
 
@@ -240,23 +244,23 @@ void BendConstraint::Solve(Particles* particles, float dt)
     _correction[elem * ELEM_SIZE + 2] += lambda * d2;
     */
 
-    const size_t a = _elements[elem * ELEM_SIZE + 0];
-    const size_t b = _elements[elem * ELEM_SIZE + 2];
+    a = _elements[elem * ELEM_SIZE + 0];
+    b = _elements[elem * ELEM_SIZE + 2];
 
-    const float w0 = particles->invMass[a];
-    const float w1 = particles->invMass[b];
+    w0 = particles->invMass[a];
+    w1 = particles->invMass[b];
 
-    float w = w0 + w1;
-    if(w < 1e-6f) continue;
+    W = w0 + w1;
+    if(W < 1e-6f) continue;
 
-    pxr::GfVec3f gradient = particles->predicted[a] - particles->predicted[b];
-    const float length = gradient.GetLength();
+    h = particles->predicted[a] - particles->predicted[b];
+    hL = h.GetLength();
 
-    if(length < 1e-6f) continue;
+    if(hL < 1e-6f) continue;
 
-    const float C = length - _rest[elem];
+    C = hL - _rest[elem];
 
-	  const pxr::GfVec3f correction = gradient.GetNormalized() / (w + alpha) * C;
+	  correction = h.GetNormalized() / (W + alpha) * C;
 
     _correction[elem * ELEM_SIZE + 0] -= w0 * correction;
     _correction[elem * ELEM_SIZE + 2] += w1 * correction;
@@ -279,7 +283,8 @@ void BendConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>&
   }
 }
 
-int _FindBestVertex(const pxr::GfVec3f* positions, size_t p, size_t n, const int* neighbors, int num)
+int _FindBestVertex(const pxr::GfVec3f* positions, size_t p, size_t n, 
+  const int* neighbors, int num)
 {
   int best = -1;
   float minCosine = FLT_MAX;
@@ -296,10 +301,27 @@ int _FindBestVertex(const pxr::GfVec3f* positions, size_t p, size_t n, const int
   return best;
 }
 
-int _FindBestBoundaryVertex(const pxr::GfVec3f* positions, size_t p, const int* neighbors, int num)
+pxr::GfVec2i _FindBestBoundaryVertices(const pxr::GfVec3f* positions, size_t p, 
+  const int* neighbors, int num, const bool* boundaries)
 {
-  if(num <= 3) return -1;
+  pxr::GfVec2i result(-1,-1);
+  int best = -1;
+  float minCosine = FLT_MAX;
+  for (size_t m = 0; m < num; ++m) {
+    if(!boundaries[neighbors[m]])continue;
+    for (size_t n = 0; n < num; ++n) {
+      if (neighbors[m] == neighbors[n] || !boundaries[neighbors[n]])continue;
 
+      const pxr::GfVec3f e0 = (positions[neighbors[m]] - positions[p]);
+      const pxr::GfVec3f e1 = (positions[neighbors[n]] - positions[p]);
+      float cosine = pxr::GfDot(e0, e1) / (e0.GetLength() * e1.GetLength());
+      if (cosine < minCosine) {
+        minCosine = cosine;
+        result = m > n ? pxr::GfVec2i(n, m) : pxr::GfVec2i(m, n);
+      }
+    }
+  }
+  return result;
 }
 
 void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
@@ -321,26 +343,35 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
     const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
 
     for (size_t p = 0; p < numPoints; ++p) {
+      size_t numNeighbors = mesh->GetNumAdjacents(p);
+      const int* neighbors = mesh->GetAdjacents(p);
+
       if(boundaries[p]) {
+        if(numNeighbors <= 2)continue;
+
+        pxr::GfVec2i pair = _FindBestBoundaryVertices(positions, p, neighbors, numNeighbors, &boundaries[0]);
+        if(pair[0] == -1 || pair[1] == -1)continue;
+
+        allElements.push_back(neighbors[pair[0]] + offset);
+        allElements.push_back(p + offset);
+        allElements.push_back(neighbors[pair[1]] + offset);
+        cnt++;
 
       } else {
-        size_t numNeighbors = mesh->GetNumNeighbors(p);
-        const int* neighbors = mesh->GetNeighbors(p);
-        std::cout << p << ": ";
-        for(size_t n = 0; n < numNeighbors; ++n) std::cout << neighbors[n] << ",";
-        std::cout << std::endl;
         for (size_t n = 0; n < numNeighbors; ++n) {
           int o = _FindBestVertex(positions, p, n, neighbors, numNeighbors);
 
           if (o > -1 && neighbors[o] > neighbors[n]) {
             allElements.push_back(neighbors[n] + offset);
             allElements.push_back(p + offset);
-            allElements.push_back(neigbors[o] + offset);
+            allElements.push_back(neighbors[o] + offset);
             cnt++;
           }
         }
       }
     }
+
+    std::cout << "num bend spring : " << cnt << std::endl;
 
   } else if (geometry->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geometry;
@@ -359,6 +390,7 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
   }
 
   size_t numElements = allElements.size();
+  size_t numBlocks = 0;
   size_t first = 0;
   size_t last = pxr::GfMin(Constraint::BlockSize * BendConstraint::ELEM_SIZE, numElements);
   while(true) {
@@ -368,7 +400,10 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
     first += Constraint::BlockSize * BendConstraint::ELEM_SIZE;
     if(first >= numElements)break;
     last = pxr::GfMin(last + Constraint::BlockSize * BendConstraint::ELEM_SIZE, numElements);
+    numBlocks++;
   }
+
+  std::cout << "split in " << numBlocks << " blocks of " << Constraint::BlockSize << std::endl;
 }
 
 size_t DihedralConstraint::TYPE_ID = Constraint::DIHEDRAL;

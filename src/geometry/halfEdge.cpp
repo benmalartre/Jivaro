@@ -546,7 +546,7 @@ void HalfEdgeGraph::ComputeAdjacents()
   for (HalfEdge& halfEdge : _halfEdges) {
     if(visited[halfEdge.vertex]) continue;
     adjacents.clear();
-    _ComputeVertexNeighbors(&halfEdge, adjacents, false);
+    _ComputeVertexNeighbors(&halfEdge, adjacents, true);
     for(auto& adjacent: adjacents)_adjacents.push_back(adjacent);
     _adjacentsCount[halfEdge.vertex] = adjacents.size();
     _adjacentsOffset[halfEdge.vertex] = adjacentsOffset;

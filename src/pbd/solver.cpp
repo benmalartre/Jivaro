@@ -401,7 +401,7 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     _points->SetColors(&_particles.color[0], numParticles);
     _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
 
-    UpdateCurves();
+    //UpdateCurves();
   }
 
 }

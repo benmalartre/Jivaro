@@ -24,7 +24,7 @@ class SelfCollision;
 class Constraint
 {
 public:
-  constexpr static size_t BlockSize = 1024;
+  constexpr static size_t BlockSize = 2048;
   constexpr static float EPSILON = 1e-6f;
   enum Type {
     STRETCH = 1,
