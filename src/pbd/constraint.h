@@ -24,7 +24,7 @@ class SelfCollision;
 class Constraint: public Element
 {
 public:
-  constexpr static size_t BlockSize = 2048;
+  constexpr static size_t BlockSize = 256;
   constexpr static float EPSILON = 1e-6f;
   enum TypeId {
     STRETCH = 1,
@@ -75,7 +75,7 @@ class StretchConstraint : public Constraint
 {
 public:
   StretchConstraint(Body* body, const pxr::VtArray<int>& elems, 
-    float stiffness=0.5f, float damping=0.05f);
+    float stiffness=0.5f, float damping=0.25f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
   const char* GetTypeName() const override {return TYPE_NAME;};
@@ -102,7 +102,7 @@ class BendConstraint : public Constraint
 {
 public:
   BendConstraint(Body* body, const pxr::VtArray<int>& elems, 
-    float stiffness = 0.1f, float damping=0.05f);
+    float stiffness = 0.1f, float damping=0.25f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
   const char* GetTypeName() const override {return TYPE_NAME;};
@@ -167,7 +167,7 @@ public:
     float stiffness=0.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
 
   CollisionConstraint(Particles* particles, SelfCollision* collision, const pxr::VtArray<int>& elems,
-    float stiffness=0.f, float damping = 0.25f, float restitution = 0.2f, float friction = 0.2f);
+    float stiffness=0.f, float damping = 0.5f, float restitution = 0.2f, float friction = 0.5f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
   const char* GetTypeName() const override {return TYPE_NAME;};

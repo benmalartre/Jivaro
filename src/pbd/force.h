@@ -70,7 +70,7 @@ public:
 private:
   static size_t         TYPE_ID;
   static const char*    TYPE_NAME;
-  pxr::UsdAttribute _attr;
+  pxr::UsdAttribute     _attr;
   float _damp;
 };
 
