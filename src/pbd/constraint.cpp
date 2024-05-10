@@ -191,15 +191,15 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
   const pxr::GfMatrix4d& m = geometry->GetMatrix();
 
   size_t numElements = _elements.size() / ELEM_SIZE;
-  _rest.resize(numElements * 2);
+  _rest.resize(numElements);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    pxr::GfVec3f center = (
+    /*pxr::GfVec3f center = (
       m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0] - offset]),
         m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1] - offset]),
           m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset])) / 3.f;
-    _rest[elemIdx * 2] = (center - m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]])).GetLength();
+    _rest[elemIdx] = (center - m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]])).GetLength();*/
     
-    _rest[elemIdx * 2 + 1] = (m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset]) - 
+    _rest[elemIdx] = (m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset]) - 
       m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0] - offset])).GetLength();
       
   }
@@ -212,14 +212,15 @@ void BendConstraint::Solve(Particles* particles, float dt)
   const size_t numElements = _elements.size() / ELEM_SIZE;
   const float alpha = _compliance / (dt * dt);
 
-  pxr::GfVec3f x0, x1, x2, center, h, base, g0, g1, g2, correction;
-  float w0, w1, w2, W, hL, bL, C, lagrange;
+  pxr::GfVec3f x0, x1, x2, center, h,  correction;
+  float w0, w1, w2, W, hL, C;
   size_t a, b, c;
 
   float k = 1.01;
   
   for(size_t elem = 0; elem  < numElements; ++elem) {
-    /* // wip not working
+    /*
+    // wip not working
     a = _elements[elem * ELEM_SIZE + 0];
     b = _elements[elem * ELEM_SIZE + 1];
     c = _elements[elem * ELEM_SIZE + 2];
@@ -230,30 +231,23 @@ void BendConstraint::Solve(Particles* particles, float dt)
 
     w0 =  particles->invMass[a];
     w1 =  particles->invMass[b];
-    w2 =  particles->invMass[c];
+    w2 =  particles->invMass[c];  
 
     W = w0 + 2.f * w1 + w2;
-    if (W < 1e-6f) continue;
 
     center = (x0 + x1 + x2) / 3.f;
     h = x1 - center;
     hL = h.GetLength();
 
-    base = x2 - x0;
-    bL = base.GetLength();
 
-    g0 = (h + base);
-    g1 = -2.f * h;
-    g2 = (h-base);
-    //h *= 1.f - (_rest[elem]/hL);
-    //h.Normalize();
-    C = hL - _rest[elem * 2] + bL - _rest[elem * 2 + 1];
+    if(hL > 1e-6f)C = 1.f - (_rest[elem]/hL);
+    else C = 0.f;
 
-	  lagrange = -C / (((hL+bL) * (hL+bL) * (w0 + w2) + (hL*hL) * w1)+ alpha);
+	  correction = -C / (W + alpha) * h;
 
-    _correction[elem * ELEM_SIZE + 0] += w0 * g0 * lagrange;
-    _correction[elem * ELEM_SIZE + 1] += w1 * g1 * lagrange;
-    _correction[elem * ELEM_SIZE + 2] += w2 * g2 * lagrange;
+    _correction[elem * ELEM_SIZE + 0] += w0 * correction;
+    _correction[elem * ELEM_SIZE + 1] -= 2.f * w1 * correction;
+    _correction[elem * ELEM_SIZE + 2] += w2 * correction;
     */
 
    // easy solution stretch constraint on base edge :
@@ -270,15 +264,12 @@ void BendConstraint::Solve(Particles* particles, float dt)
     hL = h.GetLength();
     if(hL < 1e-6f) continue;
 
-    if(hL < 1e-6f) continue;
-
-    C = hL - _rest[elem * 2 + 1];
+    C = hL - _rest[elem];
 
 	  correction = -C / (hL * hL * W + alpha) * h;
 
     _correction[elem * ELEM_SIZE + 0] += w0 * correction;
     _correction[elem * ELEM_SIZE + 2] -= w1 * correction;
-
     
   }
 }
@@ -701,10 +692,10 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 
       _correction[elem] += correction;
 
-       pxr::GfVec3f relativeVelocity = ((particles->predicted[index] + _correction[elem]) - particles->position[index]) - 
-       ((particles->predicted[other] + (w1 / w * gradient * -d)) - particles->position[other]);
+       pxr::GfVec3f relativeVelocity = (particles->predicted[index] + correction) - particles->position[index] - _collision->GetContactVelocity(index, c) *dt;
 		  pxr::GfVec3f friction = _ComputeFriction(correction, relativeVelocity);
       _correction[elem] += w0 / w * friction;
+      
     }
   }
 }
