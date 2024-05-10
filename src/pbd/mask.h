@@ -20,7 +20,7 @@ public:
       , _cur(0)
       , _values(nullptr)
       , _complete(true) {
-      if (_mask->HasMask()) {
+      if (_mask->HaveMask()) {
         _values = _mask->GetMaskCPtr();
         _complete = false;
       }
@@ -63,13 +63,13 @@ public:
   Mask(short type) : Element(type) {};
   Mask(short type, size_t n, const std::vector<int>& used) : Element(type) { SetMask(n, used); };
 
-  bool HasMask() const { return _mask.size() > 0; };
+  bool HaveMask() const { return _mask.size() > 0; };
   size_t MaskSize() const { return _mask.size(); };
   const int* GetMaskCPtr() const { return &_mask[0]; };
   void SetMask(size_t n, const std::vector<int>& used);
   void RemoveMask();
 
-  bool HasWeights() const { return _weights.size() > 0; };
+  bool HaveWeights() const { return _weights.size() > 0; };
   void SetWeights(const std::vector<float>& weights) { _weights = weights; };
   void RemoveWeights() { _weights.clear(); };
 

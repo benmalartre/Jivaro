@@ -31,6 +31,9 @@ public:
   , _velocity(0.f)
   , _color(color){}
 
+  size_t GetTypeId() const override {return 0;};
+  const char* GetTypeName() const  override {return "body";};
+
   void SetOffset(size_t offset){_offset = offset;};
   void SetNumPoints(size_t numPoints){_numPoints = numPoints;};
 
@@ -45,6 +48,7 @@ public:
   pxr::GfVec3f GetColor() const {return _color;};
   pxr::GfVec3f GetVelocity() const {return _velocity;};
   pxr::GfVec3f GetTorque() const {return _torque;};
+
 
 protected:
   Geometry*     _geometry;

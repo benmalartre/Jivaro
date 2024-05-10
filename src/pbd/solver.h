@@ -53,7 +53,7 @@ public:
   // system
   size_t GetNumParticles() { return _particles.GetNumParticles(); };
   size_t GetNumConstraints() { return _constraints.size(); };
-  size_t GetNumForces() { return _force.size(); };
+  size_t GetNumForces() { return _forces.size(); };
   size_t GetNumCollisions() { return _collisions.size(); };
 
   // bodies
@@ -70,8 +70,8 @@ public:
   void SetBodyVelocity(Body* body, const pxr::GfVec3f& velocity);
 
   // forces
-  void AddForce(Force* force) { _force.push_back(force); };
-  Force* GetForce(size_t idx) { return _force[idx]; };
+  void AddForce(Force* force) { _forces.push_back(force); };
+  Force* GetForce(size_t idx) { return _forces[idx]; };
 
   // constraints
   void AddConstraint(Constraint* constraint);
@@ -115,7 +115,6 @@ public:
   Element* GetElement(const pxr::SdfPath& path);
   const _ElementMap& GetElements(){return _elements;};
 
-
 private:
   void _PrepareContacts();
   void _UpdateContacts();
@@ -139,7 +138,7 @@ private:
   std::vector<Constraint*>            _contacts;
   std::vector<Collision*>             _collisions;
   std::vector<Body*>                  _bodies;
-  std::vector<Force*>                 _force;
+  std::vector<Force*>                 _forces;
   GravityForce*                       _gravity;
   DampForce*                          _damp;
 

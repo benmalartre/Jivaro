@@ -12,7 +12,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Constraint::Constraint(size_t elementSize, float stiffness, 
   float damping, const pxr::VtArray<int>& elems) 
-  : _elements(elems)
+  : Element(Element::CONSTRAINT)
+  , _elements(elems)
   , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
   , _damping(damping)
   , _color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1)
@@ -42,6 +43,7 @@ void Constraint::Apply(Particles* particles)
 }
 
 size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
+const char* StretchConstraint::TYPE_NAME = "stretch";
 size_t StretchConstraint::ELEM_SIZE = 2;
 
 StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
@@ -53,14 +55,15 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
     // TODO add warning message here
     return;
   }
+  const size_t offset = body->GetOffset();
   const pxr::GfMatrix4d& m = geometry->GetMatrix();
   const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
   size_t numElements = _elements.size() / ELEM_SIZE;
   _rest.resize(numElements);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
     _rest[elemIdx] = 
-      (m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]]) - 
-       m.Transform(positions[_elements[elemIdx * ELEM_SIZE]])).GetLength();
+      (m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1] - offset]) - 
+       m.Transform(positions[_elements[elemIdx * ELEM_SIZE] - offset])).GetLength();
   }
 }
 
@@ -71,29 +74,32 @@ void StretchConstraint::Solve(Particles* particles, float dt)
   const size_t numElements = _elements.size() / ELEM_SIZE;
 
   const float alpha =  _compliance / (dt * dt);
+  size_t a, b;
+  float w0, w1, W, C, length, lagrange;
+  pxr::GfVec3f gradient, correction;
   
   for(size_t elem = 0; elem  < numElements; ++elem) {
+    a = _elements[elem * ELEM_SIZE + 0];
+    b = _elements[elem * ELEM_SIZE + 1];
 
-    const size_t a = _elements[elem * ELEM_SIZE + 0];
-    const size_t b = _elements[elem * ELEM_SIZE + 1];
+    w0 = particles->invMass[a];
+    w1 = particles->invMass[b];
 
-    const float w0 = particles->invMass[a];
-    const float w1 = particles->invMass[b];
+    W = w0 + w1;
+    if(W < 1e-6f) continue;
 
-    float w = w0 + w1;
-    if(w < 1e-6f) continue;
-
-    pxr::GfVec3f gradient = particles->predicted[a] - particles->predicted[b];
-    const float length = gradient.GetLength();
+    gradient = particles->predicted[a] - particles->predicted[b];
+    length = gradient.GetLength();
 
     if(length < 1e-6f) continue;
 
-    const float C = length - _rest[elem];
+    C = length - _rest[elem];
 
-	  const pxr::GfVec3f correction = gradient.GetNormalized() / (w + alpha) * C;
+	  correction = -C / (length * length * W + alpha) * gradient;
 
-    _correction[elem * ELEM_SIZE + 0] -= w0 * correction;
-    _correction[elem * ELEM_SIZE + 1] += w1 * correction;
+    _correction[elem * ELEM_SIZE + 0] += w0 * correction;
+    _correction[elem * ELEM_SIZE + 1] -= w1 * correction;
+    
   }
 }
 
@@ -118,6 +124,8 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
 {
   pxr::VtArray<int> allElements;
   Geometry* geometry = body->GetGeometry();
+  size_t offset = body->GetOffset();
+
   if (geometry->GetType() == Geometry::MESH) {
     Mesh* mesh = (Mesh*)geometry;
     const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
@@ -129,8 +137,8 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
     while (edge) {
       a = edge->vertex;
       b = edges[edge->next].vertex;
-      allElements.push_back(a);
-      allElements.push_back(b);
+      allElements.push_back(a + offset);
+      allElements.push_back(b + offset);
       edge = it.Next();
     }
   } else if (geometry->GetType() == Geometry::CURVE) {
@@ -141,8 +149,8 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
       size_t numCVs = curve->GetNumCVs(curveIdx);
       size_t numSegments = curve->GetNumSegments(curveIdx);
       for (size_t segmentIdx = 0; segmentIdx < numSegments; ++numSegments) {
-        allElements.push_back(curveStartIdx + segmentIdx);
-        allElements.push_back(curveStartIdx + segmentIdx + 1);
+        allElements.push_back(curveStartIdx + segmentIdx + offset);
+        allElements.push_back(curveStartIdx + segmentIdx + 1 + offset);
       }
       curveStartIdx += numCVs;
     }
@@ -155,8 +163,7 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
   size_t last = pxr::GfMin(Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
   while(true) {
     pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
-    StretchConstraint* stretch = new StretchConstraint(body, blockElements, stiffness, damping);
-    constraints.push_back(stretch);
+    constraints.push_back(new StretchConstraint(body, blockElements, stiffness, damping));
     first += Constraint::BlockSize * StretchConstraint::ELEM_SIZE;
     if(first >= numElements)break;
     last = pxr::GfMin(last + Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
@@ -166,6 +173,7 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
 }
 
 size_t BendConstraint::TYPE_ID = Constraint::BEND;
+const char* BendConstraint::TYPE_NAME = "bend";
 size_t BendConstraint::ELEM_SIZE = 3;
 
 BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
@@ -173,6 +181,7 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
   : Constraint(ELEM_SIZE, stiffness, damping, elems)
 {
   Geometry* geometry = body->GetGeometry();
+  size_t offset = body->GetOffset();
 
   if(geometry->GetType() < Geometry::POINT) {
     // TODO add warning message here
@@ -182,18 +191,17 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
   const pxr::GfMatrix4d& m = geometry->GetMatrix();
 
   size_t numElements = _elements.size() / ELEM_SIZE;
-  _rest.resize(numElements);
+  _rest.resize(numElements * 2);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    /*
     pxr::GfVec3f center = (
-      m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0]]),
-        m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]]),
-          m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2]])) / 3.f;
+      m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0] - offset]),
+        m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1] - offset]),
+          m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset])) / 3.f;
+    _rest[elemIdx * 2] = (center - m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]])).GetLength();
     
-
-    _rest[elemIdx] = (center - m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]])).GetLength();*/
-    _rest[elemIdx] = (m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2]]) - 
-      m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0]])).GetLength();
+    _rest[elemIdx * 2 + 1] = (m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset]) - 
+      m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0] - offset])).GetLength();
+      
   }
 }
 
@@ -204,14 +212,14 @@ void BendConstraint::Solve(Particles* particles, float dt)
   const size_t numElements = _elements.size() / ELEM_SIZE;
   const float alpha = _compliance / (dt * dt);
 
-  pxr::GfVec3f x0, x1, x2, center, h, correction;
-  float w0, w1, w2, W, hL, C;
+  pxr::GfVec3f x0, x1, x2, center, h, base, g0, g1, g2, correction;
+  float w0, w1, w2, W, hL, bL, C, lagrange;
   size_t a, b, c;
 
   float k = 1.01;
   
   for(size_t elem = 0; elem  < numElements; ++elem) {
-    /*
+    /* // wip not working
     a = _elements[elem * ELEM_SIZE + 0];
     b = _elements[elem * ELEM_SIZE + 1];
     c = _elements[elem * ELEM_SIZE + 2];
@@ -230,20 +238,25 @@ void BendConstraint::Solve(Particles* particles, float dt)
     center = (x0 + x1 + x2) / 3.f;
     h = x1 - center;
     hL = h.GetLength();
-    if(hL<1e-6) continue;
 
+    base = x2 - x0;
+    bL = base.GetLength();
+
+    g0 = (h + base);
+    g1 = -2.f * h;
+    g2 = (h-base);
     //h *= 1.f - (_rest[elem]/hL);
-    pxr::GfVec3f d0 = -h;
-    pxr::GfVec3f d1 = 2.f*h;
-    pxr::GfVec3f d2 = -h;
-
-    float lambda = (hL - _rest[elem]) / ( d0.GetLengthSq() * w0 + d1.GetLengthSq() * w1 + d2.GetLengthSq() * w2) + alpha;
     //h.Normalize();
-    _correction[elem * ELEM_SIZE + 0] += lambda * d0;
-    _correction[elem * ELEM_SIZE + 1] -= lambda * d1;
-    _correction[elem * ELEM_SIZE + 2] += lambda * d2;
+    C = hL - _rest[elem * 2] + bL - _rest[elem * 2 + 1];
+
+	  lagrange = -C / (((hL+bL) * (hL+bL) * (w0 + w2) + (hL*hL) * w1)+ alpha);
+
+    _correction[elem * ELEM_SIZE + 0] += w0 * g0 * lagrange;
+    _correction[elem * ELEM_SIZE + 1] += w1 * g1 * lagrange;
+    _correction[elem * ELEM_SIZE + 2] += w2 * g2 * lagrange;
     */
 
+   // easy solution stretch constraint on base edge :
     a = _elements[elem * ELEM_SIZE + 0];
     b = _elements[elem * ELEM_SIZE + 2];
 
@@ -255,15 +268,18 @@ void BendConstraint::Solve(Particles* particles, float dt)
 
     h = particles->predicted[a] - particles->predicted[b];
     hL = h.GetLength();
+    if(hL < 1e-6f) continue;
 
     if(hL < 1e-6f) continue;
 
-    C = hL - _rest[elem];
+    C = hL - _rest[elem * 2 + 1];
 
-	  correction = h.GetNormalized() / (W + alpha) * C;
+	  correction = -C / (hL * hL * W + alpha) * h;
 
-    _correction[elem * ELEM_SIZE + 0] -= w0 * correction;
-    _correction[elem * ELEM_SIZE + 2] += w1 * correction;
+    _correction[elem * ELEM_SIZE + 0] += w0 * correction;
+    _correction[elem * ELEM_SIZE + 2] -= w1 * correction;
+
+    
   }
 }
 
@@ -283,13 +299,23 @@ void BendConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>&
   }
 }
 
+
+bool _IsAdjacent(size_t index, const int* adjacents, size_t num)
+{
+  for(size_t i = 0; i < num; ++i)
+    if(adjacents[i] == index)return true;
+  return false;
+}
+
 int _FindBestVertex(const pxr::GfVec3f* positions, size_t p, size_t n, 
-  const int* neighbors, int num)
+  const int* neighbors, size_t numNeighbors, const int* adjacents, size_t numAdjacents)
 {
   int best = -1;
   float minCosine = FLT_MAX;
-  for (size_t o = 0; o < num; ++o) {
+  for (size_t o = 0; o < numNeighbors; ++o) {
     if (neighbors[n] == neighbors[o])continue;
+    if(_IsAdjacent(neighbors[o], adjacents, numAdjacents))continue;
+
     const pxr::GfVec3f e0 = (positions[neighbors[n]] - positions[p]);
     const pxr::GfVec3f e1 = (positions[neighbors[o]] - positions[p]);
     float cosine = pxr::GfDot(e0, e1) / (e0.GetLength() * e1.GetLength());
@@ -343,6 +369,10 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
     const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
 
     for (size_t p = 0; p < numPoints; ++p) {
+
+      size_t numAdjacents = mesh->GetNumAdjacents(p);
+      const int* adjacents = mesh->GetAdjacents(p);
+
       size_t numNeighbors = mesh->GetNumNeighbors(p);
       const int* neighbors = mesh->GetNeighbors(p);
 
@@ -359,7 +389,8 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
 
       } else {
         for (size_t n = 0; n < numNeighbors; ++n) {
-          int o = _FindBestVertex(positions, p, n, neighbors, numNeighbors);
+          if(_IsAdjacent(neighbors[n], adjacents, numAdjacents))continue;
+          int o = _FindBestVertex(positions, p, n, neighbors, numNeighbors, adjacents, numAdjacents);
 
           if (o > -1 && neighbors[o] > neighbors[n]) {
             allElements.push_back(neighbors[n] + offset);
@@ -407,6 +438,7 @@ void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
 }
 
 size_t DihedralConstraint::TYPE_ID = Constraint::DIHEDRAL;
+const char* DihedralConstraint::TYPE_NAME = "dihedral";
 size_t DihedralConstraint::ELEM_SIZE = 4;
 
 static float _GetCotangentTheta(const pxr::GfVec3f& a, const pxr::GfVec3f& b)
@@ -569,6 +601,7 @@ void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints
 // Collision Constraint
 //--------------------------------------------------------------------------------------------------
 size_t CollisionConstraint::TYPE_ID = Constraint::COLLISION;
+const char* CollisionConstraint::TYPE_NAME = "collision";
 
 CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
   const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)

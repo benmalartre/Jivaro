@@ -22,15 +22,14 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static const size_t NUM_TIMES = 7;
+static const size_t NUM_TIMES = 6;
 static const char* TIME_NAMES[NUM_TIMES] = {
   "find contacts",
   "integrate particles",
   "solve constraints",
   "update contacts",
   "solve contacts",
-  "update particles",
-  "solve velocities"
+  "update particles"
 };
 
 Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
@@ -69,7 +68,7 @@ Solver::~Solver()
 {
   for (auto& constraint : _constraints)delete constraint;
   for (auto& body : _bodies)delete body;
-  for (auto& force : _force)delete force;
+  for (auto& force : _forces)delete force;
   _scene->RemoveGeometry(_pointsId);
   delete _curves;
   delete _points;
@@ -220,7 +219,6 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
 void Solver::AddConstraint(Constraint* constraint) 
 { 
   _constraints.push_back(constraint); 
-  const pxr::VtArray<int>& elements = constraint->GetElements();
 };
 
 void Solver::GetConstraintsByType(short type, std::vector<Constraint*>& results)
@@ -297,6 +295,7 @@ void Solver::WeightBoundaries(Body* body)
 
 void Solver::_PrepareContacts()
 {
+  _timer->Start(0);
   for (auto& contact : _contacts)
     delete contact;
   _contacts.clear();
@@ -306,7 +305,7 @@ void Solver::_PrepareContacts()
 
   _particles.ResetCounter(_contacts, 1);
 
-  //_timer->Stop();
+  _timer->Stop();
 }
   
 void Solver::_UpdateContacts()
@@ -324,7 +323,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   pxr::GfVec3f* position = &_particles.position[0];
 
   // apply external forces
-  for (const Force* force : _force)
+  for (const Force* force : _forces)
     force->Apply(begin, end, &_particles, _stepTime);
 
   for (size_t index = begin; index < end; ++index) {
@@ -425,8 +424,6 @@ void Solver::Reset()
   _particles.SetAllState(Particles::ACTIVE);
 }
 
-
-
 void Solver::Step()
 {
   const size_t numParticles = _particles.GetNumParticles();
@@ -439,37 +436,35 @@ void Solver::Step()
 
   for(size_t si = 0; si < _subSteps; ++si) {
     
-    //_timer->Start1();
+    _timer->Start(1);
     // integrate particles
     pxr::WorkParallelForN(
       numParticles,
       std::bind(&Solver::_IntegrateParticles, this,
         std::placeholders::_1, std::placeholders::_2), packetSize);
 
-    //_timer->Next();
+    _timer->Next();
     // solve and apply constraint
     _SolveConstraints(_constraints);
 
-    //_timer->Next();
-    //_timer->Next();
+    _timer->Next();
     _UpdateContacts();
     // solve and apply contacts
+    _timer->Next();
     _SolveConstraints(_contacts);
 
-    //_timer->Next();
+    _timer->Next();
     // update particles
     pxr::WorkParallelForN(
       numParticles,
       std::bind(&Solver::_UpdateParticles, this,
         std::placeholders::_1, std::placeholders::_2), packetSize);
-    //_timer->Next();
-    // solve velocities
-    //_timer->Stop();
+    _timer->Stop();
 
   }
   
-  //_timer->Update();
-  //_timer->Log();
+  _timer->Update();
+  _timer->Log();
 
   //UpdateGeometries();
 }
@@ -515,6 +510,7 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);
 }
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

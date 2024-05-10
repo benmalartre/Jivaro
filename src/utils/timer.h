@@ -78,8 +78,8 @@ protected:
     void Start() { t = CurrentTime(); }
     void End() { accum += CurrentTime() - t; num++; };
     void Reset() { accum = 0; num = 0; };
-    double Average() { return num ? ((double)accum * 1e-9) / (double)num : 0; }
-    double Elapsed() { return (double)accum * 1e-9; }
+    double Average() { return num ? ((double)accum * 1.0e-6) / (double)num : 0; }
+    double Elapsed() { return (double)accum * 1.0e-6; }
 
     uint64_t t;
     uint64_t accum;

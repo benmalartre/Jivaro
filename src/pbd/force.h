@@ -18,6 +18,8 @@ struct Body;
 class Force : public Mask
 {
 public:
+  enum Type { GRAVITY, DAMP, NOISE, WAVE};
+
   Force() : Mask(Element::FORCE) {};
   virtual ~Force() {};
   
@@ -27,6 +29,8 @@ public:
   virtual void Update(float time) = 0;
   virtual void Apply(size_t begin, size_t end, Particles* particles, float dt) const = 0;
 
+  virtual size_t GetTypeId() const override = 0;
+  virtual const char* GetTypeName() const override = 0;
 };
 
 class GravityForce : public Force
@@ -39,10 +43,14 @@ public:
 
   void Update(float time);
   void Apply(size_t begin, size_t end, Particles* particles, float dt) const override;
+  virtual size_t GetTypeId() const {return TYPE_ID;};
+  virtual const char* GetTypeName() const {return TYPE_NAME;};
 
 private:
-  pxr::UsdAttribute _attr;
-  pxr::GfVec3f      _gravity;
+  static size_t         TYPE_ID;
+  static const char*    TYPE_NAME;
+  pxr::UsdAttribute     _attr;
+  pxr::GfVec3f          _gravity;
 };
 
 class DampForce : public Force
@@ -56,9 +64,13 @@ public:
 
   void Update(float time);
   void Apply(size_t begin, size_t end, Particles* particles, float dt) const override;
+  virtual size_t GetTypeId() const {return TYPE_ID;};
+  virtual const char* GetTypeName() const {return TYPE_NAME;};
 
 private:
-pxr::UsdAttribute _attr;
+  static size_t         TYPE_ID;
+  static const char*    TYPE_NAME;
+  pxr::UsdAttribute _attr;
   float _damp;
 };
 

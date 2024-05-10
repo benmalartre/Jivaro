@@ -2,7 +2,6 @@
 #define JVR_APP_TIME_H
 
 #include "../common.h"
-#include "../utils/timer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

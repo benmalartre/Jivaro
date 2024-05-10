@@ -130,6 +130,7 @@ void ViewportUI::Init()
   simpleLight.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
   simpleLight.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
   simpleLight.SetPosition({ 200, 200, 200, 1.0 });
+  //simpleLight.SetIsDomeLight(true);
   pxr::GlfSimpleLightVector lights;
   lights.push_back(simpleLight);
 

@@ -4,6 +4,9 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+size_t GravityForce::TYPE_ID = Force::GRAVITY;
+const char* GravityForce::TYPE_NAME = "gravity";
+
 GravityForce::GravityForce(const pxr::GfVec3f& gravity) 
   : Force()
   , _gravity(gravity)
@@ -31,7 +34,7 @@ void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float d
 
   Mask::Iterator iterator((const Mask*)this, begin, end);
 
-  if(HasWeights())
+  if(HaveWeights())
     for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
       velocity[index] += _gravity *_weights[index] * invMass[index] * dt;
     }
@@ -40,6 +43,10 @@ void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float d
       velocity[index] += _gravity * invMass[index] * dt;
     }
 }
+
+
+size_t DampForce::TYPE_ID = Force::DAMP;
+const char* DampForce::TYPE_NAME = "damp";
 
 DampForce::DampForce(const pxr::UsdAttribute& attr)
   : Force()
@@ -66,7 +73,7 @@ void DampForce::Apply(size_t begin, size_t end, Particles* particles, float dt) 
   const float* invMass = &particles->invMass[0];
   pxr::GfVec3f* velocity = &particles->velocity[0];
 
-  if(HasWeights())
+  if(HaveWeights())
     for(size_t index = begin; index < end; ++index) {
       if (particles->state[index] != Particles::ACTIVE)continue;
       velocity[index] -= _damp * velocity[index]  * _weights[index] *invMass[index] * dt;

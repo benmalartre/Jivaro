@@ -48,7 +48,8 @@ public:
   void RemoveBody(Particles* particles, Body* body);
   */
   virtual ~Collision() {};
-  virtual size_t GetTypeId() const = 0; // pure virtual
+  virtual size_t GetTypeId() const override = 0; // pure virtual
+  virtual const char* GetTypeName() const override = 0; // pure virtual
 
   virtual void Init(size_t numParticles);
   virtual void Update(const pxr::UsdPrim& prim, double time);
@@ -120,6 +121,7 @@ public:
   PlaneCollision(Geometry* collider, const pxr::SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
+  const char* GetTypeName() const override { return TYPE_NAME; };
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
@@ -134,6 +136,7 @@ protected:
 
 private:
   static size_t                 TYPE_ID;
+  static const char*            TYPE_NAME;
   pxr::GfVec3f                  _position;
   pxr::GfVec3f                  _normal;
 
@@ -145,6 +148,7 @@ public:
   SphereCollision(Geometry* collider, const pxr::SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
+  const char* GetTypeName() const override { return TYPE_NAME; };
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
@@ -158,6 +162,7 @@ protected:
 
 private:
   static size_t                 TYPE_ID;
+  static const char*            TYPE_NAME;
   pxr::GfVec3f                  _center;
   float                         _radius;
 };
@@ -169,6 +174,7 @@ public:
   MeshCollision(Geometry* collider, const pxr::SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
+  const char* GetTypeName() const override { return TYPE_NAME; };
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
@@ -183,6 +189,7 @@ protected:
 
 private:
   static size_t                 TYPE_ID;
+  static const char*            TYPE_NAME;
   BVH*                          _bvh;
 };
 
@@ -195,6 +202,7 @@ public:
     float restitution=0.5f, float friction= 0.5f);
   ~SelfCollision();
   size_t GetTypeId() const override { return TYPE_ID; };
+  const char* GetTypeName() const override { return TYPE_NAME; };
 
   float GetValue(Particles* particles, size_t index) override{return 0.f;};
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override{return pxr::GfVec3f(0.f);};
@@ -225,6 +233,7 @@ protected:
 
 private:
   static size_t                     TYPE_ID;
+  static const char*                TYPE_NAME;
   HashGrid                          _grid;
   Particles*                        _particles;
   

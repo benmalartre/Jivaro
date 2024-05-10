@@ -37,7 +37,7 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
   _ResetContacts(particles);
   pxr::WorkParallelForN(particles->GetNumParticles(),
     std::bind(&Collision::_FindContacts, this,
-      std::placeholders::_1, std::placeholders::_2, particles, ft), 8);
+      std::placeholders::_1, std::placeholders::_2, particles, ft), 256);
   _BuildContacts(particles, bodies, constraints, ft);
 }
 
@@ -177,6 +177,7 @@ float Collision::GetContactInitDepth(size_t index, size_t c) const
 // Plane Collision
 //----------------------------------------------------------------------------------------
 size_t PlaneCollision::TYPE_ID = Collision::PLANE;
+const char* PlaneCollision::TYPE_NAME = "plane";
 
 PlaneCollision::PlaneCollision(Geometry* collider, const pxr::SdfPath& path, 
   float restitution, float friction) 
@@ -234,6 +235,8 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Cont
 // Sphere Collision
 //----------------------------------------------------------------------------------------
 size_t SphereCollision::TYPE_ID = Collision::SPHERE;
+const char* SphereCollision::TYPE_NAME = "sphere";
+
 SphereCollision::SphereCollision(Geometry* collider, const pxr::SdfPath& path, 
   float restitution, float friction)
   : Collision(collider, path, restitution, friction)
@@ -298,6 +301,8 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
 // Mesh Collision
 //----------------------------------------------------------------------------------------
 size_t MeshCollision::TYPE_ID = Collision::MESH;
+const char* MeshCollision::TYPE_NAME = "mesh";
+
 MeshCollision::MeshCollision(Geometry* collider, const pxr::SdfPath& path, 
   float restitution, float friction)
   : Collision(collider, path, restitution, friction)
@@ -392,6 +397,7 @@ pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
 // Self Collision
 //----------------------------------------------------------------------------------------
 size_t SelfCollision::TYPE_ID = Collision::SELF;
+const char* SelfCollision::TYPE_NAME = "self";
 
 SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path, 
   float restitution, float friction)
@@ -492,7 +498,6 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
       contact->SetComponentIndex(closest);
       numCollide++;
     }
-
   }
   SetHit(index, (numCollide > 0));
 }
