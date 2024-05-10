@@ -90,12 +90,14 @@ public:
 
 protected:
   static const float TOLERANCE_MARGIN;
+  static const size_t PACKET_SIZE;
 
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float dt);
   virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
+  virtual void _UpdateContacts(size_t begin, size_t end, Particles* particles);
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
@@ -223,9 +225,10 @@ public:
 
 protected:
   void _UpdateAccelerationStructure();
-  void _FindContacts(size_t begin, size_t end, Particles* particles, float ft) override;
-  void _FindContact(Particles* particles, size_t index, float ft) override;
   void _ResetContacts(Particles* particles) override;
+  void _FindContacts(size_t begin, size_t end, Particles* particles, float ft) override;
+  void _UpdateContacts(size_t begin, size_t end, Particles* particles) override;
+  void _FindContact(Particles* particles, size_t index, float ft) override;
   void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact, float ft);
 
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,

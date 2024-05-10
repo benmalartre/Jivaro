@@ -38,8 +38,9 @@ void Constraint::_ResetCorrection()
 void Constraint::Apply(Particles* particles)
 {
   size_t corrIdx = 0;
+  const pxr::GfVec2f* counter = &particles->counter[0];
   for(const auto& elem: _elements) 
-    particles->predicted[elem] += _correction[corrIdx++] / particles->counter[elem][0];
+    particles->predicted[elem] += _correction[corrIdx++] / counter[elem][0];
 }
 
 size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
@@ -77,25 +78,27 @@ void StretchConstraint::Solve(Particles* particles, float dt)
   size_t a, b;
   float w0, w1, W, C, length, lagrange;
   pxr::GfVec3f gradient, correction, damp;
+
+  const pxr::GfVec3f* predicted = &particles->predicted[0];
+  const pxr::GfVec3f* velocity = &particles->velocity[0];
+  const float* invMass = &particles->invMass[0];
   
   for(size_t elem = 0; elem  < numElements; ++elem) {
     a = _elements[elem * ELEM_SIZE + 0];
     b = _elements[elem * ELEM_SIZE + 1];
 
-    w0 = particles->invMass[a];
-    w1 = particles->invMass[b];
+    w0 = invMass[a];
+    w1 = invMass[b];
 
     W = w0 + w1;
     if(W < 1e-6f) continue;
 
-    gradient = particles->predicted[a] - particles->predicted[b];
+    gradient = predicted[a] - predicted[b];
     length = gradient.GetLength();
-
-    if(length < 1e-6f) continue;
 
     C = length - _rest[elem];
 
-    damp = pxr::GfDot(particles->velocity[a] * dt * dt,  gradient) * gradient * _damping;
+    damp = pxr::GfDot(velocity[a] * dt * dt,  gradient) * gradient * _damping;
 
     correction = -C / (length * length * W + alpha) * gradient - damp;
 
@@ -218,7 +221,9 @@ void BendConstraint::Solve(Particles* particles, float dt)
   float w0, w1, w2, W, hL, C;
   size_t a, b, c;
 
-  float k = 1.01;
+  const pxr::GfVec3f* predicted = &particles->predicted[0];
+  const pxr::GfVec3f* velocity = &particles->velocity[0];
+  const float* invMass = &particles->invMass[0];
   
   for(size_t elem = 0; elem  < numElements; ++elem) {
     /*
@@ -256,18 +261,18 @@ void BendConstraint::Solve(Particles* particles, float dt)
     a = _elements[elem * ELEM_SIZE + 0];
     b = _elements[elem * ELEM_SIZE + 2];
 
-    w0 = particles->invMass[a];
-    w1 = particles->invMass[b];
+    w0 = invMass[a];
+    w1 = invMass[b];
 
     W = w0 + w1;
     if(W < 1e-6f) continue;
 
-    h = particles->predicted[a] - particles->predicted[b];
+    h = predicted[a] - predicted[b];
     hL = h.GetLength();
 
     C = hL - _rest[elem];
 
-    damp = pxr::GfDot(particles->velocity[a] * dt * dt,  h) * h * _damping;
+    damp = pxr::GfDot(velocity[a] * dt * dt,  h) * h * _damping;
     correction = -C / (hL * hL * W + alpha) * h -damp;
 
     _correction[elem * ELEM_SIZE + 0] += w0 * correction;

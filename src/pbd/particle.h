@@ -78,7 +78,7 @@ struct Particles
   enum State {MUTE, IDLE, ACTIVE};
 
   Particles() :num(0){};
-  ~Particles(){};
+  ~Particles();
 
   size_t GetNumParticles() { return num; };
   void AddBody(Body* body, const pxr::GfMatrix4d& matrix);
@@ -92,20 +92,19 @@ struct Particles
 
   void _EnsureDataSize(size_t size);
 
-  pxr::VtArray<short>        state;
-  pxr::VtArray<int>          body;
-  pxr::VtArray<float>        mass;
-  pxr::VtArray<float>        invMass;
-  pxr::VtArray<float>        radius;
-  pxr::VtArray<pxr::GfVec3f> rest;
-  pxr::VtArray<pxr::GfQuatf> rotation;
-  pxr::VtArray<pxr::GfVec3f> position;
-  pxr::VtArray<pxr::GfVec3f> predicted;
-  pxr::VtArray<pxr::GfVec3f> velocity;
-  pxr::VtArray<pxr::GfVec3f> color;
-  pxr::VtArray<pxr::GfVec2f> counter;
-
-  size_t                     num;
+  short*        state;
+  int*          body;
+  float*        mass;
+  float*        invMass;
+  float*        radius;
+  pxr::GfVec3f* rest;
+  pxr::GfQuatf* rotation;
+  pxr::GfVec3f* position;
+  pxr::GfVec3f* predicted;
+  pxr::GfVec3f* velocity;
+  pxr::GfVec3f* color;
+  pxr::GfVec2f* counter;
+ size_t         num;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -61,13 +61,13 @@ public:
     }
   };
 
-  void Init(size_t n, const pxr::GfVec3f* positions, float radius);
-  void Update(const pxr::GfVec3f* positions);
+  void Init(size_t n, const pxr::GfVec3f* positions, float radius, size_t stride=0);
+  void Update(const pxr::GfVec3f* positions, size_t stride=0);
 
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const  {    return false;}
   size_t Closests(size_t index, const pxr::GfVec3f* positions,
-    std::vector<int>& closests, float distance) const;
+    std::vector<int>& closests, float distance, size_t stride=0) const;
 
   void SetSpacing(float spacing) { _spacing = spacing > 1e-6f ? spacing : 1e-6f; _scl = 1.f/_spacing; };
   pxr::GfVec3f GetColor(const pxr::GfVec3f& point);

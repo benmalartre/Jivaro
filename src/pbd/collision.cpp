@@ -17,18 +17,25 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const float Collision::TOLERANCE_MARGIN = 0.1f;
+const size_t Collision::PACKET_SIZE = 128;
 
 // 
 // Contacts
 //
 void Collision::UpdateContacts(Particles* particles)
 {
-  size_t idx = 0;
+  pxr::WorkParallelForN(
+      particles->GetNumParticles(),
+      std::bind(&Collision::_UpdateContacts, this,
+        std::placeholders::_1, std::placeholders::_2, particles), PACKET_SIZE);
+}
 
-  for (size_t c = 0; c < particles->GetNumParticles(); ++c)
-    if(_contacts.IsUsed(c))
-      _contacts.Get(c)->Update(this, particles, _c2p[idx++]);
-
+void Collision::_UpdateContacts(size_t begin, size_t end, Particles* particles)
+{
+  Mask::Iterator iterator(this, begin, end);
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
+    if(_contacts.IsUsed(index))
+      _contacts.Get(index)->Update(this, particles, index);
 }
 
 void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
@@ -451,7 +458,15 @@ void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>&
 
 void SelfCollision::UpdateContacts(Particles* particles)
 {
-  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
+  pxr::WorkParallelForN(
+      particles->GetNumParticles(),
+      std::bind(&SelfCollision::_UpdateContacts, this,
+        std::placeholders::_1, std::placeholders::_2, particles), PACKET_SIZE);
+}
+
+void SelfCollision::_UpdateContacts(size_t begin, size_t end, Particles* particles)
+{
+  Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     if (_contacts.IsUsed(index))
       for (size_t c = 0; c < _contacts.GetNumUsed(index); ++c) {

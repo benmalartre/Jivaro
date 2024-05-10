@@ -5,23 +5,42 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+template<typename T> 
+T* _ResizeArray(T* oldData, size_t oldSize, size_t newSize)
+{
+  T* newData = NULL;
+  if(newSize > 0) {
+    newData = new T[newSize];
+    memmove(newData, oldData, oldSize * sizeof(T));
+  } 
+  if(oldSize) delete [] oldData;
+  return newData;
+}
+
+Particles::~Particles()
+{
+  _EnsureDataSize(0);
+}
 
 void Particles::_EnsureDataSize(size_t desired)
 {
-  if(state.size() > desired)return;
-  size_t size = ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
-  mass.resize(size);
-  invMass.resize(size);
-  radius.resize(size);
-  rest.resize(size);
-  position.resize(size);
-  predicted.resize(size);
-  rotation.resize(size);
-  velocity.resize(size);
-  body.resize(size);
-  color.resize(size);
-  state.resize(size);
-  counter.resize(size);
+  size_t size = std::floor((num + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+  if(size > desired)return;
+
+  size = ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+  state =     _ResizeArray<short>(state, num, size);
+  body =      _ResizeArray<int>(body, num, size);
+  mass =      _ResizeArray<float>(mass, num, size);
+  invMass =   _ResizeArray<float>(invMass, num, size);
+  radius =    _ResizeArray<float>(radius, num, size);
+  counter =   _ResizeArray<pxr::GfVec2f>(counter, num, size);
+  rest =      _ResizeArray<pxr::GfVec3f>(rest, num, size);
+  position =  _ResizeArray<pxr::GfVec3f>(position, num, size);
+  predicted = _ResizeArray<pxr::GfVec3f>(predicted, num, size);
+  velocity =  _ResizeArray<pxr::GfVec3f>(velocity, num, size);
+  color =     _ResizeArray<pxr::GfVec3f>(color, num, size);
+  rotation =  _ResizeArray<pxr::GfQuatf>(rotation, num, size);
+
 }
 
 void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
@@ -86,42 +105,20 @@ void Particles::RemoveBody(Body* item)
   }
 
   size_t size = ((num - shift + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
-  mass.resize(size);
-  invMass.resize(size);
-  radius.resize(size);
-  rest.resize(size);
-  position.resize(size);
-  predicted.resize(size);
-  rotation.resize(size);
-  velocity.resize(size);
-  body.resize(size);
-  color.resize(size);
-  state.resize(size);
-  counter.resize(size);
+  _EnsureDataSize(size);
 
   num -= shift;
 }
 
 void Particles::RemoveAllBodies()
 {
-  mass.clear();
-  invMass.clear();
-  radius.clear();
-  rest.clear();
-  position.clear();
-  predicted.clear();
-  rotation.clear();
-  velocity.clear();
-  body.clear();
-  color.clear();
-  state.clear();
-  counter.clear();
+  _EnsureDataSize(0);
   num = 0;
 }
 
 void Particles::SetAllState( short s)
 {
-  for(auto& _s: state) _s = s;
+  for(size_t p=0;p<num;++p) state[p] = s;
 }
 
 void Particles::SetBodyState(Body* item, short s)
@@ -136,7 +133,7 @@ void Particles::SetBodyState(Body* item, short s)
 
 void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t c)
 {
-  for (auto& item: counter)item[c] = 0.f;
+  for (size_t p=0; p< num; ++p)counter[p][c] = 0.f;
 
   for (auto& constraint : constraints)
     for (auto& elem : constraint->GetElements())
