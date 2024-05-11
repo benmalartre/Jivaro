@@ -43,6 +43,49 @@ void Constraint::Apply(Particles* particles)
     particles->predicted[elem] += _correction[corrIdx++] / counter[elem][0];
 }
 
+ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, short type, 
+  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize)
+{
+
+  ConstraintsGroup* group = body->AddConstraintsGroup(name, type);
+
+  size_t numElements = allElements.size();
+  size_t numBlocks = 0;
+  size_t first = 0;
+  size_t last = pxr::GfMin(blockSize * elementSize, numElements);
+
+  float stiffness = 10000.f;
+  float damping = 0.25f;
+
+  while(true) {
+    pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
+    switch (type) {
+      case Constraint::STRETCH: 
+        group->constraints.push_back(new StretchConstraint(body, blockElements, stiffness, damping));
+        break;
+
+      case Constraint::BEND:
+        group->constraints.push_back(new BendConstraint(body, blockElements, stiffness, damping));
+        break;
+
+      case Constraint::DIHEDRAL:
+        group->constraints.push_back(new DihedralConstraint(body, blockElements, stiffness, damping));
+        break;
+    }
+    
+    first += blockSize * elementSize;
+    if(first >= numElements)break;
+    last = pxr::GfMin(last + blockSize * elementSize, numElements);
+    numBlocks++;
+  }
+  std::cout << name << ": " << "created " << numBlocks << " blocks of " << blockSize << "(max)" <<std::endl;
+
+  return group;
+}
+
+//-----------------------------------------------------------------------------------------
+//   STRETCH CONSTRAINT
+//-----------------------------------------------------------------------------------------
 size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
 const char* StretchConstraint::TYPE_NAME = "stretch";
 size_t StretchConstraint::ELEM_SIZE = 2;
@@ -125,8 +168,7 @@ void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3
   }
 }
 
-void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
-  float stiffness, float damping)
+ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness, float damping)
 {
   pxr::VtArray<int> allElements;
   Geometry* geometry = body->GetGeometry();
@@ -161,23 +203,20 @@ void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
       curveStartIdx += numCVs;
     }
   }
+  
+  if(allElements.size())
+    return CreateConstraintsGroup(body, 
+      pxr::TfToken("Stretch"), Constraint::STRETCH,
+        allElements, StretchConstraint::ELEM_SIZE, Constraint::BlockSize);
 
-  size_t numElements = allElements.size();
-  std::cout << "num stretch spring : " << (numElements/2) << std::endl;
-  size_t numBlocks = 0;
-  size_t first = 0;
-  size_t last = pxr::GfMin(Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
-  while(true) {
-    pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
-    constraints.push_back(new StretchConstraint(body, blockElements, stiffness, damping));
-    first += Constraint::BlockSize * StretchConstraint::ELEM_SIZE;
-    if(first >= numElements)break;
-    last = pxr::GfMin(last + Constraint::BlockSize * StretchConstraint::ELEM_SIZE, numElements);
-    numBlocks++;
-  }
-  std::cout << "spit in " << numBlocks << " blocks of " << Constraint::BlockSize << std::endl;
+  return NULL;
+
 }
 
+
+//-----------------------------------------------------------------------------------------
+//   BEND CONSTRAINT
+//-----------------------------------------------------------------------------------------
 size_t BendConstraint::TYPE_ID = Constraint::BEND;
 const char* BendConstraint::TYPE_NAME = "bend";
 size_t BendConstraint::ELEM_SIZE = 3;
@@ -349,95 +388,53 @@ pxr::GfVec2i _FindBestBoundaryVertices(const pxr::GfVec3f* positions, size_t p,
   return result;
 }
 
-void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
-  float stiffness, float damping)
+void _GetMeshBendElements(Mesh* mesh, pxr::VtArray<int>& allElements) 
 {
-  pxr::VtArray<int> allElements;
-  Geometry* geometry = body->GetGeometry();
-  size_t offset = body->GetOffset();
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
-  size_t cnt = 0;
+  const size_t numPoints = mesh->GetNumPoints();
+  const pxr::GfMatrix4d& m = mesh->GetMatrix();
+  const HalfEdgeGraph* graph = mesh->GetEdgesGraph();
+  const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
 
-  if (geometry->GetType() == Geometry::MESH) {
-    Mesh* mesh = (Mesh*)geometry;
-    const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  for (size_t p = 0; p < numPoints; ++p) {
 
-    const size_t numPoints = mesh->GetNumPoints();
-    const pxr::GfMatrix4d& m = mesh->GetMatrix();
-    const HalfEdgeGraph* graph = mesh->GetEdgesGraph();
-    const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
+    size_t numAdjacents = mesh->GetNumAdjacents(p);
+    const int* adjacents = mesh->GetAdjacents(p);
 
-    for (size_t p = 0; p < numPoints; ++p) {
+    size_t numNeighbors = mesh->GetNumNeighbors(p);
+    const int* neighbors = mesh->GetNeighbors(p);
 
-      size_t numAdjacents = mesh->GetNumAdjacents(p);
-      const int* adjacents = mesh->GetAdjacents(p);
+    if(boundaries[p]) {
+      if(numNeighbors <= 2)continue;
 
-      size_t numNeighbors = mesh->GetNumNeighbors(p);
-      const int* neighbors = mesh->GetNeighbors(p);
+      pxr::GfVec2i pair = _FindBestBoundaryVertices(positions, p, neighbors, numNeighbors, &boundaries[0]);
+      if(pair[0] == -1 || pair[1] == -1)continue;
 
-      if(boundaries[p]) {
-        if(numNeighbors <= 2)continue;
+      allElements.push_back(neighbors[pair[0]] + offset);
+      allElements.push_back(p + offset);
+      allElements.push_back(neighbors[pair[1]] + offset);
+      cnt++;
 
-        pxr::GfVec2i pair = _FindBestBoundaryVertices(positions, p, neighbors, numNeighbors, &boundaries[0]);
-        if(pair[0] == -1 || pair[1] == -1)continue;
+    } else {
+      for (size_t n = 0; n < numNeighbors; ++n) {
+        if(_IsAdjacent(neighbors[n], adjacents, numAdjacents))continue;
+        int o = _FindBestVertex(positions, p, n, neighbors, numNeighbors, adjacents, numAdjacents);
 
-        allElements.push_back(neighbors[pair[0]] + offset);
-        allElements.push_back(p + offset);
-        allElements.push_back(neighbors[pair[1]] + offset);
-        cnt++;
-
-      } else {
-        for (size_t n = 0; n < numNeighbors; ++n) {
-          if(_IsAdjacent(neighbors[n], adjacents, numAdjacents))continue;
-          int o = _FindBestVertex(positions, p, n, neighbors, numNeighbors, adjacents, numAdjacents);
-
-          if (o > -1 && neighbors[o] > neighbors[n]) {
-            allElements.push_back(neighbors[n] + offset);
-            allElements.push_back(p + offset);
-            allElements.push_back(neighbors[o] + offset);
-            cnt++;
-          }
+        if (o > -1 && neighbors[o] > neighbors[n]) {
+          allElements.push_back(neighbors[n] + offset);
+          allElements.push_back(p + offset);
+          allElements.push_back(neighbors[o] + offset);
+          cnt++;
         }
       }
     }
-
-    std::cout << "num bend spring : " << cnt << std::endl;
-
-  } else if (geometry->GetType() == Geometry::CURVE) {
-    Curve* curve = (Curve*)geometry;
-    size_t totalNumSegments = curve->GetTotalNumSegments();
-    size_t curveStartIdx = 0;
-    for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
-      size_t numCVs = curve->GetNumCVs(curveIdx);
-      size_t numSegments = curve->GetNumSegments(curveIdx);
-      for(size_t segmentIdx = 0; segmentIdx < numSegments - 1; ++numSegments) {
-        allElements.push_back(curveStartIdx + segmentIdx);
-        allElements.push_back(curveStartIdx + segmentIdx + 2);
-        allElements.push_back(curveStartIdx + segmentIdx + 1);
-      }
-      curveStartIdx += numCVs;
-    }
   }
 
-  size_t numElements = allElements.size();
-  size_t numBlocks = 0;
-  size_t first = 0;
-  size_t last = pxr::GfMin(Constraint::BlockSize * BendConstraint::ELEM_SIZE, numElements);
-  while(true) {
-    pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
-    BendConstraint* bend = new BendConstraint(body, blockElements, stiffness, damping);
-    constraints.push_back(bend);
-    first += Constraint::BlockSize * BendConstraint::ELEM_SIZE;
-    if(first >= numElements)break;
-    last = pxr::GfMin(last + Constraint::BlockSize * BendConstraint::ELEM_SIZE, numElements);
-    numBlocks++;
-  }
-
-  std::cout << "split in " << numBlocks << " blocks of " << Constraint::BlockSize << std::endl;
+  std::cout << "num bend spring : " << cnt << std::endl;
 }
 
-void CreateShearConstraints(Body* body, std::vector<Constraint*>& constraints,
-  float stiffness, float damping)
+ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness, float damping)
 {
   pxr::VtArray<int> allElements;
   Geometry* geometry = body->GetGeometry();
@@ -446,47 +443,64 @@ void CreateShearConstraints(Body* body, std::vector<Constraint*>& constraints,
   size_t cnt = 0;
 
   if (geometry->GetType() == Geometry::MESH) {
-    Mesh* mesh = (Mesh*)geometry;
-    const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-
-    const size_t numPoints = mesh->GetNumPoints();
-    const pxr::GfMatrix4d& m = mesh->GetMatrix();
-    const HalfEdgeGraph* graph = mesh->GetEdgesGraph();
-    const pxr::VtArray<bool>& boundaries = graph->GetBoundaries();
-
-    for (size_t p = 0; p < numPoints; ++p) {
-
-      size_t numAdjacents = mesh->GetNumAdjacents(p);
-      const int* adjacents = mesh->GetAdjacents(p);
-
-      size_t numNeighbors = mesh->GetNumNeighbors(p);
-      const int* neighbors = mesh->GetNeighbors(p);
-
-      if(boundaries[p]) {
-        if(numNeighbors <= 2)continue;
-
-        pxr::GfVec2i pair = _FindBestBoundaryVertices(positions, p, neighbors, numNeighbors, &boundaries[0]);
-        if(pair[0] == -1 || pair[1] == -1)continue;
-
-        allElements.push_back(neighbors[pair[0]] + offset);
-        allElements.push_back(p + offset);
-        allElements.push_back(neighbors[pair[1]] + offset);
-        cnt++;
-
-      } else {
-        for (size_t n = 0; n < numNeighbors; ++n) {
-          if(_IsAdjacent(neighbors[n], adjacents, numAdjacents))continue;
-          int o = _FindBestVertex(positions, p, n, neighbors, numNeighbors, adjacents, numAdjacents);
-
-          if (o > -1 && neighbors[o] > neighbors[n]) {
-            allElements.push_back(neighbors[n] + offset);
-            allElements.push_back(p + offset);
-            allElements.push_back(neighbors[o] + offset);
-            cnt++;
-          }
-        }
+    _GetMeshBendElements((Mesh*)geometry, allElements);
+  } else if (geometry->GetType() == Geometry::CURVE) {
+    Curve* curve = (Curve*)geometry;
+    size_t totalNumSegments = curve->GetTotalNumSegments();
+    size_t curveStartIdx = 0;
+    for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
+      size_t numCVs = curve->GetNumCVs(curveIdx);
+      size_t numSegments = curve->GetNumSegments(curveIdx);
+      for(size_t segmentIdx = 0; segmentIdx < numSegments - 1; ++numSegments) {
+        allElements.push_back(curveStartIdx + segmentIdx);
+        allElements.push_back(curveStartIdx + segmentIdx + 2);
+        allElements.push_back(curveStartIdx + segmentIdx + 1);
       }
+      curveStartIdx += numCVs;
     }
+  }
+
+  if(allElements.size())
+    return CreateConstraintsGroup(body, 
+      pxr::TfToken("Bend"), Constraint::BEND,
+        allElements, BendConstraint::ELEM_SIZE, Constraint::BlockSize);
+
+  return NULL;
+}
+
+static void _GetMeshShearElements(Mesh* mesh)
+{
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+
+  const size_t numFaces = mesh->GetNumFaces();
+  const pxr::GfMatrix4d& m = mesh->GetMatrix();
+  const pxr::VtArray<int>& counts = mesh->GetFaceCounts();
+  const pxr::VtArray<int>& connects = mesh->GetFaceConnects();
+  size_t numVertices;
+  size_t offset = 0;
+  for (size_t f = 0; p < numFaces; ++f) {
+    numVertices = counts[f];
+    for(size_t v = 0; v < numVertices; ++v) 
+      for(size_t o = 0; o < numVertices; ++o)
+        if(v==o || (v+1)%numVertices == 0 || v > o)continue;
+        else {
+          allElements.push_back(offset + v);
+          allElements.push_back(offset + o);
+        }
+    offset += numVertices;
+  }
+}
+
+ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness, float damping)
+{
+  pxr::VtArray<int> allElements;
+  Geometry* geometry = body->GetGeometry();
+  size_t offset = body->GetOffset();
+
+  size_t cnt = 0;
+
+  if (geometry->GetType() == Geometry::MESH) {
+    
 
     std::cout << "num bend spring : " << cnt << std::endl;
 
@@ -506,21 +520,13 @@ void CreateShearConstraints(Body* body, std::vector<Constraint*>& constraints,
     }
   }
 
-  size_t numElements = allElements.size();
-  size_t numBlocks = 0;
-  size_t first = 0;
-  size_t last = pxr::GfMin(Constraint::BlockSize * BendConstraint::ELEM_SIZE, numElements);
-  while(true) {
-    pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
-    BendConstraint* bend = new BendConstraint(body, blockElements, stiffness, damping);
-    constraints.push_back(bend);
-    first += Constraint::BlockSize * BendConstraint::ELEM_SIZE;
-    if(first >= numElements)break;
-    last = pxr::GfMin(last + Constraint::BlockSize * BendConstraint::ELEM_SIZE, numElements);
-    numBlocks++;
-  }
+  if(allElements.size())
+    return CreateConstraintsGroup(body, 
+      pxr::TfToken("Shear"), Constraint::STRETCH,
+        allElements, StretchConstraint::ELEM_SIZE, Constraint::BlockSize);
 
-  std::cout << "split in " << numBlocks << " blocks of " << Constraint::BlockSize << std::endl;
+  return NULL;
+
 }
 
 size_t DihedralConstraint::TYPE_ID = Constraint::DIHEDRAL;
@@ -633,8 +639,7 @@ void DihedralConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec
   }
 }
 
-void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints,
-  float stiffness, float damping)
+ConstraintsGroup* CreateDihedralConstraints(Body* body, float stiffness, float damping)
 {
   size_t offset = body->GetOffset();
   pxr::VtArray<int> allElements;
@@ -650,17 +655,12 @@ void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints
     }
   }
 
-  size_t numElements = allElements.size();
-  size_t first = 0;
-  size_t last = pxr::GfMin(Constraint::BlockSize * DihedralConstraint::ELEM_SIZE, numElements);
-  while(true) {
-    pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
-    DihedralConstraint* dihedral = new DihedralConstraint(body, blockElements, stiffness, damping);
-    constraints.push_back(dihedral);
-    first += Constraint::BlockSize * DihedralConstraint::ELEM_SIZE;
-    if(first >= numElements)break;
-    last = pxr::GfMin(last + Constraint::BlockSize * DihedralConstraint::ELEM_SIZE, numElements);
-  }
+  if(allElements.size())
+    return CreateConstraintsGroup(body, 
+      pxr::TfToken("Dihedral"), Constraint::DIHEDRAL,
+        allElements, DihedralConstraint::ELEM_SIZE, Constraint::BlockSize);
+
+  return NULL;
 }
 
 // Collision Constraint

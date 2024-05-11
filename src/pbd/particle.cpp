@@ -141,4 +141,27 @@ void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t
 }
 
 
+ConstraintsGroup* 
+Body::AddConstraintsGroup(const pxr::TfToken& group, short type)
+{
+  if(_constraints.find(group) != _constraints.end())
+    return &_constraints[group];
+  _constraints[group] = {type, {}}; 
+  return &_constraints[group];
+}
+
+size_t 
+Body::GetNumConstraintsGroup()
+{
+  return _constraints.size();
+};
+
+ ConstraintsGroup* Body::GetConstraintsGroup(const pxr::TfToken& group)
+{
+  if(_constraints.find(group) != _constraints.end())return &_constraints[group];
+  return NULL;
+};
+
+
+
 JVR_NAMESPACE_CLOSE_SCOPE

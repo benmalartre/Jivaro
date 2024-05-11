@@ -196,24 +196,25 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
 {
   Geometry* geom = body->GetGeometry();
   size_t start = _constraints.size();
+  ConstraintsGroup* group = NULL;
   switch(type) {
     case Constraint::STRETCH:
-      CreateStretchConstraints(body, _constraints, stiffness, damping);
+      group = CreateStretchConstraints(body, stiffness, damping);
       break;
     case Constraint::BEND:
-      CreateBendConstraints(body, _constraints, stiffness, damping);
+      group = CreateBendConstraints(body, stiffness, damping);
       break;
     case Constraint::DIHEDRAL:
       if(geom->GetType() == Geometry::MESH) {
-        CreateDihedralConstraints(body, _constraints, stiffness, damping);
+        group = CreateDihedralConstraints(body, stiffness, damping);
       } else {
         //TF_WARN("Dihedral constraints can only be applied on meshes !");
       }
       break;
   }
-  size_t end = _constraints.size();
-  for(size_t c = start; c < end; ++c)
-    AddConstraint(_constraints[c]);
+  if(group != NULL)
+    for(size_t c = 0; c < group->constraints.size(); ++c)
+      AddConstraint(group->constraints[c]);
 }
 
 void Solver::AddConstraint(Constraint* constraint) 
@@ -257,7 +258,7 @@ void Solver::UpdateCurves()
   pxr::VtArray<int> counts;
 
   for(size_t c = 0; c < numConstraints; ++c) {
-    if(_constraints[c]->GetTypeId() != Constraint::DIHEDRAL)continue;
+    if(_constraints[c]->GetTypeId() != Constraint::BEND)continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)

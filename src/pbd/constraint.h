@@ -20,18 +20,25 @@ struct Particles;
 struct Body;
 class Collision;
 class SelfCollision;
+class Constraint;
+
+struct ConstraintsGroup {
+  short                     type;
+  std::vector<Constraint*>  constraints;
+};
 
 class Constraint: public Element
 {
 public:
-  constexpr static size_t BlockSize = 8;
+  constexpr static size_t BlockSize = 16;
   constexpr static float EPSILON = 1e-6f;
   enum TypeId {
     STRETCH = 1,
     BEND,
     DIHEDRAL,
     COLLISION,
-    RIGID
+    RIGID,
+    LAST
   };
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
@@ -71,6 +78,11 @@ protected:
   pxr::GfVec3f                  _color;
 };
 
+
+static ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, short type, 
+  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize);
+
+
 class StretchConstraint : public Constraint
 {
 public:
@@ -94,9 +106,7 @@ protected:
   pxr::VtArray<float>           _rest;
 };
 
-void CreateStretchConstraints(Body* body, std::vector<Constraint*>& constraints,
-  float stiffness=0.5f, float damping=0.05f);
-
+ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness=0.5f, float damping=0.1f);
 
 class BendConstraint : public Constraint
 {
@@ -121,10 +131,9 @@ protected:
   pxr::VtArray<float>           _rest;
 };
 
-void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
-  float stiffness=1000.f, float damping=0.05f);
-void CreateShearConstraints(Body* body, std::vector<Constraint*>& constraints,
-  float stiffness=1000.f, float damping=0.05f);
+ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness=1000.f, float damping=0.05f);
+ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness=1000.f, float damping=0.05f);
+
 
 class DihedralConstraint : public Constraint
 {
@@ -150,9 +159,7 @@ protected:
 
 };
 
-void CreateDihedralConstraints(Body* body, std::vector<Constraint*>& constraints,
-  float stiffness=0.5f, float damping=0.05f);
-
+ConstraintsGroup* CreateDihedralConstraints(Body* body, float stiffness=0.5f, float damping=0.05f);
 
 class CollisionConstraint : public Constraint
 {
@@ -199,7 +206,6 @@ protected:
   SolveFunc                     _Solve;
 
 };
-
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

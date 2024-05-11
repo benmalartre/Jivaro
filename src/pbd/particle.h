@@ -9,16 +9,17 @@
 
 #include "../common.h"
 #include "../pbd/element.h"
+#include "../pbd/constraint.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
-class Constraint;
 
 class Body : public Element
 {
 
 public:
+
   Body(Geometry* geom, size_t offset, size_t n, const pxr::GfVec3f& color,
     float mass=1.f, float radius=0.01f, float damping=0.1f)
   : Element(Element::BODY)
@@ -49,17 +50,22 @@ public:
   pxr::GfVec3f GetVelocity() const {return _velocity;};
   pxr::GfVec3f GetTorque() const {return _torque;};
 
+  size_t GetNumConstraintsGroup();
+  ConstraintsGroup* AddConstraintsGroup(const pxr::TfToken& group, short type);
+  ConstraintsGroup* GetConstraintsGroup(const pxr::TfToken& group);
+
 
 protected:
-  Geometry*     _geometry;
-  size_t        _offset;
-  size_t        _numPoints;
-  float         _mass;
-  float         _radius;
-  float         _damping;
-  pxr::GfVec3f  _color;
-  pxr::GfVec3f  _velocity;
-  pxr::GfVec3f  _torque;
+  Geometry*                                 _geometry;
+  size_t                                    _offset;
+  size_t                                    _numPoints;
+  float                                     _mass;
+  float                                     _radius;
+  float                                     _damping;
+  pxr::GfVec3f                              _color;
+  pxr::GfVec3f                              _velocity;
+  pxr::GfVec3f                              _torque;
+  std::map<pxr::TfToken, ConstraintsGroup>  _constraints;
 
 };
 
