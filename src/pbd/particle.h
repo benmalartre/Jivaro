@@ -33,7 +33,6 @@ public:
   , _color(color){}
 
   size_t GetTypeId() const override {return 0;};
-  const char* GetTypeName() const  override {return "body";};
 
   void SetOffset(size_t offset){_offset = offset;};
   void SetNumPoints(size_t numPoints){_numPoints = numPoints;};

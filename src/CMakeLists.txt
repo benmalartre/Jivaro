@@ -157,6 +157,11 @@ target_include_directories(${TARGET}
     ${EIGEN_INCLUDE_DIR}
 )
 
+if(${PYTHON_BUILD})
+  target_include_directories(${TARGET}  PUBLIC ${Python3_INCLUDE_DIRS})
+endif()
+
+
 target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}
   ${BOOST_LIBRARIES}
@@ -168,5 +173,9 @@ target_link_libraries(${TARGET}
   ${GLFW}
   ${ADDITIONAL_LIBRARIES}
 )
+
+if(${PYTHON_BUILD})
+  target_link_libraries(${TARGET} ${Python3_LIBRARIES})
+endif()
 
 add_compile_options(/C4244)

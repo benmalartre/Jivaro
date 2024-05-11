@@ -5,7 +5,6 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 size_t GravityForce::TYPE_ID = Force::GRAVITY;
-const char* GravityForce::TYPE_NAME = "gravity";
 
 GravityForce::GravityForce(const pxr::GfVec3f& gravity) 
   : Force()
@@ -46,7 +45,6 @@ void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float d
 
 
 size_t DampForce::TYPE_ID = Force::DAMP;
-const char* DampForce::TYPE_NAME = "damp";
 
 DampForce::DampForce(const pxr::UsdAttribute& attr)
   : Force()

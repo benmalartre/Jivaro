@@ -507,7 +507,7 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
   prim.GetAttribute(PBDTokens->substeps).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
-  prim.GetAttribute(PBDTokens->sleepThreshold).Get(&_sleepThreshold, time);
+  prim.GetAttribute(PBDTokens->sleep).Get(&_sleepThreshold, time);
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);

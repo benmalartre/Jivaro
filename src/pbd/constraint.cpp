@@ -87,7 +87,6 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
 //   STRETCH CONSTRAINT
 //-----------------------------------------------------------------------------------------
 size_t StretchConstraint::TYPE_ID = Constraint::STRETCH;
-const char* StretchConstraint::TYPE_NAME = "stretch";
 size_t StretchConstraint::ELEM_SIZE = 2;
 
 StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
@@ -168,41 +167,48 @@ void StretchConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3
   }
 }
 
+static void _GetMeshStretchElements(Mesh* mesh, pxr::VtArray<int>& allElements, size_t offset)
+{
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  HalfEdgeGraph::ItUniqueEdge it(*mesh->GetEdgesGraph());
+  const auto& edges = mesh->GetEdges();
+  const pxr::GfMatrix4d& m = mesh->GetMatrix();
+  HalfEdge* edge = it.Next();
+  size_t a, b;
+  while (edge) {
+    a = edge->vertex;
+    b = edges[edge->next].vertex;
+    allElements.push_back(a + offset);
+    allElements.push_back(b + offset);
+    edge = it.Next();
+  }
+}
+
+static void _GetCurveStretchElements(Curve* curve, pxr::VtArray<int>& allElements, size_t offset)
+{
+  size_t totalNumSegments = curve->GetTotalNumSegments();
+  size_t curveStartIdx = 0;
+  for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
+    size_t numCVs = curve->GetNumCVs(curveIdx);
+    size_t numSegments = curve->GetNumSegments(curveIdx);
+    for (size_t segmentIdx = 0; segmentIdx < numSegments; ++numSegments) {
+      allElements.push_back(curveStartIdx + segmentIdx + offset);
+      allElements.push_back(curveStartIdx + segmentIdx + 1 + offset);
+    }
+    curveStartIdx += numCVs;
+  }
+}
+
 ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness, float damping)
 {
   pxr::VtArray<int> allElements;
   Geometry* geometry = body->GetGeometry();
   size_t offset = body->GetOffset();
 
-  if (geometry->GetType() == Geometry::MESH) {
-    Mesh* mesh = (Mesh*)geometry;
-    const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-    HalfEdgeGraph::ItUniqueEdge it(*mesh->GetEdgesGraph());
-    const auto& edges = mesh->GetEdges();
-    const pxr::GfMatrix4d& m = mesh->GetMatrix();
-    HalfEdge* edge = it.Next();
-    size_t a, b;
-    while (edge) {
-      a = edge->vertex;
-      b = edges[edge->next].vertex;
-      allElements.push_back(a + offset);
-      allElements.push_back(b + offset);
-      edge = it.Next();
-    }
-  } else if (geometry->GetType() == Geometry::CURVE) {
-    Curve* curve = (Curve*)geometry;
-    size_t totalNumSegments = curve->GetTotalNumSegments();
-    size_t curveStartIdx = 0;
-    for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
-      size_t numCVs = curve->GetNumCVs(curveIdx);
-      size_t numSegments = curve->GetNumSegments(curveIdx);
-      for (size_t segmentIdx = 0; segmentIdx < numSegments; ++numSegments) {
-        allElements.push_back(curveStartIdx + segmentIdx + offset);
-        allElements.push_back(curveStartIdx + segmentIdx + 1 + offset);
-      }
-      curveStartIdx += numCVs;
-    }
-  }
+  if (geometry->GetType() == Geometry::MESH) 
+    _GetMeshStretchElements((Mesh*)geometry, allElements, offset);
+  else if (geometry->GetType() == Geometry::CURVE)
+    _GetCurveStretchElements((Curve*)geometry, allElements, offset);
   
   if(allElements.size())
     return CreateConstraintsGroup(body, 
@@ -218,7 +224,6 @@ ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness, float da
 //   BEND CONSTRAINT
 //-----------------------------------------------------------------------------------------
 size_t BendConstraint::TYPE_ID = Constraint::BEND;
-const char* BendConstraint::TYPE_NAME = "bend";
 size_t BendConstraint::ELEM_SIZE = 3;
 
 BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
@@ -388,7 +393,7 @@ pxr::GfVec2i _FindBestBoundaryVertices(const pxr::GfVec3f* positions, size_t p,
   return result;
 }
 
-void _GetMeshBendElements(Mesh* mesh, pxr::VtArray<int>& allElements) 
+void _GetMeshBendElements(Mesh* mesh, pxr::VtArray<int>& allElements, size_t offset) 
 {
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
@@ -414,8 +419,6 @@ void _GetMeshBendElements(Mesh* mesh, pxr::VtArray<int>& allElements)
       allElements.push_back(neighbors[pair[0]] + offset);
       allElements.push_back(p + offset);
       allElements.push_back(neighbors[pair[1]] + offset);
-      cnt++;
-
     } else {
       for (size_t n = 0; n < numNeighbors; ++n) {
         if(_IsAdjacent(neighbors[n], adjacents, numAdjacents))continue;
@@ -425,13 +428,10 @@ void _GetMeshBendElements(Mesh* mesh, pxr::VtArray<int>& allElements)
           allElements.push_back(neighbors[n] + offset);
           allElements.push_back(p + offset);
           allElements.push_back(neighbors[o] + offset);
-          cnt++;
         }
       }
     }
   }
-
-  std::cout << "num bend spring : " << cnt << std::endl;
 }
 
 ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness, float damping)
@@ -443,7 +443,7 @@ ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness, float dampi
   size_t cnt = 0;
 
   if (geometry->GetType() == Geometry::MESH) {
-    _GetMeshBendElements((Mesh*)geometry, allElements);
+    _GetMeshBendElements((Mesh*)geometry, allElements, offset);
   } else if (geometry->GetType() == Geometry::CURVE) {
     Curve* curve = (Curve*)geometry;
     size_t totalNumSegments = curve->GetTotalNumSegments();
@@ -468,7 +468,7 @@ ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness, float dampi
   return NULL;
 }
 
-static void _GetMeshShearElements(Mesh* mesh)
+static void _GetMeshShearElements(Mesh* mesh, pxr::VtArray<int>& allElements, size_t offset)
 {
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
@@ -477,17 +477,32 @@ static void _GetMeshShearElements(Mesh* mesh)
   const pxr::VtArray<int>& counts = mesh->GetFaceCounts();
   const pxr::VtArray<int>& connects = mesh->GetFaceConnects();
   size_t numVertices;
-  size_t offset = 0;
-  for (size_t f = 0; p < numFaces; ++f) {
+  size_t shift = 0;
+  for (size_t f = 0; f < numFaces; ++f) {
     numVertices = counts[f];
     for(size_t v = 0; v < numVertices; ++v) 
       for(size_t o = 0; o < numVertices; ++o)
         if(v==o || (v+1)%numVertices == 0 || v > o)continue;
         else {
-          allElements.push_back(offset + v);
-          allElements.push_back(offset + o);
+          allElements.push_back(offset + shift + v);
+          allElements.push_back(offset + shift +o);
         }
-    offset += numVertices;
+    shift += numVertices;
+  }
+}
+
+static void _GetCurveShearElements(Curve* curve, pxr::VtArray<int>& allElements, size_t offset)
+{
+  size_t totalNumSegments = curve->GetTotalNumSegments();
+  size_t curveStartIdx = 0;
+  for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
+    size_t numCVs = curve->GetNumCVs(curveIdx);
+    size_t numSegments = curve->GetNumSegments(curveIdx);
+    for(size_t segmentIdx = 0; segmentIdx < numSegments - 1; ++numSegments) {
+      allElements.push_back(curveStartIdx + segmentIdx);
+      allElements.push_back(curveStartIdx + segmentIdx + 2);
+    }
+    curveStartIdx += numCVs;
   }
 }
 
@@ -497,28 +512,10 @@ ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness, float damp
   Geometry* geometry = body->GetGeometry();
   size_t offset = body->GetOffset();
 
-  size_t cnt = 0;
-
-  if (geometry->GetType() == Geometry::MESH) {
-    
-
-    std::cout << "num bend spring : " << cnt << std::endl;
-
-  } else if (geometry->GetType() == Geometry::CURVE) {
-    Curve* curve = (Curve*)geometry;
-    size_t totalNumSegments = curve->GetTotalNumSegments();
-    size_t curveStartIdx = 0;
-    for (size_t curveIdx = 0; curveIdx < curve->GetNumCurves(); ++curveIdx) {
-      size_t numCVs = curve->GetNumCVs(curveIdx);
-      size_t numSegments = curve->GetNumSegments(curveIdx);
-      for(size_t segmentIdx = 0; segmentIdx < numSegments - 1; ++numSegments) {
-        allElements.push_back(curveStartIdx + segmentIdx);
-        allElements.push_back(curveStartIdx + segmentIdx + 2);
-        allElements.push_back(curveStartIdx + segmentIdx + 1);
-      }
-      curveStartIdx += numCVs;
-    }
-  }
+  if (geometry->GetType() == Geometry::MESH) 
+    _GetMeshShearElements((Mesh*)geometry, allElements, offset);
+  else if (geometry->GetType() == Geometry::CURVE) 
+    _GetCurveShearElements((Curve*)geometry, allElements, offset);
 
   if(allElements.size())
     return CreateConstraintsGroup(body, 
@@ -530,7 +527,6 @@ ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness, float damp
 }
 
 size_t DihedralConstraint::TYPE_ID = Constraint::DIHEDRAL;
-const char* DihedralConstraint::TYPE_NAME = "dihedral";
 size_t DihedralConstraint::ELEM_SIZE = 4;
 
 static float _GetCotangentTheta(const pxr::GfVec3f& a, const pxr::GfVec3f& b)
@@ -666,7 +662,6 @@ ConstraintsGroup* CreateDihedralConstraints(Body* body, float stiffness, float d
 // Collision Constraint
 //--------------------------------------------------------------------------------------------------
 size_t CollisionConstraint::TYPE_ID = Constraint::COLLISION;
-const char* CollisionConstraint::TYPE_NAME = "collision";
 
 CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
   const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)

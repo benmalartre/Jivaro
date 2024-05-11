@@ -115,7 +115,10 @@ endif()
 endforeach()
 
 # python
-find_package(Python3 COMPONENTS Interpreter Development)
+if(DEFINED PYTHON_BUILD OR NOT UNIX)
+  set(PYTHON_BUILD ON)
+  find_package(Python3 COMPONENTS Development)
+endif()
 
 # OpenGL
 find_package(OpenGL REQUIRED)
@@ -128,7 +131,7 @@ if(UNIX)
 
   endif()
 else()
-	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_76")
+	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_78")
 endif()
 
 
@@ -137,11 +140,14 @@ list(APPEND BOOST_LIB_NAMES
   atomic
   regex
 )
+if(DEFINED PYTHON_BUILD)
+  list(APPEND BOOST_LIB_NAMES python310)
+endif()
 
 set(BOOST_LIBRARIES "")
 set(BOOST_VERSION "")
 if(NOT UNIX)
-	set(BOOST_VERSION "-vc142-mt-x64-1_76")
+	set(BOOST_VERSION "-vc142-mt-x64-1_78")
 endif()
 foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
   set(BOOST_LIBRARIES 

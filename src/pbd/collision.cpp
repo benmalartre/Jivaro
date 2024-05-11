@@ -184,7 +184,6 @@ float Collision::GetContactInitDepth(size_t index, size_t c) const
 // Plane Collision
 //----------------------------------------------------------------------------------------
 size_t PlaneCollision::TYPE_ID = Collision::PLANE;
-const char* PlaneCollision::TYPE_NAME = "plane";
 
 PlaneCollision::PlaneCollision(Geometry* collider, const pxr::SdfPath& path, 
   float restitution, float friction) 
@@ -242,7 +241,6 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Cont
 // Sphere Collision
 //----------------------------------------------------------------------------------------
 size_t SphereCollision::TYPE_ID = Collision::SPHERE;
-const char* SphereCollision::TYPE_NAME = "sphere";
 
 SphereCollision::SphereCollision(Geometry* collider, const pxr::SdfPath& path, 
   float restitution, float friction)
@@ -308,7 +306,6 @@ pxr::GfVec3f SphereCollision::GetGradient(Particles* particles, size_t index)
 // Mesh Collision
 //----------------------------------------------------------------------------------------
 size_t MeshCollision::TYPE_ID = Collision::MESH;
-const char* MeshCollision::TYPE_NAME = "mesh";
 
 MeshCollision::MeshCollision(Geometry* collider, const pxr::SdfPath& path, 
   float restitution, float friction)
@@ -404,7 +401,6 @@ pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
 // Self Collision
 //----------------------------------------------------------------------------------------
 size_t SelfCollision::TYPE_ID = Collision::SELF;
-const char* SelfCollision::TYPE_NAME = "self";
 
 SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path, 
   float restitution, float friction)
@@ -428,20 +424,6 @@ void SelfCollision::Update(const pxr::UsdPrim& prim, double time)
 // 
 // Contacts
 //
-size_t SelfCollision::GetNumContacts(size_t index) const
-{
-  return _contacts.GetNumUsed(index);
-}
-
- size_t SelfCollision::GetTotalNumContacts() const
- {
-    return _contacts.GetTotalNumUsed();
- }
-
-const Contact* SelfCollision::GetContacts(size_t index) const
-{
-  return _contacts.Get(index);
-}
 
 void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
   std::vector<Constraint*>& constraints, float ft)
