@@ -61,7 +61,6 @@ protected:
   pxr::GfVec3f  _velocity;
   pxr::GfVec3f  _torque;
 
-  //bool     _simulated;
 };
 
 enum BodyType

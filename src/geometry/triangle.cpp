@@ -326,6 +326,9 @@ TrianglePair::GetVertices() const
     break;
   }
 
+  if(vertices[0] > vertices[1])
+    vertices = pxr::GfVec4i(vertices[1], vertices[0], vertices[2], vertices[3]);
+
   return vertices;
 }
 

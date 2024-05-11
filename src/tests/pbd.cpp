@@ -49,14 +49,14 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(&_scene, stage, _solverId, 16);
+  _solver = _GenerateSolver(&_scene, stage, _solverId, 5);
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .025f;
+  float size = .05f;
 
   
-  for(size_t x = 0; x < 7; ++x) {
+  for(size_t x = 0; x < 1; ++x) {
     std::string name = "cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(stage, clothPath, size, 
@@ -92,8 +92,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _scene.AddGeometry(prim.GetPath(), mesh);
 
       Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, 0.1f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.f);
-      //_solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.f);
+      _solver->CreateConstraints(body, Constraint::DIHEDRAL, 1000.f, 0.25f);
+      _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.25f);
+      
       _solver->AddElement(body, mesh, prim.GetPath());
     }
   }

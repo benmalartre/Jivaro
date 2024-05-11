@@ -24,7 +24,7 @@ Particles::~Particles()
 
 void Particles::_EnsureDataSize(size_t desired)
 {
-  size_t size = std::floor((num + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+  size_t size = std::floor(num / BLOCK_SIZE) * BLOCK_SIZE;
   if(size > desired)return;
 
   size = ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
@@ -56,7 +56,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   float m = item->GetMass();
   float w = pxr::GfIsClose(m, 0.f, 0.000001f) ? 0.f : 1.f / m;
 
-  const pxr::VtArray<pxr::GfVec3f>& points = ((Deformable*)geom)->GetPositions();
+  const pxr::GfVec3f* points = ((Deformable*)geom)->GetPositionsCPtr();
   pxr::GfVec3f pos;
   size_t idx;
   for (size_t idx = base; idx < base + numPoints; ++idx) {

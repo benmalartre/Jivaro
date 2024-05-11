@@ -319,8 +319,48 @@ TrianglePairGraph::TrianglePairGraph(
   }
 }
 
+// custom comparator for triangle edges
+struct
+{
+  inline bool operator() (const pxr::GfVec4i& e1, const pxr::GfVec4i& e2)
+  {
+    return e1[0] < e2[0] || (e1[0] == e2[0] && e1[1] < e2[1]);
+  }
+} _CompareTriangleEdge;
+
+void  _FindTriangleNeighbors(const pxr::VtArray<Triangle>& triangles, pxr::VtArray<int>& neighbors)
+{
+  pxr::VtArray<pxr::GfVec4i> edges;
+  const size_t numTriangles = triangles.size();
+  int id0, id1;
+  for (size_t i = 0; i < numTriangles; ++i) {
+    const Triangle& triangle = triangles[i];
+    for (size_t j = 0; j < 3; ++j) {
+      id0 = triangle.vertices[j];
+      id1 = triangle.vertices[(j + 1) % 3];
+      edges.push_back({pxr::GfMin(id0, id1), pxr::GfMax(id0, id1), (int)(3 * i + j), (int)triangle.id});
+    }
+  }
+
+  std::sort(edges.begin(), edges.end(), _CompareTriangleEdge);
+  neighbors.assign(3 * numTriangles, -1);
+
+  size_t i = 0;
+  while (i < edges.size()) {
+    const pxr::GfVec4i& e0 = edges[i];
+    const pxr::GfVec4i& e1 = edges[i + 1];
+
+    if (e0[0] == e1[0] && e0[1] == e1[1]) {
+      neighbors[e0[2]] = e1[3];
+      neighbors[e1[2]] = e0[3];
+    }
+    i ++;
+  }
+}
+
 void Mesh::ComputeTrianglePairs()
 {
+
   TrianglePairGraph graph(_faceVertexCounts, _faceVertexIndices);
   _trianglePairs.clear();
   uint32_t triPairId = 0;
@@ -330,6 +370,7 @@ void Mesh::ComputeTrianglePairs()
   }
 
   BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
+      
 }
 
 pxr::VtArray<TrianglePair>& 
@@ -699,8 +740,42 @@ void Mesh::TriangulateFace(const HalfEdge* edge)
   _halfEdges._TriangulateFace(edge);
 }
 
-void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs)
+void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs, bool unique)
 {
+  pxr::VtArray<int> neighbors;
+  _FindTriangleNeighbors(_triangles, neighbors);
+  std::vector<bool> used(_triangles.size(), false);
+  uint32_t triPairId = 0;
+
+  if(unique) {
+    bool found;
+    for(size_t i = 0; i< neighbors.size();i+=3) {
+
+      found = false;
+      for(size_t j=0; j < 3; ++j) {
+        if(neighbors[i+j] == -1) continue;
+        if(used[neighbors[i+j]])continue;
+        if(!used[i/3] && !used[neighbors[i+j]]) {
+          pairs.push_back({ triPairId++, &_triangles[i/3], &_triangles[neighbors[i+j]]});
+          used[i/3] = true;
+          used[neighbors[i+j]] = true;
+          found = true;
+          break;
+        }
+        if(!found){
+            pairs.push_back({triPairId++, &_triangles[i/3], NULL});
+            used[i/3] = true;
+        }
+      }
+    }
+  } else 
+    for(size_t i = 0; i< neighbors.size();i+=3) 
+      for(size_t j=0; j < 3; ++j)
+        if(neighbors[i+j] == -1) continue;
+        else if(i/3 < neighbors[i+j]){
+          pairs.push_back({ triPairId++, &_triangles[i/3], &_triangles[neighbors[i+j]]});
+        }
+  /*
   pxr::VtArray<int> edgeTriIndex(_halfEdges.GetNumRawEdges(), -1);
 
   int triangleIdx = -1;
@@ -758,6 +833,7 @@ void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs)
     }
     edgeIdx += faceVertexCount;
   }
+  */
 }
 
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 

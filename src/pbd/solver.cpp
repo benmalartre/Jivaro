@@ -257,7 +257,7 @@ void Solver::UpdateCurves()
   pxr::VtArray<int> counts;
 
   for(size_t c = 0; c < numConstraints; ++c) {
-    if(_constraints[c]->GetTypeId() != Constraint::BEND)continue;
+    if(_constraints[c]->GetTypeId() != Constraint::DIHEDRAL)continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
@@ -418,10 +418,11 @@ void Solver::Reset()
 
   if(_bodies.size()) {
     WeightBoundaries(_bodies[0]);
-    LockPoints(_bodies[0], pxr::VtArray<int>({0,1,2,3,4,5,6,7,8,9}));
+    LockPoints(_bodies[0], pxr::VtArray<int>({0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21}));
   }
 
   _particles.SetAllState(Particles::ACTIVE);
+  UpdateCurves();
 }
 
 void Solver::Step()

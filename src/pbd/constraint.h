@@ -24,7 +24,7 @@ class SelfCollision;
 class Constraint: public Element
 {
 public:
-  constexpr static size_t BlockSize = 256;
+  constexpr static size_t BlockSize = 8;
   constexpr static float EPSILON = 1e-6f;
   enum TypeId {
     STRETCH = 1,
@@ -123,7 +123,8 @@ protected:
 
 void CreateBendConstraints(Body* body, std::vector<Constraint*>& constraints,
   float stiffness=1000.f, float damping=0.05f);
-
+void CreateShearConstraints(Body* body, std::vector<Constraint*>& constraints,
+  float stiffness=1000.f, float damping=0.05f);
 
 class DihedralConstraint : public Constraint
 {

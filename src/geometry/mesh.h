@@ -105,7 +105,7 @@ public:
   void Triangulate();
   void TriangulateFace(const HalfEdge* edge);
 
-  void GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs);
+  void GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs, bool unique=false);
 
   void Prepare(bool connectivity=true);
 
