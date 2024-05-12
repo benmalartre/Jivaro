@@ -75,6 +75,12 @@ public:
 
   int GetType() const { return _type; };
   virtual size_t GetNumPoints() const {return 1;};
+  pxr::UsdPrim& GetPrim(){return _prim;};
+  const pxr::UsdPrim& GetPrim() const {return _prim;};
+
+  template<typename T>
+  DirtyState GetAttributeValue(const pxr::TfToken& name, 
+    const pxr::UsdTimeCode& time, T* value);
 
   bool IsInput(){return _mode & Mode::INPUT;};
   bool IsOutput(){return _mode & Mode::OUTPUT;};
@@ -108,6 +114,8 @@ public:
   virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const {return false;};
 
+  virtual float SignedDistance(const pxr::GfVec3f& point) const {return 0.f;};
+
 protected:
   void _ComputeVelocity();
   virtual DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
@@ -115,10 +123,6 @@ protected:
 
   virtual void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) = 0;
-
-  template<typename T>
-  DirtyState _GetAttrValue(const pxr::TfToken& name, 
-    const pxr::UsdTimeCode& time, T* value);
 
   // infos
   short                               _mode;
@@ -138,7 +142,7 @@ protected:
 
 template<typename T>
 Geometry::DirtyState
-Geometry::_GetAttrValue(const pxr::TfToken& name, 
+Geometry::GetAttributeValue(const pxr::TfToken& name, 
   const pxr::UsdTimeCode& time, T *value)
 {
   pxr::UsdAttribute attr = _prim.GetAttribute(name);

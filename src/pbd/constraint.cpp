@@ -44,7 +44,7 @@ void Constraint::Apply(Particles* particles)
 }
 
 ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, short type, 
-  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize)
+  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize, Geometry* target)
 {
 
   ConstraintsGroup* group = body->AddConstraintsGroup(name, type);
@@ -57,9 +57,19 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
   float stiffness = 10000.f;
   float damping = 0.25f;
 
+  Geometry* geometry = body->GetGeometry();
+
   while(true) {
     pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
     switch (type) {
+      case Constraint::ATTACH:
+        group->constraints.push_back(new AttachConstraint(body, blockElements, stiffness, damping));
+        break;
+
+      case Constraint::PIN:
+        group->constraints.push_back(new PinConstraint(body, blockElements, target, stiffness, damping));
+        break;
+
       case Constraint::STRETCH: 
         group->constraints.push_back(new StretchConstraint(body, blockElements, stiffness, damping));
         break;
@@ -81,6 +91,92 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
   std::cout << name << ": " << "created " << numBlocks << " blocks of " << blockSize << "(max)" <<std::endl;
 
   return group;
+}
+
+//-----------------------------------------------------------------------------------------
+//   ATTACH CONSTRAINT
+//-----------------------------------------------------------------------------------------
+size_t AttachConstraint::TYPE_ID = Constraint::ATTACH;
+size_t AttachConstraint::ELEM_SIZE = 1;
+
+AttachConstraint::AttachConstraint(Body* body, const pxr::VtArray<int>& elems,
+  float stiffness, float damping)
+  : Constraint(ELEM_SIZE, stiffness, damping, elems)
+  , _body(body)
+{
+  Geometry* geometry = body->GetGeometry();
+  if(geometry->GetType() < Geometry::POINT) {
+    // TODO add warning message here
+    return;
+  }
+  const size_t offset = body->GetOffset();
+  const pxr::GfMatrix4d& m = geometry->GetMatrix();
+  const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+}
+
+void AttachConstraint::Solve(Particles* particles, float dt)
+{
+  _ResetCorrection();
+
+  const float alpha =  _compliance / (dt * dt);
+
+  const pxr::GfVec3f* predicted = &particles->predicted[0];
+  const pxr::GfVec3f* velocity = &particles->velocity[0];
+
+  const size_t offset = _body->GetOffset();
+  Geometry* geometry = _body->GetGeometry();
+
+  const pxr::GfMatrix4d& m = geometry->GetMatrix();
+  const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+
+  pxr::GfVec3f gradient, damp;
+  size_t index = 0;
+  float length;
+  
+  for(auto& elem: _elements) {
+    gradient = predicted[elem] - m.Transform(positions[elem - offset]);
+    length = gradient.GetLength();
+
+    damp = pxr::GfDot(velocity[elem] * dt * dt,  gradient) * gradient * _damping;
+
+    _correction[index++] -= length / (length * length + alpha) * gradient - damp;
+  }
+}
+
+void AttachConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions,
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
+{
+}
+
+//-----------------------------------------------------------------------------------------
+//   PIN CONSTRAINT
+//-----------------------------------------------------------------------------------------
+size_t PinConstraint::TYPE_ID = Constraint::PIN;
+size_t PinConstraint::ELEM_SIZE = 1;
+
+ PinConstraint::PinConstraint(Body* body, const pxr::VtArray<int>& elems, Geometry* target,
+  float stiffness, float damping)
+    : Constraint(ELEM_SIZE, stiffness, damping, elems)
+    , _target(target)
+{
+  Geometry* geometry = body->GetGeometry();
+  if(geometry->GetType() < Geometry::POINT) {
+    // TODO add warning message here
+    return;
+  }
+  const size_t offset = body->GetOffset();
+  const pxr::GfMatrix4d& m = geometry->GetMatrix();
+  const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+  size_t numElements = _elements.size() / ELEM_SIZE;
+}
+
+void PinConstraint::Solve(Particles* particles, float dt)
+{
+}
+
+void PinConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions,
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
+{
 }
 
 //-----------------------------------------------------------------------------------------

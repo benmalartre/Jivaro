@@ -108,11 +108,16 @@ bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
   return false;
 }
 
+float Plane::SignedDistance(const pxr::GfVec3f& point) const
+{
+  return pxr::GfDot(_normal, point - pxr::GfVec3f(_matrix.ExtractTranslation())) ;
+}
+
 Geometry::DirtyState 
 Plane::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
 
-  size_t state  = _GetAttrValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
+  size_t state  = GetAttributeValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
 
   if(state = Geometry::DirtyState::ATTRIBUTE) {
     if (_axis == pxr::UsdGeomTokens->x)
@@ -123,9 +128,9 @@ Plane::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
       _normal = pxr::GfVec3f(0.f, 0.f, 1.f);
   }
 
-  state |= _GetAttrValue<float>(pxr::UsdGeomTokens->width, time, &_width);
-  state |= _GetAttrValue<float>(pxr::UsdGeomTokens->length, time, &_length);
-  state |= _GetAttrValue<bool>(pxr::UsdGeomTokens->doubleSided, time, &_doubleSided);
+  state |= GetAttributeValue<float>(pxr::UsdGeomTokens->width, time, &_width);
+  state |= GetAttributeValue<float>(pxr::UsdGeomTokens->length, time, &_length);
+  state |= GetAttributeValue<bool>(pxr::UsdGeomTokens->doubleSided, time, &_doubleSided);
 
   return (Geometry::DirtyState)state;
 }
@@ -197,10 +202,15 @@ bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
   return false;
 }
 
+float Sphere::SignedDistance(const pxr::GfVec3f& point) const
+{
+  return (point - _matrix.ExtractTranslation()).GetLength() - _radius;
+}
+
 Geometry::DirtyState 
 Sphere::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  return _GetAttrValue<double>(pxr::UsdGeomTokens->radius, time, &_radius);
+  return GetAttributeValue<double>(pxr::UsdGeomTokens->radius, time, &_radius);
 }
 
 void 
@@ -267,6 +277,22 @@ Cube::Raycast(const pxr::GfRay& ray, Location* hit,
   return false;
 }
 
+float Cube::SignedDistance(const pxr::GfVec3f& point) const
+{
+  pxr::GfVec3f local = _invMatrix.Transform(point);
+  local[0] = pxr::GfAbs(local[0]);
+  local[1] = pxr::GfAbs(local[1]);
+  local[2] = pxr::GfAbs(local[2]);
+  
+  pxr::GfVec3f q = local - pxr::GfVec3f(_size);
+  pxr::GfVec3f r = q;
+  r[0] = pxr::GfMax(q[0], 0.f);
+  r[0] = pxr::GfMax(q[0], 0.f);
+  r[0] = pxr::GfMax(q[0], 0.f);
+  return r.GetLength() + pxr::GfMin(pxr::GfMax(q[0], pxr::GfMax(q[1], q[2])), 0.f);
+  //return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
 
 bool _PointInsideCube(const pxr::GfVec3f& point, const pxr::GfRange3d& box) 
 {
@@ -307,7 +333,7 @@ Cube::Closest(const pxr::GfVec3f& point, Location* hit,
 Geometry::DirtyState 
 Cube::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  return _GetAttrValue<float>(pxr::UsdGeomTokens->size, time, &_size);
+  return GetAttributeValue<float>(pxr::UsdGeomTokens->size, time, &_size);
 
 }
 

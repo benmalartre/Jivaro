@@ -97,6 +97,8 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locati
 //-------------------------------------------------------
 // Triangle Closest Point
 //-------------------------------------------------------
+float _Dot2( const pxr::GfVec3f& v ) { return pxr::GfDot(v,v); }
+
 bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
   pxr::GfVec3f edge0 = points[vertices[1]] - points[vertices[0]];
@@ -175,7 +177,6 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Lo
   hit->SetComponentIndex(id);
   hit->SetT(distance);
   return true;
-  
 }
 
 //-------------------------------------------------------

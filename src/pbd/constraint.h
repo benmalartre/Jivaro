@@ -13,6 +13,7 @@
 
 #include "../pbd/element.h"
 #include "../pbd/mask.h"
+#include "../geometry/location.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -30,10 +31,12 @@ struct ConstraintsGroup {
 class Constraint: public Element
 {
 public:
-  constexpr static size_t BlockSize = 16;
+  constexpr static size_t BlockSize = 64;
   constexpr static float EPSILON = 1e-6f;
   enum TypeId {
-    STRETCH = 1,
+    ATTACH = 1,
+    PIN,
+    STRETCH,
     BEND,
     DIHEDRAL,
     COLLISION,
@@ -79,7 +82,53 @@ protected:
 
 
 static ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, short type, 
-  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize);
+  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize, Geometry* target=NULL);
+
+
+class AttachConstraint : public Constraint
+{
+public:
+  AttachConstraint(Body* body, const pxr::VtArray<int>& elems, 
+    float stiffness=0.5f, float damping=0.25f);
+
+  size_t GetTypeId() const override { return TYPE_ID; };
+  size_t GetElementSize() const override { return ELEM_SIZE; };
+
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
+
+  void Solve(Particles* particles, float dt) override;
+
+  static size_t                 ELEM_SIZE;
+
+protected:
+  static size_t                 TYPE_ID;
+
+  Body*                         _body;
+};
+
+class PinConstraint : public Constraint
+{
+public:
+  PinConstraint(Body* body, const pxr::VtArray<int>& elems, Geometry* target,
+    float stiffness, float damping);
+
+  size_t GetTypeId() const override { return TYPE_ID; };
+  size_t GetElementSize() const override { return ELEM_SIZE; };
+
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
+
+  void Solve(Particles* particles, float dt) override;
+
+  static size_t                 ELEM_SIZE;
+
+protected:
+  static size_t                 TYPE_ID;
+  pxr::VtArray<Location>        _location;
+  pxr::VtArray<pxr::GfVec3f>    _offset;
+  Geometry*                     _target;
+};
 
 
 class StretchConstraint : public Constraint

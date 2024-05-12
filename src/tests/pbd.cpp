@@ -56,7 +56,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float size = .05f;
 
   
-  for(size_t x = 0; x < 1; ++x) {
+  for(size_t x = 0; x < 7; ++x) {
     std::string name = "cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(stage, clothPath, size, 
@@ -88,11 +88,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh usdMesh(prim);
       const pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
+      pxr::GfVec3f scale(xform[0][0], xform[1][1], xform[2][2]);
       Mesh* mesh = new Mesh(usdMesh, xform);
       _scene.AddGeometry(prim.GetPath(), mesh);
 
-      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, 0.1f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::DIHEDRAL, 5000.f, 0.25f);
+      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, size * 0.5f * scale.GetLength(), 0.1f);
+      _solver->CreateConstraints(body, Constraint::BEND, 5000.f, 0.25f);
       _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.25f);
       
       _solver->AddElement(body, mesh, prim.GetPath());

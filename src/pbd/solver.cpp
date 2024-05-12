@@ -434,6 +434,8 @@ void Solver::Step()
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
+
+  std::cout << "solver parallel packet size : " << packetSize << std::endl;
   _PrepareContacts();
 
   for(size_t si = 0; si < _subSteps; ++si) {

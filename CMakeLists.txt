@@ -115,8 +115,7 @@ endif()
 endforeach()
 
 # python
-if(DEFINED PYTHON_BUILD OR NOT UNIX)
-  set(PYTHON_BUILD ON)
+if(DEFINED PYTHON_BUILD)
   find_package(Python3 COMPONENTS Development)
 endif()
 
@@ -133,7 +132,6 @@ if(UNIX)
 else()
 	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_78")
 endif()
-
 
 set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
