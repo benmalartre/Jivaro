@@ -22,7 +22,7 @@ public:
   virtual void UpdateParameters(pxr::UsdPrim& prim, float time) {};
   Element(const  Element& other) = delete;
 
-  Element(short type) : _type(type) {};
+  Element(short type) : _type(type){};
   virtual ~Element() {};
 
 private:

@@ -57,11 +57,11 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
 
   pxr::UsdAttribute gravityAttr = xform.GetPrim().GetAttribute(PBDTokens->gravity);
    _gravity = new GravityForce(gravityAttr);
-  AddElement(_gravity, NULL, _solverId.AppendChild(PBDTokens->gravity));
+  AddElement(_gravity, NULL, _solverId.AppendProperty(PBDTokens->gravity));
 
   pxr::UsdAttribute dampAttr = xform.GetPrim().GetAttribute(PBDTokens->damp);
   _damp = new DampForce(dampAttr);
-  AddElement(_damp, NULL, _solverId.AppendChild(PBDTokens->damp));
+  AddElement(_damp, NULL, _solverId.AppendProperty(PBDTokens->damp));
 }
 
 Solver::~Solver()
@@ -153,6 +153,9 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix,
 {
   size_t base = _particles.GetNumParticles();
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  //geom->CreateAttribute(geom->GetPrim(), PBDTokens->mass, pxr::SdfValueTypeNames->Float);
+  geom->GetAttributeValue(PBDTokens->mass, pxr::UsdTimeCode::Default(), &mass);
+  geom->GetAttributeValue(PBDTokens->damp, pxr::UsdTimeCode::Default(), &damping);
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
   _particles.AddBody(body, matrix);
 
@@ -258,7 +261,7 @@ void Solver::UpdateCurves()
   pxr::VtArray<int> counts;
 
   for(size_t c = 0; c < numConstraints; ++c) {
-    if(_constraints[c]->GetTypeId() != Constraint::BEND)continue;
+    if(_constraints[c]->GetTypeId() != Constraint::STRETCH)continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
@@ -354,6 +357,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
 
+
     if (velocity[index].GetLength() < _sleepThreshold) {
       //state[index] = Particles::IDLE;
       //velocity[index] = pxr::GfVec3f(0.f);
@@ -419,7 +423,7 @@ void Solver::Reset()
 
   if(_bodies.size()) {
     WeightBoundaries(_bodies[0]);
-    LockPoints(_bodies[0], pxr::VtArray<int>({0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21}));
+    LockPoints(_bodies[0], pxr::VtArray<int>({0}));//,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21}));
   }
 
   _particles.SetAllState(Particles::ACTIVE);
@@ -513,6 +517,10 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);
+  for(auto& body: _bodies) {
+    prim = body->GetGeometry()->GetPrim();
+    body->UpdateParameters(prim, time);
+  }
 }
 
 

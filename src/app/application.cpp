@@ -288,8 +288,8 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
   //_exec = new TestGrid();
   //_exec = new TestParticles();
   //_exec = new TestInstancer();
-  //_exec = new TestRaycast();
-  _exec = new TestPBD();
+  _exec = new TestRaycast();
+  //_exec = new TestPBD();
   //_exec = new TestHair();
   //_exec = new TestBVH();
   _exec->InitExec(stage);
@@ -361,10 +361,11 @@ Application::Update()
       _lastTime = currentTime;
     }
   } else {
-    if (currentTime != _lastTime) {
+    //if (currentTime != _lastTime || _mainWindow->GetTool()->IsInteracting()) {
       _lastTime = currentTime;
       if (_execute) UpdateExec(_stage, currentTime);
-    }
+      if(GetActiveEngine())GetActiveEngine()->SetDirty(true);
+    //}
   }
   
   // draw popup

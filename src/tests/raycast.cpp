@@ -187,8 +187,9 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
+  _scene.InjectGeometry(stage, _meshId, _mesh, 1.0);
 
-  _AddAnimationSamples(stage, _meshId);
+  //_AddAnimationSamples(stage, _meshId);
 
   // create rays
   _raysId = rootId.AppendChild(pxr::TfToken("rays"));
@@ -209,7 +210,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
 void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
-   _bvh.Update();
+  _bvh.Update();
   _UpdateRays();
   _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker::DirtyPoints);
   _scene.MarkPrimDirty(_meshId, pxr::HdChangeTracker::AllDirty);

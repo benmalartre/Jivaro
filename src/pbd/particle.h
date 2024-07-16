@@ -21,18 +21,19 @@ class Body : public Element
 public:
 
   Body(Geometry* geom, size_t offset, size_t n, const pxr::GfVec3f& color,
-    float mass=1.f, float radius=0.01f, float damping=0.1f)
+    float mass=1.f, float radius=0.01f, float damp=0.1f)
   : Element(Element::BODY)
   , _geometry(geom)
   , _offset(offset)
   , _numPoints(n)
   , _mass(mass)
   , _radius(radius)
-  , _damping(damping)
+  , _damp(damp)
   , _velocity(0.f)
   , _color(color){}
 
   size_t GetTypeId() const override {return 0;};
+  void UpdateParameters(pxr::UsdPrim& prim, float time) override;
 
   void SetOffset(size_t offset){_offset = offset;};
   void SetNumPoints(size_t numPoints){_numPoints = numPoints;};
@@ -60,7 +61,7 @@ protected:
   size_t                                    _numPoints;
   float                                     _mass;
   float                                     _radius;
-  float                                     _damping;
+  float                                     _damp;
   pxr::GfVec3f                              _color;
   pxr::GfVec3f                              _velocity;
   pxr::GfVec3f                              _torque;

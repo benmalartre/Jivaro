@@ -5,7 +5,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 PBDTokensType::PBDTokensType() :
   substeps              ("substeps",              pxr::TfToken::Immortal),
   sleep                 ("sleep",                 pxr::TfToken::Immortal),
+  mass                  ("mass",                  pxr::TfToken::Immortal),
+  velocity              ("velocity",              pxr::TfToken::Immortal),
   gravity               ("gravity",               pxr::TfToken::Immortal),
+  stiffness             ("stiffness",             pxr::TfToken::Immortal),
   damp                  ("damp",                  pxr::TfToken::Immortal),
   friction              ("friction",              pxr::TfToken::Immortal),
   restitution           ("restitution",           pxr::TfToken::Immortal),
@@ -13,11 +16,15 @@ PBDTokensType::PBDTokensType() :
   stretch               ("stretch",               pxr::TfToken::Immortal),
   shear                 ("shear",                 pxr::TfToken::Immortal),
   bend                  ("bend",                  pxr::TfToken::Immortal),
+  dihedral              ("dihedral",              pxr::TfToken::Immortal),
   volume                ("volume",                pxr::TfToken::Immortal),
   allTokens({
     substeps,
     sleep,
+    mass,
+    velocity,
     gravity,
+    stiffness,
     damp,
     friction,
     restitution,
@@ -25,6 +32,7 @@ PBDTokensType::PBDTokensType() :
     stretch,
     shear,
     bend,
+    dihedral,
     volume
   })
 {

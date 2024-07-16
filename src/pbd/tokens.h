@@ -15,7 +15,10 @@ struct PBDTokensType {
 
     const pxr::TfToken substeps;
     const pxr::TfToken sleep;
+    const pxr::TfToken mass;
+    const pxr::TfToken velocity;
     const pxr::TfToken gravity;
+    const pxr::TfToken stiffness;
     const pxr::TfToken damp;
     const pxr::TfToken friction;
     const pxr::TfToken restitution;
@@ -23,6 +26,7 @@ struct PBDTokensType {
     const pxr::TfToken stretch;
     const pxr::TfToken shear;
     const pxr::TfToken bend;
+    const pxr::TfToken dihedral;
     const pxr::TfToken volume;
 
     const std::vector<pxr::TfToken> allTokens;

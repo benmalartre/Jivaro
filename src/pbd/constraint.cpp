@@ -2,6 +2,7 @@
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 #include "../geometry/curve.h"
+#include "../pbd/tokens.h"
 #include "../pbd/constraint.h"
 #include "../pbd/collision.h"
 #include "../pbd/particle.h"
@@ -11,11 +12,11 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 Constraint::Constraint(size_t elementSize, float stiffness, 
-  float damping, const pxr::VtArray<int>& elems) 
+  float damp, const pxr::VtArray<int>& elems) 
   : Element(Element::CONSTRAINT)
   , _elements(elems)
   , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
-  , _damping(damping)
+  , _damp(damp)
   , _color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1)
 {
   const size_t numElements = elems.size() / elementSize;
@@ -27,6 +28,16 @@ void Constraint::SetElements(const pxr::VtArray<int>& elems)
 {
   const size_t numElements = _elements.size() / GetElementSize();
   _correction.resize(numElements);
+}
+
+void Constraint::SetStiffness(float stiffness)
+{
+  _compliance = stiffness > 0.f ? 1.f / stiffness : 0.f;
+}
+
+void Constraint::SetDamp(float damp)
+{
+  _damp = damp;
 }
 
 void Constraint::_ResetCorrection()
@@ -57,7 +68,8 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
   float stiffness = 10000.f;
   float damping = 0.25f;
 
-  Geometry* geometry = body->GetGeometry();
+  //Geometry* geometry = body->GetGeometry();
+  //geometry->GetAttributeValue(pxr::TfToken("name"), pxr::UsdTimeCode::Default(), &stiffness);
 
   while(true) {
     pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
@@ -137,7 +149,7 @@ void AttachConstraint::Solve(Particles* particles, float dt)
     gradient = predicted[elem] - m.Transform(positions[elem - offset]);
     length = gradient.GetLength();
 
-    damp = pxr::GfDot(velocity[elem] * dt * dt,  gradient) * gradient * _damping;
+    damp = pxr::GfDot(velocity[elem] * dt * dt,  gradient) * gradient * _damp;
 
     _correction[index++] -= length / (length * length + alpha) * gradient - damp;
   }
@@ -237,9 +249,9 @@ void StretchConstraint::Solve(Particles* particles, float dt)
 
     C = length - _rest[elem];
 
-    damp = pxr::GfDot(velocity[a] * dt * dt,  gradient) * gradient * _damping;
+    damp = pxr::GfDot((velocity[b] - velocity[a]),  gradient) * gradient * _damp * dt * dt;
 
-    correction = -C / (length * length * W + alpha) * gradient;// - damp;
+    correction = -C / (length * length * W + alpha) * gradient - damp;
 
     _correction[elem * ELEM_SIZE + 0] += w0 * correction;
     _correction[elem * ELEM_SIZE + 1] -= w1 * correction;
@@ -308,7 +320,7 @@ ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness, float da
   
   if(allElements.size())
     return CreateConstraintsGroup(body, 
-      pxr::TfToken("Stretch"), Constraint::STRETCH,
+      PBDTokens->stretch, Constraint::STRETCH,
         allElements, StretchConstraint::ELEM_SIZE, Constraint::BlockSize);
 
   return NULL;
@@ -413,8 +425,8 @@ void BendConstraint::Solve(Particles* particles, float dt)
 
     C = hL - _rest[elem];
 
-    damp = pxr::GfDot(velocity[a] * dt * dt,  h) * h * _damping;
-    correction = -C / (hL * hL * W + alpha) * h;//-damp;
+    damp = pxr::GfDot(velocity[a] * dt * dt,  h) * h * _damp;
+    correction = -C / (hL * hL * W + alpha) * h - damp;
 
     _correction[elem * ELEM_SIZE + 0] += w0 * correction;
     _correction[elem * ELEM_SIZE + 2] -= w1 * correction;
@@ -558,7 +570,7 @@ ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness, float dampi
 
   if(allElements.size())
     return CreateConstraintsGroup(body, 
-      pxr::TfToken("Bend"), Constraint::BEND,
+      PBDTokens->bend, Constraint::BEND,
         allElements, BendConstraint::ELEM_SIZE, Constraint::BlockSize);
 
   return NULL;
@@ -749,7 +761,7 @@ ConstraintsGroup* CreateDihedralConstraints(Body* body, float stiffness, float d
 
   if(allElements.size())
     return CreateConstraintsGroup(body, 
-      pxr::TfToken("Dihedral"), Constraint::DIHEDRAL,
+      PBDTokens->dihedral, Constraint::DIHEDRAL,
         allElements, DihedralConstraint::ELEM_SIZE, Constraint::BlockSize);
 
   return NULL;
@@ -827,7 +839,7 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
   }
 }
 
-static float selfVMax = 1.f;
+static float selfVMax = 10.f;
 
 void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 {
@@ -858,7 +870,7 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 
       d = (minDistance - distance) / distance;
 
-      damp = pxr::GfDot(particles->velocity[index] * dt * dt,  gradient) * gradient * _damping;
+      damp = pxr::GfDot(particles->velocity[index] * dt * dt,  gradient) * gradient * _damp;
       correction =  w0 / w *  gradient * d - damp;
 
       _correction[elem] += correction;

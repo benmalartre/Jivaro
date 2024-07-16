@@ -23,9 +23,17 @@ class Collision;
 class SelfCollision;
 class Constraint;
 
+
+struct ConstraintTargets {
+  pxr::VtArray<Body*> bodies;
+  pxr::VtArray<int>   elements;
+  pxr::TfToken        key;
+};
+
 struct ConstraintsGroup {
-  short                     type;
-  std::vector<Constraint*>  constraints;
+  pxr::UsdPrim               prim;
+  short                      type;
+  pxr::VtArray<Constraint*>  constraints;
 };
 
 class Constraint: public Element
@@ -58,6 +66,8 @@ public:
   inline bool HaveElements(){return _elements.size() > 0;};
   const pxr::VtArray<int>& GetElements() {return _elements;};
   virtual void SetElements(const pxr::VtArray<int>& elements);
+  virtual void SetStiffness(float stiffness);
+  virtual void SetDamp(float damp);
   
   virtual void Solve(Particles* particles, float dt) = 0;
 
@@ -75,7 +85,7 @@ protected:
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _correction;
   float                         _compliance;
-  float                         _damping;
+  float                         _damp;
   pxr::TfToken                  _key;
   pxr::GfVec3f                  _color;
 };

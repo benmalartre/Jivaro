@@ -53,10 +53,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .05f;
+  float size = .025f;
 
   
-  for(size_t x = 0; x < 7; ++x) {
+  for(size_t x = 0; x < 1; ++x) {
     std::string name = "cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(stage, clothPath, size, 
@@ -73,15 +73,17 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   size_t n = 8;
   const double rStep = 360.0 / static_cast<double>(n);
 
+/*
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
     _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
+    
 
   //_AddAnimationSamples(stage, collideId);
 
 
-  _scene.AddGeometry(collideId, spheres[collideId]);
+  _scene.AddGeometry(collideId, spheres[collideId]);*/
   
   for (pxr::UsdPrim prim : primRange) {
     size_t offset = _solver->GetNumParticles();
@@ -93,8 +95,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _scene.AddGeometry(prim.GetPath(), mesh);
 
       Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, size * 0.5f * scale.GetLength(), 0.1f);
-      _solver->CreateConstraints(body, Constraint::BEND, 5000.f, 0.25f);
-      _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.25f);
+      //_solver->CreateConstraints(body, Constraint::BEND, 5000.f, 0.25f);
+      _solver->CreateConstraints(body, Constraint::STRETCH, 1000000.f, 0.25f);
       
       _solver->AddElement(body, mesh, prim.GetPath());
     }
@@ -109,19 +111,18 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, sphere.second, sphere.first);
   }
 
-  bool createGroundCollision = true;
+  bool createGroundCollision = false;
   if(createGroundCollision) {
     Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
     _solver->AddElement(collision, _ground, _groundId);
   }
 
-  bool createSelfCollision = true;
+  bool createSelfCollision = false;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
   }
-
 }
 
 
@@ -129,8 +130,6 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   _solver->Update(stage, time);
-
-
 }
 
 void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)

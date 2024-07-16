@@ -1,5 +1,6 @@
 #include "../geometry/geometry.h"
 #include "../geometry/points.h"
+#include "../pbd/tokens.h"
 #include "../pbd/particle.h"
 #include "../pbd/constraint.h"
 
@@ -140,14 +141,57 @@ void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t
       counter[elem][c]+=1.f;
 }
 
+pxr::TfToken _GetConstraintsAttributeToken(const pxr::TfToken& name, const pxr::TfToken& attribute)
+{
+  return pxr::TfToken(name.GetString()+":"+attribute.GetString());
+}
+
+void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
+{
+  _geometry->GetAttributeValue(PBDTokens->mass, time, &_mass);
+  _geometry->GetAttributeValue(PBDTokens->velocity, time, &_velocity);
+  _geometry->GetAttributeValue(PBDTokens->damp, time, &_damp);
+
+  float stiffness, damp;
+  pxr::TfToken stiffnessAttr, dampAttr;
+  for(auto& constraintsIt: _constraints) {
+    std::cout << "update " << constraintsIt.first << " on prim " << constraintsIt.second.prim.GetPath() << std::endl;
+    stiffnessAttr = _GetConstraintsAttributeToken(constraintsIt.first, PBDTokens->stiffness);
+    dampAttr = _GetConstraintsAttributeToken(constraintsIt.first, PBDTokens->damp);
+
+    std::cout << "stiffness attribute : " << stiffnessAttr << std::endl;
+    std::cout << "damp attribute : " << dampAttr << std::endl;
+
+
+    _geometry->GetAttributeValue(stiffnessAttr, time, &stiffness);
+    _geometry->GetAttributeValue(dampAttr, time, &damp);
+
+    std::cout << "new stiffness : " << stiffness << std::endl;
+    std::cout << "new damp : " << damp << std::endl;
+    std::cout << "num constraints in group : " << constraintsIt.second.constraints.size() << std::endl;
+
+    for(Constraint* constraint: constraintsIt.second.constraints) {
+      constraint->SetStiffness(stiffness);
+      constraint->SetDamp(damp);
+    }
+
+  }
+  /*
+  float GetMass() const {return _mass;};
+  float GetRadius() const {return _radius;};
+  pxr::GfVec3f GetColor() const {return _color;};
+  pxr::GfVec3f GetVelocity() const {return _velocity;};
+  pxr::GfVec3f GetTorque() const {return _torque;};
+  */
+}
 
 ConstraintsGroup* 
-Body::AddConstraintsGroup(const pxr::TfToken& group, short type)
+Body::AddConstraintsGroup(const pxr::TfToken& name, short type)
 {
-  if(_constraints.find(group) != _constraints.end())
-    return &_constraints[group];
-  _constraints[group] = {type, {}}; 
-  return &_constraints[group];
+  if(_constraints.find(name) != _constraints.end())
+    return &_constraints[name];
+  _constraints[name] = {_geometry->GetPrim(), type, {}}; 
+  return &_constraints[name];
 }
 
 size_t 
