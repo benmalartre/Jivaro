@@ -1,99 +1,161 @@
 #ifndef JVR_GEOMETRY_GEOMETRY_H
 #define JVR_GEOMETRY_GEOMETRY_H
 
+#include <limits>
+#include <float.h>
 
 #include "../common.h"
+
 #include "pxr/base/vt/array.h"
 #include "pxr/base/tf/hashmap.h"
-#include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/bbox3d.h>
-#include <float.h>
-#include "triangle.h"
+#include <pxr/base/gf/quath.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/rotation.h>
+#include <pxr/base/gf/ray.h>
+#include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/attribute.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-enum GeomInterpolation : short {
-  GeomInterpolationConstant = 0,
-  GeomInterpolationUniform,
-  GeomInterpolationVarying,
-  GeomInterpolationVertex,
-  GeomInterpolationFaceVarying,
+class Location;
 
-  GeomInterpolationCount
-};
-
-class Hit;
 class Geometry {
 public:
-  enum Type {
+  static float FrameDuration; 
+  static void SetFrameDuration(float duration) { FrameDuration = duration; };
+
+  enum Mode : short {
+    INPUT = 1,
+    OUTPUT = 2
+  };
+
+  enum Type : int {
+    INVALID,
+    XFORM,
+    PLANE,
+    SPHERE,
+    CUBE,
+    CONE, 
+    CAPSULE,
     POINT,
     CURVE,
     MESH,
     STROKE,
-    INSTANCER
+    INSTANCER,
+    VOXEL
   };
 
-  Geometry(short type);
-  Geometry(const Geometry* other, short type, bool normalize);
-  virtual ~Geometry();
+  enum DirtyState : size_t {
+    CLEAN     = 0,
+    TRANSFORM = 1,
+    DEFORM    = 2,
+    TOPOLOGY  = 4,
+    ATTRIBUTE = 8,
+    ALLDIRTY  = 15
+  };
 
-  short GetType() { return _type; };
-  const pxr::VtArray<pxr::GfVec3f>& GetPositions() const {return _points;};
-  const pxr::VtArray<pxr::GfVec3f>& GetNormals() const {return _normals;};
-  const pxr::VtArray<float>& GetRadius() const { return _radius; };
+  enum Interpolation : short {
+    CONSTANT = 0,
+    UNIFORM,
+    VARYING,
+    VERTEX,
+    FACEVARYING,
+    COUNT
+  };
 
-  pxr::VtArray<pxr::GfVec3f>& GetPositions() {return _points;};
-  pxr::VtArray<pxr::GfVec3f>& GetNormals() {return _normals;};
-  pxr::VtArray<float>& GetRadius() { return _radius; };
+  Geometry();
+  Geometry(int type, const pxr::GfMatrix4d& world);
+  Geometry(const pxr::UsdPrim& other, const pxr::GfMatrix4d& world);
+  virtual ~Geometry() {};
 
-  const pxr::GfVec3f* GetPositionsCPtr() const {return &_points[0];};
-  const pxr::GfVec3f* GetNormalsCPtr() const {return &_normals[0];};
-  const float* GetRadiusCPtr() const { return &_radius[0]; };
+  int GetType() const { return _type; };
+  virtual size_t GetNumPoints() const {return 1;};
+  pxr::UsdPrim& GetPrim(){return _prim;};
+  const pxr::UsdPrim& GetPrim() const {return _prim;};
 
-  pxr::GfVec3f GetPosition(uint32_t index) const;
-  pxr::GfVec3f GetNormal(uint32_t index) const;
-  float GetRadius(uint32_t index) const;
+  template<typename T>
+  DirtyState GetAttributeValue(const pxr::TfToken& name, 
+    const pxr::UsdTimeCode& time, T* value);
 
-  void SetPosition(uint32_t index, const pxr::GfVec3f& position);
-  void SetNormal(uint32_t index, const pxr::GfVec3f& normal);
-  void SetRadius(uint32_t index, float normal);
+  bool IsInput(){return _mode & Mode::INPUT;};
+  bool IsOutput(){return _mode & Mode::OUTPUT;};
+  void SetInputOnly() {_mode = Mode::INPUT;};
+  void SetOutputOnly() {_mode = Mode::OUTPUT;};
+  void SetInputOutput() {_mode = Mode::INPUT|Mode::OUTPUT;};
 
-  uint32_t GetNumPoints()const {return _numPoints;};
+  void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
+  const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
 
-  void Init(const pxr::VtArray<pxr::GfVec3f>& positions);
-  void Update(const pxr::VtArray<pxr::GfVec3f>& positions);
-  void SetPositions(pxr::GfVec3f* positions, size_t n);
-  void Normalize();
-  void ComputeBoundingBox();
-  pxr::GfBBox3d& GetBoundingBox() { return _bbox; };
-  const pxr::GfBBox3d& GetBoundingBox() const { return _bbox; };
+  void SetMatrix(const pxr::GfMatrix4d& matrix);
+  const pxr::GfMatrix4d& GetMatrix() const { return _matrix; };
+  const pxr::GfMatrix4d& GetPreviousMatrix() const { return _prevMatrix; };
+  const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
 
-  bool IsInitialized(){return _initialized;};
-  void SetInitialized(bool initialized){_initialized = initialized;};
+  const pxr::GfVec3f GetTorque() const;
+  const pxr::GfVec3f GetVelocity() const;
+
+  virtual void ComputeBoundingBox() {};
+  const pxr::GfBBox3d GetBoundingBox(bool worldSpace=true) const;
+
+  void SetPrim(const pxr::UsdPrim& prim){_prim = prim;};
+  virtual DirtyState Sync(const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
+  virtual void Inject(const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
 
   // query 3d position on geometry
-  virtual bool Raycast(const pxr::GfRay& ray, Hit* hit,
-    double maxDistance=-1.0, double* minDistance=NULL) const = 0;
-  virtual bool Closest(const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const = 0;
+  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
+    double maxDistance=-1.0, double* minDistance=NULL) const {return false;};
+  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const {return false;};
+
+  virtual float SignedDistance(const pxr::GfVec3f& point) const {return 0.f;};
 
 protected:
+  void _ComputeVelocity();
+  virtual DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) { return DirtyState::CLEAN;};
+
+  virtual void _Inject(const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) = 0;
+
   // infos
-  short                               _type;
-  uint32_t                            _numPoints;
-
-  // vertex data
-  pxr::VtArray<pxr::GfVec3f>          _points;
-  pxr::VtArray<pxr::GfVec3f>          _normals;
-  pxr::VtArray<float>                 _radius;
-
+  short                               _mode;
+  int                                 _type;
+  pxr::SdfPath                        _path;
+  pxr::UsdPrim                        _prim;
 
   // bounding box
+  pxr::GfMatrix4d                     _matrix;
+  pxr::GfMatrix4d                     _prevMatrix;
+  pxr::GfMatrix4d                     _invMatrix;
+  pxr::GfVec3f                        _velocity;  // positional velocity
+  pxr::GfVec3f                        _omega;     // rotational velocity
   pxr::GfBBox3d                       _bbox;
-  bool _initialized;
+  pxr::GfVec3f                        _wirecolor;
 };
+
+template<typename T>
+Geometry::DirtyState
+Geometry::GetAttributeValue(const pxr::TfToken& name, 
+  const pxr::UsdTimeCode& time, T *value)
+{
+  pxr::UsdAttribute attr = _prim.GetAttribute(name);
+  if(!attr.IsValid())return DirtyState::CLEAN;
+
+  T tmp;
+  attr.Get(&tmp, time);
+  if(tmp != *value) {
+    *value = tmp;
+    return DirtyState::ATTRIBUTE;
+  }
+  return DirtyState::CLEAN;
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

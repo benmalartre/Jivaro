@@ -37,7 +37,7 @@ static void SetStyle(ImGuiStyle* dst)
   style->ScrollbarSize = 12.f;
   style->GrabMinSize = 4.f;
 
-  colors[ImGuiCol_Text] = ImVec4(0.75f, 0.75f, 0.75f, 1.f);
+  colors[ImGuiCol_Text] = ImVec4(0.85f, 0.85f, 0.85f, 1.f);
   colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.f);
   colors[ImGuiCol_WindowBg] = ImVec4(0.2f, 0.2f, 0.2f, 1.f);
   //colors[ImGuiCol_ChildWindowBg]         = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);

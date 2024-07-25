@@ -4,6 +4,8 @@
 #include "../ui/utils.h"
 #include "../ui/textEditor.h"
 #include "../app/view.h"
+#include "../app/window.h"
+#include "../app/commands.h"
 #include "../app/application.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -35,13 +37,15 @@ TextEditorUI::Draw()
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
 
   ImGui::Text("WARNING: this will slow down the application if the layer is big");
   ImGui::Text("        and will consume lots of memory. Use with care for now");
-  _layer = GetApplication()->GetWorkStage()->GetRootLayer();
+  _layer = Application::Get()->GetWorkStage()->GetRootLayer();
   if (_layer) {
     _layer->ExportToString(&layerText);
     ImGui::Text("%s", _layer->GetDisplayName().c_str());
@@ -49,7 +53,7 @@ TextEditorUI::Draw()
   ImGui::PushItemWidth(-FLT_MIN);
   ImGuiWindow *currentWindow = ImGui::GetCurrentWindow();
   ImVec2 sizeArg(0, currentWindow->Size[1] - 120);
-  ImGui::PushFont(GetWindow()->GetFont(0));
+  ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 0));
   {
     //ScopedStyleColor color(ImGuiCol_FrameBg, ImVec4{0.0, 0.0, 0.0, 1.0});
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4{ 0.0, 0.0, 0.0, 1.0 });

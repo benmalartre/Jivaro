@@ -9,6 +9,7 @@
 #include "../ui/style.h"
 #include "../ui/explorer.h"
 #include "../app/application.h"
+#include "../app/commands.h"
 #include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/view.h"
@@ -85,9 +86,7 @@ static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, UIType::EXPLORER)
-  , _counter(0)
 {
-  _parent->SetDirty();
 }
 
 // destructor
@@ -95,21 +94,6 @@ ExplorerUI::~ExplorerUI()
 {
 }
 
-/*
-void 
-ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
-{
-  Update();
-}
-
-void
-ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
-{
-  Select();
-}
-*/
-
-/*
 void 
 ExplorerUI::Init()
 {
@@ -117,7 +101,7 @@ ExplorerUI::Init()
   _parent->SetDirty();
   _initialized = true;
 }
-*/
+
 
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
@@ -126,7 +110,7 @@ ExplorerUI::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
   if (x > GetX() + (GetWidth() - 50)) return;
 
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_RELEASE) {
       if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
@@ -150,6 +134,7 @@ void
 ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
 }
+
 
 void
 ExplorerUI::DrawItemBackground(ImDrawList* drawList,
@@ -245,10 +230,10 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
   const char* visibleIcon = ICON_FA_EYE;
   const char* invisibleIcon = ICON_FA_EYE_SLASH;
 
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
-    pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPrims();
+    pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ShowHideCommand, paths, ShowHideCommand::TOGGLE);
   }
@@ -269,13 +254,13 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
   const char* activeIcon = ICON_FA_RIGHT_TO_BRACKET;
   const char* inactiveIcon = ICON_FA_PAUSE;
 
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Selection* selection = app->GetSelection();
   
  
   if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
     _current = prim.GetPath();
-    pxr::SdfPathVector paths = selection->GetSelectedPrims();
+    pxr::SdfPathVector paths = selection->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ActivateCommand, paths, ActivateCommand::TOGGLE);
   }
@@ -366,7 +351,7 @@ bool
 ExplorerUI::Draw()
 {
   /// Draw the hierarchy of the stage
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   const ImGuiStyle& style = ImGui::GetStyle();
@@ -374,9 +359,12 @@ ExplorerUI::Draw()
 
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
+
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
 
   _items.clear();
   _mapping = 0;

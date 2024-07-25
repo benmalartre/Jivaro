@@ -12,9 +12,5 @@ Preferences::Preferences()
     CreateDirectory(_root);
   }
 }
-const std::string& Preferences::GetRootFolder()
-{
-  return _root;
-}
 
 JVR_NAMESPACE_CLOSE_SCOPE

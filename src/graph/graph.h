@@ -13,6 +13,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 static pxr::GfVec2f DEFAULT_NODE_SIZE(120.f, 60.f);
 static pxr::GfVec3f DEFAULT_NODE_COLOR(0.5f, 0.5f, 0.5f);
 
+static pxr::TfToken ParentPortToken("Parent");
+static pxr::TfToken ChildrenPortToken("Children");
+
 class Graph 
 {
 public:
@@ -31,12 +34,14 @@ public:
       };
       enum Flag {
         INPUT = 1,
-        OUTPUT = 2
+        OUTPUT = 2,
+        HIDDEN = 4
       };
 
       Port() {};
-      Port(Node* node, Flag flag, const pxr::TfToken& label, 
+      Port(Node* node, size_t flag, const pxr::TfToken& label, 
         pxr::UsdAttribute& attribute);
+      Port(Node* node, size_t flag, const pxr::TfToken& label);
 
       bool IsInput() { return _flags & INPUT; };
       bool IsOutput() { return _flags & OUTPUT; };
@@ -49,14 +54,14 @@ public:
       void SetNode(Node* node) { _node = node; };
       const pxr::UsdAttribute& GetAttr() const { return _attr;};
       pxr::UsdAttribute& GetAttr() { return _attr;};
-      Flag GetFlags() { return _flags; };
+      size_t GetFlags() { return _flags; };
       pxr::TfToken GetLabel() { return _label; };
       bool IsConnected(Graph* graph, Connexion* foundConnexion);
 
     protected:
       Node*                 _node;
       pxr::TfToken          _label;
-      Flag                  _flags;
+      size_t                _flags;
       Alignement            _align;
       pxr::UsdAttribute     _attr;
   };
@@ -82,18 +87,15 @@ public:
   //-------------------------------------------------------------------
   class Node {
     public: 
-      enum {
-        DIRTY_CLEAN = 0,
-        DIRTY_SIZE = 1,
-        DIRTY_POSITION = 2,
-        DIRTY_COLOR = 4
-      };
       Node(pxr::UsdPrim& prim);
       ~Node();
 
-      void AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
-      void AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
-      void AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name);
+      void AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, 
+        size_t flags=Port::INPUT);
+      void AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, 
+        size_t flags=Port::OUTPUT);
+      void AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name, 
+        size_t flags=Port::INPUT|Port::OUTPUT);
 
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };
@@ -101,43 +103,25 @@ public:
       const pxr::UsdPrim& GetPrim() const { return _prim; };
       bool IsCompound();
 
-      void Init();
-      void Update();
-
       pxr::TfToken GetName() { return _name; };
       Port* GetPort(const pxr::TfToken& name);
-      short GetDirty() { return _dirty; };
-      const pxr::GfVec2f& GetPosition() { return _pos; };
-      const pxr::GfVec2f& GetSize() { return _size; };
-      const pxr::GfVec3f& GetColor() { return _color; };
-      pxr::TfToken GetExpended() { return _expended; };
-      float GetWidth() { return _size[0]; };
-      float GetHeight() { return _size[1]; };
 
-      void SetDirty(short dirty) { _dirty = dirty; };
-      void SetPosition(const pxr::GfVec2f& pos) ;
-      void SetSize(const pxr::GfVec2f& size) ;
-      void SetExpended(const pxr::TfToken& expended) ;
-      void SetColor(const pxr::GfVec3f& color);
+      bool HasPort(const pxr::TfToken& name);
 
     protected:
       virtual void                _PopulatePorts() {};
+      
       Node*                       _parent;
       pxr::TfToken                _name;
       pxr::UsdPrim                _prim;
       std::vector<Port>           _ports;
-      short                       _dirty;
-      pxr::GfVec2f                _pos;
-      pxr::GfVec2f                _size;
-      pxr::GfVec3f                _color;
-      pxr::TfToken                _expended;
   };
 
 public:
-  Graph();
+  Graph(const pxr::UsdPrim& prim);
   virtual ~Graph();
 
-  virtual void Populate(pxr::UsdPrim& prim);
+  virtual void Populate(const pxr::UsdPrim& prim);
   virtual void Clear();
 
   virtual void AddNode(Node* node);
@@ -164,7 +148,6 @@ protected:
   virtual void _DiscoverNodes() = 0;
   virtual void _DiscoverConnexions() = 0;
   
-
   std::vector<Node*>              _nodes;
   std::vector<Connexion*>         _connexions;
   pxr::UsdPrim                    _prim;

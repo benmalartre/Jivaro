@@ -2,130 +2,131 @@
 #define JVR_ACCELERATION_BVH_H
 
 #include <vector>
-#include <limits>
 #include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/range3d.h>
 #include "../geometry/intersection.h"
-#include "../geometry/triangle.h"
+#include "../geometry/component.h"
+#include "../acceleration/morton.h"
 #include "../acceleration/intersector.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
-
 class BVH : public Intersector
-{ 
+{
 public:
-  enum Type {
-    ROOT,
-    BRANCH,
-    LEAF
-  };
 
-  enum Element {
-    GEOMETRY,
-    TRIPAIR,
-    TRIANGLE,
-    SEGMENT,
-    POINT,
-    INVALID
-  };
-
-  struct Data {
-    Geometry* geometry;
-    short     elemType;
-  };
-
-  struct MortomData
+  class Cell : public pxr::GfRange3d
   {
-    bool operator<(const MortomData& rhs) const { return _mortom < rhs._mortom; };
-    BVH*            _cell;
-    uint64_t        _mortom;
-  };
-
-  class RadixTest
-  {
-    const int64_t bit;
   public:
-    RadixTest(int64_t offset) : bit(offset) {}
+    enum Type {
+      ROOT,
+      GEOM,
+      BRANCH,
+      LEAF
+    };
 
-    bool operator()(int64_t value) const
-    {
-      if (bit == 63)
-        return value < 0;
-      else
-        return !(value & (1 << bit));
-    }
+    // constructor
+    Cell();
+    Cell(Cell* parent, Cell* lhs, Cell* rhs);
+    Cell(Cell* parent, Geometry* geometry);
+    Cell(Cell* parent, Component* component,
+      const pxr::GfRange3d& range);
+
+    // destructor
+    ~Cell() {
+      if (_left)delete _left;
+      if (_right)delete _right;
+    };
+
+    bool IsLeaf() const;
+    bool IsRoot() const;
+    bool IsGeom() const;
+    const Cell* GetRoot() const;
+    const Cell* GetGeom() const;
+    const BVH* GetIntersector() const;
+
+    void SetData(void* data){_data = data;};
+    void* GetData() const {return _data;};
+    void SetLeft(Cell* cell) { _left = cell; };
+    void SetRight(Cell* cell) { _right = cell; };
+    void SetParent(Cell* cell) { _parent = cell; };
+    void SetType(uint8_t type) { _type = type; };
+    uint8_t GetType() { return _type; };
+    Cell* GetLeft() { return _left; };
+    Cell* GetRight() { return _right; };
+
+    // debug
+    void GetLeaves(std::vector<Cell*>& leaves) const;
+    void GetCells(std::vector<Cell*>& cells) const;
+
+    Geometry* GetGeometry();
+    const Geometry* GetGeometry() const;
+    
+    Morton SortCellsByPair(std::vector<Morton>& mortons);
+    pxr::GfRange3f UpdateCells();
+
+    void Init(Geometry* geometry);
+
+    bool Raycast(const pxr::GfRay& ray, Location* hit,
+      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
+    bool Closest(const pxr::GfVec3f& point, Location* hit, 
+      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
+
+  protected:
+    bool _LeafRaycast(const pxr::GfRay& ray, Location* hit, 
+      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
+    void _FinishSort(std::vector<Morton>& cells);
+    Cell* _RecurseSortCellsByPair(std::vector<Morton>& mortons, int first, int last);
+    void _MortonSortTriangles(std::vector<Morton>& mortons, Geometry* geometry);
+    void _MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry* geometry);
+
+  private:
+    Cell*     _parent;
+    Cell*     _left;
+    Cell*     _right;
+    void*     _data;
+    uint8_t   _type;
   };
 
-  // constructor
-  BVH();
-  BVH(BVH* parent);
-  BVH(BVH* parent, Geometry* geometry);
-  BVH(BVH* parent, BVH* lhs);
-  BVH(BVH* parent, BVH* lhs, BVH* RHS);
-  BVH(BVH* parent, TrianglePair* pair, const pxr::GfRange3d& range);
-  BVH(BVH* parent, Triangle* tri, const pxr::GfRange3d& range);
+public:
+  BVH() {};
 
-  // destructor
-  ~BVH() {
-    if (_left)delete _left;
-    if (_right)delete _right;
-    if (_type == BVH::ROOT && _data)delete _data;
-  };
+  static uint64_t ComputeCode(const BVH::Cell* root, const pxr::GfVec3d& point)
+  {
+    const pxr::GfVec3i p = WorldToMorton(*root, point);
+    return MortonEncode3D(p);
+  }
 
-  bool IsLeaf() const;
-  bool IsRoot() const;
-  void SetParent(BVH* cell) { _parent = cell; };
-  BVH* GetParent() { return _parent; };
-  const BVH* GetParent() const { return _parent; };
-  BVH* GetRoot();
-  const BVH* GetRoot() const;
+  static pxr::GfVec3d ComputeCodeAsColor(BVH::Cell* root, const pxr::GfVec3d& point)
+  {
+    uint64_t morton = ComputeCode(root, point);
+    pxr::GfVec3i p = MortonDecode3D(morton);
+    return pxr::GfVec3d(p[0] / (float)MORTOM_MAX_L, p[1] / (float)MORTOM_MAX_L, p[2] / (float)MORTOM_MAX_L);
+  }
 
-  void SetLeft(BVH* cell) { _left = cell; };
-  void SetRight(BVH* cell) { _right = cell; };
-  BVH* GetLeft() { return _left; };
-  BVH* GetRight() { return _right; };
+  Cell* GetRoot() { return &_root; };
+  const Cell* GetRoot() const { return &_root; };
 
-  Geometry* GetGeometry();
-  const Geometry* GetGeometry() const;
-  short GetElementType();
+   // visual debug
+  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
+    pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
-  void Init(const std::vector<Geometry*>& geometries);
-  void Init(Geometry* geometry, BVH* parent);
-  void Update(const std::vector<Geometry*>& geometries);
-  void Update(Geometry* geometry, BVH* parent);
-  bool Raycast(const pxr::GfRay& ray, Hit* hit, 
-    double maxDistance = -1.f, double* minDistance=NULL) const;
-  bool Closest(const pxr::GfVec3f& point, Hit* hit, 
-    double maxDistance = -1.f, double* minDistance=NULL) const;
+  virtual void Init(const std::vector<Geometry*>& geometries) override;
+  virtual void Update() override;
 
-  size_t GetNumCells();
-
-  static void EchoNumHits();
-  static void ClearNumHits();
+  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
+    double maxDistance, double* minDistance = NULL) const override;
+  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
+    double maxDistance) const override;
 
 private:
-  void _LeastSignificantBitRadixSort(uint64_t* first, uint64_t* last);
-  void _MostSignificantBitRadixSort(uint64_t* first, uint64_t* last, uint64_t msb = 63);
-
-  void _SortCellsByPair(std::vector<BVH*>& cells, std::vector<BVH*>& results);
-  void _SortCellsByPairMortom(std::vector<BVH*>& cells, std::vector<BVH*>& results);
-  void _SortTrianglesByPair(std::vector<BVH*>& leaves, Geometry* geometry);
-
-  bool _RaycastTrianglePair(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
-    double maxDistance, double* minDistance = NULL) const;
-  bool _ClosestTrianglePair(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance, double* minDistance = NULL) const;
-
-  BVH*      _parent;
-  BVH*      _left;
-  BVH*      _right;
-  void*     _data;
-  uint8_t   _type;
-
+  Cell                        _root;
+  std::vector<Cell*>          _geometryCells;
+  std::vector<Cell*>          _leaves;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

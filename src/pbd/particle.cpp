@@ -1,138 +1,211 @@
+#include "../geometry/geometry.h"
+#include "../geometry/points.h"
+#include "../pbd/tokens.h"
 #include "../pbd/particle.h"
+#include "../pbd/constraint.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-PBDParticle::PBDParticle() 
-  : _N(0)
-  , _flip(false)
+template<typename T> 
+T* _ResizeArray(T* oldData, size_t oldSize, size_t newSize)
 {
+  T* newData = NULL;
+  if(newSize > 0) {
+    newData = new T[newSize];
+    memmove(newData, oldData, oldSize * sizeof(T));
+  } 
+  if(oldSize) delete [] oldData;
+  return newData;
 }
 
-PBDParticle::~PBDParticle()
+Particles::~Particles()
 {
+  _EnsureDataSize(0);
 }
 
-size_t PBDParticle::AddGeometry(Geometry* geom, const pxr::GfMatrix4f& m)
+void Particles::_EnsureDataSize(size_t desired)
 {
-  if (_geometries.find(geom) == _geometries.end()) {
-    size_t base = _position[0].size();
-    size_t add = geom->GetNumPoints();
-  
-    _geometries[geom] = PBDGeometry({base, m, m.GetInverse()});
+  size_t size = std::floor(num / BLOCK_SIZE) * BLOCK_SIZE;
+  if(size > desired)return;
 
-    size_t newSize = base + add;
-    _position[0].resize(newSize);
-    _position[1].resize(newSize);
-    _previous[0].resize(newSize);
-    _previous[1].resize(newSize);
-    _initial.resize(newSize);
-    _preload.resize(newSize);
-    _force.resize(newSize);
-    _mass.resize(newSize);
+  size = ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+  state =     _ResizeArray<short>(state, num, size);
+  body =      _ResizeArray<int>(body, num, size);
+  mass =      _ResizeArray<float>(mass, num, size);
+  invMass =   _ResizeArray<float>(invMass, num, size);
+  radius =    _ResizeArray<float>(radius, num, size);
+  counter =   _ResizeArray<pxr::GfVec2f>(counter, num, size);
+  rest =      _ResizeArray<pxr::GfVec3f>(rest, num, size);
+  position =  _ResizeArray<pxr::GfVec3f>(position, num, size);
+  predicted = _ResizeArray<pxr::GfVec3f>(predicted, num, size);
+  velocity =  _ResizeArray<pxr::GfVec3f>(velocity, num, size);
+  color =     _ResizeArray<pxr::GfVec3f>(color, num, size);
+  rotation =  _ResizeArray<pxr::GfQuatf>(rotation, num, size);
 
-    for (size_t p = 0; p < geom->GetNumPoints(); ++p) {
-      const pxr::GfVec3f pos = m.Transform(geom->GetPosition(p));
-      size_t idx = base + p;
-      _position[0][idx] = pos;
-      _position[1][idx] = pos;
-      _previous[0][idx] = pos;
-      _previous[1][idx] = pos;
-      _initial[idx] = pos;
-      _preload[idx] = pxr::GfVec3f(0.f);
-      _force[idx] = pxr::GfVec3f(0.f);
-      _mass[idx] = 1.f;
+}
+
+void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
+{
+  Geometry* geom = item->GetGeometry();
+  if(geom->GetType() < Geometry::POINT) return;
+
+  size_t base = num;
+  size_t numPoints = geom->GetNumPoints();
+  _EnsureDataSize(base + numPoints);
+  size_t size = base + numPoints;
+  size_t index = num > 0 ? body[num - 1] + 1 : 0;
+  float m = item->GetMass();
+  float w = pxr::GfIsClose(m, 0.f, 0.000001f) ? 0.f : 1.f / m;
+
+  const pxr::GfVec3f* points = ((Deformable*)geom)->GetPositionsCPtr();
+  pxr::GfVec3f pos;
+  size_t idx;
+  for (size_t idx = base; idx < base + numPoints; ++idx) {
+    pos = matrix.Transform(points[idx - base]);
+    mass[idx] = m;
+    invMass[idx] = w;
+    radius[idx] = item->GetRadius();
+    rest[idx] = pos;
+    position[idx] = pos;
+    predicted[idx] = pos;
+    rotation[idx] = pxr::GfQuatf(1.f);
+    velocity[idx] = item->GetVelocity();
+    body[idx] = index;
+    color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f;
+    state[idx] = ACTIVE;
+    counter[idx] = pxr::GfVec2f(0.f);
+  }
+
+  item->SetOffset(base);
+  item->SetNumPoints(numPoints);
+  num += numPoints;
+}
+
+void Particles::RemoveBody(Body* item) 
+{
+  const size_t base = item->GetOffset();
+  const size_t shift = item->GetNumPoints();
+  const size_t remaining = num - (base + shift);
+  size_t lhi, rhi;
+
+  for (size_t r = 0; r < remaining; ++r) {
+    lhi = base + r;
+    rhi = base + shift + r;
+    mass[lhi]      = mass[rhi];
+    invMass[lhi]   = invMass[rhi];
+    radius[lhi]    = radius[rhi];
+    rest[lhi]      = rest[rhi];
+    position[lhi]  = position[rhi];
+    predicted[lhi] = predicted[rhi];
+    rotation[lhi]  = rotation[rhi];
+    velocity[lhi]  = velocity[rhi];
+    body[lhi]      = body[rhi] - 1;
+    color[lhi]     = color[rhi];
+    state[lhi]     = state[rhi];
+    counter[lhi]   = counter[rhi];
+  }
+
+  size_t size = ((num - shift + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+  _EnsureDataSize(size);
+
+  num -= shift;
+}
+
+void Particles::RemoveAllBodies()
+{
+  _EnsureDataSize(0);
+  num = 0;
+}
+
+void Particles::SetAllState( short s)
+{
+  for(size_t p=0;p<num;++p) state[p] = s;
+}
+
+void Particles::SetBodyState(Body* item, short s)
+{
+  const size_t begin = item->GetOffset();
+  const size_t end = begin +item->GetNumPoints();
+
+  for (size_t r = begin; r < end; ++r) {
+    state[r] = s;
+  }
+}
+
+void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t c)
+{
+  for (size_t p=0; p< num; ++p)counter[p][c] = 0.f;
+
+  for (auto& constraint : constraints)
+    for (auto& elem : constraint->GetElements())
+      counter[elem][c]+=1.f;
+}
+
+pxr::TfToken _GetConstraintsAttributeToken(const pxr::TfToken& name, const pxr::TfToken& attribute)
+{
+  return pxr::TfToken(name.GetString()+":"+attribute.GetString());
+}
+
+void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
+{
+  _geometry->GetAttributeValue(PBDTokens->mass, time, &_mass);
+  _geometry->GetAttributeValue(PBDTokens->velocity, time, &_velocity);
+  _geometry->GetAttributeValue(PBDTokens->damp, time, &_damp);
+
+  float stiffness, damp;
+  pxr::TfToken stiffnessAttr, dampAttr;
+  for(auto& constraintsIt: _constraints) {
+    std::cout << "update " << constraintsIt.first << " on prim " << constraintsIt.second.prim.GetPath() << std::endl;
+    stiffnessAttr = _GetConstraintsAttributeToken(constraintsIt.first, PBDTokens->stiffness);
+    dampAttr = _GetConstraintsAttributeToken(constraintsIt.first, PBDTokens->damp);
+
+    std::cout << "stiffness attribute : " << stiffnessAttr << std::endl;
+    std::cout << "damp attribute : " << dampAttr << std::endl;
+
+
+    _geometry->GetAttributeValue(stiffnessAttr, time, &stiffness);
+    _geometry->GetAttributeValue(dampAttr, time, &damp);
+
+    std::cout << "new stiffness : " << stiffness << std::endl;
+    std::cout << "new damp : " << damp << std::endl;
+    std::cout << "num constraints in group : " << constraintsIt.second.constraints.size() << std::endl;
+
+    for(Constraint* constraint: constraintsIt.second.constraints) {
+      constraint->SetStiffness(stiffness);
+      constraint->SetDamp(damp);
     }
-    _N += add;
-    return base;
+
   }
-  return 0;
+  /*
+  float GetMass() const {return _mass;};
+  float GetRadius() const {return _radius;};
+  pxr::GfVec3f GetColor() const {return _color;};
+  pxr::GfVec3f GetVelocity() const {return _velocity;};
+  pxr::GfVec3f GetTorque() const {return _torque;};
+  */
 }
 
-void PBDParticle::RemoveGeometry(Geometry* geom)
+ConstraintsGroup* 
+Body::AddConstraintsGroup(const pxr::TfToken& name, short type)
 {
-  if (_geometries.find(geom) != _geometries.end()) {
-    PBDGeometry& desc = _geometries[geom];
-    size_t base = desc.offset;
-    size_t shift = geom->GetNumPoints();
-    size_t remaining = _position[0].size() - (base + shift);
-
-    for (size_t r = 0; r < remaining; ++r) {
-      _position[0][base + r] = _position[0][base + shift +r];
-      _position[1][base + r] = _position[1][base + shift + r];
-      _previous[0][base + r] = _previous[0][base + shift + r];
-      _previous[1][base + r] = _previous[1][base + shift + r];
-      _initial[base + r] = _initial[base + shift + r];
-      _preload[base + r] = _preload[base + shift + r];
-      _force[base + r] = _force[base + shift + r];
-      _mass[base + r] = _mass[base + shift + r];
-    }
-
-    size_t newSize = _position[0].size() - shift;
-    _position[0].resize(newSize);
-    _position[1].resize(newSize);
-    _previous[0].resize(newSize);
-    _previous[1].resize(newSize);
-    _initial.resize(newSize);
-    _preload.resize(newSize);
-    _force.resize(newSize);
-    _mass.resize(newSize);
-
-    _geometries.erase(geom);
-    _N -= shift;
-  }
+  if(_constraints.find(name) != _constraints.end())
+    return &_constraints[name];
+  _constraints[name] = {_geometry->GetPrim(), type, {}}; 
+  return &_constraints[name];
 }
 
-void PBDParticle::UpdateInput(Geometry* geom, 
-    const pxr::VtArray<pxr::GfVec3f>& p, const pxr::GfMatrix4f& m)
+size_t 
+Body::GetNumConstraintsGroup()
 {
-  if (_geometries.find(geom) != _geometries.end()) {
-    PBDGeometry& desc = _geometries[geom];
-  }
-}
+  return _constraints.size();
+};
 
-void PBDParticle::Reset()
+ ConstraintsGroup* Body::GetConstraintsGroup(const pxr::TfToken& group)
 {
-  for (size_t p = 0; p < _N; ++p) {
-    _position[0][p] = _initial[p];
-    _position[1][p] = _initial[p];
-    _previous[0][p] = _initial[p] - _preload[p];
-    _previous[1][p] = _initial[p] - _preload[p];
-    _force[p] = pxr::GfVec3f(0.f);
-  }
-}
+  if(_constraints.find(group) != _constraints.end())return &_constraints[group];
+  return NULL;
+};
 
-void PBDParticle::Integrate(float step)
-{
-  for(int i=0; i<_N; ++i) {
-    pxr::GfVec3f& position = _position[_flip][i];
-    pxr::GfVec3f tmp = position;
-    pxr::GfVec3f& previous = _previous[_flip][i];
-    position += position - previous + _force[i] * step * step;
-    previous = tmp;
-  }
-}
-
-void PBDParticle::AccumulateForces(const pxr::GfVec3f& gravity)
-{
-  for (int i = 0; i < _N; i++) {
-    _force[i] = gravity;
-  }
-}
-
-void PBDParticle::UpdateGeometries()
-{
-  std::map<Geometry*, PBDGeometry>::iterator it = _geometries.begin();
-  for (; it != _geometries.end(); ++it)
-  {
-    Geometry* geom = it->first;
-    size_t numPoints = geom->GetNumPoints();
-    pxr::VtArray<pxr::GfVec3f> results(numPoints);
-    for (size_t p = 0; p < numPoints; ++p) {
-      results[p] = it->second.invMatrix.Transform(_position[_flip][it->second.offset + p]);
-    }
-    geom->SetPositions(&results[0], numPoints);
-  }
-}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

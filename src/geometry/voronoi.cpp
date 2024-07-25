@@ -32,6 +32,7 @@ int Voronoi2D::GetNumSurroundingSites(size_t x, size_t y)
     if (n[i]) {
     }
   }
+  return 0;
 }
 
 void Voronoi2D::Build(pxr::UsdStageRefPtr& stage, const pxr::VtArray<pxr::GfVec3f>& seeds)

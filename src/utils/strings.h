@@ -1,7 +1,8 @@
 //--------------------------------------------------------------------------------
 // STRING UTILS
 //--------------------------------------------------------------------------------
-#pragma once
+#ifndef JVR_UTILS_STRINGS_H
+#define JVR_UTILS_STRINGS_H
 
 #include "../common.h"
 
@@ -179,3 +180,4 @@ static std::string ConvertCodePointToUtf8(char32_t codepoint)
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
+#endif // JVR_UTILS_STRINGS_H

@@ -1,90 +1,12 @@
-#include <pxr/base/gf/math.h>
-#include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec2d.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/plane.h>
-
 #include "../geometry/intersection.h"
-#include "../geometry/geometry.h"
-#include "../geometry/mesh.h"
-#include "../geometry/curve.h"
-#include "../geometry/points.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
-
-//=================================================================================================
-// HIT CLASS
-//=================================================================================================
-void 
-Hit::Set(const Hit& other) {
-  _geom = other._geom;
-  _baryCoords = other._baryCoords;
-  _elemType = other._elemType;
-  _elemId = other._elemId;
-  _elemMapId = other._elemMapId;
-  _t = other._t;
-}
-
-void 
-Hit::GetPosition(pxr::GfVec3f* position) const 
-{
-  /*
-  Geometry*     _geom;
-  pxr::GfVec3f  _baryCoords;
-  short         _elemType;
-  int           _elemId;
-  int           _elemMapId;
-  */
-  switch (_geom->GetType()) {
-    case Geometry::MESH:
-    {
-      Mesh* mesh = (Mesh*)_geom;
-      Triangle* triangle = mesh->GetTriangle(_elemId);
-      const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-      *position = 
-        pxr::GfVec3f(positions[triangle->vertices[0]]) * _baryCoords[0] +
-        pxr::GfVec3f(positions[triangle->vertices[1]]) * _baryCoords[1] +
-        pxr::GfVec3f(positions[triangle->vertices[2]]) * _baryCoords[2];
-      return;
-    }
-    case Geometry::CURVE:
-    {
-
-    }
-    case Geometry::POINT:
-    {
-      Points* points = (Points*)_geom;
-      Point point = points->Get(_elemId);
-      
-      //Point*
-    }
-  }
-}
-
-void 
-Hit::GetPosition(const pxr::GfRay& ray, pxr::GfVec3f* position) const
-{
-  *position = pxr::GfVec3f(ray.GetPoint(_t));
-}
-
-void 
-Hit::GetNormal(pxr::GfVec3f* normal) const
-{
-  switch (_geom->GetType()) {
-    case Geometry::MESH:
-    {
-
-    }
-    case Geometry::CURVE:
-    {
-
-    }
-    case Geometry::POINT:
-    {
-
-    }
-  }
-}
-
 //=================================================================================================
 // INTERSECTION ROUTINES
 //=================================================================================================

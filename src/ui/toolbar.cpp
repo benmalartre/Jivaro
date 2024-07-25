@@ -1,6 +1,3 @@
-#include "../ui/ui.h"
-#include "../ui/style.h"
-#include "../ui/fonts.h"
 #include "../ui/toolbar.h"
 #include "../app/view.h"
 #include "../app/window.h"
@@ -19,7 +16,7 @@ ImGuiWindowFlags ToolbarUI::_flags =
 
 static void _SetActiveTool(short tool) 
 {
-  Application* app = APPLICATION;
+  Application* app = Application::Get();
   app->SetActiveTool(tool);
   app->GetMainWindow()->SetActiveTool(tool);
   SelectionChangedNotice().Send();
@@ -27,33 +24,33 @@ static void _SetActiveTool(short tool)
 
 static void OnTranslateCallback()
 {
-  _SetActiveTool(TOOL_TRANSLATE);
+  _SetActiveTool(Tool::TRANSLATE);
 }
 
 static void OnRotateCallback()
 {
-  _SetActiveTool(TOOL_ROTATE);
+  _SetActiveTool(Tool::ROTATE);
 }
 
 static void OnScaleCallback()
 {
-  _SetActiveTool(TOOL_SCALE);
+  _SetActiveTool(Tool::SCALE);
 }
 
 static void OnSelectCallback()
 {
-  _SetActiveTool(TOOL_SELECT);
+  _SetActiveTool(Tool::SELECT);
 }
 
 static void OnBrushCallback()
 {
-  _SetActiveTool(TOOL_BRUSH);
+  _SetActiveTool(Tool::BRUSH);
 }
 
 static void OnPlayCallback()
 {
-  _SetActiveTool(TOOL_NONE);
-  GetApplication()->ToggleExec();
+  _SetActiveTool(Tool::NONE);
+  Application::Get()->ToggleExec();
 }
 
 
@@ -70,7 +67,7 @@ bool ToolbarSeparator::Draw()
 
 ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string& label, 
   const std::string& shortcut, const std::string& tooltip, const char* icon, bool toggable, 
-  bool enabled, UIUtils::CALLBACK_FN func, const pxr::VtArray<pxr::VtValue> args)
+  bool enabled, CALLBACK_FN func, const pxr::VtArray<pxr::VtValue> args)
   : ToolbarItem(ui, TOOLBAR_BUTTON)
   , tool(tool)
   , label(label)
@@ -90,12 +87,12 @@ bool ToolbarButton::Draw()
   //ImGui::PushFont(window->GetRegularFont(0));
   bool clicked = false;
   if(toggable) {
-    if (UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN>(
+    if (UIUtils::AddCheckableIconButton(
       0, icon, enabled ? ICON_SELECTED : ICON_DEFAULT, func)) {
       enabled = 1 - enabled;
     }
   } else {
-    clicked = UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN>(
+    clicked = UIUtils::AddCheckableIconButton(
       0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
   }
   //ImGui::PopFont();
@@ -112,44 +109,44 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
   , _vertical(vertical)
 {
   ToolbarItem* selectItem = new ToolbarButton(
-    this, TOOL_SELECT, "Select", "Space","selection tool",
+    this, Tool::SELECT, "Select", "Space","selection tool",
     ICON_FA_ARROW_POINTER, false, true,
-    (UIUtils::CALLBACK_FN)&OnSelectCallback
+    OnSelectCallback
   );
   _items.push_back(selectItem);
 
   ToolbarItem* translateItem = new ToolbarButton(
-    this, TOOL_TRANSLATE, "Translate", "T", "translation tool",
+    this, Tool::TRANSLATE, "Translate", "T", "translation tool",
     ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, false, true,
-    (UIUtils::CALLBACK_FN)&OnTranslateCallback
+    OnTranslateCallback
   );
   _items.push_back(translateItem);
 
   ToolbarItem* rotateItem = new ToolbarButton(
-    this, TOOL_ROTATE, "Rotate", "R", "rotation tool",
+    this, Tool::ROTATE, "Rotate", "R", "rotation tool",
     ICON_FA_ROTATE, false, true,
-    (UIUtils::CALLBACK_FN)&OnRotateCallback
+    OnRotateCallback
   );
   _items.push_back(rotateItem);
 
   ToolbarItem* scaleItem = new ToolbarButton(
-    this, TOOL_SCALE, "Scale", "S", "scale tool",
+    this, Tool::SCALE, "Scale", "S", "scale tool",
     ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , false, true,
-    (UIUtils::CALLBACK_FN)&OnScaleCallback
+    OnScaleCallback
   );
   _items.push_back(scaleItem);
 
   ToolbarItem* brushItem = new ToolbarButton(
-    this, TOOL_BRUSH, "Brush", "B", "brush tool",
+    this, Tool::BRUSH, "Brush", "B", "brush tool",
     ICON_FA_PAINTBRUSH, false, true,
-    (UIUtils::CALLBACK_FN)&OnBrushCallback
+    OnBrushCallback
   );
   _items.push_back(brushItem);
 
   ToolbarItem* playItem = new ToolbarButton(
-    this, TOOL_NONE, "Play", "play", "launch engine",
+    this, Tool::NONE, "Play", "play", "launch engine",
     ICON_FA_SHUFFLE, true, false,
-    (UIUtils::CALLBACK_FN)&OnPlayCallback
+    OnPlayCallback
   );
   _items.push_back(playItem);
 }
@@ -166,7 +163,7 @@ void ToolbarUI::Update()
   for (auto& item : this->_items) {
     if (item->type == TOOLBAR_BUTTON) {
       ToolbarButton* button = (ToolbarButton*)item;
-      if (button->tool == TOOL_NONE) continue;
+      if (button->tool == Tool::NONE) continue;
       if (button->enabled && button->tool != window->GetActiveTool()) {
         button->enabled = false;
       }
@@ -177,9 +174,12 @@ void ToolbarUI::Update()
 bool ToolbarUI::Draw()
 {
   bool opened;
+
+  ImGui::SetNextWindowSize(_parent->GetSize());
+  ImGui::SetNextWindowPos(_parent->GetMin());
+
   ImGui::Begin(_name.c_str(), &opened, _flags);
-  ImGui::SetWindowSize(_parent->GetSize());
-  ImGui::SetWindowPos(_parent->GetMin());
+  
 
   ImGui::PushClipRect(
     _parent->GetMin(),

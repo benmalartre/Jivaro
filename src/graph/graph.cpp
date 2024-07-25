@@ -33,76 +33,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 //------------------------------------------------------------------------------
 Graph::Node::Node(pxr::UsdPrim& prim)
   : _prim(prim)
-  , _dirty(DIRTY_POSITION|DIRTY_SIZE)
 {
   if (_prim.IsValid())
   {
-    _name = prim.GetName();
-
-    if (prim.HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
-      pxr::UsdUINodeGraphNodeAPI api(prim);
-      pxr::TfTokenVector attributeNames = api.GetSchemaAttributeNames(true);
-    } else {
-      if (pxr::UsdUINodeGraphNodeAPI::CanApply(prim)) {
-        pxr::UsdUINodeGraphNodeAPI::Apply(prim);
-      }
-      else {
-        std::cout <<
-          "Invalid prim for applying UsdUINodeGraphNodeAPI : %s." <<
-          prim.GetPath().GetText() << std::endl;
-        return;
-      }
-    }
-
-    Update();
-
-    /*
-  
-    if (prim.IsA<pxr::UsdShadeNodeGraph>()) {
-      pxr::UsdShadeNodeGraph graph(prim);
-      for (const auto& input : graph.GetInputs()) {
-        pxr::UsdAttribute attr = input.GetAttr();
-        AddInput(attr, input.GetBaseName());
-      }
-      for (const auto& output : graph.GetOutputs()) {
-        pxr::UsdAttribute attr = output.GetAttr();
-        AddOutput(attr, output.GetBaseName());
-      }
-    }
-    else if (prim.IsA<pxr::UsdShadeShader>()) {
-      pxr::UsdShadeShader shader(prim);
-      for (const auto& input : shader.GetInputs()) {
-        pxr::UsdAttribute attr = input.GetAttr();
-        AddInput(attr, input.GetBaseName());
-      }
-      for (const auto& output : shader.GetOutputs()) {
-        pxr::UsdAttribute attr = output.GetAttr();
-        AddOutput(attr, output.GetBaseName());
-      }
-    }
-    else if (prim.IsA<pxr::UsdExecGraph>()) {
-      pxr::UsdExecGraph graph(prim);
-      for (const auto& input : graph.GetInputs()) {
-        pxr::UsdAttribute attr = input.GetAttr();
-        AddInput(attr, input.GetBaseName());
-      }
-      for (const auto& output : graph.GetOutputs()) {
-        pxr::UsdAttribute attr = output.GetAttr();
-        AddOutput(attr, output.GetBaseName());
-      }
-    }
-    else if (prim.IsA<pxr::UsdExecNode>()) {
-      pxr::UsdExecNode node(prim);
-      for (const auto& input : node.GetInputs()) {
-        pxr::UsdAttribute attr = input.GetAttr();
-        AddInput(attr, input.GetBaseName());
-      }
-      for (const auto& output : node.GetOutputs()) {
-        pxr::UsdAttribute attr = output.GetAttr();
-        AddOutput(attr, output.GetBaseName());
-      }
-    }
-    */
+    _name = _prim.GetName();
   }
 }
 
@@ -136,10 +70,9 @@ Graph::Graph::GetNode(const pxr::UsdPrim& prim)
 // Node add input
 //------------------------------------------------------------------------------
 void 
-Graph::Node::AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name)
+Graph::Node::AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, size_t flags)
 {
-  Graph::Port port(this, 
-    Graph::Port::INPUT, name, attribute);
+  Graph::Port port(this, flags, name, attribute);
   _ports.push_back(port);
  
 }
@@ -147,57 +80,21 @@ Graph::Node::AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name)
 // Node add output
 //------------------------------------------------------------------------------
 void 
-Graph::Node::AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name)
+Graph::Node::AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, size_t flags)
 {
-  Graph::Port port(this, 
-    Graph::Port::OUTPUT, name, attribute);
+  Graph::Port port(this, flags, name, attribute);
   _ports.push_back(port);
 }
 
 // Node add io port
 //------------------------------------------------------------------------------
 void
-Graph::Node::AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name)
+Graph::Node::AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name, size_t flags)
 {
-  Graph::Port port(this, 
-    Graph::Port::Flag(Graph::Port::INPUT | Graph::Port::OUTPUT),
-    name, attribute);
+  Graph::Port port(this, flags, name, attribute);
   _ports.push_back(port);
 }
 
-
-// Node update
-//------------------------------------------------------------------------------
-void
-Graph::Node::Update()
-{
-  pxr::UsdUINodeGraphNodeAPI api(_prim);
-  std::cout << "update from usd " << _prim.GetPath() << std::endl;
-  pxr::UsdAttribute posAttr = api.GetPosAttr();
-  if (!posAttr.IsValid()) {
-    posAttr = api.CreatePosAttr(pxr::VtValue(_pos));
-  }
-  posAttr.Get(&_pos);
-
-  pxr::UsdAttribute sizeAttr = api.GetSizeAttr();
-  if (!sizeAttr.IsValid()) {
-    sizeAttr = api.CreateSizeAttr(pxr::VtValue(_size));
-  }
-  sizeAttr.Get(&_size);
-
-  pxr::UsdAttribute expendedAttr = api.GetExpansionStateAttr();
-  if (!expendedAttr.IsValid()) {
-    expendedAttr = api.CreateExpansionStateAttr(pxr::VtValue(pxr::UsdUITokens->closed));
-  }
-  expendedAttr.Get(&_expended);
-
-  pxr::UsdAttribute colorAttr = api.GetDisplayColorAttr();
-  if (!colorAttr.IsValid()) {
-    colorAttr = api.CreateDisplayColorAttr(pxr::VtValue(DEFAULT_NODE_COLOR));
-  }
-  colorAttr.Get(&_color);
-
-}
 
 // Node get port
 //------------------------------------------------------------------------------
@@ -210,39 +107,29 @@ Graph::Node::GetPort(const pxr::TfToken& name)
   return NULL;
 }
 
-void 
-Graph::Node::SetPosition(const pxr::GfVec2f& pos) 
-{ 
-  _pos = pos; 
-  _dirty |= DIRTY_POSITION; 
-};
-      
-void 
-Graph::Node::SetSize(const pxr::GfVec2f& size)
-{ 
-  _size = size; 
-  _dirty |= DIRTY_SIZE; 
-};
-
-void 
-Graph::Node::SetExpended(const pxr::TfToken& expended) 
-{ 
-  _expended = expended; 
-  _dirty |= DIRTY_SIZE;
-};
-
-void
-Graph::Node::SetColor(const pxr::GfVec3f& color)
+// Node check authored values
+//------------------------------------------------------------------------------
+bool
+Graph::Node::HasPort(const pxr::TfToken& name)
 {
-  _color = color;
-  _dirty |= DIRTY_COLOR;
-};
+  for (auto& port : _ports) {
+    if (port.GetName() == name) return true;
+  }
+  return false;
+}
+
 
 // Port
 //------------------------------------------------------------------------------
-Graph::Port::Port(Graph::Node* node, Graph::Port::Flag flags, 
+Graph::Port::Port(Graph::Node* node, size_t flags, 
   const pxr::TfToken& label, pxr::UsdAttribute& attr)
   : _node(node), _flags(flags), _label(label), _attr(attr)
+{
+}
+
+Graph::Port::Port(Graph::Node* node, size_t flags,
+  const pxr::TfToken& label)
+  : _node(node), _flags(flags), _label(label)
 {
 }
 
@@ -267,9 +154,9 @@ Graph::Port::IsConnected(Graph* graph, Graph::Connexion* foundConnexion)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-Graph::Graph()
+Graph::Graph(const pxr::UsdPrim& prim)
+  : _prim(prim)
 {
- 
 }
 
 
@@ -277,29 +164,16 @@ Graph::Graph()
 //------------------------------------------------------------------------------
 Graph::~Graph()
 {
-  for(auto& connexion: _connexions)delete connexion;
-  for(auto& node: _nodes)delete node;
-  _connexions.clear();
-  _nodes.clear();
+  Clear();
 }
+
 
 // Graph populate
 //------------------------------------------------------------------------------
-void Graph::Populate(pxr::UsdPrim& prim)
+void Graph::Populate(const pxr::UsdPrim& prim)
 {
-  if (!prim.HasAPI<pxr::UsdUISceneGraphPrimAPI>()) {
-    if (pxr::UsdUISceneGraphPrimAPI::CanApply(prim)) {
-      pxr::UsdUISceneGraphPrimAPI::Apply(prim);
-    } else {
-      std::cout <<
-        "Invalid prim for applying UsdUINodeGraphNodeAPI : " <<
-        prim.GetPath().GetText() << "." << std::endl;
-      return;
-    }
-  }
+  Clear();
   _prim = prim;
-  _nodes.clear();
-  _connexions.clear();
   _DiscoverNodes();
   _DiscoverConnexions();
 }
@@ -308,7 +182,8 @@ void Graph::Populate(pxr::UsdPrim& prim)
 //------------------------------------------------------------------------------
 void Graph::Clear()
 {
-  _prim = pxr::UsdPrim();
+  for (auto& connexion : _connexions)delete connexion;
+  for (auto& node : _nodes) delete node;
   _nodes.clear();
   _connexions.clear();
 }

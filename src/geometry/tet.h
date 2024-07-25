@@ -15,11 +15,6 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-struct Location {
-  Geometry*             geometry;      // geometry ptr
-  uint32_t              id;            // element index
-  pxr::GfVec3f          baryCoords;    // barycentric coordinates
-};
 
 struct HalfEdge
 {
@@ -126,11 +121,11 @@ public:
   void VoronoiDiagram(const std::vector<pxr::GfVec3f>& points);
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Hit* hit,
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
-  bool Closest(const pxr::GfVec3f& point, Hit* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
@@ -154,9 +149,6 @@ private:
   pxr::VtArray<bool>                  _boundary;
   pxr::VtArray<int>                   _shell;
   pxr::VtArray< pxr::VtArray<int> >   _neighbors;
-
-  // shell data (vertices)
-  pxr::VtArray< pxr::VtArray<int> >   _shells;
 
   // triangle data
   pxr::VtArray<Triangle>              _triangles;

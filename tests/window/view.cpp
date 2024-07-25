@@ -7,7 +7,7 @@
 #include <pxr/base/gf/vec2f.h>
 
 
-AMN_NAMESPACE_OPEN_SCOPE
+JVR_NAMESPACE_OPEN_SCOPE
 
 // View constructor
 //----------------------------------------------------------------------------
@@ -354,4 +354,4 @@ View::FixRight()
   
 }
 
-AMN_NAMESPACE_CLOSE_SCOPE
+JVR_NAMESPACE_CLOSE_SCOPE

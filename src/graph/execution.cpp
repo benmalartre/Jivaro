@@ -14,7 +14,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 ExecutionGraph* TestUsdExecAPI()
 {
   UndoBlock editBlock;
-  pxr::UsdStageRefPtr stage = GetApplication()->GetWorkStage();
+  pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
 
   const pxr::SdfPath GRAPH_PATH("/graph");
   const pxr::TfToken GET("get");
@@ -63,7 +63,6 @@ ExecutionGraph* TestUsdExecAPI()
   outVal0.ConnectToSource(output);
 
   stage->SetDefaultPrim(graph.GetPrim());
-  std::cout << "construct execution graph" << std::endl;
   return new ExecutionGraph(graph.GetPrim());
 }
 
@@ -110,11 +109,10 @@ _GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-ExecutionGraph::ExecutionGraph(pxr::UsdPrim& prim) 
-  : Graph()
+ExecutionGraph::ExecutionGraph(const pxr::UsdPrim& prim) 
+  : Graph(prim)
 {
   Populate(prim);
-  std::cout << "execution graph constructor" << prim.GetPath() << std::endl;
 }
 
 // Graph destructor
@@ -169,7 +167,6 @@ ExecutionGraph::_DiscoverNodes()
 void
 ExecutionGraph::_DiscoverConnexions()
 {
-  std::cout << "execution discover connexions ..." << std::endl;
   for (pxr::UsdPrim child : _prim.GetChildren()) {
     if (child.IsA<pxr::UsdExecNode>()) {
       pxr::UsdExecNode node(child);

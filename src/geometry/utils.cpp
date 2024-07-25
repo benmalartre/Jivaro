@@ -1,7 +1,18 @@
 #include "../geometry/utils.h"
 #include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/plane.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+//==================================================================================
+// HELPERS
+//==================================================================================
+void _GetManipTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
+  ManipXformVectors& vectors, pxr::UsdTimeCode& time)
+{
+  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
+    &vectors.pivot, &vectors.rotOrder, time);
+}
 
 void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, 
   const pxr::GfVec3f& b, const pxr::GfVec3f& c, float* u, float* v, float* w)
@@ -94,6 +105,35 @@ TriangulateMesh(const pxr::VtArray<int>& counts,
   return num_triangles;
 }
 
+int
+TriangulateMesh(const pxr::VtArray<int>& counts,
+  const pxr::VtArray<int>& indices,
+  pxr::VtArray<int>& triangles)
+{
+  int num_triangles = 0;
+  for (int count : counts)
+  {
+    num_triangles += count - 2;
+  }
+
+  triangles.resize(num_triangles * 3);
+
+  int base = 0;
+  int tri = 0;
+  for (int count : counts)
+  {
+    for (int i = 1; i < count - 1; ++i)
+    {
+      for (int j = 0; j < 3; ++j) {
+        triangles[tri++] = indices[base + j];
+      }
+      tri++;
+    }
+    base += count;
+  }
+  return num_triangles;
+}
+
 void
 UpdateTriangles(pxr::VtArray<Triangle>& triangles, size_t removeVertexIdx)
 {
@@ -102,6 +142,14 @@ UpdateTriangles(pxr::VtArray<Triangle>& triangles, size_t removeVertexIdx)
       int idx = triangle.vertices[axis];
       triangle.vertices[axis] = idx < removeVertexIdx ? idx : idx - 1;
     }
+  }
+}
+
+void
+UpdateTriangles(pxr::VtArray<int>& triangles, size_t removeVertexIdx)
+{
+  for (size_t triangleIdx = 0; triangleIdx < triangles.size(); ++triangleIdx) {
+    triangles[triangleIdx] = triangles[triangleIdx] - (removeVertexIdx < triangles[triangleIdx]);
   }
 }
 
@@ -180,13 +228,10 @@ ComputeTriangleNormals( const pxr::VtArray<pxr::GfVec3f>& positions,
 }
 
 void
-ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& ups,
-  pxr::VtArray<pxr::GfVec3f>& tangents)
+ComputeLineTangents(const pxr::GfVec3f* points, const pxr::GfVec3f* ups,
+  pxr::GfVec3f* tangents, size_t numPoints)
 {
-  size_t numPoints = points.size();
   size_t last = numPoints - 1;
-  tangents.resize(numPoints);
   pxr::GfVec3f current, previous, next;
   switch (numPoints) {
   case 0:
@@ -196,6 +241,8 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
     break;
   case 2:
     current = (points[1] - points[0]).GetNormalized();
+    tangents[0] = current;
+    tangents[1] = current;
     break;
   default:
     tangents[0] = (points[1] - points[0]).GetNormalized();
@@ -207,6 +254,69 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
     }
     break;
   }
+}
+
+// Constructs a plane from a collection of points
+// so that the summed squared distance to all points is minimzized
+pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points) 
+{
+  if(points.size()) {
+      return pxr::GfPlane();
+  }
+
+  pxr::GfVec3f sum(0.0);
+  for(const auto& point: points) {
+      sum += point;
+  }
+  pxr::GfVec3f centroid = sum * (1.0 / (float)points.size());
+
+  // Calc full 3x3 covariance matrix, excluding symmetries:
+  float xx = 0.0; float xy = 0.0; float xz = 0.0;
+  float yy = 0.0; float yz = 0.0; float zz = 0.0;
+
+  for(const auto& point: points) {
+    pxr::GfVec3f r = point - centroid;
+    xx += r[0] * r[0];
+    xy += r[0] * r[1];
+    xz += r[0] * r[2];
+    yy += r[1] * r[1];
+    yz += r[1] * r[2];
+    zz += r[2] * r[2];
+  }
+
+  float det_x = yy*zz - yz*yz;
+  float det_y = xx*zz - xz*xz;
+  float det_z = xx*yy - xy*xy;
+
+  float det_max = det_x;
+  if (det_y > det_max)det_max = det_y;
+  if (det_z > det_max) det_max = det_z;
+  if(det_max <= 0.0) {
+      return pxr::GfPlane(); // The points don't span a plane
+    }
+
+  // Pick path with best conditioning:
+  if(det_max == det_x) {
+    return pxr::GfPlane(centroid, 
+      pxr::GfVec3f(det_x, xz*yz - xy*zz, xy*yz - xz*yy).GetNormalized());
+  } else if (det_max == det_y) {
+    return pxr::GfPlane(centroid, 
+      pxr::GfVec3f(xz*yz - xy*zz, det_y, xy*xz - yz*xx).GetNormalized());
+  } else {
+    return pxr::GfPlane(centroid, 
+      pxr::GfVec3f(xy*yz - xz*yy, xy*xz - yz*xx, det_z).GetNormalized());
+  };
+}
+
+static size_t
+GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions)
+{
+  const float edge0 = (positions[vertices[1]] - positions[vertices[0]]).GetLengthSq();
+  const float edge1 = (positions[vertices[2]] - positions[vertices[1]]).GetLengthSq();
+  const float edge2 = (positions[vertices[0]] - positions[vertices[2]]).GetLengthSq();
+  if (edge0 > edge1 && edge0 > edge2)return 0;
+  else if (edge1 > edge0 && edge1 > edge2)return 1;
+  else return 2;
 }
 
 

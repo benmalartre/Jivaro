@@ -29,7 +29,6 @@
 #include "pxr/imaging/hd/tokens.h"
 #include "pxr/imaging/hdx/selectionTracker.h"
 
-#include <boost/functional/hash.hpp>
 #include <iostream>
 #include <unordered_map>
 #include <set>
@@ -39,25 +38,22 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 namespace {
 struct AggregatedHit {
-    AggregatedHit(pxr::HdxPickHit const& h) : hit(h) {}
+  AggregatedHit(pxr::HdxPickHit const& h) : hit(h) {}
 
-    pxr::HdxPickHit const& hit;
-    std::set<int> elementIndices;
-    std::set<int> edgeIndices;
-    std::set<int> pointIndices;
+  pxr::HdxPickHit const& hit;
+  std::set<int> elementIndices;
+  std::set<int> edgeIndices;
+  std::set<int> pointIndices;
 };
 
 static size_t
 _GetPartialHitHash(pxr::HdxPickHit const& hit)
 {
-    size_t hash = 0;
-
-    boost::hash_combine(hash, hit.delegateId.GetHash());
-    boost::hash_combine(hash, hit.objectId.GetHash());
-    boost::hash_combine(hash, hit.instancerId.GetHash());
-    boost::hash_combine(hash, hit.instanceIndex);
-
-    return hash;
+  return pxr::TfHash::Combine(
+    hit.delegateId.GetHash(),
+    hit.objectId.GetHash(),
+    hit.instancerId.GetHash(),
+    hit.instanceIndex);
 }
 
 typedef std::unordered_map<size_t, AggregatedHit> AggregatedHits;

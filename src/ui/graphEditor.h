@@ -74,6 +74,7 @@ public:
   static const pxr::TfToken NodeExpendState[3];
 
   enum GraphType {
+    PIPELINE,
     HIERARCHY,
     MATERIAL,
     EXECUTION
@@ -81,7 +82,7 @@ public:
 
   enum GraphDirection {
     VERTICAL,
-    HORIZONTAL
+    HORIZONTAL,
   };
 
   enum ItemState {
@@ -116,15 +117,14 @@ protected:
       virtual void SetSize(const pxr::GfVec2f& size);
       virtual void SetColor(const pxr::GfVec3f& color);
       void SetColor(int color);
-      const pxr::GfVec2f& GetPosition() const { return _pos; };
-      const pxr::GfVec2f& GetSize() const { return _size; };
-      float GetWidth() const { return _size[0]; };
-      float GetHeight() const { return _size[1]; };
-      float GetX() const { return _pos[0]; };
-      float GetY() const { return _pos[1]; };
-      const int GetColor() const { return _color; };
-      
-      
+      virtual const pxr::GfVec2f& GetPosition() const { return _pos; };
+      virtual const pxr::GfVec2f& GetSize() const { return _size; };
+      virtual float GetWidth() const { return _size[0]; };
+      virtual float GetHeight() const { return _size[1]; };
+      virtual float GetX() const { return _pos[0]; };
+      virtual float GetY() const { return _pos[1]; };
+      virtual int GetColor() const { return _color; };
+
       void SetState(size_t flag, bool value);
       bool GetState(size_t flag);
       virtual bool Contains(const pxr::GfVec2f& position, 
@@ -208,31 +208,41 @@ protected:
   //-------------------------------------------------------------------
   class Node : public Item {
     public: 
+      enum {
+        DIRTY_CLEAN = 0,
+        DIRTY_SIZE = 1,
+        DIRTY_POSITION = 2,
+        DIRTY_COLOR = 4
+      };
       Node(Graph::Node* node);
       ~Node();
 
-      void SetPosition(const pxr::GfVec2f& pos) override;
-      void SetSize(const pxr::GfVec2f& size) override;
       void SetColor(const pxr::GfVec3f& color) override;
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;
-      void SetBackgroundColor(const pxr::GfVec3f& color) { _backgroundColor = color; };
       void ComputeSize(GraphEditorUI* editor);
 
       std::vector<Port>& GetPorts() { return _ports; };
       Port* GetPort(const pxr::TfToken& name);
       Graph::Node* Get() { return _node; };
+      pxr::TfToken& GetExpended() { return _expended; };
+      short GetDirty() { return _dirty; };
+      void SetDirty(short dirty) { _dirty = dirty; };
 
-      void Update();
+      int GetColor() const override;
+
+      void Write();
+      void Read();
 
     private:
       // ui
       std::vector<Port>           _ports;
       Node*                       _parent;
-      pxr::GfVec3f                _backgroundColor;
+      pxr::TfToken                _expended;
+      short                       _dirty;
 
       // data
-      Graph::Node* _node;
+      Graph::Node*                _node;
   };
 
   struct Marquee {
@@ -314,7 +324,8 @@ public:
 
   // io
   bool Populate(Graph* graph);
-  void Update();
+  void Write();
+  void Read();
   void Clear();
   bool Read(const std::string& filename);
   bool Write(const std::string& filename);

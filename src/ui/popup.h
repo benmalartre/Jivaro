@@ -89,20 +89,19 @@ private:
 };
 
 #define NODE_FILTER_SIZE 64
-class NodePopupUI : public PopupUI
+class GraphPopupUI : public PopupUI
 {
 public:
 
-  NodePopupUI(int x, int y, int width, int height);
-  ~NodePopupUI() override;
-
-  void BuildNodeList();
+  GraphPopupUI(int x, int y, int width, int height);
+  ~GraphPopupUI() override;
 
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
   void Keyboard(int key, int scancode, int action, int mods) override;
   void Input(int key) override;
 private:
+  void _BuildNodeList();
   void _FilterNodes();
   std::vector<std::string> _nodes;
   std::vector<std::string> _filteredNodes;

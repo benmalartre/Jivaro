@@ -71,5 +71,15 @@ public:
 private:
 };
 
+/// Notice sent after time changed
+class TimeChangedNotice : public BaseNotice
+{
+public:
+  explicit TimeChangedNotice();
+  virtual ~TimeChangedNotice();
+
+private:
+};
+
 JVR_NAMESPACE_CLOSE_SCOPE
 #endif //JVR_APPLICATION_NOTICE_H

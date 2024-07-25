@@ -52,28 +52,6 @@ static float HANDLE_SIZE = 100.f;
 class Camera;
 class Geometry;
 
-struct HandleTargetXformVectors {
-  pxr::GfVec3d translation;
-  pxr::GfVec3f rotation;
-  pxr::GfVec3f scale;
-  pxr::GfVec3f pivot;
-  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
-};
-
-struct HandleTargetDesc {
-  pxr::SdfPath path;
-  pxr::GfMatrix4f base;
-  pxr::GfMatrix4f offset;
-  pxr::GfMatrix4f parent;
-  HandleTargetXformVectors previous;
-  HandleTargetXformVectors current;
-};
-
-typedef std::vector<HandleTargetDesc> HandleTargetDescList;
-
-void _GetHandleTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
-  HandleTargetXformVectors& vectors, pxr::UsdTimeCode& time);
-
 struct HandleTargetGeometryDesc {
   Geometry* geometry;
   std::vector<int> elements;
@@ -81,6 +59,10 @@ struct HandleTargetGeometryDesc {
 };
 
 typedef std::vector<HandleTargetGeometryDesc> HandleTargetGeometryDescList;
+
+
+void _EnsureXformCommonAPI(pxr::UsdPrim& prim, const pxr::UsdTimeCode& timeCode);
+
 
 class BaseHandle {
 public:
@@ -182,7 +164,7 @@ protected:
   short                   _mode;
 
   // targets
-  HandleTargetDescList    _targets;
+  ManipTargetDescList     _targets;
   
   // geometry
   Shape                   _shape;
@@ -316,6 +298,13 @@ private:
 
 class BrushHandle : public BaseHandle {
 public:
+enum Mode {
+    ADD,
+    REMOVE,
+    MOVE,
+    SCALE,
+    BRUSH
+  };
   BrushHandle();
 
   void Draw(float width, float height) override;
@@ -323,6 +312,7 @@ public:
   void EndUpdate() override;
   short Pick(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
+  short Select(float x, float y, float width, float height, bool lock) override;
 
 protected:
   void _UpdateTargets(bool interacting) override {};

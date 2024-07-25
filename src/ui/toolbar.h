@@ -4,6 +4,8 @@
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
+#include "../ui/style.h"
+#include "../ui/fonts.h"
 
 #include <vector>
 #include <pxr/base/vt/value.h>
@@ -53,12 +55,12 @@ struct ToolbarButton : public ToolbarItem {
   bool                        enabled;
 
   pxr::VtArray<pxr::VtValue>  args;
-  UIUtils::CALLBACK_FN        func;
+  CALLBACK_FN                 func;
   const char*                 icon;
 
   ToolbarButton(BaseUI* ui, short tool, const std::string& lbl, 
     const std::string& sht, const std::string& tooltip, const char* icon, 
-    bool sel, bool enb, UIUtils::CALLBACK_FN f = NULL,
+    bool sel, bool enb, CALLBACK_FN f = NULL,
     const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
   ~ToolbarButton(){};
   bool Draw() override;

@@ -5,14 +5,20 @@
 
 JVR_NAMESPACE_USING_DIRECTIVE
 
+int main(int argc, char *const *argv) {
+  
+  // Initialize glfw
+  if (!glfwInit())
+      return -1;
 
-int main(void)
-{
-  glfwInit();
   BuildKeyMap();
-  APPLICATION = new Application(1024,720);
-  APPLICATION->Init();
-  while (APPLICATION->Update());
+  Application* app = Application::Get();
+  app->Init(1024, 720);
+
+  // Main loop
+  while (app->Update());
+
   glfwTerminate();
+  delete app;
   return 1;
 }

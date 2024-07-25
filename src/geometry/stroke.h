@@ -45,16 +45,16 @@ public:
     DEL
   };
   Stroke();
-  Stroke(const Stroke* other, bool normalize = true);
-  ~Stroke();
+  Stroke(const Stroke& other, bool normalize = true);
+  virtual ~Stroke();
 
   const pxr::VtArray<StrokeLine>& GetLines() const { return _lines;};
   pxr::VtArray<StrokeLine>& GetLines() { return _lines;};
 
-  void SetDisplayColor(GeomInterpolation interp, 
+  void SetDisplayColor(Geometry::Interpolation interp, 
     const pxr::VtArray<pxr::GfVec3f>& colors);
   const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
-  GeomInterpolation GetDisplayColorInterpolation() const {
+  Geometry::Interpolation GetDisplayColorInterpolation() const {
     return _colorsInterpolation;
   };
 
@@ -79,7 +79,7 @@ private:
 
   // colors
   pxr::VtArray<pxr::GfVec3f>  _colors;
-  GeomInterpolation           _colorsInterpolation;
+  Geometry::Interpolation     _colorsInterpolation;
 
 };
 

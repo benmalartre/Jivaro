@@ -11,7 +11,7 @@
 #include "../app/window.h"
 #include "../app/view.h"
 #include "../app/application.h"
-
+#include "../app/commands.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -31,7 +31,7 @@ PopupUI::PopupUI(int x, int y, int w, int h)
   , _sync(false)
   , _cancel(false)
 {
-  _parent = GetApplication()->GetActiveWindow()->GetMainView();
+  _parent = Application::Get()->GetActiveWindow()->GetMainView();
 }
 
 PopupUI::~PopupUI()
@@ -96,10 +96,12 @@ bool
 PopupUI::Draw()
 {
 
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+  
 
   pxr::GfVec4f color(
     RANDOM_0_1,
@@ -154,20 +156,29 @@ bool ColorPopupUI::Terminate()
 {
   if (_done) {
     if (_isArray) {
-      pxr::VtArray<pxr::GfVec3f> result;
-      result = { _original };
-      _attribute.Set(result, pxr::UsdTimeCode::Default());
-      result = { _color };
-      UndoBlock editBlock(true);
-      _attribute.Set(result, pxr::UsdTimeCode::Default());
+      pxr::VtArray<pxr::GfVec3f> value = { _color };
+      pxr::VtArray<pxr::GfVec3f> previous = { _original };
+      pxr::UsdAttributeVector attributes = { _attribute };
+      ADD_COMMAND(SetAttributeCommand, attributes, 
+        pxr::VtValue(value), pxr::VtValue(previous), pxr::UsdTimeCode::Default());
     }
     else {
-      _attribute.Set(_original, pxr::UsdTimeCode::Default());
-      UndoBlock editBlock(true);
+      pxr::UsdAttributeVector attributes = { _attribute };
+       ADD_COMMAND(SetAttributeCommand, attributes,
+         pxr::VtValue(_color), pxr::VtValue(_original), pxr::UsdTimeCode::Default());
+    }
+  }
+  else {
+    if (_isArray) {
+      _attribute.Set(pxr::VtArray<pxr::GfVec3f>({ _color }), 
+        pxr::UsdTimeCode::Default());
+    }
+    else {
       _attribute.Set(_color, pxr::UsdTimeCode::Default());
     }
     AttributeChangedNotice().Send();
   }
+
   return _done;
 }
 
@@ -187,12 +198,15 @@ ColorPopupUI::Draw()
 {
   bool opened;
   const ImGuiStyle& style = ImGui::GetStyle();
+
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+  
 
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   drawList->AddRectFilled(
     ImVec2(_x, _y),
     ImVec2(_x + _width, _y + _height),
@@ -247,11 +261,14 @@ bool
 NamePopupUI::Draw()
 {
   static bool initialized = false;
+
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
   if (!initialized) {
-    ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-    ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+    
     initialized = true;
   }
 
@@ -288,24 +305,24 @@ NamePopupUI::Draw()
 
 
 //===========================================================================================
-// NodePopupUI
+// GraphPopupUI
 //===========================================================================================
-NodePopupUI::NodePopupUI(int x, int y, int width, int height)
+GraphPopupUI::GraphPopupUI(int x, int y, int width, int height)
   : PopupUI(x, y, width, height)
   , _p(0)
   , _i(0)
 {
   _sync = true;
   memset(&_filter[0], (char)0, NODE_FILTER_SIZE * sizeof(char));
-  BuildNodeList();
+  _BuildNodeList();
 }
 
-NodePopupUI::~NodePopupUI()
+GraphPopupUI::~GraphPopupUI()
 {
 }
 
 void
-NodePopupUI::BuildNodeList()
+GraphPopupUI::_BuildNodeList()
 {
   _nodes.push_back("wrap");
   _nodes.push_back("collide");
@@ -319,36 +336,18 @@ NodePopupUI::BuildNodeList()
 }
 
 void
-NodePopupUI::MouseButton(int button, int action, int mods)
+GraphPopupUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
-  std::cout << x << "," << y << std::endl;
-  /*
-  if (!(x >= _x && y >= _y && x <= (_x + _width) && y <= (_y + _height))) {
-    if (_isArray) {
-      pxr::VtArray<pxr::GfVec3f> result;
-      result = { _original };
-      _attribute.Set(result, _time);
-      result = { _color };
-      UndoBlock editBlock;
-      _attribute.Set(result, _time);
-    }
-    else {
-      _attribute.Set(_original, _time);
-      UndoBlock editBlock;
-      _attribute.Set(_color, _time);
-    }
-    _done = true;
-  }
-  */
+
   if(button == GLFW_MOUSE_BUTTON_RIGHT)
     _done = true;
 }
 
 
 void 
-NodePopupUI::Keyboard(int key, int scancode, int action, int mods)
+GraphPopupUI::Keyboard(int key, int scancode, int action, int mods)
 {
   if (action == GLFW_PRESS || action == GLFW_REPEAT) {
     switch (GetMappedKey(key)) {
@@ -364,8 +363,10 @@ NodePopupUI::Keyboard(int key, int scancode, int action, int mods)
       if (_i < 0) _i = _filteredNodes.size() - 1;
       break;
     case GLFW_KEY_ENTER:
-      const std::string name = _filteredNodes[_i];
-      std::cout << "INSTANCIATE NODE : " << name << std::endl;
+      if(_filteredNodes.size()){
+        const std::string name = _filteredNodes[_i];
+        std::cout << "NodePopupUI result : " << name << std::endl;
+      }
       _done = true;
       break;
     }
@@ -373,7 +374,7 @@ NodePopupUI::Keyboard(int key, int scancode, int action, int mods)
 }
 
 void
-NodePopupUI::Input(int key)
+GraphPopupUI::Input(int key)
 {
   _filter[_p++] = ConvertCodePointToUtf8(key).c_str()[0];
 }
@@ -384,7 +385,7 @@ static bool _FilterNodeName(const std::string& name, const char* filter)
 }
 
 void
-NodePopupUI::_FilterNodes()
+GraphPopupUI::_FilterNodes()
 {
   _filteredNodes.clear();
   for (auto& node : _nodes) {
@@ -395,19 +396,18 @@ NodePopupUI::_FilterNodes()
 }
 
 bool
-NodePopupUI::Draw()
+GraphPopupUI::Draw()
 {
-  
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
 
-
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   const ImGuiStyle& style = ImGui::GetStyle();
-  /*
+  
   drawList->AddRectFilled(
-    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_ChildBg]));*/
+    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_ChildBg]));
 
   drawList = ImGui::GetForegroundDrawList();
   
@@ -421,17 +421,17 @@ NodePopupUI::Draw()
   for(auto& node : _filteredNodes) {
     std::cout << node.c_str() << std::endl;
     if (idx == _i) {
-      ImGui::PushFont(GetWindow()->GetFont(1));
-      ImGui::TextColored(ImVec4(1.0,1.0,1.0,1.0), node.c_str());
+      ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 1));
+      ImGui::TextColored(ImVec4(1.0,1.0,1.0,1.0), "%s", node.c_str());
     } else {
-      ImGui::PushFont(GetWindow()->GetFont(1));
-      ImGui::TextColored(ImVec4(0.75,0.75,0.75,1.0), node.c_str());
+      ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 1));
+      ImGui::TextColored(ImVec4(0.75,0.75,0.75,1.0), "%s", node.c_str());
     }
     ImGui::PopFont();
     idx++;
   }
 
-  ImGui::TextColored(ImVec4(0, 0, 1, 1), _filter);
+  ImGui::TextColored(ImVec4(0, 0, 1, 1), "%s", _filter);
   ImGui::SameLine();
 
   if (ImGui::Button("OK", ImVec2(GetWidth() / 3, 32))) {
@@ -441,7 +441,6 @@ NodePopupUI::Draw()
   if (ImGui::Button("Cancel", ImVec2(GetWidth() / 3, 32))) {
     _cancel = true;
   }
-
 
   ImGui::End();
   return true;
@@ -468,10 +467,12 @@ SdfPathPopupUI::Draw()
 {
   bool opened;
 
+  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
-  ImGui::SetWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetWindowPos(pxr::GfVec2f(_x, _y));
+  
 
   // TODO: We will probably want to browse in the scene hierarchy to select the path
     //   create a selection tree, one day

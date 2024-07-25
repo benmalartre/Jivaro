@@ -12,153 +12,51 @@
 
 #include "../geometry/mesh.h"
 #include "../geometry/utils.h"
+#include "../geometry/location.h"
+#include "../geometry/intersection.h"
 
-#include "../voronoi/FortuneAlgorithm.h"
+#include "../utils/timer.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void HalfEdge::GetTriangleNormal(const pxr::GfVec3f* positions, 
-  pxr::GfVec3f& normal) const
+
+Mesh::Mesh(const pxr::GfMatrix4d& xfo)
+  : Deformable(Geometry::MESH, xfo)
+  , _flags(0)
+  , _halfEdges()
 {
-  pxr::GfVec3f ab = positions[vertex] - positions[next->vertex];
-  pxr::GfVec3f ac = positions[vertex] - positions[next->next->vertex];
-  normal = (ab ^ ac).GetNormalized();
 }
 
-void HalfEdge::GetVertexNormal(const pxr::GfVec3f* normals, 
-  pxr::GfVec3f& normal) const
-{
-  bool closed = false;
-  normal = normals[GetTriangleIndex()];
-  size_t numTriangles = 1;
-  HalfEdge* current = (HalfEdge*)this;
-  while(current->next->twin) {
-    current = current->next->twin;
-    if(current == this) {
-      closed = true;
-      break;
-    }
-    else {
-      normal += normals[current->GetTriangleIndex()];
-      numTriangles++;
-    }
-  }
-
-  if(!closed && this->twin) {
-    current = this->twin;
-    normal += normals[current->GetTriangleIndex()];
-    numTriangles++;
-    while(current->next->next->twin) {
-      current = current->next->next->twin;
-      normal += normals[current->GetTriangleIndex()];
-      numTriangles++;
-    }
-  }
-  normal *= 1.f/(float)numTriangles;
-}
-
-bool HalfEdge::GetFacing(const pxr::GfVec3f* positions, 
-  const pxr::GfVec3f& v) const
-{
-  pxr::GfVec3f tn;
-  GetTriangleNormal(positions, tn);
-  pxr::GfVec3f dir = (positions[vertex] - v).GetNormalized();
-  return pxr::GfDot(tn, dir) > 0.0;
-}
-
-bool HalfEdge::GetFacing(const pxr::GfVec3f* positions, 
-  const pxr::GfVec3f* normals, const pxr::GfVec3f& v) const
-{
-  pxr::GfVec3f dir = (positions[vertex] - v).GetNormalized();
-  return pxr::GfDot(normals[GetTriangleIndex()], dir) > 0.0;
-}
-
-float HalfEdge::GetDot(const pxr::GfVec3f* positions, 
-  const pxr::GfVec3f* normals, const pxr::GfVec3f& v) const
-{
-  pxr::GfVec3f dir = (positions[vertex] - v).GetNormalized();
-  return pxr::GfDot(normals[GetTriangleIndex()], dir);
-}
-
-Mesh::~Mesh()
-{
-};
-
-Mesh::Mesh()
-  : Geometry(Geometry::MESH)
-{
-  _initialized = false;
-  _numTriangles = 0;
-  _numPoints = 0;
-  _numFaces = 0;
-}
-
-Mesh::Mesh(const Mesh* other, bool normalize)
-  : Geometry(other, Geometry::MESH, normalize)
-{
-  _initialized = true;
-  _numTriangles = other->_numTriangles;
-  _numSamples = other->_numSamples;
-  _numFaces = other->_numFaces;
-
-  _normals = other->_normals;
-
-  _triangles.resize(_numTriangles);
-  memcpy(
-    &_triangles[0], 
-    &other->_triangles[0], 
-    _numTriangles * sizeof(Triangle));
-}
-
-Mesh::Mesh(const pxr::UsdGeomMesh& mesh)
-  : Geometry(Geometry::MESH)
+Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
+  : Deformable(mesh.GetPrim(), world)
+  , _flags(0)
 {
   pxr::UsdAttribute pointsAttr = mesh.GetPointsAttr();
   pxr::UsdAttribute faceVertexCountsAttr = mesh.GetFaceVertexCountsAttr();
   pxr::UsdAttribute faceVertexIndicesAttr = mesh.GetFaceVertexIndicesAttr();
 
-  pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());
+  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
   faceVertexCountsAttr.Get(&_faceVertexCounts, pxr::UsdTimeCode::Default());
   faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
-  _numFaces = _faceVertexCounts.size();
-  _numSamples = _faceVertexIndices.size();
-  _normals = _points;
-  _numPoints = _points.size();
 
-  Init();
+  Prepare();
 }
 
-uint32_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
+Mesh::~Mesh()
+{
+}
+
+size_t Mesh::GetFaceVertexIndex(uint32_t face, uint32_t vertex)
 {
   size_t accum = 0;
   for(size_t i=0; i < face; ++i)accum += _faceVertexCounts[i];
   return _faceVertexIndices[accum + vertex];
 }
 
-void Mesh::SetAllEdgesLatencyReal()
-{
-  for (auto& halfEdge : _halfEdges) {
-    halfEdge.latency = HalfEdge::REAL;
-  }
-}
-
-void Mesh::UpdateTopologyFromHalfEdges()
-{
-  _numFaces = _halfEdges.size() / 3;
-  _numSamples = _halfEdges.size();
-  _numTriangles = _numFaces;
-
-  _faceVertexCounts.assign(_numFaces, 3);
-  _faceVertexIndices.resize(_numSamples);
-  size_t faceVertexIndex = 0;
-  for (auto& edge : _halfEdges) {
-    _faceVertexIndices[faceVertexIndex++] = edge.vertex;
-  }
-}
-
 void Mesh::GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts)
 {
-  size_t numVertices = _points.size();
+  size_t numVertices = _positions.size();
 
   pxr::VtArray<int> visited(numVertices);
   for (auto& v : visited) v = 0;
@@ -197,47 +95,46 @@ static bool _IsHalfEdgesUVSeparated(const HalfEdge* lhs, const HalfEdge* rhs)
 
 void Mesh::GetCutEdgesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts)
 {
+  /*
   cuts->reserve(_uniqueEdges.size());
   for (const HalfEdge& halfEdge: _halfEdges) {
-    if (/*halfEdge.latency == HalfEdge::REAL && */halfEdge.twin) {
+    if (halfEdge.latency == HalfEdge::REAL && halfEdge.twin) {
+      const HalfEdge* next = &_halfEdges[halfEdge.next];
       const pxr::GfVec2d& start_lhs = uvs[halfEdge.index];
-      const pxr::GfVec2d& end_lhs = uvs[halfEdge.next->index];
-      const pxr::GfVec2d& start_rhs = uvs[halfEdge.twin->next->index];
-      const pxr::GfVec2d& end_rhs = uvs[halfEdge.twin->next->next->index];
+      const pxr::GfVec2d& end_lhs = uvs[next->index];
+      const HalfEdge* twin = &_halfEdges[halfEdge.twin];
+      const pxr::GfVec2d& start_rhs = uvs[twin->next];
+      const pxr::GfVec2d& end_rhs = uvs[_halfEdges[twin->next].next];
       if (start_lhs != end_rhs) cuts->push_back(halfEdge.index);
-      if (end_rhs != start_rhs) cuts->push_back(halfEdge.twin->index);
+      if (end_rhs != start_rhs) cuts->push_back(halfEdge.twin);
     }
   }
+*/
 }
 
-pxr::GfVec3f Mesh::GetPosition(size_t idx) const
+pxr::GfVec3f 
+Mesh::GetPosition(size_t idx) const
 {
-  return _points[idx];
+  return _positions[idx];
 }
 
-pxr::GfVec3f Mesh::GetTrianglePosition(const Triangle* T) const
+pxr::GfVec3f 
+Mesh::GetTrianglePosition(const Triangle* T) const
 {
   pxr::GfVec3f center(0.f);
-  for(uint32_t v=0;v<3;v++) center += _points[T->vertices[v]];
+  for(uint32_t v=0;v<3;v++) center += _positions[T->vertices[v]];
   center *= 1.f/3.f;
   return center;
 }
 
-pxr::GfVec3f Mesh::GetTriangleVertexPosition(const Triangle *T, uint32_t index) const
+pxr::GfVec3f 
+Mesh::GetTriangleVertexPosition(const Triangle *T, uint32_t index) const
 {
-  return _points[T->vertices[index]];
+  return _positions[T->vertices[index]];
 }
 
-pxr::GfVec3f Mesh::GetPosition(const Location& point) const
-{
-  const Triangle* T = &_triangles[point.id];
-  pxr::GfVec3f pos(0.f);
-  for(uint32_t i = 0; i < 3; ++i) 
-    pos += _points[T->vertices[i]] * point.baryCoords[i];
-  return pos;
-}
-
-pxr::GfVec3f Mesh::GetTriangleNormal(const Triangle *T) const
+pxr::GfVec3f 
+Mesh::GetTriangleNormal(const Triangle *T) const
 {
   pxr::GfVec3f center(0.f);
   for(uint32_t v = 0; v < 3; ++v)
@@ -246,26 +143,19 @@ pxr::GfVec3f Mesh::GetTriangleNormal(const Triangle *T) const
   return center;
 }
 
-pxr::GfVec3f Mesh::GetTriangleVertexNormal(const Triangle *T, uint32_t index) const
+pxr::GfVec3f 
+Mesh::GetTriangleVertexNormal(const Triangle *T, uint32_t index) const
 {
   return _normals[T->vertices[index]];
 }
 
-pxr::GfVec3f Mesh::GetNormal(const Location& point) const
-{
-  const Triangle* T = &_triangles[point.id];
-  pxr::GfVec3f nrm(0.f);
-  for(uint32_t i=0;i<3;i++) 
-    nrm += _normals[T->vertices[i]] * point.baryCoords[i];
-  return nrm;
-}
-
-pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const
+pxr::GfVec3f 
+Mesh::GetTriangleNormal(uint32_t triangleID) const
 {
   const Triangle* T = &_triangles[triangleID];
-  pxr::GfVec3f A = _points[T->vertices[0]];
-  pxr::GfVec3f B = _points[T->vertices[1]];
-  pxr::GfVec3f C = _points[T->vertices[2]];
+  pxr::GfVec3f A = _positions[T->vertices[0]];
+  pxr::GfVec3f B = _positions[T->vertices[1]];
+  pxr::GfVec3f C = _positions[T->vertices[2]];
 
   B -= A;
   C -= A;
@@ -273,380 +163,420 @@ pxr::GfVec3f Mesh::GetTriangleNormal(uint32_t triangleID) const
   return (B ^ C).GetNormalized();
 }
 
-const std::vector<HalfEdge*> Mesh::GetUniqueEdges()
+bool Mesh::RemovePoint(size_t index)
 {
-  size_t numUniqueEdges = _uniqueEdges.size();
-  if (!numUniqueEdges) {
-    ComputeHalfEdges();
-    numUniqueEdges = _uniqueEdges.size();
+  if (index >= _positions.size()) {
+    std::cout << "error index out of range" << std::endl;
+    return false;
   }
-  std::vector<HalfEdge*> halfEdges(numUniqueEdges);
-  for (size_t i = 0; i < numUniqueEdges; ++i) {
-    halfEdges[i] = &_halfEdges[_uniqueEdges[i]];
-  }
-  return halfEdges;
-}
+  _positions.erase(_positions.begin() + index);
+  _normals.erase(_normals.begin() + index);
 
-
-static bool _GetEdgeLatency(int p0, int p1, const int* )
-{
-  return false;
-}
-
-static void _SetHalfEdgeLatency(HalfEdge* halfEdge, int numFaceTriangles, 
-  int faceTriangleIndex, int triangleEdgeIndex)
-{
-  if (faceTriangleIndex == 0) {
-    if (triangleEdgeIndex == 2) halfEdge->latency = HalfEdge::IMPLICIT;
-    else halfEdge->latency = HalfEdge::REAL;
-  } else if (faceTriangleIndex == numFaceTriangles - 1) {
-    if (triangleEdgeIndex == 0) halfEdge->latency = HalfEdge::IMPLICIT;
-    else halfEdge->latency = HalfEdge::REAL;
-  } else {
-    if (triangleEdgeIndex == 1) halfEdge->latency = HalfEdge::REAL;
-    else halfEdge->latency = HalfEdge::IMPLICIT;
-  }
-}
-
-static void _RemovePoint(pxr::VtArray<pxr::GfVec3f>& points, size_t idx)
-{
-  points.erase(points.begin() + idx);
-}
-
-static void _RemoveEdge(pxr::VtArray<HalfEdge>& halfEdges, HalfEdge* edge)
-{
-  for(size_t i=0; i < halfEdges.size(); ++i) {
-    if(&halfEdges[i] == edge) {
-      halfEdges.erase(halfEdges.begin() + i);
-    }
-  }
-  /*
-  for(std::VtArray<HalfEdge>::iterator& it = halfEdges.begin(); it < halfEdges.end(); ++it) {
-    if (&(*it) == edge) {
-      halfEdges.erase(it);
-    }
-  }
-  */
+  return true;
 }
 
 void Mesh::ComputeHalfEdges()
 {
-  _halfEdges.resize(_numTriangles * 3);
+  _halfEdges.ComputeGraph(this);
+  BITMASK_SET(_flags, Mesh::HALFEDGES);
+}
 
-  pxr::TfHashMap<uint64_t, HalfEdge*, pxr::TfHash> halfEdgesMap;
-  std::vector<bool> used;
-  used.assign(_numTriangles, false);
-
-  HalfEdge* halfEdge = &_halfEdges[0];
-  size_t numFaceTriangles;
-  size_t faceIdx = 0;
-  size_t offsetIdx = 0;
-  size_t triangleIdx = 0;
-  size_t faceTriangleIdx = 0;
-
-  for (const auto& faceVertexCount: _faceVertexCounts)
-  { 
-    numFaceTriangles = faceVertexCount - 2;
-    faceTriangleIdx = 0;
-    for (int faceTriangle = 0; faceTriangle < numFaceTriangles; ++faceTriangle)
-    {
-      const Triangle* T = &_triangles[triangleIdx];
-      uint64_t A = T->vertices[0];
-      uint64_t B = T->vertices[1];
-      uint64_t C = T->vertices[2];
-
-      // create the half-edge that goes from C to A:
-      halfEdgesMap[A | (C << 32)] = halfEdge;
-      halfEdge->index = triangleIdx * 3;
-      //halfEdge->face = faceIdx;
-      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
-      halfEdge->vertex = C;
-      halfEdge->next = 1 + halfEdge;
-      _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 0);
-      ++halfEdge;
-
-      // create the half-edge that goes from A to B:
-      halfEdgesMap[B | (A << 32)] = halfEdge;
-      halfEdge->index = triangleIdx * 3 + 1;
-      //halfEdge->face = faceIdx;
-      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
-      halfEdge->vertex = A;
-      halfEdge->next = 1 + halfEdge;
-      _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 1);
-      ++halfEdge;
-
-      // create the half-edge that goes from B to C:
-      halfEdgesMap[C | (B << 32)] = halfEdge;
-      halfEdge->index = triangleIdx * 3 + 2;
-      //halfEdge->face = faceIdx;
-      //halfEdge->triangle = faceTriangleIdx + faceTriangle;
-      halfEdge->vertex = B;
-      halfEdge->next = halfEdge - 2;
-      _SetHalfEdgeLatency(halfEdge, numFaceTriangles, faceTriangleIdx, 2);
-      ++halfEdge;
-
-      triangleIdx++;
-      faceTriangleIdx++;
-    }
+float Mesh::GetAverageEdgeLength()
+{
+  const pxr::GfVec3f* positions = &_positions[0];
+  float accum = 0;
+  size_t cnt = 0;
+  HalfEdgeGraph::ItUniqueEdge it(_halfEdges);
+  HalfEdge* edge = it.Next();
+  while(edge) {
+    accum += _halfEdges.GetLength(edge, positions);
+    cnt++;
+    edge = it.Next();
   }
+  return cnt > 0 ? accum / (float)cnt : 0.f;
+}
 
-  // verify that the mesh is clean:
-  size_t numEntries = halfEdgesMap.size();
-  bool problematic = false;
-  if(numEntries != _numTriangles * 3)problematic = true;
 
-  // populate the twin pointers by iterating over the hash map:
-  uint64_t edgeIndex; 
-  size_t boundaryCount = 0;
-  for(auto& halfEdge: halfEdgesMap)
-  {
-    edgeIndex = halfEdge.first;
-    uint64_t twinIndex = ((edgeIndex & 0xffffffff) << 32) | (edgeIndex >> 32);
-    const auto& it = halfEdgesMap.find(twinIndex);
-    if(it != halfEdgesMap.end())
-    {
-      HalfEdge* twinEdge = (HalfEdge*)it->second;
-      twinEdge->twin = halfEdge.second;
-      halfEdge.second->twin = twinEdge;
-    }
-    else {
-      _boundary[halfEdge.second->vertex] = true;
-      _boundary[halfEdge.second->next->vertex] = true;
-      ++boundaryCount;
-    }
-  }
-  _uniqueEdges.reserve(_halfEdges.size());
-  size_t halfEdgeIndex = 0;
-  for (const HalfEdge& halfEdge : _halfEdges) {
-    if (halfEdge.twin) {
-      if (halfEdge.vertex < halfEdge.twin->vertex) {
-        _uniqueEdges.push_back(halfEdgeIndex);
-        if (!used[halfEdge.GetTriangleIndex()] && !used[halfEdge.twin->GetTriangleIndex()]) {
-          _trianglePairs.push_back(TrianglePair(
-            &_triangles[halfEdge.GetTriangleIndex()], 
-            &_triangles[halfEdge.twin->GetTriangleIndex()] 
-          ));
-          used[halfEdge.GetTriangleIndex()] = true;
-          used[halfEdge.twin->GetTriangleIndex()] = true;
-        }
-      }
-    } else {
-      _uniqueEdges.push_back(halfEdgeIndex);
-      if (!used[halfEdge.GetTriangleIndex()]) {
-        _trianglePairs.push_back(TrianglePair(
-          &_triangles[halfEdge.GetTriangleIndex()],
-          NULL
-        ));
-        used[halfEdge.GetTriangleIndex()] = true;
-      }
-    }
-    halfEdgeIndex++;
+static int _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx, 
+  size_t polygonNumEdges, size_t triangleIdx)
+{
+  if (polygonNumEdges < 4)return -1;
+  if (polygonEdgeIdx == 0) {
+    if (triangleEdgeIdx == 2)return triangleIdx + 1;
+    else return -1;
+  } else if (polygonEdgeIdx == polygonNumEdges - 1) {
+    if (triangleEdgeIdx == 0)return triangleIdx - 1;
+    else return -1;
+  } else {
+    if (triangleEdgeIdx == 0)return triangleIdx - 1;
+    else if (triangleEdgeIdx == 2)return triangleIdx + 1;
+    else return -1;
   }
 }
 
-static HalfEdge* _GetPreviousAdjacentEdge(Mesh* mesh, HalfEdge* edge)
+
+
+
+void TrianglePairGraph::_RemoveTriangleOpenEdges(int tri)
 {
-  int vertex = edge->vertex;
-  HalfEdge* current = edge->next;
-  while (current->next->vertex != vertex) {
-    current = current->next;
+  size_t shift = 0;
+  size_t numOpenEdges = _openEdges.size();
+  for(size_t o = 0; o < numOpenEdges; ++o) {
+    if(_openEdges[o].second == tri)shift++;
+    if(shift>0 && (o + shift) < numOpenEdges) {
+      _openEdges[o] = _openEdges[o+shift];
+    } 
   }
-  if (current->twin)return current->twin->next;
-  return NULL;
+  size_t size = numOpenEdges - shift;
+  if(shift > 0)_openEdges.resize(size > 0 ? size : 0);
 }
 
-static HalfEdge* _GetNextjacentEdge(Mesh* mesh, HalfEdge* edge)
+void TrianglePairGraph::_SingleTriangle(int tri, bool isOpenEdgeTriangle)
 {
-  if (edge->twin)return edge->twin->next;
-  return NULL;
+  _paired[tri] = true;
+  _pairs.push_back(std::make_pair(tri, -1));
 
+  if (isOpenEdgeTriangle) _RemoveTriangleOpenEdges(tri);
 }
 
-static HalfEdge* _GetNextEdge(HalfEdge* edge, short latency = HalfEdge::ANY)
+bool TrianglePairGraph::_PairTriangles(int tri0, int tri1, bool isOpenEdgeTriangle)
 {
-  int vertex = edge->vertex;
-  HalfEdge* current = edge->next;
-  switch (latency) {
-  case HalfEdge::REAL:
-    while (current->next) {
-      if (current->next->latency == HalfEdge::REAL)return current->next;
-      if (!current->twin)return NULL;
-      current = current->twin->next;
-    }
-  case HalfEdge::IMPLICIT:
-  case HalfEdge::VIRTUAL:
-  case HalfEdge::ANY:
-    return current->next;
-  default:
-    return current->next;
-  }
+  if(_paired[tri0] || _paired[tri1])return false;
+
+  _paired[tri0] = true;
+  _paired[tri1] = true;
+  _pairs.push_back(std::make_pair(tri0, tri1));
+
+  if(isOpenEdgeTriangle) _RemoveTriangleOpenEdges(tri1);
+  return true;
 }
 
-static HalfEdge* _GetPreviousEdge(HalfEdge* edge, short latency=HalfEdge::ANY)
+bool TrianglePairGraph::_PairTriangle(TrianglePairGraph::_Key common, int tri)
 {
-  int vertex = edge->vertex;
-  HalfEdge* current = edge->next;
-  switch (latency) {
-  case HalfEdge::REAL:
-    while (current->next->vertex != vertex) {
-      if (current->latency != HalfEdge::REAL && current->twin) {
-        current = current->twin->next;
-      }
-      else {
-        current = current->next;
-      }
-    }
-    return current;
-  case HalfEdge::IMPLICIT:
-  case HalfEdge::VIRTUAL:
-  case HalfEdge::ANY:
-    while (current->next->vertex != vertex) {
-      current = current->next;
-    }
-    return current;
-  default:
-    while (current->next->vertex != vertex) {
-      current = current->next;
-    }
-    return current;
-  }
-  
-}
+  if(_paired[tri])return false;
 
-static bool _IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
-{
-  for (int neighbor: neighbors) {
-    if (neighbor == idx)return true;
+  int pairedTriangle = -1;
+  size_t numOpenEdges = _openEdges.size();
+  for(size_t o = 0; o < numOpenEdges; ++o) {
+    uint64_t value = _openEdges[0].first; 
+    uint64_t reversed = ((value & 0xffffffff) << 32) | (value>> 32);
+    if(_openEdges[o].first == reversed) 
+      return _PairTriangles(tri, _openEdges[0].second, true);
   }
   return false;
 }
 
-void Mesh::ComputeNeighbors()
+TrianglePairGraph::TrianglePairGraph(
+  const pxr::VtArray<int>& faceVertexCounts, 
+  const pxr::VtArray<int>& faceVertexIndices)
 {
-  _neighbors.clear();
-  _neighbors.resize(_numPoints);
+  int numTriangles = 0;
+  for(int faceVertexCount : faceVertexCounts)numTriangles += faceVertexCount - 2;
 
-  for (HalfEdge& halfEdge : _halfEdges) {
-    int edgeIndex = halfEdge.index;
-    int vertexIndex = halfEdge.vertex;
-    HalfEdge* startEdge = &halfEdge;
-    HalfEdge* currentEdge = startEdge;
-    HalfEdge* nextEdge = NULL;
-    pxr::VtArray<int>& neighbors = _neighbors[vertexIndex];
-    if (!_IsNeighborRegistered(neighbors, startEdge->next->vertex)) {
-      neighbors.push_back(startEdge->next->vertex);
+  _allEdges.resize(numTriangles * 3);
+  _paired.resize(numTriangles, false);
+
+  int baseFaceVertexIdx = 0;
+  int triangleIdx = 0;
+  int trianglePairIdx;
+  int triangleEdgeIdx = 0;
+
+  TrianglePairGraph::_Key key0, key1, key2;
+
+  for (int faceVertexCount : faceVertexCounts) {
+    for (int i = 1; i < faceVertexCount - 1; ++i) {
+      int a = faceVertexIndices[baseFaceVertexIdx        ];
+      int b = faceVertexIndices[baseFaceVertexIdx + i    ];
+      int c = faceVertexIndices[baseFaceVertexIdx + i + 1];
+
+      key0 = { b | (a << 32), triangleIdx};
+      key1 = { c | (b << 32), triangleIdx};
+      key2 = { a | (c << 32), triangleIdx};
+
+      _allEdges[triangleEdgeIdx++] = key0;
+      _allEdges[triangleEdgeIdx++] = key1;
+      _allEdges[triangleEdgeIdx++] = key2;
+      if (faceVertexCount == 3) {
+        _SingleTriangle(triangleIdx, false);
+      }
+      // we first pair by triangle by polygon if possible
+      else if(((i-1) % 2) == 0 ) {
+        _PairTriangles(triangleIdx, triangleIdx+1, false);
+      } // else try pair with open edges from the list
+      else {
+        if(i < (faceVertexCount-2) && !_PairTriangle(key0, triangleIdx))
+          _openEdges.push_back(key0);
+
+        if(!_paired[triangleIdx] && !_PairTriangle(key1, triangleIdx))
+          _openEdges.push_back(key1);
+
+      }
+
+      triangleIdx++;
     }
 
-    short state = 1;
-    while (state == 1) {
-      nextEdge = _GetNextjacentEdge(this, currentEdge);
-      if (!nextEdge) {
-        state = 0;
-      } else if (nextEdge == startEdge) {
-        state = -1;
-      } else {
-        if (!_IsNeighborRegistered(neighbors, nextEdge->next->vertex)) {
-          neighbors.push_back(nextEdge->next->vertex);
-        }
-        currentEdge = nextEdge;
-      }
-    }
-    
-    if(state == 0) {
-      HalfEdge* previousEdge = NULL;
-      currentEdge = startEdge;
-      previousEdge = _GetPreviousEdge(currentEdge);
-      if (!_IsNeighborRegistered(neighbors, previousEdge->vertex)) {
-        neighbors.push_back(previousEdge->vertex);
-      }
-      state = 1;
-      while (state == 1) {
-        previousEdge = _GetPreviousAdjacentEdge(this, currentEdge);
-        if (!previousEdge) {
-          state = 0;
-        }
-        else if (previousEdge == startEdge) {
-          state = -1;
-        }
-        else {
-          if (!_IsNeighborRegistered(neighbors, previousEdge->next->vertex)) {
-            neighbors.push_back(previousEdge->next->vertex);
-          }
-          currentEdge = previousEdge;
-        }
-      }
-    }
+    baseFaceVertexIdx += faceVertexCount;
   }
 }
 
-void Mesh::SetTopology(
-  const pxr::VtArray<pxr::GfVec3f>& positions,
-  const pxr::VtArray<int>& faceVertexCounts,
-  const pxr::VtArray<int>& faceVertexIndices
-)
+// custom comparator for triangle edges
+struct
 {
-  _faceVertexCounts = faceVertexCounts;
-  _numFaces = _faceVertexCounts.size();
-  _faceVertexIndices = faceVertexIndices;
-  _numSamples = _faceVertexIndices.size();
-  _points = positions;
-  _normals = positions;
-  _numPoints = _points.size();
+  inline bool operator() (const pxr::GfVec4i& e1, const pxr::GfVec4i& e2)
+  {
+    return e1[0] < e2[0] || (e1[0] == e2[0] && e1[1] < e2[1]);
+  }
+} _CompareTriangleEdge;
 
-  Init();
+void  _FindTriangleNeighbors(const pxr::VtArray<Triangle>& triangles, pxr::VtArray<int>& neighbors)
+{
+  pxr::VtArray<pxr::GfVec4i> edges;
+  const size_t numTriangles = triangles.size();
+  int id0, id1;
+  for (size_t i = 0; i < numTriangles; ++i) {
+    const Triangle& triangle = triangles[i];
+    for (size_t j = 0; j < 3; ++j) {
+      id0 = triangle.vertices[j];
+      id1 = triangle.vertices[(j + 1) % 3];
+      edges.push_back({pxr::GfMin(id0, id1), pxr::GfMax(id0, id1), (int)(3 * i + j), (int)triangle.id});
+    }
+  }
+
+  std::sort(edges.begin(), edges.end(), _CompareTriangleEdge);
+  neighbors.assign(3 * numTriangles, -1);
+
+  size_t i = 0;
+  while (i < edges.size()) {
+    const pxr::GfVec4i& e0 = edges[i];
+    const pxr::GfVec4i& e1 = edges[i + 1];
+
+    if (e0[0] == e1[0] && e0[1] == e1[1]) {
+      neighbors[e0[2]] = e1[3];
+      neighbors[e1[2]] = e0[3];
+    }
+    i ++;
+  }
 }
 
-void Mesh::Init()
+void Mesh::ComputeTrianglePairs()
 {
-  // initialize boundaries
-  _boundary.resize(_numPoints);
-  memset(&_boundary[0], false, _numPoints * sizeof(bool));
-  
-  // build triangles
-  TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
-  _numTriangles = _triangles.size();
 
-  // compute half-edges
-  ComputeHalfEdges();
-  ComputeBoundingBox();
-  // compute neighbors
-  //ComputeNeighbors();
+  TrianglePairGraph graph(_faceVertexCounts, _faceVertexIndices);
+  _trianglePairs.clear();
+  uint32_t triPairId = 0;
+  for(auto& triPair: graph.GetPairs()) {
+    _trianglePairs.push_back({ triPairId++, &_triangles[triPair.first],
+       triPair.second >= 0 ? &_triangles[triPair.second] : NULL});
+  }
+
+  BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
+      
+}
+
+pxr::VtArray<TrianglePair>& 
+Mesh::GetTrianglePairs()
+{
+  if (!(_flags & Mesh::TRIANGLEPAIRS)) {
+    ComputeTrianglePairs();
+  }
+  return _trianglePairs;
+}
+
+
+size_t
+Mesh::GetNumAdjacents(size_t index)
+{
+  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
+    _halfEdges.ComputeAdjacents();
+    BITMASK_SET(_flags, Mesh::ADJACENTS);
+  }
+  return _halfEdges.GetNumAdjacents(index);
+}
+
+const int* 
+Mesh::GetAdjacents(size_t index)
+{
+  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
+    _halfEdges.ComputeAdjacents();
+    BITMASK_SET(_flags, Mesh::ADJACENTS);
+  }
+  return _halfEdges.GetAdjacents(index);
+}
+
+int 
+Mesh::GetAdjacent(size_t index, size_t adjacent)
+{
+  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
+    _halfEdges.ComputeAdjacents();
+    BITMASK_SET(_flags, Mesh::ADJACENTS);
+  }
+  return _halfEdges.GetAdjacent(index, adjacent);
 }
 
 void 
-Mesh::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
+Mesh::ComputeAdjacents()
 {
-  _points = positions;
+  if (!BITMASK_CHECK(_flags, Mesh::HALFEDGES)) {
+    ComputeHalfEdges();
+  }
+  _halfEdges.ComputeAdjacents();
+  BITMASK_SET(_flags, Mesh::ADJACENTS);
 }
 
-const HalfEdge* 
-_GetNextCutEdge(const HalfEdge* edge, 
-  const std::vector<bool>& doCutEdge, int& cnt)
+  
+
+size_t
+Mesh::GetNumNeighbors(size_t index)
 {
-  HalfEdge* current = (HalfEdge*)edge;
-  while (current->next->twin) {
-    current = current->next->twin;
-    cnt++;
-    if (current == edge) {
-      return edge;
-    }
-    else {
-      if (doCutEdge[current->index]) {
-        return current;
-      }
-    }
+  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
+    _halfEdges.ComputeNeighbors();
+    BITMASK_SET(_flags, Mesh::NEIGHBORS);
   }
-  return edge;
+  return _halfEdges.GetNumNeighbors(index);
+}
+
+const int* 
+Mesh::GetNeighbors(size_t index)
+{
+  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
+    _halfEdges.ComputeNeighbors();
+    BITMASK_SET(_flags, Mesh::NEIGHBORS);
+  }
+  return _halfEdges.GetNeighbors(index);
+}
+
+int 
+Mesh::GetNeighbor(size_t index, size_t neighbor) 
+{
+  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
+    _halfEdges.ComputeNeighbors();
+    BITMASK_SET(_flags, Mesh::NEIGHBORS);
+  }
+  return _halfEdges.GetNeighbor(index, neighbor);
+}
+
+void Mesh::ComputeNeighbors()
+{
+  if (!BITMASK_CHECK(_flags, Mesh::HALFEDGES)) {
+    ComputeHalfEdges();
+  }
+  _halfEdges.ComputeNeighbors();
+  BITMASK_SET(_flags, Mesh::NEIGHBORS);
+}
+
+
+void Mesh::Set(
+  const pxr::VtArray<pxr::GfVec3f>& positions,
+  const pxr::VtArray<int>& faceVertexCounts,
+  const pxr::VtArray<int>& faceVertexIndices,
+  bool init
+)
+{
+  _faceVertexCounts = faceVertexCounts;
+  _faceVertexIndices = faceVertexIndices;
+  _positions = positions;
+  _previous = _positions;
+  _normals = positions;
+  if(init)Prepare();
+}
+
+void Mesh::SetTopology(
+  const pxr::VtArray<int>& faceVertexCounts,
+  const pxr::VtArray<int>& faceVertexIndices,
+  bool init
+)
+{
+  _faceVertexCounts = faceVertexCounts;
+  _faceVertexIndices = faceVertexIndices;
+
+  if(init)Prepare();
+}
+
+void Mesh::SetPositions(const pxr::GfVec3f* positions, size_t n)
+{
+  if(n == GetNumPoints()) {
+    memcpy(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
+    // recompute normals
+    ComputeVertexNormals(_positions, _faceVertexCounts, 
+    _faceVertexIndices, _triangles, _normals);
+  }
+}
+
+void Mesh::SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions)
+{
+  const size_t n = positions.size();
+  if(n == GetNumPoints()) {
+    _positions = positions;
+    // recompute normals
+    ComputeVertexNormals(_positions, _faceVertexCounts, 
+    _faceVertexIndices, _triangles, _normals);
+  }
+}
+
+void Mesh::Prepare(bool connectivity)
+{
+  size_t numPoints = _positions.size();
+  // compute triangles
+  TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
+
+  // compute normals
+  ComputeVertexNormals(_positions, _faceVertexCounts, 
+    _faceVertexIndices, _triangles, _normals);
+
+  // compute bouding box
+  ComputeBoundingBox();
+
+  if(connectivity) {
+    // compute half-edges
+    ComputeHalfEdges();
+
+    // compute adjacents (connected vertices)
+    ComputeAdjacents();
+
+    // compute neighbors (first ring vertices)
+    ComputeNeighbors();
+  } else {
+    BITMASK_CLEAR(_flags,Mesh::HALFEDGES|Mesh::NEIGHBORS);
+
+  }
+}
+
+Geometry::DirtyState 
+Mesh::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+{
+  if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomMesh>())
+  {
+    _previous = _positions;
+    pxr::UsdGeomMesh usdMesh(_prim);
+    const size_t nbPositions = _positions.size();
+    usdMesh.GetPointsAttr().Get(&_positions, time);
+  }
+  return Geometry::DirtyState::DEFORM;
+}
+
+void 
+Mesh::_Inject(const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time)
+{
+  if(_prim.IsA<pxr::UsdGeomMesh>()) {
+    pxr::UsdGeomMesh usdMesh(_prim);
+
+    usdMesh.CreatePointsAttr().Set(GetPositions(), time);
+    usdMesh.CreateFaceVertexCountsAttr().Set(GetFaceCounts(), time);
+    usdMesh.CreateFaceVertexIndicesAttr().Set(GetFaceConnects(), time);
+  }
 }
 
 static int 
 _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
   HalfEdge* current = start;
+
   int count = 0;
+  /*
   bool search = true;
   while (search) {
-    if (current->twin) {
-      if (doCutEdge[current->index] && doCutEdge[current->twin->next->index]) {
+    if (current->twin != HalfEdge::INVALID_INDEX) {
+      if (doCutEdge[current->index] && doCutEdge[_halfEdges[current->twin]]) {
         count++;
       }
       current = current->twin->next;
@@ -656,7 +586,7 @@ _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
     if (current == start)search = false;
   }
   current = start;
-  /*
+  
   bool reverseSearch = true;
   while (reverseSearch) {
     HalfEdge* previous = _GetPreviousEdge(current)->twin;
@@ -672,155 +602,74 @@ _CountPointCuts(const std::vector<bool>& doCutEdge, HalfEdge* start) {
   return count;
 }
 
-void Mesh::SplitEdge(size_t index)
+bool Mesh::FlipEdge(HalfEdge* edge)
 {
-  size_t numEdges = _halfEdges.size();
-  HalfEdge& currentEdge = _halfEdges[index];
-  if (currentEdge.latency != HalfEdge::REAL)return;
-
-  HalfEdge* twinEdge = currentEdge.twin;
-  if(twinEdge) _halfEdges.resize(numEdges + 6);
-  else _halfEdges.resize(numEdges + 3);
-
-  const pxr::GfVec3f p = (_points[currentEdge.vertex] + _points[currentEdge.next->vertex]) * 0.5f;
-  _points.push_back(p);
-  _normals.push_back(p);
-
-  HalfEdge* nextEdge = _GetNextEdge(&currentEdge, HalfEdge::REAL);
-  HalfEdge* previousEdge = _GetPreviousEdge(&currentEdge, HalfEdge::REAL);
-
-  HalfEdge* halfEdge = &_halfEdges[numEdges];
-  halfEdge->index = numEdges;
-  halfEdge->vertex = _numPoints;
-  halfEdge->next = nextEdge;
-  halfEdge->latency = HalfEdge::REAL;
-  HalfEdge* n1 = halfEdge;
-  halfEdge++;
-
-  halfEdge->index = numEdges + 1;
-  halfEdge->vertex = _numPoints;
-  halfEdge->next = previousEdge;
-  halfEdge->latency = HalfEdge::IMPLICIT;
-  HalfEdge* n2 = halfEdge;
-  halfEdge++;
-
-  halfEdge->index = numEdges + 2;
-  halfEdge->vertex = _numPoints;
-  halfEdge->next = n2;
-  halfEdge->latency = HalfEdge::IMPLICIT;
-  HalfEdge* n3 = halfEdge;
-
-  nextEdge->next = n3;
-  currentEdge.next = n1;
-
-  _numPoints++;
-  _numTriangles++;
-  
-  if (twinEdge) {
-    HalfEdge* twinNextEdge = _GetNextEdge(twinEdge, HalfEdge::REAL);
-    HalfEdge* twinPreviousEdge = _GetPreviousEdge(twinEdge, HalfEdge::REAL);
-
-    halfEdge->index = numEdges + 3;
-    halfEdge->vertex = _numPoints;
-    halfEdge->next = twinNextEdge;
-    halfEdge->latency = HalfEdge::REAL;
-    HalfEdge* n4 = halfEdge;
-    halfEdge++;
-
-    halfEdge->index = numEdges + 4;
-    halfEdge->vertex = _numPoints;
-    halfEdge->next = twinNextEdge;
-    halfEdge->latency = HalfEdge::IMPLICIT;
-    HalfEdge* n5 = halfEdge;
-    halfEdge++;
-
-    halfEdge->index = numEdges + 5;
-    halfEdge->vertex = twinEdge->vertex;
-    halfEdge->next = n4;
-    halfEdge->latency = HalfEdge::IMPLICIT;
-    HalfEdge* n6 = halfEdge;
-
-    twinNextEdge->next = n3;
-    twinEdge->next = n1;
-
-    _numPoints++;
-    _numTriangles++;
-  }
+  return _halfEdges.FlipEdge(edge);
 }
 
-void Mesh::CollapseEdge(size_t index)
+bool Mesh::SplitEdge(HalfEdge* edge)
 {
-  HalfEdge* currentEdge = &_halfEdges[index];
-  HalfEdge* twinEdge = currentEdge->twin;
+  if (!edge) edge = _halfEdges.GetEdge(0);
 
-  int p1 = currentEdge->vertex;
-  int p2 = currentEdge->next->vertex;
+  size_t edgeIdx = _halfEdges._GetEdgeIndex(edge);
 
-  if (p1 > p2) {
-    _points[p2] = (_points[p1] + _points[p2]) * 0.5f;
-    _RemovePoint(_points, p1);
-  } else {
-    _points[p1] = (_points[p1] + _points[p2]) * 0.5f;
-    _RemovePoint(_points, p2);
-  }
-  HalfEdge* nextEdge = _GetNextEdge(currentEdge);
-  HalfEdge* previousEdge = _GetPreviousEdge(currentEdge);
-  if (nextEdge->twin && previousEdge->twin) {
-    nextEdge->twin->twin = previousEdge;
-    previousEdge->twin->twin = nextEdge;
-  }
+  const HalfEdge* next = _halfEdges.GetEdge(edge->next);
+  size_t numPoints = GetNumPoints();
+  const pxr::GfVec3f p =
+    (_positions[edge->vertex] + _positions[next->vertex]) * 0.5f;
 
-  _RemoveEdge(_halfEdges, nextEdge);
-  _RemoveEdge(_halfEdges, previousEdge);
+  AddPoint(p, 0.01f);
   
+  if (_halfEdges.SplitEdge(edge, numPoints)) {
+    // reallocation mess pointer retrieve edge
+    edge = _halfEdges.GetEdge(edgeIdx);
+    TriangulateFace(_halfEdges.GetEdge(edge->next));
+    if (edge->twin >= 0) {
+      TriangulateFace(_halfEdges.GetEdge(edge->twin));
+    }
+    _halfEdges.ComputeTopology(_faceVertexCounts, _faceVertexIndices);
+    return true;
+  }
+  return false;
+}
 
-  //previousEdge->next = nextEd
+
+bool Mesh::CollapseEdge(HalfEdge* edge)
+{
+  const HalfEdge* next = _halfEdges.GetEdge(edge->next);
+  size_t p1 = edge->vertex;
+  size_t p2 = next->vertex;
+
+  if (_halfEdges.CollapseEdge(edge)) {
+    if (p1 > p2) {
+      _positions[p2] = (_positions[p1] + _positions[p2]) * 0.5f;
+      RemovePoint(p1);
+    }
+    else {
+      _positions[p1] = (_positions[p1] + _positions[p2]) * 0.5f;
+      RemovePoint(p2);
+    }
+  }
+  return true;
 }
 
 void Mesh::DisconnectEdges(const pxr::VtArray<int>& cutEdges)
 {
-  size_t numHalfEdges = _halfEdges.size();
-  std::vector<std::vector<int>> insertedPoints(_points.size());
-  std::vector<bool> doCutEdge(numHalfEdges);
 
-  pxr::VtArray<pxr::GfVec3f> points = _points;
-  size_t baseNewPoints = points.size();
-  pxr::VtArray<int> indices = _faceVertexIndices;
-  for(size_t i = 0; i < numHalfEdges; ++i) doCutEdge[i] = false;
-  for(const auto& cutEdge: cutEdges) doCutEdge[cutEdge] = true;
-  /*
-  for(size_t faceVertex = 0; faceVertex < _faceVertexIndices.size(); ++faceVertex) {
-    if(doCutEdge[faceVertex]) {
-      if(! insertedPoints[_faceVertexIndices[faceVertex]].size()) {
-        insertedPoints[_faceVertexIndices[faceVertex]].push_back(baseNewPoints++);
-        points.push_back(_points[_faceVertexIndices[faceVertex]]);
-      } else {
-        indices[faceVertex] = insertedPoints[_faceVertexIndices[faceVertex]][0];
-      }
-    }
-  }
-
-  SetTopology(points, _faceVertexCounts, indices);
-  */
-
-  for (size_t faceVertex = 0; faceVertex < _faceVertexIndices.size(); ++faceVertex) {
-    HalfEdge* halfEdge = &_halfEdges[faceVertex];
-    int numCuts = _CountPointCuts(doCutEdge, halfEdge);
-    if(numCuts)std::cout << "NUM CUTS : " << numCuts << std::endl;
-  }
 }
 
-void Mesh::Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs, const pxr::TfToken& interpolation)
+void Mesh::Flatten(const pxr::VtArray<pxr::GfVec2d>& uvs, 
+  const pxr::TfToken& interpolation)
 {
   if (interpolation == pxr::UsdGeomTokens->vertex) {
     for (size_t i = 0; i < uvs.size(); ++i) {
       const pxr::GfVec2d& uv = uvs[i];
-      _points[i] = pxr::GfVec3f(uv[0], 0.f, uv[1]);
+      _positions[i] = pxr::GfVec3f(uv[0], 0.f, uv[1]);
     }
   } else if (interpolation == pxr::UsdGeomTokens->faceVarying) {
     for (size_t i = 0; i < uvs.size(); ++i) {
       const pxr::GfVec2d& uv = uvs[i];
-      _points[_faceVertexIndices[i]] = pxr::GfVec3f(uv[0], 0.f, uv[1]);
+      _positions[_faceVertexIndices[i]] = pxr::GfVec3f(uv[0], 0.f, uv[1]);
     }
   }
 }
@@ -868,6 +717,125 @@ float Mesh::AveragedTriangleArea()
   else return 0;
 }
 
+void Mesh::Triangulate()
+{
+  size_t numTriangles = _triangles.size();
+  pxr::VtArray<int> faceVertexCount(numTriangles, 3);
+  pxr::VtArray<int> faceVertexConnect(numTriangles * 3);
+  for (size_t t = 0; t < numTriangles; ++t) {
+    memcpy(&faceVertexConnect[t * 3], &_triangles[t].vertices[0], sizeof(pxr::GfVec3i));
+  }
+  SetTopology(faceVertexCount, faceVertexConnect);
+}
+
+void Mesh::TriangulateFace(const HalfEdge* edge)
+{
+  size_t numFaceVertices = _halfEdges._GetFaceVerticesCount(edge);
+  if (numFaceVertices < 4) {
+    std::cerr << "[Mesh] can't triangulate face with " << numFaceVertices << 
+      "vertices" << std::endl;
+    return;
+  }
+
+  _halfEdges._TriangulateFace(edge);
+}
+
+void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs, bool unique)
+{
+  pxr::VtArray<int> neighbors;
+  _FindTriangleNeighbors(_triangles, neighbors);
+  std::vector<bool> used(_triangles.size(), false);
+  uint32_t triPairId = 0;
+
+  if(unique) {
+    bool found;
+    for(size_t i = 0; i< neighbors.size();i+=3) {
+
+      found = false;
+      for(size_t j=0; j < 3; ++j) {
+        if(neighbors[i+j] == -1) continue;
+        if(used[neighbors[i+j]])continue;
+        if(!used[i/3] && !used[neighbors[i+j]]) {
+          pairs.push_back({ triPairId++, &_triangles[i/3], &_triangles[neighbors[i+j]]});
+          used[i/3] = true;
+          used[neighbors[i+j]] = true;
+          found = true;
+          break;
+        }
+        if(!found){
+            pairs.push_back({triPairId++, &_triangles[i/3], NULL});
+            used[i/3] = true;
+        }
+      }
+    }
+  } else 
+    for(size_t i = 0; i< neighbors.size();i+=3) 
+      for(size_t j=0; j < 3; ++j)
+        if(neighbors[i+j] == -1) continue;
+        else if(i/3 < neighbors[i+j]){
+          pairs.push_back({ triPairId++, &_triangles[i/3], &_triangles[neighbors[i+j]]});
+        }
+  /*
+  pxr::VtArray<int> edgeTriIndex(_halfEdges.GetNumRawEdges(), -1);
+
+  int triangleIdx = -1;
+  int edgeIdx = 0;
+  for(auto& faceVertexCount: _faceVertexCounts) {
+    for(int vertexIdx = 0; vertexIdx < faceVertexCount; ++vertexIdx) {
+      if(vertexIdx == 0) {
+        edgeTriIndex[edgeIdx++] = triangleIdx + 1;
+      } else if(vertexIdx == (faceVertexCount-1)) {
+        edgeTriIndex[edgeIdx++] = triangleIdx;
+      } else {
+        edgeTriIndex[edgeIdx++] = ++triangleIdx;
+      }
+    }
+  }
+
+  uint32_t triPairIdx = 0;
+  triangleIdx = 0;
+  edgeIdx = 0;
+  for(auto& faceVertexCount: _faceVertexCounts) {
+    for(int vertexIdx = 1; vertexIdx < (faceVertexCount - 1); ++vertexIdx) {
+      
+      HalfEdge* e = _halfEdges.GetEdge(edgeIdx + vertexIdx);
+      HalfEdge* p = _halfEdges.GetEdge(e->prev);
+      HalfEdge* n = _halfEdges.GetEdge(e->next);
+
+      Triangle* t = &_triangles[triangleIdx++];
+      
+      if(e->twin >= 0) {
+        Triangle* o = &_triangles[edgeTriIndex[e->twin]];
+        if(t->id < o->id) {
+          pairs.push_back({triPairIdx++, t, o});
+        }
+      }
+
+      Triangle* lo = &_triangles[edgeTriIndex[_halfEdges.GetEdgeIndex(p)]];
+      if(t->id == lo->id && p->twin >= 0) {
+        lo = &_triangles[edgeTriIndex[p->twin]];
+        if(t->id < lo->id) {
+          pairs.push_back({triPairIdx++, t, lo});
+        }
+      } else if(t->id < lo->id) {
+        pairs.push_back({triPairIdx++, t, lo});
+      }
+
+      Triangle* ro = &_triangles[edgeTriIndex[_halfEdges.GetEdgeIndex(n)]];
+      if(t->id == ro->id && n->twin >= 0) {
+        ro = &_triangles[edgeTriIndex[n->twin]];
+        if(t->id < ro->id) {
+          pairs.push_back({triPairIdx++, t, ro});
+        }
+      } else if(t->id < ro->id) {
+        pairs.push_back({triPairIdx++, t, ro});
+      }
+    }
+    edgeIdx += faceVertexCount;
+  }
+  */
+}
+
 bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin, 
   const pxr::GfVec3f& direction, Location& result, float maxDistance)
 {
@@ -892,8 +860,8 @@ bool Mesh::ClosestIntersection(const pxr::GfVec3f& origin,
       if(distance < minDistance)
       {
         minDistance = distance;
-        result.baryCoords = pxr::GfVec3f(baryCoords);
-        result.id = tri->id;
+        result.SetCoordinates(pxr::GfVec3f(baryCoords));
+        result.SetComponentIndex(tri->id);
         hit = true;
       }
     }
@@ -941,94 +909,209 @@ void Mesh::PolygonSoup(size_t numPolygons, const pxr::GfVec3f& minimum,
   for(size_t i=0; i < numPoints; ++i) {
     faceVertexConnect[i] = i;
   }
-
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  for(size_t i=0; i < numPoints / 3; ++i) {
-    pxr::GfVec3f color(
-      RANDOM_0_1,
-      RANDOM_0_1,
-      RANDOM_0_1
-    );
-    colors[i * 3] = color;
-    colors[i * 3 + 1] = color;
-    colors[i * 3 + 2] = color;
-  }
-
-  SetTopology(position, faceVertexCount, faceVertexConnect);
-  SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
+  Set(position, faceVertexCount, faceVertexConnect);
 }
 
-void Mesh::TriangularGrid2D(float width, float height, const pxr::GfMatrix4f& space, float size)
+
+void Mesh::ColoredPolygonSoup(size_t numPolygons, 
+  const pxr::GfVec3f& minimum, const pxr::GfVec3f& maximum)
 {
-  size_t numX = (width / size ) * 0.5 + 1;
-  size_t numY = (height / size) + 1;
+  //mesh->PolygonSoup(65535);
+  pxr::GfMatrix4f space(1.f);
+  TriangularGrid2D(0.05f, space);
+  Randomize(0.05f);
+}
+
+Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path)
+{
+  Mesh* mesh = new Mesh();
+  
+  mesh->OpenVDBSphere(6.66, pxr::GfVec3f(3.f, 7.f, 4.f));
+
+  pxr::UsdGeomMesh vdbSphere = pxr::UsdGeomMesh::Define(stage, path);
+  vdbSphere.CreatePointsAttr(pxr::VtValue(mesh->GetPositions()));
+  vdbSphere.CreateNormalsAttr(pxr::VtValue(mesh->GetNormals()));
+  vdbSphere.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh->GetFaceConnects()));
+  vdbSphere.CreateFaceVertexCountsAttr(pxr::VtValue(mesh->GetFaceCounts()));
+
+  vdbSphere.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
+
+  std::cout << "CREATED OPENVDB SPHERE !!!" << std::endl;
+
+  return mesh;
+}
+
+
+void Mesh::Random2DPattern(size_t numFaces)
+{
+  pxr::VtArray<pxr::GfVec3f> points(numFaces * 2 + 2);
+  pxr::VtArray<int> faceCounts(numFaces * 2);
+  pxr::VtArray<int> faceConnects(numFaces * 6);
+
+  for (size_t face = 0; face < numFaces; ++face) {
+    faceCounts[face * 2    ] = 3;
+    faceCounts[face * 2 + 1] = 3;
+    faceConnects[face * 6    ] = face * 2;
+    faceConnects[face * 6 + 1] = face * 2 + 2;
+    faceConnects[face * 6 + 2] = face * 2 + 1;
+    faceConnects[face * 6 + 3] = face * 2 + 2;
+    faceConnects[face * 6 + 4] = face * 2 + 3;
+    faceConnects[face * 6 + 5] = face * 2 + 1;
+
+    points[face * 2] = pxr::GfVec3f(face, 0, RANDOM_0_1);
+    points[face * 2 + 1] = pxr::GfVec3f(face, 0, -RANDOM_0_1);
+  }
+
+  points[numFaces * 2] = pxr::GfVec3f(numFaces, 0, RANDOM_0_1);
+  points[numFaces * 2 + 1] = pxr::GfVec3f(numFaces, 0, -RANDOM_0_1);
+
+  Set(points, faceCounts, faceConnects);
+}
+
+void Mesh::RegularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
+{
+  size_t num = (1.f / spacing ) * 0.5 + 1;
+  size_t numPoints = num * num;
+  size_t numPolygons = (num - 1) * (num - 1);
+  size_t numSamples = numPolygons * 4;
+  pxr::VtArray<pxr::GfVec3f> positions(numPoints);
+
+  float space = 1.f / static_cast<float>(num);
+
+  for(size_t y = 0; y < num; ++y) {
+    for(size_t x = 0; x < num; ++x) {
+      size_t vertexId = y * num + x;
+      positions[vertexId][0] = x * space - 0.5f;
+      positions[vertexId][1] = 0.f;
+      positions[vertexId][2] = y * space - 0.5f;
+      positions[vertexId] = matrix.Transform(positions[vertexId]);
+    }
+  }
+  
+  pxr::VtArray<int> faceCounts(numPolygons);
+  for(size_t i=0; i < numPolygons; ++i) {
+    faceCounts[i] = 4;
+  }
+
+  size_t numRows = num - 1;
+  size_t numPolygonPerRow = (num - 1) ;
+  pxr::VtArray<int> faceIndices(numSamples);
+  
+  size_t k = 0;
+  for(size_t i=0; i < numRows; ++i) {
+    for (size_t j = 0; j < numPolygonPerRow; ++j) {
+      faceIndices[k++] = (i + 1) * num + j + 1; 
+      faceIndices[k++] = i * num + j + 1;
+      faceIndices[k++] = i * num + j;
+      faceIndices[k++] = (i + 1) * num + j; 
+    }
+  }
+ 
+  Set(positions, faceCounts, faceIndices);
+}
+
+void Mesh::Cube()
+{
+  pxr::VtArray<pxr::GfVec3f> positions = {
+    {-0.5f, -0.5f, -0.5f}, { 0.5f, -0.5f, -0.5f},
+    {-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, -0.5f},
+    {-0.5f, -0.5f,  0.5f}, { 0.5f, -0.5f,  0.5f},
+    {-0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f,  0.5f}
+  };
+
+  pxr::VtArray<int> faceCounts = {
+    4,4,4,4,4,4
+  };
+
+  pxr::VtArray<int> faceIndices = {
+    0,2,3,1,4,5,7,6,
+    0,4,6,2,1,3,7,5,
+    0,1,5,4,2,6,7,3
+  };
+
+  Set(positions, faceCounts, faceIndices);
+}
+
+void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
+{
+  const float scaleY = 1.5708;
+  const float invScaleY = 1.f/scaleY;
+
+  size_t numX = (1.f / spacing )+ 1;
+  size_t numY = (1.f / spacing) + 1;
   size_t numPoints = numX * numY;
   size_t numTriangles = (numX - 1) * 2 * (numY - 1);
   size_t numSamples = numTriangles * 3;
-  pxr::VtArray<pxr::GfVec3f> position(numPoints);
+  pxr::VtArray<pxr::GfVec3f> positions(numPoints);
 
-  float spaceX = size * 2.0 / width;
-  float spaceY = size / height;
+  float spaceX = spacing * 2.f;
+  float spaceY = spacing * scaleY;
 
   for(size_t y = 0; y < numY; ++y) {
     for(size_t x = 0; x < numX; ++x) {
       size_t vertexId = y * numX + x;
-      if(y %2 == 0)position[vertexId][0] = x * spaceX + spaceX * 0.5f;
-      else position[vertexId][0] = x * spaceX;
-      position[vertexId][1] = 0.f;
-      position[vertexId][2] = y * spaceY;
-      position[vertexId] = space.Transform(position[vertexId]);
+      positions[vertexId][0] = spaceX * x - 0.5f /*- spaceX * (y % 2 +1)*/;
+      positions[vertexId][1] = 0.f;
+      positions[vertexId][2] = spaceY * y - 0.5f;
+      positions[vertexId] = matrix.Transform(positions[vertexId]);
     }
   }
   
-  pxr::VtArray<int> faceVertexCount(numTriangles);
+  pxr::VtArray<int> faceCounts(numTriangles);
   for(size_t i=0; i < numTriangles; ++i) {
-    faceVertexCount[i] = 3;
+    faceCounts[i] = 3;
   }
 
   size_t numRows = numY - 1;
   size_t numTrianglesPerRow = (numX - 1) ;
-  pxr::VtArray<int> faceVertexConnect(numSamples);
+  pxr::VtArray<int> faceIndices(numSamples);
   
   size_t k = 0;
   for(size_t i=0; i < numRows; ++i) {
     for (size_t j = 0; j < numTrianglesPerRow; ++j) {
-      if (i % 2 == 0) {
-        faceVertexConnect[k++] = i * numX + j;
-        faceVertexConnect[k++] = i * numX + j + 1;
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
+      if(i%2) {
+        if (j % 2)  {
+          faceIndices[k++] = (i + 1) * numX + j + 1; 
+          faceIndices[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j;
 
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
-        faceVertexConnect[k++] = (i + 1) * numX + j;
-        faceVertexConnect[k++] = i * numX + j;
-      }
-      else {
-        faceVertexConnect[k++] = i * numX + j;
-        faceVertexConnect[k++] = i * numX + j + 1;
-        faceVertexConnect[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = i * numX + j; 
+          faceIndices[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = (i + 1) * numX + j + 1;
+        }
+        else {
+          faceIndices[k++] = (i + 1) * numX + j; 
+          faceIndices[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j;
 
-        faceVertexConnect[k++] = (i + 1) * numX + j + 1;
-        faceVertexConnect[k++] = (i + 1) * numX + j;
-        faceVertexConnect[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j + 1; 
+          faceIndices[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = (i + 1) * numX + j + 1;
+        }
+      } else {
+        if (j % 2)  {
+          faceIndices[k++] = (i + 1) * numX + j; 
+          faceIndices[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j;
+
+          faceIndices[k++] = i * numX + j + 1; 
+          faceIndices[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = (i + 1) * numX + j + 1;
+        }
+        else {
+          faceIndices[k++] = (i + 1) * numX + j + 1; 
+          faceIndices[k++] = i * numX + j + 1;
+          faceIndices[k++] = i * numX + j;
+
+          faceIndices[k++] = i * numX + j; 
+          faceIndices[k++] = (i + 1) * numX + j;
+          faceIndices[k++] = (i + 1) * numX + j + 1;
+        }
       }
+      
     }
   }
-  
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  for(size_t i=0; i < numPoints / 3; ++i) {
-    pxr::GfVec3f color(
-      RANDOM_0_1,
-      RANDOM_0_1,
-      RANDOM_0_1
-    );
-    colors[i * 3] = color;
-    colors[i * 3 + 1] = color;
-    colors[i * 3 + 2] = color;
-  }
- 
-
-  SetTopology(position, faceVertexCount, faceVertexConnect);
-  SetDisplayColor(GeomInterpolation::GeomInterpolationVertex, colors);
+  Set(positions, faceCounts, faceIndices);
 }
 
 void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
@@ -1038,13 +1121,14 @@ void Mesh::OpenVDBSphere(float radius, const pxr::GfVec3f& center)
 
 void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
 {
+  /*
   size_t numPoints = points.size();
-  std::vector<mygal::Vector2<double>> _points(numPoints);
+  std::vector<mygal::Vector2<double>> _positions(numPoints);
   for (size_t p=0; p < numPoints; ++p) {
-    _points[p].x = points[p][0];
-    _points[p].y = points[p][2];
+    _positions[p].x = points[p][0];
+    _positions[p].y = points[p][2];
   }
-  mygal::FortuneAlgorithm<double> algorithm(_points);
+  mygal::FortuneAlgorithm<double> algorithm(_positions);
   algorithm.construct();
 
   algorithm.bound(mygal::Box<double>{-0.55, -0.55, 0.55, 0.55});
@@ -1099,13 +1183,13 @@ void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
   }
 
   SetTopology(positions, faceVertexCounts, faceVertexConnects);
-  SetDisplayColor(GeomInterpolation::GeomInterpolationFaceVarying, colors);
-
+  */
 }
 
-void Mesh::Randomize(float value)
+void 
+Mesh::Randomize(float value)
 {
-  for(auto& pos: _points) {
+  for(auto& pos: _positions) {
     pos += pxr::GfVec3f(
       RANDOM_LO_HI(-value, value),
       RANDOM_LO_HI(-value, value),
@@ -1113,12 +1197,37 @@ void Mesh::Randomize(float value)
   }
 }
 
-
-void Mesh::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors)
+// query 3d position on geometry
+bool 
+Mesh::Raycast(const pxr::GfRay& ray, Location* hit,
+  double maxDistance, double* minDistance) const
 {
-  _colorsInterpolation = interp;
-  _colors = colors;
-}
+  const pxr::GfVec3f* positions = &_positions[0];
+  pxr::GfRay localRay(ray);
+  localRay.Transform(_invMatrix);
+
+  Location localHit;
+  localHit.SetGeometryIndex(0);
+  for(const Triangle& triangle: _triangles)
+    triangle.Raycast(positions, localRay, &localHit);
+
+  bool success = false;
+  if(localHit.IsValid()) {
+    const Triangle* hitTri = &_triangles[localHit.GetComponentIndex()];
+    const pxr::GfVec3f intersection = localHit.ComputePosition(positions, &hitTri->vertices[0], 3, &_matrix);
+    const float distance = (ray.GetStartPoint() - intersection).GetLength();
+    hit->Set(localHit);
+    hit->SetT(distance);
+    success = true;
+  } 
+  return success;
+};
+
+bool 
+Mesh::Closest(const pxr::GfVec3f& point, Location* hit,
+  double maxDistance, double* minDistance) const 
+{
+  return false;
+};
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -1,73 +1,51 @@
 #ifndef JVR_APPLICATION_APPLICATION_H
 #define JVR_APPLICATION_APPLICATION_H
 
+#include <pxr/usd/usd/stageCache.h>
 #include "../common.h"
-#include "../app/scene.h"
-#include "../app/workspace.h"
-#include "../app/selection.h"
+#include "../exec/execution.h"
 #include "../app/time.h"
-#include "../app/window.h"
-#include "../app/view.h"
-#include "../app/camera.h"
-#include "../app/tools.h"
-#include "../ui/popup.h"
+#include "../app/notice.h"
+#include "../app/selection.h"
 #include "../command/manager.h"
-#include "../geometry/mesh.h"
-//#include <openvdb/openvdb.h>
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class TimelineUI;
-class PropertyUI;
-class ViewportUI;
-class GraphEditorUI;
-class ExplorerUI;
-class LayersUI;
-class CurveEditorUI;
-class Command;
-class CommandManager;
+class PopupUI;
 class Engine;
 class Window;
-
+class Scene;
 
 class Application : public pxr::TfWeakBase
 {
 public:
-  static const char* APPLICATION_NAME;
+  static const char* name;
   // constructor
-  Application(unsigned width, unsigned height);
-  Application(bool fullscreen=true);
+  Application();
 
   // destructor
   ~Application();
 
     // create a fullscreen window
-  static Window* CreateFullScreenWindow();
+  static Window* CreateFullScreenWindow(const std::string& name);
 
   // create a standard window of specified size
-  static Window* CreateStandardWindow(int width, int height);
+  static Window* CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension);
 
   // create a child window
-  static Window* CreateChildWindow(int x, int y, int width, int height, Window* parent, 
-    const std::string& name="Child", bool decorated=true);
-
+  static Window* CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent);
 
   // browse file
   std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
     const int numFilters, const char* name="Browse", bool readOrWrite=false);
   
   // init application
-  void Init();
+  void Init(unsigned width, unsigned height, bool fullscreen=false);
   void Term();
 
   // update application
   bool Update();
-
-  // the main loop
-  void MainLoop();
-
-  // cleanup
-  void CleanUp();
 
   void NewScene(const std::string& filename);
   void OpenScene(const std::string& filename);
@@ -89,6 +67,7 @@ public:
   void NewSceneCallback(const NewSceneNotice& n); 
   void SceneChangedCallback(const SceneChangedNotice& n);
   void AttributeChangedCallback(const AttributeChangedNotice& n);
+  void TimeChangedCallback(const TimeChangedNotice& n);
   void UndoStackNoticeCallback(const UndoStackNotice& n);
 
   // commands
@@ -97,9 +76,6 @@ public:
   void Redo();
   void Duplicate();
   void Delete();
-
-  // time
-  Time& GetTime() { return _time; };
 
   // window
   Window* GetMainWindow() {return _mainWindow;};
@@ -116,20 +92,34 @@ public:
   void UpdatePopup();
 
   // tools
-  void SetActiveTool(short tool);
+  void SetActiveTool(size_t tool);
+  void AddDeferredCommand(CALLBACK_FN fn);
+  void ExecuteDeferredCommands();
 
   // engines
   void AddEngine(Engine* engine);
   void RemoveEngine(Engine* engine);
+  void SetActiveEngine(Engine* engine);
+  Engine* GetActiveEngine();
   std::vector<Engine*> GetEngines() { return _engines; };
-  void SetActiveViewport(ViewportUI* viewport);
+  void DirtyAllEngines();
+
+  // stage cache
+  pxr::UsdStageRefPtr& GetStage(){return _stage;};
+  void SetStage(pxr::UsdStageRefPtr& stage);
+  pxr::UsdStageCache& GetStageCache() { return _stageCache; }
 
   // execution
-  Workspace* GetWorkspace() { return _workspace; };
-  void SetWorkspace(Workspace* workspace) { _workspace = workspace; };
   void ToggleExec();
   void SetExec(bool state);
   bool GetExec();
+
+  virtual void InitExec(pxr::UsdStageRefPtr& stage);
+  virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time);
+  virtual void TerminateExec(pxr::UsdStageRefPtr& stage);
+
+  // singleton 
+  static Application *Get();
 
   // usd stages
   //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
@@ -138,47 +128,40 @@ public:
 
   pxr::SdfLayerRefPtr GetCurrentLayer();
 
+protected:
+  Execution*                        _exec;
+  double                            _lastTime;
+  static Application*               _singleton;
+
+
 private:
+  bool                              _IsAnyEngineDirty();
   std::string                       _fileName;
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindows;
   Window*                           _activeWindow;
   Window*                           _focusWindow;
-  Workspace*                        _workspace;
   Selection                         _selection;
-  bool                              _needCaptureFramebuffers;
 
   // uis
-  
-  ViewportUI*                       _viewport;
-  GraphEditorUI*                    _graph;
-  LayersUI*                         _layers;
-  ExplorerUI*                       _explorer;
-  TimelineUI*                       _timeline;
-  PropertyUI*                       _property;
-  CurveEditorUI*                    _animationEditor;
   PopupUI*                          _popup;
 
-  // time
-  Time                              _time;
-
-  // mesh
-  Mesh*                             _mesh;
-
-  // command manager
+  // command
   CommandManager                    _manager;
+  std::vector<CALLBACK_FN>          _deferred;
 
   // engines
+  pxr::UsdStageCache                _stageCache;
+  pxr::UsdStageRefPtr               _stage;
+  pxr::SdfLayerRefPtr               _layer;
   std::vector<Engine*>              _engines;
+  Engine*                           _activeEngine;
   bool                              _execute;
+
 };
 
-extern Application* APPLICATION;
-
-static Application* GetApplication() { return APPLICATION; };
-
 #define ADD_COMMAND(CMD, ...) \
-GetApplication()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));
+Application::Get()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));
 
 JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR
 

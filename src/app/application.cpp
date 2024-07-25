@@ -1,73 +1,59 @@
 #include <iostream>
 #include <string>
-#include <pxr/base/tf/debug.h>
-#include <pxr/base/tf/refPtr.h>
-#include <pxr/usd/sdf/layer.h>
-#include <pxr/usd/sdf/layerStateDelegate.h>
-#include <pxr/base/tf/refPtr.h>
-#include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
-#include <pxr/usd/usdGeom/sphere.h>
-#include <pxr/usd/usdGeom/cube.h>
-#include <pxr/usd/usdGeom/bboxCache.h>
-#include <pxr/usd/usdGeom/xformCommonAPI.h>
-#include <pxr/usd/usdGeom/mesh.h>
-#include <pxr/usd/usdGeom/cube.h>
-#include <pxr/usd/usdGeom/xform.h>
-#include <pxr/imaging/hd/renderPassState.h>
-#include <pxr/imaging/LoFi/debugCodes.h>
 
 #include "../utils/files.h"
+#include "../utils/timer.h"
 #include "../utils/prefs.h"
-#include "../ui/fileBrowser.h"
-#include "../ui/viewport.h"
-#include "../ui/menu.h"
-#include "../ui/graphEditor.h"
-#include "../ui/timeline.h"
-#include "../ui/demo.h"
-#include "../ui/toolbar.h"
-#include "../ui/explorer.h"
-#include "../ui/layers.h"
-#include "../ui/layerEditor.h"
-#include "../ui/propertyEditor.h"
-#include "../ui/curveEditor.h"
-#include "../command/command.h"
-#include "../command/delegate.h"
-#include "../command/manager.h"
-#include "../command/router.h"
-#include "../command/block.h"
+#include "../ui/popup.h"
+#include "../geometry/scene.h"
 #include "../app/application.h"
+#include "../app/commands.h"
 #include "../app/modal.h"
 #include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/engine.h"
+#include "../app/selection.h"
+#include "../app/window.h"
+#include "../app/view.h"
+#include "../app/camera.h"
+#include "../app/tools.h"
+
+#include "../tests/grid.h"
+#include "../tests/raycast.h"
+#include "../tests/particles.h"
+#include "../tests/pbd.h"
+#include "../tests/hair.h"
+#include "../tests/bvh.h"
+#include "../tests/points.h"
+#include "../tests/instancer.h"
+#include "../tests/velocity.h"
+#include "../tests/pendulum.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Application* APPLICATION = nullptr;
-const char* Application::APPLICATION_NAME = "Jivaro";
+const char* Application::name = "Jivaro";
 
+// singleton
+//----------------------------------------------------------------------------
+Application* Application::_singleton=nullptr;
+
+Application* Application::Get() { 
+  if(_singleton==nullptr){
+        _singleton = new Application();
+    }
+    return _singleton; 
+};
 
 // constructor
 //----------------------------------------------------------------------------
-Application::Application(unsigned width, unsigned height):
-  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
+Application::Application()
+  : _mainWindow(nullptr)
+  , _activeWindow(nullptr)
+  , _popup(nullptr)
+  , _execute(false)
+  , _activeEngine(nullptr)
+  , _exec(nullptr)
 {  
-  _workspace = new Workspace();
-  _mainWindow = CreateStandardWindow(width, height);
-  _activeWindow = _mainWindow;
-  _time.Init(1, 101, 24);
-  
-};
-
-Application::Application(bool fullscreen):
-  _mainWindow(nullptr), _activeWindow(nullptr), _popup(nullptr),
-  _viewport(nullptr), _execute(false), _needCaptureFramebuffers(false)
-{
-  _workspace = new Workspace();
-  _mainWindow = CreateFullScreenWindow();
-  _activeWindow = _mainWindow;
-  _time.Init(1, 101, 24);
 };
 
 // destructor
@@ -75,35 +61,31 @@ Application::Application(bool fullscreen):
 Application::~Application()
 {
   if(_mainWindow) delete _mainWindow;
-  if(_workspace) delete _workspace;
 };
 
 // create full screen window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateFullScreenWindow()
+Application::CreateFullScreenWindow(const std::string& name)
 {
-  return Window::CreateFullScreenWindow();
+  return Window::CreateFullScreenWindow(name);
 }
 
 // create child window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateChildWindow(
-  int x, int y, int width, int height, Window* parent,
-  const std::string& name, bool decorated)
+Application::CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent)
 {
   return
-    Window::CreateChildWindow(x, y, width, height,
-      parent->GetGlfwWindow(), name, decorated);
+    Window::CreateChildWindow(name, dimension, parent);
 }
 
 // create standard window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateStandardWindow(int width, int height)
+Application::CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension)
 {
-  return Window::CreateStandardWindow(width, height);
+  return Window::CreateStandardWindow(name, dimension);
 }
 
 // popup
@@ -113,8 +95,19 @@ Application::SetPopup(PopupUI* popup)
 {
   popup->SetParent(GetActiveWindow()->GetMainView());
   _popup = popup;
+  _mainWindow->CaptureFramebuffer();
+  for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
+}
+
+/*
+void
+Application::SetPopupDeferred(PopupUI* popup)
+{
+  popup->SetParent(GetActiveWindow()->GetMainView());
+  _popup = popup;
   _needCaptureFramebuffers = true;
 }
+*/
 
 void
 Application::UpdatePopup()
@@ -128,6 +121,23 @@ Application::UpdatePopup()
   _mainWindow->ForceRedraw();
   for (auto& childWindow : _childWindows)childWindow->ForceRedraw();
 }
+
+void
+Application::AddDeferredCommand(CALLBACK_FN fn)
+{
+  _deferred.push_back(fn);
+}
+
+void
+Application::ExecuteDeferredCommands()
+{
+  // execute any registered command that could not been run during draw
+  if (_deferred.size()) {
+    for(int i = _deferred.size() - 1; i >= 0; --i) _deferred[i]();
+    _deferred.clear();
+  }
+}
+
 
 // browse for file
 //----------------------------------------------------------------------------
@@ -145,7 +155,7 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
 
   ModalFileBrowser browser(x, y, label, mode);
   browser.Loop();
-  if(browser.GetStatus() == BaseModal::Status::OK) {
+  if(browser.GetStatus() == ModalBase::Status::OK) {
     result = browser.GetResult();
   }
   browser.Term();  
@@ -153,98 +163,37 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
   return result;
 }
 
-
-
-Mesh* MakeColoredPolygonSoup(pxr::UsdStageRefPtr& stage, 
-  const pxr::TfToken& path)
+bool
+Application::_IsAnyEngineDirty()
 {
-  Mesh* mesh = new Mesh();
-  //mesh->PolygonSoup(65535);
-  pxr::GfMatrix4f space(1.f);
-  mesh->TriangularGrid2D(10.f, 6.f, space, 0.2f);
-  mesh->Randomize(0.05f);
-
-  pxr::UsdGeomMesh polygonSoup = 
-    pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(path));
-  polygonSoup.CreatePointsAttr(pxr::VtValue(mesh->GetPositions()));
-  polygonSoup.CreateNormalsAttr(pxr::VtValue(mesh->GetNormals()));
-  polygonSoup.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh->GetFaceConnects()));
-  polygonSoup.CreateFaceVertexCountsAttr(pxr::VtValue(mesh->GetFaceCounts()));
-  pxr::VtArray<pxr::GfVec3f> colors(1);
-
-  polygonSoup.CreateDisplayColorAttr(pxr::VtValue(mesh->GetDisplayColor()));
-  pxr::UsdGeomPrimvar displayColorPrimvar = polygonSoup.GetDisplayColorPrimvar();
-  GeomInterpolation colorInterpolation = mesh->GetDisplayColorInterpolation();
-
-  switch(colorInterpolation) {
-    case GeomInterpolationConstant:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->constant);
-      break;
-    case GeomInterpolationUniform:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->uniform);
-      break;
-    case GeomInterpolationVertex:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->vertex);
-      break;
-    case GeomInterpolationVarying:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
-      break;
-    case GeomInterpolationFaceVarying:
-      displayColorPrimvar.SetInterpolation(pxr::UsdGeomTokens->faceVarying);
-      break;
-    default:
-      break;
+  for (auto& engine : _engines) {
+    if (engine->IsDirty())return true;
   }
-
-  polygonSoup.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
-  return mesh;
+  return false;
 }
 
-Mesh* MakeOpenVDBSphere(pxr::UsdStageRefPtr& stage, const pxr::TfToken& path)
+void
+Application::SetStage(pxr::UsdStageRefPtr& stage)
 {
-  Mesh* mesh = new Mesh();
-  /*
-  mesh->OpenVDBSphere(6.66, pxr::GfVec3f(3.f, 7.f, 4.f));
-
-  pxr::SdfPath path(path);
-  pxr::UsdGeomMesh vdbSphere = pxr::UsdGeomMesh::Define(stage, path);
-  vdbSphere.CreatePointsAttr(pxr::VtValue(mesh->GetPositions()));
-  vdbSphere.CreateNormalsAttr(pxr::VtValue(mesh->GetNormals()));
-  vdbSphere.CreateFaceVertexIndicesAttr(pxr::VtValue(mesh->GetFaceConnects()));
-  vdbSphere.CreateFaceVertexCountsAttr(pxr::VtValue(mesh->GetFaceCounts()));
-
-  vdbSphere.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::UsdGeomTokens->none));
-
-  std::cout << "CREATED OPENVDB SPHERE !!!" << std::endl;
-  */ 
- 
-  return mesh;
+  _stageCache.Insert(stage);
+  _stage = stage;
+  _layer = stage->GetRootLayer();
 }
 
 // init application
 //----------------------------------------------------------------------------
 void 
-Application::Init()
+Application::Init(unsigned width, unsigned height, bool fullscreen)
 {
- #ifdef _WIN32
-  std::string filename =
-    //"E:/Projects/RnD/USD_BUILD/assets/animX/test.usda";
-    //"C:/Users/graph/Documents/bmal/src/USD_ASSETS/Kitchen_set/Kitchen_set.usd";
-    //"E:/Projects/RnD/USD_BUILD/assets/Contour/JackTurbulized.usda";
-    //"E:/Projects/RnD/USD/extras/usd/examples/usdGeomExamples/basisCurves.usda";
-    //"E:/Projects/RnD/USD_BUILD/assets/maneki_anim.usd";
-    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
-    //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/UsdSkelExamples/HumanFemale/HumanFemal.usda";
-    //"/Users/benmalartre/Documents/RnD/USD_BUILD/assets/Kitchen_set/Kitchen_set.usd";
-    //"/Users/benmalartre/Documents/RnD/amnesie/usd/result.usda";
-#else
-  std::string filename = 
-    "/Users/benmalartre/Documents/RnD/USD_BUILD/assets/maneki_anim.usda";
-#endif
-
-  // build test scene
-  //pxr::TestScene(filename);
-  // create imaging gl engine
+  if(fullscreen) {
+    _mainWindow = CreateFullScreenWindow(name);
+  } else {
+    _mainWindow = CreateStandardWindow(name, pxr::GfVec4i(0,0,width, height));
+  }
+  
+  _activeWindow = _mainWindow;
+  Time::Get()->Init(1, 101, 24);
+  
   //TfDebug::Enable(HD_MDI);
   //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
   //TfDebug::Enable(GLF_DEBUG_CONTEXT_CAPS);
@@ -258,62 +207,12 @@ Application::Init()
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
+  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::TimeChangedCallback);
   pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
   // create window
-  _mainWindow->SetGLContext();
-  int width, height;
-  glfwGetWindowSize(_mainWindow->GetGlfwWindow(), &width, &height);
-  View* mainView = _mainWindow->SplitView(
-    _mainWindow->GetMainView(), 0.5, true, View::LFIXED, 22);
-  View* bottomView = _mainWindow->SplitView(
-    mainView->GetRight(), 0.9, true, false);
-  //bottomView->Split(0.9, true, true);
-  View* timelineView = bottomView->GetRight();
-  timelineView->SetTabed(false);
-  View* centralView = _mainWindow->SplitView(
-    bottomView->GetLeft(), 0.6, true);
-  View* middleView = centralView->GetLeft();
-  View* topView = mainView->GetLeft();
-  topView->SetTabed(false);
-
-  _mainWindow->SplitView(middleView, 0.9, false);
+  _mainWindow->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
   
-  View* workingView = _mainWindow->SplitView(
-    middleView->GetLeft(), 0.15, false);
-  View* propertyView = middleView->GetRight();
-  View* leftTopView = _mainWindow->SplitView(
-    workingView->GetLeft(), 0.1, false, View::LFIXED, 32);
-  View* toolView = leftTopView->GetLeft();
-  toolView->SetTabed(false);
-  View* explorerView = leftTopView->GetRight();
-  /*
-  _mainWindow->SplitView(stageView, 0.25, true);
-  View* layersView = stageView->GetLeft();
-  View* explorerView = stageView->GetRight();
-  */
-
-
-  View* viewportView = workingView->GetRight();  
-  View* graphView = centralView->GetRight();
-
-  _mainWindow->Resize(width, height);
-  
-  
-  GraphEditorUI* graph = new GraphEditorUI(graphView);
-  
-  //CurveEditorUI* editor = new CurveEditorUI(graphView);
-  _viewport = new ViewportUI(viewportView);
-  _timeline = new TimelineUI(timelineView);
-  MenuUI* menu = new MenuUI(topView);
-  ToolbarUI* verticalToolbar = new ToolbarUI(toolView, true);
-  _explorer = new ExplorerUI(explorerView);
-  //_layers =  new LayersUI(layersView);
-  //new LayerHierarchyUI(layersView, "fuck");
-  //_property = new PropertyUI(propertyView, "Property");
-  //new DemoUI(propertyView);
-  
-  std::cout << "PREFERENCES : " << GetPreferences().GetRootFolder() << std::endl;
   //_stage = TestAnimXFromFile(filename, editor);
   //pxr::UsdStageRefPtr stage = TestAnimX(editor);
   //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
@@ -367,43 +266,111 @@ Application::Init()
   //TestStageUI(graph, _stages);
 
  
-  _mainWindow->CollectLeaves();
+  //_mainWindow->CollectLeaves();
  
-  Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
+  /*Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
   AddWindow(childWindow);
   
   ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
   
   //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
   
-  childWindow->CollectLeaves();
+  childWindow->CollectLeaves();*/
 
 }
 
-bool 
+void 
+Application::InitExec(pxr::UsdStageRefPtr& stage)
+{
+  //_exec = new TestPendulum();
+  //_exec = new TestVelocity();
+  //_exec = new TestPoints();
+  //_exec = new TestGrid();
+  //_exec = new TestParticles();
+  //_exec = new TestInstancer();
+  //_exec = new TestRaycast();
+  //_exec = new TestPBD();
+  _exec = new TestHair();
+  //_exec = new TestBVH();
+  _exec->InitExec(stage);
+
+  for(auto& engine: _engines) {
+    engine->InitExec(_exec->GetScene());
+  }
+  
+}
+
+void
+Application::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+{
+  _exec->UpdateExec(stage, time);
+
+  for (auto& engine : _engines) {
+    engine->UpdateExec(time);
+  }
+  
+}
+
+void
+Application::TerminateExec(pxr::UsdStageRefPtr& stage)
+{
+  for (auto& engine : _engines) {
+    engine->TerminateExec();
+  }
+  _exec->TerminateExec(stage);
+  delete _exec;
+  _exec = NULL;  
+  _execute = false;
+  NewSceneNotice().Send();
+}
+
+
+void
+Application::Term()
+{
+
+}
+
+bool
 Application::Update()
 {
+  ExecuteDeferredCommands();
+  /*
   if (_needCaptureFramebuffers) {
     _mainWindow->CaptureFramebuffer();
     for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
     _needCaptureFramebuffers = false;
   }
-  _time.ComputeFramerate(glfwGetTime());
-  if(_time.IsPlaying()) {
-    if(_time.PlayBack()) {
-      if(_viewport)_viewport->GetEngine()->SetDirty(true);
-    }
-  }  
-  if (_workspace->GetExecStage()) {
-    _workspace->UpdateExec(GetTime().GetActiveTime());
-  }
+  */
 
-  glfwSwapInterval(1);
   glfwPollEvents();
+  //Time::Get()->ComputeFramerate();
+
+  static double refreshRate = 1.f / 60.f;
+  static int playback;
+  Time* time = Time::Get();
+  float currentTime(time->GetActiveTime());
+  
+  
+  // execution if needed
+  if (time->IsPlaying()) {
+    playback = time->Playback();
+    if (playback != Time::PLAYBACK_WAITING) {
+      if(_execute) UpdateExec(_stage, currentTime);
+      GetActiveEngine()->SetDirty(true);
+      _lastTime = currentTime;
+    }
+  } else {
+    if (currentTime != _lastTime || _mainWindow->GetTool()->IsInteracting()) {
+      _lastTime = currentTime;
+      if (_execute) UpdateExec(_stage, currentTime);
+    }
+  }
+  
   // draw popup
   if (_popup) {
     Window* window = _popup->GetView()->GetWindow();
-    window->Draw(_popup);
+    window->DrawPopup(_popup);
     if (_popup->IsDone() || _popup->IsCancel()) {
       _popup->Terminate();
       delete _popup;
@@ -414,7 +381,22 @@ Application::Update()
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
 
-  //glfwWaitEventsTimeout(1.f / (60 * APPLICATION->GetTime().GetFPS()));
+  // playback if needed
+  if(time->IsPlaying() && playback != Time::PLAYBACK_WAITING) {
+    switch(playback) {
+      case Time::PLAYBACK_NEXT:
+        time->NextFrame(); break;
+      case Time::PLAYBACK_PREVIOUS:
+        time->PreviousFrame(); break;
+      case Time::PLAYBACK_FIRST:
+        time->FirstFrame(); break;
+      case Time::PLAYBACK_LAST:
+        time->LastFrame(); break;
+      case Time::PLAYBACK_STOP:
+        time->StopPlayback(); break;
+    }
+  }
+
   return true;
 }
 
@@ -441,11 +423,13 @@ void
 Application::AddEngine(Engine* engine)
 {
   _engines.push_back(engine);
+  _activeEngine = engine;
 }
 
 void 
 Application::RemoveEngine(Engine* engine)
 {
+  if (engine == _activeEngine)  _activeEngine = NULL;
   for (size_t i = 0; i < _engines.size(); ++i) {
     if (engine == _engines[i]) {
       _engines.erase(_engines.begin() + i);
@@ -454,29 +438,35 @@ Application::RemoveEngine(Engine* engine)
   }
 }
 
-static void _DirtyAllEngines(std::vector<Engine*>& engines)
+void 
+Application::DirtyAllEngines()
 {
-  for (auto& engine : engines) {
+  for (auto& engine : _engines) {
     engine->SetDirty(true);
   }
 }
 
-void 
-Application::SetActiveViewport(ViewportUI* viewport) 
+Engine* Application::GetActiveEngine()
 {
-  if (_viewport) {
-    _viewport->GetView()->ClearFlag(View::TIMEVARYING);
-  }
-  _viewport = viewport;
-  _viewport->GetView()->SetFlag(View::TIMEVARYING);
+  return _activeEngine;
 }
 
 void 
-Application::SetActiveTool(short t)
+Application::SetActiveEngine(Engine* engine) 
 {
-  _mainWindow->GetTool()->SetActiveTool(t);
-  for (auto& window : _childWindows) {
-    window->GetTool()->SetActiveTool(t);
+  _activeEngine = engine;
+}
+
+void 
+Application::SetActiveTool(size_t t)
+{
+  Tool* tool = _mainWindow->GetTool();
+  size_t lastActiveTool = tool->GetActiveTool();
+  if(t != lastActiveTool) {
+    tool->SetActiveTool(t);
+    for (auto& window : _childWindows) {
+      window->GetTool()->SetActiveTool(t);
+    }
   }
 }
 
@@ -485,31 +475,37 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {
   for (auto& engine : _engines) {
     if (!_selection.IsEmpty() && _selection.IsObject()) {
-      engine->SetSelected(_selection.GetSelectedPrims());
+      engine->SetSelected(_selection.GetSelectedPaths());
     } else {
       engine->ClearSelected();
     }
   }
-  _mainWindow->GetTool()->ResetSelection();
+  if(_mainWindow->GetTool()->IsActive())
+    _mainWindow->GetTool()->ResetSelection();
   _mainWindow->ForceRedraw();
   for (auto& window : _childWindows) {
-    window->GetTool()->ResetSelection();
+    if(window->GetTool()->IsActive())
+      window->GetTool()->ResetSelection();
     window->ForceRedraw();
   }
-  _DirtyAllEngines(_engines);
+  DirtyAllEngines();
 }
 
 void 
 Application::NewSceneCallback(const NewSceneNotice& n)
 {
+  if(_exec) TerminateExec(_stage);
+
   _selection.Clear();
   _manager.Clear();
-  _DirtyAllEngines(_engines);
+  DirtyAllEngines();
 }
 
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
+  if(_exec) TerminateExec(_stage);
+
   _mainWindow->GetTool()->ResetSelection();
   _mainWindow->ForceRedraw();
   for (auto& window : _childWindows) {
@@ -517,19 +513,37 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
     window->ForceRedraw();
   }
   
-  _DirtyAllEngines(_engines);
+  DirtyAllEngines();
 }
 
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
+  if (_exec && _execute) {
+    UpdateExec(_stage, Time::Get()->GetActiveTime());
+  }
   _mainWindow->ForceRedraw();
   _mainWindow->GetTool()->ResetSelection();
   for (auto& window : _childWindows) {
     window->ForceRedraw();
     window->GetTool()->ResetSelection();
   }
-  _DirtyAllEngines(_engines);
+  DirtyAllEngines();
+}
+
+void
+Application::TimeChangedCallback(const TimeChangedNotice& n)
+{
+  if (_exec && _execute) {
+    UpdateExec(_stage, Time::Get()->GetActiveTime());
+    
+  }
+  _mainWindow->ForceRedraw();
+  for (auto& window : _childWindows) {
+    window->ForceRedraw();
+  }
+  DirtyAllEngines();
+  _lastTime = Time::Get()->GetActiveTime();
 }
 
 void
@@ -563,7 +577,7 @@ void
 Application::Delete()
 {
   Selection* selection = GetSelection();
-  const pxr::SdfPathVector& paths = selection->GetSelectedPrims();
+  const pxr::SdfPathVector& paths = selection->GetSelectedPaths();
   selection->Clear();
   ADD_COMMAND(DeletePrimCommand, GetWorkStage(), paths);
 }
@@ -605,14 +619,9 @@ void
 Application::ToggleExec() 
 {
   _execute = 1 - _execute; 
-  if (_execute) {
-    _workspace->AddExecStage();
-    _DirtyAllEngines(_engines);
-  }
-  else {
-    _workspace->RemoveExecStage();
-    _DirtyAllEngines(_engines);
-  }
+  if (_execute)InitExec(_stage);
+  else TerminateExec(_stage);
+  DirtyAllEngines();
 };
 
 void 
@@ -631,21 +640,21 @@ Application::GetExec()
 pxr::UsdStageRefPtr
 Application::GetDisplayStage()
 {
-  return _workspace->GetDisplayStage();
+  return _stage;
 }
 
 // get stage for work
 pxr::UsdStageRefPtr
 Application::GetWorkStage()
 {
-  return _workspace->GetWorkStage();
+  return _stage;
 }
 
 // get current layer
 pxr::SdfLayerRefPtr
 Application::GetCurrentLayer()
 {
-  return _workspace->GetWorkLayer();
+  return _layer;
 }
 
 // selection
@@ -685,8 +694,8 @@ Application::GetStageBoundingBox()
   pxr::GfBBox3d bbox;
   pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
   pxr::UsdGeomBBoxCache bboxCache(
-    pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
-  return bboxCache.ComputeWorldBound(_workspace->GetWorkStage()->GetPseudoRoot());
+    pxr::UsdTimeCode(Time::Get()->GetActiveTime()), purposes, false, false);
+  return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
 }
 
 pxr::GfBBox3d 
@@ -700,11 +709,11 @@ Application::GetSelectionBoundingBox()
     pxr::UsdGeomTokens->render
   };
   pxr::UsdGeomBBoxCache bboxCache(
-    pxr::UsdTimeCode(_time.GetActiveTime()), purposes, false, false);
+    pxr::UsdTimeCode(Time::Get()->GetActiveTime()), purposes, false, false);
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const Selection::Item& item = _selection[n];
     if (item.type == Selection::Type::PRIM) {
-      pxr::UsdPrim prim = _workspace->GetWorkStage()->GetPrimAtPath(item.path);
+      pxr::UsdPrim prim = _stage->GetPrimAtPath(item.path);
       
       if (prim.IsActive()) {
         const pxr::GfBBox3d primBBox = bboxCache.ComputeWorldBound(prim);

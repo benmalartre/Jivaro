@@ -1,6 +1,21 @@
-#include "time.h"
+#include "../utils/timer.h"
+#include "../geometry/geometry.h"
+#include "../app/time.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+// singleton
+//----------------------------------------------------------------------------
+Time* Time::_singleton=nullptr;
+
+Time* Time::Get() { 
+  if(_singleton==nullptr){
+        _singleton = new Time();
+    }
+    return _singleton; 
+};
+
 
 void Time::Init(float start, float end, float fps)
 {
@@ -9,27 +24,22 @@ void Time::Init(float start, float end, float fps)
   _activeTime = _startTime;
   _endTime = end;
   _maxTime = _endTime;
-  _loop = false;
-  _fps = fps;
+  _loop = true;
+  _fps = fps > 1e-6 ? fps : 1e-6;
+  _frame = 1e6f / _fps;
   _speed = 1.f;
   _playback = false;
   _playForwardOrBackward = false;
   _lastT = 0;
-  _frameCount = 0;
 }
 
-void Time::ComputeFramerate(double T)
+void Time::SetFPS(float fps)
 {
-  _frameCount++;
+  _fps = fps > 1e-6 ? fps : 1e-6; 
+  _frame = 1e6f/_fps;
+  Geometry::SetFrameDuration(_frame);
+};
 
-  if (T - _lastT >= 1.0)
-  {
-    _framerate = _frameCount;
-
-    _frameCount = 0;
-    _lastT = T;
-  }
-}
 // time
 void Time::PreviousFrame()
 {
@@ -63,33 +73,41 @@ void Time::LastFrame()
   _activeTime = _endTime;
 }
 
-void Time::StartPlayBack(bool backward)
+void Time::StartPlayback(bool backward)
 {
-  _stopWatch.Reset();
+  _chronometer = 0;
   _playback = true;
   _playForwardOrBackward = backward;
-  _stopWatch.Start();
-  PlayBack();
+  Playback();
 }
 
-void Time::StopPlayBack()
+void Time::StopPlayback()
 {
-  _stopWatch.Stop();
   _playback=false;
 }
 
-bool Time::PlayBack()
+int Time::Playback()
 {
-  _stopWatch.Stop();
-  if(_stopWatch.GetMilliseconds()>1000/_fps)
-  {
-    if(_playForwardOrBackward)PreviousFrame();
-    else NextFrame();
-    _stopWatch.Reset();
-    _stopWatch.Start();
-    return true;
-  }
-  return false;
+  _chronometer = CurrentTime() - _lastT;
+
+  if(_chronometer < _frame)
+    return PLAYBACK_WAITING;
+
+  _lastT = CurrentTime();
+  
+  if(!_playForwardOrBackward && _activeTime > _endTime)
+    return _loop ? PLAYBACK_FIRST : PLAYBACK_STOP;
+
+  else if(_playForwardOrBackward && _activeTime < _startTime)
+    return _loop ? PLAYBACK_LAST : PLAYBACK_STOP;
+
+  else if(!_playForwardOrBackward)
+    return PLAYBACK_NEXT;
+
+  else return PLAYBACK_PREVIOUS;
+
+  
 } 
+
 JVR_NAMESPACE_CLOSE_SCOPE
 

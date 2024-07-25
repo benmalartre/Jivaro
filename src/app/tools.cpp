@@ -1,17 +1,19 @@
 #include "../ui/viewport.h"
+#include "../app/handle.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
 #include "../app/selection.h"
 #include "../app/engine.h"
 #include "../app/application.h"
 
+
 JVR_NAMESPACE_OPEN_SCOPE
 
 Tool::Tool()
   : _interacting(false)
   , _active(NULL)
-  , _last(TOOL_NONE)
-  , _current(TOOL_NONE)
+  , _last(Tool::NONE)
+  , _current(Tool::NONE)
 {
 }
 
@@ -36,7 +38,6 @@ Tool::SetProgram(GLSLProgram* pgm)
 void 
 Tool::SetCamera(Camera* camera)
 {
-  _ResetActiveTool();
   if (!_active) return;
   _active->SetCamera(camera);
 
@@ -56,22 +57,22 @@ Tool::_ResetActiveTool()
   if (_last != _current) {
     if (_active)delete _active;
     switch (_current) {
-    case TOOL_NONE:
+    case Tool::NONE:
       _active = NULL;
       break;
-    case TOOL_SELECT:
+    case Tool::SELECT:
       _active = new SelectHandle();
       break;
-    case TOOL_BRUSH:
+    case Tool::BRUSH:
       _active = new BrushHandle();
       break;
-    case TOOL_SCALE:
+    case Tool::SCALE:
       _active = new ScaleHandle();
       break;
-    case TOOL_ROTATE:
+    case Tool::ROTATE:
       _active = new RotateHandle();
       break;
-    case TOOL_TRANSLATE:
+    case Tool::TRANSLATE:
       _active = new TranslateHandle();
       break;
     default:
@@ -91,11 +92,12 @@ void Tool::SetActiveTool(short tool)
 {
   _last = _current;
   _current = tool;
+  _ResetActiveTool();
 }
 
 bool Tool::IsActive()
 {
-  return (_current != TOOL_NONE);
+  return (_current != Tool::NONE);
 }
 
 bool Tool::IsInteracting() {
@@ -107,9 +109,13 @@ bool Tool::IsInteracting() {
   }
 }
 
+short Tool::GetActiveTool(){
+  return _current;
+}
+
 void Tool::Draw()
 {
-  Selection* selection = GetApplication()->GetSelection();
+  Selection* selection = Application::Get()->GetSelection();
   if(_active && selection->GetNumSelectedItems()) {
     glClear(GL_DEPTH_BUFFER_BIT);
     _active->Draw(_viewport[2] , _viewport[3]);
@@ -118,7 +124,7 @@ void Tool::Draw()
 
 void Tool::Select(float x, float y, float width, float height, bool lock)
 {
-  Selection* selection = GetApplication()->GetSelection();
+  Selection* selection = Application::Get()->GetSelection();
   if(_active  && selection->GetNumSelectedItems()) {
     _activeAxis = _active->Select(x, y, width, height, lock);
   }
@@ -133,7 +139,7 @@ void Tool::Pick(float x, float y, float width, float height)
 
 void Tool::BeginUpdate(float x, float y, float width, float height)
 {
-  Selection* selection = GetApplication()->GetSelection();
+  Selection* selection = Application::Get()->GetSelection();
   if(_active && selection->GetNumSelectedItems()) {
     if (_activeAxis != BaseHandle::AXIS_NONE) {
       _active->BeginUpdate(x, y, width, height);
@@ -156,7 +162,7 @@ void Tool::EndUpdate(float x, float y, float width, float height)
 
 void Tool::Update(float x, float y, float width, float height)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   Selection* selection = app->GetSelection();
   if(_active && selection->GetNumSelectedItems()) {
     _active->Update(x, y, width, height);

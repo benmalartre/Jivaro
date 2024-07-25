@@ -1,0 +1,56 @@
+#usda 1.0
+(
+    defaultPrim = "graph"
+    doc = """Generated from Composed Stage of root layer 
+"""
+)
+
+def ExecGraph "graph" (
+    apiSchemas = ["NodeGraphNodeAPI", "SceneGraphPrimAPI"]
+)
+{
+    def ExecNode "get" (
+        apiSchemas = ["NodeGraphNodeAPI"]
+    )
+    {
+        token inputs:Attribute (
+            connectability = "interfaceOnly"
+        )
+        asset inputs:Primitive (
+            connectability = "interfaceOnly"
+        )
+        vector3f outputs:Value = (0, 0, 0)
+        uniform token ui:nodegraph:node:expansionState = "closed"
+        uniform float2 ui:nodegraph:node:pos = (0, 0)
+    }
+
+    def ExecNode "multiply" (
+        apiSchemas = ["NodeGraphNodeAPI"]
+    )
+    {
+        float inputs:Factor = 1
+        vector3f inputs:Input.connect = </graph/get.outputs:Value>
+        vector3f outputs:Output
+        uniform token ui:nodegraph:node:expansionState = "closed"
+        uniform float2 ui:nodegraph:node:pos = (120, 0)
+    }
+
+    def ExecNode "set" (
+        apiSchemas = ["NodeGraphNodeAPI"]
+    )
+    {
+        token inputs:Attribute (
+            connectability = "interfaceOnly"
+        )
+        asset inputs:Primitive (
+            connectability = "interfaceOnly"
+        )
+        vector3f inputs:Value0 = (0, 0, 0)
+        vector3f inputs:Value0.connect = </graph/multiply.outputs:Output>
+        vector3f inputs:Value1 = (0, 0, 0)
+        vector3f inputs:Value2 = (0, 0, 0)
+        uniform token ui:nodegraph:node:expansionState = "closed"
+        uniform float2 ui:nodegraph:node:pos = (240, 0)
+    }
+}
+

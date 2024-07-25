@@ -3,12 +3,13 @@
 #include "../utils/strings.h"
 #include "../app/view.h"
 #include "../app/application.h"
-#include "../command/command.h"
+#include "../app/commands.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags ContentBrowserUI::_flags = 
+  ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_MenuBar |
   ImGuiWindowFlags_NoTitleBar |
@@ -270,21 +271,23 @@ bool ContentBrowserUI::Draw()
   const pxr::GfVec2f min(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
 
   static ContentBrowserOptions options;
   DrawContentBrowserMenuBar(options);
 
-  Workspace* workspace = GetApplication()->GetWorkspace();
-
+  //Workspace* workspace = Application::Get()->GetWorkspace();
+  Application* app = Application::Get();
   // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
-  pxr::SdfLayerHandle selectedLayer(workspace->GetWorkLayer());
-  pxr::SdfLayerHandle selectedStage(workspace->GetWorkStage() 
-    ? workspace->GetWorkStage()->GetRootLayer() : pxr::SdfLayerHandle());
+  pxr::SdfLayerHandle selectedLayer(app->GetCurrentLayer());
+  pxr::SdfLayerHandle selectedStage(app->GetWorkStage() 
+    ? app->GetWorkStage()->GetRootLayer() : pxr::SdfLayerHandle());
   auto layers = pxr::SdfLayer::GetLoadedLayers();
-  DrawLayerSet(workspace->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
+  DrawLayerSet(app->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
   /*
   if (selected != editor.GetCurrentLayer()) {
     editor.SetCurrentLayer(selected);

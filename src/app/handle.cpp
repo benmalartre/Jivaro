@@ -7,26 +7,34 @@
 #include <pxr/usd/usdGeom/boundable.h>
 #include <pxr/usd/usdGeom/xformable.h>
 #include <pxr/usd/usdGeom/xformCache.h>
+#include <pxr/usd/usdGeom/xformOp.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
 
+#include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/camera.h"
 #include "../app/selection.h"
 #include "../app/application.h"
-#include "../command/block.h"
-#include "../command/command.h"
+#include "../app/commands.h"
 #include "../geometry/utils.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 //==================================================================================
-// HELPERS
+// Create XformCommonAPI
 //==================================================================================
-void _GetHandleTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi, 
-  HandleTargetXformVectors& vectors, pxr::UsdTimeCode& time)
+void _EnsureXformCommonAPI(pxr::UsdPrim& prim, const pxr::UsdTimeCode& timeCode)
 {
-  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale, 
-    &vectors.pivot, &vectors.rotOrder, time);
+  pxr::GfVec3d translation;
+  pxr::GfVec3f rotation;
+  pxr::GfVec3f scale;
+  pxr::GfVec3f pivot;
+  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+  pxr::UsdGeomXformCommonAPI api(prim);
+  api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
+  pxr::UsdGeomXformable xformable(prim);
+  xformable.ClearXformOpOrder();
+  api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
 }
 
 //==================================================================================
@@ -174,12 +182,12 @@ BaseHandle::SetVisibility(short axis)
 void 
 BaseHandle::ResetSelection()
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   
   Selection* selection = app->GetSelection();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   if (!stage)return;
-  pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default()/*app->GetTime().GetActiveTime()*/;
+  pxr::UsdTimeCode activeTime = Time::Get()->GetActiveTime();
   pxr::UsdGeomXformCache xformCache(activeTime);
   _targets.clear();
   bool resetXformCache;
@@ -192,13 +200,13 @@ BaseHandle::ResetSelection()
         xformCache.GetParentToWorldTransform(prim));
       pxr::GfMatrix4f invParentMatrix(
         parentMatrix.GetInverse());
-      HandleTargetXformVectors vectors;
+      ManipXformVectors vectors;
       pxr::UsdGeomXformCommonAPI xformApi(prim);
       xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
         &vectors.pivot, &vectors.rotOrder, activeTime); 
       const pxr::GfMatrix4f rotationMatrix(
-        UsdGeomXformOp::GetOpTransform(
-          UsdGeomXformCommonAPI::ConvertRotationOrderToOpType(vectors.rotOrder), VtValue(vectors.rotation)));
+        pxr::UsdGeomXformOp::GetOpTransform(
+          pxr::UsdGeomXformCommonAPI::ConvertRotationOrderToOpType(vectors.rotOrder), VtValue(vectors.rotation)));
       const pxr::GfMatrix4f translationMatrix = pxr::GfMatrix4f(1.f).SetTranslate(pxr::GfVec3f(vectors.translation));
       const pxr::GfMatrix4f pivotMatrix = pxr::GfMatrix4f(1.f).SetTranslate(vectors.pivot);
       pxr::GfMatrix4f world( rotationMatrix * pivotMatrix * translationMatrix * parentMatrix);
@@ -500,7 +508,7 @@ BaseHandle::_ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVe
 void 
 BaseHandle::BeginUpdate(float x, float y, float width, float height)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::GfRay ray(
     _camera->GetPosition(), 
     _camera->GetRayDirection(x, y, width, height));
@@ -678,7 +686,7 @@ TranslateHandle::Update(float x, float y, float width, float height)
 void
 TranslateHandle::_UpdateTargets(bool interacting)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
@@ -689,18 +697,18 @@ TranslateHandle::_UpdateTargets(bool interacting)
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
       xformApi.SetTranslate(xformMatrix.GetRow3(3) - target.previous.pivot, activeTime);
     }
+
   }
   else {
-    
     pxr::UsdGeomXformCache xformCache(activeTime);
     for (auto& target : _targets) {
       pxr::UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       pxr::GfMatrix4f invParentMatrix(
         xformCache.GetParentToWorldTransform(targetPrim).GetInverse());
       pxr::GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
-      target.current.translation = pxr::GfVec3d(xformMatrix.GetRow3(3) - target.previous.pivot);
+      target.current.translation = pxr::GfVec3f(xformMatrix.GetRow3(3)) - target.previous.pivot;
     }
-    ADD_COMMAND(TranslateCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(TranslateCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
   }
 }
 
@@ -864,35 +872,36 @@ using RotationDesc = std::pair<pxr::GfVec3f, pxr::UsdGeomXformCommonAPI::Rotatio
 
 static 
 RotationDesc
-_ResolveRotation(HandleTargetDesc& target,
+_ResolveRotation(ManipTargetDesc& target,
   pxr::UsdGeomXformCommonAPI& xformApi, const pxr::GfMatrix4d& matrix,
   pxr::UsdTimeCode activeTime)
 {
-  const GfVec3d xAxis = target.parent.GetRow3(0);
-  const GfVec3d yAxis = target.parent.GetRow3(1);
-  const GfVec3d zAxis = target.parent.GetRow3(2);
+  const pxr::GfVec3d xAxis = target.parent.GetRow3(0);
+  const pxr::GfVec3d yAxis = target.parent.GetRow3(1);
+  const pxr::GfVec3d zAxis = target.parent.GetRow3(2);
 
   // Get latest rotation values to give a hint to the decompose function
-  HandleTargetXformVectors vectors;
+  ManipXformVectors vectors;
   xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
     &vectors.pivot, &vectors.rotOrder, activeTime);
-  double thetaTw = GfDegreesToRadians(vectors.rotation[0]);
-  double thetaFB = GfDegreesToRadians(vectors.rotation[1]);
-  double thetaLR = GfDegreesToRadians(vectors.rotation[2]);
+
+  double thetaTw = pxr::GfDegreesToRadians(vectors.rotation[0]);
+  double thetaFB = pxr::GfDegreesToRadians(vectors.rotation[1]);
+  double thetaLR = pxr::GfDegreesToRadians(vectors.rotation[2]);
   double thetaSw = 0.0;
 
   // Decompose the matrix in angle values
-  GfRotation::DecomposeRotation(matrix, xAxis, yAxis, zAxis, 1.0,
+  pxr::GfRotation::DecomposeRotation(matrix, xAxis, yAxis, zAxis, 1.0,
     &thetaTw, &thetaFB, &thetaLR, &thetaSw, true);
   return std::make_pair(
-    GfVec3f(GfRadiansToDegrees(thetaTw), GfRadiansToDegrees(thetaFB), GfRadiansToDegrees(thetaLR)),
+    pxr::GfVec3f(pxr::GfRadiansToDegrees(thetaTw), pxr::GfRadiansToDegrees(thetaFB), pxr::GfRadiansToDegrees(thetaLR)),
     vectors.rotOrder);
 }
 
 void
 RotateHandle::_UpdateTargets(bool interacting)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
@@ -924,7 +933,7 @@ RotateHandle::_UpdateTargets(bool interacting)
       target.current.rotOrder = rotation.second;
     }
     
-    ADD_COMMAND(RotateCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(RotateCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
   }
 }
 
@@ -1300,7 +1309,7 @@ ScaleHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
 void
 ScaleHandle::_UpdateTargets(bool interacting)
 {
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetWorkStage();
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode::Default();
   Selection* selection = app->GetSelection();
@@ -1325,7 +1334,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
         pxr::GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]);
     }
 
-    ADD_COMMAND(ScaleCommand, GetApplication()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(ScaleCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
   }
 }
 
@@ -1355,8 +1364,6 @@ BrushHandle::_BuildStroke(bool replace)
 
   const pxr::GfVec3f normal(_camera->GetViewPlaneNormal());
   std::vector<pxr::GfVec3f> profile(2);
-  profile[0] = { -0.5f, 0.f, 0.f };
-  profile[1] = { 0.5f, 0.f, 0.f };
 
   std::vector<pxr::GfMatrix4f> xfos(_path.size());
   pxr::GfVec3f tangent, bitangent, up;
@@ -1472,6 +1479,12 @@ BrushHandle::Draw(float width, float height)
     _DrawShape(&_help, pxr::GfMatrix4f(1.f));
   }
   glBindVertexArray(vao);
+}
+
+short 
+BrushHandle::Select(float x, float y, float width, float height, bool lock)
+{
+  return AXIS_NORMAL;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

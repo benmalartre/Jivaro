@@ -18,9 +18,11 @@ add_executable(${TARGET}
   utils/shaders.cpp
   utils/icons.cpp
   utils/prefs.cpp
+  utils/timer.cpp
   ui/ui.cpp
   ui/fonts.cpp
   ui/demo.cpp
+  ui/icon.cpp
   ui/textFilter.cpp
   ui/utils.cpp
   ui/popup.cpp
@@ -30,18 +32,21 @@ add_executable(${TARGET}
   ui/splitter.cpp
   ui/tab.cpp
   ui/menu.cpp
+  ui/tool.cpp
   ui/textEditor.cpp
   ui/graphEditor.cpp
   ui/viewport.cpp
   ui/timeline.cpp
   ui/toolbar.cpp
-  ui/layers.cpp
   ui/layerEditor.cpp
   ui/explorer.cpp
   ui/propertyEditor.cpp
   ui/curveEditor.cpp
   graph/graph.cpp
   graph/execution.cpp
+  graph/hierarchy.cpp
+  #exec/node.cpp 
+  #exec/network.cpp 
   #embree/oiio.cpp
   #embree/jpeg.cpp
   #embree/utils.cpp
@@ -52,23 +57,46 @@ add_executable(${TARGET}
   #embree/context.cpp
   #embree/device.cpp
   geometry/utils.cpp
+  geometry/matrix.cpp
+  geometry/rbf.cpp
+  geometry/decomposition.cpp
+  geometry/subdiv.cpp
+  geometry/tesselator.cpp
+  geometry/kabsch.cpp
+  geometry/sampler.cpp
+  geometry/voxels.cpp
   geometry/shape.cpp
+  geometry/location.cpp
   geometry/intersection.cpp
   geometry/point.cpp
   geometry/edge.cpp
+  geometry/halfEdge.cpp
   geometry/triangle.cpp
+  geometry/delaunay.cpp
   geometry/geometry.cpp
+  geometry/implicit.cpp
+  geometry/deformable.cpp
   geometry/points.cpp
   geometry/mesh.cpp
   geometry/curve.cpp
+  geometry/instancer.cpp
   geometry/stroke.cpp
+  geometry/perlin.cpp
   geometry/voronoi.cpp
+  geometry/scene.cpp
   #geometry/vdb.cpp
-  acceleration/mortom.cpp
+  acceleration/morton.cpp
+  acceleration/intersector.cpp
   acceleration/grid3d.cpp
   acceleration/bvh.cpp
-  acceleration/intersector.cpp
+  acceleration/octree.cpp
+  acceleration/hashGrid.cpp
+  pbd/tokens.cpp
+  pbd/contact.cpp
+  pbd/collision.cpp
+  pbd/mask.cpp
   pbd/particle.cpp
+  pbd/force.cpp
   pbd/constraint.cpp
   pbd/solver.cpp
   anim/animx.cpp
@@ -79,20 +107,32 @@ add_executable(${TARGET}
   command/delegate.cpp
   command/manager.cpp
   app/time.cpp
+  app/utils.cpp
+  app/commands.cpp
   app/notice.cpp
   app/handle.cpp
   app/camera.cpp
   app/view.cpp
   app/window.cpp
   app/modal.cpp
-  app/scene.cpp
   app/engine.cpp
-  app/workspace.cpp
   app/picking.cpp
   app/selection.cpp
   app/tools.cpp
-  #app/delegate.cpp
+  app/delegate.cpp
   app/application.cpp
+  #tests/location.cpp
+  tests/utils.cpp
+  tests/pbd.cpp
+  tests/hair.cpp
+  tests/particles.cpp
+  tests/raycast.cpp
+  tests/bvh.cpp
+  tests/instancer.cpp
+  tests/grid.cpp
+  tests/points.cpp
+  tests/velocity.cpp
+  tests/pendulum.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp
@@ -107,25 +147,34 @@ endif()
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
-    #${Python2_INCLUDE_DIRS}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}
-    #${OPENVDB_INCLUDE_DIR}
-	${BOOST_INCLUDE_DIR}
-	${ICON_AWESOME_DIR}
+    ${OPENVDB_INCLUDE_DIR}
+    ${OPENSUBDIV_INCLUDE_DIR}
+    ${BOOST_INCLUDE_DIR}
+    ${ICON_AWESOME_DIR}
+    ${EIGEN_INCLUDE_DIR}
 )
+
+if(DEFINED PYTHON_BUILD)
+  target_include_directories(${TARGET}  PUBLIC ${Python3_INCLUDE_DIRS})
+endif()
 
 target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}
-  #{Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}
   ${EMBREE_LIBRARIES}
   ${TBB_LIBRARIES}
-  #${OPENVDB_LIBRARIES}
+  ${OPENVDB_LIBRARIES}
+  ${OPENSUBDIV_LIBRARIES}
   ${GLFW}
   ${ADDITIONAL_LIBRARIES}
 )
+
+if(DEFINED PYTHON_BUILD)
+  target_link_libraries(${TARGET} ${Python3_LIBRARIES})
+endif()
 
 add_compile_options(/C4244)

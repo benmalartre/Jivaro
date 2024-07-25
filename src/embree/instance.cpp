@@ -111,7 +111,7 @@ UsdEmbreeInstance* TranslateInstance(
     rtcAttachGeometry(scene,result->_geom);
     rtcReleaseGeometry(result->_geom);
 
-    UsdEmbreeSetTransform(result, pxr::GfMatrix4d(1).SetTranslate(pxr::GfVec3d(0,12,0)));
+    UsdEmbreeSetTransform(result, pxr::GfMatrix4d()).SetTranslate(pxr::GfVec3d(0,12,0)));
     rtcCommitGeometry(result->_geom);
   }
   else

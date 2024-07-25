@@ -43,7 +43,7 @@ void CurveEditorUI::Init()
 
 void CurveEditorUI::Update()
 {
-  if (GetApplication()->GetWorkStage()) {
+  if (Application::Get()->GetWorkStage()) {
     //RecurseStage();
   }
 }
@@ -238,7 +238,7 @@ void CurveEditorUI::DrawCurve(pxr::UsdAnimXCurve* crv)
 
 void CurveEditorUI::DrawTime()
 {
-  Time& time = APPLICATION->GetTime();
+  Time& time = *Time::Get();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   float ox = _parent->GetX() + _offset[0] * _scale[0];
   float oy = _parent->GetY() + _offset[1] * _scale[1];
@@ -356,11 +356,13 @@ bool CurveEditorUI::Draw()
   const pxr::GfVec2f max(min + size);
   
   //if (!_active)return false;
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
   ImGui::PushClipRect(min, max, false);
-  Application* app = GetApplication();
+  Application* app = Application::Get();
   /*
   if (app->GetStage())
   {

@@ -31,33 +31,24 @@ Stroke::~Stroke()
 };
 
 Stroke::Stroke()
-  : Geometry(Geometry::STROKE)
+  : Geometry(Geometry::STROKE, pxr::GfMatrix4d(1.0))
 {
-  _initialized = false;
   _numLines = 0;
   _type = STROKE;
 }
 
-Stroke::Stroke(const Stroke* other, bool normalize)
-  : Geometry(other, Geometry::STROKE, normalize)
+Stroke::Stroke(const Stroke& other, bool normalize)
+  : Geometry(Geometry::STROKE, other.GetMatrix())
 {
-  _initialized = true;
-  _numLines = other->_numLines;
+  _numLines = other._numLines;
   _type = STROKE;
 
-  _input = other->_input;
+  _input = other._input;
   _lines.resize(_numLines);
   for(size_t i = 0; i < _numLines; ++i) {
-    _lines[i].points = other->_lines[i].points;
-    _lines[i].widths = other->_lines[i].widths;
+    _lines[i].points = other._lines[i].points;
+    _lines[i].widths = other._lines[i].widths;
   }
-}
-
-void Stroke::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors) 
-{
-  _colorsInterpolation = interp;
-  _colors = colors;
 }
 
 uint32_t Stroke::GetNumCVs(uint32_t lineIndex)const

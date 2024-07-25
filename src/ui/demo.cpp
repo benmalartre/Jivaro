@@ -33,9 +33,10 @@ bool DemoUI::Draw()
   const pxr::GfVec2f pos(GetX(), GetY());
   const pxr::GfVec2f size(GetWidth(), GetHeight());
 
-  ImGui::Begin(_name.c_str(), &opened, _flags);
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);
+
+  ImGui::Begin(_name.c_str(), &opened, _flags);
 
   ImGui::ShowDemoWindow();
 

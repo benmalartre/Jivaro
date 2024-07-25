@@ -1,8 +1,6 @@
 #ifndef UNDOROUTER_H
 #define UNDOROUTER_H
 
-#include <boost/noncopyable.hpp>
-
 #include <pxr/pxr.h>
 #include <pxr/base/tf/declarePtrs.h>
 #include <pxr/base/tf/refPtr.h>
@@ -36,7 +34,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 /// Here is a quick breakdown of the chain of triggers.
 /// Usd Edit => Sdf Edit => Delegate => Router => Notice => Native Undo Listener
 ///
-class UndoRouter : boost::noncopyable {
+class UndoRouter {
 private:
     int _depth = 0;
     UndoInverse _inversion;
@@ -50,7 +48,8 @@ private:
 
     
 public:
-    
+    UndoRouter (const UndoRouter&) = delete;
+    UndoRouter& operator= (const UndoRouter&) = delete;
     static UndoRouter& Get();
     void   AddInverse(std::function<bool()> inverse);
     static bool TrackLayer(const pxr::SdfLayerHandle& layer);
