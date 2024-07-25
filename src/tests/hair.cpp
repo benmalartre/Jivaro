@@ -62,9 +62,9 @@ pxr::HdDirtyBits TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, p
   pxr::VtArray<Triangle> triangles;
   pxr::VtArray<Sample> samples;
 
-  mesh.GetPointsAttr().Get(&positions);
-  mesh.GetFaceVertexCountsAttr().Get(&counts);
-  mesh.GetFaceVertexIndicesAttr().Get(&indices);
+  mesh.GetPointsAttr().Get(&positions, time);
+  mesh.GetFaceVertexCountsAttr().Get(&counts, time);
+  mesh.GetFaceVertexIndicesAttr().Get(&indices, time);
 
   //uint64_t T1 = CurrentTime() - T;
   //T = CurrentTime();
@@ -120,7 +120,7 @@ pxr::HdDirtyBits TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, p
 
 void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
 {
-   if (!stage) return;
+  if (!stage) return;
 
   pxr::UsdPrimRange primRange = stage->TraverseAll();
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
@@ -151,6 +151,7 @@ void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _QueryControls(stage);
 
+  _scene.Sync(stage, time);
   for(auto& source: _sourcesMap) {
     const pxr::SdfPath& path = source.first;
     _Sources& sources = source.second;

@@ -187,9 +187,8 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
-  _scene.InjectGeometry(stage, _meshId, _mesh, 1.0);
 
-  //_AddAnimationSamples(stage, _meshId);
+  _AddAnimationSamples(stage, _meshId);
 
   // create rays
   _raysId = rootId.AppendChild(pxr::TfToken("rays"));
