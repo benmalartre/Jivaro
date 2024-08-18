@@ -8,7 +8,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------
 // Triangle Area
 //-------------------------------------------------------
-float Triangle::GetArea(const pxr::GfVec3f* points)
+float Triangle::GetArea(const pxr::GfVec3f* points) const
 {
 
   const pxr::GfVec3f e0 = points[vertices[1]] - points[vertices[0]];
@@ -31,7 +31,7 @@ float Triangle::GetArea(const pxr::GfVec3f* points)
 // Triangle Center
 //-------------------------------------------------------
 pxr::GfVec3f 
-Triangle::GetCenter(const pxr::GfVec3f* points)
+Triangle::GetCenter(const pxr::GfVec3f* points) const
 {
   return pxr::GfVec3f(
     points[vertices[0]] +
@@ -43,7 +43,7 @@ Triangle::GetCenter(const pxr::GfVec3f* points)
 // Triangle Normal
 //-------------------------------------------------------
 pxr::GfVec3f 
-Triangle::GetNormal(const pxr::GfVec3f* points)
+Triangle::GetNormal(const pxr::GfVec3f* points) const
 {
 
   // get triangle edges

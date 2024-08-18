@@ -337,13 +337,90 @@ void _PoissonDiskFromSamples(const pxr::GfVec3f* positions,
 }
 
 void
+StochasticSampling(int nbSamples,
+  const pxr::VtArray<pxr::GfVec3f>& points,
+  const pxr::VtArray<pxr::GfVec3f>& normals,
+  const pxr::VtArray<Triangle>& triangles,
+  pxr::VtArray<Sample>& samples)
+{
+  size_t nbTriangles = triangles.size();
+  std::vector<float>triangleAreas(nbTriangles);
+  float totalArea = 0.f;
+
+  for(size_t t = 0; t < nbTriangles; ++t) {
+    triangleAreas[t] = triangles[t].GetArea(&points[0]);
+    totalArea += triangleAreas[t];
+  }
+
+  std::vector<size_t>triangleSamples(nbTriangles, 0);
+  size_t totalSamples = 0;
+  for(size_t t = 0; t < nbTriangles; ++t) {
+    triangleSamples[t] = (size_t)(nbSamples * triangleAreas[t] / totalArea);
+    totalSamples += triangleSamples[t];
+  }
+
+  samples.resize(totalSamples);
+  size_t sampleIdx = 0;
+  for (size_t t = 0; t < nbTriangles; ++t) {
+    for(size_t i = 0; i < triangleSamples[t]; ++i) {
+      float u = RANDOM_0_1;
+      float v = RANDOM_0_1;
+      samples[sampleIdx++] = { 
+        triangles[t].vertices, 
+        0, 
+        pxr::GfVec3f(u, v, 1.f - (u+v))
+      };
+    }
+  }
+}
+
+
+void
+GridSampling(int nbSamples,
+  const pxr::VtArray<pxr::GfVec3f>& points,
+  const pxr::VtArray<pxr::GfVec3f>& normals,
+  const pxr::VtArray<Triangle>& triangles,
+  pxr::VtArray<Sample>& samples)
+{
+  size_t nbTriangles = triangles.size();
+  std::vector<float>triangleAreas(nbTriangles);
+  float totalArea = 0.f;
+
+  for(size_t t = 0; t < nbTriangles; ++t) {
+    triangleAreas[t] = triangles[t].GetArea(&points[0]);
+    totalArea += triangleAreas[t];
+  }
+
+  std::vector<size_t>triangleSamples(nbTriangles, 0);
+  size_t totalSamples = 0;
+  for(size_t t = 0; t < nbTriangles; ++t) {
+    triangleSamples[t] = (size_t)(nbSamples * triangleAreas[t] / totalArea);
+    totalSamples += triangleSamples[t];
+  }
+
+  samples.resize(totalSamples);
+  size_t sampleIdx = 0;
+  for (size_t t = 0; t < nbTriangles; ++t) {
+    for(size_t i = 0; i < triangleSamples[t]; ++i) {
+      float u = RANDOM_0_1;
+      float v = RANDOM_0_1;
+      samples[sampleIdx++] = { 
+        triangles[t].vertices, 
+        0, 
+        pxr::GfVec3f(u, v, 1.f - (u+v))
+      };
+    }
+  }
+}
+
+void
   PoissonSampling(float radius, int nbSamples,
     const pxr::VtArray<pxr::GfVec3f>& points,
     const pxr::VtArray<pxr::GfVec3f>& normals,
     const pxr::VtArray<Triangle>& triangles,
     pxr::VtArray<Sample>& samples)
 {
-  /*
+  
   pxr::VtArray<Sample> seeds;
   pxr::VtArray<int> indices(triangles.size() * 3);
   for (size_t triIdx = 0; triIdx < triangles.size(); ++triIdx) {
@@ -356,19 +433,6 @@ void
   }
 
   _PoissonDiskFromSamples(&points[0], &normals[0], radius, seeds, samples);
-  */
-  samples.resize(nbSamples);
-  for (size_t sampleIdx = 0; sampleIdx < nbSamples; ++sampleIdx) {
-    float u = RANDOM_0_1;
-    float v = RANDOM_0_1;
-    size_t triIndex = RANDOM_0_X(triangles.size() - 1);
-    samples[sampleIdx] = { 
-      triangles[triIndex].vertices, 
-      0, 
-      pxr::GfVec3f(u, v, 1 - (u+v))
-    };
-  }
-
-} // namespace Sample
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE

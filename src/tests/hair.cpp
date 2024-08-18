@@ -74,7 +74,8 @@ pxr::HdDirtyBits TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, p
   ComputeVertexNormals(positions, counts, indices, triangles, normals);
   //uint64_t T3 = CurrentTime() - T;
   //T = CurrentTime();
-  PoissonSampling(_radius, _density, positions, normals, triangles, samples);
+  //PoissonSampling(_radius, _density, positions, normals, triangles, samples);
+  StochasticSampling(_density, positions, normals, triangles, samples);
   //uint64_t T4 = CurrentTime() - T;
   //T = CurrentTime();  
 
