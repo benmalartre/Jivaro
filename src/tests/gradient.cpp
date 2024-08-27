@@ -72,12 +72,7 @@ void TestGradient::_Initialize(pxr::UsdStageRefPtr& stage)
       _meshes[m]->SetInputOnly();
     }
 
-    /*
-    _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
-    _leaves = _SetupBVHInstancer(stage, _bvhId, &_bvh);
-    _scene.AddGeometry(_bvhId, (Geometry*)_leaves );
-    _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
-    */
+ 
 
     pxr::GfVec3f bmin(_bvh.GetMin());
     pxr::GfVec3f bmax(_bvh.GetMax());
@@ -98,7 +93,7 @@ void TestGradient::_Initialize(pxr::UsdStageRefPtr& stage)
       size[0] / dimensions[0], 
       size[1] / dimensions[1], 
       size[2] / dimensions[2]);
-    pxr::GfVec3f offset = size * -0.5f;
+    pxr::GfVec3f offset = bmin + (size - _bvh.GetSize());
 
     size_t total = dimensions[0] * dimensions[1] * dimensions[2];
     positions.resize(total);
@@ -116,7 +111,7 @@ void TestGradient::_Initialize(pxr::UsdStageRefPtr& stage)
             y * step[1] + offset[1],
             z * step[2] + offset[2]
           );
-          widths[index] = 0.1;
+          widths[index] = radius;
           colors[index] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
         }
   }
@@ -126,9 +121,16 @@ void TestGradient::_Initialize(pxr::UsdStageRefPtr& stage)
   _points->SetPositions(positions);
   _points->SetWidths(widths);
   _points->SetColors(colors);
+  _points->SetInputOnly();
 
   _pointsId = _rootId.AppendChild(pxr::TfToken("pendulum"));
   _scene.AddGeometry(_pointsId, _points);
+
+  _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
+  _leaves = _SetupPointsInstancer(stage, _bvhId, _points);
+  _scene.AddGeometry(_bvhId, (Geometry*)_leaves );
+  _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
+    
 
 
 }

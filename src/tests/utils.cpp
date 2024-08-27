@@ -142,7 +142,6 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 }
 
 
-
 Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
 {
   pxr::VtArray<pxr::GfVec3f> points;
@@ -211,6 +210,75 @@ void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bv
 
 }
 
+
+Instancer* _SetupPointsInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Points* points)
+{
+  size_t numPoints = points->GetNumPoints();
+
+  pxr::VtArray<pxr::GfVec3f> positions(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+
+  pxr::VtArray<int64_t> indices(numPoints);
+  pxr::VtArray<int> protoIndices(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    positions[pointIdx] = points->GetPosition(pointIdx);
+    scales[pointIdx] = pxr::GfVec3f(points->GetWidth(pointIdx));
+    colors[pointIdx] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    protoIndices[pointIdx] = 0;
+    indices[pointIdx] = pointIdx;
+    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+  }
+
+  pxr::UsdGeomPointInstancer instancer =
+    pxr::UsdGeomPointInstancer::Define(stage, path);
+
+  pxr::UsdGeomCube proto =
+    pxr::UsdGeomCube::Define(stage,
+      path.AppendChild(pxr::TfToken("proto_cube")));
+  proto.CreateSizeAttr().Set(1.0);
+
+  instancer.CreatePositionsAttr().Set(positions);
+  instancer.CreateProtoIndicesAttr().Set(protoIndices);
+  instancer.CreateScalesAttr().Set(scales);
+  instancer.CreateIdsAttr().Set(indices);
+  instancer.CreateOrientationsAttr().Set(rotations);
+  instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
+  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
+  pxr::UsdGeomPrimvar colorPrimvar =
+    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+  colorPrimvar.SetElementSize(1);
+  colorPrimvar.Set(colors);
+
+  return new Instancer(instancer.GetPrim(), pxr::GfMatrix4d(1.0));
+}
+
+void _UpdatePointsInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Points* points, float time)
+{
+
+  size_t numPoints = points->GetNumPoints();
+
+  pxr::VtArray<pxr::GfVec3f> positions(numPoints);
+  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
+  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
+
+  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    positions[pointIdx] = points->GetPosition(pointIdx);
+    scales[pointIdx] = pxr::GfVec3f(1.f);
+    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+  }
+
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  pxr::UsdGeomPointInstancer instancer(prim);
+
+  instancer.GetPositionsAttr().Set(positions);
+  instancer.GetScalesAttr().Set(scales);
+  instancer.GetOrientationsAttr().Set(rotations);
+
+}
 
 Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid)
 {
