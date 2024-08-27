@@ -179,8 +179,8 @@ void Camera::Orbit(double dx, double dy)
   double dist = (_pos - _lookat).GetLength();
   _pos = pxr::GfVec3d(0,0, dist);
 
-  _polar -= dy;
-  _azimuth -= dx;
+  _polar -= dy * 0.5f;
+  _azimuth -= dx * 0.5f;
 
   pxr::GfRotation pR(pxr::GfVec3d::XAxis(), _polar);
   _pos = pR.TransformDir(_pos);

@@ -232,6 +232,29 @@ static void _Smooth(int smoothIterations)
 
 }
 
+void _CreateVertexColor()
+{
+  pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+  if (usdMesh.GetPrim().IsValid()) {
+    UndoBlock block;
+    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+    size_t numPoints = mesh.GetNumPoints();
+    pxr::UsdGeomMesh usdMesh(mesh.GetPrim());
+    pxr::UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
+    if(!colorPrimVar) 
+      colorPrimVar = usdMesh.CreateDisplayColorPrimvar(
+        pxr::UsdGeomTokens->vertex, numPoints);
+
+    colorPrimVar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+
+    pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+    for(auto& color: colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    pxr::UsdAttribute colorsAttr = colorPrimVar.GetAttr();
+    colorsAttr.Set(colors);
+  }
+
+}
+
 bool ToolUI::Draw()
 {
   static bool opened = false;
@@ -292,6 +315,10 @@ bool ToolUI::Draw()
       std::cout << "subdiv done !" << std::endl;
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Create Vertex Color")) {
+    _CreateVertexColor();
   }
 
   if (ImGui::Button("Triangulate Mesh")) {

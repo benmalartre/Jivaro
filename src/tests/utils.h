@@ -47,6 +47,7 @@ void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bv
 Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid);
 void _UpdateGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* bvh, float time);
 
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_TEST_PBD_H

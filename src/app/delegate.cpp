@@ -1,6 +1,6 @@
 
 #include "../app/delegate.h"
-#include "../geometry/geometry.h"
+#include "../geometry/deformable.h"
 #include "../geometry/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -71,11 +71,12 @@ Delegate::SamplePrimvar(pxr::SdfPath const& id,
   float* sampleTimes,
   pxr::VtValue* sampleValues)
 {
+  std::cout << "sample prim var..." << std::endl;
   if (key == pxr::HdTokens->widths) {
     auto& prims = _scene->GetPrims();
     if (prims.find(id) != prims.end()) {
       //std::cout << "set sample widths : " << std::endl;
-      //*sampleValues = pxr::VtValue(prims[id].geom->GetWidths());
+      *sampleValues = pxr::VtValue(((Deformable*)prims[id].geom)->GetWidths());
     }
     return 1;
   }
@@ -91,9 +92,10 @@ Delegate::SampleIndexedPrimvar(pxr::SdfPath const& id,
   pxr::VtValue* sampleValues,
   pxr::VtIntArray* sampleIndices)
 {
-  /*return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
-    sampleIndices);
-    */
+  std::cout << "sample indexed prim var..." << std::endl;
+  //return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
+   // sampleIndices);
+    
   //std::cout << "sample index primvar not implemented" << std::endl;
   return 0;
 }
@@ -210,7 +212,7 @@ Delegate::GetInstancerId(pxr::SdfPath const& primId)
 pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath const& id,
   pxr::HdInterpolation interpolation)
 {
-  //std::cout << "delegate get primvar descriptor : " << id << " : interpolation = " << interpolation << std::endl;
+  std::cout << "delegate get primvar descriptor : " << id << " : interpolation = " << interpolation << std::endl;
   pxr::HdPrimvarDescriptorVector primvars;
   if (interpolation == pxr::HdInterpolationVertex) {
     primvars.emplace_back(pxr::HdTokens->points, interpolation,

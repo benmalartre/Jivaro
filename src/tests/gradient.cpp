@@ -23,63 +23,24 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
   _GetRootPrim(stage);
 
-  _TraverseStageFindingMeshes(stage);
+  _TraverseStageFindingMesh(stage);
 
-  _Initialize(stage);
-
-}
-
-
-void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
-{
-  _scene.Sync(stage, time);
-}
-
-void TestGradient::TerminateExec(pxr::UsdStageRefPtr& stage)
-{
-  if (!stage) return;
-  _Terminate(stage);
-}
-
-size_t TestGradient::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
-{
-  size_t numMeshes = 0;
-  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  for (pxr::UsdPrim prim : stage->TraverseAll())
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
-      _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
-        xformCache.GetLocalToWorldTransform(prim)));
-      _meshesId.push_back(prim.GetPath());
-      numMeshes++;
-    }
-  return numMeshes;
-      
-}
-
-
-void TestGradient::_Initialize(pxr::UsdStageRefPtr& stage) 
-{
   pxr::VtArray<pxr::GfVec3f> positions;
   pxr::VtArray<float> widths;
   pxr::VtArray<pxr::GfVec3f> colors;
 
   // create bvh
-  if (_meshes.size()) {
-    _bvh.Init(_meshes);
+  if (_mesh && _mesh->GetPrim().IsValid()) {
+    _bvh.Init({_mesh});
 
-    for(size_t m = 0; m < _meshes.size();++m) {
-      _scene.AddGeometry(_meshesId[m], _meshes[m]);
-      _meshes[m]->SetInputOnly();
-    }
-
- 
+    _scene.AddGeometry(_meshId, _mesh);
 
     pxr::GfVec3f bmin(_bvh.GetMin());
     pxr::GfVec3f bmax(_bvh.GetMax());
 
     pxr::GfVec3f size(_bvh.GetSize());
 
-    float radius = pxr::GfMin(size[0], size[1], size[2]) * 0.1f;
+    float radius = pxr::GfMin(size[0], size[1], size[2])*0.5f;
 
     pxr::GfVec3f dimensions(
       pxr::GfCeil(size[0] / radius),
@@ -93,7 +54,7 @@ void TestGradient::_Initialize(pxr::UsdStageRefPtr& stage)
       size[0] / dimensions[0], 
       size[1] / dimensions[1], 
       size[2] / dimensions[2]);
-    pxr::GfVec3f offset = bmin + (size - _bvh.GetSize());
+    pxr::GfVec3f offset = bmin + pxr::GfVec3f(radius) * 0.5f;
 
     size_t total = dimensions[0] * dimensions[1] * dimensions[2];
     positions.resize(total);
@@ -114,6 +75,13 @@ void TestGradient::_Initialize(pxr::UsdStageRefPtr& stage)
           widths[index] = radius;
           colors[index] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
         }
+
+    _gradient.Init((Mesh*)_mesh);
+
+    pxr::UsdPrim prim = _mesh->GetPrim();
+    std::cout << prim.GetPath() << std::endl;
+    
+
   }
 
   _points= new Points();
@@ -123,21 +91,60 @@ void TestGradient::_Initialize(pxr::UsdStageRefPtr& stage)
   _points->SetColors(colors);
   _points->SetInputOnly();
 
-  _pointsId = _rootId.AppendChild(pxr::TfToken("pendulum"));
+  _pointsId = _rootId.AppendChild(pxr::TfToken("points"));
   _scene.AddGeometry(_pointsId, _points);
 
-  _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
-  _leaves = _SetupPointsInstancer(stage, _bvhId, _points);
-  _scene.AddGeometry(_bvhId, (Geometry*)_leaves );
-  _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
-    
 
+  /*
+  _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
+  _instancer = _SetupPointsInstancer(stage, _bvhId, _points);
+  _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
+  _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
+  */
 
 }
 
-void TestGradient::_Terminate(pxr::UsdStageRefPtr& stage)
+
+void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
+  _scene.Sync(stage, time);
+  if(_mesh) {
+    size_t numPoints = _mesh->GetNumPoints();
+    /*
+    pxr::UsdGeomMesh usdMesh(_mesh->GetPrim());
+    pxr::UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
+    if(!colorPrimVar) 
+      colorPrimVar = usdMesh.CreateDisplayColorPrimvar(
+        pxr::UsdGeomTokens->vertex, numPoints);
+
+    colorPrimVar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+    */
+    pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+    for(auto& color: colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    _mesh->SetColors(colors);
+
+    _scene.MarkPrimDirty(_meshId, pxr::HdChangeTracker::AllDirty);
+  }
+
+}
+
+void TestGradient::TerminateExec(pxr::UsdStageRefPtr& stage)
+{
+  if (!stage) return;
+
   _scene.Remove(_pointsId);
+}
+
+void TestGradient::_TraverseStageFindingMesh(pxr::UsdStageRefPtr& stage)
+{
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  for (pxr::UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      _mesh = new Mesh(pxr::UsdGeomMesh(prim), 
+        xformCache.GetLocalToWorldTransform(prim));
+      _meshId = prim.GetPath();
+      break;
+    }
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

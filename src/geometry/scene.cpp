@@ -356,7 +356,6 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
   const short type = prim.geom->GetType();
 
   if(type == Geometry::INSTANCER) {
-    std::cout << "request attribute " << key << " for instancer " << std::endl;
     Instancer* instancer = (Instancer*)prim.geom;
     if (key == pxr::HdInstancerTokens->instanceTranslations) {
       return pxr::VtValue(instancer->GetPositions());

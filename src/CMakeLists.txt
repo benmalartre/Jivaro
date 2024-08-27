@@ -99,6 +99,7 @@ add_executable(${TARGET}
   acceleration/bvh.cpp
   acceleration/octree.cpp
   acceleration/hashGrid.cpp
+  acceleration/gradient.cpp
 
   pbd/tokens.cpp
   pbd/contact.cpp

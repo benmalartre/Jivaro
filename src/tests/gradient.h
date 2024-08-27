@@ -2,7 +2,9 @@
 #define JVR_TEST_GRADIENT_H
 
 #include "../acceleration/bvh.h"
+#include "../acceleration/gradient.h"
 #include "../exec/execution.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -12,6 +14,8 @@ class Points;
 
 class TestGradient : public Execution {
 public:
+
+
   TestGradient() : Execution(){};
   ~TestGradient(){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
@@ -19,19 +23,17 @@ public:
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
   
 protected:
-  void _Initialize(pxr::UsdStageRefPtr& stage);
-  void _Terminate(pxr::UsdStageRefPtr& stage);
-  size_t _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
+  void _TraverseStageFindingMesh(pxr::UsdStageRefPtr& stage);
 
 private:
   pxr::SdfPath              _bvhId;
   BVH                       _bvh;
-  Instancer*                _leaves;
-  std::vector<Geometry*>    _meshes;
-  std::vector<pxr::SdfPath> _meshesId;
+  Instancer*                _instancer;
+  Mesh*                     _mesh;
+  pxr::SdfPath              _meshId;
   Points*                   _points;
   pxr::SdfPath              _pointsId;
- 
+  Gradient                  _gradient;
 };
 
 
