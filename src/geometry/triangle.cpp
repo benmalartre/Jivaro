@@ -97,7 +97,10 @@ bool Triangle::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locati
 //-------------------------------------------------------
 // Triangle Closest Point
 //-------------------------------------------------------
-float _Dot2( const pxr::GfVec3f& v ) { return pxr::GfDot(v,v); }
+static inline float _Dot2( const pxr::GfVec3f& v ) 
+{ 
+  return pxr::GfDot(v,v); 
+}
 
 bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
@@ -106,77 +109,81 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Lo
   pxr::GfVec3f v0 = points[vertices[0]] - point;
   pxr::GfVec3f closest = points[vertices[0]];
 
-  float a = edge0 * edge0;
-  float b = edge0 * edge1;
-  float c = edge1 * edge1;
-  float d = edge0 * v0;
-  float e = edge1 * v0;
+  double a = edge0 * edge0;
+  double b = edge0 * edge1;
+  double c = edge1 * edge1;
+  double d = edge0 * v0;
+  double e = edge1 * v0;
   
-  float det = a*c - b*b;
-  float s = b*e - c*d;
-  float t = b*d - a*e;
+  double det = a*c - b*b;
+  double s = b*e - c*d;
+  double t = b*d - a*e;
     
   if ( s + t < det ) {
-    if ( s < 0.f ) {
-      if ( t < 0.f ) {
-        if ( d < 0.f ) {
-          s = CLAMP( -d/a, 0.f, 1.f );
-          t = 0.f;
+    if ( s < 0.0 ) {
+      if ( t < 0.0 ) {
+        if ( d < 0.0 ) {
+          s = CLAMP( -d/a, 0.0, 1.0 );
+          t = 0.0;
         } else {
-          s = 0.f;
-          t = CLAMP( -e/c, 0.f, 1.f );
+          s = 0.0;
+          t = CLAMP( -e/c, 0.0, 1.0 );
         }
       } else {
-        s = 0.f;
-        t = CLAMP( -e/c, 0.f, 1.f );
+        s = 0.0;
+        t = CLAMP( -e/c, 0.0, 1.0 );
       }
-    } else if ( t < 0.f ) {
-      s = CLAMP( -d/a, 0.f, 1.f );
-      t = 0.f;
+    } else if ( t < 0.0 ) {
+      s = CLAMP( -d/a, 0.0, 1.0 );
+      t = 0.0;
     } else {
-      float invDet = 1.f / det;
+      double invDet = 1.0 / det;
       s *= invDet;
       t *= invDet;
     }
   } else {
-    if ( s < 0.f ) {
-      float tmp0 = b+d;
-      float tmp1 = c+e;
+    if ( s < 0.0 ) {
+      double tmp0 = b+d;
+      double tmp1 = c+e;
       if ( tmp1 > tmp0 ) {
-        float numer = tmp1 - tmp0;
-        float denom = a-2*b+c;
-        s = CLAMP( numer/denom, 0.f, 1.f );
+        double numer = tmp1 - tmp0;
+        double denom = a-2*b+c;
+        s = CLAMP( numer/denom, 0.0, 1.0 );
         t = 1-s;
       } else {
-        t = CLAMP( -e/c, 0.f, 1.f );
-        s = 0.f;
+        t = CLAMP( -e/c, 0.0, 1.0 );
+        s = 0.0;
       }
-    } else if ( t < 0.f ) {
+    } else if ( t < 0.0 ) {
       if ( a+d > b+e ) {
-        float numer = c+e-b-d;
-        float denom = a-2*b+c;
-        s = CLAMP( numer/denom, 0.f, 1.f );
+        double numer = c+e-b-d;
+        double denom = a-2*b+c;
+        s = CLAMP( numer/denom, 0.0, 1.0 );
         t = 1-s;
       } else {
-        s = CLAMP( -e/c, 0.f, 1.f );
-        t = 0.f;
+        s = CLAMP( -e/c, 0.0, 1.0 );
+        t = 0.0;
       }
     } else {
-      float numer = c+e-b-d;
-      float denom = a-2*b+c;
-      s = CLAMP( numer/denom, 0.f, 1.f );
-      t = 1.f - s;
+      double numer = c+e-b-d;
+      double denom = a-2*b+c;
+      s = CLAMP( numer/denom, 0.0, 1.0 );
+      t = 1.0 - s;
     }
   }
   
   closest += s * edge0 + t * edge1;
   
-  float distance = (point - closest).GetLength();
 
-  hit->SetCoordinates(pxr::GfVec3f(1.f - s - t, s, t));
-  hit->SetComponentIndex(id);
-  hit->SetT(distance);
-  return true;
+  double distance = (point - closest).GetLength();
+  if(distance < hit->GetT()) {
+    hit->SetCoordinates(pxr::GfVec3f(1.0 - s - t, s, t));
+    hit->SetComponentIndex(id);
+    hit->SetT(distance);
+    return true;
+  }
+  return false;
+
 }
 
 //-------------------------------------------------------

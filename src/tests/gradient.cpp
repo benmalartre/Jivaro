@@ -17,6 +17,23 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+pxr::GfVec3f _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point)
+{
+  float minDistance = FLT_MAX;
+  size_t index = INVALID_POINT_ID;
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  size_t numPoints = mesh->GetNumPoints();
+
+  for(size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
+    float distance = pxr::GfVec3f(positions[pointIdx] - point).GetLength();
+    if(distance < minDistance) {
+      index = pointIdx;
+      minDistance = distance;
+    }
+  }
+  return positions[index];
+}
+
 void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
@@ -89,11 +106,10 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _points->SetPositions(positions);
   _points->SetWidths(widths);
   _points->SetColors(colors);
-  _points->SetInputOnly();
+  //_points->SetInputOnly();
 
   _pointsId = _rootId.AppendChild(pxr::TfToken("points"));
   _scene.AddGeometry(_pointsId, _points);
-
 
   /*
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
@@ -101,7 +117,6 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
   */
-
 }
 
 
@@ -110,20 +125,50 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   _scene.Sync(stage, time);
   if(_mesh) {
     size_t numPoints = _mesh->GetNumPoints();
-    /*
-    pxr::UsdGeomMesh usdMesh(_mesh->GetPrim());
-    pxr::UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
-    if(!colorPrimVar) 
-      colorPrimVar = usdMesh.CreateDisplayColorPrimvar(
-        pxr::UsdGeomTokens->vertex, numPoints);
+    const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
+    const pxr::GfRange3f range(_mesh->GetBoundingBox().GetRange());
 
-    colorPrimVar.SetInterpolation(pxr::UsdGeomTokens->vertex);
-    */
-    pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-    for(auto& color: colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    pxr::GfVec3f seed(
+      RANDOM_LO_HI(-10, 10), 
+      RANDOM_LO_HI(-10, 10), 
+      RANDOM_LO_HI(-10, 10)
+    );
+    
+    pxr::GfMatrix4f matrix;
+    pxr::GfVec3f position;
+    Location hit;
+    pxr::VtArray<pxr::GfVec3f> points(3);
+     pxr::VtArray<pxr::GfVec3f> colors(3);
+    points[0] = seed;
+    colors[0] = pxr::GfVec3f(1.f,25.f,0.25f);
+    colors[1] = pxr::GfVec3f(025.f,1.f,0.25f);
+    colors[2] = pxr::GfVec3f(0.25f,0.25f,1.f);
+
+    if(_bvh.Closest(seed, &hit, _mesh->GetBoundingBox().GetRange().GetSize().GetLength() * 0.02f)) {
+      Triangle* triangle = _mesh->GetTriangle(hit.GetComponentIndex());
+      std::cout << "hit triangle " << triangle->GetIndex() << std::endl; 
+      pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
+      points[1] = closest;
+    }
+
+    seed = _ConstraintPointOnMesh(_mesh, seed);
+    points[1] = seed;
+    
+    _points->SetPositions(points);
+    _points->SetColors(colors);
+  
+    _scene.MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
+
+    colors.resize(numPoints);
+    for (size_t i = 0; i < numPoints; ++i) {
+
+      colors[i][0] = RESCALE(positions[i][0], range.GetMin()[0], range.GetMax()[0], 0.f, 1.f);
+      colors[i][1] = RESCALE(positions[i][1], range.GetMin()[1], range.GetMax()[1], 0.f, 1.f);
+      colors[i][2] = RESCALE(positions[i][2], range.GetMin()[2], range.GetMax()[2], 0.f, 1.f);
+    }
     _mesh->SetColors(colors);
 
-    _scene.MarkPrimDirty(_meshId, pxr::HdChangeTracker::AllDirty);
+    _scene.MarkPrimDirty(_meshId, pxr::HdChangeTracker::DirtyPrimvar);
   }
 
 }
@@ -146,5 +191,7 @@ void TestGradient::_TraverseStageFindingMesh(pxr::UsdStageRefPtr& stage)
       break;
     }
 }
+
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

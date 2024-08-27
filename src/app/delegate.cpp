@@ -71,7 +71,6 @@ Delegate::SamplePrimvar(pxr::SdfPath const& id,
   float* sampleTimes,
   pxr::VtValue* sampleValues)
 {
-  std::cout << "sample prim var..." << std::endl;
   if (key == pxr::HdTokens->widths) {
     auto& prims = _scene->GetPrims();
     if (prims.find(id) != prims.end()) {
@@ -92,7 +91,6 @@ Delegate::SampleIndexedPrimvar(pxr::SdfPath const& id,
   pxr::VtValue* sampleValues,
   pxr::VtIntArray* sampleIndices)
 {
-  std::cout << "sample indexed prim var..." << std::endl;
   //return _SamplePrimvar(id, key, maxNumSamples, sampleTimes, sampleValues,
    // sampleIndices);
     
@@ -212,7 +210,6 @@ Delegate::GetInstancerId(pxr::SdfPath const& primId)
 pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath const& id,
   pxr::HdInterpolation interpolation)
 {
-  std::cout << "delegate get primvar descriptor : " << id << " : interpolation = " << interpolation << std::endl;
   pxr::HdPrimvarDescriptorVector primvars;
   if (interpolation == pxr::HdInterpolationVertex) {
     primvars.emplace_back(pxr::HdTokens->points, interpolation,

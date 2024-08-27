@@ -119,13 +119,12 @@ public:
   virtual void Update() override;
 
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
-    double maxDistance, double* minDistance = NULL) const override;
+    double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
   virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const override;
 
 private:
   Cell                        _root;
-  std::vector<Cell*>          _geometryCells;
   std::vector<Cell*>          _leaves;
 }; 
 

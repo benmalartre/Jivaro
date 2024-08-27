@@ -285,42 +285,38 @@ bool
 BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit, 
   double maxDistance, double* minDistance) const
 {  
-  if(IsLeaf()) {
-    const Geometry* geometry = GetGeometry();
-    const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
-    Component* component = (Component*)_data;
-    pxr::GfVec3f localPoint = geometry->GetInverseMatrix().Transform(point);
-    Location localHit(*hit);
-    if (component->Closest(points, localPoint, &localHit)) {
-      const double distance = (point - geometry->GetMatrix().Transform(localPoint)).GetLength();
-      if (distance < *minDistance) {
-        hit->Set(localHit);
-        *minDistance = distance;
-      }
+  if(pxr::GfSqrt(GetDistanceSquared(point)) > maxDistance) return false;
+
+  const Geometry* geometry = GetGeometry();
+  const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+  Component* component = (Component*)_data;
+  pxr::GfVec3f localPoint = geometry->GetInverseMatrix().Transform(point);
+  Location localHit(*hit);
+  localHit.TransformT(geometry->GetInverseMatrix());
+
+  if (component->Closest(points, localPoint, &localHit)) {
+
+    Triangle* triangle = ((Mesh*)geometry)->GetTriangle(localHit.GetComponentIndex());
+    const pxr::GfVec3d localHitPoint = 
+      localHit.ComputePosition(points, &triangle->vertices[0], 3);
+
+    const double distance = (point - geometry->GetMatrix().Transform(localHitPoint)).GetLength();
+    if (distance < *minDistance && (distance < maxDistance)) {
+        std::cout << "hit triangle " << component->GetIndex() << " strore it !!" << std::endl;
+      hit->Set(localHit);
+      hit->SetT(distance);
+      *minDistance = distance;
+      return true;
     }
-  } else {
-    if(IsGeom()) {        
-      const BVH* intersector = GetIntersector();
-      hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
-    }
-    const pxr::GfVec3d offset(maxDistance);
-    const pxr::GfRange3d range(point - offset, point + offset);
-    bool leftHit = false;
-    bool rightHit = false;
-    if(_left && !range.IsOutside(*_left)) {
-      leftHit = _left->Closest(point, hit, maxDistance, minDistance);
-    }
-    if(_right && !range.IsOutside(*_right)) {
-      rightHit= _right->Closest(point, hit, maxDistance, minDistance);
-    }
-    return leftHit|| rightHit;
   }
+  return false;
 }
 
 void BVH::Cell::_MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry* geometry)
 {
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
+
 
   pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
   size_t numTrianglePairs = trianglePairs.size();
@@ -330,7 +326,6 @@ void BVH::Cell::_MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry*
   for (size_t t = 0; t < numTrianglePairs; ++t) {
     BVH::Cell* leaf =
       new BVH::Cell(this, &trianglePairs[t], trianglePairs[t].GetBoundingBox(positions, matrix));
-
     const BVH::Cell* root = GetRoot();
     mortons[t] = { BVH::ComputeCode(root, leaf->GetMidpoint()), leaf };
   }
@@ -350,7 +345,6 @@ void BVH::Cell::_MortonSortTriangles(std::vector<Morton>& mortons, Geometry* geo
   for (size_t t = 0; t < numTriangles; ++t) {
     BVH::Cell* leaf =
       new BVH::Cell(this, &triangles[t], triangles[t].GetBoundingBox(positions, matrix));
-
     const BVH::Cell* root = GetRoot();
     mortons[t] = { BVH::ComputeCode(root, leaf->GetMidpoint()), leaf };
   }
@@ -450,6 +444,8 @@ void BVH::Cell::_FinishSort(std::vector<Morton>& mortons)
 {
   Morton morton = SortCellsByPair(mortons);
   _SwapCells(this, (BVH::Cell*)morton.data);
+
+
 }
 
 void BVH::Cell::Init(Geometry* geometry)
@@ -468,6 +464,7 @@ void
 BVH::Init(const std::vector<Geometry*>& geometries)
 {
   _geometries = geometries;
+  _leaves.clear();
   size_t numColliders = _geometries.size();
   const pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
@@ -492,7 +489,9 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _root.SetMin(cell->GetMin());
   _root.SetMax(cell->GetMax());
   _root.SetData((void*)this);
+  _root.GetLeaves(_leaves);
   cells.clear();
+  
 }
 
 void
@@ -512,8 +511,20 @@ bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
 bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
-  double minDistance = FLT_MAX;
-  return _root.Closest(point, hit, maxDistance, &minDistance);
+  // TODO implemnt fibonacci range selection on the z order curve
+  Morton morton = {ComputeCode(&_root, point)};
+  Morton minMorton = {ComputeCode(&_root, point - pxr::GfVec3f(maxDistance))};
+  Morton maxMorton = {ComputeCode(&_root, point + pxr::GfVec3f(maxDistance))};
+  double minDistance = maxDistance;
+
+  size_t numCandidates = 0;
+  for (auto& leaf : _leaves) {
+    Morton current = Morton{ ComputeCode(&_root, leaf->GetMidpoint()), leaf };
+    if (minMorton < current && current < maxMorton) {
+      ((BVH::Cell*)current.data)->Closest(point, hit, maxDistance, &minDistance);
+    }
+  }
+  return true;
 }
 
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
