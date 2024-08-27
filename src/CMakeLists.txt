@@ -14,11 +14,13 @@ add_executable(${TARGET}
   imgui/imgui_tables.cpp
   imgui/imgui_stdlib.cpp
   imgui/imgui.cpp
+
   utils/files.cpp
   utils/shaders.cpp
   utils/icons.cpp
   utils/prefs.cpp
   utils/timer.cpp
+
   ui/ui.cpp
   ui/fonts.cpp
   ui/demo.cpp
@@ -42,11 +44,15 @@ add_executable(${TARGET}
   ui/explorer.cpp
   ui/propertyEditor.cpp
   ui/curveEditor.cpp
+
   graph/graph.cpp
   graph/execution.cpp
   graph/hierarchy.cpp
+
+  exec/execution.cpp
   #exec/node.cpp 
   #exec/network.cpp 
+
   #embree/oiio.cpp
   #embree/jpeg.cpp
   #embree/utils.cpp
@@ -56,6 +62,7 @@ add_executable(${TARGET}
   #embree/instance.cpp
   #embree/context.cpp
   #embree/device.cpp
+
   geometry/utils.cpp
   geometry/matrix.cpp
   geometry/rbf.cpp
@@ -85,12 +92,14 @@ add_executable(${TARGET}
   geometry/voronoi.cpp
   geometry/scene.cpp
   #geometry/vdb.cpp
+
   acceleration/morton.cpp
   acceleration/intersector.cpp
   acceleration/grid3d.cpp
   acceleration/bvh.cpp
   acceleration/octree.cpp
   acceleration/hashGrid.cpp
+
   pbd/tokens.cpp
   pbd/contact.cpp
   pbd/collision.cpp
@@ -99,13 +108,16 @@ add_executable(${TARGET}
   pbd/force.cpp
   pbd/constraint.cpp
   pbd/solver.cpp
+
   anim/animx.cpp
+
   command/command.cpp
   command/inverse.cpp
   command/block.cpp
   command/router.cpp
   command/delegate.cpp
   command/manager.cpp
+
   app/time.cpp
   app/utils.cpp
   app/commands.cpp
@@ -121,6 +133,7 @@ add_executable(${TARGET}
   app/tools.cpp
   app/delegate.cpp
   app/application.cpp
+
   #tests/location.cpp
   tests/utils.cpp
   tests/pbd.cpp
@@ -133,6 +146,7 @@ add_executable(${TARGET}
   tests/points.cpp
   tests/velocity.cpp
   tests/pendulum.cpp
+  tests/gradient.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp

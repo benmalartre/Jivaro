@@ -28,6 +28,7 @@
 #include "../tests/instancer.h"
 #include "../tests/velocity.h"
 #include "../tests/pendulum.h"
+#include "../tests/gradient.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -290,7 +291,8 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
   //_exec = new TestPBD();
-  _exec = new TestHair();
+  //_exec = new TestHair();
+  _exec = new TestGradient();
   //_exec = new TestBVH();
   _exec->InitExec(stage);
 

@@ -28,7 +28,12 @@ public:
   const Scene* GetScene() const {return &_scene;};
 
 protected:
-  Scene _scene;
+  void _GetRootPrim(pxr::UsdStageRefPtr& stage);
+
+  Scene         _scene;
+  pxr::SdfPath  _rootId;
+  pxr::UsdPrim  _rootPrim;
+  
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

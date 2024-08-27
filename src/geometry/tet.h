@@ -16,38 +16,6 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 
-struct HalfEdge
-{
-  enum Latency {
-    REAL,
-    IMPLICIT,
-    VIRTUAL
-  };
-
-  uint32_t                index;     // half edge index
-  uint32_t                vertex;    // vertex index
-  uint32_t                face;      // face index
-  uint32_t                triangle;  // triangle index
-  struct HalfEdge*        twin;      // opposite half-edge
-  struct HalfEdge*        next;      // next half-edge
-  uint8_t                 latency;   // edge latency
-
-  HalfEdge():vertex(0),face(0),triangle(0),twin(NULL),next(NULL),latency(REAL){};
-  inline size_t GetTriangleIndex() const {return index / 3;};
-  void GetTriangleNormal(const pxr::GfVec3f* positions, 
-    pxr::GfVec3f& normal) const;
-  void GetVertexNormal(const pxr::GfVec3f* normals, pxr::GfVec3f& normal) const;
-  bool GetFacing(const pxr::GfVec3f* positions, const pxr::GfVec3f& v) const;
-  bool GetFacing(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals,
-    const pxr::GfVec3f& v) const;
-  float GetDot(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals,
-    const pxr::GfVec3f& v) const;
-  short GetFlags(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals, 
-    const pxr::GfVec3f& v, float creaseValue) const;
-  float GetWeight(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals,
-    const pxr::GfVec3f& v) const;
-};
-
 class Tet : public Geometry {
 public:
   Tet();
