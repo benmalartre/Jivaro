@@ -23,7 +23,7 @@ public:
   Location() 
     : _geomId(-1)
     , _compId(-1)
-    , _coords(pxr::GfVec4f(0.f, 0.f, 0.f, DBL_MAX)) {};
+    , _coords(pxr::GfVec4f(0.f, 0.f, 0.f, FLT_MAX)) {};
 
   Location(const Location& other)
     : _geomId(other._geomId)

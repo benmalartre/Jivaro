@@ -138,22 +138,34 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     pxr::GfVec3f position;
     Location hit;
     pxr::VtArray<pxr::GfVec3f> points(3);
-     pxr::VtArray<pxr::GfVec3f> colors(3);
-    points[0] = seed;
+    pxr::VtArray<pxr::GfVec3f> colors(3);
+    points[0] = seed; 
     colors[0] = pxr::GfVec3f(1.f,25.f,0.25f);
     colors[1] = pxr::GfVec3f(025.f,1.f,0.25f);
     colors[2] = pxr::GfVec3f(0.25f,0.25f,1.f);
 
-    if(_bvh.Closest(seed, &hit, _mesh->GetBoundingBox().GetRange().GetSize().GetLength() * 0.02f)) {
+    if(_bvh.Closest(seed, &hit, 32)) {
       Triangle* triangle = _mesh->GetTriangle(hit.GetComponentIndex());
-      std::cout << "hit triangle " << triangle->GetIndex() << std::endl; 
       pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
       points[1] = closest;
     }
+    
+
+    /* Brute force
+    float minDistance = FLT_MAX;
+    for(size_t t = 0; t < _mesh->GetNumTriangles(); ++t) {
+      Triangle* triangle = _mesh->GetTriangle(t);
+      triangle->Closest(positions, seed, &hit);
+    }
+
+    Triangle* triangle = _mesh->GetTriangle(hit.GetComponentIndex());
+    pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
+    points[1] = closest;
+    */
 
     seed = _ConstraintPointOnMesh(_mesh, seed);
-    points[1] = seed;
-    
+    points[2] = seed;
+
     _points->SetPositions(points);
     _points->SetColors(colors);
   

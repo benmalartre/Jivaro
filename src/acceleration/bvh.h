@@ -69,12 +69,15 @@ public:
     Morton SortCellsByPair(std::vector<Morton>& mortons);
     pxr::GfRange3f UpdateCells();
 
+    Cell* FindClosestCell(const std::vector<Morton>& mortons, 
+      int first, int last, const Morton& morton) const; 
+
     void Init(Geometry* geometry);
 
     bool Raycast(const pxr::GfRay& ray, Location* hit,
       double maxDistance = DBL_MAX, double* minDistance = NULL) const;
     bool Closest(const pxr::GfVec3f& point, Location* hit, 
-      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
+      double maxDistance = DBL_MAX) const;
 
   protected:
     bool _LeafRaycast(const pxr::GfRay& ray, Location* hit, 
@@ -83,7 +86,7 @@ public:
     Cell* _RecurseSortCellsByPair(std::vector<Morton>& mortons, int first, int last);
     void _MortonSortTriangles(std::vector<Morton>& mortons, Geometry* geometry);
     void _MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry* geometry);
-
+    
   private:
     Cell*     _parent;
     Cell*     _left;
@@ -126,6 +129,7 @@ public:
 private:
   Cell                        _root;
   std::vector<Cell*>          _leaves;
+  std::vector<Morton>         _mortons;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

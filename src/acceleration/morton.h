@@ -31,6 +31,9 @@ struct Morton {
   bool operator <(const Morton& other) const {
     return code < other.code;
   }
+  bool operator <=(const Morton& other) const {
+    return code <= other.code;
+  }
 };
 
 // CONVERSION

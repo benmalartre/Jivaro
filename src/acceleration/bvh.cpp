@@ -283,10 +283,8 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
 
 bool 
 BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit, 
-  double maxDistance, double* minDistance) const
+  double maxDistance) const
 {  
-  if(pxr::GfSqrt(GetDistanceSquared(point)) > maxDistance) return false;
-
   const Geometry* geometry = GetGeometry();
   const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
   Component* component = (Component*)_data;
@@ -301,11 +299,9 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
       localHit.ComputePosition(points, &triangle->vertices[0], 3);
 
     const double distance = (point - geometry->GetMatrix().Transform(localHitPoint)).GetLength();
-    if (distance < *minDistance && (distance < maxDistance)) {
-        std::cout << "hit triangle " << component->GetIndex() << " strore it !!" << std::endl;
+    if (distance < hit->GetT() /*&& (maxDistance > 0.f && distance < maxDistance)*/) {
       hit->Set(localHit);
       hit->SetT(distance);
-      *minDistance = distance;
       return true;
     }
   }
@@ -444,8 +440,24 @@ void BVH::Cell::_FinishSort(std::vector<Morton>& mortons)
 {
   Morton morton = SortCellsByPair(mortons);
   _SwapCells(this, (BVH::Cell*)morton.data);
+}
 
+BVH::Cell*
+BVH::Cell::FindClosestCell(
+  const std::vector<Morton>& mortons,
+  int           first,
+  int           last,
+  const Morton &morton) const
+{
+  if (first == last)
+    return (BVH::Cell*)mortons[first].data;
 
+  int split = _FindSplit(mortons, first, last);
+
+  if(morton < mortons[split])
+    return FindClosestCell(mortons, first, split, morton);
+  else
+    return FindClosestCell(mortons, split + 1, last, morton);
 }
 
 void BVH::Cell::Init(Geometry* geometry)
@@ -490,6 +502,11 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _root.SetMax(cell->GetMax());
   _root.SetData((void*)this);
   _root.GetLeaves(_leaves);
+  _mortons.resize(_leaves.size());
+  for(size_t m = 0; m < _leaves.size(); ++m) {
+    _mortons[m] = {BVH::ComputeCode(&_root, _leaves[m]->GetMidpoint()), _leaves[m] };
+  }
+  //std::sort(_mortons.begin(), _mortons.end());
   cells.clear();
   
 }
@@ -508,23 +525,70 @@ bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
   return _root.Raycast(ray, hit, maxDistance, minDistance);
 };
 
+
+/*
+
+
+BVH::Cell*
+BVH::Cell::_RecurseSortCellsByPair(
+  std::vector<Morton>& mortons,
+  int           first,
+  int           last)
+{
+  if (first == last)
+    return (BVH::Cell*)mortons[first].data;
+
+  int split = _FindSplit(mortons, first, last);
+
+  BVH::Cell* left = _RecurseSortCellsByPair(mortons, first, split);
+  BVH::Cell* right = _RecurseSortCellsByPair(mortons, split + 1, last);
+  return new BVH::Cell(this, left, right);
+}
+
+Morton BVH::Cell::SortCellsByPair(
+  std::vector<Morton>& mortons)
+{
+  size_t numMortons = mortons.size();
+  std::sort(mortons.begin(), mortons.end());
+  return { 0, _RecurseSortCellsByPair(mortons, 0, static_cast<int>(numMortons) - 1) };
+} 
+
+void BVH::Cell::_FinishSort(std::vector<Morton>& mortons)
+{
+  Morton morton = SortCellsByPair(mortons);
+  _SwapCells(this, (BVH::Cell*)morton.data);
+}
+*/
+
+
 bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
+  bool found = false;
   // TODO implemnt fibonacci range selection on the z order curve
   Morton morton = {ComputeCode(&_root, point)};
-  Morton minMorton = {ComputeCode(&_root, point - pxr::GfVec3f(maxDistance))};
-  Morton maxMorton = {ComputeCode(&_root, point + pxr::GfVec3f(maxDistance))};
-  double minDistance = maxDistance;
+  size_t maxBits = 0;
+  size_t closest;
+  if(maxDistance <= 0.f || maxDistance == FLT_MAX) {
+    BVH::Cell* closest = _root.FindClosestCell(_mortons, 0, _mortons.size() - 1, morton);
+    if(closest)
+      found = closest->Closest(point, hit, maxDistance);
+  }
+  else 
+  {
+    std::cout << "route 2 max dista,nce " << maxDistance << std::endl;
+    Morton minMorton = {ComputeCode(&_root, point - pxr::GfVec3f(maxDistance))};
+    Morton maxMorton = {ComputeCode(&_root, point + pxr::GfVec3f(maxDistance))};
 
-  size_t numCandidates = 0;
-  for (auto& leaf : _leaves) {
-    Morton current = Morton{ ComputeCode(&_root, leaf->GetMidpoint()), leaf };
-    if (minMorton < current && current < maxMorton) {
-      ((BVH::Cell*)current.data)->Closest(point, hit, maxDistance, &minDistance);
+    for (auto& leaf : _leaves) {
+      Morton current = Morton{ ComputeCode(&_root, leaf->GetMidpoint()), leaf };
+      if (minMorton <= current && current <= maxMorton)
+        if(((BVH::Cell*)current.data)->Closest(point, hit, maxDistance))
+          found = true;
+      
     }
   }
-  return true;
+  return found;
 }
 
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
