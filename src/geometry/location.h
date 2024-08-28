@@ -16,13 +16,12 @@ class Intersector;
 class Location{
 
 public:
-  static const int INVALID_INDEX = -1;
-  static const int AWAITING_INDEX = INT_MAX;
+  static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
   
   // Constructors
   Location() 
-    : _geomId(-1)
-    , _compId(-1)
+    : _geomId(INVALID_INDEX)
+    , _compId(INVALID_INDEX)
     , _coords(pxr::GfVec4f(0.f, 0.f, 0.f, FLT_MAX)) {};
 
   Location(const Location& other)
