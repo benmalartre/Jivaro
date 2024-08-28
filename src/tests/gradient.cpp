@@ -111,11 +111,12 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _pointsId = _rootId.AppendChild(pxr::TfToken("points"));
   _scene.AddGeometry(_pointsId, _points);
 
+/*
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
   _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, false);
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
-  
+  */
 }
 
 
@@ -138,6 +139,7 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     Location hit;
     pxr::VtArray<pxr::GfVec3f> points(3);
     pxr::VtArray<pxr::GfVec3f> colors(3);
+    pxr::VtArray<float> widths(3, 1.f);
     points[0] = seed; 
     colors[0] = pxr::GfVec3f(1.f,0.f,0.f);
     colors[1] = pxr::GfVec3f(0.f,1.f,0.f);
@@ -169,6 +171,7 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
     _points->SetPositions(points);
     _points->SetColors(colors);
+    _points->SetWidths(widths);
   
     _scene.MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
 

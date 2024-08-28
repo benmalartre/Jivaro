@@ -484,20 +484,6 @@ void BVH::Cell::_FinishSort(std::vector<Morton>& mortons)
   _SwapCells(this, (BVH::Cell*)morton.data);
 }
 
-const BVH::Cell* 
-BVH::Cell::FindClosestBranch(const pxr::GfVec3f &point) const
-{
-  if(_type == BVH::Cell::LEAF)return _parent;
-  bool checkLeft = false, checkRight = false;
-  if(_left && _left->Contains(point))checkLeft=true;
-  if(_right && _right->Contains(point))checkRight=true;
-
-  if(checkLeft && checkRight)return this;
-  if(checkLeft)return _left->FindClosestBranch(point);
-  if(checkRight)return _right->FindClosestBranch(point);
-  return this;
-}
-
 void BVH::Cell::Init(Geometry* geometry)
 {
   _type = BVH::Cell::GEOM;
@@ -624,17 +610,16 @@ void BVH::Cell::_FinishSort(std::vector<Morton>& mortons)
 bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
-  if (!_root.Contains(point)) 
-    return _root.FindClosestBranch(
-      pxr::GfVec3f(
-        CLAMP(point[0], _root.GetMin()[0], _root.GetMax()[0]),
-        CLAMP(point[1], _root.GetMin()[1], _root.GetMax()[1]),
-        CLAMP(point[2], _root.GetMin()[2], _root.GetMax()[2])
-      )
-    )->Closest(point, hit, maxDistance);
-  
+  if (!_root.Contains(point)) {
+    const pxr::GfVec3f projected(
+      CLAMP(point[0], _root.GetMin()[0], _root.GetMax()[0]),
+      CLAMP(point[1], _root.GetMin()[1], _root.GetMax()[1]),
+      CLAMP(point[2], _root.GetMin()[2], _root.GetMax()[2])
+    );
+    return _root.Closest(point, hit, maxDistance - (projected - point).GetLength());
+  }
   else 
-    return _root.FindClosestBranch(point)->Closest(point, hit, maxDistance);
+    return _root.Closest(point, hit, maxDistance);
 
 }
 
