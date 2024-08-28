@@ -70,9 +70,6 @@ public:
     Morton SortCellsByPair(std::vector<Morton>& mortons);
     pxr::GfRange3f UpdateCells();
 
-    const Cell* FindClosestBranch(const BVH::Cell* root, 
-      const pxr::GfVec3f &point)const;
-
     void Init(Geometry* geometry);
 
     bool Raycast(const pxr::GfRay& ray, Location* hit,
