@@ -69,7 +69,8 @@ public:
     Morton SortCellsByPair(std::vector<Morton>& mortons);
     pxr::GfRange3f UpdateCells();
 
-    Cell* FindClosestCell(const std::vector<Morton>& mortons, 
+    const Cell* FindClosestBranch(const pxr::GfVec3f &point)const;
+    int FindClosestCell(const std::vector<Morton>& mortons, 
       int first, int last, const Morton& morton) const; 
 
     void Init(Geometry* geometry);
@@ -77,7 +78,7 @@ public:
     bool Raycast(const pxr::GfRay& ray, Location* hit,
       double maxDistance = DBL_MAX, double* minDistance = NULL) const;
     bool Closest(const pxr::GfVec3f& point, Location* hit, 
-      double maxDistance = DBL_MAX) const;
+      double maxDistance, pxr::GfVec2i &counter) const;
 
   protected:
     bool _LeafRaycast(const pxr::GfRay& ray, Location* hit, 
@@ -113,6 +114,8 @@ public:
 
   Cell* GetRoot() { return &_root; };
   const Cell* GetRoot() const { return &_root; };
+
+  void SortLeaves();
 
    // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions,

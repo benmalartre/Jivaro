@@ -111,12 +111,11 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _pointsId = _rootId.AppendChild(pxr::TfToken("points"));
   _scene.AddGeometry(_pointsId, _points);
 
-  /*
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
-  _instancer = _SetupPointsInstancer(stage, _bvhId, _points);
+  _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh);
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
-  */
+  
 }
 
 
@@ -140,11 +139,14 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     pxr::VtArray<pxr::GfVec3f> points(3);
     pxr::VtArray<pxr::GfVec3f> colors(3);
     points[0] = seed; 
-    colors[0] = pxr::GfVec3f(1.f,25.f,0.25f);
-    colors[1] = pxr::GfVec3f(025.f,1.f,0.25f);
-    colors[2] = pxr::GfVec3f(0.25f,0.25f,1.f);
+    colors[0] = pxr::GfVec3f(1.f,0.f,0.f);
+    colors[1] = pxr::GfVec3f(0.f,1.f,0.f);
+    colors[2] = pxr::GfVec3f(0.f,0.f,1.f);
 
-    if(_bvh.Closest(seed, &hit, 32)) {
+    const float threshold = FLT_MAX;
+    //pxr::GfSqrt(_bvh.GetDistanceSquared(seed)) + _bvh.GetSize().GetLength() * 0.1f;
+ 
+    if(_bvh.Closest(seed, &hit, threshold)) {
       Triangle* triangle = _mesh->GetTriangle(hit.GetComponentIndex());
       pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
       points[1] = closest;
