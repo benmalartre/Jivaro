@@ -42,10 +42,11 @@ public:
       if (_right)delete _right;
     };
 
-    bool IsLeaf() const;
-    bool IsRoot() const;
-    bool IsBranch() const;
-    bool IsGeom() const;
+    bool IsLeaf() const {return _type == BVH::Cell::LEAF;};
+    bool IsRoot() const {return _type == BVH::Cell::ROOT;};
+    bool IsBranch() const {return _type == BVH::Cell::BRANCH;};
+    bool IsGeom() const {return _type == BVH::Cell::GEOM;};
+
     const Cell* GetRoot() const;
     const Cell* GetGeom() const;
     const BVH* GetIntersector() const;
@@ -60,7 +61,6 @@ public:
     Cell* GetLeft() { return _left; };
     Cell* GetRight() { return _right; };
 
-    // debug
     void GetLeaves(std::vector<Cell*>& leaves) const;
     void GetBranches(std::vector<Cell*>& branches) const;
 
@@ -106,13 +106,15 @@ public:
   {
     uint64_t morton = ComputeCode(root, point);
     pxr::GfVec3i p = MortonDecode3D(morton);
-    return pxr::GfVec3d(p[0] / (float)MORTOM_MAX_L, p[1] / (float)MORTOM_MAX_L, p[2] / (float)MORTOM_MAX_L);
+    return pxr::GfVec3d(
+      p[0] / (float)MORTOM_MAX_L, 
+      p[1] / (float)MORTOM_MAX_L, 
+      p[2] / (float)MORTOM_MAX_L
+    );
   }
 
   Cell* GetRoot() { return &_root; };
   const Cell* GetRoot() const { return &_root; };
-
-  void SortLeaves();
 
    // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
@@ -129,7 +131,6 @@ public:
 private:
   Cell                        _root;
   std::vector<Cell*>          _leaves;
-  std::vector<Morton>         _mortons;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

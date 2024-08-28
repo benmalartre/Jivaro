@@ -114,30 +114,6 @@ GetDistance(const pxr::GfRange3d& range, const pxr::GfVec3d& point)
   return pxr::GfSqrt(dx * dx + dy * dy + dz * dz);
 }
 
-bool
-BVH::Cell::IsRoot() const
-{
-  return _type == BVH::Cell::ROOT;
-}
-
-bool
-BVH::Cell::IsGeom() const
-{
-  return _type == BVH::Cell::GEOM;
-}
-
-bool
-BVH::Cell::IsBranch() const
-{
-  return _type == BVH::Cell::BRANCH;
-}
-
-bool
-BVH::Cell::IsLeaf() const
-{
-  return _type == BVH::Cell::LEAF;
-}
-
 const BVH::Cell*
 BVH::Cell::GetRoot() const
 {
@@ -525,8 +501,8 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _root.SetMin(cell->GetMin());
   _root.SetMax(cell->GetMax());
   _root.SetData((void*)this);
-  
-  SortLeaves();
+  _root.GetLeaves(_leaves);
+
   cells.clear();
   
 }
@@ -544,33 +520,6 @@ bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
 {
   return _root.Raycast(ray, hit, maxDistance, minDistance);
 };
-
-void 
-BVH::SortLeaves()
-{
-  _root.GetLeaves(_leaves);
-
-  size_t num = _leaves.size();
-  std::vector<Morton> mortons(num);
-  std::vector<BVH::Cell*> leaves = _leaves;
-
-  for(size_t m = 0; m < num; ++m) {
-    mortons[m] = {BVH::ComputeCode(&_root, leaves[m]->GetMidpoint()), leaves[m] };
-  }
-
-  std::vector<int> indices(num);
-  std::iota(indices.begin(), indices.end(), 0);
-  std::sort(indices.begin(), indices.end(),
-            [&](int A, int B) -> bool {
-                return mortons[A] < mortons[B];
-            });
-  
-  _mortons.resize(num);
-  for(size_t m = 0; m < num; ++m) {
-    _leaves[m] = leaves[indices[m]];
-    _mortons[m] = mortons[indices[m]];
-  }
-}
 
 
 /*
