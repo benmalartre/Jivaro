@@ -16,7 +16,6 @@
 
 #include "../common.h"
 
-#define INVALID_POINT_ID std::numeric_limits<uint32_t>::max()
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -24,10 +23,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Geometry;
 class Location;
 struct Component {
-
+  static const uint32_t INVALID_INDEX = std::numeric_limits<uint32_t>::max();
   uint32_t id;
 
-  Component() : id(INVALID_POINT_ID) {};
+  Component() : id(INVALID_INDEX) {};
   Component(uint32_t index) : id(index) {};
   uint32_t GetIndex(){return id;};
 

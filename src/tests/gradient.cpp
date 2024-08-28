@@ -20,18 +20,23 @@ JVR_NAMESPACE_OPEN_SCOPE
 pxr::GfVec3f _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point)
 {
   float minDistance = FLT_MAX;
-  size_t index = INVALID_POINT_ID;
+  size_t index = Component::INVALID_INDEX;
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-  size_t numPoints = mesh->GetNumPoints();
+  size_t numTriangles = mesh->GetNumTriangles();
 
-  for(size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    float distance = pxr::GfVec3f(positions[pointIdx] - point).GetLength();
-    if(distance < minDistance) {
-      index = pointIdx;
-      minDistance = distance;
-    }
+  Location hit;
+  for(size_t t = 0; t < numTriangles; ++t) {
+    Triangle* triangle = mesh->GetTriangle(t);
+
+    triangle->Closest(positions, point, &hit);
   }
-  return positions[index];
+
+  if(hit.GetComponentIndex() != Component::INVALID_INDEX) 
+  {
+    Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
+    return hit.ComputePosition(positions, &triangle->vertices[0], 3);
+  }
+  return pxr::GfVec3f() ;
 }
 
 void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
