@@ -38,8 +38,8 @@ public:
   size_t GetNumGeometries() const {return _geometries.size();};
 
   //used for visually debug
-  virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
-    pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors){};
+  virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
+    pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf=true){};
 
 
   virtual void Init(const std::vector<Geometry*>& geometries) = 0;

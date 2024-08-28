@@ -42,7 +42,7 @@ static void
 _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 {
   std::vector<BVH::Cell*> cells;
-  bvh->GetRoot()->GetCells(cells);
+  bvh->GetRoot()->GetBranches(cells);
   size_t numPoints = cells.size();
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);

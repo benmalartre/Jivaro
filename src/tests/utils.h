@@ -41,7 +41,7 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 Instancer* _SetupPointsInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Points* points);
 void _UpdatePointsInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Points* bvh, float time);
 
-Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh);
+Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, bool branchOrLeaf=true);
 void _UpdateBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, float time);
 
 Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid);

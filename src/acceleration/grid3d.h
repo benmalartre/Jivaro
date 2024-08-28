@@ -100,8 +100,8 @@ public:
     uint32_t& index);
   pxr::GfVec3f GetColorXYZ(const uint32_t index);
 
-  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
-    pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors) override;
+  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
+    pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf) override;
 
 protected:
 

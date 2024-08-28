@@ -142,13 +142,13 @@ Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& p
 }
 
 
-Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh)
+Instancer* _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, BVH* bvh, bool branchOrLeaf)
 {
   pxr::VtArray<pxr::GfVec3f> points;
   pxr::VtArray<pxr::GfVec3f> scales;
   pxr::VtArray<pxr::GfVec3f> colors;
 
-  bvh->GetCells(points, scales, colors);
+  bvh->GetCells(points, scales, colors, branchOrLeaf);
   size_t numPoints = points.size();
 
   pxr::VtArray<int64_t> indices(numPoints);
@@ -286,7 +286,7 @@ Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, G
   pxr::VtArray<pxr::GfVec3f> scales;
   pxr::VtArray<pxr::GfVec3f> colors;
 
-  grid->GetCells(points, scales, colors);
+  grid->GetCells(points, scales, colors, false);
   size_t numPoints = points.size();
 
   pxr::VtArray<int64_t> indices(numPoints);

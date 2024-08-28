@@ -44,6 +44,7 @@ public:
 
     bool IsLeaf() const;
     bool IsRoot() const;
+    bool IsBranch() const;
     bool IsGeom() const;
     const Cell* GetRoot() const;
     const Cell* GetGeom() const;
@@ -61,7 +62,7 @@ public:
 
     // debug
     void GetLeaves(std::vector<Cell*>& leaves) const;
-    void GetCells(std::vector<Cell*>& cells) const;
+    void GetBranches(std::vector<Cell*>& branches) const;
 
     Geometry* GetGeometry();
     const Geometry* GetGeometry() const;
@@ -70,15 +71,13 @@ public:
     pxr::GfRange3f UpdateCells();
 
     const Cell* FindClosestBranch(const pxr::GfVec3f &point)const;
-    int FindClosestCell(const std::vector<Morton>& mortons, 
-      int first, int last, const Morton& morton) const; 
 
     void Init(Geometry* geometry);
 
     bool Raycast(const pxr::GfRay& ray, Location* hit,
       double maxDistance = DBL_MAX, double* minDistance = NULL) const;
     bool Closest(const pxr::GfVec3f& point, Location* hit, 
-      double maxDistance, pxr::GfVec2i &counter) const;
+      double maxDistance = DBL_MAX) const;
 
   protected:
     bool _LeafRaycast(const pxr::GfRay& ray, Location* hit, 
@@ -118,8 +117,8 @@ public:
   void SortLeaves();
 
    // visual debug
-  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
-    pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors) override;
+  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
+    pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf) override;
 
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update() override;

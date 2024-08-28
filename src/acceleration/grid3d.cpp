@@ -377,7 +377,7 @@ void Grid3D::XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, ui
 }
 
 void Grid3D::GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
-  pxr::VtArray<pxr::GfVec3f>& scales, pxr::VtArray<pxr::GfVec3f>& colors)
+  pxr::VtArray<pxr::GfVec3f>& scales, pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf)
 {
   for(size_t c = 0; c < _numCells; ++c) {
     if(_cells[c]) {

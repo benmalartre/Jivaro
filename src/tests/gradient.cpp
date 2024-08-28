@@ -112,7 +112,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_pointsId, _points);
 
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
-  _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh);
+  _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, false);
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
   
