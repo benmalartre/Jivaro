@@ -143,10 +143,9 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     colors[1] = pxr::GfVec3f(0.f,1.f,0.f);
     colors[2] = pxr::GfVec3f(0.f,0.f,1.f);
 
-    const float threshold = FLT_MAX;
     //pxr::GfSqrt(_bvh.GetDistanceSquared(seed)) + _bvh.GetSize().GetLength() * 0.1f;
  
-    if(_bvh.Closest(seed, &hit, threshold)) {
+    if(_bvh.Closest(seed, &hit, FLT_MAX)) {
       Triangle* triangle = _mesh->GetTriangle(hit.GetComponentIndex());
       pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
       points[1] = closest;

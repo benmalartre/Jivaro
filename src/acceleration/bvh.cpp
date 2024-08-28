@@ -290,6 +290,7 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
 
   if(IsLeaf()) {
     const Geometry* geometry = GetGeometry();
+
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)_data;
     pxr::GfVec3f localPoint = geometry->GetInverseMatrix().Transform(point);
@@ -341,8 +342,6 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
 
     else
       return false;
-
-
   }
 }
 
@@ -625,8 +624,18 @@ void BVH::Cell::_FinishSort(std::vector<Morton>& mortons)
 bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
-  const BVH::Cell* branch = _root.FindClosestBranch(point);    
-  return branch->Closest(point, hit, maxDistance);
+  if (!_root.Contains(point)) 
+    return _root.FindClosestBranch(
+      pxr::GfVec3f(
+        CLAMP(point[0], _root.GetMin()[0], _root.GetMax()[0]),
+        CLAMP(point[1], _root.GetMin()[1], _root.GetMax()[1]),
+        CLAMP(point[2], _root.GetMin()[2], _root.GetMax()[2])
+      )
+    )->Closest(point, hit, maxDistance);
+  
+  else 
+    return _root.FindClosestBranch(point)->Closest(point, hit, maxDistance);
+
 }
 
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
@@ -636,7 +645,6 @@ void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
   if(branchOrLeaf)_root.GetLeaves(cells);
   else _root.GetBranches(cells);
   size_t numCells = cells.size();
-  std::cout << "DRAW " << numCells << " BVH CELLS !!" << std::endl;
   positions.resize(numCells);
   sizes.resize(numCells);
   colors.resize(numCells);
