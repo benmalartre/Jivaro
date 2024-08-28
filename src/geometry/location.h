@@ -60,7 +60,7 @@ public:
     const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
   
   inline bool IsValid() const { 
-    return (_geomId > INVALID_INDEX) && (_compId > INVALID_INDEX); };
+    return (_geomId != INVALID_INDEX) && (_compId != INVALID_INDEX); };
 
 protected:
   int           _geomId;

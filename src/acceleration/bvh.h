@@ -25,6 +25,7 @@ public:
     enum Type {
       ROOT,
       GEOM,
+      TRUNK,
       BRANCH,
       LEAF
     };
@@ -42,10 +43,11 @@ public:
       if (_right)delete _right;
     };
 
-    bool IsLeaf() const {return _type == BVH::Cell::LEAF;};
-    bool IsRoot() const {return _type == BVH::Cell::ROOT;};
-    bool IsBranch() const {return _type == BVH::Cell::BRANCH;};
-    bool IsGeom() const {return _type == BVH::Cell::GEOM;};
+    bool IsLeaf() const { return _type == BVH::Cell::LEAF; };
+    bool IsRoot() const { return _type == BVH::Cell::ROOT; };
+    bool IsTrunk() const { return _type == BVH::Cell::TRUNK; };
+    bool IsBranch() const { return _type == BVH::Cell::BRANCH; };
+    bool IsGeom() const { return _type == BVH::Cell::GEOM; };
 
     const Cell* GetRoot() const;
     const Cell* GetGeom() const;
@@ -60,6 +62,7 @@ public:
     uint8_t GetType() { return _type; };
     Cell* GetLeft() { return _left; };
     Cell* GetRight() { return _right; };
+    Cell* GetParent() { return _parent; };
 
     void GetLeaves(std::vector<Cell*>& leaves) const;
     void GetBranches(std::vector<Cell*>& branches) const;
@@ -130,6 +133,8 @@ public:
 
 private:
   Cell                        _root;
+  std::vector<Cell*>          _geoms;
+  std::vector<Cell*>          _branches;
   std::vector<Cell*>          _leaves;
 }; 
 

@@ -14,6 +14,7 @@
 #include "../tests/gradient.h"
 
 #include "../app/application.h"
+#include "../utils/timer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -116,12 +117,44 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _pointsId = _rootId.AppendChild(pxr::TfToken("points"));
   _scene.AddGeometry(_pointsId, _points);
 
-/*
+
+  if(true)
+  {
+    size_t N = 1000;
+    pxr::VtArray<pxr::GfVec3f> points(N);
+    for(auto& point: points)
+      point = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+      
+    pxr::VtArray<pxr::GfVec3f> result1(N);
+
+    uint64_t startT1 = CurrentTime();
+    for(size_t n = 0; n < N; ++n) {
+      result1[n] = _ConstraintPointOnMesh(_mesh, points[n]);
+    }
+    uint64_t elapsedT1 = CurrentTime() - startT1;
+    
+    pxr::VtArray<pxr::GfVec3f> result2(N);
+
+    uint64_t startT2 = CurrentTime();
+    for(size_t n = 0; n < N; ++n) {
+      Location hit;
+      _bvh.Closest(points[n], &hit, FLT_MAX);
+      result2[n] = hit.ComputePosition(_mesh->GetPositionsCPtr(), 
+        &_mesh->GetTriangle(hit.GetComponentIndex())->vertices[0], 3);
+    }
+    uint64_t elapsedT2 = CurrentTime() - startT2;
+
+    std::cout << "brute force took : " << (elapsedT1 * 1e-6) << " seconds" << std::endl;
+    std::cout << "with bvh took : " << (elapsedT2 * 1e-6) << " seconds" << std::endl;
+
+  }
+
+
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
   _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, false);
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
-  */
+  
 }
 
 

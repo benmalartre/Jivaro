@@ -68,7 +68,6 @@ BVH::Cell::Cell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs)
   }
 }
 
-
 BVH::Cell::Cell(BVH::Cell* parent, Component* component, const pxr::GfRange3d& range)
   : _parent(parent)
   , _left(NULL)
@@ -493,6 +492,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   for (Geometry* geom : _geometries) {
     BVH::Cell* bvh = new BVH::Cell(&_root, geom);
     cells.push_back({ BVH::ComputeCode(&_root, bvh->GetMidpoint()), bvh });
+    _geoms.push_back(bvh);
   }
 
   Morton morton = _root.SortCellsByPair(cells);
@@ -559,17 +559,42 @@ void BVH::Cell::_FinishSort(std::vector<Morton>& mortons)
 bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
-  if (!_root.Contains(point)) {
-    const pxr::GfVec3f projected(
+  /*
+  pxr::GfVec3f query = point;
+  if (!_root.Contains(query)) {
+    query = pxr::GfVec3f(
       CLAMP(point[0], _root.GetMin()[0], _root.GetMax()[0]),
       CLAMP(point[1], _root.GetMin()[1], _root.GetMax()[1]),
       CLAMP(point[2], _root.GetMin()[2], _root.GetMax()[2])
     );
-    return _root.Closest(point, hit, maxDistance - (projected - point).GetLength());
   }
-  else 
-    return _root.Closest(point, hit, maxDistance);
+  */
+  for (size_t g = 0; g < _geometries.size(); ++g) {
+    BVH::Cell* root = (BVH::Cell * )_geoms[g];
+    uint64_t morton = ComputeCode(root, point);
+    BVH::Cell* cell = root;
+    while(true) {
+      BVH::Cell* left = cell->GetLeft();
+      BVH::Cell* right = cell->GetRight();
+      if(!left || ! right)break;
+      
+      uint64_t leftMorton = ComputeCode(&_root, left->GetMidpoint());
+      uint64_t rightMorton = ComputeCode(&_root, right->GetMidpoint());
 
+      int leftPrefix = MortonLeadingZeros(morton ^ leftMorton);
+      int rightPrefix = MortonLeadingZeros(morton ^ rightMorton);
+
+      if (leftPrefix < rightPrefix)
+        cell = cell->GetLeft();
+      else if (rightPrefix < leftPrefix)
+        cell = cell->GetRight();
+      else break;
+    }
+    
+    if(cell->GetParent()->Closest(point, hit, maxDistance))
+      hit->SetGeometryIndex(g);
+  }
+  return hit->IsValid();
 }
 
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
