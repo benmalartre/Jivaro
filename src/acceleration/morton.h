@@ -31,10 +31,10 @@ struct Morton {
   void*     data;
 
   bool operator <(const Morton& other) const {
-    return maximum < other.minimum;
+    return minimum < other.maximum;
   }
   bool operator <=(const Morton& other) const {
-    return maximum <= other.minimum;
+    return minimum <= other.maximum;
   }
 };
 

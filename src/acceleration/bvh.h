@@ -81,10 +81,9 @@ public:
   protected:
     bool _LeafRaycast(const pxr::GfRay& ray, Location* hit, 
       double maxDistance = DBL_MAX, double* minDistance = NULL) const;
-    void _FinishSort(std::vector<Morton>& cells);
-    Cell* _RecurseSortCellsByPair(std::vector<Morton>& mortons, int first, int last);
-    void _MortonSortTriangles(std::vector<Morton>& mortons, Geometry* geometry);
-    void _MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry* geometry);
+    Cell* _RecurseSortCellsByPair(BVH* bvh, int first, int last);
+    void _MortonSortTriangles(BVH* bvh, Geometry* geometry);
+    void _MortonSortTrianglePairs(BVH* bvh, Geometry* geometry);
     
   private:
     Cell*     _parent;
@@ -114,8 +113,14 @@ public:
     );
   }
 
-  Cell* GetRoot() { return &_root; };
-  const Cell* GetRoot() const { return &_root; };
+  Cell* GetRoot() { return &_cells[0]; };
+  const Cell* GetRoot() const { return &_cells[0]; };
+
+  // cell constructor
+  BVH::Cell* AddCell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs);
+  BVH::Cell* AddCell(BVH::Cell* parent, Geometry* geometry);
+  BVH::Cell* AddCell(BVH::Cell* parent, Component* component,
+    const pxr::GfRange3d& range);
 
    // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
@@ -129,11 +134,15 @@ public:
   virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const override;
 
+protected:
+  void _FinishSortCells();
+
 private:
-  Cell                        _root;
+  std::vector<Cell>           _cells;
   std::vector<Cell*>          _geoms;
   std::vector<Cell*>          _branches;
   std::vector<Cell*>          _leaves;
+  std::vector<Morton>         _mortons; 
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE
