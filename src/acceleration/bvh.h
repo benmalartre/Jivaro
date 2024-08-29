@@ -36,12 +36,6 @@ public:
     Cell(Cell* parent, Component* component,
       const pxr::GfRange3d& range);
 
-    // destructor
-    ~Cell() {
-      if (_left)delete _left;
-      if (_right)delete _right;
-    };
-
     bool IsLeaf() const { return _type == BVH::Cell::LEAF; };
     bool IsRoot() const { return _type == BVH::Cell::ROOT; };
     bool IsBranch() const { return _type == BVH::Cell::BRANCH; };
@@ -68,10 +62,8 @@ public:
     Geometry* GetGeometry();
     const Geometry* GetGeometry() const;
     
-    Morton SortCellsByPair(std::vector<Morton>& mortons);
+    Morton SortCellsByPair(BVH* bvh, std::vector<Morton>& mortons);
     pxr::GfRange3f UpdateCells();
-
-    void Init(Geometry* geometry);
 
     bool Raycast(const pxr::GfRay& ray, Location* hit,
       double maxDistance = DBL_MAX, double* minDistance = NULL) const;
@@ -81,9 +73,7 @@ public:
   protected:
     bool _LeafRaycast(const pxr::GfRay& ray, Location* hit, 
       double maxDistance = DBL_MAX, double* minDistance = NULL) const;
-    Cell* _RecurseSortCellsByPair(BVH* bvh, int first, int last);
-    void _MortonSortTriangles(BVH* bvh, Geometry* geometry);
-    void _MortonSortTrianglePairs(BVH* bvh, Geometry* geometry);
+    
     
   private:
     Cell*     _parent;
@@ -117,10 +107,13 @@ public:
   const Cell* GetRoot() const { return &_cells[0]; };
 
   // cell constructor
+  BVH::Cell* AddRoot();
   BVH::Cell* AddCell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs);
   BVH::Cell* AddCell(BVH::Cell* parent, Geometry* geometry);
   BVH::Cell* AddCell(BVH::Cell* parent, Component* component,
     const pxr::GfRange3d& range);
+    
+  void AddGeometry(BVH::Cell* cell, Geometry* geometry);
 
    // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
@@ -133,16 +126,18 @@ public:
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
   virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const override;
-
+  
 protected:
-  void _FinishSortCells();
+  Cell* _RecurseSortCellsByPair(int first, int last);
+  void _MortonSortTriangles(Geometry* geometry);
+  void _MortonSortTrianglePairs(Geometry* geometry);
+  void _FinishSort();
 
 private:
   std::vector<Cell>           _cells;
   std::vector<Cell*>          _geoms;
-  std::vector<Cell*>          _branches;
   std::vector<Cell*>          _leaves;
-  std::vector<Morton>         _mortons; 
+  std::vector<Morton>         _mortons, 
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE
