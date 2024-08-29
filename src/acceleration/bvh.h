@@ -18,6 +18,8 @@ class Geometry;
 class BVH : public Intersector
 {
 public:
+  static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
+
 
   class Cell : public pxr::GfRange3d
   {
@@ -31,10 +33,9 @@ public:
 
     // constructor
     Cell();
-    Cell(Cell* parent, Cell* lhs, Cell* rhs);
-    Cell(Cell* parent, Geometry* geometry);
-    Cell(Cell* parent, Component* component,
-      const pxr::GfRange3d& range);
+    Cell(size_t parent, size_t lhs, const BVH::Cell* left, size_t rhs, const BVH::Cell* right);
+    Cell(size_t parent, Geometry* geometry);
+    Cell(size_t parent, Component* component, const pxr::GfRange3d& range);
 
     bool IsLeaf() const { return _type == BVH::Cell::LEAF; };
     bool IsRoot() const { return _type == BVH::Cell::ROOT; };
@@ -45,46 +46,37 @@ public:
     const Cell* GetGeom() const;
     const BVH* GetIntersector() const;
 
-    void SetData(void* data){_data = data;};
-    void* GetData() const {return _data;};
-    void SetLeft(Cell* cell) { _left = cell; if (cell)cell->_parent = this; };
-    void SetRight(Cell* cell) { _right = cell; if (cell)cell->_parent = this;};
-    void SetParent(Cell* cell) { _parent = cell; };
+    void SetData(void* data) { _data = data; };
+    void SetLeft(size_t cell) { _left = cell; };
+    void SetRight(size_t cell) { _right = cell; };
+    void SetParent(size_t cell) { _parent = cell; };
     void SetType(uint8_t type) { _type = type; };
-    uint8_t GetType() { return _type; };
-    Cell* GetLeft() { return _left; };
-    Cell* GetRight() { return _right; };
-    Cell* GetParent() { return _parent; };
 
-    void GetLeaves(std::vector<Cell*>& leaves) const;
-    void GetBranches(std::vector<Cell*>& branches) const;
-
-    Geometry* GetGeometry();
-    const Geometry* GetGeometry() const;
-    
-    Morton SortCellsByPair(BVH* bvh, std::vector<Morton>& mortons);
-    pxr::GfRange3f UpdateCells();
-
-    bool Raycast(const pxr::GfRay& ray, Location* hit,
-      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
-    bool Closest(const pxr::GfVec3f& point, Location* hit, 
-      double maxDistance = DBL_MAX) const;
-
-  protected:
-    bool _LeafRaycast(const pxr::GfRay& ray, Location* hit, 
-      double maxDistance = DBL_MAX, double* minDistance = NULL) const;
-    
-    
+    void* GetData() const { return _data; };
+    uint8_t GetType() const { return _type; };
+    size_t GetLeft() const { return _left; };
+    size_t GetRight() const { return _right; };
+    size_t GetParent() const { return _parent; };
+ 
   private:
-    Cell*     _parent;
-    Cell*     _left;
-    Cell*     _right;
+    BVH*      _bvh;
+    size_t    _parent;
+    size_t    _left;
+    size_t    _right;
     void*     _data;
     uint8_t   _type;
   };
 
+  struct _Geom {
+    Geometry*   geom;
+    size_t      index;
+    size_t      start;
+    size_t      end;
+  };
+
 public:
   BVH() {};
+  ~BVH();
 
   static uint64_t ComputeCode(const BVH::Cell* root, const pxr::GfVec3d& point)
   {
@@ -103,17 +95,24 @@ public:
     );
   }
 
-  Cell* GetRoot() { return &_cells[0]; };
-  const Cell* GetRoot() const { return &_cells[0]; };
+ 
+  Cell* GetRoot() { return &_root; };
+  const Cell* GetRoot() const { return &_root; };
 
-  // cell constructor
-  BVH::Cell* AddRoot();
-  BVH::Cell* AddCell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs);
+  Cell* GetCell(size_t index) { return &_cells[index]; };
+  const Cell* GetCell(size_t index) const { return &_cells[index]; };
+
+  BVH::Cell* AddCell(BVH::Cell* parent, BVH::Cell* left, BVH::Cell* right);
   BVH::Cell* AddCell(BVH::Cell* parent, Geometry* geometry);
   BVH::Cell* AddCell(BVH::Cell* parent, Component* component,
     const pxr::GfRange3d& range);
-    
+
   void AddGeometry(BVH::Cell* cell, Geometry* geometry);
+  const Geometry* GetGeometryFromCell(const BVH::Cell* cell) const;
+  const Geometry* GetGeometry(size_t index) const;
+
+  Morton SortCellsByPair(BVH::Cell* cell);
+  pxr::GfRange3f UpdateCells();
 
    // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
@@ -126,18 +125,32 @@ public:
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
   virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const override;
+
+  void GetLeaves(const BVH::Cell* cell, std::vector<const Cell*>& leaves) const;
+  void GetBranches(const BVH::Cell* cell, std::vector<const Cell*>& branches) const;
   
 protected:
-  Cell* _RecurseSortCellsByPair(int first, int last);
-  void _MortonSortTriangles(Geometry* geometry);
-  void _MortonSortTrianglePairs(Geometry* geometry);
-  void _FinishSort();
+  int _FindSplit(int first, int last);
+  size_t _GetIndex(const BVH::Cell* cell) const;
+  BVH::Cell* _GetCell(size_t index);
+  const BVH::Cell* _GetCell(size_t index) const;
+  void _MortonSortTriangles(BVH::Cell* cell, Geometry* geometry);
+  void _MortonSortTrianglePairs(BVH::Cell* cell, Geometry* geometry);
+  Cell* _RecurseSortCellsByPair(BVH::Cell* cell, int first, int last);
+  void _FinishSort(BVH::Cell* cell);
+
+  pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell, const Geometry* geometry);
+
+  bool _Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
+    double maxDistance = DBL_MAX, double* minDistance = NULL) const;
+  bool _Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
+    double maxDistance = DBL_MAX) const;
 
 private:
-  std::vector<Cell>           _cells;
-  std::vector<Cell*>          _geoms;
-  std::vector<Cell*>          _leaves;
-  std::vector<Morton>         _mortons, 
+  Cell                            _root;
+  std::vector<Cell>               _cells;
+  std::vector<_Geom>              _geoms;
+  std::vector<Morton>             _mortons;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

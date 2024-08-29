@@ -39,33 +39,31 @@ static void _RearangeChildrenCells(BVH::Cell* lhs, BVH::Cell* rhs)
 
 static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
 {
-  BVH::Cell *left = lhs->GetLeft(), *right = lhs->GetRight(), *parent = lhs->GetParent();
-  pxr::GfVec3d min = lhs->GetMin(), max = lhs->GetMax();
   lhs->SetLeft(rhs->GetLeft());
   lhs->SetRight(rhs->GetRight());
   lhs->SetParent(rhs->GetParent());
   lhs->SetMin(rhs->GetMin());
   lhs->SetMax(rhs->GetMax());
-  rhs->SetLeft(left);
-  rhs->SetRight(right);
-  rhs->SetParent(parent);
+  rhs->SetLeft(BVH::INVALID_INDEX);
+  rhs->SetRight(BVH::INVALID_INDEX);
+  rhs->SetParent(BVH::INVALID_INDEX);
   rhs->SetMin(lhs->GetMin());
   rhs->SetMax(lhs->GetMax());
 }
 
 BVH::Cell::Cell()
-  : _parent(NULL)
-  , _left(NULL)
-  , _right(NULL)
+  : _parent(BVH::INVALID_INDEX)
+  , _left(BVH::INVALID_INDEX)
+  , _right(BVH::INVALID_INDEX)
   , _data(NULL)
   , _type(BVH::Cell::ROOT)
 {
 }
 
-BVH::Cell::Cell(BVH::Cell* parent, Geometry* geometry)
+BVH::Cell::Cell(size_t parent, Geometry* geometry)
   : _parent(parent)
-  , _left(NULL)
-  , _right(NULL)
+  , _left(BVH::INVALID_INDEX)
+  , _right(BVH::INVALID_INDEX)
   , _data(NULL)
   , _type(BVH::Cell::GEOM)
 {
@@ -77,28 +75,27 @@ BVH::Cell::Cell(BVH::Cell* parent, Geometry* geometry)
   }
 }
 
-BVH::Cell::Cell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs)
+BVH::Cell::Cell(size_t parent, size_t lhs, const BVH::Cell* left, size_t rhs, const BVH::Cell* right)
   : _parent(parent)
   , _left(lhs)
   , _right(rhs)
   , _data(NULL)
   , _type(BVH::Cell::BRANCH)
 {
-  if (_left && _right) {
-    
-    const pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*_left, *_right);
+  if (left && right) {
+    const pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*left,*right);
     SetMin(range.GetMin());
     SetMax(range.GetMax());
-  } else if (_left) {
-    SetMin(_left->GetMin());
-    SetMax(_left->GetMax());
+  } else if (left) {
+    SetMin(left->GetMin());
+    SetMax(left->GetMax());
   }
 }
 
-BVH::Cell::Cell(BVH::Cell* parent, Component* component, const pxr::GfRange3d& range)
+BVH::Cell::Cell(size_t parent, Component* component, const pxr::GfRange3d& range)
   : _parent(parent)
-  , _left(NULL)
-  , _right(NULL)
+  , _left(BVH::INVALID_INDEX)
+  , _right(BVH::INVALID_INDEX)
   , _data((void*)component)
   , _type(BVH::Cell::LEAF)
 {
@@ -140,98 +137,9 @@ GetDistance(const pxr::GfRange3d& range, const pxr::GfVec3d& point)
   return pxr::GfSqrt(dx * dx + dy * dy + dz * dz);
 }
 
-const BVH::Cell*
-BVH::Cell::GetRoot() const
-{
-  if (IsRoot())return this;
-  BVH::Cell* parent = _parent;
-  while (parent) {
-    if (parent->IsRoot()) return parent;
-    parent = parent->_parent;
-  }
-  return this;
-}
-
-const BVH::Cell*
-BVH::Cell::GetGeom() const
-{
-  if (IsGeom())return this;
-  BVH::Cell* parent = _parent;
-  while (parent) {
-    if (parent->IsGeom()) return parent;
-    parent = parent->_parent;
-  }
-  return this;
-}
-
-const BVH* 
-BVH::Cell::GetIntersector() const
-{
-  return (BVH*) GetRoot()->GetData();
-}
-
-static void 
-_RecurseGetBranches(BVH::Cell* cell, std::vector<BVH::Cell*>& branches)
-{
-  if(cell->GetType() == BVH::Cell::BRANCH)branches.push_back(cell);
-
-  if (cell->GetLeft()) {
-    _RecurseGetBranches(cell->GetLeft(), branches);
-  }
-  if (cell->GetRight()) {
-    _RecurseGetBranches(cell->GetRight(), branches);
-  }
-}
-
-void
-BVH::Cell::GetBranches(std::vector<BVH::Cell*>& branches) const
-{
-  if (_left)_RecurseGetBranches(_left, branches);
-  if(_right)_RecurseGetBranches(_right, branches);
-}
-
-static void
-_RecurseGetLeaves(BVH::Cell* cell, std::vector<BVH::Cell*>& leaves)
-{
-  if(cell->GetType() == BVH::Cell::LEAF)leaves.push_back(cell);
-  if (cell->GetLeft()) {
-    _RecurseGetLeaves(cell->GetLeft(), leaves);
-  }
-  if (cell->GetRight()) {
-    _RecurseGetLeaves(cell->GetRight(), leaves);
-  }
-}
-
-void
-BVH::Cell::GetLeaves(std::vector<BVH::Cell*>& leaves) const
-{
-  leaves.clear();
-  if (_left)_RecurseGetLeaves(_left, leaves);
-  if (_right)_RecurseGetLeaves(_right, leaves);
-}
-
-Geometry*
-BVH::Cell::GetGeometry()
-{
-  const BVH::Cell* geom = GetGeom();
-  if (geom) {
-    return (Geometry*)geom->_data;
-  }
-  else return NULL;
-}
-
-const Geometry*
-BVH::Cell::GetGeometry() const
-{
-  const BVH::Cell* geom = GetGeom();
-  if (geom) {
-    return (Geometry*)geom->_data;
-  }
-  else return NULL;
-}
 
 bool
-BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
+BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   double enterDistance, exitDistance;
@@ -241,14 +149,14 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
   if(enterDistance > maxDistance) 
     return false;
 
-  if (IsLeaf()) {
-    const Geometry* geometry = GetGeometry();
+  if (cell->IsLeaf()) {
+    const Geometry* geometry = GetGeometryFromCell(cell);
     pxr::GfRay localRay(ray);
 
     localRay.Transform(geometry->GetInverseMatrix());
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     
-    Component* component = (Component*)_data;
+    Component* component = (Component*)cell->GetData();
     Location localHit(*hit);
     if (component->Raycast(points, localRay, &localHit)) {
       const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetT()));
@@ -262,14 +170,15 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
     }
     return false;
   } else {
-    if(IsGeom()) {       
-      const BVH* intersector = GetIntersector();
-      hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
+    if(cell->IsGeom()) {       
+      hit->SetGeometryIndex(GetGeometryIndex((Geometry*)cell->GetData()));
     }
     Location leftHit(*hit), rightHit(*hit);
     bool leftFound(false), rightFound(false);
-    if (_left && _left->Raycast(ray, &leftHit, maxDistance, minDistance))leftFound=true;
-    if (_right && _right->Raycast(ray, &rightHit, maxDistance, minDistance))rightFound=true;
+    const BVH::Cell* left = _GetCell(cell->GetLeft());
+    if (left && _Raycast(left, ray, &leftHit, maxDistance, minDistance))leftFound=true;
+    const BVH::Cell* right = _GetCell(cell->GetRight());
+    if (right && _Raycast(right, ray, &rightHit, maxDistance, minDistance))rightFound=true;
 
     if (leftFound && rightFound) {
       if(leftHit.GetT()<rightHit.GetT()) 
@@ -284,17 +193,17 @@ BVH::Cell::Raycast(const pxr::GfRay& ray, Location* hit,
 }
 
 bool 
-BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit, 
+BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit, 
   double maxDistance) const
 {  
-  double distance = GetDistance(*this, point) - GetSize().GetLength() * 0.5f;
+  double distance = GetDistance(*cell, point) - cell->GetSize().GetLength() * 0.5f;
   if (distance > hit->GetT() || distance > maxDistance)return false;
 
-  if(IsLeaf()) {
-    const Geometry* geometry = GetGeometry();
+  if(cell->IsLeaf()) {
+    const Geometry* geometry = GetGeometryFromCell(cell);
 
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
-    Component* component = (Component*)_data;
+    Component* component = (Component*)cell->GetData();
     pxr::GfVec3f localPoint = geometry->GetInverseMatrix().Transform(point);
     Location localHit(*hit);
     localHit.TransformT(geometry->GetInverseMatrix());
@@ -314,58 +223,59 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
     return false;
   } else {
     
-    if(IsGeom()) {       
-      const BVH* intersector = GetIntersector();
-      hit->SetGeometryIndex(intersector->GetGeometryIndex((Geometry*)_data));
+    if(cell->IsGeom()) {       
+      hit->SetGeometryIndex(GetGeometryIndex((Geometry*)cell->GetData()));
     }
 
-    if(_left && _right) 
+    const BVH::Cell* left = _GetCell(cell->GetLeft());
+    const BVH::Cell* right = _GetCell(cell->GetRight());
+
+    if(left && right) 
     {
-      const BVH::Cell* root = GetRoot();
-      uint64_t code = ComputeCode(root, point);
-      uint64_t leftCode = ComputeCode(root, _left->GetMidpoint());
-      uint64_t rightCode = ComputeCode(root, _right->GetMidpoint());
+      uint64_t code = ComputeCode(&_root, point);
+      uint64_t leftCode = ComputeCode(&_root, left->GetMidpoint());
+      uint64_t rightCode = ComputeCode(&_root, right->GetMidpoint());
 
       int leftPrefix = MortonLeadingZeros(leftCode ^ code);
       int rightPrefix = MortonLeadingZeros(rightCode ^ code);
       if(rightPrefix > leftPrefix)
-        return _right->Closest(point, hit, maxDistance);
+        return _Closest(right, point, hit, maxDistance);
       else if(leftPrefix > rightPrefix)
-        return _left->Closest(point, hit, maxDistance);
+        return _Closest(left, point, hit, maxDistance);
       else {
-        double leftDistSq = (_left->GetMidpoint() - point).GetLengthSq() - 
-          _left->GetSize().GetLengthSq() * 0.5f;
-        double rightDistSq = (_right->GetMidpoint() - point).GetLengthSq() -
-          _right->GetSize().GetLengthSq() * 0.5f;
+        double leftDistSq = (left->GetMidpoint() - point).GetLengthSq() - 
+          left->GetSize().GetLengthSq() * 0.5f;
+        double rightDistSq = (right->GetMidpoint() - point).GetLengthSq() -
+          right->GetSize().GetLengthSq() * 0.5f;
 
         bool leftFound, rightFound;
         if( leftDistSq < rightDistSq) {
-          leftFound = _left->Closest(point, hit, maxDistance);
-          rightFound = _right->Closest(point, hit, maxDistance);
+          leftFound = _Closest(left, point, hit, maxDistance);
+          rightFound = _Closest(right, point, hit, maxDistance);
         } else {
-          rightFound = _right->Closest(point, hit, maxDistance);
-          leftFound = _left->Closest(point, hit, maxDistance);
+          rightFound = _Closest(right, point, hit, maxDistance);
+          leftFound = _Closest(left, point, hit, maxDistance);
         }
         return leftFound || rightFound;
       }
     } 
 
-    else if(_left)
-      return _left->Closest(point, hit, maxDistance);
+    else if(left)
+      return _Closest(left, point, hit, maxDistance);
 
-    else if(_right)
-      return _right->Closest(point, hit, maxDistance);
+    else if(right)
+      return _Closest(right, point, hit, maxDistance);
 
     else
       return false;
   }
 }
 
-static pxr::GfRange3f 
-_RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
+pxr::GfRange3f 
+BVH::_RecurseUpdateCells(BVH::Cell* cell, const Geometry* geometry)
 {
   if(cell->IsGeom()) {
-    geometry = cell->GetGeometry();
+    geometry = GetGeometryFromCell(cell);
   } 
   
   if (cell->IsLeaf()) {
@@ -385,14 +295,14 @@ _RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
   } else {
     pxr::GfRange3f range;
     if (cell->GetLeft() && cell->GetRight()) {
-      range.UnionWith(_RecurseUpdateCells(cell->GetLeft(), geometry));
-      range.UnionWith(_RecurseUpdateCells(cell->GetRight(), geometry));
+      range.UnionWith(_RecurseUpdateCells(_GetCell(cell->GetLeft()), geometry));
+      range.UnionWith(_RecurseUpdateCells(_GetCell(cell->GetRight()), geometry));
     } 
     else if(cell->GetLeft()) {
-      range.UnionWith(_RecurseUpdateCells(cell->GetLeft(), geometry));
+      range.UnionWith(_RecurseUpdateCells(_GetCell(cell->GetLeft()), geometry));
     } 
     else if(cell->GetRight()) {
-      range.UnionWith(_RecurseUpdateCells(cell->GetRight(), geometry));
+      range.UnionWith(_RecurseUpdateCells(_GetCell(cell->GetRight()), geometry));
     } 
 
     cell->SetMin(range.GetMin());
@@ -402,10 +312,10 @@ _RecurseUpdateCells(BVH::Cell* cell, Geometry* geometry)
 }
 
 int 
-_FindSplit(const std::vector<Morton>& mortons,  int first, int last)
+BVH::_FindSplit(int first, int last)
 {
-  uint64_t firstCode = mortons[first].code;
-  uint64_t lastCode = mortons[last].code;
+  uint64_t firstCode = _mortons[first].code;
+  uint64_t lastCode = _mortons[last].code;
 
   if (firstCode == lastCode)
     return (first + last) >> 1;
@@ -421,7 +331,7 @@ _FindSplit(const std::vector<Morton>& mortons,  int first, int last)
 
     if (newSplit < last)
     {
-      uint64_t splitCode = mortons[newSplit].code;
+      uint64_t splitCode = _mortons[newSplit].code;
       int splitPrefix = MortonLeadingZeros(firstCode ^ splitCode);
       if (splitPrefix > commonPrefix) {
         split = newSplit;
@@ -432,24 +342,24 @@ _FindSplit(const std::vector<Morton>& mortons,  int first, int last)
   return split;
 }
 
-BVH::Cell*
-BVH::AddRoot()
+
+BVH::~BVH()
 {
-  _cells.push_back(BVH::Cell());
-  return &_cells.back();
 }
 
 BVH::Cell* 
 BVH::AddCell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs)
 {
-  _cells.push_back(BVH::Cell(parent, lhs, rhs));
+  size_t geomIdx = _geoms.size();
+  _cells.push_back(BVH::Cell(_GetIndex(parent), _GetIndex(lhs), lhs, _GetIndex(rhs), rhs));
   return &_cells.back();
 }
 
 BVH::Cell* 
 BVH::AddCell(BVH::Cell* parent, Geometry* geometry)
 {
-  _cells.push_back(BVH::Cell(parent, geometry));
+  size_t geomIdx = _geoms.size();
+  _cells.push_back(BVH::Cell(_GetIndex(parent), geometry));
   return &_cells.back();
 }
 
@@ -457,70 +367,114 @@ BVH::Cell*
 BVH::AddCell(BVH::Cell* parent, Component* component,
   const pxr::GfRange3d& range)
 {
-  _cells.push_back(BVH::Cell(parent, component, range));
+  size_t geomIdx = _geoms.size();
+  _cells.push_back(BVH::Cell(_GetIndex(parent), component, range));
   return &_cells.back();
 }
 
-void BVH::AddGeometry(BVH::Cell* cell, Geometry* geometry)
+void 
+BVH::AddGeometry(BVH::Cell* cell, Geometry* geometry)
 {
   cell->SetType(BVH::Cell::GEOM);
   if (geometry->GetType() == Geometry::MESH) {
     _mortons.clear();
-    _MortonSortTrianglePairs(geometry);
-    _FinishSort();
+    _MortonSortTrianglePairs(cell, geometry);
+    _FinishSort(cell);
   } else if (geometry->GetType() == Geometry::CURVE) {
 
   }
 }
 
+const Geometry* 
+BVH::GetGeometry(size_t index) const
+{
+  return _geoms[index].geom;
+}
+
+const Geometry* 
+BVH::GetGeometryFromCell(const BVH::Cell* cell) const
+{
+  size_t cellIdx = _GetIndex(cell);
+  for (size_t g = 0; g < _geoms.size(); ++g) {
+    if (cellIdx > _geoms[g].start && cellIdx <= _geoms[g].end)
+      return _geoms[g].geom;
+  }
+  return NULL;
+}
 
 void
 BVH::Init(const std::vector<Geometry*>& geometries)
 {
-  BVH::Cell* root = AddRoot();
-  _geometries = geometries;
-  _leaves.clear();
-  size_t numColliders = _geometries.size();
-  const pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox(true);
+  _Init(geometries);
+  
+  std::cout << "init bvh with " << _geoms.size() << " geometries " << std::endl;
+
+  const pxr::GfBBox3d bbox = _geoms[0].geom->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
-  for (size_t i = 1; i < numColliders; ++i) {
-    const pxr::GfBBox3d bbox = _geometries[i]->GetBoundingBox(true);
+  for (size_t i = 1; i < _geoms.size(); ++i) {
+    const pxr::GfBBox3d bbox = _geoms[i].geom->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
-  std::vector<Morton> cells;
-  cells.reserve(numColliders);
+  for (size_t g = 0; g < _geoms.size(); ++g) {
+    Mesh* mesh = (Mesh*)_geoms[g].geom;
 
-  for (Geometry* geom : _geometries) {
-    BVH::Cell* cell = AddCell(root, geom);
-    AddGeometry(cell, geom);
-    cells.push_back({ 
-      BVH::ComputeCode(root, bvh->GetMidpoint()), 
-      BVH::ComputeCode(root, bvh->GetMin()),
-      BVH::ComputeCode(root, bvh->GetMax()),
-      bvh 
+    BVH::Cell* cell = AddCell(&_root, mesh);
+    std::cout << "Add Geometry: " << cell << std::endl;
+    AddGeometry(cell, mesh);
+
+    size_t start = _cells.size();
+
+    _mortons.clear();
+    _mortons.reserve(mesh->GetTrianglePairs().size() * 2);
+
+    _mortons.push_back({
+      BVH::ComputeCode(&_root, cell->GetMidpoint()), 
+      BVH::ComputeCode(&_root, cell->GetMin()),
+      BVH::ComputeCode(&_root, cell->GetMax()),
+      cell 
     });
-    _geoms.push_back(bvh);
+    
+    Morton morton = SortCellsByPair(cell);
+    BVH::Cell* top = (BVH::Cell*)morton.data;
+    cell->SetLeft(_GetIndex(top));
+    cell->SetMin(top->GetMin());
+    cell->SetMax(top->GetMax());
+    cell->SetData((void*)this);
+
+    _geoms[g].index = _GetIndex(cell);
+    _geoms[g].start = start;
+    _geoms[g].end = _cells.size() - 1;
+
+    std::cout << "--------------------- geometry : " << std::endl;
+    std::cout << "index : " << _geoms[g].index <<std::endl;
+    std::cout << "start : " << _geoms[g].start << std::endl;
+    std::cout << "end : " << _geoms[g].end << std::endl;
   }
 
-  Morton morton = root->SortCellsByPair(this, cells);
-  BVH::Cell* cell = (BVH::Cell*)morton.data;
-  root->SetLeft(cell);
-  root->SetMin(cell->GetMin());
-  root->SetMax(cell->GetMax());
-  root->SetData((void*)this);
-  root->GetLeaves(_leaves);
+  _mortons.clear();
+  for (size_t g = 0; g < _geoms.size(); ++g) {
+    BVH::Cell* cell = _GetCell(_geoms[g].index);
+    _mortons.push_back({
+      BVH::ComputeCode(&_root, cell->GetMidpoint()),
+      BVH::ComputeCode(&_root, cell->GetMin()),
+      BVH::ComputeCode(&_root, cell->GetMax()),
+      cell
+      });
+  }
+  
+  Morton morton = SortCellsByPair(&_root);
 
-  cells.clear();
+  std::cout << "bvh initialized" << morton.code << std::endl;
   
 }
 
 void
 BVH::Update()
 {
-  pxr::GfRange3f newRange = _RecurseUpdateCells(&_cells[0],NULL);
+  pxr::GfRange3f newRange = _RecurseUpdateCells(&_root, NULL);
   SetMin(newRange.GetMin());
   SetMax(newRange.GetMax());
 }
@@ -528,21 +482,22 @@ BVH::Update()
 bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  return _cells[0].Raycast(ray, hit, maxDistance, minDistance);
+  return _Raycast(&_root, ray, hit, maxDistance, minDistance);
 };
 
-void BVH::_MortonSortTrianglePairs(Geometry* geometry)
+void BVH::_MortonSortTrianglePairs(BVH::Cell* cell, Geometry* geometry)
 {
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
 
   pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
   size_t numTrianglePairs = trianglePairs.size();
-  mortons.resize(numTrianglePairs);
+  _mortons.resize(numTrianglePairs);
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
+  std::cout << "add tringle pairs" << std::endl;
   for (size_t t = 0; t < numTrianglePairs; ++t) {
-    BVH::Cell* leaf = AddCell(this, &trianglePairs[t], 
+    BVH::Cell* leaf = AddCell(cell, &trianglePairs[t],
       trianglePairs[t].GetBoundingBox(positions, matrix));
     const BVH::Cell* root = GetRoot();
     uint64_t code = BVH::ComputeCode(root, leaf->GetMidpoint());
@@ -553,21 +508,23 @@ void BVH::_MortonSortTrianglePairs(Geometry* geometry)
       leaf 
     };
   }
+  std::cout << " tringle pairs added" << std::endl;
 }
 
 
-void BVH::_MortonSortTriangles(Geometry* geometry)
+void BVH::_MortonSortTriangles(BVH::Cell* cell, Geometry* geometry)
 {
   if (geometry->GetType() != Geometry::MESH)return;
   Mesh* mesh = (Mesh*)geometry;
 
   pxr::VtArray<Triangle>& triangles = mesh->GetTriangles();
   size_t numTriangles = triangles.size();
-  mortons.resize(numTriangles);
+  _mortons.resize(numTriangles);
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
+  std::cout << "add triangle" << std::endl;
   for (size_t t = 0; t < numTriangles; ++t) {
-    BVH::Cell* leaf = bvh->AddCell(this, &triangles[t], 
+    BVH::Cell* leaf = AddCell(cell, &triangles[t],
       triangles[t].GetBoundingBox(positions, matrix));
 
     const BVH::Cell* root = GetRoot();
@@ -579,30 +536,59 @@ void BVH::_MortonSortTriangles(Geometry* geometry)
       leaf 
     };
   }
+  std::cout << "tringle pairs addedc" << std::endl;
+}
+
+size_t 
+BVH::_GetIndex(const BVH::Cell* cell) const
+{
+  if (!cell)return BVH::INVALID_INDEX;
+
+  return  ((intptr_t)cell - (intptr_t)&_cells[0]) / sizeof(BVH::Cell);
+}
+
+BVH::Cell*
+BVH::_GetCell(size_t index)
+{
+  return index < _cells.size() ? &_cells[index] : NULL;
+}
+
+const BVH::Cell*
+BVH::_GetCell(size_t index) const
+{
+  return index < _cells.size() ? &_cells[index] : NULL;
 }
 
 BVH::Cell*
 BVH::_RecurseSortCellsByPair(
+  BVH::Cell*    cell,
   int           first,
   int           last)
 {
-  if (first == last)
+  if (first == last) {
     return (BVH::Cell*)_mortons[first].data;
+  }
 
-  int split = _FindSplit(_mortons, first, last);
+  int split = _FindSplit(first, last);
 
-  BVH::Cell* left = _RecurseSortCellsByPair(first, split);
-  BVH::Cell* right = _RecurseSortCellsByPair(split + 1, last);
-  BVH::Cell* parent = &_cells.back();
-  return bvh->AddCell(parent, left, right);
+  BVH::Cell* left = _RecurseSortCellsByPair(cell, first, split);
+  BVH::Cell* right = _RecurseSortCellsByPair(cell, split + 1, last);
+  return AddCell(cell, left, right);
 }
 
 Morton 
-BVH::SortCellsByPair()
+BVH::SortCellsByPair(BVH::Cell* cell)
 {
+  
+  std::cout<< "sort cells by  pairs" << std::endl;
   size_t numMortons = _mortons.size();
+  std::cout<< "num mortons" << numMortons << std::endl;
+  
   std::sort(_mortons.begin(), _mortons.end());
-  BVH::Cell* top = _RecurseSortCellsByPair(0, static_cast<int>(numMortons) - 1);
+  std::cout<< "mortons sorted !! " << numMortons << std::endl;
+  for (auto& morton : _mortons)if(!morton.data) std::cout << morton.code << ": " << morton.data << std::endl;
+  BVH::Cell* top = _RecurseSortCellsByPair(cell, 0, static_cast<int>(numMortons) - 1);
+  std::cout<< "top cell " << top << std::endl;
   return {
     ComputeCode(top, top->GetMidpoint()),
     ComputeCode(top, top->GetMin()),
@@ -612,12 +598,11 @@ BVH::SortCellsByPair()
 } 
 
 void
-BVH::_FinishSort()
+BVH::_FinishSort(BVH::Cell* cell)
 {
-  Morton morton = SortCellsByPair(bvh, _mortons);
-  _SwapCells(&_cells[0], (BVH::Cell*)morton.data);
+  Morton morton = SortCellsByPair(cell);
+  _SwapCells(cell, (BVH::Cell*)morton.data);
 }
-
 /*
 
 
@@ -665,15 +650,15 @@ bool BVH::Closest(const pxr::GfVec3f& point,
     );
   }
   */
-
-  const BVH::Cell* root = &_cells[0];
-  for (size_t g = 0; g < _geometries.size(); ++g) {
-    BVH::Cell* root = (BVH::Cell * )_geoms[g];
+  size_t numGeometries = _geoms.size();
+  const BVH::Cell* root = &_root;
+  for (size_t g = 0; g < numGeometries; ++g) {
+    const BVH::Cell* root = _GetCell(_geoms[g].index);
     uint64_t morton = ComputeCode(root, point);
-    BVH::Cell* cell = root;
+    const BVH::Cell* cell = root;
     while(true) {
-      BVH::Cell* left = cell->GetLeft();
-      BVH::Cell* right = cell->GetRight();
+      const BVH::Cell* left = _GetCell(cell->GetLeft());
+      const BVH::Cell* right = _GetCell(cell->GetRight());
       if(!left || ! right)break;
       
       uint64_t leftMorton = ComputeCode(root, left->GetMidpoint());
@@ -683,13 +668,13 @@ bool BVH::Closest(const pxr::GfVec3f& point,
       int rightPrefix = MortonLeadingZeros(morton ^ rightMorton);
 
       if (leftPrefix < rightPrefix)
-        cell = cell->GetLeft();
+        cell = _GetCell(cell->GetLeft());
       else if (rightPrefix < leftPrefix)
-        cell = cell->GetRight();
+        cell = _GetCell(cell->GetRight());
       else break;
     }
     
-    if(cell->GetParent()->Closest(point, hit, maxDistance))
+    if(_Closest(_GetCell(cell->GetParent()), point, hit, maxDistance))
       hit->SetGeometryIndex(g);
   }
   return hit->IsValid();
@@ -698,9 +683,9 @@ bool BVH::Closest(const pxr::GfVec3f& point,
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
   pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf)
 {
-  std::vector<BVH::Cell*> cells;
-  if(branchOrLeaf)_cells[0].GetLeaves(cells);
-  else _cells[0].GetBranches(cells);
+  std::vector<const BVH::Cell*> cells;
+  if(branchOrLeaf)GetLeaves(&_root, cells);
+  else GetBranches(&_root, cells);
   size_t numCells = cells.size();
   positions.resize(numCells);
   sizes.resize(numCells);
@@ -711,6 +696,26 @@ void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
     colors[l] = pxr::GfVec3f(ComputeCodeAsColor(GetRoot(), 
       pxr::GfVec3f(cells[l]->GetMidpoint())));
   }
+}
+
+void
+BVH::GetBranches(const BVH::Cell* cell, std::vector<const BVH::Cell*>& branches) const
+{
+  if (cell->GetType() == BVH::Cell::BRANCH)branches.push_back(cell);
+  const BVH::Cell* left = _GetCell(cell->GetLeft());
+  const BVH::Cell* right = _GetCell(cell->GetRight());
+  if (left)GetBranches(left, branches);
+  if (right)GetBranches(right, branches);
+}
+
+void
+BVH::GetLeaves(const BVH::Cell* cell, std::vector<const BVH::Cell*>& leaves) const
+{
+  if (cell->GetType() == BVH::Cell::LEAF)leaves.push_back(cell);
+  const BVH::Cell* left = _GetCell(cell->GetLeft());
+  const BVH::Cell* right = _GetCell(cell->GetRight());
+  if (left)GetLeaves(left, leaves);
+  if (right)GetLeaves(right, leaves);
 }
 
 

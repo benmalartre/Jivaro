@@ -120,7 +120,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
   if(true)
   {
-    size_t N = 10000;
+    size_t N = 10;
     pxr::VtArray<pxr::GfVec3f> points(N);
     for(auto& point: points)
       point = pxr::GfVec3f(RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10));
@@ -132,6 +132,8 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
       result1[n] = _ConstraintPointOnMesh(_mesh, points[n]);
     }
     uint64_t elapsedT1 = CurrentTime() - startT1;
+
+    std::cout << (elapsedT1 * 1e-9) << std::endl;
     
     pxr::VtArray<pxr::GfVec3f> result2(N);
 

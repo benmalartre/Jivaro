@@ -145,25 +145,20 @@ size_t _GetGeometryNumComponents(Geometry* geometry)
 // construct the grid from a list of geometries
 void Grid3D::Init(const std::vector<Geometry*>& geometries)
 {
-  if(geometries.size() > 1) {
-    std::cerr << "Grid 3D only accept ONE geometry, use MultiGrid3D instead !!" << std::endl;
-    _geometries = {geometries[0]};
-  } else {
-    _geometries = geometries;
-  }
+  _Init(geometries);
 
   // delete old cells
   DeleteCells();
 
-  if (!_geometries.size())return;
+  if (!_geoms.size())return;
 
   // compute bound of the grid
-  size_t totalNumComponents = _GetGeometryNumComponents(_geometries[0]);
-  const pxr::GfBBox3d bbox = _geometries[0]->GetBoundingBox(true);
+  size_t totalNumComponents = _GetGeometryNumComponents(_geoms[0].geom);
+  const pxr::GfBBox3d bbox = _geoms[0].geom->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
-  for (size_t i = 1; i < _geometries.size(); ++i) {
-    totalNumComponents += _GetGeometryNumComponents(_geometries[i]);
-    const pxr::GfBBox3d bbox = _geometries[i]->GetBoundingBox(true);
+  for (size_t i = 1; i < _geoms.size(); ++i) {
+    totalNumComponents += _GetGeometryNumComponents(_geoms[i].geom);
+    const pxr::GfBBox3d bbox = _geoms[i].geom->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());
@@ -194,22 +189,22 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
   memset(_cells, 0x0, sizeof(Grid3D::Cell*) * _numCells);
 
   // insert all the components in the cells
-  switch (_geometries[0]->GetType()) {
+  switch (_geoms[0].geom->GetType()) {
     case Geometry::MESH:
-      InsertMesh((Mesh*)_geometries[0]);
+      InsertMesh((Mesh*)_geoms[0].geom);
       break;
     case Geometry::CURVE:
-      InsertCurve((Curve*)_geometries[0]);
+      InsertCurve((Curve*)_geoms[0].geom);
       break;
     case Geometry::POINT:
-      InsertPoints((Points*)_geometries[0]);
+      InsertPoints((Points*)_geoms[0].geom);
       break;
   }
 }
 
 void Grid3D::Update()
 {
-  Init(_geometries);
+  //Init(_geoms);
 }
 
 bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
@@ -261,7 +256,7 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   while(!hitSomething) {
     uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
     if (_cells[o] != NULL) 
-      if(_cells[o]->Raycast(_geometries[0], ray, hit, maxDistance, minDistance))
+      if(_cells[o]->Raycast(_geoms[0].geom, ray, hit, maxDistance, minDistance))
         hitSomething=true;
         
     uint8_t k =

@@ -28,14 +28,20 @@ public:
     INVALID
   };
 
+  struct _Geom {
+    size_t      index;
+    size_t      start;
+    size_t      end;
+    Geometry*   geom;
+  };
+
 public:
   virtual ~Intersector(){};
 
   size_t GetGeometryIndex(Geometry* geom) const;
-  const std::vector<Geometry*>& GetGeometries() const {return _geometries;};
-  const Geometry* GetGeometry(size_t index) const {return _geometries[index];};
-  Geometry* GetGeometry(size_t index) {return _geometries[index];};
-  size_t GetNumGeometries() const {return _geometries.size();};
+  const Geometry* GetGeometry(size_t index) const {return _geoms[index].geom;};
+  Geometry* GetGeometry(size_t index) {return _geoms[index].geom;};
+  size_t GetNumGeometries() const {return _geoms.size();};
 
   //used for visually debug
   virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
@@ -53,8 +59,8 @@ public:
     double maxDistance=DBL_MAX) const = 0;
 
 protected:
-  virtual void _Init(const std::vector<Geometry*>& geometries){_geometries = geometries;};
-   std::vector<Geometry*>      _geometries;
+  virtual void _Init(const std::vector<Geometry*>& geometries);
+   std::vector<_Geom> _geoms;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

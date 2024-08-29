@@ -12,16 +12,12 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 void Gradient::Init(Mesh* mesh)
 {
-  std::cout << "gradient init ..." << std::endl;
   size_t numPoints = mesh->GetNumPoints();
-  std::cout << "num points : " << numPoints << std::endl;
   _flags.resize(numPoints);
   _gradient[0].resize(numPoints);
   _gradient[1].resize(numPoints);
   _value[0].resize(numPoints);
   _value[1].resize(numPoints);
-
-
 }
   
 void Gradient::Compute(Mesh* mesh)

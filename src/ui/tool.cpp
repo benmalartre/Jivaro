@@ -41,8 +41,8 @@ ToolUI::~ToolUI()
 static void
 _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 {
-  std::vector<BVH::Cell*> cells;
-  bvh->GetRoot()->GetBranches(cells);
+  std::vector<const BVH::Cell*> cells;
+  bvh->GetBranches(bvh->GetRoot(), cells);
   size_t numPoints = cells.size();
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
   pxr::VtArray<pxr::GfVec3f> scales(numPoints);
