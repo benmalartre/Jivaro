@@ -26,13 +26,15 @@ static uint32_t __inline __builtin_clz(uint32_t x) {
 
 struct Morton {
   uint64_t  code;
+  uint64_t  minimum;
+  uint64_t  maximum;
   void*     data;
 
   bool operator <(const Morton& other) const {
-    return code < other.code;
+    return maximum < other.minimum;
   }
   bool operator <=(const Morton& other) const {
-    return code <= other.code;
+    return maximum <= other.minimum;
   }
 };
 

@@ -15,6 +15,28 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+/*
+static void _RearangeChildrenCells(BVH::Cell* lhs, BVH::Cell* rhs)
+{
+  if(lhs->IsLeaf() || rhs->IsLeaf())return;
+
+  if(lhs->GetLeft() && lhs->GetRight() && rhs->GetLeft() && rhs->GetRight()) {
+    pxr::GfRange3d alt1 = pxr::GfRange3d().UnionWith(*lhs->GetLeft()).UnionWith(*rhs->GetLeft());
+    pxr::GfRange3d alt2 = pxr::GfRange3d().UnionWith(*lhs->GetLeft()).UnionWith(*rhs->GetRight());
+
+    float alt1LengthSq = alt1.GetSize().GetLengthSq();
+    float alt2LengthSq = alt2.GetSize().GetLengthSq();
+    if( alt1 < alt2 && alt1 < lhs->GetSize().GetLengthSq()) {
+      std::swap(lhs->GetLeft(), rhs->GetLeft());
+      lhs->Set(alt1);
+       
+    } else if(alt2 < alt1 && alt2 < lhs->GetSize().GetLengthSq()) {
+
+    }
+  }
+}
+*/
+
 static void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs)
 {
   lhs->SetLeft(rhs->GetLeft());
@@ -59,6 +81,7 @@ BVH::Cell::Cell(BVH::Cell* parent, BVH::Cell* lhs, BVH::Cell* rhs)
   , _type(BVH::Cell::BRANCH)
 {
   if (_left && _right) {
+    
     const pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*_left, *_right);
     SetMin(range.GetMin());
     SetMax(range.GetMax());
@@ -294,10 +317,8 @@ BVH::Cell::Closest(const pxr::GfVec3f& point, Location* hit,
 
     if(_left && _right) 
     {
-      double leftDistSq = (_left->GetMidpoint() - point).GetLengthSq() + 
-        _left->GetSize().GetLengthSq() * 0.5f;
-      double rightDistSq = (_right->GetMidpoint() - point).GetLengthSq() + 
-        _right->GetSize().GetLengthSq() * 0.5f;
+      double leftDistSq = (_left->GetMidpoint() - point).GetLengthSq();
+      double rightDistSq = (_right->GetMidpoint() - point).GetLengthSq();
       bool leftFound, rightFound;
       if( leftDistSq < rightDistSq) {
         leftFound = _left->Closest(point, hit, maxDistance);
@@ -332,10 +353,15 @@ void BVH::Cell::_MortonSortTrianglePairs(std::vector<Morton>& mortons, Geometry*
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
   for (size_t t = 0; t < numTrianglePairs; ++t) {
-    BVH::Cell* leaf =
-      new BVH::Cell(this, &trianglePairs[t], trianglePairs[t].GetBoundingBox(positions, matrix));
+    BVH::Cell* leaf = new BVH::Cell(this, &trianglePairs[t], 
+      trianglePairs[t].GetBoundingBox(positions, matrix));
     const BVH::Cell* root = GetRoot();
-    mortons[t] = { BVH::ComputeCode(root, leaf->GetMidpoint()), leaf };
+    mortons[t] = { 
+      BVH::ComputeCode(root, leaf->GetMidpoint()), 
+      BVH::ComputeCode(root, leaf->GetMin()),
+      BVH::ComputeCode(root, leaf->GetMax()),
+      leaf 
+    };
   }
 }
 
@@ -354,7 +380,12 @@ void BVH::Cell::_MortonSortTriangles(std::vector<Morton>& mortons, Geometry* geo
     BVH::Cell* leaf =
       new BVH::Cell(this, &triangles[t], triangles[t].GetBoundingBox(positions, matrix));
     const BVH::Cell* root = GetRoot();
-    mortons[t] = { BVH::ComputeCode(root, leaf->GetMidpoint()), leaf };
+    mortons[t] = { 
+      BVH::ComputeCode(root, leaf->GetMidpoint()),
+      BVH::ComputeCode(root, leaf->GetMin()),
+      BVH::ComputeCode(root, leaf->GetMax()),
+      leaf 
+    };
   }
 }
 
@@ -450,7 +481,12 @@ Morton BVH::Cell::SortCellsByPair(
 {
   size_t numMortons = mortons.size();
   std::sort(mortons.begin(), mortons.end());
-  return { 0, _RecurseSortCellsByPair(mortons, 0, static_cast<int>(numMortons) - 1) };
+  BVH::Cell* top = _RecurseSortCellsByPair(mortons, 0, static_cast<int>(numMortons) - 1);
+  return {
+    ComputeCode(top, top->GetMidpoint()),
+    ComputeCode(top, top->GetMin()),
+    ComputeCode(top, top->GetMax())
+   };
 } 
 
 void BVH::Cell::_FinishSort(std::vector<Morton>& mortons)
@@ -491,7 +527,12 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 
   for (Geometry* geom : _geometries) {
     BVH::Cell* bvh = new BVH::Cell(&_root, geom);
-    cells.push_back({ BVH::ComputeCode(&_root, bvh->GetMidpoint()), bvh });
+    cells.push_back({ 
+      BVH::ComputeCode(&_root, bvh->GetMidpoint()), 
+      BVH::ComputeCode(&_root, bvh->GetMin()),
+      BVH::ComputeCode(&_root, bvh->GetMax()),
+      bvh 
+    });
     _geoms.push_back(bvh);
   }
 

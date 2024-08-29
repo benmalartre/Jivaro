@@ -25,7 +25,6 @@ public:
     enum Type {
       ROOT,
       GEOM,
-      TRUNK,
       BRANCH,
       LEAF
     };
@@ -45,7 +44,6 @@ public:
 
     bool IsLeaf() const { return _type == BVH::Cell::LEAF; };
     bool IsRoot() const { return _type == BVH::Cell::ROOT; };
-    bool IsTrunk() const { return _type == BVH::Cell::TRUNK; };
     bool IsBranch() const { return _type == BVH::Cell::BRANCH; };
     bool IsGeom() const { return _type == BVH::Cell::GEOM; };
 
@@ -55,8 +53,8 @@ public:
 
     void SetData(void* data){_data = data;};
     void* GetData() const {return _data;};
-    void SetLeft(Cell* cell) { _left = cell; };
-    void SetRight(Cell* cell) { _right = cell; };
+    void SetLeft(Cell* cell) { _left = cell; if (cell)cell->_parent = this; };
+    void SetRight(Cell* cell) { _right = cell; if (cell)cell->_parent = this;};
     void SetParent(Cell* cell) { _parent = cell; };
     void SetType(uint8_t type) { _type = type; };
     uint8_t GetType() { return _type; };

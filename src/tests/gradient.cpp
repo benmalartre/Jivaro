@@ -123,8 +123,8 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
     size_t N = 1000;
     pxr::VtArray<pxr::GfVec3f> points(N);
     for(auto& point: points)
-      point = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-      
+      point = pxr::GfVec3f(RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10));
+
     pxr::VtArray<pxr::GfVec3f> result1(N);
 
     uint64_t startT1 = CurrentTime();
@@ -151,7 +151,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
 
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
-  _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, false);
+  _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, true);
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
   
