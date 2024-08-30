@@ -46,17 +46,18 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
   _GetRootPrim(stage);
 
-  _TraverseStageFindingMesh(stage);
+  _TraverseStageFindingMeshes(stage);
 
   pxr::VtArray<pxr::GfVec3f> positions;
   pxr::VtArray<float> widths;
   pxr::VtArray<pxr::GfVec3f> colors;
 
   // create bvh
-  if (_mesh && _mesh->GetPrim().IsValid()) {
-    _bvh.Init({_mesh});
+  if (_meshes.size()) {
+    _bvh.Init(_meshes);
 
-    _scene.AddGeometry(_meshId, _mesh);
+    for(size_t m = 0; m < _meshes.size(); ++m)
+      _scene.AddGeometry(_meshesId[m], _meshes[m]);
 
     pxr::GfVec3f bmin(_bvh.GetMin());
     pxr::GfVec3f bmax(_bvh.GetMax());
@@ -99,12 +100,6 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
           colors[index] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
         }
 
-    _gradient.Init((Mesh*)_mesh);
-
-    pxr::UsdPrim prim = _mesh->GetPrim();
-    std::cout << prim.GetPath() << std::endl;
-    
-
   }
 
   _points= new Points();
@@ -129,7 +124,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
     uint64_t startT1 = CurrentTime();
     for(size_t n = 0; n < N; ++n) {
-      result1[n] = _ConstraintPointOnMesh(_mesh, points[n]);
+      result1[n] = _ConstraintPointOnMesh((Mesh*)_meshes[0], points[n]);
     }
     uint64_t elapsedT1 = CurrentTime() - startT1;
 
@@ -141,8 +136,10 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
     for(size_t n = 0; n < N; ++n) {
       Location hit;
       if(_bvh.Closest(points[n], &hit, FLT_MAX)) {
-        result2[n] = hit.ComputePosition(_mesh->GetPositionsCPtr(), 
-          &_mesh->GetTriangle(hit.GetComponentIndex())->vertices[0], 3);
+        Mesh* mesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
+
+        result2[n] = hit.ComputePosition(mesh->GetPositionsCPtr(), 
+          &mesh->GetTriangle(hit.GetComponentIndex())->vertices[0], 3);
       }
     }
     uint64_t elapsedT2 = CurrentTime() - startT2;
@@ -163,10 +160,10 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
-  if(_mesh) {
-    size_t numPoints = _mesh->GetNumPoints();
-    const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
-    const pxr::GfRange3f range(_mesh->GetBoundingBox().GetRange());
+  if(_meshes.size()) {
+    size_t numPoints = _meshes[0]->GetNumPoints();
+    const pxr::GfVec3f* positions = ((Deformable*)_meshes[0])->GetPositionsCPtr();
+    const pxr::GfRange3f range(_meshes[0]->GetBoundingBox().GetRange());
 
     pxr::GfVec3f seed(
       RANDOM_LO_HI(-10, 10), 
@@ -188,7 +185,9 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     //pxr::GfSqrt(_bvh.GetDistanceSquared(seed)) + _bvh.GetSize().GetLength() * 0.1f;
  
     if(_bvh.Closest(seed, &hit, FLT_MAX)) {
-      Triangle* triangle = _mesh->GetTriangle(hit.GetComponentIndex());
+      Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
+      const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
+      Triangle* triangle = hitMesh->GetTriangle(hit.GetComponentIndex());
       pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
       points[1] = closest;
     }
@@ -206,7 +205,7 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     points[1] = closest;
     */
 
-    seed = _ConstraintPointOnMesh(_mesh, seed);
+    seed = _ConstraintPointOnMesh((Mesh*)_meshes[0], seed);
     points[2] = seed;
 
     _points->SetPositions(points);
@@ -222,9 +221,10 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       colors[i][1] = RESCALE(positions[i][1], range.GetMin()[1], range.GetMax()[1], 0.f, 1.f);
       colors[i][2] = RESCALE(positions[i][2], range.GetMin()[2], range.GetMax()[2], 0.f, 1.f);
     }
-    _mesh->SetColors(colors);
+    ((Mesh*)_meshes[0])->SetColors(colors);
 
-    _scene.MarkPrimDirty(_meshId, pxr::HdChangeTracker::DirtyPrimvar);
+    for(size_t m = 0; m < _meshes.size(); ++m)
+      _scene.MarkPrimDirty(_meshesId[m], pxr::HdChangeTracker::DirtyPrimvar);
   }
 
 }
@@ -236,15 +236,14 @@ void TestGradient::TerminateExec(pxr::UsdStageRefPtr& stage)
   _scene.Remove(_pointsId);
 }
 
-void TestGradient::_TraverseStageFindingMesh(pxr::UsdStageRefPtr& stage)
+void TestGradient::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   for (pxr::UsdPrim prim : stage->TraverseAll())
     if (prim.IsA<pxr::UsdGeomMesh>()) {
-      _mesh = new Mesh(pxr::UsdGeomMesh(prim), 
-        xformCache.GetLocalToWorldTransform(prim));
-      _meshId = prim.GetPath();
-      break;
+      _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+        xformCache.GetLocalToWorldTransform(prim)));
+      _meshesId.push_back(prim.GetPath());
     }
 }
 

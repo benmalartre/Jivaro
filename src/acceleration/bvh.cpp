@@ -112,17 +112,19 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   double enterDistance, exitDistance;
-  if (!ray.Intersect(pxr::GfBBox3d(*this), &enterDistance, &exitDistance))
+  if (!ray.Intersect(pxr::GfBBox3d(*cell), &enterDistance, &exitDistance))
     return false;
 
   if(enterDistance > maxDistance) 
     return false;
-  std::cout << "-Raycast " << _GetIndex(cell) << std::endl;
-  size_t geomIdx = GetGeometryIndexFromCell(cell);
-  const Geometry* geometry = GetGeometry(geomIdx);
+
+  const pxr::GfVec3f enterPoint(ray.GetPoint(enterDistance));
 
   if (cell->IsLeaf()) {
     
+    size_t geomIdx = GetGeometryIndexFromCell(cell);
+    const Geometry* geometry = GetGeometry(geomIdx);
+
     pxr::GfRay localRay(ray);
 
     localRay.Transform(geometry->GetInverseMatrix());
@@ -136,6 +138,7 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
       if ((distance < *minDistance) && (distance < maxDistance)) {
         hit->Set(localHit);
         hit->SetT(distance);
+        hit->SetGeometryIndex(geomIdx);
         *minDistance = distance;
         return true;
       }
@@ -151,17 +154,17 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
 
     if (leftFound && rightFound) {
       if(leftHit.GetT()<rightHit.GetT()) { 
-        hit->Set(leftHit); hit->SetGeometryIndex(geomIdx); return true;
+        hit->Set(leftHit); return true;
       } else {
-        hit->Set(rightHit); hit->SetGeometryIndex(geomIdx); return true;
+        hit->Set(rightHit); return true;
       }
     } else if (leftFound) {
-      { hit->Set(leftHit); hit->SetGeometryIndex(geomIdx); return true;}
+      { hit->Set(leftHit); return true;}
     } else if (rightFound) {
-      { hit->Set(rightHit); hit->SetGeometryIndex(geomIdx); return true;}
+      { hit->Set(rightHit); return true;}
     } return false;
   }
-  
+
 }
 
 bool 
@@ -215,12 +218,20 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
       else if(leftPrefix > rightPrefix)
         return _Closest(left, point, hit, maxDistance);
       else {
-        
+      
+        double leftDistSq = (left->GetMidpoint() - point).GetLengthSq() - 
+          left->GetSize().GetLengthSq() * 0.5f;
+        double rightDistSq = (right->GetMidpoint() - point).GetLengthSq() -
+          right->GetSize().GetLengthSq() * 0.5f;
 
-        bool leftFound = false, rightFound = false;
-        leftFound = _Closest(left, point, hit, maxDistance);
-        rightFound = _Closest(right, point, hit, maxDistance);
-
+        bool leftFound, rightFound;
+        if( leftDistSq < rightDistSq) {
+          leftFound = _Closest(left, point, hit, maxDistance);
+          rightFound = _Closest(right, point, hit, maxDistance);
+        } else {
+          rightFound = _Closest(right, point, hit, maxDistance);
+          leftFound = _Closest(left, point, hit, maxDistance);
+        }
         return leftFound || rightFound;
       }
     } 
@@ -357,16 +368,13 @@ BVH::GetGeometryIndexFromCell(const BVH::Cell* cell) const
   size_t cellIdx = _GetIndex(cell);
 
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
-    std::cout << "Get geometry index from cell : " << cellIdx << std::endl;
-    std::cout << " - start index : " << GetGeometryCellsStartIndex(g) << std::endl;
-    std::cout << " - end index : " << GetGeometryCellsEndIndex(g) << std::endl;
-
     if (cellIdx >= GetGeometryCellsStartIndex(g) && cellIdx < GetGeometryCellsEndIndex(g))
       return g;
   }
 
   return INVALID_GEOMETRY;
 }
+
 
 void
 BVH::Init(const std::vector<Geometry*>& geometries)
@@ -385,6 +393,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   SetMax(accum.GetMax());
 
   _mortons.clear();
+  _mortons.reserve(numComponents);
 
   // first load all geometries
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
@@ -397,7 +406,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 
         pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
         size_t numTrianglePairs = trianglePairs.size();
-        _mortons.resize(numTrianglePairs);
+
         const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
         const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
         for (size_t t = 0; t < numTrianglePairs; ++t) {
@@ -405,12 +414,9 @@ BVH::Init(const std::vector<Geometry*>& geometries)
             trianglePairs[t].GetBoundingBox(positions, matrix));
     
           uint64_t code = _ComputeCode(_GetCell(leafIdx)->GetMidpoint());
-          _mortons[t] = { 
-            code, 
-            code,
-            code,
-            leafIdx
-          };
+          uint64_t minimum = _ComputeCode(_GetCell(leafIdx)->GetMin());
+          uint64_t maximum = _ComputeCode(_GetCell(leafIdx)->GetMax());
+          _mortons.push_back({ code, minimum, maximum, leafIdx});
         }  
         SetGeometryCellIndices(g, start, _cells.size());
       }
@@ -592,8 +598,32 @@ Morton BVH::Cell::SortCellsByPair(
 bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
+  uint64_t morton = _ComputeCode(point);
+  const BVH::Cell* cell = &_root;
+  const BVH::Cell* parent = nullptr;
+  while(true) {
+    const BVH::Cell* left = _GetCell(cell->GetLeft());
+    const BVH::Cell* right = _GetCell(cell->GetRight());
+    if(!left || ! right)break;
+    
+    uint64_t leftMorton = _ComputeCode(left->GetMidpoint());
+    uint64_t rightMorton = _ComputeCode(right->GetMidpoint());
 
-  return _Closest(&_root, point, hit, maxDistance);
+    int leftPrefix = MortonLeadingZeros(morton ^ leftMorton);
+    int rightPrefix = MortonLeadingZeros(morton ^ rightMorton);
+
+    if (leftPrefix > rightPrefix)
+      cell = _GetCell(cell->GetLeft());
+    else if (rightPrefix > leftPrefix)
+      cell = _GetCell(cell->GetRight());
+    else break;
+
+    parent = cell;
+  }
+  
+  return parent ? 
+    _Closest(parent, point, hit, maxDistance) : 
+    _Closest(cell, point, hit, maxDistance);
 }
 
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,

@@ -26,6 +26,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+
 void TestRaycast::_UpdateRays() 
 {
   const double time = Time::Get()->GetActiveTime();
@@ -69,11 +70,10 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
     Location hit;
     Deformable* deformable;
     hits[index] = false;
-    std::cout << "raycast..." << std::endl;
+
     if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
-      std::cout << "hit something!" << std::endl;
+
       const Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
-      std::cout << "geometry : " << collided << std::endl;
       const pxr::GfMatrix4d& matrix = collided->GetMatrix();
       switch (collided->GetType()) {
         case Geometry::MESH:

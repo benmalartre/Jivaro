@@ -1,6 +1,6 @@
 #ifndef JVR_TEST_GRADIENT_H
 #define JVR_TEST_GRADIENT_H
-
+#include <vector>
 #include "../acceleration/bvh.h"
 #include "../acceleration/gradient.h"
 #include "../exec/execution.h"
@@ -23,14 +23,14 @@ public:
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
   
 protected:
-  void _TraverseStageFindingMesh(pxr::UsdStageRefPtr& stage);
+  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
 
 private:
   pxr::SdfPath              _bvhId;
   BVH                       _bvh;
   Instancer*                _instancer;
-  Mesh*                     _mesh;
-  pxr::SdfPath              _meshId;
+  std::vector<Geometry*>    _meshes;
+  std::vector<pxr::SdfPath> _meshesId;
   Points*                   _points;
   pxr::SdfPath              _pointsId;
   Gradient                  _gradient;
