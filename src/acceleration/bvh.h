@@ -108,6 +108,7 @@ protected:
   void _AddTriangles(Geometry* geometry);
   void _AddTrianglePairs(Geometry* geometry);
   size_t _RecurseSortCells(int first, int last);
+  const BVH::Cell* _GetClosestCell(const pxr::GfVec3f& point) const;
 
   pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
 
