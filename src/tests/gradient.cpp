@@ -120,7 +120,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
   if(true)
   {
-    size_t N = 10;
+    size_t N = 1000;
     pxr::VtArray<pxr::GfVec3f> points(N);
     for(auto& point: points)
       point = pxr::GfVec3f(RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10));
@@ -140,9 +140,10 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
     uint64_t startT2 = CurrentTime();
     for(size_t n = 0; n < N; ++n) {
       Location hit;
-      _bvh.Closest(points[n], &hit, FLT_MAX);
-      result2[n] = hit.ComputePosition(_mesh->GetPositionsCPtr(), 
-        &_mesh->GetTriangle(hit.GetComponentIndex())->vertices[0], 3);
+      if(_bvh.Closest(points[n], &hit, FLT_MAX)) {
+        result2[n] = hit.ComputePosition(_mesh->GetPositionsCPtr(), 
+          &_mesh->GetTriangle(hit.GetComponentIndex())->vertices[0], 3);
+      }
     }
     uint64_t elapsedT2 = CurrentTime() - startT2;
 
@@ -150,7 +151,6 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << "with bvh took : " << (elapsedT2 * 1e-6) << " seconds" << std::endl;
 
   }
-
 
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
   _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, false);

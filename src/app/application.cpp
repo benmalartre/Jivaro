@@ -289,10 +289,10 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
   //_exec = new TestGrid();
   //_exec = new TestParticles();
   //_exec = new TestInstancer();
-  //_exec = new TestRaycast();
+  _exec = new TestRaycast();
   //_exec = new TestPBD();
   //_exec = new TestHair();
-  _exec = new TestGradient();
+  //_exec = new TestGradient();
   //_exec = new TestBVH();
   _exec->InitExec(stage);
 

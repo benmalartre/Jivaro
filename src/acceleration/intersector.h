@@ -29,19 +29,29 @@ public:
   };
 
   struct _Geom {
+    Geometry*   geom;
     size_t      index;
     size_t      start;
     size_t      end;
-    Geometry*   geom;
   };
 
 public:
   virtual ~Intersector(){};
 
-  size_t GetGeometryIndex(Geometry* geom) const;
+  size_t GetIndexFromGeometry(Geometry* geom) const ;
+  size_t GetGeometryCellIndex(size_t index) const;
+  size_t GetGeometryCellsStartIndex(size_t index) const;
+  size_t GetGeometryCellsEndIndex(size_t index) const;
+
+  void SetGeometryCellIndex(size_t index, size_t cellIdx){_geoms[index].index = cellIdx;};
+  void SetGeometryCellsStartIndex(size_t index, size_t startIdx){_geoms[index].start = startIdx;};
+  void SetGeometryCellsEndIndex(size_t index, size_t endIdx){_geoms[index].end = endIdx;};
+  void SetGeometryCellIndices(size_t index, size_t cellIdx, size_t startIdx, size_t endIdx);
+
   const Geometry* GetGeometry(size_t index) const {return _geoms[index].geom;};
-  Geometry* GetGeometry(size_t index) {return _geoms[index].geom;};
   size_t GetNumGeometries() const {return _geoms.size();};
+
+  
 
   //used for visually debug
   virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
@@ -60,6 +70,8 @@ public:
 
 protected:
   virtual void _Init(const std::vector<Geometry*>& geometries);
+
+private:
    std::vector<_Geom> _geoms;
 }; 
 

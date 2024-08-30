@@ -28,7 +28,7 @@ struct Morton {
   uint64_t  code;
   uint64_t  minimum;
   uint64_t  maximum;
-  void*     data;
+  size_t    data;
 
   bool operator <(const Morton& other) const {
     return minimum < other.maximum;

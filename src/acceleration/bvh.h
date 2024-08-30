@@ -49,18 +49,14 @@ public:
     void SetData(void* data) { _data = data; };
     void SetLeft(size_t cell) { _left = cell; };
     void SetRight(size_t cell) { _right = cell; };
-    void SetParent(size_t cell) { _parent = cell; };
     void SetType(uint8_t type) { _type = type; };
 
     void* GetData() const { return _data; };
     uint8_t GetType() const { return _type; };
     size_t GetLeft() const { return _left; };
     size_t GetRight() const { return _right; };
-    size_t GetParent() const { return _parent; };
  
   private:
-    BVH*      _bvh;
-    size_t    _parent;
     size_t    _left;
     size_t    _right;
     void*     _data;
@@ -76,7 +72,7 @@ public:
 
 public:
   BVH() {};
-  ~BVH();
+  ~BVH() {};
 
   static uint64_t ComputeCode(const BVH::Cell* root, const pxr::GfVec3d& point)
   {
@@ -102,14 +98,13 @@ public:
   Cell* GetCell(size_t index) { return &_cells[index]; };
   const Cell* GetCell(size_t index) const { return &_cells[index]; };
 
-  BVH::Cell* AddCell(BVH::Cell* parent, BVH::Cell* left, BVH::Cell* right);
-  BVH::Cell* AddCell(BVH::Cell* parent, Geometry* geometry);
-  BVH::Cell* AddCell(BVH::Cell* parent, Component* component,
+  size_t AddCell(BVH::Cell* parent, BVH::Cell* left, BVH::Cell* right);
+  size_t AddCell(BVH::Cell* parent, Geometry* geometry);
+  size_t AddCell(BVH::Cell* parent, Component* component,
     const pxr::GfRange3d& range);
 
   void AddGeometry(BVH::Cell* cell, Geometry* geometry);
   const Geometry* GetGeometryFromCell(const BVH::Cell* cell) const;
-  const Geometry* GetGeometry(size_t index) const;
 
   Morton SortCellsByPair(BVH::Cell* cell);
   pxr::GfRange3f UpdateCells();
@@ -131,13 +126,14 @@ public:
   
 protected:
   int _FindSplit(int first, int last);
+  int _FindCLosest(int first, int last, uint64_t code);
+  void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs);
   size_t _GetIndex(const BVH::Cell* cell) const;
   BVH::Cell* _GetCell(size_t index);
   const BVH::Cell* _GetCell(size_t index) const;
   void _MortonSortTriangles(BVH::Cell* cell, Geometry* geometry);
   void _MortonSortTrianglePairs(BVH::Cell* cell, Geometry* geometry);
-  Cell* _RecurseSortCellsByPair(BVH::Cell* cell, int first, int last);
-  void _FinishSort(BVH::Cell* cell);
+  size_t _RecurseSortCellsByPair(BVH::Cell* cell, int first, int last);
 
   pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell, const Geometry* geometry);
 
@@ -149,7 +145,6 @@ protected:
 private:
   Cell                            _root;
   std::vector<Cell>               _cells;
-  std::vector<_Geom>              _geoms;
   std::vector<Morton>             _mortons;
 }; 
 

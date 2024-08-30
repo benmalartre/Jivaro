@@ -129,7 +129,7 @@ void Grid3D::InsertPoints(Points* points)
   //Points* points = (Points*)_geometries[idx];
 }
 
-size_t _GetGeometryNumComponents(Geometry* geometry)
+size_t _GetGeometryNumComponents(const Geometry* geometry)
 {
   switch(geometry->GetType()) {
     case Geometry::POINT:
@@ -150,15 +150,15 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
   // delete old cells
   DeleteCells();
 
-  if (!_geoms.size())return;
+  if (!GetNumGeometries())return;
 
   // compute bound of the grid
-  size_t totalNumComponents = _GetGeometryNumComponents(_geoms[0].geom);
-  const pxr::GfBBox3d bbox = _geoms[0].geom->GetBoundingBox(true);
+  size_t totalNumComponents = _GetGeometryNumComponents(GetGeometry(0));
+  const pxr::GfBBox3d bbox = GetGeometry(0)->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
-  for (size_t i = 1; i < _geoms.size(); ++i) {
-    totalNumComponents += _GetGeometryNumComponents(_geoms[i].geom);
-    const pxr::GfBBox3d bbox = _geoms[i].geom->GetBoundingBox(true);
+  for (size_t i = 1; i < GetNumGeometries(); ++i) {
+    totalNumComponents += _GetGeometryNumComponents(GetGeometry(i));
+    const pxr::GfBBox3d bbox = GetGeometry(i)->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());
@@ -189,15 +189,15 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
   memset(_cells, 0x0, sizeof(Grid3D::Cell*) * _numCells);
 
   // insert all the components in the cells
-  switch (_geoms[0].geom->GetType()) {
+  switch (GetGeometry(0)->GetType()) {
     case Geometry::MESH:
-      InsertMesh((Mesh*)_geoms[0].geom);
+      InsertMesh((Mesh*)GetGeometry(0));
       break;
     case Geometry::CURVE:
-      InsertCurve((Curve*)_geoms[0].geom);
+      InsertCurve((Curve*)GetGeometry(0));
       break;
     case Geometry::POINT:
-      InsertPoints((Points*)_geoms[0].geom);
+      InsertPoints((Points*)GetGeometry(0));
       break;
   }
 }
@@ -256,7 +256,7 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   while(!hitSomething) {
     uint32_t o = cell[2] * _resolution[0] * _resolution[1] + cell[1] * _resolution[0] + cell[0];
     if (_cells[o] != NULL) 
-      if(_cells[o]->Raycast(_geoms[0].geom, ray, hit, maxDistance, minDistance))
+      if(_cells[o]->Raycast(GetGeometry(0), ray, hit, maxDistance, minDistance))
         hitSomething=true;
         
     uint8_t k =
