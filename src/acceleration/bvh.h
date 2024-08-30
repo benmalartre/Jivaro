@@ -63,8 +63,8 @@ public:
   BVH() {};
   ~BVH() {};
 
-  Cell* GetRoot() { return &_root; };
-  const Cell* GetRoot() const { return &_root; };
+  Cell* GetRoot() { return _root; };
+  const Cell* GetRoot() const { return _root; };
 
   Cell* GetCell(size_t index) { return &_cells[index]; };
   const Cell* GetCell(size_t index) const { return &_cells[index]; };
@@ -101,7 +101,6 @@ protected:
   pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
   int _FindSplit(int first, int last);
   int _FindCLosest(int first, int last, uint64_t code);
-  void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs);
   size_t _GetIndex(const BVH::Cell* cell) const;
   BVH::Cell* _GetCell(size_t index);
   const BVH::Cell* _GetCell(size_t index) const;
@@ -118,7 +117,7 @@ protected:
     double maxDistance = DBL_MAX) const;
 
 private:
-  Cell                            _root;
+  Cell*                           _root;
   std::vector<Cell>               _cells;
   std::vector<Morton>             _mortons;
 }; 

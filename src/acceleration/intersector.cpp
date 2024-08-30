@@ -4,10 +4,8 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 void 
-Intersector::SetGeometryCellIndices(size_t index, size_t start, size_t end) {
-  std::cout << "#############################################" << std::endl;
-  std::cout << "geometry " << index << " indices: (" << start << " -> " << end << ")" << std::endl;
-
+Intersector::SetGeometryCellIndices(size_t index, size_t start, size_t end) 
+{
   _geoms[index].start = start;
   _geoms[index].end = end;
 };
@@ -36,7 +34,6 @@ Intersector::GetGeometryCellsEndIndex(size_t index) const
 void
 Intersector::_Init(const std::vector<Geometry*>& geometries)
 {
-  std::cout << "init intersector with " << geometries.size() << std::endl;
   _geoms.resize(geometries.size());
   size_t start = 0, end = 0;
   for(size_t g = 0; g < _geoms.size(); ++g) {

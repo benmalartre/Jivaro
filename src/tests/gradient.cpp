@@ -127,8 +127,6 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
       result1[n] = _ConstraintPointOnMesh((Mesh*)_meshes[0], points[n]);
     }
     uint64_t elapsedT1 = CurrentTime() - startT1;
-
-    std::cout << (elapsedT1 * 1e-9) << std::endl;
     
     pxr::VtArray<pxr::GfVec3f> result2(N);
 
@@ -144,6 +142,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
     }
     uint64_t elapsedT2 = CurrentTime() - startT2;
 
+    std::cout << "================== benchmark closest point query with " << N << std::endl;
     std::cout << "brute force took : " << (elapsedT1 * 1e-6) << " seconds" << std::endl;
     std::cout << "with bvh took : " << (elapsedT2 * 1e-6) << " seconds" << std::endl;
 
