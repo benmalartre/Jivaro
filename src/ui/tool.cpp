@@ -60,9 +60,7 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
     scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
     protoIndices[pointIdx] = 0;
     indices[pointIdx] = pointIdx;
-    colors[pointIdx] =
-      pxr::GfVec3f(bvh->ComputeCodeAsColor(bvh->GetRoot(),
-        pxr::GfVec3f(cells[pointIdx]->GetMidpoint())));
+    colors[pointIdx] = bvh->GetMortonColor(pxr::GfVec3f(cells[pointIdx]->GetMidpoint()));
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
     widths[pointIdx] = RANDOM_0_1;
   }

@@ -23,6 +23,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Geometry;
 class Location;
 struct Component {
+  enum Type {
+    POINT,
+    EDGE,
+    TRIANGLE,
+    TRIANGLEPAIR,
+    POLYGON
+  };
   static const uint32_t INVALID_INDEX = std::numeric_limits<uint32_t>::max();
   uint32_t id;
 
@@ -35,6 +42,7 @@ struct Component {
   virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const = 0;
 
   virtual pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const = 0;
+  virtual short GetType() const = 0;
 
 };
 

@@ -26,24 +26,20 @@ public:
   public:
     enum Type {
       ROOT,
-      GEOM,
       BRANCH,
       LEAF
     };
 
     // constructor
     Cell();
-    Cell(size_t parent, size_t lhs, const BVH::Cell* left, size_t rhs, const BVH::Cell* right);
-    Cell(size_t parent, Geometry* geometry);
-    Cell(size_t parent, Component* component, const pxr::GfRange3d& range);
+    Cell(size_t lhs, const BVH::Cell* left, size_t rhs, const BVH::Cell* right);
+    Cell(Component* component, const pxr::GfRange3d& range);
 
     bool IsLeaf() const { return _type == BVH::Cell::LEAF; };
     bool IsRoot() const { return _type == BVH::Cell::ROOT; };
     bool IsBranch() const { return _type == BVH::Cell::BRANCH; };
-    bool IsGeom() const { return _type == BVH::Cell::GEOM; };
 
     const Cell* GetRoot() const;
-    const Cell* GetGeom() const;
     const BVH* GetIntersector() const;
 
     void SetData(void* data) { _data = data; };
@@ -65,7 +61,6 @@ public:
 
   struct _Geom {
     Geometry*   geom;
-    size_t      index;
     size_t      start;
     size_t      end;
   };
@@ -74,44 +69,27 @@ public:
   BVH() {};
   ~BVH() {};
 
-  static uint64_t ComputeCode(const BVH::Cell* root, const pxr::GfVec3d& point)
-  {
-    const pxr::GfVec3i p = WorldToMorton(*root, point);
-    return MortonEncode3D(p);
-  }
-
-  static pxr::GfVec3d ComputeCodeAsColor(BVH::Cell* root, const pxr::GfVec3d& point)
-  {
-    uint64_t morton = ComputeCode(root, point);
-    pxr::GfVec3i p = MortonDecode3D(morton);
-    return pxr::GfVec3d(
-      p[0] / (float)MORTOM_MAX_L, 
-      p[1] / (float)MORTOM_MAX_L, 
-      p[2] / (float)MORTOM_MAX_L
-    );
-  }
-
- 
   Cell* GetRoot() { return &_root; };
   const Cell* GetRoot() const { return &_root; };
 
   Cell* GetCell(size_t index) { return &_cells[index]; };
   const Cell* GetCell(size_t index) const { return &_cells[index]; };
 
-  size_t AddCell(BVH::Cell* parent, BVH::Cell* left, BVH::Cell* right);
-  size_t AddCell(BVH::Cell* parent, Geometry* geometry);
-  size_t AddCell(BVH::Cell* parent, Component* component,
+  size_t AddCell(BVH::Cell* left, BVH::Cell* right);
+  size_t AddCell(Component* component,
     const pxr::GfRange3d& range);
 
-  void AddGeometry(BVH::Cell* cell, Geometry* geometry);
   const Geometry* GetGeometryFromCell(const BVH::Cell* cell) const;
+  size_t GetGeometryIndexFromCell(const BVH::Cell* cell) const;
 
-  Morton SortCellsByPair(BVH::Cell* cell);
+  Morton SortCells();
   pxr::GfRange3f UpdateCells();
 
    // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
     pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf) override;
+
+  pxr::GfVec3f GetMortonColor(const pxr::GfVec3f &point);
 
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update() override;
@@ -125,17 +103,20 @@ public:
   void GetBranches(const BVH::Cell* cell, std::vector<const Cell*>& branches) const;
   
 protected:
+  uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
+  pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
   int _FindSplit(int first, int last);
   int _FindCLosest(int first, int last, uint64_t code);
   void _SwapCells(BVH::Cell* lhs, BVH::Cell* rhs);
   size_t _GetIndex(const BVH::Cell* cell) const;
   BVH::Cell* _GetCell(size_t index);
   const BVH::Cell* _GetCell(size_t index) const;
-  void _MortonSortTriangles(BVH::Cell* cell, Geometry* geometry);
-  void _MortonSortTrianglePairs(BVH::Cell* cell, Geometry* geometry);
-  size_t _RecurseSortCellsByPair(BVH::Cell* cell, int first, int last);
+  void _AddPoints(Geometry* geometry);
+  void _AddTriangles(Geometry* geometry);
+  void _AddTrianglePairs(Geometry* geometry);
+  size_t _RecurseSortCells(int first, int last);
 
-  pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell, const Geometry* geometry);
+  pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
 
   bool _Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const;

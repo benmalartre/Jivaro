@@ -76,10 +76,10 @@ Polygon::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hi
 }
 
 //-------------------------------------------------------
-// TrianglePair closest point
+// Polygon closest point
 //-------------------------------------------------------
 bool 
-TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
+Polygon::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
   bool hitSometing = false;
   if (left && left->Closest(points, point, hit))hitSometing = true;
@@ -88,10 +88,10 @@ TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Loc
 };
 
 //-------------------------------------------------------
-// TrianglePair touch box
+// Polygon touch box
 //-------------------------------------------------------
 bool 
-TrianglePair::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, 
+Polygon::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, 
   const pxr::GfVec3f& boxhalfsize) const
 {
   return false;

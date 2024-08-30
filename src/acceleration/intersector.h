@@ -38,16 +38,17 @@ public:
 public:
   virtual ~Intersector(){};
 
-  size_t GetIndexFromGeometry(Geometry* geom) const ;
+  size_t GetGeometryIndex(Geometry* geom) const ;
   size_t GetGeometryCellIndex(size_t index) const;
   size_t GetGeometryCellsStartIndex(size_t index) const;
   size_t GetGeometryCellsEndIndex(size_t index) const;
 
-  void SetGeometryCellIndex(size_t index, size_t cellIdx){_geoms[index].index = cellIdx;};
-  void SetGeometryCellsStartIndex(size_t index, size_t startIdx){_geoms[index].start = startIdx;};
-  void SetGeometryCellsEndIndex(size_t index, size_t endIdx){_geoms[index].end = endIdx;};
-  void SetGeometryCellIndices(size_t index, size_t cellIdx, size_t startIdx, size_t endIdx);
+  void SetGeometryCellIndex(size_t index, size_t cell){_geoms[index].index = cell;};
+  void SetGeometryCellsStartIndex(size_t index, size_t cell){_geoms[index].start = cell;};
+  void SetGeometryCellsEndIndex(size_t index, size_t cell){_geoms[index].end = cell;};
+  void SetGeometryCellIndices(size_t index, size_t start, size_t end);
 
+  Geometry* GetGeometry(size_t index) { return _geoms[index].geom; };
   const Geometry* GetGeometry(size_t index) const {return _geoms[index].geom;};
   size_t GetNumGeometries() const {return _geoms.size();};
 
