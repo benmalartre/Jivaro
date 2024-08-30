@@ -59,12 +59,6 @@ public:
     uint8_t   _type;
   };
 
-  struct _Geom {
-    Geometry*   geom;
-    size_t      start;
-    size_t      end;
-  };
-
 public:
   BVH() {};
   ~BVH() {};

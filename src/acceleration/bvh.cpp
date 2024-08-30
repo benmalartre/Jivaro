@@ -439,16 +439,7 @@ BVH::Update()
 bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  for (size_t g = 0; g < GetNumGeometries(); ++g) {
-    size_t index = GetGeometryCellIndex(g);
-    std::cout << "raycast geom index " << index << std::endl;
-    const BVH::Cell* cell = _GetCell(index);
-    std::cout << "cekk : " << cell << std::endl;
-    // find the first
-    if (_Raycast(cell, ray, hit, maxDistance, minDistance))
-      hit->SetGeometryIndex(g);
-  }
-  return hit->IsValid();
+  return _Raycast(&_root, ray, hit, maxDistance, minDistance);
 };
 
 void BVH::_AddTrianglePairs(Geometry* geometry)
@@ -602,15 +593,7 @@ bool BVH::Closest(const pxr::GfVec3f& point,
   Location* hit, double maxDistance) const
 {
 
-  for (size_t g = 0; g < GetNumGeometries(); ++g) {
-    size_t index = GetGeometryCellIndex(g);
-    const BVH::Cell* cell = _GetCell(index);
-    
-    // find the first
-    if (_Closest(_GetCell(cell->GetLeft()), point, hit, maxDistance))
-      hit->SetGeometryIndex(g);
-  }
-  return hit->IsValid();
+  return _Closest(&_root, point, hit, maxDistance);
 }
 
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,

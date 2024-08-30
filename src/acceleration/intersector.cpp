@@ -22,12 +22,6 @@ Intersector::GetGeometryIndex(Geometry* geom) const
 }
 
 size_t
-Intersector::GetGeometryCellIndex(size_t index) const 
-{
-  return _geoms[index].index;
-}
-
-size_t
 Intersector::GetGeometryCellsStartIndex(size_t index) const 
 {
   return _geoms[index].start;
@@ -47,7 +41,6 @@ Intersector::_Init(const std::vector<Geometry*>& geometries)
   size_t start = 0, end = 0;
   for(size_t g = 0; g < _geoms.size(); ++g) {
     _geoms[g].geom = geometries[g];
-    _geoms[g].index = g;
     _geoms[g].start = start;
     _geoms[g].end = end;
   }

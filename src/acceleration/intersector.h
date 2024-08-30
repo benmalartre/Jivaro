@@ -19,18 +19,9 @@ class Location;
 class Intersector : public pxr::GfRange3d
 { 
 public:
- static const int INVALID_GEOMETRY = INT_MAX;
-  enum ElementType {
-    POINT,
-    EDGE,
-    TRIANGLE,
-    POLYGON,
-    INVALID
-  };
-
+  static const int INVALID_GEOMETRY = INT_MAX;
   struct _Geom {
     Geometry*   geom;
-    size_t      index;
     size_t      start;
     size_t      end;
   };
@@ -39,11 +30,9 @@ public:
   virtual ~Intersector(){};
 
   size_t GetGeometryIndex(Geometry* geom) const ;
-  size_t GetGeometryCellIndex(size_t index) const;
   size_t GetGeometryCellsStartIndex(size_t index) const;
   size_t GetGeometryCellsEndIndex(size_t index) const;
 
-  void SetGeometryCellIndex(size_t index, size_t cell){_geoms[index].index = cell;};
   void SetGeometryCellsStartIndex(size_t index, size_t cell){_geoms[index].start = cell;};
   void SetGeometryCellsEndIndex(size_t index, size_t cell){_geoms[index].end = cell;};
   void SetGeometryCellIndices(size_t index, size_t start, size_t end);
@@ -51,8 +40,6 @@ public:
   Geometry* GetGeometry(size_t index) { return _geoms[index].geom; };
   const Geometry* GetGeometry(size_t index) const {return _geoms[index].geom;};
   size_t GetNumGeometries() const {return _geoms.size();};
-
-  
 
   //used for visually debug
   virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
