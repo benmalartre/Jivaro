@@ -18,30 +18,80 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-pxr::GfVec3f _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point)
+bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit, pxr::GfVec3f* result=NULL)
 {
   float minDistance = FLT_MAX;
   size_t index = Component::INVALID_INDEX;
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   size_t numTriangles = mesh->GetNumTriangles();
 
-  Location hit;
+
+  bool found = false;
+
   for(size_t t = 0; t < numTriangles; ++t) {
     Triangle* triangle = mesh->GetTriangle(t);
 
-    triangle->Closest(positions, point, &hit);
-  }
+    if (triangle->Closest(positions, point, hit)) {
+      found = true;
+      if (result) {
+        Triangle* triangle = mesh->GetTriangle(hit->GetComponentIndex());
+        const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
-  if(hit.GetComponentIndex() != Component::INVALID_INDEX) 
-  {
-    Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-    return hit.ComputePosition(positions, &triangle->vertices[0], 3);
+        *result = hit->ComputePosition(positions, &triangle->vertices[0], 3);
+      }
+    }
   }
-  return pxr::GfVec3f() ;
+  return found;
+}
+
+void _BenchmarckClosestPoints(BVH* bvh, std::vector<Geometry*>& meshes)
+{
+  size_t N = 1000;
+  pxr::VtArray<pxr::GfVec3f> points(N);
+  for(auto& point: points)
+    point = pxr::GfVec3f(RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10));
+
+  pxr::VtArray<pxr::GfVec3f> result1(N);
+
+  uint64_t startT1 = CurrentTime();
+  
+  for (size_t n = 0; n < N; ++n) {
+    Location hit;
+    for (size_t m = 0; m < meshes.size(); ++m) {
+      if (_ConstraintPointOnMesh((Mesh*)meshes[m], points[n], &hit)) {
+        Triangle* triangle = ((Mesh*)meshes[m])->GetTriangle(hit.GetComponentIndex());
+        const pxr::GfVec3f* positions = ((Mesh*)meshes[m])->GetPositionsCPtr();
+
+        result1[n] = hit.ComputePosition(positions, &triangle->vertices[0], 3);
+       }
+     }
+   }
+
+  uint64_t elapsedT1 = CurrentTime() - startT1;
+  
+  pxr::VtArray<pxr::GfVec3f> result2(N);
+
+  uint64_t startT2 = CurrentTime();
+  for(size_t n = 0; n < N; ++n) {
+    Location hit;
+    if(bvh->Closest(points[n], &hit, FLT_MAX)) {
+      Mesh* mesh = (Mesh*)meshes[hit.GetGeometryIndex()];
+
+      result2[n] = hit.ComputePosition(mesh->GetPositionsCPtr(), 
+        &mesh->GetTriangle(hit.GetComponentIndex())->vertices[0], 3);
+    }
+  }
+  uint64_t elapsedT2 = CurrentTime() - startT2;
+
+  std::cout << "================== benchmark closest point query with " << N << std::endl;
+  std::cout << "brute force took : " << (elapsedT1 * 1e-6) << " seconds" << std::endl;
+  std::cout << "with bvh took : " << (elapsedT2 * 1e-6) << " seconds" << std::endl;
+
 }
 
 void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 {
+
   if (!stage) return;
 
   _GetRootPrim(stage);
@@ -112,46 +162,13 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _pointsId = _rootId.AppendChild(pxr::TfToken("points"));
   _scene.AddGeometry(_pointsId, _points);
 
-
-  if(true)
-  {
-    size_t N = 1000;
-    pxr::VtArray<pxr::GfVec3f> points(N);
-    for(auto& point: points)
-      point = pxr::GfVec3f(RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10));
-
-    pxr::VtArray<pxr::GfVec3f> result1(N);
-
-    uint64_t startT1 = CurrentTime();
-    for(size_t n = 0; n < N; ++n) {
-      result1[n] = _ConstraintPointOnMesh((Mesh*)_meshes[0], points[n]);
-    }
-    uint64_t elapsedT1 = CurrentTime() - startT1;
-    
-    pxr::VtArray<pxr::GfVec3f> result2(N);
-
-    uint64_t startT2 = CurrentTime();
-    for(size_t n = 0; n < N; ++n) {
-      Location hit;
-      if(_bvh.Closest(points[n], &hit, FLT_MAX)) {
-        Mesh* mesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
-
-        result2[n] = hit.ComputePosition(mesh->GetPositionsCPtr(), 
-          &mesh->GetTriangle(hit.GetComponentIndex())->vertices[0], 3);
-      }
-    }
-    uint64_t elapsedT2 = CurrentTime() - startT2;
-
-    std::cout << "================== benchmark closest point query with " << N << std::endl;
-    std::cout << "brute force took : " << (elapsedT1 * 1e-6) << " seconds" << std::endl;
-    std::cout << "with bvh took : " << (elapsedT2 * 1e-6) << " seconds" << std::endl;
-
-  }
-
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
   _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, false);
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
+
+
+  //_BenchmarckClosestPoints(&_bvh, _meshes);
   
 }
 
@@ -204,7 +221,8 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     points[1] = closest;
     */
 
-    seed = _ConstraintPointOnMesh((Mesh*)_meshes[0], seed);
+    Location hit2;
+    _ConstraintPointOnMesh((Mesh*)_meshes[0], seed, &hit2, &seed);
     points[2] = seed;
 
     _points->SetPositions(points);
