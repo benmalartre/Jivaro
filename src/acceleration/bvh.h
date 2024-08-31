@@ -98,7 +98,7 @@ protected:
   uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
   pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
   int _FindSplit(int first, int last) const;
-  int _FindClosestCell(int first, int last, uint64_t code) const;
+  int _FindClosestCell(uint64_t code) const;
   size_t _GetIndex(const BVH::Cell* cell) const;
   BVH::Cell* _GetCell(size_t index);
   const BVH::Cell* _GetCell(size_t index) const;
@@ -106,7 +106,6 @@ protected:
   void _AddTriangles(Geometry* geometry);
   void _AddTrianglePairs(Geometry* geometry);
   size_t _RecurseSortCells(int first, int last);
-  size_t _RecurseFindClosestCell(int first, int last, uint64_t morton) const;
   pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
 
   bool _Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
