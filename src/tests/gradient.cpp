@@ -172,6 +172,8 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
   _scene.AddGeometry(_xformId, (Geometry*) _xform);
   _scene.InjectGeometry(stage, _xformId, _xform, pxr::UsdTimeCode::Default());
+
+    _BenchmarckClosestPoints(&_bvh, _meshes);
   
 }
 
@@ -248,8 +250,6 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     for(size_t m = 0; m < _meshes.size(); ++m)
       _scene.MarkPrimDirty(_meshesId[m], pxr::HdChangeTracker::DirtyPrimvar);
   }
-
-  _BenchmarckClosestPoints(&_bvh, _meshes);
 
 }
 

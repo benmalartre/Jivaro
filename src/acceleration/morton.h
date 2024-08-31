@@ -38,21 +38,23 @@ struct Morton {
   }
 };
 
-// CONVERSION
+// Conversion
 pxr::GfVec3d MortonToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p);
 pxr::GfVec3i WorldToMorton(const pxr::GfRange3d& range, const pxr::GfVec3d& p);
-void ClampMorton(pxr::GfVec3i& p);
 
-// ENCODING
+// Encoding
 uint32_t MortonEncode2D(const pxr::GfVec2i& p);
 uint64_t MortonEncode3D(const pxr::GfVec3i& p);
 
-// DECODING
+// Decoding
 pxr::GfVec2i MortonDecode2D(uint32_t code);
 pxr::GfVec3i MortonDecode3D(uint64_t code);
 
+// Utils
+pxr::GfVec3i& MortonClamp(pxr::GfVec3i& p);
 uint32_t MortonLeadingZeros(const uint64_t x);
 uint32_t MortonFindSplit(Morton* mortoms, int first, int last);
+uint64_t MortonConstraintPointInBox(uint64_t point, uint64_t bmin, uint64_t bmax);
  
 JVR_NAMESPACE_CLOSE_SCOPE
 

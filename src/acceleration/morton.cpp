@@ -27,16 +27,16 @@ pxr::GfVec3i WorldToMorton(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
     (int)(invScale[1] * (p[1] - min[1])),
     (int)(invScale[2] * (p[2] - min[2]))
     });
-  ClampMorton(r);
-  return r;
+  return MortonClamp(r);
 }
 
-void ClampMorton(pxr::GfVec3i& p)
+pxr::GfVec3i& MortonClamp(pxr::GfVec3i& p)
 {
   for (size_t axis = 0; axis < 3; ++axis) {
     if (p[axis] < 0)p[axis] = 0;
     else if (p[axis] > MORTOM_MAX_L) p[axis] = MORTOM_MAX_L;
   }
+  return p;
 }
 
 // ENCODING
@@ -116,7 +116,7 @@ pxr::GfVec2i MortonDecode2D(uint32_t code)
   return pxr::GfVec2i(x, y);
 }
 
-static uint64_t MORTOM_DECODE_3D_MASH[6] = { 
+static uint64_t MORTOM_DECODE_3D_MASK[6] = { 
   0x00000000001fffff, 
   0x001f00000000ffff, 
   0x001f0000ff0000ff, 
@@ -127,12 +127,12 @@ static uint64_t MORTOM_DECODE_3D_MASH[6] = {
 
 
 static inline uint32_t _GetThirdBits(const uint64_t m) {
-  uint64_t x = m & MORTOM_DECODE_3D_MASH[5];
-  x = (x ^ (x >> 2)) & MORTOM_DECODE_3D_MASH[4];
-  x = (x ^ (x >> 4)) & MORTOM_DECODE_3D_MASH[3];
-  x = (x ^ (x >> 8)) & MORTOM_DECODE_3D_MASH[2];
-  x = (x ^ (x >> 16)) & MORTOM_DECODE_3D_MASH[1];
-  x = (x ^ (x >> 32)) & MORTOM_DECODE_3D_MASH[0];
+  uint64_t x = m & MORTOM_DECODE_3D_MASK[5];
+  x = (x ^ (x >> 2)) & MORTOM_DECODE_3D_MASK[4];
+  x = (x ^ (x >> 4)) & MORTOM_DECODE_3D_MASK[3];
+  x = (x ^ (x >> 8)) & MORTOM_DECODE_3D_MASK[2];
+  x = (x ^ (x >> 16)) & MORTOM_DECODE_3D_MASK[1];
+  x = (x ^ (x >> 32)) & MORTOM_DECODE_3D_MASK[0];
   return x;
 }
 
@@ -183,6 +183,27 @@ uint32_t MortonFindSplit(Morton* mortons, int first, int last)
   } while (step > 1);
 
   return split;
+}
+
+uint64_t MortonConstraintPointInBox(uint64_t point, uint64_t bmin, uint64_t bmax)
+{
+  uint32_t x = _GetThirdBits(point);
+  uint32_t y = _GetThirdBits(point >> 1);
+  uint32_t z = _GetThirdBits(point >> 2);
+
+  uint32_t minx = _GetThirdBits(bmin);
+  uint32_t miny = _GetThirdBits(bmin >> 1);
+  uint32_t minz = _GetThirdBits(bmin >> 2);
+
+  uint32_t maxx = _GetThirdBits(bmax);
+  uint32_t maxy = _GetThirdBits(bmax >> 1);
+  uint32_t maxz = _GetThirdBits(bmax >> 2);
+
+  return MortonEncode3D(pxr::GfVec3i(
+    CLAMP(x, minx, maxx),
+    CLAMP(y, miny, maxy),
+    CLAMP(z, minz, maxz)
+  ));
 }
 
 
