@@ -41,7 +41,7 @@ Scene::Init(const pxr::UsdStageRefPtr& stage)
 }
 
 void
-Scene::Sync(const pxr::UsdStageRefPtr& stage, double time)
+Scene::Sync(const pxr::UsdStageRefPtr& stage, const pxr::UsdTimeCode& time)
 {
   pxr::UsdTimeCode activeTime = pxr::UsdTimeCode(time);
   pxr::UsdGeomXformCache xformCache(activeTime);
@@ -150,7 +150,7 @@ pxr::GfMatrix4d _GetParentXform(const pxr::UsdPrim& prim,
 }
 
 void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage, 
- const pxr::SdfPath& path, Geometry* geometry, float time)
+ const pxr::SdfPath& path, Geometry* geometry, const pxr::UsdTimeCode& time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(path);
   if(!prim.IsValid()) {

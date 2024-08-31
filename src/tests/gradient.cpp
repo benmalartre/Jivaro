@@ -166,6 +166,12 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, false);
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
+
+  _xformId = _rootId.AppendChild(pxr::TfToken("xform"));
+  _xform = new Xform();
+
+  _scene.AddGeometry(_xformId, (Geometry*) _xform);
+  _scene.InjectGeometry(stage, _xformId, _xform, pxr::UsdTimeCode::Default());
   
 }
 
@@ -243,7 +249,7 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       _scene.MarkPrimDirty(_meshesId[m], pxr::HdChangeTracker::DirtyPrimvar);
   }
 
-  //_BenchmarckClosestPoints(&_bvh, _meshes);
+  _BenchmarckClosestPoints(&_bvh, _meshes);
 
 }
 

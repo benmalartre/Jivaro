@@ -72,6 +72,15 @@ BVH::Cell::Cell(Component* component, const pxr::GfRange3d& range)
   SetMax(range.GetMax());
 }
 
+pxr::GfVec3f _ConstraintPointInRange(const pxr::GfVec3f& point, const pxr::GfRange3d &range)
+{
+  return pxr::GfVec3f(
+    CLAMP(point[0], range.GetMin()[0], range.GetMax()[0]),
+    CLAMP(point[1], range.GetMin()[1], range.GetMax()[1]),
+    CLAMP(point[2], range.GetMin()[2], range.GetMax()[2])
+  );
+}
+
 // distance
 static double 
 _GetDistance1D(double value, double lower, double upper)
@@ -104,6 +113,17 @@ GetDistance(const pxr::GfRange3d& range, const pxr::GfVec3d& point)
   float dy = _GetDistance1D(point[1], minimum[1], maximum[1]);
   float dz = _GetDistance1D(point[2], minimum[2], maximum[2]);
   return pxr::GfSqrt(dx * dx + dy * dy + dz * dz);
+}
+
+static double 
+GetDistanceSq(const pxr::GfRange3d& range, const pxr::GfVec3d& point)
+{
+  const pxr::GfVec3d& minimum = range.GetMin();
+  const pxr::GfVec3d& maximum = range.GetMax();
+  float dx = _GetDistance1D(point[0], minimum[0], maximum[0]);
+  float dy = _GetDistance1D(point[1], minimum[1], maximum[1]);
+  float dz = _GetDistance1D(point[2], minimum[2], maximum[2]);
+  return dx * dx + dy * dy + dz * dz;
 }
 
 
@@ -167,14 +187,7 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
 
 }
 
-pxr::GfVec3f _ConstraintPointInRange(const pxr::GfVec3f& point, const pxr::GfRange3d &range)
-{
-  return pxr::GfVec3f(
-    CLAMP(point[0], range.GetMin()[0], range.GetMax()[0]),
-    CLAMP(point[1], range.GetMin()[1], range.GetMax()[1]),
-    CLAMP(point[2], range.GetMin()[2], range.GetMax()[2])
-  );
-}
+
 
 bool 
 BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit, 
@@ -216,21 +229,70 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
     
     if(left && right) 
     {
-      double distance = hit->GetT();
-      double leftDistance = GetDistance(*left, point) - left->GetSize().GetLengthSq() * 0.5f;
-      double rightDistance = GetDistance(*right, point) - right->GetSize().GetLengthSq() * 0.5f;
+      uint64_t morton = _ComputeCode(point);
+      uint64_t leftMorton = _ComputeCode(_ConstraintPointInRange(point, *left));
+      uint64_t rightMorton = _ComputeCode(_ConstraintPointInRange(point, *right));
 
-      bool leftFound = false, rightFound = false;
-      if (leftDistance < rightDistance) {
-        leftFound = (leftDistance < distance && _Closest(left, point, hit, maxDistance));
-        rightFound = (rightDistance < distance && _Closest(right, point, hit, maxDistance));
-      }
-      else {
-        rightFound = (rightDistance < distance && _Closest(right, point, hit, maxDistance));
-        leftFound = (leftDistance < distance && _Closest(left, point, hit, maxDistance));
+      int leftPrefix = MortonLeadingZeros(morton ^ leftMorton);
+      int rightPrefix = MortonLeadingZeros(morton ^ rightMorton);
+      if (leftPrefix > rightPrefix)
+        return _Closest(left, point, hit, maxDistance);
+
+      else if (rightPrefix > leftPrefix)
+        return _Closest(right, point, hit, maxDistance);
+
+      else 
+      {
+        Location leftHit(*hit), rightHit(*hit);
+        bool leftFound = _Closest(left, point, &leftHit, maxDistance);
+        bool rightFound = _Closest(right, point, &rightHit, maxDistance);
+
+        if(leftFound && rightFound) {
+          if(leftHit.GetT() < rightHit.GetT())
+            hit->Set(leftHit);
+          else
+            hit->Set(rightHit);
+          return true;
+        } 
+
+        else if(leftFound) 
+          {hit->Set(leftHit);return true;}
+
+        else if(rightFound) 
+          {hit->Set(rightHit);return true;}
+
+        else return false;
       }
 
-      return leftFound || rightFound;
+
+      /*
+      double distanceSq = pxr::GfPow(hit->GetT(), 2);
+      double leftDistanceSq = GetDistanceSq(*left, point);//- left->GetSize().GetLengthSq() * 0.5f;
+      double rightDistanceSq = GetDistanceSq(*right, point);// - right->GetSize().GetLengthSq() * 0.5f;
+
+      if(leftDistanceSq > distanceSq && rightDistanceSq > distanceSq) 
+        return false;
+
+      else if(leftDistanceSq > distanceSq)
+        return _Closest(right, point, hit, maxDistance);
+
+      else if(rightDistanceSq > distanceSq)
+        return _Closest(left, point, hit, maxDistance);
+
+      else if(leftDistanceSq < rightDistanceSq) 
+      {
+        bool leftFound = _Closest(left, point, hit, maxDistance);
+        bool rightFound = _Closest(right, point, hit, maxDistance);
+        return leftFound || rightFound;
+      }
+
+      else 
+      {
+        bool rightFound = _Closest(right, point, hit, maxDistance);
+        bool  leftFound = _Closest(left, point, hit, maxDistance);
+        return leftFound || rightFound;
+      }
+      */
     } 
 
     else if(left)
@@ -241,6 +303,7 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
 
     else
       return false;
+    
   }
 }
 
@@ -577,11 +640,9 @@ bool BVH::Closest(const pxr::GfVec3f& point,
 {
   
   uint64_t morton = _ComputeCode(point);
-  size_t depth = 0;
 
   const BVH::Cell *cell=_root;
   while(true) {
-    depth++;
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = _GetCell(cell->GetRight());
     
@@ -599,7 +660,6 @@ bool BVH::Closest(const pxr::GfVec3f& point,
     else break;
 
   }
-  std::cout << "depth : " << depth << std::endl;
   
   return _Closest(cell, point, hit, maxDistance);
 

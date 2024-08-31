@@ -11,6 +11,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Solver;
 class Plane;
 class Points;
+class Xform;
 
 class TestGradient : public Execution {
 public:
@@ -33,6 +34,8 @@ private:
   std::vector<pxr::SdfPath> _meshesId;
   Points*                   _points;
   pxr::SdfPath              _pointsId;
+  Xform*                    _xform;
+  pxr::SdfPath              _xformId;
   Gradient                  _gradient;
 };
 

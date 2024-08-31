@@ -42,7 +42,8 @@ public:
   ~Scene();
 
   void Init(const pxr::UsdStageRefPtr& stage);
-  void Sync(const pxr::UsdStageRefPtr& stage, double time);
+  void Sync(const pxr::UsdStageRefPtr& stage, 
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default());
 
   void Save(const std::string& filename);
   void Export(const std::string& filename);
@@ -56,7 +57,7 @@ public:
   void AddGeometry(const pxr::SdfPath& path, Geometry* geom);
 
   void InjectGeometry(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-    Geometry* geometry, float time);
+    Geometry* geometry, const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default());
 
   void RemoveGeometry(const pxr::SdfPath& path);
 
