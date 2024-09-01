@@ -673,9 +673,10 @@ BVH::_RecurseClosestCell(const BVH::Cell* cell, const Morton &morton,
 {
   if(!cell) return false;
 
+  /*
   if(cell->GetDistanceSquared(point) > pxr::GfPow(maxDistance, 2)) 
     return false;
-
+  */
   if(cell->IsLeaf()) {
     return _Closest(cell, point, hit, maxDistance);
   } 
@@ -685,22 +686,19 @@ BVH::_RecurseClosestCell(const BVH::Cell* cell, const Morton &morton,
 
     Location leftHit(*hit), rightHit(*hit);
 
-    uint64_t leftCode = _ComputeCode(left->GetMidpoint());
-    uint64_t rightCode = _ComputeCode(right->GetMidpoint());
-
-    uint64_t leftDiff = left ? (leftCode < morton.code ? MortonSubtract(morton.code, leftCode) : 
-      MortonSubtract(leftCode, morton.code)) : std::numeric_limits<uint64_t>::max();
-    uint64_t rightDiff = right ? (rightCode < morton.code ? MortonSubtract(morton.code, rightCode) : 
-      MortonSubtract(rightCode, morton.code)) : std::numeric_limits<uint64_t>::max();
+    uint64_t pntCode = _ComputeCode(_ConstraintPointInRange(point, *cell));
+    size_t commonPrefix = MortonLeadingZeros(_ComputeCode(cell->GetMidpoint()) ^ pntCode);
+    size_t leftPrefix = MortonLeadingZeros(_ComputeCode(left->GetMidpoint()) ^ pntCode);
+    size_t rightPrefix = MortonLeadingZeros(_ComputeCode(right->GetMidpoint()) ^ pntCode);
 
     const float distanceSq = pxr::GfPow(maxDistance, 2);
     bool leftFound(false), rightFound(false);
-    if(left && leftDiff <= rightDiff ) {
+    if(left &&  (leftPrefix >= rightPrefix || leftPrefix == commonPrefix)) {
       leftFound = left->GetDistanceSquared(point) < distanceSq ? 
         _RecurseClosestCell(left, morton, point, &leftHit, maxDistance) : false;
     }
    
-    if(right && rightDiff <= leftDiff) {
+    if(right && (rightPrefix >= leftPrefix || rightPrefix == commonPrefix)) {
       rightFound = right->GetDistanceSquared(point) < distanceSq ? 
         _RecurseClosestCell(right, morton, point, &rightHit, maxDistance) : false;
     }
