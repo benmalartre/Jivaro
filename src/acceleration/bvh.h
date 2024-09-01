@@ -110,6 +110,8 @@ protected:
   void _AddTrianglePairs(Geometry* geometry);
   size_t _RecurseSortCells(size_t first, size_t last);
   pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
+  bool _ShouldCheckCell(const BVH::Cell* parent, const BVH::Cell* cell, 
+    const Morton &morton, const pxr::GfVec3f& point, double maxDistance) const;
 
   bool _Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const;
