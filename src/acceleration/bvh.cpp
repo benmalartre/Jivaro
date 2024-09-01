@@ -673,30 +673,36 @@ BVH::_RecurseClosestCell(const BVH::Cell* cell, const Morton &morton,
 {
   if(!cell) return false;
 
+  if(cell->GetDistanceSquared(point) > pxr::GfPow(maxDistance, 2)) 
+    return false;
+
   if(cell->IsLeaf()) {
     return _Closest(cell, point, hit, maxDistance);
   } 
   else {
-    if(cell->GetDistanceSquared(point) > pxr::GfPow(maxDistance, 2)) 
-      return false;
-
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = _GetCell(cell->GetRight());
 
     Location leftHit(*hit), rightHit(*hit);
 
-    const float distanceSq = pxr::GfPow(hit->GetT(), 2);
+    uint64_t leftCode = _ComputeCode(left->GetMidpoint());
+    uint64_t rightCode = _ComputeCode(right->GetMidpoint());
+
+    uint64_t leftDiff = left ? (leftCode < morton.code ? MortonSubtract(morton.code, leftCode) : 
+      MortonSubtract(leftCode, morton.code)) : std::numeric_limits<uint64_t>::max();
+    uint64_t rightDiff = right ? (rightCode < morton.code ? MortonSubtract(morton.code, rightCode) : 
+      MortonSubtract(rightCode, morton.code)) : std::numeric_limits<uint64_t>::max();
+
+    const float distanceSq = pxr::GfPow(maxDistance, 2);
     bool leftFound(false), rightFound(false);
-    if(left) {
-      //if(MortonCheckBoxIntersects(_ComputeCode(left->GetMin()), _ComputeCode(left->GetMax()), morton.minimum, morton.maximum))
-        leftFound = left->GetDistanceSquared(point) < distanceSq ? 
-          _RecurseClosestCell(left, morton, point, &leftHit,  hit->GetT()) : false;
+    if(left && leftDiff <= rightDiff ) {
+      leftFound = left->GetDistanceSquared(point) < distanceSq ? 
+        _RecurseClosestCell(left, morton, point, &leftHit, maxDistance) : false;
     }
    
-    if(right) {
-      //if(MortonCheckBoxIntersects(_ComputeCode(right->GetMin()), _ComputeCode(right->GetMax()), morton.minimum, morton.maximum))
-        rightFound = right->GetDistanceSquared(point) < distanceSq ? 
-          _RecurseClosestCell(right, morton, point, &rightHit,  hit->GetT()) : false;
+    if(right && rightDiff <= leftDiff) {
+      rightFound = right->GetDistanceSquared(point) < distanceSq ? 
+        _RecurseClosestCell(right, morton, point, &rightHit, maxDistance) : false;
     }
 
     if (leftFound && rightFound) {
