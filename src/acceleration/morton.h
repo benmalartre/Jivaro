@@ -55,6 +55,8 @@ pxr::GfVec3i& MortonClamp(pxr::GfVec3i& p);
 uint32_t MortonLeadingZeros(const uint64_t x);
 uint32_t MortonFindSplit(Morton* mortoms, int first, int last);
 uint64_t MortonConstraintPointInBox(uint64_t point, uint64_t bmin, uint64_t bmax);
+bool MortonCheckBoxIntersects(uint64_t pmin, uint64_t pmax, uint64_t bmin, uint64_t bmax);
+bool MortonCheckPointInside(uint64_t point, uint64_t bmin, uint64_t bmax);
  
 JVR_NAMESPACE_CLOSE_SCOPE
 

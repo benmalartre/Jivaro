@@ -173,7 +173,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_xformId, (Geometry*) _xform);
   _scene.InjectGeometry(stage, _xformId, _xform, pxr::UsdTimeCode::Default());
 
-    _BenchmarckClosestPoints(&_bvh, _meshes);
+   _BenchmarckClosestPoints(&_bvh, _meshes);
   
 }
 
@@ -186,11 +186,8 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     const pxr::GfVec3f* positions = ((Deformable*)_meshes[0])->GetPositionsCPtr();
     const pxr::GfRange3f range(_meshes[0]->GetBoundingBox().GetRange());
 
-    pxr::GfVec3f seed(
-      RANDOM_LO_HI(-10, 10), 
-      RANDOM_LO_HI(-10, 10), 
-      RANDOM_LO_HI(-10, 10)
-    );
+    const pxr::GfMatrix4d& xform = _xform->GetMatrix();
+    pxr::GfVec3f seed(xform[3][0], xform[3][1], xform[3][2]);
     
     pxr::GfMatrix4f matrix;
     pxr::GfVec3f position;

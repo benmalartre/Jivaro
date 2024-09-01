@@ -206,5 +206,32 @@ uint64_t MortonConstraintPointInBox(uint64_t point, uint64_t bmin, uint64_t bmax
   ));
 }
 
+bool MortonCheckBoxIntersects(uint64_t pmin, uint64_t pmax, uint64_t bmin, uint64_t bmax)
+{
+  pxr::GfVec3f p0, p1, b0, b1;
+
+  p0 = MortonDecode3D(pmin);
+  p1 = MortonDecode3D(pmax);
+
+  b0 = MortonDecode3D(bmin);
+  b1 = MortonDecode3D(bmax);
+
+  return !(pxr::GfRange3f(p0, p1).IsOutside(pxr::GfRange3f(b0, b1)));
+}
+
+bool MortonCheckPointInside(uint64_t point, uint64_t bmin, uint64_t bmax)
+{
+  pxr::GfVec3f p(MortonDecode3D(point));
+
+
+  pxr::GfVec3f b0(MortonDecode3D(bmin));
+  pxr::GfVec3f b1(MortonDecode3D(bmax));
+
+  return pxr::GfRange3f(b0, b1).IsInside(p);
+
+
+}
+
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

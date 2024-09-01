@@ -174,7 +174,6 @@ bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Lo
   
   closest += s * edge0 + t * edge1;
   
-
   double distance = (point - closest).GetLength();
   if(distance < hit->GetT()) {
     hit->SetCoordinates(pxr::GfVec3f(1.0 - s - t, s, t));

@@ -48,7 +48,7 @@ Location::TransformT(const pxr::GfMatrix4d &matrix)
 {
   pxr::GfVec3d v(_coords[3], 0.0, 0.0);
   matrix.Transform(v);
-  _coords[3]= v.GetLength();
+  _coords[3] = v.GetLength();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

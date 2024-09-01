@@ -201,13 +201,13 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
     pxr::GfVec3f localPoint = geometry->GetInverseMatrix().Transform(point);
     Location localHit(*hit);
     localHit.TransformT(geometry->GetInverseMatrix());
-    
+
     component->Closest(points, localPoint, &localHit);
 
-    const double distance = geometry->GetMatrix().Transform(pxr::GfVec3f(localHit.GetT())).GetLength();
-    if (distance < hit->GetT()) {
+    localHit.TransformT(geometry->GetMatrix());
+
+    if (localHit.GetT() < hit->GetT()) {
       hit->Set(localHit);
-      hit->SetT(distance);
       hit->SetGeometryIndex(geomIdx);
       return true;
     }
@@ -215,13 +215,13 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
     return false;
   }
   else {
+    
     const double distance = GetDistance(*cell, point);
     if (distance > hit->GetT() || distance > maxDistance)return false;
 
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = GetCell(cell->GetRight());
 
-    
     if(left && right) 
     {
       uint64_t morton = _ComputeCode(point);
@@ -267,6 +267,32 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
 
     else
       return false;
+    
+
+    /*
+    if(left && right) {
+      Location leftHit(*hit), rightHit(*hit);
+      bool leftFound = _Closest(left, point, &leftHit, maxDistance);
+      bool rightFound = _Closest(right, point, &rightHit, maxDistance);
+
+      if(leftFound && rightFound) {
+        if(leftHit.GetT() < rightHit.GetT())
+          hit->Set(leftHit);
+        else
+          hit->Set(rightHit);
+        return true;
+      } 
+
+    }
+    else if(left)
+      return _Closest(left, point, hit, maxDistance);
+
+    else if(right)
+      return _Closest(right, point, hit, maxDistance);
+
+    else
+      return false;
+    */
   }
 }
 
@@ -327,8 +353,8 @@ BVH::_ComputeCodeAsColor(const pxr::GfVec3d& point) const
   );
 }
 
-int 
-BVH::_FindSplit(int first, int last) const
+size_t 
+BVH::_FindSplit(size_t first, size_t last) const
 {
   uint64_t firstCode = _mortons[first].code;
   uint64_t lastCode = _mortons[last].code;
@@ -336,19 +362,19 @@ BVH::_FindSplit(int first, int last) const
   if (firstCode == lastCode)
     return (first + last) >> 1;
 
-  int commonPrefix = MortonLeadingZeros(firstCode ^ lastCode);
-  int split = first;
-  int step = last - first;
+  size_t commonPrefix = MortonLeadingZeros(firstCode ^ lastCode);
+  size_t split = first;
+  size_t step = last - first;
 
   do
   {
     step = (step + 1) >> 1;
-    int newSplit = split + step;
+    size_t newSplit = split + step;
 
     if (newSplit < last)
     {
       uint64_t splitCode = _mortons[newSplit].code;
-      int splitPrefix = MortonLeadingZeros(firstCode ^ splitCode);
+      size_t splitPrefix = MortonLeadingZeros(firstCode ^ splitCode);
       if (splitPrefix > commonPrefix) {
         split = newSplit;
       }
@@ -359,21 +385,28 @@ BVH::_FindSplit(int first, int last) const
 }
 
 
-int 
+
+size_t 
 BVH::_FindClosestCell(uint64_t code) const
 {
   size_t first = 0;
   size_t last = _mortons.size();
-  size_t closest = last >> 1; 
-
-  int maxCommonPrefix = 0;
+  size_t closest = BVH::INVALID_INDEX;
+  size_t maxCommonPrefix = 0;
 
   while(first != last) {
     size_t middle = (first + last) >> 1;
 
     if(_mortons[middle].code > code) last = middle;
     else if(_mortons[middle].code < code) first = middle + 1;
-    else break;
+    else {
+      size_t firstPrefix = MortonLeadingZeros(code ^ _mortons[first].code);
+      size_t lastPrefix = MortonLeadingZeros(code ^ _mortons[last].code);
+
+      if(firstPrefix > lastPrefix)return first;
+      else if(firstPrefix < lastPrefix)return last;
+      else return middle;
+    }
 
     size_t commonPrefix = MortonLeadingZeros(code ^ _mortons[middle].code);
 
@@ -506,7 +539,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 
   _mortons.clear();
   for(size_t c = 0; c < _cells.size(); ++c) { 
-    if(_cells[c].GetType() == BVH::Cell::LEAF) {
+    if (_cells[c].GetType() == BVH::Cell::LEAF) {
       _mortons.push_back({
         _ComputeCode(_cells[c].GetMidpoint()),
         _ComputeCode(_cells[c].GetMin()),
@@ -515,7 +548,6 @@ BVH::Init(const std::vector<Geometry*>& geometries)
     }
   }
   std::sort(_mortons.begin(), _mortons.end());
-
 }
 
 void
@@ -545,11 +577,10 @@ void BVH::_AddTrianglePairs(Geometry* geometry)
   for (size_t t = 0; t < numTrianglePairs; ++t) {
     size_t leafIdx = AddCell(&trianglePairs[t],
       trianglePairs[t].GetBoundingBox(positions, matrix));
-    uint64_t code = _ComputeCode( _GetCell(leafIdx)->GetMidpoint());
     _mortons[t] = { 
-      code, 
-      code,
-      code,
+      _ComputeCode( _GetCell(leafIdx)->GetMidpoint()), 
+      _ComputeCode( _GetCell(leafIdx)->GetMin()),
+      _ComputeCode( _GetCell(leafIdx)->GetMax()),
       leafIdx
     };
   }
@@ -569,11 +600,10 @@ void BVH::_AddTriangles( Geometry* geometry)
   for (size_t t = 0; t < numTriangles; ++t) {
     size_t leafIdx = AddCell(&triangles[t],
       triangles[t].GetBoundingBox(positions, matrix));
-    uint64_t code = _ComputeCode(_GetCell(leafIdx)->GetMidpoint());
     _mortons[t] = { 
-      code,
-      code,
-      code,
+      _ComputeCode(_GetCell(leafIdx)->GetMidpoint()),
+      _ComputeCode(_GetCell(leafIdx)->GetMin()),
+      _ComputeCode(_GetCell(leafIdx)->GetMax()),
       leafIdx
     };
   }
@@ -599,14 +629,14 @@ BVH::_GetCell(size_t index) const
 
 size_t
 BVH::_RecurseSortCells(
-  int           first,
-  int           last)
+  size_t           first,
+  size_t           last)
 {
   if (first == last) {
     return _mortons[first].data;
   }
 
-  int split = _FindSplit(first, last);
+  size_t split = _FindSplit(first, last);
 
   size_t leftIdx = _RecurseSortCells(first, split);
   size_t rightIdx = _RecurseSortCells(split + 1, last);
@@ -637,6 +667,52 @@ BVH::GetMortonColor(const pxr::GfVec3f& point)
 }
 
 
+bool 
+BVH::_RecurseClosestCell(const BVH::Cell* cell, const Morton &morton, 
+  const pxr::GfVec3f& point, Location* hit, double maxDistance) const
+{
+  if(!cell) return false;
+
+  if(cell->IsLeaf()) {
+    return _Closest(cell, point, hit, maxDistance);
+  } 
+  else {
+    if(cell->GetDistanceSquared(point) > pxr::GfPow(maxDistance, 2)) 
+      return false;
+
+    const BVH::Cell* left = _GetCell(cell->GetLeft());
+    const BVH::Cell* right = _GetCell(cell->GetRight());
+
+    Location leftHit(*hit), rightHit(*hit);
+
+    const float distanceSq = pxr::GfPow(hit->GetT(), 2);
+    bool leftFound(false), rightFound(false);
+    if(left) {
+      //if(MortonCheckBoxIntersects(_ComputeCode(left->GetMin()), _ComputeCode(left->GetMax()), morton.minimum, morton.maximum))
+        leftFound = left->GetDistanceSquared(point) < distanceSq ? 
+          _RecurseClosestCell(left, morton, point, &leftHit,  hit->GetT()) : false;
+    }
+   
+    if(right) {
+      //if(MortonCheckBoxIntersects(_ComputeCode(right->GetMin()), _ComputeCode(right->GetMax()), morton.minimum, morton.maximum))
+        rightFound = right->GetDistanceSquared(point) < distanceSq ? 
+          _RecurseClosestCell(right, morton, point, &rightHit,  hit->GetT()) : false;
+    }
+
+    if (leftFound && rightFound) {
+      if(leftHit.GetT()<rightHit.GetT()) { 
+        hit->Set(leftHit); return true;
+      } else {
+        hit->Set(rightHit); return true;
+      }
+    } else if (leftFound) {
+      { hit->Set(leftHit); return true;}
+    } else if (rightFound) {
+      { hit->Set(rightHit); return true;}
+    } return false;
+  }
+}
+
 bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
@@ -664,28 +740,20 @@ bool BVH::Closest(const pxr::GfVec3f& point,
   }
   */
 
-  uint64_t morton = _ComputeCode(point);
-  size_t closestIdx = _FindClosestCell(morton);
+  uint64_t pntCode = _ComputeCode(point);
+  size_t closestIdx = _FindClosestCell(pntCode);
   const BVH::Cell* closest = _GetCell(_mortons[closestIdx].data);
 
   if(_Closest(closest, point, hit, maxDistance)) {
-    Mesh* mesh = (Mesh*)GetGeometry(hit->GetGeometryIndex());
-    const pxr::GfVec3f hitPoint = hit->ComputePosition(mesh->GetPositionsCPtr(),
-      &mesh->GetTriangle(hit->GetComponentIndex())->vertices[0], 3, &mesh->GetMatrix());
+    Morton morton = {
+      pntCode, 
+      _ComputeCode(point - pxr::GfVec3f(hit->GetT())),
+      _ComputeCode(point + pxr::GfVec3f(hit->GetT())), 
+      INVALID_INDEX
+    };
 
-    const float radius = hit->GetT() - GetDistance(*closest, point);
-    size_t startRange = _FindClosestCell(_ComputeCode(point - pxr::GfVec3f(radius)));
-    size_t endRange = _FindClosestCell(_ComputeCode(point + pxr::GfVec3f(radius)));
+    _RecurseClosestCell(_root, morton, point, hit, hit->GetT());
 
-    uint64_t pointCode = _ComputeCode(hitPoint);
-    size_t commonPrefix = MortonLeadingZeros(_ComputeCode(closest->GetMidpoint()) ^ pointCode);
-
-    for(size_t c = startRange; c <= endRange; ++c) 
-      if(_mortons[c].minimum <= pointCode && pointCode <= _mortons[c].maximum)
-        _Closest(_GetCell(_mortons[c].data), point, hit, maxDistance);
-  
-      
-    
     return true;
   }
   return false;
