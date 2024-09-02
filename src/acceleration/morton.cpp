@@ -221,13 +221,7 @@ bool MortonCheckBoxIntersects(uint64_t pmin, uint64_t pmax, uint64_t bmin, uint6
 
 bool MortonCheckPointInside(uint64_t point, uint64_t bmin, uint64_t bmax)
 {
-  pxr::GfVec3f p(MortonDecode3D(point));
-
-
-  pxr::GfVec3f b0(MortonDecode3D(bmin));
-  pxr::GfVec3f b1(MortonDecode3D(bmax));
-
-  return pxr::GfRange3f(b0, b1).IsInside(p);
+  return bmin <= point && point <= bmax;
 }
 
 uint64_t MortonNegate(uint64_t code)
@@ -278,6 +272,10 @@ uint64_t MortonShiftLeft(uint64_t code, int shift)
   return (((code << (3 * shift)) & 0x0fffffffffffffff) | (code & 0x7000000000000000));
 }
 
+size_t MortonAtLevel(uint64_t code, int level)
+{
+  return code >> (3 * level) & ~(~0u << 3);
+}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

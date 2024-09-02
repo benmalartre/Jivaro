@@ -196,9 +196,9 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     pxr::VtArray<pxr::GfVec3f> colors(3);
     pxr::VtArray<float> widths(3, 1.f);
     points[0] = seed; 
-    colors[0] = pxr::GfVec3f(1.f,0.f,0.f);
+    colors[2] = pxr::GfVec3f(1.f,0.f,0.f);
     colors[1] = pxr::GfVec3f(0.f,1.f,0.f);
-    colors[2] = pxr::GfVec3f(0.f,0.f,1.f);
+    colors[0] = pxr::GfVec3f(0.f,0.f,1.f);
 
     //pxr::GfSqrt(_bvh.GetDistanceSquared(seed)) + _bvh.GetSize().GetLength() * 0.1f;
  

@@ -65,6 +65,7 @@ uint64_t MortonAdd(uint64_t lhs, uint64_t rhs);
 uint64_t MortonSubtract(uint64_t lhs, uint64_t rhs);
 uint64_t MortonShiftRight(uint64_t code, int shift);
 uint64_t MortonShiftLeft(uint64_t code, int shift);
+size_t   MortonAtLevel(uint64_t code, int level);
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

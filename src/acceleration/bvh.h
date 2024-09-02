@@ -18,8 +18,8 @@ class Geometry;
 class BVH : public Intersector
 {
 public:
-  static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
-
+  static const size_t INVALID_INDEX;
+  static const double EPSILON;
 
   class Cell : public pxr::GfRange3d
   {
@@ -95,12 +95,13 @@ public:
   void GetBranches(const BVH::Cell* cell, std::vector<const Cell*>& branches) const;
   
 protected:
+  pxr::GfVec3f _ComputeHitPoint(Location* hit) const;
   uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
   pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
   size_t _FindSplit(size_t first, size_t last) const;
   size_t _FindClosestCell(uint64_t code) const;
-  bool _RecurseClosestCell(const BVH::Cell* cell, const Morton &morton, 
-    const pxr::GfVec3f& point, Location* hit, double maxDistance) const;
+  bool _RecurseClosestCell(const BVH::Cell* cell, const pxr::GfVec3f& point, 
+    Location* hit, double maxDistance) const;
 
   size_t _GetIndex(const BVH::Cell* cell) const;
   BVH::Cell* _GetCell(size_t index);
@@ -110,8 +111,8 @@ protected:
   void _AddTrianglePairs(Geometry* geometry);
   size_t _RecurseSortCells(size_t first, size_t last);
   pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
-  bool _ShouldCheckCell(const BVH::Cell* parent, const BVH::Cell* cell, 
-    const Morton &morton, const pxr::GfVec3f& point, double maxDistance) const;
+  bool _ShouldCheckCell(const BVH::Cell* cell, const pxr::GfVec3f& point, 
+    double radius) const;
 
   bool _Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const;
