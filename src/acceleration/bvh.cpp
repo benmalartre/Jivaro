@@ -616,7 +616,7 @@ bool
 BVH::_ShouldCheckCell(const BVH::Cell* cell, 
   const pxr::GfVec3f& point, double maxDistance) const
 {
-  if(!cell)return false;
+  if(cell->GetType() == BVH::Cell::LEAF)return true;
   
   if(cell->GetDistanceSquared(point) > (maxDistance * maxDistance))return false;
 
@@ -651,47 +651,35 @@ BVH::_RecurseClosestCell(const BVH::Cell* cell, const pxr::GfVec3f& point,
 {
   if(!cell) return false;
 
-  if(cell->GetDistanceSquared(point) > pxr::GfPow(maxDistance, 2)) 
+  if(cell->GetDistanceSquared(point) > pxr::GfPow(hit->GetT(), 2)) 
     return false;
   
   if(cell->IsLeaf()) {
-    return _Closest(cell, point, hit, maxDistance);
+    return _Closest(cell, point, hit, hit->GetT());
   } 
   else {
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = _GetCell(cell->GetRight());
-
-    Location leftHit(*hit), rightHit(*hit);
     bool leftFound(false), rightFound(false);
+  
+    if(left->GetDistanceSquared(point) < right->GetDistanceSquared(point)) {
+      if( _ShouldCheckCell(left, point, hit->GetT()))
+        leftFound = _RecurseClosestCell(left, point, hit,  hit->GetT());
+      if( _ShouldCheckCell(right, point, hit->GetT()))
+        rightFound = _RecurseClosestCell(right, point, hit, hit->GetT());
+    }
 
-    uint64_t pntCode = _ComputeCode(_ConstraintPointInRange(point, *cell));
-    uint64_t cellCode = _ComputeCode(cell->GetMidpoint());
-    uint64_t leftCode = _ComputeCode(left->GetMidpoint());
-    uint64_t rightCode = _ComputeCode(right->GetMidpoint());
+    else {
+      if( _ShouldCheckCell(right, point, hit->GetT()))
+        rightFound = _RecurseClosestCell(right, point, hit, hit->GetT());
+      if( _ShouldCheckCell(left, point, hit->GetT()))
+        leftFound = _RecurseClosestCell(left, point, hit,  hit->GetT());
+    }
 
-    size_t commonPrefix = MortonLeadingZeros(pntCode ^ cellCode);
-    size_t leftPrefix = MortonLeadingZeros(pntCode ^ leftCode);
-    size_t rightPrefix = MortonLeadingZeros(pntCode ^ rightCode);
-    
-    if(leftPrefix >= commonPrefix && _ShouldCheckCell(left, point, maxDistance))
-      leftFound = _RecurseClosestCell(left, point, &leftHit,  maxDistance);
-
-    if(rightPrefix >= commonPrefix && _ShouldCheckCell(right, point, maxDistance))
-      rightFound = _RecurseClosestCell(right, point, &rightHit, maxDistance);
-
-    if (leftFound && rightFound) {
-      if(leftHit.GetT() < rightHit.GetT()) { 
-        hit->Set(leftHit); return true;
-      } else {
-        hit->Set(rightHit); return true;
-      }
-    } else if (leftFound) {
-      { hit->Set(leftHit); return true;}
-    } else if (rightFound) {
-      { hit->Set(rightHit); return true;}
-    } return false;
+    return leftFound || rightFound;
   }
 }
+
 
 bool BVH::Closest(const pxr::GfVec3f& point, 
   Location* hit, double maxDistance) const
