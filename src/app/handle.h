@@ -105,6 +105,7 @@ public:
     : _activeAxis(AXIS_NONE)
     , _hoveredAxis(AXIS_NONE)
     , _activeNormal(NORMAL_CAMERA)
+    , _activeMask(0b1111111111111111)
     , _camera(NULL)
     , _interacting(false)
     , _compensate(compensate)
@@ -140,7 +141,7 @@ public:
   const pxr::GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
 
-  virtual void SetVisibility(short axis);
+  virtual void SetVisibility(short axis, short mask);
   virtual void Setup();
   virtual void SetProgram(GLSLProgram* pgm);
   virtual void Draw(float width, float height);
@@ -159,6 +160,7 @@ protected:
   pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVec3f& normal,
     const pxr::GfRay& ray, short axis, float radius);
   pxr::GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
+  virtual void _UpdateActiveMask();
 
   // handle transformation flags
   short                   _mode;
@@ -175,6 +177,7 @@ protected:
 
   // state
   short                   _activeNormal;
+  short                   _activeMask;
   short                   _activeAxis;
   short                   _hoveredAxis;
   short                   _lastActiveAxis;
@@ -213,7 +216,7 @@ public:
   void Update(float x, float y, float width, float height) override;
   void EndUpdate() override;
   void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
-  void SetVisibility(short axis) override;
+  void SetVisibility(short axis, short mask) override;
 
 protected:
   void _UpdateTargets(bool interacting) override;
@@ -230,7 +233,7 @@ public:
   void Update(float x, float y, float width, float height) override;
   void EndUpdate() override;
   void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
-  void SetVisibility(short axis) override;
+  void SetVisibility(short axis, short mask) override;
 
 protected:
   void _UpdateTargets(bool interacting) override;
@@ -251,7 +254,7 @@ public:
 
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
-  void SetVisibility(short axis) override;
+  void SetVisibility(short axis, short mask) override;
 
 protected:
   void _UpdateTargets(bool interacting) override;
@@ -268,7 +271,7 @@ public:
 
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
-  void SetVisibility(short axis) override;
+  void SetVisibility(short axis, short mask) override;
 
 protected:
   void _UpdateTargets(bool interacting) override;
@@ -285,7 +288,7 @@ public:
 
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
-  void SetVisibility(short axis) override;
+  void SetVisibility(short axis, short mask) override;
 
 protected:
   void _UpdateTargets(bool interacting) override;

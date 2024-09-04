@@ -278,4 +278,220 @@ size_t MortonAtLevel(uint64_t code, int level)
 }
 
 
+int _MortonMSBPosition( uint64_t code)
+{
+    if(!code) return -1;
+
+    int msb = 0;
+    while (code) 
+    {
+        msb++;
+        code = code >> 1;
+    }
+    return msb - 1;
+}
+
+void _MortonTurnOnBits( uint64_t& code, int start, int stop, int step)
+{
+    for(int pos = start; pos <= stop; pos += step)
+    {
+        uint64_t onBit = 0x1ul << (pos);
+        code |= onBit;
+    }
+
+    return;
+}
+
+void _MortonTurnOffBits( uint64_t& code, int start, int stop, int step)
+{
+    for(int pos = start; pos <= stop; pos += step)
+    {
+        uint64_t onBit = 0x1ul << (pos);
+        code &= ~onBit;
+    }
+
+    return;
+}
+
+void _MortonTurnOnBit( uint64_t& code, int i)
+{
+    code = code | (0x1ul << i);
+    return;
+}
+
+void _MortonTurnOffBit( uint64_t& code, int i)
+{
+    code = code & (~(0x1ul << i));
+    return;
+}
+
+uint64_t _MortonSetOnes(int start)
+{
+    return (1ul<< (start+1)) - 1ul;
+}
+
+bool _MortonIsInRange(uint64_t zval, uint64_t zmin, uint64_t zmax)
+{
+
+  pxr::GfVec3i values = MortonDecode3D(zval);
+  pxr::GfVec3i minimum = MortonDecode3D(zmin);
+  pxr::GfVec3i maximum = MortonDecode3D(zmax);
+
+  return  ((minimum[0] <= values[0]) && ( values[0] <= maximum[0])) &&
+          ((minimum[1] <= values[1]) && ( values[1] <= maximum[1])) &&
+          ((minimum[2] <= values[2]) && ( values[2] <= maximum[2]));
+}
+
+uint64_t _MortonLoadxxx10000( uint64_t value, uint64_t bitPos)
+{
+    int pos = _MortonMSBPosition(bitPos);
+    _MortonTurnOffBits(value, pos%3, pos, 3 );
+    _MortonTurnOnBit(value, pos);
+
+    return value;
+}
+
+uint64_t _MortonLoadxxx01111( uint64_t value, uint64_t bitPos)
+{
+    int pos = _MortonMSBPosition(bitPos);
+    _MortonTurnOnBits( value, pos%3, pos, 3);
+    _MortonTurnOffBit( value, pos);
+
+    return value;
+}
+
+uint64_t MortonBigMin( uint64_t zval, uint64_t zmin, uint64_t zmax)
+{
+  uint64_t bigmin    = 0ul;
+
+  int msb = _MortonMSBPosition(zval);
+
+  uint64_t bpos = 0x1ul << (msb+1);
+  
+  while(bpos)
+  {
+    uint64_t bzval = zval & bpos;
+    uint64_t bzmin = zmin & bpos;
+    uint64_t bzmax = zmax & bpos;
+
+    if     ( !bzval && !bzmin && !bzmax)
+    {}
+    else if( !bzval && !bzmin &&  bzmax)
+    {
+      bigmin = _MortonLoadxxx10000(zmin, bpos);
+      zmax   = _MortonLoadxxx01111(zmax, bpos);    
+    }
+    else if( !bzval &&  bzmin &&  bzmax)
+    {
+      bigmin = zmin;
+      break;
+    }
+    else if(  bzval && !bzmin && !bzmax)
+    {
+      break;
+    }
+    else if(  bzval && !bzmin &&  bzmax)
+    {
+      zmin = _MortonLoadxxx10000(zmin, bpos);
+    }
+    else if(  bzval &&  bzmin &&  bzmax)
+    {}
+
+    bpos >>= 1;
+  }
+
+  return bigmin;
+}
+
+uint64_t MortonLitMax( uint64_t zval, uint64_t zmin, uint64_t zmax)
+{
+  uint64_t litmax    = 0ul;
+
+  int msb = _MortonMSBPosition(zval);
+
+  uint64_t bpos = 0x1ul << (msb+1);
+  
+  while(bpos)
+  {
+    uint64_t bzval = zval & bpos;
+    uint64_t bzmin = zmin & bpos;
+    uint64_t bzmax = zmax & bpos;
+
+    if     ( !bzval && !bzmin && !bzmax)
+    {}
+    else if( !bzval && !bzmin &&  bzmax)
+    {
+      zmax   = _MortonLoadxxx01111(zmax, bpos);    
+    }
+    else if( !bzval &&  bzmin &&  bzmax)
+    {
+      break;
+    }
+    else if(  bzval && !bzmin && !bzmax)
+    {
+      litmax = zmax;
+      break;
+    }
+    else if(  bzval && !bzmin &&  bzmax)
+    {
+      litmax = _MortonLoadxxx01111(zmax, bpos);
+      zmin   = _MortonLoadxxx10000(zmin, bpos);
+    }
+    else if(  bzval &&  bzmin &&  bzmax)
+    {}
+
+    bpos >>= 1;
+  }
+
+  return litmax;
+}
+
+
+uint64_t MortonNextOf (uint64_t zval, uint64_t zmin, uint64_t zmax)
+{
+  if(zval < zmin || zval >= zmax)
+    return MORTON_INVALID_INDEX;
+  
+  int num_attemts = 3;
+  int attempts    = 0;
+
+  while(true)
+  {
+    zval++;
+    attempts++;
+    if( _MortonIsInRange(zval, zmin, zmax)  ) return zval;
+    if( attempts == num_attemts) break;
+  }
+
+  // compute bigmin
+  return MortonBigMin(zval, zmin, zmax);
+}
+
+uint64_t MortonPrevOf(uint64_t zval, uint64_t zmin, uint64_t zmax)
+{
+  if(zval <= zmin || zval > zmax)
+    return MORTON_INVALID_INDEX;
+
+  int num_attemts = 3;
+  int attempts    = 0;
+
+  while(true)
+  {
+    zval--;
+    attempts++;
+    if( _MortonIsInRange(zval, zmin, zmax)  ) return zval;
+    if( attempts == num_attemts) break;
+  }
+
+  return MortonLitMax(zval, zmin, zmax);
+}
+
+/*
+  const pxr::GfVec3i left = MortonEncode3D(minimum);
+  const pxr::GfVec3i right = MortonEncode3D(maximum);
+
+  uint64_t zmin = MortonEncode3D(pxr::GfVec3i(left[2], left[1], left[0]));
+  uint64_t zmax = MortonEncode3D(pxr::GfVec3i(right[2], right[1], right[0]));
+*/
+
 JVR_NAMESPACE_CLOSE_SCOPE

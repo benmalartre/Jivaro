@@ -175,7 +175,7 @@ BaseHandle::ComputePickFrustum()
 }
 
 void 
-BaseHandle::SetVisibility(short axis)
+BaseHandle::SetVisibility(short axis, short mask)
 {
 }
 
@@ -336,6 +336,8 @@ BaseHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
 void 
 BaseHandle::Draw(float width, float height)
 {
+  _UpdateActiveMask();
+  SetVisibility(_activeAxis, _activeMask);
   ComputeSizeMatrix(width, height);
   ComputeViewPlaneMatrix();
   pxr::GfMatrix4f m = _sizeMatrix * _displayMatrix;
@@ -375,6 +377,7 @@ BaseHandle::SetProgram(GLSLProgram* pgm)
 void 
 BaseHandle::Update(float x, float y, float width, float height)
 {
+  _UpdateActiveMask();
   if(_interacting) {
     pxr::GfRay ray(
       _camera->GetPosition(), 
@@ -520,7 +523,8 @@ BaseHandle::BeginUpdate(float x, float y, float width, float height)
     _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
   }
   _interacting = true;
-  SetVisibility(_activeAxis);
+  SetVisibility(_activeAxis, _activeMask);
+  _UpdateActiveMask();
 
 }
 
@@ -530,6 +534,26 @@ BaseHandle::EndUpdate()
   _interacting = false;
   _shape.SetVisibility(0b1111111111111111);
   _UpdateTargets(false);
+}
+
+void
+BaseHandle::_UpdateActiveMask()
+{
+  const pxr::GfVec3f normal(_plane.GetNormal());
+  const float xDot = pxr::GfAbs(pxr::GfDot(normal, 
+    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::XAxis())));
+  const float yDot = pxr::GfAbs(pxr::GfDot(normal, 
+    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::YAxis())));
+  const float zDot = pxr::GfAbs(pxr::GfDot(normal, 
+    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::ZAxis())));
+  _activeMask = 0b1111111111111111;
+  if(xDot > 0.97f)
+    _activeMask = 0b1111110011101101;
+  else if(yDot > 0.97f)
+    _activeMask = 0b1111110101011011;
+  else if(zDot > 0.97f)
+    _activeMask = 0b1111111000110111;
+
 }
 
 //==================================================================================
@@ -562,7 +586,7 @@ void SelectHandle::_DrawShape(Shape* shape, const pxr::GfMatrix4f& m)
 
 }
 
-void SelectHandle::SetVisibility(short axis)
+void SelectHandle::SetVisibility(short axis, short mask)
 {
 
 }
@@ -616,27 +640,27 @@ TranslateHandle::TranslateHandle()
 
 
 void
-TranslateHandle::SetVisibility(short axis)
+TranslateHandle::SetVisibility(short axis, short mask)
 {
   /*YZXZXY*/
   int bits = 0;
   switch (axis) {
   case AXIS_X:
-    bits = 0b0000010010; break;
+    bits = 0b0000010010 & mask; break;
   case AXIS_Y:
-    bits = 0b0000100100; break;
+    bits = 0b0000100100 & mask; break;
   case AXIS_Z:
-    bits = 0b0001001000; break;
+    bits = 0b0001001000 & mask; break;
   case AXIS_XY:
-    bits = 0b100110110; break;
+    bits = 0b100110110 & mask; break;
   case AXIS_XZ:
-    bits = 0b0101011010; break;
+    bits = 0b0101011010 & mask; break;
   case AXIS_YZ:
-    bits = 0b0011101100; break;
+    bits = 0b0011101100 & mask; break;
   case AXIS_XYZ:
-    bits = 0b0000001111; break;
+    bits = 0b0000001111 & mask; break;
   default:
-    bits = 0b1111111111; break;
+    bits = 0b1111111111 & mask; break;
   }
   _shape.SetVisibility(bits);
 }
@@ -647,22 +671,23 @@ TranslateHandle::BeginUpdate(float x, float y, float width, float height)
   pxr::GfRay ray = _camera->GetRay(x, y, width, height);
   double distance;
   bool frontFacing;
+  size_t visibilityMask = 0;
   _startMatrix = _matrix;
   if(ray.Intersect(_plane, &distance, &frontFacing)) {
     if(_activeAxis == AXIS_CAMERA) {
       _offset = pxr::GfVec3f(pxr::GfVec3d(_position) - ray.GetPoint(distance));
     } else {
       _offset =  pxr::GfVec3f(pxr::GfVec3d(_position) -
-        _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis));
+        _ConstraintPointToAxis(pxr::GfVec3f(ray.GetPoint(distance)), _activeAxis)); 
     }
   }
   _interacting = true;
-  SetVisibility(_activeAxis);
 }
 
 void
 TranslateHandle::Update(float x, float y, float width, float height)
 {
+  _UpdateActiveMask();
   if(_interacting) {
     pxr::GfRay ray = _camera->GetRay(x, y, width, height);
 
@@ -762,7 +787,7 @@ RotateHandle::RotateHandle()
 }
 
 void
-RotateHandle::SetVisibility(short axis)
+RotateHandle::SetVisibility(short axis, short mask)
 {
   int bits = 0;
   switch (axis) {
@@ -829,7 +854,7 @@ RotateHandle::BeginUpdate(float x, float y, float width, float height)
     }
   }
   _interacting = true;
-  SetVisibility(_activeAxis);
+  SetVisibility(_activeAxis, _activeMask);
 }
 
 void 
@@ -981,7 +1006,7 @@ ScaleHandle::ScaleHandle()
 }
 
 void
-ScaleHandle::SetVisibility(short axis)
+ScaleHandle::SetVisibility(short axis, short mask)
 {
   /*YZXZXY*/
   int bits = 0;
@@ -1037,7 +1062,7 @@ ScaleHandle::BeginUpdate(float x, float y, float width, float height)
     }
   }
   _interacting = true;
-  SetVisibility(_activeAxis);
+  SetVisibility(_activeAxis, _activeMask);
 }
 
 void 

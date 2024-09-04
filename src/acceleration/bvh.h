@@ -99,9 +99,8 @@ protected:
   uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
   pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
   size_t _FindSplit(size_t first, size_t last) const;
-  size_t _FindClosestCell(uint64_t code) const;
-  bool _RecurseClosestCell(const BVH::Cell* cell, const pxr::GfVec3f& point, 
-    Location* hit, double maxDistance) const;
+  size_t _FindClosestCell(const pxr::GfVec3f &point) const;
+  bool _RecurseClosestCell(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit) const;
 
   size_t _GetIndex(const BVH::Cell* cell) const;
   BVH::Cell* _GetCell(size_t index);

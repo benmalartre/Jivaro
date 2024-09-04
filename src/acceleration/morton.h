@@ -23,6 +23,7 @@ static uint32_t __inline __builtin_clz(uint32_t x) {
 
 #define MORTOM_LONG_BITS  21
 #define MORTOM_MAX_L ((1 << (MORTOM_LONG_BITS)) - 1)
+#define MORTON_INVALID_INDEX std::numeric_limits<uint64_t>::max()
 
 struct Morton {
   uint64_t  code;
@@ -66,6 +67,11 @@ uint64_t MortonSubtract(uint64_t lhs, uint64_t rhs);
 uint64_t MortonShiftRight(uint64_t code, int shift);
 uint64_t MortonShiftLeft(uint64_t code, int shift);
 size_t   MortonAtLevel(uint64_t code, int level);
+
+uint64_t MortonBigMin( uint64_t zval, uint64_t minimum, uint64_t maximum);
+uint64_t MortonLitMax( uint64_t zval, uint64_t minimum, uint64_t maximum);
+uint64_t MortonNextOf(uint64_t zval, uint64_t zmin, uint64_t zmax);
+uint64_t MortonPrevOf(uint64_t zval, uint64_t zmin, uint64_t zmax);
 
 
 JVR_NAMESPACE_CLOSE_SCOPE
