@@ -71,7 +71,7 @@ void _BenchmarckClosestPoints(BVH* bvh, std::vector<Geometry*>& meshes)
 
   uint64_t startT2 = CurrentTime();
   std::cout << "accelerated started" << std::endl;
-  for(size_t n = 0; n < N; ++n) {
+  for(size_t n = 0; n < N  ; ++n) {
     Location hit;
     if(bvh->Closest(points[n], &hit, FLT_MAX)) {
       Mesh* hitMesh = (Mesh*)meshes[hit.GetGeometryIndex()];
@@ -163,7 +163,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_pointsId, _points);
 
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
-  _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, false);
+  _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, true);
   _scene.AddGeometry(_bvhId, (Geometry*)_instancer );
   _scene.MarkPrimDirty(_bvhId, pxr::HdChangeTracker::DirtyInstancer);
 
@@ -173,7 +173,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_xformId, (Geometry*) _xform);
   _scene.InjectGeometry(stage, _xformId, _xform, pxr::UsdTimeCode::Default());
 
-   _BenchmarckClosestPoints(&_bvh, _meshes);
+  _BenchmarckClosestPoints(&_bvh, _meshes);
   
 }
 
@@ -202,13 +202,16 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
     //pxr::GfSqrt(_bvh.GetDistanceSquared(seed)) + _bvh.GetSize().GetLength() * 0.1f;
  
-    if(_bvh.Closest(seed, &hit, FLT_MAX)) {
+    //points[1] = _bvh.Constraint(_bvh.GetRoot(), seed);
+    
+    if(_bvh.Closest(seed, &hit, DBL_MAX)) {
       Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
       const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
       Triangle* triangle = hitMesh->GetTriangle(hit.GetComponentIndex());
       pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
       points[1] = closest;
     }
+  
     
 
     /* Brute force

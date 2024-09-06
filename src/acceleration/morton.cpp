@@ -62,7 +62,7 @@ static inline uint64_t _SplitBy2bits(const uint32_t a) {
 
 uint32_t MortonEncode2D(const pxr::GfVec2i& p)
 {
-  return _SplitBy2bits(p[0]) | (_SplitBy2bits(p[1]) << 1);
+  return 0l | _SplitBy2bits(p[0]) | (_SplitBy2bits(p[1]) << 1);
 }
 
 static uint64_t MORTOM_ENCODE_3D_MASK[6] = { 
@@ -75,7 +75,8 @@ static uint64_t MORTOM_ENCODE_3D_MASK[6] = {
 };
 
 static inline uint64_t _SplitBy3bits(const uint32_t a) {
-  uint64_t x = ((uint64_t)a) & MORTOM_ENCODE_3D_MASK[0];
+  uint64_t x = 0ul;
+  x = (x | (uint64_t)a) & MORTOM_ENCODE_3D_MASK[0];
   x = (x | (uint64_t)x << 32) & MORTOM_ENCODE_3D_MASK[1];
   x = (x | x << 16) & MORTOM_ENCODE_3D_MASK[2];
   x = (x | x << 8) & MORTOM_ENCODE_3D_MASK[3];
@@ -86,7 +87,7 @@ static inline uint64_t _SplitBy3bits(const uint32_t a) {
 
 uint64_t MortonEncode3D(const pxr::GfVec3i& p)
 {
-  return _SplitBy3bits(p[0]) | (_SplitBy3bits(p[1]) << 1) | (_SplitBy3bits(p[2]) << 2);
+  return 0ul | _SplitBy3bits(p[0]) | (_SplitBy3bits(p[1]) << 1) | (_SplitBy3bits(p[2]) << 2);
 }
 
 // DECODING
@@ -274,100 +275,94 @@ uint64_t MortonShiftLeft(uint64_t code, int shift)
 
 size_t MortonAtLevel(uint64_t code, int level)
 {
-  return code >> (3 * level) & ~(~0u << 3);
+  return (code >> (3 * level))  & ~(~0U << 3);
 }
 
 
 int _MortonMSBPosition( uint64_t code)
 {
-    if(!code) return -1;
+  if(!code) return -1;
 
-    int msb = 0;
-    while (code) 
-    {
-        msb++;
-        code = code >> 1;
-    }
-    return msb - 1;
+  return (63 - MortonLeadingZeros(code));
 }
 
 void _MortonTurnOnBits( uint64_t& code, int start, int stop, int step)
 {
-    for(int pos = start; pos <= stop; pos += step)
-    {
-        uint64_t onBit = 0x1ul << (pos);
-        code |= onBit;
-    }
+  for(int pos = start; pos <= stop; pos += step)
+  {
+    uint64_t onBit = 0x1ul << (pos);
+    code |= onBit;
+  }
 
-    return;
+  return;
 }
 
 void _MortonTurnOffBits( uint64_t& code, int start, int stop, int step)
 {
-    for(int pos = start; pos <= stop; pos += step)
-    {
-        uint64_t onBit = 0x1ul << (pos);
-        code &= ~onBit;
-    }
+  for(int pos = start; pos <= stop; pos += step)
+  {
+    uint64_t onBit = 0x1ul << (pos);
+    code &= ~onBit;
+  }
 
-    return;
+  return;
 }
 
 void _MortonTurnOnBit( uint64_t& code, int i)
 {
-    code = code | (0x1ul << i);
-    return;
+  code = code | (0x1ul << i);
+  return;
 }
 
 void _MortonTurnOffBit( uint64_t& code, int i)
 {
-    code = code & (~(0x1ul << i));
-    return;
+  code = code & (~(0x1ul << i));
+  return;
 }
 
 uint64_t _MortonSetOnes(int start)
 {
-    return (1ul<< (start+1)) - 1ul;
+  return (1ul<< (start+1)) - 1ul;
 }
 
-bool _MortonIsInRange(uint64_t zval, uint64_t zmin, uint64_t zmax)
+bool MortonIsInRange(uint64_t zval, uint64_t zmin, uint64_t zmax)
 {
+  if(zval < zmin || zmax < zval)
+    return false;
 
-  pxr::GfVec3i values = MortonDecode3D(zval);
-  pxr::GfVec3i minimum = MortonDecode3D(zmin);
-  pxr::GfVec3i maximum = MortonDecode3D(zmax);
+  else if(zval == zmin || zval == zmax)
+    return true;
 
-  return  ((minimum[0] <= values[0]) && ( values[0] <= maximum[0])) &&
-          ((minimum[1] <= values[1]) && ( values[1] <= maximum[1])) &&
-          ((minimum[2] <= values[2]) && ( values[2] <= maximum[2]));
+  else
+    //return zmin <= zval && zval <= zmax;
+    return zval == MortonLitMax(MortonBigMin(zval, zmin, zmax), zmin, zmax);
 }
 
 uint64_t _MortonLoadxxx10000( uint64_t value, uint64_t bitPos)
 {
-    int pos = _MortonMSBPosition(bitPos);
-    _MortonTurnOffBits(value, pos%3, pos, 3 );
-    _MortonTurnOnBit(value, pos);
+  int pos = _MortonMSBPosition(bitPos);
+  _MortonTurnOffBits(value, pos%3, pos, 3 );
+  _MortonTurnOnBit(value, pos);
 
-    return value;
+  return value;
 }
 
 uint64_t _MortonLoadxxx01111( uint64_t value, uint64_t bitPos)
 {
-    int pos = _MortonMSBPosition(bitPos);
-    _MortonTurnOnBits( value, pos%3, pos, 3);
-    _MortonTurnOffBit( value, pos);
+  int pos = _MortonMSBPosition(bitPos);
+  _MortonTurnOnBits( value, pos%3, pos, 3);
+  _MortonTurnOffBit( value, pos);
 
-    return value;
+  return value;
 }
 
 uint64_t MortonBigMin( uint64_t zval, uint64_t zmin, uint64_t zmax)
 {
-  uint64_t bigmin    = 0ul;
+  uint64_t bigmin = 0ul;
 
   int msb = _MortonMSBPosition(zval);
 
-  uint64_t bpos = 0x1ul << (msb+1);
-  
+  uint64_t bpos = (0x1ul << (msb+1));
   while(bpos)
   {
     uint64_t bzval = zval & bpos;
@@ -409,8 +404,7 @@ uint64_t MortonLitMax( uint64_t zval, uint64_t zmin, uint64_t zmax)
 
   int msb = _MortonMSBPosition(zval);
 
-  uint64_t bpos = 0x1ul << (msb+1);
-  
+  uint64_t bpos = (0x1ul << (msb+1));
   while(bpos)
   {
     uint64_t bzval = zval & bpos;
@@ -445,53 +439,5 @@ uint64_t MortonLitMax( uint64_t zval, uint64_t zmin, uint64_t zmax)
 
   return litmax;
 }
-
-
-uint64_t MortonNextOf (uint64_t zval, uint64_t zmin, uint64_t zmax)
-{
-  if(zval < zmin || zval >= zmax)
-    return MORTON_INVALID_INDEX;
-  
-  int num_attemts = 3;
-  int attempts    = 0;
-
-  while(true)
-  {
-    zval++;
-    attempts++;
-    if( _MortonIsInRange(zval, zmin, zmax)  ) return zval;
-    if( attempts == num_attemts) break;
-  }
-
-  // compute bigmin
-  return MortonBigMin(zval, zmin, zmax);
-}
-
-uint64_t MortonPrevOf(uint64_t zval, uint64_t zmin, uint64_t zmax)
-{
-  if(zval <= zmin || zval > zmax)
-    return MORTON_INVALID_INDEX;
-
-  int num_attemts = 3;
-  int attempts    = 0;
-
-  while(true)
-  {
-    zval--;
-    attempts++;
-    if( _MortonIsInRange(zval, zmin, zmax)  ) return zval;
-    if( attempts == num_attemts) break;
-  }
-
-  return MortonLitMax(zval, zmin, zmax);
-}
-
-/*
-  const pxr::GfVec3i left = MortonEncode3D(minimum);
-  const pxr::GfVec3i right = MortonEncode3D(maximum);
-
-  uint64_t zmin = MortonEncode3D(pxr::GfVec3i(left[2], left[1], left[0]));
-  uint64_t zmax = MortonEncode3D(pxr::GfVec3i(right[2], right[1], right[0]));
-*/
 
 JVR_NAMESPACE_CLOSE_SCOPE

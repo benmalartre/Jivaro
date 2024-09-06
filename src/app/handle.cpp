@@ -524,7 +524,6 @@ BaseHandle::BeginUpdate(float x, float y, float width, float height)
   }
   _interacting = true;
   SetVisibility(_activeAxis, _activeMask);
-  _UpdateActiveMask();
 
 }
 
@@ -534,26 +533,12 @@ BaseHandle::EndUpdate()
   _interacting = false;
   _shape.SetVisibility(0b1111111111111111);
   _UpdateTargets(false);
+  SetActiveAxis(AXIS_XYZ);
 }
 
 void
 BaseHandle::_UpdateActiveMask()
 {
-  const pxr::GfVec3f normal(_plane.GetNormal());
-  const float xDot = pxr::GfAbs(pxr::GfDot(normal, 
-    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::XAxis())));
-  const float yDot = pxr::GfAbs(pxr::GfDot(normal, 
-    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::YAxis())));
-  const float zDot = pxr::GfAbs(pxr::GfDot(normal, 
-    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::ZAxis())));
-  _activeMask = 0b1111111111111111;
-  if(xDot > 0.97f)
-    _activeMask = 0b1111110011101101;
-  else if(yDot > 0.97f)
-    _activeMask = 0b1111110101011011;
-  else if(zDot > 0.97f)
-    _activeMask = 0b1111111000110111;
-
 }
 
 //==================================================================================
@@ -737,6 +722,29 @@ TranslateHandle::_UpdateTargets(bool interacting)
   }
 }
 
+void
+TranslateHandle::_UpdateActiveMask()
+{
+  const pxr::GfVec3f normal(_plane.GetNormal());
+  const float xDot = pxr::GfAbs(pxr::GfDot(normal, 
+    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::XAxis())));
+  const float yDot = pxr::GfAbs(pxr::GfDot(normal, 
+    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::YAxis())));
+  const float zDot = pxr::GfAbs(pxr::GfDot(normal, 
+    pxr::GfMatrix4f(1.f).SetRotate(_rotation).TransformDir(pxr::GfVec3f::ZAxis())));
+  _activeMask = 0b1111111111111111;
+
+  if(xDot > 0.97f)
+    _activeMask = 0b1111110011101101;
+
+  else if(yDot > 0.97f)
+    _activeMask = 0b1111110101011011;
+    
+  else if(zDot > 0.97f)
+    _activeMask = 0b1111111000110111;
+
+}
+
 //==================================================================================
 // ROTATE HANDLE IMPLEMENTATION
 //==================================================================================
@@ -792,15 +800,15 @@ RotateHandle::SetVisibility(short axis, short mask)
   int bits = 0;
   switch (axis) {
   case AXIS_X:
-    bits = 0b00010; break;
+    bits = 0b00010 & mask; break;
   case AXIS_Y:
-    bits = 0b00100; break;
+    bits = 0b00100 & mask; break;
   case AXIS_Z:
-    bits = 0b01000; break;
+    bits = 0b01000 & mask; break;
   case AXIS_CAMERA:
-    bits = 0b10000; break;
+    bits = 0b10000 & mask; break;
   default:
-    bits = 0b11111; break;
+    bits = 0b11111 & mask; break;
   }
   _shape.SetVisibility(bits);
 }

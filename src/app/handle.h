@@ -275,6 +275,7 @@ public:
 
 protected:
   void _UpdateTargets(bool interacting) override;
+  void _UpdateActiveMask() override;
 
 private:
   float _radius;

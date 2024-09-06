@@ -93,21 +93,22 @@ public:
 
   void GetLeaves(const BVH::Cell* cell, std::vector<const Cell*>& leaves) const;
   void GetBranches(const BVH::Cell* cell, std::vector<const Cell*>& branches) const;
+
+  pxr::GfVec3f Constraint(const BVH::Cell* cell, const pxr::GfVec3f &point) const;
   
 protected:
   pxr::GfVec3f _ComputeHitPoint(Location* hit) const;
   uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
   pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
   size_t _FindSplit(size_t first, size_t last) const;
-  size_t _FindClosestCell(const pxr::GfVec3f &point) const;
-  bool _RecurseClosestCell(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit) const;
+  size_t _LeftOrRight(const BVH::Cell* cell, const pxr::GfVec3f &point, uint64_t code)const;
+  size_t _FindClosestCell(const BVH::Cell* cell, const pxr::GfVec3f &point, uint64_t code)const;
+
+  bool _CheckCloserCells(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit, uint64_t code) const;
 
   size_t _GetIndex(const BVH::Cell* cell) const;
   BVH::Cell* _GetCell(size_t index);
   const BVH::Cell* _GetCell(size_t index) const;
-  void _AddPoints(Geometry* geometry);
-  void _AddTriangles(Geometry* geometry);
-  void _AddTrianglePairs(Geometry* geometry);
   size_t _RecurseSortCells(size_t first, size_t last);
   pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
   bool _ShouldCheckCell(const BVH::Cell* cell, const pxr::GfVec3f& point, 
@@ -121,7 +122,9 @@ protected:
 private:
   Cell*                           _root;
   std::vector<Cell>               _cells;
-  std::vector<Morton>             _mortons;
+  std::vector<Morton>             _leaves;
+  std::vector<Morton>             _branches;
+  std::vector<int>                _cellToMorton;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE
