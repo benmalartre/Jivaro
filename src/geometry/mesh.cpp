@@ -1258,6 +1258,7 @@ Mesh::Raycast(const pxr::GfRay& ray, Location* hit,
     const float distance = (ray.GetStartPoint() - intersection).GetLength();
     hit->Set(localHit);
     hit->SetT(distance);
+    if (minDistance)*minDistance = distance;
     success = true;
   } 
   return success;
@@ -1267,7 +1268,6 @@ bool
 Mesh::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const 
 {
-  double minDistance = DBL_MAX;
   size_t index = Component::INVALID_INDEX;
 
   size_t numTriangles = _triangles.size();
@@ -1275,8 +1275,10 @@ Mesh::Closest(const pxr::GfVec3f& point, Location* hit,
   bool found = false;
 
   for(size_t t = 0; t < numTriangles; ++t)
-    if(_triangles[t].Closest(&_positions[0], point, hit))
+    if (_triangles[t].Closest(&_positions[0], point, hit)) {
       found = true;
+      if (minDistance)*minDistance = hit->GetT();
+    }
       
   return found;
 };
