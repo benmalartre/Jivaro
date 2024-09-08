@@ -18,7 +18,7 @@ class Geometry;
 class BVH : public Intersector
 {
 public:
-  static const size_t INVALID_INDEX;
+  static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
   class Cell : public pxr::GfRange3d
   {
@@ -66,8 +66,7 @@ public:
   const Cell* GetCell(size_t index) const { return &_cells[index]; };
 
   size_t AddCell(BVH::Cell* left, BVH::Cell* right);
-  size_t AddCell(Component* component,
-    const pxr::GfRange3d& range);
+  size_t AddCell(Component* component, const pxr::GfRange3d& range);
 
   const Geometry* GetGeometryFromCell(const BVH::Cell* cell) const;
   size_t GetGeometryIndexFromCell(const BVH::Cell* cell) const;
@@ -75,7 +74,11 @@ public:
   Morton SortCells();
   pxr::GfRange3f UpdateCells();
 
+  // infos
   size_t GetNumComponents(){return _numComponents;};
+  size_t GetNumLeaves(){return _mortons.size();};
+  size_t GetNumCells(){return _cells.size();};
+
    // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
     pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf) override;

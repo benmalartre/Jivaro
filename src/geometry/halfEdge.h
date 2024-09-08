@@ -57,6 +57,7 @@ public:
   size_t GetNumRawEdges() const;
   size_t GetNumEdges() const;
   HalfEdge* GetEdge(int index);
+  const HalfEdge* GetEdge(int index)const;
   size_t GetEdgeIndex(const HalfEdge* edge) const;
   HalfEdge* GetAvailableEdge();
   pxr::VtArray<HalfEdge>& GetEdges(){return _halfEdges;};

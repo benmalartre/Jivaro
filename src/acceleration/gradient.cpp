@@ -14,10 +14,8 @@ void Gradient::Init(Mesh* mesh)
 {
   size_t numPoints = mesh->GetNumPoints();
   _flags.resize(numPoints);
-  _gradient[0].resize(numPoints);
-  _gradient[1].resize(numPoints);
-  _value[0].resize(numPoints);
-  _value[1].resize(numPoints);
+  _gradient.resize(numPoints);
+  _value.resize(numPoints);
 }
   
 void Gradient::Compute(Mesh* mesh)
@@ -44,5 +42,7 @@ void Gradient::_FindFeatures(Mesh* mesh)
 
 
 }
+
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

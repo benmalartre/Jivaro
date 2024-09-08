@@ -38,13 +38,18 @@ public:
 
 protected:
   void _FindFeatures(Mesh* mesh);
+  void _UpdateKroneckerDelta(Mesh* mesh);
+  void _SolveCotanLaplace();
 
 
 private:
   pxr::VtArray<int>           _flags;
-  pxr::VtArray<pxr::GfVec3f>  _gradient[2];
-  pxr::VtArray<pxr::GfVec3f>  _value[2];
+  pxr::VtArray<pxr::GfVec3f>  _gradient;
+  pxr::VtArray<pxr::GfVec3f>  _value;
+  pxr::VtArray<pxr::GfVec3f>  _divergence;
   bool                        _flip;
+
+  double                      _avgLength;
 
 }; 
 

@@ -100,6 +100,8 @@ public:
   void ComputeAdjacents();
   void ComputeTrianglePairs();
 
+  float ComputeCotangentWeight(size_t p0, size_t p1) const;
+
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
   void Triangulate();

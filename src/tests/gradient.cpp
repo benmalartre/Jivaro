@@ -164,8 +164,10 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
     uint64_t elapsedT = CurrentTime() - startT;
 
     std::cout << "================== bvh initialize : "  << std::endl;
-    std::cout << "took : " << (elapsedT * 1e-6) << " seconds" << std::endl;
-    std::cout << "num components : " << _bvh.GetNumComponents() << std::endl;
+    std::cout << "- bvh build took      : " << (elapsedT * 1e-6) << " seconds" << std::endl;
+    std::cout << "- bvh num components  : " << _bvh.GetNumComponents() << std::endl;
+    std::cout << "- bvh num leaves      : " << _bvh.GetNumLeaves() << std::endl;
+    std::cout << "- bvh num cells       : " << _bvh.GetNumCells() << std::endl;
 
     for(size_t m = 0; m < _meshes.size(); ++m)
       _scene.AddGeometry(_meshesId[m], _meshes[m]);
@@ -260,10 +262,6 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     colors[2] = pxr::GfVec3f(1.f,0.f,0.f);
     colors[1] = pxr::GfVec3f(0.f,1.f,0.f);
     colors[0] = pxr::GfVec3f(0.f,0.f,1.f);
-
-    //pxr::GfSqrt(_bvh.GetDistanceSquared(seed)) + _bvh.GetSize().GetLength() * 0.1f;
- 
-    //points[1] = _bvh.Constraint(_bvh.GetRoot(), seed);
     
     if(_bvh.Closest(seed, &hit, DBL_MAX)) {
       Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
@@ -273,20 +271,7 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       points[1] = closest;
     }
   
-    
-
-    /* Brute force
-    float minDistance = FLT_MAX;
-    for(size_t t = 0; t < _mesh->GetNumTriangles(); ++t) {
-      Triangle* triangle = _mesh->GetTriangle(t);
-      triangle->Closest(positions, seed, &hit);
-    }
-
-    Triangle* triangle = _mesh->GetTriangle(hit.GetComponentIndex());
-    pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
-    points[1] = closest;
-    */
-
+  
     Location hit2;
     pxr::GfVec3f result;
     for (size_t m = 0; m < _meshes.size(); ++m)

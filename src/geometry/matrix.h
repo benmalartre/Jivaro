@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include "../common.h"
 #include <pxr/base/gf/math.h>
 
@@ -10,7 +11,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 template <typename T>
 class Matrix {
-#define INVALID_INDEX std::numeric_limits<size_t>::max()
+  static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
 public:
   enum Flags {

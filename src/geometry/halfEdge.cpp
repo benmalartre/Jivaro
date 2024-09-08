@@ -49,6 +49,12 @@ HalfEdgeGraph::GetEdge(int index)
   return &_halfEdges[index];
 }
 
+const HalfEdge*
+HalfEdgeGraph::GetEdge(int index) const
+{
+  return &_halfEdges[index];
+}
+
 HalfEdge*
 HalfEdgeGraph::GetAvailableEdge()
 {
