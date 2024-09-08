@@ -16,6 +16,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+static const size_t BVH::INVALID_INDEX = std::numeric_limits<size_t>::max();
+
 BVH::Cell::Cell()
   : _left(BVH::INVALID_INDEX)
   , _right(BVH::INVALID_INDEX)

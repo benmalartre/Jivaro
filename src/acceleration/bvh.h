@@ -19,7 +19,6 @@ class BVH : public Intersector
 {
 public:
   static const size_t INVALID_INDEX;
-  static const double EPSILON;
 
   class Cell : public pxr::GfRange3d
   {
