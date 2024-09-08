@@ -295,65 +295,12 @@ BVH::_ComputeCodeAsColor(const pxr::GfVec3d& point) const
   );
 }
 
-size_t 
-BVH::_FindSplit(size_t first, size_t last) const
-{
-  uint64_t firstCode = _leaves[first].code;
-  uint64_t lastCode = _leaves[last].code;
-
-  if (firstCode == lastCode)
-    return (first + last) >> 1;
-
-  size_t commonPrefix = MortonLeadingZeros(firstCode ^ lastCode);
-  size_t split = first;
-  size_t step = last - first;
-
-  do
-  {
-    step = (step + 1) >> 1;
-    size_t newSplit = split + step;
-
-    if (newSplit < last)
-    {
-      uint64_t splitCode = _leaves[newSplit].code;
-      size_t splitPrefix = MortonLeadingZeros(firstCode ^ splitCode);
-      if (splitPrefix > commonPrefix) {
-        split = newSplit;
-      }
-    }
-  } while (step > 1);
-
-  return split;
-}
-
-
-double 
-BVH:: _GetCellChildrenMinimumSilhouetteDistanceSq(const BVH::Cell* cell, const pxr::GfVec3f& point) const
-{
-  if(!cell) return DBL_MAX;
-  if(cell->GetType() == BVH::Cell::LEAF)
-    return (point - _ConstraintPointOnSilhouette(point, *cell)).GetLengthSq();
-
-  double leftDistanceSq = (point - _ConstraintPointOnSilhouette(point, *_GetCell(cell->GetLeft()))).GetLengthSq();
-  double rightDistanceSq = (point - _ConstraintPointOnSilhouette(point, *_GetCell(cell->GetRight()))).GetLengthSq();
-
-  return leftDistanceSq < rightDistanceSq ? leftDistanceSq : rightDistanceSq;
-}
-
-pxr::GfVec2f _GetCellDistancesSq(const BVH::Cell* cell, const pxr::GfVec3f& point)
-{
-  return pxr::GfVec2f(
-    cell->GetDistanceSquared(point),
-    (point - _ConstraintPointOnSilhouette(point, *cell)).GetLengthSq()
-  );
-}
-
 const Morton&
 BVH::_CellToMorton(size_t cellIdx) const
 {
   short cellType = _GetCell(cellIdx)->GetType();
   if(cellType == BVH::Cell::BRANCH || cellType == BVH::Cell::ROOT)
-    return BVH::INVALID_INDEX;//_branches[_cellToMorton[cellIdx]];
+    return { 0,0,0,NULL };//_branches[_cellToMorton[cellIdx]];
   else
     return _leaves[_cellToMorton[cellIdx]];
 }
@@ -565,7 +512,7 @@ BVH::_RecurseSortCells(
     return _leaves[first].data;
   }
 
-  size_t split = _FindSplit(first, last);
+  size_t split = MortonFindSplit(&_leaves[0], first, last);
 
   size_t leftIdx = _RecurseSortCells(first, split);
   size_t rightIdx = _RecurseSortCells(split + 1, last);

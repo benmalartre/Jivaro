@@ -100,11 +100,7 @@ protected:
   pxr::GfVec3f _ComputeHitPoint(Location* hit) const;
   uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
   pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
-  size_t _FindSplit(size_t first, size_t last) const;
   size_t _LeftOrRight(const BVH::Cell* cell, const pxr::GfVec3f &point, double maxDistance)const;
-
-  double _GetCellChildrenMinimumSilhouetteDistanceSq(const BVH::Cell* cell, const pxr::GfVec3f& point) const;
-
   const Morton& _CellToMorton(size_t  cellIdx) const;
 
   size_t _GetIndex(const BVH::Cell* cell) const;
