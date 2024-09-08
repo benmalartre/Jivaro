@@ -101,15 +101,8 @@ protected:
   uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
   pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
   size_t _FindSplit(size_t first, size_t last) const;
-  size_t _LeftOrRight(const BVH::Cell* cell, const pxr::GfVec3f &point, uint64_t code, double maxDistance)const;
+  size_t _LeftOrRight(const BVH::Cell* cell, const pxr::GfVec3f &point, double maxDistance)const;
 
-  size_t _FindClosestCell(const pxr::GfVec3f &point, size_t first, size_t last, Location *hit, size_t closest, size_t num)const;
-  size_t _FindClosestCell(const pxr::GfVec3f &point, uint64_t code)const;
-  size_t _FindClosestCell(uint64_t code)const;
-  size_t _FindClosestCell(const BVH::Cell* cell, const pxr::GfVec3f &point, uint64_t code, double maxDistance)const;
-  size_t _FindClosestBranch(const BVH::Cell* cell, const pxr::GfVec3f &point, uint64_t code)const;
-
-  bool _CheckCloserCells(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit, uint64_t code) const;
   double _GetCellChildrenMinimumSilhouetteDistanceSq(const BVH::Cell* cell, const pxr::GfVec3f& point) const;
 
   const Morton& _CellToMorton(size_t  cellIdx) const;
@@ -119,8 +112,6 @@ protected:
   const BVH::Cell* _GetCell(size_t index) const;
   size_t _RecurseSortCells(size_t first, size_t last);
   pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
-  bool _ShouldCheckCell(const BVH::Cell* cell, const pxr::GfVec3f& point, 
-    double radius) const;
 
   bool _Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const;
