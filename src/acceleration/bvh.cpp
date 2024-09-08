@@ -16,29 +16,6 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-/*
-static void _RearangeChildrenCells(BVH::Cell* lhs, BVH::Cell* rhs)
-{
-  if(lhs->IsLeaf() || rhs->IsLeaf())return;
-
-  if(lhs->GetLeft() && lhs->GetRight() && rhs->GetLeft() && rhs->GetRight()) {
-    pxr::GfRange3d alt1 = pxr::GfRange3d().UnionWith(*lhs->GetLeft()).UnionWith(*rhs->GetLeft());
-    pxr::GfRange3d alt2 = pxr::GfRange3d().UnionWith(*lhs->GetLeft()).UnionWith(*rhs->GetRight());
-
-    float alt1LengthSq = alt1.GetSize().GetLengthSq();
-    float alt2LengthSq = alt2.GetSize().GetLengthSq();
-    if( alt1 < alt2 && alt1 < lhs->GetSize().GetLengthSq()) {
-      std::swap(lhs->GetLeft(), rhs->GetLeft());
-      lhs->Set(alt1);
-       
-    } else if(alt2 < alt1 && alt2 < lhs->GetSize().GetLengthSq()) {
-
-    }
-  }
-}
-*/
-
-
 BVH::Cell::Cell()
   : _left(BVH::INVALID_INDEX)
   , _right(BVH::INVALID_INDEX)
@@ -75,45 +52,6 @@ BVH::Cell::Cell(Component* component, const pxr::GfRange3d& range)
   SetMin(range.GetMin());
   SetMax(range.GetMax());
 }
-
-pxr::GfVec3f _ConstraintPointInRange(const pxr::GfVec3f& point, const pxr::GfRange3d &range)
-{
-  return pxr::GfVec3f(
-    CLAMP(point[0], range.GetMin()[0], range.GetMax()[0]),
-    CLAMP(point[1], range.GetMin()[1], range.GetMax()[1]),
-    CLAMP(point[2], range.GetMin()[2], range.GetMax()[2])
-  );
-}
-
-inline double _ContraintValueOnSilhouette(double value, double minimum, double maximum)
-{
-  return (value >= minimum && value <= maximum) ? 
-    minimum + (maximum - value) : 
-    (value > (minimum + maximum) /2.0 ? minimum : maximum);
-}
-
-pxr::GfVec3f _ConstraintPointOnSilhouette(const pxr::GfVec3f& point, const pxr::GfRange3d &range)
-{
-  const pxr::GfVec3f middle(range.GetMidpoint());
-  const pxr::GfVec3f minimum(range.GetMin());
-  const pxr::GfVec3f maximum(range.GetMax());
-  return pxr::GfVec3f(
-    _ContraintValueOnSilhouette(point[0], minimum[0], maximum[0]),
-    _ContraintValueOnSilhouette(point[1], minimum[1], maximum[1]),
-    _ContraintValueOnSilhouette(point[2], minimum[2], maximum[2])
-  );
-}
-
-const size_t BVH::INVALID_INDEX = std::numeric_limits<size_t>::max();
-const double BVH::EPSILON = 1e-6;
-
-
-pxr::GfVec3f 
-BVH::Constraint(const BVH::Cell* cell, const pxr::GfVec3f &point) const
-{
-  return _ConstraintPointOnSilhouette(point, *cell);
-}
-
 
 bool
 BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
@@ -298,9 +236,9 @@ BVH::_CellToMorton(size_t cellIdx) const
 {
   short cellType = _GetCell(cellIdx)->GetType();
   if(cellType == BVH::Cell::BRANCH || cellType == BVH::Cell::ROOT)
-    return { 0,0,0,NULL };//_branches[_cellToMorton[cellIdx]];
+    return { 0,0,0, NULL };
   else
-    return _leaves[_cellToMorton[cellIdx]];
+    return _mortons[_cellToMorton[cellIdx]];
 }
 
 size_t
@@ -371,8 +309,8 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
-  _leaves.clear();
-  _leaves.reserve(_numComponents);
+  _mortons.clear();
+  _mortons.reserve(_numComponents);
 
   // first load all geometries
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
@@ -395,7 +333,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
           uint64_t code = _ComputeCode(_GetCell(leafIdx)->GetMidpoint());
           uint64_t minimum = _ComputeCode(_GetCell(leafIdx)->GetMin());
           uint64_t maximum = _ComputeCode(_GetCell(leafIdx)->GetMax());
-          _leaves.push_back({ code, minimum, maximum, leafIdx});
+          _mortons.push_back({ code, minimum, maximum, leafIdx});
         }  
         
       }
@@ -411,8 +349,8 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _root->SetType(BVH::Cell::ROOT);
   
   _cellToMorton.resize(_cells.size(), BVH::INVALID_INDEX);
-  for(size_t m = 0; m < _leaves.size(); ++m)
-    _cellToMorton[_leaves[m].data] = m;
+  for(size_t m = 0; m < _mortons.size(); ++m)
+    _cellToMorton[_mortons[m].data] = m;
 
 }
 

@@ -93,14 +93,11 @@ public:
 
   void GetLeaves(const BVH::Cell* cell, std::vector<const Cell*>& leaves) const;
   void GetBranches(const BVH::Cell* cell, std::vector<const Cell*>& branches) const;
-
-  pxr::GfVec3f Constraint(const BVH::Cell* cell, const pxr::GfVec3f &point) const;
   
 protected:
   pxr::GfVec3f _ComputeHitPoint(Location* hit) const;
   uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
   pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
-  size_t _LeftOrRight(const BVH::Cell* cell, const pxr::GfVec3f &point, double maxDistance)const;
   const Morton& _CellToMorton(size_t  cellIdx) const;
 
   size_t _GetIndex(const BVH::Cell* cell) const;
