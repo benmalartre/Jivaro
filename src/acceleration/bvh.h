@@ -76,7 +76,7 @@ public:
   Morton SortCells();
   pxr::GfRange3f UpdateCells();
 
-
+  size_t GetNumComponents(){return _numComponents;};
    // visual debug
   void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
     pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf) override;
@@ -117,9 +117,9 @@ protected:
 private:
   Cell*                           _root;
   std::vector<Cell>               _cells;
-  std::vector<Morton>             _leaves;
-  std::vector<Morton>             _branches;
+  std::vector<Morton>             _mortons;
   std::vector<int>                _cellToMorton;
+  size_t                          _numComponents;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

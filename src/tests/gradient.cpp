@@ -55,7 +55,6 @@ TestGradient::_BenchmarckClosestPoints()
   pxr::VtArray<pxr::GfVec3f> result1(N);
 
   uint64_t startT1 = CurrentTime();
-  std::cout << "brute force started" << std::endl;
   
   for (size_t n = 0; n < N; ++n) {
     Location hit;
@@ -64,15 +63,12 @@ TestGradient::_BenchmarckClosestPoints()
       if (_ConstraintPointOnMesh((Mesh*)_meshes[m], points[n], &hit, &result))
         result1[n] = result;
   }
-  
-  std::cout << "brute force ended" << std::endl;
 
   uint64_t elapsedT1 = CurrentTime() - startT1;
   
   pxr::VtArray<pxr::GfVec3f> result2(N);
 
   uint64_t startT2 = CurrentTime();
-  std::cout << "accelerated started" << std::endl;
   for(size_t n = 0; n < N  ; ++n) {
     Location hit;
     if(_bvh.Closest(points[n], &hit, FLT_MAX)) {
@@ -83,10 +79,9 @@ TestGradient::_BenchmarckClosestPoints()
       result2[n] = closest;
     }
   }
-  std::cout << "accelerated ended" << std::endl;
   uint64_t elapsedT2 = CurrentTime() - startT2;
 
-  std::cout << "================== benchmark closest point query with " << N << std::endl;
+  std::cout << "================== benchmark closest points with " << N << " random points" << std::endl;
   std::cout << "brute force took : " << (elapsedT1 * 1e-6) << " seconds" << std::endl;
   std::cout << "with bvh took : " << (elapsedT2 * 1e-6) << " seconds" << std::endl;
 
@@ -132,7 +127,6 @@ TestGradient::_BenchmarckClosestPoints2()
   for(auto& point: points)
     point = pxr::GfVec3f(RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10));
 
-  std::cout << "parallel closest points started" << std::endl;
   uint64_t startT = CurrentTime();
   pxr::VtArray<pxr::GfVec3f> results(N);
 
@@ -141,10 +135,9 @@ TestGradient::_BenchmarckClosestPoints2()
       std::placeholders::_2, &points[0], &results[0]));
 
   uint64_t elapsedT = CurrentTime() - startT;
-  std::cout << "parallel closest points ended" << std::endl;
   
 
-  std::cout << "================== benchmark closest point query with " << N << std::endl;
+  std::cout << "================== benchmark closest points with " << N << " random points" << std::endl;
   std::cout << "with bvh took : " << (elapsedT * 1e-6) << " seconds" << std::endl;
 
 }
@@ -172,6 +165,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
     std::cout << "================== bvh initialize : "  << std::endl;
     std::cout << "took : " << (elapsedT * 1e-6) << " seconds" << std::endl;
+    std::cout << "num components : " << _bvh.GetNumComponents() << std::endl;
 
     for(size_t m = 0; m < _meshes.size(); ++m)
       _scene.AddGeometry(_meshesId[m], _meshes[m]);

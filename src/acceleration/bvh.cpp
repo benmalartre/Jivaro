@@ -210,30 +210,28 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = GetCell(cell->GetRight());
 
-    switch(_LeftOrRight(cell, point, hit->GetT()))
-    {
-      case 0:
-        return _Closest(left, point, hit, hit->GetT());
-      
-      case 1:
-        return _Closest(right, point, hit, hit->GetT());
+    double maxDistanceSq = hit->GetT() * hit->GetT();
+    bool checkLeft = left->GetDistanceSquared(point) < maxDistanceSq;
+    bool checkRight = right->GetDistanceSquared(point) < maxDistanceSq;
 
-      case 2:
-      {
-        bool leftFound(false), rightFound(false);
-        if(left->GetDistanceSquared(point) < right->GetDistanceSquared(point)) {
-          leftFound = _Closest(left, point, hit, hit->GetT());
-          rightFound = _Closest(right, point, hit, hit->GetT());
-        } else {
-          rightFound = _Closest(right, point, hit, hit->GetT());
-          leftFound = _Closest(left, point, hit, hit->GetT());
-        }
-
-        return leftFound || rightFound;
+    if(checkLeft && checkRight) {
+      bool leftFound(false), rightFound(false);
+      if(left->GetDistanceSquared(point) < right->GetDistanceSquared(point)) {
+        leftFound = _Closest(left, point, hit, hit->GetT());
+        rightFound = _Closest(right, point, hit, hit->GetT());
+      } else {
+        rightFound = _Closest(right, point, hit, hit->GetT());
+        leftFound = _Closest(left, point, hit, hit->GetT());
       }
-      case 3:
-        return false;
+
+      return leftFound || rightFound;
     }
+    else if( checkLeft)
+      return _Closest(left, point, hit, hit->GetT());
+    else if(checkRight)
+      return _Closest(right, point, hit, hit->GetT());
+    else 
+      return false;
     
   }
 }
@@ -305,23 +303,6 @@ BVH::_CellToMorton(size_t cellIdx) const
     return _leaves[_cellToMorton[cellIdx]];
 }
 
-size_t 
-BVH::_LeftOrRight(const BVH::Cell* cell, const pxr::GfVec3f &point, double maxDistance) const
-{
-  double maxDistanceSq = maxDistance * maxDistance;
-  bool checkLeft = _GetCell(cell->GetLeft())->GetDistanceSquared(point) < maxDistanceSq;
-  bool checkRight = _GetCell(cell->GetRight())->GetDistanceSquared(point) < maxDistanceSq;
-
-  if(checkLeft && checkRight)
-    return 2;
-  else if( checkLeft)
-    return 0;
-  else if(checkRight)
-    return 1;
-
-  return 3;
-}
-
 size_t
 BVH::AddCell( BVH::Cell* lhs, BVH::Cell* rhs)
 {
@@ -381,17 +362,17 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   
   const pxr::GfBBox3d bbox = GetGeometry(0)->GetBoundingBox(true);
   pxr::GfRange3d accum = bbox.GetRange();
-  size_t numComponents = ((Mesh*)GetGeometry(0))->GetTrianglePairs().size();
+  _numComponents = ((Mesh*)GetGeometry(0))->GetTrianglePairs().size();
   for (size_t i = 1; i < GetNumGeometries(); ++i) {
     const pxr::GfBBox3d bbox = GetGeometry(i)->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
-    numComponents += ((Mesh*)GetGeometry(1))->GetTrianglePairs().size();
+    _numComponents += ((Mesh*)GetGeometry(1))->GetTrianglePairs().size();
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
   _leaves.clear();
-  _leaves.reserve(numComponents);
+  _leaves.reserve(_numComponents);
 
   // first load all geometries
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
@@ -428,46 +409,10 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 
   _root = _GetCell(morton.data);
   _root->SetType(BVH::Cell::ROOT);
-
-  /*
-  _branches.reserve(numBranches);
-
-  for(size_t c = numLeaves; c < _cells.size(); ++c) { 
-    _branches.push_back({
-      _ComputeCode(_cells[c].GetMidpoint()),
-      _ComputeCode(_cells[c].GetMin()),
-      _ComputeCode(_cells[c].GetMax()), c});
-  }
-  std::sort(_branches.begin(), _branches.end());
-  */
   
   _cellToMorton.resize(_cells.size(), BVH::INVALID_INDEX);
   for(size_t m = 0; m < _leaves.size(); ++m)
     _cellToMorton[_leaves[m].data] = m;
-
-  /*
-  for(size_t m = 0; m < _branches.size(); ++m)
-    _cellToMorton[_branches[m].data] = m;
-  */
-
-  
-
-/*
-  std::cout << "bounding box " << GetMin() << "," << GetMax() << std::endl;
-  uint64_t code = _ComputeCode(pxr::GfVec3f(4, 8, 7));
-
-  uint64_t minCode = _ComputeCode(GetMin());
-  uint64_t maxCode = _ComputeCode(GetMax());
-
-  uint64_t bigmin = MortonBigMin(code, minCode, maxCode);
-  uint64_t litmax = MortonLitMax(code, minCode, maxCode);
-
-  std::cout << "code : " << MortonDecode3D(code) << std::endl;
-  std::cout << "minimum : " << MortonDecode3D(minCode) << std::endl;
-  std::cout << "maximum : " << MortonDecode3D(maxCode) << std::endl;
-  std::cout << "bigmin : " << MortonDecode3D(bigmin) << std::endl;
-  std::cout << "litmax : " << MortonDecode3D(litmax) << std::endl;
-  */
 
 }
 
@@ -509,10 +454,10 @@ BVH::_RecurseSortCells(
   size_t           last)
 {
   if (first == last) {
-    return _leaves[first].data;
+    return _mortons[first].data;
   }
 
-  size_t split = MortonFindSplit(&_leaves[0], first, last);
+  size_t split = MortonFindSplit(&_mortons[0], first, last);
 
   size_t leftIdx = _RecurseSortCells(first, split);
   size_t rightIdx = _RecurseSortCells(split + 1, last);
@@ -522,9 +467,9 @@ BVH::_RecurseSortCells(
 Morton 
 BVH::SortCells()
 {
-  size_t numLeaves = _leaves.size();
+  size_t numLeaves = _mortons.size();
   
-  std::sort(_leaves.begin(), _leaves.end());
+  std::sort(_mortons.begin(), _mortons.end());
 
   size_t topIdx = _RecurseSortCells(0, static_cast<int>(numLeaves) - 1);
   BVH::Cell* top = _GetCell(topIdx);
