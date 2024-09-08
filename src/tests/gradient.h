@@ -26,6 +26,10 @@ public:
 protected:
   void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
 
+  void _BenchmarckClosestPoints();
+  void _BenchmarckClosestPoints2();
+  void _ClosestPointQuery(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results);
+
 private:
   pxr::SdfPath              _bvhId;
   BVH                       _bvh;

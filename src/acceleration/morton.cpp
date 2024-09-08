@@ -218,7 +218,6 @@ uint32_t MortonUpperBound(const Morton* mortons, int first, int last, uint64_t c
   return last;
 }
 
-
 int _MortonMSBPosition( uint64_t code)
 {
   if(!code) return -1;

@@ -44,7 +44,8 @@ bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit
   return found;
 }
 
-void _BenchmarckClosestPoints(BVH* bvh, std::vector<Geometry*>& meshes)
+void 
+TestGradient::_BenchmarckClosestPoints()
 {
   size_t N = 1000;
   pxr::VtArray<pxr::GfVec3f> points(N);
@@ -59,8 +60,8 @@ void _BenchmarckClosestPoints(BVH* bvh, std::vector<Geometry*>& meshes)
   for (size_t n = 0; n < N; ++n) {
     Location hit;
     pxr::GfVec3f result;
-    for (size_t m = 0; m < meshes.size(); ++m)
-      if (_ConstraintPointOnMesh((Mesh*)meshes[m], points[n], &hit, &result))
+    for (size_t m = 0; m < _meshes.size(); ++m)
+      if (_ConstraintPointOnMesh((Mesh*)_meshes[m], points[n], &hit, &result))
         result1[n] = result;
   }
   
@@ -74,8 +75,8 @@ void _BenchmarckClosestPoints(BVH* bvh, std::vector<Geometry*>& meshes)
   std::cout << "accelerated started" << std::endl;
   for(size_t n = 0; n < N  ; ++n) {
     Location hit;
-    if(bvh->Closest(points[n], &hit, FLT_MAX)) {
-      Mesh* hitMesh = (Mesh*)meshes[hit.GetGeometryIndex()];
+    if(_bvh.Closest(points[n], &hit, FLT_MAX)) {
+      Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
       const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
       Triangle* triangle = hitMesh->GetTriangle(hit.GetComponentIndex());
       pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
@@ -88,6 +89,63 @@ void _BenchmarckClosestPoints(BVH* bvh, std::vector<Geometry*>& meshes)
   std::cout << "================== benchmark closest point query with " << N << std::endl;
   std::cout << "brute force took : " << (elapsedT1 * 1e-6) << " seconds" << std::endl;
   std::cout << "with bvh took : " << (elapsedT2 * 1e-6) << " seconds" << std::endl;
+
+}
+
+// thread task
+void TestGradient::_ClosestPointQuery(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results)
+{
+  for (size_t index = begin; index < end; ++index) {
+    double minDistance = DBL_MAX;
+    Location hit;
+    if (_bvh.Closest(positions[index], &hit, DBL_MAX)) {
+      const Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
+      const pxr::GfMatrix4d& matrix = collided->GetMatrix();
+      switch (collided->GetType()) {
+      case Geometry::MESH:
+      {
+        Mesh* mesh = (Mesh*)collided;
+        Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
+
+        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &matrix);
+        break;
+      }
+      case Geometry::CURVE:
+      {
+        //Curve* curve = (Curve*)collided;
+        //Edge* edge = curve->GetEdge(hit.GetElementIndex());
+        //results[index] = hit.GetPosition(collided->GetPositionsCPtr(), &edge->vertices[0], 2, curve->GetMatrix());
+        break;
+      }
+      default:
+        continue;
+      }
+    }
+  }
+}
+
+void 
+TestGradient::_BenchmarckClosestPoints2()
+{
+  size_t N = 1000000;
+  pxr::VtArray<pxr::GfVec3f> points(N);
+  for(auto& point: points)
+    point = pxr::GfVec3f(RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10));
+
+  std::cout << "parallel closest points started" << std::endl;
+  uint64_t startT = CurrentTime();
+  pxr::VtArray<pxr::GfVec3f> results(N);
+
+  pxr::WorkParallelForN(N,
+    std::bind(&TestGradient::_ClosestPointQuery, this, std::placeholders::_1, 
+      std::placeholders::_2, &points[0], &results[0]));
+
+  uint64_t elapsedT = CurrentTime() - startT;
+  std::cout << "parallel closest points ended" << std::endl;
+  
+
+  std::cout << "================== benchmark closest point query with " << N << std::endl;
+  std::cout << "with bvh took : " << (elapsedT * 1e-6) << " seconds" << std::endl;
 
 }
 
@@ -181,7 +239,8 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_xformId, (Geometry*) _xform);
   _scene.InjectGeometry(stage, _xformId, _xform, pxr::UsdTimeCode::Default());
 
-  _BenchmarckClosestPoints(&_bvh, _meshes);
+  _BenchmarckClosestPoints();
+  _BenchmarckClosestPoints2();
   
 }
 
