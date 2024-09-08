@@ -7,7 +7,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 pxr::GfVec3d MortonToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p)
 {
-  const pxr::GfVec3d scale(range.GetSize() / (float)MORTOM_MAX_L);
+  const pxr::GfVec3d scale(range.GetSize() / (float)MORTON_MAX_L);
   const pxr::GfVec3d min(range.GetMin());
   return pxr::GfVec3d(
     scale[0] * p[0] + min[0],
@@ -18,7 +18,7 @@ pxr::GfVec3d MortonToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p)
 
 pxr::GfVec3i WorldToMorton(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
 {
-  const pxr::GfVec3d scale(range.GetSize() / (float)MORTOM_MAX_L);
+  const pxr::GfVec3d scale(range.GetSize() / (float)MORTON_MAX_L);
   const pxr::GfVec3d min(range.GetMin());
   const pxr::GfVec3d invScale(1.0 / scale[0], 1.0 / scale[1], 1.0 / scale[2]);
 
@@ -34,13 +34,13 @@ pxr::GfVec3i& MortonClamp(pxr::GfVec3i& p)
 {
   for (size_t axis = 0; axis < 3; ++axis) {
     if (p[axis] < 0)p[axis] = 0;
-    else if (p[axis] > MORTOM_MAX_L) p[axis] = MORTOM_MAX_L;
+    else if (p[axis] > MORTON_MAX_L) p[axis] = MORTON_MAX_L;
   }
   return p;
 }
 
 // ENCODING
-static uint64_t MORTOM_ENCODE_2D_MASK[6] = { 
+static uint64_t MORTON_ENCODE_2D_MASK[6] = { 
   0x00000000ffffffff, 
   0x0000ffff0000ffff, 
   0x00ff00ff00ff00ff,
@@ -51,12 +51,12 @@ static uint64_t MORTOM_ENCODE_2D_MASK[6] = {
 
 static inline uint64_t _SplitBy2bits(const uint32_t a) {
   uint64_t x = a;
-  x = (x | (uint64_t)x << 32) & MORTOM_ENCODE_2D_MASK[0];
-  x = (x | x << 16) & MORTOM_ENCODE_2D_MASK[1];
-  x = (x | x << 8) & MORTOM_ENCODE_2D_MASK[2];
-  x = (x | x << 4) & MORTOM_ENCODE_2D_MASK[3];
-  x = (x | x << 2) & MORTOM_ENCODE_2D_MASK[4];
-  x = (x | x << 1) & MORTOM_ENCODE_2D_MASK[5];
+  x = (x | (uint64_t)x << 32) & MORTON_ENCODE_2D_MASK[0];
+  x = (x | x << 16) & MORTON_ENCODE_2D_MASK[1];
+  x = (x | x << 8) & MORTON_ENCODE_2D_MASK[2];
+  x = (x | x << 4) & MORTON_ENCODE_2D_MASK[3];
+  x = (x | x << 2) & MORTON_ENCODE_2D_MASK[4];
+  x = (x | x << 1) & MORTON_ENCODE_2D_MASK[5];
   return x;
 }
 
@@ -65,7 +65,7 @@ uint32_t MortonEncode2D(const pxr::GfVec2i& p)
   return 0l | _SplitBy2bits(p[0]) | (_SplitBy2bits(p[1]) << 1);
 }
 
-static uint64_t MORTOM_ENCODE_3D_MASK[6] = { 
+static uint64_t MORTON_ENCODE_3D_MASK[6] = { 
   0x00000000001fffff, 
   0x001f00000000ffff, 
   0x001f0000ff0000ff, 
@@ -76,12 +76,12 @@ static uint64_t MORTOM_ENCODE_3D_MASK[6] = {
 
 static inline uint64_t _SplitBy3bits(const uint32_t a) {
   uint64_t x = 0ul;
-  x = (x | (uint64_t)a) & MORTOM_ENCODE_3D_MASK[0];
-  x = (x | (uint64_t)x << 32) & MORTOM_ENCODE_3D_MASK[1];
-  x = (x | x << 16) & MORTOM_ENCODE_3D_MASK[2];
-  x = (x | x << 8) & MORTOM_ENCODE_3D_MASK[3];
-  x = (x | x << 4) & MORTOM_ENCODE_3D_MASK[4];
-  x = (x | x << 2) & MORTOM_ENCODE_3D_MASK[5];
+  x = (x | (uint64_t)a) & MORTON_ENCODE_3D_MASK[0];
+  x = (x | (uint64_t)x << 32) & MORTON_ENCODE_3D_MASK[1];
+  x = (x | x << 16) & MORTON_ENCODE_3D_MASK[2];
+  x = (x | x << 8) & MORTON_ENCODE_3D_MASK[3];
+  x = (x | x << 4) & MORTON_ENCODE_3D_MASK[4];
+  x = (x | x << 2) & MORTON_ENCODE_3D_MASK[5];
   return x;
 }
 
@@ -91,7 +91,7 @@ uint64_t MortonEncode3D(const pxr::GfVec3i& p)
 }
 
 // DECODING
-static uint64_t MORTOM_DECODE_2D_MASK[6] = { 
+static uint64_t MORTON_DECODE_2D_MASK[6] = { 
   0x00000000ffffffff, 
   0x0000ffff0000ffff, 
   0x00ff00ff00ff00ff, 
@@ -101,12 +101,12 @@ static uint64_t MORTOM_DECODE_2D_MASK[6] = {
 };
 
 static inline uint32_t _GetSecondBits(const uint64_t m) {
-  uint64_t x = m & MORTOM_DECODE_2D_MASK[5];
-  x = (x ^ (x >> 1)) & MORTOM_DECODE_2D_MASK[4];
-  x = (x ^ (x >> 2)) & MORTOM_DECODE_2D_MASK[3];
-  x = (x ^ (x >> 4)) & MORTOM_DECODE_2D_MASK[2];
-  x = (x ^ (x >> 8)) & MORTOM_DECODE_2D_MASK[1];
-  x = (x ^ (x >> 16)) & MORTOM_DECODE_2D_MASK[0];
+  uint64_t x = m & MORTON_DECODE_2D_MASK[5];
+  x = (x ^ (x >> 1)) & MORTON_DECODE_2D_MASK[4];
+  x = (x ^ (x >> 2)) & MORTON_DECODE_2D_MASK[3];
+  x = (x ^ (x >> 4)) & MORTON_DECODE_2D_MASK[2];
+  x = (x ^ (x >> 8)) & MORTON_DECODE_2D_MASK[1];
+  x = (x ^ (x >> 16)) & MORTON_DECODE_2D_MASK[0];
   return x;
 }
 
@@ -117,7 +117,7 @@ pxr::GfVec2i MortonDecode2D(uint32_t code)
   return pxr::GfVec2i(x, y);
 }
 
-static uint64_t MORTOM_DECODE_3D_MASK[6] = { 
+static uint64_t MORTON_DECODE_3D_MASK[6] = { 
   0x00000000001fffff, 
   0x001f00000000ffff, 
   0x001f0000ff0000ff, 
@@ -128,12 +128,12 @@ static uint64_t MORTOM_DECODE_3D_MASK[6] = {
 
 
 static inline uint32_t _GetThirdBits(const uint64_t m) {
-  uint64_t x = m & MORTOM_DECODE_3D_MASK[5];
-  x = (x ^ (x >> 2)) & MORTOM_DECODE_3D_MASK[4];
-  x = (x ^ (x >> 4)) & MORTOM_DECODE_3D_MASK[3];
-  x = (x ^ (x >> 8)) & MORTOM_DECODE_3D_MASK[2];
-  x = (x ^ (x >> 16)) & MORTOM_DECODE_3D_MASK[1];
-  x = (x ^ (x >> 32)) & MORTOM_DECODE_3D_MASK[0];
+  uint64_t x = m & MORTON_DECODE_3D_MASK[5];
+  x = (x ^ (x >> 2)) & MORTON_DECODE_3D_MASK[4];
+  x = (x ^ (x >> 4)) & MORTON_DECODE_3D_MASK[3];
+  x = (x ^ (x >> 8)) & MORTON_DECODE_3D_MASK[2];
+  x = (x ^ (x >> 16)) & MORTON_DECODE_3D_MASK[1];
+  x = (x ^ (x >> 32)) & MORTON_DECODE_3D_MASK[0];
   return x;
 }
 
@@ -186,25 +186,108 @@ uint32_t MortonFindSplit(Morton* mortons, int first, int last)
   return split;
 }
 
-uint64_t MortonConstraintPointInBox(uint64_t point, uint64_t bmin, uint64_t bmax)
+uint32_t MortonLowerBound(const Morton* mortons, int first, int last, uint64_t code)
 {
-  uint32_t x = _GetThirdBits(point);
-  uint32_t y = _GetThirdBits(point >> 1);
-  uint32_t z = _GetThirdBits(point >> 2);
+  if(mortons[first].code >= code)return first;
+  while (first < last) {
+    size_t middle = (first + last)>>1;
+    if(code < mortons[middle].code)
+      last = middle;
 
-  uint32_t minx = _GetThirdBits(bmin);
-  uint32_t miny = _GetThirdBits(bmin >> 1);
-  uint32_t minz = _GetThirdBits(bmin >> 2);
+    else if(code > mortons[middle].code) 
+      first = middle + 1;
 
-  uint32_t maxx = _GetThirdBits(bmax);
-  uint32_t maxy = _GetThirdBits(bmax >> 1);
-  uint32_t maxz = _GetThirdBits(bmax >> 2);
+    else break;
+  }
+  return first;
+}
 
-  return MortonEncode3D(pxr::GfVec3i(
-    CLAMP(x, minx, maxx),
-    CLAMP(y, miny, maxy),
-    CLAMP(z, minz, maxz)
-  ));
+uint32_t MortonUpperBound(const Morton* mortons, int first, int last, uint64_t code)
+{
+  if(mortons[last].code <= code)return last;
+  while (first < last) {
+    size_t middle = (first + last)>>1;
+    if(code < mortons[middle].code)
+      last = middle;
+
+    else if(code > mortons[middle].code) 
+      first = middle + 1;
+
+    else break;
+  }
+  return last;
+}
+
+// Constants
+/// Returns the ith corner of the range, in the following order:
+/// LDB, RDB, LUB, RUB, LDF, RDF, LUF, RUF. Where L/R is left/right,
+/// D/U is down/up, and B/F is back/front.
+uint64_t MortonGetCorner(size_t i)
+{
+  switch(i) {
+    case 0:
+      return 0x0;
+
+    case 1:
+      return 0x1249249249249249;
+
+    case 2:
+      return 0x2492492492492492;
+    
+    case 3:
+      return 0x36db6db6db6db6db;
+
+    case 4:
+      return 0x4924924924924924;
+    
+    case 5:
+      return 0x5b6db6db6db6db6d;
+
+    case 6:
+      return 0x6db6db6db6db6db6;
+    
+    case 7:
+      return 0x7fffffffffffffff;
+  }
+}
+
+uint64_t MortonGetSplit(size_t i)
+{
+  switch(i) {
+    case 0:
+      return 0x1ffffffffffffff;
+
+    case 1:
+      return 0x11fffffffffffff7;
+
+    case 2:
+      return 0x41ffffffffffffdf;
+
+    case 3:
+      return 0x51ffffffffffffd7;
+
+    case 4:
+      return 0x21ffffffffffffef;
+      
+    case 5:
+      return 0x31ffffffffffffe7;
+
+    case 6:
+      return 0x61ffffffffffffcf;
+    
+    case 7:
+      return 0x71ffffffffffffc7;
+  }
+}
+
+uint64_t MortonMiddle(uint64_t lhs, uint64_t rhs)
+{
+  return (lhs + rhs) >> 1;
+}
+
+double MortonRatio(uint64_t code, uint64_t lhs, uint64_t rhs)
+{
+  return (double) code / (double)(lhs + rhs);
 }
 
 bool MortonCheckBoxIntersects(uint64_t pmin, uint64_t pmax, uint64_t bmin, uint64_t bmax)
@@ -334,7 +417,6 @@ bool MortonIsInRange(uint64_t zval, uint64_t zmin, uint64_t zmax)
     return true;
 
   else
-    //return zmin <= zval && zval <= zmax;
     return zval == MortonLitMax(MortonBigMin(zval, zmin, zmax), zmin, zmax);
 }
 
@@ -439,5 +521,6 @@ uint64_t MortonLitMax( uint64_t zval, uint64_t zmin, uint64_t zmax)
 
   return litmax;
 }
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

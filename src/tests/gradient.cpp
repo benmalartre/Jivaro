@@ -55,6 +55,7 @@ void _BenchmarckClosestPoints(BVH* bvh, std::vector<Geometry*>& meshes)
 
   uint64_t startT1 = CurrentTime();
   std::cout << "brute force started" << std::endl;
+  
   for (size_t n = 0; n < N; ++n) {
     Location hit;
     pxr::GfVec3f result;
@@ -105,7 +106,14 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create bvh
   if (_meshes.size()) {
+
+    uint64_t startT = CurrentTime();
     _bvh.Init(_meshes);
+
+    uint64_t elapsedT = CurrentTime() - startT;
+
+    std::cout << "================== bvh initialize : "  << std::endl;
+    std::cout << "took : " << (elapsedT * 1e-6) << " seconds" << std::endl;
 
     for(size_t m = 0; m < _meshes.size(); ++m)
       _scene.AddGeometry(_meshesId[m], _meshes[m]);
