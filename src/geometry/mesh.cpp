@@ -1267,7 +1267,18 @@ bool
 Mesh::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const 
 {
-  return false;
+  double minDistance = DBL_MAX;
+  size_t index = Component::INVALID_INDEX;
+
+  size_t numTriangles = _triangles.size();
+
+  bool found = false;
+
+  for(size_t t = 0; t < numTriangles; ++t)
+    if(_triangles[t].Closest(&_positions[0], point, hit))
+      found = true;
+      
+  return found;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

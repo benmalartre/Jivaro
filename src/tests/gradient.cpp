@@ -244,34 +244,34 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
-  if(_meshes.size()) {
+  if (_meshes.size()) {
     size_t numPoints = _meshes[0]->GetNumPoints();
     const pxr::GfVec3f* positions = ((Deformable*)_meshes[0])->GetPositionsCPtr();
     const pxr::GfRange3f range(_meshes[0]->GetBoundingBox().GetRange());
 
     const pxr::GfMatrix4d& xform = _xform->GetMatrix();
     pxr::GfVec3f seed(xform[3][0], xform[3][1], xform[3][2]);
-    
+
     pxr::GfMatrix4f matrix;
     pxr::GfVec3f position;
     Location hit;
     pxr::VtArray<pxr::GfVec3f> points(3);
     pxr::VtArray<pxr::GfVec3f> colors(3);
     pxr::VtArray<float> widths(3, 1.f);
-    points[0] = seed; 
-    colors[2] = pxr::GfVec3f(1.f,0.f,0.f);
-    colors[1] = pxr::GfVec3f(0.f,1.f,0.f);
-    colors[0] = pxr::GfVec3f(0.f,0.f,1.f);
-    
-    if(_bvh.Closest(seed, &hit, DBL_MAX)) {
+    points[0] = seed;
+    colors[2] = pxr::GfVec3f(1.f, 0.f, 0.f);
+    colors[1] = pxr::GfVec3f(0.f, 1.f, 0.f);
+    colors[0] = pxr::GfVec3f(0.f, 0.f, 1.f);
+
+    if (_bvh.Closest(seed, &hit, DBL_MAX)) {
       Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
       const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
       Triangle* triangle = hitMesh->GetTriangle(hit.GetComponentIndex());
       pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
       points[1] = closest;
     }
-  
-  
+
+
     Location hit2;
     pxr::GfVec3f result;
     for (size_t m = 0; m < _meshes.size(); ++m)
@@ -281,8 +281,8 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     _points->SetPositions(points);
     _points->SetColors(colors);
     _points->SetWidths(widths);
-  
-    _scene.MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
+
+    _scene.MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints | pxr::HdChangeTracker::DirtyPrimvar);
 
     colors.resize(numPoints);
     for (size_t i = 0; i < numPoints; ++i) {
@@ -293,8 +293,10 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     }
     ((Mesh*)_meshes[0])->SetColors(colors);
 
-    for(size_t m = 0; m < _meshes.size(); ++m)
+    for (size_t m = 0; m < _meshes.size(); ++m)
       _scene.MarkPrimDirty(_meshesId[m], pxr::HdChangeTracker::DirtyPrimvar);
+
+    if (!pxr::GfIsClose(points[1], points[2], 0.0001f))std::cout << "divergence : " << (points[2] - points[1]) << std::endl;
   }
 
 }

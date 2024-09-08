@@ -149,13 +149,13 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = GetCell(cell->GetRight());
 
-    double maxDistanceSq = hit->GetT() * hit->GetT();
-    bool checkLeft = left->GetDistanceSquared(point) < maxDistanceSq;
-    bool checkRight = right->GetDistanceSquared(point) < maxDistanceSq;
+    double maxDistSq = hit->GetT() * hit->GetT();
+    double leftDistSq = left->GetDistanceSquared(point);
+    double rightDistSq = right->GetDistanceSquared(point);
 
-    if(checkLeft && checkRight) {
+    if(leftDistSq < maxDistSq && rightDistSq < maxDistSq) {
       bool leftFound(false), rightFound(false);
-      if(left->GetDistanceSquared(point) < right->GetDistanceSquared(point)) {
+      if(leftDistSq < rightDistSq) {
         leftFound = _Closest(left, point, hit, hit->GetT());
         rightFound = _Closest(right, point, hit, hit->GetT());
       } else {
@@ -165,9 +165,9 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
 
       return leftFound || rightFound;
     }
-    else if( checkLeft)
+    else if( leftDistSq < maxDistSq)
       return _Closest(left, point, hit, hit->GetT());
-    else if(checkRight)
+    else if(rightDistSq < maxDistSq)
       return _Closest(right, point, hit, hit->GetT());
     else 
       return false;
