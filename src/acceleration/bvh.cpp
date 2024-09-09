@@ -224,7 +224,6 @@ pxr::GfVec3d
 BVH::_ComputeCodeAsColor(const pxr::GfVec3d& point) const
 {
   return MortonColor(*this, point);
-  uint64_t morton = _ComputeCode( point);
 }
 
 const Morton&

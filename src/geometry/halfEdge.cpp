@@ -650,40 +650,47 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
   }
 }
 
-/*
-float
-Mesh::ComputeCotangentWeight(size_t p0, size_t p1) const 
-{
-  const HalfEdge *edge = _halfEdges.GetEdgeFromVertices(p0, p1);
-  if(edge->twin == HalfEdge::INVALID_INDEX)return 0.f;
-  
-  const HalfEdge *opposite = _halfEdges.GetEdge(edge->twin);
-  const HalfEdge *lhs = _halfEdges.GetEdge(edge->next);
-  const HalfEdge *rhs = _halfEdges.GetEdge(opposite->next);
-
-  const pxr::GfVec3f& i = _positions[edge->vertex];
-  const pxr::GfVec3f& j = _positions[opposite->vertex];
-  const pxr::GfVec3f& u = _positions[lhs->vertex];
-  const pxr::GfVec3f& v = _positions[rhs->vertex];
-
-  // compute the vectors in order to compute the triangles
-  pxr::GfVec3f vec1(u - i);
-  pxr::GfVec3f vec2(u - j);
-  pxr::GfVec3f vec3(v - i);
-  pxr::GfVec3f vec4(v - j);
-
-  // compute alpha and beta
-  float alpha = acos((vec1*vec2) / (vec1.GetLength() * vec2.GetLength()));
-  float beta = acos((vec3*vec4) / (vec3.GetLength() * vec4.GetLength()));
-
-  // compute the weight
-  return _CoTangentWeight(alpha) + _CoTangentWeight(beta);
-}
-*/
-
 void 
 HalfEdgeGraph::ComputeCotangentWeights(const pxr::GfVec3f *positions)
 {
+  size_t numPoints = _neighborsCount.size();
+  std::vector<int> visited(numPoints, 0);
+  _cotangentWeights.resize(_neighbors.size() + _neighborsCount.size());
+
+  
+  for (HalfEdge& edge : _halfEdges) {
+    if(visited[edge.vertex]) continue;
+
+    float sum = 0.f;
+    for(size_t n = 0; n < _neighborsCount[edge.vertex]; ++n) {
+      const HalfEdge *opposite = GetEdge(edge.twin);
+      const HalfEdge *lhs = GetEdge(edge.next);
+      const HalfEdge *rhs = GetEdge(opposite->next);
+
+      const pxr::GfVec3f& i = positions[edge.vertex];
+      const pxr::GfVec3f& j = positions[opposite->vertex];
+      const pxr::GfVec3f& u = positions[lhs->vertex];
+      const pxr::GfVec3f& v = positions[rhs->vertex];
+
+      // compute the vectors in order to compute the triangles
+      pxr::GfVec3f vec1(u - i);
+      pxr::GfVec3f vec2(u - j);
+      pxr::GfVec3f vec3(v - i);
+      pxr::GfVec3f vec4(v - j);
+
+      // compute alpha and beta
+      float alpha = acos((vec1*vec2) / (vec1.GetLength() * vec2.GetLength()));
+      float beta = acos((vec3*vec4) / (vec3.GetLength() * vec4.GetLength()));
+
+      float cotan = _CotangentWeight(alpha) + _CotangentWeight(beta);
+
+      _cotangentWeights[_neighborsOffset[edge.vertex] + edge.vertex + n] = cotan;
+      sum += cotan;
+    }
+    _cotangentWeights[_neighborsOffset[edge.vertex] + edge.vertex + _neighborsCount[edge.vertex]] = sum;
+    visited[edge.vertex]++;
+  }
+
 
 }
 
@@ -929,6 +936,18 @@ int
 HalfEdgeGraph::GetAdjacent(size_t index, size_t adjacent)
 {
    return _adjacents[_adjacentsOffset[index]+adjacent];
+}
+
+const float*  
+HalfEdgeGraph::GetCotangentWeights(size_t index)
+{
+  return &_cotangentWeights[_neighborsOffset[index] + index];
+}
+
+float  
+HalfEdgeGraph::GetCotangentWeight(size_t index, size_t neighbor)
+{
+   return _cotangentWeights[_neighborsOffset[index] + index + neighbor];
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

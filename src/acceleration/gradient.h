@@ -40,6 +40,7 @@ protected:
   void _FindFeatures(Mesh* mesh);
   void _UpdateKroneckerDelta(Mesh* mesh);
   void _SolveCotanLaplace();
+  double _ComputeTime(Mesh* mesh);
 
 
 private:

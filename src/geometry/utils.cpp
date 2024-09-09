@@ -256,26 +256,27 @@ ComputeLineTangents(const pxr::GfVec3f* points, const pxr::GfVec3f* ups,
   }
 }
 
+pxr::GfVec3f _ComputeCentroidFromPoints(size_t n, const pxr::GfVec3f* positions, const int *indices=NULL)
+{
+  pxr::GfVec3f sum(0.0);
+  for(size_t i = 0; i < n; ++i) {
+    sum += positions[indices ? indices[i] : i];
+  }
+  return sum * (1.0 / (float)n);
+}
+
 // Constructs a plane from a collection of points
 // so that the summed squared distance to all points is minimzized
-pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points) 
+pxr::GfPlane _ComputePlaneFromPoints(size_t n, const pxr::GfVec3f* positions, const int *indices=NULL) 
 {
-  if(points.size()) {
-      return pxr::GfPlane();
-  }
-
-  pxr::GfVec3f sum(0.0);
-  for(const auto& point: points) {
-      sum += point;
-  }
-  pxr::GfVec3f centroid = sum * (1.0 / (float)points.size());
+  const pxr::GfVec3f centroid = _ComputeCentroidFromPoints(n, positions, indices);
 
   // Calc full 3x3 covariance matrix, excluding symmetries:
   float xx = 0.0; float xy = 0.0; float xz = 0.0;
   float yy = 0.0; float yz = 0.0; float zz = 0.0;
 
-  for(const auto& point: points) {
-    pxr::GfVec3f r = point - centroid;
+  for(size_t i = 0; i < n; ++i) {
+    pxr::GfVec3f r = positions[indices ? indices[i] : i] - centroid;
     xx += r[0] * r[0];
     xy += r[0] * r[1];
     xz += r[0] * r[2];
@@ -292,8 +293,8 @@ pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points)
   if (det_y > det_max)det_max = det_y;
   if (det_z > det_max) det_max = det_z;
   if(det_max <= 0.0) {
-      return pxr::GfPlane(); // The points don't span a plane
-    }
+    return pxr::GfPlane(); // The points don't span a plane
+  }
 
   // Pick path with best conditioning:
   if(det_max == det_x) {
@@ -307,6 +308,87 @@ pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points)
       pxr::GfVec3f(xy*yz - xz*yy, xy*xz - yz*xx, det_z).GetNormalized());
   };
 }
+
+pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points) 
+{
+  return _ComputePlaneFromPoints(points.size(), &points[0]);
+}
+
+pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions) 
+{
+  return _ComputePlaneFromPoints(indices.size(), positions, &indices[0]);
+}
+
+// Constructs a line from a collection of points
+// so that the summed squared distance to all points is minimzized
+pxr::GfLine _ComputeLineFromPoints(size_t n, const pxr::GfVec3f* positions, const int *indices=NULL, size_t maxIterations=5) 
+{
+  const pxr::GfVec3f centroid = _ComputeCentroidFromPoints(n, positions, indices);
+
+  pxr::GfVec3f direction(0, 1, 0);
+  if (!n || !maxIterations) return pxr::GfLine(centroid, direction);
+  
+  CVector3f point;
+  CVector3f last = direction;
+  for (size_t i = 0; i < maxIterations; ++i) {
+    for (size_t p = 0; p < numPoints; ++p) {
+      point = points[p] - centroid;
+      direction += point * pxr::GfDot(point, last);
+    }
+    direction.Normalize();
+    if (pxr::GfIsClose(last, direction, 0.00001)) break;
+    last = direction;
+  }
+
+  return pxr::GfLine(centroid, last);
+}
+
+pxr::GfLine ComputeLineFromPoints(const pxr::VtArray<pxr::GfVec3f>& points) 
+{
+  return _ComputeLineFromPoints(points.size(), &points[0]);
+}
+
+pxr::GfPlane ComputeLineFromPoints(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions) 
+{
+  return _ComputeLineFromPoints(indices.size(), positions, &indices[0]);
+}
+
+// Constructs the covariant matrix from a collection of points
+pxr::GfMatrix4f _ComputeCovarianceMatrix(size_t n, const pxr::GfVec3f* positions, const int *indices=NULL) 
+{
+  const pxr::GfVec3f centroid = _ComputeCentroidFromPoints(n, positions, indices);
+
+  float xx = 0.0; float xy = 0.0; float xz = 0.0;
+  float yy = 0.0; float yz = 0.0; float zz = 0.0;
+
+  for(size_t i = 0; i < n; ++i) {
+    pxr::GfVec3f r = positions[indices ? indices[i] : i] - centroid;
+    xx += r[0] * r[0];
+    xy += r[0] * r[1];
+    xz += r[0] * r[2];
+    yy += r[1] * r[1];
+    yz += r[1] * r[2];
+    zz += r[2] * r[2];
+  }
+
+  return pxr::GfMatrix4f({
+    xx, xy, xz, 0.f,
+    xy, yy, yz, 0.f,
+    xz, yz, zz, 0.f,
+    centroid[0], centroid[1], centroid[2], 1.f
+    });
+}
+
+pxr::GfMatrix4f ComputeCovarianceMatrix(const pxr::VtArray<pxr::GfVec3f>& points) 
+{
+  return _ComputeCovarianceMatrix(points.size(), &points[0]);
+}
+
+pxr::GfMatrix4f ComputeCovarianceMatrix(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions) 
+{
+  return _ComputeCovarianceMatrix(indices.size(), positions, &indices[0]);
+}
+
 
 static size_t
 GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions)

@@ -7,6 +7,8 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/plane.h>
+#include <pxr/base/gf/line.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 
@@ -154,9 +156,29 @@ ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
                     const pxr::VtArray<pxr::GfVec3f>& ups,
                     pxr::VtArray<pxr::GfVec3f>& tangents);
 
-/// Compute plane from points
+/// Compute best plane from points
 pxr::GfPlane 
 ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points);
+
+pxr::GfPlane 
+ComputePlaneFromPoints(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions);
+
+/// Compute best line from points
+pxr::GfLine
+ComputeLineFromPoints(const pxr::VtArray<pxr::GfVec3f> &points);
+
+pxr::GfLine
+ComputeLineFromPoints(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions);
+
+/// Compute covariance matrix
+pxr::GfMatrix4f
+ComputeCovarianceMatrix(const pxr::VtArray<pxr::GfVec3f>& points);
+
+pxr::GfMatrix4f
+ComputeCovarianceMatrix(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions);
+
+
+
 
 /// Longest edge in a triangle
 static size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, 

@@ -464,6 +464,36 @@ void Mesh::ComputeNeighbors()
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
 }
 
+const float* 
+Mesh::GetCotangentWeights(size_t index)
+{
+  if (!BITMASK_CHECK(_flags, Mesh::COTANGENTWEIGHTS)) {
+    _halfEdges.ComputeCotangentWeights(&_positions[0]);
+    BITMASK_SET(_flags, Mesh::COTANGENTWEIGHTS);
+  }
+  return _halfEdges.GetCotangentWeights(index);
+}
+
+int 
+Mesh::GetCotangentWeight(size_t index, size_t neighbor) 
+{
+  if (!BITMASK_CHECK(_flags, Mesh::COTANGENTWEIGHTS)) {
+    _halfEdges.ComputeCotangentWeights(&_positions[0]);
+    BITMASK_SET(_flags, Mesh::COTANGENTWEIGHTS);
+  }
+  return _halfEdges.GetCotangentWeight(index, neighbor);
+}
+
+void 
+Mesh::ComputeCotangentWeights()
+{
+  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
+    ComputeNeighbors();
+  }
+  _halfEdges.ComputeCotangentWeights(&_positions[0]);
+  BITMASK_SET(_flags, Mesh::COTANGENTWEIGHTS);
+}
+
 
 void Mesh::Set(
   const pxr::VtArray<pxr::GfVec3f>& positions,

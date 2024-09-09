@@ -75,6 +75,9 @@ public:
   const int* GetAdjacents(size_t index);
   int GetAdjacent(size_t index, size_t adjacent);
 
+  const float* GetCotangentWeights(size_t index);
+  float GetCotangentWeight(size_t index, size_t neighbor);
+
   HalfEdge* GetEdgeFromVertex(size_t vertex);
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
   const HalfEdge* GetEdgeFromVertices(size_t start, size_t end) const;
@@ -131,7 +134,7 @@ private:
   pxr::VtArray<int>                    _neighbors; // first ring
   pxr::VtArray<int>                    _neighborsCount;
   pxr::VtArray<int>                    _neighborsOffset;
-  pxr::VtArray<float>                  _cotangentWeight;
+  pxr::VtArray<float>                  _cotangentWeights;
 
   friend Mesh;
 

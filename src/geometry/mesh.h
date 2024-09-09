@@ -65,6 +65,8 @@ public:
   pxr::GfVec3f GetTriangleVertexNormal(const Triangle* T, uint32_t index) const;    // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;                        // triangle normal
 
+  const HalfEdge* GetEdge(size_t index) const {return _halfEdges.GetEdge(index);};
+  HalfEdge* GetEdge(size_t index){return _halfEdges.GetEdge(index);};
   pxr::VtArray<HalfEdge>& GetEdges(){return _halfEdges.GetEdges();};
   HalfEdgeGraph* GetEdgesGraph(){return &_halfEdges;};
   const pxr::VtArray<HalfEdge>& GetEdges()const{return _halfEdges.GetEdges();};
@@ -78,6 +80,9 @@ public:
   size_t GetNumNeighbors(size_t index);
   const int* GetNeighbors(size_t index);
   int GetNeighbor(size_t index, size_t neighbor);
+
+  const float* GetCotangentWeights(size_t index);
+  int GetCotangentWeight(size_t index, size_t neighbor);
   
   Triangle* GetTriangle(uint32_t index) {return &_triangles[index];};
   const Triangle* GetTriangle(uint32_t index) const {return &_triangles[index];};
@@ -99,6 +104,7 @@ public:
   void ComputeHalfEdges();
   void ComputeNeighbors();
   void ComputeAdjacents();
+  void ComputeCotangentWeights();
   void ComputeTrianglePairs();
 
   float TriangleArea(uint32_t index);
