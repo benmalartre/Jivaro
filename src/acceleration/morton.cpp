@@ -218,6 +218,33 @@ uint32_t MortonUpperBound(const Morton* mortons, int first, int last, uint64_t c
   return last;
 }
 
+inline pxr::GfVec3f _MortonColor(double value)
+{
+  static const int NUM_COLORS = 8;
+  static float color[NUM_COLORS][3] = { {1,0,0}, {1,1,0}, {0,1,1}, {0,1,0}, {0,1,1}, {0,0,1}, {1,0,1}, {1,0,0} };
+  
+  int idx1;
+  int idx2;
+  float fraction = 0;
+  
+  value = value * (NUM_COLORS-1);        // Will multiply value by NUM_COLORS - 1.
+  idx1  = floor(value);                  // Our desired color will be after this index.
+  idx2  = idx1+1;                        // ... and before this index (inclusive).
+  fraction = value - float(idx1);    // Distance between the two indexes (0-1).
+  
+  return pxr::GfVec3f(color[idx1]) * (1.f-fraction) + pxr::GfVec3f(color[idx2]) * fraction;
+}
+pxr::GfVec3f MortonColor(const pxr::GfRange3d& range, const pxr::GfVec3d &p)
+{
+  uint64_t code = MortonEncode3D(WorldToMorton(range, p));
+  return _MortonColor((double)code / (double) 0x7fffffffffffffff);
+}
+
+pxr::GfVec3f MortonColor(const Morton& morton)
+{
+  return _MortonColor((double)morton.code / (double) 0x7fffffffffffffff);
+}
+
 int _MortonMSBPosition( uint64_t code)
 {
   if(!code) return -1;

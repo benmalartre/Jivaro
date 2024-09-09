@@ -16,11 +16,11 @@ struct Polygon : public Component {
 
   Polygon()
     : Component() {};
-  Polygon(uint32_t index, const pxr::VtArray<Triangles>& tris)
+  Polygon(uint32_t index, const pxr::VtArray<size_t>& vertices)
     : Component(index)
-    , triangles(tris){};
+    , vertices(vertices){};
 
-  std::vector<Triangle*> triangles;    
+  std::vector<size_t> vertices;    
 
   pxr::GfVec3f GetCenter(Deformable* geom);
   pxr::GfVec3f GetPosition(Deformable* geom, short idx);

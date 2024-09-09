@@ -43,10 +43,11 @@ private:
 class Mesh : public Deformable {
 public:
   enum Flag {
-    ADJACENTS     = 1 << 0,
-    NEIGHBORS     = 1 << 1,
-    HALFEDGES     = 1 << 2,
-    TRIANGLEPAIRS = 1 << 3
+    ADJACENTS         = 1 << 0,
+    NEIGHBORS         = 1 << 1,
+    HALFEDGES         = 1 << 2,
+    TRIANGLEPAIRS     = 1 << 3,
+    COTANGENTWEIGHTS  = 1 << 4
   };
   Mesh(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world);
@@ -99,8 +100,6 @@ public:
   void ComputeNeighbors();
   void ComputeAdjacents();
   void ComputeTrianglePairs();
-
-  float ComputeCotangentWeight(size_t p0, size_t p1) const;
 
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();

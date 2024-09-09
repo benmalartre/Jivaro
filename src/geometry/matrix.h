@@ -158,15 +158,14 @@ void Matrix<T>::TransposeInPlace() {
 template <typename T>
 size_t Matrix<T>::GetIndex(size_t rows, size_t columns) const
 {
-  if (rows < _rows && columns < _columns) {
-    if (_IsTransposed()) {
-      return _rows * _columns + rows;
-    }
-    else {
-      return _columns * rows + columns;
-    }
-  }
-  return INVALID_INDEX;
+  if (rows >= _rows || columns >= _columns)
+    return INVALID_INDEX;
+
+  if (_IsTransposed())
+    return _rows * _columns + rows;
+
+  else
+    return _columns * rows + columns;
 }
 
 

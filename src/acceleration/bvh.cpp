@@ -223,13 +223,8 @@ BVH::_ComputeCode(const pxr::GfVec3d& point) const
 pxr::GfVec3d 
 BVH::_ComputeCodeAsColor(const pxr::GfVec3d& point) const
 {
+  return MortonColor(*this, point);
   uint64_t morton = _ComputeCode( point);
-  pxr::GfVec3i p = MortonDecode3D(morton);
-  return pxr::GfVec3d(
-    p[0] / (float)MORTON_MAX_L, 
-    p[1] / (float)MORTON_MAX_L, 
-    p[2] / (float)MORTON_MAX_L
-  );
 }
 
 const Morton&

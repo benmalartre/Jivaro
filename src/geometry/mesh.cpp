@@ -1186,45 +1186,6 @@ void Mesh::VoronoiDiagram(const std::vector<pxr::GfVec3f>& points)
   */
 }
 
-inline float _CoTangentWeight(float x)
-{
-  static const float eps = 1e-6f;
-  const float cotanMax = pxr::GfCos( eps ) / pxr::GfSin( eps );
-  return pxr::GfCos(x)/pxr::GfSin(x);
-  //float cotan = pxr::GfCos(x)/pxr::GfSin(x);
-  //return cotan < -cotanMax ? -cotanMax : cotan > cotanMax ? cotanMax : cotan;
-}
-
-
-float
-Mesh::ComputeCotangentWeight(size_t p0, size_t p1) const 
-{
-  const HalfEdge *edge = _halfEdges.GetEdgeFromVertices(p0, p1);
-  if(edge->twin == HalfEdge::INVALID_INDEX)return 0.f;
-  
-  const HalfEdge *opposite = _halfEdges.GetEdge(edge->twin);
-  const HalfEdge *lhs = _halfEdges.GetEdge(edge->next);
-  const HalfEdge *rhs = _halfEdges.GetEdge(opposite->next);
-
-  const pxr::GfVec3f& i = _positions[edge->vertex];
-  const pxr::GfVec3f& j = _positions[opposite->vertex];
-  const pxr::GfVec3f& u = _positions[lhs->vertex];
-  const pxr::GfVec3f& v = _positions[rhs->vertex];
-
-  // compute the vectors in order to compute the triangles
-  pxr::GfVec3f vec1(u - i);
-  pxr::GfVec3f vec2(u - j);
-  pxr::GfVec3f vec3(v - i);
-  pxr::GfVec3f vec4(v - j);
-
-  // compute alpha and beta
-  float alpha = acos((vec1*vec2) / (vec1.GetLength() * vec2.GetLength()));
-  float beta = acos((vec3*vec4) / (vec3.GetLength() * vec4.GetLength()));
-
-  // compute the weight
-  return _CoTangentWeight(alpha) + _CoTangentWeight(beta);
-}
-
 
 void 
 Mesh::Randomize(float value)

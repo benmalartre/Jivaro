@@ -29,6 +29,20 @@ HalfEdge* HalfEdgeGraph::ItUniqueEdge::Next()
   }
 }
 
+
+void
+HalfEdgeGraph::AllocateEdges(size_t num)
+{
+  size_t first = _halfEdges.size();
+  _halfEdges.resize(first + num);
+  _halfEdgeUsed.resize(first + num);
+  for (size_t edgeIdx = first; edgeIdx < (first + num); ++edgeIdx) {
+    HalfEdge* edge = &_halfEdges[edgeIdx];
+    _halfEdgeUsed[edgeIdx] = false;
+    _availableEdges.push(edgeIdx);
+  }
+}
+
 float
 HalfEdgeGraph::GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const
 {
@@ -380,9 +394,6 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
   );
 }
 
-// TODO alternative method for compute vertex neighborhood
-// now we can miss some vertex neighborhood when there are holes in the geometry
-// resulting in half-edges without twins
 HalfEdge* 
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
@@ -528,15 +539,6 @@ HalfEdgeGraph::_TriangulateFace(const HalfEdge* edge)
   }
 }
 
-static bool 
-_IsNeighborRegistered(const pxr::VtArray<int>& neighbors, int idx)
-{
-  for (int neighbor: neighbors) {
-    if (neighbor == idx)return true;
-  }
-  return false;
-}
-
 void HalfEdgeGraph::ComputeAdjacents()
 {
   size_t numPoints = _boundary.size();
@@ -648,18 +650,43 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
   }
 }
 
-void
-HalfEdgeGraph::AllocateEdges(size_t num)
+/*
+float
+Mesh::ComputeCotangentWeight(size_t p0, size_t p1) const 
 {
-  size_t first = _halfEdges.size();
-  _halfEdges.resize(first + num);
-  _halfEdgeUsed.resize(first + num);
-  for (size_t edgeIdx = first; edgeIdx < (first + num); ++edgeIdx) {
-    HalfEdge* edge = &_halfEdges[edgeIdx];
-    _halfEdgeUsed[edgeIdx] = false;
-    _availableEdges.push(edgeIdx);
-  }
+  const HalfEdge *edge = _halfEdges.GetEdgeFromVertices(p0, p1);
+  if(edge->twin == HalfEdge::INVALID_INDEX)return 0.f;
+  
+  const HalfEdge *opposite = _halfEdges.GetEdge(edge->twin);
+  const HalfEdge *lhs = _halfEdges.GetEdge(edge->next);
+  const HalfEdge *rhs = _halfEdges.GetEdge(opposite->next);
+
+  const pxr::GfVec3f& i = _positions[edge->vertex];
+  const pxr::GfVec3f& j = _positions[opposite->vertex];
+  const pxr::GfVec3f& u = _positions[lhs->vertex];
+  const pxr::GfVec3f& v = _positions[rhs->vertex];
+
+  // compute the vectors in order to compute the triangles
+  pxr::GfVec3f vec1(u - i);
+  pxr::GfVec3f vec2(u - j);
+  pxr::GfVec3f vec3(v - i);
+  pxr::GfVec3f vec4(v - j);
+
+  // compute alpha and beta
+  float alpha = acos((vec1*vec2) / (vec1.GetLength() * vec2.GetLength()));
+  float beta = acos((vec3*vec4) / (vec3.GetLength() * vec4.GetLength()));
+
+  // compute the weight
+  return _CoTangentWeight(alpha) + _CoTangentWeight(beta);
 }
+*/
+
+void 
+HalfEdgeGraph::ComputeCotangentWeights(const pxr::GfVec3f *positions)
+{
+
+}
+
 
 bool
 HalfEdgeGraph::FlipEdge(HalfEdge* edge)

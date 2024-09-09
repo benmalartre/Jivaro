@@ -58,6 +58,8 @@ uint32_t MortonFindSplit(const Morton* mortons, int first, int last);
 uint32_t MortonLowerBound(const Morton* mortons, int first, int last, uint64_t code);
 uint32_t MortonUpperBound(const Morton* mortons, int first, int last, uint64_t code);
 
+pxr::GfVec3f MortonColor(const pxr::GfRange3d &range, const pxr::GfVec3d &p);
+pxr::GfVec3f MortonColor(const Morton& morton);
 
 uint64_t MortonBigMin( uint64_t zval, uint64_t minimum, uint64_t maximum);
 uint64_t MortonLitMax( uint64_t zval, uint64_t minimum, uint64_t maximum);

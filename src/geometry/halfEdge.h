@@ -15,6 +15,7 @@ class Mesh;
 struct HalfEdge
 {
   static const int INVALID_INDEX = -1;
+
   int vertex;    // vertex index
   int twin;      // opposite half-edge
   int prev;      // previous half-edge  
@@ -26,6 +27,8 @@ struct HalfEdge
 class HalfEdgeGraph {
 public:
  
+  static inline const float EPSILON = 1e-6f;
+
   struct ItUniqueEdge {
     const HalfEdgeGraph&      graph;
     int                       index;
@@ -40,6 +43,7 @@ public:
   void ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors);
   void ComputeAdjacents(const HalfEdge* edge, pxr::VtArray<int>& adjacents);
   void ComputeTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const;
+  void ComputeCotangentWeights(const pxr::GfVec3f *positions);
 
   void AllocateEdges(size_t num);
   bool FlipEdge(HalfEdge* edge);
@@ -108,7 +112,7 @@ protected:
   void _ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors, bool connected=false);
   size_t _GetEdgeIndex(const HalfEdge* edge) const;
   size_t _GetFaceVerticesCount(const HalfEdge* edge);
-
+  inline float _CotangentWeight(float x);
 
 private:
   // half-edge data
@@ -127,10 +131,20 @@ private:
   pxr::VtArray<int>                    _neighbors; // first ring
   pxr::VtArray<int>                    _neighborsCount;
   pxr::VtArray<int>                    _neighborsOffset;
+  pxr::VtArray<float>                  _cotangentWeight;
 
   friend Mesh;
 
 };
+
+inline float 
+HalfEdgeGraph::_CotangentWeight(float x)
+{
+  const float cotanMax = pxr::GfCos( HalfEdgeGraph::EPSILON ) / pxr::GfSin( HalfEdgeGraph::EPSILON  );
+  //return pxr::GfCos(x)/pxr::GfSin(x);
+  float cotan = pxr::GfCos(x)/pxr::GfSin(x);
+  return cotan < -cotanMax ? -cotanMax : cotan > cotanMax ? cotanMax : cotan;
+}
 
 using HalfEdgesKeys = std::vector<std::pair<uint64_t, HalfEdge*>>;
 using HalfEdgeKey  = HalfEdgesKeys::value_type;
