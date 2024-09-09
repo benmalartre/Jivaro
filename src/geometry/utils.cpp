@@ -328,11 +328,11 @@ pxr::GfLine _ComputeLineFromPoints(size_t n, const pxr::GfVec3f* positions, cons
   pxr::GfVec3f direction(0, 1, 0);
   if (!n || !maxIterations) return pxr::GfLine(centroid, direction);
   
-  CVector3f point;
-  CVector3f last = direction;
+  pxr::GfVec3f point;
+  pxr::GfVec3f last = direction;
   for (size_t i = 0; i < maxIterations; ++i) {
-    for (size_t p = 0; p < numPoints; ++p) {
-      point = points[p] - centroid;
+    for (size_t p = 0; p < n; ++p) {
+      point = positions[indices ? indices[p] : p] - centroid;
       direction += point * pxr::GfDot(point, last);
     }
     direction.Normalize();
@@ -348,7 +348,7 @@ pxr::GfLine ComputeLineFromPoints(const pxr::VtArray<pxr::GfVec3f>& points)
   return _ComputeLineFromPoints(points.size(), &points[0]);
 }
 
-pxr::GfPlane ComputeLineFromPoints(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions) 
+pxr::GfLine ComputeLineFromPoints(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions) 
 {
   return _ComputeLineFromPoints(indices.size(), positions, &indices[0]);
 }
