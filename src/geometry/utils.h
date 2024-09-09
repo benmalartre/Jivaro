@@ -40,9 +40,6 @@ typedef std::vector<ManipTargetDesc> ManipTargetDescList;
 void _GetManipTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
   ManipXformVectors& vectors, pxr::UsdTimeCode& time);
 
-const double GEOM_EPSILON = std::numeric_limits<double>::epsilon();
-const std::size_t GEOM_INVALID_INDEX = std::numeric_limits<std::size_t>::max();
-
 template<typename T>
 static inline double ComputeDistanceSquared(const T& a, const T& b)
 {
@@ -91,8 +88,8 @@ static inline bool CheckPointInSphere(const pxr::GfVec3d& center, float radius, 
 }
 
 template<typename T>
-inline bool CheckPointsEquals(const T& a, const T& b) {
-  return pxr::GfIsClose(a, b, GEOM_EPSILON);
+inline bool CheckPointsEquals(const T& a, const T& b, float eps=std::numeric_limits<float>::epsilon()) {
+  return pxr::GfIsClose(a, b, eps);
 };
 
 /// Barycentric coordinates

@@ -19,6 +19,10 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Delaunay {
+
+  static const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
+
+
   static inline size_t _FastMod(const size_t i, const size_t c) {
     return i >= c ? i % c : i;
   }
@@ -97,10 +101,6 @@ class Delaunay {
     return (d[0] * (e[1] * cp - bp * f[1]) -
       d[1] * (e[0] * cp - bp * f[0]) +
       ap * (e[0] * f[1] - e[1] * f[0])) < 0.0;
-  }
-
-  static inline bool _CheckPointEquality(const pxr::GfVec2d& a, const pxr::GfVec2d& b) {
-    return pxr::GfIsClose(a, b, GEOM_EPSILON);
   }
 
   // monotonically increases with real angle, but doesn't need expensive trigonometry
