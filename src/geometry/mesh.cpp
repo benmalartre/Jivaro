@@ -494,6 +494,25 @@ Mesh::ComputeCotangentWeights()
   BITMASK_SET(_flags, Mesh::COTANGENTWEIGHTS);
 }
 
+float 
+Mesh::ComputeEdgeAverageLength()
+{
+  if (!BITMASK_CHECK(_flags, Mesh::HALFEDGES)) {
+    ComputeHalfEdges();
+  }
+
+  double sum = 0.0;
+  int cnt = 0;
+  HalfEdgeGraph::ItUniqueEdge it(_halfEdges);
+  HalfEdge* edge = it.Next();
+  while(edge) {
+    sum += _halfEdges.GetLengthSq(edge, &_positions[0]);
+    cnt++;
+    edge = it.Next();
+  }
+  return static_cast<float>(pxr::GfSqrt(sum) / (double)cnt);
+}
+
 
 void Mesh::Set(
   const pxr::VtArray<pxr::GfVec3f>& positions,

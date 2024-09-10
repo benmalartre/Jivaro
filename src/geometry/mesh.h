@@ -106,6 +106,7 @@ public:
   void ComputeAdjacents();
   void ComputeCotangentWeights();
   void ComputeTrianglePairs();
+  float ComputeEdgeAverageLength();
 
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();

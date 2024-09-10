@@ -175,11 +175,23 @@ pxr::GfMatrix4f
 ComputeCovarianceMatrix(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions);
 
 
+static pxr::GfQuatf RandomQuaternion() {
+  float x,y,z, u,v,w, s;
+  do { 
+    x = RANDOM_LO_HI(-1.0,1.0); 
+    y = RANDOM_LO_HI(-1.0,1.0); 
+    z = x*x + y*y; 
+  } while (z > 1);
 
+  do { 
+    u = RANDOM_LO_HI(-1.0,1.0); 
+    v = RANDOM_LO_HI(-1.0,1.0); 
+    w = u*u + v*v; 
+  } while (w > 1);
 
-/// Longest edge in a triangle
-static size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, 
-  const pxr::GfVec3f* positions);
+  s = sqrt((1-z) / w);
+  return pxr::GfQuatf(x, y, s*u, s*v).GetNormalized();
+}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

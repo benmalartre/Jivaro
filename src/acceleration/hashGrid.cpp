@@ -5,7 +5,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 void 
-HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing, size_t stride)
+HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
 {
   _spacing = spacing>1e-6 ? spacing : 1e-6;
   _scl = 1.f/_spacing;
@@ -14,18 +14,18 @@ HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing, size_t strid
   _cellStart.resize(_tableSize + 1);
   _cellEntries.resize(_n);
 
-  Update(points, stride);
+  Update(points);
 }
 
 void 
-HashGrid::Update(const pxr::GfVec3f* points, size_t stride)
+HashGrid::Update(const pxr::GfVec3f* points)
 {
   uint64_t T = CurrentTime();
   memset(&_cellStart[0], 0, _cellStart.size() * sizeof(int));
   memset(&_cellEntries[0], 0, _cellEntries.size() * sizeof(int));
 
   for (size_t pointIdx = 0; pointIdx < _n; ++pointIdx) {
-    int64_t hash = (this->*_HashCoords)(_IntCoords(points[pointIdx + pointIdx * stride]));
+    int64_t hash = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
     _cellStart[hash]++;
   }
 
@@ -37,7 +37,7 @@ HashGrid::Update(const pxr::GfVec3f* points, size_t stride)
   _cellStart[_tableSize] = start;
 
   for (size_t pointIdx = 0; pointIdx < _n; ++pointIdx) {
-    int64_t hash = (this->*_HashCoords)(_IntCoords(points[pointIdx + pointIdx * stride]));
+    int64_t hash = (this->*_HashCoords)(_IntCoords(points[pointIdx]));
     _cellStart[hash]--;
     _cellEntries[_cellStart[hash]] = pointIdx;
   }
@@ -45,9 +45,9 @@ HashGrid::Update(const pxr::GfVec3f* points, size_t stride)
 
 size_t 
 HashGrid::Closests(size_t index, const pxr::GfVec3f* positions,
-  std::vector<int>& closests, float distance, size_t stride) const
+  std::vector<int>& closests, float distance) const
 {
-  const pxr::GfVec3f& point = positions[index + index * stride];
+  const pxr::GfVec3f& point = positions[index];
   const pxr::GfVec3i minCoords = _IntCoords(point - pxr::GfVec3f(distance));
   const pxr::GfVec3i maxCoords = _IntCoords(point + pxr::GfVec3f(distance));
   const float distance2 = distance * distance;
@@ -61,7 +61,7 @@ HashGrid::Closests(size_t index, const pxr::GfVec3f* positions,
 
         for (int n = start; n < end; ++n) {
           if(_cellEntries[n] != index && 
-            (point - positions[_cellEntries[n] + _cellEntries[n] * stride]).GetLengthSq() < distance2)
+            (point - positions[_cellEntries[n]]).GetLengthSq() < distance2)
               closests.push_back(_cellEntries[n]);
         }
       }

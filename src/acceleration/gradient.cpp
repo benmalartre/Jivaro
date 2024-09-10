@@ -7,48 +7,11 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+// https://github.com/IasonManolas/Geodesics_in_heat/blob/master/src/geodesicdistance.hpp
 
 
 
-void Gradient::Init(Mesh* mesh)
-{
-  size_t numPoints = mesh->GetNumPoints();
-  _flags.resize(numPoints);
-  _gradient.resize(numPoints);
-  _value.resize(numPoints);
-}
-  
-void Gradient::Compute(Mesh* mesh)
-{
-
-}
-
-void Gradient::SetSeed(pxr::VtArray<int> &seed)
-{
-  for(size_t index = 0; index < seed.size(); ++index)
-    BIT_SET(_flags[index], Gradient::SEED);
-}
-
-void Gradient::SetFixed(pxr::VtArray<int> &fixed)
-{
-  for(size_t index = 0; index < fixed.size(); ++index)
-    BIT_SET(_flags[index], Gradient::FIXED);
-}
-
-void Gradient::_FindFeatures(Mesh* mesh)
-{
-  BVH bvh;
-  bvh.Init({ mesh });
-
-
-}
-
-/**
- * 
- * t = h^2   
- * h is the mean spacing between adjacent nodes 
- * @return t 
- */
+/*
 double
 Gradient::_ComputeTime(Mesh* mesh) 
 {
@@ -65,6 +28,7 @@ Gradient::_ComputeTime(Mesh* mesh)
   }
   return (sum /n ) * (sum /n);
 }
+*/
 	
 
 

@@ -321,7 +321,7 @@ pxr::GfPlane ComputePlaneFromPoints(const pxr::VtArray<int>& indices, const pxr:
 
 // Constructs a line from a collection of points
 // so that the summed squared distance to all points is minimzized
-pxr::GfLine _ComputeLineFromPoints(size_t n, const pxr::GfVec3f* positions, const int *indices=NULL, size_t maxIterations=5) 
+pxr::GfLine _ComputeLineFromPoints(size_t n, const pxr::GfVec3f* positions, const int *indices=NULL, size_t maxIterations=6) 
 {
   const pxr::GfVec3f centroid = _ComputeCentroidFromPoints(n, positions, indices);
 
@@ -387,18 +387,6 @@ pxr::GfMatrix4f ComputeCovarianceMatrix(const pxr::VtArray<pxr::GfVec3f>& points
 pxr::GfMatrix4f ComputeCovarianceMatrix(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions) 
 {
   return _ComputeCovarianceMatrix(indices.size(), positions, &indices[0]);
-}
-
-
-static size_t
-GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, const pxr::GfVec3f* positions)
-{
-  const float edge0 = (positions[vertices[1]] - positions[vertices[0]]).GetLengthSq();
-  const float edge1 = (positions[vertices[2]] - positions[vertices[1]]).GetLengthSq();
-  const float edge2 = (positions[vertices[0]] - positions[vertices[2]]).GetLengthSq();
-  if (edge0 > edge1 && edge0 > edge2)return 0;
-  else if (edge1 > edge0 && edge1 > edge2)return 1;
-  else return 2;
 }
 
 

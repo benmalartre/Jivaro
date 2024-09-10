@@ -2,56 +2,49 @@
 #define JVR_ACCELERATION_GRADIENT_H
 
 #include <vector>
-#include <pxr/base/tf/hash.h>
-#include <pxr/base/gf/ray.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/vec3d.h>
-#include <pxr/base/gf/range3d.h>
-#include "../geometry/intersection.h"
-#include "../geometry/component.h"
-#include "../acceleration/morton.h"
-#include "../acceleration/intersector.h"
+#include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
+#include <unordered_set>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 class Mesh;
+class HalfEdgeGraph;
 
 class Gradient
 {
+  using VertexIndexSet = std::unordered_set<VertexIndex>;
+  using VertexIndexMap = std::unordered_map<VertexIndex, double>;
+  using SimplicialSolver = Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>;
 public:
-  enum Flags {
-    SEED,
-    FIXED,
-    TOP,
-    BOTTOM,
-    LEFT,
-    RIGHT,
-    FRONT,
-    BACK
-  };
-  
-  void Init(Mesh* mesh);
-  void Compute(Mesh* mesh);
-  void SetSeed(pxr::VtArray<int> &seed);
-  void SetFixed(pxr::VtArray<int> &seed);
+  void Prefactor();
+  void Compute(const VertexIndexSet &vertices, VertexIndexMap &distances);
 
 protected:
-  void _FindFeatures(Mesh* mesh);
-  void _UpdateKroneckerDelta(Mesh* mesh);
+  void _UpdateKroneckerDelta(const VertexIndexSet &sourcesVi);
   void _SolveCotanLaplace();
-  double _ComputeTime(Mesh* mesh);
+  void _ComputeUnitGradient();
+  void _ComputeDivergence();
 
+  Eigen::VectorXd _SolvePhi(const VertexIndexSet &sourcesVi);
 
 private:
-  pxr::VtArray<int>           _flags;
-  pxr::VtArray<pxr::GfVec3f>  _gradient;
-  pxr::VtArray<pxr::GfVec3f>  _value;
-  pxr::VtArray<pxr::GfVec3f>  _divergence;
-  bool                        _flip;
+  HalfEdgeGraph*              _graph;
+  double                      _t;
+  Eigen::SparseVector<double> _kronecker;
+  Eigen::VectorXd             _solved_u;
+  pxr::VtArray<pxr::GfVec3d>  _gradient;
+  Eigen::VectorXd             _divergence;
 
-  double                      _avgLength;
+  SimplicialSolver            _la;
+  SimplicialSolver            _la_cotan;
 
+
+  Eigen::SparseMatrix<double> _Lc;
+  Eigen::SparseMatrix<double> _A;
+
+  double                      _averageEdgeLength;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -111,6 +111,10 @@ struct TrianglePair : public Component {
   virtual short GetType() const override {return Component::TRIANGLEPAIR;};
 };
 
+/// Longest edge in a triangle
+static size_t GetLongestEdgeInTriangle(const pxr::GfVec3i& vertices, 
+  const pxr::GfVec3f* positions);
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_GEOMETRY_TRIANGLE_H
