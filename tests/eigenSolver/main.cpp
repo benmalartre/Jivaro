@@ -18,6 +18,8 @@ using Matrix4r = Eigen::Matrix<Scalar, 4, 4, Eigen::DontAlign>;
 
 #include "../../src/utils/timer.h"
 #include "../../src/geometry/matrix.h"
+#include "../../src/geometry/mesh.h"
+#include "../../src/geometry/scene.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -39,6 +41,17 @@ void _PrintResult(std::string title, const Scalar* values, const Scalar* vectors
   std::cout << "#" << std::endl;
 }
 
+
+pxr::UsdPrim _TraverseStageFindingMesh(pxr::UsdStageRefPtr& stage)
+{
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  for (pxr::UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<pxr::UsdGeomMesh>())
+      return prim;
+  
+  return pxr::UsdPrim();
+}
+
 void _PrintBenchMark(const std::string& title, uint64_t t)
 {
   static size_t titleMax = 32;
@@ -52,7 +65,7 @@ void _PrintBenchMark(const std::string& title, uint64_t t)
 bool _CompareDatas(Scalar* lhs, Scalar* rhs, size_t N)
 {
   for(size_t x = 0; x < N; ++x) {
-    if(std::abs(lhs[x] - rhs[x]) > 0.0001f)return false;
+    if(std::abs(lhs[x] - rhs[x]) > 0.001f)return false;
   }
   return true;
 }
@@ -60,18 +73,53 @@ bool _CompareDatas(Scalar* lhs, Scalar* rhs, size_t N)
 // benchmark matrix class efficency (compared to pxr::GfMatrix4)
 void _BenchMark(size_t N) {
   
-
   SparseMatrix<Scalar>   inverseSparse(N, N);
   Matrix<Scalar>         inverseDense(N, N);
-  for(size_t c = 0; c < N; ++c)
-    for(size_t r = c; r < N; ++r)
-      {
-        Scalar value = RANDOM_0_1;
-        inverseSparse.Set(r, c, value);
-        inverseSparse.Set(c, r, value);
-        inverseDense.Set(r, c, value);
-        inverseDense.Set(c, r, value);
+
+  std::string filename = "C:/Users/graph/Documents/bmal/src/USD_ASSETS/UVMapping/Lezar.usda";
+  pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename); 
+  Scene scene;
+  scene.Init(stage);
+
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+
+  pxr::UsdPrim prim = _TraverseStageFindingMesh(stage);
+  if(prim.IsValid()) {
+    Mesh mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim));
+    scene.AddGeometry(prim.GetPath(), &mesh);
+
+    N = mesh.GetNumPoints();
+    inverseSparse.Resize(N, N);
+    inverseDense.Resize(N, N);
+
+    uint64_t startT = CurrentTime();
+    HalfEdgeGraph* graph = mesh.GetEdgesGraph();
+    const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
+    graph->ComputeCotangentWeights(positions);
+    std::cout << "compute cotangent weights took : " << ((CurrentTime() - startT) * 1e-6) << " seconds" << std::endl;
+    for(size_t v = 0; v < mesh.GetNumPoints(); ++v) {
+      float value = RANDOM_0_1;
+      for(size_t n = 0; n < mesh.GetNumNeighbors(v); ++n) {
+        size_t neighbor = mesh.GetNeighbor(v, n);
+        inverseSparse.Set(v, n, value);
+        inverseSparse.Set(n, v, value);
+        inverseDense.Set(v, n, value);
+        inverseDense.Set(n, v, value);
       }
+      
+    }
+
+  } else {
+    for(size_t c = 0; c < N; ++c)
+      for(size_t r = c; r < N; ++r)
+        {
+          Scalar value = RANDOM_0_1;
+          inverseSparse.Set(r, c, value);
+          inverseSparse.Set(c, r, value);
+          inverseDense.Set(r, c, value);
+          inverseDense.Set(c, r, value);
+        }
+  }
 
   /*
   std::cout << "sparse (Eigen): " << inverseSparse << std::endl;
@@ -82,14 +130,13 @@ void _BenchMark(size_t N) {
 
   // custom
   {
-
     startT = CurrentTime();
     SparseMatrix<Scalar>::Solver solver;
-    inverseSparse.InverseInPlace(solver);
+    inverseSparse.Compute(solver);
 
     _PrintBenchMark("sparse (Eigen): ", CurrentTime() - startT);
 
-    std::cout << "compute : " << (SparseMatrix<Scalar>::solveT * 1e-6) << " seconds" << std::endl;
+    std::cout << "compute : " << (SparseMatrix<Scalar>::computeT * 1e-6) << " seconds" << std::endl;
     std::cout << "identity : " << (SparseMatrix<Scalar>::identityT * 1e-6) << " seconds" << std::endl;
     std::cout << "solve : " << (SparseMatrix<Scalar>::solveT * 1e-6) << " seconds" << std::endl;
   }
@@ -99,9 +146,13 @@ void _BenchMark(size_t N) {
 
     startT = CurrentTime();
    
-    inverseDense.InverseInPlace();
+    inverseDense = inverseDense.LUDecomposition();
     
     _PrintBenchMark("dense (Custom): ", CurrentTime() - startT);
+
+    std::cout << "compute : " << (Matrix<Scalar>::computeT * 1e-6) << " seconds" << std::endl;
+    std::cout << "identity : " << (Matrix<Scalar>::identityT * 1e-6) << " seconds" << std::endl;
+    std::cout << "solve : " << (Matrix<Scalar>::solveT * 1e-6) << " seconds" << std::endl;
     
   }
 
@@ -125,7 +176,7 @@ JVR_NAMESPACE_USING_DIRECTIVE
 
 int main (int argc, char *argv[])
 {
-  for(size_t i = 2; i < 16; ++i)
+  for(size_t i = 2; i < 11; ++i)
     _BenchMark(1<<i);
   return 0;
 }

@@ -393,6 +393,4 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 }
 
 
-
-
 JVR_NAMESPACE_CLOSE_SCOPE

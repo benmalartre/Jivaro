@@ -97,8 +97,9 @@ RBF::Init(const Matrix& keys, const Matrix& values)
 }
 
 // interpolate
+
 void
-RBF::Interpolate(const Matrix<T>& querys, Matrix<T>* result)
+RBF::Interpolate(const Matrix& querys, Matrix* result)
 {
   result->Resize(querys.NumRows(), _values.NumColumns());
 

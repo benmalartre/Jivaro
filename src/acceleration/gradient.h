@@ -2,6 +2,8 @@
 #define JVR_ACCELERATION_GRADIENT_H
 
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include <Eigen/Sparse>
 #include <Eigen/SparseCholesky>
 #include <unordered_set>
@@ -14,8 +16,8 @@ class HalfEdgeGraph;
 
 class Gradient
 {
-  using VertexIndexSet = std::unordered_set<VertexIndex>;
-  using VertexIndexMap = std::unordered_map<VertexIndex, double>;
+  using VertexIndexSet = std::unordered_set<int>;
+  using VertexIndexMap = std::unordered_map<int, double>;
   using SimplicialSolver = Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>>;
 public:
   void Prefactor();

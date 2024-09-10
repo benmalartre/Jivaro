@@ -3,6 +3,7 @@
 
 #include <queue>
 #include <iterator>
+#include <vector>
 #include <pxr/base/vt/array.h>
 #include <pxr/base/tf/hashmap.h>
 
@@ -22,6 +23,14 @@ struct HalfEdge
   int next;      // next half-edge
 
   HalfEdge() : vertex(INVALID_INDEX), twin(INVALID_INDEX), prev(INVALID_INDEX), next(INVALID_INDEX){};
+};
+
+template <typename T>
+struct HalfEdgeGraphSparseMatrix 
+{
+  pxr::VtArray<int> rows;
+  pxr::VtArray<int> columns;
+  pxr::VtArray<T>   values;
 };
 
 class HalfEdgeGraph {
@@ -151,6 +160,12 @@ HalfEdgeGraph::_CotangentWeight(float x)
 
 using HalfEdgesKeys = std::vector<std::pair<uint64_t, HalfEdge*>>;
 using HalfEdgeKey  = HalfEdgesKeys::value_type;
+
+template <typename T>
+HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetLaplacianMatrix(const HalfEdgeGraph& graph);
+
+template <typename T>
+HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetMassMatrix(const HalfEdgeGraph& graph);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

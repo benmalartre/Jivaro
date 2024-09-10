@@ -694,6 +694,18 @@ HalfEdgeGraph::ComputeCotangentWeights(const pxr::GfVec3f *positions)
 
 }
 
+template <typename T>
+HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetLaplacianMatrix(const HalfEdgeGraph& graph)
+{
+  return HalfEdgeGraphSparseMatrix<T>;
+}
+
+template <typename T>
+HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetMassMatrix(const HalfEdgeGraph& graph)
+{
+  return HalfEdgeGraphSparseMatrix<T>;
+}
+
 
 bool
 HalfEdgeGraph::FlipEdge(HalfEdge* edge)

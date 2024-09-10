@@ -153,7 +153,6 @@ void TestBVH::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
         xformCache.GetLocalToWorldTransform(prim)));
       _meshesId.push_back(prim.GetPath());
     }
-      
 }
 
 void TestBVH::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
