@@ -86,6 +86,12 @@ HalfEdgeGraph::GetNumRawEdges() const
 }
 
 size_t
+HalfEdgeGraph::GetNumVertices() const
+{
+  return _vertexHalfEdge.size();
+}
+
+size_t
 HalfEdgeGraph::GetNumEdges() const
 {
   size_t numEdges = 0;
@@ -106,23 +112,20 @@ HalfEdge*
 HalfEdgeGraph::GetEdgeFromVertices(size_t start, size_t end)
 {
   HalfEdge* edge = &_halfEdges[_vertexHalfEdge[start]];
-  if(edge) {
-    if (_halfEdges[edge->next].vertex == end)return edge;
-    HalfEdge* current = _GetNextAdjacentEdge(edge);
-    while (current && (current != edge)) {
-      if (_halfEdges[current->next].vertex == end)return current;
-      current = _GetNextAdjacentEdge(current);
-    }
-  }
-  edge = &_halfEdges[_vertexHalfEdge[end]];
-  if(edge) {
-    if (_halfEdges[edge->next].vertex == start)return edge;
+  if(_halfEdges[edge->next].vertex == end) return edge;
 
-    HalfEdge* current = _GetNextAdjacentEdge(edge);
-    while (current && (current != edge)) {
-      if (_halfEdges[current->next].vertex == start)return current;
-      current = _GetNextAdjacentEdge(current);
-    }
+  HalfEdge* next = _GetNextAdjacentEdge(edge);
+
+  while(next && next != edge) {
+    if (_halfEdges[next->next].vertex == end)return next;
+    next = _GetNextAdjacentEdge(next);
+  }
+  std::cout << "edge : " << edge << std::endl;
+  HalfEdge* previous = _GetPreviousAdjacentEdge(edge);
+  std::cout << "previous : " << previous << std::endl;
+  while (previous && previous != edge) {
+    if (_halfEdges[previous->next].vertex == end)return previous;
+    previous = _GetPreviousAdjacentEdge(previous);
   }
   
   return NULL;
@@ -317,6 +320,13 @@ HalfEdgeGraph::_GetFaceVerticesCount(const HalfEdge* edge)
   return faceVerticesCount;
 }
 
+size_t
+HalfEdgeGraph::GetTotalNumNeighbors() const
+{
+  return _neighbors.size();
+}
+
+
 HalfEdge*
 HalfEdgeGraph::_FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex)
 {
@@ -397,23 +407,24 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 HalfEdge* 
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
-  if (edge->twin >= 0)
-    return &_halfEdges[_halfEdges[edge->twin].prev];
+  std::cout << "get previous edge : " << edge << std::endl;
+  if (_halfEdges[edge->prev].twin != HalfEdge::INVALID_INDEX)
+    return &_halfEdges[_halfEdges[edge->prev].twin];
   return NULL;
 }
 
 const HalfEdge*
 HalfEdgeGraph::_GetPreviousAdjacentEdge(const HalfEdge* edge) const
 {
-  if (edge->twin >= 0)
-    return &_halfEdges[_halfEdges[edge->twin].prev];
+  if (_halfEdges[edge->prev].twin != HalfEdge::INVALID_INDEX)
+    return &_halfEdges[_halfEdges[edge->prev].twin];
   return NULL;
 }
 
 HalfEdge* 
 HalfEdgeGraph::_GetNextAdjacentEdge(const HalfEdge* edge)
 {
-  if (edge->twin >= 0)
+  if (edge->twin != HalfEdge::INVALID_INDEX)
     return &_halfEdges[_halfEdges[edge->twin].next];
     
   return NULL;
@@ -423,7 +434,7 @@ HalfEdgeGraph::_GetNextAdjacentEdge(const HalfEdge* edge)
 const HalfEdge*
 HalfEdgeGraph::_GetNextAdjacentEdge(const HalfEdge* edge) const
 {
-  if (edge->twin >= 0)
+  if (edge->twin != HalfEdge::INVALID_INDEX)
     return &_halfEdges[_halfEdges[edge->twin].next];
 
   return NULL;
@@ -654,29 +665,30 @@ void
 HalfEdgeGraph::ComputeCotangentWeights(const pxr::GfVec3f *positions)
 {
   size_t numPoints = _neighborsCount.size();
-  std::vector<int> visited(numPoints, 0);
+
   _cotangentWeights.resize(_neighbors.size() + _neighborsCount.size());
 
   
-  for (HalfEdge& edge : _halfEdges) {
-    if(visited[edge.vertex]) continue;
+  for (size_t i = 0; i < GetNumVertices(); ++i) {
 
     float sum = 0.f;
-    for(size_t n = 0; n < _neighborsCount[edge.vertex]; ++n) {
-      const HalfEdge *opposite = GetEdge(edge.twin);
-      const HalfEdge *lhs = GetEdge(edge.next);
-      const HalfEdge *rhs = GetEdge(opposite->next);
+    int neighbor, previous, next;
+    size_t numNeighbors = _neighborsCount[i];
+    for(size_t j = 0; j < numNeighbors; ++j) {
+      neighbor = GetNeighbor(i, j);
+      previous = GetNeighbor(i, (j-1)%numNeighbors);
+      next = GetNeighbor(i, (j+1)%numNeighbors);
 
-      const pxr::GfVec3f& i = positions[edge.vertex];
-      const pxr::GfVec3f& j = positions[opposite->vertex];
-      const pxr::GfVec3f& u = positions[lhs->vertex];
-      const pxr::GfVec3f& v = positions[rhs->vertex];
+      const pxr::GfVec3f& a = positions[i];
+      const pxr::GfVec3f& b = positions[neighbor];
+      const pxr::GfVec3f& u = positions[previous];
+      const pxr::GfVec3f& v = positions[next];
 
       // compute the vectors in order to compute the triangles
-      pxr::GfVec3f vec1(u - i);
-      pxr::GfVec3f vec2(u - j);
-      pxr::GfVec3f vec3(v - i);
-      pxr::GfVec3f vec4(v - j);
+      pxr::GfVec3f vec1(u - a);
+      pxr::GfVec3f vec2(u - b);
+      pxr::GfVec3f vec3(v - a);
+      pxr::GfVec3f vec4(v - b);
 
       // compute alpha and beta
       float alpha = acos((vec1*vec2) / (vec1.GetLength() * vec2.GetLength()));
@@ -684,28 +696,17 @@ HalfEdgeGraph::ComputeCotangentWeights(const pxr::GfVec3f *positions)
 
       float cotan = _CotangentWeight(alpha) + _CotangentWeight(beta);
 
-      _cotangentWeights[_neighborsOffset[edge.vertex] + edge.vertex + n] = cotan;
+      _cotangentWeights[_neighborsOffset[i] + i + j] = cotan;
       sum += cotan;
+      
     }
-    _cotangentWeights[_neighborsOffset[edge.vertex] + edge.vertex + _neighborsCount[edge.vertex]] = sum;
-    visited[edge.vertex]++;
+    _cotangentWeights[_neighborsOffset[i] + i + _neighborsCount[i]] = sum;
   }
 
+  std::cout << _cotangentWeights << std::endl;
+
 
 }
-
-template <typename T>
-HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetLaplacianMatrix(const HalfEdgeGraph& graph)
-{
-  return HalfEdgeGraphSparseMatrix<T>;
-}
-
-template <typename T>
-HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetMassMatrix(const HalfEdgeGraph& graph)
-{
-  return HalfEdgeGraphSparseMatrix<T>;
-}
-
 
 bool
 HalfEdgeGraph::FlipEdge(HalfEdge* edge)
@@ -915,49 +916,49 @@ HalfEdgeGraph::ComputeTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>&
 }
 
 size_t 
-HalfEdgeGraph::GetNumNeighbors(size_t index)
+HalfEdgeGraph::GetNumNeighbors(size_t index) const
 {
   return _neighborsCount[index];
 }
 
 const int*  
-HalfEdgeGraph::GetNeighbors(size_t index)
+HalfEdgeGraph::GetNeighbors(size_t index) const
 {
   return &_neighbors[_neighborsOffset[index]];
 }
 
 int  
-HalfEdgeGraph::GetNeighbor(size_t index, size_t neighbor)
+HalfEdgeGraph::GetNeighbor(size_t index, size_t neighbor) const
 {
   return _neighbors[_neighborsOffset[index]+neighbor];
 }
 
 size_t  
-HalfEdgeGraph::GetNumAdjacents(size_t index)
+HalfEdgeGraph::GetNumAdjacents(size_t index) const
 {
   return _adjacentsCount[index];
 }
 
 const int*  
-HalfEdgeGraph::GetAdjacents(size_t index)
+HalfEdgeGraph::GetAdjacents(size_t index) const
 {
   return &_adjacents[_adjacentsOffset[index]];
 }
 
 int  
-HalfEdgeGraph::GetAdjacent(size_t index, size_t adjacent)
+HalfEdgeGraph::GetAdjacent(size_t index, size_t adjacent) const
 {
    return _adjacents[_adjacentsOffset[index]+adjacent];
 }
 
 const float*  
-HalfEdgeGraph::GetCotangentWeights(size_t index)
+HalfEdgeGraph::GetCotangentWeights(size_t index) const
 {
   return &_cotangentWeights[_neighborsOffset[index] + index];
 }
 
 float  
-HalfEdgeGraph::GetCotangentWeight(size_t index, size_t neighbor)
+HalfEdgeGraph::GetCotangentWeight(size_t index, size_t neighbor) const
 {
    return _cotangentWeights[_neighborsOffset[index] + index + neighbor];
 }

@@ -7,9 +7,6 @@
 #include <iomanip>
 
 #include <Eigen/Sparse>
-#include <Eigen/SparseCholesky>
-#include <Eigen/SparseLU>
-#include <Eigen/IterativeLinearSolvers>
  
 #include <pxr/base/gf/math.h>
 #include "../common.h"
@@ -286,7 +283,7 @@ T Matrix<T>::GetDeterminant(const Matrix<T>::Pivots& pivots) const
   if (!_even)determinant = -1.f;
 
   for (size_t i = 0; i < m; ++i) {
-    determinant *= Get(i, i);
+    determinant *= _matrix[i * _columns + i];
   }
   return determinant;
 }
@@ -649,11 +646,11 @@ public:
 
   typedef typename Eigen::Triplet<T>                                    Triplet;
   typedef typename Eigen::Vector<T, Eigen::Dynamic>                     Vector;
-  typedef typename Eigen::SimplicialCholesky< Eigen::SparseMatrix<T> >  CholeskySolver;
+  //typedef typename Eigen::SimplicialCholesky< Eigen::SparseMatrix<T> >  CholeskySolver;
   typedef typename Eigen::SimplicialLDLT< Eigen::SparseMatrix<T> >      SimplicialSolver;
-  typedef typename Eigen::SparseLU< Eigen::SparseMatrix<T> >            LUSolver;
-  typedef typename Eigen::ConjugateGradient< Eigen::SparseMatrix<T>, Eigen::Lower|Eigen::Upper >   CGSolver;
-  typedef typename CholeskySolver Solver;
+  //typedef typename Eigen::SparseLU< Eigen::SparseMatrix<T>, Eigen::COLAMDOrdering<int> >            LUSolver;
+  //typedef typename Eigen::ConjugateGradient< Eigen::SparseMatrix<T>, Eigen::Lower|Eigen::Upper >   CGSolver;
+  typedef typename SimplicialSolver Solver;
 
   static inline uint64_t computeT = 0;
   static inline uint64_t identityT = 0;
@@ -696,6 +693,8 @@ public:
   inline SparseMatrix Inverse(typename Solver& solver);
   inline void InverseInPlace(typename Solver& solver);
   inline SparseMatrix AsDiagonal();
+
+  inline void Compress();
 
 private:
   Eigen::SparseMatrix<T> _matrix;
@@ -783,9 +782,7 @@ void SparseMatrix<T>::Set(size_t row, size_t column, T value)
 
 template <typename T>
 void SparseMatrix<T>::Set(int n, int* rows, int* cols, T* values)
-{
-  _matrix.resize(n, n);
-   
+{   
   std::vector<SparseMatrix<T>::Triplet> triplets(n);
   for (size_t i = 0; i < n; ++i) 
     triplets[i] = SparseMatrix<T>::Triplet( rows[i], cols[i], values[i] * 0.5);
@@ -891,10 +888,12 @@ template <typename T>
 void SparseMatrix<T>::InverseInPlace(  typename SparseMatrix<T>::Solver &solver)
 {
   uint64_t startT = CurrentTime();
-  solver.analyzePattern(_matrix);
-  solver.factorize(_matrix);
+  solver.compute(_matrix); 
   computeT += (CurrentTime() - startT);
 
+  if(solver.info()!=Eigen::Success) {
+     std::cout << "Fail factorize matrix :(" << std::endl;
+   }
   startT = CurrentTime();
   Eigen::SparseMatrix<T> I(_matrix.rows(),_matrix.rows());
   I.setIdentity();
@@ -911,6 +910,11 @@ SparseMatrix<T> SparseMatrix<T>::AsDiagonal()
   return _matrix.diagonal();
 }
 
+template <typename T>
+void SparseMatrix<T>::Compress()
+{
+  _matrix.makeCompressed();
+}
 
 template <typename T>
 T SparseMatrix<T>::GetDeterminant() const
@@ -933,7 +937,9 @@ typename SparseMatrix<T>::Vector SparseMatrix<T>::Solve(typename SparseMatrix<T>
 template <typename T>
 void SparseMatrix<T>::Compute(typename Solver& solver)
 {
-  solver.compute(_matrix);
+  solver.analyzePattern(_matrix); 
+  solver.factorize(_matrix); 
+
 }
 
 

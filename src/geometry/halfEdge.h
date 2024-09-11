@@ -4,6 +4,7 @@
 #include <queue>
 #include <iterator>
 #include <vector>
+#include <iomanip>
 #include <pxr/base/vt/array.h>
 #include <pxr/base/tf/hashmap.h>
 
@@ -25,12 +26,24 @@ struct HalfEdge
   HalfEdge() : vertex(INVALID_INDEX), twin(INVALID_INDEX), prev(INVALID_INDEX), next(INVALID_INDEX){};
 };
 
+static std::ostream& operator<<(std::ostream& os, const HalfEdge *edge) {
+
+  return os << edge->vertex << " " << edge->prev << " " << 
+    edge->next << " " << edge->twin << std::endl;
+}
+
 template <typename T>
 struct HalfEdgeGraphSparseMatrix 
 {
   pxr::VtArray<int> rows;
   pxr::VtArray<int> columns;
   pxr::VtArray<T>   values;
+
+  HalfEdgeGraphSparseMatrix(size_t size) {
+    rows.resize(size);
+    columns.resize(size);
+    values.resize(size);
+  };
 };
 
 class HalfEdgeGraph {
@@ -67,6 +80,7 @@ public:
   bool IsUnique(const HalfEdge* edge) const;
   bool IsUsed(const HalfEdge* edge) const;
 
+  size_t GetNumVertices() const;
   size_t GetNumRawEdges() const;
   size_t GetNumEdges() const;
   HalfEdge* GetEdge(int index);
@@ -76,16 +90,17 @@ public:
   pxr::VtArray<HalfEdge>& GetEdges(){return _halfEdges;};
   const pxr::VtArray<HalfEdge>& GetEdges() const{return _halfEdges;};
 
-  size_t GetNumNeighbors(size_t index);
-  const int* GetNeighbors(size_t index);
-  int GetNeighbor(size_t index, size_t neighbor);
+  size_t GetNumNeighbors(size_t index) const;
+  const int* GetNeighbors(size_t index)const;
+  int GetNeighbor(size_t index, size_t neighbor)const;
+  size_t GetTotalNumNeighbors()const;
 
-  size_t GetNumAdjacents(size_t index);
-  const int* GetAdjacents(size_t index);
-  int GetAdjacent(size_t index, size_t adjacent);
+  size_t GetNumAdjacents(size_t index)const;
+  const int* GetAdjacents(size_t index)const;
+  int GetAdjacent(size_t index, size_t adjacent)const;
 
-  const float* GetCotangentWeights(size_t index);
-  float GetCotangentWeight(size_t index, size_t neighbor);
+  const float* GetCotangentWeights(size_t index) const;
+  float GetCotangentWeight(size_t index, size_t neighbor) const;
 
   HalfEdge* GetEdgeFromVertex(size_t vertex);
   HalfEdge* GetEdgeFromVertices(size_t start, size_t end);
@@ -162,10 +177,86 @@ using HalfEdgesKeys = std::vector<std::pair<uint64_t, HalfEdge*>>;
 using HalfEdgeKey  = HalfEdgesKeys::value_type;
 
 template <typename T>
-HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetLaplacianMatrix(const HalfEdgeGraph& graph);
+HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetLaplacianMatrix(const HalfEdgeGraph& graph)
+{
+  size_t numVertices = graph.GetNumVertices();
+  size_t numEntries = graph.GetTotalNumNeighbors() * 2 + numVertices;
+
+  std::cout << "num laplace entries : " << numEntries << std::endl;
+  HalfEdgeGraphSparseMatrix<T> laplaceMatrixInfos(numEntries);
+  size_t entryIdx = 0;
+  for(size_t v = 0; v < graph.GetNumVertices(); ++v) {
+    size_t numNeighbors = graph.GetNumNeighbors(v);
+    for(size_t n = 0; n < numNeighbors; ++n) {
+      size_t neighbor = graph.GetNeighbor(v, n);
+
+      laplaceMatrixInfos.rows[entryIdx] = v;
+      laplaceMatrixInfos.columns[entryIdx] = neighbor;
+      laplaceMatrixInfos.values[entryIdx] = graph.GetCotangentWeight(v, n);
+      entryIdx++;
+
+      laplaceMatrixInfos.rows[entryIdx] = neighbor;
+      laplaceMatrixInfos.columns[entryIdx] = v;
+      laplaceMatrixInfos.values[entryIdx] = graph.GetCotangentWeight(n, v);
+      entryIdx++;
+    }
+    laplaceMatrixInfos.rows[entryIdx] = v;
+    laplaceMatrixInfos.columns[entryIdx] = v;
+    laplaceMatrixInfos.values[entryIdx] = -1.0;//graph.GetCotangentWeight(n, v);
+    entryIdx++;
+    //std::cout << "entry idx " << entryIdx << std::endl;
+  }
+
+  std::cout << "last entry : " << entryIdx << std::endl;
+
+  //std::cout << laplaceMatrixInfos.rows << std::endl;
+  //std::cout << laplaceMatrixInfos.columns << std::endl;
+  return laplaceMatrixInfos;
+}
 
 template <typename T>
-HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetMassMatrix(const HalfEdgeGraph& graph);
+HalfEdgeGraphSparseMatrix<T> HalfEdgeGraphGetMassMatrix(const HalfEdgeGraph& graph)
+{
+  pxr::VtArray<float> areas(graph.GetNumPoints());
+  /*
+  typename MeshType::template PerVertexAttributeHandle<ScalarType> h =
+          tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType>(m, "area");
+  for(int i=0;i<m.vn;++i) h[i]=0;
+
+  for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
+  {
+      ScalarType a = DoubleArea(*fi);
+      for(int j=0;j<fi->VN();++j)
+          h[tri::Index(m,fi->V(j))] += a;
+  }
+  ScalarType maxA=0;
+  for(int i=0;i<m.vn;++i)
+      maxA = std::max(maxA,h[i]);
+
+  //store the index and the scalar for the sparse matrix
+  for (size_t i=0;i<m.vert.size();i++)
+  {
+      if (vertexCoord)
+      {
+          for (size_t j=0;j<3;j++)
+          {
+              int currI=(i*3)+j;
+              index.push_back(std::pair<int,int>(currI,currI));
+              entry.push_back(h[i]/maxA);
+          }
+      }
+      else
+      {
+          int currI=i;
+          index.push_back(std::pair<int,int>(currI,currI));
+          entry.push_back(h[i]/maxA);
+      }
+  }
+  tri::Allocator<MeshType>::template DeletePerVertexAttribute<ScalarType>(m,h);
+  */
+  return HalfEdgeGraphSparseMatrix<T>;
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

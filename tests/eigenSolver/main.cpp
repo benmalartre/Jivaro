@@ -71,43 +71,43 @@ bool _CompareDatas(Scalar* lhs, Scalar* rhs, size_t N)
 }
 
 // benchmark matrix class efficency (compared to pxr::GfMatrix4)
-void _BenchMark(size_t N) {
-  
+void _BenchMark(size_t N, const std::string &filename) {
+  std::cout << "0 " << std::endl;
   SparseMatrix<Scalar>   inverseSparse(N, N);
   Matrix<Scalar>         inverseDense(N, N);
-
-  std::string filename = "C:/Users/graph/Documents/bmal/src/USD_ASSETS/UVMapping/Lezar.usda";
+  std::cout << "1" << std::endl;
   pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename); 
   Scene scene;
   scene.Init(stage);
+
+  std::cout << "2 " << std::endl;
 
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
 
   pxr::UsdPrim prim = _TraverseStageFindingMesh(stage);
   if(prim.IsValid()) {
-    Mesh mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim));
-    scene.AddGeometry(prim.GetPath(), &mesh);
+    Mesh *mesh = new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim));
+    scene.AddGeometry(prim.GetPath(), mesh);
 
-    N = mesh.GetNumPoints();
+    std::cout << "3 " << std::endl;
+
+    N = mesh->GetNumPoints();
     inverseSparse.Resize(N, N);
     inverseDense.Resize(N, N);
 
     uint64_t startT = CurrentTime();
-    HalfEdgeGraph* graph = mesh.GetEdgesGraph();
-    const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
-    graph->ComputeCotangentWeights(positions);
-    std::cout << "compute cotangent weights took : " << ((CurrentTime() - startT) * 1e-6) << " seconds" << std::endl;
-    for(size_t v = 0; v < mesh.GetNumPoints(); ++v) {
-      float value = RANDOM_0_1;
-      for(size_t n = 0; n < mesh.GetNumNeighbors(v); ++n) {
-        size_t neighbor = mesh.GetNeighbor(v, n);
-        inverseSparse.Set(v, n, value);
-        inverseSparse.Set(n, v, value);
-        inverseDense.Set(v, n, value);
-        inverseDense.Set(n, v, value);
-      }
-      
-    }
+    HalfEdgeGraph* graph = mesh->GetEdgesGraph();
+    const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+    mesh->ComputeCotangentWeights();
+    HalfEdgeGraphSparseMatrix<Scalar> laplaceMatrixInfos = HalfEdgeGraphGetLaplacianMatrix<Scalar>(*graph);
+
+    std::cout << "4 " << std::endl;
+
+    inverseSparse.Set(laplaceMatrixInfos.values.size(), &laplaceMatrixInfos.rows[0],
+      &laplaceMatrixInfos.columns[0], &laplaceMatrixInfos.values[0]);
+
+
+    inverseSparse.Compress();
 
   } else {
     for(size_t c = 0; c < N; ++c)
@@ -119,6 +119,8 @@ void _BenchMark(size_t N) {
           inverseDense.Set(r, c, value);
           inverseDense.Set(c, r, value);
         }
+
+      inverseSparse.Compress();
   }
 
   /*
@@ -132,7 +134,7 @@ void _BenchMark(size_t N) {
   {
     startT = CurrentTime();
     SparseMatrix<Scalar>::Solver solver;
-    inverseSparse.Compute(solver);
+    inverseSparse.InverseInPlace(solver);
 
     _PrintBenchMark("sparse (Eigen): ", CurrentTime() - startT);
 
@@ -146,7 +148,7 @@ void _BenchMark(size_t N) {
 
     startT = CurrentTime();
    
-    inverseDense = inverseDense.LUDecomposition();
+    inverseDense.InverseInPlace();
     
     _PrintBenchMark("dense (Custom): ", CurrentTime() - startT);
 
@@ -176,7 +178,16 @@ JVR_NAMESPACE_USING_DIRECTIVE
 
 int main (int argc, char *argv[])
 {
-  for(size_t i = 2; i < 11; ++i)
-    _BenchMark(1<<i);
+
+  std::string filename0 = "C:/Users/graph/Documents/bmal/src/USD_ASSETS/UVMapping/Kitty.usda";
+  _BenchMark(32, filename0);
+
+  std::cout << "bench 1 ok" << std::endl; 
+  
+
+  std::string filename1 = "C:/Users/graph/Documents/bmal/src/USD_ASSETS/UVMapping/Lezar.usda";
+  _BenchMark(32, filename1);
+
+  std::cout << "bench 2 ok" << std::endl; 
   return 0;
 }
