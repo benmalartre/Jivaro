@@ -181,22 +181,6 @@ void Mesh::ComputeHalfEdges()
   BITMASK_SET(_flags, Mesh::HALFEDGES);
 }
 
-float Mesh::GetAverageEdgeLength()
-{
-  const pxr::GfVec3f* positions = &_positions[0];
-  float accum = 0;
-  size_t cnt = 0;
-  HalfEdgeGraph::ItUniqueEdge it(_halfEdges);
-  HalfEdge* edge = it.Next();
-  while(edge) {
-    accum += _halfEdges.GetLength(edge, positions);
-    cnt++;
-    edge = it.Next();
-  }
-  return cnt > 0 ? accum / (float)cnt : 0.f;
-}
-
-
 static int _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx, 
   size_t polygonNumEdges, size_t triangleIdx)
 {
@@ -386,31 +370,31 @@ Mesh::GetTrianglePairs()
 size_t
 Mesh::GetNumAdjacents(size_t index)
 {
-  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
-    _halfEdges.ComputeAdjacents();
-    BITMASK_SET(_flags, Mesh::ADJACENTS);
-  }
   return _halfEdges.GetNumAdjacents(index);
+}
+
+size_t
+Mesh::GetTotalNumAdjacents()
+{
+  return _halfEdges.GetTotalNumAdjacents();
 }
 
 const int* 
 Mesh::GetAdjacents(size_t index)
 {
-  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
-    _halfEdges.ComputeAdjacents();
-    BITMASK_SET(_flags, Mesh::ADJACENTS);
-  }
   return _halfEdges.GetAdjacents(index);
 }
 
 int 
 Mesh::GetAdjacent(size_t index, size_t adjacent)
 {
-  if (!BITMASK_CHECK(_flags, Mesh::ADJACENTS)) {
-    _halfEdges.ComputeAdjacents();
-    BITMASK_SET(_flags, Mesh::ADJACENTS);
-  }
   return _halfEdges.GetAdjacent(index, adjacent);
+}
+
+int 
+Mesh::GetAdjacentIndex(size_t index, size_t adjacent)
+{
+  return _halfEdges.GetAdjacentIndex(index, adjacent);
 }
 
 void 
@@ -423,36 +407,34 @@ Mesh::ComputeAdjacents()
   BITMASK_SET(_flags, Mesh::ADJACENTS);
 }
 
-  
-
 size_t
 Mesh::GetNumNeighbors(size_t index)
 {
-  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
-    _halfEdges.ComputeNeighbors();
-    BITMASK_SET(_flags, Mesh::NEIGHBORS);
-  }
   return _halfEdges.GetNumNeighbors(index);
+}
+
+size_t
+Mesh::GetTotalNumNeighbors()
+{
+  return _halfEdges.GetTotalNumNeighbors();
 }
 
 const int* 
 Mesh::GetNeighbors(size_t index)
 {
-  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
-    _halfEdges.ComputeNeighbors();
-    BITMASK_SET(_flags, Mesh::NEIGHBORS);
-  }
   return _halfEdges.GetNeighbors(index);
 }
 
 int 
 Mesh::GetNeighbor(size_t index, size_t neighbor) 
 {
-  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
-    _halfEdges.ComputeNeighbors();
-    BITMASK_SET(_flags, Mesh::NEIGHBORS);
-  }
   return _halfEdges.GetNeighbor(index, neighbor);
+}
+
+int 
+Mesh::GetNeighborIndex(size_t index, size_t neighbor) 
+{
+  return _halfEdges.GetNeighborIndex(index, neighbor);
 }
 
 void Mesh::ComputeNeighbors()
@@ -462,36 +444,6 @@ void Mesh::ComputeNeighbors()
   }
   _halfEdges.ComputeNeighbors();
   BITMASK_SET(_flags, Mesh::NEIGHBORS);
-}
-
-const float* 
-Mesh::GetCotangentWeights(size_t index)
-{
-  if (!BITMASK_CHECK(_flags, Mesh::COTANGENTWEIGHTS)) {
-    _halfEdges.ComputeCotangentWeights(&_positions[0]);
-    BITMASK_SET(_flags, Mesh::COTANGENTWEIGHTS);
-  }
-  return _halfEdges.GetCotangentWeights(index);
-}
-
-int 
-Mesh::GetCotangentWeight(size_t index, size_t neighbor) 
-{
-  if (!BITMASK_CHECK(_flags, Mesh::COTANGENTWEIGHTS)) {
-    _halfEdges.ComputeCotangentWeights(&_positions[0]);
-    BITMASK_SET(_flags, Mesh::COTANGENTWEIGHTS);
-  }
-  return _halfEdges.GetCotangentWeight(index, neighbor);
-}
-
-void 
-Mesh::ComputeCotangentWeights()
-{
-  if (!BITMASK_CHECK(_flags, Mesh::NEIGHBORS)) {
-    ComputeNeighbors();
-  }
-  _halfEdges.ComputeCotangentWeights(&_positions[0]);
-  BITMASK_SET(_flags, Mesh::COTANGENTWEIGHTS);
 }
 
 float 
@@ -510,7 +462,137 @@ Mesh::ComputeEdgeAverageLength()
     cnt++;
     edge = it.Next();
   }
-  return static_cast<float>(pxr::GfSqrt(sum) / (double)cnt);
+  return cnt > 0 ? static_cast<float>(pxr::GfSqrt(sum) / (double)cnt) : 0.f;
+}
+
+
+static inline float _CotangentWeight(float x)
+{
+  static const float cotanMax = pxr::GfCos( 1.e-6 ) / pxr::GfSin( 1.e-6 );
+  //return pxr::GfCos(x)/pxr::GfSin(x);
+  float cotan = pxr::GfCos(x)/pxr::GfSin(x);
+  return cotan < -cotanMax ? -cotanMax : cotan > cotanMax ? cotanMax : cotan;
+}
+
+void 
+Mesh::ComputeCotangentWeights(MeshCotangentWeights& weights)
+{
+  const pxr::GfVec3f *positions = GetPositionsCPtr();
+  size_t numPoints = _halfEdges.GetNumVertices();
+
+  weights.values.resize(_halfEdges.GetTotalNumAdjacents() + numPoints);
+  weights.offsets.resize(numPoints);
+
+  int i0, i1, i2, i3;
+  size_t k, na, offset = 0;
+  float alpha, beta, cotan;
+
+  for (i0 = 0; i0 < numPoints; ++i0) {
+
+    float sum = 0.f;
+    na = _halfEdges.GetNumAdjacents(i0);
+
+    for(size_t k = 0; k < na; ++k) {
+      i1 = _halfEdges.GetAdjacent(i0, k);
+
+      i2 = _halfEdges.GetAdjacent(i0, k > 0 ? k - 1 : na - 1);
+      i3 = _halfEdges.GetAdjacent(i0, (k+1) % na);
+
+      const pxr::GfVec3f& p0 = positions[i0];
+      const pxr::GfVec3f& p1 = positions[i1];
+      const pxr::GfVec3f& p2 = positions[i2];
+      const pxr::GfVec3f& p3 = positions[i3];
+
+      // compute the vectors in order to compute the triangles
+      pxr::GfVec3f v0(p2 - p0);
+      pxr::GfVec3f v1(p2 - p1);
+      pxr::GfVec3f v2(p3 - p0);
+      pxr::GfVec3f v3(p3 - p1);
+
+      // compute alpha and beta
+      alpha = acos((v0*v1) / pxr::GfSqrt(v0.GetLengthSq() * v1.GetLengthSq()));
+      beta = acos((v2*v3) / pxr::GfSqrt(v2.GetLengthSq() * v3.GetLengthSq()));
+      cotan = (_CotangentWeight(alpha) + _CotangentWeight(beta)) * 0.5f;
+      
+      weights.values[offset + k] = cotan;
+      sum += cotan;
+      
+    }
+
+    weights.values[offset + na] = -sum;
+    weights.offsets[i0] = offset;
+    offset += na + 1;
+  }
+}
+
+void
+Mesh::ComputeAreas(MeshAreas& result)
+{
+  const pxr::GfVec3f *positions = GetPositionsCPtr();
+
+  size_t numPoints = _positions.size();
+  size_t numFaces = _faceVertexCounts.size();
+  result.face.resize(numFaces);
+  result.vertex.resize(numPoints);
+
+  result.faceInfos = pxr::GfVec4f(0.f, FLT_MAX, FLT_MIN, 0.f);
+  result.vertexInfos = pxr::GfVec4f(0.f, FLT_MAX, FLT_MIN, 0.f);
+
+  size_t numHalfEdges = _halfEdges.GetNumRawEdges();
+
+  std::vector<bool> visited(numHalfEdges, false);
+
+  for(size_t i = 0; i < numHalfEdges; ++i) {
+    const HalfEdge* start = _halfEdges.GetEdge(i);
+    if(!start || visited[i])continue;
+
+    const HalfEdge* edge = _halfEdges.GetEdge(start->next);
+    visited[i] = true;
+    visited[start->next] = true;
+    float area = 0.f;
+    while(edge && edge->next != i) {
+      visited[edge->next] = true;
+      const HalfEdge* next = _halfEdges.GetEdge(edge->next);
+      Triangle triangle(Component::INVALID_INDEX, 
+        pxr::GfVec3i(start->vertex, edge->vertex, next->vertex));
+      area += triangle.GetArea(positions);
+      edge = next;
+    }
+
+    result.face[start->face] = area;
+    result.faceInfos[0] += area;
+    if(area < result.faceInfos[1])result.faceInfos[1] = area;
+    if(area > result.faceInfos[2])result.faceInfos[2] = area;
+  }
+
+  result.faceInfos[3] = result.faceInfos[0] / static_cast<float>(numFaces);
+
+  for(size_t i = 0; i < numPoints; ++i) {
+    const HalfEdge* start = _halfEdges.GetEdgeFromVertex(i);
+
+    float area = result.face[start->face];
+    const HalfEdge* edge = _halfEdges.GetNextAdjacentEdge(start);
+    while(edge && edge != start) {
+      area += result.face[edge->face];
+      edge = _halfEdges.GetNextAdjacentEdge(edge);
+    }
+    if(edge != start) {
+      edge = _halfEdges.GetPreviousAdjacentEdge(start);
+      while(edge) {
+        area += result.face[edge->face];
+        edge = _halfEdges.GetPreviousAdjacentEdge(edge);
+      }
+    }
+    area /= result.faceInfos[2];
+    result.vertex[i] = area;
+
+    result.vertexInfos[0] += area;
+    if(area < result.vertexInfos[1])result.vertexInfos[1] = area;
+    if(area > result.vertexInfos[2])result.vertexInfos[2] = area;
+    
+  }
+
+  result.vertexInfos[3] = result.vertexInfos[0] / static_cast<float>(numPoints);
 }
 
 

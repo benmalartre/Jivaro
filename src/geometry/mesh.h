@@ -38,6 +38,28 @@ private:
 
 };
 
+// offsets = vertex cotangent weights offset in value array
+// values = per adjacents vertex pair cotangent weight
+struct MeshCotangentWeights {
+  pxr::VtArray<int>          offsets;
+  pxr::VtArray<float>        values; 
+
+  float Get(size_t index, size_t n) {
+    return values[offsets[index] + n];
+  };
+};
+
+
+// face: area of each face
+// vertex: mixed voronoi area of each vertex 
+struct MeshAreas {
+  pxr::VtArray<float>       face;
+  pxr::VtArray<float>       vertex;
+
+  pxr::GfVec4f              faceInfos;    // total, min, max, avg
+  pxr::GfVec4f              vertexInfos;  // total, min, max, avg
+};
+
 
 
 class Mesh : public Deformable {
@@ -46,8 +68,7 @@ public:
     ADJACENTS         = 1 << 0,
     NEIGHBORS         = 1 << 1,
     HALFEDGES         = 1 << 2,
-    TRIANGLEPAIRS     = 1 << 3,
-    COTANGENTWEIGHTS  = 1 << 4
+    TRIANGLEPAIRS     = 1 << 3
   };
   Mesh(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world);
@@ -74,15 +95,16 @@ public:
 
 
   size_t GetNumAdjacents(size_t index);
+  size_t GetTotalNumAdjacents();
   const int* GetAdjacents(size_t index);
   int GetAdjacent(size_t index, size_t adjacent);
+  int GetAdjacentIndex(size_t index, size_t adjacent);
   
   size_t GetNumNeighbors(size_t index);
+  size_t GetTotalNumNeighbors();
   const int* GetNeighbors(size_t index);
   int GetNeighbor(size_t index, size_t neighbor);
-
-  const float* GetCotangentWeights(size_t index);
-  int GetCotangentWeight(size_t index, size_t neighbor);
+  int GetNeighborIndex(size_t index, size_t neighbor);
   
   Triangle* GetTriangle(uint32_t index) {return &_triangles[index];};
   const Triangle* GetTriangle(uint32_t index) const {return &_triangles[index];};
@@ -94,8 +116,6 @@ public:
   size_t GetNumFaces()const {return _faceVertexCounts.size();};
   size_t GetNumEdges()const { return _halfEdges.GetNumEdges(); };
 
-  float GetAverageEdgeLength();
-
   size_t GetFaceNumVertices(uint32_t idx) const {return _faceVertexCounts[idx];};
   size_t GetFaceVertexIndex(uint32_t face, uint32_t vertex);
   void GetCutVerticesFromUVs(const pxr::VtArray<pxr::GfVec2d>& uvs, pxr::VtArray<int>* cuts);
@@ -104,9 +124,11 @@ public:
   void ComputeHalfEdges();
   void ComputeNeighbors();
   void ComputeAdjacents();
-  void ComputeCotangentWeights();
   void ComputeTrianglePairs();
   float ComputeEdgeAverageLength();
+
+  void ComputeCotangentWeights(MeshCotangentWeights& results);
+  void ComputeAreas(MeshAreas& results);
 
   float TriangleArea(uint32_t index);
   float AveragedTriangleArea();
@@ -162,6 +184,7 @@ public:
   void RegularGrid2D(float spacing, const pxr::GfMatrix4f& space=pxr::GfMatrix4f(1.f));
   void VoronoiDiagram(const std::vector<pxr::GfVec3f>& points);
 
+
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
@@ -188,6 +211,7 @@ private:
   HalfEdgeGraph                       _halfEdges;
 
 };
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

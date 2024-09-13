@@ -49,6 +49,54 @@ private:
   double                      _averageEdgeLength;
 }; 
 
+
+template <typename T>
+SparseMatrixInfos<T> GetLaplacianMatrix()
+{
+  size_t numVertices = _graph.GetNumVertices();
+  size_t numEntries = _graph.GetTotalNumAdjacents() + numVertices;
+
+  SparseMatrixInfos<T> infos(numEntries);
+  size_t entryIdx = 0;
+  for(size_t v = 0; v < _graph.GetNumVertices(); ++v) {
+    size_t numAdjacents = _graph.GetNumAdjacents(v);
+    for(size_t n = 0; n < numAdjacents; ++n) {
+      size_t adjacent = _graph.GetAdjacent(v, n);
+      if(v < adjacent) {
+        T weight = graph.GetCotangentWeight(v, n);
+        infos.keys[entryIdx] = std::make_pair(v, adjacent);
+        infos.values[entryIdx] = weight ;
+        entryIdx++;
+
+        infos.keys[entryIdx] = std::make_pair(adjacent, v);
+        size_t o = graph.GetAdjacentIndex(adjacent, v);
+        infos.values[entryIdx] = graph.GetCotangentWeight(adjacent, o);
+
+        entryIdx++;
+      }
+    }
+    infos.keys[entryIdx] = { v, v };
+    infos.values[entryIdx] = graph.GetCotangentWeight(v, numAdjacents);
+    entryIdx++;
+  }
+  return infos;
+}
+
+template <typename T>
+SparseMatrixInfos<T> GetMassMatrix()
+{
+  size_t numEntries = graph.GetNumVertices();
+  SparseMatrixInfos<T> infos(numEntries);
+
+  for(size_t v = 0; v < numEntries; ++v) {
+    infos.keys[v] = {v, v};
+    infos.values[v] = graph.GetMass(v);
+  }
+
+  return infos;
+
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_ACCELERATION_GRADIENT_H

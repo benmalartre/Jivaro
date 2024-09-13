@@ -9,18 +9,45 @@
 #include <Eigen/Sparse>
  
 #include <pxr/base/gf/math.h>
+#include <pxr/base/vt/array.h>
 #include "../common.h"
 #include "../utils/timer.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+template <typename T>
+struct SparseMatrixInfos 
+{
+  typedef typename std::pair<int, int> Key;
+  pxr::VtArray<Key>  keys;
+  pxr::VtArray<T>    values;
+
+  SparseMatrixInfos(size_t size) {
+    keys.resize(size);
+    values.resize(size);
+  };
+  void AddEntry(size_t row, size_t col, T val) {
+    keys.push_back(std::make_pair(row, col));
+    values.push_back(val);
+  };
+};
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, typename const SparseMatrixInfos<T> &infos) {
+  for(size_t i = 0; i < infos.keys.size(); ++i)
+    os << "((" << infos.keys[i].first << "," << infos.keys[i].second << "), " << 
+      std::fixed << std::setprecision(4) << infos.values[i] << "),";
+  return os;
+};
 
 
 template <typename T>
 class Matrix {
 public:
   static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
+
+  static inline uint64_t feedT = 0;
   static inline uint64_t computeT = 0;
-  static inline uint64_t identityT = 0;
   static inline uint64_t solveT = 0;
 
   enum State {
@@ -33,8 +60,9 @@ public:
     MATRIX_IS_SINGULAR
   };
 
-  typedef typename std::vector<T> Vector;
-  typedef typename std::vector<int> Pivots;
+  typedef typename std::pair<int, int>  Key;
+  typedef typename std::vector<T>       Vector;
+  typedef typename std::vector<int>     Pivots;
 
   Matrix();
   Matrix(size_t row, size_t column);
@@ -47,7 +75,7 @@ public:
 
 
   void Set(size_t row, size_t colum, T value);
-  void Set(int n, int* rows, int* cols, T* values);
+  void Set(int n, Key *keys, T* values);
   void SetRow(size_t row, typename const Vector& values);
   void SetColumn(size_t column, typename const Vector& values);
 
@@ -86,6 +114,8 @@ public:
   Matrix Inverse();
   Matrix AsDiagonal();
   void InverseInPlace();
+
+  static void ResetTs();
 
 private:
   
@@ -146,10 +176,10 @@ void Matrix<T>::Clear()
 
 template <typename T>
 Matrix<T> Matrix<T>::Transpose() {
-  Matrix<T> result(this);
+  Matrix<T> result(*this);
   for(size_t c = 0; c < _columns; ++c) 
     for(size_t r = 0; r < _rows; ++r)
-      result._matrix[r * _colums + c] = _matrix[c * _rows + r];
+      result._matrix[r * _columns + c] = _matrix[c * _rows + r];
   return result;
 }
 
@@ -291,14 +321,18 @@ T Matrix<T>::GetDeterminant(const Matrix<T>::Pivots& pivots) const
 template <typename T>
 void Matrix<T>::Set(size_t row, size_t column, T value)
 {
+  uint64_t startT = CurrentTime();
   _matrix[row * _columns + column] = value;
+  feedT += (CurrentTime() - startT);
 }
 
 template <typename T>
-void Matrix<T>::Set(int n, int* rows, int* cols, T* values)
+void Matrix<T>::Set(int n, Matrix<T>::Key *keys, T* values)
 {
-  for(size_t i = 0; i < n; ++n)
-    _matrix[rows[i] * _columns + cols[i]] = values[i];
+  uint64_t startT = CurrentTime();
+  for(size_t i = 0; i < n; ++i)
+    _matrix[keys[i].first * _columns + keys[i].second] = values[i];
+  feedT += (CurrentTime() - startT);
 }
 
 template <typename T>
@@ -393,7 +427,7 @@ Matrix<T> Matrix<T>::Multiply(const Matrix<T>& other)
     for (size_t i = 0; i < _rows; ++i)
       for (size_t k = 0; k < other._columns; ++k)
         for (size_t j = 0; j < _columns; ++j)
-          result._matrix[i * _columns + j] += _matrix[i * _columns + k] * other._matrix[k * _columbs + j];
+          result._matrix[i * _columns + j] += _matrix[i * _columns + k] * other._matrix[k * _columns + j];
     return result;
   }
   return Matrix();
@@ -497,6 +531,9 @@ Matrix<T> Matrix<T>::Inverse()
   uint64_t startT = CurrentTime();
   Matrix<T> result(_columns, _columns);
   Matrix<T> lu = LUDecomposition();
+  computeT += CurrentTime() - startT;
+
+  startT = CurrentTime();
   if (lu.IsValid()) {
     Matrix<T>::Vector b(_columns, 0);
     for (size_t i = 0; i < _columns; ++i) {
@@ -505,14 +542,18 @@ Matrix<T> Matrix<T>::Inverse()
       result.SetColumn(i, lu.SolveLU(b));
     }
   }
-  identityT += CurrentTime() - startT;
+  solveT += CurrentTime() - startT;
   return result;
 }
 
 template <typename T>
 void Matrix<T>::InverseInPlace()
 {
+  uint64_t startT = CurrentTime();
   Matrix<T> lu = LUDecomposition();
+  computeT += CurrentTime() - startT;
+
+  startT = CurrentTime();
   if (lu.IsValid()) {
     Matrix<T>::Vector b(_columns, 0);
     for (size_t i = 0; i < _columns; ++i) {
@@ -521,15 +562,14 @@ void Matrix<T>::InverseInPlace()
       SetColumn(i, lu.SolveLU(b));
     }
   }
+  solveT += CurrentTime() - startT;
 }
 
 template <typename T>
 Matrix<T> Matrix<T>::LUDecomposition()
 {
-  uint64_t startT = CurrentTime();
   float singularityThreshold = 0.f;
   if (_rows != _columns) {
-    computeT += CurrentTime() - startT;
     return Matrix<T>();
   }
 
@@ -576,7 +616,6 @@ Matrix<T> Matrix<T>::LUDecomposition()
     if (pxr::GfAbs(lu._matrix[perm * _columns + column]) < singularityThreshold) {
       _singular = true;
       std::cerr << "matrix is singular !" << std::endl;
-      computeT += CurrentTime() - startT;
       return lu;
     }
 
@@ -591,22 +630,18 @@ Matrix<T> Matrix<T>::LUDecomposition()
       lu._matrix[row * m + column] /= luDiag;
     }
   }
-  computeT += CurrentTime() - startT;
   return lu;
 }
 
 template <typename T>
 typename Matrix<T>::Vector Matrix<T>::SolveLU(typename const Matrix<T>::Vector& b)
 {
-  uint64_t startT = CurrentTime();
   size_t m = _pivots.size();
   if (_columns != m) {
-    solveT += CurrentTime() - startT;
     std::cerr << "SolveLU : matrix size mismatch !" << std::endl;
     return Matrix<T>::Vector(b.size());
   }
   if (_singular) {
-    solveT += CurrentTime() - startT;
     std::cerr << "SolveLU : matrix is singular !" << std::endl;
     return Matrix<T>::Vector(b.size());
   }
@@ -634,8 +669,15 @@ typename Matrix<T>::Vector Matrix<T>::SolveLU(typename const Matrix<T>::Vector& 
       result[i] -= value * _matrix[i * _columns + column];
     }
   }
-  solveT += CurrentTime() - startT;
   return result;
+}
+
+template<typename T>
+void Matrix<T>::ResetTs()
+{
+  feedT = 0;
+  computeT = 0;
+  solveT = 0;
 }
 
 
@@ -643,7 +685,7 @@ template <typename T>
 class SparseMatrix {
 
 public:
-
+  typedef typename std::pair<int, int>                                  Key;
   typedef typename Eigen::Triplet<T>                                    Triplet;
   typedef typename Eigen::Vector<T, Eigen::Dynamic>                     Vector;
   //typedef typename Eigen::SimplicialCholesky< Eigen::SparseMatrix<T> >  CholeskySolver;
@@ -652,8 +694,8 @@ public:
   //typedef typename Eigen::ConjugateGradient< Eigen::SparseMatrix<T>, Eigen::Lower|Eigen::Upper >   CGSolver;
   typedef typename SimplicialSolver Solver;
 
+  static inline uint64_t feedT = 0;
   static inline uint64_t computeT = 0;
-  static inline uint64_t identityT = 0;
   static inline uint64_t solveT = 0;
 
   using Data = Eigen::SparseMatrix<T>;
@@ -666,7 +708,7 @@ public:
   inline size_t NumColumns()const { return static_cast<size_t>(_matrix.cols());  };
 
   void Set(size_t row, size_t colum, T value);
-  void Set(int n, int* rows, int* cols, T* values);
+  void Set(int n, Key *keys, T* values);
   
   void SetRow(size_t row, typename const Vector& values);
   void SetColumn(size_t column, typename const Vector& values);
@@ -695,6 +737,8 @@ public:
   inline SparseMatrix AsDiagonal();
 
   inline void Compress();
+
+  static void ResetTs();
 
 private:
   Eigen::SparseMatrix<T> _matrix;
@@ -762,14 +806,14 @@ void SparseMatrix<T>::GetDenseData(T* result, bool transposed) const
 
 template <typename T>
 SparseMatrix<T> SparseMatrix<T>::Transpose() {
-  SparseMatrix<T> result(this);
+  SparseMatrix<T> result(*this);
   result._matrix = _matrix.transpose();
   return result;
 }
 
 template <typename T>
 void SparseMatrix<T>::TransposeInPlace() {
-  SparseMatrix<T> tmp(this);
+  SparseMatrix<T> tmp(*this);
   tmp._matrix = _matrix.transpose();
   _matrix = tmp._matrix;
 }
@@ -777,17 +821,21 @@ void SparseMatrix<T>::TransposeInPlace() {
 template <typename T>
 void SparseMatrix<T>::Set(size_t row, size_t column, T value)
 {
+  uint64_t startT = CurrentTime();
   _matrix.coeffRef(row, column) = value;
+  feedT += (CurrentTime() - startT);
 }
 
 template <typename T>
-void SparseMatrix<T>::Set(int n, int* rows, int* cols, T* values)
+void SparseMatrix<T>::Set(int n, SparseMatrix<T>::Key *keys, T* values)
 {   
+  uint64_t startT = CurrentTime();
   std::vector<SparseMatrix<T>::Triplet> triplets(n);
   for (size_t i = 0; i < n; ++i) 
-    triplets[i] = SparseMatrix<T>::Triplet( rows[i], cols[i], values[i] * 0.5);
+    triplets[i] = SparseMatrix<T>::Triplet( keys[i].first, keys[i].second, values[i]);
   
   _matrix.setFromTriplets(triplets.begin(), triplets.end());
+  feedT += (CurrentTime() - startT);
 }
 
 
@@ -839,14 +887,14 @@ template <typename T>
 SparseMatrix<T> SparseMatrix<T>::Multiply(const SparseMatrix<T>& other)
 {
   SparseMatrix<T> result(*this);
-  _result._matrix *= other._matrix;
+  result._matrix = _matrix * other._matrix;
   return result;
 }
 
 template <typename T>
 void SparseMatrix<T>::MultiplyInPlace(const SparseMatrix<T>& other)
 {
-  _matrix *= other._matrix;
+  _matrix = _matrix * other._matrix;
 }
 
 template <typename T>
@@ -872,13 +920,17 @@ void SparseMatrix<T>::ScaleInPlace(const SparseMatrix<T>& other, float scale)
 template <typename T>
 SparseMatrix<T> SparseMatrix<T>::Inverse(  SparseMatrix<T>::Solver &solver)
 {
+  uint64_t startT = CurrentTime();
   solver.analyzePattern(_matrix);
   solver.factorize(_matrix);
   Eigen::SparseMatrix<T> I(_matrix.rows(),_matrix.rows());
   I.setIdentity();
+  computeT += (CurrentTime() - startT);
 
+  startT = CurrentTime();
   SparseMatrix<T> result;
   result._matrix = solver.solve(I);
+  solveT += (CurrentTime() - startT);
 
   return result;
 }
@@ -889,15 +941,14 @@ void SparseMatrix<T>::InverseInPlace(  typename SparseMatrix<T>::Solver &solver)
 {
   uint64_t startT = CurrentTime();
   solver.compute(_matrix); 
-  computeT += (CurrentTime() - startT);
-
+  
   if(solver.info()!=Eigen::Success) {
      std::cout << "Fail factorize matrix :(" << std::endl;
    }
-  startT = CurrentTime();
+
   Eigen::SparseMatrix<T> I(_matrix.rows(),_matrix.rows());
   I.setIdentity();
-  identityT += (CurrentTime() - startT);
+  computeT += (CurrentTime() - startT);
 
   startT = CurrentTime();
   _matrix = solver.solve(I);
@@ -940,6 +991,14 @@ void SparseMatrix<T>::Compute(typename Solver& solver)
   solver.analyzePattern(_matrix); 
   solver.factorize(_matrix); 
 
+}
+
+template<typename T>
+void SparseMatrix<T>::ResetTs()
+{
+  feedT = 0;
+  computeT = 0;
+  solveT = 0;
 }
 
 
