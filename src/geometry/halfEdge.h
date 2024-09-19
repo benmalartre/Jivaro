@@ -10,7 +10,6 @@
 
 #include "../common.h"
 #include "../acceleration/morton.h"
-#include "../geometry/matrix.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -114,7 +113,6 @@ public:
 
 protected:
 
-  HalfEdge* _FindInAdjacentEdges(const HalfEdge* edge, size_t endVertex);
   bool _IsTriangle(const HalfEdge* edge) const;
   void _TriangulateFace(const HalfEdge* edge);
   void _UpdatePoint(size_t startIndex, size_t endIndex, size_t oldIndex, size_t replaceIdx);

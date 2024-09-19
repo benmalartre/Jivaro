@@ -99,6 +99,7 @@ protected:
   pxr::VtArray<pxr::GfVec3f>          _colors;
   bool                                _haveWidths;
   pxr::VtArray<float>                 _widths;
+  pxr::VtArray<Point>                 _points;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

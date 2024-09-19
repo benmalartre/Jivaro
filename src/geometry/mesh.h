@@ -13,9 +13,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class TrianglePairGraph {
 public:
-  using _Keys = std::vector<std::pair<uint64_t, int>>;
+  using _Keys = std::vector<std::pair<uint64_t, size_t>>;
   using _Key  = _Keys::value_type;
-  using _Pairs = std::vector<std::pair<int, int>> ;
+  using _Pairs = std::vector<std::pair<size_t, size_t>> ;
   using _Pair = _Pairs::value_type;
   
   TrianglePairGraph(const pxr::VtArray<int>& faceCounts, 
@@ -25,10 +25,10 @@ public:
 
 
 protected:
-  void _RemoveTriangleOpenEdges(int tri);
-  bool _PairTriangles(int tri0, int tri11, bool isOpenEdgeTriangle);
-  bool _PairTriangle(_Key common, int tri);
-  void _SingleTriangle(int tri, bool isOpenEdgeTriangle);
+  void _RemoveTriangleOpenEdges(size_t tri);
+  bool _PairTriangles(size_t tri0, size_t tri11, bool isOpenEdgeTriangle);
+  bool _PairTriangle(_Key common, size_t tri);
+  void _SingleTriangle(size_t tri, bool isOpenEdgeTriangle);
 
 private:
   _Keys                 _openEdges;
@@ -65,9 +65,9 @@ struct MeshAreas {
 class Mesh : public Deformable {
 public:
   enum Flag {
-    ADJACENTS         = 1 << 0,
-    NEIGHBORS         = 1 << 1,
-    HALFEDGES         = 1 << 2,
+    HALFEDGES         = 1 << 0,
+    ADJACENTS         = 1 << 1,
+    NEIGHBORS         = 1 << 2,
     TRIANGLEPAIRS     = 1 << 3
   };
   Mesh(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
@@ -92,7 +92,6 @@ public:
   HalfEdgeGraph* GetEdgesGraph(){return &_halfEdges;};
   const pxr::VtArray<HalfEdge>& GetEdges()const{return _halfEdges.GetEdges();};
   const HalfEdgeGraph* GetEdgesGraph()const{return &_halfEdges;};
-
 
   size_t GetNumAdjacents(size_t index);
   size_t GetTotalNumAdjacents();
@@ -125,7 +124,7 @@ public:
   void ComputeNeighbors();
   void ComputeAdjacents();
   void ComputeTrianglePairs();
-  float ComputeEdgeAverageLength();
+  float ComputeAverageEdgeLength();
 
   void ComputeCotangentWeights(MeshCotangentWeights& results);
   void ComputeAreas(MeshAreas& results);
@@ -137,7 +136,7 @@ public:
 
   void GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs, bool unique=false);
 
-  void Prepare(bool connectivity=true);
+  void Init(size_t connectivity=0);
 
   // points (deformation)
   void SetPositions(const pxr::GfVec3f* positions, size_t n) override;

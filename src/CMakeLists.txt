@@ -90,6 +90,7 @@ add_executable(${TARGET}
   geometry/stroke.cpp
   geometry/perlin.cpp
   geometry/voronoi.cpp
+  geometry/geodesic.cpp
   geometry/scene.cpp
   #geometry/vdb.cpp
 
@@ -99,7 +100,7 @@ add_executable(${TARGET}
   acceleration/bvh.cpp
   acceleration/octree.cpp
   acceleration/hashGrid.cpp
-  acceleration/gradient.cpp
+  acceleration/kdtree.cpp
 
   pbd/tokens.cpp
   pbd/contact.cpp
@@ -147,7 +148,7 @@ add_executable(${TARGET}
   tests/points.cpp
   tests/velocity.cpp
   tests/pendulum.cpp
-  tests/gradient.cpp
+  tests/geodesic.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp

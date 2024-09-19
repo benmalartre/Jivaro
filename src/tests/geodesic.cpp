@@ -11,7 +11,7 @@
 #include "../geometry/scene.h"
 
 #include "../tests/utils.h"
-#include "../tests/gradient.h"
+#include "../tests/geodesic.h"
 
 #include "../app/application.h"
 #include "../utils/timer.h"
@@ -45,7 +45,7 @@ bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit
 }
 
 void 
-TestGradient::_BenchmarckClosestPoints()
+TestGeodesic::_BenchmarckClosestPoints()
 {
   size_t N = 1000;
   pxr::VtArray<pxr::GfVec3f> points(N);
@@ -88,7 +88,7 @@ TestGradient::_BenchmarckClosestPoints()
 }
 
 // thread task
-void TestGradient::_ClosestPointQuery(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results)
+void TestGeodesic::_ClosestPointQuery(size_t begin, size_t end, const pxr::GfVec3f* positions, pxr::GfVec3f* results)
 {
   for (size_t index = begin; index < end; ++index) {
     double minDistance = DBL_MAX;
@@ -120,7 +120,7 @@ void TestGradient::_ClosestPointQuery(size_t begin, size_t end, const pxr::GfVec
 }
 
 void 
-TestGradient::_BenchmarckClosestPoints2()
+TestGeodesic::_BenchmarckClosestPoints2()
 {
   size_t N = 1000000;
   pxr::VtArray<pxr::GfVec3f> points(N);
@@ -131,7 +131,7 @@ TestGradient::_BenchmarckClosestPoints2()
   pxr::VtArray<pxr::GfVec3f> results(N);
 
   pxr::WorkParallelForN(N,
-    std::bind(&TestGradient::_ClosestPointQuery, this, std::placeholders::_1, 
+    std::bind(&TestGeodesic::_ClosestPointQuery, this, std::placeholders::_1, 
       std::placeholders::_2, &points[0], &results[0]));
 
   uint64_t elapsedT = CurrentTime() - startT;
@@ -142,9 +142,9 @@ TestGradient::_BenchmarckClosestPoints2()
 
 }
 
-void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
+void TestGeodesic::InitExec(pxr::UsdStageRefPtr& stage)
 {
-
+  std::cout << "test geodesic init scene " << std::endl;
   if (!stage) return;
 
   _GetRootPrim(stage);
@@ -155,29 +155,46 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::VtArray<float> widths;
   pxr::VtArray<pxr::GfVec3f> colors;
 
+  std::cout << "found " << _meshes.size() << " meshes in teh stage" << std::endl;
+
   // create bvh
   if (_meshes.size()) {
+    std::cout << "init kdtree" << std::endl;
 
     uint64_t startT = CurrentTime();
-    _bvh.Init(_meshes);
-
+    _kdtree.Init(_meshes);
     uint64_t elapsedT = CurrentTime() - startT;
 
+    std::cout << "================== kdtree initialize : "  << std::endl;
+    std::cout << "- build took      : " << (elapsedT * 1e-6) << " seconds" << std::endl;
+    std::cout << "- num components  : " << _kdtree.GetNumComponents() << std::endl;
+    std::cout << "- num cells       : " << _kdtree.GetNumCells() << std::endl;
+    
+
+    startT = CurrentTime();
+    _bvh.Init(_meshes);
+
+    elapsedT = CurrentTime() - startT;
+
     std::cout << "================== bvh initialize : "  << std::endl;
-    std::cout << "- bvh build took      : " << (elapsedT * 1e-6) << " seconds" << std::endl;
-    std::cout << "- bvh num components  : " << _bvh.GetNumComponents() << std::endl;
-    std::cout << "- bvh num leaves      : " << _bvh.GetNumLeaves() << std::endl;
-    std::cout << "- bvh num cells       : " << _bvh.GetNumCells() << std::endl;
+    std::cout << "- build took      : " << (elapsedT * 1e-6) << " seconds" << std::endl;
+    std::cout << "- num components  : " << _bvh.GetNumComponents() << std::endl;
+    std::cout << "- num leaves      : " << _bvh.GetNumLeaves() << std::endl;
+    std::cout << "- num cells       : " << _bvh.GetNumCells() << std::endl;
 
     for(size_t m = 0; m < _meshes.size(); ++m)
       _scene.AddGeometry(_meshesId[m], _meshes[m]);
 
+    /*
     pxr::GfVec3f bmin(_bvh.GetMin());
     pxr::GfVec3f bmax(_bvh.GetMax());
 
     pxr::GfVec3f size(_bvh.GetSize());
 
+    std::cout << "bvh size : " << size << std::endl;
+
     float radius = pxr::GfMin(size[0], size[1], size[2])*0.5f;
+    std::cout << "bvh radius : " << radius << std::endl;
 
     pxr::GfVec3f dimensions(
       pxr::GfCeil(size[0] / radius),
@@ -212,8 +229,10 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
           widths[index] = radius;
           colors[index] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
         }
+    */
   }
 
+  
   _points= new Points();
 
   _points->SetPositions(positions);
@@ -223,6 +242,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 
   _pointsId = _rootId.AppendChild(pxr::TfToken("points"));
   _scene.AddGeometry(_pointsId, _points);
+  
 
   _bvhId = _rootId.AppendChild(pxr::TfToken("bvh"));
   _instancer = _SetupBVHInstancer(stage, _bvhId, &_bvh, true);
@@ -241,7 +261,7 @@ void TestGradient::InitExec(pxr::UsdStageRefPtr& stage)
 }
 
 
-void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   if (_meshes.size()) {
@@ -301,14 +321,14 @@ void TestGradient::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
 }
 
-void TestGradient::TerminateExec(pxr::UsdStageRefPtr& stage)
+void TestGeodesic::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
   _scene.Remove(_pointsId);
 }
 
-void TestGradient::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
+void TestGeodesic::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   for (pxr::UsdPrim prim : stage->TraverseAll())

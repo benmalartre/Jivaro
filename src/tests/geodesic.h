@@ -1,24 +1,22 @@
-#ifndef JVR_TEST_GRADIENT_H
-#define JVR_TEST_GRADIENT_H
+#ifndef JVR_TEST_GEODESIC_H
+#define JVR_TEST_GEODESIC_H
 #include <vector>
+#include "../acceleration/kdtree.h"
 #include "../acceleration/bvh.h"
-#include "../acceleration/gradient.h"
+#include "../geometry/geodesic.h"
+#include "../geometry/implicit.h"
+#include "../geometry/points.h"
 #include "../exec/execution.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Solver;
-class Plane;
-class Points;
-class Xform;
-
-class TestGradient : public Execution {
+class TestGeodesic : public Execution {
 public:
 
 
-  TestGradient() : Execution(){};
-  ~TestGradient(){};
+  TestGeodesic() : Execution(){};
+  ~TestGeodesic(){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
@@ -35,6 +33,7 @@ protected:
 private:
   pxr::SdfPath              _bvhId;
   BVH                       _bvh;
+  KDTree                    _kdtree;
   Instancer*                _instancer;
   std::vector<Geometry*>    _meshes;
   std::vector<pxr::SdfPath> _meshesId;
@@ -42,10 +41,10 @@ private:
   pxr::SdfPath              _pointsId;
   Xform*                    _xform;
   pxr::SdfPath              _xformId;
-  Gradient                  _gradient;
+  Geodesic                  _geodesic;
 };
 
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // JVR_TEST_GRADIENT_H
+#endif // JVR_TEST_GEODESIC_H

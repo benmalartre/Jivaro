@@ -301,8 +301,6 @@ BVH::Init(const std::vector<Geometry*>& geometries)
     accum.UnionWith(bbox.GetRange());
     _numComponents += ((Mesh*)GetGeometry(1))->GetTrianglePairs().size();
   }
-  SetMin(accum.GetMin());
-  SetMax(accum.GetMax());
 
   _mortons.clear();
   _mortons.reserve(_numComponents);

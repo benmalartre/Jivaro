@@ -366,6 +366,7 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 HalfEdge* 
 HalfEdgeGraph::GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
+  std::cout << "get previous adjacent edge for vertex " << edge->vertex << std::endl;
   if (_halfEdges[edge->prev].twin != HalfEdge::INVALID_INDEX)
     return &_halfEdges[_halfEdges[edge->prev].twin];
   return NULL;
@@ -378,6 +379,7 @@ HalfEdgeGraph::GetPreviousAdjacentEdge(const HalfEdge* edge) const
     return &_halfEdges[_halfEdges[edge->prev].twin];
   return NULL;
 }
+
 
 HalfEdge* 
 HalfEdgeGraph::GetNextAdjacentEdge(const HalfEdge* edge)
@@ -571,20 +573,21 @@ HalfEdgeGraph::ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbo
 void
 HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors, bool connected)
 {
+
   if(connected) {
-    const HalfEdge* current = edge;
-    do {
+    neighbors.push_back(_halfEdges[edge->next].vertex);
+    const HalfEdge* current = GetNextAdjacentEdge(edge);
+    while(current) {
       neighbors.push_back(_halfEdges[current->next].vertex);
       current = GetNextAdjacentEdge(current);
       if(current == edge)return;
-    } while(current);
+    };
 
-    current = &_halfEdges[edge->prev];
-    do {
+    current = GetPreviousAdjacentEdge(edge);
+    while(current) {
       neighbors.push_back(current->vertex);
       current = GetPreviousAdjacentEdge(current);
-      if(current == edge)return;
-    } while (current);
+    }
   } else {
     const HalfEdge* current = edge;
     do {
@@ -617,6 +620,7 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
       if(current == edge)return;
     } while(current);
   }
+  std::cout << neighbors << std::endl;
 }
 
 bool

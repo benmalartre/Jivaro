@@ -1,5 +1,5 @@
-#ifndef JVR_ACCELERATION_GRADIENT_H
-#define JVR_ACCELERATION_GRADIENT_H
+#ifndef JVR_GEOMETRY_GEODESIC_H
+#define JVR_GEOMETRY_GEODESIC_H
 
 #include <vector>
 #include <unordered_map>
@@ -7,6 +7,7 @@
 #include <Eigen/Sparse>
 #include <Eigen/SparseCholesky>
 #include <unordered_set>
+#include "../geometry/matrix.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -14,7 +15,7 @@ class Geometry;
 class Mesh;
 class HalfEdgeGraph;
 
-class Gradient
+class Geodesic
 {
   using VertexIndexSet = std::unordered_set<int>;
   using VertexIndexMap = std::unordered_map<int, double>;
@@ -99,4 +100,4 @@ SparseMatrixInfos<T> GetMassMatrix()
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
-#endif // JVR_ACCELERATION_GRADIENT_H
+#endif // JVR_GEOMETRY_GEODESIC_H

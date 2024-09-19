@@ -357,6 +357,7 @@ TrianglePair::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4
     range.UnionWith(m.Transform(positions[right->vertices[1]]));
     range.UnionWith(m.Transform(positions[right->vertices[2]]));
   }
+
   return range;
 }
 

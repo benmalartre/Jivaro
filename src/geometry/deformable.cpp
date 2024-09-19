@@ -34,6 +34,9 @@ Deformable::Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix)
     pxr::UsdAttribute pointsAttr = pointBased.GetPointsAttr();
     pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
     _previous = _positions;
+    _points.resize(_positions.size());
+    size_t pointIdx = 0;
+    for(auto& point: _points)point.id = pointIdx++;
 
     pxr::UsdAttribute normalsAttr = pointBased.GetNormalsAttr();
     if(normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue()) {
@@ -54,7 +57,12 @@ Deformable::Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix)
 
 void Deformable::_ValidateNumPoints(size_t n)
 {
-  if (n != _positions.size()) _positions.resize(n);
+  if (n != _positions.size()) {
+    _positions.resize(n);
+    _points.resize(n);
+    size_t pointIdx = 0;
+    for(auto& point: _points)point.id = pointIdx++;
+  }
   if (n != _previous.size()) _previous.resize(n);
 
   if(_haveNormals && n != _normals.size())_normals.resize(n);
@@ -193,7 +201,10 @@ Deformable::GetColor(uint32_t index) const
 float
 Deformable::GetWidth(uint32_t index) const
 {
-  return _widths[index];
+  if(HaveWidths())
+    return _widths[index];
+  else
+    return 0.01f;
 }
 
 void
@@ -228,6 +239,8 @@ Deformable::ComputeBoundingBox()
   for (const auto& position : _positions)
     range.ExtendBy(position);
   
+  range.SetMin(range.GetMin() - pxr::GfVec3f(FLT_EPSILON));
+  range.SetMax(range.GetMax() + pxr::GfVec3f(FLT_EPSILON));
   _bbox.Set(range, _matrix);
    
 }

@@ -1,6 +1,6 @@
 
 #include "../acceleration/bvh.h"
-#include "../acceleration/gradient.h"
+#include "../geometry/geodesic.h"
 #include "../geometry/smooth.h"
 #include "../geometry/mesh.h"
 

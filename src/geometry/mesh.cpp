@@ -39,8 +39,7 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
   faceVertexCountsAttr.Get(&_faceVertexCounts, pxr::UsdTimeCode::Default());
   faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
-
-  Prepare();
+  Init();
 }
 
 Mesh::~Mesh()
@@ -181,27 +180,24 @@ void Mesh::ComputeHalfEdges()
   BITMASK_SET(_flags, Mesh::HALFEDGES);
 }
 
-static int _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx, 
+static size_t _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx, 
   size_t polygonNumEdges, size_t triangleIdx)
 {
-  if (polygonNumEdges < 4)return -1;
+  if (polygonNumEdges < 4)return Component::INVALID_INDEX;
   if (polygonEdgeIdx == 0) {
     if (triangleEdgeIdx == 2)return triangleIdx + 1;
-    else return -1;
+    else return Component::INVALID_INDEX;
   } else if (polygonEdgeIdx == polygonNumEdges - 1) {
     if (triangleEdgeIdx == 0)return triangleIdx - 1;
-    else return -1;
+    else return Component::INVALID_INDEX;
   } else {
     if (triangleEdgeIdx == 0)return triangleIdx - 1;
     else if (triangleEdgeIdx == 2)return triangleIdx + 1;
-    else return -1;
+    else return Component::INVALID_INDEX;
   }
 }
 
-
-
-
-void TrianglePairGraph::_RemoveTriangleOpenEdges(int tri)
+void TrianglePairGraph::_RemoveTriangleOpenEdges(size_t tri)
 {
   size_t shift = 0;
   size_t numOpenEdges = _openEdges.size();
@@ -215,17 +211,18 @@ void TrianglePairGraph::_RemoveTriangleOpenEdges(int tri)
   if(shift > 0)_openEdges.resize(size > 0 ? size : 0);
 }
 
-void TrianglePairGraph::_SingleTriangle(int tri, bool isOpenEdgeTriangle)
+void TrianglePairGraph::_SingleTriangle(size_t tri, bool isOpenEdgeTriangle)
 {
-  _paired[tri] = true;
-  _pairs.push_back(std::make_pair(tri, -1));
-
-  if (isOpenEdgeTriangle) _RemoveTriangleOpenEdges(tri);
+  for(size_t e = 0; e < 3; ++e)
+    if(_PairTriangle(_allEdges[tri * 3 + e], tri))
+      return;
+    else
+      _openEdges.push_back(_allEdges[tri * 3 + e]);
 }
 
-bool TrianglePairGraph::_PairTriangles(int tri0, int tri1, bool isOpenEdgeTriangle)
+bool TrianglePairGraph::_PairTriangles(size_t tri0, size_t tri1, bool isOpenEdgeTriangle)
 {
-  if(_paired[tri0] || _paired[tri1])return false;
+  if(tri0 == tri1 || _paired[tri0] || _paired[tri1]) return false;
 
   _paired[tri0] = true;
   _paired[tri1] = true;
@@ -235,17 +232,17 @@ bool TrianglePairGraph::_PairTriangles(int tri0, int tri1, bool isOpenEdgeTriang
   return true;
 }
 
-bool TrianglePairGraph::_PairTriangle(TrianglePairGraph::_Key common, int tri)
+bool TrianglePairGraph::_PairTriangle(TrianglePairGraph::_Key common, size_t tri)
 {
   if(_paired[tri])return false;
 
-  int pairedTriangle = -1;
+  size_t pairedTriangle = Component::INVALID_INDEX;
   size_t numOpenEdges = _openEdges.size();
   for(size_t o = 0; o < numOpenEdges; ++o) {
-    uint64_t value = _openEdges[0].first; 
+    uint64_t value = _openEdges[o].first; 
     uint64_t reversed = ((value & 0xffffffff) << 32) | (value>> 32);
-    if(_openEdges[o].first == reversed) 
-      return _PairTriangles(tri, _openEdges[0].second, true);
+    if(common.first == value || common.first == reversed) 
+      return _PairTriangles(tri, _openEdges[o].second, true);
   }
   return false;
 }
@@ -254,24 +251,24 @@ TrianglePairGraph::TrianglePairGraph(
   const pxr::VtArray<int>& faceVertexCounts, 
   const pxr::VtArray<int>& faceVertexIndices)
 {
-  int numTriangles = 0;
+  size_t numTriangles = 0;
   for(int faceVertexCount : faceVertexCounts)numTriangles += faceVertexCount - 2;
 
   _allEdges.resize(numTriangles * 3);
   _paired.resize(numTriangles, false);
 
-  int baseFaceVertexIdx = 0;
-  int triangleIdx = 0;
-  int trianglePairIdx;
-  int triangleEdgeIdx = 0;
+  size_t baseFaceVertexIdx = 0;
+  size_t triangleIdx = 0;
+  size_t trianglePairIdx;
+  size_t triangleEdgeIdx = 0;
 
   TrianglePairGraph::_Key key0, key1, key2;
 
   for (int faceVertexCount : faceVertexCounts) {
     for (int i = 1; i < faceVertexCount - 1; ++i) {
-      int a = faceVertexIndices[baseFaceVertexIdx        ];
-      int b = faceVertexIndices[baseFaceVertexIdx + i    ];
-      int c = faceVertexIndices[baseFaceVertexIdx + i + 1];
+      size_t a = faceVertexIndices[baseFaceVertexIdx        ];
+      size_t b = faceVertexIndices[baseFaceVertexIdx + i    ];
+      size_t c = faceVertexIndices[baseFaceVertexIdx + i + 1];
 
       key0 = { b | (a << 32), triangleIdx};
       key1 = { c | (b << 32), triangleIdx};
@@ -281,7 +278,7 @@ TrianglePairGraph::TrianglePairGraph(
       _allEdges[triangleEdgeIdx++] = key1;
       _allEdges[triangleEdgeIdx++] = key2;
       if (faceVertexCount == 3) {
-        _SingleTriangle(triangleIdx, false);
+        _SingleTriangle(triangleIdx, true);
       }
       // we first pair by triangle by polygon if possible
       else if(((i-1) % 2) == 0 ) {
@@ -301,6 +298,17 @@ TrianglePairGraph::TrianglePairGraph(
 
     baseFaceVertexIdx += faceVertexCount;
   }
+
+  std::cout << "num open edges : " << _openEdges.size() << std::endl;
+  size_t numUnpairedTriangles = 0;
+  for(size_t t = 0; t < numTriangles; ++t)
+    if(!_paired[t]) {
+      numUnpairedTriangles++;
+      _paired[t] = true;
+      _pairs.push_back(std::make_pair(t, Component::INVALID_INDEX));
+    }
+
+  std::cout << "num unpaired triangles : " << numUnpairedTriangles << std::endl;
 }
 
 // custom comparator for triangle edges
@@ -327,7 +335,7 @@ void  _FindTriangleNeighbors(const pxr::VtArray<Triangle>& triangles, pxr::VtArr
   }
 
   std::sort(edges.begin(), edges.end(), _CompareTriangleEdge);
-  neighbors.assign(3 * numTriangles, -1);
+  neighbors.assign(3 * numTriangles, Component::INVALID_INDEX);
 
   size_t i = 0;
   while (i < edges.size()) {
@@ -348,10 +356,15 @@ void Mesh::ComputeTrianglePairs()
   TrianglePairGraph graph(_faceVertexCounts, _faceVertexIndices);
   _trianglePairs.clear();
   uint32_t triPairId = 0;
+  size_t uniqueTriPairs = 0;
+  size_t numTriPairs  = graph.GetPairs().size();
   for(auto& triPair: graph.GetPairs()) {
+    if(triPair.second == Component::INVALID_INDEX)uniqueTriPairs++;
     _trianglePairs.push_back({ triPairId++, &_triangles[triPair.first],
-       triPair.second >= 0 ? &_triangles[triPair.second] : NULL});
+       triPair.second != Component::INVALID_INDEX ? &_triangles[triPair.second] : NULL});
   }
+
+  std::cout << "fucking unique tri pairs : " << uniqueTriPairs << " on " << numTriPairs << std::endl;
 
   BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
       
@@ -447,7 +460,7 @@ void Mesh::ComputeNeighbors()
 }
 
 float 
-Mesh::ComputeEdgeAverageLength()
+Mesh::ComputeAverageEdgeLength()
 {
   if (!BITMASK_CHECK(_flags, Mesh::HALFEDGES)) {
     ComputeHalfEdges();
@@ -477,6 +490,9 @@ static inline float _CotangentWeight(float x)
 void 
 Mesh::ComputeCotangentWeights(MeshCotangentWeights& weights)
 {
+  if(!_flags & Mesh::ADJACENTS)
+    ComputeAdjacents();
+    
   const pxr::GfVec3f *positions = GetPositionsCPtr();
   size_t numPoints = _halfEdges.GetNumVertices();
 
@@ -528,6 +544,8 @@ Mesh::ComputeCotangentWeights(MeshCotangentWeights& weights)
 void
 Mesh::ComputeAreas(MeshAreas& result)
 {
+  if(!_flags & Mesh::ADJACENTS)
+    ComputeAdjacents();
   const pxr::GfVec3f *positions = GetPositionsCPtr();
 
   size_t numPoints = _positions.size();
@@ -608,7 +626,7 @@ void Mesh::Set(
   _positions = positions;
   _previous = _positions;
   _normals = positions;
-  if(init)Prepare();
+  if(init)Init();
 }
 
 void Mesh::SetTopology(
@@ -620,7 +638,7 @@ void Mesh::SetTopology(
   _faceVertexCounts = faceVertexCounts;
   _faceVertexIndices = faceVertexIndices;
 
-  if(init)Prepare();
+  if(init)Init();
 }
 
 void Mesh::SetPositions(const pxr::GfVec3f* positions, size_t n)
@@ -644,7 +662,7 @@ void Mesh::SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions)
   }
 }
 
-void Mesh::Prepare(bool connectivity)
+void Mesh::Init(size_t connectivity)
 {
   size_t numPoints = _positions.size();
   // compute triangles
@@ -657,18 +675,32 @@ void Mesh::Prepare(bool connectivity)
   // compute bouding box
   ComputeBoundingBox();
 
-  if(connectivity) {
-    // compute half-edges
-    ComputeHalfEdges();
+  // compute connectivity if required
+  //    - adjacents = vertex connected vertices
+  //    - neighbors = vertex first ring vertices
+  switch(connectivity) {
+    case 1:
+      ComputeHalfEdges();
+      ComputeAdjacents();
+      BITMASK_SET(_flags,Mesh::HALFEDGES|Mesh::ADJACENTS);
+      break;
 
-    // compute adjacents (connected vertices)
-    ComputeAdjacents();
+    case 2:
+      ComputeHalfEdges();
+      ComputeNeighbors();
+      BITMASK_SET(_flags,Mesh::HALFEDGES|Mesh::NEIGHBORS);
+      break;
 
-    // compute neighbors (first ring vertices)
-    ComputeNeighbors();
-  } else {
-    BITMASK_CLEAR(_flags,Mesh::HALFEDGES|Mesh::NEIGHBORS);
+    case 3:
+      ComputeHalfEdges();
+      ComputeAdjacents();
+      ComputeNeighbors();
+      BITMASK_SET(_flags, Mesh::HALFEDGES|Mesh::NEIGHBORS|Mesh::ADJACENTS);
+      break;
 
+    default:
+      BITMASK_CLEAR(_flags, Mesh::HALFEDGES | Mesh::NEIGHBORS | Mesh::ADJACENTS);
+      break;
   }
 }
 
@@ -755,7 +787,7 @@ bool Mesh::SplitEdge(HalfEdge* edge)
     // reallocation mess pointer retrieve edge
     edge = _halfEdges.GetEdge(edgeIdx);
     TriangulateFace(_halfEdges.GetEdge(edge->next));
-    if (edge->twin >= 0) {
+    if (edge->twin != HalfEdge::INVALID_INDEX) {
       TriangulateFace(_halfEdges.GetEdge(edge->twin));
     }
     _halfEdges.ComputeTopology(_faceVertexCounts, _faceVertexIndices);
@@ -884,7 +916,7 @@ void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs, bool unique)
 
       found = false;
       for(size_t j=0; j < 3; ++j) {
-        if(neighbors[i+j] == -1) continue;
+        if(neighbors[i+j] == Component::INVALID_INDEX) continue;
         if(used[neighbors[i+j]])continue;
         if(!used[i/3] && !used[neighbors[i+j]]) {
           pairs.push_back({ triPairId++, &_triangles[i/3], &_triangles[neighbors[i+j]]});
@@ -902,7 +934,7 @@ void Mesh::GetAllTrianglePairs(pxr::VtArray<TrianglePair>& pairs, bool unique)
   } else 
     for(size_t i = 0; i< neighbors.size();i+=3) 
       for(size_t j=0; j < 3; ++j)
-        if(neighbors[i+j] == -1) continue;
+        if(neighbors[i+j] == Component::INVALID_INDEX) continue;
         else if(i/3 < neighbors[i+j]){
           pairs.push_back({ triPairId++, &_triangles[i/3], &_triangles[neighbors[i+j]]});
         }

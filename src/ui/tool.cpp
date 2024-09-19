@@ -120,7 +120,7 @@ static void _CollapseEdges(float factor)
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
     Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
-    float l = mesh.GetAverageEdgeLength() * factor;
+    float l = mesh.ComputeAverageEdgeLength() * factor;
     std::cout << "average edge length = " << l << std::endl;
     Tesselator tesselator(&mesh);
     tesselator.Update(l);
