@@ -302,6 +302,9 @@ BVH::Init(const std::vector<Geometry*>& geometries)
     _numComponents += ((Mesh*)GetGeometry(1))->GetTrianglePairs().size();
   }
 
+  SetMin(accum.GetMin());
+  SetMax(accum.GetMax());
+
   _mortons.clear();
   _mortons.reserve(_numComponents);
 
