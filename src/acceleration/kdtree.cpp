@@ -3,14 +3,8 @@
 #include <iterator>
 #include <numeric>
 
-#include <pxr/base/gf/vec2i.h>
-#include <pxr/base/gf/vec3d.h>
-#include <pxr/base/gf/bbox3d.h>
-#include <pxr/base/gf/ray.h>
 #include "../acceleration/kdtree.h"
-#include "../geometry/component.h"
-#include "../geometry/geometry.h"
-#include "../geometry/mesh.h"
+#include "../geometry/deformable.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
