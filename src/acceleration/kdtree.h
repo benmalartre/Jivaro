@@ -5,6 +5,8 @@
 #include <pxr/base/gf/vec3f.h>
 #include "../acceleration/intersector.h"
 
+// https://github.com/YevgeniyEngineer/KDTree/tree/main
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -47,7 +49,7 @@ public:
 
   
 private:
-  inline float _DistanceSquared(const pxr::GfVec3f &p1, const pxr::GfVec3f &p2) const noexcept
+  inline float _DistanceSq(const pxr::GfVec3f &p1, const pxr::GfVec3f &p2) const noexcept
   {
     return (p1 - p2).GetLengthSq();
   }
@@ -78,8 +80,11 @@ private:
     Cell          *right = nullptr;
   };
 
- Cell* _BuildTreeRecursively(std::vector<Cell>::iterator begin,
-   std::vector<Cell>::iterator end, std::size_t index) const;
+  Cell* _BuildTreeRecursively(std::vector<Cell>::iterator begin,
+    std::vector<Cell>::iterator end, std::size_t index) const;
+
+  void _RecurseClosest(const Cell *cell, const pxr::GfVec3f &point, 
+    size_t index, double &minDistanceSq, Cell *&nearest) const;
 
   Cell*                           _root = nullptr;
   std::vector<Cell>               _cells;

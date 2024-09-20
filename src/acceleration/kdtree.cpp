@@ -96,4 +96,31 @@ KDTree::_BuildTreeRecursively(std::vector<Cell>::iterator begin,
   return &(*middle);
 }
 
+void
+KDTree::_RecurseClosest(const KDTree::Cell *cell, const pxr::GfVec3f &point, size_t index, 
+  double &minDistanceSq, KDTree::Cell *&nearest) const
+{
+  if (cell == nullptr)
+    return;
+
+  const double distanceSq = _DistanceSq(point, cell->point);
+  if (distanceSq <= minDistanceSq)
+  {
+    minDistanceSq = distanceSq;
+    nearest = const_cast<KDTree::Cell *>(cell);
+  }
+
+  const double delta = cell->point[index] - point[index];
+
+  index = (index + 1) % 3;
+
+  const bool isDeltaPositive = (delta > 0.0);
+  _RecurseClosest(isDeltaPositive ? cell->left : cell->right, 
+    point, index, minDistanceSq, nearest);
+
+  if (delta * delta <= minDistanceSq)
+    _RecurseClosest(isDeltaPositive ? cell->right : cell->left, 
+      point, index, minDistanceSq, nearest);
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE
