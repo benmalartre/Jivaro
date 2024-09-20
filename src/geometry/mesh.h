@@ -31,10 +31,10 @@ protected:
     size_t  triangle;
 
     bool operator<(const _HalfEdge& other) const {
-      if (area != other.area) return area > other.area;
-      if (vertex0 != other.vertex0) return vertex0 > other.vertex0;
-      if (vertex1 != other.vertex1) return vertex1 > other.vertex1;
-      return false;
+      return 
+        area > other.area || 
+        (area == other.area && vertex0 > other.vertex0) || 
+        (area == other.area && vertex0 ==other.vertex0 && vertex1 > other.vertex1);
     }
 
     bool operator==(const _HalfEdge& other) const {

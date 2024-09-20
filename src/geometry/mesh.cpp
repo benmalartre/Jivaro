@@ -216,7 +216,7 @@ TrianglePairGraph::_SingleTriangle(size_t tri)
 bool 
 TrianglePairGraph::_PairTriangles(size_t tri0, size_t tri1)
 {
-  if(tri0 == tri1 || _paired[tri0] || _paired[tri1]) return false;
+  if(_paired[tri0] || _paired[tri1]) return false;
 
   _paired[tri0] = true;
   _paired[tri1] = true;
@@ -240,30 +240,40 @@ TrianglePairGraph::TrianglePairGraph(
   size_t baseFaceVertexIdx = 0;
   size_t triangleIdx = 0;
   size_t triangleEdgeIdx = 0;
+  size_t removeHalfEdges = 0;
 
   for (int faceVertexCount : faceVertexCounts) {
-    for (int i = 1; i < faceVertexCount - 1; ++i) {
-      size_t a = faceVertexIndices[baseFaceVertexIdx        ];
-      size_t b = faceVertexIndices[baseFaceVertexIdx + i    ];
-      size_t c = faceVertexIndices[baseFaceVertexIdx + i + 1];
+    if(faceVertexCount == 4) {
+      _PairTriangles(triangleIdx, triangleIdx+1);
+      triangleIdx += 2;
+      removeHalfEdges += 6;
+    } else {
+      for (int i = 1; i < faceVertexCount - 1; ++i) {
+        size_t a = faceVertexIndices[baseFaceVertexIdx        ];
+        size_t b = faceVertexIndices[baseFaceVertexIdx + i    ];
+        size_t c = faceVertexIndices[baseFaceVertexIdx + i + 1];
 
-      _halfEdges[triangleEdgeIdx++] = a < b ? 
-        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, a, b), a, b, triangleIdx}) :
-        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, b, a), b, a, triangleIdx});
+        _halfEdges[triangleEdgeIdx++] = a < b ? 
+          _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, a, b), a, b, triangleIdx}) :
+          _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, b, a), b, a, triangleIdx});
 
-      _halfEdges[triangleEdgeIdx++] = b < c ? 
-        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, b, c), b, c, triangleIdx}) :
-        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, c, b), c, b, triangleIdx});
+        _halfEdges[triangleEdgeIdx++] = b < c ? 
+          _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, b, c), b, c, triangleIdx}) :
+          _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, c, b), c, b, triangleIdx});
 
-      _halfEdges[triangleEdgeIdx++] = c < a ? 
-        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, c, a), c, a, triangleIdx}) :
-        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, a, c), a, c, triangleIdx});
+        _halfEdges[triangleEdgeIdx++] = c < a ? 
+          _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, c, a), c, a, triangleIdx}) :
+          _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, a, c), a, c, triangleIdx});
 
-      triangleIdx++;
+        triangleIdx++;
+      }
     }
 
     baseFaceVertexIdx += faceVertexCount;
   }
+
+  if(removeHalfEdges)_halfEdges.resize(_halfEdges.size() - removeHalfEdges);
+  if(!_halfEdges.size())return;
 
   // sort triangle half edges lexicographicaly
   std::sort(_halfEdges.begin(), _halfEdges.end());
@@ -278,13 +288,12 @@ TrianglePairGraph::TrianglePairGraph(
     if(numTrianglesPaired == numTriangles)break;
   }
 
-  size_t numUnpairedTriangles = 0;
-  for(size_t t = 0; t < numTriangles; ++t)
-    if(!_paired[t]) {
-      numUnpairedTriangles++;
-      _paired[t] = true;
-      _pairs.push_back(std::make_pair(t, Component::INVALID_INDEX));
-    }
+  if(numTrianglesPaired != numTriangles)
+    for(size_t t = 0; t < numTriangles; ++t)
+      if(!_paired[t]) {
+        _paired[t] = true;
+        _pairs.push_back(std::make_pair(t, Component::INVALID_INDEX));
+      }
 }
 
 // custom comparator for triangle edges

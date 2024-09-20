@@ -293,13 +293,13 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 {
   Intersector::_Init(geometries);
   
-  const pxr::GfBBox3d bbox = GetGeometry(0)->GetBoundingBox(true);
+  const pxr::GfBBox3d bbox;
   pxr::GfRange3d accum = bbox.GetRange();
-  _numComponents = ((Mesh*)GetGeometry(0))->GetTrianglePairs().size();
-  for (size_t i = 1; i < GetNumGeometries(); ++i) {
-    const pxr::GfBBox3d bbox = GetGeometry(i)->GetBoundingBox(true);
+  _numComponents = 0;
+  for (size_t g = 0; g < GetNumGeometries(); ++g) {
+    const pxr::GfBBox3d bbox = GetGeometry(g)->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
-    _numComponents += ((Mesh*)GetGeometry(1))->GetTrianglePairs().size();
+    _numComponents += ((Mesh*)GetGeometry(g))->GetTrianglePairs().size();
   }
 
   SetMin(accum.GetMin());
@@ -307,6 +307,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 
   _mortons.clear();
   _mortons.reserve(_numComponents);
+  
 
   // first load all geometries
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
@@ -330,8 +331,8 @@ BVH::Init(const std::vector<Geometry*>& geometries)
           uint64_t minimum = _ComputeCode(_GetCell(leafIdx)->GetMin());
           uint64_t maximum = _ComputeCode(_GetCell(leafIdx)->GetMax());
           _mortons.push_back({ code, minimum, maximum, leafIdx});
-        }  
-        
+        }
+        break;
       }
     }
     SetGeometryCellIndices(g, start, _cells.size());
