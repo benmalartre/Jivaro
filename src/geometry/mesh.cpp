@@ -2,7 +2,7 @@
 //----------------------------------------------
 
 #include <cmath>
-#include <unordered_map>
+#include <algorithm>
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/vec2d.h>
 #include <pxr/base/gf/vec3f.h>
@@ -197,30 +197,24 @@ static size_t _TwinTriangleIndex(size_t polygonEdgeIdx, size_t triangleEdgeIdx,
   }
 }
 
-void TrianglePairGraph::_RemoveTriangleOpenEdges(size_t tri)
+float 
+TrianglePairGraph::_ComputeEdgeBoundingBoxArea(const pxr::GfVec3f *positions, size_t vertex0, size_t vertex1) 
 {
-  size_t shift = 0;
-  size_t numOpenEdges = _openEdges.size();
-  for(size_t o = 0; o < numOpenEdges; ++o) {
-    if(_openEdges[o].second == tri)shift++;
-    if(shift>0 && (o + shift) < numOpenEdges) {
-      _openEdges[o] = _openEdges[o+shift];
-    } 
-  }
-  size_t size = numOpenEdges - shift;
-  if(shift > 0)_openEdges.resize(size > 0 ? size : 0);
+  const float width = pxr::GfAbs(positions[vertex0][0] - positions[vertex1][0]);
+  const float height = pxr::GfAbs(positions[vertex0][1] - positions[vertex1][1]);
+  const float depth = pxr::GfAbs(positions[vertex0][2] - positions[vertex1][2]);
+  return 2.f * (width * height + width * depth + height * depth);
 }
 
-void TrianglePairGraph::_SingleTriangle(size_t tri, bool isOpenEdgeTriangle)
+void 
+TrianglePairGraph::_SingleTriangle(size_t tri)
 {
-  for(size_t e = 0; e < 3; ++e)
-    if(_PairTriangle(_allEdges[tri * 3 + e], tri))
-      return;
-    else
-      _openEdges.push_back(_allEdges[tri * 3 + e]);
+  _paired[tri] = true;
+  _pairs.push_back(std::make_pair(tri, Component::INVALID_INDEX));
 }
 
-bool TrianglePairGraph::_PairTriangles(size_t tri0, size_t tri1, bool isOpenEdgeTriangle)
+bool 
+TrianglePairGraph::_PairTriangles(size_t tri0, size_t tri1)
 {
   if(tri0 == tri1 || _paired[tri0] || _paired[tri1]) return false;
 
@@ -228,41 +222,24 @@ bool TrianglePairGraph::_PairTriangles(size_t tri0, size_t tri1, bool isOpenEdge
   _paired[tri1] = true;
   _pairs.push_back(std::make_pair(tri0, tri1));
 
-  if(isOpenEdgeTriangle) _RemoveTriangleOpenEdges(tri1);
   return true;
-}
-
-bool TrianglePairGraph::_PairTriangle(TrianglePairGraph::_Key common, size_t tri)
-{
-  if(_paired[tri])return false;
-
-  size_t pairedTriangle = Component::INVALID_INDEX;
-  size_t numOpenEdges = _openEdges.size();
-  for(size_t o = 0; o < numOpenEdges; ++o) {
-    uint64_t value = _openEdges[o].first; 
-    uint64_t reversed = ((value & 0xffffffff) << 32) | (value>> 32);
-    if(common.first == value || common.first == reversed) 
-      return _PairTriangles(tri, _openEdges[o].second, true);
-  }
-  return false;
 }
 
 TrianglePairGraph::TrianglePairGraph(
   const pxr::VtArray<int>& faceVertexCounts, 
-  const pxr::VtArray<int>& faceVertexIndices)
+  const pxr::VtArray<int>& faceVertexIndices,
+  const pxr::GfVec3f *positions)
 {
   size_t numTriangles = 0;
-  for(int faceVertexCount : faceVertexCounts)numTriangles += faceVertexCount - 2;
+  for(int faceVertexCount : faceVertexCounts)
+    numTriangles += faceVertexCount - 2;
 
-  _allEdges.resize(numTriangles * 3);
+  _halfEdges.resize(numTriangles * 3);
   _paired.resize(numTriangles, false);
 
   size_t baseFaceVertexIdx = 0;
   size_t triangleIdx = 0;
-  size_t trianglePairIdx;
   size_t triangleEdgeIdx = 0;
-
-  TrianglePairGraph::_Key key0, key1, key2;
 
   for (int faceVertexCount : faceVertexCounts) {
     for (int i = 1; i < faceVertexCount - 1; ++i) {
@@ -270,28 +247,17 @@ TrianglePairGraph::TrianglePairGraph(
       size_t b = faceVertexIndices[baseFaceVertexIdx + i    ];
       size_t c = faceVertexIndices[baseFaceVertexIdx + i + 1];
 
-      key0 = { b | (a << 32), triangleIdx};
-      key1 = { c | (b << 32), triangleIdx};
-      key2 = { a | (c << 32), triangleIdx};
+      _halfEdges[triangleEdgeIdx++] = a < b ? 
+        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, a, b), a, b, triangleIdx}) :
+        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, b, a), b, a, triangleIdx});
 
-      _allEdges[triangleEdgeIdx++] = key0;
-      _allEdges[triangleEdgeIdx++] = key1;
-      _allEdges[triangleEdgeIdx++] = key2;
-      if (faceVertexCount == 3) {
-        _SingleTriangle(triangleIdx, true);
-      }
-      // we first pair by triangle by polygon if possible
-      else if(((i-1) % 2) == 0 ) {
-        _PairTriangles(triangleIdx, triangleIdx+1, false);
-      } // else try pair with open edges from the list
-      else {
-        if(i < (faceVertexCount-2) && !_PairTriangle(key0, triangleIdx))
-          _openEdges.push_back(key0);
+      _halfEdges[triangleEdgeIdx++] = b < c ? 
+        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, b, c), b, c, triangleIdx}) :
+        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, c, b), c, b, triangleIdx});
 
-        if(!_paired[triangleIdx] && !_PairTriangle(key1, triangleIdx))
-          _openEdges.push_back(key1);
-
-      }
+      _halfEdges[triangleEdgeIdx++] = c < a ? 
+        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, c, a), c, a, triangleIdx}) :
+        _HalfEdge({_ComputeEdgeBoundingBoxArea(positions, a, c), a, c, triangleIdx});
 
       triangleIdx++;
     }
@@ -299,7 +265,6 @@ TrianglePairGraph::TrianglePairGraph(
     baseFaceVertexIdx += faceVertexCount;
   }
 
-  std::cout << "num open edges : " << _openEdges.size() << std::endl;
   size_t numUnpairedTriangles = 0;
   for(size_t t = 0; t < numTriangles; ++t)
     if(!_paired[t]) {
@@ -308,7 +273,6 @@ TrianglePairGraph::TrianglePairGraph(
       _pairs.push_back(std::make_pair(t, Component::INVALID_INDEX));
     }
 
-  std::cout << "num unpaired triangles : " << numUnpairedTriangles << std::endl;
 }
 
 // custom comparator for triangle edges
@@ -352,19 +316,13 @@ void  _FindTriangleNeighbors(const pxr::VtArray<Triangle>& triangles, pxr::VtArr
 
 void Mesh::ComputeTrianglePairs()
 {
-
-  TrianglePairGraph graph(_faceVertexCounts, _faceVertexIndices);
+  TrianglePairGraph graph(_faceVertexCounts, _faceVertexIndices, &_positions[0]);
   _trianglePairs.clear();
   uint32_t triPairId = 0;
-  size_t uniqueTriPairs = 0;
-  size_t numTriPairs  = graph.GetPairs().size();
   for(auto& triPair: graph.GetPairs()) {
-    if(triPair.second == Component::INVALID_INDEX)uniqueTriPairs++;
     _trianglePairs.push_back({ triPairId++, &_triangles[triPair.first],
        triPair.second != Component::INVALID_INDEX ? &_triangles[triPair.second] : NULL});
   }
-
-  std::cout << "fucking unique tri pairs : " << uniqueTriPairs << " on " << numTriPairs << std::endl;
 
   BITMASK_SET(_flags, Mesh::TRIANGLEPAIRS);
       

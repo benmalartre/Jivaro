@@ -366,7 +366,6 @@ HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 HalfEdge* 
 HalfEdgeGraph::GetPreviousAdjacentEdge(const HalfEdge* edge)
 {
-  std::cout << "get previous adjacent edge for vertex " << edge->vertex << std::endl;
   if (_halfEdges[edge->prev].twin != HalfEdge::INVALID_INDEX)
     return &_halfEdges[_halfEdges[edge->prev].twin];
   return NULL;
@@ -620,7 +619,6 @@ HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& 
       if(current == edge)return;
     } while(current);
   }
-  std::cout << neighbors << std::endl;
 }
 
 bool

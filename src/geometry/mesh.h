@@ -1,6 +1,8 @@
 #ifndef JVR_GEOMETRY_MESH_H
 #define JVR_GEOMETRY_MESH_H
 
+#include <vector>
+#include <unordered_map>
 #include <pxr/usd/usdGeom/mesh.h>
 
 #include "../geometry/component.h"
@@ -13,28 +15,37 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class TrianglePairGraph {
 public:
-  using _Keys = std::vector<std::pair<uint64_t, size_t>>;
-  using _Key  = _Keys::value_type;
   using _Pairs = std::vector<std::pair<size_t, size_t>> ;
   using _Pair = _Pairs::value_type;
   
   TrianglePairGraph(const pxr::VtArray<int>& faceCounts, 
-    const pxr::VtArray<int>& faceIndices);
+    const pxr::VtArray<int>& faceIndices, const pxr::GfVec3f *positions);
 
   _Pairs& GetPairs() { return _pairs; };
 
-
 protected:
-  void _RemoveTriangleOpenEdges(size_t tri);
-  bool _PairTriangles(size_t tri0, size_t tri11, bool isOpenEdgeTriangle);
-  bool _PairTriangle(_Key common, size_t tri);
-  void _SingleTriangle(size_t tri, bool isOpenEdgeTriangle);
+  struct _HalfEdge {
+    float   area;
+    size_t  vertex0;
+    size_t  vertex1;
+    size_t  triangle;
+
+    bool operator<(const _HalfEdge& other) const {
+      if (area != other.area) return area > other.area;
+      if (vertex0 != other.vertex0) return vertex0 > other.vertex0;
+      if (vertex1 != other.vertex1) return vertex1 > other.vertex1;
+      return false;
+    }
+  };
+
+  float _ComputeEdgeBoundingBoxArea(const pxr::GfVec3f *positions, size_t vertex0, size_t vertex1);
+  bool _PairTriangles(size_t tri0, size_t tri11);
+  void _SingleTriangle(size_t tri);
 
 private:
-  _Keys                 _openEdges;
-  _Keys                 _allEdges;
-  std::vector<bool>     _paired;
-  _Pairs                _pairs;
+  std::vector<_HalfEdge>  _halfEdges;
+  std::vector<bool>       _paired;
+  _Pairs                  _pairs;
 
 };
 
