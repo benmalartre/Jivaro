@@ -330,7 +330,7 @@ Application::TerminateExec(pxr::UsdStageRefPtr& stage)
 void
 Application::Term()
 {
-
+  std::cout << "Jivaro Application Terminate!!" << std::endl;
 }
 
 bool

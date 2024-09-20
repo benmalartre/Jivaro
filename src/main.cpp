@@ -17,8 +17,7 @@ int main(int argc, char *const *argv) {
 
   // Main loop
   while (app->Update());
-
-  glfwTerminate();
   delete app;
+  glfwTerminate();
   return 1;
 }

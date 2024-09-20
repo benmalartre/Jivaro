@@ -565,8 +565,6 @@ Window::RemoveView(View* view)
   } else if(parent->GetRight() == view) {
     sibling = parent->GetLeft();
   }
-  std::cout << "remove view " << view << std::endl;
-  std::cout << "sibling view " << sibling << std::endl;
 
   if (sibling) {
     if (sibling->GetFlag(View::LEAF)) {
@@ -582,16 +580,13 @@ Window::RemoveView(View* view)
       sibling->SetLeft(NULL);
       sibling->SetRight(NULL);
     }
-    std::cout << "delete sibbling" << std::endl;
     delete sibling;
   }
 
-  std::cout << "delete view" << std::endl;
   delete view;
   Resize(_width, _height);
   ForceRedraw();
   _mainView->SetDirty();
-  std::cout << "remove view done" << std::endl;
 }
 
 // collect child leaves views from specified view
@@ -846,12 +841,12 @@ Window::SetupImgui()
 void 
 Window::ClearImgui()
 {
-  ImGui::DestroyContext(_context);
   // Cleanup
   if(_shared) {
-    //ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
   }
+  ImGui::DestroyContext(_context);
 }
 
 void Window::DragSplitter(int x, int y)

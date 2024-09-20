@@ -62,15 +62,12 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
 
 View::~View()
 {
-  std::cout << "destruct view : " << this << ":" << _uis.size() << std::endl;
-  for (auto& ui : _uis) {
-    std::cout << "    -> " << ui->GetName() << std::endl; delete ui;
-  }
+  for (auto& ui : _uis)
+    delete ui;
  
   if (_tab) delete _tab;
   if (_left) delete _left;
   if (_right) delete _right;
-  std::cout << "view destructed" << std::endl;
 }
 
 void 
