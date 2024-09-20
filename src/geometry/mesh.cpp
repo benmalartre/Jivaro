@@ -265,6 +265,19 @@ TrianglePairGraph::TrianglePairGraph(
     baseFaceVertexIdx += faceVertexCount;
   }
 
+  // sort triangle half edges lexicographicaly
+  std::sort(_halfEdges.begin(), _halfEdges.end());
+
+  size_t numTrianglesPaired = 0;
+
+  for(size_t e = 0; e < _halfEdges.size() - 1; ++e)
+  {
+    if(_paired[_halfEdges[e].triangle]) continue;
+    if(_halfEdges[e] == _halfEdges[e+1] && _PairTriangles(_halfEdges[e].triangle, _halfEdges[e+1].triangle))
+      {numTrianglesPaired+=2;e++;}
+    if(numTrianglesPaired == numTriangles)break;
+  }
+
   size_t numUnpairedTriangles = 0;
   for(size_t t = 0; t < numTriangles; ++t)
     if(!_paired[t]) {
@@ -272,7 +285,6 @@ TrianglePairGraph::TrianglePairGraph(
       _paired[t] = true;
       _pairs.push_back(std::make_pair(t, Component::INVALID_INDEX));
     }
-
 }
 
 // custom comparator for triangle edges

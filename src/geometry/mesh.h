@@ -36,6 +36,10 @@ protected:
       if (vertex1 != other.vertex1) return vertex1 > other.vertex1;
       return false;
     }
+
+    bool operator==(const _HalfEdge& other) const {
+      return vertex0 == other.vertex0 && vertex1 == other.vertex1;
+    }
   };
 
   float _ComputeEdgeBoundingBoxArea(const pxr::GfVec3f *positions, size_t vertex0, size_t vertex1);
@@ -46,8 +50,8 @@ private:
   std::vector<_HalfEdge>  _halfEdges;
   std::vector<bool>       _paired;
   _Pairs                  _pairs;
-
 };
+
 
 // offsets = vertex cotangent weights offset in value array
 // values = per adjacents vertex pair cotangent weight
