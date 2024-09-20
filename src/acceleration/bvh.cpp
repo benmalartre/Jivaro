@@ -308,7 +308,6 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _mortons.clear();
   _mortons.reserve(_numComponents);
   
-
   // first load all geometries
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
     size_t start = _cells.size();

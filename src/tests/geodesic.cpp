@@ -25,19 +25,28 @@ bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   size_t numTriangles = mesh->GetNumTriangles();
 
+  pxr::GfVec3f localPoint = mesh->GetInverseMatrix().Transform(point);
+  Location localHit(*hit);
+  localHit.TransformT(mesh->GetInverseMatrix());
 
   bool found = false;
 
   for(size_t t = 0; t < numTriangles; ++t) {
     Triangle* triangle = mesh->GetTriangle(t);
 
-    if (triangle->Closest(positions, point, hit)) {
-      found = true;
-      if (result) {
-        Triangle* triangle = mesh->GetTriangle(hit->GetComponentIndex());
-        const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+    if (triangle->Closest(positions, localPoint, &localHit)) {
+      
+      localHit.TransformT(mesh->GetMatrix());
 
-        *result = hit->ComputePosition(positions, &triangle->vertices[0], 3);
+      if (localHit.GetT() < hit->GetT()) {
+        hit->Set(localHit);
+        found = true;
+        if (result) {
+          Triangle* triangle = mesh->GetTriangle(hit->GetComponentIndex());
+          const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+
+          *result = hit->ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
+        }
       }
     }
   }
@@ -287,7 +296,7 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
       const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
       Triangle* triangle = hitMesh->GetTriangle(hit.GetComponentIndex());
-      pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
+      pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3, &hitMesh->GetMatrix());
       points[1] = closest;
     }
 
