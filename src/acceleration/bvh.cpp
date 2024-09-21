@@ -80,11 +80,11 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     Component* component = (Component*)cell->GetData();
     Location localHit(*hit);
     if (component->Raycast(points, localRay, &localHit)) {
-      const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetT()));
+      const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetDistance()));
       const double distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
       if ((distance < *minDistance) && (distance < maxDistance)) {
         hit->Set(localHit);
-        hit->SetT(distance);
+        hit->SetDistance(distance);
         hit->SetGeometryIndex(geomIdx);
         *minDistance = distance;
         return true;
@@ -100,7 +100,7 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     if (right && _Raycast(right, ray, &rightHit, maxDistance, minDistance))rightFound=true;
 
     if (leftFound && rightFound) {
-      if(leftHit.GetT()<rightHit.GetT()) { 
+      if(leftHit.GetDistance()<rightHit.GetDistance()) {
         hit->Set(leftHit); return true;
       } else {
         hit->Set(rightHit); return true;
@@ -115,62 +115,59 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
 }
 
 bool 
-BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit, 
-  double maxDistance) const
+BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, ClosestPoint* hit, 
+  double maxDistanceSq) const
 {  
   if(!cell->Contains(point)) {
-    const double distance = pxr::GfSqrt(cell->GetDistanceSquared(point));
-    if(distance > hit->GetT() || distance > maxDistance)return false;
+    const double distanceSq = cell->GetDistanceSquared(point);
+    if(distanceSq > (point - hit->GetPoint()).GetLengthSq() || distanceSq > maxDistanceSq)return false;
   }
 
   if (cell->IsLeaf()) {
 
     size_t geomIdx = GetGeometryIndexFromCell(cell);
     const Geometry* geometry = GetGeometry(geomIdx);
+    const pxr::GfMatrix4d& invMatrix = geometry->GetInverseMatrix();
     
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)cell->GetData();
-    pxr::GfVec3f localPoint(geometry->GetInverseMatrix().Transform(point));
+    pxr::GfVec3f localPoint(invMatrix.Transform(point));
     
-    Location localHit;
+    ClosestPoint localHit(*hit);
+    localHit.ConvertToLocal(invMatrix, localPoint);
 
     if (component->Closest(points, localPoint, &localHit)) {
-      const Triangle* triangle = ((const Mesh*)geometry)->GetTriangle(localHit.GetComponentIndex());
-      localHit.SetT((localHit.ComputePosition(points, &triangle->vertices[0], 3,
-        &geometry->GetMatrix()) - point).GetLength());
-    }
-
-    if (localHit.GetT() < hit->GetT()) {
+      localHit.ConvertToWorld(geometry->GetMatrix(), point);
       hit->Set(localHit);
       hit->SetGeometryIndex(geomIdx);
       return true;
     }
-    
+
     return false;
   }
   else {
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = GetCell(cell->GetRight());
 
-    double maxDistSq = pxr::GfPow(hit->GetT(), 2);
+    double hitDistSq = hit->IsValid() ? (point - hit->GetPoint()).GetLengthSq() : DBL_MAX;
     double leftDistSq = left->GetDistanceSquared(point);
     double rightDistSq = right->GetDistanceSquared(point);
 
-    if( leftDistSq < maxDistSq && rightDistSq < maxDistSq ) {
+    if( leftDistSq < hitDistSq && rightDistSq < hitDistSq) {
       bool leftFound(false), rightFound(false);
       if(leftDistSq < rightDistSq) {
-        leftFound = _Closest(left, point, hit, hit->GetT());
-        rightFound = _Closest(right, point, hit, hit->GetT());
+        leftFound = _Closest(left, point, hit, hitDistSq);
+        rightFound = _Closest(right, point, hit, hitDistSq);
       } else {
-        rightFound = _Closest(right, point, hit, hit->GetT());
-        leftFound = _Closest(left, point, hit, hit->GetT());
+        rightFound = _Closest(right, point, hit, hitDistSq);
+        leftFound = _Closest(left, point, hit, hitDistSq);
       }
       return leftFound || rightFound;
     }
-    else if( leftDistSq < maxDistSq )
-      return _Closest(left, point, hit, hit->GetT());
-    else if( rightDistSq < maxDistSq )
-      return _Closest(right, point, hit, hit->GetT());
+    else if( leftDistSq < hitDistSq )
+      return _Closest(left, point, hit, hitDistSq);
+    else if( rightDistSq < hitDistSq )
+      return _Closest(right, point, hit, hitDistSq);
     else 
       return false;
   }
@@ -442,9 +439,10 @@ BVH::_ComputeHitPoint(Location* hit) const
 
 
 bool BVH::Closest(const pxr::GfVec3f& point, 
-  Location* hit, double maxDistance) const
+  ClosestPoint* hit, double maxDistance) const
 {
-  return _Closest(_root, point, hit, maxDistance);
+  return _Closest(_root, point, hit, 
+    maxDistance < DBL_MAX ? maxDistance * maxDistance : DBL_MAX);
 }
 
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,

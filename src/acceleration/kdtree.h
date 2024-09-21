@@ -27,19 +27,17 @@ public:
   struct Cell : public pxr::GfRange3d
   {
     explicit Cell(const IndexPoint &point=IndexPoint(INVALID_INDEX, pxr::GfVec3f(0.f)))
-      : point(point), left(nullptr), right(nullptr)
+      : point(point), left(INVALID_INDEX), right(INVALID_INDEX)
     {
     }
     ~Cell()
     {
-      left = nullptr;
-      right = nullptr;
     }
 
     short             axis;
     IndexPoint        point;
-    Cell              *left = nullptr;
-    Cell              *right = nullptr;
+    size_t            left = INVALID_INDEX;
+    size_t            right = INVALID_INDEX;
   };
 
   using IndexDistance = std::pair<size_t, float>; // Index + Distance
@@ -70,7 +68,7 @@ public:
   Cell* GetCell(size_t index) { return &_cells[index]; };
   const Cell* GetCell(size_t index) const { return &_cells[index]; };
 
-  Cell* AddCell(const IndexPoint& point=IndexPoint(INVALID_INDEX, pxr::GfVec3f(0.f)));
+  size_t AddCell(const IndexPoint& point=IndexPoint(INVALID_INDEX, pxr::GfVec3f(0.f)));
 
   const Geometry* GetGeometryFromCell(const Cell* cell) const;
   size_t GetGeometryIndexFromCell(const Cell* cell) const;
@@ -85,7 +83,7 @@ public:
 
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
-  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
+  virtual bool Closest(const pxr::GfVec3f& point, ClosestPoint* hit,
     double maxDistance) const override;
 
 private:
@@ -109,7 +107,7 @@ private:
 
   size_t _GetIndex(const Cell* cell) const;
 
-  Cell* _BuildTreeRecursively(const pxr::GfRange3d& range, 
+  size_t _BuildTreeRecursively(const pxr::GfRange3d& range, 
     size_t depth, size_t begin, size_t end);
 
   void _RecurseClosest(const Cell *cell, const pxr::GfVec3f &point, 

@@ -75,7 +75,7 @@ Edge::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::G
 
 
 bool 
-Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
+Edge::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, ClosestPoint* hit) const
 {
   return false;
 }

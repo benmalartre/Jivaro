@@ -101,7 +101,7 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
       if (_bvh.Raycast(pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
       {
         // calculate cell in which intersection occurred
-        const float zpos = rayStart[axis] + hit.GetT() * rayDir[axis];
+        const float zpos = rayStart[axis] + hit.GetDistance() * rayDir[axis];
         const float zhit = (zpos - minExtents[axis]) / _radius;
 
         uint32_t z = uint32_t(floorf((rayStart[axis] - minExtents[axis]) / _radius + 0.5f));
@@ -116,7 +116,7 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 
         inside = !inside;
 
-        rayStart += rayDir * (hit.GetT() + eps);
+        rayStart += rayDir * (hit.GetDistance() + eps);
 
       }
       else {
@@ -147,7 +147,7 @@ void Voxels::_ProximityWork(size_t begin, size_t end)
 
   for (size_t cell = begin; cell < end; ++cell) {
     const pxr::GfVec3f point = GetCellPosition(cell);
-    Location hit;
+    ClosestPoint hit;
     if(_bvh.Closest(point, &hit, threshold))
       _data[cell] += 3;
   }

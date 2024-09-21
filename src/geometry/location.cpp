@@ -43,4 +43,15 @@ Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t
   else return result;
 }
 
+//=================================================================================================
+// CLOSEST POINT CLASS
+//=================================================================================================
+void 
+ClosestPoint::Set(const ClosestPoint& other) {
+  _geomId     = other._geomId;
+  _compId     = other._compId;
+  _coords     = other._coords;
+  _point      = other._point;
+}
+
 PXR_NAMESPACE_CLOSE_SCOPE

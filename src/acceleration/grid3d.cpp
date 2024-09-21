@@ -36,11 +36,11 @@ bool Grid3D::Cell::Raycast(const Geometry* geometry, const pxr::GfRay& ray,
   Location localHit(*hit);
   for (Component* component : components) {
     if (component->Raycast(points, localRay, &localHit)) {
-      const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetT()));
+      const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetDistance()));
       const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
       if (distance < *minDistance && distance < maxDistance) {
         hit->Set(localHit);
-        hit->SetT(distance);
+        hit->SetDistance(distance);
         hit->SetGeometryIndex(0);
         *minDistance = distance;
         hitSomething = true;
@@ -274,8 +274,7 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   return hitSomething;
 }
 
-bool Grid3D::Closest(const pxr::GfVec3f& point, Location* hit,
-  double maxDistance) const
+bool Grid3D::Closest(const pxr::GfVec3f& point, ClosestPoint* hit, double maxDistance) const
 {
   return false;
 }

@@ -79,7 +79,7 @@ Polygon::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hi
 // Polygon closest point
 //-------------------------------------------------------
 bool 
-Polygon::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
+Polygon::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, ClosestPoint* hit) const
 {
   bool hitSometing = false;
   if (left && left->Closest(points, point, hit))hitSometing = true;

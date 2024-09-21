@@ -18,44 +18,38 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit, pxr::GfVec3f* result=NULL)
+bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, ClosestPoint* hit, pxr::GfVec3f* result=NULL)
 {
-  if(mesh->GetBoundingBox().GetRange().GetDistanceSquared(point) > pxr::GfPow(hit->GetT(), 2))
-    return false;
-
-  float minDistance = FLT_MAX;
+  bool found(false);
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   pxr::VtArray<TrianglePair>& pairs = mesh->GetTrianglePairs();
   size_t numPairs = pairs.size();
 
-  pxr::GfVec3f localPoint(mesh->GetInverseMatrix().Transform(point));
-  Location localHit;
+  const pxr::GfMatrix4d &invMatrix = mesh->GetInverseMatrix();
+  const pxr::GfMatrix4d &matrix = mesh->GetMatrix();
 
-  bool found = false;
+  ClosestPoint localHit(*hit);
+
+  pxr::GfVec3f localPoint(invMatrix.Transform(point));
+
+  if(!localHit.GetComponentIndex() == ClosestPoint::INVALID_INDEX)
+    localHit.ConvertToLocal(invMatrix, localPoint);
 
   for(size_t t = 0; t < numPairs; ++t) {
     TrianglePair* pair = &pairs[t];
 
-    if (pair->Closest(positions, localPoint, &localHit))
+    if (pair->Closest(positions, localPoint, &localHit)) 
       found = true;
+    
   }
   if(found) {
-    Triangle* triangle = mesh->GetTriangle(localHit.GetComponentIndex());
-    localHit.SetT((localHit.ComputePosition(positions, &triangle->vertices[0], 3,
-      &mesh->GetMatrix()) - point).GetLength());
-    if(localHit.GetT() > hit->GetT()) return false;
-
+    localHit.ConvertToWorld(matrix, point);
+    if (result)
+      *result = pxr::GfVec3f(localHit.GetPoint());
     hit->Set(localHit);
-    if (result) {
-      Triangle* triangle = mesh->GetTriangle(hit->GetComponentIndex());
-      const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-
-      *result = hit->ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
-    }
     return true;
   }
   return false;
-  
 }
 
 void 
@@ -71,11 +65,11 @@ TestGeodesic::_BenchmarckClosestPoints()
   uint64_t startT1 = CurrentTime();
   
   for (size_t n = 0; n < N; ++n) {
-    Location hit;
+    ClosestPoint hit;
     pxr::GfVec3f result;
     for (size_t m = 0; m < _meshes.size(); ++m)
       if (_ConstraintPointOnMesh((Mesh*)_meshes[m], points[n], &hit, &result))
-        result1[n] = result;
+        result1[n] = pxr::GfVec3f(hit.GetPoint());
   }
 
   uint64_t elapsedT1 = CurrentTime() - startT1;
@@ -84,13 +78,9 @@ TestGeodesic::_BenchmarckClosestPoints()
 
   uint64_t startT2 = CurrentTime();
   for(size_t n = 0; n < N  ; ++n) {
-    Location hit;
-    if(_bvh.Closest(points[n], &hit, FLT_MAX)) {
-      Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
-      const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
-      Triangle* triangle = hitMesh->GetTriangle(hit.GetComponentIndex());
-      pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3);
-      result2[n] = closest;
+    ClosestPoint hit;
+    if(_bvh.Closest(points[n], &hit, DBL_MAX)) {
+      result2[n] = pxr::GfVec3f(hit.GetPoint());
     }
   }
   uint64_t elapsedT2 = CurrentTime() - startT2;
@@ -106,17 +96,14 @@ void TestGeodesic::_ClosestPointQuery(size_t begin, size_t end, const pxr::GfVec
 {
   for (size_t index = begin; index < end; ++index) {
     double minDistance = DBL_MAX;
-    Location hit;
+    ClosestPoint hit;
     if (_bvh.Closest(positions[index], &hit, DBL_MAX)) {
       const Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
       const pxr::GfMatrix4d& matrix = collided->GetMatrix();
       switch (collided->GetType()) {
       case Geometry::MESH:
       {
-        Mesh* mesh = (Mesh*)collided;
-        Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
-
-        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &matrix);
+        results[index] = pxr::GfVec3f(hit.GetPoint());
         break;
       }
       case Geometry::CURVE:
@@ -146,12 +133,12 @@ TestGeodesic::_BenchmarckClosestPoints2()
 
   pxr::WorkParallelForN(N,
     std::bind(&TestGeodesic::_ClosestPointQuery, this, std::placeholders::_1, 
-      std::placeholders::_2, &points[0], &results[0]));
+      std::placeholders::_2, &points[0], &results[0]), N / 32);
 
   uint64_t elapsedT = CurrentTime() - startT;
   
 
-  std::cout << "================== benchmark closest points with " << N << " random points" << std::endl;
+  std::cout << "================== benchmark parallel closest points with " << N << " random points" << std::endl;
   std::cout << "with bvh took : " << (elapsedT * 1e-6) << " seconds" << std::endl;
 
 }
@@ -288,7 +275,7 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
     pxr::GfMatrix4f matrix;
     pxr::GfVec3f position;
-    Location hit1;
+    ClosestPoint hit1;
     pxr::VtArray<pxr::GfVec3f> points(4);
     pxr::VtArray<pxr::GfVec3f> colors(4);
     pxr::VtArray<float> widths(4, range.GetSize().GetLength() / 250.f);
@@ -300,27 +287,20 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
     // bvh accelerated query
     if (_bvh.Closest(seed, &hit1, DBL_MAX)) {
-      Mesh* hitMesh = (Mesh*)_meshes[hit1.GetGeometryIndex()];
-      const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
-      Triangle* triangle = hitMesh->GetTriangle(hit1.GetComponentIndex());
-      points[1] = hit1.ComputePosition(positions, &triangle->vertices[0], 3, &hitMesh->GetMatrix());
+      points[1] = pxr::GfVec3f(hit1.GetPoint());
     }
 
     // brute force reference
-    Location hit2;
+    ClosestPoint hit2;
     pxr::GfVec3f result;
     for (size_t m = 0; m < _meshes.size(); ++m)
       if (_ConstraintPointOnMesh((Mesh*)_meshes[m], seed, &hit2, &result))
-        points[2] = result;
+        points[2] = pxr::GfVec3f(hit2.GetPoint());
 
     // kdtree accelerated query (point only)
-    Location hit3;
+    ClosestPoint hit3;
     if (_kdtree.Closest(seed, &hit3, DBL_MAX)) {
-      
-      Deformable* deformable = (Deformable*)_meshes[hit3.GetGeometryIndex()];
-      const pxr::GfVec3f* positions = deformable->GetPositionsCPtr();
-      Point* point = deformable->GetPoint(hit3.GetComponentIndex());
-      points[3] = hit3.ComputePosition(positions, &point->id, 1, &deformable->GetMatrix());
+      points[3] = pxr::GfVec3f(hit3.GetPoint());
      
     }
 

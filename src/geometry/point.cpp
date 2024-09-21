@@ -59,7 +59,7 @@ Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit)
 }
 
 bool 
-Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
+Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, ClosestPoint* hit) const
 {
   return false;
 }

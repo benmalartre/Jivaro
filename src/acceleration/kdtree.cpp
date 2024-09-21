@@ -8,11 +8,11 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-KDTree::Cell*
+size_t
 KDTree::AddCell( const KDTree::IndexPoint &point)
 {
   _cells.push_back(KDTree::Cell(point));
-  return &_cells.back();
+  return _cells.size() - 1;
 }
 
 void
@@ -50,6 +50,8 @@ KDTree::Init(const std::vector<Geometry*> &geometries)
   _points.reserve(totalNumPoints);
   _numComponents = totalNumPoints;
 
+  std::cout << "init kd tree with " << totalNumPoints << " points..." << std::endl;
+
   pxr::GfRange3d range;
   size_t offset = 0;
   for(size_t g = 0; g < geometries.size(); ++g) {
@@ -71,11 +73,14 @@ KDTree::Init(const std::vector<Geometry*> &geometries)
   SetMin(range.GetMin());
   SetMax(range.GetMax());
 
-  _root = _BuildTreeRecursively(range, 0, 0, _points.size());
-  std::cout << "kdtree root : " << (intptr_t)_root << std::endl;
-
   std::cout << "bbox minimum : " << GetMin() << std::endl;
   std::cout << "bbox maximum : " << GetMax() << std::endl;
+
+  _cells.reserve(_points.size());
+  _root = GetCell(_BuildTreeRecursively(range, 0, 0, _points.size()));
+  std::cout << "kdtree root : " << (intptr_t)_root << std::endl;
+
+  
 
   if (_root == nullptr)
   {
@@ -96,8 +101,7 @@ KDTree::Raycast(const pxr::GfRay& ray, Location* hit,
 }
 
 bool 
-KDTree::Closest(const pxr::GfVec3f& point, Location* hit,
-  double maxDistance) const
+KDTree::Closest(const pxr::GfVec3f& point, ClosestPoint* hit, double maxDistance) const
 {
   double minDistanceSq = DBL_MAX;
   KDTree::Cell *nearest = nullptr;
@@ -122,15 +126,16 @@ KDTree::Closest(const pxr::GfVec3f& point, Location* hit,
   return false;
 }
 
-KDTree::Cell* 
+size_t 
 KDTree::_BuildTreeRecursively(const pxr::GfRange3d& range, size_t depth, size_t begin, size_t end)
 {
-  KDTree::Cell* cell = AddCell();
+  size_t index = AddCell();
+  KDTree::Cell* cell = GetCell(index);
   cell->SetMin(range.GetMin());
   cell->SetMax(range.GetMax());
   cell->axis = depth % 3;
 
-  if(end - begin <= 1) {
+  if((end - begin) <= 1) {
     cell->point = _points[begin];
   } else {
     size_t middle = (begin + end) >> 1;
@@ -150,7 +155,7 @@ KDTree::_BuildTreeRecursively(const pxr::GfRange3d& range, size_t depth, size_t 
     }
   }
 
-  return cell;
+  return index;
 }
 
 void

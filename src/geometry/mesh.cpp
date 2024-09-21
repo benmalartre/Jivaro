@@ -1362,7 +1362,7 @@ Mesh::Raycast(const pxr::GfRay& ray, Location* hit,
     const pxr::GfVec3f intersection = localHit.ComputePosition(positions, &hitTri->vertices[0], 3, &_matrix);
     const float distance = (ray.GetStartPoint() - intersection).GetLength();
     hit->Set(localHit);
-    hit->SetT(distance);
+    hit->SetDistance(distance);
     if (minDistance)*minDistance = distance;
     success = true;
   } 
@@ -1379,13 +1379,27 @@ Mesh::Closest(const pxr::GfVec3f& point, Location* hit,
 
   bool found = false;
 
+  ClosestPoint closest;
+
   for(size_t t = 0; t < numTriangles; ++t)
-    if (_triangles[t].Closest(&_positions[0], point, hit)) {
+    if (_triangles[t].Closest(&_positions[0], point, &closest)) {
       found = true;
-      if (minDistance)*minDistance = hit->GetT();
     }
-      
-  return found;
+
+  if (!found)
+    return false;
+
+  closest.ConvertToWorld(_matrix, point);
+
+  hit->SetGeometryIndex(closest.GetGeometryIndex());
+  hit->SetComponentIndex(closest.GetComponentIndex());
+  hit->SetCoordinates(closest.GetCoordinates());
+
+  double distance = (point - closest.GetPoint()).GetLength();
+
+  if (minDistance)*minDistance = distance;
+  return true;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
