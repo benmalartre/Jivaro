@@ -19,7 +19,6 @@ class Location;
 class Intersector : public pxr::GfRange3d
 { 
 public:
-  static const size_t INVALID_GEOMETRY = std::numeric_limits<size_t>::max();
   static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
   struct _Geom {
     Geometry*   geom;

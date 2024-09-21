@@ -11,9 +11,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 // different distance metrics
 //
 enum DistanceType {
-  DISTANCE_CHEBYSHEV,
-  DISTANCE_MANHATTAN,
-  DISTANCE_EUCLIDEAN
+  CHEBYSHEV,
+  MANHATTAN,
+  EUCLIDEAN
 };
 
 // Distance measure base class

@@ -18,6 +18,24 @@ KDTree::AddCell( const KDTree::IndexPoint &point)
 void
 KDTree::Init(const std::vector<Geometry*> &geometries) 
 {
+  switch(_distanceType) {
+    case DistanceType::CHEBYSHEV:
+      _distance = new DistanceChebyshev();
+      break;
+
+    case DistanceType::MANHATTAN:
+      _distance = new DistanceManhattan();
+      break;
+
+    case DistanceType::EUCLIDEAN:
+      _distance = new DistanceEuclidean();
+      break;
+    
+    default:
+      std::cerr << "KDTree initialize DistanceMesure fail: invalid type!";
+      return;
+  }
+
   Intersector::_Init(geometries);
 
   size_t totalNumPoints = 0;
@@ -50,8 +68,14 @@ KDTree::Init(const std::vector<Geometry*> &geometries)
     offset += numPoints;
   }
 
+  SetMin(range.GetMin());
+  SetMax(range.GetMax());
+
   _root = _BuildTreeRecursively(range, 0, 0, _points.size());
   std::cout << "kdtree root : " << (intptr_t)_root << std::endl;
+
+  std::cout << "bbox minimum : " << GetMin() << std::endl;
+  std::cout << "bbox maximum : " << GetMax() << std::endl;
 
   if (_root == nullptr)
   {
@@ -183,7 +207,7 @@ KDTree::GetGeometryFromCell(const KDTree::Cell* cell) const
 {
   size_t geomIdx = GetGeometryIndexFromCell(cell);
   
-  return geomIdx != INVALID_GEOMETRY ?
+  return geomIdx != INVALID_INDEX ?
     GetGeometry(geomIdx) : NULL;
 
 }
@@ -212,7 +236,7 @@ KDTree::GetGeometryIndexFromCell(const KDTree::Cell* cell) const
 
     middle = (start + end) >> 1;
   } 
-  return INVALID_GEOMETRY;
+  return INVALID_INDEX;
 }
 
 bool
@@ -222,7 +246,7 @@ KDTree::_IntersectSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell
   const pxr::GfVec3d& maximum = cell->GetMax();
 
   // maximum distance needs different treatment
-  if (_distanceType == DISTANCE_CHEBYSHEV) {
+  if (_distanceType == DistanceType::CHEBYSHEV) {
     double maxDist = 0.0;
     double currDist = 0.0;
     for (size_t i = 0; i < 2; ++i) {

@@ -58,10 +58,11 @@ public:
     };
   };
 
-  typedef std::priority_queue<NN4Heap, std::vector<NN4Heap>> _KNNSearchQueue;
+  typedef std::priority_queue<NN4Heap, std::vector<NN4Heap>> KNNSearchQueue;
 
-  KDTree() : _root(nullptr) {};
-  ~KDTree() {};
+  KDTree(DistanceType distanceType=DistanceType::EUCLIDEAN) 
+    : _root(nullptr), _distanceType(distanceType), _distance(nullptr) {};
+  ~KDTree() {delete _distance;};
   
   Cell* GetRoot() { return _root; };
   const Cell* GetRoot() const { return _root; };

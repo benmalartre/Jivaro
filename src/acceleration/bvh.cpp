@@ -257,7 +257,7 @@ BVH::GetGeometryFromCell(const BVH::Cell* cell) const
 {
   size_t geomIdx = GetGeometryIndexFromCell(cell);
   
-  return geomIdx != INVALID_GEOMETRY ?
+  return geomIdx != INVALID_INDEX ?
     GetGeometry(geomIdx) : NULL;
 
 }
@@ -286,7 +286,7 @@ BVH::GetGeometryIndexFromCell(const BVH::Cell* cell) const
 
     middle = (start + end) >> 1;
   } 
-  return INVALID_GEOMETRY;
+  return INVALID_INDEX;
 }
 
 void

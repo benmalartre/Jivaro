@@ -16,7 +16,7 @@ Intersector::GetGeometryIndex(Geometry* geom) const
   for (size_t index = 0; index < _geoms.size(); ++index) {
     if(_geoms[index].geom == geom)return static_cast<int>(index);
   }
-  return INVALID_GEOMETRY;
+  return INVALID_INDEX;
 }
 
 size_t
