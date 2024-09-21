@@ -87,7 +87,7 @@ public:
     TRIANGLEPAIRS     = 1 << 3
   };
   Mesh(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world);
+  Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world, size_t connectivity=0);
   virtual ~Mesh();
 
   const pxr::VtArray<int>& GetFaceCounts() const { return _faceVertexCounts;};
@@ -163,12 +163,14 @@ public:
     const pxr::VtArray<pxr::GfVec3f>& positions,
     const pxr::VtArray<int>& faceVertexCounts,
     const pxr::VtArray<int>& faceVertexIndices, 
-    bool init=true
+    bool init=true,
+    size_t connectivity=0
   );
   void SetTopology(
     const pxr::VtArray<int>& faceVertexCounts,
     const pxr::VtArray<int>& faceVertexIndices,
-    bool init=true
+    bool init=true,
+    size_t connectivity=0
   );
   bool FlipEdge(HalfEdge* edge);
   bool SplitEdge(HalfEdge* edge);

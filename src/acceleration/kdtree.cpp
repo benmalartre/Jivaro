@@ -8,6 +8,12 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+KDTree::Cell*
+KDTree::AddCell( const KDTree::IndexPoint* point)
+{
+  _cells.push_back(KDTree::Cell(point));
+  return &_cells.back();
+}
 
 void
 KDTree::Init(const std::vector<Geometry*> &geometries) 
@@ -23,9 +29,10 @@ KDTree::Init(const std::vector<Geometry*> &geometries)
     SetGeometryCellIndices(g, totalNumPoints, totalNumPoints + numPoints);
     totalNumPoints += numPoints;
   }
-  _cells.reserve(totalNumPoints);
+  _points.reserve(totalNumPoints);
   _numComponents = totalNumPoints;
 
+  pxr::GfRange3d range;
   size_t offset = 0;
   for(size_t g = 0; g < geometries.size(); ++g) {
     const Deformable* deformable = static_cast<const Deformable*>(geometries[g]);
@@ -36,12 +43,15 @@ KDTree::Init(const std::vector<Geometry*> &geometries)
     const pxr::GfVec3f* positions = deformable->GetPositionsCPtr();
     for (size_t i = 0; i < numPoints; ++i)
     {
-      _cells.emplace_back(matrix.Transform(positions[i]), i + offset);
+      const pxr::GfVec3f worldPoint(matrix.Transform(positions[i]));
+      range.UnionWith(worldPoint);
+      _points.push_back(KDTree::IndexPoint(i + offset, worldPoint));
     }
     offset += numPoints;
   }
 
-  _root = _BuildTreeRecursively(_cells.begin(), _cells.end(), 0UL);
+  _root = _BuildTreeRecursively(range, 0, 0, _points.size());
+  std::cout << "kdtree root : " << (intptr_t)_root << std::endl;
 
   if (_root == nullptr)
   {
@@ -65,57 +75,108 @@ bool
 KDTree::Closest(const pxr::GfVec3f& point, Location* hit,
   double maxDistance) const
 {
+  double minDistanceSq = DBL_MAX;
+  KDTree::Cell *nearest = nullptr;
+  _RecurseClosest(_root, point, 0, minDistanceSq, nearest);
+
+  if(nearest) {
+    std::cout << "nearest = " << nearest->point->index << std::endl;
+    size_t cellIndex = nearest->point->index;
+    size_t geomIndex = GetGeometryIndexFromCell(&_cells[cellIndex]);
+    size_t pntIndex = cellIndex - GetGeometryCellsStartIndex(geomIndex);
+    const Geometry *geometry = GetGeometryFromCell(&_cells[cellIndex]);
+
+
+    std::cout << "geometry = " << geomIndex << std::endl;
+    std::cout << "component = " << pntIndex << std::endl;
+    hit->SetComponentIndex(pntIndex);
+    hit->SetGeometryIndex(geomIndex);
+    hit->SetCoordinates(pxr::GfVec3f(1.f, 0.f, 0.f));
+    //hit->SetCoordinates(((Deformable*)geometry)->GetPosition(pntIndex));
+    return true;
+  }
   return false;
 }
 
 KDTree::Cell* 
-KDTree::_BuildTreeRecursively(std::vector<Cell>::iterator begin,
-  std::vector<Cell>::iterator end, std::size_t index) const
+KDTree::_BuildTreeRecursively(const pxr::GfRange3d& range, size_t depth, size_t begin, size_t end)
 {
-  if (begin >= end)
-  {
-    return nullptr;
+  KDTree::Cell* cell = AddCell();
+  cell->SetMin(range.GetMin());
+  cell->SetMax(range.GetMax());
+  cell->axis = depth % 3;
+
+  if(end - begin <= 1) {
+    cell->point = &_points[begin];
+  } else {
+    size_t middle = (begin + end) >> 1;
+    std::nth_element(_points.begin() + begin, _points.begin() + middle,
+                     _points.begin() + end, _CompareDimension(cell->axis));
+    cell->point = &_points[middle];
+
+    if (middle - begin > 0) {
+      pxr::GfVec3d maximum(range.GetMax());
+      maximum[cell->axis] = _points[middle].position[cell->axis];
+      cell->left = _BuildTreeRecursively(pxr::GfRange3d(range.GetMin(), maximum), depth + 1, begin, middle);
+    }
+    if (end - middle > 1) {
+      pxr::GfVec3d minimum(range.GetMin());
+      minimum[cell->axis] = _points[middle].position[cell->axis];
+      cell->right = _BuildTreeRecursively(pxr::GfRange3d(minimum, range.GetMax()), depth + 1, middle + 1, end);
+    }
   }
 
-  auto middle = begin + std::distance(begin, end) / 2;
-
-  std::nth_element(begin, middle, end, [&index](const Cell& n1, const Cell& n2) -> bool {
-    return (n1.point[index] < n2.point[index]);
-  });
-
-  index = (index + 1) % 3;
-
-  middle->left = _BuildTreeRecursively(begin, middle, index);
-  middle->right = _BuildTreeRecursively(middle + 1, end, index);
-
-  return &(*middle);
+  return cell;
 }
 
 void
 KDTree::_RecurseClosest(const KDTree::Cell *cell, const pxr::GfVec3f &point, size_t index, 
   double &minDistanceSq, KDTree::Cell *&nearest) const
 {
-  if (cell == nullptr)
-    return;
 
-  const double distanceSq = _DistanceSq(point, cell->point);
-  if (distanceSq <= minDistanceSq)
+}
+
+size_t 
+KDTree::_GetIndex(const KDTree::Cell* cell) const
+{
+  return  ((intptr_t)cell - (intptr_t)&_cells[0]) / sizeof(KDTree::Cell);
+}
+
+const Geometry* 
+KDTree::GetGeometryFromCell(const KDTree::Cell* cell) const
+{
+  size_t geomIdx = GetGeometryIndexFromCell(cell);
+  
+  return geomIdx != INVALID_GEOMETRY ?
+    GetGeometry(geomIdx) : NULL;
+
+}
+
+size_t
+KDTree::GetGeometryIndexFromCell(const KDTree::Cell* cell) const
+{
+  size_t cellIdx = _GetIndex(cell);
+  size_t startIdx, endIdx;
+  size_t start = 0;
+  size_t end = GetNumGeometries();
+  size_t middle = end >> 1;
+
+  while(start != end)
   {
-    minDistanceSq = distanceSq;
-    nearest = const_cast<KDTree::Cell *>(cell);
-  }
+    startIdx = GetGeometryCellsStartIndex(middle);
+    endIdx = GetGeometryCellsEndIndex(middle);
+    if(startIdx <= cellIdx && cellIdx < endIdx )
+      return middle;
 
-  const double delta = cell->point[index] - point[index];
+    else if (cellIdx < startIdx)
+      end = middle;
 
-  index = (index + 1) % 3;
+    else
+      start = middle;
 
-  const bool isDeltaPositive = (delta > 0.0);
-  _RecurseClosest(isDeltaPositive ? cell->left : cell->right, 
-    point, index, minDistanceSq, nearest);
-
-  if (delta * delta <= minDistanceSq)
-    _RecurseClosest(isDeltaPositive ? cell->right : cell->left, 
-      point, index, minDistanceSq, nearest);
+    middle = (start + end) >> 1;
+  } 
+  return INVALID_GEOMETRY;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

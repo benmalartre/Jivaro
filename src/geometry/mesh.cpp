@@ -28,7 +28,7 @@ Mesh::Mesh(const pxr::GfMatrix4d& xfo)
 {
 }
 
-Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
+Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world, size_t connectivity)
   : Deformable(mesh.GetPrim(), world)
   , _flags(0)
 {
@@ -39,7 +39,7 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world)
   pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
   faceVertexCountsAttr.Get(&_faceVertexCounts, pxr::UsdTimeCode::Default());
   faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
-  Init();
+  Init(connectivity);
 }
 
 Mesh::~Mesh()
@@ -597,7 +597,8 @@ void Mesh::Set(
   const pxr::VtArray<pxr::GfVec3f>& positions,
   const pxr::VtArray<int>& faceVertexCounts,
   const pxr::VtArray<int>& faceVertexIndices,
-  bool init
+  bool init, 
+  size_t connectivity
 )
 {
   _faceVertexCounts = faceVertexCounts;
@@ -605,19 +606,20 @@ void Mesh::Set(
   _positions = positions;
   _previous = _positions;
   _normals = positions;
-  if(init)Init();
+  if(init)Init(connectivity);
 }
 
 void Mesh::SetTopology(
   const pxr::VtArray<int>& faceVertexCounts,
   const pxr::VtArray<int>& faceVertexIndices,
-  bool init
+  bool init,
+  size_t connectivity
 )
 {
   _faceVertexCounts = faceVertexCounts;
   _faceVertexIndices = faceVertexIndices;
 
-  if(init)Init();
+  if(init)Init(connectivity);
 }
 
 void Mesh::SetPositions(const pxr::GfVec3f* positions, size_t n)
@@ -658,19 +660,19 @@ void Mesh::Init(size_t connectivity)
   //    - adjacents = vertex connected vertices
   //    - neighbors = vertex first ring vertices
   switch(connectivity) {
-    case 1:
+    case Mesh::ADJACENTS:
       ComputeHalfEdges();
       ComputeAdjacents();
       BITMASK_SET(_flags,Mesh::HALFEDGES|Mesh::ADJACENTS);
       break;
 
-    case 2:
+    case Mesh::NEIGHBORS:
       ComputeHalfEdges();
       ComputeNeighbors();
       BITMASK_SET(_flags,Mesh::HALFEDGES|Mesh::NEIGHBORS);
       break;
 
-    case 3:
+    case Mesh::ADJACENTS|Mesh::NEIGHBORS:
       ComputeHalfEdges();
       ComputeAdjacents();
       ComputeNeighbors();

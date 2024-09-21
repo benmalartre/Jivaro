@@ -54,6 +54,8 @@ public:
   void RemovePoint(size_t index);
   void RemoveAllPoints();
 
+  Point* GetPoint(size_t index){return &_points[index];};
+
   virtual void SetPositions(const pxr::GfVec3f* positions, size_t n);
   virtual void SetWidths(const float* widths, size_t n);
   virtual void SetColors(const pxr::GfVec3f* colors, size_t n);

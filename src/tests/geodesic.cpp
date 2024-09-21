@@ -20,39 +20,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit, pxr::GfVec3f* result=NULL)
 {
-  /*
-  float minDistance = FLT_MAX;
-  size_t index = Component::INVALID_INDEX;
-  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-  size_t numTriangles = mesh->GetNumTriangles();
-
-  pxr::GfVec3f localPoint = mesh->GetInverseMatrix().Transform(point);
-  Location localHit(*hit);
-  localHit.TransformT(mesh->GetInverseMatrix());
-
-  bool found = false;
-
-  for(size_t t = 0; t < numTriangles; ++t) {
-    Triangle* triangle = mesh->GetTriangle(t);
-
-    if (triangle->Closest(positions, localPoint, &localHit)) {
-      
-      localHit.TransformT(mesh->GetMatrix());
-
-      if (localHit.GetT() < hit->GetT()) {
-        hit->Set(localHit);
-        found = true;
-        if (result) {
-          Triangle* triangle = mesh->GetTriangle(hit->GetComponentIndex());
-          const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-
-          *result = hit->ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
-        }
-      }
-    }
-  }
-  return found;
-  */
   if(mesh->GetBoundingBox().GetRange().GetDistanceSquared(point) > pxr::GfPow(hit->GetT(), 2))
     return false;
 
@@ -88,27 +55,6 @@ bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit
     return true;
   }
   return false;
-
-
-  /*
-    const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
-    Component* component = (Component*)cell->GetData();
-    pxr::GfVec3f localPoint(geometry->GetInverseMatrix().Transform(point));
-    
-    Location localHit(*hit);
-    localHit.TransformT(geometry->GetInverseMatrix());
-
-    if(!component->Closest(points, localPoint, &localHit))
-      return false;
-
-    localHit.TransformT(geometry->GetMatrix());
-
-    if (localHit.GetT() < hit->GetT()) {
-      hit->Set(localHit);
-      hit->SetGeometryIndex(geomIdx);
-      return true;
-    }
-  */
   
 }
 
@@ -342,22 +288,22 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
     pxr::GfMatrix4f matrix;
     pxr::GfVec3f position;
-    Location hit;
-    pxr::VtArray<pxr::GfVec3f> points(3);
-    pxr::VtArray<pxr::GfVec3f> colors(3);
-    pxr::VtArray<float> widths(3, 1.f);
+    Location hit1;
+    pxr::VtArray<pxr::GfVec3f> points(4);
+    pxr::VtArray<pxr::GfVec3f> colors(4);
+    pxr::VtArray<float> widths(4, range.GetSize().GetLength() / 250.f);
     points[0] = seed;
     colors[2] = pxr::GfVec3f(1.f, 0.f, 0.f);
     colors[1] = pxr::GfVec3f(0.f, 1.f, 0.f);
     colors[0] = pxr::GfVec3f(0.f, 0.f, 1.f);
+    colors[3] = pxr::GfVec3f(1.f, 1.f, 0.f);
 
     // bvh accelerated query
-    if (_bvh.Closest(seed, &hit, DBL_MAX)) {
-      Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
+    if (_bvh.Closest(seed, &hit1, DBL_MAX)) {
+      Mesh* hitMesh = (Mesh*)_meshes[hit1.GetGeometryIndex()];
       const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
-      Triangle* triangle = hitMesh->GetTriangle(hit.GetComponentIndex());
-      pxr::GfVec3f closest = hit.ComputePosition(positions, &triangle->vertices[0], 3, &hitMesh->GetMatrix());
-      points[1] = closest;
+      Triangle* triangle = hitMesh->GetTriangle(hit1.GetComponentIndex());
+      points[1] = hit1.ComputePosition(positions, &triangle->vertices[0], 3, &hitMesh->GetMatrix());
     }
 
     // brute force reference
@@ -366,6 +312,18 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     for (size_t m = 0; m < _meshes.size(); ++m)
       if (_ConstraintPointOnMesh((Mesh*)_meshes[m], seed, &hit2, &result))
         points[2] = result;
+
+    // kdtree accelerated query (point only)
+    Location hit3;
+    if (_kdtree.Closest(seed, &hit3, DBL_MAX)) {
+      
+      Deformable* deformable = (Deformable*)_meshes[hit3.GetGeometryIndex()];
+      const pxr::GfVec3f* positions = deformable->GetPositionsCPtr();
+      Point* point = deformable->GetPoint(hit3.GetComponentIndex());
+      points[3] = hit3.ComputePosition(positions, &point->id, 1, &deformable->GetMatrix());
+     
+    }
+
 
     _points->SetPositions(points);
     _points->SetColors(colors);

@@ -18,8 +18,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 
 BVH::Cell::Cell()
-  : _left(BVH::INVALID_INDEX)
-  , _right(BVH::INVALID_INDEX)
+  : _left(Intersector::INVALID_INDEX)
+  , _right(Intersector::INVALID_INDEX)
   , _data(NULL)
   , _type(BVH::Cell::ROOT)
 {
@@ -45,25 +45,13 @@ BVH::Cell::Cell(size_t lhs, BVH::Cell* left, size_t rhs, BVH::Cell* right)
 }
 
 BVH::Cell::Cell(Component* component, const pxr::GfRange3d& range)
-  : _left(BVH::INVALID_INDEX)
-  , _right(BVH::INVALID_INDEX)
+  : _left(Intersector::INVALID_INDEX)
+  , _right(Intersector::INVALID_INDEX)
   , _data((void*)component)
   , _type(BVH::Cell::LEAF)
 {
   SetMin(range.GetMin());
   SetMax(range.GetMax());
-}
-
-bool 
-BVH::Cell::IntersectSphere(const pxr::GfVec3f &center, double radius) const
-{
-  double radiusSq = radius * radius;
-  double accum = 0.0;
-  for( int i = 0; i < 3; i++ ) {
-    if( center[i] < GetMin()[i] ) accum += pxr::GfPow( center[i] - GetMin()[i], 2 );
-    else if( center[i] > GetMax()[i] ) accum += pxr::GfPow( center[i] - GetMax()[i], 2 );
-  }
-  return accum <= radiusSq;
 }
 
 bool
@@ -269,7 +257,7 @@ BVH::GetGeometryFromCell(const BVH::Cell* cell) const
 {
   size_t geomIdx = GetGeometryIndexFromCell(cell);
   
-  return geomIdx != BVH::INVALID_GEOMETRY ?
+  return geomIdx != INVALID_GEOMETRY ?
     GetGeometry(geomIdx) : NULL;
 
 }
@@ -357,7 +345,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   _root = _GetCell(morton.data);
   _root->SetType(BVH::Cell::ROOT);
   
-  _cellToMorton.resize(_cells.size(), BVH::INVALID_INDEX);
+  _cellToMorton.resize(_cells.size(), Intersector::INVALID_INDEX);
   for(size_t m = 0; m < _mortons.size(); ++m)
     _cellToMorton[_mortons[m].data] = m;
 

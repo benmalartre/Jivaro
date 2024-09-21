@@ -184,14 +184,12 @@ static void _Voxelize(float radius, short axis)
 
 static void _Smooth(int smoothIterations)
 {
-  std::cout << "smooth called with " << smoothIterations << " iterations" << std::endl;
   pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
     pxr::TfStopwatch sw;
     sw.Start();
-    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()), Mesh::ADJACENTS);
     sw.Stop();
-    std::cout << "convert usd mesh to mesh : " << sw.GetSeconds() << std::endl;
 
     sw.Reset();
     sw.Start();
@@ -206,15 +204,12 @@ static void _Smooth(int smoothIterations)
 
     }
     sw.Stop();
-    std::cout << "init smooth data : " << sw.GetSeconds() << std::endl;
 
     sw.Reset();
     sw.Start();
     smooth.Compute(smoothIterations);
     sw.Stop();
-    std::cout << "compute smooth: " << sw.GetSeconds() << std::endl;
 
-    
 
     pxr::VtArray<GfVec3f> smoothed(numPoints);
     for(size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx)
@@ -225,7 +220,6 @@ static void _Smooth(int smoothIterations)
     UndoBlock block;
     _SetMesh(usdMesh, smoothed, mesh.GetFaceCounts(), mesh.GetFaceConnects());
     sw.Stop();
-    std::cout << "set usd mesh: " << sw.GetSeconds() << std::endl;
   }
 
 }
