@@ -2,10 +2,11 @@
 #define JVR_ACCELERATION_KDTREE_H
 
 #include <vector>
+#include <queue>
 #include <pxr/base/gf/vec3f.h>
 #include "../acceleration/intersector.h"
+#include "../acceleration/distance.h"
 
-// https://github.com/YevgeniyEngineer/KDTree/tree/main (maybe this is not working :D)
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -25,7 +26,7 @@ public:
   
   struct Cell : public pxr::GfRange3d
   {
-    explicit Cell(const IndexPoint *point = nullptr)
+    explicit Cell(const IndexPoint &point=IndexPoint(INVALID_INDEX, pxr::GfVec3f(0.f)))
       : point(point), left(nullptr), right(nullptr)
     {
     }
@@ -36,31 +37,39 @@ public:
     }
 
     short             axis;
-    const IndexPoint  *point;
+    IndexPoint        point;
     Cell              *left = nullptr;
     Cell              *right = nullptr;
   };
 
-
   using IndexDistance = std::pair<size_t, float>; // Index + Distance
-  static const size_t MAX_NUM_POINTS = 32;
 
-  KDTree &operator=(const KDTree &other) = delete;
-  KDTree(const KDTree &other) = delete;
-  KDTree &operator=(KDTree &&other) noexcept = default;
-  KDTree(KDTree &&other) noexcept = default;
+
+  // helper class for priority queue in k nearest neighbor search
+  struct NN4Heap {
+    size_t index;       // index of actual cell in _cells
+    double distance;    // distance of this neighbor from query point
+
+    (NN4Heap)(size_t i, double d) 
+      : index(i), distance(d) {};
+
+    inline bool operator<(const NN4Heap& other) {
+      return distance < other.distance;
+    };
+  };
+
+  typedef std::priority_queue<NN4Heap, std::vector<NN4Heap>> _KNNSearchQueue;
 
   KDTree() : _root(nullptr) {};
   ~KDTree() {};
   
-
   Cell* GetRoot() { return _root; };
   const Cell* GetRoot() const { return _root; };
 
   Cell* GetCell(size_t index) { return &_cells[index]; };
   const Cell* GetCell(size_t index) const { return &_cells[index]; };
 
-  Cell* AddCell(const IndexPoint* point = nullptr);
+  Cell* AddCell(const IndexPoint& point=IndexPoint(INVALID_INDEX, pxr::GfVec3f(0.f)));
 
   const Geometry* GetGeometryFromCell(const Cell* cell) const;
   size_t GetGeometryIndexFromCell(const Cell* cell) const;
@@ -81,21 +90,22 @@ public:
 private:
   struct _CompareDimension {
     _CompareDimension(size_t dim) { d = dim; }
-    bool operator()(const IndexPoint& lhs, const IndexPoint& rhs) {
+    inline bool operator()(const IndexPoint& lhs, const IndexPoint& rhs) const noexcept {
       return (lhs.position[d] < rhs.position[d]);
     }
     size_t d;
   };
 
-  struct CompareDistances
+  struct _CompareDistances
   {
-    inline bool operator()(const IndexDistance &d1, const IndexDistance &d2) const noexcept
-    {
+    inline bool operator()(const IndexDistance &d1, const IndexDistance &d2) const noexcept {
       return (d1.second > d2.second);
     }
   };
 
- 
+  bool _ContainsSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell *cell) ;
+  bool _IntersectSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell *cell);
+
   size_t _GetIndex(const Cell* cell) const;
 
   Cell* _BuildTreeRecursively(const pxr::GfRange3d& range, 
@@ -108,6 +118,8 @@ private:
   std::vector<IndexPoint>         _points;
   std::vector<Cell>               _cells;
   size_t                          _numComponents;
+  DistanceType                    _distanceType;
+  DistanceMeasure*                _distance;
 }; 
 
 JVR_NAMESPACE_CLOSE_SCOPE

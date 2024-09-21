@@ -9,7 +9,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 KDTree::Cell*
-KDTree::AddCell( const KDTree::IndexPoint* point)
+KDTree::AddCell( const KDTree::IndexPoint &point)
 {
   _cells.push_back(KDTree::Cell(point));
   return &_cells.back();
@@ -80,8 +80,8 @@ KDTree::Closest(const pxr::GfVec3f& point, Location* hit,
   _RecurseClosest(_root, point, 0, minDistanceSq, nearest);
 
   if(nearest) {
-    std::cout << "nearest = " << nearest->point->index << std::endl;
-    size_t cellIndex = nearest->point->index;
+    std::cout << "nearest = " << nearest->point.index << std::endl;
+    size_t cellIndex = nearest->point.index;
     size_t geomIndex = GetGeometryIndexFromCell(&_cells[cellIndex]);
     size_t pntIndex = cellIndex - GetGeometryCellsStartIndex(geomIndex);
     const Geometry *geometry = GetGeometryFromCell(&_cells[cellIndex]);
@@ -107,12 +107,12 @@ KDTree::_BuildTreeRecursively(const pxr::GfRange3d& range, size_t depth, size_t 
   cell->axis = depth % 3;
 
   if(end - begin <= 1) {
-    cell->point = &_points[begin];
+    cell->point = _points[begin];
   } else {
     size_t middle = (begin + end) >> 1;
     std::nth_element(_points.begin() + begin, _points.begin() + middle,
                      _points.begin() + end, _CompareDimension(cell->axis));
-    cell->point = &_points[middle];
+    cell->point = _points[middle];
 
     if (middle - begin > 0) {
       pxr::GfVec3d maximum(range.GetMax());
@@ -133,7 +133,43 @@ void
 KDTree::_RecurseClosest(const KDTree::Cell *cell, const pxr::GfVec3f &point, size_t index, 
   double &minDistanceSq, KDTree::Cell *&nearest) const
 {
+  /*
+  double curdist, dist;
 
+  curdist = distance->distance(point, node->point);
+  if (!(searchpredicate && !(*searchpredicate)(allnodes[node->dataindex]))) {
+    if (neighborheap->size() < k) {
+      neighborheap->push(nn4heap(node->dataindex, curdist));
+    } else if (curdist < neighborheap->top().distance) {
+      neighborheap->pop();
+      neighborheap->push(nn4heap(node->dataindex, curdist));
+    }
+  }
+  // first search on side closer to point
+  if (point[node->cutdim] < node->point[node->cutdim]) {
+    if (node->loson)
+      if (neighbor_search(point, node->loson, k, neighborheap)) return true;
+  } else {
+    if (node->hison)
+      if (neighbor_search(point, node->hison, k, neighborheap)) return true;
+  }
+  // second search on farther side, if necessary
+  if (neighborheap->size() < k) {
+    dist = std::numeric_limits<double>::max();
+  } else {
+    dist = neighborheap->top().distance;
+  }
+  if (point[node->cutdim] < node->point[node->cutdim]) {
+    if (node->hison && bounds_overlap_ball(point, dist, node->hison))
+      if (neighbor_search(point, node->hison, k, neighborheap)) return true;
+  } else {
+    if (node->loson && bounds_overlap_ball(point, dist, node->loson))
+      if (neighbor_search(point, node->loson, k, neighborheap)) return true;
+  }
+
+  if (neighborheap->size() == k) dist = neighborheap->top().distance;
+  return ball_within_bounds(point, dist, node);
+  */
 }
 
 size_t 
@@ -177,6 +213,60 @@ KDTree::GetGeometryIndexFromCell(const KDTree::Cell* cell) const
     middle = (start + end) >> 1;
   } 
   return INVALID_GEOMETRY;
+}
+
+bool
+KDTree::_IntersectSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell *cell) 
+{
+  const pxr::GfVec3d& minimum = cell->GetMin();
+  const pxr::GfVec3d& maximum = cell->GetMax();
+
+  // maximum distance needs different treatment
+  if (_distanceType == DISTANCE_CHEBYSHEV) {
+    double maxDist = 0.0;
+    double currDist = 0.0;
+    for (size_t i = 0; i < 2; ++i) {
+      if (center[i] < minimum[i])   // lower than low boundary
+        currDist = _distance->Compute1D(center[i], minimum[i], i);
+      
+      else if (center[i] > maximum[i])   // higher than high boundary
+        currDist = _distance->Compute1D(center[i], maximum[i], i);
+      
+      if (currDist > maxDist) 
+        maxDist = currDist;
+      
+      if (maxDist > radius) return false;
+    }
+    return true;
+  } else {
+    double sum = 0.0;    
+    for (size_t i = 0; i < 3; ++i) {
+      if (center[i] < minimum[i]) {  // lower than low boundary
+        sum += _distance->Compute1D(center[i], minimum[i], i);
+        if (sum > radius) return false;
+      }
+      else if (center[i] > maximum[i]) {  // higher than high boundary
+        sum += _distance->Compute1D(center[i], maximum[i], i);
+        if (sum > radius) return false;
+      }
+    }
+    return true;
+  }
+}
+
+// returns true when the bounds of *node* completely contain the
+// ball with radius *dist* around *point*
+bool 
+KDTree::_ContainsSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell *cell) 
+{
+  const pxr::GfVec3d& minimum = cell->GetMin();
+  const pxr::GfVec3d& maximum = cell->GetMax();
+
+  for (size_t i = 0; i < 3; ++i)
+    if (_distance->Compute1D(center[i], minimum[i], i) <= radius ||
+        _distance->Compute1D(center[i], maximum[i], i) <= radius)
+      return false;
+  return true;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

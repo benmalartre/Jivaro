@@ -16,7 +16,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 
-#define HASH_GRID_MIN_SPACING 0.0000001f
+// https://matthias-research.github.io/pages/tenMinutePhysics/11-hashing.pdf
 
 class HashGrid
 {
@@ -71,7 +71,7 @@ public:
   pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
 
 private:
-size_t                              _n;
+  size_t                            _n;
   float                             _spacing;
   float                             _scl;
   size_t                            _tableSize;

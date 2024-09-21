@@ -95,6 +95,7 @@ add_executable(${TARGET}
   #geometry/vdb.cpp
 
   acceleration/morton.cpp
+  acceleration/distance.cpp
   acceleration/intersector.cpp
   acceleration/grid3d.cpp
   acceleration/bvh.cpp
