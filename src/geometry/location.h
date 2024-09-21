@@ -25,7 +25,7 @@ public:
   void Set(const Location& other);
   inline void SetGeometryIndex(int id) { _geomId = id; };
   inline void SetComponentIndex(int id) { _compId = id; };
-  inline void SetCoordinates(const pxr::GfVec3d& coords) { 
+  virtual inline void SetCoordinates(const pxr::GfVec3d& coords) { 
     _coords[0] = coords[0]; 
     _coords[1] = coords[1];
     _coords[2] = coords[2];
@@ -54,16 +54,12 @@ protected:
   pxr::GfVec4d  _coords;
 };
 
-class ClosestPoint
+class ClosestPoint : public Location
 {
 public:
-  static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
-
   // Constructor
   ClosestPoint()
-    : _geomId(INVALID_INDEX)
-    , _compId(INVALID_INDEX)
-    , _coords(pxr::GfVec3d(0.0))
+    : Location()
     , _point(pxr::GfVec3d(DBL_MAX)){};
 
   // Convert
@@ -79,24 +75,12 @@ public:
 
   // Setters
   void Set(const ClosestPoint& other);
-  inline void SetGeometryIndex(int id) { _geomId = id; };
-  inline void SetComponentIndex(int id) { _compId = id; };
-  inline void SetCoordinates(const pxr::GfVec3d& coords) {_coords = coords;};
   inline void SetPoint(const pxr::GfVec3d& point) {_point = point;};
 
   // getters
-  inline int GetGeometryIndex() const { return _geomId; };
-  inline int GetComponentIndex() const { return _compId; };
-  inline const pxr::GfVec3d& GetCoordinates(){return _coords;};
   inline const pxr::GfVec3d& GetPoint(){return _point;};
 
-  inline bool IsValid() const { 
-    return (_geomId != INVALID_INDEX) && (_compId != INVALID_INDEX); };
-
 protected:
-  size_t        _geomId;
-  size_t        _compId;
-  pxr::GfVec3d  _coords;
   pxr::GfVec3d  _point;
 };
 
