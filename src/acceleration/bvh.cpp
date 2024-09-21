@@ -54,6 +54,18 @@ BVH::Cell::Cell(Component* component, const pxr::GfRange3d& range)
   SetMax(range.GetMax());
 }
 
+bool 
+BVH::Cell::IntersectSphere(const pxr::GfVec3f &center, double radius) const
+{
+  double radiusSq = radius * radius;
+  double accum = 0.0;
+  for( int i = 0; i < 3; i++ ) {
+    if( center[i] < GetMin()[i] ) accum += pxr::GfPow( center[i] - GetMin()[i], 2 );
+    else if( center[i] > GetMax()[i] ) accum += pxr::GfPow( center[i] - GetMax()[i], 2 );
+  }
+  return accum <= radiusSq;
+}
+
 bool
 BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
@@ -118,8 +130,10 @@ bool
 BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit, 
   double maxDistance) const
 {  
-  const double distance = pxr::GfSqrt(cell->GetDistanceSquared(point));
-  if (distance > hit->GetT() || distance > maxDistance)return false;
+  if(!cell->Contains(point)) {
+    const double distance = pxr::GfSqrt(cell->GetDistanceSquared(point));
+    if(distance > hit->GetT() || distance > maxDistance)return false;
+  }
 
   if (cell->IsLeaf()) {
 
@@ -128,13 +142,15 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
     
     const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)cell->GetData();
-    pxr::GfVec3f localPoint = geometry->GetInverseMatrix().Transform(point);
-    Location localHit(*hit);
-    localHit.TransformT(geometry->GetInverseMatrix());
+    pxr::GfVec3f localPoint(geometry->GetInverseMatrix().Transform(point));
+    
+    Location localHit;
 
-    component->Closest(points, localPoint, &localHit);
-
-    localHit.TransformT(geometry->GetMatrix());
+    if (component->Closest(points, localPoint, &localHit)) {
+      const Triangle* triangle = ((const Mesh*)geometry)->GetTriangle(localHit.GetComponentIndex());
+      localHit.SetT((localHit.ComputePosition(points, &triangle->vertices[0], 3,
+        &geometry->GetMatrix()) - point).GetLength());
+    }
 
     if (localHit.GetT() < hit->GetT()) {
       hit->Set(localHit);
@@ -145,15 +161,14 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
     return false;
   }
   else {
-
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = GetCell(cell->GetRight());
 
-    double maxDistSq = hit->GetT() * hit->GetT();
+    double maxDistSq = pxr::GfPow(hit->GetT(), 2);
     double leftDistSq = left->GetDistanceSquared(point);
     double rightDistSq = right->GetDistanceSquared(point);
 
-    if(leftDistSq < maxDistSq && rightDistSq < maxDistSq) {
+    if( leftDistSq < maxDistSq && rightDistSq < maxDistSq ) {
       bool leftFound(false), rightFound(false);
       if(leftDistSq < rightDistSq) {
         leftFound = _Closest(left, point, hit, hit->GetT());
@@ -162,16 +177,14 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
         rightFound = _Closest(right, point, hit, hit->GetT());
         leftFound = _Closest(left, point, hit, hit->GetT());
       }
-
       return leftFound || rightFound;
     }
-    else if( leftDistSq < maxDistSq)
+    else if( leftDistSq < maxDistSq )
       return _Closest(left, point, hit, hit->GetT());
-    else if(rightDistSq < maxDistSq)
+    else if( rightDistSq < maxDistSq )
       return _Closest(right, point, hit, hit->GetT());
     else 
       return false;
-    
   }
 }
 
@@ -268,22 +281,22 @@ BVH::GetGeometryIndexFromCell(const BVH::Cell* cell) const
   size_t startIdx, endIdx;
   size_t start = 0;
   size_t end = GetNumGeometries();
-  size_t split = end >> 1;
+  size_t middle = end >> 1;
 
   while(start != end)
   {
-    startIdx = GetGeometryCellsStartIndex(split);
-    endIdx = GetGeometryCellsEndIndex(split);
-    if (cellIdx < startIdx)
-      end = split;
+    startIdx = GetGeometryCellsStartIndex(middle);
+    endIdx = GetGeometryCellsEndIndex(middle);
+    if(startIdx <= cellIdx && cellIdx < endIdx )
+      return middle;
 
-    else if(cellIdx >= endIdx)
-      start = split;
+    else if (cellIdx < startIdx)
+      end = middle;
 
-    else if(startIdx <= cellIdx && cellIdx < endIdx )
-      return split;
-      
-    split = (start + end) >> 1;
+    else
+      start = middle;
+
+    middle = (start + end) >> 1;
   } 
   return INVALID_GEOMETRY;
 }

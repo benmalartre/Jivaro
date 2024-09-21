@@ -34,6 +34,8 @@ public:
     Cell(size_t lhs, BVH::Cell* left, size_t rhs, BVH::Cell* right);
     Cell(Component* component, const pxr::GfRange3d& range);
 
+    bool IntersectSphere(const pxr::GfVec3f &center, double radius) const;
+
     bool IsLeaf() const { return _type == BVH::Cell::LEAF; };
     bool IsRoot() const { return _type == BVH::Cell::ROOT; };
     bool IsBranch() const { return _type == BVH::Cell::BRANCH; };
