@@ -12,7 +12,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
+//https://www.highperformancegraphics.org/posters23/Fast_Triangle_Pairing_for_Ray_Tracing.pdf
+//
 class TrianglePairGraph {
 public:
   using _Pairs = std::vector<std::pair<size_t, size_t>> ;

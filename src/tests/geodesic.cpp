@@ -20,6 +20,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit, pxr::GfVec3f* result=NULL)
 {
+  /*
   float minDistance = FLT_MAX;
   size_t index = Component::INVALID_INDEX;
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
@@ -51,6 +52,64 @@ bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit
     }
   }
   return found;
+  */
+  if(mesh->GetBoundingBox().GetRange().GetDistanceSquared(point) > pxr::GfPow(hit->GetT(), 2))
+    return false;
+
+  float minDistance = FLT_MAX;
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  pxr::VtArray<TrianglePair>& pairs = mesh->GetTrianglePairs();
+  size_t numPairs = pairs.size();
+
+  pxr::GfVec3f localPoint(mesh->GetInverseMatrix().Transform(point));
+  Location localHit;
+
+  bool found = false;
+
+  for(size_t t = 0; t < numPairs; ++t) {
+    TrianglePair* pair = &pairs[t];
+
+    if (pair->Closest(positions, localPoint, &localHit))
+      found = true;
+  }
+  if(found) {
+    Triangle* triangle = mesh->GetTriangle(localHit.GetComponentIndex());
+    localHit.SetT((localHit.ComputePosition(positions, &triangle->vertices[0], 3,
+      &mesh->GetMatrix()) - point).GetLength());
+    if(localHit.GetT() > hit->GetT()) return false;
+
+    hit->Set(localHit);
+    if (result) {
+      Triangle* triangle = mesh->GetTriangle(hit->GetComponentIndex());
+      const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+
+      *result = hit->ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
+    }
+    return true;
+  }
+  return false;
+
+
+  /*
+    const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+    Component* component = (Component*)cell->GetData();
+    pxr::GfVec3f localPoint(geometry->GetInverseMatrix().Transform(point));
+    
+    Location localHit(*hit);
+    localHit.TransformT(geometry->GetInverseMatrix());
+
+    if(!component->Closest(points, localPoint, &localHit))
+      return false;
+
+    localHit.TransformT(geometry->GetMatrix());
+
+    if (localHit.GetT() < hit->GetT()) {
+      hit->Set(localHit);
+      hit->SetGeometryIndex(geomIdx);
+      return true;
+    }
+  */
+  
 }
 
 void 
@@ -292,6 +351,7 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     colors[1] = pxr::GfVec3f(0.f, 1.f, 0.f);
     colors[0] = pxr::GfVec3f(0.f, 0.f, 1.f);
 
+    // bvh accelerated query
     if (_bvh.Closest(seed, &hit, DBL_MAX)) {
       Mesh* hitMesh = (Mesh*)_meshes[hit.GetGeometryIndex()];
       const pxr::GfVec3f* positions = hitMesh->GetPositionsCPtr();
@@ -300,7 +360,7 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       points[1] = closest;
     }
 
-
+    // brute force reference
     Location hit2;
     pxr::GfVec3f result;
     for (size_t m = 0; m < _meshes.size(); ++m)
@@ -325,7 +385,10 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     for (size_t m = 0; m < _meshes.size(); ++m)
       _scene.MarkPrimDirty(_meshesId[m], pxr::HdChangeTracker::DirtyPrimvar);
 
-    if (!pxr::GfIsClose(points[1], points[2], 0.0001f))std::cout << "divergence : " << (points[2] - points[1]) << std::endl;
+    if (!pxr::GfIsClose(points[1], points[2], 0.0001f)) {
+      std::cout << "divergence : " << (points[2] - points[1]) << std::endl;
+      std::cout << "distances  : " << (points[1] - seed).GetLength() << " vs " << (points[2] - seed).GetLength() << std::endl;
+    }
   }
 
 }

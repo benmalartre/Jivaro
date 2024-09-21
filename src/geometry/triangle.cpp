@@ -347,11 +347,10 @@ TrianglePair::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4
 {
   pxr::GfRange3f range;
 
-  if (left) {
-    range.UnionWith(m.Transform(positions[left->vertices[0]]));
-    range.UnionWith(m.Transform(positions[left->vertices[1]]));
-    range.UnionWith(m.Transform(positions[left->vertices[2]]));
-  } 
+  range.UnionWith(m.Transform(positions[left->vertices[0]]));
+  range.UnionWith(m.Transform(positions[left->vertices[1]]));
+  range.UnionWith(m.Transform(positions[left->vertices[2]]));
+
   if (right) {
     range.UnionWith(m.Transform(positions[right->vertices[0]]));
     range.UnionWith(m.Transform(positions[right->vertices[1]]));
@@ -368,7 +367,7 @@ bool
 TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const
 {
   bool hitSometing = false;
-  if (left && left->Raycast(points, ray, hit))hitSometing = true;
+  if (left->Raycast(points, ray, hit))hitSometing = true;
   if (right && right->Raycast(points, ray, hit))hitSometing = true;
   return hitSometing;
 }
@@ -380,7 +379,7 @@ bool
 TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
   bool hitSometing = false;
-  if (left && left->Closest(points, point, hit))hitSometing = true;
+  if (left->Closest(points, point, hit))hitSometing = true;
   if (right && right->Closest(points, point, hit))hitSometing = true;
   return hitSometing;
 };

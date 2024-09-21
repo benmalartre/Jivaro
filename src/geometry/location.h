@@ -44,7 +44,6 @@ public:
     _coords[2] = coords[2];
   };
   void SetT(double t) { _coords[3] = t;};
-  void TransformT(const pxr::GfMatrix4d& matrix);
 
   // Getters
   int GetGeometryIndex() const { return _geomId; };

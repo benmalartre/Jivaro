@@ -30,12 +30,12 @@ struct Component {
     TRIANGLEPAIR,
     POLYGON
   };
-  static const uint32_t INVALID_INDEX = std::numeric_limits<uint32_t>::max();
-  uint32_t id;
+  static const int INVALID_INDEX = std::numeric_limits<int>::max();
+  int id;
 
   Component() : id(INVALID_INDEX) {};
-  Component(uint32_t index) : id(index) {};
-  uint32_t GetIndex(){return id;};
+  Component(int index) : id(index) {};
+  int GetIndex(){return id;};
 
   virtual bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const = 0;
   virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const = 0;

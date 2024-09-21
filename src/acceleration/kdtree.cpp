@@ -12,10 +12,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 void
 KDTree::Init(const std::vector<Geometry*> &geometries) 
 {
-  std::cout << "kdtree constructor called!" << std::endl;
   Intersector::_Init(geometries);
 
-  std::cout << "kdtree num geometries : " << GetNumGeometries() << std::endl;
   size_t totalNumPoints = 0;
   for(size_t g = 0; g < geometries.size(); ++g) {
     if(geometries[g]->GetType() < Geometry::POINT)
@@ -23,7 +21,6 @@ KDTree::Init(const std::vector<Geometry*> &geometries)
 
     size_t numPoints = geometries[g]->GetNumPoints();
     SetGeometryCellIndices(g, totalNumPoints, totalNumPoints + numPoints);
-    std::cout << "geometry " << g  << " : " << totalNumPoints << " -> " << (totalNumPoints + numPoints) << std::endl;
     totalNumPoints += numPoints;
   }
   _cells.reserve(totalNumPoints);
@@ -50,8 +47,6 @@ KDTree::Init(const std::vector<Geometry*> &geometries)
   {
       throw std::runtime_error("KDTree is empty.");
   }
-
-  std::cout << "kdtree successfully initialized!" << std::endl;
 }
 
 void
