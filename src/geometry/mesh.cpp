@@ -360,31 +360,31 @@ Mesh::GetTrianglePairs()
 
 
 size_t
-Mesh::GetNumAdjacents(size_t index)
+Mesh::GetNumAdjacents(size_t index) const
 {
   return _halfEdges.GetNumAdjacents(index);
 }
 
 size_t
-Mesh::GetTotalNumAdjacents()
+Mesh::GetTotalNumAdjacents() const
 {
   return _halfEdges.GetTotalNumAdjacents();
 }
 
 const int* 
-Mesh::GetAdjacents(size_t index)
+Mesh::GetAdjacents(size_t index) const
 {
   return _halfEdges.GetAdjacents(index);
 }
 
 int 
-Mesh::GetAdjacent(size_t index, size_t adjacent)
+Mesh::GetAdjacent(size_t index, size_t adjacent) const
 {
   return _halfEdges.GetAdjacent(index, adjacent);
 }
 
 int 
-Mesh::GetAdjacentIndex(size_t index, size_t adjacent)
+Mesh::GetAdjacentIndex(size_t index, size_t adjacent) const
 {
   return _halfEdges.GetAdjacentIndex(index, adjacent);
 }
@@ -400,31 +400,31 @@ Mesh::ComputeAdjacents()
 }
 
 size_t
-Mesh::GetNumNeighbors(size_t index)
+Mesh::GetNumNeighbors(size_t index) const
 {
   return _halfEdges.GetNumNeighbors(index);
 }
 
 size_t
-Mesh::GetTotalNumNeighbors()
+Mesh::GetTotalNumNeighbors() const
 {
   return _halfEdges.GetTotalNumNeighbors();
 }
 
 const int* 
-Mesh::GetNeighbors(size_t index)
+Mesh::GetNeighbors(size_t index) const
 {
   return _halfEdges.GetNeighbors(index);
 }
 
 int 
-Mesh::GetNeighbor(size_t index, size_t neighbor) 
+Mesh::GetNeighbor(size_t index, size_t neighbor) const
 {
   return _halfEdges.GetNeighbor(index, neighbor);
 }
 
 int 
-Mesh::GetNeighborIndex(size_t index, size_t neighbor) 
+Mesh::GetNeighborIndex(size_t index, size_t neighbor) const
 {
   return _halfEdges.GetNeighborIndex(index, neighbor);
 }
@@ -519,6 +519,7 @@ Mesh::ComputeCotangentWeights(MeshCotangentWeights& weights)
     offset += na + 1;
   }
 }
+
 
 void
 Mesh::ComputeAreas(MeshAreas& result)

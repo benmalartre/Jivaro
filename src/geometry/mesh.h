@@ -60,7 +60,7 @@ struct MeshCotangentWeights {
   pxr::VtArray<int>          offsets;
   pxr::VtArray<float>        values; 
 
-  float Get(size_t index, size_t n) {
+  float Get(size_t index, size_t n) const {
     return values[offsets[index] + n];
   };
 };
@@ -109,17 +109,17 @@ public:
   const pxr::VtArray<HalfEdge>& GetEdges()const{return _halfEdges.GetEdges();};
   const HalfEdgeGraph* GetEdgesGraph()const{return &_halfEdges;};
 
-  size_t GetNumAdjacents(size_t index);
-  size_t GetTotalNumAdjacents();
-  const int* GetAdjacents(size_t index);
-  int GetAdjacent(size_t index, size_t adjacent);
-  int GetAdjacentIndex(size_t index, size_t adjacent);
+  size_t GetNumAdjacents(size_t index) const;
+  size_t GetTotalNumAdjacents() const;
+  const int* GetAdjacents(size_t index) const;
+  int GetAdjacent(size_t index, size_t adjacent) const;
+  int GetAdjacentIndex(size_t index, size_t adjacent) const;
   
-  size_t GetNumNeighbors(size_t index);
-  size_t GetTotalNumNeighbors();
-  const int* GetNeighbors(size_t index);
-  int GetNeighbor(size_t index, size_t neighbor);
-  int GetNeighborIndex(size_t index, size_t neighbor);
+  size_t GetNumNeighbors(size_t index) const;
+  size_t GetTotalNumNeighbors() const;
+  const int* GetNeighbors(size_t index) const;
+  int GetNeighbor(size_t index, size_t neighbor) const;
+  int GetNeighborIndex(size_t index, size_t neighbor) const;
   
   Triangle* GetTriangle(uint32_t index) {return &_triangles[index];};
   const Triangle* GetTriangle(uint32_t index) const {return &_triangles[index];};

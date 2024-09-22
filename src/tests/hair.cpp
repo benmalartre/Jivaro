@@ -21,7 +21,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void TestHair::_InitControls(pxr::UsdStageRefPtr& stage)
+void 
+TestHair::_InitControls(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
 
@@ -35,7 +36,8 @@ void TestHair::_InitControls(pxr::UsdStageRefPtr& stage)
   controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
 }
 
-void TestHair::_QueryControls(pxr::UsdStageRefPtr& stage)
+void 
+TestHair::_QueryControls(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   pxr::UsdPrim controlPrim = rootPrim.GetChild(pxr::TfToken("Controls"));
@@ -49,7 +51,8 @@ void TestHair::_QueryControls(pxr::UsdStageRefPtr& stage)
   controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&_width);
 }
 
-pxr::HdDirtyBits TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& mesh, 
+pxr::HdDirtyBits 
+TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& mesh, 
   pxr::GfMatrix4d& xform, double time)
 {
   uint64_t T = CurrentTime();
@@ -119,7 +122,8 @@ pxr::HdDirtyBits TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, p
 }
 
 
-void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
+void 
+TestHair::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
@@ -148,7 +152,8 @@ void TestHair::InitExec(pxr::UsdStageRefPtr& stage)
   
 }
 
-void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+void 
+TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _QueryControls(stage);
 
@@ -170,7 +175,8 @@ void TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
   }
 }
 
-void TestHair::TerminateExec(pxr::UsdStageRefPtr& stage)
+void 
+TestHair::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 

@@ -724,10 +724,11 @@ public:
   inline void SubtractInPlace(const SparseMatrix& other);
   inline SparseMatrix Multiply(const SparseMatrix& other);
   inline void MultiplyInPlace(const SparseMatrix& other);
-  inline SparseMatrix Scale(const SparseMatrix& other, float scale);
-  inline void ScaleInPlace(const SparseMatrix& other, float scale);
+  inline SparseMatrix Scale(float scale);
+  inline void ScaleInPlace(float scale);
   inline typename Vector MultiplyVector(typename const Vector& vector);
   inline void Compute(typename Solver& solver);
+  inline bool CheckSuccess(typename Solver& solver, const std::string &message);
   inline typename Vector Solve(typename Solver& solver, Vector& b);
   inline void Factorize(typename Solver& solver);
   inline SparseMatrix Transpose();
@@ -865,7 +866,7 @@ template <typename T>
 SparseMatrix<T> SparseMatrix<T>::Add(const SparseMatrix<T>& other)
 {
   SparseMatrix<T> result(*this);
-  _result._matrix += other._matrix;
+  result._matrix += other._matrix;
   return result;
 }
 
@@ -904,7 +905,7 @@ typename SparseMatrix<T>::Vector SparseMatrix<T>::MultiplyVector(typename const 
 }
 
 template <typename T>
-SparseMatrix<T> SparseMatrix<T>::Scale(const SparseMatrix<T>& other, float scale)
+SparseMatrix<T> SparseMatrix<T>::Scale(float scale)
 {
   SparseMatrix<T> result(*this);
   result._matrix *= scale;
@@ -912,7 +913,7 @@ SparseMatrix<T> SparseMatrix<T>::Scale(const SparseMatrix<T>& other, float scale
 }
 
 template <typename T>
-void SparseMatrix<T>::ScaleInPlace(const SparseMatrix<T>& other, float scale)
+void SparseMatrix<T>::ScaleInPlace(float scale)
 {
   _matrix *= scale;
 }
@@ -992,6 +993,18 @@ void SparseMatrix<T>::Compute(typename Solver& solver)
   solver.factorize(_matrix); 
 
 }
+
+template <typename T>
+bool SparseMatrix<T>::CheckSuccess(typename SparseMatrix<T>::Solver& solver, const std::string &message)
+{
+  if (solver.info() != Eigen::Success) {
+    std::cerr << message<< std::endl;
+    return false;
+  }
+  return true;
+}
+
+
 
 template<typename T>
 void SparseMatrix<T>::ResetTs()

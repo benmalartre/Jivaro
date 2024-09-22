@@ -58,14 +58,17 @@ bool
 BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
+
+  maxDistance = pxr::GfMin(maxDistance, hit->GetDistance());
+  /*
   double enterDistance, exitDistance;
   if (!ray.Intersect(pxr::GfBBox3d(*cell), &enterDistance, &exitDistance))
     return false;
 
   if(enterDistance > maxDistance) 
     return false;
+  */
 
-  const pxr::GfVec3f enterPoint(ray.GetPoint(enterDistance));
 
   if (cell->IsLeaf()) {
     
@@ -80,8 +83,10 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     Component* component = (Component*)cell->GetData();
     Location localHit(*hit);
     if (component->Raycast(points, localRay, &localHit)) {
+
       const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetDistance()));
       const double distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
+      
       if ((distance < *minDistance) && (distance < maxDistance)) {
         hit->Set(localHit);
         hit->SetDistance(distance);
@@ -95,21 +100,31 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     Location leftHit(*hit), rightHit(*hit);
     bool leftFound(false), rightFound(false);
     const BVH::Cell* left = _GetCell(cell->GetLeft());
-    if (left && _Raycast(left, ray, &leftHit, maxDistance, minDistance))leftFound=true;
     const BVH::Cell* right = _GetCell(cell->GetRight());
-    if (right && _Raycast(right, ray, &rightHit, maxDistance, minDistance))rightFound=true;
 
-    if (leftFound && rightFound) {
-      if(leftHit.GetDistance()<rightHit.GetDistance()) {
-        hit->Set(leftHit); return true;
+  
+    double leftDist=DBL_MAX, rightDist=DBL_MAX;
+    ray.Intersect(pxr::GfBBox3d(*left), &leftDist);
+    bool leftCheck = leftDist < maxDistance;
+    ray.Intersect(pxr::GfBBox3d(*right), &rightDist);
+    bool rightCheck = rightDist < maxDistance;
+  
+    if(leftCheck && rightCheck) {
+      if(leftDist < rightDist) {
+        if (_Raycast(left, ray, hit, maxDistance, minDistance))leftFound=true;
+        if (_Raycast(right, ray, hit, maxDistance, minDistance))rightFound=true;
       } else {
-        hit->Set(rightHit); return true;
+        if (_Raycast(right, ray, hit, maxDistance, minDistance))rightFound=true;
+        if (_Raycast(left, ray, hit, maxDistance, minDistance))leftFound=true;
       }
-    } else if (leftFound) {
-      { hit->Set(leftHit); return true;}
-    } else if (rightFound) {
-      { hit->Set(rightHit); return true;}
-    } return false;
+    } else if (leftCheck) {
+      if (_Raycast(left, ray, hit, maxDistance, minDistance))leftFound=true;
+    } else if (rightCheck) {
+      if (_Raycast(right, ray, hit, maxDistance, minDistance))rightFound=true;
+    }
+
+    return leftFound || rightFound;
+
   }
 
 }
@@ -359,6 +374,77 @@ BVH::Update()
 bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
+  /*
+  const BVH::Cell *stack[64];
+  const BVH::Cell* cell = _root;
+  uint8_t stackPtr = 0;
+  while (1)
+  {
+    if (cell->IsLeaf())
+    {
+      size_t geomIdx = GetGeometryIndexFromCell(cell);
+      const Geometry* geometry = GetGeometry(geomIdx);
+
+      pxr::GfRay localRay(ray);
+
+      localRay.Transform(geometry->GetInverseMatrix());
+      const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+      
+      Component* component = (Component*)cell->GetData();
+      Location localHit(*hit);
+      if (component->Raycast(points, localRay, &localHit)) {
+        std::cout << "hit some triangle..." << std::endl;
+        const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetDistance()));
+        const double distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
+        
+        if ((distance < *minDistance) && (distance < maxDistance)) {
+          hit->Set(localHit);
+          hit->SetDistance(distance);
+          hit->SetGeometryIndex(geomIdx);
+          *minDistance = distance;
+        }
+      }
+      if (stackPtr == 0) break; else cell = stack[--stackPtr];
+      continue;
+    }
+
+    const BVH::Cell* left = _GetCell(cell->GetLeft());
+    const BVH::Cell* right = _GetCell(cell->GetRight());
+
+    if(right) {
+      double leftDist=DBL_MAX, rightDist=DBL_MAX;
+
+      bool hitLeft = ray.Intersect(pxr::GfBBox3d(*left), &leftDist, NULL);
+      bool hitRight = ray.Intersect(pxr::GfBBox3d(*right), &rightDist, NULL);
+
+      if(hitLeft && hitRight)
+        if(leftDist < rightDist){
+          cell = left;
+          stack[stackPtr++] = right;
+        } else {
+          cell = right;
+          stack[stackPtr++] = left;
+        }
+
+      else if (hitLeft)
+        cell = left;
+
+      else if (hitRight)
+        cell = right;
+      
+      else
+        if(stackPtr == 0) break; else cell = stack[--stackPtr];
+      
+    } else {
+      if(ray.Intersect(pxr::GfBBox3d(*left)))
+        cell = left;
+      else
+        if(stackPtr == 0) break; else cell = stack[--stackPtr];
+    }
+
+    return hit->IsValid();
+  }*/
+
   return _Raycast(_root, ray, hit, maxDistance, minDistance);
 };
 

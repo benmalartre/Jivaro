@@ -26,9 +26,9 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-
 void TestRaycast::_UpdateRays() 
 {
+  //uint64_t startT = CurrentTime();
   const double time = Time::Get()->GetActiveTime();
   const size_t numRays = _mesh->GetNumPoints();
 
@@ -58,6 +58,8 @@ void TestRaycast::_UpdateRays()
 
   _rays->SetTopology(points, radiis, counts); 
   _rays->SetColors(colors);
+  //uint64_t elapsedT = CurrentTime() - startT;
+  //std::cout << "  - Update rays took : " << (elapsedT * 1e-6) << " seconds.." << std::endl; 
 }
 
 // thread task
@@ -103,6 +105,7 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
 // parallelize raycast
 void TestRaycast::_UpdateHits()
 {
+  //uint64_t startT = CurrentTime();
   const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
   size_t numRays = _rays->GetNumPoints() >> 1;
 
@@ -113,7 +116,7 @@ void TestRaycast::_UpdateHits()
 
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestRaycast::_FindHits, this, std::placeholders::_1, 
-      std::placeholders::_2, positions, &points[0], &hits[0]));
+      std::placeholders::_2, positions, &points[0], &hits[0]), 32);
 
   // need accumulate result
   pxr::VtArray<pxr::GfVec3f> result;
@@ -129,6 +132,9 @@ void TestRaycast::_UpdateHits()
 
   pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.5f, 0.0f));
   _hits->SetColors(colors);
+
+  //uint64_t elapsedT = CurrentTime() - startT;
+  //std::cout << "  - Update hits took : " << (elapsedT * 1e-6) << " seconds.." << std::endl; 
 
 }
 
@@ -186,7 +192,7 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 0.f, 0.f));
 
-  const size_t n = 64;
+  const size_t n = 1024;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);

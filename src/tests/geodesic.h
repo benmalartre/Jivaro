@@ -41,7 +41,7 @@ private:
   pxr::SdfPath              _pointsId;
   Xform*                    _xform;
   pxr::SdfPath              _xformId;
-  Geodesic                  _geodesic;
+  Geodesic*                 _geodesic;
 };
 
 
