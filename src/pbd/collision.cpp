@@ -78,7 +78,7 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   size_t numBodies = bodies.size();
 
   pxr::VtArray<int> elements;
-  int bodyIdx = -1;
+  size_t bodyIdx = INVALID_INDEX;
 
   Mask::Iterator iterator(this, 0, numParticles);
   size_t particleToContactIdx = 0;

@@ -325,28 +325,18 @@ Instancer* _SetupGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, G
 
 void _UpdateGridInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Grid3D* grid, float time)
 {
-  /*
-  std::vector<BVH::Cell*> cells;
-  bvh->GetRoot()->GetCells(cells);
-  size_t numPoints = cells.size();
+  pxr::VtArray<pxr::GfVec3f> points;
+  pxr::VtArray<pxr::GfVec3f> scales;
+  pxr::VtArray<pxr::GfVec3f> colors;
 
-  pxr::VtArray<pxr::GfVec3f> points(numPoints);
-  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
-  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
-
-  for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
-    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
-    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
-  }
+  grid->GetCells(points, scales, colors, false);
 
   pxr::UsdPrim prim = stage->GetPrimAtPath(path);
   pxr::UsdGeomPointInstancer instancer(prim);
 
   instancer.GetPositionsAttr().Set(points);
   instancer.GetScalesAttr().Set(scales);
-  instancer.GetOrientationsAttr().Set(rotations);
-  */
+
 }
 
 

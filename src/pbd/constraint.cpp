@@ -505,6 +505,9 @@ void _GetMeshBendElements(Mesh* mesh, pxr::VtArray<int>& allElements, size_t off
 {
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
+  if(!(mesh->GetFlags() & Mesh::NEIGHBORS))mesh->ComputeNeighbors();  
+  if(!(mesh->GetFlags() & Mesh::ADJACENTS))mesh->ComputeAdjacents();  
+
   const size_t numPoints = mesh->GetNumPoints();
   const pxr::GfMatrix4d& m = mesh->GetMatrix();
   const HalfEdgeGraph* graph = mesh->GetEdgesGraph();

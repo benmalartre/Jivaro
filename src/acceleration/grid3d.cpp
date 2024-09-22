@@ -147,6 +147,13 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
 {
   _Init(geometries);
 
+  Update();
+
+  
+}
+
+void Grid3D::Update()
+{
   // delete old cells
   DeleteCells();
 
@@ -200,11 +207,6 @@ void Grid3D::Init(const std::vector<Geometry*>& geometries)
       InsertPoints((Points*)GetGeometry(0));
       break;
   }
-}
-
-void Grid3D::Update()
-{
-  //Init(_geoms);
 }
 
 bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,

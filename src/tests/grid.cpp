@@ -290,13 +290,13 @@ void TestGrid::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     uint64_t startT = CurrentTime();
     _bvh.Update();
     uint64_t bvhUpdateT = CurrentTime() - startT;
-    std::cout << "update bvh : " << ((double)bvhUpdateT * 1e-9) << " seconds" << std::endl;
+    std::cout << "update bvh : " << ((double)bvhUpdateT * 1e-6) << " seconds" << std::endl;
 
      startT = CurrentTime();
     _grid.Update();
     uint64_t gridUpdateT = CurrentTime() - startT;
-    std::cout << "update grid : " << ((double)gridUpdateT * 1e-9) << " seconds" << std::endl;
-    //_UpdateGridInstancer(stage, _gridId, &_grid, time);
+    std::cout << "update grid : " << ((double)gridUpdateT * 1e-6) << " seconds" << std::endl;
+    _UpdateGridInstancer(stage, _gridId, &_grid, time);
     _scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::DirtyInstancer);
   }
 

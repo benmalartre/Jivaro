@@ -68,7 +68,7 @@ public:
   pxr::GfVec3f GetCellPosition(uint32_t index);
   pxr::GfVec3f GetCellMin(uint32_t index);
   pxr::GfVec3f GetCellMax(uint32_t index);
-  inline uint32_t NumCells(){return _numCells;};
+  inline uint32_t GetNumCells(){return _numCells;};
   uint32_t* GetResolution(){return &_resolution[0];};
   inline uint32_t GetResolutionX(){return _resolution[0];};
   inline uint32_t GetResolutionY(){return _resolution[1];};

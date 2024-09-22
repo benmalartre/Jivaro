@@ -60,13 +60,11 @@ public:
   size_t GetNumUsed(size_t index) const;
   size_t GetTotalNumUsed() const;
 
-
 private:
   size_t                n;
   size_t                m;
   int*                  used;
   Contact*              data;
-  std::mutex            mutex;
 };
 
 

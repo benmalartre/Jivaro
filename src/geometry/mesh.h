@@ -90,6 +90,7 @@ public:
   Mesh(const pxr::UsdGeomMesh& usdMesh, const pxr::GfMatrix4d& world, size_t connectivity=0);
   virtual ~Mesh();
 
+  size_t GetFlags(){return _flags;};
   const pxr::VtArray<int>& GetFaceCounts() const { return _faceVertexCounts;};
   const pxr::VtArray<int>& GetFaceConnects() const { return _faceVertexIndices;};
   pxr::VtArray<int>& GetFaceCounts() { return _faceVertexCounts;};
