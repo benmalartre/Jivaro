@@ -67,6 +67,9 @@ protected:
   pxr::GfVec3f                              _torque;
   std::map<pxr::TfToken, ConstraintsGroup>  _constraints;
 
+  std::vector<int>                          _connexions;
+  std::vector<int>                          _connexionsCounts;
+  std::vector<int>                          _connexionsOffsets;
 };
 
 enum BodyType

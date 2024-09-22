@@ -357,10 +357,9 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
 
-
     if (velocity[index].GetLength() < _sleepThreshold) {
-      //state[index] = Particles::IDLE;
-      //velocity[index] = pxr::GfVec3f(0.f);
+      state[index] = Particles::IDLE;
+      velocity[index] = pxr::GfVec3f(0.f);
     }
 
     // update position
@@ -370,7 +369,6 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 
 void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 {
-
   // solve constraints
   pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
     [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
@@ -483,7 +481,6 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
     _collisions[i]->Update(prim, time);
-
   }
 }
 

@@ -85,12 +85,12 @@ Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdPrim.CreateAttribute(PBDTokens->velocity, pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(0.f));
   
   pxr::TfToken stretchStiffness(PBDTokens->stretch.GetString()+":"+PBDTokens->stiffness.GetString());
-  usdPrim.CreateAttribute(stretchStiffness, pxr::SdfValueTypeNames->Float).Set(10000.f);
+  usdPrim.CreateAttribute(stretchStiffness, pxr::SdfValueTypeNames->Float).Set(100000.f);
   pxr::TfToken stretchDamp(PBDTokens->stretch.GetString()+":"+PBDTokens->damp.GetString());
   usdPrim.CreateAttribute(stretchDamp, pxr::SdfValueTypeNames->Float).Set(0.1f);
 
   pxr::TfToken bendStiffness(PBDTokens->bend.GetString() + ":" + PBDTokens->stiffness.GetString());
-  usdPrim.CreateAttribute(bendStiffness, pxr::SdfValueTypeNames->Float).Set(2000.f);
+  usdPrim.CreateAttribute(bendStiffness, pxr::SdfValueTypeNames->Float).Set(20000.f);
   pxr::TfToken bendDamp(PBDTokens->bend.GetString() + ":" + PBDTokens->damp.GetString());
   usdPrim.CreateAttribute(bendDamp, pxr::SdfValueTypeNames->Float).Set(0.1f);
 

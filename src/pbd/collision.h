@@ -212,6 +212,7 @@ public:
     std::vector<Constraint*>& constraints, float ft)override;
 
 protected:
+  void _ComputeNeighbors(const std::vector<Body*>& bodies);
   void _UpdateAccelerationStructure();
   void _ResetContacts(Particles* particles) override;
   void _FindContacts(size_t begin, size_t end, Particles* particles, float ft) override;
@@ -222,10 +223,18 @@ protected:
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft)override;
 
+  inline bool _AreConnected(size_t lhs, size_t rhs);
+
 private:
   static size_t                     TYPE_ID;
   HashGrid                          _grid;
   Particles*                        _particles;
+
+  bool                              _neighborsInitialized;
+  std::vector<int>                  _neighbors;
+  std::vector<short>                _neighborsCounts;
+  std::vector<int>                  _neighborsOffsets;
+
   
 };
 

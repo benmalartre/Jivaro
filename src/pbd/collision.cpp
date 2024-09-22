@@ -278,7 +278,7 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index, Con
   pxr::GfVec3f normal = predicted - _center;
   float nL = normal.GetLength();
   if (nL > 0.0000001f)normal.Normalize();
-  else normal = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1).GetNormalized();
+  else normal = pxr::GfVec3f(0.f, 1.f, 0.f);
 
   float d = nL - (_radius + particles->radius[index]);
 
@@ -407,6 +407,7 @@ SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path,
   : Collision(NULL, path, restitution, friction)
   , _particles(particles)
   , _grid(NULL)
+  , _neighborsInitialized(false)
 {
   _grid.Init(_particles->GetNumParticles(), &_particles->predicted[0], _particles->radius[0] * 2.f + TOLERANCE_MARGIN);
 }
@@ -428,6 +429,7 @@ void SelfCollision::Update(const pxr::UsdPrim& prim, double time)
 void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
   std::vector<Constraint*>& constraints, float ft)
 {
+  if(!_neighborsInitialized)_ComputeNeighbors(bodies);
   _ResetContacts(particles);
 
   pxr::WorkParallelForN(particles->GetNumParticles(),
@@ -485,9 +487,10 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
   std::vector<int> closests;
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, particles->radius[index] * 2.f);
+  _grid.Closests(index, &particles->predicted[0], closests, particles->radius[index] * 3.f);
 
   for(int closest: closests) {
+    if(_AreConnected(index, closest))continue;
     if(numCollide >= PARTICLE_MAX_CONTACTS)break;
     if((particles->predicted[index]-particles->predicted[closest]).GetLength() < particles->radius[index] + particles->radius[closest]) {
       Contact* contact = _contacts.Use(index);
@@ -519,6 +522,7 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
 void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints, float ft)
 {
+
   CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
 
@@ -566,8 +570,53 @@ pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size
 pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index, size_t other)
 {
   return particles->velocity[other];
-};
+}
 
+
+void 
+SelfCollision::_ComputeNeighbors(const std::vector<Body*> &bodies)
+{
+  size_t numParticles = _particles->GetNumParticles();
+  _neighborsCounts.resize(numParticles, 0);
+  _neighborsOffsets.resize(numParticles, 0);
+  _neighbors.clear();
+
+  size_t neighborsOffset = 0;
+  for(size_t b = 0; b < bodies.size(); ++b) {
+    const Geometry* geometry = bodies[b]->GetGeometry();
+    size_t offset = bodies[b]->GetOffset();
+    switch (geometry->GetType()) {
+      case Geometry::MESH:
+      {
+        Mesh* mesh = (Mesh*)geometry;
+        size_t numPoints = mesh->GetNumPoints();
+        for (size_t p = 0; p < numPoints; ++p) {
+          size_t numAdjacents = mesh->GetNumAdjacents(p);
+          for (size_t n = 0; n < numAdjacents; ++n)
+            _neighbors.push_back(offset + mesh->GetAdjacent(p, n));
+       
+          _neighborsCounts[offset + p] = numAdjacents;
+          _neighborsOffsets[offset + p] = neighborsOffset;
+          neighborsOffset += numAdjacents;
+        }
+        break;
+      }
+    }
+  }
+
+  _neighborsInitialized = true;
+}
+
+
+bool 
+SelfCollision::_AreConnected(size_t index, size_t other)
+{
+  int* neighbors = &_neighbors[_neighborsOffsets[index]];
+  for(size_t n = 0; n < _neighborsCounts[index]; ++n) {
+    if(neighbors[n] == other)return true;
+  }
+  return false;
+}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE
