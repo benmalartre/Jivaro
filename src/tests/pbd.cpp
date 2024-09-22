@@ -107,7 +107,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   float restitution = 0.5f;
   float friction = 0.5f;
-  bool createSphereCollision = false;
+  bool createSphereCollision = true;
   if(createSphereCollision) {
     for (auto& sphere : spheres) {
       Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
@@ -115,13 +115,13 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
      }
   }
 
-  bool createGroundCollision = false;
+  bool createGroundCollision = true;
   if(createGroundCollision) {
     Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
     _solver->AddElement(collision, _ground, _groundId);
   }
 
-  bool createSelfCollision = false  ;
+  bool createSelfCollision = true  ;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);

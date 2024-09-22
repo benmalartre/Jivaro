@@ -233,7 +233,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Cont
 
   contact->Init(this, particles, index);
   contact->SetCoordinates(intersection);
-  contact->SetT(d);
+  contact->SetDistance(d);
 
 }
 
@@ -286,7 +286,7 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index, Con
 
   contact->Init(this, particles, index);
   contact->SetCoordinates(intersection);
-  contact->SetT(d);
+  contact->SetDistance(d);
 }
 
 float SphereCollision::GetValue(Particles* particles, size_t index)
@@ -513,7 +513,7 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
 
   contact->Init(this, particles, index, other);
   contact->SetCoordinates(intersection);
-  contact->SetT(-d);
+  contact->SetDistance(-d);
 }
 
 void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
