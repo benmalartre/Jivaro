@@ -123,14 +123,14 @@ void TestGrid::_UpdateHits()
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0], &_grid));
   uint64_t bvhRaycastT = CurrentTime() - startT;
-  std::cout << "raycast bvh : " << ((double)bvhRaycastT * 1e-9) << " seconds" << std::endl;
+  std::cout << "raycast bvh : " << ((double)bvhRaycastT * 1e-6) << " seconds" << std::endl;
 
   startT = CurrentTime();
   pxr::WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[numRays], &hits[numRays], &_bvh));
   uint64_t gridRaycastT = CurrentTime() - startT;
-  std::cout << "raycast grid : " << ((double)gridRaycastT * 1e-9) << " seconds" << std::endl;
+  std::cout << "raycast grid : " << ((double)gridRaycastT * 1e-6) << " seconds" << std::endl;
 
 
 
@@ -238,13 +238,13 @@ void TestGrid::InitExec(pxr::UsdStageRefPtr& stage)
     uint64_t startT = CurrentTime();
     _bvh.Init(_meshes);
     uint64_t bvhBuildT = CurrentTime() - startT;
-    std::cout << "build bvh : " << ((double)bvhBuildT * 1e-9) << " seconds" << std::endl;
+    std::cout << "build bvh : " << ((double)bvhBuildT * 1e-6) << " seconds" << std::endl;
 
 
     startT = CurrentTime();
     _grid.Init(_meshes);
     uint64_t gridBuildT = CurrentTime() - startT;
-    std::cout << "build grid : " << ((double)gridBuildT * 1e-9) << " seconds" << std::endl;
+    std::cout << "build grid : " << ((double)gridBuildT * 1e-6) << " seconds" << std::endl;
     
 
     _gridId = rootId.AppendChild(pxr::TfToken("grid"));

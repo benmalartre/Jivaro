@@ -355,7 +355,7 @@ StochasticSampling(int nbSamples,
   std::vector<size_t>triangleSamples(nbTriangles, 0);
   size_t totalSamples = 0;
   for(size_t t = 0; t < nbTriangles; ++t) {
-    triangleSamples[t] = (size_t)(nbSamples * triangleAreas[t] / totalArea);
+    triangleSamples[t] = nbSamples;//(size_t)(nbSamples * triangleAreas[t] / totalArea);
     totalSamples += triangleSamples[t];
   }
 
