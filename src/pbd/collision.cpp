@@ -53,8 +53,20 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
     const size_t index = elements[elemIdx];
     _StoreContactLocation(particles, index, _contacts.Use(index), ft);
+    _ResolveInitialPenetration(particles, index);
   }
 }
+
+void Collision::_ResolveInitialPenetration(Particles* particles, size_t index)
+{
+  const float d = GetContactInitDepth(index); 
+  if(d > 0) return;
+  const pxr::GfVec3f offset = GetContactNormal(index) * -d;
+
+  particles->position[index] += offset;
+  particles->predicted[index] += offset;
+}
+
 
 void Collision::_ResetContacts(Particles* particles)
 {
@@ -487,7 +499,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
   std::vector<int> closests;
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, particles->radius[index] * 3.f);
+  _grid.Closests(index, &particles->predicted[0], closests, particles->radius[index] * 2.f);
 
   for(int closest: closests) {
     if(_AreConnected(index, closest))continue;
@@ -591,13 +603,13 @@ SelfCollision::_ComputeNeighbors(const std::vector<Body*> &bodies)
         Mesh* mesh = (Mesh*)geometry;
         size_t numPoints = mesh->GetNumPoints();
         for (size_t p = 0; p < numPoints; ++p) {
-          size_t numAdjacents = mesh->GetNumAdjacents(p);
-          for (size_t n = 0; n < numAdjacents; ++n)
-            _neighbors.push_back(offset + mesh->GetAdjacent(p, n));
+          size_t numNeighbors = mesh->GetNumNeighbors(p);
+          for (size_t n = 0; n < numNeighbors; ++n)
+            _neighbors.push_back(offset + mesh->GetNeighbor(p, n));
        
-          _neighborsCounts[offset + p] = numAdjacents;
+          _neighborsCounts[offset + p] = numNeighbors;
           _neighborsOffsets[offset + p] = neighborsOffset;
-          neighborsOffset += numAdjacents;
+          neighborsOffset += numNeighbors;
         }
         break;
       }

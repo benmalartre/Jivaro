@@ -100,6 +100,7 @@ protected:
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
+  virtual void _ResolveInitialPenetration(Particles* particles, size_t index);
 
   // hits encode vertex hit in the int list bits
   pxr::VtArray<int>                 _hits;

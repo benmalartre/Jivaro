@@ -66,7 +66,7 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
   size_t last = pxr::GfMin(blockSize * elementSize, numElements);
 
   float stiffness = 10000.f;
-  float damping = 0.25f;
+  float damping = 0.1;
 
   //Geometry* geometry = body->GetGeometry();
   //geometry->GetAttributeValue(pxr::TfToken("name"), pxr::UsdTimeCode::Default(), &stiffness);
@@ -84,6 +84,10 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
 
       case Constraint::STRETCH: 
         group->constraints.push_back(new StretchConstraint(body, blockElements, stiffness, damping));
+        break;
+
+      case Constraint::SHEAR: 
+        group->constraints.push_back(new ShearConstraint(body, blockElements, stiffness, damping));
         break;
 
       case Constraint::BEND:
@@ -579,6 +583,17 @@ ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness, float dampi
   return NULL;
 }
 
+//-----------------------------------------------------------------------------------------
+//   SHEAR CONSTRAINT
+//-----------------------------------------------------------------------------------------
+size_t ShearConstraint::TYPE_ID = Constraint::SHEAR;
+
+ShearConstraint::ShearConstraint(Body* body, const pxr::VtArray<int>& elems,
+  float stiffness, float damping)
+  : StretchConstraint(body, elems, stiffness, damping)
+{
+}
+
 static void _GetMeshShearElements(Mesh* mesh, pxr::VtArray<int>& allElements, size_t offset)
 {
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
@@ -591,13 +606,14 @@ static void _GetMeshShearElements(Mesh* mesh, pxr::VtArray<int>& allElements, si
   size_t shift = 0;
   for (size_t f = 0; f < numFaces; ++f) {
     numVertices = counts[f];
-    for(size_t v = 0; v < numVertices; ++v) 
-      for(size_t o = 0; o < numVertices; ++o)
-        if(v==o || (v+1)%numVertices == 0 || v > o)continue;
-        else {
-          allElements.push_back(offset + shift + v);
-          allElements.push_back(offset + shift +o);
-        }
+    for (size_t v = 0; v < numVertices; ++v) {
+      size_t o = (v + 2) % numVertices;
+      if (v > o)continue;
+      else {
+        allElements.push_back(offset + connects[shift + v]);
+        allElements.push_back(offset + connects[shift + o]);
+      }
+    }
     shift += numVertices;
   }
 }
@@ -628,13 +644,13 @@ ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness, float damp
   else if (geometry->GetType() == Geometry::CURVE) 
     _GetCurveShearElements((Curve*)geometry, allElements, offset);
 
+  std::cout << "create shear constraints : " << allElements.size() << std::endl;
   if(allElements.size())
     return CreateConstraintsGroup(body, 
-      pxr::TfToken("Shear"), Constraint::STRETCH,
+      PBDTokens->shear, Constraint::SHEAR,
         allElements, StretchConstraint::ELEM_SIZE, Constraint::BlockSize);
 
   return NULL;
-
 }
 
 size_t DihedralConstraint::TYPE_ID = Constraint::DIHEDRAL;
@@ -800,6 +816,7 @@ void CollisionConstraint::Apply(Particles* particles)
   for(const auto& elem: _elements)
     particles->predicted[elem] += _correction[corrIdx++] / counter[elem][1] ;
 
+
 }
 
 pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity)
@@ -825,28 +842,33 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 {
   _ResetCorrection();
   const size_t numElements = _elements.size();
-  pxr::GfVec3f correction;
-  float w, w0, w1;
+  pxr::GfVec3f correction, damp;
+  float w, w0, w1, C;
+  const float alpha =  _compliance / (dt * dt);
   for (size_t elem = 0; elem < numElements; ++elem) {
     const size_t index = _elements[elem];
 
+    const pxr::GfVec3f position = _collision->GetContactPosition(index);
     const pxr::GfVec3f normal = _collision->GetContactNormal(index);
     const pxr::GfVec3f velocity = _collision->GetContactVelocity(index);
-    const float d = _collision->GetContactDepth(index);// - pxr::GfMax(_collision->GetContactInitDepth(index) * pxr::GfMax(velocity.GetLength(),vMax)* dt, 0.f) ;
+    const float d = _collision->GetContactDepth(index);
     if(d > 0.f)continue;
 
     w0 = particles->invMass[index];
     w1 = 1.f;
     w = w0 + w1;
+    if(w < 1e-6f) continue;
 
-    correction = w0 / w * normal * -d;
+    damp = pxr::GfDot((particles->velocity[index] - velocity),  normal) * normal * _damp * dt * dt;
+
+    correction = w0 / w * -d * normal - damp;
+
     _correction[elem] += correction;
 
-    pxr::GfVec3f relativeVelocity = (particles->predicted[index] + correction) - 
-      particles->position[index] - velocity * dt;
+    pxr::GfVec3f relativeVelocity = (particles->velocity[index]  - velocity) * dt;
 		pxr::GfVec3f friction = _ComputeFriction(correction, relativeVelocity);
     _correction[elem] +=  w0 / w * friction;
-  
+
   }
 }
 
@@ -869,6 +891,8 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 
     accum = pxr::GfVec3f(0.f);
     velocity = pxr::GfVec3f(0.f);
+
+    float rN = 1.f / (float)collision->GetNumContacts(index);
     for(c = 0; c < collision->GetNumContacts(index); ++c) {
       other = collision->GetContactComponent(index, c);
 
@@ -877,44 +901,39 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       w = w0 + w1;
 
       const pxr::GfVec3f normal = _collision->GetContactNormal(index, c);
-      const float d = _collision->GetContactDepth(index, c) + 
-        pxr::GfMax(-_collision->GetContactInitDepth(index, c) - vMax * dt, 0.f) ;
+      const pxr::GfVec3f velocity = _collision->GetContactVelocity(index, c);
+      const float d = _collision->GetContactDepth(index, c);
       if(d > 0.f)continue;
 
-      correction = w0 / w * normal * -d; 
+      damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
+      correction =  w0 / w *  normal * -d - damp;
 
-      accum += correction;
-      velocity += _collision->GetContactVelocity(index, c) * dt ;
+      pxr::GfVec3f relativeVelocity = (particles->velocity[index]  - velocity) * dt;
+      pxr::GfVec3f friction = _ComputeFriction(correction, relativeVelocity);
+      correction +=  w0 / w * friction;
 
       /*
       minDistance = particles->radius[index] + particles->radius[other];
 
       gradient = particles->predicted[index] - particles->predicted[other];
-      distance = gradient.GetLength() + pxr::GfMax(-collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
+      distance = collision->GetContactDepth(index, c);//gradient.GetLength() + pxr::GfMax(-collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
 
-
-
-      if(distance > minDistance || w < 1e-6)continue;
+      //if(distance > minDistance || w < 1e-6)continue;
 
       d = (minDistance - distance) / distance;
 
-      damp = pxr::GfDot(particles->velocity[index] * dt * dt,  gradient) * gradient * _damp;
-      _correction[elem] +=  w0 / w *  gradient * distance - damp;
+      //damp = pxr::GfDot(particles->velocity[index] * dt * dt,  gradient) * gradient * _damp;
+      correction =  w0 / w *  gradient * distance - damp;
 
-      
-      pxr::GfVec3f relativeVelocity = (particles->predicted[index] + correction) - particles->position[index] - 
-        _collision->GetContactVelocity(index, c) * dt;
+      pxr::GfVec3f relativeVelocity = (particles->velocity[index] - _collision->GetContactVelocity(index, c)) * dt;
 		  pxr::GfVec3f friction = _ComputeFriction(correction, relativeVelocity);
-      _correction[elem] += w0 / w * friction;
+      correction += w0 / w * friction;
       */
-    }
-    float rN =  1.f / (float)collision->GetNumContacts(index);
-    _correction[elem] = accum * rN;
 
-    pxr::GfVec3f relativeVelocity = (particles->predicted[index] + _correction[elem]) - 
-      particles->position[index] - velocity * rN;
-    pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
-    _correction[elem] += w0 / w * friction;
+      _correction[elem] += correction * rN;
+      
+    }
+    
     
   }
 }

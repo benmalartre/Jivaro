@@ -45,6 +45,7 @@ public:
     ATTACH = 1,
     PIN,
     STRETCH,
+    SHEAR,
     BEND,
     DIHEDRAL,
     COLLISION,
@@ -164,6 +165,21 @@ protected:
 
 ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness=0.5f, float damping=0.1f);
 
+class ShearConstraint : public StretchConstraint
+{
+public:
+ ShearConstraint(Body* body, const pxr::VtArray<int>& elems, 
+    float stiffness=0.5f, float damping=0.25f);
+
+  size_t GetTypeId() const override { return TYPE_ID; };
+
+protected:
+  static size_t                 TYPE_ID;
+
+};
+
+ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness=0.5f, float damping=0.1f);
+
 class BendConstraint : public Constraint
 {
 public:
@@ -186,7 +202,6 @@ protected:
 };
 
 ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness=1000.f, float damping=0.05f);
-ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness=1000.f, float damping=0.05f);
 
 
 class DihedralConstraint : public Constraint

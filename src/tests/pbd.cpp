@@ -53,10 +53,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .025f;
+  float size = .005f;
 
   
-  for(size_t x = 0; x < 5; ++x) {
+  for(size_t x = 0; x < 1; ++x) {
     std::string name = "cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _GenerateClothMesh(stage, clothPath, size, 
@@ -95,8 +95,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _scene.AddGeometry(prim.GetPath(), mesh);
 
       Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, size * 9.9f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::BEND, 5000.f, 0.25f);
-      _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.25f);
+      _solver->CreateConstraints(body, Constraint::BEND, 200.f, 0.1f);
+      _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.1f);
+      _solver->CreateConstraints(body, Constraint::SHEAR, 500.f, 0.1f);
       
       _solver->AddElement(body, mesh, prim.GetPath());
     }

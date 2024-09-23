@@ -204,9 +204,15 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
     case Constraint::STRETCH:
       group = CreateStretchConstraints(body, stiffness, damping);
       break;
+
+    case Constraint::SHEAR:
+      group = CreateShearConstraints(body, stiffness, damping);
+      break;
+
     case Constraint::BEND:
       group = CreateBendConstraints(body, stiffness, damping);
       break;
+
     case Constraint::DIHEDRAL:
       if(geom->GetType() == Geometry::MESH) {
         group = CreateDihedralConstraints(body, stiffness, damping);
@@ -260,14 +266,19 @@ void Solver::UpdateCurves()
   pxr::VtArray<pxr::GfVec3f> colors;
   pxr::VtArray<int> counts;
 
+  size_t numShearConstraints = 0;
+
   for(size_t c = 0; c < numConstraints; ++c) {
-    if(_constraints[c]->GetTypeId() != Constraint::STRETCH)continue;
+    if(_constraints[c]->GetTypeId() != Constraint::SHEAR)continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
+    numShearConstraints++;
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
       counts.push_back(2);
 
   }
+
+  std::cout << "NUM SHEAR CONSTRAINST : " << numShearConstraints << std::endl;
 
   _curves->SetTopology(positions, widths, counts);
   _curves->SetColors(colors);
