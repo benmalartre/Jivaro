@@ -53,7 +53,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .05f;
+  float size = .01f;
 
   
   for(size_t x = 0; x < 5; ++x) {

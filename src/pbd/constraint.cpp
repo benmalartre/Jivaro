@@ -889,10 +889,9 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
     size_t numContactUsed = 0;
     for(c = 0; c < collision->GetNumContacts(index); ++c) {
       other = collision->GetContactComponent(index, c);
-
-      const float d = _collision->GetContactDepth(index, c);
+      
+      d = _collision->GetContactDepth(index, c);
       if(d > particles->radius[index])continue;
-
       w0 = particles->invMass[index];
       w1 = particles->invMass[other];
       w = w0 + w1;
@@ -912,7 +911,7 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       _correction[elem] = accum * rN;
 
       pxr::GfVec3f relativeVelocity = (particles->velocity[index]  - velocity * rN);
-      pxr::GfVec3f friction = _ComputeFriction(correction, relativeVelocity);
+      pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
       correction +=  w0 / w * friction;
     }
     

@@ -151,24 +151,19 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   _geometry->GetAttributeValue(PBDTokens->mass, time, &_mass);
   _geometry->GetAttributeValue(PBDTokens->velocity, time, &_velocity);
   _geometry->GetAttributeValue(PBDTokens->damp, time, &_damp);
+  _geometry->GetAttributeValue(PBDTokens->friction, time, &_friction);
+  _geometry->GetAttributeValue(PBDTokens->restitution, time, &_restitution);
 
   float stiffness, damp;
   pxr::TfToken stiffnessAttr, dampAttr;
   for(auto& constraintsIt: _constraints) {
-    std::cout << "update " << constraintsIt.first << " on prim " << constraintsIt.second.prim.GetPath() << std::endl;
     stiffnessAttr = _GetConstraintsAttributeToken(constraintsIt.first, PBDTokens->stiffness);
     dampAttr = _GetConstraintsAttributeToken(constraintsIt.first, PBDTokens->damp);
-
-    std::cout << "stiffness attribute : " << stiffnessAttr << std::endl;
-    std::cout << "damp attribute : " << dampAttr << std::endl;
 
 
     _geometry->GetAttributeValue(stiffnessAttr, time, &stiffness);
     _geometry->GetAttributeValue(dampAttr, time, &damp);
 
-    std::cout << "new stiffness : " << stiffness << std::endl;
-    std::cout << "new damp : " << damp << std::endl;
-    std::cout << "num constraints in group : " << constraintsIt.second.constraints.size() << std::endl;
 
     for(Constraint* constraint: constraintsIt.second.constraints) {
       constraint->SetStiffness(stiffness);

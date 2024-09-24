@@ -62,6 +62,8 @@ protected:
   float                                     _mass;
   float                                     _radius;
   float                                     _damp;
+  float                                     _friction;
+  float                                     _restitution;
   pxr::GfVec3f                              _color;
   pxr::GfVec3f                              _velocity;
   pxr::GfVec3f                              _torque;

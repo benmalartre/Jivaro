@@ -28,6 +28,8 @@ class Collision : public Mask
 {
 public:
 
+  static const float TOLERANCE_MARGIN;
+
   enum Type {
     PLANE = 1,
     SPHERE,
@@ -54,7 +56,8 @@ public:
   virtual void Update(const pxr::UsdPrim& prim, double time);
   virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft);
-  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft);
+  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
+    float ft, bool solveInitialPenetration);
   virtual void UpdateContacts(Particles* particles);
 
 
@@ -88,7 +91,7 @@ public:
   float GetRestitution() const {return _restitution;};
 
 protected:
-  static const float TOLERANCE_MARGIN;
+
   static const size_t PACKET_SIZE;
 
   virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
