@@ -890,14 +890,18 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
     for(c = 0; c < collision->GetNumContacts(index); ++c) {
       other = collision->GetContactComponent(index, c);
       
-      d = _collision->GetContactDepth(index, c);
-      if(d > particles->radius[index])continue;
+      d = _collision->GetContactDepth(index, c) - particles->radius[index];
+      if(d > 0.f)continue;
       w0 = particles->invMass[index];
       w1 = particles->invMass[other];
       w = w0 + w1;
 
       normal = _collision->GetContactNormal(index, c);
       velocity += _collision->GetContactVelocity(index, c);
+
+      minDistance = particles->radius[index] + particles->radius[other];
+      d = (minDistance - d) / d;
+
 
       damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
       correction =  w0 / w *  normal * -d - damp;
