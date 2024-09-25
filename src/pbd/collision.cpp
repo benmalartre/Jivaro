@@ -465,7 +465,7 @@ void SelfCollision::UpdateContacts(Particles* particles)
   pxr::WorkParallelForN(
       particles->GetNumParticles(),
       std::bind(&SelfCollision::_UpdateContacts, this,
-        std::placeholders::_1, std::placeholders::_2, particles), PACKET_SIZE);
+        std::placeholders::_1, std::placeholders::_2, particles), 8);
 }
 
 void SelfCollision::_UpdateContacts(size_t begin, size_t end, Particles* particles)
@@ -506,13 +506,15 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   std::vector<int> closests;
 
+
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, particles->radius[index] * 2.f + TOLERANCE_MARGIN);
+  _grid.Closests(index, &particles->position[0], closests, particles->radius[index] * 2.f + TOLERANCE_MARGIN);
 
   for(int closest: closests) {
     if(_AreConnected(index, closest))continue;
     if(numCollide >= PARTICLE_MAX_CONTACTS)break;
-    if((particles->predicted[index]-particles->predicted[closest]).GetLength() < particles->radius[index] + particles->radius[closest]) {
+    if((particles->predicted[index]-particles->predicted[closest]).GetLength() < 
+      particles->radius[index] + particles->radius[closest] + TOLERANCE_MARGIN) {
       Contact* contact = _contacts.Use(index);
       _StoreContactLocation(particles, index, closest, contact, ft);
       contact->SetComponentIndex(closest);
@@ -563,6 +565,7 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
     if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
       if (elements.size()) {
         constraint = new CollisionConstraint(particles, this, elements);
+        //StoreContactsLocation(particles, & elements[0], elements.size(), ft, false);
         constraints.push_back(constraint);
         elements.clear();
       } 

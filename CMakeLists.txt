@@ -56,7 +56,16 @@ if(NOT DEFINED USD_DIR)
 endif()
 
 # eigen
-set(EIGEN_INCLUDE_DIR "C:/Users/graph/Documents/bmal/src/eigen-3.4.0")
+if(UNIX)
+  if(APPLE)
+    set(EIGEN_INCLUDE_DIR "/Users/malartrebenjamin/Documents/RnD/eigen-3.4.0")
+  else()
+
+  endif()
+else()
+  set(EIGEN_INCLUDE_DIR "C:/Users/graph/Documents/bmal/src/eigen-3.4.0")
+endif()
+
 
 #set(USD_DIR "/Users/benmalartre/Documents/RnD/USD_BUILD")
 set(USD_INCLUDE_DIR "${USD_DIR}/include")

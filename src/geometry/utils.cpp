@@ -371,12 +371,12 @@ pxr::GfMatrix4f _ComputeCovarianceMatrix(size_t n, const pxr::GfVec3f* positions
     zz += r[2] * r[2];
   }
 
-  return pxr::GfMatrix4f({
+  return pxr::GfMatrix4f(
     xx, xy, xz, 0.f,
     xy, yy, yz, 0.f,
     xz, yz, zz, 0.f,
     centroid[0], centroid[1], centroid[2], 1.f
-    });
+    );
 }
 
 pxr::GfMatrix4f ComputeCovarianceMatrix(const pxr::VtArray<pxr::GfVec3f>& points) 

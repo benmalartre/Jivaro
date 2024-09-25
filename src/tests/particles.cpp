@@ -224,7 +224,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   }
   std::cout<< "added sphere collision" <<std::endl;
 
-  bool createSelfCollision = true;
+  bool createSelfCollision = false;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, restitution, friction);

@@ -33,7 +33,7 @@ struct SparseMatrixInfos
 };
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, typename const SparseMatrixInfos<T> &infos) {
+std::ostream& operator<<(std::ostream& os, const SparseMatrixInfos<T> &infos) {
   for(size_t i = 0; i < infos.keys.size(); ++i)
     os << "((" << infos.keys[i].first << "," << infos.keys[i].second << "), " << 
       std::fixed << std::setprecision(4) << infos.values[i] << "),";
@@ -76,8 +76,8 @@ public:
 
   void Set(size_t row, size_t colum, T value);
   void Set(int n, Key *keys, T* values);
-  void SetRow(size_t row, typename const Vector& values);
-  void SetColumn(size_t column, typename const Vector& values);
+  void SetRow(size_t row, const Vector& values);
+  void SetColumn(size_t column, const Vector& values);
 
   T Get(size_t row, size_t column) const;
   T* GetData();
@@ -188,7 +188,7 @@ void Matrix<T>::TransposeInPlace() {
   Matrix<T>::Vector tmp(this->_matrix);
   for(size_t c = 0; c < _columns; ++c) 
     for(size_t r = 0; r < _rows; ++r)
-      tmp[r * _colums + c] = _matrix[c * _rows + r];
+      tmp[r * _columns + c] = _matrix[c * _rows + r];
   _matrix = tmp;
   size_t rows = _rows;
   _rows = _columns;
@@ -438,7 +438,7 @@ void Matrix<T>::MultiplyInPlace(const Matrix<T>& other)
 {
   if (_columns == other._rows) {
     size_t i, j, k;
-    Matrix<T>::Vector tmp(this._matrix);
+    Matrix<T>::Vector tmp(this->_matrix);
     Clear();
     for (size_t i = 0; i < _rows; ++i)
       for (size_t k = 0; k < other._columns; ++k)
@@ -448,7 +448,7 @@ void Matrix<T>::MultiplyInPlace(const Matrix<T>& other)
 }
 
 template <typename T>
-typename Matrix<T>::Vector Matrix<T>::MultiplyVector(typename const Matrix<T>::Vector& vector)
+typename Matrix<T>::Vector Matrix<T>::MultiplyVector( const Matrix<T>::Vector &vector)
 {
   Matrix<T>::Vector result(_columns);
   if (vector.size() == _columns) {
@@ -634,23 +634,23 @@ Matrix<T> Matrix<T>::LUDecomposition()
 }
 
 template <typename T>
-typename Matrix<T>::Vector Matrix<T>::SolveLU(typename const Matrix<T>::Vector& b)
+typename Matrix<T>::Vector Matrix<T>::SolveLU( const Matrix<T>::Vector &vector)
 {
   size_t m = _pivots.size();
   if (_columns != m) {
     std::cerr << "SolveLU : matrix size mismatch !" << std::endl;
-    return Matrix<T>::Vector(b.size());
+    return Matrix<T>::Vector(vector.size());
   }
   if (_singular) {
     std::cerr << "SolveLU : matrix is singular !" << std::endl;
-    return Matrix<T>::Vector(b.size());
+    return Matrix<T>::Vector(vector.size());
   }
 
   int row, column, i;
-  Matrix<T>::Vector result(b.size());
+  Matrix<T>::Vector result(vector.size());
   // apply permutations to b
   for (row = 0; row < m; ++row)
-    result[row] = b[_pivots[row]];
+    result[row] = vector[_pivots[row]];
 
   // solve LY = b
   T value;
@@ -692,7 +692,7 @@ public:
   typedef typename Eigen::SimplicialLDLT< Eigen::SparseMatrix<T> >      SimplicialSolver;
   //typedef typename Eigen::SparseLU< Eigen::SparseMatrix<T>, Eigen::COLAMDOrdering<int> >            LUSolver;
   //typedef typename Eigen::ConjugateGradient< Eigen::SparseMatrix<T>, Eigen::Lower|Eigen::Upper >   CGSolver;
-  typedef typename SimplicialSolver Solver;
+  typedef SimplicialSolver Solver;
 
   static inline uint64_t feedT = 0;
   static inline uint64_t computeT = 0;
@@ -710,8 +710,8 @@ public:
   void Set(size_t row, size_t colum, T value);
   void Set(int n, Key *keys, T* values);
   
-  void SetRow(size_t row, typename const Vector& values);
-  void SetColumn(size_t column, typename const Vector& values);
+  void SetRow(size_t row,  const Vector &values);
+  void SetColumn(size_t column, const Vector &values);
 
   inline T Get(size_t row, size_t column) const;
   inline const T* GetData() const;
@@ -726,15 +726,15 @@ public:
   inline void MultiplyInPlace(const SparseMatrix& other);
   inline SparseMatrix Scale(float scale);
   inline void ScaleInPlace(float scale);
-  inline typename Vector MultiplyVector(typename const Vector& vector);
-  inline void Compute(typename Solver& solver);
-  inline bool CheckSuccess(typename Solver& solver, const std::string &message);
-  inline typename Vector Solve(typename Solver& solver, Vector& b);
-  inline void Factorize(typename Solver& solver);
+  inline Vector MultiplyVector(const Vector& vector);
+  inline void Compute(Solver& solver);
+  inline bool CheckSuccess(Solver& solver, const std::string &message);
+  inline Vector Solve(Solver& solver, Vector& b);
+  inline void Factorize(Solver& solver);
   inline SparseMatrix Transpose();
   inline void TransposeInPlace();
-  inline SparseMatrix Inverse(typename Solver& solver);
-  inline void InverseInPlace(typename Solver& solver);
+  inline SparseMatrix Inverse(Solver& solver);
+  inline void InverseInPlace(Solver& solver);
   inline SparseMatrix AsDiagonal();
 
   inline void Compress();
@@ -880,7 +880,7 @@ template <typename T>
 SparseMatrix<T> SparseMatrix<T>::Subtract(const SparseMatrix<T>& other)
 {
   SparseMatrix<T> result(*this);
-  _result._matrix -= other._matrix;
+  result._matrix -= other._matrix;
   return result;
 }
 
@@ -899,7 +899,8 @@ void SparseMatrix<T>::MultiplyInPlace(const SparseMatrix<T>& other)
 }
 
 template <typename T>
-typename SparseMatrix<T>::Vector SparseMatrix<T>::MultiplyVector(typename const SparseMatrix<T>::Vector& vector)
+typename SparseMatrix<T>::Vector SparseMatrix<T>::MultiplyVector(
+  const SparseMatrix<T>::Vector &vector)
 {
   return _matrix * vector;
 }
@@ -987,7 +988,7 @@ typename SparseMatrix<T>::Vector SparseMatrix<T>::Solve(typename SparseMatrix<T>
 }
 
 template <typename T>
-void SparseMatrix<T>::Compute(typename Solver& solver)
+void SparseMatrix<T>::Compute(typename SparseMatrix<T>::Solver& solver)
 {
   solver.analyzePattern(_matrix); 
   solver.factorize(_matrix); 

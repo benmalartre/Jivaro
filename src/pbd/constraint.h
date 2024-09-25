@@ -264,7 +264,6 @@ protected:
   void _SolveSelf(Particles* particles, float dt);
 
   pxr::GfVec3f _ComputeFriction(const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity);
-
   static size_t                 TYPE_ID;
   Mode                          _mode;
   Collision*                    _collision;

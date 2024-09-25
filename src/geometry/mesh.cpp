@@ -319,8 +319,9 @@ void  _FindTriangleNeighbors(const pxr::VtArray<Triangle>& triangles, pxr::VtArr
     }
   }
 
+  int invalidIdx = Component::INVALID_INDEX;
   std::sort(edges.begin(), edges.end(), _CompareTriangleEdge);
-  neighbors.assign(3 * numTriangles, Component::INVALID_INDEX);
+  neighbors.assign(3 * numTriangles, invalidIdx);
 
   size_t i = 0;
   while (i < edges.size()) {

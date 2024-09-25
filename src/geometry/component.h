@@ -16,8 +16,6 @@
 
 #include "../common.h"
 
-
-
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
@@ -25,6 +23,7 @@ class Location;
 class ClosestPoint;
 
 struct Component {
+  static const int INVALID_INDEX = std::numeric_limits<int>::max();
   enum Type {
     POINT,
     EDGE,
@@ -32,7 +31,7 @@ struct Component {
     TRIANGLEPAIR,
     POLYGON
   };
-  static const int INVALID_INDEX = std::numeric_limits<int>::max();
+
   int id;
 
   Component() : id(INVALID_INDEX) {};
