@@ -18,10 +18,8 @@ public:
   Contact(){};
   virtual ~Contact(){};
 
-  void Init(Collision* collision, Particles* particles, size_t index);
-  void Init(SelfCollision* collision, Particles* particles, size_t index, size_t other);
-  void Update(Collision* collision, Particles* particles, size_t index);
-  void Update(SelfCollision* collision, Particles* particles, size_t index, size_t other);
+  void Init(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth);
+  void Update(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth);
 
   const pxr::GfVec3f& GetNormal() const {return _normal;};
   const pxr::GfVec3f& GetVelocity() const {return _velocity;};
@@ -38,7 +36,7 @@ private:
 };
 
 
-static const size_t PARTICLE_MAX_CONTACTS = 16;
+static const size_t PARTICLE_MAX_CONTACTS = 32;
 
 class Contacts {
 

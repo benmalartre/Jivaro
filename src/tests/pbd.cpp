@@ -65,7 +65,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .025f;
+  float size = .05f;
 
   
   for(size_t x = 0; x < 5; ++x) {
@@ -102,7 +102,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     size_t offset = _solver->GetNumParticles();
 
     Body* body = _solver->CreateBody((Geometry*)_clothMeshes[c], 
-      _clothMeshes[c]->GetMatrix(), 0.1f, size * 10.f, 0.1f);
+      _clothMeshes[c]->GetMatrix(), 1.f, size * 10.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 100000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::SHEAR, 50000.f, 0.1f);
@@ -116,7 +116,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   float restitution = 0.1f;
   float friction = 0.5f;
-  bool createSphereCollision = false;
+  bool createSphereCollision = true;
   if(createSphereCollision) {
     for (auto& sphere : spheres) {
       Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
@@ -124,13 +124,13 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
      }
   }
 
-  bool createGroundCollision = false;
+  bool createGroundCollision = true;
   if(createGroundCollision) {
     Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
     _solver->AddElement(collision, _ground, _groundId);
   }
 
-  bool createSelfCollision = false;
+  bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 1.f, 1.f);

@@ -8,36 +8,19 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Contact::Init(Collision* collision, Particles* particles, size_t index)
+void Contact::Init(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth)
 {
-  _normal = collision->GetGradient(particles, index);
-  _initDepth = collision->GetValue(particles, index);
+  _normal = normal;
+  _velocity = velocity;
+  _initDepth = depth;
   if(_initDepth > 0.f) _initDepth = 0.f;
-  _velocity = collision->GetVelocity(particles, index);
 }
 
-void Contact::Init(SelfCollision* collision, Particles* particles, size_t index, size_t other)
+void Contact::Update(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth)
 {
-  _compId = other;
-  _geomId = index;
-  _normal = collision->GetGradient(particles, index, other);
-  _initDepth = collision->GetValue(particles, index, other);
-  if(_initDepth > 0.f) _initDepth = 0.f;
-  _velocity = collision->GetVelocity(particles, index, other);
-}
-
-void Contact::Update(Collision* collision, Particles* particles, size_t index)
-{
-  _normal = collision->GetGradient(particles, index);
-  _depth = collision->GetValue(particles, index);
-  _velocity = collision->GetVelocity(particles, index);
-}
-
-void Contact::Update(SelfCollision* collision, Particles* particles, size_t index, size_t other)
-{
-  _normal = collision->GetGradient(particles, index, other);
-  _depth = collision->GetValue(particles, index, other);
-  _velocity = collision->GetVelocity(particles, index, other);
+  _normal = normal;
+  _velocity = velocity;
+  _depth = depth;
 }
 
 void Contacts::Resize(size_t N, size_t M) {

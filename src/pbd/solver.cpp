@@ -392,24 +392,12 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
   size_t numParticles = _particles.GetNumParticles();
   if (pxr::GfIsClose(time, _startTime, 0.001f)) {
     Reset();
-
-    pxr::VtArray<float> widths(numParticles);
-    for(size_t r=0; r < numParticles; ++r)widths[r] = _particles.radius[r] * 2.f;
-    
-    _points->SetPositions(&_particles.position[0], numParticles);
-    _points->SetWidths(&widths[0], numParticles);
-    _points->SetColors(&_particles.color[0], numParticles);
-
-    _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
   } else {
     Step();
-
-    _points->SetPositions(&_particles.position[0], numParticles);
-    _points->SetColors(&_particles.color[0], numParticles);
-    _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints|pxr::HdChangeTracker::DirtyPrimvar);
-
-    UpdateCurves();
   }
+
+  UpdatePoints();
+  UpdateCurves();
 
 }
 

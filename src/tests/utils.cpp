@@ -67,7 +67,7 @@ Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::Sdf
 
 
 Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  float spacing, const pxr::GfMatrix4d& m)
+  float spacing, const pxr::GfMatrix4d& m, float mass, float damp)
 {
   Mesh* mesh = new Mesh(m);
   //mesh->TriangularGrid2D(spacing);
@@ -80,8 +80,9 @@ Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
 
   pxr::UsdPrim usdPrim = usdMesh.GetPrim();
-  usdPrim.CreateAttribute(PBDTokens->mass, pxr::SdfValueTypeNames->Float).Set(0.1f);
-  usdPrim.CreateAttribute(PBDTokens->damp, pxr::SdfValueTypeNames->Float).Set(0.1f);
+  mesh->SetPrim(usdPrim);
+  usdPrim.CreateAttribute(PBDTokens->mass, pxr::SdfValueTypeNames->Float).Set(mass);
+  usdPrim.CreateAttribute(PBDTokens->damp, pxr::SdfValueTypeNames->Float).Set(damp);
   usdPrim.CreateAttribute(PBDTokens->velocity, pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(0.f));
   
   pxr::TfToken stretchStiffness(PBDTokens->stretch.GetString()+":"+PBDTokens->stiffness.GetString());
