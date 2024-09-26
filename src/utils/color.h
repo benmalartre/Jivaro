@@ -1,15 +1,24 @@
 #ifndef JVR_UTILS_COLOR_H
 #define JVR_UTILS_COLOR_H
 
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
+
 #include "../common.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 // index to random color
-static inline unsigned RandomColorByIndex(unsigned index)
+static inline pxr::GfVec3f RandomColorByIndex(unsigned index)
 {
-  srand(index);
-  return rand();
+  int r = (index * 255 * 255) % 255;
+  int g = (index * 255)       % 255;
+  int b = (index )            % 255;
+
+  float rC = 1.f / 255.f;
+
+  return pxr::GfVec3f(r * rC, g * rC, b * rC);
 }
 
 template <typename T>

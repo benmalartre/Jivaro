@@ -307,6 +307,8 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
+  if(!_accelerated)return;
+
   _mortons.clear();
   _mortons.reserve(_numComponents);
   
@@ -363,7 +365,10 @@ BVH::Update()
 bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  return _Raycast(_root, ray, hit, maxDistance, minDistance);
+  if(_accelerated) 
+    return _Raycast(_root, ray, hit, maxDistance, minDistance);
+  else 
+    std::cout << "need implement brute force raycasting for low resolution scene" << std::endl;
 };
 
 size_t 

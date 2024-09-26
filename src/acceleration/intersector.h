@@ -20,6 +20,7 @@ class Intersector : public pxr::GfRange3d
 { 
 public:
   static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
+  static const size_t MINIMUM_COMPONENTS = 1024;
   struct _Geom {
     Geometry*   geom;
     size_t      start;
@@ -58,6 +59,7 @@ public:
 
 protected:
   virtual void _Init(const std::vector<Geometry*>& geometries);
+   bool _accelerated;
 
 private:
    std::vector<_Geom> _geoms;

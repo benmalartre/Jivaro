@@ -1,5 +1,6 @@
 #include <pxr/base/work/loops.h>
 
+#include "../utils/color.h"
 #include "../geometry/geometry.h"
 #include "../geometry/implicit.h"
 #include "../geometry/mesh.h"
@@ -485,8 +486,8 @@ void SelfCollision::UpdateContacts(Particles* particles)
 void SelfCollision::_UpdateContacts(size_t begin, size_t end, Particles* particles)
 {
   Mask::Iterator iterator(this, begin, end);
-  //pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
+    pxr::GfVec3f color = RandomColorByIndex(index);
     if (_contacts.IsUsed(index))
       for (size_t c = 0; c < _contacts.GetNumUsed(index); ++c) {
         size_t other = _contacts.Get(index, c)->GetComponentIndex();
@@ -496,13 +497,13 @@ void SelfCollision::_UpdateContacts(size_t begin, size_t end, Particles* particl
           GetVelocity(particles, index, other), 
           GetValue(particles, index, other)
          );
-        /*
+        
         if(index % 32 == 0) {
           particles->color[index] = color;
           particles->color[other] = color;
         }
-        else particles->color[index] = pxr::GfVec3f(0.5f+RANDOM_LO_HI(-0.05f, 0.05f));
-        */
+        //else particles->color[index] = pxr::GfVec3f(0.5f+RANDOM_LO_HI(-0.05f, 0.05f));
+        
       }
   } 
 }
