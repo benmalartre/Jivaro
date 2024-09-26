@@ -863,13 +863,13 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 
     pxr::GfVec3f relativeVelocity = ((particles->predicted[index] + _correction[elem]) - 
       particles->position[index]) - velocity * dt;
-		pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
+    pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
     _correction[elem] +=  friction;
 
   }
 }
 
-static float selfVMax = 0.1f;
+static float selfVMax = 0.5f;
 
 void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 {
@@ -892,25 +892,29 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
     size_t numContactUsed = 0;
     for(c = 0; c < collision->GetNumContacts(index); ++c) {
       other = collision->GetContactComponent(index, c);
-      
-      d   = _collision->GetContactDepth(index, c) + 
-        pxr::GfMax(_collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
 
-      if(d  > 0.f)continue;
-      
+      normal = collision->GetContactNormal(index, c);
+      d = collision->GetContactDepth(index, c) ;
+
+      if(d > 0.f) continue;
       w0 = particles->invMass[index];
-      w1 = particles->invMass[other];
+      w1 = particles->invMass[other];     
       w = w0 + w1;
-      if(w < 1e-6)continue;
 
-      normal = _collision->GetContactNormal(index, c);
-      velocity += _collision->GetContactVelocity(index, c);
-
-
+      //d = RESCALE(d, -Collision::TOLERANCE_MARGIN, Collision::TOLERANCE_MARGIN, -Collision::TOLERANCE_MARGIN, 0.f);
+    
       damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
       correction =  w0 / w *  normal * -d - damp;
 
       accum += correction;
+
+      velocity = ((particles->predicted[index] + correction) - 
+        particles->position[index]) - _collision->GetContactVelocity(index, c) * dt;
+      
+		  pxr::GfVec3f friction = _ComputeFriction(correction, velocity);
+
+      accum += w0 / w * friction;
+
       numContactUsed++;
     }
 
@@ -918,10 +922,6 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       float rN = 1.f / (float)numContactUsed;
       _correction[elem] = accum * rN;
 
-      pxr::GfVec3f relativeVelocity = (particles->velocity[index]  - velocity * rN);
-      pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity * dt);
-      _correction[elem] +=  w0 / w * friction;
-      particles->velocity[index] *= 0.1f;
     }
     
   }

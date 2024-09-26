@@ -74,7 +74,6 @@ void TestPendulum::InitExec(pxr::UsdStageRefPtr& stage)
 
   }
   
-
   _solver->Update(stage, _solver->GetStartTime());
 }
 

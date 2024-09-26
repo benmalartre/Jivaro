@@ -22,6 +22,18 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
+void TestPBD::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
+{
+  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
+  for (pxr::UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
+      _collideMeshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+        xformCache.GetLocalToWorldTransform(prim)));
+      _collideMeshesId.push_back(prim.GetPath());
+    }
+}
+
+
 void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
@@ -53,14 +65,15 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .01f;
+  float size = .025f;
 
   
   for(size_t x = 0; x < 5; ++x) {
     std::string name = "cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
-    _GenerateClothMesh(stage, clothPath, size, 
-    pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f}));
+    _clothMeshesId.push_back(clothPath);
+    _clothMeshes.push_back(_GenerateClothMesh(stage, clothPath, size, 
+    pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f})));
     
   }
   std::cout << "created cloth meshes" << std::endl;
@@ -78,29 +91,24 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
     _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
-  
-
   //_AddAnimationSamples(stage, collideId);
-
-
   _scene.AddGeometry(collideId, spheres[collideId]);
-  
-  for (pxr::UsdPrim prim : primRange) {
-    size_t offset = _solver->GetNumParticles();
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
-      pxr::UsdGeomMesh usdMesh(prim);
-      const pxr::GfMatrix4d xform = xformCache.GetLocalToWorldTransform(prim);
-      pxr::GfVec3f scale(xform[0][0], xform[1][1], xform[2][2]);
-      Mesh* mesh = new Mesh(usdMesh, xform);
-      _scene.AddGeometry(prim.GetPath(), mesh);
 
-      Body* body = _solver->CreateBody((Geometry*)mesh, xform, 0.1f, size * 9.9f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::BEND, 200.f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.1f);
-      _solver->CreateConstraints(body, Constraint::SHEAR, 500.f, 0.1f);
-      
-      _solver->AddElement(body, mesh, prim.GetPath());
-    }
+
+  
+  for (size_t c = 0; c < _clothMeshesId.size(); ++c) {
+    size_t offset = _solver->GetNumParticles();
+
+    _scene.AddGeometry(_clothMeshesId[c], _clothMeshes[c]);
+
+    Body* body = _solver->CreateBody((Geometry*)_clothMeshes[c], 
+      _clothMeshes[c]->GetMatrix(), 1.f, size * 9.9f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::BEND, 200.f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::SHEAR, 500.f, 0.1f);
+    
+    _solver->AddElement(body, _clothMeshes[c], _clothMeshesId[c]);
+    
   }
 
   //_solver->AddElement(gravity, NULL, _groundId);
@@ -122,10 +130,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, _ground, _groundId);
   }
 
-  bool createSelfCollision = true;
+  bool createSelfCollision = false;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.f, 1.f);
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 1.f, 1.f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
   }
 }

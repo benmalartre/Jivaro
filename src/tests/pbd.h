@@ -16,11 +16,20 @@ public:
   void InitExec(pxr::UsdStageRefPtr& stage) override;
   void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+
+protected: 
+  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
+
 private:
-  Solver*                                                    _solver;
-  Plane*                                                     _ground;
-  pxr::SdfPath                                               _groundId;
-  pxr::SdfPath                                               _solverId;
+  Solver*                   _solver;
+  Plane*                    _ground;
+  pxr::SdfPath              _groundId;
+  pxr::SdfPath              _solverId;
+
+  std::vector<Mesh*>        _clothMeshes;
+  std::vector<pxr::SdfPath> _clothMeshesId;
+  std::vector<Mesh*>        _collideMeshes;
+  std::vector<pxr::SdfPath> _collideMeshesId;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

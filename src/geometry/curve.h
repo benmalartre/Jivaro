@@ -9,7 +9,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Location;
+class  Location;
 
 class Curve : public Deformable {
 public:

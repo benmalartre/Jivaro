@@ -176,6 +176,8 @@ public:
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
+  virtual void Init(size_t numParticles) override;
+
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
@@ -190,6 +192,7 @@ protected:
 private:
   static size_t                 TYPE_ID;
   BVH*                          _bvh;
+  std::vector<Location>         _query;
 };
 
 class SelfCollision : public Collision

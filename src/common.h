@@ -66,7 +66,7 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define CLAMP(a, min, max) ((a)<(min)?(min):(a)>(max)?(max):(a))
 #define RESCALE(value, inmin, inmax, outmin, outmax) \
-  (((value) - (inmin))*((outmax)-(outmin))/((inmax)-(inmin))+(outmin))
+  (outmin) + ((outmax) - (outmin)) * (((value) - (inmin)) / ((inmax) - (inmin)))
 
 // x=target variable, y=mask
 #define BIT_SET(x,y) ((x) |= ( 1 << y))
