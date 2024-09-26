@@ -47,10 +47,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
-  pxr::UsdPrimRange primRange = stage->TraverseAll();
-  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  pxr::GfQuatf rotate(0.f, 0.3827f, 0.9239f, 0.f);
-  rotate.Normalize();
+  _TraverseStageFindingMeshes(stage);
 
   // create collide ground
   _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
@@ -65,7 +62,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .05f;
+  float size = .01f;
 
   
   for(size_t x = 0; x < 5; ++x) {
@@ -102,7 +99,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     size_t offset = _solver->GetNumParticles();
 
     Body* body = _solver->CreateBody((Geometry*)_clothMeshes[c], 
-      _clothMeshes[c]->GetMatrix(), 1.f, size * 10.f, 0.1f);
+      _clothMeshes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 100000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::SHEAR, 50000.f, 0.1f);
@@ -135,6 +132,16 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 1.f, 1.f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
+  }
+
+  bool createMeshCollision = true;
+  if(createMeshCollision) {
+    for (size_t c = 0; c < _collideMeshesId.size(); ++c) {
+      std::cout << "create collider form mesh "  << _collideMeshesId[c] << std::endl;
+      Collision* meshCollide = new MeshCollision(_collideMeshes[c], _collideMeshesId[c], 1.f, 1.f);
+      _solver->AddElement(meshCollide, _collideMeshes[c], _collideMeshesId[c]);
+      
+    }
   }
 }
 

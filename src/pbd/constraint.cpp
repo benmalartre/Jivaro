@@ -811,13 +811,10 @@ CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* co
 // this one has to happen serialy
 void CollisionConstraint::Apply(Particles* particles)
 {
-  
   size_t corrIdx = 0;
   const pxr::GfVec2f* counter = &particles->counter[0];
   for(const auto& elem: _elements)
-    particles->predicted[elem] += _correction[corrIdx++] / counter[elem][1] ;
-  
-
+    particles->predicted[elem] += _correction[corrIdx++] / counter[elem][1];
 }
 
 pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correction, 
@@ -869,7 +866,7 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
   }
 }
 
-static float selfVMax = 0.5f;
+static float selfVMax = 12.f;
 
 void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 {
@@ -894,9 +891,10 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       other = collision->GetContactComponent(index, c);
 
       normal = collision->GetContactNormal(index, c);
-      d = collision->GetContactDepth(index, c) ;
+      d = collision->GetContactDepth(index, c) + 
+        pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
 
-      if(d > 0.f) continue;
+      if(d >= 0.f) continue;
       w0 = particles->invMass[index];
       w1 = particles->invMass[other];     
       w = w0 + w1;

@@ -251,7 +251,10 @@ void Solver::UpdatePoints()
 {
   size_t numParticles = _particles.GetNumParticles();
   _points->SetPositions(&_particles.position[0], numParticles);
-  _points->SetWidths(&_particles.radius[0], numParticles);
+  pxr::VtArray<float> widths(numParticles);
+  for(size_t p = 0; p<numParticles; ++p)
+    widths[p] = 2.f * _particles.radius[p];
+  _points->SetWidths(&widths[0], numParticles);
   _points->SetColors(&_particles.color[0], numParticles);
 
   _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
@@ -305,15 +308,19 @@ void Solver::WeightBoundaries(Body* body)
 
 void Solver::_PrepareContacts()
 {
+  std::cout << "prepare cleared..." << std::endl;
   _timer->Start(0);
   for (auto& contact : _contacts)
     delete contact;
   _contacts.clear();
+  std::cout << "contacts cleared..." << std::endl;
 
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+std::cout << "contacts found..." << std::endl;
 
   _particles.ResetCounter(_contacts, 1);
+  std::cout << "counter reseted.." << std::endl;
 
   _timer->Stop();
 }
@@ -434,7 +441,7 @@ void Solver::Step()
 
   std::cout << "solver parallel packet size : " << packetSize << std::endl;
   _PrepareContacts();
-
+  std::cout << "contacts ok" << std::endl;
   for(size_t si = 0; si < _subSteps; ++si) {
     
     _timer->Start(1);

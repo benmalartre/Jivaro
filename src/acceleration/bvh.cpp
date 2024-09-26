@@ -77,11 +77,12 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
       const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetDistance()));
       const double distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
       
-      if ((distance < *minDistance) && (distance < maxDistance)) {
+      if ((distance < maxDistance)) {
         hit->Set(localHit);
         hit->SetDistance(distance);
         hit->SetGeometryIndex(geomIdx);
-        *minDistance = distance;
+        if(minDistance)
+          *minDistance = distance;
         return true;
       }
     }
