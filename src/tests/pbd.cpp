@@ -74,6 +74,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _clothMeshesId.push_back(clothPath);
     _clothMeshes.push_back(_GenerateClothMesh(stage, clothPath, size, 
     pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f})));
+
+    _scene.AddGeometry(_clothMeshesId.back(), _clothMeshes.back());
     
   }
   std::cout << "created cloth meshes" << std::endl;
@@ -99,13 +101,11 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   for (size_t c = 0; c < _clothMeshesId.size(); ++c) {
     size_t offset = _solver->GetNumParticles();
 
-    _scene.AddGeometry(_clothMeshesId[c], _clothMeshes[c]);
-
     Body* body = _solver->CreateBody((Geometry*)_clothMeshes[c], 
-      _clothMeshes[c]->GetMatrix(), 1.f, size * 9.9f, 0.1f);
-    _solver->CreateConstraints(body, Constraint::BEND, 200.f, 0.1f);
-    _solver->CreateConstraints(body, Constraint::STRETCH, 1000.f, 0.1f);
-    _solver->CreateConstraints(body, Constraint::SHEAR, 500.f, 0.1f);
+      _clothMeshes[c]->GetMatrix(), 0.1f, size * 10.f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::STRETCH, 100000.f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::SHEAR, 50000.f, 0.1f);
     
     _solver->AddElement(body, _clothMeshes[c], _clothMeshesId[c]);
     
@@ -116,7 +116,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   float restitution = 0.1f;
   float friction = 0.5f;
-  bool createSphereCollision = true;
+  bool createSphereCollision = false;
   if(createSphereCollision) {
     for (auto& sphere : spheres) {
       Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
@@ -124,7 +124,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
      }
   }
 
-  bool createGroundCollision = true;
+  bool createGroundCollision = false;
   if(createGroundCollision) {
     Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
     _solver->AddElement(collision, _ground, _groundId);

@@ -50,7 +50,7 @@ void Constraint::Apply(Particles* particles)
 {
   size_t corrIdx = 0;
   const pxr::GfVec2f* counter = &particles->counter[0];
-  for(const auto& elem: _elements) 
+  for(const auto& elem: _elements)
     particles->predicted[elem] += _correction[corrIdx++] / counter[elem][0];
 }
 
