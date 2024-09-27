@@ -405,13 +405,26 @@ void MeshCollision::_StoreContactLocation(Particles* particles, int index, Conta
 float 
 MeshCollision::GetValue(Particles* particles, size_t index)
 {
-  return 0.f;
+  Mesh* mesh = (Mesh*)GetGeometry();
+  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  if(!_closest[index].IsValid())return 0.f;
+
+  const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
+
+  const pxr::GfVec3f position = 
+    _closest[index].ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
+  return (particles->predicted[index] - position).GetLength() - particles->radius[index];
 }
   
 pxr::GfVec3f 
 MeshCollision::GetGradient(Particles* particles, size_t index)
 {
-  return pxr::GfVec3f(0.f);// return (particles->predicted[index] - _center).GetNormalized();
+  if(!_closest[index].IsValid())return pxr::GfVec3f(0.f);
+  Mesh* mesh = (Mesh*)GetGeometry();
+  const pxr::GfVec3f* normals = mesh->GetNormalsCPtr();
+  const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
+
+  return _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 }
 
 void 

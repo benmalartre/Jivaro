@@ -250,7 +250,7 @@ void Solver::LockPoints(Body* body, pxr::VtArray<int>& elements)
 void Solver::UpdatePoints()
 {
   size_t numParticles = _particles.GetNumParticles();
-  /*
+  
   pxr::VtArray<pxr::GfVec3f> positions(numParticles);
   memcpy(&positions[0], &_particles.position[0], numParticles * sizeof(pxr::GfVec3f));
   pxr::VtArray<pxr::GfVec3f> colors(numParticles);
@@ -259,7 +259,6 @@ void Solver::UpdatePoints()
   for(size_t p = 0; p<numParticles; ++p)
     widths[p] = 2.f * _particles.radius[p];
 
-  */
 
   pxr::VtArray<pxr::GfVec3f> positions;
   pxr::VtArray<pxr::GfVec3f> colors;
