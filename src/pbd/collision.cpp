@@ -358,17 +358,14 @@ MeshCollision::MeshCollision(Geometry* collider, const pxr::SdfPath& path,
 
 void MeshCollision::Update(const pxr::UsdPrim& prim, double time)
 {
-  _UpdateAccelerationStructure();
   _UpdateParameters(prim, time);
+  _UpdateAccelerationStructure();
 }
 
 void MeshCollision::Init(size_t numParticles)
 {
-  if(numParticles != _query.size()) {
-    _query.resize(numParticles, Location());
-    _closest.resize(numParticles, ClosestPoint());
-  }
-  
+  _query.resize(numParticles, Location());
+  _closest.resize(numParticles, ClosestPoint());
 }
 
 void MeshCollision::_CreateAccelerationStructure()
@@ -381,7 +378,6 @@ void MeshCollision::_CreateAccelerationStructure()
 void MeshCollision::_UpdateAccelerationStructure()
 {
   _bvh->Update();
-
 } 
 
 

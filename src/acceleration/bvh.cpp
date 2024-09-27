@@ -138,7 +138,8 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, ClosestPoint* hi
     pxr::GfVec3f localPoint(invMatrix.Transform(point));
     
     ClosestPoint localHit(*hit);
-    localHit.ConvertToLocal(invMatrix);
+    if(hit->IsValid())
+      localHit.ConvertToLocal(invMatrix);
 
     if (component->Closest(points, localPoint, &localHit)) {
       localHit.ConvertToWorld(geometry->GetMatrix());

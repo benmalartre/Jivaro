@@ -137,7 +137,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   bool createMeshCollision = true;
   if(createMeshCollision) {
     for (size_t c = 0; c < _collideMeshesId.size(); ++c) {
-      std::cout << "create collider form mesh "  << _collideMeshesId[c] << std::endl;
+      _scene.AddGeometry(_collideMeshesId[c], _collideMeshes[c]);
+      _collideMeshes[c]->SetInputOnly();
       Collision* meshCollide = new MeshCollision(_collideMeshes[c], _collideMeshesId[c], 1.f, 1.f);
       _solver->AddElement(meshCollide, _collideMeshes[c], _collideMeshesId[c]);
       
@@ -149,6 +150,13 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
+  for(auto& collision: _solver->GetCollisions()){
+    const Geometry* geometry = collision->GetGeometry();
+    if(geometry)
+      collision->Update(stage->GetPrimAtPath(geometry->GetPrim().GetPath()), time);
+  }
+    
+
   _solver->Update(stage, time);
 }
 

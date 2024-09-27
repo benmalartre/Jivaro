@@ -330,20 +330,15 @@ void Solver::WeightBoundaries(Body* body)
 
 void Solver::_PrepareContacts()
 {
-  std::cout << "prepare cleared..." << std::endl;
   _timer->Start(0);
   for (auto& contact : _contacts)
     delete contact;
   _contacts.clear();
-  std::cout << "contacts cleared..." << std::endl;
 
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-std::cout << "contacts found..." << std::endl;
 
   _particles.ResetCounter(_contacts, 1);
-  std::cout << "counter reseted.." << std::endl;
-
   _timer->Stop();
 }
   
@@ -415,8 +410,8 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
-  UpdateCollisions(stage, time);
   UpdateParameters(stage, time);
+  UpdateCollisions(stage, time);
  
   size_t numParticles = _particles.GetNumParticles();
   if (pxr::GfIsClose(time, _startTime, 0.001f)) {
@@ -461,9 +456,7 @@ void Solver::Step()
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
 
-  std::cout << "solver parallel packet size : " << packetSize << std::endl;
   _PrepareContacts();
-  std::cout << "contacts ok" << std::endl;
   for(size_t si = 0; si < _subSteps; ++si) {
     
     _timer->Start(1);

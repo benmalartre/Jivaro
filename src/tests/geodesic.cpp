@@ -265,6 +265,7 @@ void TestGeodesic::InitExec(pxr::UsdStageRefPtr& stage)
 void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
+  _bvh.Update();
   if (_meshes.size()) {
     size_t numPoints = _meshes[0]->GetNumPoints();
     const pxr::GfVec3f* positions = ((Deformable*)_meshes[0])->GetPositionsCPtr();
