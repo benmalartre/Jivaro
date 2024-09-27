@@ -63,13 +63,11 @@ public:
     , _point(pxr::GfVec3d(DBL_MAX)){};
 
   // Convert
-  inline void ConvertToWorld(const pxr::GfMatrix4d &matrix, 
-    const pxr::GfVec3f& query) {
+  inline void ConvertToWorld(const pxr::GfMatrix4d &matrix) {
     _point = matrix.Transform(_point);
   };
 
-  inline void ConvertToLocal(const pxr::GfMatrix4d &invMatrix, 
-    const pxr::GfVec3f& localQuery) {
+  inline void ConvertToLocal(const pxr::GfMatrix4d &invMatrix) {
     _point = invMatrix.Transform(_point);
   };
 

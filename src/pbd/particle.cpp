@@ -13,7 +13,7 @@ T* _ResizeArray(T* oldData, size_t oldSize, size_t newSize)
   if(newSize > 0) {
     newData = new T[newSize];
     memmove(newData, oldData, oldSize * sizeof(T));
-    memset(newData+oldSize, 0.f, (newSize - oldSize) * sizeof(T));
+    memset(newData+oldSize  , 0.f, (newSize - oldSize) * sizeof(T));
   } 
   if(oldSize) delete [] oldData;
   return newData;

@@ -138,10 +138,10 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, ClosestPoint* hi
     pxr::GfVec3f localPoint(invMatrix.Transform(point));
     
     ClosestPoint localHit(*hit);
-    localHit.ConvertToLocal(invMatrix, localPoint);
+    localHit.ConvertToLocal(invMatrix);
 
     if (component->Closest(points, localPoint, &localHit)) {
-      localHit.ConvertToWorld(geometry->GetMatrix(), point);
+      localHit.ConvertToWorld(geometry->GetMatrix());
       hit->Set(localHit);
       hit->SetGeometryIndex(geomIdx);
       return true;
@@ -301,12 +301,16 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
     const pxr::GfBBox3d bbox = GetGeometry(g)->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
+    std::cout << geometries[g]->GetPrim().GetPath() << std::endl;
+
     _numComponents += ((Mesh*)GetGeometry(g))->GetTrianglePairs().size();
+    std::cout << "num components : " << _numComponents << std::endl;
   }
 
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
+  std::cout << "accelerated ? " << _accelerated << std::endl;
   if(!_accelerated)return;
 
   _mortons.clear();
@@ -357,9 +361,11 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 void
 BVH::Update()
 {
-  pxr::GfRange3f newRange = _RecurseUpdateCells(_root);
-  SetMin(newRange.GetMin());
-  SetMax(newRange.GetMax());
+  if(_accelerated) {
+    pxr::GfRange3f newRange = _RecurseUpdateCells(_root);
+    SetMin(newRange.GetMin());
+    SetMax(newRange.GetMax());
+  }
 }
 
 bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
@@ -367,8 +373,6 @@ bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
 {
   if(_accelerated) 
     return _Raycast(_root, ray, hit, maxDistance, minDistance);
-  else 
-    std::cout << "need implement brute force raycasting for low resolution scene" << std::endl;
 };
 
 size_t 
@@ -450,8 +454,10 @@ BVH::_ComputeHitPoint(Location* hit) const
 bool BVH::Closest(const pxr::GfVec3f& point, 
   ClosestPoint* hit, double maxDistance) const
 {
-  return _Closest(_root, point, hit, 
-    maxDistance < DBL_MAX ? maxDistance * maxDistance : DBL_MAX);
+  if(_accelerated)
+    return _Closest(_root, point, hit, 
+      maxDistance < DBL_MAX ? maxDistance * maxDistance : DBL_MAX);
+  return false;
 }
 
 void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,

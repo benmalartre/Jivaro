@@ -33,7 +33,7 @@ bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, ClosestPoint*
   pxr::GfVec3f localPoint(invMatrix.Transform(point));
 
   if(!localHit.GetComponentIndex() == ClosestPoint::INVALID_INDEX)
-    localHit.ConvertToLocal(invMatrix, localPoint);
+    localHit.ConvertToLocal(invMatrix);
 
   for(size_t t = 0; t < numPairs; ++t) {
     TrianglePair* pair = &pairs[t];
@@ -43,7 +43,7 @@ bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, ClosestPoint*
     
   }
   if(found) {
-    localHit.ConvertToWorld(matrix, point);
+    localHit.ConvertToWorld(matrix);
     if (result)
       *result = pxr::GfVec3f(localHit.GetPoint());
     hit->Set(localHit);

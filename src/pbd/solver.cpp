@@ -250,14 +250,37 @@ void Solver::LockPoints(Body* body, pxr::VtArray<int>& elements)
 void Solver::UpdatePoints()
 {
   size_t numParticles = _particles.GetNumParticles();
-  _points->SetPositions(&_particles.position[0], numParticles);
+  /*
+  pxr::VtArray<pxr::GfVec3f> positions(numParticles);
+  memcpy(&positions[0], &_particles.position[0], numParticles * sizeof(pxr::GfVec3f));
+  pxr::VtArray<pxr::GfVec3f> colors(numParticles);
+  memcpy(&colors[0], &_particles.color[0], numParticles * sizeof(pxr::GfVec3f));
   pxr::VtArray<float> widths(numParticles);
   for(size_t p = 0; p<numParticles; ++p)
     widths[p] = 2.f * _particles.radius[p];
-  _points->SetWidths(&widths[0], numParticles);
-  _points->SetColors(&_particles.color[0], numParticles);
 
-  _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
+  */
+
+  pxr::VtArray<pxr::GfVec3f> positions;
+  pxr::VtArray<pxr::GfVec3f> colors;
+  pxr::VtArray<float> widths;
+
+  size_t numCollisions = _collisions.size();
+  for(size_t c = 0; c < numCollisions; ++c) {
+    if(_collisions[c]->GetTypeId() == Collision::MESH) {
+      _collisions[c]->GetPoints(&_particles, positions, widths, colors);
+    }
+  }
+
+  size_t numPoints = positions.size();
+  if(numPoints) {
+    _points->SetPositions(&positions[0], numPoints);
+    _points->SetWidths(&widths[0], numPoints);
+    _points->SetColors(&colors[0], numPoints);
+
+
+    _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
+  }
 }
 
 void Solver::UpdateCurves()
@@ -275,7 +298,6 @@ void Solver::UpdateCurves()
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
       counts.push_back(2);
-
   }
 
   _curves->SetTopology(positions, widths, counts);

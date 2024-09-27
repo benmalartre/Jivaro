@@ -75,6 +75,9 @@ public:
   size_t GetTotalNumContacts(){return _contacts.GetTotalNumUsed();};
   const std::vector<int>& GetC2P(){return _c2p;};
 
+  virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors);
+
   virtual float GetValue(Particles* particles, size_t index) = 0;
   virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
   virtual pxr::GfVec3f GetVelocity(Particles* particles, size_t index);
@@ -177,10 +180,14 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
 
   virtual void Init(size_t numParticles) override;
+  const Location* GetQuery(size_t index){return &_query[index];};
 
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
+
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
 protected:
   void _CreateAccelerationStructure();
@@ -193,6 +200,7 @@ private:
   static size_t                 TYPE_ID;
   BVH*                          _bvh;
   std::vector<Location>         _query;
+  std::vector<ClosestPoint>     _closest;
 };
 
 class SelfCollision : public Collision

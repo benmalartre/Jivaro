@@ -20,6 +20,22 @@ JVR_NAMESPACE_OPEN_SCOPE
 const float Collision::TOLERANCE_MARGIN = .1f;
 const size_t Collision::PACKET_SIZE = 64;
 
+
+void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
+{
+  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
+  const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  const float r = 1.f;
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
+    if(_contacts.IsUsed(index)) {
+      Contact* contact = _contacts.Get(index);
+      positions.push_back(pxr::GfVec3f(contact->GetCoordinates()));
+      colors.push_back(color);
+      radius.push_back(r);
+    }
+}
+
 // 
 // Contacts
 //
@@ -349,8 +365,8 @@ void MeshCollision::Update(const pxr::UsdPrim& prim, double time)
 void MeshCollision::Init(size_t numParticles)
 {
   if(numParticles != _query.size()) {
-    _query.resize(numParticles);
-    for(auto& query: _query)query = Location();
+    _query.resize(numParticles, Location());
+    _closest.resize(numParticles, ClosestPoint());
   }
   
 }
@@ -375,9 +391,7 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   Mesh* mesh = (Mesh*)_collider;
   double maxDistance = particles->velocity[index].GetLength() * ft + particles->radius[index];
   double minDistance = DBL_MAX;
-  if(_bvh->Raycast(ray, &_query[index], maxDistance, &minDistance)) {
-    std::cout << "hit mesh at distance " << minDistance << std::endl;
-  }
+  _bvh->Closest(particles->position[index], &_closest[index], DBL_MAX);
     ;
   /*
     SetHit(index, true);
@@ -418,16 +432,33 @@ void MeshCollision::_StoreContactLocation(Particles* particles, int index, Conta
   
 }
 
-float MeshCollision::GetValue(Particles* particles, size_t index)
+float 
+MeshCollision::GetValue(Particles* particles, size_t index)
 {
   return 0.f;
   /*return (particles->predicted[index] - _center).GetLength() -
     _radius - particles->radius[index];*/
 }
   
-pxr::GfVec3f MeshCollision::GetGradient(Particles* particles, size_t index)
+pxr::GfVec3f 
+MeshCollision::GetGradient(Particles* particles, size_t index)
 {
   return pxr::GfVec3f(0.f);// return (particles->predicted[index] - _center).GetNormalized();
+}
+
+void 
+MeshCollision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
+{
+  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
+  const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  const float r = .1f;
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
+    if(_closest[index].IsValid()) {
+      positions.push_back(pxr::GfVec3f(_closest[index].GetPoint()));
+      colors.push_back(color);
+      radius.push_back(r);
+    }
 }
 
 

@@ -1391,8 +1391,6 @@ Mesh::Closest(const pxr::GfVec3f& point, Location* hit,
   if (!found)
     return false;
 
-  closest.ConvertToWorld(_matrix, point);
-
   hit->SetGeometryIndex(closest.GetGeometryIndex());
   hit->SetComponentIndex(closest.GetComponentIndex());
   hit->SetCoordinates(closest.GetCoordinates());
