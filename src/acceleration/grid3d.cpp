@@ -276,7 +276,7 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   return hitSomething;
 }
 
-bool Grid3D::Closest(const pxr::GfVec3f& point, ClosestPoint* hit, double maxDistance) const
+bool Grid3D::Closest(const pxr::GfVec3f& point, Location* hit, double maxDistance) const
 {
   return false;
 }

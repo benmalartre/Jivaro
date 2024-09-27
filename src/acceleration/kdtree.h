@@ -83,7 +83,7 @@ public:
 
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
-  virtual bool Closest(const pxr::GfVec3f& point, ClosestPoint* hit,
+  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const override;
 
 private:

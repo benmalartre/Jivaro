@@ -147,7 +147,7 @@ void Voxels::_ProximityWork(size_t begin, size_t end)
 
   for (size_t cell = begin; cell < end; ++cell) {
     const pxr::GfVec3f point = GetCellPosition(cell);
-    ClosestPoint hit;
+    Location hit;
     if(_bvh.Closest(point, &hit, threshold))
       _data[cell] += 3;
   }

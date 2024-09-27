@@ -119,7 +119,7 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
 }
 
 bool 
-BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, ClosestPoint* hit, 
+BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit, 
   double maxDistanceSq) const
 {  
   if(!cell->Contains(point)) {
@@ -137,7 +137,7 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, ClosestPoint* hi
     Component* component = (Component*)cell->GetData();
     pxr::GfVec3f localPoint(invMatrix.Transform(point));
     
-    ClosestPoint localHit(*hit);
+    Location localHit(*hit);
     if(hit->IsValid())
       localHit.ConvertToLocal(invMatrix);
 
@@ -453,7 +453,7 @@ BVH::_ComputeHitPoint(Location* hit) const
 
 
 bool BVH::Closest(const pxr::GfVec3f& point, 
-  ClosestPoint* hit, double maxDistance) const
+  Location* hit, double maxDistance) const
 {
   if(_accelerated)
     return _Closest(_root, point, hit, 

@@ -102,7 +102,7 @@ static inline float _Dot2( const pxr::GfVec3f& v )
   return pxr::GfDot(v,v); 
 }
 
-bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, ClosestPoint* hit) const
+bool Triangle::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
   pxr::GfVec3f edge0 = points[vertices[1]] - points[vertices[0]];
   pxr::GfVec3f edge1 = points[vertices[2]] - points[vertices[0]];
@@ -375,7 +375,7 @@ TrianglePair::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Locatio
 // TrianglePair closest point
 //-------------------------------------------------------
 bool 
-TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, ClosestPoint* hit) const
+TrianglePair::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
 {
   bool hitSometing = false;
   if (left->Closest(points, point, hit))hitSometing = true;

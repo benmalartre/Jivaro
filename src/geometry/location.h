@@ -19,7 +19,17 @@ public:
   Location() 
     : _geomId(INVALID_INDEX)
     , _compId(INVALID_INDEX)
-    , _coords(pxr::GfVec4d(0.0, 0.0, 0.0, DBL_MAX)){};
+    , _coords(pxr::GfVec4d(0.0, 0.0, 0.0, DBL_MAX))
+    , _point(pxr::GfVec3d(DBL_MAX)){};
+
+  // Convert
+  inline void ConvertToWorld(const pxr::GfMatrix4d &matrix) {
+    _point = matrix.Transform(_point);
+  };
+
+  inline void ConvertToLocal(const pxr::GfMatrix4d &invMatrix) {
+    _point = invMatrix.Transform(_point);
+  };
 
   // Setters
   void Set(const Location& other);
@@ -30,6 +40,7 @@ public:
     _coords[1] = coords[1];
     _coords[2] = coords[2];
   };
+  inline void SetPoint(const pxr::GfVec3d& point) {_point = point;};
   inline void SetDistance(double t) { _coords[3] = t;};
 
   // Getters
@@ -37,7 +48,9 @@ public:
   inline int GetComponentIndex() const { return _compId; };
   inline const pxr::GfVec3d GetCoordinates() const { 
     return pxr::GfVec3d(_coords[0], _coords[1], _coords[2]);};
+  inline const pxr::GfVec3d& GetPoint(){return _point;};
   inline double GetDistance() const { return _coords[3]; };
+  
 
   virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, 
     const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
@@ -52,33 +65,6 @@ protected:
   size_t        _geomId;
   size_t        _compId;
   pxr::GfVec4d  _coords;
-};
-
-class ClosestPoint : public Location
-{
-public:
-  // Constructor
-  ClosestPoint()
-    : Location()
-    , _point(pxr::GfVec3d(DBL_MAX)){};
-
-  // Convert
-  inline void ConvertToWorld(const pxr::GfMatrix4d &matrix) {
-    _point = matrix.Transform(_point);
-  };
-
-  inline void ConvertToLocal(const pxr::GfMatrix4d &invMatrix) {
-    _point = invMatrix.Transform(_point);
-  };
-
-  // Setters
-  void Set(const ClosestPoint& other);
-  inline void SetPoint(const pxr::GfVec3d& point) {_point = point;};
-
-  // getters
-  inline const pxr::GfVec3d& GetPoint(){return _point;};
-
-protected:
   pxr::GfVec3d  _point;
 };
 

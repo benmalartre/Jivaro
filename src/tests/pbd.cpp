@@ -150,13 +150,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
-  for(auto& collision: _solver->GetCollisions()){
-    const Geometry* geometry = collision->GetGeometry();
-    if(geometry)
-      collision->Update(stage->GetPrimAtPath(geometry->GetPrim().GetPath()), time);
-  }
-    
-
   _solver->Update(stage, time);
 }
 

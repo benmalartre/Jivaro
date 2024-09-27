@@ -1381,7 +1381,7 @@ Mesh::Closest(const pxr::GfVec3f& point, Location* hit,
 
   bool found = false;
 
-  ClosestPoint closest;
+  Location closest;
 
   for(size_t t = 0; t < numTriangles; ++t)
     if (_triangles[t].Closest(&_positions[0], point, &closest)) {

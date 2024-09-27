@@ -90,7 +90,7 @@ public:
 
   virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
-  virtual bool Closest(const pxr::GfVec3f& point, ClosestPoint* hit,
+  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance) const override;
 
   void GetLeaves(const BVH::Cell* cell, std::vector<const Cell*>& leaves) const;
@@ -110,7 +110,7 @@ protected:
 
   bool _Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const;
-  bool _Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, ClosestPoint* hit,
+  bool _Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
     double maxDistanceSq = DBL_MAX) const;
 
 private:

@@ -20,7 +20,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 class Location;
-class ClosestPoint;
 
 struct Component {
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
@@ -40,7 +39,7 @@ struct Component {
 
   virtual bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const = 0;
   virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const = 0;
-  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, ClosestPoint* hit) const = 0;
+  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const = 0;
 
   virtual pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const = 0;
   virtual short GetType() const = 0;

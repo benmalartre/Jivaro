@@ -101,8 +101,8 @@ protected:
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float dt);
-  virtual void _FindContacts(size_t begin, size_t end, Particles* particles, float ft);
-  virtual void _UpdateContacts(size_t begin, size_t end, Particles* particles);
+  virtual void _FindContacts(Particles* particles, size_t begin, size_t end, float ft);
+  virtual void _UpdateContacts(Particles* particles, size_t begin, size_t end);
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
@@ -200,7 +200,7 @@ private:
   static size_t                 TYPE_ID;
   BVH*                          _bvh;
   std::vector<Location>         _query;
-  std::vector<ClosestPoint>     _closest;
+  std::vector<Location>         _closest;
 };
 
 class SelfCollision : public Collision
@@ -230,8 +230,8 @@ protected:
   void _ComputeNeighbors(const std::vector<Body*>& bodies);
   void _UpdateAccelerationStructure();
   void _ResetContacts(Particles* particles) override;
-  void _FindContacts(size_t begin, size_t end, Particles* particles, float ft) override;
-  void _UpdateContacts(size_t begin, size_t end, Particles* particles) override;
+  void _FindContacts(Particles* particles, size_t begin, size_t end, float ft) override;
+  void _UpdateContacts(Particles* particles, size_t begin, size_t end) override;
   void _FindContact(Particles* particles, size_t index, float ft) override;
   void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact, float ft);
 

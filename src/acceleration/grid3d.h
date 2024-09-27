@@ -87,7 +87,7 @@ public:
   // intersect a ray with the grid
   bool Raycast(const pxr::GfRay& ray, Location* hitPoint,
     double maxDistance=DBL_MAX, double* minDistance=NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, ClosestPoint* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance=DBL_MAX) const override;
 
   Cell* GetCell(uint32_t index);
@@ -125,7 +125,7 @@ public:
   // intersect a ray with the multi-grid
   bool Raycast(const pxr::GfRay& ray, Location* hitPoint,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, ClosestPoint* hit,
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = DBL_MAX) const override;
 
 private:

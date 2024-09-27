@@ -18,7 +18,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, ClosestPoint* hit, pxr::GfVec3f* result=NULL)
+bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, Location* hit, pxr::GfVec3f* result=NULL)
 {
   bool found(false);
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
@@ -28,11 +28,11 @@ bool _ConstraintPointOnMesh(Mesh* mesh, const pxr::GfVec3f &point, ClosestPoint*
   const pxr::GfMatrix4d &invMatrix = mesh->GetInverseMatrix();
   const pxr::GfMatrix4d &matrix = mesh->GetMatrix();
 
-  ClosestPoint localHit(*hit);
+  Location localHit(*hit);
 
   pxr::GfVec3f localPoint(invMatrix.Transform(point));
 
-  if(!localHit.GetComponentIndex() == ClosestPoint::INVALID_INDEX)
+  if(!localHit.GetComponentIndex() == Location::INVALID_INDEX)
     localHit.ConvertToLocal(invMatrix);
 
   for(size_t t = 0; t < numPairs; ++t) {
@@ -65,7 +65,7 @@ TestGeodesic::_BenchmarckClosestPoints()
   uint64_t startT1 = CurrentTime();
   
   for (size_t n = 0; n < N; ++n) {
-    ClosestPoint hit;
+    Location hit;
     pxr::GfVec3f result;
     for (size_t m = 0; m < _meshes.size(); ++m)
       if (_ConstraintPointOnMesh((Mesh*)_meshes[m], points[n], &hit, &result))
@@ -78,7 +78,7 @@ TestGeodesic::_BenchmarckClosestPoints()
 
   uint64_t startT2 = CurrentTime();
   for(size_t n = 0; n < N  ; ++n) {
-    ClosestPoint hit;
+    Location hit;
     if(_bvh.Closest(points[n], &hit, DBL_MAX)) {
       result2[n] = pxr::GfVec3f(hit.GetPoint());
     }
@@ -96,7 +96,7 @@ void TestGeodesic::_ClosestPointQuery(size_t begin, size_t end, const pxr::GfVec
 {
   for (size_t index = begin; index < end; ++index) {
     double minDistance = DBL_MAX;
-    ClosestPoint hit;
+    Location hit;
     if (_bvh.Closest(positions[index], &hit, DBL_MAX)) {
       const Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
       const pxr::GfMatrix4d& matrix = collided->GetMatrix();
@@ -276,7 +276,7 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
     pxr::GfMatrix4f matrix;
     pxr::GfVec3f position;
-    ClosestPoint hit1;
+    Location hit1;
     pxr::VtArray<pxr::GfVec3f> points(4);
     pxr::VtArray<pxr::GfVec3f> colors(4);
     pxr::VtArray<float> widths(4, range.GetSize().GetLength() / 250.f);
@@ -292,14 +292,14 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     }
 
     // brute force reference
-    ClosestPoint hit2;
+    Location hit2;
     pxr::GfVec3f result;
     for (size_t m = 0; m < _meshes.size(); ++m)
       if (_ConstraintPointOnMesh((Mesh*)_meshes[m], seed, &hit2, &result))
         points[2] = pxr::GfVec3f(hit2.GetPoint());
 
     // kdtree accelerated query (point only)
-    ClosestPoint hit3;
+    Location hit3;
     if (_kdtree.Closest(seed, &hit3, DBL_MAX)) {
       points[3] = pxr::GfVec3f(hit3.GetPoint());
      

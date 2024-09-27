@@ -216,7 +216,7 @@ Octree::Raycast(const pxr::GfRay& ray, Location* hit,
 
 bool 
 Octree::Closest(const pxr::GfVec3f& point, 
-  ClosestPoint* hit, double maxDistance) const
+  Location* hit, double maxDistance) const
 {
   Cell* closestCell = NULL;
   _GetClosestCell(point, closestCell);

@@ -101,7 +101,7 @@ KDTree::Raycast(const pxr::GfRay& ray, Location* hit,
 }
 
 bool 
-KDTree::Closest(const pxr::GfVec3f& point, ClosestPoint* hit, double maxDistance) const
+KDTree::Closest(const pxr::GfVec3f& point, Location* hit, double maxDistance) const
 {
   double minDistanceSq = DBL_MAX;
   KDTree::Cell *nearest = nullptr;
