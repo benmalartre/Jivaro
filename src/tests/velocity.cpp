@@ -62,7 +62,7 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
   }
 
   _solverId =  rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(&_scene, stage, _solverId);
+  _solver = _CreateSolver(&_scene, stage, _solverId);
 
 
   Body* body0 = _solver->CreateBody(_points0, pxr::GfMatrix4d(1.0), 0.1f, 0.25f, 0.1f);
@@ -76,7 +76,7 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
   if(createGroundCollision) {
     // create collide ground
     _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-    _ground = _GenerateCollidePlane(stage, _groundId, 0.5, 0.5);
+    _ground = _CreateCollidePlane(stage, _groundId, 0.5, 0.5);
     _ground->SetMatrix(
       pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
     //_AddAnimationSamples(stage, _groundId);

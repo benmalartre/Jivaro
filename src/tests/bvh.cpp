@@ -206,7 +206,7 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
 
   const size_t n = 64;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
-  _mesh = _GenerateMeshGrid(stage, _meshId, n, scale * rotate * translate);
+  _mesh = _CreateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
   //_AddAnimationSamples(stage, _meshId);

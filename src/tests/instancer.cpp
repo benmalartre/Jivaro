@@ -14,7 +14,7 @@ class Mesh;
 class Points;
 class BVH;
 
-void _GenerateRandomTriangle(Mesh* proto)
+void _CreateRandomTriangle(Mesh* proto)
 {
   pxr::VtArray<pxr::GfVec3f> positions(3);
   for(size_t i = 0 ; i < 3; ++i) {
@@ -27,7 +27,7 @@ void _GenerateRandomTriangle(Mesh* proto)
   proto->Set(positions, faceCounts, faceIndices);
 }
 
-void _GenerateRandomGround(Mesh* ground)
+void _CreateRandomGround(Mesh* ground)
 {
   ground->RegularGrid2D(0.005);
   pxr::VtArray<pxr::GfVec3f>& positions = ground->GetPositions();
@@ -46,7 +46,7 @@ void _GenerateRandomGround(Mesh* ground)
   }
 }
 
-Instancer* _GenerateInstancer(size_t numPoints, size_t numPrototypes)
+Instancer* _CreateInstancer(size_t numPoints, size_t numPrototypes)
 {
 
   pxr::VtArray<pxr::GfVec3f> points(numPoints);
@@ -113,7 +113,7 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
 
   // instancer
   _instancerId = rootId.AppendChild(pxr::TfToken("instancer"));
-  _instancer = _GenerateInstancer(32, numProtos);
+  _instancer = _CreateInstancer(32, numProtos);
   _scene.AddGeometry(_instancerId, _instancer);
 
   _scene.MarkPrimDirty(_instancerId, pxr::HdChangeTracker::DirtyTransform |
@@ -127,14 +127,14 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   for(size_t p  =0; p < numProtos; ++p) {
     _protosId[p] = rootId.AppendChild(pxr::TfToken("proto_"+std::to_string(p)));
     _protos[p] = new Mesh();
-    _GenerateRandomTriangle(_protos[p]);
+    _CreateRandomTriangle(_protos[p]);
     _instancer->AddPrototype(_protosId[p]);
   }
 
   // ground
   _groundId = rootId.AppendChild(pxr::TfToken("ground"));
   _ground = new Mesh(pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f)));
-  _GenerateRandomGround(_ground);
+  _CreateRandomGround(_ground);
 
   // inject in usd scene
   for(size_t p  =0; p < numProtos; ++p) {

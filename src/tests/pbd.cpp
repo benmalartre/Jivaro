@@ -51,14 +51,14 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create collide ground
   _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-  _ground = _GenerateCollidePlane(stage, _groundId);
+  _ground = _CreateCollidePlane(stage, _groundId);
   _ground->SetMatrix(
     pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
   _scene.AddGeometry(_groundId, _ground);
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(&_scene, stage, _solverId, 5);
+  _solver = _CreateSolver(&_scene, stage, _solverId, 5);
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
@@ -69,7 +69,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     std::string name = "cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _clothMeshesId.push_back(clothPath);
-    _clothMeshes.push_back(_GenerateClothMesh(stage, clothPath, size, 
+    _clothMeshes.push_back(_CreateClothMesh(stage, clothPath, size, 
     pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f})));
 
     _scene.AddGeometry(_clothMeshesId.back(), _clothMeshes.back());
@@ -89,7 +89,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
-    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
+    _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
   //_AddAnimationSamples(stage, collideId);
   _scene.AddGeometry(collideId, spheres[collideId]);
 

@@ -259,11 +259,6 @@ void Solver::UpdatePoints()
   for(size_t p = 0; p<numParticles; ++p)
     widths[p] = 2.f * _particles.radius[p];
 
-
-  pxr::VtArray<pxr::GfVec3f> positions;
-  pxr::VtArray<pxr::GfVec3f> colors;
-  pxr::VtArray<float> widths;
-
   size_t numCollisions = _collisions.size();
   for(size_t c = 0; c < numCollisions; ++c) {
     if(_collisions[c]->GetTypeId() == Collision::MESH) {

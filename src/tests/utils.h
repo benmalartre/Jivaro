@@ -23,19 +23,19 @@ class Grid3D;
 class Instancer;
 
 void _AddMainDemoLight();
-Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
+Solver* _CreateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   int subSteps=5, float sleepThreshold=0.001f);
 
-Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+Mesh* _CreateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   size_t subd=8, const pxr::GfMatrix4d& m=pxr::GfMatrix4d(1.0));
 
-Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   float spacing=0.025f, const pxr::GfMatrix4d& m=pxr::GfMatrix4d(1.0), float mass=1.f, float damp=.1f);
 
-Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+Plane* _CreateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   float friction=0.5f, float restitution=0.5f);
 
-Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+Sphere* _CreateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   double radius, const pxr::GfMatrix4d& m, float friction=0.5f, float restitution=0.5f);
 
 Instancer* _SetupPointsInstancer(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path, Points* points);

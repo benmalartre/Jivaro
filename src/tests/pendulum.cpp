@@ -55,7 +55,7 @@ void TestPendulum::InitExec(pxr::UsdStageRefPtr& stage)
   }
 
   _solverId =  rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(&_scene, stage, _solverId);
+  _solver = _CreateSolver(&_scene, stage, _solverId);
 
 
   Body* body = _solver->CreateBody(_points, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f);

@@ -105,7 +105,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
     // create solver with particles
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
-  _solver = _GenerateSolver(&_scene, stage, _solverId);
+  _solver = _CreateSolver(&_scene, stage, _solverId);
   _scene.AddGeometry(_solverId, _solver);
 
 
@@ -122,7 +122,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
     pxr::GfRotation rotate(axis, x * rStep);
     spheres[collideId] =
-      _GenerateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d().SetTranslate(rotate.TransformDir(offset)));
+      _CreateCollideSphere(stage, collideId, RANDOM_0_1 + 2.f, pxr::GfMatrix4d().SetTranslate(rotate.TransformDir(offset)));
 
     _scene.AddGeometry(collideId, spheres[collideId]);
   }
@@ -130,7 +130,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   std::string name = "sphere_collide_ctr";
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
-    _GenerateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.0), friction, restitution);
+    _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.0), friction, restitution);
 
     //_AddAnimationSamples(stage, collideId);
 
@@ -206,7 +206,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if(createGroundCollision) {
     // create collide ground
     _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-    _ground = _GenerateCollidePlane(stage, _groundId, friction, restitution);
+    _ground = _CreateCollidePlane(stage, _groundId, friction, restitution);
     _ground->SetMatrix(
       pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
     //_AddAnimationSamples(stage, _groundId);

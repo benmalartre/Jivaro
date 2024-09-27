@@ -27,7 +27,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
+Plane* _CreateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   float friction, float restitution)
 {
   const double width = 100;
@@ -45,7 +45,7 @@ Plane* _GenerateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
   return new Plane(usdGround, pxr::GfMatrix4d(1.0));
 }
 
-Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
+Solver* _CreateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   int subSteps, float sleepThreshold)
 {
   pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
@@ -66,7 +66,7 @@ Solver* _GenerateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::Sdf
 }
 
 
-Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   float spacing, const pxr::GfMatrix4d& m, float mass, float damp)
 {
   Mesh* mesh = new Mesh(m);
@@ -106,7 +106,7 @@ Mesh* _GenerateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   return mesh;
 }
 
-Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+Mesh* _CreateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   size_t subd, const pxr::GfMatrix4d& m)
 {
   Mesh* mesh = new Mesh(m);
@@ -124,7 +124,7 @@ Mesh* _GenerateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   return mesh;
 }
 
-Sphere* _GenerateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
+Sphere* _CreateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   double radius, const pxr::GfMatrix4d& m, float friction, float restitution)
 {
   
