@@ -39,7 +39,15 @@ void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& posi
 // 
 // Contacts
 //
-void Collision::UpdateContacts(Particles* particles, size_t begin , size_t end)
+void Collision::UpdateContacts(Particles* particles)
+{
+  pxr::WorkParallelForN(
+      particles->GetNumParticles(),
+      std::bind(&Collision::_UpdateContacts, this, particles, 
+        std::placeholders::_1, std::placeholders::_2), PACKET_SIZE);
+}
+
+void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
@@ -479,7 +487,15 @@ void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>&
 
 }
 
-void SelfCollision::UpdateContacts(Particles* particles, size_t begin , size_t end)
+void SelfCollision::UpdateContacts(Particles* particles)
+{
+  pxr::WorkParallelForN(
+      particles->GetNumParticles(),
+      std::bind(&SelfCollision::_UpdateContacts, this, particles, 
+        std::placeholders::_1, std::placeholders::_2), PACKET_SIZE);
+}
+
+void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {

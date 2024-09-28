@@ -147,13 +147,6 @@ size_t Solver::GetBodyIndex(Geometry* geom)
   return Solver::INVALID_INDEX;
 }
 
-size_t Solver::GetPacketSize()
-{
-  size_t numParticles = _particles.GetNumParticles();
-  size_t numThreads = pxr::WorkGetConcurrencyLimit();
-  return numParticles / (numThreads > 1 ? numThreads - 1 : 1);
-}
-
 
 Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix, 
   float mass, float radius, float damping)
@@ -342,20 +335,11 @@ void Solver::_PrepareContacts()
   _particles.ResetCounter(_contacts, 1);
   _timer->Stop();
 }
-
-void Solver::_UpdateContactsX(size_t begin, size_t end)
-{
-  for (auto& collision : _collisions)
-    collision->UpdateContacts(&_particles, begin, end);
-}
   
 void Solver::_UpdateContacts()
 {
-  const size_t numParticles = _particles.GetNumParticles();
-  pxr::WorkParallelForN(
-      numParticles,
-      std::bind(&Solver::_UpdateContactsX, this,
-        std::placeholders::_1, std::placeholders::_2), GetPacketSize());
+  for (auto& collision : _collisions)
+    collision->UpdateContacts(&_particles);
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
