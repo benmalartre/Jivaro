@@ -58,7 +58,7 @@ public:
     std::vector<Constraint*>& constraints, float ft);
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, 
     float ft, bool solveInitialPenetration);
-  virtual void UpdateContacts(Particles* particles);
+  virtual void UpdateContacts(Particles* particles, size_t begin, size_t end);
 
 
   virtual Geometry* GetGeometry(){return _collider;};
@@ -102,7 +102,6 @@ protected:
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float dt);
   virtual void _FindContacts(Particles* particles, size_t begin, size_t end, float ft);
-  virtual void _UpdateContacts(Particles* particles, size_t begin, size_t end);
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
@@ -133,8 +132,6 @@ public:
   float GetValue(Particles* particles, size_t index) override;
   pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
-
-  //void UpdateContacts(Particles* particles) override;
 
 protected:
   void _UpdatePositionAndNormal();
@@ -219,7 +216,7 @@ public:
   pxr::GfVec3f GetGradient(Particles* particles, size_t index, size_t other);
   pxr::GfVec3f GetVelocity(Particles* particles, size_t index, size_t other);
 
-  void UpdateContacts(Particles* particles) override;
+  void UpdateContacts(Particles* particles, size_t begin , size_t end) override;
 
   void Update(const pxr::UsdPrim& prim, double time) override;
 
@@ -231,7 +228,6 @@ protected:
   void _UpdateAccelerationStructure();
   void _ResetContacts(Particles* particles) override;
   void _FindContacts(Particles* particles, size_t begin, size_t end, float ft) override;
-  void _UpdateContacts(Particles* particles, size_t begin, size_t end) override;
   void _FindContact(Particles* particles, size_t index, float ft) override;
   void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact, float ft);
 

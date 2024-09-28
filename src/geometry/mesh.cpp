@@ -594,8 +594,16 @@ Mesh::ComputeAreas(MeshAreas& result)
   result.vertexInfos[3] = result.vertexInfos[0] / static_cast<float>(numPoints);
 }
 
+void
+Mesh::SetInputOutput() 
+{
+  Geometry::SetInputOutput();
+  _base = new Mesh(*this);
+}
 
-void Mesh::Set(
+
+void 
+Mesh::Set(
   const pxr::VtArray<pxr::GfVec3f>& positions,
   const pxr::VtArray<int>& faceVertexCounts,
   const pxr::VtArray<int>& faceVertexIndices,
@@ -692,6 +700,7 @@ Mesh::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomMesh>())
   {
+    if(!IsInput())return Geometry::DirtyState::CLEAN;
     _previous = _positions;
     pxr::UsdGeomMesh usdMesh(_prim);
     const size_t nbPositions = _positions.size();

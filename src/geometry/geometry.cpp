@@ -30,6 +30,7 @@ Geometry::Geometry()
   , _mode(INPUT|OUTPUT)
   , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
+  , _base(nullptr)
 {
   SetMatrix(pxr::GfMatrix4d(1.0));
 }
@@ -39,6 +40,7 @@ Geometry::Geometry(int type, const pxr::GfMatrix4d& world)
   , _mode(INPUT|OUTPUT)
   , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
+  , _base(nullptr)
 {
   SetMatrix(world);
 }
@@ -62,6 +64,7 @@ Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
   else _type = Geometry::INVALID;
   SetMatrix(world);
 }
+
 
 void 
 Geometry::SetMatrix(const pxr::GfMatrix4d& matrix) 

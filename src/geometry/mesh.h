@@ -159,6 +159,8 @@ public:
   void SetPositions(const pxr::GfVec3f* positions, size_t n) override;
   void SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions) override;
 
+  void SetInputOutput();
+
   // topology
   void Set(
     const pxr::VtArray<pxr::GfVec3f>& positions,

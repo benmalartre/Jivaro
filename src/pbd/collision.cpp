@@ -17,7 +17,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = .1f;
+const float Collision::TOLERANCE_MARGIN = .05f;
 const size_t Collision::PACKET_SIZE = 64;
 
 
@@ -26,7 +26,7 @@ void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& posi
 {
   Mask::Iterator iterator(this, 0, particles->GetNumParticles());
   const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  const float r = 1.f;
+  const float r = 0.05f;
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
     if(_contacts.IsUsed(index)) {
       Contact* contact = _contacts.Get(index);
@@ -39,15 +39,7 @@ void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& posi
 // 
 // Contacts
 //
-void Collision::UpdateContacts(Particles* particles)
-{
-  pxr::WorkParallelForN(
-      particles->GetNumParticles(),
-      std::bind(&Collision::_UpdateContacts, this, particles, 
-        std::placeholders::_1, std::placeholders::_2), PACKET_SIZE);
-}
-
-void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
+void Collision::UpdateContacts(Particles* particles, size_t begin , size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
@@ -432,8 +424,8 @@ MeshCollision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& posit
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
 {
   Mask::Iterator iterator(this, 0, particles->GetNumParticles());
-  const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  const float r = .1f;
+  const pxr::GfVec3f color(1.f, 0.f, 0.f);
+  const float r = 0.05f;
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
     if(_closest[index].IsValid()) {
       positions.push_back(pxr::GfVec3f(_closest[index].GetPoint()));
@@ -487,15 +479,7 @@ void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>&
 
 }
 
-void SelfCollision::UpdateContacts(Particles* particles)
-{
-  pxr::WorkParallelForN(
-      particles->GetNumParticles(),
-      std::bind(&SelfCollision::_UpdateContacts, this, particles, 
-        std::placeholders::_1, std::placeholders::_2), PACKET_SIZE);
-}
-
-void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
+void SelfCollision::UpdateContacts(Particles* particles, size_t begin , size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
@@ -551,7 +535,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, 4.f * particles->radius[index] + Collision::TOLERANCE_MARGIN);
+  _grid.Closests(index, &particles->predicted[0], closests, 2.f * particles->radius[index] + Collision::TOLERANCE_MARGIN);
 
   for(int closest: closests) {
     if(_AreConnected(index, closest))continue;
@@ -559,7 +543,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
     pxr::GfVec3f ip(particles->position[index] + particles->velocity[index] * ft);
     pxr::GfVec3f cp(particles->position[closest] + particles->velocity[closest] * ft);
-    if((ip - cp).GetLength() < 2.f * (particles->radius[index] + particles->radius[closest] + Collision::TOLERANCE_MARGIN)) {
+    if((ip - cp).GetLength() < (particles->radius[index] + particles->radius[closest] + Collision::TOLERANCE_MARGIN)) {
       Contact* contact = _contacts.Use(index);
       _StoreContactLocation(particles, index, closest, contact, ft);
       contact->SetComponentIndex(closest);
@@ -635,6 +619,7 @@ pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size
 // Velocity
 pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index, size_t other)
 {
+  return pxr::GfVec3f(0.f);
   return (particles->predicted[index] - particles->position[index]) +
     (particles->predicted[other] - particles->position[other]) * .5f;
 }

@@ -33,6 +33,37 @@ void TestPBD::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
     }
 }
 
+void TestPBD::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
+{
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+
+  if(prim.IsValid()) {
+    pxr::UsdGeomXformable xformable(prim);
+    pxr::GfVec3d scale = pxr::GfVec3f(1.f, 1.f, 1.f);
+    pxr::GfVec3d translate0 = pxr::GfVec3f(0.f, 0.f, 0.f);
+    pxr::GfVec3d translate1 = pxr::GfVec3f(0.f, -10.f, 0.f);
+    pxr::GfVec3d translate2 = pxr::GfVec3f(0.f, 10.f, 0.f);
+
+    pxr::UsdGeomXformOp op = xformable.AddScaleOp();
+    op.Set(scale);
+
+    op = xformable.AddRotateYOp();
+    op.Set( 0.f, 1);
+    //op.Set(-45.f, 26);
+    //op.Set( 45.f, 51);
+    //op.Set(-45.f, 76);
+    //op.Set( 720.f, 101);
+
+    op = xformable.AddTranslateOp();
+    op.Set(translate0, 101);
+    op.Set(translate2, 126);
+    op.Set(translate1, 151);
+    op.Set(translate2, 176);
+    op.Set(translate0, 201);
+
+  }
+}
+
 
 void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 {
@@ -65,17 +96,14 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float size = .01f;
 
   
-  for(size_t x = 0; x < 5; ++x) {
+  for(size_t x = 0; x < 2; ++x) {
     std::string name = "cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _clothMeshesId.push_back(clothPath);
     _clothMeshes.push_back(_CreateClothMesh(stage, clothPath, size, 
     pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f})));
-
     _scene.AddGeometry(_clothMeshesId.back(), _clothMeshes.back());
-    
   }
-  std::cout << "created cloth meshes" << std::endl;
 
    // create collide spheres
   std::map<pxr::SdfPath, Sphere*> spheres;
@@ -90,11 +118,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
     _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
-  //_AddAnimationSamples(stage, collideId);
+  _AddAnimationSamples(stage, collideId);
   _scene.AddGeometry(collideId, spheres[collideId]);
 
-
-  
   for (size_t c = 0; c < _clothMeshesId.size(); ++c) {
     size_t offset = _solver->GetNumParticles();
 
@@ -107,9 +133,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(body, _clothMeshes[c], _clothMeshesId[c]);
     
   }
-
-  //_solver->AddElement(gravity, NULL, _groundId);
-
 
   float restitution = 0.1f;
   float friction = 0.5f;
@@ -144,6 +167,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       
     }
   }
+  _solver->Reset();
 }
 
 

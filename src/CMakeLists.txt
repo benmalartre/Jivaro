@@ -150,6 +150,7 @@ add_executable(${TARGET}
   tests/velocity.cpp
   tests/pendulum.cpp
   tests/geodesic.cpp
+  tests/push.cpp
   #tests/stageGraph.cpp
   #tests/stageUI.cpp
   main.cpp

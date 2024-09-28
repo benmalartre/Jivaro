@@ -147,6 +147,13 @@ size_t Solver::GetBodyIndex(Geometry* geom)
   return Solver::INVALID_INDEX;
 }
 
+size_t Solver::GetPacketSize()
+{
+  size_t numParticles = _particles.GetNumParticles();
+  size_t numThreads = pxr::WorkGetConcurrencyLimit();
+  return numParticles / (numThreads > 1 ? numThreads - 1 : 1);
+}
+
 
 Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix, 
   float mass, float radius, float damping)
@@ -257,7 +264,7 @@ void Solver::UpdatePoints()
   memcpy(&colors[0], &_particles.color[0], numParticles * sizeof(pxr::GfVec3f));
   pxr::VtArray<float> widths(numParticles);
   for(size_t p = 0; p<numParticles; ++p)
-    widths[p] = 2.f * _particles.radius[p];
+    widths[p] = .2f * _particles.radius[p];
 
   size_t numCollisions = _collisions.size();
   for(size_t c = 0; c < numCollisions; ++c) {
@@ -335,11 +342,20 @@ void Solver::_PrepareContacts()
   _particles.ResetCounter(_contacts, 1);
   _timer->Stop();
 }
+
+void Solver::_UpdateContactsX(size_t begin, size_t end)
+{
+  for (auto& collision : _collisions)
+    collision->UpdateContacts(&_particles, begin, end);
+}
   
 void Solver::_UpdateContacts()
 {
-  for (auto& collision : _collisions)
-    collision->UpdateContacts(&_particles);
+  const size_t numParticles = _particles.GetNumParticles();
+  pxr::WorkParallelForN(
+      numParticles,
+      std::bind(&Solver::_UpdateContactsX, this,
+        std::placeholders::_1, std::placeholders::_2), GetPacketSize());
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
@@ -424,6 +440,7 @@ void Solver::Reset()
   // reset
   _particles.RemoveAllBodies();
 
+
   for (size_t b = 0; b < _bodies.size(); ++b) {
     const pxr::GfMatrix4d& matrix = _bodies[b]->GetGeometry()->GetMatrix();
     _particles.AddBody(_bodies[b], matrix);
@@ -483,7 +500,7 @@ void Solver::Step()
   _timer->Update();
   _timer->Log();
 
-  //UpdateGeometries();
+  UpdateGeometries();
 }
 
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
@@ -498,21 +515,25 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::UpdateGeometries()
 {
-  /*
-  std::map<Geometry*, _Geometry>::iterator it = _geometries.begin();
-  for (; it != _geometries.end(); ++it)
+  const auto* positions = &_particles.predicted[0];
+  _ElementMap::iterator it = _elements.begin();
+  size_t offset = 0;
+  for (; it != _elements.end(); ++it)
   {
-    Geometry* geom = it->first;
-    size_t numPoints = geom->GetNumPoints();
-    pxr::VtArray<pxr::GfVec3f> results(numPoints);
-    const auto& positions = _body.GetPositions();
-    for (size_t p = 0; p < numPoints; ++p) {
-      results[p] = it->second.invMatrix.Transform(positions[it->second.offset + p]);
+    if(it->first->GetType() == Element::BODY) {
+      Deformable* geom = (Deformable*)it->second.second;
+      size_t numPoints = geom->GetNumPoints();
+      pxr::VtArray<pxr::GfVec3f> results(numPoints);
+    
+      for (size_t p = 0; p < numPoints; ++p) {
+        results[p] = geom->GetInverseMatrix().Transform(positions[offset + p]);
+      }
+      offset += numPoints;
+      geom->SetPositions(&results[0], numPoints);
+      std::cout << "geometry should be updating " << it->second.first << std::endl;
+      _scene->MarkPrimDirty(it->second.first, pxr::HdChangeTracker::AllDirty);
     }
-    geom->SetPositions(&results[0], numPoints);
   }
-}
-*/
 }
 
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)

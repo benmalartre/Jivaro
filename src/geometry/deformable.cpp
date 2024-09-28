@@ -278,8 +278,8 @@ Deformable::RemoveAllPoints()
 
 Point Deformable::Get(uint32_t index)
 {
-  if(index < _positions.size())
-    return Point(index);   
+  if(index < _points.size())
+    return _points[index];   
   else
     return Point(); 
 }

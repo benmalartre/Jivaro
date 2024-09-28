@@ -89,7 +89,7 @@ protected:
   virtual void _ValidateNumPoints(size_t n);
 
   // todo have extensible list of attribute referenced by their name
-  // with some predefined ans we can append new ones
+  // with some predefined and other we can append on demand
   //std::map<pxr::TfToken, Attribute>  _attributes;
   
   // vertex data

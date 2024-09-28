@@ -859,14 +859,14 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
     _correction[elem] = -d * normal - damp;
 
     pxr::GfVec3f relativeVelocity = ((particles->predicted[index] + _correction[elem]) - 
-      particles->position[index]) - velocity * dt;
+      particles->position[index]) - velocity;
     pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
     _correction[elem] +=  friction;
 
   }
 }
 
-static float selfVMax = 12.f;
+static float selfVMax = 10.f;
 
 void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 {
@@ -891,8 +891,7 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       other = collision->GetContactComponent(index, c);
 
       normal = collision->GetContactNormal(index, c);
-      d = collision->GetContactDepth(index, c) + 
-        pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
+      d = collision->GetContactDepth(index, c)+ pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
 
       if(d >= 0.f) continue;
       w0 = particles->invMass[index];

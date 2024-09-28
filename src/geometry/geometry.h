@@ -71,7 +71,7 @@ public:
   Geometry();
   Geometry(int type, const pxr::GfMatrix4d& world);
   Geometry(const pxr::UsdPrim& other, const pxr::GfMatrix4d& world);
-  virtual ~Geometry() {};
+  virtual ~Geometry() {if(_base)delete _base;};
 
   int GetType() const { return _type; };
   virtual size_t GetNumPoints() const {return 1;};
@@ -86,7 +86,7 @@ public:
   bool IsOutput(){return _mode & Mode::OUTPUT;};
   void SetInputOnly() {_mode = Mode::INPUT;};
   void SetOutputOnly() {_mode = Mode::OUTPUT;};
-  void SetInputOutput() {_mode = Mode::INPUT|Mode::OUTPUT;};
+  virtual void SetInputOutput() {_mode = Mode::INPUT|Mode::OUTPUT;};
 
   void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
   const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
@@ -138,6 +138,8 @@ protected:
   pxr::GfVec3f                        _omega;     // rotational velocity
   pxr::GfBBox3d                       _bbox;
   pxr::GfVec3f                        _wirecolor;
+
+  Geometry*                           _base;
 };
 
 template<typename T>

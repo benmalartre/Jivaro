@@ -55,6 +55,7 @@ public:
   size_t GetNumConstraints() { return _constraints.size(); };
   size_t GetNumForces() { return _forces.size(); };
   size_t GetNumCollisions() { return _collisions.size(); };
+  size_t GetPacketSize();
 
   // bodies
   std::vector<Body*> GetBodies(){return _bodies;};
@@ -118,11 +119,14 @@ public:
 private:
   void _PrepareContacts();
   void _UpdateContacts();
+  
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);
 
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);
+  void _UpdateContactsX(size_t begin, size_t end);
+
 
   int                                 _subSteps;
   float                               _sleepThreshold;
