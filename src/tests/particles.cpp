@@ -28,6 +28,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 static Voxels* _Voxelize(Mesh* mesh, float radius)
 {
+  std::cout << "voxelize with radius " << radius << std::endl;
   Voxels *voxels = new Voxels();
   voxels->Init(mesh, radius*2.f);
   voxels->Trace(0);
@@ -86,7 +87,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 1.f;
-  float radius = 0.5f;
+  float radius = 0.25f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;

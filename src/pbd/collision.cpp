@@ -583,6 +583,12 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
   contact->Init(normal.GetNormalized(), GetVelocity(particles, index, other), d);
   contact->SetDistance(d);
 
+  if(d < 0.f) {
+    const pxr::GfVec3f offset = -d * normal;
+    particles->position[index] += offset;
+    particles->predicted[index] += offset;
+  }
+
 }
 
 void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
@@ -635,9 +641,11 @@ pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size
 // Velocity
 pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index, size_t other)
 {
-  return pxr::GfVec3f(0.f);
-  return (particles->predicted[index] - particles->position[index]) +
-    (particles->predicted[other] - particles->position[other]) * .5f;
+  const pxr::GfVec3f& normal = GetGradient(particles, index, other);
+  return (particles->predicted[index] - particles->position[index]) -
+    (particles->predicted[other] - particles->position[other]) - 
+    (particles->radius[index] * particles->invMass[index] + 
+     particles->radius[other] * particles->invMass[other]) * normal;
 }
 
 

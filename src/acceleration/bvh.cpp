@@ -374,6 +374,26 @@ bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
 {
   if(_accelerated) 
     return _Raycast(_root, ray, hit, maxDistance, minDistance);
+
+  else {
+    bool found = false;
+    for(size_t g = 0; g < GetNumGeometries(); ++g) {
+      const Geometry* geom = GetGeometry(g);
+      if(geom->GetType() == Geometry::MESH) {
+        const Mesh* mesh = (Mesh*)geom;
+        pxr::GfRay localRay(ray);
+        localRay.Transform(geom->GetInverseMatrix());
+        const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+        for(const auto& triangle: mesh->GetTriangles()) {
+          if(triangle.Raycast(positions, localRay, hit)) {
+            hit->SetGeometryIndex(g);
+            found = true;
+          }
+        }
+      }
+    }
+    return found;
+  }
 };
 
 size_t 

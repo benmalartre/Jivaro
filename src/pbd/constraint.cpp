@@ -891,7 +891,7 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       other = collision->GetContactComponent(index, c);
 
       normal = collision->GetContactNormal(index, c);
-      d = collision->GetContactDepth(index, c)+ pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
+      d = collision->GetContactDepth(index, c);//+ pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
 
       if(d >= 0.f) continue;
       w0 = particles->invMass[index];

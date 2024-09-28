@@ -287,7 +287,7 @@ void Solver::UpdateCurves()
   pxr::VtArray<int> counts;
 
   for(size_t c = 0; c < numConstraints; ++c) {
-    if(_constraints[c]->GetTypeId() != Constraint::BEND) continue;
+    //if(_constraints[c]->GetTypeId() != Constraint::BEND) continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
@@ -375,15 +375,18 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   short* state = &_particles.state[0];
 
   float invDt = 1.f / _stepTime;
+  const float vMax = (_particles.radius[0] * _subSteps) / _stepTime;
 
   for(size_t index = begin; index < end; ++index) {
     if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
-
-    if (velocity[index].GetLength() < _sleepThreshold) {
+    const float vL = velocity[index].GetLength();
+    if (vL < _sleepThreshold) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
+    } else if (vL > vMax) {
+      velocity[index] = velocity[index].GetNormalized() * vMax;
     }
 
     // update position
@@ -484,7 +487,7 @@ void Solver::Step()
   _timer->Update();
   _timer->Log();
 
-  UpdateGeometries();
+  //UpdateGeometries();
 }
 
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)

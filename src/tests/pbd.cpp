@@ -118,7 +118,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
     _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
-  _AddAnimationSamples(stage, collideId);
+  //_AddAnimationSamples(stage, collideId);
   _scene.AddGeometry(collideId, spheres[collideId]);
 
   for (size_t c = 0; c < _clothMeshesId.size(); ++c) {
