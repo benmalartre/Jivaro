@@ -30,24 +30,22 @@ Geometry::Geometry()
   , _mode(INPUT|OUTPUT)
   , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
-  , _base(nullptr)
 {
   SetMatrix(pxr::GfMatrix4d(1.0));
 }
 
 Geometry::Geometry(int type, const pxr::GfMatrix4d& world)
   : _type(type)
-  , _mode(INPUT|OUTPUT)
+  , _mode(OUTPUT)
   , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
-  , _base(nullptr)
 {
   SetMatrix(world);
 }
 
 Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
   : _type(INVALID)
-  , _mode(INPUT|OUTPUT)
+  , _mode(INPUT)
   , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim(prim)
 {
@@ -85,13 +83,13 @@ void Geometry::_ComputeVelocity()
   const pxr::GfQuatd previous = _prevMatrix.ExtractRotationQuat();
   const pxr::GfQuatd deltaR = (previous * rotation.GetInverse());
   
-  _omega = pxr::GfVec3f(deltaR.GetImaginary() * (deltaR.GetReal() / Geometry::FrameDuration));
+  _torque = pxr::GfVec3f(deltaR.GetImaginary() * (deltaR.GetReal() / Geometry::FrameDuration));
 
 }
 
 const pxr::GfVec3f Geometry::GetTorque() const
 {
-  return _omega;
+  return _torque;
 }
 
 const pxr::GfVec3f Geometry::GetVelocity() const

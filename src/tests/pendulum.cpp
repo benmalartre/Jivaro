@@ -29,7 +29,7 @@ Points* _CreatePendulum(size_t N)
   points->SetPositions(positions);
   points->SetWidths(widths);
   points->SetColors(colors);
-  points->SetInputOnly();
+  //points->SetInputOnly();
 
   return points;
 }

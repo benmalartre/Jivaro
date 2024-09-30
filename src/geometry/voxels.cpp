@@ -74,7 +74,6 @@ void Voxels::Init(Deformable* geometry, float radius)
 void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 {
   pxr::GfBBox3d bbox = _geometry->GetBoundingBox(true);
-  std::cout << bbox << std::endl;
   const pxr::GfRange3d range(bbox.GetRange());
   const pxr::GfVec3f size(range.GetSize());
   const pxr::GfVec3f minExtents(range.GetMin());
@@ -82,7 +81,6 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
   const float eps = 0.000001f * size[axis];
   uint32_t x = begin;
-  std::cout << eps << std::endl;
 
   for (uint32_t y = 0; y < _resolution[(axis + 2) % 3]; ++y)
   {

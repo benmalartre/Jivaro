@@ -29,7 +29,7 @@ Points* _CreateGridPoint(const pxr::GfVec3f& center, size_t N)
   points->SetPositions(positions);
   points->SetWidths(widths);
   points->SetColors(colors);
-  points->SetInputOnly();
+  //points->SetInputOnly();
 
   return points;
 }

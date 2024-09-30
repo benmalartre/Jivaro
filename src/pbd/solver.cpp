@@ -374,18 +374,17 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   pxr::GfVec3f* velocity = &_particles.velocity[0];
   short* state = &_particles.state[0];
 
-  float invDt = 1.f / _stepTime;
-  const float vMax = (_particles.radius[0] * _subSteps) / _stepTime;
-
+  float invDt = 1.f / _stepTime, vL;
+  const float vMax = 10.f;
   for(size_t index = begin; index < end; ++index) {
     if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
-    const float vL = velocity[index].GetLength();
+    vL = velocity[index].GetLength();
     if (vL < _sleepThreshold) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
-    } else if (vL > vMax) {
+    } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
     }
 
@@ -419,11 +418,23 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 
   UpdatePoints();
   UpdateCurves();
+  UpdateGeometries();
 
 }
 
 void Solver::Reset()
 {
+  size_t offset = 0;
+  for (size_t b = 0; b < _bodies.size(); ++b) {
+    size_t numPoints = _bodies[b]->GetNumPoints();
+    for(size_t p = 0; p < numPoints; ++p) {
+      _particles.predicted[offset+p] = _particles.rest[offset+p];
+      _particles.position[offset+p] = _particles.rest[offset+p];
+    }
+    offset += numPoints;
+  }
+  UpdateGeometries();
+
   // reset
   _particles.RemoveAllBodies();
 
@@ -486,8 +497,6 @@ void Solver::Step()
   
   _timer->Update();
   _timer->Log();
-
-  //UpdateGeometries();
 }
 
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
@@ -502,23 +511,28 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::UpdateGeometries()
 {
+
   const auto* positions = &_particles.predicted[0];
   _ElementMap::iterator it = _elements.begin();
   size_t offset = 0;
   for (; it != _elements.end(); ++it)
   {
     if(it->first->GetType() == Element::BODY) {
-      Deformable* geom = (Deformable*)it->second.second;
-      size_t numPoints = geom->GetNumPoints();
-      pxr::VtArray<pxr::GfVec3f> results(numPoints);
-    
-      for (size_t p = 0; p < numPoints; ++p) {
-        results[p] = geom->GetInverseMatrix().Transform(positions[offset + p]);
+      pxr::SdfPath id = it->second.first;
+      Geometry* geometry = it->second.second;
+      if(geometry->GetType() >= Geometry::POINT) {
+        Deformable* deformable = (Deformable*)geometry;
+        size_t numPoints = deformable->GetNumPoints();
+        pxr::VtArray<pxr::GfVec3f> results(numPoints);
+      
+        for (size_t p = 0; p < numPoints; ++p) {
+          results[p] = deformable->GetInverseMatrix().Transform(positions[offset + p]);
+        }
+        deformable->SetPositions(&results[0], numPoints);
+        _scene->MarkPrimDirty(id, pxr::HdChangeTracker::AllDirty);
+
+        offset += numPoints;
       }
-      offset += numPoints;
-      geom->SetPositions(&results[0], numPoints);
-      std::cout << "geometry should be updating " << it->second.first << std::endl;
-      _scene->MarkPrimDirty(it->second.first, pxr::HdChangeTracker::AllDirty);
     }
   }
 }

@@ -188,7 +188,7 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
 
     for(size_t m = 0; m < _meshes.size();++m) {
       _scene.AddGeometry(_meshesId[m], _meshes[m]);
-      _meshes[m]->SetInputOnly();
+      //_meshes[m]->SetInputOnly();
     }
 
     _bvhId = rootId.AppendChild(pxr::TfToken("bvh"));

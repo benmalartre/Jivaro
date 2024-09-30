@@ -40,8 +40,8 @@ Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t
   else
     result += normals[_compId];
 
-  if(m)return m->TransformDir(result);
-  else return result;
+  if(m)return m->TransformDir(result).GetNormalized();
+  else return result.GetNormalized();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

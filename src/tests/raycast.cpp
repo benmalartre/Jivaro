@@ -138,7 +138,7 @@ void TestRaycast::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       _subjects.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
       _subjectsId.push_back(prim.GetPath());
-      _subjects.back()->SetInputOnly();
+      //_subjects.back()->SetInputOnly();
     } 
 }
 

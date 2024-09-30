@@ -28,7 +28,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 static Voxels* _Voxelize(Mesh* mesh, float radius)
 {
-  std::cout << "voxelize with radius " << radius << std::endl;
   Voxels *voxels = new Voxels();
   voxels->Init(mesh, radius*2.f);
   voxels->Trace(0);
@@ -77,7 +76,7 @@ void TestParticles::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
     if (prim.IsA<pxr::UsdGeomMesh>()) {
       _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
       _meshesId.push_back(prim.GetPath());
-      _meshes.back()->SetInputOnly();
+      //_meshes.back()->SetInputOnly();
     } 
 }
 
@@ -163,7 +162,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
         emitterId = item.path;
         emitter = new Mesh(pxr::UsdGeomMesh(prim), 
           pxr::UsdGeomMesh(prim).ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
-        emitter->SetInputOnly();
+        //emitter->SetInputOnly();
         break;
       }
     }
@@ -171,7 +170,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   if(emitterId.IsEmpty()) {
     emitterId = _solverId.AppendChild(pxr::TfToken("emitter"));
     emitter = new Mesh(scale * rotate * translate);
-    emitter->SetInputOnly();
+    //emitter->SetInputOnly();
     emitter->Cube();
     _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
   }

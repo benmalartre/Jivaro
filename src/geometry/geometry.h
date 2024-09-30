@@ -71,7 +71,7 @@ public:
   Geometry();
   Geometry(int type, const pxr::GfMatrix4d& world);
   Geometry(const pxr::UsdPrim& other, const pxr::GfMatrix4d& world);
-  virtual ~Geometry() {if(_base)delete _base;};
+  virtual ~Geometry() {};
 
   int GetType() const { return _type; };
   virtual size_t GetNumPoints() const {return 1;};
@@ -82,11 +82,13 @@ public:
   DirtyState GetAttributeValue(const pxr::TfToken& name, 
     const pxr::UsdTimeCode& time, T* value);
 
+
   bool IsInput(){return _mode & Mode::INPUT;};
   bool IsOutput(){return _mode & Mode::OUTPUT;};
   void SetInputOnly() {_mode = Mode::INPUT;};
   void SetOutputOnly() {_mode = Mode::OUTPUT;};
   virtual void SetInputOutput() {_mode = Mode::INPUT|Mode::OUTPUT;};
+  
 
   void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
   const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
@@ -135,11 +137,9 @@ protected:
   pxr::GfMatrix4d                     _prevMatrix;
   pxr::GfMatrix4d                     _invMatrix;
   pxr::GfVec3f                        _velocity;  // positional velocity
-  pxr::GfVec3f                        _omega;     // rotational velocity
+  pxr::GfVec3f                        _torque;    // rotational velocity
   pxr::GfBBox3d                       _bbox;
   pxr::GfVec3f                        _wirecolor;
-
-  Geometry*                           _base;
 };
 
 template<typename T>

@@ -20,7 +20,7 @@ class Intersector : public pxr::GfRange3d
 { 
 public:
   static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
-  static const size_t MINIMUM_COMPONENTS = 8;
+  static const size_t MINIMUM_COMPONENTS = 512;
   struct _Geom {
     Geometry*   geom;
     size_t      start;

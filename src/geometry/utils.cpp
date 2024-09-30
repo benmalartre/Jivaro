@@ -174,7 +174,10 @@ ComputeVertexNormals( const pxr::VtArray<pxr::GfVec3f>& positions,
     const Triangle* T = &triangles[i];
     pxr::GfVec3f ab = positions[T->vertices[1]] - positions[T->vertices[0]];
     pxr::GfVec3f ac = positions[T->vertices[2]] - positions[T->vertices[0]];
-    triangleNormals[i] = (ab ^ ac).GetNormalized();
+    triangleNormals[i] = ab ^ ac;
+    if(!triangleNormals[i].GetLengthSq() < 1e-6)
+      triangleNormals[i].Normalize();
+    //std::cout << "fail get triangle normal at index " << T->GetIndex() << std::endl;
   }
 
   // then polygons normals

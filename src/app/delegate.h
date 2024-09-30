@@ -60,9 +60,6 @@ public:
   /// Returns the cullstyle for the given prim.
   virtual pxr::HdCullStyle GetCullStyle(pxr::SdfPath const &id) override;
 
-  /// Returns the shading style for the given prim.
-  virtual pxr::VtValue GetShadingStyle(pxr::SdfPath const &id) override;
-
   /// Returns the refinement level for the given prim in the range [0,8].
   ///
   /// The refinement level indicates how many iterations to apply when

@@ -35,7 +35,7 @@ struct Component {
 
   Component() : id(INVALID_INDEX) {};
   Component(int index) : id(index) {};
-  int GetIndex(){return id;};
+  int GetIndex()const {return id;};
 
   virtual bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const = 0;
   virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const = 0;

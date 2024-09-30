@@ -31,14 +31,16 @@ Mesh::Mesh(const pxr::GfMatrix4d& xfo)
 Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world, size_t connectivity)
   : Deformable(mesh.GetPrim(), world)
   , _flags(0)
+  , _halfEdges()
 {
   pxr::UsdAttribute pointsAttr = mesh.GetPointsAttr();
   pxr::UsdAttribute faceVertexCountsAttr = mesh.GetFaceVertexCountsAttr();
   pxr::UsdAttribute faceVertexIndicesAttr = mesh.GetFaceVertexIndicesAttr();
 
-  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
-  faceVertexCountsAttr.Get(&_faceVertexCounts, pxr::UsdTimeCode::Default());
-  faceVertexIndicesAttr.Get(&_faceVertexIndices, pxr::UsdTimeCode::Default());
+  pointsAttr.Get(&_positions, 1);
+  std::cout << "positions : " << _positions << std::endl;
+  faceVertexCountsAttr.Get(&_faceVertexCounts, 1);
+  faceVertexIndicesAttr.Get(&_faceVertexIndices, 1);
   Init(connectivity);
 }
 
@@ -594,13 +596,6 @@ Mesh::ComputeAreas(MeshAreas& result)
   result.vertexInfos[3] = result.vertexInfos[0] / static_cast<float>(numPoints);
 }
 
-void
-Mesh::SetInputOutput() 
-{
-  Geometry::SetInputOutput();
-  _base = new Mesh(*this);
-}
-
 
 void 
 Mesh::Set(
@@ -658,13 +653,14 @@ void Mesh::Init(size_t connectivity)
   size_t numPoints = _positions.size();
   // compute triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
-
+  std::cout << "triangulated" << std::endl;
   // compute normals
   ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
-
+  std::cout << "normals" << std::endl;
   // compute bouding box
   ComputeBoundingBox();
+  std::cout << "bbox" << std::endl;
 
   // compute connectivity if required
   //    - adjacents = vertex connected vertices
@@ -700,11 +696,11 @@ Mesh::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomMesh>())
   {
-    if(!IsInput())return Geometry::DirtyState::CLEAN;
-    _previous = _positions;
     pxr::UsdGeomMesh usdMesh(_prim);
-    const size_t nbPositions = _positions.size();
-    usdMesh.GetPointsAttr().Get(&_positions, time);
+
+    _previous = _positions;
+      usdMesh.GetPointsAttr().Get(&_positions, time);
+    
   }
   return Geometry::DirtyState::DEFORM;
 }

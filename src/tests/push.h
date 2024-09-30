@@ -22,7 +22,6 @@ protected:
 private:
   
   std::vector<pxr::SdfPath>    _meshesId;
-  std::vector<Mesh*>           _baseMeshes;
   std::vector<Mesh*>           _meshes;
   
 };

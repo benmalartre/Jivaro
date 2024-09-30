@@ -17,8 +17,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = .05f;
-const size_t Collision::PACKET_SIZE = 64;
+const float Collision::TOLERANCE_MARGIN = .1f;
+const size_t Collision::PACKET_SIZE = 32;
 
 
 void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
@@ -76,7 +76,7 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
     for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
       const size_t index = elements[elemIdx];
       _StoreContactLocation(particles, index, _contacts.Use(index), ft);
-      _ResolveInitialPenetration(particles, index);
+      //_ResolveInitialPenetration(particles, index);
     }
   
   else
@@ -582,13 +582,6 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
 
   contact->Init(normal.GetNormalized(), GetVelocity(particles, index, other), d);
   contact->SetDistance(d);
-
-  if(d < 0.f) {
-    const pxr::GfVec3f offset = -d * normal;
-    particles->position[index] += offset;
-    particles->predicted[index] += offset;
-  }
-
 }
 
 void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
@@ -641,17 +634,14 @@ pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size
 // Velocity
 pxr::GfVec3f SelfCollision::GetVelocity(Particles* particles, size_t index, size_t other)
 {
-  const pxr::GfVec3f& normal = GetGradient(particles, index, other);
-  return (particles->predicted[index] - particles->position[index]) -
-    (particles->predicted[other] - particles->position[other]) - 
-    (particles->radius[index] * particles->invMass[index] + 
-     particles->radius[other] * particles->invMass[other]) * normal;
+  return particles->velocity[other];
 }
 
 
 void 
 SelfCollision::_ComputeNeighbors(const std::vector<Body*> &bodies)
 {
+
   size_t numParticles = _particles->GetNumParticles();
   _neighborsCounts.resize(numParticles, 0);
   _neighborsOffsets.resize(numParticles, 0);
@@ -665,12 +655,14 @@ SelfCollision::_ComputeNeighbors(const std::vector<Body*> &bodies)
       case Geometry::MESH:
       {
         Mesh* mesh = (Mesh*)geometry;
+        if(!(mesh->GetFlags() & Mesh::NEIGHBORS))
+          mesh->ComputeNeighbors();
         size_t numPoints = mesh->GetNumPoints();
         for (size_t p = 0; p < numPoints; ++p) {
           size_t numNeighbors = mesh->GetNumNeighbors(p);
           for (size_t n = 0; n < numNeighbors; ++n)
             _neighbors.push_back(offset + mesh->GetNeighbor(p, n));
-       
+      
           _neighborsCounts[offset + p] = numNeighbors;
           _neighborsOffsets[offset + p] = neighborsOffset;
           neighborsOffset += numNeighbors;
