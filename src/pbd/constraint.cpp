@@ -828,7 +828,7 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correctio
     pxr::GfVec3f correctionNorm = correction / correctionLength;
 
     pxr::GfVec3f tangentialVelocity = relativeVelocity - correctionNorm *
-      pxr::GfDot(relativeVelocity, correction);
+      pxr::GfDot(relativeVelocity, correctionNorm);
     float tangentialLength = tangentialVelocity.GetLength();
     float maxTangential = correctionLength * _collision->GetFriction();
 
@@ -852,8 +852,8 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
     const pxr::GfVec3f position = _collision->GetContactPosition(index);
     const pxr::GfVec3f normal = _collision->GetContactNormal(index);
     const pxr::GfVec3f velocity = _collision->GetContactVelocity(index);
-    const float d = _collision->GetContactDepth(index);// + 
-      //pxr::GfMax(_collision->GetContactInitDepth(index) - vMax * dt, 0.f);
+    const float d = _collision->GetContactDepth(index) + 
+      pxr::GfMax(_collision->GetContactInitDepth(index) - vMax * dt, 0.f);
     if(d > 0.f)continue;
 
     damp = pxr::GfDot((particles->velocity[index] - velocity),  normal) * normal * _damp * dt * dt;
@@ -865,7 +865,9 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
     pxr::GfVec3f relativeVelocity = (particles->velocity[index] - velocity) * dt;
     
     pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
+    
     _correction[elem] +=  friction;
+    _correction[elem] -= particles->velocity[index] * .1f * dt;
 
   }
 }
@@ -904,12 +906,14 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       w = w0 + w1;
       if(w < 1e-6) continue;
     
-      damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
+      damp = pxr::GfDot(particles->velocity[index] * dt,  normal) * normal * _damp;
       correction =  w0 / w *  -d * normal - damp;
+      correction += _collision->GetFriction() * (particles->velocity[index] * dt * dt * -d);
+      correction -= particles->velocity[index] * 0.1f * dt;
 
       accum += correction;
 
-      velocity += _collision->GetContactVelocity(index, c) * dt;
+      velocity += (particles->velocity[index] - _collision->GetContactVelocity(index, c));
 
       numContactUsed++;
     }
@@ -918,50 +922,12 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       float rN = 1.f / (float)numContactUsed;
       _correction[elem] = accum * rN;
             
-		  pxr::GfVec3f friction = _ComputeFriction(_correction[elem], (particles->velocity[index] * dt - velocity * rN));
+		  pxr::GfVec3f friction = _ComputeFriction(_correction[elem], velocity * rN);
       _correction[elem]  += w0 / w * friction;
     }
     
   }
 }
-
-/*
-const size_t numElements = _elements.size() / ELEM_SIZE;
-
-  const float alpha =  _compliance / (dt * dt);
-  size_t a, b;
-  float w0, w1, W, C, length, lagrange;
-  pxr::GfVec3f gradient, correction, damp;
-
-  const pxr::GfVec3f* predicted = &particles->predicted[0];
-  const pxr::GfVec3f* velocity = &particles->velocity[0];
-  const float* invMass = &particles->invMass[0];
-  
-  for(size_t elem = 0; elem  < numElements; ++elem) {
-    a = _elements[elem * ELEM_SIZE + 0];
-    b = _elements[elem * ELEM_SIZE + 1];
-
-    w0 = invMass[a];
-    w1 = invMass[b];
-
-    W = w0 + w1;
-    if(W < 1e-6f) continue;
-
-    gradient = predicted[a] - predicted[b];
-    length = gradient.GetLength();
-    if(length<1e-6f)continue;
-
-    C = length - _rest[elem];
-
-    damp = pxr::GfDot((velocity[b] - velocity[a]),  gradient) * gradient * _damp * dt * dt;
-
-    correction = -C / (length * length * W + alpha) * gradient - damp;
-
-    _correction[elem * ELEM_SIZE + 0] += w0 * correction;
-    _correction[elem * ELEM_SIZE + 1] -= w1 * correction;
-    
-  }
-*/
 
 void CollisionConstraint::Solve(Particles* particles, float dt)
 {

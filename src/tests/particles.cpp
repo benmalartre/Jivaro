@@ -232,6 +232,17 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << "added self collision" << std::endl;
   }
 
+  bool createMeshCollision = true;
+  if(createMeshCollision) {
+    for (size_t c = 0; c < _collideMeshesId.size(); ++c) {
+      _scene.AddGeometry(_collideMeshesId[c], _collideMeshes[c]);
+      _collideMeshes[c]->SetInputOnly();
+      Collision* meshCollide = new MeshCollision(_collideMeshes[c], _collideMeshesId[c], 1.f, 1.f);
+      _solver->AddElement(meshCollide, _collideMeshes[c], _collideMeshesId[c]);
+      
+    }
+  }
+
   _lastTime = FLT_MAX;
 
   std::cout << "update first frame" << std::endl;

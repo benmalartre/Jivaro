@@ -39,6 +39,9 @@ private:
   std::vector<Geometry*>    _meshes;
   std::vector<pxr::SdfPath> _meshesId;
 
+  std::vector<Mesh*>        _collideMeshes;
+  std::vector<pxr::SdfPath> _collideMeshesId;
+
 };
 
 

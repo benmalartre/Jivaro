@@ -1354,26 +1354,29 @@ bool
 Mesh::Raycast(const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  const pxr::GfVec3f* positions = &_positions[0];
   pxr::GfRay localRay(ray);
+
   localRay.Transform(_invMatrix);
+  
+  bool found(false);
+  for(auto& pair: _trianglePairs) {
+    Location localHit(*hit);
+    if (pair.Raycast(&_positions[0], localRay, &localHit)) {
 
-  Location localHit;
-  localHit.SetGeometryIndex(0);
-  for(const Triangle& triangle: _triangles)
-    triangle.Raycast(positions, localRay, &localHit);
-
-  bool success = false;
-  if(localHit.IsValid()) {
-    const Triangle* hitTri = &_triangles[localHit.GetComponentIndex()];
-    const pxr::GfVec3f intersection = localHit.ComputePosition(positions, &hitTri->vertices[0], 3, &_matrix);
-    const float distance = (ray.GetStartPoint() - intersection).GetLength();
-    hit->Set(localHit);
-    hit->SetDistance(distance);
-    if (minDistance)*minDistance = distance;
-    success = true;
-  } 
-  return success;
+      const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetDistance()));
+      const double distance = (ray.GetStartPoint() - _matrix.Transform(localPoint)).GetLength();
+      
+      if ((distance < hit->GetDistance())) {
+        hit->Set(localHit);
+        hit->SetDistance(distance);
+        if(minDistance)
+          *minDistance = distance;
+        found = true;
+      }
+    }
+  }
+  
+  return found;
 };
 
 bool 

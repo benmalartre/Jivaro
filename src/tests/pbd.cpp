@@ -120,7 +120,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
   spheres[collideId] =
     _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
-  //_AddAnimationSamples(stage, collideId);
+  _AddAnimationSamples(stage, collideId);
   _scene.AddGeometry(collideId, spheres[collideId]);
 
   for (size_t c = 0; c < _clothMeshesId.size(); ++c) {
@@ -167,7 +167,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 1.f, 1.f);
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.f, 1.f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
   }
 

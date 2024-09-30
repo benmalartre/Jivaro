@@ -305,13 +305,11 @@ BVH::Init(const std::vector<Geometry*>& geometries)
     std::cout << geometries[g]->GetPrim().GetPath() << std::endl;
 
     _numComponents += ((Mesh*)GetGeometry(g))->GetTrianglePairs().size();
-    std::cout << "num components : " << _numComponents << std::endl;
   }
 
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
-  std::cout << "accelerated ? " << _accelerated << std::endl;
   if(!_accelerated)return;
 
   _mortons.clear();
@@ -381,14 +379,9 @@ bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
       const Geometry* geom = GetGeometry(g);
       if(geom->GetType() == Geometry::MESH) {
         const Mesh* mesh = (Mesh*)geom;
-        pxr::GfRay localRay(ray);
-        localRay.Transform(geom->GetInverseMatrix());
-        const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-        for(const auto& triangle: mesh->GetTriangles()) {
-          if(triangle.Raycast(positions, localRay, hit)) {
-            hit->SetGeometryIndex(g);
-            found = true;
-          }
+        if(mesh->Raycast(ray, hit, maxDistance, minDistance)) {
+          hit->SetGeometryIndex(g);
+          found = true;
         }
       }
     }

@@ -257,7 +257,7 @@ void Solver::UpdatePoints()
   memcpy(&colors[0], &_particles.color[0], numParticles * sizeof(pxr::GfVec3f));
   pxr::VtArray<float> widths(numParticles);
   for(size_t p = 0; p<numParticles; ++p)
-    widths[p] = .2f * _particles.radius[p];
+    widths[p] = 2.f * _particles.radius[p];
 
   size_t numCollisions = _collisions.size();
   for(size_t c = 0; c < numCollisions; ++c) {
@@ -375,7 +375,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   short* state = &_particles.state[0];
 
   float invDt = 1.f / _stepTime, vL;
-  const float vMax = 10.f;
+  const float vMax = 5.f;
 
   const double velDecay = std::exp(std::log(0.95f) * _stepTime);
 
@@ -515,7 +515,7 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 void Solver::UpdateGeometries()
 {
 
-  const auto* positions = &_particles.predicted[0];
+  const auto* positions = &_particles.position[0];
   _ElementMap::iterator it = _elements.begin();
   size_t offset = 0;
   for (; it != _elements.end(); ++it)
