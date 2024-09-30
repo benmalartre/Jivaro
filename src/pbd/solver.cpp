@@ -376,10 +376,14 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 
   float invDt = 1.f / _stepTime, vL;
   const float vMax = 10.f;
+
+  const double velDecay = std::exp(std::log(0.95f) * _stepTime);
+
   for(size_t index = begin; index < end; ++index) {
     if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
+    velocity[index] *= velDecay;
     vL = velocity[index].GetLength();
     if (vL < _sleepThreshold) {
       state[index] = Particles::IDLE;
@@ -387,6 +391,8 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
     }
+
+
 
     // update position
     position[index] = predicted[index];
@@ -422,18 +428,15 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 
 }
 
+void 
+Solver::UpdateVelocities()
+{
+  for(size_t p =0; p < _particles.GetNumParticles(); ++p)
+    _particles.velocity[p] *= 0.95f;
+}
+
 void Solver::Reset()
 {
-  size_t offset = 0;
-  for (size_t b = 0; b < _bodies.size(); ++b) {
-    size_t numPoints = _bodies[b]->GetNumPoints();
-    for(size_t p = 0; p < numPoints; ++p) {
-      _particles.predicted[offset+p] = _particles.rest[offset+p];
-      _particles.position[offset+p] = _particles.rest[offset+p];
-    }
-    offset += numPoints;
-  }
-  UpdateGeometries();
 
   // reset
   _particles.RemoveAllBodies();

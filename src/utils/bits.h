@@ -25,3 +25,5 @@ size_t GetNumActiveBits(std::vector<T>& data)
   }
   return numActiveBits;
 }
+
+#endif //JVR_UTILS_BITS_H

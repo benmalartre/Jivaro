@@ -56,7 +56,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   size_t size = base + numPoints;
   size_t index = num > 0 ? body[num - 1] + 1 : 0;
   float m = item->GetMass();
-  float w = pxr::GfIsClose(m, 0.f, 0.000001f) ? 0.f : 1.f / m;
+  float w = m < 1e-6f ? 0.f : 1.f / m;
 
   const pxr::GfVec3f* points = ((Deformable*)geom)->GetPositionsCPtr();
   pxr::GfVec3f pos;

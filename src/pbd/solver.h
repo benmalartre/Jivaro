@@ -101,6 +101,7 @@ public:
   
   // solver 
   void Update(pxr::UsdStageRefPtr& stage, float time);
+  void UpdateVelocities();
   void UpdateParameters(pxr::UsdStageRefPtr& stage, float time);
   void UpdateCollisions(pxr::UsdStageRefPtr& stage, float time);
   void UpdateGeometries();

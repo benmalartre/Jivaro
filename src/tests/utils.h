@@ -30,7 +30,7 @@ Mesh* _CreateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   size_t subd=8, const pxr::GfMatrix4d& m=pxr::GfMatrix4d(1.0));
 
 Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-  float spacing=0.025f, const pxr::GfMatrix4d& m=pxr::GfMatrix4d(1.0), float mass=1.f, float damp=.1f);
+  float spacing=0.025f, const pxr::GfMatrix4d& m=pxr::GfMatrix4d(1.0), float mass=0.1f, float damp=.1f);
 
 Plane* _CreateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
   float friction=0.5f, float restitution=0.5f);

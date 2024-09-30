@@ -314,7 +314,7 @@ void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
-  const pxr::GfVec3f predicted(particles->position[index] + particles->velocity[index] * ft);
+  const pxr::GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
 
   pxr::GfVec3f normal = predicted - _center;
   float nL = normal.GetLength();
@@ -573,8 +573,8 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 void SelfCollision::_StoreContactLocation(Particles* particles, int index, int other, 
   Contact* contact, float ft)
 {
-  const pxr::GfVec3f ip(particles->position[index] + particles->velocity[index] * ft);
-  const pxr::GfVec3f op(particles->position[other] + particles->velocity[other] * ft);
+  const pxr::GfVec3f ip(particles->predicted[index] + particles->velocity[index] * ft);
+  const pxr::GfVec3f op(particles->predicted[other] + particles->velocity[other] * ft);
   pxr::GfVec3f normal = ip - op;
   float nL = normal.GetLength();
   

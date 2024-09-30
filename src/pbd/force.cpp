@@ -74,7 +74,7 @@ void DampForce::Apply(size_t begin, size_t end, Particles* particles, float dt) 
   if(HaveWeights())
     for(size_t index = begin; index < end; ++index) {
       if (particles->state[index] != Particles::ACTIVE)continue;
-      velocity[index] -= _damp * velocity[index]  * _weights[index] *invMass[index] * dt;
+      velocity[index] -= _damp * velocity[index]  * _weights[index] * invMass[index] * dt;
     }
   else 
     for(size_t index = begin; index < end; ++index) {

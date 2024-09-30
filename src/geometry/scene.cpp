@@ -193,7 +193,6 @@ void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage,
   const pxr::GfMatrix4d& parent = _GetParentXform(prim, time);
   geometry->SetPrim(prim);
   geometry->Inject(parent, time);
-  
 }
 
 void Scene::RemoveGeometry(const pxr::SdfPath& path)
