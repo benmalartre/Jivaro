@@ -4,7 +4,6 @@ set(DIRS
     sdf
     ndr
     sdr
-    exec
     pcp
     usd
     usdGeom
@@ -17,12 +16,9 @@ set(DIRS
     usdHydra
     usdRi
     usdSkel
-    usdNpr
     usdUI
     usdUtils
     usdPhysics
-	usdAnimX
-    usdExec
     plugin
 )
 
