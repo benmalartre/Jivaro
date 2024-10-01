@@ -33,7 +33,7 @@ static Voxels* _Voxelize(Mesh* mesh, float radius)
   voxels->Trace(0);
   voxels->Trace(1);
   voxels->Trace(2);
-  voxels->Build(0.05f);
+  voxels->Build(1.f);
 
   return voxels;
 }

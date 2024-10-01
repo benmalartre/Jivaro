@@ -17,7 +17,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = .1f;
+const float Collision::TOLERANCE_MARGIN = .05f;
 const size_t Collision::PACKET_SIZE = 32;
 
 
@@ -559,7 +559,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
     pxr::GfVec3f ip(particles->position[index] + particles->velocity[index] * ft);
     pxr::GfVec3f cp(particles->position[closest] + particles->velocity[closest] * ft);
-    if((ip - cp).GetLength() < (particles->radius[index] + particles->radius[closest] + Collision::TOLERANCE_MARGIN)) {
+    if((ip - cp).GetLength() < (particles->radius[index] + particles->radius[closest]) + Collision::TOLERANCE_MARGIN) {
       Contact* contact = _contacts.Use(index);
       _StoreContactLocation(particles, index, closest, contact, ft);
       contact->SetComponentIndex(closest);

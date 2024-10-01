@@ -76,9 +76,9 @@ Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
-  usdMesh.CreatePointsAttr().Set(mesh->GetPositions());
-  usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
-  usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
+  usdMesh.CreatePointsAttr().Set(mesh->GetPositions(), pxr::UsdTimeCode::Default());
+  usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts(), pxr::UsdTimeCode::Default());
+  usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects(), pxr::UsdTimeCode::Default());
 
   pxr::UsdPrim usdPrim = usdMesh.GetPrim();
   mesh->SetPrim(usdPrim);
@@ -100,7 +100,6 @@ Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdPrim.CreateAttribute(bendStiffness, pxr::SdfValueTypeNames->Float).Set(20000.f);
   pxr::TfToken bendDamp(PBDTokens->bend.GetString() + ":" + PBDTokens->damp.GetString());
   usdPrim.CreateAttribute(bendDamp, pxr::SdfValueTypeNames->Float).Set(0.1f);
-
 
   usdMesh.MakeMatrixXform().Set(m);
 

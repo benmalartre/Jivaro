@@ -867,7 +867,7 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
     pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
     
     _correction[elem] +=  friction;
-    _correction[elem] -= particles->velocity[index] * .1f * dt;
+    //_correction[elem] -= particles->velocity[index] * .1f * dt;
 
   }
 }
@@ -908,8 +908,8 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
     
       damp = pxr::GfDot(particles->velocity[index] * dt,  normal) * normal * _damp;
       correction =  w0 / w *  -d * normal - damp;
-      correction += _collision->GetFriction() * (particles->velocity[index] * dt * dt * -d);
-      correction -= particles->velocity[index] * 0.1f * dt;
+      //correction += _collision->GetFriction() * (particles->velocity[index] * dt * dt * -d);
+      //correction -= particles->velocity[index] * 0.1f * dt;
 
       accum += correction;
 

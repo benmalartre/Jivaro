@@ -431,8 +431,7 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 void 
 Solver::UpdateVelocities()
 {
-  for(size_t p =0; p < _particles.GetNumParticles(); ++p)
-    _particles.velocity[p] *= 0.95f;
+
 }
 
 void Solver::Reset()

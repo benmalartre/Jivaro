@@ -118,6 +118,12 @@ Delegate::GetCullStyle(pxr::SdfPath const &id)
   return pxr::HdCullStyleNothing;
 }
 
+/*virtual*/
+pxr::VtValue
+Delegate::GetShadingStyle(pxr::SdfPath const &id)
+{
+    return pxr::VtValue();
+}
 
 /*virtual*/
 pxr::HdDisplayStyle

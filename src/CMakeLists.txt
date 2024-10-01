@@ -1,5 +1,7 @@
 set(TARGET jivaro)
 
+set(USDIMAGINGGL_ENGINE_ENABLE_SCENE_INDEX true)
+
 add_definitions(
   -DTASKING_TBB
   -DNOMINMAX
@@ -111,8 +113,6 @@ add_executable(${TARGET}
   pbd/force.cpp
   pbd/constraint.cpp
   pbd/solver.cpp
-
-  anim/animx.cpp
 
   command/command.cpp
   command/inverse.cpp
