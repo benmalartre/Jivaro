@@ -27,6 +27,7 @@ void GravityForce::Update(float time)
 
 void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float dt) const
 {
+  const float* mass = &particles->mass[0];
   const float* invMass = &particles->invMass[0];
   pxr::GfVec3f* velocity = &particles->velocity[0];
 

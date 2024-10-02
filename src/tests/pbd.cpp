@@ -95,7 +95,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   // create cloth meshes
   float size = .01f;
 
-  for(size_t x = 0; x < 5; ++x) {
+  for(size_t x = 0; x < 3; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _clothMeshesId.push_back(clothPath);
@@ -158,6 +158,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _scene.AddGeometry(_collideMeshesId[c], _collideMeshes[c]);
       _collideMeshes[c]->SetInputOnly();
       Collision* meshCollide = new MeshCollision(_collideMeshes[c], _collideMeshesId[c], 1.f, 1.f);
+      meshCollide->Init(_solver->GetNumParticles());
       _solver->AddElement(meshCollide, _collideMeshes[c], _collideMeshesId[c]);
       
     }

@@ -36,7 +36,7 @@ Geometry::Geometry()
 
 Geometry::Geometry(int type, const pxr::GfMatrix4d& world)
   : _type(type)
-  , _mode(OUTPUT)
+  , _mode(INPUT|OUTPUT)
   , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
 {

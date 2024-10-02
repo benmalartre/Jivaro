@@ -142,6 +142,7 @@ Delegate::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue
 Delegate::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
+  std::cout << "delegate get " << id << " " << key << std::endl;
   return _scene->Get(id, key);
 }
 

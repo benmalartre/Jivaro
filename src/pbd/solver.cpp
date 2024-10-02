@@ -431,7 +431,6 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 void 
 Solver::UpdateVelocities()
 {
-
 }
 
 void Solver::Reset()
@@ -495,6 +494,8 @@ void Solver::Step()
         std::placeholders::_1, std::placeholders::_2), packetSize);
     _timer->Stop();
 
+    UpdateVelocities();
+
   }
   
   _timer->Update();
@@ -506,7 +507,7 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-    _collisions[i]->Update(prim, time);
+    _collisions[i]->Update(prim, time + _frameTime);
   }
 }
 

@@ -153,7 +153,7 @@ void AttachConstraint::Solve(Particles* particles, float dt)
     gradient = predicted[elem] - m.Transform(positions[elem - offset]);
     length = gradient.GetLength();
 
-    damp = pxr::GfDot(velocity[elem] * dt * dt,  gradient) * gradient * _damp;
+    damp = pxr::GfDot(velocity[elem],  gradient) * gradient * _damp * dt * dt;
 
     _correction[index++] -= length / (length * length + alpha) * gradient - damp;
   }
@@ -430,7 +430,7 @@ void BendConstraint::Solve(Particles* particles, float dt)
 
     C = hL - _rest[elem];
 
-    damp = pxr::GfDot(velocity[a] * dt * dt,  h) * h * _damp;
+    damp = pxr::GfDot(velocity[a],  h) * h * _damp * dt * dt;
     correction = -C / (hL * hL * W + alpha) * h - damp;
 
     _correction[elem * ELEM_SIZE + 0] += w0 * correction;
@@ -867,8 +867,6 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
     pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
     
     _correction[elem] +=  friction;
-    //_correction[elem] -= particles->velocity[index] * .1f * dt;
-
   }
 }
 
@@ -906,10 +904,10 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
       w = w0 + w1;
       if(w < 1e-6) continue;
     
-      damp = pxr::GfDot(particles->velocity[index] * dt,  normal) * normal * _damp;
+      damp = pxr::GfDot((particles->velocity[index] -  
+        _collision->GetContactVelocity(index, c)),  normal) * normal * _damp * dt * dt; 
       correction =  w0 / w *  -d * normal - damp;
       //correction += _collision->GetFriction() * (particles->velocity[index] * dt * dt * -d);
-      //correction -= particles->velocity[index] * 0.1f * dt;
 
       accum += correction;
 

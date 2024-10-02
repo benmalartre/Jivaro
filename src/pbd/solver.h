@@ -101,10 +101,10 @@ public:
   
   // solver 
   void Update(pxr::UsdStageRefPtr& stage, float time);
-  void UpdateVelocities();
   void UpdateParameters(pxr::UsdStageRefPtr& stage, float time);
   void UpdateCollisions(pxr::UsdStageRefPtr& stage, float time);
   void UpdateGeometries();
+  void UpdateVelocities();
   void Reset();
   void Step();
 
@@ -155,7 +155,7 @@ private:
   // timing
   Timer*                              _timer;
 
-  friend class Particles;
+  friend struct Particles;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

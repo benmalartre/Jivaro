@@ -20,11 +20,10 @@ float LagrangeMultiplierCustom(size_t N, pxr::GfVec3f* grad, float* w)
 {
   float result = 0.f;
   for(size_t n = 0; n < N; ++n) {
-    const float m = w[n];
     result += 
-      grad[n][0] * m * grad[n][0] +
-      grad[n][1] * m * grad[n][1] +
-      grad[n][2] * m * grad[n][2];
+      grad[n][0] * w[n] * grad[n][0] +
+      grad[n][1] * w[n] * grad[n][1] +
+      grad[n][2] * w[n]      * grad[n][2];
   }
   return result;
 }
@@ -66,12 +65,12 @@ int main (int argc, char *argv[])
 
     sT = JVR::CurrentTime();
     eR = LagrangeMultiplierEigen(n, gradient, &w[0]);
-    eT = (double)((JVR::CurrentTime() - sT) * 1e-9);
+    eT = (double)((JVR::CurrentTime() - sT) * 1e-6);
     std::cout << "eigen  (" << n << ") : " << eR << " took " << eT << std::endl;
    
     sT = JVR::CurrentTime();
     cR = LagrangeMultiplierCustom(n, &grad[0], &w[0]);
-    cT = (double)((JVR::CurrentTime() - sT) * 1e-9);
+    cT = (double)((JVR::CurrentTime() - sT) * 1e-6);
     std::cout << "custom (" << n << ") : " << cR << " took " << cT << std::endl;
 
   }

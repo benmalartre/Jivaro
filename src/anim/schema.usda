@@ -1,0 +1,337 @@
+#usda 1.0
+(
+	"This file describes the Graph schemata for code generation."
+	subLayers = [
+		@usd/schema.usda@
+	]
+)
+
+over "GLOBAL" (
+	customData = {
+		string libraryName      = "Graph"
+		string libraryPath      = "."
+		dictionary libraryTokens = {
+			dictionary full = {
+				string doc = """Possible value for connectability metadata on a InputPort.
+				When connectability of an input/output is set to full, it implies that it can be connected
+				to any other port.
+				"""
+			}
+			dictionary interfaceOnly = {
+				string doc= """Possible value for 'connectability' metadata on 
+				a InputPort. It implies that the input can only connect to 
+				a Graph Input (which represents an interface override, not 
+				a computation-time dataflow connection), or another Input whose 
+				connectability is also 'interfaceOnly'.
+				"""
+			}
+			dictionary connectedSourceFor = {
+				string value = "connectedSourceFor:"
+				string doc = """The prefix on Asset relationships
+				associated with a Parameter.
+
+				This prefixed relationship has a suffix matching the associated
+				attribute name, and denotes a logical connection between
+				AssetNodes.
+				"""
+			}
+			dictionary outputs = {
+				string value = "outputs:"
+				string doc = """The prefix on output ports.
+				"""
+			}
+			dictionary inputs = {
+				string value = "inputs:"
+				string doc = """The prefix on input ports.
+				"""
+			}
+		}
+	}
+)
+{
+}
+
+class Graph "Graph" (
+  inherits = </Typed>
+  doc = """A node-graph is a container for asset nodes, as well as other 
+  node-graphs. It has a public input interface and provides a list of public 
+  outputs.
+
+  <b>Node Graph Interfaces</b>
+  
+  One of the most important functions of a node-graph is to host the "interface"
+  with which clients of already-built nodes networks will interact.  Please
+  see \\ref GraphGraph_Interfaces "Interface Inputs" for a detailed
+  explanation of what the interface provides, and how to construct and
+  use it, to effectively share/instance nodes networks.
+
+  <b>Node Graph Ports</b>
+
+  These are typically connected to an input on a other node inside the node-graph.
+  These are also used to author and animate input parameters.
+  """
+  customData = {
+	string extraIncludes = '''
+#include <utility>
+#include <pxr/usd/usd/editTarget.h>
+#include <pxr/usd/usd/relationship.h>
+#include "input.h"
+#include "output.h"
+#include "node.h"
+'''
+}) 
+{
+}
+
+class Node "Node" (
+    inherits = </Typed>
+    doc = """Base class for all Jivaro Nodes.
+    """ 
+    customData = {
+      string extraIncludes = '''
+#include "input.h"
+#include "output.h"
+#include "pxr/usd/ndr/declare.h"'''
+    }
+) 
+{
+}
+
+class Stage "Stage" (
+    doc = """Class for the terminal stage node"""
+    inherits = </Graph>
+    customData = {
+        string className = "Stage"
+    }
+)  
+{
+    uniform token lifetimeManagement (
+        allowedTokens = ["on-disk", "in-memory"]
+        doc = """Encodes the lifetime management of the stage, on-disk or
+        in-memory"""
+    )
+
+    uniform string fileName (
+        doc = """ar-solvable file path on disk"""
+    )
+
+    uniform string[] loadPrimsPath(
+      doc = """Full Path to prims on the stage.
+        These prims will be associated with state below on loading the stage.
+        """
+    )
+
+    uniform token[] loadPrimsStates (
+        allowedTokens = ["AllRule", "OnlyRule", "NoneRule"]
+        doc = """Load rule for the associated prim.
+            - AllRule : Include payloads on the specified prim and all 
+              descendants.
+            - OnlyRule : Include payloads on the specified prim but no 
+              descendants.
+            - NoneRule : Exclude payloads on the specified prim and all 
+              descendants.
+        """
+    )
+
+    uniform  string[] populationMask (
+        doc = """Set of fullpath to prims on the stage.
+            This set represents a mask that may be applied to a stage to limit 
+            the prims it populates.
+        """
+    )
+
+    token [] inputs:layers(
+        doc = """Relationships to the layers composing this stage."""
+    )
+}
+
+class Deformable "Deformable" (
+  inherits = </Node>
+  doc = """A Deformable provides a hub into which multiple layers are 
+  composed according to the node state and provide deformed geometry over 
+  time to upstream the pipeline.
+  """
+  customData = {
+    string extraIncludes = '''
+#include "node.h"
+#include "connectableAPI.h"'''
+  dictionary schemaTokens = {
+    dictionary geometry = {
+      string doc = """The modeling variation described on a Deformable."""
+    }
+    dictionary animRig = {
+      string doc = """The animation rig variation described on a Deformable."""
+    }
+    dictionary cfxRig = {
+      string doc = """The character fx rig variation described on a Deformable."""
+    }
+    dictionary animDatas = {
+      string doc = """The animation datas variation described on a Deformable."""
+    }
+    dictionary cfxDatas = {
+      string doc = """The characterFX datas variation described on a Deformable."""
+    }
+    dictionary animCache = {
+      string doc = """The animation cache variation described on a Deformable."""
+    }
+    dictionary cfxCache = {
+      string doc = """The characterFX cache variation described on a Deformable."""
+    }
+    dictionary derivesFrom  = {
+      string doc = """A legacy relationship name specifying a specializes 
+        composition on a Deformable."""
+    }
+    dictionary deformed = {
+      string doc = """Describes the <i>deformed geometry</i> output terminal 
+      on a Deformable. It is used to output the resulting geometry to upstream
+      the graph."""
+    }
+  }
+}) 
+{
+  token inputs:geometry (
+    doc = """Describes the <i>input geometry</i> input on a Deformable."""
+    displayGroup = "Inputs"
+    customData = {
+      string apiName = "geometry"
+    }
+  )
+  token outputs:deformed (
+    doc = """Describes the <i>result geometry</i> output on a AssetNode."""
+    displayGroup = "Outputs"
+    customData = {
+      string apiName = "deformed"
+    }
+  )
+}
+
+class Layer "Layer" (
+    doc = """Class for the layer node.
+      A layer is a unit of scene description that you combine with other units
+      of scene description to form a shot, model, set, shader, and so on.
+    """
+    inherits = </Node>
+    customData = {
+        string className = "Layer"
+    }
+)  
+{
+    uniform string fileName (
+        doc = """ar-solvable file path on disk"""
+    )
+
+    token [] outputs:result(
+        displayGroup = "Outputs"
+        doc = """loaded result for this layer."""
+    )
+}
+
+
+class "ConnectableAPI"
+(
+  inherits = </APISchemaBase>
+  doc = """ConnectableAPI is an API schema that provides a common
+  interface for creating outputs and making connections between nodes.
+  The interface is common to all Graph schemas including Node, Graph, 
+  and Deformable.
+
+  One can construct a ConnectableAPI directly from a UsdPrim, or
+  from objects of any of the schema classes listed above.  If it seems
+  onerous to need to construct a secondary schema object to interact with
+  Inputs and Outputs, keep in mind that any function whose purpose is either
+  to walk shot description networks via their connections, or to create such
+  networks, can typically be written entirely in terms of 
+  ConnectableAPI objects, without needing to care what the underlying
+  prim type is.
+
+  Additionally, the most common ConnectableAPI behaviors
+  (creating Inputs and Outputs, and making connections) are wrapped as
+  convenience methods on the prim schema classes (creation) and 
+  InputPort and OutputPort.
+  """ 
+  customData = {
+    token apiSchemaType = 'nonApplied'
+    string extraIncludes = '''
+#include "node.h"
+#include "graph.h"
+'''
+  }
+)
+{
+}
+
+class "DeformableAPI"
+(
+  inherits = </APISchemaBase>
+  doc = """DeformableAPI is an API schema that provides an 
+  interface for binding assets to different states(animation, cfx, cached...). 
+  """ 
+  customData = {
+    string extraIncludes = """ """
+	dictionary schemaTokens = {
+		dictionary stateBinding = {
+		  string value = "state:binding"
+		  string doc = """The current state of the asset."""
+		}
+
+		dictionary animRig = {
+		  string doc = """When in animRig state, the asset will exhibit it's animation controls 
+		  and authored animation curves."""
+		}
+
+		dictionary cfxRig = {
+		  string doc = """When in cfxRig state, the asset will exhibit the animation cache + the cfx rig 
+		  to be simulated/sculpted on top."""
+		}
+		dictionary animationCache = {
+		  string doc = """When in animationCache state, the asset will exhibit the animation cache only."""
+		}
+		dictionary cfxCache = {
+		  string doc = """When in cfxCache state, the asset will exhibit the animation cache with the cfx 
+		  cache override on top."""
+		}
+	}
+}
+)
+{
+    
+}
+
+class "CoordSysAPI"
+(
+    inherits = </APISchemaBase>
+    doc = """CoordSysAPI provides a way to designate, name,
+    and discover coordinate systems.
+
+    Coordinate systems are implicitly established by UsdGeomXformable
+    prims, using their local space.  That coordinate system may be
+    bound (i.e., named) from another prim.  The binding is encoded
+    as a single-target relationship in the "coordSys:" namespace.
+    Coordinate system bindings apply to descendants of the prim
+    where the binding is expressed, but names may be re-bound by
+    descendant prims.
+
+    Named coordinate systems are useful in animation workflows.
+    An example is camera base sculpting.  
+    Using the paint coordinate frame avoids the need to assign 
+    a UV set to the object, and can be a concise way to project
+    sculpt across a collection of objects with a single shared
+    paint coordinate system.
+
+    This is a non-applied API schema.
+    """
+    customData = {
+        token apiSchemaType = "nonApplied"
+        string extraIncludes = '''
+#include "pxr/usd/usdGeom/xformable.h"'''
+        dictionary schemaTokens = {
+            dictionary coordSys = {
+                string value = "coordSys:"
+                string doc = """Namespace prefix for relationships that
+                bind coordinate systems."""
+            }
+        }
+    }
+)
+{
+}

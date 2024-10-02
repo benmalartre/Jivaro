@@ -239,6 +239,7 @@ void TestGeodesic::InitExec(pxr::UsdStageRefPtr& stage)
   _points->SetPositions(positions);
   _points->SetWidths(widths);
   _points->SetColors(colors);
+  _points->SetOutputOnly();
   //_points->SetInputOnly();
 
   _pointsId = _rootId.AppendChild(pxr::TfToken("points"));
@@ -266,13 +267,17 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   _bvh.Update();
+  std::cout << "update exec with " << _meshes.size() << " meshes " << std::endl;
   if (_meshes.size()) {
+
     size_t numPoints = _meshes[0]->GetNumPoints();
     const pxr::GfVec3f* positions = ((Deformable*)_meshes[0])->GetPositionsCPtr();
     const pxr::GfRange3f range(_meshes[0]->GetBoundingBox().GetRange());
 
     const pxr::GfMatrix4d& xform = _xform->GetMatrix();
     pxr::GfVec3f seed(xform[3][0], xform[3][1], xform[3][2]);
+
+    std::cout << "seed : " << seed << std::endl;
 
     pxr::GfMatrix4f matrix;
     pxr::GfVec3f position;
@@ -289,6 +294,7 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     // bvh accelerated query
     if (_bvh.Closest(seed, &hit1, DBL_MAX)) {
       points[1] = pxr::GfVec3f(hit1.GetPoint());
+      std::cout << points[1] << std::endl;
     }
 
     // brute force reference
@@ -297,6 +303,8 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     for (size_t m = 0; m < _meshes.size(); ++m)
       if (_ConstraintPointOnMesh((Mesh*)_meshes[m], seed, &hit2, &result))
         points[2] = pxr::GfVec3f(hit2.GetPoint());
+
+    std::cout << points[2] << std::endl;
 
     // kdtree accelerated query (point only)
     Location hit3;
@@ -310,7 +318,7 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     _points->SetColors(colors);
     _points->SetWidths(widths);
 
-    _scene.MarkPrimDirty(_pointsId, pxr::HdChangeTracker::DirtyPoints | pxr::HdChangeTracker::DirtyPrimvar);
+    _scene.MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
 
     colors.resize(numPoints);
     for (size_t i = 0; i < numPoints; ++i) {
