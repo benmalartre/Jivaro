@@ -652,14 +652,11 @@ void Mesh::Init(size_t connectivity)
   size_t numPoints = _positions.size();
   // compute triangles
   TriangulateMesh(_faceVertexCounts, _faceVertexIndices, _triangles);
-  std::cout << "triangulated" << std::endl;
   // compute normals
   ComputeVertexNormals(_positions, _faceVertexCounts, 
     _faceVertexIndices, _triangles, _normals);
-  std::cout << "normals" << std::endl;
   // compute bouding box
   ComputeBoundingBox();
-  std::cout << "bbox" << std::endl;
 
   // compute connectivity if required
   //    - adjacents = vertex connected vertices

@@ -1,6 +1,7 @@
 
 #include "../app/delegate.h"
 #include "../geometry/deformable.h"
+#include "../geometry/instancer.h"
 #include "../geometry/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -142,7 +143,6 @@ Delegate::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue
 Delegate::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
-  std::cout << "delegate get " << id << " " << key << std::endl;
   return _scene->Get(id, key);
 }
 
@@ -177,32 +177,49 @@ Delegate::GetCoordSysBindings(pxr::SdfPath const& id)
 // -------------------------------------------------------------------------- //
 // Instancer Support Methods
 // -------------------------------------------------------------------------- //
+
 pxr::VtIntArray
-Delegate::GetInstanceIndices(pxr::SdfPath const &instancerId,
-  pxr::SdfPath const &prototypeId)
+Delegate::GetInstanceIndices( pxr::SdfPath const &instancerId,
+                              pxr::SdfPath const &prototypeId)
 {
- std::cout << "get instance indices..." << std::endl;
- return pxr::VtIntArray();
+  Scene::_Prim* instancerPrim = _scene->GetPrim(instancerId);
+  pxr::VtIntArray indices;
+
+  if(instancerPrim && instancerPrim->geom->GetType() == Geometry::INSTANCER) {
+    Instancer* instancer = (Instancer*)instancerPrim->geom;
+    const pxr::VtArray<pxr::SdfPath>& prototypes = instancer->GetPrototypes();
+    size_t prototypeIndex = 0;
+    for (; prototypeIndex < prototypes.size(); ++prototypeIndex)
+      if (prototypes[prototypeIndex] == prototypeId) break;
+    
+    if (prototypeIndex == prototypes.size()) return indices;
+
+    const pxr::VtArray<int>& prototypeIndices = instancer->GetProtoIndices();
+    for (size_t i = 0; i < prototypeIndices.size(); ++i)
+      if (static_cast<size_t>(prototypeIndices[i]) == prototypeIndex)
+        indices.push_back(i);
+
+  }
+
+  return indices;
 }
 
 pxr::GfMatrix4d
 Delegate::GetInstancerTransform(pxr::SdfPath const &instancerId)
 {
-  std::cout << "get instancer transforml..." << std::endl;
   return pxr::GfMatrix4d();
 }
 
 pxr::SdfPathVector
 Delegate::GetInstancerPrototypes(pxr::SdfPath const &instancerId)
 {
-  std::cout << "get instancer prototypes..." << std::endl;
   return pxr::SdfPathVector();
 }
 
 pxr::SdfPath
 Delegate::GetInstancerId(pxr::SdfPath const& primId)
 {
-    return _scene->GetInstancerBinding(primId);
+  return _scene->GetInstancerBinding(primId);
 }
 
 // -------------------------------------------------------------------------- //
@@ -230,7 +247,10 @@ void Delegate::SetScene(Scene* scene) {
   pxr::HdRenderIndex& index = GetRenderIndex();
   if (_scene) {
     for (auto& prim : _scene->GetPrims()) {
-      index.RemoveRprim(prim.first);
+      if(prim.second.geom->GetType() == Geometry::INSTANCER)
+        index.RemoveInstancer(prim.first);
+      else
+        index.RemoveRprim(prim.first);
     }
   }
   _scene = scene;
@@ -255,9 +275,12 @@ void Delegate::SetScene(Scene* scene) {
         index.InsertRprim(pxr::HdPrimTypeTokens->points, this, prim.first);
         break;
 
-      case Geometry::INSTANCER:
+      case Geometry::INSTANCER:                      
         index.InsertInstancer(this, prim.first);
-        break;
+        tracker.MarkInstancerDirty(prim.first,  pxr::HdChangeTracker::DirtyTransform |
+                                                pxr::HdChangeTracker::DirtyPrimvar |
+                                                pxr::HdChangeTracker::DirtyInstanceIndex);
+        return;
     }
     
     if(prim.second.bits != pxr::HdChangeTracker::Clean) {  
@@ -271,7 +294,10 @@ void Delegate::RemoveScene() {
   pxr::HdRenderIndex& index = GetRenderIndex();
   if (_scene) {
     for (auto& prim : _scene->GetPrims()) {
-      index.RemoveRprim(prim.first);
+      if(prim.second.geom->GetType() == Geometry::INSTANCER)
+        index.RemoveInstancer(prim.first);
+      else
+        index.RemoveRprim(prim.first);
     }
     _scene = NULL;
   }
@@ -282,7 +308,11 @@ void Delegate::UpdateScene()
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   for (auto& prim : _scene->GetPrims()) {
     if(prim.second.bits != pxr::HdChangeTracker::Clean) {
-      tracker.MarkRprimDirty(prim.first, prim.second.bits);
+      if(prim.second.geom->GetType() == Geometry::INSTANCER) 
+        tracker.MarkInstancerDirty(prim.first, prim.second.bits);
+
+      else
+        tracker.MarkRprimDirty(prim.first, prim.second.bits);
     }
   }
 }

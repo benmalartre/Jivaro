@@ -19,8 +19,8 @@ Points* _CreateGridPoint(const pxr::GfVec3f& center, size_t N)
 
   for(size_t z = 0; z < N; ++z) 
     for(size_t y = 0; y< N; ++y) {
-      positions[z * N + y] = pxr::GfVec3f(center[0], center[1] + y, center[2] + z);
-      widths[z * N + y] = 0.25f;
+      positions[z * N + y] = pxr::GfVec3f(center[0]+RANDOM_LO_HI(-0.01,0.01), center[1] + y+RANDOM_LO_HI(-0.01,0.01), center[2] + z+RANDOM_LO_HI(-0.01,0.01));
+      widths[z * N + y] = 0.5f;
       colors[z * N + y] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     }
 
@@ -50,14 +50,14 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
   {
     _points0 = _CreateGridPoint(pxr::GfVec3f(-1.f, 2.f, 0.f), 16);
     _points0Id = rootId.AppendChild(pxr::TfToken("Points0"));
-
+    _scene.InjectGeometry(stage, _points0Id, _points0, 1.f);
     _scene.AddGeometry(_points0Id, _points0);
   }
 
   {
     _points1 = _CreateGridPoint(pxr::GfVec3f(1.f, 2.f, 0.f), 16);
     _points1Id = rootId.AppendChild(pxr::TfToken("Points1"));
-
+    _scene.InjectGeometry(stage, _points1Id, _points1, 1.f);
     _scene.AddGeometry(_points1Id, _points1);
   }
 
@@ -65,7 +65,7 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
   _solver = _CreateSolver(&_scene, stage, _solverId);
 
 
-  Body* body0 = _solver->CreateBody(_points0, pxr::GfMatrix4d(1.0), 0.1f, 0.25f, 0.1f);
+  Body* body0 = _solver->CreateBody(_points0, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f);
   _solver->SetBodyVelocity(body0, pxr::GfVec3f(1.f, 0.f, 0.f));
   _solver->AddElement(body0, _points0, _points0Id);
   Body* body1 = _solver->CreateBody(_points1, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f);
@@ -76,7 +76,7 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
   if(createGroundCollision) {
     // create collide ground
     _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-    _ground = _CreateCollidePlane(stage, _groundId, 0.5, 0.5);
+    _ground = _CreateCollidePlane(stage, _groundId, 0.5f, 0.f);
     _ground->SetMatrix(
       pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
     //_AddAnimationSamples(stage, _groundId);
@@ -91,7 +91,7 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
    bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.25f, 0.25f);
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.f, 1.f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
 
   }

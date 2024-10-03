@@ -252,7 +252,7 @@ void
 Scene::MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits)
 {
   Scene::_Prim* prim = GetPrim(path);
-  if(prim)prim->bits = bits; 
+  if(prim) prim->bits = bits; 
 }
 
 // -----------------------------------------------------------------------//

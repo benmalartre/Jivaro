@@ -19,7 +19,7 @@ Points* _CreatePendulum(size_t N)
   pxr::VtArray<pxr::GfVec3f> colors(numPoints);
 
   for(size_t x = 0; x < numPoints; ++x) {
-    positions[x] = pxr::GfVec3f(x * 5, 10, 0);
+    positions[x] = pxr::GfVec3f(x *0.25f, 10, 0);
     widths[x] = 0.25f;
     colors[x] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   }
@@ -46,24 +46,31 @@ void TestPendulum::InitExec(pxr::UsdStageRefPtr& stage)
     stage->SetDefaultPrim(rootPrim);
   }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
-
+  const size_t N = 16;
   {
-    _points = _CreatePendulum(3);
+    _points = _CreatePendulum(N);
     _pointsId = rootId.AppendChild(pxr::TfToken("pendulum"));
 
     _scene.AddGeometry(_pointsId, _points);
+    _scene.InjectGeometry(stage, _pointsId, _points, 1.f);
   }
 
   _solverId =  rootId.AppendChild(pxr::TfToken("Solver"));
   _solver = _CreateSolver(&_scene, stage, _solverId);
 
 
-  Body* body = _solver->CreateBody(_points, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f);
-  //_solver->SetBodyVelocity(body, pxr::GfVec3f(1.f, 0.f, 0.f));
+  Body* body = _solver->CreateBody(_points, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.f);
+
+  //_solver->SetBodyVelocity(body, pxr::GfVec3f(0.01f, 0.f, 0.f));
   _solver->AddElement(body, _points, _pointsId);
 
-  pxr::VtArray<int> elements = {0,1, 1, 2, 2, 3};
-  StretchConstraint* stretch = new StretchConstraint(body, elements, 0.f, 0.f);
+  pxr::VtArray<int> elements(2 * N);
+  for(size_t i = 0; i < N; ++i) {
+    elements[i * 2] = i;
+    elements[i * 2 + 1] = i+1;
+  }
+
+  StretchConstraint* stretch = new StretchConstraint(body, elements, 200000.f, 0.5f);
   _solver->AddConstraint(stretch);
 
   bool createSelfCollision = false;

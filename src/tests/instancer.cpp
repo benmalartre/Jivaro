@@ -59,7 +59,7 @@ Instancer* _CreateInstancer(size_t numPoints, size_t numPrototypes)
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
     points[pointIdx] = pxr::GfVec3f(RANDOM_LO_HI(-5,5), pointIdx, RANDOM_LO_HI(-5,5));
     scales[pointIdx] = pxr::GfVec3f(RANDOM_0_1 + 0.5);
-    protoIndices[pointIdx] = RANDOM_LO_HI(0, numPrototypes-1);
+    protoIndices[pointIdx] = RANDOM_LO_HI(0, numPrototypes);
     indices[pointIdx] = pointIdx;
     colors[pointIdx] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
     rotations[pointIdx] = pxr::GfQuath::GetIdentity();
@@ -93,6 +93,7 @@ void _UpdateInstancer(Instancer* instancer, float time)
   }
 
   instancer->SetPositions(points);
+
 }
 
 
@@ -114,6 +115,7 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   // instancer
   _instancerId = rootId.AppendChild(pxr::TfToken("instancer"));
   _instancer = _CreateInstancer(32, numProtos);
+  _instancer->SetInputOutput();
   _scene.AddGeometry(_instancerId, _instancer);
 
   _scene.MarkPrimDirty(_instancerId, pxr::HdChangeTracker::DirtyTransform |
@@ -127,7 +129,9 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   for(size_t p  =0; p < numProtos; ++p) {
     _protosId[p] = rootId.AppendChild(pxr::TfToken("proto_"+std::to_string(p)));
     _protos[p] = new Mesh();
+    _protos[p]->SetInputOutput();
     _CreateRandomTriangle(_protos[p]);
+    _scene.AddGeometry(_protosId[p], _protos[p]);
     _instancer->AddPrototype(_protosId[p]);
   }
 
@@ -142,21 +146,18 @@ void TestInstancer::InitExec(pxr::UsdStageRefPtr& stage)
   }
   _scene.InjectGeometry(stage, _groundId, _ground, 1.f);
   _scene.AddGeometry(_groundId, _ground);
-  _scene.InjectGeometry(stage, _instancerId, _instancer, 1.f);
   
-  for(size_t i = 2; i < 101 ; i+= 10) {
-    float time = i;
-    _UpdateInstancer(_instancer, time);
-    _scene.InjectGeometry(stage, _instancerId, _instancer, time);
-  }
+  _scene.InjectGeometry(stage, _instancerId, _instancer, 1.f);
+  _scene.MarkPrimDirty(_instancerId, pxr::HdChangeTracker::AllDirty);
   
 
-  //_instancer = (Instancer*)_scene.AddGeometry(_instancerId, Geometry::INSTANCER, pxr::GfMatrix4d());
 }
 
 void TestInstancer::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  //_scene.Sync(stage, time);
+  _scene.Sync(stage, time);
+  _UpdateInstancer(_instancer, time);
+  _scene.InjectGeometry(stage, _instancerId, _instancer, time);
   
 }
 

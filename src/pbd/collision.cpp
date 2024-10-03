@@ -17,7 +17,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = .1f;
+const float Collision::TOLERANCE_MARGIN = 0.01f;
 const size_t Collision::PACKET_SIZE = 32;
 
 
@@ -70,30 +70,13 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
   _BuildContacts(particles, bodies, constraints, ft);
 }
 
-void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft, bool solveInitialPenetration)
+void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft)
 {
-  if(solveInitialPenetration)
-    for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
-      const size_t index = elements[elemIdx];
-      _StoreContactLocation(particles, index, _contacts.Use(index), ft);
-      _ResolveInitialPenetration(particles, index);
-    }
-  
-  else
-    for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
-      const size_t index = elements[elemIdx];
-      _StoreContactLocation(particles, index, _contacts.Use(index), ft);
-    }
-}
 
-void Collision::_ResolveInitialPenetration(Particles* particles, size_t index)
-{
-  const float d = GetContactInitDepth(index); 
-  if(d > 0) return;
-  const pxr::GfVec3f offset = GetContactNormal(index) * -d;
-
-  particles->position[index] += offset;
-  particles->predicted[index] += offset;
+  for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
+    const size_t index = elements[elemIdx];
+    _StoreContactLocation(particles, index, _contacts.Use(index), ft);
+  }
 }
 
 
@@ -131,7 +114,7 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
       if (particles->body[index] != bodyIdx || elements.size() >= Constraint::BlockSize) {
         if (elements.size()) {
           constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
-          StoreContactsLocation(particles, & elements[0], elements.size(), ft, true);
+          StoreContactsLocation(particles, & elements[0], elements.size(), ft);
           constraints.push_back(constraint);
           elements.clear();
         }
@@ -143,7 +126,7 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   
   if (elements.size()) {
     constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
-    StoreContactsLocation(particles, & elements[0], elements.size(), ft, true);
+    StoreContactsLocation(particles, & elements[0], elements.size(), ft);
     constraints.push_back(constraint);
   }
 
@@ -551,7 +534,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, 2.f * particles->radius[index] + Collision::TOLERANCE_MARGIN);
+  _grid.Closests(index, &particles->predicted[0], closests, 2.f * particles->radius[index] + 2.f * Collision::TOLERANCE_MARGIN);
 
   for(int closest: closests) {
     if(_AreConnected(index, closest))continue;

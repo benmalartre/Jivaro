@@ -101,6 +101,8 @@ void Instancer::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& t
   instancer.CreateScalesAttr().Set(_scales, time);
   instancer.CreateOrientationsAttr().Set(_rotations, time);
   instancer.CreateProtoIndicesAttr().Set(_protoIndices, time);
+
+  std::cout << "INJECT INSTANCER PROTO INDICES : " << _protoIndices.size() << std::endl;
   for(size_t p = 0; p < _prototypes.size(); ++p)
     instancer.CreatePrototypesRel().AddTarget(_prototypes[p]);
 

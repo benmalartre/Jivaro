@@ -154,7 +154,6 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix,
 {
   size_t base = _particles.GetNumParticles();
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  //geom->CreateAttribute(geom->GetPrim(), PBDTokens->mass, pxr::SdfValueTypeNames->Float);
   geom->GetAttributeValue(PBDTokens->mass, pxr::UsdTimeCode::Default(), &mass);
   geom->GetAttributeValue(PBDTokens->damp, pxr::UsdTimeCode::Default(), &damping);
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
@@ -384,6 +383,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     if (state[index] != Particles::ACTIVE)continue;
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
+    
     velocity[index] *= velDecay;
     vL = velocity[index].GetLength();
     if (vL < _sleepThreshold) {
@@ -513,7 +513,6 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::UpdateGeometries()
 {
-
   const auto* positions = &_particles.position[0];
   _ElementMap::iterator it = _elements.begin();
   size_t offset = 0;
@@ -542,7 +541,7 @@ void Solver::UpdateGeometries()
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
-  _frameTime = 1.f / 60.f;//static_cast<float>(Time::Get()->GetFPS());
+  _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
   prim.GetAttribute(PBDTokens->substeps).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(PBDTokens->sleep).Get(&_sleepThreshold, time);

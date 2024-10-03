@@ -28,6 +28,7 @@ public:
   const pxr::VtArray<int64_t>& GetIndices() const {return _indices;};
   const pxr::VtArray<pxr::GfVec3f>& GetScales() const {return _scales;};
   const pxr::VtArray<pxr::GfQuath>& GetRotations() const {return _rotations;};
+  const pxr::VtArray<pxr::SdfPath>& GetPrototypes() const {return _prototypes;};
 
   void AddPrototype(pxr::SdfPath& path);
   void RemovePrototype(pxr::SdfPath& path);
@@ -41,7 +42,7 @@ private:
   pxr::VtArray<int64_t>           _indices;
   pxr::VtArray<int>               _protoIndices;
   pxr::VtArray<pxr::GfQuath>      _rotations;
-  std::vector<pxr::SdfPath>       _prototypes;
+  pxr::VtArray<pxr::SdfPath>      _prototypes;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
