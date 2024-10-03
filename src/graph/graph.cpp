@@ -18,9 +18,9 @@
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
 #include <pxr/usd/usdUI/backdrop.h>
-#include <pxr/usd/usdExec/execConnectableAPI.h>
-#include <pxr/usd/usdExec/execNode.h>
-#include <pxr/usd/usdExec/execGraph.h>
+//#include <pxr/usd/usdExec/execConnectableAPI.h>
+//#include <pxr/usd/usdExec/execNode.h>
+//#include <pxr/usd/usdExec/execGraph.h>
 
 #include "../graph/graph.h"
 #include "../command/command.h"
@@ -311,7 +311,7 @@ Graph::ConnexionPossible(const Graph::Port* lhs, const Graph::Port* rhs)
       return false;
     }
     return pxr::UsdShadeConnectableAPI::CanConnect(output, input);
-  } else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
+  } /*else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
     pxr::UsdExecNode lhsExec(lhsPrim);
     pxr::UsdExecOutput output = lhsExec.GetOutput(lhs->GetName());
 
@@ -319,7 +319,7 @@ Graph::ConnexionPossible(const Graph::Port* lhs, const Graph::Port* rhs)
     pxr::UsdExecInput input = rhsExec.GetInput(rhs->GetName());
 
     return pxr::UsdExecConnectableAPI::CanConnect(output, input);
-  }
+  }*/
 
   return false;
 }

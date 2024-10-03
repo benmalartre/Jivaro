@@ -1,9 +1,9 @@
 #include <pxr/usd/sdf/types.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
-#include <pxr/usd/usdExec/execConnectableAPI.h>
-#include <pxr/usd/usdExec/execNode.h>
-#include <pxr/usd/usdExec/execGraph.h>
+//#include <pxr/usd/usdExec/execConnectableAPI.h>
+//#include <pxr/usd/usdExec/execNode.h>
+//#include <pxr/usd/usdExec/execGraph.h>
 #include "../graph/graph.h"
 #include "../graph/execution.h"
 #include "../command/block.h"
@@ -11,6 +11,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+/*
 ExecutionGraph* TestUsdExecAPI()
 {
   UndoBlock editBlock;
@@ -65,6 +66,7 @@ ExecutionGraph* TestUsdExecAPI()
   stage->SetDefaultPrim(graph.GetPrim());
   return new ExecutionGraph(graph.GetPrim());
 }
+*/
 
 pxr::SdfValueTypeName 
 _GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
@@ -129,6 +131,7 @@ ExecutionGraph::ExecutionNode::ExecutionNode(pxr::UsdPrim& prim)
 
 void ExecutionGraph::ExecutionNode::_PopulatePorts()
 {
+  /*
   if (_prim.IsA<pxr::UsdExecGraph>()) {
     pxr::UsdExecGraph graph(_prim);
     for (const auto& input : graph.GetInputs()) {
@@ -151,6 +154,7 @@ void ExecutionGraph::ExecutionNode::_PopulatePorts()
       AddOutput(attr, output.GetBaseName());
     }
   }
+  */
 }
 
 void
@@ -168,6 +172,7 @@ void
 ExecutionGraph::_DiscoverConnexions()
 {
   for (pxr::UsdPrim child : _prim.GetChildren()) {
+    /*
     if (child.IsA<pxr::UsdExecNode>()) {
       pxr::UsdExecNode node(child);
       for (pxr::UsdExecInput& input : node.GetInputs()) {
@@ -187,6 +192,7 @@ ExecutionGraph::_DiscoverConnexions()
         }
       }
     }
+    */
   }
 }
 

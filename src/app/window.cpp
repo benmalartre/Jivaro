@@ -34,7 +34,7 @@
 #include "../ui/explorer.h"
 #include "../ui/layerEditor.h"
 #include "../ui/propertyEditor.h"
-#include "../ui/curveEditor.h"
+//#include "../ui/curveEditor.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

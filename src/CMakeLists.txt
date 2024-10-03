@@ -45,7 +45,7 @@ add_executable(${TARGET}
   ui/layerEditor.cpp
   ui/explorer.cpp
   ui/propertyEditor.cpp
-  ui/curveEditor.cpp
+  #ui/curveEditor.cpp
 
   graph/graph.cpp
   graph/execution.cpp

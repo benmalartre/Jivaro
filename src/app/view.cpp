@@ -12,7 +12,7 @@
 #include "../ui/contentBrowser.h"
 #include "../ui/graphEditor.h"
 #include "../ui/propertyEditor.h"
-#include "../ui/curveEditor.h"
+//#include "../ui/curveEditor.h"
 #include "../ui/layerEditor.h"
 #include "../ui/textEditor.h"
 #include "../ui/debug.h"
@@ -110,9 +110,9 @@ View::CreateUI(UIType type)
   case UIType::GRAPHEDITOR:
     _current = new GraphEditorUI(this);
     break;
-  case UIType::CURVEEDITOR:
-    _current = new CurveEditorUI(this);
-    break;
+  //case UIType::CURVEEDITOR:
+  //  _current = new CurveEditorUI(this);
+  //  break;
   case UIType::LAYEREDITOR:
     _current = new LayerEditorUI(this);
     break;

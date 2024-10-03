@@ -81,9 +81,14 @@ public:
 
 
 protected:
+  float _ComputeLagrangeMultiplier(Particles* particles, size_t elem=0);
   void _ResetCorrection();
+  
+  virtual float _CalculateValue(Particles* particles, size_t elem) = 0;
+  virtual void _CalculateGradient(Particles* particles, size_t elem) = 0;
 
   pxr::VtArray<int>             _elements;
+  pxr::VtArray<pxr::GfVec3f>    _gradient;
   pxr::VtArray<pxr::GfVec3f>    _correction;
   float                         _compliance;
   float                         _damp;
@@ -113,6 +118,9 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
+
   static size_t                 TYPE_ID;
 
   Body*                         _body;
@@ -135,6 +143,9 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
+
   static size_t                 TYPE_ID;
   pxr::VtArray<Location>        _location;
   pxr::VtArray<pxr::GfVec3f>    _offset;
@@ -159,6 +170,9 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
+
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
 };
@@ -174,6 +188,9 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
 
 protected:
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
+
   static size_t                 TYPE_ID;
 
 };
@@ -197,6 +214,9 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
+
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
 };
@@ -221,6 +241,9 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
+
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
 
@@ -260,6 +283,9 @@ public:
 
 
 protected:
+  float _CalculateValue(Particles* particles, size_t index) override;
+  void _CalculateGradient(Particles* particles, size_t index) override;
+
   void _SolveGeom(Particles* particles, float dt);
   void _SolveSelf(Particles* particles, float dt);
 

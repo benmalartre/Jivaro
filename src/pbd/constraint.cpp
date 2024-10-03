@@ -21,13 +21,15 @@ Constraint::Constraint(size_t elementSize, float stiffness,
 {
   const size_t numElements = elems.size() / elementSize;
 
-  _correction.resize(_elements.size());
+  _correction.resize(numElements);
+  _gradient.resize(numElements+1);
 }
 
 void Constraint::SetElements(const pxr::VtArray<int>& elems)
 {
   const size_t numElements = _elements.size() / GetElementSize();
   _correction.resize(numElements);
+  _gradient.resize(numElements+1);
 }
 
 void Constraint::SetStiffness(float stiffness)
@@ -108,6 +110,65 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
 
   return group;
 }
+
+/*
+float Constraint::_ComputeLagrangeMultiplier(Particles* particles, size_t elem)
+{
+  const size_t N = GetElementSize();
+  float result = 0.f, m;
+  for(size_t n = 0; n < N; ++n) {
+    m = particles->mass[_elements[elem * N + n]];
+    result += 
+      _gradient[n][0] * m * _gradient[n][0] +
+      _gradient[n][1] * m * _gradient[n][1] +
+      _gradient[n][2] * m * _gradient[n][2];
+  }
+  return result;
+}
+
+void Constraint::_Solve(size_t N, const float C, const pxr::GfVec3f* gradients, const float dt)
+{
+  _ResetCorrection();
+
+  const size_t N = GetElementSize();
+  const float rN = 1.f / static_cast<float>(N);
+  const size_t numElements = _elements.size() / N;
+  const size_t offset = _body[0]->offset;
+  size_t comp, part;
+
+  // Calculate time-scaled compliance
+  const float alpha = _compliance / (dt * dt);
+
+  for(size_t elem = 0; elem  < numElements; ++elem) {
+    const float C = _CalculateValue(particles, elem);
+
+    // Calculate the derivative of the constraint function
+    _CalculateGradient(particles, elem);
+
+    // Skip if the gradient is sufficiently small
+    constexpr float eps = 1e-6f;
+    float gradientNormSq = 0.f;
+    for(size_t n = 0; n < N; ++n)
+      gradientNormSq += _gradient[n].GetLengthSq();
+    
+    if(gradientNormSq < eps)
+      continue;
+
+    // Calculate delta lagrange multiplier
+    const float deltaLagrange =
+      -C / (_ComputeLagrangeMultiplier(particles, elem) + alpha);
+
+    for(size_t n = 0; n < N; ++n) {
+      comp = elem * N + n;
+      part = _elements[comp] + offset;
+     _correction[comp] +=
+       (_gradient[n] * particles->mass[part] * deltaLagrange) - 
+       pxr::GfDot(particles->velocity[part] * dt * dt,  _gradient[N]) * _gradient[N] * _damping;
+    }
+  }
+}
+*/
+
 
 //-----------------------------------------------------------------------------------------
 //   ATTACH CONSTRAINT
@@ -222,6 +283,35 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
   }
 }
 
+float StretchConstraint::_CalculateValue(Particles* particles, size_t elem)
+{
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[elem * ELEM_SIZE + 0]];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[elem * ELEM_SIZE + 1]];
+  return -((p1 - p0).GetLength() - _rest[elem]);
+}
+
+void StretchConstraint::_CalculateGradient(Particles* particles, size_t elem)
+{
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[elem * ELEM_SIZE + 0]];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[elem * ELEM_SIZE + 1]];
+
+  const pxr::GfVec3f delta = p1 - p0;
+  const float length = delta.GetLength();
+
+  constexpr float epsilon = 1e-24;
+  const pxr::GfVec3f direction = 
+    (length < epsilon) ? 
+    pxr::GfVec3f(
+      RANDOM_LO_HI(-1.f, 1.f), 
+      RANDOM_LO_HI(-1.f, 1.f), 
+      RANDOM_LO_HI(-1.f, 1.f)
+    ).GetNormalized() : delta / length;
+
+  _gradient[0] = direction;
+  _gradient[1] = -direction;
+  _gradient[2] = pxr::GfVec3f(0.f);
+}
+
 void StretchConstraint::Solve(Particles* particles, float dt)
 {
   _ResetCorrection();
@@ -231,7 +321,7 @@ void StretchConstraint::Solve(Particles* particles, float dt)
   const float alpha =  _compliance / (dt * dt);
   size_t a, b;
   float w0, w1, W, C, length;
-  pxr::GfVec3f gradient, correction, damp;
+  pxr::GfVec3f gradient, correction, damp0, damp1;
 
   const pxr::GfVec3f* predicted = &particles->predicted[0];
   const pxr::GfVec3f* velocity = &particles->velocity[0];
@@ -251,14 +341,17 @@ void StretchConstraint::Solve(Particles* particles, float dt)
     length = gradient.GetLength();
     if(length<1e-6f)continue;
 
+    gradient /= length;
+
     C = length - _rest[elem];
 
-    damp = pxr::GfDot((velocity[b] - velocity[a]),  gradient) * gradient * _damp * dt * dt;
+    damp0 = pxr::GfDot(velocity[a],  gradient) * gradient * _damp * dt * dt;
+    damp1 = pxr::GfDot(velocity[b],  gradient) * gradient * _damp * dt * dt;
 
-    correction = -C / (length * length * W + alpha) * gradient - damp;
+    correction = -C / (length * length * W + alpha) * gradient;
 
-    _correction[elem * ELEM_SIZE + 0] += w0 * correction;
-    _correction[elem * ELEM_SIZE + 1] -= w1 * correction;
+    _correction[elem * ELEM_SIZE + 0] += w0 * correction - damp0;
+    _correction[elem * ELEM_SIZE + 1] -= w1 * correction - damp1;
     
   }
 }
@@ -366,6 +459,46 @@ BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
       m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0] - offset])).GetLength();
       
   }
+}
+
+float BendConstraint::_CalculateValue(Particles* particles, size_t index)
+{
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0]];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1]];
+  const pxr::GfVec3f& p2 = particles->predicted[_elements[index * ELEM_SIZE + 2]];
+
+  const pxr::GfVec3f center = (p0 + p1 + p2) / 3.f;
+  pxr::GfVec3f delta = p2 - center;
+
+  const float length = delta.GetLength();
+  if (pxr::GfIsClose(length, 0.f, 0.0000001f))return 1.f;
+
+  return 1.f - (_rest[index] / length);
+}
+
+void BendConstraint::_CalculateGradient(Particles* particles, size_t index)
+{
+  const pxr::GfVec3f& p0 = particles->predicted[_elements[index * ELEM_SIZE + 0]];
+  const pxr::GfVec3f& p1 = particles->predicted[_elements[index * ELEM_SIZE + 1]];
+  const pxr::GfVec3f& p2 = particles->predicted[_elements[index * ELEM_SIZE + 2]];
+
+  const pxr::GfVec3f center = (p0 + p1 + p2) / 3.f;
+  pxr::GfVec3f delta = p2 - center;
+  const float length = delta.GetLength();
+
+  constexpr float epsilon = 1e-24;
+  const pxr::GfVec3f direction = 
+    (length < epsilon) ? 
+    pxr::GfVec3f(
+      RANDOM_LO_HI(-1.f, 1.f), 
+      RANDOM_LO_HI(-1.f, 1.f), 
+      RANDOM_LO_HI(-1.f, 1.f)
+    ).GetNormalized() : delta / length;
+
+  _gradient[0] = -direction;
+  _gradient[1] = -direction;
+  _gradient[2] = 2 * direction;
+  _gradient[3] = (p1 - p0).GetNormalized();
 }
 
 void BendConstraint::Solve(Particles* particles, float dt)
@@ -645,7 +778,6 @@ ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness, float damp
   else if (geometry->GetType() == Geometry::CURVE) 
     _GetCurveShearElements((Curve*)geometry, allElements, offset);
 
-  std::cout << "create shear constraints : " << allElements.size() << std::endl;
   if(allElements.size())
     return CreateConstraintsGroup(body, 
       PBDTokens->shear, Constraint::SHEAR,
@@ -692,6 +824,90 @@ DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<int>& elem
     _rest[elemIdx] = std::acos(dot);
   }
 }
+
+float DihedralConstraint::_CalculateValue(Particles* particles, size_t index)
+{
+  const size_t a = _elements[index * ELEM_SIZE + 0];
+  const size_t b = _elements[index * ELEM_SIZE + 1];
+  const size_t c = _elements[index * ELEM_SIZE + 2];
+  const size_t d = _elements[index * ELEM_SIZE + 3];
+
+  const pxr::GfVec3f& p0 = particles->predicted[a];
+  const pxr::GfVec3f& p1 = particles->predicted[b];
+  const pxr::GfVec3f& p2 = particles->predicted[c];
+  const pxr::GfVec3f& p3 = particles->predicted[d];
+
+  const float& im0 = particles->mass[a];
+  const float& im1 = particles->mass[b];
+  const float& im2 = particles->mass[c];
+  const float& im3 = particles->mass[d];
+
+  pxr::GfVec3f e = p3 - p2;
+  float edgeLen = e.GetLength();
+  if (edgeLen < 1e-9) return 0.f;
+
+  pxr::GfVec3f n1 = pxr::GfCross(p2 - p0, p3 - p0).GetNormalized(); 
+  pxr::GfVec3f n2 = pxr::GfCross(p3 - p1, p2 - p1).GetNormalized();
+
+  float dot = pxr::GfDot(n1, n2);
+
+  if (dot < -1.0) dot = -1.0;
+  if (dot > 1.0) dot = 1.0;
+
+  if (pxr::GfDot(pxr::GfCross(n1, n2), e) > 0.0)
+    return -std::acos(dot) - _rest[index];
+  else
+    return std::acos(dot) - _rest[index];
+}
+
+void DihedralConstraint::_CalculateGradient(Particles* particles, size_t elemIdx)
+{
+  const size_t a = _elements[elemIdx * ELEM_SIZE + 0];
+  const size_t b = _elements[elemIdx * ELEM_SIZE + 1];
+  const size_t c = _elements[elemIdx * ELEM_SIZE + 2];
+  const size_t d = _elements[elemIdx * ELEM_SIZE + 3];
+
+  const pxr::GfVec3f& p0 = particles->predicted[a];
+  const pxr::GfVec3f& p1 = particles->predicted[b];
+  const pxr::GfVec3f& p2 = particles->predicted[c];
+  const pxr::GfVec3f& p3 = particles->predicted[d];
+
+  const float& im0 = particles->mass[a];
+  const float& im1 = particles->mass[b];
+  const float& im2 = particles->mass[c];
+  const float& im3 = particles->mass[d];
+
+  pxr::GfVec3f e = p3 - p2;
+  const float edgeLen = e.GetLength();
+  if (edgeLen < 1e-9) {
+    _gradient[0] = _gradient[1] = _gradient[3] = _gradient[4] = pxr::GfVec3f(0.f);
+    return;
+  }
+
+  const float invEdgeLen = 1.f / edgeLen;
+
+  pxr::GfVec3f n1 = pxr::GfCross(p2 - p0, p3 - p0);
+  n1 /= n1.GetLengthSq();
+
+  pxr::GfVec3f n2 = pxr::GfCross(p3 - p1, p2 - p1);
+  n2 /= n2.GetLengthSq();
+
+  pxr::GfVec3f d0 = edgeLen * n1;
+  pxr::GfVec3f d1 = edgeLen * n2;
+  pxr::GfVec3f d2 =
+    invEdgeLen * pxr::GfDot(p0 - p3, e) * n1 +
+    invEdgeLen * pxr::GfDot(p1 - p3, e) * n2;
+  pxr::GfVec3f d3 =
+    invEdgeLen * pxr::GfDot(p2 - p0, e) * n1 +
+    invEdgeLen * pxr::GfDot(p2 - p1, e) * n2;
+
+  _gradient[0] = im0 * d0;
+  _gradient[1] = im1 * d1;
+  _gradient[2] = im2 * d2;
+  _gradient[3] = im3 * d3;
+  _gradient[4] = e.GetNormalized();
+}
+
 
 void DihedralConstraint::Solve(Particles* particles, float dt)
 {
@@ -807,6 +1023,16 @@ CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* co
   , _mode(CollisionConstraint::SELF)
   , _Solve(&CollisionConstraint::_SolveSelf)
 {
+}
+
+float CollisionConstraint::_CalculateValue(Particles* particles, size_t elem)
+{
+  return _collision->GetValue(particles, _elements[elem]);
+}
+
+void CollisionConstraint::_CalculateGradient(Particles* particles, size_t elem)
+{
+  _gradient[0] = _collision->GetContactNormal(_elements[elem]);
 }
 
 // this one has to happen serialy

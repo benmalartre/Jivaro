@@ -6,8 +6,8 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdShade/nodeGraph.h>
 #include <pxr/usd/usdShade/connectableAPI.h>
-#include <pxr/usd/usdExec/execNode.h>
-#include <pxr/usd/usdExec/execConnectableAPI.h>
+//#include <pxr/usd/usdExec/execNode.h>
+//#include <pxr/usd/usdExec/execConnectableAPI.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 
 #include "../utils/strings.h"
@@ -625,7 +625,7 @@ ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::Sd
     pxr::UsdShadeInput input = rhs.GetInput(destination.GetNameToken());
 
     input.ConnectToSource(output);
-  } else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
+  } /*else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
     pxr::UsdExecNode lhs(lhsPrim);
     pxr::UsdExecNode rhs(rhsPrim);
 
@@ -633,7 +633,7 @@ ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::Sd
     pxr::UsdExecInput input = rhs.GetInput(destination.GetNameToken());
 
     input.ConnectToSource(output);
-  }
+  }*/
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
