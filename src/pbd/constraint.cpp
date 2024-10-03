@@ -839,10 +839,10 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correctio
     friction = -tangentialVelocity * pxr::GfMin(maxTangential / tangentialLength, 1.0f);
   }
 
-  return friction;// + correction * _collision->GetRestitution() * 0.5f;
+  return friction + correction * _collision->GetRestitution() * 0.5f;
 }
 
-static float vMax = 5.f;
+static float vMax = 2.5f;
 
 void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
 {
@@ -870,7 +870,7 @@ void CollisionConstraint::_SolveGeom(Particles* particles, float dt)
   }
 }
 
-static float selfVMax = 25.f;
+static float selfVMax = 2.5f;
 
 void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 {
@@ -896,14 +896,14 @@ void CollisionConstraint::_SolveSelf(Particles* particles, float dt)
 
       normal = collision->GetContactNormal(index, c);
       d = collision->GetContactDepth(index, c) 
-        + pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
+        + pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f) - Collision::TOLERANCE_MARGIN;
 
       if(d >= 0.f) continue;
       w0 = particles->invMass[index];
       w1 = particles->invMass[other];     
       w = w0 + w1;
       if(w < 1e-6) continue;
-    
+
       damp = pxr::GfDot((particles->velocity[index] -  
         _collision->GetContactVelocity(index, c)) * dt * dt,  normal) * normal * _damp; 
       correction =  w0 / w *  -d * normal - damp;

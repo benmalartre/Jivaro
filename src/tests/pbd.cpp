@@ -91,12 +91,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   for(size_t x = 0; x < 5; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
+    Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 
+      pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f}));
+    clothMesh->SetInputOutput();
     _clothMeshesId.push_back(clothPath);
-    _clothMeshes.push_back(_CreateClothMesh(stage, clothPath, size, 
-    pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f})));
-    _scene.AddGeometry(_clothMeshesId.back(), _clothMeshes.back());
-    //_scene.InjectGeometry(stage, _clothMeshesId.back(), _clothMeshes.back(), pxr::UsdTimeCode::Default());
-    _clothMeshes.back()->SetInputOutput();
+    _clothMeshes.push_back(clothMesh);
+    _scene.AddGeometry(clothPath, clothMesh);
   }
 
   for (size_t c = 0; c < _clothMeshesId.size(); ++c) {

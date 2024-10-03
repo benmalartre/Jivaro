@@ -525,12 +525,12 @@ void Solver::UpdateGeometries()
       if(geometry->GetType() >= Geometry::POINT) {
         Deformable* deformable = (Deformable*)geometry;
         size_t numPoints = deformable->GetNumPoints();
-        pxr::VtArray<pxr::GfVec3f> results(numPoints);
-      
+        pxr::GfVec3f* output = deformable->GetPositionsPtr();
+        
         for (size_t p = 0; p < numPoints; ++p) {
-          results[p] = deformable->GetInverseMatrix().Transform(positions[offset + p]);
+          output[p] = deformable->GetInverseMatrix().Transform(positions[offset + p]);
         }
-        deformable->SetPositions(&results[0], numPoints);
+        //deformable->SetPositions(&results[0], numPoints);
         _scene->MarkPrimDirty(id, pxr::HdChangeTracker::AllDirty);
 
         offset += numPoints;

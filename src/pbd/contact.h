@@ -36,7 +36,7 @@ private:
 };
 
 
-static const size_t PARTICLE_MAX_CONTACTS = 32;
+static const size_t PARTICLE_MAX_CONTACTS = 64;
 
 class Contacts {
 
