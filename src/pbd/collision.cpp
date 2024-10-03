@@ -17,7 +17,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const float Collision::TOLERANCE_MARGIN = .05f;
+const float Collision::TOLERANCE_MARGIN = .1f;
 const size_t Collision::PACKET_SIZE = 32;
 
 
@@ -388,7 +388,7 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   pxr::GfRay ray(particles->velocity[index], particles->position[index]);
   Mesh* mesh = (Mesh*)_collider;
   double maxDistance = particles->velocity[index].GetLength() * ft + 
-    particles->radius[index] + Collision::TOLERANCE_MARGIN;
+    particles->radius[index] * + Collision::TOLERANCE_MARGIN;
   double minDistance = DBL_MAX;
   if(_bvh->Closest(particles->position[index], &_closest[index], maxDistance))
     SetHit(index, true);
@@ -551,7 +551,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, 2.f * particles->radius[index] + Collision::TOLERANCE_MARGIN);
+  _grid.Closests(index, &particles->predicted[0], closests, 4.f * particles->radius[index] /*+ Collision::TOLERANCE_MARGIN*/);
 
   for(int closest: closests) {
     if(_AreConnected(index, closest))continue;
@@ -559,7 +559,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
     pxr::GfVec3f ip(particles->position[index] + particles->velocity[index] * ft);
     pxr::GfVec3f cp(particles->position[closest] + particles->velocity[closest] * ft);
-    if((ip - cp).GetLength() < (particles->radius[index] + particles->radius[closest]) + Collision::TOLERANCE_MARGIN) {
+    if((ip - cp).GetLength() < 3.f * (particles->radius[index] + particles->radius[closest]) /*+ Collision::TOLERANCE_MARGIN*/) {
       Contact* contact = _contacts.Use(index);
       _StoreContactLocation(particles, index, closest, contact, ft);
       contact->SetComponentIndex(closest);

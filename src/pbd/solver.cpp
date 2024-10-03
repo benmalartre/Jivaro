@@ -376,7 +376,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   short* state = &_particles.state[0];
 
   float invDt = 1.f / _stepTime, vL;
-  const float vMax = 5.f;
+  const float vMax = 25.f;
 
   const double velDecay = std::exp(std::log(0.95f) * _stepTime);
 
@@ -389,11 +389,9 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     if (vL < _sleepThreshold) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
-    } /*else if(vL > vMax) {
+    } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
-    }*/
-
-
+    }
 
     // update position
     position[index] = predicted[index];
@@ -522,7 +520,6 @@ void Solver::UpdateGeometries()
   for (; it != _elements.end(); ++it)
   {
     if(it->first->GetType() == Element::BODY) {
-      std::cout << "update geometries : " << it->second.first << std::endl;
       pxr::SdfPath id = it->second.first;
       Geometry* geometry = it->second.second;
       if(geometry->GetType() >= Geometry::POINT) {
@@ -545,7 +542,7 @@ void Solver::UpdateGeometries()
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
-  _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
+  _frameTime = 1.f / 60.f;//static_cast<float>(Time::Get()->GetFPS());
   prim.GetAttribute(PBDTokens->substeps).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(PBDTokens->sleep).Get(&_sleepThreshold, time);

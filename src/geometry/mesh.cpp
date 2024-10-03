@@ -38,7 +38,6 @@ Mesh::Mesh(const pxr::UsdGeomMesh& mesh, const pxr::GfMatrix4d& world, size_t co
   pxr::UsdAttribute faceVertexIndicesAttr = mesh.GetFaceVertexIndicesAttr();
 
   pointsAttr.Get(&_positions, 1);
-  std::cout << "positions : " << _positions << std::endl;
   faceVertexCountsAttr.Get(&_faceVertexCounts, 1);
   faceVertexIndicesAttr.Get(&_faceVertexIndices, 1);
   Init(connectivity);

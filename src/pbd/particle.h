@@ -9,11 +9,12 @@
 
 #include "../common.h"
 #include "../pbd/element.h"
-#include "../pbd/constraint.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
+class Constraint;
+struct ConstraintsGroup;
 
 class Body : public Element
 {
@@ -67,7 +68,7 @@ protected:
   pxr::GfVec3f                              _color;
   pxr::GfVec3f                              _velocity;
   pxr::GfVec3f                              _torque;
-  std::map<pxr::TfToken, ConstraintsGroup>  _constraints;
+  std::map<pxr::TfToken, ConstraintsGroup*> _constraints;
 
   std::vector<int>                          _connexions;
   std::vector<int>                          _connexionsCounts;

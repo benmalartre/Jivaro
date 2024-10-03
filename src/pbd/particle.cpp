@@ -166,7 +166,7 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
     _geometry->GetAttributeValue(dampAttr, time, &damp);
 
 
-    for(Constraint* constraint: constraintsIt.second.constraints) {
+    for(Constraint* constraint: constraintsIt.second->constraints) {
       constraint->SetStiffness(stiffness);
       constraint->SetDamp(damp);
     }
@@ -185,9 +185,9 @@ ConstraintsGroup*
 Body::AddConstraintsGroup(const pxr::TfToken& name, short type)
 {
   if(_constraints.find(name) != _constraints.end())
-    return &_constraints[name];
-  _constraints[name] = {_geometry->GetPrim(), type, {}}; 
-  return &_constraints[name];
+    return _constraints[name];
+  _constraints[name] = new ConstraintsGroup({_geometry->GetPrim(), type, {}}); 
+  return _constraints[name];
 }
 
 size_t 
@@ -198,7 +198,7 @@ Body::GetNumConstraintsGroup()
 
  ConstraintsGroup* Body::GetConstraintsGroup(const pxr::TfToken& group)
 {
-  if(_constraints.find(group) != _constraints.end())return &_constraints[group];
+  if(_constraints.find(group) != _constraints.end())return _constraints[group];
   return NULL;
 };
 

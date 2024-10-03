@@ -12,12 +12,13 @@
 #include <pxr/base/gf/matrix4f.h>
 
 #include "../pbd/element.h"
+#include "../pbd/particle.h"
+#include "../pbd/collision.h"
 #include "../pbd/mask.h"
 #include "../geometry/location.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-struct Particles;
 struct Body;
 class Collision;
 class SelfCollision;
@@ -81,11 +82,7 @@ public:
 
 
 protected:
-  float _ComputeLagrangeMultiplier(Particles* particles, size_t elem=0);
   void _ResetCorrection();
-  
-  virtual float _CalculateValue(Particles* particles, size_t elem) = 0;
-  virtual void _CalculateGradient(Particles* particles, size_t elem) = 0;
 
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _gradient;
@@ -118,9 +115,6 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
-
   static size_t                 TYPE_ID;
 
   Body*                         _body;
@@ -143,9 +137,6 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
-
   static size_t                 TYPE_ID;
   pxr::VtArray<Location>        _location;
   pxr::VtArray<pxr::GfVec3f>    _offset;
@@ -170,9 +161,6 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
-
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
 };
@@ -188,9 +176,6 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
-
   static size_t                 TYPE_ID;
 
 };
@@ -214,9 +199,6 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
-
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
 };
@@ -241,9 +223,6 @@ public:
   static size_t                 ELEM_SIZE;
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
-
   static size_t                 TYPE_ID;
   pxr::VtArray<float>           _rest;
 
@@ -283,9 +262,6 @@ public:
 
 
 protected:
-  float _CalculateValue(Particles* particles, size_t index) override;
-  void _CalculateGradient(Particles* particles, size_t index) override;
-
   void _SolveGeom(Particles* particles, float dt);
   void _SolveSelf(Particles* particles, float dt);
 
@@ -296,6 +272,7 @@ protected:
   SolveFunc                     _Solve;
 
 };
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

@@ -11,9 +11,10 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-/*
+
 ExecutionGraph* TestUsdExecAPI()
 {
+  /*
   UndoBlock editBlock;
   pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
 
@@ -65,8 +66,10 @@ ExecutionGraph* TestUsdExecAPI()
 
   stage->SetDefaultPrim(graph.GetPrim());
   return new ExecutionGraph(graph.GetPrim());
+  */
+  return nullptr;
 }
-*/
+
 
 pxr::SdfValueTypeName 
 _GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
