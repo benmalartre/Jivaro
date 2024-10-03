@@ -81,7 +81,6 @@ list(APPEND USD_LIB_NAMES
   tf
   kind
   sdf
-  exec
   plug
   garch
   ndr
@@ -99,11 +98,9 @@ list(APPEND USD_LIB_NAMES
   usdGeom
   usdLux
   usdShade
-  usdExec
   usdUI
   usdImaging
   usdImagingGL
-  usdAnimX
   vt
   cameraUtil
   pxOsd
