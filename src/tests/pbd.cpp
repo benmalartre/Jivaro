@@ -79,13 +79,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
   _TraverseStageFindingMeshes(stage);
-
-  // create collide ground
-  _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
-  _ground = _CreateCollidePlane(stage, _groundId);
-  _ground->SetMatrix(
-    pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
-  _scene.AddGeometry(_groundId, _ground);
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
@@ -95,7 +88,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   // create cloth meshes
   float size = .01f;
 
-  for(size_t x = 0; x < 3; ++x) {
+  for(size_t x = 0; x < 1; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     _clothMeshesId.push_back(clothPath);
@@ -105,22 +98,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     //_scene.InjectGeometry(stage, _clothMeshesId.back(), _clothMeshes.back(), pxr::UsdTimeCode::Default());
     _clothMeshes.back()->SetInputOutput();
   }
-
-   // create collide spheres
-  std::map<pxr::SdfPath, Sphere*> spheres;
-  
-  pxr::GfVec3f offset(10.f, 0.f, 0.f);
-  pxr::GfVec3f axis(0.f,1.f,0.f);
-  size_t n = 8;
-  const double rStep = 360.0 / static_cast<double>(n);
-
-
-  std::string name = "sphere_collide_ctr";
-  pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
-  spheres[collideId] =
-    _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
-  _AddAnimationSamples(stage, collideId);
-  _scene.AddGeometry(collideId, spheres[collideId]);
 
   for (size_t c = 0; c < _clothMeshesId.size(); ++c) {
     size_t offset = _solver->GetNumParticles();
@@ -138,16 +115,40 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.1f;
   float friction = 0.5f;
 
-  bool createSphereCollision = true;
+  bool createSphereCollision = false;
   if(createSphereCollision) {
+
+   // create collide spheres
+    std::map<pxr::SdfPath, Sphere*> spheres;
+    
+    pxr::GfVec3f offset(10.f, 0.f, 0.f);
+    pxr::GfVec3f axis(0.f,1.f,0.f);
+    size_t n = 8;
+    const double rStep = 360.0 / static_cast<double>(n);
+
+
+    std::string name = "sphere_collide_ctr";
+    pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
+    spheres[collideId] =
+      _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
+    _AddAnimationSamples(stage, collideId);
+    _scene.AddGeometry(collideId, spheres[collideId]);
+
     for (auto& sphere : spheres) {
       Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
       _solver->AddElement(collision, sphere.second, sphere.first);
      }
   }
 
-  bool createGroundCollision = true;
+  bool createGroundCollision = false;
   if(createGroundCollision) {
+      // create collide ground
+    _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
+    _ground = _CreateCollidePlane(stage, _groundId);
+    _ground->SetMatrix(
+      pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
+    _scene.AddGeometry(_groundId, _ground);
+
     Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
     _solver->AddElement(collision, _ground, _groundId);
   }

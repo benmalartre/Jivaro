@@ -70,6 +70,7 @@ Solver::~Solver()
   for (auto& body : _bodies)delete body;
   for (auto& force : _forces)delete force;
   _scene->RemoveGeometry(_pointsId);
+  _scene->RemoveGeometry(_curvesId);
   delete _curves;
   delete _points;
   delete _timer;
@@ -388,9 +389,9 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     if (vL < _sleepThreshold) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
-    } else if(vL > vMax) {
+    } /*else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
-    }
+    }*/
 
 
 
@@ -521,6 +522,7 @@ void Solver::UpdateGeometries()
   for (; it != _elements.end(); ++it)
   {
     if(it->first->GetType() == Element::BODY) {
+      std::cout << "update geometries : " << it->second.first << std::endl;
       pxr::SdfPath id = it->second.first;
       Geometry* geometry = it->second.second;
       if(geometry->GetType() >= Geometry::POINT) {
