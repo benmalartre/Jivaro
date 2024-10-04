@@ -48,13 +48,23 @@ void Constraint::_ResetCorrection()
 }
 
 // this one has to happen serialy
-void Constraint::Apply(Particles* particles)
+void Constraint::ApplyPosition(Particles* particles)
 {
   size_t corrIdx = 0;
   const pxr::GfVec2f* counter = &particles->counter[0];
   for(const auto& elem: _elements)
     particles->predicted[elem] += _correction[corrIdx++] / counter[elem][0];
 }
+
+// this one has to happen serialy
+void Constraint::ApplyVelocity(Particles* particles)
+{
+  size_t corrIdx = 0;
+  const pxr::GfVec2f* counter = &particles->counter[0];
+  for(const auto& elem: _elements)
+    particles->velocity[elem] += _correction[corrIdx++] / counter[elem][0];
+}
+
 
 ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, short type, 
   const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize, Geometry* target)
@@ -817,12 +827,21 @@ CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* co
 }
 
 // this one has to happen serialy
-void CollisionConstraint::Apply(Particles* particles)
+void CollisionConstraint::ApplyPosition(Particles* particles)
 {
   size_t corrIdx = 0;
   const pxr::GfVec2f* counter = &particles->counter[0];
   for(const auto& elem: _elements)
     particles->predicted[elem] += _correction[corrIdx++] / counter[elem][1];
+}
+
+// this one has to happen serialy
+void CollisionConstraint::ApplyVelocity(Particles* particles)
+{
+  size_t corrIdx = 0;
+  const pxr::GfVec2f* counter = &particles->counter[0];
+  for (const auto& elem : _elements)
+    particles->velocity[elem] += _correction[corrIdx++] / counter[elem][1];
 }
 
 pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correction, 
@@ -845,7 +864,7 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correctio
   return friction;// + correction * _collision->GetRestitution() * 0.5f;
 }
 
-static float vMax = 5.f;
+static float vMax = 25.f;
 
 void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 {
@@ -867,13 +886,13 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
     _correction[elem] = -d * normal - damp;
 
-    pxr::GfVec3f relativeVelocity = (particles->velocity[index] - velocity);
+    pxr::GfVec3f relativeVelocity = (particles->velocity[index] - velocity) * dt;
     pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
     _correction[elem] +=  friction;
   }
 }
 
-static float selfVMax = 5.f;
+static float selfVMax = 25.f;
 
 void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 {
@@ -899,9 +918,14 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
       normal = collision->GetContactNormal(index, c);
       d = collision->GetContactDepth(index, c) + 
-        pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f);
+        /*pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f) +*/ Collision::TOLERANCE_MARGIN;
 
       if(d >= 0.f) continue;
+
+      if(d > -2.f * Collision::TOLERANCE_MARGIN)
+        d = RESCALE(d + Collision::TOLERANCE_MARGIN, -Collision::TOLERANCE_MARGIN, Collision::TOLERANCE_MARGIN, 
+          -2.f * Collision::TOLERANCE_MARGIN, 0.f);
+        
       w0 = particles->invMass[index];
       w1 = particles->invMass[other];     
       w = w0 + w1;
@@ -913,7 +937,10 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
       accum += correction;
 
-      velocity += (particles->velocity[index] - _collision->GetContactVelocity(index, c));
+      velocity = (particles->velocity[index] - _collision->GetContactVelocity(index, c)) * dt;
+      accum  += _ComputeFriction(correction, velocity);
+
+      //velocity += (particles->velocity[index] - _collision->GetContactVelocity(index, c)) * dt;
 
       numContactUsed++;
     }
@@ -922,8 +949,8 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
       float rN = 1.f / (float)numContactUsed;
       _correction[elem] = accum * rN;
             
-		  pxr::GfVec3f friction = _ComputeFriction(_correction[elem], velocity * rN);
-      _correction[elem]  += w0 / w * friction;
+		  //pxr::GfVec3f friction = _ComputeFriction(_correction[elem], velocity * rN);
+      //_correction[elem]  += w0 / w * friction;
     }
     
   }
@@ -931,6 +958,7 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 {
+  _ResetCorrection();
   const size_t numElements = _elements.size();
 
   for (size_t elem = 0; elem < numElements; ++elem) {
@@ -938,13 +966,14 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
      const float d = _collision->GetContactDepth(index);
 
     if(d > 0.f)continue;
-    //particles->velocity[index] = (particles->velocity[index] + _collision->GetContactVelocity(index))* 0.5f * 0.95f;
+    _correction[elem] = (-particles->velocity[index] + _collision->GetContactVelocity(index))* 0.5f;
   }
 }
 
 void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
 {
-  /*
+  return;
+   _ResetCorrection();
   const size_t numElements = _elements.size();
   pxr::GfVec3f velocity, normal;
   float d, w, w0, w1;
@@ -972,10 +1001,10 @@ void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
 
     if (numContactUsed) {
       float rN = 1.f / (float)numContactUsed;
-      particles->velocity[elem] = velocity * rN * 0.1f;
+      _correction[elem] = velocity * rN * 0.1f;
     }
   }
-  */
+  
 }
 
 void CollisionConstraint::SolvePosition(Particles* particles, float dt)

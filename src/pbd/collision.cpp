@@ -18,7 +18,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const size_t Collision::PACKET_SIZE = 32;
-
+const float Collision::TOLERANCE_MARGIN = 0.025f;
 
 void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
@@ -244,7 +244,7 @@ void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const pxr::GfVec3f velocity = particles->velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->position[index] + velocity);
-  float d = pxr::GfDot(_normal, predicted - _position)  - (particles->radius[index] + 0.05f);
+  float d = pxr::GfDot(_normal, predicted - _position)  - (particles->radius[index] + TOLERANCE_MARGIN);
   SetHit(index, d < 0.f);
 }
 
@@ -252,7 +252,7 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Cont
 {
 
   const pxr::GfVec3f predicted = particles->position[index] + particles->velocity[index] * ft;
-  float d = pxr::GfDot(predicted - _position, _normal)  - particles->radius[index];
+  float d = pxr::GfDot(predicted - _position, _normal)  - particles->radius[index] + TOLERANCE_MARGIN;
   pxr::GfVec3f intersection = predicted + _normal * -d;
 
   contact->Init(_normal,GetVelocity(particles, index), d);
@@ -291,7 +291,7 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const pxr::GfVec3f velocity = particles->velocity[index] * ft;
-  const float radius = _radius + particles->radius[index] + _collider->GetVelocity().GetLength();
+  const float radius = _radius + particles->radius[index] + _collider->GetVelocity().GetLength() + TOLERANCE_MARGIN;
   const pxr::GfVec3f predicted(particles->position[index] + velocity);
   SetHit(index, (predicted - _center).GetLength() < radius);
 }
@@ -305,7 +305,7 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index, Con
   if (nL > 0.0000001f)normal.Normalize();
   else normal = pxr::GfVec3f(0.f, 1.f, 0.f);
 
-  float d = nL - (_radius + particles->radius[index]);
+  float d = nL - (_radius + particles->radius[index] + TOLERANCE_MARGIN);
 
   pxr::GfVec3f intersection = predicted  + normal * -d;
 
@@ -535,7 +535,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, 2.f * particles->radius[index]+0.01f);
+  _grid.Closests(index, &particles->predicted[0], closests, 3.f * particles->radius[index]+TOLERANCE_MARGIN);
 
   for(int closest: closests) {
     if(_AreConnected(index, closest))continue;
@@ -543,7 +543,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
     pxr::GfVec3f ip(particles->position[index] + particles->velocity[index] * ft);
     pxr::GfVec3f cp(particles->position[closest] + particles->velocity[closest] * ft);
-    if((ip - cp).GetLength() < (particles->radius[index] + particles->radius[closest] + 0.01f)) {
+    if((ip - cp).GetLength() < 1.5f * (particles->radius[index] + particles->radius[closest] + TOLERANCE_MARGIN)) {
       Contact* contact = _contacts.Use(index);
       _StoreContactLocation(particles, index, closest, contact, ft);
       contact->SetComponentIndex(closest);

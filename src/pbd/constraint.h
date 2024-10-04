@@ -77,9 +77,10 @@ public:
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) = 0;
 
-  // this one has to be called serially 
+  // this two has to be called serially 
   // as two constraints can move the same point
-  virtual void Apply(Particles* particles);
+  virtual void ApplyPosition(Particles* particles);
+  virtual void ApplyVelocity(Particles* particles);
 
 
 protected:
@@ -260,7 +261,8 @@ public:
 
   // this one has to be called serially 
   // as two constraints can move the same point
-  void Apply(Particles* particles) override;
+  void ApplyPosition(Particles* particles) override;
+  void ApplyVelocity(Particles* particles) override;
 
 
 protected:

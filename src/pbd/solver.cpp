@@ -43,7 +43,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   , _gravity(nullptr)
   , _damp(nullptr)
 {
-  _frameTime = 1.f / 60.f;//Time::Get()->GetFPS();
+  _frameTime = 1.f / Time::Get()->GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
 
   _timer = new Timer();
@@ -390,24 +390,36 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     if (vL < _sleepThreshold) {
       state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
-    } else if(vL > vMax) {
+    } /*else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
-    }
+    }*/
 
     // update position
     position[index] = predicted[index];
   }
 }
 
-void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
+void 
+Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 {
   // solve constraints
   pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
     [&](Constraint* constraint) {constraint->SolvePosition(&_particles, _stepTime); });
   
   // apply constraint serially
-  for (auto& constraint : constraints)constraint->Apply(&_particles);
+  for (auto& constraint : constraints)constraint->ApplyPosition(&_particles);
 
+}
+
+void 
+Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
+{
+  // solve velocities
+  pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
+    [&](Constraint* constraint) {constraint->SolveVelocity(&_particles, _stepTime); });
+
+  // apply velocities serially
+  for (auto& constraint : constraints)constraint->ApplyVelocity(&_particles);
 }
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
@@ -428,12 +440,6 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 
 }
 
-void 
-Solver::UpdateVelocities()
-{
-  for(auto& contact: _contacts)
-    contact->SolveVelocity(GetParticles(), _stepTime);
-}
 
 void Solver::Reset()
 {
@@ -478,16 +484,17 @@ void Solver::Step()
       std::bind(&Solver::_IntegrateParticles, this,
         std::placeholders::_1, std::placeholders::_2), packetSize);
 
-    _timer->Next();
-    // solve and apply constraint
-    _SolveConstraints(_constraints);
+    for (size_t ci = 0; ci < 2; ++ci) {
+      _timer->Next();
+      // solve and apply constraint
+      _SolveConstraints(_constraints);
 
-    _timer->Next();
-    _UpdateContacts();
-    // solve and apply contacts
-    _timer->Next();
-    _SolveConstraints(_contacts);
-
+      _timer->Next();
+      _UpdateContacts();
+      // solve and apply contacts
+      _timer->Next();
+      _SolveConstraints(_contacts);
+    }
     _timer->Next();
     // update particles
     pxr::WorkParallelForN(
@@ -496,7 +503,7 @@ void Solver::Step()
         std::placeholders::_1, std::placeholders::_2), packetSize);
     _timer->Stop();
 
-    UpdateVelocities();
+    _SolveVelocities(_contacts);
 
   }
   
@@ -542,7 +549,7 @@ void Solver::UpdateGeometries()
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
-  _frameTime = 1.f / 60.f;//static_cast<float>(Time::Get()->GetFPS());
+  _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
   prim.GetAttribute(PBDTokens->substeps).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(PBDTokens->sleep).Get(&_sleepThreshold, time);

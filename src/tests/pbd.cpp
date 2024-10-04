@@ -49,10 +49,10 @@ void TestPBD::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& pat
 
     op = xformable.AddRotateYOp();
     op.Set( 0.f, 1);
-    //op.Set(-45.f, 26);
-    //op.Set( 45.f, 51);
-    //op.Set(-45.f, 76);
-    //op.Set( 720.f, 101);
+    op.Set(-45.f, 26);
+    op.Set( 45.f, 51);
+    op.Set(-45.f, 76);
+    op.Set( 720.f, 101);
 
     op = xformable.AddTranslateOp();
     op.Set(translate0, 101);
@@ -86,9 +86,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .025f;
+  float size = .016f;
 
-  for(size_t x = 0; x < 1; ++x) {
+  for(size_t x = 0; x < 5; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 
@@ -106,7 +106,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _clothMeshes[c]->GetMatrix(), 0.1f, size * 9.f, 0.1f);
     //_solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 60000.f, 0.1f);
-    //_solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);
     
     _solver->AddElement(body, _clothMeshes[c], _clothMeshesId[c]);
     
@@ -115,7 +115,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.1f;
   float friction = 0.5f;
 
-  bool createSphereCollision = false;
+  bool createSphereCollision = true;
   if(createSphereCollision) {
 
    // create collide spheres
@@ -153,7 +153,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, _ground, _groundId);
   }
 
-  bool createMeshCollision = false;
+  bool createMeshCollision = true;
   if(createMeshCollision) {
     for (size_t c = 0; c < _collideMeshesId.size(); ++c) {
       _scene.AddGeometry(_collideMeshesId[c], _collideMeshes[c]);
@@ -165,7 +165,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     }
   }
 
-  bool createSelfCollision = false;
+  bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.f, 1.f);

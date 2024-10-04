@@ -1181,18 +1181,15 @@ void Mesh::Cube()
 
 void Mesh::TriangularGrid2D(float spacing, const pxr::GfMatrix4f& matrix)
 {
-  const float scaleY = 1.5708;
-  const float invScaleY = 1.f/scaleY;
-
-  size_t numX = (1.f / spacing )+ 1;
-  size_t numY = (1.f / spacing) + 1;
+  size_t numX = ((1.f / spacing )+ 1) * 0.5f;
+  size_t numY = ((1.f / spacing) + 1) * 0.5f;
   size_t numPoints = numX * numY;
   size_t numTriangles = (numX - 1) * 2 * (numY - 1);
   size_t numSamples = numTriangles * 3;
   pxr::VtArray<pxr::GfVec3f> positions(numPoints);
 
   float spaceX = spacing * 2.f;
-  float spaceY = spacing * scaleY;
+  float spaceY = spacing * 2.f;
 
   for(size_t y = 0; y < numY; ++y) {
     for(size_t x = 0; x < numX; ++x) {

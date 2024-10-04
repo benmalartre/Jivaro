@@ -104,7 +104,6 @@ public:
   void UpdateParameters(pxr::UsdStageRefPtr& stage, float time);
   void UpdateCollisions(pxr::UsdStageRefPtr& stage, float time);
   void UpdateGeometries();
-  void UpdateVelocities();
   void Reset();
   void Step();
 
@@ -121,6 +120,7 @@ private:
   void _UpdateContacts();
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);
+  void _SolveVelocities(std::vector<Constraint*>& constraints);
 
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);

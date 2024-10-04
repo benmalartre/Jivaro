@@ -28,7 +28,7 @@ class Collision : public Mask
 {
 public:
 
-  //static const float TOLERANCE_MARGIN;
+  static const float TOLERANCE_MARGIN;
 
   enum Type {
     PLANE = 1,
