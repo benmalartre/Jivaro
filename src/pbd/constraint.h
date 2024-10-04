@@ -71,7 +71,8 @@ public:
   virtual void SetStiffness(float stiffness);
   virtual void SetDamp(float damp);
   
-  virtual void Solve(Particles* particles, float dt) = 0;
+  virtual void SolvePosition(Particles* particles, float dt) = 0;
+  virtual void SolveVelocity(Particles* particles, float dt){};
 
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) = 0;
@@ -110,7 +111,7 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
-  void Solve(Particles* particles, float dt) override;
+  void SolvePosition(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
@@ -132,7 +133,7 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
-  void Solve(Particles* particles, float dt) override;
+  void SolvePosition(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
@@ -156,7 +157,7 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
-  void Solve(Particles* particles, float dt) override;
+  void SolvePosition(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
@@ -194,7 +195,7 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results, 
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
-  void Solve(Particles* particles, float dt) override;
+  void SolvePosition(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
@@ -218,7 +219,7 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
-  void Solve(Particles* particles, float dt) override;
+  void SolvePosition(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
@@ -254,7 +255,8 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
-  void Solve(Particles* particles, float dt) override;
+  void SolvePosition(Particles* particles, float dt) override;
+  void SolveVelocity(Particles* particles, float dt) override;
 
   // this one has to be called serially 
   // as two constraints can move the same point
@@ -262,14 +264,18 @@ public:
 
 
 protected:
-  void _SolveGeom(Particles* particles, float dt);
-  void _SolveSelf(Particles* particles, float dt);
+  void _SolvePositionGeom(Particles* particles, float dt);
+  void _SolvePositionSelf(Particles* particles, float dt);
+
+  void _SolveVelocityGeom(Particles* particles, float dt);
+  void _SolveVelocitySelf(Particles* particles, float dt);
 
   pxr::GfVec3f _ComputeFriction(const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity);
   static size_t                 TYPE_ID;
   Mode                          _mode;
   Collision*                    _collision;
-  SolveFunc                     _Solve;
+  SolveFunc                     _SolvePosition;
+  SolveFunc                     _SolveVelocity;
 
 };
 

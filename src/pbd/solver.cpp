@@ -43,7 +43,7 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   , _gravity(nullptr)
   , _damp(nullptr)
 {
-  _frameTime = 1.f / Time::Get()->GetFPS();
+  _frameTime = 1.f / 60.f;//Time::Get()->GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
 
   _timer = new Timer();
@@ -402,7 +402,7 @@ void Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 {
   // solve constraints
   pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
-    [&](Constraint* constraint) {constraint->Solve(&_particles, _stepTime); });
+    [&](Constraint* constraint) {constraint->SolvePosition(&_particles, _stepTime); });
   
   // apply constraint serially
   for (auto& constraint : constraints)constraint->Apply(&_particles);
@@ -430,6 +430,8 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 void 
 Solver::UpdateVelocities()
 {
+  for(auto& contact: _contacts)
+    contact->SolveVelocity(GetParticles(), _stepTime);
 }
 
 void Solver::Reset()
@@ -506,10 +508,9 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-    _collisions[i]->Update(prim, time + _frameTime);
+    _collisions[i]->Update(prim, time);
   }
 }
-
 
 void Solver::UpdateGeometries()
 {
@@ -529,7 +530,6 @@ void Solver::UpdateGeometries()
         for (size_t p = 0; p < numPoints; ++p) {
           output[p] = deformable->GetInverseMatrix().Transform(positions[offset + p]);
         }
-        //deformable->SetPositions(&results[0], numPoints);
         _scene->MarkPrimDirty(id, pxr::HdChangeTracker::AllDirty);
 
         offset += numPoints;
@@ -541,7 +541,7 @@ void Solver::UpdateGeometries()
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
-  _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
+  _frameTime = 1.f / 60.f;//static_cast<float>(Time::Get()->GetFPS());
   prim.GetAttribute(PBDTokens->substeps).Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(PBDTokens->sleep).Get(&_sleepThreshold, time);
