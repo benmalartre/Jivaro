@@ -23,9 +23,9 @@ HalfEdge* HalfEdgeGraph::ItUniqueEdge::Next()
   while (true) {
     if (index >= graph._halfEdges.size())return NULL;
     HalfEdge* edge = (HalfEdge*)&graph._halfEdges[index];
-    if (!graph.IsUsed(edge) || !graph.IsUnique(edge))
-      index++;
-    else return edge;
+    if (graph.IsUsed(edge) && graph.IsUnique(edge))
+      return edge;
+    index++;
   }
 }
 

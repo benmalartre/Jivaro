@@ -292,9 +292,11 @@ static void _GetMeshStretchElements(Mesh* mesh, pxr::VtArray<int>& allElements, 
   const pxr::GfMatrix4d& m = mesh->GetMatrix();
   HalfEdge* edge = it.Next();
   size_t a, b;
+
   while (edge) {
     a = edge->vertex;
     b = edges[edge->next].vertex;
+ 
     allElements.push_back(a + offset);
     allElements.push_back(b + offset);
     edge = it.Next();
@@ -936,13 +938,13 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
      const float d = _collision->GetContactDepth(index);
 
     if(d > 0.f)continue;
-    particles->velocity[index] = (particles->velocity[index] + _collision->GetContactVelocity(index))* 0.5f * 0.95f;
+    //particles->velocity[index] = (particles->velocity[index] + _collision->GetContactVelocity(index))* 0.5f * 0.95f;
   }
 }
 
 void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
 {
-  
+  /*
   const size_t numElements = _elements.size();
   pxr::GfVec3f velocity, normal;
   float d, w, w0, w1;
@@ -973,7 +975,7 @@ void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
       particles->velocity[elem] = velocity * rN * 0.1f;
     }
   }
-
+  */
 }
 
 void CollisionConstraint::SolvePosition(Particles* particles, float dt)

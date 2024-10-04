@@ -302,6 +302,7 @@ void Solver::UpdateCurves()
 
 void Solver::WeightBoundaries(Body* body)
 {
+  return;
   size_t offset = body->GetOffset();
   size_t numPoints = body->GetNumPoints();
 

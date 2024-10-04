@@ -40,7 +40,7 @@ struct ConstraintsGroup {
 class Constraint: public Element
 {
 public:
-  constexpr static size_t BlockSize = 64;
+  constexpr static size_t BlockSize = 256;
   constexpr static float EPSILON = 1e-6f;
   enum TypeId {
     ATTACH = 1,

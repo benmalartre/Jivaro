@@ -70,8 +70,8 @@ Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   float spacing, const pxr::GfMatrix4d& m, float mass, float damp)
 {
   Mesh* mesh = new Mesh(m);
-  //mesh->TriangularGrid2D(spacing);
-  mesh->RegularGrid2D(spacing);
+  mesh->TriangularGrid2D(spacing);
+  //mesh->RegularGrid2D(spacing);
   //mesh.Randomize(0.1f);
   
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);

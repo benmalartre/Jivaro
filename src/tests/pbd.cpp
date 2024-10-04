@@ -86,9 +86,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _scene.AddGeometry(_solverId, _solver);
 
   // create cloth meshes
-  float size = .01f;
+  float size = .025f;
 
-  for(size_t x = 0; x < 5; ++x) {
+  for(size_t x = 0; x < 1; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 
@@ -103,10 +103,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     size_t offset = _solver->GetNumParticles();
 
     Body* body = _solver->CreateBody((Geometry*)_clothMeshes[c], 
-      _clothMeshes[c]->GetMatrix(), 0.1f, size * 10.f, 0.1f);
+      _clothMeshes[c]->GetMatrix(), 0.1f, size * 9.f, 0.1f);
     //_solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 60000.f, 0.1f);
-    _solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);
+    //_solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);
     
     _solver->AddElement(body, _clothMeshes[c], _clothMeshesId[c]);
     
@@ -115,7 +115,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float restitution = 0.1f;
   float friction = 0.5f;
 
-  bool createSphereCollision = true;
+  bool createSphereCollision = false;
   if(createSphereCollision) {
 
    // create collide spheres
@@ -153,7 +153,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->AddElement(collision, _ground, _groundId);
   }
 
-  bool createMeshCollision = true;
+  bool createMeshCollision = false;
   if(createMeshCollision) {
     for (size_t c = 0; c < _collideMeshesId.size(); ++c) {
       _scene.AddGeometry(_collideMeshesId[c], _collideMeshes[c]);
@@ -165,7 +165,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     }
   }
 
-  bool createSelfCollision = true;
+  bool createSelfCollision = false;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.f, 1.f);
