@@ -372,12 +372,15 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   pxr::GfRay ray(particles->velocity[index], particles->position[index]);
   Mesh* mesh = (Mesh*)_collider;
   double maxDistance = (particles->velocity[index].GetLength() * ft + 
-    particles->radius[index]) ;
+    particles->radius[index] + Collision::TOLERANCE_MARGIN) ;
   double minDistance = DBL_MAX;
-  if(_bvh->Closest(particles->position[index], &_closest[index], maxDistance))
+  if(_bvh->Raycast(ray, &_closest[index], maxDistance, &minDistance))
     SetHit(index, true);
   else
-    SetHit(index, false);
+    if(_bvh->Closest(particles->position[index], &_closest[index], maxDistance))
+      SetHit(index, true);
+    else
+      SetHit(index, false);
   
 }
 

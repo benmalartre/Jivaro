@@ -179,6 +179,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   _voxelsId = _solverId.AppendChild(pxr::TfToken("voxels"));
   _voxels = _Voxelize(_emitter, radius);
   _scene.InjectGeometry(stage, _voxelsId, _voxels);
+  _scene.AddGeometry(_voxelsId, _voxels);
 
   std::cout << "voxels num cells " << _voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << _voxels->GetNumPoints() << std::endl;
@@ -242,7 +243,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     for (size_t c = 0; c < _collideMeshesId.size(); ++c) {
       _scene.AddGeometry(_collideMeshesId[c], _collideMeshes[c]);
       _collideMeshes[c]->SetInputOnly();
-      Collision* meshCollide = new MeshCollision(_collideMeshes[c], _collideMeshesId[c], 1.f, 1.f);
+      Collision* meshCollide = new MeshCollision(_collideMeshes[c], _collideMeshesId[c], 0.f, 1.f);
       meshCollide->Init(_solver->GetNumParticles());
       _solver->AddElement(meshCollide, _collideMeshes[c], _collideMeshesId[c]);
       std::cout << "added mesh collision" << _collideMeshesId[c] <<std::endl;

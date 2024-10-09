@@ -88,7 +88,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   // create cloth meshes
   float size = .016f;
 
-  for(size_t x = 0; x < 1; ++x) {
+  for(size_t x = 0; x < 7; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 
@@ -103,7 +103,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     size_t offset = _solver->GetNumParticles();
 
     Body* body = _solver->CreateBody((Geometry*)_clothMeshes[c], 
-      _clothMeshes[c]->GetMatrix(), 0.1f, size * 9.f, 0.1f);
+      _clothMeshes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f);
     //_solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 60000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);

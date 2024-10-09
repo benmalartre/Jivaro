@@ -861,7 +861,7 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const pxr::GfVec3f& correctio
     friction = -tangentialVelocity * pxr::GfMin(maxTangential / tangentialLength, 1.0f);
   }
 
-  return friction + correction * _collision->GetRestitution() * 0.5f;
+  return friction;
 }
 
 static float vMax = 5.f;
@@ -917,8 +917,8 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
       other = collision->GetContactComponent(index, c);
 
       normal = collision->GetContactNormal(index, c);
-      d = collision->GetContactDepth(index, c) + 
-        pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f) + Collision::TOLERANCE_MARGIN;
+      d = collision->GetContactDepth(index, c)/* + 
+        pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f)*/ + Collision::TOLERANCE_MARGIN;
 
       if(d >= 0.f) continue;
 
