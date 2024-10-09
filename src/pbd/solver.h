@@ -126,6 +126,7 @@ private:
   void _UpdateParticles(size_t begin, size_t end);
 
   int                                 _subSteps;
+  int                                 _iterations;
   float                               _sleepThreshold;
   float                               _startTime;
   float                               _frameTime;

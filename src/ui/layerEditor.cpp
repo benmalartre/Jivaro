@@ -256,7 +256,7 @@ _AddTopNodeLayerRow(const pxr::SdfLayerRefPtr &layer, const Selection &selection
       //DrawSublayerPathEditDialog(layer, "");
     }
     if (ImGui::MenuItem("Add root prim")) {
-      ADD_COMMAND(CreatePrimCommand, Application::Get()->GetWorkStage()->GetRootLayer(), pxr::SdfPath("ZOB"));
+      ADD_COMMAND(CreatePrimCommand, Application::Get()->GetWorkStage()->GetRootLayer(), pxr::SdfPath("ZOB"), 0);
       //ExecuteAfterDraw<PrimNew>(layer, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
     }
     const char *clipboard = ImGui::GetClipboardText();

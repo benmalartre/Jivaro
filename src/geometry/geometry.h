@@ -37,6 +37,7 @@ public:
   enum Type : int {
     INVALID,
     XFORM,
+    SOLVER,
     PLANE,
     SPHERE,
     CUBE,

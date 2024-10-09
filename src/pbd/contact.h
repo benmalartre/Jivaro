@@ -33,6 +33,8 @@ private:
 
   float             _initDepth;// start frame penetration depth
   float             _depth;    // current substep penetration depth
+
+  bool              _active;
 };
 
 

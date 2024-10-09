@@ -113,6 +113,7 @@ add_executable(${TARGET}
   pbd/force.cpp
   pbd/constraint.cpp
   pbd/solver.cpp
+  pbd/menu.cpp
 
   command/command.cpp
   command/inverse.cpp
@@ -165,6 +166,7 @@ endif()
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
+    ${USD_PLUGINS_INCLUDE_DIR}
     ${EMBREE_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIR}
     ${TBB_INCLUDE_DIR}
@@ -183,6 +185,7 @@ target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}
+  ${USD_PLUGINS_LIBRARIES}
   ${EMBREE_LIBRARIES}
   ${TBB_LIBRARIES}
   ${OPENVDB_LIBRARIES}

@@ -4,6 +4,8 @@
 #include <pxr/base/gf/range3f.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/tf/stopwatch.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usdGeom/points.h>
 #include "../geometry/voxels.h"
 #include "../geometry/location.h"
 #include "../geometry/deformable.h"
@@ -188,6 +190,29 @@ void Voxels::Build(float randomize)
       AddPoint(GetCellPosition(cellIdx) + offset, _radius);
       numHits++;
     }
+  }
+}
+
+Geometry::DirtyState 
+Voxels::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+{
+  if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomPoints>())
+  {
+    _previous = _positions;
+    pxr::UsdGeomPoints usdPoints(_prim);
+    const size_t nbPositions = _positions.size();
+    usdPoints.GetPointsAttr().Get(&_positions, time);
+  }
+  return Geometry::DirtyState::DEFORM;
+}
+
+void 
+Voxels::_Inject(const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time)
+{
+  if(_prim.IsA<pxr::UsdGeomPoints>()) {
+    pxr::UsdGeomPoints usdPoints(_prim);
+    usdPoints.CreatePointsAttr().Set(GetPositions(), time);
   }
 }
 

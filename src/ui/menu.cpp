@@ -10,6 +10,7 @@
 #include "../utils/strings.h"
 #include "../ui/style.h"
 #include "../ui/menu.h"
+#include "../geometry/geometry.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"
@@ -96,21 +97,13 @@ MenuUI::MenuUI(View* parent)
   fileMenu->Add("Save", false, true, std::bind(SaveFileCallback));
   fileMenu->Add("New", false, true, std::bind(NewFileCallback));
 
-  MenuUI::Item* testItem = Add("Test", false, true, NULL);
-  testItem->Add("CreatePrim", false, true, std::bind(CreatePrimCallback));
-  testItem->Add("Triangulate", false, true, std::bind(TriangulateCallback));
+  MenuUI::Item* testItem = Add("Create", false, true, NULL);
+  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, Geometry::CUBE));
+  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, Geometry::SPHERE));
+  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, Geometry::CAPSULE));
+  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, Geometry::CONE));
 
-  MenuUI::Item* subItem = testItem->Add("SubMenu", false, true, NULL);
-  subItem->Add("Sub0", false, true, NULL);
-  subItem->Add("Sub1", false, true, NULL);
-  MenuUI::Item* subSubItem = subItem->Add("Sub2", false, true, NULL);
-
-  subSubItem->Add("SubSub0", false, true, NULL);
-  subSubItem->Add("SubSub1", true, true, NULL);
-  subSubItem->Add("SubSub2", false, false, NULL);
-  subSubItem->Add("SubSub3", true, false, NULL);
-  subSubItem->Add("SubSub4", false, true, NULL);
-  subSubItem->Add("SubSub5", false, true, NULL);
+  AddPbdMenu(this);
 
   MenuUI::Item* demoItem = Add("Demo", false, true);
   demoItem->Add("Open Demo", false, true, std::bind(OpenDemoCallback));
@@ -306,11 +299,16 @@ static void SetLayoutCallback(Window* window, short layout)
   window->SetDesiredLayout(layout);
 }
 
-static void CreatePrimCallback()
+static void CreatePrimCallback(short type)
 {
+  Application* app = Application::Get();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+  const pxr::UsdPrim root = stage->GetPseudoRoot();
+  pxr::SdfLayerHandle layer = stage->GetSessionLayer();
+
   pxr::SdfPath name(RandomString(32));
 
-  ADD_COMMAND(CreatePrimCommand, Application::Get()->GetCurrentLayer(), name);
+  ADD_COMMAND(CreatePrimCommand, layer, name, type);
 }
 
 static void TriangulateCallback()

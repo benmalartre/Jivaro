@@ -100,7 +100,6 @@ public:
   // imgui context
   void SetupImgui();
   void ClearImgui();
-  int GetGuiId(){return _guiId;};
 
   // fullscreen
   bool IsFullScreen(){return _fullscreen;};
@@ -148,6 +147,7 @@ public:
   void BeginRepeatKey();
   void EndRepeatKey();
   bool ShouldRepeatKey();
+  void SetViewportMessage(const std::string &message);
 
   // fonts
   inline ImFont* GetFont(size_t size, size_t index);
@@ -212,7 +212,6 @@ private:
 
   // imgui
   ImGuiIO*              _io;
-  int                   _guiId;
   bool                  _debounce;
   uint64_t              _lastRepeatT;
 

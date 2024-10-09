@@ -92,6 +92,7 @@ public:
   std::vector<BaseUI*>& GetUIs();
   void TransferUIs(View* source);
   bool HasUIs() { return _uis.size() > 0; };
+  void SetViewportMessage(const std::string &message);
 
   // current
   BaseUI* GetCurrent() { return _current; };

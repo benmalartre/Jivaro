@@ -443,7 +443,6 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::Reset()
 {
-
   // reset
   _particles.RemoveAllBodies();
 
@@ -484,17 +483,18 @@ void Solver::Step()
       std::bind(&Solver::_IntegrateParticles, this,
         std::placeholders::_1, std::placeholders::_2), packetSize);
 
-    for (size_t ci = 0; ci < 2; ++ci) {
-      _timer->Next();
+    for (size_t ci = 0; ci < _iterations; ++ci) {
+      _timer->Start(2);
       // solve and apply constraint
       _SolveConstraints(_constraints);
-
-      _timer->Next();
-      _UpdateContacts();
-      // solve and apply contacts
-      _timer->Next();
-      _SolveConstraints(_contacts);
     }
+
+    _timer->Next();
+    _UpdateContacts();
+    // solve and apply contacts
+    _timer->Next();
+    _SolveConstraints(_contacts);
+
     _timer->Next();
     // update particles
     pxr::WorkParallelForN(
@@ -516,7 +516,7 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-    _collisions[i]->Update(prim, time);
+    _collisions[i]->Update(prim, time + _frameTime);
   }
 }
 
@@ -551,6 +551,7 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
   _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
   prim.GetAttribute(PBDTokens->substeps).Get(&_subSteps, time);
+  prim.GetAttribute(PBDTokens->iterations).Get(&_iterations, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   prim.GetAttribute(PBDTokens->sleep).Get(&_sleepThreshold, time);
 

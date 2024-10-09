@@ -38,6 +38,7 @@ static Voxels* _Voxelize(Mesh* mesh, float radius)
   return voxels;
 }
 
+
 void TestParticles::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(path);
@@ -74,8 +75,8 @@ void TestParticles::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   for (pxr::UsdPrim prim : stage->TraverseAll())
     if (prim.IsA<pxr::UsdGeomMesh>()) {
-      _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
-      _meshesId.push_back(prim.GetPath());
+      _collideMeshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
+      _collideMeshesId.push_back(prim.GetPath());
       //_meshes.back()->SetInputOnly();
     } 
 }
@@ -85,8 +86,8 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  float mass = 0.01f;
-  float radius = 0.1f;
+  float mass = 1.f;
+  float radius = 0.25f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;
@@ -147,7 +148,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 25.f, 0.f));
 
-  pxr::SdfPath emitterId;
 
   Application* app = Application::Get();
   Selection* selection = app->GetSelection();
@@ -159,24 +159,26 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       if(item.type != Selection::PRIM) continue;
       pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
       if(prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
-        emitterId = item.path;
-        emitter = new Mesh(pxr::UsdGeomMesh(prim), 
+        _emitterId = item.path;
+        _emitter = new Mesh(pxr::UsdGeomMesh(prim), 
           pxr::UsdGeomMesh(prim).ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
         //emitter->SetInputOnly();
         break;
       }
     }
   }
-  if(emitterId.IsEmpty()) {
-    emitterId = _solverId.AppendChild(pxr::TfToken("emitter"));
-    emitter = new Mesh(scale * rotate * translate);
+  if(_emitterId.IsEmpty()) {
+    std::cout << " nothing selected create cube emitter" << std::endl;
+    _emitterId = _solverId.AppendChild(pxr::TfToken("emitter"));
+    _emitter = new Mesh(scale * rotate * translate);
     //emitter->SetInputOnly();
-    emitter->Cube();
-    _scene.InjectGeometry(stage, emitterId, emitter, 1.f);
+    _emitter->Cube();
+    _scene.InjectGeometry(stage, _emitterId, _emitter, 1.f);
   }
 
-  _voxels = _Voxelize(emitter, radius);
-  delete emitter;
+  _voxelsId = _solverId.AppendChild(pxr::TfToken("voxels"));
+  _voxels = _Voxelize(_emitter, radius);
+  _scene.InjectGeometry(stage, _voxelsId, _voxels);
 
   std::cout << "voxels num cells " << _voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << _voxels->GetNumPoints() << std::endl;
@@ -184,8 +186,11 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   
   //Points* points = new Points(pxr::UsdGeomPoints(voxels), xform);
   pxr::GfMatrix4d matrix(1.0);
+  std::cout << "add particles " << std::endl;
+  std::cout << _voxels << std::endl;
+
   Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius, damping);
-  _solver->AddElement(body, _voxels, emitterId);
+  _solver->AddElement(body, _voxels, _emitterId);
   std::cout << "added particles" << _solver->GetNumParticles() << std::endl;
 
 
@@ -227,7 +232,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.f, 1.f);
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 1.f, 1.f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
     std::cout << "added self collision" << std::endl;
   }
@@ -238,27 +243,15 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       _scene.AddGeometry(_collideMeshesId[c], _collideMeshes[c]);
       _collideMeshes[c]->SetInputOnly();
       Collision* meshCollide = new MeshCollision(_collideMeshes[c], _collideMeshesId[c], 1.f, 1.f);
+      meshCollide->Init(_solver->GetNumParticles());
       _solver->AddElement(meshCollide, _collideMeshes[c], _collideMeshesId[c]);
-      
+      std::cout << "added mesh collision" << _collideMeshesId[c] <<std::endl;
     }
   }
 
   _lastTime = FLT_MAX;
 
-  std::cout << "update first frame" << std::endl;
   Particles* particles = _solver->GetParticles();
-
-  pxr::GfRange3f range;
-  for (size_t p = 0; p < particles->GetNumParticles(); ++p) {
-    range = range.UnionWith(particles->position[p]);
-  }
-  std::vector<int> used;
-  for(size_t p = 0; p < _solver->GetNumParticles(); ++p)
-    if (particles->position[p][1] < range.GetMidpoint()[1]) {
-      used.push_back(p);
-      particles->color[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    }
-  //collision->SetMask(_solver->GetNumParticles(), used);
 
 
   UpdateExec(stage, _solver->GetStartTime());
@@ -269,7 +262,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 void TestParticles::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
-
   if(time != _lastTime) {
     _solver->Update(stage, time);
     _lastTime = time;
@@ -281,7 +273,9 @@ void TestParticles::TerminateExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
   _scene.RemoveGeometry(_solverId);
+  //_scene.RemoveGeometry(_emitterId);
   delete _solver;
+  delete _emitter;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

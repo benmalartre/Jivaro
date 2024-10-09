@@ -52,6 +52,7 @@ Solver* _CreateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPa
 
   pxr::UsdPrim usdPrim = usdXform.GetPrim();
   usdPrim.CreateAttribute(PBDTokens->substeps, pxr::SdfValueTypeNames->Int).Set(subSteps);
+  usdPrim.CreateAttribute(PBDTokens->iterations, pxr::SdfValueTypeNames->Int).Set(3);
   usdPrim.CreateAttribute(PBDTokens->sleep, pxr::SdfValueTypeNames->Float).Set(sleepThreshold);
 
   usdPrim.CreateAttribute(PBDTokens->gravity, pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(0.f, -9.81f, 0.f));

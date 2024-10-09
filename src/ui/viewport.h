@@ -76,6 +76,8 @@ class ViewportUI : public BaseUI
     pxr::GfFrustum _ComputePickFrustum(int x, int y);
     bool Pick(int x, int y, int mods);
 
+    void SetMessage(const std::string& message){_message = message;};
+
     /*
     pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos,
       pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);*/
@@ -110,6 +112,8 @@ class ViewportUI : public BaseUI
     const char**                        _rendererNames;
     int                                 _numRenderers;
     pxr::CameraUtilConformWindowPolicy  _conformWindowPolicy;
+
+    std::string                         _message;
 
 };
 JVR_NAMESPACE_CLOSE_SCOPE

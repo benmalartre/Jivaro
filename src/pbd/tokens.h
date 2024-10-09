@@ -14,6 +14,7 @@ struct PBDTokensType {
     PBDTokensType();
 
     const pxr::TfToken substeps;
+    const pxr::TfToken iterations;
     const pxr::TfToken sleep;
     const pxr::TfToken mass;
     const pxr::TfToken velocity;

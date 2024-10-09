@@ -4,6 +4,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 PBDTokensType::PBDTokensType() :
   substeps              ("substeps",              pxr::TfToken::Immortal),
+  iterations            ("iterations",            pxr::TfToken::Immortal),
   sleep                 ("sleep",                 pxr::TfToken::Immortal),
   mass                  ("mass",                  pxr::TfToken::Immortal),
   velocity              ("velocity",              pxr::TfToken::Immortal),
@@ -20,6 +21,7 @@ PBDTokensType::PBDTokensType() :
   volume                ("volume",                pxr::TfToken::Immortal),
   allTokens({
     substeps,
+    iterations,
     sleep,
     mass,
     velocity,

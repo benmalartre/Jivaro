@@ -528,7 +528,7 @@ bool ViewportUI::Draw()
         min, min + size, ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
     }
     
-    std::string msg = "Hello Jivaro!";
+    std::string msg = _message;
     
     drawList->AddText(
       ImVec2(min[0] + 20, (min[1] + size[1]) - 20), 

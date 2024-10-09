@@ -387,6 +387,13 @@ Window::ShouldRepeatKey()
   return false;
 }
 
+void 
+Window::SetViewportMessage(const std::string &message)
+{
+  for(auto& view: _views)
+    view->SetViewportMessage(message);
+}
+
 
 
 // Resize

@@ -88,7 +88,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   // create cloth meshes
   float size = .016f;
 
-  for(size_t x = 0; x < 5; ++x) {
+  for(size_t x = 0; x < 1; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 
@@ -168,7 +168,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.f, 1.f);
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.5f, 0.5f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
   }
 

@@ -42,7 +42,6 @@ endif()
 set(NFD_INCLUDE_DIR "./utils/nfd/include")
 
 
-
 # glfw
 if(NOT DEFINED GLFW_DIR)
 	message(FATAL_ERROR "No GLFW_DIR variable set! GLFW installation path must be passed to cmake!!!")
@@ -55,6 +54,11 @@ if(NOT DEFINED USD_DIR)
 	message(FATAL_ERROR "No USD_DIR variable set! USD installation path must be passed to cmake!!!")
 endif()
 
+# usd 
+if(NOT DEFINED USD_PLUGINS_DIR)
+	message(FATAL_ERROR "No USD_PLUGINS_DIR variable set! USDPlugins installation path must be passed to cmake!!!")
+endif()
+
 # eigen
 if(UNIX)
   if(APPLE)
@@ -65,6 +69,7 @@ if(UNIX)
 else()
   set(EIGEN_INCLUDE_DIR "C:/Users/graph/Documents/bmal/src/eigen-3.4.0")
 endif()
+
 
 
 #set(USD_DIR "/Users/benmalartre/Documents/RnD/USD_BUILD")
@@ -136,13 +141,14 @@ if(UNIX)
 
   endif()
 else()
-	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_76")
+	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_78")
 endif()
 
 set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
 list(APPEND BOOST_LIB_NAMES 
   atomic
   regex
+  system
 )
 if(DEFINED PYTHON_BUILD)
   list(APPEND BOOST_LIB_NAMES python310)
@@ -151,7 +157,7 @@ endif()
 set(BOOST_LIBRARIES "")
 set(BOOST_VERSION "")
 if(NOT UNIX)
-	set(BOOST_VERSION "-vc142-mt-x64-1_76")
+	set(BOOST_VERSION "-vc142-mt-x64-1_78")
 endif()
 foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
   set(BOOST_LIBRARIES 
@@ -208,6 +214,22 @@ foreach(OPENSUBDIV_LIB_NAME IN LISTS OPENSUBDIV_LIB_NAMES)
   set(OPENSUBDIV_LIBRARIES 
     ${OPENSUBDIV_LIBRARIES} 
       "${OPENSUBDIV_LIBRARY_DIR}/${LIB_PREFIX}${OPENSUBDIV_LIB_NAME}${LIB_DYNAMIC_EXT}"
+  )
+endforeach()
+
+# custom usd plugins
+set(USD_PLUGINS_INCLUDE_DIR "${USD_PLUGINS_DIR}/include")
+set(USD_PLUGINS_LIBRARY_DIR "${USD_PLUGINS_DIR}/lib")
+
+list(APPEND USD_PLUGINS_LIB_NAMES 
+  usdPbd
+)
+
+set(USD_PLUGINS_LIBRARIES "")
+foreach(USD_PLUGINS_LIB_NAME IN LISTS USD_PLUGINS_LIB_NAMES)
+  set(USD_PLUGINS_LIBRARIES 
+    ${USD_PLUGINS_LIBRARIES} 
+      "${USD_PLUGINS_LIBRARY_DIR}/${LIB_PREFIX}${USD_PLUGINS_LIB_NAME}${LIB_DYNAMIC_EXT}"
   )
 endforeach()
 

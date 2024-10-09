@@ -89,8 +89,8 @@ private:
 //==================================================================================
 class CreatePrimCommand : public Command {
 public:
-  CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name);
-  CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name);
+  CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name, short type);
+  CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name, short type);
   ~CreatePrimCommand() {};
   void Do() override;
 

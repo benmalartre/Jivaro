@@ -21,6 +21,7 @@
 
 #include "../tests/utils.h"
 #include "../app/application.h"
+#include "../app/window.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -204,7 +205,7 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
   pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
   pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
 
-  const size_t n = 64;
+  const size_t n = 1024;
   _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
   _mesh = _CreateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
@@ -230,6 +231,7 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
 
 void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
+  uint64_t startT = CurrentTime();
   _scene.Sync(stage, time);
   
   if (_meshes.size()) {
@@ -248,6 +250,10 @@ void TestBVH::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 
   _UpdateHits();
   _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::AllDirty);
+  double elapsedT = (double)(CurrentTime() - startT)*1e-6;
+  size_t numRays = _mesh->GetNumPoints();
+  Window* mainWindow = Application::Get()->GetMainWindow();
+  mainWindow->SetViewportMessage("launch " + std::to_string(numRays) + " took " +std::to_string(elapsedT) + " seconds.");
 }
 
 void TestBVH::TerminateExec(pxr::UsdStageRefPtr& stage)

@@ -25,6 +25,7 @@ protected:
   void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
 
 private:
+
   Solver*           _solver;
   Plane*            _ground;
   Voxels*           _voxels;
@@ -36,8 +37,8 @@ private:
   BVH               _bvh;
   float             _lastTime;
 
-  std::vector<Geometry*>    _meshes;
-  std::vector<pxr::SdfPath> _meshesId;
+  Mesh*                     _emitter;
+  pxr::SdfPath              _emitterId;
 
   std::vector<Mesh*>        _collideMeshes;
   std::vector<pxr::SdfPath> _collideMeshesId;

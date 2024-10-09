@@ -213,6 +213,14 @@ View::TransferUIs(View* source)
   }
 }
 
+void
+View::SetViewportMessage(const std::string &message)
+{
+  for(auto& ui: _uis)
+    if(ui->GetType() == UIType::VIEWPORT)
+      ((ViewportUI*)ui)->SetMessage(message);
+}
+
 bool
 View::Contains(int x, int y)
 {

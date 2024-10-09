@@ -185,6 +185,9 @@ void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage,
       case Geometry::INSTANCER:
         prim = pxr::UsdGeomPointInstancer::Define(stage, path).GetPrim();
         break;
+      case Geometry::VOXEL:
+        prim = pxr::UsdGeomPoints::Define(stage, path).GetPrim();
+        break;
       default:
         return;
     }

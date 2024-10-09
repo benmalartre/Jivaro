@@ -10,6 +10,7 @@
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
+#include "../pbd/menu.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -53,14 +54,13 @@ private:
   static ImGuiWindowFlags _flags;
 };
 
-
 static void OpenFileCallback();
 static void SaveFileCallback();
 static void NewFileCallback();
 static void OpenDemoCallback();
 static void OpenChildWindowCallback();
 static void SetLayoutCallback(Window* window, short layout);
-static void CreatePrimCallback();
+static void CreatePrimCallback(short type);
 static void TriangulateCallback();
 static void FlattenGeometryCallback();
 
