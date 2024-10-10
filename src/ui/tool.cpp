@@ -261,11 +261,11 @@ bool ToolUI::Draw()
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
   if (ImGui::Button("Create Root Prim")) {
+    UndoBlock block;
     pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
     stage->SetDefaultPrim(root.GetPrim());
   } ImGui::SameLine();
   if (ImGui::Button("Create Random Mesh")) {
-    
     Mesh mesh;
     mesh.Random2DPattern(32);
     UndoBlock block;
@@ -278,6 +278,7 @@ bool ToolUI::Draw()
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }
     else {
+      UndoBlock block;
       pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, pxr::SdfPath("/RandomMesh"));
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
       stage->SetDefaultPrim(usdMesh.GetPrim());

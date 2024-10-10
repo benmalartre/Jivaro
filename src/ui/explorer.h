@@ -1,6 +1,7 @@
 #ifndef JVR_UI_EXPLORER_H
 #define JVR_UI_EXPLORER_H
 
+#include <limits>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/base/tf/hashmap.h>
 
@@ -12,17 +13,21 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static size_t EXPLORER_LINE_HEIGHT = 20;
+
+
 class Selection;
 class ExplorerUI : public BaseUI
 {
+public:
+  static size_t EXPLORER_LINE_HEIGHT = 20;
+  const static size_t INVALID_INDEX = std::numeric_limit<size_t>()::max();
+
   struct Item {
     pxr::SdfPath    path;
     size_t          id;
     bool            selected;
   };
 
-public:
   ExplorerUI(View* parent);
   ~ExplorerUI() override;
 
@@ -39,6 +44,9 @@ public:
   void DrawType(const pxr::UsdPrim& prim, bool selected);
   void DrawActive(const pxr::UsdPrim& prim, bool selected);
 
+protected:
+  Item* _GetItemUnderMouse(const pxr::GfVec2f& relative);
+
 private:
   bool                          _locked;
   bool                          _flip;
@@ -46,6 +54,9 @@ private:
   size_t                        _selectionHash;
   std::vector<Item>             _items;
   size_t                        _mapping;
+  bool                          _drag;
+  std::vector<pxr::SdfPath>     _dragItems;
+  pxr::GfVec2f                  _scroll;
 
   static ImGuiWindowFlags       _flags;
   static ImGuiTreeNodeFlags     _treeFlags;

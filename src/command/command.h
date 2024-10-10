@@ -11,6 +11,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 //==================================================================================
 class Command {
   public:
+    Command() : _undoable(false) {};
     Command(bool undoable) : _undoable(undoable) {};
     virtual void Do() = 0;
 protected:

@@ -86,6 +86,7 @@ static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, UIType::EXPLORER)
+  , _drag(false)
 {
 }
 
@@ -102,6 +103,20 @@ ExplorerUI::Init()
   _initialized = true;
 }
 
+ExplorerUI::Item*
+ExplorerUI::_GetItemUnderMouse(const pxr::GfVec2f &relative)
+{
+  const ImGuiStyle& style = ImGui::GetStyle();
+  size_t lineHeight = ImGui::GetTextLineHeight() + style.FramePadding.y * 2 + style.ItemInnerSpacing.y;
+  int index = (_scroll[1] + relative[1]) / lineHeight - 1;
+
+  std::cout << "Item Under Mouse" << relative << " : " << index << std::endl;
+  if(index >= 0 && index < _items.size())
+    return &_items[index]; 
+
+  return NULL;
+}
+
 
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
@@ -112,7 +127,11 @@ ExplorerUI::MouseButton(int button, int action, int mods)
 
   Application* app = Application::Get();
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
-    if (action == GLFW_RELEASE) {
+    if (action == GLFW_PRESS) {
+      ExplorerUI::Item* item = _GetItemUnderMouse(pxr::GfVec2f(x - GetX(), y - GetY()));
+      if (!item) return;
+
+      _current = item->path;
       if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
         if (mods & GLFW_MOD_CONTROL) {
           app->ToggleSelection({ _current });
@@ -121,6 +140,10 @@ ExplorerUI::MouseButton(int button, int action, int mods)
           app->SetSelection({ _current });
         }
       }
+      _drag = true;
+      _dragItems = app->GetSelection()->GetSelectedPaths();
+    } else if(action == GLFW_RELEASE) {
+      _drag = false; 
     }
   }
 }
@@ -128,6 +151,9 @@ ExplorerUI::MouseButton(int button, int action, int mods)
 void 
 ExplorerUI::MouseMove(int x, int y)
 {
+  if(_drag) {
+    _GetItemUnderMouse(pxr::GfVec2f(x - GetX(), y - GetY()));
+  }
 }
 
 void
@@ -170,8 +196,8 @@ ExplorerUI::DrawBackground()
 {
   ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   const auto& style = ImGui::GetStyle();
-  const float scrollOffsetH = ImGui::GetScrollX();
-  const float scrollOffsetV = ImGui::GetScrollY();
+  _scroll[0] = ImGui::GetScrollX();
+  _scroll[1] = ImGui::GetScrollY();
   pxr::GfVec2f clipRectMin(GetX(), GetY());
   pxr::GfVec2f clipRectMax(GetX() + GetWidth(), GetY() + GetHeight());
 
@@ -188,7 +214,7 @@ ExplorerUI::DrawBackground()
   ImGui::SetCursorPos(
     ImVec2(
       clipRectMin[0],
-      clipRectMin[1] - scrollOffsetV + ImGui::GetTextLineHeight() + style.FramePadding[1] * 2));
+      clipRectMin[1] - _scroll[1] + ImGui::GetTextLineHeight() + style.FramePadding[1] * 2));
   //ImGui::PopFont();
   //ImGui::PushFont(GetWindow()->GetRegularFont(1));
   for (auto& item : _items) {
@@ -345,6 +371,7 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
     }
     ImGui::TreePop();
   }
+  
 }
 
 bool 
@@ -399,7 +426,7 @@ ExplorerUI::Draw()
   ImGui::NextColumn();
   //ImGui::PopFont();
 
-  //ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
+  ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
   /*
   bool unfolded = 
     ImGui::TreeNodeEx(stage->GetRootLayer()->GetDisplayName().c_str(), _treeFlags);*/

@@ -3,9 +3,12 @@
 #include <usdPbd/solver.h>
 #include <usdPbd/bodyAPI.h>
 #include <usdPbd/collisionAPI.h>
+#include <usdPbd/constraintAPI.h>
 
+#include "../utils/strings.h"
 #include "../ui/menu.h"
 #include "../geometry/geometry.h"
+#include "../geometry/mesh.h"
 #include "../pbd/menu.h"
 #include "../app/application.h"
 #include "../app/commands.h"
@@ -25,6 +28,7 @@ void AddPbdMenu(MenuUI* menu)
   */
 
   MenuUI::Item* subItem = testItem->Add("Create Solver", false, true, std::bind(CreateSolverCallback));
+  subItem = testItem->Add("Create Cloth", false, true, std::bind(CreateClothCallback));
   subItem = testItem->Add("Add Body API", false, true, std::bind(AddBodyAPICallback));
   subItem = testItem->Add("Add Collision API", false, true, std::bind(AddCollisionAPICallback));
   subItem = testItem->Add("Add Constraint API", false, true, std::bind(AddConstraintAPICallback));
@@ -46,21 +50,56 @@ void AddPbdMenu(MenuUI* menu)
 void CreateSolverCallback()
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetStage();
-  pxr::SdfLayerHandle layer = stage->GetSessionLayer();
+  Selection* selection = app->GetSelection();
 
-  pxr::SdfPath name(RandomString(32));
-  ADD_COMMAND(CreatePrimCommand, layer, name, Geometry::SOLVER);
+  UndoBlock block;
+  if(selection->GetNumSelectedItems())
+    pxr::UsdPbdSolver::Define(app->GetStage(), (*selection)[0].path.AppendChild(pxr::TfToken("Solver")));
+  else
+    pxr::UsdPbdSolver::Define(app->GetStage(), pxr::SdfPath(pxr::TfToken("/Solver")));
+  
 }
 
 void CreateClothCallback()
 {
+  static const float spacing = 0.1f;
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetStage();
-  pxr::SdfLayerHandle layer = stage->GetSessionLayer();
+    pxr::UsdStageRefPtr stage = app->GetStage();
 
-  pxr::SdfPath name(RandomString(32));
-  ADD_COMMAND(CreatePrimCommand, layer, name, Geometry::SOLVER);
+  
+  UndoBlock editBlock;
+  pxr::UsdPrim prim;
+
+  Selection* selection = app->GetSelection();
+  if(!selection->GetNumSelectedItems()) {
+    Mesh mesh;
+    mesh.TriangularGrid2D(spacing);
+    //mesh->RegularGrid2D(spacing);
+    //mesh.Randomize(0.1f);
+    
+    pxr::SdfPath path(pxr::TfToken("/Cloth"+RandomString(6)));
+    pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
+
+    usdMesh.CreatePointsAttr().Set(mesh.GetPositions(), pxr::UsdTimeCode::Default());
+    usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts(), pxr::UsdTimeCode::Default());
+    usdMesh.CreateFaceVertexIndicesAttr().Set(mesh.GetFaceConnects(), pxr::UsdTimeCode::Default());
+
+    pxr::UsdPrim prim = usdMesh.GetPrim();
+    mesh.SetPrim(prim);
+    pxr::UsdPbdBodyAPI::Apply(prim);
+    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("Stretch"));
+  }
+  else {
+    for(size_t s = 0; s < selection->GetNumSelectedItems(); ++s) {
+      prim = stage->GetPrimAtPath((*selection)[0].path);
+      pxr::UsdPbdBodyAPI::Apply(prim);
+      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("Stretch"));
+    }
+    
+  }
+
+  
+
 }
 
 void AddBodyAPICallback()

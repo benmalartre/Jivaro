@@ -141,6 +141,10 @@ void LayerTextEditCommand::Do() {
 static void _SetTypeNameFromType(pxr::SdfPrimSpecHandle& primSpec, short type)
 {
   switch (type) {
+  case Geometry::XFORM:
+    primSpec->SetTypeName(pxr::TfToken("Cube"));
+    break;
+
   case Geometry::CUBE:
     primSpec->SetTypeName(pxr::TfToken("Cube"));
     break;
@@ -170,7 +174,7 @@ static void _SetTypeNameFromType(pxr::SdfPrimSpecHandle& primSpec, short type)
     break;
 
   case Geometry::SOLVER:
-    primSpec->SetTypeName(pxr::TfToken("Solver"));
+    primSpec->SetTypeName(pxr::TfToken("PbdSolver"));
     break;
 
   }
@@ -197,8 +201,6 @@ CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPa
 {
   if (!layer) 
     return;
-
-  UndoRouter::Get().TransferEdits(&_inverse);
 
   pxr::SdfPrimSpecHandle primSpec =
     pxr::SdfPrimSpec::New(layer, name.GetString(), pxr::SdfSpecifier::SdfSpecifierDef);

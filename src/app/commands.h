@@ -115,6 +115,7 @@ public:
 //==================================================================================
 class DeletePrimCommand : public Command {
 public:
+  DeletePrimCommand(){};
   DeletePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& path);
   ~DeletePrimCommand() {};
   void Do() override;
