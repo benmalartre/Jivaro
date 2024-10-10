@@ -6,6 +6,7 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/cone.h>
+#include <pxr/usd/usdGeom/cylinder.h>
 #include <pxr/usd/usdGeom/capsule.h>
 
 #include "../geometry/geometry.h"
@@ -114,7 +115,7 @@ private:
 class Cone : public Geometry {
 public:
   Cone(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Cone(const pxr::UsdGeomCone& sphere, const pxr::GfMatrix4d& world);
+  Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world);
   virtual ~Cone() {};
 
   // query 3d position on geometry
@@ -134,6 +135,30 @@ private:
   float                    _height;
   pxr::TfToken             _axis;
 
+};
+
+class Cylinder : public Geometry {
+public:
+  Cylinder(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
+  Cylinder(const pxr::UsdGeomCylinder& cylinder, const pxr::GfMatrix4d& world);
+  virtual ~Cylinder() {};
+
+  // query 3d position on geometry
+  bool Raycast(const pxr::GfRay& ray, Location* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+  bool Closest(const pxr::GfVec3f& point, Location* hit,
+    double maxDistance = -1.0, double* minDistance = NULL) const override;
+
+protected:
+  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
+    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  void _Inject(const pxr::GfMatrix4d& parent,
+    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+
+private:
+  float                    _radius;  
+  float                    _height;
+  pxr::TfToken             _axis;
 };
 
 class Capsule : public Geometry {

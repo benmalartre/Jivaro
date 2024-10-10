@@ -42,6 +42,7 @@ public:
     SPHERE,
     CUBE,
     CONE, 
+    CYLINDER,
     CAPSULE,
     POINT,
     CURVE,

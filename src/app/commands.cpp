@@ -153,8 +153,16 @@ static void _SetTypeNameFromType(pxr::SdfPrimSpecHandle& primSpec, short type)
     primSpec->SetTypeName(pxr::TfToken("Capsule"));
     break;
 
+  case Geometry::CYLINDER:
+    primSpec->SetTypeName(pxr::TfToken("Cylinder"));
+    break;
+
   case Geometry::CONE:
     primSpec->SetTypeName(pxr::TfToken("Cone"));
+    break;
+
+  case Geometry::POINT:
+    primSpec->SetTypeName(pxr::TfToken("Points"));
     break;
 
   case Geometry::MESH:
@@ -162,9 +170,20 @@ static void _SetTypeNameFromType(pxr::SdfPrimSpecHandle& primSpec, short type)
     break;
 
   case Geometry::SOLVER:
-    primSpec->SetTypeName(pxr::TfToken("PbdSolver"));
+    primSpec->SetTypeName(pxr::TfToken("Solver"));
     break;
-    
+
+  }
+}
+
+static void _SetSpecsFromGeometry(pxr::SdfPrimSpecHandle& primSpec, Geometry* geometry )
+{
+  switch(geometry->GetType()) {
+    case Geometry::CUBE:
+      {
+        //Cube* cube = Cube*(geometry);
+        //primSpec->
+      }
   }
 }
 
@@ -172,28 +191,48 @@ static void _SetTypeNameFromType(pxr::SdfPrimSpecHandle& primSpec, short type)
 //==================================================================================
 // Create Prim
 //==================================================================================
-CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name, short type) 
+CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name, short type, 
+  bool asDefault, Geometry* geometry) 
   : Command(true)
 {
-  if (!layer) return;
+  if (!layer) 
+    return;
+
   UndoRouter::Get().TransferEdits(&_inverse);
+
   pxr::SdfPrimSpecHandle primSpec =
     pxr::SdfPrimSpec::New(layer, name.GetString(), pxr::SdfSpecifier::SdfSpecifierDef);
   _SetTypeNameFromType(primSpec,  type);
-  //layer->InsertRootPrim(primSpec);
-  //layer->SetDefaultPrim(primSpec->GetNameToken());
+
+  if(asDefault)
+    layer->SetDefaultPrim(primSpec->GetNameToken());
+
+  if(geometry)
+    _SetSpecsFromGeometry(primSpec, geometry);
+
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
-  std::cout << "created prim at " << primSpec->GetNameToken() << std::endl;
 }
 
-CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name, short type)
+CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name, short type, 
+  bool asDefault, Geometry* geometry)
   : Command(true)
 {
-  if (!spec) return;
+  if (!spec) 
+    return;
+
   UndoRouter::Get().TransferEdits(&_inverse);
-  SdfPrimSpec::New(spec, name.GetString(), SdfSpecifier::SdfSpecifierDef);
-  _SetTypeNameFromType(spec,  type);
+
+  pxr::SdfPrimSpecHandle primSpec =
+    SdfPrimSpec::New(spec, name.GetString(), SdfSpecifier::SdfSpecifierDef);
+  _SetTypeNameFromType(primSpec,  type);
+
+  if(asDefault)
+    primSpec->GetLayer()->SetDefaultPrim(primSpec->GetNameToken());
+
+  if(geometry)
+    _SetSpecsFromGeometry(primSpec, geometry);
+
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }

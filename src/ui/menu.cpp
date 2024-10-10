@@ -306,9 +306,17 @@ static void CreatePrimCallback(short type)
   const pxr::UsdPrim root = stage->GetPseudoRoot();
   pxr::SdfLayerHandle layer = stage->GetSessionLayer();
 
-  pxr::SdfPath name(RandomString(32));
+  pxr::SdfPath name(RandomString(6));
 
-  ADD_COMMAND(CreatePrimCommand, layer, name, type);
+  Selection* selection = app->GetSelection();
+
+  if(selection->GetNumSelectedItems()) {
+    pxr::SdfPrimSpecHandle spec = app->GetStage()->GetEditTarget().GetLayer()->GetPrimAtPath((*selection)[0].path);
+    ADD_COMMAND(CreatePrimCommand, spec, name, type);
+  } else {
+    ADD_COMMAND(CreatePrimCommand, layer, name, type);
+  }
+  
 }
 
 static void TriangulateCallback()

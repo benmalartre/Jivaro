@@ -6,6 +6,7 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/cone.h>
+#include <pxr/usd/usdGeom/cylinder.h>
 #include <pxr/usd/usdGeom/capsule.h>
 
 #include "../geometry/implicit.h"
@@ -424,6 +425,87 @@ Cone::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
   usdCone.CreateHeightAttr().Set(_height, time);
   usdCone.CreateRadiusAttr().Set(_radius, time);
   usdCone.CreateAxisAttr().Set(_axis, time);
+}
+
+//-------------------------------------------------------------------------------------------------
+// Cylinder Implicit Geometry
+//-------------------------------------------------------------------------------------------------
+Cylinder::Cylinder(const pxr::GfMatrix4d& xfo)
+  : Geometry(Geometry::CYLINDER, xfo)
+  , _radius(0.5f)
+  , _height(1.f)
+  , _axis(pxr::UsdGeomTokens->y)
+{
+}
+
+Cylinder::Cylinder(const pxr::UsdGeomCylinder& cylinder, const pxr::GfMatrix4d& world)
+  : Geometry(cylinder.GetPrim(), world)
+{
+  pxr::UsdAttribute radiusAttr = cylinder.GetRadiusAttr();
+  radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+
+  pxr::UsdAttribute heightAttr = cylinder.GetHeightAttr();
+  heightAttr.Get(&_height, pxr::UsdTimeCode::Default());
+
+  pxr::UsdAttribute axisAttr = cylinder.GetAxisAttr();
+  axisAttr.Get(&_axis, pxr::UsdTimeCode::Default());
+
+}
+
+bool 
+Cylinder::Raycast(const pxr::GfRay& ray, Location* hit,
+  double maxDistance, double* minDistance) const
+{ 
+  pxr::GfRay invRay(ray);
+  invRay.Transform(GetInverseMatrix());
+  double enterDistance, exitDistance;
+  if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
+    pxr::GfVec3f local(ray.GetPoint(enterDistance));
+    pxr::GfVec3f world(GetMatrix().Transform(local));
+    float distance = (ray.GetStartPoint() - world).GetLength();
+    if(distance < maxDistance && distance < *minDistance) {
+      *minDistance = distance;
+      // store spherical coordinates
+      float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+      float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+      hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+      return true;
+    }
+  }
+  return false;
+}
+
+bool 
+Cylinder::Closest(const pxr::GfVec3f& point, Location* hit,
+  double maxDistance, double* minDistance) const
+{
+  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
+  pxr::GfVec3f closest = GetMatrix().Transform(local);  
+  float distance = (point - closest).GetLength();
+  if(distance < maxDistance && distance < *minDistance) {
+    *minDistance = distance;
+    // store spherical coordinates
+    float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+    float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+    hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+    return true;
+  }
+  return false;
+}
+
+Geometry::DirtyState 
+Cylinder::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+{
+  return Geometry::DirtyState::CLEAN;
+}
+
+void 
+Cylinder::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
+{
+  pxr::UsdGeomCylinder usdCylinder(_prim);
+  usdCylinder.CreateHeightAttr().Set(_height, time);
+  usdCylinder.CreateRadiusAttr().Set(_radius, time);
+  usdCylinder.CreateAxisAttr().Set(_axis, time);
 }
 
 //-------------------------------------------------------------------------------------------------

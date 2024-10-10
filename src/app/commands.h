@@ -87,10 +87,13 @@ private:
 //==================================================================================
 // Create new prim
 //==================================================================================
+class Geometry;
 class CreatePrimCommand : public Command {
 public:
-  CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name, short type);
-  CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name, short type);
+  CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name, short type, 
+    bool asDefault=false, Geometry* geometry=NULL);
+  CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name, short type, 
+    bool asDefault=false, Geometry* geometry=NULL);
   ~CreatePrimCommand() {};
   void Do() override;
 

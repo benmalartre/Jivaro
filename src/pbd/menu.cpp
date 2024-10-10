@@ -16,7 +16,7 @@ void AddPbdMenu(MenuUI* menu)
 {
   std::cout << "ADD PBD MENU CALLED..." << std::endl;
 
-  MenuUI::Item* testItem = menu->Add("PBD", false, true, NULL);
+  MenuUI::Item* testItem = menu->Add("Pbd", false, true, NULL);
   /*
   testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, Geometry::CUBE));
   testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, Geometry::SPHERE));
@@ -45,17 +45,21 @@ void AddPbdMenu(MenuUI* menu)
 
 void CreateSolverCallback()
 {
-  /*
-  pxr::UsdStageRefPtr stage = Application::Get()->GetDisplayStage();
-  pxr::UsdPbdSolver::Define(stage, pxr::SdfPath(pxr::TfToken("/Solver")));
-  */
   Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetStage();
-  const pxr::UsdPrim root = stage->GetPseudoRoot();
   pxr::SdfLayerHandle layer = stage->GetSessionLayer();
 
   pxr::SdfPath name(RandomString(32));
+  ADD_COMMAND(CreatePrimCommand, layer, name, Geometry::SOLVER);
+}
 
+void CreateClothCallback()
+{
+  Application* app = Application::Get();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::SdfLayerHandle layer = stage->GetSessionLayer();
+
+  pxr::SdfPath name(RandomString(32));
   ADD_COMMAND(CreatePrimCommand, layer, name, Geometry::SOLVER);
 }
 

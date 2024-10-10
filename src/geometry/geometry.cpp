@@ -11,6 +11,7 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/cone.h>
+#include <pxr/usd/usdGeom/cylinder.h>
 #include <pxr/usd/usdGeom/capsule.h>
 
 
@@ -54,6 +55,7 @@ Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
   else if(prim.IsA<pxr::UsdGeomSphere>())_type = Geometry::SPHERE;
   else if(prim.IsA<pxr::UsdGeomCapsule>())_type = Geometry::CAPSULE;
   else if(prim.IsA<pxr::UsdGeomCone>())_type = Geometry::CONE;
+  else if(prim.IsA<pxr::UsdGeomCylinder>())_type = Geometry::CYLINDER;
   else if(prim.IsA<pxr::UsdGeomCube>())_type = Geometry::CUBE;
   else if(prim.IsA<pxr::UsdGeomBasisCurves>())_type = Geometry::CURVE;
   else if(prim.IsA<pxr::UsdGeomMesh>())_type = Geometry::MESH;

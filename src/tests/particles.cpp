@@ -33,7 +33,7 @@ static Voxels* _Voxelize(Mesh* mesh, float radius)
   voxels->Trace(0);
   voxels->Trace(1);
   voxels->Trace(2);
-  voxels->Build(1.f);
+  voxels->Build(0.0f);
 
   return voxels;
 }
@@ -190,7 +190,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   std::cout << "add particles " << std::endl;
   std::cout << _voxels << std::endl;
 
-  Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius, damping);
+  Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius*0.95f, damping);
   _solver->AddElement(body, _voxels, _emitterId);
   std::cout << "added particles" << _solver->GetNumParticles() << std::endl;
 
@@ -233,7 +233,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   bool createSelfCollision = true;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 1.f, 1.f);
+    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.f, 1.f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
     std::cout << "added self collision" << std::endl;
   }

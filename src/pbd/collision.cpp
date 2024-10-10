@@ -291,7 +291,7 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const pxr::GfVec3f velocity = particles->velocity[index] * ft;
-  const float radius = _radius + particles->radius[index] + _collider->GetVelocity().GetLength() + Collision::TOLERANCE_MARGIN;
+  const float radius = _radius + particles->radius[index] + _collider->GetVelocity().GetLength() * ft + Collision::TOLERANCE_MARGIN;
   const pxr::GfVec3f predicted(particles->position[index] + velocity);
   SetHit(index, (predicted - _center).GetLength() < radius);
 }

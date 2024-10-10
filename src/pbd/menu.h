@@ -8,6 +8,7 @@ class MenuUI;
 void AddPbdMenu(MenuUI* menu);
 
 static void CreateSolverCallback();
+static void CreateClothCallback();
 static void AddBodyAPICallback();
 static void AddCollisionAPICallback();
 static void AddConstraintAPICallback();
