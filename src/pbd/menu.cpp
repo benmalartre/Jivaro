@@ -64,9 +64,9 @@ void CreateClothCallback()
 {
   static const float spacing = 0.1f;
   Application* app = Application::Get();
-    pxr::UsdStageRefPtr stage = app->GetStage();
+  pxr::UsdStageRefPtr stage = app->GetStage();
 
-  
+
   UndoBlock editBlock;
   pxr::UsdPrim prim;
 
@@ -97,19 +97,49 @@ void CreateClothCallback()
     }
     
   }
-
-  
-
 }
 
 void AddBodyAPICallback()
 {
-  std::cout << "ADD BODY API CALLED..." << std::endl;
+  Application* app = Application::Get();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+
+  pxr::UsdPrim prim;
+
+  Selection* selection = app->GetSelection();
+  size_t numSelected = selection->GetNumSelectedItems();
+  if(!numSelected)return;
+
+
+  UndoBlock editBlock;
+
+  for(size_t n = 0; n < numSelected; ++n) {
+    prim = stage->GetPrimAtPath(selection->GetItem(n).path);
+    if(!prim.IsValid())continue;
+    pxr::UsdPbdBodyAPI::Apply(prim);
+  }
+
 }
 
 void AddCollisionAPICallback()
 {
-  std::cout << "ADD COLIISION API CALLED..." << std::endl;
+  Application* app = Application::Get();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+
+  pxr::UsdPrim prim;
+
+  Selection* selection = app->GetSelection();
+  size_t numSelected = selection->GetNumSelectedItems();
+  if(!numSelected)return;
+
+
+  UndoBlock editBlock;
+
+  for(size_t n = 0; n < numSelected; ++n) {
+    prim = stage->GetPrimAtPath(selection->GetItem(n).path);
+    if(!prim.IsValid())continue;
+    pxr::UsdPbdCollisionAPI::Apply(prim);
+  }
 }
 
 void AddConstraintAPICallback()

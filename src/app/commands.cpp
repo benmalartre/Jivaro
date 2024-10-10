@@ -142,7 +142,7 @@ static void _SetTypeNameFromType(pxr::SdfPrimSpecHandle& primSpec, short type)
 {
   switch (type) {
   case Geometry::XFORM:
-    primSpec->SetTypeName(pxr::TfToken("Cube"));
+    primSpec->SetTypeName(pxr::TfToken("Xform"));
     break;
 
   case Geometry::CUBE:

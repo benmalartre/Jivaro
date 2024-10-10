@@ -27,10 +27,10 @@ private:
   pxr::SdfPath              _groundId;
   pxr::SdfPath              _solverId;
 
-  std::vector<Mesh*>        _clothMeshes;
-  std::vector<pxr::SdfPath> _clothMeshesId;
-  std::vector<Mesh*>        _collideMeshes;
-  std::vector<pxr::SdfPath> _collideMeshesId;
+  std::vector<Geometry*>    _clothes;
+  std::vector<pxr::SdfPath> _clothesId;
+  std::vector<Geometry*>    _colliders;
+  std::vector<pxr::SdfPath> _collidersId;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

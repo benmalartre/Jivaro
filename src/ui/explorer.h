@@ -19,9 +19,6 @@ class Selection;
 class ExplorerUI : public BaseUI
 {
 public:
-  static size_t EXPLORER_LINE_HEIGHT = 20;
-  const static size_t INVALID_INDEX = std::numeric_limit<size_t>()::max();
-
   struct Item {
     pxr::SdfPath    path;
     size_t          id;

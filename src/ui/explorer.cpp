@@ -121,31 +121,6 @@ ExplorerUI::_GetItemUnderMouse(const pxr::GfVec2f &relative)
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
 {
-  double x, y;
-  glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
-  if (x > GetX() + (GetWidth() - 50)) return;
-
-  Application* app = Application::Get();
-  if (button == GLFW_MOUSE_BUTTON_LEFT) {
-    if (action == GLFW_PRESS) {
-      ExplorerUI::Item* item = _GetItemUnderMouse(pxr::GfVec2f(x - GetX(), y - GetY()));
-      if (!item) return;
-
-      _current = item->path;
-      if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
-        if (mods & GLFW_MOD_CONTROL) {
-          app->ToggleSelection({ _current });
-        }
-        else {
-          app->SetSelection({ _current });
-        }
-      }
-      _drag = true;
-      _dragItems = app->GetSelection()->GetSelectedPaths();
-    } else if(action == GLFW_RELEASE) {
-      _drag = false; 
-    }
-  }
 }
 
 void 
@@ -320,6 +295,36 @@ static ImVec4 GetPrimColor(const pxr::UsdPrim& prim) {
   return PrimDefaultColor;
 }
 
+/*
+
+  double x, y;
+  glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
+  if (x > GetX() + (GetWidth() - 50)) return;
+
+  Application* app = Application::Get();
+  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    if (action == GLFW_PRESS) {
+      ExplorerUI::Item* item = _GetItemUnderMouse(pxr::GfVec2f(x - GetX(), y - GetY()));
+      if (!item) return;
+
+      _current = item->path;
+      if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
+        if (mods & GLFW_MOD_CONTROL) {
+          app->ToggleSelection({ _current });
+        }
+        else {
+          app->SetSelection({ _current });
+        }
+      }
+      _drag = true;
+      _dragItems = app->GetSelection()->GetSelectedPaths();
+    } else if(action == GLFW_RELEASE) {
+      _drag = false; 
+    }
+  }
+  
+  */
+
 /// Recursive function to draw a prim and its descendants
 void 
 ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection) 
@@ -341,6 +346,18 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
   const bool unfolded = ImGui::TreeNodeEx(prim.GetName().GetText(), flags);
   if (ImGui::IsItemClicked()) {
     _current = prim.GetPath();
+
+    Application* app = Application::Get();
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
+      if (io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL]) {
+        app->ToggleSelection({ _current });
+      }
+      else {
+        app->SetSelection({ _current });
+      }
+    }
   }
 
   if (ImGui::IsItemToggledOpen())_parent->SetFlag(View::DISCARDMOUSEBUTTON);
@@ -426,7 +443,6 @@ ExplorerUI::Draw()
   ImGui::NextColumn();
   //ImGui::PopFont();
 
-  ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
   /*
   bool unfolded = 
     ImGui::TreeNodeEx(stage->GetRootLayer()->GetDisplayName().c_str(), _treeFlags);*/

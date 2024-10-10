@@ -1,3 +1,9 @@
+#include <pxr/usd/usd/prim.h>
+#include <usdPbd/solver.h>
+#include <usdPbd/bodyAPI.h>
+#include <usdPbd/collisionAPI.h>
+#include <usdPbd/constraintAPI.h>
+
 #include "../geometry/sampler.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
@@ -26,11 +32,26 @@ void TestPBD::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   for (pxr::UsdPrim prim : stage->TraverseAll())
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
-      _collideMeshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
-        xformCache.GetLocalToWorldTransform(prim)));
-      _collideMeshesId.push_back(prim.GetPath());
+    if(prim.HasAPI<pxr::UsdPbdBodyAPI>()) {
+      if (prim.IsA<pxr::UsdGeomMesh>()) {
+        _clothes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+          xformCache.GetLocalToWorldTransform(prim)));
+        _clothes.back()->SetInputOutput();
+        _clothesId.push_back(prim.GetPath());
+      };
+    } else if (prim.HasAPI<pxr::UsdPbdCollisionAPI>()) {
+      if(prim.IsA<pxr::UsdGeomMesh>()) {
+        _colliders.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+          xformCache.GetLocalToWorldTransform(prim)));
+        _collidersId.push_back(prim.GetPath());
+      } else if (prim.IsA<pxr::UsdGeomSphere>()) {
+        _colliders.push_back(new Sphere(pxr::UsdGeomSphere(prim), 
+          xformCache.GetLocalToWorldTransform(prim)));
+        _collidersId.push_back(prim.GetPath());
+      }
+      
     }
+    
 }
 
 void TestPBD::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
@@ -88,27 +109,27 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   // create cloth meshes
   float size = .016f;
 
-  for(size_t x = 0; x < 7; ++x) {
+  for(size_t x = 0; x < 3; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 
       pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f}));
     clothMesh->SetInputOutput();
-    _clothMeshesId.push_back(clothPath);
-    _clothMeshes.push_back(clothMesh);
+    _clothesId.push_back(clothPath);
+    _clothes.push_back(clothMesh);
     _scene.AddGeometry(clothPath, clothMesh);
   }
 
-  for (size_t c = 0; c < _clothMeshesId.size(); ++c) {
+  for (size_t c = 0; c < _clothesId.size(); ++c) {
     size_t offset = _solver->GetNumParticles();
 
-    Body* body = _solver->CreateBody((Geometry*)_clothMeshes[c], 
-      _clothMeshes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f);
+    Body* body = _solver->CreateBody((Geometry*)_clothes[c], 
+      _clothes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f);
     //_solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 60000.f, 0.1f);
-    _solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);
+    //_solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);
     
-    _solver->AddElement(body, _clothMeshes[c], _clothMeshesId[c]);
+    _solver->AddElement(body, _clothes[c], _clothesId[c]);
     
   }
 
@@ -155,12 +176,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   bool createMeshCollision = true;
   if(createMeshCollision) {
-    for (size_t c = 0; c < _collideMeshesId.size(); ++c) {
-      _scene.AddGeometry(_collideMeshesId[c], _collideMeshes[c]);
-      _collideMeshes[c]->SetInputOnly();
-      Collision* meshCollide = new MeshCollision(_collideMeshes[c], _collideMeshesId[c], 1.f, 1.f);
+    for (size_t c = 0; c < _collidersId.size(); ++c) {
+      _scene.AddGeometry(_collidersId[c], _colliders[c]);
+      _colliders[c]->SetInputOnly();
+      Collision* meshCollide = new MeshCollision(_colliders[c], _collidersId[c], 1.f, 1.f);
       meshCollide->Init(_solver->GetNumParticles());
-      _solver->AddElement(meshCollide, _collideMeshes[c], _collideMeshesId[c]);
+      _solver->AddElement(meshCollide, _colliders[c], _collidersId[c]);
       
     }
   }
