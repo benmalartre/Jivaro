@@ -100,6 +100,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
   _TraverseStageFindingMeshes(stage);
+
+  for(size_t c = 0; c < _clothes.size(); ++c)
+    _scene.AddGeometry(_clothesId[c], _clothes[c]);
+  
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
@@ -108,6 +112,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   // create cloth meshes
   float size = .016f;
+
 
   for(size_t x = 0; x < 3; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
@@ -119,6 +124,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _clothes.push_back(clothMesh);
     _scene.AddGeometry(clothPath, clothMesh);
   }
+  
 
   for (size_t c = 0; c < _clothesId.size(); ++c) {
     size_t offset = _solver->GetNumParticles();

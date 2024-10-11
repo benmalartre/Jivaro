@@ -1,3 +1,4 @@
+#include <usdPbd/collisionAPI.h>
 #include <pxr/base/work/loops.h>
 
 #include "../utils/color.h"
@@ -8,7 +9,6 @@
 #include "../acceleration/bvh.h"
 #include "../acceleration/hashGrid.h"
 #include "../pbd/utils.h"
-#include "../pbd/tokens.h"
 #include "../pbd/collision.h"
 #include "../pbd/particle.h"
 #include "../pbd/contact.h"
@@ -156,9 +156,9 @@ void Collision::Update(const pxr::UsdPrim& prim, double time){}
 
 void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 {
-
-  prim.GetAttribute(PBDTokens->restitution).Get(&_restitution, time);
-  prim.GetAttribute(PBDTokens->friction).Get(&_friction, time);
+  pxr::UsdPbdCollisionAPI api(prim);
+  api.GetRestitutionAttr().Get(&_restitution, time);
+  api.GetFrictionAttr().Get(&_friction, time);
 }
 
 

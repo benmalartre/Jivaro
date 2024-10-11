@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include <pxr/base/work/loops.h>
+#include <usdPbd/solver.h>
+#include <usdPbd/bodyAPI.h>
 
 #include "../acceleration/bvh.h"
 #include "../acceleration/hashGrid.h"
@@ -12,7 +14,6 @@
 #include "../geometry/curve.h"
 #include "../geometry/implicit.h"
 #include "../geometry/scene.h"
-#include "../pbd/tokens.h"
 #include "../pbd/constraint.h"
 #include "../pbd/force.h"
 #include "../pbd/collision.h"
@@ -55,13 +56,17 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
   _curvesId = _solverId.AppendChild(pxr::TfToken("Constraints"));
   _curves = (Curve*)_scene->AddGeometry(_curvesId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
 
-  pxr::UsdAttribute gravityAttr = xform.GetPrim().GetAttribute(PBDTokens->gravity);
+  //pxr::UsdSolver
+  pxr::UsdPbdSolver solver(xform.GetPrim());
+  pxr::UsdAttribute gravityAttr = solver.GetGravityAttr();
    _gravity = new GravityForce(gravityAttr);
-  AddElement(_gravity, NULL, _solverId.AppendProperty(PBDTokens->gravity));
+  AddElement(_gravity, NULL, _solverId.AppendProperty(gravityAttr.GetName()));
 
-  pxr::UsdAttribute dampAttr = xform.GetPrim().GetAttribute(PBDTokens->damp);
+  /*
+  pxr::UsdAttribute dampAttr = solver.GetDampAttr();
   _damp = new DampForce(dampAttr);
-  AddElement(_damp, NULL, _solverId.AppendProperty(PBDTokens->damp));
+  AddElement(_damp, NULL, _solverId.AppendProperty(dampAttr.GetName()));
+  */
 }
 
 Solver::~Solver()
@@ -154,8 +159,10 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix,
 {
   size_t base = _particles.GetNumParticles();
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  geom->GetAttributeValue(PBDTokens->mass, pxr::UsdTimeCode::Default(), &mass);
-  geom->GetAttributeValue(PBDTokens->damp, pxr::UsdTimeCode::Default(), &damping);
+  pxr::UsdPbdBodyAPI api(geom->GetPrim());
+
+  api.GetMassAttr().Get(&mass, pxr::UsdTimeCode::Default());
+  api.GetDampAttr().Get(&damping, pxr::UsdTimeCode::Default());
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
   _particles.AddBody(body, matrix);
 
@@ -549,11 +556,13 @@ void Solver::UpdateGeometries()
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 {
   pxr::UsdPrim prim = stage->GetPrimAtPath(_solverId);
+  pxr::UsdPbdSolver solver(prim);
+
   _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
-  prim.GetAttribute(PBDTokens->substeps).Get(&_subSteps, time);
-  prim.GetAttribute(PBDTokens->iterations).Get(&_iterations, time);
+  solver.GetSubStepsAttr().Get(&_subSteps, time);
+  solver.GetIterationAttr().Get(&_iterations, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
-  prim.GetAttribute(PBDTokens->sleep).Get(&_sleepThreshold, time);
+  solver.GetSleepThresholdAttr().Get(&_sleepThreshold, time);
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);

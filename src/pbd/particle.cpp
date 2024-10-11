@@ -1,6 +1,8 @@
+#include <usdPbd/bodyAPI.h>
+#include <usdPbd/collisionAPI.h>
+
 #include "../geometry/geometry.h"
 #include "../geometry/points.h"
-#include "../pbd/tokens.h"
 #include "../pbd/particle.h"
 #include "../pbd/constraint.h"
 
@@ -149,17 +151,20 @@ pxr::TfToken _GetConstraintsAttributeToken(const pxr::TfToken& name, const pxr::
 
 void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
 {
-  _geometry->GetAttributeValue(PBDTokens->mass, time, &_mass);
-  _geometry->GetAttributeValue(PBDTokens->velocity, time, &_velocity);
-  _geometry->GetAttributeValue(PBDTokens->damp, time, &_damp);
-  _geometry->GetAttributeValue(PBDTokens->friction, time, &_friction);
-  _geometry->GetAttributeValue(PBDTokens->restitution, time, &_restitution);
+  pxr::UsdPbdBodyAPI bodyApi(prim);
+  bodyApi.GetMassAttr().Get(&_mass, time);
+  bodyApi.GetVelocityAttr().Get(&_velocity, time);
+  bodyApi.GetDampAttr().Get(&_damp, time);
+
+  pxr::UsdPbdCollisionAPI collideApi(prim);
+  collideApi.GetFrictionAttr().Get(&_friction, time);
+  collideApi.GetRestitutionAttr().Get(&_restitution, time);
 
   float stiffness, damp;
   pxr::TfToken stiffnessAttr, dampAttr;
   for(auto& constraintsIt: _constraints) {
-    stiffnessAttr = _GetConstraintsAttributeToken(constraintsIt.first, PBDTokens->stiffness);
-    dampAttr = _GetConstraintsAttributeToken(constraintsIt.first, PBDTokens->damp);
+    stiffnessAttr = _GetConstraintsAttributeToken(constraintsIt.first, pxr::TfToken("stiffness"));
+    dampAttr = _GetConstraintsAttributeToken(constraintsIt.first, pxr::TfToken("damp"));
 
 
     _geometry->GetAttributeValue(stiffnessAttr, time, &stiffness);

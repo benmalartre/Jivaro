@@ -2,7 +2,6 @@
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 #include "../geometry/curve.h"
-#include "../pbd/tokens.h"
 #include "../pbd/constraint.h"
 #include "../pbd/collision.h"
 #include "../pbd/particle.h"
@@ -341,7 +340,7 @@ ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness, float da
   
   if(allElements.size())
     return CreateConstraintsGroup(body, 
-      PBDTokens->stretch, Constraint::STRETCH,
+      pxr::TfToken("stretch"), Constraint::STRETCH,
         allElements, StretchConstraint::ELEM_SIZE, Constraint::BlockSize);
 
   return NULL;
@@ -594,7 +593,7 @@ ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness, float dampi
 
   if(allElements.size())
     return CreateConstraintsGroup(body, 
-      PBDTokens->bend, Constraint::BEND,
+      pxr::TfToken("bend"), Constraint::BEND,
         allElements, BendConstraint::ELEM_SIZE, Constraint::BlockSize);
 
   return NULL;
@@ -663,7 +662,7 @@ ConstraintsGroup* CreateShearConstraints(Body* body, float stiffness, float damp
 
   if(allElements.size())
     return CreateConstraintsGroup(body, 
-      PBDTokens->shear, Constraint::SHEAR,
+      pxr::TfToken("shear"), Constraint::SHEAR,
         allElements, StretchConstraint::ELEM_SIZE, Constraint::BlockSize);
 
   return NULL;
@@ -796,7 +795,7 @@ ConstraintsGroup* CreateDihedralConstraints(Body* body, float stiffness, float d
 
   if(allElements.size())
     return CreateConstraintsGroup(body, 
-      PBDTokens->dihedral, Constraint::DIHEDRAL,
+      pxr::TfToken("dihedral"), Constraint::DIHEDRAL,
         allElements, DihedralConstraint::ELEM_SIZE, Constraint::BlockSize);
 
   return NULL;

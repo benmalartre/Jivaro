@@ -13,6 +13,11 @@
 #include <pxr/usd/usdGeom/primvarsApi.h>
 #include <pxr/imaging/hd/changeTracker.h>
 
+#include <usdPbd/collisionAPI.h>
+#include <usdPbd/constraintAPI.h>
+#include <usdPbd/bodyAPI.h>
+#include <usdPbd/solver.h>
+
 #include "../tests/utils.h"
 #include "../geometry/implicit.h"
 #include "../geometry/mesh.h"
@@ -21,7 +26,6 @@
 #include "../geometry/instancer.h"
 #include "../acceleration/bvh.h"
 #include "../acceleration/grid3d.h"
-#include "../pbd/tokens.h"
 #include "../pbd/solver.h"
 #include "../pbd/force.h"
 
@@ -38,9 +42,9 @@ Plane* _CreateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdGround.CreateLengthAttr().Set(length);
   usdGround.CreateAxisAttr().Set(pxr::UsdGeomTokens->y);
 
-  pxr::UsdPrim usdPrim = usdGround.GetPrim();
-  usdPrim.CreateAttribute(PBDTokens->restitution, pxr::SdfValueTypeNames->Float).Set(restitution);
-  usdPrim.CreateAttribute(PBDTokens->friction, pxr::SdfValueTypeNames->Float).Set(friction);
+  pxr::UsdPbdCollisionAPI api = pxr::UsdPbdCollisionAPI::Apply(usdGround.GetPrim());
+  api.GetRestitutionAttr().Set(restitution);
+  api.GetFrictionAttr().Set(friction);
 
   return new Plane(usdGround, pxr::GfMatrix4d(1.0));
 }
@@ -48,20 +52,9 @@ Plane* _CreateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
 Solver* _CreateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   int subSteps, float sleepThreshold)
 {
-  pxr::UsdGeomXform usdXform = pxr::UsdGeomXform::Define(stage, path);
+  pxr::UsdPbdSolver usdSolver = pxr::UsdPbdSolver::Define(stage, path);
 
-  pxr::UsdPrim usdPrim = usdXform.GetPrim();
-  usdPrim.CreateAttribute(PBDTokens->substeps, pxr::SdfValueTypeNames->Int).Set(subSteps);
-  usdPrim.CreateAttribute(PBDTokens->iterations, pxr::SdfValueTypeNames->Int).Set(3);
-  usdPrim.CreateAttribute(PBDTokens->sleep, pxr::SdfValueTypeNames->Float).Set(sleepThreshold);
-
-  usdPrim.CreateAttribute(PBDTokens->gravity, pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(0.f, -9.81f, 0.f));
-  pxr::UsdAttribute gravityAttr = usdPrim.GetAttribute(PBDTokens->gravity);
-    
-  usdPrim.CreateAttribute(PBDTokens->damp, pxr::SdfValueTypeNames->Float).Set(0.1f);
-  pxr::UsdAttribute dampAttr = usdPrim.GetAttribute(PBDTokens->damp);
-
-  Solver* solver = new Solver(scene, usdXform, pxr::GfMatrix4d(1.0));
+  Solver* solver = new Solver(scene, usdSolver, pxr::GfMatrix4d(1.0));
 
   return solver;
 }
@@ -76,13 +69,20 @@ Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   //mesh.Randomize(0.1f);
   
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
-
   usdMesh.CreatePointsAttr().Set(mesh->GetPositions(), pxr::UsdTimeCode::Default());
   usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts(), pxr::UsdTimeCode::Default());
   usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects(), pxr::UsdTimeCode::Default());
 
   pxr::UsdPrim usdPrim = usdMesh.GetPrim();
   mesh->SetPrim(usdPrim);
+
+  pxr::UsdPbdBodyAPI api = pxr::UsdPbdBodyAPI::Apply(usdPrim);
+  api.GetMassAttr().Set(mass);
+  api.GetDampAttr().Set(damp);
+  api.GetRadiusAttr().Set(spacing * 0.95f);
+  //api.GetGravityAttr().Set(gravity);
+
+  /*/
   usdPrim.CreateAttribute(PBDTokens->mass, pxr::SdfValueTypeNames->Float).Set(mass);
   usdPrim.CreateAttribute(PBDTokens->damp, pxr::SdfValueTypeNames->Float).Set(damp);
   usdPrim.CreateAttribute(PBDTokens->velocity, pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(0.f));
@@ -101,7 +101,8 @@ Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdPrim.CreateAttribute(bendStiffness, pxr::SdfValueTypeNames->Float).Set(20000.f);
   pxr::TfToken bendDamp(PBDTokens->bend.GetString() + ":" + PBDTokens->damp.GetString());
   usdPrim.CreateAttribute(bendDamp, pxr::SdfValueTypeNames->Float).Set(0.1f);
-
+  */
+ 
   usdMesh.MakeMatrixXform().Set(m);
 
   return mesh;
@@ -137,10 +138,10 @@ Sphere* _CreateCollideSphere(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& pat
   double real;
   usdSphere.GetRadiusAttr().Get(&real);
 
-  pxr::UsdPrim usdPrim = usdSphere.GetPrim();
-  usdPrim.CreateAttribute(PBDTokens->restitution, pxr::SdfValueTypeNames->Float).Set(restitution);
-  usdPrim.CreateAttribute(PBDTokens->friction, pxr::SdfValueTypeNames->Float).Set(friction);
+  pxr::UsdPbdCollisionAPI api = pxr::UsdPbdCollisionAPI::Apply(usdSphere.GetPrim());
 
+  api.GetRestitutionAttr().Set(restitution);
+  api.GetFrictionAttr().Set(friction);
 
   pxr::UsdGeomXformOp op = usdSphere.MakeMatrixXform();
   op.Set(pxr::GfMatrix4d(m));
