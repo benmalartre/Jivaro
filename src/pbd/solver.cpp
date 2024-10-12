@@ -461,10 +461,28 @@ void Solver::Reset()
 
   _particles.ResetCounter(_constraints, 0);
 
+  size_t nL = 5;
   if(_bodies.size()) {
-    WeightBoundaries(_bodies[0]);
-    pxr::VtArray<int> locked({0});//,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21});
-    LockPoints(_bodies[0], locked);
+    for (size_t b = 0; b < _bodies.size(); ++b) {
+      WeightBoundaries(_bodies[b]);
+      pxr::VtArray<int> locked(nL);
+      Deformable* deformable = (Deformable*)_bodies[b]->GetGeometry();
+      const pxr::GfVec3f* positions = deformable->GetPositionsCPtr();
+      size_t numPoints = deformable->GetNumPoints();
+      std::vector<std::pair<int, float>> pairs(numPoints);
+      
+      for(size_t i = 0; i < numPoints; ++i)
+        pairs[i] = std::make_pair(i, positions[i][1]);
+
+      std::sort(pairs.begin(), pairs.end(), [](auto& lhs, auto& rhs) {
+        return lhs.second > rhs.second;
+      });
+      for(size_t i = 0; i < nL; ++i)
+        locked[i]  = pairs[i].first;
+
+      LockPoints(_bodies[b], locked);
+    }
+    
   }
 
   _particles.SetAllState(Particles::ACTIVE);
@@ -531,26 +549,26 @@ void Solver::UpdateGeometries()
 {
   const auto* positions = &_particles.position[0];
   _ElementMap::iterator it = _elements.begin();
-  size_t offset = 0;
   for (; it != _elements.end(); ++it)
   {
     if(it->first->GetType() == Element::BODY) {
+      Body* body = (Body*)it->first;
       pxr::SdfPath id = it->second.first;
       Geometry* geometry = it->second.second;
       if(geometry->GetType() >= Geometry::POINT) {
         Deformable* deformable = (Deformable*)geometry;
-        size_t numPoints = deformable->GetNumPoints();
+        size_t numPoints = body->GetNumPoints();
         pxr::GfVec3f* output = deformable->GetPositionsPtr();
-        
+        size_t offset = body->GetOffset();
+        std::cout << "update geometry : " << geometry->GetPrim().GetPath() << " " << offset << " " << numPoints << std::endl;
         for (size_t p = 0; p < numPoints; ++p) {
           output[p] = deformable->GetInverseMatrix().Transform(positions[offset + p]);
         }
         _scene->MarkPrimDirty(id, pxr::HdChangeTracker::AllDirty);
-
-        offset += numPoints;
       }
     }
   }
+  
 }
 
 void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)

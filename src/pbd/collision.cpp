@@ -442,7 +442,11 @@ SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path,
   , _grid(NULL)
   , _neighborsInitialized(false)
 {
-  _grid.Init(_particles->GetNumParticles(), &_particles->predicted[0], _particles->radius[0] * 2.f);
+  double avgRadius = 0.0;
+  size_t numParticles = _particles->GetNumParticles();
+  for (size_t p = 0; p < numParticles; ++p)avgRadius += particles->radius[p];
+  avgRadius /= static_cast<float>(numParticles);
+  _grid.Init(numParticles, &_particles->predicted[0], avgRadius * 2.f);
 }
 
 SelfCollision::~SelfCollision()
@@ -538,15 +542,14 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], closests, 3.f * particles->radius[index]+TOLERANCE_MARGIN);
-
+  _grid.Closests(index, &particles->predicted[0], closests, 2.f * particles->radius[index]+TOLERANCE_MARGIN);
   for(int closest: closests) {
     if(_AreConnected(index, closest))continue;
     if(numCollide >= PARTICLE_MAX_CONTACTS)break;
 
     pxr::GfVec3f ip(particles->position[index] + particles->velocity[index] * ft);
     pxr::GfVec3f cp(particles->position[closest] + particles->velocity[closest] * ft);
-    if((ip - cp).GetLength() < 1.5f * (particles->radius[index] + particles->radius[closest] + TOLERANCE_MARGIN)) {
+    if((ip - cp).GetLength() < (particles->radius[index] + particles->radius[closest] + TOLERANCE_MARGIN)) {
       Contact* contact = _contacts.Use(index);
       _StoreContactLocation(particles, index, closest, contact, ft);
       contact->SetComponentIndex(closest);
@@ -615,7 +618,7 @@ float SelfCollision::GetValue(Particles* particles, size_t index, size_t other)
   
 pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size_t other)
 {
-  return (particles->predicted[index] - particles->predicted[other]).GetNormalized();
+  return (particles->predicted[index] - particles->predicted[other]);//.GetNormalized();
 }
 
 // Velocity

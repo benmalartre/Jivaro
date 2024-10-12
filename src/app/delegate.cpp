@@ -244,7 +244,9 @@ pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath cons
 }
 
 void Delegate::SetScene(Scene* scene) {
+
   pxr::HdRenderIndex& index = GetRenderIndex();
+
   if (_scene) {
     for (auto& prim : _scene->GetPrims()) {
       if(prim.second.geom->GetType() == Geometry::INSTANCER)
@@ -253,6 +255,7 @@ void Delegate::SetScene(Scene* scene) {
         index.RemoveRprim(prim.first);
     }
   }
+  
   _scene = scene;
   if (!_scene)return;
 

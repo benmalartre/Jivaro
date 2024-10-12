@@ -378,7 +378,6 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
     }
   } else {
     if (key == pxr::HdTokens->points) {
-      std::cout << "get positions for " << id << std::endl;
       return pxr::VtValue(((Deformable*)prim.geom)->GetPositions());
     } else if (key == pxr::HdTokens->displayColor) {
       pxr::VtArray<pxr::GfVec3f>& colors =

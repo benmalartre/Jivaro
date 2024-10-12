@@ -3,6 +3,7 @@
 
 #include "../geometry/geometry.h"
 #include "../geometry/points.h"
+#include "../geometry/mesh.h"
 #include "../pbd/particle.h"
 #include "../pbd/constraint.h"
 
@@ -64,7 +65,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   pxr::GfVec3f pos;
   size_t idx;
   for (size_t idx = base; idx < base + numPoints; ++idx) {
-    pos = matrix.Transform(points[idx - base]);
+    pos = matrix.Transform(points[idx - base] + pxr::GfVec3f(RANDOM_LO_HI(-1,1), RANDOM_LO_HI(-1,1), RANDOM_LO_HI(-1,1)) * 0.001f);
     mass[idx] = m;
     invMass[idx] = w;
     radius[idx] = item->GetRadius();
@@ -78,6 +79,8 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
     state[idx] = ACTIVE;
     counter[idx] = pxr::GfVec2f(0.f);
   }
+
+  if (areas)delete areas;
 
   item->SetOffset(base);
   item->SetNumPoints(numPoints);
@@ -152,6 +155,7 @@ pxr::TfToken _GetConstraintsAttributeToken(const pxr::TfToken& name, const pxr::
 void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
 {
   pxr::UsdPbdBodyAPI bodyApi(prim);
+  bodyApi.GetRadiusAttr().Get(&_radius, time);
   bodyApi.GetMassAttr().Get(&_mass, time);
   bodyApi.GetVelocityAttr().Get(&_velocity, time);
   bodyApi.GetDampAttr().Get(&_damp, time);
@@ -160,6 +164,7 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   collideApi.GetFrictionAttr().Get(&_friction, time);
   collideApi.GetRestitutionAttr().Get(&_restitution, time);
 
+/*
   float stiffness, damp;
   pxr::TfToken stiffnessAttr, dampAttr;
   for(auto& constraintsIt: _constraints) {
@@ -177,6 +182,7 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
     }
 
   }
+  */
   /*
   float GetMass() const {return _mass;};
   float GetRadius() const {return _radius;};

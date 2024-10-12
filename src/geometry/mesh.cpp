@@ -526,7 +526,7 @@ Mesh::ComputeCotangentWeights(MeshCotangentWeights& weights)
 void
 Mesh::ComputeAreas(MeshAreas& result)
 {
-  if(!_flags & Mesh::ADJACENTS)
+  if(!BITMASK_CHECK(_flags, Mesh::ADJACENTS))
     ComputeAdjacents();
   const pxr::GfVec3f *positions = GetPositionsCPtr();
 
@@ -539,7 +539,6 @@ Mesh::ComputeAreas(MeshAreas& result)
   result.vertexInfos = pxr::GfVec4f(0.f, FLT_MAX, FLT_MIN, 0.f);
 
   size_t numHalfEdges = _halfEdges.GetNumRawEdges();
-
   std::vector<bool> visited(numHalfEdges, false);
 
   for(size_t i = 0; i < numHalfEdges; ++i) {
@@ -571,19 +570,22 @@ Mesh::ComputeAreas(MeshAreas& result)
     const HalfEdge* start = _halfEdges.GetEdgeFromVertex(i);
 
     float area = result.face[start->face];
+    size_t numFaces = 0;
     const HalfEdge* edge = _halfEdges.GetNextAdjacentEdge(start);
     while(edge && edge != start) {
       area += result.face[edge->face];
       edge = _halfEdges.GetNextAdjacentEdge(edge);
+      numFaces++;
     }
     if(edge != start) {
       edge = _halfEdges.GetPreviousAdjacentEdge(start);
       while(edge) {
         area += result.face[edge->face];
         edge = _halfEdges.GetPreviousAdjacentEdge(edge);
+        numFaces++;
       }
     }
-    area /= result.faceInfos[2];
+    area /= static_cast<float>(numFaces);
     result.vertex[i] = area;
 
     result.vertexInfos[0] += area;
