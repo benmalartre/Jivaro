@@ -137,7 +137,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     
     _solver->AddElement(body, _clothes[c], _clothesId[c]);
     
-    
   }
   
   float restitution = 0.1f;
@@ -202,12 +201,15 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   _solver->Reset();
   
+  
 }
 
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
-  //_solver->Update(stage, time);
+  _solver->Update(stage, time);
+
+  /*
   float factor = RANDOM_0_1;
   for(size_t m = 0; m < _clothes.size(); ++m) {
     pxr::GfVec3f* positions = ((Mesh*)_clothes[m])->GetPositionsPtr();
@@ -218,7 +220,7 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     }
     _scene.MarkPrimDirty(_clothesId[m], pxr::HdChangeTracker::AllDirty);
   }
-
+  */
 }
 
 void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)

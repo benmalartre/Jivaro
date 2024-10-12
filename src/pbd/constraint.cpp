@@ -84,12 +84,13 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
   Geometry* geometry = body->GetGeometry();
   bool hasConstraintApi = false;
   
+  /*
   pxr::UsdPrim prim = geometry->GetPrim();
   if(prim.IsValid()) {
     std::cout << "HAs Constraint API " << prim.GetPath() << std::endl;
     if(!prim.HasAPI(pxr::TfToken("UsdPbdConstraintAPI"), name))
       pxr::UsdPbdConstraintAPI::Apply(prim, name);
-  }
+  }*/
 
   while(true) {
     pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
@@ -341,7 +342,7 @@ ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness, float da
   pxr::VtArray<int> allElements;
   Geometry* geometry = body->GetGeometry();
   size_t offset = body->GetOffset();
-
+  
   if (geometry->GetType() == Geometry::MESH) 
     _GetMeshStretchElements((Mesh*)geometry, allElements, offset);
   else if (geometry->GetType() == Geometry::CURVE)
@@ -351,7 +352,7 @@ ConstraintsGroup* CreateStretchConstraints(Body* body, float stiffness, float da
     return CreateConstraintsGroup(body, 
       pxr::TfToken("stretch"), Constraint::STRETCH,
         allElements, StretchConstraint::ELEM_SIZE, Constraint::BlockSize);
-
+  
   return NULL;
 
 }
