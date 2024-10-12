@@ -251,9 +251,9 @@ Scene::GetInstancerBinding(const pxr::SdfPath& path)
 
 
 void 
-Scene::MarkPrimDirty(const pxr::SdfPath& inPath, pxr::HdDirtyBits bits)
+Scene::MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits)
 {
-  Scene::_Prim* prim = GetPrim(inPath);
+  Scene::_Prim* prim = GetPrim(path);
   if(prim) prim->bits = bits; 
 }
 

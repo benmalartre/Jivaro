@@ -100,8 +100,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _TraverseStageFindingMeshes(stage);
 
   for(size_t c = 0; c < _clothes.size(); ++c) {
-    _scene.AddGeometry(_clothesId[c], _clothes[c]);
     _clothes[c]->SetInputOutput();
+    _scene.AddGeometry(_clothesId[c], _clothes[c]);
   }
   
   // create solver with attributes
@@ -113,7 +113,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float size = .025f;
 
 
-  for(size_t x = 0; x < 0; ++x) {
+  for(size_t x = 0; x < 3; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 

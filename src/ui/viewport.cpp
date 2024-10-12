@@ -394,7 +394,7 @@ void ViewportUI::Render()
   _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
 
   _renderParams.frame = pxr::UsdTimeCode(Time::Get()->GetActiveTime());
-  _renderParams.complexity = 1.0f;
+  _renderParams.complexity = 1.1f;
   _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
   _renderParams.showGuides = true;
   _renderParams.showRender = true;
@@ -405,7 +405,7 @@ void ViewportUI::Render()
   _renderParams.enableIdRender = false;
   _renderParams.enableSampleAlphaToCoverage = true;
   _renderParams.highlight = true;
-  _renderParams.enableSceneMaterials = false;
+  _renderParams.enableSceneMaterials = true;
   _renderParams.enableSceneLights = true;
   //_renderParams.colorCorrectionMode = ???
   _renderParams.clearColor = pxr::GfVec4f(0.25,0.25,0.25,1.0);

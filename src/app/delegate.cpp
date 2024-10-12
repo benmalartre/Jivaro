@@ -19,9 +19,9 @@ Delegate::~Delegate()
 bool
 Delegate::IsEnabled(pxr::TfToken const& option) const
 {
-  if (option == pxr::HdOptionTokens->parallelRprimSync) {
-    return true;
-  }
+    if (option == pxr::HdOptionTokens->parallelRprimSync) {
+        return true;
+    }
 
     return false;
 }
@@ -143,7 +143,6 @@ Delegate::GetRenderTag(pxr::SdfPath const& id)
 pxr::VtValue
 Delegate::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 {
-  std::cout << "DELEGATE GET " << id << " " << key << std::endl;
   return _scene->Get(id, key);
 }
 
@@ -245,19 +244,17 @@ pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath cons
 }
 
 void Delegate::SetScene(Scene* scene) {
-
-  _scene = scene;
-
   pxr::HdRenderIndex& index = GetRenderIndex();
-
-  for (auto& prim : _scene->GetPrims()) {
-    if(!prim.second.geom->IsOutput()) continue;
-    if(prim.second.geom->GetType() == Geometry::INSTANCER)
-      index.RemoveInstancer(prim.first);
-    else {
-      index.RemoveRprim(prim.first);
+  if (_scene) {
+    for (auto& prim : _scene->GetPrims()) {
+      if(prim.second.geom->GetType() == Geometry::INSTANCER)
+        index.RemoveInstancer(prim.first);
+      else
+        index.RemoveRprim(prim.first);
     }
   }
+  _scene = scene;
+  if (!_scene)return;
 
   pxr::HdChangeTracker& tracker = GetRenderIndex().GetChangeTracker();
   
@@ -265,9 +262,7 @@ void Delegate::SetScene(Scene* scene) {
     Geometry* geometry = prim.second.geom;
     if (!geometry->IsOutput())continue;
 
-    short geomType = geometry->GetType();
-
-    switch (geomType) {
+    switch (geometry->GetType()) {
       case Geometry::MESH:
         index.InsertRprim(pxr::HdPrimTypeTokens->mesh, this, prim.first);
         break;
@@ -280,18 +275,18 @@ void Delegate::SetScene(Scene* scene) {
         index.InsertRprim(pxr::HdPrimTypeTokens->points, this, prim.first);
         break;
 
-      case Geometry::INSTANCER:      
+      case Geometry::INSTANCER:                      
         index.InsertInstancer(this, prim.first);
-        break;
+        tracker.MarkInstancerDirty(prim.first,  pxr::HdChangeTracker::DirtyTransform |
+                                                pxr::HdChangeTracker::DirtyPrimvar |
+                                                pxr::HdChangeTracker::DirtyInstanceIndex);
+        continue;
     }
     
-    if(geomType == Geometry::INSTANCER)
-      tracker.MarkInstancerDirty(prim.first,  pxr::HdChangeTracker::DirtyTransform |
-                                                pxr::HdChangeTracker::DirtyPrimvar |
-                                                pxr::HdChangeTracker::DirtyInstanceIndex);                                         
-    else 
-      if(prim.second.bits != pxr::HdChangeTracker::Clean) 
-        tracker.MarkRprimDirty(prim.first, prim.second.bits);
+    if(prim.second.bits != pxr::HdChangeTracker::Clean) {  
+      tracker.MarkRprimDirty(prim.first, prim.second.bits);
+    }
+    
   }
 }
 

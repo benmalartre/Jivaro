@@ -37,7 +37,7 @@ class Solver : public Xform {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
-  typedef std::unordered_map<Element*, std::pair<pxr::SdfPath, Geometry*>> _ElementMap;
+  typedef std::map<Element*, std::pair<pxr::SdfPath, Geometry*>> _ElementMap;
 
   explicit Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
   ~Solver();
