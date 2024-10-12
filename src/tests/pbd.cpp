@@ -36,7 +36,6 @@ void TestPBD::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
       if (prim.IsA<pxr::UsdGeomMesh>()) {
         _clothes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
-        _clothes.back()->SetInputOutput();
         _clothesId.push_back(prim.GetPath());
       };
     } else if (prim.HasAPI<pxr::UsdPbdCollisionAPI>()) {
@@ -51,7 +50,6 @@ void TestPBD::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
       }
       
     }
-    
 }
 
 void TestPBD::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
@@ -60,7 +58,7 @@ void TestPBD::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& pat
 
   if(prim.IsValid()) {
     pxr::UsdGeomXformable xformable(prim);
-    pxr::GfVec3d scale = pxr::GfVec3f(1.f, 1.f, 1.f);
+    pxr::GfVec3f scale = pxr::GfVec3f(1.f, 1.f, 1.f);
     pxr::GfVec3d translate0 = pxr::GfVec3f(0.f, 0.f, 0.f);
     pxr::GfVec3d translate1 = pxr::GfVec3f(0.f, -10.f, 0.f);
     pxr::GfVec3d translate2 = pxr::GfVec3f(0.f, 10.f, 0.f);
@@ -101,9 +99,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   _TraverseStageFindingMeshes(stage);
 
-  for(size_t c = 0; c < _clothes.size(); ++c)
+  for(size_t c = 0; c < _clothes.size(); ++c) {
     _scene.AddGeometry(_clothesId[c], _clothes[c]);
-  
+    _clothes[c]->SetInputOutput();
+  }
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));

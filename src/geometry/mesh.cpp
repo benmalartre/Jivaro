@@ -697,10 +697,10 @@ Mesh::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
     pxr::UsdGeomMesh usdMesh(_prim);
 
     _previous = _positions;
-      usdMesh.GetPointsAttr().Get(&_positions, time);
-    
+    usdMesh.GetPointsAttr().Get(&_positions, time);
+    return Geometry::DirtyState::DEFORM;
   }
-  return Geometry::DirtyState::DEFORM;
+  return Geometry::DirtyState::CLEAN;
 }
 
 void 

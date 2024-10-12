@@ -560,7 +560,6 @@ void Solver::UpdateGeometries()
         size_t numPoints = body->GetNumPoints();
         pxr::GfVec3f* output = deformable->GetPositionsPtr();
         size_t offset = body->GetOffset();
-        std::cout << "update geometry : " << geometry->GetPrim().GetPath() << " " << offset << " " << numPoints << std::endl;
         for (size_t p = 0; p < numPoints; ++p) {
           output[p] = deformable->GetInverseMatrix().Transform(positions[offset + p]);
         }

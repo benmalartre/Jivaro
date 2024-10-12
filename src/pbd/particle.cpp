@@ -80,8 +80,6 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
     counter[idx] = pxr::GfVec2f(0.f);
   }
 
-  if (areas)delete areas;
-
   item->SetOffset(base);
   item->SetNumPoints(numPoints);
   num += numPoints;

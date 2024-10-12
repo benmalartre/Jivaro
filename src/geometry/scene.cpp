@@ -89,7 +89,6 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
 
 Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo)
 {
-
   const auto& primIt = _prims.find(path);
   if( primIt != _prims.end())
     return primIt->second.geom;
@@ -131,7 +130,7 @@ Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::Gf
 
 void Scene::AddGeometry(const pxr::SdfPath& path, Geometry* geom)
 {
-  _prims[path] = {geom};
+  _prims[path] = {geom, pxr::HdChangeTracker::Clean};
 }
 
 
@@ -252,9 +251,9 @@ Scene::GetInstancerBinding(const pxr::SdfPath& path)
 
 
 void 
-Scene::MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits)
+Scene::MarkPrimDirty(const pxr::SdfPath& inPath, pxr::HdDirtyBits bits)
 {
-  Scene::_Prim* prim = GetPrim(path);
+  Scene::_Prim* prim = GetPrim(inPath);
   if(prim) prim->bits = bits; 
 }
 
@@ -317,19 +316,19 @@ Scene::GetTransform(pxr::SdfPath const & id)
 bool 
 Scene::IsMesh(const pxr::SdfPath& id)
 {
-  return (_prims.find(id) != _prims.end() && _prims[id].geom->GetType() == Geometry::MESH);
+  return _prims[id].geom->GetType() == Geometry::MESH;
 }
 
 bool
 Scene::IsCurves(const pxr::SdfPath& id)
 {
-  return (_prims.find(id) != _prims.end() && _prims[id].geom->GetType() == Geometry::CURVE);
+  return _prims[id].geom->GetType() == Geometry::CURVE;
 }
 
 bool
 Scene::IsPoints(const pxr::SdfPath& id)
 {
-  return (_prims.find(id) != _prims.end() && _prims[id].geom->GetType() == Geometry::POINT);
+  return _prims[id].geom->GetType() == Geometry::POINT;
 }
 
 const pxr::SdfPath
@@ -372,9 +371,7 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
       return pxr::VtValue(instancer->GetScales());
     } else if (key == pxr::HdInstancerTokens->instanceRotations) {
       return pxr::VtValue(instancer->GetRotations());
-    }
-    else {
-
+    } else {
     }
   } else {
     if (key == pxr::HdTokens->points) {

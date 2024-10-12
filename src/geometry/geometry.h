@@ -89,7 +89,7 @@ public:
   bool IsOutput(){return BITMASK_CHECK(_mode, Mode::OUTPUT);};
   void SetInputOnly() {_mode = Mode::INPUT;};
   void SetOutputOnly() {_mode = Mode::OUTPUT;};
-  void SetInputOutput() {BITMASK_CHECK(_mode, Mode::INPUT|Mode::OUTPUT);};
+  void SetInputOutput() {_mode = Mode::INPUT|Mode::OUTPUT;};
   
   void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
   const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
