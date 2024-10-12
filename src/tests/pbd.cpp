@@ -113,7 +113,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   float size = .025f;
 
 
-  for(size_t x = 0; x < 3; ++x) {
+  for(size_t x = 0; x < 0; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
     Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 
@@ -124,20 +124,22 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _scene.AddGeometry(clothPath, clothMesh);
   }
   
-
+  
   for (size_t c = 0; c < _clothesId.size(); ++c) {
     size_t offset = _solver->GetNumParticles();
 
     Body* body = _solver->CreateBody((Geometry*)_clothes[c], 
       _clothes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f);
+    
     _solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.5f);
     _solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);
     
     _solver->AddElement(body, _clothes[c], _clothesId[c]);
     
+    
   }
-
+  
   float restitution = 0.1f;
   float friction = 0.5f;
 
@@ -199,13 +201,24 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
 
   _solver->Reset();
+  
 }
-
 
 void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
-  _solver->Update(stage, time);
+  //_solver->Update(stage, time);
+  float factor = RANDOM_0_1;
+  for(size_t m = 0; m < _clothes.size(); ++m) {
+    pxr::GfVec3f* positions = ((Mesh*)_clothes[m])->GetPositionsPtr();
+    const pxr::GfVec3f* normal = ((Mesh*)_clothes[m])->GetNormalsCPtr();
+    std::cout << "push " << factor << _clothes[m] << std::endl;
+    for(size_t p=0; p < ((Mesh*)_clothes[m])->GetNumPoints(); ++p) {
+      positions[p] += normal[p] * factor;
+    }
+    _scene.MarkPrimDirty(_clothesId[m], pxr::HdChangeTracker::AllDirty);
+  }
+
 }
 
 void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)

@@ -29,7 +29,7 @@ Particles::~Particles()
 
 void Particles::_EnsureDataSize(size_t desired)
 {
-  size_t size = std::floor(num / BLOCK_SIZE) * BLOCK_SIZE;
+  size_t size = std::ceil(num / BLOCK_SIZE) * BLOCK_SIZE;
   if(size > desired)return;
 
   size = ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;

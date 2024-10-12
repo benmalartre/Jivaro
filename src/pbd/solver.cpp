@@ -164,9 +164,11 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix,
   api.GetMassAttr().Get(&mass, pxr::UsdTimeCode::Default());
   api.GetDampAttr().Get(&damping, pxr::UsdTimeCode::Default());
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
+  
   _particles.AddBody(body, matrix);
 
   UpdatePoints();
+
   return body;
 }
 
