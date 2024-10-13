@@ -18,7 +18,7 @@ public:
   void TerminateExec(pxr::UsdStageRefPtr& stage) override;
 
 protected: 
-  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
+  void _TraverseStageFindingElements(pxr::UsdStageRefPtr& stage);
   void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
 
 private:

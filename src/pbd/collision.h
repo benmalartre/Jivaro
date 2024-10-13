@@ -7,6 +7,7 @@
 
 #include "../common.h"
 #include "../acceleration/hashGrid.h"
+#include "../acceleration/bvh.h"
 #include "../pbd/contact.h"
 #include "../pbd/mask.h"
 
@@ -20,7 +21,6 @@ class Constraint;
 class CollisionConstraint;
 class Points;
 class Solver;
-class BVH;
 class HashGrid;
 
 
@@ -197,7 +197,7 @@ protected:
 
 private:
   static size_t                 TYPE_ID;
-  BVH*                          _bvh;
+  BVH                           _bvh;
   std::vector<Location>         _query;
   std::vector<Location>         _closest;
 };

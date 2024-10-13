@@ -291,23 +291,26 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const pxr::GfVec3f velocity = particles->velocity[index] * ft;
-  const float radius = _radius + particles->radius[index] + _collider->GetVelocity().GetLength() * ft + Collision::TOLERANCE_MARGIN;
-  const pxr::GfVec3f predicted(particles->position[index] + velocity);
-  SetHit(index, (predicted - _center).GetLength() < radius);
+  const float radius = _radius + particles->radius[index] + Collision::TOLERANCE_MARGIN;
+  pxr::GfVec3f predicted(particles->position[index] + velocity);
+  predicted = _collider->GetInverseMatrix().Transform(predicted);
+  SetHit(index, predicted.GetLength() < radius);
 }
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
-  const pxr::GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
+  pxr::GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
 
-  pxr::GfVec3f normal = predicted - _center;
+  predicted = _collider->GetInverseMatrix().Transform(predicted);
+
+  pxr::GfVec3f normal = predicted;
   float nL = normal.GetLength();
   if (nL > 0.0000001f)normal.Normalize();
   else normal = pxr::GfVec3f(0.f, 1.f, 0.f);
 
-  float d = nL - (_radius + particles->radius[index] + Collision::TOLERANCE_MARGIN);
+  float d = nL - (_radius + particles->radius[index]);
 
-  pxr::GfVec3f intersection = predicted  + normal * -d;
+  pxr::GfVec3f intersection = _collider->GetMatrix().Transform(predicted  + normal * -d);
 
   contact->Init(normal,GetVelocity(particles, index), d);
   contact->SetCoordinates(intersection);
@@ -316,7 +319,7 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index, Con
 
 float SphereCollision::GetValue(Particles* particles, size_t index)
 {
-  return (particles->predicted[index] - _center).GetLength() -
+  return (_collider->GetInverseMatrix().Transform(particles->predicted[index])).GetLength() -
     (_radius + particles->radius[index]);
 }
   
@@ -342,7 +345,6 @@ MeshCollision::MeshCollision(Geometry* collider, const pxr::SdfPath& path,
 
 MeshCollision::~MeshCollision()
 {
-  delete _bvh;
 }
 
 void MeshCollision::Update(const pxr::UsdPrim& prim, double time)
@@ -362,13 +364,12 @@ void MeshCollision::Init(size_t numParticles)
 void MeshCollision::_CreateAccelerationStructure()
 {
   uint64_t T = CurrentTime();
-  _bvh = new BVH();
-  _bvh->Init({_collider});
+  _bvh.Init({_collider});
 } 
 
 void MeshCollision::_UpdateAccelerationStructure()
 {
-  _bvh->Update();
+  _bvh.Update();
 } 
 
 
@@ -379,10 +380,10 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   double maxDistance = (particles->velocity[index].GetLength() * ft + 
     particles->radius[index] + Collision::TOLERANCE_MARGIN) ;
   double minDistance = DBL_MAX;
-  if(_bvh->Raycast(ray, &_closest[index], maxDistance, &minDistance))
+  if(_bvh.Raycast(ray, &_closest[index], maxDistance, &minDistance))
     SetHit(index, true);
   else
-    if(_bvh->Closest(particles->position[index], &_closest[index], maxDistance))
+    if(_bvh.Closest(particles->position[index], &_closest[index], maxDistance))
       SetHit(index, true);
     else
       SetHit(index, false);

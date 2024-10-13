@@ -71,6 +71,7 @@ public:
   virtual void SetStiffness(float stiffness);
   virtual void SetDamp(float damp);
   
+  virtual void Reset(Particles* particles){};
   virtual void SolvePosition(Particles* particles, float dt) = 0;
   virtual void SolveVelocity(Particles* particles, float dt){};
 
@@ -111,6 +112,7 @@ public:
 
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
+
 
   void SolvePosition(Particles* particles, float dt) override;
 
@@ -158,6 +160,7 @@ public:
   void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
 
+  void Reset(Particles* particles) override;
   void SolvePosition(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;

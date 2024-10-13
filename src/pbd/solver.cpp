@@ -72,7 +72,9 @@ Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix
 Solver::~Solver()
 {
   for (auto& constraint : _constraints)delete constraint;
+  for (auto& contact : _contacts)delete contact;
   for (auto& body : _bodies)delete body;
+  for (auto& collision: _collisions)delete collision;
   for (auto& force : _forces)delete force;
   _scene->RemoveGeometry(_pointsId);
   _scene->RemoveGeometry(_curvesId);
@@ -488,6 +490,10 @@ void Solver::Reset()
   }
 
   _particles.SetAllState(Particles::ACTIVE);
+
+  for(auto& constraint: _constraints) {
+    constraint->Reset(&_particles);
+  }
   UpdateCurves();
 }
 
@@ -582,10 +588,10 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   pxr::UsdPbdSolver solver(prim);
 
   _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
-  solver.GetSubStepsAttr().Get(&_subSteps, time);
-  solver.GetIterationAttr().Get(&_iterations, time);
+  solver.GetPbdSubStepsAttr().Get(&_subSteps, time);
+  solver.GetPbdIterationAttr().Get(&_iterations, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
-  solver.GetSleepThresholdAttr().Get(&_sleepThreshold, time);
+  solver.GetPbdSleepThresholdAttr().Get(&_sleepThreshold, time);
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);

@@ -28,7 +28,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-void TestPBD::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
+void TestPBD::_TraverseStageFindingElements(pxr::UsdStageRefPtr& stage)
 {
   pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
   for (pxr::UsdPrim prim : stage->TraverseAll())
@@ -45,6 +45,18 @@ void TestPBD::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
         _collidersId.push_back(prim.GetPath());
       } else if (prim.IsA<pxr::UsdGeomSphere>()) {
         _colliders.push_back(new Sphere(pxr::UsdGeomSphere(prim), 
+          xformCache.GetLocalToWorldTransform(prim)));
+        _collidersId.push_back(prim.GetPath());
+      } else if (prim.IsA<pxr::UsdGeomCube>()) {
+        _colliders.push_back(new Cube(pxr::UsdGeomCube(prim), 
+          xformCache.GetLocalToWorldTransform(prim)));
+        _collidersId.push_back(prim.GetPath());
+      } else if (prim.IsA<pxr::UsdGeomCylinder>()) {
+        _colliders.push_back(new Cylinder(pxr::UsdGeomCylinder(prim), 
+          xformCache.GetLocalToWorldTransform(prim)));
+        _collidersId.push_back(prim.GetPath());
+      } else if (prim.IsA<pxr::UsdGeomCapsule>()) {
+        _colliders.push_back(new Capsule(pxr::UsdGeomCapsule(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
       }
@@ -97,7 +109,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 
-  _TraverseStageFindingMeshes(stage);
+  _TraverseStageFindingElements(stage);
 
   for(size_t c = 0; c < _clothes.size(); ++c) {
     _clothes[c]->SetInputOutput();
@@ -132,16 +144,15 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     Body* body = _solver->CreateBody((Geometry*)_clothes[c], 
       _clothes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f);
     
-    _solver->CreateConstraints(body, Constraint::BEND, 20000.f, 0.1f);
+    //_solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.5f);
-    _solver->CreateConstraints(body, Constraint::SHEAR, 60000.f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::SHEAR, 6000.f, 0.1f);
     
     _solver->AddElement(body, _clothes[c], _clothesId[c]);
     
   }
   
-  float restitution = 0.1f;
-  float friction = 0.5f;
+  float restitution, friction;
 
   bool createSelfCollision = true;
   if (createSelfCollision) {
@@ -149,30 +160,39 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.5f, 0.5f);
     _solver->AddElement(selfCollide, NULL, selfCollideId);
   }
-
-  bool createSphereCollision = true;
-  if(createSphereCollision) {
-
-   // create collide spheres
-    std::map<pxr::SdfPath, Sphere*> spheres;
     
-    pxr::GfVec3f offset(10.f, 0.f, 0.f);
-    pxr::GfVec3f axis(0.f,1.f,0.f);
-    size_t n = 8;
-    const double rStep = 360.0 / static_cast<double>(n);
+  bool createCollisions = true;
+  if(createCollisions) {
 
+    for (size_t c = 0; c < _collidersId.size(); ++c) {
+      _scene.AddGeometry(_collidersId[c], _colliders[c]);
+      _colliders[c]->SetInputOnly();
+      Collision* collision = NULL;
 
-    std::string name = "sphere_collide_ctr";
-    pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
-    spheres[collideId] =
-      _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
-    //_AddAnimationSamples(stage, collideId);
-    _scene.AddGeometry(collideId, spheres[collideId]);
+      _colliders[c]->GetAttributeValue(pxr::UsdPbdTokens->pbdFriction, pxr::UsdTimeCode::Default(), &friction);
+      _colliders[c]->GetAttributeValue(pxr::UsdPbdTokens->pbdRestitution, pxr::UsdTimeCode::Default(), &restitution);
 
-    for (auto& sphere : spheres) {
-      Collision* collision = new SphereCollision(sphere.second, sphere.first, restitution, friction);
-      _solver->AddElement(collision, sphere.second, sphere.first);
-     }
+      switch(_colliders[c]->GetType()) {
+        case Geometry::CUBE:
+          break;
+        case Geometry::SPHERE:
+          collision = new SphereCollision(_colliders[c], _collidersId[c], restitution, friction);
+          break;
+        case Geometry::CYLINDER:
+        case Geometry::CAPSULE:
+        case Geometry::CONE:
+          std::cerr << "Collision Shape NOT implemented" << std::endl;
+          break;
+        case Geometry::MESH:
+          collision = new MeshCollision(_colliders[c], _collidersId[c], restitution, friction);
+          ((MeshCollision*)collision)->Init(_solver->GetNumParticles());
+          break;
+      }
+      
+      if(collision)
+        _solver->AddElement(collision, _colliders[c], _collidersId[c]);
+      
+    }
   }
 
   bool createGroundCollision = true;
@@ -187,18 +207,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
     _solver->AddElement(collision, _ground, _groundId);
   }
-
-  bool createMeshCollision = true;
-  if(createMeshCollision) {
-    for (size_t c = 0; c < _collidersId.size(); ++c) {
-      _scene.AddGeometry(_collidersId[c], _colliders[c]);
-      _colliders[c]->SetInputOnly();
-      Collision* meshCollide = new MeshCollision(_colliders[c], _collidersId[c], 1.f, 1.f);
-      meshCollide->Init(_solver->GetNumParticles());
-      _solver->AddElement(meshCollide, _colliders[c], _collidersId[c]);
-      
-    }
-  }
+  
   
   _solver->Reset();
   

@@ -234,6 +234,15 @@ StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
   }
 }
 
+void StretchConstraint::Reset(Particles* particles)
+{
+  size_t numElements = _elements.size() / ELEM_SIZE;
+  for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
+    _rest[elemIdx] = (particles->position[_elements[elemIdx * ELEM_SIZE + 1]] -
+      particles->position[_elements[elemIdx * ELEM_SIZE]]).GetLength();
+  }
+}
+
 void StretchConstraint::SolvePosition(Particles* particles, float dt)
 {
 

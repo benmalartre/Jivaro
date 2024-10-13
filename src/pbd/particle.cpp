@@ -15,8 +15,8 @@ T* _ResizeArray(T* oldData, size_t oldSize, size_t newSize)
   T* newData = NULL;
   if(newSize > 0) {
     newData = new T[newSize];
-    memmove(newData, oldData, oldSize * sizeof(T));
-    memset(newData+oldSize  , 0.f, (newSize - oldSize) * sizeof(T));
+    memcpy(newData, oldData, oldSize * sizeof(T));
+    memset(newData + oldSize, 0.f, (newSize - oldSize) * sizeof(T));
   } 
   if(oldSize) delete [] oldData;
   return newData;
@@ -24,11 +24,14 @@ T* _ResizeArray(T* oldData, size_t oldSize, size_t newSize)
 
 Particles::~Particles()
 {
+  std::cout << "delete particles" << std::endl;
   _EnsureDataSize(0);
+  std::cout << "particles deleted" << std::endl;
 }
 
 void Particles::_EnsureDataSize(size_t desired)
 {
+  std::cout << "ensure data size " << desired << " (" << num << ")" << std::endl;
   size_t size = std::floor(num / BLOCK_SIZE) * BLOCK_SIZE;
   if(desired && size > desired)return;
 
@@ -64,7 +67,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   const pxr::GfVec3f* points = ((Deformable*)geom)->GetPositionsCPtr();
   pxr::GfVec3f pos;
   size_t idx;
-  for (size_t idx = base; idx < base + numPoints; ++idx) {
+  for (size_t idx = base; idx < size; ++idx) {
     pos = matrix.Transform(points[idx - base] + pxr::GfVec3f(RANDOM_LO_HI(-1,1), RANDOM_LO_HI(-1,1), RANDOM_LO_HI(-1,1)) * 0.001f);
     mass[idx] = m;
     invMass[idx] = w;

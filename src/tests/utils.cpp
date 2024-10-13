@@ -52,11 +52,11 @@ Plane* _CreateCollidePlane(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
 Solver* _CreateSolver(Scene* scene, pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   int subSteps, float sleepThreshold)
 {
-  pxr::UsdPbdSolver usdSolver = pxr::UsdPbdSolver::Define(stage, path);
-
-  Solver* solver = new Solver(scene, usdSolver, pxr::GfMatrix4d(1.0));
-
-  return solver;
+  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  if(prim.IsValid())
+    return new Solver(scene, pxr::UsdPbdSolver(prim), pxr::GfMatrix4d(1.0));
+  
+  return new Solver(scene, pxr::UsdPbdSolver::Define(stage, path), pxr::GfMatrix4d(1.0));
 }
 
 
