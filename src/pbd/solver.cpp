@@ -169,7 +169,8 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix,
 
   _particles.AddBody(body, matrix);
 
-  UpdatePoints();
+  if(_showPoints)UpdatePoints();
+  else ClearPoints();
 
   return body;
 }
@@ -288,6 +289,14 @@ void Solver::UpdatePoints()
   }
 }
 
+void Solver::ClearPoints()
+{
+  if(_points->GetNumPoints()) {
+    _points->RemoveAllPoints();
+    _scene->MarkPrimDirty(_pointsId, pxr::HdChangeTracker::AllDirty);
+  }
+}
+
 void Solver::UpdateCurves()
 {
   size_t numConstraints = _constraints.size();
@@ -309,6 +318,14 @@ void Solver::UpdateCurves()
   _curves->SetColors(colors);
 
   _scene->MarkPrimDirty(_curvesId, pxr::HdChangeTracker::AllDirty);
+}
+
+void Solver::ClearCurves()
+{
+  if(_curves->GetNumCurves()) {
+    _curves->RemoveAllCurves();
+    _scene->MarkPrimDirty(_curvesId, pxr::HdChangeTracker::AllDirty);
+  }
 }
 
 void Solver::WeightBoundaries(Body* body)
@@ -445,8 +462,10 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
     Step();
   }
 
-  UpdatePoints();
-  UpdateCurves();
+  if(_showPoints)UpdatePoints();
+  else ClearPoints();
+  if(_showConstraints)UpdateCurves();
+  else ClearCurves();
   UpdateGeometries();
 
 }
@@ -592,6 +611,9 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   solver.GetPbdIterationAttr().Get(&_iterations, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   solver.GetPbdSleepThresholdAttr().Get(&_sleepThreshold, time);
+
+  solver.GetPbdShowPointsAttr().Get(&_showPoints, time);
+  solver.GetPbdShowConstraintsAttr().Get(&_showConstraints, time);
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);

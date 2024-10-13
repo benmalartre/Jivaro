@@ -1,5 +1,6 @@
 #include <usdPbd/bodyAPI.h>
 #include <usdPbd/collisionAPI.h>
+#include <usdPbd/constraintAPI.h>
 
 #include "../geometry/geometry.h"
 #include "../geometry/points.h"
@@ -148,11 +149,6 @@ void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t
       counter[elem][c]+=1.f;
 }
 
-pxr::TfToken _GetConstraintsAttributeToken(const pxr::TfToken& name, const pxr::TfToken& attribute)
-{
-  return pxr::TfToken(name.GetString()+":"+attribute.GetString());
-}
-
 void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
 {
   pxr::UsdPbdBodyAPI bodyApi(prim);
@@ -165,25 +161,19 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   collideApi.GetFrictionAttr().Get(&_friction, time);
   collideApi.GetRestitutionAttr().Get(&_restitution, time);
 
-/*
-  float stiffness, damp;
-  pxr::TfToken stiffnessAttr, dampAttr;
+  float stiffness = 10000.f, damp = 0.25f;
   for(auto& constraintsIt: _constraints) {
-    stiffnessAttr = _GetConstraintsAttributeToken(constraintsIt.first, pxr::TfToken("stiffness"));
-    dampAttr = _GetConstraintsAttributeToken(constraintsIt.first, pxr::TfToken("damp"));
-
-
-    _geometry->GetAttributeValue(stiffnessAttr, time, &stiffness);
-    _geometry->GetAttributeValue(dampAttr, time, &damp);
-
-
-    for(Constraint* constraint: constraintsIt.second->constraints) {
-      constraint->SetStiffness(stiffness);
-      constraint->SetDamp(damp);
+    pxr::UsdPbdConstraintAPI api(prim, constraintsIt.first);
+    if(api) {
+      api.GetStiffnessAttr().Get(&stiffness);
+      api.GetDampAttr().Get(&damp);
+      for(Constraint* constraint: constraintsIt.second->constraints) {
+        constraint->SetStiffness(stiffness);
+        constraint->SetDamp(damp);
+      }
     }
-
   }
-  */
+  
   /*
   float GetMass() const {return _mass;};
   float GetRadius() const {return _radius;};
@@ -198,7 +188,7 @@ Body::AddConstraintsGroup(const pxr::TfToken& name, short type)
 {
   if(_constraints.find(name) != _constraints.end())
     return _constraints[name];
-  _constraints[name] = new ConstraintsGroup({_geometry->GetPrim(), type, {}}); 
+  _constraints[name] = new ConstraintsGroup({_geometry->GetPrim(), name, type, {}}); 
   return _constraints[name];
 }
 

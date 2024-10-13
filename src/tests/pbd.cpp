@@ -56,6 +56,7 @@ void TestPBD::_TraverseStageFindingElements(pxr::UsdStageRefPtr& stage)
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
       } else if (prim.IsA<pxr::UsdGeomCapsule>()) {
+        std::cout << "FOUND CAPSULE COLLIDER" << std::endl;
         _colliders.push_back(new Capsule(pxr::UsdGeomCapsule(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
@@ -154,7 +155,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   
   float restitution, friction;
 
-  bool createSelfCollision = true;
+  bool createSelfCollision = false;
   if (createSelfCollision) {
     pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
     Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.5f, 0.5f);
@@ -174,15 +175,25 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
       switch(_colliders[c]->GetType()) {
         case Geometry::CUBE:
+          std::cerr << "Collision shape CUBE not implemented" << std::endl;
           break;
+
         case Geometry::SPHERE:
           collision = new SphereCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
+
         case Geometry::CYLINDER:
-        case Geometry::CAPSULE:
-        case Geometry::CONE:
-          std::cerr << "Collision Shape NOT implemented" << std::endl;
+          std::cerr << "Collision shape CYLINDER not implemented" << std::endl;
           break;
+
+        case Geometry::CAPSULE:
+          collision = new CapsuleCollision(_colliders[c], _collidersId[c], restitution, friction);
+          break;
+
+        case Geometry::CONE:
+          std::cerr << "Collision shape CONE not implemented" << std::endl;
+          break;
+
         case Geometry::MESH:
           collision = new MeshCollision(_colliders[c], _collidersId[c], restitution, friction);
           ((MeshCollision*)collision)->Init(_solver->GetNumParticles());

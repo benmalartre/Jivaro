@@ -78,6 +78,7 @@ public:
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
   void GetConstraintsByType(short type, std::vector<Constraint*>& results);
   void UpdateCurves();
+  void ClearCurves();
 
   // contacts
   void AddContact(Constraint* contact) { _contacts.push_back(contact); };
@@ -95,6 +96,7 @@ public:
   Particles* GetParticles() { return &_particles; };
   void LockPoints(Body* body, pxr::VtArray<int>& elements);
   void UpdatePoints();
+  void ClearPoints();
   void WeightBoundaries(Body* body);
   Points* GetPoints(){return _points;};
   pxr::SdfPath GetPointsId(){return _pointsId;};
@@ -152,6 +154,11 @@ private:
   pxr::SdfPath                        _pointsId;
   pxr::SdfPath                        _curvesId;
   pxr::SdfPath                        _solverId;
+
+  // display
+  bool                                _showPoints;
+  bool                                _showConstraints;
+  size_t                              _showConstraintsMask;
 
   // timing
   Timer*                              _timer;

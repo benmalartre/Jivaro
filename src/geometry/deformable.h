@@ -52,6 +52,7 @@ public:
   void AddPoint(const pxr::GfVec3f& pos, float radius, 
                 const pxr::GfVec3f* normal=NULL, const pxr::GfVec3f* color=NULL);
   void RemovePoint(size_t index);
+  void RemovePoints(size_t start, size_t end);
   void RemoveAllPoints();
 
   Point* GetPoint(size_t index){return &_points[index];};

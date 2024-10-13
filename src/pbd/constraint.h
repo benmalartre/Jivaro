@@ -33,6 +33,7 @@ struct ConstraintTargets {
 
 struct ConstraintsGroup {
   pxr::UsdPrim               prim;
+  pxr::TfToken               name;
   short                      type;
   pxr::VtArray<Constraint*>  constraints;
 };

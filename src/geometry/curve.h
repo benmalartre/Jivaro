@@ -32,6 +32,9 @@ public:
     const pxr::VtArray<int>& cvCounts
   );
 
+  void RemoveCurve(size_t index);
+  void RemoveAllCurves();
+
   const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
   pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
 

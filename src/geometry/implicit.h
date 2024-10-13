@@ -53,8 +53,8 @@ protected:
 private:
   pxr::TfToken                _axis;
   pxr::GfVec3f                _normal;
-  float                       _width;
-  float                       _length;
+  double                      _width;
+  double                      _length;
   bool                        _doubleSided;
 };
 
@@ -93,8 +93,8 @@ public:
   Cube(const pxr::UsdGeomCube& sphere, const pxr::GfMatrix4d& world);
   virtual ~Cube() {};
 
-  void SetSize(float size){_size = size;};
-  float GetSize() {return _size;};
+  void SetSize(double size){_size = size;};
+  double GetSize() {return _size;};
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
@@ -111,7 +111,7 @@ protected:
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
-  float                    _size;  
+  double                    _size;  
 
 };
 
@@ -121,11 +121,11 @@ public:
   Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world);
   virtual ~Cone() {};
 
-  void SetRadius(float radius){_radius = radius;};
-  float GetRadius() {return _radius;};
-  void SetHeight(float height){_height = height;};
-  float GetHeight() {return _height;};
-  void SetAxis(const pxr::TfTokens &axis){_axis = axis;};
+  void SetRadius(double radius){_radius = radius;};
+  double GetRadius() {return _radius;};
+  void SetHeight(double height){_height = height;};
+  double GetHeight() {return _height;};
+  void SetAxis(const pxr::TfToken &axis){_axis = axis;};
   const pxr::TfToken& GetAxis() {return _axis;};
 
   // query 3d position on geometry
@@ -141,8 +141,8 @@ protected:
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
-  float                    _radius;  
-  float                    _height;
+  double                   _radius;  
+  double                   _height;
   pxr::TfToken             _axis;
 
 };
@@ -153,11 +153,11 @@ public:
   Cylinder(const pxr::UsdGeomCylinder& cylinder, const pxr::GfMatrix4d& world);
   virtual ~Cylinder() {};
 
-  void SetRadius(float radius){_radius = radius;};
-  float GetRadius() {return _radius;};
-  void SetHeight(float height){_height = height;};
-  float GetHeight() {return _height;};
-  void SetAxis(const pxr::TfTokens &axis){_axis = axis;};
+  void SetRadius(double radius){_radius = radius;};
+  double GetRadius() {return _radius;};
+  void SetHeight(double height){_height = height;};
+  double GetHeight() {return _height;};
+  void SetAxis(const pxr::TfToken &axis){_axis = axis;};
   const pxr::TfToken& GetAxis() {return _axis;};
 
   // query 3d position on geometry
@@ -173,8 +173,8 @@ protected:
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
 
 private:
-  float                    _radius;  
-  float                    _height;
+  double                    _radius;  
+  double                    _height;
   pxr::TfToken             _axis;
 };
 
@@ -184,11 +184,11 @@ public:
   Capsule(const pxr::UsdGeomCapsule& sphere, const pxr::GfMatrix4d& world);
   virtual ~Capsule() {};
 
-  void SetRadius(float radius){_radius = radius;};
-  float GetRadius() {return _radius;};
-  void SetHeight(float height){_height = height;};
-  float GetHeight() {return _height;};
-  void SetAxis(const pxr::TfTokens &axis){_axis = axis;};
+  void SetRadius(double radius){_radius = radius;};
+  double GetRadius() {return _radius;};
+  void SetHeight(double height){_height = height;};
+  double GetHeight() {return _height;};
+  void SetAxis(const pxr::TfToken &axis){_axis = axis;};
   const pxr::TfToken& GetAxis() {return _axis;};
 
   // query 3d position on geometry
@@ -202,10 +202,11 @@ protected:
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
   void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+  float SignedDistance(const pxr::GfVec3f& point) const override;
 
 private:
-  float                    _radius;  
-  float                    _height;
+  double                   _radius;  
+  double                   _height;
   pxr::TfToken             _axis;
 };
 

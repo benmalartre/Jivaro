@@ -129,8 +129,8 @@ Plane::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
       _normal = pxr::GfVec3f(0.f, 0.f, 1.f);
   }
 
-  state |= GetAttributeValue<float>(pxr::UsdGeomTokens->width, time, &_width);
-  state |= GetAttributeValue<float>(pxr::UsdGeomTokens->length, time, &_length);
+  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->width, time, &_width);
+  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->length, time, &_length);
   state |= GetAttributeValue<bool>(pxr::UsdGeomTokens->doubleSided, time, &_doubleSided);
 
   return (Geometry::DirtyState)state;
@@ -334,7 +334,7 @@ Cube::Closest(const pxr::GfVec3f& point, Location* hit,
 Geometry::DirtyState 
 Cube::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  return GetAttributeValue<float>(pxr::UsdGeomTokens->size, time, &_size);
+  return GetAttributeValue<double>(pxr::UsdGeomTokens->size, time, &_size);
 
 }
 
@@ -415,6 +415,7 @@ Cone::Closest(const pxr::GfVec3f& point, Location* hit,
 Geometry::DirtyState 
 Cone::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
+  short radiusDirty  = GetAttributeValue<double>(pxr::UsdGeomTokens->radius, time, &_radius);
   return Geometry::DirtyState::CLEAN;
 }
 
@@ -549,7 +550,11 @@ bool Capsule::Closest(const pxr::GfVec3f& point, Location* hit,
 Geometry::DirtyState 
 Capsule::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
-  return Geometry::DirtyState::CLEAN;
+  size_t state = GetAttributeValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
+  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->width, time, &_radius);
+  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->length, time, &_height);
+
+  return (Geometry::DirtyState)state;
 }
 
 void 
@@ -560,6 +565,31 @@ Capsule::_Inject(const pxr::GfMatrix4d& parent,
   usdCapsule.CreateHeightAttr().Set(_height, time);
   usdCapsule.CreateRadiusAttr().Set(_radius, time);
   usdCapsule.CreateAxisAttr().Set(_axis, time);
+}
+
+float 
+Capsule::SignedDistance(const pxr::GfVec3f& point) const
+{
+  pxr::GfVec3f a, b, p;
+  p = _invMatrix.Transform(point);
+  if (_axis == pxr::UsdGeomTokens->x) {
+    a = pxr::GfVec3f(-_height * 0.5f, 0.f, 0.f);
+    b = pxr::GfVec3f(_height * 0.5f, 0.f, 0.f);
+  }
+  else if (_axis == pxr::UsdGeomTokens->y) {
+    a = pxr::GfVec3f(0.f, -_height * 0.5f, 0.f);
+    b = pxr::GfVec3f(0.f, _height * 0.5f, 0.f);
+  }
+  else if (_axis == pxr::UsdGeomTokens->z) {
+    a = pxr::GfVec3f(0.f, 0.f, -_height * 0.5f);
+    b = pxr::GfVec3f(0.f, 0.f, _height * 0.5f);
+  }
+    
+  pxr::GfVec3f pa = p - a;
+  pxr::GfVec3f ba = b - a;
+  float h = pxr::GfClamp( pxr::GfDot(pa, ba)/pxr::GfDot(ba, ba), 0.f, 1.f );
+
+  return (pa - ba * h).GetLength() - _radius;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -917,6 +917,8 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
   for (elem = 0; elem < numElements; ++elem) {
     index = _elements[elem];
+    w0 = particles->invMass[index];
+    if(w0 < 1e-6)continue;
 
     accum = pxr::GfVec3f(0.f);
     velocity = pxr::GfVec3f(0.f);
@@ -935,7 +937,6 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
         d = RESCALE(d + Collision::TOLERANCE_MARGIN, -Collision::TOLERANCE_MARGIN, Collision::TOLERANCE_MARGIN, 
           -2.f * Collision::TOLERANCE_MARGIN, 0.f);
         
-      w0 = particles->invMass[index];
       w1 = particles->invMass[other];     
       w = w0 + w1;
       if(w < 1e-6) continue;

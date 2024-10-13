@@ -147,6 +147,23 @@ Curve::SetTopology(
   _cvCounts = cvCounts;
 }
 
+void 
+Curve::RemoveCurve(size_t index)
+{
+  size_t offset = 0, start, end, num;
+  for(size_t i = 0; i < index; ++i) {
+    offset += _cvCounts[i];
+  }
+  num = _cvCounts[index];
+}
+
+void 
+Curve::RemoveAllCurves()
+{
+  RemoveAllPoints();
+  _cvCounts.clear();
+}
+
 void
 Curve::SetCurveWidth(size_t curveIdx, size_t cvIdx, float width)
 {
