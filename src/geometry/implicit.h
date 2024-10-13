@@ -196,13 +196,14 @@ public:
     double maxDistance = -1.0, double* minDistance = NULL) const override;
   bool Closest(const pxr::GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
+  float SignedDistance(const pxr::GfVec3f& point) const override;
 
 protected:
   Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
   void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
-  float SignedDistance(const pxr::GfVec3f& point) const override;
+  
 
 private:
   double                   _radius;  
