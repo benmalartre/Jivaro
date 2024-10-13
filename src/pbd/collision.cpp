@@ -307,9 +307,10 @@ void SphereCollision::_StoreContactLocation(Particles* particles, int index, Con
   if (nL > 0.0000001f)normal.Normalize();
   else normal = pxr::GfVec3f(0.f, 1.f, 0.f);
 
-  float d = nL - _radius;// + particles->radius[index]);
+  float d = nL - _radius;
 
-  pxr::GfVec3f intersection = _collider->GetMatrix().Transform(predicted.GetNormalized() * -d) + normal * particles->radius[index];
+  pxr::GfVec3f intersection = _collider->GetMatrix().Transform(predicted.GetNormalized() * -d) + 
+    normal * particles->radius[index];
 
   contact->Init(normal,GetVelocity(particles, index), d);
   contact->SetCoordinates(intersection);
@@ -380,26 +381,32 @@ void CapsuleCollision::_FindContact(Particles* particles, size_t index, float ft
   const pxr::GfVec3f velocity = particles->velocity[index] * ft;
   const float radius = particles->radius[index] + Collision::TOLERANCE_MARGIN;
   pxr::GfVec3f predicted(particles->position[index] + velocity);
+  pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
+  pxr::GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
 
-  pxr::GfVec3f local = _PointOnCapsuleSegment(_collider->GetInverseMatrix().Transform(predicted), 
-    capsule->GetAxis(), capsule->GetHeight());
-
-  if((predicted - _collider->GetMatrix().Transform(local)).GetLength() < radius)
+  if((local - closest).GetLength() < _radius)
     SetHit(index, true);
-  else 
-    SetHit(index, false);
 
+  else {
+    pxr::GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
+    if((predicted - _collider->GetMatrix().Transform(surface)).GetLength() < radius)
+      SetHit(index, true);
+    else 
+      SetHit(index, false);
+  }
 }
 
 void CapsuleCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
+  Capsule* capsule = (Capsule*)_collider;
   const pxr::GfVec3f predicted = particles->position[index] + particles->velocity[index] * ft;
 
-  pxr::GfVec3f local = _PointOnCapsuleSegment(_collider->GetInverseMatrix().Transform(predicted), 
-    capsule->GetAxis(), capsule->GetHeight());
+  pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
+  pxr::GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
+  pxr::GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
 
-  pxr::GfVec3f world = _collider->GetMatrix().Transform(local);
-  pxr::GfVec3f normal = (predicted - world)
+  pxr::GfVec3f world = _collider->GetMatrix().Transform(surface);
+  pxr::GfVec3f normal = (predicted - world);
   float d = normal.GetLength() - particles->radius[index];
 
   contact->Init(normal.GetNormalized(), GetVelocity(particles, index), d);
@@ -409,21 +416,34 @@ void CapsuleCollision::_StoreContactLocation(Particles* particles, int index, Co
 
 float CapsuleCollision::GetValue(Particles* particles, size_t index)
 {
-  const pxr::GfVec3f local = _PointOnCapsuleSegment(_collider->GetInverseMatrix().Transform(particles->predicted[index]),
-    capsule->GetAxis(), capsule->GetHeight());
+  Capsule* capsule = (Capsule*)_collider;
 
-  pxr::GfVec3f world = _collider->GetMatrix().Transform(local);
-  return (predicted - world).GetLength() - particles->radius[index];
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->predicted[index]);
+  const pxr::GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
+  const pxr::GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
+
+  pxr::GfVec3f world = _collider->GetMatrix().Transform(surface);
+
+  return (particles->predicted[index] - world).GetLength() - particles->radius[index];
 
 }
   
 pxr::GfVec3f CapsuleCollision::GetGradient(Particles* particles, size_t index)
 {
-  const pxr::GfVec3f local = _PointOnCapsuleSegment(_collider->GetInverseMatrix().Transform(particles->predicted[index]),
-    capsule->GetAxis(), capsule->GetHeight());
+  Capsule* capsule = (Capsule*)_collider;
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->predicted[index]);
+  const pxr::GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
 
-  pxr::GfVec3f world = _collider->GetMatrix().Transform(local);
-  return (predicted - world).GetNormalized();
+  const pxr::GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
+  pxr::GfVec3f world = _collider->GetMatrix().Transform(surface);
+
+  if((local - closest).GetLengthSq() < _radius * _radius)
+    return (world - particles->predicted[index]).GetNormalized();
+  else
+    return (particles->predicted[index] - world).GetNormalized();
+
+
+  
 }
 
 
