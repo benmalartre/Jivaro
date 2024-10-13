@@ -18,7 +18,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const size_t Collision::PACKET_SIZE = 32;
-const float Collision::TOLERANCE_MARGIN = 0.05f;
+const float Collision::TOLERANCE_MARGIN = 0.01f;
 
 void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
@@ -338,6 +338,11 @@ MeshCollision::MeshCollision(Geometry* collider, const pxr::SdfPath& path,
 {
   Mesh* mesh = (Mesh*)_collider;
   _CreateAccelerationStructure();
+}
+
+MeshCollision::~MeshCollision()
+{
+  delete _bvh;
 }
 
 void MeshCollision::Update(const pxr::UsdPrim& prim, double time)

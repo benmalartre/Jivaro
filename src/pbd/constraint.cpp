@@ -78,19 +78,10 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
   size_t first = 0;
   size_t last = pxr::GfMin(blockSize * elementSize, numElements);
 
-  float stiffness = 10000.f;
+  float stiffness = 100000.f;
   float damping = 0.1;
 
   Geometry* geometry = body->GetGeometry();
-  bool hasConstraintApi = false;
-  
-  /*
-  pxr::UsdPrim prim = geometry->GetPrim();
-  if(prim.IsValid()) {
-    std::cout << "HAs Constraint API " << prim.GetPath() << std::endl;
-    if(!prim.HasAPI(pxr::TfToken("UsdPbdConstraintAPI"), name))
-      pxr::UsdPbdConstraintAPI::Apply(prim, name);
-  }*/
 
   while(true) {
     pxr::VtArray<int> blockElements(allElements.begin()+first, allElements.begin()+last);
@@ -279,7 +270,7 @@ void StretchConstraint::SolvePosition(Particles* particles, float dt)
 
     damp = pxr::GfDot((velocity[a] + velocity[b]) * 0.5f  * dt * dt,  normal) * normal * _damp ;
 
-    correction = -C / (length * length * W + alpha) * gradient;// - damp;
+    correction = -C / (length * length * W + alpha) * gradient - damp;
 
     _correction[elem * ELEM_SIZE + 0] += w0  * correction;
     _correction[elem * ELEM_SIZE + 1] -= w1 * correction;
@@ -976,8 +967,7 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
 {
-  return;
-   _ResetCorrection();
+  _ResetCorrection();
   const size_t numElements = _elements.size();
   pxr::GfVec3f velocity, normal;
   float d, w0, w1, w;

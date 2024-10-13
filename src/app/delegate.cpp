@@ -109,7 +109,7 @@ Delegate::GetVisible(pxr::SdfPath const & id)
 bool
 Delegate::GetDoubleSided(pxr::SdfPath const & id)
 {
-    return false;
+    return true;
 }
 
 /*virtual*/

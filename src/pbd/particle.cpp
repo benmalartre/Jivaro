@@ -29,10 +29,10 @@ Particles::~Particles()
 
 void Particles::_EnsureDataSize(size_t desired)
 {
-  size_t size = std::ceil(num / BLOCK_SIZE) * BLOCK_SIZE;
-  if(size > desired)return;
+  size_t size = std::floor(num / BLOCK_SIZE) * BLOCK_SIZE;
+  if(desired && size > desired)return;
 
-  size = ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+  size = desired ? ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE : 0;
   state =     _ResizeArray<short>(state, num, size);
   body =      _ResizeArray<int>(body, num, size);
   mass =      _ResizeArray<float>(mass, num, size);

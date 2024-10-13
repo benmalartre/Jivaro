@@ -302,8 +302,6 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
     const pxr::GfBBox3d bbox = GetGeometry(g)->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
-    std::cout << geometries[g]->GetPrim().GetPath() << std::endl;
-
     _numComponents += ((Mesh*)GetGeometry(g))->GetTrianglePairs().size();
   }
 

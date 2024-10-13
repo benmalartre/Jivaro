@@ -1,6 +1,7 @@
 #include <pxr/usd/usdGeom/xform.h>
 
 #include "../geometry/mesh.h"
+#include "../tests/utils.h"
 #include "../tests/push.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -35,22 +36,19 @@ void TestPush::InitExec(pxr::UsdStageRefPtr& stage)
     stage->SetDefaultPrim(rootPrim);
   }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
-std::cout << "find meshes " << time << std::endl;
   _TraverseStageFindingMeshes(stage);
-  std::cout << "num meshesh : " << _meshes.size() << std::endl;
+
   UpdateExec(stage, 1);
 }
 
 
 void TestPush::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
-  std::cout << "update exec " << time << std::endl;
   _scene.Sync(stage, time);
   const float factor = RANDOM_0_X(3);
   for(size_t m = 0; m < _meshes.size(); ++m) {
     pxr::GfVec3f* positions = _meshes[m]->GetPositionsPtr();
     const pxr::GfVec3f* normal = _meshes[m]->GetNormalsCPtr();
-    std::cout << "push " << factor << _meshesId[m] << std::endl;
     for(size_t p=0; p < _meshes[m]->GetNumPoints(); ++p) {
       positions[p] += normal[p] * factor;
     }

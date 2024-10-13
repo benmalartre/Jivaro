@@ -17,7 +17,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 void AddPbdMenu(MenuUI* menu)
 {
-  std::cout << "ADD PBD MENU CALLED..." << std::endl;
 
   MenuUI::Item* testItem = menu->Add("Pbd", false, true, NULL);
   /*
@@ -87,13 +86,17 @@ void CreateClothCallback()
     pxr::UsdPrim prim = usdMesh.GetPrim();
     mesh.SetPrim(prim);
     pxr::UsdPbdBodyAPI::Apply(prim);
-    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("Stretch"));
+    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("stretch"));
+    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("shear"));
+    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("bend"));
   }
   else {
     for(size_t s = 0; s < selection->GetNumSelectedItems(); ++s) {
       prim = stage->GetPrimAtPath((*selection)[0].path);
       pxr::UsdPbdBodyAPI::Apply(prim);
-      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("Stretch"));
+      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("stretch"));
+      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("shear"));
+      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("bend"));
     }
     
   }
@@ -144,7 +147,6 @@ void AddCollisionAPICallback()
 
 void AddConstraintAPICallback()
 {
-  std::cout << "ADD CONSTRAINT API CALLED..." << std::endl;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

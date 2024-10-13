@@ -695,7 +695,6 @@ Mesh::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
   if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomMesh>())
   {
     pxr::UsdGeomMesh usdMesh(_prim);
-
     _previous = _positions;
     usdMesh.GetPointsAttr().Get(&_positions, time);
     return Geometry::DirtyState::DEFORM;

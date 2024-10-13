@@ -562,9 +562,13 @@ void Solver::UpdateGeometries()
         size_t numPoints = body->GetNumPoints();
         pxr::GfVec3f* output = deformable->GetPositionsPtr();
         size_t offset = body->GetOffset();
+        pxr::GfRange3f range;
         for (size_t p = 0; p < numPoints; ++p) {
-          output[p] = deformable->GetInverseMatrix().Transform(positions[offset + p]);
+          const pxr::GfVec3f& local = deformable->GetInverseMatrix().Transform(positions[offset + p]);
+          range.UnionWith(local);
+          output[p] = local;
         }
+        deformable->SetBoundingBox(range);
         _scene->MarkPrimDirty(id, pxr::HdChangeTracker::AllDirty);
       }
     }

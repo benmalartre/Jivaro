@@ -175,6 +175,7 @@ class MeshCollision : public Collision
 public:
   MeshCollision(Geometry* collider, const pxr::SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
+  ~MeshCollision();
   size_t GetTypeId() const override { return TYPE_ID; };
 
   virtual void Init(size_t numParticles) override;

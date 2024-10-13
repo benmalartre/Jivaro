@@ -108,7 +108,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
   _solver = _CreateSolver(&_scene, stage, _solverId, 5);
   _scene.AddGeometry(_solverId, _solver);
-
+  
   // create cloth meshes
   float size = .025f;
 
@@ -116,9 +116,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   for(size_t x = 0; x < 0; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
     pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
-    Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, 
-      pxr::GfMatrix4d(1.f).SetScale(10.f) * pxr::GfMatrix4d(1.f).SetTranslate({0.f, 10.f+x, 0.f}));
-    clothMesh->SetInputOutput();
+    const pxr::GfMatrix4d matrix = pxr::GfMatrix4d(1.f).SetScale(10.f) *
+      pxr::GfMatrix4d(1.f).SetTranslate({ 0.f, 10.f + x, 0.f });
+    Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, matrix);
+    
     _clothesId.push_back(clothPath);
     _clothes.push_back(clothMesh);
     _scene.AddGeometry(clothPath, clothMesh);
@@ -165,7 +166,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     pxr::SdfPath collideId = rootId.AppendChild(pxr::TfToken(name));
     spheres[collideId] =
       _CreateCollideSphere(stage, collideId, 4.f, pxr::GfMatrix4d(1.f));
-    _AddAnimationSamples(stage, collideId);
+    //_AddAnimationSamples(stage, collideId);
     _scene.AddGeometry(collideId, spheres[collideId]);
 
     for (auto& sphere : spheres) {
@@ -198,8 +199,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       
     }
   }
-
+  
   _solver->Reset();
+  
   
   
 }
@@ -208,19 +210,6 @@ void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   _solver->Update(stage, time);
-
-  /*
-  float factor = RANDOM_0_1;
-  for(size_t m = 0; m < _clothes.size(); ++m) {
-    pxr::GfVec3f* positions = ((Mesh*)_clothes[m])->GetPositionsPtr();
-    const pxr::GfVec3f* normal = ((Mesh*)_clothes[m])->GetNormalsCPtr();
-    std::cout << "push " << factor << _clothes[m] << std::endl;
-    for(size_t p=0; p < ((Mesh*)_clothes[m])->GetNumPoints(); ++p) {
-      positions[p] += normal[p] * factor;
-    }
-    _scene.MarkPrimDirty(_clothesId[m], pxr::HdChangeTracker::AllDirty);
-  }
-  */
 }
 
 void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)

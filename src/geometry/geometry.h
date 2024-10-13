@@ -103,6 +103,7 @@ public:
   const pxr::GfVec3f GetVelocity() const;
 
   virtual void ComputeBoundingBox() {};
+  void SetBoundingBox(const pxr::GfRange3d &range){ _bbox.Set(range, _matrix);};
   const pxr::GfBBox3d GetBoundingBox(bool worldSpace=true) const;
 
   void SetPrim(const pxr::UsdPrim& prim){_prim = prim;};

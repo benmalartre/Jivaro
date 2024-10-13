@@ -49,9 +49,9 @@ Scene::Sync(const pxr::UsdStageRefPtr& stage, const pxr::UsdTimeCode& time)
   for(auto& itPrim: _prims) {
     pxr::UsdPrim prim = stage->GetPrimAtPath(itPrim.first);
     Geometry* geometry = itPrim.second.geom;
-    if (!geometry->IsInput() || !prim.IsValid()) {
+    if (!geometry->IsInput() || !prim.IsValid())
       continue;
-    }
+    
     pxr::GfMatrix4d matrix(xformCache.GetLocalToWorldTransform(prim));
     geometry->Sync(matrix, time);
   }

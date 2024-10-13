@@ -69,17 +69,25 @@ Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   //mesh.Randomize(0.1f);
   
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
-  usdMesh.CreatePointsAttr().Set(mesh->GetPositions(), pxr::UsdTimeCode::Default());
-  usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts(), pxr::UsdTimeCode::Default());
-  usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects(), pxr::UsdTimeCode::Default());
+  usdMesh.GetPointsAttr().Set(mesh->GetPositions(), pxr::UsdTimeCode::Default());
+  usdMesh.GetFaceVertexCountsAttr().Set(mesh->GetFaceCounts(), pxr::UsdTimeCode::Default());
+  usdMesh.GetFaceVertexIndicesAttr().Set(mesh->GetFaceConnects(), pxr::UsdTimeCode::Default());
 
-  pxr::UsdPrim usdPrim = usdMesh.GetPrim();
-  mesh->SetPrim(usdPrim);
+  usdMesh.MakeMatrixXform().Set(m);
 
-  pxr::UsdPbdBodyAPI api = pxr::UsdPbdBodyAPI::Apply(usdPrim);
+  pxr::UsdPrim prim = usdMesh.GetPrim();
+  mesh->SetPrim(prim);
+  mesh->SetInputOutput();
+  pxr::UsdPbdBodyAPI api = pxr::UsdPbdBodyAPI::Apply(prim);
+
   api.GetMassAttr().Set(mass);
   api.GetDampAttr().Set(damp);
   api.GetRadiusAttr().Set(spacing * 0.95f);
+
+  pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("stretch"));
+  pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("shear"));
+  pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("bend"));
+  
   //api.GetGravityAttr().Set(gravity);
 
   /*/
@@ -103,7 +111,8 @@ Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdPrim.CreateAttribute(bendDamp, pxr::SdfValueTypeNames->Float).Set(0.1f);
   */
  
-  usdMesh.MakeMatrixXform().Set(m);
+
+
 
   return mesh;
 
@@ -117,12 +126,20 @@ Mesh* _CreateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   //mesh.Randomize(0.1f);
   pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
-  usdMesh.CreatePointsAttr().Set(mesh->GetPositions());
-  usdMesh.CreateFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
-  usdMesh.CreateFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
+  usdMesh.GetPointsAttr().Set(mesh->GetPositions());
+  usdMesh.GetFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
+  usdMesh.GetFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
+
+  pxr::VtVec3fArray extentArray(2);
+  extentArray[0] = pxr::GfVec3f(-0.5f,0.f,-0.5f);
+  extentArray[1] = pxr::GfVec3f(0.5f,0.f,0.5f);
+  usdMesh.GetExtentAttr().Set(extentArray);
 
   pxr::UsdGeomXformOp op = usdMesh.AddTransformOp();
   op.Set(m, pxr::UsdTimeCode::Default());
+
+  mesh->SetPrim(usdMesh.GetPrim());
+  mesh->SetInputOutput();
 
   return mesh;
 }
