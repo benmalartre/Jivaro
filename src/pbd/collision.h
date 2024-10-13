@@ -33,6 +33,7 @@ public:
   enum Type {
     PLANE = 1,
     SPHERE,
+    CAPSULE,
     MESH,
     SELF
   };
@@ -167,6 +168,30 @@ private:
   static size_t                 TYPE_ID;
   pxr::GfVec3f                  _center;
   float                         _radius;
+};
+
+class CapsuleCollision : public Collision
+{
+public:
+  CapsuleCollision(Geometry* collider, const pxr::SdfPath& path, 
+    float restitution=0.5f, float friction= 0.5f);
+  size_t GetTypeId() const override { return TYPE_ID; };
+
+  float GetValue(Particles* particles, size_t index) override;
+  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
+  void Update(const pxr::UsdPrim& prim, double time) override;
+  
+protected:
+  void _UpdateRadiusAndHeight();
+  void _FindContact(Particles* particles, size_t index, float ft) override;
+  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
+  
+
+private:
+  static size_t                 TYPE_ID;
+  pxr::GfVec3f                  _center;
+  float                         _radius;
+  float                         _height;
 };
 
 

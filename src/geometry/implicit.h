@@ -93,6 +93,9 @@ public:
   Cube(const pxr::UsdGeomCube& sphere, const pxr::GfMatrix4d& world);
   virtual ~Cube() {};
 
+  void SetSize(float size){_size = size;};
+  float GetSize() {return _size;};
+
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
@@ -117,6 +120,13 @@ public:
   Cone(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world);
   virtual ~Cone() {};
+
+  void SetRadius(float radius){_radius = radius;};
+  float GetRadius() {return _radius;};
+  void SetHeight(float height){_height = height;};
+  float GetHeight() {return _height;};
+  void SetAxis(const pxr::TfTokens &axis){_axis = axis;};
+  const pxr::TfToken& GetAxis() {return _axis;};
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
@@ -143,6 +153,13 @@ public:
   Cylinder(const pxr::UsdGeomCylinder& cylinder, const pxr::GfMatrix4d& world);
   virtual ~Cylinder() {};
 
+  void SetRadius(float radius){_radius = radius;};
+  float GetRadius() {return _radius;};
+  void SetHeight(float height){_height = height;};
+  float GetHeight() {return _height;};
+  void SetAxis(const pxr::TfTokens &axis){_axis = axis;};
+  const pxr::TfToken& GetAxis() {return _axis;};
+
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
@@ -166,6 +183,13 @@ public:
   Capsule(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
   Capsule(const pxr::UsdGeomCapsule& sphere, const pxr::GfMatrix4d& world);
   virtual ~Capsule() {};
+
+  void SetRadius(float radius){_radius = radius;};
+  float GetRadius() {return _radius;};
+  void SetHeight(float height){_height = height;};
+  float GetHeight() {return _height;};
+  void SetAxis(const pxr::TfTokens &axis){_axis = axis;};
+  const pxr::TfToken& GetAxis() {return _axis;};
 
   // query 3d position on geometry
   bool Raycast(const pxr::GfRay& ray, Location* hit,
