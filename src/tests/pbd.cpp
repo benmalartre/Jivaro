@@ -56,7 +56,6 @@ void TestPBD::_TraverseStageFindingElements(pxr::UsdStageRefPtr& stage)
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
       } else if (prim.IsA<pxr::UsdGeomCapsule>()) {
-        std::cout << "FOUND CAPSULE COLLIDER" << std::endl;
         _colliders.push_back(new Capsule(pxr::UsdGeomCapsule(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
@@ -175,7 +174,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
       switch(_colliders[c]->GetType()) {
         case Geometry::CUBE:
-          std::cerr << "Collision shape CUBE not implemented" << std::endl;
+          collision = new BoxCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
         case Geometry::SPHERE:

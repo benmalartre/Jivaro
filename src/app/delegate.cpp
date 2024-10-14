@@ -275,7 +275,7 @@ void Delegate::SetScene(Scene* scene) {
         index.InsertRprim(pxr::HdPrimTypeTokens->points, this, prim.first);
         break;
 
-      case Geometry::INSTANCER:                      
+      case Geometry::INSTANCER:       
         index.InsertInstancer(this, prim.first);
         tracker.MarkInstancerDirty(prim.first,  pxr::HdChangeTracker::DirtyTransform |
                                                 pxr::HdChangeTracker::DirtyPrimvar |
@@ -294,8 +294,9 @@ void Delegate::RemoveScene() {
   pxr::HdRenderIndex& index = GetRenderIndex();
   if (_scene) {
     for (auto& prim : _scene->GetPrims()) {
-      if(prim.second.geom->GetType() == Geometry::INSTANCER)
+      if(prim.second.geom->GetType() == Geometry::INSTANCER) {
         index.RemoveInstancer(prim.first);
+      }
       else
         index.RemoveRprim(prim.first);
     }

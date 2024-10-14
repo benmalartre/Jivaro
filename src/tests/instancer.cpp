@@ -157,7 +157,7 @@ void TestInstancer::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   _UpdateInstancer(_instancer, time);
-  _scene.InjectGeometry(stage, _instancerId, _instancer, time);
+  //_scene.InjectGeometry(stage, _instancerId, _instancer, time);
   
 }
 

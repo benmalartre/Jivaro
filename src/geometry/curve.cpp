@@ -155,6 +155,7 @@ Curve::RemoveCurve(size_t index)
     offset += _cvCounts[i];
   }
   num = _cvCounts[index];
+  
 }
 
 void 

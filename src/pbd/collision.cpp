@@ -262,6 +262,127 @@ void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Cont
 }
 
 //----------------------------------------------------------------------------------------
+// Box Collision
+//----------------------------------------------------------------------------------------
+size_t BoxCollision::TYPE_ID = Collision::BOX;
+
+BoxCollision::BoxCollision(Geometry* collider, const pxr::SdfPath& path, 
+  float restitution, float friction)
+  : Collision(collider, path, restitution, friction)
+{
+  _UpdateSize();
+}
+
+void BoxCollision::Update(const pxr::UsdPrim& prim, double time)
+{
+  _UpdateSize();
+  _UpdateParameters(prim, time);
+}
+
+void BoxCollision::_UpdateSize()
+{
+  Cube* cube = (Cube*)_collider;
+  _size = cube->GetSize();
+} 
+
+static bool _PointInBox(const pxr::GfVec3f &p, double size)
+{
+  const float halfSize = size * 0.5f;
+  return 
+    p[0] >= -halfSize && p[0] <= halfSize &&
+    p[1] >= -halfSize && p[1] <= halfSize &&
+    p[2] >= -halfSize && p[2] <= halfSize;
+}
+
+static pxr::GfVec3f _PointOutsideBoxAxis(const pxr::GfVec3f &p, double size, short axis)
+{
+  const size_t halfSize = size * 0.5f;
+  pxr::GfVec3f result = p;
+  switch(axis) {
+    case 0:
+      result[0] = p[0] > halfSize ? halfSize : p[0] < -halfSize ? -halfSize : p[0];
+      break;
+
+    case 1:
+      result[1] = p[1] > halfSize ? halfSize : p[1] < -halfSize ? -halfSize : p[1];
+      break;
+
+    case 2:
+      result[2] = p[2] > halfSize ? halfSize : p[2] < -halfSize ? -halfSize : p[2];
+      break;
+
+  }
+  return result;
+}
+
+static pxr::GfVec3f _PointOutsideBox(const pxr::GfVec3f &p, double size)
+{
+  if(!_PointInBox(p, size))
+    return p;
+
+  const pxr::GfVec3f onX = _PointOutsideBoxAxis(p, size, 0);
+  const pxr::GfVec3f onY = _PointOutsideBoxAxis(p, size, 1);
+  const pxr::GfVec3f onZ = _PointOutsideBoxAxis(p, size, 2);
+
+  std::vector<std::pair<pxr::GfVec3f, float>> diffSq(3);
+  diffSq[0] = {onX, (p - onX).GetLengthSq()};
+  diffSq[1] = {onY, (p - onX).GetLengthSq()};
+  diffSq[2] = {onZ, (p - onX).GetLengthSq()};
+
+  std::sort(diffSq.begin(), diffSq.end(), 
+    [](auto& lhs, auto& rhs) {return lhs.second < rhs.second;});
+  return diffSq[0].first;
+  
+}
+
+void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
+{
+  const pxr::GfVec3f velocity = particles->velocity[index] * ft;
+  const pxr::GfVec3f predicted(particles->position[index] + velocity);
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
+
+  Cube* cube = (Cube*)_collider;
+  SetHit(index, cube->SignedDistance(predicted) < particles->radius[index]);
+}
+
+void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
+{
+  const pxr::GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
+
+  const pxr::GfVec3f closest = _PointOutsideBox(local, _size);
+ 
+  pxr::GfVec3f world = _collider->GetMatrix().Transform(closest);
+  pxr::GfVec3f normal = _collider->GetMatrix().TransformDir(closest).GetNormalized();
+
+  const float d = (predicted - world).GetLength() - particles->radius[index];
+
+  contact->Init(normal,GetVelocity(particles, index), d);
+  contact->SetCoordinates(world);
+  contact->SetDistance(d);
+}
+
+float BoxCollision::GetValue(Particles* particles, size_t index)
+{
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->predicted[index]);
+  const pxr::GfVec3f closest = _PointOutsideBox(local, _size);
+  pxr::GfVec3f world = _collider->GetMatrix().Transform(closest);
+
+  return (particles->predicted[index] - world).GetLength() - particles->radius[index];
+
+}
+  
+pxr::GfVec3f BoxCollision::GetGradient(Particles* particles, size_t index)
+{
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->predicted[index]);
+  const pxr::GfVec3f closest = _PointOutsideBox(local, _size);
+  pxr::GfVec3f world = _collider->GetMatrix().Transform(closest);
+
+  return (particles->predicted[index] - world).GetNormalized();
+}
+
+
+//----------------------------------------------------------------------------------------
 // Sphere Collision
 //----------------------------------------------------------------------------------------
 size_t SphereCollision::TYPE_ID = Collision::SPHERE;
@@ -384,10 +505,12 @@ void CapsuleCollision::_FindContact(Particles* particles, size_t index, float ft
   pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
   pxr::GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
 
-  if((local - closest).GetLength() < _radius)
+  // check point center inside capsule
+  if((local - closest).GetLength() < (_radius + Collision::TOLERANCE_MARGIN))
     SetHit(index, true);
 
   else {
+    // check point intersect capsule
     pxr::GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
     if((predicted - _collider->GetMatrix().Transform(surface)).GetLength() < radius)
       SetHit(index, true);
@@ -425,7 +548,6 @@ float CapsuleCollision::GetValue(Particles* particles, size_t index)
   pxr::GfVec3f world = _collider->GetMatrix().Transform(surface);
 
   return (particles->predicted[index] - world).GetLength() - particles->radius[index];
-
 }
   
 pxr::GfVec3f CapsuleCollision::GetGradient(Particles* particles, size_t index)
@@ -441,9 +563,6 @@ pxr::GfVec3f CapsuleCollision::GetGradient(Particles* particles, size_t index)
     return (world - particles->predicted[index]).GetNormalized();
   else
     return (particles->predicted[index] - world).GetNormalized();
-
-
-  
 }
 
 

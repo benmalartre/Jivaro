@@ -288,8 +288,8 @@ float Cube::SignedDistance(const pxr::GfVec3f& point) const
   pxr::GfVec3f q = local - pxr::GfVec3f(_size);
   pxr::GfVec3f r = q;
   r[0] = pxr::GfMax(q[0], 0.f);
-  r[0] = pxr::GfMax(q[0], 0.f);
-  r[0] = pxr::GfMax(q[0], 0.f);
+  r[1] = pxr::GfMax(q[1], 0.f);
+  r[2] = pxr::GfMax(q[2], 0.f);
   return r.GetLength() + pxr::GfMin(pxr::GfMax(q[0], pxr::GfMax(q[1], q[2])), 0.f);
   //return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
 }
