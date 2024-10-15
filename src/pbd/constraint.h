@@ -71,6 +71,9 @@ public:
   virtual void SetElements(const pxr::VtArray<int>& elements);
   virtual void SetStiffness(float stiffness);
   virtual void SetDamp(float damp);
+  virtual void SetActive(bool active){_active=active;};
+
+  bool IsActive() {return _active;};
   
   virtual void Reset(Particles* particles){};
   virtual void SolvePosition(Particles* particles, float dt) = 0;
@@ -88,6 +91,7 @@ public:
 protected:
   void _ResetCorrection();
 
+  bool                          _active;
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _gradient;
   pxr::VtArray<pxr::GfVec3f>    _correction;
@@ -150,7 +154,7 @@ protected:
   Geometry*                     _target;
 };
 
-ConstraintsGroup* CreatePinConstraints(Body* body, float stiffness=0.5f, float damping=0.1f, Geometry* target);
+ConstraintsGroup* CreatePinConstraints(Body* body, Geometry* target, float stiffness=0.5f, float damping=0.1f);
 
 
 class StretchConstraint : public Constraint

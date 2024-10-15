@@ -164,16 +164,20 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   collideApi.GetFrictionAttr().Get(&_friction, time);
   collideApi.GetRestitutionAttr().Get(&_restitution, time);
 
+  bool active;
   float stiffness, damp;
+  
   for(auto& constraintsIt: _constraints) {
     if(prim.HasAPI<pxr::UsdPbdConstraintAPI>(constraintsIt.first)) {
       pxr::UsdPbdConstraintAPI api(prim, constraintsIt.first);
 
       api.GetStiffnessAttr().Get(&stiffness);
       api.GetDampAttr().Get(&damp);
+      api.GetConstraintEnabledAttr().Get(&active);
       for(Constraint* constraint: constraintsIt.second->constraints) {
         constraint->SetStiffness(stiffness);
         constraint->SetDamp(damp);
+        constraint->SetActive(active);
       }
     }
   }

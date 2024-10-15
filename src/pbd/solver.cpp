@@ -215,7 +215,7 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
   ConstraintsGroup* group = NULL;
   switch(type) {
     case Constraint::ATTACH:
-      group = CreateAttachConstraint(body, stiffness, damping);
+      group = CreateAttachConstraints(body, stiffness, damping);
       break;
 
     case Constraint::STRETCH:
@@ -437,10 +437,15 @@ Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 {
   // solve constraints
   pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
-    [&](Constraint* constraint) {constraint->SolvePosition(&_particles, _stepTime); });
+    [&](Constraint* constraint) {
+      if(constraint->IsActive())
+        constraint->SolvePosition(&_particles, _stepTime); 
+    });
   
   // apply constraint serially
-  for (auto& constraint : constraints)constraint->ApplyPosition(&_particles);
+  for (auto& constraint : constraints)
+    if(constraint->IsActive())
+      constraint->ApplyPosition(&_particles);
 
 }
 
@@ -449,10 +454,15 @@ Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
 {
   // solve velocities
   pxr::WorkParallelForEach(constraints.begin(), constraints.end(),
-    [&](Constraint* constraint) {constraint->SolveVelocity(&_particles, _stepTime); });
+    [&](Constraint* constraint) {
+      if(constraint->IsActive())
+        constraint->SolveVelocity(&_particles, _stepTime); 
+    });
 
   // apply velocities serially
-  for (auto& constraint : constraints)constraint->ApplyVelocity(&_particles);
+  for (auto& constraint : constraints)
+    if(constraint->IsActive())
+      constraint->ApplyVelocity(&_particles);
 }
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)

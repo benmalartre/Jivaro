@@ -93,14 +93,17 @@ void CreateClothCallback()
     pxr::UsdPrim prim = usdMesh.GetPrim();
     mesh.SetPrim(prim);
     pxr::UsdPbdBodyAPI::Apply(prim);
+    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("attach"));
     pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("stretch"));
     pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("shear"));
     pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("bend"));
+
   }
   else {
     for(size_t s = 0; s < selection->GetNumSelectedItems(); ++s) {
       prim = stage->GetPrimAtPath((*selection)[0].path);
       pxr::UsdPbdBodyAPI::Apply(prim);
+      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("attach"));
       pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("stretch"));
       pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("shear"));
       pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("bend"));

@@ -146,6 +146,7 @@ void AttachConstraint::SolvePosition(Particles* particles, float dt)
 {
   _ResetCorrection();
 
+  _compliance = 0.0000001f;
   const float alpha =  _compliance / (dt * dt);
 
   const pxr::GfVec3f* predicted = &particles->predicted[0];
@@ -162,8 +163,9 @@ void AttachConstraint::SolvePosition(Particles* particles, float dt)
   float length;
   
   for(auto& elem: _elements) {
-    gradient = predicted[elem] - m.Transform(positions[elem - offset]);
+    gradient = predicted[elem] - particles->input[elem];
     length = gradient.GetLength();
+    if(length < 1e-9)continue;
 
     damp = pxr::GfDot(velocity[elem],  gradient) * gradient * _damp * dt * dt;
 
@@ -226,7 +228,7 @@ void PinConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& 
 {
 }
 
-ConstraintsGroup* CreatePinConstraints(Body* body, float stiffness, float damping, Geometry* target)
+ConstraintsGroup* CreatePinConstraints(Body* body, Geometry* target, float stiffness, float damping)
 {
 
   return NULL;

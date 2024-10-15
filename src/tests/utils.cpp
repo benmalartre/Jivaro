@@ -84,6 +84,7 @@ Mesh* _CreateClothMesh(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   api.GetDampAttr().Set(damp);
   api.GetRadiusAttr().Set(spacing * 0.95f);
 
+  pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("attach"));
   pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("stretch"));
   pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("shear"));
   pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("bend"));
