@@ -1,4 +1,5 @@
 #include <pxr/base/gf/ray.h>
+#include <pxr/base/gf/quatf.h>
 
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/basisCurves.h>
@@ -104,17 +105,16 @@ Geometry::GetScale()
 const pxr::GfQuatf& 
 Geometry::GetRotation()
 {
-  pxr::GfQuatf q;
-  float absQ2 = pxr::GfPow(GetDeterminant(), (1.f / 3.f));
-  q[3] = pxr::GfSqrt(pxr::GfMax(0.f, absQ2 + m[0][0] + m[1][1] + m[2][2])) / 2.f;
-  q[0] = pxr::GfSqrt(pxr::GfMax(0.f, 1.f + m[0][0] - m[1][1] - m[2][2])) / 2.f;
-  q[1] = pxr::GfSqrt(pxr::GfMax(0.f, 1.f - m[0][0] + m[1][1] - m[2][2])) / 2.f;
-  q[2] = pxr::GfSqrt(pxr::GfMax(0.f, 1.f - m[0][0] - m[1][1] + m[2][2])) / 2.f;
-  q[0] *= pxr::GfSign(q[0] * (m[2][1] - m[1][2]));
-  q[1] *= pxr::GfSign(q[1] * (m[0][2] - m[2][0]));
-  q[2] *= pxr::GfSign(q[2] * (m[1][0] - m[0][1]));
+  double absQ2 = pxr::GfPow(_matrix.GetDeterminant(), (1.0 / 3.0));
+  double w = pxr::GfSqrt(pxr::GfMax(0.0, absQ2 + _matrix[0][0] + _matrix[1][1] + _matrix[2][2])) / 2.0;
+  double x = pxr::GfSqrt(pxr::GfMax(0.0, 1.0 + _matrix[0][0] - _matrix[1][1] - _matrix[2][2])) / 2.0;
+  double y = pxr::GfSqrt(pxr::GfMax(0.0, 1.0 - _matrix[0][0] + _matrix[1][1] - _matrix[2][2])) / 2.0;
+  double z = pxr::GfSqrt(pxr::GfMax(0.0, 1.0 - _matrix[0][0] - _matrix[1][1] + _matrix[2][2])) / 2.0;
+  x *= x * (_matrix[2][1] - _matrix[1][2]) > 0.0 ? 1.0 : -1.0;
+  y *= y * (_matrix[0][2] - _matrix[2][0]) > 0.0 ? 1.0 : -1.0;
+  z *= z * (_matrix[1][0] - _matrix[0][1]) > 0.0 ? 1.0 : -1.0;
 
-  return q;
+  return pxr::GfQuatf(w, x, y, z);
 }
 
 const pxr::GfVec3f Geometry::GetTorque() const
