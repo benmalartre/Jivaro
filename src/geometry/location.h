@@ -57,6 +57,12 @@ public:
 
   virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, 
     const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
+
+  virtual pxr::GfVec3f ComputeVelocity(const pxr::GfVec3f* positions, const pxr::GfVec3f* previous, 
+    const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
+
+  template<typename T>
+  T ComputeValue(const T* values, const int* elements, size_t sz) const;
   
   inline bool IsValid() const { 
     return (_geomId != INVALID_INDEX) && (_compId != INVALID_INDEX); };
@@ -67,8 +73,6 @@ protected:
   pxr::GfVec4d  _coords;
   pxr::GfVec3d  _point;
 };
-
-
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

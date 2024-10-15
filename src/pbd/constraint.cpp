@@ -166,7 +166,7 @@ void AttachConstraint::SolvePosition(Particles* particles, float dt)
     length = gradient.GetLength();
     if(length < 1e-9)continue;
 
-    damp = pxr::GfDot(velocity[elem],  gradient) * gradient * _damp * dt * dt;
+    damp = pxr::GfDot(velocity[elem] * dt * dt,  gradient) * gradient * _damp;
 
     _correction[index++] -= length / (length * length + alpha) * gradient - damp;
   }
