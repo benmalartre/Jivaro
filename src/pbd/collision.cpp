@@ -315,18 +315,26 @@ void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
   const pxr::GfVec3f predicted(particles->position[index] + velocity);
   Cube* cube = (Cube*) _collider;
 
-  SetHit(index, cube->SignedDistance(predicted) - particles->radius[index] < Collision::TOLERANCE_MARGIN);
+  const pxr::GfVec3d scale = _collider->GetScale();
+  const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
+
+  SetHit(index, cube->SignedDistance(predicted) - particles->radius[index] / scaleFactor < Collision::TOLERANCE_MARGIN);
 }
 
 void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
+  Cube* cube = (Cube*) _collider;
+
+  const pxr::GfVec3d scale = _collider->GetScale();
+  const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
+  
   const pxr::GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
   const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
   
   const pxr::GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
 
   pxr::GfVec3f normal = predicted - closest;
-  const float d = normal.GetLength() - particles->radius[index];
+  const float d = cube->SignedDistance(predicted) - particles->radius[index] / scaleFactor;
   normal.Normalize();
   contact->Init(normal, GetVelocity(particles, index), d);
   contact->SetCoordinates(predicted + normal * d);
@@ -336,7 +344,9 @@ void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contac
 float BoxCollision::GetValue(Particles* particles, size_t index)
 {
   Cube* cube = (Cube*) _collider;
-  return cube->SignedDistance(particles->predicted[index]) - particles->radius[index];
+  const pxr::GfVec3d scale = _collider->GetScale();
+  const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
+  return cube->SignedDistance(particles->predicted[index]) - particles->radius[index] / scaleFactor;
 }
   
 pxr::GfVec3f BoxCollision::GetGradient(Particles* particles, size_t index)

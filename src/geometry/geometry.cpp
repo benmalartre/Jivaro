@@ -1,5 +1,6 @@
 #include <pxr/base/gf/ray.h>
 #include <pxr/base/gf/quatf.h>
+#include <pxr/base/gf/transform.h>
 
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/basisCurves.h>
@@ -99,7 +100,8 @@ Geometry::GetTranslate()
 const pxr::GfVec3d
 Geometry::GetScale()
 {
-  return pxr::GfVec3d(_matrix[0][0], _matrix[1][1], _matrix[2][2]);
+  pxr::GfTransform transform(_matrix);
+  return transform.GetScale();
 }
 
 const pxr::GfQuatd
