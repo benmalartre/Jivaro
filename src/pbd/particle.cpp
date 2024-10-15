@@ -164,7 +164,7 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   collideApi.GetFrictionAttr().Get(&_friction, time);
   collideApi.GetRestitutionAttr().Get(&_restitution, time);
 
-  float stiffness = 10000.f, damp = 0.25f;
+  float stiffness, damp;
   for(auto& constraintsIt: _constraints) {
     pxr::UsdPbdConstraintAPI api(prim, constraintsIt.first);
     if(api) {
@@ -176,14 +176,6 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
       }
     }
   }
-  
-  /*
-  float GetMass() const {return _mass;};
-  float GetRadius() const {return _radius;};
-  pxr::GfVec3f GetColor() const {return _color;};
-  pxr::GfVec3f GetVelocity() const {return _velocity;};
-  pxr::GfVec3f GetTorque() const {return _torque;};
-  */
 }
 
 ConstraintsGroup* 

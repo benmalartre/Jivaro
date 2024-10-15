@@ -103,6 +103,7 @@ public:
   
   // solver 
   void Update(pxr::UsdStageRefPtr& stage, float time);
+  void UpdateInputs(pxr::UsdStageRefPtr& stage, float time);
   void UpdateParameters(pxr::UsdStageRefPtr& stage, float time);
   void UpdateCollisions(pxr::UsdStageRefPtr& stage, float time);
   void UpdateGeometries();

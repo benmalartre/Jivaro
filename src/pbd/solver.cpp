@@ -452,6 +452,7 @@ Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
+  UpdateInputs(stage, time);
   UpdateParameters(stage, time);
   UpdateCollisions(stage, time);
  
@@ -563,6 +564,23 @@ void Solver::Step()
   _timer->Log();
 }
 
+
+void Solver::UpdateInputs(pxr::UsdStageRefPtr& stage, float time)
+{
+  for(size_t i = 0; i < _bodies.size(); ++i){
+    pxr::UsdPrim prim = _bodies[i]->GetGeometry()->GetPrim();
+    if(!prim.IsValid())continue;
+
+    if(prim.IsA<pxr::UsdGeomMesh>()) {
+      pxr::UsdGeomMesh mesh(prim);
+      pxr::VtArray<pxr::GfVec3f> inputs;
+      mesh.GetPointsAttr().Get(&inputs, time);
+
+      memcpy(&_particles.input[0] + _bodies[i]->GetOffset(), &inputs[0], inputs.size() * sizeof(pxr::GfVec3f));
+    }
+  }
+}
+
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
   for(size_t i = 0; i < _collisions.size(); ++i){
@@ -617,10 +635,6 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);
-  for(auto& body: _bodies) {
-    prim = body->GetGeometry()->GetPrim();
-    body->UpdateParameters(prim, time);
-  }
 }
 
 

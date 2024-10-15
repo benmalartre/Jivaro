@@ -89,6 +89,34 @@ void Geometry::_ComputeVelocity()
 
 }
 
+const pxr::GfVec3f& 
+Geometry::GetTranslate()
+{
+  return pxr::GfVec3f(_matrix[3][0], _matrix[3][1], _matrix[3][2]);
+}
+
+const pxr::GfVec3f& 
+Geometry::GetScale()
+{
+  return pxr::GfVec3f(_matrix[0][0], _matrix[1][1], _matrix[2][2]);
+}
+
+const pxr::GfQuatf& 
+Geometry::GetRotation()
+{
+  pxr::GfQuatf q;
+  float absQ2 = pxr::GfPow(GetDeterminant(), (1.f / 3.f));
+  q[3] = pxr::GfSqrt(pxr::GfMax(0.f, absQ2 + m[0][0] + m[1][1] + m[2][2])) / 2.f;
+  q[0] = pxr::GfSqrt(pxr::GfMax(0.f, 1.f + m[0][0] - m[1][1] - m[2][2])) / 2.f;
+  q[1] = pxr::GfSqrt(pxr::GfMax(0.f, 1.f - m[0][0] + m[1][1] - m[2][2])) / 2.f;
+  q[2] = pxr::GfSqrt(pxr::GfMax(0.f, 1.f - m[0][0] - m[1][1] + m[2][2])) / 2.f;
+  q[0] *= pxr::GfSign(q[0] * (m[2][1] - m[1][2]));
+  q[1] *= pxr::GfSign(q[1] * (m[0][2] - m[2][0]));
+  q[2] *= pxr::GfSign(q[2] * (m[1][0] - m[0][1]));
+
+  return q;
+}
+
 const pxr::GfVec3f Geometry::GetTorque() const
 {
   return _torque;

@@ -99,6 +99,10 @@ public:
   const pxr::GfMatrix4d& GetPreviousMatrix() const { return _prevMatrix; };
   const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
 
+  const pxr::GfVec3f& GetTranslate();
+  const pxr::GfVec3f& GetScale();
+  const pxr::GfQuatf& GetRotation();
+
   const pxr::GfVec3f GetTorque() const;
   const pxr::GfVec3f GetVelocity() const;
 
