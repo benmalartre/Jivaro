@@ -635,6 +635,11 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);
+
+  for(auto& body: _bodies) {
+    prim = body->GetGeometry()->GetPrim();
+    body->UpdateParameters(prim, time);
+  }
 }
 
 
