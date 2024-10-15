@@ -90,31 +90,22 @@ void Geometry::_ComputeVelocity()
 
 }
 
-const pxr::GfVec3f& 
+const pxr::GfVec3d 
 Geometry::GetTranslate()
 {
-  return pxr::GfVec3f(_matrix[3][0], _matrix[3][1], _matrix[3][2]);
+  return _matrix.ExtractTranslation();
 }
 
-const pxr::GfVec3f& 
+const pxr::GfVec3d
 Geometry::GetScale()
 {
-  return pxr::GfVec3f(_matrix[0][0], _matrix[1][1], _matrix[2][2]);
+  return pxr::GfVec3d(_matrix[0][0], _matrix[1][1], _matrix[2][2]);
 }
 
-const pxr::GfQuatf& 
+const pxr::GfQuatd
 Geometry::GetRotation()
 {
-  double absQ2 = pxr::GfPow(_matrix.GetDeterminant(), (1.0 / 3.0));
-  double w = pxr::GfSqrt(pxr::GfMax(0.0, absQ2 + _matrix[0][0] + _matrix[1][1] + _matrix[2][2])) / 2.0;
-  double x = pxr::GfSqrt(pxr::GfMax(0.0, 1.0 + _matrix[0][0] - _matrix[1][1] - _matrix[2][2])) / 2.0;
-  double y = pxr::GfSqrt(pxr::GfMax(0.0, 1.0 - _matrix[0][0] + _matrix[1][1] - _matrix[2][2])) / 2.0;
-  double z = pxr::GfSqrt(pxr::GfMax(0.0, 1.0 - _matrix[0][0] - _matrix[1][1] + _matrix[2][2])) / 2.0;
-  x *= x * (_matrix[2][1] - _matrix[1][2]) > 0.0 ? 1.0 : -1.0;
-  y *= y * (_matrix[0][2] - _matrix[2][0]) > 0.0 ? 1.0 : -1.0;
-  z *= z * (_matrix[1][0] - _matrix[0][1]) > 0.0 ? 1.0 : -1.0;
-
-  return pxr::GfQuatf(w, x, y, z);
+  return _matrix.ExtractRotationQuat();
 }
 
 const pxr::GfVec3f Geometry::GetTorque() const

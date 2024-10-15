@@ -314,14 +314,15 @@ void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
   const pxr::GfVec3f velocity = particles->velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->position[index] + velocity);
   Cube* cube = (Cube*) _collider;
-  SetHit(index, (cube->SignedDistance(predicted) - particles->radius[index]) < Collision::TOLERANCE_MARGIN);
+
+  SetHit(index, cube->SignedDistance(predicted) - particles->radius[index] < Collision::TOLERANCE_MARGIN);
 }
 
 void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
   const pxr::GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
   const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
-
+  
   const pxr::GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
 
   pxr::GfVec3f normal = predicted - closest;
@@ -334,8 +335,8 @@ void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contac
 
 float BoxCollision::GetValue(Particles* particles, size_t index)
 {
- Cube* cube = (Cube*) _collider;
- return cube->SignedDistance(particles->predicted[index]) - particles->radius[index];
+  Cube* cube = (Cube*) _collider;
+  return cube->SignedDistance(particles->predicted[index]) - particles->radius[index];
 }
   
 pxr::GfVec3f BoxCollision::GetGradient(Particles* particles, size_t index)
