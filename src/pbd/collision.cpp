@@ -285,64 +285,36 @@ void BoxCollision::_UpdateSize()
   _size = cube->GetSize();
 } 
 
-static bool _PointInBox(const pxr::GfVec3f &p, double size)
+
+pxr::GfVec3f _PointOnBox(const pxr::GfVec3f& local, double size, const pxr::GfMatrix4d& m)
 {
-  const float halfSize = size * 0.5f;
-  return 
-    p[0] >= -halfSize && p[0] <= halfSize &&
-    p[1] >= -halfSize && p[1] <= halfSize &&
-    p[2] >= -halfSize && p[2] <= halfSize;
-}
+  const double halfSize = size * 0.5f;
+  const double xDiff = pxr::GfAbs(local[0]) - halfSize;
+  const double yDiff = pxr::GfAbs(local[1]) - halfSize;
+  const double zDiff = pxr::GfAbs(local[2]) - halfSize;
 
-static pxr::GfVec3f _PointOutsideBoxAxis(const pxr::GfVec3f &p, double size, short axis)
-{
-  const size_t halfSize = size * 0.5f;
-  pxr::GfVec3f result = p;
-  switch(axis) {
-    case 0:
-      result[0] = p[0] > halfSize ? halfSize : p[0] < -halfSize ? -halfSize : p[0];
-      break;
-
-    case 1:
-      result[1] = p[1] > halfSize ? halfSize : p[1] < -halfSize ? -halfSize : p[1];
-      break;
-
-    case 2:
-      result[2] = p[2] > halfSize ? halfSize : p[2] < -halfSize ? -halfSize : p[2];
-      break;
-
+  pxr::GfVec3f normal;
+  double d;
+  if(xDiff <= yDiff && xDiff <= zDiff) {
+    d = xDiff;
+    normal = local[0] > 0.f ? pxr::GfVec3f(-1.f, 0.f, 0.f) : pxr::GfVec3f(1.f, 0.f, 0.f);
+  } else if(yDiff <= zDiff) {
+    d = yDiff;
+    normal = local[1] > 0.f ? pxr::GfVec3f(0.f, -1.f, 0.f) : pxr::GfVec3f(0.f, 1.f, 0.f);
+  } else {
+    d = zDiff;
+    normal = local[2] > 0.f ? pxr::GfVec3f(0.f, 0.f, -1.f) : pxr::GfVec3f(0.f, 0.f, 1.f);
   }
-  return result;
-}
 
-static pxr::GfVec3f _PointOutsideBox(const pxr::GfVec3f &p, double size)
-{
-  if(!_PointInBox(p, size))
-    return p;
-
-  const pxr::GfVec3f onX = _PointOutsideBoxAxis(p, size, 0);
-  const pxr::GfVec3f onY = _PointOutsideBoxAxis(p, size, 1);
-  const pxr::GfVec3f onZ = _PointOutsideBoxAxis(p, size, 2);
-
-  std::vector<std::pair<pxr::GfVec3f, float>> diffSq(3);
-  diffSq[0] = {onX, (p - onX).GetLengthSq()};
-  diffSq[1] = {onY, (p - onX).GetLengthSq()};
-  diffSq[2] = {onZ, (p - onX).GetLengthSq()};
-
-  std::sort(diffSq.begin(), diffSq.end(), 
-    [](auto& lhs, auto& rhs) {return lhs.second < rhs.second;});
-  return diffSq[0].first;
-  
+  return m.Transform(normal * d);
 }
 
 void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const pxr::GfVec3f velocity = particles->velocity[index] * ft;
   const pxr::GfVec3f predicted(particles->position[index] + velocity);
-  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
-
-  Cube* cube = (Cube*)_collider;
-  SetHit(index, cube->SignedDistance(predicted) < particles->radius[index]);
+  Cube* cube = (Cube*) _collider;
+  SetHit(index, (cube->SignedDistance(predicted) - particles->radius[index]) < Collision::TOLERANCE_MARGIN);
 }
 
 void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
@@ -350,35 +322,29 @@ void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contac
   const pxr::GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
   const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
 
-  const pxr::GfVec3f closest = _PointOutsideBox(local, _size);
- 
-  pxr::GfVec3f world = _collider->GetMatrix().Transform(closest);
-  pxr::GfVec3f normal = _collider->GetMatrix().TransformDir(closest).GetNormalized();
+  const pxr::GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
 
-  const float d = (predicted - world).GetLength() - particles->radius[index];
-
-  contact->Init(normal,GetVelocity(particles, index), d);
-  contact->SetCoordinates(world);
+  pxr::GfVec3f normal = predicted - closest;
+  const float d = normal.GetLength() - particles->radius[index];
+  normal.Normalize();
+  contact->Init(normal, GetVelocity(particles, index), d);
+  contact->SetCoordinates(predicted + normal * d);
   contact->SetDistance(d);
 }
 
 float BoxCollision::GetValue(Particles* particles, size_t index)
 {
-  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->predicted[index]);
-  const pxr::GfVec3f closest = _PointOutsideBox(local, _size);
-  pxr::GfVec3f world = _collider->GetMatrix().Transform(closest);
-
-  return (particles->predicted[index] - world).GetLength() - particles->radius[index];
-
+ Cube* cube = (Cube*) _collider;
+ return cube->SignedDistance(particles->predicted[index]) - particles->radius[index];
 }
   
 pxr::GfVec3f BoxCollision::GetGradient(Particles* particles, size_t index)
 {
   const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->predicted[index]);
-  const pxr::GfVec3f closest = _PointOutsideBox(local, _size);
-  pxr::GfVec3f world = _collider->GetMatrix().Transform(closest);
 
-  return (particles->predicted[index] - world).GetNormalized();
+  const pxr::GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
+
+  return (particles->predicted[index] - closest).GetNormalized();
 }
 
 

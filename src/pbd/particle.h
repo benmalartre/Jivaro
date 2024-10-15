@@ -110,6 +110,7 @@ struct Particles
   float*        radius;
   pxr::GfVec3f* rest;
   pxr::GfQuatf* rotation;
+  pxr::GfVec3f* input;
   pxr::GfVec3f* position;
   pxr::GfVec3f* predicted;
   pxr::GfVec3f* velocity;

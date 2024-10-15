@@ -44,6 +44,7 @@ void Particles::_EnsureDataSize(size_t desired)
   radius =    _ResizeArray<float>(radius, num, size);
   counter =   _ResizeArray<pxr::GfVec2f>(counter, num, size);
   rest =      _ResizeArray<pxr::GfVec3f>(rest, num, size);
+  input =     _ResizeArray<pxr::GfVec3f>(input, num, size);
   position =  _ResizeArray<pxr::GfVec3f>(position, num, size);
   predicted = _ResizeArray<pxr::GfVec3f>(predicted, num, size);
   velocity =  _ResizeArray<pxr::GfVec3f>(velocity, num, size);
@@ -74,6 +75,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
     invMass[idx] = w;
     radius[idx] = item->GetRadius();
     rest[idx] = pos;
+    input[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
     rotation[idx] = pxr::GfQuatf(1.f);
@@ -103,6 +105,7 @@ void Particles::RemoveBody(Body* item)
     invMass[lhi]   = invMass[rhi];
     radius[lhi]    = radius[rhi];
     rest[lhi]      = rest[rhi];
+    input[lhi]     = input[rhi];
     position[lhi]  = position[rhi];
     predicted[lhi] = predicted[rhi];
     rotation[lhi]  = rotation[rhi];

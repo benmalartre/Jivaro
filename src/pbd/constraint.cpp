@@ -887,8 +887,8 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     const pxr::GfVec3f position = _collision->GetContactPosition(index);
     const pxr::GfVec3f normal = _collision->GetContactNormal(index);
     const pxr::GfVec3f velocity = _collision->GetContactVelocity(index);
-    const float d = _collision->GetContactDepth(index);// + 
-      //pxr::GfMax(_collision->GetContactInitDepth(index) - vMax * dt, 0.f);
+    const float d = _collision->GetContactDepth(index) + 
+      pxr::GfMax(_collision->GetContactInitDepth(index) - vMax * dt, 0.f);
 
     if(d > 0.f)continue;
 
