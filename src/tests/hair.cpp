@@ -34,6 +34,7 @@ TestHair::_InitControls(pxr::UsdStageRefPtr& stage)
   controlPrim.CreateAttribute(pxr::TfToken("Amplitude"), pxr::SdfValueTypeNames->Float).Set(0.5f);
   controlPrim.CreateAttribute(pxr::TfToken("Frequency"), pxr::SdfValueTypeNames->Float).Set(1.f);
   controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
+  controlPrim.CreateAttribute(pxr::TfToken("Color"), pxr::SdfValueTypeNames->Float3).Set(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
 }
 
 void 
@@ -49,6 +50,7 @@ TestHair::_QueryControls(pxr::UsdStageRefPtr& stage)
   controlPrim.GetAttribute(pxr::TfToken("Amplitude")).Get(&_amplitude);
   controlPrim.GetAttribute(pxr::TfToken("Frequency")).Get(&_frequency);
   controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&_width);
+  controlPrim.GetAttribute(pxr::TfToken("Color")).Get(&_color);
 }
 
 pxr::HdDirtyBits 
@@ -86,8 +88,10 @@ TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& 
 
 
   pxr::VtArray<pxr::GfVec3f> points(numCVs);
+  pxr::VtArray<pxr::GfVec3f> colors(numCVs);
   pxr::VtArray<float> radii(numCVs);
   pxr::VtArray<int> cvCounts(samples.size());
+
 
   for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
 
@@ -96,6 +100,11 @@ TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& 
     const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
     const pxr::GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
     const float tangentFactor = pxr::GfCos(position[2] * _scale + time * _frequency) * _amplitude;
+
+    colors[sampleIdx * 4] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[sampleIdx * 4 + 1] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[sampleIdx * 4 + 2] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[sampleIdx * 4 + 3] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
 
 
     points[sampleIdx * 4] = xform.Transform(position);
@@ -114,6 +123,7 @@ TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& 
   //T = CurrentTime();
 
   curve->SetTopology(points, radii, cvCounts);
+  curve->SetColors(colors);
 
   //uint64_t T6 = CurrentTime() - T;
   //T = CurrentTime();

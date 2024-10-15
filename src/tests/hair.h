@@ -24,6 +24,7 @@ private:
   pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash> _sourcesMap;
   int _density;
   float _length, _amplitude, _frequency, _width, _scale, _radius;
+  pxr::GfVec3f _color;
 };
 
 

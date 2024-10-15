@@ -154,7 +154,6 @@ void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t
 
 void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
 {
-  std::cout << "BODY UPDATE PARAMETERS " << prim.GetPath() << std::endl;
   pxr::UsdPbdBodyAPI bodyApi(prim);
   bodyApi.GetRadiusAttr().Get(&_radius, time);
   bodyApi.GetMassAttr().Get(&_mass, time);
@@ -167,10 +166,9 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
 
   float stiffness, damp;
   for(auto& constraintsIt: _constraints) {
-    std::cout << "look for constraint API " << constraintsIt.first;
-    pxr::UsdPbdConstraintAPI api(prim, constraintsIt.first);
-    std::cout << " : " << (bool)api << std::endl;
-    if(api) {
+    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>(constraintsIt.first)) {
+      pxr::UsdPbdConstraintAPI api(prim, constraintsIt.first);
+
       api.GetStiffnessAttr().Get(&stiffness);
       api.GetDampAttr().Get(&damp);
       for(Constraint* constraint: constraintsIt.second->constraints) {

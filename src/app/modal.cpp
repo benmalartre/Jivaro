@@ -123,19 +123,4 @@ void ModalDemo::_LoopImpl()
 
 }
 
-//==============================================================================
-// Modal Menu Window
-//==============================================================================
-ModalMenu::ModalMenu(int x, int y, const std::string& title)
-  : ModalBase(x, y, 800, 800, title)
-{
-  ModalBase::Init();
-  View* view = _window->GetMainView();
-  _ui = new DemoUI(view);
-}
-
-void ModalMenu::_LoopImpl()
-{
-}
-
 JVR_NAMESPACE_CLOSE_SCOPE

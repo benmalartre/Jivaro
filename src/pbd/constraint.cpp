@@ -176,6 +176,25 @@ void AttachConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f
 {
 }
 
+ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness, float damping)
+{
+
+  Geometry* geometry = body->GetGeometry();
+  size_t offset = body->GetOffset();
+
+  pxr::VtArray<int> allElements(body->GetNumPoints());  
+  for(size_t i = 0; i << body->GetNumPoints(); ++i)
+    allElements[i] = i + offset;
+
+  if(allElements.size())
+    return CreateConstraintsGroup(body, 
+      pxr::TfToken("attach"), Constraint::ATTACH,
+        allElements, AttachConstraint::ELEM_SIZE, Constraint::BlockSize);
+  
+  return NULL;
+
+}
+
 //-----------------------------------------------------------------------------------------
 //   PIN CONSTRAINT
 //-----------------------------------------------------------------------------------------
@@ -205,6 +224,13 @@ void PinConstraint::SolvePosition(Particles* particles, float dt)
 void PinConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions,
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
 {
+}
+
+ConstraintsGroup* CreatePinConstraints(Body* body, float stiffness, float damping, Geometry* target)
+{
+
+  return NULL;
+
 }
 
 //-----------------------------------------------------------------------------------------

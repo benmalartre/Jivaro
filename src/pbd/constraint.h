@@ -125,6 +125,8 @@ protected:
   Body*                         _body;
 };
 
+ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness=0.5f, float damping=0.1f);
+
 class PinConstraint : public Constraint
 {
 public:
@@ -147,6 +149,8 @@ protected:
   pxr::VtArray<pxr::GfVec3f>    _offset;
   Geometry*                     _target;
 };
+
+ConstraintsGroup* CreatePinConstraints(Body* body, float stiffness=0.5f, float damping=0.1f, Geometry* target);
 
 
 class StretchConstraint : public Constraint

@@ -292,11 +292,13 @@ Scene::GetBasisCurvesTopology(pxr::SdfPath const& id)
 pxr::GfRange3d 
 Scene::GetExtent(pxr::SdfPath const& id)
 {
+
   if (_prims.find(id) != _prims.end()) {
     Geometry* geometry = _prims[id].geom;
     if(geometry->GetType() < Geometry::POINT) {
       // TODO implicit geometry handling
     } else {
+        std::cout << "extent for  " << id << " " << geometry->GetBoundingBox().GetRange() << std::endl;
      return geometry->GetBoundingBox().GetRange();
     }
   }

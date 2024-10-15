@@ -130,11 +130,12 @@ Mesh* _CreateMeshGrid(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path,
   usdMesh.GetFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
   usdMesh.GetFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
 
+/*
   pxr::VtVec3fArray extentArray(2);
   extentArray[0] = pxr::GfVec3f(-0.5f,0.f,-0.5f);
   extentArray[1] = pxr::GfVec3f(0.5f,0.f,0.5f);
   usdMesh.GetExtentAttr().Set(extentArray);
-
+*/
   pxr::UsdGeomXformOp op = usdMesh.AddTransformOp();
   op.Set(m, pxr::UsdTimeCode::Default());
 

@@ -162,10 +162,11 @@ void
 KDTree::_RecurseClosest(const KDTree::Cell *cell, const pxr::GfVec3f &point, size_t index, 
   double &minDistanceSq, KDTree::Cell *&nearest) const
 {
-  /*
-  double curdist, dist;
+  
+  double curDist, dist;
 
-  curdist = distance->distance(point, node->point);
+  curDist = _distance->Compute(point, pxr::GfVec3f(cell->GetMidpoint()));
+  /*
   if (!(searchpredicate && !(*searchpredicate)(allnodes[node->dataindex]))) {
     if (neighborheap->size() < k) {
       neighborheap->push(nn4heap(node->dataindex, curdist));

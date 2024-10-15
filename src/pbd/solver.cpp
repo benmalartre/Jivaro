@@ -168,6 +168,7 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix,
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
 
   _particles.AddBody(body, matrix);
+  CreateConstraints(body, Constraint::ATTACH, 0.f, 0.25f);
 
   if(_showPoints)UpdatePoints();
   else ClearPoints();
@@ -213,6 +214,10 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
   size_t start = _constraints.size();
   ConstraintsGroup* group = NULL;
   switch(type) {
+    case Constraint::ATTACH:
+      group = CreateAttachConstraint(body, stiffness, damping);
+      break;
+
     case Constraint::STRETCH:
       group = CreateStretchConstraints(body, stiffness, damping);
       break;
@@ -611,7 +616,9 @@ void Solver::UpdateGeometries()
           range.UnionWith(local);
           output[p] = local;
         }
-        deformable->SetBoundingBox(range);
+        //deformable->SetBoundingBox(range);
+        deformable->ComputeBoundingBox();
+
         _scene->MarkPrimDirty(id, pxr::HdChangeTracker::AllDirty);
       }
     }

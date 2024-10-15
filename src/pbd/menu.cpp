@@ -61,10 +61,9 @@ void CreateSolverCallback()
 
 void CreateClothCallback()
 {
-  static const float spacing = 0.1f;
+  static const float spacing = 0.01f;
   Application* app = Application::Get();
   pxr::UsdStageRefPtr stage = app->GetStage();
-
 
   UndoBlock editBlock;
   pxr::UsdPrim prim;
@@ -75,8 +74,16 @@ void CreateClothCallback()
     mesh.TriangularGrid2D(spacing);
     //mesh->RegularGrid2D(spacing);
     //mesh.Randomize(0.1f);
+
+    // get root prim
+    pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+    if(!rootPrim.IsValid()) {
+      pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+      rootPrim = root.GetPrim();
+      stage->SetDefaultPrim(rootPrim);
+    }
     
-    pxr::SdfPath path(pxr::TfToken("/Cloth"+RandomString(6)));
+    pxr::SdfPath path = rootPrim.GetPath().AppendChild(pxr::TfToken("Cloth"+RandomString(6)));
     pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
 
     usdMesh.CreatePointsAttr().Set(mesh.GetPositions(), pxr::UsdTimeCode::Default());

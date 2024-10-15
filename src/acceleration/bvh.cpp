@@ -234,7 +234,7 @@ BVH::_CellToMorton(size_t cellIdx) const
 {
   short cellType = _GetCell(cellIdx)->GetType();
   if(cellType == BVH::Cell::BRANCH || cellType == BVH::Cell::ROOT)
-    return { 0,0,0, NULL };
+    return { 0,NULL };
   else
     return _mortons[_cellToMorton[cellIdx]];
 }
@@ -334,7 +334,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
           uint64_t code = _ComputeCode(_GetCell(leafIdx)->GetMidpoint());
           uint64_t minimum = _ComputeCode(_GetCell(leafIdx)->GetMin());
           uint64_t maximum = _ComputeCode(_GetCell(leafIdx)->GetMax());
-          _mortons.push_back({ code, minimum, maximum, leafIdx});
+          _mortons.push_back({ code, leafIdx});
         }
         break;
       }
@@ -432,8 +432,6 @@ BVH::SortCells()
   BVH::Cell* top = _GetCell(topIdx);
   return {
     _ComputeCode( top->GetMidpoint() ),
-    _ComputeCode( top->GetMin() ),
-    _ComputeCode( top->GetMax() ),
     topIdx
    };
 } 

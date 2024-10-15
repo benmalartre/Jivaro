@@ -27,8 +27,6 @@ static uint32_t __inline __builtin_clz(uint32_t x) {
 
 struct Morton {
   uint64_t  code;
-  uint64_t  minimum;
-  uint64_t  maximum;
   size_t    data;
 
   bool operator <(const Morton& other) const {

@@ -186,51 +186,6 @@ void TestGeodesic::InitExec(pxr::UsdStageRefPtr& stage)
     for(size_t m = 0; m < _meshes.size(); ++m)
       _scene.AddGeometry(_meshesId[m], _meshes[m]);
 
-    /*
-    pxr::GfVec3f bmin(_bvh.GetMin());
-    pxr::GfVec3f bmax(_bvh.GetMax());
-
-    pxr::GfVec3f size(_bvh.GetSize());
-
-    std::cout << "bvh size : " << size << std::endl;
-
-    float radius = pxr::GfMin(size[0], size[1], size[2])*0.5f;
-    std::cout << "bvh radius : " << radius << std::endl;
-
-    pxr::GfVec3f dimensions(
-      pxr::GfCeil(size[0] / radius),
-      pxr::GfCeil(size[1] / radius),
-      pxr::GfCeil(size[2] / radius)
-    );
-
-    size = dimensions * radius;
-
-    pxr::GfVec3f step(
-      size[0] / dimensions[0], 
-      size[1] / dimensions[1], 
-      size[2] / dimensions[2]);
-    pxr::GfVec3f offset = bmin + pxr::GfVec3f(radius) * 0.5f;
-
-    size_t total = dimensions[0] * dimensions[1] * dimensions[2];
-    positions.resize(total);
-    widths.resize(total);
-    colors.resize(total);
-
-    size_t index;
-    for(size_t z = 0; z < dimensions[2]; ++z) 
-      for(size_t y = 0; y < dimensions[1]; ++y)
-        for(size_t x = 0; x < dimensions[0]; ++x) {
-          index = z * dimensions[0] * dimensions[1] + y * dimensions[0] + x;
-
-          positions[index] = pxr::GfVec3f(  
-            x * step[0] + offset[0], 
-            y * step[1] + offset[1],
-            z * step[2] + offset[2]
-          );
-          widths[index] = radius;
-          colors[index] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-        }
-    */
   }
 
   
@@ -312,7 +267,7 @@ void TestGeodesic::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
       points[3] = pxr::GfVec3f(hit3.GetPoint());
      
     }
-
+    std::cout << points[3] << std::endl;
 
     _points->SetPositions(points);
     _points->SetColors(colors);
