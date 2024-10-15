@@ -168,7 +168,7 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix,
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
 
   _particles.AddBody(body, matrix);
-  CreateConstraints(body, Constraint::ATTACH, 0.f, 0.25f);
+  CreateConstraints(body, Constraint::ATTACH, 10000.f, 0.25f);
 
   if(_showPoints)UpdatePoints();
   else ClearPoints();

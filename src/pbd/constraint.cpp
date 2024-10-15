@@ -146,7 +146,6 @@ void AttachConstraint::SolvePosition(Particles* particles, float dt)
 {
   _ResetCorrection();
 
-  _compliance = 0.0000001f;
   const float alpha =  _compliance / (dt * dt);
 
   const pxr::GfVec3f* predicted = &particles->predicted[0];
@@ -163,7 +162,7 @@ void AttachConstraint::SolvePosition(Particles* particles, float dt)
   float length;
   
   for(auto& elem: _elements) {
-    gradient = predicted[elem] - particles->input[elem];
+    gradient = predicted[elem] - m.Transform(particles->input[elem]);
     length = gradient.GetLength();
     if(length < 1e-9)continue;
 
@@ -185,7 +184,7 @@ ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness, float dam
   size_t offset = body->GetOffset();
 
   pxr::VtArray<int> allElements(body->GetNumPoints());  
-  for(size_t i = 0; i << body->GetNumPoints(); ++i)
+  for(size_t i = 0; i < body->GetNumPoints(); ++i)
     allElements[i] = i + offset;
 
   if(allElements.size())
