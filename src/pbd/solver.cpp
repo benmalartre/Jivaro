@@ -419,6 +419,9 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     velocity[index] = (predicted[index] - position[index]) * invDt;
     
     velocity[index] *= velDecay;
+
+    float damp = _bodies[_particles.body[index]]->GetDamp();
+    velocity[index] -= velocity[index] * damp * 0.5f;
     vL = velocity[index].GetLength();
     if (vL < _sleepThreshold) {
       state[index] = Particles::IDLE;

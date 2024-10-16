@@ -951,7 +951,8 @@ KeyboardCallback(
       }
       case GLFW_KEY_DELETE:
       {
-        app->Delete();
+        if(!ImGui::IsItemActive())
+          app->Delete();
         break;
       }
       case GLFW_KEY_SPACE:

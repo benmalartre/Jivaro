@@ -632,17 +632,20 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
 
   return _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 }
-
+/*
 pxr::GfVec3f 
 MeshCollision::GetVelocity(Particles* particles, size_t index)
 {
+  
   if(!_closest[index].IsValid())return pxr::GfVec3f(0.f);
   Mesh* mesh = (Mesh*)GetGeometry();
   const pxr::GfVec3f* previous = mesh->GetPreviousCPtr();
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
+  
+ return pxr::GfVec3f(0.f);
 }
-
+*/
 void 
 MeshCollision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)

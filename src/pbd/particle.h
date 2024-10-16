@@ -47,6 +47,7 @@ public:
   size_t GetNumPoints() const {return _numPoints;};
   float GetMass() const {return _mass;};
   float GetRadius() const {return _radius;};
+  float GetDamp() const {return _damp;};
   pxr::GfVec3f GetColor() const {return _color;};
   pxr::GfVec3f GetVelocity() const {return _velocity;};
   pxr::GfVec3f GetTorque() const {return _torque;};
