@@ -151,24 +151,22 @@ void AttachConstraint::SolvePosition(Particles* particles, float dt)
   const pxr::GfVec3f* predicted = &particles->predicted[0];
   const pxr::GfVec3f* velocity = &particles->velocity[0];
 
-  const size_t offset = _body->GetOffset();
   Geometry* geometry = _body->GetGeometry();
 
-  const pxr::GfMatrix4d& m = geometry->GetMatrix();
   const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
 
-  pxr::GfVec3f gradient, damp;
   size_t index = 0;
-  float length;
-  
+
   for(auto& elem: _elements) {
-    gradient = predicted[elem] - m.Transform(particles->input[elem]);
-    length = gradient.GetLength();
+    const pxr::GfVec3f gradient = predicted[elem] - particles->input[elem];
+    const float length = gradient.GetLength();
     if(length < 1e-9)continue;
 
-    damp = pxr::GfDot(velocity[elem] * dt * dt,  gradient) * gradient * _damp;
+    const pxr::GfVec3f normal = gradient.GetNormalized();
+    const pxr::GfVec3f correction = -length / (length * length + alpha) * gradient;
+    const pxr::GfVec3f damp = pxr::GfDot(velocity[index] * dt * dt,  normal) * normal * _damp;
 
-    _correction[index++] -= length / (length * length + alpha) * gradient - damp;
+    _correction[index++] += correction - damp;
   }
 }
 
@@ -304,11 +302,9 @@ void StretchConstraint::SolvePosition(Particles* particles, float dt)
 
     C = length - _rest[elem];
 
-    damp = pxr::GfDot((velocity[a] + velocity[b]) * 0.5f  * dt * dt,  normal) * normal * _damp ;
-
+    damp = pxr::GfDot((velocity[a] + velocity[b]) * 0.5f * dt * dt,  normal) * normal * _damp;
     correction = -C / (length * length * W + alpha) * gradient - damp;
-
-    _correction[elem * ELEM_SIZE + 0] += w0  * correction;
+    _correction[elem * ELEM_SIZE + 0] += w0 * correction;
     _correction[elem * ELEM_SIZE + 1] -= w1 * correction;
   }
 }
@@ -914,8 +910,8 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     const pxr::GfVec3f position = _collision->GetContactPosition(index);
     const pxr::GfVec3f normal = _collision->GetContactNormal(index);
     const pxr::GfVec3f velocity = _collision->GetContactVelocity(index);
-    const float d = _collision->GetContactDepth(index) + 
-      pxr::GfMax(_collision->GetContactInitDepth(index) - vMax * dt, 0.f);
+    const float d = _collision->GetContactDepth(index)/* + 
+      pxr::GfMax(_collision->GetContactInitDepth(index) - vMax * dt, 0.f)*/;
 
     if(d > 0.f)continue;
 

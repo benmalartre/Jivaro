@@ -142,7 +142,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     size_t offset = _solver->GetNumParticles();
 
     Body* body = _solver->CreateBody((Geometry*)_clothes[c], 
-      _clothes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f);
+      _clothes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f, true);
     
     //_solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.5f);

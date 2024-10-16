@@ -190,7 +190,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
   std::cout << "add particles " << std::endl;
   std::cout << _voxels << std::endl;
 
-  Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius*0.95f, damping);
+  Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius*0.95f, damping, false);
   _solver->AddElement(body, _voxels, _emitterId);
   std::cout << "added particles" << _solver->GetNumParticles() << std::endl;
 

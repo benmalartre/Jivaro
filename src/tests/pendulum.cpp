@@ -59,7 +59,7 @@ void TestPendulum::InitExec(pxr::UsdStageRefPtr& stage)
   _solver = _CreateSolver(&_scene, stage, _solverId);
 
 
-  Body* body = _solver->CreateBody(_points, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.f);
+  Body* body = _solver->CreateBody(_points, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.f, false);
 
   //_solver->SetBodyVelocity(body, pxr::GfVec3f(0.01f, 0.f, 0.f));
   _solver->AddElement(body, _points, _pointsId);

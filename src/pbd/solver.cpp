@@ -157,7 +157,7 @@ size_t Solver::GetBodyIndex(Geometry* geom)
 
 
 Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix, 
-  float mass, float radius, float damping)
+  float mass, float radius, float damping, bool attach)
 {
   size_t base = _particles.GetNumParticles();
   pxr::GfVec3f wirecolor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
@@ -168,7 +168,8 @@ Body* Solver::CreateBody(Geometry* geom, const pxr::GfMatrix4d& matrix,
   Body* body = new Body(geom, base, geom->GetNumPoints(), wirecolor, mass, radius, damping);
 
   _particles.AddBody(body, matrix);
-  CreateConstraints(body, Constraint::ATTACH, 10000.f, 0.25f);
+  if(attach)
+    CreateConstraints(body, Constraint::ATTACH, 10000.f, 0.25f);
 
   if(_showPoints)UpdatePoints();
   else ClearPoints();
@@ -561,11 +562,9 @@ void Solver::Step()
       std::bind(&Solver::_IntegrateParticles, this,
         std::placeholders::_1, std::placeholders::_2), packetSize);
 
-    for (size_t ci = 0; ci < _iterations; ++ci) {
-      _timer->Start(2);
-      // solve and apply constraint
-      _SolveConstraints(_constraints);
-    }
+    _timer->Next();
+    // solve and apply constraint
+    _SolveConstraints(_constraints);
 
     _timer->Next();
     _UpdateContacts();
@@ -596,12 +595,16 @@ void Solver::UpdateInputs(pxr::UsdStageRefPtr& stage, float time)
     pxr::UsdPrim prim = _bodies[i]->GetGeometry()->GetPrim();
     if(!prim.IsValid())continue;
 
-    if(prim.IsA<pxr::UsdGeomMesh>()) {
+    if (prim.IsA<pxr::UsdGeomMesh>()) {
       pxr::UsdGeomMesh mesh(prim);
       pxr::VtArray<pxr::GfVec3f> inputs;
       mesh.GetPointsAttr().Get(&inputs, time);
 
-      memcpy(&_particles.input[0] + _bodies[i]->GetOffset(), &inputs[0], inputs.size() * sizeof(pxr::GfVec3f));
+      const pxr::GfMatrix4d& matrix = _bodies[i]->GetGeometry()->GetMatrix();
+
+      for (size_t p = 0; p < inputs.size(); ++p)
+        _particles.input[_bodies[i]->GetOffset() + p] = matrix.Transform(inputs[p]);
+
     }
   }
 }
@@ -653,7 +656,6 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
 
   _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
   solver.GetPbdSubStepsAttr().Get(&_subSteps, time);
-  solver.GetPbdIterationAttr().Get(&_iterations, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
   solver.GetPbdSleepThresholdAttr().Get(&_sleepThreshold, time);
 

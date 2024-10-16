@@ -65,10 +65,10 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
   _solver = _CreateSolver(&_scene, stage, _solverId);
 
 
-  Body* body0 = _solver->CreateBody(_points0, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f);
+  Body* body0 = _solver->CreateBody(_points0, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f, false);
   _solver->SetBodyVelocity(body0, pxr::GfVec3f(1.f, 0.f, 0.f));
   _solver->AddElement(body0, _points0, _points0Id);
-  Body* body1 = _solver->CreateBody(_points1, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f);
+  Body* body1 = _solver->CreateBody(_points1, pxr::GfMatrix4d(1.0), 1.f, 0.25f, 0.1f, false);
   _solver->SetBodyVelocity(body1, pxr::GfVec3f(-1.f, 0.f, 0.f));
   _solver->AddElement(body1, _points1, _points1Id);
 

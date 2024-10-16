@@ -89,12 +89,6 @@ public:
   void _LoopImpl() override;
 };
 
-class ModalMenu : public ModalBase
-{
-public:
-  ModalMenu(int x, int y, const std::string& title);
-  void _LoopImpl() override;
-};
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
