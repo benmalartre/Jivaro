@@ -500,6 +500,8 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 void
 GraphEditorUI::Node::Write()
 {
+  if(!_node->GetPrim().IsValid())return;
+
   if(!_node->GetPrim().HasAPI<pxr::UsdUINodeGraphNodeAPI>()) {
     pxr::UsdUINodeGraphNodeAPI api = 
       pxr::UsdUINodeGraphNodeAPI::Apply(_node->GetPrim());
@@ -821,6 +823,14 @@ GraphEditorUI::Clear()
   for (auto& node : _nodes)delete node;
   _connexions.clear();
   _nodes.clear();
+
+  _selectedNodes.clear();
+  _selectedConnexions.clear();
+  _hoveredNode = nullptr;
+  _currentNode = nullptr;
+  _hoveredPort = nullptr;
+  _currentPort = nullptr;
+  _hoveredConnexion = nullptr;
 }
 
 // read
@@ -1070,10 +1080,13 @@ GraphEditorUI::OnNewSceneNotice(const NewSceneNotice& n)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
+  std::cout << "Graph Editor SCene Change Callback..." << std::endl;
   if (!_graph) return;
   if (!_graph->GetPrim().IsValid()) {
     Clear();
   } else {
+    _graph->Clear();
+    _graph->Populate(_graph->GetPrim());
     Populate(_graph);
   }
   _parent->SetDirty();

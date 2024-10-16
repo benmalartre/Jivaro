@@ -404,6 +404,8 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 {
   const int* body = &_particles.body[0];
   const pxr::GfVec3f* predicted = &_particles.predicted[0];
+  const pxr::GfVec3f* input = &_particles.input[0];
+  const float* mass = &_particles.mass[0];
   pxr::GfVec3f* position = &_particles.position[0];
   pxr::GfVec3f* velocity = &_particles.velocity[0];
   short* state = &_particles.state[0];
@@ -415,13 +417,15 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
 
   for(size_t index = begin; index < end; ++index) {
     if (state[index] != Particles::ACTIVE)continue;
+    
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
     
     velocity[index] *= velDecay;
 
+    //_damp * velocity[index]  * _weights[index] * invMass[index] * dt;
     float damp = _bodies[_particles.body[index]]->GetDamp();
-    velocity[index] -= velocity[index] * damp * 0.5f;
+    velocity[index] -= velocity[index] * damp * _particles.invMass[index] * _stepTime;
     vL = velocity[index].GetLength();
     if (vL < _sleepThreshold) {
       state[index] = Particles::IDLE;
@@ -431,7 +435,10 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     }*/
 
     // update position
-    position[index] = predicted[index];
+    if (mass[index] == 0.f)
+      position[index] = input[index];
+    else
+      position[index] = predicted[index];
   }
 }
 

@@ -131,6 +131,7 @@ UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeC
   constexpr const char* format = DataType == ImGuiDataType_S32 ? "%d" : DecimalPrecision;
   ImGui::InputScalarN(attribute.GetName().GetText(), DataType, buffer.data(), N,
     NULL, NULL, format, ImGuiInputTextFlags());
+
   if (ImGui::IsItemDeactivatedAfterEdit()) {
     return pxr::VtValue(VectorType(buffer));
   }

@@ -129,6 +129,7 @@ public:
   const std::vector<View*>& GetViews();
   void DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
   void DiscardMouseEventsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
+  void DiscardKeyboardEvents();
   void InvalidateViews();
   void ClearViews();
   void SetLayout();

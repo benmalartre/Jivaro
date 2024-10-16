@@ -921,6 +921,7 @@ KeyboardCallback(
 {
   ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
+
   Application* app = Application::Get();
   PopupUI* popup = app->GetPopup();
   if (popup) {
@@ -930,7 +931,7 @@ KeyboardCallback(
   }
 
   Time* time = Time::Get();
-  
+    
   if (action == GLFW_PRESS) {
     switch(GetMappedKey(key))
     {
@@ -951,8 +952,7 @@ KeyboardCallback(
       }
       case GLFW_KEY_DELETE:
       {
-        if(!ImGui::IsItemActive())
-          app->Delete();
+        if (mods & GLFW_MOD_CONTROL)app->Delete();
         break;
       }
       case GLFW_KEY_SPACE:
@@ -1024,6 +1024,8 @@ KeyboardCallback(
     parent->SetDebounce(false);
     parent->EndRepeatKey();
   }
+ 
+
   //  /* call tutorial keyboard handler */
   //  //device_key_pressed(key);
 //
