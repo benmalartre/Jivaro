@@ -916,17 +916,16 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     if(m < 1e-9 || d > 0.f)continue;
     
     damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
-    _correction[elem] = -d * normal ;//- damp;
+    _correction[elem] = -d * normal - damp;
 
     pxr::GfVec3f relativeVelocity = (particles->velocity[index] - velocity) * dt;
     pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
-    //_correction[elem] +=  friction;
+    _correction[elem] +=  friction;
   }
 }
 
 void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 {
-  return;
   _ResetCorrection();
   const size_t numElements = _elements.size();
 
@@ -934,8 +933,8 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
     const size_t index = _elements[elem];
     if(_collision->GetContactDepth(index) > 0.f) continue;
 
-    const pxr::GfVec3f baumgarte = _collision->GetContactNormal(index) * -_collision->GetContactInitDepth(index);
-    _correction[elem] = /*-particles->velocity[index] +*/ _collision->GetContactVelocity(index) * 0.5f ;//- baumgarte;
+    const pxr::GfVec3f baumgarte = _collision->GetContactNormal(index) * -_collision->GetContactInitDepth(index) * dt;
+    _correction[elem] = (-particles->velocity[index] + _collision->GetContactVelocity(index)) * 0.5f - baumgarte;
   }
 }
 
@@ -963,14 +962,8 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
       other = collision->GetContactComponent(index, c);
 
       normal = collision->GetContactNormal(index, c);
-      d = collision->GetContactDepth(index, c)/* + 
-        pxr::GfMax(collision->GetContactInitDepth(index, c) - selfVMax * dt, 0.f)*/ - Collision::TOLERANCE_MARGIN;
-
-      if(d >= 0.f) continue;
-
-      if(d > -2.f * Collision::TOLERANCE_MARGIN)
-        d = RESCALE(d + Collision::TOLERANCE_MARGIN, -Collision::TOLERANCE_MARGIN, Collision::TOLERANCE_MARGIN, 
-          -2.f * Collision::TOLERANCE_MARGIN, 0.f);
+      d = collision->GetContactDepth(index, c) + 
+        pxr::GfMax(collision->GetContactInitDepth(index, c) - _collision->GetMaxSeparationVelocity() * dt, 0.f);
         
       w1 = particles->invMass[other];     
       w = w0 + w1;

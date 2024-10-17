@@ -528,7 +528,7 @@ void Solver::Reset()
       for(size_t i = 0; i < nL; ++i)
         locked[i]  = pairs[i].first;
 
-      LockPoints(_bodies[b], locked);
+      //LockPoints(_bodies[b], locked);
     }
     
   }

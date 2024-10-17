@@ -59,17 +59,6 @@ Location::ComputeVelocity(const pxr::GfVec3f* positions, const pxr::GfVec3f* pre
   else return result;
 }
 
-template<typename T>
-T Location::ComputeValue(const T* values, const int* elements, size_t sz) const
-{
-  T result;;
-  if (elements)
-    for (size_t d = 0; d < sz; ++d)
-      result += values[elements[d]] * _coords[d];
-  else
-    result += value[_compId];
 
-  return result;
-}
 
 PXR_NAMESPACE_CLOSE_SCOPE

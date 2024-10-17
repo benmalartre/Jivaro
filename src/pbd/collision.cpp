@@ -590,24 +590,19 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   const pxr::GfVec3f predicted = particles->position[index] + particles->velocity[index] * ft;
   const float maxDistance = particles->velocity[index].GetLength() * ft + particles->radius[index] + TOLERANCE_MARGIN;
   double minDistance = DBL_MAX;
-  
-  /*
-  if(_bvh.Raycast(ray, &_closest[index], maxDistance, &minDistance))
-    SetHit(index, true);
+
+  if(_bvh.Closest(predicted, &_closest[index], maxDistance * 2.f)) {
+    const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
+
+    const pxr::GfVec3f position = 
+      _closest[index].ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
+
+    const pxr::GfVec3f delta = position - predicted;
+    SetHit(index, delta.GetLength() < particles->radius[index] + Collision::TOLERANCE_MARGIN);
+  }
+    
   else
-  */
-    if(_bvh.Closest(predicted, &_closest[index], maxDistance * 2.f)) {
-      const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
-
-      const pxr::GfVec3f position = 
-        _closest[index].ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
-
-      const pxr::GfVec3f delta = position - predicted;
-      SetHit(index, /*delta.GetLength() < particles->radius[index] + Collision::TOLERANCE_MARGIN*/ true);
-    }
-      
-    else
-      SetHit(index, false);
+    SetHit(index, false);
   
 }
 
@@ -662,7 +657,7 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
 
   return _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 }
-/*
+
 pxr::GfVec3f 
 MeshCollision::GetVelocity(Particles* particles, size_t index)
 {
@@ -673,9 +668,13 @@ MeshCollision::GetVelocity(Particles* particles, size_t index)
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
   
- return pxr::GfVec3f(0.f);
+  const pxr::GfVec3f prev = mesh->GetPreviousMatrix().Transform(
+    _closest[index].ComputeValue<pxr::GfVec3f>(previous, &triangle->vertices[0], 3));
+  const pxr::GfVec3f pos = mesh->GetMatrix().Transform(
+    _closest[index].ComputeValue<pxr::GfVec3f>(positions, &triangle->vertices[0], 3));
+  return pos - prev;
 }
-*/
+
 void 
 MeshCollision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
@@ -803,7 +802,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
   std::vector<int> closests;
 
   size_t numCollide = 0;
-  _grid.Closests(index, &particles->predicted[0], &particles->velocity[0], ft,
+  _grid.Closests(index, &particles->predicted[0], /*&particles->velocity[0], ft,*/
     closests, 2.f * (particles->radius[index]+TOLERANCE_MARGIN));
   for(int closest: closests) {
     if(_AreConnected(index, closest))continue;
