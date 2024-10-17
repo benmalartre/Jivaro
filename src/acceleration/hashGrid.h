@@ -66,6 +66,8 @@ public:
 
   size_t Closests(size_t index, const pxr::GfVec3f* positions,
     std::vector<int>& closests, float distance) const;
+  size_t Closests(size_t index, const pxr::GfVec3f* positions, const pxr::GfVec3f* velocities, float ft,
+    std::vector<int>& closests, float distance) const;
 
   void SetSpacing(float spacing) { _spacing = spacing > 1e-6f ? spacing : 1e-6f; _scl = 1.f/_spacing; };
   pxr::GfVec3f GetColor(const pxr::GfVec3f& point);

@@ -61,7 +61,7 @@ void TestVelocity::InitExec(pxr::UsdStageRefPtr& stage)
     _scene.AddGeometry(_points1Id, _points1);
   }
 
-  _solverId =  rootId.AppendChild(pxr::TfToken("Solver"));
+  _solverId =  rootId.AppendChild(pxr::TfToken("Solver"));  
   _solver = _CreateSolver(&_scene, stage, _solverId);
 
 

@@ -22,26 +22,26 @@ public:
 
 protected:
   void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
-  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
+  void _TraverseStageFindingElements(pxr::UsdStageRefPtr& stage);
 
 private:
 
-  Solver*           _solver;
-  Plane*            _ground;
-  Voxels*           _voxels;
+  Solver*                   _solver;
+  Plane*                    _ground;
+  Voxels*                   _voxels;
 
-  pxr::SdfPath      _groundId;
-  pxr::SdfPath      _solverId;
-  pxr::SdfPath      _voxelsId;
+  pxr::SdfPath              _groundId;
+  pxr::SdfPath              _solverId;
+  pxr::SdfPath              _voxelsId;
 
-  BVH               _bvh;
-  float             _lastTime;
+  BVH                       _bvh;
+  float                     _lastTime;
 
   Mesh*                     _emitter;
   pxr::SdfPath              _emitterId;
 
-  std::vector<Mesh*>        _collideMeshes;
-  std::vector<pxr::SdfPath> _collideMeshesId;
+  std::vector<Geometry*>    _colliders;
+  std::vector<pxr::SdfPath> _collidersId;
 
 };
 

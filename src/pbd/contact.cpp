@@ -52,6 +52,13 @@ Contacts::Use(size_t index) {
   return &data[index * m + available];
 }
 
+Contact*
+Contacts::LastUsed(size_t index){
+  if(used[index] > 0)
+    return &data[index * m + used[index] - 1];
+  return nullptr;
+}
+
 size_t 
 Contacts::GetNumUsed(size_t index) const
 {

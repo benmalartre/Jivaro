@@ -57,6 +57,7 @@ public:
   bool IsUsed(size_t index){return used[index] > 0;};
 
   Contact* Use(size_t index);
+  Contact* LastUsed(size_t index);
   size_t GetNumUsed(size_t index) const;
   size_t GetTotalNumUsed() const;
 

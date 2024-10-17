@@ -70,6 +70,7 @@ public:
   virtual pxr::GfVec3f GetContactVelocity(size_t index, size_t c=0) const;
   virtual float GetContactDepth(size_t index, size_t c=0) const;
   virtual float GetContactInitDepth(size_t index, size_t c=0) const;
+  virtual float GetMaxSeparationVelocity() const {return _maxSeparationVelocity;};
 
   Contacts& GetContacts(){return _contacts;};
   size_t GetNumContacts(size_t index){return _contacts.GetNumUsed(index);};
@@ -115,6 +116,7 @@ protected:
   Contacts                          _contacts;   
   float                             _restitution;
   float                             _friction;
+  float                             _maxSeparationVelocity;
   Geometry*                         _collider;
   pxr::TfToken                      _key;
 

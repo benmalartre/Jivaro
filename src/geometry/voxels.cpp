@@ -187,7 +187,7 @@ void Voxels::Build(float randomize)
         RANDOM_0_1 * randomize * _radius,
         RANDOM_0_1 * randomize * _radius);
 
-      AddPoint(GetCellPosition(cellIdx) + offset, _radius);
+      AddPoint(GetCellPosition(cellIdx) + offset, 0.1f);
       numHits++;
     }
   }

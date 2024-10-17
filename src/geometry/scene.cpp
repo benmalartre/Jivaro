@@ -298,7 +298,6 @@ Scene::GetExtent(pxr::SdfPath const& id)
     if(geometry->GetType() < Geometry::POINT) {
       // TODO implicit geometry handling
     } else {
-        std::cout << "extent for  " << id << " " << geometry->GetBoundingBox().GetRange() << std::endl;
      return geometry->GetBoundingBox().GetRange();
     }
   }

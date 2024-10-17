@@ -34,7 +34,8 @@ TestHair::_InitControls(pxr::UsdStageRefPtr& stage)
   controlPrim.CreateAttribute(pxr::TfToken("Amplitude"), pxr::SdfValueTypeNames->Float).Set(0.5f);
   controlPrim.CreateAttribute(pxr::TfToken("Frequency"), pxr::SdfValueTypeNames->Float).Set(1.f);
   controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
-  controlPrim.CreateAttribute(pxr::TfToken("Color"), pxr::SdfValueTypeNames->Float3).Set({RANDOM_0_1, RANDOM_0_1, RANDOM_0_1});
+  controlPrim.CreateAttribute(pxr::TfToken("Color"), pxr::SdfValueTypeNames->Float3).Set(
+    pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
 }
 
 void 

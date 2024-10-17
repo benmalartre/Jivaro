@@ -424,16 +424,14 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     
     velocity[index] *= velDecay;
 
-    //_damp * velocity[index]  * _weights[index] * invMass[index] * dt;
     float damp = _bodies[_particles.body[index]]->GetDamp();
     velocity[index] -= velocity[index] * damp * _particles.invMass[index] * _stepTime;
     vL = velocity[index].GetLength();
     if (vL < _sleepThreshold) {
-      state[index] = Particles::IDLE;
       velocity[index] = pxr::GfVec3f(0.f);
-    } /*else if(vL > vMax) {
+    } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
-    }*/
+    }
 
     // update position
     if (mass[index] == 0.f)
@@ -614,7 +612,7 @@ void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-    _collisions[i]->Update(prim, time + _frameTime);
+    _collisions[i]->Update(prim, time);
   }
 }
 

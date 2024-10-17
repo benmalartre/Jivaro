@@ -92,7 +92,7 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     const BVH::Cell* left = _GetCell(cell->GetLeft());
     const BVH::Cell* right = _GetCell(cell->GetRight());
   
-    double leftDist=DBL_MAX, rightDist=DBL_MAX;
+    double leftDist=maxDistance, rightDist=maxDistance;
     ray.Intersect(pxr::GfBBox3d(*left), &leftDist);
     bool leftCheck = leftDist < maxDistance;
     ray.Intersect(pxr::GfBBox3d(*right), &rightDist);

@@ -69,6 +69,32 @@ HashGrid::Closests(size_t index, const pxr::GfVec3f* positions,
   return closests.size();
 }
 
+size_t 
+HashGrid::Closests(size_t index, const pxr::GfVec3f* positions, const pxr::GfVec3f* velocities, float ft,
+  std::vector<int>& closests, float distance) const
+{
+  const pxr::GfVec3f& point = positions[index] + velocities[index] * ft;
+  const pxr::GfVec3i minCoords = _IntCoords(point - pxr::GfVec3f(distance));
+  const pxr::GfVec3i maxCoords = _IntCoords(point + pxr::GfVec3f(distance));
+  const float distance2 = distance * distance;
+
+  for (int x = minCoords[0]; x <= maxCoords[0]; ++x)
+    for (int y = minCoords[1]; y <= maxCoords[1]; ++y)
+      for (int z = minCoords[2]; z <= maxCoords[2]; ++z) {
+        int64_t hash = (this->*_HashCoords)(pxr::GfVec3i(x, y, z));
+        int start = _cellStart[hash];
+        int end = _cellStart[hash + 1];
+
+        for (int n = start; n < end; ++n) {
+          if(_cellEntries[n] != index && 
+            (point - (positions[_cellEntries[n]] + velocities[_cellEntries[n]])).GetLengthSq() < distance2)
+              closests.push_back(_cellEntries[n]);
+        }
+      }
+
+  return closests.size();
+}
+
 pxr::GfVec3f
 HashGrid::GetColor(const pxr::GfVec3f& point)
 {
