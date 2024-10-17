@@ -863,11 +863,8 @@ void CollisionConstraint::ApplyPosition(Particles* particles)
 {
   size_t corrIdx = 0;
   const pxr::GfVec2f* counter = &particles->counter[0];
-  for(const auto& elem: _elements) {
-    //particles->position[elem] += _correction[corrIdx] / counter[elem][1];
+  for(const auto& elem: _elements)
     particles->predicted[elem] += _correction[corrIdx++] / counter[elem][1];
-  }
-    
 }
 
 // this one has to happen serialy
@@ -918,13 +915,27 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
     if(m < 1e-9 || d > 0.f)continue;
     
-
     damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
-    _correction[elem] = -d * normal - damp;
+    _correction[elem] = -d * normal ;//- damp;
 
     pxr::GfVec3f relativeVelocity = (particles->velocity[index] - velocity) * dt;
     pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
-    _correction[elem] +=  friction;
+    //_correction[elem] +=  friction;
+  }
+}
+
+void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
+{
+  return;
+  _ResetCorrection();
+  const size_t numElements = _elements.size();
+
+  for (size_t elem = 0; elem < numElements; ++elem) {
+    const size_t index = _elements[elem];
+    if(_collision->GetContactDepth(index) > 0.f) continue;
+
+    const pxr::GfVec3f baumgarte = _collision->GetContactNormal(index) * -_collision->GetContactInitDepth(index);
+    _correction[elem] = /*-particles->velocity[index] +*/ _collision->GetContactVelocity(index) * 0.5f ;//- baumgarte;
   }
 }
 
@@ -983,20 +994,6 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 		  pxr::GfVec3f friction = _ComputeFriction(_correction[elem], velocity * rN);
       _correction[elem]  += w0 / w * friction;
     }
-  }
-}
-
-void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
-{
-  _ResetCorrection();
-  const size_t numElements = _elements.size();
-
-  for (size_t elem = 0; elem < numElements; ++elem) {
-    const size_t index = _elements[elem];
-    if(_collision->GetContactDepth(index) > 0.f) continue;
-
-    const pxr::GfVec3f baumgarte = _collision->GetContactNormal(index) * _collision->GetContactInitDepth(index);
-    _correction[elem] = -particles->velocity[index];// + _collision->GetContactVelocity(index)) * 0.5f + baumgarte;
   }
 }
 

@@ -67,10 +67,13 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   float w = m < 1e-6f ? 0.f : 1.f / m;
 
   const pxr::GfVec3f* points = ((Deformable*)geom)->GetPositionsCPtr();
+  const pxr::GfRange3d range = geom->GetBoundingBox().GetRange();
   pxr::GfVec3f pos;
   size_t idx;
   for (size_t idx = base; idx < size; ++idx) {
-    pos = matrix.Transform(points[idx - base] + pxr::GfVec3f(RANDOM_LO_HI(-1,1), RANDOM_LO_HI(-1,1), RANDOM_LO_HI(-1,1)) * 0.001f);
+    
+    pos = matrix.Transform(points[idx - base]);
+    float bY = float(idx) / float(size);
     mass[idx] = m;
     invMass[idx] = w;
     radius[idx] = item->GetRadius();
@@ -81,7 +84,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
     rotation[idx] = pxr::GfQuatf(1.f);
     velocity[idx] = item->GetVelocity();
     body[idx] = index;
-    color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f;
+    color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f * bY;
     state[idx] = ACTIVE;
     counter[idx] = pxr::GfVec2f(0.f);
   }

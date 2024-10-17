@@ -18,7 +18,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const size_t Collision::PACKET_SIZE = 64;
-const float Collision::TOLERANCE_MARGIN = 0.05f;
+const float Collision::TOLERANCE_MARGIN = 0.01f;
 
 void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
@@ -27,8 +27,8 @@ void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& posi
   const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   const float r = 0.05f;
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
-    if(_contacts.IsUsed(index)) {
-      Contact* contact = _contacts.Get(index);
+    if(_contacts[_flip].IsUsed(index)) {
+      Contact* contact = _contacts[_flip].Get(index);
       positions.push_back(pxr::GfVec3f(contact->GetCoordinates()));
       colors.push_back(color);
       radius.push_back(r);
@@ -50,8 +50,8 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
-    if(_contacts.IsUsed(index))
-      _contacts.Get(index)->Update(
+    if(_contacts[_flip].IsUsed(index))
+      _contacts[_flip].Get(index)->Update(
         GetGradient(particles, index),
         GetVelocity(particles, index),
         GetValue(particles, index)
@@ -61,6 +61,7 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
   std::vector<Constraint*>& constraints, float ft)
 {
+  _flip = 1 - _flip;
   Init(particles->GetNumParticles());
   _ResetContacts(particles);
   pxr::WorkParallelForN(particles->GetNumParticles(),
@@ -73,7 +74,8 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
 {
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
     const size_t index = elements[elemIdx];
-    _StoreContactLocation(particles, index, _contacts.Use(index), ft);
+    _StoreContactLocation(particles, index, _contacts[_flip].Use(index), ft);
+    
   }
 }
 
@@ -87,8 +89,8 @@ void Collision::_ResetContacts(Particles* particles)
   _c2p.clear();
   _c2p.reserve(numParticles);
 
-  _contacts.Resize(numParticles, 1);
-  _contacts.ResetAllUsed();
+  _contacts[_flip].Resize(numParticles, 1);
+  _contacts[_flip].ResetAllUsed();
 
 }
 
@@ -165,8 +167,6 @@ void Collision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
 // Velocity
 pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
 {  
-  return pxr::GfVec3f(0.f);
-
 
   const pxr::GfVec3f torque = _collider->GetTorque();
   const pxr::GfVec3f tangent =
@@ -177,32 +177,32 @@ pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
 
 size_t Collision::GetContactComponent(size_t index, size_t c) const
 {
-  return _contacts.Get(index, c)->GetComponentIndex();
+  return _contacts[_flip].Get(index, c)->GetComponentIndex();
 }
 
 pxr::GfVec3f Collision::GetContactPosition(size_t index, size_t c) const 
 {
-  return pxr::GfVec3f(_contacts.Get(index, c)->GetCoordinates());
+  return pxr::GfVec3f(_contacts[_flip].Get(index, c)->GetCoordinates());
 }
 
 pxr::GfVec3f Collision::GetContactNormal(size_t index,size_t c) const 
 {
-  return _contacts.Get(index, c)->GetNormal();
+  return _contacts[_flip].Get(index, c)->GetNormal();
 }
 
 pxr::GfVec3f Collision::GetContactVelocity(size_t index, size_t c) const 
 {
-  return _contacts.Get(index, c)->GetVelocity();
+  return _contacts[_flip].Get(index, c)->GetVelocity();
 }
 
 float Collision::GetContactDepth(size_t index, size_t c) const
 {
-  return _contacts.Get(index, c)->GetDepth();
+  return _contacts[_flip].Get(index, c)->GetDepth();
 }
 
 float Collision::GetContactInitDepth(size_t index, size_t c) const
 {
-  return _contacts.Get(index, c)->GetInitDepth();
+  return _contacts[_flip].Get(index, c)->GetInitDepth();
 }
 
 
@@ -246,15 +246,15 @@ void PlaneCollision::_UpdatePositionAndNormal()
 void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const pxr::GfVec3f predicted(particles->position[index] + particles->velocity[index] * ft);
-  float d = pxr::GfDot(_normal, predicted - _position)  - particles->radius[index] - TOLERANCE_MARGIN;
-  SetHit(index, d < 0.f);
+  float d = pxr::GfDot(_normal, predicted - _position)  - particles->radius[index];
+  SetHit(index, d < TOLERANCE_MARGIN);
 }
 
 void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
-  const pxr::GfVec3f predicted = particles->position[index];
+  const pxr::GfVec3f predicted = particles->predicted[index];// + particles->velocity[index] * ft;
   float d = pxr::GfDot(predicted - _position, _normal)  - particles->radius[index];
-  pxr::GfVec3f intersection = predicted + _normal * -d;
+  pxr::GfVec3f intersection = predicted + _normal * d;
 
   contact->Init(_normal,GetVelocity(particles, index), d);
   contact->SetPoint(intersection);
@@ -324,20 +324,21 @@ void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
+  const pxr::GfVec3f predicted = particles->predicted[index];// + particles->velocity[index] * ft;
   Cube* cube = (Cube*) _collider;
 
   const pxr::GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
   
-  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->position[index]);
+  const pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
   
   const pxr::GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
 
-  pxr::GfVec3f normal = particles->position[index] - closest;
-  const float d = cube->SignedDistance(particles->position[index]) - particles->radius[index] / scaleFactor;
+  pxr::GfVec3f normal = predicted - closest;
+  const float d = cube->SignedDistance(predicted) - particles->radius[index] / scaleFactor;
   normal.Normalize();
   contact->Init(normal, GetVelocity(particles, index), d);
-  contact->SetPoint(particles->position[index] + normal * d);
+  contact->SetPoint(predicted + normal * d);
   contact->SetDistance(d);
 }
 
@@ -396,19 +397,19 @@ void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 
 void SphereCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
-  pxr::GfVec3f normal = particles->position[index] - _center;
+  const pxr::GfVec3f predicted = particles->predicted[index];// + particles->velocity[index] * ft;
 
-  float nL = normal.GetLength();
-  if (nL > 0.0000001f)normal.Normalize();
-  else normal = pxr::GfVec3f(0.f, 1.f, 0.f);
+  Sphere* sphere = (Sphere*)_collider;
 
-  float d = nL - _radius;
+  const pxr::GfVec3d scale = _collider->GetScale();
+  const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
 
-  pxr::GfVec3f intersection = _collider->GetMatrix().Transform(_collider->GetInverseMatrix().Transform(particles->position[index]).GetNormalized() * -d) + 
-    normal * particles->radius[index];
+  const float d = sphere->SignedDistance(particles->predicted[index]) - particles->radius[index] / scaleFactor;
+
+  const pxr::GfVec3f normal = (particles->predicted[index] - _center).GetNormalized();
 
   contact->Init(normal,GetVelocity(particles, index), d);
-  contact->SetPoint(intersection);
+  contact->SetPoint(particles->predicted[index] + normal * d);
   contact->SetDistance(d);
 }
 
@@ -490,18 +491,20 @@ void CapsuleCollision::_FindContact(Particles* particles, size_t index, float ft
 
 void CapsuleCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
+  const pxr::GfVec3f predicted = particles->predicted[index];// + particles->velocity[index] * ft;
+
   Capsule* capsule = (Capsule*)_collider;
 
    const pxr::GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
 
-  pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(particles->position[index]);
+  pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
   pxr::GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
   pxr::GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
 
   pxr::GfVec3f world = _collider->GetMatrix().Transform(surface);
-  pxr::GfVec3f normal = (particles->position[index] - world);
-  float d = capsule->SignedDistance(particles->position[index]) - particles->radius[index] / scaleFactor;
+  pxr::GfVec3f normal = (predicted - world);
+  float d = capsule->SignedDistance(predicted) - particles->radius[index] / scaleFactor;
 
   contact->Init(normal.GetNormalized(), GetVelocity(particles, index), d);
   contact->SetPoint(world);
@@ -750,9 +753,9 @@ void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t e
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     //pxr::GfVec3f color = RandomColorByIndex(index);
-    if (_contacts.IsUsed(index))
-      for (size_t c = 0; c < _contacts.GetNumUsed(index); ++c) {
-        Contact* contact = _contacts.Get(index, c);
+    if (_contacts[_flip].IsUsed(index))
+      for (size_t c = 0; c < _contacts[_flip].GetNumUsed(index); ++c) {
+        Contact* contact = _contacts[_flip].Get(index, c);
         size_t other = contact->GetComponentIndex();
 
         contact->Update(
@@ -782,8 +785,8 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _c2p.clear();
   _c2p.reserve(numParticles * PARTICLE_MAX_CONTACTS);
 
-  _contacts.Resize(numParticles, PARTICLE_MAX_CONTACTS);
-  _contacts.ResetAllUsed();
+  _contacts[_flip].Resize(numParticles, PARTICLE_MAX_CONTACTS);
+  _contacts[_flip].ResetAllUsed();
 
 }
 
@@ -809,7 +812,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
     pxr::GfVec3f ip(particles->position[index] + particles->velocity[index] * ft);
     pxr::GfVec3f cp(particles->position[closest] + particles->velocity[closest] * ft);
     if((ip - cp).GetLength() < (particles->radius[index] + particles->radius[closest] + TOLERANCE_MARGIN)) {
-      Contact* contact = _contacts.Use(index);
+      Contact* contact = _contacts[_flip].Use(index);
       _StoreContactLocation(particles, index, closest, contact, ft);
       contact->SetComponentIndex(closest);
       numCollide++;
@@ -840,7 +843,7 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
   CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
 
-  size_t numContacts = _contacts.GetTotalNumUsed();
+  size_t numContacts = _contacts[_flip].GetTotalNumUsed();
 
   pxr::VtArray<int> elements;
  
@@ -849,7 +852,7 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
   Mask::Iterator iterator(this, 0, numParticles);
   size_t index = iterator.Begin();
   for (; index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    size_t numUsed = _contacts.GetNumUsed(index);
+    size_t numUsed = _contacts[_flip].GetNumUsed(index);
     if(numUsed) {
       elements.push_back(index);      
     } 

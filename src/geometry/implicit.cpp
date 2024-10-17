@@ -205,7 +205,8 @@ bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
 
 float Sphere::SignedDistance(const pxr::GfVec3f& point) const
 {
-  return (point - _matrix.ExtractTranslation()).GetLength() - _radius;
+  pxr::GfVec3f local = _invMatrix.Transform(point);
+  return local.GetLength() - _radius;
 }
 
 Geometry::DirtyState 

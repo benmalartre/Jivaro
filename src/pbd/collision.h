@@ -45,7 +45,8 @@ public:
     , _id(path)
     , _collider(collider)
     , _restitution(restitution)
-    , _friction(friction) {};
+    , _friction(friction)
+    , _flip(false) {};
 
   /*
   void AddBody(Particles* particles, Body* body);
@@ -72,9 +73,10 @@ public:
   virtual float GetContactInitDepth(size_t index, size_t c=0) const;
   virtual float GetMaxSeparationVelocity() const {return _maxSeparationVelocity;};
 
-  Contacts& GetContacts(){return _contacts;};
-  size_t GetNumContacts(size_t index){return _contacts.GetNumUsed(index);};
-  size_t GetTotalNumContacts(){return _contacts.GetTotalNumUsed();};
+  Contacts& GetContacts(){return _contacts[_flip];};
+  Contacts& GetPreviousContacts() {return _contacts[1 - _flip];};
+  size_t GetNumContacts(size_t index){return _contacts[_flip].GetNumUsed(index);};
+  size_t GetTotalNumContacts(){return _contacts[_flip].GetTotalNumUsed();};
   const std::vector<int>& GetC2P(){return _c2p;};
 
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
@@ -113,7 +115,8 @@ protected:
   pxr::VtArray<int>                 _hits;
   std::vector<int>                  _c2p;
   size_t                            _numParticles;
-  Contacts                          _contacts;   
+  Contacts                          _contacts[2];
+  bool                              _flip;   
   float                             _restitution;
   float                             _friction;
   float                             _maxSeparationVelocity;

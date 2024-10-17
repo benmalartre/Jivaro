@@ -360,7 +360,7 @@ void Solver::WeightBoundaries(Body* body)
 void Solver::_PrepareContacts()
 {
   _timer->Start(0);
-  for (auto& contact : _contacts)
+  for (auto& contact: _contacts)
     delete contact;
   _contacts.clear();
 
@@ -414,7 +414,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   float invDt = 1.f / _stepTime, vL;
   const float vMax = 25.f;
 
-  const double velDecay = std::exp(std::log(0.95f) * _stepTime);
+  const double velDecay = std::exp(std::log(0.85f) * _stepTime);
 
   for(size_t index = begin; index < end; ++index) {
     if (state[index] != Particles::ACTIVE)continue;
@@ -549,7 +549,7 @@ void Solver::Step()
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
-
+  
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
     
