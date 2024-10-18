@@ -42,6 +42,7 @@ public:
   pxr::GfVec3f GetPosition(uint32_t index) const;
   pxr::GfVec3f GetNormal(uint32_t index) const;
   pxr::GfVec3f GetColor(uint32_t index)const;
+  pxr::GfVec3f GetVelocity(uint32_t index)const;
   float GetWidth(uint32_t index) const;
 
   void SetPrevious(uint32_t index, const pxr::GfVec3f& position);

@@ -597,8 +597,12 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
     const pxr::GfVec3f position = 
       _closest[index].ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
 
-    const pxr::GfVec3f delta = position - predicted;
-    SetHit(index, delta.GetLength() < particles->radius[index] + Collision::TOLERANCE_MARGIN);
+    const pxr::GfVec3f normal = 
+      _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
+
+    const pxr::GfVec3f delta = predicted - position;
+    SetHit(index, (delta.GetLength() < particles->radius[index] + Collision::TOLERANCE_MARGIN) ||
+      (pxr::GfDot(delta.GetNormalized(), normal) < 0.f));
   }
     
   else
@@ -661,18 +665,24 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
 pxr::GfVec3f 
 MeshCollision::GetVelocity(Particles* particles, size_t index)
 {
-  
+  return pxr::GfVec3f(0.f);
   if(!_closest[index].IsValid())return pxr::GfVec3f(0.f);
   Mesh* mesh = (Mesh*)GetGeometry();
   const pxr::GfVec3f* previous = mesh->GetPreviousCPtr();
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
-  
-  const pxr::GfVec3f prev = mesh->GetPreviousMatrix().Transform(
-    _closest[index].ComputeValue<pxr::GfVec3f>(previous, &triangle->vertices[0], 3));
-  const pxr::GfVec3f pos = mesh->GetMatrix().Transform(
-    _closest[index].ComputeValue<pxr::GfVec3f>(positions, &triangle->vertices[0], 3));
-  return pos - prev;
+
+
+  pxr::GfVec3f deformation = mesh->GetMatrix().Transform(
+    _closest[index].ComputeValue<pxr::GfVec3f>(positions, &triangle->vertices[0], 3) -
+    _closest[index].ComputeValue<pxr::GfVec3f>(previous, &triangle->vertices[0], 3)
+  );
+
+  const pxr::GfVec3f torque = _collider->GetTorque();
+  const pxr::GfVec3f tangent =
+    (GetGradient(particles, index) ^ torque).GetNormalized();
+
+  return _collider->GetVelocity() + tangent * torque.GetLength() + deformation;
 }
 
 void 

@@ -915,12 +915,14 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
     if(m < 1e-9 || d > 0.f)continue;
     
-    damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
+    damp = pxr::GfDot(particles->velocity[index] * dt,  normal) * normal * _damp;
     _correction[elem] = -d * normal - damp;
 
+    /*
     pxr::GfVec3f relativeVelocity = (particles->velocity[index] - velocity) * dt;
     pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
     _correction[elem] +=  friction;
+    */  
   }
 }
 
@@ -933,8 +935,8 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
     const size_t index = _elements[elem];
     if(_collision->GetContactDepth(index) > 0.f) continue;
 
-    const pxr::GfVec3f baumgarte = _collision->GetContactNormal(index) * -_collision->GetContactInitDepth(index) * dt;
-    _correction[elem] = (-particles->velocity[index] + _collision->GetContactVelocity(index)) * 0.5f - baumgarte;
+    //const pxr::GfVec3f baumgarte = _collision->GetContactNormal(index) * -_collision->GetContactInitDepth(index) * dt;
+    _correction[elem] = (-particles->velocity[index] + _collision->GetContactVelocity(index)) * 0.5f;// - baumgarte;
   }
 }
 

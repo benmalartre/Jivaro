@@ -36,11 +36,11 @@ void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float d
 
   if(HaveWeights())
     for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-      velocity[index] += _gravity *_weights[index] * invMass[index] * dt;
+      velocity[index] += _gravity *_weights[index] /** invMass[index]*/ * dt;
     }
   else
     for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-      velocity[index] += _gravity * invMass[index] * dt;
+      velocity[index] += _gravity /** invMass[index]*/ * dt;
     }
 }
 

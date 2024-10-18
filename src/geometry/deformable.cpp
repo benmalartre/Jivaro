@@ -59,11 +59,12 @@ void Deformable::_ValidateNumPoints(size_t n)
 {
   if (n != _positions.size()) {
     _positions.resize(n);
+    _previous.resize(n);
     _points.resize(n);
+
     size_t pointIdx = 0;
     for(auto& point: _points)point.id = pointIdx++;
   }
-  if (n != _previous.size()) _previous.resize(n);
 
   if(_haveNormals && n != _normals.size())_normals.resize(n);
   if(_haveWidths && n != _widths.size())_widths.resize(n);
@@ -198,6 +199,12 @@ Deformable::GetColor(uint32_t index) const
     return _wirecolor;
 }
 
+pxr::GfVec3f
+Deformable::GetVelocity(uint32_t index) const
+{
+  return _positions[index] - _previous[index];
+}
+
 float
 Deformable::GetWidth(uint32_t index) const
 {
@@ -252,6 +259,7 @@ Deformable::AddPoint(const pxr::GfVec3f& pos, float width,
   _previous.push_back(pos);
   _positions.push_back(pos);
   _widths.push_back(width);
+  _points.push_back(_previous.size()-1);
 
   if(_haveNormals && normal)_normals.push_back(*normal);
   if(_haveColors && color)_colors.push_back(*color);
@@ -262,6 +270,7 @@ Deformable::RemovePoint(size_t index)
 {
   _positions.erase(_positions.begin() + index);
   _previous.erase(_previous.begin() + index);
+  _points.erase(_points.begin() + index);
   if(_haveWidths)_widths.erase(_widths.begin() + index);
   if(_haveNormals)_normals.erase(_normals.begin() + index);
   if(_haveColors)_colors.erase(_colors.begin() + index);
