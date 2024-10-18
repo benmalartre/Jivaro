@@ -20,6 +20,14 @@ JVR_NAMESPACE_OPEN_SCOPE
 const size_t Collision::PACKET_SIZE = 64;
 const float Collision::TOLERANCE_MARGIN = 0.01f;
 
+
+void Collision::Reset()
+{
+  _contacts[0].Clear();
+  _contacts[1].Clear();
+  _flip = false;
+}
+
 void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
 {
@@ -61,8 +69,34 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
   std::vector<Constraint*>& constraints, float ft)
 {
-  _flip = 1 - _flip;
+
   Init(particles->GetNumParticles());
+
+  if(_contacts[_flip].GetTotalNumUsed()) {
+    if(GetTypeId() == Collision::MESH) {
+      const pxr::GfVec3f* positions = ((Deformable*)_collider)->GetPositionsCPtr();
+      const pxr::GfVec3f* normals = ((Deformable*)_collider)->GetNormalsCPtr();
+
+      for(size_t p = 0; p < particles->GetNumParticles(); ++p) {
+        if(!_contacts[_flip].GetNumUsed(p)) continue;
+        
+        Contact* contact = _contacts[_flip].Get(p);
+        if(contact->IsTouching()) {
+          Triangle* triangle = ((Mesh*)_collider)->GetTriangle(contact->GetComponentIndex());
+          const pxr::GfVec3f position = contact->ComputePosition(positions, &triangle->vertices[0], 3, &_collider->GetMatrix());
+          const pxr::GfVec3f normal = contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_collider->GetMatrix());
+
+          const pxr::GfVec3f predicted = (position + normal * particles->radius[p]);
+          particles->predicted[p] = predicted;
+          particles->position[p] = predicted;
+        }  
+      }
+    }
+    // TODO implement other collision types
+  }
+  
+  _flip = 1 - _flip;
+
   _ResetContacts(particles);
   pxr::WorkParallelForN(particles->GetNumParticles(),
     std::bind(&Collision::_FindContacts, this, particles,
@@ -203,6 +237,16 @@ float Collision::GetContactDepth(size_t index, size_t c) const
 float Collision::GetContactInitDepth(size_t index, size_t c) const
 {
   return _contacts[_flip].Get(index, c)->GetInitDepth();
+}
+
+void Collision::SetContactTouching(size_t index, bool touching, size_t c)
+{
+  _contacts[_flip].Get(index, c)->SetTouching(touching);
+}
+
+bool Collision::IsContactTouching(size_t index, size_t c) const
+{
+  return _contacts[_flip].Get(index, c)->IsTouching();
 }
 
 
@@ -665,22 +709,21 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
 pxr::GfVec3f 
 MeshCollision::GetVelocity(Particles* particles, size_t index)
 {
-  return pxr::GfVec3f(0.f);
+
   if(!_closest[index].IsValid())return pxr::GfVec3f(0.f);
   Mesh* mesh = (Mesh*)GetGeometry();
   const pxr::GfVec3f* previous = mesh->GetPreviousCPtr();
   const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
   const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
 
-
-  pxr::GfVec3f deformation = mesh->GetMatrix().Transform(
-    _closest[index].ComputeValue<pxr::GfVec3f>(positions, &triangle->vertices[0], 3) -
-    _closest[index].ComputeValue<pxr::GfVec3f>(previous, &triangle->vertices[0], 3)
-  );
+  pxr::GfVec3f deformation = 
+    mesh->GetMatrix().Transform(
+      _closest[index].ComputeValue<pxr::GfVec3f>(positions, &triangle->vertices[0], 3)) -
+    mesh->GetPreviousMatrix().Transform(
+      _closest[index].ComputeValue<pxr::GfVec3f>(previous, &triangle->vertices[0], 3));
 
   const pxr::GfVec3f torque = _collider->GetTorque();
-  const pxr::GfVec3f tangent =
-    (GetGradient(particles, index) ^ torque).GetNormalized();
+  const pxr::GfVec3f tangent = (GetGradient(particles, index) ^ torque).GetNormalized();
 
   return _collider->GetVelocity() + tangent * torque.GetLength() + deformation;
 }

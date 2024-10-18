@@ -535,9 +535,13 @@ void Solver::Reset()
 
   _particles.SetAllState(Particles::ACTIVE);
 
-  for(auto& constraint: _constraints) {
+  for(auto& constraint: _constraints)
     constraint->Reset(&_particles);
-  }
+  
+
+  for(auto& collision: _collisions)
+    collision->Reset();
+    
   UpdateCurves();
 }
 

@@ -21,6 +21,8 @@ public:
   void Init(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth);
   void Update(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth);
 
+  void SetTouching(bool touching){_touching = touching;};
+  bool IsTouching(){return _touching;};
   const pxr::GfVec3f& GetNormal() const {return _normal;};
   const pxr::GfVec3f& GetVelocity() const {return _velocity;};
   float GetDepth() const {return _depth;};
@@ -35,6 +37,7 @@ private:
   float             _depth;    // current substep penetration depth
 
   bool              _active;
+  bool              _touching;
 };
 
 
@@ -50,6 +53,7 @@ public:
     return &data[index * m + second];
   };
 
+  void Clear();
   void Resize(size_t n, size_t m=PARTICLE_MAX_CONTACTS);
   void ResetUsed(size_t index);
   void ResetAllUsed();

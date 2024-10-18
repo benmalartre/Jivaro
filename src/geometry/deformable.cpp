@@ -281,6 +281,7 @@ Deformable::RemovePoints(size_t start, size_t end)
 {
   _positions.erase(_positions.begin() + start, _positions.begin() + end);
   _previous.erase(_previous.begin() + start, _previous.begin() + end);
+  _points.erase(_points.begin() + start, _points.begin() + end);
   if(_haveWidths)_widths.erase(_widths.begin() + start, _widths.begin() + end);
   if(_haveNormals)_normals.erase(_normals.begin() + start, _normals.begin() + end);
   if(_haveColors)_colors.erase(_colors.begin() + start, _colors.begin() + end);

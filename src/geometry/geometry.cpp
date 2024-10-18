@@ -71,8 +71,6 @@ Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
 void 
 Geometry::SetMatrix(const pxr::GfMatrix4d& matrix) 
 { 
-  std::cout << "SET MATRIX " << GetPrim().GetPath() << std::endl;
-  std::cout << matrix << std::endl;
   _prevMatrix = _matrix;
   _matrix = matrix; 
   _invMatrix = matrix.GetInverse();

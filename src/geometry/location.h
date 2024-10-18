@@ -50,12 +50,11 @@ public:
     return pxr::GfVec3d(_coords[0], _coords[1], _coords[2]);};
   inline const pxr::GfVec3d& GetPoint(){return _point;};
   inline double GetDistance() const { return _coords[3]; };
-  
 
   virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, 
     const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
 
-  virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* positions, 
+  virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* normals, 
     const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
 
   virtual pxr::GfVec3f ComputeVelocity(const pxr::GfVec3f* positions, const pxr::GfVec3f* previous, 
@@ -77,7 +76,7 @@ protected:
 template<typename T>
 T Location::ComputeValue(const T* values, const int* elements, size_t sz) const
 {
-  T result;;
+  T result(0);
   if (elements)
     for (size_t d = 0; d < sz; ++d)
       result += values[elements[d]] * _coords[d];

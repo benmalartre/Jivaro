@@ -73,6 +73,9 @@ public:
   virtual float GetContactInitDepth(size_t index, size_t c=0) const;
   virtual float GetMaxSeparationVelocity() const {return _maxSeparationVelocity;};
 
+  virtual void SetContactTouching(size_t index, bool touching, size_t c=0);
+  virtual bool IsContactTouching(size_t index, size_t c=0) const;
+
   Contacts& GetContacts(){return _contacts[_flip];};
   Contacts& GetPreviousContacts() {return _contacts[1 - _flip];};
   size_t GetNumContacts(size_t index){return _contacts[_flip].GetNumUsed(index);};
@@ -96,6 +99,8 @@ public:
 
   float GetFriction() const {return _friction;};
   float GetRestitution() const {return _restitution;};
+
+  void Reset();
 
 protected:
 
