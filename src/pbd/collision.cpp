@@ -18,13 +18,13 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const size_t Collision::PACKET_SIZE = 64;
-const float Collision::TOLERANCE_MARGIN = 0.01f;
+const float Collision::TOLERANCE_MARGIN = 0.001f;
 
 
 void Collision::Reset()
 {
-  _contacts[0].Clear();
-  _contacts[1].Clear();
+  _contacts[0].ResetAllUsed();
+  _contacts[1].ResetAllUsed();
   _flip = false;
 }
 
@@ -71,7 +71,8 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
 {
 
   Init(particles->GetNumParticles());
-
+  
+  /*
   if(_contacts[_flip].GetTotalNumUsed()) {
     if(GetTypeId() == Collision::MESH) {
       const pxr::GfVec3f* positions = ((Deformable*)_collider)->GetPositionsCPtr();
@@ -87,14 +88,16 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
           const pxr::GfVec3f normal = contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_collider->GetMatrix());
 
           const pxr::GfVec3f predicted = (position + normal * particles->radius[p]);
-          particles->predicted[p] = predicted;
+          //particles->velocity[p] += (predicted -  particles->position[p]);
           particles->position[p] = predicted;
+          particles->predicted[p] = predicted;
         }  
       }
     }
     // TODO implement other collision types
   }
-  
+  */
+ 
   _flip = 1 - _flip;
 
   _ResetContacts(particles);
@@ -216,7 +219,7 @@ size_t Collision::GetContactComponent(size_t index, size_t c) const
 
 pxr::GfVec3f Collision::GetContactPosition(size_t index, size_t c) const 
 {
-  return pxr::GfVec3f(_contacts[_flip].Get(index, c)->GetCoordinates());
+  return pxr::GfVec3f(_contacts[_flip].Get(index, c)->GetPoint());
 }
 
 pxr::GfVec3f Collision::GetContactNormal(size_t index,size_t c) const 

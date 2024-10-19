@@ -53,7 +53,6 @@ public:
     return &data[index * m + second];
   };
 
-  void Clear();
   void Resize(size_t n, size_t m=PARTICLE_MAX_CONTACTS);
   void ResetUsed(size_t index);
   void ResetAllUsed();

@@ -5,6 +5,7 @@
 
 #include "../geometry/component.h"
 #include "../geometry/triangle.h"
+#include "../geometry/edge.h"
 #include "../geometry/deformable.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -46,6 +47,8 @@ public:
   size_t GetTotalNumSegments()const;
 
   float GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex);
+  const Edge* GetEdge(size_t index) const {return &_edges[index];};
+  Edge* GetEdge(size_t index) {return &_edges[index];};
 
   void Set(
     const pxr::VtArray<pxr::GfVec3f>& positions, 
@@ -69,11 +72,14 @@ protected:
   void _Inject(const pxr::GfMatrix4d& parent,
     const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
 
+  void _ComputeEdges();
+
 private:
   size_t                              _PointIndex(size_t curveIdx, size_t cvIdx);
 
   // curves description
   pxr::VtArray<int>                   _cvCounts;
+  pxr::VtArray<Edge>                  _edges;
 
 };
 

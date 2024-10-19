@@ -75,7 +75,7 @@ public:
 
   bool IsActive() {return _active;};
   
-  virtual void Reset(Particles* particles){};
+  virtual void Reset(Particles* particles);
   virtual void SolvePosition(Particles* particles, float dt) = 0;
   virtual void SolveVelocity(Particles* particles, float dt){};
 

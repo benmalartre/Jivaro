@@ -112,6 +112,25 @@ Curve::Closest(const pxr::GfVec3f& point, Location* hit,
   return false;
 };
 
+void
+Curve::_ComputeEdges()
+{
+  _edges.clear();
+  _edges.reserve(_positions.size());
+
+  size_t offset = 0;
+  size_t index = 0;
+  for(auto& cvCount: _cvCounts) {
+    size_t start = offset;
+    for(size_t c = 1; c < cvCount; ++c) {
+      size_t end = offset + c;
+      _edges.push_back(Edge(index++, pxr::GfVec2i(start, end), 0.1f));
+      start = end;
+    }
+    offset += cvCount;
+  } 
+}
+
 size_t
 Curve::_PointIndex(size_t curveIdx, size_t cvIdx)
 {
@@ -132,6 +151,8 @@ Curve::SetTopology(
   _haveNormals = false;
   _haveColors = false;
   _cvCounts = cvCounts;
+
+  _ComputeEdges();
 }
 
 void 
@@ -145,6 +166,9 @@ Curve::SetTopology(
   _haveNormals = false;
   _haveColors = false;
   _cvCounts = cvCounts;
+
+  _ComputeEdges();
+
 }
 
 void 
@@ -155,7 +179,8 @@ Curve::RemoveCurve(size_t index)
     offset += _cvCounts[i];
   }
   num = _cvCounts[index];
-  
+  _ComputeEdges();
+
 }
 
 void 
@@ -163,6 +188,7 @@ Curve::RemoveAllCurves()
 {
   RemoveAllPoints();
   _cvCounts.clear();
+  _edges.clear();
 }
 
 void

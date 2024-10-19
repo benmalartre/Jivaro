@@ -11,8 +11,10 @@
 #include "../acceleration/bvh.h"
 #include "../acceleration/morton.h"
 #include "../geometry/component.h"
+#include "../geometry/edge.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
+#include "../geometry/curve.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -455,6 +457,15 @@ BVH::_ComputeHitPoint(Location* hit) const
       const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
       return hit->ComputePosition(positions, &triangle->vertices[0], 3, &geometry->GetMatrix());
+    }
+
+    case Geometry::CURVE:
+    {
+      const Curve* curve = (Curve*)geometry;
+      const Edge* edge = curve->GetEdge(hit->GetComponentIndex());
+      const pxr::GfVec3f* positions = curve->GetPositionsCPtr();
+
+      return hit->ComputePosition(positions, &edge->vertices[0], 2, &geometry->GetMatrix());
     }
   }
   return pxr::GfVec3f(0.f);

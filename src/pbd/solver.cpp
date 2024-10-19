@@ -556,7 +556,6 @@ void Solver::Step()
   
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
-    
     _timer->Start(1);
     // integrate particles
     pxr::WorkParallelForN(
