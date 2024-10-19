@@ -18,7 +18,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const size_t Collision::PACKET_SIZE = 64;
-const float Collision::TOLERANCE_MARGIN = 0.001f;
+const float Collision::TOLERANCE_MARGIN = 0.01f;
 
 
 void Collision::Reset()
@@ -72,7 +72,6 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
 
   Init(particles->GetNumParticles());
   
-  /*
   if(_contacts[_flip].GetTotalNumUsed()) {
     if(GetTypeId() == Collision::MESH) {
       const pxr::GfVec3f* positions = ((Deformable*)_collider)->GetPositionsCPtr();
@@ -88,7 +87,7 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
           const pxr::GfVec3f normal = contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_collider->GetMatrix());
 
           const pxr::GfVec3f predicted = (position + normal * particles->radius[p]);
-          //particles->velocity[p] += (predicted -  particles->position[p]);
+          particles->velocity[p] += (predicted -  particles->position[p]) * ft;
           particles->position[p] = predicted;
           particles->predicted[p] = predicted;
         }  
@@ -96,8 +95,8 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
     }
     // TODO implement other collision types
   }
-  */
- 
+  
+
   _flip = 1 - _flip;
 
   _ResetContacts(particles);
@@ -300,7 +299,7 @@ void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 void PlaneCollision::_StoreContactLocation(Particles* particles, int index, Contact* contact, float ft)
 {
   const pxr::GfVec3f predicted = particles->predicted[index];// + particles->velocity[index] * ft;
-  float d = pxr::GfDot(predicted - _position, _normal)  - particles->radius[index];
+  float d = pxr::GfDot(_normal, predicted - _position)  - particles->radius[index];
   pxr::GfVec3f intersection = predicted + _normal * d;
 
   contact->Init(_normal,GetVelocity(particles, index), d);
@@ -525,9 +524,7 @@ static pxr::GfVec3f _PointOnCapsuleSegment(const pxr::GfVec3f &p,
 void CapsuleCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   Capsule* capsule = (Capsule*)_collider;
-  const pxr::GfVec3f velocity = particles->velocity[index] * ft;
-  const float radius = particles->radius[index] + Collision::TOLERANCE_MARGIN;
-  pxr::GfVec3f predicted(particles->position[index] + velocity);
+  pxr::GfVec3f predicted(particles->position[index] + particles->velocity[index] * ft);
 
   const pxr::GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
@@ -542,19 +539,14 @@ void CapsuleCollision::_StoreContactLocation(Particles* particles, int index, Co
 
   Capsule* capsule = (Capsule*)_collider;
 
-   const pxr::GfVec3d scale = _collider->GetScale();
+  const pxr::GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
 
-  pxr::GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
-  pxr::GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
-  pxr::GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
-
-  pxr::GfVec3f world = _collider->GetMatrix().Transform(surface);
-  pxr::GfVec3f normal = (predicted - world);
+  pxr::GfVec3f normal = GetGradient(particles, index);
   float d = capsule->SignedDistance(predicted) - particles->radius[index] / scaleFactor;
 
-  contact->Init(normal.GetNormalized(), GetVelocity(particles, index), d);
-  contact->SetPoint(world);
+  contact->Init(normal, GetVelocity(particles, index), d);
+  contact->SetPoint(predicted + normal * d);
   contact->SetDistance(d);
 }
 
@@ -807,7 +799,7 @@ void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t e
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    //pxr::GfVec3f color = RandomColorByIndex(index);
+    pxr::GfVec3f color = RandomColorByIndex(index);
     if (_contacts[_flip].IsUsed(index))
       for (size_t c = 0; c < _contacts[_flip].GetNumUsed(index); ++c) {
         Contact* contact = _contacts[_flip].Get(index, c);
@@ -819,13 +811,13 @@ void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t e
           GetValue(particles, index, other)
          );
         
-        /*
+        
         if(index % 32 == 0) {
           particles->color[index] = color;
           particles->color[other] = color;
         }
         else particles->color[index] = pxr::GfVec3f(0.5f+RANDOM_LO_HI(-0.05f, 0.05f));
-        */
+        
       }
   } 
 }

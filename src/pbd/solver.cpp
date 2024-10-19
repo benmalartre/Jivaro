@@ -414,14 +414,14 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   float invDt = 1.f / _stepTime, vL;
   const float vMax = 25.f;
 
-  const double velDecay = std::exp(std::log(0.85f) * _stepTime);
+  const double velDecay = std::exp(std::log(0.9f) * _stepTime);
 
   for(size_t index = begin; index < end; ++index) {
     if (state[index] != Particles::ACTIVE)continue;
     
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
-    
+    /*
     velocity[index] *= velDecay;
 
     float damp = _bodies[_particles.body[index]]->GetDamp();
@@ -432,7 +432,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
     }
-
+    */
     // update position
     if (mass[index] == 0.f)
       position[index] = input[index];
@@ -556,6 +556,7 @@ void Solver::Step()
   
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
+
     _timer->Start(1);
     // integrate particles
     pxr::WorkParallelForN(
@@ -568,7 +569,8 @@ void Solver::Step()
     _SolveConstraints(_constraints);
 
     _timer->Next();
-    _UpdateContacts();
+     _UpdateContacts();
+
     // solve and apply contacts
     _timer->Next();
     _SolveConstraints(_contacts);

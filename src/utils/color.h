@@ -12,13 +12,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 // index to random color
 static inline pxr::GfVec3f RandomColorByIndex(unsigned index)
 {
-  int r = (index * 255 * 255) % 255;
-  int g = (index * 255)       % 255;
-  int b = (index )            % 255;
+  float r = ((index >> 16) & 0xff) / 255.0f;
+  float g = ((index >>  8) & 0xff) / 255.0f;
+  float b = ((index      ) & 0xff) / 255.0f;
 
-  float rC = 1.f / 255.f;
-
-  return pxr::GfVec3f(r * rC, g * rC, b * rC);
+  return pxr::GfVec3f(r, g, b);
 }
 
 template <typename T>
