@@ -553,8 +553,9 @@ Geometry::DirtyState
 Capsule::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 {
   size_t state = GetAttributeValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
-  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->width, time, &_radius);
-  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->length, time, &_height);
+  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->radius, time, &_radius);
+  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->height, time, &_height);
+  state |= GetAttributeValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
 
   return (Geometry::DirtyState)state;
 }

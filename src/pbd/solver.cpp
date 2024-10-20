@@ -36,6 +36,7 @@ static const char* TIME_NAMES[NUM_TIMES] = {
 Solver::Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
   : Xform(xform, world)
   , _scene(scene)
+  , _selfCollisions(nullptr)
   , _subSteps(5)
   , _sleepThreshold(0.001f)
   , _paused(true)
@@ -78,6 +79,7 @@ Solver::~Solver()
   for (auto& force : _forces)delete force;
   _scene->RemoveGeometry(_pointsId);
   _scene->RemoveGeometry(_curvesId);
+  delete _selfCollisions;
   delete _curves;
   delete _points;
   delete _timer;
@@ -362,8 +364,10 @@ void Solver::_PrepareContacts()
   _timer->Start(0);
   for (auto& contact: _contacts)
     delete contact;
+
   _contacts.clear();
 
+  _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
@@ -373,6 +377,7 @@ void Solver::_PrepareContacts()
   
 void Solver::_UpdateContacts()
 {
+  _selfCollisions->UpdateContacts(&_particles);
   for (auto& collision : _collisions)
     collision->UpdateContacts(&_particles);
 }
@@ -414,14 +419,14 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   float invDt = 1.f / _stepTime, vL;
   const float vMax = 25.f;
 
-  const double velDecay = std::exp(std::log(0.9f) * _stepTime);
+  const double velDecay = std::exp(std::log(0.95f) * _stepTime);
 
   for(size_t index = begin; index < end; ++index) {
     if (state[index] != Particles::ACTIVE)continue;
     
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
-    /*
+    
     velocity[index] *= velDecay;
 
     float damp = _bodies[_particles.body[index]]->GetDamp();
@@ -432,7 +437,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
     }
-    */
+    
     // update position
     if (mass[index] == 0.f)
       position[index] = input[index];
@@ -510,35 +515,37 @@ void Solver::Reset()
   _particles.ResetCounter(_constraints, 0);
 
   size_t nL = 5;
-  if(_bodies.size()) {
-    for (size_t b = 0; b < _bodies.size(); ++b) {
-      WeightBoundaries(_bodies[b]);
-      pxr::VtArray<int> locked(nL);
-      Deformable* deformable = (Deformable*)_bodies[b]->GetGeometry();
-      const pxr::GfVec3f* positions = deformable->GetPositionsCPtr();
-      size_t numPoints = deformable->GetNumPoints();
-      std::vector<std::pair<int, float>> pairs(numPoints);
-      
-      for(size_t i = 0; i < numPoints; ++i)
-        pairs[i] = std::make_pair(i, positions[i][1]);
-
-      std::sort(pairs.begin(), pairs.end(), [](auto& lhs, auto& rhs) {
-        return lhs.second > rhs.second;
-      });
-      for(size_t i = 0; i < nL; ++i)
-        locked[i]  = pairs[i].first;
-
-      //LockPoints(_bodies[b], locked);
-    }
+  for (size_t b = 0; b < _bodies.size(); ++b) {
+    //WeightBoundaries(_bodies[b]);
+    pxr::VtArray<int> locked(nL);
+    Deformable* deformable = (Deformable*)_bodies[b]->GetGeometry();
+    const pxr::GfVec3f* positions = deformable->GetPositionsCPtr();
+    size_t numPoints = deformable->GetNumPoints();
+    std::vector<std::pair<int, float>> pairs(numPoints);
     
+    for(size_t i = 0; i < numPoints; ++i)
+      pairs[i] = std::make_pair(i, positions[i][1]);
+
+    std::sort(pairs.begin(), pairs.end(), [](auto& lhs, auto& rhs) {
+      return lhs.second > rhs.second;
+    });
+    for(size_t i = 0; i < nL; ++i)
+      locked[i]  = pairs[i].first;
+
+    //LockPoints(_bodies[b], locked);
   }
 
   _particles.SetAllState(Particles::ACTIVE);
+
+  if(_selfCollisions)delete _selfCollisions;
+  _selfCollisions = new SelfCollision(&_particles, 
+    GetPrim().GetPath().AppendProperty(pxr::TfToken("selfCollide")), 0.5f, 0.5f);
 
   for(auto& constraint: _constraints)
     constraint->Reset(&_particles);
   
 
+  _selfCollisions->Reset();
   for(auto& collision: _collisions)
     collision->Reset();
     
@@ -556,6 +563,8 @@ void Solver::Step()
   
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
+
+    _SolveVelocities(_contacts);
 
     _timer->Start(1);
     // integrate particles
@@ -582,8 +591,6 @@ void Solver::Step()
       std::bind(&Solver::_UpdateParticles, this,
         std::placeholders::_1, std::placeholders::_2), packetSize);
     _timer->Stop();
-
-    _SolveVelocities(_contacts);
 
   }
   
@@ -614,6 +621,8 @@ void Solver::UpdateInputs(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
+  _selfCollisions->Update(GetPrim(), time);
+  
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
@@ -658,12 +667,12 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   pxr::UsdPbdSolver solver(prim);
 
   _frameTime = 1.f / static_cast<float>(Time::Get()->GetFPS());
-  solver.GetPbdSubStepsAttr().Get(&_subSteps, time);
+  solver.GetSubStepsAttr().Get(&_subSteps, time);
   _stepTime = _frameTime / static_cast<float>(_subSteps);
-  solver.GetPbdSleepThresholdAttr().Get(&_sleepThreshold, time);
+  solver.GetSleepThresholdAttr().Get(&_sleepThreshold, time);
 
-  solver.GetPbdShowPointsAttr().Get(&_showPoints, time);
-  solver.GetPbdShowConstraintsAttr().Get(&_showConstraints, time);
+  solver.GetShowPointsAttr().Get(&_showPoints, time);
+  solver.GetShowConstraintsAttr().Get(&_showConstraints, time);
 
   if(_gravity)_gravity->Update(time);
   if (_damp)_damp->Update(time);

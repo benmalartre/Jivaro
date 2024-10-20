@@ -45,8 +45,7 @@ public:
     , _id(path)
     , _collider(collider)
     , _restitution(restitution)
-    , _friction(friction)
-    , _flip(false) {};
+    , _friction(friction){};
 
   /*
   void AddBody(Particles* particles, Body* body);
@@ -76,10 +75,9 @@ public:
   virtual void SetContactTouching(size_t index, bool touching, size_t c=0);
   virtual bool IsContactTouching(size_t index, size_t c=0) const;
 
-  Contacts& GetContacts(){return _contacts[_flip];};
-  Contacts& GetPreviousContacts() {return _contacts[1 - _flip];};
-  size_t GetNumContacts(size_t index){return _contacts[_flip].GetNumUsed(index);};
-  size_t GetTotalNumContacts(){return _contacts[_flip].GetTotalNumUsed();};
+  Contacts& GetContacts(){return _contacts;};
+  size_t GetNumContacts(size_t index){return _contacts.GetNumUsed(index);};
+  size_t GetTotalNumContacts(){return _contacts.GetTotalNumUsed();};
   const std::vector<int>& GetC2P(){return _c2p;};
 
   virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
@@ -120,8 +118,9 @@ protected:
   pxr::VtArray<int>                 _hits;
   std::vector<int>                  _c2p;
   size_t                            _numParticles;
-  Contacts                          _contacts[2];
-  bool                              _flip;   
+  Contacts                          _contacts;
+
+  bool                              _enabled;
   float                             _restitution;
   float                             _friction;
   float                             _maxSeparationVelocity;
@@ -286,6 +285,7 @@ public:
     std::vector<Constraint*>& constraints, float ft)override;
 
 protected:
+  void _UpdateParameters( const pxr::UsdPrim& prim, double time) override;
   void _ComputeNeighbors(const std::vector<Body*>& bodies);
   void _UpdateAccelerationStructure();
   void _ResetContacts(Particles* particles) override;

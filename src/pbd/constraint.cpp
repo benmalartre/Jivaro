@@ -168,10 +168,10 @@ void AttachConstraint::SolvePosition(Particles* particles, float dt)
     if(length < 1e-9)continue;
 
     const pxr::GfVec3f normal = gradient.GetNormalized();
-    const pxr::GfVec3f correction = -length / (length * length + alpha) * gradient;
+    const pxr::GfVec3f correction = -length / (particles->invMass[index] + alpha) * gradient;
     const pxr::GfVec3f damp = pxr::GfDot(velocity[index] * dt * dt,  normal) * normal * _damp;
 
-    _correction[index++] += correction - damp;
+    _correction[index++] += particles->invMass[index] * correction - damp;
   }
 }
 
@@ -870,11 +870,10 @@ void CollisionConstraint::ApplyPosition(Particles* particles)
 {
   size_t corrIdx = 0;
   const pxr::GfVec2f* counter = &particles->counter[0];
-  for(const auto& elem: _elements) 
+  for(const auto& elem: _elements) {
+    //particles->position[elem] += _correction[corrIdx] / counter[elem][0];
     particles->predicted[elem] += _correction[corrIdx++] / counter[elem][1];
- 
-    
-
+  }
 }
 
 // this one has to happen serialy
@@ -913,7 +912,7 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
   const size_t numElements = _elements.size();
   pxr::GfVec3f damp, position, gradient, normal, correction;
 
-  _compliance = 0.0000001f;
+  _compliance = 0.00001f;
   const float alpha = _compliance / (dt * dt);
 
   for (size_t elem = 0; elem < numElements; ++elem) {
@@ -925,18 +924,20 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
   
     float d = _collision->GetContactDepth(index);
     if(particles->mass[index] < 1e-9 || d > 0.f) continue;
+
+    particles->color[index] = pxr::GfVec3f(0.75, 0.75, 0.5);
     
-    /*
     if(_collision->GetMaxSeparationVelocity() > 0.f)
       d += pxr::GfMax(_collision->GetContactInitDepth(index) - 
-      _collision->GetMaxSeparationVelocity() * dt, 0.f);*/
+      _collision->GetMaxSeparationVelocity() * dt, 0.f);
+    
 
+    const float lagrange = -d / (particles->invMass[index] + alpha);
     damp = pxr::GfDot(particles->velocity[index] * dt * dt,  normal) * normal * _damp;
-    _correction[elem] = -d * normal;// - damp;
+    _correction[elem] = lagrange * particles->invMass[index] * normal - damp;
 
-    pxr::GfVec3f relativeVelocity = (particles->velocity[index] - velocity) * dt;
-    pxr::GfVec3f friction = _ComputeFriction(_correction[elem], relativeVelocity);
-    //_correction[elem] +=  friction;
+    pxr::GfVec3f friction = _ComputeFriction(_correction[elem], particles->velocity[index] - velocity);
+    _correction[elem] +=  friction;
 
     particles->color[index] = pxr::GfVec3f(
       RESCALE(_collision->GetContactInitDepth(index), 0, particles->radius[index], 0, 1),
@@ -957,7 +958,13 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
     _collision->SetContactTouching(index, false); 
     if(_collision->GetContactDepth(index) > 0.f) continue;
 
-    _correction[elem] = -particles->velocity[index] + _collision->GetContactNormal(index) * _collision->GetContactInitDepth(index);
+    const pxr::GfVec3f normal = _collision->GetContactNormal(index);
+    const pxr::GfVec3f relV = _collision->GetContactVelocity(index);
+    const pxr::GfVec3f nV = normal * pxr::GfDot(normal, relV) ;
+    const pxr::GfVec3f tV = relV - normal * pxr::GfDot(normal, nV);
+
+    _correction[elem] = -particles->velocity[index] * 0.5f + _collision->GetContactVelocity(index) * 0.5f
+      + _collision->GetContactNormal(index) * _collision->GetContactInitDepth(index);
     _collision->SetContactTouching(index, true);
   }
 }

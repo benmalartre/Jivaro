@@ -154,13 +154,6 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   
   float restitution, friction;
 
-  bool createSelfCollision = false;
-  if (createSelfCollision) {
-    pxr::SdfPath selfCollideId = _solverId.AppendChild(pxr::TfToken("SelfCollision"));
-    Collision* selfCollide = new SelfCollision(_solver->GetParticles(), selfCollideId, 0.5f, 0.5f);
-    _solver->AddElement(selfCollide, NULL, selfCollideId);
-  }
-    
   bool createCollisions = true;
   if(createCollisions) {
 

@@ -23,9 +23,7 @@ const float Collision::TOLERANCE_MARGIN = 0.01f;
 
 void Collision::Reset()
 {
-  _contacts[0].ResetAllUsed();
-  _contacts[1].ResetAllUsed();
-  _flip = false;
+  _contacts.ResetAllUsed();
 }
 
 void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
@@ -35,8 +33,8 @@ void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& posi
   const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   const float r = 0.05f;
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
-    if(_contacts[_flip].IsUsed(index)) {
-      Contact* contact = _contacts[_flip].Get(index);
+    if(_contacts.IsUsed(index)) {
+      Contact* contact = _contacts.Get(index);
       positions.push_back(pxr::GfVec3f(contact->GetCoordinates()));
       colors.push_back(color);
       radius.push_back(r);
@@ -58,8 +56,8 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
-    if(_contacts[_flip].IsUsed(index))
-      _contacts[_flip].Get(index)->Update(
+    if(_contacts.IsUsed(index))
+      _contacts.Get(index)->Update(
         GetGradient(particles, index),
         GetVelocity(particles, index),
         GetValue(particles, index)
@@ -72,33 +70,30 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
 
   Init(particles->GetNumParticles());
   
-  if(_contacts[_flip].GetTotalNumUsed()) {
+  /*
+  if(_contacts.GetTotalNumUsed()) {
     if(GetTypeId() == Collision::MESH) {
       const pxr::GfVec3f* positions = ((Deformable*)_collider)->GetPositionsCPtr();
       const pxr::GfVec3f* normals = ((Deformable*)_collider)->GetNormalsCPtr();
 
       for(size_t p = 0; p < particles->GetNumParticles(); ++p) {
-        if(!_contacts[_flip].GetNumUsed(p)) continue;
+        if(!_contacts.GetNumUsed(p)) continue;
         
-        Contact* contact = _contacts[_flip].Get(p);
+        Contact* contact = _contacts.Get(p);
         if(contact->IsTouching()) {
           Triangle* triangle = ((Mesh*)_collider)->GetTriangle(contact->GetComponentIndex());
           const pxr::GfVec3f position = contact->ComputePosition(positions, &triangle->vertices[0], 3, &_collider->GetMatrix());
           const pxr::GfVec3f normal = contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_collider->GetMatrix());
 
-          const pxr::GfVec3f predicted = (position + normal * particles->radius[p]);
-          particles->velocity[p] += (predicted -  particles->position[p]) * ft;
-          particles->position[p] = predicted;
-          particles->predicted[p] = predicted;
+          const pxr::GfVec3f correction = (position + normal * contact->GetDepth()) - particles->predicted[p];
+          particles->position[p] += correction;
         }  
       }
     }
     // TODO implement other collision types
   }
-  
-
-  _flip = 1 - _flip;
-
+  */
+ 
   _ResetContacts(particles);
   pxr::WorkParallelForN(particles->GetNumParticles(),
     std::bind(&Collision::_FindContacts, this, particles,
@@ -110,7 +105,7 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
 {
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
     const size_t index = elements[elemIdx];
-    _StoreContactLocation(particles, index, _contacts[_flip].Use(index), ft);
+    _StoreContactLocation(particles, index, _contacts.Use(index), ft);
     
   }
 }
@@ -125,8 +120,8 @@ void Collision::_ResetContacts(Particles* particles)
   _c2p.clear();
   _c2p.reserve(numParticles);
 
-  _contacts[_flip].Resize(numParticles, 1);
-  _contacts[_flip].ResetAllUsed();
+  _contacts.Resize(numParticles, 1);
+  _contacts.ResetAllUsed();
 
 }
 
@@ -213,42 +208,42 @@ pxr::GfVec3f Collision::GetVelocity(Particles* particles, size_t index)
 
 size_t Collision::GetContactComponent(size_t index, size_t c) const
 {
-  return _contacts[_flip].Get(index, c)->GetComponentIndex();
+  return _contacts.Get(index, c)->GetComponentIndex();
 }
 
 pxr::GfVec3f Collision::GetContactPosition(size_t index, size_t c) const 
 {
-  return pxr::GfVec3f(_contacts[_flip].Get(index, c)->GetPoint());
+  return pxr::GfVec3f(_contacts.Get(index, c)->GetPoint());
 }
 
 pxr::GfVec3f Collision::GetContactNormal(size_t index,size_t c) const 
 {
-  return _contacts[_flip].Get(index, c)->GetNormal();
+  return _contacts.Get(index, c)->GetNormal();
 }
 
 pxr::GfVec3f Collision::GetContactVelocity(size_t index, size_t c) const 
 {
-  return _contacts[_flip].Get(index, c)->GetVelocity();
+  return _contacts.Get(index, c)->GetVelocity();
 }
 
 float Collision::GetContactDepth(size_t index, size_t c) const
 {
-  return _contacts[_flip].Get(index, c)->GetDepth();
+  return _contacts.Get(index, c)->GetDepth();
 }
 
 float Collision::GetContactInitDepth(size_t index, size_t c) const
 {
-  return _contacts[_flip].Get(index, c)->GetInitDepth();
+  return _contacts.Get(index, c)->GetInitDepth();
 }
 
 void Collision::SetContactTouching(size_t index, bool touching, size_t c)
 {
-  _contacts[_flip].Get(index, c)->SetTouching(touching);
+  _contacts.Get(index, c)->SetTouching(touching);
 }
 
 bool Collision::IsContactTouching(size_t index, size_t c) const
 {
-  return _contacts[_flip].Get(index, c)->IsTouching();
+  return _contacts.Get(index, c)->IsTouching();
 }
 
 
@@ -720,7 +715,7 @@ MeshCollision::GetVelocity(Particles* particles, size_t index)
   const pxr::GfVec3f torque = _collider->GetTorque();
   const pxr::GfVec3f tangent = (GetGradient(particles, index) ^ torque).GetNormalized();
 
-  return _collider->GetVelocity() + tangent * torque.GetLength() + deformation;
+  return _collider->GetVelocity() + tangent * torque.GetLength() + deformation / Geometry::FrameDuration;
 }
 
 void 
@@ -763,6 +758,15 @@ SelfCollision::~SelfCollision()
   
 }
 
+void SelfCollision::_UpdateParameters( const pxr::UsdPrim& prim, double time)
+{
+  pxr::UsdPbdCollisionAPI api(prim);
+  api.GetCollisionEnabledAttr().Get(&_enabled, time);
+  api.GetRestitutionAttr().Get(&_restitution, time);
+  api.GetFrictionAttr().Get(&_friction, time);
+  api.GetMaxSeparationVelocityAttr().Get(&_maxSeparationVelocity, time);
+}
+
 void SelfCollision::Update(const pxr::UsdPrim& prim, double time)
 {
   _UpdateAccelerationStructure();
@@ -800,9 +804,9 @@ void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t e
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     pxr::GfVec3f color = RandomColorByIndex(index);
-    if (_contacts[_flip].IsUsed(index))
-      for (size_t c = 0; c < _contacts[_flip].GetNumUsed(index); ++c) {
-        Contact* contact = _contacts[_flip].Get(index, c);
+    if (_contacts.IsUsed(index))
+      for (size_t c = 0; c < _contacts.GetNumUsed(index); ++c) {
+        Contact* contact = _contacts.Get(index, c);
         size_t other = contact->GetComponentIndex();
 
         contact->Update(
@@ -832,8 +836,8 @@ void SelfCollision::_ResetContacts(Particles* particles)
   _c2p.clear();
   _c2p.reserve(numParticles * PARTICLE_MAX_CONTACTS);
 
-  _contacts[_flip].Resize(numParticles, PARTICLE_MAX_CONTACTS);
-  _contacts[_flip].ResetAllUsed();
+  _contacts.Resize(numParticles, PARTICLE_MAX_CONTACTS);
+  _contacts.ResetAllUsed();
 
 }
 
@@ -859,7 +863,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
     pxr::GfVec3f ip(particles->position[index] + particles->velocity[index] * ft);
     pxr::GfVec3f cp(particles->position[closest] + particles->velocity[closest] * ft);
     if((ip - cp).GetLength() < (particles->radius[index] + particles->radius[closest] + TOLERANCE_MARGIN)) {
-      Contact* contact = _contacts[_flip].Use(index);
+      Contact* contact = _contacts.Use(index);
       _StoreContactLocation(particles, index, closest, contact, ft);
       contact->SetComponentIndex(closest);
       numCollide++;
@@ -890,7 +894,7 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
   CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
 
-  size_t numContacts = _contacts[_flip].GetTotalNumUsed();
+  size_t numContacts = _contacts.GetTotalNumUsed();
 
   pxr::VtArray<int> elements;
  
@@ -899,7 +903,7 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
   Mask::Iterator iterator(this, 0, numParticles);
   size_t index = iterator.Begin();
   for (; index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    size_t numUsed = _contacts[_flip].GetNumUsed(index);
+    size_t numUsed = _contacts.GetNumUsed(index);
     if(numUsed) {
       elements.push_back(index);      
     } 

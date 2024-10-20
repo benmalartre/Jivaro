@@ -25,14 +25,11 @@ T* _ResizeArray(T* oldData, size_t oldSize, size_t newSize)
 
 Particles::~Particles()
 {
-  std::cout << "delete particles" << std::endl;
   _EnsureDataSize(0);
-  std::cout << "particles deleted" << std::endl;
 }
 
 void Particles::_EnsureDataSize(size_t desired)
 {
-  std::cout << "ensure data size " << desired << " (" << num << ")" << std::endl;
   size_t size = std::floor(num / BLOCK_SIZE) * BLOCK_SIZE;
   if(desired && size > desired)return;
 
@@ -162,10 +159,11 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   bodyApi.GetMassAttr().Get(&_mass, time);
   bodyApi.GetVelocityAttr().Get(&_velocity, time);
   bodyApi.GetDampAttr().Get(&_damp, time);
+  bodyApi.GetSelfCollisionEnabledAttr().Get(&_selfCollisionEnabled, time);
+  bodyApi.GetSelfCollisionRadiusAttr().Get(&_selfCollisionRadius, time);
+  bodyApi.GetSelfCollisionFrictionAttr().Get(&_selfCollisionFriction, time);
+  bodyApi.GetSelfCollisionRestitutionAttr().Get(&_selfCollisionRestitution, time);
 
-  pxr::UsdPbdCollisionAPI collideApi(prim);
-  collideApi.GetFrictionAttr().Get(&_friction, time);
-  collideApi.GetRestitutionAttr().Get(&_restitution, time);
 
   bool active;
   float stiffness, damp;

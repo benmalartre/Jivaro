@@ -141,6 +141,7 @@ private:
   std::vector<Constraint*>            _constraints;
   std::vector<Constraint*>            _contacts;
   std::vector<Collision*>             _collisions;
+  Collision*                          _selfCollisions;
   std::vector<Body*>                  _bodies;
   std::vector<Force*>                 _forces;
   GravityForce*                       _gravity;

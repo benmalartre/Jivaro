@@ -332,10 +332,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
         for (size_t t = 0; t < numTrianglePairs; ++t) {
           size_t leafIdx = AddCell(&trianglePairs[t],
             trianglePairs[t].GetBoundingBox(positions, matrix));
-    
           uint64_t code = _ComputeCode(_GetCell(leafIdx)->GetMidpoint());
-          uint64_t minimum = _ComputeCode(_GetCell(leafIdx)->GetMin());
-          uint64_t maximum = _ComputeCode(_GetCell(leafIdx)->GetMax());
           _mortons.push_back({ code, leafIdx});
         }
         break;
@@ -361,9 +358,48 @@ void
 BVH::Update()
 {
   if(_accelerated) {
+    
     pxr::GfRange3f newRange = _RecurseUpdateCells(_root);
     SetMin(newRange.GetMin());
     SetMax(newRange.GetMax());
+    
+    /*
+   _mortons.clear();
+
+    // first update morton codes
+    for (size_t g = 0; g < GetNumGeometries(); ++g) {
+      size_t start = GetGeometryCellsStartIndex(g);
+      size_t end = GetGeometryCellsStartIndex(g);
+
+      Geometry* geometry = GetGeometry(g);
+      switch(geometry->GetType()) {
+        case Geometry::MESH:
+        {
+          Mesh* mesh = (Mesh*)geometry;
+
+          pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
+          size_t numTrianglePairs = trianglePairs.size();
+
+          for(size_t i = 0; i < numTrianglePairs; ++i) {
+            uint64_t code = _ComputeCode(_GetCell(start + i)->GetMidpoint());
+            _mortons.push_back({ code, start + i});
+          }
+          break;
+        }
+      }
+    }
+
+    size_t numLeaves = _cells.size();
+    Morton morton = SortCells();
+    size_t numBranches = _cells.size() - numLeaves;
+
+    _root = _GetCell(morton.data);
+    _root->SetType(BVH::Cell::ROOT);
+    
+    _cellToMorton.resize(_cells.size(), Intersector::INVALID_INDEX);
+    for(size_t m = 0; m < _mortons.size(); ++m)
+      _cellToMorton[_mortons[m].data] = m;
+    */
   }
 }
 
