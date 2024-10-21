@@ -535,7 +535,7 @@ bool ViewportUI::Draw()
       0xFFFFFFFF, 
       msg.c_str());
 
-    msg = "Fps : "+ std::to_string(ImGui::GetIO().Framerate);
+    msg = "FPS(frame per seconds) : "+ std::to_string(ImGui::GetIO().Framerate);
     drawList->AddText(
       ImVec2((min[0] + size[0]) - 128.f, (min[1] + size[1]) - 20),
       0xFFFFFFFF,

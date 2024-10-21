@@ -18,7 +18,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const size_t Collision::PACKET_SIZE = 64;
-const float Collision::TOLERANCE_MARGIN = 0.01f;
+const float Collision::TOLERANCE_MARGIN = 0.1f;
 
 
 void Collision::Reset()
@@ -26,7 +26,7 @@ void Collision::Reset()
   _contacts.ResetAllUsed();
 }
 
-void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
+void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points, 
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
 {
   Mask::Iterator iterator(this, 0, particles->GetNumParticles());
@@ -35,10 +35,37 @@ void Collision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& posi
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
     if(_contacts.IsUsed(index)) {
       Contact* contact = _contacts.Get(index);
-      positions.push_back(pxr::GfVec3f(contact->GetCoordinates()));
+      points.push_back(pxr::GfVec3f(contact->GetPoint()));
       colors.push_back(color);
       radius.push_back(r);
     }
+}
+
+void Collision::GetNormals(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points, 
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts)
+{
+  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
+  const pxr::GfVec3f color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  const float r = 0.05f;
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
+    if(_contacts.IsUsed(index)) {
+      Contact* contact = _contacts.Get(index);
+      if(contact) {
+        const pxr::GfVec3f position = pxr::GfVec3f(contact->GetPoint());
+        points.push_back(position);
+        points.push_back(position + pxr::GfVec3f(contact->GetNormal()));
+        colors.push_back(color);
+        colors.push_back(color);
+        radius.push_back(r);
+        radius.push_back(r);
+        counts.push_back(2);
+      }
+    }
+}
+
+void Collision::GetVelocities(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points, 
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts)
+{
 }
 
 // 
@@ -84,9 +111,9 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
           Triangle* triangle = ((Mesh*)_collider)->GetTriangle(contact->GetComponentIndex());
           const pxr::GfVec3f position = contact->ComputePosition(positions, &triangle->vertices[0], 3, &_collider->GetMatrix());
           const pxr::GfVec3f normal = contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_collider->GetMatrix());
-
-          const pxr::GfVec3f correction = (position + normal * contact->GetDepth()) - particles->predicted[p];
-          particles->position[p] += correction;
+          const pxr::GfVec3f desired = (particles->position[p]  + (position + normal * contact->GetDepth())) * 0.5f;
+          particles->position[p] = desired;
+          particles->predicted[p] = desired;
         }  
       }
     }
@@ -696,30 +723,22 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
   return _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 }
 
+
 pxr::GfVec3f 
 MeshCollision::GetVelocity(Particles* particles, size_t index)
 {
-
   if(!_closest[index].IsValid())return pxr::GfVec3f(0.f);
   Mesh* mesh = (Mesh*)GetGeometry();
-  const pxr::GfVec3f* previous = mesh->GetPreviousCPtr();
-  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-  const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
-
-  pxr::GfVec3f deformation = 
-    mesh->GetMatrix().Transform(
-      _closest[index].ComputeValue<pxr::GfVec3f>(positions, &triangle->vertices[0], 3)) -
-    mesh->GetPreviousMatrix().Transform(
-      _closest[index].ComputeValue<pxr::GfVec3f>(previous, &triangle->vertices[0], 3));
 
   const pxr::GfVec3f torque = _collider->GetTorque();
   const pxr::GfVec3f tangent = (GetGradient(particles, index) ^ torque).GetNormalized();
 
-  return _collider->GetVelocity() + tangent * torque.GetLength() + deformation / Geometry::FrameDuration;
+  return _collider->GetVelocity() + tangent * torque.GetLength() +
+    mesh->GetTriangleVelocity(_closest[index].GetComponentIndex());
 }
 
 void 
-MeshCollision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions, 
+MeshCollision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points, 
   pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
 {
   Mask::Iterator iterator(this, 0, particles->GetNumParticles());
@@ -727,12 +746,62 @@ MeshCollision::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& posit
   const float r = 0.05f;
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
     if(_closest[index].IsValid()) {
-      positions.push_back(pxr::GfVec3f(_closest[index].GetPoint()));
+      points.push_back(pxr::GfVec3f(_closest[index].GetPoint()));
       colors.push_back(color);
       radius.push_back(r);
     }
 }
 
+void 
+MeshCollision::GetNormals(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts)
+{
+  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
+  const pxr::GfVec3f red(1.f, 0.f, 0.f);
+  const float r = 0.05f;
+  Mesh* mesh = (Mesh*)_collider;
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
+    if(_closest[index].IsValid()) {
+      Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
+      const pxr::GfVec3f position =
+        _closest[index].ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &mesh->GetMatrix());
+      const pxr::GfVec3f normal =
+        _closest[index].ComputeNormal(mesh->GetNormalsCPtr(), &triangle->vertices[0], 3, &mesh->GetMatrix());
+
+      points.push_back(position);
+      points.push_back(position + normal);
+      colors.push_back(red);
+      colors.push_back(red);
+      radius.push_back(r);
+      radius.push_back(r);
+      counts.push_back(2);
+    }
+}
+
+void 
+MeshCollision::GetVelocities(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts)
+{
+  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
+  const pxr::GfVec3f green(0.f, 1.f, 0.f);
+  const float r = 0.05f;
+  Mesh* mesh = (Mesh*)_collider;
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
+    if(_closest[index].IsValid()) {
+      Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
+      const pxr::GfVec3f velocity = mesh->GetMatrix().TransformDir(triangle->GetVelocity(mesh->GetPositionsCPtr(), mesh->GetPreviousCPtr()));
+      const pxr::GfVec3f position =
+        _closest[index].ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &mesh->GetMatrix());
+
+      points.push_back(position);
+      points.push_back(position + velocity);
+      colors.push_back(green);
+      colors.push_back(green);
+      radius.push_back(r);
+      radius.push_back(r);
+      counts.push_back(2);
+    }
+}
 
 //----------------------------------------------------------------------------------------
 // Self Collision

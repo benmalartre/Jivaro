@@ -78,6 +78,7 @@ struct Triangle : public Component{
 
   pxr::GfVec3f GetCenter(const pxr::GfVec3f* points) const;
   pxr::GfVec3f GetNormal(const pxr::GfVec3f* points) const;
+  pxr::GfVec3f GetVelocity(const pxr::GfVec3f* points, const pxr::GfVec3f* previous) const;
   float GetArea(const pxr::GfVec3f* points) const;
   bool PlaneBoxTest(const pxr::GfVec3f& normal, const pxr::GfVec3f& point, 
     const pxr::GfVec3f& box) const;

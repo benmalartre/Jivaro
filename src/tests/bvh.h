@@ -13,9 +13,13 @@ class BVH;
 class Instancer;
 class Geometry;
 
-
 class TestBVH : public Execution {
 public:
+  enum Method{
+    RAYCAST,
+    CLOSEST
+  };
+  
   friend class Scene;
   TestBVH() : Execution(){};
   void InitExec(pxr::UsdStageRefPtr& stage) override;
@@ -41,6 +45,8 @@ private:
   pxr::SdfPath              _bvhId;
   std::vector<Geometry*>    _meshes;
   std::vector<pxr::SdfPath> _meshesId;
+
+  bool                      _method;
 
 };
 

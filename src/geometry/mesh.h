@@ -102,6 +102,7 @@ public:
   pxr::GfVec3f GetTriangleNormal(const Triangle* T) const;                          // triangle normal
   pxr::GfVec3f GetTriangleVertexNormal(const Triangle* T, uint32_t index) const;    // vertex normal
   pxr::GfVec3f GetTriangleNormal(uint32_t triangleID) const;                        // triangle normal
+  pxr::GfVec3f GetTriangleVelocity(uint32_t triangleId) const;                      // triangle velocity
 
   const HalfEdge* GetEdge(size_t index) const {return _halfEdges.GetEdge(index);};
   HalfEdge* GetEdge(size_t index){return _halfEdges.GetEdge(index);};

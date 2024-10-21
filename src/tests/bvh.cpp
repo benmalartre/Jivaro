@@ -81,35 +81,67 @@ void TestBVH::_UpdateRays()
 void TestBVH::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
   pxr::GfVec3f* results, bool* hits)
 {
-  for (size_t index = begin; index < end; ++index) {
-    pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
-    double minDistance = DBL_MAX;
-    Location hit;
-    if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
-      const Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
-      const pxr::GfMatrix4d& matrix = collided->GetMatrix();
-      switch (collided->GetType()) {
-      case Geometry::MESH:
-      {
-        Mesh* mesh = (Mesh*)collided;
-        Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
+  if(_method == RAYCAST) {
+    for (size_t index = begin; index < end; ++index) {
+      pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
+      double minDistance = DBL_MAX;
+      Location hit;
+      if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
+        const Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
+        const pxr::GfMatrix4d& matrix = collided->GetMatrix();
+        switch (collided->GetType()) {
+        case Geometry::MESH:
+        {
+          Mesh* mesh = (Mesh*)collided;
+          Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
 
-        results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &matrix);
-        break;
+          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &matrix);
+          break;
+        }
+        case Geometry::CURVE:
+        {
+          //Curve* curve = (Curve*)collided;
+          //Edge* edge = curve->GetEdge(hit.GetElementIndex());
+          //results[index] = hit.GetPosition(collided->GetPositionsCPtr(), &edge->vertices[0], 2, curve->GetMatrix());
+          break;
+        }
+        default:
+          continue;
+        }
+        hits[index] = true;
+      } else {
+        hits[index] = false;
       }
-      case Geometry::CURVE:
-      {
-        //Curve* curve = (Curve*)collided;
-        //Edge* edge = curve->GetEdge(hit.GetElementIndex());
-        //results[index] = hit.GetPosition(collided->GetPositionsCPtr(), &edge->vertices[0], 2, curve->GetMatrix());
-        break;
+    }
+  } else if(_method == CLOSEST) {
+    for (size_t index = begin; index < end; ++index) {
+      Location hit;
+      if (_bvh.Closest(positions[index*2], &hit, DBL_MAX)) {
+        const Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
+        const pxr::GfMatrix4d& matrix = collided->GetMatrix();
+        switch (collided->GetType()) {
+        case Geometry::MESH:
+        {
+          Mesh* mesh = (Mesh*)collided;
+          Triangle* triangle = mesh->GetTriangle(hit.GetComponentIndex());
+
+          results[index] = hit.ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &matrix);
+          break;
+        }
+        case Geometry::CURVE:
+        {
+          //Curve* curve = (Curve*)collided;
+          //Edge* edge = curve->GetEdge(hit.GetElementIndex());
+          //results[index] = hit.GetPosition(collided->GetPositionsCPtr(), &edge->vertices[0], 2, curve->GetMatrix());
+          break;
+        }
+        default:
+          continue;
+        }
+        hits[index] = true;
+      } else {
+        hits[index] = false;
       }
-      default:
-        continue;
-      }
-      hits[index] = true;
-    } else {
-      hits[index] = false;
     }
   }
 }
@@ -176,6 +208,7 @@ void TestBVH::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
+  _method = CLOSEST;
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   const pxr::SdfPath  rootId = rootPrim.GetPath();
 

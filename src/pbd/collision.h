@@ -61,7 +61,6 @@ public:
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft);
   virtual void UpdateContacts(Particles* particles);
 
-
   virtual Geometry* GetGeometry(){return _collider;};
 
   virtual size_t GetContactComponent(size_t index, size_t c=0) const;
@@ -80,9 +79,6 @@ public:
   size_t GetTotalNumContacts(){return _contacts.GetTotalNumUsed();};
   const std::vector<int>& GetC2P(){return _c2p;};
 
-  virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
-    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors);
-
   virtual float GetValue(Particles* particles, size_t index) = 0;
   virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
   virtual pxr::GfVec3f GetVelocity(Particles* particles, size_t index);
@@ -99,6 +95,14 @@ public:
   float GetRestitution() const {return _restitution;};
 
   void Reset();
+
+  // for visual debugging
+  virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors);
+  virtual void GetNormals(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts);
+  virtual void GetVelocities(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts);
 
 protected:
 
@@ -244,8 +248,13 @@ public:
   pxr::GfVec3f GetVelocity(Particles* particles, size_t index) override;
   void Update(const pxr::UsdPrim& prim, double time) override;
 
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
+  // for visual debugging
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
     pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
+  void GetNormals(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts) override;
+  void GetVelocities(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts) override;
 
 protected:
   void _CreateAccelerationStructure();

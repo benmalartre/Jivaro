@@ -314,14 +314,21 @@ void Solver::UpdateCurves()
   pxr::VtArray<pxr::GfVec3f> colors;
   pxr::VtArray<int> counts;
 
+  /*
   for(size_t c = 0; c < numConstraints; ++c) {
-    //if(_constraints[c]->GetTypeId() != Constraint::BEND) continue;
+    if(_constraints[c]->GetTypeId() == Constraint::ATTACH) continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
       counts.push_back(2);
   }
-
+  */
+ size_t numCollisions = _collisions.size();
+  for(size_t c = 0; c < numCollisions; ++c) {
+    if(_collisions[c]->GetTypeId() != Collision::MESH) continue;
+    _collisions[c]->GetNormals(&_particles, positions, widths, colors, counts);
+    _collisions[c]->GetVelocities(&_particles, positions, widths, colors, counts);
+  }
   _curves->SetTopology(positions, widths, counts);
   _curves->SetColors(colors);
 
@@ -389,12 +396,16 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   // compute predicted position
   pxr::GfVec3f* predicted = &_particles.predicted[0];
   pxr::GfVec3f* position = &_particles.position[0];
+  pxr::GfVec3f* colors = &_particles.color[0];
+
+  pxr::GfVec3f color(0.5f, 0.25f, 0.75f);
 
   // apply external forces
   for (const Force* force : _forces)
     force->Apply(begin, end, &_particles, _stepTime);
 
   for (size_t index = begin; index < end; ++index) {
+    colors[index] = color;
     if(_particles.state[index] == Particles::IDLE)
       if((predicted[index] - position[index]).GetLength() > _sleepThreshold )
         _particles.state[index] = Particles::ACTIVE;

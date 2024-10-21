@@ -174,8 +174,33 @@ ComputeCovarianceMatrix(const pxr::VtArray<pxr::GfVec3f>& points);
 pxr::GfMatrix4f
 ComputeCovarianceMatrix(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions);
 
+static const pxr::GfVec3f 
+OrthogonalVector(const pxr::GfVec3f &v)
+{
+  float x = pxr::GfAbs(v[0]);
+  float y = pxr::GfAbs(v[1]);
+  float z = pxr::GfAbs(v[2]);
 
-static pxr::GfQuatf RandomQuaternion() {
+  pxr::GfVec3f other = x < y ? (x < z ? pxr::GfVec3f::XAxis() : pxr::GfVec3f::ZAxis()) : 
+    (y < z ? pxr::GfVec3f::YAxis() : pxr::GfVec3f::ZAxis());
+  return pxr::GfCross(v, other);
+}
+
+static pxr::GfQuatf 
+GetRotationBetweenVectors(const pxr::GfVec3f &u, const pxr::GfVec3f &v)
+{
+  const pxr::GfVec3f nu = u.GetNormalized();
+  const pxr::GfVec3f nv = v.GetNormalized();
+  if (nu == -nv)
+    return pxr::GfQuatf(0, OrthogonalVector(nu).GetNormalized());
+  
+  pxr::GfVec3f half = (nu + nv).GetNormalized();
+  return pxr::GfQuatf(pxr::GfDot(nu, half), pxr::GfCross(nu, half));
+}
+
+
+static pxr::GfQuatf 
+RandomQuaternion() {
   float x,y,z, u,v,w, s;
   do { 
     x = RANDOM_LO_HI(-1.0,1.0); 

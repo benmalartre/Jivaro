@@ -59,6 +59,29 @@ Triangle::GetNormal(const pxr::GfVec3f* points) const
 }
 
 //-------------------------------------------------------
+// Triangle Velocity
+//-------------------------------------------------------
+pxr::GfVec3f 
+Triangle::GetVelocity(const pxr::GfVec3f* positions, const pxr::GfVec3f* previous) const
+{
+  const pxr::GfVec3f prevPos = GetCenter(previous);
+  const pxr::GfVec3f curPos = GetCenter(positions);
+  const pxr::GfVec3f prevNormal = GetNormal(previous);
+  const pxr::GfVec3f curNormal = GetNormal(positions);
+
+  const pxr::GfVec3f deltaP(curPos - prevPos);
+  pxr::GfVec3f velocity = pxr::GfVec3f(deltaP / Geometry::FrameDuration);
+
+  const pxr::GfQuatf deltaR = GetRotationBetweenVectors(prevNormal, curNormal);
+  
+  const pxr::GfVec3f torque = pxr::GfVec3f(deltaR.GetImaginary() * (deltaR.GetReal() / Geometry::FrameDuration));
+
+  const pxr::GfVec3f tangent = (curNormal ^ torque).GetNormalized();
+
+  return velocity + tangent * torque.GetLength();
+}
+
+//-------------------------------------------------------
 // Triangle bounding box
 //-------------------------------------------------------
 pxr::GfRange3f 

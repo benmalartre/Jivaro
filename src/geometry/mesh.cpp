@@ -150,9 +150,9 @@ Mesh::GetTriangleVertexNormal(const Triangle *T, uint32_t index) const
 }
 
 pxr::GfVec3f 
-Mesh::GetTriangleNormal(uint32_t triangleID) const
+Mesh::GetTriangleNormal(uint32_t triangleId) const
 {
-  const Triangle* T = &_triangles[triangleID];
+  const Triangle* T = &_triangles[triangleId];
   pxr::GfVec3f A = _positions[T->vertices[0]];
   pxr::GfVec3f B = _positions[T->vertices[1]];
   pxr::GfVec3f C = _positions[T->vertices[2]];
@@ -161,6 +161,12 @@ Mesh::GetTriangleNormal(uint32_t triangleID) const
   C -= A;
 
   return (B ^ C).GetNormalized();
+}
+
+pxr::GfVec3f Mesh::GetTriangleVelocity(uint32_t triangleId) const
+{
+  const Triangle* triangle = &_triangles[triangleId];
+  return triangle->GetVelocity(&_positions[0], &_previous[0]);
 }
 
 bool Mesh::RemovePoint(size_t index)
@@ -701,7 +707,14 @@ Mesh::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
       usdMesh.GetPointsAttr().Get(&_previous, time);
 
     usdMesh.GetPointsAttr().Get(&_positions, time);
-    return Geometry::DirtyState::DEFORM;
+
+    // recompute normals if needed
+    if(pxr::VtValue(_positions).GetHash() != pxr::VtValue(_previous).GetHash()) {
+      ComputeVertexNormals(_positions, _faceVertexCounts, 
+        _faceVertexIndices, _triangles, _normals);
+    
+      return Geometry::DirtyState::DEFORM;
+    }
   }
   return Geometry::DirtyState::CLEAN;
 }
