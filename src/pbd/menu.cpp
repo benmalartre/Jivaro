@@ -27,10 +27,13 @@ void AddPbdMenu(MenuUI* menu)
   */
 
   MenuUI::Item* subItem = testItem->Add("Create Solver", false, true, std::bind(CreateSolverCallback));
-  subItem = testItem->Add("Create Cloth", false, true, std::bind(CreateClothCallback));
+  subItem = testItem->Add("Add Cloth", false, true, std::bind(AddClothCallback));
   subItem = testItem->Add("Add Body API", false, true, std::bind(AddBodyAPICallback));
   subItem = testItem->Add("Add Collision API", false, true, std::bind(AddCollisionAPICallback));
-  subItem = testItem->Add("Add Constraint API", false, true, std::bind(AddConstraintAPICallback));
+
+  subItem = testItem->Add("Remove Cloth", false, true, std::bind(RemoveClothCallback));
+  subItem = testItem->Add("Remove Body API", false, true, std::bind(RemoveBodyAPICallback));
+  subItem = testItem->Add("Remove Collision API", false, true, std::bind(RemoveCollisionAPICallback));
 
   /*
   subItem->Add("Sub0", false, true, NULL);
@@ -59,7 +62,7 @@ void CreateSolverCallback()
   
 }
 
-void CreateClothCallback()
+void AddClothCallback()
 {
   static const float spacing = 0.01f;
   Application* app = Application::Get();
@@ -155,8 +158,44 @@ void AddCollisionAPICallback()
   }
 }
 
-void AddConstraintAPICallback()
+void RemoveClothCallback()
 {
+  Application* app = Application::Get();
+  pxr::UsdStageRefPtr stage = app->GetStage();
+
+  UndoBlock editBlock;
+  pxr::UsdPrim prim;
+
+  Selection* selection = app->GetSelection();
+
+  for(size_t s = 0; s < selection->GetNumSelectedItems(); ++s) {
+    prim = stage->GetPrimAtPath((*selection)[0].path);
+    if(prim.HasAPI<pxr::UsdPbdBodyAPI>())
+      prim.RemoveAPI(pxr::UsdPbdTokens->PbdBodyAPI);
+    
+    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>())
+      prim.RemoveAPI(pxr::UsdPbdTokens->PbdConstraintAPI, pxr::TfToken("attach"));
+    
+    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>())
+      prim.RemoveAPI(pxr::UsdPbdTokens->PbdConstraintAPI, pxr::TfToken("stretch"));
+    
+    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>())
+      prim.RemoveAPI(pxr::UsdPbdTokens->PbdConstraintAPI, pxr::TfToken("shear"));
+    
+    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>())
+      prim.RemoveAPI(pxr::UsdPbdTokens->PbdConstraintAPI, pxr::TfToken("bend"));
+  }
 }
+
+void RemoveBodyAPICallback()
+{
+
+}
+
+void RemoveCollisionAPICallback()
+{
+
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

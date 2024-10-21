@@ -30,16 +30,19 @@ void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float d
   const float* mass = &particles->mass[0];
   const float* invMass = &particles->invMass[0];
   pxr::GfVec3f* velocity = &particles->velocity[0];
+  const short* state = &particles->state[0];
 
 
   Mask::Iterator iterator((const Mask*)this, begin, end);
 
   if(HaveWeights())
     for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
+      if(state[index] != Particles::ACTIVE) continue;
       velocity[index] += _gravity *_weights[index] /** invMass[index]*/ * dt;
     }
   else
     for(size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
+      if(state[index] != Particles::ACTIVE) continue;
       velocity[index] += _gravity /** invMass[index]*/ * dt;
     }
 }

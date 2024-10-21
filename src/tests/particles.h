@@ -35,7 +35,6 @@ private:
   pxr::SdfPath              _voxelsId;
 
   BVH                       _bvh;
-  float                     _lastTime;
 
   Mesh*                     _emitter;
   pxr::SdfPath              _emitterId;

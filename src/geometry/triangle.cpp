@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "../geometry/utils.h"
 #include "../geometry/triangle.h"
 #include "../geometry/mesh.h"
 #include "../acceleration/intersector.h"

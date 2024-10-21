@@ -14,6 +14,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 class Constraint;
+class Particles;
 struct ConstraintsGroup;
 
 class Body : public Element
@@ -35,6 +36,7 @@ public:
 
   size_t GetTypeId() const override {return 0;};
   void UpdateParameters(pxr::UsdPrim& prim, float time) override;
+  void UpdateParticles(Particles* particles);
 
   void SetOffset(size_t offset){_offset = offset;};
   void SetNumPoints(size_t numPoints){_numPoints = numPoints;};
@@ -61,6 +63,7 @@ protected:
   Geometry*                                 _geometry;
   size_t                                    _offset;
   size_t                                    _numPoints;
+  bool                                      _simulationEnabled;
   float                                     _mass;
   float                                     _radius;
   float                                     _damp;
@@ -91,7 +94,11 @@ enum BodyType
 struct Particles
 {
   const static size_t BLOCK_SIZE = 1024;
-  enum State {MUTE, IDLE, ACTIVE};
+  enum State {
+    MUTE, 
+    IDLE, 
+    ACTIVE
+  };
 
   Particles() :num(0){};
   ~Particles();
@@ -121,7 +128,7 @@ struct Particles
   pxr::GfVec3f* velocity;
   pxr::GfVec3f* color;
   pxr::GfVec2f* counter;
- size_t         num;
+  size_t        num;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

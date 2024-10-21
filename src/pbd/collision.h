@@ -93,6 +93,7 @@ public:
 
   float GetFriction() const {return _friction;};
   float GetRestitution() const {return _restitution;};
+  float GetDamp() const {return _damp;};
 
   void Reset();
 
@@ -127,6 +128,7 @@ protected:
   bool                              _enabled;
   float                             _restitution;
   float                             _friction;
+  float                             _damp;
   float                             _maxSeparationVelocity;
   Geometry*                         _collider;
   pxr::TfToken                      _key;

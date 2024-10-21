@@ -267,6 +267,18 @@ void Solver::LockPoints(Body* body, pxr::VtArray<int>& elements)
   }
 }
 
+void Solver::AttachPoints(Body* body, pxr::VtArray<int>& elements)
+{
+  Mesh* mesh = (Mesh*)body->GetGeometry();
+  //CreateAttachConstraints()
+}
+
+void Solver::PinPoints(Body* body, Geometry* target, pxr::VtArray<int>& elements)
+{
+  Mesh* mesh = (Mesh*)body->GetGeometry();
+  //CreatePinConstraints()
+}
+
 void Solver::UpdatePoints()
 {
   size_t numParticles = _particles.GetNumParticles();
@@ -374,7 +386,8 @@ void Solver::_PrepareContacts()
 
   _contacts.clear();
 
-  _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+  if(_selfCollisions)
+    _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
@@ -384,7 +397,8 @@ void Solver::_PrepareContacts()
   
 void Solver::_UpdateContacts()
 {
-  _selfCollisions->UpdateContacts(&_particles);
+  if(_selfCollisions)
+    _selfCollisions->UpdateContacts(&_particles);
   for (auto& collision : _collisions)
     collision->UpdateContacts(&_particles);
 }
@@ -398,14 +412,11 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   pxr::GfVec3f* position = &_particles.position[0];
   pxr::GfVec3f* colors = &_particles.color[0];
 
-  pxr::GfVec3f color(0.5f, 0.25f, 0.75f);
-
   // apply external forces
   for (const Force* force : _forces)
     force->Apply(begin, end, &_particles, _stepTime);
 
   for (size_t index = begin; index < end; ++index) {
-    colors[index] = color;
     if(_particles.state[index] == Particles::IDLE)
       if((predicted[index] - position[index]).GetLength() > _sleepThreshold )
         _particles.state[index] = Particles::ACTIVE;
@@ -438,6 +449,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
     
+    /*
     velocity[index] *= velDecay;
 
     float damp = _bodies[_particles.body[index]]->GetDamp();
@@ -448,7 +460,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
     }
-    
+    */
     // update position
     if (mass[index] == 0.f)
       position[index] = input[index];
@@ -549,14 +561,14 @@ void Solver::Reset()
   _particles.SetAllState(Particles::ACTIVE);
 
   if(_selfCollisions)delete _selfCollisions;
-  _selfCollisions = new SelfCollision(&_particles, 
+    _selfCollisions = new SelfCollision(&_particles, 
     GetPrim().GetPath().AppendProperty(pxr::TfToken("selfCollide")), 0.5f, 0.5f);
 
   for(auto& constraint: _constraints)
     constraint->Reset(&_particles);
   
-
-  _selfCollisions->Reset();
+  if(_selfCollisions)
+    _selfCollisions->Reset();
   for(auto& collision: _collisions)
     collision->Reset();
     
@@ -632,7 +644,8 @@ void Solver::UpdateInputs(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
-  _selfCollisions->Update(GetPrim(), time);
+  if(_selfCollisions)
+    _selfCollisions->Update(GetPrim(), time);
   
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
@@ -662,8 +675,7 @@ void Solver::UpdateGeometries()
           range.UnionWith(local);
           output[p] = local;
         }
-        //deformable->SetBoundingBox(range);
-        deformable->ComputeBoundingBox();
+        deformable->SetBoundingBox(range);
 
         _scene->MarkPrimDirty(id, pxr::HdChangeTracker::AllDirty);
       }
@@ -691,6 +703,7 @@ void Solver::UpdateParameters(pxr::UsdStageRefPtr& stage, float time)
   for(auto& body: _bodies) {
     prim = body->GetGeometry()->GetPrim();
     body->UpdateParameters(prim, time);
+    body->UpdateParticles(&_particles);
   }
 }
 

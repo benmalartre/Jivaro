@@ -108,6 +108,10 @@ void Camera::FrameSelection(const pxr::GfBBox3d &selBBox)
   pxr::GfBBox3d zUpBBox(selBBox.GetRange(), _zUpInverseMatrix);
   pxr::GfVec3d center = zUpBBox.ComputeCentroid();
   pxr::GfRange3d selRange = zUpBBox.ComputeAlignedRange();
+  if(selRange.IsEmpty()) {
+    std::cerr << "Selection have invalid bounding box, Frame Selection aborted!" << std::endl;
+    return;
+  }
   pxr::GfVec3d rangeSize = selRange.GetSize();
   
   float frameFit = 1.1f;

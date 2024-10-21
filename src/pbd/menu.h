@@ -8,10 +8,14 @@ class MenuUI;
 void AddPbdMenu(MenuUI* menu);
 
 static void CreateSolverCallback();
-static void CreateClothCallback();
+
+static void AddClothCallback();
 static void AddBodyAPICallback();
 static void AddCollisionAPICallback();
-static void AddConstraintAPICallback();
+
+static void RemoveClothCallback();
+static void RemoveBodyAPICallback();
+static void RemoveCollisionAPICallback();
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

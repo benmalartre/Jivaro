@@ -95,6 +95,9 @@ public:
   // particles
   Particles* GetParticles() { return &_particles; };
   void LockPoints(Body* body, pxr::VtArray<int>& elements);
+  void AttachPoints(Body* body, pxr::VtArray<int>& elements);
+  void PinPoints(Body* body, Geometry* target, pxr::VtArray<int>& elements);
+
   void UpdatePoints();
   void ClearPoints();
   void WeightBoundaries(Body* body);

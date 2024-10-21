@@ -155,6 +155,7 @@ void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t
 void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
 {
   pxr::UsdPbdBodyAPI bodyApi(prim);
+  bodyApi.GetSimulationEnabledAttr().Get(&_simulationEnabled, time);
   bodyApi.GetRadiusAttr().Get(&_radius, time);
   bodyApi.GetMassAttr().Get(&_mass, time);
   bodyApi.GetVelocityAttr().Get(&_velocity, time);
@@ -163,7 +164,6 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   bodyApi.GetSelfCollisionRadiusAttr().Get(&_selfCollisionRadius, time);
   bodyApi.GetSelfCollisionFrictionAttr().Get(&_selfCollisionFriction, time);
   bodyApi.GetSelfCollisionRestitutionAttr().Get(&_selfCollisionRestitution, time);
-
 
   bool active;
   float stiffness, damp;
@@ -181,6 +181,21 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
         constraint->SetActive(active);
       }
     }
+  }
+}
+
+void Body::UpdateParticles(Particles* particles)
+{
+  return; 
+  for(size_t p = _offset; p < _offset + _numPoints; ++p) {
+    if(!_simulationEnabled)
+      particles->state[p] = Particles::MUTE;
+    else if(particles->state[p] != Particles::IDLE)
+      particles->state[p] = Particles::ACTIVE;
+
+    particles->radius[p] = _radius;
+    particles->mass[p] = _mass;
+    particles->invMass[p] = _mass > 1e-9 ? 1.f/_mass : 0.f;
   }
 }
 

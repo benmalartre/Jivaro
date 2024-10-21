@@ -49,6 +49,7 @@ TimelineUI::Update()
   _currentTime = time->GetActiveTime();
   _loop = time->GetLoop();
   _fps = time->GetFPS();
+  _speed = time->GetSpeed();
   _playing = time->IsPlaying();
   _parent->SetDirty();
 }
@@ -72,6 +73,7 @@ TimelineUI::ValidateTime()
   time->SetMaxTime(_maxTime);
   time->SetActiveTime(_currentTime);
   time->SetLoop(_loop);
+  time->SetSpeed(_speed);
 }
 
 float 
@@ -193,6 +195,18 @@ void TimelineUI::DrawButtons()
       time->SetLoop(_loop);
     });
   ImGui::SameLine();
+
+  ImGui::SetNextItemWidth(60);
+  ImGui::InputScalar("speed", ImGuiDataType_Float, &_speed,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if (!ImGui::IsItemActive() && _speed != time->GetSpeed())
+  {
+    ValidateTime();
+  }
+  if (ImGui::IsItemHovered())
+    AttachTooltip("Speed");
+  //AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
+  ImGui::SameLine(); 
 }
 
 void TimelineUI::DrawControls()

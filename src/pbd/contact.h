@@ -25,6 +25,7 @@ public:
   bool IsTouching(){return _touching;};
   const pxr::GfVec3f& GetNormal() const {return _normal;};
   const pxr::GfVec3f& GetVelocity() const {return _velocity;};
+  const pxr::GfVec3f& GetCorrection() const{return _correction;};
   float GetDepth() const {return _depth;};
   float GetInitDepth() const {return _initDepth;};
 
@@ -32,6 +33,7 @@ public:
 private:
   pxr::GfVec3f      _normal;   // contact normal
   pxr::GfVec3f      _velocity; // relative velocity
+  pxr::GfVec3f      _correction; // velocity correction
 
   float             _initDepth;// start frame penetration depth
   float             _depth;    // current substep penetration depth

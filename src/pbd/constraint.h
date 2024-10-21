@@ -95,7 +95,7 @@ protected:
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _gradient;
   pxr::VtArray<pxr::GfVec3f>    _correction;
-  float                         _compliance;
+  double                        _compliance;
   float                         _damp;
   pxr::TfToken                  _key;
   pxr::GfVec3f                  _color;
@@ -129,7 +129,8 @@ protected:
   Body*                         _body;
 };
 
-ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness=0.5f, float damping=0.1f);
+ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness=0.5f, float damping=0.1f, 
+  const pxr::VtArray<int> *elements=nullptr);
 
 class PinConstraint : public Constraint
 {
@@ -154,7 +155,8 @@ protected:
   Geometry*                     _target;
 };
 
-ConstraintsGroup* CreatePinConstraints(Body* body, Geometry* target, float stiffness=0.5f, float damping=0.1f);
+ConstraintsGroup* CreatePinConstraints(Body* body, Geometry* target, float stiffness=0.5f, float damping=0.1f,
+  const pxr::VtArray<int> *elements=nullptr);
 
 
 class StretchConstraint : public Constraint

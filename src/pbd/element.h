@@ -11,6 +11,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 
 class Geometry;
+class Particles;
 class Element
 {
 public:
