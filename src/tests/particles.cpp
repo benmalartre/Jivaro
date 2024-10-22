@@ -199,6 +199,11 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
       _colliders[c]->GetAttributeValue(pxr::UsdPbdTokens->pbdRestitution, pxr::UsdTimeCode::Default(), &restitution);
 
       switch(_colliders[c]->GetType()) {
+        case Geometry::PLANE:
+          std::cerr << "Create collision shape PLANE for " << _collidersId[c] << std::endl;
+          collision = new PlaneCollision(_colliders[c], _collidersId[c], restitution, friction);
+          break;
+
         case Geometry::CUBE:
           std::cerr << "Create collision shape CUBE for " << _collidersId[c] << std::endl;
           collision = new BoxCollision(_colliders[c], _collidersId[c], restitution, friction);
@@ -247,7 +252,6 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
     _solver->AddElement(collision, _ground, _groundId);
   }
-
 
   Particles* particles = _solver->GetParticles();
 

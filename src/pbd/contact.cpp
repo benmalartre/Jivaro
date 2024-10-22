@@ -23,6 +23,7 @@ void Contact::Update(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, c
   _depth = depth;
 }
 
+
 void Contacts::Resize(size_t N, size_t M) {
   if(data && n == N && m == M){ResetAllUsed(); return;}
   else if(data) {delete [] data; data=nullptr; delete [] used; used=nullptr;}

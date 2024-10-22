@@ -12,10 +12,9 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Constraint::Constraint(Body* body, size_t elementSize, float stiffness, 
+Constraint::Constraint(size_t elementSize, float stiffness, 
   float damp, const pxr::VtArray<int>& elems) 
   : Element(Element::CONSTRAINT)
-  , _body(body)
   , _elements(elems)
   , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
   , _damp(damp)
@@ -137,7 +136,8 @@ size_t AttachConstraint::ELEM_SIZE = 1;
 
 AttachConstraint::AttachConstraint(Body* body, const pxr::VtArray<int>& elems,
   float stiffness, float damping)
-  : Constraint(body, ELEM_SIZE, stiffness, damping, elems)
+  : Constraint(ELEM_SIZE, stiffness, damping, elems)
+  , _body(body)
 {
   Geometry* geometry = body->GetGeometry();
   if(geometry->GetType() < Geometry::POINT) {
@@ -215,7 +215,7 @@ size_t PinConstraint::ELEM_SIZE = 1;
 
  PinConstraint::PinConstraint(Body* body, const pxr::VtArray<int>& elems, Geometry* target,
   float stiffness, float damping)
-    : Constraint(body, ELEM_SIZE, stiffness, damping, elems)
+    : Constraint(ELEM_SIZE, stiffness, damping, elems)
     , _target(target)
 {
   Geometry* geometry = body->GetGeometry();
@@ -272,7 +272,7 @@ size_t StretchConstraint::ELEM_SIZE = 2;
 
 StretchConstraint::StretchConstraint(Body* body, const pxr::VtArray<int>& elems,
   float stiffness, float damping)
-  : Constraint(body, ELEM_SIZE, stiffness, damping, elems)
+  : Constraint(ELEM_SIZE, stiffness, damping, elems)
 {
   Geometry* geometry = body->GetGeometry();
   if(geometry->GetType() < Geometry::POINT) {
@@ -422,7 +422,7 @@ size_t BendConstraint::ELEM_SIZE = 3;
 
 BendConstraint::BendConstraint(Body* body, const pxr::VtArray<int>& elems,
   float stiffness, float damping)
-  : Constraint(body, ELEM_SIZE, stiffness, damping, elems)
+  : Constraint(ELEM_SIZE, stiffness, damping, elems)
 {
   Geometry* geometry = body->GetGeometry();
   size_t offset = body->GetOffset();
@@ -747,7 +747,7 @@ static float _GetCotangentTheta(const pxr::GfVec3f& a, const pxr::GfVec3f& b)
 
 DihedralConstraint::DihedralConstraint(Body* body, const pxr::VtArray<int>& elems,
   float stiffness, float damping)
-  : Constraint(body, ELEM_SIZE, stiffness, damping, elems)
+  : Constraint(ELEM_SIZE, stiffness, damping, elems)
 {
   Geometry* geometry = body->GetGeometry();
 
@@ -874,7 +874,7 @@ size_t CollisionConstraint::TYPE_ID = Constraint::COLLISION;
 
 CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
   const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
-  : Constraint(body, 1, stiffness, damping, elems)
+  : Constraint(1, stiffness, damping, elems)
   , _collision(collision)
   , _mode(CollisionConstraint::GEOM)
   , _SolvePosition(&CollisionConstraint::_SolvePositionGeom)
@@ -884,7 +884,7 @@ CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
 
 CollisionConstraint::CollisionConstraint(Particles* particles, SelfCollision* collision, 
   const pxr::VtArray<int>& elems, float stiffness, float damping, float restitution, float friction)
-  : Constraint(NULL, 1, stiffness, damping, elems)
+  : Constraint(1, stiffness, damping, elems)
   , _collision(collision)
   , _mode(CollisionConstraint::SELF)
   , _SolvePosition(&CollisionConstraint::_SolvePositionSelf)
@@ -983,11 +983,6 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
     _collision->SetContactTouching(index, false); 
     if(_collision->GetContactDepth(index) > 0.f) continue;
 
-    const pxr::GfVec3f normal = _collision->GetContactNormal(index);
-    const pxr::GfVec3f relV = _collision->GetContactVelocity(index);
-    const pxr::GfVec3f nV = normal * pxr::GfDot(normal, relV) ;
-    const pxr::GfVec3f tV = relV - normal * pxr::GfDot(normal, nV);
-
     _correction[elem] += (-particles->velocity[index] * _collision->GetFriction() + _collision->GetContactVelocity(index)) * 0.5f;
     _collision->SetContactTouching(index, true);
   }
@@ -1009,7 +1004,7 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
   for (elem = 0; elem < numElements; ++elem) {
     index = _elements[elem];
-    Body* body = particles->GetBody(index);
+    Body* body = particles->body[index];
     if(!body->GetSelfCollisionEnabled())continue;
     
     w0 = particles->invMass[index];

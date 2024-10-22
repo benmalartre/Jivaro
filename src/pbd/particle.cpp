@@ -37,7 +37,7 @@ void Particles::_EnsureDataSize(size_t desired)
 
   size = desired ? ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE : 0;
   state =     _ResizeArray<short>(state, num, size);
-  body =      _ResizeArray<int>(body, num, size);
+  body =      _ResizeArray<Body*>(body, num, size);
   mass =      _ResizeArray<float>(mass, num, size);
   invMass =   _ResizeArray<float>(invMass, num, size);
   radius =    _ResizeArray<float>(radius, num, size);
@@ -61,7 +61,6 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   size_t numPoints = geom->GetNumPoints();
   _EnsureDataSize(base + numPoints);
   size_t size = base + numPoints;
-  size_t index = num > 0 ? body[num - 1] + 1 : 0;
   float m = item->GetMass();
   float w = m < 1e-6f ? 0.f : 1.f / m;
 
@@ -82,7 +81,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
     predicted[idx] = pos;
     rotation[idx] = pxr::GfQuatf(1.f);
     velocity[idx] = item->GetVelocity();
-    body[idx] = index;
+    body[idx] = item;
     color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f * bY;
     state[idx] = ACTIVE;
     counter[idx] = pxr::GfVec2f(0.f);
@@ -91,8 +90,6 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   item->SetOffset(base);
   item->SetNumPoints(numPoints);
   num += numPoints;
-
-  bodies.push_back(item);
 }
 
 void Particles::RemoveBody(Body* item) 
@@ -124,16 +121,11 @@ void Particles::RemoveBody(Body* item)
   _EnsureDataSize(size);
 
   num -= shift;
-
-  auto toErase = std::find(bodies.begin(), bodies.end(), item);
-  if(toErase != bodies.end())
-    bodies.erase(toErase);
 }
 
 void Particles::RemoveAllBodies()
 {
   _EnsureDataSize(0);
-  bodies.clear();
   num = 0;
 }
 
@@ -159,6 +151,13 @@ void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t
   for (auto& constraint : constraints)
     for (auto& elem : constraint->GetElements())
       counter[elem][c]+=1.f;
+}
+
+Body::~Body()
+{
+  for (auto& constraint : _constraints)
+    delete constraint.second;
+  _constraints.clear();
 }
 
 void Body::UpdateParameters(pxr::UsdPrim& prim, float time)

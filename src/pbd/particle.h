@@ -34,6 +34,8 @@ public:
   , _velocity(0.f)
   , _color(color){}
 
+  ~Body();
+
   size_t GetTypeId() const override {return 0;};
   void UpdateParameters(pxr::UsdPrim& prim, float time) override;
   void UpdateParticles(Particles* particles);
@@ -118,9 +120,6 @@ struct Particles
   void RemoveBody(Body* body);
   void RemoveAllBodies();
 
-  Body* GetBody(size_t index){return bodies[body[index]];};
-  const Body* GetBody(size_t index) const {return bodies[body[index]];};
-
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);
 
@@ -129,7 +128,7 @@ struct Particles
   void _EnsureDataSize(size_t size);
 
   short*              state;
-  int*                body;
+  Body**              body;
   float*              mass;
   float*              invMass;
   float*              radius;
@@ -142,7 +141,6 @@ struct Particles
   pxr::GfVec3f*       color;
   pxr::GfVec2f*       counter;
   size_t              num;
-  std::vector<Body*>  bodies;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

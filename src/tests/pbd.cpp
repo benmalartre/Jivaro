@@ -98,10 +98,12 @@ void TestPBD::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& pat
 
 void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 {
+  std::cout << "Test PBD Init Execution" << std::endl;
   if (!stage) return;
 
   _scene.Init(stage);
-  
+  std::cout << " - initialized scene" << std::endl;
+
   // get root prim
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   if(!rootPrim.IsValid()) {
@@ -110,18 +112,22 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     stage->SetDefaultPrim(rootPrim);
   }
   const pxr::SdfPath  rootId = rootPrim.GetPath();
+  std::cout << " - found root prim" << rootId << std::endl;
 
   _TraverseStageFindingElements(stage);
+  std::cout << " - traversed stage finding elements : " << _colliders.size() << std::endl;
 
   for(size_t c = 0; c < _clothes.size(); ++c) {
     _clothes[c]->SetInputOutput();
     _scene.AddGeometry(_clothesId[c], _clothes[c]);
   }
+ 
   
   // create solver with attributes
   _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
   _solver = _CreateSolver(&_scene, stage, _solverId, 5);
   _scene.AddGeometry(_solverId, _solver);
+  std::cout << " - created solver " << _solverId << std::endl;
   
   // create cloth meshes
   float size = .025f;
@@ -151,6 +157,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
     _solver->CreateConstraints(body, Constraint::SHEAR, 6000.f, 0.1f);
     
     _solver->AddElement(body, _clothes[c], _clothesId[c]);
+    std::cout << " - created cloth " << _clothesId[c] << std::endl;
     
   }
   
@@ -169,10 +176,12 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
       switch(_colliders[c]->GetType()) {
         case Geometry::CUBE:
+          std::cout << " - created cube collision " << _clothesId[c] << std::endl;
           collision = new BoxCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
         case Geometry::SPHERE:
+          std::cout << " - created sphere collision " << _clothesId[c] << std::endl;
           collision = new SphereCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
@@ -181,6 +190,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
           break;
 
         case Geometry::CAPSULE:
+          std::cout << " - created capsule collision " << _clothesId[c] << std::endl;
           collision = new CapsuleCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
@@ -189,6 +199,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
           break;
 
         case Geometry::MESH:
+          std::cout << " - created mesh collision " << _clothesId[c] << std::endl;
           collision = new MeshCollision(_colliders[c], _collidersId[c], restitution, friction);
           ((MeshCollision*)collision)->Init(_solver->GetNumParticles());
           break;

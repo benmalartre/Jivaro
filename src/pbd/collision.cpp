@@ -83,12 +83,14 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
-    if(_contacts.IsUsed(index))
-      _contacts.Get(index)->Update(
+    if(_contacts.IsUsed(index)) {
+      Contact* contact = _contacts.Get(index);
+      contact->Update(
         GetGradient(particles, index),
         GetVelocity(particles, index),
         GetValue(particles, index)
       );
+    }
 }
 
 void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
@@ -161,7 +163,7 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   size_t numBodies = bodies.size();
 
   pxr::VtArray<int> elements;
-  size_t bodyIdx = INVALID_INDEX;
+  Body* currentBody = nullptr;
 
   Mask::Iterator iterator(this, 0, numParticles);
   size_t particleToContactIdx = 0;
@@ -170,21 +172,21 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
     if (CheckHit(index)) {
       numHits++;
       _c2p.push_back(index);
-      if (particles->body[index] != bodyIdx || elements.size() >= Constraint::BlockSize) {
+      if (particles->body[index] != currentBody || elements.size() >= Constraint::BlockSize) {
         if (elements.size()) {
-          constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
+          constraint = new CollisionConstraint(currentBody, this, elements);
           StoreContactsLocation(particles, & elements[0], elements.size(), ft);
           constraints.push_back(constraint);
           elements.clear();
         }
-        bodyIdx = particles->body[index];
+        currentBody = particles->body[index];
       } 
       elements.push_back(index);
     }
   } 
   
   if (elements.size()) {
-    constraint = new CollisionConstraint(bodies[bodyIdx], this, elements);
+    constraint = new CollisionConstraint(currentBody, this, elements);
     StoreContactsLocation(particles, & elements[0], elements.size(), ft);
     constraints.push_back(constraint);
   }
@@ -841,7 +843,7 @@ SelfCollision::SelfCollision(Particles* particles, const pxr::SdfPath& path,
   size_t numParticles = _particles->GetNumParticles();
 
   for (size_t p = 0; p < numParticles; ++p) {
-    Body* body = particles->GetBody(p);
+    Body* body = particles->body[p];
     avgRadius += particles->radius[p] * body->GetSelfCollisionRadius();
   }
   avgRadius /= static_cast<float>(numParticles);
@@ -942,14 +944,14 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   std::vector<int> closests;
 
-  Body* body = particles->GetBody(index);
+  Body* body = particles->body[index];
   if(!body->GetSelfCollisionEnabled())return;
   const float radiusMultiplier = body->GetSelfCollisionRadius();
   size_t numCollide = 0;
   _grid.Closests(index, &particles->predicted[0], /*&particles->velocity[0], ft,*/
     closests,  2.f * ( particles->radius[index] * radiusMultiplier + TOLERANCE_MARGIN));
   for(int closest: closests) {
-    Body* other = particles->GetBody(closest);
+    Body* other = particles->body[closest];
     if(other != body) continue;
     if(_AreConnected(index, closest))continue;
     if(numCollide >= PARTICLE_MAX_CONTACTS)break;
@@ -976,7 +978,7 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
   pxr::GfVec3f normal = ip - op;
   float nL = normal.GetLength();
 
-  Body* body = particles->GetBody(index);
+  Body* body = particles->body[index];
   
   const float radiusMultiplier = body->GetSelfCollisionRadius();
   float d = nL - (particles->radius[index] + particles->radius[other]) * radiusMultiplier;
@@ -1024,7 +1026,7 @@ void SelfCollision::_UpdateAccelerationStructure()
 
 float SelfCollision::GetValue(Particles* particles, size_t index, size_t other)
 {
-  Body* body = particles->GetBody(index);
+  Body* body = particles->body[index];
   const float radiusMultiplier = body->GetSelfCollisionRadius();
 
   return (particles->predicted[index] - particles->predicted[other]).GetLength() - 

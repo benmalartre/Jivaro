@@ -79,7 +79,8 @@ Solver::~Solver()
   for (auto& force : _forces)delete force;
   _scene->RemoveGeometry(_pointsId);
   _scene->RemoveGeometry(_curvesId);
-  delete _selfCollisions;
+  if(_selfCollisions)
+    delete _selfCollisions;
   delete _curves;
   delete _points;
   delete _timer;
@@ -430,7 +431,6 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
 void Solver::_UpdateParticles(size_t begin, size_t end)
 {
-  const int* body = &_particles.body[0];
   const pxr::GfVec3f* predicted = &_particles.predicted[0];
   const pxr::GfVec3f* input = &_particles.input[0];
   const float* mass = &_particles.mass[0];
@@ -447,12 +447,10 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     if (state[index] != Particles::ACTIVE)continue;
     
     // update velocity
-    velocity[index] = (predicted[index] - position[index]) * invDt;
-    
-    
+    velocity[index] = (predicted[index] - position[index]) * invDt; 
     velocity[index] *= velDecay;
 
-    float damp = _bodies[_particles.body[index]]->GetDamp();
+    float damp = _particles.body[index]->GetDamp();
     velocity[index] -= velocity[index] * damp * _particles.invMass[index] * _stepTime;
     vL = velocity[index].GetLength();
     if (vL < _sleepThreshold) {
@@ -526,6 +524,7 @@ void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::Reset()
 {
+  Time::Get()->SetActiveTime(_startTime);
   // reset
   _particles.RemoveAllBodies();
 

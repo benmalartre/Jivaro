@@ -41,7 +41,7 @@ struct ConstraintsGroup {
 class Constraint: public Element
 {
 public:
-  constexpr static size_t BlockSize = 256;
+  constexpr static size_t BlockSize = 64;
   constexpr static float EPSILON = 1e-6f;
   enum TypeId {
     ATTACH = 1,
@@ -57,7 +57,7 @@ public:
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(Body* body, size_t elementSize, float stiffness, float damping,
+  Constraint(size_t elementSize, float stiffness, float damping,
     const pxr::VtArray<int>& elems=pxr::VtArray<int>());
 
   virtual ~Constraint(){};
@@ -90,7 +90,6 @@ public:
 
 protected:
   void _ResetCorrection();
-  Body*                         _body;
   bool                          _active;
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _gradient;
@@ -125,6 +124,7 @@ public:
 
 protected:
   static size_t                 TYPE_ID;
+  Body*                         _body;
 };
 
 ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness=0.5f, float damping=0.1f, 
