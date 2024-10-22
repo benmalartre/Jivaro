@@ -152,7 +152,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
         _emitterId = item.path;
         _emitter = new Mesh(pxr::UsdGeomMesh(prim), 
           pxr::UsdGeomMesh(prim).ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
-        //emitter->SetInputOnly();
+        _emitter->SetInputOnly();
         break;
       }
     }
@@ -161,7 +161,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << " nothing selected create cube emitter" << std::endl;
     _emitterId = _solverId.AppendChild(pxr::TfToken("emitter"));
     _emitter = new Mesh(scale * rotate * translate);
-    //emitter->SetInputOnly();
+    _emitter->SetInputOnly();
     _emitter->Cube();
     _scene.InjectGeometry(stage, _emitterId, _emitter, 1.f);
   }
@@ -200,10 +200,12 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
 
       switch(_colliders[c]->GetType()) {
         case Geometry::CUBE:
+          std::cerr << "Create collision shape CUBE for " << _collidersId[c] << std::endl;
           collision = new BoxCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
         case Geometry::SPHERE:
+          std::cerr << "Create collision shape SPHERE for " << _collidersId[c] << std::endl;
           collision = new SphereCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
@@ -212,6 +214,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
           break;
 
         case Geometry::CAPSULE:
+          std::cerr << "Create collision shape CAPSULE for " << _collidersId[c] << std::endl;
           collision = new CapsuleCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
@@ -220,6 +223,7 @@ void TestParticles::InitExec(pxr::UsdStageRefPtr& stage)
           break;
 
         case Geometry::MESH:
+          std::cerr << "Create collision shape MESH for " << _collidersId[c] << std::endl;
           collision = new MeshCollision(_colliders[c], _collidersId[c], restitution, friction);
           ((MeshCollision*)collision)->Init(_solver->GetNumParticles());
           break;

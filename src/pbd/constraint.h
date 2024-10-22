@@ -57,10 +57,10 @@ public:
 
   static const int INVALID_INDEX = std::numeric_limits<int>::max();
 
-  Constraint(size_t elementSize, float stiffness, float damping,
+  Constraint(Body* body, size_t elementSize, float stiffness, float damping,
     const pxr::VtArray<int>& elems=pxr::VtArray<int>());
 
-  virtual ~Constraint() {};
+  virtual ~Constraint(){};
   virtual size_t GetTypeId() const override = 0;
   virtual size_t GetElementSize() const = 0;
   inline size_t GetNumElements() const{
@@ -90,7 +90,7 @@ public:
 
 protected:
   void _ResetCorrection();
-
+  Body*                         _body;
   bool                          _active;
   pxr::VtArray<int>             _elements;
   pxr::VtArray<pxr::GfVec3f>    _gradient;
@@ -125,8 +125,6 @@ public:
 
 protected:
   static size_t                 TYPE_ID;
-
-  Body*                         _body;
 };
 
 ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness=0.5f, float damping=0.1f, 
@@ -286,7 +284,7 @@ protected:
   void _SolveVelocityGeom(Particles* particles, float dt);
   void _SolveVelocitySelf(Particles* particles, float dt);
 
-  pxr::GfVec3f _ComputeFriction(const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity);
+  pxr::GfVec3f _ComputeFriction(const float friction, const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity);
   static size_t                 TYPE_ID;
   Mode                          _mode;
   Collision*                    _collision;

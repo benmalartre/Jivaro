@@ -449,7 +449,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     // update velocity
     velocity[index] = (predicted[index] - position[index]) * invDt;
     
-    /*
+    
     velocity[index] *= velDecay;
 
     float damp = _bodies[_particles.body[index]]->GetDamp();
@@ -460,7 +460,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
     }
-    */
+    
     // update position
     if (mass[index] == 0.f)
       position[index] = input[index];

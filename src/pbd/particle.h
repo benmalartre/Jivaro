@@ -54,6 +54,14 @@ public:
   pxr::GfVec3f GetVelocity() const {return _velocity;};
   pxr::GfVec3f GetTorque() const {return _torque;};
 
+  bool GetSelfCollisionEnabled() const {return _selfCollisionEnabled;};
+  float GetSelfCollisionRadius() const {return _selfCollisionRadius;};
+  float GetSelfCollisionFriction() const {return _selfCollisionFriction;};
+  float GetSelfCollisionDamp() const {return _selfCollisionDamp;};
+  //float GetSelfCollisionStiffness() const {return _selfCollisionStiffness;};
+  float GetSelfCollisionRestitution() const {return _selfCollisionRestitution;};
+  float GetSelfCollisionMaxSeparationVelocity() const {return _selfCollisionMaxSeparationVelocity;};
+
   size_t GetNumConstraintsGroup();
   ConstraintsGroup* AddConstraintsGroup(const pxr::TfToken& group, short type);
   ConstraintsGroup* GetConstraintsGroup(const pxr::TfToken& group);
@@ -72,6 +80,8 @@ protected:
   float                                     _selfCollisionRadius;
   float                                     _selfCollisionFriction;
   float                                     _selfCollisionRestitution;
+  float                                     _selfCollisionDamp;
+  float                                     _selfCollisionMaxSeparationVelocity;
 
   pxr::GfVec3f                              _color;
   pxr::GfVec3f                              _velocity;
@@ -108,6 +118,9 @@ struct Particles
   void RemoveBody(Body* body);
   void RemoveAllBodies();
 
+  Body* GetBody(size_t index){return bodies[body[index]];};
+  const Body* GetBody(size_t index) const {return bodies[body[index]];};
+
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);
 
@@ -115,20 +128,21 @@ struct Particles
 
   void _EnsureDataSize(size_t size);
 
-  short*        state;
-  int*          body;
-  float*        mass;
-  float*        invMass;
-  float*        radius;
-  pxr::GfVec3f* rest;
-  pxr::GfQuatf* rotation;
-  pxr::GfVec3f* input;
-  pxr::GfVec3f* position;
-  pxr::GfVec3f* predicted;
-  pxr::GfVec3f* velocity;
-  pxr::GfVec3f* color;
-  pxr::GfVec2f* counter;
-  size_t        num;
+  short*              state;
+  int*                body;
+  float*              mass;
+  float*              invMass;
+  float*              radius;
+  pxr::GfVec3f*       rest;
+  pxr::GfQuatf*       rotation;
+  pxr::GfVec3f*       input;
+  pxr::GfVec3f*       position;
+  pxr::GfVec3f*       predicted;
+  pxr::GfVec3f*       velocity;
+  pxr::GfVec3f*       color;
+  pxr::GfVec2f*       counter;
+  size_t              num;
+  std::vector<Body*>  bodies;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

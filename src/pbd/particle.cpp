@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <usdPbd/bodyAPI.h>
 #include <usdPbd/collisionAPI.h>
 #include <usdPbd/constraintAPI.h>
@@ -89,6 +91,8 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   item->SetOffset(base);
   item->SetNumPoints(numPoints);
   num += numPoints;
+
+  bodies.push_back(item);
 }
 
 void Particles::RemoveBody(Body* item) 
@@ -120,11 +124,16 @@ void Particles::RemoveBody(Body* item)
   _EnsureDataSize(size);
 
   num -= shift;
+
+  auto toErase = std::find(bodies.begin(), bodies.end(), item);
+  if(toErase != bodies.end())
+    bodies.erase(toErase);
 }
 
 void Particles::RemoveAllBodies()
 {
   _EnsureDataSize(0);
+  bodies.clear();
   num = 0;
 }
 
@@ -164,6 +173,8 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   bodyApi.GetSelfCollisionRadiusAttr().Get(&_selfCollisionRadius, time);
   bodyApi.GetSelfCollisionFrictionAttr().Get(&_selfCollisionFriction, time);
   bodyApi.GetSelfCollisionRestitutionAttr().Get(&_selfCollisionRestitution, time);
+  bodyApi.GetSelfCollisionDampAttr().Get(&_selfCollisionDamp, time);
+  bodyApi.GetSelfCollisionMaxSeparationVelocityAttr().Get(&_selfCollisionMaxSeparationVelocity, time);
 
   bool active;
   float stiffness, damp;

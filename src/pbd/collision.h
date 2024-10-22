@@ -129,6 +129,7 @@ protected:
   float                             _restitution;
   float                             _friction;
   float                             _damp;
+  float                             _margin;
   float                             _maxSeparationVelocity;
   Geometry*                         _collider;
   pxr::TfToken                      _key;
