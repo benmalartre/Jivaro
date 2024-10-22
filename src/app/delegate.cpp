@@ -243,6 +243,32 @@ pxr::HdPrimvarDescriptorVector Delegate::GetPrimvarDescriptors(pxr::SdfPath cons
   return primvars;
 }
 
+
+// ---------------------------------------------------------------------------- //
+// Materials 
+// ---------------------------------------------------------------------------- //
+/*virtual*/ 
+pxr::SdfPath 
+Delegate::GetMaterialId(pxr::SdfPath const &rprimId)
+{
+  if(_scene) 
+    return _scene->GetMaterialId(rprimId);
+  return pxr::SdfPath();
+}
+
+/*virtual*/
+pxr::VtValue 
+Delegate::GetMaterialResource(pxr::SdfPath const &materialId)
+{
+  if (_scene)
+    return _scene->GetMaterialResource(materialId);
+  return pxr::VtValue();
+}
+
+
+// ---------------------------------------------------------------------------- //
+// Scene 
+// ---------------------------------------------------------------------------- //
 void Delegate::SetScene(Scene* scene) {
   pxr::HdRenderIndex& index = GetRenderIndex();
   if (_scene) {

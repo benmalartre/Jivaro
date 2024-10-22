@@ -6,6 +6,7 @@
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include <pxr/usd/usdGeom/points.h>
+#include <pxr/usd/usdShade/material.h>
 #include <usdPbd/collisionAPI.h>
 
 #include "../utils/strings.h"
@@ -38,7 +39,15 @@ Scene::~Scene()
 void 
 Scene::Init(const pxr::UsdStageRefPtr& stage)
 {
+  std::cout << "-----------------------------------------------------------------------------------" << std::endl;
+  std::cout << "SCENE INIT CALLED" << std::endl;
 
+  for (pxr::UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<pxr::UsdShadeMaterial>()) {
+      std::cout << "FOUND MATERIAL : " << prim.GetPath() << std::endl;
+    }
+
+  std::cout << "SCENE INIT END" << std::endl;
 }
 
 void
@@ -390,6 +399,28 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
       }
     }
   }
+  return pxr::VtValue();
+}
+
+
+// -----------------------------------------------------------------------//
+/// \name Materials
+// -----------------------------------------------------------------------//
+
+pxr::SdfPath 
+Scene::GetMaterialId(pxr::SdfPath const &rprimId)
+{
+  pxr::SdfPath materialId;
+  pxr::TfMapLookup(_materialBindings, rprimId, &materialId);
+  return materialId;
+}
+
+pxr::VtValue 
+Scene::GetMaterialResource(pxr::SdfPath const &materialId)
+{
+  if (pxr::VtValue *material = pxr::TfMapLookupPtr(_materials, materialId))
+    return *material;
+  
   return pxr::VtValue();
 }
 

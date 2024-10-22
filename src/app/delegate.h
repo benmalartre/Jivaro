@@ -122,6 +122,11 @@ public:
     size_t maxNumSamples, float* times,
     pxr::VtValue* samples, pxr::VtIntArray* indices) override;
 
+
+  // Materials
+  pxr::SdfPath GetMaterialId(pxr::SdfPath const &rprimId) override;
+  pxr::VtValue GetMaterialResource(pxr::SdfPath const &materialId) override;
+
   void SetScene(Scene* scene);
   void RemoveScene();
   Scene* GetScene() { return _scene; };
@@ -130,6 +135,9 @@ public:
 private:
   Scene* _scene;
   pxr::SdfPath _instancerId;
+
+  std::map<pxr::SdfPath, pxr::VtValue> _materials;
+  std::map<pxr::SdfPath, pxr::SdfPath> _materialBindings;
 
 };
 

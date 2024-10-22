@@ -25,7 +25,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-TF_DEFINE_ENV_SETTING(JVR_ENGINE_DEBUG_SCENE_DELEGATE_ID, "/",
+TF_DEFINE_ENV_SETTING(JVR_ENGINE_EXEC_SCENE_DELEGATE_ID, "/",
   "Default Jivaro scene delegate id");
 
 TF_DEFINE_ENV_SETTING(JVR_ENGINE_ENABLE_SCENE_INDEX, false,
@@ -35,7 +35,7 @@ pxr::SdfPath const&
 _GetUsdImagingDelegateId()
 {
   static pxr::SdfPath const delegateId =
-    pxr::SdfPath(pxr::TfGetEnvSetting(JVR_ENGINE_DEBUG_SCENE_DELEGATE_ID));
+    pxr::SdfPath(pxr::TfGetEnvSetting(JVR_ENGINE_EXEC_SCENE_DELEGATE_ID));
 
   return delegateId;
 }

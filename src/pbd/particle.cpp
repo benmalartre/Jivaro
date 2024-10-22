@@ -186,7 +186,6 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
 
 void Body::UpdateParticles(Particles* particles)
 {
-  return; 
   for(size_t p = _offset; p < _offset + _numPoints; ++p) {
     if(!_simulationEnabled)
       particles->state[p] = Particles::MUTE;

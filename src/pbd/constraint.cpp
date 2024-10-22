@@ -1026,7 +1026,7 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
       damp = pxr::GfDot((particles->velocity[index] -  
         _collision->GetContactVelocity(index, c)) * dt * dt,  normal) * normal * _damp; 
-      correction =  w0 / w *  -d * normal - damp;
+      correction =  w0 / w *  -d * normal;// - damp;
 
       accum += correction;
 

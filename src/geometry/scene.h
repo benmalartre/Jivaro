@@ -1,6 +1,7 @@
 #ifndef JVR_GEOMETRY_SCENE_H
 #define JVR_GEOMETRY_SCENE_H
 #include <vector>
+#include <map>
 #include "../common.h"
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
@@ -33,8 +34,10 @@ public:
     pxr::HdDirtyBits   bits;
   };
 
-  typedef pxr::TfHashMap< pxr::SdfPath, _Prim, pxr::SdfPath::Hash > _PrimMap;
-  typedef pxr::TfHashMap< pxr::SdfPath, _Graph, pxr::SdfPath::Hash > _GraphMap;
+  typedef pxr::TfHashMap< pxr::SdfPath, _Prim, pxr::SdfPath::Hash >   _PrimMap;
+  typedef pxr::TfHashMap< pxr::SdfPath, _Graph, pxr::SdfPath::Hash >  _GraphMap;
+  typedef std::map< pxr::SdfPath, pxr::VtValue >                      _MaterialMap;
+  typedef std::map< pxr::SdfPath, pxr::SdfPath >                      _MaterialBindingMap;
   
   friend class Execution;
 
@@ -114,10 +117,16 @@ public:
   pxr::HdPrimvarDescriptorVector GetPrimvarDescriptors(pxr::SdfPath const& id,
     pxr::HdInterpolation interpolation);
 
+  /// Materials
+  pxr::SdfPath GetMaterialId(pxr::SdfPath const &rprimId);
+  pxr::VtValue GetMaterialResource(pxr::SdfPath const &materialId);
+
 
 private:
   Solver*                                                     _solver;
   _PrimMap                                                    _prims;
+  _MaterialMap                                                _materials;
+  _MaterialBindingMap                                         _materialBindings;
 };
 
 

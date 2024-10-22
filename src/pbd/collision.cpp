@@ -18,7 +18,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const size_t Collision::PACKET_SIZE = 64;
-const float Collision::TOLERANCE_MARGIN = 0.1f;
+const float Collision::TOLERANCE_MARGIN = 0.005f;
 
 
 void Collision::Reset()
@@ -903,14 +903,6 @@ void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t e
           GetVelocity(particles, index, other), 
           GetValue(particles, index, other)
          );
-        
-        /*
-        if(index % 32 == 0) {
-          particles->color[index] = color;
-          particles->color[other] = color;
-        }
-        else particles->color[index] = pxr::GfVec3f(0.5f+RANDOM_LO_HI(-0.05f, 0.05f));
-        */
       }
   } 
 }
@@ -1021,7 +1013,7 @@ float SelfCollision::GetValue(Particles* particles, size_t index, size_t other)
   
 pxr::GfVec3f SelfCollision::GetGradient(Particles* particles, size_t index, size_t other)
 {
-  return (particles->predicted[index] - particles->predicted[other]);//.GetNormalized();
+  return (particles->predicted[index] - particles->predicted[other]).GetNormalized();
 }
 
 // Velocity

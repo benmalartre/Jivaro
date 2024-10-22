@@ -561,7 +561,7 @@ void Solver::Reset()
   _particles.SetAllState(Particles::ACTIVE);
 
   if(_selfCollisions)delete _selfCollisions;
-    _selfCollisions = new SelfCollision(&_particles, 
+  _selfCollisions = new SelfCollision(&_particles, 
     GetPrim().GetPath().AppendProperty(pxr::TfToken("selfCollide")), 0.5f, 0.5f);
 
   for(auto& constraint: _constraints)

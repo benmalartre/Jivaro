@@ -100,6 +100,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
+  _scene.Init(stage);
+  
   // get root prim
   pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
   if(!rootPrim.IsValid()) {
