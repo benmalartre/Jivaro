@@ -74,6 +74,7 @@ Solver::~Solver()
 {
   for (auto& constraint : _constraints)delete constraint;
   for (auto& contact : _contacts)delete contact;
+  for (auto& attachment : _attachments)delete attachment;
   for (auto& body : _bodies)delete body;
   for (auto& collision: _collisions)delete collision;
   for (auto& force : _forces)delete force;
@@ -387,21 +388,36 @@ void Solver::_PrepareContacts()
 
   _contacts.clear();
 
-  if(_selfCollisions)
-    _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+
+  if(_selfCollisions)
+    _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
   _particles.ResetCounter(_contacts, 1);
   _timer->Stop();
 }
+
+void Solver::_PrepareAttachments()
+{
+  for(auto& attachment: _attachments)
+    delete attachment;
+  _attachments.clear();
+
+  for(auto& collision: _collisions) {
+    collision->CreateContactConstraints(&_particles, _bodies, _attachments);
+  }
+
+  std::cout << "ATTACHMENTS CONSTRAINTS : " << _attachments.size() << std::endl;
+}
   
 void Solver::_UpdateContacts()
 {
-  if(_selfCollisions)
-    _selfCollisions->UpdateContacts(&_particles);
   for (auto& collision : _collisions)
     collision->UpdateContacts(&_particles);
+
+  if(_selfCollisions)
+    _selfCollisions->UpdateContacts(&_particles);
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
@@ -426,6 +442,8 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
+
+    colors[index] = pxr::GfVec3f(0.5f, 1.f, 0.75f);
   }
 }
 
@@ -538,7 +556,7 @@ void Solver::Reset()
 
   size_t nL = 5;
   for (size_t b = 0; b < _bodies.size(); ++b) {
-    //WeightBoundaries(_bodies[b]);
+    WeightBoundaries(_bodies[b]);
     pxr::VtArray<int> locked(nL);
     Deformable* deformable = (Deformable*)_bodies[b]->GetGeometry();
     const pxr::GfVec3f* positions = deformable->GetPositionsCPtr();
@@ -582,6 +600,10 @@ void Solver::Step()
   size_t numThreads = pxr::WorkGetConcurrencyLimit();
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
+
+
+  // create last frame contact (pin) constraints
+  _PrepareAttachments();
   
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
@@ -598,6 +620,7 @@ void Solver::Step()
     _timer->Next();
     // solve and apply constraint
     _SolveConstraints(_constraints);
+    _SolveConstraints(_attachments);
 
     _timer->Next();
      _UpdateContacts();
@@ -643,14 +666,14 @@ void Solver::UpdateInputs(pxr::UsdStageRefPtr& stage, float time)
 
 void Solver::UpdateCollisions(pxr::UsdStageRefPtr& stage, float time)
 {
-  if(_selfCollisions)
-    _selfCollisions->Update(GetPrim(), time);
-  
   for(size_t i = 0; i < _collisions.size(); ++i){
     pxr::SdfPath path = GetElementPath(_collisions[i]);
     pxr::UsdPrim prim = stage->GetPrimAtPath(path);
     _collisions[i]->Update(prim, time);
   }
+
+  if(_selfCollisions)
+    _selfCollisions->Update(GetPrim(), time);
 }
 
 void Solver::UpdateGeometries()

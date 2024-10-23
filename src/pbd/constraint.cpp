@@ -74,7 +74,7 @@ void Constraint::Reset(Particles* particles)
 
 
 ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, short type, 
-  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize, Geometry* target)
+  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize, void* data)
 {
 
   ConstraintsGroup* group = body->AddConstraintsGroup(name, type);
@@ -97,7 +97,7 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
         break;
 
       case Constraint::PIN:
-        group->constraints.push_back(new PinConstraint(body, blockElements, target, stiffness, damping));
+        group->constraints.push_back(new PinConstraint(body, blockElements, (Geometry*)data, stiffness, damping));
         break;
 
       case Constraint::STRETCH: 
@@ -114,6 +114,10 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
 
       case Constraint::DIHEDRAL:
         group->constraints.push_back(new DihedralConstraint(body, blockElements, stiffness, damping));
+        break;
+
+      case Constraint::CONTACT:
+        group->constraints.push_back(new ContactConstraint(body, blockElements, (Collision*)data, stiffness, damping));
         break;
     }
     
@@ -183,7 +187,8 @@ void AttachConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f
 
 ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness, float damping, const pxr::VtArray<int>* elements)
 {
-
+  std::cout << "CREATE ATTCH CONSTRAINT !" << std::endl;
+  std::cout << " BODY " << body->GetGeometry()->GetPrim().GetPath() << std::endl;
   Geometry* geometry = body->GetGeometry();
   size_t offset = body->GetOffset();
   pxr::VtArray<int> allElements;
@@ -197,6 +202,8 @@ ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness, float dam
     for(size_t i = 0; i < body->GetNumPoints(); ++i)
       allElements[i] = i + offset;
   }
+
+  std::cout << "ALL ELEMENTS : " << allElements << std::endl;
 
   if(allElements.size())
     return CreateConstraintsGroup(body, 
@@ -213,7 +220,7 @@ ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness, float dam
 size_t PinConstraint::TYPE_ID = Constraint::PIN;
 size_t PinConstraint::ELEM_SIZE = 1;
 
- PinConstraint::PinConstraint(Body* body, const pxr::VtArray<int>& elems, Geometry* target,
+ PinConstraint::PinConstraint(Body* body, const pxr::VtArray<int>& elems, Geometry* target, 
   float stiffness, float damping)
     : Constraint(ELEM_SIZE, stiffness, damping, elems)
     , _target(target)
@@ -227,6 +234,11 @@ size_t PinConstraint::ELEM_SIZE = 1;
   const pxr::GfMatrix4d& m = geometry->GetMatrix();
   const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
   size_t numElements = _elements.size() / ELEM_SIZE;
+
+
+  for(const auto& elem: elems) {
+
+  }
 }
 
 void PinConstraint::SolvePosition(Particles* particles, float dt)
@@ -868,8 +880,9 @@ ConstraintsGroup* CreateDihedralConstraints(Body* body, float stiffness, float d
   return NULL;
 }
 
-// Collision Constraint
-//--------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
+//   COLLISION / SELF-COLLISION CONSTRAINT
+//-----------------------------------------------------------------------------------------
 size_t CollisionConstraint::TYPE_ID = Constraint::COLLISION;
 
 CollisionConstraint::CollisionConstraint(Body* body, Collision* collision,
@@ -929,7 +942,6 @@ pxr::GfVec3f CollisionConstraint::_ComputeFriction(const float friction, const p
   return pxr::GfVec3f(0.f);
 }
 
-
 void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 {
   _ResetCorrection();
@@ -945,8 +957,9 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     const pxr::GfVec3f position = _collision->GetContactPosition(index);
     const pxr::GfVec3f normal = _collision->GetContactNormal(index);
     const pxr::GfVec3f velocity = _collision->GetContactVelocity(index);
-  
+
     float d = _collision->GetContactDepth(index);
+
     if(particles->mass[index] < 1e-9 || d > 0.f) continue;
 
     particles->color[index] = pxr::GfVec3f(0.75, 0.75, 0.5);
@@ -963,13 +976,13 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     pxr::GfVec3f friction = _ComputeFriction(_collision->GetFriction(), 
       _correction[elem], particles->velocity[index] - velocity);
     _correction[elem] +=  friction;
-
+/*
     particles->color[index] = pxr::GfVec3f(
       RESCALE(_collision->GetContactInitDepth(index), 0, particles->radius[index], 0, 1),
       RESCALE(_collision->GetContactInitDepth(index), 0, particles->radius[index], 1, 0),
       0.f
     );
-    
+*/    
   }
 }
 
@@ -981,15 +994,30 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
   for (size_t elem = 0; elem < numElements; ++elem) {
     const size_t index = _elements[elem];
     _collision->SetContactTouching(index, false); 
-    if(_collision->GetContactDepth(index) > 0.f) continue;
+    if(_collision->GetContactDepth(index) > _collision->GetMargin()) continue;
 
-    _correction[elem] += (-particles->velocity[index] * _collision->GetFriction() + _collision->GetContactVelocity(index)) * 0.5f;
+    float dot = RESCALE(pxr::GfDot(_collision->GetContactNormal(index), 
+      -particles->velocity[index].GetNormalized()),
+      -1.f, 1.f, 1.f, 0.f);
+
+    _correction[elem] += (-particles->velocity[index] * dot * _collision->GetFriction() + 
+      _collision->GetContactVelocity(index)) * 0.5f;
+    /*
+    const pxr::GfVec3f normal = _collision->GetContactNormal(index);
+    const pxr::GfVec3f normalVelocity = pxr::GfDot(-particles->velocity[index] * dt, normal) * normal;
+    const pxr::GfVec3f tangentVelocity = particles->velocity[index] - normalVelocity;
+
+    _correction[elem] += -particles->velocity[index] + _collision->GetRestitution() * normalVelocity + _collision->GetFriction() * tangentVelocity;
+
+    //_correction[elem] += (-particles->velocity[index] * _collision->GetFriction() + _collision->GetContactVelocity(index)) * 0.5f;
+    */
     _collision->SetContactTouching(index, true);
   }
 }
 
 void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 {
+
   _ResetCorrection();
 
   SelfCollision* collision = (SelfCollision*)_collision;
@@ -1017,24 +1045,23 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
     size_t numContactUsed = 0;
     for(c = 0; c < collision->GetNumContacts(index); ++c) {
+      other = collision->GetContactComponent(index, c);
+
+      normal = collision->GetContactNormal(index, c);
+      d = collision->GetContactDepth(index, c) + 
+        pxr::GfMax(collision->GetContactInitDepth(index, c) - _collision->GetMaxSeparationVelocity() * dt, 0.f);
+        
       w1 = particles->invMass[other];     
       w = w0 + w1;
-      float d = _collision->GetContactDepth(index, c);
-      if(w < 1e-9 || d > 0.f) continue;
+      if(w < 1e-6) continue;
 
-      other = collision->GetContactComponent(index, c);
-      normal = collision->GetContactNormal(index, c);
+      damp = pxr::GfDot((particles->velocity[index] -  
+        _collision->GetContactVelocity(index, c)) * dt * dt,  normal) * normal * _damp; 
+      correction =  w0 / w *  -d * normal - damp;
 
-      if(selfMaxV > 0.f)
-        d += pxr::GfMax(-_collision->GetContactInitDepth(index) - selfMaxV * dt, 0.f);
+      accum += correction;
 
-      const float lagrange = -d / (w + alpha);
-      const pxr::GfVec3f correction = lagrange * w0 * normal;
-      damp = pxr::GfDot(correction, normal) * normal * body->GetSelfCollisionDamp();
-
-      accum += correction - damp;
-
-      velocity = (particles->velocity[index] - _collision->GetContactVelocity(index, c)) * dt;
+      velocity = _collision->GetContactVelocity(index, c) * dt;
 
       numContactUsed++;
     }
@@ -1079,7 +1106,6 @@ void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
       _correction[elem] = w0 / w * (-particles->velocity[index] + velocity * rN) * 0.5f;
     }
   }
-  
 }
 
 void CollisionConstraint::SolvePosition(Particles* particles, float dt)
@@ -1106,6 +1132,69 @@ void CollisionConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVe
 void CreateCollisionConstraint(Body* body, Collision* collision, std::vector<Constraint*>& constraints,
   float stiffness, float damping)
 {
+}
+
+
+//-----------------------------------------------------------------------------------------
+//   CONTACT CONSTRAINT
+//-----------------------------------------------------------------------------------------
+size_t ContactConstraint::TYPE_ID = Constraint::CONTACT;
+size_t ContactConstraint::ELEM_SIZE = 1;
+
+ContactConstraint::ContactConstraint(Body* body, const pxr::VtArray<int>& elems, Collision* collision,
+  float stiffness, float damping)
+    : Constraint(ELEM_SIZE, stiffness, damping, elems)
+    , _collision(collision)
+{
+  Geometry* geometry = body->GetGeometry();
+  if(geometry->GetType() < Geometry::POINT) {
+    // TODO add warning message here
+    return;
+  }
+  const size_t offset = body->GetOffset();
+  const pxr::GfMatrix4d& m = geometry->GetMatrix();
+  const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+  size_t numElements = _elements.size() / ELEM_SIZE;
+
+
+  for(const auto& elem: elems) {
+
+  }
+}
+
+void ContactConstraint::SolvePosition(Particles* particles, float dt)
+{
+}
+
+void ContactConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions,
+  pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors)
+{
+}
+
+ConstraintsGroup* CreateContactConstraints(Body* body, Collision* collision, float stiffness, float damping,
+  const pxr::VtArray<int> *elements)
+{
+
+  Geometry* geometry = body->GetGeometry();
+  size_t offset = body->GetOffset();
+  pxr::VtArray<int> allElements;
+  if(elements) {
+    allElements.resize(elements->size());  
+    for(size_t i = 0; i < elements->size(); ++i)
+      allElements[i] = (*elements)[i] + offset;
+  } else {
+    allElements.resize(body->GetNumPoints());  
+    for(size_t i = 0; i < body->GetNumPoints(); ++i)
+      allElements[i] = i + offset;
+  }
+
+  if(allElements.size())
+    return CreateConstraintsGroup(body, 
+      pxr::TfToken("contact"), Constraint::CONTACT,
+        allElements, ContactConstraint::ELEM_SIZE, Constraint::BlockSize, collision);
+ 
+  return NULL;
+
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

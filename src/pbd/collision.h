@@ -61,6 +61,9 @@ public:
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft);
   virtual void UpdateContacts(Particles* particles);
 
+  virtual void CreateContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
+    std::vector<Constraint*>& constraints);
+
   virtual Geometry* GetGeometry(){return _collider;};
 
   virtual size_t GetContactComponent(size_t index, size_t c=0) const;
@@ -94,6 +97,7 @@ public:
   float GetFriction() const {return _friction;};
   float GetRestitution() const {return _restitution;};
   float GetDamp() const {return _damp;};
+  float GetMargin()const {return _margin;};
 
   void Reset();
 

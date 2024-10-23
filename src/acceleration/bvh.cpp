@@ -61,6 +61,7 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   maxDistance = pxr::GfMin(maxDistance, hit->GetDistance());
+  if(cell->GetDistanceSquared(ray.GetPoint(0.f)) > maxDistance * maxDistance) return false;
 
   if (cell->IsLeaf()) {
     

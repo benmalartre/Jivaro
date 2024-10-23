@@ -52,6 +52,7 @@ public:
     DIHEDRAL,
     COLLISION,
     RIGID,
+    CONTACT,
     LAST
   };
 
@@ -102,7 +103,7 @@ protected:
 
 
 static ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, short type, 
-  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize, Geometry* target=NULL);
+  const pxr::VtArray<int>& allElements, size_t elementSize, size_t blockSize, void* data=NULL);
 
 
 class AttachConstraint : public Constraint
@@ -133,8 +134,8 @@ ConstraintsGroup* CreateAttachConstraints(Body* body, float stiffness=0.5f, floa
 class PinConstraint : public Constraint
 {
 public:
-  PinConstraint(Body* body, const pxr::VtArray<int>& elems, Geometry* target,
-    float stiffness, float damping);
+  PinConstraint(Body* body, const pxr::VtArray<int>& elems, Geometry* target, 
+    float stiffness=0.f, float damping=0.f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
@@ -285,6 +286,7 @@ protected:
   void _SolveVelocitySelf(Particles* particles, float dt);
 
   pxr::GfVec3f _ComputeFriction(const float friction, const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity);
+
   static size_t                 TYPE_ID;
   Mode                          _mode;
   Collision*                    _collision;
@@ -293,6 +295,30 @@ protected:
 
 };
 
+class ContactConstraint : public Constraint
+{
+public:
+  ContactConstraint(Body* body, const pxr::VtArray<int>& elems, Collision* collision, 
+    float stiffness=0.f, float damping=0.f);
+
+  size_t GetTypeId() const override { return TYPE_ID; };
+  size_t GetElementSize() const override { return ELEM_SIZE; };
+
+  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& results,
+    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
+
+  void SolvePosition(Particles* particles, float dt) override;
+
+  static size_t                 ELEM_SIZE;
+
+protected:
+  static size_t                 TYPE_ID;
+  pxr::VtArray<Contact>         _contact;
+  Collision*                    _collision;
+};
+
+ConstraintsGroup* CreateContactConstraints(Body* body, Collision* collision, float stiffness=0.f, float damping=1.f,
+  const pxr::VtArray<int> *elements=nullptr);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
