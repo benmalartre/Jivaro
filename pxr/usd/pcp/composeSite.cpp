@@ -187,16 +187,14 @@ PcpComposeSitePermission(PcpLayerStackRefPtr const &layerStack,
 bool
 PcpComposeSiteHasPrimSpecs(PcpLayerStackRefPtr const &layerStack,
                            SdfPath const &path,
-                           const std::vector<SdfLayerHandle>& layersToIgnore)
+                           const std::unordered_set<SdfLayerHandle, TfHash>& 
+                               layersToIgnore)
 {
     for (auto const &layer: layerStack->GetLayers()) {
         // if a spec was found in this layer, ensure that it is currently not
         // being ignored.
-        if (layer->HasSpec(path)) {
-            if (std::find( layersToIgnore.begin(), layersToIgnore.end(), layer) 
-                == layersToIgnore.end()) {
-                return true;
-            }
+        if (layer->HasSpec(path) && layersToIgnore.count(layer) == 0) {
+            return true;
         }
     }
     return false;

@@ -21,6 +21,7 @@
 
 #include <map>
 #include <set>
+#include <unordered_set>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -134,8 +135,9 @@ public:
     /// Will be true if a non empty sublayer was added or removed.
     bool didAddOrRemoveNonEmptySublayer = false;
 
-    /// Lists of layers that will be muted or unmuted during change processing.
-    std::vector<SdfLayerHandle> layersToMute, layersToUnmute;
+    /// Set of layers that were explicitly muted or removed from a sublayer
+    /// list and all sublayers of those layers, recursively.
+    std::unordered_set<SdfLayerHandle, TfHash> layersAffectedByMutingOrRemoval;
 
     // Holds all the diff changelists that were computed when adding/removing
     // sublayers or muting/unmuting layers.

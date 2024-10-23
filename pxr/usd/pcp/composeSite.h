@@ -206,8 +206,10 @@ PCP_API
 bool
 PcpComposeSiteHasPrimSpecs(PcpLayerStackRefPtr const &layerStack,
                            SdfPath const &path,
-                           const std::vector<SdfLayerHandle>& layersToIgnore);
+                           const std::unordered_set<SdfLayerHandle, TfHash>& 
+                               layersToIgnore);
 
+PCP_API
 bool
 PcpComposeSiteHasPrimSpecs(PcpLayerStackRefPtr const &layerStack,
                            SdfPath const &path);

@@ -1037,8 +1037,8 @@ PcpCache::Apply(const PcpCacheChanges& changes, PcpLifeboat* lifeboat)
                 // we may have blown the prim index so check that it exists.
                 if (PcpPrimIndex* primIndex = _GetPrimIndex(path)) {
                     Pcp_RescanForSpecs(primIndex, IsUsd(),
-                                       /* updateHasSpecs */ true, 
-                                       changes.layersToMute);
+                                       /* updateHasSpecs */ true,
+                                       &changes);
 
                     // If there are no specs left then we can discard the
                     // prim index.

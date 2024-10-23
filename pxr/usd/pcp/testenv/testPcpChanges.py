@@ -6,7 +6,7 @@
 # https://openusd.org/license.
 
 from pxr import Sdf, Pcp, Tf
-import unittest
+import os, unittest
 from contextlib import contextmanager
 
 INCREMENTAL_CHANGES = Tf.GetEnvSetting(
@@ -1034,6 +1034,106 @@ class TestPcpChanges(unittest.TestCase):
             self.assertEqual(cp.GetSpecChanges(), [])
             self.assertEqual(cp.GetPrimChanges(),
                              ['/FSToyCarA/Looks/PaintedWood_PaintedYellow'])
+
+    def test_MuteCulledAncestralReferences(self):
+        """Tests that muting an ancestrally-referenced layer and invalidates
+        affected prim indexes when the corresponding node is culled."""
+
+        rootLayer = Sdf.Layer.FindOrOpen(
+            'TestMuteCulledAncestralReference/root.sdf')
+        refLayer = Sdf.Layer.FindOrOpenRelativeToLayer(rootLayer, 'ref.sdf')
+        pcp = Pcp.Cache(Pcp.LayerStackIdentifier(rootLayer))
+
+        # Compute the initial prim index and verify that all reference
+        # nodes pointing to ref.sdf have been culled from the graph.
+        # All nodes should be in the root layer stack.
+        pi, err = pcp.ComputePrimIndex(
+            '/FSToyCarA/Looks/PaintedWood_PaintedYellow')
+
+        nodes = [pi.rootNode]
+        while nodes:
+            node = nodes[0]
+            nodes = nodes[1:] + node.children
+            self.assertEqual(node.layerStack.layers[0], rootLayer)
+
+        # However, we should have a dependency registered on ref.sdf.
+        refLayerStack = pcp.FindAllLayerStacksUsingLayer(refLayer)[0]
+        self.assertEqual(
+            [dep.indexPath for dep in pcp.FindSiteDependencies(
+                refLayerStack, '/FSToyCarA_defaultShadingVariant')],
+            ['/FSToyCarA'])
+
+        # Mute ref.sdf and verify that the prim index is invalidated
+        # and that recomputing the prim index results in a composition
+        # error due to the muted reference layer.
+        pcp.RequestLayerMuting([refLayer.identifier], [])
+        self.assertTrue(pcp.IsLayerMuted(refLayer.identifier))
+
+        self.assertFalse(pcp.FindPrimIndex(
+            '/FSToyCarA/Looks/PaintedWood_PaintedYellow'))
+        pi, err = pcp.ComputePrimIndex(
+            '/FSToyCarA/Looks/PaintedWood_PaintedYellow')
+
+        self.assertTrue(err)
+
+    def test_MuteRemoveSublayerWithSublayers(self):
+        """Tests that muting/removing sublayers that also have sublayers
+        invalidate affected cache prim indexes."""
+
+        def _Test(rootLayerId, layerOperationFn):
+            rootLayer = Sdf.Layer.FindOrOpen(rootLayerId)
+            pcp = Pcp.Cache(Pcp.LayerStackIdentifier(rootLayer))
+
+            def _ComputePrimIndex(path):
+                pi, err = pcp.ComputePrimIndex(path)
+                self.assertFalse(err, f"Unexpected errors for {path}: {err}")
+                return (pi, path)
+
+            def _FindPrimIndex(indexAndPath):
+                return True if pcp.FindPrimIndex(indexAndPath[1]) else False
+
+            # These prim indexes either have all of their opinions or a def
+            # in the sublayers that will be removed from composition.
+            overInSublayers = _ComputePrimIndex('/Parent/OverInSublayers')
+            overAndDefInSublayers = _ComputePrimIndex('/Parent/OverAndDefInSublayers')
+            overInRootDefInSublayer = _ComputePrimIndex('/Parent/OverInRootDefInSublayer')
+
+            # This prim index has an over in the root layer and another over in
+            # a sublayer that will be removed from composition.
+            overInSublayerAndRoot = _ComputePrimIndex('/Parent/OverInSublayerAndRoot')
+
+            layerOperationFn(pcp)
+
+            # After the layer operation, all of these prim indexes should be
+            # resync'd.
+            self.assertFalse(_FindPrimIndex(overInSublayers))
+            self.assertFalse(_FindPrimIndex(overAndDefInSublayers))
+            self.assertFalse(_FindPrimIndex(overInRootDefInSublayer))
+
+            # This prim index does not need to be recomputed, it just has an
+            # updated prim stack.
+            self.assertTrue(_FindPrimIndex(overInSublayerAndRoot))
+            self.assertEqual(
+                overInSublayerAndRoot[0].primStack,
+                [rootLayer.GetPrimAtPath('/Parent/OverInSublayerAndRoot')])
+
+        # Test cases for muting a sublayer that itself has sublayers.
+        def _MuteSublayer(pcp):
+            subLayer = pcp.layerStack.layers[1]
+            self.assertEqual(os.path.basename(subLayer.identifier), 'sub.sdf')
+            pcp.RequestLayerMuting([subLayer.identifier], [])
+
+        _Test('TestMuteRemoveWithNestedSublayers/root.sdf', _MuteSublayer)
+        _Test('TestMuteRemoveWithSiblingSublayers/root.sdf', _MuteSublayer)
+
+        # Test cases for removing a sublayer that itself has sublayers.
+        def _RemoveSublayer(pcp):
+            with Pcp._TestChangeProcessor(pcp):
+                rootLayer = pcp.GetLayerStackIdentifier().rootLayer
+                rootLayer.subLayerPaths.clear()
+
+        _Test('TestMuteRemoveWithNestedSublayers/root.sdf', _RemoveSublayer)
+        _Test('TestMuteRemoveWithSiblingSublayers/root.sdf', _RemoveSublayer)
 
     def test_AddMuteRemoveSublayerWithRelocates(self):
         """Tests that adding/muting/removing sublayers that only define layer 

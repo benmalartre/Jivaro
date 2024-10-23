@@ -40,6 +40,7 @@ TF_DECLARE_WEAK_AND_REF_PTRS(PcpPrimIndex_Graph);
 
 class ArResolver;
 class PcpCache;
+class PcpCacheChanges;
 class PcpPrimIndex;
 class PcpPrimIndexInputs;
 class PcpPrimIndexOutputs;
@@ -281,7 +282,7 @@ private:
     friend void Pcp_RescanForSpecs(
                     PcpPrimIndex*, bool usd,
                     bool updateHasSpecs,
-                    const std::vector<SdfLayerHandle>& layersToIgnore);
+                    const PcpCacheChanges *cacheChanges);
 
     // The node graph representing the compositional structure of this prim.
     PcpPrimIndex_GraphRefPtr _graph;
