@@ -98,6 +98,7 @@ public:
   float GetRestitution() const {return _restitution;};
   float GetDamp() const {return _damp;};
   float GetMargin()const {return _margin;};
+  float GetStiffness() const {return _stiffness;};
 
   void Reset();
 
@@ -133,6 +134,7 @@ protected:
   float                             _restitution;
   float                             _friction;
   float                             _damp;
+  float                             _stiffness;
   float                             _margin;
   float                             _maxSeparationVelocity;
   Geometry*                         _collider;

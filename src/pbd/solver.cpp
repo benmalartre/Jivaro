@@ -4,6 +4,7 @@
 #include <usdPbd/solver.h>
 #include <usdPbd/bodyAPI.h>
 
+#include "../utils/color.h"
 #include "../acceleration/bvh.h"
 #include "../acceleration/hashGrid.h"
 #include "../geometry/location.h"
@@ -443,7 +444,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
 
-    colors[index] = pxr::GfVec3f(0.5f, 1.f, 0.75f);
+    colors[index] = RandomColorByIndex(index);
   }
 }
 

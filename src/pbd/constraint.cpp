@@ -948,7 +948,8 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
   const size_t numElements = _elements.size();
   pxr::GfVec3f damp, position, gradient, normal, correction;
 
-  _compliance = 0.0001f;
+  const float stiffness = _collision->GetStiffness();
+  _compliance = stiffness < 1e-9 ? 0.f : 1.f / stiffness;
   const float alpha = _compliance / (dt * dt);
 
   for (size_t elem = 0; elem < numElements; ++elem) {
@@ -970,6 +971,8 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
     const float lagrange = -d / (particles->invMass[index] + alpha);
     const pxr::GfVec3f correction = lagrange * particles->invMass[index] * normal;
+
+    //const pxr::GfVec3f correction = -d * normal;
     damp = pxr::GfDot(correction, normal) * normal * _collision->GetDamp();
     _correction[elem] = correction - damp;
 
@@ -988,6 +991,7 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 {
+
   _ResetCorrection(); 
   const size_t numElements = _elements.size();
 
@@ -996,21 +1000,22 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
     _collision->SetContactTouching(index, false); 
     if(_collision->GetContactDepth(index) > _collision->GetMargin()) continue;
 
+    /*
     float dot = RESCALE(pxr::GfDot(_collision->GetContactNormal(index), 
       -particles->velocity[index].GetNormalized()),
       -1.f, 1.f, 1.f, 0.f);
 
     _correction[elem] += (-particles->velocity[index] * dot * _collision->GetFriction() + 
       _collision->GetContactVelocity(index)) * 0.5f;
-    /*
+    */
     const pxr::GfVec3f normal = _collision->GetContactNormal(index);
-    const pxr::GfVec3f normalVelocity = pxr::GfDot(-particles->velocity[index] * dt, normal) * normal;
+    const pxr::GfVec3f normalVelocity = pxr::GfDot(particles->velocity[index] * dt, normal) * normal;
     const pxr::GfVec3f tangentVelocity = particles->velocity[index] - normalVelocity;
 
-    _correction[elem] += -particles->velocity[index] + _collision->GetRestitution() * normalVelocity + _collision->GetFriction() * tangentVelocity;
+    //_correction[elem] += -particles->velocity[index] + _collision->GetRestitution() * normalVelocity + _collision->GetFriction() * tangentVelocity;
 
     //_correction[elem] += (-particles->velocity[index] * _collision->GetFriction() + _collision->GetContactVelocity(index)) * 0.5f;
-    */
+    
     _collision->SetContactTouching(index, true);
   }
 }
