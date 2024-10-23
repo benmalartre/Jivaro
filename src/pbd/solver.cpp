@@ -408,8 +408,6 @@ void Solver::_PrepareAttachments()
   for(auto& collision: _collisions) {
     collision->CreateContactConstraints(&_particles, _bodies, _attachments);
   }
-
-  std::cout << "ATTACHMENTS CONSTRAINTS : " << _attachments.size() << std::endl;
 }
   
 void Solver::_UpdateContacts()
@@ -517,6 +515,12 @@ Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
   for (auto& constraint : constraints)
     if(constraint->IsActive())
       constraint->ApplyVelocity(&_particles);
+}
+
+void 
+Solver::_SmoothVelocities(size_t iterations)
+{
+
 }
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)

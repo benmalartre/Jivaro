@@ -391,7 +391,7 @@ void ViewportUI::Render()
     _camera->GetProjectionMatrix()
   );
 
-  _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
+  _engine->SetSelectionColor(pxr::GfVec4f(0.75, 0.75, 0, 0.5));
 
   _renderParams.frame = pxr::UsdTimeCode(Time::Get()->GetActiveTime());
   _renderParams.complexity = 1.0f;

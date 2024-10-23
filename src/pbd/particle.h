@@ -8,6 +8,7 @@
 #include <pxr/base/gf/matrix4f.h>
 
 #include "../common.h"
+#include "../geometry/smooth.h"
 #include "../pbd/element.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -15,6 +16,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Geometry;
 class Constraint;
 class Particles;
+
 struct ConstraintsGroup;
 
 class Body : public Element
@@ -32,7 +34,10 @@ public:
   , _radius(radius)
   , _damp(damp)
   , _velocity(0.f)
-  , _color(color){}
+  , _color(color)
+  {
+    _InitSmoothKernel();
+  }
 
   ~Body();
 
@@ -70,6 +75,8 @@ public:
 
 
 protected:
+  void                                      _InitSmoothKernel();
+
   Geometry*                                 _geometry;
   size_t                                    _offset;
   size_t                                    _numPoints;
@@ -93,6 +100,8 @@ protected:
   std::vector<int>                          _connexions;
   std::vector<int>                          _connexionsCounts;
   std::vector<int>                          _connexionsOffsets;
+
+  Smooth<pxr::GfVec3f>*                     _smoothKernel;
 };
 
 enum BodyType

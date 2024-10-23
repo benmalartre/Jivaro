@@ -285,7 +285,8 @@ protected:
   void _SolveVelocityGeom(Particles* particles, float dt);
   void _SolveVelocitySelf(Particles* particles, float dt);
 
-  pxr::GfVec3f _ComputeFriction(const float friction, const pxr::GfVec3f& correction, const pxr::GfVec3f& relativeVelocity);
+  pxr::GfVec3f _ComputeFriction(const float friction, const pxr::GfVec3f& correction, 
+    const pxr::GfVec3f& relativeVelocity);
 
   static size_t                 TYPE_ID;
   Mode                          _mode;
@@ -299,7 +300,7 @@ class ContactConstraint : public Constraint
 {
 public:
   ContactConstraint(Body* body, const pxr::VtArray<int>& elems, Collision* collision, 
-    float stiffness=0.f, float damping=0.f);
+    const pxr::VtArray<Contact*>& contact, float stiffness=0.f, float damping=0.f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
@@ -313,7 +314,7 @@ public:
 
 protected:
   static size_t                 TYPE_ID;
-  pxr::VtArray<Contact>         _contact;
+  pxr::VtArray<Contact>         _contacts;
   Collision*                    _collision;
 };
 

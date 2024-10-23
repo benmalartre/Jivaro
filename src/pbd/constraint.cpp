@@ -116,9 +116,6 @@ ConstraintsGroup* CreateConstraintsGroup(Body* body, const pxr::TfToken& name, s
         group->constraints.push_back(new DihedralConstraint(body, blockElements, stiffness, damping));
         break;
 
-      case Constraint::CONTACT:
-        group->constraints.push_back(new ContactConstraint(body, blockElements, (Collision*)data, stiffness, damping));
-        break;
     }
     
     first += blockSize * elementSize;
@@ -1147,7 +1144,7 @@ size_t ContactConstraint::TYPE_ID = Constraint::CONTACT;
 size_t ContactConstraint::ELEM_SIZE = 1;
 
 ContactConstraint::ContactConstraint(Body* body, const pxr::VtArray<int>& elems, Collision* collision,
-  float stiffness, float damping)
+  const pxr::VtArray<Contact*> &contacts, float stiffness, float damping)
     : Constraint(ELEM_SIZE, stiffness, damping, elems)
     , _collision(collision)
 {
@@ -1161,14 +1158,56 @@ ContactConstraint::ContactConstraint(Body* body, const pxr::VtArray<int>& elems,
   const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
   size_t numElements = _elements.size() / ELEM_SIZE;
 
+  for(auto& contact: contacts)
+    _contacts.push_back(*contact);
 
-  for(const auto& elem: elems) {
+  std::cout << "num contacts " << _contacts.size() << std::endl;
+  std::cout << "num elements " << _elements.size() << std::endl;
 
-  }
 }
 
 void ContactConstraint::SolvePosition(Particles* particles, float dt)
 {
+  _ResetCorrection();
+
+  const float alpha =  _compliance / (dt * dt);
+
+  const pxr::GfVec3f* predicted = &particles->predicted[0];
+  const pxr::GfVec3f* velocity = &particles->velocity[0];
+  const float* radius = &particles->radius[0];
+
+  const Geometry* geometry = _collision->GetGeometry();
+  const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+  const pxr::GfVec3f* normals = ((Deformable*)geometry)->GetNormalsCPtr();
+
+  if(geometry->GetType() == Geometry::MESH) {
+    
+    Mesh* mesh = (Mesh*)geometry;
+    for(size_t elem = 0; elem < _elements.size();++elem) {
+      size_t index = _elements[elem];
+      const Triangle* triangle = mesh->GetTriangle(_contacts[elem].GetComponentIndex());
+
+      const pxr::GfVec3f position = 
+        _contacts[elem].ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
+
+      const pxr::GfVec3f normal = 
+        _contacts[elem].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
+
+      const pxr::GfVec3f desired = position + normal * radius[index];
+
+      const pxr::GfVec3f gradient = predicted[index] - desired;
+      const float length = gradient.GetLength();
+      if(length < 1e-9)continue;
+
+      const pxr::GfVec3f gradN = gradient.GetNormalized();
+      const pxr::GfVec3f correction = -length / (particles->invMass[index] + alpha) * gradient;
+      const pxr::GfVec3f damp = pxr::GfDot(velocity[index] * dt * dt, gradN) * gradN * _damp;
+
+      _correction[elem] += particles->invMass[index] * correction - damp;
+    }
+  }
+
+  
 }
 
 void ContactConstraint::GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& positions,
@@ -1184,6 +1223,7 @@ ConstraintsGroup* CreateContactConstraints(Body* body, Collision* collision, flo
   size_t offset = body->GetOffset();
   pxr::VtArray<int> allElements;
   if(elements) {
+    if(!elements->size())return NULL;
     allElements.resize(elements->size());  
     for(size_t i = 0; i < elements->size(); ++i)
       allElements[i] = (*elements)[i] + offset;

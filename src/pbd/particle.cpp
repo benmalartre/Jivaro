@@ -7,6 +7,8 @@
 #include "../geometry/geometry.h"
 #include "../geometry/points.h"
 #include "../geometry/mesh.h"
+#include "../geometry/smooth.h"
+
 #include "../pbd/particle.h"
 #include "../pbd/constraint.h"
 
@@ -158,6 +160,29 @@ Body::~Body()
   for (auto& constraint : _constraints)
     delete constraint.second;
   _constraints.clear();
+  delete _smoothKernel;
+}
+
+void 
+Body::_InitSmoothKernel()
+{
+  pxr::VtFloatArray weights;
+  _smoothKernel = new Smooth<pxr::GfVec3f>(_numPoints, weights);
+  switch(_geometry->GetType()) {
+    case Geometry::MESH:
+    {
+      Mesh* mesh = (Mesh*)_geometry;
+      if(!(mesh->GetFlags() & Mesh::ADJACENTS))mesh->ComputeAdjacents(); 
+      const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+
+      for(size_t i = 0; i < _numPoints; ++i) {
+        _smoothKernel->SetDatas(i, positions[i]);
+        _smoothKernel->SetNeighbors(i, mesh->GetNumAdjacents(i), mesh->GetAdjacents(i));
+      }
+      break;
+    }
+  }
+
 }
 
 void Body::UpdateParameters(pxr::UsdPrim& prim, float time)

@@ -129,6 +129,8 @@ private:
   void _SolveConstraints(std::vector<Constraint*>& constraints);
   void _SolveVelocities(std::vector<Constraint*>& constraints);
 
+  void _SmoothVelocities(size_t iterations);
+
   void _IntegrateParticles(size_t begin, size_t end);
   void _UpdateParticles(size_t begin, size_t end);
 

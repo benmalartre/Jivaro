@@ -189,6 +189,7 @@ Collision::CreateContactConstraints(Particles* particles, const std::vector<Body
       const pxr::GfVec3f* normals = mesh->GetNormalsCPtr();
 
       pxr::VtArray<int> elements;
+      pxr::VtArray<Contact*> contacts;
 
       Mask::Iterator iterator(this, 0, particles->GetNumParticles());
       size_t index = iterator.Begin();
@@ -196,11 +197,13 @@ Collision::CreateContactConstraints(Particles* particles, const std::vector<Body
         if(!_contacts.GetNumUsed(index)) continue;
         
         Contact* contact = _contacts.Get(index);
+        
         if(contact->IsTouching()) {
           //const pxr::GfVec3f velocity = mesh->GetTriangleVelocity(contact->GetComponentIndex());
           //particles->position[p] = desired;
           //particles->predicted[p] = desired;
           elements.push_back(index);
+          contacts.push_back(contact);
           particles->color[index] = pxr::GfVec3f(1.f, 0.f, 0.f);
         }  
         else
@@ -208,10 +211,10 @@ Collision::CreateContactConstraints(Particles* particles, const std::vector<Body
 
         if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
           if (elements.size()) {
-            //constraint = new ContactConstraint(particles->body[index], elements, this);
-            //constraints.push_back(constraint);
-            std::cout << "Create Contact COnstraint !" << std::endl;
+            constraint = new ContactConstraint(particles->body[index], elements, this, contacts, _friction, _damp);
+            constraints.push_back(constraint);
             elements.clear();
+            contacts.clear();
           } 
         }
       }
