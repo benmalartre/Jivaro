@@ -18,9 +18,9 @@
     `PXR_USE_BOOST_PYTHON=ON` when running CMake. This option is for testing and 
     transition purposes; it is deprecated and will be removed in a future release. 
 
-- Added "--boost-python" option for building OpenUSD's Python bindings with 
-  boost::python. This option is for testing and transition purposes; it is 
-  deprecated and will be removed in a future release. 
+- Added "--boost-python" option to build_usd.py for building OpenUSD's Python 
+  bindings with boost::python. This option is for testing and transition 
+  purposes; it is deprecated and will be removed in a future release. 
   Note that the build script will continue to build boost if it's needed by 
   optional dependencies. These include OpenImageIO and OpenVDB.
 
