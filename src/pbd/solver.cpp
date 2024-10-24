@@ -75,7 +75,7 @@ Solver::~Solver()
 {
   for (auto& constraint : _constraints)delete constraint;
   for (auto& contact : _contacts)delete contact;
-  for (auto& attachment : _attachments)delete attachment;
+  //for (auto& attachment : _attachments)delete attachment;
   for (auto& body : _bodies)delete body;
   for (auto& collision: _collisions)delete collision;
   for (auto& force : _forces)delete force;
@@ -399,6 +399,7 @@ void Solver::_PrepareContacts()
   _timer->Stop();
 }
 
+/*
 void Solver::_PrepareAttachments()
 {
   for(auto& attachment: _attachments)
@@ -409,6 +410,7 @@ void Solver::_PrepareAttachments()
     collision->CreateContactConstraints(&_particles, _bodies, _attachments);
   }
 }
+*/
   
 void Solver::_UpdateContacts()
 {
@@ -424,6 +426,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
   pxr::GfVec3f* velocity = &_particles.velocity[0];
 
   // compute predicted position
+  pxr::GfVec3f* previous = &_particles.previous[0];
   pxr::GfVec3f* predicted = &_particles.predicted[0];
   pxr::GfVec3f* position = &_particles.position[0];
   pxr::GfVec3f* colors = &_particles.color[0];
@@ -439,6 +442,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
     if(_particles.state[index] != Particles::ACTIVE)continue;
 
+    previous[index] = velocity[index];
     position[index] = predicted[index];
     predicted[index] = position[index] + velocity[index] * _stepTime;
 
@@ -452,6 +456,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   const pxr::GfVec3f* input = &_particles.input[0];
   const float* mass = &_particles.mass[0];
   pxr::GfVec3f* position = &_particles.position[0];
+  pxr::GfVec3f* previous = &_particles.previous[0];
   pxr::GfVec3f* velocity = &_particles.velocity[0];
   short* state = &_particles.state[0];
 
@@ -464,6 +469,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     if (state[index] != Particles::ACTIVE)continue;
     
     // update velocity
+    //previous[index] = velocity[index];
     velocity[index] = (predicted[index] - position[index]) * invDt; 
     velocity[index] *= velDecay;
 
@@ -515,13 +521,12 @@ Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
   for (auto& constraint : constraints)
     if(constraint->IsActive())
       constraint->ApplyVelocity(&_particles);
+
+  // smooth velocities
+  for(auto& body: _bodies)
+    body->SmoothVelocities(&_particles, 1);
 }
 
-void 
-Solver::_SmoothVelocities(size_t iterations)
-{
-
-}
 
 void Solver::Update(pxr::UsdStageRefPtr& stage, float time)
 {
@@ -593,7 +598,13 @@ void Solver::Reset()
     _selfCollisions->Reset();
   for(auto& collision: _collisions)
     collision->Reset();
-    
+
+/*
+  if (_attachments.size()) {
+    for (auto& attachment : _attachments)delete attachment;
+    _attachments.clear();
+  }
+  */  
   UpdateCurves();
 }
 
@@ -608,7 +619,7 @@ void Solver::Step()
 
 
   // create last frame contact (pin) constraints
-  _PrepareAttachments();
+  //_PrepareAttachments();
   
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
@@ -625,7 +636,7 @@ void Solver::Step()
     _timer->Next();
     // solve and apply constraint
     _SolveConstraints(_constraints);
-    _SolveConstraints(_attachments);
+    //_SolveConstraints(_attachments);
 
     _timer->Next();
      _UpdateContacts();

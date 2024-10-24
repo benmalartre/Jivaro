@@ -211,7 +211,7 @@ Collision::CreateContactConstraints(Particles* particles, const std::vector<Body
 
         if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
           if (elements.size()) {
-            constraint = new ContactConstraint(particles->body[index], elements, this, contacts, _friction, _damp);
+            constraint = new ContactConstraint(particles->body[index], elements, this, contacts, _stiffness, _damp);
             constraints.push_back(constraint);
             elements.clear();
             contacts.clear();
@@ -614,7 +614,7 @@ void CapsuleCollision::_FindContact(Particles* particles, size_t index, float ft
 
   const pxr::GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
-  const float d = capsule->SignedDistance(predicted) - particles->radius[index] / scaleFactor;
+  const float d = capsule->SignedDistance(predicted) - (particles->radius[index] + _margin) / scaleFactor;
 
   SetHit(index, d < Collision::TOLERANCE_MARGIN);
 }

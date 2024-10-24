@@ -42,7 +42,6 @@ public:
   Collision(Geometry* collider, const pxr::SdfPath& path, 
     float restitution=0.5f, float friction=0.5f) 
     : Mask(Element::COLLISION)
-    , _id(path)
     , _collider(collider)
     , _restitution(restitution)
     , _friction(friction){};
@@ -139,9 +138,6 @@ protected:
   float                             _maxSeparationVelocity;
   Geometry*                         _collider;
   pxr::TfToken                      _key;
-
-  Points*                           _points;
-  pxr::SdfPath                      _id;
 
 };
 

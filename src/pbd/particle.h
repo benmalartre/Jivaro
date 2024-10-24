@@ -73,6 +73,8 @@ public:
   ConstraintsGroup* AddConstraintsGroup(const pxr::TfToken& group, short type);
   ConstraintsGroup* GetConstraintsGroup(const pxr::TfToken& group);
 
+  void SmoothVelocities(Particles* particles, size_t iterations);
+
 
 protected:
   void                                      _InitSmoothKernel();
@@ -144,6 +146,7 @@ struct Particles
   pxr::GfVec3f*       rest;
   pxr::GfQuatf*       rotation;
   pxr::GfVec3f*       input;
+  pxr::GfVec3f*       previous;
   pxr::GfVec3f*       position;
   pxr::GfVec3f*       predicted;
   pxr::GfVec3f*       velocity;

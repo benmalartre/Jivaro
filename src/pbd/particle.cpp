@@ -46,6 +46,7 @@ void Particles::_EnsureDataSize(size_t desired)
   counter =   _ResizeArray<pxr::GfVec2f>(counter, num, size);
   rest =      _ResizeArray<pxr::GfVec3f>(rest, num, size);
   input =     _ResizeArray<pxr::GfVec3f>(input, num, size);
+  previous =  _ResizeArray<pxr::GfVec3f>(previous, num, size);
   position =  _ResizeArray<pxr::GfVec3f>(position, num, size);
   predicted = _ResizeArray<pxr::GfVec3f>(predicted, num, size);
   velocity =  _ResizeArray<pxr::GfVec3f>(velocity, num, size);
@@ -79,6 +80,7 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
     radius[idx] = item->GetRadius();
     rest[idx] = pos;
     input[idx] = pos;
+    previous[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
     rotation[idx] = pxr::GfQuatf(1.f);
@@ -109,6 +111,7 @@ void Particles::RemoveBody(Body* item)
     radius[lhi]    = radius[rhi];
     rest[lhi]      = rest[rhi];
     input[lhi]     = input[rhi];
+    previous[lhi] = previous[rhi];
     position[lhi]  = position[rhi];
     predicted[lhi] = predicted[rhi];
     rotation[lhi]  = rotation[rhi];
@@ -173,16 +176,37 @@ Body::_InitSmoothKernel()
     {
       Mesh* mesh = (Mesh*)_geometry;
       if(!(mesh->GetFlags() & Mesh::ADJACENTS))mesh->ComputeAdjacents(); 
-      const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
 
       for(size_t i = 0; i < _numPoints; ++i) {
-        _smoothKernel->SetDatas(i, positions[i]);
+        _smoothKernel->SetDatas(i, pxr::GfVec3f(0.f));
         _smoothKernel->SetNeighbors(i, mesh->GetNumAdjacents(i), mesh->GetAdjacents(i));
       }
       break;
     }
   }
+}
 
+void 
+Body::SmoothVelocities(Particles* particles, size_t iterations)
+{
+  switch(_geometry->GetType()) {
+    case Geometry::MESH:
+    {
+      Mesh* mesh = (Mesh*)_geometry;
+      if(!(mesh->GetFlags() & Mesh::ADJACENTS))mesh->ComputeAdjacents(); 
+      const pxr::GfVec3f* velocities = &particles->velocity[0];
+
+      for(size_t i = 0; i < _numPoints; ++i) {
+        _smoothKernel->SetDatas(i, velocities[i + _offset]);
+      }
+      _smoothKernel->Compute(iterations);
+
+      for(size_t i = 0; i < _numPoints; ++i) {
+        particles->velocity[i + _offset] = _smoothKernel->GetDatas(i);
+      }
+      
+    }
+  }
 }
 
 void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
