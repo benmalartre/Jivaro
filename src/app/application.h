@@ -117,6 +117,7 @@ public:
   virtual void InitExec(pxr::UsdStageRefPtr& stage);
   virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time);
   virtual void TerminateExec(pxr::UsdStageRefPtr& stage);
+  virtual void SendExecViewEvent(const ExecViewEventData& data);
 
   // singleton 
   static Application *Get();

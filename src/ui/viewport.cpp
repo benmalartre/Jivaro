@@ -234,6 +234,20 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   }
   _engine->SetDirty(true);
   _parent->SetDirty();
+
+  Application* app = Application::Get();
+  if(app->GetExec()) {
+    ExecViewEventData data;
+    data.type = ExecViewEventData::MOUSE_BUTTON;
+    data.button = button;
+    data.action = action;
+    data.mods = mods;
+    data.x = x - GetX();
+    data.y = y - GetY();
+    data.width = GetWidth();
+    data.height = GetHeight();
+    app->SendExecViewEvent(data);
+  }
 }
 
 void ViewportUI::MouseMove(int x, int y) 

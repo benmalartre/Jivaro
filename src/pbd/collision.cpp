@@ -18,7 +18,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 const size_t Collision::PACKET_SIZE = 64;
-const float Collision::TOLERANCE_MARGIN = 0.005f;
+const float Collision::TOLERANCE_MARGIN = 0.01f;
 
 
 void Collision::Reset()

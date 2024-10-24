@@ -75,7 +75,6 @@ Solver::~Solver()
 {
   for (auto& constraint : _constraints)delete constraint;
   for (auto& contact : _contacts)delete contact;
-  //for (auto& attachment : _attachments)delete attachment;
   for (auto& body : _bodies)delete body;
   for (auto& collision: _collisions)delete collision;
   for (auto& force : _forces)delete force;
@@ -329,7 +328,7 @@ void Solver::UpdateCurves()
   pxr::VtArray<pxr::GfVec3f> colors;
   pxr::VtArray<int> counts;
 
-  /*
+  
   for(size_t c = 0; c < numConstraints; ++c) {
     if(_constraints[c]->GetTypeId() == Constraint::ATTACH) continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
@@ -337,13 +336,13 @@ void Solver::UpdateCurves()
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
       counts.push_back(2);
   }
-  */
+  /*
  size_t numCollisions = _collisions.size();
   for(size_t c = 0; c < numCollisions; ++c) {
     if(_collisions[c]->GetTypeId() != Collision::MESH) continue;
     _collisions[c]->GetNormals(&_particles, positions, widths, colors, counts);
-    _collisions[c]->GetVelocities(&_particles, positions, widths, colors, counts);
-  }
+    _c
+    */
   _curves->SetTopology(positions, widths, counts);
   _curves->SetColors(colors);
 
@@ -399,19 +398,8 @@ void Solver::_PrepareContacts()
   _timer->Stop();
 }
 
-/*
-void Solver::_PrepareAttachments()
-{
-  for(auto& attachment: _attachments)
-    delete attachment;
-  _attachments.clear();
 
-  for(auto& collision: _collisions) {
-    collision->CreateContactConstraints(&_particles, _bodies, _attachments);
-  }
-}
-*/
-  
+
 void Solver::_UpdateContacts()
 {
   for (auto& collision : _collisions)
@@ -598,13 +586,7 @@ void Solver::Reset()
     _selfCollisions->Reset();
   for(auto& collision: _collisions)
     collision->Reset();
-
-/*
-  if (_attachments.size()) {
-    for (auto& attachment : _attachments)delete attachment;
-    _attachments.clear();
-  }
-  */  
+  
   UpdateCurves();
 }
 
@@ -617,9 +599,6 @@ void Solver::Step()
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
 
-
-  // create last frame contact (pin) constraints
-  //_PrepareAttachments();
   
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
@@ -636,7 +615,6 @@ void Solver::Step()
     _timer->Next();
     // solve and apply constraint
     _SolveConstraints(_constraints);
-    //_SolveConstraints(_attachments);
 
     _timer->Next();
      _UpdateContacts();

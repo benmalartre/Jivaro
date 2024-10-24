@@ -329,6 +329,13 @@ Application::TerminateExec(pxr::UsdStageRefPtr& stage)
   NewSceneNotice().Send();
 }
 
+void 
+Application::SendExecViewEvent(const ExecViewEventData& data)
+{
+  _exec->ViewEvent(data);
+}
+
+
 
 void
 Application::Term()

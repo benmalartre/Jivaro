@@ -1,6 +1,8 @@
 #ifndef JVR_EXEC_EXECUTION_H
 #define JVR_EXEC_EXECUTION_H
 
+#include <GLFW/glfw3.h>
+
 #include <pxr/base/tf/hashMap.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
@@ -11,6 +13,26 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Scene;
+
+struct ExecViewEventData {
+  enum Type {
+    MOUSE_BUTTON,
+    MOUSE_MOVE,
+    KEYBOARD_INPUT
+  };
+
+  short type;
+  int button;
+  int action;
+  int mods;
+  int x;
+  int y;
+  int key;
+  int width;
+  int height;
+};
+
+
 class Execution {
 public:
   virtual ~Execution(){};
@@ -23,11 +45,17 @@ public:
   virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time) = 0;
   virtual void TerminateExec(pxr::UsdStageRefPtr& stage) = 0;
 
+  virtual void ViewEvent(const ExecViewEventData& data);
+
 public:
   Scene* GetScene(){return &_scene;};
   const Scene* GetScene() const {return &_scene;};
 
 protected:
+  virtual void _MouseButtonEvent(const ExecViewEventData &data);
+  virtual void _MouseMoveEvent(const ExecViewEventData &data);
+  virtual void _KeyboardInputEvent(const ExecViewEventData &data);
+
   void _GetRootPrim(pxr::UsdStageRefPtr& stage);
 
   Scene         _scene;

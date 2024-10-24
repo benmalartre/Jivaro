@@ -124,7 +124,6 @@ public:
 private:
   void _PrepareContacts();
   void _UpdateContacts();
-  //void _PrepareAttachments();
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);
   void _SolveVelocities(std::vector<Constraint*>& constraints);
@@ -144,7 +143,6 @@ private:
   Particles                           _particles;
   std::vector<Constraint*>            _constraints; // static
   std::vector<Constraint*>            _contacts;    // dynamic
-  //std::vector<Constraint*>            _attachments; // dynamic
   std::vector<Collision*>             _collisions;
   Collision*                          _selfCollisions;
   std::vector<Body*>                  _bodies;
